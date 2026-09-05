@@ -5,18 +5,14 @@
 // This is based upon `@radix-ui/react-popover` fetched Oct 25, 2024 at https://github.com/radix-ui/primitives at commit 374c7d7.
 // The upstream source lives at https://github.com/radix-ui/primitives/tree/main/packages/react/popover.
 
-import { composeEventHandlers } from '@radix-ui/primitive';
-import { useComposedRefs } from '@radix-ui/react-compose-refs';
 import { DismissableLayer } from '@radix-ui/react-dismissable-layer';
 import { useFocusGuards } from '@radix-ui/react-focus-guards';
 import { FocusScope } from '@radix-ui/react-focus-scope';
-import { useId } from '@radix-ui/react-id';
 import * as PopperPrimitive from '@radix-ui/react-popper';
 import { Portal as PortalPrimitive } from '@radix-ui/react-portal';
 import { Presence } from '@radix-ui/react-presence';
 import { Primitive } from '@radix-ui/react-primitive';
 import { Slot } from '@radix-ui/react-slot';
-import { useControllableState } from '@radix-ui/react-use-controllable-state';
 import { hideOthers } from 'aria-hidden';
 import React, {
   type ComponentPropsWithoutRef,
@@ -28,12 +24,14 @@ import React, {
   forwardRef,
   useCallback,
   useEffect,
+  useId,
   useMemo,
   useRef,
   useState,
 } from 'react';
 import { RemoveScroll } from 'react-remove-scroll';
 
+import { composeEventHandlers, useComposedRefs, useControllableState } from '@dxos/react-hooks';
 import { DX_POPOVER_CONTENT_ATTR } from '@dxos/ui-types';
 
 import { useElevationContext, useSafeCollisionPadding, useThemeContext } from '../../hooks';

@@ -3,7 +3,6 @@
 //
 
 import * as CheckboxPrimitive from '@radix-ui/react-checkbox';
-import { useControllableState } from '@radix-ui/react-use-controllable-state';
 import React, {
   type ComponentPropsWithRef,
   type ForwardRefExoticComponent,
@@ -16,6 +15,7 @@ import React, {
 } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { useControllableState } from '@dxos/react-hooks';
 import {
   DescriptionAndValidation as DescriptionAndValidationPrimitive,
   type DescriptionAndValidationProps as DescriptionAndValidationPrimitiveProps,
@@ -24,7 +24,6 @@ import {
   INPUT_NAME,
   InputRoot,
   type InputRootProps,
-  type InputScopedProps,
   Label as LabelPrimitive,
   type LabelProps as LabelPrimitiveProps,
   PinInput as PinInputPrimitive,
@@ -168,10 +167,10 @@ Description.displayName = 'Input.Description';
 
 type ValidationProps = ThemedClassName<ValidationPrimitiveProps> & { srOnly?: boolean };
 
-const Validation = forwardRef<HTMLSpanElement, InputScopedProps<ValidationProps>>(
-  ({ __inputScope, classNames, children, srOnly, ...props }, forwardedRef) => {
+const Validation = forwardRef<HTMLSpanElement, ValidationProps>(
+  ({ classNames, children, srOnly, ...props }, forwardedRef) => {
     const { tx } = useThemeContext();
-    const { validationValence } = useInputContext(INPUT_NAME, __inputScope);
+    const { validationValence } = useInputContext(INPUT_NAME);
     return (
       <ValidationPrimitive
         {...props}
@@ -256,26 +255,16 @@ type AdornmentProps = {
 
 type TextInputProps = InputSharedProps & ThemedClassName<TextInputPrimitiveProps> & AutoFillProps & AdornmentProps;
 
-const TextInput = forwardRef<HTMLInputElement, InputScopedProps<TextInputProps>>(
+const TextInput = forwardRef<HTMLInputElement, TextInputProps>(
   (
-    {
-      __inputScope,
-      classNames,
-      density: densityProp,
-      elevation: elevationProp,
-      variant,
-      noAutoFill,
-      start,
-      end,
-      ...props
-    },
+    { classNames, density: densityProp, elevation: elevationProp, variant, noAutoFill, start, end, ...props },
     forwardedRef,
   ) => {
     const { hasIosKeyboard } = useThemeContext();
     const { tx } = useThemeContext();
     const density = useDensityContext(densityProp);
     const elevation = useElevationContext(elevationProp);
-    const { validationValence } = useInputContext(INPUT_NAME, __inputScope);
+    const { validationValence } = useInputContext(INPUT_NAME);
     const adorned = start != null || end != null;
 
     const field = (
@@ -329,13 +318,13 @@ TextInput.displayName = 'Input.TextInput';
 
 type TextAreaProps = InputSharedProps & ThemedClassName<TextAreaPrimitiveProps>;
 
-const TextArea = forwardRef<HTMLTextAreaElement, InputScopedProps<TextAreaProps>>(
-  ({ __inputScope, classNames, density: propsDensity, elevation: propsElevation, variant, ...props }, forwardedRef) => {
+const TextArea = forwardRef<HTMLTextAreaElement, TextAreaProps>(
+  ({ classNames, density: propsDensity, elevation: propsElevation, variant, ...props }, forwardedRef) => {
     const { hasIosKeyboard } = useThemeContext();
     const { tx } = useThemeContext();
     const density = useDensityContext(propsDensity);
     const elevation = useElevationContext(propsElevation);
-    const { validationValence } = useInputContext(INPUT_NAME, __inputScope);
+    const { validationValence } = useInputContext(INPUT_NAME);
 
     return (
       <TextAreaPrimitive
@@ -369,13 +358,9 @@ type CheckboxProps = ThemedClassName<Omit<CheckboxPrimitive.CheckboxProps, 'chil
   size?: Size;
 };
 
-const Checkbox: ForwardRefExoticComponent<CheckboxProps> = forwardRef<
-  HTMLButtonElement,
-  InputScopedProps<CheckboxProps>
->(
+const Checkbox: ForwardRefExoticComponent<CheckboxProps> = forwardRef<HTMLButtonElement, CheckboxProps>(
   (
     {
-      __inputScope,
       classNames,
       checked: propsChecked,
       defaultChecked: propsDefaultChecked,
@@ -390,7 +375,7 @@ const Checkbox: ForwardRefExoticComponent<CheckboxProps> = forwardRef<
       defaultProp: propsDefaultChecked,
       onChange: propsOnCheckedChange,
     });
-    const { id, validationValence, descriptionId, errorMessageId } = useInputContext(INPUT_NAME, __inputScope);
+    const { id, validationValence, descriptionId, errorMessageId } = useInputContext(INPUT_NAME);
     const { tx } = useThemeContext();
 
     return (
@@ -428,10 +413,9 @@ type SwitchProps = ThemedClassName<
   Omit<ComponentPropsWithRef<'input'>, 'children' | 'onChange'> & { onCheckedChange?: (checked: boolean) => void }
 >;
 
-const Switch = forwardRef<HTMLInputElement, InputScopedProps<SwitchProps>>(
+const Switch = forwardRef<HTMLInputElement, SwitchProps>(
   (
     {
-      __inputScope,
       classNames,
       checked: propsChecked,
       defaultChecked: propsDefaultChecked,
@@ -447,7 +431,7 @@ const Switch = forwardRef<HTMLInputElement, InputScopedProps<SwitchProps>>(
       onChange: propsOnCheckedChange,
     });
 
-    const { id, validationValence, descriptionId, errorMessageId } = useInputContext(INPUT_NAME, __inputScope);
+    const { id, validationValence, descriptionId, errorMessageId } = useInputContext(INPUT_NAME);
 
     return (
       <input

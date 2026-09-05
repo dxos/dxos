@@ -2,8 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Primitive } from '@radix-ui/react-primitive';
-import { Slot } from '@radix-ui/react-slot';
+import { ark } from '@ark-ui/react/factory';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { PropsWithChildren } from 'react';
 
@@ -23,27 +22,27 @@ import { ThemedClassName } from '../util';
 
 const Outer = slottable<HTMLDivElement, { priority?: number }>(
   ({ children, asChild, priority, ...props }, forwardedRef) => {
-    const Comp = asChild ? Slot : Primitive.div;
     return (
-      <Comp
+      <ark.div
+        asChild={asChild}
         {...composableProps<HTMLDivElement>(props, { classNames: 'p-2 border border-red-500 rounded' })}
         ref={forwardedRef}
       >
         {children}
-      </Comp>
+      </ark.div>
     );
   },
 );
 
 const Middle = slottable<HTMLDivElement>(({ children, asChild, ...props }, forwardedRef) => {
-  const Comp = asChild ? Slot : Primitive.div;
   return (
-    <Comp
+    <ark.div
+      asChild={asChild}
       {...composableProps<HTMLDivElement>(props, { classNames: 'p-2 border border-red-500 rounded' })}
       ref={forwardedRef}
     >
       {children}
-    </Comp>
+    </ark.div>
   );
 });
 

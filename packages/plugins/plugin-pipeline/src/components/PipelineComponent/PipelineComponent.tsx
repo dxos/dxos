@@ -2,8 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
+import { ark } from '@ark-ui/react/factory';
 import { useAtomValue } from '@effect/atom-react/Hooks';
-import { Slot } from '@radix-ui/react-slot';
 import React, { type FC, type PropsWithChildren } from 'react';
 
 import { Obj } from '@dxos/echo';
@@ -55,12 +55,11 @@ type PipelineContentProps = PropsWithChildren<{
 
 const PipelineContent = slottable<HTMLDivElement, PipelineContentProps>(
   ({ asChild, model, children, ...props }, forwardedRef) => {
-    const Comp = asChild ? Slot : 'div';
     return (
       <Board.Root model={model}>
-        <Comp {...composableProps(props)} ref={forwardedRef}>
+        <ark.div asChild={asChild} {...composableProps(props)} ref={forwardedRef}>
           {children}
-        </Comp>
+        </ark.div>
       </Board.Root>
     );
   },

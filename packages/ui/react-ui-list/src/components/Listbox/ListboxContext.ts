@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { createContext } from '@radix-ui/react-context';
+import { createContext } from '@dxos/react-ui';
 
 import { type UseListSelectionReturn } from '../../hooks';
 

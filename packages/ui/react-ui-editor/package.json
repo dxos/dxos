@@ -47,12 +47,11 @@
     "@dxos/async": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/log": "workspace:*",
+    "@dxos/react-hooks": "workspace:*",
     "@dxos/react-ui-menu": "workspace:*",
     "@dxos/ui-editor": "workspace:*",
     "@dxos/ui-types": "workspace:*",
-    "@dxos/util": "workspace:*",
-    "@radix-ui/react-context": "catalog:",
-    "@radix-ui/react-use-controllable-state": "catalog:"
+    "@dxos/util": "workspace:*"
   },
   "devDependencies": {
     "@codemirror/autocomplete": "catalog:",

@@ -2,7 +2,6 @@
 // Copyright 2026 DXOS.org
 //
 
-import { createContext } from '@radix-ui/react-context';
 import React, {
   type PropsWithChildren,
   type RefObject,
@@ -14,6 +13,7 @@ import React, {
 } from 'react';
 
 import { log } from '@dxos/log';
+import { createContext } from '@dxos/react-hooks';
 import { IconButton, useTranslation } from '@dxos/react-ui';
 import { Form, type FormFieldRenderer, type FormFieldRendererProps, type FormUpdateMeta } from '@dxos/react-ui-form';
 

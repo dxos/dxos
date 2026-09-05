@@ -2,8 +2,9 @@
 // Copyright 2024 DXOS.org
 //
 
-import { createContext } from '@radix-ui/react-context';
 import { useEffect, useMemo, useState } from 'react';
+
+import { createContext } from '@dxos/react-hooks';
 
 import { ATTENDABLE_ATTRIBUTE, type Attention, AttentionManager } from '../../types/Attention';
 

@@ -3,7 +3,6 @@
 //
 
 import { CalendarDate, CalendarDateTime, Time, parseDate, parseDateTime, parseTime } from '@internationalized/date';
-import { useControllableState } from '@radix-ui/react-use-controllable-state';
 import React, { type ComponentProps, ReactNode, forwardRef, useCallback, useState } from 'react';
 import {
   DateField,
@@ -14,7 +13,8 @@ import {
   type TimeFieldProps,
 } from 'react-aria-components';
 
-import { INPUT_NAME, type InputScopedProps, useInputContext } from '@dxos/react-input';
+import { useControllableState } from '@dxos/react-hooks';
+import { INPUT_NAME, useInputContext } from '@dxos/react-input';
 
 import { useDensityContext, useElevationContext, useThemeContext } from '../../hooks';
 import { type ThemedClassName } from '../../util';
@@ -139,18 +139,16 @@ type SegmentedTimeBearingProps = SegmentedInputBaseProps & {
 //
 
 const useFieldChrome = ({
-  __inputScope,
   density: densityProp,
   elevation: elevationProp,
 }: {
-  __inputScope?: any;
   density: InputSharedProps['density'];
   elevation: InputSharedProps['elevation'];
 }) => {
   const { tx } = useThemeContext();
   const density = useDensityContext(densityProp);
   const elevation = useElevationContext(elevationProp);
-  const { id: contextId, validationValence, descriptionId, errorMessageId } = useInputContext(INPUT_NAME, __inputScope);
+  const { id: contextId, validationValence, descriptionId, errorMessageId } = useInputContext(INPUT_NAME);
   return { tx, density, elevation, validationValence, contextId, descriptionId, errorMessageId };
 };
 
@@ -202,10 +200,9 @@ const PickerWrapper = ({
 
 type SegmentedDateProps = SegmentedInputBaseProps;
 
-const SegmentedDate = forwardRef<HTMLDivElement, InputScopedProps<SegmentedDateProps>>(
+const SegmentedDate = forwardRef<HTMLDivElement, SegmentedDateProps>(
   (
     {
-      __inputScope,
       classNames,
       density: densityProp,
       elevation: elevationProp,
@@ -221,7 +218,6 @@ const SegmentedDate = forwardRef<HTMLDivElement, InputScopedProps<SegmentedDateP
     forwardedRef,
   ) => {
     const { tx, density, elevation, validationValence, contextId, descriptionId, errorMessageId } = useFieldChrome({
-      __inputScope,
       density: densityProp,
       elevation: elevationProp,
     });
@@ -287,10 +283,9 @@ SegmentedDate.displayName = 'Input.SegmentedDate';
 
 type SegmentedTimeProps = SegmentedTimeBearingProps;
 
-const SegmentedTime = forwardRef<HTMLDivElement, InputScopedProps<SegmentedTimeProps>>(
+const SegmentedTime = forwardRef<HTMLDivElement, SegmentedTimeProps>(
   (
     {
-      __inputScope,
       classNames,
       density: densityProp,
       elevation: elevationProp,
@@ -307,7 +302,6 @@ const SegmentedTime = forwardRef<HTMLDivElement, InputScopedProps<SegmentedTimeP
     forwardedRef,
   ) => {
     const { tx, density, elevation, validationValence, contextId, descriptionId, errorMessageId } = useFieldChrome({
-      __inputScope,
       density: densityProp,
       elevation: elevationProp,
     });
@@ -362,10 +356,9 @@ SegmentedTime.displayName = 'Input.SegmentedTime';
 
 type SegmentedDateTimeProps = SegmentedTimeBearingProps;
 
-const SegmentedDateTime = forwardRef<HTMLDivElement, InputScopedProps<SegmentedDateTimeProps>>(
+const SegmentedDateTime = forwardRef<HTMLDivElement, SegmentedDateTimeProps>(
   (
     {
-      __inputScope,
       classNames,
       density: densityProp,
       elevation: elevationProp,
@@ -382,7 +375,6 @@ const SegmentedDateTime = forwardRef<HTMLDivElement, InputScopedProps<SegmentedD
     forwardedRef,
   ) => {
     const { tx, density, elevation, validationValence, contextId, descriptionId, errorMessageId } = useFieldChrome({
-      __inputScope,
       density: densityProp,
       elevation: elevationProp,
     });

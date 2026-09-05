@@ -4,13 +4,9 @@
 
 // This is based upon `@radix-ui/react-dropdown-menu` fetched 25 Oct 2024 at https://github.com/radix-ui/primitives at commit 06de2d4.
 
-import { composeEventHandlers } from '@radix-ui/primitive';
-import { composeRefs } from '@radix-ui/react-compose-refs';
-import { useId } from '@radix-ui/react-id';
 import * as MenuPrimitive from '@radix-ui/react-menu';
 import { Primitive } from '@radix-ui/react-primitive';
 import { Slot } from '@radix-ui/react-slot';
-import { useControllableState } from '@radix-ui/react-use-controllable-state';
 import React, {
   type ComponentPropsWithoutRef,
   type ComponentPropsWithRef,
@@ -22,9 +18,12 @@ import React, {
   forwardRef,
   useCallback,
   useEffect,
+  useId,
   useMemo,
   useRef,
 } from 'react';
+
+import { composeEventHandlers, composeRefs, useControllableState } from '@dxos/react-hooks';
 
 import { useElevationContext, useSafeCollisionPadding, useThemeContext } from '../../hooks';
 import { type ThemedClassName } from '../../util';

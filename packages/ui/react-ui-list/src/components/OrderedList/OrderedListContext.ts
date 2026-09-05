@@ -1,8 +1,7 @@
+import { createContext } from '@dxos/react-ui';
 //
 // Copyright 2026 DXOS.org
 //
-
-import { createContext } from '@radix-ui/react-context';
 
 import {
   type ReorderActive,

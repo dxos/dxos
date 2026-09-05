@@ -24,7 +24,6 @@ const createOptionLabel: Label = ['create-new-object.label', { ns: translationKe
 export type OnCreateHandler = (schema: Type.AnyEntity, values: any) => Parameters<typeof Ref.make>[0];
 
 export type FormCellEditorProps<T extends Type.AnyEntity = Type.AnyEntity> = {
-  __gridScope: any;
   schema?: T;
   model?: TableModel;
   fieldProjection: FieldProjection;
@@ -34,7 +33,6 @@ export type FormCellEditorProps<T extends Type.AnyEntity = Type.AnyEntity> = {
 } & Omit<FormRootProps<any>, 'values' | 'schema' | 'onCreate'>;
 
 export const FormCellEditor = <T extends Type.AnyEntity = Type.AnyEntity>({
-  __gridScope,
   schema,
   model,
   fieldProjection,
@@ -43,7 +41,7 @@ export const FormCellEditor = <T extends Type.AnyEntity = Type.AnyEntity>({
   ...formProps
 }: FormCellEditorProps<T>) => {
   const anchorRef = useRef<HTMLButtonElement | null>(null);
-  const { id: _gridId, editing: contextEditing, setEditing } = useGridContext('ArrayEditor', __gridScope);
+  const { id: _gridId, editing: contextEditing, setEditing } = useGridContext('ArrayEditor');
   const [editing, setLocalEditing] = useState(false);
 
   useEffect(() => {

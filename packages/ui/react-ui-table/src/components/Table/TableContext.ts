@@ -2,8 +2,9 @@
 // Copyright 2024 DXOS.org
 //
 
-import { createContext } from '@radix-ui/react-context';
 import { type RefObject } from 'react';
+
+import { createContext } from '@dxos/react-hooks';
 
 import { type TableController } from './Table';
 

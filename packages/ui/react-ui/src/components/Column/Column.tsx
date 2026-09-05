@@ -2,8 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Primitive } from '@radix-ui/react-primitive';
-import { Slot } from '@radix-ui/react-slot';
+import { ark } from '@ark-ui/react/factory';
 import React, { type CSSProperties } from 'react';
 
 import { type SlottableProps } from '@dxos/ui-types';
@@ -55,14 +54,14 @@ type ColumnRootProps = {
 const ColumnRoot = slottable<HTMLDivElement, ColumnRootProps>(
   ({ children, asChild, role, gutter = 'lg', subgrid, gap, ...props }, forwardedRef) => {
     const { className, ...rest } = composableProps(props);
-    const Comp = asChild ? Slot : Primitive.div;
     const { tx } = useThemeContext();
     const gutterSize = gutterSizes[gutter];
-    // The provider wraps `Comp` rather than the children: under `asChild`, `Comp` is a Slot that
-    // merges its props into its single child, and a Provider in that position would swallow them.
+    // The provider wraps `Comp` rather than the children: under `asChild`, `Comp` merges its props into
+    // its single child, and a Provider in that position would swallow them.
     return (
       <ColumnContext.Provider value={true}>
-        <Comp
+        <ark.div
+          asChild={asChild}
           {...rest}
           role={role ?? 'none'}
           style={
@@ -78,7 +77,7 @@ const ColumnRoot = slottable<HTMLDivElement, ColumnRootProps>(
           ref={forwardedRef}
         >
           {children}
-        </Comp>
+        </ark.div>
       </ColumnContext.Provider>
     );
   },
@@ -101,12 +100,17 @@ type ColumnRowProps = {};
  */
 const ColumnRow = slottable<HTMLDivElement, ColumnRowProps>(({ children, asChild, role, ...props }, forwardedRef) => {
   const { className, ...rest } = composableProps(props);
-  const Comp = asChild ? Slot : Primitive.div;
   const { tx } = useThemeContext();
   return (
-    <Comp {...rest} role={role ?? 'none'} className={tx('column.row', {}, className)} ref={forwardedRef}>
+    <ark.div
+      asChild={asChild}
+      {...rest}
+      role={role ?? 'none'}
+      className={tx('column.row', {}, className)}
+      ref={forwardedRef}
+    >
       {children}
-    </Comp>
+    </ark.div>
   );
 });
 
@@ -128,11 +132,10 @@ type ColumnCenterProps = SlottableProps;
 const ColumnCenter = slottable<HTMLDivElement>(({ children, asChild, ...props }, forwardedRef) => {
   const { tx } = useThemeContext();
   const { className, ...rest } = composableProps(props);
-  const Comp = asChild ? Slot : Primitive.div;
   return (
-    <Comp {...rest} className={tx('column.center', {}, className)} ref={forwardedRef}>
+    <ark.div asChild={asChild} {...rest} className={tx('column.center', {}, className)} ref={forwardedRef}>
       {children}
-    </Comp>
+    </ark.div>
   );
 });
 
@@ -157,11 +160,15 @@ const ColumnBlock = slottable<HTMLDivElement, ColumnBlockProps>(
   ({ children, asChild, end, compact, square, ...props }, forwardedRef) => {
     const { tx } = useThemeContext();
     const { className, ...rest } = composableProps(props);
-    const Comp = asChild ? Slot : Primitive.div;
     return (
-      <Comp {...rest} className={tx('column.block', { end, compact, square }, className)} ref={forwardedRef}>
+      <ark.div
+        asChild={asChild}
+        {...rest}
+        className={tx('column.block', { end, compact, square }, className)}
+        ref={forwardedRef}
+      >
         {children}
-      </Comp>
+      </ark.div>
     );
   },
 );

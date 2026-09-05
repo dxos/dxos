@@ -3,8 +3,8 @@
 //
 
 import { type Edge } from '@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge';
-import { createContext } from '@radix-ui/react-context';
 
+import { createContext } from '@dxos/react-hooks';
 import { type Size } from '@dxos/react-ui-dnd';
 
 // Kept out of `Tile.tsx`: react-refresh only fast-refreshes a module whose exports are all

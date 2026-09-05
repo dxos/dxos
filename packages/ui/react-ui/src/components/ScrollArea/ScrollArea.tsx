@@ -2,12 +2,11 @@
 // Copyright 2026 DXOS.org
 //
 
-import { useComposedRefs } from '@radix-ui/react-compose-refs';
-import { createContext } from '@radix-ui/react-context';
 import { Primitive } from '@radix-ui/react-primitive';
 import { Slot, Slottable } from '@radix-ui/react-slot';
 import React, { CSSProperties, useMemo, useState } from 'react';
 
+import { createContext, useComposedRefs } from '@dxos/react-hooks';
 import { type AllowedAxis, type SlottableProps } from '@dxos/ui-types';
 
 import { useThemeContext } from '../../hooks';

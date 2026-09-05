@@ -9,12 +9,12 @@ import { AlertDialog } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
 
 import { Action } from '../Panel';
-import { Viewport, type ViewportScopedProps, useViewportContext } from './Viewport';
+import { Viewport, useViewportContext } from './Viewport';
 
 type StorybookViewportProps = {};
 
-const Views = ({ __viewportScope }: ViewportScopedProps<{}>) => {
-  const { setActiveView } = useViewportContext('StorybookViews', __viewportScope);
+const Views = ({}: {}) => {
+  const { setActiveView } = useViewportContext('StorybookViews');
   return (
     <Viewport.Views>
       <Viewport.View id='one' classNames='p-4'>

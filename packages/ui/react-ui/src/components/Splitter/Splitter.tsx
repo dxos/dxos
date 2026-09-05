@@ -10,9 +10,9 @@
 // that collapses to one pane or the other with an animation.
 
 import { Splitter as SplitterPrimitive } from '@ark-ui/react/splitter';
-import { createContext } from '@radix-ui/react-context';
 import React, { type ComponentProps, type RefObject, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
+import { createContext } from '@dxos/react-hooks';
 import { type SlottableProps } from '@dxos/ui-types';
 
 import { useThemeContext } from '../../hooks';

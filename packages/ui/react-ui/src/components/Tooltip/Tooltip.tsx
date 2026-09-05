@@ -5,10 +5,7 @@
 // This is based upon `@radix-ui/react-tooltip` fetched 17 March 2025 at https://github.com/radix-ui/primitives at commit 6e75e11.
 // TODO(burdon): Replace with https://ui.shadcn.com/docs/components/radix/tooltip
 
-import { composeEventHandlers } from '@radix-ui/primitive';
-import { useComposedRefs } from '@radix-ui/react-compose-refs';
 import { DismissableLayer } from '@radix-ui/react-dismissable-layer';
-import { useId } from '@radix-ui/react-id';
 import * as PopperPrimitive from '@radix-ui/react-popper';
 import { type PopperAnchorProps } from '@radix-ui/react-popper';
 import { Portal as PortalPrimitive } from '@radix-ui/react-portal';
@@ -16,7 +13,6 @@ import { Presence } from '@radix-ui/react-presence';
 import { Primitive } from '@radix-ui/react-primitive';
 import { Slottable } from '@radix-ui/react-slot';
 import { type TooltipProps } from '@radix-ui/react-tooltip';
-import { useControllableState } from '@radix-ui/react-use-controllable-state';
 import * as VisuallyHiddenPrimitive from '@radix-ui/react-visually-hidden';
 import React, {
   type ComponentPropsWithoutRef,
@@ -28,10 +24,13 @@ import React, {
   forwardRef,
   useCallback,
   useEffect,
+  useId,
   useMemo,
   useRef,
   useState,
 } from 'react';
+
+import { composeEventHandlers, useComposedRefs, useControllableState } from '@dxos/react-hooks';
 
 import { useElevationContext, useThemeContext } from '../../hooks';
 import {

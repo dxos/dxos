@@ -141,7 +141,6 @@
     "@dxos/ui-editor": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@radix-ui/react-compose-refs": "catalog:",
     "effect": "catalog:"
   },
   "devDependencies": {

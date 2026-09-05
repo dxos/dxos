@@ -259,6 +259,7 @@
     "@dxos/plugin-tasks": "workspace:*",
     "@dxos/plugin-transcription": "workspace:*",
     "@dxos/react-client": "workspace:*",
+    "@dxos/react-hooks": "workspace:*",
     "@dxos/react-list": "workspace:*",
     "@dxos/react-ui-assistant": "workspace:*",
     "@dxos/react-ui-attention": "workspace:*",
@@ -282,7 +283,6 @@
     "@effect/ai-anthropic": "catalog:",
     "@effect/ai-openai": "catalog:",
     "@effect/atom-react": "catalog:",
-    "@radix-ui/react-context": "catalog:",
     "effect": "catalog:"
   },
   "devDependencies": {

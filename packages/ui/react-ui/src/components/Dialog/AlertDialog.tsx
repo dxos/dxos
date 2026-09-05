@@ -3,8 +3,9 @@
 //
 
 import * as AlertDialogPrimitive from '@radix-ui/react-alert-dialog';
-import { createContext } from '@radix-ui/react-context';
 import React, { type ForwardRefExoticComponent, type FunctionComponent, forwardRef } from 'react';
+
+import { createContext } from '@dxos/react-hooks';
 
 import { useThemeContext } from '../../hooks';
 import { ElevationProvider } from '../../primitives';

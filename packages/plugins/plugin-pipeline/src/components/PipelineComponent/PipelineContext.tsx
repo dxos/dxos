@@ -2,8 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
-import { createContext } from '@radix-ui/react-context';
 import React from 'react';
+
+import { createContext } from '@dxos/react-hooks';
 
 import { type ItemProps, type PipelineContextValue } from './PipelineComponent';
 

@@ -3,7 +3,6 @@
 //
 
 import { type EditorView } from '@codemirror/view';
-import { useControllableState } from '@radix-ui/react-use-controllable-state';
 import React, {
   Fragment,
   type KeyboardEvent,
@@ -16,6 +15,7 @@ import React, {
 
 import { addEventListener } from '@dxos/async';
 import { invariant } from '@dxos/invariant';
+import { useControllableState } from '@dxos/react-hooks';
 import {
   DX_ANCHOR_ACTIVATE,
   type DxAnchorActivate,

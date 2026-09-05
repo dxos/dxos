@@ -3,10 +3,10 @@
 //
 
 import { RegistryContext } from '@effect/atom-react/RegistryContext';
-import { useControllableState } from '@radix-ui/react-use-controllable-state';
 import * as Atom from 'effect/unstable/reactivity/Atom';
 import React, { type MouseEvent, type PropsWithChildren, useCallback, useContext, useMemo } from 'react';
 
+import { useControllableState } from '@dxos/react-hooks';
 import { type DropdownMenuRootProps, Icon, DropdownMenu as NaturalDropdownMenu } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
@@ -24,10 +24,8 @@ import { ActionLabel } from './ActionLabel';
 import {
   MenuContextProvider,
   MenuDropdownContext,
-  type MenuScopedProps,
   menuContextDefaults,
   useMenuItems,
-  useMenuScope,
   useMenuScoped,
 } from './MenuContext';
 import { ToolbarMenu, ToolbarMenuItems } from './ToolbarMenu';
@@ -48,7 +46,6 @@ const MenuProvider = ({
   alwaysActive,
   onAction,
 }: MenuProviderProps) => {
-  const { scope } = useMenuScope(undefined);
   const registry = useContext(RegistryContext);
   const menuItemsAtom = useMemo(() => Atom.make<MenuItemsMap>(new Map()).pipe(Atom.keepAlive), []);
 
@@ -83,7 +80,6 @@ const MenuProvider = ({
       addMenuItems={addMenuItems}
       removeMenuItems={removeMenuItems}
       onAction={onAction}
-      scope={scope}
     >
       {children}
     </MenuContextProvider>
@@ -141,14 +137,13 @@ type MenuContentProps = {
 const MenuContentItem = ({
   item,
   onClick,
-  __menuScope,
-}: MenuScopedProps<{
+}: {
   item: MenuItem;
   onClick: (action: MenuAction, event: MouseEvent) => void;
-}>) => {
+}) => {
   const action = item as MenuAction;
   const handleClick = useCallback((event: MouseEvent) => onClick(action, event), [action, onClick]);
-  const { iconSize } = useMenuScoped('MenuContentItem', __menuScope);
+  const { iconSize } = useMenuScoped('MenuContentItem');
   return (
     <NaturalDropdownMenu.Item
       onClick={handleClick}
@@ -174,16 +169,11 @@ const MenuContentItem = ({
  * Must be a descendant of `Menu.Root`. Reads items via `useMenuItems` from the
  * nearest menu context, with optional `group`/`items` prop overrides.
  */
-const MenuContent = ({
-  group,
-  items: propsItems,
-  caller: callerOverride,
-  __menuScope,
-}: MenuScopedProps<MenuContentProps>) => {
+const MenuContent = ({ group, items: propsItems, caller: callerOverride }: MenuContentProps) => {
   const { closeMenu, caller: contextCaller } = useContext(MenuDropdownContext);
   const caller = callerOverride ?? contextCaller;
-  const { onAction } = useMenuScoped('MenuContent', __menuScope);
-  const resolvedItems = useMenuItems(group, propsItems, 'MenuContent', __menuScope);
+  const { onAction } = useMenuScoped('MenuContent');
+  const resolvedItems = useMenuItems(group, propsItems, 'MenuContent');
 
   const handleActionClick = useCallback(
     (action: MenuAction, event: MouseEvent) => {

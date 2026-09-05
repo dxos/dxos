@@ -2,10 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
-import { createContext } from '@radix-ui/react-context';
 import React, { type PropsWithChildren } from 'react';
 
-import { Icon, IconButton, type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { createContext, Icon, IconButton, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { TogglePanel } from '@dxos/react-ui-components';
 import { type MessageChromeProps, isPrompt } from '@dxos/react-ui-feed';
 import { type ContentBlock, Message } from '@dxos/types';

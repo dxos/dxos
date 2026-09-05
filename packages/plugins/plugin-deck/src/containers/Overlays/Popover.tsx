@@ -2,12 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
-import { createContext } from '@radix-ui/react-context';
 import React, { type PropsWithChildren, useCallback, useEffect, useRef, useState } from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface, CardIconSlot, useObjectMenuItems } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
+import { createContext } from '@dxos/react-hooks';
 import {
   Card,
   Icon,

@@ -3,11 +3,11 @@
 //
 
 import { useAtomValue } from '@effect/atom-react/Hooks';
-import { type Scope, createContextScope } from '@radix-ui/react-context';
 import * as Atom from 'effect/unstable/reactivity/Atom';
-import { createContext, useMemo } from 'react';
+import { createContext as createReactContext, useMemo } from 'react';
 
 import { log } from '@dxos/log';
+import { createContext } from '@dxos/react-hooks';
 
 import {
   type MenuContextValue,
@@ -22,14 +22,10 @@ import {
 // components, so contexts and hooks exported beside them force a full page reload on every edit.
 
 //
-// Scoped context.
+// Context.
 //
 
-export type MenuScopedProps<P> = P & { __menuScope?: Scope };
-
 export const MENU_NAME = 'Menu';
-
-export const [createMenuContext, createMenuScope] = createContextScope(MENU_NAME, []);
 
 const nullItemsAtom = Atom.make<MenuItem[] | null>(null);
 const defaultItemsAccessor: MenuItemsAccessor = () => nullItemsAtom;
@@ -43,9 +39,7 @@ export const menuContextDefaults: MenuContextValue = {
   removeMenuItems: () => {},
 };
 
-export const [MenuContextProvider, useMenuScoped] = createMenuContext<MenuContextValue>(MENU_NAME, menuContextDefaults);
-
-export const useMenuScope = createMenuScope();
+export const [MenuContextProvider, useMenuScoped] = createContext<MenuContextValue>(MENU_NAME, menuContextDefaults);
 
 //
 // Dropdown context (internal) — allows Menu.Content to close the parent dropdown.
@@ -56,7 +50,7 @@ export type MenuDropdownContextValue = {
   caller?: string;
 };
 
-export const MenuDropdownContext = createContext<MenuDropdownContextValue>({
+export const MenuDropdownContext = createReactContext<MenuDropdownContextValue>({
   closeMenu: () => {},
 });
 
@@ -108,9 +102,8 @@ export const useMenuItems = (
   group?: MenuGroupContext,
   propsItems?: MenuItem[],
   consumerName: string = 'useMenuItemConsumer',
-  __menuScope?: Scope,
 ) => {
-  const { items, menuItemsAtom } = useMenuScoped(consumerName, __menuScope);
+  const { items, menuItemsAtom } = useMenuScoped(consumerName);
   const groupItems = useAtomValue(items(group));
   const entries = useAtomValue(menuItemsAtom) ?? new Map();
 
@@ -124,7 +117,6 @@ export const useMenuItems = (
   return resolved ?? undefined;
 };
 
-/** Returns the menu context without Radix scope. */
 export const useMenu = (consumerName: string): MenuContextValue => {
-  return useMenuScoped(consumerName, undefined);
+  return useMenuScoped(consumerName);
 };

@@ -2,7 +2,6 @@
 // Copyright 2026 DXOS.org
 //
 
-import { createContext } from '@radix-ui/react-context';
 import React, {
   type KeyboardEvent,
   type MouseEvent,
@@ -17,16 +16,17 @@ import { Filter, Obj } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
 import {
   Button,
+  composable,
+  composableProps,
+  createContext,
   DxAnchorActivate,
   Icon,
   IconBlock,
   IconButton,
   Input,
   Tag,
-  Toolbar,
-  composable,
-  composableProps,
   toLocalizedString,
+  Toolbar,
   useTranslation,
 } from '@dxos/react-ui';
 import { Listbox, useListDisclosure } from '@dxos/react-ui-list';

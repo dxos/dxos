@@ -3,7 +3,6 @@
 //
 
 import { dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
-import { composeRefs } from '@radix-ui/react-compose-refs';
 import React, {
   type ComponentPropsWithoutRef,
   type PropsWithChildren,
@@ -24,6 +23,7 @@ import {
   type ThemedClassName,
   composable,
   composableProps,
+  composeRefs,
   usePx,
   useTranslation,
 } from '@dxos/react-ui';

@@ -2,10 +2,10 @@
 // Copyright 2023 DXOS.org
 //
 
-import { useComposedRefs } from '@radix-ui/react-compose-refs';
 import React, { type ReactElement, type Ref as ReactRef, forwardRef, useMemo, useRef, useState } from 'react';
 
 import { Obj } from '@dxos/echo';
+import { useComposedRefs } from '@dxos/react-hooks';
 import { Card, Icon, IconButton, Tag, useTranslation } from '@dxos/react-ui';
 import { Menu, createMenuAction } from '@dxos/react-ui-menu';
 import { getHashStyles } from '@dxos/ui-theme';

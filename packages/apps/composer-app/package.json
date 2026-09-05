@@ -179,7 +179,6 @@
     "@radix-ui/react-dropdown-menu": "catalog:",
     "@radix-ui/react-popover": "catalog:",
     "@radix-ui/react-scroll-area": "catalog:",
-    "@radix-ui/react-slot": "catalog:",
     "@radix-ui/react-tooltip": "catalog:",
     "@tauri-apps/api": "catalog:",
     "@tauri-apps/plugin-os": "catalog:",

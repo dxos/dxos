@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Slot } from '@radix-ui/react-slot';
+import { ark } from '@ark-ui/react/factory';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { type ReactNode, forwardRef } from 'react';
 
@@ -18,11 +18,14 @@ import { composable, composableProps, slottable } from './slots';
 //
 
 const Host = slottable<HTMLDivElement>(({ children, asChild, ...props }, forwardedRef) => {
-  const Comp: any = asChild ? Slot : 'div';
   return (
-    <Comp {...composableProps(props, { classNames: 'p-2 rounded-sm bg-base-surface text-base-fg' })} ref={forwardedRef}>
+    <ark.div
+      asChild={asChild}
+      {...composableProps(props, { classNames: 'p-2 rounded-sm bg-base-surface text-base-fg' })}
+      ref={forwardedRef}
+    >
       {children}
-    </Comp>
+    </ark.div>
   );
 });
 

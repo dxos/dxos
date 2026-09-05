@@ -1,7 +1,8 @@
 # Radix → Ark UI migration (plan)
 
-**Status:** planning. Phase 0 (four hand-built components) is in flight on its own branch; nothing
-else has started. Every number below was measured against this tree at `@ark-ui/react@5.39.1` /
+**Status:** in progress. Phase 0 landed as #12902 (2026-09-03). Phase 1 (own the scaffolding) is on
+`claude/react-ui-ark-port-fe9f63`; Phases 2–4a follow on the same branch — see the ledger in
+`.agents/projects/ark/TASKS.md` for what is decided and what is done. Every number below was measured against this tree at `@ark-ui/react@5.39.1` /
 `@zag-js/*@1.43.3` and the `@radix-ui/*` versions in the lockfile on 2026-09-02 — re-measure before
 trusting a figure in a later quarter.
 
@@ -450,7 +451,7 @@ Editable → Splitter → Carousel (Carousel also imports `@dxos/react-focus`).
 
 Deliverable: one PR, `react-ui: rebuild Carousel, Editable, Splitter and Stepper on Ark UI`.
 
-### Phase 1 — own the scaffolding
+### Phase 1 — own the scaffolding _(in progress)_
 
 Create the replacements for the five Radix scaffolding packages inside `react-primitives`
 (`react-hooks` already holds `compose-refs`'s single use there):

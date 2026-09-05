@@ -2,8 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Primitive } from '@radix-ui/react-primitive';
-import { Slot } from '@radix-ui/react-slot';
+import { ark } from '@ark-ui/react/factory';
 import React from 'react';
 
 import { mx } from '@dxos/ui-theme';
@@ -12,10 +11,9 @@ import { composableProps, slottable } from '../../util';
 
 export const Container = slottable<HTMLDivElement>(({ children, asChild, ...props }, forwardedRef) => {
   const { className, ...rest } = composableProps<HTMLDivElement>(props);
-  const Comp = asChild ? Slot : Primitive.div;
   return (
-    <Comp {...rest} className={mx('dx-expand', className)} ref={forwardedRef}>
+    <ark.div asChild={asChild} {...rest} className={mx('dx-expand', className)} ref={forwardedRef}>
       {children}
-    </Comp>
+    </ark.div>
   );
 });

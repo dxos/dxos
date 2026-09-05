@@ -2,11 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-import { useComposedRefs } from '@radix-ui/react-compose-refs';
+import { ark } from '@ark-ui/react/factory';
 import { DialogContent, Root as DialogRoot, DialogTitle } from '@radix-ui/react-dialog';
-import { Primitive } from '@radix-ui/react-primitive';
-import { Slot } from '@radix-ui/react-slot';
-import { useControllableState } from '@radix-ui/react-use-controllable-state';
 import React, {
   type ComponentPropsWithRef,
   type KeyboardEvent,
@@ -20,7 +17,7 @@ import React, {
 
 import { addEventListener } from '@dxos/async';
 import { FOCUS_GROUP_ATTR, KEYBOARD_MODALITY_ATTR } from '@dxos/react-focus';
-import { useMediaQuery, useMergeRefs } from '@dxos/react-hooks';
+import { useComposedRefs, useControllableState, useMediaQuery, useMergeRefs } from '@dxos/react-hooks';
 import { osTranslations } from '@dxos/ui-theme';
 
 import { useThemeContext } from '../../hooks';
@@ -120,7 +117,7 @@ MainRoot.displayName = MAIN_ROOT_NAME;
 // Overlay
 //
 
-type MainOverlayProps = ThemedClassName<Omit<ComponentPropsWithRef<typeof Primitive.div>, 'children' | 'onClick'>>;
+type MainOverlayProps = ThemedClassName<Omit<ComponentPropsWithRef<typeof ark.div>, 'children' | 'onClick'>>;
 
 const MainOverlay = forwardRef<HTMLDivElement, MainOverlayProps>(({ classNames, ...props }, forwardedRef) => {
   const [isLg] = useMediaQuery('lg');
@@ -175,7 +172,7 @@ const MainSidebar = forwardRef<HTMLDivElement, MainSidebarProps>(
     const { t } = useTranslation(osTranslations);
     // A ref object for `useSwipeToDismiss`, merged rather than synced: `useForwardedRef` writes the
     // forwarded ref once in an effect, which never delivers the node when `Root` swaps between
-    // `Primitive.div` and `DialogContent` on a media-query change.
+    // `ark.div` and `DialogContent` on a media-query change.
     const ref = useRef<HTMLDivElement>(null);
     const composedRef = useMergeRefs<HTMLDivElement>([ref, forwardedRef]);
     const noopRef = useRef(null);
@@ -199,7 +196,7 @@ const MainSidebar = forwardRef<HTMLDivElement, MainSidebarProps>(
       [props.onKeyDown],
     );
 
-    const Root = isLg ? Primitive.div : DialogContent;
+    const Root = isLg ? ark.div : DialogContent;
 
     return (
       <DialogRoot open={state !== 'closed'} aria-label={toLocalizedString(label, t)} modal={false}>
@@ -278,7 +275,7 @@ MainComplementarySidebar.displayName = COMPLEMENTARY_SIDEBAR_NAME;
 //
 
 type MainContentProps = ThemedClassName<
-  ComponentPropsWithRef<typeof Primitive.div> &
+  ComponentPropsWithRef<typeof ark.div> &
     MainStyleProps & {
       asChild?: boolean;
     }
@@ -288,11 +285,12 @@ const MainContent = forwardRef<HTMLDivElement, MainContentProps>(
   ({ asChild, classNames, bounce, handlesFocus, children, role, ...props }: MainContentProps, forwardedRef) => {
     const { navigationSidebarState, complementarySidebarState } = useMainContext(MAIN_NAME);
     const { tx } = useThemeContext();
-    const Comp = asChild ? Slot : role ? Primitive.div : 'main';
+    const Comp = role ? ark.div : ark.main;
     const { ref: moverRef, ...mover } = useLandmarkMover(props.onKeyDown, '1');
 
     return (
       <Comp
+        asChild={asChild}
         {...(handlesFocus && { ...mover })}
         {...props}
         role={role}

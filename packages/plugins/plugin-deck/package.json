@@ -156,6 +156,7 @@
     "PLUGIN.mdl"
   ],
   "dependencies": {
+    "@ark-ui/react": "catalog:",
     "@dxos/app-framework": "workspace:*",
     "@dxos/app-graph": "workspace:*",
     "@dxos/app-toolkit": "workspace:*",
@@ -180,8 +181,6 @@
     "@dxos/ui-types": "workspace:*",
     "@dxos/util": "workspace:*",
     "@effect/atom-react": "catalog:",
-    "@radix-ui/react-context": "catalog:",
-    "@radix-ui/react-slot": "catalog:",
     "@tauri-apps/plugin-deep-link": "catalog:",
     "immer": "catalog:"
   },

@@ -9,7 +9,7 @@
 // The two contexts (Input / Item) are split so items don't re-render on
 // every keystroke and the input doesn't re-render on every (un)register.
 
-import { Slot } from '@radix-ui/react-slot';
+import { ark } from '@ark-ui/react/factory';
 import React, {
   type ChangeEvent,
   type ComponentPropsWithRef,
@@ -343,10 +343,9 @@ const PickerItem = slottable<HTMLDivElement, PickerItemProps>(
       event.preventDefault();
     }, []);
 
-    const Comp: ElementType = asChild ? Slot : 'div';
-
     return (
-      <Comp
+      <ark.div
+        asChild={asChild}
         {...composableProps<HTMLDivElement>(props, {
           classNames: styles.pickerItem({ class: mx(disabled && 'opacity-50 cursor-not-allowed') }),
           role: 'option',
@@ -370,7 +369,7 @@ const PickerItem = slottable<HTMLDivElement, PickerItemProps>(
         onClick={handleClick}
       >
         {children}
-      </Comp>
+      </ark.div>
     );
   },
 );

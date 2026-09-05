@@ -2,7 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-import { createContext } from '@radix-ui/react-context';
 import React, {
   type ComponentType,
   type CSSProperties,
@@ -18,6 +17,7 @@ import React, {
 import { useResizeDetector } from 'react-resize-detector';
 
 import { useFocusGroup } from '@dxos/react-focus';
+import { createContext } from '@dxos/react-hooks';
 import { ScrollArea, ScrollAreaRootProps, ThemedClassName, usePx } from '@dxos/react-ui';
 import { composable, composableProps, useMergeRefs } from '@dxos/react-ui';
 import { cardMaxInlineSize, cardMinInlineSize } from '@dxos/ui-theme';

@@ -2,7 +2,6 @@
 // Copyright 2024 DXOS.org
 //
 
-import { useComposedRefs } from '@radix-ui/react-compose-refs';
 import React, {
   type ComponentPropsWithoutRef,
   type PropsWithChildren,
@@ -11,6 +10,8 @@ import React, {
   useCallback,
   useRef,
 } from 'react';
+
+import { useComposedRefs } from '@dxos/react-hooks';
 
 import { Tooltip, type TooltipTriggerProps } from './Tooltip';
 import { type TooltipScopedProps } from './TooltipContext';

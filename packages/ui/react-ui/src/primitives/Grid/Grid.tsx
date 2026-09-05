@@ -2,8 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Primitive } from '@radix-ui/react-primitive';
-import { Slot } from '@radix-ui/react-slot';
+import { ark } from '@ark-ui/react/factory';
 import React from 'react';
 
 import { mx } from '@dxos/ui-theme';
@@ -71,10 +70,10 @@ export const Grid = slottable<HTMLDivElement, GridProps>(
     forwardedRef,
   ) => {
     const { className, ...rest } = composableProps<HTMLDivElement>(props);
-    const Comp = asChild ? Slot : Primitive.div;
 
     return (
-      <Comp
+      <ark.div
+        asChild={asChild}
         ref={forwardedRef}
         {...rest}
         role={role ?? 'none'}
@@ -105,7 +104,7 @@ export const Grid = slottable<HTMLDivElement, GridProps>(
         }
       >
         {children}
-      </Comp>
+      </ark.div>
     );
   },
 );

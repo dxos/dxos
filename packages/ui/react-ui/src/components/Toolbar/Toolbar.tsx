@@ -2,8 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Primitive } from '@radix-ui/react-primitive';
-import { Slot } from '@radix-ui/react-slot';
+import { ark } from '@ark-ui/react/factory';
 import type { ToggleGroupItemProps as ToggleGroupItemPrimitiveProps } from '@radix-ui/react-toggle-group';
 import * as ToolbarPrimitive from '@radix-ui/react-toolbar';
 import React, { type MouseEventHandler, forwardRef } from 'react';
@@ -78,12 +77,11 @@ type ToolbarTextProps = SlottableProps;
 
 const ToolbarText = slottable<HTMLDivElement>(({ children, asChild, ...props }, forwardedRef) => {
   const { className, ...rest } = composableProps(props);
-  const Comp = asChild ? Slot : Primitive.div;
   const { tx } = useThemeContext();
   return (
-    <Comp {...rest} className={tx('toolbar.text', {}, className)} ref={forwardedRef}>
+    <ark.div asChild={asChild} {...rest} className={tx('toolbar.text', {}, className)} ref={forwardedRef}>
       {children}
-    </Comp>
+    </ark.div>
   );
 });
 

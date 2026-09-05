@@ -14,8 +14,6 @@
 //
 // https://www.w3.org/WAI/ARIA/apg/patterns/combobox
 
-import { createContext } from '@radix-ui/react-context';
-import { useControllableState } from '@radix-ui/react-use-controllable-state';
 import React, {
   type ComponentPropsWithoutRef,
   type ComponentPropsWithRef,
@@ -27,6 +25,9 @@ import React, {
 import {
   Button,
   type ButtonProps,
+  composable,
+  composableProps,
+  createContext,
   Icon,
   type IconProps,
   Popover,
@@ -35,8 +36,7 @@ import {
   type PopoverVirtualTriggerProps,
   ScrollArea,
   type ThemedClassName,
-  composable,
-  composableProps,
+  useControllableState,
   useId,
   useThemeContext,
 } from '@dxos/react-ui';

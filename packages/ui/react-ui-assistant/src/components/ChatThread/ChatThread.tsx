@@ -2,7 +2,6 @@
 // Copyright 2026 DXOS.org
 //
 
-import { createContext } from '@radix-ui/react-context';
 import React, {
   type ComponentPropsWithoutRef,
   type PropsWithChildren,
@@ -13,7 +12,7 @@ import React, {
   useState,
 } from 'react';
 
-import { IconButton, useTranslation } from '@dxos/react-ui';
+import { createContext, IconButton, useTranslation } from '@dxos/react-ui';
 import {
   type FeedModel,
   MessageList,

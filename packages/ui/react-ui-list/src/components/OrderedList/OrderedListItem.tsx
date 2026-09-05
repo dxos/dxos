@@ -2,7 +2,6 @@
 // Copyright 2026 DXOS.org
 //
 
-import { createContext } from '@radix-ui/react-context';
 import React, {
   type ComponentProps,
   type CSSProperties,
@@ -15,6 +14,7 @@ import React, {
 
 import { useFocusGroup } from '@dxos/react-focus';
 import {
+  createContext,
   IconBlock,
   IconButton,
   type IconButtonProps,

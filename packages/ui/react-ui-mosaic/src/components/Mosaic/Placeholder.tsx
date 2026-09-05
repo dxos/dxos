@@ -2,13 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
+import { ark } from '@ark-ui/react/factory';
 import {
   DropIndicator as NaturalDropIndicator,
   type DropIndicatorProps as NaturalDropIndicatorProps,
 } from '@atlaskit/pragmatic-drag-and-drop-react-drop-indicator/box';
 import { dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
-import { Primitive } from '@radix-ui/react-primitive';
-import { Slot } from '@radix-ui/react-slot';
 import React, { type PropsWithChildren, useLayoutEffect, useMemo, useRef } from 'react';
 
 import { type Axis, type ThemedClassName } from '@dxos/react-ui';
@@ -51,7 +50,6 @@ const MosaicPlaceholder = <Location extends DndLocation = DndLocation>({
   location,
 }: MosaicPlaceholderProps<Location>) => {
   const rootRef = useRef<HTMLDivElement>(null);
-  const Comp = asChild ? Slot : Primitive.div;
   const {
     id: containerId,
     eventHandler,
@@ -120,7 +118,8 @@ const MosaicPlaceholder = <Location extends DndLocation = DndLocation>({
   }, [rootRef, data, setActiveLocation]);
 
   return (
-    <Comp
+    <ark.div
+      asChild={asChild}
       {...{
         [`data-${MOSAIC_PLACEHOLDER_ORIENTATION_ATTR}`]: orientation,
         [`data-${MOSAIC_PLACEHOLDER_STATE_ATTR}`]: data.location === activeLocation ? 'active' : 'idle',
@@ -130,7 +129,7 @@ const MosaicPlaceholder = <Location extends DndLocation = DndLocation>({
       ref={rootRef}
     >
       {children}
-    </Comp>
+    </ark.div>
   );
 };
 

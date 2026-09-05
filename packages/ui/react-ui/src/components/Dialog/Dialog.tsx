@@ -2,10 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-import { createContext } from '@radix-ui/react-context';
+import { ark } from '@ark-ui/react/factory';
 import * as DialogPrimitive from '@radix-ui/react-dialog';
-import { Primitive } from '@radix-ui/react-primitive';
-import { Slot } from '@radix-ui/react-slot';
 import React, {
   type ComponentPropsWithRef,
   type ForwardRefExoticComponent,
@@ -16,7 +14,7 @@ import React, {
 } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import { useMergeRefs } from '@dxos/react-hooks';
+import { createContext, useMergeRefs } from '@dxos/react-hooks';
 import { osTranslations } from '@dxos/ui-theme';
 import { type SlottableProps } from '@dxos/ui-types';
 
@@ -192,12 +190,11 @@ type DialogHeaderProps = SlottableProps;
 
 const DialogHeader = slottable<HTMLDivElement>(({ children, asChild, ...props }, forwardedRef) => {
   const { className, ...rest } = composableProps(props);
-  const Comp = asChild ? Slot : Primitive.div;
   const { tx } = useThemeContext();
   return (
-    <Comp {...rest} className={tx('dialog.header', {}, className)} ref={forwardedRef}>
+    <ark.div asChild={asChild} {...rest} className={tx('dialog.header', {}, className)} ref={forwardedRef}>
       {children}
-    </Comp>
+    </ark.div>
   );
 });
 
@@ -249,12 +246,11 @@ type DialogBodyProps = SlottableProps;
 
 const DialogBody = slottable<HTMLDivElement>(({ children, asChild, ...props }, forwardedRef) => {
   const { className, ...rest } = composableProps(props);
-  const Comp = asChild ? Slot : Primitive.div;
   const { tx } = useThemeContext();
   return (
-    <Comp {...rest} className={tx('dialog.body', {}, className)} ref={forwardedRef}>
+    <ark.div asChild={asChild} {...rest} className={tx('dialog.body', {}, className)} ref={forwardedRef}>
       {children}
-    </Comp>
+    </ark.div>
   );
 });
 
@@ -306,12 +302,11 @@ type DialogActionBarProps = SlottableProps;
 
 const DialogActionBar = slottable<HTMLDivElement>(({ children, asChild, ...props }, forwardedRef) => {
   const { className: classNames, ...rest } = composableProps(props);
-  const Comp = asChild ? Slot : Primitive.div;
   const { tx } = useThemeContext();
   return (
-    <Comp {...rest} className={tx('dialog.actionbar', {}, classNames)} ref={forwardedRef}>
+    <ark.div asChild={asChild} {...rest} className={tx('dialog.actionbar', {}, classNames)} ref={forwardedRef}>
       {children}
-    </Comp>
+    </ark.div>
   );
 });
 

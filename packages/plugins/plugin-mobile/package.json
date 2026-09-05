@@ -92,8 +92,7 @@
     "@dxos/react-ui-mosaic": "workspace:*",
     "@dxos/react-ui-search": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@effect/atom-react": "catalog:",
-    "@radix-ui/react-context": "catalog:"
+    "@effect/atom-react": "catalog:"
   },
   "devDependencies": {
     "@dxos/plugin-testing": "workspace:*",

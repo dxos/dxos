@@ -2,13 +2,12 @@
 // Copyright 2024 DXOS.org
 //
 
-import { createContext } from '@radix-ui/react-context';
-import { Slot } from '@radix-ui/react-slot';
+import { ark } from '@ark-ui/react/factory';
 import * as TabsPrimitive from '@radix-ui/react-tabs';
-import { useControllableState } from '@radix-ui/react-use-controllable-state';
 import React, { type ComponentPropsWithoutRef, type MouseEvent, useCallback, useLayoutEffect } from 'react';
 
 import { findFirstFocusable } from '@dxos/react-focus';
+import { createContext, useControllableState } from '@dxos/react-hooks';
 import {
   Button,
   type ButtonProps,
@@ -168,11 +167,10 @@ const TabsViewport = slottable<
   Omit<ComponentPropsWithoutRef<'div'>, 'className' | 'style' | 'children' | 'role'>
 >(({ children, asChild, ...props }, forwardedRef) => {
   const { activePart } = useTabsContext('TabsViewport');
-  const Comp = asChild ? Slot : 'div';
   return (
-    <Comp {...composableProps<HTMLDivElement>(props)} data-active={activePart} ref={forwardedRef}>
+    <ark.div asChild={asChild} {...composableProps<HTMLDivElement>(props)} data-active={activePart} ref={forwardedRef}>
       {children}
-    </Comp>
+    </ark.div>
   );
 });
 

@@ -354,9 +354,6 @@ catalogs:
     '@posthog/mcp':
       specifier: ^0.12.0
       version: 0.12.0
-    '@radix-ui/primitive':
-      specifier: 1.1.1
-      version: 1.1.1
     '@radix-ui/react-alert-dialog':
       specifier: 1.1.6
       version: 1.1.6
@@ -366,9 +363,6 @@ catalogs:
     '@radix-ui/react-collapsible':
       specifier: 1.1.3
       version: 1.1.3
-    '@radix-ui/react-compose-refs':
-      specifier: 1.1.1
-      version: 1.1.1
     '@radix-ui/react-context':
       specifier: 1.1.1
       version: 1.1.1
@@ -390,9 +384,6 @@ catalogs:
     '@radix-ui/react-focus-scope':
       specifier: 1.1.2
       version: 1.1.2
-    '@radix-ui/react-id':
-      specifier: 1.1.0
-      version: 1.1.0
     '@radix-ui/react-menu':
       specifier: 2.1.6
       version: 2.1.6
@@ -444,9 +435,6 @@ catalogs:
     '@radix-ui/react-tooltip':
       specifier: 1.1.8
       version: 1.1.8
-    '@radix-ui/react-use-controllable-state':
-      specifier: 1.1.0
-      version: 1.1.0
     '@radix-ui/react-visually-hidden':
       specifier: 1.1.2
       version: 1.1.2
@@ -2766,9 +2754,6 @@ importers:
       '@radix-ui/react-scroll-area':
         specifier: 'catalog:'
         version: 1.2.10(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
-      '@radix-ui/react-slot':
-        specifier: 'catalog:'
-        version: 1.1.2(@types/react@19.2.17)(react@19.2.7)
       '@radix-ui/react-tooltip':
         specifier: 'catalog:'
         version: 1.1.8(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
@@ -7680,6 +7665,9 @@ importers:
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../sdk/react-client
+      '@dxos/react-hooks':
+        specifier: workspace:*
+        version: link:../../ui/react-primitives/react-hooks
       '@dxos/react-list':
         specifier: workspace:*
         version: link:../../ui/react-primitives/react-list
@@ -7749,9 +7737,6 @@ importers:
       '@effect/atom-react':
         specifier: 'catalog:'
         version: 4.0.0-rc.108(effect@4.0.0-rc.108)(react@19.2.7)(scheduler@0.27.0)
-      '@radix-ui/react-context':
-        specifier: 'catalog:'
-        version: 1.1.1(@types/react@19.2.17)(react@19.2.7)
       effect:
         specifier: 4.0.0-rc.108
         version: 4.0.0-rc.108
@@ -8322,9 +8307,6 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
-      '@radix-ui/react-compose-refs':
-        specifier: 'catalog:'
-        version: 1.1.1(@types/react@19.2.17)(react@19.2.7)
       effect:
         specifier: 4.0.0-rc.108
         version: 4.0.0-rc.108
@@ -9810,6 +9792,9 @@ importers:
 
   packages/plugins/plugin-deck:
     dependencies:
+      '@ark-ui/react':
+        specifier: 'catalog:'
+        version: 5.39.1(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../sdk/app-framework
@@ -9882,12 +9867,6 @@ importers:
       '@effect/atom-react':
         specifier: 'catalog:'
         version: 4.0.0-rc.108(effect@4.0.0-rc.108)(react@19.2.7)(scheduler@0.27.0)
-      '@radix-ui/react-context':
-        specifier: 'catalog:'
-        version: 1.1.1(@types/react@19.2.17)(react@19.2.7)
-      '@radix-ui/react-slot':
-        specifier: 'catalog:'
-        version: 1.1.2(@types/react@19.2.17)(react@19.2.7)
       '@tauri-apps/plugin-deep-link':
         specifier: 'catalog:'
         version: 2.4.9
@@ -10390,6 +10369,9 @@ importers:
 
   packages/plugins/plugin-explorer:
     dependencies:
+      '@ark-ui/react':
+        specifier: 'catalog:'
+        version: 5.39.1(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../sdk/app-framework
@@ -10423,6 +10405,9 @@ importers:
       '@dxos/plugin-space':
         specifier: workspace:*
         version: link:../plugin-space
+      '@dxos/react-hooks':
+        specifier: workspace:*
+        version: link:../../ui/react-primitives/react-hooks
       '@dxos/react-ui-components':
         specifier: workspace:*
         version: link:../../ui/react-ui-components
@@ -10447,12 +10432,6 @@ importers:
       '@observablehq/plot':
         specifier: 'catalog:'
         version: 0.6.11
-      '@radix-ui/react-context':
-        specifier: 'catalog:'
-        version: 1.1.1(@types/react@19.2.17)(react@19.2.7)
-      '@radix-ui/react-slot':
-        specifier: 'catalog:'
-        version: 1.1.2(@types/react@19.2.17)(react@19.2.7)
       d3:
         specifier: 'catalog:'
         version: 7.9.0
@@ -10577,9 +10556,6 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
-      '@radix-ui/react-compose-refs':
-        specifier: 'catalog:'
-        version: 1.1.1(@types/react@19.2.17)(react@19.2.7)
       effect:
         specifier: 4.0.0-rc.108
         version: 4.0.0-rc.108
@@ -11553,9 +11529,6 @@ importers:
       '@effect/atom-react':
         specifier: 'catalog:'
         version: 4.0.0-rc.108(effect@4.0.0-rc.108)(react@19.2.7)(scheduler@0.27.0)
-      '@radix-ui/react-context':
-        specifier: 'catalog:'
-        version: 1.1.1(@types/react@19.2.17)(react@19.2.7)
       date-fns:
         specifier: 'catalog:'
         version: 3.6.0
@@ -11808,9 +11781,6 @@ importers:
       '@effect/atom-react':
         specifier: 'catalog:'
         version: 4.0.0-rc.108(effect@4.0.0-rc.108)(react@19.2.7)(scheduler@0.27.0)
-      '@radix-ui/react-context':
-        specifier: 'catalog:'
-        version: 1.1.1(@types/react@19.2.17)(react@19.2.7)
       effect:
         specifier: 4.0.0-rc.108
         version: 4.0.0-rc.108
@@ -12518,6 +12488,9 @@ importers:
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../sdk/react-client
+      '@dxos/react-hooks':
+        specifier: workspace:*
+        version: link:../../ui/react-primitives/react-hooks
       '@dxos/react-ui-attention':
         specifier: workspace:*
         version: link:../../ui/react-ui-attention
@@ -12557,9 +12530,6 @@ importers:
       '@effect/atom-react':
         specifier: 'catalog:'
         version: 4.0.0-rc.108(effect@4.0.0-rc.108)(react@19.2.7)(scheduler@0.27.0)
-      '@radix-ui/react-context':
-        specifier: 'catalog:'
-        version: 1.1.1(@types/react@19.2.17)(react@19.2.7)
       react-dropzone:
         specifier: 'catalog:'
         version: 14.2.3(react@19.2.7)
@@ -12842,9 +12812,6 @@ importers:
       '@effect/atom-react':
         specifier: 'catalog:'
         version: 4.0.0-rc.108(effect@4.0.0-rc.108)(react@19.2.7)(scheduler@0.27.0)
-      '@radix-ui/react-context':
-        specifier: 'catalog:'
-        version: 1.1.1(@types/react@19.2.17)(react@19.2.7)
     devDependencies:
       '@dxos/plugin-testing':
         specifier: workspace:*
@@ -13379,6 +13346,9 @@ importers:
 
   packages/plugins/plugin-pipeline:
     dependencies:
+      '@ark-ui/react':
+        specifier: 'catalog:'
+        version: 5.39.1(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../sdk/app-framework
@@ -13403,6 +13373,9 @@ importers:
       '@dxos/plugin-space':
         specifier: workspace:*
         version: link:../plugin-space
+      '@dxos/react-hooks':
+        specifier: workspace:*
+        version: link:../../ui/react-primitives/react-hooks
       '@dxos/react-ui-attention':
         specifier: workspace:*
         version: link:../../ui/react-ui-attention
@@ -13427,15 +13400,6 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
-      '@radix-ui/react-compose-refs':
-        specifier: 'catalog:'
-        version: 1.1.1(@types/react@19.2.17)(react@19.2.7)
-      '@radix-ui/react-context':
-        specifier: 'catalog:'
-        version: 1.1.1(@types/react@19.2.17)(react@19.2.7)
-      '@radix-ui/react-slot':
-        specifier: 'catalog:'
-        version: 1.1.2(@types/react@19.2.17)(react@19.2.7)
       effect:
         specifier: 4.0.0-rc.108
         version: 4.0.0-rc.108
@@ -14342,6 +14306,9 @@ importers:
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../sdk/react-client
+      '@dxos/react-hooks':
+        specifier: workspace:*
+        version: link:../../ui/react-primitives/react-hooks
       '@dxos/react-ui-attention':
         specifier: workspace:*
         version: link:../../ui/react-ui-attention
@@ -14378,9 +14345,6 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
-      '@radix-ui/react-compose-refs':
-        specifier: 'catalog:'
-        version: 1.1.1(@types/react@19.2.17)(react@19.2.7)
       cronstrue:
         specifier: 'catalog:'
         version: 2.59.0
@@ -14729,6 +14693,9 @@ importers:
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../sdk/react-client
+      '@dxos/react-hooks':
+        specifier: workspace:*
+        version: link:../../ui/react-primitives/react-hooks
       '@dxos/react-ui-attention':
         specifier: workspace:*
         version: link:../../ui/react-ui-attention
@@ -14780,9 +14747,6 @@ importers:
       '@octokit/core':
         specifier: 'catalog:'
         version: 7.0.6
-      '@radix-ui/react-compose-refs':
-        specifier: 'catalog:'
-        version: 1.1.1(@types/react@19.2.17)(react@19.2.7)
       '@typescript/typescript6':
         specifier: 'catalog:'
         version: 6.0.2
@@ -15604,6 +15568,9 @@ importers:
       '@dxos/plugin-space':
         specifier: workspace:*
         version: link:../plugin-space
+      '@dxos/react-hooks':
+        specifier: workspace:*
+        version: link:../../ui/react-primitives/react-hooks
       '@dxos/react-ui-menu':
         specifier: workspace:*
         version: link:../../ui/react-ui-menu
@@ -15616,9 +15583,6 @@ importers:
       '@effect/atom-react':
         specifier: 'catalog:'
         version: 4.0.0-rc.108(effect@4.0.0-rc.108)(react@19.2.7)(scheduler@0.27.0)
-      '@radix-ui/react-context':
-        specifier: 'catalog:'
-        version: 1.1.1(@types/react@19.2.17)(react@19.2.7)
       babylonjs-gltf2interface:
         specifier: 'catalog:'
         version: 7.54.3
@@ -15805,6 +15769,9 @@ importers:
 
   packages/plugins/plugin-status-bar:
     dependencies:
+      '@ark-ui/react':
+        specifier: 'catalog:'
+        version: 5.39.1(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../sdk/app-framework
@@ -15820,9 +15787,6 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
-      '@radix-ui/react-slot':
-        specifier: 'catalog:'
-        version: 1.1.2(@types/react@19.2.17)(react@19.2.7)
       date-fns:
         specifier: 'catalog:'
         version: 3.6.0
@@ -16150,9 +16114,6 @@ importers:
       '@effect/atom-react':
         specifier: 'catalog:'
         version: 4.0.0-rc.108(effect@4.0.0-rc.108)(react@19.2.7)(scheduler@0.27.0)
-      '@radix-ui/react-context':
-        specifier: 'catalog:'
-        version: 1.1.1(@types/react@19.2.17)(react@19.2.7)
       date-fns:
         specifier: 'catalog:'
         version: 3.6.0
@@ -16353,6 +16314,9 @@ importers:
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../sdk/react-client
+      '@dxos/react-hooks':
+        specifier: workspace:*
+        version: link:../../ui/react-primitives/react-hooks
       '@dxos/react-ui-attention':
         specifier: workspace:*
         version: link:../../ui/react-ui-attention
@@ -16383,12 +16347,6 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
-      '@radix-ui/react-compose-refs':
-        specifier: 'catalog:'
-        version: 1.1.1(@types/react@19.2.17)(react@19.2.7)
-      '@radix-ui/react-context':
-        specifier: 'catalog:'
-        version: 1.1.1(@types/react@19.2.17)(react@19.2.7)
       date-fns:
         specifier: 'catalog:'
         version: 3.6.0
@@ -17415,9 +17373,6 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
-      '@radix-ui/react-compose-refs':
-        specifier: 'catalog:'
-        version: 1.1.1(@types/react@19.2.17)(react@19.2.7)
       effect:
         specifier: 4.0.0-rc.108
         version: 4.0.0-rc.108
@@ -19029,6 +18984,9 @@ importers:
       '@dxos/react-focus':
         specifier: workspace:*
         version: link:../../ui/react-primitives/react-focus
+      '@dxos/react-hooks':
+        specifier: workspace:*
+        version: link:../../ui/react-primitives/react-hooks
       '@dxos/react-ui-list':
         specifier: workspace:*
         version: link:../../ui/react-ui-list
@@ -19044,12 +19002,6 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
-      '@radix-ui/react-context':
-        specifier: 'catalog:'
-        version: 1.1.1(@types/react@19.2.17)(react@19.2.7)
-      '@radix-ui/react-use-controllable-state':
-        specifier: 'catalog:'
-        version: 1.1.0(@types/react@19.2.17)(react@19.2.7)
       '@xstate/react':
         specifier: 'catalog:'
         version: 3.2.1(@types/react@19.2.17)(react@19.2.7)(xstate@4.37.1)
@@ -20189,9 +20141,6 @@ importers:
       '@effect/atom-react':
         specifier: 'catalog:'
         version: 4.0.0-rc.108(effect@4.0.0-rc.108)(react@19.2.7)(scheduler@0.27.0)
-      '@radix-ui/react-compose-refs':
-        specifier: 'catalog:'
-        version: 1.1.1(@types/react@19.2.17)(react@19.2.7)
       alea:
         specifier: 'catalog:'
         version: 1.0.1
@@ -20223,18 +20172,12 @@ importers:
 
   packages/ui/react-primitives/react-input:
     dependencies:
+      '@ark-ui/react':
+        specifier: 'catalog:'
+        version: 5.39.1(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
       '@dxos/react-hooks':
         specifier: workspace:*
         version: link:../react-hooks
-      '@radix-ui/react-context':
-        specifier: 'catalog:'
-        version: 1.1.1(@types/react@19.2.17)(react@19.2.7)
-      '@radix-ui/react-primitive':
-        specifier: 'catalog:'
-        version: 2.0.2(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
-      '@radix-ui/react-slot':
-        specifier: 'catalog:'
-        version: 1.1.2(@types/react@19.2.17)(react@19.2.7)
     devDependencies:
       '@types/react':
         specifier: ~19.2.17
@@ -20251,6 +20194,9 @@ importers:
 
   packages/ui/react-primitives/react-list:
     dependencies:
+      '@ark-ui/react':
+        specifier: 'catalog:'
+        version: 5.39.1(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
       '@dxos/react-hooks':
         specifier: workspace:*
         version: link:../react-hooks
@@ -20260,18 +20206,6 @@ importers:
       '@radix-ui/react-collapsible':
         specifier: 'catalog:'
         version: 1.1.3(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
-      '@radix-ui/react-context':
-        specifier: 'catalog:'
-        version: 1.1.1(@types/react@19.2.17)(react@19.2.7)
-      '@radix-ui/react-primitive':
-        specifier: 'catalog:'
-        version: 2.0.2(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
-      '@radix-ui/react-slot':
-        specifier: 'catalog:'
-        version: 1.1.2(@types/react@19.2.17)(react@19.2.7)
-      '@radix-ui/react-use-controllable-state':
-        specifier: 'catalog:'
-        version: 1.1.0(@types/react@19.2.17)(react@19.2.7)
     devDependencies:
       '@storybook/react-vite':
         specifier: 'catalog:'
@@ -20330,18 +20264,12 @@ importers:
       '@internationalized/date':
         specifier: 'catalog:'
         version: 3.12.3
-      '@radix-ui/primitive':
-        specifier: 'catalog:'
-        version: 1.1.1
       '@radix-ui/react-alert-dialog':
         specifier: 'catalog:'
         version: 1.1.6(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
       '@radix-ui/react-checkbox':
         specifier: 'catalog:'
         version: 1.1.4(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
-      '@radix-ui/react-compose-refs':
-        specifier: 'catalog:'
-        version: 1.1.1(@types/react@19.2.17)(react@19.2.7)
       '@radix-ui/react-context':
         specifier: 'catalog:'
         version: 1.1.1(@types/react@19.2.17)(react@19.2.7)
@@ -20360,9 +20288,6 @@ importers:
       '@radix-ui/react-focus-scope':
         specifier: 'catalog:'
         version: 1.1.2(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
-      '@radix-ui/react-id':
-        specifier: 'catalog:'
-        version: 1.1.0(@types/react@19.2.17)(react@19.2.7)
       '@radix-ui/react-menu':
         specifier: 'catalog:'
         version: 2.1.6(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
@@ -20405,9 +20330,6 @@ importers:
       '@radix-ui/react-tooltip':
         specifier: 'catalog:'
         version: 1.1.8(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
-      '@radix-ui/react-use-controllable-state':
-        specifier: 'catalog:'
-        version: 1.1.0(@types/react@19.2.17)(react@19.2.7)
       '@radix-ui/react-visually-hidden':
         specifier: 'catalog:'
         version: 1.1.2(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
@@ -20514,9 +20436,6 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
-      '@radix-ui/react-context':
-        specifier: 'catalog:'
-        version: 1.1.1(@types/react@19.2.17)(react@19.2.7)
       effect:
         specifier: 4.0.0-rc.108
         version: 4.0.0-rc.108
@@ -20551,6 +20470,9 @@ importers:
 
   packages/ui/react-ui-attention:
     dependencies:
+      '@ark-ui/react':
+        specifier: 'catalog:'
+        version: 5.39.1(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
@@ -20569,15 +20491,6 @@ importers:
       '@effect/atom-react':
         specifier: 'catalog:'
         version: 4.0.0-rc.108(effect@4.0.0-rc.108)(react@19.2.7)(scheduler@0.27.0)
-      '@radix-ui/react-context':
-        specifier: 'catalog:'
-        version: 1.1.1(@types/react@19.2.17)(react@19.2.7)
-      '@radix-ui/react-primitive':
-        specifier: 'catalog:'
-        version: 2.0.2(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
-      '@radix-ui/react-slot':
-        specifier: 'catalog:'
-        version: 1.1.2(@types/react@19.2.17)(react@19.2.7)
       effect:
         specifier: 4.0.0-rc.108
         version: 4.0.0-rc.108
@@ -20670,12 +20583,6 @@ importers:
       '@dxos/react-ui-dnd':
         specifier: workspace:*
         version: link:../react-ui-dnd
-      '@radix-ui/react-compose-refs':
-        specifier: 'catalog:'
-        version: 1.1.1(@types/react@19.2.17)(react@19.2.7)
-      '@radix-ui/react-context':
-        specifier: 'catalog:'
-        version: 1.1.1(@types/react@19.2.17)(react@19.2.7)
       '@xyflow/react':
         specifier: 'catalog:'
         version: 12.8.1(@types/react@19.2.17)(immer@10.1.1)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
@@ -20710,9 +20617,9 @@ importers:
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
-      '@radix-ui/react-context':
-        specifier: 'catalog:'
-        version: 1.1.1(@types/react@19.2.17)(react@19.2.7)
+      '@dxos/react-hooks':
+        specifier: workspace:*
+        version: link:../react-primitives/react-hooks
       date-fns:
         specifier: 'catalog:'
         version: 3.6.0
@@ -21138,9 +21045,6 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
-      '@radix-ui/react-context':
-        specifier: 'catalog:'
-        version: 1.1.1(@types/react@19.2.17)(react@19.2.7)
     devDependencies:
       '@dxos/log':
         specifier: workspace:*
@@ -21202,6 +21106,9 @@ importers:
       '@dxos/progress':
         specifier: workspace:*
         version: link:../../core/compute/progress
+      '@dxos/react-hooks':
+        specifier: workspace:*
+        version: link:../react-primitives/react-hooks
       '@dxos/react-ui-editor':
         specifier: workspace:*
         version: link:../react-ui-editor
@@ -21220,9 +21127,6 @@ importers:
       '@lezer/highlight':
         specifier: ^1.2.3
         version: 1.2.3
-      '@radix-ui/react-context':
-        specifier: 'catalog:'
-        version: 1.1.1(@types/react@19.2.17)(react@19.2.7)
       date-fns:
         specifier: 'catalog:'
         version: 3.6.0
@@ -21290,21 +21194,15 @@ importers:
 
   packages/ui/react-ui-dashboard:
     dependencies:
+      '@ark-ui/react':
+        specifier: 'catalog:'
+        version: 5.39.1(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
+      '@dxos/react-hooks':
+        specifier: workspace:*
+        version: link:../react-primitives/react-hooks
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
-      '@radix-ui/react-context':
-        specifier: 'catalog:'
-        version: 1.1.1(@types/react@19.2.17)(react@19.2.7)
-      '@radix-ui/react-primitive':
-        specifier: 'catalog:'
-        version: 2.0.2(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
-      '@radix-ui/react-slot':
-        specifier: 'catalog:'
-        version: 1.1.2(@types/react@19.2.17)(react@19.2.7)
-      '@radix-ui/react-use-controllable-state':
-        specifier: 'catalog:'
-        version: 1.1.0(@types/react@19.2.17)(react@19.2.7)
     devDependencies:
       '@dxos/react-ui':
         specifier: workspace:*
@@ -21354,9 +21252,6 @@ importers:
       '@dxos/ui-types':
         specifier: workspace:*
         version: link:../ui-types
-      '@radix-ui/react-context':
-        specifier: 'catalog:'
-        version: 1.1.1(@types/react@19.2.17)(react@19.2.7)
     devDependencies:
       '@dxos/random':
         specifier: workspace:*
@@ -21391,9 +21286,6 @@ importers:
       '@dxos/ui-types':
         specifier: workspace:*
         version: link:../ui-types
-      '@radix-ui/react-context':
-        specifier: 'catalog:'
-        version: 1.1.1(@types/react@19.2.17)(react@19.2.7)
       '@xyflow/react':
         specifier: 'catalog:'
         version: 12.8.1(@types/react@19.2.17)(immer@10.1.1)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
@@ -21407,9 +21299,6 @@ importers:
       '@dxos/ui-editor':
         specifier: workspace:*
         version: link:../ui-editor
-      '@radix-ui/react-compose-refs':
-        specifier: 'catalog:'
-        version: 1.1.1(@types/react@19.2.17)(react@19.2.7)
       '@storybook/react-vite':
         specifier: 'catalog:'
         version: 10.5.8(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(esbuild@0.28.1)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(rollup@3.30.0)(storybook@10.5.8(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.1)(@types/react@19.2.17)(prettier@3.6.2)(react@19.2.7))(vite@8.2.1(@types/node@22.10.2)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.0))
@@ -21437,12 +21326,9 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
-      '@radix-ui/react-context':
-        specifier: 'catalog:'
-        version: 1.1.1(@types/react@19.2.17)(react@19.2.7)
-      '@radix-ui/react-use-controllable-state':
-        specifier: 'catalog:'
-        version: 1.1.0(@types/react@19.2.17)(react@19.2.7)
+      '@dxos/react-hooks':
+        specifier: workspace:*
+        version: link:../react-primitives/react-hooks
     devDependencies:
       '@dxos/react-ui':
         specifier: workspace:*
@@ -21492,6 +21378,9 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
+      '@dxos/react-hooks':
+        specifier: workspace:*
+        version: link:../react-primitives/react-hooks
       '@dxos/react-ui-menu':
         specifier: workspace:*
         version: link:../react-ui-menu
@@ -21504,12 +21393,6 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
-      '@radix-ui/react-context':
-        specifier: 'catalog:'
-        version: 1.1.1(@types/react@19.2.17)(react@19.2.7)
-      '@radix-ui/react-use-controllable-state':
-        specifier: 'catalog:'
-        version: 1.1.0(@types/react@19.2.17)(react@19.2.7)
     devDependencies:
       '@codemirror/autocomplete':
         specifier: 'catalog:'
@@ -21728,9 +21611,6 @@ importers:
       '@dxos/ui-theme':
         specifier: workspace:*
         version: link:../ui-theme
-      '@radix-ui/react-context':
-        specifier: 'catalog:'
-        version: 1.1.1(@types/react@19.2.17)(react@19.2.7)
       dompurify:
         specifier: '>=3.2.4'
         version: 3.3.1
@@ -21798,6 +21678,9 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
+      '@dxos/react-hooks':
+        specifier: workspace:*
+        version: link:../react-primitives/react-hooks
       '@dxos/react-ui-components':
         specifier: workspace:*
         version: link:../react-ui-components
@@ -21834,9 +21717,6 @@ importers:
       '@effect/atom-react':
         specifier: 'catalog:'
         version: 4.0.0-rc.108(effect@4.0.0-rc.108)(react@19.2.7)(scheduler@0.27.0)
-      '@radix-ui/react-context':
-        specifier: 'catalog:'
-        version: 1.1.1(@types/react@19.2.17)(react@19.2.7)
       date-fns:
         specifier: 'catalog:'
         version: 3.6.0
@@ -21898,15 +21778,15 @@ importers:
       '@dxos/node-std':
         specifier: workspace:*
         version: link:../../common/node-std
+      '@dxos/react-hooks':
+        specifier: workspace:*
+        version: link:../react-primitives/react-hooks
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
       '@effect/atom-react':
         specifier: 'catalog:'
         version: 4.0.0-rc.108(effect@4.0.0-rc.108)(react@19.2.7)(scheduler@0.27.0)
-      '@radix-ui/react-context':
-        specifier: 'catalog:'
-        version: 1.1.1(@types/react@19.2.17)(react@19.2.7)
       chess.js:
         specifier: 'catalog:'
         version: 1.4.0
@@ -21956,9 +21836,9 @@ importers:
       '@dxos/node-std':
         specifier: workspace:*
         version: link:../../common/node-std
-      '@radix-ui/react-context':
-        specifier: 'catalog:'
-        version: 1.1.1(@types/react@19.2.17)(react@19.2.7)
+      '@dxos/react-hooks':
+        specifier: workspace:*
+        version: link:../react-primitives/react-hooks
       '@types/topojson-specification':
         specifier: 'catalog:'
         version: 1.0.5
@@ -22130,6 +22010,9 @@ importers:
       '@dxos/lit-grid':
         specifier: workspace:*
         version: link:../lit-grid
+      '@dxos/react-hooks':
+        specifier: workspace:*
+        version: link:../react-primitives/react-hooks
       '@dxos/react-ui-editor':
         specifier: workspace:*
         version: link:../react-ui-editor
@@ -22139,12 +22022,6 @@ importers:
       '@lit/react':
         specifier: 'catalog:'
         version: 1.0.8(@types/react@19.2.17)
-      '@radix-ui/react-context':
-        specifier: 'catalog:'
-        version: 1.1.1(@types/react@19.2.17)(react@19.2.7)
-      '@radix-ui/react-use-controllable-state':
-        specifier: 'catalog:'
-        version: 1.1.0(@types/react@19.2.17)(react@19.2.7)
     devDependencies:
       '@dxos/random':
         specifier: workspace:*
@@ -22264,15 +22141,6 @@ importers:
       '@effect/atom-react':
         specifier: 'catalog:'
         version: 4.0.0-rc.108(effect@4.0.0-rc.108)(react@19.2.7)(scheduler@0.27.0)
-      '@radix-ui/react-context':
-        specifier: 'catalog:'
-        version: 1.1.1(@types/react@19.2.17)(react@19.2.7)
-      '@radix-ui/react-slot':
-        specifier: 'catalog:'
-        version: 1.1.2(@types/react@19.2.17)(react@19.2.7)
-      '@radix-ui/react-use-controllable-state':
-        specifier: 'catalog:'
-        version: 1.1.0(@types/react@19.2.17)(react@19.2.7)
     devDependencies:
       '@dxos/echo':
         specifier: workspace:*
@@ -22404,9 +22272,9 @@ importers:
       '@dxos/react-focus':
         specifier: workspace:*
         version: link:../react-primitives/react-focus
-      '@radix-ui/react-context':
-        specifier: 'catalog:'
-        version: 1.1.1(@types/react@19.2.17)(react@19.2.7)
+      '@dxos/react-hooks':
+        specifier: workspace:*
+        version: link:../react-primitives/react-hooks
       react-resize-detector:
         specifier: 'catalog:'
         version: 11.0.1(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
@@ -22490,6 +22358,9 @@ importers:
       '@dxos/react-focus':
         specifier: workspace:*
         version: link:../react-primitives/react-focus
+      '@dxos/react-hooks':
+        specifier: workspace:*
+        version: link:../react-primitives/react-hooks
       '@dxos/react-ui-attention':
         specifier: workspace:*
         version: link:../react-ui-attention
@@ -22499,12 +22370,6 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
-      '@radix-ui/react-context':
-        specifier: 'catalog:'
-        version: 1.1.1(@types/react@19.2.17)(react@19.2.7)
-      '@radix-ui/react-use-controllable-state':
-        specifier: 'catalog:'
-        version: 1.1.0(@types/react@19.2.17)(react@19.2.7)
     devDependencies:
       '@dxos/random':
         specifier: workspace:*
@@ -22548,6 +22413,9 @@ importers:
 
   packages/ui/react-ui-mosaic:
     dependencies:
+      '@ark-ui/react':
+        specifier: 'catalog:'
+        version: 5.39.1(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
       '@atlaskit/pragmatic-drag-and-drop':
         specifier: 'catalog:'
         version: 1.7.7
@@ -22581,6 +22449,9 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
+      '@dxos/react-hooks':
+        specifier: workspace:*
+        version: link:../react-primitives/react-hooks
       '@dxos/react-ui-dnd':
         specifier: workspace:*
         version: link:../react-ui-dnd
@@ -22602,18 +22473,6 @@ importers:
       '@playwright/test':
         specifier: 'catalog:'
         version: 1.57.0
-      '@radix-ui/react-compose-refs':
-        specifier: 'catalog:'
-        version: 1.1.1(@types/react@19.2.17)(react@19.2.7)
-      '@radix-ui/react-context':
-        specifier: 'catalog:'
-        version: 1.1.1(@types/react@19.2.17)(react@19.2.7)
-      '@radix-ui/react-primitive':
-        specifier: 'catalog:'
-        version: 2.0.2(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
-      '@radix-ui/react-slot':
-        specifier: 'catalog:'
-        version: 1.1.2(@types/react@19.2.17)(react@19.2.7)
       '@tanstack/react-virtual':
         specifier: 'catalog:'
         version: 3.14.9(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
@@ -22642,9 +22501,6 @@ importers:
       '@effect/atom-react':
         specifier: 'catalog:'
         version: 4.0.0-rc.108(effect@4.0.0-rc.108)(react@19.2.7)(scheduler@0.27.0)
-      '@radix-ui/react-use-controllable-state':
-        specifier: 'catalog:'
-        version: 1.1.0(@types/react@19.2.17)(react@19.2.7)
       '@storybook/react-vite':
         specifier: 'catalog:'
         version: 10.5.8(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(esbuild@0.28.1)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(rollup@3.30.0)(storybook@10.5.8(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.1)(@types/react@19.2.17)(prettier@3.6.2)(react@19.2.7))(vite@8.2.1(@types/node@22.10.2)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.0))
@@ -22672,6 +22528,9 @@ importers:
 
   packages/ui/react-ui-pickers:
     dependencies:
+      '@dxos/react-hooks':
+        specifier: workspace:*
+        version: link:../react-primitives/react-hooks
       '@dxos/ui-types':
         specifier: workspace:*
         version: link:../ui-types
@@ -22681,9 +22540,6 @@ importers:
       '@emoji-mart/react':
         specifier: 'catalog:'
         version: 1.1.1(emoji-mart@5.5.2)(react@19.2.7)
-      '@radix-ui/react-use-controllable-state':
-        specifier: 'catalog:'
-        version: 1.1.0(@types/react@19.2.17)(react@19.2.7)
       emoji-mart:
         specifier: 'catalog:'
         version: 5.5.2
@@ -22770,12 +22626,6 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
-      '@radix-ui/react-context':
-        specifier: 'catalog:'
-        version: 1.1.1(@types/react@19.2.17)(react@19.2.7)
-      '@radix-ui/react-use-controllable-state':
-        specifier: 'catalog:'
-        version: 1.1.0(@types/react@19.2.17)(react@19.2.7)
       command-score:
         specifier: 'catalog:'
         version: 0.1.2
@@ -22807,6 +22657,9 @@ importers:
 
   packages/ui/react-ui-syntax-highlighter:
     dependencies:
+      '@dxos/react-hooks':
+        specifier: workspace:*
+        version: link:../react-primitives/react-hooks
       '@dxos/ui-theme':
         specifier: workspace:*
         version: link:../ui-theme
@@ -22816,9 +22669,6 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
-      '@radix-ui/react-context':
-        specifier: 'catalog:'
-        version: 1.1.1(@types/react@19.2.17)(react@19.2.7)
       jsonpath-plus:
         specifier: 'catalog:'
         version: 10.4.0
@@ -22886,6 +22736,9 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
+      '@dxos/react-hooks':
+        specifier: workspace:*
+        version: link:../react-primitives/react-hooks
       '@dxos/react-ui-attention':
         specifier: workspace:*
         version: link:../react-ui-attention
@@ -22907,9 +22760,6 @@ importers:
       '@effect/atom-react':
         specifier: 'catalog:'
         version: 4.0.0-rc.108(effect@4.0.0-rc.108)(react@19.2.7)(scheduler@0.27.0)
-      '@radix-ui/react-context':
-        specifier: 'catalog:'
-        version: 1.1.1(@types/react@19.2.17)(react@19.2.7)
     devDependencies:
       '@dxos/echo-react':
         specifier: workspace:*
@@ -22968,24 +22818,21 @@ importers:
 
   packages/ui/react-ui-tabs:
     dependencies:
+      '@ark-ui/react':
+        specifier: 'catalog:'
+        version: 5.39.1(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
       '@dxos/react-focus':
         specifier: workspace:*
         version: link:../react-primitives/react-focus
+      '@dxos/react-hooks':
+        specifier: workspace:*
+        version: link:../react-primitives/react-hooks
       '@dxos/react-ui-attention':
         specifier: workspace:*
         version: link:../react-ui-attention
-      '@radix-ui/react-context':
-        specifier: 'catalog:'
-        version: 1.1.1(@types/react@19.2.17)(react@19.2.7)
-      '@radix-ui/react-slot':
-        specifier: 'catalog:'
-        version: 1.1.2(@types/react@19.2.17)(react@19.2.7)
       '@radix-ui/react-tabs':
         specifier: 'catalog:'
         version: 1.1.3(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
-      '@radix-ui/react-use-controllable-state':
-        specifier: 'catalog:'
-        version: 1.1.0(@types/react@19.2.17)(react@19.2.7)
     devDependencies:
       '@dxos/random':
         specifier: workspace:*
@@ -23050,9 +22897,6 @@ importers:
       '@effect/atom-react':
         specifier: 'catalog:'
         version: 4.0.0-rc.108(effect@4.0.0-rc.108)(react@19.2.7)(scheduler@0.27.0)
-      '@radix-ui/react-context':
-        specifier: 'catalog:'
-        version: 1.1.1(@types/react@19.2.17)(react@19.2.7)
     devDependencies:
       '@dxos/echo':
         specifier: workspace:*
@@ -23145,6 +22989,9 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
+      '@dxos/react-hooks':
+        specifier: workspace:*
+        version: link:../react-primitives/react-hooks
       '@dxos/react-ui-dnd':
         specifier: workspace:*
         version: link:../react-ui-dnd
@@ -23163,9 +23010,6 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
-      '@radix-ui/react-context':
-        specifier: 'catalog:'
-        version: 1.1.1(@types/react@19.2.17)(react@19.2.7)
       date-fns:
         specifier: 'catalog:'
         version: 3.6.0

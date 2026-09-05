@@ -601,19 +601,56 @@ Findings that shaped the plan, so they are not re-derived:
   Radix had a 296-day release gap ending 2026-06-06, Ark's worst is 56 days; Radix has ~68× the
   downloads.
 
-- [ ] **Phase 0 — port Carousel, Editable, Splitter, Stepper to Ark.** In flight as background task
-      `task_2d437290` on its own worktree from `main` (started 2026-09-02). ~2,264 LOC; consumers
-      4 / 13 / 8 / 3; adds `@ark-ui/react` to `react-ui` (catalog). Lands as
-      `react-ui: rebuild Carousel, Editable, Splitter and Stepper on Ark UI`.
-- [ ] **Phase 1 — own the scaffolding.** `composeRefs`, `useControllableState`, unscoped
-      `createContext` in `react-primitives`; `Primitive.*` (270 sites) → `ark.*`. Sweep the 28
-      sibling packages and 28 plugin/app/sdk files; re-point the plugins that import
-      `@radix-ui/react-tooltip`/`-toolbar`/`-toggle-group`/`-toggle`/`-toast` directly at
-      `@dxos/react-ui` (layering violations regardless). Update the `composite-components` skill for
-      the no-scope context. Worth doing even if nothing after it happens.
-- [ ] **Phase 2 — leaves.** Slider, Progress, Clipboard, Avatars, ScrollArea, Button toggles,
-      `Input.Checkbox`, `react-list` Collapsible, `react-ui-tabs`, hand-rolled Separator. Namespace
-      API holds for all of them.
+- [x] **Phase 0 — port Carousel, Editable, Splitter, Stepper to Ark.** Landed 2026-09-03 as #12902
+      (`react-ui: rebuild Carousel, Editable, Splitter and Stepper on Ark UI`); ~2,264 LOC; consumers
+      4 / 13 / 8 / 3; `@ark-ui/react` is now a `react-ui` dependency (catalog).
+      **Overnight run, decided 2026-09-05 (user, 1x1):** attempt Phases 1 → 2 → 3 → 4a in order, one branch
+      (`claude/react-ui-ark-port-fe9f63`), one draft PR opened after Phase 1 and rewritten per phase, merge
+      `origin/main` at every phase boundary. Stop at the first phase that cannot go green; commit what is.
+      Excluded: Toast (model change), Calendar/RAC cluster, retiring the `Toolbar.*` namespace, Phase 6.
+      Decisions: boot budget trips → re-baseline by the measured delta with the dated justification and the
+      number at the top of the PR body; Select keeps the children API (collection built internally) and
+      MIGRATION.md records moving to Ark's `collection` as a later phase; `Input.Checkbox` → Ark (DOM becomes
+      label + native input, ref type → input); `Input.Switch` and `PinInput` stay hand-built, MIGRATION.md
+      records `pin-input` as a later phase; `ToggleGroup` keeps the single/multiple API via an adapter;
+      **Toolbar is pulled into Phase 2** — `Toolbar.Root` on a `@dxos/react-focus` group, `Toolbar.ToggleGroup`
+      over Ark `toggle-group`, namespace kept; `Slottable` in Tooltip and ScrollArea → restructure, no shim;
+      all long suites (full build, full test, composer build + budget, Playwright e2e) pre-authorised; the
+      composite-components skill, MIGRATION.md status lines and this ledger are updated as phases land;
+      **every phase ends with the storybook render check** — the vitest storybook project of every touched
+      package, console errors counted as failures (user, 2026-09-05).
+
+- [x] **Phase 1 — own the scaffolding.** Done 2026-09-05 on this branch. `@dxos/react-hooks` owns
+      `composeRefs`/`useComposedRefs` (over the existing `mergeRefs`), `useControllableState` (Radix
+      signature, uncontrolled `onChange` reported post-commit so updaters resolve through React),
+      `createContext` (Radix signature, no scope) and `composeEventHandlers`, with tests. `Primitive.*`
+      + `Slot` → `ark.<tag>` from `@ark-ui/react/factory` in 45 files; the seven scoped contexts nobody
+      ever scoped (react-list ×2, react-input, grid, menu, syntax-highlighter, shell Viewport) are plain
+      contexts — `create*Scope`, `*ScopedProps` and the `__*Scope` props are gone. The five Radix
+      scaffolding packages plus `-id` and `primitive` left 46 package.jsons; `react-ui` keeps
+      `react-context`/`-slot`/`-primitive` for the forks only (Tooltip, Popover, DropdownMenu,
+      ContextMenu, ScrollArea untouched — they go with Phases 2–3). Doc'd in the composite-components
+      skill and `slots.ts`. The plugin-level `@radix-ui/react-tooltip`/`-toolbar`/… imports the plan
+      mentions no longer existed in `src` — only composer-app's package.json listed six Radix packages
+      with no import; `react-slot` was the one this pass could drop, the rest wait for Phase 6.
+- [ ] **Phase 2 — leaves.** Order, one commit each, gated on build + the touched packages' unit and
+      storybook tests: Separator (hand-rolled `role="separator"`) → Toggle + ToggleGroup (adapter keeps
+      the single/multiple API: `single` maps `value` ↔ `[value]`) + **Toolbar** (`Root` = `useFocusGroup`
+      with the orientation as axis, `memorizeCurrent`, `cyclic`; `role="toolbar"` kept; Button/IconButton/
+      Toggle/Link wrappers become pass-throughs since react-focus takes any focusable; `ToggleGroup` runs
+      `rovingFocus={false}` under the bar; the 196 `Toolbar.Root` consumers change nothing) →
+      `Input.Checkbox` (Ark `checkbox`: `Root(label) > Control > Indicator` + `HiddenInput` carrying the
+      `Input.Root` id and aria; `react-list`'s `CheckedState` type decoupled from Radix) → `react-list`
+      Collapsible (Ark `collapsible`; only the story consumes the parts) → `react-ui-tabs` (Ark `tabs`;
+      `[data-state="active"]` → `[data-selected]`; `Tabs.TabPrimitive` stays an alias of the Ark trigger)
+      → Slider (adapter keeps `value: number[]` / `onValueChange(number[])`; `thumbLabels` → Ark's
+      `aria-label[]`) → ScrollArea last (real rewrite: Ark `scroll-area` replaces the 250-line
+      `ScrollAreaThumbs` measurer; `Slottable` goes because the thumbs render inside `Root` beside the
+      viewport; options `autoHide`/`thin`/`padding`/`centered`/`snap`/`native` stay as theme props).
+      **Verdicts revised on inspection, 2026-09-05:** Progress, Avatars and Clipboard are NOT ported —
+      Progress is countdown/error/rewind semantics the `progress` machine has no notion of; Avatar's
+      content is the lit `DxAvatar` element, so Ark's image-fallback machine has nothing to own;
+      Clipboard is a ten-line context plus two buttons. Recorded in MIGRATION.md.
 - [ ] **Phase 3 — the forks.** Tooltip → Popover → Menu. Add `Positioner`, keep our `Viewport`,
       `Arrow` → `Arrow`+`ArrowTip` (`fill-separator` → `--arrow-background`), rename the five
       variables, delete the three aliasing blocks, collapse DropdownMenu + ContextMenu onto one
