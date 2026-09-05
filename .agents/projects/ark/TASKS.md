@@ -831,19 +831,25 @@ dist/types/src: ENOTEMPTY` — a concurrent writer. A Cursor TypeScript native-p
       (tracked 2026-09-05). `react-ui-attention` and `app-graph` use `react-ui` only as a dev
       dependency (stories), so there is no runtime cycle. The menu split below is the first step;
       decide the target layering for the rest of the family after it lands.
-  - [x] **Menu split (2026-09-05): the renderer in `react-ui`, the graph and atoms in
-        `react-ui-menu`.** `ui-types` gains the plain entry model (`MenuEntry` = action | group |
-        separator, `MenuInvokeParams`, `keyBinding` on the shared chrome). `react-ui` gains
-        `DropdownMenu.Entries` / `ContextMenu.Entries` / `Toolbar.Entries`, data-driven renderers over
-        `MenuEntriesProvider` — `useEntries(group)` is a hook the source supplies, so a submenu or a
-        toolbar dropdown still resolves lazily, and `onAction(entry, params)` runs an entry — plus
-        `MenuEntryLabel`/`menuEntryLabel`. `react-ui-menu` keeps `Menu.Root` (the provider: the atom
-        accessor, contributions, `onAction` on graph nodes), `Menu.Content`, `Menu.Toolbar`
-        (attention-gated) and `Menu.Items` as thin glue over those renderers, and its hooks/builder;
-        its four renderers (`DropdownMenu`, `ToolbarMenu`, `ActionLabel`, `action-label`) are gone.
-        The node behind an entry lives in a WeakMap (`menuEntryNode`), so the plain model carries no
-        graph type and `Menu.Root onAction` still receives `AppGraphNode.Action`s. Consumer imports
-        unchanged (`ToolbarMenuActionGroupProperties` now lives in `types.ts`).
+  - [ ] **Menus: inert parts in `react-ui`, action-driven builders in `react-ui-menu`** (design in
+        `DESIGN.md`, 2026-09-05; supersedes the same-day "menu split", which it reverts).
+    - [ ] `react-ui`: one inert `Menu` shaped like `Select` (single `Root`, `Trigger` +
+          `ContextTrigger`, `Portal`, `Content`, `Viewport`, items, `Sub`); `DropdownMenu` and
+          `ContextMenu` stay as aliases. `DropdownMenu.Entries`, `Toolbar.Entries`,
+          `MenuEntriesProvider` and the `MenuEntry` model in `ui-types` removed (`keyBinding` kept).
+    - [ ] `react-ui-menu`: `ActionToolbar` (whole `Toolbar.Root` driven from `MenuActions`,
+          `children` after the graph items, `attendableId` → `Toolbar.Root disabled`) and
+          `ActionMenu` (whole `Menu.Root` driven from `MenuActions`, trigger as child, `group` or
+          `items`, submenus resolved on open). `onAction` / `caller` / `iconSize` move onto
+          `MenuActions` through the source hooks' options; contributions attach to the
+          `MenuActions` object (`useMenuContribution(menu, props)`); `Menu.*`, `useMenu`,
+          `useMenuScoped` and the context's `attendableId` / `alwaysActive` go.
+    - [ ] Sweep: 49 `Menu.Toolbar` sites → `ActionToolbar` (2 prepend sites adjusted), 21
+          `Menu.Content` sites → `ActionMenu`, the card/column owners put `menu` on their own
+          context for the contributors (PipelineArticle, app-toolkit `useObjectMenuItems`).
+    - [ ] Follow-ups: rename `react-ui-menu` → `react-ui-actions` (own PR, 46 manifests); remove
+          the `DropdownMenu` / `ContextMenu` aliases after re-pointing the ~100 part-level sites;
+          a data-fed `Select` in `react-ui-list` beside `Combobox`.
 - [ ] **Reconcile Ark's anatomy (e.g. `Positioner`) with the Radix-era part names (`Portal`,
       `Content`, `Viewport`)** (tracked 2026-09-05). Today `Content` renders Ark's `Positioner`
       internally, `Portal` re-bridges context across the DOM move, and `Viewport` is the scroll area
