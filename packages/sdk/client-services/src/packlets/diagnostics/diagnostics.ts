@@ -10,14 +10,7 @@ import { createDidFromIdentityKey, credentialTypeFilter } from '@dxos/credential
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
 import { STORAGE_VERSION } from '@dxos/protocols';
-import {
-  type Device,
-  type Identity,
-  type NetworkStatus,
-  type Platform,
-  SpaceMember,
-  type Space as SpaceProto,
-} from '@dxos/protocols/proto/dxos/client/services';
+import { type Device, type Identity, type NetworkStatus, type Platform, SpaceMember, SpaceMember_PresenceState, Space_Metrics, Space_PipelineState } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { type SwarmInfo } from '@dxos/protocols/proto/dxos/devtools/swarm';
 import { type Epoch } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { type DevtoolsHost, type LoggingService } from '@dxos/protocols/rpc';
@@ -63,12 +56,12 @@ export type SpaceStats = {
   db?: {
     objects: number;
   };
-  metrics?: SpaceProto.Metrics & {
+  metrics?: Space_Metrics & {
     startupTime?: number;
   };
   epochs?: (Epoch & { id?: PublicKey })[];
   members?: SpaceMember[];
-  pipeline?: SpaceProto.PipelineState;
+  pipeline?: Space_PipelineState;
 };
 
 /**
@@ -179,8 +172,8 @@ const getSpaceStats = async (space: DataSpace): Promise<SpaceStats> => {
         },
         presence:
           space.presence.getPeersByIdentityKey(member.key).length > 0
-            ? SpaceMember.PresenceState.ONLINE
-            : SpaceMember.PresenceState.OFFLINE,
+            ? SpaceMember_PresenceState.ONLINE
+            : SpaceMember_PresenceState.OFFLINE,
       })),
     ),
 

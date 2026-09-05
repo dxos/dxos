@@ -4,10 +4,10 @@
 
 import { type Mutex, type MutexGuard } from '@dxos/async';
 import { type Context, ContextDisposedError, cancelWithContext } from '@dxos/context';
-import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
+import { Invitation, Invitation_State } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 
-export const stateToString = (state: Invitation.State): string => {
-  return Object.entries(Invitation.State).find(([key, val]) => val === state)?.[0] ?? 'unknown';
+export const stateToString = (state: Invitation_State): string => {
+  return Object.entries(Invitation_State).find(([key, val]) => val === state)?.[0] ?? 'unknown';
 };
 
 export const computeExpirationTime = (invitation: Partial<Invitation>): Date | undefined => {

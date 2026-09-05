@@ -8,7 +8,7 @@ import { Trigger, chain } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { raise } from '@dxos/debug';
 import { AlreadyJoinedError } from '@dxos/protocols';
-import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
+import { Invitation, Invitation_Kind, Invitation_State, Invitation_Type } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 
 import { type ServiceContext } from '../services';
 import { createIdentity, createPeers } from '../testing';
@@ -47,7 +47,7 @@ describe('services/space-invitations-protocol', () => {
     const space1 = await host.dataSpaceManager!.createSpace(new Context());
     const spaceKey = space1.key;
 
-    await Promise.all(performInvitation({ host, guest, options: { kind: Invitation.Kind.SPACE, spaceKey } }));
+    await Promise.all(performInvitation({ host, guest, options: { kind: Invitation_Kind.SPACE, spaceKey } }));
 
     {
       const space1 = host.dataSpaceManager!.spaces.get(spaceKey)!;
@@ -71,7 +71,7 @@ describe('services/space-invitations-protocol', () => {
     const space1 = await host.dataSpaceManager!.createSpace(new Context());
     const spaceKey = space1.key;
 
-    await Promise.all(performInvitation({ host, guest, options: { kind: Invitation.Kind.SPACE, spaceKey } }));
+    await Promise.all(performInvitation({ host, guest, options: { kind: Invitation_Kind.SPACE, spaceKey } }));
 
     {
       const space1 = host.dataSpaceManager!.spaces.get(spaceKey)!;
@@ -86,7 +86,7 @@ describe('services/space-invitations-protocol', () => {
     const [_, guestResult] = performInvitation({
       host,
       guest,
-      options: { kind: Invitation.Kind.SPACE, spaceKey },
+      options: { kind: Invitation_Kind.SPACE, spaceKey },
     });
 
     expect((await guestResult).error).to.be.instanceOf(AlreadyJoinedError);
@@ -103,7 +103,7 @@ describe('services/space-invitations-protocol', () => {
       performInvitation({
         host,
         guest,
-        options: { kind: Invitation.Kind.SPACE, spaceKey: space1.key },
+        options: { kind: Invitation_Kind.SPACE, spaceKey: space1.key },
         hooks: {
           guest: {
             onReady: (invitation) => {
@@ -157,7 +157,7 @@ describe('services/space-invitations-protocol', () => {
     const [host, guest] = await chain<ServiceContext>([createIdentity, closeAfterTest])(createPeers(2));
     const space = await host.dataSpaceManager!.createSpace(new Context());
     const hostInvitation = await createInvitation(host, {
-      kind: Invitation.Kind.SPACE,
+      kind: Invitation_Kind.SPACE,
       spaceKey: space.key,
       timeout: 100,
     });
@@ -167,7 +167,7 @@ describe('services/space-invitations-protocol', () => {
     const guestTimeout = new Trigger();
     const guestInvitation = await acceptInvitation(guest, invitation);
     guestInvitation.subscribe((invitation) => {
-      if (invitation.state === Invitation.State.TIMEOUT) {
+      if (invitation.state === Invitation_State.TIMEOUT) {
         guestTimeout.wake();
       }
     });
@@ -186,7 +186,7 @@ describe('services/space-invitations-protocol', () => {
     const invitationPromises = performInvitation({
       host,
       guest,
-      options: { kind: Invitation.Kind.SPACE, spaceKey: space1.key },
+      options: { kind: Invitation_Kind.SPACE, spaceKey: space1.key },
       hooks: {
         host: {
           onConnecting: (invitation) => {
@@ -211,7 +211,7 @@ describe('services/space-invitations-protocol', () => {
     expect(swarmKey1).to.deep.eq(swarmKey2);
 
     const [{ invitation: invitation1 }, { error }] = await Promise.all(invitationPromises);
-    expect(invitation1?.state).to.eq(Invitation.State.CANCELLED);
+    expect(invitation1?.state).to.eq(Invitation_State.CANCELLED);
     expect(error).to.exist;
 
     await space1.close(new Context());
@@ -228,7 +228,7 @@ describe('services/space-invitations-protocol', () => {
   //   const swarmKey = PublicKey.random();
   //   const hostObservable = await host.spaceInvitations!.createInvitation(hostSpace, {
   //     swarmKey,
-  //     type: Invitation.Type.MULTIUSE_TESTING
+  //     type: Invitation_Type.MULTIUSE_TESTING
   //   });
 
   //   const [done, count] = latch({ count: GUEST_COUNT });
@@ -247,7 +247,7 @@ describe('services/space-invitations-protocol', () => {
   //     range(GUEST_COUNT).map(async (idx) => {
   //       const observable = await guests[idx].spaceInvitations!.acceptInvitation({
   //         swarmKey,
-  //         type: Invitation.Type.MULTIUSE_TESTING
+  //         type: Invitation_Type.MULTIUSE_TESTING
   //       });
   //       const success = new Trigger();
   //       observable.subscribe({
