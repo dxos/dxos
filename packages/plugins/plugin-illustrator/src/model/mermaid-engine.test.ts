@@ -148,10 +148,11 @@ describe('mermaid-engine', () => {
       );
       const edges = chosen.candidate.layout.objects.find(({ id }) => id === 'edges')!.elements;
       const arrow = edges.find((element) => element.kind === 'arrow' && /^M-N-\d+$/.test(element.id));
+      const terminals = arrow?.kind === 'arrow' ? [arrow.start?.[axis], arrow.end?.[axis]] : [];
 
-      expect(arrow?.kind).toBe('arrow');
       expect(edges.some(({ id }) => /^M-N-\d+-path$/.test(id))).toBe(false);
-      expect(arrow?.kind === 'arrow' && arrow.start[axis]).toBe(arrow?.kind === 'arrow' && arrow.end[axis]);
+      expect(terminals[0]).toBeDefined();
+      expect(terminals[0]).toBe(terminals[1]);
     });
   }
 
