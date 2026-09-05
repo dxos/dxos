@@ -120,6 +120,8 @@ const PopoverRoot: FC<PopoverRootProps> = ({ children, open: openProp, defaultOp
       gutter: sideOffset,
       ...(alignOffset !== undefined && { offset: { mainAxis: sideOffset, crossAxis: alignOffset } }),
       overflowPadding,
+      // Keeps the arrow off the rounded corners, where its fill would paint over the curve.
+      arrowPadding: 12,
       flip: avoidCollisions,
       hideWhenDetached,
       boundary,

@@ -31,7 +31,8 @@
  */
 @layer dx-components {
   [data-part='content'] > [data-part='arrow'] {
-    --arrow-clip: calc(50% - 2 * var(--arrow-inset, 0px));
+    /* Once shifted, the box is centred on the border's outer edge: keep the outer half and the border. */
+    --arrow-clip: calc(50% - var(--arrow-inset, 0px));
   }
   [data-part='content'][data-side='bottom'] > [data-part='arrow'] {
     translate: 0 calc(var(--arrow-inset, 0px) * -1);
