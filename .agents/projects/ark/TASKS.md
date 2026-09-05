@@ -773,6 +773,10 @@ dist/types/src: ENOTEMPTY` — a concurrent writer. A Cursor TypeScript native-p
       evicts the Radix layer. Gates: full build, 34-package storybook sweep (SearchDialog's FTS play story
       timed out under the 2-wide sweep, passes alone in 2 s), react-ui unit tests, lint of the 18 touched
       packages, knip, format.
+- [ ] **Phase 4b — Toast.** Model change: Ark's `createToaster()` store with a `Toaster` host replaces the
+      provider-plus-`Toast.Root` tree; `--radix-toast-swipe-*` (`animation.css`) goes with Zag's gestures.
+      Excluded from the 2026-09-05 run. Evicts `react-toast` and, with it, the last Radix floating layer
+      from the boot graph — bring the boot budget ceiling back down from 4.55 MB then.
 - [ ] **Phase 5 — decisions.** RAC (keep for the date/time cluster vs consolidate onto Ark; default
       keep); Toolbar (no Ark toolbar — focus group from `@dxos/react-focus` + `toggle-group`); Focus
       (keep as the seam).
