@@ -476,8 +476,6 @@ export class InvitationsHandler {
         await ctx.dispose();
       } else {
         invariant(invitation.swarmKey);
-        const swarmKey = toPublicKey(invitation.swarmKey);
-        invariant(swarmKey);
 
         const timeoutInactive = () => {
           if (guardedState.mutex.isLocked()) {
@@ -510,6 +508,8 @@ export class InvitationsHandler {
     } else {
       label = `invitation host for space ${toPublicKey(invitation.spaceKey)?.truncate()}`;
     }
+    const swarmKey = toPublicKey(invitation.swarmKey);
+    invariant(swarmKey, 'swarmKey missing in the invitation');
     const swarmConnection = await this._networkManager.joinSwarm(ctx, {
       topic: swarmKey,
       protocolProvider: createTeleportProtocolFactory(async (teleport) => {

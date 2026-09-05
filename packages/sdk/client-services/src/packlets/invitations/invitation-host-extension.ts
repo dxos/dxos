@@ -10,6 +10,7 @@ import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { InvalidInvitationExtensionRoleError } from '@dxos/protocols';
 import { getBufService } from '@dxos/protocols/buf-service';
+import { toPublicKey } from '@dxos/protocols/buf';
 import { Invitation, Invitation_AuthMethod, Invitation_State } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 import { type ProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
 import {
@@ -167,17 +168,14 @@ export class InvitationHostExtension
             }
 
             case Invitation_AuthMethod.KNOWN_PUBLIC_KEY: {
-              if (!invitation.guestKeypair) {
+              const guestPublicKey = toPublicKey(invitation.guestKeypair?.publicKey);
+              if (!guestPublicKey) {
                 status = AuthenticationResponse.Status.INTERNAL_ERROR;
                 break;
               }
               const isSignatureValid =
                 this._challenge &&
-                verify(
-                  this._challenge,
-                  Buffer.from(signedChallenge ?? []),
-                  invitation.guestKeypair.publicKey.asBuffer(),
-                );
+                verify(this._challenge, Buffer.from(signedChallenge ?? []), guestPublicKey.asBuffer());
               if (isSignatureValid) {
                 this.authenticationPassed = true;
               } else {
