@@ -9,7 +9,13 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { useAgentHostingClient, useClient } from '@dxos/react-client';
 import { type Identity } from '@dxos/react-client/halo';
-import { Invitation, InvitationEncoder } from '@dxos/react-client/invitations';
+import {
+  type Invitation,
+  Invitation_AuthMethod,
+  Invitation_State,
+  Invitation_Type,
+  InvitationEncoder,
+} from '@dxos/react-client/invitations';
 
 import { type AgentFormProps } from '../../components';
 
@@ -93,7 +99,7 @@ export const useKubeAgentHandlers = ({
 
   const handleAgentCreate = useCallback(async (invitation: Invitation) => {
     const invitationCode = InvitationEncoder.encode(invitation);
-    if (invitation.state === Invitation.State.CONNECTING) {
+    if (invitation.state === Invitation_State.CONNECTING) {
       log.info(JSON.stringify({ invitationCode, authCode: invitation.authCode }));
       return createAgent(invitationCode);
     }
@@ -104,8 +110,8 @@ export const useKubeAgentHandlers = ({
 
     // TODO(nf): do this work in the hosting provider client?
     const invitation = client.halo.share({
-      type: Invitation.Type.INTERACTIVE,
-      authMethod: Invitation.AuthMethod.NONE,
+      type: Invitation_Type.INTERACTIVE,
+      authMethod: Invitation_AuthMethod.NONE,
       multiUse: true,
     });
 

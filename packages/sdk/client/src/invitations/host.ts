@@ -7,7 +7,7 @@ import * as Queue from 'effect/Queue';
 
 import { type CancellableInvitation } from '@dxos/client-protocol';
 import { EffectEx } from '@dxos/effect';
-import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
+import { Invitation, Invitation_State } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 
 type HostInvitationProps = {
   observable: CancellableInvitation;
@@ -45,13 +45,13 @@ export const hostInvitation = ({
     const subscription = observable.subscribe(
       (invitation: Invitation) => {
         switch (invitation.state) {
-          case Invitation.State.CONNECTING: {
+          case Invitation_State.CONNECTING: {
             runCallback(callbacks?.onConnecting?.(invitation));
             EffectEx.runAndForwardErrors(Queue.offer(connectingQueue, invitation)).catch(() => {});
             break;
           }
 
-          case Invitation.State.SUCCESS: {
+          case Invitation_State.SUCCESS: {
             runCallback(callbacks?.onSuccess?.(invitation));
             EffectEx.runAndForwardErrors(Queue.offer(invitationQueue, invitation)).catch(() => {});
             break;

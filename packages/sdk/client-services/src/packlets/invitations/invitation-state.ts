@@ -9,7 +9,7 @@
 import { Mutex, type PushStream } from '@dxos/async';
 import { type Context } from '@dxos/context';
 import { log } from '@dxos/log';
-import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
+import { Invitation, Invitation_State } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 
 import { stateToString } from './utils';
 
@@ -22,7 +22,7 @@ export interface GuardedInvitationState {
   current: Invitation;
 
   complete(newState: Partial<Invitation>): void;
-  set(lockHolder: FlowLockHolder | null, newState: Invitation.State): boolean;
+  set(lockHolder: FlowLockHolder | null, newState: Invitation_State): boolean;
   error(lockHolder: FlowLockHolder | null, error: any): boolean;
 }
 
@@ -51,7 +51,7 @@ export const createGuardedInvitationState = (
       stream.next(currentInvitation);
       return ctx.dispose();
     },
-    set: (lockHolder: FlowLockHolder | null, newState: Invitation.State): boolean => {
+    set: (lockHolder: FlowLockHolder | null, newState: Invitation_State): boolean => {
       if (isStateChangeAllowed(lockHolder)) {
         logStateUpdate(currentInvitation, lockHolder, newState);
         currentInvitation = { ...currentInvitation, state: newState };
@@ -63,8 +63,8 @@ export const createGuardedInvitationState = (
     },
     error: (lockHolder: FlowLockHolder | null, error: any): boolean => {
       if (isStateChangeAllowed(lockHolder)) {
-        logStateUpdate(currentInvitation, lockHolder, Invitation.State.ERROR, error);
-        currentInvitation = { ...currentInvitation, state: Invitation.State.ERROR };
+        logStateUpdate(currentInvitation, lockHolder, Invitation_State.ERROR, error);
+        currentInvitation = { ...currentInvitation, state: Invitation_State.ERROR };
         stream.next(currentInvitation);
         stream.error(error);
         lastActiveLockHolder = lockHolder;
@@ -75,7 +75,7 @@ export const createGuardedInvitationState = (
   };
 };
 
-const logStateUpdate = (invitation: Invitation, actor: any, newState: Invitation.State, error?: Error) => {
+const logStateUpdate = (invitation: Invitation, actor: any, newState: Invitation_State, error?: Error) => {
   const logContext = {
     invitationId: invitation.invitationId,
     actor: actor?.constructor.name,
@@ -87,12 +87,12 @@ const logStateUpdate = (invitation: Invitation, actor: any, newState: Invitation
   log.verbose('dxos.sdk.invitations-handler.state.update', logContext);
 };
 
-const isNonTerminalState = (currentState: Invitation.State): boolean => {
+const isNonTerminalState = (currentState: Invitation_State): boolean => {
   return ![
-    Invitation.State.SUCCESS,
-    Invitation.State.ERROR,
-    Invitation.State.CANCELLED,
-    Invitation.State.TIMEOUT,
-    Invitation.State.EXPIRED,
+    Invitation_State.SUCCESS,
+    Invitation_State.ERROR,
+    Invitation_State.CANCELLED,
+    Invitation_State.TIMEOUT,
+    Invitation_State.EXPIRED,
   ].includes(currentState);
 };

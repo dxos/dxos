@@ -15,7 +15,19 @@ import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { Invitation, QueryInvitationsResponse } from '@dxos/protocols/proto/dxos/client/services';
+import { buf, bufInit, fromPublicKey } from '@dxos/protocols/buf';
+import {
+  Invitation,
+  Invitation_AuthMethod,
+  Invitation_State,
+  Invitation_Type,
+  InvitationSchema,
+} from '@dxos/protocols/buf/dxos/client/invitation_pb';
+import {
+  QueryInvitationsResponse,
+  QueryInvitationsResponse_Action,
+  QueryInvitationsResponse_Type,
+} from '@dxos/protocols/buf/dxos/client/services_pb';
 import { type DeviceProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
 
 import { RPC_TIMEOUT } from '../common';
@@ -108,26 +120,26 @@ export class InvitationsProxy implements Invitations {
     stream.subscribe(
       ({ action, type, invitations, existing }: QueryInvitationsResponse) => {
         switch (action) {
-          case QueryInvitationsResponse.Action.ADDED: {
+          case QueryInvitationsResponse_Action.ADDED: {
             log('remote invitations added', { type, invitations });
             invitations
               ?.filter((invitation) => this._matchesInvitationContext(invitation))
               .filter((invitation) => !this._invitations.has(invitation.invitationId))
               .forEach((invitation) => {
-                type === QueryInvitationsResponse.Type.CREATED ? this.share(invitation) : this.join(invitation);
+                type === QueryInvitationsResponse_Type.CREATED ? this.share(invitation) : this.join(invitation);
               });
             if (existing) {
-              type === QueryInvitationsResponse.Type.CREATED
+              type === QueryInvitationsResponse_Type.CREATED
                 ? initialCreatedReceived.wake()
                 : initialAcceptedReceived.wake();
             }
             break;
           }
-          case QueryInvitationsResponse.Action.REMOVED: {
+          case QueryInvitationsResponse_Action.REMOVED: {
             log('remote invitations removed', { type, invitations });
-            const cache = type === QueryInvitationsResponse.Type.CREATED ? this._created : this._accepted;
+            const cache = type === QueryInvitationsResponse_Type.CREATED ? this._created : this._accepted;
             const cacheUpdate =
-              type === QueryInvitationsResponse.Type.CREATED ? this._createdUpdate : this._acceptedUpdate;
+              type === QueryInvitationsResponse_Type.CREATED ? this._createdUpdate : this._acceptedUpdate;
             invitations?.forEach((removed) => {
               const index = cache
                 .get()
@@ -142,11 +154,11 @@ export class InvitationsProxy implements Invitations {
             existing && initialAcceptedReceived.wake();
             break;
           }
-          case QueryInvitationsResponse.Action.LOAD_COMPLETE: {
+          case QueryInvitationsResponse_Action.LOAD_COMPLETE: {
             persistentLoaded.wake();
             break;
           }
-          case QueryInvitationsResponse.Action.SAVED: {
+          case QueryInvitationsResponse_Action.SAVED: {
             log('remote invitations saved', { invitations });
             this._savedUpdate.emit(invitations ?? []);
             break;
@@ -196,14 +208,14 @@ export class InvitationsProxy implements Invitations {
   }
 
   getInvitationOptions(): Invitation {
-    return {
+    return buf.create(InvitationSchema, {
       invitationId: PublicKey.random().toHex(),
-      type: Invitation.Type.INTERACTIVE,
-      authMethod: Invitation.AuthMethod.SHARED_SECRET,
-      state: Invitation.State.INIT,
-      swarmKey: PublicKey.random(),
-      ...this._getInvitationContext(),
-    };
+      type: Invitation_Type.INTERACTIVE,
+      authMethod: Invitation_AuthMethod.SHARED_SECRET,
+      state: Invitation_State.INIT,
+      swarmKey: fromPublicKey(PublicKey.random()),
+      ...bufInit(this._getInvitationContext()),
+    });
   }
 
   // TODO(nf): Some way to retrieve observables for resumed invitations?
@@ -272,12 +284,34 @@ export class InvitationsProxy implements Invitations {
     const context = this._getInvitationContext();
     log('checking invitation context', { invitation, context });
     return Object.entries(context).reduce((acc, [key, value]) => {
-      const invitationValue = (invitation as any)[key];
-      if (invitationValue instanceof PublicKey && value instanceof PublicKey) {
-        return acc && invitationValue.equals(value);
-      } else {
-        return acc && invitationValue === value;
-      }
+      const invitationValue = (invitation as Record<string, unknown>)[key];
+      return acc && contextValuesEqual(invitationValue, value);
     }, true);
   }
 }
+
+/** The key bytes behind a context value, for the key types an invitation can carry. */
+const keyBytes = (value: unknown): Uint8Array | undefined => {
+  if (value instanceof PublicKey) {
+    return value.asUint8Array();
+  }
+  if (value !== null && typeof value === 'object' && 'data' in value && value.data instanceof Uint8Array) {
+    return value.data;
+  }
+};
+
+/**
+ * Compares one field of the invitation context.
+ *
+ * A key is compared by its bytes: it reaches here either as the domain `PublicKey` or as the buf
+ * message, and two messages carrying the same key are distinct objects.
+ */
+const contextValuesEqual = (invitationValue: unknown, value: unknown): boolean => {
+  const left = keyBytes(invitationValue);
+  const right = keyBytes(value);
+  if (left && right) {
+    return left.length === right.length && left.every((byte, index) => byte === right[index]);
+  }
+
+  return invitationValue === value;
+};
