@@ -390,17 +390,20 @@ export class TypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
       return Reflect.get(target, prop, receiver);
     }
 
-    // Own getter properties (e.g. the `SchemaId` slot installed by `setSchemaProperties`).
-    if (Object.getOwnPropertyDescriptor(target, prop)?.get) {
-      return Reflect.get(target, prop, receiver);
-    }
-
     const value = Reflect.get(target, prop, receiver);
-    if (isValidProxyTarget(value)) {
-      return createProxy(value, this);
+    if (!isValidProxyTarget(value)) {
+      return value;
     }
 
-    return value;
+    // A value produced by an own getter (e.g. the `jsonSchema` slot on a type entity) is system
+    // surface and is returned as-is; only own data is proxy-wrapped. The descriptor lookup allocates,
+    // so it runs only here, once the value is known to be one that would otherwise be wrapped — every
+    // primitive read has already returned above without paying for it.
+    if (Object.getOwnPropertyDescriptor(target, prop)?.get) {
+      return value;
+    }
+
+    return createProxy(value, this);
   }
 
   set(target: ProxyTarget, prop: string | symbol, value: any, receiver: any): boolean {
