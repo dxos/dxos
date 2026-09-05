@@ -147,8 +147,6 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Observabi
             cross_subdomain_cookie: false,
             ...posthogConfig,
           });
-          // `sdkVersion` is unconditional: it gates EDGE deprecation, so a host that omits `release`
-          // must still be attributable to an SDK version.
           posthog.register({
             sdkVersion: DXOS_VERSION,
             ...(release ? { release } : {}),
