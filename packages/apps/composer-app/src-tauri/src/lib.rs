@@ -11,6 +11,8 @@ mod window_state;
 #[cfg(all(desktop, unix))]
 mod xattr_cmd;
 #[cfg(target_os = "macos")]
+mod memory_log;
+#[cfg(target_os = "macos")]
 mod menubar;
 #[cfg(target_os = "macos")]
 mod spotlight;
@@ -286,6 +288,9 @@ pub fn run() {
                     }
                 }
                 window_state::setup_window_state_tracking(&main_window);
+
+                #[cfg(target_os = "macos")]
+                memory_log::spawn(app.handle(), &main_window);
 
                 #[cfg(target_os = "macos")]
                 {

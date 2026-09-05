@@ -102,6 +102,7 @@ dependencies = [
  "libc",
  "log",
  "objc2 0.5.2",
+ "objc2 0.6.4",
  "reqwest 0.12.22",
  "serde",
  "serde_json",
