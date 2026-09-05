@@ -23,6 +23,16 @@ import { blackhole } from './testing/bench-util';
 // `Obj.update` transaction (change context + batched notification) on top of the `set` trap, so the
 // batched row below reports what that transaction costs when amortized over ten sets.
 //
+// `make` rows price construction: `Obj.make` against a plain object literal, and — for the
+// persisted kinds — `Obj.make` plus `db.add`, since an object that never reaches the database is
+// already covered by the unpersisted row. They run last in each block on purpose: they are the only
+// rows that grow the database, and running them first would leave every read and write after them
+// measuring a doc inflated by the preceding row rather than the pool the block set up.
+//
+// The `x1` rows carry ~85ns of tinybench per-callback overhead, which swamps anything cheaper than
+// it — every plain-object row is below that floor. Recover a per-operation cost that cancels it with
+// `(mean(x10) - mean(x1)) / 9` rather than reading a fast `x1` row directly.
+//
 
 // Powers of two: both pools are indexed by masking a monotonic cursor, which is branch-free and
 // keeps the rotation off the measured path.
@@ -30,8 +40,17 @@ const OBJECT_POOL_SIZE = 64;
 const OBJECT_POOL_MASK = OBJECT_POOL_SIZE - 1;
 const VALUE_POOL_SIZE = 1_024;
 const VALUE_POOL_MASK = VALUE_POOL_SIZE - 1;
+// Ring the `make` benches park each constructed object in, so it escapes the frame (see
+// `makeSink`). Bounded, so the retained set stays flat while the rest becomes garbage.
+const MAKE_SINK_SIZE = 64;
+const MAKE_SINK_MASK = MAKE_SINK_SIZE - 1;
 const BATCH = 10;
 const BENCH_OPTIONS = { time: 1_000 };
+// The `make` rows run a shorter window than the rest: the persisted kinds insert a new object per
+// iteration and never flush, so a full second would pile up enough documents to distort the tail of
+// the run (and strain memory). Uniform across all four kinds so the make rows stay comparable to
+// each other; hz is normalized, so the shorter window costs resolution, not correctness.
+const MAKE_BENCH_OPTIONS = { time: 250 };
 
 class BenchObject extends Type.makeObject<BenchObject>(DXN.make('com.example.type.benchObject', '0.1.0'))(
   // A closed struct rather than `TestSchema.Expando`: an expando's `Record` rest element adds a
@@ -82,6 +101,15 @@ await db.flush();
 
 // Generated at runtime so the written value is not a literal V8 can constant-fold into the store.
 const valuePool = Array.from({ length: VALUE_POOL_SIZE }, () => Math.floor(Math.random() * 1_000_000));
+// Pre-built so the `make` rows measure object construction rather than string concatenation.
+const labelPool = Array.from({ length: VALUE_POOL_SIZE }, (unusedValue, index) => `label-${index}`);
+
+// Every constructed object is parked here. Escape analysis scalar-replaces an allocation that never
+// leaves the frame — the allocation disappears and the row reports a speed no caller can observe,
+// which is the most common way an allocation bench lies. Storing into a heap array that outlives the
+// frame forces the object to escape. (`db.add` already does this for the persisted kinds; the ring
+// is what covers plain and unpersisted, and keeps all four measuring the same shape of work.)
+const makeSink: unknown[] = new Array(MAKE_SINK_SIZE).fill(null);
 
 let cursor = 0;
 let checksum = 0;
@@ -90,7 +118,7 @@ afterAll(() => {
   // The single sink for the whole file. `checksum` and the pools are closed over here, so they stay
   // live for the module's lifetime and V8 cannot prove either the benchmarked loads (which feed
   // `checksum`) or the benchmarked stores (which land in the pools) dead.
-  blackhole([checksum, plainPool, unpersistedPool, automergePool, feedPool]);
+  blackhole([checksum, plainPool, unpersistedPool, automergePool, feedPool, makeSink]);
 });
 
 //
@@ -140,6 +168,26 @@ describe('property access (plain vs echo)', { tags: ['manual'], timeout: 300_000
         }
       },
       BENCH_OPTIONS,
+    );
+
+    bench(
+      'make x1',
+      () => {
+        const index = cursor++ & VALUE_POOL_MASK;
+        makeSink[index & MAKE_SINK_MASK] = { value: valuePool[index], label: labelPool[index] };
+      },
+      MAKE_BENCH_OPTIONS,
+    );
+
+    bench(
+      `make x${BATCH}`,
+      () => {
+        for (let n = 0; n < BATCH; n++) {
+          const index = cursor++ & VALUE_POOL_MASK;
+          makeSink[index & MAKE_SINK_MASK] = { value: valuePool[index], label: labelPool[index] };
+        }
+      },
+      MAKE_BENCH_OPTIONS,
     );
   });
 
@@ -195,6 +243,32 @@ describe('property access (plain vs echo)', { tags: ['manual'], timeout: 300_000
       },
       BENCH_OPTIONS,
     );
+
+    bench(
+      'make x1',
+      () => {
+        const index = cursor++ & VALUE_POOL_MASK;
+        makeSink[index & MAKE_SINK_MASK] = Obj.make(BenchObject, {
+          value: valuePool[index],
+          label: labelPool[index],
+        });
+      },
+      MAKE_BENCH_OPTIONS,
+    );
+
+    bench(
+      `make x${BATCH}`,
+      () => {
+        for (let n = 0; n < BATCH; n++) {
+          const index = cursor++ & VALUE_POOL_MASK;
+          makeSink[index & MAKE_SINK_MASK] = Obj.make(BenchObject, {
+            value: valuePool[index],
+            label: labelPool[index],
+          });
+        }
+      },
+      MAKE_BENCH_OPTIONS,
+    );
   });
 
   describe('echo object (automerge)', () => {
@@ -249,6 +323,32 @@ describe('property access (plain vs echo)', { tags: ['manual'], timeout: 300_000
       },
       BENCH_OPTIONS,
     );
+
+    // `make` here is construction plus `db.add` — the object has to reach the database for the row
+    // to mean anything, and the proxy alone is already priced by the unpersisted row above.
+    bench(
+      'make x1 (Obj.make + db.add)',
+      () => {
+        const index = cursor++ & VALUE_POOL_MASK;
+        makeSink[index & MAKE_SINK_MASK] = db.add(
+          Obj.make(BenchObject, { value: valuePool[index], label: labelPool[index] }),
+        );
+      },
+      MAKE_BENCH_OPTIONS,
+    );
+
+    bench(
+      `make x${BATCH} (Obj.make + db.add)`,
+      () => {
+        for (let n = 0; n < BATCH; n++) {
+          const index = cursor++ & VALUE_POOL_MASK;
+          makeSink[index & MAKE_SINK_MASK] = db.add(
+            Obj.make(BenchObject, { value: valuePool[index], label: labelPool[index] }),
+          );
+        }
+      },
+      MAKE_BENCH_OPTIONS,
+    );
   });
 
   describe('echo object (feed)', () => {
@@ -302,6 +402,32 @@ describe('property access (plain vs echo)', { tags: ['manual'], timeout: 300_000
         });
       },
       BENCH_OPTIONS,
+    );
+
+    bench(
+      'make x1 (Obj.make + db.add to feed)',
+      () => {
+        const index = cursor++ & VALUE_POOL_MASK;
+        makeSink[index & MAKE_SINK_MASK] = db.add(
+          Obj.make(BenchObject, { value: valuePool[index], label: labelPool[index] }),
+          { to: feed },
+        );
+      },
+      MAKE_BENCH_OPTIONS,
+    );
+
+    bench(
+      `make x${BATCH} (Obj.make + db.add to feed)`,
+      () => {
+        for (let n = 0; n < BATCH; n++) {
+          const index = cursor++ & VALUE_POOL_MASK;
+          makeSink[index & MAKE_SINK_MASK] = db.add(
+            Obj.make(BenchObject, { value: valuePool[index], label: labelPool[index] }),
+            { to: feed },
+          );
+        }
+      },
+      MAKE_BENCH_OPTIONS,
     );
   });
 });
