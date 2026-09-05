@@ -17,6 +17,7 @@ import {
 import { log } from '@dxos/log';
 import { AlreadyJoinedError, type Client } from '@dxos/react-client';
 import { type Identity } from '@dxos/react-client/halo';
+import { toPublicKey } from '@dxos/protocols/buf';
 import { type AuthenticatingInvitationObservable, type Invitation, InvitationEncoder, Invitation_State } from '@dxos/react-client/invitations';
 
 import { type FailReason } from '../../types';
@@ -184,7 +185,7 @@ const acceptingInvitationTemplate = (Kind: Kind, successTarget: string) => {
                   if (Kind !== 'Space') {
                     return false;
                   } else {
-                    const spaceKey = context.space.invitation?.spaceKey?.toHex();
+                    const spaceKey = toPublicKey(context.space.invitation?.spaceKey)?.toHex();
                     const succeededKeys = context.space.succeededKeys;
                     return spaceKey ? !!succeededKeys?.has(spaceKey) : false;
                   }

@@ -3,6 +3,7 @@
 //
 
 import { PublicKey } from '@dxos/react-client';
+import { fromPublicKey } from '@dxos/protocols/buf';
 import { CancellableInvitationObservable, type Invitation, Invitation_AuthMethod, Invitation_Kind, Invitation_State, Invitation_Type } from '@dxos/react-client/invitations';
 
 export const inviteWithState = (state: Invitation_State) =>
@@ -12,7 +13,7 @@ export const inviteWithState = (state: Invitation_State) =>
       invitationId: Math.random().toString(16).slice(2),
       kind: Invitation_Kind.SPACE,
       authMethod: Invitation_AuthMethod.NONE,
-      swarmKey: PublicKey.random(),
+      swarmKey: fromPublicKey(PublicKey.random()),
       type: Invitation_Type.INTERACTIVE,
       authCode: [Invitation_State.READY_FOR_AUTHENTICATION, Invitation_State.AUTHENTICATING].includes(state)
         ? '123456'
