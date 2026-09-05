@@ -17,3 +17,36 @@
     --sticky-bottom: var(--dx-statusbar-size);
   }
 }
+
+/**
+ * Floating arrows. Zag's arrow is a square straddling the content's edge, its tip a rotated copy
+ * painted in the surface colour with the border on the two outer edges. Two corrections, on
+ * whichever side the content landed:
+ * - Zag positions the arrow against its containing block, which is the content's padding box when
+ *   the content carries a backdrop filter, so it lands one border width inside the edge it should
+ *   straddle; it is moved outward by `--arrow-inset`, the border width the theme declares.
+ * - The half inside the content would cover whatever sits at the edge — a highlighted row reads
+ *   as a diamond on it — so the arrow is clipped to its outer half plus the border strip, which is
+ *   exactly what the tip's fill has to cover for the outline to open into it.
+ */
+@layer dx-components {
+  [data-part='content'] > [data-part='arrow'] {
+    --arrow-clip: calc(50% - 2 * var(--arrow-inset, 0px));
+  }
+  [data-part='content'][data-side='bottom'] > [data-part='arrow'] {
+    translate: 0 calc(var(--arrow-inset, 0px) * -1);
+    clip-path: inset(0 0 var(--arrow-clip) 0);
+  }
+  [data-part='content'][data-side='top'] > [data-part='arrow'] {
+    translate: 0 var(--arrow-inset, 0px);
+    clip-path: inset(var(--arrow-clip) 0 0 0);
+  }
+  [data-part='content'][data-side='right'] > [data-part='arrow'] {
+    translate: calc(var(--arrow-inset, 0px) * -1) 0;
+    clip-path: inset(0 var(--arrow-clip) 0 0);
+  }
+  [data-part='content'][data-side='left'] > [data-part='arrow'] {
+    translate: var(--arrow-inset, 0px) 0;
+    clip-path: inset(0 0 0 var(--arrow-clip));
+  }
+}

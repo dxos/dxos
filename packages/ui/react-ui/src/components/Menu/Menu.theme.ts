@@ -20,7 +20,8 @@ const positioner: ComponentFunction<MenuStyleProps> = ({ elevation }, ...etc) =>
 
 const content: ComponentFunction<MenuStyleProps> = ({ elevation }, ...etc) =>
   mx(
-    'dx-popover-surface w-48 md:w-56 border border-separator rounded-sm',
+    // The machine focuses the content on open; the ring belongs to the items, not the surface.
+    'dx-popover-surface w-48 md:w-56 border border-separator rounded-sm outline-none',
     surfaceZIndex({ elevation, level: 'menu' }),
     surfaceShadow({ elevation: 'positioned' }),
     ...etc,
@@ -48,11 +49,14 @@ const groupLabel: ComponentFunction<MenuStyleProps> = (_props, ...etc) =>
 /**
  * Zag's arrow is a square straddling the content's edge, rotated so its top-left corner points
  * outward. Painted in the surface colour with the border on those two edges, its inner half covers
- * the content's border and the outline appears to bend around the tip.
+ * the content's border and the outline appears to bend around the tip. The content's backdrop
+ * filter makes it the arrow's containing block, whose padding box starts inside the border, so
+ * `positioning.css` moves the arrow outward by `--arrow-inset`, the border width, to meet the
+ * border's outer edge.
  */
 const arrow: ComponentFunction<MenuStyleProps> = (_props, ...etc) =>
   mx(
-    '[--arrow-size:12px] [--arrow-background:var(--surface-bg)]',
+    '[--arrow-size:12px] [--arrow-background:var(--surface-bg)] [--arrow-inset:1px]',
     '[&>[data-part=arrow-tip]]:border-separator [&>[data-part=arrow-tip]]:border-t [&>[data-part=arrow-tip]]:border-l',
     ...etc,
   );

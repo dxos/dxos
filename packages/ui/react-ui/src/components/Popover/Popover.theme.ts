@@ -41,11 +41,14 @@ const viewport: ComponentFunction<PopoverStyleProps> = ({ constrainBlock, constr
 /**
  * Zag's arrow is a square straddling the content's edge, rotated so its top-left corner points
  * outward. Painted in the surface colour with the border on those two edges, its inner half covers
- * the content's border and the outline appears to bend around the tip.
+ * the content's border and the outline appears to bend around the tip. The content's backdrop
+ * filter makes it the arrow's containing block, whose padding box starts inside the border, so
+ * `positioning.css` moves the arrow outward by `--arrow-inset`, the border width, to meet the
+ * border's outer edge.
  */
 const arrow: ComponentFunction<PopoverStyleProps> = (_props, ...etc) =>
   mx(
-    '[--arrow-size:12px] [--arrow-background:var(--surface-bg)]',
+    '[--arrow-size:12px] [--arrow-background:var(--surface-bg)] [--arrow-inset:2px]',
     '[&>[data-part=arrow-tip]]:border-separator [&>[data-part=arrow-tip]]:border-t-2 [&>[data-part=arrow-tip]]:border-l-2',
     ...etc,
   );

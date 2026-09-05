@@ -180,9 +180,18 @@
    * pair animated to `--radix-accordion-content-height`, which only Radix ever set, so after the
    * migration they ran to `unset` and nothing moved.
    */
+  /*
+   * The box runs between two heights while its content keeps its full size, so the content is
+   * clipped for the run and released on the last frame — `overflow` is discrete, so it holds until
+   * the midpoint between the last two keyframes rather than flipping halfway.
+   */
   @keyframes slide-down {
     from {
       height: 0;
+      overflow: hidden;
+    }
+    99% {
+      overflow: hidden;
     }
     to {
       height: var(--height);
@@ -191,9 +200,11 @@
   @keyframes slide-up {
     from {
       height: var(--height);
+      overflow: hidden;
     }
     to {
       height: 0;
+      overflow: hidden;
     }
   }
   --animate-slide-down: slide-down 300ms cubic-bezier(0.87, 0, 0.13, 1);
