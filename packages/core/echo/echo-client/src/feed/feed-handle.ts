@@ -39,6 +39,15 @@ const FEED_APPEND_BATCH_SIZE = 15;
 const RECONNECT_INITIAL_DELAY = 1_000;
 
 /**
+ * Ceiling on background append flushes per second. A failed send re-queues its cores and
+ * re-triggers the scheduler, so without a ceiling a send that fails instantly -- a closed RPC
+ * endpoint answers before the next tick -- turns the retry into a busy loop that starves the page
+ * (measured at ~10k rejections/s after an identity reset). Coalescing is the scheduler's purpose, so
+ * the happy path is unaffected by a 100ms floor between flushes.
+ */
+const FEED_APPEND_MAX_FLUSH_FREQUENCY = 10;
+
+/**
  * Ceiling for {@link FeedHandle.beginPolling}'s reconnect backoff after a stream error: the delay
  * doubles after each failed attempt, capped here, and resets to {@link RECONNECT_INITIAL_DELAY} the
  * moment a reconnected stream observes data.
@@ -133,7 +142,9 @@ export class FeedHandle {
    * Debounces `Obj.update` mutations on live feed objects into a single background append per
    * flush cycle (coalescing), mirroring `RepoProxy._sendUpdatesJob`'s use of the same primitive.
    */
-  readonly #appendScheduler = new UpdateScheduler(this._ctx, () => this.#flushDirty());
+  readonly #appendScheduler = new UpdateScheduler(this._ctx, () => this.#flushDirty(), {
+    maxFrequency: FEED_APPEND_MAX_FLUSH_FREQUENCY,
+  });
 
   private readonly _spaceId: SpaceId;
   private readonly _feedId: string;
@@ -245,16 +256,7 @@ export class FeedHandle {
     this.#addOptimistic(cores);
 
     const encoded = batch.map(({ json }) => JSON.stringify(json));
-    const sendPromise = this.#sendAppendBatches(encoded).catch((err) => {
-      log.catch(err);
-      this._error = err as Error;
-      this.updated.emit();
-      for (const { core, token } of batch) {
-        core.revertCapture(token);
-        this.#dirtyCores.add(core);
-      }
-      this.#appendScheduler.trigger();
-    });
+    const sendPromise = this.#sendAppendBatches(encoded).catch((err) => this.#onSendFailed(err, batch));
     this.#inFlight.add(sendPromise);
     try {
       await sendPromise;
@@ -398,21 +400,35 @@ export class FeedHandle {
     this.#dirtyCores.clear();
 
     const encoded = batch.map(({ json }) => JSON.stringify(json));
-    const sendPromise = this.#sendAppendBatches(encoded).catch((err) => {
-      log.catch(err);
-      this._error = err as Error;
-      this.updated.emit();
-      for (const { core, token } of batch) {
-        core.revertCapture(token);
-        this.#dirtyCores.add(core);
-      }
-      this.#appendScheduler.trigger();
-    });
+    const sendPromise = this.#sendAppendBatches(encoded).catch((err) => this.#onSendFailed(err, batch));
     this.#inFlight.add(sendPromise);
     try {
       await sendPromise;
     } finally {
       this.#inFlight.delete(sendPromise);
+    }
+  }
+
+  /**
+   * Shared failure path for {@link append} and {@link #flushDirty}: undo the optimistic capture and
+   * surface the error. A closed RPC endpoint ends retries here rather than re-queueing: the handle
+   * holds the service it was built with and is cached per database, so no later attempt can reach a
+   * live endpoint -- re-triggering only spins (see {@link FEED_APPEND_MAX_FLUSH_FREQUENCY}). The
+   * cores stay dirty so the unsent state is still visible through {@link error} and a blocking flush.
+   */
+  #onSendFailed(err: unknown, batch: Array<{ core: FeedObjectCore; token: string }>): void {
+    const closed = err instanceof RpcClosedError;
+    if (!closed) {
+      log.catch(err);
+    }
+    this._error = err as Error;
+    this.updated.emit();
+    for (const { core, token } of batch) {
+      core.revertCapture(token);
+      this.#dirtyCores.add(core);
+    }
+    if (!closed) {
+      this.#appendScheduler.trigger();
     }
   }
 

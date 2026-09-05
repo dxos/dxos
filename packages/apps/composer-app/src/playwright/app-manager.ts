@@ -393,6 +393,26 @@ export class AppManager {
     await objectForm.getByTestId('save-button').click();
   }
 
+  /** The space id the app is currently showing, read off the `/w/<spaceId>` route. */
+  get currentSpaceId(): string {
+    const { pathname } = new URL(this.page.url());
+    const spaceId = pathname.match(/^\/w\/([^/]+)/)?.[1];
+    if (!spaceId) {
+      throw new Error(`app is not in a space workspace: ${pathname}`);
+    }
+    return spaceId;
+  }
+
+  /**
+   * Waits until the app is showing `spaceId`. Joining a space moves the app between workspaces
+   * asynchronously, and until it does the navtree of the space being left is what answers queries --
+   * so an object assertion made in that window measures the wrong space, and a section toggled in it
+   * leaves the joined space's section untouched.
+   */
+  async waitForSpace(spaceId: string, timeout = 30_000): Promise<void> {
+    await this.page.waitForURL((url) => url.pathname.startsWith(`/w/${spaceId}`), { timeout });
+  }
+
   async navigateToObject(nth = 0, delay = 100): Promise<void> {
     await this.getObjectLinks().nth(nth).click({ delay });
   }

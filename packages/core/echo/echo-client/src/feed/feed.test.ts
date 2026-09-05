@@ -9,7 +9,7 @@ import * as Option from 'effect/Option';
 import * as Scope from 'effect/Scope';
 import { afterEach, beforeEach, describe, onTestFinished, test } from 'vitest';
 
-import { Event } from '@dxos/async';
+import { Event, sleep } from '@dxos/async';
 import { Database, Feed, Scope as FeedScope, Filter, Obj, Query, Ref } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 import { EffectEx } from '@dxos/effect';
@@ -342,6 +342,39 @@ describe('Feed', () => {
       const results = await db.query(Query.select(Filter.everything()).from(FeedScope.feed(feedUri))).run();
       expect(results).toHaveLength(1);
       expect((results[0] as TestSchema.Person).name).toEqual('john');
+    });
+
+    // The production trigger is an identity reset or worker handover closing the services endpoint
+    // under a handle that still has captured writes. An interrupted handler is what the in-process
+    // transport surfaces for that: `runServiceCall` maps an interrupt-only cause to `RpcClosedError`.
+    test('append stops retrying once the RPC endpoint is closed', async ({ expect }) => {
+      await using peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Person] });
+      const db = await peer.createDatabase();
+
+      let callCount = 0;
+      const realHandlers = peer.host.feedService;
+      const closedHandlers: FeedService.Handlers = {
+        ...realHandlers,
+        'FeedService.insertIntoFeed': () => {
+          callCount++;
+          return Effect.interrupt;
+        },
+      };
+      db._setFeedService(await makeFeedClient(closedHandlers));
+
+      const feed = db.add(Feed.make({ name: 'closed' }));
+      const john = Obj.make(TestSchema.Person, { name: 'john' });
+
+      // Best-effort contract: the closed endpoint surfaces through the handle's error, not a throw.
+      await db.appendToFeed(feed, [john]);
+      await db.flush();
+      const settled = callCount;
+      expect(settled).toBeGreaterThanOrEqual(1);
+
+      // Before this guard the failure re-queued and re-triggered on the next tick, so a closed
+      // endpoint produced thousands of attempts in this window.
+      await sleep(300);
+      expect(callCount).toEqual(settled);
     });
 
     test('disposing the feed handle flushes a same-tick update instead of dropping it', async ({ expect }) => {
