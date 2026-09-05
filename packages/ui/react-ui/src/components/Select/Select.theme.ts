@@ -23,8 +23,9 @@ const content: ComponentFunction<SelectStyleProps> = (_props, ...etc) => {
   );
 };
 
+// The input-surface utility outranks Button's component-layer hover, so the hover is a utility too.
 const triggerButton: ComponentFunction<SelectStyleProps> = (_props, ...etc) =>
-  mx('bg-input-surface grid grid-cols-[1fr_auto] [&>span]:text-left', ...etc);
+  mx('bg-input-surface enabled:hover:bg-hover-surface grid grid-cols-[1fr_auto] [&>span]:text-left', ...etc);
 
 const viewport: ComponentFunction<SelectStyleProps> = (_props, ...etc) => mx('overflow-y-auto', ...etc);
 
