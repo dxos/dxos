@@ -4,7 +4,7 @@
 
 import { type Accessor, createSignal } from 'solid-js';
 
-import { type StatusPayload } from './types';
+import { type PluginEntry, type StatusPayload } from './types';
 
 //
 // Creep tuning. The ring auto-creeps toward a moving ceiling so a long
@@ -24,6 +24,22 @@ export const STATE_2_RATE = 0.05;
 export const STATE_2_BUMP = 15;
 /** Hard ceiling the auto-creep never crosses (host must drive the rest). */
 export const ABSOLUTE_CEILING = 90;
+
+/**
+ * Spacing between plugin icons entering the row, sampled per icon from this range. Activation
+ * arrives in bursts — a dozen plugins inside a couple of frames — which lands as a single clump
+ * rather than as anything the eye can follow, so arrivals queue and drain at this cadence instead.
+ * The interval varies because a fixed one reads as a machine ticking rather than work landing.
+ */
+export const PLUGIN_DRAIN_MIN_MS = 200;
+export const PLUGIN_DRAIN_MAX_MS = 400;
+
+/** A drain delay sampled from `[PLUGIN_DRAIN_MIN_MS, PLUGIN_DRAIN_MAX_MS]`. */
+export const drainDelay = (): number =>
+  PLUGIN_DRAIN_MIN_MS + Math.random() * (PLUGIN_DRAIN_MAX_MS - PLUGIN_DRAIN_MIN_MS);
+
+/** A plugin drawn in the activation row, in activation order. */
+export type PluginRow = PluginEntry;
 
 /** Loader lifecycle phase. */
 export type Phase = 'creep' | 'host' | 'dismissing';
@@ -69,6 +85,8 @@ export type LoaderStore = {
   lines: Accessor<StatusLine[]>;
   /** Current lifecycle phase. */
   phase: Accessor<Phase>;
+  /** The activation row, in the order the host seeded it. */
+  plugins: Accessor<PluginRow[]>;
   /** The abort handler once startup has stalled, or `undefined` while it is within budget. */
   onAbort: Accessor<(() => void) | undefined>;
   /** Whole seconds since the loader appeared. Ticks only while stalled — see {@link LoaderStore.stalled}. */
@@ -77,6 +95,17 @@ export type LoaderStore = {
   pushStatus: (payload: StatusPayload) => void;
   /** Enter host-driven progress with `fraction` ∈ [0, 1]; never regresses. */
   setProgress: (fraction?: number) => void;
+  /**
+   * Register the icon for every plugin that *could* activate. Registration alone draws nothing:
+   * most enabled plugins activate lazily on first use, so a row seeded from that set would sit
+   * half-dim for the whole boot. Rows appear from {@link LoaderStore.activatePlugin}.
+   */
+  setPlugins: (entries: PluginEntry[]) => void;
+  /**
+   * Queue this plugin's icon for the row. Arrivals drain one at a time, spaced by {@link drainDelay}
+   * — activation bursts would otherwise land as one clump. Unregistered and repeated ids are ignored.
+   */
+  activatePlugin: (id: string) => void;
   /** Offer the user an abort (see `BootLoaderApi.stalled`). Idempotent — the first handler wins. */
   stalled: (onAbort: () => void) => void;
   /** Snap to 100%, stop the creep, and enter the dismissing phase. */
@@ -89,6 +118,13 @@ export const createLoaderStore = (initialStatus?: string): LoaderStore => {
   const [progress, setProgressPct] = createSignal(0);
   const [lines, setLines] = createSignal<StatusLine[]>(initialStatus ? [{ id: 0, text: initialStatus }] : []);
   const [phase, setPhase] = createSignal<Phase>('creep');
+  const [plugins, setPluginRows] = createSignal<PluginRow[]>([]);
+  // Icons for every plugin that could activate, keyed by slug. Plain map, not a signal: nothing
+  // renders from it directly.
+  const registry = new Map<string, PluginEntry>();
+  // Arrivals waiting their turn, drained one per `PLUGIN_DRAIN_MS`.
+  const pendingPlugins: PluginEntry[] = [];
+  let drainTimer: ReturnType<typeof setTimeout> | null = null;
   // Held as a signal rather than a boolean + prop so the button has the handler directly, and so a
   // second `stalled()` (a re-fired deadline) cannot swap it mid-press.
   const [onAbort, setOnAbort] = createSignal<(() => void) | undefined>(undefined);
@@ -146,6 +182,59 @@ export const createLoaderStore = (initialStatus?: string): LoaderStore => {
     });
   };
 
+  const setPlugins = (entries: PluginEntry[]): void => {
+    registry.clear();
+    for (const entry of entries) {
+      if (entry.icon) {
+        registry.set(entry.id, entry);
+      }
+    }
+  };
+
+  // Appended in its final state: the entrance is a CSS animation that runs from the element's first
+  // frame, so it needs no two-step flip to start it (and no frame in which to do so — the main
+  // thread is saturated during boot).
+  const emitPlugin = (entry: PluginEntry): void => setPluginRows((current) => [...current, entry]);
+
+  /**
+   * Cooldown after every emission, not merely while the queue is non-empty: activations arrive one
+   * at a time as often as in a burst, and without a cooldown each of those would find no timer armed
+   * and draw immediately — the clump this exists to prevent. Sampled afresh each time, so the row
+   * fills at an uneven human cadence rather than a machine tick. Disarms once the queue is idle.
+   */
+  const scheduleDrain = (): void => {
+    drainTimer = setTimeout(() => {
+      const entry = pendingPlugins.shift();
+      if (!entry) {
+        drainTimer = null;
+        return;
+      }
+      emitPlugin(entry);
+      scheduleDrain();
+    }, drainDelay());
+  };
+
+  const stopDrain = (): void => {
+    if (drainTimer != null) {
+      clearTimeout(drainTimer);
+      drainTimer = null;
+    }
+  };
+
+  const activatePlugin = (id: string): void => {
+    const entry = registry.get(id);
+    if (!entry || plugins().some((row) => row.id === id) || pendingPlugins.some((row) => row.id === id)) {
+      return;
+    }
+    if (drainTimer == null) {
+      // Nothing has drawn recently, so this one draws at once; the cooldown paces whatever follows.
+      emitPlugin(entry);
+      scheduleDrain();
+    } else {
+      pendingPlugins.push(entry);
+    }
+  };
+
   const setProgress = (fraction?: number): void => {
     setPhase('host');
     const pct = clampPercent(fraction);
@@ -181,9 +270,24 @@ export const createLoaderStore = (initialStatus?: string): LoaderStore => {
   const dispose = (): void => {
     stopCreep();
     stopElapsed();
+    stopDrain();
   };
 
   startCreep();
 
-  return { progress, lines, phase, onAbort, elapsedSeconds, pushStatus, setProgress, stalled, ready, dispose };
+  return {
+    progress,
+    lines,
+    phase,
+    plugins,
+    onAbort,
+    elapsedSeconds,
+    pushStatus,
+    setProgress,
+    setPlugins,
+    activatePlugin,
+    stalled,
+    ready,
+    dispose,
+  };
 };

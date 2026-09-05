@@ -32,18 +32,59 @@ export default meta;
 
 type Story = StoryObj;
 
-/** Normal startup: the ring creeps, statuses append, then the host reports ready. */
+/**
+ * A representative slice of the enabled plugin set, taken from real `dx.config.ts` meta so the
+ * story exercises the same sprite symbols the app registers.
+ */
+const PLUGINS = [
+  { id: 'space', icon: 'ph--planet--regular' },
+  { id: 'markdown', icon: 'ph--text-aa--regular' },
+  { id: 'table', icon: 'ph--table--regular' },
+  { id: 'sheet', icon: 'ph--grid-nine--regular' },
+  { id: 'assistant', icon: 'ph--sparkle--regular' },
+  { id: 'inbox', icon: 'ph--tray--regular' },
+  { id: 'map', icon: 'ph--map-trifold--regular' },
+  { id: 'kanban', icon: 'ph--kanban--regular' },
+];
+
+/** Normal startup: the ring creeps, statuses append, plugin icons light, then the host reports ready. */
 export const Default: Story = {
   render: () => {
     const store = createLoaderStore('Starting…');
     onMount(() => {
       const timers = [
         setTimeout(() => store.pushStatus({ humanized: 'Loading plugins', range: { index: 12, total: 80 } }), 400),
+        setTimeout(() => store.setPlugins(PLUGINS), 500),
         setTimeout(() => store.setProgress(0.4), 900),
-        setTimeout(() => store.pushStatus({ humanized: 'Activating Observability: react-surface' }), 1_400),
-        setTimeout(() => store.setProgress(0.8), 1_900),
-        setTimeout(() => store.ready(), 2_400),
+        // Each plugin lights as it activates, staggered the way real activation arrives.
+        ...PLUGINS.map((plugin, index) => setTimeout(() => store.activatePlugin(plugin.id), 1_000 + index * 220)),
+        setTimeout(() => store.setProgress(0.8), 2_900),
+        setTimeout(() => store.ready(), 3_600),
       ];
+      onCleanup(() => timers.forEach(clearTimeout));
+    });
+    onCleanup(() => store.dispose());
+    return <Loader store={store} />;
+  },
+};
+
+/**
+ * The activation row on its own, filling slowly: each plugin's icon is appended monochrome as it
+ * activates and fades in. Registered-but-never-activated plugins draw nothing.
+ */
+export const PluginActivation: Story = {
+  render: () => {
+    const store = createLoaderStore('Activating plugins…');
+    onMount(() => {
+      store.setPlugins(PLUGINS);
+      store.setProgress(0.5);
+      // Staggered 10ms → 100ms across the set: the app fires activations in bursts, and the
+      // entrance has to survive both ends of that range.
+      let at = 600;
+      const timers = PLUGINS.map((plugin, index) => {
+        at += 10 + (index / Math.max(PLUGINS.length - 1, 1)) * 90;
+        return setTimeout(() => store.activatePlugin(plugin.id), at);
+      });
       onCleanup(() => timers.forEach(clearTimeout));
     });
     onCleanup(() => store.dispose());
