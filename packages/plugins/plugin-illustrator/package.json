@@ -180,12 +180,17 @@
     "elkjs": "catalog:"
   },
   "devDependencies": {
+    "@codemirror/language": "catalog:",
+    "@codemirror/view": "catalog:",
     "@dxos/echo-client": "workspace:*",
     "@dxos/plugin-testing": "workspace:*",
+    "@dxos/react-ui-editor": "workspace:*",
+    "@dxos/ui-editor": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
     "@storybook/react-vite": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
+    "codemirror-lang-mermaid": "catalog:",
     "mermaid": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:",

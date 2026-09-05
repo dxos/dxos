@@ -2,12 +2,16 @@
 // Copyright 2026 DXOS.org
 //
 
+import { syntaxHighlighting } from '@codemirror/language';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import { mermaid as mermaidLanguage } from 'codemirror-lang-mermaid';
 import Mermaid from 'mermaid';
 import React, { useEffect, useId, useMemo, useState } from 'react';
 
 import { useThemeContext } from '@dxos/react-ui';
+import { useTextEditor } from '@dxos/react-ui-editor';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import { createBasicExtensions, createThemeExtensions, listener, mermaidHighlightStyle } from '@dxos/ui-editor';
 import { mx } from '@dxos/ui-theme';
 
 import { Diagnostics, MermaidEngine, type Scene, UmlGrid } from '#model';
@@ -21,13 +25,36 @@ import pipeline from '../../docs/diagrams/pipeline.mmd?raw';
 import { SceneSvg } from './SceneSvg';
 
 //
-// Layout bench: the same mermaid source rendered by mermaid itself (the reference the DSL author
-// sees elsewhere) beside our engine's layout, with the Tier-1 report underneath. Edit the source
-// live; both columns follow.
+// Layout bench: the mermaid source (left, editable) with mermaid's own rendering beneath it as the
+// reference the DSL author sees elsewhere, and our engine's layout on the right with the Tier-1
+// report. Edit the source live; both renders follow.
 //
 
 const objectsOf = (commands: readonly Scene.Command[]): Scene.WorldObject[] =>
   commands.flatMap((command) => (command.op === 'upsert-object' ? [command.object] : []));
+
+/** Theme-aware CodeMirror editor in the mermaid language mode. */
+const SourceEditor = ({ initialValue, onChange }: { initialValue: string; onChange: (text: string) => void }) => {
+  const { themeMode } = useThemeContext();
+  const { parentRef, focusAttributes } = useTextEditor(
+    () => ({
+      initialValue,
+      extensions: [
+        createBasicExtensions({ lineNumbers: true }),
+        createThemeExtensions({ themeMode, syntaxHighlighting: true }),
+        mermaidLanguage(),
+        // The language emits its own lezer tags, so the standard highlight style would not color it.
+        syntaxHighlighting(mermaidHighlightStyle()),
+        listener({ onChange: ({ text }) => onChange(text) }),
+      ],
+    }),
+    [themeMode],
+  );
+
+  return (
+    <div {...focusAttributes} ref={parentRef} className='dx-fill overflow-auto' data-testid='layout-bench.source' />
+  );
+};
 
 /** Reference rendering through mermaid.js; `%% ref` lines are comments to it and are ignored. */
 const MermaidDiagram = ({ source }: { source: string }) => {
@@ -62,15 +89,23 @@ const MermaidDiagram = ({ source }: { source: string }) => {
   if (error) {
     return <pre className='p-2 text-xs text-rose-500 whitespace-pre-wrap'>{error}</pre>;
   }
-  // Mermaid returns a sanitized SVG string; there is no element form to render.
+  // Mermaid returns a sanitized SVG string; there is no element form to render. The SVG carries its
+  // own size, so it is scaled to the panel rather than clipped.
   return (
-    <div className='dx-fill overflow-auto p-2 [&>svg]:max-w-full' dangerouslySetInnerHTML={{ __html: svg ?? '' }} />
+    <div
+      className='dx-fill overflow-hidden p-2 [&>svg]:w-full [&>svg]:h-full [&>svg]:max-w-none'
+      dangerouslySetInnerHTML={{ __html: svg ?? '' }}
+    />
   );
 };
 
+const Header = ({ children }: { children: string }) => (
+  <div className='px-3 py-1.5 text-xs uppercase tracking-wide text-description bg-baseSurface'>{children}</div>
+);
+
 type StoryArgs = {
   source: string;
-  /** Lattice pitch as a multiple of the cell size; 0 disables quantization. */
+  /** Lattice pitch as a multiple of the cell size. */
   lattice: number;
 };
 
@@ -101,25 +136,30 @@ const Bench = ({ source: initial, lattice }: StoryArgs) => {
   const errors = Diagnostics.errors(report);
 
   return (
-    <div className='dx-fill grid grid-cols-[minmax(20rem,1fr)_2fr_3fr] grid-rows-[auto_1fr] gap-px bg-separator'>
-      {['Source', 'Mermaid', 'Layout'].map((title) => (
-        <div key={title} className='px-3 py-1.5 text-xs uppercase tracking-wide text-description bg-baseSurface'>
-          {title}
+    <div className='dx-fill grid grid-cols-[minmax(24rem,2fr)_3fr] gap-px bg-separator'>
+      {/* Left: editor above the mermaid reference. */}
+      <div className='grid grid-rows-[auto_1fr_auto_1fr] min-h-0 gap-px bg-separator'>
+        <Header>Source</Header>
+        {/* Keyed on the fixture so switching stories replaces the buffer; edits otherwise persist. */}
+        <div className='bg-baseSurface min-h-0'>
+          <SourceEditor key={initial} initialValue={initial} onChange={setSource} />
         </div>
-      ))}
-      <textarea
-        className='dx-fill resize-none p-3 font-mono text-xs bg-baseSurface text-baseText outline-none'
-        spellCheck={false}
-        value={source}
-        onChange={(event) => setSource(event.target.value)}
-        data-testid='layout-bench.source'
-      />
-      <div className='bg-baseSurface min-w-0'>
-        <MermaidDiagram source={source} />
+        <Header>Mermaid</Header>
+        <div className='bg-baseSurface min-h-0'>
+          <MermaidDiagram source={source} />
+        </div>
       </div>
-      <div className='bg-baseSurface min-w-0 grid grid-rows-[1fr_auto]'>
-        <SceneSvg classNames='dx-attention-surface' objects={objects} grid={UmlGrid.GRID} />
-        <div className='p-2 font-mono text-xs border-bs border-separator' data-testid='layout-bench.report'>
+      {/* Right: the engine's layout, scaled to fit, with the report. */}
+      <div className='grid grid-rows-[auto_1fr_auto] min-h-0 gap-px bg-separator'>
+        <Header>Layout</Header>
+        {/* The SVG is the grid item itself: a percentage height inside a wrapper resolves to the
+            viewBox's intrinsic size and the row grows to it instead of the SVG scaling to fit. */}
+        <SceneSvg
+          classNames='dx-attention-surface bg-baseSurface min-h-0 min-w-0'
+          objects={objects}
+          grid={UmlGrid.GRID}
+        />
+        <div className='p-2 font-mono text-xs bg-baseSurface' data-testid='layout-bench.report'>
           {failure ? (
             <span className='text-rose-500'>{failure}</span>
           ) : (
@@ -154,18 +194,9 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-const corpus: Record<string, string> = {
-  echo,
-  assistant,
-  compute,
-  pipeline,
-  'app-framework': appFramework,
-  edge,
-};
-
-export const Echo: Story = { args: { source: corpus.echo } };
-export const Assistant: Story = { args: { source: corpus.assistant } };
-export const Compute: Story = { args: { source: corpus.compute } };
-export const Pipeline: Story = { args: { source: corpus.pipeline } };
-export const AppFramework: Story = { args: { source: corpus['app-framework'] } };
-export const Edge: Story = { args: { source: corpus.edge } };
+export const Echo: Story = { args: { source: echo } };
+export const Assistant: Story = { args: { source: assistant } };
+export const Compute: Story = { args: { source: compute } };
+export const Pipeline: Story = { args: { source: pipeline } };
+export const AppFramework: Story = { args: { source: appFramework } };
+export const Edge: Story = { args: { source: edge } };

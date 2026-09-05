@@ -65,9 +65,12 @@ its scorer interface now and fixtures later.
       crossings rose on assistant (7→17) and edge (9→22) — snapshots record it.
 - [ ] **Crossings after quantization** — run ELK `INTERACTIVE` (crossing minimization seeded from the
       quantized positions) as a second pass, or quantize before the crossing sweep.
-- [x] **Layout bench story** (`components/Layout.stories.tsx`) — three columns: editable mermaid
-      source · mermaid.js reference render · engine layout with the Tier-1 report; one story per
-      corpus diagram, `lattice` as a range control. `mermaid` added as a devDependency (catalog).
+- [x] **Layout bench story** (`components/Layout.stories.tsx`) — two columns: left = `react-ui-editor`
+      (mermaid language mode + `mermaidHighlightStyle`, theme-aware) above the mermaid.js reference
+      render; right = engine layout scaled to fit, with the Tier-1 report. One story per corpus
+      diagram, `lattice` as a range control. Dev deps added: `mermaid`, `codemirror-lang-mermaid`,
+      `@codemirror/{language,view}`, `@dxos/react-ui-editor`, `@dxos/ui-editor`. Gotcha: the SVG must
+      be the grid item itself — a percentage height inside a wrapper resolves to the viewBox size.
 - [ ] **`edges` object is selectable** — clicking a connector selects the dialect's `edges`
       object. Fine for hand-drawn line-only objects, odd for dialect output; options: dialects mark
       the object non-selectable, or `SceneSvg` skips objects with no closed shapes. Decide with
