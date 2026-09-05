@@ -27,7 +27,8 @@ const content: ComponentFunction<SelectStyleProps> = (_props, ...etc) => {
 const triggerButton: ComponentFunction<SelectStyleProps> = (_props, ...etc) =>
   mx('bg-input-surface enabled:hover:bg-hover-surface grid grid-cols-[1fr_auto] [&>span]:text-left', ...etc);
 
-const viewport: ComponentFunction<SelectStyleProps> = (_props, ...etc) => mx('overflow-y-auto', ...etc);
+// The scroll area grows into the content's remaining height and scrolls its list.
+const viewport: ComponentFunction<SelectStyleProps> = (_props, ...etc) => mx(...etc);
 
 const item: ComponentFunction<SelectStyleProps> = (_props, ...etc) =>
   mx(

@@ -32,6 +32,7 @@ import { useElevationContext, useSafeCollisionPadding, useThemeContext } from '.
 import { type ThemedClassName } from '../../util';
 import { Button, type ButtonProps } from '../Button';
 import { Icon } from '../Icon';
+import { ScrollArea } from '../ScrollArea';
 import { SELECT_NAME, type SelectOptionEntry, SelectProvider, useSelectContext } from './SelectContext';
 
 /** Consumers hand the machine a per-side padding; it takes one number, so the widest side wins. */
@@ -256,13 +257,16 @@ SelectContent.displayName = 'Select.Content';
 
 type SelectViewportProps = ThemedClassName<ComponentPropsWithRef<typeof SelectPrimitive.List>>;
 
+/** The list is slotted onto the scroll viewport so the machine scrolls the same element the thumb tracks. */
 const SelectViewport = forwardRef<HTMLDivElement, SelectViewportProps>(
   ({ classNames, children, ...props }, forwardedRef) => {
     const { tx } = useThemeContext();
     return (
-      <SelectPrimitive.List {...props} className={tx('select.viewport', {}, classNames)} ref={forwardedRef}>
-        {children}
-      </SelectPrimitive.List>
+      <ScrollArea.Root orientation='vertical' thin classNames={tx('select.viewport', {}, classNames)}>
+        <SelectPrimitive.List asChild {...props}>
+          <ScrollArea.Viewport ref={forwardedRef}>{children}</ScrollArea.Viewport>
+        </SelectPrimitive.List>
+      </ScrollArea.Root>
     );
   },
 );

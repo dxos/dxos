@@ -30,6 +30,7 @@ import { composeEventHandlers, useComposedRefs, useControllableState } from '@dx
 import { useElevationContext, useSafeCollisionPadding, useThemeContext } from '../../hooks';
 import { type ThemedClassName } from '../../util';
 import { ColumnContext } from '../Column/ColumnContext';
+import { ScrollArea } from '../ScrollArea';
 import {
   CONTEXT_MENU_NAME,
   DROPDOWN_MENU_NAME,
@@ -334,13 +335,21 @@ type MenuViewportProps = ThemedClassName<ComponentPropsWithRef<typeof ark.div>> 
   asChild?: boolean;
 };
 
+/** The scrolling body of the menu, with the overlay scrollbar rather than the native one. */
 const MenuViewport = forwardRef<HTMLDivElement, MenuViewportProps>(
   ({ classNames, asChild, children, ...props }, forwardedRef) => {
     const { tx } = useThemeContext();
     return (
-      <ark.div asChild={asChild} {...props} className={tx('menu.viewport', {}, classNames)} ref={forwardedRef}>
-        {children}
-      </ark.div>
+      <ScrollArea.Root orientation='vertical' thin classNames={tx('menu.viewport', {})}>
+        <ScrollArea.Viewport
+          asChild={asChild}
+          {...props}
+          classNames={tx('menu.viewportContent', {}, classNames)}
+          ref={forwardedRef}
+        >
+          {children}
+        </ScrollArea.Viewport>
+      </ScrollArea.Root>
     );
   },
 );

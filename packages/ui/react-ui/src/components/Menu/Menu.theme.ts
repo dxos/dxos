@@ -29,7 +29,9 @@ const content: ComponentFunction<MenuStyleProps> = ({ elevation }, ...etc) =>
 
 // `--available-height` is set by the machine on the positioner, so it reaches here by inheritance.
 const viewport: ComponentFunction<MenuStyleProps> = (_props, ...etc) =>
-  mx('rounded-sm p-1 max-h-[var(--available-height)] overflow-y-auto', ...etc);
+  mx('rounded-sm max-h-[var(--available-height)]', ...etc);
+
+const viewportContent: ComponentFunction<MenuStyleProps> = (_props, ...etc) => mx('p-1', ...etc);
 
 const item: ComponentFunction<MenuStyleProps> = (_props, ...etc) =>
   mx(
@@ -65,6 +67,7 @@ export const menuTheme: Theme<MenuStyleProps> = {
   positioner,
   content,
   viewport,
+  viewportContent,
   item,
   separator,
   groupLabel,
