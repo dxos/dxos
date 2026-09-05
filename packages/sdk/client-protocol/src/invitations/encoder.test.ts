@@ -94,6 +94,7 @@ describe('Invitation utils', () => {
   });
 });
 
+/** A complete space invitation the encoder round-trips, with `fields` overriding the defaults. */
 const makeInvitation = (fields: buf.MessageInitShape<typeof InvitationSchema> = {}): Invitation =>
   buf.create(InvitationSchema, {
     invitationId: PublicKey.random().toHex(),
