@@ -833,11 +833,11 @@ dist/types/src: ENOTEMPTY` — a concurrent writer. A Cursor TypeScript native-p
       decide the target layering for the rest of the family after it lands.
   - [ ] **Menus: inert parts in `react-ui`, action-driven builders in `react-ui-menu`** (design in
         `DESIGN.md`, 2026-09-05; supersedes the same-day "menu split", which it reverts).
-    - [ ] `react-ui`: one inert `Menu` shaped like `Select` (single `Root`, `Trigger` +
+    - [x] `react-ui`: one inert `Menu` shaped like `Select` (single `Root`, `Trigger` +
           `ContextTrigger`, `Portal`, `Content`, `Viewport`, items, `Sub`); `DropdownMenu` and
           `ContextMenu` stay as aliases. `DropdownMenu.Entries`, `Toolbar.Entries`,
           `MenuEntriesProvider` and the `MenuEntry` model in `ui-types` removed (`keyBinding` kept).
-    - [ ] `react-ui-menu`: `ActionToolbar` (whole `Toolbar.Root` driven from `MenuActions`,
+    - [x] `react-ui-menu`: `ActionToolbar` (whole `Toolbar.Root` driven from `MenuActions`,
           `children` after the graph items, `attendableId` → `Toolbar.Root disabled`) and
           `ActionMenu` (whole `Menu.Root` driven from `MenuActions`, trigger as child, `group` or
           `items`, submenus resolved on open). `onAction` / `caller` / `iconSize` move onto

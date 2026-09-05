@@ -20,7 +20,7 @@ import { type DropdownMenuItemGroupProperties, type ToggleGroupMenuItemGroupProp
 
 import { translationKey } from '#translations';
 
-import { useMenuItems } from '../hooks';
+import { useMenuActions, useMenuItems } from '../hooks';
 import {
   type MenuAction,
   type MenuActions,
@@ -300,7 +300,7 @@ const ActionToolbarItems = ({ menu }: { menu: MenuActions }) => {
 // ActionToolbar
 //
 
-export type ActionToolbarProps = MenuActions &
+export type ActionToolbarProps = Partial<MenuActions> &
   ToolbarRootProps & {
     /** The toolbar is enabled only while this attendable has attention, unless `alwaysActive`. */
     attendableId?: string;
@@ -310,16 +310,25 @@ export type ActionToolbarProps = MenuActions &
 /**
  * A whole `Toolbar.Root` driven from a `MenuActions`: the graph's root items render first, then the
  * toolbar's own children. Mix graph and hand-written controls the other way round by dropping an
- * `ActionMenu` into a plain `Toolbar.Root`.
+ * `ActionMenu` into a plain `Toolbar.Root`. Without a `MenuActions` it is an empty toolbar until one
+ * arrives (a tile whose menu is built asynchronously).
  */
 export const ActionToolbar = composable<HTMLDivElement, ActionToolbarProps>(
   (
     { items, contributions, onAction, caller, iconSize, attendableId, alwaysActive, children, ...props },
     forwardedRef,
   ) => {
+    // Called unconditionally (hooks), used only when no source was spread in.
+    const standalone = useMenuActions();
     const menu = useMemo<MenuActions>(
-      () => ({ items, contributions, onAction, caller, iconSize }),
-      [items, contributions, onAction, caller, iconSize],
+      () => ({
+        items: items ?? standalone.items,
+        contributions: contributions ?? standalone.contributions,
+        onAction,
+        caller,
+        iconSize,
+      }),
+      [items, contributions, onAction, caller, iconSize, standalone],
     );
     const { hasAttention } = useAttention(attendableId);
 

@@ -12,7 +12,7 @@ import {
   createGapSeparator,
   createMenuAction,
   createMenuItemGroup,
-  MenuRootProps,
+  type ActionToolbarProps,
   type ActionGraphEdges,
   type ActionGraphNodes,
   type ActionGraphProps,
@@ -110,7 +110,7 @@ const createTableToolbarActions = ({
     };
   });
 
-export type TableToolbarProps = Pick<MenuRootProps, 'attendableId'> &
+export type TableToolbarProps = Pick<ActionToolbarProps, 'attendableId'> &
   TableToolbarState & {
     onAdd?: () => void;
     onSave?: () => void;

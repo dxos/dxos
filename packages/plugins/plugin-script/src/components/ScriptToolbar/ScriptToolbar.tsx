@@ -12,7 +12,7 @@ import { composable, composableProps } from '@dxos/react-ui';
 import {
   ActionToolbar,
   createGapSeparator,
-  MenuRootProps,
+  type ActionToolbarProps,
   type ActionGraphProps,
   useMenuActions,
 } from '@dxos/react-ui-menu';
@@ -27,7 +27,7 @@ import {
 } from '#hooks';
 import { meta } from '#meta';
 
-export type ScriptToolbarProps = Pick<MenuRootProps, 'attendableId'> & {
+export type ScriptToolbarProps = Pick<ActionToolbarProps, 'attendableId'> & {
   script: Script.Script;
   state: ScriptToolbarStateStore;
 };

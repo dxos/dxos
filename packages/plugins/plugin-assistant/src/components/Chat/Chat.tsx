@@ -32,7 +32,7 @@ import {
   isPrompt,
   useFeedModel,
 } from '@dxos/react-ui-feed';
-import { ActionToolbar, createMenuAction, MenuRootProps } from '@dxos/react-ui-menu';
+import { ActionToolbar, createMenuAction, type ActionToolbarProps } from '@dxos/react-ui-menu';
 import { TaskList } from '@dxos/react-ui-task';
 import { Message, Task } from '@dxos/types';
 import { keyToFallback } from '@dxos/util';
@@ -341,7 +341,7 @@ const useRequestTiming = ({ active }: { active: boolean }) => {
 
 const CHAT_TOOLBAR_NAME = 'Chat.Toolbar';
 
-type ChatToolbarProps = Pick<MenuRootProps, 'attendableId' | 'alwaysActive'> &
+type ChatToolbarProps = Pick<ActionToolbarProps, 'attendableId' | 'alwaysActive'> &
   PropsWithChildren<{
     companionTo?: Obj.Unknown;
   }>;

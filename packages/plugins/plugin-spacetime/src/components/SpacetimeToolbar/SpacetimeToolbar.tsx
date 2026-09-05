@@ -9,7 +9,13 @@ import React, { useCallback, useContext, useMemo } from 'react';
 
 import { ElevationProvider } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
-import { ActionToolbar, MenuBuilder, MenuRootProps, type ActionGraphProps, useMenuActions } from '@dxos/react-ui-menu';
+import {
+  ActionToolbar,
+  MenuBuilder,
+  type ActionToolbarProps,
+  type ActionGraphProps,
+  useMenuActions,
+} from '@dxos/react-ui-menu';
 import { HuePicker } from '@dxos/react-ui-pickers';
 
 import { type EditorState, getSelectedObjectIds } from '../../tools';
@@ -18,7 +24,7 @@ import { type SelectionMode, createSelectionModeActions } from './selection';
 import { createToolActions } from './tools';
 import { createViewActions } from './view';
 
-export type SpacetimeToolbarProps = Pick<MenuRootProps, 'attendableId' | 'alwaysActive'> & {
+export type SpacetimeToolbarProps = Pick<ActionToolbarProps, 'attendableId' | 'alwaysActive'> & {
   editorStateAtom: Atom.Writable<EditorState>;
   editorActions: EditorActions;
 };

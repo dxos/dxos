@@ -11,14 +11,14 @@ import {
   ActionToolbar,
   createMenuAction,
   type ActionGraphProps,
-  type MenuRootProps,
+  type ActionToolbarProps,
   useMenuActions,
 } from '@dxos/react-ui-menu';
 
 import { meta } from '#meta';
 import { CodeCapabilities } from '#types';
 
-export type CodeToolbarProps = Pick<MenuRootProps, 'attendableId'> & {
+export type CodeToolbarProps = Pick<ActionToolbarProps, 'attendableId'> & {
   state: CodeCapabilities.ProjectBuildState | undefined;
   onBuild: () => void;
   onRun: () => void;

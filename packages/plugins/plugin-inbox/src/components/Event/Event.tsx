@@ -8,7 +8,7 @@ import { type Database, Obj } from '@dxos/echo';
 import { createContext } from '@dxos/react-hooks';
 import { ScrollArea, type ThemedClassName } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
-import { ActionToolbar, MenuRootProps } from '@dxos/react-ui-menu';
+import { ActionToolbar, type ActionToolbarProps } from '@dxos/react-ui-menu';
 import { type Actor, type Event as EventType } from '@dxos/types';
 import { mx } from '@dxos/ui-theme';
 
@@ -68,7 +68,7 @@ type EventToolbarProps = Pick<
   UseEventToolbarActionsProps,
   'graph' | 'onOpen' | 'onSave' | 'saveDisabled' | 'onDelete' | 'editing'
 > &
-  Pick<MenuRootProps, 'alwaysActive'>;
+  Pick<ActionToolbarProps, 'alwaysActive'>;
 
 const EventToolbar = composable<HTMLDivElement, EventToolbarProps>(
   ({ alwaysActive, graph, onOpen, onSave, saveDisabled, onDelete, editing, ...props }, forwardedRef) => {

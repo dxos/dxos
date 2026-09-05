@@ -86,7 +86,7 @@ export const ConnectorAuthMenu = ({ connectorIds, db, existingTarget, onSelect }
   }
 
   return (
-    <ActionMenu {...menuActions} onAction={handleAction} attendableId={NODE_ID} alwaysActive>
+    <ActionMenu {...menuActions} onAction={handleAction}>
       <IconButton variant='ghost' icon='ph--plugs--regular' label={t('connect.label')} />
     </ActionMenu>
   );
