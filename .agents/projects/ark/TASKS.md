@@ -712,6 +712,13 @@ Findings that shaped the plan, so they are not re-derived:
       `-dropdown-menu`, `-context-menu`, `-popper`, `-dismissable-layer`, `-focus-scope`, `-focus-guards`,
       `-presence`, `-portal`, `createDropdownMenuScope`. Radix left in `react-ui`: `react-dialog`,
       `react-alert-dialog`, `react-select`, `react-toast` (Phase 4).
+      **Boot budget tripped at the Phase 3 boundary (2026-09-05):** 4,565,469 bytes, 4,164 over the 4.35 MB
+      ceiling; re-baselined to 4.55 MB per the decision above. Sourcemap attribution (`scratchpad/attribute.mjs`
+      over `out/boot-budget.json` with `@jridgewell/trace-mapping`) puts the whole ~78 KB delta from Phase 2 on
+      the Zag floating stack (`menu` 25.7 KB, `focus-trap` 12.8, `tooltip` 9.7, `popover` 7.7, `popper` 6.9,
+      `dismissable` 5.6, `presence` 3.7, `interact-outside` 3.2, `aria-hidden` 1.9, `remove-scroll` 1.1), while
+      the ~19 KB Radix floating stack stays in the graph via `react-select`/`react-dialog`/`react-toast` until
+      Phase 4 — so Phase 3 is the point of maximum duplication. Bring the ceiling back down after Phase 4a.
       **Tooling trap (2026-09-05):** an install that swaps binaries under a running moon build leaves
       tasks cached as successful with an EMPTY `dist/types` (dx-compile's type emit died, the lib emit
       did not); every later full build then fails downstream with `Could not find a declaration file for

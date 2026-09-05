@@ -61,8 +61,20 @@ const MAX_PRELOAD_ENTRIES = 25;
  * chunks' sourcemaps (`.agents/projects/ark/TASKS.md` Phase 5). Measured at 4,360,490 bytes; the
  * ceiling is set to keep the same ~200 KB margin rather than to bank the whole win, since a budget
  * left where it was would silently absorb it.
+ *
+ * Re-baselined 2026-09-05 (was 4.35 MB) at Phase 3 of the Radix → Ark migration
+ * (`packages/ui/react-ui/docs/MIGRATION.md`), which put Tooltip, Popover and Menu on Zag machines.
+ * Measured at 4,565,469 bytes, 4,164 over the ceiling. Attributed through the boot chunks'
+ * sourcemaps, the Zag floating stack now in the eager graph is ~78 KB: `menu` 25,704, `focus-trap`
+ * 12,810, `tooltip` 9,740, `popover` 7,734, `popper` 6,911, `dismissable` 5,562, `presence` 3,681,
+ * `interact-outside` 3,187, `aria-hidden` 1,895, `remove-scroll` 1,143 — which is the whole delta
+ * from the Phase 2 measurement (4.28 MB). The Radix floating stack it replaces (`react-popper`
+ * 3,915, `-dismissable-layer` 3,312, `-focus-scope` 3,113, `-presence` 1,931, `react-remove-scroll`
+ * 5,506, `aria-hidden` 1,466) is still in the graph because `react-select`, `react-dialog` and
+ * `react-toast` import it; Phase 4 evicts those, and this ceiling should come back down then. The
+ * ~200 KB margin is kept.
  */
-const MAX_PRELOAD_BYTES = 4.35 * 1024 * 1024;
+const MAX_PRELOAD_BYTES = 4.55 * 1024 * 1024;
 
 const buildDir = path.join(process.cwd(), 'out');
 const outDir = path.join(buildDir, 'composer');
