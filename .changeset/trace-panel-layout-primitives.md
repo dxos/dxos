@@ -10,4 +10,4 @@ sits flush with the top edge. `Syntax` renders its code as a block and leaves sc
 `Syntax.Viewport`: lines now advance by exactly their `line-height`, so an `Nlh` height cap shows
 N lines, and the code no longer nests a native scrollbar inside the viewport's own.
 
-The search panel puts its input in a toolbar above the results instead of a statusbar below them.
+The search panel puts its input in a toolbar above the results instead of a status bar below them.
