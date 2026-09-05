@@ -9,11 +9,7 @@ import { Context } from '@dxos/context';
 import { raise } from '@dxos/debug';
 import { AlreadyJoinedError } from '@dxos/protocols';
 import { fromPublicKey, toPublicKey } from '@dxos/protocols/buf';
-import {
-  Invitation,
-  Invitation_Kind,
-  Invitation_State,
-} from '@dxos/protocols/buf/dxos/client/invitation_pb';
+import { Invitation, Invitation_Kind, Invitation_State } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 
 import { type ServiceContext } from '../services';
 import { createIdentity, createPeers } from '../testing';
