@@ -73,7 +73,7 @@ export const SyntaxHighlighter = composable<HTMLDivElement, SyntaxHighlighterPro
           { classNames, className, role, style },
           {
             role: 'none',
-            classNames: mx('dx-expand p-1 overflow-auto', copyButton && 'relative group'),
+            classNames: mx('dx-expand overflow-auto', copyButton && 'relative group'),
           },
         )}
         ref={forwardedRef}
@@ -87,6 +87,8 @@ export const SyntaxHighlighter = composable<HTMLDivElement, SyntaxHighlighterPro
             boxShadow: 'none',
             padding: 0,
             margin: 0,
+            // This allows setting max-h-[6lh] on the Syntax.Code component.
+            lineHeight: 'inherit',
             // Non-scrolling wrapper: defer all scrolling to an enclosing `Syntax.Viewport`.
             // The prism theme sets `overflow: auto` on the <pre>, which otherwise creates a
             // nested native horizontal scrollbar alongside the viewport's custom one.

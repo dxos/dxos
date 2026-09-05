@@ -44,30 +44,26 @@ type BaseStoryArgs = PropsWithChildren<{
 const BaseStory = ({ children, toolbar }: BaseStoryArgs) => (
   <Panel.Root classNames='h-full min-h-0'>
     <Panel.Toolbar asChild>{toolbar}</Panel.Toolbar>
-    <Panel.Content asChild classNames='min-h-0'>
-      {children}
-    </Panel.Content>
+    <Panel.Content>{children}</Panel.Content>
   </Panel.Root>
 );
 
 const JsonInspectorPanel = ({ data }: { data: unknown }) => (
-  <div className='min-h-0 h-full'>
-    <ScrollContainer.Root pin>
-      <ScrollContainer.Content thin>
-        <ScrollContainer.Viewport>
-          <Syntax.Root data={data}>
-            <Syntax.Content>
-              <Syntax.Viewport>
-                <Syntax.Code classNames='text-xs' />
-              </Syntax.Viewport>
-            </Syntax.Content>
-          </Syntax.Root>
-        </ScrollContainer.Viewport>
-        <ScrollContainer.ScrollDownButton />
-        <ScrollContainer.Fade />
-      </ScrollContainer.Content>
-    </ScrollContainer.Root>
-  </div>
+  <ScrollContainer.Root pin>
+    <ScrollContainer.Content thin>
+      <ScrollContainer.Viewport>
+        <Syntax.Root data={data}>
+          <Syntax.Content>
+            <Syntax.Viewport>
+              <Syntax.Code classNames='text-xs' />
+            </Syntax.Viewport>
+          </Syntax.Content>
+        </Syntax.Root>
+      </ScrollContainer.Viewport>
+      <ScrollContainer.ScrollDownButton />
+      <ScrollContainer.Fade />
+    </ScrollContainer.Content>
+  </ScrollContainer.Root>
 );
 
 const DefaultStory = () => {

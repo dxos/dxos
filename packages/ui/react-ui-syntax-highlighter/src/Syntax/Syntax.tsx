@@ -134,7 +134,7 @@ type SyntaxContentProps = ComposableProps;
 /** Flex-column layout container for composite parts. */
 const SyntaxContent = composable<HTMLDivElement, SyntaxContentProps>(({ children, ...props }, forwardedRef) => {
   return (
-    <div {...composableProps(props, { classNames: 'flex flex-col dx-expand overflow-hidden' })} ref={forwardedRef}>
+    <div {...composableProps(props, { classNames: 'flex flex-col p-1 dx-expand overflow-hidden' })} ref={forwardedRef}>
       {children}
     </div>
   );
@@ -244,13 +244,11 @@ type SyntaxCodeProps = ComposableProps<{
 /** Highlighted code leaf. Reads source/data from `Syntax.Root` context. */
 const SyntaxCode = composable<HTMLDivElement, SyntaxScopedProps<SyntaxCodeProps>>(
   ({ __scopeSyntax, testId, ...props }, forwardedRef) => {
-    const context = useSyntaxContext(SYNTAX_CODE_NAME, __scopeSyntax);
-    // `overflow-visible` undoes the `overflow-auto` SyntaxHighlighter carries for standalone use:
-    // here the enclosing `Syntax.Viewport` owns scrolling, and a nested scroll container would
-    // scroll first, showing a native scrollbar instead of the viewport's custom one.
     const merged = composableProps(props, { classNames: 'text-sm overflow-visible' });
 
+    const context = useSyntaxContext(SYNTAX_CODE_NAME, __scopeSyntax);
     if (context.mode === 'json') {
+      console.log(merged.className);
       return (
         <JsonHighlighter
           {...merged}
