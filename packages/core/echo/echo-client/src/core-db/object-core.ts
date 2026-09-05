@@ -106,6 +106,13 @@ export class ObjectCore {
    */
   public readonly updates = new Event();
 
+  /**
+   * Bumped by every {@link notifyUpdate}. Proxy targets stamp their decoded-leaf cache with the
+   * generation it was filled at, so invalidating every cache for this core is one increment here and
+   * a stale entry is caught by one compare on read, rather than by walking `targetsMap`.
+   */
+  public generation = 0;
+
   // -------------------------------------------------------------------------
   // Fields merged from ObjectInternals (formerly echo-proxy-target.ts).
   // The EchoDatabase reference is typed `unknown` here to avoid a circular dep
@@ -313,6 +320,8 @@ export class ObjectCore {
    * This function can be used unbound.
    */
   public readonly notifyUpdate = () => {
+    // Before the emit, so a subscriber reading the object inside its callback sees fresh values.
+    this.generation++;
     try {
       this.updates.emit();
     } catch (err: any) {

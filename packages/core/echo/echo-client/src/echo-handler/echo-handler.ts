@@ -77,8 +77,10 @@ import {
   type ProxyTarget,
   TargetKey,
   getEchoDatabase,
+  type LeafCache,
   symbolHandler,
   symbolInternals,
+  symbolLeafCache,
   symbolNamespace,
   symbolPath,
 } from './echo-proxy-target';
@@ -187,6 +189,25 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       return this._arrayGet(target, prop);
     }
 
+    // Decoded primitives are served from the target's leaf cache while it is current. A hit may be
+    // returned ahead of the `Reflect.has` walk below because entries are only ever written on the
+    // virtual-data path, after that walk has classified the key — and a key that resolved to document
+    // data cannot later resolve to a prototype accessor. `notifyUpdate` bumps the core generation on
+    // every mutation, local or remote, before anything can observe it, so a hit is never stale.
+    let leafCache: LeafCache | undefined;
+    if (typeof prop === 'string') {
+      leafCache = target[symbolLeafCache];
+      if (leafCache) {
+        const generation = target[symbolInternals].generation;
+        if (leafCache.generation !== generation) {
+          leafCache.values.clear();
+          leafCache.generation = generation;
+        } else if (leafCache.values.has(prop)) {
+          return leafCache.values.get(prop);
+        }
+      }
+    }
+
     // The ECHO system surface (id, [Type], [Meta], [Parent], toJSON, ...) is defined as
     // accessors/methods on the prototype chain (instanceState → EchoRoot/EchoRecord.prototype →
     // Object.prototype); root objects expose the full set, nested/meta records the empty base.
@@ -212,7 +233,13 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     }
 
     const decodedValueAtPath = getDecodedValueAtPath(target, prop);
-    return this._wrapInProxyIfRequired(target, decodedValueAtPath);
+    const value = this._wrapInProxyIfRequired(target, decodedValueAtPath);
+    // Leaves only. Records and arrays are wrapped objects whose identity `targetsMap` already owns,
+    // and a ref is minted fresh per read today — caching one would pin an instance across reads.
+    if (leafCache && typeof prop === 'string' && (value === null || typeof value !== 'object')) {
+      leafCache.values.set(prop, value);
+    }
+    return value;
   }
 
   set(target: ProxyTarget, prop: string | symbol, value: any, receiver: any): boolean {
@@ -271,6 +298,11 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
   private _wrapInProxyIfRequired(target: ProxyTarget, decodedValueAtPath: DecodedValueAtPath) {
     const { value: decoded, dataPath, namespace } = decodedValueAtPath;
     if (decoded == null) {
+      return decoded;
+    }
+    // A primitive is none of the cases below; settling that first also spares the `symbolIsProxy`
+    // probe from boxing it and walking its wrapper prototype on every primitive read.
+    if (typeof decoded !== 'object') {
       return decoded;
     }
     if (decoded instanceof Uint8Array) {

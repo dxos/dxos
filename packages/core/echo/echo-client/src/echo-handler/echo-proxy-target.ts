@@ -19,9 +19,22 @@ export const symbolPath = Symbol.for('@dxos/echo/internal/ProxyPath');
 export const symbolNamespace = Symbol.for('@dxos/echo/internal/ProxyNamespace');
 export const symbolHandler = Symbol.for('@dxos/echo/internal/ProxyHandler');
 export const symbolInternals = Symbol.for('@dxos/echo/internal/ProxyInternals');
+export const symbolLeafCache = Symbol.for('@dxos/echo/internal/ProxyLeafCache');
 
 // Re-export TargetKey from core-db so echo-handler callers only need this module.
 export { TargetKey } from '../core-db';
+
+/**
+ * Decoded primitive values of a record target, keyed by property, valid for one `ObjectCore`
+ * generation. Records, arrays and refs are never stored here — they are wrapped objects whose identity
+ * the core's `targetsMap` already owns.
+ * @internal
+ */
+export type LeafCache = {
+  /** The `ObjectCore.generation` the entries were read at; a mismatch on read empties the map. */
+  generation: number;
+  values: Map<string, unknown>;
+};
 
 /**
  * Generic proxy target type for ECHO proxy objects.
@@ -60,6 +73,11 @@ export type ProxyTarget = {
    * For modifications. Fires on real changes.
    */
   [EventId]: Event<void>;
+
+  /**
+   * Present on record targets (installed by `createInstanceState`); arrays carry none.
+   */
+  [symbolLeafCache]?: LeafCache;
 } & ({ [key: keyof any]: any } | EchoArray<any>);
 
 /**
