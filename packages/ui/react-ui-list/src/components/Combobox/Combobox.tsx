@@ -154,10 +154,7 @@ const ComboboxContent = composable<HTMLDivElement, ComboboxContentProps>(
         // and silently drops an incoming one. Width sits on the CONTENT so the border stays
         // inside the trigger's footprint; the chrome matches `Select.Content` (1px separator
         // border, overlay surface) since the two controls sit side by side in forms.
-        classNames={[
-          'w-(--radix-popover-trigger-width) box-border border border-separator bg-(--dx-surface-overlay)',
-          classNames,
-        ]}
+        classNames={['w-(--reference-width) box-border border border-separator bg-(--dx-surface-overlay)', classNames]}
         ref={forwardedRef}
       >
         <Popover.Viewport classNames='w-full min-w-0'>

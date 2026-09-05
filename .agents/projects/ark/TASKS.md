@@ -682,7 +682,38 @@ Findings that shaped the plan, so they are not re-derived:
       variable (`[--z-index:50]`) instead; the arrow is painted from `--arrow-background`. `Tooltip.test.tsx`
       (4) and a new `TestHover` play story (opens, positions at the trigger, hands over) pass. Gone:
       `@radix-ui/react-tooltip`, `-visually-hidden`, the `TooltipScopedProps`/`createTooltipScope` exports,
-      the grace-area hull. `useSafeCollisionPadding` now types its padding itself (`CollisionPadding`). Tooltip → Popover → Menu. Add `Positioner`, keep our `Viewport`,
+      the grace-area hull. `useSafeCollisionPadding` now types its padding itself (`CollisionPadding`).
+      Popover DONE 2026-09-05: `Popover.Root` = `usePopover` + `RootProvider lazyMount unmountOnExit`
+      (Ark's presence keeps closed content mounted-hidden before the first open unless `lazyMount`; Radix
+      never mounted it — a play story caught the difference). `Content` lifts placement (`side`/`align`/
+      `sideOffset`/`alignOffset`/`collisionPadding`/`collisionBoundary`/`avoidCollisions`/`hideWhenDetached`)
+      to the root as state and the dismissal/focus handlers as a ref, since Ark keeps both on the root;
+      `onOpenAutoFocus` is asked at render (every consumer only ever calls `preventDefault()`), which sets
+      the machine's `autoFocus`. `VirtualTrigger` registers a ref the root turns into
+      `positioning.getAnchorRect`; the `[data-popover-collision-boundary]` ancestor becomes
+      `positioning.boundary`; the safe-area padding collapses to its widest side because Zag's
+      `overflowPadding` is one number. `Viewport` reads `--available-*` (Zag sets them on the positioner);
+      `--radix-popover-content-transform-origin` → `--transform-origin` (2 consumers), the Combobox's
+      `--radix-popover-trigger-width` → `--reference-width`; `sticky` dropped (1 consumer). New
+      `surfaceZIndexVar` in ui-theme feeds the positioner's `--z-index`. Play stories: open/place/Escape,
+      virtual anchor. Gone: `aria-hidden`, `react-remove-scroll`, `createPopoverScope`.
+      **Tooling trap (2026-09-05):** an install that swaps binaries under a running moon build leaves
+      tasks cached as successful with an EMPTY `dist/types` (dx-compile's type emit died, the lib emit
+      did not); every later full build then fails downstream with `Could not find a declaration file for
+      module '@dxos/x'` while `x:build` reports "cached". Cure: find packages with `dist/lib` but no
+      `dist/types/src` and `moon run <pkg>:build --force` each, then rebuild. UPDATE: it recurred on every full build
+      for `types` and `react-ui-list` even after forced rebuilds, with dx-build logging `Failed to remove
+      dist/types/src: ENOTEMPTY` — a concurrent writer. A Cursor TypeScript native-preview server
+      (`tsc --lsp`, pid seen in `ps`) runs against this worktree, and those two packages are the ones
+      whose files the user has open; the working assumption is that it emits into `dist/types` and leaves
+      a buildinfo that makes dx-build's incremental tsc emit nothing. Mitigation used for the rest of the
+      run: `scratchpad/repair-types.sh` (find buildinfo-only `dist/types`, delete, force-build) before and
+      after every full build. CI is unaffected. **Actual cause found:** `.moon/workspace.yml` sets
+      `cache.unstable_sharedWorktreeCache` — one output CAS per machine shared by every worktree — so a
+      task whose inputs hash matches an archive produced by ANOTHER worktree (with a buildinfo-only
+      `dist/types`, however that build lost them) hydrates that archive here on every full build, and a
+      local `--force` does not replace it. Fix: `moon --cache write exec :build` once, which rewrites
+      every archive from fresh outputs. Tooltip → Popover → Menu. Add `Positioner`, keep our `Viewport`,
       `Arrow` → `Arrow`+`ArrowTip` (`fill-separator` → `--arrow-background`), rename the five
       variables, delete the three aliasing blocks, collapse DropdownMenu + ContextMenu onto one
       `menu` machine, retire the 116 `__scope*` props. Removes ten Radix packages plus `aria-hidden`

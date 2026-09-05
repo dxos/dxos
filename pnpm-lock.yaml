@@ -807,9 +807,6 @@ catalogs:
     argparse:
       specifier: ^2.0.1
       version: 2.0.1
-    aria-hidden:
-      specifier: ^1.2.4
-      version: 1.2.4
     assert:
       specifier: ^2.0.0
       version: 2.0.0
@@ -1401,9 +1398,6 @@ catalogs:
     react-qr-rounded:
       specifier: ^1.0.0
       version: 1.0.0
-    react-remove-scroll:
-      specifier: ^2.6.0
-      version: 2.6.3
     react-resize-detector:
       specifier: ^11.0.1
       version: 11.0.1
@@ -20276,9 +20270,6 @@ importers:
       '@radix-ui/react-toast':
         specifier: 'catalog:'
         version: 1.2.6(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
-      aria-hidden:
-        specifier: 'catalog:'
-        version: 1.2.4
       date-fns:
         specifier: 'catalog:'
         version: 3.6.0
@@ -20300,9 +20291,6 @@ importers:
       react-i18next:
         specifier: 'catalog:'
         version: 11.18.6(i18next@21.10.0)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
-      react-remove-scroll:
-        specifier: 'catalog:'
-        version: 2.6.3(@types/react@19.2.17)(react@19.2.7)
     devDependencies:
       '@dxos/random':
         specifier: workspace:*

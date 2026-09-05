@@ -107,7 +107,7 @@
 
   /**
    * Popover/hover-card fade+zoom (shadcn-style).
-   * Pair with `origin-(--radix-popover-content-transform-origin)` so the zoom emanates from the anchor.
+   * Pair with `origin-(--transform-origin)` so the zoom emanates from the anchor.
    */
   @keyframes popover-in {
     from {

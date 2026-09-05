@@ -181,7 +181,6 @@ export const Layout = ({ children }: PropsWithChildren<{}>) => {
                   onOpenAutoFocus={(event) => event.preventDefault()}
                   onInteractOutside={handleInteractOutside}
                   onEscapeKeyDown={handleInteractOutside}
-                  sticky='always'
                   hideWhenDetached
                 >
                   <Popover.Viewport>

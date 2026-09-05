@@ -167,7 +167,7 @@ const TooltipProvider: FC<TooltipProviderProps> = ({
   return (
     <TooltipContextProvider {...context}>
       {children}
-      <TooltipPrimitive.RootProvider value={tooltip} unmountOnExit>
+      <TooltipPrimitive.RootProvider value={tooltip} lazyMount unmountOnExit>
         <Portal>
           <TooltipPrimitive.Positioner className={tx('tooltip.positioner', { elevation })}>
             <TooltipPrimitive.Content className={tx('tooltip.content', { elevation })}>

@@ -142,7 +142,6 @@ export const PopoverContent = () => {
     <Popover.Portal>
       <Popover.Content
         side={side}
-        sticky='always'
         hideWhenDetached
         onOpenAutoFocus={isRename ? undefined : (event) => event.preventDefault()}
         onInteractOutside={handleInteractOutside}
@@ -150,7 +149,7 @@ export const PopoverContent = () => {
         classNames={[
           roundedClassNames,
           !isRename && [
-            'origin-(--radix-popover-content-transform-origin)',
+            'origin-(--transform-origin)',
             'data-[state=open]:animate-popover-in',
             'data-[state=closed]:animate-popover-out',
           ],
