@@ -245,6 +245,49 @@ cost is now a smaller multiple of the floor — the same effect noted at Stage A
 
 ---
 
+## `7a5b1d98` — 2026-09-05 — review round 1: absent keys uncached, single `Map.get`
+
+All three suites unmodified. One pass. Read rows only (nothing else on the diff's path):
+
+| per-op                 | `27735fbc` | `7a5b1d98` |
+| ---------------------- | ---------: | ---------: |
+| read, unpersisted      |     105 ns |      97 ns |
+| read, automerge        |     133 ns |     108 ns |
+| read, unpersisted wide |     114 ns |     107 ns |
+| read, automerge wide   |     130 ns |     116 ns |
+
+Automerge moved 133 → 108 ns; one `Map.get` instead of `has`+`get` is on the hit path, so part of that
+is the diff, but the unpersisted row moved 8% with nothing behind it, so the attributable share is
+roughly half. Elision check: unpersisted 5.7×, automerge 6.1×.
+
+---
+
+## Phase 3c — materialized record replaces the leaf cache (`dirty`, committed next)
+
+`echo-client` 549/549 and `echo-client-e2e` 324/324 unmodified. One pass on the tree that became the
+Phase 3c commit. Harness floor 67 ns.
+
+Change: each record target decodes its record once per core generation into `{ decoded, values }`;
+`get` serves `values[prop]`, the key-set traps serve `decoded` (DESIGN.md D10). Read rows are hits under
+both designs, so parity is the expectation; the structural win is in `ownKeys`/`has`/
+`getOwnPropertyDescriptor`, which this bench does not row.
+
+| per-op                 | `7a5b1d98` (leaf cache) | 3c (materialized) |
+| ---------------------- | ----------------------: | ----------------: |
+| read, unpersisted      |                   97 ns |            103 ns |
+| read, automerge        |                  108 ns |            129 ns |
+| read, feed             |                  110 ns |            103 ns |
+| read, unpersisted wide |                  107 ns |            105 ns |
+| read, automerge wide   |                  116 ns |            116 ns |
+| write, automerge       |                  331 µs |            283 µs |
+| make, automerge        |                  3.3 ms |            3.2 ms |
+
+Narrow automerge read 108 → 129 ns is inside the ~20% between-run band (the wide row did not move);
+the hit path is one keyed load on a null-prototype object instead of one `Map.get`, and neither is
+distinguishable from the other at this floor. Elision check: unpersisted 5.8×, automerge 6.7×, feed 5.6×.
+
+---
+
 ## Baseline → final, `0dab2f81` → `27735fbc`
 
 Per-op, both from this file. Every ECHO read row is a `Proxy` trap still (Stage C is blocked — DESIGN.md

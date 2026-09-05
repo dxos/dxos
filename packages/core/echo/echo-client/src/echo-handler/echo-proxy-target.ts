@@ -19,21 +19,23 @@ export const symbolPath = Symbol.for('@dxos/echo/internal/ProxyPath');
 export const symbolNamespace = Symbol.for('@dxos/echo/internal/ProxyNamespace');
 export const symbolHandler = Symbol.for('@dxos/echo/internal/ProxyHandler');
 export const symbolInternals = Symbol.for('@dxos/echo/internal/ProxyInternals');
-export const symbolLeafCache = Symbol.for('@dxos/echo/internal/ProxyLeafCache');
+export const symbolMaterialized = Symbol.for('@dxos/echo/internal/ProxyMaterialized');
 
 // Re-export TargetKey from core-db so echo-handler callers only need this module.
 export { TargetKey } from '../core-db';
 
 /**
- * Decoded primitive values of a record target, keyed by property, valid for one `ObjectCore`
- * generation. Records, arrays and refs are never stored here — they are wrapped objects whose identity
- * the core's `targetsMap` already owns.
+ * A record target's data, materialized from the document once per `ObjectCore` generation so that
+ * every trap after the first serves a plain property load instead of a document decode.
  * @internal
  */
-export type LeafCache = {
-  /** The `ObjectCore.generation` the entries were read at; a mismatch on read empties the map. */
+export type MaterializedRecord = {
+  /** The `ObjectCore.generation` this was built at; a mismatch rebuilds it on the next trap. */
   generation: number;
-  values: Map<string, unknown>;
+  /** The record as `ObjectCore.getDecoded` returns it, for the key-set traps. */
+  decoded: unknown;
+  /** Values as `get` returns them: primitives decoded, records and arrays wrapped, refs resolved. */
+  values: Record<string, unknown>;
 };
 
 /**
@@ -77,7 +79,7 @@ export type ProxyTarget = {
   /**
    * Present on record targets (installed by `createInstanceState`); arrays carry none.
    */
-  [symbolLeafCache]?: LeafCache;
+  [symbolMaterialized]?: MaterializedRecord;
 } & ({ [key: keyof any]: any } | EchoArray<any>);
 
 /**

@@ -1,6 +1,6 @@
 # echo-plain-objects — Tasks
 
-_Resume: Phase 5 — a reviewer subagent is going over the full diff; fix confirmed findings, re-run the affected suite (and the bench if a hot-path line moves), then update the PR body to cover the optimization work. Stage C stays BLOCKED under constraint 3 (DESIGN.md D9) pending the user's choice. Uncommitted: none. Last: Phase 3b measured at `27735fbc` — automerge reads 133 ns, 12.7× from baseline._
+_Resume: Phase 3c is green and measured; review round 2 is running over it — fix confirmed findings, re-run the suites, then update the PR body. Stage C stays BLOCKED under constraint 3 (DESIGN.md D9) pending the user's choice. Uncommitted: none once the 3c commit lands. Last: Phase 3c measured at parity (129 / 116 ns automerge reads)._
 
 Design and decisions: [DESIGN.md](./DESIGN.md). Numbers: [`echo-client-e2e/BENCHMARKS.md`](../../../packages/core/echo/echo-client-e2e/BENCHMARKS.md).
 
@@ -102,8 +102,31 @@ Checking the cache first is safe (F4 says why) and took the hit to 85 ns.
 - [x] **Measure** — `27735fbc` in `BENCHMARKS.md`. Automerge reads 464 → 133 ns (3.5×), within ~25 ns of
       unpersisted (105 ns); 12.7× against the baseline.
 
+## Phase 3c — materialized record (user direction: "materialize into a ready-to-use object")
+
+Replaces the leaf cache (DESIGN.md D10). Each record target decodes its record once per core generation
+into `MaterializedRecord { decoded, values }`; `get` serves `values[prop]`, the key-set traps serve
+`decoded`. Rebuild is lazy on the first trap after the generation moved, for the reason in D10.
+
+### Tasks
+
+- [x] **`MaterializedRecord` on the instance state** — `symbolMaterialized`, installed by
+      `createInstanceState`, one generation behind so the first trap builds it.
+- [x] **`_materialize`** — one `getDecoded` of the record; `values` holds every key the system surface
+      does not answer, wrapped once through `_wrapInProxyIfRequired`.
+- [x] **`ownKeys` / `has` / `getOwnPropertyDescriptor` read `decoded`** — one decode per generation
+      instead of per call; arrays keep the fresh decode.
+- [x] **Green: `echo-client` and `echo-client-e2e` tests, unmodified** — 549 and 324 passed, after the
+      `hasDoc` guard (D10): the first run failed `circular references`, a read inside `createObject`
+      before the core had a document.
+- [x] **Measure** — in `BENCHMARKS.md`. Automerge reads 129 / 116 ns, parity with 3b as expected.
+- [ ] **Review round 2** — over the materialized record specifically.
+
 ### Follow-ups recorded, not in scope
 
+- Arrays (`EchoArray` targets) still decode per index; the same materialization applies.
+- A nested record target's `decoded` duplicates the subtree the root's `decoded` already holds; a
+  materialization that slices from the parent would remove the O(depth) duplication.
 - Each assignment inside one `Obj.update` is a separate Automerge commit; batching into one
   `core.change` is the real write win.
 - `ownKeys`/`has` decode the whole record per key → `Object.keys(obj)` is O(n²).

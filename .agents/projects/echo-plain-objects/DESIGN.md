@@ -134,6 +134,42 @@ Also `echo-panproto/src/lens/live.ts:112` wraps a live object in a second Proxy 
 and throw. Unblocking C means changing those tests and the lens — a relaxation of constraint 3 the user
 has not granted. Until then the Proposal above is a design on file, not a plan.
 
+### D10 — Materialize the record, not the leaf (user direction, 2026-09-05)
+
+**Decided: each record target materializes its whole record from the document once per core
+generation; the per-key leaf cache is replaced.** The user asked for a ready-to-use object rebuilt when
+the document changes rather than a decode-on-read with a cache. `getDecoded` deep-copies the subtree it
+is asked for (`decode` rebuilds every nested object with `Object.fromEntries`), so decoding per key was
+paying for the record's shape anyway; decoding it once and keeping the result makes `ownKeys`, `has`
+and `getOwnPropertyDescriptor` — which each decoded the whole record per call, so `Object.keys(obj)` was
+O(n²) — one decode per generation as well.
+
+Shape: `MaterializedRecord { generation, decoded, values }` on the instance state. `decoded` is the
+record exactly as `getDecoded` returns it, used by the key-set traps so their answers are unchanged.
+`values` is a null-prototype object of what `get` returns — primitives, the stable nested proxies from
+`targetsMap`, resolved refs — for every document key the system surface does not answer
+(`Reflect.has(target, key)` false at build time). `get` reads `values[prop]` first; `undefined` means
+"not here" and falls through to today's path, so a key the record could not hold (a seeded own property
+still shadowing during `createObject`) is still answered correctly, only without the fast path.
+
+Rebuild is lazy, on the first trap after the generation moved, not eager in the `notifyUpdate`
+subscription: eager would decode the whole record on every `set`, so an `Obj.update` with ten sets on a
+250-field object would rebuild it ten times before anything reads, and the write rows would regress. The
+generation counter is the subscription reduced to an integer; the lazy rebuild reads it. If a consumer
+turns out to read one field after every change on a wide object, lazy costs it a whole-record decode per
+change where the leaf cache cost one key — recorded as a trade-off, not a defect.
+
+One guard the leaf cache never needed: materialization touches the document, and inside `createObject`
+a read can arrive before `initNewObject` has given the core one (the `circular references` test: building
+`task` creates `another`, whose `createRef` reads `task.id` while `task` is mid-construction — the seeded
+own property answered it before, `getDoc` threw now). `_materialize` returns without building while
+`core.hasDoc` is false, leaving the generation behind so the next trap retries; `get` then falls through
+to the own property exactly as before.
+
+Refs are now materialized: one `Ref` per generation instead of one per read. This is a semantic change
+the leaf cache deliberately avoided (F2); the suites decide whether anything depends on per-read
+identity, and none did.
+
 ### D8 — Stage A is a pure fast path, not a redesign
 
 In `TypedReactiveHandler.get`: (1) track per target whether any own **string-keyed accessor** exists

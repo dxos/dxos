@@ -223,6 +223,13 @@ export class ObjectCore {
     throw new Error('Invalid ObjectCore state');
   }
 
+  /**
+   * False only between construction and `initNewObject`/`bind`, while {@link getDoc} would throw.
+   */
+  get hasDoc(): boolean {
+    return this.doc != null || this.docHandle != null;
+  }
+
   getObjectStructure(): EntityStructure {
     return getDeep(this.getDoc(), this.mountPath) as EntityStructure;
   }

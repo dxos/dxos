@@ -112,7 +112,7 @@ import {
   type ProxyTarget,
   getEchoDatabase,
   symbolInternals,
-  symbolLeafCache,
+  symbolMaterialized,
   symbolNamespace,
   symbolPath,
 } from './echo-proxy-target';
@@ -662,8 +662,12 @@ export const createInstanceState = (
   defineHiddenProperty(state, symbolNamespace, namespace);
   defineHiddenProperty(state, symbolPath, path);
   defineHiddenProperty(state, EventId, options?.event ?? new Event());
-  // Starts one generation behind the core so the first read of every key is a miss.
-  defineHiddenProperty(state, symbolLeafCache, { generation: core.generation - 1, values: new Map() });
+  // Starts one generation behind the core so the first trap materializes.
+  defineHiddenProperty(state, symbolMaterialized, {
+    generation: core.generation - 1,
+    decoded: undefined,
+    values: Object.create(null),
+  });
   return state;
 };
 
