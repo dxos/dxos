@@ -52,7 +52,8 @@ import { AlreadyJoinedError } from '@dxos/protocols';
 import { toPublicKey } from '@dxos/protocols/buf';
 import { type Runtime_Client_EdgeFeatures } from '@dxos/protocols/buf/dxos/config_pb';
 import { type PeerState } from '@dxos/protocols/buf/dxos/mesh/presence_pb';
-import { Invitation, SpaceState } from '@dxos/protocols/proto/dxos/client/services';
+import { fromPublicKey } from '@dxos/protocols/buf';
+import { Invitation, Invitation_Kind, Invitation_Type, SpaceState } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 import { type FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { EdgeReplicationSetting, type SpaceMetadata } from '@dxos/protocols/proto/dxos/echo/metadata';
 import {
@@ -69,7 +70,7 @@ import { trace } from '@dxos/tracing';
 import { ComplexMap, deferFunction, forEachAsync } from '@dxos/util';
 
 import { type Identity, IdentityProviderService, createAuthProvider } from '../identity';
-import { type InvitationsManager, InvitationsManagerService } from '../invitations';
+import { type InvitationsManager, InvitationsManagerService, toBufAuthMethod } from '../invitations';
 import { type IMetadataStore, IMetadataStoreService } from '../metadata';
 import {
   AuthStatus,
@@ -1097,13 +1098,13 @@ export class DataSpaceManager extends Resource {
   ): Promise<void> {
     const tasks = invitations.map(([credentialId, invitation]) => {
       return this._invitationsManager.createInvitation(this._ctx, {
-        type: Invitation.Type.DELEGATED,
-        kind: Invitation.Kind.SPACE,
-        spaceKey: space.key,
-        authMethod: invitation.authMethod,
+        type: Invitation_Type.DELEGATED,
+        kind: Invitation_Kind.SPACE,
+        spaceKey: fromPublicKey(space.key),
+        authMethod: toBufAuthMethod(invitation.authMethod),
         invitationId: invitation.invitationId,
-        swarmKey: invitation.swarmKey,
-        guestKeypair: invitation.guestKey ? { publicKey: invitation.guestKey } : undefined,
+        swarmKey: fromPublicKey(invitation.swarmKey),
+        guestKeypair: invitation.guestKey ? { publicKey: fromPublicKey(invitation.guestKey) } : undefined,
         lifetime: invitation.expiresOn ? remainingLifetimeSeconds(invitation.expiresOn) : undefined,
         multiUse: invitation.multiUse,
         delegationCredentialId: credentialId,
