@@ -791,8 +791,10 @@ dist/types/src: ENOTEMPTY` — a concurrent writer. A Cursor TypeScript native-p
       Boot budget after 4b: 4,546,844 bytes, no `@radix-ui` bytes in the graph; ~186 KB above main's
       2026-08-31 figure (4,360,490) — the Zag machines are the new floor, ceiling stays 4.55 MB.
       Lockfile: 31 `@radix-ui` versions gone (~1.9 MB built), rest via tldraw/excalidraw/leva (Phase 6).
-      Also: `playground/TextField.stories.tsx` (densities, variants, adornments, states, selectable
-      accent hue overriding the accent role tokens on a subtree).
+      Also: `playground/Playground.stories.tsx` — a section per component family (buttons, text fields,
+      controls, select, slider, progress, tags, avatar, skeleton, navigation, editable, collapsible, card,
+      banner, overlays, dialogs), each its own story plus `All` composing them, under a sticky bar that
+      sets the accent hue (overriding the accent role tokens on the subtree) and density.
 - [ ] **Phase 5 — decisions.** RAC (keep for the date/time cluster vs consolidate onto Ark; default
       keep); Toolbar (no Ark toolbar — focus group from `@dxos/react-focus` + `toggle-group`); Focus
       (keep as the seam).
