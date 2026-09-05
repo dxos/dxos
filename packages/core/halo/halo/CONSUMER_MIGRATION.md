@@ -283,7 +283,7 @@ Initiation lives on `Identity` / `Space` (not on `Invitation`); the returned
 
 ```ts
 // Before
-const observable = space.share({ authMethod: Invitation.AuthMethod.NONE });
+const observable = space.share({ authMethod: Invitation_AuthMethod.NONE });
 observable.subscribe((invitation) => {
   /* switch on invitation.state */
 });

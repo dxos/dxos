@@ -61,7 +61,9 @@ import {
   createRtcTransportFactory,
 } from '@dxos/network-manager';
 import { InvalidStorageVersionError, STORAGE_VERSION } from '@dxos/protocols';
-import { Invitation, SystemStatus } from '@dxos/protocols/proto/dxos/client/services';
+import { toPublicKey } from '@dxos/protocols/buf';
+import { Invitation, Invitation_Kind } from '@dxos/protocols/buf/dxos/client/invitation_pb';
+import { SystemStatus } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { type Credential, type ProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
 import {
   ContactsService,
@@ -238,7 +240,7 @@ export class ClientServicesHost {
   // Orchestration state (formerly on `ServiceContext`).
   readonly #initialized = new Trigger();
   readonly #edgeIdentityUpdateMutex = new Mutex();
-  readonly #handlerFactories = new Map<Invitation.Kind, (invitation: Partial<Invitation>) => InvitationProtocol>();
+  readonly #handlerFactories = new Map<Invitation_Kind, (invitation: Partial<Invitation>) => InvitationProtocol>();
 
   constructor({
     config,
@@ -576,7 +578,7 @@ export class ClientServicesHost {
 
     // Wire the setters for components that point "up the stack".
     this.#handlerFactories.set(
-      Invitation.Kind.DEVICE,
+      Invitation_Kind.DEVICE,
       () =>
         new DeviceInvitationProtocol(
           this.#keyring!,
@@ -739,7 +741,7 @@ export class ClientServicesHost {
   }
 
   getInvitationHandler(invitation: Partial<Invitation> & Pick<Invitation, 'kind'>): InvitationProtocol {
-    if (this.identityManager.identity == null && invitation.kind === Invitation.Kind.SPACE) {
+    if (this.identityManager.identity == null && invitation.kind === Invitation_Kind.SPACE) {
       throw new Error('Identity must be created before joining a space.');
     }
     const factory = this.#handlerFactories.get(invitation.kind);
@@ -805,13 +807,13 @@ export class ClientServicesHost {
     log('_initialize: EdgeAgentManager opened');
 
     this.#handlerFactories.set(
-      Invitation.Kind.SPACE,
+      Invitation_Kind.SPACE,
       (invitation) =>
         new SpaceInvitationProtocol(
           this.#dataSpaceManager!,
           this.#signingContextProvider!(),
           this.#keyring!,
-          invitation.spaceKey,
+          toPublicKey(invitation.spaceKey),
         ),
     );
     this.#initialized.wake();

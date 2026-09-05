@@ -8,7 +8,8 @@ import { invariant } from '@dxos/invariant';
 import { type KeyringApi } from '@dxos/keyring';
 import { type PublicKey } from '@dxos/keys';
 import { AlreadyJoinedError } from '@dxos/protocols';
-import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
+import { fromPublicKey } from '@dxos/protocols/buf';
+import { Invitation, Invitation_Kind } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 import type { DeviceProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
 import {
   type AdmissionRequest,
@@ -38,7 +39,7 @@ export class DeviceInvitationProtocol implements InvitationProtocol {
 
   getInvitationContext(): Partial<Invitation> & Pick<Invitation, 'kind'> {
     return {
-      kind: Invitation.Kind.DEVICE,
+      kind: Invitation_Kind.DEVICE,
     };
   }
 
@@ -122,6 +123,6 @@ export class DeviceInvitationProtocol implements InvitationProtocol {
       haloSpaceRootUrl,
     });
 
-    return { identityKey };
+    return { identityKey: fromPublicKey(identityKey) };
   }
 }

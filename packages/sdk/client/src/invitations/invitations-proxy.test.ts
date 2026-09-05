@@ -6,7 +6,14 @@ import { afterEach, describe, expect, test, vi } from 'vitest';
 
 import { Stream } from '@dxos/async';
 import type { ClientServices } from '@dxos/client-protocol';
-import { Invitation, QueryInvitationsResponse } from '@dxos/protocols/proto/dxos/client/services';
+import { buf } from '@dxos/protocols/buf';
+import { Invitation_Kind } from '@dxos/protocols/buf/dxos/client/invitation_pb';
+import {
+  QueryInvitationsResponse,
+  QueryInvitationsResponse_Action,
+  QueryInvitationsResponse_Type,
+  QueryInvitationsResponseSchema,
+} from '@dxos/protocols/buf/dxos/client/services_pb';
 
 import { InvitationsProxy } from './invitations-proxy';
 
@@ -25,7 +32,7 @@ const makeProxy = (queryInvitations: InvitationsService['queryInvitations']) => 
     cancelInvitation: notCalled('cancelInvitation'),
   };
 
-  return new InvitationsProxy(service, undefined, () => ({ kind: Invitation.Kind.SPACE }));
+  return new InvitationsProxy(service, undefined, () => ({ kind: Invitation_Kind.SPACE }));
 };
 
 describe('InvitationsProxy', () => {
@@ -37,22 +44,28 @@ describe('InvitationsProxy', () => {
     const proxy = makeProxy(
       () =>
         new Stream<QueryInvitationsResponse>(({ next }) => {
-          next({
-            action: QueryInvitationsResponse.Action.ADDED,
-            type: QueryInvitationsResponse.Type.CREATED,
-            invitations: [],
-            existing: true,
-          });
-          next({
-            action: QueryInvitationsResponse.Action.ADDED,
-            type: QueryInvitationsResponse.Type.ACCEPTED,
-            invitations: [],
-            existing: true,
-          });
-          next({
-            action: QueryInvitationsResponse.Action.LOAD_COMPLETE,
-            type: QueryInvitationsResponse.Type.CREATED,
-          });
+          next(
+            buf.create(QueryInvitationsResponseSchema, {
+              action: QueryInvitationsResponse_Action.ADDED,
+              type: QueryInvitationsResponse_Type.CREATED,
+              invitations: [],
+              existing: true,
+            }),
+          );
+          next(
+            buf.create(QueryInvitationsResponseSchema, {
+              action: QueryInvitationsResponse_Action.ADDED,
+              type: QueryInvitationsResponse_Type.ACCEPTED,
+              invitations: [],
+              existing: true,
+            }),
+          );
+          next(
+            buf.create(QueryInvitationsResponseSchema, {
+              action: QueryInvitationsResponse_Action.LOAD_COMPLETE,
+              type: QueryInvitationsResponse_Type.CREATED,
+            }),
+          );
         }),
     );
 

@@ -15,8 +15,13 @@ import {
   type JoinSpaceRequest,
   type JoinSpaceResponseBody,
 } from '@dxos/protocols';
+import {
+  Invitation_AuthMethod,
+  Invitation_Kind,
+  Invitation_State,
+  Invitation_Type,
+} from '@dxos/protocols/buf/dxos/client/invitation_pb';
 import { schema } from '@dxos/protocols/proto';
-import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { type DeviceProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
 import {
   type AdmissionRequest,
@@ -71,9 +76,9 @@ export class EdgeInvitationHandler implements FlowLockHolder {
     const invitation = guardedState.current;
     const spaceId = invitation.spaceId;
     const canBeHandledByEdge =
-      invitation.authMethod !== Invitation.AuthMethod.SHARED_SECRET &&
-      invitation.type === Invitation.Type.DELEGATED &&
-      invitation.kind === Invitation.Kind.SPACE &&
+      invitation.authMethod !== Invitation_AuthMethod.SHARED_SECRET &&
+      invitation.type === Invitation_Type.DELEGATED &&
+      invitation.kind === Invitation_Kind.SPACE &&
       spaceId != null &&
       SpaceId.isValid(spaceId);
 
@@ -126,7 +131,7 @@ export class EdgeInvitationHandler implements FlowLockHolder {
       this._flowLock = await tryAcquireBeforeContextDisposed(ctx, guardedState.mutex);
       log.verbose('edge invitation flow acquired the lock');
 
-      guardedState.set(this, Invitation.State.CONNECTING);
+      guardedState.set(this, Invitation_State.CONNECTING);
 
       const response = await this._joinSpaceByInvitation(ctx, guardedState, spaceId, {
         identityKey: admissionRequest.identityKey.toHex(),
@@ -136,7 +141,7 @@ export class EdgeInvitationHandler implements FlowLockHolder {
       const admissionResponse = await this._mapToAdmissionResponse(response);
       await this._callbacks.onInvitationSuccess(ctx, admissionResponse, { space: admissionRequest });
     } catch (error) {
-      guardedState.set(this, Invitation.State.ERROR);
+      guardedState.set(this, Invitation_State.ERROR);
       throw error;
     } finally {
       this._flowLock?.release();
@@ -170,7 +175,7 @@ export class EdgeInvitationHandler implements FlowLockHolder {
         if (!privateKey || !publicKey) {
           throw error;
         }
-        const signature = sign(Buffer.from(error.challenge, 'base64'), privateKey);
+        const signature = sign(Buffer.from(error.challenge, 'base64'), Buffer.from(privateKey.data));
         return this._client.joinSpaceByInvitation(ctx, spaceId, {
           ...request,
           signature: Buffer.from(signature).toString('base64'),
