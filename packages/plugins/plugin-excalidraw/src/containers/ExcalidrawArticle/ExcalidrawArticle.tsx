@@ -73,6 +73,12 @@ export const ExcalidrawArticle = ({
     if (!wanted || sameSet(wanted, reportedSelectionRef.current)) {
       return;
     }
+    // An empty host selection clears the editor's; the element check below is for non-empty ones.
+    if (wanted.length === 0) {
+      reportedSelectionRef.current = wanted;
+      api.updateScene({ appState: { selectedElementIds: {} } });
+      return;
+    }
     const selectedElementIds = Object.fromEntries(
       elements
         .filter(

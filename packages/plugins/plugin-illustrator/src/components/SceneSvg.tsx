@@ -337,9 +337,11 @@ export type SceneSvgProps = ThemedClassName<{
 }>;
 
 /**
- * Minimal SVG backend for the scene DSL: renders world objects directly (no canvas editor),
- * resolving bound arrow refs against box borders. Useful for read-only previews and stories;
- * interaction/persistence stays with the tldraw backend.
+ * SVG backend for the scene DSL: renders world objects directly (no canvas editor), resolving
+ * bound arrow refs against box borders and drawing the UML end markers. Selection is host-owned
+ * and optional — pass `selection` with `onSelectionChange` (click, shift-toggle, background clear,
+ * Space) and `onActivate` (double-click, Enter) to make objects interactive; persistence stays
+ * with the variant that holds the canvas.
  */
 export const SceneSvg = ({ classNames, objects, grid, selection, onSelectionChange, onActivate }: SceneSvgProps) => {
   const { registry, viewBox } = useMemo(() => resolve(objects), [objects]);
