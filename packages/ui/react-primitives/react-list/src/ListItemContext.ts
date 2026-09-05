@@ -2,7 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type CheckboxProps } from '@radix-ui/react-checkbox';
 import {
   type ComponentPropsWithoutRef,
   type ComponentRef,
@@ -18,10 +17,12 @@ import { createContext } from '@dxos/react-hooks';
 
 export const LIST_ITEM_NAME = 'ListItem';
 
+export type CheckedState = boolean | 'indeterminate';
+
 export interface ListItemData {
   id: string;
   labelId?: string;
-  selected?: CheckboxProps['checked'];
+  selected?: CheckedState;
   open?: boolean;
 }
 
@@ -30,8 +31,8 @@ export type ListItemProps = Omit<ListItemData, 'id'> & { collapsible?: boolean }
     defaultOpen?: boolean;
     onOpenChange?: (nextOpen: boolean) => void;
   } & {
-    onSelectedChange?: CheckboxProps['onCheckedChange'];
-    defaultSelected?: CheckboxProps['defaultChecked'];
+    onSelectedChange?(checked: CheckedState): void;
+    defaultSelected?: CheckedState;
   };
 
 export type ListItemElement = ComponentRef<'li'>;
@@ -39,8 +40,8 @@ export type ListItemElement = ComponentRef<'li'>;
 export type ListItemContextValue = {
   headingId: string;
   open: boolean;
-  selected: CheckboxProps['checked'];
-  setSelected: Dispatch<SetStateAction<CheckboxProps['checked']>>;
+  selected: CheckedState | undefined;
+  setSelected: Dispatch<SetStateAction<CheckedState | undefined>>;
 };
 
 export const [ListItemProvider, useListItemContext] = createContext<ListItemContextValue>(LIST_ITEM_NAME);

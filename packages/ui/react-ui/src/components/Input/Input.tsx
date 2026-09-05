@@ -2,10 +2,11 @@
 // Copyright 2023 DXOS.org
 //
 
-import * as CheckboxPrimitive from '@radix-ui/react-checkbox';
+import { Checkbox as CheckboxPrimitive, useCheckbox } from '@ark-ui/react/checkbox';
 import React, {
   type ComponentPropsWithRef,
-  type ForwardRefExoticComponent,
+  type ComponentPropsWithoutRef,
+  type MouseEvent,
   PropsWithChildren,
   type ReactNode,
   forwardRef,
@@ -15,7 +16,7 @@ import React, {
 } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import { useControllableState } from '@dxos/react-hooks';
+import { useComposedRefs, useControllableState } from '@dxos/react-hooks';
 import {
   DescriptionAndValidation as DescriptionAndValidationPrimitive,
   type DescriptionAndValidationProps as DescriptionAndValidationPrimitiveProps,
@@ -354,51 +355,107 @@ TextArea.displayName = 'Input.TextArea';
 // Checkbox
 //
 
-type CheckboxProps = ThemedClassName<Omit<CheckboxPrimitive.CheckboxProps, 'children'>> & {
+type CheckedState = boolean | 'indeterminate';
+
+/** Element props reach the visible control (a div); the form fields reach the hidden input. */
+type CheckboxProps = ThemedClassName<Omit<ComponentPropsWithoutRef<'div'>, 'defaultChecked' | 'defaultValue'>> & {
+  checked?: CheckedState;
+  defaultChecked?: CheckedState;
+  // A method signature, so a handler typed for the boolean it will get still fits (as with Radix).
+  onCheckedChange?(checked: CheckedState): void;
   size?: Size;
+  disabled?: boolean;
+  required?: boolean;
+  readOnly?: boolean;
+  name?: string;
+  form?: string;
+  /** Submitted with the form (default `on`). */
+  value?: string;
 };
 
-const Checkbox: ForwardRefExoticComponent<CheckboxProps> = forwardRef<HTMLButtonElement, CheckboxProps>(
+/**
+ * A native checkbox, visually hidden, behind a styled control. The `Input.Root` id lands on the
+ * input so `Input.Label` reaches it; everything else (test ids, handlers) lands on the visible
+ * control, which is what a pointer or a test hits.
+ */
+const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(
   (
     {
       classNames,
-      checked: propsChecked,
-      defaultChecked: propsDefaultChecked,
-      onCheckedChange: propsOnCheckedChange,
+      checked,
+      defaultChecked,
+      onCheckedChange,
       size,
+      disabled,
+      required,
+      readOnly,
+      name,
+      form,
+      value,
+      onClick,
       ...props
     },
     forwardedRef,
   ) => {
-    const [checked, onCheckedChange] = useControllableState({
-      prop: propsChecked,
-      defaultProp: propsDefaultChecked,
-      onChange: propsOnCheckedChange,
-    });
     const { id, validationValence, descriptionId, errorMessageId } = useInputContext(INPUT_NAME);
     const { tx } = useThemeContext();
+    const inputRef = useRef<HTMLInputElement>(null);
+    const checkbox = useCheckbox({
+      ids: { hiddenInput: id },
+      checked,
+      defaultChecked,
+      onCheckedChange: onCheckedChange && (({ checked }) => onCheckedChange(checked)),
+      disabled,
+      required,
+      readOnly,
+      invalid: validationValence === 'error',
+      name,
+      form,
+      value,
+    });
+
+    // The machine toggles through the label's activation of the input, which any ancestor that
+    // calls `preventDefault()` on the click (a tree row does) cancels. Clicking the input here and
+    // cancelling the activation keeps exactly one toggle per click, on the same path the keyboard
+    // takes, wherever the control sits.
+    const handleClick = useCallback(
+      (event: MouseEvent<HTMLDivElement>) => {
+        onClick?.(event);
+        if (event.defaultPrevented) {
+          return;
+        }
+        event.preventDefault();
+        if (!checkbox.disabled && !readOnly) {
+          inputRef.current?.click();
+          inputRef.current?.focus();
+        }
+      },
+      [onClick, checkbox.disabled, readOnly],
+    );
 
     return (
-      <CheckboxPrimitive.Root
-        {...{
-          ...props,
-          checked,
-          onCheckedChange,
-          id,
-          'aria-describedby': descriptionId,
-          ...(validationValence === 'error' && {
-            'aria-invalid': 'true' as const,
-            'aria-errormessage': errorMessageId,
-          }),
-          'className': tx('input.checkbox', { size }, 'shrink-0', classNames),
-        }}
-        ref={forwardedRef}
-      >
-        <Icon
-          icon={checked === 'indeterminate' ? 'ph--minus--regular' : 'ph--check--regular'}
-          classNames={tx('input.checkboxIndicator', { size, checked })}
+      <CheckboxPrimitive.RootProvider value={checkbox} className='contents'>
+        <CheckboxPrimitive.Control
+          {...props}
+          // Focusable by pointer only, so a press lands focus here (as it did on the button this
+          // replaces) instead of on the nearest focusable ancestor, which a tree row re-renders on.
+          tabIndex={-1}
+          onClick={handleClick}
+          className={tx('input.checkbox', { size }, 'shrink-0', classNames)}
+        >
+          <CheckboxPrimitive.Indicator asChild>
+            <Icon icon='ph--check--regular' classNames={tx('input.checkboxIndicator', { size })} />
+          </CheckboxPrimitive.Indicator>
+          <CheckboxPrimitive.Indicator indeterminate asChild>
+            <Icon icon='ph--minus--regular' classNames={tx('input.checkboxIndicator', { size })} />
+          </CheckboxPrimitive.Indicator>
+        </CheckboxPrimitive.Control>
+        <CheckboxPrimitive.HiddenInput
+          aria-describedby={descriptionId}
+          {...(validationValence === 'error' && { 'aria-errormessage': errorMessageId })}
+          ref={useComposedRefs(forwardedRef, inputRef)}
         />
-      </CheckboxPrimitive.Root>
+      </CheckboxPrimitive.RootProvider>
     );
   },
 );
@@ -512,6 +569,7 @@ export const Input = {
 };
 
 export type {
+  CheckedState,
   CheckboxProps,
   DateInputProps,
   DateTimeInputProps,

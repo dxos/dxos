@@ -56,7 +56,6 @@
     "@dxos/util": "workspace:*",
     "@internationalized/date": "catalog:",
     "@radix-ui/react-alert-dialog": "catalog:",
-    "@radix-ui/react-checkbox": "catalog:",
     "@radix-ui/react-context": "catalog:",
     "@radix-ui/react-context-menu": "catalog:",
     "@radix-ui/react-dialog": "catalog:",

@@ -27,11 +27,9 @@
   "dependencies": {
     "@ark-ui/react": "catalog:",
     "@dxos/react-hooks": "workspace:*",
-    "@radix-ui/react-checkbox": "catalog:",
     "@radix-ui/react-collapsible": "catalog:"
   },
   "devDependencies": {
-    "@radix-ui/react-checkbox": "catalog:",
     "@storybook/react-vite": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
