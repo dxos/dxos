@@ -18,7 +18,8 @@ import * as GraphNode from '@dxos/graph/GraphNode';
 import * as SpaceCapabilities from '@dxos/plugin-space/SpaceCapabilities';
 import * as SpaceEvents from '@dxos/plugin-space/SpaceEvents';
 
-// Raw import keeps the welcome copy in a standalone Markdown file that renders in editors and diffs cleanly.
+// Raw imports keep the seeded copy in standalone Markdown files that render in editors and diff cleanly.
+import DXOS_CONTENT from '../content/DXOS.md?raw';
 import README_CONTENT from '../content/README.md?raw';
 import { OnboardingOperation } from '../operations';
 import { type OnboardingOptions } from './capabilities';
@@ -27,6 +28,11 @@ const DEFAULT_SPACE_ICON = 'house-line';
 const DEFAULT_SPACE_ICON_HUE = 'violet';
 
 export const README_DOCUMENT_NAME = 'README';
+export const DXOS_DOCUMENT_NAME = 'DXOS';
+
+// The README links to the seeded DXOS document; its URI only exists once that object is created,
+// so the Markdown carries this placeholder and the seeder substitutes the real link.
+export const DXOS_URI_PLACEHOLDER = '{{DXOS_URI}}';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* ({ generateSampleSpace }: OnboardingOptions) {
@@ -62,10 +68,15 @@ export default Capability.makeModule(
         ),
       ).pipe(Effect.provideService(Operation.Service, operationInvoker));
 
-      const welcomeDoc = Markdown.make({ name: README_DOCUMENT_NAME, content: README_CONTENT });
+      const visionDoc = Markdown.make({ name: DXOS_DOCUMENT_NAME, content: DXOS_CONTENT });
+      defaultSpace.db.add(visionDoc);
+      const welcomeDoc = Markdown.make({
+        name: README_DOCUMENT_NAME,
+        content: README_CONTENT.replace(DXOS_URI_PLACEHOLDER, Ref.make(visionDoc).uri),
+      });
       defaultSpace.db.add(welcomeDoc);
       Obj.update(rootCollection, (rootCollection) => {
-        rootCollection.objects.push(Ref.make(welcomeDoc));
+        rootCollection.objects.push(Ref.make(welcomeDoc), Ref.make(visionDoc));
       });
     }
 
