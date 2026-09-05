@@ -673,7 +673,7 @@ Findings that shaped the plan, so they are not re-derived:
       TextTooltip truncation veto) gates the open in the provider. Deletion is smaller than the guide's 942
       LOC suggests; the win is the content layer, not the trigger logic.
 
-- [ ] **Phase 3 — the forks.** Tooltip DONE 2026-09-05 (see design above): `Tooltip.Provider` is one
+- [x] **Phase 3 — the forks.** DONE 2026-09-05. Tooltip DONE 2026-09-05 (see design above): `Tooltip.Provider` is one
       `useTooltip` machine with `ids.trigger = (value) => value`, our own `ark.button` trigger delegating
       pointer/blur/click to `api.getTriggerProps({ value })` at event time (so no trigger subscribes),
       imperative `aria-describedby`/`data-state` on the active trigger as before, Ark `Positioner` /
@@ -697,13 +697,28 @@ Findings that shaped the plan, so they are not re-derived:
       `--radix-popover-trigger-width` → `--reference-width`; `sticky` dropped (1 consumer). New
       `surfaceZIndexVar` in ui-theme feeds the positioner's `--z-index`. Play stories: open/place/Escape,
       virtual anchor. Gone: `aria-hidden`, `react-remove-scroll`, `createPopoverScope`.
+      Menu DONE 2026-09-05: `DropdownMenu` and `ContextMenu` are one implementation (`DropdownMenu.tsx`,
+      `ContextMenu.tsx` deleted) over Ark's `menu` machine — `Menu.Root` for both, `Trigger` vs
+      `ContextTrigger`, `Sub` = nested `Menu.Root` + `TriggerItem` (the machine parents it itself),
+      `Content` lifts placement to the root as Popover does; `lazyMount unmountOnExit`; `typeahead`.
+      **Selection is the item's own click**, not the machine's `onSelect`: Zag's `invokeOnSelect` reads
+      `highlightedValue` from React-state-backed context, and a click that lands before React commits the
+      pointerdown's highlight (which `userEvent.click` right after open does) finds it null and selects
+      nothing — an afternoon of Zag instrumentation to find. Keyboard Enter still works because the
+      machine clicks the highlighted element. `closeOnSelect={false}` and the item closes the root unless
+      its cancelable `onSelect` event was `preventDefault()`ed (Radix contract kept). `modal` accepted,
+      no-op. `MenuButton`, `react-ui-menu` and the 20-odd consumers compile unchanged. Play stories:
+      DropdownMenu select, ContextMenu, MenuButton select. Gone: `@radix-ui/react-menu`,
+      `-dropdown-menu`, `-context-menu`, `-popper`, `-dismissable-layer`, `-focus-scope`, `-focus-guards`,
+      `-presence`, `-portal`, `createDropdownMenuScope`. Radix left in `react-ui`: `react-dialog`,
+      `react-alert-dialog`, `react-select`, `react-toast` (Phase 4).
       **Tooling trap (2026-09-05):** an install that swaps binaries under a running moon build leaves
       tasks cached as successful with an EMPTY `dist/types` (dx-compile's type emit died, the lib emit
       did not); every later full build then fails downstream with `Could not find a declaration file for
-      module '@dxos/x'` while `x:build` reports "cached". Cure: find packages with `dist/lib` but no
+module '@dxos/x'` while `x:build` reports "cached". Cure: find packages with `dist/lib` but no
       `dist/types/src` and `moon run <pkg>:build --force` each, then rebuild. UPDATE: it recurred on every full build
       for `types` and `react-ui-list` even after forced rebuilds, with dx-build logging `Failed to remove
-      dist/types/src: ENOTEMPTY` — a concurrent writer. A Cursor TypeScript native-preview server
+dist/types/src: ENOTEMPTY` — a concurrent writer. A Cursor TypeScript native-preview server
       (`tsc --lsp`, pid seen in `ps`) runs against this worktree, and those two packages are the ones
       whose files the user has open; the working assumption is that it emits into `dist/types` and leaves
       a buildinfo that makes dx-build's incremental tsc emit nothing. Mitigation used for the rest of the

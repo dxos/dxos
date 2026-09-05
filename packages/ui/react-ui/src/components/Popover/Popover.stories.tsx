@@ -93,17 +93,17 @@ export const TestOpenClose: StoryObj = {
     const trigger = within(canvasElement).getByRole('button', { name: 'Open popover' });
     await expect(document.querySelector('[role="dialog"]')).toBeNull();
     await userEvent.click(trigger);
-    const dialog = await waitFor(() => {
+    const dialog = await waitFor(async () => {
       const element = document.querySelector<HTMLElement>('[role="dialog"]');
-      expect(element).not.toBeNull();
+      await expect(element).not.toBeNull();
       return element!;
     });
     await expect(dialog.textContent).toContain('Popover body');
     await expect(trigger.getAttribute('aria-expanded')).toBe('true');
-    await waitFor(() => {
+    await waitFor(async () => {
       const rect = dialog.getBoundingClientRect();
-      expect(rect.width).toBeGreaterThan(0);
-      expect(near(rect, trigger.getBoundingClientRect())).toBe(true);
+      await expect(rect.width).toBeGreaterThan(0);
+      await expect(near(rect, trigger.getBoundingClientRect())).toBe(true);
     });
     await userEvent.keyboard('{Escape}');
     await waitFor(() => expect(document.querySelector('[role="dialog"]')).toBeNull());
@@ -131,9 +131,9 @@ export const TestVirtualAnchor: StoryObj = {
   },
   play: async ({ canvasElement }) => {
     const anchor = within(canvasElement).getByRole('button', { name: 'Anchor' });
-    const dialog = await waitFor(() => {
+    const dialog = await waitFor(async () => {
       const element = document.querySelector<HTMLElement>('[role="dialog"]');
-      expect(element).not.toBeNull();
+      await expect(element).not.toBeNull();
       return element!;
     });
     await waitFor(() => expect(near(dialog.getBoundingClientRect(), anchor.getBoundingClientRect())).toBe(true));

@@ -536,6 +536,24 @@ Outcome: `react-popper`, `-dismissable-layer`, `-focus-scope`, `-focus-guards`, 
 `-portal`, `-tooltip`, `-menu`, `-dropdown-menu`, `-context-menu` leave `react-ui`. Also
 `aria-hidden` and `react-remove-scroll`, which only the Popover fork imports.
 
+**Done (2026-09-05).** Verdict revisions from the port:
+
+- `Tooltip` kept its single-provider design (one machine, one content node, N triggers) rather than
+  Ark's `Tooltip.Root` per trigger: Ark's `Tooltip.Trigger` subscribes every trigger to the machine,
+  which would re-render all 47 consumers' triggers on every open. Our trigger is an `ark.button` that
+  asks `api.getTriggerProps({ value })` at event time instead.
+- Zag's positioner sets `z-index: var(--z-index)` inline, so a `z-*` class cannot win; the theme sets
+  the variable (`surfaceZIndexVar` in `ui-theme`). `overflowPadding` is one number, so safe-area
+  collision padding collapses to its widest side. Closed content needs `lazyMount unmountOnExit` or
+  Ark keeps it mounted-hidden before the first open (a play story caught it).
+- `Popover.Content`'s placement props are lifted to the root as state, because Ark positions from the
+  root; `sticky` has no counterpart and was dropped (one consumer).
+- `Menu` selection is handled on the item's own click, not through the machine's `onSelect`: Zag's
+  `invokeOnSelect` reads `highlightedValue` from context, and a click landing before React commits the
+  pointerdown's highlight (a `userEvent.click` right after open) selects nothing. `closeOnSelect` is
+  off and the item closes the menu unless its cancelable `onSelect` was `preventDefault()`ed, which
+  keeps Radix's contract. `DropdownMenu.Root modal` is accepted as a no-op.
+
 ### Phase 4 — modal, toast, select
 
 - **`Dialog` + `Main`** → `dialog`. `Overlay` → `Backdrop`, `Close` → `CloseTrigger`, `AlertDialog`

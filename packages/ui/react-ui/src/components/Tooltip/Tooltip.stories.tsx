@@ -94,20 +94,20 @@ export const TestHover: Story = {
     const [first, second] = canvas.getAllByRole('button');
 
     await userEvent.hover(first);
-    const tooltip = await waitFor(() => {
+    const tooltip = await waitFor(async () => {
       const element = document.querySelector<HTMLElement>('[role="tooltip"]');
-      expect(element).not.toBeNull();
+      await expect(element).not.toBeNull();
       return element!;
     });
     await waitFor(() => expect(tooltip.textContent).toContain('First tip'));
     await expect(first.getAttribute('aria-describedby')).toContain(tooltip.id);
     await expect(second.getAttribute('aria-describedby')).toBeNull();
     // Positioned beside the trigger rather than left at the portal's origin.
-    await waitFor(() => {
+    await waitFor(async () => {
       const rect = tooltip.getBoundingClientRect();
       const anchor = first.getBoundingClientRect();
-      expect(rect.width).toBeGreaterThan(0);
-      expect(Math.abs(rect.left + rect.width / 2 - (anchor.left + anchor.width / 2))).toBeLessThan(anchor.width);
+      await expect(rect.width).toBeGreaterThan(0);
+      await expect(Math.abs(rect.left + rect.width / 2 - (anchor.left + anchor.width / 2))).toBeLessThan(anchor.width);
     });
 
     await userEvent.unhover(first);
