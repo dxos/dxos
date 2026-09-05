@@ -55,7 +55,6 @@
     "@dxos/ui-types": "workspace:*",
     "@dxos/util": "workspace:*",
     "@internationalized/date": "catalog:",
-    "@radix-ui/react-toast": "catalog:",
     "date-fns": "catalog:",
     "dompurify": "catalog:",
     "error-stack-parser": "catalog:",

@@ -1,7 +1,7 @@
 # → Ark UI migration (plan)
 
 **Status:** in progress. Phase 0 landed as #12902 (2026-09-03). Phase 1 (own the scaffolding) is on
-`claude/react-ui-ark-port-fe9f63`, with Phases 2, 3 and 4a (Dialog/Main, Select) — see the ledger in
+`claude/react-ui-ark-port-fe9f63`, with Phases 2, 3, 4a (Dialog/Main, Select) and 4b (Toast) — see the ledger in
 `.agents/projects/ark/TASKS.md` for what is decided and what is done. Every number below was measured against this tree at `@ark-ui/react@5.39.1` /
 `@zag-js/*@1.43.3` and the `@-ui/*` versions in the lockfile on 2026-09-02 — re-measure before
 trusting a figure in a later quarter.
@@ -561,7 +561,7 @@ Outcome: `react-popper`, `-dismissable-layer`, `-focus-scope`, `-focus-guards`, 
   JSX, so most consumers change one import and nothing else. **Decided 2026-09-05: keep the children
   API in this pass; moving consumers to Ark's `collection` prop is a later phase of its own.**
 
-**Done for Dialog, Main and Select (2026-09-05); Toast is not in this pass.** Verdict revisions:
+**Done for Dialog, Main and Select, then Toast (2026-09-05).** Verdict revisions:
 
 - `Dialog.Overlay` is Ark's `Backdrop` with the content nested inside it, not a sibling `Positioner`:
   every consumer nests `Content` in `Overlay`, and the backdrop's own presence runs the exit animation.
@@ -575,6 +575,11 @@ Outcome: `react-popper`, `-dismissable-layer`, `-focus-scope`, `-focus-guards`, 
 - `Select` keeps the children API by having each option register with the root, which builds the
   `collection`; the trigger shows the selected option's own children as 's `ItemText` did. The
   content therefore stays mounted (hidden) while closed. `Arrow` and the scroll buttons are gone.
+- `Toast` keeps its declarative API over the store: the provider owns `createToaster` and a registry
+  of declared roots, `Toast.Root` renders nothing in place and mirrors `open` into the store, and
+  `Toast.Viewport` is Ark's `Toaster` rendering each root's content inside the machine's actor. The
+  `--radix-toast-swipe-*` animation is gone with the `tailwindcss-radix` plugin; motion is the
+  machine's inline variables transitioned in `toast.css`.
 
 ### Phase 5 — decisions, not ports
 

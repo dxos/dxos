@@ -45,6 +45,7 @@
 @import './css/components/surface.css';
 @import './css/components/tag.css';
 @import './css/components/text.css';
+@import './css/components/toast.css';
 
 /* @layer dx-components (layout) */
 @import './css/layout/main.css';
@@ -123,7 +124,6 @@
  */
 @plugin '@tailwindcss/forms';
 @plugin 'tailwind-scrollbar';
-@plugin 'tailwindcss-radix';
 
 /**
  * Class-based dark mode.

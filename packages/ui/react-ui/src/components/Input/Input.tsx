@@ -240,7 +240,6 @@ PinInput.displayName = 'Input.PinInput';
 
 //
 // TextInput
-// TODO(burdon): Implement inline icon within button: e.g., https://www.radix-ui.com/themes/playground#text-field
 //
 
 type AutoFillProps = {

@@ -354,9 +354,6 @@ catalogs:
     '@posthog/mcp':
       specifier: ^0.12.0
       version: 0.12.0
-    '@radix-ui/react-toast':
-      specifier: 1.2.6
-      version: 1.2.6
     '@react-three/drei':
       specifier: ^10.7.7
       version: 10.7.7
@@ -1458,9 +1455,6 @@ catalogs:
     tailwindcss:
       specifier: ^4.3.0
       version: 4.3.0
-    tailwindcss-radix:
-      specifier: ^4.0.2
-      version: 4.0.2
     three:
       specifier: ^0.178.0
       version: 0.178.0
@@ -20153,9 +20147,6 @@ importers:
       '@internationalized/date':
         specifier: 'catalog:'
         version: 3.12.3
-      '@radix-ui/react-toast':
-        specifier: 'catalog:'
-        version: 1.2.6(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
       date-fns:
         specifier: 'catalog:'
         version: 3.6.0
@@ -23350,9 +23341,6 @@ importers:
       tailwindcss:
         specifier: 'catalog:'
         version: 4.3.0
-      tailwindcss-radix:
-        specifier: 'catalog:'
-        version: 4.0.2(tailwindcss@4.3.0)
     devDependencies:
       '@storybook/react-vite':
         specifier: 'catalog:'
@@ -41099,12 +41087,6 @@ packages:
     peerDependenciesMeta:
       tailwind-merge:
         optional: true
-
-  tailwindcss-radix@4.0.2:
-    resolution: {integrity: sha512-Uoa2BUCfWKGCjQPXbj4X4Q4EWAeCsvhj0udn0IupeNcvuLbqRXvC5+bKAqsngIne5mrRUPTy/IqMXGh81YyrCA==}
-    engines: {node: '>=20'}
-    peerDependencies:
-      tailwindcss: ^3.0 || ^4.0
 
   tailwindcss@4.3.0:
     resolution: {integrity: sha512-y6nxMGB1nMW9R6k96e5gdIFzcfL/gTJRNaqGes1YvkLnPVXzWgbqFF2yLC0T8G774n24cx3Pe8XrKoniCOAH+Q==}
@@ -65208,10 +65190,6 @@ snapshots:
       tailwindcss: 4.3.0
     optionalDependencies:
       tailwind-merge: 3.5.0
-
-  tailwindcss-radix@4.0.2(tailwindcss@4.3.0):
-    dependencies:
-      tailwindcss: 4.3.0
 
   tailwindcss@4.3.0: {}
 

@@ -773,10 +773,26 @@ dist/types/src: ENOTEMPTY` — a concurrent writer. A Cursor TypeScript native-p
       evicts the Radix layer. Gates: full build, 34-package storybook sweep (SearchDialog's FTS play story
       timed out under the 2-wide sweep, passes alone in 2 s), react-ui unit tests, lint of the 18 touched
       packages, knip, format.
-- [ ] **Phase 4b — Toast.** Model change: Ark's `createToaster()` store with a `Toaster` host replaces the
-      provider-plus-`Toast.Root` tree; `--radix-toast-swipe-*` (`animation.css`) goes with Zag's gestures.
-      Excluded from the 2026-09-05 run. Evicts `react-toast` and, with it, the last Radix floating layer
-      from the boot graph — bring the boot budget ceiling back down from 4.55 MB then.
+- [x] **Phase 4b — Toast.** DONE 2026-09-05. Ark's toast is a store plus a `Toaster` host; the
+      declarative API the nine consumers use is kept: `Toast.Provider` owns `createToaster` (bottom-end,
+      no overlap, 8px gap, offsets via `--dx-toast-offset-end` so `md` widens the end inset) and a
+      `ToastRegistry` (an external store, so a root re-registering each render re-renders the viewport
+      alone, not the app under the provider); `Toast.Root` renders nothing where it stands — it registers
+      `{ children, classNames, props, ref, countdown }` and mirrors `open` into the store (`create` with
+      its own id / `dismiss`), with `onStatusChange('dismissing')` reported back as `onOpenChange(false)`;
+      `Toast.Viewport` is Ark's `Toaster`, rendering each registered root inside the machine's actor so
+      `Title`/`Description`/`Close`/`Action` find their toast and the countdown reads `paused` from it.
+      `duration: Infinity` persists (Zag honours it). `title: true` on create so the root carries
+      `aria-labelledby`. `type` and `Action.altText` accepted, no-op. Positioning and the enter/exit
+      motion are the machine's inline variables transitioned by `ui-theme/css/components/toast.css`
+      (the `toast-*` keyframes and `--radix-toast-swipe-*` are gone). Removed `@radix-ui/react-toast`
+      and `tailwindcss-radix` (its only user). Play story: open from state, labelled by title, closed
+      from the action, both changes reported. `react-ui` now imports nothing from `@radix-ui`.
+      Boot budget after 4b: 4,546,844 bytes, no `@radix-ui` bytes in the graph; ~186 KB above main's
+      2026-08-31 figure (4,360,490) — the Zag machines are the new floor, ceiling stays 4.55 MB.
+      Lockfile: 31 `@radix-ui` versions gone (~1.9 MB built), rest via tldraw/excalidraw/leva (Phase 6).
+      Also: `playground/TextField.stories.tsx` (densities, variants, adornments, states, selectable
+      accent hue overriding the accent role tokens on a subtree).
 - [ ] **Phase 5 — decisions.** RAC (keep for the date/time cluster vs consolidate onto Ark; default
       keep); Toolbar (no Ark toolbar — focus group from `@dxos/react-focus` + `toggle-group`); Focus
       (keep as the seam).

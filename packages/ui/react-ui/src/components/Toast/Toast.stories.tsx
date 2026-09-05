@@ -4,6 +4,7 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { type ReactNode, useState } from 'react';
+import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { withTheme } from '../../testing';
 import { Button } from '../Button';
@@ -101,5 +102,56 @@ export const WithAction: Story = {
         trigger: <Button variant='primary'>Reload</Button>,
       },
     ],
+  },
+};
+
+const LifecycleStory = () => {
+  const [open, setOpen] = useState(false);
+  const [log, setLog] = useState<string[]>([]);
+  const handleOpenChange = (next: boolean) => {
+    setOpen(next);
+    setLog((current) => [...current, next ? 'open' : 'closed']);
+  };
+  return (
+    <Toast.Provider>
+      <Button onClick={() => handleOpenChange(true)}>Show toast</Button>
+      <span data-testid='log'>{log.join(',')}</span>
+      <Toast.Viewport />
+      <Toast.Root open={open} onOpenChange={handleOpenChange} duration={Infinity}>
+        <Toast.Title icon='ph--sparkle--regular' onClose={() => handleOpenChange(false)}>
+          Lifecycle toast
+        </Toast.Title>
+        <Toast.Description>Stays until closed.</Toast.Description>
+        <Toast.Actions>
+          <Toast.Action altText='Acknowledge' asChild>
+            <Button variant='primary'>OK</Button>
+          </Toast.Action>
+        </Toast.Actions>
+      </Toast.Root>
+    </Toast.Provider>
+  );
+};
+
+/** Opens from state, is labelled by its title, closes from its close button, and reports both changes. */
+export const TestLifecycle: StoryObj = {
+  render: () => <LifecycleStory />,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const status = () => document.querySelector<HTMLElement>('[role="status"]');
+    await expect(status()).toBeNull();
+    await userEvent.click(canvas.getByRole('button', { name: 'Show toast' }));
+    const toast = await waitFor(async () => {
+      const element = status();
+      await expect(element).not.toBeNull();
+      return element!;
+    });
+    await waitFor(async () => {
+      const labelledBy = toast.getAttribute('aria-labelledby');
+      await expect(labelledBy && document.getElementById(labelledBy)?.textContent).toBe('Lifecycle toast');
+    });
+    await expect(toast.textContent).toContain('Stays until closed.');
+    await userEvent.click(within(toast).getByRole('button', { name: 'OK' }));
+    await waitFor(async () => expect(status()).toBeNull());
+    await expect(canvas.getByTestId('log').textContent).toBe('open,closed');
   },
 };

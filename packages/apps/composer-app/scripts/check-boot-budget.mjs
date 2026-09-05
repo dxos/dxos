@@ -73,7 +73,9 @@ const MAX_PRELOAD_ENTRIES = 25;
  * 5,506, `aria-hidden` 1,466) is still in the graph because `react-select`, `react-dialog` and
  * `react-toast` import it; Phase 4 evicts those, and this ceiling should come back down then. The
  * ~200 KB margin is kept. Phase 4a (Dialog, Main, Select on Ark) measured 4,547,849 — 17,620 back —
- * with `react-toast` still holding the Radix layer; the ceiling comes down with Toast.
+ * with `react-toast` still holding the Radix layer. Phase 4b (Toast) measured 4,546,844 with no
+ * `@radix-ui` bytes left in the graph: the Zag machines are the new floor, ~186 KB above the
+ * 2026-08-31 figure, so the ceiling stays where the Phase 3 re-baseline put it.
  */
 const MAX_PRELOAD_BYTES = 4.55 * 1024 * 1024;
 
