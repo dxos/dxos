@@ -6,6 +6,16 @@
 # status: active | paused | blocked | ended
 
 projects:
+  - name: echo-plain-objects
+    status: active
+    user: dmaretskyi
+    host: cloud-sandbox
+    created: 2026-09-05
+    summary: 'Take the JS Proxy off the ECHO object read path: objects become plain, non-extensible values with read-only data properties (identity preserved; the system refreshes them in place via Object.defineProperty when the backing document changes) and Obj.update hands its callback a mutable proxy. Motivated by echo-client-e2e/property-access.bench.ts — a single-field read costs ~30x plain on an unpersisted object and ~240x on an automerge-backed one, flat in object width, so the cost is per access and lives in the get trap.'
+    tasks: .agents/projects/echo-plain-objects/TASKS.md
+    design: .agents/projects/echo-plain-objects/DESIGN.md
+    prs: [12951]
+    resume: 'Phase 0 DONE: baseline recorded in packages/core/echo/echo-client-e2e/BENCHMARKS.md at 0dab2f81 (bench lands via PR #12951). Phase 1 IN FLIGHT: three exploration agents scoping the proxy core (typed-handler get/set path, ChangeId/EventId, nested/arrays), the persisted read path (why automerge reads are 1.7us and how doc changes reach the object), and the blast radius (every isProxy/getProxyTarget/trap dependency). NEXT: fold their reports into DESIGN.md, settle the one real design fork — refresh persisted objects in place (defineProperty, identity kept) vs re-materialize — then Phase 2 implements unpersisted objects first, since they need no refresh path and give the first before/after number.'
   - name: agent-process-edge
     status: active
     user: dmaretskyi

@@ -106,6 +106,12 @@ export class ObjectCore {
    */
   public readonly updates = new Event();
 
+  /**
+   * Moves on every mutation; proxy targets stamp their materialized record with it, so one compare on
+   * read detects a stale one.
+   */
+  public generation = 0;
+
   // -------------------------------------------------------------------------
   // Fields merged from ObjectInternals (formerly echo-proxy-target.ts).
   // The EchoDatabase reference is typed `unknown` here to avoid a circular dep
@@ -217,6 +223,13 @@ export class ObjectCore {
     throw new Error('Invalid ObjectCore state');
   }
 
+  /**
+   * False only between construction and `initNewObject`/`bind`, while {@link getDoc} would throw.
+   */
+  get hasDoc(): boolean {
+    return this.doc != null || this.docHandle != null;
+  }
+
   getObjectStructure(): EntityStructure {
     return getDeep(this.getDoc(), this.mountPath) as EntityStructure;
   }
@@ -241,6 +254,9 @@ export class ObjectCore {
       invariant(this.docHandle);
       this.docHandle.change(changeFn, options);
       // Note: We don't need to notify listeners here, since `change` event is already processed by DB.
+      // The generation still moves here so a local write invalidates reads even when the DB no longer
+      // routes the change event to this core.
+      this.generation++;
     }
   }
 
@@ -269,6 +285,7 @@ export class ObjectCore {
       invariant(this.docHandle);
       result = this.docHandle.changeAt(heads, callback, options);
       // Note: We don't need to notify listeners here, since `change` event is already processed by DB.
+      this.generation++;
     }
 
     return result;
@@ -313,6 +330,8 @@ export class ObjectCore {
    * This function can be used unbound.
    */
   public readonly notifyUpdate = () => {
+    // Before the emit, so a subscriber reading the object inside its callback sees fresh values.
+    this.generation++;
     try {
       this.updates.emit();
     } catch (err: any) {
@@ -411,7 +430,11 @@ export class ObjectCore {
     return newLength;
   }
 
-  private _getRaw(path: Doc.KeyPath): AutomergeDoc<EntityStructure> | AutomergeDoc<DatabaseDirectory> {
+  /**
+   * The stored value at `path` as the document holds it, undecoded. The document is immutable, so the
+   * result can be held for as long as the generation it was read at.
+   */
+  getRaw(path: Doc.KeyPath): AutomergeDoc<EntityStructure> | AutomergeDoc<DatabaseDirectory> {
     const fullPath = [...this.mountPath, ...path];
 
     let value = this.getDoc();
@@ -432,7 +455,7 @@ export class ObjectCore {
 
   // TODO(dmaretskyi): Rename to `get`.
   getDecoded(path: Doc.KeyPath): DecodedAutomergePrimaryValue {
-    const decoded = this.decode(this._getRaw(path));
+    const decoded = this.decode(this.getRaw(path));
     return upgradeMeta(path, decoded) as DecodedAutomergePrimaryValue;
   }
 
@@ -454,7 +477,7 @@ export class ObjectCore {
   }
 
   getKind(): EntityKind {
-    return (this._getRaw([SYSTEM_NAMESPACE, 'kind']) as any) ?? EntityKind.Object;
+    return (this.getRaw([SYSTEM_NAMESPACE, 'kind']) as any) ?? EntityKind.Object;
   }
 
   // TODO(dmaretskyi): Just set statically during construction.
@@ -463,7 +486,7 @@ export class ObjectCore {
   }
 
   getSource(): EncodedReference | undefined {
-    const res = this._getRaw([SYSTEM_NAMESPACE, 'source']);
+    const res = this.getRaw([SYSTEM_NAMESPACE, 'source']);
     if (!res || !EncodedReference.isEncodedReference(res)) {
       return undefined;
     }
@@ -476,7 +499,7 @@ export class ObjectCore {
   }
 
   getTarget(): EncodedReference | undefined {
-    const res = this._getRaw([SYSTEM_NAMESPACE, 'target']);
+    const res = this.getRaw([SYSTEM_NAMESPACE, 'target']);
     if (!res || !EncodedReference.isEncodedReference(res)) {
       return undefined;
     }
@@ -489,7 +512,7 @@ export class ObjectCore {
   }
 
   getParent(): EncodedReference | undefined {
-    const res = this._getRaw([SYSTEM_NAMESPACE, 'parent']);
+    const res = this.getRaw([SYSTEM_NAMESPACE, 'parent']);
     if (!res || !EncodedReference.isEncodedReference(res)) {
       return undefined;
     }
@@ -505,7 +528,7 @@ export class ObjectCore {
   }
 
   getType(): EncodedReference | undefined {
-    const res = this._getRaw([SYSTEM_NAMESPACE, 'type']);
+    const res = this.getRaw([SYSTEM_NAMESPACE, 'type']);
     if (!res || !EncodedReference.isEncodedReference(res)) {
       return undefined;
     }
@@ -533,7 +556,7 @@ export class ObjectCore {
    * created before this field was introduced.
    */
   getCreatedAt(): number | undefined {
-    const value = this._getRaw([SYSTEM_NAMESPACE, 'createdAt']);
+    const value = this.getRaw([SYSTEM_NAMESPACE, 'createdAt']);
     return typeof value === 'number' ? value : undefined;
   }
 
@@ -571,7 +594,7 @@ export class ObjectCore {
   }
 
   isDeleted(remainingDepth: number = 10): boolean {
-    const value = this._getRaw([SYSTEM_NAMESPACE, 'deleted']);
+    const value = this.getRaw([SYSTEM_NAMESPACE, 'deleted']);
     const ownDeleted = typeof value === 'boolean' ? value : false;
     if (ownDeleted) {
       return true;

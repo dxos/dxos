@@ -108,7 +108,14 @@ import * as Doc from '../automerge/Doc';
 import { type ObjectCore } from '../core-db';
 import { type EchoDatabase } from '../proxy-db';
 import { getBody, getHeader } from './devtools-formatter';
-import { type ProxyTarget, getEchoDatabase, symbolInternals, symbolNamespace, symbolPath } from './echo-proxy-target';
+import {
+  type ProxyTarget,
+  getEchoDatabase,
+  symbolInternals,
+  symbolMaterialized,
+  symbolNamespace,
+  symbolPath,
+} from './echo-proxy-target';
 
 const META_NAMESPACE = 'meta';
 
@@ -655,6 +662,12 @@ export const createInstanceState = (
   defineHiddenProperty(state, symbolNamespace, namespace);
   defineHiddenProperty(state, symbolPath, path);
   defineHiddenProperty(state, EventId, options?.event ?? new Event());
+  // Starts one generation behind the core so the first trap materializes.
+  defineHiddenProperty(state, symbolMaterialized, {
+    generation: core.generation - 1,
+    raw: undefined,
+    values: Object.create(null),
+  });
   return state;
 };
 

@@ -19,9 +19,24 @@ export const symbolPath = Symbol.for('@dxos/echo/internal/ProxyPath');
 export const symbolNamespace = Symbol.for('@dxos/echo/internal/ProxyNamespace');
 export const symbolHandler = Symbol.for('@dxos/echo/internal/ProxyHandler');
 export const symbolInternals = Symbol.for('@dxos/echo/internal/ProxyInternals');
+export const symbolMaterialized = Symbol.for('@dxos/echo/internal/ProxyMaterialized');
 
 // Re-export TargetKey from core-db so echo-handler callers only need this module.
 export { TargetKey } from '../core-db';
+
+/**
+ * A record target's data for one `ObjectCore` generation: the document's own record object for the
+ * key-set traps, and the values `get` has already produced from it.
+ * @internal
+ */
+export type MaterializedRecord = {
+  /** The `ObjectCore.generation` this was taken at; a mismatch resets it on the next trap. */
+  generation: number;
+  /** The stored record as the document holds it — immutable, so held rather than copied. */
+  raw: unknown;
+  /** Values as `get` returns them, filled on first read of each key: primitives decoded, records and arrays wrapped, refs resolved. */
+  values: Record<string, unknown>;
+};
 
 /**
  * Generic proxy target type for ECHO proxy objects.
@@ -60,6 +75,11 @@ export type ProxyTarget = {
    * For modifications. Fires on real changes.
    */
   [EventId]: Event<void>;
+
+  /**
+   * Present on record targets (installed by `createInstanceState`); arrays carry none.
+   */
+  [symbolMaterialized]?: MaterializedRecord;
 } & ({ [key: keyof any]: any } | EchoArray<any>);
 
 /**

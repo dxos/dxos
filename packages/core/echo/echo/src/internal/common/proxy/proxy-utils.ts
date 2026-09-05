@@ -33,14 +33,20 @@ export const isReactiveRecord = (value: any): boolean => {
 };
 
 export const isValidProxyTarget = (value: any): value is object => {
-  if (value == null || value[symbolIsProxy]) {
+  // Settled before the `symbolIsProxy` probe: a symbol lookup on a primitive boxes it and walks its
+  // wrapper prototype, and this runs on every proxy read. Functions never qualify either — their
+  // prototype chain is neither `Object.prototype` nor reactive.
+  if (value == null || typeof value !== 'object') {
+    return false;
+  }
+  if (value[symbolIsProxy]) {
     return false;
   }
   if (Array.isArray(value)) {
     return true;
   }
 
-  return typeof value === 'object' && isReactiveRecord(value);
+  return isReactiveRecord(value);
 };
 
 /**
