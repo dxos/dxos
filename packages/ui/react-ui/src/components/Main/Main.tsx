@@ -21,7 +21,7 @@ import { useComposedRefs, useControllableState, useMediaQuery, useMergeRefs } fr
 import { osTranslations } from '@dxos/ui-theme';
 
 import { useThemeContext } from '../../hooks';
-import { type Label, toLocalizedString, useTranslation } from '../../primitives';
+import { type Label, toLocalizedString, useTranslation } from '../../providers';
 import { type MainStyleProps } from '../../theme';
 import { type ThemedClassName } from '../../util';
 import { MAIN_NAME, MainProvider, type SidebarState, useLandmarkMover, useMainContext } from './MainContext';

@@ -6,7 +6,7 @@ import { useContext } from 'react';
 
 import { log } from '@dxos/log';
 
-import { ThemeContext, type ThemeContextValue } from '../primitives';
+import { ThemeContext, type ThemeContextValue } from '../providers';
 import { defaultTx } from '../theme';
 import { initialSafeArea } from './useSafeArea';
 

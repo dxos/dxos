@@ -19,7 +19,7 @@ import { osTranslations } from '@dxos/ui-theme';
 import { type SlottableProps } from '@dxos/ui-types';
 
 import { useThemeContext } from '../../hooks';
-import { ElevationProvider } from '../../primitives';
+import { ElevationProvider } from '../../providers';
 import { type DialogSize } from '../../theme';
 import { type ThemedClassName, composableProps, slottable } from '../../util';
 import { IconButton } from '../Button';

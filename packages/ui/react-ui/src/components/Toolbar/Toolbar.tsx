@@ -20,7 +20,7 @@ import { type SlottableProps } from '@dxos/ui-types';
 import { translationKey } from '#translations';
 
 import { useThemeContext } from '../../hooks';
-import { DensityProvider } from '../../primitives/DensityProvider';
+import { DensityProvider } from '../../providers/DensityProvider';
 import { type ToolbarStyleProps } from '../../theme';
 import { composable, composableProps, slottable } from '../../util';
 import {

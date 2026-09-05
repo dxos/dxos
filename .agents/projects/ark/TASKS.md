@@ -797,11 +797,9 @@ dist/types/src: ENOTEMPTY` — a concurrent writer. A Cursor TypeScript native-p
       keep); Toolbar (no Ark toolbar — focus group from `@dxos/react-focus` + `toggle-group`); Focus
       (keep as the seam).
 - [ ] **Phase 6 — remove `@radix-ui/*`** from catalog and lockfile; `pnpm knip` is the gate.
-- [ ] **Re-organize `react-ui/src/primitives`** (tracked 2026-09-05). The folder holds providers and
-      layout helpers (`Container`, `DensityProvider`, `ElevationProvider`, `Flex`, `Grid`,
-      `ThemeProvider`, `layout.ts`), not primitives in the Radix/Ark sense; with the machines now under
-      `components/`, the name misleads. Decide the split (providers vs layout) and where `Show`
-      (`components/Show`, a conditional-render helper, not a component with anatomy) belongs.
+- [x] **Re-organize `react-ui/src/primitives`** DONE 2026-09-05: `providers/` (Density, Elevation,
+      Theme), `layout/` (Container, Flex, Grid, `layout.ts`), `flow/` (Show, Switch — structural
+      rendering, no anatomy). Barrels unchanged for consumers; story titles follow the folders.
 - [ ] **Storybook icon sprite first-load gap** (tracked 2026-09-05, not the port's). The dev server
       assembles the page's icon sprite from the modules it has scanned, so a story's first load can
       receive a sprite (99 symbols) that lacks that story's own icons — `Toggle` showed a blank

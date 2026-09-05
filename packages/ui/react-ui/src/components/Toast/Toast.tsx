@@ -32,7 +32,7 @@ import { useControllableState } from '@dxos/react-hooks';
 import { translationKey } from '#translations';
 
 import { useThemeContext } from '../../hooks';
-import { DensityProvider, ElevationProvider } from '../../primitives';
+import { DensityProvider, ElevationProvider } from '../../providers';
 import { type ThemedClassName } from '../../util';
 import { IconButton } from '../Button';
 import { Column } from '../Column';

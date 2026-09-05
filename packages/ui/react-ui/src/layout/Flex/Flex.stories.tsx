@@ -75,7 +75,7 @@ const AsChildStory = () => (
 );
 
 const meta: Meta = {
-  title: 'ui/react-ui-core/primitives/Flex',
+  title: 'ui/react-ui-core/layout/Flex',
   decorators: [withTheme(), withLayout({ layout: 'column' })],
   parameters: { layout: 'fullscreen' },
 };

@@ -6,7 +6,7 @@ import { useContext } from 'react';
 
 import { type Density } from '@dxos/ui-types';
 
-import { DensityContext } from '../primitives';
+import { DensityContext } from '../providers';
 
 export const useDensityContext = (densityProp?: Density): Density | undefined => {
   const { density } = useContext(DensityContext);
