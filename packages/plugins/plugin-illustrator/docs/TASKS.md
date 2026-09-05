@@ -57,8 +57,13 @@ its scorer interface now and fixtures later.
       left every UML snapshot unchanged.
 - [ ] **Corpus review with Rich** — the six diagrams are faithful to what the surveys verified but
       dense (13–18 connectors); expect edits to scope, and the metric snapshots to follow.
-- [ ] **Tier 3 scaffold** — evalite eval in `assistant-evals` with the Tier-1 scorer plugged in;
-      no fixtures yet.
+- [x] **Tier 3** — `assistant-evals/src/evals/diagram.eval.ts`: the agent diagrams a described
+      six-component system into an SVG-variant drawing; scorers are all deterministic — no hard
+      defects (the Tier-1 report over the stored scene), every component present, every `%% ref`
+      grounded to the URL it was given, connector count. Live-only (needs `DX_ANTHROPIC_API_KEY`),
+      not yet run. To make the loop real, `DrawingOperation.Generate` now compiles flowcharts with
+      `MermaidEngine` and returns `diagnostics`; the UML skill tells the agent to fix errors and
+      regenerate, and documents flowcharts + `%% ref`.
 - [ ] **Contact sheet** of the six SVGs as one reviewable artifact.
 - [ ] **DESIGN.md** — add Diagnostics + selection sections; drop future-work #4 once done.
 

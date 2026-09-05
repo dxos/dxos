@@ -197,6 +197,14 @@ legible by exactly the machinery that judges our own layouts.
 The corpus lives in `docs/diagrams/*.mmd` and is simultaneously the deliverable (rendered `.svg`
 beside each source) — one copy, so it cannot drift from what the tests exercise.
 
+### The repair loop
+
+`DrawingOperation.Generate` returns the report as `diagnostics` beside the scene, and the UML skill
+instructs the agent to treat every `error` as "the picture is wrong — simplify and regenerate". This
+is the one idea worth taking from archify (`tt-a1i/archify`), which has no layout engine at all and
+instead has the model place nodes and a validator report what to fix; here the engine does the
+placing and the validator only has to catch what the engine could not.
+
 ## Selection
 
 Selection is **owned by the host, implemented by the renderer**. `DrawingVariantSurfaceProps` carries

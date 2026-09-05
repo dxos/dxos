@@ -25,7 +25,8 @@
   ],
   "dependencies": {
     "@dxos/app-toolkit": "workspace:*",
-    "@dxos/keys": "workspace:*"
+    "@dxos/keys": "workspace:*",
+    "@dxos/plugin-illustrator": "workspace:*"
   },
   "devDependencies": {
     "@dxos/ai": "workspace:*",

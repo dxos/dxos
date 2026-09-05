@@ -9,7 +9,7 @@
 // Run: `moon run plugin-illustrator:render-diagrams [-- --scoreboard]` (vite-node; bun cannot load elkjs).
 //
 
-import { readFileSync, readdirSync, writeFileSync } from 'node:fs';
+import { readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { basename, dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import React from 'react';

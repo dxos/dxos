@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { readFileSync, readdirSync } from 'node:fs';
+import { readdirSync, readFileSync } from 'node:fs';
 import { basename, join } from 'node:path';
 import { describe, test } from 'vitest';
 

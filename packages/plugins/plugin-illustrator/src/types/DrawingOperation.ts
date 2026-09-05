@@ -11,7 +11,7 @@ import * as Operation from '@dxos/compute/Operation';
 import { Database, Ref, Type } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 
-import { Scene } from '#model';
+import { Diagnostics, Scene } from '#model';
 
 import * as Drawing from './Drawing';
 
@@ -86,11 +86,18 @@ export const Generate = Operation.make({
   },
   input: Schema.Struct({
     drawing: Ref.Ref(Drawing.Drawing).annotate({ description: 'The drawing to generate into.' }),
-    source: Schema.String.annotate({ description: 'Mermaid source: a flowchart or a classDiagram.' }),
+    source: Schema.String.annotate({
+      description:
+        'Mermaid source: a flowchart or a classDiagram. Flowcharts may carry `%% ref <nodeId> <dxn-or-url>` lines saying what a node depicts.',
+    }),
   }),
   output: Schema.Struct({
     ...SceneOutput,
     upserted: Schema.Array(Schema.String).annotate({ description: 'Object ids created or modified.' }),
+    diagnostics: Schema.Array(Diagnostics.Diagnostic).annotate({
+      description:
+        'Layout report. Fix every `error` (overlap, connector through a node, label overflow) by simplifying or splitting the diagram and regenerating; `warning`s (crossings, bends) are quality hints.',
+    }),
   }),
   services: [Capability.Service, Database.Service],
 });

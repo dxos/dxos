@@ -9,17 +9,27 @@
 // and a scene read back from a renderer after the user dragged it. See `docs/DESIGN.md`.
 //
 
+import * as Schema from 'effect/Schema';
+
 import * as Layout from './layout';
 import type * as Scene from './scene';
 
-export type Severity = 'error' | 'warning';
+export const Severity = Schema.Literals(['error', 'warning']);
+export type Severity = Schema.Schema.Type<typeof Severity>;
 
 /**
  * `error` codes are objective defects — the picture is wrong, not merely busy — and gate CI.
  * `warning` codes are quality metrics that trend rather than pass/fail; they are golden-filed so
  * a layout change reads as a reviewable diff instead of a threshold argument.
  */
-export type Code = 'node-overlap' | 'route-through-node' | 'label-overflow' | 'edge-crossing' | 'excessive-bends';
+export const Code = Schema.Literals([
+  'node-overlap',
+  'route-through-node',
+  'label-overflow',
+  'edge-crossing',
+  'excessive-bends',
+]);
+export type Code = Schema.Schema.Type<typeof Code>;
 
 export const SEVERITY: Record<Code, Severity> = {
   'node-overlap': 'error',
@@ -29,13 +39,16 @@ export const SEVERITY: Record<Code, Severity> = {
   'excessive-bends': 'warning',
 };
 
-export type Diagnostic = {
-  code: Code;
-  severity: Severity;
-  message: string;
-  /** Scene refs implicated: `objectId` or `objectId/elementId`, as `Arrow.from`/`to` spell them. */
-  refs: readonly string[];
-};
+/** A schema so operations can return diagnostics to the agent — the repair loop. */
+export const Diagnostic = Schema.Struct({
+  code: Code,
+  severity: Severity,
+  message: Schema.String,
+  refs: Schema.Array(Schema.String).annotate({
+    description: 'Scene refs implicated: `objectId` or `objectId/elementId`, as `Arrow.from`/`to` spell them.',
+  }),
+});
+export type Diagnostic = Schema.Schema.Type<typeof Diagnostic>;
 
 /** Aggregate counts; the soft ones are the score a layout change is reviewed against. */
 export type Metrics = {

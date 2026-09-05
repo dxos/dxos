@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import * as Operation from '@dxos/compute/Operation';
 
-import { Mermaid, Uml } from '#model';
+import { Diagnostics, MermaidEngine, Uml } from '#model';
 import { DrawingOperation } from '#types';
 import { resolveVariant } from '#util';
 
@@ -14,10 +14,15 @@ const handler: Operation.WithHandler<typeof DrawingOperation.Generate> = Drawing
   Operation.withHandler(
     Effect.fn(function* ({ drawing, source }) {
       const { canvas, variant } = yield* resolveVariant(drawing);
-      const compile = Uml.isClassDiagram(source) ? Uml.compile : Mermaid.compile;
-      const { upserted } = variant.builder.apply(canvas, compile(source));
+      // ELK is promise-based; the platform boundary sits here.
+      const commands = Uml.isClassDiagram(source)
+        ? Uml.compile(source)
+        : yield* Effect.promise(() => MermaidEngine.compile(source));
+      const { upserted } = variant.builder.apply(canvas, commands);
       const { scene, unmanaged } = variant.builder.read(canvas);
-      return { scene, unmanaged, upserted };
+      // The report closes the agent's loop: it can see an illegible result and regenerate.
+      const { diagnostics } = Diagnostics.analyze(scene.objects);
+      return { scene, unmanaged, upserted, diagnostics };
     }),
   ),
 );

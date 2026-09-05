@@ -87,6 +87,11 @@
       "types": "./dist/types/src/model/index.d.ts",
       "import": "./dist/lib/model.mjs"
     },
+    "./skills": {
+      "source": "./src/skills/index.ts",
+      "types": "./dist/types/src/skills/index.d.ts",
+      "import": "./dist/lib/skills.mjs"
+    },
     "./translations": {
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
