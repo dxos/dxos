@@ -58,6 +58,16 @@ its scorer interface now and fixtures later.
 - [x] **Selection verified in Storybook** (`SceneSvg › Selection`, driven by clicks): click →
       `[Dialect]` with `data-selected`; shift-click adds `Scene`; shift-click again toggles it off;
       double-click selects + activates; background click clears.
+- [x] **Lattice placement + straightened ports** (Rich's review of the EDGE render: needless jogs,
+      nodes not aligned) — node origins quantize to `lattice × cell` (1.5) with a frame-clearance
+      floor when groups exist; ports straighten inside the cross-axis overlap. Corpus bends:
+      pipeline 19→9, app-framework 35→25, assistant 29→20, compute 32→22, echo 28→25, edge 37→30;
+      crossings rose on assistant (7→17) and edge (9→22) — snapshots record it.
+- [ ] **Crossings after quantization** — run ELK `INTERACTIVE` (crossing minimization seeded from the
+      quantized positions) as a second pass, or quantize before the crossing sweep.
+- [x] **Layout bench story** (`components/Layout.stories.tsx`) — three columns: editable mermaid
+      source · mermaid.js reference render · engine layout with the Tier-1 report; one story per
+      corpus diagram, `lattice` as a range control. `mermaid` added as a devDependency (catalog).
 - [ ] **`edges` object is selectable** — clicking a connector selects the dialect's `edges`
       object. Fine for hand-drawn line-only objects, odd for dialect output; options: dialects mark
       the object non-selectable, or `SceneSvg` skips objects with no closed shapes. Decide with

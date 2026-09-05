@@ -146,8 +146,20 @@ moves it onto the engine seam for block diagrams that must read well:
 INCLUDE_CHILDREN`), so crossing minimization and layer assignment respect containment instead of
   drawing a frame around wherever the members landed. Frame padding reserves a top band for the label.
 - **Uniform grid cells**, sized to the longest label wrapped at `maxWidth`, snapped to `GRID` like the
-  UML grid dialect. Node rects are snapped and frames are then **recomputed from their snapped
-  members**, so snapping can never break containment.
+  UML grid dialect.
+- **Lattice placement.** Node origins are quantized to a lattice whose pitch is `lattice × cell`
+  (default 1.5, so the gutter is half a cell), colliding nodes sliding along the cross axis to the
+  nearest free slot. This is what makes connectors straight: ELK's Brandes-Köpf output puts
+  neighbours _roughly_ in line, and a plain round-to-32px snap preserved every residual offset as a
+  jog. With groups, the pitch has a floor of `cell + 2·FRAME_PAD (+ label band)` so adjacent frames
+  cannot overlap after quantization; frames are then **recomputed from their quantized members**, so
+  quantization can never break containment. Trade-off, visible in the corpus snapshots: bends fell by
+  25–50% on every diagram, crossings rose on two (quantization perturbs ELK's crossing-minimized
+  order). A follow-up is to feed the quantized positions back through ELK `INTERACTIVE` so crossing
+  minimization runs on the lattice rather than before it.
+- **Straightened ports.** When an edge's nodes overlap on the cross axis, both terminals take one
+  shared coordinate inside the overlap (distinct per node side), mirroring the UML emitter — the
+  residual jog between nearly aligned nodes disappears.
 - **Shared routing.** Connectors take `makeAvoidingRouter` over the node rects (frames are containers,
   not obstacles) with `zRouter` as the per-edge fallback; the emitted `line` + `arrow` pair is the same
   shape the UML emitters produce, so `Diagnostics` reads it unchanged. `RoutedRelation.relation` was

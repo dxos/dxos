@@ -2,7 +2,7 @@
 
 exports[`mermaid-engine > has no hard defects and records its soft metrics 1`] = `
 {
-  "bends": 12,
-  "crossings": 2,
+  "bends": 6,
+  "crossings": 0,
 }
 `;
