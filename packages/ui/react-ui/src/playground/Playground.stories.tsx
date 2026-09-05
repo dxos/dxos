@@ -555,7 +555,9 @@ const OverlaysSection = () => (
 );
 
 const DialogsSection = () => {
-  const [toastOpen, setToastOpen] = useState(false);
+  const [toasts, setToasts] = useState<number[]>([]);
+  const addToast = () => setToasts((current) => [...current, (current.at(-1) ?? 0) + 1]);
+  const removeToast = (id: number) => setToasts((current) => current.filter((toast) => toast !== id));
   return (
     <Section title='Dialog, alert dialog, toast'>
       <Dialog.Root>
@@ -605,18 +607,21 @@ const DialogsSection = () => {
           </AlertDialog.Content>
         </AlertDialog.Overlay>
       </AlertDialog.Root>
-      <Button onClick={() => setToastOpen(true)}>Toast</Button>
-      <Toast.Root open={toastOpen} onOpenChange={setToastOpen} duration={4_000}>
-        <Toast.Title icon='ph--sparkle--regular' onClose={() => setToastOpen(false)}>
-          Saved
-        </Toast.Title>
-        <Toast.Description>The bar below counts down to when this closes.</Toast.Description>
-        <Toast.Actions>
-          <Toast.Action asChild>
-            <Button variant='primary'>Undo</Button>
-          </Toast.Action>
-        </Toast.Actions>
-      </Toast.Root>
+      <Button onClick={addToast}>Toast</Button>
+      {/* One root per toast: each click adds one and open ones stack. */}
+      {toasts.map((id) => (
+        <Toast.Root key={id} duration={6_000} onOpenChange={(open) => !open && removeToast(id)}>
+          <Toast.Title icon='ph--sparkle--regular' onClose={() => removeToast(id)}>
+            Saved {id}
+          </Toast.Title>
+          <Toast.Description>The bar below counts down to when this closes.</Toast.Description>
+          <Toast.Actions>
+            <Toast.Action asChild>
+              <Button variant='primary'>Undo</Button>
+            </Toast.Action>
+          </Toast.Actions>
+        </Toast.Root>
+      ))}
     </Section>
   );
 };

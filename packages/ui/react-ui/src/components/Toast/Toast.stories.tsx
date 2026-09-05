@@ -155,3 +155,53 @@ export const TestLifecycle: StoryObj = {
     await expect(canvas.getByTestId('log').textContent).toBe('open,closed');
   },
 };
+
+const StackedStory = () => {
+  const [toasts, setToasts] = useState<number[]>([]);
+  const add = () => setToasts((current) => [...current, (current.at(-1) ?? 0) + 1]);
+  const remove = (id: number) => setToasts((current) => current.filter((toast) => toast !== id));
+  return (
+    <Toast.Provider>
+      <Button onClick={add}>Add toast</Button>
+      <Toast.Viewport />
+      {toasts.map((id) => (
+        <Toast.Root key={id} duration={Infinity} onOpenChange={(open) => !open && remove(id)}>
+          <Toast.Title icon='ph--sparkle--regular' onClose={() => remove(id)}>
+            Toast {id}
+          </Toast.Title>
+          <Toast.Description>Each root is its own toast; they stack from the bottom.</Toast.Description>
+        </Toast.Root>
+      ))}
+    </Toast.Provider>
+  );
+};
+
+/** Every declared root is a toast of its own, and open ones stack with the machine's gap. */
+export const Stacked: StoryObj = {
+  render: () => <StackedStory />,
+};
+
+export const TestStacked: StoryObj = {
+  render: () => <StackedStory />,
+  play: async ({ canvasElement }) => {
+    const button = within(canvasElement).getByRole('button', { name: 'Add toast' });
+    const roots = () => [...document.querySelectorAll<HTMLElement>('[data-scope="toast"][data-part="root"]')];
+    for (let count = 1; count <= 3; count++) {
+      await userEvent.click(button);
+      await waitFor(async () => expect(roots()).toHaveLength(count));
+    }
+    // Laid out by the machine (newest first in the DOM): three distinct rows, each at least a
+    // toast's height apart.
+    await waitFor(async () => {
+      const tops = roots()
+        .map((root) => Math.round(root.getBoundingClientRect().top))
+        .sort((a, b) => a - b);
+      const height = roots()[0].getBoundingClientRect().height;
+      await expect(new Set(tops).size).toBe(3);
+      await expect(tops[1] - tops[0]).toBeGreaterThanOrEqual(height);
+      await expect(tops[2] - tops[1]).toBeGreaterThanOrEqual(height);
+    });
+    await userEvent.click(within(roots()[2]).getByRole('button', { name: /close/i }));
+    await waitFor(async () => expect(roots()).toHaveLength(2));
+  },
+};
