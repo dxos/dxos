@@ -2,9 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { useCallback } from 'react';
+import { useCallback } from 'react';
 
-import { Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
+import { MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 
 import { meta } from '#meta';
 
@@ -15,20 +15,23 @@ import {
   toggleProcessEnvironment,
 } from './trace-filter';
 
-export type TraceToolbarProps = {
+export type UseTraceMenuOptions = {
   /** Process environments currently shown. */
   selected: readonly ProcessEnvironment[];
   onSelectedChange: (environments: ProcessEnvironment[]) => void;
 };
 
-/** The filter collapses to a funnel trigger, so the panel's own rows keep the width. */
-export const TraceToolbar = ({ selected, onSelectedChange }: TraceToolbarProps) => {
+/**
+ * Environment filter menu for the trace panel's toolbar.
+ * The group collapses to a funnel trigger, so the panel's own rows keep the width.
+ */
+export const useTraceMenu = ({ selected, onSelectedChange }: UseTraceMenuOptions) => {
   const handleToggle = useCallback(
     (environment: ProcessEnvironment) => onSelectedChange(toggleProcessEnvironment(selected, environment)),
     [selected, onSelectedChange],
   );
 
-  const menu = useMenuBuilder(
+  return useMenuBuilder(
     () =>
       MenuBuilder.make()
         .group(
@@ -70,15 +73,4 @@ export const TraceToolbar = ({ selected, onSelectedChange }: TraceToolbarProps) 
         .build(),
     [handleToggle, selected, onSelectedChange],
   );
-
-  return (
-    <Menu.Root {...menu} alwaysActive>
-      <Menu.Toolbar classNames='justify-between border-be border-subdued-separator'>
-        <span />
-        <Menu.Items />
-      </Menu.Toolbar>
-    </Menu.Root>
-  );
 };
-
-TraceToolbar.displayName = 'TraceToolbar';

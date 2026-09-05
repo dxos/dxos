@@ -23,6 +23,7 @@ const resolveReplacer = (replacer?: JsonReplacer) => {
   if (!replacer) {
     return undefined;
   }
+
   return typeof replacer === 'function' ? replacer : createReplacer(replacer);
 };
 

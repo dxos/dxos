@@ -41,6 +41,7 @@ import {
   hoverableFocusedWithinControls,
   mx,
 } from '@dxos/ui-theme';
+import { type Density } from '@dxos/ui-types';
 
 import { Path } from '../../util';
 import { DROP_INDENTATION, indentTrack } from './helpers';
@@ -201,6 +202,11 @@ export type TreeProps<T extends { id: string } = any> = {
    */
   gridTemplateColumns?: string;
   /**
+   * Control density of the disclosure toggle. The toggle is one `--dx-control` square, so this is
+   * what makes it tile with a denser row rather than holding a `md` square in an `sm` grid.
+   */
+  density?: Density;
+  /**
    * Render a disclosure toggle in the template's first track. Off for a tree that is a flat list
    * — one whose model never has a branch — so the template starts with the consumer's own first
    * cell rather than holding a square for a chevron no row will ever show.
@@ -281,6 +287,7 @@ export const Tree = <T extends { id: string } = any>({
   ariaLabel,
   classNames,
   gridTemplateColumns = '[tree-row-start] var(--dx-control) minmax(0, 1fr) min-content [tree-row-end]',
+  density = 'md',
   toggle = true,
   draggable = false,
   selectionMode = 'single',
@@ -547,6 +554,7 @@ export const Tree = <T extends { id: string } = any>({
       draggable,
       toggle,
       gridTemplateColumns,
+      density,
       renderColumns,
       renderIcon,
       renderHeading,
@@ -568,6 +576,7 @@ export const Tree = <T extends { id: string } = any>({
       draggable,
       toggle,
       gridTemplateColumns,
+      density,
       renderColumns,
       renderIcon,
       renderHeading,
@@ -603,9 +612,15 @@ export const Tree = <T extends { id: string } = any>({
       {ariaLabel && <TreeView.Label className='sr-only'>{ariaLabel}</TreeView.Label>}
       <TreeRenderProvider value={renderContext as TreeRenderContextValue}>
         <TreeView.Tree
+          // Sets `--dx-control` for the whole subtree, which is what actually sizes a row (the row
+          // is one control tall and its toggle track one control wide) — so `density` alone is
+          // enough and a consumer needs no `dx-density-*` class of its own.
+          data-density={density}
           // `outline-none`: the machine parks focus on the tree container (tabIndex=-1) when no
           // row holds it, which must not draw a focus ring around the whole tree.
-          className={mx('grid outline-none', ...(Array.isArray(classNames) ? classNames : [classNames]))}
+          // Row spacing belongs to the container: as a margin on each row it also offset the first
+          // row from the tree's top edge, which is space between the tree and its frame, not between rows.
+          className={mx('grid gap-0.5 outline-none', ...(Array.isArray(classNames) ? classNames : [classNames]))}
           // One track: rows, section headers and the end target span it. The consumer's column
           // template is applied per row, behind an indent track, rather than here — a subgrid would
           // share one set of tracks down the tree, and padding a subgrid only shrinks its first
@@ -747,7 +762,9 @@ const TreeBranchContent: FC<TreeNodeRowProps> = ({ node }) => {
       ref={handleRef}
       // `[&[hidden]]:hidden` restores the UA collapse that the `grid` display would defeat.
       className={mx(
-        'col-[tree-row] grid grid-cols-subgrid [&[hidden]]:hidden',
+        // Same `gap-0.5` as the tree: this is a separate grid, so the tree's own gap does not reach
+        // the rows inside an expanded branch.
+        'col-[tree-row] grid grid-cols-subgrid gap-0.5 [&[hidden]]:hidden',
         'overflow-y-clip [interpolate-size:allow-keywords]',
         closing ? 'animate-tree-conceal' : 'data-[animate]:data-[state=open]:animate-tree-disclose',
       )}
@@ -805,6 +822,7 @@ const TreeNodeRowContent: FC<TreeNodeRowProps> = memo(({ node }) => {
     draggable: treeDraggable,
     toggle,
     gridTemplateColumns,
+    density,
     renderColumns: Columns,
     renderHeading: RenderHeading,
     blockInstruction,
@@ -997,7 +1015,7 @@ const TreeNodeRowContent: FC<TreeNodeRowProps> = memo(({ node }) => {
       data-instruction={instruction?.type}
       data-testid={props.testId}
       className={mx(
-        'col-[tree-row] mt-0.5 outline-none cursor-pointer select-none',
+        'col-[tree-row] outline-none cursor-pointer select-none',
         // The row leaves the list for the duration of the drag: the pointer is carrying it, and a
         // copy left behind in place reads as a second row rather than as the one being moved. A
         // branch's children go with it, since the drag start collapses it.
@@ -1043,10 +1061,10 @@ const TreeNodeRowContent: FC<TreeNodeRowProps> = memo(({ node }) => {
             <TreeView.BranchTrigger asChild>
               {/* zag stamps data-state=open on the trigger, which the ghost button styles as an
                   open menu trigger (bg-input-bg) — the chevron must stay transparent. */}
-              <TreeItemToggle isBranch open={open} classNames='data-[state=open]:bg-transparent' />
+              <TreeItemToggle isBranch open={open} density={density} classNames='data-[state=open]:bg-transparent' />
             </TreeView.BranchTrigger>
           ) : (
-            <TreeItemToggle isBranch={false} />
+            <TreeItemToggle isBranch={false} density={density} />
           ))}
         {RenderHeading ? (
           <RenderHeading item={item} path={path} props={props} open={open} />
