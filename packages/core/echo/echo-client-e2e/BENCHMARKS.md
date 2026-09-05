@@ -69,3 +69,63 @@ x1).
 - Unpersisted read reads _lower_ wide than narrow (258 vs 297 ns); the x10 rme is 1.9%, so this is
   noise, and the honest statement is "flat".
 - Automerge rows drain before warmup only; each row's run phase starts from an empty pending queue.
+
+---
+
+## `f42c3714` — 2026-09-05 — Stage A: no descriptor allocation on typed-handler reads
+
+`echo` suite 581/581 unmodified. Clean tree. Harness floor 71 ns (98 at baseline — the derivation
+cancels it; plain read moved 6.8 → 7.3 ns, so ~7% is the residual run-to-run noise on cheap rows).
+
+Change: `TypedReactiveHandler.get` reads the value first and returns any non-object outright, consulting
+`getOwnPropertyDescriptor` only for values that would be proxy-wrapped; `isValidProxyTarget` checks
+`typeof` before probing `symbolIsProxy`. Both are exact reorderings (DESIGN.md D8).
+
+### Narrow object — 2 fields
+
+| per-op    |  plain | echo unpersisted |     echo automerge |        echo feed |
+| --------- | -----: | ---------------: | -----------------: | ---------------: |
+| **read**  | 7.3 ns |     130 ns · 18× |     1.06 µs · 145× |     117 ns · 16× |
+| **write** | 3.1 ns | 10.0 µs · 3,200× |   283 µs · 91,000× |  9.3 µs · 3,000× |
+| **make**  |  16 ns |   79 µs · 5,000× | 3.3 ms† · 210,000× | 274 µs · 17,000× |
+
+Write split: unpersisted `T`≈2.5 / `S`≈7.6 µs · automerge `T`≈46 / `S`≈241 µs · feed `T`≈1.7 /
+`S`≈7.6 µs.
+
+### Wide object — 250 fields
+
+| per-op    |   plain | echo unpersisted | echo automerge | echo feed |
+| --------- | ------: | ---------------: | -------------: | --------: |
+| **read**  | 12.8 ns |           114 ns |        1.02 µs |    113 ns |
+| **write** |  3.4 ns |           9.5 µs |         354 µs |    9.4 µs |
+| **make**  |  841 ns |          1.03 ms |       18.7 ms† |   2.18 ms |
+
+### Baseline → Stage A
+
+| per-op                 | baseline | Stage A |    Δ | attributed to the diff?                                                   |
+| ---------------------- | -------: | ------: | ---: | ------------------------------------------------------------------------- |
+| read, unpersisted      |   297 ns |  130 ns | 2.3× | yes — the descriptor and the boxing were on this exact path               |
+| read, feed             |   271 ns |  117 ns | 2.3× | yes — same handler                                                        |
+| read, unpersisted wide |   258 ns |  114 ns | 2.3× | yes                                                                       |
+| read, feed wide        |   264 ns |  113 ns | 2.3× | yes                                                                       |
+| read, automerge        |  1.69 µs | 1.06 µs | 1.6× | **no** — `isValidProxyTarget` is unreferenced in `echo-client`; see below |
+| read, automerge wide   |  1.83 µs | 1.02 µs | 1.8× | **no** — as above                                                         |
+| write, unpersisted     |  14.4 µs | 10.0 µs | 1.4× | yes — `_prepareValueForAssignment` calls `isValidProxyTarget`             |
+| write, feed            |  12.4 µs |  9.3 µs | 1.3× | yes                                                                       |
+| make, unpersisted      |   118 µs |   79 µs | 1.5× | yes — `init` calls it per property                                        |
+| make, feed             |   414 µs |  274 µs | 1.5× | yes — same `init`                                                         |
+
+Reads on the two typed-handler kinds improved 2.3×, not the ~3.5× predicted: the residual trap floor is
+higher than estimated.
+
+**The automerge read delta is real (well outside 7% noise) but not explained by this diff.** Nothing
+Stage A touched is on `EchoReactiveHandler`'s primitive read path. Two candidates: run-to-run variance
+on allocation-heavy rows (four allocations per read) that the within-run rme cannot see, or machine
+state between runs. It is recorded here as observed, not credited. The Stage B run measures the bench
+twice back to back at one commit to bound that variance before any further automerge number is read.
+
+### Elision check
+
+`x10`/`x1`: unpersisted 6.3×, automerge 8.4×, feed 5.8× — lower than at baseline (7.4 / 9.0 / 7.5)
+because the per-op cost fell while the floor did not, so the floor is a larger share of `x1`. A fully
+elided read would sit at ~1×; nothing is close.

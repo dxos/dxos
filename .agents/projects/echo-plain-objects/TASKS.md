@@ -54,13 +54,13 @@ all three constraints without design. Ships regardless of Stage C.
 
 ### Tasks
 
-- [ ] **Skip the descriptor lookup** — track per target whether any own string-keyed accessor exists
-      (set in `init`, maintained in the `defineProperty` trap); read `target[prop]` directly when none
-      does.
-- [ ] **Don't box primitives** — `isValidProxyTarget` returns early for non-object/non-function values
-      before touching `symbolIsProxy`.
-- [ ] **Green: `echo` tests, unmodified.**
-- [ ] **Measure** — rerun the bench; record at the commit. Expect ~70 ns unpersisted.
+- [x] **Skip the descriptor lookup** — simpler than the flag: read the value first, return non-objects
+      outright, consult the descriptor only for values that would be wrapped. Exact reordering.
+- [x] **Don't box primitives** — `typeof` before the `symbolIsProxy` probe in `isValidProxyTarget`.
+- [x] **Green: `echo` tests, unmodified** — 34 files, 581 passed, 9 skipped.
+- [x] **Measure** — `f42c3714` in `BENCHMARKS.md`. Unpersisted/feed reads 2.3× (297 → 130 ns), not the
+      ~3.5× predicted; writes 1.3–1.4×, `Obj.make` 1.5×. Automerge reads moved 1.6× but the diff is not
+      on that path — recorded as unattributed, to be bounded by the Stage B repeat run.
 
 ## Phase 3 — Stage B: automerge reads from a per-object leaf cache
 
