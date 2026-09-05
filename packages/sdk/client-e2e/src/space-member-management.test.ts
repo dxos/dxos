@@ -7,6 +7,7 @@ import { describe, expect, onTestFinished, test } from 'vitest';
 import { waitForCondition } from '@dxos/async';
 import { type Client } from '@dxos/client';
 import { type Space } from '@dxos/client-protocol';
+import { toSpaceMemberRole } from '@dxos/client-services';
 import { performInvitation } from '@dxos/client-services/testing';
 import { createInitializedClientsWithContext } from '@dxos/client/testing';
 import { Context } from '@dxos/context';
@@ -144,7 +145,9 @@ const findMember = (space: Space, client: Client) => {
 };
 
 const waitHasRole = async (spaceOrMany: Space | Space[], client: Client, role: SpaceMember_Role) => {
-  return waitForMemberState(spaceOrMany, client, (m) => m?.role === role);
+  // The member's role is read back through SpacesService, which still serves protobuf.js shapes.
+  const memberRole = toSpaceMemberRole(role);
+  return waitForMemberState(spaceOrMany, client, (m) => m?.role === memberRole);
 };
 
 const waitHasStatus = async (

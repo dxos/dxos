@@ -33,8 +33,8 @@ import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { AlreadyJoinedError } from '@dxos/protocols';
-import { fromPublicKey, toPublicKey } from '@dxos/protocols/buf';
-import { Invitation, Invitation_AuthMethod, Invitation_Kind, Invitation_State } from '@dxos/protocols/buf/dxos/client/invitation_pb';
+import { buf, fromPublicKey, toPublicKey } from '@dxos/protocols/buf';
+import { AdmissionKeypairSchema, Invitation, Invitation_AuthMethod, Invitation_Kind, Invitation_State } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 import { ConnectionState } from '@dxos/protocols/proto/dxos/client/services';
 import { StorageType, createStorage } from '@dxos/random-access-storage';
 
