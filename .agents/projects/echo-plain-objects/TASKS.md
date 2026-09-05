@@ -120,7 +120,19 @@ into `MaterializedRecord { decoded, values }`; `get` serves `values[prop]`, the 
       `hasDoc` guard (D10): the first run failed `circular references`, a read inside `createObject`
       before the core had a document.
 - [x] **Measure** — in `BENCHMARKS.md`. Automerge reads 129 / 116 ns, parity with 3b as expected.
-- [ ] **Review round 2** — over the materialized record specifically.
+- [x] **Review round 2** — over the materialized record. No stale or wrong value found on any mutation
+      path. Confirmed cost regression: whole-record deep decode plus eager child wrapping made a read
+      after a write O(subtree) and the `Obj.update` write/read interleave quadratic; a nested record
+      target duplicated its subtree. Fixed by holding the document's own record object (`core.getRaw`, no
+      copy) and filling `values` lazily per key — D10 "Revised". Also fixed: two stale comments
+      (`object-core.ts` generation, `ref.ts` per-access refs); `getOwnPropertyDescriptor` returns the
+      `id` descriptor before materializing. Left as-is, with reason: an evicted core (removed from the
+      entity manager) keeps serving its last values instead of re-reading a document it no longer
+      tracks — the object is already removed from the directory, and bound local writes still
+      self-invalidate; the meta-root `createdAt`/`updatedAt` shadowing the reviewer raised cannot occur
+      under lazy fill, since the virtual branch answers before the decode path stores anything.
+- [ ] **Green: both suites, unmodified, on the lazy form.**
+- [ ] **Measure** — one pass, record.
 
 ### Follow-ups recorded, not in scope
 

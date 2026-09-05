@@ -665,7 +665,7 @@ export const createInstanceState = (
   // Starts one generation behind the core so the first trap materializes.
   defineHiddenProperty(state, symbolMaterialized, {
     generation: core.generation - 1,
-    decoded: undefined,
+    raw: undefined,
     values: Object.create(null),
   });
   return state;

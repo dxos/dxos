@@ -166,6 +166,27 @@ own property answered it before, `getDoc` threw now). `_materialize` returns wit
 `core.hasDoc` is false, leaving the generation behind so the next trap retries; `get` then falls through
 to the own property exactly as before.
 
+**Revised after review round 2: the record is held, not decoded, and the values fill lazily.** The
+first cut decoded the whole record on the first trap after a change and wrapped every child eagerly.
+The reviewer showed the cost model that creates: a scalar read after a write went from one key's decode
+to a deep decode of the subtree, so the write/read interleave an `Obj.update` callback routinely does
+(`for (k of keys) d[k] = d[k] + 1`) became quadratic in record width, and reading `doc.title` after
+every keystroke into a large `content` string re-copied the string; eager wrapping also created a proxy
+target for every nested child on the first read of any field. So `MaterializedRecord` now holds
+**`raw`** — the document's own record object, taken by `core.getRaw` with no copy, which is safe because
+an Automerge document is immutable and a change produces a new one — for `ownKeys`/`has`/
+`getOwnPropertyDescriptor`, and **`values`** starts empty at each generation and is filled by `get` on
+the decode path, one key per first read. Resetting at a change is O(1). The key-set traps read `raw`
+with `Object.keys`/`Object.hasOwn` rather than `Reflect.*`, because the document object carries
+symbol-keyed Automerge metadata a decoded copy never had; the descriptor is built explicitly (the
+document is frozen, and the assertion at `reactive-proxy.blueprint-test.ts:343` needs `writable: true`).
+Arrays keep the fresh decode on those traps, byte for byte.
+
+This is the leaf cache generalized — wrapped children and refs are held too, and the key set is served
+from the document object — rather than the eager snapshot first asked for. The eager form is recorded
+here as considered and rejected on the reviewer's cost argument; if the user wants it regardless, it is
+`_materialize` walking `raw` once.
+
 Refs are now materialized: one `Ref` per generation instead of one per read. This is a semantic change
 the leaf cache deliberately avoided (F2); the suites decide whether anything depends on per-read
 identity, and none did.

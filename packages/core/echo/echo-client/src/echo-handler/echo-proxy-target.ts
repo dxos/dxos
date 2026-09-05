@@ -25,16 +25,16 @@ export const symbolMaterialized = Symbol.for('@dxos/echo/internal/ProxyMateriali
 export { TargetKey } from '../core-db';
 
 /**
- * A record target's data, materialized from the document once per `ObjectCore` generation so that
- * every trap after the first serves a plain property load instead of a document decode.
+ * A record target's data for one `ObjectCore` generation: the document's own record object for the
+ * key-set traps, and the values `get` has already produced from it.
  * @internal
  */
 export type MaterializedRecord = {
-  /** The `ObjectCore.generation` this was built at; a mismatch rebuilds it on the next trap. */
+  /** The `ObjectCore.generation` this was taken at; a mismatch resets it on the next trap. */
   generation: number;
-  /** The record as `ObjectCore.getDecoded` returns it, for the key-set traps. */
-  decoded: unknown;
-  /** Values as `get` returns them: primitives decoded, records and arrays wrapped, refs resolved. */
+  /** The stored record as the document holds it — immutable, so held rather than copied. */
+  raw: unknown;
+  /** Values as `get` returns them, filled on first read of each key: primitives decoded, records and arrays wrapped, refs resolved. */
   values: Record<string, unknown>;
 };
 

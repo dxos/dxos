@@ -129,8 +129,14 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
   }
 
   ownKeys(target: ProxyTarget): ArrayLike<string | symbol> {
-    const value = this._decodedRecord(target);
-    const keys = typeof value === 'object' && value !== null ? Reflect.ownKeys(value) : [];
+    const record = this._record(target);
+    // The document object carries its own symbol-keyed metadata, which a decoded copy never had.
+    const keys: (string | symbol)[] =
+      typeof record !== 'object' || record === null
+        ? []
+        : target[symbolMaterialized]
+          ? Object.keys(record)
+          : Reflect.ownKeys(record);
     if (isRootDataObject(target)) {
       keys.push(PROPERTY_ID);
     }
@@ -139,12 +145,22 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
   }
 
   getOwnPropertyDescriptor(target: ProxyTarget, p: string | symbol): PropertyDescriptor | undefined {
-    const value = this._decodedRecord(target);
     if (isRootDataObject(target) && p === PROPERTY_ID) {
       return { enumerable: true, configurable: true, writable: false };
     }
 
-    return typeof value === 'object' && value !== null ? Reflect.getOwnPropertyDescriptor(value, p) : undefined;
+    const record = this._record(target);
+    if (typeof record !== 'object' || record === null) {
+      return undefined;
+    }
+    if (!target[symbolMaterialized]) {
+      return Reflect.getOwnPropertyDescriptor(record, p);
+    }
+    // The document is frozen; the descriptor describes the key as a decoded copy would carry it.
+    if (typeof p !== 'string' || !Object.hasOwn(record, p)) {
+      return undefined;
+    }
+    return { value: getDecodedValueAtPath(target, p).value, writable: true, enumerable: true, configurable: true };
   }
 
   defineProperty(target: ProxyTarget, property: string | symbol, attributes: PropertyDescriptor): boolean {
@@ -163,21 +179,22 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       return true;
     }
 
-    const value = this._decodedRecord(target);
-    return typeof value === 'object' && value !== null ? Reflect.has(value, p) : false;
+    const record = this._record(target);
+    if (typeof record !== 'object' || record === null) {
+      return false;
+    }
+    return target[symbolMaterialized] ? typeof p === 'string' && Object.hasOwn(record, p) : Reflect.has(record, p);
   }
 
   get(target: ProxyTarget, prop: string | symbol, receiver: any): any {
-    // Checked before every other branch: the materialized record holds only document keys that are not
-    // on the system surface, and the core generation moves before any mutation can be observed.
+    // Checked before every other branch: a key reaches the materialized record only after the decode path
+    // below has answered it once, and the core generation moves before any mutation can be observed.
+    let materialized: MaterializedRecord | undefined;
     if (typeof prop === 'string') {
-      const materialized = target[symbolMaterialized];
-      if (materialized) {
-        const values =
-          materialized.generation === target[symbolInternals].generation
-            ? materialized.values
-            : this._materialize(target, materialized).values;
-        const value = values[prop];
+      const slot = target[symbolMaterialized];
+      if (slot && (slot.generation === target[symbolInternals].generation || this._materialize(target, slot))) {
+        materialized = slot;
+        const value = slot.values[prop];
         if (value !== undefined) {
           return value;
         }
@@ -233,47 +250,44 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       }
     }
 
-    return this._wrapInProxyIfRequired(target, getDecodedValueAtPath(target, prop));
+    const value = this._wrapInProxyIfRequired(target, getDecodedValueAtPath(target, prop));
+    // An absent key stays out so probing arbitrary keys cannot grow the record.
+    if (materialized && typeof prop === 'string' && value !== undefined) {
+      materialized.values[prop] = value;
+    }
+    return value;
   }
 
   /**
-   * Rebuilds a record target's materialized data from the document. Keys the system surface answers
-   * (`Reflect.has` on the target) are left out so the accessor keeps winning, as on the decode path.
+   * Resets a record target's materialized record to the current generation: the document's own record
+   * object is taken as is, and the values refill lazily as keys are read, so a change costs nothing
+   * until the next read of each key. Returns false while the core has no document — inside
+   * `createObject` the seeded own properties answer reads until then, and the next trap retries.
    */
-  private _materialize(target: ProxyTarget, materialized: MaterializedRecord): MaterializedRecord {
-    // Inside `createObject` the seeded own properties answer reads until the document exists; leaving
-    // the generation behind makes the next trap retry.
-    if (!target[symbolInternals].hasDoc) {
-      return materialized;
+  private _materialize(target: ProxyTarget, materialized: MaterializedRecord): boolean {
+    const core = target[symbolInternals];
+    if (!core.hasDoc) {
+      return false;
     }
-    const generation = target[symbolInternals].generation;
-    const { value, namespace, dataPath } = getDecodedValueAtPath(target);
-    const values: Record<string, unknown> = Object.create(null);
-    if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
-      for (const [key, entry] of Object.entries(value)) {
-        if (!Reflect.has(target, key)) {
-          values[key] = this._wrapInProxyIfRequired(target, { namespace, value: entry, dataPath: [...dataPath, key] });
-        }
-      }
-    }
-    materialized.decoded = value;
-    materialized.values = values;
-    materialized.generation = generation;
-    return materialized;
+    materialized.raw = core.getRaw([target[symbolNamespace], ...target[symbolPath]]);
+    materialized.values = Object.create(null);
+    materialized.generation = core.generation;
+    return true;
   }
 
   /**
-   * The decoded record for the key-set traps: the materialized copy when the target has one, otherwise
-   * a fresh decode (arrays).
+   * The record the key-set traps read: the document's own record object for a record target, a fresh
+   * decode for an array.
    */
-  private _decodedRecord(target: ProxyTarget): unknown {
+  private _record(target: ProxyTarget): unknown {
     const materialized = target[symbolMaterialized];
     if (!materialized) {
       return getDecodedValueAtPath(target).value;
     }
-    return materialized.generation === target[symbolInternals].generation
-      ? materialized.decoded
-      : this._materialize(target, materialized).decoded;
+    if (materialized.generation !== target[symbolInternals].generation && !this._materialize(target, materialized)) {
+      return undefined;
+    }
+    return materialized.raw;
   }
 
   set(target: ProxyTarget, prop: string | symbol, value: any, receiver: any): boolean {

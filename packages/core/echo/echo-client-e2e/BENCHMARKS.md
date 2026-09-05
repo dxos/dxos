@@ -262,10 +262,11 @@ roughly half. Elision check: unpersisted 5.7×, automerge 6.1×.
 
 ---
 
-## Phase 3c — materialized record replaces the leaf cache (`dirty`, committed next)
+## `9bc3cf29` — 2026-09-05 — Phase 3c, first cut: eager materialized record
 
-`echo-client` 549/549 and `echo-client-e2e` 324/324 unmodified. One pass on the tree that became the
-Phase 3c commit. Harness floor 67 ns.
+`echo-client` 549/549 and `echo-client-e2e` 324/324 unmodified. One pass. Harness floor 67 ns. **Superseded
+by the lazy form below** after review round 2 found the eager deep decode makes a read after a write
+O(subtree) — a cost this bench's read rows, which never interleave a write, cannot show.
 
 Change: each record target decodes its record once per core generation into `{ decoded, values }`;
 `get` serves `values[prop]`, the key-set traps serve `decoded` (DESIGN.md D10). Read rows are hits under

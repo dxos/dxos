@@ -107,8 +107,8 @@ export class ObjectCore {
   public readonly updates = new Event();
 
   /**
-   * Moves on every mutation; proxy targets stamp their decoded-leaf cache with it, so one compare on
-   * read detects a stale entry.
+   * Moves on every mutation; proxy targets stamp their materialized record with it, so one compare on
+   * read detects a stale one.
    */
   public generation = 0;
 
@@ -430,7 +430,11 @@ export class ObjectCore {
     return newLength;
   }
 
-  private _getRaw(path: Doc.KeyPath): AutomergeDoc<EntityStructure> | AutomergeDoc<DatabaseDirectory> {
+  /**
+   * The stored value at `path` as the document holds it, undecoded. The document is immutable, so the
+   * result can be held for as long as the generation it was read at.
+   */
+  getRaw(path: Doc.KeyPath): AutomergeDoc<EntityStructure> | AutomergeDoc<DatabaseDirectory> {
     const fullPath = [...this.mountPath, ...path];
 
     let value = this.getDoc();
@@ -451,7 +455,7 @@ export class ObjectCore {
 
   // TODO(dmaretskyi): Rename to `get`.
   getDecoded(path: Doc.KeyPath): DecodedAutomergePrimaryValue {
-    const decoded = this.decode(this._getRaw(path));
+    const decoded = this.decode(this.getRaw(path));
     return upgradeMeta(path, decoded) as DecodedAutomergePrimaryValue;
   }
 
@@ -473,7 +477,7 @@ export class ObjectCore {
   }
 
   getKind(): EntityKind {
-    return (this._getRaw([SYSTEM_NAMESPACE, 'kind']) as any) ?? EntityKind.Object;
+    return (this.getRaw([SYSTEM_NAMESPACE, 'kind']) as any) ?? EntityKind.Object;
   }
 
   // TODO(dmaretskyi): Just set statically during construction.
@@ -482,7 +486,7 @@ export class ObjectCore {
   }
 
   getSource(): EncodedReference | undefined {
-    const res = this._getRaw([SYSTEM_NAMESPACE, 'source']);
+    const res = this.getRaw([SYSTEM_NAMESPACE, 'source']);
     if (!res || !EncodedReference.isEncodedReference(res)) {
       return undefined;
     }
@@ -495,7 +499,7 @@ export class ObjectCore {
   }
 
   getTarget(): EncodedReference | undefined {
-    const res = this._getRaw([SYSTEM_NAMESPACE, 'target']);
+    const res = this.getRaw([SYSTEM_NAMESPACE, 'target']);
     if (!res || !EncodedReference.isEncodedReference(res)) {
       return undefined;
     }
@@ -508,7 +512,7 @@ export class ObjectCore {
   }
 
   getParent(): EncodedReference | undefined {
-    const res = this._getRaw([SYSTEM_NAMESPACE, 'parent']);
+    const res = this.getRaw([SYSTEM_NAMESPACE, 'parent']);
     if (!res || !EncodedReference.isEncodedReference(res)) {
       return undefined;
     }
@@ -524,7 +528,7 @@ export class ObjectCore {
   }
 
   getType(): EncodedReference | undefined {
-    const res = this._getRaw([SYSTEM_NAMESPACE, 'type']);
+    const res = this.getRaw([SYSTEM_NAMESPACE, 'type']);
     if (!res || !EncodedReference.isEncodedReference(res)) {
       return undefined;
     }
@@ -552,7 +556,7 @@ export class ObjectCore {
    * created before this field was introduced.
    */
   getCreatedAt(): number | undefined {
-    const value = this._getRaw([SYSTEM_NAMESPACE, 'createdAt']);
+    const value = this.getRaw([SYSTEM_NAMESPACE, 'createdAt']);
     return typeof value === 'number' ? value : undefined;
   }
 
@@ -590,7 +594,7 @@ export class ObjectCore {
   }
 
   isDeleted(remainingDepth: number = 10): boolean {
-    const value = this._getRaw([SYSTEM_NAMESPACE, 'deleted']);
+    const value = this.getRaw([SYSTEM_NAMESPACE, 'deleted']);
     const ownDeleted = typeof value === 'boolean' ? value : false;
     if (ownDeleted) {
       return true;
