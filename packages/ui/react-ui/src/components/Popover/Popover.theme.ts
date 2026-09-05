@@ -38,9 +38,12 @@ const viewport: ComponentFunction<PopoverStyleProps> = ({ constrainBlock, constr
     ...etc,
   );
 
-/** Two rotated squares painted from `--arrow-background`, matching the content's border. */
+/**
+ * A rotated square painted from `--arrow-background` in the content's border colour, sunk beneath
+ * the content so only the half outside its edge shows — a triangle, not a diamond.
+ */
 const arrow: ComponentFunction<PopoverStyleProps> = (_props, ...etc) =>
-  mx('[--arrow-size:12px] [--arrow-background:var(--color-separator)]', ...etc);
+  mx('z-[-1] [--arrow-size:12px] [--arrow-background:var(--color-separator)]', ...etc);
 
 export const popoverTheme: Theme<PopoverStyleProps> = {
   positioner,

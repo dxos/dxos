@@ -44,9 +44,12 @@ const separator: ComponentFunction<MenuStyleProps> = (_props, ...etc) => mx('my-
 const groupLabel: ComponentFunction<MenuStyleProps> = (_props, ...etc) =>
   mx('text-description', 'select-none px-(--dx-control-pad) py-1', ...etc);
 
-/** Two rotated squares painted from `--arrow-background`, matching the content's border. */
+/**
+ * A rotated square painted from `--arrow-background` in the content's border colour, sunk beneath
+ * the content so only the half outside its edge shows — a triangle, not a diamond.
+ */
 const arrow: ComponentFunction<MenuStyleProps> = (_props, ...etc) =>
-  mx('[--arrow-size:12px] [--arrow-background:var(--color-separator)]', ...etc);
+  mx('z-[-1] [--arrow-size:12px] [--arrow-background:var(--color-separator)]', ...etc);
 
 export const menuTheme: Theme<MenuStyleProps> = {
   positioner,

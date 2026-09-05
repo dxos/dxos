@@ -20,7 +20,7 @@ const DefaultStory = ({ openTrigger, children }: PropsWithChildren<{ openTrigger
       <Popover.Trigger asChild>{openTrigger}</Popover.Trigger>
       <Popover.Content>
         <Popover.Viewport>
-          <p className='px-2 py-1 min-w-[18rem] max-w-[38rem]'>{children}</p>
+          <p className='px-2 py-1 min-w-[18rem] max-w-[30rem]'>{children}</p>
         </Popover.Viewport>
         <Popover.Arrow />
       </Popover.Content>
