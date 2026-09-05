@@ -7,6 +7,7 @@ import { beforeEach, describe, expect, onTestFinished, test } from 'vitest';
 import { type PushStream, Trigger, sleep, waitForCondition } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { PublicKey } from '@dxos/keys';
+import { fromPublicKey, toPublicKey } from '@dxos/protocols/buf';
 import { Invitation, Invitation_AuthMethod, Invitation_Kind, Invitation_State, Invitation_Type } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 import { openAndClose } from '@dxos/test-utils';
 import { range } from '@dxos/util';
@@ -233,7 +234,7 @@ describe.skipIf(process.env.CI && !process.env.RUN_FLAKY_TESTS)(
         await hostInvitation(host, invitation);
         const guests = await Promise.all(
           range(5).map(async () => {
-            const guest = await createPeer(invitation.spaceKey);
+            const guest = await createPeer(toPublicKey(invitation.spaceKey));
             const authCodeInput2 = await acceptInvitation(guest, invitation);
             authCodeInput2.wake(invitation.authCode!);
             return guest;
@@ -314,7 +315,7 @@ describe.skipIf(process.env.CI && !process.env.RUN_FLAKY_TESTS)(
     };
 
     const createNewHost = async (invitation: Invitation): Promise<PeerSetup> => {
-      const newHost = await createPeer(invitation.spaceKey!);
+      const newHost = await createPeer(toPublicKey(invitation.spaceKey));
       await performAuth(newHost, invitation);
       await sleep(30);
       await hostInvitation(newHost, invitation);
@@ -362,14 +363,14 @@ describe.skipIf(process.env.CI && !process.env.RUN_FLAKY_TESTS)(
         type: Invitation_Type.DELEGATED,
         kind: Invitation_Kind.SPACE,
         authMethod: Invitation_AuthMethod.SHARED_SECRET,
-        spaceKey: setup.spaceKey,
+        spaceKey: fromPublicKey(setup.spaceKey),
         multiUse: false,
         ...options,
       });
       // cancel to avoid interfering with invitations-handler direct invocations
       const invitation = observable.get();
       await setup.peer.invitationsManager.cancelInvitation(invitation);
-      return { ...invitation, swarmKey: PublicKey.random() };
+      return { ...invitation, swarmKey: fromPublicKey(PublicKey.random()) };
     };
   },
 );
