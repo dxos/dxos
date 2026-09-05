@@ -29,6 +29,7 @@ import type { Position } from '@dxos/util';
 
 // eslint-disable-next-line @dxos/rules/import-as-namespace
 import type * as Translations$ from '../app/Translations';
+import type * as AppSettings from '../types/AppSettings';
 // eslint-disable-next-line @dxos/rules/import-as-namespace
 import type * as ObservabilityMapping$ from './ObservabilityMapping';
 
@@ -184,6 +185,43 @@ export const isSettings = (value: unknown): value is Settings =>
  * @category Capability
  */
 export const Settings = Capability$.make<Settings>()('org.dxos.app-framework.capability.settings');
+
+/**
+ * Control surface over the device-synced settings store, which projects every {@link Settings}
+ * contribution (plus the plugin set) into the settings space so they follow the identity across
+ * devices, with per-key device overrides.
+ *
+ * Contributed once the settings space is open, so consumers must tolerate its absence: before that,
+ * and in hosts with no client at all (stories, node), settings stay device-local.
+ */
+export type SettingsSync = {
+  /** Key of the device this app instance writes settings for. */
+  readonly deviceKey: string;
+  /**
+   * Settings prefixes this device writes locally rather than sharing. Reactive, so settings UI
+   * re-renders when the scope changes here or on another device.
+   */
+  readonly unsynced: Atom.Atom<readonly string[]>;
+  /**
+   * Turn sharing of a prefix on or off for this device.
+   *
+   * Turning it OFF is lossless — nothing visibly changes here and no other device is touched.
+   * Turning it ON keeps one side of every conflicting key: the account's by default, this device's
+   * with `adopt: 'local'`. Ask the reader only when {@link conflicts} is non-empty.
+   */
+  setSynced(prefix: string, synced: boolean, options?: { adopt?: AppSettings.Adopt }): void;
+  /**
+   * Keys that rejoining the account would change, so a caller can skip the question when there is
+   * nothing to decide. Read on demand rather than reactively: it is consulted at the moment the
+   * reader asks to rejoin.
+   */
+  conflicts(prefix: string): readonly string[];
+};
+
+/**
+ * @category Capability
+ */
+export const SettingsSync = Capability$.makeSingleton<SettingsSync>()('org.dxos.app-framework.capability.settingsSync');
 
 export type Schema = ReadonlyArray<Type.AnyEntity>;
 

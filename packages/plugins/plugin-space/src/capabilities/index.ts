@@ -89,6 +89,16 @@ export const Repair = Capability.lazyModule(
   () => import('./repair'),
 );
 export const Schema = AppCapability.schema(() => import('./schema'));
+export const SettingsSync = Capability.lazyModule(
+  'SettingsSync',
+  {
+    requires: [ClientCapabilities.Client, Capabilities.PluginManager, Capabilities.AtomRegistry],
+    provides: [AppCapabilities.SettingsSync],
+    // Runtime event: the settings space this projects into arrives with the space list, not at startup.
+    activatesOn: ClientEvents.SpacesReady,
+  },
+  () => import('./settings-sync'),
+);
 export const SpaceSettings = AppCapability.settings(() => import('./settings'), {
   provides: [SpaceCapabilities.SettingsAtom],
 });

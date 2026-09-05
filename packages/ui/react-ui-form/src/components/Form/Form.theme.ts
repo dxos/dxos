@@ -18,7 +18,11 @@ const formStyles = tv({
     content: 'pb-form-padding',
     section: 'flex flex-col py-form-section-gap first:pt-0',
     group: 'flex flex-col gap-trim-md p-trim-md border border-separator rounded-sm',
-    sectionHeader: '',
+    // Heading row: the title/description block fills, section-level actions sit at its end.
+    sectionHeader: 'flex items-start gap-trim-md',
+    sectionHeading: 'flex flex-col min-is-0 grow',
+    // Centred against the title's line rather than the block, so a description does not drag it down.
+    sectionActions: 'flex shrink-0 items-center',
     sectionTitle: 'text-lg',
     sectionDescription: 'text-description',
     fieldSet: '',
@@ -49,7 +53,8 @@ const formStyles = tv({
         // Gap on the section spaces its direct children — section title/description and, for action
         // panels, the `Form.Row`s placed directly in the section (which have no `fieldSet` wrapper).
         section: 'py-form-section-gap! gap-trim-md',
-        sectionHeader: 'pb-form-section-gap',
+        sectionHeader: 'flex items-start gap-trim-md pb-form-section-gap',
+        sectionActions: 'flex shrink-0 items-center px-trim-md',
         sectionTitle: 'px-trim-md text-xl',
         sectionDescription: 'px-trim-md',
         // No top padding: the section gap already separates the field set from the title above it.

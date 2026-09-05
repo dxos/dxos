@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { type ReactNode, useCallback, useEffect, useMemo, useState } from 'react';
 
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppSpace from '@dxos/app-toolkit/AppSpace';
@@ -36,10 +36,11 @@ export type DebugSettingsProps = AppSurface.SettingsProps<
   {
     logStore: IdbLogStore;
     onUpload?: AppCapabilities.FileUploader;
+    scope?: ReactNode;
   }
 >;
 
-export const DebugSettings = ({ settings, onSettingsChange, logStore, onUpload }: DebugSettingsProps) => {
+export const DebugSettings = ({ settings, onSettingsChange, logStore, onUpload, scope }: DebugSettingsProps) => {
   const { t } = useTranslation(meta.profile.key);
   const [toast, setToast] = useState<Toast>();
   const download = useFileDownload();
@@ -157,7 +158,7 @@ export const DebugSettings = ({ settings, onSettingsChange, logStore, onUpload }
     <Form.Root schema={Settings.Settings} values={settings} variant='settings' readonly={!onSettingsChange}>
       <Form.Viewport scroll>
         <Form.Content>
-          <Form.Section title={meta.profile.name ?? meta.profile.key}>
+          <Form.Section title={meta.profile.name ?? meta.profile.key} actions={scope}>
             <Form.Row label={t('settings.wireframe.label')} description={t('settings.wireframe.description')}>
               <Input.Root>
                 <Input.Switch

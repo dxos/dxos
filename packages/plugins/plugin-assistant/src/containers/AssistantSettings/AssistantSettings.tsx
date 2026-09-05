@@ -3,7 +3,7 @@
 //
 
 import { useAtomValue } from '@effect/atom-react/Hooks';
-import React, { useMemo } from 'react';
+import React, { type ReactNode, useMemo } from 'react';
 
 import { Provider } from '@dxos/ai';
 import { useOptionalCapability } from '@dxos/app-framework/ui';
@@ -18,7 +18,7 @@ import { Assistant, AssistantCapabilities, Ollama } from '#types';
 import { presetsForProvider, resolveProvider } from '../../processor';
 import { OllamaModels } from './OllamaModels';
 
-export type AssistantSettingsProps = AppSurface.SettingsProps<Assistant.Settings>;
+export type AssistantSettingsProps = AppSurface.SettingsProps<Assistant.Settings, { scope?: ReactNode }>;
 
 // The per-provider model-default options must match the chat picker (usePresets): the catalog models
 // served by the provider, restricted to installed models when `installed` is supplied (local sidecar).
@@ -27,7 +27,7 @@ const presetOptions = (provider: DXN.DXN, installed?: ReadonlySet<string>) =>
     .filter((preset) => !installed || installed.has(preset.backend))
     .map((preset) => ({ value: preset.model, label: preset.label }));
 
-export const AssistantSettings = ({ settings, onSettingsChange }: AssistantSettingsProps) => {
+export const AssistantSettings = ({ settings, onSettingsChange, scope }: AssistantSettingsProps) => {
   const { t } = useTranslation(meta.profile.key);
 
   // The Ollama manager is the bundled sidecar (desktop only). Its presence selects the local
@@ -79,7 +79,7 @@ export const AssistantSettings = ({ settings, onSettingsChange }: AssistantSetti
     >
       <Form.Viewport scroll>
         <Form.Content>
-          <Form.Section title={meta.profile.name ?? meta.profile.key}>
+          <Form.Section title={meta.profile.name ?? meta.profile.key} actions={scope}>
             <Form.FieldSet fieldMap={fieldMap} />
           </Form.Section>
           <OllamaModels />

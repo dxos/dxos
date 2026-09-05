@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import React from 'react';
+import React, { type ReactNode } from 'react';
 
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Button, useTranslation } from '@dxos/react-ui';
@@ -15,10 +15,11 @@ export type ScriptSettingsProps = AppSurface.SettingsProps<
   Settings.Settings,
   {
     onAuthenticate?: () => void;
+    scope?: ReactNode;
   }
 >;
 
-export const ScriptSettings = ({ settings, onSettingsChange, onAuthenticate }: ScriptSettingsProps) => {
+export const ScriptSettings = ({ settings, onSettingsChange, onAuthenticate, scope }: ScriptSettingsProps) => {
   const { t } = useTranslation(meta.profile.key);
 
   return (
@@ -31,7 +32,7 @@ export const ScriptSettings = ({ settings, onSettingsChange, onAuthenticate }: S
     >
       <Form.Viewport scroll>
         <Form.Content>
-          <Form.Section title={meta.profile.name ?? meta.profile.key}>
+          <Form.Section title={meta.profile.name ?? meta.profile.key} actions={scope}>
             {/* TODO(wittjosiah): Hide outside of dev environments. */}
             <Form.Row label={t('authenticate-action.label')} description={t('authenticate-action.description')}>
               <Button disabled={!onSettingsChange} onClick={onAuthenticate}>

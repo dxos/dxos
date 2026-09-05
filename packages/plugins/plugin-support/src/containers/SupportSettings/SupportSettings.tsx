@@ -8,7 +8,7 @@ import React from 'react';
 import { useOperationInvoker, useSettingsState } from '@dxos/app-framework/ui';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import { type AppSurface, useDefaultSpace, useSettingsSpaceProperties } from '@dxos/app-toolkit/ui';
+import { type AppSurface, SettingsScope, useDefaultSpace, useSettingsSpaceProperties } from '@dxos/app-toolkit/ui';
 import { Annotation } from '@dxos/echo';
 import { Button, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
@@ -55,7 +55,10 @@ export const SupportSettings = ({ subject }: SupportSettingsProps) => {
     >
       <Form.Viewport scroll>
         <Form.Content>
-          <Form.Section title={meta.profile.name ?? meta.profile.key}>
+          <Form.Section
+            title={meta.profile.name ?? meta.profile.key}
+            actions={<SettingsScope prefix={subject.prefix} />}
+          >
             {onShowWelcome && (
               <Form.Row label={t('show-welcome.label')}>
                 <Button onClick={onShowWelcome}>{t('show-welcome.label')}</Button>

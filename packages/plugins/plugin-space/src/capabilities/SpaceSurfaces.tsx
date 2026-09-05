@@ -12,7 +12,13 @@ import { useAtomCapability, useOperationInvoker, useSettingsState } from '@dxos/
 import * as AppAnnotation from '@dxos/app-toolkit/AppAnnotation';
 import type * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppSpace from '@dxos/app-toolkit/AppSpace';
-import { useActiveSpace, useHomeVisibility, useSettingsSpace, useSettingsSpaceProperties } from '@dxos/app-toolkit/ui';
+import {
+  SettingsScope,
+  useActiveSpace,
+  useHomeVisibility,
+  useSettingsSpace,
+  useSettingsSpaceProperties,
+} from '@dxos/app-toolkit/ui';
 import { Annotation, Obj, Type } from '@dxos/echo';
 import { useType } from '@dxos/echo-react';
 import { MembershipPolicy } from '@dxos/protocols/proto/dxos/halo/credentials';
@@ -99,6 +105,7 @@ export const SpaceSettingsSurface = ({ subject }: SpaceSettingsSurfaceProps) => 
 
   return (
     <SpaceSettings
+      scope={<SettingsScope prefix={subject.prefix} />}
       spaces={visibleSpaces}
       eligibleDefaultSpaces={eligibleSpaces}
       onOpenSpaceSettings={(space: Space) => invokePromise(SpaceOperation.OpenSettings, { space })}

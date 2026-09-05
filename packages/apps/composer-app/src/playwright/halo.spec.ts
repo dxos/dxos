@@ -6,6 +6,7 @@ import { expect, test } from '@playwright/test';
 import { platform } from 'node:os';
 
 import { AppManager, INITIAL_SPACE_COUNT, INITIAL_URL } from './app-manager';
+import { StackPlugin } from './plugins';
 
 // TODO(wittjosiah): WebRTC only available in chromium browser for testing currently.
 //   https://github.com/microsoft/playwright/issues/2973
@@ -70,6 +71,52 @@ test.describe('HALO tests', () => {
     // await waitForExpect(async () => {
     //   expect(await host.shell.getDisplayName()).to.equal(await guest.shell.getDisplayName());
     // });
+  });
+
+  test('settings sync across devices, and one device can keep its own', async () => {
+    test.setTimeout(180_000);
+
+    // Both devices on one identity, so they share a settings space. Both boots have to land first:
+    // the navigation to the default space arrives seconds after the shell renders and closes any
+    // dialog opened before it.
+    await host.waitForDefaultWorkspace();
+    await guest.waitForDefaultWorkspace();
+    await host.openUserDevices();
+    const invitationCode = await host.createDeviceInvitation();
+    await guest.openUserDevices();
+    await guest.joinNewIdentity();
+    await guest.shell.acceptDeviceInvitation(invitationCode);
+    // Read after the guest connects: the host learns the auth code from `readyForAuthentication`,
+    // which the flow only reaches once there is a guest on the other side.
+    const authCode = await host.getAuthCode();
+    await guest.shell.authenticateDevice(authCode);
+    await expect(guest.getSpaceItems()).toHaveCount(INITIAL_SPACE_COUNT, { timeout: 60_000 });
+    await guest.waitForJoinedWorkspace();
+
+    // The plugin set is an ordinary synced namespace keyed by plugin id, so enabling one here is
+    // the same mechanism as changing any other setting.
+    await host.openRegistryCategory('recommended');
+    await expect(host.getPluginToggle(StackPlugin.meta.profile.key)).not.toBeChecked();
+    await host.getPluginToggle(StackPlugin.meta.profile.key).click();
+    await expect(host.getPluginToggle(StackPlugin.meta.profile.key)).toBeChecked();
+
+    // 1. Sync: the host's decision replicates to the guest through the settings space.
+    await guest.openRegistryCategory('recommended');
+    await expect(guest.getPluginToggle(StackPlugin.meta.profile.key)).toBeChecked({ timeout: 60_000 });
+
+    // 2. Local override: the guest leaves the account for the plugin set only.
+    await guest.openPluginSettings('org.dxos.plugin.registry');
+    await guest.usePluginSetForThisDeviceOnly();
+
+    await guest.openRegistryCategory('recommended');
+    await guest.getPluginToggle(StackPlugin.meta.profile.key).click();
+    await expect(guest.getPluginToggle(StackPlugin.meta.profile.key)).not.toBeChecked();
+
+    // The guest's change stays put and the host is untouched. Asserting the host after the guest
+    // has settled is the real check: a leaked write would have replicated by now.
+    await expect(guest.getPluginToggle(StackPlugin.meta.profile.key)).not.toBeChecked({ timeout: 30_000 });
+    await host.openRegistryCategory('recommended');
+    await expect(host.getPluginToggle(StackPlugin.meta.profile.key)).toBeChecked({ timeout: 30_000 });
   });
 
   test('deleting a space replicates across devices', async () => {

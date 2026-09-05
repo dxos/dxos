@@ -30,6 +30,7 @@ export default defineConfig({
     'operations/LayoutOperation': 'src/operations/LayoutOperation.ts',
     'operations/NavigationOperation': 'src/operations/NavigationOperation.ts',
     'operations/SettingsOperation': 'src/operations/SettingsOperation.ts',
+    'types/AppSettings': 'src/types/AppSettings.ts',
     'types/CollectionModel': 'src/types/CollectionModel.ts',
     'types/ConnectorSync': 'src/types/ConnectorSync.ts',
     'app-framework/AppActivationEvents': 'src/app-framework/AppActivationEvents.ts',

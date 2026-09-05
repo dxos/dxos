@@ -5,7 +5,7 @@
 import React, { useCallback, useMemo } from 'react';
 
 import { useCapabilities, useSettingsState } from '@dxos/app-framework/ui';
-import { type AppSurface } from '@dxos/app-toolkit/ui';
+import { type AppSurface, SettingsScope } from '@dxos/app-toolkit/ui';
 import { useClient } from '@dxos/react-client';
 import { Select, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
@@ -44,7 +44,10 @@ export const FileSettings = ({ subject }: FileSettingsProps) => {
     >
       <Form.Viewport scroll>
         <Form.Content>
-          <Form.Section title={meta.profile.name ?? meta.profile.key}>
+          <Form.Section
+            title={meta.profile.name ?? meta.profile.key}
+            actions={<SettingsScope prefix={subject.prefix} />}
+          >
             <Form.Row
               label={t('settings.backend.label')}
               description={active?.description ?? t('settings.backend.description')}

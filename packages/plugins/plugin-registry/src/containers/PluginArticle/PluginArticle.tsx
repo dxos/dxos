@@ -48,6 +48,7 @@ export const PluginArticle = ({ subject: plugin }: PluginArticleProps) => {
     [plugins, pluginId],
   );
   const isCore = manager.getCore().includes(pluginId);
+
   const canUninstall = isInstalled && !isCore && remotePluginIds.has(pluginId);
   const hasUpdate =
     isInstalled && !!catalogEntry && !!installedVersionTag && installedVersionTag !== catalogEntry.release?.version;
