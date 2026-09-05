@@ -22,8 +22,6 @@ import {
 import { useAttention } from '@dxos/react-ui-attention';
 import { mx } from '@dxos/ui-theme';
 
-// TODO(burdon): Rewrite this; there are too many hacks/quirks.
-
 type TabsActivePart = 'list' | 'panel';
 
 type TabsOrientation = 'horizontal' | 'vertical';
