@@ -279,7 +279,7 @@ const FailureStory = ({ stages = 4 }: StoryArgs) => {
 export const TestFailure: Story = {
   render: FailureStory,
   args: { stages: 4 },
-  // A run that failed is drawn in the error hue throughout: a plan half-drawn in the primary hue
+  // A run that failed is drawn in the error hue throughout: a plan half-drawn in the accent
   // would read as half of it having gone fine.
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
