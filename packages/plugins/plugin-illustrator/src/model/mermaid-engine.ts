@@ -573,20 +573,78 @@ const emit = (
       arrangement === 'columns' && groupOf.get(edge.from) !== groupOf.get(edge.to) ? !horizontal : horizontal;
     const ports = straighten(routed, nodes, isHorizontal);
     const elements: Scene.Element[] = [...buses.elements];
+    // Terminals already placed, per node, with their role. Edges are routed independently (and an
+    // internal edge and a cross-group edge may even route in different modes), so a later edge can
+    // land its terminal on an earlier one. Only an exit on an entry is a defect — it reads as a
+    // crossing — so a slot is taken by the opposite role alone: two exits (a fork) or two entries (a
+    // merge) share a trunk, as a bus does. Such an edge is re-routed with the port nudged to a free
+    // slot on that side, preferring the nudge that keeps the route straightest.
+    type Role = 'exit' | 'entry';
+    const terminals = new Map<string, { point: Scene.Point; role: Role }[]>();
+    const taken = (nodeId: string, point: Scene.Point, role: Role) =>
+      (terminals.get(nodeId) ?? []).some(
+        (other) =>
+          other.role !== role &&
+          Math.abs(other.point.x - point.x) < GRID_FINE &&
+          Math.abs(other.point.y - point.y) < GRID_FINE,
+      );
+    const NUDGES: [number, number][] = [
+      [0, 0],
+      [1, 0],
+      [-1, 0],
+      [0, 1],
+      [0, -1],
+      [2, 0],
+      [-2, 0],
+      [0, 2],
+      [0, -2],
+    ];
+    const routeEdge = (edge: MermaidEdge, from: Rect, to: Rect): Scene.Point[] => {
+      const horizontal = isHorizontal(edge);
+      const sameLane = horizontal ? from.x === to.x : from.y === to.y;
+      const alongY = horizontal ? sameLane : !sameLane;
+      const base = ports.get(edge) ?? {};
+      const center = (rect: Rect) => (alongY ? rect.x + rect.w / 2 : rect.y + rect.h / 2);
+      const within = (rect: Rect, value: number) =>
+        alongY
+          ? Math.min(rect.x + rect.w - GRID_FINE, Math.max(rect.x + GRID_FINE, value))
+          : Math.min(rect.y + rect.h - GRID_FINE, Math.max(rect.y + GRID_FINE, value));
+      const route = ([startNudge, endNudge]: [number, number]) =>
+        router({
+          relation: edge,
+          from,
+          to,
+          horizontal,
+          offset: 0,
+          ports: {
+            start: within(from, (base.start ?? center(from)) + startNudge * GRID_FINE),
+            end: within(to, (base.end ?? center(to)) + endNudge * GRID_FINE),
+          },
+        });
+      const free = (points: Scene.Point[]) =>
+        !taken(edge.from, points[0], 'exit') && !taken(edge.to, points[points.length - 1], 'entry');
+      const direct = route(NUDGES[0]);
+      if (free(direct)) {
+        return direct;
+      }
+      let best: Scene.Point[] | undefined;
+      for (const nudge of NUDGES.slice(1)) {
+        const attempt = route(nudge);
+        if (free(attempt) && (!best || attempt.length < best.length)) {
+          best = attempt;
+        }
+      }
+      return best ?? direct;
+    };
     routed.forEach((edge, index) => {
       const from = nodes.get(edge.from);
       const to = nodes.get(edge.to);
       if (!from || !to) {
         return;
       }
-      const points = router({
-        relation: edge,
-        from,
-        to,
-        horizontal: isHorizontal(edge),
-        offset: 0,
-        ports: ports.get(edge),
-      });
+      const points = routeEdge(edge, from, to);
+      terminals.set(edge.from, [...(terminals.get(edge.from) ?? []), { point: points[0], role: 'exit' }]);
+      terminals.set(edge.to, [...(terminals.get(edge.to) ?? []), { point: points[points.length - 1], role: 'entry' }]);
       const id = `${edge.from}-${edge.to}-${index}`;
       if (points.length > 2) {
         elements.push({ kind: 'line', id: `${id}-path`, points: points.slice(0, -1) });

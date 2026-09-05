@@ -89,9 +89,18 @@ its scorer interface now and fixtures later.
       objective take 3 crossings on `pipeline` to even a 7-unit spread; now 0.5/unit. Corpus after:
       assistant 13→7 crossings (columns wins there), pipeline back to 0/9, others unchanged. First
       weight tuned with the corpus as evidence — the loop the framework exists for.
-- [ ] **Coincident ports across routing modes** — in columns, R→Q (internal, vertical flow) and Q→X
-      (cross-group, horizontal) both attach at Q's right side on the same y; straightening only
-      spreads ports among edges it handles. Add a `shared-port` diagnostic and spread across modes.
+- [x] **Coincident ports across routing modes** — edges are routed in sequence; an exit landing
+      within half a grid unit of an entry on that node (or vice versa) re-routes with the port nudged
+      to the free slot whose route has the fewest points. Forks and merges keep sharing a trunk: the
+      first cut split every coincidence and the corpus judged it — +6 crossings on compute, +5…9
+      bends elsewhere — while the opposite-role rule leaves total crossings at 53 and takes bends
+      123→115 (pipeline 0→1 crossing is a formerly overlapping exit-on-entry now drawn apart). On
+      `Basic` it removed the columns crossing (Q→X left Q on top of R→Q's entry).
+- [x] **Connector-length cost term** (0.03/grid unit; 0.1 traded crossings for length on compute and
+      edge) — with it, `Basic` picks columns 7.0 vs layered 7.2: Y→A straight, packages side by side.
+      Ablation: with de-collision off the term leaves every corpus choice unchanged.
+- [ ] **`shared-port` diagnostic** — the analyzer should report coincident terminals, not just the
+      crossings they cause.
 - [ ] **Bus for LR/RL** and for bases not directly above their subtypes (a jogged trunk).
 - [ ] **Excalidraw markers** — map `head`/`tail` onto `startArrowhead`/`endArrowhead`.
 - [ ] **Crossings after quantization** — run ELK `INTERACTIVE` (crossing minimization seeded from the
@@ -115,7 +124,12 @@ its scorer interface now and fixtures later.
       not yet run. To make the loop real, `DrawingOperation.Generate` now compiles flowcharts with
       `MermaidEngine` and returns `diagnostics`; the UML skill tells the agent to fix errors and
       regenerate, and documents flowcharts + `%% ref`.
-- [ ] **Contact sheet** of the six SVGs as one reviewable artifact.
+- [x] **Contact sheet** of the six SVGs as one reviewable artifact (`scratchpad/build-sheet.mjs` → published
+      artifact; metrics are pasted in by hand, so regenerate after a corpus render).
+- [x] **Corpus test speed (CI shard-2 timeout)** — each of the three tests per diagram recompiled its
+      source (16 candidates × ELK ≈ 20 s), overrunning vitest's 15 s budget on the CI runner. One
+      `beforeAll` compile per diagram is shared by its tests; the file still takes ~2 min locally —
+      follow-up: lay out candidates concurrently or cut the sweep with a cheap pre-filter.
 - [x] **DESIGN.md** — Diagnostics, selection, flowchart engine and objective sections added.
 - [ ] Drop DESIGN.md future-work #4 (free-text overflow) once `Diagnostics` measures `text` elements.
 

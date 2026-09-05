@@ -27,7 +27,13 @@ describe('objective', () => {
     const evaluation = evaluate(DEFAULT, layout);
 
     expect(evaluation.violations).toEqual([]);
-    expect(evaluation.terms.map(({ id }) => id)).toEqual(['crossings', 'bends', 'uneven-frame-gaps', 'compactness']);
+    expect(evaluation.terms.map(({ id }) => id)).toEqual([
+      'crossings',
+      'bends',
+      'connector-length',
+      'uneven-frame-gaps',
+      'compactness',
+    ]);
     expect(evaluation.cost).toBeGreaterThan(0);
   });
 

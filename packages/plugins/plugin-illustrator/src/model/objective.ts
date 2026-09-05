@@ -131,6 +131,18 @@ export const unevenFrameGaps: CostTerm = {
   measure: ({ report }) => report.metrics.frameGapSpread / GRID,
 };
 
+/**
+ * Total connector length in grid units: a long edge is hard to follow even when it is straight.
+ * Weighted so ~100 grid units of extra connector cost one crossing — at 0.1 the objective traded
+ * crossings for shorter edges on the compute and edge corpus diagrams.
+ */
+export const connectorLength: CostTerm = {
+  id: 'connector-length',
+  description: 'Total connector length.',
+  weight: 0.03,
+  measure: ({ report }) => report.metrics.length / GRID,
+};
+
 /** Bounding perimeter in grid units; a light preference for the tighter of otherwise-equal layouts. */
 export const compactness: CostTerm = {
   id: 'compactness',
@@ -141,5 +153,5 @@ export const compactness: CostTerm = {
 
 export const DEFAULT: Objective = {
   constraints: [noHardDefects, framesApart()],
-  costs: [crossings, bends, unevenFrameGaps, compactness],
+  costs: [crossings, bends, connectorLength, unevenFrameGaps, compactness],
 };

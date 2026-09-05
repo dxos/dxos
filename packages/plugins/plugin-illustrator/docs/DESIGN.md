@@ -185,8 +185,9 @@ a layout and the report that grades one are the same measurements:
 
 - **Constraint** — hard. `violations(layout)` names each way the layout breaks it. Built-ins:
   `noHardDefects` (every `error` diagnostic), `framesApart(gap)`.
-- **Cost term** — soft, weighted. Built-ins: `crossings` (3), `bends` (1), `unevenFrameGaps` (0.5
-  per grid unit), `compactness` (0.05). One crossing ≈ three bends is the current exchange rate; the
+- **Cost term** — soft, weighted. Built-ins: `crossings` (3), `bends` (1), `connectorLength` (0.03
+  per grid unit — a long edge is hard to follow even when straight), `unevenFrameGaps` (0.5 per grid
+  unit), `compactness` (0.05). One crossing ≈ three bends is the current exchange rate; the
   corpus snapshots are where a weight change shows its consequences. The gap weight was 2 until the
   arrangement axis arrived: on `pipeline` the objective then chose three crossings to even out a
   7-unit gutter spread, which is the kind of verdict a weight exists to prevent.
@@ -210,10 +211,17 @@ it. `columns` lays each package out in the flow direction and arranges the packa
 across it (`SEPARATE_CHILDREN`, root direction perpendicular), with cross-package edges routed
 sideways; because the root cannot see edges inside its children in that mode, every cross-group
 edge is lifted to a root-level edge between the groups so they fall into dependency order. On the
-`Basic` fixture with two cross-package references the two arrangements land close — layered
-0 crossings / 2 bends, columns 1 crossing / 3 bends (Y→A becomes straight, Q→X gains a crossing) —
-and the objective's exchange rate (one crossing ≈ three bends) decides. The bench's `arrangement`
-control forces either, which is how that rate gets argued about with a picture in front of you.
+`Basic` fixture with two cross-package references the two arrangements land close: layered
+0 crossings / 2 bends, columns 0 / 3 with Y→A straight and much shorter cross-package edges, and
+the connector-length term tips it to columns (7.0 vs 7.2). Columns first lost with a crossing that
+turned out to be a routing defect — Q→X left Q on the very point where R→Q entered it — fixed by
+re-routing an exit that lands on an entry (or the reverse) with its port nudged to the free slot
+that keeps the route straightest. Forks and merges still share a trunk: splitting every
+coincidence cost the corpus six crossings on compute and five to nine bends elsewhere, the
+opposite-role rule holds total crossings and drops bends 123→115 — the corpus judging a routing
+rule, not only a weight. The
+bench's `arrangement` control forces either, which is how the exchange rates get argued about with a
+picture in front of you.
 
 ### Rules as generators: the inheritance bus
 

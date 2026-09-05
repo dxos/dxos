@@ -4,7 +4,7 @@
 
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { basename, join, resolve, sep } from 'node:path';
-import { describe, test } from 'vitest';
+import { beforeAll, describe, test } from 'vitest';
 
 import { analyze, errors } from './diagnostics';
 import * as MermaidEngine from './mermaid-engine';
@@ -28,21 +28,26 @@ const corpus = readdirSync(DIAGRAMS)
   .map((file) => [basename(file, '.mmd'), readFileSync(join(DIAGRAMS, file), 'utf8')] as const);
 
 describe.each(corpus)('corpus: %s', (_name, source) => {
-  test('renders with no hard defects', async ({ expect }) => {
-    const report = analyze(objectsOf(await MermaidEngine.compile(source)));
+  // One search per diagram: the candidate sweep is seconds of ELK and the tests only read its result.
+  let objects: Scene.WorldObject[];
+  beforeAll(async () => {
+    objects = objectsOf(await MermaidEngine.compile(source));
+  }, 120_000);
+
+  test('renders with no hard defects', ({ expect }) => {
+    const report = analyze(objects);
 
     expect(errors(report).map(({ message }) => message)).toEqual([]);
     expect(report.metrics.nodes).toBeGreaterThan(0);
   });
 
-  test('soft metrics', async ({ expect }) => {
-    const { crossings, bends } = analyze(objectsOf(await MermaidEngine.compile(source))).metrics;
+  test('soft metrics', ({ expect }) => {
+    const { crossings, bends } = analyze(objects).metrics;
 
     expect({ crossings, bends }).toMatchSnapshot();
   });
 
-  test('every ref names a path in this repository or a URL', async ({ expect }) => {
-    const objects = objectsOf(await MermaidEngine.compile(source));
+  test('every ref names a path in this repository or a URL', ({ expect }) => {
     const refs = objects.flatMap((object) => (object.ref ? [[object.id, object.ref] as const] : []));
 
     expect(refs.length).toBeGreaterThan(0);

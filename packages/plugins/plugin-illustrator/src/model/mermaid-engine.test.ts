@@ -148,6 +148,13 @@ describe('mermaid-engine', () => {
 
     expect(errors(report).map(({ message }) => message)).toEqual([]);
     expect(report.metrics.crossings).toBe(0);
+    // Which arrangement wins is a close call on this fixture (columns by connector length); the
+    // snapshot records it so a weight change shows up as a diff rather than a surprise.
+    const { chosen } = await layout(BASIC);
+    expect({
+      arrangement: chosen.candidate.arrangement,
+      cost: Number(chosen.evaluation.cost.toFixed(2)),
+    }).toMatchSnapshot();
     // The inheritance bus wins: B and C stub up to one bus and a single triangle-headed trunk.
     const edges = objects.find(({ id }) => id === 'edges')!.elements;
     expect(edges.find(({ id }) => id === 'A-bus')?.kind).toBe('line');

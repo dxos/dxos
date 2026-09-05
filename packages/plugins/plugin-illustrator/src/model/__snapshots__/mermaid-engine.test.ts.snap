@@ -2,7 +2,14 @@
 
 exports[`mermaid-engine > basic: no hard defects, every connector straight or one bend 1`] = `
 {
-  "bends": 2,
+  "arrangement": "columns",
+  "cost": 7.04,
+}
+`;
+
+exports[`mermaid-engine > basic: no hard defects, every connector straight or one bend 2`] = `
+{
+  "bends": 3,
   "crossings": 0,
 }
 `;

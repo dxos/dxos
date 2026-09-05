@@ -59,6 +59,8 @@ export type Metrics = {
   labelOverflows: number;
   crossings: number;
   bends: number;
+  /** Total connector length in scene units; long edges are hard to follow. */
+  length: number;
   width: number;
   height: number;
   /** Boxes that enclose another object's box (subgraph / group frames). */
@@ -335,7 +337,9 @@ export const analyze = (objects: readonly Scene.WorldObject[], { maxBends = 3 }:
   }
 
   let bends = 0;
+  let length = 0;
   for (const connector of allConnectors) {
+    length += segmentsOf(connector).reduce((total, [a, b]) => total + Math.hypot(b.x - a.x, b.y - a.y), 0);
     const count = bendCount(connector);
     bends += count;
     if (count > maxBends) {
@@ -374,6 +378,7 @@ export const analyze = (objects: readonly Scene.WorldObject[], { maxBends = 3 }:
       labelOverflows: diagnostics.filter(({ code }) => code === 'label-overflow').length,
       crossings,
       bends,
+      length,
       width: xs.length ? Math.max(...xs) - Math.min(...xs) : 0,
       height: ys.length ? Math.max(...ys) - Math.min(...ys) : 0,
       containers: frameRects.length,
