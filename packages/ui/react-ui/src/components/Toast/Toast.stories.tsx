@@ -71,8 +71,19 @@ export const Default: Story = {
     openTrigger: 'Open toast',
     icon: 'ph--sparkle--regular',
     title: 'This is a toast',
-    description: 'This goes away on its own with a timer.',
-    duration: 100_000,
+    description: 'The bar below counts down to when this closes; it stops while the pointer is over the toast.',
+    duration: 8_000,
+  },
+};
+
+export const Persistent: Story = {
+  args: {
+    defaultOpen: true,
+    openTrigger: 'Open toast',
+    icon: 'ph--sparkle--regular',
+    title: 'This is a toast',
+    description: 'This one stays until you dismiss it, so there is no bar below.',
+    duration: Infinity,
   },
 };
 
@@ -82,8 +93,8 @@ export const WithAction: Story = {
     openTrigger: 'Open toast',
     icon: 'ph--sparkle--regular',
     title: 'This is a toast',
-    description: 'This goes away on its own with a timer.',
-    duration: 100_000,
+    description: 'The bar below counts down to when this closes; it stops while the pointer is over the toast.',
+    duration: 8_000,
     actionTriggers: [
       {
         altText: 'Press F5 to reload the page',
