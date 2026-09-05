@@ -27,7 +27,8 @@ import { blackhole } from './testing/bench-util';
 // persisted kinds — `Obj.make` plus `db.add`, since an object that never reaches the database is
 // already covered by the unpersisted row. They run last in each block on purpose: they are the only
 // rows that grow the database, and running them first would leave every read and write after them
-// measuring a doc inflated by the preceding row rather than the pool the block set up.
+// measuring a doc inflated by the preceding row rather than the pool the block set up. Ordering only
+// settles this within a block — across blocks it is the per-kind database above that does.
 //
 // The `x1` rows carry ~85ns of tinybench per-callback overhead, which swamps anything cheaper than
 // it — every plain-object row is below that floor. Recover a per-operation cost that cancels it with
@@ -67,20 +68,32 @@ class BenchObject extends Type.makeObject<BenchObject>(DXN.make('com.example.typ
 // order of magnitude above a plain property read and would collapse the whole matrix into noise.
 // Safe because `*.bench.ts` is outside the test runner's `include` — this file is only ever loaded
 // by an explicit `vitest bench` run.
-const storagePath = createTmpPath();
+const storagePaths = [createTmpPath(), createTmpPath()];
 process.once('exit', () => {
-  try {
-    rmSync(storagePath, { recursive: true, force: true });
-  } catch {
-    // Best-effort: EchoTestBuilder.close() is async and can't run from a sync exit handler.
+  for (const storagePath of storagePaths) {
+    try {
+      rmSync(storagePath, { recursive: true, force: true });
+    } catch {
+      // Best-effort: EchoTestBuilder.close() is async and can't run from a sync exit handler.
+    }
   }
 });
 
 const builder = await new EchoTestBuilder().open();
-const peer = await builder.createPeer({ types: [Feed.Feed, BenchObject], storagePath });
-const db = await peer.createDatabase();
-const feed = db.add(Feed.make({ name: 'bench' }));
-await db.flush();
+
+const openDatabase = async (storagePath: string) => {
+  const peer = await builder.createPeer({ types: [Feed.Feed, BenchObject], storagePath });
+  return peer.createDatabase();
+};
+
+// A database per persisted kind rather than one shared between them. Every row mutates the database
+// it runs against — `make` adds objects, and no row flushes, so writes pile up as un-flushed changes
+// — so on a shared database each kind would be measured against a database sized by whichever blocks
+// happened to run before it, by an amount that varies with their iteration counts.
+const automergeDb = await openDatabase(storagePaths[0]);
+const feedDb = await openDatabase(storagePaths[1]);
+const feed = feedDb.add(Feed.make({ name: 'bench' }));
+await feedDb.flush();
 
 const makeProps = (index: number) => ({ value: index, label: `label-${index}` });
 
@@ -92,12 +105,13 @@ const unpersistedPool = Array.from({ length: OBJECT_POOL_SIZE }, (unusedValue, i
   Obj.make(BenchObject, makeProps(index)),
 );
 const automergePool = Array.from({ length: OBJECT_POOL_SIZE }, (unusedValue, index) =>
-  db.add(Obj.make(BenchObject, makeProps(index))),
+  automergeDb.add(Obj.make(BenchObject, makeProps(index))),
 );
 const feedPool = Array.from({ length: OBJECT_POOL_SIZE }, (unusedValue, index) =>
-  db.add(Obj.make(BenchObject, makeProps(index)), { to: feed }),
+  feedDb.add(Obj.make(BenchObject, makeProps(index)), { to: feed }),
 );
-await db.flush();
+await automergeDb.flush();
+await feedDb.flush();
 
 // Generated at runtime so the written value is not a literal V8 can constant-fold into the store.
 const valuePool = Array.from({ length: VALUE_POOL_SIZE }, () => Math.floor(Math.random() * 1_000_000));
@@ -333,7 +347,7 @@ describe('property access (plain vs echo)', { tags: ['manual'], timeout: 300_000
       'make x1 (Obj.make + db.add)',
       () => {
         const index = cursor++ & VALUE_POOL_MASK;
-        makeSink[index & MAKE_SINK_MASK] = db.add(
+        makeSink[index & MAKE_SINK_MASK] = automergeDb.add(
           Obj.make(BenchObject, { value: valuePool[index], label: labelPool[index] }),
         );
       },
@@ -345,7 +359,7 @@ describe('property access (plain vs echo)', { tags: ['manual'], timeout: 300_000
       () => {
         for (let n = 0; n < BATCH; n++) {
           const index = cursor++ & VALUE_POOL_MASK;
-          makeSink[index & MAKE_SINK_MASK] = db.add(
+          makeSink[index & MAKE_SINK_MASK] = automergeDb.add(
             Obj.make(BenchObject, { value: valuePool[index], label: labelPool[index] }),
           );
         }
@@ -411,7 +425,7 @@ describe('property access (plain vs echo)', { tags: ['manual'], timeout: 300_000
       'make x1 (Obj.make + db.add to feed)',
       () => {
         const index = cursor++ & VALUE_POOL_MASK;
-        makeSink[index & MAKE_SINK_MASK] = db.add(
+        makeSink[index & MAKE_SINK_MASK] = feedDb.add(
           Obj.make(BenchObject, { value: valuePool[index], label: labelPool[index] }),
           { to: feed },
         );
@@ -424,7 +438,7 @@ describe('property access (plain vs echo)', { tags: ['manual'], timeout: 300_000
       () => {
         for (let n = 0; n < BATCH; n++) {
           const index = cursor++ & VALUE_POOL_MASK;
-          makeSink[index & MAKE_SINK_MASK] = db.add(
+          makeSink[index & MAKE_SINK_MASK] = feedDb.add(
             Obj.make(BenchObject, { value: valuePool[index], label: labelPool[index] }),
             { to: feed },
           );
