@@ -1,6 +1,6 @@
 # echo-plain-objects — Tasks
 
-_Resume: Phase 3b (cache check first in `EchoReactiveHandler.get`) is committed and green on both suites — one bench pass is in flight; record it in BENCHMARKS.md, then the Phase 5 reviewer pass and the PR body update. Stage C stays BLOCKED under constraint 3 (DESIGN.md D9) pending the user's choice. Uncommitted: none (a scratch profiling script sits untracked in echo-client-e2e and is deleted before the PR is final). Last: Stage B landed at `63cc39ab`, profiled (F4), lint fix `9c2b274b`._
+_Resume: Phase 5 — a reviewer subagent is going over the full diff; fix confirmed findings, re-run the affected suite (and the bench if a hot-path line moves), then update the PR body to cover the optimization work. Stage C stays BLOCKED under constraint 3 (DESIGN.md D9) pending the user's choice. Uncommitted: none. Last: Phase 3b measured at `27735fbc` — automerge reads 133 ns, 12.7× from baseline._
 
 Design and decisions: [DESIGN.md](./DESIGN.md). Numbers: [`echo-client-e2e/BENCHMARKS.md`](../../../packages/core/echo/echo-client-e2e/BENCHMARKS.md).
 
@@ -99,7 +99,8 @@ Checking the cache first is safe (F4 says why) and took the hit to 85 ns.
 - [x] **Cache check first** — ahead of the `invariant`, the symbol `switch` and `instanceof EchoArray`;
       arrays carry no cache and the internal accessors are symbols, so nothing is bypassed. 201 → 85 ns.
 - [x] **Green: `echo-client` and `echo-client-e2e` tests, unmodified** — 549 and 324 passed.
-- [ ] **Measure** — one pass, record. Expect automerge reads within ~20 ns of unpersisted.
+- [x] **Measure** — `27735fbc` in `BENCHMARKS.md`. Automerge reads 464 → 133 ns (3.5×), within ~25 ns of
+      unpersisted (105 ns); 12.7× against the baseline.
 
 ### Follow-ups recorded, not in scope
 
@@ -140,8 +141,8 @@ if unblocked; DESIGN.md §Proposal, scoped by D3/D6/D7.
 
 ## Phase 5: Compare and review
 
-- [ ] **Before/after table in `BENCHMARKS.md`** — baseline `0dab2f81` vs final commit, per cell, with
-      the elision checks re-verified (x10 ≈ 10× x1 for ECHO rows).
+- [x] **Before/after table in `BENCHMARKS.md`** — `0dab2f81` → `27735fbc`, per cell; elision checks
+      re-verified on every section.
 - [ ] **Blast-radius follow-through** — anything outside `echo*` that broke or needed a shim,
       recorded with its resolution.
 - [ ] **Reviewer pass** — run a code-review subagent over the full diff; fix every confirmed finding;

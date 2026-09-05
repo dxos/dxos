@@ -193,3 +193,79 @@ next section.
 ### Elision check
 
 `x10`/`x1`: unpersisted 5.9×, automerge 8.8×, feed 6.1× (pass 1). Nothing elided.
+
+---
+
+## `27735fbc` — 2026-09-05 — Phase 3b: leaf cache consulted before the trap prelude
+
+`echo-client` 549/549 and `echo-client-e2e` 324/324 unmodified. Clean tree. One pass. Harness floor
+66 ns.
+
+Change: `EchoReactiveHandler.get` checks the leaf cache first — before the `invariant` (whose build-time
+call-site record allocated on every read; it now sits behind a plain check), the internal-accessor
+symbol `switch`, and `instanceof EchoArray`. DESIGN.md F4 has the profile that found the prelude and the
+argument for why checking first is safe.
+
+### Narrow object — 2 fields
+
+| per-op    | plain | echo unpersisted |     echo automerge |        echo feed |
+| --------- | ----: | ---------------: | -----------------: | ---------------: |
+| **read**  |  8 ns |     105 ns · 13× |   **133 ns · 17×** |     110 ns · 14× |
+| **write** |  3 ns | 9.98 µs · 3,300× |   287 µs · 96,000× | 8.72 µs · 2,900× |
+| **make**  | 15 ns |   88 µs · 5,900× | 3.2 ms† · 210,000× | 269 µs · 18,000× |
+
+Write split: unpersisted `T`≈2.8 / `S`≈7.2 µs · automerge `T`≈35 / `S`≈252 µs · feed `T`≈1.8 /
+`S`≈6.9 µs.
+
+### Wide object — 250 fields
+
+| per-op    |  plain | echo unpersisted | echo automerge | echo feed |
+| --------- | -----: | ---------------: | -------------: | --------: |
+| **read**  |  12 ns |           114 ns |     **130 ns** |    111 ns |
+| **write** |   4 ns |          8.61 µs |         360 µs |   10.1 µs |
+| **make**  | 905 ns |          1.17 ms |       20.3 ms† |   2.11 ms |
+
+### Stage B → Phase 3b
+
+| per-op               | Stage B (mean of 2) | Phase 3b |    Δ |
+| -------------------- | ------------------: | -------: | ---: |
+| read, automerge      |              464 ns |   133 ns | 3.5× |
+| read, automerge wide |              495 ns |   130 ns | 3.8× |
+| read, unpersisted    |              105 ns |   105 ns |    – |
+| read, feed           |              106 ns |   110 ns |    – |
+
+The automerge read now sits within ~25 ns of the unpersisted read, as F2 predicted for the cache
+alone; the missing 3.5× was the prelude. The tight-loop harness in F4 (85 vs 71 ns) and tinybench
+(133 vs 105 ns) agree on the gap to within their floors.
+
+### Elision check
+
+`x10`/`x1`: unpersisted 6.0×, automerge 6.9×, feed 6.2×. Automerge fell from 8.8× because its per-op
+cost is now a smaller multiple of the floor — the same effect noted at Stage A. Nothing elided.
+
+---
+
+## Baseline → final, `0dab2f81` → `27735fbc`
+
+Per-op, both from this file. Every ECHO read row is a `Proxy` trap still (Stage C is blocked — DESIGN.md
+D9), so the floor under these numbers is the trap itself.
+
+| per-op                 | baseline |   final |     Δ |
+| ---------------------- | -------: | ------: | ----: |
+| read, unpersisted      |   297 ns |  105 ns |  2.8× |
+| read, automerge        |  1.69 µs |  133 ns | 12.7× |
+| read, feed             |   271 ns |  110 ns |  2.5× |
+| read, unpersisted wide |   258 ns |  114 ns |  2.3× |
+| read, automerge wide   |  1.83 µs |  130 ns | 14.1× |
+| read, feed wide        |   264 ns |  111 ns |  2.4× |
+| write, unpersisted     |  14.4 µs | 10.0 µs |  1.4× |
+| write, automerge       |   399 µs |  287 µs |  1.4× |
+| write, feed            |  12.4 µs |  8.7 µs |  1.4× |
+| make, unpersisted      |   118 µs |   88 µs |  1.3× |
+| make, automerge        |   4.3 ms |  3.2 ms |  1.3× |
+| make, feed             |   414 µs |  269 µs |  1.5× |
+
+Reads against plain (8 ns): unpersisted 13×, automerge 17×, feed 14× — from 44× / 249× / 40×. Writes
+and construction moved only through Stage A's `isValidProxyTarget` change and sit inside the ~20%
+between-run band for the µs rows; the automerge write is a per-set Automerge commit (F2) and was never
+in scope here.
