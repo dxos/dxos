@@ -65,6 +65,8 @@ export interface Env {
   FUNCTIONS_AI_SERVICE: FunctionsAiService;
   /** Absent when the function is not invoked in the context of a space. */
   ACCESS_TOKEN_SERVICE?: AccessTokenService;
+  /** Absent on a host with no blob store, which then falls back to inline blob storage. */
+  BLOB_SERVICE?: BlobService;
 }
 
 /**
@@ -125,6 +127,20 @@ export type GetAccessTokenRequest = {
 export type GetAccessTokenResult =
   | { success: true; accessToken: string; expiresAtMillis: number }
   | { success: false; reason: string };
+
+/**
+ * Content-addressed blob store for functions, keyed by the hex SHA-256 digest of the whole blob.
+ *
+ * Declared structurally rather than as `@dxos/blob`'s `BlobTransport` so this package keeps no
+ * dependency on ECHO, and without `url`: a host reaching its store over a service binding has no
+ * public URL to hand back, so the backend built from this omits `getUrl` rather than inventing one.
+ */
+export interface BlobService {
+  put(ctx: TraceContext, key: string, data: Uint8Array, options?: { contentType?: string }): Promise<void>;
+  /** `undefined` means the key was not found. */
+  get(ctx: TraceContext, key: string): Promise<Uint8Array | undefined>;
+  has(ctx: TraceContext, key: string): Promise<boolean>;
+}
 
 /**
  * FunctionsAiService API for other CF services like functions.

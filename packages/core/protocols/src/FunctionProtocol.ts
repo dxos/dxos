@@ -96,6 +96,12 @@ export interface Context {
      */
     accessTokenService?: EdgeFunctionEnv.AccessTokenService;
 
+    /**
+     * Content-addressed blob store. When present the function host stores blobs there by default
+     * instead of embedding them in the space document, which is the only option without it.
+     */
+    blobService?: EdgeFunctionEnv.BlobService;
+
     traceService?: TraceProtocol.TraceService;
   };
 

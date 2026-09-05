@@ -15,7 +15,7 @@ import * as Header from '@dxos/compute/Header';
 import * as Operation from '@dxos/compute/Operation';
 import * as Trace from '@dxos/compute/Trace';
 import { LifecycleState, Resource } from '@dxos/context';
-import { Database, JsonSchema, Ref, Registry, type Type } from '@dxos/echo';
+import { Blob, Database, JsonSchema, Ref, Registry, type Type } from '@dxos/echo';
 import { type DatabaseImpl, EchoClient, makeRegistry } from '@dxos/echo-client';
 import { refFromEncodedReference } from '@dxos/echo/internal';
 import { EffectEx, SchemaAST } from '@dxos/effect';
@@ -27,6 +27,7 @@ import { EdgeFunctionEnv, ErrorCodec, type FunctionProtocol, type TraceProtocol 
 import { FunctionsAiHttpClient } from './functions-ai-http-client';
 import {
   accessTokenResolverFromService,
+  blobBackendFromService,
   configuredCredentialsLayer,
   createS3Host,
   credentialsLayerFromDatabase,
@@ -176,7 +177,7 @@ export class FunctionContext extends Resource {
   db: DatabaseImpl | undefined;
   readonly opts: FunctionWrappingOptions;
   /** Released in `_close`: this is a `Resource`, so a reopen would otherwise stack registrations. */
-  #unregisterBlobBackend: (() => void) | undefined;
+  #unregisterBlobBackends: (() => void)[] = [];
 
   constructor(context: FunctionProtocol.Context, opts: FunctionWrappingOptions) {
     super();
@@ -217,16 +218,32 @@ export class FunctionContext extends Resource {
     if (this.client && this.db) {
       const db = this.db;
       const { S3_BACKEND, createS3BlobBackend } = await import('@dxos/blob/s3');
-      this.#unregisterBlobBackend = this.client.graph.registerBlobBackend(
-        S3_BACKEND,
-        createS3BlobBackend(createS3Host({ getDatabase: (spaceId) => (spaceId === db.spaceId ? db : undefined) })),
+      this.#unregisterBlobBackends.push(
+        this.client.graph.registerBlobBackend(
+          S3_BACKEND,
+          createS3BlobBackend(createS3Host({ getDatabase: (spaceId) => (spaceId === db.spaceId ? db : undefined) })),
+        ),
       );
+
+      // Registered as the DEFAULT, so a handler that writes a blob without naming a storage — every
+      // mail attachment does — reaches the host's store instead of falling through to inline. Inline
+      // embeds the bytes in the space document, which caps a blob at 4 MiB and costs ~90x the payload
+      // in transient allocation to persist; that is what exhausts a 128 MiB worker isolate on a
+      // mailbox carrying ordinary attachments.
+      const { blobService } = this.context.services;
+      if (blobService) {
+        this.#unregisterBlobBackends.push(
+          this.client.graph.registerBlobBackend(Blob.Storage.edge, blobBackendFromService(blobService), {
+            default: true,
+          }),
+        );
+      }
     }
   }
 
   override async _close() {
-    this.#unregisterBlobBackend?.();
-    this.#unregisterBlobBackend = undefined;
+    this.#unregisterBlobBackends.forEach((unregister) => unregister());
+    this.#unregisterBlobBackends = [];
     await this.db?.close();
     await this.client?.close();
   }

@@ -48,6 +48,7 @@ export const wrapHandlerForCloudflare = (func: FunctionProtocol.Func): ExportedH
           contextSpaceId: spaceId as SpaceId | undefined,
           serviceScope,
           accessTokenService: env.ACCESS_TOKEN_SERVICE,
+          blobService: env.BLOB_SERVICE,
         });
 
         return EdgeResponse.success(await invokeFunction(func, context, request));
@@ -116,11 +117,13 @@ export const createFunctionContext = async ({
   contextSpaceId,
   serviceScope,
   accessTokenService,
+  blobService,
 }: {
   serviceContainer: ServiceContainer;
   contextSpaceId: SpaceId | undefined;
   serviceScope: Scope.Scope;
   accessTokenService?: EdgeFunctionEnv.AccessTokenService;
+  blobService?: EdgeFunctionEnv.BlobService;
 }): Promise<FunctionProtocol.Context> => {
   const services = await serviceContainer.createServices();
   // Bridge the host Handlers to the effect-rpc client surface in-process (no wire hop), matching the
@@ -152,6 +155,7 @@ export const createFunctionContext = async ({
       queueService,
       functionsAiService: services.functionsAiService,
       accessTokenService,
+      blobService,
     },
     spaceId: contextSpaceId,
     spaceKey,
