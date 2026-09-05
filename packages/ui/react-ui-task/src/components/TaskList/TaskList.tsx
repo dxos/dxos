@@ -31,7 +31,14 @@ import {
 } from '@dxos/react-ui';
 import { Listbox, useListDisclosure } from '@dxos/react-ui-list';
 import { MarkdownEditable, type MarkdownEditableController } from '@dxos/react-ui-markdown';
-import { ActionMenu, createMenuAction, executeMenuAction, fallbackIcon, type MenuAction, type MenuItem } from '@dxos/react-ui-menu';
+import {
+  ActionMenu,
+  createMenuAction,
+  executeMenuAction,
+  fallbackIcon,
+  type MenuAction,
+  type MenuItem,
+} from '@dxos/react-ui-menu';
 import { type Actor, Task } from '@dxos/types';
 import { hoverableControlItem, mx } from '@dxos/ui-theme';
 import { type ComposableProps } from '@dxos/ui-types';
@@ -502,7 +509,19 @@ const TaskEstimateControl = ({ task }: { task: Task.Task }) => {
 
   return (
     <>
-      <ActionMenu actions={Task.EstimateOptions.map(({ id, title }) => createMenuAction( `estimate-${id}`, // `none` is not an `Estimate`: an unset estimate is the absent property. () => onTaskUpdate(task, { estimate: id === 'none' ? null : id }), { label: title, classNames: estimateTextStyle(id), checked: (estimate ?? 'none') === id, }, ), )}>
+      {/* Sourced from the schema's own option table, so the picker offers exactly what the field
+          accepts and carries the same hue the form's select paints it with. Clearing is offered
+          first; the table has no `none` row because the field is simply absent when unset. */}
+      <ActionMenu
+        actions={Task.EstimateOptions.map(({ id, title }) =>
+          createMenuAction(
+            `estimate-${id}`,
+            // `none` is not an `Estimate`: an unset estimate is the absent property.
+            () => onTaskUpdate(task, { estimate: id === 'none' ? null : id }),
+            { label: title, classNames: estimateTextStyle(id), checked: (estimate ?? 'none') === id },
+          ),
+        )}
+      >
         <IconBlock>
           <Button
             variant='ghost'
@@ -517,10 +536,6 @@ const TaskEstimateControl = ({ task }: { task: Task.Task }) => {
           </Button>
         </IconBlock>
       </ActionMenu>
-      {/* Sourced from the schema's own option table, so the picker offers exactly what the field
-          accepts and carries the same hue the form's select paints it with. Clearing is offered
-          first; the table has no `none` row because the field is simply absent when unset. */}
-      
     </>
   );
 };
@@ -554,27 +569,31 @@ const TaskPriorityIcon = ({ task }: { task: Task.Task }) => {
   }
 
   return (
-    
-      <ActionMenu actions={Task.PriorityOptions.map(({ id, icon: optionIcon }) => createMenuAction(`priority-${id}`, () => onTaskUpdate(task, { priority: id }), { label: t(`priority-${id}.label`), icon: optionIcon, iconClassNames: priorityTextStyle(id), checked: priority === id, }), )}>
-        <IconBlock>
-          <IconButton
-            variant='ghost'
-            icon={icon}
-            iconOnly
-            label={t('task-priority.label')}
-            data-testid='taskList.item.priority'
-            // The hue goes on the icon, not the button: the row dims icons through `--icons-color`,
-            // which the `Icon` root reads, so a colour set on the button is overridden at rest.
-            iconClassNames={tint}
-            // The row is the selection target; opening the menu must not also select it.
-            onClick={(event) => event.stopPropagation()}
-          />
-        </IconBlock>
-      </ActionMenu>
-      {/* Sourced from the schema's own option table, so the picker offers exactly what the field
-          accepts and carries the same hue the form's select paints it with. */}
-      
-    
+    <ActionMenu
+      actions={Task.PriorityOptions.map(({ id, icon: optionIcon }) =>
+        createMenuAction(`priority-${id}`, () => onTaskUpdate(task, { priority: id }), {
+          label: t(`priority-${id}.label`),
+          icon: optionIcon,
+          iconClassNames: priorityTextStyle(id),
+          checked: priority === id,
+        }),
+      )}
+    >
+      <IconBlock>
+        <IconButton
+          variant='ghost'
+          icon={icon}
+          iconOnly
+          label={t('task-priority.label')}
+          data-testid='taskList.item.priority'
+          // The hue goes on the icon, not the button: the row dims icons through `--icons-color`,
+          // which the `Icon` root reads, so a colour set on the button is overridden at rest.
+          iconClassNames={tint}
+          // The row is the selection target; opening the menu must not also select it.
+          onClick={(event) => event.stopPropagation()}
+        />
+      </IconBlock>
+    </ActionMenu>
   );
 };
 
@@ -656,18 +675,18 @@ const TaskListItemActions = ({ task }: { task: Task.Task }) => {
 
   return (
     <ActionMenu actions={actions}>
-        <IconBlock>
-          <IconButton
-            variant='ghost'
-            iconOnly
-            icon='ph--dots-three-vertical--regular'
-            label={t('task-actions.label')}
-            data-testid='taskList.item.actions'
-            classNames={ROW_ACTION_CLASSNAMES}
-            onClick={(event) => event.stopPropagation()}
-          />
-        </IconBlock>
-      </ActionMenu>
+      <IconBlock>
+        <IconButton
+          variant='ghost'
+          iconOnly
+          icon='ph--dots-three-vertical--regular'
+          label={t('task-actions.label')}
+          data-testid='taskList.item.actions'
+          classNames={ROW_ACTION_CLASSNAMES}
+          onClick={(event) => event.stopPropagation()}
+        />
+      </IconBlock>
+    </ActionMenu>
   );
 };
 

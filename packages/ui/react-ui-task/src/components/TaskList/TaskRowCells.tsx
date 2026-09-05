@@ -59,8 +59,19 @@ export const TaskStatusControl = ({ task, onTaskUpdate, active, classNames }: Ta
   }
 
   return (
-    
-      <ActionMenu actions={Task.StatusOptions.map(({ id }) => createMenuAction(`status-${id}`, () => onTaskUpdate(task, { status: id }), { label: t(`status-${id}.label`), icon: STATUS_ICONS[id].icon, iconClassNames: statusTextStyle(id), checked: status === id, }), )}>
+    <>
+      {/* Sourced from the schema's own option table, so the picker offers exactly what the field
+          accepts and carries the same hue the form's select paints it with. */}
+      <ActionMenu
+        actions={Task.StatusOptions.map(({ id }) =>
+          createMenuAction(`status-${id}`, () => onTaskUpdate(task, { status: id }), {
+            label: t(`status-${id}.label`),
+            icon: STATUS_ICONS[id].icon,
+            iconClassNames: statusTextStyle(id),
+            checked: status === id,
+          }),
+        )}
+      >
         {/* The block, not the button, is the trigger: the same `IconBlock > IconButton` shape as
             the priority cell, so every control in the row is one rail-item square. */}
         <IconBlock square classNames={classNames}>
@@ -79,10 +90,7 @@ export const TaskStatusControl = ({ task, onTaskUpdate, active, classNames }: Ta
           />
         </IconBlock>
       </ActionMenu>
-      {/* Sourced from the schema's own option table, so the picker offers exactly what the field
-          accepts and carries the same hue the form's select paints it with. */}
-      
-    
+    </>
   );
 };
 
