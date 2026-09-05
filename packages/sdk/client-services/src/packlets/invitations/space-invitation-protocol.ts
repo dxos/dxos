@@ -14,6 +14,7 @@ import { type KeyringApi } from '@dxos/keyring';
 import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { AlreadyJoinedError, AuthorizationError, InvalidInvitationError, SpaceNotFoundError } from '@dxos/protocols';
+import { fromPublicKey, toPublicKey } from '@dxos/protocols/buf';
 import { Invitation, Invitation_AuthMethod, Invitation_Kind, Invitation_Type } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 import { type ProfileDocument, SpaceMember } from '@dxos/protocols/proto/dxos/halo/credentials';
 import {
@@ -24,7 +25,7 @@ import {
 
 import { type DataSpaceManager, type SigningContext } from '../spaces';
 import { type InvitationProtocol } from './invitation-protocol';
-import { computeExpirationTime } from './utils';
+import { computeExpirationTime, toSpaceMemberRole } from './utils';
 
 export class SpaceInvitationProtocol implements InvitationProtocol {
   constructor(
@@ -62,7 +63,7 @@ export class SpaceInvitationProtocol implements InvitationProtocol {
     invariant(space);
     return {
       kind: Invitation_Kind.SPACE,
-      spaceKey: this._spaceKey,
+      spaceKey: fromPublicKey(this._spaceKey),
       spaceId: space.id,
     };
   }
@@ -78,7 +79,7 @@ export class SpaceInvitationProtocol implements InvitationProtocol {
     const spaceMemberCredential = await this._spaceManager.admitMember({
       spaceKey: this._spaceKey,
       identityKey: request.space.identityKey,
-      role: invitation.role ?? SpaceMember.Role.ADMIN,
+      role: toSpaceMemberRole(invitation.role),
       profile: guestProfile,
       delegationCredentialId: invitation.delegationCredentialId,
     });
@@ -107,13 +108,13 @@ export class SpaceInvitationProtocol implements InvitationProtocol {
       {
         invitationId: invitation.invitationId,
         authMethod: invitation.authMethod,
-        swarmKey: invitation.swarmKey,
-        role: invitation.role ?? SpaceMember.Role.ADMIN,
+        swarmKey: toPublicKey(invitation.swarmKey),
+        role: toSpaceMemberRole(invitation.role),
         expiresOn: computeExpirationTime(invitation),
         multiUse: invitation.multiUse ?? false,
         guestKey:
           invitation.authMethod === Invitation_AuthMethod.KNOWN_PUBLIC_KEY
-            ? invitation.guestKeypair!.publicKey
+            ? toPublicKey(invitation.guestKeypair?.publicKey)
             : undefined,
       },
     );
@@ -144,7 +145,8 @@ export class SpaceInvitationProtocol implements InvitationProtocol {
     if (invitation.spaceKey == null) {
       return new InvalidInvitationError({ message: 'No spaceKey was provided for a space invitation.' });
     }
-    if (this._spaceManager.spaces.has(invitation.spaceKey)) {
+    const spaceKey = toPublicKey(invitation.spaceKey);
+    if (spaceKey && this._spaceManager.spaces.has(spaceKey)) {
       return new AlreadyJoinedError({ message: 'Already joined space.' });
     }
   }

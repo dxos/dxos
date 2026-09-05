@@ -7,8 +7,14 @@ import * as EffectStream from 'effect/Stream';
 
 import { Context } from '@dxos/context';
 import { EffectEx } from '@dxos/effect';
+import { buf } from '@dxos/protocols/buf';
 import { type Invitation } from '@dxos/protocols/buf/dxos/client/invitation_pb';
-import { QueryInvitationsResponse, QueryInvitationsResponse_Action, QueryInvitationsResponse_Type } from '@dxos/protocols/buf/dxos/client/services_pb';
+import {
+  QueryInvitationsResponse,
+  QueryInvitationsResponseSchema,
+  QueryInvitationsResponse_Action,
+  QueryInvitationsResponse_Type,
+} from '@dxos/protocols/buf/dxos/client/services_pb';
 import { type InvitationsService } from '@dxos/protocols/rpc';
 import { trace } from '@dxos/tracing';
 
@@ -82,68 +88,84 @@ export class InvitationsServiceImpl implements InvitationsService.Handlers {
 
       // Push added invitations to the stream.
       this._invitationsManager.invitationCreated.on(ctx, (invitation) => {
-        void emit.single({
-          action: QueryInvitationsResponse_Action.ADDED,
-          type: QueryInvitationsResponse_Type.CREATED,
-          invitations: [invitation],
-        });
+        void emit.single(
+          buf.create(QueryInvitationsResponseSchema, {
+            action: QueryInvitationsResponse_Action.ADDED,
+            type: QueryInvitationsResponse_Type.CREATED,
+            invitations: [invitation],
+          }),
+        );
       });
 
       this._invitationsManager.invitationAccepted.on(ctx, (invitation) => {
-        void emit.single({
-          action: QueryInvitationsResponse_Action.ADDED,
-          type: QueryInvitationsResponse_Type.ACCEPTED,
-          invitations: [invitation],
-        });
+        void emit.single(
+          buf.create(QueryInvitationsResponseSchema, {
+            action: QueryInvitationsResponse_Action.ADDED,
+            type: QueryInvitationsResponse_Type.ACCEPTED,
+            invitations: [invitation],
+          }),
+        );
       });
 
       // Push removed invitations to the stream.
       this._invitationsManager.removedCreated.on(ctx, (invitation) => {
-        void emit.single({
-          action: QueryInvitationsResponse_Action.REMOVED,
-          type: QueryInvitationsResponse_Type.CREATED,
-          invitations: [invitation],
-        });
+        void emit.single(
+          buf.create(QueryInvitationsResponseSchema, {
+            action: QueryInvitationsResponse_Action.REMOVED,
+            type: QueryInvitationsResponse_Type.CREATED,
+            invitations: [invitation],
+          }),
+        );
       });
 
       this._invitationsManager.removedAccepted.on(ctx, (invitation) => {
-        void emit.single({
-          action: QueryInvitationsResponse_Action.REMOVED,
-          type: QueryInvitationsResponse_Type.ACCEPTED,
-          invitations: [invitation],
-        });
+        void emit.single(
+          buf.create(QueryInvitationsResponseSchema, {
+            action: QueryInvitationsResponse_Action.REMOVED,
+            type: QueryInvitationsResponse_Type.ACCEPTED,
+            invitations: [invitation],
+          }),
+        );
       });
 
       // used only for testing
       this._invitationsManager.saved.on(ctx, (invitation) => {
-        void emit.single({
-          action: QueryInvitationsResponse_Action.SAVED,
-          type: QueryInvitationsResponse_Type.CREATED,
-          invitations: [invitation],
-        });
+        void emit.single(
+          buf.create(QueryInvitationsResponseSchema, {
+            action: QueryInvitationsResponse_Action.SAVED,
+            type: QueryInvitationsResponse_Type.CREATED,
+            invitations: [invitation],
+          }),
+        );
       });
 
       // Push existing invitations to the stream.
-      void emit.single({
-        action: QueryInvitationsResponse_Action.ADDED,
-        type: QueryInvitationsResponse_Type.CREATED,
-        invitations: this._invitationsManager.getCreatedInvitations(),
-        existing: true,
-      });
+      void emit.single(
+        buf.create(QueryInvitationsResponseSchema, {
+          action: QueryInvitationsResponse_Action.ADDED,
+          type: QueryInvitationsResponse_Type.CREATED,
+          invitations: this._invitationsManager.getCreatedInvitations(),
+          existing: true,
+        }),
+      );
 
-      void emit.single({
-        action: QueryInvitationsResponse_Action.ADDED,
-        type: QueryInvitationsResponse_Type.ACCEPTED,
-        invitations: this._invitationsManager.getAcceptedInvitations(),
-        existing: true,
-      });
+      void emit.single(
+        buf.create(QueryInvitationsResponseSchema, {
+          action: QueryInvitationsResponse_Action.ADDED,
+          type: QueryInvitationsResponse_Type.ACCEPTED,
+          invitations: this._invitationsManager.getAcceptedInvitations(),
+          existing: true,
+        }),
+      );
 
       this._invitationsManager.onPersistentInvitationsLoaded(ctx, () => {
-        void emit.single({
-          action: QueryInvitationsResponse_Action.LOAD_COMPLETE,
-          type: QueryInvitationsResponse_Type.CREATED,
-          // TODO(nf): populate with invitations
-        });
+        void emit.single(
+          buf.create(QueryInvitationsResponseSchema, {
+            action: QueryInvitationsResponse_Action.LOAD_COMPLETE,
+            type: QueryInvitationsResponse_Type.CREATED,
+            // TODO(nf): populate with invitations
+          }),
+        );
       });
       // TODO(nf): expired invitations?
 
