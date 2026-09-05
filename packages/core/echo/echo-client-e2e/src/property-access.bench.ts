@@ -114,11 +114,14 @@ const makeSink: unknown[] = new Array(MAKE_SINK_SIZE).fill(null);
 let cursor = 0;
 let checksum = 0;
 
-afterAll(() => {
+afterAll(async () => {
   // The single sink for the whole file. `checksum` and the pools are closed over here, so they stay
   // live for the module's lifetime and V8 cannot prove either the benchmarked loads (which feed
   // `checksum`) or the benchmarked stores (which land in the pools) dead.
   blackhole([checksum, plainPool, unpersistedPool, automergePool, feedPool, makeSink]);
+  // Closes the peers and disposes their storage. The exit handler above only unlinks the directory,
+  // and cannot await this — which is why the close belongs here, where a hook can be async.
+  await builder.close();
 });
 
 //
