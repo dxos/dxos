@@ -567,10 +567,12 @@ const emit = (
     const router = route ?? makeAvoidingRouter([...nodes.values()], zRouter);
     const buses = bus && !horizontal ? inheritanceBuses(graph.edges, nodes) : { elements: [], consumed: new Set() };
     const routed = graph.edges.filter((edge) => !buses.consumed.has(edge));
-    // In columns, groups sit across the flow, so an edge between groups runs across it too.
+    // In columns the root level runs across the flow, so an edge between two of its members — groups
+    // or ungrouped nodes — runs across it too.
     const groupOf = new Map(graph.groups.flatMap((group) => group.children.map((id) => [id, group.id] as const)));
+    const rootOf = (id: string) => groupOf.get(id) ?? id;
     const isHorizontal = (edge: MermaidEdge) =>
-      arrangement === 'columns' && groupOf.get(edge.from) !== groupOf.get(edge.to) ? !horizontal : horizontal;
+      arrangement === 'columns' && rootOf(edge.from) !== rootOf(edge.to) ? !horizontal : horizontal;
     const ports = straighten(routed, nodes, isHorizontal);
     const elements: Scene.Element[] = [...buses.elements];
     // Terminals already placed, per node, with their role. Edges are routed independently (and an

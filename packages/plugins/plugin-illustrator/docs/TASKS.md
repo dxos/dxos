@@ -130,6 +130,10 @@ its scorer interface now and fixtures later.
       source (16 candidates × ELK ≈ 20 s), overrunning vitest's 15 s budget on the CI runner. One
       `beforeAll` compile per diagram is shared by its tests; the file still takes ~2 min locally —
       follow-up: lay out candidates concurrently or cut the sweep with a cheap pre-filter.
+- [x] **Review round 3 (CodeRabbit)** — columns: an edge between two ungrouped root nodes is an
+      across-flow edge too (`rootOf`, TB+LR tests); `toStandard` keeps a labelled UML edge's own label;
+      excalidraw `applySelection` records only the ids whose elements have arrived, so a selection
+      spanning documents that load one update apart completes on the later update.
 - [x] **DESIGN.md** — Diagnostics, selection, flowchart engine and objective sections added.
 - [ ] Drop DESIGN.md future-work #4 (free-text overflow) once `Diagnostics` measures `text` elements.
 

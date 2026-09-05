@@ -79,18 +79,16 @@ export const ExcalidrawArticle = ({
       api.updateScene({ appState: { selectedElementIds: {} } });
       return;
     }
-    const selectedElementIds = Object.fromEntries(
-      elements
-        .filter(
-          (element) => typeof element.customData?.object === 'string' && wanted.includes(element.customData.object),
-        )
-        .map((element) => [element.id, true as const]),
+    const matched = elements.filter(
+      (element) => typeof element.customData?.object === 'string' && wanted.includes(element.customData.object),
     );
-    // Only claim the selection once elements exist to carry it; an early call would record it
-    // as applied while selecting nothing.
-    if (Object.keys(selectedElementIds).length > 0) {
-      reportedSelectionRef.current = wanted;
-      api.updateScene({ appState: { selectedElementIds } });
+    // Claim only the part of the selection that elements exist to carry: the adapter delivers
+    // documents one update at a time, so an object still missing stays pending for the next.
+    if (matched.length > 0) {
+      reportedSelectionRef.current = wanted.filter((id) => matched.some(({ customData }) => customData?.object === id));
+      api.updateScene({
+        appState: { selectedElementIds: Object.fromEntries(matched.map((element) => [element.id, true as const])) },
+      });
     }
   };
 

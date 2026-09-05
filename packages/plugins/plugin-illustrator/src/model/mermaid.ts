@@ -53,20 +53,23 @@ const EDGE_KINDS: Record<string, RelationKind> = {
   'o-->': 'contains',
 };
 
+/** Reference-render labels for the UML kinds, used when the edge carries none of its own. */
+const UML_LABELS: Record<string, string> = { '--|>': 'extends', '--{': 'has many', 'o-->': 'contains' };
+const UML_EDGE = /^(\s*\S+)\s*(o-->|--\|>|--\{)\s*(?:\|(.*?)\|\s*)?(\S+)\s*$/;
+
 /**
  * Rewrite the UML edge tokens into mermaid-legal labelled arrows, for rendering the source with
  * mermaid.js itself (as a reference beside our layout). Lossy by design: mermaid flowcharts have no
- * triangle or crow's foot, so the kind becomes a label; `%% ref` lines are already comments.
+ * triangle or crow's foot, so the kind becomes the label unless the edge already has one; `%% ref`
+ * lines are already comments.
  */
 export const toStandard = (source: string): string =>
   source
     .split('\n')
-    .map((line) =>
-      line
-        .replace(/^(\s*\S+)\s*--\|>\s*(\S+)\s*$/, '$1 -->|extends| $2')
-        .replace(/^(\s*\S+)\s*--\{\s*(\S+)\s*$/, '$1 -->|has many| $2')
-        .replace(/^(\s*\S+)\s*o-->\s*(\S+)\s*$/, '$1 -->|contains| $2'),
-    )
+    .map((line) => {
+      const match = UML_EDGE.exec(line);
+      return match ? `${match[1]} -->|${match[3] ?? UML_LABELS[match[2]]}| ${match[4]}` : line;
+    })
     .join('\n');
 
 /** Scene arrow markers for a relationship kind. */

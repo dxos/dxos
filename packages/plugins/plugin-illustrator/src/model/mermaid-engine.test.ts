@@ -117,9 +117,43 @@ describe('mermaid-engine', () => {
     expect(toStandard('  B --|> A')).toBe('  B -->|extends| A');
     expect(toStandard('X --{ Y')).toBe('X -->|has many| Y');
     expect(toStandard('P o--> Q')).toBe('P -->|contains| Q');
+    // A label of the edge's own survives in place of the kind's.
+    expect(toStandard('B --|>|is a| A')).toBe('B -->|is a| A');
+    expect(toStandard('X --{ |owns| Y')).toBe('X -->|owns| Y');
+    expect(toStandard('P o--> |holds| Q')).toBe('P -->|holds| Q');
     // Plain arrows and labelled edges pass through untouched.
     expect(toStandard('Y -->|sync| Z')).toBe('Y -->|sync| Z');
   });
+
+  // In columns the root level is laid across the flow, so an edge between two ungrouped nodes runs
+  // across it: a straight connector, with no polyline, on the across axis.
+  for (const [direction, axis] of [
+    ['TB', 'y'],
+    ['LR', 'x'],
+  ] as const) {
+    test(`columns: an edge between ungrouped nodes runs across the ${direction} flow`, async ({ expect }) => {
+      const { chosen } = await layout(
+        trim`
+          flowchart ${direction}
+            subgraph g1 [G1]
+              A
+            end
+            subgraph g2 [G2]
+              B
+            end
+            M --> N
+            A --> B
+        `,
+        { arrangement: ['columns'] },
+      );
+      const edges = chosen.candidate.layout.objects.find(({ id }) => id === 'edges')!.elements;
+      const arrow = edges.find((element) => element.kind === 'arrow' && /^M-N-\d+$/.test(element.id));
+
+      expect(arrow?.kind).toBe('arrow');
+      expect(edges.some(({ id }) => /^M-N-\d+-path$/.test(id))).toBe(false);
+      expect(arrow?.kind === 'arrow' && arrow.start[axis]).toBe(arrow?.kind === 'arrow' && arrow.end[axis]);
+    });
+  }
 
   test('edge tokens carry the UML end markers', async ({ expect }) => {
     const objects = objectsOf(
