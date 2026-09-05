@@ -18,8 +18,8 @@ import { generatePasscode } from '@dxos/credentials';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { bufWkt, fromPublicKey } from '@dxos/protocols/buf';
-import { Invitation, Invitation_AuthMethod, Invitation_State, Invitation_Type } from '@dxos/protocols/buf/dxos/client/invitation_pb';
+import { buf, bufWkt, fromPublicKey } from '@dxos/protocols/buf';
+import { Invitation, InvitationSchema, Invitation_AuthMethod, Invitation_State, Invitation_Type } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 import { SpaceMember_Role } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { SpaceMember } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { type InvitationsService } from '@dxos/protocols/rpc';
@@ -259,7 +259,7 @@ export class InvitationsManager {
       options?.authCode ??
       (authMethod === Invitation_AuthMethod.SHARED_SECRET ? generatePasscode(AUTHENTICATION_CODE_LENGTH) : undefined);
 
-    return {
+    return buf.create(InvitationSchema, {
       invitationId,
       type,
       authMethod,
@@ -277,7 +277,7 @@ export class InvitationsManager {
       delegationCredentialId: options?.delegationCredentialId,
       ...options,
       ...protocol.getInvitationContext(),
-    } satisfies Invitation;
+    });
   }
 
   private _createObservableInvitation(
@@ -358,7 +358,7 @@ export class InvitationsManager {
   ): Promise<void> {
     if (invitation.type === Invitation_Type.DELEGATED && invitation.delegationCredentialId == null) {
       const delegationCredentialId = await handler.delegate(invitation);
-      changeStream.next({ ...invitation, delegationCredentialId });
+      changeStream.next({ ...invitation, delegationCredentialId: fromPublicKey(delegationCredentialId) });
     } else if (invitation.persistent) {
       await this._metadataStore.addInvitation(fromBufInvitation(invitation));
       this.saved.emit(invitation);

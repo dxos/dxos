@@ -52,8 +52,8 @@ import { AlreadyJoinedError } from '@dxos/protocols';
 import { toPublicKey } from '@dxos/protocols/buf';
 import { type Runtime_Client_EdgeFeatures } from '@dxos/protocols/buf/dxos/config_pb';
 import { type PeerState } from '@dxos/protocols/buf/dxos/mesh/presence_pb';
-import { fromPublicKey } from '@dxos/protocols/buf';
-import { Invitation, Invitation_Kind, Invitation_Type, SpaceState } from '@dxos/protocols/buf/dxos/client/invitation_pb';
+import { buf, fromPublicKey } from '@dxos/protocols/buf';
+import { AdmissionKeypairSchema, Invitation, Invitation_Kind, Invitation_Type, SpaceState } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 import { type FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { EdgeReplicationSetting, type SpaceMetadata } from '@dxos/protocols/proto/dxos/echo/metadata';
 import {
@@ -1104,10 +1104,12 @@ export class DataSpaceManager extends Resource {
         authMethod: toBufAuthMethod(invitation.authMethod),
         invitationId: invitation.invitationId,
         swarmKey: fromPublicKey(invitation.swarmKey),
-        guestKeypair: invitation.guestKey ? { publicKey: fromPublicKey(invitation.guestKey) } : undefined,
+        guestKeypair: invitation.guestKey
+          ? buf.create(AdmissionKeypairSchema, { publicKey: fromPublicKey(invitation.guestKey) })
+          : undefined,
         lifetime: invitation.expiresOn ? remainingLifetimeSeconds(invitation.expiresOn) : undefined,
         multiUse: invitation.multiUse,
-        delegationCredentialId: credentialId,
+        delegationCredentialId: fromPublicKey(credentialId),
         persistent: false,
       });
     });

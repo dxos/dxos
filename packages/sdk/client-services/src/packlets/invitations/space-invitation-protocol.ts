@@ -81,7 +81,7 @@ export class SpaceInvitationProtocol implements InvitationProtocol {
       identityKey: request.space.identityKey,
       role: toSpaceMemberRole(invitation.role),
       profile: guestProfile,
-      delegationCredentialId: invitation.delegationCredentialId,
+      delegationCredentialId: toPublicKey(invitation.delegationCredentialId),
     });
 
     const space = this._spaceManager.spaces.get(this._spaceKey);
@@ -102,13 +102,15 @@ export class SpaceInvitationProtocol implements InvitationProtocol {
     }
 
     log('writing delegate space invitation', { host: this._signingContext.deviceKey, id: invitation.invitationId });
+    const swarmKey = toPublicKey(invitation.swarmKey);
+    invariant(swarmKey, 'swarmKey missing in the invitation');
     const credential = await createDelegatedSpaceInvitationCredential(
       this._signingContext.credentialSigner,
       space.key,
       {
         invitationId: invitation.invitationId,
         authMethod: fromBufAuthMethod(invitation.authMethod),
-        swarmKey: toPublicKey(invitation.swarmKey),
+        swarmKey,
         role: toSpaceMemberRole(invitation.role),
         expiresOn: computeExpirationTime(invitation),
         multiUse: invitation.multiUse ?? false,
@@ -127,6 +129,8 @@ export class SpaceInvitationProtocol implements InvitationProtocol {
   async cancelDelegation(invitation: Invitation): Promise<void> {
     invariant(this._spaceKey);
     invariant(invitation.type === Invitation_Type.DELEGATED && invitation.delegationCredentialId);
+    const delegationCredentialId = toPublicKey(invitation.delegationCredentialId);
+    invariant(delegationCredentialId);
     const space = this._spaceManager.spaces.get(this._spaceKey);
     invariant(space);
 
@@ -134,7 +138,7 @@ export class SpaceInvitationProtocol implements InvitationProtocol {
     const credential = await createCancelDelegatedSpaceInvitationCredential(
       this._signingContext.credentialSigner,
       space.key,
-      invitation.delegationCredentialId,
+      delegationCredentialId,
     );
 
     invariant(credential.credential);
