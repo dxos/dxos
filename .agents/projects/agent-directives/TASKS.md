@@ -202,6 +202,28 @@ told to land a PR would still pick up adjacent fixes and poll CI between turns.
       to write its own state, which the "never set the mode yourself" rule
       forbids. Cost: a stale pin can outlive the work it named.
 
+## Phase 6: phase axis, server watcher, per-turn checklist (2026-09-05)
+
+Spec: `agents/superpowers/specs/2026-09-05-agent-modes-design.md`. Design
+settled 1x1 with the user; order of delivery is phase → watcher → checklist.
+
+### Tasks
+
+- [x] **Brainstorm + spec** — phase is a second axis (`discuss|build|debug`, default
+      `discuss`), not a third mode value; `discuss` is about responsiveness, not
+      permissions; server status comes from one round-robin watcher per machine;
+      the foreground guard is an `ask`, never a deny, in every phase.
+- [ ] **Phase axis** — `.claude/.phase` + `.claude/.debug`, `mode.sh phase set`,
+      hook branch, `focus` implies `build`, `context` emits the PHASE clause.
+- [ ] **Watcher singleton** — `diagnose.sh` round-robin over `launch.json` ports
+      plus 9009/5199, `~/.cache/dxos/watch/{status,watcher.pid}`, `--status`,
+      `--restart`; `context` renders SERVERS with a `THIS` marker.
+- [ ] **Checklist + guard** — CHECKLIST lines in `context`; `guard-foreground.sh`
+      on `PreToolUse` Bash; DIAGNOSTICS footer behind the debug flag.
+- [ ] **Tests + docs** — extend `mode.test.sh`; new `diagnose.test.sh` and
+      `guard-foreground.test.sh`; AGENTS.md, `.claude/README.md`, `mode.md`,
+      storybook README, REPOSITORY_GUIDE.
+
 ### References
 
 - `DESIGN.md` — findings, the control-point taxonomy, and the state-machine argument.
