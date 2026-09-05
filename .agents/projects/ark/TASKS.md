@@ -786,6 +786,12 @@ dist/types/src: ENOTEMPTY` — a concurrent writer. A Cursor TypeScript native-p
       method", 72 per run). Hygiene, not the phantom-slot fix — the slot reproduced on 8ee1fe6662 (remove
       on unmount) and not on e55eeabd87 (dismiss on unmount) with the same seven-toast script, which is
       now `TestPileClosesRanks`. Lesson recorded: verify a repro fails on the old code before crediting a fix.
+      **StrictMode (the real remaining break, found 2026-09-05 by driving the user's tab through the
+      Chrome extension):** storybook renders under StrictMode, so effects run mount → cleanup → mount;
+      the root's cleanup dismissed the toast it had just created, so with dismiss-on-unmount NO toast
+      ever appeared in the dev storybook while the runner (no StrictMode) passed. Deferred store calls
+      now consult an `alive` ref, so only a real unmount dismisses. `TestStrictMode` wraps the stack in
+      `StrictMode` in the runner. Verified in the live tab: toasts appear; closing the middle closes ranks.
       A root that unmounts while visible is `dismiss`ed, not `remove`d: removing drops the actor before
       it retires its height from the pile, which left a phantom slot between survivors (seen 2026-09-05).
       `Toast.Viewport` is Ark's `Toaster`, rendering each registered root inside the machine's actor so

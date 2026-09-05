@@ -21,6 +21,7 @@ import React, {
   useEffect,
   useId,
   useMemo,
+  useRef,
   useState,
   useSyncExternalStore,
 } from 'react';
@@ -161,13 +162,24 @@ const ToastRoot = forwardRef<HTMLDivElement, ToastRootProps>(
       registry.set(id, { children, classNames, props, ref: forwardedRef, countdown });
     });
 
+    // Whether this root is currently mounted, read by the deferred store calls below: StrictMode
+    // runs mount, cleanup, mount in a row, and a cleanup that dismissed on its own would retire
+    // every toast the moment it appeared.
+    const alive = useRef(false);
+    useEffect(() => {
+      alive.current = true;
+      return () => {
+        alive.current = false;
+      };
+    }, []);
+
     // Store calls leave the effect on a microtask: the store's React binding flushes synchronously
     // when it publishes, which React refuses inside a lifecycle and then applies late, leaving the
     // machine and the DOM out of step.
     useEffect(() => {
       let cancelled = false;
       queueMicrotask(() => {
-        if (cancelled) {
+        if (cancelled || !alive.current) {
           return;
         }
         if (!open) {
@@ -209,6 +221,10 @@ const ToastRoot = forwardRef<HTMLDivElement, ToastRootProps>(
     useEffect(
       () => () => {
         queueMicrotask(() => {
+          // Remounted in the meantime (StrictMode): the toast is still this root's.
+          if (alive.current) {
+            return;
+          }
           if (toaster.isVisible(id)) {
             toaster.dismiss(id);
           } else {

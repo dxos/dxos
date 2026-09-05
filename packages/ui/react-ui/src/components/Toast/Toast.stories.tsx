@@ -3,7 +3,7 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React, { type ReactNode, useState } from 'react';
+import React, { type ReactNode, StrictMode, useState } from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { withTheme } from '../../testing';
@@ -262,6 +262,39 @@ export const TestPileClosesRanks: StoryObj = {
       // Contiguous: every survivor sits one gap below the previous one.
       await expect(Math.round(rects[1].top - rects[0].bottom)).toBe(8);
       await expect(Math.round(rects[2].top - rects[1].bottom)).toBe(8);
+    });
+  },
+};
+
+/**
+ * Storybook renders stories under StrictMode, which runs every effect's mount, cleanup, mount in a
+ * row. A root whose cleanup dismissed unconditionally retired each toast the moment it appeared —
+ * seen live while the test runner, which has no StrictMode, stayed green.
+ */
+export const TestStrictMode: StoryObj = {
+  render: () => (
+    <StrictMode>
+      <StackedStory overlap={false} />
+    </StrictMode>
+  ),
+  play: async ({ canvasElement }) => {
+    const button = within(canvasElement).getByRole('button', { name: 'Add toast' });
+    const roots = () => [...document.querySelectorAll<HTMLElement>('[data-scope="toast"][data-part="root"]')];
+    for (let count = 1; count <= 3; count++) {
+      await userEvent.click(button);
+      await waitFor(async () => expect(roots()).toHaveLength(count));
+    }
+    // Still there after the exit delay would have run, so nothing dismissed them on mount.
+    await new Promise((resolve) => setTimeout(resolve, 600));
+    await expect(roots().filter((root) => getComputedStyle(root).opacity === '1')).toHaveLength(3);
+    const middle = roots().sort((a, b) => a.getBoundingClientRect().top - b.getBoundingClientRect().top)[1];
+    await userEvent.click(within(middle).getByRole('button', { name: /close/i }));
+    await waitFor(async () => expect(roots()).toHaveLength(2));
+    await waitFor(async () => {
+      const rects = roots()
+        .map((root) => root.getBoundingClientRect())
+        .sort((a, b) => a.top - b.top);
+      await expect(Math.round(rects[1].top - rects[0].bottom)).toBe(8);
     });
   },
 };
