@@ -168,12 +168,8 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
   }
 
   get(target: ProxyTarget, prop: string | symbol, receiver: any): any {
-    // Decoded primitives are served from the target's leaf cache while it is current, ahead of every
-    // other check: array targets carry no cache, the internal accessors below are all symbols, and
-    // entries are only ever written on the virtual-data path after the `Reflect.has` walk has
-    // classified the key — a key that resolved to document data cannot later resolve to a prototype
-    // accessor. `notifyUpdate` bumps the core generation on every mutation, local or remote, before
-    // anything can observe it, so a hit is never stale.
+    // Checked before every other branch: only string keys that resolved to document data are ever
+    // written here, and the core generation moves before any mutation can be observed.
     let leafCache: LeafCache | undefined;
     if (typeof prop === 'string') {
       leafCache = target[symbolLeafCache];
@@ -182,8 +178,11 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
         if (leafCache.generation !== generation) {
           leafCache.values.clear();
           leafCache.generation = generation;
-        } else if (leafCache.values.has(prop)) {
-          return leafCache.values.get(prop);
+        } else {
+          const cached = leafCache.values.get(prop);
+          if (cached !== undefined) {
+            return cached;
+          }
         }
       }
     }
@@ -239,9 +238,9 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
 
     const decodedValueAtPath = getDecodedValueAtPath(target, prop);
     const value = this._wrapInProxyIfRequired(target, decodedValueAtPath);
-    // Leaves only. Records and arrays are wrapped objects whose identity `targetsMap` already owns,
-    // and a ref is minted fresh per read today — caching one would pin an instance across reads.
-    if (leafCache && typeof prop === 'string' && (value === null || typeof value !== 'object')) {
+    // Primitives only: wrapped records, arrays and refs carry identity the cache must not pin, and an
+    // absent key is left uncached so probing arbitrary keys cannot grow the map.
+    if (leafCache && typeof prop === 'string' && value !== undefined && (value === null || typeof value !== 'object')) {
       leafCache.values.set(prop, value);
     }
     return value;

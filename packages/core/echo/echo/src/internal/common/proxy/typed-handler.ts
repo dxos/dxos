@@ -396,9 +396,8 @@ export class TypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
     }
 
     // A value produced by an own getter (e.g. the `jsonSchema` slot on a type entity) is system
-    // surface and is returned as-is; only own data is proxy-wrapped. The descriptor lookup allocates,
-    // so it runs only here, once the value is known to be one that would otherwise be wrapped — every
-    // primitive read has already returned above without paying for it.
+    // surface, not data to wrap; the descriptor lookup allocates, so it runs only once the value is
+    // known to be one that would otherwise be wrapped.
     if (Object.getOwnPropertyDescriptor(target, prop)?.get) {
       return value;
     }

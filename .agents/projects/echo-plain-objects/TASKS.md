@@ -145,8 +145,18 @@ if unblocked; DESIGN.md §Proposal, scoped by D3/D6/D7.
       re-verified on every section.
 - [ ] **Blast-radius follow-through** — anything outside `echo*` that broke or needed a shim,
       recorded with its resolution.
-- [ ] **Reviewer pass** — run a code-review subagent over the full diff; fix every confirmed finding;
-      re-run until it reports clean. Record anything deliberately left as-is, with the reason.
+- [ ] **Reviewer pass** — round 1 done (six findings; stale-value audit of every mutation path came
+      back clean). Fixed: absent keys are no longer cached (unbounded growth on a record probed with
+      arbitrary keys); bound `ObjectCore.change`/`changeAt` bump the generation themselves, so a local
+      write invalidates reads even if the entity manager no longer routes the change event to that core;
+      the hit path does one `Map.get` instead of `has`+`get` (possible because `undefined` is never
+      stored); four comments trimmed to one clause. Left as-is, with reason: (a) `isValidProxyTarget` now
+      returns `false` for a revoked function proxy where it used to throw — strictly more robust, no
+      caller depends on the throw; (b) the read rows measure only cache hits after Stage B and the feed
+      read rows go through the typed handler — both true and both recorded (F2, BENCHMARKS.md), but a
+      miss-path row cannot be built without a mutation per iteration, whose cost swamps the read, so
+      it is recorded here as a follow-up rather than added. Re-run of all three suites and one bench
+      pass pending; round 2 review after that.
 
 ### References
 

@@ -107,9 +107,8 @@ export class ObjectCore {
   public readonly updates = new Event();
 
   /**
-   * Bumped by every {@link notifyUpdate}. Proxy targets stamp their decoded-leaf cache with the
-   * generation it was filled at, so invalidating every cache for this core is one increment here and
-   * a stale entry is caught by one compare on read, rather than by walking `targetsMap`.
+   * Moves on every mutation; proxy targets stamp their decoded-leaf cache with it, so one compare on
+   * read detects a stale entry.
    */
   public generation = 0;
 
@@ -248,6 +247,9 @@ export class ObjectCore {
       invariant(this.docHandle);
       this.docHandle.change(changeFn, options);
       // Note: We don't need to notify listeners here, since `change` event is already processed by DB.
+      // The generation still moves here so a local write invalidates reads even when the DB no longer
+      // routes the change event to this core.
+      this.generation++;
     }
   }
 
@@ -276,6 +278,7 @@ export class ObjectCore {
       invariant(this.docHandle);
       result = this.docHandle.changeAt(heads, callback, options);
       // Note: We don't need to notify listeners here, since `change` event is already processed by DB.
+      this.generation++;
     }
 
     return result;
