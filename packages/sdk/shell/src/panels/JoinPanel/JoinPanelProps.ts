@@ -5,7 +5,13 @@
 import { type FC, type cloneElement } from 'react';
 
 import type { Identity } from '@dxos/react-client/halo';
-import type { AuthenticatingInvitationObservable, Invitation, InvitationResult } from '@dxos/react-client/invitations';
+import {
+  type AuthenticatingInvitationObservable,
+  type Invitation,
+  type InvitationResult,
+  Invitation_AuthMethod,
+  Invitation_State,
+} from '@dxos/react-client/invitations';
 
 import { type ConfirmResetProps, type StepProps } from '../../steps';
 import { type FailReason } from '../../types';

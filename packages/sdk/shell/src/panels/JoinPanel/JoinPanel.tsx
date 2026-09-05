@@ -431,18 +431,18 @@ export const JoinPanel = ({
 
   const onHaloDone = useCallback(() => {
     propsOnDone?.({
-      identityKey: joinState.context.identity?.identityKey ?? joinState.context.halo.invitation?.identityKey ?? null,
-      swarmKey: joinState.context.halo.invitation?.swarmKey ?? null,
-      spaceKey: joinState.context.identity?.spaceKey ?? joinState.context.halo.invitation?.spaceKey ?? null,
+      identityKey: joinState.context.identity?.identityKey ?? toPublicKey(joinState.context.halo.invitation?.identityKey) ?? null,
+      swarmKey: toPublicKey(joinState.context.halo.invitation?.swarmKey) ?? null,
+      spaceKey: joinState.context.identity?.spaceKey ?? toPublicKey(joinState.context.halo.invitation?.spaceKey) ?? null,
       target: joinState.context.halo.invitation?.target ?? null,
     });
   }, [joinState, propsOnDone]);
 
   const onSpaceDone = useCallback(() => {
     propsOnDone?.({
-      identityKey: joinState.context.space.invitation?.identityKey ?? null,
-      swarmKey: joinState.context.space.invitation?.swarmKey ?? null,
-      spaceKey: joinState.context.space.invitation?.spaceKey ?? null,
+      identityKey: toPublicKey(joinState.context.space.invitation?.identityKey) ?? null,
+      swarmKey: toPublicKey(joinState.context.space.invitation?.swarmKey) ?? null,
+      spaceKey: toPublicKey(joinState.context.space.invitation?.spaceKey) ?? null,
       target: joinState.context.space.invitation?.target ?? null,
     });
   }, [joinState, propsOnDone]);

@@ -7,6 +7,7 @@ import React from 'react';
 
 import { IdentityDid, PublicKey } from '@dxos/keys';
 import { HaloSpaceMember, SpaceMember } from '@dxos/react-client/echo';
+import { fromPublicKey, toPublicKey } from '@dxos/protocols/buf';
 import { type Invitation, Invitation_State } from '@dxos/react-client/invitations';
 import { withTheme } from '@dxos/react-ui/testing';
 
@@ -128,9 +129,9 @@ export const SpaceManagerWithEvenMoreInvites = () => {
                       authMethod,
                       invitationId: id,
                       state,
-                      identityKey = PublicKey.random(),
+                      identityKey = fromPublicKey(PublicKey.random()),
                       swarmKey,
-                      spaceKey = PublicKey.random(),
+                      spaceKey = fromPublicKey(PublicKey.random()),
                       target = null,
                     } = invitation;
                     return (
@@ -143,7 +144,12 @@ export const SpaceManagerWithEvenMoreInvites = () => {
                           invitationCode: id,
                           authCode: state === Invitation_State.READY_FOR_AUTHENTICATION ? '123414' : undefined,
                           id,
-                          result: { identityKey, swarmKey, spaceKey, target },
+                          result: {
+                            identityKey: toPublicKey(identityKey) ?? null,
+                            swarmKey: toPublicKey(swarmKey) ?? null,
+                            spaceKey: toPublicKey(spaceKey) ?? null,
+                            target: target ?? null,
+                          },
                           cancel: () => {},
                           authenticate: async (authCode: string) => {},
                           connect: () => {},
