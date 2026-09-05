@@ -830,6 +830,11 @@ dist/types/src: ENOTEMPTY` — a concurrent writer. A Cursor TypeScript native-p
 - [ ] **Fold `react-ui-menu` into `react-ui` and remove the package** (tracked 2026-09-05): the
       action-graph menu wrappers (`useMenuActions`, `Menu.Root`, `ToolbarMenu`, `DropdownMenu`) sit
       on `react-ui`'s Menu; one package fewer in the boot graph's dependency chain.
+- [ ] **Review each `react-ui` component's theme against its Ark anatomy** (tracked 2026-09-05), e.g.
+      Tabs: the theme functions were written for Radix parts and data attributes (`data-state`,
+      `data-orientation` values, `data-highlighted`); walk each ported component's theme file against
+      the Ark part list and the attributes the machine actually sets, and drop rules that no longer
+      match anything.
 - [ ] **Phase 5 — decisions.** RAC (keep for the date/time cluster vs consolidate onto Ark; default
       keep); Toolbar (no Ark toolbar — focus group from `@dxos/react-focus` + `toggle-group`); Focus
       (keep as the seam).
