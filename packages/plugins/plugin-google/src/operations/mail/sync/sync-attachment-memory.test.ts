@@ -46,6 +46,15 @@ import { googleSyncTestServices, runGoogleSync } from '../../../testing/sync-fix
 // Every run reports every blob INLINE: `operation-service` depends on neither `@dxos/client` nor any
 // other registrant of a blob backend (`registerBlobBackend` appears nowhere in dxos/edge), so the
 // registry keeps its `'inline'` default and each attachment is embedded in the Automerge document.
+//
+// `DX_MEM_BACKEND=1` registers a default backend to stand in for blob-service. Same run, 5 x 1 MiB:
+//
+//                    peak heap   heap delta   per byte   blobs
+//   inline            620.0 MiB    438.8 MiB     87.76x   5 inline
+//   blob backend      205.2 MiB     23.9 MiB      4.78x   5 external
+//
+// Routing the bytes out of the document is an 18x cut in allocation, and what remains is the
+// pipeline's own cost rather than the payload's.
 
 const ATTACHMENT_KB = Number.parseInt(process.env.DX_MEM_KB ?? '512', 10);
 const MESSAGE_COUNT = Number.parseInt(process.env.DX_MEM_COUNT ?? '20', 10);
@@ -54,15 +63,15 @@ const seedGmailBinding = (builder: EchoTestBuilder) =>
   seedMailboxBinding(builder, { source: GMAIL_SOURCE, connectorId: GMAIL_CONNECTOR_ID });
 
 /**
- * Gives every message one attachment part of `bytes` bytes. The encoded payload is built once and
- * shared by reference, so the fixture itself holds a single copy — every byte the measurement sees
- * past that is the sync pipeline's own allocation.
+ * Gives every message one attachment part of `bytes` bytes, each with DISTINCT content: a
+ * content-addressed backend would otherwise store one object for the whole run and be measured
+ * against an inline path that embeds all of them.
  */
 const withAttachments = (dataset: GmailDataset, bytes: number): GmailDataset => {
-  const data = Buffer.alloc(bytes, 0x41).toString('base64url');
   const attachments: Record<string, GoogleMail.MessagePartBody> = {};
-  const messages = dataset.messages.map((message) => {
+  const messages = dataset.messages.map((message, index) => {
     const attachmentId = `att-${message.id}`;
+    const data = Buffer.alloc(bytes, index % 251).toString('base64url');
     attachments[attachmentId] = { size: bytes, data };
     return {
       ...message,
@@ -119,6 +128,27 @@ describe.runIf(process.env.DX_MEM)('gmail sync attachment memory', () => {
 
     const { db, mailbox, binding } = await seedGmailBinding(builder);
 
+    // `DX_MEM_BACKEND=1` stands in for blob-service: a default backend takes the bytes, so
+    // `processAttachments` — which passes no `storage` — writes a URI instead of embedding the
+    // payload, and the same run can be measured both ways.
+    const store = new Map<string, Uint8Array>();
+    const cleanup = process.env.DX_MEM_BACKEND
+      ? db.graph.registerBlobBackend(
+          'mem',
+          {
+            schemes: ['mem'],
+            put: async ({ data, contentHash }) => {
+              const uri = `mem:${contentHash}`;
+              store.set(uri, data);
+              return { uri };
+            },
+            get: async ({ uri }) => store.get(uri),
+            has: async ({ uri }) => store.has(uri),
+          },
+          { default: true },
+        )
+      : undefined;
+
     const { before, peak, delta } = await measurePeakHeap(() =>
       EffectEx.runPromise(
         runGoogleSync({ binding: Ref.make(binding) }).pipe(Effect.provide(googleSyncTestServices(db, dataset))),
@@ -131,6 +161,8 @@ describe.runIf(process.env.DX_MEM)('gmail sync attachment memory', () => {
       .query(Query.select(Filter.type(Blob.Blob)).from(Scope.feed(Feed.getFeedUri(mailbox.feed.target!)!)))
       .run();
     const inline = blobs.filter((blob) => blob.data._tag === 'inline').length;
+    cleanup?.();
+    const stored = [...store.values()].reduce((total, bytes) => total + bytes.byteLength, 0);
 
     // eslint-disable-next-line no-console
     console.log(
@@ -144,6 +176,7 @@ describe.runIf(process.env.DX_MEM)('gmail sync attachment memory', () => {
         `heap delta:        ${mb(delta)} MiB`,
         `delta / payload:   ${(delta / attachmentBytes).toFixed(2)}x`,
         `blobs:             ${blobs.length} (${inline} inline, ${blobs.length - inline} external)`,
+        `backend held:      ${mb(stored)} MiB in ${store.size} objects`,
         '',
       ].join('\n'),
     );
