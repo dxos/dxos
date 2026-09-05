@@ -176,6 +176,38 @@ INCLUDE_CHILDREN`), so crossing minimization and layer assignment respect contai
 - **Not modelled:** nested subgraphs (the parser records only the innermost group), node shapes
   other than the rectangle.
 
+## Objective (`objective.ts`) — how heuristics are expressed
+
+Layout heuristics used to live in three idioms: constants (`LATTICE`, `GAP_MAIN`, `TURN_COST`),
+rules (`GroupRule`), and one scoring function (`uml-search`). The objective unifies them into two
+statement types, both evaluated over the emitted scene through `Diagnostics`, so the judge that picks
+a layout and the report that grades one are the same measurements:
+
+- **Constraint** — hard. `violations(layout)` names each way the layout breaks it. Built-ins:
+  `noHardDefects` (every `error` diagnostic), `framesApart(gap)`.
+- **Cost term** — soft, weighted. Built-ins: `crossings` (3), `bends` (1), `unevenFrameGaps` (2,
+  in grid units), `compactness` (0.05). One crossing ≈ three bends is the current exchange rate; the
+  corpus snapshots are where a weight change shows its consequences.
+
+Engines and rules are **candidate generators**; `Objective.select` ranks candidates by fewest
+violations, then lowest cost, and returns them all so a bench can show what lost and why. The
+flowchart engine generates `lattice {1.5, 2} × order {model, free} × bus {on, off}` — placement is
+computed once per lattice × order and emitted twice, so the bus costs nothing extra to try.
+
+Two consequences worth stating. First, a cost term can only choose among what the generators
+produce: the uneven-gutter term found that _no_ candidate had even frame gaps, which is what led to
+the group-compaction pass in placement (a constraint-side fix), not to a weight change. Second, a
+user's flag on a layout maps onto exactly one of three moves — a new constraint, a new cost term, or
+a weight — which is the shape the feedback loop takes.
+
+### Rules as generators: the inheritance bus
+
+Subtypes of one base that sit on one row beneath it connect through a shared horizontal bus and a
+single triangle-headed trunk — the UML tree connector — instead of parallel arrows. It is emitted as
+a candidate dimension rather than applied unconditionally: with the bus on, bends fall (each stub
+and the trunk are straight), and if the bus would cross something the diagnostics report says so and
+the bus-off candidate wins. TB only for now.
+
 ## Diagnostics (`diagnostics.ts`)
 
 `Diagnostics.analyze(objects)` is a **pure function over an emitted scene** — not a return channel

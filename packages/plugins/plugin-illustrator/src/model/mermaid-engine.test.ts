@@ -7,7 +7,7 @@ import { describe, test } from 'vitest';
 import { trim } from '@dxos/util';
 
 import { analyze, errors } from './diagnostics';
-import { compile } from './mermaid-engine';
+import { compile, layout } from './mermaid-engine';
 import type * as Scene from './scene';
 import { BASIC } from './testing';
 import { GRID } from './uml-grid';
@@ -81,6 +81,18 @@ describe('mermaid-engine', () => {
     expect(inside('Edge', 'core')).toBe(false);
   });
 
+  test('layout ranks every candidate and the chosen one has the lowest feasible cost', async ({ expect }) => {
+    const result = await layout(BASIC);
+
+    // lattice × order × bus.
+    expect(result.ranked).toHaveLength(8);
+    const feasible = result.ranked.filter(({ evaluation }) => evaluation.violations.length === 0);
+    expect(feasible.length).toBeGreaterThan(0);
+    expect(result.chosen).toBe(result.ranked[0]);
+    expect(result.chosen.evaluation.cost).toBe(Math.min(...feasible.map(({ evaluation }) => evaluation.cost)));
+    expect(result.chosen.candidate.bus).toBe(true);
+  });
+
   test('edge tokens carry the UML end markers', async ({ expect }) => {
     const objects = objectsOf(
       await compile(trim`
@@ -107,9 +119,14 @@ describe('mermaid-engine', () => {
     const report = analyze(objects);
 
     expect(errors(report).map(({ message }) => message)).toEqual([]);
-    expect(report.metrics.connectors).toBe(6);
-    // Each package's relations fit in two lattice rows, so nothing should need a second bend.
     expect(report.metrics.crossings).toBe(0);
+    // The inheritance bus wins: B and C stub up to one bus and a single triangle-headed trunk.
+    const edges = objects.find(({ id }) => id === 'edges')!.elements;
+    expect(edges.find(({ id }) => id === 'A-bus')?.kind).toBe('line');
+    expect(edges.filter(({ id }) => id.endsWith('-stub-0') || id.endsWith('-stub-1'))).toHaveLength(2);
+    expect(edges.filter((element) => element.kind === 'arrow' && element.head === 'triangle')).toHaveLength(1);
+    // Nothing else needs a second bend, and the three frames sit at equal gaps.
+    expect(report.metrics.frameGapSpread).toBe(0);
 
     // Inheritance reads upward: the base type sits above its subtypes.
     const originY = (id: string) => objects.find((object) => object.id === id)!.origin!.y;

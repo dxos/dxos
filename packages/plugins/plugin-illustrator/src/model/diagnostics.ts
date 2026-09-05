@@ -61,6 +61,12 @@ export type Metrics = {
   bends: number;
   width: number;
   height: number;
+  /** Boxes that enclose another object's box (subgraph / group frames). */
+  containers: number;
+  /** Smallest gap from a container to its nearest container (Infinity with fewer than two). */
+  frameGapMin: number;
+  /** Spread (max − min) of each container's nearest-neighbour gap; 0 when gutters are uniform. */
+  frameGapSpread: number;
 };
 
 export type Report = {
@@ -340,6 +346,19 @@ export const analyze = (objects: readonly Scene.WorldObject[], { maxBends = 3 }:
   const xs = allNodes.flatMap(({ rect }) => [rect.x, rect.x + rect.w]);
   const ys = allNodes.flatMap(({ rect }) => [rect.y, rect.y + rect.h]);
 
+  // Gutter uniformity between containers: each frame's gap to its nearest frame. Nearest-neighbour
+  // (rather than all pairs) so a row of three is judged on its two gutters, not the span across.
+  const frameRects = allNodes.filter(({ ref }) => containers.has(ref)).map(({ rect }) => rect);
+  const gapBetween = (a: Rect, b: Rect) =>
+    Math.max(a.x - (b.x + b.w), b.x - (a.x + a.w), a.y - (b.y + b.h), b.y - (a.y + a.h));
+  const nearestGaps = frameRects.flatMap((frame, index) => {
+    const gaps = frameRects
+      .filter((_, other) => other !== index)
+      .map((other) => gapBetween(frame, other))
+      .filter((gap) => gap >= 0);
+    return gaps.length ? [Math.min(...gaps)] : [];
+  });
+
   return {
     diagnostics,
     metrics: {
@@ -352,6 +371,9 @@ export const analyze = (objects: readonly Scene.WorldObject[], { maxBends = 3 }:
       bends,
       width: xs.length ? Math.max(...xs) - Math.min(...xs) : 0,
       height: ys.length ? Math.max(...ys) - Math.min(...ys) : 0,
+      containers: frameRects.length,
+      frameGapMin: nearestGaps.length ? Math.min(...nearestGaps) : Infinity,
+      frameGapSpread: nearestGaps.length >= 2 ? Math.max(...nearestGaps) - Math.min(...nearestGaps) : 0,
     },
   };
 };

@@ -106,7 +106,7 @@ const Header = ({ children }: { children: string }) => (
 
 type StoryArgs = {
   source: string;
-  /** Lattice pitch as a multiple of the cell size. */
+  /** Lattice pitch as a multiple of the cell size; 0 lets the objective choose. */
   lattice: number;
 };
 
@@ -114,13 +114,16 @@ const Bench = ({ source: initial, lattice }: StoryArgs) => {
   const [source, setSource] = useState(initial);
   useEffect(() => setSource(initial), [initial]);
   const [objects, setObjects] = useState<Scene.WorldObject[]>([]);
+  const [result, setResult] = useState<MermaidEngine.Result>();
   const [failure, setFailure] = useState<string>();
   useEffect(() => {
     let cancelled = false;
-    MermaidEngine.compile(source, { lattice })
-      .then((commands) => {
+    // 0 lets the objective choose among the lattice candidates; otherwise the lattice is fixed.
+    MermaidEngine.layout(source, lattice > 0 ? { lattice } : {})
+      .then((layout) => {
         if (!cancelled) {
-          setObjects(objectsOf(commands));
+          setObjects(objectsOf(layout.commands));
+          setResult(layout);
           setFailure(undefined);
         }
       })
@@ -166,7 +169,15 @@ const Bench = ({ source: initial, lattice }: StoryArgs) => {
           ) : (
             <>
               <span className={mx(errors.length ? 'text-rose-500' : 'text-emerald-600')}>{errors.length} errors</span>
-              {` · ${report.metrics.nodes} nodes · ${report.metrics.connectors} connectors · ${report.metrics.crossings} crossings · ${report.metrics.bends} bends`}
+              {` · ${report.metrics.nodes} nodes · ${report.metrics.connectors} connectors · ${report.metrics.crossings} crossings · ${report.metrics.bends} bends · gap spread ${report.metrics.frameGapSpread}`}
+              {result && (
+                <div className='text-description'>
+                  {`chosen: lattice ${result.chosen.candidate.lattice} · order ${result.chosen.candidate.order} · bus ${result.chosen.candidate.bus} · cost ${result.chosen.evaluation.cost.toFixed(2)} of ${result.ranked.length} candidates — `}
+                  {result.chosen.evaluation.terms
+                    .map(({ id, value, weighted }) => `${id} ${value}×→${weighted.toFixed(1)}`)
+                    .join(' · ')}
+                </div>
+              )}
               {errors.map((diagnostic) => (
                 <div key={diagnostic.message} className='text-rose-500'>
                   {diagnostic.message}
@@ -185,9 +196,12 @@ const meta = {
   render: Bench,
   decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
   parameters: { layout: 'fullscreen' },
-  args: { lattice: 1.5 },
+  args: { lattice: 0 },
   argTypes: {
-    lattice: { control: { type: 'range', min: 1, max: 3, step: 0.25 } },
+    lattice: {
+      description: '0 lets the objective choose among candidates; otherwise fixes the lattice pitch.',
+      control: { type: 'range', min: 0, max: 3, step: 0.25 },
+    },
   },
 } satisfies Meta<typeof Bench>;
 

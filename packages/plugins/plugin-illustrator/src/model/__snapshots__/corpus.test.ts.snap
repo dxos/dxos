@@ -2,21 +2,21 @@
 
 exports[`corpus: app-framework > soft metrics 1`] = `
 {
-  "bends": 25,
-  "crossings": 15,
+  "bends": 26,
+  "crossings": 10,
 }
 `;
 
 exports[`corpus: assistant > soft metrics 1`] = `
 {
-  "bends": 21,
-  "crossings": 18,
+  "bends": 17,
+  "crossings": 13,
 }
 `;
 
 exports[`corpus: compute > soft metrics 1`] = `
 {
-  "bends": 23,
+  "bends": 22,
   "crossings": 13,
 }
 `;
@@ -30,14 +30,14 @@ exports[`corpus: echo > soft metrics 1`] = `
 
 exports[`corpus: edge > soft metrics 1`] = `
 {
-  "bends": 30,
-  "crossings": 22,
+  "bends": 34,
+  "crossings": 11,
 }
 `;
 
 exports[`corpus: pipeline > soft metrics 1`] = `
 {
   "bends": 9,
-  "crossings": 2,
+  "crossings": 0,
 }
 `;

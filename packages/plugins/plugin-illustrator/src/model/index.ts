@@ -9,6 +9,7 @@ export * as Diagnostics from './diagnostics';
 export * as Layout from './layout';
 export * as Mermaid from './mermaid';
 export * as MermaidEngine from './mermaid-engine';
+export * as Objective from './objective';
 export * as Scene from './scene';
 export * from './svg-handler';
 export * as Ui from './ui';

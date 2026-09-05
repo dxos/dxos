@@ -70,6 +70,17 @@ its scorer interface now and fixtures later.
       markers; `SceneSvg` draws them (hollow triangle filled with `--surface-bg`); tldraw maps
       triangle/dot (no crow's foot there → arrow). Inheritance reversed for layering so the base type
       ranks above. `Basic` fixture uses tokens and no labels.
+- [x] **Objective framework** (`objective.ts`) — heuristics as constraints (hard) + weighted cost
+      terms (soft) over `Diagnostics`; engines/rules are candidate generators; `select` ranks by
+      violations then cost and returns every candidate. Flowchart engine: `lattice × order × bus`
+      candidates; `layout()` returns the ranking, `compile()` the winner. Bench shows the chosen
+      candidate and its cost terms; `lattice 0` = let the objective choose.
+- [x] **Inheritance bus** — first rule expressed as a candidate generator: siblings on one row →
+      stubs to one bus → single triangle trunk into the base (TB only).
+- [x] **Even frame gaps** — `frameGapMin` / `frameGapSpread` metrics; `unevenFrameGaps` cost term;
+      and, because no candidate had even gaps, a `compactGroups` placement pass that closes surplus
+      inter-frame gutters by whole pitches (nodes stay on the lattice).
+- [ ] **Bus for LR/RL** and for bases not directly above their subtypes (a jogged trunk).
 - [ ] **Excalidraw markers** — map `head`/`tail` onto `startArrowhead`/`endArrowhead`.
 - [ ] **Crossings after quantization** — run ELK `INTERACTIVE` (crossing minimization seeded from the
       quantized positions) as a second pass, or quantize before the crossing sweep.
