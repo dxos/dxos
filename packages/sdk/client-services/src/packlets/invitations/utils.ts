@@ -5,7 +5,7 @@
 import { type Mutex, type MutexGuard } from '@dxos/async';
 import { type Context, ContextDisposedError, cancelWithContext } from '@dxos/context';
 import { buf, bufWkt } from '@dxos/protocols/buf';
-import { Invitation, InvitationSchema, Invitation_AuthMethod, Invitation_State } from '@dxos/protocols/buf/dxos/client/invitation_pb';
+import { type Invitation, InvitationSchema, Invitation_AuthMethod, Invitation_State } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 import { decodeCompat, encodeCompat } from '@dxos/protocols/buf-shape-compat';
 import { SpaceMember_Role } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { Invitation as LegacyInvitation } from '@dxos/protocols/proto/dxos/client/services';
@@ -69,7 +69,7 @@ export const toSpaceMemberRole = (role: SpaceMember_Role | undefined): SpaceMemb
 /**
  * Reads the peer-protocol auth method as the invitation's buf auth method.
  *
- * `dxos.halo.invitations` still carries `Invitation.AuthMethod` through the protobuf.js codec, so
+ * `dxos.halo.invitations` still carries `Invitation_AuthMethod` through the protobuf.js codec, so
  * the enum arrives nominally distinct from the buf one despite being the same proto enum.
  */
 export const toBufAuthMethod = (authMethod: LegacyInvitation.AuthMethod | undefined): Invitation_AuthMethod => {

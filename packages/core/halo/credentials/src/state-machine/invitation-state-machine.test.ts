@@ -26,7 +26,7 @@ describe('InvitationStateMachine', () => {
     invitationId: PublicKey.random().toHex(),
     swarmKey: PublicKey.random(),
     role: SpaceMember.Role.ADMIN,
-    authMethod: Invitation.AuthMethod.KNOWN_PUBLIC_KEY,
+    authMethod: Invitation_AuthMethod.KNOWN_PUBLIC_KEY,
     multiUse: false,
   };
 

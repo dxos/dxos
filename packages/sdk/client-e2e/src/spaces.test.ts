@@ -26,6 +26,7 @@ import { EncodedReference } from '@dxos/echo-protocol';
 import { TestSchema as TestSchema$ } from '@dxos/echo/testing';
 import { DXN, SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { fromPublicKey } from '@dxos/protocols/buf';
 import { MembershipPolicy } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { range } from '@dxos/util';
 
@@ -187,7 +188,7 @@ describe('Spaces', () => {
       await space1.db.flush();
       // Create epoch.
       await client1.services.services.SpacesService?.createEpoch({
-        spaceKey: space1.key,
+        spaceKey: fromPublicKey(space1.key),
       });
     }
 

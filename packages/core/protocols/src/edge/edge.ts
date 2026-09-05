@@ -196,7 +196,7 @@ export type JoinSpaceRequest = {
   identityKey: string;
   /**
    * Base64 encoded signed challenge.
-   * Used to verify the IdentityKey in case of `invitation.authMethod === Invitation.AuthMethod.KNOWN_PUBLIC_KEY`
+   * Used to verify the IdentityKey in case of `invitation.authMethod === Invitation_AuthMethod.KNOWN_PUBLIC_KEY`
    */
   signature?: string;
 };

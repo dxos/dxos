@@ -6,7 +6,7 @@ import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 
 import { Doc, FormBuilder } from '@dxos/cli-util';
-import { type AuthenticatingInvitationObservable, Invitation } from '@dxos/client/invitations';
+import { type AuthenticatingInvitationObservable, type Invitation, Invitation_State } from '@dxos/client/invitations';
 
 /**
  * Pretty prints an identity with ANSI colors.
@@ -19,20 +19,20 @@ export const printIdentity = (identity: { identityDid: string; profile?: { displ
   );
 
 const TERMINAL_FAILURE_STATES = new Set([
-  Invitation.State.CANCELLED,
-  Invitation.State.TIMEOUT,
-  Invitation.State.ERROR,
-  Invitation.State.EXPIRED,
+  Invitation_State.CANCELLED,
+  Invitation_State.TIMEOUT,
+  Invitation_State.ERROR,
+  Invitation_State.EXPIRED,
 ]);
 
 /** Await an authenticating invitation reaching the given state. */
-export const waitForState = (invitation: AuthenticatingInvitationObservable, state: Invitation.State) =>
+export const waitForState = (invitation: AuthenticatingInvitationObservable, state: Invitation_State) =>
   Effect.callback<void, Error>((resume) => {
     const subscription = invitation.subscribe((inv) => {
       if (inv.state === state) {
         resume(Effect.void);
       } else if (TERMINAL_FAILURE_STATES.has(inv.state!)) {
-        resume(Effect.fail(new Error(`Invitation failed with state: ${Invitation.State[inv.state!]}`)));
+        resume(Effect.fail(new Error(`Invitation failed with state: ${Invitation_State[inv.state!]}`)));
       }
     });
     return Effect.sync(() => subscription.unsubscribe());

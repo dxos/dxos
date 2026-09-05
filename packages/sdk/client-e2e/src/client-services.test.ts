@@ -13,6 +13,7 @@ import { Context } from '@dxos/context';
 import { TestSchema } from '@dxos/echo/testing';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
+import { fromPublicKey, toPublicKey } from '@dxos/protocols/buf';
 import { Invitation_AuthMethod, Invitation_State } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 import { Device, DeviceKind, SpaceMember } from '@dxos/protocols/proto/dxos/client/services';
 
@@ -236,7 +237,7 @@ describe('Client services', () => {
     const trigger = new Trigger<Space>();
     await expect
       .poll(() => {
-        const guestSpace = client2.spaces.get(guestInvitation!.spaceKey!);
+        const guestSpace = client2.spaces.get(toPublicKey(guestInvitation!.spaceKey)!);
         invariant(guestSpace);
         trigger.wake(guestSpace);
         return guestSpace;

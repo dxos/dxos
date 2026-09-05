@@ -12,6 +12,7 @@ import {
   InvitationEncoder,
   Invitation_AuthMethod,
   Invitation_State,
+  Invitation_Type,
 } from '@dxos/client/invitations';
 import { log } from '@dxos/log';
 

@@ -434,5 +434,5 @@ export const hasInvitationExpired = (invitation: Invitation): boolean => {
 
 // TODO: remove once "multiuse" type invitations get removed from local metadata of existing profiles
 const isLegacyInvitationFormat = (invitation: Invitation): boolean => {
-  return invitation.type === Invitation.Type.MULTIUSE;
+  return invitation.type === Invitation_Type.MULTIUSE;
 };

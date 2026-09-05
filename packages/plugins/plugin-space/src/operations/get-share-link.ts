@@ -16,8 +16,8 @@ const handler: Operation.WithHandler<typeof SpaceOperation.GetShareLink> = Space
 
       const invitation = yield* Operation.invoke(SpaceOperation.Share, {
         space: input.space,
-        type: Invitation.Type.DELEGATED,
-        authMethod: Invitation.AuthMethod.KNOWN_PUBLIC_KEY,
+        type: Invitation_Type.DELEGATED,
+        authMethod: Invitation_AuthMethod.KNOWN_PUBLIC_KEY,
         multiUse: true,
         target: input.target,
       });
@@ -26,7 +26,7 @@ const handler: Operation.WithHandler<typeof SpaceOperation.GetShareLink> = Space
         () =>
           new Promise<string>((resolve) => {
             invitation.subscribe((inv) => {
-              if (inv.state === Invitation.State.CONNECTING) {
+              if (inv.state === Invitation_State.CONNECTING) {
                 resolve(InvitationEncoder.encode(inv));
               }
             });

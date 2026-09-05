@@ -33,6 +33,7 @@ import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { AlreadyJoinedError } from '@dxos/protocols';
+import { fromPublicKey, toPublicKey } from '@dxos/protocols/buf';
 import { Invitation, Invitation_AuthMethod, Invitation_Kind, Invitation_State } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 import { ConnectionState } from '@dxos/protocols/proto/dxos/client/services';
 import { StorageType, createStorage } from '@dxos/random-access-storage';
@@ -68,8 +69,8 @@ const successfulInvitation = async ({
       expect(guestInvitation!.spaceKey).to.exist;
       expect(hostInvitation!.spaceKey).to.deep.eq(guestInvitation!.spaceKey);
 
-      expect(host.dataSpaceManager!.spaces.get(hostInvitation!.spaceKey!)).to.exist;
-      expect(guest.dataSpaceManager!.spaces.get(guestInvitation!.spaceKey!)).to.exist;
+      expect(host.dataSpaceManager!.spaces.get(toPublicKey(hostInvitation!.spaceKey)!)).to.exist;
+      expect(guest.dataSpaceManager!.spaces.get(toPublicKey(guestInvitation!.spaceKey)!)).to.exist;
       break;
 
     case Invitation_Kind.DEVICE:
@@ -325,7 +326,7 @@ describe('Invitations', () => {
         () => ({
           host,
           guest,
-          options: { kind: Invitation_Kind.SPACE, spaceKey: space.key },
+          options: { kind: Invitation_Kind.SPACE, spaceKey: fromPublicKey(space.key) },
         }),
         () => [host, guest],
       );
@@ -369,7 +370,7 @@ describe('Invitations', () => {
         space = await hostContext.dataSpaceManager.createSpace(Context.default());
         host = new InvitationsProxy(service, undefined, () => ({
           kind: Invitation_Kind.SPACE,
-          spaceKey: space.key,
+          spaceKey: fromPublicKey(space.key),
         }));
 
         onTestFinished(() => space.close(Context.default()));
@@ -424,7 +425,7 @@ describe('Invitations', () => {
         {
           const tempHost = new InvitationsProxy(hostApi.service, undefined, () => ({
             kind: Invitation_Kind.SPACE,
-            spaceKey: space.key,
+            spaceKey: fromPublicKey(space.key),
           }));
 
           // ensure the saved event fires
@@ -451,7 +452,7 @@ describe('Invitations', () => {
         );
         const host = new InvitationsProxy(newHostService, undefined, () => ({
           kind: Invitation_Kind.SPACE,
-          spaceKey: space.key,
+          spaceKey: fromPublicKey(space.key),
         }));
 
         const loadedInvitations = await newHostManager.loadPersistentInvitations(Context.default());
@@ -515,7 +516,7 @@ describe('Invitations', () => {
         {
           const tempHost = new InvitationsProxy(hostApi.service, undefined, () => ({
             kind: Invitation_Kind.SPACE,
-            spaceKey: space.key,
+            spaceKey: fromPublicKey(space.key),
             persistent: false,
           }));
           // TODO(nf): require calling manually outside of service-host?
@@ -541,7 +542,7 @@ describe('Invitations', () => {
 
         const host = new InvitationsProxy(newHostService, undefined, () => ({
           kind: Invitation_Kind.SPACE,
-          spaceKey: space.key,
+          spaceKey: fromPublicKey(space.key),
         }));
         await host.open();
 
@@ -570,7 +571,7 @@ describe('Invitations', () => {
         space = await hostContext.dataSpaceManager.createSpace(Context.default());
         host = new InvitationsProxy(hostService, undefined, () => ({
           kind: Invitation_Kind.SPACE,
-          spaceKey: space.key,
+          spaceKey: fromPublicKey(space.key),
         }));
         guest = new InvitationsProxy(guestService, undefined, () => ({ kind: Invitation_Kind.SPACE }));
 
