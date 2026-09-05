@@ -160,7 +160,7 @@ Tasks run through `moon` (`moon run <package>:<task>`). See a package's
 - Format: `pnpm format` (oxfmt — CI checks `oxfmt --check`, not prettier)
 - Unused deps & dead files: `pnpm knip` (root deps are excluded — see `REPOSITORY_GUIDE.md`)
 - Storybook: `moon run storybook-react:serve` (port 9009). **One server, shared with
-  the user — see "Sharing the storybook server" below.** It periodically wedges;
+  the user — see "Sharing long-running servers" below.** It periodically wedges;
   `serve` arms a watcher that captures the cause. If it wedges under a server you
   started another way, run `bash tools/storybook-react/diagnose.sh` BEFORE restarting —
   a restart destroys the evidence. → `REPOSITORY_GUIDE.md` §Storybooks.
@@ -169,7 +169,19 @@ A remote-cache warning from moon is harmless — builds work, they just don't sh
 cache. Worth fixing anyway: `tools/moon-cache/install-certs.sh --op` installs the certificates
 once per machine, for every worktree.
 
-## Sharing the storybook server
+## Sharing long-running servers
+
+Applies to every long-running server the user might be looking at — storybook on 9009,
+the Composer app on 5199, any `*:serve` task. Ports and specifics below are storybook's;
+the rules are the same for the others.
+
+**Each server serves ONE worktree, and that is invisible from the outside.** A server
+answering on its usual port may be serving a different worktree entirely — the app boots,
+the page renders, and none of your changes are in it. Before using one to verify, confirm
+whose tree it serves: fetch a file that exists only in yours
+(`/@fs/<abs path to a file you just wrote>` returns 200), or check the process's cwd with
+`lsof -a -p <pid> -d cwd -Fn`. If it is serving another worktree, restart it from yours
+rather than starting a second — and say so, since it moves a window someone may be using.
 
 **There is ONE storybook server, on port 9009, and the user is looking at it.** Never
 start a second one "on a free port" to avoid disturbing them — two servers on one machine
