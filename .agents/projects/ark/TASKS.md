@@ -781,6 +781,11 @@ dist/types/src: ENOTEMPTY` — a concurrent writer. A Cursor TypeScript native-p
       keep); Toolbar (no Ark toolbar — focus group from `@dxos/react-focus` + `toggle-group`); Focus
       (keep as the seam).
 - [ ] **Phase 6 — remove `@radix-ui/*`** from catalog and lockfile; `pnpm knip` is the gate.
+- [ ] **Re-organize `react-ui/src/primitives`** (tracked 2026-09-05). The folder holds providers and
+      layout helpers (`Container`, `DensityProvider`, `ElevationProvider`, `Flex`, `Grid`,
+      `ThemeProvider`, `layout.ts`), not primitives in the Radix/Ark sense; with the machines now under
+      `components/`, the name misleads. Decide the split (providers vs layout) and where `Show`
+      (`components/Show`, a conditional-render helper, not a component with anatomy) belongs.
 - [ ] **Separate, not this phase: touch drag in the Tree.** `pragmatic-drag-and-drop` is native
       HTML5 DnD, which does not fire from touch in iPhone WKWebView, so Tree reordering is
       desktop-only under Tauri mobile. Library-independent; verify on device first. Tracked
