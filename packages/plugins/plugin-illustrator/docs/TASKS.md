@@ -55,6 +55,13 @@ its scorer interface now and fixtures later.
       per-group spacing (above) and the router's fixed 50k-iteration A* budget — replaced by an
       admissible turn-aware heuristic (`turnsNeeded × TURN_COST`) plus an area-scaled budget, which
       left every UML snapshot unchanged.
+- [x] **Selection verified in Storybook** (`SceneSvg › Selection`, driven by clicks): click →
+      `[Dialect]` with `data-selected`; shift-click adds `Scene`; shift-click again toggles it off;
+      double-click selects + activates; background click clears.
+- [ ] **`edges` object is selectable** — clicking a connector selects the dialect's `edges`
+      object. Fine for hand-drawn line-only objects, odd for dialect output; options: dialects mark
+      the object non-selectable, or `SceneSvg` skips objects with no closed shapes. Decide with
+      Rich.
 - [ ] **Corpus review with Rich** — the six diagrams are faithful to what the surveys verified but
       dense (13–18 connectors); expect edits to scope, and the metric snapshots to follow.
 - [x] **Tier 3** — `assistant-evals/src/evals/diagram.eval.ts`: the agent diagrams a described
