@@ -825,7 +825,10 @@ dist/types/src: ENOTEMPTY` — a concurrent writer. A Cursor TypeScript native-p
 - [ ] **Phase 5 — decisions.** RAC (keep for the date/time cluster vs consolidate onto Ark; default
       keep); Toolbar (no Ark toolbar — focus group from `@dxos/react-focus` + `toggle-group`); Focus
       (keep as the seam).
-- [ ] **Phase 6 — remove `@radix-ui/*`** from catalog and lockfile; `pnpm knip` is the gate.
+- [x] **Phase 6 — remove `@radix-ui/*` from the catalog** DONE 2026-09-05: 36 `@radix-ui/*` entries plus
+      `aria-hidden`, `react-remove-scroll` and `tailwindcss-radix` removed from `pnpm-workspace.yaml`; no
+      manifest declared any of them. The 226 lockfile entries left are transitive to tldraw, excalidraw
+      and leva and stay with them. knip clean.
 - [x] **Re-organize `react-ui/src/primitives`** DONE 2026-09-05: `providers/` (Density, Elevation,
       Theme), `layout/` (Container, Flex, Grid, `layout.ts`), `flow/` (Show, Switch — structural
       rendering, no anatomy). Barrels unchanged for consumers; story titles follow the folders.
