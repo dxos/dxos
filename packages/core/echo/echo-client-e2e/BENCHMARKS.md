@@ -289,27 +289,52 @@ distinguishable from the other at this floor. Elision check: unpersisted 5.8×, 
 
 ---
 
-## Baseline → final, `0dab2f81` → `27735fbc`
+## `b3486ba0` — 2026-09-05 — Phase 3c, lazy form: document record held, values filled per key
+
+`echo-client` 549/549 and `echo-client-e2e` 324/324 unmodified. Clean tree. One pass. Harness floor
+66 ns.
+
+Change: `MaterializedRecord.raw` is the document's own record object (no copy) for the key-set traps;
+`values` starts empty at each generation and fills on the decode path, one key per first read; reset at a
+change is O(1). DESIGN.md D10 "Revised".
+
+| per-op                 | `9bc3cf29` (eager) | `b3486ba0` (lazy) |
+| ---------------------- | -----------------: | ----------------: |
+| read, unpersisted      |             103 ns |             99 ns |
+| read, automerge        |             129 ns |            113 ns |
+| read, feed             |             103 ns |            102 ns |
+| read, unpersisted wide |             105 ns |            102 ns |
+| read, automerge wide   |             116 ns |            111 ns |
+| write, automerge       |             283 µs |            303 µs |
+| make, automerge        |             3.2 ms |            3.2 ms |
+
+Hit paths are identical, so parity; the difference the redesign makes — a read after a write, and
+`Object.keys` on a wide record — is not rowed here (follow-up in TASKS.md). Elision check: unpersisted
+5.7×, automerge 6.3×, feed 5.9×.
+
+---
+
+## Baseline → final, `0dab2f81` → `b3486ba0`
 
 Per-op, both from this file. Every ECHO read row is a `Proxy` trap still (Stage C is blocked — DESIGN.md
 D9), so the floor under these numbers is the trap itself.
 
 | per-op                 | baseline |   final |     Δ |
 | ---------------------- | -------: | ------: | ----: |
-| read, unpersisted      |   297 ns |  105 ns |  2.8× |
-| read, automerge        |  1.69 µs |  133 ns | 12.7× |
-| read, feed             |   271 ns |  110 ns |  2.5× |
-| read, unpersisted wide |   258 ns |  114 ns |  2.3× |
-| read, automerge wide   |  1.83 µs |  130 ns | 14.1× |
-| read, feed wide        |   264 ns |  111 ns |  2.4× |
-| write, unpersisted     |  14.4 µs | 10.0 µs |  1.4× |
-| write, automerge       |   399 µs |  287 µs |  1.4× |
-| write, feed            |  12.4 µs |  8.7 µs |  1.4× |
-| make, unpersisted      |   118 µs |   88 µs |  1.3× |
+| read, unpersisted      |   297 ns |   99 ns |  3.0× |
+| read, automerge        |  1.69 µs |  113 ns | 15.0× |
+| read, feed             |   271 ns |  102 ns |  2.7× |
+| read, unpersisted wide |   258 ns |  102 ns |  2.5× |
+| read, automerge wide   |  1.83 µs |  111 ns | 16.5× |
+| read, feed wide        |   264 ns |  102 ns |  2.6× |
+| write, unpersisted     |  14.4 µs | 8.32 µs |  1.7× |
+| write, automerge       |   399 µs |  303 µs |  1.3× |
+| write, feed            |  12.4 µs | 8.41 µs |  1.5× |
+| make, unpersisted      |   118 µs |   77 µs |  1.5× |
 | make, automerge        |   4.3 ms |  3.2 ms |  1.3× |
-| make, feed             |   414 µs |  269 µs |  1.5× |
+| make, feed             |   414 µs |  251 µs |  1.6× |
 
-Reads against plain (8 ns): unpersisted 13×, automerge 17×, feed 14× — from 44× / 249× / 40×. Writes
+Reads against plain (7 ns): unpersisted 14×, automerge 16×, feed 15× — from 44× / 249× / 40×. Writes
 and construction moved only through Stage A's `isValidProxyTarget` change and sit inside the ~20%
 between-run band for the µs rows; the automerge write is a per-set Automerge commit (F2) and was never
 in scope here.

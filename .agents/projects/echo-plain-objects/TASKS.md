@@ -1,6 +1,6 @@
 # echo-plain-objects — Tasks
 
-_Resume: Phase 3c is green and measured; review round 2 is running over it — fix confirmed findings, re-run the suites, then update the PR body. Stage C stays BLOCKED under constraint 3 (DESIGN.md D9) pending the user's choice. Uncommitted: none once the 3c commit lands. Last: Phase 3c measured at parity (129 / 116 ns automerge reads)._
+_Resume: A + B + 3b + 3c landed and measured; two review rounds folded in; PR #12951 body updated. Open: Stage C decision (D9) and the follow-ups below. Stage C stays BLOCKED under constraint 3 (DESIGN.md D9) pending the user's choice. Uncommitted: none. Last: lazy materialized record at `b3486ba0`, automerge reads 113 / 111 ns._
 
 Design and decisions: [DESIGN.md](./DESIGN.md). Numbers: [`echo-client-e2e/BENCHMARKS.md`](../../../packages/core/echo/echo-client-e2e/BENCHMARKS.md).
 
@@ -131,8 +131,8 @@ into `MaterializedRecord { decoded, values }`; `get` serves `values[prop]`, the 
       tracks — the object is already removed from the directory, and bound local writes still
       self-invalidate; the meta-root `createdAt`/`updatedAt` shadowing the reviewer raised cannot occur
       under lazy fill, since the virtual branch answers before the decode path stores anything.
-- [ ] **Green: both suites, unmodified, on the lazy form.**
-- [ ] **Measure** — one pass, record.
+- [x] **Green: both suites, unmodified, on the lazy form** — 549 and 324 passed.
+- [x] **Measure** — `b3486ba0` in `BENCHMARKS.md`. Automerge reads 113 / 111 ns; 15× / 16.5× from baseline.
 
 ### Follow-ups recorded, not in scope
 
@@ -176,11 +176,11 @@ if unblocked; DESIGN.md §Proposal, scoped by D3/D6/D7.
 
 ## Phase 5: Compare and review
 
-- [x] **Before/after table in `BENCHMARKS.md`** — `0dab2f81` → `27735fbc`, per cell; elision checks
+- [x] **Before/after table in `BENCHMARKS.md`** — `0dab2f81` → `b3486ba0`, per cell; elision checks
       re-verified on every section.
 - [ ] **Blast-radius follow-through** — anything outside `echo*` that broke or needed a shim,
       recorded with its resolution.
-- [ ] **Reviewer pass** — round 1 done (six findings; stale-value audit of every mutation path came
+- [x] **Reviewer pass** — round 1 (six findings; stale-value audit of every mutation path came
       back clean). Fixed: absent keys are no longer cached (unbounded growth on a record probed with
       arbitrary keys); bound `ObjectCore.change`/`changeAt` bump the generation themselves, so a local
       write invalidates reads even if the entity manager no longer routes the change event to that core;
@@ -190,8 +190,7 @@ if unblocked; DESIGN.md §Proposal, scoped by D3/D6/D7.
       caller depends on the throw; (b) the read rows measure only cache hits after Stage B and the feed
       read rows go through the typed handler — both true and both recorded (F2, BENCHMARKS.md), but a
       miss-path row cannot be built without a mutation per iteration, whose cost swamps the read, so
-      it is recorded here as a follow-up rather than added. Re-run of all three suites and one bench
-      pass pending; round 2 review after that.
+      it is recorded here as a follow-up rather than added. Round 2 is under Phase 3c.
 
 ### References
 
