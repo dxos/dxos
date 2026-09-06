@@ -35,20 +35,21 @@ const textInputSurfaceFocus =
 const textInputSurfaceHover = 'hover:bg-focus-surface';
 
 /**
- * The control's border takes the valence's semantic border token. Repeated under `focus-within`
- * because `dx-input` restores the plain separator on focus with a compound selector no single
- * utility outranks.
+ * The control's border takes the valence's semantic border token, and so does its focus band: the
+ * `dx-input` focus rule paints ring and border from `--dx-input-focus-ring`, which is set here
+ * because that rule's compound selector outranks any single utility. Repeated under `focus-within`
+ * for the non-visible focus, where `dx-input` restores the plain separator.
  */
 const valence = (valence?: MessageValence) => {
   switch (valence) {
     case 'success':
-      return 'border-success-border focus-within:border-success-border';
+      return 'border-success-border focus-within:border-success-border [--dx-input-focus-ring:var(--color-success-border)]';
     case 'info':
-      return 'border-info-border focus-within:border-info-border';
+      return 'border-info-border focus-within:border-info-border [--dx-input-focus-ring:var(--color-info-border)]';
     case 'warning':
-      return 'border-warning-border focus-within:border-warning-border';
+      return 'border-warning-border focus-within:border-warning-border [--dx-input-focus-ring:var(--color-warning-border)]';
     case 'error':
-      return 'border-error-border focus-within:border-error-border';
+      return 'border-error-border focus-within:border-error-border [--dx-input-focus-ring:var(--color-error-border)]';
   }
 };
 

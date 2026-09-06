@@ -19,6 +19,9 @@
     --surface-bg: var(--color-input-surface);
     background-color: var(--surface-bg);
 
+    /* The colour the focus band takes; a valence overrides it so an invalid field focuses in its own colour. */
+    --dx-input-focus-ring: var(--color-focus-ring-subtle);
+
     &:focus {
       @apply outline-hidden;
     }
@@ -30,7 +33,7 @@
     /* Border matches the ring while it shows, so the focus treatment reads as one band (no inner line). */
     &:not([disabled]):focus-visible,
     &:not([disabled]):has(:focus-visible) {
-      @apply ring-focus-line ring-offset-focus-offset z-[1] ring-[var(--color-focus-ring-subtle)] border-[color:var(--color-focus-ring-subtle)];
+      @apply ring-focus-line ring-offset-focus-offset z-[1] ring-[var(--dx-input-focus-ring)] border-[color:var(--dx-input-focus-ring)];
     }
   }
 }
