@@ -89,9 +89,7 @@ const WindowStory = () => {
       return;
     }
 
-    void Effect.runPromise(Effect.promise(() => space.db.appendToFeed(feed, createMessages({ count: TOTAL })))).then(
-      () => setSeeded(true),
-    );
+    void space.db.appendToFeed(feed, createMessages({ count: TOTAL })).then(() => setSeeded(true));
   }, [space, feed]);
 
   const [feedWindow, setFeedWindow] = useState(initialWindow);
@@ -194,30 +192,27 @@ export const Growth: Story = {
     await settle(viewport);
 
     // The change this PR is for: opening a long chat reads a window, not the history behind it.
-    expect(probe.loaded).toBe(INITIAL_WINDOW);
-    expect(probe.loaded).toBeLessThan(TOTAL);
+    await expect(probe.loaded).toBe(INITIAL_WINDOW);
+    await expect(probe.loaded).toBeLessThan(TOTAL);
 
     // The row the reader lands on at the top of the pre-grow window, and so the row the older page
     // arrives above. Read from the model rather than the DOM: the grow is dispatched by the same
     // range update that puts it under the edge, so there is no moment to sample it afterwards.
-    expect(probe.oldestId).toBeDefined();
+    await expect(probe.oldestId).toBeDefined();
 
     controller?.scrollToIndex(0);
     await settle(viewport);
-    expect({ startIndex: probe.startIndex, size: probe.size }).toEqual({
+    await expect({ startIndex: probe.startIndex, size: probe.size }).toEqual({
       startIndex: 0,
       size: INITIAL_WINDOW + WINDOW_STEP,
     });
 
-    // Nothing the reader was looking at moved when the older page landed above it: the anchor row
-    // is still the one under the top edge, and its index has shifted by exactly the page that
-    // arrived above it.
     // NOTE: The reader's position is NOT held across the grow, and this story deliberately does not
     // assert that it is. Changing `.limit()` re-issues the query, which publishes an empty result
     // before the new page — the length sequence the model folds in is `0,200,0,400`, not `200,400`.
     // `ListModel.replace` infers a prepend by finding the previous first item in the new array, so
     // the intervening `replace([])` erases the anchor and 400 messages arrive as a fresh list: after
-    // the grow `startIndex` is 0 rather than ${WINDOW_STEP}, and the reader is thrown back to the
+    // the grow `startIndex` is 0 rather than one page in, and the reader is thrown back to the
     // oldest message. `FeedModel`'s `loadBefore` protocol is the seam that would tell the engine a
     // prepend is a prepend. Assert it once growth goes through that instead.
 
@@ -225,7 +220,7 @@ export const Growth: Story = {
     // whole feed is loaded, which is the failure the window exists to avoid.
     await settle(viewport);
     await settle(viewport);
-    expect(probe.size).toBe(INITIAL_WINDOW + WINDOW_STEP);
+    await expect(probe.size).toBe(INITIAL_WINDOW + WINDOW_STEP);
   },
 };
 
