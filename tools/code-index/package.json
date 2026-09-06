@@ -23,7 +23,6 @@
     "test": "vitest run --passWithNoTests --project=node"
   },
   "dependencies": {
-    "@automerge/automerge": "catalog:",
     "@dxos/ai": "workspace:*",
     "@dxos/echo": "workspace:*",
     "@dxos/effect": "workspace:*",

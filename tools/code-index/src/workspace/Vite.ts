@@ -147,8 +147,10 @@ export const middleware = ({
               /**
                * The two wasm packages must not be pre-bundled: esbuild rewrites their wasm-bindgen
                * glue and its memory is never initialized, which surfaces as a missing
-               * `__wbindgen_externrefs`. Served as source they evaluate inert (`slim`) and
-               * `vite-plugin-wasm` turns the `.wasm` import into a URL for the explicit init.
+               * `__wbindgen_externrefs`. Served as source they initialize themselves, with
+               * `vite-plugin-wasm` turning the `.wasm` import into a URL. Both reach the graph
+               * through `@dxos/echo` rather than being declared here — naming a transitive package
+               * is how the pre-bundler is told to leave it alone.
                *
                * `automerge-repo` is deliberately NOT excluded: it does no wasm work itself, and
                * pre-bundling it is what converts the CommonJS packages it depends on. Its own
