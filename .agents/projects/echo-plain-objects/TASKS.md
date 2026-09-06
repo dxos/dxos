@@ -261,17 +261,21 @@ verdicts.
 
 ### Tasks
 
-- [ ] **Adversarial pass on A1–A5.**
-- [ ] **Prove the defect first** — a counting probe over `lookupRef`/`defineProperty` under a remote
-      one-key change, and a ref-identity assertion, both failing before the fix.
-- [ ] **(A) Preserve ref identity** across `_refreshRecord` and `_writeThrough` when the stored URI is
-      unchanged.
-- [ ] **(B) Thread the changed paths** from `event.patches` through `getInlineAndLinkChanges` /
-      `_emitObjectUpdateEvent` / `notifyUpdate` into `_refreshAll`, and refresh only the targets they
-      touch.
-- [ ] **Green: `echo`, `echo-client`, `echo-client-e2e`, unmodified.**
-- [ ] **Measure** — a sync-shaped bench (remote one-key change against a wide, ref-heavy object) plus the
-      existing two, to show the read/write rows are unmoved.
+- [x] **Adversarial pass on A1–A5** — A1 survives conditionally, A2 survives, A3/A4/A5 falsified. (B) is
+      not merely wasteful but wrong: a remote `list.splice(0, 1)` emits one patch naming `list[0]`, while
+      the targets for `list[1]` and `list[2]` both need refreshing, so path narrowing silently corrupts
+      them. Verdicts and evidence in DESIGN.md D13.
+- [x] **Prove the defect first** — `echo-client-e2e/src/sync-refresh.test.ts`, three tests over two
+      clients on one peer so the change arrives the way a synced one does. "A ref the change did not
+      touch keeps its identity" is red at HEAD (`Object.is` on two `Ref(echo:///01M1VN73…)`); the other
+      two pass, which is what makes the first one a defect rather than a design gap.
+- [x] **Memoize the raw record** in `_refreshRecord`, keyed on the `docHandle` it came from — an
+      unchanged record is one pointer compare, and an unchanged key keeps its materialized value. This
+      replaces both (A) and (B): ref identity falls out of it, and no patch plumbing is needed.
+- [x] **Green: `echo` 581, `echo-client` 549, `echo-client-e2e` 327** (including the three new), all
+      unmodified.
+- [ ] **Measure** — the property-access matrix, to show reads and writes are unmoved.
+- [ ] **Record the run in `BENCHMARKS.md`** under this commit.
 
 ## Phase 5: Compare and review
 

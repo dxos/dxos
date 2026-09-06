@@ -285,6 +285,54 @@ id, and discards the rest of the path, so `_emitObjectUpdateEvent` can only ask 
 (A) preserve ref identity across a refresh when the stored URI is unchanged, and (B) thread the changed
 paths from `event.patches` through to `_refreshAll` and refresh only the targets they touch.
 
+### D13 — Stage F: memoize the raw record, do not thread the patches (adversarial pass 2026-09-06)
+
+**Decided.** The plan D12 set out was (A) preserve ref identity across a refresh and (B) thread
+`event.patches` into `_refreshAll` so only the targets a change touches are refreshed. Premises A1–A5
+went to an adversarial agent. (A) survives and (B) is dead; both are replaced by a memo on the raw
+record, which is strictly better and much smaller.
+
+- **A1, reusing a `RefImpl` for an unchanged URI — survives, conditionally.** `RefImpl` memoizes
+  nothing: `get target` and `load()` call the resolver on every access, so a held instance and a fresh
+  one are observationally identical across mutation and deletion of the pointed-to object. The one
+  branch that pins a target (`lookupRef`'s `linkCache` path) is unreachable from a refresh, because
+  `_canMaterialize` and `lookupRef` branch on the same `getEchoDatabase(core)`. Nothing relies on the
+  identity changing: `RefImpl` hashes by URI and `ref.atom` is an `Atom.family`, so two instances of one
+  URI yield the identical atom — today's churn buys a wasted `useMemo` recompute, not a re-render.
+  **Condition: the reuse must stay behind `_canMaterialize`.** If that gate is ever relaxed (Stage E's
+  falsified P1), a `linkCache`-pinned target becomes reusable and does go stale.
+- **A3/A4, patch paths are sufficient — falsified, and the failure is data corruption.** A remote
+  `list.splice(0, 1)` emits exactly one patch, `del [objects, id, data, list, 0]`. The targets already
+  handed out for `list[1]` and `list[2]` must both be refreshed — their values shifted — and neither
+  path prefixes nor extends the patch path. Under path-intersection narrowing they are skipped and keep
+  the old values permanently. Every index-shifting operation has this shape (`splice`, `shift`,
+  `unshift`, `sort`, `reverse`, `length =`). Widening any patch under an array to the whole array
+  subtree re-derives the memo below, with more code. Two lesser falsifiers: a string write emits a
+  `splice` path carrying a character index _below_ the key, and creation/removal emit
+  `path.length === 2`, where there is no namespace segment to match on at all.
+- **A5, `_emitObjectUpdateEvent` is the only caller needing narrowing — falsified.**
+  `bindCoreToBranch`'s own listener is a second remote-originated caller, equally unscoped, live
+  whenever a `db.branch()` binding is open. And the local side is worse than assumed: only `set` and
+  `deleteProperty` open a `changeTargetKey` scope, so every array mutator, `textUpdate`/`textSplice`,
+  `_setRaw` and every external `getDocAccessor().handle.change` caller runs a full unscoped refresh —
+  including the CodeMirror↔automerge binding, once per keystroke.
+
+**What replaces both.** Automerge shares untouched subtrees structurally, and this holds for a change
+delivered over the replication network, not merely a local one. So `_refreshRecord` memoizes the raw
+record it last filled from: an unchanged record is the identical object and the refresh is one pointer
+compare; within a changed record, a key whose raw value is identical keeps the value already
+materialized for it. That is where (A) comes from for free — the encoded-reference map keeps identity,
+so the `Ref` built from it is reused rather than re-minted. Measured on a 41 + 41 + 40-key object, one
+remote key change: **`_materializeValue` 246 → 3**. It needs no plumbing, it is correct on the array
+case that falsifies (B), it covers every caller in the A5 list at once rather than the remote one only,
+and it makes the long-standing double refresh (`ObjectCore.change` refreshes eagerly and the routed-back
+change event refreshes again) collapse into a second pointer compare.
+
+**The one trap.** Raw-record identity is meaningful only within one document. `switchBranch` and
+`_rebindMemberToBranch` re-point a live core at a different document, so the memo is keyed on the
+`docHandle` it was taken from; without that guard three branching tests fail with the core serving the
+previous branch's values.
+
 ### D8 — Stage A is a pure fast path, not a redesign
 
 In `TypedReactiveHandler.get`: (1) track per target whether any own **string-keyed accessor** exists

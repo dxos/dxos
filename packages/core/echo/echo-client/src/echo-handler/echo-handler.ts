@@ -97,6 +97,16 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
 
   _proxyMap = new WeakMap<object, any>();
 
+  /**
+   * The document record each target was last filled from, with the document it came from. Automerge
+   * shares untouched subtrees structurally, so a record the change did not reach is the identical object
+   * and needs no work at all, and within a changed record an untouched key holds the identical value —
+   * which is what lets a materialized `Ref`, array or nested proxy keep its identity across a refresh
+   * instead of being minted again. Held weakly, and only ever compared by identity: a stale entry costs
+   * a refresh that was already the unconditional behaviour.
+   */
+  _rawRecords = new WeakMap<object, { docHandle: object | undefined; raw: object | undefined }>();
+
   init(target: ProxyTarget): void {
     invariant(target[symbolInternals]);
     invariant(!isProxy(target));
@@ -292,9 +302,23 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
    * `Object.prototype` — are left to it, as the decode path did.
    */
   private _refreshRecord(target: ProxyTarget): void {
-    if (!this._canMaterialize(target[symbolInternals])) {
+    const core = target[symbolInternals];
+    if (!this._canMaterialize(core)) {
       return;
     }
+    const stored: unknown = core.getRaw([target[symbolNamespace], ...target[symbolPath]]);
+    const raw = typeof stored === 'object' && stored !== null ? stored : undefined;
+    const previousRaw = this._previousRaw(target, core);
+    if (previousRaw !== undefined && previousRaw === raw) {
+      this._forwardReads(target);
+      return;
+    }
+    this._rawRecords.set(target, { docHandle: core.docHandle, raw });
+    // Both sides of the per-key comparison below, or nothing: with no record to compare against, every
+    // key is materialized afresh as it was before.
+    const comparable =
+      previousRaw !== undefined && raw !== undefined ? { previous: previousRaw, current: raw } : undefined;
+
     const record = this._storedRecord(target);
     const present = typeof record === 'object' && record !== null && !Array.isArray(record);
     // Materialized in full before anything is applied, so a value that throws leaves the target as it
@@ -302,9 +326,13 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     const materialized: [string, unknown][] = [];
     if (present) {
       const prototype = Object.getPrototypeOf(target);
-      for (const [key, stored] of Object.entries(record)) {
+      for (const [key, value] of Object.entries(record)) {
         if (!Reflect.has(prototype, key)) {
-          materialized.push([key, this._materializeValue(target, key, stored)]);
+          const unchanged =
+            comparable !== undefined &&
+            Object.hasOwn(target, key) &&
+            Reflect.get(comparable.previous, key) === Reflect.get(comparable.current, key);
+          materialized.push([key, unchanged ? Reflect.get(target, key) : this._materializeValue(target, key, value)]);
         }
       }
     }
@@ -318,7 +346,22 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
         delete (target as any)[key];
       }
     }
-    // A proxy created before the core had a database kept its `get` trap; it can go now.
+    this._forwardReads(target);
+  }
+
+  /**
+   * The record this target was last filled from, or undefined when there is none to compare against.
+   * Discarded when the core has since been bound to a different document — `switchBranch` and
+   * `_rebindMemberToBranch` re-point a live core, and values from the old document's tree are not
+   * comparable with the new one's.
+   */
+  private _previousRaw(target: ProxyTarget, core: ObjectCore): object | undefined {
+    const cached = this._rawRecords.get(target);
+    return cached !== undefined && cached.docHandle === core.docHandle ? cached.raw : undefined;
+  }
+
+  /** A proxy created before the core had a database kept its `get` trap; it can go once the target is filled. */
+  private _forwardReads(target: ProxyTarget): void {
     const proxy = this._proxyMap.get(target);
     if (proxy) {
       getProxySlot(proxy).forwardReads();
