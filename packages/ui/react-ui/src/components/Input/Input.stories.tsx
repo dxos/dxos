@@ -3,9 +3,10 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React from 'react';
+import React, { type PropsWithChildren } from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
+import { mx } from '@dxos/ui-theme';
 import { type MessageValence } from '@dxos/ui-types';
 
 import { withLayoutVariants, withTheme } from '../../testing';
@@ -45,8 +46,47 @@ type StoryArgs = Partial<{
   validationMessage: string;
 }>;
 
+type RowProps = PropsWithChildren<
+  Pick<
+    StoryArgs,
+    'label' | 'labelVisuallyHidden' | 'description' | 'descriptionVisuallyHidden' | 'validationMessage'
+  > & {
+    /** Lead with the control: a checkbox or switch reads control-then-label. */
+    inline?: boolean;
+  }
+>;
+
+/** Label, control and the meta text on one line, so the valence border and message are seen together. */
+const Row = ({
+  inline,
+  label,
+  labelVisuallyHidden,
+  description,
+  descriptionVisuallyHidden,
+  validationMessage,
+  children,
+}: RowProps) => (
+  <div className='flex items-center gap-2'>
+    {inline && children}
+    <Input.Label srOnly={labelVisuallyHidden} classNames='shrink-0'>
+      {label}
+    </Input.Label>
+    {!inline && children}
+    <Input.DescriptionAndValidation
+      srOnly={descriptionVisuallyHidden}
+      classNames={mx('flex grow shrink-0 whitespace-nowrap', validationMessage && 'justify-end')}
+    >
+      {validationMessage ? (
+        <Input.Validation classNames='block'>{validationMessage}</Input.Validation>
+      ) : (
+        <Input.Description>{description}</Input.Description>
+      )}
+    </Input.DescriptionAndValidation>
+  </div>
+);
+
 const DefaultStory = ({
-  kind,
+  kind = 'text',
   label,
   description,
   labelVisuallyHidden,
@@ -55,31 +95,40 @@ const DefaultStory = ({
   validationMessage,
   ...props
 }: StoryArgs) => {
+  const control = (() => {
+    switch (kind) {
+      case 'text':
+        return <Input.TextInput {...props} />;
+      case 'pin':
+        return <Input.PinInput {...props} />;
+      case 'textarea':
+        return <Input.TextArea {...props} />;
+      case 'time':
+        return <Input.Time {...props} />;
+      case 'date':
+        return <Input.Date {...props} />;
+      case 'datetime':
+        return <Input.DateTime {...props} />;
+      case 'checkbox':
+        return <Input.Checkbox {...props} />;
+      case 'switch':
+        return <Input.Switch {...props} />;
+    }
+  })();
+
   return (
-    <Input.Root {...{ validationValence }}>
-      <Input.Label srOnly={labelVisuallyHidden}>{label}</Input.Label>
-
-      {kind === 'text' && <Input.TextInput {...props} />}
-      {kind === 'pin' && <Input.PinInput {...props} />}
-      {kind === 'textarea' && <Input.TextArea {...props} />}
-      {kind === 'time' && <Input.Time {...props} />}
-      {kind === 'date' && <Input.Date {...props} />}
-      {kind === 'datetime' && <Input.DateTime {...props} />}
-      {kind === 'checkbox' && (
-        <Input.Block>
-          <Input.Checkbox {...props} />
-        </Input.Block>
-      )}
-      {kind === 'switch' && (
-        <Input.Block>
-          <Input.Switch {...props} />
-        </Input.Block>
-      )}
-
-      <Input.DescriptionAndValidation srOnly={descriptionVisuallyHidden} classNames='grid grid-cols-2'>
-        <Input.Description>{description}</Input.Description>
-        {validationMessage && <Input.Validation classNames='block'>{validationMessage}</Input.Validation>}
-      </Input.DescriptionAndValidation>
+    <Input.Root validationValence={validationValence}>
+      <Row
+        validationValence={validationValence}
+        inline={kind === 'checkbox' || kind === 'switch'}
+        label={label}
+        labelVisuallyHidden={labelVisuallyHidden}
+        description={description}
+        descriptionVisuallyHidden={descriptionVisuallyHidden}
+        validationMessage={validationMessage}
+      >
+        {control}
+      </Row>
     </Input.Root>
   );
 };
@@ -88,7 +137,7 @@ const meta = {
   title: 'ui/react-ui-core/components/Input',
   component: Input.Root as any,
   render: DefaultStory,
-  decorators: [withTheme(), withLayoutVariants()],
+  decorators: [withTheme(), withLayoutVariants({ classNames: 'w-[40rem]' })],
 } satisfies Meta<typeof DefaultStory>;
 
 export default meta;
@@ -214,7 +263,7 @@ export const _TextInput: Story = {
  */
 export const TextInputAdornments: Story = {
   render: () => (
-    <div className='flex flex-col gap-4 min-w-[28rem]'>
+    <div className='flex flex-col'>
       <Input.Root>
         <Input.Label>Start icon</Input.Label>
         <Input.TextInput start={<Icon icon='ph--magnifying-glass--regular' size={4} />} placeholder='Search…' />
