@@ -456,11 +456,16 @@ Tracked 2026-09-01. Now that `TogglePanel` is an Ark Collapsible and the Accordi
 keymap, the same disclosure should back nested objects in `react-ui-form` — an object field is a
 disclosure by nature, and the form currently expresses it without one.
 
-- [ ] **Use a collapsible disclosure for form objects.** Establish first whether a nested object
-      wants `Collapsible` (one independent region) or `Accordion` (a set where the machine tracks
-      which are open), since the form renders many siblings and that is what decides the choice.
-- [ ] Check it against the `Form.Viewport`/`Form.Section` composition rather than wrapping fields in
-      a new container — the viewport owns the gutter, and an extra wrapper there loses it.
+- [x] **Use a collapsible disclosure for form objects.** DONE 2026-09-05: `Collapsible`, not
+      `Accordion` — each nested object folds on its own and the form owns no set across siblings, so
+      there is nothing for an accordion to coordinate. `FormFieldSetContainer`'s bordered box _is_ the
+      `Collapsible.Root`, the `FormFieldHeader` row renders as its trigger (`trigger` prop on
+      `FormFieldLabel`: a real button, so the fold is keyboard-reachable where the old div `onClick`
+      was not) with a caret `Icon` reading `data-state` off it, and the body is `Collapsible.Content`
+      with the `fieldSetBody` classes. The hand-rolled `collapsed` state, the `ToggleIconButton` and the
+      `expand-fields`/`collapse-fields` keys go. Pinned by `FormFieldSet.test.tsx`.
+- [x] Check it against the `Form.Viewport`/`Form.Section` composition — no element added: the
+      disclosure reuses the box, header and body the group already rendered.
 
 ## Phase 12: Optional guide line inside branch content
 
