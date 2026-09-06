@@ -920,6 +920,14 @@ dist/types/src: ENOTEMPTY` — a concurrent writer. A Cursor TypeScript native-p
       heading is in view and marks the matching link, which is what a document outline does by
       hand today. The installed 5.39.1 ships it (`@ark-ui/react/toc`). Decide the consumer —
       `react-ui-feed`'s `Outline`, the markdown article's heading rail — before writing the component.
+- [x] **Transcription `Pipeline/Live` story lost its mic** DONE 2026-09-06 (reported). Not the
+      toolbar: the story's own graph extension registered at startup, its connector called
+      `getDefaultSpace` on a client with no runtime yet and threw before subscribing to anything
+      reactive, so it never re-ran and the document node never existed for the transcription
+      extension to match. The module now activates on `ClientEvents.SpacesReady`; the story's play
+      asserts the record control is in the editor toolbar. `plugin-review`'s comments story guards
+      the same connector with an `initialized` check that returns nothing and expects a re-run a
+      non-reactive read cannot cause — likely the same latent race, left for its owner.
 - [ ] **Rename `Input` → `Field`** (own PR, a codemod over ~900 sites: `Root` 443, `Label` 215,
       `TextInput` 119, `Switch` 40, `Checkbox` 25, `DescriptionAndValidation` 22, `Validation` 13,
       `TextArea` 12, `Description` 11, `PinInput` 4). Proposed names follow Ark where the part is
