@@ -18,151 +18,69 @@ import {
   canAct,
   hasAdmittingDevice,
   holdsSpace,
-  isMember,
   liveDocument,
   resolvablePendingSpaces,
   token,
 } from './model';
 import { type Real, BudgetExhausted, awaitSpaceOnAllDevices, runCheckpoint } from './system';
 
-/**
- * The operation vocabulary, as Effect schemas: one declaration defines what may be generated, what
- * a trace line contains, and what a trace line decodes back into.
- *
- * Index ranges are literal unions rather than range-checked integers — the vocabulary is genuinely
- * finite, so generation needs no rejection, and repeated draws collide on the same slot, which is
- * where concurrent-merge defects live.
- */
-export const makeCommandSchema = ({
-  clients,
-  spaces,
-  documents,
-}: {
-  clients: number;
-  spaces: number;
-  documents: number;
-}) => {
-  const slots = (count: number) => Schema.Literals(Array.from({ length: Math.max(count, 1) }, (_, index) => index));
-  const client = slots(clients);
-  const space = slots(spaces);
-  const document = slots(documents);
-  // Boundary-heavy on purpose: concurrent inserts at the same offset are what exercise text merge.
-  const position = Schema.Literals([0, 0.25, 0.5, 0.75, 0.999]);
+//
+// Vocabulary. One declaration per operation: what may be generated, what a trace line holds, and
+// what a trace line decodes back into.
+//
 
-  return Schema.TaggedUnion({
-    GoOffline: { client },
-    GoOnline: { client },
-    Restart: { client },
-    CreateSpace: { client },
-    JoinSpace: { client, space },
-    CreateDocument: { client, space },
-    EditText: { client, space, document, position },
-    EditCounter: { client, space, document },
-    DeleteDocument: { client, space, document },
-    Checkpoint: {},
-  });
-};
+// Each slot is its own schema instance so the generator can tell them apart by identity; the
+// fleet shape that bounds them is a run-time parameter of generation, not of the type.
+const ClientSlot = Schema.Int.annotate({ identifier: 'ClientSlot' });
+const SpaceSlot = Schema.Int.annotate({ identifier: 'SpaceSlot' });
+const DocumentSlot = Schema.Int.annotate({ identifier: 'DocumentSlot' });
+// Boundary-heavy on purpose: concurrent inserts at the same offset are what exercise text merge.
+const Position = Schema.Literals([0, 0.25, 0.5, 0.75, 0.999]);
 
-export type Command = ReturnType<typeof makeCommandSchema>['Type'];
+export const GoOffline = Schema.TaggedStruct('GoOffline', { client: ClientSlot });
+export const GoOnline = Schema.TaggedStruct('GoOnline', { client: ClientSlot });
+export const Restart = Schema.TaggedStruct('Restart', { client: ClientSlot });
+export const CreateSpace = Schema.TaggedStruct('CreateSpace', { client: ClientSlot });
+export const JoinSpace = Schema.TaggedStruct('JoinSpace', { client: ClientSlot, space: SpaceSlot });
+export const CreateDocument = Schema.TaggedStruct('CreateDocument', { client: ClientSlot, space: SpaceSlot });
+export const EditText = Schema.TaggedStruct('EditText', {
+  client: ClientSlot,
+  space: SpaceSlot,
+  document: DocumentSlot,
+  position: Position,
+});
+export const EditCounter = Schema.TaggedStruct('EditCounter', {
+  client: ClientSlot,
+  space: SpaceSlot,
+  document: DocumentSlot,
+});
+export const DeleteDocument = Schema.TaggedStruct('DeleteDocument', {
+  client: ClientSlot,
+  space: SpaceSlot,
+  document: DocumentSlot,
+});
+export const Checkpoint = Schema.TaggedStruct('Checkpoint', {});
 
-/**
- * Relative draw frequency per operation.
- *
- * A uniform draw spends the whole budget before it tests anything: `Restart` and `Checkpoint` are
- * enabled from the first command, while every data operation has to wait for a space and a
- * document to exist, so a uniform 25-command plan reaches roughly one edit. Weighting also buys
- * wall-clock — a `Restart` tears down and re-initialises a client and a `Checkpoint` quiesces the
- * whole fleet, where an edit is milliseconds.
- */
-const COMMAND_WEIGHTS: Record<Command['_tag'], number> = {
-  EditText: 8,
-  EditCounter: 5,
-  CreateDocument: 4,
-  CreateSpace: 3,
-  JoinSpace: 3,
-  GoOffline: 3,
-  GoOnline: 3,
-  Restart: 2,
-  Checkpoint: 2,
-  // Rare: a deleted slot still counts against `maxDocumentsPerSpace`, so frequent deletes starve
-  // the run of anything to edit.
-  DeleteDocument: 1,
-};
+export const Command = Schema.Union([
+  GoOffline,
+  GoOnline,
+  Restart,
+  CreateSpace,
+  JoinSpace,
+  CreateDocument,
+  EditText,
+  EditCounter,
+  DeleteDocument,
+  Checkpoint,
+]);
+export type Command = typeof Command.Type;
 
-/**
- * Cuts or restores a peer's link. Excluded by a `partitions: false` run, which isolates the
- * convergence property from the partition-tolerance one — useful when a defect in the second
- * blocks every run before it can test the first.
- */
-const PARTITION_COMMANDS = new Set(['GoOffline', 'GoOnline', 'Restart']);
+type Tag = Command['_tag'];
+type CommandOf<T extends Tag> = Extract<Command, { _tag: T }>;
 
-/** Mutates replicated state — what a plan has to reach for convergence to be tested at all. */
-export const mutatesData = (command: Command): boolean =>
-  command._tag === 'CreateDocument' ||
-  command._tag === 'EditText' ||
-  command._tag === 'EditCounter' ||
-  command._tag === 'DeleteDocument';
-
-/**
- * The weighted generator over the whole vocabulary. Per-tag arbitraries come from the same schema
- * declaration, so a weight can never name an operation that does not exist.
- */
-export const makeCommandArbitrary = ({
-  checkpoints,
-  partitions,
-  ...slots
-}: Parameters<typeof makeCommandSchema>[0] & {
-  checkpoints: boolean;
-  partitions: boolean;
-}): FastCheck.Arbitrary<Command> => {
-  const weights = new Map(Object.entries(COMMAND_WEIGHTS));
-  const cases = Object.entries(makeCommandSchema(slots).cases)
-    .filter(([tag]) => (tag !== 'Checkpoint' || checkpoints) && (partitions || !PARTITION_COMMANDS.has(tag)))
-    .map(([tag, member]) => {
-      const weight = weights.get(tag);
-      invariant(weight !== undefined, `no draw weight for ${tag}`);
-      return { arbitrary: Schema.toArbitrary(member)(FastCheck), weight };
-    });
-  return FastCheck.oneof(...cases);
-};
-
-/** The precondition. Reads the model only, which is what fast-check requires of `check`. */
-export const canRun = (command: Command, model: Model): boolean => {
-  switch (command._tag) {
-    case 'GoOffline':
-      return model.clients[command.client].state === 'online';
-    case 'GoOnline':
-      return model.clients[command.client].state === 'offline';
-    case 'Restart':
-      return model.clients[command.client].state !== 'down';
-    case 'CreateSpace':
-      return model.clients[command.client].state === 'online' && model.spaces.length < model.limits.maxSpaces;
-    case 'JoinSpace':
-      return (
-        model.clients[command.client].state === 'online' &&
-        command.space < model.spaces.length &&
-        model.spaces[command.space].pending.has(identityOf(model, command.client)) &&
-        hasAdmittingDevice(model, command.space)
-      );
-    case 'CreateDocument':
-      return (
-        canAct(model, command.client) &&
-        command.space < model.spaces.length &&
-        holdsSpace(model, command.client, command.space) &&
-        model.spaces[command.space].documents.length < model.limits.maxDocumentsPerSpace
-      );
-    case 'EditText':
-    case 'EditCounter':
-    case 'DeleteDocument':
-      return (
-        canAct(model, command.client) &&
-        holdsSpace(model, command.client, command.space) &&
-        liveDocument(model, command.space, command.document) !== undefined
-      );
-    case 'Checkpoint':
-      return model.clients.some((client) => client.state === 'online');
-  }
-};
+//
+// Semantics. Each entry is the whole of one operation; the dispatchers below never switch on a tag.
+//
 
 /**
  * What the model transition decided, handed to the system half so it cannot pick differently.
@@ -177,75 +95,109 @@ export type Transition = {
   token?: string;
 };
 
-/**
- * The model half of a command, in full and with no I/O.
- *
- * Separating it is what makes a sequence simulable: `plan.ts` runs this against a throwaway model
- * to learn which commands will survive their preconditions, so the recorded plan is what executes
- * rather than what was drawn.
- */
-export const advance = (command: Command, model: Model): Transition => {
-  const joins: Transition['joins'] = [];
-  const learned: Transition['learned'] = [];
+/** The model-side moves every command composes from; each records what it did on the transition. */
+type ModelOps = {
+  /** An identity joins a space through one of its devices. */
+  join: (client: ClientIndex, space: number) => void;
   /** A space reaches every *online* device of a member identity; an offline one has to wait. */
-  const learn = (space: number, identity: IdentityIndex): void => {
-    for (const device of model.identities[identity].devices) {
-      if (model.clients[device].state === 'online' && !model.spaces[space].knownBy.has(device)) {
-        model.spaces[space].knownBy.add(device);
-        learned.push({ client: device, space });
-      }
-    }
-  };
-  // The precondition already guarantees the document is live; asserting says so rather than
-  // asking the type-checker to take it on faith.
-  const documentAt = (spaceSlot: number, documentSlot: number): ModelDocument => {
-    const document = liveDocument(model, spaceSlot, documentSlot);
-    invariant(document, `no live document ${spaceSlot}/${documentSlot}`);
-    return document;
-  };
-  const join = (client: ClientIndex, space: number): void => {
-    const identity = identityOf(model, client);
-    model.spaces[space].pending.delete(identity);
-    model.spaces[space].members.add(identity);
-    model.spaces[space].knownBy.add(client);
-    joins.push({ client, space });
-    learn(space, identity);
-  };
+  learn: (space: number, identity: IdentityIndex) => void;
+  /** The precondition already guarantees the document is live; asserting says so rather than
+   * asking the type-checker to take it on faith. */
+  documentAt: (space: number, document: number) => ModelDocument;
+};
 
-  switch (command._tag) {
-    case 'GoOffline': {
-      model.clients[command.client].state = 'offline';
-      break;
-    }
+type CommandKind =
+  /** Cuts or restores a peer's link; excluded by `partitions: false`. */
+  | 'partition'
+  /** Changes who is in a space. */
+  | 'membership'
+  /** Mutates replicated state — what a plan has to reach for convergence to be tested at all. */
+  | 'data'
+  /** Compares peers mid-run; excluded by `checkpoints: false`. */
+  | 'assertion';
 
-    case 'GoOnline':
-    case 'Restart': {
-      model.clients[command.client].state = 'online';
-      for (const slot of resolvablePendingSpaces(model, command.client)) {
-        join(command.client, slot);
-      }
-      // Back online, it catches up on every space its identity joined while it was away.
-      const identity = identityOf(model, command.client);
-      model.spaces.forEach((space, slot) => {
-        if (space.members.has(identity)) {
-          learn(slot, identity);
-        }
-      });
-      break;
-    }
+type CommandSpec<C extends Command> = {
+  kind: CommandKind;
+  /**
+   * Relative draw frequency. A uniform draw spends the whole budget before it tests anything:
+   * `Restart` and `Checkpoint` are enabled from the first command while every data operation waits
+   * for a space and a document, so a uniform 25-command plan reaches roughly one edit.
+   */
+  weight: number;
+  /** The precondition. Reads the model only. */
+  check: (model: Model, command: C) => boolean;
+  /** The model half, with no I/O; returns what it decided beyond the joins and learns it recorded. */
+  advance: (model: Model, command: C, ops: ModelOps) => Decision;
+  /** The system half, driven by the transition so it cannot pick differently from the model. */
+  run: (real: Real, command: C, transition: Transition, model: Model) => Promise<void>;
+};
 
-    case 'CreateSpace': {
-      const creator = identityOf(model, command.client);
+/** What a command decides beyond the joins and learns it records through `ModelOps`. */
+type Decision = Partial<Omit<Transition, 'joins' | 'learned'>>;
+
+const brainOf = (real: Real, client: ClientIndex) => real.replicants[client].brain;
+
+const decided = <T>(value: T | undefined, what: string): T => {
+  invariant(value !== undefined, `the model decided no ${what}`);
+  return value;
+};
+
+export const COMMANDS: { [T in Tag]: CommandSpec<CommandOf<T>> } = {
+  GoOffline: {
+    kind: 'partition',
+    weight: 3,
+    check: (model, { client }) => model.clients[client].state === 'online',
+    advance: (model, { client }) => {
+      model.clients[client].state = 'offline';
+      return {};
+    },
+    run: async (real, { client }) => {
+      await brainOf(real, client).goOffline();
+    },
+  },
+
+  GoOnline: {
+    kind: 'partition',
+    weight: 3,
+    check: (model, { client }) => model.clients[client].state === 'offline',
+    advance: (model, { client }, ops) => {
+      model.clients[client].state = 'online';
+      return catchUp(model, client, ops);
+    },
+    run: async (real, { client }) => {
+      await brainOf(real, client).goOnline();
+    },
+  },
+
+  Restart: {
+    kind: 'partition',
+    weight: 2,
+    check: (model, { client }) => model.clients[client].state !== 'down',
+    advance: (model, { client }, ops) => {
+      model.clients[client].state = 'online';
+      return catchUp(model, client, ops);
+    },
+    run: async (real, { client }) => {
+      await brainOf(real, client).restart();
+    },
+  },
+
+  CreateSpace: {
+    kind: 'membership',
+    weight: 3,
+    check: (model, { client }) =>
+      model.clients[client].state === 'online' && model.spaces.length < model.limits.maxSpaces,
+    advance: (model, { client }, { join, learn }) => {
+      const creator = identityOf(model, client);
       const spaceSlot = model.spaces.length;
       const space: ModelSpace = {
         members: new Set([creator]),
         pending: new Set(model.identities.map((_, index) => index).filter((index) => index !== creator)),
-        knownBy: new Set([command.client]),
+        knownBy: new Set([client]),
         documents: [],
       };
       model.spaces.push(space);
       learn(spaceSlot, creator);
-
       // Every other identity that can join right now does; the rest stay pending (D2).
       for (const identity of [...space.pending]) {
         const device = model.identities[identity].devices.find(
@@ -255,43 +207,192 @@ export const advance = (command: Command, model: Model): Transition => {
           join(device, spaceSlot);
         }
       }
-      return { joins, learned, spaceSlot };
-    }
+      return { spaceSlot };
+    },
+    run: async (real, { client }, transition) => {
+      const slot = decided(transition.spaceSlot, 'space slot');
+      const brain = brainOf(real, client);
+      const { spaceId } = await brain.createSpace({ label: `edge-stress-space-${slot}` });
+      const { invitationCode } = await brain.shareSpace({ spaceId });
+      real.spaceIds[slot] = spaceId;
+      real.invitationCodes[slot] = invitationCode;
+      real.spaceOwners[slot] = client;
+      // The real id goes into the trace the moment it exists: a run that dies before its own
+      // cleanup leaves an artifact a sweeper can act on (scripts/sweep-edge-stress.mjs).
+      real.trace({ seq: real.counters.commands, detail: 'spaceId', spaceId });
+    },
+  },
 
-    case 'JoinSpace': {
-      join(command.client, command.space);
-      break;
-    }
+  JoinSpace: {
+    kind: 'membership',
+    weight: 3,
+    check: (model, { client, space }) =>
+      model.clients[client].state === 'online' &&
+      space < model.spaces.length &&
+      model.spaces[space].pending.has(identityOf(model, client)) &&
+      hasAdmittingDevice(model, space),
+    advance: (_model, { client, space }, { join }) => {
+      join(client, space);
+      return {};
+    },
+    // The join itself is a consequence of the transition, performed by `execute` for every command.
+    run: async () => {},
+  },
 
-    case 'CreateDocument': {
-      const documents = model.spaces[command.space].documents;
+  CreateDocument: {
+    kind: 'data',
+    weight: 4,
+    check: (model, { client, space }) =>
+      canAct(model, client) &&
+      space < model.spaces.length &&
+      holdsSpace(model, client, space) &&
+      model.spaces[space].documents.length < model.limits.maxDocumentsPerSpace,
+    advance: (model, { space }) => {
+      const documents = model.spaces[space].documents;
       const documentSlot = documents.length;
       documents.push({ deleted: false, tokens: new Set(), counters: new Map() });
-      return { joins, learned, documentSlot };
-    }
+      return { documentSlot };
+    },
+    run: async (real, { client, space }, transition) => {
+      real.counters.documents++;
+      await brainOf(real, client).createDocument({
+        spaceId: real.spaceIds[space],
+        docId: documentId(space, decided(transition.documentSlot, 'document slot')),
+        counterSlots: real.replicants.length,
+      });
+    },
+  },
 
-    case 'EditText': {
-      const value = token(command.client, ++model.opSeq);
-      documentAt(command.space, command.document).tokens.add(value);
-      return { joins, learned, token: value };
-    }
+  EditText: {
+    kind: 'data',
+    weight: 8,
+    check: (model, { client, space, document }) =>
+      canAct(model, client) && holdsSpace(model, client, space) && liveDocument(model, space, document) !== undefined,
+    advance: (model, { client, space, document }, { documentAt }) => {
+      const value = token(client, ++model.opSeq);
+      documentAt(space, document).tokens.add(value);
+      return { token: value };
+    },
+    run: async (real, { client, space, document, position }, transition) => {
+      const value = decided(transition.token, 'token');
+      real.trace({ seq: real.counters.commands, detail: 'token', token: value });
+      await brainOf(real, client).editDocumentText({
+        spaceId: real.spaceIds[space],
+        docId: documentId(space, document),
+        token: value,
+        positionRatio: position,
+      });
+    },
+  },
 
-    case 'EditCounter': {
-      const document = documentAt(command.space, command.document);
-      document.counters.set(command.client, (document.counters.get(command.client) ?? 0) + 1);
-      break;
-    }
+  EditCounter: {
+    kind: 'data',
+    weight: 5,
+    check: (model, { client, space, document }) =>
+      canAct(model, client) && holdsSpace(model, client, space) && liveDocument(model, space, document) !== undefined,
+    advance: (_model, { client, space, document }, { documentAt }) => {
+      const counters = documentAt(space, document).counters;
+      counters.set(client, (counters.get(client) ?? 0) + 1);
+      return {};
+    },
+    run: async (real, { client, space, document }) => {
+      await brainOf(real, client).editDocumentCounter({
+        spaceId: real.spaceIds[space],
+        docId: documentId(space, document),
+        slot: client,
+      });
+    },
+  },
 
-    case 'DeleteDocument': {
-      documentAt(command.space, command.document).deleted = true;
-      break;
-    }
+  DeleteDocument: {
+    kind: 'data',
+    // Rare: a deleted slot still counts against `maxDocumentsPerSpace`, so frequent deletes starve
+    // the run of anything to edit.
+    weight: 1,
+    check: (model, { client, space, document }) =>
+      canAct(model, client) && holdsSpace(model, client, space) && liveDocument(model, space, document) !== undefined,
+    advance: (_model, { space, document }, { documentAt }) => {
+      documentAt(space, document).deleted = true;
+      return {};
+    },
+    run: async (real, { client, space, document }) => {
+      await brainOf(real, client).deleteDocument({
+        spaceId: real.spaceIds[space],
+        docId: documentId(space, document),
+      });
+    },
+  },
 
-    case 'Checkpoint':
-      break;
+  Checkpoint: {
+    kind: 'assertion',
+    weight: 2,
+    check: (model) => model.clients.some((client) => client.state === 'online'),
+    advance: () => ({}),
+    run: (real, _command, _transition, model) => runCheckpoint(model, real),
+  },
+};
+
+/** Back online, a device joins what it can and catches up on every space its identity already has. */
+const catchUp = (model: Model, client: ClientIndex, { join, learn }: ModelOps): Decision => {
+  for (const slot of resolvablePendingSpaces(model, client)) {
+    join(client, slot);
   }
+  const identity = identityOf(model, client);
+  model.spaces.forEach((space, slot) => {
+    if (space.members.has(identity)) {
+      learn(slot, identity);
+    }
+  });
+  return {};
+};
 
-  return { joins, learned };
+//
+// Dispatch. The table above is the only place a tag is interpreted.
+//
+
+const specOf = <T extends Tag>(tag: T): CommandSpec<CommandOf<T>> => COMMANDS[tag];
+
+/** Slots are plain integers now, so a plan replayed against a smaller fleet must not index past it. */
+const addressesFleet = (command: Command, model: Model): boolean =>
+  !('client' in command) || model.clients[command.client] !== undefined;
+
+/** The precondition. Reads the model only, which is what makes a sequence simulable. */
+export const canRun = <T extends Tag>(command: CommandOf<T>, model: Model): boolean =>
+  addressesFleet(command, model) && specOf(command._tag).check(model, command);
+
+/**
+ * The model half of a command, in full and with no I/O.
+ *
+ * Separating it is what makes a sequence simulable: `plan.ts` runs this against a throwaway model
+ * to learn which commands will survive their preconditions, so the recorded plan is what executes
+ * rather than what was drawn.
+ */
+export const advance = <T extends Tag>(command: CommandOf<T>, model: Model): Transition => {
+  const transition: Transition = { joins: [], learned: [] };
+  const ops: ModelOps = {
+    learn: (space, identity) => {
+      for (const device of model.identities[identity].devices) {
+        if (model.clients[device].state === 'online' && !model.spaces[space].knownBy.has(device)) {
+          model.spaces[space].knownBy.add(device);
+          transition.learned.push({ client: device, space });
+        }
+      }
+    },
+    join: (client, space) => {
+      const identity = identityOf(model, client);
+      model.spaces[space].pending.delete(identity);
+      model.spaces[space].members.add(identity);
+      model.spaces[space].knownBy.add(client);
+      transition.joins.push({ client, space });
+      ops.learn(space, identity);
+    },
+    documentAt: (space, document) => {
+      const found = liveDocument(model, space, document);
+      invariant(found, `no live document ${space}/${document}`);
+      return found;
+    },
+  };
+  return { ...transition, ...specOf(command._tag).advance(model, command, ops) };
 };
 
 /**
@@ -317,12 +418,6 @@ export const simulate = (commands: readonly Command[], model: Model, limit = Num
   return executable;
 };
 
-const performJoins = async (real: Real, joins: Transition['joins']): Promise<void> => {
-  for (const { client, space } of joins) {
-    await real.replicants[client].brain.joinSpace({ invitationCode: real.invitationCodes[space] });
-  }
-};
-
 /**
  * Block until the sibling devices the model just credited with a space actually hold it.
  *
@@ -345,7 +440,7 @@ const settleLearned = async (real: Real, learned: Transition['learned']): Promis
  * two cannot pick different slots or tokens; a throw ends the run, so the brief window where the
  * model leads the fleet is never observed.
  */
-export const execute = async (command: Command, model: Model, real: Real): Promise<void> => {
+export const execute = async <T extends Tag>(command: CommandOf<T>, model: Model, real: Real): Promise<void> => {
   // Thrown before any model or system mutation, so the two never diverge on a budget stop.
   if (Date.now() > real.deadline) {
     throw new BudgetExhausted();
@@ -354,99 +449,74 @@ export const execute = async (command: Command, model: Model, real: Real): Promi
   real.trace({ seq: real.counters.commands, ...command });
 
   const transition = advance(command, model);
-  const brain = real.replicants[command._tag === 'Checkpoint' ? 0 : command.client].brain;
-
-  switch (command._tag) {
-    case 'GoOffline': {
-      await brain.goOffline();
-      break;
-    }
-
-    case 'GoOnline': {
-      await brain.goOnline();
-      await performJoins(real, transition.joins);
-      break;
-    }
-
-    case 'Restart': {
-      await brain.restart();
-      await performJoins(real, transition.joins);
-      break;
-    }
-
-    case 'CreateSpace': {
-      const slot = transition.spaceSlot;
-      invariant(slot !== undefined, 'the model decided no space slot');
-      const { spaceId } = await brain.createSpace({ label: `edge-stress-space-${slot}` });
-      const { invitationCode } = await brain.shareSpace({ spaceId });
-      real.spaceIds[slot] = spaceId;
-      real.invitationCodes[slot] = invitationCode;
-      real.spaceOwners[slot] = command.client;
-      // The real id goes into the trace the moment it exists: a run that dies before its own
-      // cleanup leaves an artifact a sweeper can act on (scripts/sweep-edge-stress.mjs).
-      real.trace({ seq: real.counters.commands, detail: 'spaceId', spaceId });
-      await performJoins(real, transition.joins);
-      break;
-    }
-
-    case 'JoinSpace': {
-      await performJoins(real, transition.joins);
-      break;
-    }
-
-    case 'CreateDocument': {
-      const slot = transition.documentSlot;
-      invariant(slot !== undefined, 'the model decided no document slot');
-      real.counters.documents++;
-      await brain.createDocument({
-        spaceId: real.spaceIds[command.space],
-        docId: documentId(command.space, slot),
-        counterSlots: model.clients.length,
-      });
-      break;
-    }
-
-    case 'EditText': {
-      const { token: value } = transition;
-      invariant(value !== undefined, 'the model minted no token');
-      real.trace({ seq: real.counters.commands, detail: 'token', token: value });
-      await brain.editDocumentText({
-        spaceId: real.spaceIds[command.space],
-        docId: documentId(command.space, command.document),
-        token: value,
-        positionRatio: command.position,
-      });
-      break;
-    }
-
-    case 'EditCounter': {
-      await brain.editDocumentCounter({
-        spaceId: real.spaceIds[command.space],
-        docId: documentId(command.space, command.document),
-        slot: command.client,
-      });
-      break;
-    }
-
-    case 'DeleteDocument': {
-      await brain.deleteDocument({
-        spaceId: real.spaceIds[command.space],
-        docId: documentId(command.space, command.document),
-      });
-      break;
-    }
-
-    case 'Checkpoint': {
-      await runCheckpoint(model, real);
-      break;
-    }
+  await specOf(command._tag).run(real, command, transition, model);
+  // Joins and HALO propagation are consequences of the transition, not of any one command.
+  for (const { client, space } of transition.joins) {
+    await brainOf(real, client).joinSpace({ invitationCode: real.invitationCodes[space] });
   }
-
   await settleLearned(real, transition.learned);
+};
+
+/** The table is the authority on which tags exist, so it is also what narrows a decoded one. */
+const isTag = (value: unknown): value is Tag => typeof value === 'string' && value in COMMANDS;
+
+const tagOf = (member: (typeof Command.members)[number]): Tag => {
+  const { literal } = member.fields._tag.ast;
+  invariant(isTag(literal), `not a command tag: ${String(literal)}`);
+  return literal;
 };
 
 export const describe = (command: Command): string => {
   const { _tag, ...args } = command;
   const values = Object.values(args);
   return values.length > 0 ? `${_tag}(${values.join(', ')})` : `${_tag}()`;
+};
+
+export const mutatesData = (command: Command): boolean => specOf(command._tag).kind === 'data';
+
+//
+// Generation. Parameterized by fleet shape; everything else comes from the declarations above.
+//
+
+export type FleetShape = { clients: number; spaces: number; documents: number };
+
+/**
+ * The weighted generator over the whole vocabulary.
+ *
+ * Each member's arbitrary is built from its own declared fields, with the three slot schemas bound
+ * to the fleet shape and everything else derived from the schema; the result is decoded through
+ * `Command`, so a generated value that the declaration would not accept cannot exist.
+ */
+export const makeCommandArbitrary = ({
+  checkpoints,
+  partitions,
+  ...shape
+}: FleetShape & { checkpoints: boolean; partitions: boolean }): FastCheck.Arbitrary<Command> => {
+  // Uniform over the slots, as the literal unions were: `integer` biases toward small values,
+  // which would concentrate draws on slot 0 instead of colliding across all of them.
+  const slots = (count: number) =>
+    FastCheck.constantFrom(...Array.from({ length: Math.max(count, 1) }, (_, index) => index));
+  const bounded = new Map<unknown, FastCheck.Arbitrary<unknown>>([
+    [ClientSlot, slots(shape.clients)],
+    [SpaceSlot, slots(shape.spaces)],
+    [DocumentSlot, slots(shape.documents)],
+  ]);
+  const decode = Schema.decodeUnknownSync(Command);
+  const members = Command.members
+    .filter((member) => {
+      const { kind } = specOf(tagOf(member));
+      return (kind !== 'assertion' || checkpoints) && (kind !== 'partition' || partitions);
+    })
+    .map((member) => ({
+      weight: specOf(tagOf(member)).weight,
+      arbitrary: FastCheck.record(
+        Object.fromEntries(
+          Object.entries(member.fields).map(([name, field]) => [
+            name,
+            bounded.get(field) ?? Schema.toArbitrary(field)(FastCheck),
+          ]),
+        ),
+      ).map(decode),
+    }));
+  return FastCheck.oneof(...members);
 };

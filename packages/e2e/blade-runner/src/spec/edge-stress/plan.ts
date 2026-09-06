@@ -13,16 +13,7 @@ import { log } from '@dxos/log';
 import { type SchedulerEnvImpl } from '../../env';
 import { type ReplicantBrain, type ReplicantsSummary, type TestPlan, type TestProps } from '../../plan';
 import { ClientReplicant } from '../../replicants/client-replicant';
-import {
-  type Command,
-  canRun,
-  describe,
-  execute,
-  makeCommandArbitrary,
-  makeCommandSchema,
-  mutatesData,
-  simulate,
-} from './commands';
+import { Command, canRun, describe, execute, makeCommandArbitrary, mutatesData, simulate } from './commands';
 import { type Model, makeFleetModel } from './model';
 import {
   type EdgeStressResult,
@@ -169,14 +160,8 @@ export class EdgeStress implements TestPlan<EdgeStressSpec, EdgeStressResult> {
    */
   private _drawPlan(params: TestProps<EdgeStressSpec>, limits: Model['limits'], clientCount: number): Command[] {
     const spec = params.spec;
-    const commandSchema = makeCommandSchema({
-      clients: clientCount,
-      spaces: spec.maxSpaces,
-      documents: spec.maxDocumentsPerSpace,
-    });
-
     if (spec.planFile) {
-      const plan = readPlanFile(spec.planFile).map((entry) => Schema.decodeUnknownSync(commandSchema)(entry));
+      const plan = readPlanFile(spec.planFile).map((entry) => Schema.decodeUnknownSync(Command)(entry));
       // Simulated against the same starting model the run will use, so an edited plan reports a
       // command that cannot run rather than being quietly truncated at execution time.
       const executable = simulate(plan, makeFleetModel({ devicesPerIdentity: spec.devicesPerIdentity, limits }));

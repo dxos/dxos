@@ -143,11 +143,15 @@ EditCounter(0,1,1) EditText(0,0,1,0)
   which `client.destroy()` hangs 10s in `leaveSwarm`. Each replicant now runs a loopback TCP proxy
   in front of EDGE and cuts it — closer to "no network" anyway, and needs no SDK change. **The SDK
   defect stands and is unfixed**: an `EdgeClient` cannot be restarted once closed.
-- **Operations are Effect schemas.** The vocabulary is one `Schema.TaggedUnion`; per-tag
-  arbitraries come from `schema.cases`, so a draw weight can never name an operation that does not
-  exist. Bounded indices are `Schema.Literals` rather than range-checked integers: generation needs
-  no rejection, and repeated draws collide on the same slot, which is where concurrent-merge
-  defects live.
+- **Operations are static Effect schemas, and each is declared once.** Every command is a
+  module-level `Schema.TaggedStruct` (`GoOffline`, `CreateSpace`, `EditText`, …) joined by one
+  `Schema.Union`, and a single `COMMANDS` table gives each its kind, draw weight, precondition,
+  model transition and fleet action — `commands.ts` reads as a description of what the system can
+  do, and the dispatchers never switch on a tag. Slots are plain integers whose range is a parameter
+  of *generation* (uniform over the fleet shape, so draws still collide on the same slot) rather
+  than of the type; a generated value is decoded through the union, so nothing the declaration
+  would not accept can be drawn. Measured identical to the previous factory-built schema: 25/25
+  executable on every seed, 14.7 / 20.8 data operations with and without partitions.
 - **fast-check now comes from `effect/testing`.** `effect` is already a declared dependency, so the
   undeclared direct `fast-check` import is gone; the version in use moved from 3.23.2 (resolved
   only via root hoisting) to the 4.9.0 that Effect pins.
