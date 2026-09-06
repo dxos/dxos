@@ -94,8 +94,8 @@ describe('refresh on a change from elsewhere', { timeout: 120_000 }, () => {
     expect(refBefore.uri).toEqual(Ref.make(assignee).uri);
 
     await propagate(peers, held, () => {
-      Obj.update(written, (mutable) => {
-        mutable.value = 1;
+      Obj.update(written, (written) => {
+        written.value = 1;
       });
     });
 
@@ -120,8 +120,8 @@ describe('refresh on a change from elsewhere', { timeout: 120_000 }, () => {
     expect(held.assignee.uri).toEqual(Ref.make(alice).uri);
 
     await propagate(peers, held, () => {
-      Obj.update(written, (mutable) => {
-        mutable.assignee = Ref.make(bob);
+      Obj.update(written, (written) => {
+        written.assignee = Ref.make(bob);
       });
     });
 
@@ -143,8 +143,8 @@ describe('refresh on a change from elsewhere', { timeout: 120_000 }, () => {
     expect(held.nested?.label).toEqual('start');
 
     await propagate(peers, held, () => {
-      Obj.update(written, (mutable) => {
-        delete mutable.nested;
+      Obj.update(written, (written) => {
+        delete written.nested;
       });
     });
 
