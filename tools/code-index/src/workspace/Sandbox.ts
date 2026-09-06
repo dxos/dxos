@@ -9,6 +9,7 @@ import * as Data from 'effect/Data';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import { spawn } from 'node:child_process';
+import { randomBytes } from 'node:crypto';
 import { existsSync } from 'node:fs';
 import { homedir, tmpdir } from 'node:os';
 import { delimiter, join } from 'node:path';
@@ -186,16 +187,21 @@ const make = Effect.gen(function* () {
         );
       }
 
+      // Every frame carries this, and the runtime drops it from its environment before evaluating
+      // anything, so it is a secret the snippet shares the process with but cannot read. A snippet
+      // can reach fd 3 on its own — `import('node:fs')` and `writeSync(3, …)` — so the descriptor
+      // is not by itself an authentication boundary; requiring an unguessable token is what makes a
+      // forged `{"done":true}` frame, which would let the snippet dictate its own result, useless.
+      // This is integrity of the channel, not isolation: nothing here contains code that means harm.
+      const token = randomBytes(24).toString('hex');
+
       const result = yield* Effect.callback<{ ok: boolean; output: string }, SandboxError>((resume) => {
         const child = spawn(bun, ['run', RUNTIME], {
           cwd: tmpdir(),
           // Nothing of the host's environment is inherited: no API keys, no proxy settings, no
           // `PATH` into the repository's tooling.
-          env: { PATH: '/usr/bin:/bin', HOME: tmpdir(), NODE_ENV: 'production' },
-          // A fourth pipe carries the protocol. stdout stays the snippet's to scribble on: with
-          // `process` in its scope it can write there whatever the override of `console` says, and
-          // a forged `{"done":true}` frame on the channel the parent parses would let it dictate
-          // its own result.
+          env: { PATH: '/usr/bin:/bin', HOME: tmpdir(), NODE_ENV: 'production', CODE_INDEX_TOKEN: token },
+          // A fourth pipe carries the protocol, so stdout stays the snippet's to scribble on.
           stdio: ['pipe', 'pipe', 'pipe', 'pipe'],
         });
 
@@ -240,11 +246,16 @@ const make = Effect.gen(function* () {
         };
 
         const onLine = (line: string) => {
-          let message: HostCall | { done: true; ok: boolean; output: string };
+          let message: (HostCall | { done: true; ok: boolean; output: string }) & { token?: string };
           try {
             message = JSON.parse(line);
           } catch (cause) {
             finish(new SandboxError({ message: `Malformed message from sandbox: ${line}`, cause }).pipe(Effect.fail));
+            return;
+          }
+          // An unauthenticated frame is the snippet writing to fd 3 itself. Dropping it rather than
+          // failing the run keeps a snippet from ending its own turn by writing a bad frame.
+          if (message.token !== token) {
             return;
           }
           if ('done' in message) {

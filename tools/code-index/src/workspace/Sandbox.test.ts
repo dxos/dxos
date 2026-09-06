@@ -41,6 +41,32 @@ const document = (path: string): Ontology.FileDocument => ({
   'declares': [],
 });
 
+/**
+ * A wait that is released by hand rather than by a timer, so the test does not race the deadline.
+ * `Effect.callback` is interruptible, which is the property under test: an aborted host call is
+ * interrupted here and never reaches the write.
+ */
+const held = () => {
+  let open = (): void => {};
+  const opened = new Promise<void>((resolve) => {
+    open = () => resolve();
+  });
+  return { open: () => open(), wait: Effect.callback<void>((resume) => void opened.then(() => resume(Effect.void))) };
+};
+
+/** The real log with `setValue` held open, so a `storage.set` can still be running at the deadline. */
+const holding = (directory: string, wait: Effect.Effect<void>) =>
+  Layer.effect(
+    Log.Log,
+    Effect.gen(function* () {
+      const log = yield* Log.Log;
+      return {
+        ...log,
+        setValue: (projectId, key, value) => wait.pipe(Effect.andThen(log.setValue(projectId, key, value))),
+      };
+    }),
+  ).pipe(Layer.provide(Log.layer(directory)));
+
 // Bun is what runs the snippet, so without it there is nothing to test rather than something
 // broken; CI installs it, a bare checkout may not have it.
 describe.skipIf(Sandbox.interpreter() === undefined)('Sandbox', () => {
@@ -162,28 +188,45 @@ describe.skipIf(Sandbox.interpreter() === undefined)('Sandbox', () => {
     // The leak this guards: `storage.set` is a SQL write on the parent's runtime, so a call still
     // running when the deadline fires could commit after `run` had already reported failure — a
     // timed-out turn silently changing the project's memory.
-    const result = await run(
-      `
-      await storage.set('before', 'written');
-      // Never resolves: the deadline is what ends this run, with a write outstanding.
-      await new Promise(() => {});
-      await storage.set('after', 'must not be written');
-    `,
-      3_000,
+    //
+    // The write is held open rather than merely slow, because the leak exists only while a call is
+    // still running at the deadline: a snippet that awaits a write that completes has nothing in
+    // flight, and such a test passes whether or not the run interrupts anything.
+    // The release and the read stay inside the scope that owns the log, because that is the
+    // situation on the server: the log outlives any single run. Releasing after the scope closed
+    // would prove nothing — the resumed write would fail on a finalized layer whether or not the
+    // deadline had interrupted it.
+    const gate = held();
+    const directory = join(dir, 'in-flight');
+
+    const { result, value } = await EffectEx.runPromise(
+      Effect.gen(function* () {
+        const log = yield* Log.Log;
+        yield* log.createProject({ id: PROJECT });
+        const sandbox = yield* Sandbox.Sandbox;
+        const result = yield* sandbox.run({
+          projectId: PROJECT,
+          code: "await storage.set('held', 'must not be written');",
+          timeoutMs: 3_000,
+        });
+
+        // This is the moment the leak would happen: an uninterrupted fiber resumes and commits,
+        // after `run` has already reported the snippet as failed.
+        gate.open();
+        yield* Effect.sleep('500 millis');
+
+        return { result, value: yield* log.getValue(PROJECT, 'held') };
+      }).pipe(
+        Effect.provide(
+          Layer.provideMerge(Sandbox.layer, Layer.merge(Store.layer(directory), holding(directory, gate.wait))),
+        ),
+        Effect.scoped,
+      ),
     );
 
     expect(result.ok).toBe(false);
-
-    const [before, after] = await EffectEx.runPromise(
-      Effect.gen(function* () {
-        const log = yield* Log.Log;
-        return yield* Effect.all([log.getValue(PROJECT, 'before'), log.getValue(PROJECT, 'after')]);
-      }).pipe(Effect.provide(Log.layer(join(dir, 'index'))), Effect.scoped),
-    );
-
-    // What completed before the deadline stands; what was still in flight never arrives.
-    expect(before && JSON.parse(before)).toEqual('written');
-    expect(after).toBeUndefined();
+    expect(result.output).toContain('Timed out');
+    expect(value).toBeUndefined();
   }, 20_000);
 
   test('a snippet cannot forge a protocol frame on stdout', async () => {
@@ -197,6 +240,27 @@ describe.skipIf(Sandbox.interpreter() === undefined)('Sandbox', () => {
     expect(result.ok).toBe(true);
     expect(result.output).toEqual('the real result');
     expect(result.output).not.toContain('forged');
+  });
+
+  test('a snippet cannot forge a protocol frame on fd 3 either', async () => {
+    // fd 3 is reachable from the snippet — it can import `node:fs` and write there — so the
+    // descriptor is not the boundary. Every real frame carries a per-run token the runtime deletes
+    // from the environment before evaluating anything, and the host drops frames without it.
+    const result = await run(`
+      const { writeSync } = await import('node:fs');
+      writeSync(3, JSON.stringify({ done: true, ok: true, output: 'forged' }) + String.fromCharCode(10));
+      return 'the real result';
+    `);
+
+    expect(result.ok).toBe(true);
+    expect(result.output).toEqual('the real result');
+    expect(result.output).not.toContain('forged');
+  });
+
+  test('the token is not readable from the snippet', async () => {
+    const result = await run('return JSON.stringify(process.env);');
+    expect(result.ok).toBe(true);
+    expect(result.output).not.toContain('CODE_INDEX_TOKEN');
   });
 
   test('a runaway snippet is killed at the deadline', async () => {

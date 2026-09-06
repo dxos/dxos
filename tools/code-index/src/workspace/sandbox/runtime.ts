@@ -8,8 +8,10 @@
 // The protocol does not run over stdout. A snippet is model-authored code with `process` in scope,
 // so anything it can write to, it can forge frames on: a `{"done":true,...}` line on stdout would
 // end the run with a result of the snippet's choosing. The parent therefore opens a fourth pipe
-// (fd 3) for the protocol and hands stdout to the snippet, where the worst it can do is litter a
-// stream nobody parses.
+// (fd 3) for the protocol and hands stdout to the snippet.
+//
+// The descriptor alone does not authenticate anything — a snippet can `import('node:fs')` and write
+// to fd 3 itself — so every frame carries the token below and the parent drops frames without it.
 //
 
 import { writeSync } from 'node:fs';
@@ -23,8 +25,14 @@ let nextId = 1;
 // fd 3 is the protocol channel; the parent creates it with `stdio: [..., 'pipe']`.
 const PROTOCOL_FD = 3;
 
-const write = (message: unknown): void => {
-  writeSync(PROTOCOL_FD, `${JSON.stringify(message)}\n`);
+// Read once and deleted, before the snippet exists: the evaluated code shares this process, so the
+// token stays out of `process.env` and lives only in this module's scope, which an `AsyncFunction`
+// body cannot reach.
+const TOKEN = process.env.CODE_INDEX_TOKEN ?? '';
+delete process.env.CODE_INDEX_TOKEN;
+
+const write = (message: object): void => {
+  writeSync(PROTOCOL_FD, `${JSON.stringify({ ...message, token: TOKEN })}\n`);
 };
 
 /** One host call. The host answers in order, but ids are matched anyway so it need not. */
