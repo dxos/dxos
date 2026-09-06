@@ -136,7 +136,6 @@
       "@dxos/react-error-boundary",
       "@dxos/react-focus",
       "@dxos/react-hooks",
-      "@dxos/react-input",
       "@dxos/react-list",
       "@dxos/react-ui",
       "@dxos/react-ui-assistant",

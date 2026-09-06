@@ -883,12 +883,36 @@ dist/types/src: ENOTEMPTY` — a concurrent writer. A Cursor TypeScript native-p
       as one (fold and close only, no maximize), its position and size persisted beside the tab; the
       pin, which only guarded the popover's self-dismissal, goes. `DebugPanel` is parts (`Root`,
       `Tablist`, `Content`) so the tab strip sits in the window's title bar and the panels in its body.
-- [ ] **Reconcile `Input.Root` with Ark's `Field.Root`** (tracked 2026-09-05). Ark's `Field` owns the
-      label/control/helper-text/error-text wiring (`aria-labelledby`, `aria-describedby`, `id`s,
-      `invalid`/`required`/`disabled` state) that `Input.Root` and its `Label`/`Description`/
-      `Validation` parts hand-roll today. Decide whether `Input.Root` becomes a `Field.Root`, and
-      what that does to `Input.Label`'s `classNames`-only contract and to `FormFieldLabel`'s
-      `standalone` span (the form's group headers are not fields).
+- [x] **Reconcile `Input.Root` with Ark's `Field.Root`** DONE 2026-09-05. Contrast: Ark's field owns
+      exactly what `@dxos/react-input` hand-rolled — the ids, `htmlFor`, `aria-describedby`,
+      `aria-errormessage`, `aria-invalid`, and the required/disabled/read-only state on label and
+      control — plus two things ours lacked (it detects helper and error text by presence, and stamps
+      `data-*` state on every part); ours had one thing Ark lacks, the five-way `validationValence`
+      the theme colours by. So `Input.Root` is `Field.Root` (a `display: contents` div, since the
+      machine watches it for its texts) plus a valence context; `Label` is `Field.Label`,
+      `TextInput`/`TextArea` are `Field.Input`/`Field.Textarea`, `Description`/`Validation`/
+      `DescriptionAndValidation` keep the old aria swap (the row is the helper text while valid; once
+      invalid the description alone is and the validation is the error text) on `HelperText`/
+      `ErrorText`; `Checkbox`, `Switch`, `PinInput` and the segmented fields read the field context.
+      `Root` gains `required`/`disabled`/`readOnly`/`asChild`/`classNames`. `@dxos/react-input`
+      deleted (`PinInput` moved into react-ui).
+- [ ] **Rename `Input` → `Field`** (own PR, a codemod over ~900 sites: `Root` 443, `Label` 215,
+      `TextInput` 119, `Switch` 40, `Checkbox` 25, `DescriptionAndValidation` 22, `Validation` 13,
+      `TextArea` 12, `Description` 11, `PinInput` 4). Proposed names follow Ark where the part is
+      Ark's: `Field.Root`, `Field.Label`, `Field.Input` (`TextInput`), `Field.Textarea`,
+      `Field.HelperText` (`Description`), `Field.ErrorText` (`Validation`), `Field.RequiredIndicator`
+      (new); ours keep theirs: `Field.Checkbox`, `Field.Switch`, `Field.PinInput`, `Field.Date`/
+      `Time`/`DateTime`, `Field.TriggerIcon`, `Field.Block`. `DescriptionAndValidation` folds into
+      `HelperText` + `ErrorText` as siblings once the aria swap is retired — a field is either
+      described or in error, and Ark already points the control at each.
+- [ ] **`react-ui-form` on `Field` consistently.** `FormRow` passes `required`/`disabled`/`readonly`
+      to the root so the label and control carry the state (today only the valence reaches it);
+      `FormFieldLabel` renders `Field.Label` whenever a control exists and the `standalone` span only
+      for group headers; `Input.Description` becomes the helper text without the swap; the field
+      renderers that open their own roots (`RefField` per item, `GeoPointField` ×2, `InlineRefField`,
+      `FormLayout`, `ViewEditor`) get reviewed for which state they should forward. Decide
+      `Field.RequiredIndicator` against the CSS asterisk — the asterisk keeps the label's
+      `textContent` exactly the label, which `getByLabelText` depends on.
 - [ ] **Review each `react-ui` component's theme against Ark's anatomy** (tracked 2026-09-05, e.g.
       Tabs): the port kept the Radix-era slot names and selectors where they mapped one-to-one, so
       each `*.theme.ts` should be checked for parts Ark adds or renames (`indicator`, `positioner`,

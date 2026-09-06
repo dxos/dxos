@@ -51,7 +51,6 @@
     "@dxos/react-error-boundary": "workspace:*",
     "@dxos/react-focus": "workspace:*",
     "@dxos/react-hooks": "workspace:*",
-    "@dxos/react-input": "workspace:*",
     "@dxos/ui-types": "workspace:*",
     "@dxos/util": "workspace:*",
     "@internationalized/date": "catalog:",

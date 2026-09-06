@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+import { useFieldContext } from '@ark-ui/react/field';
 import { CalendarDate, CalendarDateTime, Time, parseDate, parseDateTime, parseTime } from '@internationalized/date';
 import React, { type ComponentProps, ReactNode, forwardRef, useCallback, useState } from 'react';
 import {
@@ -14,13 +15,13 @@ import {
 } from 'react-aria-components';
 
 import { useControllableState } from '@dxos/react-hooks';
-import { INPUT_NAME, useInputContext } from '@dxos/react-input';
 
 import { useDensityContext, useElevationContext, useThemeContext } from '../../hooks';
 import { type ThemedClassName } from '../../util';
 import { DatePicker } from '../DatePicker';
 import { Popover } from '../Popover';
 import { type InputSharedProps } from './Input';
+import { INPUT_NAME, useInputValence } from './InputContext';
 import { useInputTrigger } from './InputTriggerContext';
 
 //
@@ -148,8 +149,18 @@ const useFieldChrome = ({
   const { tx } = useThemeContext();
   const density = useDensityContext(densityProp);
   const elevation = useElevationContext(elevationProp);
-  const { id: contextId, validationValence, descriptionId, errorMessageId } = useInputContext(INPUT_NAME);
-  return { tx, density, elevation, validationValence, contextId, descriptionId, errorMessageId };
+  // The field owns the id and the described-by/error wiring; the valence is ours.
+  const field = useFieldContext();
+  const { validationValence } = useInputValence(INPUT_NAME);
+  return {
+    tx,
+    density,
+    elevation,
+    validationValence,
+    contextId: field?.ids.control,
+    descriptionId: field?.ariaDescribedby,
+    errorMessageId: field?.ids.errorText,
+  };
 };
 
 /**

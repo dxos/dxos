@@ -2,6 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
+import { useFieldContext } from '@ark-ui/react/field';
 import React, {
   type ChangeEvent,
   type ClipboardEvent,
@@ -16,7 +17,7 @@ import React, {
 
 import { useForwardedRef, useIsFocused } from '@dxos/react-hooks';
 
-import { INPUT_NAME, useInputContext } from './InputContext';
+import { INPUT_NAME, useInputValence } from './InputContext';
 
 type PinInputProps = Omit<ComponentPropsWithRef<'input'>, 'type' | 'maxLength'> & {
   /** Class name applied to each segment div. */
@@ -40,7 +41,9 @@ const PinInput = forwardRef<HTMLInputElement, PinInputProps>(
     }: PinInputProps,
     forwardedRef,
   ) => {
-    const { id, validationValence, descriptionId, errorMessageId } = useInputContext(INPUT_NAME);
+    // The field owns the id and the described-by/error wiring; the valence is ours.
+    const field = useFieldContext();
+    const { validationValence } = useInputValence(INPUT_NAME);
     const inputRef = useForwardedRef(forwardedRef);
     const inputFocused = useIsFocused(inputRef);
     const [internalValue, setInternalValue] = useState('');
@@ -168,7 +171,7 @@ const PinInput = forwardRef<HTMLInputElement, PinInputProps>(
       <div className={`relative inline-flex items-center gap-2 ${className ?? ''}`}>
         <input
           ref={inputRef}
-          id={id}
+          id={field?.ids.control}
           type='text'
           value={value}
           onChange={handleChange}
@@ -178,10 +181,10 @@ const PinInput = forwardRef<HTMLInputElement, PinInputProps>(
           maxLength={length}
           disabled={disabled}
           spellCheck={false}
-          aria-describedby={descriptionId}
+          aria-describedby={field?.ariaDescribedby}
           {...(validationValence === 'error' && {
             'aria-invalid': 'true' as const,
-            'aria-errormessage': errorMessageId,
+            'aria-errormessage': field?.ids.errorText,
           })}
           {...props}
           pattern={pattern}

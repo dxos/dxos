@@ -706,9 +706,6 @@
       "path": "packages/ui/react-primitives/react-hooks/tsconfig.json"
     },
     {
-      "path": "packages/ui/react-primitives/react-input/tsconfig.json"
-    },
-    {
       "path": "packages/ui/react-primitives/react-list/tsconfig.json"
     },
     {

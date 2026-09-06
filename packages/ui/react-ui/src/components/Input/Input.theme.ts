@@ -139,6 +139,10 @@ const segment: ComponentFunction<InputStyleProps> = (props, ...etc) =>
     ...etc,
   );
 
+// The field's element: it exists so the machine can watch for its texts, not to lay anything out,
+// so it takes no box unless a consumer gives it one.
+const root: ComponentFunction<InputStyleProps> = (_props, ...etc) => mx('contents', ...etc);
+
 // Matches `react-ui-form`'s `fieldLabel` geometry: a control-height row with the text centred, so a
 // label sits the same distance from its field in a bare `Input.Root` as in a schema-driven form.
 // Only when visible — an sr-only label is out of flow, and a min-height on it would be meaningless.
@@ -166,6 +170,7 @@ const block: ComponentFunction<InputStyleProps> = (props, ...etc) =>
   mx('grid place-items-center w-[var(--dx-rail-item)] h-[var(--dx-rail-item)]', ...etc);
 
 export const inputTheme = {
+  root,
   input,
   container,
   adornment,
