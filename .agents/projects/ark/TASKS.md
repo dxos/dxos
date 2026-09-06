@@ -911,6 +911,11 @@ dist/types/src: ENOTEMPTY` — a concurrent writer. A Cursor TypeScript native-p
 - [ ] **Rename `Stepper` → `Steps`** (tracked 2026-09-05): Ark's name for the machine the component
       sits on, and the family convention is Ark's name where the part is Ark's. Own PR with the
       `Input` → `Field` codemod, or folded into it.
+- [ ] **Replace `react-joyride` with Ark's `Tour`** (tracked 2026-09-05): the onboarding walkthrough
+      keeps a second floating stack and its own spotlight/step machine; Ark's tour machine gives the
+      steps, the spotlight and the positioning on the same popper the rest of the library uses.
+      Establish first which `react-joyride` features the walkthrough actually relies on (scrolling
+      to a target, the beacon, controlled step state) and whether Ark's tour covers them.
 - [ ] **Rename `Input` → `Field`** (own PR, a codemod over ~900 sites: `Root` 443, `Label` 215,
       `TextInput` 119, `Switch` 40, `Checkbox` 25, `DescriptionAndValidation` 22, `Validation` 13,
       `TextArea` 12, `Description` 11, `PinInput` 4). Proposed names follow Ark where the part is
