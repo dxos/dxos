@@ -266,15 +266,27 @@ const make = (dir: string): Effect.Effect<Api, StoreError, SqlClient.SqlClient |
       Effect.gen(function* () {
         const pending = yield* sql<{
           path: string;
+          graph: string;
           pending_graph: string;
-        }>`SELECT path, pending_graph FROM files WHERE pending_graph IS NOT NULL`.pipe(
+        }>`SELECT path, graph, pending_graph FROM files WHERE pending_graph IS NOT NULL`.pipe(
           Effect.mapError(fail('Failed to read pending commits')),
         );
         for (const row of pending) {
           yield* dropGraph(row.pending_graph);
-          yield* sql`UPDATE files SET pending_graph = NULL WHERE path = ${row.path}`.pipe(
-            Effect.mapError(fail('Failed to clear pending commit')),
-          );
+          if (row.graph === row.pending_graph) {
+            // A file's *first* commit, interrupted: the row announced the graph it was about to
+            // write and is the same row that claims it live, at the mtime it was written for. Just
+            // clearing `pending_graph` would leave a row asserting it is current with no facts at
+            // all — and an incremental pass, seeing the mtime match, would never reindex it. The
+            // row goes with the graph, so the next pass treats the file as new.
+            yield* sql`DELETE FROM files WHERE path = ${row.path}`.pipe(
+              Effect.mapError(fail('Failed to discard an unfinished first commit')),
+            );
+          } else {
+            yield* sql`UPDATE files SET pending_graph = NULL WHERE path = ${row.path}`.pipe(
+              Effect.mapError(fail('Failed to clear pending commit')),
+            );
+          }
         }
         return pending.length;
       });
@@ -323,10 +335,17 @@ const make = (dir: string): Effect.Effect<Api, StoreError, SqlClient.SqlClient |
         if (!current) {
           return;
         }
-        // The row goes first: a graph without a row is garbage `reconcile` can spot, a row without a
-        // graph would be a phantom file.
-        yield* sql`DELETE FROM files WHERE path = ${path}`.pipe(Effect.mapError(fail('Failed to delete ledger row')));
+        // The graph is announced as pending *before* the row goes, so a crash between the two
+        // leaves it reachable through `pending_graph` and `reconcile` drops it on the next open.
+        // The row alone is not enough: `reconcile` scans pending rows, not the quad store, so a
+        // graph whose row is already gone would never be found — and its quads keep answering
+        // queries through the union default graph, making a deleted file's facts immortal.
+        yield* sql`UPDATE files SET pending_graph = ${current.graph} WHERE path = ${path}`.pipe(
+          Effect.mapError(fail('Failed to begin file removal')),
+        );
         yield* dropGraph(current.graph);
+        // A row without a graph would be a phantom file, so it goes last.
+        yield* sql`DELETE FROM files WHERE path = ${path}`.pipe(Effect.mapError(fail('Failed to delete ledger row')));
       });
 
     return {

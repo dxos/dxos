@@ -70,7 +70,14 @@ export const DEFAULT_BATCH_SIZE = 64;
 const millis = <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<[number, A], E, R> =>
   Effect.map(Effect.timed(effect), ([duration, value]) => [Duration.toMillis(duration), value]);
 
+/**
+ * `run` is exported, so `batchSize` arrives from outside: zero would leave the batching loop's
+ * index unchanged and a negative one would walk away from the end, in both cases forever.
+ */
 const chunk = <T>(items: readonly T[], size: number): T[][] => {
+  if (!Number.isInteger(size) || size < 1) {
+    throw new RangeError(`batchSize must be a positive integer, got ${size}`);
+  }
   const batches: T[][] = [];
   for (let index = 0; index < items.length; index += size) {
     batches.push(items.slice(index, index + size));

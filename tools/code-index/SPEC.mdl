@@ -253,7 +253,7 @@ module Mdl
 module Cli
   desc: Subcommands and flags; the Bun entry point is `bin/code-index.ts`.
   api:
-    DEFAULT_RULES: string                     # bundled rules/example.n3.
+    DEFAULT_RULES: string                     # the bundled rules/ directory.
     command: Command                          # code-index with its subcommands.
     run: (argv) => Effect<void>
 ```
@@ -360,7 +360,7 @@ feat F-6: Derived relations are rules, recomputed with the index
     `graph:derived` in one batch.
   req F-6.1: Reachability is a query, not a rule — `deus:imports+` walks the graph lazily, and the
              closure rule that used to ship (147s per pass, 123k stored quads for identical answers)
-             was removed. `rules/example.n3` says so in its header; keep derivations small.
+             was removed. `rules/50-example.n3` says so in its header; keep derivations small.
   req F-6.2: A conclusion never outlives its premises — retracting an import retracts what it entailed.
   req F-6.3: Conclusions are never premises: a pass reads the file graphs only.
   req F-6.4: A pass that indexed and removed nothing skips reasoning and leaves the derived graph as is.

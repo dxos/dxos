@@ -68,7 +68,12 @@ const handlers = Rpcs.toLayer({
       for (const file of files) {
         try {
           const absolute = join(root, file.path);
-          const [source, stats] = await Promise.all([readFile(absolute, 'utf8'), stat(absolute)]);
+          // The stat is taken *before* the read, not concurrently with it. Either order can catch a
+          // file mid-write, but only this one errs safely: the recorded mtime is then older than
+          // the file's, so the next pass sees a difference and reindexes. Reading first and
+          // stat-ing after would pair old content with the new mtime and call it current forever.
+          const stats = await stat(absolute);
+          const source = await readFile(absolute, 'utf8');
           // The mtime travels back with the document: the main thread commits what was actually
           // read, so a file written mid-crawl is reindexed rather than recorded as up to date.
           const mtime = Math.floor(stats.mtimeMs);

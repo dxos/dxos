@@ -160,7 +160,7 @@ describe('Store', () => {
 
   const REASONER = 'test';
 
-  // A rule of the store's own, kept trivial — what to ship is `rules/example.n3`'s business.
+  // A rule of the store's own, kept trivial — what to ship is `rules/50-example.n3`'s business.
   const RULES = `
     @prefix deus: <${Ontology.PREFIX}>.
     { ?a deus:imports ?b } => { ?a deus:importsTestFile ?b }.
@@ -274,6 +274,23 @@ describe('Store', () => {
     expect(await withStore((store) => store.match(undefined, undefined, undefined, orphan))).toEqual([]);
     expect(await withStore((store) => store.reconcile())).toEqual(0);
     await withStore((store) => store.removeFile('src/z.ts'));
+  });
+
+  test('an interrupted delete leaves no graph answering queries', async () => {
+    // The failure this guards is a deleted file whose facts stay visible forever: `reconcile` scans
+    // pending rows rather than the quad store, so a graph whose row went first is unfindable.
+    await withStore((store) => store.putDocument(document('src/doomed.ts', 4)));
+    const live = Ontology.graphIri('src/doomed.ts', 4);
+
+    // Simulate a crash partway through `removeFile`: the graph is announced as pending but its
+    // quads and its row are both still there.
+    const database = new DatabaseSync(join(dir, 'index.sqlite'));
+    database.prepare('UPDATE files SET pending_graph = ? WHERE path = ?').run(live.value, 'src/doomed.ts');
+    database.close();
+
+    expect(await withStore((store) => store.match(undefined, undefined, undefined, live))).toEqual([]);
+    await withStore((store) => store.removeFile('src/doomed.ts'));
+    expect(await withStore((store) => store.getFile('src/doomed.ts'))).toBeUndefined();
   });
 
   test('clear empties both databases', async () => {

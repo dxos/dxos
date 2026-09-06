@@ -24,10 +24,11 @@ The store defaults to `<git root>/node_modules/.code-index`, so every command fi
 from anywhere in the repository. Each pass prints a phase breakdown
 (`scan · parse · commit · reason · total`).
 
-Indexing ends by rerunning the N3 rules (`rules/example.n3`, or `--rules F`) over the whole graph and
-replacing `graph:derived` with the result, so a conclusion never outlives the fact that entailed it.
+Indexing ends by rerunning the N3 rules — every `.n3` in the bundled `rules/` directory, in filename
+order, or whatever `--rules <file|dir>` names — over the whole graph, replacing each reasoner's
+derived graph with the result, so a conclusion never outlives the fact that entailed it.
 Reachability is **not** among those rules — `deus:imports+` walks the import graph as a query, in a
-fraction of the time a materialized closure costs; `rules/example.n3` explains when a rule is the
+fraction of the time a materialized closure costs; `rules/50-example.n3` explains when a rule is the
 wrong tool. That phase is whole-graph and by
 far the most expensive one, so it is skipped when a pass changed nothing, and `--no-reason` skips it
 outright (leaving the derived graph as stale as the last pass that did run it).

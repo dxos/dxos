@@ -37,6 +37,11 @@ const entryTarget = (value: unknown): string | undefined => {
   if (typeof value === 'string') {
     return value;
   }
+  // A fallback array is a list of candidates in preference order (`["./fallback.js", "./main.js"]`),
+  // at the top level or nested under a condition; the first that names a target is the entry.
+  if (Array.isArray(value)) {
+    return value.map(entryTarget).find((target): target is string => target !== undefined);
+  }
   if (isRecord(value)) {
     for (const condition of ENTRY_CONDITIONS) {
       const target = entryTarget(value[condition]);
@@ -90,6 +95,10 @@ export const analyzePackageJson = (context: AnalyzeContext): Ontology.FileDocume
     }
   } else if (typeof manifest.exports === 'string') {
     addEntry(manifest.exports);
+  } else if (Array.isArray(manifest.exports)) {
+    // A top-level array is a fallback list for the `.` subpath, not an absence of exports; falling
+    // through to `types`/`main` would report an entry the package does not actually publish.
+    addEntry(entryTarget(manifest.exports));
   } else {
     addEntry(typeof manifest.types === 'string' ? manifest.types : undefined);
     addEntry(typeof manifest.main === 'string' ? manifest.main : undefined);

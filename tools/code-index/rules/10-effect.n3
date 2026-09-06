@@ -1,4 +1,4 @@
-# Effect constructs. See `rules/example.n3` for what belongs in a rule file and what belongs in a
+# Effect constructs. See `rules/50-example.n3` for what belongs in a rule file and what belongs in a
 # query — in short: classification and joins here, reachability in SPARQL.
 
 @prefix deus: <https://dxos.org/vocab/deus#>.

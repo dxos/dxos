@@ -184,26 +184,26 @@ A specifier is recorded in exactly one of `imports` / `importsType` / `importsMo
 
 ### Derived — written by reasoners, never by the parser
 
-| Property / class            | Meaning                                                                                                                                                             | Reasoner           |
-| --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------ |
-| `deus:usesPackage`          | Package `p` has a file importing a file of package `q` (`p ≠ q`).                                                                                                   | `packages`         |
-| `deus:usesPackageInApi`     | Same, but through `deus:apiDependsOn` of a package-public symbol — the deps that must be public/peer.                                                               | `packages`         |
-| `deus:undeclaredDependency` | `usesPackage` without `declaresDep`/`declaresPeerDep`.                                                                                                              | `packages`         |
-| `deus:unusedDependency`     | `declaresDep` without `usesPackage`.                                                                                                                                | `packages`         |
-| `deus:packagePublic`        | **Package-public**: the symbol is exported by a file reachable from a `deus:entry` through `deus:reexports`. Distinct from `deus:exported`, which is module-public. | `public-api`       |
-| `deus:violatesLayering`     | A `library` package importing an `application` package, and the like.                                                                                               | `layering`         |
-| `deus:implementsOperation`  | An `OperationHandler`'s `deus:derivedFrom` `Operation`.                                                                                                             | `rules/compute.n3` |
-| `deus:bundlesHandler`       | An `OperationHandlerSet` referencing an `OperationHandler` in its implementation.                                                                                   | `rules/compute.n3` |
-| `deus:exposesOperation`     | A `Skill` referencing an `Operation` in its implementation (`Skill.toolDefinitions({ operations })`).                                                               | `rules/compute.n3` |
-| `deus:providesService`      | An `EffectLayer` whose `deus:argument` is an `EffectService`.                                                                                                       | `rules/effect.n3`  |
-| `deus:requiresService`      | An `EffectLayer` whose implementation references an `EffectService` it does not provide — an approximation, labeled as such.                                        | `rules/effect.n3`  |
-| `deus:describes`            | A `module`/`type` `SpecBlock` naming a symbol of the same package.                                                                                                  | `specs`            |
-| `deus:undocumented`         | A package-public symbol no spec block describes.                                                                                                                    | `specs`            |
-| `deus:phantom`              | A spec block naming a symbol that does not exist.                                                                                                                   | `specs`            |
-| `deus:tests`                | A test file importing a file: the test covers it.                                                                                                                   | `rules/example.n3` |
-| `deus:importsTestFile`      | A non-test file importing a test file.                                                                                                                              | `rules/example.n3` |
-| `deus:usesDeprecated`       | A symbol depending on a `deus:deprecated` one.                                                                                                                      | `rules/example.n3` |
-| classes in the table above  | `deus:EffectService`, `deus:EchoType`, …                                                                                                                            | per framework      |
+| Property / class            | Meaning                                                                                                                                                             | Reasoner              |
+| --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------- |
+| `deus:usesPackage`          | Package `p` has a file importing a file of package `q` (`p ≠ q`).                                                                                                   | `packages`            |
+| `deus:usesPackageInApi`     | Same, but through `deus:apiDependsOn` of a package-public symbol — the deps that must be public/peer.                                                               | `packages`            |
+| `deus:undeclaredDependency` | `usesPackage` without `declaresDep`/`declaresPeerDep`.                                                                                                              | `packages`            |
+| `deus:unusedDependency`     | `declaresDep` without `usesPackage`.                                                                                                                                | `packages`            |
+| `deus:packagePublic`        | **Package-public**: the symbol is exported by a file reachable from a `deus:entry` through `deus:reexports`. Distinct from `deus:exported`, which is module-public. | `public-api`          |
+| `deus:violatesLayering`     | A `library` package importing an `application` package, and the like.                                                                                               | `layering`            |
+| `deus:implementsOperation`  | An `OperationHandler`'s `deus:derivedFrom` `Operation`.                                                                                                             | `rules/compute.n3`    |
+| `deus:bundlesHandler`       | An `OperationHandlerSet` referencing an `OperationHandler` in its implementation.                                                                                   | `rules/compute.n3`    |
+| `deus:exposesOperation`     | A `Skill` referencing an `Operation` in its implementation (`Skill.toolDefinitions({ operations })`).                                                               | `rules/compute.n3`    |
+| `deus:providesService`      | An `EffectLayer` whose `deus:argument` is an `EffectService`.                                                                                                       | `rules/effect.n3`     |
+| `deus:requiresService`      | An `EffectLayer` whose implementation references an `EffectService` it does not provide — an approximation, labeled as such.                                        | `rules/effect.n3`     |
+| `deus:describes`            | A `module`/`type` `SpecBlock` naming a symbol of the same package.                                                                                                  | `specs`               |
+| `deus:undocumented`         | A package-public symbol no spec block describes.                                                                                                                    | `specs`               |
+| `deus:phantom`              | A spec block naming a symbol that does not exist.                                                                                                                   | `specs`               |
+| `deus:tests`                | A test file importing a file: the test covers it.                                                                                                                   | `rules/50-example.n3` |
+| `deus:importsTestFile`      | A non-test file importing a test file.                                                                                                                              | `rules/50-example.n3` |
+| `deus:usesDeprecated`       | A symbol depending on a `deus:deprecated` one.                                                                                                                      | `rules/50-example.n3` |
+| classes in the table above  | `deus:EffectService`, `deus:EchoType`, …                                                                                                                            | per framework         |
 
 Reachability over `deus:imports` is deliberately **absent**. A SPARQL property path walks it lazily
 (`deus:imports+`, ~0.2s over a 15k-file index) where the equivalent closure rule cost 147s per
