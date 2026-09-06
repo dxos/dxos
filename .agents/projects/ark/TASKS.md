@@ -860,7 +860,7 @@ dist/types/src: ENOTEMPTY` — a concurrent writer. A Cursor TypeScript native-p
       the `Arrow` must stay outside of; `Select` and `Menu` should expose the same surface. Decide
       per floating component whether a Radix-era part stays, folds, or gets Ark's name.
 - [x] **StrictMode parity fallout in CI** DONE 2026-09-05: the runner's new `StrictMode` (Phase 4b)
-      exposed two defects the dev storybook had been hiding. `useFollow` marked a feed *positioned* on
+      exposed two defects the dev storybook had been hiding. `useFollow` marked a feed _positioned_ on
       the effect re-run StrictMode issues in the arrival's own tick, so the reserve landing a beat
       later was glided instead of written (`fill/Plain Past End`, `widget/Toggle At Tail`); the flag
       is now earned by the settle pass. Babylon's `AdvancedDynamicTexture` queues an `update()` on
