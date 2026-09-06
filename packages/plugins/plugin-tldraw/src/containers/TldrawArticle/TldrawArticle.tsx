@@ -21,7 +21,16 @@ import { TldrawCapabilities } from '#types';
 
 export type TldrawArticleProps = IllustratorCapabilities.DrawingVariantSurfaceProps;
 
-export const TldrawArticle = ({ role, attendableId, drawing, canvas, extrinsic }: TldrawArticleProps) => {
+export const TldrawArticle = ({
+  role,
+  attendableId,
+  drawing,
+  canvas,
+  extrinsic,
+  selection,
+  onSelectionChange,
+  onActivate,
+}: TldrawArticleProps) => {
   invariant(Obj.instanceOf(Drawing.Canvas, canvas));
   const settings = useAtomCapability(TldrawCapabilities.Settings);
   const id = Obj.getURI(drawing as Obj.Any);
@@ -50,6 +59,9 @@ export const TldrawArticle = ({ role, attendableId, drawing, canvas, extrinsic }
       // TODO(wittjosiah): Ensure attention works as expected on the mobile app.
       hideUi={section ? !hasAttention : !hasAttention && !isTauri()}
       onThreadCreate={handleThreadCreate}
+      selection={selection}
+      onSelectionChange={onSelectionChange}
+      onActivate={onActivate}
       {...props}
     />
   );
