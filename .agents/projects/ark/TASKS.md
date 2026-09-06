@@ -883,6 +883,12 @@ dist/types/src: ENOTEMPTY` — a concurrent writer. A Cursor TypeScript native-p
       as one (fold and close only, no maximize), its position and size persisted beside the tab; the
       pin, which only guarded the popover's self-dismissal, goes. `DebugPanel` is parts (`Root`,
       `Tablist`, `Content`) so the tab strip sits in the window's title bar and the panels in its body.
+- [ ] **Reconcile `Input.Root` with Ark's `Field.Root`** (tracked 2026-09-05). Ark's `Field` owns the
+      label/control/helper-text/error-text wiring (`aria-labelledby`, `aria-describedby`, `id`s,
+      `invalid`/`required`/`disabled` state) that `Input.Root` and its `Label`/`Description`/
+      `Validation` parts hand-roll today. Decide whether `Input.Root` becomes a `Field.Root`, and
+      what that does to `Input.Label`'s `classNames`-only contract and to `FormFieldLabel`'s
+      `standalone` span (the form's group headers are not fields).
 - [ ] **Review each `react-ui` component's theme against Ark's anatomy** (tracked 2026-09-05, e.g.
       Tabs): the port kept the Radix-era slot names and selectors where they mapped one-to-one, so
       each `*.theme.ts` should be checked for parts Ark adds or renames (`indicator`, `positioner`,
