@@ -27,6 +27,10 @@ const loadMermaid = async () => {
     startOnLoad: false,
     theme: document.documentElement.classList.contains('dark') ? 'dark' : 'default',
     securityLevel: 'strict',
+    // SVG `<text>` rather than `foreignObject`: mermaid's HTML labels inherit the page's stylesheet,
+    // and the design system's reset collapses them to zero height — a diagram of empty boxes.
+    flowchart: { htmlLabels: false },
+    fontFamily: 'inherit',
   });
   return mermaid;
 };

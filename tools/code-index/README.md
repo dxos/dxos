@@ -32,9 +32,46 @@ wrong tool. That phase is whole-graph and by
 far the most expensive one, so it is skipped when a pass changed nothing, and `--no-reason` skips it
 outright (leaving the derived graph as stale as the last pass that did run it).
 
+## Reasoning about it in a browser
+
+`code-index` with no subcommand starts a webserver — chat on the left, and beside it a canvas of
+whatever the agent chose to show you.
+
+```bash
+bun tools/code-index/bin/code-index.ts                    # http://127.0.0.1:5599, gpt-oss:20b via local ollama
+bun tools/code-index/bin/code-index.ts --provider anthropic
+bun tools/code-index/bin/code-index.ts chat --prompt 'Which packages declare ECHO types?'
+```
+
+`chat` is the same session in the terminal — same log, same agent, same sandbox — which makes it the
+cheapest way to exercise a turn without a browser. Anthropic needs `DX_ANTHROPIC_API_KEY` (or
+`ANTHROPIC_API_KEY`) and is there for hosts that cannot run a 20B model locally.
+
+**One tool.** The agent's only action is `exec`, which runs TypeScript in a Bun child process whose
+sole capabilities are four namespaces bridged over stdio: `rdf` (SPARQL over this index), `storage`
+(per-project memory), `display` (the only channel to the screen — Mermaid, tables, markdown) and
+`print` (the model's own return channel). The tool's documentation *is*
+[`src/workspace/sandbox/api.d.ts`](./src/workspace/sandbox/api.d.ts), so the surface cannot drift
+from what the model is told. The isolation is process-level — fresh interpreter, scrubbed
+environment, temporary cwd, wall-clock deadline — which bounds accidents rather than a hostile
+snippet.
+
+**A project is an append-only log.** Chat, canvas and title are folds over one `events` table
+(`src/workspace/Fold.ts`, shared by the server and the browser), so a reload replays exactly what a
+live session saw and there is no second copy to keep in step. The project id is in the URL
+(`/p/<id>`); a bare load adopts the last one that browser opened.
+
+**No build step.** Vite runs inside the server process in middleware mode and resolves `@dxos/*`
+through the `source` condition, so the UI — Solid, with `@dxos/react-ui-thread` mounted as a React
+island — is transformed from the working tree with nothing to rebuild first.
+
 Tests run on Node under vitest (the CLI runs on Bun; the SQLite driver and the worker platform are
-chosen from the ambient runtime):
+chosen from the ambient runtime). The sandbox tests spawn the real child process and skip where Bun
+is absent:
 
 ```bash
 moon run code-index:test
 ```
+
+The store is single-writer (LevelDB), so `serve` and any other `code-index` command cannot run at
+the same time.

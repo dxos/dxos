@@ -90,17 +90,38 @@ const MAX_ROWS = 500;
 const truncate = (text: string): string =>
   text.length <= MAX_OUTPUT ? text : `${text.slice(0, MAX_OUTPUT)}\n… output truncated (${text.length} chars)`;
 
-/** The vocabulary as the snippet sees it, read off the ontology module rather than a second list. */
-const vocabulary = (): { term: string; kind: 'class' | 'property' }[] =>
-  Object.entries(Ontology.CONTEXT)
-    .filter(([, value]) => typeof value === 'string' || typeof value === 'object')
-    .map(([term]) => ({ term, kind: /^[A-Z]/.test(term) ? ('class' as const) : ('property' as const) }));
+/**
+ * What the graph actually contains, rather than what the indexer asserts. The distinction matters:
+ * the classes and relations an agent most wants — `EffectLayer`, `providesService` — are concluded
+ * by the N3 rules and appear nowhere in the JSON-LD context. Reporting the context instead sent the
+ * agent brute-forcing predicate names for four turns before it found `providesService` by hand.
+ */
+const VOCABULARY_QUERY = `PREFIX deus: <${Ontology.PREFIX}>
+  SELECT ?kind ?term (COUNT(*) AS ?count) WHERE {
+    { ?s a ?term . BIND('class' AS ?kind) }
+    UNION
+    { ?s ?term ?o . BIND('property' AS ?kind) }
+    FILTER(STRSTARTS(STR(?term), '${Ontology.PREFIX}'))
+  } GROUP BY ?kind ?term ORDER BY ?kind DESC(?count)`;
 
 type HostCall = { readonly id: number; readonly method: string; readonly params: Record<string, unknown> };
 
 const make = Effect.gen(function* () {
   const store = yield* Store.Store;
   const log = yield* Log.Log;
+
+  // A whole-graph scan, so it is computed once and shared by every snippet in the process.
+  const vocabulary = yield* Effect.cached(
+    store.select(VOCABULARY_QUERY).pipe(
+      Effect.map((rows) =>
+        rows.map((row) => ({
+          term: row.term.slice(Ontology.PREFIX.length),
+          kind: row.kind,
+          count: Number(row.count),
+        })),
+      ),
+    ),
+  );
 
   /** One host call. A failure here is the snippet's failure, not the run's: it sees the message. */
   const handle = (
@@ -122,7 +143,7 @@ const make = Effect.gen(function* () {
       case 'rdf.prefixes':
         return Effect.succeed(Ontology.prefixes);
       case 'rdf.vocabulary':
-        return Effect.succeed(vocabulary());
+        return vocabulary.pipe(Effect.mapError((cause) => new SandboxError({ message: cause.message, cause })));
       case 'storage.get':
         return log.getValue(projectId, String(params.key)).pipe(
           Effect.map((value) => (value === undefined ? undefined : JSON.parse(value))),

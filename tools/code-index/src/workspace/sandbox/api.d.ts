@@ -22,8 +22,11 @@ declare const rdf: {
   ask(sparql: string): Promise<boolean>;
   /** The prefix map the index writes, e.g. `deus:` → `https://dxos.org/vocab/deus#`. */
   prefixes(): Promise<Record<string, string>>;
-  /** Names and one-line descriptions of the ontology's classes and predicates. */
-  vocabulary(): Promise<{ term: string; kind: 'class' | 'property'; comment?: string }[]>;
+  /**
+   * Every class and predicate present in the graph, with how many quads use it — the derived ones
+   * (`EffectLayer`, `providesService`, …) included. Read this before guessing a predicate name.
+   */
+  vocabulary(): Promise<{ term: string; kind: 'class' | 'property'; count: number }[]>;
 };
 
 /** Persistent, per-project key/value memory. Values are JSON-encoded; survives restarts. */

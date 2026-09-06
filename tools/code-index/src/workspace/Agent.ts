@@ -58,6 +58,13 @@ export class ExecToolkit extends Toolkit.make(ExecTool) {}
 /** How many model round-trips one turn may take before it is cut off. */
 export const MAX_STEPS = 12;
 
+/**
+ * How many steps from the end the model is warned. An agent that explores until it is cut off
+ * leaves the user with nothing, and it cannot ration a budget it was never told about — the first
+ * turn this loop ever ran spent all twelve steps discovering predicate names and displayed nothing.
+ */
+export const WARN_AT_REMAINING = 3;
+
 export type TurnOptions = {
   readonly projectId: string;
   readonly text: string;
@@ -146,6 +153,27 @@ const make = Effect.gen(function* () {
         }
         // The calls and their results go back verbatim; the tool events are already in the log.
         prompt = Prompt.concat(prompt, Prompt.fromResponseParts(response.content));
+
+        const remaining = MAX_STEPS - step - 1;
+        if (remaining <= WARN_AT_REMAINING) {
+          prompt = Prompt.concat(
+            prompt,
+            Prompt.make([
+              {
+                role: 'user',
+                content: [
+                  {
+                    type: 'text',
+                    text:
+                      `[${remaining} tool call${remaining === 1 ? '' : 's'} left in this turn] Stop exploring and ` +
+                      'display what you already have — a partial answer on the screen beats a complete one the ' +
+                      'user never sees.',
+                  },
+                ],
+              },
+            ]),
+          );
+        }
       }
 
       return yield* Effect.fail(
