@@ -13,13 +13,15 @@ import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppSpace from '@dxos/app-toolkit/AppSpace';
 import * as Operation from '@dxos/compute/Operation';
-import { Obj } from '@dxos/echo';
+import { Filter, Obj, Query, Relation } from '@dxos/echo';
 import { LogLevel } from '@dxos/log';
 import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabilities';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
+import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { SpaceState } from '@dxos/protocols/proto/dxos/client/services';
 // UI-free subpath: the root barrel reaches the panel components.
 import { logBuffer } from '@dxos/react-ui-debug/log-buffer';
+import { AnchoredTo, type Message, type Thread } from '@dxos/types';
 
 import { DebugOperation } from '#types';
 
@@ -48,12 +50,48 @@ const summarizeSubject = (data: unknown) => {
       dxn: String(Obj.getURI(data)),
       typename: Obj.getTypename(data),
       name: Obj.getLabel(data),
+      // Bounded by the one open document, so the snapshot stays O(planks).
+      text: Obj.instanceOf(Markdown.Document, data) ? data.content.target?.content : undefined,
     };
   }
   if ('id' in data && typeof data.id === 'string') {
     return { id: data.id };
   }
   return undefined;
+};
+
+/** The comment threads on an object, with their messages loaded — the review companion's view of it. */
+const collectComments = async (subject: unknown) => {
+  if (!Obj.isObject(subject)) {
+    return undefined;
+  }
+  const db = Obj.getDatabase(subject);
+  if (!db) {
+    return undefined;
+  }
+  const anchors: AnchoredTo.AnchoredTo[] = await db
+    .query(Query.select(Filter.id(subject.id)).targetOf(AnchoredTo.AnchoredTo))
+    .run();
+  return Promise.all(
+    anchors.map(async (anchor) => {
+      const thread = Relation.getSource(anchor) as Thread.Thread;
+      const messages: Message.Message[] = await Promise.all(thread.messages.map((ref) => ref.load()));
+      return {
+        id: thread.id,
+        anchorId: anchor.id,
+        anchor: anchor.anchor,
+        status: thread.status,
+        messages: messages.map((message) => ({
+          id: message.id,
+          sender: message.sender.name ?? message.sender.identityDid,
+          text: message.blocks
+            .map((block) => (block._tag === 'text' ? block.text : undefined))
+            .filter((text): text is string => text !== undefined)
+            .join('\n'),
+        })),
+      };
+    }),
+  );
 };
 
 const OPERATION_DXN = /dxn:[^/]+/;
@@ -143,16 +181,21 @@ const handler: Operation.WithHandler<typeof DebugOperation.Snapshot> = DebugOper
       const layout = Option.getOrUndefined(Option.map(layoutAtom, (atom) => registry.get(atom)));
       const graph = Option.getOrUndefined(Option.map(graphBuilder, (builder) => builder.graph));
 
-      const planks = (layout?.active ?? []).map((id) => {
-        const node = graph ? Option.getOrUndefined(AppGraph.getNode(graph, id)) : undefined;
-        return {
-          id,
-          label: node ? translate(node.properties?.label) : undefined,
-          type: node?.type,
-          subject: node ? summarizeSubject(node.data) : undefined,
-          actions: graph ? collectActions(graph, translate, id) : [],
-        };
-      });
+      const planks = yield* Effect.promise(() =>
+        Promise.all(
+          (layout?.active ?? []).map(async (id) => {
+            const node = graph ? Option.getOrUndefined(AppGraph.getNode(graph, id)) : undefined;
+            return {
+              id,
+              label: node ? translate(node.properties?.label) : undefined,
+              type: node?.type,
+              subject: node ? summarizeSubject(node.data) : undefined,
+              actions: graph ? collectActions(graph, translate, id) : [],
+              comments: node ? await collectComments(node.data) : undefined,
+            };
+          }),
+        ),
+      );
 
       const spaces = Option.match(client, {
         onNone: () => [],

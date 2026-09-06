@@ -15,7 +15,7 @@ journey across plugins, written in plain markdown so anyone can add a chapter wi
 
 | Script                 | Chapters               | Last run          |
 | ---------------------- | ---------------------- | ----------------- |
-| [basics.md](basics.md) | 1 Spaces and documents; 2 Rename, undo and a second space | see `../reports/` |
+| [basics.md](basics.md) | 1 Spaces and documents; 2 Rename, undo and a second space; 3 Comments; 4 The assistant edits the document | see `../reports/` |
 
 ## Anatomy of a script
 
@@ -80,8 +80,9 @@ agent's eyes. One call returns:
 
 - `layout` — mode, sidebars, `workspace`, and `active` (the graph paths of the open planks, which
   `appToolkit.open` and `switchWorkspace` accept).
-- `planks` — each open plank with its resolved `label`, `subject` (`dxn`, `typename`, `name`) and
-  the graph `actions` the UI offers for it, with their operation keys.
+- `planks` — each open plank with its resolved `label`, `subject` (`dxn`, `typename`, `name`), the
+  graph `actions` the UI offers for it, with their operation keys, and the `comments` threads
+  anchored to its subject (id, anchor, status, messages).
 - `spaces` — id, name, `SpaceState` name, and which is the default.
 - `toasts` — what is on screen: title, description and button labels.
 - `errors` — error-level log entries since `since` (a timestamp; default the last minute). Uncaught
@@ -92,6 +93,15 @@ agent's eyes. One call returns:
 
 When a script needs something the snapshot does not report, extend the snapshot
 (`packages/plugins/plugin-debug/src/operations/snapshot.ts`) rather than scripting the page.
+
+## The page
+
+The port lives in a page. Open it with the headless helper rather than a pane tab: a hidden tab
+boots slowly or not at all, and a headless page mounts in seconds on a fresh profile.
+
+```bash
+node packages/apps/composer-app/testing/scripts/bin/qa-browser.mjs http://localhost:5182/
+```
 
 ## Reports
 

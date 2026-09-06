@@ -48,6 +48,9 @@ const SubjectSummary = Schema.Struct({
   dxn: Schema.optional(Schema.String),
   typename: Schema.optional(Schema.String),
   name: Schema.optional(Schema.String),
+  text: Schema.optional(Schema.String).annotate({
+    description: 'The current text of a markdown document, so an edit can be judged without the editor.',
+  }),
 });
 
 const ActionSummary = Schema.Struct({
@@ -61,12 +64,31 @@ const ActionSummary = Schema.Struct({
   group: Schema.optional(Schema.Boolean),
 });
 
+const CommentMessageSummary = Schema.Struct({
+  id: Schema.String,
+  sender: Schema.optional(Schema.String),
+  text: Schema.optional(Schema.String),
+});
+
+const CommentThreadSummary = Schema.Struct({
+  id: Schema.String,
+  anchorId: Schema.String.annotate({
+    description: 'Id of the `AnchoredTo` relation that ties the thread to the subject.',
+  }),
+  anchor: Schema.optional(Schema.String),
+  status: Schema.optional(Schema.String),
+  messages: Schema.Array(CommentMessageSummary),
+});
+
 const PlankSummary = Schema.Struct({
   id: Schema.String,
   label: Schema.optional(Schema.String),
   type: Schema.optional(Schema.String),
   subject: Schema.optional(SubjectSummary),
   actions: Schema.Array(ActionSummary),
+  comments: Schema.optional(Schema.Array(CommentThreadSummary)).annotate({
+    description: "Comment threads anchored to the plank's subject, when it is a database object.",
+  }),
 });
 
 const SurfaceSummary = Schema.Struct({
@@ -107,7 +129,7 @@ export const Snapshot = Operation.make({
     description:
       'Returns a JSON snapshot of the live UI state: layout (mode, sidebars, open planks), attended ' +
       'items, each open plank with its subject object and the actions the UI offers for it (with ' +
-      'their operation keys), the mounted surfaces, the spaces, the visible toasts, the errors ' +
+      'their operation keys) and the comment threads on it, the mounted surfaces, the spaces, the visible toasts, the errors ' +
       'logged since `since` (a timestamp; default: the last minute), and plugin counts. Read-only.',
     icon: 'ph--camera--regular',
   },

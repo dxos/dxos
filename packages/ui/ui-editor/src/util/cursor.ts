@@ -44,12 +44,18 @@ export class Cursor {
     return [from, to].join(':');
   };
 
+  // Undefined rather than a throw for a cursor the converter rejects: anchors arrive from the
+  // database, and one malformed anchor would otherwise fail the state update for every comment.
   static readonly getRangeFromCursor = (state: EditorState, cursor: string) => {
     const cursorConverter = state.facet(Cursor.converter);
 
     const parts = cursor.split(':');
-    const from = cursorConverter.fromCursor(parts[0]);
-    const to = cursorConverter.fromCursor(parts[1]);
-    return from !== undefined && to !== undefined ? { from, to } : undefined;
+    try {
+      const from = cursorConverter.fromCursor(parts[0]);
+      const to = cursorConverter.fromCursor(parts[1]);
+      return from !== undefined && to !== undefined ? { from, to } : undefined;
+    } catch {
+      return undefined;
+    }
   };
 }
