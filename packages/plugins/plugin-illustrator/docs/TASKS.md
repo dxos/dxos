@@ -112,9 +112,15 @@ its scorer interface now and fixtures later.
       assistant 6/12 → 6/12, compute 11/25 → 10/31, echo 6/25 → 6/25, edge 17/28 → 17/30, pipeline
       1/11 → 0/11 — 53 → 47 crossings, 115 → 123 bends. Cost: a corpus compile went from ~20 s to ~65 s;
       the corpus hook budget is 300 s. Follow-up below.
-- [ ] **Candidate sweep cost** — 72 raw candidates per diagram; profile ELK vs routing, drop knob values
-      that never place on the corpus, or grade placements with the cheap Z-router and A*-route only the
-      short list.
+- [x] **Candidate sweep cost, first cut** — a CPU profile of a `compute` layout put ~85% of the time in
+      the A* search (`search` 48%, `heapPop` 15%, GC 15%, the obstacle scan 7%); ELK is negligible. The
+      per-cell string keys (`settled` map, `used` set, `blocked` rect scan) are now flat typed-array
+      grids with a generation stamp, and the heap keys on a precomputed `f`. 4 candidates on `compute`:
+      6.8 s → 2.0 s; output identical (snapshots and SVGs unchanged). No knob value is dead — `up` wins
+      `compute`, `edges` wins `Basic`, `free` places distinctly — so nothing was pruned.
+- [ ] **Candidate sweep cost, next** — still ~20 s per corpus diagram for ~50 distinct placements. Options:
+      early-exit a configuration once a route with the heuristic's turn count is found; grade placements
+      with the Z-router and A*-route only the short list; cap the sweep by a time budget in the bench.
 - [ ] **Review routine (eval loop)** — generate 10 diagrams for user review; the user describes what is
       wrong with each; turn the observations into constraints, cost terms or candidate axes and re-run
       the corpus. (tracked 2026-09-05)
