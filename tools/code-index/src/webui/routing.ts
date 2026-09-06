@@ -14,7 +14,15 @@ const LAST_KEY = 'code-index/last-project';
 
 const parse = (path: string): string | undefined => {
   const match = /^\/p\/([^/?#]+)/.exec(path);
-  return match?.[1];
+  if (!match?.[1]) {
+    return undefined;
+  }
+  try {
+    return decodeURIComponent(match[1]);
+  } catch {
+    // A malformed escape is not a project; treat the URL as naming nothing.
+    return undefined;
+  }
 };
 
 export const lastProject = (): string | undefined => {
@@ -42,7 +50,9 @@ export const currentProject = current;
 
 /** Navigates to a project, pushing history so Back returns to the previous one. */
 export const openProject = (projectId: string, options?: { readonly replace?: boolean }): void => {
-  const url = `/p/${projectId}`;
+  // `--project` takes arbitrary text, and a `/`, `?` or `#` in it would silently change the route
+  // into one `parse` cannot read back.
+  const url = `/p/${encodeURIComponent(projectId)}`;
   if (options?.replace) {
     window.history.replaceState(null, '', url);
   } else {

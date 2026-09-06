@@ -37,10 +37,16 @@ export type State = {
   }[];
   /** What the canvas shows. `CanvasCleared` empties it; the split screen opens once it is non-empty. */
   readonly canvas: readonly Presentation[];
+  /**
+   * Whether a turn is still in flight. Part of the fold rather than of any one client's local
+   * state: a reload lands mid-turn, and a second tab watching the same project has to reach the
+   * same answer as the tab that sent the prompt.
+   */
+  readonly running: boolean;
   readonly seq: number;
 };
 
-export const empty: State = { title: 'Untitled', turns: [], calls: [], canvas: [], seq: 0 };
+export const empty: State = { title: 'Untitled', turns: [], calls: [], canvas: [], running: false, seq: 0 };
 
 /** Applies one entry. Unknown-to-the-fold events advance `seq` and change nothing else. */
 export const apply = (state: State, entry: Events.Entry): State => {
@@ -48,7 +54,8 @@ export const apply = (state: State, entry: Events.Entry): State => {
   const event = entry.event;
   switch (event._tag) {
     case 'UserMessage':
-      return { ...state, seq, turns: [...state.turns, { role: 'user', text: event.text }] };
+      // A user message opens a turn; only `TurnEnded` or `TurnFailed` closes one.
+      return { ...state, seq, running: true, turns: [...state.turns, { role: 'user', text: event.text }] };
     case 'AssistantMessage':
       return { ...state, seq, turns: [...state.turns, { role: 'assistant', text: event.text }] };
     case 'ToolCall':
@@ -73,9 +80,14 @@ export const apply = (state: State, entry: Events.Entry): State => {
       return { ...state, seq, title: event.title };
     case 'TurnEnded':
       // A boundary marker; the transcript already holds everything the turn produced.
-      return { ...state, seq };
+      return { ...state, seq, running: false };
     case 'TurnFailed':
-      return { ...state, seq, turns: [...state.turns, { role: 'assistant', text: `⚠ ${event.message}` }] };
+      return {
+        ...state,
+        seq,
+        running: false,
+        turns: [...state.turns, { role: 'assistant', text: `⚠ ${event.message}` }],
+      };
   }
 };
 

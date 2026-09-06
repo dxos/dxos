@@ -82,13 +82,20 @@ describe('Log', () => {
   });
 
   test('the fold recovers chat and canvas from the log alone', async () => {
+    // The three events of one run carry the same `callId`, which is what lets the fold present a
+    // run as code *and* its output. An earlier version minted the id after appending the call, so
+    // this asserted the broken shape — a replayed run whose output never arrived.
+    const callId = Events.newCallId();
     const state = await withLog((api) =>
       Effect.gen(function* () {
         const project = yield* api.createProject({ id: 'folded' });
         yield* api.append(project.id, new Events.UserMessage({ text: 'draw something' }));
-        yield* api.append(project.id, new Events.ToolCall({ callId: 'pending', code: 'await display.text("x")' }));
-        yield* api.append(project.id, new Events.Presented({ kind: 'mermaid', content: 'graph TD\n  a --> b' }));
-        yield* api.append(project.id, new Events.ToolResult({ callId: '2', ok: true, output: 'done' }));
+        yield* api.append(project.id, new Events.ToolCall({ callId, code: 'await display.text("x")' }));
+        yield* api.append(
+          project.id,
+          new Events.Presented({ callId, kind: 'mermaid', content: 'graph TD\n  a --> b' }),
+        );
+        yield* api.append(project.id, new Events.ToolResult({ callId, ok: true, output: 'done' }));
         yield* api.append(project.id, new Events.AssistantMessage({ text: 'there it is' }));
         return Fold.fold(yield* api.read(project.id));
       }),
@@ -99,9 +106,7 @@ describe('Log', () => {
       { role: 'assistant', text: 'there it is' },
     ]);
     expect(state.canvas).toEqual([{ seq: 3, kind: 'mermaid', title: undefined, content: 'graph TD\n  a --> b' }]);
-    expect(state.calls).toEqual([
-      { callId: 'pending', code: 'await display.text("x")', output: undefined, ok: undefined },
-    ]);
+    expect(state.calls).toEqual([{ callId, code: 'await display.text("x")', output: 'done', ok: true }]);
   });
 
   test('clearing the canvas is an event, and the fold obeys it', async () => {
@@ -146,6 +151,27 @@ describe('Log', () => {
     expect(mine && JSON.parse(mine)).toEqual({ package: '@dxos/echo' });
     expect(theirs).toBeUndefined();
     expect(keys).toEqual(['focus']);
+  });
+
+  test('a turn is open from its user message until a terminal event', async () => {
+    // `running` is part of the fold rather than of a client's local state precisely so that this
+    // holds for a reload landing mid-turn and for a second tab watching the same project.
+    const [midTurn, ended, failed] = await withLog((api) =>
+      Effect.gen(function* () {
+        const project = yield* api.createProject({ id: 'running' });
+        yield* api.append(project.id, new Events.UserMessage({ text: 'go' }));
+        const open = Fold.fold(yield* api.read(project.id));
+        yield* api.append(project.id, new Events.TurnEnded({ steps: 1 }));
+        const closed = Fold.fold(yield* api.read(project.id));
+        yield* api.append(project.id, new Events.UserMessage({ text: 'again' }));
+        yield* api.append(project.id, new Events.TurnFailed({ message: 'the model fell over' }));
+        return [open, closed, Fold.fold(yield* api.read(project.id))];
+      }),
+    );
+
+    expect(midTurn.running).toBe(true);
+    expect(ended.running).toBe(false);
+    expect(failed.running).toBe(false);
   });
 
   test('the last project is the one most recently written to', async () => {

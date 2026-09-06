@@ -36,6 +36,13 @@ export const toKind = (value: string): PresentationKind => {
   }
 };
 
+/**
+ * Identifies one code run across the three events that describe it — the call, whatever it
+ * displayed, and its result. `Fold.apply` joins them on this, so it is minted before the call is
+ * appended and reused verbatim; deriving it from anything written later leaves the join unmade.
+ */
+export const newCallId = (): string => `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
+
 /** A user turn, as typed. */
 export class UserMessage extends Schema.TaggedClass<UserMessage>('code-index/UserMessage')('UserMessage', {
   text: Schema.String,

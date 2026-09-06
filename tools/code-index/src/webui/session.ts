@@ -28,24 +28,24 @@ export type Session = {
  */
 export const openSession = (projectId: string): Session => {
   const [state, setState] = createSignal<Fold.State>(Fold.empty);
-  const [busy, setBusy] = createSignal(false);
+  // Covers only the gap between the click and the log echoing the message back; from then on the
+  // fold's `running` is the answer, which is why a reload mid-turn still shows the agent working.
+  const [sending, setSending] = createSignal(false);
 
   const stop = api.watch(projectId, 0, (entry) => {
     setState((previous) => Fold.apply(previous, entry));
-    // The boundary comes off the log, not from the sender, so a second tab watching the same
-    // project agrees about whether the agent is working.
-    if (entry.event._tag === 'TurnEnded' || entry.event._tag === 'TurnFailed') {
-      setBusy(false);
+    if (entry.event._tag === 'UserMessage') {
+      setSending(false);
     }
   });
   onCleanup(stop);
 
   return {
     state,
-    busy,
+    busy: () => sending() || state().running,
     send: (text) => {
-      setBusy(true);
-      void api.dispatch(projectId, new Events.UserMessage({ text })).catch(() => setBusy(false));
+      setSending(true);
+      void api.dispatch(projectId, new Events.UserMessage({ text })).catch(() => setSending(false));
     },
     clearCanvas: () => {
       void api.dispatch(projectId, new Events.CanvasCleared({}));

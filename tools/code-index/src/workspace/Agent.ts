@@ -107,10 +107,13 @@ const make = Effect.gen(function* () {
   const handlerLayer = (projectId: string) =>
     ExecToolkit.toLayer({
       exec: Effect.fn(function* ({ code }) {
-        // The call's sequence number is its identity in the log. The provider's own id never
-        // reaches storage, so a replay does not depend on the provider being consistent about it.
-        const call = yield* log.append(projectId, new Events.ToolCall({ callId: 'pending', code })).pipe(Effect.orDie);
-        const callId = String(call.seq);
+        // The id is minted here, before the call is appended, because it has to travel *on* the
+        // `ToolCall` as well as on everything that answers it: `Fold.apply` joins a result to its
+        // call by this field, so a placeholder on one side leaves a replayed trace showing the code
+        // with no output forever. It is ours rather than the provider's so a replay does not depend
+        // on the provider being consistent about its own ids.
+        const callId = Events.newCallId();
+        yield* log.append(projectId, new Events.ToolCall({ callId, code })).pipe(Effect.orDie);
         const result = yield* sandbox
           .run({ projectId, code })
           .pipe(Effect.catch((cause) => Effect.succeed({ ok: false, output: cause.message, presented: [] as const })));

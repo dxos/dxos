@@ -192,12 +192,21 @@ const make = Effect.gen(function* () {
           // Nothing of the host's environment is inherited: no API keys, no proxy settings, no
           // `PATH` into the repository's tooling.
           env: { PATH: '/usr/bin:/bin', HOME: tmpdir(), NODE_ENV: 'production' },
-          stdio: ['pipe', 'pipe', 'pipe'],
+          // A fourth pipe carries the protocol. stdout stays the snippet's to scribble on: with
+          // `process` in its scope it can write there whatever the override of `console` says, and
+          // a forged `{"done":true}` frame on the channel the parent parses would let it dictate
+          // its own result.
+          stdio: ['pipe', 'pipe', 'pipe', 'pipe'],
         });
 
         let buffer = '';
         let settled = false;
         let stderr = '';
+        // Every host call in flight, with the AbortController that cancels it. A `storage.set` is a
+        // SQL write: without this, a call still running when the deadline fires would commit after
+        // `run` had already reported the snippet as failed, so a timed-out turn could still change
+        // the project's memory.
+        const inFlight = new Set<AbortController>();
 
         const finish = (outcome: Effect.Effect<{ ok: boolean; output: string }, SandboxError>) => {
           if (settled) {
@@ -205,6 +214,10 @@ const make = Effect.gen(function* () {
           }
           settled = true;
           clearTimeout(timer);
+          for (const pending of inFlight) {
+            pending.abort();
+          }
+          inFlight.clear();
           child.kill('SIGKILL');
           resume(outcome);
         };
@@ -239,17 +252,32 @@ const make = Effect.gen(function* () {
             return;
           }
           // Host calls are answered on the parent's runtime; the snippet is blocked on its promise.
-          void Effect.runPromiseExit(handle(projectId, message, presented)).then((exit) => {
-            answer(
-              exit._tag === 'Success'
-                ? { id: message.id, result: exit.value }
-                : { id: message.id, error: String(exit.cause) },
-            );
-          });
+          // The signal is what makes the call interruptible: `finish` aborts it, Effect runs the
+          // fiber's finalizers, and a half-done write is rolled back rather than landing late.
+          const controller = new AbortController();
+          inFlight.add(controller);
+          void Effect.runPromiseExit(handle(projectId, message, presented), { signal: controller.signal }).then(
+            (exit) => {
+              inFlight.delete(controller);
+              if (settled) {
+                return;
+              }
+              answer(
+                exit._tag === 'Success'
+                  ? { id: message.id, result: exit.value }
+                  : { id: message.id, error: String(exit.cause) },
+              );
+            },
+          );
         };
 
-        child.stdout.setEncoding('utf8');
-        child.stdout.on('data', (chunk: string) => {
+        const protocol = child.stdio[3];
+        if (!protocol || !('setEncoding' in protocol)) {
+          finish(Effect.fail(new SandboxError({ message: 'The sandbox has no protocol channel' })));
+          return;
+        }
+        protocol.setEncoding('utf8');
+        protocol.on('data', (chunk: string) => {
           buffer += chunk;
           let newline = buffer.indexOf('\n');
           while (newline >= 0) {
@@ -261,6 +289,10 @@ const make = Effect.gen(function* () {
             newline = buffer.indexOf('\n');
           }
         });
+        // stdout and stderr are both diagnostics now: a crash's stack is worth reporting, and
+        // whatever a snippet wrote directly is not the transcript (that arrives in the `done`
+        // frame, from the capture `print` and the `console` override feed).
+        child.stdout.setEncoding('utf8');
         child.stderr.setEncoding('utf8');
         child.stderr.on('data', (chunk: string) => {
           stderr += chunk;

@@ -39,6 +39,17 @@ export const DEFAULT_PORT = 5599;
 
 export const DEFAULT_HOST = '127.0.0.1';
 
+/**
+ * Hosts this server will bind. `/rpc` starts agent turns and reads the whole index, and it carries
+ * no credential of any kind, so a bind reachable from the network would hand both to anyone who can
+ * route to the port. Rather than invent an auth scheme for a single-user dev tool, the bind itself
+ * is refused: whoever genuinely wants remote access can put a tunnel or a reverse proxy in front and
+ * own the authentication there.
+ */
+const LOOPBACK = ['127.0.0.1', 'localhost', '::1', '::ffff:127.0.0.1'];
+
+const isLoopback = (host: string): boolean => LOOPBACK.includes(host) || /^127\.\d+\.\d+\.\d+$/.test(host);
+
 /** The UI's root, resolved from this module so the server finds it whatever the working directory. */
 const WEBUI_ROOT = fileURLToPath(new URL('../webui', import.meta.url));
 
@@ -56,6 +67,17 @@ export const run = ({
   model,
 }: Options): Effect.Effect<void, ServerError | Vite.ViteError, Store.Store | Log.Log | Agent.Agent> =>
   Effect.gen(function* () {
+    if (!isLoopback(host)) {
+      return yield* Effect.fail(
+        new ServerError({
+          message:
+            `Refusing to bind ${host}: /rpc runs agent turns and reads the index with no ` +
+            'authentication. Bind loopback (the default) and put a tunnel or reverse proxy in front ' +
+            'if you need it elsewhere.',
+        }),
+      );
+    }
+
     const scope = yield* Effect.scope;
 
     // NDJSON rather than JSON: the `Watch` stream is chunked down one response, and a client that

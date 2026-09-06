@@ -103,13 +103,19 @@ export const select = (options: {
   readonly model?: string;
   readonly endpoint?: string;
 }): Effect.Effect<Selection, ModelError> => {
-  const provider = options.provider ?? (options.model !== undefined ? 'ollama' : defaults().provider);
+  const configured = defaults();
+  const provider = options.provider ?? (options.model !== undefined ? 'ollama' : configured.provider);
   if (!isProvider(provider)) {
     return Effect.fail(new ModelError({ message: `Unknown provider: ${provider}. Use ollama or anthropic.` }));
   }
+  // The environment's model counts too, and only for the provider it was configured against: a
+  // `CODE_INDEX_MODEL` naming an Ollama tag must not be handed to Anthropic because a `--provider`
+  // flag moved. A flag always wins; the built-in default is the last resort.
+  const fromEnvironment = provider === configured.provider ? configured.model : undefined;
   return Effect.succeed({
     provider,
-    model: options.model ?? (provider === 'anthropic' ? DEFAULT_ANTHROPIC_MODEL : DEFAULT_OLLAMA_MODEL),
+    model:
+      options.model ?? fromEnvironment ?? (provider === 'anthropic' ? DEFAULT_ANTHROPIC_MODEL : DEFAULT_OLLAMA_MODEL),
     endpoint: options.endpoint,
   });
 };

@@ -5,6 +5,7 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Semaphore from 'effect/Semaphore';
 import * as Stream from 'effect/Stream';
 
 import * as Store from '../Store.ts';
@@ -29,6 +30,24 @@ export const layer = (options: { readonly root: string; readonly model: Models.S
       const store = yield* Store.Store;
       const log = yield* Log.Log;
       const agent = yield* Agent.Agent;
+
+      /**
+       * One turn at a time per project. The log serializes individual appends, not turns, so two
+       * overlapping turns would each fold a different prefix of the transcript and interleave their
+       * replies — and nothing downstream could tell which answer belonged to which question. A
+       * second prompt therefore queues behind the first rather than racing it.
+       */
+      const turns = new Map<string, Semaphore.Semaphore>();
+      const gateFor = (projectId: string) =>
+        Effect.gen(function* () {
+          const existing = turns.get(projectId);
+          if (existing) {
+            return existing;
+          }
+          const created = yield* Semaphore.make(1);
+          turns.set(projectId, created);
+          return created;
+        });
 
       return {
         Info: () =>
@@ -60,9 +79,17 @@ export const layer = (options: { readonly root: string; readonly model: Models.S
 
         Dispatch: ({ projectId, event }: { projectId: string; event: Events.Event }) =>
           event._tag === 'UserMessage'
-            ? // The turn appends the user's message itself, and runs detached: a request that
-              // waited for it would hold the connection open for a minute of tool calls.
-              agent.turn({ projectId, text: event.text }).pipe(Effect.forkDetach, Effect.asVoid)
+            ? // The turn appends the user's message itself, and runs detached: a request that waited
+              // for it would hold the connection open for a minute of tool calls. Detached but not
+              // unordered — it takes the project's turn gate first, so a prompt sent while another
+              // turn is running waits for it rather than interleaving with it.
+              gateFor(projectId).pipe(
+                Effect.flatMap((gate) =>
+                  agent
+                    .turn({ projectId, text: event.text })
+                    .pipe(Semaphore.withPermits(gate, 1), Effect.forkDetach, Effect.asVoid),
+                ),
+              )
             : log.append(projectId, event).pipe(
                 Effect.asVoid,
                 Effect.mapError((cause) => failure(cause.message)),

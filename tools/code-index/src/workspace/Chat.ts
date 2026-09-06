@@ -27,6 +27,9 @@ const CYAN = '[36m';
 const YELLOW = '[33m';
 const RED = '[31m';
 
+/** The events that close a turn; a one-shot run stops printing at one of them. */
+const TERMINAL: readonly string[] = ['TurnEnded', 'TurnFailed'];
+
 /** One line per event, in the order the agent produced them. */
 export const render = (event: Events.Event): string | undefined => {
   switch (event._tag) {
@@ -50,6 +53,8 @@ export const render = (event: Events.Event): string | undefined => {
       return `${DIM}(canvas cleared)${RESET}`;
     case 'TurnFailed':
       return `${RED}⚠ ${event.message}${RESET}`;
+    // Boundaries and metadata: real events, but nothing a reader of the transcript needs to see.
+    case 'TurnEnded':
     case 'TitleSet':
       return undefined;
   }
@@ -65,7 +70,10 @@ export type Options = {
  * Runs the chat. The printer tails the log rather than watching the agent, so what the terminal
  * shows is exactly what a reload of the webui would replay.
  */
-export const run = ({ projectId, prompt }: Options): Effect.Effect<void, unknown, Log.Log | Agent.Agent> =>
+export const run = ({
+  projectId,
+  prompt,
+}: Options): Effect.Effect<void, Log.LogError | Agent.AgentError, Log.Log | Agent.Agent> =>
   Effect.gen(function* () {
     const log = yield* Log.Log;
     const agent = yield* Agent.Agent;
@@ -76,6 +84,13 @@ export const run = ({ projectId, prompt }: Options): Effect.Effect<void, unknown
     const from = prompt === undefined ? 0 : (history.at(-1)?.seq ?? 0);
 
     const printer = yield* log.stream(projectId, from).pipe(
+      // A one-shot run ends at the event that closes the turn; an interactive one tails forever.
+      // Stopping on the event rather than on a timer is what makes the output complete — a fixed
+      // sleep drops the tail of any turn whose last events land after it, which on a loaded machine
+      // is most of them.
+      // `takeUntil` is inclusive, which is the point: the closing event has to be printed (a
+      // `TurnFailed` carries the reason) and only then may the stream end.
+      Stream.takeUntil((entry) => prompt !== undefined && TERMINAL.includes(entry.event._tag)),
       Stream.runForEach((entry) => {
         const line = render(entry.event);
         return line === undefined ? Effect.void : Console.log(line);
@@ -84,12 +99,12 @@ export const run = ({ projectId, prompt }: Options): Effect.Effect<void, unknown
     );
 
     if (prompt !== undefined) {
-      yield* agent.turn({ projectId, text: prompt });
-      // The printer is a separate fiber reading a queue; give it the tail of the log before the
-      // scope closes under it.
-      yield* Effect.yieldNow;
-      yield* Effect.sleep('100 millis');
-      return yield* Fiber.interrupt(printer);
+      // The turn's own failure is recorded as `TurnFailed`, which is a line worth printing — so the
+      // exit is held, the printer is joined (it stops itself at that event), and only then does the
+      // failure propagate. Failing first would close the scope and interrupt the printer mid-tail.
+      const exit = yield* Effect.exit(agent.turn({ projectId, text: prompt }));
+      yield* Fiber.join(printer);
+      return yield* exit;
     }
 
     yield* Console.log(`${DIM}code-index chat · project ${projectId} · ^C to exit${RESET}`);
@@ -98,7 +113,7 @@ export const run = ({ projectId, prompt }: Options): Effect.Effect<void, unknown
 
     // The loop is a plain recursion over one blocking read: a terminal has no backpressure to
     // model and this keeps ^C handling with the runtime rather than in a signal handler.
-    const next: Effect.Effect<void, unknown> = Effect.gen(function* () {
+    const next: Effect.Effect<void, Log.LogError> = Effect.gen(function* () {
       const line = yield* Effect.promise(() => readline.question(`${YELLOW}› ${RESET}`));
       const text = line.trim();
       if (text.length === 0) {

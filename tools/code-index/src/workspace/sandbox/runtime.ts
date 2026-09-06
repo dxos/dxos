@@ -2,16 +2,17 @@
 // Copyright 2026 DXOS.org
 //
 // The sandbox child process. Runs one snippet and exits; every capability it has is a call back to
-// the host over stdio, so this file imports nothing. Started by `Sandbox.ts`, which passes the
-// snippet on stdin as the first line.
+// the host, and `node:fs` for the one write below is the only thing it imports. Started by
+// `Sandbox.ts`, which passes the snippet on stdin as the first line.
 //
-// stdout is the protocol channel and nothing else — `console.log` is captured into the transcript
-// rather than written — so a snippet cannot corrupt the framing by printing.
+// The protocol does not run over stdout. A snippet is model-authored code with `process` in scope,
+// so anything it can write to, it can forge frames on: a `{"done":true,...}` line on stdout would
+// end the run with a result of the snippet's choosing. The parent therefore opens a fourth pipe
+// (fd 3) for the protocol and hands stdout to the snippet, where the worst it can do is litter a
+// stream nobody parses.
 //
 
-// This file imports nothing, which would make it a script — and its locals would then collide in
-// the global scope with the very declarations in `api.d.ts` that describe them.
-export {};
+import { writeSync } from 'node:fs';
 
 type Pending = { resolve: (value: unknown) => void; reject: (error: Error) => void };
 
@@ -19,8 +20,11 @@ const pending = new Map<number, Pending>();
 const captured: string[] = [];
 let nextId = 1;
 
+// fd 3 is the protocol channel; the parent creates it with `stdio: [..., 'pipe']`.
+const PROTOCOL_FD = 3;
+
 const write = (message: unknown): void => {
-  process.stdout.write(`${JSON.stringify(message)}\n`);
+  writeSync(PROTOCOL_FD, `${JSON.stringify(message)}\n`);
 };
 
 /** One host call. The host answers in order, but ids are matched anyway so it need not. */
@@ -46,8 +50,8 @@ const print = (...values: unknown[]): void => {
   captured.push(values.map(format).join(' '));
 };
 
-// The snippet's own logging is transcript, not protocol: every console method funnels into the
-// same capture so nothing it prints can be mistaken for a host call.
+// The snippet's own logging belongs in the transcript the model reads, so every console method
+// funnels into the same capture `print` writes to rather than reaching a stream.
 for (const level of ['log', 'info', 'warn', 'error', 'debug', 'trace'] as const) {
   (console as unknown as Record<string, unknown>)[level] = print;
 }
@@ -118,6 +122,7 @@ const evaluate = async (code: string): Promise<unknown> => {
 const main = async (): Promise<void> => {
   let buffer = '';
   let code: string | undefined;
+  // The snippet and the answers to its host calls both arrive on stdin, in that order.
   process.stdin.setEncoding('utf8');
   process.stdin.on('data', (chunk: string) => {
     buffer += chunk;

@@ -8,7 +8,6 @@ import '@dxos-theme';
 import { render } from 'solid-js/web';
 
 import { App } from './App.tsx';
-import { initAutomergeWasm } from './automerge.ts';
 
 /**
  * The web UI's entry point. Solid owns the page; the chat thread inside it is React, mounted as an
@@ -21,6 +20,4 @@ if (!root) {
   throw new Error('Missing #root');
 }
 
-// The thread's messages are ECHO objects, so automerge's wasm has to be live before the first
-// render rather than lazily on the first message.
-void initAutomergeWasm().then(() => render(() => <App />, root));
+render(() => <App />, root);

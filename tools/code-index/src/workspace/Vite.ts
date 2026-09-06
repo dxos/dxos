@@ -11,7 +11,6 @@ import type * as Scope from 'effect/Scope';
 import { readFile } from 'node:fs/promises';
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import { join } from 'node:path';
-import { ResolverFactory } from 'oxc-resolver';
 import { type Plugin, type ViteDevServer, createServer } from 'vite';
 import solid from 'vite-plugin-solid';
 import wasm from 'vite-plugin-wasm';
@@ -60,31 +59,6 @@ const NODE_STD = ['assert', 'buffer', 'crypto', 'events', 'fs', 'fs/promises', '
  * Redirects those imports to their browser shims. Workspace packages are served as source here, so
  * their `node:util` imports arrive unrewritten — where a build would have applied this same mapping.
  */
-/**
- * Automerge's default entry point initializes its wasm with top-level await, and the browser
- * variant of that glue never gets its memory set up under Vite (`__wbindgen_externrefs` of
- * undefined). The fix is to point every importer at `slim`, which does no wasm work on evaluation,
- * and initialize explicitly instead — that is what `webui/automerge.ts` does.
- *
- * An alias rather than a resolver plugin: `@dxos/echo` is served as source from a directory that
- * cannot itself resolve `@automerge/automerge/slim`, so a per-importer redirect silently falls
- * through for the one importer that matters. There is a single automerge in the workspace, so one
- * alias is both correct and the whole of it.
- */
-const slimWasmAliases = (from: string): Record<string, string> => {
-  // `browser` is deliberately absent: subduction's browser-conditioned `/slim` is the
-  // top-level-await glue again, so the non-browser resolution is the one that stays inert.
-  const resolver = new ResolverFactory({ conditionNames: ['source', 'import', 'module', 'default'] });
-  const aliases: Record<string, string> = {};
-  for (const name of ['@automerge/automerge', '@automerge/automerge-subduction']) {
-    const resolved = resolver.sync(from, `${name}/slim`);
-    if (!resolved.error && resolved.path) {
-      aliases[name] = resolved.path;
-    }
-  }
-  return aliases;
-};
-
 const nodeStdPlugin = (): Plugin => ({
   name: 'code-index:node-std',
   enforce: 'pre',
@@ -116,9 +90,11 @@ export const middleware = ({
             appType: 'custom',
             server: {
               middlewareMode: true,
-              // The UI imports TypeScript out of the workspace, which is outside `root`; without
-              // this Vite refuses to serve those files.
-              fs: { allow: [appRoot, repoRoot], strict: false },
+              // The UI imports TypeScript out of the workspace, which is outside `root`, so both
+              // trees are allowed explicitly. `strict` stays on: turning it off does not widen the
+              // allow list, it removes it, and `/@fs/<absolute path>` would then serve any file the
+              // process can read.
+              fs: { allow: [appRoot, repoRoot] },
             },
             // The UI is Solid, except for the chat thread, which is the repository's own React
             // component. `vite-plugin-solid` must therefore be scoped to the Solid half — left
