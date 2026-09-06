@@ -155,6 +155,8 @@ its scorer interface now and fixtures later.
       source (16 candidates × ELK ≈ 20 s), overrunning vitest's 15 s budget on the CI runner. One
       `beforeAll` compile per diagram is shared by its tests; the file still takes ~2 min locally —
       follow-up: lay out candidates concurrently or cut the sweep with a cheap pre-filter.
+      Same again in `mermaid-engine.test.ts` once the sweep grew (shard 2 red at 15 s): one shared sweep per
+      fixture (`once`), describe budget 120 s; the file went 10.3 s → 3.4 s locally.
 - [x] **Review round 3 (CodeRabbit)** — columns: an edge between two ungrouped root nodes is an
       across-flow edge too (`rootOf`, TB+LR tests); `toStandard` keeps a labelled UML edge's own label;
       excalidraw `applySelection` records only the ids whose elements have arrived, so a selection

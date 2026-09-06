@@ -40,9 +40,18 @@ const FLOWCHART = trim`
     %% ref Edge https://github.com/dxos/edge
 `;
 
-describe('mermaid-engine', () => {
+/** Runs a sweep once for the file: a candidate sweep is seconds of ELK and routing, and the tests only read its result. */
+const once = <T>(compute: () => Promise<T>) => {
+  let promise: Promise<T> | undefined;
+  return () => (promise ??= compute());
+};
+const basicLayout = once(() => layout(BASIC));
+const flowchartObjects = once(async () => objectsOf(await compile(FLOWCHART)));
+
+// The shared sweeps land on whichever test awaits them first, on a CI runner several times slower than a laptop.
+describe('mermaid-engine', { timeout: 120_000 }, () => {
   test('ref directives land on the world objects they name', async ({ expect }) => {
-    const objects = objectsOf(await compile(FLOWCHART));
+    const objects = await flowchartObjects();
 
     expect(objects.find(({ id }) => id === 'Echo')?.ref).toBe('packages/core/echo');
     expect(objects.find(({ id }) => id === 'Edge')?.ref).toBe('https://github.com/dxos/edge');
@@ -50,7 +59,7 @@ describe('mermaid-engine', () => {
   });
 
   test('places nodes on the grid and frames enclose their members', async ({ expect }) => {
-    const objects = objectsOf(await compile(FLOWCHART));
+    const objects = await flowchartObjects();
     const nodes = objects.filter((object) => !['edges', 'client', 'core'].includes(object.id));
 
     expect(nodes).toHaveLength(6);
@@ -83,7 +92,7 @@ describe('mermaid-engine', () => {
   });
 
   test('layout ranks every candidate and the chosen one has the lowest feasible cost', async ({ expect }) => {
-    const result = await layout(BASIC);
+    const result = await basicLayout();
 
     // lattice × order × arrangement × layering × alignment × bus, less the knob settings that reach
     // a placement already routed (three groups, so both arrangements are tried).
@@ -179,14 +188,14 @@ describe('mermaid-engine', () => {
   });
 
   test('basic: no hard defects, every connector straight or one bend', async ({ expect }) => {
-    const objects = objectsOf(await compile(BASIC));
+    const objects = objectsOf((await basicLayout()).commands);
     const report = analyze(objects);
 
     expect(errors(report).map(({ message }) => message)).toEqual([]);
     expect(report.metrics.crossings).toBe(0);
     // Which arrangement wins is a close call on this fixture (columns by connector length); the
     // snapshot records it so a weight change shows up as a diff rather than a surprise.
-    const { chosen } = await layout(BASIC);
+    const { chosen } = await basicLayout();
     expect({
       arrangement: chosen.candidate.arrangement,
       cost: Number(chosen.evaluation.cost.toFixed(2)),
@@ -226,7 +235,7 @@ describe('mermaid-engine', () => {
   });
 
   test('has no hard defects and records its soft metrics', async ({ expect }) => {
-    const report = analyze(objectsOf(await compile(FLOWCHART)));
+    const report = analyze(await flowchartObjects());
 
     expect(errors(report).map(({ message }) => message)).toEqual([]);
     expect(report.metrics.connectors).toBe(7);
