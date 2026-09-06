@@ -77,8 +77,8 @@ const DefaultStory = ({
       )}
 
       <Input.DescriptionAndValidation srOnly={descriptionVisuallyHidden}>
-        {validationMessage && <Input.Validation classNames='block'>{validationMessage}</Input.Validation>}
         <Input.Description>{description}</Input.Description>
+        {validationMessage && <Input.Validation classNames='block'>{validationMessage}</Input.Validation>}
       </Input.DescriptionAndValidation>
     </Input.Root>
   );

@@ -34,17 +34,21 @@ const textInputSurfaceFocus =
 
 const textInputSurfaceHover = 'hover:bg-focus-surface';
 
-// TODO(burdon): Replace with semantic tokens.
+/**
+ * The control's border takes the valence's semantic border token. Repeated under `focus-within`
+ * because `dx-input` restores the plain separator on focus with a compound selector no single
+ * utility outranks.
+ */
 const valence = (valence?: MessageValence) => {
   switch (valence) {
     case 'success':
-      return 'shadow-emerald-500/50 dark:shadow-emerald-600/50';
+      return 'border-success-border focus-within:border-success-border';
     case 'info':
-      return 'shadow-cyan-500/50 dark:shadow-cyan-600/50';
+      return 'border-info-border focus-within:border-info-border';
     case 'warning':
-      return 'shadow-amber-500/50 dark:shadow-amber-600/50';
+      return 'border-warning-border focus-within:border-warning-border';
     case 'error':
-      return 'shadow-rose-500/50 dark:shadow-rose-600/50';
+      return 'border-error-border focus-within:border-error-border';
   }
 };
 
