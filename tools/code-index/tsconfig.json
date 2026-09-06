@@ -2,6 +2,8 @@
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "emitDeclarationOnly": false,
+    "jsx": "react-jsx",
+    "jsxImportSource": "react",
     "outDir": "dist"
   },
   "include": [
@@ -13,10 +15,40 @@
       "path": "../../packages/common/effect"
     },
     {
+      "path": "../../packages/common/node-std"
+    },
+    {
       "path": "../../packages/common/sql-sqlite"
     },
     {
+      "path": "../../packages/common/util"
+    },
+    {
       "path": "../../packages/core/compute/ai"
+    },
+    {
+      "path": "../../packages/core/echo/echo"
+    },
+    {
+      "path": "../../packages/sdk/types"
+    },
+    {
+      "path": "../../packages/ui/react-ui"
+    },
+    {
+      "path": "../../packages/ui/react-ui-dnd"
+    },
+    {
+      "path": "../../packages/ui/react-ui-thread"
+    },
+    {
+      "path": "../../packages/ui/ui-theme"
+    },
+    {
+      "path": "../vite-plugin-icons"
+    },
+    {
+      "path": "../vite-plugin-import-source"
     }
   ]
 }

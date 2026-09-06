@@ -86,6 +86,15 @@ export class TurnFailed extends Schema.TaggedClass<TurnFailed>('code-index/TurnF
   message: Schema.String,
 }) {}
 
+/**
+ * The turn is over. Recorded so "is the agent still working?" is answered by the log rather than
+ * inferred from the last message's shape — a second client watching the same project needs the
+ * same answer, and prose arrives mid-turn as well as at the end.
+ */
+export class TurnEnded extends Schema.TaggedClass<TurnEnded>('code-index/TurnEnded')('TurnEnded', {
+  steps: Schema.Number,
+}) {}
+
 export const Event = Schema.Union([
   UserMessage,
   AssistantMessage,
@@ -94,6 +103,7 @@ export const Event = Schema.Union([
   Presented,
   CanvasCleared,
   TitleSet,
+  TurnEnded,
   TurnFailed,
 ]);
 

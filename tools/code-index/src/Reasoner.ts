@@ -6,7 +6,7 @@
 
 import * as Data from 'effect/Data';
 import * as Effect from 'effect/Effect';
-import { readFile, readdir } from 'node:fs/promises';
+import { readdir, readFile } from 'node:fs/promises';
 import { basename, extname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 

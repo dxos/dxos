@@ -140,7 +140,9 @@ const make = Effect.gen(function* () {
             .pipe(Effect.mapError(fail('Cannot record reply')));
         }
         if (response.toolCalls.length === 0) {
-          return;
+          return yield* log
+            .append(projectId, new Events.TurnEnded({ steps: step + 1 }))
+            .pipe(Effect.asVoid, Effect.mapError(fail('Cannot close turn')));
         }
         // The calls and their results go back verbatim; the tool events are already in the log.
         prompt = Prompt.concat(prompt, Prompt.fromResponseParts(response.content));

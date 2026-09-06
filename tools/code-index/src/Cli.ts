@@ -12,7 +12,6 @@ import * as Command from 'effect/unstable/cli/Command';
 import * as Flag from 'effect/unstable/cli/Flag';
 import { readFile } from 'node:fs/promises';
 import { extname, resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
 
 import * as Crawler from './Crawler.ts';
 import * as Indexer from './Indexer.ts';

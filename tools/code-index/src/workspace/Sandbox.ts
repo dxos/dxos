@@ -9,7 +9,9 @@ import * as Data from 'effect/Data';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import { spawn } from 'node:child_process';
-import { tmpdir } from 'node:os';
+import { existsSync } from 'node:fs';
+import { homedir, tmpdir } from 'node:os';
+import { delimiter, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import * as Ontology from '../Ontology.ts';
@@ -63,11 +65,24 @@ const MAX_OUTPUT = 32_000;
 
 /**
  * The interpreter the snippet runs under. Bun, always — the runtime file is TypeScript and is
- * loaded directly. When the host is itself Bun that is its own binary; under Node (the test
- * suite) it is whatever `bun` the real `PATH` resolves, which is why lookup happens here rather
- * than in the child's scrubbed environment.
+ * loaded directly. When the host is itself Bun that is its own binary; under Node (the test suite)
+ * it is looked up here, because the child's environment is scrubbed and has no `PATH` to find it
+ * with. `undefined` means there is no Bun on this machine, which is a diagnosable condition rather
+ * than a spawn failure.
  */
-const interpreter = (): string => (typeof globalThis.Bun !== 'undefined' ? process.execPath : 'bun');
+export const interpreter = (): string | undefined => {
+  if (typeof globalThis.Bun !== 'undefined') {
+    return process.execPath;
+  }
+  const candidates = [
+    ...(process.env.PATH ?? '')
+      .split(delimiter)
+      .filter(Boolean)
+      .map((entry) => join(entry, 'bun')),
+    join(homedir(), '.bun/bin/bun'),
+  ];
+  return candidates.find((candidate) => existsSync(candidate));
+};
 
 /** SPARQL rows are truncated hard: a query with no LIMIT must not be able to fill the context. */
 const MAX_ROWS = 500;
@@ -143,8 +158,15 @@ const make = Effect.gen(function* () {
   const run: Api['run'] = ({ projectId, code, timeoutMs = DEFAULT_TIMEOUT_MS }) =>
     Effect.gen(function* () {
       const presented: Events.Presented[] = [];
+      const bun = interpreter();
+      if (bun === undefined) {
+        return yield* Effect.fail(
+          new SandboxError({ message: 'The sandbox needs Bun on this machine; none was found on PATH.' }),
+        );
+      }
+
       const result = yield* Effect.callback<{ ok: boolean; output: string }, SandboxError>((resume) => {
-        const child = spawn(interpreter(), ['run', RUNTIME], {
+        const child = spawn(bun, ['run', RUNTIME], {
           cwd: tmpdir(),
           // Nothing of the host's environment is inherited: no API keys, no proxy settings, no
           // `PATH` into the repository's tooling.
@@ -196,7 +218,7 @@ const make = Effect.gen(function* () {
             return;
           }
           // Host calls are answered on the parent's runtime; the snippet is blocked on its promise.
-          Effect.runPromiseExit(handle(projectId, message, presented)).then((exit) => {
+          void Effect.runPromiseExit(handle(projectId, message, presented)).then((exit) => {
             answer(
               exit._tag === 'Success'
                 ? { id: message.id, result: exit.value }
