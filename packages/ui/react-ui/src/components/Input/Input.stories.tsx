@@ -305,17 +305,17 @@ const opensAtField = async ({ canvasElement }: { canvasElement: HTMLElement }) =
   const canvas = within(canvasElement);
   const [field] = canvasElement.querySelectorAll<HTMLElement>('[data-density]');
   await userEvent.click(canvas.getAllByRole('button')[0]);
-  const dialog = await waitFor(() => {
+  const dialog = await waitFor(async () => {
     const element = document.querySelector<HTMLElement>('[role="dialog"]');
-    expect(element).not.toBeNull();
+    await expect(element).not.toBeNull();
     return element!;
   });
-  await waitFor(() => {
+  await waitFor(async () => {
     const rect = dialog.getBoundingClientRect();
     const anchor = field.getBoundingClientRect();
-    expect(Math.abs(rect.left - anchor.left)).toBeLessThan(8);
-    expect(rect.top).toBeGreaterThanOrEqual(anchor.bottom);
-    expect(rect.top - anchor.bottom).toBeLessThan(16);
+    await expect(Math.abs(rect.left - anchor.left)).toBeLessThan(8);
+    await expect(rect.top).toBeGreaterThanOrEqual(anchor.bottom);
+    await expect(rect.top - anchor.bottom).toBeLessThan(16);
   });
 };
 
