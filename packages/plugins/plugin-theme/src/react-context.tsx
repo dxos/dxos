@@ -97,8 +97,10 @@ export default Capability.makeModule(
             <Toast.Provider>
               <Tooltip.Provider delayDuration={1_000} skipDelayDuration={100} disableHoverableContent>
                 {children}
+                {/* Toasts render in the viewport, not where their roots sit, and their close button is a
+                    tooltip trigger, which throws without a provider above it. */}
+                <Toast.Viewport />
               </Tooltip.Provider>
-              <Toast.Viewport />
             </Toast.Provider>
           </ThemeProvider>
         );

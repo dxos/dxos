@@ -941,6 +941,11 @@ dist/types/src: ENOTEMPTY` — a concurrent writer. A Cursor TypeScript native-p
       (`[&>*]:[grid-column:var(--dx-col,auto)]`), a no-op outside a Column.
 - [x] **Playground fieldset-per-elevation story** DONE 2026-09-06: one small fieldset on each surface
       of the elevation ladder, with invalid and disabled variants; now the `Elevation` playground story.
+- [x] **Deleting an item in Composer threw `Tooltip.Trigger must be used within Tooltip`** DONE
+      2026-09-06 (reported): Ark toasts render in the viewport, not where their roots sit, and the theme
+      plugin's context rendered `Toast.Viewport` beside its `Tooltip.Provider`, so the undo toast's close
+      button had no provider. The viewport moved inside the provider; `react-context.test.tsx` renders a
+      closable toast through the plugin's context and fails without the move.
 - [ ] **Rename `Input` → `Field`** (own PR, a codemod over ~900 sites: `Root` 443, `Label` 215,
       `TextInput` 119, `Switch` 40, `Checkbox` 25, `DescriptionAndValidation` 22, `Validation` 13,
       `TextArea` 12, `Description` 11, `PinInput` 4). Proposed names follow Ark where the part is
