@@ -908,6 +908,9 @@ dist/types/src: ENOTEMPTY` — a concurrent writer. A Cursor TypeScript native-p
       `aria-labelledby`/`aria-describedby` by detecting the texts. `Form.Section` is the first
       consumer: its `h2` is the legend through `asChild`, so the group is named by its title and the
       heading still serves navigation. Stories assert the naming, the description and the disabling.
+- [ ] **Rename `Stepper` → `Steps`** (tracked 2026-09-05): Ark's name for the machine the component
+      sits on, and the family convention is Ark's name where the part is Ark's. Own PR with the
+      `Input` → `Field` codemod, or folded into it.
 - [ ] **Rename `Input` → `Field`** (own PR, a codemod over ~900 sites: `Root` 443, `Label` 215,
       `TextInput` 119, `Switch` 40, `Checkbox` 25, `DescriptionAndValidation` 22, `Validation` 13,
       `TextArea` 12, `Description` 11, `PinInput` 4). Proposed names follow Ark where the part is
