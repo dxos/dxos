@@ -881,7 +881,8 @@ dist/types/src: ENOTEMPTY` — a concurrent writer. A Cursor TypeScript native-p
       inline itself and its `--z-index` is the stack order; the root provides `elevation='dialog'`
       so menus and tooltips inside outrank it. `plugin-debug`'s status rail opens the debug panel
       as one (fold and close only, no maximize), its position and size persisted beside the tab; the
-      pin, which only guarded the popover's self-dismissal, goes.
+      pin, which only guarded the popover's self-dismissal, goes. `DebugPanel` is parts (`Root`,
+      `Tablist`, `Content`) so the tab strip sits in the window's title bar and the panels in its body.
 - [ ] **Review each `react-ui` component's theme against Ark's anatomy** (tracked 2026-09-05, e.g.
       Tabs): the port kept the Radix-era slot names and selectors where they mapped one-to-one, so
       each `*.theme.ts` should be checked for parts Ark adds or renames (`indicator`, `positioner`,

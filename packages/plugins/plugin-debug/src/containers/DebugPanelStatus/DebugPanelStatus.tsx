@@ -101,20 +101,25 @@ export const DebugPanelStatus = ({ controller = getDebugPortController() }: Debu
       </StatusBar.Item>
       <FloatingPanel.Portal>
         <FloatingPanel.Content>
-          <FloatingPanel.Header>
-            <FloatingPanel.DragTrigger>
-              <FloatingPanel.Title>{t('debug-panel.title')}</FloatingPanel.Title>
-            </FloatingPanel.DragTrigger>
-            {/* Fold and restore only: a debug panel over the whole app is a window the reader would resize. */}
-            <FloatingPanel.Control>
-              <FloatingPanel.StageTrigger stage='minimized' />
-              <FloatingPanel.StageTrigger stage='default' />
-              <FloatingPanel.CloseTrigger />
-            </FloatingPanel.Control>
-          </FloatingPanel.Header>
-          <FloatingPanel.Body>
-            <DebugPanel />
-          </FloatingPanel.Body>
+          {/* The tab strip lives in the title bar, so the tabs' root spans the header and the body. */}
+          <DebugPanel.Root>
+            <FloatingPanel.Header classNames='pl-1'>
+              {/* The tabs stand where a title would; the title stays as the window's accessible name. */}
+              <DebugPanel.Tablist />
+              <FloatingPanel.DragTrigger>
+                <FloatingPanel.Title classNames='sr-only'>{t('debug-panel.title')}</FloatingPanel.Title>
+              </FloatingPanel.DragTrigger>
+              {/* Fold and restore only: a debug panel over the whole app is a window the reader would resize. */}
+              <FloatingPanel.Control>
+                <FloatingPanel.StageTrigger stage='minimized' />
+                <FloatingPanel.StageTrigger stage='default' />
+                <FloatingPanel.CloseTrigger />
+              </FloatingPanel.Control>
+            </FloatingPanel.Header>
+            <FloatingPanel.Body classNames='grid'>
+              <DebugPanel.Content />
+            </FloatingPanel.Body>
+          </DebugPanel.Root>
           <FloatingPanel.Resizers />
         </FloatingPanel.Content>
       </FloatingPanel.Portal>
