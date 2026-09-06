@@ -187,7 +187,7 @@ export const SpaceGenerator = composable<HTMLDivElement, SpaceGeneratorProps>(
       // is not an attendable surface, so without it every action renders disabled.
 
       <Panel.Root {...composableProps(props)} ref={forwardedRef}>
-        <Panel.Toolbar asChild>
+        <Panel.Toolbar>
           <ActionToolbar {...menuActions} alwaysActive classNames='dx-document'>
             <Input.Root>
               <Input.TextInput
