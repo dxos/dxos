@@ -20,9 +20,13 @@ export const symbolReactivePrototype = Symbol.for('@dxos/echo/ReactivePrototype'
 
 /**
  * Every proxy this module creates, keyed by the proxy itself. Identity is answered from here rather
- * than through a `get` trap so that a proxy without one is still recognized.
+ * than through a `get` trap so that a proxy without one is still recognized. Held on `globalThis`
+ * under a registry symbol because a remote plugin can evaluate this module twice (host and wrapper
+ * chunk), and a proxy made by one instance must still be recognized by the other.
  */
-const proxySlots = new WeakMap<object, ProxyHandlerSlot<any>>();
+const proxySlotsKey = Symbol.for('@dxos/echo/ProxySlots');
+const proxySlots: WeakMap<object, ProxyHandlerSlot<any>> = ((globalThis as Record<symbol, unknown>)[proxySlotsKey] ??=
+  new WeakMap()) as WeakMap<object, ProxyHandlerSlot<any>>;
 
 /**
  * Internal api.
