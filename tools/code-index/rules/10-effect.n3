@@ -1,0 +1,43 @@
+# Effect constructs. See `rules/50-example.n3` for what belongs in a rule file and what belongs in a
+# query — in short: classification and joins here, reachability in SPARQL.
+
+@prefix deus: <https://dxos.org/vocab/deus#>.
+@prefix effect: <https://dxos.org/deus/module/effect%2F>.
+@prefix errors: <https://dxos.org/deus/module/%40dxos%2Ferrors#>.
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>.
+
+# A service tag: `class Store extends Context.Service<Store, Api>()('id')`.
+{ ?s deus:extends <https://dxos.org/deus/module/effect%2FContext#Service> } => { ?s rdf:type deus:EffectService }.
+
+# A layer, by whichever constructor built it.
+{ ?s deus:constructedBy <https://dxos.org/deus/module/effect%2FLayer#effect> } => { ?s rdf:type deus:EffectLayer }.
+{ ?s deus:constructedBy <https://dxos.org/deus/module/effect%2FLayer#succeed> } => { ?s rdf:type deus:EffectLayer }.
+{ ?s deus:constructedBy <https://dxos.org/deus/module/effect%2FLayer#sync> } => { ?s rdf:type deus:EffectLayer }.
+{ ?s deus:constructedBy <https://dxos.org/deus/module/effect%2FLayer#scoped> } => { ?s rdf:type deus:EffectLayer }.
+{ ?s deus:constructedBy <https://dxos.org/deus/module/effect%2FLayer#mergeAll> } => { ?s rdf:type deus:EffectLayer }.
+{ ?s deus:constructedBy <https://dxos.org/deus/module/effect%2FLayer#merge> } => { ?s rdf:type deus:EffectLayer }.
+{ ?s deus:constructedBy <https://dxos.org/deus/module/effect%2FLayer#unwrap> } => { ?s rdf:type deus:EffectLayer }.
+{ ?s deus:constructedBy <https://dxos.org/deus/module/effect%2FLayer#effectContext> } => { ?s rdf:type deus:EffectLayer }.
+{ ?s deus:constructedBy <https://dxos.org/deus/module/effect%2FLayer#provide> } => { ?s rdf:type deus:EffectLayer }.
+{ ?s deus:constructedBy <https://dxos.org/deus/module/effect%2FLayer#empty> } => { ?s rdf:type deus:EffectLayer }.
+
+# What a layer provides: `Layer.effect(Store, …)` — the first argument, when it is a service tag.
+{ ?s rdf:type deus:EffectLayer. ?s deus:argument ?tag. ?tag rdf:type deus:EffectService }
+  => { ?s deus:providesService ?tag }.
+
+# Schemas.
+{ ?s deus:constructedBy <https://dxos.org/deus/module/effect%2FSchema#Struct> } => { ?s rdf:type deus:Schema }.
+{ ?s deus:constructedBy <https://dxos.org/deus/module/effect%2FSchema#TaggedStruct> } => { ?s rdf:type deus:Schema }.
+{ ?s deus:constructedBy <https://dxos.org/deus/module/effect%2FSchema#Union> } => { ?s rdf:type deus:Schema }.
+{ ?s deus:constructedBy <https://dxos.org/deus/module/effect%2FSchema#Literal> } => { ?s rdf:type deus:Schema }.
+{ ?s deus:constructedBy <https://dxos.org/deus/module/effect%2FSchema#Array> } => { ?s rdf:type deus:Schema }.
+{ ?s deus:extends <https://dxos.org/deus/module/effect%2FSchema#Schema.Type> } => { ?s rdf:type deus:Schema }.
+{ ?s deus:extends <https://dxos.org/deus/module/effect%2FSchema#Class> } => { ?s rdf:type deus:Schema }.
+
+# Domain errors: the repo's `BaseError.extend`, plus Effect's own tagged errors.
+{ ?s deus:extends errors:BaseError.extend } => { ?s rdf:type deus:DomainError }.
+{ ?s deus:extends <https://dxos.org/deus/module/effect%2FData#TaggedError> } => { ?s rdf:type deus:DomainError }.
+{ ?s deus:extends <https://dxos.org/deus/module/effect%2FSchema#TaggedError> } => { ?s rdf:type deus:DomainError }.
+
+# RPC groups.
+{ ?s deus:constructedBy <https://dxos.org/deus/module/effect%2Funstable%2Frpc%2FRpcGroup#make> } => { ?s rdf:type deus:Rpc }.

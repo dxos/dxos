@@ -1,0 +1,13 @@
+# Barrels: this repo addresses most things through an index file, so a reference lands on the
+# re-exported name rather than the declaration. `deus:aliasOf` links the two, and this rule carries
+# every class across that link — including through a chain of barrels, since EYE runs each rule set
+# to a fixpoint.
+#
+# It runs LAST (filename order is the dependency mechanism): the classes it propagates are the ones
+# the rule files before it concluded.
+
+@prefix deus: <https://dxos.org/vocab/deus#>.
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>.
+
+{ ?alias deus:aliasOf ?origin. ?origin rdf:type ?class } => { ?alias rdf:type ?class }.
+  

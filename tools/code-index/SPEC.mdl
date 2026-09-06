@@ -1,0 +1,454 @@
+---
+id: org.dxos.code-index
+name: CodeIndex
+version: 0.11.1
+---
+
+`code-index` indexes a repository into two databases that live side by side in one directory: a
+SQLite ledger of indexed files and a persistent RDF quad store holding one named graph per file.
+The graph speaks the DEUS code vocabulary defined in [`design/ONTOLOGY.md`](./design/ONTOLOGY.md) —
+that document is the source of truth, and the indexer emits JSON-LD shaped by it. Queries are
+SPARQL or typed LDkit lenses; derived relations (transitive dependencies, layering rules) are N3
+rules evaluated by the EYE reasoner rather than code.
+
+Parsing runs off the main thread: a pool of workers, addressed over Effect RPC, parses with `oxc`
+and resolves imports with `oxc-resolver`. Workers never touch a database, so nothing contends on
+SQLite or LevelDB; only the main thread writes.
+
+The CLI is `effect/unstable/cli` on Bun. The library is Effect-native and runs on Node as well,
+which is where the test suite exercises it.
+
+## Extensions
+
+The following extension dialects are used in this document.
+
+| Term     | URI                          |
+|----------|------------------------------|
+| `module` | `org.dxos.mdl.module@1.0`    |
+| `feat`   | `org.dxos.mdl.feat@1.0`      |
+| `test`   | `org.dxos.mdl.test@1.0`      |
+
+## Stack
+
+| Concern            | Choice                                  | Why |
+|--------------------|-----------------------------------------|-----|
+| Relational store   | `@effect/sql-sqlite-{bun,node}`         | Effect-native SQL; the driver is chosen from the ambient runtime because neither loads under the other. |
+| Schema             | `@dxos/sql-sqlite` `SqlMigrations` + `effect` `Migrator` | Same numbered-`.sql` migration pattern as the rest of the repo, with its own history table. |
+| Quad store         | `quadstore` over `classic-level`        | A real persistent RDF/JS store with named graphs — deliberately not a triple table hand-rolled on SQLite. |
+| SPARQL             | `quadstore-comunica`                    | Comunica engine bound directly to the quad store, with the default graph as the union of all file graphs. |
+| Typed graph access | `ldkit`                                 | Schema-typed reads over the same engine, so a lens and a raw SPARQL query see one graph. |
+| Reasoning          | `eyereasoner` (EYE, N3)                 | Forward-chaining rules over an N3 serialization of the asserted facts; conclusions land in one replaceable graph. Reachability is left to SPARQL property paths. |
+| Parsing            | `oxc-parser`, `oxc-resolver`            | Real module records and real resolution, not regex. |
+| Manifests          | `yaml`, `JSON.parse`                    | `moon.yml` layers and `package.json` identity, entries and workspace deps. |
+| Concurrency        | `effect/unstable/rpc` over worker threads | Batches of paths in, JSON-LD documents out. |
+| CLI                | `effect/unstable/cli`, `@effect/platform-bun` | Subcommands, flags and help from the same Effect runtime as the library. |
+
+## Layout
+
+A store is one directory. It defaults to `<git root>/node_modules/.code-index` for the repository
+containing the working directory, so any command run anywhere inside the repo finds the same index:
+
+```
+<store>/
+  index.sqlite   # file ledger + migration history + key/value meta
+  graph/         # LevelDB directory backing the quad store
+```
+
+## Indexing pass
+
+1. **Crawl** — `git ls-files --cached --others --exclude-standard` under the root, filtered by
+   extension, plus each file's mtime. Git owns the ignore rules, so the index and the repository
+   never disagree about what a file is.
+2. **Diff** — compare against `files.mtime` in the ledger. Unchanged files are skipped entirely;
+   files gone from the working tree have their graph and row removed.
+3. **Dispatch** — changed paths are batched (64 by default) and sent to the worker pool.
+4. **Analyze** (worker) — an analyzer chosen by filename reads the file and returns its JSON-LD
+   document plus the mtime actually read: TypeScript (declarations, references, snippets),
+   `package.json` (the `Package` node), `moon.yml` (its layer), `.mdl` (spec blocks).
+5. **Upsert** (main thread) — one commit per file: swap its named graph, then advance its ledger row.
+6. **Reason** — if anything changed, the N3 rules run over the asserted facts and `graph:derived` is
+   replaced with the result. A pass that indexed and removed nothing skips this phase, since it would
+   derive exactly what is already stored. The reasoner is fed only the facts whose predicate the
+   rules name — the narrowing is dropped if a rule leaves a predicate unbound — which on this repo
+   is the difference between a 30s phase and a 4s one.
+
+Each phase is timed and reported (`scan`, `parse`, `commit`, `reason`, `total`); `parse` and `commit`
+are summed across concurrent batches, so they overlap and can exceed the wall-clock total.
+
+## Commit safety across two stores
+
+The two databases cannot share a transaction, so the ledger is made the single commit marker and
+the graph write is made idempotent:
+
+1. `files.pending_graph` is set to the new graph IRI (`graph:<path>#<mtime>`) — the announcement.
+2. The old graph's quads and the new graph's quads are swapped in **one** Quadstore batch.
+3. The row is updated: `graph` becomes the new IRI and `pending_graph` is cleared — the commit.
+
+A crash before step 3 leaves the previous revision live and the new graph reachable only through
+`pending_graph`; `reconcile` (run whenever the store opens) deletes exactly those graphs. Because
+the graph IRI carries the mtime, a half-written revision can never be mistaken for the live one.
+Deletion runs the other way — row first, then graph — since a graph without a row is collectable
+garbage while a row without a graph would be a phantom file.
+
+## Modules
+
+```mdl
+module Store
+  desc: |
+    The entire persistence surface. Opened from a directory path, scoped — both databases close
+    when the enclosing Effect scope ends, and pending commits are reconciled on the way in.
+  api:
+    # Types
+    Api: {...}                                # the service interface below.
+    FileRecord: { path, language, size, hash, mtime }
+    FileState: FileRecord & { graph }         # what an incremental pass diffs against.
+    Stats: { dir, files, quads }
+    Binding: Record<string, string>           # one SPARQL SELECT row, term values by variable.
+    StoreError: Data.TaggedError
+
+    # Service
+    Store: Context.Service                    # 'code-index/Store'.
+    layer: (dir) => Layer<Store, StoreError>  # migrates sqlite, opens the quad store, reconciles.
+
+    # Ledger
+    getFile / listFiles / fileStates / getMeta / setMeta
+
+    # Commits
+    putDocument: (FileDocument) => Effect<void>       # graph swap + ledger advance (see above).
+    removeFile: (path) => Effect<void>
+    reconcile: () => Effect<number>                   # drops graphs left by an interrupted commit.
+
+    # RDF graph
+    putQuads / delQuads / match
+    select / ask / construct                  # SPARQL, default graph = union of file graphs.
+    lens: (schema) => Lens                    # LDkit lens over this store.
+    dump / load                               # N3 text in and out.
+    reason: (reasoner, rules, { materialize? }) => Effect<Quad[]>  # premises exclude the reasoner's
+                                                                   # own graph; materialize replaces it.
+    derived: (reasoner?) => Effect<Quad[]>    # what a reasoner (or every reasoner) concluded.
+    stats / clear
+```
+
+```mdl
+module Ontology
+  desc: |
+    The executable mirror of `design/ONTOLOGY.md`: IRIs, the JSON-LD context the indexer emits, the
+    document schema, and the LDkit schemas that read it back.
+  api:
+    PREFIX: 'https://dxos.org/vocab/deus#'
+    FILE_BASE / GRAPH_BASE: string
+    iri / fileIri / symbolIri / graphIri: (…) => NamedNode
+    File, Symbol: NamedNode                   # classes.
+    path, language, size, mtime, hash, imports, importsModule, declares, parseError: NamedNode
+    name, kind, exported, line: NamedNode     # symbol properties.
+    importsTestFile: NamedNode                # derived by rules only.
+    CONTEXT: object                           # the JSON-LD @context.
+    FileDocument / SymbolNode: Schema         # the wire shape, decoded by the RPC layer.
+    FileSchema / SymbolSchema: LDkit schemas
+    prefixes: Record<string, string>
+```
+
+```mdl
+module Crawler
+  desc: Repository discovery — git root, store location, and the non-ignored files with mtimes.
+  api:
+    CrawlError: Data.TaggedError
+    Entry: { path, mtime }
+    DEFAULT_EXTENSIONS: string[]              # includes .mdl; .yml is not in the set.
+    DEFAULT_FILENAMES: string[]               # crawled whatever the extension — moon.yml.
+    storeDir: (root) => string                # <root>/node_modules/.code-index
+    gitRoot: (cwd?) => Effect<string>
+    crawl: (root, options?) => Effect<Entry[]>
+```
+
+```mdl
+module Indexer
+  desc: |
+    The main thread's half: crawl, diff against the ledger, dispatch batches to the worker pool,
+    upsert the documents that come back.
+  api:
+    Options: { root, workers?, batchSize?, force?, extensions?, rules? }
+    DEFAULT_REASONER: 'rules'                 # the graph the pass's own rule set writes to.
+    Timings: { scanMs, parseMs, commitMs, reasonMs, totalMs }
+    Result: { root, scanned, indexed, unchanged, removed, skipped, derived, reasoned, timings }
+    DEFAULT_BATCH_SIZE: 64
+    run: (options) => Effect<Result, _, Store | Scope>
+```
+
+```mdl
+module worker/Protocol
+  desc: The RPC contract between the main thread and the parsing workers.
+  api:
+    FileRef: { path, mtime }
+    AnalyzedFile: { path, mtime, document }   # document is JSON-LD text on the wire.
+    SkippedFile: { path, reason }
+    Rpcs: RpcGroup                            # AnalyzeBatch(root, files) -> { analyzed, skipped }.
+```
+
+```mdl
+module worker/Pool
+  desc: |
+    The worker pool client. Bun spawns web workers, Node spawns worker threads; the worker source
+    is the same file, so its relative imports carry explicit `.ts` extensions.
+  api:
+    make: (size) => Effect<Client, WorkerError, Scope>
+    Client: the RPC client the pool hands out.
+```
+
+```mdl
+module worker/analyze
+  desc: |
+    Dispatch: one analyzer per filename, each emitting the complete document for one file. Nothing
+    here or below names a framework — classification is a reasoner's job.
+  api:
+    AnalyzeContext: { root, path, source, mtime, resolve, packageOf }
+    analyze: (context) => Ontology.FileDocument
+    createResolver: (root) => Resolve       # oxc-resolver over the repository.
+    language: (path) => string
+```
+
+```mdl
+module worker/analyzers/typescript
+  desc: |
+    Declarations and what can be seen of them structurally: what they extend, what call constructs
+    them, what they reference and from which position, and a definition snippet.
+  api:
+    analyzeTypeScript: (context) => FileDocument
+    declarations: (body) => Declaration[]   # top-level declarations with kind/export/offset.
+    snippetOf: (source, declaration, comments) => string | undefined
+    SNIPPET_BUDGET: 1200                    # literals collapse deepest-first past this.
+    SNIPPET_HARD_CAP: 9600                  # past this the declaration has no snippet at all.
+    isTypeScriptPath: (path) => boolean
+```
+
+```mdl
+module worker/analyzers/package
+  desc: The two files that assert a `Package` node, each from its own graph.
+  api:
+    analyzePackageJson: (context) => FileDocument   # identity, entries, workspace deps.
+    analyzeMoonYml: (context) => FileDocument       # the package's layer.
+```
+
+```mdl
+module worker/analyzers/spec
+  desc: `.mdl` documents — one `SpecBlock` per fenced block; linking them to symbols is a reasoner's job.
+  api:
+    analyzeMdl: (context) => FileDocument
+```
+
+```mdl
+module Mdl
+  desc: |
+    Reader for the `.mdl` document format: frontmatter, fenced blocks, `<type> [id][: title]`
+    headers and indented fields. Belongs in `@dxos/deus` as a Node-usable subpath; lives here until
+    that export exists.
+  api:
+    Block: { type, id?, title?, fields, mentions, body, line }
+    Document: { frontmatter, blocks }
+    parse: (text) => Document
+    parseFrontmatter: (text) => Record<string, string>
+```
+
+```mdl
+module Cli
+  desc: Subcommands and flags; the Bun entry point is `bin/code-index.ts`.
+  api:
+    DEFAULT_RULES: string                     # the bundled rules/ directory.
+    command: Command                          # code-index with its subcommands.
+    run: (argv) => Effect<void>
+```
+
+## Commands
+
+| Command                                | Effect |
+|----------------------------------------|--------|
+| `index [--root R] [--force] [--workers N] [--rules F] [--no-reason]` | Incremental pass, closed by a reasoning phase. |
+| `files [--lang L]`                     | List indexed files. |
+| `query <sparql> [--file]`              | SPARQL SELECT. |
+| `ask <sparql> [--file]`                | SPARQL ASK. |
+| `dump`                                 | Serialize the graph to N3. |
+| `stats`                                | File and quad counts. |
+| `clear`                                | Empty both databases. |
+| `ontology`                             | Print the JSON-LD context. |
+
+`--root` defaults to the git root of the working directory, `--store` to
+`<root>/node_modules/.code-index`, and `--json` applies to every command.
+
+## Features
+
+```mdl
+feat F-1: One directory, two databases
+  desc: |
+    A store is initialized from a directory path; `index.sqlite` (migrated) and `graph/` are created
+    inside it. Both are opened by `Store.layer` and closed when the scope ends.
+  req F-1.1: The SQLite schema is created by numbered migrations recorded in `code_index_migrations`.
+  req F-1.2: Records and quads written in one process are visible after reopening the store.
+  req F-1.3: No module outside `Store` opens a database.
+```
+
+```mdl
+feat F-2: One graph per file revision
+  desc: |
+    Every file's quads live in `graph:<path>#<mtime>`; reindexing swaps the graph rather than
+    accumulating revisions, and removing a file drops its graph and its row.
+  req F-2.1: After a reindex the previous graph holds no quads and the ledger names the new one.
+  req F-2.2: Derived quads live in `graph:derived`, which reasoning replaces wholesale.
+  req F-2.3: An interrupted commit leaves a `pending_graph` that `reconcile` deletes on the next open.
+```
+
+```mdl
+feat F-3: Incremental by mtime
+  desc: The crawl compares mtimes against the ledger; unchanged files are never read or parsed.
+  req F-3.1: A second pass over an unchanged tree indexes nothing.
+  req F-3.2: Touching one file reindexes exactly that file.
+  req F-3.3: `--force` reindexes everything regardless of mtime.
+  req F-3.4: A file deleted from the working tree is removed from both databases.
+```
+
+```mdl
+feat F-4: Off-thread parsing
+  desc: |
+    Workers receive batches of paths and return JSON-LD documents; they never open a database. The
+    mtime returned is the one actually read, so a file written mid-crawl is reindexed next pass
+    rather than recorded as current.
+  req F-4.1: A file that cannot be read is reported as skipped, not as a failure of the pass.
+  req F-4.2: A parse failure still produces a file node, carrying `deus:parseError`.
+```
+
+```mdl
+feat F-5: Import edges
+  desc: |
+    A specifier that resolves to a file inside the repository becomes a `deus:imports` edge; a bare
+    package, a path into `node_modules`, or anything unresolvable stays a `deus:importsModule`
+    literal.
+  req F-5.1: Ignored files (per `.gitignore`) are never crawled or indexed.
+  req F-5.2: A specifier is recorded either as an edge or as a module reference, never both.
+```
+
+```mdl
+feat F-7: Packages and containment
+  desc: |
+    `package.json` asserts a `Package` node — name, version, private, public entries from the export
+    map, workspace dependencies — and `moon.yml` adds its layer from its own graph. Every file
+    asserts `deus:inPackage` for the nearest enclosing manifest.
+  req F-7.1: A `Package` node survives either of its two files being reindexed alone.
+  req F-7.2: Only `workspace:` ranges become `declaresDep`; catalog and registry ranges do not.
+```
+
+```mdl
+feat F-8: Structure now, meaning later
+  desc: |
+    The parser records what a declaration extends, what call constructs it, what it is piped through
+    or derived from, and what it references — as `Member` IRIs following the specifier as written.
+    No analyzer names a framework; classification is a rule file's job.
+  req F-8.1: A bare specifier yields both a member IRI and, if it resolves inside the repo, a symbol IRI.
+  req F-8.2: References from type positions are `apiDependsOn`, from value positions `implDependsOn`.
+  req F-8.3: Every stored snippet is valid TypeScript, or absent.
+```
+
+```mdl
+feat F-9: Specs are facts
+  desc: A `.mdl` document yields one `SpecBlock` per fenced block, with its fields and the identifiers it mentions.
+  req F-9.1: Block ids and names come from the header; two blocks sharing a key are disambiguated in order.
+```
+
+```mdl
+feat F-6: Derived relations are rules, recomputed with the index
+  desc: |
+    Indexing closes with a reasoning phase: the asserted facts are serialized to N3, the rule set is
+    appended, and EYE runs in `derivations` mode so only entailed quads come back. They replace
+    `graph:derived` in one batch.
+  req F-6.1: Reachability is a query, not a rule — `deus:imports+` walks the graph lazily, and the
+             closure rule that used to ship (147s per pass, 123k stored quads for identical answers)
+             was removed. `rules/50-example.n3` says so in its header; keep derivations small.
+  req F-6.2: A conclusion never outlives its premises — retracting an import retracts what it entailed.
+  req F-6.3: Conclusions are never premises: a pass reads the file graphs only.
+  req F-6.4: A pass that indexed and removed nothing skips reasoning and leaves the derived graph as is.
+  req F-6.6: Premises are narrowed to the predicates the rules name; an unbound predicate disables the narrowing.
+  req F-6.5: `--no-reason` skips the phase; the derived graph is then only as fresh as the last pass that ran it.
+```
+
+## Tests
+
+```mdl
+test T-1: Store
+  file: src/Store.test.ts
+  covers: F-1, F-2, F-6
+  cases:
+    - a document lands in the file ledger and its own named graph
+    - reindexing swaps the graph rather than accumulating revisions
+    - the ledger survives reopening the store
+    - SPARQL sees the file graphs
+    - LDkit lens returns typed entities
+    - removing a file drops its graph and its row
+    - N3 rules derive new quads, optionally materialized
+    - a derivation does not outlive the fact that entailed it
+    - conclusions are never premises of the next pass
+    - a rule with an unbound predicate still sees the whole graph
+    - a dotfile path survives serialization
+    - dump serializes and load restores
+    - raw quads still round-trip
+    - an interrupted commit is reconciled when the store reopens
+    - clear empties both databases
+```
+
+```mdl
+test T-2: Indexer
+  file: src/Indexer.test.ts
+  covers: F-3, F-4, F-5, F-6
+  cases:
+    - the crawler follows gitignore
+    - the default store lives beside the repository dependencies
+    - a first pass indexes every crawled file
+    - resolved imports are edges and bare specifiers stay module references
+    - a second pass reindexes only what changed
+    - a deleted file loses its graph and its ledger row
+    - --force reindexes everything
+    - the pass closes by recomputing the derived graph
+    - an import removed from a file retracts what it entailed
+    - a pass that changed nothing does not run the rules
+    - --no-reason leaves the derived graph untouched
+    - every snippet the index holds is valid TypeScript
+```
+
+```mdl
+test T-3: TypeScript analyzer
+  file: src/worker/analyzers/typescript.test.ts
+  covers: F-4, F-5, F-7, F-8
+  cases:
+    - file node carries its package and parses clean
+    - imports split into value, type-only and external
+    - re-exports are edges to the re-exported files
+    - a class extending a curried call records the callee as a member IRI
+    - constructedBy and argument come from the initializer call
+    - a pipe rooted in a reference is derivedFrom it, and each stage is pipedThrough
+    - a workspace import records both addressings
+    - type positions are API, value positions are implementation
+    - unresolved references are counted, globals are not
+    - doc summary and deprecation come from the leading JSDoc
+    - snippets abbreviate implementation and stay valid TypeScript
+    - an anonymous default export is named default
+    - a parse failure still yields a file node
+```
+
+```mdl
+test T-4: Package analyzers
+  file: src/worker/analyzers/package.test.ts
+  covers: F-7
+  cases:
+    - package.json asserts the Package node with entries and workspace deps
+    - a manifest without a name is just a file
+    - a broken manifest reports a parse error
+    - moon.yml contributes the layer to the sibling package
+    - moon.yml outside a package asserts nothing about packages
+```
+
+```mdl
+test T-5: Spec documents
+  file: src/Mdl.test.ts
+  covers: F-9
+  cases:
+    - frontmatter is read as flat strings
+    - every fenced block yields a header, fields and mentions
+    - the spec analyzer turns blocks into SpecBlock nodes
+```

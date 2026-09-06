@@ -70,6 +70,9 @@
       "path": "packages/sdk/client-services/tsconfig.json"
     },
     {
+      "path": "tools/code-index/tsconfig.json"
+    },
+    {
       "path": "packages/common/codec-protobuf/tsconfig.json"
     },
     {

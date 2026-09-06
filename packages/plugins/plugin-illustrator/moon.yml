@@ -10,14 +10,23 @@ tasks:
   # Renders docs/diagrams/*.mmd to .svg through the SVG variant and prints the layout report;
   # `-- --scoreboard` prints the strategy × metric table instead. See docs/diagrams/README.md.
   render-diagrams:
-    # vite-node, not bun: bun's CJS interop cannot construct elkjs's bundled fake worker.
-    command: vite-node scripts/render-diagrams.tsx
+    # vite-node: elkjs mistakes bun's global `self` for a web worker; `render.ts` carries the bun shim.
+    command: vite-node scripts/render-diagrams.ts
     inputs:
-      - scripts/render-diagrams.tsx
+      - scripts/render-diagrams.ts
       - docs/diagrams/*.mmd
+      - scripts/standalone-svg.ts
       - src/**/*
     outputs:
       - docs/diagrams/*.svg
+    options:
+      cache: false
+      runInCI: false
+
+  # Renders one mermaid source to a standalone SVG: `-- --input a.mmd --output a.svg`, or stdin to
+  # stdout. The layout report goes to stderr.
+  render:
+    command: bun scripts/render.ts
     options:
       cache: false
       runInCI: false

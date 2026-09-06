@@ -1,0 +1,14 @@
+# ECHO types (`@dxos/echo`).
+#
+# An ECHO type is a schema piped through `Type.Obj` / `Type.Relation`, or a class extending
+# `Type.makeObject`. Both forms carry the typename and version in the piped call's argument, which
+# the parser does not read — a snippet shows it, and a JS reasoner could lift it later.
+
+@prefix deus: <https://dxos.org/vocab/deus#>.
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>.
+
+{ ?s deus:pipedThrough <https://dxos.org/deus/module/%40dxos%2Fecho#Type.Obj> } => { ?s rdf:type deus:EchoType }.
+{ ?s deus:pipedThrough <https://dxos.org/deus/module/%40dxos%2Fecho#Type.Relation> }
+  => { ?s rdf:type deus:EchoRelation }.
+{ ?s deus:extends <https://dxos.org/deus/module/%40dxos%2Fecho#Type.makeObject> } => { ?s rdf:type deus:EchoType }.
+{ ?s deus:extends <https://dxos.org/deus/module/%40dxos%2Fecho#Type.makeRelation> } => { ?s rdf:type deus:EchoRelation }.
