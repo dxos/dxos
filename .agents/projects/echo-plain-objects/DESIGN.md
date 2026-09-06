@@ -246,6 +246,45 @@ nested values must be stored on the target already wrapped. Both benches run aft
 bench's "construct" phase is where the fill-at-construction cost shows. Tests unchanged; the lens in
 `echo-panproto` may change (user, 2026-09-06).
 
+### D12 — Stage E abandoned; fix the refresh instead (adversarial pass 2026-09-06, user direction)
+
+**Decided.** Four of Stage E's five premises were put to an adversarial agent and falsified. Stage E is
+dropped; the work goes to the refresh path it would have widened.
+
+- **P1, fill unconditionally — falsified with a red test.** `clone.ts:cloneInner` creates the proxy with
+  no database and an empty `linkCache`, then copies the document in via `coreClone.change(...)`, which
+  triggers the refresh; every ref freezes as a `RefImpl` with no resolver
+  (`invariant violation: Resolver is not set [this.#resolver] at ref.ts:553`, `clone.test.ts` "clone with
+  nested objects"). `edit-history.ts:169` is the same shape, latent. `lookupRef`'s non-database branch
+  asserts `linkCache`, which `saveRefs` clears on `db.add`. The database half of `_canMaterialize` is
+  load-bearing.
+- **P2, arrays hold their elements — survives with five conditions.** Spread, `JSON.stringify`,
+  `Object.keys`, `Array.isArray`, species and `instanceof Array` all survive, because `EchoArray`
+  declares `static get [Symbol.species]()`. But `arr.constructor` drifts `Array` → `EchoArray`; `has`,
+  `ownKeys` and `getOwnPropertyDescriptor` must stay trapped (`_arrayHas` answers `'-1' in arr` as
+  `true`; a raw `EchoArray` has 9 own keys against the trap's 4, so internals would leak); and the
+  refresh half — the expensive half — is unwritten, since arrays skip both `_refreshAll` and
+  `_writeThrough` and their mutators open no `changeTargetKey` scope.
+- **P3, `Obj.update` may pass a different proxy — falsified.** 84 call sites pass no callback argument
+  and write through the outer read-side proxy, `reactive-proxy.blueprint-test.ts:332` among them. A
+  mutable root view does not cover them: nested records, arrays and meta come from the shared
+  `targetsMap`, and a second `Proxy` over one of those targets fails `isProxy`, degrading
+  `Obj.subscribe` on it to a no-op.
+- **P4, one shared read-only handler — falsified, and not by a test.** The read surface genuinely
+  differs (`getOwnPropertyDescriptor(obj,'id')` carries no `value` for a db-backed object;
+  `Reflect.ownKeys` is 6 against 4). Merging the classes destroys the only discriminator:
+  `isEchoObjectField` would report `true` for a detached typed root, so `_handleLinksAssignment` would
+  deep-copy by value instead of throwing "Object references must be wrapped with `Ref.make`".
+
+**What the pass found instead, and what is now being built.** The refresh is O(document) per incoming
+change **and re-mints ref identity**: `_materializeValue → lookupRef` builds a fresh `RefImpl` plus
+`RefResolver` per ref key on every unscoped refresh, so `holder.assignee !== holder.assignee` across
+one. `_writeThrough`'s key narrowing is the right idea and is wired only for the local-write path; the
+remote path throws its information away — `getInlineAndLinkChanges` keeps `patch.path[1]`, the object
+id, and discards the rest of the path, so `_emitObjectUpdateEvent` can only ask for a full refresh. So:
+(A) preserve ref identity across a refresh when the stored URI is unchanged, and (B) thread the changed
+paths from `event.patches` through to `_refreshAll` and refresh only the targets they touch.
+
 ### D8 — Stage A is a pure fast path, not a redesign
 
 In `TypedReactiveHandler.get`: (1) track per target whether any own **string-keyed accessor** exists

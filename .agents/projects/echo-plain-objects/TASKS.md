@@ -235,32 +235,43 @@ both benches after each.
       only the lens, which the user released).
 - [ ] **PR body updated with the Stage D column.**
 
-## Phase 7 — Stage E: one read-only handler, a mutable view inside `Obj.update`
+## Phase 7 — Stage E: one read-only handler, a mutable view inside `Obj.update` (abandoned)
 
-The user's original design, returned to after the Stage D justification for keeping a `get` trap on some
-proxies was checked and failed: `lookupRef` already has a no-database path, `clone`/`edit-history` create
-the document before the proxy, and an array target could hold its elements as easily as a record does. If
-no proxy needs a `get` trap, and `Obj.update` may hand the callback a different proxy (user, 2026-09-06),
-then the read-side object needs only three traps that always throw — uniform across every kind — so one
-shared handler serves everything and `ProxyHandlerSlot`'s swappable `_handler` has nothing left to do.
+- [x] **Adversarial pass on the premises** — four of five falsified; see DESIGN.md D12 for each verdict
+      and its evidence. `clone.test.ts` goes red under premise 1; premise 3 is contradicted by 84
+      zero-argument `Obj.update` call sites; premise 4 would turn the `Ref.make` guard into a silent
+      deep copy. Stage E is dropped rather than reshaped — what remains of it (arrays holding their
+      elements) is a smaller, separate change, and the pass surfaced a live defect that matters more.
+- [x] **Abandoned, with the direction it produced recorded** (D12).
 
-Premises P1–P5 are with an adversarial agent before any of this is built; the tasks below are provisional
-on its verdicts.
+## Phase 8 — Stage F: fix the refresh (identity, then granularity)
+
+The defect the adversarial pass surfaced. The refresh is O(document) per incoming change and re-mints ref
+identity — `_materializeValue → lookupRef` builds a fresh `RefImpl` and `RefResolver` per ref key on every
+unscoped refresh, so `holder.assignee !== holder.assignee` across one. And `_writeThrough`'s key narrowing
+is wired only for the local-write path: on the remote path `getInlineAndLinkChanges` keeps the object id
+out of `patch.path[1]` and discards the rest, so `_emitObjectUpdateEvent` can only ask for a full refresh.
+Predicted symptom of both together: re-render storms under sync in ref-heavy, array-heavy spaces — a
+workload neither bench covers, so it needs its own measurement.
+
+Premises A1–A5 (ref reuse is observationally equivalent, URI equality is a sufficient key, patch paths
+carry what a target must react to, path-intersecting targets are sufficient, `_emitObjectUpdateEvent` is
+the only caller needing narrowing) are with an adversarial agent; the tasks below are provisional on its
+verdicts.
 
 ### Tasks
 
-- [ ] **Adversarial pass on the premises** — fill-always, arrays-hold-elements, different-proxy-in-update,
-      one-shared-read-handler, suites-unchanged. Falsify or bound each.
-- [ ] **Fill unconditionally** — drop the database half of `_canMaterialize`; refresh when the database is
-      attached to the core so a held ref gains its resolver.
-- [ ] **Arrays hold their elements** — fill and refresh `EchoArray` targets like records; drop their trap.
-- [ ] **Split the handler** — a shared read-only handler (throwing `set`/`deleteProperty`/`defineProperty`,
-      plus the key-set traps) and a mutable one used only inside `Obj.update`.
-- [ ] **`Obj.update` passes the mutable proxy**; the change-context key stays the raw target / core.
-- [ ] **Delete `ProxyHandlerSlot`'s swappable handler and the `db.add` swap** — re-pointing the target's
-      prototype is the whole of the conversion.
+- [ ] **Adversarial pass on A1–A5.**
+- [ ] **Prove the defect first** — a counting probe over `lookupRef`/`defineProperty` under a remote
+      one-key change, and a ref-identity assertion, both failing before the fix.
+- [ ] **(A) Preserve ref identity** across `_refreshRecord` and `_writeThrough` when the stored URI is
+      unchanged.
+- [ ] **(B) Thread the changed paths** from `event.patches` through `getInlineAndLinkChanges` /
+      `_emitObjectUpdateEvent` / `notifyUpdate` into `_refreshAll`, and refresh only the targets they
+      touch.
 - [ ] **Green: `echo`, `echo-client`, `echo-client-e2e`, unmodified.**
-- [ ] **Measure** — both benches; expect reads at or below the current ~25 ns and writes unchanged.
+- [ ] **Measure** — a sync-shaped bench (remote one-key change against a wide, ref-heavy object) plus the
+      existing two, to show the read/write rows are unmoved.
 
 ## Phase 5: Compare and review
 
