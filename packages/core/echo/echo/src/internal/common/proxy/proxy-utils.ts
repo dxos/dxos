@@ -122,13 +122,13 @@ export const createProxy = <T extends object>(target: T, handler: ReactiveHandle
   // On the target, so that both it and a `get`-less proxy over it answer.
   defineHiddenProperty(target, symbolSlot, slot);
   defineHiddenProperty(target, symbolProxy, proxy);
+  // Before `init`, which recurses into nested values: a graph that reaches back to this target must
+  // find the proxy already memoized rather than build a second one.
+  handler._proxyMap.set(target, proxy);
   handler.init(target);
   if (handler.readsForwarded?.(target)) {
     slot.forwardReads();
   }
-
-  // TODO(dmaretskyi): Check if this will actually work; maybe a global WeakMap is better?
-  handler._proxyMap.set(target, proxy);
   return proxy;
 };
 

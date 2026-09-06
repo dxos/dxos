@@ -292,29 +292,25 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
    * `Object.prototype` — are left to it, as the decode path did.
    */
   private _refreshRecord(target: ProxyTarget): void {
-    const core = target[symbolInternals];
-    if (!this._canMaterialize(core)) {
+    if (!this._canMaterialize(target[symbolInternals])) {
       return;
     }
-    const namespace = target[symbolNamespace];
-    const path = target[symbolPath];
-    // The meta root is read decoded so `upgradeMeta` supplies its defaults; data is read raw, since a
-    // decode copies the whole subtree and only the top level is needed here.
-    const record: unknown =
-      namespace === META_NAMESPACE && path.length === 0
-        ? core.getDecoded([namespace])
-        : core.getRaw([namespace, ...path]);
+    const record = this._storedRecord(target);
     const present = typeof record === 'object' && record !== null && !Array.isArray(record);
+    // Materialized in full before anything is applied, so a value that throws leaves the target as it
+    // was rather than half of two records — reads are forwarded straight at it and would not recover.
+    const materialized: [string, unknown][] = [];
     if (present) {
       const prototype = Object.getPrototypeOf(target);
       for (const [key, stored] of Object.entries(record)) {
-        if (Reflect.has(prototype, key)) {
-          continue;
+        if (!Reflect.has(prototype, key)) {
+          materialized.push([key, this._materializeValue(target, key, stored)]);
         }
-        const value = this._materializeValue(target, key, stored);
-        if (!Object.hasOwn(target, key) || (target as any)[key] !== value) {
-          Object.defineProperty(target, key, { value, writable: true, enumerable: true, configurable: true });
-        }
+      }
+    }
+    for (const [key, value] of materialized) {
+      if (!Object.hasOwn(target, key) || (target as any)[key] !== value) {
+        Object.defineProperty(target, key, { value, writable: true, enumerable: true, configurable: true });
       }
     }
     for (const key of Object.keys(target)) {
@@ -327,6 +323,20 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     if (proxy) {
       getProxySlot(proxy).forwardReads();
     }
+  }
+
+  /**
+   * A target's record as the document holds it. The meta root is read decoded, so `upgradeMeta` supplies
+   * the defaults an older document omits; everything else is read raw, since a decode copies the whole
+   * subtree where only the top level is wanted.
+   */
+  private _storedRecord(target: ProxyTarget): unknown {
+    const core = target[symbolInternals];
+    const namespace = target[symbolNamespace];
+    const path = target[symbolPath];
+    return namespace === META_NAMESPACE && path.length === 0
+      ? core.getDecoded([namespace])
+      : core.getRaw([namespace, ...path]);
   }
 
   /**
@@ -366,7 +376,8 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       return true;
     }
     const previous = (target as any)[key];
-    const stored = target[symbolInternals].getRaw([target[symbolNamespace], ...target[symbolPath], key]);
+    const record = this._storedRecord(target);
+    const stored = typeof record === 'object' && record !== null ? (record as any)[key] : undefined;
     if (stored === undefined) {
       delete (target as any)[key];
       return !isProxy(previous);

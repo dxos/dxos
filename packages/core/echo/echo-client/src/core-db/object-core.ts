@@ -360,11 +360,15 @@ export class ObjectCore {
    * This function can be used unbound.
    */
   public readonly notifyUpdate = () => {
+    // Refresh before the emit, so a subscriber reading the object inside its callback sees fresh values;
+    // guarded separately from it, so a refresh that fails still lets subscribers hear about the change.
+    this.#reportingErrors(() => this.#refresh());
+    this.#reportingErrors(() => this.updates.emit());
+  };
+
+  #reportingErrors(fn: () => void): void {
     try {
-      // Before the emit, so a subscriber reading the object inside its callback sees fresh values, and
-      // inside the guard so a failing refresh is reported rather than escaping into the writer.
-      this.#refresh();
-      this.updates.emit();
+      fn();
     } catch (err: any) {
       // Print the error message synchronously for easier debugging.
       // The stack trace and details will be printed asynchronously.
@@ -376,7 +380,7 @@ export class ObjectCore {
       // TODO(dmaretskyi): Take some inspiration from facebook/react/packages/shared/invokeGuardedCallbackImpl.js
       throwUnhandledError(err);
     }
-  };
+  }
 
   /**
    * Encode a value to be stored in the Automerge document.
