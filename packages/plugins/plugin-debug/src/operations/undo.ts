@@ -10,12 +10,14 @@ import * as Operation from '@dxos/compute/Operation';
 
 import { DebugOperation } from '#types';
 
+import { NothingToUndoError } from '../errors';
+
 const handler: Operation.WithHandler<typeof DebugOperation.Undo> = DebugOperation.Undo.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* () {
       const tracker = yield* Capability.get(Capabilities.HistoryTracker);
       if (!tracker.canUndo()) {
-        return yield* Effect.fail(new Error('Nothing to undo.'));
+        return yield* Effect.fail(new NothingToUndoError());
       }
       yield* tracker.undo();
       return { undone: true };

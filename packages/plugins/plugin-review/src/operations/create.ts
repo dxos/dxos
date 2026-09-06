@@ -18,6 +18,8 @@ import { AnchoredTo, Thread } from '@dxos/types';
 
 import { CommentCapabilities, CommentOperation } from '#types';
 
+import { CommentNotPersistedError, InvalidCommentRangeError, RangeAnchorSubjectError } from '../errors';
+
 const handler: Operation.WithHandler<typeof CommentOperation.Create> = CommentOperation.Create.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({ name, anchor: anchorProp, range, subject, branch, text, sender }) {
@@ -80,7 +82,10 @@ const handler: Operation.WithHandler<typeof CommentOperation.Create> = CommentOp
             }
           })
         : undefined;
-      return { threadId: thread.id, anchorId: persisted?.id ?? anchor.id };
+      if (!persisted) {
+        return yield* Effect.fail(new CommentNotPersistedError());
+      }
+      return { threadId: thread.id, anchorId: persisted.id };
     }),
   ),
 );
@@ -90,8 +95,13 @@ export default handler;
 /** The cursor anchor for a character range of a markdown document, as the editor's comment action makes it. */
 const anchorFromRange = Effect.fnUntraced(function* (subject: Obj.Unknown, range: { from: number; to: number }) {
   if (!Obj.instanceOf(Markdown.Document, subject)) {
-    return yield* Effect.fail(new Error('A range anchor needs a markdown document as the subject.'));
+    return yield* Effect.fail(new RangeAnchorSubjectError());
   }
   const content = yield* Effect.promise(() => subject.content.load());
-  return toCursorRange(Doc.createAccessor(content, ['content']), range.from, range.to);
+  const { from, to } = range;
+  const length = content.content.length;
+  if (!Number.isInteger(from) || !Number.isInteger(to) || from < 0 || from > to || to > length) {
+    return yield* Effect.fail(new InvalidCommentRangeError());
+  }
+  return toCursorRange(Doc.createAccessor(content, ['content']), from, to);
 });

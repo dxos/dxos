@@ -26,7 +26,7 @@ Environment, in order:
 2. Start the QA dev server in the background and wait for it (first start builds the graph, budget
    15 minutes):
      DX_DEBUG_PORT_SESSION=$(node -e 'console.log(crypto.randomUUID())') \
-       pnpm exec moon run composer-app:serve-qa -- --port 5182 --strictPort --host 127.0.0.1
+       pnpm exec moon run composer-app:serve-qa -- --port 5182 --strictPort --host 127.0.0.1 > /tmp/qa-server.log 2>&1 &
    Choosing the session yourself (DX_DEBUG_PORT_SESSION) means you never need the sidecar.
    Wait until `curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:5182/` prints 200.
 3. Open the app in the repo's headless browser helper, which stays alive for the whole run.

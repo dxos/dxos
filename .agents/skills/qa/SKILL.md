@@ -37,7 +37,7 @@ Through the Browser pane, `preview_start` with the `composer-qa` launch configur
 background:
 
 ```bash
-moon run composer-app:serve-qa -- --port 5182 --strictPort
+moon run composer-app:serve-qa -- --port 5182 --strictPort &
 ```
 
 **Run the page in the headless browser helper, not the Browser pane.** The pane's tab is hidden
@@ -46,7 +46,7 @@ Chromium page counts as visible and mounts in seconds. Close the pane's tab firs
 share the port's session), then, in the background from the repo root:
 
 ```bash
-node packages/apps/composer-app/testing/scripts/bin/qa-browser.mjs http://localhost:5182/
+node packages/apps/composer-app/testing/scripts/bin/qa-browser.mjs http://localhost:5182/ &
 ```
 
 It prints `mounted` once the app is up and page errors as `[page] …`; it stays alive until you stop

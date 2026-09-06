@@ -100,7 +100,7 @@ The port lives in a page. Open it with the headless helper rather than a pane ta
 boots slowly or not at all, and a headless page mounts in seconds on a fresh profile.
 
 ```bash
-node packages/apps/composer-app/testing/scripts/bin/qa-browser.mjs http://localhost:5182/
+node packages/apps/composer-app/testing/scripts/bin/qa-browser.mjs http://localhost:5182/ &
 ```
 
 ## Reports

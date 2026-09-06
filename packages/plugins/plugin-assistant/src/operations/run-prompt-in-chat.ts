@@ -16,6 +16,7 @@ import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 
 import { AssistantCapabilities, AssistantEvents, AssistantOperation } from '#types';
 
+import { ChatNotSpecifiedError } from '../errors';
 import { defaultPreset } from '../processor';
 
 const handler: Operation.WithHandler<typeof AssistantOperation.RunPromptInChat> =
@@ -36,7 +37,7 @@ const handler: Operation.WithHandler<typeof AssistantOperation.RunPromptInChat> 
             : undefined;
         const chat = chatProp ?? companion?.chat;
         if (chat === undefined) {
-          return yield* Effect.fail(new Error('Pass `chat` or `companionTo`.'));
+          return yield* Effect.fail(new ChatNotSpecifiedError());
         }
         // As the companion's own submit does: a transient chat is persisted under its subject before
         // the first request, so the agent process can resolve a durable conversation feed and space.
