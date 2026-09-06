@@ -167,12 +167,25 @@ export const middleware = ({
     const template = join(appRoot, 'index.html');
 
     /**
-     * Vite in `custom` app type serves no HTML, so the SPA fallback is ours: any request that its
+     * A request the browser makes by navigating, as opposed to one a module makes. Only the former
+     * may fall through to `index.html`: answering a module request with HTML turns a resolve
+     * failure or a 403 into a MIME-type error naming the importer, which is how an automerge
+     * misconfiguration in this file presented as a broken `/automerge.ts`.
+     */
+    const isNavigation = (request: IncomingMessage): boolean =>
+      (request.method === 'GET' || request.method === 'HEAD') && (request.headers.accept ?? '').includes('text/html');
+
+    /**
+     * Vite in `custom` app type serves no HTML, so the SPA fallback is ours: a navigation its
      * middlewares did not answer gets `index.html`, which is what makes `/p/<project>` a URL the
      * user can reload.
      */
     const handle: Middleware['handle'] = (request, response) => {
       server.middlewares(request, response, () => {
+        if (!isNavigation(request)) {
+          response.writeHead(404, { 'content-type': 'text/plain' }).end(`Not found: ${request.url ?? ''}`);
+          return;
+        }
         void (async () => {
           try {
             const html = await server.transformIndexHtml(request.url ?? '/', await readFile(template, 'utf8'));
