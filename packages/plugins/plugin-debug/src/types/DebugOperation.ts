@@ -75,6 +75,26 @@ const SurfaceSummary = Schema.Struct({
   component: Schema.optional(Schema.String),
 });
 
+const SpaceSummary = Schema.Struct({
+  id: Schema.String,
+  name: Schema.optional(Schema.String),
+  state: Schema.String.annotate({ description: 'The `SpaceState` name, e.g. `SPACE_READY`.' }),
+  default: Schema.optional(Schema.Boolean),
+});
+
+const ToastSummary = Schema.Struct({
+  title: Schema.optional(Schema.String),
+  description: Schema.optional(Schema.String),
+  actions: Schema.Array(Schema.String).annotate({ description: "Labels of the toast's buttons." }),
+});
+
+const ErrorSummary = Schema.Struct({
+  timestamp: Schema.Number,
+  message: Schema.optional(Schema.String),
+  error: Schema.optional(Schema.String),
+  file: Schema.optional(Schema.String),
+});
+
 /**
  * One JSON document describing the live UI state — layout, attention, open planks with their
  * subjects and reachable actions, mounted surfaces, and plugin counts — so an agent can infer what
@@ -87,16 +107,24 @@ export const Snapshot = Operation.make({
     description:
       'Returns a JSON snapshot of the live UI state: layout (mode, sidebars, open planks), attended ' +
       'items, each open plank with its subject object and the actions the UI offers for it (with ' +
-      'their operation keys), the mounted surfaces, and plugin counts. Read-only.',
+      'their operation keys), the mounted surfaces, the spaces, the visible toasts, the errors ' +
+      'logged since `since` (a timestamp; default: the last minute), and plugin counts. Read-only.',
     icon: 'ph--camera--regular',
   },
   services: [Capability.Service, Plugin.Service],
-  input: Schema.Struct({}),
+  input: Schema.Struct({
+    since: Schema.optional(Schema.Number).annotate({
+      description: 'Only errors logged at or after this unix timestamp (ms) are reported.',
+    }),
+  }),
   output: Schema.Struct({
     layout: Schema.optional(LayoutSummary),
     attention: Schema.Array(Schema.String),
     planks: Schema.Array(PlankSummary),
     surfaces: Schema.Array(SurfaceSummary),
+    spaces: Schema.Array(SpaceSummary),
+    toasts: Schema.Array(ToastSummary),
+    errors: Schema.Array(ErrorSummary),
     plugins: Schema.Struct({
       installed: Schema.Number,
       enabled: Schema.Number,
