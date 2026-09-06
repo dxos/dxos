@@ -902,6 +902,12 @@ dist/types/src: ENOTEMPTY` — a concurrent writer. A Cursor TypeScript native-p
       pickers anchor through `Popover.VirtualTrigger` at the field element now; the two picker stories
       assert the calendar opens under its field. Sweep of every `asChild` trigger/anchor: the other
       children are buttons, `Icon`, `StatusBar` parts and `composable`s that spread their props.
+- [x] **`Fieldset` on Ark's fieldset** DONE 2026-09-05 (asked for after the field work). `Root`
+      (a `<fieldset>` whose `disabled`/`invalid` reach every `Input.Root` inside, since the field
+      machine reads the fieldset's), `Legend`, `HelperText`, `ErrorText`; the machine wires
+      `aria-labelledby`/`aria-describedby` by detecting the texts. `Form.Section` is the first
+      consumer: its `h2` is the legend through `asChild`, so the group is named by its title and the
+      heading still serves navigation. Stories assert the naming, the description and the disabling.
 - [ ] **Rename `Input` → `Field`** (own PR, a codemod over ~900 sites: `Root` 443, `Label` 215,
       `TextInput` 119, `Switch` 40, `Checkbox` 25, `DescriptionAndValidation` 22, `Validation` 13,
       `TextArea` 12, `Description` 11, `PinInput` 4). Proposed names follow Ark where the part is

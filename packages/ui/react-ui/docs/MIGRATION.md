@@ -104,38 +104,39 @@ measured. ² Counted as `DropdownMenu.` references.
 
 Ark components with no counterpart in `react-ui`, for reference:
 
-| Ark component     | in the repo today                                   | note                                          |
-| ----------------- | --------------------------------------------------- | --------------------------------------------- |
-| `accordion`       | `react-ui-list` — already on Ark                    | migrated on merit (APG keymap), see `TREE.md` |
-| `collapsible`     | `react-list` — on Ark                               | done, Phase 2                                 |
-| `tabs`            | `react-ui` `Tabs` — on Ark                          | done; folded in from `react-ui-tabs`          |
-| `combobox`        | hand-built in `react-ui-list`                       | candidate, not obligation (+87.9 KB raw)      |
-| `listbox`         | hand-built in `react-ui-list`                       | candidate, not obligation (+22.5 KB raw)      |
-| `drawer`          | none — `Main`'s sidebars are dialogs                | the missing mobile bottom sheet, Phase 4      |
-| `tree-view`       | `react-ui-list` `Tree` — already on Ark             | the reason Ark is in the app                  |
-| `hover-card`      | none                                                |                                               |
-| `navigation-menu` | none                                                |                                               |
-| `floating-panel`  | none                                                |                                               |
-| `tour`            | none                                                |                                               |
-| `tags-input`      | none                                                |                                               |
-| `file-upload`     | none                                                |                                               |
-| `number-input`    | none (`Input` has no numeric variant)               |                                               |
-| `pin-input`       | `Input.PinInput` hand-built                         |                                               |
-| `password-input`  | none                                                |                                               |
-| `switch`          | `Input.Switch` hand-built                           |                                               |
-| `rating-group`    | none                                                |                                               |
-| `segment-group`   | none                                                |                                               |
-| `pagination`      | none                                                |                                               |
-| `color-picker`    | none                                                |                                               |
-| `signature-pad`   | none                                                |                                               |
-| `qr-code`         | `react-ui` `QrCode` — on Ark                        | done; replaced `react-qr-rounded`             |
-| `timer`           | none                                                |                                               |
-| `marquee`         | none (`TextCrawl` is a different thing)             |                                               |
-| `image-cropper`   | none                                                |                                               |
-| `json-tree-view`  | none (devtools has its own `ObjectsTree` on `Tree`) |                                               |
-| `toc`             | none                                                |                                               |
-| `angle-slider`    | none                                                |                                               |
-| `cascade-select`  | none                                                |                                               |
+| Ark component     | in the repo today                                    | note                                          |
+| ----------------- | ---------------------------------------------------- | --------------------------------------------- |
+| `accordion`       | `react-ui-list` — already on Ark                     | migrated on merit (APG keymap), see `TREE.md` |
+| `collapsible`     | `react-list` — on Ark                                | done, Phase 2                                 |
+| `tabs`            | `react-ui` `Tabs` — on Ark                           | done; folded in from `react-ui-tabs`          |
+| `combobox`        | hand-built in `react-ui-list`                        | candidate, not obligation (+87.9 KB raw)      |
+| `listbox`         | hand-built in `react-ui-list`                        | candidate, not obligation (+22.5 KB raw)      |
+| `drawer`          | none — `Main`'s sidebars are dialogs                 | the missing mobile bottom sheet, Phase 4      |
+| `tree-view`       | `react-ui-list` `Tree` — already on Ark              | the reason Ark is in the app                  |
+| `hover-card`      | none                                                 |                                               |
+| `navigation-menu` | none                                                 |                                               |
+| `floating-panel`  | `FloatingPanel` (2026-09-05); the debug panel is one |                                               |
+| `fieldset`        | `Fieldset` (2026-09-05); `Form.Section` is one       |                                               |
+| `tour`            | none                                                 |                                               |
+| `tags-input`      | none                                                 |                                               |
+| `file-upload`     | none                                                 |                                               |
+| `number-input`    | none (`Input` has no numeric variant)                |                                               |
+| `pin-input`       | `Input.PinInput` hand-built                          |                                               |
+| `password-input`  | none                                                 |                                               |
+| `switch`          | `Input.Switch` hand-built                            |                                               |
+| `rating-group`    | none                                                 |                                               |
+| `segment-group`   | none                                                 |                                               |
+| `pagination`      | none                                                 |                                               |
+| `color-picker`    | none                                                 |                                               |
+| `signature-pad`   | none                                                 |                                               |
+| `qr-code`         | `react-ui` `QrCode` — on Ark                         | done; replaced `react-qr-rounded`             |
+| `timer`           | none                                                 |                                               |
+| `marquee`         | none (`TextCrawl` is a different thing)              |                                               |
+| `image-cropper`   | none                                                 |                                               |
+| `json-tree-view`  | none (devtools has its own `ObjectsTree` on `Tree`)  |                                               |
+| `toc`             | none                                                 |                                               |
+| `angle-slider`    | none                                                 |                                               |
+| `cascade-select`  | none                                                 |                                               |
 
 ## 2. Primitive mapping: → Ark
 
