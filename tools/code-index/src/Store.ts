@@ -178,9 +178,31 @@ const make = (dir: string): Effect.Effect<Api, StoreError, SqlClient.SqlClient |
     const quadstore = new Quadstore({ backend, dataFactory: DataFactory });
     yield* Effect.acquireRelease(
       tryStore('Failed to open graph', () => quadstore.open()),
-      () => Effect.orDie(tryStore('Failed to close graph', () => quadstore.close())),
+      () =>
+        Effect.orDie(
+          tryStore('Failed to close graph', async () => {
+            while (inFlight > 0) {
+              await new Promise((resolve) => setImmediate(resolve));
+            }
+            // One more turn: the last query's own follow-up work is queued, not yet run.
+            await new Promise((resolve) => setImmediate(resolve));
+            await quadstore.close();
+          }),
+        ),
     );
     const engine = new Engine(quadstore);
+    // Comunica keeps working on a query after its stream ends (cardinality metadata, for one), and
+    // touching a closed store throws asynchronously. Queries are counted so the finalizer can wait
+    // for the stragglers instead of closing under them.
+    let inFlight = 0;
+    const tracked = async <A>(work: () => Promise<A>): Promise<A> => {
+      inFlight++;
+      try {
+        return await work();
+      } finally {
+        inFlight--;
+      }
+    };
     // Every file lives in its own named graph, so queries treat the default graph as their union —
     // otherwise a SPARQL pattern without an explicit GRAPH clause would match nothing.
     const context = { unionDefaultGraph: true };
@@ -277,11 +299,14 @@ const make = (dir: string): Effect.Effect<Api, StoreError, SqlClient.SqlClient |
           Effect.mapError(fail('Failed to begin file commit')),
         );
 
-        // 2. Swap the graphs in one backend batch.
-        const previous = current
-          ? yield* match(undefined, undefined, undefined, DataFactory.namedNode(current.graph))
-          : [];
-        yield* patchGraph(current && current.graph !== graph.value ? previous : [], quads);
+        // 2. Swap the graphs in one backend batch. Both the live graph and the target are cleared:
+        //    a reindex at an unchanged mtime targets the graph it is replacing, and merging into it
+        //    would leave the previous revision's quads behind forever.
+        const stale: Quad[] = [];
+        for (const name of new Set([current?.graph, graph.value].filter((value) => value !== undefined))) {
+          stale.push(...(yield* match(undefined, undefined, undefined, DataFactory.namedNode(name))));
+        }
+        yield* patchGraph(stale, quads);
 
         // 3. Commit: the ledger row is what makes the new graph the live one.
         yield* sql`UPDATE files SET language = ${document.language}, size = ${document.size},
@@ -354,15 +379,19 @@ const make = (dir: string): Effect.Effect<Api, StoreError, SqlClient.SqlClient |
       match,
 
       select: (sparql) =>
-        tryStore('Failed to run SPARQL SELECT', async () => {
-          const rows = await collect<Bindings>(await engine.queryBindings(sparql, context));
-          return rows.map((row) => Object.fromEntries([...row].map(([key, term]) => [key.value, term.value])));
-        }),
+        tryStore('Failed to run SPARQL SELECT', () =>
+          tracked(async () => {
+            const rows = await collect<Bindings>(await engine.queryBindings(sparql, context));
+            return rows.map((row) => Object.fromEntries([...row].map(([key, term]) => [key.value, term.value])));
+          }),
+        ),
 
-      ask: (sparql) => tryStore('Failed to run SPARQL ASK', () => engine.queryBoolean(sparql, context)),
+      ask: (sparql) => tryStore('Failed to run SPARQL ASK', () => tracked(() => engine.queryBoolean(sparql, context))),
 
       construct: (sparql) =>
-        tryStore('Failed to run SPARQL CONSTRUCT', () => engine.queryQuads(sparql, context).then(collect<Quad>)),
+        tryStore('Failed to run SPARQL CONSTRUCT', () =>
+          tracked(() => engine.queryQuads(sparql, context).then(collect<Quad>)),
+        ),
 
       lens: (schema) => createLens(schema, ldkit),
 

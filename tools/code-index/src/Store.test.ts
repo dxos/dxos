@@ -46,6 +46,7 @@ const document = (path: string, mtime: number, imports: string[] = []): Ontology
       'argument': [],
       'apiDependsOn': [],
       'implDependsOn': [],
+      'aliasOf': [],
       'snippet': 'export const thing = 1;',
     },
   ],
@@ -102,6 +103,22 @@ describe('Store', () => {
     expect(stale).toHaveLength(0);
     expect(fresh.length).toBeGreaterThan(0);
     expect(after.quads).toEqual(before.quads);
+  });
+
+  test('reindexing at an unchanged mtime replaces rather than merges', async () => {
+    // `--force` reindexes without the mtime moving, so the new graph IRI is the one being replaced.
+    const revised: Ontology.FileDocument = { ...document('src/a.ts', 2), importsModule: ['revised'] };
+    await withStore((store) => store.putDocument(revised));
+
+    const quads = await withStore((store) =>
+      store.match(undefined, undefined, undefined, Ontology.graphIri('src/a.ts', 2)),
+    );
+    const modules = quads.filter((quad) => quad.predicate.value === Ontology.importsModule.value);
+    expect(modules.map((quad) => quad.object.value)).toEqual(['revised']);
+    // The import edge of the previous write is gone, not merged in beside the new one.
+    expect(quads.filter((quad) => quad.predicate.value === Ontology.imports.value)).toEqual([]);
+
+    await withStore((store) => store.putDocument(document('src/a.ts', 2, ['src/b.ts'])));
   });
 
   test('the ledger survives reopening the store', async () => {

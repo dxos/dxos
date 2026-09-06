@@ -13,6 +13,7 @@ import { realpath } from 'node:fs/promises';
 import { availableParallelism } from 'node:os';
 
 import * as Crawler from './Crawler.ts';
+import * as Reasoner from './Reasoner.ts';
 import * as Store from './Store.ts';
 import * as Pool from './worker/Pool.ts';
 import type * as Protocol from './worker/Protocol.ts';
@@ -32,8 +33,8 @@ export type Options = {
   /** Reindex every file, ignoring recorded mtimes. */
   readonly force?: boolean;
   readonly extensions?: readonly string[];
-  /** N3 rules applied once the pass has committed; omitted, the reasoning phase is skipped. */
-  readonly rules?: string;
+  /** Reasoners run once the pass has committed; omitted or empty, the reasoning phase is skipped. */
+  readonly reasoners?: readonly Reasoner.Reasoner[];
 };
 
 /**
@@ -57,15 +58,14 @@ export type Result = {
   readonly skipped: readonly Protocol.SkippedFile[];
   /** Size of the derived graph after the pass, whether or not this pass recomputed it. */
   readonly derived: number;
-  /** Whether the rules ran; a pass that changed nothing leaves the derived graph alone. */
+  /** Whether the reasoners ran; a pass that changed nothing leaves their graphs alone. */
   readonly reasoned: boolean;
+  /** What each reasoner concluded, in the order they ran. */
+  readonly reasoners: readonly Reasoner.Outcome[];
   readonly timings: Timings;
 };
 
 export const DEFAULT_BATCH_SIZE = 64;
-
-/** Name of the graph the pass's own rule set writes to; one graph per reasoner. */
-export const DEFAULT_REASONER = 'rules';
 
 const millis = <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<[number, A], E, R> =>
   Effect.map(Effect.timed(effect), ([duration, value]) => [Duration.toMillis(duration), value]);
@@ -146,16 +146,17 @@ export const run = (
     yield* store.setMeta('root', root);
     yield* store.setMeta('indexedAt', new Date().toISOString());
 
-    // Reasoning closes the pass: the derived graph is recomputed from the facts this pass leaves
+    // Reasoning closes the pass: each reasoner's graph is recomputed from the facts this pass left
     // behind, so a conclusion can never outlive the import or file that entailed it. A pass that
     // changed nothing would derive exactly what is already there, so it is skipped — reasoning is
     // whole-graph and by far the most expensive phase.
     const dirty = indexed > 0 || removed.length > 0;
-    const [reasonMs, derived] = yield* millis(
-      options.rules && dirty
-        ? Effect.map(store.reason(DEFAULT_REASONER, options.rules, { materialize: true }), (quads) => quads.length)
-        : Effect.map(store.derived(), (quads) => quads.length),
-    );
+    const reasoners = options.reasoners ?? [];
+    const willReason = reasoners.length > 0 && dirty;
+    const [reasonMs, outcomes] = yield* millis(willReason ? Reasoner.run(reasoners) : Effect.succeed([]));
+    const derived = willReason
+      ? outcomes.reduce((total, outcome) => total + outcome.derived, 0)
+      : (yield* store.derived()).length;
 
     return {
       root,
@@ -165,7 +166,8 @@ export const run = (
       removed: removed.length,
       skipped,
       derived,
-      reasoned: Boolean(options.rules) && dirty,
+      reasoned: willReason,
+      reasoners: outcomes,
       timings: { scanMs, parseMs, commitMs, reasonMs, totalMs: Date.now() - started },
     };
   });

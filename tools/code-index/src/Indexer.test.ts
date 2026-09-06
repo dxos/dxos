@@ -46,14 +46,19 @@ describe('Indexer', () => {
 
   // Deliberately not a closure: reachability over `deus:imports` is a query (`deus:imports+`),
   // never a materialized rule — see the header of `rules/example.n3`.
-  const RULES = `
+  const REASONER = {
+    name: 'test',
+    rules: `
     @prefix deus: <${Ontology.PREFIX}>.
     { ?a deus:imports ?b } => { ?a deus:importsTestFile ?b }.
-  `;
+  `,
+  };
 
   const index = (options?: Partial<Indexer.Options>) =>
     EffectEx.runPromise(
-      Effect.scoped(Effect.provide(Indexer.run({ root, workers: 1, rules: RULES, ...options }), Store.layer(dir))),
+      Effect.scoped(
+        Effect.provide(Indexer.run({ root, workers: 1, reasoners: [REASONER], ...options }), Store.layer(dir)),
+      ),
     );
 
   test('the crawler follows gitignore', async () => {
@@ -152,7 +157,7 @@ describe('Indexer', () => {
     expect(result.timings.reasonMs).toBeGreaterThan(0);
 
     const derived = await withStore((store) =>
-      store.match(undefined, Ontology.importsTestFile, undefined, Ontology.derivedGraphIri(Indexer.DEFAULT_REASONER)),
+      store.match(undefined, Ontology.importsTestFile, undefined, Ontology.derivedGraphIri(REASONER.name)),
     );
     expect(derived).toHaveLength(2);
 
@@ -199,7 +204,7 @@ describe('Indexer', () => {
     const touched = new Date();
     await utimes(join(root, 'src', 'a.ts'), touched, touched);
 
-    const result = await index({ rules: undefined });
+    const result = await index({ reasoners: [] });
     expect(result).toMatchObject({ indexed: 1, reasoned: false, derived: 1 });
     // a no longer imports b, but nothing recomputed the conclusion that said it did.
     expect(await withStore((store) => store.match(undefined, Ontology.importsTestFile))).toHaveLength(1);

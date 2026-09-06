@@ -11,12 +11,13 @@ import * as Argument from 'effect/unstable/cli/Argument';
 import * as Command from 'effect/unstable/cli/Command';
 import * as Flag from 'effect/unstable/cli/Flag';
 import { readFile } from 'node:fs/promises';
-import { resolve } from 'node:path';
+import { extname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import * as Crawler from './Crawler.ts';
 import * as Indexer from './Indexer.ts';
 import * as Ontology from './Ontology.ts';
+import * as Reasoner from './Reasoner.ts';
 import * as Store from './Store.ts';
 
 /**
@@ -24,8 +25,8 @@ import * as Store from './Store.ts';
  * `<git root>/node_modules/.code-index` for the repository containing the working directory.
  */
 
-/** Bundled N3 rule set; read its header before adding rules of your own. */
-export const DEFAULT_RULES = fileURLToPath(new URL('../rules/example.n3', import.meta.url));
+/** The bundled rule files; read `rules/50-example.n3` before adding rules of your own. */
+export const DEFAULT_RULES = Reasoner.BUNDLED_DIR;
 
 const rootFlag = Flag.string('root').pipe(
   Flag.withDescription('Repository root to index (default: the git root of the working directory).'),
@@ -60,7 +61,7 @@ const index = Command.make(
     force: Flag.boolean('force').pipe(Flag.withDescription('Reindex every file, ignoring recorded mtimes.')),
     workers: Flag.integer('workers').pipe(Flag.withDescription('Parsing workers.'), Flag.optional),
     rules: Flag.string('rules').pipe(
-      Flag.withDescription('N3 rules recomputed at the end of the pass (default: bundled rules/example.n3).'),
+      Flag.withDescription('N3 rules file or directory, recomputed at the end of the pass (default: bundled rules/).'),
       Flag.optional,
     ),
     noReason: Flag.boolean('no-reason').pipe(Flag.withDescription('Skip the reasoning phase.')),
@@ -69,16 +70,13 @@ const index = Command.make(
     Effect.gen(function* () {
       const repo = yield* resolveRoot(root);
       const rulesPath = resolve(Option.getOrElse(rules, () => DEFAULT_RULES));
-      const source = noReason
-        ? undefined
-        : yield* Effect.tryPromise({
-            try: () => readFile(rulesPath, 'utf8'),
-            catch: (cause) => new Store.StoreError({ message: `Cannot read rules file: ${rulesPath}`, cause }),
-          });
+      const reasoners = noReason
+        ? []
+        : yield* extname(rulesPath) === '' ? Reasoner.load(rulesPath) : Reasoner.loadFile(rulesPath);
       const result = yield* Indexer.run({
         root: repo,
         force,
-        rules: source,
+        reasoners,
         workers: Option.getOrUndefined(workers),
       }).pipe(Effect.provide(storeLayer(repo, store)));
       const { timings } = result;
@@ -89,6 +87,13 @@ const index = Command.make(
             (noReason ? '' : `, ${result.derived} derived`),
           `scan ${seconds(timings.scanMs)} · parse ${seconds(timings.parseMs)} · commit ${seconds(timings.commitMs)}` +
             ` · reason ${result.reasoned ? seconds(timings.reasonMs) : 'skipped'} · total ${seconds(timings.totalMs)}`,
+          ...(result.reasoners.length > 0
+            ? [
+                result.reasoners
+                  .map((outcome) => `${outcome.name} ${outcome.derived} (${seconds(outcome.durationMs)})`)
+                  .join(' · '),
+              ]
+            : []),
         ].join('\n'),
       );
     }),

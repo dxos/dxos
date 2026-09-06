@@ -44,8 +44,11 @@ export const packageIri = (name: string): NamedNode =>
 export const memberIri = (specifier: string, path: string): NamedNode =>
   DataFactory.namedNode(`${MODULE_BASE}${encodeURIComponent(specifier)}#${path}`);
 
+/** Both components are encoded: a `.mdl` documenting the grammar has a block whose type is `<type>`. */
 export const specBlockIri = (path: string, blockType: string, key: string): NamedNode =>
-  DataFactory.namedNode(`${FILE_BASE}${encodeURIComponent(path)}#${blockType}:${encodeURIComponent(key)}`);
+  DataFactory.namedNode(
+    `${FILE_BASE}${encodeURIComponent(path)}#${encodeURIComponent(blockType)}:${encodeURIComponent(key)}`,
+  );
 
 /** IRI of the named graph holding one revision of a file; the mtime makes the swap atomic. */
 export const graphIri = (path: string, mtime: number): NamedNode =>
@@ -108,6 +111,8 @@ export const derivedFrom = iri('derivedFrom');
 export const argument = iri('argument');
 export const apiDependsOn = iri('apiDependsOn');
 export const implDependsOn = iri('implDependsOn');
+/** A re-exported name and the declaration it stands for: `export { default as X } from './y'`. */
+export const aliasOf = iri('aliasOf');
 export const snippet = iri('snippet');
 export const doc = iri('doc');
 export const deprecated = iri('deprecated');
@@ -195,6 +200,7 @@ export const CONTEXT = {
   argument: id('argument'),
   apiDependsOn: id('apiDependsOn'),
   implDependsOn: id('implDependsOn'),
+  aliasOf: id('aliasOf'),
   // SpecBlock.
   blockType: 'deus:blockType',
   blockId: 'deus:blockId',
@@ -217,6 +223,7 @@ export const SymbolNode = Schema.Struct({
   'argument': Schema.Array(Schema.String),
   'apiDependsOn': Schema.Array(Schema.String),
   'implDependsOn': Schema.Array(Schema.String),
+  'aliasOf': Schema.Array(Schema.String),
   'snippet': Schema.optional(Schema.String),
   'doc': Schema.optional(Schema.String),
   'deprecated': Schema.optional(Schema.Boolean),

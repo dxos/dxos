@@ -43,7 +43,19 @@ export function run(input: Input, count = DEFAULT): Effect.Effect<Result<Store>>
 
 export class Widget { #secret = 1; private hidden(): void {} public shown: string = 'a'; method(a: number): number { return a + helper(); } }
 
-export default class {}
+export namespace Helpers {
+  export const StubbedLayer = Layer.succeed(Store, {} as Api);
+
+  const hidden = 1;
+}
+
+export class Registry {
+  static layerEmpty = Layer.succeed(Store, {} as Api);
+  static #secret = 2;
+  instanceField = 3;
+}
+
+export default Layer.succeed(Store, {} as Api);
 
 export * from './everything.ts';
 export { pick } from './picked.ts';
@@ -95,7 +107,7 @@ const symbol = (name: string) => {
   }
   return found;
 };
-const member = (specifier: string, path: string) => Ontology.memberIri(specifier, path).value;
+const member2 = (specifier: string, path: string) => Ontology.memberIri(specifier, path).value;
 const file = (path: string) => Ontology.fileIri(path).value;
 const sym = (path: string, name: string) => Ontology.symbolIri(path, name).value;
 
@@ -127,19 +139,19 @@ describe('typescript analyzer', () => {
   });
 
   test('a class extending a curried call records the callee as a member IRI', () => {
-    expect(symbol('Store').extends).toEqual([member('effect/Context', 'Service')]);
+    expect(symbol('Store').extends).toEqual([member2('effect/Context', 'Service')]);
     expect(symbol('Store').kind).toEqual('class');
   });
 
   test('an interface extends its heritage', () => {
     expect(symbol('Api').extends).toEqual([]);
     expect(symbol('Api').apiDependsOn).toEqual(
-      expect.arrayContaining([file('src/input.ts').replace(/$/, '#Input'), member('effect/Effect', 'Effect')]),
+      expect.arrayContaining([file('src/input.ts').replace(/$/, '#Input'), member2('effect/Effect', 'Effect')]),
     );
   });
 
   test('constructedBy and argument come from the initializer call', () => {
-    expect(symbol('live').constructedBy).toEqual([member('effect/Layer', 'effect')]);
+    expect(symbol('live').constructedBy).toEqual([member2('effect/Layer', 'effect')]);
     expect(symbol('live').argument).toEqual([sym('src/Store.ts', 'Store')]);
   });
 
@@ -148,17 +160,17 @@ describe('typescript analyzer', () => {
     expect(handler.derivedFrom).toEqual([sym('src/normalize.ts', 'Normalize')]);
     expect(handler.constructedBy).toEqual([]);
     expect(handler.pipedThrough).toEqual([
-      member('@dxos/compute/Operation', 'withHandler'),
+      member2('@dxos/compute/Operation', 'withHandler'),
       sym('packages/compute/src/Operation.ts', 'withHandler'),
-      member('other-lib', 'Other.decorate'),
+      member2('other-lib', 'Other.decorate'),
     ]);
   });
 
   test('a workspace import records both addressings', () => {
     const schema = symbol('Document');
-    expect(schema.constructedBy).toEqual([member('effect/Schema', 'Struct')]);
+    expect(schema.constructedBy).toEqual([member2('effect/Schema', 'Struct')]);
     expect(schema.pipedThrough).toEqual(
-      expect.arrayContaining([member('@dxos/echo', 'Type.Obj'), sym('packages/echo/src/index.ts', 'Type')]),
+      expect.arrayContaining([member2('@dxos/echo', 'Type.Obj'), sym('packages/echo/src/index.ts', 'Type')]),
     );
   });
 
@@ -166,19 +178,19 @@ describe('typescript analyzer', () => {
     const layer = symbol('layer');
     expect(layer.apiDependsOn).toEqual(
       expect.arrayContaining([
-        member('effect/Layer', 'Layer'),
+        member2('effect/Layer', 'Layer'),
         sym('src/Store.ts', 'Store'),
         sym('src/errors.ts', 'StoreError'),
       ]),
     );
     expect(layer.implDependsOn).toEqual(
-      expect.arrayContaining([member('effect/Layer', 'unwrap'), sym('src/Store.ts', 'make')]),
+      expect.arrayContaining([member2('effect/Layer', 'unwrap'), sym('src/Store.ts', 'make')]),
     );
     expect(layer.implDependsOn).not.toContain(sym('src/Store.ts', 'Store'));
 
     const run = symbol('run');
     expect(run.apiDependsOn).toEqual(
-      expect.arrayContaining([sym('src/input.ts', 'Input'), member('effect/Effect', 'Effect')]),
+      expect.arrayContaining([sym('src/input.ts', 'Input'), member2('effect/Effect', 'Effect')]),
     );
     expect(run.implDependsOn).toEqual(
       expect.arrayContaining([sym('src/Store.ts', 'doRun'), sym('src/Store.ts', 'DEFAULT')]),
@@ -234,8 +246,29 @@ describe('typescript analyzer', () => {
     }
   });
 
-  test('an anonymous default export is named default', () => {
-    expect(symbol('default')).toMatchObject({ kind: 'class', exported: true });
+  test('namespace members and initialized statics are declarations of their own', () => {
+    const member = symbol('Helpers.StubbedLayer');
+    expect(member).toMatchObject({ kind: 'variable', exported: true });
+    expect(member.constructedBy).toEqual([member2('effect/Layer', 'succeed')]);
+    expect(member.snippet).toEqual('export const StubbedLayer = Layer.succeed(Store, {} as Api);');
+    // A namespace's non-exported member is still a declaration, just not one that leaves the module.
+    expect(symbol('Helpers.hidden').exported).toBe(false);
+
+    const statik = symbol('Registry.layerEmpty');
+    expect(statik.constructedBy).toEqual([member2('effect/Layer', 'succeed')]);
+    expect(statik.argument).toEqual([sym('src/Store.ts', 'Store')]);
+    // A class member only parses inside a class; the snippet carries the header that says so.
+    expect(statik.snippet).toEqual('class Registry {\n  static layerEmpty = Layer.succeed(Store, {} as Api);\n}');
+    // Private statics and instance fields are not module-level declarations.
+    expect(document.declares.map((declared) => declared.name)).not.toContain('Registry.#secret');
+    expect(document.declares.map((declared) => declared.name)).not.toContain('Registry.instanceField');
+  });
+
+  test('a default-exported expression is a declaration with construction', () => {
+    // `export default Capability.makeModule(…)` binds no name, but it declares a value all the same.
+    expect(symbol('default')).toMatchObject({ kind: 'variable', exported: true });
+    expect(symbol('default').constructedBy).toEqual([member2('effect/Layer', 'succeed')]);
+    expect(symbol('default').argument).toEqual([sym('src/Store.ts', 'Store')]);
   });
 
   test('a parse failure still yields a file node', () => {

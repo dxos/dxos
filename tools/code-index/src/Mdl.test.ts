@@ -64,6 +64,22 @@ describe('Mdl', () => {
     expect(parsed.blocks[0].line).toEqual(12);
   });
 
+  test('a block type that is not a name still yields a legal IRI', () => {
+    // `packages/reflect/deus/lang/core.mdl` documents the grammar with a block headed `<type> …`,
+    // and an unencoded `<` in an IRI is rejected by every N3 parser downstream.
+    const document = analyzeMdl({
+      root: '/repo',
+      path: 'lang/core.mdl',
+      source: '```mdl\n<type> [<id>][: <title>]\n```\n',
+      mtime: 1,
+      resolve: () => undefined,
+      packageOf: () => undefined,
+    });
+    const id = document.declaresBlock?.[0]['@id'] ?? '';
+    expect(id).not.toMatch(/[<>]/);
+    expect(id).toContain('%3Ctype%3E');
+  });
+
   test('the spec analyzer turns blocks into SpecBlock nodes', () => {
     const document = analyzeMdl({
       root: '/repo',

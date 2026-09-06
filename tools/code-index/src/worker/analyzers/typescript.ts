@@ -131,6 +131,10 @@ type Declaration = {
   readonly offset: number;
 };
 
+const isPrivateMember = (node: Node): boolean =>
+  (node.type === 'PropertyDefinition' || node.type === 'MethodDefinition' || node.type === 'AccessorProperty') &&
+  ((isNode(node.key) && node.key.type === 'PrivateIdentifier') || node.accessibility === 'private');
+
 const KINDS: Record<string, string> = {
   FunctionDeclaration: 'function',
   ClassDeclaration: 'class',
@@ -161,20 +165,83 @@ const declarationsOf = (node: Node, statement: Node, exported: boolean): Declara
     : [];
 };
 
-/** Top-level declarations, with whether each one leaves the module. */
-export const declarations = (body: readonly Statement[]): Declaration[] =>
+const keyNameOf = (node: Node): string | undefined => {
+  const key = isNode(node.key) ? node.key : undefined;
+  if (!key || node.computed === true) {
+    return undefined;
+  }
+  return nameOf(key) ?? (typeof key.value === 'string' ? key.value : undefined);
+};
+
+/**
+ * Initialized static members: the companion-object pattern (`static layerEmpty = Layer.succeed(…)`)
+ * declares module-level values under a class, and they are as much API as a top-level `const`.
+ */
+const staticMembers = (node: Node, className: string, exported: boolean): Declaration[] => {
+  const body = isNode(node.body) && Array.isArray(node.body.body) ? node.body.body.filter(isNode) : [];
+  return body.flatMap((member) => {
+    if (
+      member.type !== 'PropertyDefinition' ||
+      member.static !== true ||
+      !isNode(member.value) ||
+      isPrivateMember(member)
+    ) {
+      return [];
+    }
+    const key = keyNameOf(member);
+    return key
+      ? [
+          {
+            name: `${className}.${key}`,
+            kind: 'variable',
+            exported,
+            node: member,
+            statement: member,
+            offset: member.start,
+          },
+        ]
+      : [];
+  });
+};
+
+/**
+ * Top-level declarations, with whether each one leaves the module. Recurses into namespace bodies —
+ * `export namespace X { export const Y = … }` declares `X.Y`, which is module API under another name.
+ */
+export const declarations = (body: readonly Statement[], prefix = '', inherited = false): Declaration[] =>
   (body as readonly unknown[]).flatMap((raw) => {
     // oxc's AST types are a union of interfaces; the walker addresses nodes structurally.
     if (!isNode(raw)) {
       return [];
     }
     const statement: Node = raw;
+    const qualify = (declared: readonly Declaration[]): Declaration[] =>
+      declared.flatMap((declaration) => {
+        const named = {
+          ...declaration,
+          name: `${prefix}${declaration.name}`,
+          exported: prefix === '' ? declaration.exported : declaration.exported && inherited,
+        };
+        const isClass = declaration.node.type === 'ClassDeclaration';
+        // A namespace body declares its own members; a class declares its initialized statics.
+        const nested =
+          declaration.node.type === 'TSModuleDeclaration' && isNode(declaration.node.body)
+            ? declarations(
+                (Array.isArray(declaration.node.body.body) ? declaration.node.body.body : []) as readonly Statement[],
+                `${named.name}.`,
+                named.exported,
+              )
+            : isClass
+              ? staticMembers(declaration.node, named.name, named.exported)
+              : [];
+        return [named, ...nested];
+      });
     switch (statement.type) {
       case 'ExportNamedDeclaration':
-        return isNode(statement.declaration) ? declarationsOf(statement.declaration, statement, true) : [];
+        return isNode(statement.declaration) ? qualify(declarationsOf(statement.declaration, statement, true)) : [];
       case 'ExportDefaultDeclaration': {
         const declaration = isNode(statement.declaration) ? statement.declaration : undefined;
-        const named = declaration ? declarationsOf(declaration, statement, true) : [];
+        const named = declaration ? qualify(declarationsOf(declaration, statement, true)) : [];
         return named.length > 0
           ? named
           : [
@@ -189,7 +256,7 @@ export const declarations = (body: readonly Statement[]): Declaration[] =>
             ];
       }
       default:
-        return declarationsOf(statement, statement, false);
+        return qualify(declarationsOf(statement, statement, false));
     }
   });
 
@@ -571,10 +638,6 @@ const LITERAL_NODES = new Set(['ObjectExpression', 'ArrayExpression', 'TSTypeLit
 const isFunctionNode = (node: Node): boolean =>
   node.type === 'FunctionDeclaration' || node.type === 'FunctionExpression' || node.type === 'ArrowFunctionExpression';
 
-const isPrivateMember = (node: Node): boolean =>
-  (node.type === 'PropertyDefinition' || node.type === 'MethodDefinition' || node.type === 'AccessorProperty') &&
-  ((isNode(node.key) && node.key.type === 'PrivateIdentifier') || node.accessibility === 'private');
-
 /** Apply non-overlapping cuts (outer wins) to a span of the source. */
 const splice = (source: string, start: number, end: number, cuts: readonly Cut[]): string => {
   const sorted = [...cuts].filter((cut) => cut.start >= start && cut.end <= end).sort((a, b) => a.start - b.start);
@@ -651,6 +714,13 @@ export const snippetOf = (
   });
 
   let snippet = splice(source, statement.start, statement.end, cuts);
+  // A class member is not a top-level statement; the enclosing header is what makes the snippet
+  // parse, and it also says where the member lives.
+  const wrap = (text: string) =>
+    statement.type === 'PropertyDefinition' || statement.type === 'MethodDefinition'
+      ? `class ${declaration.name.split('.')[0]} {\n  ${text}\n}`
+      : text;
+  snippet = wrap(snippet);
   // Over budget: collapse the deepest kept literal bodies first, until it fits or nothing is left.
   for (let depth = LITERAL_DEPTH; depth >= 1 && snippet.length > SNIPPET_BUDGET; depth--) {
     for (const literal of literals) {
@@ -658,7 +728,7 @@ export const snippetOf = (
         cuts.push({ start: literal.node.start + 1, end: literal.node.end - 1, text: ' /*...*/ ' });
       }
     }
-    snippet = splice(source, statement.start, statement.end, cuts);
+    snippet = wrap(splice(source, statement.start, statement.end, cuts));
   }
   return snippet.length > SNIPPET_HARD_CAP ? undefined : snippet;
 };
@@ -736,6 +806,7 @@ export const analyzeTypeScript = (context: AnalyzeContext): Ontology.FileDocumen
 
   const reexports = new Set<string>();
   const importsModule = new Set<string>();
+  const aliases: Array<{ name: string; origin: string | undefined; line: number; typeOnly: boolean }> = [];
 
   for (const statement of (body as readonly unknown[]).filter(isNode)) {
     if (
@@ -790,6 +861,27 @@ export const analyzeTypeScript = (context: AnalyzeContext): Ontology.FileDocumen
         reexports.add(Ontology.fileIri(resolution.file).value);
       } else {
         importsModule.add(statement.source.value);
+      }
+      // A named re-export declares the name it exports. Recording what it stands for is what lets a
+      // rule see through a barrel: this repo addresses most things through one.
+      const specifierNodes = Array.isArray(statement.specifiers) ? statement.specifiers.filter(isNode) : [];
+      for (const node of specifierNodes) {
+        const exportedName = nameOf(isNode(node.exported) ? node.exported : undefined);
+        const localName = nameOf(isNode(node.local) ? node.local : undefined);
+        if (!exportedName) {
+          continue;
+        }
+        const origin = resolution.file
+          ? Ontology.symbolIri(resolution.file, localName ?? exportedName).value
+          : resolution.bare
+            ? Ontology.memberIri(statement.source.value, localName ?? exportedName).value
+            : undefined;
+        aliases.push({
+          name: exportedName,
+          origin,
+          line: lineOf(source, node.start),
+          typeOnly: statement.exportKind === 'type' || node.exportKind === 'type',
+        });
       }
     }
   }
@@ -875,8 +967,18 @@ export const analyzeTypeScript = (context: AnalyzeContext): Ontology.FileDocumen
 
     let construction: Construction = { constructedBy: [], pipedThrough: [], derivedFrom: [], argument: [] };
     const extendsRefs: ExpressionRef[] = [];
-    if (declaration.node.type === 'VariableDeclarator' && isNode(declaration.node.init)) {
-      construction = constructionOf(declaration.node.init);
+    const initializer =
+      declaration.node.type === 'VariableDeclarator' && isNode(declaration.node.init)
+        ? declaration.node.init
+        : declaration.node.type === 'PropertyDefinition' && isNode(declaration.node.value)
+          ? declaration.node.value
+          : // `export default Capability.makeModule(…)` declares a value with no binding of its
+            // own: the exported expression is its initializer.
+            declaration.statement.type === 'ExportDefaultDeclaration' && declaration.node !== declaration.statement
+            ? declaration.node
+            : undefined;
+    if (initializer) {
+      construction = constructionOf(initializer);
     } else if (declaration.node.type === 'ClassDeclaration' || declaration.node.type === 'ClassExpression') {
       if (isNode(declaration.node.superClass)) {
         const ref = expressionRef(headCallee(declaration.node.superClass).callee);
@@ -907,6 +1009,7 @@ export const analyzeTypeScript = (context: AnalyzeContext): Ontology.FileDocumen
       'argument': refsToIris(construction.argument),
       'apiDependsOn': [...api],
       'implDependsOn': [...impl],
+      'aliasOf': [],
       ...((value) => (value === undefined ? {} : { snippet: value }))(snippetOf(source, declaration, parsed.comments)),
       ...docOf(source, declaration.statement, parsed.comments),
     };
@@ -933,6 +1036,25 @@ export const analyzeTypeScript = (context: AnalyzeContext): Ontology.FileDocumen
     }
   }
 
+  const aliasSymbols: Ontology.SymbolNode[] = aliases
+    .filter((alias) => alias.origin !== undefined && !symbols.some((declared) => declared.name === alias.name))
+    .map((alias) => ({
+      '@id': Ontology.symbolIri(path, alias.name).value,
+      '@type': 'Symbol',
+      'name': alias.name,
+      'kind': 'reexport',
+      'exported': true,
+      'line': alias.line,
+      'extends': [],
+      'constructedBy': [],
+      'pipedThrough': [],
+      'derivedFrom': [],
+      'argument': [],
+      'apiDependsOn': alias.typeOnly && alias.origin ? [alias.origin] : [],
+      'implDependsOn': !alias.typeOnly && alias.origin ? [alias.origin] : [],
+      'aliasOf': alias.origin ? [alias.origin] : [],
+    }));
+
   return {
     ...base,
     imports: [...imports],
@@ -940,7 +1062,7 @@ export const analyzeTypeScript = (context: AnalyzeContext): Ontology.FileDocumen
     importsModule: [...importsModule],
     reexports: [...reexports],
     unresolvedReferences: unresolved,
-    declares: symbols,
+    declares: [...symbols, ...aliasSymbols],
     ...(errors.length > 0 ? { parseError: errors } : {}),
   };
 };
