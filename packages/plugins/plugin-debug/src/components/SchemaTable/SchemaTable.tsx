@@ -2,9 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
-import React from 'react';
+import React, { useCallback, useState } from 'react';
 
 import { Type } from '@dxos/echo';
+import { log } from '@dxos/log';
 import { IconButton, ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
@@ -12,7 +13,8 @@ export type SchemaTableProps = ThemedClassName<{
   types: any[];
   objects?: Record<string, number | undefined>;
   label: string;
-  onClick: (typename: string) => void;
+  /** May be async — the row awaits it, so a generator's failure is reported rather than unowned. */
+  onClick: (typename: string) => Promise<void> | void;
 }>;
 
 /**
@@ -25,6 +27,27 @@ const rowName = (type: any, typename: string | undefined): string =>
   (typeof type.presetLabel === 'string' ? type.presetLabel : undefined) ?? typename ?? '';
 
 export const SchemaTable = ({ classNames, types, objects = {}, label, onClick }: SchemaTableProps) => {
+  // A sample space takes seconds to build. Without holding the row that is running, the click
+  // dropped the handler's promise: nothing showed the work in flight, a second click raced the
+  // first, and a rejection after the panel unmounted surfaced as an unhandled rejection.
+  const [pending, setPending] = useState<string>();
+  const handleClick = useCallback(
+    async (typename: string) => {
+      if (pending !== undefined) {
+        return;
+      }
+      setPending(typename);
+      try {
+        await onClick(typename);
+      } catch (err) {
+        log.catch(err);
+      } finally {
+        setPending(undefined);
+      }
+    },
+    [onClick, pending],
+  );
+
   return (
     <div className={mx('grid grid-cols-[1fr_80px_40px] gap-1 overflow-none', classNames)}>
       <h2 className='p-2'>{label}</h2>
@@ -41,10 +64,11 @@ export const SchemaTable = ({ classNames, types, objects = {}, label, onClick }:
             </div>
             <IconButton
               variant='ghost'
-              icon='ph--plus--regular'
+              icon={pending === typename ? 'ph--spinner--regular' : 'ph--plus--regular'}
               iconOnly
+              disabled={pending !== undefined}
               label={`Create ${rowName(type, typename)}`}
-              onClick={() => typename && onClick(typename)}
+              onClick={() => typename && void handleClick(typename)}
             />
           </div>
         );

@@ -4,6 +4,7 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { expect, waitFor, within } from 'storybook/test';
 
 import { random } from '@dxos/random';
 
@@ -170,5 +171,158 @@ export const Indeterminate: Story = {
   args: {
     stages: 5,
     indeterminate: true,
+  },
+};
+
+/**
+ * Drives the plan by hand rather than on a timer, so the moment an advance is reported can be
+ * observed rather than caught.
+ */
+const HandoverStory = ({ stages = 3 }: StoryArgs) => {
+  const [active, setActive] = useState<number | undefined>(0);
+  const [fraction, setFraction] = useState(1);
+
+  return (
+    <div className='flex flex-col gap-4 w-full'>
+      <Toolbar.Root>
+        {/* What a run does at the moment it starts the next stage: it reports the new stage and a
+            count of almost nothing, both in the same update. */}
+        <Toolbar.Button
+          data-testid='stepper.advance'
+          onClick={() => {
+            setActive((active) => (active ?? 0) + 1);
+            setFraction(0.2);
+          }}
+        >
+          Advance
+        </Toolbar.Button>
+        <Toolbar.Button
+          data-testid='stepper.reset'
+          onClick={() => {
+            setActive(undefined);
+            setFraction(0);
+          }}
+        >
+          Reset
+        </Toolbar.Button>
+      </Toolbar.Root>
+      <Stepper steps={stages} active={active} fraction={fraction} />
+    </div>
+  );
+};
+
+/**
+ * Every drawn width, on each painted frame for `ms`. Read after the frame rather than before it, so
+ * the first reading is of what the click actually drew rather than of what was on screen before it.
+ */
+const sample = async (read: () => number[], ms: number): Promise<number[][]> => {
+  const frames: number[][] = [];
+  const until = performance.now() + ms;
+  while (performance.now() < until) {
+    await new Promise((resolve) => requestAnimationFrame(resolve));
+    frames.push(read());
+  }
+  return frames;
+};
+
+export const TestHandover: Story = {
+  render: HandoverStory,
+  args: { stages: 3 },
+  // Sampled every frame rather than asserted at an instant: what makes the stepper wrong is a line
+  // that goes backwards at some point during the window, which a single reading after the click is
+  // free to miss entirely.
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    // The computed width, not the inline one: a line easing to its target is drawn at neither end
+    // for the length of the transition, and it is exactly those frames that show a line retreating.
+    const widths = () =>
+      [...canvasElement.querySelectorAll<HTMLElement>('[data-scope="steps"][data-part="separator"]')].map((track) => {
+        const fill = track.firstElementChild;
+        return fill ? Math.round((fill.getBoundingClientRect().width / track.getBoundingClientRect().width) * 100) : 0;
+      });
+
+    // The first stage, counted to its end.
+    await waitFor(async () => expect(widths()).toEqual([100, 0]));
+
+    // A run reports the next stage the instant it starts it, with a count of almost nothing. The
+    // line leaving the stage being left has to stay at its end while it hands over — without that
+    // it snaps back to the new count and the reader sees the stepper run backwards.
+    canvas.getByTestId('stepper.advance').click();
+    const advancing = await sample(widths, 800);
+    await expect(Math.min(...advancing.map((frame) => frame[0]))).toEqual(100);
+    await waitFor(async () => expect(widths()).toEqual([100, 20]));
+
+    // A reset has no line in flight to finish, so it lands at once: easing back to nothing would
+    // read as progress in reverse.
+    canvas.getByTestId('stepper.reset').click();
+    const resetting = await sample(widths, 200);
+    await expect(Math.max(...resetting.map((frame) => Math.max(...frame)))).toEqual(0);
+  },
+};
+
+/** Holds a plan part-way through so the failure can be applied to a run that has made progress. */
+const FailureStory = ({ stages = 4 }: StoryArgs) => {
+  const [failed, setFailed] = useState(false);
+
+  return (
+    <div className='flex flex-col gap-4 w-full'>
+      <Toolbar.Root>
+        <Toolbar.Button data-testid='stepper.fail' onClick={() => setFailed(true)}>
+          Fail
+        </Toolbar.Button>
+      </Toolbar.Root>
+      <Stepper steps={stages} active={2} fraction={0.5} error={failed} />
+    </div>
+  );
+};
+
+export const TestFailure: Story = {
+  render: FailureStory,
+  args: { stages: 4 },
+  // A run that failed is drawn in the error hue throughout: a plan half-drawn in the primary hue
+  // would read as half of it having gone fine.
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    // Resolved from the theme rather than written down, so the test says "the error hue" and not a
+    // particular colour the theme is free to change.
+    const swatch = (classNames: string) => {
+      const probe = document.createElement('div');
+      probe.className = `border ${classNames}`;
+      canvasElement.append(probe);
+      const { backgroundColor, borderTopColor } = getComputedStyle(probe);
+      probe.remove();
+      return { backgroundColor, borderTopColor };
+    };
+    const errorSurface = swatch('bg-error-surface').backgroundColor;
+    const separator = swatch('border-separator').borderTopColor;
+    const primarySurface = swatch('bg-primary-surface').backgroundColor;
+
+    const circles = () =>
+      [...canvasElement.querySelectorAll('[data-scope="steps"][data-part="item"] [role="img"]')].map((circle) => {
+        const { backgroundColor, borderTopColor } = getComputedStyle(circle);
+        return { backgroundColor, borderTopColor };
+      });
+
+    await waitFor(async () => expect(circles()).toHaveLength(4));
+    // Stages the run reached are filled in the primary hue; the one ahead of it is an outline.
+    await expect(circles().map((circle) => circle.backgroundColor === primarySurface)).toEqual([
+      true,
+      true,
+      true,
+      false,
+    ]);
+
+    canvas.getByTestId('stepper.fail').click();
+
+    // Every stage the run started now reads as failed, so the progress behind the failure does not
+    // read as having gone fine.
+    await waitFor(async () =>
+      expect(circles().map((circle) => circle.backgroundColor === errorSurface)).toEqual([true, true, true, false]),
+    );
+    await expect(circles().every((circle) => circle.backgroundColor !== primarySurface)).toEqual(true);
+
+    // The stage it never reached is untouched: it did not fail, and colouring it would claim the
+    // failure reached further than it did.
+    await expect(circles()[3].borderTopColor).toEqual(separator);
   },
 };

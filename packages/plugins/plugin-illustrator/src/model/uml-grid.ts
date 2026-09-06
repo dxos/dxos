@@ -53,7 +53,8 @@ export type Rect = {
 };
 
 export type RoutedRelation = {
-  relation: UmlRelation;
+  /** The edge being routed; routers read only its endpoints, so any dialect's edge type fits. */
+  relation: Layout.LayoutEdge;
   from: Rect;
   to: Rect;
   /** True when the diagram flows LR/RL, so ranks stack along x. */

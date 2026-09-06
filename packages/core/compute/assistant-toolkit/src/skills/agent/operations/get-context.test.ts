@@ -6,6 +6,8 @@ import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 
 import { AiContext } from '@dxos/assistant';
+import * as Agent from '@dxos/assistant/Agent';
+import * as Chat from '@dxos/assistant/Chat';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Obj, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
@@ -13,7 +15,6 @@ import { invariant } from '@dxos/invariant';
 import { EntityId } from '@dxos/keys';
 
 import { OperationTestLayer } from '../../../testing';
-import { Agent, Chat } from '../../../types';
 import AgentSkillDef from '../skill';
 import * as AgentSkillOperations from './definitions';
 

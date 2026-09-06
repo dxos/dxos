@@ -40,7 +40,7 @@ test.describe.skip('Inbox', () => {
   });
 
   test.afterEach(async () => {
-    await host.closePage();
+    await host.close();
   });
 
   // Create a JMAP-connected mailbox by driving the real credential form; provider HTTP is served by

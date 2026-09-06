@@ -15,6 +15,7 @@ import { useObject, useQuery, useResolveRef } from '@dxos/echo-react';
 import { normalizeText } from '@dxos/markdown';
 import {
   Card,
+  Collapsible,
   Icon,
   ScrollArea,
   type ThemedClassName,
@@ -542,88 +543,99 @@ const MessageTile = ({ id, message: messageOrRef }: MessageTileProps) => {
   const summary = summaries?.get(target.id);
 
   // One subgrid spanning the tile's columns, so the summary row and the detail/body row share them.
+  // `Collapsible.Root` takes over that same element rather than adding one — an element between the
+  // tile and its rows would break the subgrid chain the columns depend on. A conversation of one
+  // passes no `onExpandedChange`, which disables the machine: the heading keeps its box but stops
+  // being a control, so there is no dead tab stop and nothing to fold.
   return (
-    <div className='contents'>
-      <div className='col-span-full grid grid-cols-subgrid items-start pt-1'>
-        {/* Summary row: avatar (col 1) | title (col 2) | date + star (col 3) | menu (col 4). */}
-        {/* `db` (not `getContact`): a conversation holds few messages, so a query per tile is
+    <Collapsible.Root
+      asChild
+      open={isExpanded}
+      onOpenChange={onExpandedChange && ((open) => onExpandedChange(id, open))}
+      disabled={!onExpandedChange}
+      lazyMount
+      unmountOnExit
+    >
+      <div className='contents'>
+        <div className='col-span-full grid grid-cols-subgrid items-start pt-1'>
+          {/* Summary row: avatar (col 1) | title (col 2) | date + star (col 3) | menu (col 4). */}
+          {/* `db` (not `getContact`): a conversation holds few messages, so a query per tile is
             affordable here — unlike the virtualized mailbox list, which resolves the whole page at once. */}
-        {/* Avatar centred on the title's FIRST line — the row is `items-start` (the title clamps to
+          {/* Avatar centred on the title's FIRST line — the row is `items-start` (the title clamps to
             two lines), so centring against the whole block would leave the avatar hanging below the
             name it belongs to. The nesting mirrors the title column's own box: `py-1` on the OUTER
             element, then an unpadded `1lh` line box to centre within. Putting both on one element
             fails, because `h-[1lh]` is border-box and the padding then eats into the line height,
             leaving the avatar high by exactly that padding. */}
-        <div className='px-2 py-1 text-lg'>
-          <div className='flex items-center h-[1lh]'>
-            <ContactAvatar
-              actor={target.sender}
-              role='from'
-              db={db}
-              size={MESSAGE_AVATAR_SIZE}
-              onContactCreate={onContactCreate}
-            />
-          </div>
-        </div>
-
-        <div className='col-start-2 flex flex-col py-1'>
-          <h2
-            className={mx('text-lg line-clamp-2 min-w-0', onExpandedChange && 'cursor-pointer')}
-            data-testid={onExpandedChange && !isExpanded ? 'message.expand' : undefined}
-            // Focusable and key-activated only when it actually toggles, so a single-message
-            // conversation doesn't put a dead tab stop in the reading order.
-            role={onExpandedChange && 'button'}
-            tabIndex={onExpandedChange && 0}
-            aria-expanded={onExpandedChange && isExpanded}
-            onClick={onExpandedChange && (() => onExpandedChange(id, !isExpanded))}
-            onKeyDown={
-              onExpandedChange &&
-              ((event) => {
-                if (event.key === 'Enter' || event.key === ' ') {
-                  event.preventDefault();
-                  onExpandedChange(id, !isExpanded);
-                }
-              })
-            }
-          >
-            {sender}
-          </h2>
-          {isExpanded ? (
-            <>{subject && <div className='font-medium line-clamp-2'>{subject}</div>}</>
-          ) : (
-            <div className='text-sm text-description line-clamp-1' data-testid={summary && 'message.summary'}>
-              {summary ?? snippet}
+          <div className='px-2 py-1 text-lg'>
+            <div className='flex items-center h-[1lh]'>
+              <ContactAvatar
+                actor={target.sender}
+                role='from'
+                db={db}
+                size={MESSAGE_AVATAR_SIZE}
+                onContactCreate={onContactCreate}
+              />
             </div>
-          )}
-        </div>
+          </div>
 
-        <div className='col-start-3 flex items-center'>
-          <span className=' p-2 whitespace-nowrap text-sm text-description'>{date}</span>
-          {isExpanded && (
-            <>
-              {mailbox && (
-                <div className='p-1'>
-                  <MessageStar message={target} mailbox={mailbox} />
-                </div>
-              )}
-              <MessageMenu attendableId={attendableId} actions={menuActions} />
-            </>
-          )}
-        </div>
-      </div>
+          <div className='col-start-2 flex flex-col py-1'>
+            {/* The accordion heading: a real heading wrapping the control that folds its section, so the
+              thread reads as a list of sections rather than a list of clickable text. The clamp sits on
+              the button, whose own line boxes it counts — on the heading it would see the button as one
+              atomic box and clamp nothing. */}
+            <h2 className='text-lg min-w-0'>
+              <Collapsible.Trigger
+                classNames='line-clamp-2'
+                data-testid={onExpandedChange && !isExpanded ? 'message.expand' : undefined}
+              >
+                {sender}
+              </Collapsible.Trigger>
+            </h2>
+            {/* One line in one fixed box whichever state the tile is in: a stack shows folded and open
+                tiles at once, and a summary line shorter than a subject line makes the two read as
+                different row heights. Pinned rather than merely clamped, so a message with no subject
+                still holds the line. */}
+            <div
+              // `leading-6` last: `text-sm` carries a line height of its own, and the two states only
+              // share a baseline if the line box is 24px in both.
+              className={mx(isExpanded ? 'font-medium' : 'text-sm text-description', 'h-6 leading-6 line-clamp-1')}
+              data-testid={!isExpanded && summary ? 'message.summary' : undefined}
+            >
+              {isExpanded ? subject : (summary ?? snippet)}
+            </div>
+          </div>
 
-      {isExpanded && (
-        <div className='col-span-full grid grid-cols-subgrid items-start'>
-          {/* MessageDetails renders a `subgrid` Card.Root, so it spans and aligns to the tile columns. */}
-          <MessageDetails message={message} mailbox={mailbox} onContactCreate={onContactCreate} />
-          <div className='col-start-2 col-span-3 flex flex-col gap-1 min-w-0 pb-1'>
-            {/* The summary is not repeated here: an expanded message shows its body, and the
-                conversation's summary is the last tile in the stack. */}
-            <MessageBody message={message} mailbox={mailbox} options={options} />
+          <div className='col-start-3 flex items-center'>
+            <span className=' p-2 whitespace-nowrap text-sm text-description'>{date}</span>
+            {isExpanded && (
+              <>
+                {mailbox && (
+                  <div className='p-1'>
+                    <MessageStar message={target} mailbox={mailbox} />
+                  </div>
+                )}
+                <MessageMenu attendableId={attendableId} actions={menuActions} />
+              </>
+            )}
           </div>
         </div>
-      )}
-    </div>
+
+        {/* `unmountOnExit` keeps a folded message's body out of the tree entirely, as the previous
+          conditional did — a thread holds many messages and each body is a rendered document. */}
+        <Collapsible.Content asChild>
+          <div className='col-span-full grid grid-cols-subgrid items-start'>
+            {/* MessageDetails renders a `subgrid` Card.Root, so it spans and aligns to the tile columns. */}
+            <MessageDetails message={message} mailbox={mailbox} onContactCreate={onContactCreate} />
+            <div className='col-start-2 col-span-3 flex flex-col gap-1 min-w-0 pb-1'>
+              {/* The summary is not repeated here: an expanded message shows its body, and the
+                conversation's summary is the last tile in the stack. */}
+              <MessageBody message={message} mailbox={mailbox} options={options} />
+            </div>
+          </div>
+        </Collapsible.Content>
+      </div>
+    </Collapsible.Root>
   );
 };
 

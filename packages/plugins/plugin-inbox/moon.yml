@@ -15,7 +15,7 @@ tasks:
     # Fail when the ./plugin export pulls in `@dxos/react-ui`. The plugin entry must
     # remain UI-free under workerd so it can load in non-DOM environments.
     command: >-
-      pnpm exec dx-trace-imports
+      bun $workspaceRoot/tools/dx-trace-imports/cli.js
       --export ./InboxPlugin
       --to "@dxos/react-ui"
       --conditions workerd,worker

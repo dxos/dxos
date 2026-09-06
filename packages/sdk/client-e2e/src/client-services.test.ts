@@ -13,7 +13,9 @@ import { Context } from '@dxos/context';
 import { TestSchema } from '@dxos/echo/testing';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { Device, DeviceKind, Invitation, SpaceMember } from '@dxos/protocols/proto/dxos/client/services';
+import { toPublicKey } from '@dxos/protocols/buf';
+import { Invitation_AuthMethod, Invitation_State } from '@dxos/protocols/buf/dxos/client/invitation_pb';
+import { Device, DeviceKind, SpaceMember } from '@dxos/protocols/proto/dxos/client/services';
 
 // TODO(burdon): Use as set-up for test suite.
 // TODO(burdon): Timeouts and progress callback/events.
@@ -139,16 +141,16 @@ describe('Client services', () => {
       performInvitation({
         host: client1.halo,
         guest: client2.halo,
-        options: { authMethod: Invitation.AuthMethod.SHARED_SECRET },
+        options: { authMethod: Invitation_AuthMethod.SHARED_SECRET },
       }),
     );
 
     // Check same identity.
     expect(hostInvitation!.identityKey).not.to.exist;
-    expect(guestInvitation?.identityKey).to.deep.eq(client1.halo.identity.get()!.identityKey);
-    expect(guestInvitation?.identityKey).to.deep.eq(client2.halo.identity.get()!.identityKey);
-    expect(hostInvitation?.state).to.eq(Invitation.State.SUCCESS);
-    expect(guestInvitation?.state).to.eq(Invitation.State.SUCCESS);
+    expect(toPublicKey(guestInvitation?.identityKey)).to.deep.eq(client1.halo.identity.get()!.identityKey);
+    expect(toPublicKey(guestInvitation?.identityKey)).to.deep.eq(client2.halo.identity.get()!.identityKey);
+    expect(hostInvitation?.state).to.eq(Invitation_State.SUCCESS);
+    expect(guestInvitation?.state).to.eq(Invitation_State.SUCCESS);
 
     // Check devices.
     // TODO(burdon): Incorrect number of devices.
@@ -222,20 +224,20 @@ describe('Client services', () => {
       performInvitation({
         host: hostSpace,
         guest: client2.spaces,
-        options: { authMethod: Invitation.AuthMethod.SHARED_SECRET },
+        options: { authMethod: Invitation_AuthMethod.SHARED_SECRET },
       }),
     );
 
-    expect(guestInvitation?.spaceKey).to.deep.eq(hostSpace.key);
+    expect(toPublicKey(guestInvitation?.spaceKey)).to.deep.eq(hostSpace.key);
     expect(hostInvitation?.spaceKey).to.deep.eq(guestInvitation?.spaceKey);
-    expect(hostInvitation?.state).to.eq(Invitation.State.SUCCESS);
+    expect(hostInvitation?.state).to.eq(Invitation_State.SUCCESS);
     log('invitation complete');
 
     // TODO(burdon): Space should now be available?
     const trigger = new Trigger<Space>();
     await expect
       .poll(() => {
-        const guestSpace = client2.spaces.get(guestInvitation!.spaceKey!);
+        const guestSpace = client2.spaces.get(toPublicKey(guestInvitation!.spaceKey)!);
         invariant(guestSpace);
         trigger.wake(guestSpace);
         return guestSpace;

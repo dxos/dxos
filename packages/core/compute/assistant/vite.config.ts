@@ -10,6 +10,8 @@ export default defineConfig({
     'extraction': 'src/extraction/index.ts',
     'ExecutionGraph': 'src/util/execution-graph.ts',
     'session/AiContext': 'src/session/AiContext.ts',
+    'types/Agent': 'src/types/Agent.ts',
+    'types/Chat': 'src/types/Chat.ts',
     'request/AiRequest': 'src/request/AiRequest.ts',
     'session/AiSession': 'src/session/AiSession.ts',
     'session/Alarm': 'src/session/Alarm.ts',

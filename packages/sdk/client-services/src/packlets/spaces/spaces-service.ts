@@ -3,6 +3,7 @@
 //
 
 import type { AutomergeUrl } from '@automerge/automerge-repo';
+import { toBinary } from '@bufbuild/protobuf';
 import * as Effect from 'effect/Effect';
 import * as EffectStream from 'effect/Stream';
 
@@ -31,6 +32,8 @@ import {
   encodeError,
   makeInProcessClient,
 } from '@dxos/protocols';
+import { decodeCompat } from '@dxos/protocols/buf-shape-compat';
+import { PeerStateSchema } from '@dxos/protocols/buf/dxos/mesh/presence_pb';
 import {
   type ContactAdmission,
   type CreateEpochResponse,
@@ -525,7 +528,7 @@ export class SpacesServiceImpl implements SpacesService.Handlers {
       },
       members: await Promise.all(
         Array.from(space.inner.spaceState.members.values()).map(async (member) => {
-          const peers = space.presence.getPeersOnline().filter(({ identityKey }) => identityKey.equals(member.key));
+          const peers = space.presence.getPeersByIdentityKey(member.key);
           const isMe = this._identityManager.identity?.identityKey.equals(member.key);
 
           if (isMe) {
@@ -540,7 +543,9 @@ export class SpacesServiceImpl implements SpacesService.Handlers {
             },
             role: member.role,
             presence: peers.length > 0 ? SpaceMember.PresenceState.ONLINE : SpaceMember.PresenceState.OFFLINE,
-            peerStates: peers,
+            // `Space` is still `protoMessage`-carried, so presence's buf messages convert back
+            // here — one boundary, via the codec rather than a hand-written field map.
+            peerStates: peers.map((peer) => decodeCompat(PeerStateSchema, toBinary(PeerStateSchema, peer))),
           };
         }),
       ),

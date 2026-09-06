@@ -7,7 +7,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import { useAtomCapability, useCapability, useOperationInvoker } from '@dxos/app-framework/ui';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import { type Chat as ChatType } from '@dxos/assistant-toolkit';
+import type * as ChatType from '@dxos/assistant/Chat';
 import { Event } from '@dxos/async';
 import { type Space, useRegistry } from '@dxos/react-client/echo';
 import { useTranslation } from '@dxos/react-ui';

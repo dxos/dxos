@@ -16,6 +16,7 @@ import {
   makeToolExecutionService,
   makeToolResolverFromOperations,
 } from '@dxos/assistant';
+import * as Chat from '@dxos/assistant/Chat';
 import * as Operation from '@dxos/compute/Operation';
 import * as Template from '@dxos/compute/Template';
 import * as Trace from '@dxos/compute/Trace';
@@ -27,7 +28,6 @@ import { log } from '@dxos/log';
 import { trim } from '@dxos/util';
 
 import { PromptError } from '../errors';
-import * as Chat from '../types/Chat';
 import { makeCompleteJobParameters, makeCompleteJobTool } from './complete-job-tool';
 import { RunInstructions } from './definitions';
 

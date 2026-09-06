@@ -37,7 +37,7 @@ import { log } from '@dxos/log';
 import { ContentBlock, Message } from '@dxos/types';
 
 import { getOperationFromTool } from '../tool-runtime/services';
-import { type AiAssistantError, CompleteBlock, PartialBlock } from '../util';
+import { type AiAssistantError, CompleteBlock, PartialBlock, emitRequestPhase } from '../util';
 import { formatSystemPrompt, formatUserPrompt } from './format';
 import { GenerationObserver } from './observer';
 
@@ -273,6 +273,9 @@ export class Request {
           }),
         );
         if (tokenCount > this._options.summarizationThreshold) {
+          // A summarization pass is itself a model round-trip, so it can dominate the wait before
+          // the turn the reader asked for even starts.
+          yield* emitRequestPhase('summarizing');
           const summary = yield* AiSummarizer.summarize([...this._history]);
           yield* this._submitMessage(summary);
         }
@@ -325,6 +328,7 @@ export class Request {
         history: this._history.length,
       });
 
+      yield* emitRequestPhase('encoding-prompt');
       const prompt = yield* AiPreprocessor.preprocessPrompt([...this._history, ...this._pending], {
         system,
         cacheControl: 'ephemeral',
@@ -338,9 +342,21 @@ export class Request {
 
       // v4 overloads `streamText` on the presence of `toolkit`, so the two cases branch explicitly
       // rather than passing a possibly-undefined key.
-      const stream = toolkit
-        ? LanguageModel.streamText({ prompt, toolkit, disableToolCallResolution: true })
-        : LanguageModel.streamText({ prompt, disableToolCallResolution: true });
+      const openStream = () =>
+        toolkit
+          ? LanguageModel.streamText({ prompt, toolkit, disableToolCallResolution: true })
+          : LanguageModel.streamText({ prompt, disableToolCallResolution: true });
+
+      // Counts attempts at the provider rather than turns: the retry below re-runs the whole
+      // collect, so `Stream.unwrap` re-evaluates this on each attempt and the reader sees the
+      // request being re-issued instead of an unexplained stall.
+      let attempt = 0;
+      const stream = Stream.unwrap(
+        Effect.gen(function* () {
+          yield* emitRequestPhase('contacting-provider', { attempt: ++attempt });
+          return openStream();
+        }),
+      );
 
       // Set once any block of this attempt has been submitted, after which the request cannot be
       // re-issued: the messages are already in `_pending` and a second attempt would duplicate them.

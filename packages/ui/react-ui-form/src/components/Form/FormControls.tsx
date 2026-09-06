@@ -8,6 +8,7 @@ import { type AnyProperties } from '@dxos/echo/internal';
 import {
   Column,
   type ColumnRootProps,
+  DIALOG_AUTOFOCUS_ATTRIBUTE,
   IconButton,
   type IconButtonProps,
   Input,
@@ -261,6 +262,9 @@ export const FormActions = ({ classNames, submitLabel, submitIcon }: FormActions
           label={t('cancel-button.label')}
           onClick={onCancel}
           data-testid='cancel-button'
+          // Inside a dialog this claims the initial focus, so a reflexive Enter dismisses rather than
+          // commits; the attribute is inert anywhere else.
+          {...{ [DIALOG_AUTOFOCUS_ATTRIBUTE]: '' }}
         />
       )}
       {onSave && (

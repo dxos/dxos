@@ -5,20 +5,25 @@
 import { useAtomValue } from '@effect/atom-react/Hooks';
 import * as Duration from 'effect/Duration';
 import { pipe } from 'effect/Function';
+import * as Option from 'effect/Option';
 import * as Atom from 'effect/unstable/reactivity/Atom';
 import React, { useCallback, useDeferredValue, useEffect, useMemo, useState } from 'react';
 
+import { AGENT_PROCESS_KEY } from '@dxos/agent-runtime';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import { useAtomCapabilityState, useCapability, useOperationInvoker } from '@dxos/app-framework/ui';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
+import * as Chat from '@dxos/assistant/Chat';
 import * as Process from '@dxos/compute/Process';
+import { Annotation, Filter } from '@dxos/echo';
+import { useQuery } from '@dxos/echo-react';
 import { EID } from '@dxos/keys';
 import { type Space } from '@dxos/react-client/echo';
-import { ScrollContainer } from '@dxos/react-ui';
-import { composable, composableProps } from '@dxos/react-ui';
+import { Input, Panel, ScrollContainer, ThemedClassName, composable, composableProps } from '@dxos/react-ui';
 import { useAttentionAttributes } from '@dxos/react-ui-attention';
 import { type Commit, Timeline } from '@dxos/react-ui-components';
+import { Menu } from '@dxos/react-ui-menu';
 import { Syntax } from '@dxos/react-ui-syntax-highlighter';
 import { mx } from '@dxos/ui-theme';
 
@@ -28,7 +33,7 @@ import { getTraceMessagesAtom, useTraceMessages } from '#hooks';
 import { AssistantCapabilities } from '#types';
 
 import { type ProcessEnvironment, filterProcesses, parseProcessEnvironments } from './trace-filter';
-import { TraceToolbar } from './TraceToolbar';
+import { useTraceMenu } from './useTraceMenu';
 
 export type TracePanelProps = AppSurface.SpaceArticleProps<Pick<ProcessTreeProps, 'onProcessTerminate'>>;
 
@@ -48,6 +53,8 @@ export const TracePanel = composable<HTMLDivElement, TracePanelProps>(
       [updateSettings],
     );
 
+    const menu = useTraceMenu({ selected: environments, onSelectedChange: handleEnvironmentsChange });
+
     // `useDeferredValue` batches update bursts, works together with `React.memo`.
     // See the comment in `ProcessTreeContainer` for more details.
     const { branches, commits, spanTree, details } = useDeferredValue(useExecutionGraph(space));
@@ -61,6 +68,7 @@ export const TracePanel = composable<HTMLDivElement, TracePanelProps>(
       if (!import.meta.env.DEV) {
         return;
       }
+
       // Attach a debug hatch to the global object (a genuine global-augmentation boundary).
       const debugGlobal = globalThis as typeof globalThis & { dxosDumpTrace?: () => string };
       debugGlobal.dxosDumpTrace = () => {
@@ -75,6 +83,7 @@ export const TracePanel = composable<HTMLDivElement, TracePanelProps>(
         void navigator.clipboard?.writeText(json);
         return `dxosDumpTrace: ${data.length} message(s) copied to clipboard`;
       };
+
       return () => {
         delete debugGlobal.dxosDumpTrace;
       };
@@ -112,62 +121,83 @@ export const TracePanel = composable<HTMLDivElement, TracePanelProps>(
     );
 
     return (
-      <div
-        {...composableProps(props, {
-          ...attentionAttrs,
-          classNames: mx(
-            'h-full grid divide-y divide-subdued-separator',
+      <Panel.Root {...composableProps(props, { ...attentionAttrs, classNames: 'h-full' })} ref={forwardedRef}>
+        <Menu.Root {...menu} alwaysActive>
+          <Panel.Toolbar asChild>
+            <Menu.Toolbar classNames='justify-between'>
+              <span />
+              <Menu.Items />
+            </Menu.Toolbar>
+          </Panel.Toolbar>
+        </Menu.Root>
+
+        <Panel.Content
+          classNames={mx(
+            'grid grid-cols-[minmax(0,1fr)]',
+            // The process tree takes only the height its rows need (capped by its own max-height),
+            // so a short tree does not reserve empty space above the timeline.
             !tracePanelDebug && selectedCommit
-              ? 'grid-rows-[min-content_minmax(0,160px)_1fr_minmax(0,206px)]'
-              : 'grid-rows-[min-content_minmax(0,160px)_1fr]',
-          ),
-        })}
-        ref={forwardedRef}
-      >
-        <TraceToolbar selected={environments} onSelectedChange={handleEnvironmentsChange} />
+              ? 'grid-rows-[min-content_1fr_min-content]'
+              : 'grid-rows-[min-content_1fr]',
+          )}
+        >
+          {/* TODO(burdon): Select process to show details. */}
+          <div className='min-w-0'>
+            <Input.Root>
+              <Input.Label classNames='px-1'>Processes</Input.Label>
+            </Input.Root>
+            <ProcessTreeContainer
+              classNames='max-h-[8lh]'
+              space={space}
+              environments={environments}
+              onProcessSelect={handleProcessSelect}
+              onProcessTerminate={onProcessTerminate}
+            />
+          </div>
 
-        <ProcessTreeContainer
-          environments={environments}
-          onProcessSelect={handleProcessSelect}
-          onProcessTerminate={onProcessTerminate}
-        />
+          <div className='min-w-0'>
+            <Input.Root>
+              <Input.Label classNames='px-1'>Trace</Input.Label>
+            </Input.Root>
+            <ScrollContainer.Root pin>
+              <ScrollContainer.Content thin>
+                <ScrollContainer.Fade />
+                <ScrollContainer.Viewport>
+                  {tracePanelDebug ? (
+                    <Syntax.Root data={spanTree}>
+                      <Syntax.Content>
+                        <Syntax.Viewport>
+                          <Syntax.Code classNames='text-xs' />
+                        </Syntax.Viewport>
+                      </Syntax.Content>
+                    </Syntax.Root>
+                  ) : (
+                    <Timeline
+                      branches={branches}
+                      branch={currentBranch}
+                      commits={commits}
+                      onSelect={handleCommitSelect}
+                    />
+                  )}
+                </ScrollContainer.Viewport>
+                <ScrollContainer.ScrollDownButton />
+              </ScrollContainer.Content>
+            </ScrollContainer.Root>
+          </div>
 
-        <ScrollContainer.Root pin>
-          <ScrollContainer.Content thin>
-            <ScrollContainer.Fade />
-            <ScrollContainer.Viewport>
-              {tracePanelDebug ? (
-                <Syntax.Root data={spanTree}>
-                  <Syntax.Content>
-                    <Syntax.Viewport>
-                      <Syntax.Code classNames='text-xs' />
-                    </Syntax.Viewport>
-                  </Syntax.Content>
-                </Syntax.Root>
-              ) : (
-                <Timeline
-                  compact
-                  commits={commits}
-                  branches={branches}
-                  currentBranch={currentBranch}
-                  onSelect={handleCommitSelect}
-                />
-              )}
-            </ScrollContainer.Viewport>
-            <ScrollContainer.ScrollDownButton />
-          </ScrollContainer.Content>
-        </ScrollContainer.Root>
-
-        {!tracePanelDebug && selectedCommit && (
-          <Syntax.Root data={details[selectedCommit.id] ?? selectedCommit}>
-            <Syntax.Content>
-              <Syntax.Viewport>
-                <Syntax.Code classNames='text-xs' />
-              </Syntax.Viewport>
-            </Syntax.Content>
-          </Syntax.Root>
-        )}
-      </div>
+          {!tracePanelDebug && selectedCommit && (
+            <div className='p-2'>
+              <Syntax.Root data={details[selectedCommit.id] ?? selectedCommit}>
+                <Syntax.Content classNames='border border-subdued-separator rounded-sm'>
+                  <Syntax.Viewport>
+                    <Syntax.Code classNames='max-h-[20lh] text-xs' />
+                  </Syntax.Viewport>
+                </Syntax.Content>
+              </Syntax.Root>
+            </div>
+          )}
+        </Panel.Content>
+      </Panel.Root>
     );
   },
 );
@@ -247,13 +277,28 @@ const getExecutionGraph = (
 };
 TracePanel.displayName = 'TracePanel';
 
-type ProcessTreeContainerProps = Pick<ProcessTreeProps, 'onProcessSelect' | 'onProcessTerminate'> & {
-  environments: readonly ProcessEnvironment[];
+/** Entity id of a feed URI, the join key between a process environment and a chat's feed ref. */
+const feedKey = (uri: string): string => {
+  const eid = EID.tryParse(uri);
+  return (eid && EID.getEntityId(eid)) ?? uri;
 };
+
+type ProcessTreeContainerProps = ThemedClassName<
+  Pick<ProcessTreeProps, 'onProcessSelect' | 'onProcessTerminate'> & {
+    space: Space;
+    environments: readonly ProcessEnvironment[];
+  }
+>;
 
 // Isolate `ProcessTree` updates from the rest of the panel.
 // TODO(dmaretskyi): Currently not useful since `useExecutionGraph` also pulls in the updates.
-const ProcessTreeContainer = ({ environments, onProcessSelect, onProcessTerminate }: ProcessTreeContainerProps) => {
+const ProcessTreeContainer = ({
+  classNames,
+  space,
+  environments,
+  onProcessSelect,
+  onProcessTerminate,
+}: ProcessTreeContainerProps) => {
   const monitor = useCapability(Capabilities.ProcessMonitor);
   const processes = useAtomValue(
     useMemo(() => monitor?.processTreeAtom.pipe(Atom.debounce(Duration.millis(500))) ?? atomEmpty, [monitor]),
@@ -267,10 +312,43 @@ const ProcessTreeContainer = ({ environments, onProcessSelect, onProcessTerminat
     () => filterProcesses(processesDeferred, environments),
     [processesDeferred, environments],
   );
+
+  // A process only knows the feed it serves, so the chat's name is joined in here rather than
+  // carried on the process itself.
+  const chats = useQuery(space.db, Filter.type(Chat.Chat));
+  const chatNamesByFeed = useMemo(() => {
+    const names = new Map<string, string>();
+    for (const chat of chats) {
+      const name = chat.name?.trim();
+      if (name) {
+        names.set(feedKey(chat.feed.uri), name);
+      }
+    }
+    return names;
+  }, [chats]);
+
+  // Only the agent process itself is renamed: its children inherit the conversation environment and
+  // keep their own operation names.
+  const resolveLabel = useCallback(
+    (process: Process.Info) => {
+      if (process.key !== AGENT_PROCESS_KEY) {
+        return undefined;
+      }
+
+      const target = Annotation.getDictionary(process.params.annotations, Process.TargetAnnotation).pipe(
+        Option.getOrUndefined,
+      );
+      return target === undefined ? undefined : chatNamesByFeed.get(feedKey(target.toString()));
+    },
+    [chatNamesByFeed],
+  );
+
   return (
     <ProcessTree
-      processes={visibleProcesses}
+      classNames={classNames}
       depth={3}
+      processes={visibleProcesses}
+      resolveLabel={resolveLabel}
       onProcessSelect={onProcessSelect}
       onProcessTerminate={onProcessTerminate}
     />

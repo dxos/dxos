@@ -23,8 +23,6 @@ const MARGIN = 8;
 
 type Point = Scene.Point;
 
-const key = (x: number, y: number) => `${x}:${y}`;
-
 /** Directions: right, down, left, up. */
 const DX = [1, 0, -1, 0];
 const DY = [0, 1, 0, -1];
@@ -38,17 +36,6 @@ export const makeAvoidingRouter = (obstacles: Rect[], fallback: Router): Router 
   // Derived from the shared grid so retuning GRID keeps the modules in sync. Evaluated here, not
   // at module scope: this module and uml-grid import each other, so GRID is TDZ during load.
   const STEP = GRID / 4;
-  const used = new Set<string>();
-
-  // Inflated obstacle test, in grid coordinates.
-  const inflated = obstacles.map((rect) => ({
-    x0: Math.floor(rect.x / STEP) - CLEARANCE,
-    y0: Math.floor(rect.y / STEP) - CLEARANCE,
-    x1: Math.ceil((rect.x + rect.w) / STEP) + CLEARANCE,
-    y1: Math.ceil((rect.y + rect.h) / STEP) + CLEARANCE,
-  }));
-  const blocked = (x: number, y: number) =>
-    inflated.some((rect) => x > rect.x0 && x < rect.x1 && y > rect.y0 && y < rect.y1);
 
   const xs = obstacles.flatMap((rect) => [rect.x, rect.x + rect.w]);
   const ys = obstacles.flatMap((rect) => [rect.y, rect.y + rect.h]);
@@ -58,8 +45,41 @@ export const makeAvoidingRouter = (obstacles: Rect[], fallback: Router): Router 
     x1: Math.ceil(Math.max(...xs) / STEP) + MARGIN,
     y1: Math.ceil(Math.max(...ys) / STEP) + MARGIN,
   };
+  const width = bounds.x1 - bounds.x0 + 1;
+  const height = bounds.y1 - bounds.y0 + 1;
+  const inBounds = (x: number, y: number) => x >= bounds.x0 && x <= bounds.x1 && y >= bounds.y0 && y <= bounds.y1;
+  const cellIndex = (x: number, y: number) => (y - bounds.y0) * width + (x - bounds.x0);
 
-  type State = { x: number; y: number; dir: number; cost: number; estimate: number; prev?: State };
+  // Flat grids in place of per-cell string keys: the search touches every cell many times over and
+  // the string building was half its running time.
+  const blockedGrid = new Uint8Array(width * height);
+  for (const rect of obstacles) {
+    const x0 = Math.floor(rect.x / STEP) - CLEARANCE;
+    const y0 = Math.floor(rect.y / STEP) - CLEARANCE;
+    const x1 = Math.ceil((rect.x + rect.w) / STEP) + CLEARANCE;
+    const y1 = Math.ceil((rect.y + rect.h) / STEP) + CLEARANCE;
+    for (let y = Math.max(bounds.y0, y0 + 1); y < Math.min(bounds.y1 + 1, y1); y++) {
+      for (let x = Math.max(bounds.x0, x0 + 1); x < Math.min(bounds.x1 + 1, x1); x++) {
+        blockedGrid[cellIndex(x, y)] = 1;
+      }
+    }
+  }
+  const blocked = (x: number, y: number) => inBounds(x, y) && blockedGrid[cellIndex(x, y)] !== 0;
+  const usedGrid = new Uint8Array(width * height);
+  const isUsed = (x: number, y: number) => inBounds(x, y) && usedGrid[cellIndex(x, y)] !== 0;
+  const markUsed = (x: number, y: number) => {
+    if (inBounds(x, y)) {
+      usedGrid[cellIndex(x, y)] = 1;
+    }
+  };
+  // Settled costs per (cell, heading), reused across searches through a generation stamp so no
+  // search pays to clear them.
+  const settledCost = new Float64Array(width * height * 4);
+  const settledGen = new Int32Array(width * height * 4);
+  let generation = 0;
+
+  /** `f` is cost + estimate, the heap's key. */
+  type State = { x: number; y: number; dir: number; cost: number; f: number; prev?: State };
   type Terminal = { point: Point; dir: number };
   type Found = { cost: number; cells: Point[] };
 
@@ -69,7 +89,7 @@ export const makeAvoidingRouter = (obstacles: Rect[], fallback: Router): Router 
     let index = heap.length - 1;
     while (index > 0) {
       const parent = (index - 1) >> 1;
-      if (heap[parent].cost + heap[parent].estimate <= heap[index].cost + heap[index].estimate) {
+      if (heap[parent].f <= heap[index].f) {
         break;
       }
       [heap[parent], heap[index]] = [heap[index], heap[parent]];
@@ -86,16 +106,10 @@ export const makeAvoidingRouter = (obstacles: Rect[], fallback: Router): Router 
         const left = index * 2 + 1;
         const right = left + 1;
         let smallest = index;
-        if (
-          left < heap.length &&
-          heap[left].cost + heap[left].estimate < heap[smallest].cost + heap[smallest].estimate
-        ) {
+        if (left < heap.length && heap[left].f < heap[smallest].f) {
           smallest = left;
         }
-        if (
-          right < heap.length &&
-          heap[right].cost + heap[right].estimate < heap[smallest].cost + heap[smallest].estimate
-        ) {
+        if (right < heap.length && heap[right].f < heap[smallest].f) {
           smallest = right;
         }
         if (smallest === index) {
@@ -109,34 +123,55 @@ export const makeAvoidingRouter = (obstacles: Rect[], fallback: Router): Router 
   };
 
   /**
+   * Fewest turns any path from (x, y) heading `dir` needs to reach the target: none while aligned
+   * and heading at it, two when heading away along its axis, otherwise one. Admissible, and since
+   * a turn costs as much as a thousand steps it is what makes the search converge on a diagram
+   * hundreds of cells across — distance alone leaves it exploring almost uniformly.
+   */
+  const turnsNeeded = (x: number, y: number, dir: number, target: Point): number => {
+    const dx = target.x - x;
+    const dy = target.y - y;
+    if (dx !== 0 && dy !== 0) {
+      return 1;
+    }
+    if (dx === 0 && dy === 0) {
+      return 0;
+    }
+    const towards = dx !== 0 ? (dx > 0 ? 0 : 2) : dy > 0 ? 1 : 3;
+    return dir === towards ? 0 : (dir + 2) % 4 === towards ? 2 : 1;
+  };
+
+  const estimateFrom = (x: number, y: number, dir: number, target: Point): number =>
+    Math.abs(target.x - x) + Math.abs(target.y - y) + turnsNeeded(x, y, dir, target) * TURN_COST;
+
+  // Every cell in every heading, so a reachable target is never abandoned on a large diagram.
+  const budget = Math.max(50_000, (bounds.x1 - bounds.x0) * (bounds.y1 - bounds.y0) * 4);
+
+  /**
    * Bounded A* between two stub ends (grid coordinates). Successors already dominated by a
    * settled state are pruned before pushing; undefined when the target is unreachable.
    */
   const search = (source: Point, startDir: number, target: Point, endDir: number): Found | undefined => {
     const open: State[] = [
-      {
-        x: source.x,
-        y: source.y,
-        dir: startDir,
-        cost: 0,
-        estimate: Math.abs(target.x - source.x) + Math.abs(target.y - source.y),
-      },
+      { x: source.x, y: source.y, dir: startDir, cost: 0, f: estimateFrom(source.x, source.y, startDir, target) },
     ];
-    const settled = new Map<string, number>();
+    generation++;
+    const settledAt = (index: number) => (settledGen[index] === generation ? settledCost[index] : undefined);
     let found: State | undefined;
 
-    for (let iterations = 0; open.length > 0 && iterations < 50_000; iterations++) {
+    for (let iterations = 0; open.length > 0 && iterations < budget; iterations++) {
       const current = heapPop(open);
       if (current.x === target.x && current.y === target.y) {
         found = current;
         break;
       }
-      const stateKey = `${current.x}:${current.y}:${current.dir}`;
-      const seen = settled.get(stateKey);
+      const stateIndex = cellIndex(current.x, current.y) * 4 + current.dir;
+      const seen = settledAt(stateIndex);
       if (seen !== undefined && seen <= current.cost) {
         continue;
       }
-      settled.set(stateKey, current.cost);
+      settledGen[stateIndex] = generation;
+      settledCost[stateIndex] = current.cost;
 
       for (let dir = 0; dir < 4; dir++) {
         if ((dir + 2) % 4 === current.dir) {
@@ -144,29 +179,25 @@ export const makeAvoidingRouter = (obstacles: Rect[], fallback: Router): Router 
         }
         const x = current.x + DX[dir];
         const y = current.y + DY[dir];
-        if (x < bounds.x0 || x > bounds.x1 || y < bounds.y0 || y > bounds.y1 || blocked(x, y)) {
+        if (!inBounds(x, y)) {
+          continue;
+        }
+        const cell = cellIndex(x, y);
+        if (blockedGrid[cell] !== 0) {
           continue;
         }
         const cost =
           current.cost +
           1 +
           (dir === current.dir ? 0 : TURN_COST) +
-          (used.has(key(x, y)) ? USED_COST : 0) +
+          (usedGrid[cell] !== 0 ? USED_COST : 0) +
           // Entering the target off-axis forces one more bend at arrival; fold it in.
           (x === target.x && y === target.y && dir !== endDir ? TURN_COST : 0);
-        const successorKey = `${x}:${y}:${dir}`;
-        const dominated = settled.get(successorKey);
+        const dominated = settledAt(cell * 4 + dir);
         if (dominated !== undefined && dominated <= cost) {
           continue;
         }
-        heapPush(open, {
-          x,
-          y,
-          dir,
-          cost,
-          estimate: Math.abs(target.x - x) + Math.abs(target.y - y),
-          prev: current,
-        });
+        heapPush(open, { x, y, dir, cost, f: cost + estimateFrom(x, y, dir, target), prev: current });
       }
     }
 
@@ -273,7 +304,7 @@ export const makeAvoidingRouter = (obstacles: Rect[], fallback: Router): Router 
       const dx = Math.sign(bx - ax);
       const dy = Math.sign(by - ay);
       for (let step = 0; step <= steps; step++) {
-        if (blocked(ax + dx * step, ay + dy * step) || used.has(key(ax + dx * step, ay + dy * step))) {
+        if (blocked(ax + dx * step, ay + dy * step) || isUsed(ax + dx * step, ay + dy * step)) {
           return false;
         }
       }
@@ -327,7 +358,7 @@ export const makeAvoidingRouter = (obstacles: Rect[], fallback: Router): Router 
       const dx = Math.sign(b.x - a.x);
       const dy = Math.sign(b.y - a.y);
       for (let step = 0; step <= steps; step++) {
-        used.add(key(ax + dx * step, ay + dy * step));
+        markUsed(ax + dx * step, ay + dy * step);
       }
     }
     return simplified;

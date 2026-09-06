@@ -10,7 +10,8 @@ import React, { type PropsWithChildren, useCallback, useEffect, useMemo, useRef,
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { Alarm } from '@dxos/assistant';
-import { Chat as AssistantChat, resolveSlashCommand } from '@dxos/assistant-toolkit';
+import { resolveSlashCommand } from '@dxos/assistant-toolkit';
+import * as AssistantChat from '@dxos/assistant/Chat';
 import { Event } from '@dxos/async';
 import { type Database, Filter, Obj, Query } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
@@ -42,12 +43,20 @@ import { meta } from '#meta';
 import { TaskSlashCommands } from '../../commands';
 import { AiUsageQuotaError, type ProcessorRequestContext } from '../../processor';
 import {
+  ChatActivity,
   ChatStatus,
+  ChatStatusStack,
   ChatPrompt as NaturalChatPrompt,
   type ChatPromptProps as NaturalChatPromptProps,
 } from '../ChatPrompt';
 import { ChatQueue as NaturalChatQueue, type ChatQueueProps as NaturalChatQueueProps } from '../ChatQueue';
-import { ChatContextProvider, type ChatContextValue, type ChatRequestTiming, useChatContext } from './context';
+import {
+  ChatContextProvider,
+  type ChatContextValue,
+  ChatReportContextProvider,
+  type ChatRequestTiming,
+  useChatContext,
+} from './context';
 import { type ChatEvent } from './events';
 import { SurfaceWidget } from './SurfaceWidget';
 import { projectAlarms, projectThread, resolveRewind } from './thread';
@@ -231,6 +240,20 @@ const ChatRoot = ({
           break;
         }
 
+        case 'report': {
+          const text = ev.text.trim();
+          if (text.length) {
+            // Same seam as a submitted prompt (persist first, queue while a turn runs), but the
+            // content is synthetic — nobody typed it.
+            void Promise.resolve(onSubmit?.(text)).then(() =>
+              active
+                ? processor.enqueue({ message: text, disposition: 'synthetic' })
+                : processor.request({ message: text, disposition: 'synthetic' }),
+            );
+          }
+          break;
+        }
+
         case 'rewind': {
           // Edit-and-resend: discard the prompt and everything after it, and put its text back in the
           // composer so it can be revised. Recorded on the feed rather than the chat because the
@@ -270,6 +293,10 @@ const ChatRoot = ({
     // them the handler would keep resolving rewinds against whatever was mounted first.
   }, [event, dump, processor, streaming, active, onEvent, onSubmit, getContext, feed, messages, chat, db]);
 
+  // An inline surface (connector prompt, plugin prompt) reports its completed flow as a synthetic
+  // turn, so the agent resumes without the report reading as something the user typed.
+  const handleReport = useCallback((text: string) => event.emit({ type: 'report', text }), [event]);
+
   return (
     <ChatContextProvider
       debug={debug}
@@ -288,7 +315,7 @@ const ChatRoot = ({
       setVisibleRange={setVisibleRange}
       {...props}
     >
-      {children}
+      <ChatReportContextProvider submit={handleReport}>{children}</ChatReportContextProvider>
     </ChatContextProvider>
   );
 };
@@ -792,7 +819,9 @@ export const Chat = {
   Content: ChatContent,
   Prompt: ChatPrompt,
   Queue: ChatQueue,
+  Activity: ChatActivity,
   Status: ChatStatus,
+  StatusStack: ChatStatusStack,
   Thread: ChatThread,
   Outline: ChatOutline,
 };

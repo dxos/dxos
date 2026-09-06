@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { useId, useMemo } from 'react';
+import React, { type MouseEvent, useId, useMemo } from 'react';
 
 import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
@@ -171,15 +171,17 @@ const MultilineText = ({ cx, cy, text, weight, className }: MultilineTextProps) 
   );
 };
 
+/** Per-instance marker fragment ids (multiple SceneSvgs may share a page). */
+type MarkerIds = Record<Exclude<Scene.ArrowHead, 'none'> | 'circle', string>;
+
 type ElementProps = {
   object: Scene.WorldObject;
   element: Scene.Element;
   registry: Map<string, Rect>;
-  /** Per-instance arrowhead marker fragment id (multiple SceneSvgs may share a page). */
-  markerId: string;
+  markers: MarkerIds;
 };
 
-const SceneElement = ({ object, element, registry, markerId }: ElementProps) => {
+const SceneElement = ({ object, element, registry, markers }: ElementProps) => {
   const { x = 0, y = 0 } = object.origin ?? {};
   const scale = object.scale ?? 1;
   const map = (point: Point): Point => ({ x: x + point.x * scale, y: y + point.y * scale });
@@ -292,6 +294,7 @@ const SceneElement = ({ object, element, registry, markerId }: ElementProps) => 
         return null;
       }
       const mid = { x: (start.x + end.x) / 2, y: (start.y + end.y) / 2 };
+      const head = element.head ?? 'arrow';
       return (
         <g className={mx('stroke-current', colorClass(element.color))}>
           <line
@@ -301,7 +304,8 @@ const SceneElement = ({ object, element, registry, markerId }: ElementProps) => 
             y2={end.y}
             strokeWidth={1.5}
             strokeDasharray={element.stroke ? strokeDash[element.stroke] : undefined}
-            markerEnd={`url(#${markerId})`}
+            markerEnd={head === 'none' ? undefined : `url(#${markers[head]})`}
+            markerStart={element.tail === 'circle' ? `url(#${markers.circle})` : undefined}
           />
           {element.text && (
             <MultilineText
@@ -324,25 +328,61 @@ export type SceneSvgProps = ThemedClassName<{
   objects: readonly Scene.WorldObject[];
   /** Draw the alignment grid at this spacing (scene px). */
   grid?: number;
+  /** Selected object ids; rendering is controlled, the host owns the state. */
+  selection?: readonly string[];
+  /** Click selects one object (shift/meta toggles); clicking the background clears. */
+  onSelectionChange?: (objectIds: readonly string[]) => void;
+  /** Double-click. */
+  onActivate?: (objectId: string) => void;
 }>;
 
 /**
- * Minimal SVG backend for the scene DSL: renders world objects directly (no canvas editor),
- * resolving bound arrow refs against box borders. Useful for read-only previews and stories;
- * interaction/persistence stays with the tldraw backend.
+ * SVG backend for the scene DSL: renders world objects directly (no canvas editor), resolving
+ * bound arrow refs against box borders and drawing the UML end markers. Selection is host-owned
+ * and optional — pass `selection` with `onSelectionChange` (click, shift-toggle, background clear,
+ * Space) and `onActivate` (double-click, Enter) to make objects interactive; persistence stays
+ * with the variant that holds the canvas.
  */
-export const SceneSvg = ({ classNames, objects, grid }: SceneSvgProps) => {
+export const SceneSvg = ({ classNames, objects, grid, selection, onSelectionChange, onActivate }: SceneSvgProps) => {
   const { registry, viewBox } = useMemo(() => resolve(objects), [objects]);
   // Fragment ids are document-global: derive per-instance ids so co-rendered scenes don't collide.
   const instanceId = useId();
-  const markerId = `${instanceId}-arrowhead`;
+  const markers: MarkerIds = {
+    arrow: `${instanceId}-arrow`,
+    triangle: `${instanceId}-triangle`,
+    crowsfoot: `${instanceId}-crowsfoot`,
+    circle: `${instanceId}-circle`,
+  };
   const gridId = `${instanceId}-grid`;
+  const selected = useMemo(() => new Set(selection), [selection]);
+  const interactive = Boolean(onSelectionChange || onActivate);
+
+  const handleSelect = (objectId: string, event: MouseEvent<SVGGElement>) => {
+    // Object clicks stop here so the background handler below does not immediately clear them.
+    event.stopPropagation();
+    if (!onSelectionChange) {
+      return;
+    }
+    const toggle = event.shiftKey || event.metaKey || event.ctrlKey;
+    onSelectionChange(
+      toggle
+        ? selected.has(objectId)
+          ? [...selected].filter((id) => id !== objectId)
+          : [...selected, objectId]
+        : [objectId],
+    );
+  };
 
   return (
-    <svg viewBox={viewBox} className={mx('dx-fill text-neutral-800 dark:text-neutral-200', classNames)}>
+    <svg
+      viewBox={viewBox}
+      className={mx('dx-fill text-neutral-800 dark:text-neutral-200', classNames)}
+      onClick={onSelectionChange && selected.size > 0 ? () => onSelectionChange([]) : undefined}
+    >
       <defs>
+        {/* UML end markers. `auto-start-reverse` lets the same shapes serve as head or tail. */}
         <marker
-          id={markerId}
+          id={markers.arrow}
           viewBox='0 0 10 10'
           refX='9'
           refY='5'
@@ -352,6 +392,49 @@ export const SceneSvg = ({ classNames, objects, grid }: SceneSvgProps) => {
         >
           <path d='M 0 1 L 9 5 L 0 9 z' className='fill-neutral-800 dark:fill-neutral-200 stroke-none' />
         </marker>
+        <marker
+          id={markers.triangle}
+          viewBox='0 0 12 12'
+          refX='11'
+          refY='6'
+          markerWidth='12'
+          markerHeight='12'
+          orient='auto-start-reverse'
+        >
+          {/* Hollow: filled with the surface so the line does not show through the triangle. */}
+          <path
+            d='M 1 1 L 11 6 L 1 11 z'
+            fill='var(--surface-bg, transparent)'
+            className='stroke-neutral-800 dark:stroke-neutral-200'
+            strokeWidth={1.2}
+          />
+        </marker>
+        <marker
+          id={markers.crowsfoot}
+          viewBox='0 0 12 12'
+          refX='11'
+          refY='6'
+          markerWidth='12'
+          markerHeight='12'
+          orient='auto-start-reverse'
+        >
+          <path
+            d='M 0 6 L 11 1 M 0 6 L 11 6 M 0 6 L 11 11'
+            className='fill-none stroke-neutral-800 dark:stroke-neutral-200'
+            strokeWidth={1.2}
+          />
+        </marker>
+        <marker
+          id={markers.circle}
+          viewBox='0 0 10 10'
+          refX='2'
+          refY='5'
+          markerWidth='8'
+          markerHeight='8'
+          orient='auto'
+        >
+          <circle cx='5' cy='5' r='3' className='fill-neutral-800 dark:fill-neutral-200 stroke-none' />
+        </marker>
         {grid && (
           <pattern id={gridId} width={grid} height={grid} patternUnits='userSpaceOnUse'>
             <path d={`M ${grid} 0 L 0 0 0 ${grid}`} className='fill-none stroke-neutral-500/20' strokeWidth={1} />
@@ -360,9 +443,45 @@ export const SceneSvg = ({ classNames, objects, grid }: SceneSvgProps) => {
       </defs>
       {grid && <rect x='-10000' y='-10000' width='20000' height='20000' fill={`url(#${gridId})`} />}
       {objects.map((object) => (
-        <g key={object.id}>
+        <g
+          key={object.id}
+          data-object={object.id}
+          data-selected={selected.has(object.id) || undefined}
+          // Keyboard: Tab focuses an object, Space selects it, Enter selects and activates it.
+          tabIndex={interactive ? 0 : undefined}
+          role={interactive ? 'button' : undefined}
+          aria-label={interactive ? object.id : undefined}
+          aria-pressed={interactive ? selected.has(object.id) : undefined}
+          className={mx(
+            interactive && 'cursor-pointer outline-none focus-visible:[&>*]:stroke-accent-text',
+            selected.has(object.id) && 'text-accent-text',
+          )}
+          onClick={interactive ? (event) => handleSelect(object.id, event) : undefined}
+          onDoubleClick={
+            onActivate
+              ? (event) => {
+                  event.stopPropagation();
+                  onActivate(object.id);
+                }
+              : undefined
+          }
+          onKeyDown={
+            interactive
+              ? (event) => {
+                  if (event.key === ' ' || event.key === 'Enter') {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    onSelectionChange?.(event.shiftKey ? [...selected, object.id] : [object.id]);
+                    if (event.key === 'Enter') {
+                      onActivate?.(object.id);
+                    }
+                  }
+                }
+              : undefined
+          }
+        >
           {object.elements.map((element) => (
-            <SceneElement key={element.id} object={object} element={element} registry={registry} markerId={markerId} />
+            <SceneElement key={element.id} object={object} element={element} registry={registry} markers={markers} />
           ))}
         </g>
       ))}

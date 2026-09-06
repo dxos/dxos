@@ -115,6 +115,12 @@ describe('node storage', () => {
     expect(state.disabled).toBe(false);
   });
 
+  test('isObservabilityDisabled reports disabled when the state cannot be read', async () => {
+    await writeFile(configDir, '', 'utf-8');
+    const disabled = await isObservabilityDisabled(configDir);
+    expect(disabled).toBe(true);
+  });
+
   test('showObservabilityBanner prints once then is silent', async () => {
     await mkdir(configDir, { recursive: true });
     const bannerCb = vi.fn();

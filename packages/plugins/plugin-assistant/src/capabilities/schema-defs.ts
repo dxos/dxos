@@ -3,7 +3,9 @@
 //
 
 import { AiContext, Alarm, SessionLink } from '@dxos/assistant';
-import { Agent, Chat, McpServer, Memory } from '@dxos/assistant-toolkit';
+import { McpServer, Memory } from '@dxos/assistant-toolkit';
+import * as Agent from '@dxos/assistant/Agent';
+import * as Chat from '@dxos/assistant/Chat';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Skill from '@dxos/compute/Skill';
 import { Sequence } from '@dxos/conductor';

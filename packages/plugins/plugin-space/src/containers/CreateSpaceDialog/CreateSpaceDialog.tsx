@@ -12,7 +12,7 @@ import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { EffectEx } from '@dxos/effect';
 import { log } from '@dxos/log';
-import { Column, Dialog, useTranslation } from '@dxos/react-ui';
+import { Dialog, ScrollArea, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 import { Listbox } from '@dxos/react-ui-list';
 
@@ -34,6 +34,11 @@ export const CreateSpaceDialog = () => {
   const [error, setError] = useState<string | undefined>(undefined);
   const templates = useCapabilities(SpaceCapabilities.SpaceTemplate);
   const [template, setTemplate] = useState<string | undefined>(undefined);
+
+  const handleCancel = useCallback(
+    () => invoke(LayoutOperation.UpdateDialog, { state: false }).pipe(EffectEx.runAndForwardErrors),
+    [invoke],
+  );
 
   // Selecting a template seeds the fields it has an opinion about, leaving anything the user has
   // already typed alone would make the defaults unreachable — so this overwrites, and re-keys the
@@ -73,55 +78,59 @@ export const CreateSpaceDialog = () => {
 
   return (
     <Dialog.Content>
-      <Dialog.Header>
-        <Dialog.Title>{t('create-space-dialog.title')}</Dialog.Title>
-        <Dialog.Close asChild>
-          <Dialog.ActionIconButton action='close' ref={closeRef} />
-        </Dialog.Close>
-      </Dialog.Header>
-      <Dialog.Body>
-        <Form.Root
-          testId='create-space-form'
-          autoFocus
-          // Re-keyed on the selection so the template's defaults replace what the form already holds.
-          key={template ?? 'none'}
-          schema={SpaceSchema.SpaceForm}
-          defaultValues={values}
-          fieldProvider={inputSurfaceLookup}
-          onSave={handleCreateSpace}
-        >
-          {/* Dialog.Body owns the gutter Column; place the form in its center column via Column.Center
-              (not Form.Viewport's own Column.Root, which double-insets) so it aligns with the title. */}
-          <Column.Center>
-            <Form.Content>
-              <Form.FieldSet />
-              <Form.Error>{error}</Form.Error>
-              {templates.length > 0 && (
-                <div role='group' aria-labelledby='create-space-templates'>
-                  <h3 id='create-space-templates' className='my-1 text-sm text-subdued'>
-                    {t('create-space-dialog.templates.label')}
-                  </h3>
-                  <Listbox.Root value={template} onValueChange={setTemplate}>
-                    <Listbox.Content aria-labelledby='create-space-templates'>
-                      {templates.map(({ id, label, description, icon }) => (
-                        <Listbox.Item key={id} id={id}>
-                          <Listbox.ItemContent
-                            // Templates carry a bare `iconValues` name, as space properties do.
-                            icon={icon ? `ph--${icon}--regular` : 'ph--placeholder--regular'}
-                            title={label}
-                            description={description}
-                          />
-                        </Listbox.Item>
-                      ))}
-                    </Listbox.Content>
-                  </Listbox.Root>
-                </div>
-              )}
-              <Form.Submit />
-            </Form.Content>
-          </Column.Center>
-        </Form.Root>
-      </Dialog.Body>
+      {/* The form spans the whole dialog rather than just its body, so the action row can stay pinned
+          below the scrolling fields while still reading the form's context. */}
+      <Form.Root
+        testId='create-space-form'
+        // Re-keyed on the selection so the template's defaults replace what the form already holds.
+        key={template ?? 'none'}
+        schema={SpaceSchema.SpaceForm}
+        defaultValues={values}
+        fieldProvider={inputSurfaceLookup}
+        onSave={handleCreateSpace}
+        onCancel={handleCancel}
+      >
+        <Dialog.Header>
+          <Dialog.Title>{t('create-space-dialog.title')}</Dialog.Title>
+          <Dialog.Close asChild>
+            <Dialog.ActionIconButton action='close' ref={closeRef} />
+          </Dialog.Close>
+        </Dialog.Header>
+        <Dialog.Body>
+          {/* A ScrollArea rather than Form.Viewport's own scrolling Column, which would nest a second
+              gutter inside the one Dialog.Body already propagates and inset the fields twice. */}
+          <ScrollArea.Root orientation='vertical' padding thin>
+            <ScrollArea.Viewport>
+              <Form.Content>
+                <Form.FieldSet />
+                <Form.Error>{error}</Form.Error>
+                {templates.length > 0 && (
+                  <div role='group' aria-labelledby='create-space-templates'>
+                    <h3 id='create-space-templates' className='my-1 text-sm text-subdued'>
+                      {t('create-space-dialog.templates.label')}
+                    </h3>
+                    <Listbox.Root value={template} onValueChange={setTemplate}>
+                      <Listbox.Content aria-labelledby='create-space-templates'>
+                        {templates.map(({ id, label, description, icon }) => (
+                          <Listbox.Item key={id} id={id}>
+                            <Listbox.ItemContent
+                              // Templates carry a bare `iconValues` name, as space properties do.
+                              icon={icon ? `ph--${icon}--regular` : 'ph--placeholder--regular'}
+                              title={label}
+                              description={description}
+                            />
+                          </Listbox.Item>
+                        ))}
+                      </Listbox.Content>
+                    </Listbox.Root>
+                  </div>
+                )}
+              </Form.Content>
+            </ScrollArea.Viewport>
+          </ScrollArea.Root>
+        </Dialog.Body>
+        <Form.Actions submitLabel={t('create-space-dialog.create.label')} />
+      </Form.Root>
     </Dialog.Content>
   );
 };

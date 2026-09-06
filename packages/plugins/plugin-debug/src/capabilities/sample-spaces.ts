@@ -5,7 +5,7 @@
 import type * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as SampleSpace from '@dxos/app-toolkit/SampleSpace';
 
-import { PipelineSpace, TidepoolSpace } from '../sample';
+import { ChatroomSpace, PipelineSpace, TidepoolSpace } from '../sample';
 
 /**
  * The sample spaces this plugin offers. Loaded only once something asks for the list — the content
@@ -26,5 +26,12 @@ export default [
     label: 'Tidepool — Offline sync v2',
     description: 'A work-stream with a two-level task tree, a .mdl spec, an architecture note and a decision log.',
     definition: TidepoolSpace(),
+  }),
+  SampleSpace.preset({
+    id: 'org.dxos.plugin-debug.sample.chatroom',
+    label: 'Coding Chatroom App',
+    description:
+      'A brief, a five-stage plan as a task tree, and the skill for building it on Workers and Claude agents.',
+    definition: ChatroomSpace(),
   }),
 ] satisfies ReadonlyArray<AppCapabilities.SampleSpace>;

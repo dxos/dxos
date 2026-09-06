@@ -24,13 +24,14 @@ import {
   type PendingState,
   SessionStore,
   SkillHooks,
+  emitRequestPhase,
   getOperationFromTool,
   makeToolExecutionService,
   makeToolResolverFromOperations,
 } from '@dxos/assistant';
+import * as Chat from '@dxos/assistant/Chat';
 import { ProcessManager } from '@dxos/compute-runtime';
 import * as Credential from '@dxos/compute/Credential';
-import * as Instructions from '@dxos/compute/Instructions';
 import * as McpServer from '@dxos/compute/McpServer';
 import * as Operation from '@dxos/compute/Operation';
 import * as Process from '@dxos/compute/Process';
@@ -45,7 +46,7 @@ import { trim } from '@dxos/util';
 import { type DelegationStrategy } from './delegation-strategy';
 import { type MakeTurnProducer, makeAiSessionTurnProducer } from './turn-producer';
 
-interface AgentProcessOptions {
+export interface AgentProcessOptions {
   // TODO(burdon): Instructions?
   systemPrompt?: string;
 
@@ -115,22 +116,20 @@ export const AgentProcess = (options: AgentProcessOptions) =>
     },
     (ctx) =>
       Effect.gen(function* () {
-        const feedDxn = Annotation.getDictionary(ctx.params.annotations, Process.TargetAnnotation).pipe(
+        const chatDxn = Annotation.getDictionary(ctx.params.annotations, Process.TargetAnnotation).pipe(
           Option.getOrUndefined,
         );
-        if (feedDxn == null) {
-          return yield* Effect.die(new Error('Agent executable requires spawn options.target set to a queue DXN.'));
+        if (chatDxn == null) {
+          return yield* Effect.die(new Error('Agent executable requires spawn options.target set to a Chat DXN.'));
         }
-        const feed = yield* Database.resolve(feedDxn, Feed.Feed).pipe(Effect.orDie);
-        // Steering instructions travel as a spawn annotation (the session is feed-centric and cannot
-        // reach its Chat); a broken ref degrades to an unsteered session rather than failing the process.
-        const instructionsDxn = Annotation.getDictionary(ctx.params.annotations, Process.InstructionsAnnotation).pipe(
-          Option.getOrUndefined,
-        );
-        const instructions = instructionsDxn
-          ? yield* Database.resolve(instructionsDxn, Instructions.Instructions).pipe(
-              Effect.orElseSucceed(() => undefined),
-            )
+        // The process is bound to the chat, not to its feed: the queue, the steering instructions
+        // and the checklist are all read from the chat, and a rehydrated process recovers them by
+        // re-reading it rather than from spawn annotations.
+        const chat = yield* Database.resolve(chatDxn, Chat.Chat).pipe(Effect.orDie);
+        const feed = yield* Database.load(chat.feed).pipe(Effect.orDie);
+        // A broken instructions ref degrades to an unsteered session rather than failing the process.
+        const instructions = chat.instructions
+          ? yield* Database.load(chat.instructions).pipe(Effect.orElseSucceed(() => undefined))
           : undefined;
         const runtime = yield* Effect.context<Database.Service>();
         const makeTurnProducer = options.makeTurnProducer ?? makeAiSessionTurnProducer;
@@ -288,6 +287,11 @@ export const AgentProcess = (options: AgentProcessOptions) =>
             function* () {
               log('agent onAlarm fired', { backlog: toolResults.length });
 
+              // Earliest point the agent can report to a reader who is already waiting: draining the
+              // queue below reads the feed, which is itself part of the wait. An empty wake emits it
+              // too, but that path returns in milliseconds and the turn settling clears the line.
+              yield* emitRequestPhase('preparing');
+
               for (const pid of dropReportedToolResults(toolResults, (pid) => toolCallManager.isReported(pid))) {
                 log.info('skip tool result that was reported synchronously', { pid });
               }
@@ -364,7 +368,7 @@ export const AgentProcess = (options: AgentProcessOptions) =>
               // children are linked, so their exits wake `onChildEvent` below.
               if (Option.isSome(strategy)) {
                 const activeIds = new Set(delegations.map((delegation) => delegation.id));
-                const pending = yield* strategy.value.reconcile(feed, activeIds);
+                const pending = yield* strategy.value.reconcile(chat, activeIds);
                 for (const delegation of pending) {
                   const pid = yield* delegation.spawn;
                   delegations.push({ pid, id: delegation.id });
@@ -407,12 +411,12 @@ export const AgentProcess = (options: AgentProcessOptions) =>
                 const fiber = yield* operationInvoker.attachFiber(event.pid).pipe(Effect.orDie);
                 const exit = yield* fiber.await;
                 if (Option.isSome(strategy)) {
-                  yield* strategy.value.onComplete(feed, delegation.id, exit);
+                  yield* strategy.value.onComplete(chat, delegation.id, exit);
                   // Re-reconcile: work that was waiting on this delegation (e.g. a dependent task)
                   // spawns now rather than on the next conversational turn — this is what lets a
                   // batch of delegated tasks drain without further prompting.
                   const activeIds = new Set(delegations.map((delegation) => delegation.id));
-                  const pending = yield* strategy.value.reconcile(feed, activeIds);
+                  const pending = yield* strategy.value.reconcile(chat, activeIds);
                   for (const next of pending) {
                     const pid = yield* next.spawn;
                     delegations.push({ pid, id: next.id });

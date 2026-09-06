@@ -50,6 +50,19 @@ export interface FeedStoreOptions {
 }
 
 /**
+ * Client-side pull progress for one space/namespace.
+ */
+export type SyncState = {
+  /** Highest global position pulled from the server, or -1 when nothing has been pulled. */
+  lastPulledPosition: number;
+  /**
+   * Token of the server that assigned {@link lastPulledPosition}. Undefined before the first
+   * response carrying one, which is also the case for state written by earlier releases.
+   */
+  serverToken: string | undefined;
+};
+
+/**
  * Effect service tag for {@link FeedStore}.
  */
 export class FeedStoreService extends EffectContext.Service<FeedStoreService, FeedStore>()('@dxos/feed/FeedStore') {}
@@ -135,6 +148,14 @@ export class FeedStore {
         return token;
       }).pipe(Effect.withSpan('FeedStore.ensureCursorToken'), SpanAttributes.annotateSpace(spaceId)),
   );
+
+  /**
+   * Identity of this store's storage, as reported to sync clients so they can detect that the
+   * server they had been syncing with was swapped or wiped. Created on first use and stable
+   * thereafter, so it only changes when the underlying storage is recreated.
+   */
+  getServerToken = (spaceId: string): Effect.Effect<string, SqlError.SqlError, SqlClient.SqlClient> =>
+    this.#ensureCursorToken(spaceId);
 
   /**
    * Seals block payloads for a batch, returning storage columns aligned by input index. A block
@@ -236,6 +257,9 @@ export class FeedStore {
 
         // Validate Token if cursor used.
         const validCursorToken = yield* this.#ensureCursorToken(request.spaceId);
+        // Only a position authority's token is meaningful to a sync client -- it names the store
+        // whose positions the client is caching.
+        const serverToken = this.#options.assignPositions ? validCursorToken : undefined;
         if (request.cursor && cursorToken !== validCursorToken) {
           return yield* Effect.die(new Error(`Cursor token mismatch`));
         }
@@ -252,7 +276,11 @@ export class FeedStore {
            We prioritize `cursor`.
         */
 
-        const position = request.position ?? -1;
+        // A client whose remembered positions were assigned by a different store names slots that
+        // no longer exist, so serve the namespace from the start rather than from a meaningless
+        // offset — recovering in the same round-trip the client already paid for.
+        const serverChanged = request.expectedServerToken != null && request.expectedServerToken !== validCursorToken;
+        const position = serverChanged ? -1 : (request.position ?? -1);
 
         // Resolve subscriptions or feed IDs.
         if (request.query && 'subscriptionId' in request.query) {
@@ -283,6 +311,7 @@ export class FeedStore {
             blocks: [],
             nextCursor: FeedCursor.make(`${validCursorToken}|-1`),
             hasMore: false,
+            serverToken,
           };
         }
 
@@ -342,7 +371,7 @@ export class FeedStore {
           }
         }
 
-        return { requestId: request.requestId, blocks, nextCursor, hasMore } satisfies QueryResponse;
+        return { requestId: request.requestId, blocks, nextCursor, hasMore, serverToken } satisfies QueryResponse;
       }).pipe(Effect.withSpan('FeedStore.query'), SpanAttributes.annotateSpace(request.spaceId)),
   );
 
@@ -382,38 +411,83 @@ export class FeedStore {
   );
 
   /**
-   * Get the last pulled position for the given space and namespace.
-   * Returns -1 if no sync state exists yet.
+   * Get the pull progress for the given space and namespace.
+   * `lastPulledPosition` is -1 and `serverToken` undefined when no sync state exists yet.
    */
   getSyncState = (opts: {
     spaceId: SpaceId;
     feedNamespace: string;
-  }): Effect.Effect<number, SqlError.SqlError, SqlClient.SqlClient> =>
+  }): Effect.Effect<SyncState, SqlError.SqlError, SqlClient.SqlClient> =>
     Effect.gen({ self: this }, function* () {
       const sql = yield* SqlClient.SqlClient;
-      const rows = yield* sql<{ lastPulledPosition: number }>`
-        SELECT lastPulledPosition FROM sync_state
+      const rows = yield* sql<{ lastPulledPosition: number; serverToken: string | null }>`
+        SELECT lastPulledPosition, serverToken FROM sync_state
         WHERE spaceId = ${opts.spaceId} AND feedNamespace = ${opts.feedNamespace}
       `;
-      return rows[0]?.lastPulledPosition ?? -1;
+      return {
+        lastPulledPosition: rows[0]?.lastPulledPosition ?? -1,
+        serverToken: rows[0]?.serverToken ?? undefined,
+      };
     }).pipe(Effect.withSpan('FeedStore.getSyncState'), SpanAttributes.annotateSpace(opts.spaceId));
 
   /**
-   * Update the last pulled position for the given space and namespace.
+   * Update the pull progress for the given space and namespace.
    */
   setSyncState = (opts: {
     spaceId: SpaceId;
     feedNamespace: string;
     lastPulledPosition: number;
+    /** Token of the server that assigned `lastPulledPosition`; leaves the stored token as-is when omitted. */
+    serverToken?: string;
   }): Effect.Effect<void, SqlError.SqlError, SqlClient.SqlClient> =>
     Effect.gen({ self: this }, function* () {
       const sql = yield* SqlClient.SqlClient;
+      const serverToken = opts.serverToken ?? null;
       yield* sql`
-        INSERT INTO sync_state (spaceId, feedNamespace, lastPulledPosition)
-        VALUES (${opts.spaceId}, ${opts.feedNamespace}, ${opts.lastPulledPosition})
-        ON CONFLICT (spaceId, feedNamespace) DO UPDATE SET lastPulledPosition = ${opts.lastPulledPosition}
+        INSERT INTO sync_state (spaceId, feedNamespace, lastPulledPosition, serverToken)
+        VALUES (${opts.spaceId}, ${opts.feedNamespace}, ${opts.lastPulledPosition}, ${serverToken})
+        ON CONFLICT (spaceId, feedNamespace) DO UPDATE SET
+          lastPulledPosition = ${opts.lastPulledPosition},
+          serverToken = COALESCE(${serverToken}, sync_state.serverToken)
       `;
     }).pipe(Effect.withSpan('FeedStore.setSyncState'), SpanAttributes.annotateSpace(opts.spaceId));
+
+  /**
+   * Discards everything derived from a server that no longer exists: strips the global position
+   * from every block of the space/namespace and restarts pull progress under the new server's
+   * token, so the next pull replays the namespace from the start.
+   *
+   * Blocks themselves are kept -- they are re-pushed and de-duplicated by (actorId, sequence) -- so
+   * locally authored history survives a server swap.
+   */
+  resetSyncState = (opts: {
+    spaceId: SpaceId;
+    feedNamespace: string;
+    serverToken: string;
+  }): Effect.Effect<void, SqlError.SqlError, SqlClient.SqlClient | SqlTransaction.SqlTransaction> =>
+    Effect.gen({ self: this }, function* () {
+      const sqlTransaction = yield* SqlTransaction.SqlTransaction;
+      yield* sqlTransaction.withTransaction(
+        Effect.gen(function* () {
+          const sql = yield* SqlClient.SqlClient;
+          yield* sql`
+            UPDATE blocks SET position = NULL
+            WHERE feedPrivateId IN (
+              SELECT feedPrivateId FROM feeds
+              WHERE spaceId = ${opts.spaceId} AND feedNamespace = ${opts.feedNamespace}
+            )
+          `;
+          yield* sql`
+            DELETE FROM sync_state
+            WHERE spaceId = ${opts.spaceId} AND feedNamespace = ${opts.feedNamespace}
+          `;
+          yield* sql`
+            INSERT INTO sync_state (spaceId, feedNamespace, lastPulledPosition, serverToken)
+            VALUES (${opts.spaceId}, ${opts.feedNamespace}, -1, ${opts.serverToken})
+          `;
+        }),
+      );
+    }).pipe(Effect.withSpan('FeedStore.resetSyncState'), SpanAttributes.annotateSpace(opts.spaceId));
 
   /**
    * Returns the number of blocks pending push (no global position yet) in a space/namespace.
@@ -593,6 +667,16 @@ export class FeedStore {
           // namespace position counter. Otherwise the response contains wasted slots that
           // sync clients will try to UPDATE local rows to, tripping the
           // (feedPrivateId, position) UNIQUE constraint and stalling sync indefinitely.
+          // On a replica, a pulled block the store already holds is the same block by
+          // (actorId, sequence): adopt the server's position for it, which is what re-attaches
+          // locally authored history to the new ordering after a server swap wiped positions.
+          // A position authority must keep DO NOTHING -- the assignment path below distinguishes a
+          // fresh row from a duplicate by whether the insert wrote one.
+          const onConflict = this.#options.assignPositions
+            ? sql`ON CONFLICT(feedPrivateId, sequence, actorId) DO NOTHING`
+            : sql`ON CONFLICT(feedPrivateId, sequence, actorId) DO UPDATE SET position = excluded.position
+                  WHERE blocks.position IS NULL AND excluded.position IS NOT NULL`;
+
           const positions: number[] = [];
           for (const [blockIndex, block] of request.blocks.entries()) {
             const key = block.feedId!;
@@ -614,7 +698,7 @@ export class FeedStore {
                 ${feedPrivateId}, ${positionToInsert}, ${block.sequence}, ${block.actorId},
                 ${block.prevSequence}, ${block.prevActorId}, ${block.timestamp}, ${data}, ${encryptionKeyId}, ${iv}
               )
-              ON CONFLICT(feedPrivateId, sequence, actorId) DO NOTHING
+              ${onConflict}
               RETURNING position
             `;
 
@@ -660,7 +744,8 @@ export class FeedStore {
 
       this.onNewBlocks.emit();
 
-      return { requestId: request.requestId, positions };
+      const serverToken = this.#options.assignPositions ? yield* this.#ensureCursorToken(request.spaceId) : undefined;
+      return { requestId: request.requestId, positions, serverToken };
     }).pipe(Effect.withSpan('FeedStore.append'));
 
   /**

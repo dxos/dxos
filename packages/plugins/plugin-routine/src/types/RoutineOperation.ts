@@ -6,17 +6,17 @@
 
 import * as Schema from 'effect/Schema';
 
+// Value-side `EID` import keeps TS declaration emit portable — `TriggerTemplate`
+// references `EID.Schema` and the inferred `CreateTriggerFromTemplate` type
+// otherwise needs a transitive `@dxos/keys` import that's hard for d.ts emit to surface.
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
-import * as Chat from '@dxos/assistant-toolkit/Chat';
+import * as Chat from '@dxos/assistant/Chat';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Operation from '@dxos/compute/Operation';
 import * as Routine from '@dxos/compute/Routine';
 import * as Trigger from '@dxos/compute/Trigger';
 import { Database, DXN, Obj, Ref, Type } from '@dxos/echo';
-// Value-side `EID` import keeps TS declaration emit portable — `TriggerTemplate`
-// references `EID.Schema` and the inferred `CreateTriggerFromTemplate` type
-// otherwise needs a transitive `@dxos/keys` import that's hard for d.ts emit to surface.
 import { EID as _EchoURIReference } from '@dxos/keys';
 
 import { TriggerTemplate } from './Routine';

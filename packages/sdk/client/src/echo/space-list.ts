@@ -23,7 +23,8 @@ import { failedInvariant, invariant } from '@dxos/invariant';
 import { PublicKey, SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { ApiError, runServiceCall, subscribeStream } from '@dxos/protocols';
-import { Invitation, type Space as SerializedSpace, SpaceState } from '@dxos/protocols/proto/dxos/client/services';
+import { Invitation, Invitation_Kind } from '@dxos/protocols/buf/dxos/client/invitation_pb';
+import { type Space as SerializedSpace, SpaceState } from '@dxos/protocols/proto/dxos/client/services';
 import { type IndexConfig } from '@dxos/protocols/proto/dxos/echo/indexing';
 import { MembershipPolicy } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { type SpacesService } from '@dxos/protocols/rpc';
@@ -119,7 +120,7 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
       this._serviceProvider.services.InvitationsService,
       this._serviceProvider.services.IdentityService,
       () => ({
-        kind: Invitation.Kind.SPACE,
+        kind: Invitation_Kind.SPACE,
       }),
     );
     await previous?.close();

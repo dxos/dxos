@@ -7,7 +7,8 @@ import * as Rpc from 'effect/unstable/rpc/Rpc';
 import type * as RpcClient from 'effect/unstable/rpc/RpcClient';
 import * as RpcGroup from 'effect/unstable/rpc/RpcGroup';
 
-import { protoMessage, serviceError } from './service-rpc.ts';
+import { LogEntrySchema, QueryLogsRequestSchema } from './buf/proto/gen/dxos/client/logging_pb.ts';
+import { bufMessage, serviceError } from './service-rpc.ts';
 import { mutableArray, protoTimestamp } from './service-schemas.ts';
 
 //
@@ -84,8 +85,8 @@ export class Rpcs extends RpcGroup.make(
     stream: true,
   }),
   Rpc.make('queryLogs', {
-    payload: protoMessage('dxos.client.services.QueryLogsRequest'),
-    success: protoMessage('dxos.client.services.LogEntry'),
+    payload: bufMessage(QueryLogsRequestSchema),
+    success: bufMessage(LogEntrySchema),
     error: serviceError,
     stream: true,
   }),

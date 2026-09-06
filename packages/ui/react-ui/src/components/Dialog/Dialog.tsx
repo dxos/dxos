@@ -11,9 +11,12 @@ import React, {
   type ForwardRefExoticComponent,
   type FunctionComponent,
   forwardRef,
+  useCallback,
+  useRef,
 } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { useMergeRefs } from '@dxos/react-hooks';
 import { osTranslations } from '@dxos/ui-theme';
 import { type SlottableProps } from '@dxos/ui-types';
 
@@ -106,10 +109,53 @@ type DialogContentProps = ThemedClassName<ComponentPropsWithRef<typeof DialogPri
   inOverlayLayout?: boolean;
 };
 
+/**
+ * Marks the control a dialog wants focused when it opens. Radix otherwise focuses the first tabbable
+ * descendant, which is the header's close button — a dialog that offers a Cancel action prefers it,
+ * so a reflexive Enter dismisses rather than commits.
+ */
+export const DIALOG_AUTOFOCUS_ATTRIBUTE = 'data-dx-autofocus';
+
+/**
+ * Honours {@link DIALOG_AUTOFOCUS_ATTRIBUTE} on open, for both Dialog and AlertDialog.
+ * Returns the ref the content element must carry, since the marked control is found by querying it.
+ */
+export const useDialogAutoFocus = (
+  forwardedRef: React.ForwardedRef<HTMLDivElement>,
+  onOpenAutoFocus?: (event: Event) => void,
+) => {
+  const contentRef = useRef<HTMLDivElement>(null);
+  const ref = useMergeRefs([forwardedRef, contentRef]);
+
+  const handleOpenAutoFocus = useCallback(
+    (event: Event) => {
+      onOpenAutoFocus?.(event);
+      if (event.defaultPrevented) {
+        return;
+      }
+
+      const target = contentRef.current?.querySelector<HTMLElement>(`[${DIALOG_AUTOFOCUS_ATTRIBUTE}]`);
+      if (target) {
+        // Preventing the default suppresses Radix's own first-tabbable pass, which would otherwise
+        // run after this handler and steal the focus back.
+        event.preventDefault();
+        target.focus();
+      }
+    },
+    [onOpenAutoFocus],
+  );
+
+  return { ref, onOpenAutoFocus: handleOpenAutoFocus };
+};
+
 const DialogContent: ForwardRefExoticComponent<DialogContentProps> = forwardRef<HTMLDivElement, DialogContentProps>(
-  ({ classNames, children, size = 'sm', inOverlayLayout: propsInOverlayLayout, ...props }, forwardedRef) => {
+  (
+    { classNames, children, size = 'sm', inOverlayLayout: propsInOverlayLayout, onOpenAutoFocus, ...props },
+    forwardedRef,
+  ) => {
     const { tx } = useThemeContext();
     const { inOverlayLayout } = useOverlayLayoutContext(DIALOG_CONTENT_NAME);
+    const autoFocus = useDialogAutoFocus(forwardedRef, onOpenAutoFocus);
 
     return (
       <DialogPrimitive.Content
@@ -117,6 +163,7 @@ const DialogContent: ForwardRefExoticComponent<DialogContentProps> = forwardRef<
         // NOTE: Radix warning unless set to undefined.
         // https://www.radix-ui.com/primitives/docs/components/dialog#description
         aria-describedby={undefined}
+        onOpenAutoFocus={autoFocus.onOpenAutoFocus}
         className={tx(
           'dialog.content',
           {
@@ -125,7 +172,7 @@ const DialogContent: ForwardRefExoticComponent<DialogContentProps> = forwardRef<
           },
           classNames,
         )}
-        ref={forwardedRef}
+        ref={autoFocus.ref}
       >
         <Column.Root classNames='dx-expand' gutter='lg'>
           {children}

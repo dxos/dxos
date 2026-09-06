@@ -36,7 +36,7 @@ export class DevicesServiceImpl implements DevicesService.Handlers {
           void emit.single({ devices: [] });
         } else {
           invariant(this._identityManager.identity?.presence, 'presence not present');
-          const peers = this._identityManager.identity.presence.getPeersOnline();
+          const identityPresence = this._identityManager.identity.presence;
           void emit.single({
             devices: Array.from(deviceKeys.entries()).map(([key, profile]) => {
               const isMe = this._identityManager.identity?.deviceKey.equals(key);
@@ -49,9 +49,10 @@ export class DevicesServiceImpl implements DevicesService.Handlers {
                     ? Device.PresenceState.ONLINE
                     : Device.PresenceState.OFFLINE;
               } else {
-                presence = peers.some((peer) => peer.identityKey.equals(key))
-                  ? Device.PresenceState.ONLINE
-                  : Device.PresenceState.OFFLINE;
+                presence =
+                  identityPresence.getPeersByIdentityKey(key).length > 0
+                    ? Device.PresenceState.ONLINE
+                    : Device.PresenceState.OFFLINE;
               }
 
               return {

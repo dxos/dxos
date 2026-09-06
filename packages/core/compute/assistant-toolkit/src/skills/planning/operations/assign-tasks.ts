@@ -4,12 +4,13 @@
 
 import * as Effect from 'effect/Effect';
 
+import { Harness } from '@dxos/assistant';
+import * as Chat from '@dxos/assistant/Chat';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Obj, type Ref } from '@dxos/echo';
 import { Task } from '@dxos/types';
 import { trim } from '@dxos/util';
 
-import { Chat } from '../../../types';
 import { AssignTasks } from './definitions';
 
 /**
@@ -35,7 +36,7 @@ const resolveTasks = (
 export default AssignTasks.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({ add, remove }) {
-      const chat = yield* Chat.getFromContext;
+      const chat = yield* Harness.getChat;
 
       const requested = add ?? [];
       const assignable = yield* resolveTasks(requested);

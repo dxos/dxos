@@ -8,7 +8,8 @@ import { Trigger, chain } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { raise } from '@dxos/debug';
 import { AlreadyJoinedError } from '@dxos/protocols';
-import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
+import { fromPublicKey, toPublicKey } from '@dxos/protocols/buf';
+import { Invitation, Invitation_Kind, Invitation_State } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 
 import { type ServiceContext } from '../services';
 import { createIdentity, createPeers } from '../testing';
@@ -47,7 +48,9 @@ describe('services/space-invitations-protocol', () => {
     const space1 = await host.dataSpaceManager!.createSpace(new Context());
     const spaceKey = space1.key;
 
-    await Promise.all(performInvitation({ host, guest, options: { kind: Invitation.Kind.SPACE, spaceKey } }));
+    await Promise.all(
+      performInvitation({ host, guest, options: { kind: Invitation_Kind.SPACE, spaceKey: fromPublicKey(spaceKey) } }),
+    );
 
     {
       const space1 = host.dataSpaceManager!.spaces.get(spaceKey)!;
@@ -71,7 +74,9 @@ describe('services/space-invitations-protocol', () => {
     const space1 = await host.dataSpaceManager!.createSpace(new Context());
     const spaceKey = space1.key;
 
-    await Promise.all(performInvitation({ host, guest, options: { kind: Invitation.Kind.SPACE, spaceKey } }));
+    await Promise.all(
+      performInvitation({ host, guest, options: { kind: Invitation_Kind.SPACE, spaceKey: fromPublicKey(spaceKey) } }),
+    );
 
     {
       const space1 = host.dataSpaceManager!.spaces.get(spaceKey)!;
@@ -86,7 +91,7 @@ describe('services/space-invitations-protocol', () => {
     const [_, guestResult] = performInvitation({
       host,
       guest,
-      options: { kind: Invitation.Kind.SPACE, spaceKey },
+      options: { kind: Invitation_Kind.SPACE, spaceKey: fromPublicKey(spaceKey) },
     });
 
     expect((await guestResult).error).to.be.instanceOf(AlreadyJoinedError);
@@ -103,7 +108,7 @@ describe('services/space-invitations-protocol', () => {
       performInvitation({
         host,
         guest,
-        options: { kind: Invitation.Kind.SPACE, spaceKey: space1.key },
+        options: { kind: Invitation_Kind.SPACE, spaceKey: fromPublicKey(space1.key) },
         hooks: {
           guest: {
             onReady: (invitation) => {
@@ -134,8 +139,8 @@ describe('services/space-invitations-protocol', () => {
     expect(invitation1?.spaceKey).to.deep.eq(invitation2?.spaceKey);
 
     {
-      const space1 = host.dataSpaceManager!.spaces.get(invitation1!.spaceKey!)!;
-      const space2 = guest.dataSpaceManager!.spaces.get(invitation2!.spaceKey!)!;
+      const space1 = host.dataSpaceManager!.spaces.get(toPublicKey(invitation1!.spaceKey)!)!;
+      const space2 = guest.dataSpaceManager!.spaces.get(toPublicKey(invitation2!.spaceKey)!)!;
       expect(space1).not.to.be.undefined;
       expect(space2).not.to.be.undefined;
 
@@ -157,8 +162,8 @@ describe('services/space-invitations-protocol', () => {
     const [host, guest] = await chain<ServiceContext>([createIdentity, closeAfterTest])(createPeers(2));
     const space = await host.dataSpaceManager!.createSpace(new Context());
     const hostInvitation = await createInvitation(host, {
-      kind: Invitation.Kind.SPACE,
-      spaceKey: space.key,
+      kind: Invitation_Kind.SPACE,
+      spaceKey: fromPublicKey(space.key),
       timeout: 100,
     });
     const invitation = hostInvitation.get();
@@ -167,7 +172,7 @@ describe('services/space-invitations-protocol', () => {
     const guestTimeout = new Trigger();
     const guestInvitation = await acceptInvitation(guest, invitation);
     guestInvitation.subscribe((invitation) => {
-      if (invitation.state === Invitation.State.TIMEOUT) {
+      if (invitation.state === Invitation_State.TIMEOUT) {
         guestTimeout.wake();
       }
     });
@@ -186,7 +191,7 @@ describe('services/space-invitations-protocol', () => {
     const invitationPromises = performInvitation({
       host,
       guest,
-      options: { kind: Invitation.Kind.SPACE, spaceKey: space1.key },
+      options: { kind: Invitation_Kind.SPACE, spaceKey: fromPublicKey(space1.key) },
       hooks: {
         host: {
           onConnecting: (invitation) => {
@@ -211,61 +216,9 @@ describe('services/space-invitations-protocol', () => {
     expect(swarmKey1).to.deep.eq(swarmKey2);
 
     const [{ invitation: invitation1 }, { error }] = await Promise.all(invitationPromises);
-    expect(invitation1?.state).to.eq(Invitation.State.CANCELLED);
+    expect(invitation1?.state).to.eq(Invitation_State.CANCELLED);
     expect(error).to.exist;
 
     await space1.close(new Context());
   });
-
-  // TODO(burdon): Flaky.
-  // test.skip('test multi-use invitation', async () => {
-  //   const GUEST_COUNT = 3;
-  //   const [host, ...guests] = await asyncChain<ServiceContext>([createIdentity, closeAfterTest])(
-  //     createPeers(GUEST_COUNT + 1)
-  //   );
-
-  //   const hostSpace = await host.dataSpaceManager!.createSpace(new Context());
-  //   const swarmKey = PublicKey.random();
-  //   const hostObservable = await host.spaceInvitations!.createInvitation(hostSpace, {
-  //     swarmKey,
-  //     type: Invitation.Type.MULTIUSE_TESTING
-  //   });
-
-  //   const [done, count] = latch({ count: GUEST_COUNT });
-  //   hostObservable.subscribe({
-  //     onConnecting: async (invitation2: Invitation) => {},
-  //     onConnected: async (invitation2: Invitation) => {},
-  //     onSuccess: () => {
-  //       count();
-  //     },
-  //     onCancelled: () => {},
-  //     onTimeout: (err: Error) => raise(err),
-  //     onError: (err: Error) => raise(err)
-  //   });
-
-  //   await Promise.all(
-  //     range(GUEST_COUNT).map(async (idx) => {
-  //       const observable = await guests[idx].spaceInvitations!.acceptInvitation({
-  //         swarmKey,
-  //         type: Invitation.Type.MULTIUSE_TESTING
-  //       });
-  //       const success = new Trigger();
-  //       observable.subscribe({
-  //         onConnecting: async (invitation2: Invitation) => {},
-  //         onConnected: async (invitation2: Invitation) => {},
-  //         onSuccess: () => {
-  //           success.wake();
-  //         },
-  //         onCancelled: () => raise(new Error()),
-  //         onTimeout: (err: Error) => raise(err),
-  //         onError: (err: Error) => raise(err)
-  //       });
-  //       await success.wait({ timeout: 300 });
-  //     })
-  //   );
-  //   await done();
-
-  //   await hostObservable.cancel();
-  //   await hostSpace.close();
-  // });
 });

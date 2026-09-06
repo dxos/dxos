@@ -17,6 +17,7 @@ import {
   type DialogActionIconButtonProps,
   type DialogBodyProps,
   type DialogHeaderProps,
+  useDialogAutoFocus,
 } from './Dialog';
 
 //
@@ -113,14 +114,16 @@ type AlertDialogContentProps = ThemedClassName<AlertDialogPrimitive.AlertDialogC
 const AlertDialogContent: ForwardRefExoticComponent<AlertDialogContentProps> = forwardRef<
   HTMLDivElement,
   AlertDialogContentProps
->(({ classNames, children, size = 'md', ...props }, forwardedRef) => {
+>(({ classNames, children, size = 'md', onOpenAutoFocus, ...props }, forwardedRef) => {
   const { tx } = useThemeContext();
   const { inOverlayLayout } = useOverlayLayoutContext(ALERT_DIALOG_CONTENT_NAME);
+  const autoFocus = useDialogAutoFocus(forwardedRef, onOpenAutoFocus);
   return (
     <AlertDialogPrimitive.Content
       {...props}
+      onOpenAutoFocus={autoFocus.onOpenAutoFocus}
       className={tx('dialog.content', { inOverlayLayout, size }, classNames)}
-      ref={forwardedRef}
+      ref={autoFocus.ref}
     >
       <Column.Root classNames='dx-expand' gutter='lg'>
         {children}

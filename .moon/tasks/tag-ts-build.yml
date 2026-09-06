@@ -4,9 +4,17 @@ $schema: https://moonrepo.dev/schemas/tasks.json
 # `dist/types/`, then `dx-compile` bundles the JS to `dist/lib/`. Per-package `dx-compile`
 # flags (entry points, bundled packages, platform, ...) are supplied as the project's task
 # `args` and forwarded to `dx-compile` via `"$@"`.
+#
+# Both tools run under bun rather than node. They are invoked by absolute path instead of
+# `pnpm exec` because pnpm's generated `node_modules/.bin/<name>` shim is a shell script that
+# ends in `exec node "$basedir/../@dxos/dx-build/cli.js"` — it hardcodes the interpreter and
+# never consults the target's shebang, so `pnpm exec` cannot select a runtime. bun itself needs
+# no setup step: `.moon/toolchains.yml` declares the `bun` toolchain, so `moon setup` installs
+# the `.prototools` pin and puts it on every task's PATH (the CI image deliberately ships no
+# bun of its own, precisely so the pinned one is the only one a task can reach).
 tasks:
   build:
-    command: bash -c 'pnpm exec dx-build && pnpm exec dx-compile --outputPath=dist/lib "$@"' --
+    command: bash -c 'bun $workspaceRoot/tools/dx-build/cli.js && bun $workspaceRoot/tools/dx-compile/cli.js --outputPath=dist/lib "$@"' --
     deps:
       - dx-build:build
       - dx-compile:build

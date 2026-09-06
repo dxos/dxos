@@ -6,4 +6,5 @@ export * from './tool-runtime';
 export * from './request';
 export * from './session';
 export * from './templates';
+export * from './types';
 export * from './util';

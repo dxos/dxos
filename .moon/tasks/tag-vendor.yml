@@ -4,7 +4,9 @@
 $schema: https://moonrepo.dev/schemas/tasks.json
 tasks:
   build:
-    command: pnpm exec dx-compile
+    # Runs under bun, by absolute path rather than `pnpm exec` — pnpm's `.bin` shim hardcodes
+    # `exec node` and ignores the target's shebang. See `tag-ts-build.yml` for the full note.
+    command: bun $workspaceRoot/tools/dx-compile/cli.js
     args:
       - --outputPath=dist/lib
     deps:

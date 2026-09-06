@@ -240,6 +240,29 @@ describe('collapseToolRuns', () => {
     ]);
   });
 
+  // The status line the model emits between calls ("Creating the agent") arrives as its own message,
+  // so leaving it out of the fold split one run into a panel, a bare status row, and a second panel.
+  test('a status between calls does not split the run', ({ expect }) => {
+    const collapsed = collapseToolRuns([
+      message('prompt'),
+      toolCall('tc-1'),
+      toolResult('tc-1'),
+      status(),
+      toolCall('tc-2'),
+      toolResult('tc-2'),
+      message('answer', 'assistant'),
+    ]);
+
+    expect(collapsed).toHaveLength(3);
+    expect(collapsed[1].blocks.map((block) => block._tag)).toEqual([
+      'toolCall',
+      'toolResult',
+      'status',
+      'toolCall',
+      'toolResult',
+    ]);
+  });
+
   test('two runs separated by prose stay separate', ({ expect }) => {
     const collapsed = collapseToolRuns([
       toolCall('tc-1'),
@@ -259,6 +282,13 @@ const toolCall = (toolCallId: string) =>
     created: new Date(clock++).toISOString(),
     sender: 'assistant',
     blocks: [{ _tag: 'toolCall', toolCallId, name: 'search', input: '{}', providerExecuted: false }],
+  });
+
+const status = () =>
+  Message.make({
+    created: new Date(clock++).toISOString(),
+    sender: 'assistant',
+    blocks: [{ _tag: 'status', statusText: 'Creating the agent' }],
   });
 
 const reasoning = () =>

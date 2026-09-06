@@ -44,7 +44,7 @@ tasks:
     # must exist — catches stale `./workerd` export paths like the removed browser bundle).
     # Then fail when the root export pulls in React; React lives only behind `./ui`.
     script: |
-      pnpm exec dx-trace-imports \
+      bun $workspaceRoot/tools/dx-trace-imports/cli.js \
         --export . \
         --to "{react,react-dom}" \
         --conditions workerd,worker \

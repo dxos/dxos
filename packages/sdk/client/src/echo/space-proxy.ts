@@ -41,9 +41,10 @@ import { invariant } from '@dxos/invariant';
 import { type PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { decodeError, runServiceCall, subscribeStream } from '@dxos/protocols';
+import { fromPublicKey } from '@dxos/protocols/buf';
+import { Invitation, Invitation_Kind } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 import {
   type Contact,
-  Invitation,
   type Space as SpaceData,
   type SpaceMember,
   SpaceState,
@@ -166,8 +167,8 @@ export class SpaceProxy implements Space, CustomInspectable {
       this._clientServices.services.InvitationsService,
       this._clientServices.services.IdentityService,
       () => ({
-        kind: Invitation.Kind.SPACE,
-        spaceKey: this.key,
+        kind: Invitation_Kind.SPACE,
+        spaceKey: fromPublicKey(this.key),
       }),
     );
 
@@ -579,7 +580,7 @@ export class SpaceProxy implements Space, CustomInspectable {
   share(options?: Partial<Invitation>) {
     this._throwIfNotInitialized();
     log('create invitation', options);
-    return this._invitationsProxy.share({ ...options, spaceKey: this.key });
+    return this._invitationsProxy.share({ ...options, spaceKey: fromPublicKey(this.key) });
   }
 
   async admitContact(contact: Contact): Promise<void> {

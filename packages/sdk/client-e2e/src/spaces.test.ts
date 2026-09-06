@@ -26,6 +26,7 @@ import { EncodedReference } from '@dxos/echo-protocol';
 import { TestSchema as TestSchema$ } from '@dxos/echo/testing';
 import { DXN, SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { toPublicKey } from '@dxos/protocols/buf';
 import { MembershipPolicy } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { range } from '@dxos/util';
 
@@ -115,7 +116,7 @@ describe('Spaces', () => {
     await client.destroy();
   });
 
-  test('post and listen to messages', async () => {
+  test('post and listen to messages', { timeout: 60_000 }, async () => {
     const [client1, client2] = await createInitializedClients(2);
 
     log('initialized');
@@ -125,7 +126,7 @@ describe('Spaces', () => {
     const [, { invitation: guestInvitation }] = await Promise.all(
       performInvitation({ host: space1, guest: client2.spaces }),
     );
-    const space2 = await waitForSpace(client2, guestInvitation!.spaceKey!, {
+    const space2 = await waitForSpace(client2, toPublicKey(guestInvitation!.spaceKey)!, {
       ready: true,
     });
 
@@ -149,7 +150,9 @@ describe('Spaces', () => {
       await space1.postMessage('goodbye', { data: 'Goodbye' });
     }
 
-    await asyncTimeout(Promise.all([hello.wait(), goodbye.wait()]), 200);
+    // Guards against a hang, so it is generous: two peers replicating is not a latency assertion, and
+    // both 200ms and 2s were under the round trip's own cost on a loaded runner.
+    await asyncTimeout(Promise.all([hello.wait(), goodbye.wait()]), 30_000);
   });
 
   // Trying to read from the feed, even if the range is not set to be downloaded, will trigger a download.

@@ -13,7 +13,7 @@ tasks:
   # bundler walking into a React surface — only node-conditioned `#capabilities`/`#operations` do.
   check-module-structure:
     command: >-
-      pnpm exec dx-trace-imports
+      bun $workspaceRoot/tools/dx-trace-imports/cli.js
       --export ./ThreadPlugin
       --to "{react,react-dom}"
       --conditions workerd,worker

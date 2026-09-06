@@ -4,11 +4,11 @@
 
 import { type MulticastObservable } from '@dxos/async';
 import { type PublicKey } from '@dxos/keys';
+import { type Invitation } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 import {
   type Contact,
   type Device,
   type Identity,
-  type Invitation,
   type RecoverIdentityRequest,
 } from '@dxos/protocols/proto/dxos/client/services';
 import {

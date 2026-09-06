@@ -7,6 +7,8 @@ import type { ComponentFunction, Theme } from '@dxos/ui-types';
 
 export type ProgressStyleProps = {
   indeterminate?: boolean;
+  /** Empties the fill over the caller's duration, for a deadline rather than a task. */
+  countdown?: boolean;
   /** Draws the fill in the error colour, for a run that stopped where it got to. */
   error?: boolean;
 };
@@ -16,14 +18,16 @@ const root: ComponentFunction<ProgressStyleProps> = (_props, ...etc) =>
   // painted in one is invisible against its host.
   mx('block h-1 relative rounded-full overflow-hidden bg-separator', ...etc);
 
-const bar: ComponentFunction<ProgressStyleProps> = ({ indeterminate, error }, ...etc) =>
+const bar: ComponentFunction<ProgressStyleProps> = ({ indeterminate, countdown, error }, ...etc) =>
   mx(
     'absolute inset-y-0 block rounded-full',
     error ? 'bg-error-surface' : 'bg-primary-surface',
     indeterminate
       ? 'animate-progress-indeterminate'
-      : // Ease the width between updates so incremental advances glide rather than jump.
-        'start-0 transition-[width] duration-200 ease-linear',
+      : countdown
+        ? 'start-0 animate-progress-countdown'
+        : // Ease the width between updates so incremental advances glide rather than jump.
+          'start-0 transition-[width] duration-200 ease-linear',
     ...etc,
   );
 

@@ -246,7 +246,16 @@
       width: 0%;
     }
   }
+  @keyframes progress-countdown {
+    from {
+      width: 100%;
+    }
+    to {
+      width: 0%;
+    }
+  }
   --animate-progress-indeterminate: progress-indeterminate 2s ease-out infinite;
+  --animate-progress-countdown: progress-countdown 5s linear forwards;
 
   /** 
    * Border trail 

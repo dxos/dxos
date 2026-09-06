@@ -30,6 +30,13 @@ export type ProcessTreeProps = {
    * @default 1
    */
   depth?: number;
+  /**
+   * Overrides the row label for a process (e.g. the name of the chat it is serving), falling back to
+   * the process name when it returns `undefined`.
+   *
+   * Must be referentially stable — `ProcessTree` is memoized on its props.
+   */
+  resolveLabel?: (process: Process.Info) => string | undefined;
   onProcessSelect?: (process: Process.Info) => void;
   onProcessTerminate?: (process: Process.Info) => void;
 };
@@ -52,7 +59,10 @@ const ROOT_ID = 'processes';
  */
 export const ProcessTree = React.memo(
   composable<HTMLDivElement, ProcessTreeProps>(
-    ({ processes, depth = DEFAULT_DEPTH, onProcessSelect, onProcessTerminate, ...props }, forwardedRef) => {
+    (
+      { processes, depth = DEFAULT_DEPTH, resolveLabel, onProcessSelect, onProcessTerminate, ...props },
+      forwardedRef,
+    ) => {
       // Open state lives outside the model: `processes` carries live metrics, so the forest (and with
       // it the model) is rebuilt on every tick, and a collapse held only inside the model would be
       // undone by the next one.
@@ -65,12 +75,12 @@ export const ProcessTree = React.memo(
           createStaticTreeModel<ProcessNode>(root, {
             getChildren: (node) => node.children,
             getProps: (node) => ({
-              label: node.process?.params.name ?? node.id,
+              label: (node.process && resolveLabel?.(node.process)) ?? node.process?.params.name ?? node.id,
             }),
             // Expanded by default, matching the flattened view this replaced.
             isOpen: (_node, path) => openRef.current.get(path.join('/')) ?? true,
           }),
-        [root],
+        [root, resolveLabel],
       );
 
       // The ref survives model rebuilds; the atom is what the controlled tree actually reads, so a
@@ -93,11 +103,13 @@ export const ProcessTree = React.memo(
       const renderColumns = useMemo(() => makeColumnRenderer(onProcessTerminate), [onProcessTerminate]);
 
       return (
-        <ScrollArea.Root {...composableProps(props, { classNames: 'dx-expand' })} thin ref={forwardedRef}>
+        <ScrollArea.Root {...composableProps(props)} thin ref={forwardedRef}>
           <ScrollArea.Viewport>
             <Tree<ProcessNode>
               id={ROOT_ID}
               model={model}
+              density='sm'
+              classNames='text-sm tabular-nums gap-0'
               gridTemplateColumns='[tree-row-start] var(--dx-control) minmax(0, 1fr) min-content min-content [tree-row-end]'
               renderIcon={renderIcon}
               renderColumns={renderColumns}
@@ -157,8 +169,8 @@ const makeColumnRenderer =
               classNames='min-h-0 p-1'
               icon='ph--x--regular'
               iconOnly
+              density='sm'
               variant='ghost'
-              size={4}
               label='Actions'
               onClick={(event) => {
                 event.stopPropagation();

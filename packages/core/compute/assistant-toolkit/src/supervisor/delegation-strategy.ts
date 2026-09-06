@@ -8,6 +8,8 @@ import * as Exit from 'effect/Exit';
 
 import { type Delegation, type DelegationStrategy } from '@dxos/agent-runtime';
 import { AiContext } from '@dxos/assistant';
+import * as Agent from '@dxos/assistant/Agent';
+import * as Chat from '@dxos/assistant/Chat';
 import { ProcessManager } from '@dxos/compute-runtime';
 import * as Instructions from '@dxos/compute/Instructions';
 import { Database, Feed, Filter, Obj, Query, Ref } from '@dxos/echo';
@@ -19,35 +21,6 @@ import { trim } from '@dxos/util';
 
 import { RunInstructions } from '../operations';
 import { DelegationSkill } from '../skills';
-import { Agent, Chat } from '../types';
-
-/**
- * Resolves the chat backed by the given conversation feed, if any.
- */
-const findChatForFeed = (feed: Feed.Feed): Effect.Effect<Chat.Chat | undefined, never, Database.Service> =>
-  Effect.gen(function* () {
-    const chats = yield* Database.query(Filter.type(Chat.Chat)).run;
-    for (const chat of chats) {
-      const matches = yield* Effect.gen(function* () {
-        const chatFeed = yield* Database.load(chat.feed);
-        return chatFeed.id === feed.id;
-      }).pipe(Effect.orElseSucceed(() => false));
-      if (matches) {
-        return chat;
-      }
-    }
-    return undefined;
-  });
-
-/**
- * Resolves the agent whose chat is backed by the given conversation feed, if any.
- * Plain (agentless) chats yield `undefined`.
- */
-const findAgentForFeed = (feed: Feed.Feed): Effect.Effect<Agent.Agent | undefined, never, Database.Service> =>
-  Effect.gen(function* () {
-    const chat = yield* findChatForFeed(feed);
-    return chat ? yield* Agent.loadForChat(chat) : undefined;
-  });
 
 /**
  * Normalizes an LLM-reported artifact reference (bare entity id or full ECHO URI) to a
@@ -144,13 +117,8 @@ const sweepOrphanedTasks = (
  * batch of delegated tasks drains in dependency order without further prompting.
  */
 export const makeDelegationStrategy = (): DelegationStrategy => ({
-  reconcile: (feed, activeIds) =>
+  reconcile: (chat, activeIds) =>
     Effect.gen(function* () {
-      const chat = yield* findChatForFeed(feed);
-      if (!chat) {
-        return [];
-      }
-
       yield* sweepOrphanedTasks(chat, activeIds);
       const pending = yield* findPendingTasks(chat, activeIds);
       if (pending.length === 0) {
@@ -160,6 +128,7 @@ export const makeDelegationStrategy = (): DelegationStrategy => ({
       // Sub-agents inherit the supervisor's bound skills (so they have the same tools/
       // capabilities), minus the delegation skill itself — otherwise a sub-agent could
       // recursively delegate. Resolved from the conversation's AiContext bindings.
+      const feed = yield* Database.load(chat.feed).pipe(Effect.orDie);
       const inheritedSkills = yield* Effect.gen(function* () {
         const runtime = yield* Effect.context<Database.Service>();
         const binder = yield* EffectEx.acquireReleaseResource(() => new AiContext.Binder({ feed, runtime }));
@@ -212,11 +181,9 @@ export const makeDelegationStrategy = (): DelegationStrategy => ({
       return delegations;
     }),
 
-  onComplete: (feed, id, exit) =>
+  onComplete: (chat, id, exit) =>
     Effect.gen(function* () {
-      const chat = yield* findChatForFeed(feed);
-      // Reuse the chat just resolved rather than re-scanning every chat for the same feed.
-      const agent = chat ? yield* Agent.loadForChat(chat) : undefined;
+      const agent = yield* Agent.loadForChat(chat);
 
       // Resolve the durable task by its id and record the outcome directly on it — the task set
       // is the working surface, so there is no separate mirror to reconcile.
@@ -265,6 +232,7 @@ export const makeDelegationStrategy = (): DelegationStrategy => ({
         ...artifactRefs.map((reference) => ({ _tag: 'reference' as const, reference })),
       ];
 
+      const feed = yield* Database.load(chat.feed).pipe(Effect.orDie);
       yield* Feed.append(feed, [Message.make({ sender: 'assistant', blocks })]);
     }),
 });
