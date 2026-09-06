@@ -133,6 +133,24 @@ export const Snapshot = Operation.make({
   }),
 }).pipe(Operation.mutation('none'));
 
+/**
+ * Undoes the last undoable operation — what the notification toast's **Undo** button does — so an
+ * agent driving the app through operations can exercise the undo path it cannot click.
+ */
+export const Undo = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.operation.debug.revertLast'),
+    name: 'Revert last operation',
+    description: 'Undoes the last undoable operation, as the undo toast does. Fails when there is nothing to undo.',
+    icon: 'ph--arrow-counter-clockwise--regular',
+  },
+  services: [Capability.Service],
+  input: Schema.Struct({}),
+  output: Schema.Struct({
+    undone: Schema.Boolean,
+  }),
+});
+
 const SampleSpaceSummary = Schema.Struct({
   id: Schema.String,
   label: Schema.String,

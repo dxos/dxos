@@ -15,7 +15,7 @@ journey across plugins, written in plain markdown so anyone can add a chapter wi
 
 | Script                 | Chapters               | Last run          |
 | ---------------------- | ---------------------- | ----------------- |
-| [basics.md](basics.md) | 1 Spaces and documents | see `../reports/` |
+| [basics.md](basics.md) | 1 Spaces and documents; 2 Rename, undo and a second space | see `../reports/` |
 
 ## Anatomy of a script
 
@@ -45,6 +45,7 @@ run did not create.** A name match is not evidence of ownership; abort and say w
 | `invoke <key> <input> in <spaceId>`  | The same, resolved against that space (database-backed operations).     |
 | `snapshot [<input>]`                 | `org.dxos.operation.debug.snapshot` — the live UI state, see below.     |
 | `object <uri>`                       | The live object at an `echo://<spaceId>/<objectId>` URI.                |
+| `ref <uri>`                          | A reference to that object, for operations whose input is a `Ref`.      |
 | `space <spaceId>`                    | The live space, for operations that take a `space`.                     |
 | → capture `field` as `<name>`        | Keep a field of the result for later steps' placeholders.               |
 
@@ -63,6 +64,7 @@ and the translation is mechanical. The body runs inside `async () => { … }` wi
 | `invoke K I in S`           | `return composer.invoke('K', I, { spaceId: 'S' })`                       |
 | `snapshot I`                | `return composer.snapshot(I)`                                            |
 | `object echo://S/O`         | `dxos.spaces('S').db.getObjectById('O')`                                 |
+| `ref echo://S/O`            | `dxos.Ref.make(dxos.spaces('S').db.getObjectById('O'))`                  |
 | `space S` (inside an input) | `dxos.spaces('S')`                                                       |
 
 `composer.invoke` validates the input against the operation's schema and forwards the space id;

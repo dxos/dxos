@@ -41,14 +41,17 @@ moon run composer-app:serve-qa -- --port 5182 --strictPort
 ```
 
 `DX_DEBUG_PORT=true` (set by the task) mints a session as the app boots and publishes it to
-**`temp/debug-port.json` at the repo root** (`{ session, pid, port, url }`); the server's own log
-prints it as `Debug port session: <uuid>`. The task builds the app's dependency graph first, which
-takes minutes on a cold worktree.
+**`temp/debug-port.json` at the repo root** (`{ session, pid, port, url }`), written once when the
+server starts listening — do not delete it to "wait for a fresh one". The server's own log prints
+the same id as `Debug port session: <uuid>` (`preview_logs` with `search`), which is the reliable
+read. The task builds the app's dependency graph first, which takes minutes on a cold worktree.
 
-**Boot is visibility-gated.** A background tab sits on the boot screen forever with `composer.*`
-answering underneath. Front the tab (`tabs_select`, or `navigate` to the URL) before waiting on
-boot, and wait for the app to mount rather than for the port to answer — a `snapshot` that returns
-`layout` is mounted. If `composer.snapshot` is missing, the debug plugin is not enabled on this
+**Boot needs a visible tab, or patience.** A hidden tab boots slowly (background-tab timer
+throttling stretches the loading state machine to minutes) or not at all, with `composer.*`
+answering underneath. Front the tab (`tabs_select`) before waiting on boot, and wait for the app
+to mount rather than for the port to answer — `document.querySelectorAll('[data-scope]').length > 0`
+from `javascript_tool`, or a `snapshot` that returns `layout`. Never leave a port call pending
+while the app is still booting: it will time out and wedge the loop (below). If `composer.snapshot` is missing, the debug plugin is not enabled on this
 profile: `invoke org.dxos.operation.registry.enablePlugins { ids: ["org.dxos.plugin.debug"] }`.
 
 If 5182 is already listening, it is someone's server: check whose worktree it serves before

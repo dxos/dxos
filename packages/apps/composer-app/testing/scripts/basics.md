@@ -84,3 +84,68 @@ Removes only what this run created: the two remaining documents, then the space.
      have this workspace" meanwhile.
 - **Expect**: `snapshot` lists no space whose name starts with `QA:`, `layout.workspace` is the
   default space, and `errors` is empty.
+
+## Chapter 2: Rename, undo and a second space
+
+Independent of Chapter 1: its setup creates what it needs.
+
+### Given
+
+- **Agent**: `snapshot { since: <start> }`
+- **Expect**: as Chapter 1 — a `SPACE_READY` default space, no `QA:` space, `errors` empty.
+
+### Setup
+
+- **Do**: Create a space `QA: Undo <runId>` (the navtree switches to it), then a document named
+  `QA: Note` in it.
+- **Agent**:
+  1. `invoke org.dxos.operation.space.create { name: "QA: Undo <runId>" }` → capture `id` as `<spaceId>`.
+  2. `invoke org.dxos.operation.appToolkit.switchWorkspace { subject: "root/<spaceId>" }`
+  3. `invoke org.dxos.operation.markdown.create { name: "QA: Note", content: "# QA: Note\n\nRun <runId>.\n" } in <spaceId>`
+     → capture `id` as `<note>`.
+
+### Steps
+
+#### 1. Rename the document
+
+- **Do**: Open the `⋮` menu on `QA: Note` in the navtree, choose **Rename**, enter `QA: Note (renamed)`.
+- **Agent**: `invoke org.dxos.operation.space.updateObject { object: ref <note>, properties: { name: "QA: Note (renamed)" } } in <spaceId>`
+  — the menu's own operation only opens the rename dialog; the update is what the dialog commits.
+- **Expect**: `invoke org.dxos.operation.space.queryObjects { typename: "org.dxos.type.document" } in <spaceId>`
+  returns the one document labelled `QA: Note (renamed)`, and the navtree row reads the same.
+
+#### 2. Open, delete, undo
+
+- **Do**: Click the document to open it. Delete it from its `⋮` menu. Click **Undo** in the
+  **Document deleted** toast.
+- **Agent**:
+  1. `invoke org.dxos.operation.appToolkit.open { subject: ["root/<spaceId>/content/collections/<objectId of note>"] }`
+  2. `invoke org.dxos.operation.space.removeObjects { objects: [object <note>] }`
+  3. `invoke org.dxos.operation.debug.revertLast {}` — the toast's Undo, as an operation.
+- **Expect**: After 2, `snapshot` shows the **Document deleted** toast and no active plank. After 3,
+  `queryObjects` lists the document again, `layout.active` holds its path once more (the restore
+  reopens what was open), and `errors` is empty. Clicking **Undo** also dismisses the toast; the
+  operation bypasses the toast, so for the agent it stays until it times out.
+
+#### 3. A second space
+
+- **Do**: Create a space `QA: Undo B <runId>`; the navtree switches to it and shows no documents.
+  Switch back to `QA: Undo <runId>` from the space list.
+- **Agent**:
+  1. `invoke org.dxos.operation.space.create { name: "QA: Undo B <runId>" }` → capture `id` as `<spaceB>`.
+  2. `invoke org.dxos.operation.appToolkit.switchWorkspace { subject: "root/<spaceB>" }`
+  3. `invoke org.dxos.operation.space.queryObjects { typename: "org.dxos.type.document" } in <spaceB>`
+  4. `invoke org.dxos.operation.appToolkit.switchWorkspace { subject: "root/<spaceId>" }`
+- **Expect**: After 2, `snapshot.layout.workspace` is `root/<spaceB>` and `spaces` lists both `QA:`
+  spaces `SPACE_READY`. Step 3 returns no documents. After 4, the workspace is `root/<spaceId>`
+  again and its document is still listed.
+
+### Teardown
+
+- **Do**: Delete the document, then both spaces from their settings; pick the default space.
+- **Agent**:
+  1. `invoke org.dxos.operation.space.removeObjects { objects: [object <note>] }`
+  2. `invoke org.dxos.operation.space.delete { space: space <spaceId> }`
+  3. `invoke org.dxos.operation.space.delete { space: space <spaceB> }`
+  4. `invoke org.dxos.operation.appToolkit.switchWorkspace { subject: "root/<default space id>" }`
+- **Expect**: `snapshot` lists no `QA:` space, the workspace is the default space, `errors` is empty.
