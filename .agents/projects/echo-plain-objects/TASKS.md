@@ -1,6 +1,6 @@
 # echo-plain-objects — Tasks
 
-_Resume: A + B + 3b + 3c landed and measured; two review rounds folded in; PR #12951 body updated. Open: Stage C decision (D9) and the follow-ups below. Stage C stays BLOCKED under constraint 3 (DESIGN.md D9) pending the user's choice. Uncommitted: none. Last: lazy materialized record at `b3486ba0`, automerge reads 113 / 111 ns._
+_Resume: waiting on the user's pick for de-proxying — shape C (trap-less proxy, F5) or shape A (strict plain object, six blueprint relaxations) or stop. Query bench landed at `965f9258` with baseline and head columns. Stage C stays BLOCKED under constraint 3 (DESIGN.md D9) pending the user's choice. Uncommitted: none. Last: lazy materialized record at `b3486ba0`, automerge reads 113 / 111 ns._
 
 Design and decisions: [DESIGN.md](./DESIGN.md). Numbers: [`echo-client-e2e/BENCHMARKS.md`](../../../packages/core/echo/echo-client-e2e/BENCHMARKS.md).
 
@@ -173,6 +173,21 @@ if unblocked; DESIGN.md §Proposal, scoped by D3/D6/D7.
       _new_ key on a closed struct? Decide `preventExtensions` accordingly.
 - [ ] **Green: `echo`, `echo-client`, `echo-client-e2e` tests, unmodified.**
 - [ ] **Measure** — rerun, record. Expect ~10 ns.
+
+## Phase 4b — query materialization bench (user direction)
+
+`query-materialization.bench.ts`: 1,000 narrow / 100 wide objects, peer reload before every cold sample,
+query all, one read per result; baseline vs head columns in `BENCHMARKS.md`.
+
+### Tasks
+
+- [x] **Write the bench** — cold rows inclusive of the reload (vitest passes no per-iteration hooks to
+      tinybench), in-row phase timings reported from `afterAll`, short results re-run and counted.
+- [x] **Product limits found** — 1,000 wide objects cannot be cold-queried (2 s per-object load budget,
+      20 s index-query ceiling surfaced as an unhandled rejection); cold loads slow down across reloads in
+      one process. Recorded in `BENCHMARKS.md`; not in scope to fix.
+- [x] **Baseline column** — `0dab2f81` sources checked out in place, rebuilt, measured, restored. Loading
+      unchanged; first read per object ~2 µs both ways; repeat reads 4–5× cheaper on head.
 
 ## Phase 5: Compare and review
 

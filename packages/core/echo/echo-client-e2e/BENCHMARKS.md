@@ -375,3 +375,49 @@ now runs 100 wide objects and 5 cold samples per row. The per-object first read 
 which is where the proxy target and its materialized record are built, was 2–3 ms for 1,000 narrow
 objects (2–3 µs each) against a 2.3–5 s document load: **materializing the object is not where a cold
 query's time goes; loading its document is.**
+
+## `aad3a673` sources (bench at `965f9258`) — 2026-09-05 — current head, final settings
+
+1,000 narrow / 100 wide, 5 cold samples per row. Phase means from the in-row timings (min in
+parentheses); the warm rows are tinybench means.
+
+| phase                              | narrow × 1,000 |    wide × 100 |
+| ---------------------------------- | -------------: | ------------: |
+| reload + open                      |    203 ms (79) |   118 ms (23) |
+| query, cold (to a full result set) |  3.93 s (2.45) | 1.97 s (1.48) |
+| read one field per result, cold    |   2.5 ms (1.9) |  0.2 ms (0.2) |
+| query, warm                        |         127 ms |         16 ms |
+| read one field per result, warm    |         0.4 ms |       <0.1 ms |
+
+Per object, cold: the document load is ~2.5–3.9 ms narrow and ~15–20 ms wide; the first read, which
+builds the proxy target's materialized record, is ~2.5 µs narrow and ~2 µs wide. Cold narrow queries
+came back short 6 times in 12 and were re-run to a full set. Cold rows carry ±30–40% rme from the
+reload-to-reload slowdown noted above; read the min alongside the mean.
+
+## Baseline `0dab2f81` sources vs head `aad3a673` sources — same bench (`965f9258`), same machine, back to back
+
+The baseline column was produced by checking out the `echo` and `echo-client` sources of `0dab2f81` in
+place, rebuilding both packages, running the bench, and restoring. Phase means, min in parentheses.
+
+| phase                           | narrow × 1,000: baseline | narrow × 1,000: head | wide × 100: baseline | wide × 100: head |
+| ------------------------------- | -----------------------: | -------------------: | -------------------: | ---------------: |
+| reload + open                   |             242 ms (111) |          203 ms (79) |          179 ms (21) |      118 ms (23) |
+| query, cold                     |            3.78 s (2.50) |        3.93 s (2.45) |        2.11 s (1.77) |    1.97 s (1.48) |
+| read one field per result, cold |             2.2 ms (1.9) |         2.5 ms (1.9) |         0.2 ms (0.2) |     0.2 ms (0.2) |
+| query, warm                     |                   134 ms |               127 ms |                16 ms |            16 ms |
+| read one field per result, warm |                   1.9 ms |               0.4 ms |               0.2 ms |          <0.1 ms |
+
+What this says about materialization before and after the read-path work:
+
+- **Loading is unchanged**, as it should be — nothing in Stages A–3c touches the document load, and
+  the cold query (2.5–3.9 s for 1,000 narrow objects, ~15–20 ms per wide object) is that load. The
+  cold rows' ±25–45% rme is the reload-to-reload slowdown, identical in both runs.
+- **Building an object costs the same ~2 µs either way.** The first read of each of 1,000 cold objects
+  — where the proxy target, instance state and (on head) the materialized-record slot are created — is
+  2.2 ms at baseline and 2.5 ms on head; the slot is one extra hidden property. Materialization is
+  ~0.1% of a cold query.
+- **Repeat reads are 4–5× cheaper on head**: 1.9 → 0.4 ms for a field on each of 1,000 already-loaded
+  objects, the same 1.7 µs → 0.4 µs per read the property-access bench shows at 1,000× the scale.
+
+So a cold query's time is the document load pipeline and its 2 s per-object / 20 s per-query timeouts,
+not object materialization; the read-path work moved the part it targeted and left the rest alone.
