@@ -87,7 +87,7 @@ export const parse = (source: string): UmlModel => {
   let direction: Direction = 'TB';
   let open: UmlClass | undefined;
 
-  const declare = (id: string): UmlClass => {
+  const declareClass = (id: string): UmlClass => {
     let entry = classes.get(id);
     if (!entry) {
       entry = { id, label: genericLabel(id), attributes: [], methods: [] };
@@ -134,7 +134,7 @@ export const parse = (source: string): UmlModel => {
     const cls = CLASS.exec(line);
     if (cls) {
       const [, id, label, brace] = cls;
-      const entry = declare(id);
+      const entry = declareClass(id);
       if (label) {
         entry.label = label;
       }
@@ -147,8 +147,8 @@ export const parse = (source: string): UmlModel => {
     const relation = RELATION.exec(line);
     if (relation) {
       const [, left, leftCardinality, token, rightCardinality, right, label] = relation;
-      declare(left);
-      declare(right);
+      declareClass(left);
+      declareClass(right);
       const [, kind, leftIsTarget] = RELATIONS.find(([candidate]) => candidate === token)!;
       const [from, to] = leftIsTarget ? [right, left] : [left, right];
       const [fromCardinality, toCardinality] = leftIsTarget
@@ -168,7 +168,7 @@ export const parse = (source: string): UmlModel => {
     const inline = INLINE_MEMBER.exec(line);
     if (inline) {
       const [, id, member] = inline;
-      addMember(declare(id), member);
+      addMember(declareClass(id), member);
     }
   }
 

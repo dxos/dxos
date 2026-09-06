@@ -114,7 +114,7 @@ export const parse = (source: string): MermaidGraph => {
   let direction: Direction = 'TB';
   const stack: string[] = [];
 
-  const declare = (token: string): string | undefined => {
+  const declareNode = (token: string): string | undefined => {
     const match = NODE.exec(token.trim());
     if (!match) {
       return undefined;
@@ -172,8 +172,8 @@ export const parse = (source: string): MermaidGraph => {
     const edge = EDGE.exec(line);
     if (edge) {
       const [, from, token, label, to] = edge;
-      const fromId = declare(from);
-      const toId = declare(to);
+      const fromId = declareNode(from);
+      const toId = declareNode(to);
       if (fromId && toId) {
         edges.push({
           from: fromId,
@@ -185,7 +185,7 @@ export const parse = (source: string): MermaidGraph => {
       continue;
     }
 
-    declare(line);
+    declareNode(line);
   }
 
   // Directives may precede or follow the node they name.
