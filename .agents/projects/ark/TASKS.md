@@ -859,6 +859,14 @@ dist/types/src: ENOTEMPTY` — a concurrent writer. A Cursor TypeScript native-p
       internally, `Portal` re-bridges context across the DOM move, and `Viewport` is the scroll area
       the `Arrow` must stay outside of; `Select` and `Menu` should expose the same surface. Decide
       per floating component whether a Radix-era part stays, folds, or gets Ark's name.
+- [x] **StrictMode parity fallout in CI** DONE 2026-09-05: the runner's new `StrictMode` (Phase 4b)
+      exposed two defects the dev storybook had been hiding. `useFollow` marked a feed *positioned* on
+      the effect re-run StrictMode issues in the arrival's own tick, so the reserve landing a beat
+      later was glided instead of written (`fill/Plain Past End`, `widget/Toggle At Tail`); the flag
+      is now earned by the settle pass. Babylon's `AdvancedDynamicTexture` queues an `update()` on
+      resize that it never cancels, so the simulated unmount disposed the engine under it
+      (`plugin-terra`, five unhandled errors); `createFullscreenUi` guards the deferred call. Plus
+      five `sort-named-imports` warnings the `createContext` codemod left, which `denyWarnings` fails.
 - [ ] **Review each `react-ui` component's theme against Ark's anatomy** (tracked 2026-09-05, e.g.
       Tabs): the port kept the Radix-era slot names and selectors where they mapped one-to-one, so
       each `*.theme.ts` should be checked for parts Ark adds or renames (`indicator`, `positioner`,

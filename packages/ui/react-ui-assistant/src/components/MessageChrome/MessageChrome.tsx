@@ -4,7 +4,7 @@
 
 import React, { type PropsWithChildren } from 'react';
 
-import { createContext, Icon, IconButton, type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { Icon, IconButton, type ThemedClassName, createContext, useTranslation } from '@dxos/react-ui';
 import { TogglePanel } from '@dxos/react-ui-components';
 import { type MessageChromeProps, isPrompt } from '@dxos/react-ui-feed';
 import { type ContentBlock, Message } from '@dxos/types';

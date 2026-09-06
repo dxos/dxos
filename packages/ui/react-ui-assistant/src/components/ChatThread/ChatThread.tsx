@@ -12,7 +12,7 @@ import React, {
   useState,
 } from 'react';
 
-import { createContext, IconButton, useTranslation } from '@dxos/react-ui';
+import { IconButton, createContext, useTranslation } from '@dxos/react-ui';
 import {
   type FeedModel,
   MessageList,

@@ -4,7 +4,7 @@
 
 import React, { type Dispatch, type PropsWithChildren, type SetStateAction, useEffect, useState } from 'react';
 
-import { createContext, Dialog, Icon, IconButton, type ThemedClassName, useControlledState } from '@dxos/react-ui';
+import { Dialog, Icon, IconButton, type ThemedClassName, createContext, useControlledState } from '@dxos/react-ui';
 import { ResizeHandle, type Size, resizeAttributes, sizeStyle } from '@dxos/react-ui-dnd';
 import { mx } from '@dxos/ui-theme';
 
