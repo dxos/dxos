@@ -78,19 +78,20 @@ const settle = async (viewport: HTMLElement) => {
  */
 const WindowStory = () => {
   const [space] = useSpaces();
-  const feed = useMemo<Feed.Feed | undefined>(
-    () => (space ? space.db.add(Feed.make({ name: 'chat' })) : undefined),
-    [space],
-  );
+  const [feed, setFeed] = useState<Feed.Feed | undefined>(undefined);
   const [seeded, setSeeded] = useState(false);
 
+  // Creating the feed is a write to the space, so it belongs in an effect: React may repeat or
+  // discard a render, and doing it during one can leave duplicate feeds behind.
   useEffect(() => {
-    if (!space || !feed) {
+    if (!space) {
       return;
     }
 
-    void space.db.appendToFeed(feed, createMessages({ count: TOTAL })).then(() => setSeeded(true));
-  }, [space, feed]);
+    const created = space.db.add(Feed.make({ name: 'chat' }));
+    setFeed(created);
+    void space.db.appendToFeed(created, createMessages({ count: TOTAL })).then(() => setSeeded(true));
+  }, [space]);
 
   const [feedWindow, setFeedWindow] = useState(initialWindow);
   const [visibleRange, setVisibleRange] = useState<MessageRange | undefined>(undefined);
