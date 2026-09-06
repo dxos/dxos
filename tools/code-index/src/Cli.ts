@@ -19,6 +19,10 @@ import * as Indexer from './Indexer.ts';
 import * as Ontology from './Ontology.ts';
 import * as Reasoner from './Reasoner.ts';
 import * as Store from './Store.ts';
+import * as Chat from './workspace/Chat.ts';
+import * as Log from './workspace/Log.ts';
+import * as Models from './workspace/Models.ts';
+import * as Workspace from './workspace/Workspace.ts';
 
 /**
  * The `code-index` command surface. Every command runs against one store, which defaults to
@@ -195,9 +199,133 @@ const ontology = Command.make('ontology', { json: jsonFlag }, ({ json }) =>
   emit(json, Ontology.CONTEXT, () => JSON.stringify(Ontology.CONTEXT, null, 2)),
 ).pipe(Command.withDescription('Print the JSON-LD context the indexer emits.'));
 
-export const command = Command.make('code-index').pipe(
-  Command.withDescription('Index a codebase into SQLite + RDF (DEUS ontology).'),
-  Command.withSubcommands([index, files, query, ask, dump, stats, clear, ontology]),
+//
+// Workspace: the chat surface over the index. Both commands build the same layer stack, so the
+// terminal and the browser are two renderers of one session rather than two implementations.
+//
+
+const providerFlag = Flag.string('provider').pipe(
+  Flag.withDescription(`Model provider: ${Models.PROVIDERS.join(' | ')} (default: ollama).`),
+  Flag.optional,
+);
+
+const modelFlag = Flag.string('model').pipe(
+  Flag.withDescription(`Model name (default: ${Models.DEFAULT_OLLAMA_MODEL}, or ${Models.DEFAULT_ANTHROPIC_MODEL}).`),
+  Flag.optional,
+);
+
+const endpointFlag = Flag.string('endpoint').pipe(
+  Flag.withDescription(`Ollama endpoint (default: ${Models.OLLAMA_ENDPOINT}).`),
+  Flag.optional,
+);
+
+const projectFlag = Flag.string('project').pipe(
+  Flag.withDescription('Project id to open (default: the one used last, or a new one).'),
+  Flag.optional,
+);
+
+/**
+ * Resolves the project to work in: the one named, else the one touched last, else a fresh one.
+ * `--project` on an unknown id creates it, so a scripted run can pick its own name.
+ */
+const openProject = (requested: Option.Option<string>) =>
+  Effect.gen(function* () {
+    const log = yield* Log.Log;
+    const id = Option.getOrUndefined(requested);
+    if (id !== undefined) {
+      const existing = yield* log.getProject(id);
+      return existing ?? (yield* log.createProject({ id }));
+    }
+    const last = yield* log.lastProject();
+    return last ?? (yield* log.createProject());
+  });
+
+const workspaceLayer = (root: string, store: Option.Option<string>, model: Models.Selection) =>
+  Workspace.layer({
+    storeDir: Option.match(store, { onNone: () => Crawler.storeDir(root), onSome: resolve }),
+    model,
+  });
+
+const chat = Command.make(
+  'chat',
+  {
+    root: rootFlag,
+    store: storeFlag,
+    project: projectFlag,
+    provider: providerFlag,
+    model: modelFlag,
+    endpoint: endpointFlag,
+    prompt: Flag.string('prompt').pipe(
+      Flag.withDescription('Run one turn with this prompt and exit (how a script or a test drives the agent).'),
+      Flag.optional,
+    ),
+  },
+  ({ root, store, project, provider, model, endpoint, prompt }) =>
+    Effect.gen(function* () {
+      const repo = yield* resolveRoot(root);
+      const selection = yield* Models.select({
+        provider: Option.getOrUndefined(provider),
+        model: Option.getOrUndefined(model),
+        endpoint: Option.getOrUndefined(endpoint),
+      });
+      yield* Effect.gen(function* () {
+        const opened = yield* openProject(project);
+        yield* Chat.run({ projectId: opened.id, prompt: Option.getOrUndefined(prompt) });
+      }).pipe(Effect.provide(workspaceLayer(repo, store, selection)));
+    }),
+).pipe(Command.withDescription('Chat with the index in the terminal (the headless twin of the webui).'));
+
+const serveFlags = {
+  root: rootFlag,
+  store: storeFlag,
+  provider: providerFlag,
+  model: modelFlag,
+  endpoint: endpointFlag,
+  port: Flag.integer('port').pipe(Flag.withDescription('Listen port (default: 5599).'), Flag.optional),
+  host: Flag.string('host').pipe(Flag.withDescription('Bind address (default: 127.0.0.1).'), Flag.optional),
+};
+
+type ServeFlags = {
+  readonly root: Option.Option<string>;
+  readonly store: Option.Option<string>;
+  readonly provider: Option.Option<string>;
+  readonly model: Option.Option<string>;
+  readonly endpoint: Option.Option<string>;
+  readonly port: Option.Option<number>;
+  readonly host: Option.Option<string>;
+};
+
+const serveHandler = ({ root, store, provider, model, endpoint, port, host }: ServeFlags) =>
+  Effect.gen(function* () {
+    const repo = yield* resolveRoot(root);
+    const selection = yield* Models.select({
+      provider: Option.getOrUndefined(provider),
+      model: Option.getOrUndefined(model),
+      endpoint: Option.getOrUndefined(endpoint),
+    });
+    // Imported here rather than at the top: `serve` pulls Vite and the whole dev-server
+    // machinery in, and none of the other commands should pay for it.
+    const Server = yield* Effect.promise(() => import('./workspace/Server.ts'));
+    yield* Server.run({
+      root: repo,
+      port: Option.getOrUndefined(port),
+      host: Option.getOrUndefined(host),
+      model: selection,
+    }).pipe(Effect.provide(workspaceLayer(repo, store, selection)));
+  });
+
+const serve = Command.make('serve', serveFlags, serveHandler).pipe(
+  Command.withDescription('Start the web UI (also what a bare `code-index` does).'),
+);
+
+/**
+ * The root command carries `serve`'s flags and handler, which is what makes the webserver the
+ * default: `code-index` with no subcommand starts it, and `code-index serve` is the same thing
+ * spelled out.
+ */
+export const command = Command.make('code-index', serveFlags, serveHandler).pipe(
+  Command.withDescription('Index a codebase into SQLite + RDF (DEUS ontology), and reason about it in a browser.'),
+  Command.withSubcommands([serve, chat, index, files, query, ask, dump, stats, clear, ontology]),
 );
 
 /** Runs one command; `Layer.launch` is not involved — every command opens and closes its own store. */

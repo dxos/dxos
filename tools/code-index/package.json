@@ -23,8 +23,10 @@
     "test": "vitest run --passWithNoTests --project=node"
   },
   "dependencies": {
+    "@dxos/ai": "workspace:*",
     "@dxos/effect": "workspace:*",
     "@dxos/sql-sqlite": "workspace:*",
+    "@effect/ai-anthropic": "catalog:",
     "@effect/platform-bun": "catalog:",
     "@effect/platform-node": "catalog:",
     "@effect/sql-sqlite-bun": "catalog:",
@@ -39,6 +41,9 @@
     "oxc-resolver": "catalog:",
     "quadstore": "catalog:",
     "quadstore-comunica": "catalog:",
+    "solid-js": "catalog:",
+    "vite": "catalog:",
+    "vite-plugin-solid": "catalog:",
     "yaml": "catalog:"
   },
   "devDependencies": {
