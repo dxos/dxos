@@ -107,10 +107,12 @@ export class ObjectCore {
   public readonly updates = new Event();
 
   /**
-   * Moves on every mutation; proxy targets stamp their materialized record with it, so one compare on
-   * read detects a stale one.
+   * Re-fills every proxy target of this core from the document. Installed by the proxy handler once a
+   * root proxy exists; called ahead of every update notification, and directly after a write to a
+   * bound document, so a target never serves a value the document no longer holds even when the DB
+   * does not route the change event back to this core.
    */
-  public generation = 0;
+  public refreshTargets: (() => void) | undefined;
 
   // -------------------------------------------------------------------------
   // Fields merged from ObjectInternals (formerly echo-proxy-target.ts).
@@ -254,9 +256,7 @@ export class ObjectCore {
       invariant(this.docHandle);
       this.docHandle.change(changeFn, options);
       // Note: We don't need to notify listeners here, since `change` event is already processed by DB.
-      // The generation still moves here so a local write invalidates reads even when the DB no longer
-      // routes the change event to this core.
-      this.generation++;
+      this.refreshTargets?.();
     }
   }
 
@@ -285,7 +285,7 @@ export class ObjectCore {
       invariant(this.docHandle);
       result = this.docHandle.changeAt(heads, callback, options);
       // Note: We don't need to notify listeners here, since `change` event is already processed by DB.
-      this.generation++;
+      this.refreshTargets?.();
     }
 
     return result;
@@ -331,7 +331,7 @@ export class ObjectCore {
    */
   public readonly notifyUpdate = () => {
     // Before the emit, so a subscriber reading the object inside its callback sees fresh values.
-    this.generation++;
+    this.refreshTargets?.();
     try {
       this.updates.emit();
     } catch (err: any) {

@@ -50,7 +50,7 @@ export const isValidProxyTarget = (value: any): value is object => {
   if (value == null || typeof value !== 'object') {
     return false;
   }
-  if (value[symbolIsProxy]) {
+  if (proxySlots.has(value) || value[symbolIsProxy]) {
     return false;
   }
   if (Array.isArray(value)) {
@@ -121,6 +121,9 @@ export const createProxy = <T extends object>(target: T, handler: ReactiveHandle
   const proxy = new Proxy(target, slot);
   proxySlots.set(proxy, slot);
   handler.init(target);
+  if (handler.readsForwarded?.(target)) {
+    slot.forwardReads();
+  }
 
   // TODO(dmaretskyi): Check if this will actually work; maybe a global WeakMap is better?
   handler._proxyMap.set(target, proxy);
@@ -149,6 +152,17 @@ class ProxyHandlerSlot<T extends object> implements ProxyHandler<T> {
   // TODO(burdon): Requires comment.
   setHandler(handler: ReactiveHandler<T>): void {
     this._handler = handler;
+  }
+
+  /**
+   * Drops this proxy's `get` trap: with no `get` on the handler the engine performs the read on the
+   * target itself, so a target that carries its data as own properties is read with no JavaScript call.
+   * Every other trap stays.
+   */
+  forwardReads(): void {
+    if (!Object.hasOwn(this, 'get')) {
+      Object.defineProperty(this, 'get', { value: undefined, configurable: true });
+    }
   }
 
   /**

@@ -47,7 +47,6 @@ import {
   isReactiveRecord,
   normalizeSpliceRange,
   queueNotification,
-  symbolIsProxy,
 } from '@dxos/echo/internal';
 import { assertArgument, invariant } from '@dxos/invariant';
 import { EID, EntityId, type URI } from '@dxos/keys';
@@ -74,13 +73,11 @@ import {
   stripShadowingProperties,
 } from './echo-prototypes';
 import {
-  type MaterializedRecord,
   type ProxyTarget,
   TargetKey,
   getEchoDatabase,
   symbolHandler,
   symbolInternals,
-  symbolMaterialized,
   symbolNamespace,
   symbolPath,
 } from './echo-proxy-target';
@@ -102,7 +99,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
 
   init(target: ProxyTarget): void {
     invariant(target[symbolInternals]);
-    invariant(!(target as any)[symbolIsProxy]);
+    invariant(!isProxy(target));
     invariant(Array.isArray(target[symbolPath]));
 
     // Clear extra keys from objects
@@ -126,6 +123,33 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       configurable: true,
       value: this._inspect.bind(target),
     });
+
+    if (!(target instanceof EchoArray)) {
+      const core = target[symbolInternals];
+      if (isRootDataObject(target)) {
+        core.refreshTargets = () => this._refreshAll(core, target);
+      }
+      if (this._canMaterialize(core)) {
+        this._refreshRecord(target);
+      }
+    }
+  }
+
+  /**
+   * A record target carries its data as own properties once it can be filled, so the proxy needs no
+   * `get` trap; arrays still read their elements from the document.
+   */
+  readsForwarded(target: ProxyTarget): boolean {
+    return !(target instanceof EchoArray) && this._canMaterialize(target[symbolInternals]);
+  }
+
+  /**
+   * A target is filled only once its core has both a document and a database: a ref minted before the
+   * database is known would have no resolver and, unlike a lazy read, would be held rather than re-derived.
+   * Until then the `get` trap serves reads from the document as before.
+   */
+  private _canMaterialize(core: ObjectCore): boolean {
+    return core.hasDoc && getEchoDatabase(core) != null;
   }
 
   ownKeys(target: ProxyTarget): ArrayLike<string | symbol> {
@@ -134,9 +158,9 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     const keys: (string | symbol)[] =
       typeof record !== 'object' || record === null
         ? []
-        : target[symbolMaterialized]
-          ? Object.keys(record)
-          : Reflect.ownKeys(record);
+        : target instanceof EchoArray
+          ? Reflect.ownKeys(record)
+          : Object.keys(record);
     if (isRootDataObject(target)) {
       keys.push(PROPERTY_ID);
     }
@@ -153,7 +177,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     if (typeof record !== 'object' || record === null) {
       return undefined;
     }
-    if (!target[symbolMaterialized]) {
+    if (target instanceof EchoArray) {
       return Reflect.getOwnPropertyDescriptor(record, p);
     }
     // The document is frozen; the descriptor describes the key as a decoded copy would carry it.
@@ -183,24 +207,14 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     if (typeof record !== 'object' || record === null) {
       return false;
     }
-    return target[symbolMaterialized] ? typeof p === 'string' && Object.hasOwn(record, p) : Reflect.has(record, p);
+    return typeof p === 'string' && Object.hasOwn(record, p);
   }
 
+  /**
+   * Reached only by array proxies and by a record proxy whose core had no document yet when the proxy
+   * was created; a filled record target has no `get` trap (see {@link readsForwarded}).
+   */
   get(target: ProxyTarget, prop: string | symbol, receiver: any): any {
-    // Checked before every other branch: a key reaches the materialized record only after the decode path
-    // below has answered it once, and the core generation moves before any mutation can be observed.
-    let materialized: MaterializedRecord | undefined;
-    if (typeof prop === 'string') {
-      const slot = target[symbolMaterialized];
-      if (slot && (slot.generation === target[symbolInternals].generation || this._materialize(target, slot))) {
-        materialized = slot;
-        const value = slot.values[prop];
-        if (value !== undefined) {
-          return value;
-        }
-      }
-    }
-
     // The build instruments every `invariant` call with an allocated call-site record, so on this
     // path the call sits behind the check rather than being the check.
     if (!Array.isArray(target[symbolPath])) {
@@ -250,29 +264,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       }
     }
 
-    const value = this._wrapInProxyIfRequired(target, getDecodedValueAtPath(target, prop));
-    // An absent key stays out so probing arbitrary keys cannot grow the record.
-    if (materialized && typeof prop === 'string' && value !== undefined) {
-      materialized.values[prop] = value;
-    }
-    return value;
-  }
-
-  /**
-   * Resets a record target's materialized record to the current generation: the document's own record
-   * object is taken as is, and the values refill lazily as keys are read, so a change costs nothing
-   * until the next read of each key. Returns false while the core has no document — inside
-   * `createObject` the seeded own properties answer reads until then, and the next trap retries.
-   */
-  private _materialize(target: ProxyTarget, materialized: MaterializedRecord): boolean {
-    const core = target[symbolInternals];
-    if (!core.hasDoc) {
-      return false;
-    }
-    materialized.raw = core.getRaw([target[symbolNamespace], ...target[symbolPath]]);
-    materialized.values = Object.create(null);
-    materialized.generation = core.generation;
-    return true;
+    return this._wrapInProxyIfRequired(target, getDecodedValueAtPath(target, prop));
   }
 
   /**
@@ -280,14 +272,111 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
    * decode for an array.
    */
   private _record(target: ProxyTarget): unknown {
-    const materialized = target[symbolMaterialized];
-    if (!materialized) {
+    if (target instanceof EchoArray) {
       return getDecodedValueAtPath(target).value;
     }
-    if (materialized.generation !== target[symbolInternals].generation && !this._materialize(target, materialized)) {
-      return undefined;
+    const core = target[symbolInternals];
+    return core.hasDoc ? core.getRaw([target[symbolNamespace], ...target[symbolPath]]) : undefined;
+  }
+
+  /**
+   * Re-fills every record target of the core from the document: the root, the nested records and the
+   * meta root already handed out (all in `targetsMap`). Arrays hold no data and are skipped.
+   */
+  private _refreshAll(core: ObjectCore, root: ProxyTarget): void {
+    this._refreshRecord(root);
+    for (const nested of core.targetsMap.values()) {
+      if (!(nested instanceof EchoArray)) {
+        this._refreshRecord(nested as ProxyTarget);
+      }
     }
-    return materialized.raw;
+  }
+
+  /**
+   * Makes a record target's own properties mirror its record in the document: one own data property per
+   * document key, holding what a read returns (primitives decoded, records and arrays as their proxies,
+   * refs resolved), and nothing else. Keys the prototype chain answers — the system accessors and
+   * `Object.prototype` — are left to it, as the decode path did.
+   */
+  private _refreshRecord(target: ProxyTarget): void {
+    const core = target[symbolInternals];
+    if (!this._canMaterialize(core)) {
+      return;
+    }
+    const namespace = target[symbolNamespace];
+    const path = target[symbolPath];
+    // The meta root is read decoded so `upgradeMeta` supplies its defaults; data is read raw, since a
+    // decode copies the whole subtree and only the top level is needed here.
+    const record: unknown =
+      namespace === META_NAMESPACE && path.length === 0
+        ? core.getDecoded([namespace])
+        : core.getRaw([namespace, ...path]);
+    const present = typeof record === 'object' && record !== null && !Array.isArray(record);
+    if (present) {
+      const prototype = Object.getPrototypeOf(target);
+      for (const [key, stored] of Object.entries(record)) {
+        if (Reflect.has(prototype, key)) {
+          continue;
+        }
+        const value = this._materializeValue(target, key, stored);
+        if (!Object.hasOwn(target, key) || (target as any)[key] !== value) {
+          Object.defineProperty(target, key, { value, writable: true, enumerable: true, configurable: true });
+        }
+      }
+    }
+    for (const key of Object.keys(target)) {
+      if (!present || !Object.hasOwn(record, key)) {
+        delete (target as any)[key];
+      }
+    }
+    // A proxy created before the core had a database kept its `get` trap; it can go now.
+    const proxy = this._proxyMap.get(target);
+    if (proxy) {
+      getProxySlot(proxy).forwardReads();
+    }
+  }
+
+  /**
+   * What a read of `key` returns, from the stored form: containers and refs are wrapped by path, so the
+   * stored value is only inspected for its kind and never copied; everything else is decoded.
+   */
+  private _materializeValue(target: ProxyTarget, key: string, stored: unknown): unknown {
+    const core = target[symbolInternals];
+    const container =
+      typeof stored === 'object' &&
+      stored !== null &&
+      !(stored instanceof Uint8Array) &&
+      !(stored instanceof A.RawString);
+    return this._wrapInProxyIfRequired(target, {
+      namespace: target[symbolNamespace],
+      value: container ? stored : core.decode(stored),
+      dataPath: [...target[symbolPath], key],
+    });
+  }
+
+  /**
+   * Mirrors one written key onto the target right away, ahead of the refresh the change notification
+   * triggers, so a read inside the same `Obj.update` callback already sees it.
+   */
+  private _writeThrough(target: ProxyTarget, key: string): void {
+    if (
+      target instanceof EchoArray ||
+      !this._canMaterialize(target[symbolInternals]) ||
+      Reflect.has(Object.getPrototypeOf(target), key)
+    ) {
+      return;
+    }
+    const stored = target[symbolInternals].getRaw([target[symbolNamespace], ...target[symbolPath], key]);
+    if (stored === undefined) {
+      delete (target as any)[key];
+      return;
+    }
+    Object.defineProperty(target, key, {
+      value: this._materializeValue(target, key, stored),
+      writable: true,
+      enumerable: true,
+      configurable: true,
+    });
   }
 
   set(target: ProxyTarget, prop: string | symbol, value: any, receiver: any): boolean {
@@ -324,6 +413,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       const withLinks = this._handleLinksAssignment(target, validatedValue);
       target[symbolInternals].setDecoded(fullPath, withLinks);
     }
+    this._writeThrough(target, prop);
 
     // Note: EventId.emit() is called centrally in core.updates.on() to handle both local and remote changes.
     return true;
@@ -348,7 +438,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     if (decoded == null) {
       return decoded;
     }
-    // A primitive is none of the cases below; settling that first also spares the `symbolIsProxy`
+    // A primitive is none of the cases below; settling that first also spares the proxy
     // probe from boxing it and walking its wrapper prototype on every primitive read.
     if (typeof decoded !== 'object') {
       return decoded;
@@ -356,7 +446,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     if (decoded instanceof Uint8Array) {
       return decoded;
     }
-    if (decoded[symbolIsProxy]) {
+    if (isProxy(decoded)) {
       return handleStoredSchema(target, decoded);
     }
     if (isEncodedReference(decoded)) {
@@ -500,6 +590,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     } else if (typeof property === 'string') {
       const fullPath = [getNamespace(target), ...target[symbolPath], property];
       target[symbolInternals].delete(fullPath);
+      this._writeThrough(target, property);
       return true;
     }
     return false;
@@ -961,6 +1052,9 @@ export const createObject = <T extends AnyProperties>(obj: T): CreateObjectRetur
     //  Do not change order.
     initCore(core, target);
     slot.handler.init(target);
+    if (slot.handler.readsForwarded?.(target)) {
+      slot.forwardReads();
+    }
 
     setSchemaPropertiesOnObjectCore(core, schema);
     setRelationSourceAndTarget(target, core, schema);

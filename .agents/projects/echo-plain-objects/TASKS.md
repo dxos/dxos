@@ -1,6 +1,6 @@
 # echo-plain-objects — Tasks
 
-_Resume: Stage D (D11) in progress — three survey agents running; next: proxy identity off the `get` trap, then D1 automerge write-through. Benches recorded after each stage. Stage C stays BLOCKED under constraint 3 (DESIGN.md D9) pending the user's choice. Uncommitted: none. Last: lazy materialized record at `b3486ba0`, automerge reads 113 / 111 ns._
+_Resume: Stage D1 (automerge fill/write-through/refresh, `get` trap dropped for record proxies) is in the tree — suites running; then benches, record, commit; then D2 (typed handler). Stage C stays BLOCKED under constraint 3 (DESIGN.md D9) pending the user's choice. Uncommitted: none. Last: lazy materialized record at `b3486ba0`, automerge reads 113 / 111 ns._
 
 Design and decisions: [DESIGN.md](./DESIGN.md). Numbers: [`echo-client-e2e/BENCHMARKS.md`](../../../packages/core/echo/echo-client-e2e/BENCHMARKS.md).
 
@@ -197,10 +197,10 @@ both benches after each.
 
 ### Tasks
 
-- [ ] **Surveys** — proxy-identity consumers; automerge write and construction paths; typed-handler
+- [x] **Surveys** — proxy-identity consumers; automerge write and construction paths; typed-handler
       nested values and raw readers (three Explore reports, folded into DESIGN.md F6–F8).
-- [ ] **Proxy identity off the `get` trap** — `isProxy`/`getProxySlot`/`getProxyTarget` on a `WeakMap`
-      keyed by proxy (`echo` proxy-utils); `echo` suite green.
+- [x] **Proxy identity off the `get` trap** — `4a92e276` + `71296056` (registry on `globalThis`); `echo`
+      suite green.
 - [ ] **D1 — automerge: fill at construction, write through on `set`/`delete`, refresh in
       `notifyUpdate`** — root and nested record targets; `MaterializedRecord` and `generation` removed.
 - [ ] **D1 — internals as prototype accessors** — `symbolInternals`, `SchemaId`, `TypeEntityId`,

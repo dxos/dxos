@@ -451,6 +451,88 @@ field to exist from creation: `in` is true for unset fields, `Object.keys`/sprea
 that omits an optional field. Six blueprint relaxations plus an unbounded number elsewhere, for ~7 ns
 over shape C.
 
+### F6 — Proxy-identity consumers (survey 2026-09-06, for D11)
+
+Outside `proxy-utils.ts`: `isProxy` 31 call sites, `getProxyTarget` 16, `getRawTarget` 11 (all inside
+`echo`), `getProxyHandler` 5, `x[symbolIsProxy]` 4, `getProxySlot`/`setHandler` 1 each (the `db.add`
+swap), `ProxyHandlerSlot` 0 (comments only). Every `isProxy` caller needs only the boolean; every
+`getProxyTarget` caller needs the raw target. The `WeakMap` registry (`4a92e276`, on `globalThis` in
+`71296056`) serves both. `getProxyHandler` is a dispatch seam in three places — `Text.ts:113`
+(string CRDT), `echo-prototypes.ts:367` (meta sub-proxy reuses the handler), and
+`echo-handler.ts:838/848` (`instanceof EchoReactiveHandler` distinguishes db-backed from in-memory
+records) — so the two handler classes stay distinct for now; collapsing them needs another signal for
+that discrimination.
+
+Of the four symbols the automerge `get` trap's `switch` serves, three are already real getters on
+`EchoRecord.prototype` (`SchemaId`, `TypeEntityId`, `devtoolsFormatter`) and `symbolInternals` is an own
+property of the instance state, so a forwarded read finds them. **Only the meta root's virtual
+`createdAt`/`updatedAt` have no prototype backing** (readers: `echo-panproto/runner.ts:59`,
+`plugin-space` `SpaceHomeDashboard.tsx:67`, 13 assertions in `echo-client-e2e/query.test.ts`); they
+need a dedicated meta-root prototype with two getters and a throwing setter. The `getPrototypeOf` trap
+must keep reporting `Object.prototype`/`Array.prototype`: `Obj.getSnapshot`, `safe-stringify`,
+compute's `isJsonValue`, and the blueprint's `instanceof` assertions all gate on it. Two latent
+no-ops noted, not touched: `typed-handler.ts:341` and `:742` probe `target[symbolIsProxy]` inside a
+`for…in` over the target's keys (loop-invariant, always false).
+
+### F7 — Automerge handler: construction and mutation paths (survey 2026-09-06, for D11 stage D1)
+
+Every database-loaded object becomes a proxy through one funnel, `initEchoReactiveObjectRootProxy`
+(`echo-handler.ts:1058`), reached from `EntityManager.getEntityById`/`loadEntityById`, `db.branch`,
+`clone.ts` and `edit-history.ts`; new objects through `createObject`'s two branches; nested records
+through `_wrapInProxyIfRequired`; the meta root through `getMeta`, which until D1 built a fresh
+uncached target on every call. All of them pass `createProxy` → `handler.init(target)`, so `init` is
+the one place to fill a record target, and it runs after the document exists on every path except
+`clone.ts` (proxy first, data copied in by a `core.change` that refreshes it). `init` also deletes the
+target's own enumerable string keys — the seeded ones `createObject` migrates — so the fill has to
+follow that deletion inside `init`, not precede it.
+
+Mutations: the `set`/`deleteProperty` traps know the key; array methods, text CRDT updates, the system
+setters (`setMeta`, `setDeleted`, `setType`, `setParent`, …), `atomicReplaceObject`, `clone`, `bind`,
+branch merge/sync and remote `_integrateHostUpdate` know only "this object changed". Every one of them
+ends in `core.change`/`changeAt` or `core.bind`, and `Event.emit` is synchronous in registration order,
+so a refresh at the top of `notifyUpdate` is seen by every subscriber. `core.change`'s bound arm does not
+call `notifyUpdate` itself — it relies on `docHandle.change` → entity-manager routing → `_objects.get(id)`
+— which is the gap both reviews flagged; D1 closes it by calling the refresh hook directly there.
+`initNewObject` sets the document with no notification, so fill-at-construction must follow it (it
+does on both `createObject` branches).
+
+`targetsMap` (path-keyed, never pruned) holds every nested record and array target; a shallow refresh of
+each record target per change is O(Σ keys of records already handed out). Array targets hold no elements
+and read the document per index, so they keep the `get` trap in D1 (D3). `getRaw` bypasses
+`upgradeMeta`, so the meta root refreshes from `getDecoded` to keep its defaults; data records refresh
+from the raw document object, decoding primitives only, since wrapping a container needs its path, not
+its contents. Own data properties invert today's precedence between document keys and prototype members
+(`toString`, `id`, `toJSON`); the fill skips keys the prototype chain answers, which is what the `get`
+trap's `Reflect.has` check did.
+
+### F8 — Typed handler: what a trap-less read needs (survey 2026-09-06, for D11 stage D2)
+
+The typed `get` trap does four things: serve behaviour accessors (`objectData`, `ChangeId`, `Hash`,
+`Equal`, `StaticTypeSchemaSlot` — all already prototype getters, resolvable without a trap), return
+`TypeEntityId` unwrapped (a data property; the branch exists only to dodge the wrapping below), skip
+own getters (`jsonSchema`/`fields` on type entities), and **wrap nested records and arrays in
+sub-proxies on every read** (`createProxy`, memoized per raw target in `_proxyMap`). Only the last needs
+the trap, and the target already holds sub-proxies in two places today — `[MetaId]` since creation, and
+any user assignment of one sub-proxy to another field (`typed-handler.test.ts:298-315` pins that
+identity) — so storing them for all nested values generalizes existing behaviour rather than inventing
+it. `Obj.getSnapshot` in fact depends on it: its recursion guard is `getPrototypeOf === Object.prototype`,
+which a sub-proxy satisfies through the trap and a raw compacted target (prototype = instance state)
+does not.
+
+What breaks if nested values are stored wrapped, from most to least severe: `validateInitialProps`
+(`echo-handler.ts:1130-1153`) deletes `undefined` keys by recursing into raw children — through a
+sub-proxy that is a `deleteProperty` outside a change context and throws; `deepCopy`
+(`typed-handler.ts:82-132`) produces raw copies that two callers store directly and must be re-stamped
+and re-wrapped; `TypedReactiveHandler.init` runs inside `createProxy` before the root proxy exists, so
+wrapping children there orders against ownership stamping; class instances and `Ref`s must stay raw
+(`handler.test.ts:59-73` writes to a class instance outside `update` and expects no throw);
+`_applyTextMutation`'s `setDeep` on the raw target must keep bypassing validation. `ReactiveArray` is an
+`Array` subclass, not a proxy, and is always handed out wrapped; its element reads go through the same
+trap, so arrays keep their proxy trap in D2 (D3) and only record targets go trap-less. No test in
+`echo` asserts on handler classes or `symbolIsProxy`; the constraints are behavioural
+(`entity-hash.test.ts:82-90` sub-proxy identity, `change.test.ts` enforcement surface,
+`handler.test.ts:49-56` `[objectData]` shape).
+
 ### F3 — Blast radius (report 2026-09-05)
 
 **63 introspection call sites in 20 files** (`isProxy|getProxyTarget|getProxyHandler|getProxySlot|

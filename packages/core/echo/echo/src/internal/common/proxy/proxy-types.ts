@@ -17,6 +17,12 @@ export interface ReactiveHandler<T extends object> extends ProxyHandler<T> {
   init(target: T): void;
 
   /**
+   * True when the target carries its data as own properties, so the proxy needs no `get` trap and
+   * reads can be forwarded to the target by the engine. Consulted once, after {@link init}.
+   */
+  readsForwarded?(target: T): boolean;
+
+  /**
    * Replace the string CRDT value at `path` with `newText`, applying a minimal diff so cursors and
    * concurrent edits are preserved. Implemented by handlers that back string fields; `Text.update`
    * dispatches here. Must run inside a change context (`Obj.update`).

@@ -102,7 +102,7 @@ import {
 } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { EID, EntityId, type URI } from '@dxos/keys';
-import { deepMapValues } from '@dxos/util';
+import { deepMapValues, defaultMap } from '@dxos/util';
 
 import * as Doc from '../automerge/Doc';
 import { type ObjectCore } from '../core-db';
@@ -110,9 +110,9 @@ import { type EchoDatabase } from '../proxy-db';
 import { getBody, getHeader } from './devtools-formatter';
 import {
   type ProxyTarget,
+  TargetKey,
   getEchoDatabase,
   symbolInternals,
-  symbolMaterialized,
   symbolNamespace,
   symbolPath,
 } from './echo-proxy-target';
@@ -357,12 +357,12 @@ export const getVersion = (target: ProxyTarget): Obj.Version => {
 /** The meta sub-proxy for the object. `self` is the proxy (its handler backs the meta proxy). */
 const getMeta = (self: ProxyTarget): EntityMeta => {
   const target = rawTarget(self);
-  // Reuse the root target's events so subscribers of the meta proxy are notified: the central
-  // core subscriptions emit on the root's events only (see the nested-record path).
-  const metaTarget = createRecordTarget(
-    createInstanceState(target[symbolInternals], META_NAMESPACE, [], {
-      event: target[EventId],
-    }),
+  const core = target[symbolInternals];
+  // One target per core, kept in `targetsMap` like the nested records, so the refresh that follows every
+  // change reaches a meta proxy the caller holds. Reuses the root target's event so subscribers of the
+  // meta proxy are notified: the central core subscriptions emit on the root's event only.
+  const metaTarget = defaultMap(core.targetsMap, TargetKey.new([], META_NAMESPACE, 'record'), (): ProxyTarget =>
+    createRecordTarget(createInstanceState(core, META_NAMESPACE, [], { event: target[EventId] })),
   );
   return createProxy(metaTarget, getProxyHandler(self)) as any;
 };
@@ -536,6 +536,25 @@ export class EchoRecord {
 }
 
 /**
+ * Behaviour prototype for the root of the `meta` namespace. `createdAt`/`updatedAt` are not stored in
+ * the meta section: they come from the system section and the Automerge change graph, so they are
+ * accessors here rather than data on the target.
+ */
+export class EchoMetaRoot extends EchoRecord {
+  private constructor() {
+    super();
+  }
+
+  get createdAt(): number | undefined {
+    return this[symbolInternals].getCreatedAt();
+  }
+
+  get updatedAt(): number | undefined {
+    return this[symbolInternals].getUpdatedAt();
+  }
+}
+
+/**
  * Behaviour prototype for root ECHO data objects. The extra members here are the
  * reason a root object structurally differs from a nested record — replacing the
  * former `isRootDataObject(target)` branching in the `get`/`has` traps.
@@ -639,6 +658,7 @@ export class EchoRoot extends EchoRecord {
 
 const EchoRecordPrototype: object = EchoRecord.prototype;
 const EchoRootPrototype: object = EchoRoot.prototype;
+const EchoMetaRootPrototype: object = EchoMetaRoot.prototype;
 
 //
 // Instance state and target construction.
@@ -656,26 +676,27 @@ export const createInstanceState = (
   path: Doc.KeyPath,
   options?: { event?: Event<void> },
 ): ProxyTarget => {
-  const root = namespace === DATA_NAMESPACE && path.length === 0;
-  const state = Object.create(root ? EchoRootPrototype : EchoRecordPrototype) as ProxyTarget;
+  const prototype =
+    path.length > 0
+      ? EchoRecordPrototype
+      : namespace === DATA_NAMESPACE
+        ? EchoRootPrototype
+        : namespace === META_NAMESPACE
+          ? EchoMetaRootPrototype
+          : EchoRecordPrototype;
+  const state = Object.create(prototype) as ProxyTarget;
   defineHiddenProperty(state, symbolInternals, core);
   defineHiddenProperty(state, symbolNamespace, namespace);
   defineHiddenProperty(state, symbolPath, path);
   defineHiddenProperty(state, EventId, options?.event ?? new Event());
-  // Starts one generation behind the core so the first trap materializes.
-  defineHiddenProperty(state, symbolMaterialized, {
-    generation: core.generation - 1,
-    raw: undefined,
-    values: Object.create(null),
-  });
   return state;
 };
 
 /**
- * Build a clean proxy target whose prototype chain carries the ECHO system surface.
- * User data is virtual (Automerge-backed) and never lives on the target; `initialData`
- * is only used transiently by `createObject` to seed the new object before the data is
- * migrated into the document and the keys are cleared.
+ * Build a proxy target whose prototype chain carries the ECHO system surface. The handler fills the
+ * target with the record's current values from the document (`EchoReactiveHandler.init`) and keeps them
+ * current, so reads are forwarded to it; `initialData` is only used transiently by `createObject` to
+ * seed the new object before the data is migrated into the document and the keys are cleared.
  */
 export const createRecordTarget = (state: ProxyTarget, initialData?: object): ProxyTarget => {
   const target = (initialData ? { ...initialData } : {}) as ProxyTarget;
