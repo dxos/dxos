@@ -872,6 +872,16 @@ dist/types/src: ENOTEMPTY` — a concurrent writer. A Cursor TypeScript native-p
       resize that it never cancels, so the simulated unmount disposed the engine under it
       (`plugin-terra`, five unhandled errors); `createFullscreenUi` guards the deferred call. Plus
       five `sort-named-imports` warnings the `createContext` codemod left, which `denyWarnings` fails.
+- [x] **`FloatingPanel` on Ark's floating-panel machine; the debug panel is one** DONE 2026-09-05
+      (asked for mid-session). `react-ui` `FloatingPanel` — `Root`, `Trigger`, `Portal`, `Content`
+      (renders the machine's positioner around itself, as `Popover` does), `Header`, `DragTrigger`,
+      `Title`, `Control`, `StageTrigger`/`CloseTrigger` (icon buttons the machine drives), `Body`,
+      `ResizeTrigger`/`Resizers`. The positioner's layer is set inline at the foot of the dialog
+      band plus the machine's stack index, because the machine writes `z-index: var(--z-index)`
+      inline itself and its `--z-index` is the stack order; the root provides `elevation='dialog'`
+      so menus and tooltips inside outrank it. `plugin-debug`'s status rail opens the debug panel
+      as one (fold and close only, no maximize), its position and size persisted beside the tab; the
+      pin, which only guarded the popover's self-dismissal, goes.
 - [ ] **Review each `react-ui` component's theme against Ark's anatomy** (tracked 2026-09-05, e.g.
       Tabs): the port kept the Radix-era slot names and selectors where they mapped one-to-one, so
       each `*.theme.ts` should be checked for parts Ark adds or renames (`indicator`, `positioner`,

@@ -15,6 +15,7 @@ export * from './Column';
 export * from './DatePicker';
 export * from './Deferred';
 export * from './Dialog';
+export * from './FloatingPanel';
 export * from './ErrorFallback';
 export * from './Focus';
 export * from './Icon';

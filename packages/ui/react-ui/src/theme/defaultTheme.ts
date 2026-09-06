@@ -16,6 +16,7 @@ import { columnTheme } from '../components/Column/Column.theme';
 import { datePickerTheme } from '../components/DatePicker/DatePicker.theme';
 import { dialogTheme } from '../components/Dialog/Dialog.theme';
 import { editableTheme } from '../components/Editable/Editable.theme';
+import { floatingPanelTheme } from '../components/FloatingPanel/FloatingPanel.theme';
 import { focusTheme } from '../components/Focus/Focus.theme';
 import { iconTheme } from '../components/Icon/Icon.theme';
 import { inputTheme } from '../components/Input/Input.theme';
@@ -61,6 +62,7 @@ export const defaultTheme: Theme<Record<string, any>> = {
   collapsible: collapsibleTheme,
   datePicker: datePickerTheme,
   dialog: dialogTheme,
+  floatingPanel: floatingPanelTheme,
   focus: focusTheme,
   icon: iconTheme,
   iconButton: iconButtonTheme,

@@ -4,7 +4,7 @@
 
 import React, { useCallback } from 'react';
 
-import { Panel, SystemIconButton, Tabs, ToggleIconButton, Toolbar, useTranslation } from '@dxos/react-ui';
+import { Panel, Tabs, Toolbar, useTranslation } from '@dxos/react-ui';
 import { useViewState, useViewStateActions } from '@dxos/react-ui-attention';
 
 import { meta } from '#meta';
@@ -14,25 +14,23 @@ import { LoggerPanel } from '../LoggerPanel';
 import { DEBUG_PANEL_CONTEXT, type DebugPanelTab, debugPanelAspect } from './view-state';
 
 export type DebugPanelProps = {
-  /** Overridable so a second host (or a story) gets its own tab and pin rather than the rail's. */
+  /** Overridable so a second host (or a story) gets its own tab rather than the rail's. */
   contextId?: string;
-  /** Rendered as a close button when provided (the popover host closes itself). */
-  onClose?: () => void;
 };
 
 /**
  * The debug surface: the log viewer and the Effect-CLI console behind one toolbar, so the two
- * share a single entry point in the status rail rather than a popover each.
+ * share a single entry point in the status rail rather than a popover each. The window around it
+ * (`DebugPanelStatus`) owns opening, closing and placement.
  */
-export const DebugPanel = ({ contextId = DEBUG_PANEL_CONTEXT, onClose }: DebugPanelProps) => {
+export const DebugPanel = ({ contextId = DEBUG_PANEL_CONTEXT }: DebugPanelProps) => {
   const { t } = useTranslation(meta.profile.key);
-  const { tab, pinned } = useViewState(debugPanelAspect, contextId);
+  const { tab } = useViewState(debugPanelAspect, contextId);
   const { update } = useViewStateActions(debugPanelAspect, contextId);
   const handleTabChange = useCallback(
     (value: string) => update((prev) => ({ ...prev, tab: value as DebugPanelTab })),
     [update],
   );
-  const handlePinChange = useCallback(() => update((prev) => ({ ...prev, pinned: !prev.pinned })), [update]);
 
   return (
     <Tabs.Root
@@ -54,18 +52,6 @@ export const DebugPanel = ({ contextId = DEBUG_PANEL_CONTEXT, onClose }: DebugPa
                 {t('logs.tab.label')}
               </Tabs.Button>
             </Tabs.Tablist>
-            <div role='none' className='grow' />
-            <ToggleIconButton
-              variant='ghost'
-              active={pinned}
-              icon='ph--push-pin--regular'
-              iconOnly
-              activeIcon='ph--push-pin-slash--regular'
-              label={t(pinned ? 'unpin.label' : 'pin.label')}
-              data-testid='debugPlugin.pin'
-              onClick={handlePinChange}
-            />
-            {onClose && <SystemIconButton.Close variant='ghost' iconOnly onClick={onClose} />}
           </Toolbar.Root>
         </Panel.Toolbar>
         <Panel.Content>
