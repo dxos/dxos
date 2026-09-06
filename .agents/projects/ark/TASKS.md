@@ -916,6 +916,11 @@ dist/types/src: ENOTEMPTY` — a concurrent writer. A Cursor TypeScript native-p
       steps, the spotlight and the positioning on the same popper the rest of the library uses.
       Establish first which `react-joyride` features the walkthrough actually relies on (scrolling
       to a target, the beacon, controlled step state) and whether Ark's tour covers them.
+- [ ] **Implement Ark's table of contents (`toc`)** (tracked 2026-09-05): the machine tracks which
+      heading is in view and marks the matching link, which is what a document outline does by
+      hand today. Check the installed Ark version ships it first (5.39.1 has no `toc` directory), then
+      decide the consumer — `react-ui-feed`'s `Outline`, the markdown article's heading rail — before
+      writing the component.
 - [ ] **Rename `Input` → `Field`** (own PR, a codemod over ~900 sites: `Root` 443, `Label` 215,
       `TextInput` 119, `Switch` 40, `Checkbox` 25, `DescriptionAndValidation` 22, `Validation` 13,
       `TextArea` 12, `Description` 11, `PinInput` 4). Proposed names follow Ark where the part is
