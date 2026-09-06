@@ -27,7 +27,7 @@ import { getSize, mx } from '@dxos/ui-theme';
 import { hexToEmoji } from '@dxos/util';
 
 import { translationKey } from '../../translations';
-import { AuthCode } from '../AuthCode/AuthCode';
+import { AuthCode } from '../AuthCode';
 import { type SharedInvitationListProps } from './InvitationListProps';
 
 export type InvitationListItemProps = SharedInvitationListProps & {
@@ -177,8 +177,8 @@ export const InvitationListItemImpl = ({
             <Button
               variant='ghost'
               classNames='grow justify-start font-medium'
-              onClick={() => send({ type: 'selectInvitation', invitation })}
               data-testid='show-qrcode'
+              onClick={() => send({ type: 'selectInvitation', invitation })}
             >
               <span>{t('open-share-panel.label')}</span>
             </Button>

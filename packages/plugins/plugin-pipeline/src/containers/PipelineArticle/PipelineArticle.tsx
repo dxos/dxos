@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { useCallback, useEffect } from 'react';
+import React, { useCallback } from 'react';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import { Surface, useCapability, useOperationInvoker } from '@dxos/app-framework/ui';
@@ -17,13 +17,11 @@ import {
 import { Panel } from '@dxos/react-ui';
 import { Attention } from '@dxos/react-ui-attention';
 import { useAttention } from '@dxos/react-ui-attention';
-import { useMenu } from '@dxos/react-ui-menu';
+import { useMenuContribution } from '@dxos/react-ui-menu';
 import { type Pipeline } from '@dxos/types';
 
 import { type ItemProps, PipelineComponent } from '#components';
 import { usePipelineBoardModel } from '#hooks';
-
-const PIPELINE_ITEM = 'PipelineItem';
 
 export type PipelineArticleProps = AppSurface.ObjectArticleProps<Pipeline.Pipeline>;
 
@@ -57,22 +55,16 @@ export const PipelineArticle = ({ role, subject: pipeline, attendableId }: Pipel
   );
 };
 
-const PipelineItem = ({ item, projectionModel }: ItemProps) => {
-  const menu = useMenu(PIPELINE_ITEM);
+const PipelineItem = ({ item, projectionModel, menu }: ItemProps) => {
   // The card menu renders in a portal; resolve the origin plank from the item element instead.
   const [cardRef, pivotId] = useCardPivot();
   const items = useObjectMenuItems(item, pivotId);
-
-  useEffect(() => {
-    menu.addMenuItems({
-      id: OBJECT_ACTIONS_CONTRIBUTION_ID,
-      mode: 'additive',
-      priority: OBJECT_ACTIONS_CONTRIBUTION_PRIORITY,
-      items,
-    });
-
-    return () => menu.removeMenuItems(OBJECT_ACTIONS_CONTRIBUTION_ID);
-  }, [menu, items]);
+  useMenuContribution(menu, {
+    id: OBJECT_ACTIONS_CONTRIBUTION_ID,
+    mode: 'additive',
+    priority: OBJECT_ACTIONS_CONTRIBUTION_PRIORITY,
+    items,
+  });
 
   return (
     <div ref={cardRef} className='contents'>

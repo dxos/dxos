@@ -2,20 +2,16 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type Scope, createContextScope } from '@radix-ui/react-context';
+import { createContext } from '@dxos/react-hooks';
 
 import { type GridContextValue } from './Grid';
 
 // Kept out of `Grid.tsx`: react-refresh only fast-refreshes a module whose exports are all
 // components, so a context, fragments and re-exported helpers force a full page reload on every edit.
 
-export type GridScopedProps<P> = P & { __gridScope?: Scope };
-
 export const GRID_NAME = 'Grid';
 
-export const [createGridContext, createGridScope] = createContextScope(GRID_NAME, []);
-
-export const [GridProvider, useGridContext] = createGridContext<GridContextValue>(GRID_NAME);
+export const [GridProvider, useGridContext] = createContext<GridContextValue>(GRID_NAME);
 
 // NOTE(Zan): These fragments add border to w-end and h-end of the grid using pseudo-elements.
 // These are offset by 1px to avoid double borders in planks.

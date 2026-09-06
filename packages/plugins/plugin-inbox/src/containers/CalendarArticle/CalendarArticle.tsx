@@ -16,7 +16,7 @@ import { Panel, useTranslation } from '@dxos/react-ui';
 import { useArticleKeyboardNavigation, useSelection } from '@dxos/react-ui-attention';
 import { type CalendarController, type DateMarker, Calendar as NaturalCalendar } from '@dxos/react-ui-calendar';
 import {
-  Menu,
+  ActionToolbar,
   MenuBuilder,
   TOOLBAR_DISPOSITION,
   graphActions,
@@ -216,13 +216,10 @@ export const CalendarArticle = ({ role, subject, attendableId }: CalendarArticle
           </NaturalCalendar.Root>
         </Panel.Root>
         <Panel.Root>
-          <Menu.Root {...menuActions} onAction={runAction} attendableId={id}>
-            <Panel.Toolbar asChild>
-              <Menu.Toolbar>
-                <Menu.Items />
-              </Menu.Toolbar>
-            </Panel.Toolbar>
-          </Menu.Root>
+          <Panel.Toolbar asChild>
+            <ActionToolbar {...menuActions} onAction={runAction} attendableId={id} />
+          </Panel.Toolbar>
+
           <Panel.Content asChild>
             {events.length === 0 ? (
               <InitializeCalendar calendar={subject} />

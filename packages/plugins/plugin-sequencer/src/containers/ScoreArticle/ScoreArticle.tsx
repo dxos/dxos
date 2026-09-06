@@ -10,7 +10,7 @@ import { useObject } from '@dxos/echo-react';
 import { Button, Flex, Icon, Input, Panel } from '@dxos/react-ui';
 import { Oscilloscope, OscilloscopeMode } from '@dxos/react-ui-audio';
 import { type ToggleMode } from '@dxos/react-ui-canvas';
-import { Menu, MenuBuilder, type ToolbarMenuActionGroupProperties, useMenuBuilder } from '@dxos/react-ui-menu';
+import { ActionToolbar, MenuBuilder, type ToolbarMenuActionGroupProperties, useMenuBuilder } from '@dxos/react-ui-menu';
 import { mx } from '@dxos/ui-theme';
 import { downloadBlob } from '@dxos/util';
 
@@ -348,7 +348,7 @@ export const ScoreArticle = ({ role, subject, attendableId }: ScoreArticleProps)
     };
   }, [isPlaying, activeSequence, score.tempo, score.loopStart, score.loopEnd]);
 
-  // Toolbar actions composed via the MenuBuilder / Menu.Root idiom
+  // Toolbar actions composed via the MenuBuilder / ActionToolbar idiom
   // (org.dxos.react-ui-menu.toolbarMenu). Deps cover every value the menu's
   // invoke handlers close over so the actions stay in sync.
   const togglePlay = useCallback(() => setIsPlaying((current) => !current), []);
@@ -438,23 +438,21 @@ export const ScoreArticle = ({ role, subject, attendableId }: ScoreArticleProps)
 
   return (
     <Panel.Root role={role}>
-      <Menu.Root {...menuActions} attendableId={attendableId}>
-        <Panel.Toolbar asChild>
-          <Menu.Toolbar>
-            <Menu.Items />
-            <Input.Root>
-              <Input.Label classNames='text-xs mr-1'>BPM</Input.Label>
-              <Input.TextInput
-                type='number'
-                min={1}
-                value={score.tempo}
-                onChange={(event) => handleTempoChange(Number(event.target.value))}
-                classNames='w-16'
-              />
-            </Input.Root>
-          </Menu.Toolbar>
-        </Panel.Toolbar>
-      </Menu.Root>
+      <Panel.Toolbar asChild>
+        <ActionToolbar {...menuActions} attendableId={attendableId}>
+          <Input.Root>
+            <Input.Label classNames='text-xs mr-1'>BPM</Input.Label>
+            <Input.TextInput
+              type='number'
+              min={1}
+              value={score.tempo}
+              onChange={(event) => handleTempoChange(Number(event.target.value))}
+              classNames='w-16'
+            />
+          </Input.Root>
+        </ActionToolbar>
+      </Panel.Toolbar>
+
       <Panel.Content>
         <Flex classNames='h-full min-h-0'>
           <div className='h-full grid grid-rows-[1fr_auto] w-48 shrink-0 border-r border-separator'>

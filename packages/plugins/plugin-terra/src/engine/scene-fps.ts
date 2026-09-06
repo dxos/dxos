@@ -5,9 +5,11 @@
 import { type Engine } from '@babylonjs/core/Engines/engine';
 import { type Observer } from '@babylonjs/core/Misc/observable';
 import { type Scene } from '@babylonjs/core/scene';
-import { AdvancedDynamicTexture } from '@babylonjs/gui/2D/advancedDynamicTexture';
+import { type AdvancedDynamicTexture } from '@babylonjs/gui/2D/advancedDynamicTexture';
 import { Control } from '@babylonjs/gui/2D/controls/control';
 import { TextBlock } from '@babylonjs/gui/2D/controls/textBlock';
+
+import { createFullscreenUi } from './scene-gui';
 
 // Controls are authored against the ADT's ideal coordinate space (see idealHeight below),
 // not device pixels, so these sizes read the same on hi-DPI displays as on standard ones.
@@ -33,7 +35,7 @@ export class SceneFpsWidget {
     this.#scene = options.scene;
     this.#engine = options.engine;
 
-    this.#adt = AdvancedDynamicTexture.CreateFullscreenUI('terra-fps', true, this.#scene);
+    this.#adt = createFullscreenUi('terra-fps', this.#scene);
     // Author against a fixed ideal space so control sizes are DPI-independent: without this the
     // ADT renders at the engine's device-ratio-scaled buffer and controls appear at half size or less.
     this.#adt.idealHeight = IDEAL_HEIGHT;

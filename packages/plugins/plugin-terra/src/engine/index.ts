@@ -11,3 +11,4 @@ export * from './generate-planet';
 export * from './planet-cache';
 export * from './scene-manager';
 export * from './scene-fps';
+export * from './scene-gui';

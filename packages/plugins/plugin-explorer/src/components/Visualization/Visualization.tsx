@@ -2,10 +2,10 @@
 // Copyright 2026 DXOS.org
 //
 
-import { createContext } from '@radix-ui/react-context';
-import { Slot } from '@radix-ui/react-slot';
+import { ark } from '@ark-ui/react/factory';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 
+import { createContext } from '@dxos/react-hooks';
 import { composableProps, slottable } from '@dxos/react-ui';
 import {
   type GraphLayout,
@@ -58,12 +58,11 @@ const VisualizationRoot = slottable<
   { model: SpaceGraphModel; variant: VisualizationVariantId; focus?: string; onSurfaceClick?: () => void }
 >(({ children, asChild, model, variant, focus, onSurfaceClick, ...props }, forwardedRef) => {
   const { className, ...rest } = composableProps(props, { classNames: 'dx-expand relative' });
-  const Comp = asChild ? Slot : 'div';
   return (
     <VisualizationProvider model={model} variant={getVariant(variant)} focus={focus}>
-      <Comp {...rest} className={className} onClick={onSurfaceClick} ref={forwardedRef}>
+      <ark.div asChild={asChild} {...rest} className={className} onClick={onSurfaceClick} ref={forwardedRef}>
         {children}
-      </Comp>
+      </ark.div>
     </VisualizationProvider>
   );
 });

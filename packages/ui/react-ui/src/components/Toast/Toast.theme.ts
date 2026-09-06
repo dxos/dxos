@@ -7,24 +7,14 @@ import { type ComponentFunction, type Theme } from '@dxos/ui-types';
 
 export type ToastStyleProps = {};
 
-const viewport: ComponentFunction<ToastStyleProps> = (_props, ...etc) =>
-  mx(
-    'z-40 fixed bottom-[calc(env(safe-area-inset-bottom)+1rem)]',
-    'inset-start-[calc(env(safe-area-inset-left)+1rem)] inset-end-[calc(env(safe-area-inset-right)+1rem)]',
-    'w-auto md:end-[calc(env(safe-area-inset-right)+4rem)] md:left-auto md:w-full md:max-w-sm',
-    'rounded-md flex flex-col gap-2',
-    ...etc,
-  );
+// The machine positions the region and each toast inline (`toast.css` transitions what it drives);
+// the theme sizes and paints.
+const viewport: ComponentFunction<ToastStyleProps> = (_props, ...etc) => mx(...etc);
 
 const root: ComponentFunction<ToastStyleProps> = (_props, ...etc) =>
   mx(
-    'dx-popover-surface rounded-md p-1',
+    'dx-popover-surface rounded-md p-1 w-[calc(100dvw-2rem)] md:w-96',
     surfaceShadow({ elevation: 'toast' }),
-    'radix-state-open:animate-toast-slide-in-bottom md:radix-state-open:animate-toast-slide-in-right',
-    'radix-state-closed:animate-toast-hide',
-    'radix-swipe-end:animate-toast-swipe-out',
-    'translate-x-radix-toast-swipe-move-x',
-    'radix-swipe-cancel:translate-x-0 radix-swipe-cancel:duration-200 radix-swipe-cancel:ease-[ease]',
     'dx-focus-ring',
     ...etc,
   );

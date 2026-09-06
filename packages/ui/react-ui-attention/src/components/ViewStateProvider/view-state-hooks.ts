@@ -2,10 +2,10 @@
 // Copyright 2026 DXOS.org
 //
 
-import { createContext } from '@radix-ui/react-context';
 import { useEffect, useMemo, useState } from 'react';
 
 import { invariant } from '@dxos/invariant';
+import { createContext } from '@dxos/react-hooks';
 
 import { Selection, ViewState } from '../../types';
 

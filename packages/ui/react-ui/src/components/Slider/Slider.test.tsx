@@ -6,7 +6,7 @@ import { cleanup, render, screen } from '@testing-library/react';
 import React, { type PropsWithChildren } from 'react';
 import { afterEach, describe, test } from 'vitest';
 
-import { ThemeProvider } from '../../primitives';
+import { ThemeProvider } from '../../providers';
 import { defaultTx } from '../../theme';
 import { Slider } from './Slider';
 

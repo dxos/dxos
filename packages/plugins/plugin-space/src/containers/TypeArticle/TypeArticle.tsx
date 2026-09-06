@@ -10,13 +10,12 @@ import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { Filter, Obj, Type } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { type Space } from '@dxos/react-client/echo';
-import { Panel, useTranslation } from '@dxos/react-ui';
+import { Panel, Tabs, useTranslation } from '@dxos/react-ui';
 import { Selection, useSelection, useSelectionActions, useViewStateActions } from '@dxos/react-ui-attention';
 import { Empty } from '@dxos/react-ui-list';
-import { Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
+import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 import { SearchList, useSearchListResults } from '@dxos/react-ui-search';
 import { DynamicTable, type TableRowAction } from '@dxos/react-ui-table';
-import { Tabs } from '@dxos/react-ui-tabs';
 import { mx } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
@@ -263,11 +262,7 @@ export const TypeArticle = ({ role, space, type, attendableId }: TypeArticleProp
         <Panel.Root role={role}>
           <Panel.Toolbar classNames={mx('grid', layout !== 'duplicates' && 'grid-cols-[1fr_auto]')}>
             {layout !== 'duplicates' && <SearchList.Input placeholder={t('search-placeholder.label')} />}
-            <Menu.Root {...menuActions} attendableId={attendableId} alwaysActive>
-              <Menu.Toolbar>
-                <Menu.Items />
-              </Menu.Toolbar>
-            </Menu.Root>
+            <ActionToolbar {...menuActions} attendableId={attendableId} alwaysActive />
           </Panel.Toolbar>
           <Panel.Content>
             <LayoutPanel value='masonry' empty={noResults}>

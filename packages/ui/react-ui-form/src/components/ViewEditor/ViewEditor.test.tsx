@@ -105,7 +105,7 @@ describe('ViewEditor', () => {
     const formatCombo = screen.getByRole('combobox');
     fireEvent.click(formatCombo);
 
-    const firstOption = screen.getAllByRole('option')[0];
+    const firstOption = (await screen.findAllByRole('option'))[0];
     fireEvent.click(firstOption);
 
     // Save the changes.

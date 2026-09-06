@@ -11,9 +11,15 @@ import * as Plugin from '@dxos/app-framework/Plugin';
 import * as AppGraph from '@dxos/app-graph/AppGraph';
 import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as AppSpace from '@dxos/app-toolkit/AppSpace';
 import * as Operation from '@dxos/compute/Operation';
 import { Obj } from '@dxos/echo';
+import { LogLevel } from '@dxos/log';
 import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabilities';
+import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
+import { SpaceState } from '@dxos/protocols/proto/dxos/client/services';
+// UI-free subpath: the root barrel reaches the panel components.
+import { logBuffer } from '@dxos/react-ui-debug/log-buffer';
 
 import { DebugOperation } from '#types';
 
@@ -92,9 +98,37 @@ const collectSurfaces = () => {
   }));
 };
 
+/** The app's own report of what an operation just did — read the way a user reads it, off the DOM. */
+const collectToasts = () => {
+  if (typeof document === 'undefined') {
+    return [];
+  }
+  return Array.from(document.querySelectorAll('[data-scope="toast"][data-part="root"]')).map((el) => ({
+    title: el.querySelector('[data-part="title"]')?.textContent ?? undefined,
+    description: el.querySelector('[data-part="description"]')?.textContent ?? undefined,
+    actions: Array.from(el.querySelectorAll('button')).map(
+      (button) => button.getAttribute('aria-label') ?? button.textContent ?? '',
+    ),
+  }));
+};
+
+/** Recent error-level entries from the process-wide log buffer, which the plugin starts recording at startup. */
+const collectErrors = (since: number) =>
+  logBuffer
+    .getRows()
+    .filter(({ entry }) => entry.level >= LogLevel.ERROR && entry.timestamp >= since)
+    .map(({ entry }) => ({
+      timestamp: entry.timestamp,
+      message: entry.message,
+      error: entry.computedError,
+      file: entry.meta?.F,
+    }));
+
+const DEFAULT_ERROR_WINDOW_MS = 60_000;
+
 const handler: Operation.WithHandler<typeof DebugOperation.Snapshot> = DebugOperation.Snapshot.pipe(
   Operation.withHandler(
-    Effect.fnUntraced(function* () {
+    Effect.fnUntraced(function* ({ since }) {
       const manager = yield* Plugin.Service;
       const registry = yield* Capability.get(Capabilities.AtomRegistry);
       // Each source is optional: the snapshot degrades per-section rather than failing when a
@@ -103,6 +137,7 @@ const handler: Operation.WithHandler<typeof DebugOperation.Snapshot> = DebugOper
       const graphBuilder = yield* Capability.getOption(AppCapabilities.AppGraph);
       const translator = yield* Capability.getOption(AppCapabilities.Translator);
       const attention = yield* Capability.getOption(AttentionCapabilities.Attention);
+      const client = yield* Capability.getOption(ClientCapabilities.Client);
 
       const translate = makeTranslate(Option.getOrUndefined(translator));
       const layout = Option.getOrUndefined(Option.map(layoutAtom, (atom) => registry.get(atom)));
@@ -117,6 +152,19 @@ const handler: Operation.WithHandler<typeof DebugOperation.Snapshot> = DebugOper
           subject: node ? summarizeSubject(node.data) : undefined,
           actions: graph ? collectActions(graph, translate, id) : [],
         };
+      });
+
+      const spaces = Option.match(client, {
+        onNone: () => [],
+        onSome: (client) => {
+          const defaultSpace = AppSpace.getDefaultSpace(client);
+          return client.spaces.get().map((space) => ({
+            id: space.id,
+            name: space.state.get() === SpaceState.SPACE_READY ? space.properties.name : undefined,
+            state: SpaceState[space.state.get()],
+            default: space === defaultSpace ? true : undefined,
+          }));
+        },
       });
 
       const activeModules = new Set(manager.getActive());
@@ -136,6 +184,9 @@ const handler: Operation.WithHandler<typeof DebugOperation.Snapshot> = DebugOper
         attention: Option.getOrUndefined(attention)?.getCurrent().slice() ?? [],
         planks,
         surfaces: collectSurfaces(),
+        spaces,
+        toasts: collectToasts(),
+        errors: collectErrors(since ?? Date.now() - DEFAULT_ERROR_WINDOW_MS),
         plugins: {
           installed: plugins.length,
           enabled: manager.getEnabled().length,

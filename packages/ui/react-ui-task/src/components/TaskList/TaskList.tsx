@@ -2,7 +2,6 @@
 // Copyright 2026 DXOS.org
 //
 
-import { createContext } from '@radix-ui/react-context';
 import React, {
   type KeyboardEvent,
   type MouseEvent,
@@ -26,13 +25,14 @@ import {
   Toolbar,
   composable,
   composableProps,
+  createContext,
   toLocalizedString,
   useTranslation,
 } from '@dxos/react-ui';
 import { Listbox, useListDisclosure } from '@dxos/react-ui-list';
 import { MarkdownEditable, type MarkdownEditableController } from '@dxos/react-ui-markdown';
 import {
-  Menu,
+  ActionMenu,
   type MenuAction,
   type MenuItem,
   createMenuAction,
@@ -53,7 +53,7 @@ import { type TaskNode, buildTaskForest, flattenVisibleTasks } from './tree-mode
 const shortDid = (did: string): string => `${did.slice(0, 12)}…`;
 
 //
-// Context — plain Radix context (un-scoped); nesting task lists has no meaning today.
+// Context — a plain `createContext` context from `@dxos/react-hooks` (un-scoped); nesting task lists has no meaning today.
 //
 
 const TASK_LIST_NAME = 'TaskList.Root';
@@ -508,9 +508,24 @@ const TaskEstimateControl = ({ task }: { task: Task.Task }) => {
   }
 
   return (
-    <Menu.Root>
-      <Menu.Trigger asChild>
-        <IconBlock>
+    <>
+      {/* Sourced from the schema's own option table, so the picker offers exactly what the field
+          accepts and carries the same hue the form's select paints it with. Clearing is offered
+          first; the table has no `none` row because the field is simply absent when unset. */}
+      <IconBlock>
+        {/* The button is the trigger, not the block: the button stops the click so the row is not selected
+            too, and a trigger above it would never receive it. The block still gives every control in
+            the row one rail-item square. */}
+        <ActionMenu
+          actions={Task.EstimateOptions.map(({ id, title }) =>
+            createMenuAction(
+              `estimate-${id}`,
+              // `none` is not an `Estimate`: an unset estimate is the absent property.
+              () => onTaskUpdate(task, { estimate: id === 'none' ? null : id }),
+              { label: title, classNames: estimateTextStyle(id), checked: (estimate ?? 'none') === id },
+            ),
+          )}
+        >
           <Button
             variant='ghost'
             data-testid='taskList.item.estimate'
@@ -522,26 +537,9 @@ const TaskEstimateControl = ({ task }: { task: Task.Task }) => {
           >
             {label}
           </Button>
-        </IconBlock>
-      </Menu.Trigger>
-      {/* Sourced from the schema's own option table, so the picker offers exactly what the field
-          accepts and carries the same hue the form's select paints it with. Clearing is offered
-          first; the table has no `none` row because the field is simply absent when unset. */}
-      <Menu.Content
-        items={Task.EstimateOptions.map(({ id, title }) =>
-          createMenuAction(
-            `estimate-${id}`,
-            // `none` is not an `Estimate`: an unset estimate is the absent property.
-            () => onTaskUpdate(task, { estimate: id === 'none' ? null : id }),
-            {
-              label: title,
-              classNames: estimateTextStyle(id),
-              checked: (estimate ?? 'none') === id,
-            },
-          ),
-        )}
-      />
-    </Menu.Root>
+        </ActionMenu>
+      </IconBlock>
+    </>
   );
 };
 
@@ -574,27 +572,12 @@ const TaskPriorityIcon = ({ task }: { task: Task.Task }) => {
   }
 
   return (
-    <Menu.Root>
-      <Menu.Trigger asChild>
-        <IconBlock>
-          <IconButton
-            variant='ghost'
-            icon={icon}
-            iconOnly
-            label={t('task-priority.label')}
-            data-testid='taskList.item.priority'
-            // The hue goes on the icon, not the button: the row dims icons through `--icons-color`,
-            // which the `Icon` root reads, so a colour set on the button is overridden at rest.
-            iconClassNames={tint}
-            // The row is the selection target; opening the menu must not also select it.
-            onClick={(event) => event.stopPropagation()}
-          />
-        </IconBlock>
-      </Menu.Trigger>
-      {/* Sourced from the schema's own option table, so the picker offers exactly what the field
-          accepts and carries the same hue the form's select paints it with. */}
-      <Menu.Content
-        items={Task.PriorityOptions.map(({ id, icon: optionIcon }) =>
+    <IconBlock>
+      {/* The button is the trigger, not the block: the button stops the click so the row is not selected
+            too, and a trigger above it would never receive it. The block still gives every control in
+            the row one rail-item square. */}
+      <ActionMenu
+        actions={Task.PriorityOptions.map(({ id, icon: optionIcon }) =>
           createMenuAction(`priority-${id}`, () => onTaskUpdate(task, { priority: id }), {
             label: t(`priority-${id}.label`),
             icon: optionIcon,
@@ -602,8 +585,21 @@ const TaskPriorityIcon = ({ task }: { task: Task.Task }) => {
             checked: priority === id,
           }),
         )}
-      />
-    </Menu.Root>
+      >
+        <IconButton
+          variant='ghost'
+          icon={icon}
+          iconOnly
+          label={t('task-priority.label')}
+          data-testid='taskList.item.priority'
+          // The hue goes on the icon, not the button: the row dims icons through `--icons-color`,
+          // which the `Icon` root reads, so a colour set on the button is overridden at rest.
+          iconClassNames={tint}
+          // The row is the selection target; opening the menu must not also select it.
+          onClick={(event) => event.stopPropagation()}
+        />
+      </ActionMenu>
+    </IconBlock>
   );
 };
 
@@ -684,22 +680,22 @@ const TaskListItemActions = ({ task }: { task: Task.Task }) => {
   }
 
   return (
-    <Menu.Root>
-      <Menu.Trigger asChild>
-        <IconBlock>
-          <IconButton
-            variant='ghost'
-            iconOnly
-            icon='ph--dots-three-vertical--regular'
-            label={t('task-actions.label')}
-            data-testid='taskList.item.actions'
-            classNames={ROW_ACTION_CLASSNAMES}
-            onClick={(event) => event.stopPropagation()}
-          />
-        </IconBlock>
-      </Menu.Trigger>
-      <Menu.Content items={actions} />
-    </Menu.Root>
+    <IconBlock>
+      {/* The button is the trigger, not the block: the button stops the click so the row is not selected
+            too, and a trigger above it would never receive it. The block still gives every control in
+            the row one rail-item square. */}
+      <ActionMenu actions={actions}>
+        <IconButton
+          variant='ghost'
+          iconOnly
+          icon='ph--dots-three-vertical--regular'
+          label={t('task-actions.label')}
+          data-testid='taskList.item.actions'
+          classNames={ROW_ACTION_CLASSNAMES}
+          onClick={(event) => event.stopPropagation()}
+        />
+      </ActionMenu>
+    </IconBlock>
   );
 };
 

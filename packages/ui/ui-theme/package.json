@@ -55,8 +55,7 @@
     "tailwind-merge": "catalog:",
     "tailwind-scrollbar": "catalog:",
     "tailwind-variants": "catalog:",
-    "tailwindcss": "catalog:",
-    "tailwindcss-radix": "catalog:"
+    "tailwindcss": "catalog:"
   },
   "devDependencies": {
     "@storybook/react-vite": "catalog:",

@@ -4,7 +4,6 @@
 
 import * as Option from 'effect/Option';
 import React, { type Dispatch, type SetStateAction, useMemo, useState } from 'react';
-import { QR } from 'react-qr-rounded';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import * as AppAnnotation from '@dxos/app-toolkit/AppAnnotation';
@@ -21,7 +20,7 @@ import {
   Invitation_Type,
   InvitationEncoder,
 } from '@dxos/react-client/invitations';
-import { Button, Clipboard, Icon, useId, useTranslation } from '@dxos/react-ui';
+import { Button, Clipboard, Icon, QrCode, useId, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 import {
   type ActionMenuItem,
@@ -224,16 +223,7 @@ const InvitationQR = ({ id, url, onCancel }: { id: string; url: string; onCancel
       <p className='text-description'>{t('qr-code.description', { ns: meta.profile.key })}</p>
       <div role='group' className='grid grid-cols-[1fr_min-content] my-2 gap-2'>
         <div className='w-full aspect-square relative text-description'>
-          <QR
-            rounding={100}
-            backgroundColor='transparent'
-            color='currentColor'
-            aria-labelledby={qrLabel}
-            errorCorrectionLevel='Q'
-            cutout={true}
-          >
-            {url ?? 'never'}
-          </QR>
+          <QrCode aria-labelledby={qrLabel} errorCorrection='Q' value={url ?? 'never'} />
           <Centered>
             <Emoji text={emoji} />
           </Centered>
