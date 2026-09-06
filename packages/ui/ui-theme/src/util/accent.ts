@@ -2,22 +2,12 @@
 // Copyright 2026 DXOS.org
 //
 
-/** Tailwind hues the accent can take; the roles derive every accent token from one hue. */
-export const ACCENT_HUES = [
-  'blue',
-  'indigo',
-  'violet',
-  'purple',
-  'pink',
-  'red',
-  'orange',
-  'amber',
-  'green',
-  'teal',
-  'cyan',
-] as const;
+import { type ChromaticPalette, hues } from '@dxos/ui-types';
 
-export type AccentHue = (typeof ACCENT_HUES)[number];
+/** The hues the accent can take: the theme's chromatic palette, each with a full Tailwind scale. */
+export const ACCENT_HUES: readonly ChromaticPalette[] = hues;
+
+export type AccentHue = ChromaticPalette;
 
 /** The accent role tokens, derived from one hue the way `roles.css` derives them from blue. */
 export const accentTokens = (hue: AccentHue): Record<string, string> => ({

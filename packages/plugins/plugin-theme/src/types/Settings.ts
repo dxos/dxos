@@ -8,6 +8,7 @@ import * as Schema from 'effect/Schema';
 import * as Struct from 'effect/Struct';
 
 import { ACCENT_HUES } from '@dxos/ui-theme';
+import { HueAnnotationId } from '@dxos/ui-types';
 
 export const Appearance = Schema.Union([
   Schema.Literal('light').annotate({ title: 'Light' }),
@@ -36,6 +37,8 @@ export const Settings = Schema.Struct({
     Accent.annotate({
       title: 'Accent color',
       description: 'The hue of buttons, links and selection.',
+      // Rendered with the hue picker, as a space's colour is.
+      [HueAnnotationId]: true,
     }),
   ),
 }).mapFields(Struct.map(Schema.mutableKey));

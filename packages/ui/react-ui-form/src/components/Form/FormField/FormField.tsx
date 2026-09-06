@@ -15,7 +15,7 @@ import { IconButton, IconButtonProps, useTranslation } from '@dxos/react-ui';
 import { translationKey } from '#translations';
 import { type FieldContext, type FormFieldRenderer, type FormFieldRendererProps } from '#types';
 
-import { AutofillAnnotation, OptionsLookupAnnotation } from '../../../annotations';
+import { AutofillAnnotation, HueAnnotation, OptionsLookupAnnotation } from '../../../annotations';
 import { useFormFieldState } from '../../../hooks';
 import { getRefProps } from '../../../util';
 import { FormFieldSet } from '../FormFieldSet';
@@ -27,6 +27,7 @@ import {
   ComboboxField,
   DateField,
   GeoPointField,
+  HueField,
   InlineRefField,
   MarkdownField,
   NumberField,
@@ -185,6 +186,10 @@ export const FormField = (props: FormFieldProps) => {
   const autofill = Option.getOrUndefined(AutofillAnnotation.getFromAst(type));
   if (autofill) {
     return <AutofillField {...fieldProps} autofill={autofill} />;
+  }
+
+  if (Option.getOrUndefined(HueAnnotation.getFromAst(type))) {
+    return <HueField {...fieldProps} />;
   }
 
   //

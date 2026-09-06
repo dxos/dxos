@@ -5,6 +5,7 @@
 import type * as Effect from 'effect/Effect';
 
 import { createAnnotationHelper } from '@dxos/echo/internal';
+import { HueAnnotationId } from '@dxos/ui-types';
 
 /** One selectable option produced by an {@link OptionsLookup}. */
 export type OptionsLookupEntry = { value: string; label?: string; secondaryLabel?: string; icon?: string };
@@ -61,3 +62,6 @@ export const autofill =
     deps: Deps,
     derive: (values: Pick<Values, Deps[number]>) => Effect.Effect<string | undefined, unknown>,
   ): Autofill => ({ deps, derive });
+
+/** Marks a field whose value is one of the theme's hues; the form renders the hue picker for it. */
+export const HueAnnotation = createAnnotationHelper<boolean>(HueAnnotationId);
