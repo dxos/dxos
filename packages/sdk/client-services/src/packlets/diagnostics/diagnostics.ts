@@ -10,11 +10,11 @@ import { createDidFromIdentityKey, credentialTypeFilter } from '@dxos/credential
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
 import { STORAGE_VERSION } from '@dxos/protocols';
+import { type Platform } from '@dxos/protocols/buf/dxos/client/services_pb';
 import {
   type Device,
   type Identity,
   type NetworkStatus,
-  type Platform,
   SpaceMember,
   type Space as SpaceProto,
 } from '@dxos/protocols/proto/dxos/client/services';
