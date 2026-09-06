@@ -75,9 +75,8 @@ const Row = ({
   <Input.Root validationValence={validationValence}>
     <div className='flex flex-col gap-1'>
       {(inline && (
-        <div className='flex items-center gap-1'>
+        <div className='flex items-center gap-2'>
           {children}
-          ===
           <Input.Label srOnly={labelVisuallyHidden} classNames='shrink-0'>
             {label}
           </Input.Label>
@@ -93,7 +92,7 @@ const Row = ({
 
       <Input.DescriptionAndValidation
         srOnly={descriptionVisuallyHidden}
-        classNames={mx('flex grow shrink-0 whitespace-nowrap', validationMessage && 'justify-end')}
+        classNames={mx('flex grow shrink-0 text-description whitespace-nowrap', validationMessage && 'justify-end')}
       >
         {validationMessage ? (
           <Input.Validation classNames='block'>{validationMessage}</Input.Validation>
