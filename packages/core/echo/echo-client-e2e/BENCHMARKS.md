@@ -338,3 +338,40 @@ Reads against plain (7 ns): unpersisted 14×, automerge 16×, feed 15× — from
 and construction moved only through Stage A's `isValidProxyTarget` change and sit inside the ~20%
 between-run band for the µs rows; the automerge write is a per-set Automerge commit (F2) and was never
 in scope here.
+
+---
+
+# Query materialization — `src/query-materialization.bench.ts`
+
+What it costs to bring a database's objects back into memory after a peer reload: reload + open, then a
+query for every object of one type, then one field read per result. Per-phase means come from the timings
+the bench records inside its cold rows; the tinybench rows are inclusive of the reload. Run with:
+
+```bash
+DX_RUN_MANUAL_TESTS=1 pnpm exec vitest bench --run query-materialization
+```
+
+## Finding on the first run (`aad3a673` sources, 2026-09-05): 1,000 wide objects cannot be cold-queried
+
+With 1,000 objects of 250 short-string fields, a query straight after a reload never returned a full
+result set. The index query source gives each object's document 2 s to load and drops it otherwise
+(`index-query-source-provider.ts`, `INDEX_OBJECT_LOAD_TIMEOUT`); the run logged 5,000 such drops, the one
+sample that did complete took 33.5 s to reach a full set through re-runs, and the query itself then hit
+its 20 s ceiling (`Timeout [20,000ms]: index query`) — surfaced as an **unhandled rejection**, not a
+rejected `run()`. Reload + open alone for that database averaged 2.2 s (min 0.43 s). The wide block
+therefore runs with 200 objects; the narrow block keeps 1,000. Recorded here because it is a product
+limit the bench found, not a bench artifact: 1,000 wide objects load at ~33 ms per object, and nothing in
+the query path waits for that.
+
+The narrow block also produced short results in 3 of 33 post-reload queries (0 of 1,000 returned), all
+re-run to a full set; the same per-object timeout under load.
+
+**Second run, 200 wide objects, 10 cold samples per row (`aad3a673` sources).** Complete for the narrow
+block; the wide block's third cold row again hit the 20 s index-query ceiling. Two things the run showed
+that shaped the bench's final settings: cold loads **slow down over repeated reloads in one process** —
+the narrow cold query ran 2.3 s on its first samples and ~5 s by its last (16 of 33 post-reload queries
+came back short and were re-run) — and the wide cold query ranged 3.6–11.7 s for 200 objects. The bench
+now runs 100 wide objects and 5 cold samples per row. The per-object first read after a cold query,
+which is where the proxy target and its materialized record are built, was 2–3 ms for 1,000 narrow
+objects (2–3 µs each) against a 2.3–5 s document load: **materializing the object is not where a cold
+query's time goes; loading its document is.**

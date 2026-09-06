@@ -392,6 +392,32 @@ the `switch` serves is a symbol, and symbols never enter the cache. The meta roo
 Dictionary mode itself was measured and is **not** the story: an isolated micro-benchmark of the same
 three symbol lookups on a fast-mode vs a deleted-keys target differs by ~8 ns.
 
+### F5 — Read cost of the candidate shapes (micro-bench 2026-09-05)
+
+Same harness as F4 (64-object pool, rotating, 20M reads, three rounds), Node 22.22:
+
+| shape                                                                    | ns/read |
+| ------------------------------------------------------------------------ | ------: |
+| plain object                                                             |    ~7.4 |
+| **A** own non-configurable accessors over a store slot, non-extensible   |      ~9 |
+| **C** `Proxy` with every trap except `get` (engine forwards the read)    |     ~16 |
+| `Proxy` with a minimal JS `get` trap (one lookup on a per-target record) |     ~28 |
+
+Today's real `get` trap measures ~100 ns in tinybench because of what it does around the lookup; the
+28 ns row is its floor. Shape C removes the JS call entirely: with no `get` on the handler the engine
+performs `[[Get]]` on the target itself, so the target must carry the materialized data as own data
+properties, and `set`/`deleteProperty`/`defineProperty`/`has`/`ownKeys` stay trapped. That satisfies
+every blueprint assertion unchanged (`writable: true` on a data property, `in` false until set,
+`defineProperty` and `delete` intercepted) and applies to open records as well. The trap is re-armed per
+object when its core generation moves and removed again once the record is re-materialized.
+
+Shape A is the strict plain object. Its accessors must be `configurable: false` for `defineProperty` and
+`delete` to throw rather than silently break the field (the user's condition), which forces every schema
+field to exist from creation: `in` is true for unset fields, `Object.keys`/spread list all fifteen
+`Example` fields, and chai `deep.eq` — which compares enumerable key counts — fails against any literal
+that omits an optional field. Six blueprint relaxations plus an unbounded number elsewhere, for ~7 ns
+over shape C.
+
 ### F3 — Blast radius (report 2026-09-05)
 
 **63 introspection call sites in 20 files** (`isProxy|getProxyTarget|getProxyHandler|getProxySlot|
