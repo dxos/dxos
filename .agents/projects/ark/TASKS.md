@@ -844,9 +844,13 @@ dist/types/src: ENOTEMPTY` — a concurrent writer. A Cursor TypeScript native-p
           `MenuActions` through the source hooks' options; contributions attach to the
           `MenuActions` object (`useMenuContribution(menu, props)`); `Menu.*`, `useMenu`,
           `useMenuScoped` and the context's `attendableId` / `alwaysActive` go.
-    - [ ] Sweep: 49 `Menu.Toolbar` sites → `ActionToolbar` (2 prepend sites adjusted), 21
+    - [x] Sweep: 49 `Menu.Toolbar` sites → `ActionToolbar` (2 prepend sites adjusted), 21
           `Menu.Content` sites → `ActionMenu`, the card/column owners put `menu` on their own
           context for the contributors (PipelineArticle, app-toolkit `useObjectMenuItems`).
+    - [x] Finding from the sweep: the task rows' menus opened only because the article wrapped its
+          panel in `Menu.Root`, which made every row menu an Ark *child* menu of the article's (a
+          `trigger-item`, opening on hover). As top-level menus they need the click the row buttons
+          stop, so the buttons are now the triggers (`IconBlock > ActionMenu > IconButton`).
     - [ ] Follow-ups: rename `react-ui-menu` → `react-ui-actions` (own PR, 46 manifests); remove
           the `DropdownMenu` / `ContextMenu` aliases after re-pointing the ~100 part-level sites;
           a data-fed `Select` in `react-ui-list` beside `Combobox`.
