@@ -124,7 +124,10 @@ export class EdgeStress implements TestPlan<EdgeStressSpec, EdgeStressResult> {
             // after the failing one — an off-by-one that has already produced a wrong diagnosis.
             // Recording the failure in the trace itself keeps later analysis of the artifact honest.
             trace({ event: 'failed', seq: real.counters.commands, command: describe(command) });
-            throw new Error(`command ${real.counters.commands} ${describe(command)} failed`, { cause: err });
+            // The cause goes into the message too: the log processor renders neither `cause` chains
+            // nor nested stacks, and the underlying message is the diagnosis.
+            const reason = err instanceof Error ? err.message : String(err);
+            throw new Error(`command ${real.counters.commands} ${describe(command)} failed: ${reason}`, { cause: err });
           }
         }
       } catch (err) {

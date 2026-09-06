@@ -84,6 +84,7 @@ generator was fixed.
 | G | `run-e-second-seed` | `partitions: false`, **linked stack** | **25** | identical failure to F — finding 6 is not version skew |
 | K | `run-e-second-seed` | linked, single-char tokens | 10 + 1 thrown | command 11: a document client 2 created one command earlier never reached client 0 in 60 s |
 | L | `run-e-second-seed` | linked, single-char tokens | **25** | final assertion, space 1, client 0 only: `differentDocuments: 1` |
+| T | `run-e-second-seed` | linked, declarative `COMMANDS` | 21 + 1 thrown | command 22: two documents client 1 created at 20–21 never reached client 2 (`missingOnLocal` ×2, `missingOnRemote: []`) |
 
 B, C and D share a seed and drew byte-identical `plan` lines across three intervening changes to
 the executor — the generator depends on the seed and nothing else. The seed fixes the sequence,
@@ -151,7 +152,9 @@ EditCounter(0,1,1) EditText(0,0,1,0)
   of *generation* (uniform over the fleet shape, so draws still collide on the same slot) rather
   than of the type; a generated value is decoded through the union, so nothing the declaration
   would not accept can be drawn. Measured identical to the previous factory-built schema: 25/25
-  executable on every seed, 14.7 / 20.8 data operations with and without partitions.
+  executable on every seed, 14.7 / 20.8 data operations with and without partitions; live, a
+  5-command run was green and the 25-command seed executed every non-partition kind
+  (`Checkpoint`, `CreateDocument`, `CreateSpace`, `DeleteDocument`, `EditCounter`, `EditText`) before finding 6 stopped it at command 22.
 - **fast-check now comes from `effect/testing`.** `effect` is already a declared dependency, so the
   undeclared direct `fast-check` import is gone; the version in use moved from 3.23.2 (resolved
   only via root hoisting) to the 4.9.0 that Effect pins.
