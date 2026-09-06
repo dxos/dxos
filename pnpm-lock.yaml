@@ -22118,9 +22118,6 @@ importers:
       '@dxos/react-focus':
         specifier: workspace:*
         version: link:../react-primitives/react-focus
-      '@dxos/react-hooks':
-        specifier: workspace:*
-        version: link:../react-primitives/react-hooks
       '@dxos/react-ui-attention':
         specifier: workspace:*
         version: link:../react-ui-attention

@@ -11,12 +11,12 @@ import { useActionRunner } from '@dxos/plugin-graph/hooks';
 import { Card, Flex, Icon, Input, Panel, ScrollArea, useTranslation } from '@dxos/react-ui';
 import { Masonry } from '@dxos/react-ui-masonry';
 import {
-  ActionToolbar,
-  graphActions,
-  isToolbarAction,
-  MenuBuilder,
   type ActionExecutor,
   type ActionGraphProps,
+  ActionToolbar,
+  MenuBuilder,
+  graphActions,
+  isToolbarAction,
   useMenuBuilder,
 } from '@dxos/react-ui-menu';
 import { mx } from '@dxos/ui-theme';

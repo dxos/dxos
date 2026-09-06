@@ -33,11 +33,11 @@ import { Listbox, useListDisclosure } from '@dxos/react-ui-list';
 import { MarkdownEditable, type MarkdownEditableController } from '@dxos/react-ui-markdown';
 import {
   ActionMenu,
+  type MenuAction,
+  type MenuItem,
   createMenuAction,
   executeMenuAction,
   fallbackIcon,
-  type MenuAction,
-  type MenuItem,
 } from '@dxos/react-ui-menu';
 import { type Actor, Task } from '@dxos/types';
 import { hoverableControlItem, mx } from '@dxos/ui-theme';
@@ -512,17 +512,20 @@ const TaskEstimateControl = ({ task }: { task: Task.Task }) => {
       {/* Sourced from the schema's own option table, so the picker offers exactly what the field
           accepts and carries the same hue the form's select paints it with. Clearing is offered
           first; the table has no `none` row because the field is simply absent when unset. */}
-      <ActionMenu
-        actions={Task.EstimateOptions.map(({ id, title }) =>
-          createMenuAction(
-            `estimate-${id}`,
-            // `none` is not an `Estimate`: an unset estimate is the absent property.
-            () => onTaskUpdate(task, { estimate: id === 'none' ? null : id }),
-            { label: title, classNames: estimateTextStyle(id), checked: (estimate ?? 'none') === id },
-          ),
-        )}
-      >
-        <IconBlock>
+      <IconBlock>
+        {/* The button is the trigger, not the block: the button stops the click so the row is not selected
+            too, and a trigger above it would never receive it. The block still gives every control in
+            the row one rail-item square. */}
+        <ActionMenu
+          actions={Task.EstimateOptions.map(({ id, title }) =>
+            createMenuAction(
+              `estimate-${id}`,
+              // `none` is not an `Estimate`: an unset estimate is the absent property.
+              () => onTaskUpdate(task, { estimate: id === 'none' ? null : id }),
+              { label: title, classNames: estimateTextStyle(id), checked: (estimate ?? 'none') === id },
+            ),
+          )}
+        >
           <Button
             variant='ghost'
             data-testid='taskList.item.estimate'
@@ -534,8 +537,8 @@ const TaskEstimateControl = ({ task }: { task: Task.Task }) => {
           >
             {label}
           </Button>
-        </IconBlock>
-      </ActionMenu>
+        </ActionMenu>
+      </IconBlock>
     </>
   );
 };
@@ -569,17 +572,20 @@ const TaskPriorityIcon = ({ task }: { task: Task.Task }) => {
   }
 
   return (
-    <ActionMenu
-      actions={Task.PriorityOptions.map(({ id, icon: optionIcon }) =>
-        createMenuAction(`priority-${id}`, () => onTaskUpdate(task, { priority: id }), {
-          label: t(`priority-${id}.label`),
-          icon: optionIcon,
-          iconClassNames: priorityTextStyle(id),
-          checked: priority === id,
-        }),
-      )}
-    >
-      <IconBlock>
+    <IconBlock>
+      {/* The button is the trigger, not the block: the button stops the click so the row is not selected
+            too, and a trigger above it would never receive it. The block still gives every control in
+            the row one rail-item square. */}
+      <ActionMenu
+        actions={Task.PriorityOptions.map(({ id, icon: optionIcon }) =>
+          createMenuAction(`priority-${id}`, () => onTaskUpdate(task, { priority: id }), {
+            label: t(`priority-${id}.label`),
+            icon: optionIcon,
+            iconClassNames: priorityTextStyle(id),
+            checked: priority === id,
+          }),
+        )}
+      >
         <IconButton
           variant='ghost'
           icon={icon}
@@ -592,8 +598,8 @@ const TaskPriorityIcon = ({ task }: { task: Task.Task }) => {
           // The row is the selection target; opening the menu must not also select it.
           onClick={(event) => event.stopPropagation()}
         />
-      </IconBlock>
-    </ActionMenu>
+      </ActionMenu>
+    </IconBlock>
   );
 };
 
@@ -674,8 +680,11 @@ const TaskListItemActions = ({ task }: { task: Task.Task }) => {
   }
 
   return (
-    <ActionMenu actions={actions}>
-      <IconBlock>
+    <IconBlock>
+      {/* The button is the trigger, not the block: the button stops the click so the row is not selected
+            too, and a trigger above it would never receive it. The block still gives every control in
+            the row one rail-item square. */}
+      <ActionMenu actions={actions}>
         <IconButton
           variant='ghost'
           iconOnly
@@ -685,8 +694,8 @@ const TaskListItemActions = ({ task }: { task: Task.Task }) => {
           classNames={ROW_ACTION_CLASSNAMES}
           onClick={(event) => event.stopPropagation()}
         />
-      </IconBlock>
-    </ActionMenu>
+      </ActionMenu>
+    </IconBlock>
   );
 };
 

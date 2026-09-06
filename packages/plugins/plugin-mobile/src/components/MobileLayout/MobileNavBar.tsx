@@ -6,7 +6,7 @@ import type * as Atom from 'effect/unstable/reactivity/Atom';
 import React from 'react';
 
 import { composable, composableProps } from '@dxos/react-ui';
-import { ActionToolbar, type ActionExecutor, type ActionGraphProps, useMenuActions } from '@dxos/react-ui-menu';
+import { type ActionExecutor, type ActionGraphProps, ActionToolbar, useMenuActions } from '@dxos/react-ui-menu';
 
 const NAVBAR_NAME = 'MobileLayout.NavBar';
 

@@ -17,7 +17,7 @@ import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { Button, Flex, Icon, IconButton, Input, Panel, Select, useTranslation } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
 import { Form } from '@dxos/react-ui-form';
-import { ActionToolbar, graphActions, isToolbarAction, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
+import { ActionToolbar, MenuBuilder, graphActions, isToolbarAction, useMenuBuilder } from '@dxos/react-ui-menu';
 
 import { VariantGallery } from '#components';
 import { meta } from '#meta';

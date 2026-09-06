@@ -10,10 +10,10 @@ import React, { useCallback, useContext, useMemo } from 'react';
 import { ElevationProvider } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
 import {
-  ActionToolbar,
-  MenuBuilder,
-  type ActionToolbarProps,
   type ActionGraphProps,
+  ActionToolbar,
+  type ActionToolbarProps,
+  MenuBuilder,
   useMenuActions,
 } from '@dxos/react-ui-menu';
 import { HuePicker } from '@dxos/react-ui-pickers';

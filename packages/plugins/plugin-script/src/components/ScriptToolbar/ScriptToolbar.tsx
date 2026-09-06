@@ -10,10 +10,10 @@ import type * as Script from '@dxos/compute/Script';
 import { ElevationProvider, useTranslation } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
 import {
-  ActionToolbar,
-  createGapSeparator,
-  type ActionToolbarProps,
   type ActionGraphProps,
+  ActionToolbar,
+  type ActionToolbarProps,
+  createGapSeparator,
   useMenuActions,
 } from '@dxos/react-ui-menu';
 

@@ -645,6 +645,7 @@ export type {
   MenuArrowProps,
   MenuCheckboxItemProps,
   MenuContentProps,
+  ContextMenuTriggerProps as MenuContextTriggerProps,
   MenuGroupLabelProps,
   MenuGroupProps,
   MenuItemIndicatorProps,
@@ -659,7 +660,6 @@ export type {
   MenuTriggerProps,
   MenuViewportProps,
   MenuVirtualTriggerProps,
-  ContextMenuTriggerProps as MenuContextTriggerProps,
 };
 
 export type {

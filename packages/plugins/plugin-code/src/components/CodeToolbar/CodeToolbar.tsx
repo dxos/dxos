@@ -8,10 +8,10 @@ import React, { useMemo } from 'react';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { ElevationProvider } from '@dxos/react-ui';
 import {
-  ActionToolbar,
-  createMenuAction,
   type ActionGraphProps,
+  ActionToolbar,
   type ActionToolbarProps,
+  createMenuAction,
   useMenuActions,
 } from '@dxos/react-ui-menu';
 

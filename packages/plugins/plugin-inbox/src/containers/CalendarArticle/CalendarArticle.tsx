@@ -17,10 +17,10 @@ import { useArticleKeyboardNavigation, useSelection } from '@dxos/react-ui-atten
 import { type CalendarController, type DateMarker, Calendar as NaturalCalendar } from '@dxos/react-ui-calendar';
 import {
   ActionToolbar,
-  graphActions,
-  isToolbarAction,
   MenuBuilder,
   TOOLBAR_DISPOSITION,
+  graphActions,
+  isToolbarAction,
   useMenuBuilder,
 } from '@dxos/react-ui-menu';
 import { type MosaicScrollController } from '@dxos/react-ui-mosaic';

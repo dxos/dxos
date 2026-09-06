@@ -8,15 +8,15 @@ import React, { useContext, useEffect, useMemo } from 'react';
 
 import { composable, composableProps } from '@dxos/react-ui';
 import {
-  ActionToolbar,
-  createGapSeparator,
-  createMenuAction,
-  createMenuItemGroup,
-  type ActionToolbarProps,
   type ActionGraphEdges,
   type ActionGraphNodes,
   type ActionGraphProps,
+  ActionToolbar,
+  type ActionToolbarProps,
   type MenuAction,
+  createGapSeparator,
+  createMenuAction,
+  createMenuItemGroup,
   useMenuActions,
 } from '@dxos/react-ui-menu';
 

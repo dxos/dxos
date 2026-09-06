@@ -17,12 +17,12 @@ import { useObject } from '@dxos/echo-react';
 import { useActionRunner } from '@dxos/plugin-graph/hooks';
 import { Panel } from '@dxos/react-ui';
 import {
-  ActionToolbar,
-  graphActions,
-  isToolbarAction,
-  MenuBuilder,
   type ActionExecutor,
   type ActionGraphProps,
+  ActionToolbar,
+  MenuBuilder,
+  graphActions,
+  isToolbarAction,
   useMenuBuilder,
 } from '@dxos/react-ui-menu';
 

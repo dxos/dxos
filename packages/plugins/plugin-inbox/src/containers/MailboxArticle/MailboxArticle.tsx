@@ -31,10 +31,10 @@ import { ProgressMeter } from '@dxos/react-ui-components';
 import { type EditorController } from '@dxos/react-ui-editor';
 import {
   ActionToolbar,
-  graphActions,
-  isToolbarAction,
   MenuBuilder,
   TOOLBAR_DISPOSITION,
+  graphActions,
+  isToolbarAction,
   useMenuBuilder,
 } from '@dxos/react-ui-menu';
 import { TagIndex } from '@dxos/schema';

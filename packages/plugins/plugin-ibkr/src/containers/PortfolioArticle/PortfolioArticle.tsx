@@ -16,7 +16,7 @@ import { useAtomState } from '@dxos/react-hooks';
 import { Panel, ScrollArea, useTranslation } from '@dxos/react-ui';
 import { Attention, useArticleKeyboardNavigation, useSelection } from '@dxos/react-ui-attention';
 import { Listbox } from '@dxos/react-ui-list';
-import { ActionToolbar, graphActions, isToolbarAction, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
+import { ActionToolbar, MenuBuilder, graphActions, isToolbarAction, useMenuBuilder } from '@dxos/react-ui-menu';
 
 import { Ibkr, IbkrOperation } from '#types';
 

@@ -17,7 +17,7 @@ import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { AlertDialog, Button, Panel, useTranslation } from '@dxos/react-ui';
 import { ObjectForm } from '@dxos/react-ui-form';
 import { Masonry } from '@dxos/react-ui-masonry';
-import { ActionToolbar, graphActions, isToolbarAction, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
+import { ActionToolbar, MenuBuilder, graphActions, isToolbarAction, useMenuBuilder } from '@dxos/react-ui-menu';
 
 import { PostCard } from '#components';
 import { meta } from '#meta';

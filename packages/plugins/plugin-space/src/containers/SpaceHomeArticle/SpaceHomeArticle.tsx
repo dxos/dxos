@@ -12,9 +12,9 @@ import {
   type ActionExecutor,
   type ActionGraphProps,
   ActionToolbar,
+  MenuBuilder,
   graphActions,
   isToolbarAction,
-  MenuBuilder,
   useMenuBuilder,
 } from '@dxos/react-ui-menu';
 

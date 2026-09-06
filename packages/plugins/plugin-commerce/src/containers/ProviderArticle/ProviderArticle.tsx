@@ -10,12 +10,12 @@ import { useObject } from '@dxos/echo-react';
 import { useActionRunner } from '@dxos/plugin-graph/hooks';
 import { Flex, Panel, useTranslation } from '@dxos/react-ui';
 import {
-  ActionToolbar,
-  graphActions,
-  isToolbarAction,
-  MenuBuilder,
   type ActionExecutor,
   type ActionGraphProps,
+  ActionToolbar,
+  MenuBuilder,
+  graphActions,
+  isToolbarAction,
   useMenuBuilder,
 } from '@dxos/react-ui-menu';
 

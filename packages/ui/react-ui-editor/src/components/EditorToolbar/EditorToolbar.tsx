@@ -9,10 +9,10 @@ import React, { memo, useMemo } from 'react';
 import type * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import { ElevationProvider, type ThemedClassName } from '@dxos/react-ui';
 import {
-  ActionToolbar,
-  MenuBuilder,
   type ActionGraphProps,
+  ActionToolbar,
   type MenuAction,
+  MenuBuilder,
   useMenuActions,
 } from '@dxos/react-ui-menu';
 import { type EditorViewMode } from '@dxos/ui-editor/types';
