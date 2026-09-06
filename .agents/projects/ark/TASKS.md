@@ -859,6 +859,10 @@ dist/types/src: ENOTEMPTY` — a concurrent writer. A Cursor TypeScript native-p
       internally, `Portal` re-bridges context across the DOM move, and `Viewport` is the scroll area
       the `Arrow` must stay outside of; `Select` and `Menu` should expose the same surface. Decide
       per floating component whether a Radix-era part stays, folds, or gets Ark's name.
+- [ ] **Review each `react-ui` component's theme against Ark's anatomy** (tracked 2026-09-05, e.g.
+      Tabs): the port kept the Radix-era slot names and selectors where they mapped one-to-one, so
+      each `*.theme.ts` should be checked for parts Ark adds or renames (`indicator`, `positioner`,
+      `data-selected` vs `data-state`) and for styles that no longer attach to anything.
 - [ ] **Phase 5 — decisions.** RAC (keep for the date/time cluster vs consolidate onto Ark; default
       keep); Toolbar (no Ark toolbar — focus group from `@dxos/react-focus` + `toggle-group`); Focus
       (keep as the seam).
