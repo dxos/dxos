@@ -4,7 +4,15 @@
 
 import { useFieldContext } from '@ark-ui/react/field';
 import { CalendarDate, CalendarDateTime, Time, parseDate, parseDateTime, parseTime } from '@internationalized/date';
-import React, { type ComponentProps, ReactNode, forwardRef, useCallback, useState } from 'react';
+import React, {
+  type ComponentProps,
+  ReactNode,
+  type RefObject,
+  forwardRef,
+  useCallback,
+  useRef,
+  useState,
+} from 'react';
 import {
   DateField,
   type DateFieldProps,
@@ -14,7 +22,7 @@ import {
   type TimeFieldProps,
 } from 'react-aria-components';
 
-import { useControllableState } from '@dxos/react-hooks';
+import { useComposedRefs, useControllableState } from '@dxos/react-hooks';
 
 import { useDensityContext, useElevationContext, useThemeContext } from '../../hooks';
 import { type ThemedClassName } from '../../util';
@@ -164,12 +172,15 @@ const useFieldChrome = ({
 };
 
 /**
- * Wraps a field with `Popover.Anchor` and a `DatePicker.Root` whose open state is driven by
- * the surrounding `Input.Root`'s registered trigger. `Input.TriggerIcon` (a sibling under
- * `Input.Root`) calls the registered handler on press; the popover anchors to this field.
+ * Wraps a field with a `DatePicker.Root` whose open state is driven by the surrounding
+ * `Input.Root`'s registered trigger. `Input.TriggerIcon` (a sibling under `Input.Root`) calls the
+ * registered handler on press; the popover positions at the field through a virtual anchor,
+ * because an `Anchor asChild` would hand its id to the react-aria field, which keeps it for the
+ * input and leaves the machine nothing to find — the popover then opens at the page's origin.
  */
 const PickerWrapper = ({
   children,
+  anchorRef,
   pickerValue,
   withTime,
   disabled = false,
@@ -177,6 +188,8 @@ const PickerWrapper = ({
   onPickerChange,
 }: {
   children: ReactNode;
+  /** The field's element, which the popover positions at. */
+  anchorRef: RefObject<HTMLDivElement | null>;
   pickerValue: Date | undefined;
   withTime: boolean;
   disabled?: boolean;
@@ -199,7 +212,8 @@ const PickerWrapper = ({
       open={open}
       onOpenChange={setOpen}
     >
-      <Popover.Anchor asChild>{children}</Popover.Anchor>
+      {children}
+      <Popover.VirtualTrigger virtualRef={anchorRef} />
       <DatePicker.Content>{calendar}</DatePicker.Content>
     </DatePicker.Root>
   );
@@ -251,10 +265,11 @@ const SegmentedDate = forwardRef<HTMLDivElement, SegmentedDateProps>(
       'shouldForceLeadingZeros': true,
     };
 
+    const anchorRef = useRef<HTMLDivElement | null>(null);
     const field = (
       <DateField {...fieldProps}>
         <DateInput
-          ref={forwardedRef}
+          ref={useComposedRefs(forwardedRef, anchorRef)}
           {...((id ?? contextId) ? { id: id ?? contextId } : {})}
           {...(descriptionId ? { 'aria-describedby': descriptionId } : {})}
           {...(validationValence === 'error' && errorMessageId
@@ -275,6 +290,7 @@ const SegmentedDate = forwardRef<HTMLDivElement, SegmentedDateProps>(
 
     return (
       <PickerWrapper
+        anchorRef={anchorRef}
         pickerValue={parsed ? new Date(parsed.year, parsed.month - 1, parsed.day) : undefined}
         onPickerChange={(next) => setStringValue(next ? formatCalendarDate(toCalendarDate(next)) : '')}
         withTime={false}
@@ -409,10 +425,11 @@ const SegmentedDateTime = forwardRef<HTMLDivElement, SegmentedDateTimeProps>(
       'shouldForceLeadingZeros': true,
     };
 
+    const anchorRef = useRef<HTMLDivElement | null>(null);
     const field = (
       <DateField {...fieldProps}>
         <DateInput
-          ref={forwardedRef}
+          ref={useComposedRefs(forwardedRef, anchorRef)}
           {...((id ?? contextId) ? { id: id ?? contextId } : {})}
           {...(descriptionId ? { 'aria-describedby': descriptionId } : {})}
           {...(validationValence === 'error' && errorMessageId
@@ -433,6 +450,7 @@ const SegmentedDateTime = forwardRef<HTMLDivElement, SegmentedDateTimeProps>(
 
     return (
       <PickerWrapper
+        anchorRef={anchorRef}
         pickerValue={
           parsed ? new Date(parsed.year, parsed.month - 1, parsed.day, parsed.hour, parsed.minute) : undefined
         }

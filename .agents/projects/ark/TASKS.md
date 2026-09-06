@@ -896,6 +896,12 @@ dist/types/src: ENOTEMPTY` — a concurrent writer. A Cursor TypeScript native-p
       `ErrorText`; `Checkbox`, `Switch`, `PinInput` and the segmented fields read the field context.
       `Root` gains `required`/`disabled`/`readOnly`/`asChild`/`classNames`. `@dxos/react-input`
       deleted (`PinInput` moved into react-ui).
+- [x] **Date pickers opened at the page origin** DONE 2026-09-05 (reported from the `Input` stories;
+      the colour-picker pattern again). `Popover.Anchor asChild` merged its id into react-aria's
+      `DateField`, which keeps an `id` for its input, so the popover machine found no anchor. The
+      pickers anchor through `Popover.VirtualTrigger` at the field element now; the two picker stories
+      assert the calendar opens under its field. Sweep of every `asChild` trigger/anchor: the other
+      children are buttons, `Icon`, `StatusBar` parts and `composable`s that spread their props.
 - [ ] **Rename `Input` → `Field`** (own PR, a codemod over ~900 sites: `Root` 443, `Label` 215,
       `TextInput` 119, `Switch` 40, `Checkbox` 25, `DescriptionAndValidation` 22, `Validation` 13,
       `TextArea` 12, `Description` 11, `PinInput` 4). Proposed names follow Ark where the part is

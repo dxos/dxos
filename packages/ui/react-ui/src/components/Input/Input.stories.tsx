@@ -4,6 +4,7 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
+import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { type MessageValence } from '@dxos/ui-types';
 
@@ -295,6 +296,29 @@ export const DateTime: Story = {
   },
 };
 
+/**
+ * The picker must open at its field. It is positioned through a virtual anchor because the
+ * react-aria field keeps an `id` handed to it for its input, so an `Anchor asChild` would leave
+ * the popover machine nothing to find and the calendar would open at the page's origin.
+ */
+const opensAtField = async ({ canvasElement }: { canvasElement: HTMLElement }) => {
+  const canvas = within(canvasElement);
+  const [field] = canvasElement.querySelectorAll<HTMLElement>('[data-density]');
+  await userEvent.click(canvas.getAllByRole('button')[0]);
+  const dialog = await waitFor(() => {
+    const element = document.querySelector<HTMLElement>('[role="dialog"]');
+    expect(element).not.toBeNull();
+    return element!;
+  });
+  await waitFor(() => {
+    const rect = dialog.getBoundingClientRect();
+    const anchor = field.getBoundingClientRect();
+    expect(Math.abs(rect.left - anchor.left)).toBeLessThan(8);
+    expect(rect.top).toBeGreaterThanOrEqual(anchor.bottom);
+    expect(rect.top - anchor.bottom).toBeLessThan(16);
+  });
+};
+
 export const DateWithPicker: Story = {
   render: () => (
     <Input.Root>
@@ -306,6 +330,7 @@ export const DateWithPicker: Story = {
       <Input.Description>Click the calendar icon to open the date picker.</Input.Description>
     </Input.Root>
   ),
+  play: opensAtField,
 };
 
 export const DateTimeWithPicker: Story = {
@@ -319,6 +344,7 @@ export const DateTimeWithPicker: Story = {
       <Input.Description>Click the calendar icon to open the date picker.</Input.Description>
     </Input.Root>
   ),
+  play: opensAtField,
 };
 
 export const Checkbox: Story = {
