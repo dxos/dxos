@@ -63,7 +63,7 @@ export type Stats = {
 export type Binding = Record<string, string>;
 
 export type ReasonOptions = {
-  /** Write the derived quads back into the default graph (default false — derivations are returned only). */
+  /** Replace the derived graph with this pass's conclusions (default false — derivations are returned only). */
   readonly materialize?: boolean;
 };
 
@@ -104,7 +104,10 @@ export interface Api {
   readonly lens: <T extends Schema>(schema: T) => Lens<T>;
   readonly dump: () => Effect.Effect<string, StoreError>;
   readonly load: (turtle: string) => Effect.Effect<number, StoreError>;
-  /** Run N3 rules (EYE) over the graph; returns the derived quads. */
+  /**
+   * Run N3 rules (EYE) over the asserted facts; returns the derived quads. `materialize` replaces
+   * the derived graph with this pass's conclusions — derivations never outlive their premises.
+   */
   readonly reason: (rules: string, options?: ReasonOptions) => Effect.Effect<Quad[], StoreError>;
 
   readonly stats: () => Effect.Effect<Stats, StoreError>;
@@ -130,6 +133,22 @@ const collect = <T>(stream: ResultStream<T>): Promise<T[]> =>
     stream.on('error', reject);
     stream.on('end', () => resolve(items));
   });
+
+/**
+ * The predicates a rule set matches on, or `undefined` if any rule leaves a predicate unbound (in
+ * which case no narrowing is sound and the whole graph has to go in).
+ */
+const predicatesOf = (rules: string): Set<string> | undefined => {
+  const parsed = new Parser({ format: 'text/n3' }).parse(rules);
+  const predicates = new Set<string>();
+  for (const quad of parsed) {
+    if (quad.predicate.termType !== 'NamedNode') {
+      return undefined;
+    }
+    predicates.add(quad.predicate.value);
+  }
+  return predicates;
+};
 
 const parseJsonLd = (document: Ontology.FileDocument, graph: Quad_Graph): Promise<Quad[]> =>
   new Promise((resolve, reject) => {
@@ -187,20 +206,37 @@ const make = (dir: string): Effect.Effect<Api, StoreError, SqlClient.SqlClient |
           : tryStore('Failed to drop graph', () => quadstore.multiDel(quads).then(() => undefined)),
       );
 
-    const dump: Api['dump'] = () =>
-      Effect.flatMap(match(), (quads) =>
-        Effect.callback<string, StoreError>((resume) => {
-          const writer = new Writer({ prefixes: Ontology.prefixes, format: 'text/n3' });
-          writer.addQuads(quads.map((quad) => DataFactory.quad(quad.subject, quad.predicate, quad.object)));
-          writer.end((error, result) =>
-            resume(
-              error
-                ? Effect.fail(new StoreError({ message: 'Failed to serialize graph', cause: error }))
-                : Effect.succeed(result),
-            ),
-          );
-        }),
-      );
+    /** Everything the indexer asserted — the file graphs, without anything rules derived. */
+    /**
+     * The premises a rule set can actually use: asserted facts, narrowed to the predicates the
+     * rules mention. Handing EYE the whole graph made the reasoning phase cost more than the rest
+     * of an indexing pass by two orders of magnitude, for facts no rule could match.
+     */
+    const facts = (rules: string): Effect.Effect<Quad[], StoreError> =>
+      Effect.gen(function* () {
+        const wanted = predicatesOf(rules);
+        const quads = yield* match();
+        return quads.filter(
+          (quad) =>
+            quad.graph.value !== Ontology.DERIVED_GRAPH.value &&
+            (wanted === undefined || wanted.has(quad.predicate.value)),
+        );
+      });
+
+    const serialize = (quads: readonly Quad[]): Effect.Effect<string, StoreError> =>
+      Effect.callback<string, StoreError>((resume) => {
+        const writer = new Writer({ prefixes: Ontology.prefixes, format: 'text/n3' });
+        writer.addQuads(quads.map((quad) => DataFactory.quad(quad.subject, quad.predicate, quad.object)));
+        writer.end((error, result) =>
+          resume(
+            error
+              ? Effect.fail(new StoreError({ message: 'Failed to serialize graph', cause: error }))
+              : Effect.succeed(result),
+          ),
+        );
+      });
+
+    const dump: Api['dump'] = () => Effect.flatMap(match(), serialize);
 
     const reconcile: Api['reconcile'] = () =>
       Effect.gen(function* () {
@@ -342,16 +378,23 @@ const make = (dir: string): Effect.Effect<Api, StoreError, SqlClient.SqlClient |
 
       reason: (rules, options) =>
         Effect.gen(function* () {
-          const data = yield* dump();
+          // Premises are the asserted facts only: feeding a previous run's conclusions back in
+          // would let a derivation keep itself alive after the fact it came from was retracted.
+          const data = yield* serialize(yield* facts(rules));
           const derived = yield* tryStore('Reasoning failed', () =>
             n3reasoner([data, rules].join('\n'), undefined, { output: 'derivations' }),
           );
-          const quads = yield* Effect.try({
+          const parsed = yield* Effect.try({
             try: () => new Parser({ format: 'text/n3' }).parse(typeof derived === 'string' ? derived : ''),
             catch: fail('Failed to parse derivations'),
           });
+          const quads = parsed.map((quad) =>
+            DataFactory.quad(quad.subject, quad.predicate, quad.object, Ontology.DERIVED_GRAPH),
+          );
           if (options?.materialize) {
-            yield* putQuads(quads);
+            // The whole derived graph is replaced in one batch, so conclusions are either the ones
+            // this pass entailed or none at all — never a mix of two generations.
+            yield* patchGraph(yield* match(undefined, undefined, undefined, Ontology.DERIVED_GRAPH), quads);
           }
           return quads;
         }),

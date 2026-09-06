@@ -24,8 +24,8 @@ import * as Store from './Store.ts';
  * `<git root>/node_modules/.code-index` for the repository containing the working directory.
  */
 
-/** Bundled N3 rule set (transitive `deus:dependsOn`). */
-export const DEFAULT_RULES = fileURLToPath(new URL('../rules/imports.n3', import.meta.url));
+/** Bundled N3 rule set; read its header before adding rules of your own. */
+export const DEFAULT_RULES = fileURLToPath(new URL('../rules/example.n3', import.meta.url));
 
 const rootFlag = Flag.string('root').pipe(
   Flag.withDescription('Repository root to index (default: the git root of the working directory).'),
@@ -49,6 +49,8 @@ const storeLayer = (root: string, dir: Option.Option<string>) =>
 const emit = (json: boolean, value: unknown, text: () => string): Effect.Effect<void> =>
   Console.log(json ? JSON.stringify(value, null, 2) : text());
 
+const seconds = (ms: number): string => (ms < 1000 ? `${Math.round(ms)}ms` : `${(ms / 1000).toFixed(1)}s`);
+
 const index = Command.make(
   'index',
   {
@@ -57,21 +59,37 @@ const index = Command.make(
     json: jsonFlag,
     force: Flag.boolean('force').pipe(Flag.withDescription('Reindex every file, ignoring recorded mtimes.')),
     workers: Flag.integer('workers').pipe(Flag.withDescription('Parsing workers.'), Flag.optional),
+    rules: Flag.string('rules').pipe(
+      Flag.withDescription('N3 rules recomputed at the end of the pass (default: bundled rules/example.n3).'),
+      Flag.optional,
+    ),
+    noReason: Flag.boolean('no-reason').pipe(Flag.withDescription('Skip the reasoning phase.')),
   },
-  ({ root, store, json, force, workers }) =>
+  ({ root, store, json, force, workers, rules, noReason }) =>
     Effect.gen(function* () {
       const repo = yield* resolveRoot(root);
+      const rulesPath = resolve(Option.getOrElse(rules, () => DEFAULT_RULES));
+      const source = noReason
+        ? undefined
+        : yield* Effect.tryPromise({
+            try: () => readFile(rulesPath, 'utf8'),
+            catch: (cause) => new Store.StoreError({ message: `Cannot read rules file: ${rulesPath}`, cause }),
+          });
       const result = yield* Indexer.run({
         root: repo,
         force,
+        rules: source,
         workers: Option.getOrUndefined(workers),
       }).pipe(Effect.provide(storeLayer(repo, store)));
-      yield* emit(
-        json,
-        result,
-        () =>
+      const { timings } = result;
+      yield* emit(json, result, () =>
+        [
           `${result.root}: ${result.indexed} indexed, ${result.unchanged} unchanged, ${result.removed} removed` +
-          (result.skipped.length > 0 ? `, ${result.skipped.length} skipped` : ''),
+            (result.skipped.length > 0 ? `, ${result.skipped.length} skipped` : '') +
+            (noReason ? '' : `, ${result.derived} derived`),
+          `scan ${seconds(timings.scanMs)} · parse ${seconds(timings.parseMs)} · commit ${seconds(timings.commitMs)}` +
+            ` · reason ${result.reasoned ? seconds(timings.reasonMs) : 'skipped'} · total ${seconds(timings.totalMs)}`,
+        ].join('\n'),
       );
     }),
 ).pipe(Command.withDescription('Index the repository (incremental — only files whose mtime changed).'));
@@ -152,41 +170,6 @@ const ask = Command.make(
     ),
 ).pipe(Command.withDescription('Run a SPARQL ASK.'));
 
-const reason = Command.make(
-  'reason',
-  {
-    root: rootFlag,
-    store: storeFlag,
-    json: jsonFlag,
-    rules: Flag.string('rules').pipe(Flag.withDescription('N3 rules file.'), Flag.optional),
-    materialize: Flag.boolean('materialize').pipe(Flag.withDescription('Persist the derived quads.')),
-  },
-  ({ root, store, json, rules, materialize }) =>
-    withStore(root, store, (api) =>
-      Effect.gen(function* () {
-        const path = resolve(Option.getOrElse(rules, () => DEFAULT_RULES));
-        const source = yield* Effect.tryPromise({
-          try: () => readFile(path, 'utf8'),
-          catch: (cause) => new Store.StoreError({ message: `Cannot read rules file: ${path}`, cause }),
-        });
-        const derived = yield* api.reason(source, { materialize });
-        yield* emit(
-          json,
-          derived.map((quad) => ({
-            subject: quad.subject.value,
-            predicate: quad.predicate.value,
-            object: quad.object.value,
-          })),
-          () =>
-            [
-              ...derived.map((quad) => `${quad.subject.value} ${quad.predicate.value} ${quad.object.value}`),
-              `${derived.length} derived quads${materialize ? ' (materialized)' : ''}`,
-            ].join('\n'),
-        );
-      }),
-    ),
-).pipe(Command.withDescription('Apply N3 rules with the EYE reasoner.'));
-
 const dump = Command.make('dump', { root: rootFlag, store: storeFlag }, ({ root, store }) =>
   withStore(root, store, (api) => Effect.flatMap(api.dump(), Console.log)),
 ).pipe(Command.withDescription('Serialize the graph as N3.'));
@@ -209,7 +192,7 @@ const ontology = Command.make('ontology', { json: jsonFlag }, ({ json }) =>
 
 export const command = Command.make('code-index').pipe(
   Command.withDescription('Index a codebase into SQLite + RDF (DEUS ontology).'),
-  Command.withSubcommands([index, files, query, ask, reason, dump, stats, clear, ontology]),
+  Command.withSubcommands([index, files, query, ask, dump, stats, clear, ontology]),
 );
 
 /** Runs one command; `Layer.launch` is not involved — every command opens and closes its own store. */

@@ -130,20 +130,71 @@ describe('Store', () => {
     expect(stats).toMatchObject({ files: 0, quads: 0 });
   });
 
+  // A rule of the store's own, kept trivial — what to ship is `rules/example.n3`'s business.
+  const RULES = `
+    @prefix deus: <${Ontology.PREFIX}>.
+    { ?a deus:imports ?b } => { ?a deus:importsTestFile ?b }.
+  `;
+
   test('N3 rules derive new quads, optionally materialized', async () => {
     await withStore((store) => store.putFileDocument(document('src/a.ts', 3, ['src/b.ts'])));
-    const rules = `
+
+    const derived = await withStore((store) => store.reason(RULES));
+    expect(derived.map((quad) => quad.predicate.value)).toContain(Ontology.importsTestFile.value);
+    expect(await withStore((store) => store.match(undefined, Ontology.importsTestFile))).toHaveLength(0);
+
+    await withStore((store) => store.reason(RULES, { materialize: true }));
+    const materialized = await withStore((store) => store.match(undefined, Ontology.importsTestFile));
+    expect(materialized).toHaveLength(1);
+    // Conclusions live in their own graph, apart from the file graphs they were derived from.
+    expect(materialized[0].graph.value).toEqual(Ontology.DERIVED_GRAPH.value);
+  });
+
+  test('a derivation does not outlive the fact that entailed it', async () => {
+    // The same file, reindexed without the import: the conclusion must go with its premise.
+    await withStore((store) => store.putFileDocument(document('src/a.ts', 4)));
+    expect(await withStore((store) => store.match(undefined, Ontology.imports))).toHaveLength(0);
+    // Still there until the rules are rerun — materialized conclusions are only as fresh as the pass.
+    expect(await withStore((store) => store.match(undefined, Ontology.importsTestFile))).toHaveLength(1);
+
+    await withStore((store) => store.reason(RULES, { materialize: true }));
+    expect(await withStore((store) => store.match(undefined, Ontology.importsTestFile))).toHaveLength(0);
+  });
+
+  test('conclusions are never premises of the next pass', async () => {
+    await withStore((store) => store.putFileDocument(document('src/a.ts', 5, ['src/b.ts'])));
+    await withStore((store) => store.reason(RULES, { materialize: true }));
+
+    // A rule that would fire on a previous pass's conclusion derives nothing: reasoning reads the
+    // asserted facts only.
+    const echo = `
       @prefix deus: <${Ontology.PREFIX}>.
-      { ?a deus:imports ?b } => { ?a deus:dependsOn ?b }.
+      { ?a deus:importsTestFile ?b } => { ?a deus:importsModule "echoed" }.
     `;
+    expect(await withStore((store) => store.reason(echo))).toEqual([]);
+  });
 
-    const derived = await withStore((store) => store.reason(rules));
-    expect(derived.map((quad) => quad.predicate.value)).toContain(Ontology.dependsOn.value);
-    expect(await withStore((store) => store.match(undefined, Ontology.dependsOn))).toHaveLength(0);
+  test('a rule with an unbound predicate still sees the whole graph', async () => {
+    // Narrowing premises by predicate is only sound when every rule names its predicates.
+    const wildcard = `
+      @prefix deus: <${Ontology.PREFIX}>.
+      { ?a ?predicate "src/a.ts" } => { ?a deus:importsTestFile ?a }.
+    `;
+    const derived = await withStore((store) => store.reason(wildcard));
+    expect(derived).toHaveLength(1);
+    expect(derived[0].subject.value).toEqual(Ontology.fileIri('src/a.ts').value);
+  });
 
-    await withStore((store) => store.reason(rules, { materialize: true }));
-    // Derivations land in the default graph, so they survive a reindex of the file they came from.
-    expect(await withStore((store) => store.match(undefined, Ontology.dependsOn))).toHaveLength(1);
+  test('a dotfile path survives serialization', async () => {
+    // `.agents/x.ts` under a `file:` prefix would serialize as an illegal prefixed name; both the
+    // dump and the reasoner's input have to stay parseable.
+    await withStore((store) => store.putFileDocument(document('.agents/x.ts', 1, ['src/a.ts'])));
+    expect(await withStore((store) => store.reason(RULES, { materialize: true }))).toHaveLength(2);
+
+    const dumped = await withStore((store) => store.dump());
+    expect(dumped).toContain('.agents/x.ts');
+    expect(await withStore((store) => store.load(dumped))).toBeGreaterThan(0);
+    await withStore((store) => store.removeFile('.agents/x.ts'));
   });
 
   test('dump serializes and load restores', async () => {

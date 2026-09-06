@@ -43,8 +43,17 @@ describe('Indexer', () => {
   const withStore = <A, E>(f: (store: Store.Api) => Effect.Effect<A, E>): Promise<A> =>
     EffectEx.runPromise(Effect.scoped(Effect.provide(Effect.flatMap(Store.Store, f), Store.layer(dir))));
 
+  // Deliberately not a closure: reachability over `deus:imports` is a query (`deus:imports+`),
+  // never a materialized rule — see the header of `rules/example.n3`.
+  const RULES = `
+    @prefix deus: <${Ontology.PREFIX}>.
+    { ?a deus:imports ?b } => { ?a deus:importsTestFile ?b }.
+  `;
+
   const index = (options?: Partial<Indexer.Options>) =>
-    EffectEx.runPromise(Effect.scoped(Effect.provide(Indexer.run({ root, workers: 1, ...options }), Store.layer(dir))));
+    EffectEx.runPromise(
+      Effect.scoped(Effect.provide(Indexer.run({ root, workers: 1, rules: RULES, ...options }), Store.layer(dir))),
+    );
 
   test('the crawler follows gitignore', async () => {
     const entries = await EffectEx.runPromise(Crawler.crawl(root));
@@ -60,6 +69,8 @@ describe('Indexer', () => {
     const result = await index();
     expect(result).toMatchObject({ scanned: 3, indexed: 3, unchanged: 0, removed: 0 });
     expect(result.skipped).toEqual([]);
+    expect(result.timings.totalMs).toBeGreaterThan(0);
+    expect(Object.values(result.timings).every((value) => typeof value === 'number')).toBe(true);
 
     const files = await withStore((store) => store.listFiles());
     expect(files.map(({ path }) => path)).toEqual(['src/a.ts', 'src/b.ts', 'src/c.ts']);
@@ -130,24 +141,66 @@ describe('Indexer', () => {
     expect(result).toMatchObject({ scanned: 2, indexed: 2, unchanged: 0 });
   }, 60_000);
 
-  test('EYE derives the transitive dependency closure', async () => {
-    const rules = `
-      @prefix deus: <${Ontology.PREFIX}>.
-      { ?a deus:imports ?b } => { ?a deus:dependsOn ?b }.
-      { ?a deus:dependsOn ?b. ?b deus:dependsOn ?c } => { ?a deus:dependsOn ?c }.
-    `;
-    const derived = await withStore((store) => store.reason(rules, { materialize: true }));
-    expect(derived.length).toBeGreaterThan(0);
+  test('the pass closes by recomputing the derived graph', async () => {
+    // Restore the file the deletion test removed; b's own graph still points at it, since b was
+    // never dirtied by the deletion.
+    await writeFile(join(root, 'src', 'c.ts'), "import * as Effect from 'effect';\nexport const c = Effect;\n");
+    const result = await index({ force: true });
+    // One conclusion per import edge: a -> b and b -> c.
+    expect(result).toMatchObject({ derived: 2, reasoned: true });
+    expect(result.timings.reasonMs).toBeGreaterThan(0);
 
-    const closure = await withStore((store) =>
+    const derived = await withStore((store) =>
+      store.match(undefined, Ontology.importsTestFile, undefined, Ontology.DERIVED_GRAPH),
+    );
+    expect(derived).toHaveLength(2);
+
+    // Reachability stays a query: the property path walks the same edges without storing anything.
+    const reachable = await withStore((store) =>
       store.select(`
         PREFIX deus: <${Ontology.PREFIX}>
-        SELECT ?to WHERE {
-          <${Ontology.fileIri('src/a.ts').value}> deus:dependsOn ?target .
-          GRAPH ?g { ?target deus:path ?to }
-        } ORDER BY ?to
+        SELECT ?to WHERE { <${Ontology.fileIri('src/a.ts').value}> deus:imports+ ?target . ?target deus:path ?to }
+        ORDER BY ?to
       `),
     );
-    expect(closure).toEqual([{ to: 'src/b.ts' }]);
+    expect(reachable).toEqual([{ to: 'src/b.ts' }, { to: 'src/c.ts' }]);
+  }, 60_000);
+
+  test('an import removed from a file retracts what it entailed', async () => {
+    await writeFile(join(root, 'src', 'b.ts'), 'export const b = 1;\n');
+    const touched = new Date();
+    await utimes(join(root, 'src', 'b.ts'), touched, touched);
+
+    const result = await index();
+    // b no longer imports c, so the conclusion drawn from that edge is gone with it.
+    expect(result).toMatchObject({ indexed: 1, derived: 1 });
+
+    const reachable = await withStore((store) =>
+      store.select(`
+        PREFIX deus: <${Ontology.PREFIX}>
+        SELECT ?to WHERE { <${Ontology.fileIri('src/a.ts').value}> deus:imports+ ?target . ?target deus:path ?to }
+        ORDER BY ?to
+      `),
+    );
+    expect(reachable).toEqual([{ to: 'src/b.ts' }]);
+  }, 60_000);
+
+  test('a pass that changed nothing does not run the rules', async () => {
+    const result = await index();
+    expect(result).toMatchObject({ indexed: 0, removed: 0, reasoned: false });
+    // The derived graph is reported as it stands, and left exactly as the previous pass built it.
+    expect(result.derived).toEqual(1);
+    expect(await withStore((store) => store.match(undefined, Ontology.importsTestFile))).toHaveLength(1);
+  }, 60_000);
+
+  test('--no-reason leaves the derived graph untouched', async () => {
+    await writeFile(join(root, 'src', 'a.ts'), 'export const a = 1;\n');
+    const touched = new Date();
+    await utimes(join(root, 'src', 'a.ts'), touched, touched);
+
+    const result = await index({ rules: undefined });
+    expect(result).toMatchObject({ indexed: 1, reasoned: false, derived: 1 });
+    // a no longer imports b, but nothing recomputed the conclusion that said it did.
+    expect(await withStore((store) => store.match(undefined, Ontology.importsTestFile))).toHaveLength(1);
   }, 60_000);
 });

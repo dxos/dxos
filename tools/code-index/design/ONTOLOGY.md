@@ -15,11 +15,12 @@ written here — change this file first, then the module.
 
 Resource IRIs are derived, never invented:
 
-| Thing      | IRI                                                       | Note                                   |
-| ---------- | --------------------------------------------------------- | -------------------------------------- |
-| File       | `file:` + `encodeURIComponent(<repo-relative path>)`      | Stable across revisions of the file.   |
-| Symbol     | `<file IRI>` + `#` + `encodeURIComponent(<name>)`         | Scoped to its file.                    |
-| File graph | `graph:` + `encodeURIComponent(<path>)` + `#` + `<mtime>` | Changes on every reindex — see Graphs. |
+| Thing         | IRI                                                       | Note                                        |
+| ------------- | --------------------------------------------------------- | ------------------------------------------- |
+| File          | `file:` + `encodeURIComponent(<repo-relative path>)`      | Stable across revisions of the file.        |
+| Symbol        | `<file IRI>` + `#` + `encodeURIComponent(<name>)`         | Scoped to its file.                         |
+| File graph    | `graph:` + `encodeURIComponent(<path>)` + `#` + `<mtime>` | Changes on every reindex — see Graphs.      |
+| Derived graph | `graph:derived`                                           | The single home of everything rules entail. |
 
 ## Graphs
 
@@ -29,8 +30,11 @@ previous one. The mtime in the key is what makes the swap safe — a partially w
 never confused with the live one, because the live graph IRI is recorded in SQLite (`files.graph`)
 and only advances when the write has completed. See `Store.putFileDocument` for the commit order.
 
-Derived quads produced by reasoning are written to the default graph, never into a file graph, so
-`clear`ing or reindexing a file never destroys them.
+Reasoning writes to one further graph, `graph:derived`, and never into a file graph. That graph is
+**replaced wholesale** at the end of every indexing pass: conclusions are exactly what the current
+facts entail, so a derived fact cannot outlive the import or file that entailed it. Reasoning also
+reads only the file graphs — a previous pass's conclusions are never premises of the next one,
+which would otherwise let a derivation keep itself alive.
 
 ## Classes
 
@@ -59,9 +63,22 @@ Derived quads produced by reasoning are written to the default graph, never into
 
 ### Derived — written by rules, never by the indexer
 
-| Property         | Meaning                                                    |
-| ---------------- | ---------------------------------------------------------- |
-| `deus:dependsOn` | Transitive closure of `deus:imports` (`rules/imports.n3`). |
+| Property               | Meaning                                                     |
+| ---------------------- | ----------------------------------------------------------- |
+| `deus:importsTestFile` | A non-test file importing a test file (`rules/example.n3`). |
+
+Reachability over `deus:imports` is deliberately **absent** from this list. A SPARQL property path
+walks it lazily — `deus:imports+` answers "everything this file transitively imports" in ~0.2s over
+a 15k-file index — where the equivalent closure rule cost 147s per pass and 123,692 stored quads for
+the same answers. Do not add a rule for something a query already expresses: paths (`+`, `*`, `^`,
+`|`) cover reachability, inverses and alternatives.
+
+A rule set is only handed the facts whose predicates it names, so naming them keeps the phase cheap.
+
+Derived quads live in `graph:derived` and are recomputed, never accumulated: an indexing pass that
+changed something rebuilds that graph from scratch, and a pass that changed nothing leaves it as it
+is. Note that deleting a file does not dirty the files that imported it, so an unchanged importer
+keeps its `deus:imports` edge to the departed file until that importer is itself reindexed.
 
 ## JSON-LD document
 

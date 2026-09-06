@@ -32,6 +32,12 @@ export const symbolIri = (path: string, name: string): NamedNode =>
 export const graphIri = (path: string, mtime: number): NamedNode =>
   DataFactory.namedNode(`${GRAPH_BASE}${encodeURIComponent(path)}#${mtime}`);
 
+/**
+ * The one graph holding everything rules derived. Kept apart from the file graphs so a reasoning
+ * pass can drop the whole of it and recompute — a derived fact must never outlive its premises.
+ */
+export const DERIVED_GRAPH = DataFactory.namedNode(`${GRAPH_BASE}derived`);
+
 // Classes.
 export const File = iri('File');
 export const Symbol = iri('Symbol');
@@ -53,8 +59,12 @@ export const kind = iri('kind');
 export const exported = iri('exported');
 export const line = iri('line');
 
-/** Derived by the N3 rules in `rules/imports.n3`; never written by the indexer. */
-export const dependsOn = iri('dependsOn');
+/**
+ * Derived by rules, never written by the indexer. Reachability over `deus:imports` is deliberately
+ * NOT among these: a SPARQL property path (`deus:imports+`) walks it lazily, where a closure rule
+ * would recompute and store hundreds of thousands of quads on every pass.
+ */
+export const importsTestFile = iri('importsTestFile');
 
 export const type = DataFactory.namedNode(rdf.type);
 
@@ -120,7 +130,7 @@ export const FileSchema = {
   'mtime': { '@id': mtime.value, '@type': xsd.integer },
   'hash': { '@id': hash.value, '@type': xsd.string },
   'imports': { '@id': imports.value, '@array': true, '@optional': true },
-  'dependsOn': { '@id': dependsOn.value, '@array': true, '@optional': true },
+  'importsTestFile': { '@id': importsTestFile.value, '@array': true, '@optional': true },
 } as const satisfies LdkitSchema;
 
 export const SymbolSchema = {
@@ -130,11 +140,14 @@ export const SymbolSchema = {
   'line': { '@id': line.value, '@type': xsd.integer },
 } as const satisfies LdkitSchema;
 
-/** Prefixes used when serializing the graph to Turtle/N3. */
+/**
+ * Prefixes used when serializing the graph to Turtle/N3. Vocabulary namespaces only: abbreviating
+ * `file:` or `graph:` emits prefixed names whose local part is a percent-encoded path, and a path
+ * beginning with `.` (`.agents/...`) is not a legal PNAME — the writer emits it anyway and no
+ * parser reads it back.
+ */
 export const prefixes: Record<string, string> = {
   deus: PREFIX,
-  file: FILE_BASE,
-  graph: GRAPH_BASE,
   rdf: 'http://www.w3.org/1999/02/22-rdf-syntax-ns#',
   xsd: 'http://www.w3.org/2001/XMLSchema#',
 };

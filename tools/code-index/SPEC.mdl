@@ -37,7 +37,7 @@ The following extension dialects are used in this document.
 | Quad store         | `quadstore` over `classic-level`        | A real persistent RDF/JS store with named graphs — deliberately not a triple table hand-rolled on SQLite. |
 | SPARQL             | `quadstore-comunica`                    | Comunica engine bound directly to the quad store, with the default graph as the union of all file graphs. |
 | Typed graph access | `ldkit`                                 | Schema-typed reads over the same engine, so a lens and a raw SPARQL query see one graph. |
-| Reasoning          | `eyereasoner` (EYE, N3)                 | Forward-chaining rules over an N3 serialization; derivations returned, optionally materialized. |
+| Reasoning          | `eyereasoner` (EYE, N3)                 | Forward-chaining rules over an N3 serialization of the asserted facts; conclusions land in one replaceable graph. Reachability is left to SPARQL property paths. |
 | Parsing            | `oxc-parser`, `oxc-resolver`            | Real module records and real resolution, not regex. |
 | Concurrency        | `effect/unstable/rpc` over worker threads | Batches of paths in, JSON-LD documents out. |
 | CLI                | `effect/unstable/cli`, `@effect/platform-bun` | Subcommands, flags and help from the same Effect runtime as the library. |
@@ -64,6 +64,14 @@ containing the working directory, so any command run anywhere inside the repo fi
 4. **Analyze** (worker) — read, parse with `oxc`, resolve every specifier with `oxc-resolver`, and
    return the file's JSON-LD document plus the mtime actually read.
 5. **Upsert** (main thread) — one commit per file: swap its named graph, then advance its ledger row.
+6. **Reason** — if anything changed, the N3 rules run over the asserted facts and `graph:derived` is
+   replaced with the result. A pass that indexed and removed nothing skips this phase, since it would
+   derive exactly what is already stored. The reasoner is fed only the facts whose predicate the
+   rules name — the narrowing is dropped if a rule leaves a predicate unbound — which on this repo
+   is the difference between a 30s phase and a 4s one.
+
+Each phase is timed and reported (`scan`, `parse`, `commit`, `reason`, `total`); `parse` and `commit`
+are summed across concurrent batches, so they overlap and can exceed the wall-clock total.
 
 ## Commit safety across two stores
 
@@ -113,7 +121,8 @@ module Store
     select / ask / construct                  # SPARQL, default graph = union of file graphs.
     lens: (schema) => Lens                    # LDkit lens over this store.
     dump / load                               # N3 text in and out.
-    reason: (rules, { materialize? }) => Effect<Quad[]>
+    reason: (rules, { materialize? }) => Effect<Quad[]>   # premises are the file graphs only;
+                                                          # materialize replaces graph:derived.
     stats / clear
 ```
 
@@ -129,7 +138,7 @@ module Ontology
     File, Symbol: NamedNode                   # classes.
     path, language, size, mtime, hash, imports, importsModule, declares, parseError: NamedNode
     name, kind, exported, line: NamedNode     # symbol properties.
-    dependsOn: NamedNode                      # derived by rules only.
+    importsTestFile: NamedNode                # derived by rules only.
     CONTEXT: object                           # the JSON-LD @context.
     FileDocument / SymbolNode: Schema         # the wire shape, decoded by the RPC layer.
     FileSchema / SymbolSchema: LDkit schemas
@@ -154,8 +163,9 @@ module Indexer
     The main thread's half: crawl, diff against the ledger, dispatch batches to the worker pool,
     upsert the documents that come back.
   api:
-    Options: { root, workers?, batchSize?, force?, extensions? }
-    Result: { root, scanned, indexed, unchanged, removed, skipped }
+    Options: { root, workers?, batchSize?, force?, extensions?, rules? }
+    Timings: { scanMs, parseMs, commitMs, reasonMs, totalMs }
+    Result: { root, scanned, indexed, unchanged, removed, skipped, derived, reasoned, timings }
     DEFAULT_BATCH_SIZE: 64
     run: (options) => Effect<Result, _, Store | Scope>
 ```
@@ -198,7 +208,7 @@ module worker/analyze
 module Cli
   desc: Subcommands and flags; the Bun entry point is `bin/code-index.ts`.
   api:
-    DEFAULT_RULES: string                     # bundled rules/imports.n3.
+    DEFAULT_RULES: string                     # bundled rules/example.n3.
     command: Command                          # code-index with its subcommands.
     run: (argv) => Effect<void>
 ```
@@ -207,11 +217,10 @@ module Cli
 
 | Command                                | Effect |
 |----------------------------------------|--------|
-| `index [--root R] [--force] [--workers N]` | Incremental pass over the repository. |
+| `index [--root R] [--force] [--workers N] [--rules F] [--no-reason]` | Incremental pass, closed by a reasoning phase. |
 | `files [--lang L]`                     | List indexed files. |
 | `query <sparql> [--file]`              | SPARQL SELECT. |
 | `ask <sparql> [--file]`                | SPARQL ASK. |
-| `reason [--rules F] [--materialize]`   | Apply N3 rules with EYE. |
 | `dump`                                 | Serialize the graph to N3. |
 | `stats`                                | File and quad counts. |
 | `clear`                                | Empty both databases. |
@@ -238,7 +247,7 @@ feat F-2: One graph per file revision
     Every file's quads live in `graph:<path>#<mtime>`; reindexing swaps the graph rather than
     accumulating revisions, and removing a file drops its graph and its row.
   req F-2.1: After a reindex the previous graph holds no quads and the ledger names the new one.
-  req F-2.2: Derived quads live in the default graph, so reindexing a file never destroys them.
+  req F-2.2: Derived quads live in `graph:derived`, which reasoning replaces wholesale.
   req F-2.3: An interrupted commit leaves a `pending_graph` that `reconcile` deletes on the next open.
 ```
 
@@ -272,11 +281,19 @@ feat F-5: Import edges
 ```
 
 ```mdl
-feat F-6: Derived relations are rules
+feat F-6: Derived relations are rules, recomputed with the index
   desc: |
-    `reason` serializes the graph to N3, appends the rule set, and runs EYE in `derivations` mode,
-    so only new quads come back. `--materialize` writes them; without it the graph is untouched.
-  req F-6.1: The bundled `rules/imports.n3` derives the transitive closure of `deus:imports`.
+    Indexing closes with a reasoning phase: the asserted facts are serialized to N3, the rule set is
+    appended, and EYE runs in `derivations` mode so only entailed quads come back. They replace
+    `graph:derived` in one batch.
+  req F-6.1: Reachability is a query, not a rule — `deus:imports+` walks the graph lazily, and the
+             closure rule that used to ship (147s per pass, 123k stored quads for identical answers)
+             was removed. `rules/example.n3` says so in its header; keep derivations small.
+  req F-6.2: A conclusion never outlives its premises — retracting an import retracts what it entailed.
+  req F-6.3: Conclusions are never premises: a pass reads the file graphs only.
+  req F-6.4: A pass that indexed and removed nothing skips reasoning and leaves the derived graph as is.
+  req F-6.6: Premises are narrowed to the predicates the rules name; an unbound predicate disables the narrowing.
+  req F-6.5: `--no-reason` skips the phase; the derived graph is then only as fresh as the last pass that ran it.
 ```
 
 ## Tests
@@ -293,6 +310,10 @@ test T-1: Store
     - LDkit lens returns typed entities
     - removing a file drops its graph and its row
     - N3 rules derive new quads, optionally materialized
+    - a derivation does not outlive the fact that entailed it
+    - conclusions are never premises of the next pass
+    - a rule with an unbound predicate still sees the whole graph
+    - a dotfile path survives serialization
     - dump serializes and load restores
     - raw quads still round-trip
     - an interrupted commit is reconciled when the store reopens
@@ -311,7 +332,10 @@ test T-2: Indexer
     - a second pass reindexes only what changed
     - a deleted file loses its graph and its ledger row
     - --force reindexes everything
-    - EYE derives the transitive dependency closure
+    - the pass closes by recomputing the derived graph
+    - an import removed from a file retracts what it entailed
+    - a pass that changed nothing does not run the rules
+    - --no-reason leaves the derived graph untouched
 ```
 
 ```mdl
