@@ -1,6 +1,6 @@
 # echo-plain-objects — Tasks
 
-_Resume: waiting on the user's pick for de-proxying — shape C (trap-less proxy, F5) or shape A (strict plain object, six blueprint relaxations) or stop. Query bench landed at `965f9258` with baseline and head columns. Stage C stays BLOCKED under constraint 3 (DESIGN.md D9) pending the user's choice. Uncommitted: none. Last: lazy materialized record at `b3486ba0`, automerge reads 113 / 111 ns._
+_Resume: Stage D (D11) in progress — three survey agents running; next: proxy identity off the `get` trap, then D1 automerge write-through. Benches recorded after each stage. Stage C stays BLOCKED under constraint 3 (DESIGN.md D9) pending the user's choice. Uncommitted: none. Last: lazy materialized record at `b3486ba0`, automerge reads 113 / 111 ns._
 
 Design and decisions: [DESIGN.md](./DESIGN.md). Numbers: [`echo-client-e2e/BENCHMARKS.md`](../../../packages/core/echo/echo-client-e2e/BENCHMARKS.md).
 
@@ -188,6 +188,31 @@ query all, one read per result; baseline vs head columns in `BENCHMARKS.md`.
       one process. Recorded in `BENCHMARKS.md`; not in scope to fix.
 - [x] **Baseline column** — `0dab2f81` sources checked out in place, rebuilt, measured, restored. Loading
       unchanged; first read per object ~2 µs both ways; repeat reads 4–5× cheaper on head.
+
+## Phase 6 — Stage D: trap-less reads, write-through (DESIGN.md D11)
+
+The `Proxy` stays for `set`/`delete`/`defineProperty`; the `get` trap goes; the target holds the data and
+is kept current at write time and in `notifyUpdate`. Automerge-backed objects first, typed handler second,
+both benches after each.
+
+### Tasks
+
+- [ ] **Surveys** — proxy-identity consumers; automerge write and construction paths; typed-handler
+      nested values and raw readers (three Explore reports, folded into DESIGN.md F6–F8).
+- [ ] **Proxy identity off the `get` trap** — `isProxy`/`getProxySlot`/`getProxyTarget` on a `WeakMap`
+      keyed by proxy (`echo` proxy-utils); `echo` suite green.
+- [ ] **D1 — automerge: fill at construction, write through on `set`/`delete`, refresh in
+      `notifyUpdate`** — root and nested record targets; `MaterializedRecord` and `generation` removed.
+- [ ] **D1 — internals as prototype accessors** — `symbolInternals`, `SchemaId`, `TypeEntityId`,
+      `devtoolsFormatter`, meta-root `createdAt`/`updatedAt`; `has`/`ownKeys`/`getOwnPropertyDescriptor`
+      read the target.
+- [ ] **D1 — drop `get` for automerge record proxies**; `echo-client` + `echo-client-e2e` green
+      unmodified; property and query benches recorded.
+- [ ] **D2 — typed handler: nested values stored wrapped; raw readers unwrap; drop `get`**; `echo` +
+      `echo-client` + e2e green; benches recorded.
+- [ ] **One shared handler** — slot delegation removed; kind-specific write logic reached from the
+      target; lens (`echo-panproto/lens/live.ts`) adjusted if needed.
+- [ ] **Reviewer pass** over Stage D; PR body updated with the Stage D column.
 
 ## Phase 5: Compare and review
 

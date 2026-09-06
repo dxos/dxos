@@ -191,6 +191,39 @@ Refs are now materialized: one `Ref` per generation instead of one per read. Thi
 the leaf cache deliberately avoided (F2); the suites decide whether anything depends on per-read
 identity, and none did.
 
+### D11 — Stage D: keep the `Proxy`, drop the `get` trap, write through (user direction, 2026-09-06)
+
+**Decided.** The object stays a `Proxy`, because only a `Proxy` can make `delete`, `defineProperty`, a
+write to an existing field and a write to a new key all throw the ECHO error outside `Obj.update` while
+keeping `Object.keys` exact (D9, F5). What changes:
+
+- **No `get` trap.** The target holds the record's current values as own data properties — primitives,
+  nested records as their sub-proxies, arrays as their array proxies, refs as `Ref` objects — so the
+  engine forwards every read to the target with no JavaScript call (F5: ~16 ns for the shape, against
+  ~100 ns for today's trap). `a.b.c` is three forwarded reads; each nested record is its own trap-less
+  proxy over its own filled target.
+- **One handler, no slot delegation.** A single shared handler with `set`, `deleteProperty` and
+  `defineProperty`: outside a change context each throws the ECHO error; inside, it calls the write logic
+  for the object's kind, found off the target's prototype chain. `has`, `ownKeys`,
+  `getOwnPropertyDescriptor`, `getPrototypeOf` stay as traps where today's answers differ from the
+  target's (the root's `id`, the hidden instance-state prototype); none is on the read path. Proxy
+  identity (`isProxy`, `getProxyTarget`) moves off the `get` trap onto a `WeakMap` keyed by proxy.
+- **Write-through, not a generation counter.** The target is kept current at write time: the `set` trap
+  writes the document and the target's property together, O(1) per set, so a write/read loop inside
+  `Obj.update` never rebuilds; `ObjectCore.notifyUpdate()` — the one funnel every other mutation passes
+  through synchronously (F2, confirmed by both reviews) — refreshes the root target and each nested target
+  already materialized from the document, shallow, once per incoming change; the target is filled at
+  construction, so the first read costs what every later read costs. The generation counter, the
+  materialized-record slot, the lazy fill and the trap re-arming from D10 are all removed.
+- **Symbol-keyed internals become prototype accessors.** What the `get` trap's `switch` served
+  (`symbolInternals`, `SchemaId`, `TypeEntityId`, `devtoolsFormatter`) and the meta root's virtual
+  `createdAt`/`updatedAt` move to accessors on the behaviour prototypes, so a forwarded read finds them.
+
+Order: automerge-backed objects (`EchoReactiveHandler`) first, then the in-memory typed handler, whose
+nested values must be stored on the target already wrapped. Both benches run after each, and the query
+bench's "construct" phase is where the fill-at-construction cost shows. Tests unchanged; the lens in
+`echo-panproto` may change (user, 2026-09-06).
+
 ### D8 — Stage A is a pure fast path, not a redesign
 
 In `TypedReactiveHandler.get`: (1) track per target whether any own **string-keyed accessor** exists

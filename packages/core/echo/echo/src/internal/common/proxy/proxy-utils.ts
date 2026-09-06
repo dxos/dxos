@@ -19,9 +19,16 @@ export const symbolIsProxy = Symbol.for('@dxos/schema/Proxy');
 export const symbolReactivePrototype = Symbol.for('@dxos/echo/ReactivePrototype');
 
 /**
+ * Every proxy this module creates, keyed by the proxy itself. Identity is answered from here rather
+ * than through a `get` trap so that a proxy without one is still recognized.
+ */
+const proxySlots = new WeakMap<object, ProxyHandlerSlot<any>>();
+
+/**
  * Internal api.
  */
-export const isProxy = (value: unknown) => !!(value as any)?.[symbolIsProxy];
+export const isProxy = (value: unknown): boolean =>
+  (typeof value === 'object' && value !== null && proxySlots.has(value)) || !!(value as any)?.[symbolIsProxy];
 
 /**
  * True if `value` is a plain data record — either rooted at `Object.prototype` or carrying
@@ -53,7 +60,7 @@ export const isValidProxyTarget = (value: any): value is object => {
  * @deprecated
  */
 export const getProxySlot = <T extends object>(proxy: any): ProxyHandlerSlot<T> => {
-  const value = (proxy as any)[symbolIsProxy];
+  const value = proxySlots.get(proxy) ?? (proxy as any)[symbolIsProxy];
   invariant(value instanceof ProxyHandlerSlot);
   return value;
 };
@@ -106,8 +113,9 @@ export const createProxy = <T extends object>(target: T, handler: ReactiveHandle
     return existingProxy;
   }
 
-  // TODO(dmaretskyi): In the future this should be mutable to allow replacing the handler on-the-fly while maintaining the proxy identity.
-  const proxy = new Proxy(target, new ProxyHandlerSlot<T>(target, handler));
+  const slot = new ProxyHandlerSlot<T>(target, handler);
+  const proxy = new Proxy(target, slot);
+  proxySlots.set(proxy, slot);
   handler.init(target);
 
   // TODO(dmaretskyi): Check if this will actually work; maybe a global WeakMap is better?
