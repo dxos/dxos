@@ -1,6 +1,6 @@
 # echo-plain-objects — Tasks
 
-_Resume: Stage D1 (automerge fill/write-through/refresh, `get` trap dropped for record proxies) is in the tree — suites running; then benches, record, commit; then D2 (typed handler). Stage C stays BLOCKED under constraint 3 (DESIGN.md D9) pending the user's choice. Uncommitted: none. Last: lazy materialized record at `b3486ba0`, automerge reads 113 / 111 ns._
+_Resume: D1 landed and measured at `25239b3c` (automerge reads 26 ns). Next: D2 — typed handler stores nested values wrapped and drops its `get` trap, per DESIGN.md F8's risk list. Stage C stays BLOCKED under constraint 3 (DESIGN.md D9) pending the user's choice. Uncommitted: none. Last: lazy materialized record at `b3486ba0`, automerge reads 113 / 111 ns._
 
 Design and decisions: [DESIGN.md](./DESIGN.md). Numbers: [`echo-client-e2e/BENCHMARKS.md`](../../../packages/core/echo/echo-client-e2e/BENCHMARKS.md).
 
@@ -201,13 +201,19 @@ both benches after each.
       nested values and raw readers (three Explore reports, folded into DESIGN.md F6–F8).
 - [x] **Proxy identity off the `get` trap** — `4a92e276` + `71296056` (registry on `globalThis`); `echo`
       suite green.
-- [ ] **D1 — automerge: fill at construction, write through on `set`/`delete`, refresh in
-      `notifyUpdate`** — root and nested record targets; `MaterializedRecord` and `generation` removed.
-- [ ] **D1 — internals as prototype accessors** — `symbolInternals`, `SchemaId`, `TypeEntityId`,
-      `devtoolsFormatter`, meta-root `createdAt`/`updatedAt`; `has`/`ownKeys`/`getOwnPropertyDescriptor`
-      read the target.
-- [ ] **D1 — drop `get` for automerge record proxies**; `echo-client` + `echo-client-e2e` green
-      unmodified; property and query benches recorded.
+- [x] **D1 — automerge: fill at construction, write through on `set`/`delete`, refresh in
+      `notifyUpdate`** — `25239b3c`. Fill in `init` once the core has a document _and_ a database (a ref
+      minted before the database is known has no resolver); the refresh hook also runs after a write to a
+      bound document, closing the routing gap both reviews flagged. `MaterializedRecord` and `generation`
+      removed.
+- [x] **D1 — internals as prototype accessors** — the first four were already prototype-backed (F6); the
+      meta root got `EchoMetaRoot` for `createdAt`/`updatedAt` and is now cached in `targetsMap` so a held
+      meta proxy is refreshed. `has`/`ownKeys`/`getOwnPropertyDescriptor` read the document record.
+- [x] **D1 — drop `get` for automerge record proxies** — `ProxyHandlerSlot.forwardReads`, gated on
+      `ReactiveHandler.readsForwarded`. All three suites green unmodified. Benches at `25239b3c`:
+      automerge reads 113 → **26 ns** (5× a plain read, from 249× at baseline); the per-object first read
+      after a cold query fell 2.5 ms → 0.1 ms per 1,000 objects with no measurable cost added to the
+      query.
 - [ ] **D2 — typed handler: nested values stored wrapped; raw readers unwrap; drop `get`**; `echo` +
       `echo-client` + e2e green; benches recorded.
 - [ ] **One shared handler** — slot delegation removed; kind-specific write logic reached from the

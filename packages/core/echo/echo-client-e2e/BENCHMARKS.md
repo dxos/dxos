@@ -421,3 +421,67 @@ What this says about materialization before and after the read-path work:
 
 So a cold query's time is the document load pipeline and its 2 s per-object / 20 s per-query timeouts,
 not object materialization; the read-path work moved the part it targeted and left the rest alone.
+
+---
+
+## `25239b3c` — 2026-09-06 — Stage D1: automerge record proxies lose their `get` trap
+
+`echo` 581/581, `echo-client` 549/549 and `echo-client-e2e` 324/324 unmodified. Clean tree. Harness
+floor 66 ns.
+
+Change (DESIGN.md D11): a record target carries its record as own data properties — filled in `init`,
+kept current by the `set`/`deleteProperty` traps writing through per key and by a refresh hook the core
+calls ahead of every update notification — and the proxy then drops its `get` trap, so the engine reads
+the target with no JavaScript call. Arrays keep their trap. The typed handler (unpersisted, feed) is
+untouched until D2.
+
+### Narrow object — 2 fields
+
+| per-op    | plain | echo unpersisted |     echo automerge |        echo feed |
+| --------- | ----: | ---------------: | -----------------: | ---------------: |
+| **read**  |  5 ns |      75 ns · 15× |     **26 ns · 5×** |      79 ns · 16× |
+| **write** |  2 ns | 6.39 µs · 3,200× |   184 µs · 92,000× | 6.65 µs · 3,300× |
+| **make**  |  5 ns |   47 µs · 9,400× | 3.0 ms† · 590,000× | 157 µs · 31,000× |
+
+### Wide object — 250 fields
+
+| per-op    |  plain | echo unpersisted | echo automerge | echo feed |
+| --------- | -----: | ---------------: | -------------: | --------: |
+| **read**  |   5 ns |            82 ns |      **25 ns** |     82 ns |
+| **write** |   2 ns |          6.17 µs |         476 µs |   6.64 µs |
+| **make**  | 592 ns |           770 µs |       18.8 ms† |   1.85 ms |
+
+### Phase 3c → D1
+
+| per-op               | 3c (lazy) |    D1 |    Δ |
+| -------------------- | --------: | ----: | ---: |
+| read, automerge      |    113 ns | 26 ns | 4.3× |
+| read, automerge wide |    111 ns | 25 ns | 4.4× |
+| read, unpersisted    |     99 ns | 75 ns |    – |
+| read, feed           |    102 ns | 79 ns |    – |
+
+An automerge read is now **5× a plain-object read**, from 249× at baseline. The unpersisted and feed rows
+still go through the typed handler's `get` trap; their ~20% move is between-run noise, and D2 is what
+takes them down. Width remains free.
+
+### Elision check
+
+`x10`/`x1`: automerge 3.2× (narrow) and 3.0× (wide), unpersisted 5.2×, feed 5.6×. Automerge fell from
+6.3× because its per-op cost is now a small multiple of the floor — `x1` is 108 ns against a 66 ns
+floor, so 9 further reads at 26 ns each land where the arithmetic says. Nothing elided.
+
+### Query materialization at `25239b3c` (vs `aad3a673` head sources)
+
+| phase                           |       narrow × 1,000 |            wide × 100 |
+| ------------------------------- | -------------------: | --------------------: |
+| reload + open                   |          224 ms (83) |           175 ms (33) |
+| query, cold                     |        3.92 s (2.54) |         2.42 s (1.93) |
+| **first read per result, cold** | **0.1 ms** (was 2.5) | **<0.1 ms** (was 0.2) |
+| query, warm                     |     105 ms (was 127) |        17 ms (was 16) |
+| repeat read per result, warm    |    <0.1 ms (was 0.4) |               <0.1 ms |
+
+**The fill moved the per-object work into construction and it disappeared into the noise.** The first
+read of 1,000 cold objects went 2.5 ms → 0.1 ms, a plain property load per object; the cold query that
+now carries the fill reads 3.92 s against 3.93 s before, unchanged within a ±36% rme dominated by the
+document load. So write-through costs nothing measurable at load and removes the per-object read cost
+entirely.
