@@ -1,6 +1,6 @@
 # echo-plain-objects — Tasks
 
-_Resume: Stage D is complete and measured — reads 24-26 ns across all three kinds, wide automerge write 449 → 254 µs. Stage E is ABANDONED (DESIGN.md D12; four of five premises falsified). Next is Phase 8: preserve ref identity across the refresh, then narrow the remote refresh by the patch paths, with premises A1-A5 under adversarial review first. Stage C stays BLOCKED under constraint 3 (DESIGN.md D9). Uncommitted: `echo-client-e2e/src/sync-refresh.test.ts`, a failing-before test for Phase 8 held back until it ships with its fix. Last: Stage E abandoned at `9c55516b`._
+_Resume: Stage F is complete — the refresh memoizes the raw record it filled from, so an unchanged record costs one pointer compare and an unchanged key keeps its materialized value (ref identity falls out of that). Guarded on the `docHandle` (branch rebinds) and dropped in `_writeThrough` (an ABA that silently discarded a `versioning` restore). Two full repo sweeps green, `sync-refresh.test.ts` red before and green after, benchmark a deliberate null result recorded at `a1a06de7`. Stage E is ABANDONED (DESIGN.md D12); Stage C stays BLOCKED under constraint 3 (DESIGN.md D9). Uncommitted: none. Next: nothing queued — the PR needs review, and the open follow-ups are the subtraction pass (dead helpers, `_proxyMap` overlap) and the duplicate refresh on every write, now mostly neutralized by the memo. Last: Stage F at `a1a06de7`._
 
 Design and decisions: [DESIGN.md](./DESIGN.md). Numbers: [`echo-client-e2e/BENCHMARKS.md`](../../../packages/core/echo/echo-client-e2e/BENCHMARKS.md).
 
@@ -274,8 +274,16 @@ verdicts.
       replaces both (A) and (B): ref identity falls out of it, and no patch plumbing is needed.
 - [x] **Green: `echo` 581, `echo-client` 549, `echo-client-e2e` 327** (including the three new), all
       unmodified.
-- [ ] **Measure** — the property-access matrix, to show reads and writes are unmoved.
-- [ ] **Record the run in `BENCHMARKS.md`** under this commit.
+- [x] **Measure** — the property-access matrix, both halves back to back on this machine. A null
+      result, and correctly so: the bench reads and writes a local object, while the memo pays off on a
+      refresh. The `plain object` control rows, which contain no ECHO code, move −24.8% to +25.7% across
+      the run, so every ECHO row sits inside the noise floor.
+- [x] **Record the run in `BENCHMARKS.md`** under `a1a06de7`, with the control-row caveat stated.
+- [x] **Repo-wide sweep** — two full `:test` passes. The first found exactly one real failure
+      (`versioning`, "restore applies historical content as a new forward edit"): `_writeThrough` fills
+      a key outside `_refreshRecord`, so its stale memo made a restored value look unchanged. Fixed by
+      dropping the entry there. The second found only a `client-e2e` invitation timeout that passes in
+      758 ms standalone — sweep load, not code.
 
 ## Phase 5: Compare and review
 

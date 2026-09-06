@@ -589,3 +589,45 @@ window's noise band:
 Reads are unchanged by the fix — 24 / 26 ns narrow, 24 / 26 ns wide (unpersisted / automerge) — so the
 write path was repaired without giving back the read win. The committed bench keeps the 300 ms window;
 this one comparison was taken at 1,000 ms for resolution.
+
+## `a1a06de7` — 2026-09-06 — Stage F: memoize the raw record (a null result on this bench)
+
+`_refreshRecord` now memoizes the raw automerge record a target was last filled from, so an unchanged
+record is one pointer compare and an unchanged key keeps the value already materialized for it
+(DESIGN.md D13). **This bench does not measure that**, and is run only to show it costs nothing: the
+matrix reads and writes a local object, whereas the memo pays off on a refresh — a change arriving from
+elsewhere, an array mutation, an editor keystroke. The measurement that does show the effect is a count,
+not a time: on a 41 + 41 + 40-key object, one remote key change goes from **246 calls to
+`_materializeValue` to 3**.
+
+Both halves were run back to back on the same machine, `70ca32cd~1` against `a1a06de7`, because this
+machine is roughly 2× slower than the one the tables above were recorded on — narrow reads price at
+43–55 ns here against the 24–26 ns recorded at Stage D. Comparing across sections would say nothing;
+comparing the two halves against each other is valid.
+
+| per-op, narrow     |  before |   after |  delta |
+| ------------------ | ------: | ------: | -----: |
+| read, plain        |  4.4 ns |  3.8 ns | −13.1% |
+| read, unpersisted  |   43 ns |   45 ns |  +4.8% |
+| read, automerge    |   55 ns |   45 ns | −17.6% |
+| read, feed         |   40 ns |   44 ns | +10.2% |
+| write, unpersisted | 12.7 µs | 10.6 µs | −16.2% |
+| write, automerge   |  490 µs |  492 µs |  +0.3% |
+| write, feed        | 10.7 µs | 11.9 µs | +10.7% |
+
+| per-op, wide (250 fields) |  before |   after |  delta |
+| ------------------------- | ------: | ------: | -----: |
+| read, plain               | 15.4 ns | 12.6 ns | −17.8% |
+| read, unpersisted         |   51 ns |   58 ns | +14.6% |
+| read, automerge           |   53 ns |   53 ns |  −0.0% |
+| read, feed                |   56 ns |   52 ns |  −7.6% |
+| write, unpersisted        | 11.0 µs | 10.7 µs |  −3.0% |
+| write, automerge          |  510 µs |  537 µs |  +5.3% |
+| write, feed               | 11.2 µs | 14.4 µs | +28.3% |
+
+**Read the deltas against the control, not against zero.** The `plain object` rows contain no ECHO code
+at all and cannot have been changed by this commit, yet they move −24.8% to +25.7% across the run
+(including the `make` rows not tabulated above). That is the noise floor of a 300 ms window on this
+machine, and every ECHO row above sits inside it. The honest conclusion is that this bench cannot
+distinguish before from after — which is the intended result for a change that touches only the refresh
+path — not that any individual cell improved or regressed.
