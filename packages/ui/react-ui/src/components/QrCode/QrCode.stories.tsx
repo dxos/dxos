@@ -27,7 +27,12 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
-  args: { 'value': 'https://dxos.org', 'errorCorrection': 'Q', 'aria-label': 'dxos.org' },
+  args: {
+    'value': 'https://dxos.org',
+    'icon': 'ph--circle--regular',
+    'errorCorrection': 'Q',
+    'aria-label': 'dxos.org',
+  },
 };
 
 /** Encodes its value as modules in the current colour, filling its box. */

@@ -7,12 +7,15 @@ import React, { type ComponentPropsWithRef, forwardRef } from 'react';
 
 import { useThemeContext } from '../../hooks';
 import { type ThemedClassName } from '../../util';
+import { Icon } from '../Icon';
 
 type QrCodeErrorCorrection = 'L' | 'M' | 'Q' | 'H';
 
 type QrCodeProps = ThemedClassName<Omit<ComponentPropsWithRef<typeof QrCodePrimitive.Root>, 'value' | 'encoding'>> & {
   /** What the code encodes. */
   value: string;
+  /** Overlay icon. */
+  icon?: string;
   /** How much of the code may be lost and still read; higher costs modules. Defaults to `M`. */
   errorCorrection?: QrCodeErrorCorrection;
 };
@@ -22,7 +25,7 @@ type QrCodeProps = ThemedClassName<Omit<ComponentPropsWithRef<typeof QrCodePrimi
  * Ark's qr-code machine, which encodes and lays out the modules.
  */
 const QrCode = forwardRef<HTMLDivElement, QrCodeProps>(
-  ({ classNames, value, errorCorrection = 'M', ...props }, forwardedRef) => {
+  ({ classNames, value, icon, errorCorrection = 'M', ...props }, forwardedRef) => {
     const { tx } = useThemeContext();
     return (
       <QrCodePrimitive.Root
@@ -35,9 +38,11 @@ const QrCode = forwardRef<HTMLDivElement, QrCodeProps>(
         <QrCodePrimitive.Frame className={tx('qrCode.frame', {})}>
           <QrCodePrimitive.Pattern className={tx('qrCode.pattern', {})} />
         </QrCodePrimitive.Frame>
-        <QrCodePrimitive.Overlay>
-          <img src='https://ark-ui.com/icon-192.png' alt='Ark UI Logo' />
-        </QrCodePrimitive.Overlay>
+        {icon && (
+          <QrCodePrimitive.Overlay>
+            <Icon icon={icon} size={10} classNames='bg-black' />
+          </QrCodePrimitive.Overlay>
+        )}
       </QrCodePrimitive.Root>
     );
   },
