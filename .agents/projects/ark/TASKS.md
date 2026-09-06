@@ -939,8 +939,8 @@ dist/types/src: ENOTEMPTY` — a concurrent writer. A Cursor TypeScript native-p
       story): the grid places direct children by `--dx-col`, and `Input.Root` is now a box-less
       element between the grid and the input. The root's theme class hands the column to its parts
       (`[&>*]:[grid-column:var(--dx-col,auto)]`), a no-op outside a Column.
-- [x] **Playground `FormSet` story** DONE 2026-09-06: one small fieldset on each surface of the
-      elevation ladder, with invalid and disabled variants.
+- [x] **Playground fieldset-per-elevation story** DONE 2026-09-06: one small fieldset on each surface
+      of the elevation ladder, with invalid and disabled variants; now the `Elevation` playground story.
 - [ ] **Rename `Input` → `Field`** (own PR, a codemod over ~900 sites: `Root` 443, `Label` 215,
       `TextInput` 119, `Switch` 40, `Checkbox` 25, `DescriptionAndValidation` 22, `Validation` 13,
       `TextArea` 12, `Description` 11, `PinInput` 4). Proposed names follow Ark where the part is
