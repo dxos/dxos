@@ -418,6 +418,11 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     if (Reflect.has(Object.getPrototypeOf(target), key)) {
       return true;
     }
+    // This path fills the key from the document without going through `_refreshRecord`, so the memo it
+    // keeps would describe neither the record before the write nor the one after. Left in place it is
+    // worse than absent: a later refresh comparing against it would find the key equal to a value the
+    // target no longer holds, and keep what this write put there.
+    this._rawRecords.delete(target);
     const previous = (target as any)[key];
     const record = this._storedRecord(target);
     const stored = typeof record === 'object' && record !== null ? (record as any)[key] : undefined;
