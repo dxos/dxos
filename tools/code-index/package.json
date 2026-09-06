@@ -38,7 +38,8 @@
     "oxc-parser": "catalog:",
     "oxc-resolver": "catalog:",
     "quadstore": "catalog:",
-    "quadstore-comunica": "catalog:"
+    "quadstore-comunica": "catalog:",
+    "yaml": "catalog:"
   },
   "devDependencies": {
     "@rdfjs/types": "catalog:",

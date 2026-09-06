@@ -13,7 +13,6 @@ import { realpath } from 'node:fs/promises';
 import { availableParallelism } from 'node:os';
 
 import * as Crawler from './Crawler.ts';
-import * as Ontology from './Ontology.ts';
 import * as Store from './Store.ts';
 import * as Pool from './worker/Pool.ts';
 import type * as Protocol from './worker/Protocol.ts';
@@ -64,6 +63,9 @@ export type Result = {
 };
 
 export const DEFAULT_BATCH_SIZE = 64;
+
+/** Name of the graph the pass's own rule set writes to; one graph per reasoner. */
+export const DEFAULT_REASONER = 'rules';
 
 const millis = <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<[number, A], E, R> =>
   Effect.map(Effect.timed(effect), ([duration, value]) => [Duration.toMillis(duration), value]);
@@ -132,7 +134,7 @@ export const run = (
             // Documents are committed one file at a time: each is its own graph swap plus ledger
             // row, so an interruption costs at most the file in flight.
             const [batchCommitMs] = yield* millis(
-              Effect.forEach(response.analyzed, (file) => store.putFileDocument(file.document), { discard: true }),
+              Effect.forEach(response.analyzed, (file) => store.putDocument(file.document), { discard: true }),
             );
             commitMs += batchCommitMs;
             indexed += response.analyzed.length;
@@ -151,8 +153,8 @@ export const run = (
     const dirty = indexed > 0 || removed.length > 0;
     const [reasonMs, derived] = yield* millis(
       options.rules && dirty
-        ? Effect.map(store.reason(options.rules, { materialize: true }), (quads) => quads.length)
-        : Effect.map(store.match(undefined, undefined, undefined, Ontology.DERIVED_GRAPH), (quads) => quads.length),
+        ? Effect.map(store.reason(DEFAULT_REASONER, options.rules, { materialize: true }), (quads) => quads.length)
+        : Effect.map(store.derived(), (quads) => quads.length),
     );
 
     return {

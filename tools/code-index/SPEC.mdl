@@ -39,6 +39,7 @@ The following extension dialects are used in this document.
 | Typed graph access | `ldkit`                                 | Schema-typed reads over the same engine, so a lens and a raw SPARQL query see one graph. |
 | Reasoning          | `eyereasoner` (EYE, N3)                 | Forward-chaining rules over an N3 serialization of the asserted facts; conclusions land in one replaceable graph. Reachability is left to SPARQL property paths. |
 | Parsing            | `oxc-parser`, `oxc-resolver`            | Real module records and real resolution, not regex. |
+| Manifests          | `yaml`, `JSON.parse`                    | `moon.yml` layers and `package.json` identity, entries and workspace deps. |
 | Concurrency        | `effect/unstable/rpc` over worker threads | Batches of paths in, JSON-LD documents out. |
 | CLI                | `effect/unstable/cli`, `@effect/platform-bun` | Subcommands, flags and help from the same Effect runtime as the library. |
 
@@ -61,8 +62,9 @@ containing the working directory, so any command run anywhere inside the repo fi
 2. **Diff** — compare against `files.mtime` in the ledger. Unchanged files are skipped entirely;
    files gone from the working tree have their graph and row removed.
 3. **Dispatch** — changed paths are batched (64 by default) and sent to the worker pool.
-4. **Analyze** (worker) — read, parse with `oxc`, resolve every specifier with `oxc-resolver`, and
-   return the file's JSON-LD document plus the mtime actually read.
+4. **Analyze** (worker) — an analyzer chosen by filename reads the file and returns its JSON-LD
+   document plus the mtime actually read: TypeScript (declarations, references, snippets),
+   `package.json` (the `Package` node), `moon.yml` (its layer), `.mdl` (spec blocks).
 5. **Upsert** (main thread) — one commit per file: swap its named graph, then advance its ledger row.
 6. **Reason** — if anything changed, the N3 rules run over the asserted facts and `graph:derived` is
    replaced with the result. A pass that indexed and removed nothing skips this phase, since it would
@@ -112,7 +114,7 @@ module Store
     getFile / listFiles / fileStates / getMeta / setMeta
 
     # Commits
-    putFileDocument: (FileDocument) => Effect<void>   # graph swap + ledger advance (see above).
+    putDocument: (FileDocument) => Effect<void>       # graph swap + ledger advance (see above).
     removeFile: (path) => Effect<void>
     reconcile: () => Effect<number>                   # drops graphs left by an interrupted commit.
 
@@ -121,8 +123,9 @@ module Store
     select / ask / construct                  # SPARQL, default graph = union of file graphs.
     lens: (schema) => Lens                    # LDkit lens over this store.
     dump / load                               # N3 text in and out.
-    reason: (rules, { materialize? }) => Effect<Quad[]>   # premises are the file graphs only;
-                                                          # materialize replaces graph:derived.
+    reason: (reasoner, rules, { materialize? }) => Effect<Quad[]>  # premises exclude the reasoner's
+                                                                   # own graph; materialize replaces it.
+    derived: (reasoner?) => Effect<Quad[]>    # what a reasoner (or every reasoner) concluded.
     stats / clear
 ```
 
@@ -151,7 +154,8 @@ module Crawler
   api:
     CrawlError: Data.TaggedError
     Entry: { path, mtime }
-    DEFAULT_EXTENSIONS: string[]
+    DEFAULT_EXTENSIONS: string[]              # includes .mdl; .yml is not in the set.
+    DEFAULT_FILENAMES: string[]               # crawled whatever the extension — moon.yml.
     storeDir: (root) => string                # <root>/node_modules/.code-index
     gitRoot: (cwd?) => Effect<string>
     crawl: (root, options?) => Effect<Entry[]>
@@ -164,6 +168,7 @@ module Indexer
     upsert the documents that come back.
   api:
     Options: { root, workers?, batchSize?, force?, extensions?, rules? }
+    DEFAULT_REASONER: 'rules'                 # the graph the pass's own rule set writes to.
     Timings: { scanMs, parseMs, commitMs, reasonMs, totalMs }
     Result: { root, scanned, indexed, unchanged, removed, skipped, derived, reasoned, timings }
     DEFAULT_BATCH_SIZE: 64
@@ -193,15 +198,55 @@ module worker/Pool
 ```mdl
 module worker/analyze
   desc: |
-    One file's source to one JSON-LD document. Pure apart from the injected resolver, and ignorant
-    of the store.
+    Dispatch: one analyzer per filename, each emitting the complete document for one file. Nothing
+    here or below names a framework — classification is a reasoner's job.
   api:
-    Resolve: (fromFile, specifier) => string | undefined
-    AnalyzeOptions: { root, path, source, mtime, resolve }
-    createResolver: (root) => Resolve         # oxc-resolver over the repository.
+    AnalyzeContext: { root, path, source, mtime, resolve, packageOf }
+    analyze: (context) => Ontology.FileDocument
+    createResolver: (root) => Resolve       # oxc-resolver over the repository.
     language: (path) => string
-    declarations: (body) => Declaration[]     # top-level declarations with kind/export/offset.
-    analyze: (options) => Ontology.FileDocument
+```
+
+```mdl
+module worker/analyzers/typescript
+  desc: |
+    Declarations and what can be seen of them structurally: what they extend, what call constructs
+    them, what they reference and from which position, and a definition snippet.
+  api:
+    analyzeTypeScript: (context) => FileDocument
+    declarations: (body) => Declaration[]   # top-level declarations with kind/export/offset.
+    snippetOf: (source, declaration, comments) => string | undefined
+    SNIPPET_BUDGET: 1200                    # literals collapse deepest-first past this.
+    SNIPPET_HARD_CAP: 9600                  # past this the declaration has no snippet at all.
+    isTypeScriptPath: (path) => boolean
+```
+
+```mdl
+module worker/analyzers/package
+  desc: The two files that assert a `Package` node, each from its own graph.
+  api:
+    analyzePackageJson: (context) => FileDocument   # identity, entries, workspace deps.
+    analyzeMoonYml: (context) => FileDocument       # the package's layer.
+```
+
+```mdl
+module worker/analyzers/spec
+  desc: `.mdl` documents — one `SpecBlock` per fenced block; linking them to symbols is a reasoner's job.
+  api:
+    analyzeMdl: (context) => FileDocument
+```
+
+```mdl
+module Mdl
+  desc: |
+    Reader for the `.mdl` document format: frontmatter, fenced blocks, `<type> [id][: title]`
+    headers and indented fields. Belongs in `@dxos/deus` as a Node-usable subpath; lives here until
+    that export exists.
+  api:
+    Block: { type, id?, title?, fields, mentions, body, line }
+    Document: { frontmatter, blocks }
+    parse: (text) => Document
+    parseFrontmatter: (text) => Record<string, string>
 ```
 
 ```mdl
@@ -281,6 +326,33 @@ feat F-5: Import edges
 ```
 
 ```mdl
+feat F-7: Packages and containment
+  desc: |
+    `package.json` asserts a `Package` node — name, version, private, public entries from the export
+    map, workspace dependencies — and `moon.yml` adds its layer from its own graph. Every file
+    asserts `deus:inPackage` for the nearest enclosing manifest.
+  req F-7.1: A `Package` node survives either of its two files being reindexed alone.
+  req F-7.2: Only `workspace:` ranges become `declaresDep`; catalog and registry ranges do not.
+```
+
+```mdl
+feat F-8: Structure now, meaning later
+  desc: |
+    The parser records what a declaration extends, what call constructs it, what it is piped through
+    or derived from, and what it references — as `Member` IRIs following the specifier as written.
+    No analyzer names a framework; classification is a rule file's job.
+  req F-8.1: A bare specifier yields both a member IRI and, if it resolves inside the repo, a symbol IRI.
+  req F-8.2: References from type positions are `apiDependsOn`, from value positions `implDependsOn`.
+  req F-8.3: Every stored snippet is valid TypeScript, or absent.
+```
+
+```mdl
+feat F-9: Specs are facts
+  desc: A `.mdl` document yields one `SpecBlock` per fenced block, with its fields and the identifiers it mentions.
+  req F-9.1: Block ids and names come from the header; two blocks sharing a key are disambiguated in order.
+```
+
+```mdl
 feat F-6: Derived relations are rules, recomputed with the index
   desc: |
     Indexing closes with a reasoning phase: the asserted facts are serialized to N3, the rule set is
@@ -336,17 +408,47 @@ test T-2: Indexer
     - an import removed from a file retracts what it entailed
     - a pass that changed nothing does not run the rules
     - --no-reason leaves the derived graph untouched
+    - every snippet the index holds is valid TypeScript
 ```
 
 ```mdl
-test T-3: Analyze
-  file: src/worker/analyze.test.ts
-  covers: F-4, F-5
+test T-3: TypeScript analyzer
+  file: src/worker/analyzers/typescript.test.ts
+  covers: F-4, F-5, F-7, F-8
   cases:
-    - language comes from the extension
-    - produces the document shape the ontology fixes
-    - resolved repository imports are edges, everything else is a module reference
-    - declarations carry kind, export status and line
+    - file node carries its package and parses clean
+    - imports split into value, type-only and external
+    - re-exports are edges to the re-exported files
+    - a class extending a curried call records the callee as a member IRI
+    - constructedBy and argument come from the initializer call
+    - a pipe rooted in a reference is derivedFrom it, and each stage is pipedThrough
+    - a workspace import records both addressings
+    - type positions are API, value positions are implementation
+    - unresolved references are counted, globals are not
+    - doc summary and deprecation come from the leading JSDoc
+    - snippets abbreviate implementation and stay valid TypeScript
     - an anonymous default export is named default
     - a parse failure still yields a file node
+```
+
+```mdl
+test T-4: Package analyzers
+  file: src/worker/analyzers/package.test.ts
+  covers: F-7
+  cases:
+    - package.json asserts the Package node with entries and workspace deps
+    - a manifest without a name is just a file
+    - a broken manifest reports a parse error
+    - moon.yml contributes the layer to the sibling package
+    - moon.yml outside a package asserts nothing about packages
+```
+
+```mdl
+test T-5: Spec documents
+  file: src/Mdl.test.ts
+  covers: F-9
+  cases:
+    - frontmatter is read as flat strings
+    - every fenced block yields a header, fields and mentions
+    - the spec analyzer turns blocks into SpecBlock nodes
 ```

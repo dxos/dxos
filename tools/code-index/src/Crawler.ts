@@ -8,7 +8,7 @@ import * as Data from 'effect/Data';
 import * as Effect from 'effect/Effect';
 import { execFile } from 'node:child_process';
 import { stat } from 'node:fs/promises';
-import { extname, join } from 'node:path';
+import { basename, extname, join } from 'node:path';
 import { promisify } from 'node:util';
 
 /**
@@ -27,7 +27,25 @@ export type Entry = {
   readonly mtime: number;
 };
 
-export const DEFAULT_EXTENSIONS = ['.ts', '.tsx', '.mts', '.cts', '.js', '.jsx', '.mjs', '.cjs', '.json', '.md'];
+export const DEFAULT_EXTENSIONS = [
+  '.ts',
+  '.tsx',
+  '.mts',
+  '.cts',
+  '.js',
+  '.jsx',
+  '.mjs',
+  '.cjs',
+  '.json',
+  '.md',
+  '.mdl',
+];
+
+/**
+ * Crawled whatever their extension. `.yml` is not in the extension set — a repository is full of
+ * workflow and config YAML the index has no use for — but `moon.yml` carries the package layer.
+ */
+export const DEFAULT_FILENAMES = ['moon.yml'];
 
 /** Store location for a repository: beside its dependencies, never inside the working tree. */
 export const storeDir = (root: string): string => join(root, 'node_modules', '.code-index');
@@ -44,16 +62,18 @@ export const gitRoot = (cwd: string = process.cwd()): Effect.Effect<string, Craw
 
 export type CrawlOptions = {
   readonly extensions?: readonly string[];
+  readonly filenames?: readonly string[];
 };
 
 /** Every non-ignored file under `root` with an indexable extension, plus its mtime. */
 export const crawl = (root: string, options?: CrawlOptions): Effect.Effect<Entry[], CrawlError> =>
   Effect.gen(function* () {
     const extensions = new Set(options?.extensions ?? DEFAULT_EXTENSIONS);
+    const filenames = new Set(options?.filenames ?? DEFAULT_FILENAMES);
     const stdout = yield* run(['ls-files', '--cached', '--others', '--exclude-standard', '-z'], root);
     const paths = stdout
       .split('\0')
-      .filter((path) => path.length > 0 && extensions.has(extname(path)))
+      .filter((path) => path.length > 0 && (extensions.has(extname(path)) || filenames.has(basename(path))))
       .sort();
 
     const entries = yield* Effect.forEach(

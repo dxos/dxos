@@ -8,6 +8,7 @@ import { mkdir, mkdtemp, rm, utimes, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { promisify } from 'node:util';
+import { parseSync } from 'oxc-parser';
 import { afterAll, beforeAll, describe, expect, test } from 'vitest';
 
 import { EffectEx } from '@dxos/effect';
@@ -151,7 +152,7 @@ describe('Indexer', () => {
     expect(result.timings.reasonMs).toBeGreaterThan(0);
 
     const derived = await withStore((store) =>
-      store.match(undefined, Ontology.importsTestFile, undefined, Ontology.DERIVED_GRAPH),
+      store.match(undefined, Ontology.importsTestFile, undefined, Ontology.derivedGraphIri(Indexer.DEFAULT_REASONER)),
     );
     expect(derived).toHaveLength(2);
 
@@ -202,5 +203,17 @@ describe('Indexer', () => {
     expect(result).toMatchObject({ indexed: 1, reasoned: false, derived: 1 });
     // a no longer imports b, but nothing recomputed the conclusion that said it did.
     expect(await withStore((store) => store.match(undefined, Ontology.importsTestFile))).toHaveLength(1);
+  }, 60_000);
+  test('every snippet the index holds is valid TypeScript', async () => {
+    const snippets = await withStore((store) => store.match(undefined, Ontology.snippet));
+    expect(snippets.length).toBeGreaterThan(0);
+    for (const quad of snippets) {
+      const file = decodeURIComponent(quad.subject.value.slice(Ontology.FILE_BASE.length).split('#')[0]);
+      // Re-parsed under the file's own extension: `<T>(…) =>` is a generic arrow in .ts, JSX in .tsx.
+      expect(
+        parseSync(file, quad.object.value).errors.map((error) => error.message),
+        file,
+      ).toEqual([]);
+    }
   }, 60_000);
 });

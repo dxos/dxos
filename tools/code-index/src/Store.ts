@@ -63,7 +63,7 @@ export type Stats = {
 export type Binding = Record<string, string>;
 
 export type ReasonOptions = {
-  /** Replace the derived graph with this pass's conclusions (default false — derivations are returned only). */
+  /** Replace the reasoner's graph with this pass's conclusions (default false — derivations are returned only). */
   readonly materialize?: boolean;
 };
 
@@ -82,7 +82,7 @@ export interface Api {
    * Upsert one file: replaces its named graph with the document's quads and advances the ledger.
    * The ledger row is the commit marker, so a crash at any point leaves the previous revision live.
    */
-  readonly putFileDocument: (document: Ontology.FileDocument) => Effect.Effect<void, StoreError>;
+  readonly putDocument: (document: Ontology.FileDocument) => Effect.Effect<void, StoreError>;
   /** Drop a file's graph and ledger row (the file is gone from the working tree). */
   readonly removeFile: (path: string) => Effect.Effect<void, StoreError>;
   /** Discard graphs left behind by an interrupted commit. Runs automatically when the store opens. */
@@ -108,7 +108,9 @@ export interface Api {
    * Run N3 rules (EYE) over the asserted facts; returns the derived quads. `materialize` replaces
    * the derived graph with this pass's conclusions — derivations never outlive their premises.
    */
-  readonly reason: (rules: string, options?: ReasonOptions) => Effect.Effect<Quad[], StoreError>;
+  readonly reason: (reasoner: string, rules: string, options?: ReasonOptions) => Effect.Effect<Quad[], StoreError>;
+  /** Every quad a reasoner concluded, as its graph currently stands. */
+  readonly derived: (reasoner?: string) => Effect.Effect<Quad[], StoreError>;
 
   readonly stats: () => Effect.Effect<Stats, StoreError>;
   readonly clear: () => Effect.Effect<void, StoreError>;
@@ -212,14 +214,14 @@ const make = (dir: string): Effect.Effect<Api, StoreError, SqlClient.SqlClient |
      * rules mention. Handing EYE the whole graph made the reasoning phase cost more than the rest
      * of an indexing pass by two orders of magnitude, for facts no rule could match.
      */
-    const facts = (rules: string): Effect.Effect<Quad[], StoreError> =>
+    const facts = (rules: string, ownGraph: string): Effect.Effect<Quad[], StoreError> =>
       Effect.gen(function* () {
         const wanted = predicatesOf(rules);
         const quads = yield* match();
+        // A reasoner sees the file graphs and every other reasoner's conclusions, but never its own:
+        // reading its own output back would let a derivation keep itself alive.
         return quads.filter(
-          (quad) =>
-            quad.graph.value !== Ontology.DERIVED_GRAPH.value &&
-            (wanted === undefined || wanted.has(quad.predicate.value)),
+          (quad) => quad.graph.value !== ownGraph && (wanted === undefined || wanted.has(quad.predicate.value)),
         );
       });
 
@@ -257,7 +259,7 @@ const make = (dir: string): Effect.Effect<Api, StoreError, SqlClient.SqlClient |
 
     yield* reconcile();
 
-    const putFileDocument: Api['putFileDocument'] = (document) =>
+    const putDocument: Api['putDocument'] = (document) =>
       Effect.gen(function* () {
         const graph = Ontology.graphIri(document.path, document.mtime);
         const quads = yield* tryStore('Failed to parse document', () => parseJsonLd(document, graph));
@@ -339,7 +341,7 @@ const make = (dir: string): Effect.Effect<Api, StoreError, SqlClient.SqlClient |
           Effect.mapError(fail('Failed to write meta')),
         ),
 
-      putFileDocument,
+      putDocument,
       removeFile,
       reconcile,
       putQuads,
@@ -376,11 +378,10 @@ const make = (dir: string): Effect.Effect<Api, StoreError, SqlClient.SqlClient |
           return quads.length;
         }),
 
-      reason: (rules, options) =>
+      reason: (reasoner, rules, options) =>
         Effect.gen(function* () {
-          // Premises are the asserted facts only: feeding a previous run's conclusions back in
-          // would let a derivation keep itself alive after the fact it came from was retracted.
-          const data = yield* serialize(yield* facts(rules));
+          const graph = Ontology.derivedGraphIri(reasoner);
+          const data = yield* serialize(yield* facts(rules, graph.value));
           const derived = yield* tryStore('Reasoning failed', () =>
             n3reasoner([data, rules].join('\n'), undefined, { output: 'derivations' }),
           );
@@ -388,16 +389,19 @@ const make = (dir: string): Effect.Effect<Api, StoreError, SqlClient.SqlClient |
             try: () => new Parser({ format: 'text/n3' }).parse(typeof derived === 'string' ? derived : ''),
             catch: fail('Failed to parse derivations'),
           });
-          const quads = parsed.map((quad) =>
-            DataFactory.quad(quad.subject, quad.predicate, quad.object, Ontology.DERIVED_GRAPH),
-          );
+          const quads = parsed.map((quad) => DataFactory.quad(quad.subject, quad.predicate, quad.object, graph));
           if (options?.materialize) {
-            // The whole derived graph is replaced in one batch, so conclusions are either the ones
-            // this pass entailed or none at all — never a mix of two generations.
-            yield* patchGraph(yield* match(undefined, undefined, undefined, Ontology.DERIVED_GRAPH), quads);
+            // The reasoner's whole graph is replaced in one batch, so conclusions are either the
+            // ones this pass entailed or none at all — never a mix of two generations.
+            yield* patchGraph(yield* match(undefined, undefined, undefined, graph), quads);
           }
           return quads;
         }),
+
+      derived: (reasoner) =>
+        reasoner === undefined
+          ? Effect.map(match(), (quads) => quads.filter((quad) => Ontology.isDerivedGraph(quad.graph.value)))
+          : match(undefined, undefined, undefined, Ontology.derivedGraphIri(reasoner)),
 
       stats: () =>
         Effect.gen(function* () {

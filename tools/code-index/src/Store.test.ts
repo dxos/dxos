@@ -26,8 +26,11 @@ const document = (path: string, mtime: number, imports: string[] = []): Ontology
   'size': 10 + mtime,
   mtime,
   'hash': `hash-${path}-${mtime}`,
+  'inPackage': Ontology.packageIri('@dxos/test').value,
   'imports': imports.map((target) => Ontology.fileIri(target).value),
+  'importsType': [],
   'importsModule': ['effect'],
+  'reexports': [],
   'declares': [
     {
       '@id': Ontology.symbolIri(path, 'thing').value,
@@ -36,6 +39,14 @@ const document = (path: string, mtime: number, imports: string[] = []): Ontology
       'kind': 'variable',
       'exported': true,
       'line': 3,
+      'extends': [],
+      'constructedBy': [],
+      'pipedThrough': [],
+      'derivedFrom': [],
+      'argument': [],
+      'apiDependsOn': [],
+      'implDependsOn': [],
+      'snippet': 'export const thing = 1;',
     },
   ],
 });
@@ -57,7 +68,7 @@ describe('Store', () => {
   test('a document lands in the file ledger and its own named graph', async () => {
     const [record, quads] = await withStore((store) =>
       Effect.gen(function* () {
-        yield* store.putFileDocument(document('src/a.ts', 1, ['src/b.ts']));
+        yield* store.putDocument(document('src/a.ts', 1, ['src/b.ts']));
         return [
           yield* store.getFile('src/a.ts'),
           yield* store.match(undefined, undefined, undefined, Ontology.graphIri('src/a.ts', 1)),
@@ -72,7 +83,7 @@ describe('Store', () => {
 
   test('reindexing swaps the graph rather than accumulating revisions', async () => {
     const before = await withStore((store) => store.stats());
-    await withStore((store) => store.putFileDocument(document('src/a.ts', 2, ['src/b.ts'])));
+    await withStore((store) => store.putDocument(document('src/a.ts', 2, ['src/b.ts'])));
 
     const [state, stale, fresh, after] = await withStore((store) =>
       Effect.gen(function* () {
@@ -130,6 +141,8 @@ describe('Store', () => {
     expect(stats).toMatchObject({ files: 0, quads: 0 });
   });
 
+  const REASONER = 'test';
+
   // A rule of the store's own, kept trivial — what to ship is `rules/example.n3`'s business.
   const RULES = `
     @prefix deus: <${Ontology.PREFIX}>.
@@ -137,41 +150,43 @@ describe('Store', () => {
   `;
 
   test('N3 rules derive new quads, optionally materialized', async () => {
-    await withStore((store) => store.putFileDocument(document('src/a.ts', 3, ['src/b.ts'])));
+    await withStore((store) => store.putDocument(document('src/a.ts', 3, ['src/b.ts'])));
 
-    const derived = await withStore((store) => store.reason(RULES));
+    const derived = await withStore((store) => store.reason(REASONER, RULES));
     expect(derived.map((quad) => quad.predicate.value)).toContain(Ontology.importsTestFile.value);
     expect(await withStore((store) => store.match(undefined, Ontology.importsTestFile))).toHaveLength(0);
 
-    await withStore((store) => store.reason(RULES, { materialize: true }));
+    await withStore((store) => store.reason(REASONER, RULES, { materialize: true }));
     const materialized = await withStore((store) => store.match(undefined, Ontology.importsTestFile));
     expect(materialized).toHaveLength(1);
     // Conclusions live in their own graph, apart from the file graphs they were derived from.
-    expect(materialized[0].graph.value).toEqual(Ontology.DERIVED_GRAPH.value);
+    expect(materialized[0].graph.value).toEqual(Ontology.derivedGraphIri(REASONER).value);
   });
 
   test('a derivation does not outlive the fact that entailed it', async () => {
     // The same file, reindexed without the import: the conclusion must go with its premise.
-    await withStore((store) => store.putFileDocument(document('src/a.ts', 4)));
+    await withStore((store) => store.putDocument(document('src/a.ts', 4)));
     expect(await withStore((store) => store.match(undefined, Ontology.imports))).toHaveLength(0);
     // Still there until the rules are rerun — materialized conclusions are only as fresh as the pass.
     expect(await withStore((store) => store.match(undefined, Ontology.importsTestFile))).toHaveLength(1);
 
-    await withStore((store) => store.reason(RULES, { materialize: true }));
+    await withStore((store) => store.reason(REASONER, RULES, { materialize: true }));
     expect(await withStore((store) => store.match(undefined, Ontology.importsTestFile))).toHaveLength(0);
   });
 
-  test('conclusions are never premises of the next pass', async () => {
-    await withStore((store) => store.putFileDocument(document('src/a.ts', 5, ['src/b.ts'])));
-    await withStore((store) => store.reason(RULES, { materialize: true }));
+  test('a reasoner never reads its own conclusions back', async () => {
+    await withStore((store) => store.putDocument(document('src/a.ts', 5, ['src/b.ts'])));
+    await withStore((store) => store.reason(REASONER, RULES, { materialize: true }));
 
-    // A rule that would fire on a previous pass's conclusion derives nothing: reasoning reads the
-    // asserted facts only.
+    // A rule that would fire on this reasoner's own previous conclusion derives nothing: a reasoner
+    // sees the file graphs and every *other* reasoner's output, never its own.
     const echo = `
       @prefix deus: <${Ontology.PREFIX}>.
       { ?a deus:importsTestFile ?b } => { ?a deus:importsModule "echoed" }.
     `;
-    expect(await withStore((store) => store.reason(echo))).toEqual([]);
+    expect(await withStore((store) => store.reason(REASONER, echo))).toEqual([]);
+    // Another reasoner does see it — that is how reasoners compose.
+    expect(await withStore((store) => store.reason('downstream', echo))).toHaveLength(1);
   });
 
   test('a rule with an unbound predicate still sees the whole graph', async () => {
@@ -180,7 +195,7 @@ describe('Store', () => {
       @prefix deus: <${Ontology.PREFIX}>.
       { ?a ?predicate "src/a.ts" } => { ?a deus:importsTestFile ?a }.
     `;
-    const derived = await withStore((store) => store.reason(wildcard));
+    const derived = await withStore((store) => store.reason(REASONER, wildcard));
     expect(derived).toHaveLength(1);
     expect(derived[0].subject.value).toEqual(Ontology.fileIri('src/a.ts').value);
   });
@@ -188,8 +203,8 @@ describe('Store', () => {
   test('a dotfile path survives serialization', async () => {
     // `.agents/x.ts` under a `file:` prefix would serialize as an illegal prefixed name; both the
     // dump and the reasoner's input have to stay parseable.
-    await withStore((store) => store.putFileDocument(document('.agents/x.ts', 1, ['src/a.ts'])));
-    expect(await withStore((store) => store.reason(RULES, { materialize: true }))).toHaveLength(2);
+    await withStore((store) => store.putDocument(document('.agents/x.ts', 1, ['src/a.ts'])));
+    expect(await withStore((store) => store.reason(REASONER, RULES, { materialize: true }))).toHaveLength(2);
 
     const dumped = await withStore((store) => store.dump());
     expect(dumped).toContain('.agents/x.ts');

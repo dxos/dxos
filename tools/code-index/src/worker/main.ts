@@ -8,29 +8,61 @@
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as RpcServer from 'effect/unstable/rpc/RpcServer';
+import { existsSync, readFileSync } from 'node:fs';
 import { readFile, stat } from 'node:fs/promises';
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
 
 import type * as Ontology from '../Ontology.ts';
-import { type Resolve, analyze, createResolver } from './analyze.ts';
+import { type PackageOf, type Resolve, analyze, createResolver } from './analyze.ts';
 import { Rpcs } from './Protocol.ts';
 
-const resolvers = new Map<string, Resolve>();
+type RootState = { readonly resolve: Resolve; readonly packageOf: PackageOf };
 
-const resolverFor = (root: string): Resolve => {
-  const existing = resolvers.get(root);
+const roots = new Map<string, RootState>();
+
+/** Nearest enclosing `package.json` name, walking up from a repo-relative path; cached per directory. */
+const packageLookup = (root: string): PackageOf => {
+  const byDirectory = new Map<string, string | undefined>();
+  const lookup = (directory: string): string | undefined => {
+    const cached = byDirectory.get(directory);
+    if (cached !== undefined || byDirectory.has(directory)) {
+      return cached;
+    }
+    let found: string | undefined;
+    const manifest = join(root, directory, 'package.json');
+    if (existsSync(manifest)) {
+      try {
+        const parsed: unknown = JSON.parse(readFileSync(manifest, 'utf8'));
+        if (typeof parsed === 'object' && parsed !== null && typeof (parsed as { name?: unknown }).name === 'string') {
+          found = (parsed as { name: string }).name;
+        }
+      } catch {
+        // An unparseable manifest names nothing; the file's own analyzer reports the error.
+      }
+    }
+    if (found === undefined && directory !== '.' && directory !== '') {
+      found = lookup(dirname(directory));
+    }
+    byDirectory.set(directory, found);
+    return found;
+  };
+  return (path) => lookup(dirname(path));
+};
+
+const stateFor = (root: string): RootState => {
+  const existing = roots.get(root);
   if (existing) {
     return existing;
   }
-  const created = createResolver(root);
-  resolvers.set(root, created);
+  const created = { resolve: createResolver(root), packageOf: packageLookup(root) };
+  roots.set(root, created);
   return created;
 };
 
 const handlers = Rpcs.toLayer({
   AnalyzeBatch: ({ root, files }) =>
     Effect.promise(async () => {
-      const resolve = resolverFor(root);
+      const { resolve, packageOf } = stateFor(root);
       const analyzed: Array<{ path: string; mtime: number; document: Ontology.FileDocument }> = [];
       const skipped: Array<{ path: string; reason: string }> = [];
       for (const file of files) {
@@ -43,7 +75,7 @@ const handlers = Rpcs.toLayer({
           analyzed.push({
             path: file.path,
             mtime,
-            document: analyze({ root, path: file.path, source, mtime, resolve }),
+            document: analyze({ root, path: file.path, source, mtime, resolve, packageOf }),
           });
         } catch (error) {
           skipped.push({ path: file.path, reason: error instanceof Error ? error.message : String(error) });
