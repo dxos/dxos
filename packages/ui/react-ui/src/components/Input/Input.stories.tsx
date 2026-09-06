@@ -49,7 +49,12 @@ type StoryArgs = Partial<{
 type RowProps = PropsWithChildren<
   Pick<
     StoryArgs,
-    'label' | 'labelVisuallyHidden' | 'description' | 'descriptionVisuallyHidden' | 'validationMessage'
+    | 'label'
+    | 'labelVisuallyHidden'
+    | 'description'
+    | 'descriptionVisuallyHidden'
+    | 'validationMessage'
+    | 'validationValence'
   > & {
     /** Lead with the control: a checkbox or switch reads control-then-label. */
     inline?: boolean;
@@ -60,29 +65,44 @@ type RowProps = PropsWithChildren<
 const Row = ({
   inline,
   label,
+  validationValence,
   labelVisuallyHidden,
   description,
   descriptionVisuallyHidden,
   validationMessage,
   children,
 }: RowProps) => (
-  <div className='flex items-center gap-2'>
-    {inline && children}
-    <Input.Label srOnly={labelVisuallyHidden} classNames='shrink-0'>
-      {label}
-    </Input.Label>
-    {!inline && children}
-    <Input.DescriptionAndValidation
-      srOnly={descriptionVisuallyHidden}
-      classNames={mx('flex grow shrink-0 whitespace-nowrap', validationMessage && 'justify-end')}
-    >
-      {validationMessage ? (
-        <Input.Validation classNames='block'>{validationMessage}</Input.Validation>
-      ) : (
-        <Input.Description>{description}</Input.Description>
+  <Input.Root validationValence={validationValence}>
+    <div className='flex flex-col gap-1'>
+      {(inline && (
+        <div className='flex items-center gap-1'>
+          {children}
+          ===
+          <Input.Label srOnly={labelVisuallyHidden} classNames='shrink-0'>
+            {label}
+          </Input.Label>
+        </div>
+      )) || (
+        <>
+          <Input.Label srOnly={labelVisuallyHidden} classNames='shrink-0'>
+            {label}
+          </Input.Label>
+          {children}
+        </>
       )}
-    </Input.DescriptionAndValidation>
-  </div>
+
+      <Input.DescriptionAndValidation
+        srOnly={descriptionVisuallyHidden}
+        classNames={mx('flex grow shrink-0 whitespace-nowrap', validationMessage && 'justify-end')}
+      >
+        {validationMessage ? (
+          <Input.Validation classNames='block'>{validationMessage}</Input.Validation>
+        ) : (
+          <Input.Description>{description}</Input.Description>
+        )}
+      </Input.DescriptionAndValidation>
+    </div>
+  </Input.Root>
 );
 
 const DefaultStory = ({
@@ -117,19 +137,17 @@ const DefaultStory = ({
   })();
 
   return (
-    <Input.Root validationValence={validationValence}>
-      <Row
-        validationValence={validationValence}
-        inline={kind === 'checkbox' || kind === 'switch'}
-        label={label}
-        labelVisuallyHidden={labelVisuallyHidden}
-        description={description}
-        descriptionVisuallyHidden={descriptionVisuallyHidden}
-        validationMessage={validationMessage}
-      >
-        {control}
-      </Row>
-    </Input.Root>
+    <Row
+      validationValence={validationValence}
+      inline={kind === 'checkbox' || kind === 'switch'}
+      label={label}
+      labelVisuallyHidden={labelVisuallyHidden}
+      description={description}
+      descriptionVisuallyHidden={descriptionVisuallyHidden}
+      validationMessage={validationMessage}
+    >
+      {control}
+    </Row>
   );
 };
 
