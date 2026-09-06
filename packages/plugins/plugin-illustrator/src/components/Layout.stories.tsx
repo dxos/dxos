@@ -113,9 +113,13 @@ type StoryArgs = {
   lattice: number;
   /** Group arrangement; `auto` lets the objective choose. */
   arrangement: 'auto' | MermaidEngine.Arrangement;
+  /** How references rank their ends; `auto` lets the objective choose. */
+  layering: 'auto' | MermaidEngine.Layering;
+  /** Package alignment in columns; `auto` lets the objective choose. */
+  alignment: 'auto' | MermaidEngine.Alignment;
 };
 
-const Bench = ({ source: initial, lattice, arrangement }: StoryArgs) => {
+const Bench = ({ source: initial, lattice, arrangement, layering, alignment }: StoryArgs) => {
   const [source, setSource] = useState(initial);
   useEffect(() => setSource(initial), [initial]);
   const [objects, setObjects] = useState<Scene.WorldObject[]>([]);
@@ -127,6 +131,8 @@ const Bench = ({ source: initial, lattice, arrangement }: StoryArgs) => {
     MermaidEngine.layout(source, {
       ...(lattice > 0 ? { lattice } : {}),
       ...(arrangement !== 'auto' ? { arrangement: [arrangement] } : {}),
+      ...(layering !== 'auto' ? { layering: [layering] } : {}),
+      ...(alignment !== 'auto' ? { alignment: [alignment] } : {}),
     })
       .then((layout) => {
         if (!cancelled) {
@@ -143,7 +149,7 @@ const Bench = ({ source: initial, lattice, arrangement }: StoryArgs) => {
     return () => {
       cancelled = true;
     };
-  }, [source, lattice, arrangement]);
+  }, [source, lattice, arrangement, layering, alignment]);
   const report = useMemo(() => Diagnostics.analyze(objects), [objects]);
   const errors = Diagnostics.errors(report);
 
@@ -180,7 +186,7 @@ const Bench = ({ source: initial, lattice, arrangement }: StoryArgs) => {
               {` · ${report.metrics.nodes} nodes · ${report.metrics.connectors} connectors · ${report.metrics.crossings} crossings · ${report.metrics.bends} bends · gap spread ${report.metrics.frameGapSpread}`}
               {result && (
                 <div className='text-description'>
-                  {`chosen: lattice ${result.chosen.candidate.lattice} · order ${result.chosen.candidate.order} · ${result.chosen.candidate.arrangement} · bus ${result.chosen.candidate.bus} · cost ${result.chosen.evaluation.cost.toFixed(2)} of ${result.ranked.length} candidates — `}
+                  {`chosen: lattice ${result.chosen.candidate.lattice} · order ${result.chosen.candidate.order} · ${result.chosen.candidate.arrangement} · ${result.chosen.candidate.layering} · align ${result.chosen.candidate.alignment} · bus ${result.chosen.candidate.bus} · cost ${result.chosen.evaluation.cost.toFixed(2)} of ${result.ranked.length} candidates — `}
                   {result.chosen.evaluation.terms
                     .map(({ id, value, weighted }) => `${id} ${value}×→${weighted.toFixed(1)}`)
                     .join(' · ')}
@@ -204,7 +210,7 @@ const meta = {
   render: Bench,
   decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
   parameters: { layout: 'fullscreen' },
-  args: { lattice: 0, arrangement: 'auto' },
+  args: { lattice: 0, arrangement: 'auto', layering: 'auto', alignment: 'auto' },
   argTypes: {
     lattice: {
       description: '0 lets the objective choose among candidates; otherwise fixes the lattice pitch.',
@@ -215,6 +221,17 @@ const meta = {
         'auto lets the objective choose; layered stacks groups along the flow, columns sets them side by side.',
       control: 'radio',
       options: ['auto', 'layered', 'columns'],
+    },
+    layering: {
+      description:
+        'How a reference ranks its ends: down (referenced below), up (referenced above, like a base type), free (no rank).',
+      control: 'radio',
+      options: ['auto', 'down', 'up', 'free'],
+    },
+    alignment: {
+      description: "In columns: none keeps ELK's rows; edges shifts each package to meet its cross-package partners.",
+      control: 'radio',
+      options: ['auto', 'none', 'edges'],
     },
   },
 } satisfies Meta<typeof Bench>;

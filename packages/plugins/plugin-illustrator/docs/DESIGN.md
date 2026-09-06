@@ -223,6 +223,18 @@ rule, not only a weight. The
 bench's `arrangement` control forces either, which is how the exchange rates get argued about with a
 picture in front of you.
 
+Two more axes came out of the same fixture. With columns chosen, Q→X still jogged: not a routing
+failure but two placement decisions made before routing — references ranked Q below P and R (ELK reads
+every arrow as "target below"), and the column placement left P's two rows on the bottom of X's three,
+so Q sat two rows under X and the router's single-bend routes were blocked by P above and Y below.
+`layering` makes the reference convention a candidate (`down`, `up` — the referenced above, as a base
+type is — or `free`; the typed relations always rank, and a reference between packages always orders
+the packages), and `alignment` (`edges`) shifts each package by whole rows to where its cross-package
+edges meet their partners. Neither is a rule that fires; both widen the set the objective chooses from,
+and knob settings that reach an already routed placement are skipped. On `Basic` the cost went 7.0 → 5.0
+with Q→X straight; on the corpus crossings fell 53 → 47 while bends rose 115 → 123, the objective
+spending bends where a crossing or connector length bought more.
+
 ### Rules as generators: the inheritance bus
 
 Subtypes of one base that sit on one row beneath it connect through a shared horizontal bus and a

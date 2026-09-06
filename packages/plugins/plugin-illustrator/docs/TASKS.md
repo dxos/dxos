@@ -99,6 +99,25 @@ its scorer interface now and fixtures later.
 - [x] **Connector-length cost term** (0.03/grid unit; 0.1 traded crossings for length on compute and
       edge) — with it, `Basic` picks columns 7.0 vs layered 7.2: Y→A straight, packages side by side.
       Ablation: with de-collision off the term leaves every corpus choice unchanged.
+- [x] **Layering and alignment axes** (from "the jog between Q and X could be avoided") — two placement
+      decisions, not the router, forced that jog: references ranked Q below P and R, and ELK's column
+      placement left P's rows bottom-aligned with X's. New candidate axes: `layering` (`down` — ELK's
+      reading of a reference; `up` — the referenced above, as a base type is; `free` — a reference ranks
+      nothing; inheritance/has-many/containment always rank, and a reference between packages always
+      orders them) and `alignment` (`none` | `edges` — each package shifts by whole rows to where its
+      cross-package edges meet their partners, columns only). Knob settings that reach an already routed
+      placement are skipped, so the candidate count is a ceiling (72 on `Basic`). Port nudges now come in
+      pairs first so a straight edge stays straight when it is moved off a taken port. `Basic`: cost
+      7.0 → 5.0, 3 → 1 bends, Q→X straight. Corpus (crossings/bends): app-framework 12/24 → 8/24,
+      assistant 6/12 → 6/12, compute 11/25 → 10/31, echo 6/25 → 6/25, edge 17/28 → 17/30, pipeline
+      1/11 → 0/11 — 53 → 47 crossings, 115 → 123 bends. Cost: a corpus compile went from ~20 s to ~65 s;
+      the corpus hook budget is 300 s. Follow-up below.
+- [ ] **Candidate sweep cost** — 72 raw candidates per diagram; profile ELK vs routing, drop knob values
+      that never place on the corpus, or grade placements with the cheap Z-router and A*-route only the
+      short list.
+- [ ] **Review routine (eval loop)** — generate 10 diagrams for user review; the user describes what is
+      wrong with each; turn the observations into constraints, cost terms or candidate axes and re-run
+      the corpus. (tracked 2026-09-05)
 - [ ] **`shared-port` diagnostic** — the analyzer should report coincident terminals, not just the
       crossings they cause.
 - [ ] **Bus for LR/RL** and for bases not directly above their subtypes (a jogged trunk).

@@ -32,7 +32,7 @@ describe.each(corpus)('corpus: %s', (_name, source) => {
   let objects: Scene.WorldObject[];
   beforeAll(async () => {
     objects = objectsOf(await MermaidEngine.compile(source));
-  }, 120_000);
+  }, 300_000);
 
   test('renders with no hard defects', ({ expect }) => {
     const report = analyze(objects);

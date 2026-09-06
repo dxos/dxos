@@ -52,9 +52,27 @@ export type Order = 'model' | 'free';
  */
 export type Arrangement = 'layered' | 'columns';
 
+/**
+ * How a plain reference ranks its ends. Inheritance always ranks the base above, has-many and
+ * containment the owner above; a reference has no such convention, so it is a candidate axis:
+ * `down` — the referenced sits below, ELK's reading of an arrow; `up` — the referenced sits above,
+ * as the abstraction does, so a node many others point at heads its package; `free` — a reference
+ * ranks nothing and its ends may share a row. Between packages a reference always orders the packages.
+ */
+export type Layering = 'down' | 'up' | 'free';
+
+/**
+ * How packages sit along the flow in `columns`: `none` keeps ELK's placement; `edges` shifts each
+ * package by whole rows to where its cross-package edges meet their partners' rows, so those edges
+ * run straight instead of jogging between a short package and a tall one.
+ */
+export type Alignment = 'none' | 'edges';
+
 const LATTICES: readonly number[] = [1.5, 2];
 const ORDERS: readonly Order[] = ['model', 'free'];
 const ARRANGEMENTS: readonly Arrangement[] = ['layered', 'columns'];
+const LAYERINGS: readonly Layering[] = ['down', 'up', 'free'];
+const ALIGNMENTS: readonly Alignment[] = ['none', 'edges'];
 
 /** The direction perpendicular to the flow, for arranging groups across it. */
 const ACROSS: Record<Direction, string> = { TB: 'RIGHT', BT: 'RIGHT', LR: 'DOWN', RL: 'DOWN' };
@@ -75,6 +93,10 @@ export type CompileOptions = {
   order?: readonly Order[];
   /** Group arrangement candidates (default both when the graph has two or more groups). */
   arrangement?: readonly Arrangement[];
+  /** How references rank their ends (default all three candidates). */
+  layering?: readonly Layering[];
+  /** Package alignment candidates along the flow, in `columns` (default both). */
+  alignment?: readonly Alignment[];
   /**
    * Inheritance bus candidates (default both): with `true`, subtypes on one row that share a base
    * connect through one horizontal bus and a single triangle-headed trunk instead of parallel arrows.
@@ -93,6 +115,8 @@ export type Candidate = {
   lattice: number;
   order: Order;
   arrangement: Arrangement;
+  layering: Layering;
+  alignment: Alignment;
   bus: boolean;
   commands: Scene.Command[];
   layout: Objective.Layout;
@@ -239,12 +263,21 @@ type ElkEdge = { id: string; sources: string[]; targets: string[] };
  * seeing inside them (`SEPARATE_CHILDREN`), so every edge is lifted to its endpoints' root-level
  * representatives — the group, or the node itself when ungrouped — and the groups fall into
  * dependency order; edges within one group stay where they are for that group's own layout.
+ * A reference between packages always orders the packages; within one it ranks per `layering`.
  */
-const layeringEdges = (graph: MermaidGraph, arrangement: Arrangement): ElkEdge[] => {
+const layeringEdges = (graph: MermaidGraph, arrangement: Arrangement, layering: Layering): ElkEdge[] => {
   const groupOf = new Map(graph.groups.flatMap((group) => group.children.map((id) => [id, group.id] as const)));
-  const oriented = graph.edges.map((edge) =>
-    edge.kind === 'inheritance' ? { from: edge.to, to: edge.from } : { from: edge.from, to: edge.to },
-  );
+  const betweenGroups = (edge: MermaidEdge) =>
+    groupOf.has(edge.from) && groupOf.has(edge.to) && groupOf.get(edge.from) !== groupOf.get(edge.to);
+  const oriented = graph.edges.flatMap((edge) => {
+    if (edge.kind === 'inheritance') {
+      return [{ from: edge.to, to: edge.from }];
+    }
+    if (edge.kind !== 'reference' || layering === 'down' || betweenGroups(edge)) {
+      return [{ from: edge.from, to: edge.to }];
+    }
+    return layering === 'up' ? [{ from: edge.to, to: edge.from }] : [];
+  });
   if (arrangement === 'layered') {
     return oriented.map((edge, index) => ({ id: `edge-${index}`, sources: [edge.from], targets: [edge.to] }));
   }
@@ -279,7 +312,8 @@ const place = async (
   pitch: Pitch,
   order: Order,
   arrangement: Arrangement,
-): Promise<Placement> => {
+  layering: Layering,
+): Promise<Map<string, Scene.Point>> => {
   const horizontal = graph.direction === 'LR' || graph.direction === 'RL';
   const grouped = new Set(graph.groups.flatMap((group) => group.children));
   const leaf = (id: string): ElkNode => ({ id, width: cell.w, height: cell.h });
@@ -331,7 +365,7 @@ const place = async (
             ...spacing,
           },
     children,
-    edges: layeringEdges(graph, arrangement),
+    edges: layeringEdges(graph, arrangement, layering),
   });
 
   const raw = new Map<string, Scene.Point>();
@@ -348,11 +382,81 @@ const place = async (
   };
   visit(result, { x: 0, y: 0 });
 
-  const quantized = compactGroups(graph, quantize(raw, pitch, horizontal), cell, pitch, horizontal);
-  const minX = Math.min(0, ...[...quantized.values()].map((point) => point.x));
-  const minY = Math.min(0, ...[...quantized.values()].map((point) => point.y));
+  return compactGroups(graph, quantize(raw, pitch, horizontal), cell, pitch, horizontal);
+};
+
+/**
+ * Align each package to its cross-package edges: among the whole-row shifts that put one of its
+ * members on the row of that member's partner, take the one leaving its edges the least total row
+ * offset (nearest to no shift on a tie), onto free lattice points only. Two sweeps, since a partner
+ * may itself move in the first.
+ */
+const alignGroups = (
+  graph: MermaidGraph,
+  positions: Map<string, Scene.Point>,
+  direction: Direction,
+  alignment: Alignment,
+): Map<string, Scene.Point> => {
+  if (alignment === 'none') {
+    return positions;
+  }
+  const axis = direction === 'LR' || direction === 'RL' ? 'x' : 'y';
+  const groupOf = new Map(graph.groups.flatMap((group) => group.children.map((id) => [id, group.id] as const)));
+  const result = new Map(positions);
+  for (let sweep = 0; sweep < 2; sweep++) {
+    for (const group of graph.groups) {
+      const members = new Set(group.children.filter((id) => result.has(id)));
+      // Each cross-package edge, as the member's coordinate and the partner's along the flow.
+      const pairs = graph.edges.flatMap((edge) => {
+        const [member, partner] = members.has(edge.from) ? [edge.from, edge.to] : [edge.to, edge.from];
+        const here = result.get(member);
+        const there = result.get(partner);
+        return members.has(member) && !members.has(partner) && groupOf.has(partner) && here && there
+          ? [{ here: here[axis], there: there[axis] }]
+          : [];
+      });
+      if (pairs.length === 0) {
+        continue;
+      }
+      const offset = (shift: number) => pairs.reduce((sum, pair) => sum + Math.abs(pair.here + shift - pair.there), 0);
+      const shifts = [...new Set([0, ...pairs.map((pair) => pair.there - pair.here)])].sort(
+        (left, right) => offset(left) - offset(right) || Math.abs(left) - Math.abs(right),
+      );
+      const others = new Set(
+        [...result].filter(([id]) => !members.has(id)).map(([, point]) => `${point.x}:${point.y}`),
+      );
+      const shift = shifts.find(
+        (candidate) =>
+          ![...members].some((id) => {
+            const point = result.get(id);
+            return (
+              point &&
+              others.has(
+                `${axis === 'x' ? point.x + candidate : point.x}:${axis === 'y' ? point.y + candidate : point.y}`,
+              )
+            );
+          }),
+      );
+      if (!shift) {
+        continue;
+      }
+      for (const id of members) {
+        const point = result.get(id);
+        if (point) {
+          result.set(id, { ...point, [axis]: point[axis] + shift });
+        }
+      }
+    }
+  }
+  return result;
+};
+
+/** Node rects at the origin plus the frame around each group's members. */
+const frame = (graph: MermaidGraph, positions: Map<string, Scene.Point>, cell: Cell): Placement => {
+  const minX = Math.min(0, ...[...positions.values()].map((point) => point.x));
+  const minY = Math.min(0, ...[...positions.values()].map((point) => point.y));
   const nodes = new Map<string, Rect>(
-    [...quantized].map(([id, point]) => [id, { x: point.x - minX, y: point.y - minY, w: cell.w, h: cell.h }]),
+    [...positions].map(([id, point]) => [id, { x: point.x - minX, y: point.y - minY, w: cell.w, h: cell.h }]),
   );
 
   const frames = new Map<string, Rect>();
@@ -590,16 +694,18 @@ const emit = (
           Math.abs(other.point.x - point.x) < GRID_FINE &&
           Math.abs(other.point.y - point.y) < GRID_FINE,
       );
+    // Paired nudges first: both ends move together, so a straight edge stays straight; single-ended
+    // ones for when only one end is crowded.
     const NUDGES: [number, number][] = [
       [0, 0],
+      [1, 1],
+      [-1, -1],
+      [2, 2],
+      [-2, -2],
       [1, 0],
       [-1, 0],
       [0, 1],
       [0, -1],
-      [2, 0],
-      [-2, 0],
-      [0, 2],
-      [0, -2],
     ];
     const routeEdge = (edge: MermaidEdge, from: Rect, to: Rect): Scene.Point[] => {
       const horizontal = isHorizontal(edge);
@@ -695,27 +801,54 @@ export const layout = async (source: string, options: CompileOptions = {}): Prom
   // Columns only mean something with two or more groups to arrange.
   const grouped = graph.groups.filter((group) => group.children.length > 0).length;
   const arrangements = options.arrangement ?? (grouped >= 2 ? ARRANGEMENTS : ['layered']);
+  const layerings = options.layering ?? LAYERINGS;
+  const alignments = options.alignment ?? ALIGNMENTS;
   invariant(
-    lattices.length > 0 && orders.length > 0 && buses.length > 0 && arrangements.length > 0,
+    lattices.length > 0 &&
+      orders.length > 0 &&
+      buses.length > 0 &&
+      arrangements.length > 0 &&
+      layerings.length > 0 &&
+      alignments.length > 0,
     'every candidate axis needs a value',
   );
 
   const candidates: Candidate[] = [];
+  // Knobs often reach the same placement (a graph with no in-package references layers the same
+  // either way; equal-height packages align the same every way); each is routed and graded once.
+  const seen = new Set<string>();
   for (const lattice of lattices) {
     for (const order of orders) {
       for (const arrangement of arrangements) {
-        const placement = await place(graph, cell, pitchFor(graph, cell, lattice), order, arrangement);
-        for (const bus of buses) {
-          const commands = emit(graph, cell, placement, { origin, scale, bus, arrangement, route });
-          const objects = objectsOf(commands);
-          candidates.push({
-            lattice,
-            order,
-            arrangement,
-            bus,
-            commands,
-            layout: { objects, report: Diagnostics.analyze(objects) },
-          });
+        for (const layering of layerings) {
+          const pitch = pitchFor(graph, cell, lattice);
+          const positions = await place(graph, cell, pitch, order, arrangement, layering);
+          // Alignment moves packages relative to each other, which only columns set side by side.
+          for (const alignment of arrangement === 'columns' ? alignments : (['none'] as const)) {
+            const placement = frame(graph, alignGroups(graph, positions, graph.direction, alignment), cell);
+            const key = [...placement.nodes]
+              .map(([id, rect]) => `${id}:${rect.x}:${rect.y}`)
+              .sort()
+              .join(' ');
+            for (const bus of buses) {
+              if (seen.has(`${arrangement}|${bus}|${key}`)) {
+                continue;
+              }
+              seen.add(`${arrangement}|${bus}|${key}`);
+              const commands = emit(graph, cell, placement, { origin, scale, bus, arrangement, route });
+              const objects = objectsOf(commands);
+              candidates.push({
+                lattice,
+                order,
+                arrangement,
+                layering,
+                alignment,
+                bus,
+                commands,
+                layout: { objects, report: Diagnostics.analyze(objects) },
+              });
+            }
+          }
         }
       }
     }
