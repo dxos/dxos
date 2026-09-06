@@ -350,26 +350,30 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
   /**
    * Mirrors one written key onto the target, for a refresh narrowed by a
    * {@link ObjectCore.changeTargetKey} scope, so a single-property write costs one key rather than the
-   * object's width. Returns false when the key is not the whole of the change — a container's own
-   * target, and everything already materialized under it, still holds what the container replaced — and
-   * the caller falls back to refreshing the record.
+   * object's width. Returns false when the key is not the whole of the change — a container on either
+   * side of the write owns a target, and everything already materialized under it, that no longer
+   * matches the document — and the caller falls back to refreshing the record.
    */
   private _writeThrough(target: ProxyTarget, key: string): boolean {
-    if (
-      target instanceof EchoArray ||
-      !this._canMaterialize(target[symbolInternals]) ||
-      Reflect.has(Object.getPrototypeOf(target), key)
-    ) {
+    if (!this._canMaterialize(target[symbolInternals])) {
       return true;
     }
+    // An array holds no data of its own, so the write is entirely in the targets below it.
+    if (target instanceof EchoArray) {
+      return false;
+    }
+    if (Reflect.has(Object.getPrototypeOf(target), key)) {
+      return true;
+    }
+    const previous = (target as any)[key];
     const stored = target[symbolInternals].getRaw([target[symbolNamespace], ...target[symbolPath], key]);
     if (stored === undefined) {
       delete (target as any)[key];
-      return true;
+      return !isProxy(previous);
     }
     const value = this._materializeValue(target, key, stored);
     Object.defineProperty(target, key, { value, writable: true, enumerable: true, configurable: true });
-    return !isProxy(value);
+    return !isProxy(previous) && !isProxy(value);
   }
 
   set(target: ProxyTarget, prop: string | symbol, value: any, receiver: any): boolean {

@@ -4,9 +4,19 @@
 
 import { invariant } from '@dxos/invariant';
 
+import { defineHiddenProperty } from './define-hidden-property';
 import { type ReactiveHandler } from './proxy-types';
 
-export const symbolIsProxy = Symbol.for('@dxos/schema/Proxy');
+/**
+ * Carries a proxy on its own target, so `value[symbolProxy] === value` identifies a proxy: read through
+ * the proxy it forwards to the target and answers the proxy, read on the raw target it answers something
+ * else. A registry symbol rather than module state because a remote plugin can evaluate this module
+ * twice, and a proxy made by one instance must still be recognized by the other.
+ */
+const symbolProxy = Symbol.for('@dxos/echo/Proxy');
+
+/** The {@link ProxyHandlerSlot} behind a proxy, reachable from the proxy and from its raw target. */
+const symbolSlot = Symbol.for('@dxos/echo/ProxySlot');
 
 /**
  * Marker placed on a reactive-object behaviour prototype (e.g. the typed handler's
@@ -19,23 +29,10 @@ export const symbolIsProxy = Symbol.for('@dxos/schema/Proxy');
 export const symbolReactivePrototype = Symbol.for('@dxos/echo/ReactivePrototype');
 
 /**
- * Every proxy this module creates, keyed by the proxy itself. Identity is answered from here rather
- * than through a `get` trap so that a proxy without one is still recognized. Held on `globalThis`
- * under a registry symbol because a remote plugin can evaluate this module twice (host and wrapper
- * chunk), and a proxy made by one instance must still be recognized by the other.
- */
-declare global {
-  // eslint-disable-next-line no-var
-  var __dxosProxySlots: WeakMap<object, ProxyHandlerSlot<any>> | undefined;
-}
-
-const proxySlots: WeakMap<object, ProxyHandlerSlot<any>> = (globalThis.__dxosProxySlots ??= new WeakMap());
-
-/**
  * Internal api.
  */
 export const isProxy = (value: unknown): boolean =>
-  (typeof value === 'object' && value !== null && proxySlots.has(value)) || !!(value as any)?.[symbolIsProxy];
+  typeof value === 'object' && value !== null && (value as any)[symbolProxy] === value;
 
 /**
  * True if `value` is a plain data record — either rooted at `Object.prototype` or carrying
@@ -47,13 +44,13 @@ export const isReactiveRecord = (value: any): boolean => {
 };
 
 export const isValidProxyTarget = (value: any): value is object => {
-  // Settled before the `symbolIsProxy` probe: a symbol lookup on a primitive boxes it and walks its
-  // wrapper prototype, and this runs on every proxy read. Functions never qualify either — their
-  // prototype chain is neither `Object.prototype` nor reactive.
+  // Settled before the symbol probe: a symbol lookup on a primitive boxes it and walks its wrapper
+  // prototype, and this runs on every proxy read. Functions never qualify either — their prototype
+  // chain is neither `Object.prototype` nor reactive.
   if (value == null || typeof value !== 'object') {
     return false;
   }
-  if (proxySlots.has(value) || value[symbolIsProxy]) {
+  if (value[symbolProxy] === value) {
     return false;
   }
   if (Array.isArray(value)) {
@@ -67,7 +64,7 @@ export const isValidProxyTarget = (value: any): value is object => {
  * @deprecated
  */
 export const getProxySlot = <T extends object>(proxy: any): ProxyHandlerSlot<T> => {
-  const value = proxySlots.get(proxy) ?? (proxy as any)[symbolIsProxy];
+  const value = (proxy as any)?.[symbolSlot];
   invariant(value instanceof ProxyHandlerSlot);
   return value;
 };
@@ -122,7 +119,9 @@ export const createProxy = <T extends object>(target: T, handler: ReactiveHandle
 
   const slot = new ProxyHandlerSlot<T>(target, handler);
   const proxy = new Proxy(target, slot);
-  proxySlots.set(proxy, slot);
+  // On the target, so that both it and a `get`-less proxy over it answer.
+  defineHiddenProperty(target, symbolSlot, slot);
+  defineHiddenProperty(target, symbolProxy, proxy);
   handler.init(target);
   if (handler.readsForwarded?.(target)) {
     slot.forwardReads();
@@ -181,10 +180,11 @@ class ProxyHandlerSlot<T extends object> implements ProxyHandler<T> {
    * Get value. Removed per proxy by {@link forwardReads} once the target carries its own data.
    */
   get?(target: T, prop: string | symbol, receiver: any): any {
-    if (prop === symbolIsProxy) {
-      return this;
+    // Answered from the target ahead of the handler: these carry the proxy itself, and a handler that
+    // wraps object-valued reads would wrap the proxy — and read the symbol again to decide whether to.
+    if (prop === symbolProxy || prop === symbolSlot) {
+      return Reflect.get(target, prop, receiver);
     }
-
     if (!this._handler || !this._handler.get) {
       return Reflect.get(target, prop, receiver);
     }

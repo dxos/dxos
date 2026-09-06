@@ -37,7 +37,6 @@ import {
   isReactiveRecord,
   isValidProxyTarget,
   normalizeSpliceRange,
-  symbolIsProxy,
   symbolReactivePrototype,
 } from './proxy-utils';
 import { ReactiveArray } from './reactive-array';
@@ -351,7 +350,7 @@ export class TypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
       // Set owner on all nested objects to this root ECHO object.
       // All nested records point directly to this root for centralized reactivity.
       for (const key in target) {
-        if ((target as any)[symbolIsProxy]) {
+        if (isProxy(target)) {
           continue;
         }
         let value = (target as any)[key];
@@ -787,7 +786,7 @@ export const prepareDecodedTypedTarget = <T>(target: T, schema: Schema.Schema<T>
 
 const makeArraysReactive = (target: any) => {
   for (const key in target) {
-    if (target[symbolIsProxy]) {
+    if (isProxy(target)) {
       continue;
     }
     if (Array.isArray(target[key])) {
