@@ -11,6 +11,8 @@ import React, { type CSSProperties, type PropsWithChildren, useState } from 'rea
 import { ACCENT_HUES, type AccentHue, accentTokens, mx } from '@dxos/ui-theme';
 import { type Density, type MessageValence } from '@dxos/ui-types';
 
+import { translations } from '#translations';
+
 import {
   AlertDialog,
   Avatar,
@@ -19,8 +21,10 @@ import {
   Button,
   type ButtonProps,
   Card,
+  Carousel,
   Collapsible,
   ContextMenu,
+  DatePicker,
   Dialog,
   DropdownMenu,
   Editable,
@@ -31,11 +35,15 @@ import {
   Link,
   Popover,
   Progress,
+  QrCode,
+  ScrollArea,
   Select,
   Separator,
   Skeleton,
   Slider,
+  Splitter,
   Stepper,
+  Tabs,
   Tag,
   Toast,
   Toggle,
@@ -617,6 +625,148 @@ const DialogsSection = () => {
   );
 };
 
+const TABS = ['Overview', 'Tasks', 'Files', 'Settings'];
+
+const TabsSection = () => (
+  <Section title='Tabs'>
+    <Tabs.Root asChild orientation='horizontal' defaultValue={TABS[0]} defaultActivePart='list'>
+      <Tabs.Viewport classNames='w-full grid'>
+        <Tabs.Tablist>
+          {TABS.map((tab) => (
+            <Tabs.Button key={tab} value={tab}>
+              {tab}
+            </Tabs.Button>
+          ))}
+        </Tabs.Tablist>
+        <div className='dx-expand'>
+          {TABS.map((tab) => (
+            <Tabs.Panel key={tab} value={tab}>
+              <p className='px-1 py-2 text-sm text-description'>{tab} panel.</p>
+            </Tabs.Panel>
+          ))}
+        </div>
+      </Tabs.Viewport>
+    </Tabs.Root>
+  </Section>
+);
+
+const ToolbarSection = () => (
+  <Section title='Toolbar'>
+    <Toolbar.Root classNames='basis-full'>
+      <Toolbar.IconButton icon='ph--arrow-counter-clockwise--regular' label='Undo' iconOnly />
+      <Toolbar.IconButton icon='ph--arrow-clockwise--regular' label='Redo' iconOnly />
+      <Toolbar.Separator variant='line' />
+      <Toolbar.ToggleGroup type='multiple'>
+        <Toolbar.ToggleGroupIconItem value='bold' icon='ph--text-b--regular' label='Bold' iconOnly />
+        <Toolbar.ToggleGroupIconItem value='italic' icon='ph--text-italic--regular' label='Italic' iconOnly />
+        <Toolbar.ToggleGroupIconItem value='underline' icon='ph--text-underline--regular' label='Underline' iconOnly />
+      </Toolbar.ToggleGroup>
+      <Toolbar.Separator variant='line' />
+      <Toolbar.ToggleGroup type='single' defaultValue='left'>
+        <Toolbar.ToggleGroupIconItem value='left' icon='ph--text-align-left--regular' label='Left' iconOnly />
+        <Toolbar.ToggleGroupIconItem value='center' icon='ph--text-align-center--regular' label='Center' iconOnly />
+        <Toolbar.ToggleGroupIconItem value='right' icon='ph--text-align-right--regular' label='Right' iconOnly />
+      </Toolbar.ToggleGroup>
+      <Toolbar.Separator />
+      <Toolbar.Button variant='primary'>Publish</Toolbar.Button>
+    </Toolbar.Root>
+  </Section>
+);
+
+const SLIDES = Array.from({ length: 4 }).map((_, index) => `https://placehold.co/640x360?text=Slide+${index + 1}`);
+
+const CarouselSection = () => (
+  <Section title='Carousel'>
+    <div className='w-96'>
+      <Carousel.Root count={SLIDES.length} continuous>
+        <Carousel.Content>
+          <Carousel.Previous />
+          <Carousel.Viewport>
+            {SLIDES.map((src, index) => (
+              <Carousel.Slide key={src} index={index} src={src} alt={`Slide ${index + 1}`} />
+            ))}
+          </Carousel.Viewport>
+          <Carousel.Next />
+          <Carousel.Indicators />
+          <Carousel.Caption>{(index) => `Slide ${index + 1} of ${SLIDES.length}`}</Carousel.Caption>
+        </Carousel.Content>
+      </Carousel.Root>
+    </div>
+  </Section>
+);
+
+const SplitterSection = () => (
+  <Section title='Splitter'>
+    {/* The splitter fills its parent, so the parent sets the height the panels share. */}
+    <div className='basis-full h-40 border border-separator rounded-sm overflow-hidden'>
+      <Splitter.Root orientation='horizontal' defaultSize={16} minSize={6} classNames='h-full'>
+        <Splitter.Panel position='start' classNames='p-3 text-sm text-description'>
+          Drag the handle.
+        </Splitter.Panel>
+        <Splitter.Handle />
+        <Splitter.Panel position='end' classNames='p-3 text-sm text-description'>
+          The other side.
+        </Splitter.Panel>
+      </Splitter.Root>
+    </div>
+  </Section>
+);
+
+const QrCodeSection = () => (
+  <Section title='QR code'>
+    <div className='w-32'>
+      <QrCode value='https://dxos.org' />
+    </div>
+    <div className='w-32'>
+      <QrCode value='https://composer.space' errorCorrection='H' />
+    </div>
+  </Section>
+);
+
+const DatePickerSection = () => {
+  const [value, setValue] = useState<Date | undefined>();
+  return (
+    <Section title='Date picker'>
+      <DatePicker.Root mode='single' value={value} onValueChange={setValue}>
+        <DatePicker.Trigger />
+        <DatePicker.Content>
+          <DatePicker.Calendar />
+        </DatePicker.Content>
+      </DatePicker.Root>
+      <span className='text-sm text-description'>{value ? value.toDateString() : 'No date selected'}</span>
+    </Section>
+  );
+};
+
+const SCROLL_ITEMS = Array.from({ length: 24 }).map((_, index) => `Row ${index + 1}`);
+
+const ScrollAreaSection = () => (
+  <Section title='Scroll area'>
+    <div className='h-40 w-64 border border-separator rounded-sm'>
+      <ScrollArea.Root orientation='vertical' padding>
+        <ScrollArea.Viewport classNames='p-2 gap-1'>
+          {SCROLL_ITEMS.map((item) => (
+            <div key={item} className='px-2 py-1 text-sm rounded-sm dx-hover'>
+              {item}
+            </div>
+          ))}
+        </ScrollArea.Viewport>
+      </ScrollArea.Root>
+    </div>
+    <div className='h-40 w-64 border border-separator rounded-sm'>
+      <ScrollArea.Root orientation='vertical' thin>
+        <ScrollArea.Viewport classNames='p-2 gap-1'>
+          {SCROLL_ITEMS.map((item) => (
+            <div key={item} className='px-2 py-1 text-sm rounded-sm dx-hover'>
+              {item} (thin)
+            </div>
+          ))}
+        </ScrollArea.Viewport>
+      </ScrollArea.Root>
+    </div>
+  </Section>
+);
+
 //
 // Stories
 //
@@ -632,10 +782,17 @@ const SECTIONS = [
   AvatarSection,
   SkeletonSection,
   NavigationSection,
+  TabsSection,
+  ToolbarSection,
   EditableSection,
   CollapsibleSection,
   CardSection,
   BannerSection,
+  CarouselSection,
+  SplitterSection,
+  ScrollAreaSection,
+  QrCodeSection,
+  DatePickerSection,
   OverlaysSection,
   DialogsSection,
 ];
@@ -643,7 +800,7 @@ const SECTIONS = [
 const meta = {
   title: 'ui/react-ui-core/playground/Playground',
   decorators: [withTheme()],
-  parameters: { layout: 'fullscreen' },
+  parameters: { layout: 'fullscreen', translations },
 } satisfies Meta;
 
 export default meta;
@@ -771,6 +928,62 @@ export const Dialogs: Story = {
   render: () => (
     <Frame>
       <DialogsSection />
+    </Frame>
+  ),
+};
+
+export const TabsStrip: Story = {
+  render: () => (
+    <Frame>
+      <TabsSection />
+    </Frame>
+  ),
+};
+
+export const Toolbars: Story = {
+  render: () => (
+    <Frame>
+      <ToolbarSection />
+    </Frame>
+  ),
+};
+
+export const Carousels: Story = {
+  render: () => (
+    <Frame>
+      <CarouselSection />
+    </Frame>
+  ),
+};
+
+export const Splitters: Story = {
+  render: () => (
+    <Frame>
+      <SplitterSection />
+    </Frame>
+  ),
+};
+
+export const ScrollAreas: Story = {
+  render: () => (
+    <Frame>
+      <ScrollAreaSection />
+    </Frame>
+  ),
+};
+
+export const QrCodes: Story = {
+  render: () => (
+    <Frame>
+      <QrCodeSection />
+    </Frame>
+  ),
+};
+
+export const DatePickers: Story = {
+  render: () => (
+    <Frame>
+      <DatePickerSection />
     </Frame>
   ),
 };
