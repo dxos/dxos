@@ -1240,7 +1240,9 @@ const validateInitialProps = (target: any, seen: Set<object> = new Set()) => {
         // Pass binary buffers as is; Automerge stores them natively.
       } else {
         throwIfCustomClass(key, value);
-        validateInitialProps(target[key], seen);
+        // Recurse on the raw record: a typed target stores its nested records as sub-proxies, and the
+        // `delete` above would be a mutation outside `Obj.update` on one of those.
+        validateInitialProps(isProxy(value) ? getProxyTarget(value) : value, seen);
       }
     }
   }

@@ -365,6 +365,32 @@ export class TypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
     // Relocate per-object metadata onto an instance-state prototype, leaving only user data as own
     // properties on the target. Done last so all metadata set above (and by `prepareTypedTarget`) moves.
     compactMetadataToInstanceState(target);
+
+    // After compaction and ownership, so each child is stamped and owned before it gets a proxy of its
+    // own. Recursive: wrapping a child runs its `init`, which wraps that child's children.
+    this._wrapNestedValues(target);
+  }
+
+  /**
+   * A record target carries its data as own properties, and its nested records and arrays as their
+   * sub-proxies, so the proxy needs no `get` trap. An array still wraps its elements on read.
+   */
+  readsForwarded(target: ProxyTarget): boolean {
+    return !Array.isArray(target);
+  }
+
+  /**
+   * Replaces every raw nested record and array on the target with the sub-proxy a read returns, so a
+   * forwarded read hands out the same reactive view the `get` trap used to build. Class instances,
+   * `Ref`s and primitives are not proxy targets and stay as they are.
+   */
+  private _wrapNestedValues(target: ProxyTarget): void {
+    for (const key of Object.keys(target)) {
+      const value = (target as any)[key];
+      if (isValidProxyTarget(value) && !Object.getOwnPropertyDescriptor(target, key)?.get) {
+        (target as any)[key] = createProxy(value, this);
+      }
+    }
   }
 
   /**
@@ -584,7 +610,11 @@ export class TypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
       setOwnerRecursive(validatedValue, echoRoot);
     }
 
-    return { echoRoot, preparedValue: validatedValue };
+    // Stored wrapped, for the same reason `init` wraps: the target is what a forwarded read sees.
+    return {
+      echoRoot,
+      preparedValue: isValidProxyTarget(validatedValue) ? createProxy(validatedValue, this) : validatedValue,
+    };
   }
 
   private _validateValue(target: any, prop: string | symbol, value: any) {

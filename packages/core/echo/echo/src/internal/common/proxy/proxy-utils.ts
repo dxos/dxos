@@ -152,12 +152,16 @@ class ProxyHandlerSlot<T extends object> implements ProxyHandler<T> {
   // TODO(burdon): Requires comment.
   setHandler(handler: ReactiveHandler<T>): void {
     this._handler = handler;
+    // The new handler owns the target's shape and decides for itself whether reads can be forwarded;
+    // until it says so, reads go through its trap.
+    delete (this as Partial<ProxyHandlerSlot<T>>).get;
   }
 
   /**
    * Drops this proxy's `get` trap: with no `get` on the handler the engine performs the read on the
    * target itself, so a target that carries its data as own properties is read with no JavaScript call.
-   * Every other trap stays.
+   * Every other trap stays. Reversed by {@link setHandler}, since a swap can hand the target to a
+   * handler that does not keep it filled.
    */
   forwardReads(): void {
     if (!Object.hasOwn(this, 'get')) {
