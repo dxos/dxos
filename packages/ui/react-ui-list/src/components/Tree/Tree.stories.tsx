@@ -8,7 +8,7 @@ import { RegistryContext } from '@effect/atom-react/RegistryContext';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Atom from 'effect/unstable/reactivity/Atom';
 import React, { useCallback, useContext, useEffect, useMemo, useRef } from 'react';
-import { expect, userEvent, waitFor, within } from 'storybook/test';
+import { expect, userEvent, within } from 'storybook/test';
 
 import { random } from '@dxos/random';
 import { Icon } from '@dxos/react-ui';
@@ -249,8 +249,9 @@ export const WithGroups: Story = {
 };
 
 /**
- * A childless branch still occupies a grid row when open, so the tree's row gap used to be added
- * around its zero-height content: toggling it grew the tree by the gap.
+ * A childless branch has nothing to disclose: its chevron is disabled, and a click neither opens it
+ * nor changes the tree's height (its content, were it shown, used to draw the tree's row gap around
+ * a zero-height row).
  */
 export const EmptyBranch: Story = {
   args: { emptyBranches: true },
@@ -261,14 +262,11 @@ export const EmptyBranch: Story = {
     const branch = toggle.closest('[data-part="branch"]')!;
     const height = tree.getBoundingClientRect().height;
 
+    await expect(toggle).toBeDisabled();
     await userEvent.click(toggle);
-    await waitFor(() => expect(branch).toHaveAttribute('data-state', 'open'));
     // Past the disclose animation, which interpolates the content's block size.
     await new Promise((resolve) => setTimeout(resolve, 300));
-    await expect(tree.getBoundingClientRect().height).toBe(height);
-
-    await userEvent.click(toggle);
-    await waitFor(() => expect(branch).toHaveAttribute('data-state', 'closed'));
+    await expect(branch).toHaveAttribute('data-state', 'closed');
     await expect(tree.getBoundingClientRect().height).toBe(height);
   },
 };

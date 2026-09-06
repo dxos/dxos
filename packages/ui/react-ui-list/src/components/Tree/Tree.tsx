@@ -1063,7 +1063,15 @@ const TreeNodeRowContent: FC<TreeNodeRowProps> = memo(({ node }) => {
             <TreeView.BranchTrigger asChild>
               {/* zag stamps data-state=open on the trigger, which the ghost button styles as an
                   open menu trigger (bg-input-bg) — the chevron must stay transparent. */}
-              <TreeItemToggle isBranch open={open} density={density} classNames='data-[state=open]:bg-transparent' />
+              <TreeItemToggle
+                isBranch
+                open={open}
+                density={density}
+                // Nothing to disclose: a branch the model knows to be childless keeps its chevron for
+                // row geometry but offers no toggle.
+                disabled={(node.childrenCount ?? node.children?.length ?? 0) === 0}
+                classNames='data-[state=open]:bg-transparent'
+              />
             </TreeView.BranchTrigger>
           ) : (
             <TreeItemToggle isBranch={false} density={density} />
