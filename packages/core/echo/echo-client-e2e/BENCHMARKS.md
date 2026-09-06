@@ -560,3 +560,32 @@ windows carry a **~20% run-to-run spread on the read rows**, against ~5% at one 
 single read cell as "about 25 ns", not to the nanosecond; a change under ~20% between sections of this
 file is not evidence. The conclusion the two passes agree on — all three storage kinds converged, from
 297 / 1,690 / 271 ns at baseline — sits far outside that band.
+
+---
+
+## Stage D review pass — 2026-09-06 — the write regression, found by review and fixed
+
+The Stage D reviewer caught a regression the tables above record but the write-up did not name: **the wide
+automerge write went 360 µs (Phase 3c) → 476 µs (D1) → 434 µs (D2)** while the narrow row fell. Cause: a
+write refreshed the object's whole record, twice — the trap called the refresh explicitly and the
+synchronous change event routed back and called it again — so one field of a 250-field object
+re-materialized 500 keys.
+
+Fixed by narrowing rather than deferring. `ObjectCore.changeTargetKey` scopes a write to the one key it
+touches and the refresh updates only that key. Deferring was tried first and was wrong: a subscriber is
+notified _inside_ the document write, so an update applied afterwards was invisible to it (caught by
+`subscription.test.ts`). Narrowing is applied only to a leaf write — replacing a nested record leaves the
+target already built for the old value stale, so that case falls back to refreshing the record (caught by
+`mutable-schema.test.ts`).
+
+Write rows re-measured at the **original 1,000 ms window**, since the effect is the size of the shortened
+window's noise band:
+
+| per-op                | baseline |     3c |     D1 |     D2 | after review |
+| --------------------- | -------: | -----: | -----: | -----: | -----------: |
+| write, automerge      |   399 µs | 287 µs | 184 µs | 222 µs |   **167 µs** |
+| write, automerge wide |   449 µs | 360 µs | 476 µs | 434 µs |   **254 µs** |
+
+Reads are unchanged by the fix — 24 / 26 ns narrow, 24 / 26 ns wide (unpersisted / automerge) — so the
+write path was repaired without giving back the read win. The committed bench keeps the 300 ms window;
+this one comparison was taken at 1,000 ms for resolution.

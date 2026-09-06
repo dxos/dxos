@@ -219,6 +219,25 @@ keeping `Object.keys` exact (D9, F5). What changes:
   (`symbolInternals`, `SchemaId`, `TypeEntityId`, `devtoolsFormatter`) and the meta root's virtual
   `createdAt`/`updatedAt` move to accessors on the behaviour prototypes, so a forwarded read finds them.
 
+**Refresh granularity, after the Stage D review (2026-09-06).** The first cut refreshed the object's whole
+record on every write, and twice — the trap called the refresh explicitly and the synchronous change event
+routed back and called it again — so a one-field write on a 250-field object re-materialized 500 keys, and
+the wide automerge write regressed 360 → 476 µs. `ObjectCore.changeTargetKey` now scopes a write to the
+key it touches and the refresh updates that key alone. Two constraints the tests established:
+
+- **Narrowed, not deferred.** Deferring the refresh until after the write was tried first and is wrong: a
+  subscriber is notified synchronously _inside_ the write, so an update applied afterwards is invisible to
+  it (`subscription.test.ts`, "latest value is available in subscription").
+- **Leaf writes only.** Replacing a nested record leaves the target already built for the old value —
+  and everything materialized under it — holding what the container replaced, so a write whose
+  materialized value is a proxy falls back to refreshing the record (`mutable-schema.test.ts`).
+
+**Eager container materialization is accepted here, reversing D10's argument, because it was measured.**
+D10 rejected eager filling on cost; the query bench then measured it: filling at construction left the
+cold query unchanged (3.93 → 3.92 s, inside a ±36% rme dominated by the document load) while the first read
+of 1,000 objects fell 2.5 ms → 0.1 ms. The residual risk D10 named is real but unmeasured — a deep stored
+tree is walked and proxied at load, and the recursion is bounded only by document depth.
+
 Order: automerge-backed objects (`EchoReactiveHandler`) first, then the in-memory typed handler, whose
 nested values must be stored on the target already wrapped. Both benches run after each, and the query
 bench's "construct" phase is where the fill-at-construction cost shows. Tests unchanged; the lens in

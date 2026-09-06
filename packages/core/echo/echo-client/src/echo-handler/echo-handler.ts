@@ -54,7 +54,7 @@ import { log } from '@dxos/log';
 import { deepMapValues, defaultMap, getDeep, setDeep } from '@dxos/util';
 
 import * as Doc from '../automerge/Doc';
-import { type DecodedAutomergePrimaryValue, META_NAMESPACE, ObjectCore } from '../core-db';
+import { type DecodedAutomergePrimaryValue, META_NAMESPACE, ObjectCore, type TargetRefreshScope } from '../core-db';
 import { type EchoDatabase } from '../proxy-db';
 import { EchoArray } from './echo-array';
 import { getObjectCore, isEchoObject, isRootDataObject } from './echo-object-utils';
@@ -127,7 +127,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     if (!(target instanceof EchoArray)) {
       const core = target[symbolInternals];
       if (isRootDataObject(target)) {
-        core.refreshTargets = () => this._refreshAll(core, target);
+        core.refreshTargets = (scope) => this._refreshAll(core, target, scope);
       }
       if (this._canMaterialize(core)) {
         this._refreshRecord(target);
@@ -253,17 +253,6 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       return undefined;
     }
 
-    // Virtual read-only properties on the root meta proxy — sourced from the system
-    // section and the automerge change graph, not from the stored meta section.
-    if (target[symbolNamespace] === META_NAMESPACE && target[symbolPath].length === 0) {
-      if (prop === 'createdAt') {
-        return target[symbolInternals].getCreatedAt();
-      }
-      if (prop === 'updatedAt') {
-        return target[symbolInternals].getUpdatedAt();
-      }
-    }
-
     return this._wrapInProxyIfRequired(target, getDecodedValueAtPath(target, prop));
   }
 
@@ -280,10 +269,14 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
   }
 
   /**
-   * Re-fills every record target of the core from the document: the root, the nested records and the
-   * meta root already handed out (all in `targetsMap`). Arrays hold no data and are skipped.
+   * Re-fills the core's record targets from the document: the root, the nested records and the meta root
+   * already handed out (all in `targetsMap`). Arrays hold no data and are skipped. A `scope` narrows this
+   * to the single key a write is touching.
    */
-  private _refreshAll(core: ObjectCore, root: ProxyTarget): void {
+  private _refreshAll(core: ObjectCore, root: ProxyTarget, scope?: TargetRefreshScope): void {
+    if (scope && this._writeThrough(scope.target as ProxyTarget, scope.key)) {
+      return;
+    }
     this._refreshRecord(root);
     for (const nested of core.targetsMap.values()) {
       if (!(nested instanceof EchoArray)) {
@@ -355,28 +348,28 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
   }
 
   /**
-   * Mirrors one written key onto the target right away, ahead of the refresh the change notification
-   * triggers, so a read inside the same `Obj.update` callback already sees it.
+   * Mirrors one written key onto the target, for a refresh narrowed by a
+   * {@link ObjectCore.changeTargetKey} scope, so a single-property write costs one key rather than the
+   * object's width. Returns false when the key is not the whole of the change — a container's own
+   * target, and everything already materialized under it, still holds what the container replaced — and
+   * the caller falls back to refreshing the record.
    */
-  private _writeThrough(target: ProxyTarget, key: string): void {
+  private _writeThrough(target: ProxyTarget, key: string): boolean {
     if (
       target instanceof EchoArray ||
       !this._canMaterialize(target[symbolInternals]) ||
       Reflect.has(Object.getPrototypeOf(target), key)
     ) {
-      return;
+      return true;
     }
     const stored = target[symbolInternals].getRaw([target[symbolNamespace], ...target[symbolPath], key]);
     if (stored === undefined) {
       delete (target as any)[key];
-      return;
+      return true;
     }
-    Object.defineProperty(target, key, {
-      value: this._materializeValue(target, key, stored),
-      writable: true,
-      enumerable: true,
-      configurable: true,
-    });
+    const value = this._materializeValue(target, key, stored);
+    Object.defineProperty(target, key, { value, writable: true, enumerable: true, configurable: true });
+    return !isProxy(value);
   }
 
   set(target: ProxyTarget, prop: string | symbol, value: any, receiver: any): boolean {
@@ -407,13 +400,15 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
 
     const fullPath = [getNamespace(target), ...target[symbolPath], prop];
     const validatedValue = this._validateValue(target, [...target[symbolPath], prop], value);
-    if (validatedValue === undefined) {
-      target[symbolInternals].delete(fullPath);
-    } else {
-      const withLinks = this._handleLinksAssignment(target, validatedValue);
-      target[symbolInternals].setDecoded(fullPath, withLinks);
-    }
-    this._writeThrough(target, prop);
+    // The refresh runs inside the write, narrowed to this key, so a subscriber notified by it already
+    // sees the new value.
+    core.changeTargetKey(target, prop, () => {
+      if (validatedValue === undefined) {
+        core.delete(fullPath);
+      } else {
+        core.setDecoded(fullPath, this._handleLinksAssignment(target, validatedValue));
+      }
+    });
 
     // Note: EventId.emit() is called centrally in core.updates.on() to handle both local and remote changes.
     return true;
@@ -589,8 +584,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       return false;
     } else if (typeof property === 'string') {
       const fullPath = [getNamespace(target), ...target[symbolPath], property];
-      target[symbolInternals].delete(fullPath);
-      this._writeThrough(target, property);
+      core.changeTargetKey(target, property, () => core.delete(fullPath));
       return true;
     }
     return false;

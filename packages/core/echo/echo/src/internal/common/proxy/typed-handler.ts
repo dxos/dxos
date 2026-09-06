@@ -11,7 +11,7 @@ import { Event } from '@dxos/async';
 import { inspectCustom } from '@dxos/debug';
 import { SchemaAST } from '@dxos/effect';
 import { assertArgument, invariant } from '@dxos/invariant';
-import { getDeep, setDeep } from '@dxos/util';
+import { getDeep } from '@dxos/util';
 
 import { getSchemaURI } from '../../Annotation/annotations';
 import { isEntity } from '../../Entity/guard';
@@ -129,6 +129,19 @@ const deepCopy = <T>(value: T, visited = new Map<object, object>()): T => {
   // Copy hidden properties (SchemaId, TypeId).
   copyHiddenProperties(actualValue, copy);
   return copy as T;
+};
+
+/**
+ * Write `value` at `path`, unwrapping each hop to its raw target. A nested record is stored as its
+ * sub-proxy, and writing through one would re-impose the per-delta validation the text path exists to
+ * skip.
+ */
+const setDeepOnRawTargets = (target: object, path: readonly (string | number)[], value: unknown): void => {
+  let parent: any = getRawTarget(target);
+  for (const key of path.slice(0, -1)) {
+    parent = getRawTarget(parent[key]);
+  }
+  parent[path[path.length - 1]] = value;
 };
 
 /**
@@ -386,8 +399,13 @@ export class TypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
    */
   private _wrapNestedValues(target: ProxyTarget): void {
     for (const key of Object.keys(target)) {
+      // The descriptor first: reading an own getter here would invoke it, and a type entity's
+      // `jsonSchema` getter can reach a schema still inside its own `const` initializer.
+      if (Object.getOwnPropertyDescriptor(target, key)?.get) {
+        continue;
+      }
       const value = (target as any)[key];
-      if (isValidProxyTarget(value) && !Object.getOwnPropertyDescriptor(target, key)?.get) {
+      if (isValidProxyTarget(value)) {
         (target as any)[key] = createProxy(value, this);
       }
     }
@@ -521,7 +539,7 @@ export class TypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
    * Shared read-modify-write for the in-memory string CRDT path. Mirrors the `set` trap: enforce the
    * change context, then mutate and notify through the same batched notification path so reactivity fires.
    *
-   * Writes via `setDeep` on the raw target, intentionally bypassing `_prepareValueForAssignment` /
+   * Writes on the raw targets, intentionally bypassing `_prepareValueForAssignment` /
    * `_validateValue`: a string CRDT delta produces a string, and per-delta schema checks (pattern,
    * maxLength) would reject valid intermediate states during incremental edits. Such constraints are
    * enforced at the initial assignment or as application-level invariants, mirroring the Automerge path.
@@ -550,7 +568,7 @@ export class TypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
     batchEvents(() => {
       // Write directly on the raw target (not the proxy) and notify through the same batched path
       // the `set` trap uses, so subscribers fire once per `Obj.update`.
-      setDeep(target, keyPath, next);
+      setDeepOnRawTargets(target, keyPath, next);
       queueNotification(echoRoot);
       notifyOwnerChain(target);
     });

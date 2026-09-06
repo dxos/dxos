@@ -59,6 +59,12 @@ export type ObjectCoreOptions = {
 };
 
 /**
+ * The single key a write is touching, so the proxy targets are refreshed for that key alone.
+ * @internal
+ */
+export type TargetRefreshScope = { target: object; key: string };
+
+/**
  *
  */
 // TODO(burdon): Comment.
@@ -112,7 +118,30 @@ export class ObjectCore {
    * bound document, so a target never serves a value the document no longer holds even when the DB
    * does not route the change event back to this core.
    */
-  public refreshTargets: (() => void) | undefined;
+  public refreshTargets: ((scope?: TargetRefreshScope) => void) | undefined;
+
+  /** Narrows the refresh while a {@link changeTargetKey} scope is open. */
+  #refreshScope: TargetRefreshScope | undefined;
+
+  /**
+   * Runs `fn` — a write of exactly `key` on `target` — with the refresh narrowed to that one key. The
+   * unnarrowed refresh re-reads every key of the record, which would make a single-property write cost
+   * the width of the object. Narrowed rather than deferred because the write notifies subscribers
+   * synchronously, and they must already see the new value.
+   */
+  changeTargetKey<T>(target: object, key: string, fn: () => T): T {
+    const previous = this.#refreshScope;
+    this.#refreshScope = { target, key };
+    try {
+      return fn();
+    } finally {
+      this.#refreshScope = previous;
+    }
+  }
+
+  #refresh(): void {
+    this.refreshTargets?.(this.#refreshScope);
+  }
 
   // -------------------------------------------------------------------------
   // Fields merged from ObjectInternals (formerly echo-proxy-target.ts).
@@ -256,7 +285,8 @@ export class ObjectCore {
       invariant(this.docHandle);
       this.docHandle.change(changeFn, options);
       // Note: We don't need to notify listeners here, since `change` event is already processed by DB.
-      this.refreshTargets?.();
+      // The refresh still runs, for a core the DB no longer routes the change event to.
+      this.#refresh();
     }
   }
 
@@ -285,7 +315,7 @@ export class ObjectCore {
       invariant(this.docHandle);
       result = this.docHandle.changeAt(heads, callback, options);
       // Note: We don't need to notify listeners here, since `change` event is already processed by DB.
-      this.refreshTargets?.();
+      this.#refresh();
     }
 
     return result;
@@ -330,9 +360,10 @@ export class ObjectCore {
    * This function can be used unbound.
    */
   public readonly notifyUpdate = () => {
-    // Before the emit, so a subscriber reading the object inside its callback sees fresh values.
-    this.refreshTargets?.();
     try {
+      // Before the emit, so a subscriber reading the object inside its callback sees fresh values, and
+      // inside the guard so a failing refresh is reported rather than escaping into the writer.
+      this.#refresh();
       this.updates.emit();
     } catch (err: any) {
       // Print the error message synchronously for easier debugging.

@@ -1,6 +1,6 @@
 # echo-plain-objects — Tasks
 
-_Resume: D1 and D2 landed and measured (`25239b3c`, `1b03141f`); all reads now 20-27 ns across the three kinds. Next: one shared handler (slot delegation removed), then the Stage D reviewer pass and the PR body update. Stage C stays BLOCKED under constraint 3 (DESIGN.md D9) pending the user's choice. Uncommitted: none. Last: lazy materialized record at `b3486ba0`, automerge reads 113 / 111 ns._
+_Resume: Stage D complete — D1, D2 and the reviewer fixes landed and measured; reads 24-26 ns across all three kinds, wide automerge write 449 → 254 µs. Next: update the PR body. Stage C stays BLOCKED under constraint 3 (DESIGN.md D9) pending the user's choice. Uncommitted: none. Last: lazy materialized record at `b3486ba0`, automerge reads 113 / 111 ns._
 
 Design and decisions: [DESIGN.md](./DESIGN.md). Numbers: [`echo-client-e2e/BENCHMARKS.md`](../../../packages/core/echo/echo-client-e2e/BENCHMARKS.md).
 
@@ -221,9 +221,19 @@ both benches after each.
       kinds now read at the same 20-27 ns.
 - [x] **Shorten the bench windows** — 300 ms per access row, 120 ms per `make` row, 3 cold query samples,
       so a full run of either file is under a minute; the per-op means stay comparable, the rme widens.
-- [ ] **One shared handler** — slot delegation removed; kind-specific write logic reached from the
-      target; lens (`echo-panproto/lens/live.ts`) adjusted if needed.
-- [ ] **Reviewer pass** over Stage D; PR body updated with the Stage D column.
+- [x] **One shared handler — not done, and the goal is met another way.** Reads no longer reach the slot
+      at all (no `get` trap), so the delegation that remains is on `set`/`delete`/`defineProperty` and the
+      key-set traps, which are genuinely kind-specific and cost nothing against a µs write. The slot is
+      also what lets `db.add` swap a handler while keeping object identity — load-bearing, as the D2 bug
+      showed. Recorded as a deliberate non-change.
+- [x] **Reviewer pass over Stage D** — 12 findings. Fixed: the whole-record double refresh on every write
+      (a measured 360 → 476 µs wide-write regression, now **254 µs**); nested `Text` deltas being schema-
+      validated per keystroke through a sub-proxy; a throw during refresh escaping `notifyUpdate`'s error
+      guard and stranding targets; own getters invoked while wrapping; the dead meta-root branch; both
+      casts. Accepted with reasons in DESIGN.md D11: eager container materialization (measured, D10's cost
+      argument does not hold), and `isProxy` no longer seeing through a foreign wrapping proxy (affects
+      only the lens, which the user released).
+- [ ] **PR body updated with the Stage D column.**
 
 ## Phase 5: Compare and review
 

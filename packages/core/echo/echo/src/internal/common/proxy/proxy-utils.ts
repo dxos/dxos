@@ -24,9 +24,12 @@ export const symbolReactivePrototype = Symbol.for('@dxos/echo/ReactivePrototype'
  * under a registry symbol because a remote plugin can evaluate this module twice (host and wrapper
  * chunk), and a proxy made by one instance must still be recognized by the other.
  */
-const proxySlotsKey = Symbol.for('@dxos/echo/ProxySlots');
-const proxySlots: WeakMap<object, ProxyHandlerSlot<any>> = ((globalThis as Record<symbol, unknown>)[proxySlotsKey] ??=
-  new WeakMap()) as WeakMap<object, ProxyHandlerSlot<any>>;
+declare global {
+  // eslint-disable-next-line no-var
+  var __dxosProxySlots: WeakMap<object, ProxyHandlerSlot<any>> | undefined;
+}
+
+const proxySlots: WeakMap<object, ProxyHandlerSlot<any>> = (globalThis.__dxosProxySlots ??= new WeakMap());
 
 /**
  * Internal api.
@@ -154,7 +157,7 @@ class ProxyHandlerSlot<T extends object> implements ProxyHandler<T> {
     this._handler = handler;
     // The new handler owns the target's shape and decides for itself whether reads can be forwarded;
     // until it says so, reads go through its trap.
-    delete (this as Partial<ProxyHandlerSlot<T>>).get;
+    this.#restoreReads();
   }
 
   /**
@@ -169,10 +172,15 @@ class ProxyHandlerSlot<T extends object> implements ProxyHandler<T> {
     }
   }
 
+  /** Restores the inherited `get` trap dropped by {@link forwardReads}. */
+  #restoreReads(): void {
+    delete this.get;
+  }
+
   /**
-   * Get value.
+   * Get value. Removed per proxy by {@link forwardReads} once the target carries its own data.
    */
-  get(target: T, prop: string | symbol, receiver: any): any {
+  get?(target: T, prop: string | symbol, receiver: any): any {
     if (prop === symbolIsProxy) {
       return this;
     }
