@@ -93,6 +93,7 @@
     "@dxos/app-toolkit": "workspace:*",
     "@dxos/effect": "workspace:*",
     "@dxos/i18n": "workspace:*",
+    "@dxos/ui-theme": "workspace:*",
     "@dxos/util": "workspace:*",
     "@effect/atom-react": "catalog:",
     "effect": "catalog:"

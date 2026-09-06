@@ -202,7 +202,7 @@ export const AtprotoCompanion = ({ subject, role, attendableId }: AtprotoCompani
 
   return (
     <Panel.Root role={role}>
-      <Panel.Toolbar>
+      <Panel.Toolbar asChild>
         <ActionToolbar {...menuActions} attendableId={attendableId} />
       </Panel.Toolbar>
       <Panel.Content asChild>

@@ -7,12 +7,20 @@
 import * as Schema from 'effect/Schema';
 import * as Struct from 'effect/Struct';
 
+import { ACCENT_HUES } from '@dxos/ui-theme';
+
 export const Appearance = Schema.Union([
   Schema.Literal('light').annotate({ title: 'Light' }),
   Schema.Literal('dark').annotate({ title: 'Dark' }),
   Schema.Literal('system').annotate({ title: 'System' }),
 ]);
 export type Appearance = Schema.Schema.Type<typeof Appearance>;
+
+/** The hue the accent role tokens derive from; the stylesheet's own default when unset. */
+export const Accent = Schema.Union(
+  ACCENT_HUES.map((hue) => Schema.Literal(hue).annotate({ title: hue.charAt(0).toUpperCase() + hue.slice(1) })),
+);
+export type Accent = Schema.Schema.Type<typeof Accent>;
 
 /**
  * Theme plugin settings.
@@ -22,6 +30,12 @@ export const Settings = Schema.Struct({
     Appearance.annotate({
       title: 'Appearance',
       description: 'Force light or dark mode, or follow the system setting.',
+    }),
+  ),
+  accent: Schema.optional(
+    Accent.annotate({
+      title: 'Accent color',
+      description: 'The hue of buttons, links and selection.',
     }),
   ),
 }).mapFields(Struct.map(Schema.mutableKey));

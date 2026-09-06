@@ -149,7 +149,7 @@ export const OutlineArticle = ({
   if (task) {
     return (
       <Panel.Root role={role}>
-        <Panel.Toolbar>
+        <Panel.Toolbar asChild>
           <ActionToolbar {...taskActions} attendableId={attendableId} classNames='dx-document' />
         </Panel.Toolbar>
         <Panel.Content>
@@ -174,7 +174,7 @@ export const OutlineArticle = ({
         >
           <Panel.Root role={role}>
             <Show when={toolbar}>
-              <Panel.Toolbar>
+              <Panel.Toolbar asChild>
                 <ActionToolbar {...outlineActions} attendableId={attendableId} classNames='dx-document' />
               </Panel.Toolbar>
             </Show>

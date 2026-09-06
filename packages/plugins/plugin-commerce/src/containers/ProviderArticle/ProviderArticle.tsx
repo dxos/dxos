@@ -66,7 +66,7 @@ export const ProviderArticle = ({ role, subject, attendableId }: ProviderArticle
 
   return (
     <Panel.Root role={role}>
-      <Panel.Toolbar>
+      <Panel.Toolbar asChild>
         <ActionToolbar {...actions} attendableId={attendableId} onAction={onAction} />
       </Panel.Toolbar>
       <Panel.Content classNames='flex flex-col gap-2 p-3'>

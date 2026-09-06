@@ -123,11 +123,7 @@ const ContributedActions = ({
   attendableId?: string;
 }) => {
   const menuActions = useMenuActions(actions);
-  return (
-    <>
-      {/* Plain (non-`custom`) items render `Toolbar.*` primitives, which throw without the roving-focus
-          context `ActionToolbar` provides; `contents` keeps the items in the prompt's own row. */}
-      <ActionToolbar {...menuActions} attendableId={attendableId} alwaysActive classNames='contents' />
-    </>
-  );
+  // Plain (non-`custom`) items render `Toolbar.*` primitives, which throw without the roving-focus
+  // context `ActionToolbar` provides; `contents` keeps the items in the prompt's own row.
+  return <ActionToolbar {...menuActions} attendableId={attendableId} alwaysActive classNames='contents' />;
 };

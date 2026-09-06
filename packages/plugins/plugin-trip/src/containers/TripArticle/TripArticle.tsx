@@ -283,7 +283,7 @@ export const TripArticle = ({ role, subject, attendableId, defaultShowGlobe }: T
           </NaturalCalendar.Root>
 
           <Panel.Root>
-            <Panel.Toolbar>
+            <Panel.Toolbar asChild>
               <ActionToolbar {...menuActions} attendableId={attendableId} />
             </Panel.Toolbar>
             <Panel.Content asChild>

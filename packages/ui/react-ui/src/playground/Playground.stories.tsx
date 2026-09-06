@@ -8,7 +8,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { type CSSProperties, type PropsWithChildren, useState } from 'react';
 
-import { mx } from '@dxos/ui-theme';
+import { ACCENT_HUES, type AccentHue, accentTokens, mx } from '@dxos/ui-theme';
 import { type Density, type MessageValence } from '@dxos/ui-types';
 
 import {
@@ -51,22 +51,12 @@ import { withTheme } from '../testing';
 // Frame
 //
 
-/** Tailwind hues the accent can take; the roles derive every accent token from one hue. */
-const ACCENT_HUES = ['blue', 'indigo', 'violet', 'purple', 'pink', 'red', 'orange', 'amber', 'green', 'teal', 'cyan'];
-
-/** Overrides the accent role tokens for a subtree, the way `roles.css` derives them from blue. */
-const accentStyle = (hue: string): CSSProperties =>
-  ({
-    '--color-accent-bg': `light-dark(var(--color-${hue}-600), var(--color-${hue}-700))`,
-    '--color-accent-bg-hover': `light-dark(var(--color-${hue}-700), var(--color-${hue}-800))`,
-    '--color-accent-fg': `var(--color-${hue}-100)`,
-    '--color-accent-text': `light-dark(var(--color-${hue}-600), var(--color-${hue}-400))`,
-    '--color-accent-text-hover': `var(--color-${hue}-500)`,
-  }) as CSSProperties;
+/** Overrides the accent role tokens for a subtree, the way the theme plugin does for the document. */
+const accentStyle = (hue: AccentHue): CSSProperties => accentTokens(hue) as CSSProperties;
 
 const DENSITIES: Density[] = ['sm', 'md', 'lg'];
 
-const HueSelect = ({ value, onValueChange }: { value: string; onValueChange: (hue: string) => void }) => (
+const HueSelect = ({ value, onValueChange }: { value: AccentHue; onValueChange: (hue: AccentHue) => void }) => (
   <Select.Root value={value} onValueChange={onValueChange}>
     <Select.TriggerButton placeholder='Accent' />
     <Select.Portal>
@@ -88,7 +78,7 @@ const HueSelect = ({ value, onValueChange }: { value: string; onValueChange: (hu
 
 /** The page: a sticky control bar, then the sections under the chosen accent and density. */
 const Frame = ({ children }: PropsWithChildren) => {
-  const [hue, setHue] = useState('blue');
+  const [hue, setHue] = useState<AccentHue>('blue');
   const [density, setDensity] = useState<Density>('md');
   return (
     <Tooltip.Provider>

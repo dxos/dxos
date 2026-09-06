@@ -16444,6 +16444,9 @@ importers:
       '@dxos/i18n':
         specifier: workspace:*
         version: link:../../common/i18n
+      '@dxos/ui-theme':
+        specifier: workspace:*
+        version: link:../../ui/ui-theme
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
@@ -16457,9 +16460,6 @@ importers:
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../../ui/react-ui
-      '@dxos/ui-theme':
-        specifier: workspace:*
-        version: link:../../ui/ui-theme
       '@types/react':
         specifier: ~19.2.17
         version: 19.2.17

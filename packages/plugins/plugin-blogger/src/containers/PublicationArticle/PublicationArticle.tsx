@@ -193,7 +193,7 @@ export const PublicationArticle = ({ role, attendableId, subject }: PublicationA
   return (
     <>
       <Panel.Root role={role}>
-        <Panel.Toolbar>
+        <Panel.Toolbar asChild>
           <ActionToolbar {...menuActions} onAction={runAction} attendableId={attendableId} classNames='dx-document' />
         </Panel.Toolbar>
         <Panel.Content>

@@ -55,7 +55,7 @@ export const MobileDrawer = () => {
 
   return (
     <Panel.Root>
-      <Panel.Toolbar>
+      <Panel.Toolbar asChild>
         <ActionToolbar {...menuActions} alwaysActive onAction={onAction} />
       </Panel.Toolbar>
       <Panel.Content>

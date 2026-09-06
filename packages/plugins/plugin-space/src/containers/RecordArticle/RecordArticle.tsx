@@ -53,7 +53,7 @@ export const RecordArticle = ({ role, subject, attendableId }: AppSurface.Object
 
   return (
     <Panel.Root role={role}>
-      <Panel.Toolbar>
+      <Panel.Toolbar asChild>
         <ActionToolbar {...actions} attendableId={attendableId} onAction={onAction} />
       </Panel.Toolbar>
       <Panel.Content asChild>
