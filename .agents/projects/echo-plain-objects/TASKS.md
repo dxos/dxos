@@ -1,6 +1,6 @@
 # echo-plain-objects — Tasks
 
-_Resume: Stage D complete — D1, D2 and the reviewer fixes landed and measured; reads 24-26 ns across all three kinds, wide automerge write 449 → 254 µs. Next: update the PR body. Stage C stays BLOCKED under constraint 3 (DESIGN.md D9) pending the user's choice. Uncommitted: none. Last: lazy materialized record at `b3486ba0`, automerge reads 113 / 111 ns._
+_Resume: Stage D is complete and measured — reads 24-26 ns across all three kinds, wide automerge write 449 → 254 µs. Stage E is ABANDONED (DESIGN.md D12; four of five premises falsified). Next is Phase 8: preserve ref identity across the refresh, then narrow the remote refresh by the patch paths, with premises A1-A5 under adversarial review first. Stage C stays BLOCKED under constraint 3 (DESIGN.md D9). Uncommitted: `echo-client-e2e/src/sync-refresh.test.ts`, a failing-before test for Phase 8 held back until it ships with its fix. Last: Stage E abandoned at `9c55516b`._
 
 Design and decisions: [DESIGN.md](./DESIGN.md). Numbers: [`echo-client-e2e/BENCHMARKS.md`](../../../packages/core/echo/echo-client-e2e/BENCHMARKS.md).
 
