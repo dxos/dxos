@@ -848,7 +848,7 @@ dist/types/src: ENOTEMPTY` — a concurrent writer. A Cursor TypeScript native-p
           `Menu.Content` sites → `ActionMenu`, the card/column owners put `menu` on their own
           context for the contributors (PipelineArticle, app-toolkit `useObjectMenuItems`).
     - [x] Finding from the sweep: the task rows' menus opened only because the article wrapped its
-          panel in `Menu.Root`, which made every row menu an Ark *child* menu of the article's (a
+          panel in `Menu.Root`, which made every row menu an Ark _child_ menu of the article's (a
           `trigger-item`, opening on hover). As top-level menus they need the click the row buttons
           stop, so the buttons are now the triggers (`IconBlock > ActionMenu > IconButton`).
     - [ ] Follow-ups: rename `react-ui-menu` → `react-ui-actions` (own PR, 46 manifests); remove
