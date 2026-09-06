@@ -485,3 +485,69 @@ read of 1,000 cold objects went 2.5 ms → 0.1 ms, a plain property load per obj
 now carries the fill reads 3.92 s against 3.93 s before, unchanged within a ±36% rme dominated by the
 document load. So write-through costs nothing measurable at load and removes the per-object read cost
 entirely.
+
+---
+
+## `1b03141f` — 2026-09-06 — Stage D2: the typed handler loses its `get` trap too
+
+`echo` 581/581, `echo-client` 549/549 and `echo-client-e2e` 324/324 unmodified. Clean tree.
+
+Change: a typed target now holds its nested records and arrays as the sub-proxies a read returns
+(wrapped in `init` and on assignment), so unpersisted and feed-backed objects forward reads the same way
+automerge-backed ones did in D1. Dropping the trap became reversible: `db.add` swaps the handler on the
+same slot, so `setHandler` restores it and the incoming handler opts back in.
+
+**Sampling windows shortened this run** — 300 ms per access row and 120 ms per `make` row (was 1,000 and
+250), 3 cold samples in the query bench (was 5), so a full run of either file is under a minute. The
+per-op derivation is a mean and stays comparable across sections; what a shorter window costs is
+resolution, and the rows below the harness floor (every plain-object row) are correspondingly noisier —
+plain `read` reads 1 ns narrow and 5 ns wide here against 5-7 ns before, which is floor noise, not a
+change.
+
+### Narrow object — 2 fields
+
+| per-op    | plain | echo unpersisted |     echo automerge |        echo feed |
+| --------- | ----: | ---------------: | -----------------: | ---------------: |
+| **read**  |  1 ns |  **20 ns · 20×** |    **24 ns · 24×** |  **24 ns · 24×** |
+| **write** |  3 ns | 6.26 µs · 2,100× |   222 µs · 74,000× | 6.08 µs · 2,000× |
+| **make**  |  7 ns |   57 µs · 8,100× | 3.2 ms† · 450,000× | 159 µs · 23,000× |
+
+### Wide object — 250 fields
+
+| per-op    |  plain | echo unpersisted | echo automerge | echo feed |
+| --------- | -----: | ---------------: | -------------: | --------: |
+| **read**  |   5 ns |        **24 ns** |      **27 ns** | **25 ns** |
+| **write** |   3 ns |          5.80 µs |         434 µs |   6.76 µs |
+| **make**  | 548 ns |           859 µs |       15.9 ms† |   1.67 ms |
+
+### D1 → D2
+
+| per-op                 |    D1 |    D2 |    Δ |
+| ---------------------- | ----: | ----: | ---: |
+| read, unpersisted      | 75 ns | 20 ns | 3.8× |
+| read, feed             | 79 ns | 24 ns | 3.3× |
+| read, unpersisted wide | 82 ns | 24 ns | 3.4× |
+| read, feed wide        | 82 ns | 25 ns | 3.3× |
+| read, automerge        | 26 ns | 24 ns |    – |
+
+**All three storage kinds now read at the same cost**, 20-27 ns, because all three do the same thing: a
+forwarded property load on a filled target. What separated them — a document decode for automerge, a
+wrapping trap for the other two — is gone from the read path in both cases.
+
+### Elision check
+
+`x10`/`x1` sits at 2.8-3.2× for every ECHO row, against a 77-89 ns `x1` floor: nine further reads at
+~24 ns each is exactly the arithmetic. Plain rows at 1.2-1.8× are below the floor, as always.
+
+### Query materialization at `1b03141f`
+
+| phase                        | narrow × 1,000 |    wide × 100 |
+| ---------------------------- | -------------: | ------------: |
+| reload + open                |    206 ms (80) |    55 ms (30) |
+| query, cold                  |  3.72 s (2.55) | 2.16 s (1.98) |
+| first read per result, cold  |         0.1 ms |       <0.1 ms |
+| query, warm                  |         106 ms |         16 ms |
+| repeat read per result, warm |        <0.1 ms |       <0.1 ms |
+
+Unchanged from D1, as expected: the query bench exercises automerge-backed objects, which D2 does not
+touch. Loading still dominates a cold query.

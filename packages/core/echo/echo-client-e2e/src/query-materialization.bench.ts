@@ -44,8 +44,8 @@ const WIDE_OBJECT_COUNT = 100;
 // Every cold sample reloads a peer and reloads the documents, seconds each, and cold loads slow down over
 // repeated reloads within one process; a small fixed sample count keeps the row bounded and comparable
 // across runs.
-const COLD_OPTIONS = { iterations: 5, time: 0, warmupIterations: 1, warmupTime: 0 };
-const WARM_OPTIONS = { time: 1_000 };
+const COLD_OPTIONS = { iterations: 3, time: 0, warmupIterations: 1, warmupTime: 0 };
+const WARM_OPTIONS = { time: 300 };
 const SHORT_RESULT_RETRIES = 10;
 
 class BenchObject extends Type.makeObject<BenchObject>(DXN.make('com.example.type.benchObject', '0.1.0'))(

@@ -47,13 +47,13 @@ const VALUE_POOL_MASK = VALUE_POOL_SIZE - 1;
 const MAKE_SINK_SIZE = 64;
 const MAKE_SINK_MASK = MAKE_SINK_SIZE - 1;
 const BATCH = 10;
-const BENCH_OPTIONS = { time: 1_000 };
+const BENCH_OPTIONS = { time: 300 };
 // The `make` rows run a shorter window than the rest: the persisted kinds insert a new object per
-// iteration, and within a row nothing flushes, so a full second would grow the document enough to
+// iteration, and within a row nothing flushes, so a long window would grow the document enough to
 // distort the tail of that row (and strain memory). Uniform across all four kinds so the make rows
-// stay comparable to each other; hz is normalized, so the shorter window costs resolution, not
-// correctness.
-const MAKE_BENCH_OPTIONS = { time: 250 };
+// stay comparable to each other. hz is normalized, so a shorter window costs resolution (a wider rme),
+// not correctness — the whole file is sized to run in about a minute.
+const MAKE_BENCH_OPTIONS = { time: 120 };
 
 class BenchObject extends Type.makeObject<BenchObject>(DXN.make('com.example.type.benchObject', '0.1.0'))(
   // A closed struct rather than `TestSchema.Expando`: an expando's `Record` rest element adds a

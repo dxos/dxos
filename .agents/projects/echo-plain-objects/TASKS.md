@@ -1,6 +1,6 @@
 # echo-plain-objects — Tasks
 
-_Resume: D1 landed and measured at `25239b3c` (automerge reads 26 ns). Next: D2 — typed handler stores nested values wrapped and drops its `get` trap, per DESIGN.md F8's risk list. Stage C stays BLOCKED under constraint 3 (DESIGN.md D9) pending the user's choice. Uncommitted: none. Last: lazy materialized record at `b3486ba0`, automerge reads 113 / 111 ns._
+_Resume: D1 and D2 landed and measured (`25239b3c`, `1b03141f`); all reads now 20-27 ns across the three kinds. Next: one shared handler (slot delegation removed), then the Stage D reviewer pass and the PR body update. Stage C stays BLOCKED under constraint 3 (DESIGN.md D9) pending the user's choice. Uncommitted: none. Last: lazy materialized record at `b3486ba0`, automerge reads 113 / 111 ns._
 
 Design and decisions: [DESIGN.md](./DESIGN.md). Numbers: [`echo-client-e2e/BENCHMARKS.md`](../../../packages/core/echo/echo-client-e2e/BENCHMARKS.md).
 
@@ -214,8 +214,13 @@ both benches after each.
       automerge reads 113 → **26 ns** (5× a plain read, from 249× at baseline); the per-object first read
       after a cold query fell 2.5 ms → 0.1 ms per 1,000 objects with no measurable cost added to the
       query.
-- [ ] **D2 — typed handler: nested values stored wrapped; raw readers unwrap; drop `get`**; `echo` +
-      `echo-client` + e2e green; benches recorded.
+- [x] **D2 — typed handler: nested values stored wrapped; raw readers unwrap; drop `get`** — `1b03141f`.
+      Also made trap removal reversible: `db.add` swaps the handler on the same slot, so `setHandler`
+      restores the trap and the incoming handler opts back in (two `echo-client` failures found this).
+      All three suites green. Benches: unpersisted 75 → **20 ns**, feed 79 → **24 ns**; all three storage
+      kinds now read at the same 20-27 ns.
+- [x] **Shorten the bench windows** — 300 ms per access row, 120 ms per `make` row, 3 cold query samples,
+      so a full run of either file is under a minute; the per-op means stay comparable, the rme widens.
 - [ ] **One shared handler** — slot delegation removed; kind-specific write logic reached from the
       target; lens (`echo-panproto/lens/live.ts`) adjusted if needed.
 - [ ] **Reviewer pass** over Stage D; PR body updated with the Stage D column.
