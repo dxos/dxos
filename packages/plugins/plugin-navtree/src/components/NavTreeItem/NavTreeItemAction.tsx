@@ -55,6 +55,9 @@ export const NavTreeItemActionDropdownMenu = composable<HTMLButtonElement, NavTr
           iconOnly
           label={toLocalizedString(label, t)}
           data-testid={testId}
+          // The tree selects a row on any click inside it, and selecting navigates away from the
+          // menu just opened. The trigger has handled the click by the time this runs.
+          onClick={(event) => event.stopPropagation()}
           ref={forwardedRef}
         />
       </ActionMenu>

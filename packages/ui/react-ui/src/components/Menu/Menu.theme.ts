@@ -31,11 +31,11 @@ const content: ComponentFunction<MenuStyleProps> = ({ elevation }, ...etc) =>
 const viewport: ComponentFunction<MenuStyleProps> = (_props, ...etc) =>
   mx('rounded-sm max-h-[var(--available-height)]', ...etc);
 
-const viewportContent: ComponentFunction<MenuStyleProps> = (_props, ...etc) => mx('p-1', ...etc);
+const viewportContent: ComponentFunction<MenuStyleProps> = (_props, ...etc) => mx(etc);
 
 const item: ComponentFunction<MenuStyleProps> = (_props, ...etc) =>
   mx(
-    'flex cursor-pointer select-none items-center gap-2 rounded-xs min-h-(--dx-control) px-(--dx-control-pad) py-1 text-sm',
+    'flex cursor-pointer select-none items-center gap-2 rounded-xs min-h-(--dx-control) m-1 px-(--dx-control-pad) py-1 text-sm',
     'hover:bg-hover-surface data-[highlighted]:bg-hover-surface',
     'dx-focus-subdued',
     dataDisabled,
@@ -43,10 +43,10 @@ const item: ComponentFunction<MenuStyleProps> = (_props, ...etc) =>
   );
 
 const separator: ComponentFunction<MenuStyleProps> = (_props, ...etc) =>
-  mx('my-1 mx-2 h-px bg-subdued-separator', ...etc);
+  mx('my-1 h-px border-subdued-separator', ...etc);
 
 const groupLabel: ComponentFunction<MenuStyleProps> = (_props, ...etc) =>
-  mx('text-description', 'select-none px-(--dx-control-pad) py-1', ...etc);
+  mx('text-description', 'select-none mx-1 px-(--dx-control-pad) py-1 text-xs', ...etc);
 
 /**
  * Zag's arrow is a square straddling the content's edge, rotated so its top-left corner points

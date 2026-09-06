@@ -35,6 +35,9 @@ const QrCode = forwardRef<HTMLDivElement, QrCodeProps>(
         <QrCodePrimitive.Frame className={tx('qrCode.frame', {})}>
           <QrCodePrimitive.Pattern className={tx('qrCode.pattern', {})} />
         </QrCodePrimitive.Frame>
+        <QrCodePrimitive.Overlay>
+          <img src='https://ark-ui.com/icon-192.png' alt='Ark UI Logo' />
+        </QrCodePrimitive.Overlay>
       </QrCodePrimitive.Root>
     );
   },

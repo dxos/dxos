@@ -145,8 +145,10 @@ const segment: ComponentFunction<InputStyleProps> = (props, ...etc) =>
   );
 
 // The field's element: it exists so the machine can watch for its texts, not to lay anything out,
-// so it takes no box unless a consumer gives it one.
-const root: ComponentFunction<InputStyleProps> = (_props, ...etc) => mx('contents', ...etc);
+// so it takes no box unless a consumer gives it one. Its parts stand where it stands in a Column
+// grid — the grid places direct children only, and a box-less root would strand them in the gutter.
+const root: ComponentFunction<InputStyleProps> = (_props, ...etc) =>
+  mx('contents [&>*]:[grid-column:var(--dx-col,auto)]', ...etc);
 
 // Matches `react-ui-form`'s `fieldLabel` geometry: a control-height row with the text centred, so a
 // label sits the same distance from its field in a bare `Input.Root` as in a schema-driven form.

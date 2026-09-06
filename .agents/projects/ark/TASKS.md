@@ -928,6 +928,19 @@ dist/types/src: ENOTEMPTY` — a concurrent writer. A Cursor TypeScript native-p
       asserts the record control is in the editor toolbar. `plugin-review`'s comments story guards
       the same connector with an `initialized` check that returns nothing and expects a re-run a
       non-reactive read cannot cause — likely the same latent race, left for its owner.
+- [x] **A navtree row's ⋮ menu selected the row** DONE 2026-09-06 (reported): Ark's tree item selects
+      on any click inside it, and selecting navigates, which unmounts the menu just opened. The
+      dropdown trigger stops the click after the menu machine has taken it, as the row's single
+      action button and the task rows already do. The `NavTree/RowMenu` story pins it, counting
+      `LayoutOperation.Open`; the fixture's objects gained `data` (the navtree navigates only for a
+      node that carries some) and their actions the `list-item` disposition (what puts them on the
+      row's menu), so the story's rows finally have menus.
+- [x] **A field root strands its parts in a Column grid** DONE 2026-09-06 (reported from the Dialog
+      story): the grid places direct children by `--dx-col`, and `Input.Root` is now a box-less
+      element between the grid and the input. The root's theme class hands the column to its parts
+      (`[&>*]:[grid-column:var(--dx-col,auto)]`), a no-op outside a Column.
+- [x] **Playground `FormSet` story** DONE 2026-09-06: one small fieldset on each surface of the
+      elevation ladder, with invalid and disabled variants.
 - [ ] **Rename `Input` → `Field`** (own PR, a codemod over ~900 sites: `Root` 443, `Label` 215,
       `TextInput` 119, `Switch` 40, `Checkbox` 25, `DescriptionAndValidation` 22, `Validation` 13,
       `TextArea` 12, `Description` 11, `PinInput` 4). Proposed names follow Ark where the part is
