@@ -551,3 +551,12 @@ wrapping trap for the other two — is gone from the read path in both cases.
 
 Unchanged from D1, as expected: the query bench exercises automerge-backed objects, which D2 does not
 touch. Loading still dominates a cold query.
+
+### Repeatability of the shortened windows
+
+A second back-to-back pass at `1b03141f` read 23 / 26 / 26 ns narrow and 33 / 30 / 28 ns wide
+(unpersisted / automerge / feed), against 20 / 24 / 24 and 24 / 27 / 25 on the first. So the shortened
+windows carry a **~20% run-to-run spread on the read rows**, against ~5% at one second per row. Read a
+single read cell as "about 25 ns", not to the nanosecond; a change under ~20% between sections of this
+file is not evidence. The conclusion the two passes agree on — all three storage kinds converged, from
+297 / 1,690 / 271 ns at baseline — sits far outside that band.
