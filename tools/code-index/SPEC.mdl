@@ -1,0 +1,328 @@
+---
+id: org.dxos.code-index
+name: CodeIndex
+version: 0.11.1
+---
+
+`code-index` indexes a repository into two databases that live side by side in one directory: a
+SQLite ledger of indexed files and a persistent RDF quad store holding one named graph per file.
+The graph speaks the DEUS code vocabulary defined in [`design/ONTOLOGY.md`](./design/ONTOLOGY.md) —
+that document is the source of truth, and the indexer emits JSON-LD shaped by it. Queries are
+SPARQL or typed LDkit lenses; derived relations (transitive dependencies, layering rules) are N3
+rules evaluated by the EYE reasoner rather than code.
+
+Parsing runs off the main thread: a pool of workers, addressed over Effect RPC, parses with `oxc`
+and resolves imports with `oxc-resolver`. Workers never touch a database, so nothing contends on
+SQLite or LevelDB; only the main thread writes.
+
+The CLI is `effect/unstable/cli` on Bun. The library is Effect-native and runs on Node as well,
+which is where the test suite exercises it.
+
+## Extensions
+
+The following extension dialects are used in this document.
+
+| Term     | URI                          |
+|----------|------------------------------|
+| `module` | `org.dxos.mdl.module@1.0`    |
+| `feat`   | `org.dxos.mdl.feat@1.0`      |
+| `test`   | `org.dxos.mdl.test@1.0`      |
+
+## Stack
+
+| Concern            | Choice                                  | Why |
+|--------------------|-----------------------------------------|-----|
+| Relational store   | `@effect/sql-sqlite-{bun,node}`         | Effect-native SQL; the driver is chosen from the ambient runtime because neither loads under the other. |
+| Schema             | `@dxos/sql-sqlite` `SqlMigrations` + `effect` `Migrator` | Same numbered-`.sql` migration pattern as the rest of the repo, with its own history table. |
+| Quad store         | `quadstore` over `classic-level`        | A real persistent RDF/JS store with named graphs — deliberately not a triple table hand-rolled on SQLite. |
+| SPARQL             | `quadstore-comunica`                    | Comunica engine bound directly to the quad store, with the default graph as the union of all file graphs. |
+| Typed graph access | `ldkit`                                 | Schema-typed reads over the same engine, so a lens and a raw SPARQL query see one graph. |
+| Reasoning          | `eyereasoner` (EYE, N3)                 | Forward-chaining rules over an N3 serialization; derivations returned, optionally materialized. |
+| Parsing            | `oxc-parser`, `oxc-resolver`            | Real module records and real resolution, not regex. |
+| Concurrency        | `effect/unstable/rpc` over worker threads | Batches of paths in, JSON-LD documents out. |
+| CLI                | `effect/unstable/cli`, `@effect/platform-bun` | Subcommands, flags and help from the same Effect runtime as the library. |
+
+## Layout
+
+A store is one directory. It defaults to `<git root>/node_modules/.code-index` for the repository
+containing the working directory, so any command run anywhere inside the repo finds the same index:
+
+```
+<store>/
+  index.sqlite   # file ledger + migration history + key/value meta
+  graph/         # LevelDB directory backing the quad store
+```
+
+## Indexing pass
+
+1. **Crawl** — `git ls-files --cached --others --exclude-standard` under the root, filtered by
+   extension, plus each file's mtime. Git owns the ignore rules, so the index and the repository
+   never disagree about what a file is.
+2. **Diff** — compare against `files.mtime` in the ledger. Unchanged files are skipped entirely;
+   files gone from the working tree have their graph and row removed.
+3. **Dispatch** — changed paths are batched (64 by default) and sent to the worker pool.
+4. **Analyze** (worker) — read, parse with `oxc`, resolve every specifier with `oxc-resolver`, and
+   return the file's JSON-LD document plus the mtime actually read.
+5. **Upsert** (main thread) — one commit per file: swap its named graph, then advance its ledger row.
+
+## Commit safety across two stores
+
+The two databases cannot share a transaction, so the ledger is made the single commit marker and
+the graph write is made idempotent:
+
+1. `files.pending_graph` is set to the new graph IRI (`graph:<path>#<mtime>`) — the announcement.
+2. The old graph's quads and the new graph's quads are swapped in **one** Quadstore batch.
+3. The row is updated: `graph` becomes the new IRI and `pending_graph` is cleared — the commit.
+
+A crash before step 3 leaves the previous revision live and the new graph reachable only through
+`pending_graph`; `reconcile` (run whenever the store opens) deletes exactly those graphs. Because
+the graph IRI carries the mtime, a half-written revision can never be mistaken for the live one.
+Deletion runs the other way — row first, then graph — since a graph without a row is collectable
+garbage while a row without a graph would be a phantom file.
+
+## Modules
+
+```mdl
+module Store
+  desc: |
+    The entire persistence surface. Opened from a directory path, scoped — both databases close
+    when the enclosing Effect scope ends, and pending commits are reconciled on the way in.
+  api:
+    # Types
+    Api: {...}                                # the service interface below.
+    FileRecord: { path, language, size, hash, mtime }
+    FileState: FileRecord & { graph }         # what an incremental pass diffs against.
+    Stats: { dir, files, quads }
+    Binding: Record<string, string>           # one SPARQL SELECT row, term values by variable.
+    StoreError: Data.TaggedError
+
+    # Service
+    Store: Context.Service                    # 'code-index/Store'.
+    layer: (dir) => Layer<Store, StoreError>  # migrates sqlite, opens the quad store, reconciles.
+
+    # Ledger
+    getFile / listFiles / fileStates / getMeta / setMeta
+
+    # Commits
+    putFileDocument: (FileDocument) => Effect<void>   # graph swap + ledger advance (see above).
+    removeFile: (path) => Effect<void>
+    reconcile: () => Effect<number>                   # drops graphs left by an interrupted commit.
+
+    # RDF graph
+    putQuads / delQuads / match
+    select / ask / construct                  # SPARQL, default graph = union of file graphs.
+    lens: (schema) => Lens                    # LDkit lens over this store.
+    dump / load                               # N3 text in and out.
+    reason: (rules, { materialize? }) => Effect<Quad[]>
+    stats / clear
+```
+
+```mdl
+module Ontology
+  desc: |
+    The executable mirror of `design/ONTOLOGY.md`: IRIs, the JSON-LD context the indexer emits, the
+    document schema, and the LDkit schemas that read it back.
+  api:
+    PREFIX: 'https://dxos.org/vocab/deus#'
+    FILE_BASE / GRAPH_BASE: string
+    iri / fileIri / symbolIri / graphIri: (…) => NamedNode
+    File, Symbol: NamedNode                   # classes.
+    path, language, size, mtime, hash, imports, importsModule, declares, parseError: NamedNode
+    name, kind, exported, line: NamedNode     # symbol properties.
+    dependsOn: NamedNode                      # derived by rules only.
+    CONTEXT: object                           # the JSON-LD @context.
+    FileDocument / SymbolNode: Schema         # the wire shape, decoded by the RPC layer.
+    FileSchema / SymbolSchema: LDkit schemas
+    prefixes: Record<string, string>
+```
+
+```mdl
+module Crawler
+  desc: Repository discovery — git root, store location, and the non-ignored files with mtimes.
+  api:
+    CrawlError: Data.TaggedError
+    Entry: { path, mtime }
+    DEFAULT_EXTENSIONS: string[]
+    storeDir: (root) => string                # <root>/node_modules/.code-index
+    gitRoot: (cwd?) => Effect<string>
+    crawl: (root, options?) => Effect<Entry[]>
+```
+
+```mdl
+module Indexer
+  desc: |
+    The main thread's half: crawl, diff against the ledger, dispatch batches to the worker pool,
+    upsert the documents that come back.
+  api:
+    Options: { root, workers?, batchSize?, force?, extensions? }
+    Result: { root, scanned, indexed, unchanged, removed, skipped }
+    DEFAULT_BATCH_SIZE: 64
+    run: (options) => Effect<Result, _, Store | Scope>
+```
+
+```mdl
+module worker/Protocol
+  desc: The RPC contract between the main thread and the parsing workers.
+  api:
+    FileRef: { path, mtime }
+    AnalyzedFile: { path, mtime, document }   # document is JSON-LD text on the wire.
+    SkippedFile: { path, reason }
+    Rpcs: RpcGroup                            # AnalyzeBatch(root, files) -> { analyzed, skipped }.
+```
+
+```mdl
+module worker/Pool
+  desc: |
+    The worker pool client. Bun spawns web workers, Node spawns worker threads; the worker source
+    is the same file, so its relative imports carry explicit `.ts` extensions.
+  api:
+    make: (size) => Effect<Client, WorkerError, Scope>
+    Client: the RPC client the pool hands out.
+```
+
+```mdl
+module worker/analyze
+  desc: |
+    One file's source to one JSON-LD document. Pure apart from the injected resolver, and ignorant
+    of the store.
+  api:
+    Resolve: (fromFile, specifier) => string | undefined
+    AnalyzeOptions: { root, path, source, mtime, resolve }
+    createResolver: (root) => Resolve         # oxc-resolver over the repository.
+    language: (path) => string
+    declarations: (body) => Declaration[]     # top-level declarations with kind/export/offset.
+    analyze: (options) => Ontology.FileDocument
+```
+
+```mdl
+module Cli
+  desc: Subcommands and flags; the Bun entry point is `bin/code-index.ts`.
+  api:
+    DEFAULT_RULES: string                     # bundled rules/imports.n3.
+    command: Command                          # code-index with its subcommands.
+    run: (argv) => Effect<void>
+```
+
+## Commands
+
+| Command                                | Effect |
+|----------------------------------------|--------|
+| `index [--root R] [--force] [--workers N]` | Incremental pass over the repository. |
+| `files [--lang L]`                     | List indexed files. |
+| `query <sparql> [--file]`              | SPARQL SELECT. |
+| `ask <sparql> [--file]`                | SPARQL ASK. |
+| `reason [--rules F] [--materialize]`   | Apply N3 rules with EYE. |
+| `dump`                                 | Serialize the graph to N3. |
+| `stats`                                | File and quad counts. |
+| `clear`                                | Empty both databases. |
+| `ontology`                             | Print the JSON-LD context. |
+
+`--root` defaults to the git root of the working directory, `--store` to
+`<root>/node_modules/.code-index`, and `--json` applies to every command.
+
+## Features
+
+```mdl
+feat F-1: One directory, two databases
+  desc: |
+    A store is initialized from a directory path; `index.sqlite` (migrated) and `graph/` are created
+    inside it. Both are opened by `Store.layer` and closed when the scope ends.
+  req F-1.1: The SQLite schema is created by numbered migrations recorded in `code_index_migrations`.
+  req F-1.2: Records and quads written in one process are visible after reopening the store.
+  req F-1.3: No module outside `Store` opens a database.
+```
+
+```mdl
+feat F-2: One graph per file revision
+  desc: |
+    Every file's quads live in `graph:<path>#<mtime>`; reindexing swaps the graph rather than
+    accumulating revisions, and removing a file drops its graph and its row.
+  req F-2.1: After a reindex the previous graph holds no quads and the ledger names the new one.
+  req F-2.2: Derived quads live in the default graph, so reindexing a file never destroys them.
+  req F-2.3: An interrupted commit leaves a `pending_graph` that `reconcile` deletes on the next open.
+```
+
+```mdl
+feat F-3: Incremental by mtime
+  desc: The crawl compares mtimes against the ledger; unchanged files are never read or parsed.
+  req F-3.1: A second pass over an unchanged tree indexes nothing.
+  req F-3.2: Touching one file reindexes exactly that file.
+  req F-3.3: `--force` reindexes everything regardless of mtime.
+  req F-3.4: A file deleted from the working tree is removed from both databases.
+```
+
+```mdl
+feat F-4: Off-thread parsing
+  desc: |
+    Workers receive batches of paths and return JSON-LD documents; they never open a database. The
+    mtime returned is the one actually read, so a file written mid-crawl is reindexed next pass
+    rather than recorded as current.
+  req F-4.1: A file that cannot be read is reported as skipped, not as a failure of the pass.
+  req F-4.2: A parse failure still produces a file node, carrying `deus:parseError`.
+```
+
+```mdl
+feat F-5: Import edges
+  desc: |
+    A specifier that resolves to a file inside the repository becomes a `deus:imports` edge; a bare
+    package, a path into `node_modules`, or anything unresolvable stays a `deus:importsModule`
+    literal.
+  req F-5.1: Ignored files (per `.gitignore`) are never crawled or indexed.
+  req F-5.2: A specifier is recorded either as an edge or as a module reference, never both.
+```
+
+```mdl
+feat F-6: Derived relations are rules
+  desc: |
+    `reason` serializes the graph to N3, appends the rule set, and runs EYE in `derivations` mode,
+    so only new quads come back. `--materialize` writes them; without it the graph is untouched.
+  req F-6.1: The bundled `rules/imports.n3` derives the transitive closure of `deus:imports`.
+```
+
+## Tests
+
+```mdl
+test T-1: Store
+  file: src/Store.test.ts
+  covers: F-1, F-2, F-6
+  cases:
+    - a document lands in the file ledger and its own named graph
+    - reindexing swaps the graph rather than accumulating revisions
+    - the ledger survives reopening the store
+    - SPARQL sees the file graphs
+    - LDkit lens returns typed entities
+    - removing a file drops its graph and its row
+    - N3 rules derive new quads, optionally materialized
+    - dump serializes and load restores
+    - raw quads still round-trip
+    - an interrupted commit is reconciled when the store reopens
+    - clear empties both databases
+```
+
+```mdl
+test T-2: Indexer
+  file: src/Indexer.test.ts
+  covers: F-3, F-4, F-5, F-6
+  cases:
+    - the crawler follows gitignore
+    - the default store lives beside the repository dependencies
+    - a first pass indexes every crawled file
+    - resolved imports are edges and bare specifiers stay module references
+    - a second pass reindexes only what changed
+    - a deleted file loses its graph and its ledger row
+    - --force reindexes everything
+    - EYE derives the transitive dependency closure
+```
+
+```mdl
+test T-3: Analyze
+  file: src/worker/analyze.test.ts
+  covers: F-4, F-5
+  cases:
+    - language comes from the extension
+    - produces the document shape the ontology fixes
+    - resolved repository imports are edges, everything else is a module reference
+    - declarations carry kind, export status and line
+    - an anonymous default export is named default
+    - a parse failure still yields a file node
+```

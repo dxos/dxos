@@ -1,0 +1,7 @@
+# Transitive dependency closure over the indexed import edges.
+
+@prefix deus: <https://dxos.org/vocab/deus#>.
+
+{ ?a deus:imports ?b } => { ?a deus:dependsOn ?b }.
+
+{ ?a deus:dependsOn ?b. ?b deus:dependsOn ?c } => { ?a deus:dependsOn ?c }.

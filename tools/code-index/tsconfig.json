@@ -1,0 +1,19 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "emitDeclarationOnly": false,
+    "outDir": "dist"
+  },
+  "include": [
+    "bin",
+    "src"
+  ],
+  "references": [
+    {
+      "path": "../../packages/common/effect"
+    },
+    {
+      "path": "../../packages/common/sql-sqlite"
+    }
+  ]
+}

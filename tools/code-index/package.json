@@ -1,0 +1,49 @@
+{
+  "name": "@dxos/code-index",
+  "version": "0.11.1",
+  "private": true,
+  "description": "Bun CLI that indexes a codebase into a SQLite catalogue and a persistent RDF quad store, queryable with SPARQL/LDkit and extensible with N3 (EYE) rules.",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dxos/dxos"
+  },
+  "license": "FSL-1.1-Apache-2.0",
+  "author": "info@dxos.org",
+  "sideEffects": false,
+  "type": "module",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "bin": {
+    "code-index": "./bin/code-index.ts"
+  },
+  "scripts": {
+    "code-index": "bun ./bin/code-index.ts",
+    "test": "vitest run --passWithNoTests --project=node"
+  },
+  "dependencies": {
+    "@dxos/effect": "workspace:*",
+    "@dxos/sql-sqlite": "workspace:*",
+    "@effect/platform-bun": "catalog:",
+    "@effect/platform-node": "catalog:",
+    "@effect/sql-sqlite-bun": "catalog:",
+    "@effect/sql-sqlite-node": "catalog:",
+    "classic-level": "catalog:",
+    "effect": "catalog:",
+    "eyereasoner": "catalog:",
+    "jsonld-streaming-parser": "catalog:",
+    "ldkit": "catalog:",
+    "n3": "catalog:",
+    "oxc-parser": "catalog:",
+    "oxc-resolver": "catalog:",
+    "quadstore": "catalog:",
+    "quadstore-comunica": "catalog:"
+  },
+  "devDependencies": {
+    "@rdfjs/types": "catalog:",
+    "@types/n3": "catalog:",
+    "@types/node": "catalog:",
+    "vitest": "catalog:"
+  }
+}
