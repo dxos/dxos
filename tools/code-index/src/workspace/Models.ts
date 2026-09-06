@@ -14,7 +14,7 @@ import * as Redacted from 'effect/Redacted';
 import type * as LanguageModel from 'effect/unstable/ai/LanguageModel';
 import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
 
-import * as ChatCompletionsAdapter from '@dxos/ai/ChatCompletionsAdapter';
+import * as ChatCompletionsAdapter from '@dxos/ai/chat-completions';
 
 /**
  * The two model back-ends. Ollama is the default — the whole point is a workspace that runs with no
