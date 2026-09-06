@@ -30,13 +30,23 @@ import {
 import { EffectEx } from '@dxos/effect';
 import { PublicKey } from '@dxos/keys';
 import { IdentityNotInitializedError, TimeoutError } from '@dxos/protocols';
-import { ConfigSchema } from '@dxos/protocols/buf/dxos/config_pb';
+import { buf, fromPublicKey } from '@dxos/protocols/buf';
 import {
   Invitation,
+  Invitation_AuthMethod,
+  Invitation_Kind,
+  Invitation_State,
+  Invitation_Type,
+  InvitationSchema,
+} from '@dxos/protocols/buf/dxos/client/invitation_pb';
+import {
   QueryInvitationsResponse,
-  SpaceState,
-  SystemStatus,
-} from '@dxos/protocols/proto/dxos/client/services';
+  QueryInvitationsResponse_Action,
+  QueryInvitationsResponse_Type,
+  QueryInvitationsResponseSchema,
+} from '@dxos/protocols/buf/dxos/client/services_pb';
+import { ConfigSchema } from '@dxos/protocols/buf/dxos/config_pb';
+import { SpaceState, SystemStatus } from '@dxos/protocols/proto/dxos/client/services';
 import { MembershipPolicy } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { InvitationsService, SpacesService, SystemService } from '@dxos/protocols/rpc';
 
@@ -190,26 +200,26 @@ describe('client services effect-rpc', () => {
   // could not encode. The response failed to serialize, so the stream died before delivering the
   // initial snapshot that `InvitationsProxy.open()` (and therefore the whole app boot) waited on.
   test('an existing-invitations snapshot with a delegated invitation reaches the client', async ({ expect }) => {
-    const delegated: Invitation = {
+    const delegated: Invitation = buf.create(InvitationSchema, {
       invitationId: 'delegated-invitation',
-      type: Invitation.Type.DELEGATED,
-      kind: Invitation.Kind.SPACE,
-      authMethod: Invitation.AuthMethod.KNOWN_PUBLIC_KEY,
-      state: Invitation.State.INIT,
-      swarmKey: PublicKey.random(),
-      spaceKey: PublicKey.random(),
-      delegationCredentialId: PublicKey.random(),
+      type: Invitation_Type.DELEGATED,
+      kind: Invitation_Kind.SPACE,
+      authMethod: Invitation_AuthMethod.KNOWN_PUBLIC_KEY,
+      state: Invitation_State.INIT,
+      swarmKey: fromPublicKey(PublicKey.random()),
+      spaceKey: fromPublicKey(PublicKey.random()),
+      delegationCredentialId: fromPublicKey(PublicKey.random()),
       lifetime: remainingLifetimeSeconds(new Date(Date.now() + 604_799_123)),
       multiUse: true,
       persistent: false,
-    };
+    });
 
-    const snapshot: QueryInvitationsResponse = {
-      action: QueryInvitationsResponse.Action.ADDED,
-      type: QueryInvitationsResponse.Type.CREATED,
+    const snapshot: QueryInvitationsResponse = buf.create(QueryInvitationsResponseSchema, {
+      action: QueryInvitationsResponse_Action.ADDED,
+      type: QueryInvitationsResponse_Type.CREATED,
       invitations: [delegated],
       existing: true,
-    };
+    });
 
     const proxy = await setup(() => ({
       InvitationsService: mockService<InvitationsService.Handlers>({

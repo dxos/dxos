@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { create } from '@bufbuild/protobuf';
+import { type Message, create } from '@bufbuild/protobuf';
 
 import { PublicKey } from '@dxos/keys';
 import { Timeframe } from '@dxos/timeframe';
@@ -43,3 +43,15 @@ export const fromTimeframe = (timeframe: Timeframe): TimeframeVector =>
   create(TimeframeVectorSchema, {
     frames: timeframe.frames().map(([feedKey, seq]) => ({ feedKey: feedKey.asUint8Array(), seq })),
   });
+
+/**
+ * Drops the message brand so a partial buf message can seed `create`.
+ *
+ * `Partial<T>` of a generated message carries `$typeName` as optional, which `MessageInit` refuses;
+ * the fields themselves are what a caller means by a partial message.
+ */
+export const bufInit = <T extends Message>({
+  $typeName,
+  $unknown,
+  ...fields
+}: Partial<T>): Omit<Partial<T>, '$typeName' | '$unknown'> => fields;

@@ -13,13 +13,8 @@ import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { ApiError, runServiceCall, subscribeStream } from '@dxos/protocols';
-import {
-  type Contact,
-  type Device,
-  DeviceKind,
-  type Identity,
-  Invitation,
-} from '@dxos/protocols/proto/dxos/client/services';
+import { Invitation, Invitation_Kind } from '@dxos/protocols/buf/dxos/client/invitation_pb';
+import { type Contact, type Device, DeviceKind, type Identity } from '@dxos/protocols/proto/dxos/client/services';
 import {
   type Credential,
   type DeviceProfileDocument,
@@ -144,7 +139,7 @@ export class HaloProxy implements Halo {
       this._serviceProvider.services.InvitationsService,
       this._serviceProvider.services.IdentityService,
       () => ({
-        kind: Invitation.Kind.DEVICE,
+        kind: Invitation_Kind.DEVICE,
       }),
     );
     await this._invitationProxy.open();
