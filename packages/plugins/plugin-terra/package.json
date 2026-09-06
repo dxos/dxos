@@ -120,6 +120,7 @@
     "@dxos/echo-react": "workspace:*",
     "@dxos/plugin-space": "workspace:*",
     "@dxos/react-ui": "workspace:*",
+    "@dxos/react-ui-attention": "workspace:*",
     "@dxos/react-ui-form": "workspace:*",
     "@dxos/react-ui-menu": "workspace:*",
     "@dxos/util": "workspace:*",
@@ -128,7 +129,6 @@
     "simplex-noise": "catalog:"
   },
   "devDependencies": {
-    "@dxos/react-ui-attention": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
     "@storybook/react-vite": "catalog:",
     "@types/react": "catalog:",
