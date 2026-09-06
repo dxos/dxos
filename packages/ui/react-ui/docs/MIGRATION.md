@@ -1,10 +1,13 @@
 # → Ark UI migration (plan)
 
-**Status:** in progress. Phase 0 landed as #12902 (2026-09-03). Phase 1 (own the scaffolding) is on
-`claude/react-ui-ark-port-fe9f63`, with Phases 2, 3, 4a (Dialog/Main, Select) and 4b (Toast) — see the ledger in
-`.agents/projects/ark/TASKS.md` for what is decided and what is done. Every number below was measured against this tree at `@ark-ui/react@5.39.1` /
-`@zag-js/*@1.43.3` and the `@-ui/*` versions in the lockfile on 2026-09-02 — re-measure before
-trusting a figure in a later quarter.
+**Status:** done for `react-ui` (2026-09-05). Phase 0 landed as #12902; Phases 1–4 and 6 are on
+#12961, together with the consolidation that followed (`react-qr-rounded` → `QrCode`, `react-ui-tabs`
+folded in, the inert `Menu` with `react-ui-menu`'s `ActionToolbar` / `ActionMenu` builders — see
+`.agents/projects/ark/DESIGN.md`). Phase 5 (the RAC date/time cluster) is the one open decision; the
+ledger in `.agents/projects/ark/TASKS.md` holds it and the follow-ups. §5 measures the net effect.
+Every number below was measured against this tree at `@ark-ui/react@5.39.1` / `@zag-js/*@1.43.3` and
+the `@-ui/*` versions in the lockfile on 2026-09-02 — re-measure before trusting a figure in a later
+quarter.
 
 This document considers moving `@dxos/react-ui` — and the `@dxos/react-ui-*` packages that share
 its scaffolding — from Primitives to Ark UI. It inventories what each component is built on,
@@ -50,49 +53,51 @@ _Built on_ names the behavioural dependency; "scaffolding" means only `react-con
 `react-primitive`, `react-slot`, `react-compose-refs` or `react-use-controllable-state`, which are
 not what a migration replaces.
 
-| component       |  LOC | built on                                                                                     | Ark component                                                      | consumers¹ | verdict                                                                |
-| --------------- | ---: | -------------------------------------------------------------------------------------------- | ------------------------------------------------------------------ | ---------: | ---------------------------------------------------------------------- |
-| AttentionGlyph  |  111 | scaffolding                                                                                  | —                                                                  |            | keep                                                                   |
-| Avatars         |  217 | scaffolding (hand-built)                                                                     | `avatar`                                                           |            | port (leaf)                                                            |
-| Banner          |  267 | scaffolding                                                                                  | —                                                                  |            | keep                                                                   |
-| Breadcrumb      |  143 | scaffolding                                                                                  | —                                                                  |            | keep                                                                   |
-| Button          |  810 | `react-toggle`, `react-toggle-group`                                                         | `toggle`, `toggle-group`                                           |            | port (leaf)                                                            |
-| Calendar        |  286 | `react-aria-components`                                                                      | `date-picker` (view)                                               |         21 | **decision** — see §4                                                  |
-| Card            |  772 | scaffolding                                                                                  | —                                                                  |            | keep                                                                   |
-| Carousel        |  528 | hand-built (+ `@dxos/react-focus`)                                                           | `carousel`                                                         |          4 | **Phase 0, in flight**                                                 |
-| Clipboard       |  124 | hand-built                                                                                   | `clipboard`                                                        |            | port (leaf)                                                            |
-| Column          |  357 | scaffolding                                                                                  | —                                                                  |            | keep                                                                   |
-| DatePicker      |  332 | `Calendar` + `Popover`                                                                       | `date-picker`                                                      |          1 | **decision** — see §4                                                  |
-| Deferred        |  118 | none                                                                                         | —                                                                  |            | keep                                                                   |
-| Dialog          |  590 | `react-dialog`, `react-alert-dialog`                                                         | `dialog` (`role="alertdialog"` variant)                            |            | port                                                                   |
-| Editable        |  427 | hand-built                                                                                   | `editable`                                                         |         13 | **Phase 0, in flight**                                                 |
-| ErrorFallback   |  256 | `react-error-boundary`                                                                       | —                                                                  |            | keep                                                                   |
-| Focus           |  255 | scaffolding                                                                                  | `focus-trap` (partial)                                             |            | keep — `@dxos/react-focus` owns this                                   |
-| Icon            |  128 | scaffolding                                                                                  | —                                                                  |            | keep                                                                   |
-| Image           |  257 | none                                                                                         | —                                                                  |            | keep                                                                   |
-| Input           | 1247 | `react-checkbox` + RAC segmented fields                                                      | `checkbox`, `field`, `number-input`, `password-input`, `pin-input` |            | partial — checkbox is a leaf; date/time fields follow the RAC decision |
-| Link            |   53 | scaffolding                                                                                  | —                                                                  |            | keep                                                                   |
-| Main            |  615 | `react-dialog` (sidebars)                                                                    | `dialog` / `drawer`                                                |            | port with Dialog                                                       |
-| MediaPlayer     |  196 | none                                                                                         | —                                                                  |            | keep                                                                   |
-| Menu            |  896 | **fork** of `react-menu`, `dropdown-menu`, `context-menu`                                    | `menu` (one machine; `contextTrigger` part)                        |        29² | port (floating)                                                        |
-| MenuButton      |  109 | `Menu`                                                                                       | —                                                                  |            | follows Menu                                                           |
-| Panel           |  179 | scaffolding                                                                                  | —                                                                  |            | keep                                                                   |
-| Popover         |  701 | **fork**: `popper`, `dismissable-layer`, `focus-scope`, `focus-guards`, `presence`, `portal` | `popover`                                                          |         38 | port (floating)                                                        |
-| Progress        |   99 | hand-built                                                                                   | `progress`                                                         |            | port (leaf)                                                            |
-| ScrollArea      |  529 | scaffolding (hand-built)                                                                     | `scroll-area`                                                      |            | port (leaf)                                                            |
-| ScrollContainer |  362 | scaffolding                                                                                  | —                                                                  |            | keep                                                                   |
-| Select          |  303 | `react-select`                                                                               | `select`                                                           |         44 | port — **API leaks** (collection prop)                                 |
-| Separator       |   57 | `react-separator`                                                                            | —                                                                  |            | hand-roll (trivial)                                                    |
-| Show            |  104 | none                                                                                         | —                                                                  |            | keep                                                                   |
-| Skeleton        |   53 | none                                                                                         | —                                                                  |            | keep                                                                   |
-| Slider          |  107 | `react-slider`                                                                               | `slider`                                                           |            | port (leaf)                                                            |
-| Splitter        |  434 | scaffolding (hand-built)                                                                     | `splitter`                                                         |          8 | **Phase 0, in flight**                                                 |
-| Stepper         |  330 | none (hand-built)                                                                            | `steps`                                                            |          3 | **Phase 0, in flight**                                                 |
-| Tag             |   52 | scaffolding                                                                                  | —                                                                  |            | keep                                                                   |
-| TextCrawl       |  312 | none                                                                                         | — (`marquee` differs)                                              |            | keep                                                                   |
-| Toast           |  229 | `react-toast`                                                                                | `toast` (toaster-store model)                                      |            | port — model change                                                    |
-| Toolbar         |  447 | `react-toolbar`, `react-toggle-group`                                                        | `toggle-group` only — **no toolbar**                               |            | roving focus → `@dxos/react-focus`                                     |
-| Tooltip         |  942 | **fork**: `tooltip`, `popper`, `dismissable-layer`, `presence`, `portal`, `visually-hidden`  | `tooltip`                                                          |         35 | port (floating)                                                        |
+| component       |  LOC | built on                                                                                     | Ark component                                                      | consumers¹ | verdict                                                                           |
+| --------------- | ---: | -------------------------------------------------------------------------------------------- | ------------------------------------------------------------------ | ---------: | --------------------------------------------------------------------------------- |
+| AttentionGlyph  |  111 | scaffolding                                                                                  | —                                                                  |            | keep                                                                              |
+| Avatars         |  217 | scaffolding (hand-built)                                                                     | `avatar`                                                           |            | kept — the lit element owns the image fallback                                    |
+| Banner          |  267 | scaffolding                                                                                  | —                                                                  |            | keep                                                                              |
+| Breadcrumb      |  143 | scaffolding                                                                                  | —                                                                  |            | keep                                                                              |
+| Button          |  810 | `react-toggle`, `react-toggle-group`                                                         | `toggle`, `toggle-group`                                           |            | done (Phase 2)                                                                    |
+| Calendar        |  286 | `react-aria-components`                                                                      | `date-picker` (view)                                               |         21 | **decision** — see §4                                                             |
+| Card            |  772 | scaffolding                                                                                  | —                                                                  |            | keep                                                                              |
+| Carousel        |  528 | hand-built (+ `@dxos/react-focus`)                                                           | `carousel`                                                         |          4 | done (#12902)                                                                     |
+| Clipboard       |  124 | hand-built                                                                                   | `clipboard`                                                        |            | kept — a ten-line context                                                         |
+| Column          |  357 | scaffolding                                                                                  | —                                                                  |            | keep                                                                              |
+| DatePicker      |  332 | `Calendar` + `Popover`                                                                       | `date-picker`                                                      |          1 | **decision** — see §4                                                             |
+| Deferred        |  118 | none                                                                                         | —                                                                  |            | keep                                                                              |
+| Dialog          |  590 | `react-dialog`, `react-alert-dialog`                                                         | `dialog` (`role="alertdialog"` variant)                            |            | done (Phase 4a)                                                                   |
+| Editable        |  427 | hand-built                                                                                   | `editable`                                                         |         13 | done (#12902)                                                                     |
+| ErrorFallback   |  256 | `react-error-boundary`                                                                       | —                                                                  |            | keep                                                                              |
+| Focus           |  255 | scaffolding                                                                                  | `focus-trap` (partial)                                             |            | keep — `@dxos/react-focus` owns this                                              |
+| Icon            |  128 | scaffolding                                                                                  | —                                                                  |            | keep                                                                              |
+| Image           |  257 | none                                                                                         | —                                                                  |            | keep                                                                              |
+| Input           | 1247 | `react-checkbox` + RAC segmented fields                                                      | `checkbox`, `field`, `number-input`, `password-input`, `pin-input` |            | checkbox done (Phase 2); date/time fields follow the RAC decision                 |
+| Link            |   53 | scaffolding                                                                                  | —                                                                  |            | keep                                                                              |
+| Main            |  615 | `react-dialog` (sidebars)                                                                    | `dialog` / `drawer`                                                |            | done with Dialog (Phase 4a)                                                       |
+| MediaPlayer     |  196 | none                                                                                         | —                                                                  |            | keep                                                                              |
+| Menu            |  896 | **fork** of `react-menu`, `dropdown-menu`, `context-menu`                                    | `menu` (one machine; `contextTrigger` part)                        |        29² | done (Phase 3); graph rendering moved to `react-ui-menu`'s builders               |
+| MenuButton      |  109 | `Menu`                                                                                       | —                                                                  |            | done with Menu                                                                    |
+| Panel           |  179 | scaffolding                                                                                  | —                                                                  |            | keep                                                                              |
+| Popover         |  701 | **fork**: `popper`, `dismissable-layer`, `focus-scope`, `focus-guards`, `presence`, `portal` | `popover`                                                          |         38 | done (Phase 3)                                                                    |
+| Progress        |   99 | hand-built                                                                                   | `progress`                                                         |            | kept — countdown semantics the machine lacks                                      |
+| ScrollArea      |  529 | scaffolding (hand-built)                                                                     | `scroll-area`                                                      |            | kept — hand-built thumbs; `Slottable` restructured instead                        |
+| ScrollContainer |  362 | scaffolding                                                                                  | —                                                                  |            | keep                                                                              |
+| Select          |  303 | `react-select`                                                                               | `select`                                                           |         44 | done (Phase 4a); the collection is registry-driven, so consumers kept JSX options |
+| Separator       |   57 | `react-separator`                                                                            | —                                                                  |            | done (hand-rolled)                                                                |
+| Show            |  104 | none                                                                                         | —                                                                  |            | keep                                                                              |
+| Skeleton        |   53 | none                                                                                         | —                                                                  |            | keep                                                                              |
+| Slider          |  107 | `react-slider`                                                                               | `slider`                                                           |            | done (Phase 2)                                                                    |
+| Splitter        |  434 | scaffolding (hand-built)                                                                     | `splitter`                                                         |          8 | done (#12902)                                                                     |
+| Stepper         |  330 | none (hand-built)                                                                            | `steps`                                                            |          3 | done (#12902)                                                                     |
+| Tag             |   52 | scaffolding                                                                                  | —                                                                  |            | keep                                                                              |
+| TextCrawl       |  312 | none                                                                                         | — (`marquee` differs)                                              |            | keep                                                                              |
+| Toast           |  229 | `react-toast`                                                                                | `toast` (toaster-store model)                                      |            | done (Phase 4b)                                                                   |
+| Toolbar         |  447 | `react-toolbar`, `react-toggle-group`                                                        | `toggle-group` only — **no toolbar**                               |            | done — `@dxos/react-focus` group + Ark `toggle-group`                             |
+| Tooltip         |  942 | **fork**: `tooltip`, `popper`, `dismissable-layer`, `presence`, `portal`, `visually-hidden`  | `tooltip`                                                          |         35 | done (Phase 3)                                                                    |
+| Tabs            |    — | was `react-ui-tabs` on `react-tabs`                                                          | `tabs`                                                             |         14 | done — folded into `react-ui`; attention lifted to `selectedVariant`              |
+| QrCode          |    — | was `react-qr-rounded`                                                                       | `qr-code`                                                          |          3 | done                                                                              |
 
 ¹ Consumer files outside the component's own directory, `dist`/`out` excluded; blank where not
 measured. ² Counted as `DropdownMenu.` references.
@@ -102,8 +107,8 @@ Ark components with no counterpart in `react-ui`, for reference:
 | Ark component     | in the repo today                                   | note                                          |
 | ----------------- | --------------------------------------------------- | --------------------------------------------- |
 | `accordion`       | `react-ui-list` — already on Ark                    | migrated on merit (APG keymap), see `TREE.md` |
-| `collapsible`     | `react-list` on `@-ui/react-collapsible` (§3)       | leaf swap, Phase 2                            |
-| `tabs`            | `react-ui-tabs` on `@-ui/react-tabs` (§3)           | leaf swap, Phase 2                            |
+| `collapsible`     | `react-list` — on Ark                               | done, Phase 2                                 |
+| `tabs`            | `react-ui` `Tabs` — on Ark                          | done; folded in from `react-ui-tabs`          |
 | `combobox`        | hand-built in `react-ui-list`                       | candidate, not obligation (+87.9 KB raw)      |
 | `listbox`         | hand-built in `react-ui-list`                       | candidate, not obligation (+22.5 KB raw)      |
 | `drawer`          | none — `Main`'s sidebars are dialogs                | the missing mobile bottom sheet, Phase 4      |
@@ -123,7 +128,7 @@ Ark components with no counterpart in `react-ui`, for reference:
 | `pagination`      | none                                                |                                               |
 | `color-picker`    | none                                                |                                               |
 | `signature-pad`   | none                                                |                                               |
-| `qr-code`         | none                                                |                                               |
+| `qr-code`         | `react-ui` `QrCode` — on Ark                        | done; replaced `react-qr-rounded`             |
 | `timer`           | none                                                |                                               |
 | `marquee`         | none (`TextCrawl` is a different thing)             |                                               |
 | `image-cropper`   | none                                                |                                               |
@@ -430,7 +435,7 @@ Each phase is independently landable and leaves the tree consistent. Phases 1–
 if 3–5 never happen. Verification gate for every phase: `moon run <pkg>:build`, `moon run :lint --
 --fix`, the affected stories rendered with a clean console, and the consuming packages' tests.
 
-### Phase 0 — hand-built components with Ark machines _(in flight)_
+### Phase 0 — hand-built components with Ark machines _(done, #12902, 2026-09-04)_
 
 `Carousel`, `Editable`, `Splitter`, `Stepper` → `carousel`, `editable`, `splitter`, `steps`.
 ~2,264 LOC of hand-maintained interaction and a11y, no behavioural dependency, consumer counts
@@ -459,7 +464,7 @@ behavioural imports at `@dxos/react-ui`. Update the `composite-components` skill
 Outcome: `@-ui/react-context`, `-primitive`, `-slot`, `-compose-refs`, `-use-controllable-state`
 and `-id` leave every `package.json` except `react-ui`'s. Zero anatomy change, zero consumer change.
 
-### Phase 2 — leaves: behavioural swaps with no anatomy leak _(in progress, 2026-09-05)_
+### Phase 2 — leaves: behavioural swaps with no anatomy leak _(done, 2026-09-05)_
 
 Verdicts revised on inspection while doing it:
 
@@ -500,7 +505,7 @@ holds. One PR each or small batches:
 | `react-ui-tabs`            | `tabs`                   | optional `Indicator` gained                                     |
 | `Separator`                | —                        | hand-roll: a `div role="separator"` with `aria-orientation`     |
 
-### Phase 3 — floating: the forks
+### Phase 3 — floating: the forks _(done, 2026-09-05)_
 
 The three forks — `Tooltip` (942 LOC), `Popover` (701), `Menu` (896) — are the heart of the
 migration and the largest deletion. Each currently reimplements 's content layer from `popper`,
@@ -542,7 +547,7 @@ Outcome: `react-popper`, `-dismissable-layer`, `-focus-scope`, `-focus-guards`, 
   off and the item closes the menu unless its cancelable `onSelect` was `preventDefault()`ed, which
   keeps 's contract. `DropdownMenu.Root modal` is accepted as a no-op.
 
-### Phase 4 — modal, toast, select
+### Phase 4 — modal, toast, select _(done, 2026-09-05)_
 
 - **`Dialog` + `Main`** → `dialog`. `Overlay` → `Backdrop`, `Close` → `CloseTrigger`, `AlertDialog`
   → `role="alertdialog"`. `Main`'s sidebars are dialogs today; evaluate `drawer` for them —
@@ -589,18 +594,72 @@ Outcome: `react-popper`, `-dismissable-layer`, `-focus-scope`, `-focus-guards`, 
   input (`date-input`) but not RAC's segmented-field model one-for-one. Options: (a) keep RAC as a
   second headless library for the date/time cluster and stop there; (b) consolidate onto Ark and
   rebuild the segmented fields. Not decided; (a) is the default until someone needs (b).
-- **`Toolbar`.** Ark has no toolbar. Roving focus is `@dxos/react-focus`'s job since #12884;
-  `Toolbar` becomes a focus group containing Ark `toggle-group`s. Decide whether the `Toolbar.*`
-  namespace survives as a thin composition or is retired in favour of `Flex` + focus group.
+- **`Toolbar`.** Decided in Phase 2: `Toolbar.Root` is a `@dxos/react-focus` group containing Ark
+  `toggle-group`s and the `Toolbar.*` namespace survives. Graph-driven toolbars are
+  `react-ui-menu`'s `ActionToolbar`, a whole `Toolbar.Root` built from `MenuActions`.
 - **`Focus`.** Keep; it is the seam between `react-ui` and `@dxos/react-focus`, and Ark's
   `focus-trap` covers only the trapping half.
 
-### Phase 6 — remove
+### Phase 6 — remove _(done, 2026-09-05)_
 
-When `react-ui`'s remaining `@-ui/*` imports are gone, remove the packages from the catalog and
-lockfile, and delete `@-ui/react-select`'s `Viewport`-shaped theme slots. `pnpm knip` is the
-gate — it caught the orphaned `react-compose-refs` after the Tree's flat row was deleted, and will
-catch anything left behind here.
+The 36 `@-ui/*` catalog entries are gone, with `aria-hidden`, `react-remove-scroll`,
+`tailwindcss-radix` and `react-qr-rounded`; `pnpm knip` is clean. What remains of Radix in the
+lockfile arrives through tldraw, excalidraw and leva.
+
+## 5. Net effect
+
+Measured on 2026-09-05 from d4b4919f87, the last `main` commit before the Tree rebuild (#12873,
+1 Sep), to the head of #12961. The whole-repo diff over that window (1,913 files) is dominated by
+unrelated work, so the code figures are scoped to `packages/ui` and the two packages the port
+removed.
+
+| Measure                                | 31 Aug baseline          | now                                                  |
+| -------------------------------------- | ------------------------ | ---------------------------------------------------- |
+| UI-scoped code                         |                          | 569 files, +16,318 / −9,528 (net +6.8k)              |
+| Files importing `@radix-ui`            | 144                      | 0                                                    |
+| Files importing `@ark-ui/react`        | 0                        | 67                                                   |
+| Lockfile `@radix-ui` entries           | 290                      | 226 (all via tldraw, excalidraw, leva)               |
+| Lockfile `@zag-js` + `@ark-ui` entries | 18                       | 158                                                  |
+| Lockfile packages, whole repo          | 9,422                    | 9,483                                                |
+| Workspace packages                     |                          | −2 (`react-ui-tabs`, `keyboard`), +1 (`react-focus`) |
+| Composer boot graph                    | 4,360,490 B (documented) | 4.37 MB                                              |
+
+**Third-party libraries gone from the catalog:** 36 `@radix-ui/*` packages, `aria-hidden`,
+`react-remove-scroll`, `tailwindcss-radix`, `react-qr-rounded`, `tabster`, `@fluentui/react-tabster`,
+`keyborg`, `react-hotkeys-hook`. Added: `@ark-ui/react` and `@zag-js/hotkeys`. Nine libraries and one
+focus stack out, one library family in.
+
+**Custom code retired over the window:** the old Tree (`TreeItem`, `TreeItemHeading`) and the whole
+`Treegrid`, the task list's own drag-and-drop module, `CarouselContext`, `ContextMenu.tsx` as a second
+menu implementation, `react-ui-menu`'s three renderers and its provider, the `@dxos/keyboard` package,
+and the tabster focus scaffolding. In their place: Tree, Tabs, Carousel, Editable, Splitter, Stepper,
+Toggle, ToggleGroup, Checkbox, Slider, Collapsible, Tooltip, Popover, Menu, Dialog, AlertDialog,
+Select, Toast and QrCode on Zag machines, and `react-focus` for focus groups and hotkeys.
+
+**How the work landed:**
+
+- #12873 Tree on Ark: 47 files, +3.4k / −1.4k
+- #12884 tabster and keyboard → `react-focus`
+- #12890 task list on the Ark Tree: 62 files, +3.0k / −1.3k
+- #12919 migration plan and rail-item rows: 17 files
+- #12902 Carousel, Editable, Splitter, Stepper: 39 files, +1.4k / −0.9k
+- #12961 the rest of `react-ui` plus the menu redesign: 600 files, +9.2k / −9.1k
+
+**Reading it:**
+
+- Dependency surface is the clear win: 144 Radix import sites and ten libraries replaced by one
+  vendor, with focus and hotkeys owned in-repo. The lockfile is not smaller, because Zag ships one
+  package per machine (158 entries), but they are one coherent, versioned family.
+- Source size grew by about 6.8k lines in the UI packages. That is not the machines themselves; it is
+  the wrappers that keep our public APIs stable over Ark's, plus the plan, design notes, regression
+  stories, and the new focus package. The port deliberately kept consumer APIs, so the deletions are
+  mostly Radix-era glue rather than product code.
+- Boot cost is flat against the documented 31 Aug figure: the Zag floating stack is heavier than
+  Radix's, the menu split gave that back, and the peak of 4.57 MB at Phase 3 is gone. The 31 Aug tree
+  was not rebuilt to re-measure; that number is the one recorded in `check-boot-budget.mjs`.
+- Behavioural findings the port surfaced rather than caused: Radix options carried an
+  `aria-labelledby` the table e2e relied on, and menus nested under another `Menu.Root` were
+  hover-opened child menus. Both are fixed on the branch, and the task-row menus now open on click.
 
 ## Appendix A — measurements
 
