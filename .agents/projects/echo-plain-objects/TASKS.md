@@ -235,6 +235,33 @@ both benches after each.
       only the lens, which the user released).
 - [ ] **PR body updated with the Stage D column.**
 
+## Phase 7 — Stage E: one read-only handler, a mutable view inside `Obj.update`
+
+The user's original design, returned to after the Stage D justification for keeping a `get` trap on some
+proxies was checked and failed: `lookupRef` already has a no-database path, `clone`/`edit-history` create
+the document before the proxy, and an array target could hold its elements as easily as a record does. If
+no proxy needs a `get` trap, and `Obj.update` may hand the callback a different proxy (user, 2026-09-06),
+then the read-side object needs only three traps that always throw — uniform across every kind — so one
+shared handler serves everything and `ProxyHandlerSlot`'s swappable `_handler` has nothing left to do.
+
+Premises P1–P5 are with an adversarial agent before any of this is built; the tasks below are provisional
+on its verdicts.
+
+### Tasks
+
+- [ ] **Adversarial pass on the premises** — fill-always, arrays-hold-elements, different-proxy-in-update,
+      one-shared-read-handler, suites-unchanged. Falsify or bound each.
+- [ ] **Fill unconditionally** — drop the database half of `_canMaterialize`; refresh when the database is
+      attached to the core so a held ref gains its resolver.
+- [ ] **Arrays hold their elements** — fill and refresh `EchoArray` targets like records; drop their trap.
+- [ ] **Split the handler** — a shared read-only handler (throwing `set`/`deleteProperty`/`defineProperty`,
+      plus the key-set traps) and a mutable one used only inside `Obj.update`.
+- [ ] **`Obj.update` passes the mutable proxy**; the change-context key stays the raw target / core.
+- [ ] **Delete `ProxyHandlerSlot`'s swappable handler and the `db.add` swap** — re-pointing the target's
+      prototype is the whole of the conversion.
+- [ ] **Green: `echo`, `echo-client`, `echo-client-e2e`, unmodified.**
+- [ ] **Measure** — both benches; expect reads at or below the current ~25 ns and writes unchanged.
+
 ## Phase 5: Compare and review
 
 - [x] **Before/after table in `BENCHMARKS.md`** — `0dab2f81` → `b3486ba0`, per cell; elision checks

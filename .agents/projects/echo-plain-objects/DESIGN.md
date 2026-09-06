@@ -35,7 +35,10 @@ only read-side purpose is enforcement the object shape can carry itself.
    representation whose failure mode differs from today's in message or type.
 
 Process: once implemented, a reviewer subagent goes over the diff and the code is iterated until it is
-clean.
+clean. **Every load-bearing assumption is put to an adversarial agent before it is built on** (user,
+2026-09-06) — one told to falsify the premise and to prove counterexamples with throwaway tests, not to
+confirm it. Adopted after a justification for keeping the `get` trap on some proxies turned out to be
+wrong in three of its four cases, none of which had been checked.
 
 ## Proposal
 
