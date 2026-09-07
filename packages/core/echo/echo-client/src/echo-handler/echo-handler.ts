@@ -154,12 +154,12 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
   }
 
   /**
-   * A target is filled only once its core has both a document and a database: a ref minted before the
-   * database is known would have no resolver and, unlike a lazy read, would be held rather than re-derived.
-   * Until then the `get` trap serves reads from the document as before.
+   * A target is filled as soon as its core has a document to fill it from. It needs no database: a ref
+   * materialized here resolves through its core rather than through whatever the core held at the time
+   * (see `CoreRefResolver`), so one built before `db.add` still works afterwards.
    */
   private _canMaterialize(core: ObjectCore): boolean {
-    return core.hasDoc && getEchoDatabase(core) != null;
+    return core.hasDoc;
   }
 
   ownKeys(target: ProxyTarget): ArrayLike<string | symbol> {

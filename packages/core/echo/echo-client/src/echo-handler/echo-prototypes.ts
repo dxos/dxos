@@ -55,6 +55,7 @@ import { type DevtoolsFormatter, devtoolsFormatter } from '@dxos/debug';
 import { Entity, Obj, Type } from '@dxos/echo';
 import { DATA_NAMESPACE, EncodedReference, isEncodedReference } from '@dxos/echo-protocol';
 import {
+  type AnyProperties,
   ATTR_DELETED,
   ATTR_META,
   ATTR_RELATION_SOURCE,
@@ -76,6 +77,9 @@ import {
   ParentId,
   type Ref,
   RefImpl,
+  type RefResolver,
+  type RefResolverRequest,
+  type RefSource,
   RelationSourceDXNId,
   RelationSourceId,
   RelationTargetDXNId,
@@ -380,26 +384,90 @@ export const handleStoredSchema = (target: ProxyTarget, object: any): any => {
   return object;
 };
 
-export const lookupRef = (target: ProxyTarget, encodedRef: EncodedReference): Ref<any> | undefined => {
-  const dxn = EncodedReference.toURI(encodedRef);
-  const database = getEchoDatabase(target[symbolInternals]);
-  if (database) {
-    const refImpl = new RefImpl(dxn);
-    // The resolver materializes persisted schema objects into their registered `Type.Type` entity.
-    setRefResolver(refImpl, database.graph.createRefResolver({ context: { space: database.spaceId } }));
-    return refImpl;
-  } else {
-    invariant(target[symbolInternals].linkCache);
-    const parsedEchoUri = EID.tryParse(dxn);
-    const objectId = parsedEchoUri ? EID.getEntityId(parsedEchoUri) : undefined;
-    // Not every ref addresses an object: `Ref.fromURI` also names a registry entry by type DXN (an
-    // unpersisted routine draft binds its runnable that way). The link cache is keyed by entity id,
-    // so such a ref simply has no local target — resolving it needs a database.
-    if (!objectId) {
-      return new RefImpl(dxn);
+/**
+ * A resolver bound to the core rather than to whatever the core happened to hold when the ref was
+ * built. Both of the things a ref resolves through arrive *after* the values are materialized —
+ * `db.add` sets the database and clears the link cache, and `clone` fills the link cache only once
+ * every clone exists — so a ref that captured either at mint time is wrong for the rest of its life.
+ * Deciding per call instead is what lets a target be filled before its core has a database.
+ */
+class CoreRefResolver implements RefResolver {
+  #delegate: RefResolver | undefined;
+
+  constructor(private readonly _target: ProxyTarget) {}
+
+  /** The database's resolver, once there is one; cached, since the database is never reassigned. */
+  #database(): RefResolver | undefined {
+    if (!this.#delegate) {
+      const database = getEchoDatabase(this._target[symbolInternals]);
+      if (database) {
+        // The resolver materializes persisted schema objects into their registered `Type.Type` entity.
+        this.#delegate = database.graph.createRefResolver({ context: { space: database.spaceId } });
+      }
     }
-    return new RefImpl(dxn, handleStoredSchema(target, target[symbolInternals].linkCache.get(objectId)));
+    return this.#delegate;
   }
+
+  /**
+   * The local object a ref names, for a core with no database. Not every ref addresses an object:
+   * `Ref.fromURI` also names a registry entry by type DXN (an unpersisted routine draft binds its
+   * runnable that way), and such a ref has no local target — resolving it needs a database.
+   */
+  /**
+   * Whether this core could ever resolve `uri`: with a database anything can be resolved, and without
+   * one only an entity the link cache is keyed by — which it may not hold yet, since `clone` fills the
+   * cache after building every clone.
+   */
+  canResolve(uri: URI.URI): boolean {
+    return getEchoDatabase(this._target[symbolInternals]) != null || EID.tryParse(uri) != null;
+  }
+
+  pinned(uri: URI.URI): AnyProperties | undefined {
+    const linkCache = this._target[symbolInternals].linkCache;
+    const parsed = EID.tryParse(uri);
+    const objectId = parsed ? EID.getEntityId(parsed) : undefined;
+    return linkCache && objectId ? handleStoredSchema(this._target, linkCache.get(objectId)) : undefined;
+  }
+
+  resolve(uri: URI.URI, options: { source: RefSource }): RefResolverRequest {
+    const database = this.#database();
+    invariant(database, 'Ref cannot be resolved before its object is added to a database.');
+    return database.resolve(uri, options);
+  }
+
+  resolveSync(uri: URI.URI, load: boolean, onLoad?: () => void): AnyProperties | undefined {
+    return this.#database()?.resolveSync(uri, load, onLoad) ?? this.pinned(uri);
+  }
+
+  async resolveLegacy(uri: URI.URI): Promise<AnyProperties | undefined> {
+    return (await this.#database()?.resolveLegacy(uri)) ?? this.pinned(uri);
+  }
+
+  async resolveSchema(uri: URI.URI): Promise<Schema.Codec<any, any> | undefined> {
+    return this.#database()?.resolveSchema(uri);
+  }
+
+  async resolveType(uri: URI.URI): Promise<unknown | undefined> {
+    return this.#database()?.resolveType?.(uri);
+  }
+}
+
+/** One resolver per target, since every ref read off it resolves the same way. */
+const refResolvers = new WeakMap<ProxyTarget, CoreRefResolver>();
+
+export const lookupRef = (target: ProxyTarget, encodedRef: EncodedReference): Ref<any> | undefined => {
+  const uri = EncodedReference.toURI(encodedRef);
+  const resolver = defaultMap(refResolvers, target, () => new CoreRefResolver(target));
+  // Pinned when the link cache already names the object, so assigning this ref onward still carries the
+  // local target (`getRefSavedTarget`) as it did before; the resolver covers every other case.
+  const refImpl = new RefImpl(uri, resolver.pinned(uri));
+  // Not every ref addresses an object: `Ref.fromURI` also names a registry entry by type DXN (an
+  // unpersisted routine draft binds its runnable that way). Off-database such a ref has nothing to
+  // resolve through, and `isAvailable` reports a resolver it was given, so it is left without one.
+  if (resolver.canResolve(uri)) {
+    setRefResolver(refImpl, resolver);
+  }
+  return refImpl;
 };
 
 const compactMeta = (meta: EntityMeta): Partial<EntityMeta> => {
