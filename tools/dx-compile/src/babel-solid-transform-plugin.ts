@@ -11,6 +11,8 @@ import babelPresetSolid from 'babel-preset-solid';
 import { type Plugin } from 'esbuild';
 import { readFile } from 'fs/promises';
 
+import { loadLogMetaTransform } from './load-log-meta-transform.ts';
+
 // SWC's automatic React JSX runtime (driven by `jsxImportSource: 'solid-js'`)
 // emits `_jsx(...)` calls + `import { jsx } from 'solid-js/jsx-runtime'`, but
 // `solid-js/jsx-runtime` actually resolves to `dist/solid.js` which has no
@@ -19,29 +21,6 @@ import { readFile } from 'fs/promises';
 // calls. This plugin replaces SwcTransformPlugin for `.tsx` files in packages
 // whose tsconfig sets `jsxImportSource: 'solid-js'`. SWC still handles `.ts`
 // (no JSX, much faster).
-
-type LogMetaTransformFn = (code: string, filename: string) => string | null;
-let _logMetaTransform: LogMetaTransformFn | null | undefined;
-let _didWarnLogMetaLoadFailure = false;
-
-const loadLogMetaTransform = async (): Promise<LogMetaTransformFn | null> => {
-  if (_logMetaTransform !== undefined) {
-    return _logMetaTransform;
-  }
-  try {
-    const specifier = ['@dxos', 'vite-plugin-log'].join('/');
-    const mod = (await import(specifier)) as { transformLogMeta?: LogMetaTransformFn };
-    _logMetaTransform = mod.transformLogMeta ?? null;
-  } catch (err) {
-    const code = (err as NodeJS.ErrnoException | undefined)?.code;
-    if (code !== 'ERR_MODULE_NOT_FOUND' && !_didWarnLogMetaLoadFailure) {
-      _didWarnLogMetaLoadFailure = true;
-      console.warn('dx-compile: failed to load `@dxos/vite-plugin-log`; continuing without log-meta injection.', err);
-    }
-    _logMetaTransform = null;
-  }
-  return _logMetaTransform;
-};
 
 export interface BabelSolidTransformPluginOptions {
   isVerbose: boolean;
