@@ -20,6 +20,7 @@ import {
   onCleanupSignal,
 } from '../../plan';
 import { ClientReplicant } from '../../replicants/client-replicant';
+import { describeError } from '../../util';
 import { Command, canRun, describe, execute, makeCommandArbitrary, mutatesData, simulate } from './commands';
 import { type ClientIndex, type Model, makeFleetModel } from './model';
 import {
@@ -171,6 +172,9 @@ export class EdgeStress implements TestPlan<EdgeStressSpec, EdgeStressResult> {
     });
 
     let completed = false;
+    // Captured for the summary: the verdict alone sends whoever reads the artifact back to the job
+    // log for the one thing they came for.
+    let failure: string | undefined;
     try {
       try {
         for (const command of plan) {
@@ -202,6 +206,9 @@ export class EdgeStress implements TestPlan<EdgeStressSpec, EdgeStressResult> {
       }
       await assertFullyReplicated(model, real);
       completed = true;
+    } catch (err) {
+      failure = describeError(err);
+      throw err;
     } finally {
       trace({ event: 'done', planned: plan.length, commands: real.counters.commands });
       // Written here, not on the success path: a CI job's verdict has to survive the failure it is
@@ -210,6 +217,7 @@ export class EdgeStress implements TestPlan<EdgeStressSpec, EdgeStressResult> {
         path.join(params.outDir, 'summary.md'),
         renderSummary({
           ok: completed,
+          failure,
           seed: params.randomSeed,
           edgeUrl,
           planned: plan.length,
@@ -439,6 +447,7 @@ const hashSeed = (seed: string): number => {
  */
 const renderSummary = (result: {
   ok: boolean;
+  failure: string | undefined;
   seed: string | undefined;
   edgeUrl: string;
   planned: number;
@@ -453,6 +462,7 @@ const renderSummary = (result: {
     `Against \`${result.edgeUrl}\`. Replay this exact run with \`--seed ${result.seed ?? '<unset>'}\`, or`,
     'from its own trace with `--spec \'{"plan":"<artifact>/command-trace.jsonl"}\'`.',
     '',
+    ...(result.failure ? ['```', result.failure, '```', ''] : []),
     '| | |',
     '| --- | --- |',
     `| Commands planned / executed | ${result.planned} / ${result.executed} |`,

@@ -334,11 +334,28 @@ export class ClientReplicant {
     return { invitationCode };
   }
 
+  /**
+   * Accept an invitation, reporting the two phases separately.
+   *
+   * `admittedMs` ends at `Invitation_State.SUCCESS` — the guest's credentials are replicated into
+   * the space's control feed, which is what the invitation is. Everything after it (the space
+   * appearing locally, its root document loading) is replication, and scales with the space rather
+   * than with the exchange; folding the two together hides which one a latency change came from.
+   *
+   * Both are measured here rather than by the caller, so neither carries the RPC round trip or the
+   * cost of spawning the peer.
+   */
   @trace.span()
-  async joinSpace({ invitationCode }: { invitationCode: string }): Promise<{ spaceId: string }> {
+  async joinSpace({
+    invitationCode,
+  }: {
+    invitationCode: string;
+  }): Promise<{ spaceId: string; admittedMs: number; spaceReadyMs: number }> {
     const client = this.#getClient();
+    const began = Date.now();
     const observable = client.spaces.join(InvitationEncoder.decode(invitationCode));
     const invitation = await this.#awaitInvitationSuccess(observable);
+    const admittedMs = Date.now() - began;
     invariant(invitation.spaceKey, 'no space key on completed invitation');
 
     // Deliberately not `waitForSpace` from `@dxos/client/testing`: it passes the key to
@@ -360,8 +377,9 @@ export class ClientReplicant {
     });
     invariant(space, 'joined space never appeared');
     await space.waitUntilReady();
+    const spaceReadyMs = Date.now() - began - admittedMs;
     await space.internal.setEdgeReplicationPreference(EdgeReplicationSetting.ENABLED);
-    return { spaceId: space.id };
+    return { spaceId: space.id, admittedMs, spaceReadyMs };
   }
 
   /** Whether this device currently holds the space — no waiting, so callers can poll. */

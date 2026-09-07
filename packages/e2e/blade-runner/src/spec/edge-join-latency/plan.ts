@@ -18,6 +18,7 @@ import {
   onCleanupSignal,
 } from '../../plan';
 import { ClientReplicant, type SpaceDigest } from '../../replicants/client-replicant';
+import { describeError } from '../../util';
 import { type EdgeTarget, assertCanCleanUp, canonical, isDevLikeTarget, urlsFor } from '../edge-stress';
 
 //
@@ -53,12 +54,15 @@ export type EdgeJoinLatencySpec = {
 export type JoinMeasurement = {
   joiner: number;
   /**
-   * The invitation handshake: `joinSpace` issued to the space being open locally. Measured
-   * separately because it dominates — against dev it is ~12s of a ~14s total, so a change in the
-   * total means nothing until you know which half moved.
+   * The invitation proper: `spaces.join` to `Invitation_State.SUCCESS`, i.e. the guest's
+   * credentials replicated into the space's control feed. It does not include bringing the peer up
+   * or opening the invitation, and it stops before the space itself is available — that is
+   * replication, and it scales with the space rather than with the exchange.
    */
   admittedMs: number;
-  /** Catching up from an open-but-empty space to holding every object. The replication half. */
+  /** Space available locally once admitted: the root document loading. Part of replication. */
+  spaceReadyMs: number | undefined;
+  /** `spaceReadyMs` plus catching up to holding every object. The replication half. */
   replicationMs: number | undefined;
   /** `admittedMs + replicationMs`, i.e. what a user waits from accepting an invitation. */
   syncedMs: number | undefined;
@@ -79,6 +83,7 @@ export type EdgeJoinLatencyResult = {
   measurements: JoinMeasurement[];
   /** Medians rather than means: one stuck joiner should not move the headline number. */
   medianAdmittedMs: number | undefined;
+  medianSpaceReadyMs: number | undefined;
   medianReplicationMs: number | undefined;
   medianSyncedMs: number | undefined;
   maxSyncedMs: number | undefined;
@@ -237,16 +242,16 @@ export class EdgeJoinLatency implements TestPlan<EdgeJoinLatencySpec, EdgeJoinLa
       // Joiners are timed independently and sequentially: run in parallel they would contend for
       // the same EDGE connection budget and measure each other rather than the system.
       for (let joiner = 0; joiner < spec.joiners; joiner++) {
-        const began = Date.now();
         let admittedMs = 0;
         try {
           // Spawning and sharing are inside the try because they fail too — a local stack under
           // load 500s on `/db/spaces/:id/join` — and one joiner's failure must cost only its own
-          // row, not every measurement taken so far.
+          // row, not every measurement taken so far. Neither is timed: bringing a peer up and
+          // opening an invitation are the harness's cost, not the system's.
           const peer = await spawn(`joiner-${joiner}`);
           const { invitationCode } = await seeder.brain.shareSpace({ spaceId: space });
-          await peer.brain.joinSpace({ invitationCode });
-          admittedMs = Date.now() - began;
+          const joined = await peer.brain.joinSpace({ invitationCode });
+          admittedMs = joined.admittedMs;
           // `async`/`await` rather than returning the call: an RPC handle's return is itself a
           // promise, so passing it through unawaited types as `Promise<Promise<SpaceDigest>>`.
           const settled = await awaitDigest(
@@ -254,13 +259,17 @@ export class EdgeJoinLatency implements TestPlan<EdgeJoinLatencySpec, EdgeJoinLa
             expected,
             spec.joinTimeoutMs,
           );
+          // The space loading locally is replication, not invitation, so it belongs on this side of
+          // the split even though `joinSpace` is what waited for it.
+          const replicationMs = settled.ok ? joined.spaceReadyMs + settled.elapsedMs : undefined;
           measurements.push({
             joiner,
             admittedMs,
-            replicationMs: settled.ok ? settled.elapsedMs : undefined,
-            syncedMs: settled.ok ? admittedMs + settled.elapsedMs : undefined,
+            spaceReadyMs: joined.spaceReadyMs,
+            replicationMs,
+            syncedMs: replicationMs === undefined ? undefined : admittedMs + replicationMs,
             objects: spec.objects,
-            msPerObject: settled.ok && spec.objects > 0 ? settled.elapsedMs / spec.objects : undefined,
+            msPerObject: replicationMs !== undefined && spec.objects > 0 ? replicationMs / spec.objects : undefined,
             ok: settled.ok,
             error: settled.ok ? undefined : `digest still differed after ${spec.joinTimeoutMs}ms`,
           });
@@ -268,6 +277,7 @@ export class EdgeJoinLatency implements TestPlan<EdgeJoinLatencySpec, EdgeJoinLa
           measurements.push({
             joiner,
             admittedMs,
+            spaceReadyMs: undefined,
             replicationMs: undefined,
             syncedMs: undefined,
             objects: spec.objects,
@@ -330,6 +340,7 @@ export class EdgeJoinLatency implements TestPlan<EdgeJoinLatencySpec, EdgeJoinLa
       seedMs,
       measurements,
       medianAdmittedMs: median((measurement) => measurement.admittedMs),
+      medianSpaceReadyMs: median((measurement) => measurement.spaceReadyMs),
       medianReplicationMs: median((measurement) => measurement.replicationMs),
       medianSyncedMs: median((measurement) => measurement.syncedMs),
       maxSyncedMs: synced.length > 0 ? Math.max(...synced) : undefined,
@@ -393,13 +404,20 @@ const renderSummary = (result: EdgeJoinLatencyResult): string => {
   const ms = (value: number | undefined) => (value === undefined ? '—' : `${(value / 1000).toFixed(1)}s`);
   const share = (part: number | undefined, whole: number | undefined) =>
     part === undefined || whole === undefined || whole === 0 ? '—' : `${Math.round((part / whole) * 100)}%`;
+  // Derived rather than stored: the two halves of replication always sum to it, so a second field
+  // would only be a way for them to disagree.
+  const objectsMs = (measurement: JoinMeasurement) =>
+    measurement.replicationMs === undefined || measurement.spaceReadyMs === undefined
+      ? undefined
+      : measurement.replicationMs - measurement.spaceReadyMs;
   const rows = result.measurements
     .map((measurement) =>
       [
         `| ${measurement.joiner}`,
         measurement.ok ? '✅' : '❌',
         ms(measurement.admittedMs),
-        ms(measurement.replicationMs),
+        ms(measurement.spaceReadyMs),
+        ms(objectsMs(measurement)),
         ms(measurement.syncedMs),
         measurement.msPerObject === undefined ? '—' : `${measurement.msPerObject.toFixed(0)}ms`,
         `${measurement.error ?? ''} |`,
@@ -415,8 +433,9 @@ const renderSummary = (result: EdgeJoinLatencyResult): string => {
     '',
     '| | Median | Share of total |',
     '| --- | --- | --- |',
-    `| Invitation handshake | ${ms(result.medianAdmittedMs)} | ${share(result.medianAdmittedMs, result.medianSyncedMs)} |`,
+    `| Invitation — credentials replicated | ${ms(result.medianAdmittedMs)} | ${share(result.medianAdmittedMs, result.medianSyncedMs)} |`,
     `| Replication | ${ms(result.medianReplicationMs)} | ${share(result.medianReplicationMs, result.medianSyncedMs)} |`,
+    `| — of which, space available | ${ms(result.medianSpaceReadyMs)} | |`,
     `| **Accept to fully synced** | **${ms(result.medianSyncedMs)}** | |`,
     '',
     `Slowest joiner ${ms(result.maxSyncedMs)}.${
@@ -425,26 +444,9 @@ const renderSummary = (result: EdgeJoinLatencyResult): string => {
         : ''
     }`,
     '',
-    '| Joiner | | Invitation | Replication | Total | Per object | Error |',
-    '| --- | --- | --- | --- | --- | --- | --- |',
+    '| Joiner | | Invitation | Space ready | Objects | Total | Per object | Error |',
+    '| --- | --- | --- | --- | --- | --- | --- | --- |',
     rows,
     '',
   ].join('\n');
-};
-
-/** An error as the artifact should record it: message, cause chain, and the top of the stack. */
-const describeError = (err: unknown): string => {
-  if (!(err instanceof Error)) {
-    return String(err);
-  }
-  const causes: string[] = [];
-  for (let cause = err.cause; cause instanceof Error && causes.length < 4; cause = cause.cause) {
-    causes.push(cause.message);
-  }
-  // Four frames: enough to name the call that threw without turning the summary table into a dump.
-  const frames = (err.stack ?? '')
-    .split('\n')
-    .slice(1, 5)
-    .map((line) => line.trim());
-  return [err.message, ...causes.map((cause) => `caused by: ${cause}`), ...frames].join(' | ');
 };
