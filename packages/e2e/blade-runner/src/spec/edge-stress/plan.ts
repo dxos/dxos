@@ -144,7 +144,7 @@ export class EdgeStress implements TestPlan<EdgeStressSpec, EdgeStressResult> {
     log.info('fleet ready', { setupTimeMs });
     // Same reason as the per-space `spaceId` detail: identities a dead run leaves behind must be
     // recoverable from the trace alone.
-    trace({ event: 'fleet', identityDids, deviceDids });
+    trace({ event: 'fleet', identityDids, deviceDids, agents: model.limits.agents });
 
     const real: Real = {
       spec,
@@ -327,6 +327,9 @@ export class EdgeStress implements TestPlan<EdgeStressSpec, EdgeStressResult> {
     deviceDids: { client: ClientIndex; identityDid: string }[];
   }> {
     const model = makeFleetModel({ devicesPerIdentity: spec.devicesPerIdentity, limits });
+    // Flipped to false the first time an agent cannot be created, so the rest of the fleet does not
+    // re-attempt a call the environment has already refused.
+    let agentsAvailable = true;
 
     const replicants: ReplicantBrain<ClientReplicant>[] = [];
     for (let index = 0; index < model.clients.length; index++) {
@@ -355,8 +358,19 @@ export class EdgeStress implements TestPlan<EdgeStressSpec, EdgeStressResult> {
           email: `test+bladerunner-${identity}@dxos.org`,
         });
       }
-      if (spec.agents) {
-        await replicants[owner].brain.createAgent();
+      if (spec.agents && agentsAvailable) {
+        try {
+          await replicants[owner].brain.createAgent();
+        } catch (err) {
+          // Best-effort: an agent is an always-online member that can admit a joiner when every
+          // device of every member is offline, which `partitions: false` makes unreachable anyway.
+          // Losing it must not cost the whole run — a setup that dies here measures nothing at all,
+          // and the point of running against a deployed environment is to surface its faults, not
+          // to be stopped by them. The model is corrected below so preconditions stay honest.
+          log.error('agent unavailable; continuing without one', { identity, err });
+          agentsAvailable = false;
+          model.limits.agents = false;
+        }
       }
       for (const device of rest) {
         const { invitationCode } = await replicants[owner].brain.inviteDevice();

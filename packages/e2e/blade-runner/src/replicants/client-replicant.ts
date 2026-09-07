@@ -11,17 +11,22 @@ import { Client, Config } from '@dxos/client';
 import { type CancellableInvitation, InvitationEncoder } from '@dxos/client-protocol';
 import { createEdgeIdentity } from '@dxos/client/edge';
 import { LocalClientServices } from '@dxos/client/local';
-import { waitForSpace } from '@dxos/client/testing';
 import { Context } from '@dxos/context';
 import { DXN, Filter, Obj, Query, Type } from '@dxos/echo';
 import { Doc } from '@dxos/echo-doc';
 import { isEdgePeerId } from '@dxos/echo-protocol';
 import { HubHttpClient, authenticateViaChallengeEndpoint, encodeAuthHeader } from '@dxos/edge-client';
 import { invariant } from '@dxos/invariant';
+import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { createRtcTransportFactory } from '@dxos/network-manager';
+import {
+  type Invitation,
+  Invitation_AuthMethod,
+  Invitation_State,
+  Invitation_Type,
+} from '@dxos/protocols/buf/dxos/client/invitation_pb';
 import { Runtime_Client_Storage_SqliteMode } from '@dxos/protocols/buf/dxos/config_pb';
-import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { trace } from '@dxos/tracing';
 
@@ -267,7 +272,9 @@ export class ClientReplicant {
         if (!unbound || Date.now() > deadline) {
           throw err;
         }
-        log.info('account not visible to the agent service yet; retrying', { attempt });
+        // `warn`, not `info`: the default filter hides `info` in CI, and the absence of this line
+        // is exactly what made a silent 90s retry indistinguishable from a condition never checked.
+        log.warn('account not visible to the agent service yet; retrying', { attempt, message: err.message });
         await sleep(2_000);
       }
     }
@@ -280,7 +287,7 @@ export class ClientReplicant {
   @trace.span()
   async inviteDevice(): Promise<{ invitationCode: string }> {
     const observable = this.#getClient().halo.share({
-      authMethod: Invitation.AuthMethod.NONE,
+      authMethod: Invitation_AuthMethod.NONE,
       multiUse: false,
     });
     return { invitationCode: await this.#invitationCode(observable) };
@@ -318,8 +325,8 @@ export class ClientReplicant {
   @trace.span()
   async shareSpace({ spaceId }: { spaceId: string }): Promise<{ invitationCode: string }> {
     const observable = (await this.#getSpace(spaceId)).share({
-      type: Invitation.Type.DELEGATED,
-      authMethod: Invitation.AuthMethod.KNOWN_PUBLIC_KEY,
+      type: Invitation_Type.DELEGATED,
+      authMethod: Invitation_AuthMethod.KNOWN_PUBLIC_KEY,
       multiUse: true,
     });
     const invitationCode = await this.#delegatedInvitationCode(observable);
@@ -334,7 +341,25 @@ export class ClientReplicant {
     const invitation = await this.#awaitInvitationSuccess(observable);
     invariant(invitation.spaceKey, 'no space key on completed invitation');
 
-    const space = await waitForSpace(client, invitation.spaceKey, { timeout: INVITATION_TIMEOUT, ready: true });
+    // Deliberately not `waitForSpace` from `@dxos/client/testing`: it passes the key to
+    // `SpaceList.get`, whose `spaceIdOrKey instanceof PublicKey` check compares against the class
+    // from whichever copy of the SDK *it* was loaded from. The helper ships in a bundle while
+    // `SpaceList` resolves to source, so the two `PublicKey`s are different classes, the check
+    // fails, and the key falls through to the space-id branch as `Invalid space id.` — which is
+    // what it reports rather than anything about the join. Matching on the key's own `equals`
+    // avoids identity comparison entirely, and mirrors `#getSpace`'s no-argument lookup.
+    // `invitation.spaceKey` is the buf-generated message (`{ data: Uint8Array }`), not a domain
+    // `PublicKey` — which is the whole reason the old `waitForSpace` path reported `Invalid space
+    // id.`: `SpaceList.get` type-tests for `PublicKey` and this value never was one.
+    const spaceKey = PublicKey.from(invitation.spaceKey.data);
+    const space = await waitForCondition({
+      condition: () => client.spaces.get().find((candidate) => candidate.key.equals(spaceKey)),
+      timeout: INVITATION_TIMEOUT,
+      interval: 100,
+      error: new Error(`joined space never appeared: ${spaceKey.truncate()}`),
+    });
+    invariant(space, 'joined space never appeared');
+    await space.waitUntilReady();
     await space.internal.setEdgeReplicationPreference(EdgeReplicationSetting.ENABLED);
     return { spaceId: space.id };
   }
@@ -654,7 +679,7 @@ export class ClientReplicant {
     const connecting = new Trigger<Invitation>();
     const subscription = observable.subscribe(
       (invitation: Invitation) => {
-        if (invitation.state === Invitation.State.CONNECTING) {
+        if (invitation.state === Invitation_State.CONNECTING) {
           connecting.wake(invitation);
         }
       },
@@ -696,7 +721,7 @@ export class ClientReplicant {
     const failed = new Trigger<Error>();
     const subscription = observable.subscribe(
       (invitation: Invitation) => {
-        if (invitation.state === Invitation.State.SUCCESS) {
+        if (invitation.state === Invitation_State.SUCCESS) {
           done.wake(invitation);
         }
       },

@@ -87,6 +87,11 @@ export type EdgeJoinLatencyResult = {
    * one means joiners are contending — measured against a degraded local stack, never against dev.
    */
   monotonicGrowth: boolean;
+  /**
+   * Whether the seeder got its EDGE agent. Without one the DELEGATED invitation is admitted by the
+   * seeder directly, which is slower — so latency is only comparable across runs where this matches.
+   */
+  agent: boolean;
 };
 
 export const DEFAULT_SPEC: EdgeJoinLatencySpec = {
@@ -165,6 +170,7 @@ export class EdgeJoinLatency implements TestPlan<EdgeJoinLatencySpec, EdgeJoinLa
     const measurements: JoinMeasurement[] = [];
     let spaceId: string | undefined;
     let seedMs = 0;
+    let agentCreated = false;
 
     const spawn = async (label: string, agent = false): Promise<ReplicantBrain<ClientReplicant>> => {
       const replicant = await env.spawn(ClientReplicant, { platform: spec.platform });
@@ -180,7 +186,16 @@ export class EdgeJoinLatency implements TestPlan<EdgeJoinLatencySpec, EdgeJoinLa
         await replicant.brain.bindTestAccount({ hubUrl, email: `test+bladerunner-join-${label}@dxos.org` });
       }
       if (agent && spec.agents) {
-        await replicant.brain.createAgent();
+        try {
+          await replicant.brain.createAgent();
+          agentCreated = true;
+        } catch (err) {
+          // Best-effort, same reasoning as the soak plan: without an agent the DELEGATED invitation
+          // has to be admitted by the seeder itself, which is online throughout, so the join is
+          // slower rather than impossible. Recorded in the result because it changes what the
+          // number means.
+          log.error('agent unavailable; joins will be admitted by the seeder directly', { err });
+        }
       }
       spawned.push(replicant);
       return replicant;
@@ -267,7 +282,7 @@ export class EdgeJoinLatency implements TestPlan<EdgeJoinLatencySpec, EdgeJoinLa
         log.info('joiner measured', { ...measurements[measurements.length - 1] });
       }
 
-      const result = this._summarize(edgeUrl, spec, seedMs, measurements);
+      const result = this._summarize(edgeUrl, spec, seedMs, measurements, agentCreated);
       invariant(
         result.ok,
         `joiners failed to sync: ${measurements
@@ -279,7 +294,7 @@ export class EdgeJoinLatency implements TestPlan<EdgeJoinLatencySpec, EdgeJoinLa
     } finally {
       // In `finally` so the artifacts exist however the run ended: a green/red verdict with no
       // numbers behind it is the one output a CI job must never produce.
-      const summary = this._summarize(edgeUrl, spec, seedMs, measurements);
+      const summary = this._summarize(edgeUrl, spec, seedMs, measurements, agentCreated);
       fs.writeFileSync(resultPath, `${JSON.stringify(summary, null, 2)}\n`);
       fs.writeFileSync(path.join(params.outDir, 'summary.md'), renderSummary(summary));
       unregisterCleanup();
@@ -295,6 +310,7 @@ export class EdgeJoinLatency implements TestPlan<EdgeJoinLatencySpec, EdgeJoinLa
     spec: EdgeJoinLatencySpec,
     seedMs: number,
     measurements: JoinMeasurement[],
+    agent: boolean,
   ): EdgeJoinLatencyResult {
     const ok = measurements.filter((measurement) => measurement.ok);
     const median = (pick: (measurement: JoinMeasurement) => number | undefined): number | undefined => {
@@ -320,6 +336,7 @@ export class EdgeJoinLatency implements TestPlan<EdgeJoinLatencySpec, EdgeJoinLa
       // Compared in join order, not sorted: the question is whether each joiner paid more than the
       // one before it.
       monotonicGrowth: synced.length > 1 && synced.every((value, index) => index === 0 || value > synced[index - 1]),
+      agent,
     };
   }
 
@@ -392,7 +409,9 @@ const renderSummary = (result: EdgeJoinLatencyResult): string => {
   return [
     `## ${result.ok ? '✅' : '❌'} Join latency — ${result.objects} objects, ${result.joiners} joiners`,
     '',
-    `Against \`${result.edge}\`. Seeded and flushed to EDGE in ${ms(result.seedMs)}.`,
+    `Against \`${result.edge}\`. Seeded and flushed to EDGE in ${ms(result.seedMs)}.${
+      result.agent ? '' : ' ⚠️ No EDGE agent — the seeder admitted every joiner itself, which is slower.'
+    }`,
     '',
     '| | Median | Share of total |',
     '| --- | --- | --- |',
