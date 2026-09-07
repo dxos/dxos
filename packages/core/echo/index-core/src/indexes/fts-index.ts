@@ -42,7 +42,8 @@ export interface FtsQuery {
   includeAllQueues: boolean;
 
   /**
-   * Queue IDs to search within.
+   * Queues to search within, each scoped by the space owning it — a queue id is unique only
+   * within its own space. A ref without a `spaceId` matches on the id alone.
    */
   queues: readonly QueueRef[] | null;
 
