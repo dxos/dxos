@@ -17,7 +17,6 @@ import { type EchoReactiveHandler } from './echo-handler';
 /** Global symbols so proxy targets work across Vite bundle chunks (host vs import-map plugin). */
 export const symbolPath = Symbol.for('@dxos/echo/internal/ProxyPath');
 export const symbolNamespace = Symbol.for('@dxos/echo/internal/ProxyNamespace');
-export const symbolHandler = Symbol.for('@dxos/echo/internal/ProxyHandler');
 export const symbolInternals = Symbol.for('@dxos/echo/internal/ProxyInternals');
 
 // Re-export TargetKey from core-db so echo-handler callers only need this module.
@@ -49,7 +48,6 @@ export type ProxyTarget = {
    * @deprecated
    */
   // TODO(dmaretskyi): Can be removed.
-  [symbolHandler]?: EchoReactiveHandler;
 
   /**
    * Used for objects created by `createObject`.

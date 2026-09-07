@@ -74,7 +74,6 @@ import {
   type ProxyTarget,
   TargetKey,
   getEchoDatabase,
-  symbolHandler,
   symbolInternals,
   symbolNamespace,
   symbolPath,
@@ -86,8 +85,6 @@ import {
  */
 export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
   public static readonly instance = new EchoReactiveHandler();
-
-  _proxyMap = new WeakMap<object, any>();
 
   /**
    * The document record each target was last filled from, with the document it came from. Automerge
@@ -112,8 +109,6 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
         }
       }
     }
-
-    defineHiddenProperty(target, symbolHandler, this);
 
     if (!(EventId in target)) {
       defineHiddenProperty(target, EventId, new Event());
@@ -437,7 +432,6 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
         defineHiddenProperty(array, symbolInternals, target[symbolInternals]);
         defineHiddenProperty(array, symbolPath, dataPath);
         defineHiddenProperty(array, symbolNamespace, namespace);
-        defineHiddenProperty(array, symbolHandler, this);
         defineHiddenProperty(array, EventId, target[EventId]);
         return array as any as ProxyTarget;
       });
@@ -955,7 +949,6 @@ export const createObject = <T extends AnyProperties>(obj: T): CreateObjectRetur
       }
     }
     adoptInstanceState(target, createInstanceState(core, DATA_NAMESPACE, [], { event: existingEvent }));
-    EchoReactiveHandler.instance._proxyMap.set(target, obj);
 
     core.subscriptions.push(
       core.updates.on(() => {

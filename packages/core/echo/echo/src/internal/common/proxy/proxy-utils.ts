@@ -113,20 +113,22 @@ export const normalizeSpliceRange = (
 // TODO(burdon): Document.
 // TODO(burdon): Tests for low-level functions.
 export const createProxy = <T extends object>(target: T, handler: ReactiveHandler<T>): T => {
-  const existingProxy = handler._proxyMap.get(target);
+  // The target carries its own proxy, so it is also the memo — a per-handler `WeakMap` would answer the
+  // same question, and wrongly after `setProxyHandler` moved a target between handlers.
+  const raw: object = target;
+  const existingProxy: T | undefined = Reflect.get(raw, symbolProxy);
   if (existingProxy) {
     return existingProxy;
   }
 
   const proxy = new Proxy(target, REACTIVE_PROXY_HANDLER);
   // All three live on the target rather than on a per-proxy handler: the proxy has no `get` trap, so a
-  // read of any of them forwards straight here, and one shared handler can serve every proxy.
+  // read of any of them forwards straight here, and one shared handler can serve every proxy. Stamped
+  // before `init`, which recurses into nested values: a graph that reaches back to this target must find
+  // the proxy already memoized rather than build a second one.
   defineHiddenProperty(target, symbolTarget, target);
   defineHiddenProperty(target, symbolReactiveHandler, handler);
   defineHiddenProperty(target, symbolProxy, proxy);
-  // Before `init`, which recurses into nested values: a graph that reaches back to this target must
-  // find the proxy already memoized rather than build a second one.
-  handler._proxyMap.set(target, proxy);
   handler.init(target);
   return proxy;
 };

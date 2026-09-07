@@ -3,12 +3,12 @@
 //
 
 import { type Event } from '@dxos/async';
-import { ChangeKeyId, EventId, batchEvents } from '@dxos/echo/internal';
+import { ChangeKeyId, EventId, batchEvents, getProxyHandler } from '@dxos/echo/internal';
 
 import type { Doc } from '../automerge';
 import type { ObjectCore } from '../core-db';
 import { type EchoReactiveHandler } from './echo-handler';
-import { symbolHandler, symbolInternals, symbolNamespace, symbolPath } from './echo-proxy-target';
+import { symbolInternals, symbolNamespace, symbolPath } from './echo-proxy-target';
 
 export class EchoArray<T> extends Array<T> {
   static override get [Symbol.species]() {
@@ -21,7 +21,6 @@ export class EchoArray<T> extends Array<T> {
   declare [symbolInternals]: ObjectCore;
   declare [symbolPath]: Doc.KeyPath;
   declare [symbolNamespace]: string;
-  declare [symbolHandler]: EchoReactiveHandler;
 
   // Installed by the handler's `init`, like every other target's; declared so an array is structurally
   // a `ProxyTarget` and the refresh paths can take one without a cast.
@@ -57,7 +56,7 @@ export class EchoArray<T> extends Array<T> {
       const fn = function (this: EchoArray<any>, ...args: any[]) {
         let result!: any;
         batchEvents(() => {
-          const handler = this[symbolHandler];
+          const handler = getProxyHandler<any>(this) as EchoReactiveHandler;
           result = ((handler as any)[handlerMethodName] as Function).apply(handler, [this, this[symbolPath], ...args]);
         });
         return result;

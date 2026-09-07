@@ -396,6 +396,47 @@ field reads in the ~5–15 ns range against today's 250 ns (unpersisted) and 1.7
 within 2–3× of the plain-object floor rather than 40–250× above it. This is a prediction to be checked
 against the bench, not a result.
 
+### D15 — The write gate becomes reference-based; the 84-call-site objection is retired (user direction 2026-09-07)
+
+The gate reached one shared, dispatch-free `assertMutable` in `proxy-utils.ts`, keyed by a
+`[ChangeKeyId]` accessor each variant's behaviour prototype supplies. That is a strict improvement on
+five duplicated copies, but it is **fail-open**: `changeKey === undefined` means "allow", and keying on
+a prototype means any proxied target whose prototype was not patched is ungated. That cost a real bug
+— an array assigned through a nested record stayed a plain `Array`, so it was mutable outside
+`Obj.update` and notified nobody (fixed in `3fe99b82`, pinned by `nested-array-gate.test.ts`).
+
+Instrumenting the fail-open branch and running the suite gives **zero hits across 586 `echo` tests**:
+construction writes on raw targets and never reaches the gate, so the "still under construction" escape
+hatch is dead code in practice.
+
+**The objection recorded above — that a mutable-proxy design "breaks all of them" — is now retired.**
+It rested on 84 call sites writing through the outer reference inside a zero-arg callback. Those are
+migrated: `consistent-update-param` is an error and now also rejects a zero-arg callback (auto-fixed by
+inserting a parameter that _shadows_ the outer name, so bodies need no edit) and a mutation reaching
+into a value captured before the callback. 87 sites migrated, 0 violations left.
+
+The measured shape of the remaining problem, which is what made this tractable: only **8** sites
+repo-wide genuinely mutated a pre-captured value (all in `sdk/versioning`). The other 79 either took no
+parameter or named it differently, and shadowing fixes both mechanically.
+
+**Design.** `executeChange` already ends in `callback(proxy)`, so the hand-over point exists; today it
+passes back the same read-only proxy. Reference-based means passing a _mutable_ proxy over the same
+target, whose `get` yields mutable twins of nested sub-proxies (memoized), and whose write traps consult
+no context at all. The read-only proxy then throws on write unconditionally — no `[ChangeKeyId]` read,
+no owner-chain walk, no context lookup, and fail-**closed** by construction, which removes the bug class
+above rather than one instance of it. A `get` trap reappears, but only on the write path; the read path
+stays trap-free, which is the point of this branch.
+
+**Known blockers to settle before building it:**
+
+1. `isProxy(value)` tests `value[symbolProxy] === value`, and `symbolProxy` on the target holds the
+   _read-only_ proxy — so a mutable proxy answers `false` and every `isProxy` branch in
+   `_prepareValueForAssignment` misreads it. This needs deciding, not patching around.
+2. `param === outerObj` becomes false. Reads through the outer reference still see writes (same
+   target), but any identity comparison across the boundary changes meaning.
+3. `queueNotification` keys off `currentChangeContext`, so the context must survive as the
+   _notification-batching_ mechanism even once it stops being the gate.
+
 ## Non-goals
 
 - Changing `Obj.update`'s public signature or semantics. Callers see the same API. (Constraint 1.)

@@ -316,7 +316,6 @@ const compactMetadataToInstanceState = (target: ProxyTarget): void => {
 export class TypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
   public static readonly instance: ReactiveHandler<any> = new TypedReactiveHandler();
 
-  readonly _proxyMap = new WeakMap<object, any>();
   private _inSet = false;
 
   private constructor() {}
