@@ -321,7 +321,7 @@ catalog:
   '@types/wtfnode': ^0.10.0
   '@types/yargs': ~16.0.1
   '@types/zen-observable': ^0.8.3
-  '@typescript-eslint/parser': ^8.66.0
+  '@typescript-eslint/parser': ^8.69.0
   '@typescript/typescript6': ^6.0.2
   '@typescript/vfs': ^1.6.0
   '@uiw/codemirror-theme-vscode': ^4.25.2
