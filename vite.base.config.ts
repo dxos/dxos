@@ -141,6 +141,31 @@ export const DxNodeStdPlugin = (): Plugin => ({
 });
 
 /**
+ * Rewrites import specifiers per an alias map, then hands the result back to normal resolution
+ * so a rewritten bare specifier is externalized under its new name.
+ *
+ * Not `resolve.alias`: vite's alias plugin only rewrites ids it goes on to resolve, and the
+ * library build externalizes bare specifiers before that happens — so an aliased external
+ * (`@effect/wa-sqlite` -> `@dxos/wa-sqlite`) stayed in the output under its original name.
+ */
+export const DxAliasPlugin = (alias: Record<string, string>, isBundled: (id: string) => boolean): Plugin => ({
+  name: 'DxAlias',
+  enforce: 'pre',
+  async resolveId(id, importer, options) {
+    const key = Object.keys(alias).find((name) => id === name || id.startsWith(`${name}/`));
+    if (!key) {
+      return null;
+    }
+    const aliased = alias[key] + id.slice(key.length);
+    const relative = aliased.startsWith('.') || aliased.startsWith('/');
+    if (relative || isBundled(aliased)) {
+      return this.resolve(aliased, importer, { ...options, skipSelf: true });
+    }
+    return { id: aliased, external: true };
+  },
+});
+
+/**
  * Emits `?url` / `?inline` asset imports as separate files in `dist/lib/assets/` instead of
  * base64-inlining them into the JS bundle. Leaves `?raw` alone — those import the file's
  * text content as a string literal and are handled by vite's built-in `?raw` loader.
@@ -1039,6 +1064,8 @@ export const defineConfig = (options: DxConfigOptions = {}): UserConfig => {
   // `id === name` catches the package root, `id.startsWith(name + '/')` its subpaths — a bare
   // prefix test would also swallow unrelated neighbours (`buffer` matching `buffer-alloc`).
   const isBundled = (id: string) => bundle.some((name) => id === name || id.startsWith(`${name}/`));
+  const aliasKeys = Object.keys(alias ?? {});
+  const isAliased = (id: string) => aliasKeys.some((name) => id === name || id.startsWith(`${name}/`));
   // Solid: ssr-aware client transform.
   const jsxPlugin: Plugin[] =
     jsx === 'react'
@@ -1064,6 +1091,7 @@ export const defineConfig = (options: DxConfigOptions = {}): UserConfig => {
     worker: {
       format: 'es',
       plugins: () => [
+        ...(alias ? [DxAliasPlugin(alias, isBundled)] : []),
         DxWorkerResolvePlugin(),
         ...(!nodeTarget ? [DxNodeStdPlugin()] : []),
         ...(assetsAsFiles ? [DxRawAssetsPlugin()] : []),
@@ -1097,7 +1125,10 @@ export const defineConfig = (options: DxConfigOptions = {}): UserConfig => {
         //   rolldown injects when lowering `@decorator` / `async` / `for-await`. The
         //   helpers aren't declared deps so we bundle them inline.
         external: (id) => {
-          if (id.startsWith('node:') || isBundled(id)) {
+          // An aliased specifier must reach `DxAliasPlugin`'s `resolveId` to be renamed — rollup
+          // consults this predicate on the raw specifier first and, on `true`, externalizes it
+          // under that name without ever calling a plugin.
+          if (id.startsWith('node:') || isBundled(id) || isAliased(id)) {
             return false;
           }
           return (
@@ -1113,8 +1144,8 @@ export const defineConfig = (options: DxConfigOptions = {}): UserConfig => {
         },
       },
     },
-    ...(alias ? { resolve: { alias } } : {}),
     plugins: [
+      ...(alias ? [DxAliasPlugin(alias, isBundled)] : []),
       DxWorkerResolvePlugin(),
       ...(!nodeTarget ? [DxNodeStdPlugin()] : []),
       ...(assetsAsFiles ? [DxRawAssetsPlugin()] : []),

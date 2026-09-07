@@ -15,49 +15,41 @@
   "exports": {
     ".": {
       "types": "./dist/types/src/index.d.ts",
-      "browser": "./dist/lib/browser/index.mjs",
-      "node": "./dist/lib/node-esm/index.mjs"
+      "import": "./dist/lib/index.mjs"
     },
     "./SqliteClient": {
       "types": "./dist/types/src/SqliteClient.d.ts",
-      "browser": "./dist/lib/browser/SqliteClient.mjs",
-      "node": "./dist/lib/node-esm/SqliteClient.mjs"
+      "import": "./dist/lib/SqliteClient.mjs"
     },
     "./OpfsPool": {
       "types": "./dist/types/src/OpfsPool.d.ts",
-      "browser": "./dist/lib/browser/OpfsPool.mjs",
-      "node": "./dist/lib/node-esm/OpfsPool.mjs"
+      "import": "./dist/lib/OpfsPool.mjs"
     },
     "./OpfsWorker": {
       "types": "./dist/types/src/OpfsWorker.d.ts",
-      "browser": "./dist/lib/browser/OpfsWorker.mjs",
-      "node": "./dist/lib/node-esm/OpfsWorker.mjs"
+      "import": "./dist/lib/OpfsWorker.mjs"
     },
     "./SqliteMigrator": {
       "types": "./dist/types/src/SqliteMigrator.d.ts",
-      "browser": "./dist/lib/browser/SqliteMigrator.mjs",
-      "node": "./dist/lib/node-esm/SqliteMigrator.mjs"
+      "import": "./dist/lib/SqliteMigrator.mjs"
     },
     "./platform": {
       "types": "./dist/types/src/platform/browser.d.ts",
-      "browser": "./dist/lib/browser/platform/browser.mjs",
-      "bun": "./dist/lib/node-esm/platform/bun.mjs",
-      "node": "./dist/lib/node-esm/platform/node.mjs"
+      "browser": "./dist/lib/platform/browser.mjs",
+      "bun": "./dist/lib/platform/bun.mjs",
+      "node": "./dist/lib/platform/node.mjs"
     },
     "./SqlExport": {
       "types": "./dist/types/src/SqlExport.d.ts",
-      "browser": "./dist/lib/browser/SqlExport.mjs",
-      "node": "./dist/lib/node-esm/SqlExport.mjs"
+      "import": "./dist/lib/SqlExport.mjs"
     },
     "./SqlTransaction": {
       "types": "./dist/types/src/SqlTransaction.d.ts",
-      "browser": "./dist/lib/browser/SqlTransaction.mjs",
-      "node": "./dist/lib/node-esm/SqlTransaction.mjs"
+      "import": "./dist/lib/SqlTransaction.mjs"
     },
     "./SqlMigrations": {
       "types": "./dist/types/src/SqlMigrations.d.ts",
-      "browser": "./dist/lib/browser/SqlMigrations.mjs",
-      "node": "./dist/lib/node-esm/SqlMigrations.mjs"
+      "import": "./dist/lib/SqlMigrations.mjs"
     }
   },
   "files": [
