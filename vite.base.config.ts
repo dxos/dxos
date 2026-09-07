@@ -7,6 +7,7 @@ import react from '@vitejs/plugin-react';
 import { playwright } from '@vitest/browser-playwright';
 import { execFile } from 'node:child_process';
 import { existsSync, readFileSync } from 'node:fs';
+import { rm } from 'node:fs/promises';
 import path, { join } from 'node:path';
 import { promisify } from 'node:util';
 import pkgUp from 'pkg-up';
@@ -180,28 +181,64 @@ export const DxRawAssetsPlugin = (): Plugin => {
 
 const execFileAsync = promisify(execFile);
 
-const runDxBuild = async (): Promise<void> => {
+/** Matches TypeScript diagnostic file paths, including `../` segments and multi-part extensions. */
+const DIAGNOSTIC_FILE = String.raw`[\w./-]+\.[A-Za-z0-9]+(?:\.[A-Za-z0-9]+)*`;
+
+const ANSI = String.raw`\x1B\[[0-9;]*m`;
+
+const ansiGap = String.raw`(?:${ANSI})*`;
+
+/**
+ * Rewrite compiler diagnostic paths from package-relative to repo-relative so moon/IDE output
+ * is clickable from the monorepo root. Handles classic `(line,col):`, pretty `:line:col -`,
+ * related-location lines, summary footers, and ANSI color codes from pretty mode.
+ */
+const rewriteDiagnosticPaths = (output: string, cwd: string, repoRoot: string): string => {
+  const toRepoPath = (filePath: string): string => path.relative(repoRoot, path.resolve(cwd, filePath));
+
+  const classic = new RegExp(String.raw`^(${DIAGNOSTIC_FILE})\((\d+),(\d+)\):`, 'gm');
+  const pretty = new RegExp(
+    String.raw`^(\s*)${ansiGap}(${DIAGNOSTIC_FILE})${ansiGap}:${ansiGap}(\d+)${ansiGap}:${ansiGap}(\d+)${ansiGap} -`,
+    'gm',
+  );
+  const summary = new RegExp(String.raw`starting at: ${ansiGap}(${DIAGNOSTIC_FILE})${ansiGap}:(\d+)`, 'g');
+
+  return output
+    .replace(classic, (_, filePath, line, col) => `${toRepoPath(filePath)}(${line},${col}):`)
+    .replace(pretty, (_, indent, filePath, line, col) => `${indent}${toRepoPath(filePath)}:${line}:${col} -`)
+    .replace(summary, (_, filePath, line) => `starting at: ${toRepoPath(filePath)}:${line}`);
+};
+
+/**
+ * Declaration emit: clean `dist/types/` then run `tsc`.
+ *
+ * The clean is not housekeeping — a surviving `tsconfig.tsbuildinfo` makes an incremental
+ * `tsc` consider the (already deleted by vite) outputs up to date and emit nothing at all,
+ * so the package ships a `types` entry pointing at a missing file.
+ */
+const runDeclarationBuild = async (): Promise<void> => {
+  await rm(join(process.cwd(), 'dist/types'), { recursive: true, force: true });
   try {
-    const { stdout, stderr } = await execFileAsync('pnpm', ['exec', 'dx-build']);
+    const { stdout, stderr } = await execFileAsync('pnpm', ['exec', 'tsc']);
     if (stdout.length > 0) {
-      process.stdout.write(stdout);
+      process.stdout.write(rewriteDiagnosticPaths(stdout, process.cwd(), workspaceRoot));
     }
     if (stderr.length > 0) {
-      process.stderr.write(stderr);
+      process.stderr.write(rewriteDiagnosticPaths(stderr, process.cwd(), workspaceRoot));
     }
   } catch (error) {
     // execFileAsync captures the subprocess stdio on the rejected value; without this,
     // rolldown swallows the compiler's actual diagnostic output and the plugin error carries only
     // a generic exit-code message.
-    const err = error as { stdout?: string | Buffer; stderr?: string | Buffer };
+    const err = error as { stdout?: string; stderr?: string };
     if (err.stdout && err.stdout.length > 0) {
-      process.stdout.write(err.stdout);
+      process.stdout.write(rewriteDiagnosticPaths(err.stdout, process.cwd(), workspaceRoot));
     }
     if (err.stderr && err.stderr.length > 0) {
-      process.stderr.write(err.stderr);
+      process.stderr.write(rewriteDiagnosticPaths(err.stderr, process.cwd(), workspaceRoot));
     }
     const message = error instanceof Error ? error.message : String(error);
-    throw new Error(`dx-build failed: ${message} cwd=${process.cwd()}`);
+    throw new Error(`tsc failed: ${message} cwd=${process.cwd()}`);
   }
 };
 
@@ -302,20 +339,20 @@ export const DxWorkerResolvePlugin = (): Plugin => {
 };
 
 /**
- * Kicks off `dx-build` (tsc wrapper) at build start so declaration emit runs in
- * parallel with the JS bundle. Generates per-file `.d.ts` files in `dist/types/src/`.
+ * Kicks off `tsc` at build start so declaration emit runs in parallel with the JS bundle.
+ * Generates per-file `.d.ts` files in `dist/types/src/`.
  */
 export const DxDeclarationsPlugin = (): Plugin => {
-  let dxBuildTask: Promise<void> | undefined;
+  let declarationTask: Promise<void> | undefined;
 
   return {
     name: 'DxDeclarations',
     apply: 'build',
     buildStart() {
-      dxBuildTask = runDxBuild();
+      declarationTask = runDeclarationBuild();
     },
     async closeBundle() {
-      await dxBuildTask;
+      await declarationTask;
     },
   };
 };
