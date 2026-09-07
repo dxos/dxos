@@ -22,8 +22,10 @@ import {
   type EdgeTarget,
   type Real,
   BudgetExhausted,
+  assertCanCleanUp,
   assertFullyReplicated,
   cleanupRun,
+  isDevLikeTarget,
 } from './system';
 
 /**
@@ -103,6 +105,7 @@ export class EdgeStress implements TestPlan<EdgeStressSpec, EdgeStressResult> {
     // partial spec even though the harness types it whole.
     const spec = resolveSpec(params.spec);
     const { edgeUrl, hubUrl } = urlsFor(spec.edge);
+    assertCanCleanUp(spec.edge, spec.cleanup);
     const limits: Model['limits'] = {
       maxSpaces: spec.maxSpaces,
       maxDocumentsPerSpace: spec.maxDocumentsPerSpace,
@@ -314,13 +317,15 @@ export class EdgeStress implements TestPlan<EdgeStressSpec, EdgeStressResult> {
         displayName: `edge-stress-identity-${identity}`,
       });
       identityDids.push(identityDid);
-      // Unconditional: the self-serve cleanup routes 403 an identity with no Hub account, so a run
-      // that skipped this could only be cleaned up with an admin key. One fixed alias per identity
-      // slot — the hatch rebinds, so every run reuses the same rows.
-      await replicants[owner].brain.bindTestAccount({
-        hubUrl: urls.hubUrl,
-        email: `test+bladerunner-${identity}@dxos.org`,
-      });
+      // Wherever the hatch is open, because the self-serve cleanup routes 403 an identity with no
+      // Hub account. One fixed alias per identity slot — the hatch rebinds, so every run reuses the
+      // same rows. On preview the hatch is closed and cleanup falls back to the admin key.
+      if (isDevLikeTarget(spec.edge)) {
+        await replicants[owner].brain.bindTestAccount({
+          hubUrl: urls.hubUrl,
+          email: `test+bladerunner-${identity}@dxos.org`,
+        });
+      }
       if (spec.agents) {
         await replicants[owner].brain.createAgent();
       }

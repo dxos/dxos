@@ -11,7 +11,7 @@ import { log } from '@dxos/log';
 import { type SchedulerEnvImpl } from '../../env';
 import { type Platform, type ReplicantBrain, type ReplicantsSummary, type TestPlan, type TestProps } from '../../plan';
 import { ClientReplicant, type SpaceDigest } from '../../replicants/client-replicant';
-import { type EdgeTarget, canonical, urlsFor } from '../edge-stress';
+import { type EdgeTarget, assertCanCleanUp, canonical, isDevLikeTarget, urlsFor } from '../edge-stress';
 
 //
 // Spec.
@@ -37,11 +37,19 @@ export type EdgeJoinLatencySpec = {
 
 export type JoinMeasurement = {
   joiner: number;
-  /** Wall-clock from issuing `joinSpace` to the joiner's digest matching the seeder's. */
-  syncedMs: number | undefined;
-  /** How long the invitation itself took; the remainder of `syncedMs` is replication. */
+  /**
+   * The invitation handshake: `joinSpace` issued to the space being open locally. Measured
+   * separately because it dominates — against dev it is ~12s of a ~14s total, so a change in the
+   * total means nothing until you know which half moved.
+   */
   admittedMs: number;
+  /** Catching up from an open-but-empty space to holding every object. The replication half. */
+  replicationMs: number | undefined;
+  /** `admittedMs + replicationMs`, i.e. what a user waits from accepting an invitation. */
+  syncedMs: number | undefined;
   objects: number;
+  /** Replication cost per object; the number to watch as a space grows. */
+  msPerObject: number | undefined;
   ok: boolean;
   error?: string;
 };
@@ -54,9 +62,16 @@ export type EdgeJoinLatencyResult = {
   /** Seeder's upload time — how long the space took to reach EDGE before anyone joined. */
   seedMs: number;
   measurements: JoinMeasurement[];
-  /** Convenience for a CI summary; `undefined` when no joiner succeeded. */
+  /** Medians rather than means: one stuck joiner should not move the headline number. */
+  medianAdmittedMs: number | undefined;
+  medianReplicationMs: number | undefined;
   medianSyncedMs: number | undefined;
   maxSyncedMs: number | undefined;
+  /**
+   * Whether each successive joiner took longer than the last. Flat is the expected shape; a rising
+   * one means joiners are contending — measured against a degraded local stack, never against dev.
+   */
+  monotonicGrowth: boolean;
 };
 
 export const DEFAULT_SPEC: EdgeJoinLatencySpec = {
@@ -125,6 +140,7 @@ export class EdgeJoinLatency implements TestPlan<EdgeJoinLatencySpec, EdgeJoinLa
   ): Promise<EdgeJoinLatencyResult> {
     const spec = resolveSpec(params.spec);
     const { edgeUrl, hubUrl } = urlsFor(spec.edge);
+    assertCanCleanUp(spec.edge, spec.cleanup);
     const resultPath = path.join(params.outDir, 'join-latency.json');
     log.info('edge-join-latency starting', { edgeUrl, spec });
 
@@ -142,8 +158,11 @@ export class EdgeJoinLatency implements TestPlan<EdgeJoinLatencySpec, EdgeJoinLa
       const { identityDid } = await replicant.brain.createIdentity({ displayName: label });
       identityDids.push(identityDid);
       // The self-serve cleanup routes 403 an identity with no Hub account; one fixed alias per slot
-      // rebinds rather than accumulating rows.
-      await replicant.brain.bindTestAccount({ hubUrl, email: `test+bladerunner-join-${label}@dxos.org` });
+      // rebinds rather than accumulating rows. On preview the hatch is closed, so this is skipped
+      // and `DX_HUB_API_KEY` is the only way the run's data gets deleted.
+      if (isDevLikeTarget(spec.edge)) {
+        await replicant.brain.bindTestAccount({ hubUrl, email: `test+bladerunner-join-${label}@dxos.org` });
+      }
       spawned.push(replicant);
       return replicant;
     };
@@ -195,8 +214,10 @@ export class EdgeJoinLatency implements TestPlan<EdgeJoinLatencySpec, EdgeJoinLa
           measurements.push({
             joiner,
             admittedMs,
+            replicationMs: settled.ok ? settled.elapsedMs : undefined,
             syncedMs: settled.ok ? admittedMs + settled.elapsedMs : undefined,
             objects: spec.objects,
+            msPerObject: settled.ok && spec.objects > 0 ? settled.elapsedMs / spec.objects : undefined,
             ok: settled.ok,
             error: settled.ok ? undefined : `digest still differed after ${spec.joinTimeoutMs}ms`,
           });
@@ -204,8 +225,10 @@ export class EdgeJoinLatency implements TestPlan<EdgeJoinLatencySpec, EdgeJoinLa
           measurements.push({
             joiner,
             admittedMs,
+            replicationMs: undefined,
             syncedMs: undefined,
             objects: spec.objects,
+            msPerObject: undefined,
             ok: false,
             error: err instanceof Error ? err.message : String(err),
           });
@@ -229,7 +252,7 @@ export class EdgeJoinLatency implements TestPlan<EdgeJoinLatencySpec, EdgeJoinLa
       fs.writeFileSync(resultPath, `${JSON.stringify(summary, null, 2)}\n`);
       fs.writeFileSync(path.join(params.outDir, 'summary.md'), renderSummary(summary));
       if (spec.cleanup) {
-        await this._cleanup(spawned, spaceId, identityDids);
+        await this._cleanup(edgeUrl, spawned, spaceId, identityDids);
       }
     }
   }
@@ -241,10 +264,16 @@ export class EdgeJoinLatency implements TestPlan<EdgeJoinLatencySpec, EdgeJoinLa
     seedMs: number,
     measurements: JoinMeasurement[],
   ): EdgeJoinLatencyResult {
-    const synced = measurements
-      .filter((measurement) => measurement.ok)
-      .map((measurement) => measurement.syncedMs ?? 0)
-      .sort((left, right) => left - right);
+    const ok = measurements.filter((measurement) => measurement.ok);
+    const median = (pick: (measurement: JoinMeasurement) => number | undefined): number | undefined => {
+      const values = ok.flatMap((measurement) => {
+        const value = pick(measurement);
+        return value === undefined ? [] : [value];
+      });
+      values.sort((left, right) => left - right);
+      return values.length > 0 ? values[Math.floor(values.length / 2)] : undefined;
+    };
+    const synced = ok.map((measurement) => measurement.syncedMs ?? 0);
     return {
       ok: measurements.length === spec.joiners && measurements.every((measurement) => measurement.ok),
       edge: edgeUrl,
@@ -252,16 +281,26 @@ export class EdgeJoinLatency implements TestPlan<EdgeJoinLatencySpec, EdgeJoinLa
       joiners: spec.joiners,
       seedMs,
       measurements,
-      medianSyncedMs: synced.length > 0 ? synced[Math.floor(synced.length / 2)] : undefined,
-      maxSyncedMs: synced.length > 0 ? synced[synced.length - 1] : undefined,
+      medianAdmittedMs: median((measurement) => measurement.admittedMs),
+      medianReplicationMs: median((measurement) => measurement.replicationMs),
+      medianSyncedMs: median((measurement) => measurement.syncedMs),
+      maxSyncedMs: synced.length > 0 ? Math.max(...synced) : undefined,
+      // Compared in join order, not sorted: the question is whether each joiner paid more than the
+      // one before it.
+      monotonicGrowth: synced.length > 1 && synced.every((value, index) => index === 0 || value > synced[index - 1]),
     };
   }
 
   /**
    * Every identity deletes itself; the seeder also deletes the space it owns. Nothing throws — a
    * cleanup failure must not mask the measurement.
+   *
+   * Two layers, because self-serve is unavailable wherever the test-email hatch is closed: whatever
+   * the identity cannot delete is retried with the admin key. Against preview the first layer
+   * refuses everything and the second is the only one that works.
    */
   private async _cleanup(
+    edgeUrl: string,
     spawned: ReplicantBrain<ClientReplicant>[],
     spaceId: string | undefined,
     identityDids: string[],
@@ -279,7 +318,37 @@ export class EdgeJoinLatency implements TestPlan<EdgeJoinLatencySpec, EdgeJoinLa
         refused.push(identityDids[index] ?? `replicant-${index}`);
       }
     }
-    log.info('cleanup done', { accepted, refused });
+
+    const adminKey = process.env.DX_HUB_API_KEY;
+    const stillRefused: string[] = [];
+    for (const id of refused) {
+      if (!adminKey) {
+        stillRefused.push(id);
+        continue;
+      }
+      // Identity DIDs and space ids never collide, so one pass over both is unambiguous.
+      const path = id.startsWith('did:') ? `/admin/identities/${id}` : `/admin/spaces/${id}`;
+      try {
+        const response = await fetch(new URL(path, edgeUrl), {
+          method: 'DELETE',
+          headers: { Authorization: `Bearer ${adminKey}` },
+        });
+        if (response.ok) {
+          accepted++;
+        } else {
+          stillRefused.push(id);
+          log.warn('admin cleanup failed', { path, status: response.status });
+        }
+      } catch (err) {
+        stillRefused.push(id);
+        log.warn('admin cleanup threw', { path, err });
+      }
+    }
+    if (stillRefused.length > 0) {
+      // Loud: these are real rows left in a shared environment, and the trace is the only record.
+      log.error('cleanup left data behind', { edgeUrl, ids: stillRefused, hasAdminKey: Boolean(adminKey) });
+    }
+    log.info('cleanup done', { accepted, refused: stillRefused });
   }
 
   async analyze(
@@ -298,22 +367,40 @@ export class EdgeJoinLatency implements TestPlan<EdgeJoinLatencySpec, EdgeJoinLa
  */
 const renderSummary = (result: EdgeJoinLatencyResult): string => {
   const ms = (value: number | undefined) => (value === undefined ? '—' : `${(value / 1000).toFixed(1)}s`);
+  const share = (part: number | undefined, whole: number | undefined) =>
+    part === undefined || whole === undefined || whole === 0 ? '—' : `${Math.round((part / whole) * 100)}%`;
   const rows = result.measurements
-    .map(
-      (measurement) =>
-        `| ${measurement.joiner} | ${measurement.ok ? '✅' : '❌'} | ${ms(measurement.admittedMs)} | ${ms(
-          measurement.syncedMs,
-        )} | ${measurement.error ?? ''} |`,
+    .map((measurement) =>
+      [
+        `| ${measurement.joiner}`,
+        measurement.ok ? '✅' : '❌',
+        ms(measurement.admittedMs),
+        ms(measurement.replicationMs),
+        ms(measurement.syncedMs),
+        measurement.msPerObject === undefined ? '—' : `${measurement.msPerObject.toFixed(0)}ms`,
+        `${measurement.error ?? ''} |`,
+      ].join(' | '),
     )
     .join('\n');
   return [
     `## ${result.ok ? '✅' : '❌'} Join latency — ${result.objects} objects, ${result.joiners} joiners`,
     '',
     `Against \`${result.edge}\`. Seeded and flushed to EDGE in ${ms(result.seedMs)}.`,
-    `Median join-to-synced ${ms(result.medianSyncedMs)}, slowest ${ms(result.maxSyncedMs)}.`,
     '',
-    '| Joiner | | Admitted | Fully synced | Error |',
-    '| --- | --- | --- | --- | --- |',
+    '| | Median | Share of total |',
+    '| --- | --- | --- |',
+    `| Invitation handshake | ${ms(result.medianAdmittedMs)} | ${share(result.medianAdmittedMs, result.medianSyncedMs)} |`,
+    `| Replication | ${ms(result.medianReplicationMs)} | ${share(result.medianReplicationMs, result.medianSyncedMs)} |`,
+    `| **Accept to fully synced** | **${ms(result.medianSyncedMs)}** | |`,
+    '',
+    `Slowest joiner ${ms(result.maxSyncedMs)}.${
+      result.monotonicGrowth
+        ? ' ⚠️ Every joiner took longer than the one before it — joiners are contending, or the stack is degrading.'
+        : ''
+    }`,
+    '',
+    '| Joiner | | Invitation | Replication | Total | Per object | Error |',
+    '| --- | --- | --- | --- | --- | --- | --- |',
     rows,
     '',
   ].join('\n');

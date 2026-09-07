@@ -5,14 +5,16 @@ name: EDGE nightly
 # soaks a randomized command sequence for an hour. Both run real `@dxos/client` peers as separate
 # processes through the blade-runner harness.
 #
-# Deliberately against `dev` rather than a local `wrangler dev` stack: a local stack 500s on
-# `/db/spaces/:id/join` under six peers and a hundred objects (`blockConcurrencyWhile() ... waited
-# too long`), so a local run would measure wrangler rather than EDGE. `dev` is also the only
-# deployed environment carrying the test-email hatch that binds an identity to a Hub account, which
-# the self-serve cleanup routes require.
+# Against `preview`, not a local `wrangler dev` stack: a local stack 500s on `/db/spaces/:id/join`
+# under six peers and a hundred objects (`blockConcurrencyWhile() ... waited too long`), and with
+# its tail-logger unconnected each successive joiner measured slower than the last — a local run
+# measures wrangler, not EDGE.
 #
-# Every run deletes the spaces and identities it created, in the plan's own `finally`, so a failed
-# assertion cleans up too. `DX_HUB_API_KEY` is the fallback for whatever self-serve refuses.
+# `DX_HUB_API_KEY` IS REQUIRED HERE. `preview` is not `isDevLikeEnvironment`, so the test-email
+# hatch that binds a run's identities to Hub accounts is closed and every self-serve delete is
+# refused; the admin key is the only thing that removes what a run creates. Both plans refuse to
+# start without it rather than leak (`assertCanCleanUp`). Cleanup runs in the plan's own `finally`,
+# so a failed assertion cleans up too.
 
 on:
   schedule:
@@ -24,8 +26,8 @@ on:
       edge:
         type: choice
         description: 'Which EDGE to run against'
-        options: [dev, local]
-        default: dev
+        options: [preview, dev, local]
+        default: preview
       objects:
         type: string
         description: 'Join latency: objects in the space under test'
@@ -100,7 +102,7 @@ jobs:
       - name: Measure join latency
         working-directory: packages/e2e/blade-runner
         env:
-          EDGE: ${{ inputs.edge || 'dev' }}
+          EDGE: ${{ inputs.edge || 'preview' }}
           OBJECTS: ${{ inputs.objects || '100' }}
           JOINERS: ${{ inputs.joiners || '5' }}
         run: |
@@ -162,7 +164,7 @@ jobs:
       - name: Soak
         working-directory: packages/e2e/blade-runner
         env:
-          EDGE: ${{ inputs.edge || 'dev' }}
+          EDGE: ${{ inputs.edge || 'preview' }}
           MINUTES: ${{ inputs.soak_minutes || '60' }}
           COMMANDS: ${{ inputs.soak_commands || '200' }}
         run: |

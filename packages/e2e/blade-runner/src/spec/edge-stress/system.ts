@@ -3,6 +3,7 @@
 //
 
 import { asyncTimeout, sleep } from '@dxos/async';
+import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
 import { type Platform, type ReplicantBrain } from '../../plan';
@@ -23,11 +24,32 @@ import {
 //
 
 /**
- * Which EDGE to run against. Only these two carry the dev-only test-email hatch that binds test
- * identities to Hub accounts, which the self-serve cleanup routes require; preview and production
- * would leave every run's data behind.
+ * Which EDGE to run against.
+ *
+ * `local` and `dev` are `isDevLikeEnvironment`, so they carry the test-email hatch that binds a run's
+ * identities to Hub accounts and lets it delete its own data. `preview` does not: the hatch is closed
+ * there, the self-serve routes 403 an unbound identity, and cleanup falls back entirely to
+ * `DX_HUB_API_KEY`. Running against preview without that key leaks every space and identity.
  */
-export type EdgeTarget = 'local' | 'dev';
+export type EdgeTarget = 'local' | 'dev' | 'preview';
+
+/** Where the test-email hatch is open, hence where a run can bind accounts and clean up itself. */
+export const isDevLikeTarget = (edge: EdgeTarget): boolean => edge === 'local' || edge === 'dev';
+
+/**
+ * Refuse to start a run that could not undo itself.
+ *
+ * Checked before a single identity exists, because the failure it prevents is silent: against a
+ * target with no test-email hatch every self-serve delete is refused, and without an admin key the
+ * spaces and identities simply stay in a shared environment with nothing but the trace recording
+ * that they were ever created.
+ */
+export const assertCanCleanUp = (edge: EdgeTarget, cleanup: boolean): void => {
+  invariant(
+    !cleanup || isDevLikeTarget(edge) || Boolean(process.env.DX_HUB_API_KEY),
+    `${edge} has no test-email hatch, so self-serve cleanup is refused there: set DX_HUB_API_KEY, or pass cleanup:false and accept the leak`,
+  );
+};
 
 /**
  * Every field is optional at the call site and complete here: `defaultsFor` in `plan.ts` is the
