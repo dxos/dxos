@@ -1760,12 +1760,6 @@ importers:
       '@dxos/client':
         specifier: workspace:*
         version: link:packages/sdk/client
-      '@dxos/dx-build':
-        specifier: workspace:*
-        version: link:tools/dx-build
-      '@dxos/dx-compile':
-        specifier: workspace:*
-        version: link:tools/dx-compile
       '@dxos/dx-tools':
         specifier: workspace:*
         version: link:tools/dx-tools
@@ -23313,31 +23307,6 @@ importers:
         version: 16.0.4
 
   tools/codemorph: {}
-
-  tools/dx-build:
-    dependencies:
-      '@typescript/typescript6':
-        specifier: 'catalog:'
-        version: 6.0.2
-
-  tools/dx-compile:
-    dependencies:
-      '@babel/core':
-        specifier: 'catalog:'
-        version: 7.28.0
-      '@babel/preset-typescript':
-        specifier: 'catalog:'
-        version: 7.27.1(@babel/core@7.28.0)
-      babel-preset-solid:
-        specifier: 'catalog:'
-        version: 1.9.9(@babel/core@7.28.0)(solid-js@1.9.11)
-      yargs:
-        specifier: 'catalog:'
-        version: 16.2.0
-    devDependencies:
-      '@types/yargs':
-        specifier: 'catalog:'
-        version: 16.0.4
 
   tools/dx-tools: {}
 

@@ -136,12 +136,6 @@
       "path": "packages/common/display-name/tsconfig.json"
     },
     {
-      "path": "tools/dx-build/tsconfig.json"
-    },
-    {
-      "path": "tools/dx-compile/tsconfig.json"
-    },
-    {
       "path": "tools/dx-tools/tsconfig.json"
     },
     {

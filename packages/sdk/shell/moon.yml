@@ -2,23 +2,20 @@ layer: library
 language: typescript
 tags:
   - dist-runtime
-  - ts-build
+  - ts-vite-build
   - ts-test-browser
   - ts-test-storybook
   - vite
   - pack
   - storybook
 tasks:
+  # The self-contained shell bundle (`dist/bundle`), distinct from the library build that
+  # `ts-vite-build` drives out of `vite.config.ts`.
   bundle:
+    command: pnpm exec vite build -c vite.bundle.config.ts
     options:
       mergeOutputs: replace
+    inputs:
+      - vite.bundle.config.ts
     outputs:
       - dist/bundle
-  build:
-    args:
-      - '--entryPoint=src/react.ts'
-      - '--entryPoint=src/translations.ts'
-      - '--entryPoint=src/testing/index.ts'
-  test:
-    inputs:
-      - vite.config.ts
