@@ -1,6 +1,6 @@
 # echo-plain-objects — Tasks
 
-_Resume: Stage F is complete — the refresh memoizes the raw record it filled from, so an unchanged record costs one pointer compare and an unchanged key keeps its materialized value (ref identity falls out of that). Guarded on the `docHandle` (branch rebinds) and dropped in `_writeThrough` (an ABA that silently discarded a `versioning` restore). Two full repo sweeps green, `sync-refresh.test.ts` red before and green after, benchmark a deliberate null result recorded at `a1a06de7`. Stage E is ABANDONED (DESIGN.md D12); Stage C stays BLOCKED under constraint 3 (DESIGN.md D9). Uncommitted: none. Next: nothing queued — the PR needs review, and the open follow-ups are the subtraction pass (dead helpers, `_proxyMap` overlap) and the duplicate refresh on every write, now mostly neutralized by the memo. Last: Stage F at `a1a06de7`._
+_Resume: Stage E is BUILT — ProxyHandlerSlot is gone (DESIGN.md D14). Stage F before it is complete — the refresh memoizes the raw record it filled from, so an unchanged record costs one pointer compare and an unchanged key keeps its materialized value (ref identity falls out of that). Guarded on the `docHandle` (branch rebinds) and dropped in `_writeThrough` (an ABA that silently discarded a `versioning` restore). Two full repo sweeps green, `sync-refresh.test.ts` red before and green after, benchmark a deliberate null result recorded at `a1a06de7`. Stage E is ABANDONED (DESIGN.md D12); Stage C stays BLOCKED under constraint 3 (DESIGN.md D9). Uncommitted: none. Next: nothing queued — the PR needs review, and the open follow-ups are the subtraction pass (dead helpers, `_proxyMap` overlap) and the duplicate refresh on every write, now mostly neutralized by the memo. Last: Stage F at `a1a06de7`._
 
 Design and decisions: [DESIGN.md](./DESIGN.md). Numbers: [`echo-client-e2e/BENCHMARKS.md`](../../../packages/core/echo/echo-client-e2e/BENCHMARKS.md).
 
@@ -235,7 +235,7 @@ both benches after each.
       only the lens, which the user released).
 - [ ] **PR body updated with the Stage D column.**
 
-## Phase 7 — Stage E: one read-only handler, a mutable view inside `Obj.update` (abandoned)
+## Phase 7 — Stage E: abandoned, then reinstated and built (see Phase 9)
 
 - [x] **Adversarial pass on the premises** — four of five falsified; see DESIGN.md D12 for each verdict
       and its evidence. `clone.test.ts` goes red under premise 1; premise 3 is contradicted by 84
@@ -308,3 +308,25 @@ verdicts.
 - Baseline bench and methodology: PR #12951.
 - Sibling effort on the storage side: `.agents/projects/echo-storage-optimization/` (flush scoping,
   doc-ID checksum overhead) — different layer, same package; coordinate on `echo-client` changes.
+
+## Phase 9 — Stage E, built (2026-09-07)
+
+D12 abandoned Stage E on four "falsified" premises. The user pushed back: none of them named a
+constraint, only the state of the code. Re-examined and built — see DESIGN.md D14 for each premise.
+
+### Tasks
+
+- [x] **Refs resolve through the core** (`1034f635`) — `CoreRefResolver` decides per call instead of
+      capturing the database or a link-cache target at mint time, so a target can be filled before its
+      core has a database. This is P1's root cause; `clone.test.ts` passes.
+- [x] **Arrays carry their elements** (`715bf916`) — filled and refreshed like records, `constructor`
+      pinned to `Array`, meta read decoded at every depth so the legacy tag upgrade survives.
+- [x] **One shared handler; `ProxyHandlerSlot` deleted** (`2e35502a`) — net −159 lines. Also removed:
+      `forwardReads`/`readsForwarded`, both handlers' unreachable `get` traps, `_arrayGet`,
+      `getProxySlot`, `dangerouslySetProxyId`.
+- [x] **Green: `echo` 581, `echo-client` 549, `echo-client-e2e` 327**, all unmodified; lint and
+      typecheck clean; boot graph 0.9 KB smaller.
+- [x] **Measured** — inconclusive and recorded as such (`BENCHMARKS.md` @ `2e35502a`).
+- [ ] **Follow-up: `createProxy` dedupes via `handler._proxyMap`**, which is per-handler-instance, while
+      the target already carries its proxy under a registry symbol. Reading that instead is more robust
+      across independently evaluated module copies and drops the overlap.

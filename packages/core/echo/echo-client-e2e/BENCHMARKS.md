@@ -631,3 +631,39 @@ at all and cannot have been changed by this commit, yet they move −24.8% to +2
 machine, and every ECHO row above sits inside it. The honest conclusion is that this bench cannot
 distinguish before from after — which is the intended result for a change that touches only the refresh
 path — not that any individual cell improved or regressed.
+
+## `2e35502a` — 2026-09-07 — Stage E: one shared handler, no `get` trap anywhere (inconclusive)
+
+Stage E finished what Stage D started: refs resolve through their core rather than a captured database,
+so a target is filled as soon as it has a document; arrays carry their elements as own indexed
+properties; and with no target anywhere needing a `get` trap, one shared `REACTIVE_PROXY_HANDLER`
+replaced the per-proxy `ProxyHandlerSlot` (DESIGN.md D14). Net −159 lines.
+
+Run back to back on one machine, `80840af0` against `2e35502a`, after-half first.
+
+| per-op, narrow    | before |  after |  delta |
+| ----------------- | -----: | -----: | -----: |
+| read, plain       | 3.8 ns | 2.1 ns | −44.5% |
+| read, unpersisted |  16 ns |  13 ns | −19.5% |
+| read, automerge   |  20 ns |  19 ns |  −2.6% |
+| read, feed        |  23 ns |  14 ns | −38.0% |
+
+| per-op, wide (250 fields) | before |  after |  delta |
+| ------------------------- | -----: | -----: | -----: |
+| read, plain               | 6.9 ns | 7.3 ns |  +4.3% |
+| read, unpersisted         |  26 ns |  23 ns | −10.6% |
+| read, automerge           |  24 ns |  23 ns |  −2.8% |
+| read, feed                |  25 ns |  17 ns | −30.5% |
+
+**This run resolves nothing, and the control rows are why.** `plain object` contains no ECHO code and
+cannot have been touched by this commit, yet across the single run its cells move from **−44.5% to
++116.5%** (the wide write row). Every ECHO delta above sits inside that band, so the feed read's −38%
+is not evidence of a win any more than plain's +116% is evidence of a regression.
+
+The absolute levels are the other half of the warning: automerge reads price at 19–24 ns here against
+43–55 ns in the `a1a06de7` run earlier the same day, on the same machine and the same bench. Between-run
+variance is 2–3×, which is why only a back-to-back A/B is comparable at all — and this run shows that
+even that is not enough to resolve a ten-percent effect on a 300 ms window under a noisy sandbox.
+
+What can be said: reads remain in the tens of nanoseconds and flat in object width, and nothing moved
+enough to suggest the shared handler cost anything. Stage E's case is the deletion, not a number.

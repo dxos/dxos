@@ -333,6 +333,47 @@ change event refreshes again) collapse into a second pointer compare.
 `docHandle` it was taken from; without that guard three branching tests fail with the core serving the
 previous branch's values.
 
+### D14 — Stage E, revisited and built (user direction 2026-09-07)
+
+**Decided.** D12 dropped Stage E as falsified. That was wrong on the merits, not merely overstated, and
+the user pushed back on it: none of the four verdicts named a constraint, only the state of the code.
+Re-examined premise by premise, and built.
+
+- **P1 was a symptom, not a constraint.** `clone` failed because `lookupRef` captured whatever the core
+  held at mint time — the database's resolver, or a target pinned out of the link cache — and both
+  arrive _after_ the values are built. `CoreRefResolver` decides per call instead, so filling before a
+  database exists is safe and the database half of `_canMaterialize` is gone. A URI naming no entity
+  still gets no resolver, since `isAvailable` reports the resolver it was given.
+- **P2 was real work, and cost two of its five conditions.** Arrays now fill like records. `constructor`
+  is pinned to `Array` on `EchoArray.prototype`, as `_arrayGet` used to report; `_storedRecord` reads
+  the whole meta namespace decoded, not just its root, or a nested meta target read raw loses the
+  bare-tag-id to ref upgrade. `has`/`ownKeys`/`getOwnPropertyDescriptor` stayed trapped, which was never
+  a problem: only `get` had to go.
+- **P3 does not arise.** It falsified handing the callback a _different_ proxy — an optional convenience.
+  The context-keyed write gate stays, so all 84 zero-argument `Obj.update` call sites are untouched.
+- **P4 attacked the wrong design.** It falsified merging the two handler _classes_, which would destroy
+  the `isEchoObjectField` discriminator and turn the `Ref.make` guard into a silent deep copy. What was
+  needed was one shared _dispatching_ handler; `EchoReactiveHandler` and `TypedReactiveHandler` remain
+  distinct classes and the discriminator is untouched.
+
+**The one real invariant, and why the slot existed.** A `Proxy`'s trap lookup is told nothing about which
+proxy is being operated on, so trap _presence_ is a property of the handler object. While any target
+needed a `get` trap, handler objects had to be per-proxy — that, and nothing else, is what
+`ProxyHandlerSlot` was for. Once every target carries its own data, no target needs one, and a single
+`REACTIVE_PROXY_HANDLER` serves everything: ten traps dispatching to the handler the target carries.
+`db.add` converts by rewriting that (`setProxyHandler`) rather than mutating a slot, so identity
+survives as before. Removed with it: `forwardReads`/`readsForwarded` and the per-proxy trap surgery,
+both handlers' now-unreachable `get` traps and `_arrayGet`, `getProxySlot`, and `dangerouslySetProxyId`.
+
+**A bug introduced and caught inside the change, worth keeping.** The first dispatch was
+`handler?.trap?.(...) ?? Reflect.trap(...)`. That is wrong for the two traps with a legitimate nullish
+answer — `getOwnPropertyDescriptor` for a missing property, `getPrototypeOf` for a null prototype —
+which would have silently fallen back to the default. It dispatches on the handler _defining_ the trap.
+
+**Not measured.** See BENCHMARKS.md at `2e35502a`: the control rows swing −44% to +116% within one run,
+so the bench cannot resolve this change either way. Stage E's case is the deletion — net −159 lines and
+one less object allocated per proxy — not a number.
+
 ### D8 — Stage A is a pure fast path, not a redesign
 
 In `TypedReactiveHandler.get`: (1) track per target whether any own **string-keyed accessor** exists
