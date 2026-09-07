@@ -59,6 +59,7 @@ export default Layer.succeed(Store, {} as Api);
 
 export * from './everything.ts';
 export { pick } from './picked.ts';
+export * as Inner from './inner.ts';
 export * as Missing from 'not-a-real-module';
 `;
 
@@ -83,6 +84,7 @@ const RESOLVED: Record<string, string> = {
   './normalize.ts': '/repo/src/normalize.ts',
   './everything.ts': '/repo/src/everything.ts',
   './picked.ts': '/repo/src/picked.ts',
+  './inner.ts': '/repo/src/inner.ts',
   './side-effect.ts': '/repo/src/side-effect.ts',
   '@dxos/echo': '/repo/packages/echo/src/index.ts',
   '@dxos/compute/Operation': '/repo/packages/compute/src/Operation.ts',
@@ -135,7 +137,7 @@ describe('typescript analyzer', () => {
   });
 
   test('re-exports are edges to the re-exported files', () => {
-    expect(document.reexports).toEqual([file('src/everything.ts'), file('src/picked.ts')]);
+    expect(document.reexports).toEqual([file('src/everything.ts'), file('src/picked.ts'), file('src/inner.ts')]);
   });
 
   test('a class extending a curried call records the callee as a member IRI', () => {
@@ -269,6 +271,21 @@ describe('typescript analyzer', () => {
     expect(symbol('default')).toMatchObject({ kind: 'variable', exported: true });
     expect(symbol('default').constructedBy).toEqual([member2('effect/Layer', 'succeed')]);
     expect(symbol('default').argument).toEqual([sym('src/Store.ts', 'Store')]);
+  });
+
+  test('a namespace re-export declares the name it publishes the module under', () => {
+    // `canonicalName` is concluded from this by `rules/60-canonical.n3`: the name is a fact of this
+    // file and the identifiers it qualifies are facts of the other one.
+    const namespace = symbol('Inner');
+    expect(namespace.kind).toEqual('namespace');
+    expect(namespace.exported).toBe(true);
+    expect(namespace.namespaceOf).toEqual([file('src/inner.ts')]);
+  });
+
+  test('a namespace re-export of an unresolved module declares nothing', () => {
+    // `export * as Missing from 'not-a-real-module'` has no module in the index to qualify, so
+    // there is nothing for a rule to join and the symbol would only assert a dangling name.
+    expect(document.declares.some((declared) => declared.name === 'Missing')).toBe(false);
   });
 
   test('a parse failure still yields a file node', () => {

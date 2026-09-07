@@ -1,0 +1,37 @@
+# The name an external importer writes. Two facts have to meet for it, and they live in different
+# files: the identifier is declared in its own module, while the namespace it is published under
+# (`export * as Ontology from './Ontology.ts'`) is a fact of the barrel. Neither parse can see the
+# other, which is why this is a rule rather than something the analyzer emits.
+#
+# Only ONE canonical name is concluded per symbol: a namespaced module's identifiers get the
+# qualified form and not also the bare one, which is what the scoped negation below is for.
+
+@prefix deus: <https://dxos.org/vocab/deus#>.
+@prefix list: <http://www.w3.org/2000/10/swap/list#>.
+@prefix log: <http://www.w3.org/2000/10/swap/log#>.
+@prefix string: <http://www.w3.org/2000/10/swap/string#>.
+
+# Published whole under a name: `Ontology.symbolIri`.
+{
+  ?module deus:declares ?symbol.
+  ?symbol deus:name ?identifier; deus:exported true.
+  ?namespace deus:namespaceOf ?module.
+  ?namespace deus:name ?namespaceName.
+  (?namespaceName "." ?identifier) string:concatenation ?canonical.
+} => { ?symbol deus:canonicalName ?canonical }.
+
+# Imported directly, so the identifier stands alone. `log:collectAllIn` is scoped negation as
+# failure: the bare form is concluded only when nothing publishes the module as a namespace, so the
+# two rules never both fire for one symbol.
+{
+  ?module deus:declares ?symbol.
+  ?symbol deus:name ?identifier; deus:exported true.
+  (?namespace { ?namespace deus:namespaceOf ?module } ?namespaces) log:collectAllIn ?scope.
+  ?namespaces list:length 0.
+} => { ?symbol deus:canonicalName ?identifier }.
+
+# The namespace symbol itself is imported by name from its barrel, so it is its own canonical name.
+# It sits in the barrel rather than in the module it publishes, so the rules above would give it the
+# bare form anyway; stating it here keeps the intent visible.
+{ ?namespace deus:namespaceOf ?module. ?namespace deus:name ?namespaceName }
+  => { ?namespace deus:canonicalName ?namespaceName }.

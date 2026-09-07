@@ -113,6 +113,12 @@ export const apiDependsOn = iri('apiDependsOn');
 export const implDependsOn = iri('implDependsOn');
 /** A re-exported name and the declaration it stands for: `export { default as X } from './y'`. */
 export const aliasOf = iri('aliasOf');
+/**
+ * The module a namespace symbol publishes: `export * as Ontology from './Ontology.ts'`. The name is
+ * a fact of the barrel and the identifiers are facts of the other file, so `canonicalName` — what
+ * joins them — can only be concluded by a rule.
+ */
+export const namespaceOf = iri('namespaceOf');
 export const snippet = iri('snippet');
 export const doc = iri('doc');
 export const deprecated = iri('deprecated');
@@ -145,6 +151,11 @@ export const phantom = iri('phantom');
 export const tests = iri('tests');
 export const importsTestFile = iri('importsTestFile');
 export const usesDeprecated = iri('usesDeprecated');
+/**
+ * The name an external importer writes: the identifier alone, or `<Namespace>.<identifier>` when
+ * the declaring module is published whole under one name.
+ */
+export const canonicalName = iri('canonicalName');
 
 export const type = DataFactory.namedNode(rdf.type);
 
@@ -201,6 +212,7 @@ export const CONTEXT = {
   apiDependsOn: id('apiDependsOn'),
   implDependsOn: id('implDependsOn'),
   aliasOf: id('aliasOf'),
+  namespaceOf: id('namespaceOf'),
   // SpecBlock.
   blockType: 'deus:blockType',
   blockId: 'deus:blockId',
@@ -224,6 +236,7 @@ export const SymbolNode = Schema.Struct({
   'apiDependsOn': Schema.Array(Schema.String),
   'implDependsOn': Schema.Array(Schema.String),
   'aliasOf': Schema.Array(Schema.String),
+  'namespaceOf': Schema.optional(Schema.Array(Schema.String)),
   'snippet': Schema.optional(Schema.String),
   'doc': Schema.optional(Schema.String),
   'deprecated': Schema.optional(Schema.Boolean),

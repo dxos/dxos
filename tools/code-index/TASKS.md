@@ -1,6 +1,6 @@
 # code-index — Tasks
 
-_Resume: nothing in flight — PR [#12968](https://github.com/dxos/dxos/pull/12968) is waiting on human review. Uncommitted: none. Last: the chat moved onto the assistant's own stack (`ChatThread` + `FeedModel` + `ChatEditor`), verified in a real browser._
+_Resume: nothing in flight — PR [#12968](https://github.com/dxos/dxos/pull/12968) is waiting on human review. Uncommitted: none. Last: `deus:canonicalName` in the ontology, derived by `rules/60-canonical.n3` and verified against a real index (259 names, one per symbol)._
 
 The package is two halves that share one store: an **indexer** that turns this
 repository into a SQLite ledger plus a persistent RDF quad store, and a
@@ -25,6 +25,7 @@ backend batch, then advance the row. Deletion runs the other way.
 - [x] **API vs implementation as separate facts** — `apiDependsOn` / `implDependsOn`, split on the erased boundary.
 - [x] **`deus:snippet` per symbol** — declaration with implementation abbreviated, verified by re-parsing every snippet in the index.
 - [x] **Incremental crawl keyed on path + mtime** — 0.2s when nothing changed, 4.4s for two files.
+- [x] **`deus:canonicalName`** — the name an external importer writes: the bare identifier, or `<Namespace>.<identifier>` when a barrel publishes the module whole (`export * as N from './y'`). The parser asserts `namespaceOf` on the barrel's namespace symbol; `rules/60-canonical.n3` joins it to the other file's identifiers, with scoped negation so exactly one name is concluded per symbol.
 
 ## Phase 2: the workspace
 

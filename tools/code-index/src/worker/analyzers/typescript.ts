@@ -807,6 +807,8 @@ export const analyzeTypeScript = (context: AnalyzeContext): Ontology.FileDocumen
   const reexports = new Set<string>();
   const importsModule = new Set<string>();
   const aliases: Array<{ name: string; origin: string | undefined; line: number; typeOnly: boolean }> = [];
+  /** `export * as N from './y'` — the name under which a whole module is published. */
+  const namespaces: Array<{ name: string; module: string; line: number }> = [];
 
   for (const statement of (body as readonly unknown[]).filter(isNode)) {
     if (
@@ -862,6 +864,20 @@ export const analyzeTypeScript = (context: AnalyzeContext): Ontology.FileDocumen
       } else {
         importsModule.add(statement.source.value);
       }
+      // `export * as N from './y'` publishes the whole module under one name, which is what makes
+      // the canonical name of everything in it `N.<identifier>`. The name lives here and the
+      // identifiers live in the other file, so only a rule can join them.
+      if (statement.type === 'ExportAllDeclaration' && resolution.file) {
+        const namespaceName = nameOf(isNode(statement.exported) ? statement.exported : undefined);
+        if (namespaceName) {
+          namespaces.push({
+            name: namespaceName,
+            module: Ontology.fileIri(resolution.file).value,
+            line: lineOf(source, statement.start),
+          });
+        }
+      }
+
       // A named re-export declares the name it exports. Recording what it stands for is what lets a
       // rule see through a barrel: this repo addresses most things through one.
       const specifierNodes = Array.isArray(statement.specifiers) ? statement.specifiers.filter(isNode) : [];
@@ -1055,6 +1071,28 @@ export const analyzeTypeScript = (context: AnalyzeContext): Ontology.FileDocumen
       'aliasOf': alias.origin ? [alias.origin] : [],
     }));
 
+  // The namespace is a symbol of this file like any other export — `Ontology` is what an importer
+  // writes — and `namespaceOf` is the edge a rule follows to the identifiers it qualifies.
+  const namespaceSymbols: Ontology.SymbolNode[] = namespaces
+    .filter((namespace) => !symbols.some((declared) => declared.name === namespace.name))
+    .map((namespace) => ({
+      '@id': Ontology.symbolIri(path, namespace.name).value,
+      '@type': 'Symbol',
+      'name': namespace.name,
+      'kind': 'namespace',
+      'exported': true,
+      'line': namespace.line,
+      'extends': [],
+      'constructedBy': [],
+      'pipedThrough': [],
+      'derivedFrom': [],
+      'argument': [],
+      'apiDependsOn': [],
+      'implDependsOn': [],
+      'aliasOf': [],
+      'namespaceOf': [namespace.module],
+    }));
+
   return {
     ...base,
     imports: [...imports],
@@ -1062,7 +1100,7 @@ export const analyzeTypeScript = (context: AnalyzeContext): Ontology.FileDocumen
     importsModule: [...importsModule],
     reexports: [...reexports],
     unresolvedReferences: unresolved,
-    declares: [...symbols, ...aliasSymbols],
+    declares: [...symbols, ...aliasSymbols, ...namespaceSymbols],
     ...(errors.length > 0 ? { parseError: errors } : {}),
   };
 };
