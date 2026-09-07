@@ -43,12 +43,18 @@ import { googleSyncTestServices, runGoogleSync } from '../../../testing/sync-fix
 // a 13.5 MiB no-attachment baseline, (128 - 13.5) / 105 puts a SINGLE 1 MiB attachment on the 128 MiB
 // isolate limit.
 //
-// Every run reports every blob INLINE: `operation-service` depends on neither `@dxos/client` nor any
-// other registrant of a blob backend (`registerBlobBackend` appears nowhere in dxos/edge), so the
-// registry keeps its `'inline'` default and each attachment's bytes ride on the Blob object itself
-// rather than as a URI. Those objects reach the mailbox FEED (`Cursor.commit` -> `Feed.append`), whose
-// blocks live in the SQLite-backed `FeedSpace` DO — not an Automerge document. Where the amplification
-// below is actually paid on that path is not yet localized; the ratio is measured, the cause is not.
+// Without a registered blob backend the registry keeps its `'inline'` default, so each attachment's
+// bytes ride on the Blob object itself rather than as a URI, and every run below reports every blob
+// INLINE. Those objects reach the mailbox FEED (`Cursor.commit` -> `Feed.append`), whose blocks live in
+// the SQLite-backed `FeedSpace` DO — not an Automerge document.
+//
+// What makes that fatal is that reading the feed decodes all of it. `Cursor.layer` seeds its dedup set
+// from two bounded tail queries per run, and a limited feed query still decodes the whole feed to apply
+// the limit (`Cursor.ts`, `seedDedupSet`) under `Filter.everything()` — so every attachment ever synced
+// is re-materialised at the start of every run, at ~6x its bytes, before a message is fetched. The
+// per-run cost therefore tracks mailbox HISTORY, not the delta, which is why production shows 0 ok
+// rather than failures only on large syncs. Measured in
+// `echo-client/src/feed/feed-seed-cost.test.ts`.
 //
 // `DX_MEM_BACKEND=1` registers a default backend to stand in for blob-service. Same run, 5 x 1 MiB:
 //
