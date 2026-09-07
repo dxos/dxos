@@ -250,9 +250,10 @@ printf '%s' "$fake" > "$DX_WATCH_DIR/watcher.pid"
 top=$(git -C "$sandbox" rev-parse --show-toplevel)
 printf '9009\t111\tstorybook\t%s\tanswered\t01:02\t-\n5199\t-\t-\t-\tunbound\t-\t-\n5180\t222\tvite\t/elsewhere\twedged\t00:10\t/elsewhere/temp/x\n' "$top" > "$DX_WATCH_DIR/status"
 out=$(run "$(payload 'hi')")
-check '15b this worktree flagged' '1' "$(printf '%s' "$out" | grep -c '^  :9009 storybook answered 01:02 .* \[THIS\]$')"
-check '15c other worktree not flagged' '1' "$(printf '%s' "$out" | grep -c '^  :5180 vite wedged 00:10 /elsewhere$')"
-check '15d unbound row shown' '1' "$(printf '%s' "$out" | grep -c '^  :5199 unbound$')"
+check '15b this worktree flagged' '1' "$(printf '%s' "$out" | grep -c "^  :9009 storybook answered 1m ${top##*/} \[THIS\]\$")"
+check '15c other worktree not flagged' '1' "$(printf '%s' "$out" | grep -c '^  :5180 vite wedged 0m elsewhere$')"
+check '15d unbound ports collapse to one line' '1' "$(printf '%s' "$out" | grep -c '^  unbound:.*5199')"
+check '15d2 no per-port unbound row' '0' "$(printf '%s' "$out" | grep -c '^  :[0-9]* unbound$')"
 check '15e wedged row names its capture in debug' '0' "$(printf '%s' "$out" | grep -c 'capture: /elsewhere/temp/x')"
 run "$(payload '/mode debug')" > /dev/null
 out=$(run "$(payload 'hi')")

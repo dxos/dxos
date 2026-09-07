@@ -233,6 +233,11 @@ settled 1x1 with the user; order of delivery is phase → watcher → checklist.
 - [x] **Tests + docs** — extend `mode.test.sh`; new `diagnose.test.sh` and
       `guard-foreground.test.sh`; AGENTS.md, `.claude/README.md`, `mode.md`,
       storybook README, REPOSITORY_GUIDE.
+- [x] **Final review fixes** — SERVERS collapses idle ports to one `unbound:` line
+      and renders a worktree basename with a humanised age; `--ensure` and
+      `--restart` reap legacy per-port watchers (`--reap-legacy [PORT]` seam) and
+      `--status` points at `--restart` while one runs; the guard honours an
+      explicit Bash `timeout` over 30s and reads its input in one `jq` call.
 
 ### References
 

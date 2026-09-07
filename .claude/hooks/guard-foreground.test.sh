@@ -14,7 +14,8 @@ check() {
 }
 decision() {
   local out
-  out=$(jq -nc --arg c "$1" --argjson bg "${2:-false}" '{tool_name:"Bash", tool_input:{command:$c, run_in_background:$bg}}' | bash "$hook")
+  out=$(jq -nc --arg c "$1" --argjson bg "${2:-false}" --argjson t "${3:-0}" \
+    '{tool_name:"Bash", tool_input:{command:$c, run_in_background:$bg, timeout:$t}}' | bash "$hook")
   if [ -z "$out" ]; then printf 'none'; else printf '%s' "$out" | jq -r '.hookSpecificOutput.permissionDecision // "none"'; fi
 }
 
@@ -30,6 +31,7 @@ check 'storybook dev' 'ask' "$(decision 'pnpm exec storybook dev --port 9009')"
 check 'repo-wide format' 'ask' "$(decision 'pnpm format')"
 check 'until loop' 'ask' "$(decision 'until curl -sf localhost:9009; do sleep 2; done')"
 check 'foreground sleep' 'ask' "$(decision 'sleep 60')"
+check 'explicit long timeout' 'ask' "$(decision 'moon run echo:build' false 600000)"
 
 echo '=== silent when backgrounded or bounded'
 check 'backgrounded build' 'none' "$(decision 'moon run :build' true)"
@@ -38,6 +40,8 @@ check 'single test file' 'none' "$(decision 'moon run echo:test -- src/foo.test.
 check 'single package test' 'none' "$(decision 'moon run echo:test')"
 check 'oxfmt on a path' 'none' "$(decision 'npx oxfmt --write packages/core/echo/src/foo.ts')"
 check 'git status' 'none' "$(decision 'git status')"
+check 'long timeout backgrounded' 'none' "$(decision 'moon run echo:build' true 600000)"
+check 'short timeout' 'none' "$(decision 'git status' false 5000)"
 check 'short sleep' 'none' "$(decision 'sleep 2')"
 check 'two short sleeps' 'none' "$(decision 'sleep 2; sleep 3')"
 check 'empty command' 'none' "$(out=$(jq -nc '{tool_name:"Bash", tool_input:{}}' | bash "$hook"); if [ -z "$out" ]; then printf 'none'; else printf '%s' "$out" | jq -r '.hookSpecificOutput.permissionDecision // "none"'; fi)"

@@ -295,10 +295,22 @@ EOF
   Clear the pin with `/mode terse` or `/mode normal`.
 EOF
     fi
+    # `ps` elapsed time reads as a clock time in a one-line row, so it is rendered
+    # as an age instead.
+    humanize_etime() {
+      case "$1" in
+        '' | '-') printf -- '-'; return 0 ;;
+      esac
+      printf '%s' "$1" | awk -F'[-:]' '
+        NF == 4 { printf "%dd%dh", $1, $2; next }
+        NF == 3 { printf "%dh%dm", $1, $2; next }
+        NF == 2 { printf "%dm", $1; next }
+        { printf "%s", $0 }'
+    }
     # Reads the watcher's status file rather than probing servers itself, so the
     # hot path never blocks on a wedged port.
     servers_block() {
-      local diagnose="$root/tools/storybook-react/diagnose.sh" here status line
+      local diagnose="$root/tools/storybook-react/diagnose.sh" here status
       [ -f "$diagnose" ] || return 0
       here=$(git -C "$root" rev-parse --show-toplevel 2>/dev/null || printf '%s' "$root")
       status=$(bash "$diagnose" --status 2>/dev/null) || return 0
@@ -306,22 +318,28 @@ EOF
         unwatched*) printf 'SERVERS: %s\n' "$status"; return 0 ;;
       esac
       printf 'SERVERS: (from the dev-server watcher; [THIS] = serves this worktree)\n'
-      printf '%s\n' "$status" | tail -n +2 | while IFS=$'\t' read -r port pid kind tree state age last; do
-        [ -n "$port" ] || continue
-        # A diagnostic line (stale/no-status-yet) carries no tabs, so it lands
-        # whole in $port with the rest empty; print it back as one line.
-        case "$port" in
-          *[!0-9]*) printf '  %s\n' "$port $pid $kind $tree $state $age $last"; continue ;;
-        esac
-        if [ "$state" = unbound ]; then
-          printf '  :%s unbound\n' "$port"
-        else
-          line=":$port $kind $state $age $tree"
-          [ "$tree" = "$here" ] && line="$line [THIS]"
-          printf '  %s\n' "$line"
-          if debug_on && [ "$last" != '-' ]; then printf '    capture: %s\n' "$last"; fi
-        fi
-      done
+      printf '%s\n' "$status" | tail -n +2 | {
+        local line idle=''
+        while IFS=$'\t' read -r port pid kind tree state age last; do
+          [ -n "$port" ] || continue
+          # A diagnostic line (stale/no-status-yet) carries no tabs, so it lands
+          # whole in $port with the rest empty; print it back as one line.
+          case "$port" in
+            *[!0-9]*) printf '  %s\n' "$port $pid $kind $tree $state $age $last"; continue ;;
+          esac
+          if [ "$state" = unbound ]; then
+            idle="$idle $port"
+          else
+            line=":$port $kind $state $(humanize_etime "$age") ${tree##*/}"
+            [ "$tree" = "$here" ] && line="$line [THIS]"
+            printf '  %s\n' "$line"
+            if debug_on && [ "$last" != '-' ]; then printf '    capture: %s\n' "$last"; fi
+          fi
+        done
+        # Collapsed to one line because a row per idle port is a dozen-plus lines
+        # of noise in every prompt.
+        if [ -n "$idle" ]; then printf '  unbound:%s\n' "$idle"; fi
+      }
     }
     servers_block
     cat <<'EOF'

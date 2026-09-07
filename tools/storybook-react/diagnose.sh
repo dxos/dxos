@@ -15,6 +15,7 @@
 # Options: --interval N (15s) --timeout N (10s, "answered" deadline) --port N (manual capture only)
 # Env:     DX_WATCH_DIR (~/.cache/dxos/watch)  DX_WATCH_PORTS ("9009 5199", overrides discovery)
 # Seams:   --once (one cycle) --ports (discovered ports) --etime-seconds STR (elapsed-time maths)
+#          --reap-legacy [PORT] (kill per-port watchers; a PORT narrows it to one, for tests)
 
 set -uo pipefail
 
@@ -25,6 +26,7 @@ TIMEOUT=10
 WARMUP=300
 MODE=capture
 ETIME=''
+REAP_MATCH=''
 
 # `set -u` would abort on a bare `$2`, losing the exit-2 path below; and an unvalidated value lets
 # `--port --status` silently consume the next flag as the port.
@@ -49,6 +51,14 @@ while [ $# -gt 0 ]; do
     --ensure) MODE=ensure ;;
     --restart) MODE=restart ;;
     --ports) MODE=ports ;;
+    # The optional port narrows the kill to one process, so a test can exercise this
+    # against its own fake without signalling a watcher it did not start.
+    --reap-legacy)
+      MODE=reap
+      case "${2-}" in
+        '' | -*) ;;
+        *) REAP_MATCH="$2"; shift ;;
+      esac ;;
     # Consuming a missing operand would leave `$#` at 1 and spin the parser, so guard before shifting.
     --etime-seconds)
       [ $# -ge 2 ] || { echo "$1 needs an elapsed-time string" >&2; exit 2; }
@@ -56,7 +66,7 @@ while [ $# -gt 0 ]; do
     --port) PORT="$(number_arg "$1" "${2-}")"; shift ;;
     --interval) INTERVAL="$(number_arg "$1" "${2-}")"; shift ;;
     --timeout) TIMEOUT="$(number_arg "$1" "${2-}")"; shift ;;
-    -h|--help) sed -n '4,17p' "${BASH_SOURCE[0]}"; exit 0 ;;
+    -h|--help) sed -n '4,18p' "${BASH_SOURCE[0]}"; exit 0 ;;
     *) echo "unknown option: $1" >&2; exit 2 ;;
   esac
   shift
@@ -309,9 +319,28 @@ watcher_alive() {
   ps -o command= -p "$pid" 2>/dev/null | grep -q 'diagnose\.sh .*--watch'
 }
 
+# A per-port watcher from an older checkout duplicates every capture. The pattern cannot match
+# the singleton, whose command line never carries --port.
+LEGACY_PATTERN='diagnose\.sh --watch --port'
+legacy_watcher() { pgrep -f "$LEGACY_PATTERN" >/dev/null 2>&1; }
+reap_legacy() {
+  local pattern="$LEGACY_PATTERN" legacy
+  [ -n "${1:-}" ] && pattern="$pattern $1"
+  for legacy in $(pgrep -f "$pattern" 2>/dev/null); do
+    kill "$legacy" 2>/dev/null || true
+  done
+  return 0
+}
+
 print_status() {
   if ! watcher_alive; then
-    echo "unwatched — run bash tools/storybook-react/diagnose.sh --ensure"
+    # Starting the singleton while a legacy watcher runs would leave two on :9009, so the
+    # advice is to replace it rather than to add one.
+    if legacy_watcher; then
+      echo "unwatched — a per-port watcher from an older checkout is running; run bash tools/storybook-react/diagnose.sh --restart"
+    else
+      echo "unwatched — run bash tools/storybook-react/diagnose.sh --ensure"
+    fi
     return 0
   fi
   printf 'port\tpid\tkind\tworktree\tstate\tage\tlast-capture\n'
@@ -337,6 +366,9 @@ ensure() {
   rmdir "$LOCK" 2>/dev/null || true
   mkdir "$LOCK" 2>/dev/null || { echo "another --ensure is starting the watcher."; return 0; }
   trap 'rmdir "$LOCK" 2>/dev/null || true' EXIT
+  # Before the singleton exists, so an older checkout's per-port watcher cannot end up
+  # polling and capturing the same port alongside it.
+  reap_legacy
   if watcher_alive; then
     echo "dev-server watcher already running (pid $(cat "$PIDFILE"))."; return 0
   fi
@@ -346,17 +378,14 @@ ensure() {
 }
 
 stop_watcher() {
-  local pid legacy
+  local pid
   # Only a pid that still looks like a watcher is signalled; a recycled one is simply a stale file.
   if watcher_alive; then
     pid=$(cat "$PIDFILE" 2>/dev/null)
     kill "$pid" 2>/dev/null
   fi
   rm -f "$PIDFILE"
-  # Per-port watchers would keep duplicating captures.
-  pgrep -f 'diagnose\.sh --watch --port' 2>/dev/null | while read -r legacy; do
-    kill "$legacy" 2>/dev/null
-  done
+  reap_legacy
 }
 
 case "$MODE" in
@@ -364,6 +393,7 @@ case "$MODE" in
   etime) etime_seconds "$ETIME" ;;
   status) print_status ;;
   once) cycle ;;
+  reap) reap_legacy "$REAP_MATCH" ;;
   ensure) ensure ;;
   restart) stop_watcher; sleep 1; ensure ;;
   capture)

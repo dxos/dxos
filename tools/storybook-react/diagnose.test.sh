@@ -16,6 +16,7 @@ export DX_WATCH_DIR="$sandbox/watch"
 cleanup() {
   [ -n "${server:-}" ] && kill "$server" 2>/dev/null
   [ -n "${watcher:-}" ] && kill "$watcher" 2>/dev/null
+  [ -n "${legacy:-}" ] && kill "$legacy" 2>/dev/null
   rm -rf "$sandbox"
   return 0
 }
@@ -88,6 +89,33 @@ echo '=== 6. etime is converted to seconds in every ps format'
 check '6a mm:ss' '312' "$(bash "$script" --etime-seconds 05:12)"
 check '6b hh:mm:ss' '3723' "$(bash "$script" --etime-seconds 1:02:03)"
 check '6c dd-hh:mm:ss' '183845' "$(bash "$script" --etime-seconds 2-03:04:05)"
+
+echo '=== 7. a legacy per-port watcher is named by --status and reaped'
+# A fake this test owns, on a port nothing uses: --reap-legacy is given that port so the run
+# can never signal a real watcher belonging to another session.
+exec -a "diagnose.sh --watch --port 9999" sleep 300 &
+legacy=$!
+until ps -o command= -p "$legacy" 2>/dev/null | grep -q -- '--watch --port 9999'; do sleep 0.2; done
+check '7a --status names --restart' '1' "$(bash "$script" --status | grep -c -- '--restart')"
+bash "$script" --reap-legacy 9999 > /dev/null
+# A signalled child stays a pid until it is reaped, so "gone" means absent or a zombie.
+gone() {
+  case "$(ps -o state= -p "$1" 2>/dev/null | tr -d ' ')" in
+    '' | Z*) printf 'gone' ;;
+    *) printf 'alive' ;;
+  esac
+}
+for _attempt in 1 2 3 4 5 6 7 8 9 10; do
+  [ "$(gone "$legacy")" = gone ] && break
+  sleep 0.2
+done
+check '7b the fake was reaped' 'gone' "$(gone "$legacy")"
+# Only reap a fake that actually died; waiting on a survivor would hang the suite for its
+# full sleep. A survivor stays in $legacy so the EXIT trap still kills it.
+if [ "$(gone "$legacy")" = gone ]; then
+  wait "$legacy" 2>/dev/null
+  legacy=''
+fi
 
 printf '\n%s passed, %s failed\n' "$pass" "$fail"
 [ "$fail" -eq 0 ]
