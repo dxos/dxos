@@ -102,7 +102,7 @@ catalog:
   '@effect/sql-sqlite-bun': 4.0.0-rc.108
   '@effect/sql-sqlite-node': 4.0.0-rc.108
   '@effect/sql-sqlite-wasm': 4.0.0-rc.108
-  '@effect/tsgo': ^0.36.5
+  '@effect/tsgo': ^0.41.0
   '@effect/vitest': 4.0.0-rc.108
   '@effect/wa-sqlite': ^0.1.2
   '@elgato/streamdeck': ^2.1.2
