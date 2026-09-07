@@ -46,7 +46,7 @@ export type ThemePluginOptions = {
 export const ThemePlugin = (options: ThemePluginOptions): Plugin[] => {
   // Prefer source CSS if available (monorepo dev), fall back to dist for installed package.
   const srcThemePath = resolve(import.meta.dirname, ROOT, 'src/main.css');
-  const distThemePath = resolve(import.meta.dirname, '../main.css');
+  const distThemePath = resolve(import.meta.dirname, 'main.css');
   const isMonorepo = existsSync(srcThemePath);
 
   // Static assets shipped via "files": ["src"] in package.json.
