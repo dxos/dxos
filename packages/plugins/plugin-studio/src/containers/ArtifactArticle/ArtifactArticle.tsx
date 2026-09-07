@@ -17,7 +17,7 @@ import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { Button, Flex, Icon, IconButton, Input, Panel, Select, useTranslation } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
 import { Form } from '@dxos/react-ui-form';
-import { Menu, MenuBuilder, graphActions, isToolbarAction, useMenuBuilder } from '@dxos/react-ui-menu';
+import { ActionToolbar, MenuBuilder, graphActions, isToolbarAction, useMenuBuilder } from '@dxos/react-ui-menu';
 
 import { VariantGallery } from '#components';
 import { meta } from '#meta';
@@ -370,13 +370,10 @@ export const ArtifactArticle = ({ role, subject: artifact, attendableId }: Artif
 
   return (
     <Panel.Root role={role}>
-      <Menu.Root {...menuActions} onAction={runAction} attendableId={attendableId}>
-        <Panel.Toolbar asChild>
-          <Menu.Toolbar classNames='dx-document'>
-            <Menu.Items />
-          </Menu.Toolbar>
-        </Panel.Toolbar>
-      </Menu.Root>
+      <Panel.Toolbar asChild>
+        <ActionToolbar {...menuActions} onAction={runAction} attendableId={attendableId} classNames='dx-document' />
+      </Panel.Toolbar>
+
       <Panel.Content classNames='grid grid-rows-[1fr_1fr] gap-2'>
         <div className='grid grid-rows-[auto_1fr] dx-document overflow-hidden'>
           {/* A produced (frozen) variant can be designated the artifact's cover default. */}

@@ -12,7 +12,7 @@ import { type Collection, Obj } from '@dxos/echo';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { Panel, Toolbar, useTranslation } from '@dxos/react-ui';
 import { type DndContainerHandler } from '@dxos/react-ui-dnd';
-import { Menu, createMenuAction } from '@dxos/react-ui-menu';
+import { ActionMenu, createMenuAction } from '@dxos/react-ui-menu';
 import { Mosaic } from '@dxos/react-ui-mosaic';
 import { arrayMove, isNonNullable } from '@dxos/util';
 
@@ -188,18 +188,15 @@ export const StackArticle = ({ attendableId, subject: collection }: StackArticle
             onClick={handleAddSection}
           />
           <Toolbar.Separator />
-          <Menu.Root>
-            <Menu.Trigger asChild>
-              <Toolbar.IconButton
-                square
-                icon='ph--dots-three-vertical--regular'
-                iconOnly
-                label={t('options.label')}
-                data-testid='stack.options'
-              />
-            </Menu.Trigger>
-            <Menu.Content items={optionsMenu} />
-          </Menu.Root>
+          <ActionMenu actions={optionsMenu}>
+            <Toolbar.IconButton
+              square
+              icon='ph--dots-three-vertical--regular'
+              iconOnly
+              label={t('options.label')}
+              data-testid='stack.options'
+            />
+          </ActionMenu>
         </Toolbar.Root>
       </Panel.Toolbar>
       <Panel.Content>

@@ -1,0 +1,38 @@
+/**
+ * Toast. The machine writes each toast's place as custom properties (`--x`, `--y`, `--scale`,
+ * `--opacity`, `--height`, `--z-index`) and the region's offsets inline; this transitions what it
+ * drives, so a toast slides and fades in and out instead of jumping.
+ */
+
+@layer dx-components {
+  :root {
+    --dx-toast-offset-end: 1rem;
+  }
+
+  @media (width >= theme(--breakpoint-md)) {
+    :root {
+      --dx-toast-offset-end: 4rem;
+    }
+  }
+
+  [data-scope='toast'][data-part='root'] {
+    translate: var(--x) var(--y);
+    scale: var(--scale, 1);
+    z-index: var(--z-index);
+    height: var(--height);
+    opacity: var(--opacity);
+    will-change: translate, opacity, scale;
+    transition:
+      translate 300ms cubic-bezier(0.16, 1, 0.3, 1),
+      scale 300ms cubic-bezier(0.16, 1, 0.3, 1),
+      opacity 300ms cubic-bezier(0.16, 1, 0.3, 1),
+      height 300ms cubic-bezier(0.16, 1, 0.3, 1);
+
+    &[data-state='closed'] {
+      transition:
+        translate 150ms ease-in,
+        scale 150ms ease-in,
+        opacity 100ms ease-in;
+    }
+  }
+}

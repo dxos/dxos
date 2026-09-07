@@ -13,7 +13,7 @@ import * as Role from '@dxos/app-framework/Role';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Surface } from '@dxos/app-framework/ui';
 import * as AppSpace from '@dxos/app-toolkit/AppSpace';
-import { Invitation, InvitationEncoder } from '@dxos/client/invitations';
+import { Invitation_AuthMethod, Invitation_State, InvitationEncoder } from '@dxos/client/invitations';
 import { persistentClientServices } from '@dxos/client/testing';
 import { Config } from '@dxos/config';
 import { Database, Feed, Tag } from '@dxos/echo';
@@ -103,14 +103,14 @@ const HostModule = () => {
   const onShare = useCallback(() => {
     // Persistent + shared-secret device invitation: resumable while the code is copied. Note: only
     // usable browser-to-browser / from Composer — the bun CLI cannot complete a p2p device join.
-    const observable = client.halo.share({ authMethod: Invitation.AuthMethod.SHARED_SECRET, persistent: true });
+    const observable = client.halo.share({ authMethod: Invitation_AuthMethod.SHARED_SECRET, persistent: true });
     observable.subscribe(
       (inv) => {
-        if (inv.state >= Invitation.State.CONNECTING) {
+        if (inv.state >= Invitation_State.CONNECTING) {
           setInvitation({
             code: InvitationEncoder.encode(inv),
             secret: inv.authCode,
-            state: Invitation.State[inv.state] ?? String(inv.state),
+            state: Invitation_State[inv.state] ?? String(inv.state),
           });
         }
       },

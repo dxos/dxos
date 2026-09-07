@@ -57,14 +57,14 @@
     "@dxos/keys": "workspace:*",
     "@dxos/lit-grid": "workspace:*",
     "@dxos/log": "workspace:*",
+    "@dxos/react-hooks": "workspace:*",
     "@dxos/react-ui-attention": "workspace:*",
     "@dxos/react-ui-form": "workspace:*",
     "@dxos/react-ui-grid": "workspace:*",
     "@dxos/react-ui-menu": "workspace:*",
     "@dxos/schema": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@effect/atom-react": "catalog:",
-    "@radix-ui/react-context": "catalog:"
+    "@effect/atom-react": "catalog:"
   },
   "devDependencies": {
     "@dxos/echo-react": "workspace:*",

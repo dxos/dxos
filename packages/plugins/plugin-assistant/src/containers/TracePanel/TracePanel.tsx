@@ -23,7 +23,7 @@ import { type Space } from '@dxos/react-client/echo';
 import { Input, Panel, ScrollContainer, ThemedClassName, composable, composableProps } from '@dxos/react-ui';
 import { useAttentionAttributes } from '@dxos/react-ui-attention';
 import { type Commit, Timeline } from '@dxos/react-ui-components';
-import { Menu } from '@dxos/react-ui-menu';
+import { ActionToolbar } from '@dxos/react-ui-menu';
 import { Syntax } from '@dxos/react-ui-syntax-highlighter';
 import { mx } from '@dxos/ui-theme';
 
@@ -122,14 +122,9 @@ export const TracePanel = composable<HTMLDivElement, TracePanelProps>(
 
     return (
       <Panel.Root {...composableProps(props, { ...attentionAttrs, classNames: 'h-full' })} ref={forwardedRef}>
-        <Menu.Root {...menu} alwaysActive>
-          <Panel.Toolbar asChild>
-            <Menu.Toolbar classNames='justify-between'>
-              <span />
-              <Menu.Items />
-            </Menu.Toolbar>
-          </Panel.Toolbar>
-        </Menu.Root>
+        <Panel.Toolbar asChild>
+          <ActionToolbar {...menu} alwaysActive classNames='justify-end' />
+        </Panel.Toolbar>
 
         <Panel.Content
           classNames={mx(

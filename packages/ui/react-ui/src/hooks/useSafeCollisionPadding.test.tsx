@@ -6,7 +6,7 @@ import { renderHook } from '@testing-library/react';
 import React, { type PropsWithChildren } from 'react';
 import { describe, expect, test } from 'vitest';
 
-import { ThemeContext, type ThemeContextValue } from '../primitives';
+import { ThemeContext, type ThemeContextValue } from '../providers';
 import { defaultTx } from '../theme';
 import { initialSafeArea } from './useSafeArea';
 import { useSafeCollisionPadding } from './useSafeCollisionPadding';

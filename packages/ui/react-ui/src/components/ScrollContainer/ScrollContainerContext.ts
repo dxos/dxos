@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { createContext } from '@radix-ui/react-context';
+import { createContext } from '@dxos/react-hooks';
 
 import { type ScrollController } from './ScrollContainer';
 

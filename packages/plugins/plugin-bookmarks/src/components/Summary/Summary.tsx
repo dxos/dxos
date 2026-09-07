@@ -2,12 +2,11 @@
 // Copyright 2026 DXOS.org
 //
 
-import { composeRefs } from '@radix-ui/react-compose-refs';
 import React from 'react';
 
 import { type Ref } from '@dxos/echo';
 import { Doc } from '@dxos/echo-doc';
-import { composable, composableProps, useThemeContext } from '@dxos/react-ui';
+import { composable, composableProps, composeRefs, useThemeContext } from '@dxos/react-ui';
 import { useTextEditor } from '@dxos/react-ui-editor';
 import { type Text } from '@dxos/schema';
 import {

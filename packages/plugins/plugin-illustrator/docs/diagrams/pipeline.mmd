@@ -1,0 +1,50 @@
+%% @dxos/pipeline — generic back-pressured streaming pipeline (source → stages → sink).
+flowchart TB
+  subgraph Core [Pipeline core]
+    Source[Stream source]
+    StageMap[Stage.map]
+    StageWindow[Stage.window]
+    StageBuffer[Stage buffer]
+    PipelineRun[Pipeline.run]
+    Sink[Sink]
+    AbortWith[Pipeline.abortWith]
+  end
+  subgraph Prog [Progress]
+    TrackStage[Stage.track]
+    ProgressSvc[Progress service]
+    Reporter[ProgressReporter]
+  end
+  subgraph Testing [testing subpath]
+    Instrument[instrument]
+    Metrics[Metrics service]
+    Benchmark[runBenchmark]
+    CaptureSink[captureSink]
+  end
+  Source --> StageMap
+  StageMap --> StageWindow
+  StageWindow -->|overflow| StageBuffer
+  StageBuffer --> TrackStage
+  TrackStage --> PipelineRun
+  PipelineRun -->|runForEach| Sink
+  AbortWith -->|interrupt| PipelineRun
+  TrackStage -->|advance / done / fail| ProgressSvc
+  ProgressSvc -->|subscribe| Reporter
+  StageMap -->|wrapped by| Instrument
+  Instrument -->|in / out / ms| Metrics
+  Benchmark -->|per variant| PipelineRun
+  Metrics -->|snapshot| Benchmark
+  CaptureSink -->|test impl| Sink
+  %% ref Source packages/core/compute/pipeline/src/Pipeline.ts
+  %% ref StageMap packages/core/compute/pipeline/src/Stage.ts
+  %% ref StageWindow packages/core/compute/pipeline/src/Stage.ts
+  %% ref StageBuffer packages/core/compute/pipeline/src/Stage.ts
+  %% ref PipelineRun packages/core/compute/pipeline/src/Pipeline.ts
+  %% ref Sink packages/core/compute/pipeline/src/Pipeline.ts
+  %% ref AbortWith packages/core/compute/pipeline/src/Pipeline.ts
+  %% ref TrackStage packages/core/compute/pipeline/src/Stage.ts
+  %% ref ProgressSvc packages/core/compute/pipeline/src/Progress.ts
+  %% ref Reporter packages/core/compute/pipeline/src/ProgressReporter.ts
+  %% ref Instrument packages/core/compute/pipeline/src/testing/instrument.ts
+  %% ref Metrics packages/core/compute/pipeline/src/testing/metrics.ts
+  %% ref Benchmark packages/core/compute/pipeline/src/testing/benchmark.ts
+  %% ref CaptureSink packages/core/compute/pipeline/src/testing/capture.ts

@@ -7,7 +7,7 @@ import * as Atom from 'effect/unstable/reactivity/Atom';
 import React, { type ReactNode, useMemo } from 'react';
 
 import { Column, Icon, IconBlock, IconButton, Panel, ScrollArea, type ThemedClassName, Tooltip } from '@dxos/react-ui';
-import { type ActionGraphProps, Menu, useMenuBuilder } from '@dxos/react-ui-menu';
+import { type ActionGraphProps, ActionMenu, useMenuBuilder } from '@dxos/react-ui-menu';
 import { getStyles, mx } from '@dxos/ui-theme';
 
 import { Empty } from '../Empty';
@@ -180,19 +180,16 @@ const MasterDetailRow = <T extends MasterDetailRecord>({
         </Tooltip.Provider>
       )}
       {getMenu && (
-        <Menu.Root {...menu}>
-          <Menu.Trigger asChild>
-            <IconButton
-              iconOnly
-              variant='ghost'
-              density='sm'
-              icon='ph--dots-three-vertical--regular'
-              label='Actions'
-              onClick={(event) => event.stopPropagation()}
-            />
-          </Menu.Trigger>
-          <Menu.Content />
-        </Menu.Root>
+        <ActionMenu {...menu}>
+          <IconButton
+            iconOnly
+            variant='ghost'
+            density='sm'
+            icon='ph--dots-three-vertical--regular'
+            label='Actions'
+            onClick={(event) => event.stopPropagation()}
+          />
+        </ActionMenu>
       )}
     </OrderedList.Item>
   );

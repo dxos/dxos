@@ -2,8 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Primitive } from '@radix-ui/react-primitive';
-import { Slot } from '@radix-ui/react-slot';
+import { ark } from '@ark-ui/react/factory';
 import React, { type ComponentPropsWithoutRef, type ComponentPropsWithRef, forwardRef } from 'react';
 
 import { useThemeContext } from '../../hooks';
@@ -11,7 +10,7 @@ import { type ThemedClassName } from '../../util';
 import { Icon } from '../Icon';
 import { Link, type LinkProps } from '../Link';
 
-type BreadcrumbRootProps = ThemedClassName<ComponentPropsWithRef<typeof Primitive.div>> & {
+type BreadcrumbRootProps = ThemedClassName<ComponentPropsWithRef<typeof ark.div>> & {
   'aria-label': string;
   'asChild'?: boolean;
 };
@@ -19,32 +18,53 @@ type BreadcrumbRootProps = ThemedClassName<ComponentPropsWithRef<typeof Primitiv
 const BreadcrumbRoot = forwardRef<HTMLDivElement, BreadcrumbRootProps>(
   ({ asChild, classNames, ...props }, forwardedRef) => {
     const { tx } = useThemeContext();
-    const Comp = asChild ? Slot : Primitive.div;
-    return <Comp role='navigation' {...props} className={tx('breadcrumb.root', {}, classNames)} ref={forwardedRef} />;
+    return (
+      <ark.div
+        asChild={asChild}
+        role='navigation'
+        {...props}
+        className={tx('breadcrumb.root', {}, classNames)}
+        ref={forwardedRef}
+      />
+    );
   },
 );
 
 BreadcrumbRoot.displayName = 'Breadcrumb.Root';
 
-type BreadcrumbListProps = ThemedClassName<ComponentPropsWithRef<typeof Primitive.ol>> & { asChild?: boolean };
+type BreadcrumbListProps = ThemedClassName<ComponentPropsWithRef<typeof ark.ol>> & { asChild?: boolean };
 
 const BreadcrumbList = forwardRef<HTMLOListElement, BreadcrumbListProps>(
   ({ asChild, classNames, ...props }, forwardedRef) => {
     const { tx } = useThemeContext();
-    const Comp = asChild ? Slot : Primitive.ol;
-    return <Comp role='list' {...props} className={tx('breadcrumb.list', {}, classNames)} ref={forwardedRef} />;
+    return (
+      <ark.ol
+        asChild={asChild}
+        role='list'
+        {...props}
+        className={tx('breadcrumb.list', {}, classNames)}
+        ref={forwardedRef}
+      />
+    );
   },
 );
 
 BreadcrumbList.displayName = 'Breadcrumb.List';
 
-type BreadcrumbListItemProps = ThemedClassName<ComponentPropsWithRef<typeof Primitive.li>> & { asChild?: boolean };
+type BreadcrumbListItemProps = ThemedClassName<ComponentPropsWithRef<typeof ark.li>> & { asChild?: boolean };
 
 const BreadcrumbListItem = forwardRef<HTMLLIElement, BreadcrumbListItemProps>(
   ({ asChild, classNames, ...props }, forwardedRef) => {
     const { tx } = useThemeContext();
-    const Comp = asChild ? Slot : Primitive.li;
-    return <Comp role='listitem' {...props} className={tx('breadcrumb.listItem', {}, classNames)} ref={forwardedRef} />;
+    return (
+      <ark.li
+        asChild={asChild}
+        role='listitem'
+        {...props}
+        className={tx('breadcrumb.listItem', {}, classNames)}
+        ref={forwardedRef}
+      />
+    );
   },
 );
 
@@ -52,9 +72,8 @@ BreadcrumbListItem.displayName = 'Breadcrumb.ListItem';
 
 type BreadcrumbLinkProps = LinkProps;
 
-const BreadcrumbLink = forwardRef<HTMLAnchorElement, BreadcrumbLinkProps>(({ asChild, ...props }, forwardedRef) => {
-  const Comp = asChild ? Slot : Link;
-  return <Comp {...props} ref={forwardedRef} />;
+const BreadcrumbLink = forwardRef<HTMLAnchorElement, BreadcrumbLinkProps>((props, forwardedRef) => {
+  return <Link {...props} ref={forwardedRef} />;
 });
 
 BreadcrumbLink.displayName = 'Breadcrumb.Link';
@@ -64,28 +83,28 @@ type BreadcrumbCurrentProps = ThemedClassName<ComponentPropsWithRef<'h1'>> & { a
 const BreadcrumbCurrent = forwardRef<HTMLHeadingElement, BreadcrumbCurrentProps>(
   ({ asChild, classNames, ...props }, forwardedRef) => {
     const { tx } = useThemeContext();
-    const Comp = asChild ? Slot : 'h1';
     return (
-      <Comp {...props} aria-current='page' className={tx('breadcrumb.current', {}, classNames)} ref={forwardedRef} />
+      <ark.h1
+        asChild={asChild}
+        {...props}
+        aria-current='page'
+        className={tx('breadcrumb.current', {}, classNames)}
+        ref={forwardedRef}
+      />
     );
   },
 );
 
 BreadcrumbCurrent.displayName = 'Breadcrumb.Current';
 
-type BreadcrumbSeparatorProps = ThemedClassName<ComponentPropsWithoutRef<typeof Primitive.span>>;
+type BreadcrumbSeparatorProps = ThemedClassName<ComponentPropsWithoutRef<typeof ark.span>>;
 
 function BreadcrumbSeparator({ classNames, children, ...props }: BreadcrumbSeparatorProps) {
   const { tx } = useThemeContext();
   return (
-    <Primitive.span
-      role='separator'
-      aria-hidden='true'
-      {...props}
-      className={tx('breadcrumb.separator', {}, classNames)}
-    >
+    <ark.span role='separator' aria-hidden='true' {...props} className={tx('breadcrumb.separator', {}, classNames)}>
       {children ?? <Icon icon='ph--caret-double-right--regular' />}
-    </Primitive.span>
+    </ark.span>
   );
 }
 

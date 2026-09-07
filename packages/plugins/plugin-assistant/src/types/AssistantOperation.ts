@@ -141,7 +141,10 @@ export const RunPromptInChat = Operation.make({
   },
   services: [Capability.Service, Database.Service, AgentService],
   input: Schema.Struct({
-    chat: Type.getSchema(Chat.Chat),
+    chat: Schema.optional(Type.getSchema(Chat.Chat)),
+    // The object whose companion chat should run the prompt — the way to name a companion chat that
+    // has not been persisted yet, which a caller outside the page (an agent) cannot hold.
+    companionTo: Schema.optional(Obj.Unknown),
     prompt: Schema.String,
   }),
   output: Schema.Void,

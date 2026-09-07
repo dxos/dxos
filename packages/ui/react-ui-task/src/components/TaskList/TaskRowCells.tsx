@@ -5,7 +5,7 @@
 import React from 'react';
 
 import { Icon, IconBlock, IconButton, Input, Tag, useTranslation } from '@dxos/react-ui';
-import { Menu, createMenuAction } from '@dxos/react-ui-menu';
+import { ActionMenu, createMenuAction } from '@dxos/react-ui-menu';
 import { Task } from '@dxos/types';
 
 import { translationKey } from '#translations';
@@ -59,11 +59,23 @@ export const TaskStatusControl = ({ task, onTaskUpdate, active, classNames }: Ta
   }
 
   return (
-    <Menu.Root>
-      <Menu.Trigger asChild>
-        {/* The block, not the button, is the trigger: the same `IconBlock > IconButton` shape as
-            the priority cell, so every control in the row is one rail-item square. */}
-        <IconBlock square classNames={classNames}>
+    <>
+      {/* Sourced from the schema's own option table, so the picker offers exactly what the field
+          accepts and carries the same hue the form's select paints it with. */}
+      <IconBlock square classNames={classNames}>
+        {/* The button is the trigger, not the block: the button stops the click so the row is not selected
+            too, and a trigger above it would never receive it. The block still gives every control in
+            the row one rail-item square. */}
+        <ActionMenu
+          actions={Task.StatusOptions.map(({ id }) =>
+            createMenuAction(`status-${id}`, () => onTaskUpdate(task, { status: id }), {
+              label: t(`status-${id}.label`),
+              icon: STATUS_ICONS[id].icon,
+              iconClassNames: statusTextStyle(id),
+              checked: status === id,
+            }),
+          )}
+        >
           <IconButton
             data-testid='taskList.item.status'
             // The hue goes on the icon, not the button: the row dims icons through `--icons-color`,
@@ -77,21 +89,9 @@ export const TaskStatusControl = ({ task, onTaskUpdate, active, classNames }: Ta
             // The row is the selection target; opening the menu must not also select it.
             onClick={(event) => event.stopPropagation()}
           />
-        </IconBlock>
-      </Menu.Trigger>
-      {/* Sourced from the schema's own option table, so the picker offers exactly what the field
-          accepts and carries the same hue the form's select paints it with. */}
-      <Menu.Content
-        items={Task.StatusOptions.map(({ id }) =>
-          createMenuAction(`status-${id}`, () => onTaskUpdate(task, { status: id }), {
-            label: t(`status-${id}.label`),
-            icon: STATUS_ICONS[id].icon,
-            iconClassNames: statusTextStyle(id),
-            checked: status === id,
-          }),
-        )}
-      />
-    </Menu.Root>
+        </ActionMenu>
+      </IconBlock>
+    </>
   );
 };
 

@@ -13,7 +13,7 @@ import { Masonry } from '@dxos/react-ui-masonry';
 import {
   type ActionExecutor,
   type ActionGraphProps,
-  Menu,
+  ActionToolbar,
   MenuBuilder,
   graphActions,
   isToolbarAction,
@@ -53,12 +53,8 @@ export const RecordArticle = ({ role, subject, attendableId }: AppSurface.Object
 
   return (
     <Panel.Root role={role}>
-      <Panel.Toolbar>
-        <Menu.Root {...actions} attendableId={attendableId} onAction={onAction}>
-          <Menu.Toolbar>
-            <Menu.Items />
-          </Menu.Toolbar>
-        </Menu.Root>
+      <Panel.Toolbar asChild>
+        <ActionToolbar {...actions} attendableId={attendableId} onAction={onAction} />
       </Panel.Toolbar>
       <Panel.Content asChild>
         <ScrollArea.Root orientation='vertical'>

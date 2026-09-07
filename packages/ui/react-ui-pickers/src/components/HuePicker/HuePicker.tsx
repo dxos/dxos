@@ -11,6 +11,8 @@ import { hues } from '@dxos/ui-types';
 import { PickerButton, type PickerButtonProps } from '../PickerButton';
 
 export type HuePickerProps = {
+  /** Replaces the generic "select hue" label (tooltip and screen-reader text). */
+  label?: string;
   disabled?: boolean;
   defaultValue?: string;
   value?: string;
@@ -18,13 +20,13 @@ export type HuePickerProps = {
   onReset?: ButtonProps['onClick'];
 } & Pick<PickerButtonProps, 'disabled' | 'defaultValue' | 'value' | 'onChange' | 'onReset' | 'rootVariant'>;
 
-export const HuePicker = (props: ThemedClassName<HuePickerProps>) => {
+export const HuePicker = ({ label, ...props }: ThemedClassName<HuePickerProps>) => {
   const { t } = useTranslation(osTranslations);
 
   return (
     <PickerButton
       Component={HuePreview}
-      label={t('select-hue.label')}
+      label={label ?? t('select-hue.label')}
       icon='ph--palette--regular'
       values={hues}
       {...props}

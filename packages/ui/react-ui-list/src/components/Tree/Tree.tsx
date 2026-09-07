@@ -760,11 +760,13 @@ const TreeBranchContent: FC<TreeNodeRowProps> = ({ node }) => {
   return (
     <TreeView.BranchContent
       ref={handleRef}
-      // `[&[hidden]]:hidden` restores the UA collapse that the `grid` display would defeat.
+      // `[&[hidden]]:hidden` restores the UA collapse that the `grid` display would defeat, and
+      // `empty:hidden` keeps a childless branch from occupying a row: even at zero height it would
+      // draw the tree's row gap around it, so toggling an empty branch grew the tree by the gap.
       className={mx(
         // Same `gap-0.5` as the tree: this is a separate grid, so the tree's own gap does not reach
         // the rows inside an expanded branch.
-        'col-[tree-row] grid grid-cols-subgrid gap-0.5 [&[hidden]]:hidden',
+        'col-[tree-row] grid grid-cols-subgrid gap-0.5 [&[hidden]]:hidden empty:hidden',
         'overflow-y-clip [interpolate-size:allow-keywords]',
         closing ? 'animate-tree-conceal' : 'data-[animate]:data-[state=open]:animate-tree-disclose',
       )}
@@ -1061,7 +1063,15 @@ const TreeNodeRowContent: FC<TreeNodeRowProps> = memo(({ node }) => {
             <TreeView.BranchTrigger asChild>
               {/* zag stamps data-state=open on the trigger, which the ghost button styles as an
                   open menu trigger (bg-input-bg) — the chevron must stay transparent. */}
-              <TreeItemToggle isBranch open={open} density={density} classNames='data-[state=open]:bg-transparent' />
+              <TreeItemToggle
+                isBranch
+                open={open}
+                density={density}
+                // Nothing to disclose: a branch the model knows to be childless keeps its chevron for
+                // row geometry but offers no toggle.
+                disabled={(node.childrenCount ?? node.children?.length ?? 0) === 0}
+                classNames='data-[state=open]:bg-transparent'
+              />
             </TreeView.BranchTrigger>
           ) : (
             <TreeItemToggle isBranch={false} density={density} />
