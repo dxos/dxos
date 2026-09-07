@@ -568,23 +568,90 @@ describe('EntityMetaIndex', () => {
       const all = yield* index.queryAll({ spaceIds: [], queueIds: [queueId] });
       expect(all).toHaveLength(5);
 
-      const afterCursor = yield* index.queryAll({ spaceIds: [], queueIds: [queueId], window: { after: 1 } });
+      const afterCursor = yield* index.queryAll({
+        spaceIds: [],
+        queueIds: [queueId],
+        window: { kind: 'cursor', after: 1 },
+      });
       expect(afterCursor.map((row) => row.queuePosition)).toEqual([2, 3]);
 
-      const page = yield* index.queryAll({ spaceIds: [], queueIds: [queueId], window: { after: 0, limit: 2 } });
+      const page = yield* index.queryAll({
+        spaceIds: [],
+        queueIds: [queueId],
+        window: { kind: 'cursor', after: 0, limit: 2 },
+      });
       expect(page.map((row) => row.queuePosition)).toEqual([1, 2]);
 
       const typed = yield* index.queryTypes({
         spaceIds: [],
         queueIds: [queueId],
         typeDxns: [TYPE_PERSON],
-        window: { after: 2 },
+        window: { kind: 'cursor', after: 2 },
       });
       expect(typed.map((row) => row.queuePosition)).toEqual([3]);
 
       // A cursor read never sees the unpositioned block, which has no place in the ordering yet.
-      const fromStart = yield* index.queryAll({ spaceIds: [], queueIds: [queueId], window: { after: -1 } });
+      const fromStart = yield* index.queryAll({
+        spaceIds: [],
+        queueIds: [queueId],
+        window: { kind: 'cursor', after: -1 },
+      });
       expect(fromStart.map((row) => row.queuePosition)).toEqual([0, 1, 2, 3]);
+    }).pipe(Effect.provide(TestLayer)),
+  );
+
+  it.effect('caps a queue read in natural order without a cursor', () =>
+    Effect.gen(function* () {
+      const index = new EntityMetaIndex();
+      yield* index.migrate();
+
+      const spaceId = SpaceId.random();
+      const queueId = EntityId.random();
+      const objectIds = Array.from({ length: 5 }, () => EntityId.random()).sort();
+      const makeItem = (objectId: string, deleted: boolean): IndexerObject => ({
+        spaceId,
+        queueId,
+        queueNamespace: 'data',
+        documentId: null,
+        recordId: null,
+        // Unpositioned, as a locally appended block is: a natural read still has to see it.
+        queuePosition: null,
+        createdAt: null,
+        updatedAt: Date.now(),
+        data: { id: objectId, [ATTR_TYPE]: TYPE_PERSON, [ATTR_DELETED]: deleted },
+      });
+      yield* index.update(objectIds.map((objectId) => makeItem(objectId, false)));
+
+      const oldest = yield* index.queryAll({
+        spaceIds: [],
+        queueIds: [queueId],
+        window: { kind: 'natural', direction: 'asc', limit: 2 },
+      });
+      expect(oldest.map((row) => row.objectId)).toEqual(objectIds.slice(0, 2));
+
+      const newest = yield* index.queryAll({
+        spaceIds: [],
+        queueIds: [queueId],
+        window: { kind: 'natural', direction: 'desc', limit: 2 },
+      });
+      expect(newest.map((row) => row.objectId)).toEqual(objectIds.slice(-2).reverse());
+
+      const typed = yield* index.queryTypes({
+        spaceIds: [],
+        queueIds: [queueId],
+        typeDxns: [TYPE_PERSON],
+        window: { kind: 'natural', direction: 'asc', limit: 3 },
+      });
+      expect(typed.map((row) => row.objectId)).toEqual(objectIds.slice(0, 3));
+
+      // The cap counts only rows the caller keeps, so the deleted head does not eat into it.
+      yield* index.update(objectIds.slice(0, 2).map((objectId) => makeItem(objectId, true)));
+      const live = yield* index.queryAll({
+        spaceIds: [],
+        queueIds: [queueId],
+        window: { kind: 'natural', direction: 'asc', limit: 2, deleted: false },
+      });
+      expect(live.map((row) => row.objectId)).toEqual(objectIds.slice(2, 4));
     }).pipe(Effect.provide(TestLayer)),
   );
 });

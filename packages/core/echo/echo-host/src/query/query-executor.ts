@@ -2180,8 +2180,9 @@ const extractSpaceIdFromQueue = (feedUri: string): SpaceId | undefined => {
 const BEFORE_FIRST_POSITION = -1;
 
 /**
- * The index-level window for a select bounded by a cursor range: the positions strictly between its
- * bounds, in position order, capped at the pushed-down limit.
+ * The index-level window for a select the storage layer can bound itself, so a bounded query costs
+ * what it asks for rather than the whole feed: a cursor range resumes by position, and a
+ * `feedScan` (set by the planner only where it proved the cap sound) reads in natural order.
  *
  * Every cursor range windows the scan, an empty one included — it bounds nothing but still asks for
  * a cursor read, which is over positioned blocks in position order. A reader that paged the
@@ -2194,7 +2195,15 @@ const BEFORE_FIRST_POSITION = -1;
 const extractQueueWindow = (step: QueryPlan.SelectStep): QueueWindow | undefined => {
   const range = step.feedCursorRange;
   if (range === undefined) {
-    return undefined;
+    if (step.feedScan === undefined || step.limit === undefined) {
+      return undefined;
+    }
+    return {
+      kind: 'natural',
+      direction: step.feedScan.direction,
+      limit: step.limit,
+      ...(step.feedScan.deleted !== undefined ? { deleted: step.feedScan.deleted } : {}),
+    };
   }
 
   // Backstop for the planner's check, which is where a cursor over a space's documents is refused.
@@ -2206,6 +2215,7 @@ const extractQueueWindow = (step: QueryPlan.SelectStep): QueueWindow | undefined
   }
 
   return {
+    kind: 'cursor',
     // The empty string is the start sentinel (`Feed.START`), which bounds nothing.
     after: range.begin ? parseCursor(range.begin, Number.MAX_SAFE_INTEGER) : BEFORE_FIRST_POSITION,
     ...(range.end ? { before: parseCursor(range.end, BEFORE_FIRST_POSITION) } : {}),

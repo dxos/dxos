@@ -251,6 +251,45 @@ describe('Feed query pagination', () => {
     }
   });
 
+  // The scan itself is capped for these (see `feedScanForLimit`), so they double as the regression
+  // gate on the pushdown returning the same rows the unpushed plan did.
+  test('natural desc with a limit returns the newest items', async ({ expect }) => {
+    const titles = ['a', 'b', 'c', 'd', 'e'];
+    const { db, feed } = await setupFeedWithTasks(builder, titles);
+
+    const newest = await db
+      .query(Query.select(Filter.everything()).orderBy(Order.natural('desc')).limit(2).from(feed))
+      .run();
+
+    expect(newest.map((obj) => (obj as TestSchema.Task).title)).toEqual(['e', 'd']);
+  });
+
+  test('a limited read still sees a deleted item as absent, and still returns the limit', async ({ expect }) => {
+    const titles = ['a', 'b', 'c', 'd'];
+    const { db, feed } = await setupFeedWithTasks(builder, titles);
+
+    const all = await db.query(Query.select(Filter.everything()).orderBy(Order.natural()).from(feed)).run();
+    await db.deleteFromFeed(feed, [all[0]]);
+    await db.flush();
+
+    const oldest = await db.query(Query.select(Filter.everything()).orderBy(Order.natural()).limit(2).from(feed)).run();
+
+    expect(oldest.map((obj) => (obj as TestSchema.Task).title)).toEqual(['b', 'c']);
+  });
+
+  test('a limited read covers items appended after the last flush', async ({ expect }) => {
+    const { db, feed } = await setupFeedWithTasks(builder, ['a', 'b']);
+    await db.flush();
+    // Unpositioned until a position authority assigns one — a natural read still has to see it.
+    await db.appendToFeed(feed, [Obj.make(TestSchema.Task, { title: 'c' })]);
+
+    const newest = await db
+      .query(Query.select(Filter.everything()).orderBy(Order.natural('desc')).limit(1).from(feed))
+      .run();
+
+    expect(newest.map((obj) => (obj as TestSchema.Task).title)).toEqual(['c']);
+  });
+
   test('feed scope excludes space objects when paginating', async ({ expect }) => {
     const peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Task] });
     const db = await peer.createDatabase();
