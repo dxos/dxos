@@ -12,10 +12,16 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
 import { type SchedulerEnvImpl } from '../../env';
-import { type ReplicantBrain, type ReplicantsSummary, type TestPlan, type TestProps } from '../../plan';
+import {
+  type ReplicantBrain,
+  type ReplicantsSummary,
+  type TestPlan,
+  type TestProps,
+  onCleanupSignal,
+} from '../../plan';
 import { ClientReplicant } from '../../replicants/client-replicant';
 import { Command, canRun, describe, execute, makeCommandArbitrary, mutatesData, simulate } from './commands';
-import { type Model, makeFleetModel } from './model';
+import { type ClientIndex, type Model, makeFleetModel } from './model';
 import {
   type EdgeStressResult,
   type EdgeStressSpec,
@@ -128,12 +134,17 @@ export class EdgeStress implements TestPlan<EdgeStressSpec, EdgeStressResult> {
     trace({ event: 'plan', seed: params.randomSeed, commands: plan.map(describe), plan });
 
     const setupBegin = Date.now();
-    const { replicants, model, identityDids } = await this._setupFleet(env, spec, { edgeUrl, hubUrl }, limits);
+    const { replicants, model, identityDids, deviceDids } = await this._setupFleet(
+      env,
+      spec,
+      { edgeUrl, hubUrl },
+      limits,
+    );
     const setupTimeMs = Date.now() - setupBegin;
     log.info('fleet ready', { setupTimeMs });
     // Same reason as the per-space `spaceId` detail: identities a dead run leaves behind must be
     // recoverable from the trace alone.
-    trace({ event: 'fleet', identityDids });
+    trace({ event: 'fleet', identityDids, deviceDids });
 
     const real: Real = {
       spec,
@@ -150,6 +161,14 @@ export class EdgeStress implements TestPlan<EdgeStressSpec, EdgeStressResult> {
 
     const runBegin = Date.now();
     real.deadline = runBegin + spec.maxRuntimeMs;
+
+    // A CI job timeout kills this process with SIGTERM, which skips every `finally`; without this
+    // the run's spaces and identities stay in a shared environment.
+    const unregisterCleanup = onCleanupSignal(async () => {
+      if (spec.cleanup) {
+        await cleanupRun(model, real);
+      }
+    });
 
     let completed = false;
     try {
@@ -201,6 +220,7 @@ export class EdgeStress implements TestPlan<EdgeStressSpec, EdgeStressResult> {
         }),
       );
       // Runs even when an assertion threw, which is exactly when a shared environment would leak.
+      unregisterCleanup();
       if (spec.cleanup) {
         await cleanupRun(model, real);
       }
@@ -300,7 +320,12 @@ export class EdgeStress implements TestPlan<EdgeStressSpec, EdgeStressResult> {
     spec: EdgeStressSpec,
     urls: { edgeUrl: string; hubUrl: string },
     limits: Model['limits'],
-  ): Promise<{ replicants: ReplicantBrain<ClientReplicant>[]; model: Model; identityDids: string[] }> {
+  ): Promise<{
+    replicants: ReplicantBrain<ClientReplicant>[];
+    model: Model;
+    identityDids: string[];
+    deviceDids: { client: ClientIndex; identityDid: string }[];
+  }> {
     const model = makeFleetModel({ devicesPerIdentity: spec.devicesPerIdentity, limits });
 
     const replicants: ReplicantBrain<ClientReplicant>[] = [];
@@ -311,12 +336,16 @@ export class EdgeStress implements TestPlan<EdgeStressSpec, EdgeStressResult> {
     }
 
     const identityDids: string[] = [];
+    // Which real identity each client ended up on, recorded so the trace shows the topology that
+    // actually formed rather than the one the spec asked for.
+    const deviceDids: { client: ClientIndex; identityDid: string }[] = [];
     for (const [identity, { devices }] of model.identities.entries()) {
       const [owner, ...rest] = devices;
       const { identityDid } = await replicants[owner].brain.createIdentity({
         displayName: `edge-stress-identity-${identity}`,
       });
       identityDids.push(identityDid);
+      deviceDids.push({ client: owner, identityDid });
       // Wherever the hatch is open, because the self-serve cleanup routes 403 an identity with no
       // Hub account. One fixed alias per identity slot — the hatch rebinds, so every run reuses the
       // same rows. On preview the hatch is closed and cleanup falls back to the admin key.
@@ -331,11 +360,20 @@ export class EdgeStress implements TestPlan<EdgeStressSpec, EdgeStressResult> {
       }
       for (const device of rest) {
         const { invitationCode } = await replicants[owner].brain.inviteDevice();
-        await replicants[device].brain.joinAsDevice({ invitationCode });
+        const joined = await replicants[device].brain.joinAsDevice({ invitationCode });
+        // The model treats these clients as one identity — `knownBy`, `onlineMemberDevices` and
+        // every membership precondition depend on it. A device that silently landed on an identity
+        // of its own would make the fleet a different shape than the plan was simulated against,
+        // and the run would fail much later as an unexplained replication gap.
+        invariant(
+          joined.identityDid === identityDid,
+          `device ${device} joined ${joined.identityDid}, expected identity ${identity} (${identityDid})`,
+        );
+        deviceDids.push({ client: device, identityDid: joined.identityDid });
       }
     }
 
-    return { replicants, model, identityDids };
+    return { replicants, model, identityDids, deviceDids };
   }
 
   async analyze(

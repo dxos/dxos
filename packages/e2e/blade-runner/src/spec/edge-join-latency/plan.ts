@@ -9,7 +9,14 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
 import { type SchedulerEnvImpl } from '../../env';
-import { type Platform, type ReplicantBrain, type ReplicantsSummary, type TestPlan, type TestProps } from '../../plan';
+import {
+  type Platform,
+  type ReplicantBrain,
+  type ReplicantsSummary,
+  type TestPlan,
+  type TestProps,
+  onCleanupSignal,
+} from '../../plan';
 import { ClientReplicant, type SpaceDigest } from '../../replicants/client-replicant';
 import { type EdgeTarget, assertCanCleanUp, canonical, isDevLikeTarget, urlsFor } from '../edge-stress';
 
@@ -167,6 +174,14 @@ export class EdgeJoinLatency implements TestPlan<EdgeJoinLatencySpec, EdgeJoinLa
       return replicant;
     };
 
+    // Same reason as the soak plan: SIGTERM skips `finally`, and a killed run would otherwise leave
+    // its space and every identity behind.
+    const unregisterCleanup = onCleanupSignal(async () => {
+      if (spec.cleanup) {
+        await this._cleanup(edgeUrl, spawned, spaceId, identityDids);
+      }
+    });
+
     try {
       const seeder = await spawn('seeder');
       const created = await seeder.brain.createSpace({ label: 'join-latency' });
@@ -251,6 +266,7 @@ export class EdgeJoinLatency implements TestPlan<EdgeJoinLatencySpec, EdgeJoinLa
       const summary = this._summarize(edgeUrl, spec, seedMs, measurements);
       fs.writeFileSync(resultPath, `${JSON.stringify(summary, null, 2)}\n`);
       fs.writeFileSync(path.join(params.outDir, 'summary.md'), renderSummary(summary));
+      unregisterCleanup();
       if (spec.cleanup) {
         await this._cleanup(edgeUrl, spawned, spaceId, identityDids);
       }
