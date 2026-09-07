@@ -21,6 +21,11 @@
             "type": "command",
             "command": "bash \"${CLAUDE_PROJECT_DIR:-$(git rev-parse --show-toplevel 2>/dev/null)}/.claude/hooks/guard-branch.sh\"",
             "statusMessage": "Checking branch/worktree safety"
+          },
+          {
+            "type": "command",
+            "command": "bash \"${CLAUDE_PROJECT_DIR:-$(git rev-parse --show-toplevel 2>/dev/null)}/.claude/hooks/guard-foreground.sh\"",
+            "statusMessage": "Checking for a foreground long-runner"
           }
         ]
       }

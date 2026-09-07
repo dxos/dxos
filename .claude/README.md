@@ -63,17 +63,18 @@ stdout as context the agent reads. Every other event needs
 
 ## C. Control points (ours)
 
-| Control point                                                                                                     | Event                     | Output goes to | State                                     |
-| ----------------------------------------------------------------------------------------------------------------- | ------------------------- | -------------- | ----------------------------------------- |
-| `~/.claude/hooks/session-context.sh`                                                                              | `SessionStart`            | agent          | derived (branch / cwd / verdict)          |
-| `~/.claude/hooks/branch-beacon.sh`                                                                                | `UserPromptSubmit`        | agent          | derived, recomputed each turn             |
-| `~/.claude/hooks/guard-branch.sh`, `deny-git-worktree-add.sh`                                                     | `PreToolUse(Bash)`        | deny           | derived                                   |
-| `~/.claude/hooks/guard-worktree.sh` + [repo copy](./hooks/guard-worktree.sh)                                      | `PreToolUse(Edit\|Write)` | deny           | derived                                   |
-| [`hooks/mode.sh`](./hooks/mode.sh) → [`scripts/mode.sh`](./scripts/mode.sh)   | `UserPromptSubmit`        | agent          | **persisted** `.claude/.mode` + `.claude/.focus` |
-| `dxos` plugin → `hooks/track.sh` ([tools/claude/plugins/dxos](../tools/claude/plugins/dxos))                            | `UserPromptSubmit`        | agent          | persisted, backend-resolved (registry)    |
-| [`AGENTS.md`](../AGENTS.md) (+ `CLAUDE.md` / `GEMINI.md` symlinks), [`CLAUDE.md`](./CLAUDE.md)                    | —                         | agent          | static                                    |
-| `skills/` → `../.agents/skills/` (25)                                                                             | —                         | agent          | on demand                                 |
-| [`agents/`](./agents) (2), [`commands/`](./commands) (2)                                                          | —                         | agent          | on demand                                 |
+| Control point                                                                                  | Event                     | Output goes to | State                                                          |
+| ---------------------------------------------------------------------------------------------- | ------------------------- | -------------- | -------------------------------------------------------------- |
+| `~/.claude/hooks/session-context.sh`                                                           | `SessionStart`            | agent          | derived (branch / cwd / verdict)                               |
+| `~/.claude/hooks/branch-beacon.sh`                                                             | `UserPromptSubmit`        | agent          | derived, recomputed each turn                                  |
+| `~/.claude/hooks/guard-branch.sh`, `deny-git-worktree-add.sh`                                  | `PreToolUse(Bash)`        | deny           | derived                                                        |
+| `~/.claude/hooks/guard-worktree.sh` + [repo copy](./hooks/guard-worktree.sh)                   | `PreToolUse(Edit\|Write)` | deny           | derived                                                        |
+| [`hooks/guard-foreground.sh`](./hooks/guard-foreground.sh)                                     | `PreToolUse(Bash)`        | ask            | derived                                                        |
+| [`hooks/mode.sh`](./hooks/mode.sh) → [`scripts/mode.sh`](./scripts/mode.sh)                    | `UserPromptSubmit`        | agent          | **persisted** `.claude/.mode` + `.phase` + `.focus` + `.debug` |
+| `dxos` plugin → `hooks/track.sh` ([tools/claude/plugins/dxos](../tools/claude/plugins/dxos))   | `UserPromptSubmit`        | agent          | persisted, backend-resolved (registry)                         |
+| [`AGENTS.md`](../AGENTS.md) (+ `CLAUDE.md` / `GEMINI.md` symlinks), [`CLAUDE.md`](./CLAUDE.md) | —                         | agent          | static                                                         |
+| `skills/` → `../.agents/skills/` (25)                                                          | —                         | agent          | on demand                                                      |
+| [`agents/`](./agents) (2), [`commands/`](./commands) (2)                                       | —                         | agent          | on demand                                                      |
 
 The guards exist as **both** a global `~/.claude/` copy and a repo copy. That is
 deliberate, not duplication-by-accident: the harness sometimes instantiates the

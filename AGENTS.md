@@ -67,6 +67,13 @@ a large skill loads mid-session (see `.claude/README.md` §A).
   the pin. While pinned, work on nothing else: no adjacent fixes, no CI or PR
   polling, and an off-task request gets one line naming the conflict plus a
   numbered choice. `/mode terse` or `/mode normal` clears the pin.
+- **Phase is the second axis: `/mode discuss` | `/mode build` | `/mode debug`.**
+  `discuss` (the default) answers every turn with decisions and numbered
+  options and pushes long investigation to background subagents; `build` runs
+  the agreed task to completion; `debug` is `discuss` plus the systematic
+  debugging discipline (reproduce, one hypothesis, instrument, root cause before
+  any fix). `/mode focus` also enters `build`. The per-turn block adds a
+  `SERVERS:` table from the dev-server watcher and a three-line `CHECKLIST`.
 - These govern form only. They never override correctness, required safety
   steps, showing test/command output, or reporting a failure honestly.
 
@@ -160,10 +167,10 @@ Tasks run through `moon` (`moon run <package>:<task>`). See a package's
 - Format: `pnpm format` (oxfmt — CI checks `oxfmt --check`, not prettier)
 - Unused deps & dead files: `pnpm knip` (root deps are excluded — see `REPOSITORY_GUIDE.md`)
 - Storybook: `moon run storybook-react:serve` (port 9009). **One server, shared with
-  the user — see "Sharing long-running servers" below.** It periodically wedges;
-  `serve` arms a watcher that captures the cause. If it wedges under a server you
-  started another way, run `bash tools/storybook-react/diagnose.sh` BEFORE restarting —
-  a restart destroys the evidence. → `REPOSITORY_GUIDE.md` §Storybooks.
+  the user — see "Sharing long-running servers" below.** `serve` starts one
+  machine-wide watcher (`tools/storybook-react/scripts/diagnose.sh --ensure`) that polls
+  every known dev-server port; `--status` shows what it knows, and the per-turn
+  `SERVERS:` block is that table. → `REPOSITORY_GUIDE.md` §Storybooks.
 
 A remote-cache warning from moon is harmless — builds work, they just don't share the team's
 cache. Worth fixing anyway: `tools/moon-cache/install-certs.sh --op` installs the certificates
@@ -198,7 +205,7 @@ writes wedge the other, which is how a debugging session ends up chasing its own
   window the user may be looking at.
 - **Unresponsive is usually not dead.** The server stalls for a minute or two whenever a
   file under `packages/` is written (a chokidar fsevents pathology — see
-  `tools/storybook-react/diagnose.sh`), then recovers by itself. Wait ~3 minutes before
+  `tools/storybook-react/scripts/diagnose.sh`), then recovers by itself. Wait ~3 minutes before
   concluding anything. If it is still down, run `diagnose.sh` to capture the cause BEFORE
   restarting; a restart destroys the only evidence.
 - **Never `pkill -f storybook`.** Kill by the PID you own, established via
