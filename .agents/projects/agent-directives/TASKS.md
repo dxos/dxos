@@ -228,7 +228,7 @@ settled 1x1 with the user; order of delivery is phase → watcher → checklist.
       `--restart`.
 - [x] **SERVERS block** — `context` renders the status file with a `THIS` marker.
 - [x] **Checklist** — CHECKLIST lines in `context`, after SERVERS.
-- [ ] **Guard** — `guard-foreground.sh` on `PreToolUse` Bash.
+- [x] **Guard** — `guard-foreground.sh` on `PreToolUse` Bash.
 - [x] **Diagnostics footer** — behind the debug flag (done in Task 3).
 - [ ] **Tests + docs** — extend `mode.test.sh`; new `diagnose.test.sh` and
       `guard-foreground.test.sh`; AGENTS.md, `.claude/README.md`, `mode.md`,
