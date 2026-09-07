@@ -182,8 +182,9 @@ then it keeps polling. Nothing to remember and nothing to run.
 To see what it knows, or to replace it:
 
 ```bash
-bash tools/storybook-react/diagnose.sh --status    # table of every known port
-bash tools/storybook-react/diagnose.sh --restart    # replace a running watcher with this checkout's
+bash tools/storybook-react/diagnose.sh --port 9009   # capture that server now
+bash tools/storybook-react/diagnose.sh --status      # table of every known port
+bash tools/storybook-react/diagnose.sh --restart     # replace a running watcher with this checkout's
 ```
 
 **Do not restart before capturing** — that is the whole difficulty. And check

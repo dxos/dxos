@@ -20,13 +20,14 @@ bash .claude/scripts/mode.sh get; bash .claude/scripts/mode.sh focus get; bash .
 `RESPONSE RULES` block already reflects it — confirm in one line and stop, unless
 the message clearly carries a task as well.
 
-**If `$ARGUMENTS` began with `focus`**, the mode is now TERSE and a task is
-pinned — the `FOCUS:` line in this turn's `RESPONSE RULES` block is the pin, and
-it is the whole of what you may work on. With a task on the line, acknowledge in
-one line and start it. With no task on the line the pin was derived from your
-previous instruction, so restate it in one line first — that is the user's only
-chance to correct a wrong pin. If the block carries no `FOCUS:` line, nothing
-could be pinned: say so and ask what to pin.
+**If `$ARGUMENTS` began with `focus`**, the mode is now TERSE, the phase is now
+`build`, and a task is pinned — the `FOCUS:` line in this turn's `RESPONSE
+RULES` block is the pin, and it is the whole of what you may work on. With a
+task on the line, acknowledge in one line and start it. With no task on the
+line the pin was derived from your previous instruction, so restate it in one
+line first — that is the user's only chance to correct a wrong pin. If the
+block carries no `FOCUS:` line, nothing could be pinned: say so and ask what to
+pin.
 
 **If `$ARGUMENTS` named a phase** (`discuss`, `build`, `debug`), it is already
 applied — confirm in one line.
