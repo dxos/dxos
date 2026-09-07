@@ -60,6 +60,5 @@ export const FormFieldHeader = ({
         </>
       ) : undefined
     }
-    trigger={trigger}
   />
 );
