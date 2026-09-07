@@ -30,8 +30,11 @@ import {
   RelationTargetId,
   SchemaValidator,
   SelfURIId,
+  assertMutable,
   assertObjectModel,
+  createArrayMethodError,
   createProxy,
+  createTextMethodError,
   defineHiddenProperty,
   getEntityKind,
   getProxyHandler,
@@ -76,12 +79,6 @@ import {
   symbolNamespace,
   symbolPath,
 } from './echo-proxy-target';
-import {
-  createArrayMethodError,
-  createPropertyDeleteError,
-  createPropertySetError,
-  createTextMethodError,
-} from './errors';
 
 /**
  * Shared for all targets within one ECHO object.
@@ -379,12 +376,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       throw new TypeError(`'${prop}' is a read-only system property.`);
     }
 
-    // Check readonly enforcement for ECHO objects.
     const core = target[symbolInternals];
-    if (!isInChangeContext(core)) {
-      throw createPropertySetError(prop);
-    }
-
     if (target instanceof EchoArray && prop === 'length') {
       this._arraySetLength(target, target[symbolPath], value);
       return true;
@@ -528,12 +520,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
   }
 
   deleteProperty(target: ProxyTarget, property: string | symbol): boolean {
-    // Check readonly enforcement for ECHO objects.
     const core = target[symbolInternals];
-    if (!isInChangeContext(core)) {
-      throw createPropertyDeleteError(property);
-    }
-
     if (target instanceof EchoArray) {
       // Note: Automerge support delete array[index] but its behavior is not consistent with JS arrays.
       //       It works as splice but JS arrays substitute `undefined` for deleted elements.
@@ -555,7 +542,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
   }
 
   arrayPush(target: ProxyTarget, path: Doc.KeyPath, ...items: any[]): number {
-    this._checkArrayMutationAllowed(target, 'push');
+    assertMutable(target, 'push', createArrayMethodError);
     const validatedItems = this._validateForArray(target, path, items, target.length);
 
     const encodedItems = this._encodeForArray(target, validatedItems);
@@ -564,7 +551,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
   }
 
   arrayPop(target: ProxyTarget, path: Doc.KeyPath): any {
-    this._checkArrayMutationAllowed(target, 'pop');
+    assertMutable(target, 'pop', createArrayMethodError);
     const fullPath = this._getPropertyMountPath(target, path);
 
     let returnValue: any | undefined;
@@ -578,7 +565,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
   }
 
   arrayShift(target: ProxyTarget, path: Doc.KeyPath): any {
-    this._checkArrayMutationAllowed(target, 'shift');
+    assertMutable(target, 'shift', createArrayMethodError);
     const fullPath = this._getPropertyMountPath(target, path);
 
     let returnValue: any | undefined;
@@ -592,7 +579,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
   }
 
   arrayUnshift(target: ProxyTarget, path: Doc.KeyPath, ...items: any[]): number {
-    this._checkArrayMutationAllowed(target, 'unshift');
+    assertMutable(target, 'unshift', createArrayMethodError);
     const validatedItems = this._validateForArray(target, path, items, 0);
     const fullPath = this._getPropertyMountPath(target, path);
     const encodedItems = this._encodeForArray(target, validatedItems);
@@ -609,7 +596,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
   }
 
   arraySplice(target: ProxyTarget, path: Doc.KeyPath, start: number, deleteCount?: number, ...items: any[]): any[] {
-    this._checkArrayMutationAllowed(target, 'splice');
+    assertMutable(target, 'splice', createArrayMethodError);
     const validatedItems = this._validateForArray(target, path, items, start);
 
     const fullPath = this._getPropertyMountPath(target, path);
@@ -631,7 +618,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
   }
 
   arraySort(target: ProxyTarget, path: Doc.KeyPath, compareFn?: (v1: any, v2: any) => number): any[] {
-    this._checkArrayMutationAllowed(target, 'sort');
+    assertMutable(target, 'sort', createArrayMethodError);
     const fullPath = this._getPropertyMountPath(target, path);
 
     target[symbolInternals].change((doc: any) => {
@@ -645,7 +632,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
   }
 
   arrayReverse(target: ProxyTarget, path: Doc.KeyPath): any[] {
-    this._checkArrayMutationAllowed(target, 'reverse');
+    assertMutable(target, 'reverse', createArrayMethodError);
     const fullPath = this._getPropertyMountPath(target, path);
 
     target[symbolInternals].change((doc: any) => {
@@ -659,7 +646,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
   }
 
   textUpdate(target: ProxyTarget, path: Doc.KeyPath, newText: string): void {
-    this._checkTextMutationAllowed(target, 'update');
+    assertMutable(target, 'update', createTextMethodError);
     const fullPath = this._getPropertyMountPath(target, path);
     target[symbolInternals].change((doc: any) => {
       // `A.updateText` computes a minimal diff so cursors/anchors survive and concurrent edits merge.
@@ -669,7 +656,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
   }
 
   textSplice(target: ProxyTarget, path: Doc.KeyPath, start: number, deleteCount: number, insert: string): string {
-    this._checkTextMutationAllowed(target, 'splice');
+    assertMutable(target, 'splice', createTextMethodError);
     const fullPath = this._getPropertyMountPath(target, path);
 
     let removed = '';
@@ -682,26 +669,6 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     });
 
     return removed;
-  }
-
-  /**
-   * Check if array mutation is allowed (inside a change context).
-   */
-  private _checkArrayMutationAllowed(target: ProxyTarget, method: string): void {
-    const core = target[symbolInternals];
-    if (!isInChangeContext(core)) {
-      throw createArrayMethodError(method);
-    }
-  }
-
-  /**
-   * Check if text mutation is allowed (inside a change context).
-   */
-  private _checkTextMutationAllowed(target: ProxyTarget, method: string): void {
-    const core = target[symbolInternals];
-    if (!isInChangeContext(core)) {
-      throw createTextMethodError(method);
-    }
   }
 
   setDatabase(target: ProxyTarget, database: EchoDatabase): void {

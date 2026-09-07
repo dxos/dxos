@@ -3,7 +3,7 @@
 //
 
 import { type Event } from '@dxos/async';
-import { EventId, batchEvents } from '@dxos/echo/internal';
+import { ChangeKeyId, EventId, batchEvents } from '@dxos/echo/internal';
 
 import type { Doc } from '../automerge';
 import type { ObjectCore } from '../core-db';
@@ -26,6 +26,12 @@ export class EchoArray<T> extends Array<T> {
   // Installed by the handler's `init`, like every other target's; declared so an array is structurally
   // a `ProxyTarget` and the refresh paths can take one without a cast.
   declare [EventId]: Event<void>;
+
+  // An array does not inherit `EchoRecord`, so it carries the read-only gate's key itself; the
+  // `ObjectCore` is the same one the record holding it is gated by.
+  get [ChangeKeyId](): object {
+    return this[symbolInternals];
+  }
 
   static {
     // Reads are served off the target rather than by a trap, so what the prototype chain answers is

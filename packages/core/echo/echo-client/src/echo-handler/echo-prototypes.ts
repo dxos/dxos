@@ -65,6 +65,7 @@ import {
   ATTR_RELATION_TARGET,
   ATTR_TYPE,
   ChangeId,
+  ChangeKeyId,
   EntityKind,
   type EntityMeta,
   type EntityMetaJSON,
@@ -571,6 +572,15 @@ const isRootDataObject = (target: ProxyTarget): boolean =>
  * the same `ObjectCore` via the chain. See the layering diagram at the top of this file.
  */
 export class EchoRecord {
+  /**
+   * Keyed by the `ObjectCore`, which every target of one object shares, so a nested record and the meta
+   * root are gated by the same context their root opens. Never `undefined`: a database-backed object is
+   * gated from the moment it exists.
+   */
+  get [ChangeKeyId](): object {
+    return this[symbolInternals];
+  }
+
   declare readonly [symbolInternals]: ObjectCore;
   declare readonly [symbolNamespace]: string;
   declare readonly [symbolPath]: Doc.KeyPath;

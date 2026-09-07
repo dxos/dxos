@@ -4,8 +4,11 @@
 
 import { invariant } from '@dxos/invariant';
 
+import { isInChangeContext } from './change-context';
 import { defineHiddenProperty } from './define-hidden-property';
+import { createPropertyDeleteError, createPropertySetError } from './errors';
 import { type ReactiveHandler } from './proxy-types';
+import { ChangeKeyId } from './symbols';
 
 /**
  * Carries a proxy on its own target, so `value[symbolProxy] === value` identifies a proxy: read through
@@ -129,17 +132,34 @@ export const createProxy = <T extends object>(target: T, handler: ReactiveHandle
 };
 
 /**
- * The variant's handler, reached only on a write. Reads, key enumeration and `getPrototypeOf` are all
- * answered without it — the target carries the whole answer — so this is the only dispatch left, and it
- * is on the cold path.
+ * The variant's write logic, reached only once a mutation is known to be allowed.
  */
-const trapOf = <K extends keyof ReactiveHandler<any>>(
+const writeHandlerOf = (target: object): ReactiveHandler<any> | undefined => Reflect.get(target, symbolReactiveHandler);
+
+/**
+ * The read-only gate, and the whole of it — every variant is gated here and nowhere else. A symbol is
+ * never user data (the system stamps `[ParentId]` and friends outside any change context), and a target
+ * whose `[ChangeKeyId]` is undefined is still under construction and not yet gated. Everything else may
+ * only be mutated inside the `Obj.update` that opened a context for *this* object.
+ *
+ * No dispatch: the key comes from the target's behaviour prototype, so nothing here knows or cares which
+ * variant it is looking at.
+ *
+ * `name` is the property for a trap and the method name for a mutation a proxy cannot intercept (an
+ * array method, a text CRDT op), which call this directly — the same predicate either way.
+ */
+export const assertMutable = <T extends string | symbol>(
   target: object,
-  trap: K,
-): { handler: ReactiveHandler<any>; fn: NonNullable<ReactiveHandler<any>[K]> } | undefined => {
-  const handler: ReactiveHandler<any> | undefined = Reflect.get(target, symbolReactiveHandler);
-  const fn = handler?.[trap];
-  return handler && fn ? { handler, fn } : undefined;
+  name: T,
+  createError: (name: T) => Error,
+): void => {
+  if (typeof name === 'symbol') {
+    return;
+  }
+  const changeKey: object | undefined = Reflect.get(target, ChangeKeyId);
+  if (changeKey !== undefined && !isInChangeContext(changeKey)) {
+    throw createError(name);
+  }
 };
 
 /**
@@ -149,25 +169,32 @@ const trapOf = <K extends keyof ReactiveHandler<any>>(
  * properties, so the engine answers all of those off the target itself with no JavaScript call. What is
  * left is the write gate, which exists because only a `Proxy` can make an assignment throw, and
  * `getPrototypeOf`, which hides the internal instance-state prototype so consumers see a plain object.
- * Neither of those needs to know which variant it is looking at, so `getPrototypeOf` does not dispatch
- * at all and the write traps dispatch only to reach the variant's write logic.
+ *
+ * The read-only path through this handler is therefore identical for every variant and dispatches
+ * nowhere: `getPrototypeOf` is one `Array.isArray`, and a write outside `Obj.update` throws before any
+ * handler is consulted. Dispatch happens only for a mutation that is actually allowed.
  */
 const REACTIVE_PROXY_HANDLER: ProxyHandler<any> = {
   set: (target, property, value, receiver) => {
-    const trap = trapOf(target, 'set');
-    return trap
-      ? trap.fn.call(trap.handler, target, property, value, receiver)
+    assertMutable(target, property, createPropertySetError);
+    const handler = writeHandlerOf(target);
+    return handler?.set
+      ? handler.set(target, property, value, receiver)
       : Reflect.set(target, property, value, receiver);
   },
   defineProperty: (target, property, attributes) => {
-    const trap = trapOf(target, 'defineProperty');
-    return trap
-      ? trap.fn.call(trap.handler, target, property, attributes)
+    assertMutable(target, property, createPropertySetError);
+    const handler = writeHandlerOf(target);
+    return handler?.defineProperty
+      ? handler.defineProperty(target, property, attributes)
       : Reflect.defineProperty(target, property, attributes);
   },
   deleteProperty: (target, property) => {
-    const trap = trapOf(target, 'deleteProperty');
-    return trap ? trap.fn.call(trap.handler, target, property) : Reflect.deleteProperty(target, property);
+    assertMutable(target, property, createPropertyDeleteError);
+    const handler = writeHandlerOf(target);
+    return handler?.deleteProperty
+      ? handler.deleteProperty(target, property)
+      : Reflect.deleteProperty(target, property);
   },
   // An array's real prototype chain is already what a consumer should see; only a record hides an
   // instance-state prototype behind `Object.prototype`.
