@@ -194,13 +194,22 @@ const normalizeForStorage = (value: any, seen = new Set<object>()): any => {
   }
   seen.add(canonical);
 
+  // Written back only where normalizing actually changed something: the value may be a frozen or
+  // shared constant, and rewriting a key with the value it already holds would throw on the former
+  // and be a stray mutation of the latter.
   if (Array.isArray(canonical)) {
     canonical.forEach((element, index) => {
-      canonical[index] = normalizeForStorage(element, seen);
+      const normalized = normalizeForStorage(element, seen);
+      if (normalized !== element) {
+        canonical[index] = normalized;
+      }
     });
   } else {
     for (const key of Object.keys(canonical)) {
-      canonical[key] = normalizeForStorage(canonical[key], seen);
+      const normalized = normalizeForStorage(canonical[key], seen);
+      if (normalized !== canonical[key]) {
+        canonical[key] = normalized;
+      }
     }
   }
   return canonical;
