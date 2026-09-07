@@ -15,8 +15,11 @@ import { type ReactiveHandler } from './proxy-types';
  */
 const symbolProxy = Symbol.for('@dxos/echo/Proxy');
 
-/** The {@link ProxyHandlerSlot} behind a proxy, reachable from the proxy and from its raw target. */
-const symbolSlot = Symbol.for('@dxos/echo/ProxySlot');
+/** A proxy's raw target, reachable through the proxy (which forwards the read to it) and off the target. */
+const symbolTarget = Symbol.for('@dxos/echo/ProxyTarget');
+
+/** The {@link ReactiveHandler} backing a target. Rewritten by {@link setProxyHandler}. */
+const symbolReactiveHandler = Symbol.for('@dxos/echo/ReactiveHandler');
 
 /**
  * Marker placed on a reactive-object behaviour prototype (e.g. the typed handler's
@@ -60,21 +63,24 @@ export const isValidProxyTarget = (value: any): value is object => {
   return isReactiveRecord(value);
 };
 
-/**
- * @deprecated
- */
-export const getProxySlot = <T extends object>(proxy: any): ProxyHandlerSlot<T> => {
-  const value = (proxy as any)?.[symbolSlot];
-  invariant(value instanceof ProxyHandlerSlot);
-  return value;
-};
-
 export const getProxyTarget = <T extends object>(proxy: any): T => {
-  return getProxySlot<T>(proxy).target;
+  const target = Reflect.get(proxy, symbolTarget);
+  invariant(target, 'Not a reactive proxy.');
+  return target;
 };
 
 export const getProxyHandler = <T extends object>(proxy: any): ReactiveHandler<T> => {
-  return getProxySlot<T>(proxy).handler;
+  const handler = Reflect.get(proxy, symbolReactiveHandler);
+  invariant(handler, 'Not a reactive proxy.');
+  return handler;
+};
+
+/**
+ * Hands a target to a different handler, keeping the proxy — `db.add` converting an in-memory typed
+ * object into a database-backed one, where the object's identity has to survive the conversion.
+ */
+export const setProxyHandler = <T extends object>(proxy: any, handler: ReactiveHandler<T>): void => {
+  defineHiddenProperty(getProxyTarget(proxy), symbolReactiveHandler, handler);
 };
 
 /**
@@ -95,14 +101,6 @@ export const normalizeSpliceRange = (
 };
 
 /**
- * Unsafe method to override id for debugging/testing and migration purposes.
- * @deprecated
- */
-export const dangerouslySetProxyId = <T>(obj: T, id: string) => {
-  (getProxySlot(obj).target as any).id = id;
-};
-
-/**
  * Create a reactive proxy object.
  * https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Proxy
  *
@@ -117,114 +115,84 @@ export const createProxy = <T extends object>(target: T, handler: ReactiveHandle
     return existingProxy;
   }
 
-  const slot = new ProxyHandlerSlot<T>(target, handler);
-  const proxy = new Proxy(target, slot);
-  // On the target, so that both it and a `get`-less proxy over it answer.
-  defineHiddenProperty(target, symbolSlot, slot);
+  const proxy = new Proxy(target, REACTIVE_PROXY_HANDLER);
+  // All three live on the target rather than on a per-proxy handler: the proxy has no `get` trap, so a
+  // read of any of them forwards straight here, and one shared handler can serve every proxy.
+  defineHiddenProperty(target, symbolTarget, target);
+  defineHiddenProperty(target, symbolReactiveHandler, handler);
   defineHiddenProperty(target, symbolProxy, proxy);
   // Before `init`, which recurses into nested values: a graph that reaches back to this target must
   // find the proxy already memoized rather than build a second one.
   handler._proxyMap.set(target, proxy);
   handler.init(target);
-  if (handler.readsForwarded?.(target)) {
-    slot.forwardReads();
-  }
   return proxy;
 };
 
 /**
- * Passed as the handler to the Proxy constructor.
- * Maintains a mutable slot for the actual handler.
+ * The handler a target was created with, or the one {@link setProxyHandler} later gave it. Each trap
+ * below dispatches on the handler *defining* that trap rather than on what it returned: several traps
+ * answer `undefined` or `null` legitimately — a missing property has no descriptor, a null-prototype
+ * object has no prototype — and treating that as "not handled" would silently fall back to the default.
  */
-class ProxyHandlerSlot<T extends object> implements ProxyHandler<T> {
-  /**
-   * @param target Original object.
-   * @param _handler Handles intercepted operations.
-   */
-  constructor(
-    readonly target: T,
-    private _handler: ReactiveHandler<T>,
-  ) {}
+const trapOf = <K extends keyof ReactiveHandler<any>>(
+  target: object,
+  trap: K,
+): { handler: ReactiveHandler<any>; fn: NonNullable<ReactiveHandler<any>[K]> } | undefined => {
+  const handler: ReactiveHandler<any> | undefined = Reflect.get(target, symbolReactiveHandler);
+  const fn = handler?.[trap];
+  return handler && fn ? { handler, fn } : undefined;
+};
 
-  get handler() {
-    invariant(this._handler);
-    return this._handler;
-  }
-
-  // TODO(burdon): Requires comment.
-  setHandler(handler: ReactiveHandler<T>): void {
-    this._handler = handler;
-    // The new handler owns the target's shape and decides for itself whether reads can be forwarded;
-    // until it says so, reads go through its trap.
-    this.#restoreReads();
-  }
-
-  /**
-   * Drops this proxy's `get` trap: with no `get` on the handler the engine performs the read on the
-   * target itself, so a target that carries its data as own properties is read with no JavaScript call.
-   * Every other trap stays. Reversed by {@link setHandler}, since a swap can hand the target to a
-   * handler that does not keep it filled.
-   */
-  forwardReads(): void {
-    if (!Object.hasOwn(this, 'get')) {
-      Object.defineProperty(this, 'get', { value: undefined, configurable: true });
-    }
-  }
-
-  /** Restores the inherited `get` trap dropped by {@link forwardReads}. */
-  #restoreReads(): void {
-    delete this.get;
-  }
-
-  /**
-   * Get value. Removed per proxy by {@link forwardReads} once the target carries its own data.
-   */
-  get?(target: T, prop: string | symbol, receiver: any): any {
-    // Answered from the target ahead of the handler: these carry the proxy itself, and a handler that
-    // wraps object-valued reads would wrap the proxy — and read the symbol again to decide whether to.
-    if (prop === symbolProxy || prop === symbolSlot) {
-      return Reflect.get(target, prop, receiver);
-    }
-    if (!this._handler || !this._handler.get) {
-      return Reflect.get(target, prop, receiver);
-    }
-
-    return this._handler.get(target, prop, receiver);
-  }
-
-  static {
-    const TRAPS: (keyof ProxyHandler<any>)[] = [
-      'apply',
-      'construct',
-      'defineProperty',
-      'deleteProperty',
-      'get',
-      'getOwnPropertyDescriptor',
-      'getPrototypeOf',
-      'has',
-      'isExtensible',
-      'ownKeys',
-      'preventExtensions',
-      'set',
-      'setPrototypeOf',
-    ];
-
-    for (const trap of TRAPS) {
-      if (trap === 'get') {
-        continue;
-      }
-
-      Object.defineProperty(this.prototype, trap, {
-        enumerable: false,
-        value: function (this: ProxyHandlerSlot<any>, ...args: any[]) {
-          // log.info('trap', { trap, args });
-          if (!this._handler || !this._handler[trap]) {
-            return (Reflect[trap] as Function)(...args);
-          }
-
-          return (this._handler[trap] as Function).apply(this._handler, args);
-        },
-      });
-    }
-  }
-}
+/**
+ * The handler behind every reactive proxy. There is no `get` trap: a target carries its data as own
+ * properties, so the engine serves reads off it with no JavaScript call at all — which is the whole
+ * read-path win, and the reason this can be one shared object rather than one per proxy (trap presence
+ * is a property of the handler object, and the trap lookup is told nothing about which proxy is being
+ * read). Every other trap dispatches to the target's handler, falling back to the default behaviour.
+ */
+const REACTIVE_PROXY_HANDLER: ProxyHandler<any> = {
+  defineProperty: (target, property, attributes) => {
+    const trap = trapOf(target, 'defineProperty');
+    return trap
+      ? trap.fn.call(trap.handler, target, property, attributes)
+      : Reflect.defineProperty(target, property, attributes);
+  },
+  deleteProperty: (target, property) => {
+    const trap = trapOf(target, 'deleteProperty');
+    return trap ? trap.fn.call(trap.handler, target, property) : Reflect.deleteProperty(target, property);
+  },
+  getOwnPropertyDescriptor: (target, property) => {
+    const trap = trapOf(target, 'getOwnPropertyDescriptor');
+    return trap ? trap.fn.call(trap.handler, target, property) : Reflect.getOwnPropertyDescriptor(target, property);
+  },
+  getPrototypeOf: (target) => {
+    const trap = trapOf(target, 'getPrototypeOf');
+    return trap ? trap.fn.call(trap.handler, target) : Reflect.getPrototypeOf(target);
+  },
+  has: (target, property) => {
+    const trap = trapOf(target, 'has');
+    return trap ? trap.fn.call(trap.handler, target, property) : Reflect.has(target, property);
+  },
+  isExtensible: (target) => {
+    const trap = trapOf(target, 'isExtensible');
+    return trap ? trap.fn.call(trap.handler, target) : Reflect.isExtensible(target);
+  },
+  ownKeys: (target) => {
+    const trap = trapOf(target, 'ownKeys');
+    return trap ? trap.fn.call(trap.handler, target) : Reflect.ownKeys(target);
+  },
+  preventExtensions: (target) => {
+    const trap = trapOf(target, 'preventExtensions');
+    return trap ? trap.fn.call(trap.handler, target) : Reflect.preventExtensions(target);
+  },
+  set: (target, property, value, receiver) => {
+    const trap = trapOf(target, 'set');
+    return trap
+      ? trap.fn.call(trap.handler, target, property, value, receiver)
+      : Reflect.set(target, property, value, receiver);
+  },
+  setPrototypeOf: (target, prototype) => {
+    const trap = trapOf(target, 'setPrototypeOf');
+    return trap ? trap.fn.call(trap.handler, target, prototype) : Reflect.setPrototypeOf(target, prototype);
+  },
+};

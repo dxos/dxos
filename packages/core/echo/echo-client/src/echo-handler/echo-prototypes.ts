@@ -7,11 +7,13 @@
 //
 // What the consumer holds is a Proxy; everything below is its target's prototype chain:
 //
-//   proxy ──Proxy(target, ProxyHandlerSlot → EchoReactiveHandler)
-//     │         the handler's get/set/has/... traps run here
+//   proxy ──Proxy(target, REACTIVE_PROXY_HANDLER → EchoReactiveHandler)
+//     │         the handler's set/has/... traps run here; there is no `get` trap, so reads land
+//     │         on the target, which the refresh keeps filled
 //     ▼
-//   target            a CLEAN, empty object (`{}`). User data is NOT stored here — it is
-//     │ [[Prototype]] virtual, decoded on demand from the Automerge document via `ObjectCore`.
+//   target            holds the record's CURRENT user data as own properties — primitives decoded,
+//     │ [[Prototype]] nested records and arrays as their sub-proxies, refs as `Ref`s. The handler's
+//     │               refresh keeps it mirroring the Automerge document; reads never decode.
 //     ▼
 //   instanceState     per-object, created by `createInstanceState`. Hidden (non-enumerable) data
 //     │ [[Prototype]] properties: [symbolInternals]=ObjectCore, [symbolNamespace], [symbolPath],
@@ -25,10 +27,11 @@
 //     │               nested/meta records get the EchoRecord base. This replaces the old
 //     │               `isRootDataObject(target)` branching in the traps.
 //     ▼
-//   Object.prototype ──▶ null     ordinary class-prototype termination. The get/has traps use
+//   Object.prototype ──▶ null     ordinary class-prototype termination. The `has` trap uses
 //                     `Reflect.has(target, prop)` to split "system property" (present on the chain
-//                     → delegate to the accessor) from "virtual user data" (absent → read from the
-//                     document). Object.prototype members (`toString`, `hasOwnProperty`, ...) are
+//                     → the accessor answers) from user data (an own property of the target), and the
+//                     refresh skips any key the prototype chain already answers so it cannot shadow
+//                     one. Object.prototype members (`toString`, `hasOwnProperty`, ...) are
 //                     therefore treated as system and resolve to their normal implementations,
 //                     which is exactly how a plain object behaves — and a `getPrototypeOf` trap
 //                     reports `Object.prototype` so consumers do observe a plain object. (Practical
@@ -36,8 +39,8 @@
 //                     same as on a plain `{}`.)
 //
 // `this` inside the accessors/methods below:
-//   - Reached THROUGH the proxy (the common case): the get trap calls
-//     `Reflect.get(target, prop, receiver)`, so `this` === the PROXY (the receiver).
+//   - Reached THROUGH the proxy (the common case): with no `get` trap the engine reads the target
+//     with the proxy as the receiver, so `this` === the PROXY.
 //   - Reached on the RAW target directly (e.g. internal code holding the unwrapped target):
 //     `this` === the raw target.
 //   Both resolve `this[symbolInternals]` (and the other hidden props) the same way, through the

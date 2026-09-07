@@ -162,8 +162,8 @@ const copyHiddenProperties = (source: any, target: any): void => {
 // real OWN properties on the target — there is no document behind it. Only the per-object metadata
 // is relocated onto a prototype, so swapping handlers doesn't disturb the data shape:
 //
-//   proxy ──Proxy(target, ProxyHandlerSlot → TypedReactiveHandler)
-//     │         get/set/has/... traps run here
+//   proxy ──Proxy(target, REACTIVE_PROXY_HANDLER → TypedReactiveHandler)
+//     │         set/has/... traps run here; there is no `get` trap, so reads land on the target
 //     ▼
 //   target            the user's object. OWN enumerable props = user data ({ name, age, ... });
 //     │ [[Prototype]] OWN symbol props are removed by `compactMetadataToInstanceState` after init.
@@ -384,14 +384,6 @@ export class TypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
   }
 
   /**
-   * A record target carries its data as own properties, and its nested records and arrays as their
-   * sub-proxies, so the proxy needs no `get` trap. An array still wraps its elements on read.
-   */
-  readsForwarded(target: ProxyTarget): boolean {
-    return !Array.isArray(target);
-  }
-
-  /**
    * Replaces every raw nested record and array on the target with the sub-proxy a read returns, so a
    * forwarded read hands out the same reactive view the `get` trap used to build. Class instances,
    * `Ref`s and primitives are not proxy targets and stay as they are.
@@ -416,36 +408,6 @@ export class TypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
    */
   getPrototypeOf(target: ProxyTarget): object | null {
     return Array.isArray(target) ? Reflect.getPrototypeOf(target) : Object.prototype;
-  }
-
-  get(target: ProxyTarget, prop: string | symbol, receiver: any): any {
-    // The ECHO system surface (objectData, ChangeId, StaticTypeSchemaSlot, ...) lives as accessors
-    // on the behaviour prototype; resolve them via Reflect.get and return as-is — these are not user
-    // data and must never be proxy-wrapped.
-    if (typeof prop === 'symbol' && isBehaviourAccessor(target, prop)) {
-      return Reflect.get(target, prop, receiver);
-    }
-
-    // The back-reference to the type entity is own metadata — return the raw value so we don't
-    // re-wrap an already-reactive `Type.Type` entity in another proxy (which would fail the
-    // SchemaId-in-target invariant).
-    if (prop === TypeEntityId) {
-      return Reflect.get(target, prop, receiver);
-    }
-
-    const value = Reflect.get(target, prop, receiver);
-    if (!isValidProxyTarget(value)) {
-      return value;
-    }
-
-    // A value produced by an own getter (e.g. the `jsonSchema` slot on a type entity) is system
-    // surface, not data to wrap; the descriptor lookup allocates, so it runs only once the value is
-    // known to be one that would otherwise be wrapped.
-    if (Object.getOwnPropertyDescriptor(target, prop)?.get) {
-      return value;
-    }
-
-    return createProxy(value, this);
   }
 
   set(target: ProxyTarget, prop: string | symbol, value: any, receiver: any): boolean {

@@ -8,7 +8,7 @@ import * as Schema from 'effect/Schema';
 import { type InspectOptionsStylized } from 'node:util';
 
 import { Event } from '@dxos/async';
-import { devtoolsFormatter, inspectCustom } from '@dxos/debug';
+import { inspectCustom } from '@dxos/debug';
 import { Entity, Obj, Type } from '@dxos/echo';
 import {
   DATA_NAMESPACE,
@@ -28,16 +28,13 @@ import {
   Ref,
   RelationSourceId,
   RelationTargetId,
-  SchemaId,
   SchemaValidator,
   SelfURIId,
-  TypeEntityId,
   assertObjectModel,
   createProxy,
   defineHiddenProperty,
   getEntityKind,
   getProxyHandler,
-  getProxySlot,
   getProxyTarget,
   getRefSavedTarget,
   getSchemaURI,
@@ -47,6 +44,7 @@ import {
   isReactiveRecord,
   normalizeSpliceRange,
   queueNotification,
+  setProxyHandler,
 } from '@dxos/echo/internal';
 import { assertArgument, invariant } from '@dxos/invariant';
 import { EID, EntityId, type URI } from '@dxos/keys';
@@ -63,10 +61,8 @@ import {
   createInstanceState,
   createRecordTarget,
   getDecodedValueAtPath,
-  getDevtoolsFormatter,
   getReified,
   getSchema,
-  getTypeEntity,
   getTypename,
   handleStoredSchema,
   lookupRef,
@@ -150,14 +146,6 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
   }
 
   /**
-   * Every target carries its data as own properties once it can be filled — a record its keys, an array
-   * its elements — so the proxy needs no `get` trap and the engine serves reads off the target itself.
-   */
-  readsForwarded(target: ProxyTarget): boolean {
-    return this._canMaterialize(target[symbolInternals]);
-  }
-
-  /**
    * A target is filled as soon as its core has a document to fill it from. It needs no database: a ref
    * materialized here resolves through its core rather than through whatever the core held at the time
    * (see `CoreRefResolver`), so one built before `db.add` still works afterwards.
@@ -225,52 +213,6 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
   }
 
   /**
-   * Reached only by a proxy whose core had no document yet when the proxy was created; once a target can
-   * be filled it has no `get` trap at all (see {@link readsForwarded}).
-   */
-  get(target: ProxyTarget, prop: string | symbol, receiver: any): any {
-    // The build instruments every `invariant` call with an allocated call-site record, so on this
-    // path the call sits behind the check rather than being the check.
-    if (!Array.isArray(target[symbolPath])) {
-      invariant(false, 'Proxy target has no path.');
-    }
-
-    // Cross-cutting internal accessors that apply to records and arrays alike.
-    switch (prop) {
-      case symbolInternals:
-        return target[symbolInternals];
-      case SchemaId:
-        return getSchema(target);
-      case TypeEntityId:
-        return getTypeEntity(target);
-      case devtoolsFormatter:
-        return getDevtoolsFormatter(target);
-    }
-
-    if (target instanceof EchoArray) {
-      if (typeof prop === 'symbol') {
-        return Reflect.get(target, prop);
-      }
-      return this._arrayGet(target, prop);
-    }
-
-    // The ECHO system surface (id, [Type], [Meta], [Parent], toJSON, ...) is defined as
-    // accessors/methods on the prototype chain (instanceState → EchoRoot/EchoRecord.prototype →
-    // Object.prototype); root objects expose the full set, nested/meta records the empty base.
-    // `Reflect.has` reports that surface (plus Object.prototype members, which resolve normally,
-    // as on a plain object); everything else is absent here and is virtual user data backed by
-    // the document. See the layering diagram in echo-prototypes.ts.
-    if (Reflect.has(target, prop)) {
-      return Reflect.get(target, prop, receiver);
-    }
-    if (typeof prop === 'symbol') {
-      return undefined;
-    }
-
-    return this._wrapInProxyIfRequired(target, getDecodedValueAtPath(target, prop));
-  }
-
-  /**
    * The record the key-set traps read: the document's own record object for a record target, a fresh
    * decode for an array.
    */
@@ -315,7 +257,6 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     const raw: unknown = core.getRaw([target[symbolNamespace], ...target[symbolPath]]);
     const previousRaw = this._previousRaw(target, core);
     if (previousRaw !== undefined && previousRaw === raw) {
-      this._forwardReads(target);
       return;
     }
     this._rawRecords.set(target, {
@@ -336,7 +277,6 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       }
     }
     target.length = materialized.length;
-    this._forwardReads(target);
   }
 
   /**
@@ -354,7 +294,6 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     const raw = typeof stored === 'object' && stored !== null ? stored : undefined;
     const previousRaw = this._previousRaw(target, core);
     if (previousRaw !== undefined && previousRaw === raw) {
-      this._forwardReads(target);
       return;
     }
     this._rawRecords.set(target, { docHandle: core.docHandle, raw });
@@ -390,7 +329,6 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
         delete (target as any)[key];
       }
     }
-    this._forwardReads(target);
   }
 
   /**
@@ -402,14 +340,6 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
   private _previousRaw(target: ProxyTarget, core: ObjectCore): object | undefined {
     const cached = this._rawRecords.get(target);
     return cached !== undefined && cached.docHandle === core.docHandle ? cached.raw : undefined;
-  }
-
-  /** A proxy created before the core had a database kept its `get` trap; it can go once the target is filled. */
-  private _forwardReads(target: ProxyTarget): void {
-    const proxy = this._proxyMap.get(target);
-    if (proxy) {
-      getProxySlot(proxy).forwardReads();
-    }
   }
 
   /**
@@ -593,19 +523,6 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     }
 
     return decoded;
-  }
-
-  private _arrayGet(target: ProxyTarget, prop: string) {
-    invariant(target instanceof EchoArray);
-    if (prop === 'constructor') {
-      return Array.prototype.constructor;
-    }
-    if (prop !== 'length' && isNaN(parseInt(prop))) {
-      return Reflect.get(target, prop);
-    }
-
-    const decodedValueAtPath = getDecodedValueAtPath(target, prop);
-    return this._wrapInProxyIfRequired(target, decodedValueAtPath);
   }
 
   private _arrayHas(target: ProxyTarget, prop: string | symbol): boolean {
@@ -1112,11 +1029,11 @@ export const createObject = <T extends AnyProperties>(obj: T): CreateObjectRetur
     // Already an echo-schema reactive object.
     const meta = getProxyTarget<EntityMeta>(Entity.getMeta(obj as unknown as Entity.Unknown));
 
-    // TODO(burdon): Requires comment.
-    const slot = getProxySlot(obj);
-    slot.setHandler(EchoReactiveHandler.instance);
+    // The proxy is kept and re-pointed at this handler, so the object's identity survives the
+    // conversion from an in-memory typed object into a database-backed one.
+    setProxyHandler(obj, EchoReactiveHandler.instance);
 
-    const target = slot.target as ProxyTarget;
+    const target = getProxyTarget<ProxyTarget>(obj);
     core.rootSchema = type;
     // Preserve the object's existing Event so reactive subscriptions established while it was an
     // in-memory typed object keep firing once it becomes database-backed.
@@ -1135,7 +1052,7 @@ export const createObject = <T extends AnyProperties>(obj: T): CreateObjectRetur
       }
     }
     adoptInstanceState(target, createInstanceState(core, DATA_NAMESPACE, [], { event: existingEvent }));
-    slot.handler._proxyMap.set(target, obj);
+    EchoReactiveHandler.instance._proxyMap.set(target, obj);
 
     core.subscriptions.push(
       core.updates.on(() => {
@@ -1156,10 +1073,7 @@ export const createObject = <T extends AnyProperties>(obj: T): CreateObjectRetur
     //  which can cause recursive loops of `createObject` if `EchoReactiveHandler` is not set prior to this call.
     //  Do not change order.
     initCore(core, target);
-    slot.handler.init(target);
-    if (slot.handler.readsForwarded?.(target)) {
-      slot.forwardReads();
-    }
+    EchoReactiveHandler.instance.init(target);
 
     setSchemaPropertiesOnObjectCore(core, schema);
     setRelationSourceAndTarget(target, core, schema);
