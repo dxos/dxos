@@ -12,7 +12,6 @@ import { EventId } from '@dxos/echo/internal';
 import type * as Doc from '../automerge/Doc';
 import type { ObjectCore } from '../core-db';
 import { type EchoArray } from './echo-array';
-import { type EchoReactiveHandler } from './echo-handler';
 
 /** Global symbols so proxy targets work across Vite bundle chunks (host vs import-map plugin). */
 export const symbolPath = Symbol.for('@dxos/echo/internal/ProxyPath');
