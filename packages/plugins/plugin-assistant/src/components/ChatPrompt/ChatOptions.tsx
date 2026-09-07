@@ -83,6 +83,9 @@ export const ChatOptions = ({ db, chat, context, registry, presets, preset, onPr
                   <Tabs.Panel tabIndex={-1} classNames='dx-focus-ring-inset overflow-hidden' value='model'>
                     <ModelsPanel presets={presets} preset={preset} onPresetChange={onPresetChange} />
                   </Tabs.Panel>
+                  <Tabs.Panel tabIndex={-1} classNames='dx-focus-ring-inset overflow-hidden' value='environment'>
+                    <EnvironmentPanel chat={chat} />
+                  </Tabs.Panel>
                   <Tabs.Tablist classNames={[styles.toolbar]}>
                     <Tabs.IconButton value='view' icon='ph--eye--regular' label={t('chat-view.title')} />
                     <Tabs.IconButton value='skills' icon='ph--blueprint--regular' label={t('options.skills.title')} />
@@ -92,6 +95,11 @@ export const ChatOptions = ({ db, chat, context, registry, presets, preset, onPr
                       label={t('options.mcp.title')}
                     />
                     <Tabs.IconButton value='model' icon='ph--cpu--regular' label={t('options.chat-model.title')} />
+                    <Tabs.IconButton
+                      value='environment'
+                      icon='ph--hard-drives--regular'
+                      label={t('options.environment.title')}
+                    />
                   </Tabs.Tablist>
                 </Tabs.Viewport>
               </Tabs.Root>
@@ -160,6 +168,36 @@ const ViewPanel = ({ chat }: Pick<ChatOptionsProps, 'chat'>) => {
     </Listbox.Root>
   );
 };
+
+/**
+ * Where this conversation's agent runs. A per-chat property rather than a setting, mirroring a
+ * trigger's own `remote` flag: `edge` keeps the conversation running with the client closed.
+ * `AgentService` reads the location at spawn, so switching tears the running process down and
+ * respawns it on the other host.
+ */
+const EnvironmentPanel = ({ chat }: Pick<ChatOptionsProps, 'chat'>) => {
+  const { t } = useTranslation(meta.profile.key);
+  const [remote, setRemote] = useObject(chat, 'remote');
+  const value: ChatEnvironment = remote ? 'remote' : 'local';
+  const handleChange = useCallback((value: string) => setRemote(value === 'remote'), [setRemote]);
+
+  return (
+    <Listbox.Root value={value} onValueChange={handleChange} autoFocus>
+      <Listbox.Content aria-label={t('options.environment.title')}>
+        {CHAT_ENVIRONMENTS.map((environment) => (
+          <Listbox.Item key={environment} id={environment} classNames='px-2 py-1 dx-focus-ring rounded-xs'>
+            <Listbox.ItemLabel>{t(`chat-environment.${environment}.label`)}</Listbox.ItemLabel>
+            <Listbox.Indicator />
+          </Listbox.Item>
+        ))}
+      </Listbox.Content>
+    </Listbox.Root>
+  );
+};
+
+type ChatEnvironment = (typeof CHAT_ENVIRONMENTS)[number];
+
+const CHAT_ENVIRONMENTS = ['local', 'remote'] as const;
 
 const ModelsPanel = ({
   presets,

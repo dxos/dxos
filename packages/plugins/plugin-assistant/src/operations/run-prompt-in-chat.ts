@@ -52,6 +52,7 @@ const handler: Operation.WithHandler<typeof AssistantOperation.RunPromptInChat> 
         const session = yield* getSession(chat, {
           model: preset?.model,
           provider: preset?.provider,
+          location: chat.remote ? 'edge' : 'local',
         });
         yield* session.submitPrompt(prompt);
       }),
