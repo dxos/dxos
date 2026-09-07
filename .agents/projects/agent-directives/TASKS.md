@@ -223,9 +223,10 @@ settled 1x1 with the user; order of delivery is phase → watcher → checklist.
         clause are later tasks.
   - [x] Hook branch + `focus` implies `build`.
   - [x] `context` emits the PHASE clause.
-- [ ] **Watcher singleton** — `diagnose.sh` round-robin over `launch.json` ports
+- [x] **Watcher singleton** — `diagnose.sh` round-robin over `launch.json` ports
       plus 9009/5199, `~/.cache/dxos/watch/{status,watcher.pid}`, `--status`,
-      `--restart`; `context` renders SERVERS with a `THIS` marker.
+      `--restart`.
+- [ ] **SERVERS block** — `context` renders the status file with a `THIS` marker.
 - [ ] **Checklist + guard** — CHECKLIST lines in `context`; `guard-foreground.sh`
       on `PreToolUse` Bash; DIAGNOSTICS footer behind the debug flag.
 - [ ] **Tests + docs** — extend `mode.test.sh`; new `diagnose.test.sh` and

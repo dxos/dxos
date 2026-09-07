@@ -14,21 +14,6 @@ set -uo pipefail
 
 DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-# The watcher polls one port, so it must be told the one this invocation actually serves — callers
-# override it (`moon run storybook-react:serve -- --port=9014`), and watching 9009 by default would
-# then watch somebody else's server.
-PORT=9009
-previous=""
-for arg in "$@"; do
-  case "${previous}" in
-    -p|--port) PORT="${arg}" ;;
-  esac
-  case "${arg}" in
-    --port=*) PORT="${arg#--port=}" ;;
-  esac
-  previous="${arg}"
-done
-
 # The dev server watches with `fs.watch` (see `.storybook/main.ts`), which costs one descriptor per
 # watched directory — ~12k on this monorepo. A server launched from a GUI shell inherits macOS's
 # 256 soft limit and exhausts it within seconds, so raise it here, before the watcher is armed, so
@@ -45,6 +30,6 @@ if [ "$(ulimit -Sn)" -lt 10240 ] 2>/dev/null; then
 fi
 
 # Never fatal: a missing watcher is worth a warning, not a storybook that refuses to start.
-bash "${DIR}/diagnose.sh" --ensure --port "${PORT}" || echo "warning: could not arm the hang watcher."
+bash "${DIR}/diagnose.sh" --ensure || echo "warning: could not arm the hang watcher."
 
 exec "${DIR}/node_modules/.bin/storybook" dev "$@"
