@@ -270,6 +270,23 @@ EditCounter(0,1,1) EditText(0,0,1,0)
    (`echo-network-adapter.ts:198`). `collection-state` predates the catalog pin, so this is not
    version skew.
 
+   **Independently reproduced in the edge repo's own suite.** `Check / test-edge (shard=2)` on
+   dxos/edge#1026 — a PR touching only account gating, so unrelated to replication — failed on one
+   test, with the same shape:
+
+   ```
+   FAIL |node| test/automerge.node.test.ts > AutomergeReplication > references > references through arrays
+   Error: Edge did not catch up for B2U42TM6SWWB3T52VKLW6HCMAPOBVZMQH within 60000ms
+         (local=4 unsynced=1)
+     waitForEdgeSubductionSync  test/automerge-peer.ts:258
+   ```
+
+   Four documents converge, one does not, 60 s, no progress. That is this finding reached from a
+   third direction — miniflare rather than real client processes, the edge repo rather than this
+   one — which makes it very unlikely to be an artifact of this harness. It is also a far cheaper
+   reproduction than a six-peer blade-runner run, and a natural place to hang a fix's regression
+   test. The test carries no flaky tag and is not quarantined, so it red-builds whenever it trips.
+
 7. **`POST /db/spaces/:id/notarization` 500s on the local stack** while `GET` on the same path
    succeeds. Seen on every run; the delegated join still completes, so it is not blocking. Not
    filed — needs a look at the local stack's own logs first.
