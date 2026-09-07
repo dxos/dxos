@@ -59,7 +59,7 @@ of a run — another EDGE, cleanup off, partitions on, a fixed plan — is a fla
 
 ```bash
 --spec '{"edge":"dev"}'                              # against dev.dxos.network (DX_HUB_API_KEY for the fallback)
---spec '{"cleanup":false}'                           # leave state behind for the sweeper
+--spec '{"cleanup":false}'                           # leave state behind (recover it by hand, below)
 --spec '{"partitions":true}'                         # include GoOffline/GoOnline/Restart (finding 5)
 --spec '{"plan":"out/<run>/command-trace.jsonl"}'    # replay a failed run's own plan
 ```
@@ -368,15 +368,25 @@ drawing — a probe whose job is to prove cleanup has to create something to cle
 Per-run cleanup handles assertion failures (it runs in `finally`) but not a dead orchestrator —
 SIGKILL, container loss. Two pieces close that:
 
-- The trace records every real id the moment it exists: a `fleet` event with the identity DIDs, and
-  a `detail: 'spaceId'` entry per space. A dead run's artifact is therefore sufficient to undo it.
-- `scripts/sweep-edge-stress.mjs` replays one or more traces into admin-API deletions
-  (`--dry-run` to list without a key; the edge URL comes from each trace's own `run` event).
+The trace records every real id the moment it exists — a `fleet` event with the identity DIDs and a
+`detail: 'spaceId'` entry per space — so a dead run's artifact is sufficient to undo it by hand.
+Spaces first: deleting an identity that still owns spaces would orphan them.
 
-Proven end to end against the local stack: a `--spec '{"cleanup":false,"devicesPerIdentity":[1]}'`
-run left one space and one identity; the sweeper deleted both
-(`accepted`, exit 0). That was also the first live exercise of the admin-key path — a locally
-minted `DX_HUB_API_KEY` in the edge worker's `.env`, sent as `Authorization: Bearer`.
+```bash
+TRACE=out/results/<run>/command-trace.jsonl
+EDGE=http://localhost:8787   # or https://dev.dxos.network
+SPACES=$(grep -o '"spaceId":"[^"]*"' "$TRACE" | cut -d'"' -f4 | sort -u)
+DIDS=$(grep -o '"did:halo:[^"]*"' "$TRACE" | tr -d '"' | sort -u)
+for id in $SPACES; do curl -sX DELETE "$EDGE/admin/spaces/$id"     -H "Authorization: Bearer $DX_HUB_API_KEY"; done
+for id in $DIDS;   do curl -sX DELETE "$EDGE/admin/identities/$id" -H "Authorization: Bearer $DX_HUB_API_KEY"; done
+```
+
+A `scripts/sweep-edge-stress.mjs` doing exactly this was written, exercised against the local stack
+(a `cleanup: false` run left one space and one identity; both deleted, `accepted`, exit 0 — the
+first live use of the admin-key path, a locally minted `DX_HUB_API_KEY` in the edge worker's
+`.env`) and then **deleted**: 101 lines of committed script for a path that only runs when an
+orchestrator is SIGKILLed, and which duplicated `EDGE_URLS` because it ran under bare node. The six
+lines above replace it.
 
 ### The Hub-account gate, closed with the test-email hatch
 
@@ -415,8 +425,7 @@ Still open on cleanup:
 
 1. The original probe's leftovers on dev belong to an **unbound** identity, so they still need the
    admin key: space `BLHSBW7YTLRFZZVFWT4M4MRVX5OO2XJHB`, identity
-   `did:halo:BDFMLFLXMZ5NOCYIF3VLBN6KYPG5XXEPC`. One `sweep-edge-stress.mjs` invocation once a key
-   exists.
+   `did:halo:BDFMLFLXMZ5NOCYIF3VLBN6KYPG5XXEPC`. Two `curl`s once a key exists (recipe above).
 2. Deletion is enqueued (202) and never verified gone; acceptable for now, noted.
 
 ## 5. Harness gaps found

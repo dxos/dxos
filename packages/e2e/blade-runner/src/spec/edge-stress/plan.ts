@@ -41,32 +41,39 @@ const COMMAND_POOL_FACTOR = 8;
  * `readYAMLSpecFile` replaces the spec wholesale rather than merging it over the defaults, so
  * without this each variant of the run needed its own copy of every field — which is how a single
  * plan came to have six config files that then drifted apart.
+ *
+ * Deliberately independent of `edge`: with no spec file `main.ts` merges `--spec` over a *complete*
+ * `defaultSpec()`, so a field that varied by target would already be pinned to the local value and
+ * `--spec '{"edge":"dev"}'` could never pull in the dev one. Timeouts are stall detectors, not
+ * waits, so the value generous enough for dev costs a healthy local run nothing.
  */
-export const defaultsFor = (edge: EdgeTarget): EdgeStressSpec => ({
+export const DEFAULT_SPEC: EdgeStressSpec = {
   platform: 'nodejs',
-  edge,
-  // Small by default so a local run finishes in minutes; a nightly run scales this up.
-  devicesPerIdentity: [2, 1],
-  agents: false,
-  maxSpaces: 2,
-  maxDocumentsPerSpace: 4,
+  edge: 'local',
+  // Five identities, one of them with a second device, so HALO replication is always in play.
+  devicesPerIdentity: [2, 1, 1, 1, 1],
+  // D11: the agent is the always-online member that lets a joiner in when every device is offline.
+  agents: true,
+  maxSpaces: 5,
+  maxDocumentsPerSpace: 100,
   maxCommands: 25,
   sampleDraws: 12,
-  // Every wait is longer against dev, where each operation crosses the public internet.
-  maxRuntimeMs: edge === 'dev' ? 15 * 60_000 : 10 * 60_000,
-  quiescenceTimeoutMs: edge === 'dev' ? 90_000 : 60_000,
+  /**
+   * An hour is the ceiling, not the expected duration: a stall is caught by
+   * `quiescenceTimeoutMs` (or `CALL_BUDGET_MS` for a hung peer) in a minute or two, and this only
+   * bounds a run that is making slow progress rather than none.
+   */
+  maxRuntimeMs: 60 * 60_000,
+  quiescenceTimeoutMs: 90_000,
   checkpoints: true,
   // Off until finding 5 (a cut link crashes the peer) is fixed; see RESULTS.md.
   partitions: false,
   cleanup: true,
-});
+};
 
-/**
- * `edge` is read before the merge, since it selects the defaults everything else lands on. The
- * empty default covers a spec file that sets nothing, which yields `undefined` rather than `{}`.
- */
+/** The empty default covers a spec file that sets nothing, which yields `undefined`, not `{}`. */
 export const resolveSpec = (overrides: Partial<EdgeStressSpec> = {}): EdgeStressSpec => ({
-  ...defaultsFor(overrides?.edge ?? 'local'),
+  ...DEFAULT_SPEC,
   ...overrides,
 });
 
@@ -88,7 +95,7 @@ export const urlsFor = (edge: EdgeTarget): { edgeUrl: string; hubUrl: string } =
  */
 export class EdgeStress implements TestPlan<EdgeStressSpec, EdgeStressResult> {
   defaultSpec(): EdgeStressSpec {
-    return defaultsFor('local');
+    return DEFAULT_SPEC;
   }
 
   async run(env: SchedulerEnvImpl<EdgeStressSpec>, params: TestProps<EdgeStressSpec>): Promise<EdgeStressResult> {
