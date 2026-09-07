@@ -16,11 +16,16 @@ set -uo pipefail
 
 repo=$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)
 sandbox=$(mktemp -d)
-trap 'rm -rf "$sandbox"' EXIT
+trap '[ -n "${fake:-}" ] && kill "$fake" 2>/dev/null; rm -rf "$sandbox"' EXIT
 
 mkdir -p "$sandbox/.claude"
 ln -s "$repo/.claude/hooks" "$sandbox/.claude/hooks"
 ln -s "$repo/.claude/scripts" "$sandbox/.claude/scripts"
+
+mkdir -p "$sandbox/tools"
+ln -s "$repo/tools/storybook-react" "$sandbox/tools/storybook-react"
+export DX_WATCH_DIR="$sandbox/watch"
+git -C "$sandbox" init -q 2>/dev/null
 
 export CLAUDE_PROJECT_DIR="$sandbox"
 hook="$repo/.claude/hooks/mode.sh"
@@ -230,6 +235,31 @@ out=$(run "$(payload 'hi')")
 check '14k focus renders build then pin' 'ordered' "$(
   printf '%s' "$out" | awk '/^- PHASE: BUILD/{p=NR} /^- FOCUS: x$/{f=NR} END{ if (p && f && p<f) print "ordered"; else print "misordered" }'
 )"
+
+echo '=== 15. context renders the SERVERS block from the watcher status'
+reset
+out=$(run "$(payload 'hi')")
+check '15a unwatched line' '1' "$(printf '%s' "$out" | grep -c '^SERVERS: unwatched')"
+mkdir -p "$DX_WATCH_DIR"
+# A real process whose command line matches watcher_alive's grep, so --status
+# reports watched rather than unwatched; the test's own pid would not match.
+exec -a "diagnose.sh --watch" sleep 300 &
+fake=$!
+disown "$fake" 2>/dev/null || true
+printf '%s' "$fake" > "$DX_WATCH_DIR/watcher.pid"
+top=$(git -C "$sandbox" rev-parse --show-toplevel)
+printf '9009\t111\tstorybook\t%s\tanswered\t01:02\t-\n5199\t-\t-\t-\tunbound\t-\t-\n5180\t222\tvite\t/elsewhere\twedged\t00:10\t/elsewhere/temp/x\n' "$top" > "$DX_WATCH_DIR/status"
+out=$(run "$(payload 'hi')")
+check '15b this worktree flagged' '1' "$(printf '%s' "$out" | grep -c '^  :9009 storybook answered 01:02 .* \[THIS\]$')"
+check '15c other worktree not flagged' '1' "$(printf '%s' "$out" | grep -c '^  :5180 vite wedged 00:10 /elsewhere$')"
+check '15d unbound row shown' '1' "$(printf '%s' "$out" | grep -c '^  :5199 unbound$')"
+check '15e wedged row names its capture in debug' '0' "$(printf '%s' "$out" | grep -c 'capture: /elsewhere/temp/x')"
+run "$(payload '/mode debug')" > /dev/null
+out=$(run "$(payload 'hi')")
+check '15f debug adds the capture path' '1' "$(printf '%s' "$out" | grep -c 'capture: /elsewhere/temp/x')"
+kill "$fake" 2>/dev/null
+unset fake
+rm -rf "$DX_WATCH_DIR"
 
 printf '\n%s passed, %s failed\n' "$pass" "$fail"
 [ "$fail" -eq 0 ]

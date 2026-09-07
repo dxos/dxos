@@ -295,6 +295,35 @@ EOF
   Clear the pin with `/mode terse` or `/mode normal`.
 EOF
     fi
+    # Reads the watcher's status file rather than probing servers itself, so the
+    # hot path never blocks on a wedged port.
+    servers_block() {
+      local diagnose="$root/tools/storybook-react/diagnose.sh" here status line
+      [ -f "$diagnose" ] || return 0
+      here=$(git -C "$root" rev-parse --show-toplevel 2>/dev/null || printf '%s' "$root")
+      status=$(bash "$diagnose" --status 2>/dev/null) || return 0
+      case "$status" in
+        unwatched*) printf 'SERVERS: %s\n' "$status"; return 0 ;;
+      esac
+      printf 'SERVERS: (from the dev-server watcher; [THIS] = serves this worktree)\n'
+      printf '%s\n' "$status" | tail -n +2 | while IFS=$'\t' read -r port pid kind tree state age last; do
+        [ -n "$port" ] || continue
+        # A diagnostic line (stale/no-status-yet) carries no tabs, so it lands
+        # whole in $port with the rest empty; print it back as one line.
+        case "$port" in
+          *[!0-9]*) printf '  %s\n' "$port $pid $kind $tree $state $age $last"; continue ;;
+        esac
+        if [ "$state" = unbound ]; then
+          printf '  :%s unbound\n' "$port"
+        else
+          line=":$port $kind $state $age $tree"
+          [ "$tree" = "$here" ] && line="$line [THIS]"
+          printf '  %s\n' "$line"
+          if debug_on && [ "$last" != '-' ]; then printf '    capture: %s\n' "$last"; fi
+        fi
+      done
+    }
+    servers_block
     if debug_on; then
       # Raw values beside canonical ones, so a hook fault and an agent fault look different.
       pin_source='none'
