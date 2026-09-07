@@ -286,6 +286,20 @@ EditCounter(0,1,1) EditText(0,0,1,0)
    one — which makes it very unlikely to be an artifact of this harness. It is also a far cheaper
    reproduction than a six-peer blade-runner run, and a natural place to hang a fix's regression
    test. The test carries no flaky tag and is not quarantined, so it red-builds whenever it trips.
+   **Fourth reproduction — first in CI, against preview.** The nightly soak, 15 commands into a
+   6-client fleet, with `agents` unavailable so every device was a real client:
+
+   ```
+   command 15 Checkpoint() failed: peers disagree on space 2:
+     client 0 = [s2-d0, s2-d1, s2-d2]
+     client 4 = [s2-d0,        s2-d2]
+   ```
+
+   The plan names the writers exactly: `s2-d0` came from client 1 (command 9), `s2-d1` from client 0
+   (command 12), `s2-d2` from client 5 (command 13). Two of the three crossed to client 4 and the
+   middle one never did, after the checkpoint spent its full 90s `untilConverged` budget — so this
+   is again terminal rather than slow, and it is not the writer being partitioned, since client 0
+   also wrote documents that did arrive.
 
 7. **`POST /db/spaces/:id/notarization` 500s on the local stack** while `GET` on the same path
    succeeds. Seen on every run; the delegated join still completes, so it is not blocking. Not
