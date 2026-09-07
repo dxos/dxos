@@ -16,35 +16,35 @@
     "#capabilities": {
       "source": "./src/capabilities/index.ts",
       "types": "./dist/types/src/capabilities/index.d.ts",
-      "default": "./dist/lib/neutral/capabilities/index.mjs"
+      "default": "./dist/lib/capabilities.mjs"
     },
     "#components": {
       "source": "./src/components/index.ts",
       "types": "./dist/types/src/components/index.d.ts",
-      "default": "./dist/lib/neutral/components/index.mjs"
+      "default": "./dist/lib/components.mjs"
     },
     "#meta": {
       "source": "./src/meta.ts",
       "types": "./dist/types/src/meta.d.ts",
-      "default": "./dist/lib/neutral/meta.mjs"
+      "default": "./dist/lib/meta.mjs"
     },
     "#plugin": {
       "source": "./src/plugin.tsx",
       "types": "./dist/types/src/plugin.d.ts",
-      "default": "./dist/lib/neutral/plugin.mjs"
+      "default": "./dist/lib/plugin.mjs"
     }
   },
   "exports": {
     ".": {
       "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
-      "default": "./dist/lib/neutral/index.mjs"
+      "import": "./dist/lib/index.mjs"
     },
     "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
     "./MapPlugin": {
       "source": "./src/MapPlugin.ts",
       "types": "./dist/types/src/MapPlugin.d.ts",
-      "default": "./dist/lib/neutral/MapPlugin.mjs"
+      "import": "./dist/lib/MapPlugin.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",

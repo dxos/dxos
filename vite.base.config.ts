@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+import inject from '@rollup/plugin-inject';
 import { storybookTest } from '@storybook/addon-vitest/vitest-plugin';
 import react from '@vitejs/plugin-react';
 import { playwright } from '@vitest/browser-playwright';
@@ -46,6 +47,12 @@ const NODE_STD_MODULES = [
   'stream',
   'util',
 ];
+
+// Free-identifier globals `@dxos/node-std/inject-globals` re-exports, for the `importGlobals`
+// option. Keep in sync with packages/common/node-std/src/inject-globals.js.
+const NODE_STD_GLOBALS = Object.fromEntries(
+  ['global', 'Buffer', 'process'].map((name) => [name, ['@dxos/node-std/inject-globals', name]]),
+);
 
 // This file sits at the workspace root. `import.meta.dirname` rather than `__dirname` so the file
 // loads unchanged under vite's native config loader, where it is a real ESM module in node.
@@ -900,6 +907,32 @@ export interface DxConfigOptions {
    * for packages that import large binary assets (e.g. plugin-zen's `.m4a` soundscapes).
    */
   assetsAsFiles?: boolean;
+  /**
+   * Third-party packages to inline into the bundle rather than leave external. For deps that
+   * ship CJS, WASM, or node-only builds a consumer's bundler cannot resolve on its own.
+   * Matches the package and any of its subpaths.
+   */
+  bundle?: string[];
+  /** Import aliases, applied before resolution (e.g. `{ '@effect/wa-sqlite': '@dxos/wa-sqlite' }`). */
+  alias?: Record<string, string>;
+  /**
+   * Output module formats. Default: `['es']` (`<entry>.mjs`). Adding `'cjs'` emits a parallel
+   * `<entry>.cjs` — needed only by consumers that `require()` the package, such as a
+   * PostCSS/Tailwind config loaded by a CJS toolchain.
+   */
+  formats?: ('es' | 'cjs')[];
+  /**
+   * Prepend `import '@dxos/node-std/globals'` to every entry, installing `Buffer`/`process`/
+   * `global` on `globalThis` as a side effect. For packages whose deps read those globals
+   * without importing them.
+   */
+  injectGlobals?: boolean;
+  /**
+   * Rewrite free references to `global` / `Buffer` / `process` into imports from
+   * `@dxos/node-std/inject-globals`. Module-scoped, unlike `injectGlobals`, so it works in
+   * bundles that must not touch `globalThis`.
+   */
+  importGlobals?: boolean;
   /** Vitest configuration; omit for build-only packages. */
   test?: TestOptions;
 }
@@ -996,8 +1029,16 @@ export const defineConfig = (options: DxConfigOptions = {}): UserConfig => {
     jsx,
     jsxRuntime,
     assetsAsFiles = false,
+    bundle = [],
+    alias,
+    formats = ['es'],
+    injectGlobals = false,
+    importGlobals = false,
     test,
   } = options;
+  // `id === name` catches the package root, `id.startsWith(name + '/')` its subpaths — a bare
+  // prefix test would also swallow unrelated neighbours (`buffer` matching `buffer-alloc`).
+  const isBundled = (id: string) => bundle.some((name) => id === name || id.startsWith(`${name}/`));
   // Solid: ssr-aware client transform.
   const jsxPlugin: Plugin[] =
     jsx === 'react'
@@ -1033,8 +1074,8 @@ export const defineConfig = (options: DxConfigOptions = {}): UserConfig => {
     build: {
       lib: {
         entry: resolvedEntry,
-        formats: ['es'],
-        fileName: (_, name) => `${name}.mjs`,
+        formats,
+        fileName: (format, name) => `${name}.${format === 'cjs' ? 'cjs' : 'mjs'}`,
       },
       outDir,
       sourcemap: true,
@@ -1056,7 +1097,7 @@ export const defineConfig = (options: DxConfigOptions = {}): UserConfig => {
         //   rolldown injects when lowering `@decorator` / `async` / `for-await`. The
         //   helpers aren't declared deps so we bundle them inline.
         external: (id) => {
-          if (id.startsWith('node:')) {
+          if (id.startsWith('node:') || isBundled(id)) {
             return false;
           }
           return (
@@ -1064,6 +1105,7 @@ export const defineConfig = (options: DxConfigOptions = {}): UserConfig => {
           );
         },
         output: {
+          ...(injectGlobals ? { banner: "import '@dxos/node-std/globals';" } : {}),
           chunkFileNames: 'chunk-[name].mjs',
           // Keep emitted assets adjacent to the entry chunks so consumers' bundlers
           // can resolve them via the same relative path the JS already references.
@@ -1071,11 +1113,17 @@ export const defineConfig = (options: DxConfigOptions = {}): UserConfig => {
         },
       },
     },
+    ...(alias ? { resolve: { alias } } : {}),
     plugins: [
       DxWorkerResolvePlugin(),
       ...(!nodeTarget ? [DxNodeStdPlugin()] : []),
       ...(assetsAsFiles ? [DxRawAssetsPlugin()] : []),
       ...jsxPlugin,
+      // `enforce: 'post'` so the rewrite sees transpiled output: the JSX/TS transforms above can
+      // introduce `process.env` references of their own, and inject must run after them.
+      ...(importGlobals
+        ? [{ ...inject({ modules: NODE_STD_GLOBALS, sourceMap: true }), enforce: 'post' as const }]
+        : []),
       DxosLogPlugin({ logToFile: false, transform: { enabled: true } }),
       DxDeclarationsPlugin(),
     ],

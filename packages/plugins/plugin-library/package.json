@@ -21,67 +21,67 @@
         "default": "./src/capabilities/index.ts"
       },
       "types": "./dist/types/src/capabilities/index.d.ts",
-      "workerd": "./dist/lib/neutral/capabilities/gen/workerd.mjs",
-      "node": "./dist/lib/neutral/capabilities/gen/node.mjs",
-      "default": "./dist/lib/neutral/capabilities/index.mjs"
+      "workerd": "./dist/lib/capabilities.workerd.mjs",
+      "node": "./dist/lib/capabilities.node.mjs",
+      "default": "./dist/lib/capabilities.mjs"
     },
     "#components": {
       "source": "./src/components/index.ts",
       "types": "./dist/types/src/components/index.d.ts",
-      "default": "./dist/lib/neutral/components/index.mjs"
+      "default": "./dist/lib/components.mjs"
     },
     "#containers": {
       "source": "./src/containers/index.ts",
       "types": "./dist/types/src/containers/index.d.ts",
-      "default": "./dist/lib/neutral/containers/index.mjs"
+      "default": "./dist/lib/containers.mjs"
     },
     "#meta": {
       "source": "./src/meta.ts",
       "types": "./dist/types/src/meta.d.ts",
-      "default": "./dist/lib/neutral/meta.mjs"
+      "default": "./dist/lib/meta.mjs"
     },
     "#plugin": {
       "source": "./src/plugin.tsx",
       "types": "./dist/types/src/plugin.d.ts",
-      "default": "./dist/lib/neutral/plugin.mjs"
+      "default": "./dist/lib/plugin.mjs"
     },
     "#translations": {
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
-      "default": "./dist/lib/neutral/translations.mjs"
+      "default": "./dist/lib/translations.mjs"
     },
     "#types": {
       "source": "./src/types/index.ts",
       "types": "./dist/types/src/types/index.d.ts",
-      "default": "./dist/lib/neutral/types/index.mjs"
+      "default": "./dist/lib/types.mjs"
     }
   },
   "exports": {
     ".": {
       "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
-      "default": "./dist/lib/neutral/index.mjs"
+      "import": "./dist/lib/index.mjs"
     },
     "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
     "./translations": {
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
-      "default": "./dist/lib/neutral/translations.mjs"
+      "import": "./dist/lib/translations.mjs"
     },
     "./Book": {
       "source": "./src/types/Book.ts",
       "types": "./dist/types/src/types/Book.d.ts",
-      "default": "./dist/lib/neutral/Book.mjs"
+      "import": "./dist/lib/Book.mjs"
     },
     "./LibraryEvents": {
       "source": "./src/types/LibraryEvents.ts",
       "types": "./dist/types/src/types/LibraryEvents.d.ts",
-      "default": "./dist/lib/neutral/LibraryEvents.mjs"
+      "import": "./dist/lib/LibraryEvents.mjs"
     },
     "./LibraryPlugin": {
       "source": "./src/LibraryPlugin.ts",
       "types": "./dist/types/src/LibraryPlugin.d.ts",
-      "default": "./dist/lib/neutral/LibraryPlugin.mjs"
+      "import": "./dist/lib/LibraryPlugin.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",

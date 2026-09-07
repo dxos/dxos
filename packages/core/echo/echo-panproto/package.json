@@ -16,20 +16,17 @@
     ".": {
       "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
-      "browser": "./dist/lib/browser/index.mjs",
-      "node": "./dist/lib/node-esm/index.mjs"
+      "import": "./dist/lib/index.mjs"
     },
     "./react": {
       "source": "./src/react.ts",
       "types": "./dist/types/src/react.d.ts",
-      "browser": "./dist/lib/browser/react.mjs",
-      "node": "./dist/lib/node-esm/react.mjs"
+      "import": "./dist/lib/react.mjs"
     },
     "./wasm": {
       "source": "./src/wasm.ts",
       "types": "./dist/types/src/wasm.d.ts",
-      "browser": "./dist/lib/browser/wasm.mjs",
-      "node": "./dist/lib/node-esm/wasm.mjs"
+      "import": "./dist/lib/wasm.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
