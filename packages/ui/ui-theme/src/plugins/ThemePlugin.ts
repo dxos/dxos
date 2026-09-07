@@ -31,7 +31,10 @@ export const LAYER_ORDER = [
   'utilities',
 ] as const;
 
-const ROOT = '../../../../';
+// Package root relative to this module's built location, `dist/plugin/ThemePlugin.{mjs,cjs}`.
+// Tied to the output depth: the two-pass vite build in `vite.plugin.config.ts` emits flat into
+// `dist/plugin`, where the retired pipeline nested a platform slug and a mirrored source tree.
+const ROOT = '../../';
 
 export type ThemePluginOptions = {
   srcCssPath?: string;
