@@ -565,26 +565,26 @@ describe('EntityMetaIndex', () => {
       };
       yield* index.update([...positioned.map(({ item }) => item), unpositioned]);
 
-      const all = yield* index.queryAll({ spaceIds: [], queueIds: [queueId] });
+      const all = yield* index.queryAll({ spaceIds: [], queues: [{ queueId, spaceId }] });
       expect(all).toHaveLength(5);
 
       const afterCursor = yield* index.queryAll({
         spaceIds: [],
-        queueIds: [queueId],
+        queues: [{ queueId, spaceId }],
         window: { kind: 'cursor', after: 1 },
       });
       expect(afterCursor.map((row) => row.queuePosition)).toEqual([2, 3]);
 
       const page = yield* index.queryAll({
         spaceIds: [],
-        queueIds: [queueId],
+        queues: [{ queueId, spaceId }],
         window: { kind: 'cursor', after: 0, limit: 2 },
       });
       expect(page.map((row) => row.queuePosition)).toEqual([1, 2]);
 
       const typed = yield* index.queryTypes({
         spaceIds: [],
-        queueIds: [queueId],
+        queues: [{ queueId, spaceId }],
         typeDxns: [TYPE_PERSON],
         window: { kind: 'cursor', after: 2 },
       });
@@ -593,10 +593,49 @@ describe('EntityMetaIndex', () => {
       // A cursor read never sees the unpositioned block, which has no place in the ordering yet.
       const fromStart = yield* index.queryAll({
         spaceIds: [],
-        queueIds: [queueId],
+        queues: [{ queueId, spaceId }],
         window: { kind: 'cursor', after: -1 },
       });
       expect(fromStart.map((row) => row.queuePosition)).toEqual([0, 1, 2, 3]);
+    }).pipe(Effect.provide(TestLayer)),
+  );
+
+  it.effect('a queue read is scoped to its space, so a colliding queue id cannot leak', () =>
+    Effect.gen(function* () {
+      const index = new EntityMetaIndex();
+      yield* index.migrate();
+
+      // The same queue id in two spaces — the case a bare `queueId` match cannot tell apart.
+      const queueId = EntityId.random();
+      const [mine, theirs] = [SpaceId.random(), SpaceId.random()];
+      const makeItem = (spaceId: SpaceId, objectId: string): IndexerObject => ({
+        spaceId,
+        queueId,
+        queueNamespace: 'data',
+        documentId: null,
+        recordId: null,
+        queuePosition: null,
+        createdAt: null,
+        updatedAt: Date.now(),
+        data: { id: objectId, [ATTR_TYPE]: TYPE_PERSON, [ATTR_DELETED]: false },
+      });
+      const mineId = EntityId.random();
+      const theirsId = EntityId.random();
+      yield* index.update([makeItem(mine, mineId), makeItem(theirs, theirsId)]);
+
+      const scoped = yield* index.queryAll({ spaceIds: [], queues: [{ queueId, spaceId: mine }] });
+      expect(scoped.map((row) => row.objectId)).toEqual([mineId]);
+
+      const typed = yield* index.queryTypes({
+        spaceIds: [],
+        queues: [{ queueId, spaceId: mine }],
+        typeDxns: [TYPE_PERSON],
+      });
+      expect(typed.map((row) => row.objectId)).toEqual([mineId]);
+
+      // An unqualified feed URI names no space to scope to, so it still matches on the id alone.
+      const unscoped = yield* index.queryAll({ spaceIds: [], queues: [{ queueId }] });
+      expect(unscoped.map((row) => row.objectId).sort()).toEqual([mineId, theirsId].sort());
     }).pipe(Effect.provide(TestLayer)),
   );
 
@@ -624,21 +663,21 @@ describe('EntityMetaIndex', () => {
 
       const oldest = yield* index.queryAll({
         spaceIds: [],
-        queueIds: [queueId],
+        queues: [{ queueId, spaceId }],
         window: { kind: 'natural', direction: 'asc', limit: 2 },
       });
       expect(oldest.map((row) => row.objectId)).toEqual(objectIds.slice(0, 2));
 
       const newest = yield* index.queryAll({
         spaceIds: [],
-        queueIds: [queueId],
+        queues: [{ queueId, spaceId }],
         window: { kind: 'natural', direction: 'desc', limit: 2 },
       });
       expect(newest.map((row) => row.objectId)).toEqual(objectIds.slice(-2).reverse());
 
       const typed = yield* index.queryTypes({
         spaceIds: [],
-        queueIds: [queueId],
+        queues: [{ queueId, spaceId }],
         typeDxns: [TYPE_PERSON],
         window: { kind: 'natural', direction: 'asc', limit: 3 },
       });
@@ -648,7 +687,7 @@ describe('EntityMetaIndex', () => {
       yield* index.update(objectIds.slice(0, 2).map((objectId) => makeItem(objectId, true)));
       const live = yield* index.queryAll({
         spaceIds: [],
-        queueIds: [queueId],
+        queues: [{ queueId, spaceId }],
         window: { kind: 'natural', direction: 'asc', limit: 2, deleted: false },
       });
       expect(live.map((row) => row.objectId)).toEqual(objectIds.slice(2, 4));

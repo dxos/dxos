@@ -110,14 +110,25 @@ export const EntityMeta = Schema.Struct({
 export interface EntityMeta extends Schema.Schema.Type<typeof EntityMeta> {}
 
 /**
+ * A queue to select from, scoped by the space that owns it.
+ *
+ * `spaceId` is absent only for an unqualified feed URI (`echo:///<id>`), which names no space to
+ * scope to; such a queue matches on its id alone, as every queue read did before scoping existed.
+ */
+export interface QueueRef {
+  readonly queueId: string;
+  readonly spaceId?: string;
+}
+
+/**
  * Builds a SQL condition for filtering by space and queue source.
- * When `includeAllQueues` is false and no `queueIds`, only non-queue objects are returned.
+ * When `includeAllQueues` is false and no `queues`, only non-queue objects are returned.
  */
 const buildSourceCondition = (
   sql: SqlClient.SqlClient,
   spaceIds: readonly string[],
   includeAllQueues: boolean,
-  queueIds: readonly string[] | null,
+  queues: readonly QueueRef[] | null,
 ): Statement.Fragment => {
   const conditions: Statement.Fragment[] = [];
 
@@ -129,8 +140,18 @@ const buildSourceCondition = (
     }
   }
 
-  if (queueIds && queueIds.length > 0) {
-    conditions.push(sql`${sql.in('queueId', queueIds)}`);
+  if (queues && queues.length > 0) {
+    // Each queue carries its own space: a queue id is unique only within one, so matching on the id
+    // alone would admit another space's rows for a colliding id.
+    conditions.push(
+      sql.or(
+        queues.map((queue) =>
+          queue.spaceId !== undefined
+            ? sql`(spaceId = ${queue.spaceId} AND queueId = ${queue.queueId})`
+            : sql`queueId = ${queue.queueId}`,
+        ),
+      ),
+    );
   }
 
   if (conditions.length === 0) {
@@ -243,11 +264,11 @@ export class EntityMetaIndex implements Index {
     (query: {
       spaceIds: readonly EntityMeta['spaceId'][];
       includeAllQueues?: boolean;
-      queueIds?: readonly string[] | null;
+      queues?: readonly QueueRef[] | null;
       window?: QueueWindow;
     }): Effect.Effect<readonly EntityMeta[], SqlError.SqlError, SqlClient.SqlClient> =>
       Effect.gen(function* () {
-        if (query.spaceIds.length === 0 && (!query.queueIds || query.queueIds.length === 0)) {
+        if (query.spaceIds.length === 0 && (!query.queues || query.queues.length === 0)) {
           return [];
         }
 
@@ -256,7 +277,7 @@ export class EntityMetaIndex implements Index {
           sql,
           query.spaceIds,
           query.includeAllQueues ?? false,
-          query.queueIds ?? null,
+          query.queues ?? null,
         );
         const window = buildQueueWindow(sql, query.window);
         const rows = yield* sql<EntityMeta>`SELECT * FROM objectMeta WHERE ${sourceCondition}${window}`;
@@ -273,18 +294,18 @@ export class EntityMetaIndex implements Index {
       typeDxns,
       inverted = false,
       includeAllQueues = false,
-      queueIds = null,
+      queues = null,
       window,
     }: {
       spaceIds: readonly EntityMeta['spaceId'][];
       typeDxns: readonly EntityMeta['typeDXN'][];
       inverted?: boolean;
       includeAllQueues?: boolean;
-      queueIds?: readonly string[] | null;
+      queues?: readonly QueueRef[] | null;
       window?: QueueWindow;
     }): Effect.Effect<readonly EntityMeta[], SqlError.SqlError, SqlClient.SqlClient> =>
       Effect.gen(function* () {
-        if (spaceIds.length === 0 && (!queueIds || queueIds.length === 0)) {
+        if (spaceIds.length === 0 && (!queues || queues.length === 0)) {
           return [];
         }
 
@@ -294,7 +315,7 @@ export class EntityMetaIndex implements Index {
           }
 
           const sql = yield* SqlClient.SqlClient;
-          const sourceCondition = buildSourceCondition(sql, spaceIds, includeAllQueues, queueIds);
+          const sourceCondition = buildSourceCondition(sql, spaceIds, includeAllQueues, queues);
           const rows =
             yield* sql<EntityMeta>`SELECT * FROM objectMeta WHERE ${sourceCondition}${buildQueueWindow(sql, window)}`;
           return rows.map((row) => ({
@@ -303,7 +324,7 @@ export class EntityMetaIndex implements Index {
           }));
         }
         const sql = yield* SqlClient.SqlClient;
-        const sourceCondition = buildSourceCondition(sql, spaceIds, includeAllQueues, queueIds);
+        const sourceCondition = buildSourceCondition(sql, spaceIds, includeAllQueues, queues);
         const typeWhere = buildTypeDxnCondition(sql, typeDxns);
         const queueWindow = buildQueueWindow(sql, window);
         const rows = inverted
@@ -629,10 +650,10 @@ export class EntityMetaIndex implements Index {
       createdAfter?: number;
       createdBefore?: number;
       includeAllQueues?: boolean;
-      queueIds?: readonly string[] | null;
+      queues?: readonly QueueRef[] | null;
     }): Effect.Effect<readonly EntityMeta[], SqlError.SqlError, SqlClient.SqlClient> =>
       Effect.gen(function* () {
-        if (query.spaceIds.length === 0 && (!query.queueIds || query.queueIds.length === 0)) {
+        if (query.spaceIds.length === 0 && (!query.queues || query.queues.length === 0)) {
           return [];
         }
 
@@ -641,7 +662,7 @@ export class EntityMetaIndex implements Index {
           sql,
           query.spaceIds,
           query.includeAllQueues ?? false,
-          query.queueIds ?? null,
+          query.queues ?? null,
         );
 
         const timeConditions: Statement.Fragment[] = [];

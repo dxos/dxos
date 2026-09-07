@@ -15,7 +15,7 @@ import { SqlTransaction } from '@dxos/sql-sqlite';
 
 import { MIGRATIONS, MIGRATIONS_TABLE } from '../migrations/fts';
 import { chunkArray } from '../utils';
-import { type EntityMeta, buildTypeDxnCondition } from './entity-meta-index';
+import { type EntityMeta, type QueueRef, buildTypeDxnCondition } from './entity-meta-index';
 import type { Index, IndexerObject } from './interface';
 
 // SQLite bound-variable limit (SQLITE_LIMIT_VARIABLE_NUMBER) is 999 in most builds.
@@ -44,7 +44,7 @@ export interface FtsQuery {
   /**
    * Queue IDs to search within.
    */
-  queueIds: readonly EntityId[] | null;
+  queues: readonly QueueRef[] | null;
 
   /**
    * Type identifiers to restrict matches to (any form accepted by the meta index — typename
@@ -120,7 +120,7 @@ export class FtsIndex implements Index {
     query,
     spaceId,
     includeAllQueues,
-    queueIds,
+    queues,
     typeDxns,
   }: FtsQuery): Effect.Effect<readonly FtsQueryResult[], SqlError.SqlError, SqlClient.SqlClient> {
     return Effect.gen(function* () {
@@ -166,9 +166,18 @@ export class FtsIndex implements Index {
         }
       }
 
-      if (queueIds && queueIds.length > 0) {
-        // Items from specific queues.
-        sourceConditions.push(sql`m.queueId IN ${sql.in(queueIds)}`);
+      if (queues && queues.length > 0) {
+        // Items from specific queues, each scoped by its own space: a queue id is unique only
+        // within one, so matching on the id alone would admit another space's rows.
+        sourceConditions.push(
+          sql`(${sql.or(
+            queues.map((queue) =>
+              queue.spaceId !== undefined
+                ? sql`(m.spaceId = ${queue.spaceId} AND m.queueId = ${queue.queueId})`
+                : sql`m.queueId = ${queue.queueId}`,
+            ),
+          )})`,
+        );
       }
 
       if (sourceConditions.length > 0) {
