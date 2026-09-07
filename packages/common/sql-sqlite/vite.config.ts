@@ -6,14 +6,14 @@ import { defineConfig } from '../../../vite.base.config.ts';
 
 export default defineConfig({
   entry: {
-    index: 'src/index.ts',
-    OpfsPool: 'src/OpfsPool.ts',
-    OpfsWorker: 'src/OpfsWorker.ts',
-    SqlExport: 'src/SqlExport.ts',
-    SqlMigrations: 'src/SqlMigrations.ts',
-    SqlTransaction: 'src/SqlTransaction.ts',
-    SqliteClient: 'src/SqliteClient.ts',
-    SqliteMigrator: 'src/SqliteMigrator.ts',
+    'index': 'src/index.ts',
+    'OpfsPool': 'src/OpfsPool.ts',
+    'OpfsWorker': 'src/OpfsWorker.ts',
+    'SqlExport': 'src/SqlExport.ts',
+    'SqlMigrations': 'src/SqlMigrations.ts',
+    'SqlTransaction': 'src/SqlTransaction.ts',
+    'SqliteClient': 'src/SqliteClient.ts',
+    'SqliteMigrator': 'src/SqliteMigrator.ts',
     'platform/browser': 'src/platform/browser.ts',
     'platform/bun': 'src/platform/bun.ts',
     'platform/node': 'src/platform/node.ts',
