@@ -10,7 +10,7 @@ import type * as Statement from 'effect/unstable/sql/Statement';
 
 import type { Obj } from '@dxos/echo';
 import { ATTR_TYPE } from '@dxos/echo/internal';
-import type { EntityId, SpaceId } from '@dxos/keys';
+import type { SpaceId } from '@dxos/keys';
 import { SqlTransaction } from '@dxos/sql-sqlite';
 
 import { MIGRATIONS, MIGRATIONS_TABLE } from '../migrations/fts';
