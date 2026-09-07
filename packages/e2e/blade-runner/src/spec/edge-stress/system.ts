@@ -29,8 +29,15 @@ import {
  */
 export type EdgeTarget = 'local' | 'dev';
 
+/**
+ * Every field is optional at the call site and complete here: `defaultsFor` in `plan.ts` is the
+ * only place a default is written down, and `resolveSpec` merges a spec file or `--spec` over it.
+ * This declaration is therefore also the documentation of what a run can be told to do.
+ */
 export type EdgeStressSpec = {
+  /** Where replicants run. */
   platform: Platform;
+  /** Which EDGE to run against; it also selects the default timeouts and the Hub endpoint. */
   edge: EdgeTarget;
 
   /** Devices per identity; its length is the identity count and its sum the client count. */
@@ -38,8 +45,10 @@ export type EdgeStressSpec = {
   /** Create an EDGE agent per identity — an always-online member that can admit late joiners. */
   agents: boolean;
 
+  /** Slot counts the generator draws within; a command that exceeds them fails its precondition. */
   maxSpaces: number;
   maxDocumentsPerSpace: number;
+  /** Commands that will *execute*, not commands drawn — most of a uniform draw is unreachable. */
   maxCommands: number;
   /**
    * How many command lists to draw from the seed; the longest is executed. `FastCheck.assert`
@@ -49,10 +58,14 @@ export type EdgeStressSpec = {
   sampleDraws: number;
   /** Wall-clock budget; exhausting it stops issuing commands and proceeds to the final assertion. */
   maxRuntimeMs: number;
+  /** How long a space may take to converge before a stall is called a failure rather than waited on. */
   quiescenceTimeoutMs: number;
   /** Mid-run quiesce-and-assert over the online members. */
   checkpoints: boolean;
-  /** Draw `GoOffline`/`GoOnline`/`Restart`. Off isolates convergence from partition tolerance. */
+  /**
+   * Draw `GoOffline`/`GoOnline`/`Restart`. Off isolates convergence from partition tolerance, and
+   * is the default while finding 5 stands — a cut link crashes the peer.
+   */
   partitions: boolean;
   /**
    * Run this plan instead of drawing one: the commands inline, or the path of a

@@ -49,13 +49,13 @@ cd packages/services/edge && pnpm exec tsx scripts/dev.mts \
 redis-server --port 6379 &
 cd packages/e2e/blade-runner
 GRAVITY_OUT_BASE=$PWD node --import tsx src/main.ts edgeStress --no-browser --seed <seed> \
-  [-s configs/edge-stress-default.yml] [--spec '{"edge":"dev"}']
+  [--spec '{"edge":"dev"}']
 ```
 
-Every default lives in `defaultsFor` (`src/spec/edge-stress/plan.ts`); `configs/edge-stress-default.yml`
-documents the knobs with all of them commented out, and both it and `--spec` are merged over the
-defaults rather than replacing them. So a variant of a run — another EDGE, cleanup off, partitions
-on, a fixed plan — is a `--spec` flag, not a config file:
+There is no config file. Every default lives in `defaultsFor` (`src/spec/edge-stress/plan.ts`) and
+every knob is documented on `EdgeStressSpec` (`system.ts`); `--spec` and `-s <file>` alike supply
+only what a run changes and are merged over those defaults rather than replacing them. So a variant
+of a run — another EDGE, cleanup off, partitions on, a fixed plan — is a flag:
 
 ```bash
 --spec '{"edge":"dev"}'                              # against dev.dxos.network (DX_HUB_API_KEY for the fallback)
@@ -309,8 +309,7 @@ commands structurally as well as readably, and a replayed plan is simulated befo
 edited one reports which command cannot run. That turns a counterexample into a fixture, which a
 sampled sequence otherwise lacks — there is no fast-check shrinker to lean on.
 
-Hand-shrinking run F/G's 25-command plan to five (the `plan:` block commented in
-`configs/edge-stress-default.yml`):
+Hand-shrinking run F/G's 25-command plan to five, passed inline as `--spec '{"plan":[…]}'`:
 
 ```
 CreateSpace(2)  CreateDocument(2, 0)  EditText(0, 0, 0, 0.5)  EditText(1, 0, 0, 0.5)  EditCounter(0, 0, 0)
