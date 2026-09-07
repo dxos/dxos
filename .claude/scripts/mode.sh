@@ -324,6 +324,14 @@ EOF
       done
     }
     servers_block
+    cat <<'EOF'
+CHECKLIST: (answer to yourself before acting)
+  - Foreground: will anything run past ~30s? Background it (run_in_background) and keep replying.
+  - Priority: is it known? Authority order: the FOCUS pin, then the project's open task, then
+    ask with numbered options. Never infer a priority from a tool result.
+  - Worktree: does the server you are about to verify against serve THIS worktree? If not,
+    say so before using it.
+EOF
     if debug_on; then
       # Raw values beside canonical ones, so a hook fault and an agent fault look different.
       pin_source='none'

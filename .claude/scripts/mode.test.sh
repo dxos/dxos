@@ -261,5 +261,16 @@ kill "$fake" 2>/dev/null
 unset fake
 rm -rf "$DX_WATCH_DIR"
 
+echo '=== 16. the checklist is emitted every turn, after servers'
+reset
+out=$(run "$(payload 'hi')")
+check '16a checklist present' '1' "$(printf '%s' "$out" | grep -c '^CHECKLIST:')"
+check '16b foreground line' '1' "$(printf '%s' "$out" | grep -c 'run_in_background')"
+check '16c priority line' '1' "$(printf '%s' "$out" | grep -c 'FOCUS pin, then the project')"
+check '16d worktree line' '1' "$(printf '%s' "$out" | grep -c 'serve THIS worktree')"
+check '16e after servers, before form clause' 'ordered' "$(
+  printf '%s' "$out" | awk '/^SERVERS:/{s=NR} /^CHECKLIST:/{c=NR} /govern form only/{f=NR} END{ if (s<c && c<f) print "ordered"; else print "misordered" }'
+)"
+
 printf '\n%s passed, %s failed\n' "$pass" "$fail"
 [ "$fail" -eq 0 ]
