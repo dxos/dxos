@@ -57,8 +57,7 @@ describe('ProjectOperation.DelegateTaskToChat', () => {
     );
     const taskSet = await project.taskSet?.tryLoad();
     invariant(taskSet, 'Expected the scaffolded task set.');
-    const task = space.db.add(Task.make({ title: 'Write a poem', status: 'todo' }));
-    Obj.setParent(task, taskSet);
+    const task = space.db.add(Task.make({ [Obj.Parent]: taskSet, title: 'Write a poem', status: 'todo' }));
     await space.db.flush();
 
     const { chat } = await harness.runPromise(
@@ -125,8 +124,7 @@ describe('ProjectOperation.DelegateTaskToChat', () => {
       );
       const taskSet = await project.taskSet?.tryLoad();
       invariant(taskSet, 'Expected the scaffolded task set.');
-      const task = space.db.add(Task.make({ title, status: 'todo' }));
-      Obj.setParent(task, taskSet);
+      const task = space.db.add(Task.make({ [Obj.Parent]: taskSet, title, status: 'todo' }));
       return task;
     };
 

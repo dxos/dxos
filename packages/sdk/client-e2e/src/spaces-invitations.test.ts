@@ -10,6 +10,7 @@ import { performInvitation } from '@dxos/client-services/testing';
 import { createInitializedClientsWithContext, testSpaceAutomerge, waitForSpace } from '@dxos/client/testing';
 import { Context } from '@dxos/context';
 import { TestSchema } from '@dxos/echo/testing';
+import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { toPublicKey } from '@dxos/protocols/buf';
 import {
@@ -41,7 +42,10 @@ describe('Spaces/invitations', () => {
     expect(hostInvitation?.state).to.eq(Invitation_State.SUCCESS);
 
     {
-      const space = await waitForSpace(client2, toPublicKey(guestInvitation!.spaceKey)!, { ready: true });
+      invariant(guestInvitation);
+      const guestSpaceKey = toPublicKey(guestInvitation.spaceKey);
+      invariant(guestSpaceKey);
+      const space = await waitForSpace(client2, guestSpaceKey, { ready: true });
       await testSpaceAutomerge(expect, space.db);
     }
   });

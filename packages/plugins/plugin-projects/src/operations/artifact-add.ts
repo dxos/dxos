@@ -24,7 +24,7 @@ const handler: Operation.WithHandler<typeof ProjectOperation.ArtifactAdd> = Proj
 
       if (!project.artifacts.some((ref) => refKey(ref) === refKey(objectRef))) {
         Obj.update(project, (project) => {
-          project.artifacts = [...project.artifacts, objectRef];
+          project.artifacts.push(objectRef);
         });
       }
 

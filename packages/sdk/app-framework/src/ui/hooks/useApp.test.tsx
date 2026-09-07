@@ -55,11 +55,16 @@ describe('useApp startup failure reporting', () => {
       const listener = (event: CustomEvent<StartupDiagnostics>) => reported.push(event.detail);
       window.addEventListener(STARTUP_FAILED_EVENT, listener);
 
+      // Fake the watchdog's own timers (as `startup-watchdog.test.ts` does) so the "never times
+      // out" window is asserted by advancing virtual time rather than waiting out real seconds;
+      // installed before mount so the watchdog's `setInterval`/`performance.now` are fake from creation.
+      vi.useFakeTimers({ toFake: ['setInterval', 'clearInterval', 'performance'] });
       const { unmount } = render(<TimedHost manager={manager} />);
       yield* Effect.promise(() => waitFor(() => assert.isTrue(manager.getActive().length > 0)));
-      yield* Effect.promise(() => new Promise((resolve) => setTimeout(resolve, 2 * STARTUP_WATCHDOG_TICK_MS)));
+      vi.advanceTimersByTime(2 * STARTUP_WATCHDOG_TICK_MS);
       window.removeEventListener(STARTUP_FAILED_EVENT, listener);
       unmount();
+      vi.useRealTimers();
 
       assert.deepStrictEqual(reported, []);
     }),

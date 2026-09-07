@@ -90,13 +90,18 @@ export const TestToggle: Story = {
   args: {},
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    const sidebar = () => canvasElement.querySelector<HTMLElement>('[data-side="is"]');
-    await expect(sidebar()?.getAttribute('data-state')).toBe('closed');
-    await expect(sidebar()?.hasAttribute('inert')).toBe(true);
+    await expect(canvasElement.querySelector<HTMLElement>('[data-side="is"]')?.getAttribute('data-state')).toBe(
+      'closed',
+    );
+    await expect(canvasElement.querySelector<HTMLElement>('[data-side="is"]')?.hasAttribute('inert')).toBe(true);
     await userEvent.click(canvas.getAllByRole('button', { name: 'Toggle navigation sidebar' })[1]);
-    await waitFor(async () => expect(sidebar()?.getAttribute('data-state')).toBe('expanded'));
-    await expect(sidebar()?.hasAttribute('inert')).toBe(false);
+    await waitFor(async () =>
+      expect(canvasElement.querySelector<HTMLElement>('[data-side="is"]')?.getAttribute('data-state')).toBe('expanded'),
+    );
+    await expect(canvasElement.querySelector<HTMLElement>('[data-side="is"]')?.hasAttribute('inert')).toBe(false);
     await userEvent.click(canvas.getAllByRole('button', { name: 'Toggle navigation sidebar' })[0]);
-    await waitFor(async () => expect(sidebar()?.getAttribute('data-state')).toBe('closed'));
+    await waitFor(async () =>
+      expect(canvasElement.querySelector<HTMLElement>('[data-side="is"]')?.getAttribute('data-state')).toBe('closed'),
+    );
   },
 };

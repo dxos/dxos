@@ -69,5 +69,9 @@ export class Artifact extends Type.makeObject<Artifact>(DXN.make('org.dxos.type.
 ) {}
 
 /** Creates an Artifact. `kind` defaults to `'image'`. */
-export const make = ({ name, kind = 'image' }: { name?: string; kind?: string } = {}): Artifact =>
-  Obj.make(Artifact, { name, kind, variants: [] });
+export const make = ({
+  name,
+  kind = 'image',
+  [Obj.Parent]: parent,
+}: { name?: string; kind?: string; [Obj.Parent]?: Obj.Unknown } = {}): Artifact =>
+  Obj.make(Artifact, { name, kind, variants: [], [Obj.Parent]: parent });

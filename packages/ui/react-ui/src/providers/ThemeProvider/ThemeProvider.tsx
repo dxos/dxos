@@ -15,7 +15,7 @@ import { IconRegistryProvider } from './IconRegistry';
 import { TranslationsProvider, type TranslationsProviderProps } from './TranslationsProvider';
 
 export type ThemeContextValue = {
-  tx: ThemeFunction<any>;
+  tx: ThemeFunction<Record<string, any>>;
   themeMode: ThemeMode;
   hasIosKeyboard: boolean;
   safeAreaPadding?: SafeAreaPadding;

@@ -170,13 +170,13 @@ export const CalendarArticle = ({ role, subject, attendableId }: CalendarArticle
     const start = floor.getTime() === base.getTime() ? floor : addHours(floor, 1);
     const event = db.add(
       DraftEvent.make({
+        [Obj.Parent]: subject,
         owner: {},
         description: '',
         startDate: start.toISOString(),
         endDate: addHours(start, 1).toISOString(),
       }),
     );
-    Obj.setParent(event, subject);
     handleNavigate(event.id);
   }, [db, subject, selectedDate, handleNavigate]);
 
