@@ -4,11 +4,9 @@
 
 import { invariant } from '@dxos/invariant';
 
-import { isInChangeContext } from './change-context';
 import { defineHiddenProperty } from './define-hidden-property';
 import { createPropertyDeleteError, createPropertySetError } from './errors';
 import { type ReactiveHandler } from './proxy-types';
-import { ChangeKeyId } from './symbols';
 
 /**
  * Carries a proxy on its own target, so `value[symbolProxy] === value` identifies a proxy: read through
@@ -243,32 +241,6 @@ const MUTABLE_PROXY_HANDLER: ProxyHandler<any> = {
       : Reflect.deleteProperty(target, property);
   },
   getPrototypeOf: (target) => (Array.isArray(target) ? Reflect.getPrototypeOf(target) : Object.prototype),
-};
-
-/**
- * The read-only gate, and the whole of it — every variant is gated here and nowhere else. A symbol is
- * never user data (the system stamps `[ParentId]` and friends outside any change context), and a target
- * whose `[ChangeKeyId]` is undefined is still under construction and not yet gated. Everything else may
- * only be mutated inside the `Obj.update` that opened a context for *this* object.
- *
- * No dispatch: the key comes from the target's behaviour prototype, so nothing here knows or cares which
- * variant it is looking at.
- *
- * `name` is the property for a trap and the method name for a mutation a proxy cannot intercept (an
- * array method, a text CRDT op), which call this directly — the same predicate either way.
- */
-export const assertMutable = <T extends string | symbol>(
-  target: object,
-  name: T,
-  createError: (name: T) => Error,
-): void => {
-  if (typeof name === 'symbol') {
-    return;
-  }
-  const changeKey: object | undefined = Reflect.get(target, ChangeKeyId);
-  if (changeKey !== undefined && !isInChangeContext(changeKey)) {
-    throw createError(name);
-  }
 };
 
 /**

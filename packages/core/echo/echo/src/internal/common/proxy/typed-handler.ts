@@ -17,7 +17,7 @@ import { getSchemaURI } from '../../Annotation/annotations';
 import { isEntity } from '../../Entity/guard';
 import { toEffectSchema } from '../../JsonSchema/json-schema';
 import { ObjectDeletedId, ParentId, SchemaId, StaticTypeSchemaSlot, TypeEntityId, TypeId } from '../types';
-import { executeChange, queueNotification } from './change-context';
+import { assertMutable, executeChange, queueNotification } from './change-context';
 import { defineHiddenProperty } from './define-hidden-property';
 import { createTextMethodError } from './errors';
 import { batchEvents } from './event-batch';
@@ -33,7 +33,6 @@ import {
 } from './ownership';
 import { type ReactiveHandler, objectData } from './proxy-types';
 import {
-  assertMutable,
   createProxy,
   isProxy,
   isReactiveRecord,

@@ -4,7 +4,7 @@
 
 import { batchEvents } from './event-batch';
 import { getMutableProxy } from './proxy-utils';
-import { EventId } from './symbols';
+import { ChangeKeyId, EventId } from './symbols';
 
 /**
  * Generic change context tracking.
@@ -138,5 +138,32 @@ export const executeChange = (
       (ownerTarget as any)[EventId]?.emit();
     }
     pendingOwnerNotifications.clear();
+  }
+};
+
+/**
+ * The read-only gate, and the whole of it — every variant is gated here and nowhere else. A symbol is
+ * never user data (the system stamps `[ParentId]` and friends outside any change context), and a target
+ * whose `[ChangeKeyId]` is undefined is still under construction and not yet gated. Everything else may
+ * only be mutated inside the `Obj.update` that opened a context for *this* object.
+ *
+ * No dispatch: the key comes from the target's behaviour prototype, so nothing here knows or cares which
+ * variant it is looking at. Lives here rather than beside the proxy handler because it needs the change
+ * context, and the handler module must not depend on this one.
+ *
+ * `name` is the property for a trap and the method name for a mutation a proxy cannot intercept (an
+ * array method, a text CRDT op), which call this directly — the same predicate either way.
+ */
+export const assertMutable = <T extends string | symbol>(
+  target: object,
+  name: T,
+  createError: (name: T) => Error,
+): void => {
+  if (typeof name === 'symbol') {
+    return;
+  }
+  const changeKey: object | undefined = Reflect.get(target, ChangeKeyId);
+  if (changeKey !== undefined && !isInChangeContext(changeKey)) {
+    throw createError(name);
   }
 };

@@ -2,10 +2,11 @@
 // Copyright 2024 DXOS.org
 //
 
+import { assertMutable } from './change-context';
 import { createArrayMethodError } from './errors';
 import { batchEvents } from './event-batch';
 import { changeKeyOf } from './ownership';
-import { assertMutable, canonicalOf } from './proxy-utils';
+import { canonicalOf } from './proxy-utils';
 import { ChangeKeyId } from './symbols';
 
 /**
