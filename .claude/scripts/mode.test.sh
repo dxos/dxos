@@ -179,5 +179,32 @@ check '11h garbage canonicalises to discuss' 'discuss' "$(bash "$script" phase g
 bash "$script" set terse > /dev/null
 check '11i verbosity does not touch the phase' 'garbage' "$(cat "$phase")"
 
+echo '=== 12. /mode <phase> sets the phase and nothing else'
+reset
+printf 'terse' > "$state"
+printf 'keep me' > "$focus"
+out=$(run "$(payload '/mode build')")
+check '12a phase written' 'build' "$(cat "$phase")"
+check '12b verbosity untouched' 'terse' "$(cat "$state")"
+check '12c pin untouched' 'keep me' "$(cat "$focus")"
+check '12d hook acknowledges' '1' "$(printf '%s' "$out" | grep -c 'Phase already set')"
+run "$(payload '/mode debug')" > /dev/null
+check '12e debug flag on' 'present' "$([ -e "$debug" ] && echo present || echo absent)"
+run "$(payload '/mode discuss')" > /dev/null
+check '12f discuss clears the flag' 'absent' "$([ -e "$debug" ] && echo present || echo absent)"
+run "$(payload '/mode debugging')" > /dev/null
+check '12g prefix does not match' 'discuss' "$(cat "$phase")"
+run "$(payload 'we should /mode build later')" > /dev/null
+check '12h mid-sentence is inert' 'discuss' "$(cat "$phase")"
+
+echo '=== 13. /mode focus implies build'
+reset
+run "$(payload '/mode debug')" > /dev/null
+run "$(payload '/mode focus ship it')" > /dev/null
+check '13a phase is build' 'build' "$(cat "$phase")"
+check '13b debug flag cleared' 'absent' "$([ -e "$debug" ] && echo present || echo absent)"
+check '13c pin set' 'ship it' "$(cat "$focus")"
+check '13d mode is terse' 'terse' "$(cat "$state")"
+
 printf '\n%s passed, %s failed\n' "$pass" "$fail"
 [ "$fail" -eq 0 ]

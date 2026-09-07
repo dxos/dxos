@@ -221,7 +221,7 @@ settled 1x1 with the user; order of delivery is phase → watcher → checklist.
         `discuss`. `reset()` in `mode.test.sh` now clears all four state files.
         `.claude/hooks/mode.sh` untouched — hook wiring and the `context` PHASE
         clause are later tasks.
-  - [ ] Hook branch + `focus` implies `build`.
+  - [x] Hook branch + `focus` implies `build`.
   - [ ] `context` emits the PHASE clause.
 - [ ] **Watcher singleton** — `diagnose.sh` round-robin over `launch.json` ports
       plus 9009/5199, `~/.cache/dxos/watch/{status,watcher.pid}`, `--status`,
