@@ -16,7 +16,6 @@ import {
 import { type DeviceProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
 
 import { ClientServicesHost, type ServiceContext } from '../services';
-import { toBufDeviceProfileDocument } from '../services/credentials-codec';
 
 /**
  * Strip secrets from invitation before giving it to the peer.
@@ -257,7 +256,7 @@ export const acceptInvitation = (
   if (guest instanceof ClientServicesHost) {
     return guest.invitationsManager.acceptInvitation(new Context(), {
       invitation,
-      deviceProfile: guestDeviceProfile && toBufDeviceProfileDocument(guestDeviceProfile),
+      deviceProfile: guestDeviceProfile,
     });
   }
 

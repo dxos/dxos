@@ -29,7 +29,8 @@ describe('gossip buf compat', () => {
   test('an Any payload survives a buf round-trip', ({ expect }) => {
     const bufMessage = buf.fromBinary(GossipMessageSchema, encodeCompat(GossipMessageSchema, message));
     const decoded = decodeCompat<typeof message>(GossipMessageSchema, buf.toBinary(GossipMessageSchema, bufMessage));
-    expect(decoded.payload).to.deep.contain({ data: 'Hello, world!' });
+    // The discriminator matters as much as the data: without it a peer cannot identify the payload.
+    expect(decoded.payload).to.deep.equal({ '@type': 'google.protobuf.Struct', 'data': 'Hello, world!' });
   });
 
   test('but the two codecs frame that payload differently on the wire', ({ expect }) => {
