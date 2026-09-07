@@ -183,11 +183,22 @@ export const joinPendingSpaces = async (model: Model, real: Real, client: Client
 };
 
 /**
- * Wait until every named device reports the EDGE peer fully caught up. A timeout here is a real
- * finding (sync stuck), not a flake, so it fails rather than proceeding.
+ * How long to let sync state settle before giving up on it and comparing digests anyway. Shorter
+ * than the quiescence budget on purpose: this is a barrier, and the budget belongs to the
+ * assertion that follows it.
  */
-export const quiesce = async (real: Real, spaceSlot: number, clients: ClientIndex[]): Promise<void> => {
-  const deadline = Date.now() + real.spec.quiescenceTimeoutMs;
+const SYNC_BARRIER_MS = 30_000;
+
+/**
+ * Wait until every named device reports the EDGE peer fully caught up, and report whether it did.
+ *
+ * Deliberately not an assertion. `getSyncState` is unreliable between EDGE and the client
+ * (inkandswitch/subduction#286), so a peer that never reports caught-up is not evidence that its
+ * data diverged — only the digest comparison that follows can say that. Failing here would turn a
+ * bad signal into a red run and, worse, would do it *before* the ground truth is ever read.
+ */
+export const quiesce = async (real: Real, spaceSlot: number, clients: ClientIndex[]): Promise<boolean> => {
+  const deadline = Date.now() + Math.min(SYNC_BARRIER_MS, real.spec.quiescenceTimeoutMs);
   const pending = new Map<ClientIndex, string>();
 
   for (const client of clients) {
@@ -216,16 +227,16 @@ export const quiesce = async (real: Real, spaceSlot: number, clients: ClientInde
       }
     }
     if (pending.size === 0) {
-      return;
+      return true;
     }
     await sleep(250);
   }
 
-  throw new Error(
-    `sync did not quiesce for space ${spaceSlot} within ${real.spec.quiescenceTimeoutMs}ms: ${JSON.stringify([
-      ...pending,
-    ])}`,
-  );
+  log.warn('sync state never settled; comparing digests anyway', {
+    space: spaceSlot,
+    pending: [...pending],
+  });
+  return false;
 };
 
 /**
@@ -396,7 +407,8 @@ export const runCheckpoint = async (model: Model, real: Real): Promise<void> => 
     if (devices.length === 0) {
       continue;
     }
-    await quiesce(real, slot, devices);
+    const settled = await quiesce(real, slot, devices);
+    real.trace({ detail: 'checkpoint', space: slot, devices, syncSettled: settled });
     await untilConverged(real, async () => {
       const digests = await Promise.all(
         devices.map(async (client) => ({
@@ -438,7 +450,8 @@ export const assertFullyReplicated = async (model: Model, real: Real): Promise<v
     const devices = onlineMemberDevices(model, slot);
     log.info('final assertion', { space: slot, devices });
     await awaitSpaceOnAllDevices(real, slot, devices);
-    await quiesce(real, slot, devices);
+    const settled = await quiesce(real, slot, devices);
+    real.trace({ detail: 'final', space: slot, devices, syncSettled: settled });
     await untilConverged(real, async () => {
       for (const client of devices) {
         const digest = await withDeadline(
