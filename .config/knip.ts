@@ -188,13 +188,22 @@ const lazyImportedEntry = (dir: string): string[] => {
 };
 
 /**
- * Read a repeated `--flag=value` build argument out of a workspace's moon task definition. Packages
- * with a browser build declare their entry points and the packages bundled into them there, and
- * neither is visible in the import graph.
+ * Read a workspace's `vite.config.ts`. A library build declares its entry points and the packages
+ * inlined into it there, and neither is visible in the import graph. (These used to be
+ * `--entryPoint=` / `--bundlePackage=` arguments on the moon build task.)
  */
-const moonBuildArgs = (dir: string, flag: string): string[] => {
-  const manifest = globSync(`${dir}/moon.yml`).map((file) => readFileSync(file, 'utf8'))[0];
-  return [...(manifest ?? '').matchAll(new RegExp(`--${flag}=([^'"\\s]+)`, 'g'))].map(([, value]) => value);
+const viteConfig = (dir: string): string =>
+  globSync(`${dir}/vite.config.ts`).map((file) => readFileSync(file, 'utf8'))[0] ?? '';
+
+/** Source paths named as `defineConfig({ entry })` values. */
+const viteEntryPoints = (dir: string): string[] => [
+  ...new Set([...viteConfig(dir).matchAll(/'(src\/[\w./-]+\.(?:tsx?|jsx?|mjs|cjs|css))'/g)].map(([, path]) => path)),
+];
+
+/** Package names listed in `defineConfig({ bundle })`. */
+const viteBundledPackages = (dir: string): string[] => {
+  const block = viteConfig(dir).match(/bundle:\s*\[([\s\S]*?)\]/);
+  return block ? [...block[1].matchAll(/'([^']+)'/g)].map(([, name]) => name) : [];
 };
 
 /**
@@ -267,12 +276,12 @@ const typeOnlyDependencies = (dir: string, names: string[]): string[] => {
 };
 
 /**
- * A `--bundlePackage` is inlined into the workspace's own build, so esbuild resolves that package's
- * requires against this workspace. Its dependencies therefore have to be declared here too, even
- * though nothing in the workspace imports them.
+ * A `bundle` entry is inlined into the workspace's own build, so the bundler resolves that
+ * package's requires against this workspace. Its dependencies therefore have to be declared here
+ * too, even though nothing in the workspace imports them.
  */
 const bundledDependencies = (dir: string): string[] =>
-  moonBuildArgs(dir, 'bundlePackage').flatMap((name) => {
+  viteBundledPackages(dir).flatMap((name) => {
     const manifest = globSync(`${dir}/node_modules/${name}/package.json`)[0];
     return [name, ...(manifest ? Object.keys(JSON.parse(readFileSync(manifest, 'utf8')).dependencies ?? {}) : [])];
   });
@@ -427,7 +436,7 @@ for (const manifest of globSync(
 
   // What the package itself declares as its entry points. Only these decide whether the whole-source
   // fallback applies — a supplemental reference must never make a package look fully mapped.
-  const entry = [...declared, ...published, ...substitutes, ...moonBuildArgs(dir, 'entryPoint')];
+  const entry = [...declared, ...published, ...substitutes, ...viteEntryPoints(dir)];
 
   // Reached by path from a build config rather than declared, so they extend the entry set without
   // standing in for it.
