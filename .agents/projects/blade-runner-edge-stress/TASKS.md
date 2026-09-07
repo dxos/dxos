@@ -1,7 +1,8 @@
 # blade-runner-edge-stress — Tasks
 
 Randomized, model-checked end-to-end test of real clients replicating through EDGE, in the
-blade-runner harness. Spec + decisions: [DESIGN.md](./DESIGN.md).
+blade-runner harness. Spec + decisions: [DESIGN.md](./DESIGN.md); what was measured:
+[RESULTS.md](./RESULTS.md).
 
 ## Phase 0: Design (G0) — DONE
 
@@ -17,95 +18,92 @@ blade-runner harness. Spec + decisions: [DESIGN.md](./DESIGN.md).
       member/self) and admin-key `DELETE /admin/spaces|identities/:id`, `GET /admin/spaces`,
       `POST /admin/selective-purge`. Mounted at the edge worker root.
 
-## Phase 1: Local-edge MVP (G1)
+## Phase 1: Local-edge MVP (G1) — DONE
 
-Deterministic skeleton first — fixed command lists, no randomness — so the harness plumbing is
-proven before generation is layered on.
-
-### Tasks
-
-- [x] **`ClientReplicant`** (`packages/e2e/blade-runner/src/replicants/client-replicant.ts`) —
-      real `Client` over `LocalClientServices`, persistent storage under `outDir`, the JSON-only RPC
-      surface in DESIGN.md §4, `@trace.span()` on each verb, registered with `ReplicantRegistry` and
-      reachable from the entry bundle.
-- [x] **Verify the offline/online mechanism** (DESIGN.md §15.1) — done, and the predicted approach
-      does not work: the connection is built with `deferConnect`, so a reopened one never dials again.
-      Each replicant now cuts a loopback TCP proxy in front of EDGE instead. The SDK defect (an
-      `EdgeClient` cannot be restarted once closed) stands unfixed — RESULTS.md §3.
-- [ ] **Fixture setup** — 7 identities / 10 clients (3 identities × 2 devices), HALO device
-      invitations for the sibling pairs, an edge agent per identity; measure setup time and
-      parallelize if agent creation dominates.
-- [x] **`EdgeStress` plan skeleton** (`src/spec/edge-stress.ts`, registered as `edgeStress` in `main.ts`)
-      — spawn the fleet, run a hard-coded command list, final stabilization + digest comparison.
-- [x] **Assertions** — quiescence predicate vs the edge peer, cross-device digest equality, model
-      equality (DESIGN.md §9), each with its own explicit timeout (there is no RPC timeout).
-- [ ] **Run green against local edge** — edge repo `moon run edge:dev` + Redis; scenario covering
-      device-sibling replication, invitation-through-edge, an offline edit, and a delete. Show output.
-
-## Follow-ups from the rename
-
-- [ ] **Registry entry** — `.agents/projects/registry.yml` still names `blade-runner-pbt` and
-      points `tasks:`/`design:` at the old directory. Rename the entry to `blade-runner-edge-stress`,
-      repoint both paths, and refresh `summary`/`resume`. Left undone because the cloud session lost
-      git push and the file is 112 KB — too large to retype through the GitHub API safely.
+- [x] **`ClientReplicant`** (`src/replicants/client-replicant.ts`) — real `Client` over
+      `LocalClientServices`, persistent storage under `outDir`, the JSON-only RPC surface in
+      DESIGN.md §4, `@trace.span()` on each verb, registered with `ReplicantRegistry`.
+- [x] **Verify the offline/online mechanism** (DESIGN.md §15.1) — the predicted approach does not
+      work: the connection is built with `deferConnect`, so a reopened one never dials again. Each
+      replicant cuts a loopback TCP proxy in front of EDGE instead, started only when `partitions`
+      is on. The SDK defect (an `EdgeClient` cannot be restarted once closed) stands — RESULTS.md §3.
+- [x] **Fixture setup** — `devicesPerIdentity` builds the fleet (default 5 identities / 6 clients),
+      HALO device invitations for the sibling pairs, an EDGE agent per identity. Agent creation is
+      best-effort: a deployed environment can refuse it, and a run that cannot get one says so in
+      the summary rather than failing.
+- [x] **`EdgeStress` plan** (`src/spec/edge-stress/`, registered as `edgeStress` in `main.ts`) —
+      spawn the fleet, run the command list, final stabilization + digest comparison.
+- [x] **Assertions** — quiescence vs the edge peer, cross-device digest equality, model equality
+      (DESIGN.md §9), each with its own explicit timeout (there is no RPC timeout).
+- [x] **Run green against local edge** — RESULTS.md §1 is the run book; runs F and G execute the
+      full sequence. What remains red is finding 6, a product defect, not a harness one.
 
 ## Phase 2: Schema-driven generation (G1)
 
-### Tasks
-
-- [x] **Model + operations** — the vocabulary is one `Schema.TaggedUnion` and the generator is
-      `Schema.toArbitrary(...)(FastCheck)`; an interpreter (`canRun`/`execute`) adapts each drawn
-      command to `FastCheck.AsyncCommand<Model, Real>` with a model-only precondition. Per-identity
-      membership, per-client digests, tri-state client status.
+- [x] **Model + operations** — the vocabulary is one `Schema.Union` of `TaggedStruct`s and the
+      generator is `Schema.toArbitrary(...)(FastCheck)`; an interpreter (`canRun`/`execute`) adapts
+      each drawn command with a model-only precondition. Per-identity membership, per-client
+      digests, tri-state client status.
 - [x] **Seeded runner** — `--seed` through `GlobalOptions` into `FastCheck.sample`;
       `command-trace.jsonl` written per run, with the drawn plan recorded before execution. Note
       `FastCheck.assert` is NOT usable here: it biases its first run to ~2 commands (RESULTS.md §3).
-- [ ] **Soak vs dev shape** — currently a wall-clock budget checked before each command. Shrinking
-      is unavailable in practice: minimizing a counterexample means re-running sequences against a
-      freshly rebuilt fleet, which is hours per failure. Revisit if an in-process transport lands.
 - [x] **Checkpoint command** — mid-run quiesce + assert over online members only.
-- [ ] **Burn-in locally** — repeated seeds against local edge; every failure either gets fixed or
-      becomes a deterministic `examples: [...]` regression case.
+- [x] **Soak shape** — a wall-clock budget checked before each command, and a best-of-`sampleDraws`
+      draw scored by data operations. Shrinking stays unavailable: minimizing a counterexample means
+      re-running sequences against a freshly rebuilt fleet, hours per failure. Revisit if an
+      in-process transport lands.
+- [ ] **Burn-in** — repeated seeds against preview; every failure either gets fixed or becomes a
+      deterministic regression case. Blocked on finding 6, which fails most full-length runs.
 
-## Phase 3: Preview env (G2)
+## Phase 3: Deployed EDGE (G2) — DONE
 
-### Tasks
+- [x] **`edge` target** — `'local' | 'dev' | 'preview'`, one `urlsFor` deriving `edgeUrl` and the
+      hub URL from `EDGE_URLS`. The nightly runs against **preview**: a local `wrangler dev` stack
+      500s on `/db/spaces/:id/join` under six peers and a hundred objects, and with its tail-logger
+      unconnected each successive joiner measures slower than the last, so a local run measures
+      wrangler rather than EDGE.
+- [x] **Scale run against preview** — the nightly shape executed by hand and then in CI, with
+      artifacts collected. Numbers in RESULTS.md.
+- [x] **Run book** — RESULTS.md §1, covering local EDGE, deployed EDGE, and the Depot workflow.
 
-- [ ] **`edgeEnv: 'preview'`** — preset wiring, `edge-stress-<runId>` labels on spaces/identities, and
-      `clientTag: 'edge-stress-<runId>'` so runs are attributable in edge metering.
-- [ ] **Scale run against preview** — the nightly shape (10 clients, 10 spaces, 60 min) executed
-      by hand, with artifacts collected.
-- [ ] **Run book** — how to run against local edge and against preview (blade-runner README).
+## Phase 4: Cleanup — DONE
 
-## Phase 4: Cleanup — IMPORTANT, blocks G3
-
-Deferred by decision (D10), but the nightly cannot be enabled until this lands: each 60-minute
-preview soak creates identities, agents, spaces and documents.
-
-### Tasks
-
-- [ ] **Verify VP-auth self-deletion works for a fresh test identity** (DESIGN.md §15.2) — the
-      `/data/*` routes reject identities not bound to a Hub account with 403. One manual
-      `DELETE /data/space/:spaceId` against preview decides whether path A is viable.
+- [x] **Verify VP-auth self-deletion works for a fresh test identity** (DESIGN.md §15.2) — proven
+      against local, dev and preview. The `/data/*` routes reject identities not bound to a Hub
+      account with 403, which the `test+*@dxos.org` hatch resolves; dxos/edge#1026 opened that hatch
+      on preview by moving it onto its own `isTestAccountEnvironment` rather than widening
+      `isDevLikeEnvironment`.
+- [x] **Run-scoped teardown** — in the plan's own `finally`, so it runs after a failed assertion,
+      plus a SIGTERM handler: a CI job timeout kills the process without unwinding, which is exactly
+      how a shared environment accumulates orphans.
+- [x] **No admin fallback** — self-serve only, by decision. A shared secret that can delete anything
+      is not something a test should carry, and it would mask the case this cleanup exists to prove.
+      `assertCanCleanUp` refuses any target without the hatch rather than leak, so pointing a run at
+      staging or production fails before it creates anything.
 - [ ] **Typed client methods** — add the data-management routes to `EdgeHttpClient`
-      (`packages/core/mesh/edge-client`): inspect/delete space, inspect/delete identity.
-- [ ] **Run-scoped teardown** — `try/finally` inside `plan.run` (the only place that executes
-      after a failure): every identity deletes its spaces then itself; deletion is enqueued (202), so
-      poll the inspect endpoints to confirm.
-- [ ] **Leak sweeper** — admin-key pass over `GET /admin/spaces` / `GET /admin/identities` for
-      `edge-stress-` tagged leftovers from runs killed by SIGKILL; decide where the key lives.
+      (`packages/core/mesh/edge-client`). The framework calls them with `fetch` today; typing them
+      belongs in the SDK, not here.
 
-## Phase 5: Nightly CI (G3)
+## Phase 5: Nightly CI (G3) — DONE
 
-### Tasks
+- [x] **Workflow** — `.depot/workflows/edge-nightly.yml` (Depot, not GitHub Actions): cron +
+      `workflow_dispatch` with edge/objects/joiners/minutes/commands inputs, a Redis service
+      container, and two independent jobs so a red soak does not withhold a latency number.
+- [x] **Artifacts** — `summary.md`, `join-latency.json`, `command-trace.jsonl`, `perfetto.json`,
+      per-replicant logs and storage, uploaded with `if: always()`.
+- [x] **Failure routing** (D13) — a red workflow plus artifacts, as decided. Issue filing or Discord
+      stays deferred.
 
-- [ ] **Workflow** — `.github/workflows/nightly-edge-stress.yml`: cron + `workflow_dispatch`
-      (seed / runtime / command-count inputs), Redis service container, blade-runner build,
-      time-budgeted `edgeStress` against **preview**, cleanup always.
-- [ ] **Artifacts** — `command-trace.jsonl`, resolved spec + seed, per-replicant `agent.log`,
-      `perfetto.json`, sync-state and digest diffs, tarred storage dirs.
-- [ ] **Failure routing** (D13) — start with a red workflow + artifacts; decide on issue filing or
-      Discord later.
+## Follow-ups
+
+- [ ] **Finding 6** — a document is discovered but never delivered; five reproductions, two of them
+      in CI, one in the edge repo's own `automerge.node.test.ts`. This is what keeps the nightly soak
+      red, and it is a product defect, not a harness one.
+- [ ] **Finding 5** — `EdgeFeedReplicator`'s async `append` listener leaks an unhandled rejection,
+      which is why `partitions` defaults to `false`. Un-defaulting it depends on that fix.
+- [ ] **Invitation latency** — the invitation half quantizes near 60s at 100 objects and is ~19s at
+      the low end; the corrected invitation/replication split now attributes it, so the next run
+      decides whether it is the exchange or the space loading.
 
 ## Backlog
 

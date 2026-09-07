@@ -1,10 +1,15 @@
-# blade-runner-edge-stress — Phase 1/2 results (local EDGE)
+# blade-runner-edge-stress — results
 
-What was actually executed, in the Claude Code cloud sandbox against a locally built EDGE stack.
+What was actually executed: first against a locally built EDGE stack (§1–§6), then against the
+deployed dev and preview environments (§4b), then in CI on Depot (§7).
 Design: [DESIGN.md](./DESIGN.md); ledger: [TASKS.md](./TASKS.md).
 
 ## Status
 
+- **Runs nightly on Depot against preview.** Two jobs, `join-latency` and `soak`, each a fleet of
+  real client processes against `preview.dxos.network`, cleaning up after themselves through
+  self-serve VP-authenticated deletion. The latency job is green; the soak reaches its final
+  assertion and fails there on finding 6.
 - **Reaches local EDGE and executes a real command sequence.** Orchestrator + 3 replicant
   processes, each a real `@dxos/client`, authenticate to a local EDGE worker stack, create
   identities, pair devices, share delegated invitations and replicate documents.
@@ -518,3 +523,43 @@ frame decoder rather than skew.
 **Cleanup worked here**: `{"event":"cleanup","spaces":2,"accepted":4,"refused":[]}` — the self-serve
 path deleted both spaces and both identities with no admin key. The 403s in §4b are specific to the
 deployed environment's Hub-account gate, not to the mechanism.
+
+## 7. Nightly on Depot (against preview)
+
+`.depot/workflows/edge-nightly.yml`, two independent jobs. Both dispatch by hand
+(`depot ci dispatch`) as well as on the 02:00 UTC cron, and both upload their whole output tree
+with `if: always()` — the artifact is most wanted precisely when the job went red.
+
+Five framework defects surfaced only in CI and are fixed:
+
+1. **Redis unreachable.** `SchedulerEnvImpl` defaulted its connection to the port alone, so it dialled
+   loopback; a service container answers on its service name. `DX_REDIS_HOST` now feeds the host.
+2. **`Invalid space id.`** The completed invitation's `spaceKey` is a buf message, not a `PublicKey`,
+   and `waitForSpace` compared a bundled class against a source one — an `instanceof` mismatch that
+   only appears when the two resolve differently. Replaced with `PublicKey.from(...)` + `key.equals`.
+3. **Agent creation refused.** A deployed environment can decline an EDGE agent for a freshly bound
+   identity. Both plans now treat it as best-effort, record `agent: false`, and say so in the summary
+   — latency is comparable only across runs where that flag matches.
+4. **Errors lost their diagnosis crossing RPC.** `Invalid space id.` named neither the call that threw
+   nor the cause beneath it. `describeError` records message, cause chain and the top frames.
+5. **SIGTERM skipped cleanup.** A job timeout kills the process without unwinding, which leaked two
+   spaces and five identities on dev before `onCleanupSignal` was added.
+
+### Join latency — 100 objects, 5 joiners, preview
+
+Sequential by construction: run in parallel the joiners contend for the same connection budget and
+measure each other. Median 128.8s end to end, and the two halves are close to even — which is the
+reason the invitation/replication boundary had to be defined precisely (below).
+
+Replication quantizes near 60s (`60.7, 120.1, 60.7, 7.3, 1.0`), a shape that looks like a retry
+interval rather than a transfer cost.
+
+### What the invitation number means
+
+The invitation is the credential exchange: it is finished once the guest's credentials are
+replicated into the space's control feed, which is what `Invitation_State.SUCCESS` reports. The
+space becoming available locally is **replication** — it scales with the space, not with the
+exchange — so the earlier split, which ended the invitation at `waitUntilReady`, attributed space
+loading to the wrong half. Both phases are now timed inside the replicant, so neither carries the
+RPC round trip nor the cost of spawning the peer; the summary reports space-available separately
+from object catch-up.
