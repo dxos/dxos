@@ -148,6 +148,7 @@ export class EdgeStress implements TestPlan<EdgeStressSpec, EdgeStressResult> {
     const runBegin = Date.now();
     real.deadline = runBegin + spec.maxRuntimeMs;
 
+    let completed = false;
     try {
       try {
         for (const command of plan) {
@@ -178,8 +179,24 @@ export class EdgeStress implements TestPlan<EdgeStressSpec, EdgeStressResult> {
         log.warn('time budget exhausted; proceeding to the final assertion', { spent: Date.now() - runBegin });
       }
       await assertFullyReplicated(model, real);
+      completed = true;
     } finally {
       trace({ event: 'done', planned: plan.length, commands: real.counters.commands });
+      // Written here, not on the success path: a CI job's verdict has to survive the failure it is
+      // reporting, and the counts are what say how far the run got before it stopped.
+      fs.writeFileSync(
+        path.join(params.outDir, 'summary.md'),
+        renderSummary({
+          ok: completed,
+          seed: params.randomSeed,
+          edgeUrl,
+          planned: plan.length,
+          executed: real.counters.commands,
+          spaces: real.spaceIds.length,
+          documents: real.counters.documents,
+          elapsedMs: Date.now() - runBegin,
+        }),
+      );
       // Runs even when an assertion threw, which is exactly when a shared environment would leak.
       if (spec.cleanup) {
         await cleanupRun(model, real);
@@ -358,3 +375,32 @@ const hashSeed = (seed: string): number => {
   }
   return hash;
 };
+
+/**
+ * The run as a CI job summary. Written by the plan rather than by a workflow script so the same
+ * verdict appears locally, and so nothing has to re-derive it from the trace.
+ */
+const renderSummary = (result: {
+  ok: boolean;
+  seed: string | undefined;
+  edgeUrl: string;
+  planned: number;
+  executed: number;
+  spaces: number;
+  documents: number;
+  elapsedMs: number;
+}): string =>
+  [
+    `## ${result.ok ? '✅' : '❌'} Soak — ${result.executed} commands in ${(result.elapsedMs / 60_000).toFixed(1)} min`,
+    '',
+    `Against \`${result.edgeUrl}\`. Replay this exact run with \`--seed ${result.seed ?? '<unset>'}\`, or`,
+    'from its own trace with `--spec \'{"plan":"<artifact>/command-trace.jsonl"}\'`.',
+    '',
+    '| | |',
+    '| --- | --- |',
+    `| Commands planned / executed | ${result.planned} / ${result.executed} |`,
+    `| Spaces created | ${result.spaces} |`,
+    `| Documents created | ${result.documents} |`,
+    `| Seed | \`${result.seed ?? '<unset>'}\` |`,
+    '',
+  ].join('\n');

@@ -27,6 +27,7 @@ import {
  */
 const plans: { [key: string]: () => Promise<TestPlan<any, any>> } = {
   edgeStress: async () => new (await import('./spec/edge-stress')).EdgeStress(),
+  edgeJoinLatency: async () => new (await import('./spec/edge-join-latency')).EdgeJoinLatency(),
   edgeSync: async () => new (await import('./spec/edge-sync')).EdgeSync(),
   edgeWs: async () => new (await import('./spec/edge-ws')).EdgeWs(),
   automerge: async () => new (await import('./spec/automerge')).AutomergeTestPlan(),
