@@ -45,7 +45,10 @@ import { googleSyncTestServices, runGoogleSync } from '../../../testing/sync-fix
 //
 // Every run reports every blob INLINE: `operation-service` depends on neither `@dxos/client` nor any
 // other registrant of a blob backend (`registerBlobBackend` appears nowhere in dxos/edge), so the
-// registry keeps its `'inline'` default and each attachment is embedded in the Automerge document.
+// registry keeps its `'inline'` default and each attachment's bytes ride on the Blob object itself
+// rather than as a URI. Those objects reach the mailbox FEED (`Cursor.commit` -> `Feed.append`), whose
+// blocks live in the SQLite-backed `FeedSpace` DO — not an Automerge document. Where the amplification
+// below is actually paid on that path is not yet localized; the ratio is measured, the cause is not.
 //
 // `DX_MEM_BACKEND=1` registers a default backend to stand in for blob-service. Same run, 5 x 1 MiB:
 //
@@ -53,7 +56,7 @@ import { googleSyncTestServices, runGoogleSync } from '../../../testing/sync-fix
 //   inline            620.0 MiB    438.8 MiB     87.76x   5 inline
 //   blob backend      205.2 MiB     23.9 MiB      4.78x   5 external
 //
-// Routing the bytes out of the document is an 18x cut in allocation, and what remains is the
+// Routing the bytes out of the feed block is an 18x cut in allocation, and what remains is the
 // pipeline's own cost rather than the payload's.
 
 const ATTACHMENT_KB = Number.parseInt(process.env.DX_MEM_KB ?? '512', 10);
@@ -155,8 +158,8 @@ describe.runIf(process.env.DX_MEM)('gmail sync attachment memory', () => {
       ),
     );
 
-    // Where the bytes actually landed: an `inline` blob embeds them in the Automerge document, so
-    // every synced attachment permanently inflates the space doc that a later run has to open.
+    // Where the bytes actually landed: an `inline` blob carries them on the object, so they are written
+    // into the feed block itself instead of a URI pointing at a store.
     const blobs = await db
       .query(Query.select(Filter.type(Blob.Blob)).from(Scope.feed(Feed.getFeedUri(mailbox.feed.target!)!)))
       .run();

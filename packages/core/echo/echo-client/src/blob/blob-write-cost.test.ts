@@ -10,11 +10,16 @@ import { EffectEx } from '@dxos/effect';
 
 import { EchoTestBuilder } from '../testing';
 
-// Attributes the cost of writing an INLINE blob to the stage that pays it. `operation-service` stores
-// every synced mail attachment inline and dies on `exceededMemory`; the sync-level measurement puts
-// the cost near 105x the payload at 1 MiB, but not WHERE. `BlobManager.#put` for inline storage is
-// just `{ _tag: 'inline', bytes }` — no copy, no digest — so everything below `fromBytes` is the
-// candidate. Gated by `DX_MEM`; run with `--expose-gc` so the retained figure is meaningful:
+// Attributes the cost of writing an INLINE blob to the stage that pays it, for the SPACE-DOCUMENT
+// path: `Database.add` + `db.flush`. `BlobManager.#put` for inline storage is just
+// `{ _tag: 'inline', bytes }` — no copy, no digest — so everything below `fromBytes` is the candidate.
+//
+// NOT the mail-sync path. Mail attachments reach the FEED (`Cursor.commit` -> `Feed.append`), whose
+// blocks live in the SQLite-backed `FeedSpace` DO; nothing in that path calls `db.flush`. Read the
+// numbers below as the cost of persisting an inline blob into a space document, which is a real cost
+// for callers that do that, and not as an explanation of the Gmail sync OOM.
+//
+// Gated by `DX_MEM`; run with `--expose-gc` so the retained figure is meaningful:
 //
 //   DX_MEM=1 NODE_OPTIONS=--expose-gc pnpm -C packages/core/echo/echo-client exec vitest run \
 //     src/blob/blob-write-cost.test.ts
@@ -33,7 +38,7 @@ import { EchoTestBuilder } from '../testing';
 // accumulating mailbox does not re-pay for its history on every later sync. RSS exceeds the heap
 // peak because Automerge 3 is wasm-backed and the document's own bytes live in linear memory, which
 // `heapUsed` cannot see and a workerd isolate's limit can: ~214 MiB of an isolate's 128 MiB budget
-// goes on persisting ONE 1 MiB attachment.
+// goes on persisting ONE 1 MiB inline blob into a space document.
 
 const PAYLOAD = Number.parseInt(process.env.DX_MEM_KB ?? '1024', 10) * 1024;
 

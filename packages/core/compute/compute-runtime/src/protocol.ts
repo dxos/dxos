@@ -227,9 +227,9 @@ export class FunctionContext extends Resource {
 
       // Registered as the DEFAULT, so a handler that writes a blob without naming a storage — every
       // mail attachment does — reaches the host's store instead of falling through to inline. Inline
-      // embeds the bytes in the space document, which caps a blob at 4 MiB and costs ~90x the payload
-      // in transient allocation to persist; that is what exhausts a 128 MiB worker isolate on a
-      // mailbox carrying ordinary attachments.
+      // carries the bytes on the object itself, capping a blob at 4 MiB and costing ~90x the payload
+      // in transient allocation to write; that is what exhausts a 128 MiB worker isolate on a mailbox
+      // carrying ordinary attachments.
       const { blobService } = this.context.services;
       if (blobService) {
         this.#unregisterBlobBackends.push(
