@@ -134,8 +134,12 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       value: this._inspect.bind(target),
     });
 
-    if (!(target instanceof EchoArray)) {
-      const core = target[symbolInternals];
+    const core = target[symbolInternals];
+    if (target instanceof EchoArray) {
+      if (this._canMaterialize(core)) {
+        this._refreshArray(target);
+      }
+    } else {
       if (isRootDataObject(target)) {
         core.refreshTargets = (scope) => this._refreshAll(core, target, scope);
       }
@@ -146,11 +150,11 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
   }
 
   /**
-   * A record target carries its data as own properties once it can be filled, so the proxy needs no
-   * `get` trap; arrays still read their elements from the document.
+   * Every target carries its data as own properties once it can be filled — a record its keys, an array
+   * its elements — so the proxy needs no `get` trap and the engine serves reads off the target itself.
    */
   readsForwarded(target: ProxyTarget): boolean {
-    return !(target instanceof EchoArray) && this._canMaterialize(target[symbolInternals]);
+    return this._canMaterialize(target[symbolInternals]);
   }
 
   /**
@@ -221,8 +225,8 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
   }
 
   /**
-   * Reached only by array proxies and by a record proxy whose core had no document yet when the proxy
-   * was created; a filled record target has no `get` trap (see {@link readsForwarded}).
+   * Reached only by a proxy whose core had no document yet when the proxy was created; once a target can
+   * be filled it has no `get` trap at all (see {@link readsForwarded}).
    */
   get(target: ProxyTarget, prop: string | symbol, receiver: any): any {
     // The build instruments every `invariant` call with an allocated call-site record, so on this
@@ -289,10 +293,50 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     }
     this._refreshRecord(root);
     for (const nested of core.targetsMap.values()) {
-      if (!(nested instanceof EchoArray)) {
+      if (nested instanceof EchoArray) {
+        this._refreshArray(nested);
+      } else {
         this._refreshRecord(nested as ProxyTarget);
       }
     }
+  }
+
+  /**
+   * Makes an array target's elements mirror the document: one own indexed property per stored element,
+   * holding what a read returns, and a `length` that drops whatever the document no longer has. The
+   * element values come from the same path-keyed wrapping records use, so a nested record or array keeps
+   * the proxy already handed out for it.
+   */
+  private _refreshArray(target: EchoArray<any>): void {
+    const core = target[symbolInternals];
+    if (!this._canMaterialize(core)) {
+      return;
+    }
+    const raw: unknown = core.getRaw([target[symbolNamespace], ...target[symbolPath]]);
+    const previousRaw = this._previousRaw(target, core);
+    if (previousRaw !== undefined && previousRaw === raw) {
+      this._forwardReads(target);
+      return;
+    }
+    this._rawRecords.set(target, {
+      docHandle: core.docHandle,
+      raw: typeof raw === 'object' ? (raw ?? undefined) : undefined,
+    });
+
+    // Elements come from the stored form, which is decoded under the meta namespace; the memo above still
+    // keys on the raw record, since the decode is derived from it and is a fresh object every read.
+    const stored = this._storedRecord(target);
+    const elements = Array.isArray(stored) ? stored : [];
+    // Staged before anything is applied, so an element that throws leaves the array as it was rather
+    // than half of two states — reads are forwarded straight at it and would not recover.
+    const materialized = elements.map((element, index) => this._materializeValue(target, String(index), element));
+    for (const [index, value] of materialized.entries()) {
+      if (target[index] !== value) {
+        target[index] = value;
+      }
+    }
+    target.length = materialized.length;
+    this._forwardReads(target);
   }
 
   /**
@@ -377,8 +421,12 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     const core = target[symbolInternals];
     const namespace = target[symbolNamespace];
     const path = target[symbolPath];
-    return namespace === META_NAMESPACE && path.length === 0
-      ? core.getDecoded([namespace])
+    // The whole meta namespace is read decoded, so `upgradeMeta` supplies the defaults an older document
+    // omits and upgrades a legacy bare tag id into a ref; a nested meta target is reached by walking that
+    // decoded record rather than by a raw read, which would see the un-upgraded value. Everything else is
+    // read raw, since a decode copies the whole subtree where only the top level is wanted.
+    return namespace === META_NAMESPACE
+      ? getDeep(core.getDecoded([namespace]), path)
       : core.getRaw([namespace, ...path]);
   }
 

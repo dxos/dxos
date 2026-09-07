@@ -2,7 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
-import { batchEvents } from '@dxos/echo/internal';
+import { type Event } from '@dxos/async';
+import { EventId, batchEvents } from '@dxos/echo/internal';
 
 import type { Doc } from '../automerge';
 import type { ObjectCore } from '../core-db';
@@ -20,7 +21,22 @@ export class EchoArray<T> extends Array<T> {
   [symbolNamespace]: string = null as any;
   [symbolHandler]: EchoReactiveHandler = null as any;
 
+  // Installed by the handler's `init`, like every other target's; declared so an array is structurally
+  // a `ProxyTarget` and the refresh paths can take one without a cast.
+  declare [EventId]: Event<void>;
+
   static {
+    // Reads are served off the target rather than by a trap, so what the prototype chain answers is
+    // what the consumer sees: `constructor` has to be `Array` here, as the trap used to report, or an
+    // ECHO array would advertise a class no consumer can construct. `instanceof` walks the prototype
+    // chain and is unaffected.
+    Object.defineProperty(this.prototype, 'constructor', {
+      enumerable: false,
+      writable: true,
+      configurable: true,
+      value: Array,
+    });
+
     /**
      * These methods will trigger proxy traps like `set` and `defineProperty` and emit signal notifications.
      * We wrap them in a batch to avoid unnecessary signal notifications.
