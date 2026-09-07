@@ -38,6 +38,7 @@ background:
 
 ```bash
 moon run composer-app:serve-qa -- --port 5182 --strictPort &
+SERVER_PID=$!
 ```
 
 **Run the page in the headless browser helper, not the Browser pane.** The pane's tab is hidden
@@ -47,6 +48,7 @@ share the port's session), then, in the background from the repo root:
 
 ```bash
 node packages/apps/composer-app/testing/scripts/bin/qa-browser.mjs http://localhost:5182/ &
+BROWSER_PID=$!
 ```
 
 It prints `mounted` once the app is up and page errors as `[page] …`; it stays alive until you stop
@@ -135,8 +137,9 @@ the snapshot operation rather than scripting the page.
 
 ## 7. Stop what you started
 
-Stop the browser helper and the server you started (`preview_stop`, or the background tasks) when
-the run is done, and tell the user the port is closed. Leave a server you did not start alone.
+Stop the browser helper and the server you started (`kill $BROWSER_PID $SERVER_PID`, or
+`preview_stop` for a pane-started server) when the run is done, confirm nothing listens on 5182
+(`lsof -ti :5182`), and tell the user the port is closed. Leave a server you did not start alone.
 
 ## Checklist
 
