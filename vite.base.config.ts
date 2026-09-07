@@ -595,7 +595,10 @@ const createStorybookProject = (dirname: string, options?: StorybookOptions) =>
     // a defect that only StrictMode's double-invoked effects expose would pass here and fail live.
     define: { FRAMEWORK_OPTIONS: JSON.stringify({ strictMode: true }) },
     optimizeDeps: {
-      include: ['react', 'react-dom', 'react/jsx-runtime'],
+      // `aria-query` is CJS with no `exports`, and `storybook/test` reaches it through
+      // `@testing-library/dom` as `import { elementRoles }`. Unprebundled it is served raw, the
+      // named import finds nothing, and every story file fails to import before a test runs.
+      include: ['react', 'react-dom', 'react/jsx-runtime', 'aria-query', '@testing-library/dom'],
     },
     plugins: [
       // Redirect `node:*` for source-condition-resolved @dxos/* packages (which use

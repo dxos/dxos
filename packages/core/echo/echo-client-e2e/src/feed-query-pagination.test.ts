@@ -230,6 +230,125 @@ describe('Feed query pagination', () => {
     expect(after.map((obj) => (obj as TestSchema.Task).title).sort()).toEqual(['b', 'c']);
   });
 
+  test('a newest-first limit windows the scan from the feed end', async ({ expect }) => {
+    const peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Task], assignQueuePositions: true });
+    const db = await peer.createDatabase();
+    const feed = db.add(Feed.make({ name: 'tail-feed' }));
+
+    await db.appendToFeed(
+      feed,
+      ['a', 'b', 'c', 'd', 'e'].map((title) => Obj.make(TestSchema.Task, { title })),
+    );
+    await db.flush();
+
+    const feedUri = Feed.getFeedUri(feed)!;
+    const titles = (results: readonly unknown[]) => results.map((obj) => (obj as TestSchema.Task).title);
+
+    // Ascending keeps the range's first items; descending keeps its last. Both are windowed at the
+    // index — the descending scan is reversed rather than run in full and sliced.
+    const oldest = await db
+      .query(Query.select(Filter.type(TestSchema.Task)).orderBy(Order.natural()).limit(2).from(Scope.feed(feedUri)))
+      .run();
+    expect(titles(oldest)).toEqual(['a', 'b']);
+
+    const newest = await db
+      .query(
+        Query.select(Filter.type(TestSchema.Task)).orderBy(Order.natural('desc')).limit(2).from(Scope.feed(feedUri)),
+      )
+      .run();
+    expect(titles(newest)).toEqual(['e', 'd']);
+
+    // Reversing the newest-first page is the caller's append-order view of the tail.
+    expect(titles(newest).reverse()).toEqual(['d', 'e']);
+
+    // A page short of its limit is the feed's start, which is how a reader knows to stop paging.
+    const wholeFeed = await db
+      .query(
+        Query.select(Filter.type(TestSchema.Task)).orderBy(Order.natural('desc')).limit(50).from(Scope.feed(feedUri)),
+      )
+      .run();
+    expect(titles(wholeFeed)).toEqual(['e', 'd', 'c', 'b', 'a']);
+  });
+
+  test('a newest-first window composes with skip', async ({ expect }) => {
+    const peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Task], assignQueuePositions: true });
+    const db = await peer.createDatabase();
+    const feed = db.add(Feed.make({ name: 'tail-skip-feed' }));
+
+    await db.appendToFeed(
+      feed,
+      ['a', 'b', 'c', 'd', 'e'].map((title) => Obj.make(TestSchema.Task, { title })),
+    );
+    await db.flush();
+
+    // The pushed-down window must cover the skipped prefix too, or the page comes back short.
+    const results = await db
+      .query(
+        Query.select(Filter.type(TestSchema.Task))
+          .orderBy(Order.natural('desc'))
+          .skip(1)
+          .limit(2)
+          .from(Scope.feed(Feed.getFeedUri(feed)!)),
+      )
+      .run();
+
+    expect(results.map((obj) => (obj as TestSchema.Task).title)).toEqual(['d', 'c']);
+  });
+
+  test('natural order over a feed is its append order, not object-id order', async ({ expect }) => {
+    const peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Task], assignQueuePositions: true });
+    const db = await peer.createDatabase();
+    const feed = db.add(Feed.make({ name: 'append-order-feed' }));
+
+    // Appended in an order that disagrees with object-id order, which is what a second writer in a
+    // feed produces: an id is a ULID minted at its writer, so it says nothing about feed position.
+    const tasks = ['a', 'b', 'c'].map((title) => Obj.make(TestSchema.Task, { title }));
+    const byIdDescending = [...tasks].sort((left, right) => right.id.localeCompare(left.id));
+    for (const task of byIdDescending) {
+      await db.appendToFeed(feed, [task]);
+    }
+    await db.flush();
+
+    const feedUri = Feed.getFeedUri(feed)!;
+    const appended = byIdDescending.map((task) => task.title);
+
+    const ordered = await db
+      .query(Query.select(Filter.type(TestSchema.Task)).orderBy(Order.natural()).from(Scope.feed(feedUri)))
+      .run();
+    expect(ordered.map((obj) => (obj as TestSchema.Task).title)).toEqual(appended);
+
+    const reversed = await db
+      .query(Query.select(Filter.type(TestSchema.Task)).orderBy(Order.natural('desc')).from(Scope.feed(feedUri)))
+      .run();
+    expect(reversed.map((obj) => (obj as TestSchema.Task).title)).toEqual([...appended].reverse());
+  });
+
+  test('a newest-first read includes blocks with no position yet', async ({ expect }) => {
+    // No position authority here, so nothing this peer appends is ever positioned — the state a
+    // block is in between a local write and its acknowledgement, which a chat must keep showing.
+    const peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Task] });
+    const db = await peer.createDatabase();
+    const feed = db.add(Feed.make({ name: 'unpositioned-feed' }));
+
+    await db.appendToFeed(
+      feed,
+      ['a', 'b'].map((title) => Obj.make(TestSchema.Task, { title })),
+    );
+    await db.flush();
+
+    const feedUri = Feed.getFeedUri(feed)!;
+    const newest = await db
+      .query(
+        Query.select(Filter.type(TestSchema.Task)).orderBy(Order.natural('desc')).limit(2).from(Scope.feed(feedUri)),
+      )
+      .run();
+    expect(newest.map((obj) => (obj as TestSchema.Task).title).sort()).toEqual(['a', 'b']);
+
+    // A cursor read, by contrast, is over positioned blocks only and sees none of them.
+    const cursor = await db.query(Query.select(Filter.feedCursor()).from(Scope.feed(feedUri))).run();
+    expect(cursor).toHaveLength(0);
+  });
+
   test('cursor filter is rejected outside a feed scope', async ({ expect }) => {
     const peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Task], assignQueuePositions: true });
     const db = await peer.createDatabase();

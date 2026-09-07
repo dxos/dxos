@@ -152,12 +152,22 @@ export interface QueueWindow {
   before?: number;
   /** Maximum rows to return, applied after ordering by position. */
   limit?: number;
+  /**
+   * Take the window from the end of the range instead of the start, so `limit` keeps the newest
+   * blocks. Such a read also returns the unpositioned blocks — they follow every positioned one —
+   * unless `before` bounds the window below the feed's end.
+   */
+  tail?: boolean;
 }
 
 /**
  * Trailing `... AND queuePosition > ? ORDER BY queuePosition LIMIT ?` for a windowed queue read.
  * Empty when the window is empty, so the unwindowed query keeps its previous shape (and its
  * unspecified row order).
+ *
+ * A tail read reverses the scan so the limit keeps the range's newest blocks. Rows still come back
+ * in scan order, which for a tail read is newest-first — a caller that wants append order sorts
+ * them, as it must anyway once unpositioned blocks are in the set.
  */
 const buildQueueWindow = (sql: SqlClient.SqlClient, window: QueueWindow | undefined): Statement.Fragment => {
   if (window === undefined) {
@@ -168,8 +178,20 @@ const buildQueueWindow = (sql: SqlClient.SqlClient, window: QueueWindow | undefi
   // that is the intent: an unpositioned block has no place in the ordering yet, so admitting it
   // would let it slip past a later read that resumes beyond its eventual position.
   const upper = window.before !== undefined ? sql` AND queuePosition < ${window.before}` : sql``;
+  const positioned = sql`queuePosition > ${window.after}${upper}`;
   const limit = window.limit !== undefined ? sql` LIMIT ${window.limit}` : sql``;
-  return sql` AND queuePosition > ${window.after}${upper} ORDER BY queuePosition ASC${limit}`;
+
+  if (!window.tail) {
+    return sql` AND ${positioned} ORDER BY queuePosition ASC${limit}`;
+  }
+
+  // A tail read bounded above stops short of the feed's end, so the unpositioned blocks — which sit
+  // past every position — are outside it; an unbounded one ends at the feed's end and includes them.
+  const scope = window.before === undefined ? sql`(${positioned} OR queuePosition IS NULL)` : positioned;
+  // Nulls are the newest blocks, so they lead a newest-first scan. SQLite would sort them last in
+  // `DESC`, hence the explicit null-rank key. `objectId DESC` totalises the order so a `LIMIT` over
+  // blocks that tie on position — every unpositioned one does — takes a stable subset.
+  return sql` AND ${scope} ORDER BY (queuePosition IS NULL) DESC, queuePosition DESC, objectId DESC${limit}`;
 };
 
 export class EntityMetaIndex implements Index {

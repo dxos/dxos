@@ -587,4 +587,117 @@ describe('EntityMetaIndex', () => {
       expect(fromStart.map((row) => row.queuePosition)).toEqual([0, 1, 2, 3]);
     }).pipe(Effect.provide(TestLayer)),
   );
+
+  it.effect('a limited tail read over tied unpositioned blocks is stable', () =>
+    Effect.gen(function* () {
+      const index = new EntityMetaIndex();
+      yield* index.migrate();
+
+      const spaceId = SpaceId.random();
+      const queueId = EntityId.random();
+      // Every unpositioned block ties on position, so without `objectId` in the order SQLite may
+      // answer a `LIMIT` with any subset of them and a newest-first page shifts between reads.
+      const ids = [EntityId.random(), EntityId.random(), EntityId.random()];
+      yield* index.update(
+        ids.map((id) => ({
+          spaceId,
+          queueId,
+          queueNamespace: 'data',
+          documentId: null,
+          recordId: null,
+          queuePosition: null,
+          createdAt: null,
+          updatedAt: Date.now(),
+          data: { id, [ATTR_TYPE]: TYPE_PERSON, [ATTR_DELETED]: false },
+        })),
+      );
+
+      const expected = [...ids].sort().reverse().slice(0, 2);
+      const page = yield* index.queryAll({
+        spaceIds: [],
+        queueIds: [queueId],
+        window: { after: -1, tail: true, limit: 2 },
+      });
+      expect(page.map((row) => row.objectId)).toEqual(expected);
+
+      // The same window read again answers with the same rows, which is what a pager depends on.
+      const again = yield* index.queryAll({
+        spaceIds: [],
+        queueIds: [queueId],
+        window: { after: -1, tail: true, limit: 2 },
+      });
+      expect(again.map((row) => row.objectId)).toEqual(expected);
+    }).pipe(Effect.provide(TestLayer)),
+  );
+
+  it.effect('a reversed read takes the window from the end of the range', () =>
+    Effect.gen(function* () {
+      const index = new EntityMetaIndex();
+      yield* index.migrate();
+
+      const spaceId = SpaceId.random();
+      const queueId = EntityId.random();
+      const item = (queuePosition: number | null): IndexerObject => ({
+        spaceId,
+        queueId,
+        queueNamespace: 'data',
+        documentId: null,
+        recordId: null,
+        queuePosition,
+        createdAt: null,
+        updatedAt: Date.now(),
+        data: { id: EntityId.random(), [ATTR_TYPE]: TYPE_PERSON, [ATTR_DELETED]: false },
+      });
+      yield* index.update([0, 1, 2, 3].map(item));
+
+      const tail = yield* index.queryAll({
+        spaceIds: [],
+        queueIds: [queueId],
+        window: { after: -1, tail: true, limit: 2 },
+      });
+      expect(tail.map((row) => row.queuePosition)).toEqual([3, 2]);
+
+      // `before` pages backwards past the previous page's oldest item.
+      const earlier = yield* index.queryAll({
+        spaceIds: [],
+        queueIds: [queueId],
+        window: { after: -1, before: 2, tail: true, limit: 2 },
+      });
+      expect(earlier.map((row) => row.queuePosition)).toEqual([1, 0]);
+
+      // A short page is the range's start, which is how a reader knows to stop paging.
+      const exhausted = yield* index.queryAll({
+        spaceIds: [],
+        queueIds: [queueId],
+        window: { after: -1, before: 1, tail: true, limit: 2 },
+      });
+      expect(exhausted.map((row) => row.queuePosition)).toEqual([0]);
+
+      // An unpositioned block is newer than every positioned one, so it leads an unbounded reversed
+      // read — a chat must not lose the message it just wrote while the authority catches up.
+      yield* index.update([item(null)]);
+      const withUnpositioned = yield* index.queryAll({
+        spaceIds: [],
+        queueIds: [queueId],
+        window: { after: -1, tail: true, limit: 2 },
+      });
+      expect(withUnpositioned.map((row) => row.queuePosition)).toEqual([null, 3]);
+
+      // Bounding above puts the window below the feed's end, where the unpositioned block is not.
+      const boundedAbove = yield* index.queryAll({
+        spaceIds: [],
+        queueIds: [queueId],
+        window: { after: -1, before: 3, tail: true },
+      });
+      expect(boundedAbove.map((row) => row.queuePosition)).toEqual([2, 1, 0]);
+
+      const typed = yield* index.queryTypes({
+        spaceIds: [],
+        queueIds: [queueId],
+        typeDxns: [TYPE_PERSON],
+        window: { after: -1, tail: true, limit: 1 },
+      });
+      expect(typed.map((row) => row.queuePosition)).toEqual([null]);
+    }).pipe(Effect.provide(TestLayer)),
+  );
 });

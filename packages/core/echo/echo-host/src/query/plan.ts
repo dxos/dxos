@@ -74,8 +74,12 @@ export namespace QueryPlan {
      * positioned inside it, in position order, so resuming a feed costs what is new rather than the
      * whole feed. Present (possibly with no bounds set) whenever the filter was, since a cursor read
      * covers positioned blocks only.
+     *
+     * `tail` windows from the range's end instead of its start, so `limit` keeps the newest blocks;
+     * such a read also covers the unpositioned blocks (which follow every positioned one) unless
+     * `end` bounds the window below the feed's end.
      */
-    feedCursorRange?: { begin?: string; end?: string };
+    feedCursorRange?: { begin?: string; end?: string; tail?: boolean };
   };
 
   /**

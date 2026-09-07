@@ -93,6 +93,13 @@ type QueryItem = {
   updatedAt: number | null;
 
   /**
+   * The position the position authority assigned this feed block, which is the feed's append order
+   * and so what `natural` orders a feed by. Null for an automerge object (no position exists) and
+   * for a block written locally and not yet acknowledged — the latter sorts last, being the newest.
+   */
+  queuePosition: number | null;
+
+  /**
    * Group key, set by `AggregateStep`. Undefined for queries without an `aggregate` clause; `{}` for
    * an aggregate clause with no `group` entries (a single group over the whole input).
    */
@@ -987,6 +994,7 @@ export class QueryExecutor extends Resource {
                 rank: rankMap.get(result.recordId) ?? 1,
                 createdAt: result.createdAt,
                 updatedAt: result.updatedAt,
+                queuePosition: result.queuePosition ?? null,
               };
             })
             .filter(isNonNullable);
@@ -1664,7 +1672,7 @@ export class QueryExecutor extends Resource {
   private _compareByOrder(a: QueryItem, b: QueryItem, order: QueryAST.Order): number {
     switch (order.kind) {
       case 'natural': {
-        const comparison = a.objectId.localeCompare(b.objectId);
+        const comparison = _compareNaturally(a, b);
         return order.direction === 'desc' ? -comparison : comparison;
       }
       case 'property': {
@@ -1919,6 +1927,7 @@ export class QueryExecutor extends Resource {
       rank: 1,
       createdAt: meta.createdAt,
       updatedAt: meta.updatedAt,
+      queuePosition: meta.queuePosition ?? null,
     };
   }
 
@@ -1952,6 +1961,7 @@ export class QueryExecutor extends Resource {
       rank: 1,
       createdAt: meta.createdAt,
       updatedAt: meta.updatedAt,
+      queuePosition: null,
     };
   }
 
@@ -2029,6 +2039,7 @@ export class QueryExecutor extends Resource {
         // DXN traversal results are not sourced from the meta index; timestamps are unavailable.
         createdAt: null,
         updatedAt: null,
+        queuePosition: null,
       };
     }
 
@@ -2061,6 +2072,7 @@ export class QueryExecutor extends Resource {
       // DXN traversal results are not sourced from the meta index; timestamps are unavailable.
       createdAt: null,
       updatedAt: null,
+      queuePosition: null,
     };
   }
 
@@ -2180,13 +2192,39 @@ const extractSpaceIdFromQueue = (feedUri: string): SpaceId | undefined => {
 const BEFORE_FIRST_POSITION = -1;
 
 /**
+ * A feed's natural order is its append order, which is the position the position authority assigned
+ * — not the object id. The two agree only while one writer creates every block, because an id is a
+ * ULID minted at the writer; a feed with two writers (a chat's user and its agent) can hand out ids
+ * in an order the feed does not share, and it is the feed's order that a reader must see.
+ *
+ * An unacknowledged block has no position and sorts last, being the newest, with the object id
+ * breaking ties among such blocks so the order is total and stable. An automerge object has no
+ * position at all, so a space query is unaffected and still orders by id.
+ */
+const _compareNaturally = (a: QueryItem, b: QueryItem): number => {
+  if (a.queuePosition !== b.queuePosition) {
+    // Only one side unpositioned: it is the newer, wherever the other sits.
+    if (a.queuePosition === null) {
+      return 1;
+    }
+    if (b.queuePosition === null) {
+      return -1;
+    }
+    return a.queuePosition < b.queuePosition ? -1 : 1;
+  }
+
+  return a.objectId.localeCompare(b.objectId);
+};
+
+/**
  * The index-level window for a select bounded by a cursor range: the positions strictly between its
  * bounds, in position order, capped at the pushed-down limit.
  *
  * Every cursor range windows the scan, an empty one included — it bounds nothing but still asks for
  * a cursor read, which is over positioned blocks in position order. A reader that paged the
  * unpositioned blocks in first would stop at a page of items it cannot act on while positioned ones
- * waited behind them.
+ * waited behind them. A tail read is the exception: it wants the feed's newest blocks, which is
+ * where the unpositioned ones are, so it admits them unless `end` bounds the window below the end.
  *
  * A bound that is not a decimal position is treated as unsatisfiable rather than as absent:
  * resuming a corrupted checkpoint from the beginning would re-dispatch the whole feed.
@@ -2210,6 +2248,7 @@ const extractQueueWindow = (step: QueryPlan.SelectStep): QueueWindow | undefined
     after: range.begin ? parseCursor(range.begin, Number.MAX_SAFE_INTEGER) : BEFORE_FIRST_POSITION,
     ...(range.end ? { before: parseCursor(range.end, BEFORE_FIRST_POSITION) } : {}),
     ...(step.limit !== undefined ? { limit: step.limit } : {}),
+    ...(range.tail ? { tail: true } : {}),
   };
 };
 

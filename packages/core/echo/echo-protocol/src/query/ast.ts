@@ -166,6 +166,12 @@ const FilterFeedCursor_ = Schema.Struct({
   begin: Schema.optional(Schema.String),
   /** Read up to but not including this cursor. */
   end: Schema.optional(Schema.String),
+  /**
+   * Take the window from the end of the range rather than the start, so a pushed-down limit keeps
+   * the newest items instead of the oldest. Unpositioned blocks are newer than every positioned
+   * one, so an unbounded-above tail read admits them; bounding with `end` excludes them again.
+   */
+  tail: Schema.optional(Schema.Boolean),
 });
 
 export interface FilterFeedCursor extends Schema.Schema.Type<typeof FilterFeedCursor_> {}

@@ -4,11 +4,12 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { Aggregate, Filter, Order, Query, Ref } from '@dxos/echo';
+import { Aggregate, Feed, Filter, Order, Query, Ref } from '@dxos/echo';
 import { type QueryAST } from '@dxos/echo-protocol';
 import { TestSchema } from '@dxos/echo/testing';
 import { EID, EntityId, SpaceId } from '@dxos/keys';
 
+import { type QueryPlan } from './plan';
 import { QueryPlanner, filterContainsInQuery } from './query-planner';
 
 describe('QueryPlanner', () => {
@@ -2233,6 +2234,42 @@ describe('QueryPlanner', () => {
       const filterStep = plan.steps[filterStepIndex];
       expect(filterStep).toMatchObject({ filter: { type: 'object', props: { title: { type: 'in-query' } } } });
     });
+  });
+
+  test('a newest-first limit over a feed is windowed at the scan, not sliced after it', () => {
+    const feed: QueryAST.Scope[] = [{ _tag: 'feed', feedUri: QUEUE_DXN }];
+    const select = (plan: QueryPlan.Plan) =>
+      plan.steps.find((step): step is QueryPlan.SelectStep => step._tag === 'SelectStep')!;
+
+    // Newest-first: the scan is reversed and stopped at the limit, so the read costs the window.
+    const newest = planner.createPlan(
+      Query.select(Filter.type(TestSchema.Task)).orderBy(Order.natural('desc')).limit(50).from(feed).ast,
+    );
+    expect(select(newest).limit).toBe(50);
+    expect(select(newest).feedCursorRange).toEqual({ tail: true });
+
+    // Oldest-first already matches the scan order, so it needs no reversal.
+    const oldest = planner.createPlan(
+      Query.select(Filter.type(TestSchema.Task)).orderBy(Order.natural()).limit(50).from(feed).ast,
+    );
+    expect(select(oldest).limit).toBe(50);
+    expect(select(oldest).feedCursorRange).toBeUndefined();
+
+    // An explicit cursor range keeps its bounds and gains the reversal.
+    const bounded = planner.createPlan(
+      Query.select(Filter.and(Filter.type(TestSchema.Task), Filter.feedCursor({ end: Feed.Cursor.make('7') })))
+        .orderBy(Order.natural('desc'))
+        .limit(50)
+        .from(feed).ast,
+    );
+    expect(select(bounded).feedCursorRange).toEqual({ end: '7', tail: true });
+
+    // A space scope carries no position to reverse, so the limit stays above the scan.
+    const space = planner.createPlan(
+      withSpaceIdOptions(Query.select(Filter.type(TestSchema.Task)).orderBy(Order.natural('desc')).limit(50).ast),
+    );
+    expect(select(space).limit).toBeUndefined();
+    expect(select(space).feedCursorRange).toBeUndefined();
   });
 });
 
