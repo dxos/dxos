@@ -118,6 +118,9 @@ const WORKERD_COMPATIBILITY_FLAGS = ['nodejs_compat'];
 /**
  * Remaps `node:*` and bare Node.js built-ins to `@dxos/node-std/*` externals.
  * Lets browser consumers resolve polyfills via their app's alias config.
+ *
+ * `isBundled` exempts a specifier the package asked to inline, so a `bundle` entry that shadows a
+ * stdlib name (`events`, `buffer`, `util`, …) still resolves to the npm package.
  */
 export const DxNodeStdPlugin = (isBundled: (id: string) => boolean = () => false): Plugin => ({
   name: 'DxNodeStd',
