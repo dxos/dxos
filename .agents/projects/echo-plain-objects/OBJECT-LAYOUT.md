@@ -2,7 +2,8 @@
 
 Every node below is one JavaScript object in the heap. Solid arrows are **own property references**
 (labelled with the key); dashed arrows are **`[[Prototype]]` links**. State after Stage E
-(`2e35502a`), where every target carries its own data and one shared handler serves every proxy.
+(`cf4c23bf`), where every target carries its own data and one shared four-trap handler serves every
+proxy.
 
 **There are two handler classes, not three.** `TypedReactiveHandler` backs in-memory objects and
 `EchoReactiveHandler` backs database-backed ones. A _feed_ object is not a third variant: it is an
@@ -15,7 +16,7 @@ ordinary typed object with a `FeedObjectCore` sidecar syncing it (see diagram 4)
 ```mermaid
 graph TD
   P["<b>Proxy</b> exotic object<br/><i>what the consumer holds</i>"]
-  H["<b>REACTIVE_PROXY_HANDLER</b><br/><i>one module singleton for every proxy</i><br/>no get trap · 10 traps dispatch on the target"]
+  H["<b>REACTIVE_PROXY_HANDLER</b><br/><i>one module singleton for every proxy</i><br/>4 traps: set · defineProperty · deleteProperty · getPrototypeOf<br/>only the 3 write traps dispatch"]
   T["<b>target</b><br/><i>carries the object's data as own properties</i>"]
   HANDLER["<b>handler instance</b><br/>TypedReactiveHandler.instance<br/>or EchoReactiveHandler.instance"]
 
@@ -24,12 +25,13 @@ graph TD
   T -->|"Symbol.for @dxos/echo/Proxy"| P
   T -->|"Symbol.for @dxos/echo/ProxyTarget"| T
   T -->|"Symbol.for @dxos/echo/ReactiveHandler"| HANDLER
-  H -.->|"reads the symbol<br/>on every trap"| T
+  H -.->|"read only on a write"| T
 ```
 
-A read (`obj.title`) touches **none** of this: with no `get` trap the engine performs the read on the
-target itself. The dashed edge is the dispatch that still exists on the nine remaining traps — the
-thing worth deleting next.
+A read touches **none** of this. There is no `get`, `has`, `ownKeys` or `getOwnPropertyDescriptor`
+trap, so `obj.title`, `'title' in obj`, `Object.keys(obj)`, a spread and a descriptor lookup are all
+answered by the engine off the target with no JavaScript call. `getPrototypeOf` is trapped but does
+not dispatch. The dashed edge is the only dispatch left, and it is reached only by a mutation.
 
 ### Symbols carried on a target
 
@@ -87,7 +89,7 @@ is assigned later — which is what lets reads be forwarded.
 graph TD
   P["<b>Proxy</b>"]
   H["REACTIVE_PROXY_HANDLER"]
-  T["<b>target</b> = {} filled by the refresh<br/>own data mirrors the document:<br/>title (decoded) · assignee (Ref) · nested → sub-proxy"]
+  T["<b>target</b> = {} filled by the refresh<br/>own data mirrors the document:<br/>title (decoded) · assignee (Ref) · nested → sub-proxy<br/><b>id</b> (own, from the core — not the document)"]
   IS["<b>instanceState</b> = Object.create(EchoRootPrototype)<br/>[symbolInternals] · [symbolNamespace]='data'<br/>[symbolPath]=[] · [EventId]"]
   ER["<b>EchoRoot.prototype</b><br/>id · [SchemaId] · [TypeId] · [MetaId] · [ParentId] · toJSON"]
   ERC["<b>EchoRecord.prototype</b> <i>(base)</i>"]
@@ -168,16 +170,16 @@ graph LR
   subgraph read["obj.title — no JavaScript runs"]
     R1["proxy [[Get]]"] --> R2["no get trap<br/>→ engine reads the target"] --> R3["own property<br/>~2-20 ns"]
   end
-  subgraph write["obj.title = x — the only dispatching path"]
+  subgraph write["obj.title = x — the only dispatching path (1 of 4 traps)"]
     W1["proxy [[Set]]"] --> W2["REACTIVE_PROXY_HANDLER.set"] --> W3["read @ReactiveHandler<br/>off the target"] --> W4["handler.set"] --> W5{"isInChangeContext?"}
     W5 -->|"no"| W6["throw<br/>MutationOutsideChangeContextError"]
     W5 -->|"yes"| W7["write the document /<br/>own property, then refresh"]
   end
 ```
 
-The read path is already dispatch-free. The write path is where the remaining multiple dispatch
-lives — and outside `Obj.update` it always ends in the same throw regardless of variant, which is
-the argument for collapsing the read-only proxy to a handler with no dispatch at all:
+The read path is dispatch-free and trap-free. The write path is where the remaining multiple dispatch
+lives — and outside `Obj.update` it always ends in the same throw regardless of variant, which is the
+argument for rejecting there too, with no handler lookup at all:
 
 ```js
 const READONLY_PROXY_HANDLER = {
@@ -194,7 +196,9 @@ const READONLY_PROXY_HANDLER = {
 };
 ```
 
-Whether that is reachable depends on three open questions, currently with a reviewer: whether
-`has` / `ownKeys` / `getOwnPropertyDescriptor` still differ from what the raw target answers, whether
-one change-context predicate can serve both handlers, and whether the two packages' differing error
-messages can be unified.
+The key-set traps are already gone (`cf4c23bf`) — they differed from the raw target in four ways, three
+of which were bugs. What remains before the write traps can reject without dispatching: a single
+change-context predicate (`change-context.ts` keeps one module-global `currentChangeContext`, so
+"is any context open" is an O(1) variant-free check), an exemption for the symbol writes that are
+legitimate outside `Obj.update` (`Obj.setParent` stamps `[ParentId]` after every update), and
+unifying the two packages' differing error messages.
