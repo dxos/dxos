@@ -35,6 +35,10 @@
 #                       invariants are emitted in BOTH modes, only the length
 #                       clause varies. Never silent — a mode that says nothing
 #                       in its default state is the bug this replaced.
+#   mode.sh servers     -> print just the SERVERS block `context` renders, through
+#                       the same sanitising `servers_block` — so a caller that only
+#                       wants server status (`.claude/commands/mode.md`) never has
+#                       to fall back to the watcher's raw, unvalidated `--status`.
 #
 # State is per-user runtime, not repo policy: it lives in an untracked file and
 # must stay out of git (ignored via the root .gitignore).
@@ -154,6 +158,67 @@ current() {
   canonical "$value"
 }
 
+# `ps` elapsed time reads as a clock time in a one-line row, so it is rendered
+# as an age instead.
+humanize_etime() {
+  case "$1" in
+    '' | '-') printf -- '-'; return 0 ;;
+  esac
+  printf '%s' "$1" | awk -F'[-:]' '
+    NF == 4 { printf "%dd%dh", $1, $2; next }
+    NF == 3 { printf "%dh%dm", $1, $2; next }
+    NF == 2 { printf "%dm", $1; next }
+    { printf "%s", $0 }'
+}
+# Watcher-supplied paths are printed straight into the agent's context, so a control
+# character — which would split a row and hand over an extra, instruction-shaped line —
+# is flattened here as well as at the producer.
+printable() { printf '%s' "$1" | tr -c '[:print:]' '?'; }
+# Reads the watcher's status file rather than probing servers itself, so the
+# hot path never blocks on a wedged port. Top-level, not `context`-local, so
+# the standalone `servers` verb renders through this same validated path
+# instead of a caller falling back to the watcher's raw `--status`.
+servers_block() {
+  local diagnose="$root/tools/storybook-react/scripts/diagnose.sh" here status
+  [ -f "$diagnose" ] || return 0
+  here=$(git -C "$root" rev-parse --show-toplevel 2>/dev/null || printf '%s' "$root")
+  status=$(bash "$diagnose" --status 2>/dev/null) || return 0
+  case "$status" in
+    unwatched*) printf 'SERVERS: %s\n' "$status"; return 0 ;;
+  esac
+  printf 'SERVERS: (from the dev-server watcher; [THIS] = serves this worktree)\n'
+  printf '%s\n' "$status" | tail -n +2 | {
+    local line idle=''
+    while IFS=$'\t' read -r port pid kind tree state age last; do
+      [ -n "$port" ] || continue
+      # A diagnostic line carries no tabs, so it lands whole in $port; only the
+      # watcher's own two are echoed back, because anything else on a non-numeric
+      # first field is a fragment of a split row, not a status line.
+      case "$port" in
+        'stale:'*) printf '  %s\n' "$(printable "$port")"; continue ;;
+        'no status yet'*) printf '  %s\n' "$(printable "$port")"; continue ;;
+        *[!0-9]*) continue ;;
+      esac
+      # A short row is half of a split one; rendering it would report a server that
+      # the watcher never saw.
+      if [ -z "$pid" ] || [ -z "$kind" ] || [ -z "$tree" ] || [ -z "$state" ] || [ -z "$age" ] || [ -z "$last" ]; then
+        continue
+      fi
+      if [ "$state" = unbound ]; then
+        idle="$idle $port"
+      else
+        line=":$port $kind $state $(humanize_etime "$age") ${tree##*/}"
+        [ "$tree" = "$here" ] && line="$line [THIS]"
+        printf '  %s\n' "$(printable "$line")"
+        if debug_on && [ "$last" != '-' ]; then printf '    capture: %s\n' "$(printable "$last")"; fi
+      fi
+    done
+    # Collapsed to one line because a row per idle port is a dozen-plus lines
+    # of noise in every prompt.
+    if [ -n "$idle" ]; then printf '  unbound:%s\n' "$idle"; fi
+  }
+}
+
 case "${1:-get}" in
   get)
     current; printf '\n'
@@ -252,6 +317,9 @@ case "${1:-get}" in
   debug)
     if debug_on; then printf 'on\n'; else printf 'off\n'; fi
     ;;
+  servers)
+    servers_block
+    ;;
   context)
     # Emitted in BOTH modes. The invariants are state-independent, and a rule
     # stated only in always-loaded markdown is diluted to nothing by mid-session
@@ -318,64 +386,6 @@ EOF
   Clear the pin with `/mode terse` or `/mode normal`.
 EOF
     fi
-    # `ps` elapsed time reads as a clock time in a one-line row, so it is rendered
-    # as an age instead.
-    humanize_etime() {
-      case "$1" in
-        '' | '-') printf -- '-'; return 0 ;;
-      esac
-      printf '%s' "$1" | awk -F'[-:]' '
-        NF == 4 { printf "%dd%dh", $1, $2; next }
-        NF == 3 { printf "%dh%dm", $1, $2; next }
-        NF == 2 { printf "%dm", $1; next }
-        { printf "%s", $0 }'
-    }
-    # Watcher-supplied paths are printed straight into the agent's context, so a control
-    # character — which would split a row and hand over an extra, instruction-shaped line —
-    # is flattened here as well as at the producer.
-    printable() { printf '%s' "$1" | tr -c '[:print:]' '?'; }
-    # Reads the watcher's status file rather than probing servers itself, so the
-    # hot path never blocks on a wedged port.
-    servers_block() {
-      local diagnose="$root/tools/storybook-react/scripts/diagnose.sh" here status
-      [ -f "$diagnose" ] || return 0
-      here=$(git -C "$root" rev-parse --show-toplevel 2>/dev/null || printf '%s' "$root")
-      status=$(bash "$diagnose" --status 2>/dev/null) || return 0
-      case "$status" in
-        unwatched*) printf 'SERVERS: %s\n' "$status"; return 0 ;;
-      esac
-      printf 'SERVERS: (from the dev-server watcher; [THIS] = serves this worktree)\n'
-      printf '%s\n' "$status" | tail -n +2 | {
-        local line idle=''
-        while IFS=$'\t' read -r port pid kind tree state age last; do
-          [ -n "$port" ] || continue
-          # A diagnostic line carries no tabs, so it lands whole in $port; only the
-          # watcher's own two are echoed back, because anything else on a non-numeric
-          # first field is a fragment of a split row, not a status line.
-          case "$port" in
-            'stale:'*) printf '  %s\n' "$(printable "$port")"; continue ;;
-            'no status yet'*) printf '  %s\n' "$(printable "$port")"; continue ;;
-            *[!0-9]*) continue ;;
-          esac
-          # A short row is half of a split one; rendering it would report a server that
-          # the watcher never saw.
-          if [ -z "$pid" ] || [ -z "$kind" ] || [ -z "$tree" ] || [ -z "$state" ] || [ -z "$age" ] || [ -z "$last" ]; then
-            continue
-          fi
-          if [ "$state" = unbound ]; then
-            idle="$idle $port"
-          else
-            line=":$port $kind $state $(humanize_etime "$age") ${tree##*/}"
-            [ "$tree" = "$here" ] && line="$line [THIS]"
-            printf '  %s\n' "$(printable "$line")"
-            if debug_on && [ "$last" != '-' ]; then printf '    capture: %s\n' "$(printable "$last")"; fi
-          fi
-        done
-        # Collapsed to one line because a row per idle port is a dozen-plus lines
-        # of noise in every prompt.
-        if [ -n "$idle" ]; then printf '  unbound:%s\n' "$idle"; fi
-      }
-    }
     servers_block
     cat <<'EOF'
 CHECKLIST: (answer to yourself before acting)
@@ -402,6 +412,6 @@ EOF
 EOF
     ;;
   *)
-    printf 'usage: mode.sh {get|toggle|set <mode>|focus {get|set <text>|clear}|phase {get|set <phase>}|debug get|context}\n' >&2; exit 2
+    printf 'usage: mode.sh {get|toggle|set <mode>|focus {get|set <text>|clear}|phase {get|set <phase>}|debug get|context|servers}\n' >&2; exit 2
     ;;
 esac

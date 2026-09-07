@@ -7,12 +7,16 @@
 #   bash tools/storybook-react/scripts/diagnose.sh --status      # what the watcher knows about every known port
 #   bash tools/storybook-react/scripts/diagnose.sh --ensure      # start the machine-wide watcher if none runs
 #   bash tools/storybook-react/scripts/diagnose.sh --restart     # replace a running watcher with this checkout's
+#   bash tools/storybook-react/scripts/diagnose.sh --register-port 5180  # add a port to discovery
+#                                                                         # (serve.sh does this for its own --port)
 #
-# ONE watcher per machine polls every known port (launch.json + 9009/5199) round-robin, rewrites a
-# status file each cycle, and captures the moment a server stops answering or pegs a core. The
-# agent's per-turn context reads that file, so nothing probes a wedged server on the hot path.
+# ONE watcher per machine polls every known port (launch.json + 9009/5199 + registered ports)
+# round-robin, rewrites a status file each cycle, and captures the moment a server stops
+# answering or pegs a core. The agent's per-turn context reads that file, so nothing probes a
+# wedged server on the hot path.
 #
 # Options: --interval N (15s) --timeout N (10s, "answered" deadline) --port N (manual capture only)
+#          --register-port N (merge N into discovery; validated the same as --port)
 # Env:     DX_WATCH_DIR (~/.cache/dxos/watch)  DX_WATCH_PORTS ("9009 5199", overrides discovery)
 # Seams:   --once (one cycle) --ports (discovered ports) --etime-seconds STR (elapsed-time maths)
 #          --reap-legacy [PORT] (kill per-port watchers; a PORT narrows it to one, for tests)
@@ -29,6 +33,7 @@ MODE=capture
 ETIME=''
 REAP_MATCH=''
 SANITIZE=''
+REGISTER_PORT=''
 
 # `set -u` would abort on a bare `$2`, losing the exit-2 path below; and an unvalidated value lets
 # `--port --status` silently consume the next flag as the port.
@@ -53,6 +58,9 @@ while [ $# -gt 0 ]; do
     --ensure) MODE=ensure ;;
     --restart) MODE=restart ;;
     --ports) MODE=ports ;;
+    # `number_arg`'s `exit 2` fires inside this command substitution's subshell, so it must be
+    # re-raised here explicitly or an invalid value would fall through as an empty port.
+    --register-port) REGISTER_PORT="$(number_arg "$1" "${2-}")" || exit 2; MODE=register; shift ;;
     # The optional port narrows the kill to one process, so a test can exercise this
     # against its own fake without signalling a watcher it did not start.
     --reap-legacy)
@@ -98,6 +106,11 @@ known_ports() {
     else
       printf '9009\n5199\n'
       [ -f "$ROOT/.claude/launch.json" ] && jq -r '.configurations[].port // empty' "$ROOT/.claude/launch.json" 2>/dev/null
+      # serve.sh registers its own custom --port here, so a port launch.json never
+      # heard of still gets discovered and watched.
+      for registered in "$WATCH_DIR"/ports/*; do
+        [ -e "$registered" ] && basename "$registered"
+      done
     fi
   } | grep -E '^[0-9]+$' | sort -un
 }
@@ -421,6 +434,7 @@ stop_watcher() {
 
 case "$MODE" in
   ports) known_ports ;;
+  register) mkdir -p "$WATCH_DIR/ports" && : > "$WATCH_DIR/ports/$REGISTER_PORT" ;;
   etime) etime_seconds "$ETIME" ;;
   sanitize) sanitize_field "$SANITIZE"; echo ;;
   status) print_status ;;

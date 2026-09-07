@@ -27,8 +27,9 @@
   mode, are untracked and written only by `scripts/mode.sh`.
 - `context` also renders `SERVERS:` (the dev-server watcher's status file, from
   `diagnose.sh --status` under `tools/storybook-react`, env `DX_WATCH_DIR`) and
-  `CHECKLIST:`. Three suites feed the hooks the JSON their events carry; run all
-  three after touching the hooks or the backend:
+  `CHECKLIST:`; `mode.sh servers` prints the same block on its own. Three
+  suites feed the hooks the JSON their events carry; run all three after
+  touching the hooks or the backend:
   `bash .claude/scripts/mode.test.sh`,
   `bash tools/storybook-react/scripts/diagnose.test.sh`, and
   `bash .claude/hooks/guard-foreground.test.sh`.

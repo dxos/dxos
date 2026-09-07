@@ -245,6 +245,14 @@ settled 1x1 with the user; order of delivery is phase → watcher → checklist.
       flattened to printable characters at both ends, and SERVERS drops split rows
       and unknown passthrough lines; `phase set` rolls the phase back when the
       debug marker cannot be updated.
+- [x] **Round 2 review fixes (CodeRabbit, #12973)** — `humanize_etime`, `printable`
+      and `servers_block` hoisted out of `context)` to top-level functions; a new
+      `mode.sh servers` verb calls the same validated renderer, and `mode.md`'s
+      re-orientation command now runs that instead of the watcher's raw,
+      unsanitised `--status`. `serve.sh` extracts its own forwarded `--port` and
+      registers it with `diagnose.sh --register-port`, which `known_ports` now
+      merges in, so a custom storybook port gets watched instead of only the
+      defaults and `launch.json`.
 
 ### References
 

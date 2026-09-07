@@ -29,6 +29,22 @@ if [ "$(ulimit -Sn)" -lt 10240 ] 2>/dev/null; then
   echo "warning: descriptor limit is only $(ulimit -Sn); the file watcher will exhaust it."
 fi
 
+# A forwarded --port is not necessarily one of the watcher's known ports (launch.json only lists
+# the default configurations), so register it before the watcher starts — otherwise storybook
+# serves on it but the watcher never discovers it. Last occurrence wins, same as storybook's own
+# argument parsing.
+PORT=9009
+prev=''
+for arg in "$@"; do
+  case "$arg" in
+    --port=*) PORT="${arg#--port=}" ;;
+    *) [ "$prev" = '--port' ] && PORT="$arg" ;;
+  esac
+  prev="$arg"
+done
+# Never fatal, same as --ensure below: a registration failure should not block storybook.
+bash "${DIR}/diagnose.sh" --register-port "$PORT" || echo "warning: could not register port ${PORT} with the watcher."
+
 # Never fatal: a missing watcher is worth a warning, not a storybook that refuses to start.
 bash "${DIR}/diagnose.sh" --ensure || echo "warning: could not arm the hang watcher."
 

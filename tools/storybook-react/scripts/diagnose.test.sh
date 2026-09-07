@@ -90,6 +90,10 @@ check '5a includes 9009' '1' "$(printf '%s\n' "$ports" | grep -cx 9009)"
 check '5b includes 5199' '1' "$(printf '%s\n' "$ports" | grep -cx 5199)"
 check '5c includes a launch.json port' '1' "$(printf '%s\n' "$ports" | grep -cx 5180)"
 check '5d de-duplicated' "$(printf '%s\n' "$ports" | sort -u | wc -l | tr -d ' ')" "$(printf '%s\n' "$ports" | wc -l | tr -d ' ')"
+bash "$script" --register-port 4242 > /dev/null
+ports=$(bash "$script" --ports)
+check '5e includes a registered port' '1' "$(printf '%s\n' "$ports" | grep -cx 4242)"
+check '5f --register-port foo exits 2' '2' "$(bash "$script" --register-port foo > /dev/null 2>&1; echo $?)"
 
 echo '=== 6. etime is converted to seconds in every ps format'
 check '6a mm:ss' '312' "$(bash "$script" --etime-seconds 05:12)"
