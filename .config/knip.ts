@@ -195,16 +195,46 @@ const lazyImportedEntry = (dir: string): string[] => {
 const viteConfig = (dir: string): string =>
   globSync(`${dir}/vite.config.ts`).map((file) => readFileSync(file, 'utf8'))[0] ?? '';
 
+/**
+ * The balanced `{...}` or quoted string that follows `<key>:`, or '' when the key is absent.
+ * Scanning the whole config instead would sweep in paths that are not entry points — an app's
+ * `src/main.tsx`, a CRX's `src/background.ts` — and silently mark them reachable for knip.
+ */
+const configProperty = (source: string, key: string): string => {
+  const start = source.search(new RegExp(`\\b${key}\\s*:`));
+  if (start === -1) {
+    return '';
+  }
+  const rest = source.slice(source.indexOf(':', start) + 1).trimStart();
+  if (!rest.startsWith('{') && !rest.startsWith('[')) {
+    // A plain `entry: 'src/index.ts'`.
+    return rest.slice(0, rest.indexOf(',') + 1 || rest.indexOf('\n'));
+  }
+  const open = rest[0];
+  const close = open === '{' ? '}' : ']';
+  let depth = 0;
+  for (let index = 0; index < rest.length; index++) {
+    if (rest[index] === open) {
+      depth++;
+    } else if (rest[index] === close && --depth === 0) {
+      return rest.slice(0, index + 1);
+    }
+  }
+  return '';
+};
+
 /** Source paths named as `defineConfig({ entry })` values. */
 const viteEntryPoints = (dir: string): string[] => [
-  ...new Set([...viteConfig(dir).matchAll(/'(src\/[\w./-]+\.(?:tsx?|jsx?|mjs|cjs|css))'/g)].map(([, path]) => path)),
+  ...new Set(
+    [...configProperty(viteConfig(dir), 'entry').matchAll(/'(src\/[\w./-]+\.(?:tsx?|jsx?|mjs|cjs|css))'/g)].map(
+      ([, path]) => path,
+    ),
+  ),
 ];
 
 /** Package names listed in `defineConfig({ bundle })`. */
-const viteBundledPackages = (dir: string): string[] => {
-  const block = viteConfig(dir).match(/bundle:\s*\[([\s\S]*?)\]/);
-  return block ? [...block[1].matchAll(/'([^']+)'/g)].map(([, name]) => name) : [];
-};
+const viteBundledPackages = (dir: string): string[] =>
+  [...configProperty(viteConfig(dir), 'bundle').matchAll(/'([^']+)'/g)].map(([, name]) => name);
 
 /**
  * Dependencies a moon task runs as a command rather than imports. The command is the package's
