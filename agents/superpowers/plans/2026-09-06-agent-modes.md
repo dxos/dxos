@@ -30,11 +30,13 @@
 ### Task 1: Phase state in the backend
 
 **Files:**
+
 - Modify: `.claude/scripts/mode.sh` (state vars near line 40, new `canonical_phase`, new `phase` case branch)
 - Modify: `.gitignore:7-12`
 - Modify: `.claude/scripts/mode.test.sh` (append section 11)
 
 **Interfaces:**
+
 - Produces: `bash .claude/scripts/mode.sh phase get` → prints `discuss|build|debug`; `mode.sh phase set <discuss|build|debug>` → writes `.claude/.phase`, creates `.claude/.debug` for `debug`, removes it otherwise, prints `Phase: BUILD`; `mode.sh debug get` → prints `on|off`. Exit 2 on bad arg.
 
 - [ ] **Step 1: Write the failing tests**
@@ -167,10 +169,12 @@ git commit -m "agent-directives: add the phase axis to the mode backend"
 ### Task 2: `/mode discuss|build|debug` in the hook; `focus` implies `build`
 
 **Files:**
+
 - Modify: `.claude/hooks/mode.sh:31` (`modes` alternation) and the `if [ -n "$sentinel" ]` block
 - Modify: `.claude/scripts/mode.test.sh` (append section 12)
 
 **Interfaces:**
+
 - Consumes: `mode.sh phase set <phase>` from Task 1.
 - Produces: typing `/mode discuss|build|debug` as the first line writes the phase; `/mode focus …` additionally runs `phase set build`.
 
@@ -268,10 +272,12 @@ git commit -m "agent-directives: /mode discuss|build|debug, focus implies build"
 ### Task 3: PHASE clause and DIAGNOSTICS footer in `context`
 
 **Files:**
+
 - Modify: `.claude/scripts/mode.sh` (`context)` branch)
 - Modify: `.claude/scripts/mode.test.sh` (append section 14)
 
 **Interfaces:**
+
 - Consumes: `current_phase`, `debug_on` from Task 1.
 - Produces: `context` output contains exactly one line starting `- PHASE: DISCUSS|BUILD|DEBUG`, emitted after the MODE clause and before any `- FOCUS:`; when the debug flag is on, a `DIAGNOSTICS:` block is the last thing before the closing "form only" clause.
 
@@ -379,11 +385,13 @@ git commit -m "agent-directives: PHASE clause and DIAGNOSTICS footer in the per-
 ### Task 4: Round-robin watcher singleton with a status file
 
 **Files:**
+
 - Modify: `tools/storybook-react/diagnose.sh` (options, layout, `capture` signature, new discovery/cycle/status/ensure/restart)
 - Modify: `tools/storybook-react/serve.sh:48` (`--ensure` no longer needs `--port`)
 - Create: `tools/storybook-react/diagnose.test.sh`
 
 **Interfaces:**
+
 - Produces: `bash tools/storybook-react/diagnose.sh --status` prints either `unwatched — run bash tools/storybook-react/diagnose.sh --ensure` (exit 0) or a header line `port pid kind worktree state age last-capture` followed by tab-separated rows. `--once` runs one discovery/probe/write cycle and exits (test seam). `--ensure` starts the singleton if none; `--restart` replaces it. Status file: `${DX_WATCH_DIR:-$HOME/.cache/dxos/watch}/status`. Env: `DX_WATCH_DIR`, `DX_WATCH_PORTS`.
 - States: `answered|wedged|starting|unbound|gone`.
 
@@ -752,10 +760,12 @@ git commit -m "storybook-react: one round-robin dev-server watcher with a status
 ### Task 5: SERVERS block in `context`
 
 **Files:**
+
 - Modify: `.claude/scripts/mode.sh` (`context)` branch, after FOCUS)
 - Modify: `.claude/scripts/mode.test.sh` (sandbox setup + section 15)
 
 **Interfaces:**
+
 - Consumes: `diagnose.sh --status` output format from Task 4 (`unwatched…` line, or header + tab rows with worktree in column 4).
 - Produces: a `SERVERS:` block: either `SERVERS: unwatched — run bash tools/storybook-react/diagnose.sh --ensure` or one line per row `  :9009 storybook answered 4h12m illustrator-selection-diagrams [THIS]`, with `[THIS]` only when column 4 equals this checkout's toplevel.
 
@@ -847,10 +857,12 @@ git commit -m "agent-directives: SERVERS block in the per-turn context, fed by t
 ### Task 6: CHECKLIST lines in `context`
 
 **Files:**
+
 - Modify: `.claude/scripts/mode.sh` (`context)` branch, after SERVERS)
 - Modify: `.claude/scripts/mode.test.sh` (append section 16)
 
 **Interfaces:**
+
 - Produces: a `CHECKLIST:` block of three lines, always emitted, between SERVERS and DIAGNOSTICS.
 
 - [ ] **Step 1: Write the failing tests**
@@ -906,11 +918,13 @@ git commit -m "agent-directives: per-turn CHECKLIST in the context block"
 ### Task 7: Foreground guard on Bash
 
 **Files:**
+
 - Create: `.claude/hooks/guard-foreground.sh`
 - Create: `.claude/hooks/guard-foreground.test.sh`
 - Modify: `.claude/settings.json` (`PreToolUse` → `Bash` matcher gets a second hook)
 
 **Interfaces:**
+
 - Produces: for a Bash tool call whose `tool_input.command` matches a long-runner and `tool_input.run_in_background` is not `true`, stdout is `{"hookSpecificOutput":{"hookEventName":"PreToolUse","permissionDecision":"ask","permissionDecisionReason":"…"}}`; otherwise no output. Exit 0 always.
 
 - [ ] **Step 1: Write the failing test**
@@ -1059,6 +1073,7 @@ git commit -m "agent-directives: ask before a long-running Bash command holds th
 ### Task 8: Documentation and ledger
 
 **Files:**
+
 - Modify: `AGENTS.md` "Responding to the user" (after the `/mode focus` bullet) and "Build, test, lint" storybook bullet
 - Modify: `.claude/CLAUDE.md` "Mode" section
 - Modify: `.claude/README.md` §C table row for `hooks/mode.sh`, add a row for `guard-foreground.sh`
@@ -1092,8 +1107,8 @@ In "Mode", add a bullet after the `/mode focus` one:
   `DIAGNOSTICS:` footer. `focus` sets the phase to `build`. State files, like the
   mode, are untracked and written only by `scripts/mode.sh`.
 - `context` also renders `SERVERS:` (from `tools/storybook-react/diagnose.sh
-  --status`, env `DX_WATCH_DIR`) and `CHECKLIST`. Tests: `bash
-  .claude/scripts/mode.test.sh`, `bash tools/storybook-react/diagnose.test.sh`,
+--status`, env `DX_WATCH_DIR`) and `CHECKLIST`. Tests: `bash
+.claude/scripts/mode.test.sh`, `bash tools/storybook-react/diagnose.test.sh`,
   `bash .claude/hooks/guard-foreground.test.sh`.
 ```
 
@@ -1102,7 +1117,7 @@ In "Mode", add a bullet after the `/mode focus` one:
 In the §C table, change the `hooks/mode.sh` row's State cell to `**persisted** .claude/.mode + .phase + .focus + .debug` and add a row:
 
 ```markdown
-| [`hooks/guard-foreground.sh`](./hooks/guard-foreground.sh)                                                       | `PreToolUse(Bash)`        | ask            | derived                                   |
+| [`hooks/guard-foreground.sh`](./hooks/guard-foreground.sh) | `PreToolUse(Bash)` | ask | derived |
 ```
 
 - [ ] **Step 4: `.claude/commands/mode.md`**

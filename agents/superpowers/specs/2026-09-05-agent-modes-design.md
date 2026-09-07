@@ -42,22 +42,22 @@ loading mid-session (see `DESIGN.md`, phase 2).
 
 ## 1. State
 
-| File | Values | Absent means | Written by |
-| --- | --- | --- | --- |
-| `.claude/.mode` | `terse` \| `normal` | `normal` | `mode.sh set` (existing) |
-| `.claude/.phase` | `discuss` \| `build` \| `debug` | `discuss` | `mode.sh phase set` (new) |
-| `.claude/.focus` | task text | unpinned | `mode.sh focus set` (existing) |
-| `.claude/.debug` | present/absent | self-report off | `mode.sh phase set debug` (new) |
+| File             | Values                          | Absent means    | Written by                      |
+| ---------------- | ------------------------------- | --------------- | ------------------------------- |
+| `.claude/.mode`  | `terse` \| `normal`             | `normal`        | `mode.sh set` (existing)        |
+| `.claude/.phase` | `discuss` \| `build` \| `debug` | `discuss`       | `mode.sh phase set` (new)       |
+| `.claude/.focus` | task text                       | unpinned        | `mode.sh focus set` (existing)  |
+| `.claude/.debug` | present/absent                  | self-report off | `mode.sh phase set debug` (new) |
 
 Transitions:
 
-| Command | verbosity | phase | pin | debug flag |
-| --- | --- | --- | --- | --- |
-| `/mode terse` / `/mode normal` | set | — | cleared (as today) | — |
-| `/mode discuss` | — | `discuss` | — | cleared |
-| `/mode build` | — | `build` | — | cleared |
-| `/mode debug` | — | `debug` | — | set |
-| `/mode focus [task]` | `terse` | `build` | set | cleared |
+| Command                        | verbosity | phase     | pin                | debug flag |
+| ------------------------------ | --------- | --------- | ------------------ | ---------- |
+| `/mode terse` / `/mode normal` | set       | —         | cleared (as today) | —          |
+| `/mode discuss`                | —         | `discuss` | —                  | cleared    |
+| `/mode build`                  | —         | `build`   | —                  | cleared    |
+| `/mode debug`                  | —         | `debug`   | —                  | set        |
+| `/mode focus [task]`           | `terse`   | `build`   | set                | cleared    |
 
 All writes go through the existing temp-file-then-rename `write_file`, and every
 read canonicalises so a hand-edited file cannot wedge the machine (anything not
@@ -167,14 +167,14 @@ the server's cwd so a capture lands in the tree that owns the server.
 
 ### Verbs
 
-| Verb | Behaviour |
-| --- | --- |
-| `--status` | Print the status table. If the pidfile's process is dead or absent, print `unwatched` and the `--ensure` command instead of a stale table. Exit 0 either way. |
-| `--ensure` | Start the singleton if none runs. Lock via `mkdir` as today, keyed on the machine-wide dir instead of the port. `serve.sh` keeps calling it. |
-| `--restart` | Stop the singleton by its pidfile, then `--ensure`, so a newer checkout's script takes over. |
-| `--watch` | The loop itself. Internal; `--ensure` spawns it. |
-| (none) | Manual capture of `--port` now, unchanged. |
-| `--port N` | For manual capture only; the loop ignores it. |
+| Verb        | Behaviour                                                                                                                                                     |
+| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `--status`  | Print the status table. If the pidfile's process is dead or absent, print `unwatched` and the `--ensure` command instead of a stale table. Exit 0 either way. |
+| `--ensure`  | Start the singleton if none runs. Lock via `mkdir` as today, keyed on the machine-wide dir instead of the port. `serve.sh` keeps calling it.                  |
+| `--restart` | Stop the singleton by its pidfile, then `--ensure`, so a newer checkout's script takes over.                                                                  |
+| `--watch`   | The loop itself. Internal; `--ensure` spawns it.                                                                                                              |
+| (none)      | Manual capture of `--port` now, unchanged.                                                                                                                    |
+| `--port N`  | For manual capture only; the loop ignores it.                                                                                                                 |
 
 ### `mode.sh context` integration
 
