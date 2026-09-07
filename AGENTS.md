@@ -168,7 +168,7 @@ Tasks run through `moon` (`moon run <package>:<task>`). See a package's
 - Unused deps & dead files: `pnpm knip` (root deps are excluded — see `REPOSITORY_GUIDE.md`)
 - Storybook: `moon run storybook-react:serve` (port 9009). **One server, shared with
   the user — see "Sharing long-running servers" below.** `serve` starts one
-  machine-wide watcher (`tools/storybook-react/diagnose.sh --ensure`) that polls
+  machine-wide watcher (`tools/storybook-react/scripts/diagnose.sh --ensure`) that polls
   every known dev-server port; `--status` shows what it knows, and the per-turn
   `SERVERS:` block is that table. → `REPOSITORY_GUIDE.md` §Storybooks.
 
@@ -205,7 +205,7 @@ writes wedge the other, which is how a debugging session ends up chasing its own
   window the user may be looking at.
 - **Unresponsive is usually not dead.** The server stalls for a minute or two whenever a
   file under `packages/` is written (a chokidar fsevents pathology — see
-  `tools/storybook-react/diagnose.sh`), then recovers by itself. Wait ~3 minutes before
+  `tools/storybook-react/scripts/diagnose.sh`), then recovers by itself. Wait ~3 minutes before
   concluding anything. If it is still down, run `diagnose.sh` to capture the cause BEFORE
   restarting; a restart destroys the only evidence.
 - **Never `pkill -f storybook`.** Kill by the PID you own, established via

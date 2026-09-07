@@ -32,4 +32,4 @@ fi
 # Never fatal: a missing watcher is worth a warning, not a storybook that refuses to start.
 bash "${DIR}/diagnose.sh" --ensure || echo "warning: could not arm the hang watcher."
 
-exec "${DIR}/node_modules/.bin/storybook" dev "$@"
+exec "${DIR}/../node_modules/.bin/storybook" dev "$@"

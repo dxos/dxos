@@ -13,7 +13,7 @@ expansion reaches you, so any write is already done.
 Run this first — it is the source of truth for the report:
 
 ```bash
-bash .claude/scripts/mode.sh get; bash .claude/scripts/mode.sh focus get; bash .claude/scripts/mode.sh phase get; bash tools/storybook-react/diagnose.sh --status; git rev-parse --show-toplevel; git branch --show-current; ls -1 AGENTS.md .claude/CLAUDE.md ~/.claude/CLAUDE.md 2>/dev/null
+bash .claude/scripts/mode.sh get; bash .claude/scripts/mode.sh focus get; bash .claude/scripts/mode.sh phase get; bash tools/storybook-react/scripts/diagnose.sh --status; git rev-parse --show-toplevel; git branch --show-current; ls -1 AGENTS.md .claude/CLAUDE.md ~/.claude/CLAUDE.md 2>/dev/null
 ```
 
 **If `$ARGUMENTS` named a mode**, it is already applied and this turn's

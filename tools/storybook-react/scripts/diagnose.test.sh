@@ -3,12 +3,12 @@
 # Copyright 2026 DXOS.org
 #
 # Tests for the watcher's discovery, status file, and --status against a throwaway
-# HTTP listener. Run: bash tools/storybook-react/diagnose.test.sh
+# HTTP listener. Run: bash tools/storybook-react/scripts/diagnose.test.sh
 
 set -uo pipefail
 
-repo=$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)
-script="$repo/tools/storybook-react/diagnose.sh"
+repo=$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)
+script="$repo/tools/storybook-react/scripts/diagnose.sh"
 sandbox=$(mktemp -d)
 export DX_WATCH_DIR="$sandbox/watch"
 # Every process this test starts is its own; the watcher below runs only against the sandbox

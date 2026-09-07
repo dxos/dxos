@@ -3,10 +3,10 @@
 # Copyright 2026 DXOS.org
 # Capture why a dev server is wedged, BEFORE restarting it — a restart destroys the only evidence.
 #
-#   bash tools/storybook-react/diagnose.sh --port 9009   # capture that server now
-#   bash tools/storybook-react/diagnose.sh --status      # what the watcher knows about every known port
-#   bash tools/storybook-react/diagnose.sh --ensure      # start the machine-wide watcher if none runs
-#   bash tools/storybook-react/diagnose.sh --restart     # replace a running watcher with this checkout's
+#   bash tools/storybook-react/scripts/diagnose.sh --port 9009   # capture that server now
+#   bash tools/storybook-react/scripts/diagnose.sh --status      # what the watcher knows about every known port
+#   bash tools/storybook-react/scripts/diagnose.sh --ensure      # start the machine-wide watcher if none runs
+#   bash tools/storybook-react/scripts/diagnose.sh --restart     # replace a running watcher with this checkout's
 #
 # ONE watcher per machine polls every known port (launch.json + 9009/5199) round-robin, rewrites a
 # status file each cycle, and captures the moment a server stops answering or pegs a core. The
@@ -77,7 +77,7 @@ while [ $# -gt 0 ]; do
   shift
 done
 
-ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"
 WATCH_DIR="${DX_WATCH_DIR:-$HOME/.cache/dxos/watch}"
 PIDFILE="$WATCH_DIR/watcher.pid"
 STATUS="$WATCH_DIR/status"
@@ -355,9 +355,9 @@ print_status() {
     # Starting the singleton while a legacy watcher runs would leave two on :9009, so the
     # advice is to replace it rather than to add one.
     if legacy_watcher; then
-      echo "unwatched — a per-port watcher from an older checkout is running; run bash tools/storybook-react/diagnose.sh --restart"
+      echo "unwatched — a per-port watcher from an older checkout is running; run bash tools/storybook-react/scripts/diagnose.sh --restart"
     else
-      echo "unwatched — run bash tools/storybook-react/diagnose.sh --ensure"
+      echo "unwatched — run bash tools/storybook-react/scripts/diagnose.sh --ensure"
     fi
     return 0
   fi

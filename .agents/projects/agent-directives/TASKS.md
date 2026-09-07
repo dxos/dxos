@@ -204,7 +204,7 @@ told to land a PR would still pick up adjacent fixes and poll CI between turns.
 
 ## Phase 6: phase axis, server watcher, per-turn checklist (2026-09-05)
 
-PR: #12973 (OPEN) — https://github.com/dxos/dxos/pull/12973
+PR: #12973 (OPEN) — https://github.com/dxos/dxos/pull/12973. Shell scripts live in `tools/storybook-react/scripts/` (serve, diagnose, diagnose.test).
 
 Spec: `agents/superpowers/specs/2026-09-05-agent-modes-design.md`. Design
 settled 1x1 with the user; order of delivery is phase → watcher → checklist.

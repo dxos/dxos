@@ -29,7 +29,7 @@ tasks:
   serve:
     # Wrapper, not `storybook dev` directly: it arms the hang watcher beside the server (see
     # `diagnose.sh`) and forwards every argument through.
-    command: ./serve.sh
+    command: ./scripts/serve.sh
     args:
       - --port=9009
       - --no-open
@@ -49,8 +49,8 @@ tasks:
     inputs:
       - .storybook/*
       - /tools/storybook-react/.storybook/main.ts
-      - serve.sh
-      - diagnose.sh
+      - scripts/serve.sh
+      - scripts/diagnose.sh
       - static/*
     preset: server
   # Fast dev variant: DX_FASTBUNDLE skips the `importSource` source-resolution plugin and
@@ -58,7 +58,7 @@ tasks:
   # to wedge the browser renderer. Trades granular HMR on DXOS source for lower memory/churn.
   serve-fast:
     # See `serve` — the wrapper arms the hang watcher and forwards to `storybook dev`.
-    command: ./serve.sh
+    command: ./scripts/serve.sh
     args:
       - --port=9009
       - --no-open
@@ -74,8 +74,8 @@ tasks:
     inputs:
       - .storybook/*
       - /tools/storybook-react/.storybook/main.ts
-      - serve.sh
-      - diagnose.sh
+      - scripts/serve.sh
+      - scripts/diagnose.sh
       - static/*
     preset: server
   # TODO(wittjosiah): No inputs or deps to avoid moon re-building things when running e2e tests.

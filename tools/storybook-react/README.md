@@ -44,4 +44,4 @@ pnpm test-storybook --url http://127.0.0.1:9009 -- --watch
 plus 9009/5199) every 15s, rewrites `status`, and captures a wedged server to
 `<its worktree>/temp/`. `diagnose.sh --status` prints the table; `--restart`
 replaces a running watcher with this checkout's script. Tests:
-`bash tools/storybook-react/diagnose.test.sh`.
+`bash tools/storybook-react/scripts/diagnose.test.sh`.

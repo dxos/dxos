@@ -171,7 +171,7 @@ around 1.2GB), and it is **activity-driven, not uptime-driven** — recorded
 intervals between wedges range from 1 minute to 32 hours, clustering during
 working hours and near-vanishing overnight.
 
-`serve` therefore arms a watcher (`tools/storybook-react/serve.sh` →
+`serve` therefore arms a watcher (`tools/storybook-react/scripts/serve.sh` →
 `diagnose.sh --ensure`) — ONE per machine, not one per server. It round-robins
 every known dev-server port (`.claude/launch.json` plus 9009/5199), and the
 first time a port stops answering or holds ≥90% CPU for three polls it writes a
@@ -182,9 +182,9 @@ then it keeps polling. Nothing to remember and nothing to run.
 To see what it knows, or to replace it:
 
 ```bash
-bash tools/storybook-react/diagnose.sh --port 9009   # capture that server now
-bash tools/storybook-react/diagnose.sh --status      # table of every known port
-bash tools/storybook-react/diagnose.sh --restart     # replace a running watcher with this checkout's
+bash tools/storybook-react/scripts/diagnose.sh --port 9009   # capture that server now
+bash tools/storybook-react/scripts/diagnose.sh --status      # table of every known port
+bash tools/storybook-react/scripts/diagnose.sh --restart     # replace a running watcher with this checkout's
 ```
 
 **Do not restart before capturing** — that is the whole difficulty. And check

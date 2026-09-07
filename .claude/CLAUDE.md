@@ -30,7 +30,7 @@
   `CHECKLIST:`. Three suites feed the hooks the JSON their events carry; run all
   three after touching the hooks or the backend:
   `bash .claude/scripts/mode.test.sh`,
-  `bash tools/storybook-react/diagnose.test.sh`, and
+  `bash tools/storybook-react/scripts/diagnose.test.sh`, and
   `bash .claude/hooks/guard-foreground.test.sh`.
 - **Bare `/mode` changes nothing and re-orients**: reply with the worktree and
   branch, the instruction files actually consulted (including skills loaded this

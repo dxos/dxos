@@ -337,7 +337,7 @@ EOF
     # Reads the watcher's status file rather than probing servers itself, so the
     # hot path never blocks on a wedged port.
     servers_block() {
-      local diagnose="$root/tools/storybook-react/diagnose.sh" here status
+      local diagnose="$root/tools/storybook-react/scripts/diagnose.sh" here status
       [ -f "$diagnose" ] || return 0
       here=$(git -C "$root" rev-parse --show-toplevel 2>/dev/null || printf '%s' "$root")
       status=$(bash "$diagnose" --status 2>/dev/null) || return 0
