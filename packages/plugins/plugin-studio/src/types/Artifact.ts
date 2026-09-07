@@ -68,6 +68,11 @@ export class Artifact extends Type.makeObject<Artifact>(DXN.make('org.dxos.type.
   ),
 ) {}
 
-/** Creates an Artifact. `kind` defaults to `'image'`. */
+/**
+ * Creates an Artifact.
+ * @param props.name Optional display name.
+ * @param props.kind Media kind (`'image' | 'video' | …`); defaults to `'image'`.
+ * @param props[Obj.Parent] Optional parent object to set at construction time.
+ */
 export const make = (props: { name?: string; kind?: string; [Obj.Parent]?: Obj.Unknown } = {}): Artifact =>
   Obj.make(Artifact, { name: props.name, kind: props.kind ?? 'image', variants: [], [Obj.Parent]: props[Obj.Parent] });

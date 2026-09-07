@@ -59,12 +59,18 @@ describe('useApp startup failure reporting', () => {
       // out" window is asserted by advancing virtual time rather than waiting out real seconds;
       // installed before mount so the watchdog's `setInterval`/`performance.now` are fake from creation.
       vi.useFakeTimers({ toFake: ['setInterval', 'clearInterval', 'performance'] });
-      const { unmount } = render(<TimedHost manager={manager} />);
-      yield* Effect.promise(() => waitFor(() => assert.isTrue(manager.getActive().length > 0)));
-      vi.advanceTimersByTime(2 * STARTUP_WATCHDOG_TICK_MS);
-      window.removeEventListener(STARTUP_FAILED_EVENT, listener);
-      unmount();
-      vi.useRealTimers();
+      let unmount = () => {};
+      try {
+        ({ unmount } = render(<TimedHost manager={manager} />));
+        yield* Effect.promise(() => waitFor(() => assert.isTrue(manager.getActive().length > 0)));
+        vi.advanceTimersByTime(2 * STARTUP_WATCHDOG_TICK_MS);
+      } finally {
+        // Restore real timers even if the render/wait/advance above throws, so a failure here
+        // can't leak fake timers into whichever test runs next in this worker.
+        window.removeEventListener(STARTUP_FAILED_EVENT, listener);
+        unmount();
+        vi.useRealTimers();
+      }
 
       assert.deepStrictEqual(reported, []);
     }),
