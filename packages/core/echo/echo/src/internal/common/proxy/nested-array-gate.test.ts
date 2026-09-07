@@ -85,3 +85,52 @@ describe('nested array mutations are gated at every depth', () => {
     expect(events).to.eq(1);
   });
 });
+
+/**
+ * Writability belongs to the reference, not to the callback's dynamic extent. `Obj.update` hands the
+ * callback a mutable view; the object named outside stays read-only for the whole of it.
+ */
+describe('the change context is reference-based, not ambient', () => {
+  test('the outer reference stays read-only inside the callback', () => {
+    const obj: any = Obj.make(Sheet, {});
+
+    // Reached a frame deeper, which is also the shape the lint rule cannot see: it reports a mutation
+    // written inside the callback, so only the runtime catches this one.
+    const writeThrough = (target: any) => {
+      target.rows = [];
+    };
+
+    // Aliased because the parameter shadows `obj` by convention, and the parameter is the mutable view.
+    const readOnly = obj;
+
+    expect(() =>
+      Obj.update(obj, (obj: any) => {
+        void obj;
+        writeThrough(readOnly);
+      }),
+    ).to.throw(/Obj\.update/);
+  });
+
+  test('navigation from the parameter is mutable all the way down', () => {
+    const obj: any = Obj.make(Sheet, { rec: { list: ['x'] } });
+
+    Obj.update(obj, (obj: any) => {
+      obj.rec.list.push('b');
+      obj.rec.list[0] = 'z';
+    });
+
+    expect([...obj.rec.list]).to.deep.eq(['z', 'b']);
+  });
+
+  test('a mutable view is never stored in the graph', () => {
+    const obj: any = Obj.make(Sheet, { rec: { list: ['x'] } });
+    const before = obj.rec;
+
+    Obj.update(obj, (obj: any) => {
+      obj.rows = [obj.rec];
+    });
+
+    // What landed in the document is the canonical reference, not the callback-scoped view.
+    expect(obj.rows[0]).to.eq(before);
+  });
+});

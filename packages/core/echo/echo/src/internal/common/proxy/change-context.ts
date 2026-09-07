@@ -3,6 +3,7 @@
 //
 
 import { batchEvents } from './event-batch';
+import { getMutableProxy } from './proxy-utils';
 import { EventId } from './symbols';
 
 /**
@@ -121,7 +122,10 @@ export const executeChange = (
 ): void => {
   const exitContext = enterChangeContext(contextKey);
   try {
-    batchEvents(() => callback(proxy));
+    // The callback is handed the mutable view, not `proxy`: writability travels with the reference, so
+    // the object named outside stays read-only even while this runs. The context is still entered —
+    // it is what batches notifications and what the array and text gates read.
+    batchEvents(() => callback(getMutableProxy(proxy)));
   } finally {
     exitContext();
     // Fire the primary notification (a real change).

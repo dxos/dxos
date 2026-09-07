@@ -5,7 +5,7 @@
 import { createArrayMethodError } from './errors';
 import { batchEvents } from './event-batch';
 import { changeKeyOf } from './ownership';
-import { assertMutable } from './proxy-utils';
+import { assertMutable, canonicalOf } from './proxy-utils';
 import { ChangeKeyId } from './symbols';
 
 /**
@@ -48,7 +48,9 @@ export class ReactiveArray<T> extends Array<T> {
           batchEvents(() => {
             result = Array.prototype[method].apply(this, args);
           });
-          return result;
+          // `sort`/`reverse` answer the receiver. Inside `Obj.update` that is the mutable view, which is
+          // callback-scoped: hand back the array's canonical identity so `arr.sort() === arr` holds.
+          return result === this ? canonicalOf(this) : result;
         },
       });
     }

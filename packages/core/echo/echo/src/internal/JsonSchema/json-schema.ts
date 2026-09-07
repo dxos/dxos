@@ -774,12 +774,16 @@ const inlineAllOfDeep = (node: any): any => {
   // `anyOf` collapses run first: they merge a branch up, and that branch carries the `allOf` wrapper
   // `inlineAllOf` has to flatten.
   const inlined = collapseEchoRef(inlineAllOf(collapseNumberUnion(restoreOpenRecord(restoreEmptyObject(node)))));
+  // Recursed into a copy, never `inlined` itself: the collapse helpers pass a node through unchanged
+  // when there is nothing to collapse, so `inlined` can still BE the caller's node — and that node can
+  // be live stored schema, which normalizing must not rewrite in place.
+  const result: any = { ...inlined };
   for (const [key, value] of Object.entries(inlined)) {
     if (value && typeof value === 'object') {
-      inlined[key] = inlineAllOfDeep(value);
+      result[key] = inlineAllOfDeep(value);
     }
   }
-  return inlined;
+  return result;
 };
 
 const normalizeJsonSchema = (jsonSchema: Types.DeepMutable<JsonSchemaType>): Types.DeepMutable<JsonSchemaType> => {

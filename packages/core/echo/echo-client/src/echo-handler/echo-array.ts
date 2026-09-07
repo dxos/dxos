@@ -3,7 +3,7 @@
 //
 
 import { type Event } from '@dxos/async';
-import { ChangeKeyId, EventId, batchEvents, getProxyHandler } from '@dxos/echo/internal';
+import { ChangeKeyId, EventId, batchEvents, canonicalOf, getProxyHandler } from '@dxos/echo/internal';
 
 import type { Doc } from '../automerge';
 import type { ObjectCore } from '../core-db';
@@ -59,7 +59,9 @@ export class EchoArray<T> extends Array<T> {
           const handler = getProxyHandler<any>(this) as EchoReactiveHandler;
           result = ((handler as any)[handlerMethodName] as Function).apply(handler, [this, this[symbolPath], ...args]);
         });
-        return result;
+        // `sort`/`reverse` answer the receiver. Inside `Obj.update` that is the mutable view, which is
+        // callback-scoped: hand back the array's canonical identity so `arr.sort() === arr` holds.
+        return result === this ? canonicalOf(this) : result;
       };
       Object.defineProperty(fn, 'name', { value: method });
       Object.defineProperty(this.prototype, method, {

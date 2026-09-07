@@ -427,15 +427,35 @@ no owner-chain walk, no context lookup, and fail-**closed** by construction, whi
 above rather than one instance of it. A `get` trap reappears, but only on the write path; the read path
 stays trap-free, which is the point of this branch.
 
-**Known blockers to settle before building it:**
+**Built, and how the three anticipated blockers actually resolved:**
 
-1. `isProxy(value)` tests `value[symbolProxy] === value`, and `symbolProxy` on the target holds the
-   _read-only_ proxy — so a mutable proxy answers `false` and every `isProxy` branch in
-   `_prepareValueForAssignment` misreads it. This needs deciding, not patching around.
-2. `param === outerObj` becomes false. Reads through the outer reference still see writes (same
-   target), but any identity comparison across the boundary changes meaning.
-3. `queueNotification` keys off `currentChangeContext`, so the context must survive as the
-   _notification-batching_ mechanism even once it stops being the gate.
+1. `isProxy` needed **no change at all** — the blocker dissolved. The view's `get` twins any
+   proxy-valued read, so reading `[symbolProxy]` through a view returns the view and
+   `view[symbolProxy] === view` holds. `[symbolTarget]` is not a proxy, so it still answers the raw
+   target and `getRawTarget` unwraps a view correctly.
+2. Identity across the boundary was the real cost, and it appeared in **return values** rather than in
+   comparisons: `sort`/`reverse` answer the receiver, which inside a callback is the view, breaking
+   `arr.sort() === arr` (8 tests). Both array wrappers now answer `canonicalOf(this)`.
+3. Confirmed: the context stays, purely as the notification-batching mechanism and as what the array
+   and text gates read. It is no longer the gate.
+
+**A fourth, unanticipated one — a view must never enter the graph.** Storing one would hand a
+permanent write capability to every later reader and break identity for holders of the read-only
+reference. `normalizeForStorage` maps views back to the canonical reference through the literal being
+assigned, stopping at proxies; normalizing only the top level was not enough (`obj.rows = [obj.rec]`,
+caught by its own new test).
+
+**The read-only proxy is now fail-closed** — `assertReadOnly` throws for any non-symbol property with
+no state consulted: no `[ChangeKeyId]`, no owner-chain walk, no context lookup. That removes the
+fail-open class which produced the nested-array hole, rather than one instance of it. Symbols stay
+exempt because the system stamps `[ParentId]` and friends on objects consumers hold read-only.
+
+**What fail-closed exposed, and the lint rule could not.** `toJsonSchema` mutated live stored schema in
+place: `inlineAllOfDeep` wrote into its input, and the collapse helpers pass a node through unchanged,
+so `inlined` could _be_ the caller's live node. Ambient context made that legal whenever it happened
+inside an `Obj.update`. It is now side-effect-free — a correctness fix in its own right. The lint rule
+sees only _lexical_ outer mutation; this sat several frames deep in library code, so runtime
+enforcement is what found it. The rule is necessary, not sufficient.
 
 ## Non-goals
 
