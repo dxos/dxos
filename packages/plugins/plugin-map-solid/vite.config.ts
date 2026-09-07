@@ -14,5 +14,9 @@ export default defineConfig({
     meta: 'src/meta.ts',
   },
   jsx: 'solid',
-  test: { node: true },
+  // `vite-plugin-solid` adds the `browser` export condition under vitest, so
+  // `@dxos/app-framework/testing` resolves through `@dxos/react-ui` to `@dxos/lit-ui`, whose
+  // custom elements touch `HTMLElement` at module scope. Solid would have picked jsdom itself
+  // had the node project not named an environment.
+  test: { node: { environment: 'jsdom' } },
 });
