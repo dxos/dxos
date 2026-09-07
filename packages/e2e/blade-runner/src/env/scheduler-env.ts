@@ -23,7 +23,7 @@ import {
   runBrowser,
   runNode,
 } from '../plan';
-import { REDIS_PORT, WebSocketRedisProxy, createRedisReadableStream, createRedisRpcPort } from '../redis';
+import { REDIS_HOST, REDIS_PORT, WebSocketRedisProxy, createRedisReadableStream, createRedisRpcPort } from '../redis';
 import { writeEventStreamToAFile } from '../tracing';
 import { ReadableMuxer } from '../tracing/readable-muxer';
 import { type RpcHandle, type SchedulerEnv } from './interface';
@@ -68,7 +68,10 @@ export class SchedulerEnvImpl<S> extends Resource implements SchedulerEnv {
   constructor(
     private readonly _options: GlobalOptions,
     public params: TestProps<S>,
-    private readonly _redisOptions: RedisOptions = { port: REDIS_PORT },
+    // `host` explicitly, not just the port: ioredis defaults to loopback, so in CI the orchestrator
+    // could not reach a Redis service container even with `DX_REDIS_HOST` set — the replicants,
+    // which build their options from `DEFAULT_REDIS_OPTIONS`, could.
+    private readonly _redisOptions: RedisOptions = { host: REDIS_HOST, port: REDIS_PORT },
   ) {
     super();
     this._redis = new Redis(this._redisOptions);
