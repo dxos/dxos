@@ -119,10 +119,17 @@ const WORKERD_COMPATIBILITY_FLAGS = ['nodejs_compat'];
  * Remaps `node:*` and bare Node.js built-ins to `@dxos/node-std/*` externals.
  * Lets browser consumers resolve polyfills via their app's alias config.
  */
-export const DxNodeStdPlugin = (): Plugin => ({
+export const DxNodeStdPlugin = (isBundled: (id: string) => boolean = () => false): Plugin => ({
   name: 'DxNodeStd',
   enforce: 'pre',
   resolveId(id) {
+    // A package that asked to inline a stdlib-shadowing package (`events`, `buffer`, `util`, …)
+    // means the npm package of that name, so the remap below must not claim it first — the
+    // esbuild pipeline only ever remapped `node:`-prefixed specifiers for this reason. Otherwise
+    // the inlined copy reaches `@dxos/node-std/events` through a `require()` no bundler rewrites.
+    if (isBundled(id)) {
+      return null;
+    }
     if (id.startsWith('node:')) {
       const mod = id.slice(5);
       if (NODE_STD_MODULES.includes(mod)) {
@@ -139,6 +146,62 @@ export const DxNodeStdPlugin = (): Plugin => ({
     }
   },
 });
+
+/**
+ * Hoists `require()` of an external out of inlined CommonJS into a real ESM import.
+ *
+ * Rolldown wraps each inlined CJS module in a `__commonJSMin` factory and leaves its
+ * `require("pkg")` calls verbatim, guarded by a `__require` shim that throws in any realm without
+ * `require` — so a browser consumer of the bundle dies on the first such call ("Calling `require`
+ * for X in an environment that doesn't expose the `require` function"). The calls sit inside the
+ * factory bodies rather than at the top level, which is why rolldown's own
+ * `esmExternalRequirePlugin` cannot lift them.
+ *
+ * Rewriting the emitted chunk is what the retired `dx-compile` did for the same reason, and the
+ * hoist is safe for the same reason: a factory body runs after module initialization, so the
+ * binding it reads is already populated.
+ */
+export const DxHoistRequirePlugin = (): Plugin => {
+  // The two forms rolldown emits. Destructuring (`var { a, b } = ...`) reads named exports, so it
+  // needs a namespace import; a single binding (`var X = ...`) is the whole `module.exports`, so it
+  // needs a DEFAULT import — `inherits` and friends are bare `module.exports = fn`, and a namespace
+  // object in their place fails as `inherits is not a function`.
+  const NAMED_REQUIRE = /var \{[\s\S]+?\} = __require\("(.+?)"\)/g;
+  const DEFAULT_REQUIRE = /var [^{}\n]+? = __require\("(.+?)"\)/g;
+  const slug = (specifier: string) => specifier.replace(/[^a-zA-Z0-9]/g, '_');
+  const namespaceId = (specifier: string) => `__dx_req_ns_${slug(specifier)}`;
+  const defaultId = (specifier: string) => `__dx_req_default_${slug(specifier)}`;
+
+  return {
+    name: 'DxHoistRequire',
+    apply: 'build',
+    renderChunk(code) {
+      if (!code.includes('__require("')) {
+        return null;
+      }
+      const namespaces = new Set<string>();
+      const defaults = new Set<string>();
+      // Destructuring first: its pattern is the narrower of the two, and the single-binding pattern
+      // would otherwise also match the head of a destructuring statement.
+      let out = code.replace(NAMED_REQUIRE, (match, specifier: string) => {
+        namespaces.add(specifier);
+        return match.replace(`__require("${specifier}")`, namespaceId(specifier));
+      });
+      out = out.replace(DEFAULT_REQUIRE, (match, specifier: string) => {
+        defaults.add(specifier);
+        return match.replace(`__require("${specifier}")`, defaultId(specifier));
+      });
+      if (namespaces.size === 0 && defaults.size === 0) {
+        return null;
+      }
+      const imports = [
+        ...[...namespaces].map((specifier) => `import * as ${namespaceId(specifier)} from '${specifier}';`),
+        ...[...defaults].map((specifier) => `import ${defaultId(specifier)} from '${specifier}';`),
+      ].join('\n');
+      return { code: `${imports}\n${out}`, map: null };
+    },
+  };
+};
 
 /**
  * Rewrites import specifiers per an alias map, then hands the result back to normal resolution
@@ -1105,7 +1168,7 @@ export const defineConfig = (options: DxConfigOptions = {}): UserConfig => {
       plugins: () => [
         ...(alias ? [DxAliasPlugin(alias, isBundled)] : []),
         DxWorkerResolvePlugin(),
-        ...(!nodeTarget ? [DxNodeStdPlugin()] : []),
+        ...(!nodeTarget ? [DxNodeStdPlugin(isBundled)] : []),
         ...(assetsAsFiles ? [DxRawAssetsPlugin()] : []),
         WasmPlugin(),
         DxosLogPlugin({ logToFile: false, transform: { enabled: true } }),
@@ -1164,7 +1227,7 @@ export const defineConfig = (options: DxConfigOptions = {}): UserConfig => {
     plugins: [
       ...(alias ? [DxAliasPlugin(alias, isBundled)] : []),
       DxWorkerResolvePlugin(),
-      ...(!nodeTarget ? [DxNodeStdPlugin()] : []),
+      ...(!nodeTarget ? [DxNodeStdPlugin(isBundled)] : []),
       ...(assetsAsFiles ? [DxRawAssetsPlugin()] : []),
       ...jsxPlugin,
       // `enforce: 'post'` so the rewrite sees transpiled output: the JSX/TS transforms above can
@@ -1173,6 +1236,8 @@ export const defineConfig = (options: DxConfigOptions = {}): UserConfig => {
         ? [{ ...inject({ modules: NODE_STD_GLOBALS, sourceMap: true }), enforce: 'post' as const }]
         : []),
       DxosLogPlugin({ logToFile: false, transform: { enabled: true } }),
+      // After the log transform so it sees the final emitted chunk.
+      ...(bundle.length > 0 ? [DxHoistRequirePlugin()] : []),
       ...(declarations ? [DxDeclarationsPlugin()] : []),
     ],
     ...(test ? { test: buildTestConfig(process.cwd(), test, jsx) } : {}),

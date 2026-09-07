@@ -1,5 +1,8 @@
 {
   "extends": "../../tsconfig.base.json",
+  "exclude": [
+    "vite.config.ts"
+  ],
   "include": [
     "**/*"
   ],
@@ -7,8 +10,5 @@
     {
       "path": "../../packages/common/node-std"
     }
-  ],
-  "exclude": [
-    "vite.config.ts"
   ]
 }
