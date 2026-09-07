@@ -21,6 +21,14 @@
   Any write to the mode clears the pin, so naming a verbosity is how you leave
   focus; the pin is per-worktree like the mode, so concurrent sessions in one
   worktree share it.
+- **`/mode discuss|build|debug`** writes `.claude/.phase` (default `discuss`);
+  `debug` also creates `.claude/.debug`, which makes `context` append a
+  `DIAGNOSTICS:` footer. `focus` sets the phase to `build`. State files, like the
+  mode, are untracked and written only by `scripts/mode.sh`.
+- `context` also renders `SERVERS:` (from `tools/storybook-react/diagnose.sh
+--status`, env `DX_WATCH_DIR`) and `CHECKLIST`. Tests: `bash
+.claude/scripts/mode.test.sh`, `bash tools/storybook-react/diagnose.test.sh`,
+  `bash .claude/hooks/guard-foreground.test.sh`.
 - `bash .claude/scripts/mode.test.sh` exercises both files by feeding the hook
   the JSON the `UserPromptSubmit` event carries. Run it after touching either.
 - **Bare `/mode` changes nothing and re-orients**: reply with the worktree and

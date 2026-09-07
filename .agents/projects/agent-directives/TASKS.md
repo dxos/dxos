@@ -213,7 +213,7 @@ settled 1x1 with the user; order of delivery is phase → watcher → checklist.
       `discuss`), not a third mode value; `discuss` is about responsiveness, not
       permissions; server status comes from one round-robin watcher per machine;
       the foreground guard is an `ask`, never a deny, in every phase.
-- [ ] **Phase axis** — `.claude/.phase` + `.claude/.debug`, `mode.sh phase set`,
+- [x] **Phase axis** — `.claude/.phase` + `.claude/.debug`, `mode.sh phase set`,
       hook branch, `focus` implies `build`, `context` emits the PHASE clause.
   - [x] **Task 1: backend** — `mode.sh phase get|set {discuss|build|debug}` and
         `mode.sh debug get`; the debug flag rides on the phase (`debug` sets it,
@@ -230,7 +230,7 @@ settled 1x1 with the user; order of delivery is phase → watcher → checklist.
 - [x] **Checklist** — CHECKLIST lines in `context`, after SERVERS.
 - [x] **Guard** — `guard-foreground.sh` on `PreToolUse` Bash.
 - [x] **Diagnostics footer** — behind the debug flag (done in Task 3).
-- [ ] **Tests + docs** — extend `mode.test.sh`; new `diagnose.test.sh` and
+- [x] **Tests + docs** — extend `mode.test.sh`; new `diagnose.test.sh` and
       `guard-foreground.test.sh`; AGENTS.md, `.claude/README.md`, `mode.md`,
       storybook README, REPOSITORY_GUIDE.
 

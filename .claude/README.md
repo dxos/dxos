@@ -69,7 +69,8 @@ stdout as context the agent reads. Every other event needs
 | `~/.claude/hooks/branch-beacon.sh`                                                                                | `UserPromptSubmit`        | agent          | derived, recomputed each turn             |
 | `~/.claude/hooks/guard-branch.sh`, `deny-git-worktree-add.sh`                                                     | `PreToolUse(Bash)`        | deny           | derived                                   |
 | `~/.claude/hooks/guard-worktree.sh` + [repo copy](./hooks/guard-worktree.sh)                                      | `PreToolUse(Edit\|Write)` | deny           | derived                                   |
-| [`hooks/mode.sh`](./hooks/mode.sh) → [`scripts/mode.sh`](./scripts/mode.sh)   | `UserPromptSubmit`        | agent          | **persisted** `.claude/.mode` + `.claude/.focus` |
+| [`hooks/guard-foreground.sh`](./hooks/guard-foreground.sh)                                                       | `PreToolUse(Bash)`        | ask            | derived                                   |
+| [`hooks/mode.sh`](./hooks/mode.sh) → [`scripts/mode.sh`](./scripts/mode.sh)   | `UserPromptSubmit`        | agent          | **persisted** `.claude/.mode` + `.phase` + `.focus` + `.debug` |
 | `dxos` plugin → `hooks/track.sh` ([tools/claude/plugins/dxos](../tools/claude/plugins/dxos))                            | `UserPromptSubmit`        | agent          | persisted, backend-resolved (registry)    |
 | [`AGENTS.md`](../AGENTS.md) (+ `CLAUDE.md` / `GEMINI.md` symlinks), [`CLAUDE.md`](./CLAUDE.md)                    | —                         | agent          | static                                    |
 | `skills/` → `../.agents/skills/` (25)                                                                             | —                         | agent          | on demand                                 |

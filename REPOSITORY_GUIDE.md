@@ -171,24 +171,24 @@ around 1.2GB), and it is **activity-driven, not uptime-driven** — recorded
 intervals between wedges range from 1 minute to 32 hours, clustering during
 working hours and near-vanishing overnight.
 
-`serve` therefore arms a watcher beside the server (`tools/storybook-react/serve.sh`
-→ `diagnose.sh --ensure`). It polls, and the first time the server stops answering
-or holds ≥90% CPU for three polls it writes a report to `temp/` naming what the
-CPU is in, whether a Vite dep re-optimization was in flight, and how many
-storybook processes are alive; then it re-arms. Nothing to remember and nothing
-to run.
+`serve` therefore arms a watcher (`tools/storybook-react/serve.sh` →
+`diagnose.sh --ensure`) — ONE per machine, not one per server. It round-robins
+every known dev-server port (`.claude/launch.json` plus 9009/5199), and the
+first time a port stops answering or holds ≥90% CPU for three polls it writes a
+report to that server's own `temp/` naming what the CPU is in, whether a Vite
+dep re-optimization was in flight, and how many storybook processes are alive;
+then it keeps polling. Nothing to remember and nothing to run.
 
-To capture on demand, or when the server was started some other way:
+To see what it knows, or to replace it:
 
 ```bash
-bash tools/storybook-react/diagnose.sh            # capture now
-bash tools/storybook-react/diagnose.sh --watch    # capture whenever it next wedges
+bash tools/storybook-react/diagnose.sh --status    # table of every known port
+bash tools/storybook-react/diagnose.sh --restart    # replace a running watcher with this checkout's
 ```
 
-**Do not restart before capturing** — that is the whole difficulty. And check for
-a second server first: an orphaned keeper daemon from a previous session was found
-restarting storybook on another port for five days, doubling the watcher and
-memory load against the same repo.
+**Do not restart before capturing** — that is the whole difficulty. And check
+`--status` first: a stale singleton reports `stale:` after three missed
+intervals rather than silently going dark.
 
 ### Fast dev mode (`serve-fast`)
 

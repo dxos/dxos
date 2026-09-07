@@ -36,3 +36,12 @@ To run vitest against the stories run the following (with the storybook dev serv
 ```bash
 pnpm test-storybook --url http://127.0.0.1:9009 -- --watch
 ```
+
+## Hang watcher
+
+`serve.sh` runs `diagnose.sh --ensure`, which starts ONE watcher per machine
+(`~/.cache/dxos/watch/`). It polls every known dev-server port (`.claude/launch.json`
+plus 9009/5199) every 15s, rewrites `status`, and captures a wedged server to
+`<its worktree>/temp/`. `diagnose.sh --status` prints the table; `--restart`
+replaces a running watcher with this checkout's script. Tests:
+`bash tools/storybook-react/diagnose.test.sh`.

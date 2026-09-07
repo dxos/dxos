@@ -1,6 +1,6 @@
 ---
-description: Show or set the response mode (terse | normal | focus [task])
-argument-hint: '[terse|normal|focus [task]]'
+description: Show or set the response mode (terse | normal | focus [task]) and phase (discuss | build | debug)
+argument-hint: '[terse|normal|focus [task]|discuss|build|debug]'
 allowed-tools: Bash
 ---
 
@@ -13,7 +13,7 @@ expansion reaches you, so any write is already done.
 Run this first — it is the source of truth for the report:
 
 ```bash
-bash .claude/scripts/mode.sh get; bash .claude/scripts/mode.sh focus get; git rev-parse --show-toplevel; git branch --show-current; ls -1 AGENTS.md .claude/CLAUDE.md ~/.claude/CLAUDE.md 2>/dev/null
+bash .claude/scripts/mode.sh get; bash .claude/scripts/mode.sh focus get; bash .claude/scripts/mode.sh phase get; bash tools/storybook-react/diagnose.sh --status; git rev-parse --show-toplevel; git branch --show-current; ls -1 AGENTS.md .claude/CLAUDE.md ~/.claude/CLAUDE.md 2>/dev/null
 ```
 
 **If `$ARGUMENTS` named a mode**, it is already applied and this turn's
@@ -28,6 +28,9 @@ previous instruction, so restate it in one line first — that is the user's onl
 chance to correct a wrong pin. If the block carries no `FOCUS:` line, nothing
 could be pinned: say so and ask what to pin.
 
+**If `$ARGUMENTS` named a phase** (`discuss`, `build`, `debug`), it is already
+applied — confirm in one line.
+
 **If `$ARGUMENTS` is empty**, this is a re-orientation request. Reply with
 exactly these three things and nothing else:
 
@@ -37,7 +40,9 @@ exactly these three things and nothing else:
    you really consulted — not the full catalogue of what exists.
 3. The current mode, from the command above, and the other mode's command on the
    same line (`/mode terse` | `/mode normal`). If a task is pinned, name it and
-   say that `/mode terse` or `/mode normal` clears it.
+   say that `/mode terse` or `/mode normal` clears it. Then the current phase
+   with the other phases' commands on the same line, then the SERVERS table
+   from the command above.
 
 Do **not** offer the modes as a numbered list. A numeric reply is the one form
 the `UserPromptSubmit` hook cannot catch, so it would invite an answer that
