@@ -36,10 +36,13 @@
       "path": "../../packages/ui/react-ui"
     },
     {
-      "path": "../../packages/ui/react-ui-dnd"
+      "path": "../../packages/ui/react-ui-assistant"
     },
     {
-      "path": "../../packages/ui/react-ui-thread"
+      "path": "../../packages/ui/react-ui-chat"
+    },
+    {
+      "path": "../../packages/ui/react-ui-feed"
     },
     {
       "path": "../../packages/ui/ui-theme"

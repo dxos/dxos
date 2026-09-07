@@ -23817,12 +23817,15 @@ importers:
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../../packages/ui/react-ui
-      '@dxos/react-ui-dnd':
+      '@dxos/react-ui-assistant':
         specifier: workspace:*
-        version: link:../../packages/ui/react-ui-dnd
-      '@dxos/react-ui-thread':
+        version: link:../../packages/ui/react-ui-assistant
+      '@dxos/react-ui-chat':
         specifier: workspace:*
-        version: link:../../packages/ui/react-ui-thread
+        version: link:../../packages/ui/react-ui-chat
+      '@dxos/react-ui-feed':
+        specifier: workspace:*
+        version: link:../../packages/ui/react-ui-feed
       '@dxos/sql-sqlite':
         specifier: workspace:*
         version: link:../../packages/common/sql-sqlite

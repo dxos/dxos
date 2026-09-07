@@ -11,7 +11,7 @@ import { App } from './App.tsx';
 
 /**
  * The web UI's entry point. Solid owns the page; the chat thread inside it is React, mounted as an
- * island (see `react/Island.ts`) so the repository's own `@dxos/react-ui-thread` can be used
+ * island (see `react/Island.ts`) so the repository's own `@dxos/react-ui-assistant` can be used
  * unmodified rather than reimplemented in Solid.
  */
 

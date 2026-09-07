@@ -1,6 +1,6 @@
 # code-index — Tasks
 
-_Resume: nothing in flight — PR [#12968](https://github.com/dxos/dxos/pull/12968) is green, mergeable and waiting on human review. Uncommitted: none. Last: `7b238909`, restricting the SPA fallback to navigation requests._
+_Resume: nothing in flight — PR [#12968](https://github.com/dxos/dxos/pull/12968) is waiting on human review. Uncommitted: none. Last: the chat moved onto the assistant's own stack (`ChatThread` + `FeedModel` + `ChatEditor`), verified in a real browser._
 
 The package is two halves that share one store: an **indexer** that turns this
 repository into a SQLite ledger plus a persistent RDF quad store, and a
@@ -40,7 +40,8 @@ the sandbox is written against.
 - [x] **Two providers** — Ollama `gpt-oss:20b` by default, Anthropic as the escape hatch. Both plain `LanguageModel` layers.
 - [x] **effect-rpc over NDJSON** — `Watch` streams history and live tail in one stream; `Dispatch` appends; three genuine question RPCs beside them.
 - [x] **In-process Vite, no build step** — programmatic API in middleware mode, `@dxos/*` resolved through the `source` condition.
-- [x] **Solid shell with the chat as a React island** — `@dxos/react-ui-thread` unmodified, codemirror composer and all.
+- [x] **Solid shell with the chat as a React island** — the repository's own chat components, unmodified, codemirror composer and all.
+- [x] **On the assistant's own stack** — `ChatThread` (`@dxos/react-ui-assistant`) over a `FeedModel` (`@dxos/react-ui-feed`) with `ChatEditor` (`@dxos/react-ui-chat`) as the composer, which is what Composer's `plugin-assistant` renders. Replaced the older `@dxos/react-ui-thread`.
 - [x] **Projects in the URL** — `/p/<id>`, last opened remembered per browser.
 - [x] **CLI chat** — `code-index chat [--prompt …]`, same log/agent/sandbox rendered as lines.
 - [x] **Recorded demo** — the agent presenting a Mermaid diagram, replaying intact after reload ([video](https://pub-39066a86073446d7b77b1c157b660bb5.r2.dev/demos/2026-09-06-code-index-webui/code-index-demo.webm)).

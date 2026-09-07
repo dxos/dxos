@@ -5,36 +5,25 @@
 import React, { useCallback, useMemo } from 'react';
 import { I18nProvider } from 'react-aria-components';
 
-import { Obj } from '@dxos/echo';
 import { ThemeProvider, Tooltip, defaultTx } from '@dxos/react-ui';
-import { Dnd } from '@dxos/react-ui-dnd';
-import { type MessageMetadata, Thread } from '@dxos/react-ui-thread';
-import { translations as threadTranslations } from '@dxos/react-ui-thread/translations';
+import { ChatThread } from '@dxos/react-ui-assistant';
+import { translations as assistantTranslations } from '@dxos/react-ui-assistant/translations';
+import { ChatEditor, ChatStatusIndicator } from '@dxos/react-ui-chat';
+import { translations as chatTranslations } from '@dxos/react-ui-chat/translations';
+import { useFeedModel } from '@dxos/react-ui-feed';
 import { Message } from '@dxos/types';
-import { hexToFallback } from '@dxos/util';
 
 import type * as Fold from '../../workspace/Fold.ts';
 
 /**
- * The chat, as `@dxos/react-ui-thread` renders it. The transcript arrives already folded from the
- * project log, so this component holds no state of its own: it maps turns to `Message` objects and
+ * The chat, as Composer's assistant renders it: `ChatThread` over a `FeedModel`, with the
+ * repository's own codemirror composer below. The transcript arrives already folded from the
+ * project log, so this component holds no state of its own — it maps turns to `Message` objects and
  * hands a typed line back up to Solid.
  */
 
-const AGENT = { role: 'assistant' as const, identityDid: 'did:key:agent', name: 'code-index' };
-const USER = { role: 'user' as const, identityDid: 'did:key:you', name: 'You' };
-
-const metadata = (message: Message.Message): MessageMetadata => {
-  const did = message.sender.identityDid ?? '0';
-  const fallback = hexToFallback(did);
-  return {
-    id: Obj.getURI(message),
-    timestamp: message.created,
-    authorId: did,
-    authorName: message.sender.name,
-    authorAvatarProps: { hue: fallback.hue, emoji: fallback.emoji },
-  };
-};
+const AGENT = { role: 'assistant' as const, name: 'code-index' };
+const USER = { role: 'user' as const, name: 'You' };
 
 export type ThreadIslandProps = {
   readonly turns: readonly Fold.Turn[];
@@ -54,6 +43,10 @@ const Transcript = ({ turns, busy, onSend }: ThreadIslandProps) => {
     [turns],
   );
 
+  // `stops: 'prompt'` is what makes each of the user's turns a stop, so the thread brings the last
+  // prompt to the top and the nav steps question to question rather than row to row.
+  const model = useFeedModel(messages, { stops: 'prompt' });
+
   const handleSend = useCallback(
     (text: string) => {
       onSend(text);
@@ -65,19 +58,27 @@ const Transcript = ({ turns, busy, onSend }: ThreadIslandProps) => {
   );
 
   return (
-    <Thread.Root getMetadata={metadata} identityDid={USER.identityDid} editable={!busy}>
-      <Thread.Content classNames='dx-grow'>
-        <Thread.Messages messages={messages} />
-        <Thread.Textbox
-          id='composer'
-          authorId={USER.identityDid}
-          authorName={USER.name}
-          onSend={handleSend}
-          disabled={busy}
-        />
-        <Thread.Status activity={busy}>Thinking…</Thread.Status>
-      </Thread.Content>
-    </Thread.Root>
+    // `thinking` shows the agent's reasoning and tool blocks rather than the answer alone, which is
+    // the view this workspace wants: the point is watching it query the graph.
+    <ChatThread.Root model={model} viewType='thinking'>
+      <div className='flex flex-col dx-grow overflow-hidden'>
+        <div className='dx-expand relative'>
+          <ChatThread.Viewport classNames='dx-fullscreen' padding />
+        </div>
+        {/* The composer needs a testid of its own: the feed renders every message through
+            codemirror as well, so `.cm-content` alone matches message bodies too. */}
+        <div className='flex items-center gap-2 p-2 border-t border-separator' data-testid='code-index.composer'>
+          <ChatEditor
+            id='composer'
+            classNames='dx-grow'
+            lineWrapping
+            placeholder={busy ? 'Working…' : 'Ask about the repository…'}
+            onSubmit={handleSend}
+          />
+          <ChatStatusIndicator processing={busy} />
+        </div>
+      </div>
+    </ChatThread.Root>
   );
 };
 
@@ -87,11 +88,9 @@ const Transcript = ({ turns, busy, onSend }: ThreadIslandProps) => {
  */
 export const ThreadIsland = (props: ThreadIslandProps) => (
   <I18nProvider locale='en-US'>
-    <ThemeProvider tx={defaultTx} themeMode='dark' resourceExtensions={threadTranslations}>
+    <ThemeProvider tx={defaultTx} themeMode='dark' resourceExtensions={[...assistantTranslations, ...chatTranslations]}>
       <Tooltip.Provider>
-        <Dnd.Root>
-          <Transcript {...props} />
-        </Dnd.Root>
+        <Transcript {...props} />
       </Tooltip.Provider>
     </ThemeProvider>
   </I18nProvider>
