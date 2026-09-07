@@ -31,6 +31,22 @@ describe('shallowEqual', () => {
     expect(shallowEqual({ a: { b: 1 } }, { a: { b: 1 } })).toBe(false);
   });
 
+  test('an array is never equal to a record', ({ expect }) => {
+    expect(shallowEqual([], {})).toBe(false);
+    expect(shallowEqual({}, [])).toBe(false);
+  });
+
+  // A hole is absent from `Object.keys`, so length is the only thing separating these.
+  test('sparse arrays of differing length', ({ expect }) => {
+    expect(shallowEqual(new Array(1), [])).toBe(false);
+    expect(shallowEqual([1, 2], [1])).toBe(false);
+  });
+
+  test('arrays with the same entries', ({ expect }) => {
+    const subject = { id: 'x' };
+    expect(shallowEqual([subject], [subject])).toBe(true);
+  });
+
   test('non-objects', ({ expect }) => {
     expect(shallowEqual(1, 1)).toBe(true);
     expect(shallowEqual(1, 2)).toBe(false);

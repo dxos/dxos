@@ -107,6 +107,37 @@ const InvalidIdPlugin = Plugin.define(invalidIdMeta).pipe(
   Plugin.make,
 );
 
+const RoleStable = Role.make<{ subject: { id: string } }>('org.dxos.test.role.stable');
+
+const stableMeta = Plugin.makeMeta({
+  key: DXN.make('org.dxos.plugin.test.surfaceStable'),
+  name: 'SurfaceStableTest',
+});
+
+// Counts renders of the CONTRIBUTED component — the subtree a surface is supposed to fence off —
+// rather than commits of the Surface itself, which re-renders either way.
+const StablePlugin = (counts: { value: number }) =>
+  Plugin.define(stableMeta).pipe(
+    Plugin.addModule({
+      id: 'surfaces',
+      provides: [Capabilities.ReactSurface],
+      activate: () =>
+        Effect.succeed([
+          Capability.contributeAll(Capabilities.ReactSurface, [
+            create({
+              id: 'stable',
+              filter: makeFilter(RoleStable),
+              component: ({ data: { subject } }) => {
+                counts.value++;
+                return <span data-testid='stable'>{subject.id}</span>;
+              },
+            }),
+          ]),
+        ]),
+    }),
+    Plugin.make,
+  )();
+
 // A counter increments once per commit of the wrapped Surface subtree (mount or update).
 const probe = (counts: { value: number }) => () => {
   counts.value++;
@@ -522,37 +553,6 @@ describe('SurfaceComponent quantified comparison (per-role vs global subscriptio
 });
 
 describe('SurfaceComponent data stability', () => {
-  const RoleStable = Role.make<{ subject: { id: string } }>('org.dxos.test.role.stable');
-
-  const stableMeta = Plugin.makeMeta({
-    key: DXN.make('org.dxos.plugin.test.surfaceStable'),
-    name: 'SurfaceStableTest',
-  });
-
-  // Counts renders of the CONTRIBUTED component — the subtree a surface is supposed to fence off —
-  // rather than commits of the Surface itself, which re-renders either way.
-  const StablePlugin = (counts: { value: number }) =>
-    Plugin.define(stableMeta).pipe(
-      Plugin.addModule({
-        id: 'surfaces',
-        provides: [Capabilities.ReactSurface],
-        activate: () =>
-          Effect.succeed([
-            Capability.contributeAll(Capabilities.ReactSurface, [
-              create({
-                id: 'stable',
-                filter: makeFilter(RoleStable),
-                component: ({ data: { subject } }) => {
-                  counts.value++;
-                  return <span data-testid='stable'>{subject.id}</span>;
-                },
-              }),
-            ]),
-          ]),
-      }),
-      Plugin.make,
-    )();
-
   test('an inline `data` literal does not re-render the subtree when an ancestor renders', async ({ expect }) => {
     const counts = { value: 0 };
     await using harness = await createTestApp({ plugins: [StablePlugin(counts)] });
