@@ -206,5 +206,30 @@ check '13b debug flag cleared' 'absent' "$([ -e "$debug" ] && echo present || ec
 check '13c pin set' 'ship it' "$(cat "$focus")"
 check '13d mode is terse' 'terse' "$(cat "$state")"
 
+echo '=== 14. context carries the phase clause and the diagnostics footer'
+reset
+out=$(run "$(payload 'hi')")
+check '14a default phase clause' '1' "$(printf '%s' "$out" | grep -c '^- PHASE: DISCUSS')"
+check '14b discuss rule present' '1' "$(printf '%s' "$out" | grep -c 'background subagent')"
+check '14c no diagnostics by default' '0' "$(printf '%s' "$out" | grep -c '^DIAGNOSTICS:')"
+check '14d phase after mode, before form clause' 'ordered' "$(
+  printf '%s' "$out" | awk '/MODE: /{m=NR} /^- PHASE:/{p=NR} /govern form only/{f=NR} END{ if (m<p && p<f) print "ordered"; else print "misordered" }'
+)"
+run "$(payload '/mode build')" > /dev/null
+out=$(run "$(payload 'hi')")
+check '14e build clause' '1' "$(printf '%s' "$out" | grep -c '^- PHASE: BUILD')"
+check '14f build rule present' '1' "$(printf '%s' "$out" | grep -c 'to completion')"
+run "$(payload '/mode debug')" > /dev/null
+out=$(run "$(payload 'hi')")
+check '14g debug clause' '1' "$(printf '%s' "$out" | grep -c '^- PHASE: DEBUG')"
+check '14h debug rule present' '1' "$(printf '%s' "$out" | grep -c 'one hypothesis at a time')"
+check '14i diagnostics footer present' '1' "$(printf '%s' "$out" | grep -c '^DIAGNOSTICS:')"
+check '14j diagnostics names the phase file' '1' "$(printf '%s' "$out" | grep -c "phase: .*\.claude/\.phase = debug")"
+run "$(payload '/mode focus x')" > /dev/null
+out=$(run "$(payload 'hi')")
+check '14k focus renders build then pin' 'ordered' "$(
+  printf '%s' "$out" | awk '/^- PHASE: BUILD/{p=NR} /^- FOCUS: x$/{f=NR} END{ if (p && f && p<f) print "ordered"; else print "misordered" }'
+)"
+
 printf '\n%s passed, %s failed\n' "$pass" "$fail"
 [ "$fail" -eq 0 ]

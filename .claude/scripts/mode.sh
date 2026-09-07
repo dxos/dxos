@@ -253,6 +253,34 @@ EOF
   is earned by content, never by restating or narrating.
 EOF
     fi
+    case "$(current_phase)" in
+      discuss)
+        cat <<'EOF'
+- PHASE: DISCUSS — reply this turn with the answer, the decisions taken, and
+  numbered options. Investigation over ~2 tool calls goes to a background subagent;
+  say so and report when it lands. Designs and plans go to
+  agents/superpowers/{specs,plans}/, not to long chat. Edits are fine when this
+  turn asks for them; do not start implementation the user has not asked for.
+  Switch with `/mode build`.
+EOF
+        ;;
+      build)
+        cat <<'EOF'
+- PHASE: BUILD — run the agreed or pinned task to completion, commit, report.
+  Anything expected to run past ~30s goes to the background. Switch with
+  `/mode discuss`.
+EOF
+        ;;
+      debug)
+        cat <<'EOF'
+- PHASE: DEBUG — the DISCUSS rules plus: reproduce first; one hypothesis at a time;
+  instrument with @dxos/log and read the evidence (app.log, test.log,
+  test-browser.log, the watcher's last capture); confirm the root cause before
+  proposing a fix; no fix and no cleanup until it is confirmed. Switch with
+  `/mode build` or `/mode discuss`.
+EOF
+        ;;
+    esac
     # The pin is emitted last so it reads as the narrowest constraint, and only
     # when one exists — an unpinned session must look exactly as it did before.
     pinned=$(current_focus)
@@ -266,6 +294,16 @@ EOF
   (1. do it now  2. stay on the pin) — never silent compliance.
   Clear the pin with `/mode terse` or `/mode normal`.
 EOF
+    fi
+    if debug_on; then
+      # Raw values beside canonical ones, so a hook fault and an agent fault look different.
+      pin_source='none'
+      if [ -n "$pinned" ]; then pin_source='file'; fi
+      printf 'DIAGNOSTICS: (debug flag on; `/mode build` or `/mode discuss` turns it off)\n'
+      printf '  mode:  %s = %s -> %s\n' "$state" "$(read_state 2>/dev/null || printf '<unreadable>')" "$(current)"
+      printf '  phase: %s = %s -> %s\n' "$phase" "$(read_phase 2>/dev/null || printf '<unreadable>')" "$(current_phase)"
+      printf '  focus: %s (%s)\n' "$focus" "$pin_source"
+      printf '  elapsed: %ss\n' "$SECONDS"
     fi
     cat <<'EOF'
 - These govern form only. They do NOT override correctness, required safety
