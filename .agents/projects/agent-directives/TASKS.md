@@ -203,6 +203,7 @@ told to land a PR would still pick up adjacent fixes and poll CI between turns.
       forbids. Cost: a stale pin can outlive the work it named.
 
 ## Phase 6: phase axis, server watcher, per-turn checklist (2026-09-05)
+
 PR: #12973 (OPEN) — https://github.com/dxos/dxos/pull/12973
 
 Spec: `agents/superpowers/specs/2026-09-05-agent-modes-design.md`. Design
@@ -239,6 +240,11 @@ settled 1x1 with the user; order of delivery is phase → watcher → checklist.
       `--restart` reap legacy per-port watchers (`--reap-legacy [PORT]` seam) and
       `--status` points at `--restart` while one runs; the guard honours an
       explicit Bash `timeout` over 30s and reads its input in one `jq` call.
+- [x] **Review fixes** — `--ensure` holds its lock until the spawned watcher owns
+      the pidfile (and `--watch` yields when it loses that race); status rows are
+      flattened to printable characters at both ends, and SERVERS drops split rows
+      and unknown passthrough lines; `phase set` rolls the phase back when the
+      debug marker cannot be updated.
 
 ### References
 

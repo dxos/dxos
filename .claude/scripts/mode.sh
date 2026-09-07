@@ -214,12 +214,35 @@ case "${1:-get}" in
           discuss | build | debug) next=$3 ;;
           *) printf 'usage: mode.sh phase set {discuss|build|debug}\n' >&2; exit 2 ;;
         esac
+        # Strict read: the previous value is what a failed marker update is rolled back to,
+        # and an unknown one is never safe to overwrite.
+        if ! previous=$(read_phase); then
+          printf 'ERROR: %s exists but could not be read; refusing to overwrite it.\n' "$phase" >&2
+          exit 1
+        fi
         write_file "$phase" "$next" || { printf 'ERROR: could not write %s\n' "$phase" >&2; exit 1; }
         # The flag rides on the phase: debug turns it on, any other phase turns it off.
+        marker_failed=''
         if [ "$next" = 'debug' ]; then
-          write_file "$debug" 'on' || { printf 'ERROR: could not write %s\n' "$debug" >&2; exit 1; }
+          write_file "$debug" 'on' || marker_failed='yes'
         else
-          rm -f "$debug" 2>/dev/null || { printf 'ERROR: could not clear %s\n' "$debug" >&2; exit 1; }
+          rm -f "$debug" 2>/dev/null || marker_failed='yes'
+        fi
+        if [ -n "$marker_failed" ]; then
+          # Phase and marker are one state: a committed phase beside a stale marker prints
+          # DIAGNOSTICS for a non-debug phase, so the phase goes back.
+          rollback='ok'
+          if [ -n "$previous" ]; then
+            write_file "$phase" "$previous" || rollback='failed'
+          else
+            rm -f "$phase" 2>/dev/null || rollback='failed'
+          fi
+          if [ "$rollback" = 'ok' ]; then
+            printf 'ERROR: could not update %s; the phase is unchanged.\n' "$debug" >&2
+          else
+            printf 'ERROR: could not update %s, and %s could not be restored.\n' "$debug" "$phase" >&2
+          fi
+          exit 1
         fi
         printf 'Phase: %s\n' "$(printf '%s' "$next" | tr '[:lower:]' '[:upper:]')"
         ;;
@@ -307,6 +330,10 @@ EOF
         NF == 2 { printf "%dm", $1; next }
         { printf "%s", $0 }'
     }
+    # Watcher-supplied paths are printed straight into the agent's context, so a control
+    # character — which would split a row and hand over an extra, instruction-shaped line —
+    # is flattened here as well as at the producer.
+    printable() { printf '%s' "$1" | tr -c '[:print:]' '?'; }
     # Reads the watcher's status file rather than probing servers itself, so the
     # hot path never blocks on a wedged port.
     servers_block() {
@@ -322,18 +349,26 @@ EOF
         local line idle=''
         while IFS=$'\t' read -r port pid kind tree state age last; do
           [ -n "$port" ] || continue
-          # A diagnostic line (stale/no-status-yet) carries no tabs, so it lands
-          # whole in $port with the rest empty; print it back as one line.
+          # A diagnostic line carries no tabs, so it lands whole in $port; only the
+          # watcher's own two are echoed back, because anything else on a non-numeric
+          # first field is a fragment of a split row, not a status line.
           case "$port" in
-            *[!0-9]*) printf '  %s\n' "$port $pid $kind $tree $state $age $last"; continue ;;
+            'stale:'*) printf '  %s\n' "$(printable "$port")"; continue ;;
+            'no status yet'*) printf '  %s\n' "$(printable "$port")"; continue ;;
+            *[!0-9]*) continue ;;
           esac
+          # A short row is half of a split one; rendering it would report a server that
+          # the watcher never saw.
+          if [ -z "$pid" ] || [ -z "$kind" ] || [ -z "$tree" ] || [ -z "$state" ] || [ -z "$age" ] || [ -z "$last" ]; then
+            continue
+          fi
           if [ "$state" = unbound ]; then
             idle="$idle $port"
           else
             line=":$port $kind $state $(humanize_etime "$age") ${tree##*/}"
             [ "$tree" = "$here" ] && line="$line [THIS]"
-            printf '  %s\n' "$line"
-            if debug_on && [ "$last" != '-' ]; then printf '    capture: %s\n' "$last"; fi
+            printf '  %s\n' "$(printable "$line")"
+            if debug_on && [ "$last" != '-' ]; then printf '    capture: %s\n' "$(printable "$last")"; fi
           fi
         done
         # Collapsed to one line because a row per idle port is a dozen-plus lines

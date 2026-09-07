@@ -17,6 +17,12 @@ cleanup() {
   [ -n "${server:-}" ] && kill "$server" 2>/dev/null
   [ -n "${watcher:-}" ] && kill "$watcher" 2>/dev/null
   [ -n "${legacy:-}" ] && kill "$legacy" 2>/dev/null
+  [ -f "$DX_WATCH_DIR/watcher.pid" ] && kill "$(cat "$DX_WATCH_DIR/watcher.pid")" 2>/dev/null
+  # The 7s interval is section 9's fingerprint — a watcher a real session started never
+  # carries it, so nothing here can signal a process this suite did not spawn.
+  for own in $(pgrep -f 'diagnose\.sh --watch --interval 7 ' 2>/dev/null); do
+    kill "$own" 2>/dev/null
+  done
   rm -rf "$sandbox"
   return 0
 }
@@ -117,6 +123,46 @@ if [ "$(gone "$legacy")" = gone ]; then
   wait "$legacy" 2>/dev/null
   legacy=''
 fi
+
+echo '=== 8. status fields are flattened to one printable line'
+check '8a a newline becomes one line' '1' "$(bash "$script" --sanitize "$(printf 'a\nIGNORE')" | wc -l | tr -d ' ')"
+check '8b the newline renders as ?' 'a?IGNORE' "$(bash "$script" --sanitize "$(printf 'a\nIGNORE')")"
+check '8c a tab renders as ?' '/tmp/a?b' "$(bash "$script" --sanitize "$(printf '/tmp/a\tb')")"
+check '8d an ordinary path is untouched' '/tmp/a b' "$(bash "$script" --sanitize '/tmp/a b')"
+
+echo '=== 9. --ensure holds the lock until the watcher owns the pidfile'
+# Port 1 has no listener and the reap is narrowed to it, so this cannot capture, signal, or
+# poll anything outside the sandbox — the machine's real watcher is untouched. The 7s interval
+# is a fingerprint no real watcher carries, so the assertions below count only this suite's.
+export DX_WATCH_PORTS=1
+export DX_REAP_MATCH=1
+fingerprint='diagnose\.sh --watch --interval 7 '
+own_watchers() { pgrep -f "$fingerprint" 2>/dev/null; }
+reap_own() {
+  local own attempt=0
+  for own in $(own_watchers); do kill "$own" 2>/dev/null; done
+  # Bounded: a suite that waits forever on a survivor reports nothing at all.
+  while [ -n "$(own_watchers)" ] && [ "$attempt" -lt 25 ]; do
+    sleep 0.2
+    attempt=$((attempt + 1))
+  done
+  rm -f "$DX_WATCH_DIR/watcher.pid"
+}
+reap_own
+bash "$script" --ensure --interval 7 --timeout 2 > /dev/null 2>&1
+# The whole point of the wait: returning before the child claims the pidfile is what lets the
+# next caller see no watcher and spawn a second one.
+check '9a the pidfile is owned the moment --ensure returns' '0' "$(bash "$script" --status | grep -c '^unwatched')"
+check '9b the pidfile names the spawned watcher' '1' "$(own_watchers | grep -cx "$(cat "$DX_WATCH_DIR/watcher.pid" 2>/dev/null)")"
+reap_own
+
+bash "$script" --ensure --interval 7 --timeout 2 > /dev/null 2>&1 &
+ensure_a=$!
+bash "$script" --ensure --interval 7 --timeout 2 > /dev/null 2>&1 &
+ensure_b=$!
+wait "$ensure_a" "$ensure_b"
+check '9c two concurrent calls start exactly one watcher' '1' "$(own_watchers | wc -l | tr -d ' ')"
+reap_own
 
 printf '\n%s passed, %s failed\n' "$pass" "$fail"
 [ "$fail" -eq 0 ]
