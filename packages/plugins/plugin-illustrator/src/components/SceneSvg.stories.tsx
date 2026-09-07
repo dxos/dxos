@@ -8,7 +8,7 @@ import React, { useEffect, useState } from 'react';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { trim } from '@dxos/util';
 
-import { type Scene, Uml, UmlEngine, UmlGrid, UmlRules, UmlSearch } from '#model';
+import { MermaidEngine, type Scene, Uml, UmlEngine, UmlGrid, UmlRules, UmlSearch } from '#model';
 
 import { SceneSvg } from './SceneSvg';
 
@@ -78,7 +78,29 @@ const COMPLEX_DIAGRAM = trim`
       Container ..> Store
 `;
 
-type LayoutKind = 'grid' | 'layered' | 'dagre' | 'elk' | 'rules' | 'search';
+type LayoutKind = 'grid' | 'layered' | 'dagre' | 'elk' | 'rules' | 'search' | 'flowchart';
+
+/** Block diagram with subgraphs, exercising the compound-graph flowchart engine. */
+const FLOWCHART = trim`
+  flowchart TB
+    subgraph client [Client]
+      App[Composer]
+      Framework[App Framework]
+    end
+    subgraph core [Core]
+      Echo[ECHO]
+      Halo[HALO]
+      Mesh[MESH]
+    end
+    Edge[EDGE]
+    App --> Framework
+    Framework --> Echo
+    Framework --> Halo
+    Echo --> Mesh
+    Halo --> Mesh
+    Mesh -->|sync| Edge
+    Edge --> Echo
+`;
 
 type StoryArgs = {
   source: string;
@@ -90,27 +112,33 @@ type StoryArgs = {
   cellHeight?: number;
   /** Fixed header height (grid layouts only); measured from the title text when unset. */
   headerHeight?: number;
+  /** Enable click / shift-click selection and show the selected ids. */
+  selectable?: boolean;
 };
 
 const objectsOf = (commands: Scene.Command[]): Scene.WorldObject[] =>
   commands.flatMap((command) => (command.op === 'upsert-object' ? [command.object] : []));
 
-const DefaultStory = ({ source, layout, cellWidth, cellHeight, headerHeight }: StoryArgs) => {
+const DefaultStory = ({ source, layout, cellWidth, cellHeight, headerHeight, selectable }: StoryArgs) => {
   const [objects, setObjects] = useState<Scene.WorldObject[]>([]);
+  const [selection, setSelection] = useState<readonly string[]>([]);
+  const [activated, setActivated] = useState<string>();
   // Async: the ELK engine returns a promise; the sync dialects resolve immediately.
   useEffect(() => {
     let cancelled = false;
     const options = { cell: { w: cellWidth, h: cellHeight }, titleHeight: headerHeight };
     const commands =
-      layout === 'layered'
-        ? Promise.resolve(Uml.compile(source))
-        : layout === 'grid'
-          ? Promise.resolve(UmlGrid.compile(source, options))
-          : layout === 'rules'
-            ? Promise.resolve(UmlRules.compile(source, options))
-            : layout === 'search'
-              ? Promise.resolve(UmlSearch.compile(source, options))
-              : UmlEngine.compile(source, { ...options, engine: layout });
+      layout === 'flowchart'
+        ? MermaidEngine.compile(source)
+        : layout === 'layered'
+          ? Promise.resolve(Uml.compile(source))
+          : layout === 'grid'
+            ? Promise.resolve(UmlGrid.compile(source, options))
+            : layout === 'rules'
+              ? Promise.resolve(UmlRules.compile(source, options))
+              : layout === 'search'
+                ? Promise.resolve(UmlSearch.compile(source, options))
+                : UmlEngine.compile(source, { ...options, engine: layout });
     void commands.then((resolved) => {
       if (!cancelled) {
         setObjects(objectsOf(resolved));
@@ -122,11 +150,21 @@ const DefaultStory = ({ source, layout, cellWidth, cellHeight, headerHeight }: S
   }, [source, layout, cellWidth, cellHeight, headerHeight]);
 
   return (
-    <SceneSvg
-      classNames='dx-attention-surface'
-      objects={objects}
-      grid={layout !== 'layered' ? UmlGrid.GRID : undefined}
-    />
+    <div className='dx-fill grid grid-rows-[1fr_auto]'>
+      <SceneSvg
+        classNames='dx-attention-surface'
+        objects={objects}
+        grid={layout !== 'layered' ? UmlGrid.GRID : undefined}
+        selection={selectable ? selection : undefined}
+        onSelectionChange={selectable ? setSelection : undefined}
+        onActivate={selectable ? setActivated : undefined}
+      />
+      {selectable && (
+        <div className='p-2 text-xs font-mono text-neutral-500' data-testid='scene-svg.status'>
+          selected: [{selection.join(', ')}]{activated ? ` · activated: ${activated}` : ''}
+        </div>
+      )}
+    </div>
   );
 };
 
@@ -136,7 +174,7 @@ const meta = {
   decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
   parameters: { layout: 'fullscreen' },
   argTypes: {
-    layout: { control: 'select', options: ['grid', 'layered', 'dagre', 'elk', 'rules', 'search'] },
+    layout: { control: 'select', options: ['grid', 'layered', 'dagre', 'elk', 'rules', 'search', 'flowchart'] },
   },
 } satisfies Meta<typeof DefaultStory>;
 
@@ -149,6 +187,24 @@ export const Default: Story = {
   args: {
     source: CLASS_DIAGRAM,
     layout: 'grid',
+  },
+};
+
+/** Flowchart with subgraphs: ELK compound placement, frames recomputed from snapped members. */
+export const Flowchart: Story = {
+  args: {
+    source: FLOWCHART,
+    layout: 'flowchart',
+    selectable: true,
+  },
+};
+
+/** Click selects a class, shift-click toggles, the background clears; double-click activates. */
+export const Selection: Story = {
+  args: {
+    source: CLASS_DIAGRAM,
+    layout: 'elk',
+    selectable: true,
   },
 };
 

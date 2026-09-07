@@ -62,8 +62,8 @@ const isMulti = (value: SingleValue | MultiValue): value is MultiValue => value 
  *
  * Controlled-ness keys on `onValueChange` rather than on the value's presence so that
  * `undefined` (single mode) and the empty set (multi mode) remain valid "nothing expanded"
- * values. Radix's `useControllableState` (1.1.0) flips to uncontrolled when a controlled
- * value clears to `undefined`, then re-reads the stale internal state and fails to collapse —
+ * values. `useControllableState` keys on the value's presence, so it flips to uncontrolled when a
+ * controlled value clears to `undefined`, then re-reads the stale internal state and fails to collapse —
  * a hand-rolled controller is the only correct option here.
  */
 export const useListDisclosure: {

@@ -24,7 +24,7 @@ export type CanvasContext = ProjectionState & {
 /**
  * @internal
  */
-// TODO(burdon): Use radix?
+// TODO(burdon): Use `createContext` from `@dxos/react-hooks`?
 export const CanvasContext = createContext<CanvasContext | null>(null);
 
 export const useCanvasContext = (): CanvasContext => {

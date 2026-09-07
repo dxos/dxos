@@ -28,7 +28,6 @@ export const ControlledSelector = <T extends string>(props: ControlledSelectorPr
               </Select.Option>
             ))}
           </Select.Viewport>
-          <Select.Arrow />
         </Select.Content>
       </Select.Portal>
     </Select.Root>

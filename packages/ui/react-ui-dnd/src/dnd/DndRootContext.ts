@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { createContext } from '@radix-ui/react-context';
+import { createContext } from '@dxos/react-hooks';
 
 import { type DndDraggingState } from './Root';
 import { type DndContainerHandler } from './types';

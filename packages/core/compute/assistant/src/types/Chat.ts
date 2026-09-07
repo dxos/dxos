@@ -19,6 +19,7 @@ import { Task } from '@dxos/types';
 /**
  * AI chat session.
  */
+// TODO(burdon): Rename to Session?
 export class Chat extends Type.makeObject<Chat>(DXN.make('org.dxos.type.assistant.chat', '0.2.0'))(
   Schema.Struct({
     name: Schema.String.pipe(Schema.optional),

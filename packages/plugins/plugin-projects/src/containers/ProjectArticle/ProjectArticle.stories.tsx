@@ -399,8 +399,8 @@ export const TaskLink: Story = {
     // Overview owns the outline, so the link is followed from a tab that is not the Tasks one.
     // `find`, not `get`: seeding completes at client init, which can be before the article mounts.
     await expect(await canvas.findByTestId('projectsPlugin.tab.tasks', undefined, { timeout: 10_000 })).toHaveAttribute(
-      'data-state',
-      'inactive',
+      'aria-selected',
+      'false',
     );
 
     const link = await canvas.findByText(TASK_TITLE, undefined, { timeout: 10_000 });
@@ -409,7 +409,7 @@ export const TaskLink: Story = {
     // The section swaps the outline for the task's form; the tab the host owns is untouched.
     await expect(canvas.findByDisplayValue(TASK_TITLE, undefined, { timeout: 10_000 })).resolves.toBeTruthy();
     await waitFor(() => expect(canvas.queryByText(OUTLINE_ITEM)).toBeNull(), { timeout: 10_000 });
-    await expect(canvas.getByTestId('projectsPlugin.tab.tasks')).toHaveAttribute('data-state', 'inactive');
+    await expect(canvas.getByTestId('projectsPlugin.tab.tasks')).toHaveAttribute('aria-selected', 'false');
 
     // Back is the way out, and the outline it came from is shown again.
     // The label plugin-tasks contributes for the outline's own back action.

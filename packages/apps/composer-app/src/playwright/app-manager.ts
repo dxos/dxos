@@ -70,6 +70,7 @@ export class AppManager {
 
   private readonly _inIframe: boolean | undefined = undefined;
   private _initialized = false;
+  private _close?: () => Promise<void>;
   private _invitationCode = new Trigger<string>();
   private _authCode = new Trigger<string>();
   // Rolling tail of console errors: the app reports operation failures generically to the user, and
@@ -89,8 +90,9 @@ export class AppManager {
       return;
     }
 
-    const { page } = await setupPage(this._browser, { url: INITIAL_URL });
+    const { page, close } = await setupPage(this._browser, { url: INITIAL_URL });
     this.page = page;
+    this._close = close;
     this.page.on('console', (message) => this._onConsoleMessage(message));
 
     // Assert boot rather than proceed on a swallowed `false`, so a failed boot fails here instead of as
@@ -104,10 +106,8 @@ export class AppManager {
     this.deck = new DeckManager(this.page);
   }
 
-  async closePage(): Promise<void> {
-    if (this.page !== undefined) {
-      await this.page.close();
-    }
+  async close(): Promise<void> {
+    await this._close?.();
   }
 
   //

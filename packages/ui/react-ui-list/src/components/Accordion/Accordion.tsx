@@ -5,8 +5,8 @@
 import { AccordionItem, AccordionItemBody, AccordionItemHeader } from './AccordionItem';
 import { AccordionRoot } from './AccordionRoot';
 
-// Built on `@ark-ui/react`'s Accordion (zag state machine), which carries the APG keymap — the
-// key navigation the previous hand-rolled/Radix pairing never had.
+// Built on `@ark-ui/react`'s Accordion (zag state machine), which carries the APG keymap for key
+// navigation.
 
 export const Accordion = {
   Root: AccordionRoot,

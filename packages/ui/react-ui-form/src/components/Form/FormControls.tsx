@@ -8,6 +8,8 @@ import { type AnyProperties } from '@dxos/echo/internal';
 import {
   Column,
   type ColumnRootProps,
+  DIALOG_AUTOFOCUS_ATTRIBUTE,
+  Fieldset,
   IconButton,
   type IconButtonProps,
   Input,
@@ -261,6 +263,9 @@ export const FormActions = ({ classNames, submitLabel, submitIcon }: FormActions
           label={t('cancel-button.label')}
           onClick={onCancel}
           data-testid='cancel-button'
+          // Inside a dialog this claims the initial focus, so a reflexive Enter dismisses rather than
+          // commits; the attribute is inert anywhere else.
+          {...{ [DIALOG_AUTOFOCUS_ATTRIBUTE]: '' }}
         />
       )}
       {onSave && (
@@ -298,23 +303,31 @@ export type FormSectionProps = ThemedClassName<{
   actions?: ReactNode;
 }>;
 
-export const FormSection = composable<HTMLDivElement, FormSectionProps>(
+/**
+ * A titled group of fields: a fieldset named by its heading, so assistive technology announces the
+ * title on entering the group and the heading still serves navigation.
+ */
+export const FormSection = composable<HTMLFieldSetElement, FormSectionProps>(
   ({ children, title, description, actions, ...props }, forwardedRef) => {
     const { variant = 'default' } = useFormContext(FORM_SECTION_NAME);
     const styles = formTheme.styles({ variant });
     return (
-      <div {...composableProps(props, { classNames: styles.section() })} ref={forwardedRef}>
+      <Fieldset.Root {...composableProps(props, { classNames: styles.section() })} ref={forwardedRef}>
         {(title || description) && (
           <div className={styles.sectionHeader()}>
             <div className={styles.sectionHeading()}>
-              {title && <h2 className={styles.sectionTitle()}>{title}</h2>}
+              {title && (
+                <Fieldset.Legend asChild>
+                  <h2 className={styles.sectionTitle()}>{title}</h2>
+                </Fieldset.Legend>
+              )}
               {description && <MarkdownView classNames={styles.sectionDescription()} content={description} />}
             </div>
             {actions && <div className={styles.sectionActions()}>{actions}</div>}
           </div>
         )}
         {children}
-      </div>
+      </Fieldset.Root>
     );
   },
 );

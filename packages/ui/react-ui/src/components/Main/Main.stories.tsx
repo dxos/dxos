@@ -4,6 +4,7 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
+import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { withLayout, withTheme } from '../../testing';
 import { IconButton } from '../Button';
@@ -82,4 +83,20 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   args: {},
+};
+
+/** The toggles drive the sidebar states, which the sidebars carry as data attributes. */
+export const TestToggle: Story = {
+  args: {},
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const sidebar = () => canvasElement.querySelector<HTMLElement>('[data-side="is"]');
+    await expect(sidebar()?.getAttribute('data-state')).toBe('closed');
+    await expect(sidebar()?.hasAttribute('inert')).toBe(true);
+    await userEvent.click(canvas.getAllByRole('button', { name: 'Toggle navigation sidebar' })[1]);
+    await waitFor(async () => expect(sidebar()?.getAttribute('data-state')).toBe('expanded'));
+    await expect(sidebar()?.hasAttribute('inert')).toBe(false);
+    await userEvent.click(canvas.getAllByRole('button', { name: 'Toggle navigation sidebar' })[0]);
+    await waitFor(async () => expect(sidebar()?.getAttribute('data-state')).toBe('closed'));
+  },
 };

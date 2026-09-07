@@ -10,13 +10,8 @@ import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as GraphNode from '@dxos/graph/GraphNode';
 
 import { applyPresentation } from '../presentation';
-import {
-  type ActionGraphEdges,
-  type ActionGraphNodes,
-  type ActionGraphProps,
-  type MenuActions,
-  useMenuActions,
-} from './useMenuActions';
+import { type MenuActions, type MenuActionsOptions } from '../types';
+import { type ActionGraphEdges, type ActionGraphNodes, type ActionGraphProps, useMenuActions } from './useMenuActions';
 
 export type GraphMenuOptions = {
   /** Group the actions descend from. Defaults to the menu root (top-level toolbar items). */
@@ -99,7 +94,7 @@ export const graphActions = (
 export const useGraphMenuActions = (
   graph: AppGraph.ReadableGraph | undefined,
   nodeId: string | undefined,
-  options?: GraphMenuOptions,
+  options?: GraphMenuOptions & MenuActionsOptions,
 ): MenuActions => {
   const atom = useMemo(
     () => Atom.make((get) => graphActions(graph, get, nodeId, options)),
@@ -107,5 +102,5 @@ export const useGraphMenuActions = (
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [graph, nodeId, options?.rootId],
   );
-  return useMenuActions(atom);
+  return useMenuActions(atom, options);
 };

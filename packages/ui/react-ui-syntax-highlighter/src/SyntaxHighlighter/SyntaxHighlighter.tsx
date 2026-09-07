@@ -73,7 +73,7 @@ export const SyntaxHighlighter = composable<HTMLDivElement, SyntaxHighlighterPro
           { classNames, className, role, style },
           {
             role: 'none',
-            classNames: mx('dx-expand p-1 overflow-auto', copyButton && 'relative group'),
+            classNames: mx('dx-expand overflow-auto', copyButton && 'relative group'),
           },
         )}
         ref={forwardedRef}
@@ -81,16 +81,29 @@ export const SyntaxHighlighter = composable<HTMLDivElement, SyntaxHighlighterPro
         <NativeSyntaxHighlighter
           language={languages[language as keyof typeof languages] || language}
           style={prismTheme}
+          // className='leading-6'
           customStyle={{
             background: 'unset',
             border: 'none',
             boxShadow: 'none',
             padding: 0,
             margin: 0,
+            // This allows setting max-h-[6lh] on the Syntax.Code component.
+            lineHeight: 'inherit',
             // Non-scrolling wrapper: defer all scrolling to an enclosing `Syntax.Viewport`.
             // The prism theme sets `overflow: auto` on the <pre>, which otherwise creates a
             // nested native horizontal scrollbar alongside the viewport's custom one.
             overflow: 'visible',
+          }}
+          codeTagProps={{
+            style: {
+              lineHeight: 'inherit',
+              // `block`, not the default `inline`: as an inline box every line is the union of the
+              // <pre>'s strut and this element's own box, and the two carry different font stacks
+              // (the prism theme's vs the app's), so lines advanced 16.5px under a 16px
+              // line-height — enough that a `max-h-[Nlh]` cap showed N-1 lines and a sliver.
+              display: 'block',
+            },
           }}
           {...nativeProps}
         >

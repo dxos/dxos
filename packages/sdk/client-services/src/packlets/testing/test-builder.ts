@@ -18,7 +18,8 @@ import { FeedFactory, FeedStore } from '@dxos/feed-store';
 import { SqliteKeyring } from '@dxos/keyring';
 import { MemorySignalManager, MemorySignalManagerContext, type SignalManager } from '@dxos/messaging';
 import { MemoryTransportFactory, SwarmNetworkManager } from '@dxos/network-manager';
-import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
+import { toPublicKey } from '@dxos/protocols/buf';
+import { Invitation_Kind } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 import { StorageType } from '@dxos/random-access-storage';
 import { layerMemory as sqliteLayerMemory } from '@dxos/sql-sqlite/platform';
 import * as SqlTransaction from '@dxos/sql-sqlite/SqlTransaction';
@@ -233,8 +234,13 @@ export class TestPeer {
     if (!this._props.invitationsManager) {
       const manager = new InvitationsManager(new InvitationsHandler(this.networkManager), this.metadataStore);
       manager.setInvitationHandlerFactory((invitation) => {
-        if (invitation.kind === Invitation.Kind.SPACE) {
-          return new SpaceInvitationProtocol(this.dataSpaceManager, this.identity!, this.keyring, invitation.spaceKey!);
+        if (invitation.kind === Invitation_Kind.SPACE) {
+          return new SpaceInvitationProtocol(
+            this.dataSpaceManager,
+            this.identity!,
+            this.keyring,
+            toPublicKey(invitation.spaceKey),
+          );
         } else {
           throw new Error('not implemented');
         }

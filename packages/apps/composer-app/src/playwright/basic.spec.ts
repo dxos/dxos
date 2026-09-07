@@ -25,7 +25,7 @@ test.describe('Basic tests', () => {
   });
 
   test.afterEach(async () => {
-    await host.closePage();
+    await host.close();
   });
 
   test('create identity, space is created by default', async () => {

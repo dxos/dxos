@@ -83,7 +83,6 @@ export const TemplateForm = ({ id, template, onChange }: TemplateFormProps) => {
                           </Select.Option>
                         ))}
                       </Select.Viewport>
-                      <Select.Arrow />
                     </Select.Content>
                   </Select.Portal>
                 </Select.Root>

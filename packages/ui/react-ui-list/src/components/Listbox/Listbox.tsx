@@ -12,7 +12,7 @@
 // selection semantics) — the shape the deprecated `@dxos/react-ui` `List`/`ListItem` filled.
 // (`Listbox` is slated to be renamed `List` once that legacy component is deleted.)
 //
-// Compound shape (matches Radix Select / Toolbar / Tabs):
+// Compound shape (matches Select / Toolbar / Tabs):
 //
 //   <Listbox.Root value={…} onValueChange={…}>
 //     {/* Viewport is optional — include for full-pane pickers, omit for popovers. */}
@@ -213,8 +213,8 @@ const Content = composable<HTMLUListElement, ContentProps>((props, forwardedRef)
 
   const { children, ...rest } = props as PropsWithChildren<ContentProps & Record<string, unknown>>;
 
-  // We render via the primitive `<List>` so descendant `<ListItem>`s satisfy their Radix
-  // context-scope check. The container's role/aria/navigation wiring comes from the navigation
+  // We render via the primitive `<List>` so descendant `<ListItem>`s satisfy their
+  // context check. The container's role/aria/navigation wiring comes from the navigation
   // aspect rather than the primitive's `selectable` plumbing — that keeps the ARIA grammar
   // (`aria-selected`) owned by `Item` below.
   const composed = composableProps<HTMLUListElement>(rest, { classNames: styles.listboxContent() });

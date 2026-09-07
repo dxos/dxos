@@ -18,6 +18,8 @@ export type MermaidNode = {
   label: string;
   /** Enclosing subgraph id, when declared inside one. */
   group?: string;
+  /** What the node depicts (DXN or URI), from a `%% ref <id> <target>` directive. */
+  ref?: string;
 };
 
 export type MermaidGroup = {
@@ -26,10 +28,62 @@ export type MermaidGroup = {
   children: string[];
 };
 
+/** Relationship kind, from the edge token; drawn with the UML end markers in `markers`. */
+export type RelationKind = 'reference' | 'inheritance' | 'hasMany' | 'contains';
+
 export type MermaidEdge = {
   from: string;
   to: string;
+  kind: RelationKind;
   label?: string;
+};
+
+/**
+ * Edge tokens: mermaid's own arrows read as references; the classDiagram-style `--|>` (hollow
+ * triangle) and ER-style `--{` (crow's foot) and `o-->` (circle at the source) extend the flowchart
+ * grammar with the UML kinds, at the cost of mermaid.js rejecting those lines.
+ */
+const EDGE_KINDS: Record<string, RelationKind> = {
+  '-->': 'reference',
+  '---': 'reference',
+  '-.->': 'reference',
+  '==>': 'reference',
+  '--|>': 'inheritance',
+  '--{': 'hasMany',
+  'o-->': 'contains',
+};
+
+/** Reference-render labels for the UML kinds, used when the edge carries none of its own. */
+const UML_LABELS: Record<string, string> = { '--|>': 'extends', '--{': 'has many', 'o-->': 'contains' };
+const UML_EDGE = /^(\s*\S+)\s*(o-->|--\|>|--\{)\s*(?:\|(.*?)\|\s*)?(\S+)\s*$/;
+
+/**
+ * Rewrite the UML edge tokens into mermaid-legal labelled arrows, for rendering the source with
+ * mermaid.js itself (as a reference beside our layout). Lossy by design: mermaid flowcharts have no
+ * triangle or crow's foot, so the kind becomes the label unless the edge already has one; `%% ref`
+ * lines are already comments.
+ */
+export const toStandard = (source: string): string =>
+  source
+    .split('\n')
+    .map((line) => {
+      const match = UML_EDGE.exec(line);
+      return match ? `${match[1]} -->|${match[3] ?? UML_LABELS[match[2]]}| ${match[4]}` : line;
+    })
+    .join('\n');
+
+/** Scene arrow markers for a relationship kind. */
+export const markers = (kind: RelationKind): Pick<Scene.Arrow, 'head' | 'tail'> => {
+  switch (kind) {
+    case 'inheritance':
+      return { head: 'triangle' };
+    case 'hasMany':
+      return { head: 'crowsfoot' };
+    case 'contains':
+      return { tail: 'circle' };
+    default:
+      return {};
+  }
 };
 
 export type MermaidGraph = {
@@ -43,9 +97,12 @@ const DIRECTIONS: Direction[] = ['TB', 'BT', 'LR', 'RL'];
 
 // `A[Label]`, `A(Label)`, `A{Label}` or a bare `A`.
 const NODE = /^([A-Za-z0-9_-]+)(?:\[(.*?)\]|\((.*?)\)|\{(.*?)\})?$/;
-// `A --> B`, `A-->|label|B`, `A --- B`.
-const EDGE = /^(.+?)\s*(-->|---|-\.->|==>)\s*(?:\|(.*?)\|\s*)?(.+)$/;
+// `A --> B`, `A-->|label|B`, `A --- B`, plus the UML kinds `B --|> A`, `X --{ Y`, `A o--> B`.
+const EDGE = /^(.+?)\s*(o-->|--\|>|--\{|-->|---|-\.->|==>)\s*(?:\|(.*?)\|\s*)?(.+)$/;
 const SUBGRAPH = /^subgraph\s+([A-Za-z0-9_-]+)(?:\s*\[(.*?)\])?\s*$/;
+
+// `%% ref A packages/core/echo` — a comment to mermaid proper, so sources stay portable.
+const REF = /^%%\s*ref\s+([A-Za-z0-9_-]+)\s+(\S+)\s*$/;
 
 const unquote = (value: string) => value.trim().replace(/^"(.*)"$/, '$1');
 
@@ -80,8 +137,14 @@ export const parse = (source: string): MermaidGraph => {
     return id;
   };
 
+  const refs = new Map<string, string>();
   for (const raw of source.split('\n')) {
     const line = raw.trim();
+    const ref = REF.exec(line);
+    if (ref) {
+      refs.set(ref[1], ref[2]);
+      continue;
+    }
     if (!line || line.startsWith('%%')) {
       continue;
     }
@@ -108,11 +171,16 @@ export const parse = (source: string): MermaidGraph => {
 
     const edge = EDGE.exec(line);
     if (edge) {
-      const [, from, , label, to] = edge;
+      const [, from, token, label, to] = edge;
       const fromId = declare(from);
       const toId = declare(to);
       if (fromId && toId) {
-        edges.push({ from: fromId, to: toId, ...(label ? { label: unquote(label) } : {}) });
+        edges.push({
+          from: fromId,
+          to: toId,
+          kind: EDGE_KINDS[token] ?? 'reference',
+          ...(label ? { label: unquote(label) } : {}),
+        });
       }
       continue;
     }
@@ -120,7 +188,13 @@ export const parse = (source: string): MermaidGraph => {
     declare(line);
   }
 
-  return { direction, nodes: [...nodes.values()], groups, edges };
+  // Directives may precede or follow the node they name.
+  return {
+    direction,
+    nodes: [...nodes.values()].map((node) => (refs.has(node.id) ? { ...node, ref: refs.get(node.id) } : node)),
+    groups,
+    edges,
+  };
 };
 
 /** Layout constants in scene units. */
@@ -223,6 +297,7 @@ export const compile = (source: string, options: CompileOptions = {}): Scene.Com
         id: node.id,
         origin: { x: origin.x + point.x * scale, y: origin.y + point.y * scale },
         scale,
+        ...(node.ref ? { ref: node.ref } : {}),
         elements: [{ kind: 'rect', id: 'box', x: 0, y: 0, w: NODE_W, h: NODE_H, text: node.label }],
       },
     });
@@ -240,6 +315,7 @@ export const compile = (source: string, options: CompileOptions = {}): Scene.Com
           id: `${edge.from}-${edge.to}`,
           from: `${edge.from}/box`,
           to: `${edge.to}/box`,
+          ...markers(edge.kind),
           ...(edge.label ? { text: edge.label } : {}),
         })),
       },

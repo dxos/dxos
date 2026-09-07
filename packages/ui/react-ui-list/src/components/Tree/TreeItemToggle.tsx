@@ -20,14 +20,16 @@ export type TreeItemToggleProps = Omit<IconButtonProps, 'icon' | 'size' | 'label
  */
 export const TreeItemToggle = memo(
   composable<HTMLButtonElement, TreeItemToggleProps>(
-    ({ classNames, open, isBranch, hidden, ...props }, forwardedRef) => {
+    ({ classNames, open, isBranch, hidden, density = 'md', ...props }, forwardedRef) => {
       return (
         <IconButton
           ref={forwardedRef}
           data-testid='treeItem.toggle'
           aria-expanded={open}
           variant='ghost'
-          density='md'
+          // Sets the `--dx-control` the square below is measured against, so a denser tree gets a
+          // smaller toggle rather than an `md` square in an `sm` grid.
+          density={density}
           classNames={[
             // One control tall, not `h-full`: a row with a description is taller than its title
             // line, and stretching the toggle centred the chevron against the whole row instead of

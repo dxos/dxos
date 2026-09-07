@@ -21,7 +21,7 @@ import { type ComposableProps, type SlottableProps, type ThemedClassName } from 
 
 /**
  * Reconciles className properties from a parent slot.
- * - `className` is injected at runtime by the Slot merge mechanism; it is absent from
+ * - `className` is injected at runtime by the `asChild` merge; it is absent from
  *   `ComposableProps` so consumers cannot pass it, hence the widened parameter type here.
  * - `classNames` is the consumer-facing prop for theming overrides.
  * Use `composableProps` to reconcile both into a single `className`.
@@ -61,14 +61,11 @@ const COMPOSABLE = Symbol.for('dxos.composable');
  * @example
  * ```tsx
  * const MyPanel = slottable<HTMLDivElement, { border?: boolean }>(
- *   ({ children, asChild, border, ...props }, forwardedRef) => {
- *     const Comp = asChild ? Slot : Primitive.div;
- *     return (
- *       <Comp {...composableProps(props, { classNames: border && 'border' })} ref={forwardedRef}>
- *         {children}
- *       </Comp>
- *     );
- *   },
+ *   ({ children, asChild, border, ...props }, forwardedRef) => (
+ *     <ark.div asChild={asChild} {...composableProps(props, { classNames: border && 'border' })} ref={forwardedRef}>
+ *       {children}
+ *     </ark.div>
+ *   ),
  * );
  * ```
  */
@@ -89,14 +86,14 @@ export function slottable<E extends HTMLElement, P extends object = {}>(
           });
         }
       } catch {
-        // Children.only throws if not exactly one child — Slot handles this.
+        // Children.only throws if not exactly one child — `asChild` renders nothing in that case.
       }
     }
 
     const result = render(props, forwardedRef);
     if (warn) {
-      // The marker cannot go on the rendered element: under `asChild` that element is the `Slot`,
-      // which merges the class into the very child that is dropping props — the bug being flagged
+      // The marker cannot go on the rendered element: under `asChild` the class is merged into the
+      // very child that is dropping props — the bug being flagged
       // swallows its own diagnostic. So it goes on a wrapper, which `dx-slot-warning` renders as
       // `display: contents` so it adds no layout box; the outline is drawn on its children instead.
       return createElement('div', { role: 'none', className: 'dx-slot-warning' }, result);

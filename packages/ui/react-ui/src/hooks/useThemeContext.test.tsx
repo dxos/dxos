@@ -6,7 +6,7 @@ import { renderHook } from '@testing-library/react';
 import React, { type PropsWithChildren } from 'react';
 import { describe, expect, test } from 'vitest';
 
-import { ThemeProvider } from '../primitives';
+import { ThemeProvider } from '../providers';
 import { defaultTx } from '../theme';
 import { useThemeContext } from './useThemeContext';
 

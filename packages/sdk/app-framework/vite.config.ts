@@ -11,6 +11,10 @@ export default defineConfig({
     // pulling in Vite itself — the CLI registers the same set in bun's module registry.
     'vite-plugin/packages': 'src/vite-plugin/packages.ts',
     'index': 'src/index.ts',
+    // The `dx-plugin` bin — the plugin-authoring CLI shipped with the package so out-of-repo
+    // plugin authors run the same toolchain; in-repo, the composer-plugin tag's `prebuild`
+    // depends on it.
+    'plugin-cli': 'src/plugin-cli/main.ts',
     'core/activation-event': 'src/core/activation-event.ts',
     'common/activation-events': 'src/common/activation-events.ts',
     'common/capabilities': 'src/common/capabilities.ts',

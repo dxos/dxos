@@ -15,7 +15,7 @@ test.describe('Collection tests', () => {
   });
 
   test.afterEach(async () => {
-    await host.closePage();
+    await host.close();
   });
 
   test('create collection', async () => {

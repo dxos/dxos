@@ -8,7 +8,13 @@ import React, { memo, useMemo } from 'react';
 
 import type * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import { ElevationProvider, type ThemedClassName } from '@dxos/react-ui';
-import { type ActionGraphProps, Menu, type MenuAction, MenuBuilder, useMenuActions } from '@dxos/react-ui-menu';
+import {
+  type ActionGraphProps,
+  ActionToolbar,
+  type MenuAction,
+  MenuBuilder,
+  useMenuActions,
+} from '@dxos/react-ui-menu';
 import { type EditorViewMode } from '@dxos/ui-editor/types';
 
 import { addBlocks } from './blocks';
@@ -60,11 +66,7 @@ export const EditorToolbar = memo(({ classNames, role, attendableId, onAction, .
 
   return (
     <ElevationProvider elevation={role === SECTION_ROLE ? 'positioned' : 'base'}>
-      <Menu.Root {...menuActions} attendableId={attendableId} onAction={onAction}>
-        <Menu.Toolbar classNames={classNames}>
-          <Menu.Items />
-        </Menu.Toolbar>
-      </Menu.Root>
+      <ActionToolbar {...menuActions} attendableId={attendableId} onAction={onAction} classNames={classNames} />
     </ElevationProvider>
   );
 });

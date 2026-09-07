@@ -22,21 +22,15 @@
     "./style.css": "./dist/bundle/shell.css",
     "./react": {
       "types": "./dist/types/src/react.d.ts",
-      "browser": "./dist/lib/browser/react.mjs",
-      "node": "./dist/lib/node-esm/react.mjs"
+      "default": "./dist/lib/react.mjs"
     },
     "./translations": {
       "types": "./dist/types/src/translations.d.ts",
-      "browser": "./dist/lib/browser/translations.mjs",
-      "node": "./dist/lib/node-esm/translations.mjs"
+      "default": "./dist/lib/translations.mjs"
     },
     "./testing": {
       "types": "./dist/types/src/testing/index.d.ts",
-      "browser": "./dist/lib/browser/testing/index.mjs",
-      "node": {
-        "require": "./dist/lib/node/testing/index.cjs",
-        "default": "./dist/lib/node-esm/testing/index.mjs"
-      }
+      "default": "./dist/lib/testing.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -53,16 +47,14 @@
     "@dxos/log": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/react-focus": "workspace:*",
+    "@dxos/react-hooks": "workspace:*",
     "@dxos/react-ui-list": "workspace:*",
     "@dxos/react-ui-pickers": "workspace:*",
     "@dxos/rpc": "workspace:*",
     "@dxos/rpc-tunnel": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@radix-ui/react-context": "catalog:",
-    "@radix-ui/react-use-controllable-state": "catalog:",
     "@xstate/react": "catalog:",
     "date-fns": "catalog:",
-    "react-qr-rounded": "catalog:",
     "scheduler": "catalog:",
     "use-sync-external-store": "catalog:",
     "xstate": "catalog:"

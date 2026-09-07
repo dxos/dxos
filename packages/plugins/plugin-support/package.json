@@ -190,7 +190,6 @@
     "@dxos/ui-theme": "workspace:*",
     "@dxos/util": "workspace:*",
     "@effect/atom-react": "catalog:",
-    "@radix-ui/react-context": "catalog:",
     "date-fns": "catalog:",
     "effect": "catalog:",
     "html-to-image": "catalog:",
