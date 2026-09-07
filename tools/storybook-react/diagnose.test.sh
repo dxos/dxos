@@ -97,7 +97,8 @@ exec -a "diagnose.sh --watch --port 9999" sleep 300 &
 legacy=$!
 until ps -o command= -p "$legacy" 2>/dev/null | grep -q -- '--watch --port 9999'; do sleep 0.2; done
 check '7a --status names --restart' '1' "$(bash "$script" --status | grep -c -- '--restart')"
-bash "$script" --reap-legacy 9999 > /dev/null
+reap_out=$(bash "$script" --reap-legacy 9999)
+check '7a2 reap names the reaped pid' '1' "$(printf '%s\n' "$reap_out" | grep -c "reaped legacy watcher pid $legacy")"
 # A signalled child stays a pid until it is reaped, so "gone" means absent or a zombie.
 gone() {
   case "$(ps -o state= -p "$1" 2>/dev/null | tr -d ' ')" in

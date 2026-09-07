@@ -324,10 +324,14 @@ watcher_alive() {
 LEGACY_PATTERN='diagnose\.sh --watch --port'
 legacy_watcher() { pgrep -f "$LEGACY_PATTERN" >/dev/null 2>&1; }
 reap_legacy() {
-  local pattern="$LEGACY_PATTERN" legacy
+  local pattern="$LEGACY_PATTERN" legacy cmdline
   [ -n "${1:-}" ] && pattern="$pattern $1"
   for legacy in $(pgrep -f "$pattern" 2>/dev/null); do
-    kill "$legacy" 2>/dev/null || true
+    # Command line read before the kill, since a signalled pid can vanish before this loop reads it again.
+    cmdline=$(ps -o command= -p "$legacy" 2>/dev/null)
+    if kill "$legacy" 2>/dev/null; then
+      echo "reaped legacy watcher pid $legacy ($cmdline)"
+    fi
   done
   return 0
 }

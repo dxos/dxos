@@ -19,8 +19,12 @@ parsed=$(printf '%s' "$input" \
   | jq -r '"\(.tool_input.run_in_background // false) \(.tool_input.timeout // 0)", (.tool_input.command // "")' 2>/dev/null \
   || printf '')
 [ -z "$parsed" ] && exit 0
-header=$(printf '%s\n' "$parsed" | head -1)
-command=$(printf '%s\n' "$parsed" | tail -n +2)
+# Parameter expansion, not a `head`/`tail` pipe: a command near or past the pipe buffer size
+# (~150 KB) makes `head` exit after its one read, SIGPIPEing `printf` under pipefail.
+case "$parsed" in
+  *$'\n'*) header=${parsed%%$'\n'*}; command=${parsed#*$'\n'} ;;
+  *) header=$parsed; command='' ;;
+esac
 background=${header%% *}
 timeout=${header##* }
 [ -z "$command" ] && exit 0

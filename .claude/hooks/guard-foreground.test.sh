@@ -50,5 +50,18 @@ echo '=== the reason names the fix'
 reason=$(jq -nc '{tool_name:"Bash", tool_input:{command:"pnpm install"}}' | bash "$hook" | jq -r '.hookSpecificOutput.permissionDecisionReason')
 check 'mentions run_in_background' '1' "$(printf '%s' "$reason" | grep -c run_in_background)"
 
+echo '=== survives a command near/past the pipe buffer without SIGPIPE (guard-foreground.sh:22-23)'
+huge_plain=$(printf 'echo %0200000d' 0)
+huge_plain_out=$(jq -nc --arg c "$huge_plain" '{tool_name:"Bash", tool_input:{command:$c}}' | bash "$hook")
+huge_plain_rc=$?
+check 'huge command exits 0' '0' "$huge_plain_rc"
+check 'huge command decision' 'none' "$(if [ -z "$huge_plain_out" ]; then printf 'none'; else printf '%s' "$huge_plain_out" | jq -r '.hookSpecificOutput.permissionDecision // "none"'; fi)"
+
+huge_sleep=$(printf 'sleep 60 # %0200000d' 0)
+huge_sleep_out=$(jq -nc --arg c "$huge_sleep" '{tool_name:"Bash", tool_input:{command:$c}}' | bash "$hook")
+huge_sleep_rc=$?
+check 'huge sleep command exits 0' '0' "$huge_sleep_rc"
+check 'huge sleep command still asks' 'ask' "$(if [ -z "$huge_sleep_out" ]; then printf 'none'; else printf '%s' "$huge_sleep_out" | jq -r '.hookSpecificOutput.permissionDecision // "none"'; fi)"
+
 printf '\n%s passed, %s failed\n' "$pass" "$fail"
 [ "$fail" -eq 0 ]
