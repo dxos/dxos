@@ -1,0 +1,9 @@
+---
+'@dxos/protocols': patch
+'@dxos/client': patch
+'@dxos/client-services': patch
+---
+
+Move the identity, contacts, devices and spaces service RPCs to buf messages. The credential
+subsystem keeps its protobuf.js shapes — the payloads cross the RPC boundary as their shared wire
+bytes — so `@dxos/client`'s public API is unchanged.
