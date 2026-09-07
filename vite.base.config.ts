@@ -958,12 +958,6 @@ export interface DxConfigOptions {
    */
   mainFields?: string[];
   /**
-   * Output module formats. Default: `['es']` (`<entry>.mjs`). Adding `'cjs'` emits a parallel
-   * `<entry>.cjs` — needed only by consumers that `require()` the package, such as a
-   * PostCSS/Tailwind config loaded by a CJS toolchain.
-   */
-  formats?: ('es' | 'cjs')[];
-  /**
    * Prepend `import '@dxos/node-std/globals'` to every entry, installing `Buffer`/`process`/
    * `global` on `globalThis` as a side effect. For packages whose deps read those globals
    * without importing them.
@@ -1075,7 +1069,6 @@ export const defineConfig = (options: DxConfigOptions = {}): UserConfig => {
     bundle = [],
     alias,
     mainFields,
-    formats = ['es'],
     injectGlobals = false,
     importGlobals = false,
     test,
@@ -1121,8 +1114,12 @@ export const defineConfig = (options: DxConfigOptions = {}): UserConfig => {
     build: {
       lib: {
         entry: resolvedEntry,
-        formats,
-        fileName: (format, name) => `${name}.${format === 'cjs' ? 'cjs' : 'mjs'}`,
+        // ESM only. A package that also needs CJS gets its own config rather than a `formats`
+        // option here: the two formats have to disagree about `chunkFileNames` (and often about
+        // a transform, as `@dxos/ui-theme/plugin` does for `import.meta.dirname`), which one
+        // shared output object cannot express.
+        formats: ['es'],
+        fileName: (_, name) => `${name}.mjs`,
       },
       outDir,
       sourcemap: true,
