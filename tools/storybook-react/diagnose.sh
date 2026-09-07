@@ -14,6 +14,7 @@
 #
 # Options: --interval N (15s) --timeout N (10s, "answered" deadline) --port N (manual capture only)
 # Env:     DX_WATCH_DIR (~/.cache/dxos/watch)  DX_WATCH_PORTS ("9009 5199", overrides discovery)
+# Seams:   --once (one cycle) --ports (discovered ports) --etime-seconds STR (elapsed-time maths)
 
 set -uo pipefail
 
@@ -23,6 +24,7 @@ TIMEOUT=10
 # Seconds after a server starts during which a pegged core is warm-up, not a wedge.
 WARMUP=300
 MODE=capture
+ETIME=''
 
 # `set -u` would abort on a bare `$2`, losing the exit-2 path below; and an unvalidated value lets
 # `--port --status` silently consume the next flag as the port.
@@ -47,10 +49,14 @@ while [ $# -gt 0 ]; do
     --ensure) MODE=ensure ;;
     --restart) MODE=restart ;;
     --ports) MODE=ports ;;
+    # Consuming a missing operand would leave `$#` at 1 and spin the parser, so guard before shifting.
+    --etime-seconds)
+      [ $# -ge 2 ] || { echo "$1 needs an elapsed-time string" >&2; exit 2; }
+      ETIME="$2"; MODE=etime; shift ;;
     --port) PORT="$(number_arg "$1" "${2-}")"; shift ;;
     --interval) INTERVAL="$(number_arg "$1" "${2-}")"; shift ;;
     --timeout) TIMEOUT="$(number_arg "$1" "${2-}")"; shift ;;
-    -h|--help) sed -n '4,16p' "${BASH_SOURCE[0]}"; exit 0 ;;
+    -h|--help) sed -n '4,17p' "${BASH_SOURCE[0]}"; exit 0 ;;
     *) echo "unknown option: $1" >&2; exit 2 ;;
   esac
   shift
@@ -61,20 +67,23 @@ WATCH_DIR="${DX_WATCH_DIR:-$HOME/.cache/dxos/watch}"
 PIDFILE="$WATCH_DIR/watcher.pid"
 STATUS="$WATCH_DIR/status"
 WATCH_LOG="$WATCH_DIR/watcher.log"
+# Global because the EXIT trap that releases it expands the name after `ensure` has returned.
+LOCK="$WATCH_DIR/.lock"
 
 # Total CPU% across the process's threads; a wedged server sits at ~100 on one core.
 cpu_of() {
   ps -o %cpu= -p "$1" 2>/dev/null | tr -d ' '
 }
 
+# The override shares discovery's filter and de-duplication, so a typo or a repeat cannot add a row.
 known_ports() {
-  if [ -n "${DX_WATCH_PORTS:-}" ]; then
-    printf '%s\n' $DX_WATCH_PORTS
-    return
-  fi
   {
-    printf '9009\n5199\n'
-    [ -f "$ROOT/.claude/launch.json" ] && jq -r '.configurations[].port // empty' "$ROOT/.claude/launch.json" 2>/dev/null
+    if [ -n "${DX_WATCH_PORTS:-}" ]; then
+      printf '%s\n' $DX_WATCH_PORTS
+    else
+      printf '9009\n5199\n'
+      [ -f "$ROOT/.claude/launch.json" ] && jq -r '.configurations[].port // empty' "$ROOT/.claude/launch.json" 2>/dev/null
+    fi
   } | grep -E '^[0-9]+$' | sort -un
 }
 listener_pid() { lsof -ti ":$1" -sTCP:LISTEN 2>/dev/null | head -1; }
@@ -91,24 +100,31 @@ pid_kind() {
 }
 pid_etime() { ps -o etime= -p "$1" 2>/dev/null | tr -d ' '; }
 # macOS `ps` has no `etimes` keyword and answers an unknown one on stdout, so seconds are derived
-# from the [[dd-]hh:]mm:ss elapsed field rather than asked for.
+# from the [[dd-]hh:]mm:ss elapsed field rather than asked for. Reachable as `--etime-seconds` so
+# the arithmetic that arms the warm-up guard has a test seam.
+etime_seconds() {
+  printf '%s' "$1" | awk -F'[-:]' '
+    NF == 4 { print ((($1 * 24 + $2) * 60) + $3) * 60 + $4 }
+    NF == 3 { print (($1 * 60) + $2) * 60 + $3 }
+    NF == 2 { print $1 * 60 + $2 }'
+}
 pid_age() {
   local etime
   etime=$(pid_etime "$1")
   [ -n "$etime" ] || return 0
-  printf '%s' "$etime" | awk -F'[-:]' '
-    NF == 4 { print ((($1 * 24 + $2) * 60) + $3) * 60 + $4 }
-    NF == 3 { print (($1 * 60) + $2) * 60 + $3 }
-    NF == 2 { print $1 * 60 + $2 }'
+  etime_seconds "$etime"
 }
 probe_path() { if [ "$1" = storybook ]; then printf '/index.json'; else printf '/'; fi; }
 answers() { curl -sf -m "$TIMEOUT" -o /dev/null "http://localhost:$1$(probe_path "$2")"; }
 
 # Captures land in the tree that owns the server, so the report sits beside its own cache and log.
 capture() {
-  local port="$1" pid="$2" reason="$3" tree="${4:-$ROOT}"
+  local port="$1" pid="$2" reason="$3" tree="${4:-$ROOT}" kind="${5:-$(pid_kind "$2")}"
   local out_dir="$tree/temp"
   local cache="$tree/tools/storybook-react/node_modules/.cache/storybook"
+  # A plain vite server has no `/index.json`, so the report must probe what `cycle` probed.
+  local probe
+  probe="$(probe_path "$kind")"
   mkdir -p "${out_dir}" || { echo "cannot write to ${out_dir}" >&2; return 1; }
   # `mktemp`, not a timestamp: two captures in the same second (a second watcher, or a manual run
   # racing the automatic one) would otherwise share a path and truncate each other's report.
@@ -119,7 +135,7 @@ capture() {
   }
 
   {
-    echo "=== storybook :${port} pid ${pid} @ $(date -u +%Y-%m-%dT%H:%M:%SZ) ==="
+    echo "=== ${kind} :${port} pid ${pid} @ $(date -u +%Y-%m-%dT%H:%M:%SZ) ==="
     echo "trigger: ${reason}"
     echo
 
@@ -137,8 +153,8 @@ capture() {
     echo
 
     echo "--- responsive? ---"
-    curl -sf -m "${TIMEOUT}" -o /dev/null -w "index.json: HTTP %{http_code} in %{time_total}s\n" \
-      "http://localhost:${port}/index.json" || echo "index.json: NO RESPONSE within ${TIMEOUT}s"
+    curl -sf -m "${TIMEOUT}" -o /dev/null -w "probe ${probe}: HTTP %{http_code} in %{time_total}s\n" \
+      "http://localhost:${port}${probe}" || echo "probe ${probe}: NO RESPONSE within ${TIMEOUT}s"
     echo
 
     echo "--- vite dep optimizer ---"
@@ -185,7 +201,7 @@ capture() {
 
   echo
   echo "Captured: ${out}"
-  grep -E "^trigger:|index.json:|^open descriptors:|^soft limit|deps_temp_\* dirs in flight:" "${out}"
+  grep -E "^trigger:|^probe |^open descriptors:|^soft limit|deps_temp_\* dirs in flight:" "${out}"
   echo
   # chokidar 3's fsevents backend fans every raw event out over one listener per watched path and
   # rebuilds a path prefix in each, which pinned this server at 100% for minutes at a time. The
@@ -270,7 +286,7 @@ cycle() {
       hot_set "$pid" "$hot"
     fi
     if [ -n "$reason" ]; then
-      captured=$(capture "$port" "$pid" "$reason" "$tree" | sed -n 's/^Captured: //p')
+      captured=$(capture "$port" "$pid" "$reason" "$tree" "$kind" | sed -n 's/^Captured: //p')
       [ -n "$captured" ] && last_set "$port" "$captured"
       wedge_set "$port" "${captured:-pending}"
       hot_set "$pid" 0
@@ -283,10 +299,14 @@ cycle() {
   printf '%s' "$rows" > "$tmp" && mv -f "$tmp" "$STATUS"
 }
 
+# A live pid is not identity: after a reboot or pid recycling the pidfile names an unrelated
+# process, which `--restart` would otherwise SIGTERM.
 watcher_alive() {
   local pid
   pid=$(cat "$PIDFILE" 2>/dev/null) || return 1
-  [ -n "$pid" ] && kill -0 "$pid" 2>/dev/null
+  [ -n "$pid" ] || return 1
+  kill -0 "$pid" 2>/dev/null || return 1
+  ps -o command= -p "$pid" 2>/dev/null | grep -q 'diagnose\.sh .*--watch'
 }
 
 print_status() {
@@ -300,7 +320,9 @@ print_status() {
   local written now
   written=$(stat -f %m "$STATUS" 2>/dev/null || stat -c %Y "$STATUS" 2>/dev/null || echo 0)
   now=$(date +%s)
-  if [ $((now - written)) -gt $((INTERVAL * 3)) ]; then
+  if [ "$written" -eq 0 ]; then
+    echo "no status yet — the watcher has not finished its first cycle"
+  elif [ $((now - written)) -gt $((INTERVAL * 3)) ]; then
     echo "stale: status last written $((now - written))s ago; run --restart"
   fi
 }
@@ -309,13 +331,12 @@ ensure() {
   mkdir -p "$WATCH_DIR"
   # `mkdir` is atomic, so two `serve` tasks racing cannot both spawn; a lock older than a minute
   # outlived whatever held it.
-  local lock="$WATCH_DIR/.lock"
-  if [ -d "$lock" ] && [ -z "$(find "$lock" -maxdepth 0 -mmin +1 2>/dev/null)" ]; then
+  if [ -d "$LOCK" ] && [ -z "$(find "$LOCK" -maxdepth 0 -mmin +1 2>/dev/null)" ]; then
     echo "another --ensure is starting the watcher."; return 0
   fi
-  rmdir "$lock" 2>/dev/null || true
-  mkdir "$lock" 2>/dev/null || { echo "another --ensure is starting the watcher."; return 0; }
-  trap 'rmdir "$lock" 2>/dev/null || true' EXIT
+  rmdir "$LOCK" 2>/dev/null || true
+  mkdir "$LOCK" 2>/dev/null || { echo "another --ensure is starting the watcher."; return 0; }
+  trap 'rmdir "$LOCK" 2>/dev/null || true' EXIT
   if watcher_alive; then
     echo "dev-server watcher already running (pid $(cat "$PIDFILE"))."; return 0
   fi
@@ -325,16 +346,22 @@ ensure() {
 }
 
 stop_watcher() {
-  local pid
-  pid=$(cat "$PIDFILE" 2>/dev/null)
-  [ -n "$pid" ] && kill "$pid" 2>/dev/null
+  local pid legacy
+  # Only a pid that still looks like a watcher is signalled; a recycled one is simply a stale file.
+  if watcher_alive; then
+    pid=$(cat "$PIDFILE" 2>/dev/null)
+    kill "$pid" 2>/dev/null
+  fi
   rm -f "$PIDFILE"
-  # Per-port watchers from before the singleton would keep duplicating captures.
-  pgrep -f 'diagnose\.sh --watch --port' 2>/dev/null | xargs kill 2>/dev/null || true
+  # Per-port watchers would keep duplicating captures.
+  pgrep -f 'diagnose\.sh --watch --port' 2>/dev/null | while read -r legacy; do
+    kill "$legacy" 2>/dev/null
+  done
 }
 
 case "$MODE" in
   ports) known_ports ;;
+  etime) etime_seconds "$ETIME" ;;
   status) print_status ;;
   once) cycle ;;
   ensure) ensure ;;
@@ -342,12 +369,18 @@ case "$MODE" in
   capture)
     pid=$(listener_pid "$PORT")
     [ -n "$pid" ] || { echo "Nothing listening on :$PORT."; exit 1; }
-    capture "$PORT" "$pid" manual "$(pid_tree "$pid")"
+    capture "$PORT" "$pid" manual "$(pid_tree "$pid")" "$(pid_kind "$pid")"
     ;;
   watch)
     mkdir -p "$WATCH_DIR"
+    # A second watcher doubles every capture and, on exit, would delete the singleton's pidfile.
+    if watcher_alive; then
+      echo "dev-server watcher already running (pid $(cat "$PIDFILE"))."
+      exit 0
+    fi
     printf '%s' "$$" > "$PIDFILE"
-    trap 'rm -f "$PIDFILE"' EXIT
+    # Guarded because a watcher that lost the pidfile to a successor must not delete the successor's.
+    trap 'if [ "$(cat "$PIDFILE" 2>/dev/null)" = "$$" ]; then rm -f "$PIDFILE"; fi' EXIT
     echo "$(date +%H:%M:%S) watching $(known_ports | tr '\n' ' ')every ${INTERVAL}s."
     while true; do
       cycle

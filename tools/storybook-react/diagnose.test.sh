@@ -11,7 +11,15 @@ repo=$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)
 script="$repo/tools/storybook-react/diagnose.sh"
 sandbox=$(mktemp -d)
 export DX_WATCH_DIR="$sandbox/watch"
-trap 'rm -rf "$sandbox"; [ -n "${server:-}" ] && kill "$server" 2>/dev/null' EXIT
+# Every process this test starts is its own; the watcher below runs only against the sandbox
+# DX_WATCH_DIR and the throwaway DX_WATCH_PORTS, never a real dev server.
+cleanup() {
+  [ -n "${server:-}" ] && kill "$server" 2>/dev/null
+  [ -n "${watcher:-}" ] && kill "$watcher" 2>/dev/null
+  rm -rf "$sandbox"
+  return 0
+}
+trap cleanup EXIT
 
 pass=0; fail=0
 check() {
@@ -45,13 +53,21 @@ check '2d kind is vite (not storybook)' 'vite' "$(col "$port" 3)"
 check '2e worktree is the cwd' "$www" "$(col "$port" 4)"
 check '2f port 1 unbound' 'unbound' "$(col 1 5)"
 
-echo '=== 3. --status prints the table when a watcher pid is alive'
-printf '%s' "$$" > "$DX_WATCH_DIR/watcher.pid"
+echo '=== 3. the singleton owns the pidfile'
+bash "$script" --watch --interval 60 --timeout 2 > "$sandbox/watch.log" 2>&1 &
+watcher=$!
+until [ -s "$DX_WATCH_DIR/watcher.pid" ]; do sleep 0.2; done
 out=$(bash "$script" --status)
 check '3a header' '1' "$(printf '%s' "$out" | grep -c '^port')"
 check '3b row for the listener' '1' "$(printf '%s' "$out" | grep -c "^$port	")"
+second=$(bash "$script" --watch --interval 60 --timeout 2 2>&1)
+check '3c a second --watch refuses' '1' "$(printf '%s' "$second" | grep -c 'already running')"
+check '3d the pidfile still names the singleton' "$watcher" "$(cat "$DX_WATCH_DIR/watcher.pid")"
+kill "$watcher" 2>/dev/null; wait "$watcher" 2>/dev/null; watcher=''
+printf '%s' "$$" > "$DX_WATCH_DIR/watcher.pid"
+check '3e an unrelated live pid is unwatched' '1' "$(bash "$script" --status | grep -c '^unwatched')"
 printf '99999999' > "$DX_WATCH_DIR/watcher.pid"
-check '3c dead pid is unwatched' '1' "$(bash "$script" --status | grep -c '^unwatched')"
+check '3f dead pid is unwatched' '1' "$(bash "$script" --status | grep -c '^unwatched')"
 
 echo '=== 4. a vanished server is gone for one cycle, then unbound'
 kill "$server"; wait "$server" 2>/dev/null; server=''
@@ -67,6 +83,11 @@ check '5a includes 9009' '1' "$(printf '%s\n' "$ports" | grep -cx 9009)"
 check '5b includes 5199' '1' "$(printf '%s\n' "$ports" | grep -cx 5199)"
 check '5c includes a launch.json port' '1' "$(printf '%s\n' "$ports" | grep -cx 5180)"
 check '5d de-duplicated' "$(printf '%s\n' "$ports" | sort -u | wc -l | tr -d ' ')" "$(printf '%s\n' "$ports" | wc -l | tr -d ' ')"
+
+echo '=== 6. etime is converted to seconds in every ps format'
+check '6a mm:ss' '312' "$(bash "$script" --etime-seconds 05:12)"
+check '6b hh:mm:ss' '3723' "$(bash "$script" --etime-seconds 1:02:03)"
+check '6c dd-hh:mm:ss' '183845' "$(bash "$script" --etime-seconds 2-03:04:05)"
 
 printf '\n%s passed, %s failed\n' "$pass" "$fail"
 [ "$fail" -eq 0 ]
