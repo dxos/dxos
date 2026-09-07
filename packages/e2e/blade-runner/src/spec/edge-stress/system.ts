@@ -26,15 +26,21 @@ import {
 /**
  * Which EDGE to run against.
  *
- * `local` and `dev` are `isDevLikeEnvironment`, so they carry the test-email hatch that binds a run's
- * identities to Hub accounts and lets it delete its own data. `preview` does not: the hatch is closed
- * there, the self-serve routes 403 an unbound identity, and cleanup falls back entirely to
- * `DX_HUB_API_KEY`. Running against preview without that key leaks every space and identity.
+ * All three carry the `test+*@dxos.org` hatch that binds a run's identities to Hub accounts, which
+ * the self-serve delete routes require — preview since dxos/edge#1026, which gated the hatch on its
+ * own `isTestAccountEnvironment` rather than on `isDevLikeEnvironment`. Staging and production do
+ * not, and are absent here for that reason: a run there could not delete what it created.
  */
 export type EdgeTarget = 'local' | 'dev' | 'preview';
 
-/** Where the test-email hatch is open, hence where a run can bind accounts and clean up itself. */
-export const isDevLikeTarget = (edge: EdgeTarget): boolean => edge === 'local' || edge === 'dev';
+/**
+ * Where the test-email hatch is open, hence where a run can bind accounts and clean up after itself.
+ *
+ * Every target this type admits, so it is presently total — kept as a predicate rather than deleted
+ * because it is the check that stops a run it cannot undo, and the next target added (staging, a
+ * one-off deployment) is far more likely to lack the hatch than to have it.
+ */
+export const isDevLikeTarget = (edge: EdgeTarget): boolean => edge === 'local' || edge === 'dev' || edge === 'preview';
 
 /**
  * Refuse to start a run that could not undo itself.
@@ -47,7 +53,7 @@ export const isDevLikeTarget = (edge: EdgeTarget): boolean => edge === 'local' |
 export const assertCanCleanUp = (edge: EdgeTarget, cleanup: boolean): void => {
   invariant(
     !cleanup || isDevLikeTarget(edge),
-    `${edge} is not a dev-like environment, so an identity cannot bind a Hub account there and the self-serve delete routes answer 403; cleanup would leave every space and identity behind`,
+    `${edge} has no test-email hatch, so an identity cannot bind a Hub account there and the self-serve delete routes answer 403; cleanup would leave every space and identity behind`,
   );
 };
 

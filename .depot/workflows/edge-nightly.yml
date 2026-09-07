@@ -12,15 +12,14 @@ name: EDGE nightly
 #
 # Cleanup is self-serve only: each identity signs a verifiable presentation and deletes exactly the
 # data it created, with no shared admin secret in CI. That requires the identity to be bound to a
-# Hub account, which is why this runs against `dev`.
+# Hub account, which the `test+*@dxos.org` hatch provides -- on preview since dxos/edge#1026, which
+# moved the hatch onto its own `isTestAccountEnvironment` rather than widening
+# `isDevLikeEnvironment`. Verified against preview with `DX_HUB_API_KEY` unset: `cleanup done
+# { accepted: 4, refused: [] }`.
 #
-# `preview` CANNOT be the target today, measured rather than assumed: `POST /hub/account/
-# invitation-code/redeem` with a `test+*@dxos.org` email answers 200 on dev and 400
-# `invitation_code_required` on preview, because `PREVIEW` is excluded from `isDevLikeEnvironment`.
-# Without a bound account every self-serve delete is 403, and the invitation-code path is no
-# substitute -- `redeemCode` is single-use and also consumes the email, so a nightly run would burn
-# five codes and five permanently dead account rows every night. `assertCanCleanUp` refuses a
-# non-dev-like target rather than leak. Cleanup runs in the plan's own `finally` and on SIGTERM.
+# `assertCanCleanUp` refuses any target without that hatch rather than leak, so pointing this at
+# staging or production fails before it creates anything. Cleanup runs in the plan's own `finally`
+# and on SIGTERM.
 
 on:
   schedule:
@@ -32,8 +31,8 @@ on:
       edge:
         type: choice
         description: 'Which EDGE to run against'
-        options: [dev, local]
-        default: dev
+        options: [preview, dev, local]
+        default: preview
       objects:
         type: string
         description: 'Join latency: objects in the space under test'
@@ -107,7 +106,7 @@ jobs:
       - name: Measure join latency
         working-directory: packages/e2e/blade-runner
         env:
-          EDGE: ${{ inputs.edge || 'dev' }}
+          EDGE: ${{ inputs.edge || 'preview' }}
           OBJECTS: ${{ inputs.objects || '100' }}
           JOINERS: ${{ inputs.joiners || '5' }}
         run: |
@@ -168,7 +167,7 @@ jobs:
       - name: Soak
         working-directory: packages/e2e/blade-runner
         env:
-          EDGE: ${{ inputs.edge || 'dev' }}
+          EDGE: ${{ inputs.edge || 'preview' }}
           MINUTES: ${{ inputs.soak_minutes || '60' }}
           COMMANDS: ${{ inputs.soak_commands || '200' }}
         run: |
