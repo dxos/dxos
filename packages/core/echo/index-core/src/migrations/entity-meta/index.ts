@@ -11,6 +11,7 @@ import init from './0001_init.sql?raw';
 import indexes from './0003_indexes.sql?raw';
 import queuePosition from './0004_queue_position.sql?raw';
 import queueObjectId from './0005_queue_object_id.sql?raw';
+import queueObjectIdBySpace from './0006_queue_object_id_by_space.sql?raw';
 
 /**
  * Columns added to `objectMeta` after it first shipped, with the DDL that adds them. Databases in
@@ -50,6 +51,7 @@ export const MIGRATIONS = {
   '0003_indexes': SqlMigrations.apply(indexes),
   '0004_queue_position': SqlMigrations.apply(queuePosition),
   '0005_queue_object_id': SqlMigrations.apply(queueObjectId),
+  '0006_queue_object_id_by_space': SqlMigrations.apply(queueObjectIdBySpace),
 };
 
 /** Own history table per store, since many stores share the client database. */

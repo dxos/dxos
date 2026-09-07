@@ -600,6 +600,39 @@ describe('EntityMetaIndex', () => {
     }).pipe(Effect.provide(TestLayer)),
   );
 
+  it.effect('the natural cap orders by code unit, which is what the executor sorts by', () =>
+    Effect.gen(function* () {
+      const index = new EntityMetaIndex();
+      yield* index.migrate();
+
+      const spaceId = SpaceId.random();
+      const queueId = EntityId.random();
+      // The id format check is case-insensitive, and BINARY puts every upper-case id before every
+      // lower-case one — the boundary a locale collation would order the other way.
+      const upper = '01ARZ3NDEKTSV4RRFFQ69G5FAV';
+      const lower = '01arz3ndektsv4rrffq69g5fab';
+      const makeItem = (objectId: string): IndexerObject => ({
+        spaceId,
+        queueId,
+        queueNamespace: 'data',
+        documentId: null,
+        recordId: null,
+        queuePosition: null,
+        createdAt: null,
+        updatedAt: Date.now(),
+        data: { id: objectId, [ATTR_TYPE]: TYPE_PERSON, [ATTR_DELETED]: false },
+      });
+      yield* index.update([makeItem(upper), makeItem(lower)]);
+
+      const oldest = yield* index.queryAll({
+        spaceIds: [],
+        queues: [{ queueId, spaceId }],
+        window: { kind: 'natural', direction: 'asc', limit: 1 },
+      });
+      expect(oldest.map((row) => row.objectId)).toEqual([upper]);
+    }).pipe(Effect.provide(TestLayer)),
+  );
+
   it.effect('a queue read is scoped to its space, so a colliding queue id cannot leak', () =>
     Effect.gen(function* () {
       const index = new EntityMetaIndex();

@@ -1670,7 +1670,11 @@ export class QueryExecutor extends Resource {
   private _compareByOrder(a: QueryItem, b: QueryItem, order: QueryAST.Order): number {
     switch (order.kind) {
       case 'natural': {
-        const comparison = a.objectId.localeCompare(b.objectId);
+        // Code-unit order, not `localeCompare`: the feed scan pushes this ordering into SQLite's
+        // `ORDER BY objectId`, which collates BINARY, and an entity id may be lower-case (the
+        // format check is case-insensitive). Under a locale collation the two would disagree on a
+        // mixed-case pair, and the scan's capped page would not be the page this sort produces.
+        const comparison = a.objectId < b.objectId ? -1 : a.objectId > b.objectId ? 1 : 0;
         return order.direction === 'desc' ? -comparison : comparison;
       }
       case 'property': {
