@@ -32,7 +32,7 @@ test.describe('Settings sync', () => {
   });
 
   test.afterEach(async () => {
-    await host.closePage();
+    await host.close();
   });
 
   test('a device-local change leaves the account value intact', async () => {
