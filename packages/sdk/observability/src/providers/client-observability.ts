@@ -10,15 +10,11 @@ import { type Space } from '@dxos/client/echo';
 import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
+import { toPublicKey } from '@dxos/protocols/buf';
+import { type NetworkStatus, type NetworkStatus_Signal } from '@dxos/protocols/buf/dxos/client/services_pb';
 // Value imports come straight from protocols: reaching them through the `@dxos/client` barrels
 // puts echo-client (and wa-sqlite, automerge-repo with it) in the app's eager boot graph.
-import {
-  ConnectionState,
-  DeviceKind,
-  type NetworkStatus,
-  Platform,
-  SpaceState,
-} from '@dxos/protocols/proto/dxos/client/services';
+import { ConnectionState, DeviceKind, Platform, SpaceState } from '@dxos/protocols/proto/dxos/client/services';
 
 import * as Observability from '../Observability';
 import { type CrossRealmMemory, measureCrossRealmMemory, readHeap, supportsCrossRealmMemory } from './memory';
@@ -66,7 +62,7 @@ export const identityProvider = (clientServices: Partial<ClientServices>): Obser
         return;
       }
 
-      observability.setTags({ deviceKey: thisDevice.deviceKey.truncate() });
+      observability.setTags({ deviceKey: toPublicKey(thisDevice.deviceKey)?.truncate() ?? '' });
       if (thisDevice.profile?.label) {
         observability.setTags({ deviceProfile: thisDevice.profile.label });
       }
@@ -109,7 +105,7 @@ export const networkMetricsProvider = (clientServices: Partial<ClientServices>):
     const updateSignalMetrics = new Event<NetworkStatus>().debounce(NETWORK_METRICS_MIN_INTERVAL);
     updateSignalMetrics.on(ctx, async () => {
       log('send signal metrics');
-      (lastNetworkStatus?.signaling as NetworkStatus.Signal[])?.forEach(({ server, state }) => {
+      (lastNetworkStatus?.signaling as NetworkStatus_Signal[])?.forEach(({ server, state }) => {
         observability.metrics.gauge('dxos.client.network.signal.connectionState', state, { server });
       });
 
