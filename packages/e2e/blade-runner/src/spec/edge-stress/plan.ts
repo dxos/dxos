@@ -2,8 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Schema } from 'effect';
-import { FastCheck } from 'effect/testing';
+import * as Schema from 'effect/Schema';
+import * as Testing from 'effect/testing';
 import fs from 'node:fs';
 import path from 'node:path';
 
@@ -24,11 +24,11 @@ import { describeError } from '../../util';
 import { Command, canRun, describe, execute, makeCommandArbitrary, mutatesData, simulate } from './commands';
 import { type ClientIndex, type Model, makeFleetModel } from './model';
 import {
+  BudgetExhausted,
   type EdgeStressResult,
   type EdgeStressSpec,
   type EdgeTarget,
   type Real,
-  BudgetExhausted,
   assertCanCleanUp,
   assertFullyReplicated,
   cleanupRun,
@@ -280,13 +280,13 @@ export class EdgeStress implements TestPlan<EdgeStressSpec, EdgeStressResult> {
       checkpoints: spec.checkpoints,
       partitions: spec.partitions,
     });
-    const pool = FastCheck.array(command, {
+    const pool = Testing.FastCheck.array(command, {
       minLength: spec.maxCommands,
       maxLength: spec.maxCommands * COMMAND_POOL_FACTOR,
       size: 'max',
     });
 
-    const draws = FastCheck.sample(pool, {
+    const draws = Testing.FastCheck.sample(pool, {
       seed: hashSeed(seed ?? ''),
       numRuns: spec.sampleDraws,
     });

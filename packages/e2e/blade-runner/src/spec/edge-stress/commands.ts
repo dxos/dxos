@@ -2,8 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Schema } from 'effect';
-import { FastCheck } from 'effect/testing';
+import * as Schema from 'effect/Schema';
+import * as Testing from 'effect/testing';
 
 import { invariant } from '@dxos/invariant';
 
@@ -13,16 +13,16 @@ import {
   type Model,
   type ModelDocument,
   type ModelSpace,
-  documentId,
-  identityOf,
   canAct,
+  documentId,
   hasAdmittingDevice,
   holdsSpace,
+  identityOf,
   liveDocument,
   resolvablePendingSpaces,
   token,
 } from './model';
-import { type Real, BudgetExhausted, awaitSpaceOnAllDevices, runCheckpoint } from './system';
+import { BudgetExhausted, type Real, awaitSpaceOnAllDevices, runCheckpoint } from './system';
 
 //
 // What the system can do. Each command below is one declaration: its arguments (the schema, which
@@ -519,12 +519,12 @@ export const makeCommandArbitrary = ({
   checkpoints,
   partitions,
   ...shape
-}: FleetShape & { checkpoints: boolean; partitions: boolean }): FastCheck.Arbitrary<Command> => {
+}: FleetShape & { checkpoints: boolean; partitions: boolean }): Testing.FastCheck.Arbitrary<Command> => {
   // Uniform over the slots, as the literal unions were: `integer` biases toward small values,
   // which would crowd draws onto slot 0 instead of colliding across the whole fleet.
   const slots = (count: number) =>
-    FastCheck.constantFrom(...Array.from({ length: Math.max(count, 1) }, (_, index) => index));
-  const bounded = new Map<unknown, FastCheck.Arbitrary<unknown>>([
+    Testing.FastCheck.constantFrom(...Array.from({ length: Math.max(count, 1) }, (_, index) => index));
+  const bounded = new Map<unknown, Testing.FastCheck.Arbitrary<unknown>>([
     [ClientSlot, slots(shape.clients)],
     [SpaceSlot, slots(shape.spaces)],
     [DocumentSlot, slots(shape.documents)],
@@ -534,14 +534,14 @@ export const makeCommandArbitrary = ({
     .filter(({ kind }) => (kind !== 'assertion' || checkpoints) && (kind !== 'partition' || partitions))
     .map(({ weight, schema }) => ({
       weight,
-      arbitrary: FastCheck.record(
+      arbitrary: Testing.FastCheck.record(
         Object.fromEntries(
           Object.entries(schema.fields).map(([name, field]) => [
             name,
-            bounded.get(field) ?? Schema.toArbitrary(field)(FastCheck),
+            bounded.get(field) ?? Schema.toArbitrary(field)(Testing.FastCheck),
           ]),
         ),
       ).map(decode),
     }));
-  return FastCheck.oneof(...members);
+  return Testing.FastCheck.oneof(...members);
 };
