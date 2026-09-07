@@ -23,13 +23,13 @@ import React, {
 import { EffectEx } from '@dxos/effect';
 import { log } from '@dxos/log';
 import { ErrorBoundary } from '@dxos/react-error-boundary';
-import { useDefaultValue } from '@dxos/react-hooks';
 import { Position } from '@dxos/util';
 
 import { ActivationEvents, Capabilities, Role } from '../../../common';
 import { type PluginManager } from '../../../core';
 import { useOptionalPluginManager, usePluginManager } from '../PluginManager';
 import { SurfaceContext } from './context';
+import { useShallowStable } from './shallowStable';
 import { DebugSurface, isSurfaceDebugEnabled, isSurfaceWrapperEnabled } from './SurfaceDebug';
 import { type SurfaceManager } from './SurfaceManager';
 import { useSurfaceManager } from './SurfaceManagerContext';
@@ -40,6 +40,8 @@ import { type Definition, type Props, type TypedProps, type WebComponentDefiniti
 const DEBUG = import.meta.env?.VITE_DEBUG;
 
 const DEFAULT_PLACEHOLDER = <Fragment />;
+
+const EMPTY_DATA: Record<string, any> = Object.freeze({});
 
 /**
  * Fires the role's surface demand event so modules gated on it load (see the `roles` option of
@@ -223,7 +225,12 @@ export const SurfaceComponent = memo(
     placeholder = DEFAULT_PLACEHOLDER,
     ...rest
   }: TypedProps<Role.Role<any>>) => {
-    const data = useDefaultValue(dataProp, () => ({}));
+    // Stabilizing `data` here is what keeps a surface a real memo boundary: almost every call site
+    // passes an object literal, so without this the subtree below re-renders on every ancestor
+    // render even when nothing it reads has changed. Replaces a `useDefaultValue` that mirrored the
+    // prop into state via an effect, which could not stabilize identity and delivered each change
+    // one commit late.
+    const data = useShallowStable(dataProp ?? EMPTY_DATA);
     const surfaceManager = useSurfaceManager();
     // Subscribe only to this role's contributions: contributing/removing a surface for a
     // different role keeps this bucket referentially stable, so the atom does not re-render us.
@@ -253,9 +260,10 @@ export const SurfaceComponent = memo(
       if (!isSurfaceDebugEnabled() || effectiveRole === '') {
         return;
       }
+      // Measured on the raw prop: `data` is stabilized above, so the churn would never be visible.
       const previous = churnRef.current;
-      const churn = previous.data === undefined ? 0 : nextDataChurn(previous.data, data, previous.churn);
-      churnRef.current = { data, churn };
+      const churn = previous.data === undefined ? 0 : nextDataChurn(previous.data, dataProp, previous.churn);
+      churnRef.current = { data: dataProp, churn };
       for (const definition of candidates) {
         surfaceMetrics.recordDispatch(definition.id, effectiveRole, {
           candidates: candidates.length,
