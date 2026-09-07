@@ -18,3 +18,6 @@ export class SampleSpaceApplyError extends BaseError.extend(
   'SampleSpaceApplyError',
   'Failed to apply the sample space.',
 ) {}
+
+/** The history tracker has no undoable operation to revert. */
+export class NothingToUndoError extends BaseError.extend('NothingToUndoError', 'Nothing to undo.') {}

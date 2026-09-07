@@ -33,23 +33,39 @@ yes for that origin.
 ## 3. Start the server and open the port
 
 Through the Browser pane, `preview_start` with the `composer-qa` launch configuration starts
-`moon run composer-app:serve-qa` on port 5182 and opens the tab; from a shell the same task, in
-the background:
+`moon run composer-app:serve-qa` on port 5182 and opens a tab; from a shell the same task, in the
+background:
 
 ```bash
-moon run composer-app:serve-qa -- --port 5182 --strictPort
+moon run composer-app:serve-qa -- --port 5182 --strictPort &
 ```
 
-`DX_DEBUG_PORT=true` (set by the task) mints a session as the app boots and publishes it to
-**`temp/debug-port.json` at the repo root** (`{ session, pid, port, url }`); the server's own log
-prints it as `Debug port session: <uuid>`. The task builds the app's dependency graph first, which
-takes minutes on a cold worktree.
+**Run the page in the headless browser helper, not the Browser pane.** The pane's tab is hidden
+whenever the user is not looking at it, and a hidden page boots slowly or not at all; a headless
+Chromium page counts as visible and mounts in seconds. Close the pane's tab first (two pages would
+share the port's session), then, in the background from the repo root:
 
-**Boot is visibility-gated.** A background tab sits on the boot screen forever with `composer.*`
-answering underneath. Front the tab (`tabs_select`, or `navigate` to the URL) before waiting on
-boot, and wait for the app to mount rather than for the port to answer — a `snapshot` that returns
-`layout` is mounted. If `composer.snapshot` is missing, the debug plugin is not enabled on this
-profile: `invoke org.dxos.operation.registry.enablePlugins { ids: ["org.dxos.plugin.debug"] }`.
+```bash
+node packages/apps/composer-app/testing/scripts/bin/qa-browser.mjs http://localhost:5182/ &
+```
+
+It prints `mounted` once the app is up and page errors as `[page] …`; it stays alive until you stop
+it. The headless profile is fresh every launch, so its Given always starts from a clean default
+space, and the debug plugin needs enabling on it (below).
+
+`DX_DEBUG_PORT=true` (set by the task) mints a session as the app boots and publishes it to
+**`temp/debug-port.json` at the repo root** (`{ session, pid, port, url }`), written once when the
+server starts listening — do not delete it to "wait for a fresh one". The server's own log prints
+the same id as `Debug port session: <uuid>` (`preview_logs` with `search`), which is the reliable
+read. The task builds the app's dependency graph first, which takes minutes on a cold worktree.
+
+**Wait for the mount, not for the port.** The port answers while the app is still on the boot
+screen. Wait for the helper's `mounted` line (or, in a pane tab, front it and poll
+`document.querySelectorAll('[data-scope]').length > 0` from `javascript_tool`). Never leave a port
+call pending while the app is still booting: it will time out and wedge the loop (below). If
+`composer.snapshot` is missing, the debug plugin is not enabled on this profile:
+`invoke org.dxos.operation.registry.enablePlugins { ids: ["org.dxos.plugin.debug"] }` and wait for
+it to appear.
 
 If 5182 is already listening, it is someone's server: check whose worktree it serves before
 reusing it (`lsof -a -p <pid> -d cwd -Fn`) and never kill it. Pick another port with `--port` if in
@@ -119,14 +135,14 @@ the snapshot operation rather than scripting the page.
 
 ## 7. Stop what you started
 
-Stop the server you started (`preview_stop`, or the background task) when the run is done, and
-tell the user the port is closed. Leave a server you did not start alone.
+Stop the browser helper and the server you started (`preview_stop`, or the background tasks) when
+the run is done, and tell the user the port is closed. Leave a server you did not start alone.
 
 ## Checklist
 
 ```markdown
 - [ ] Script and chapter read in full, including Given and Teardown
-- [ ] Server started by me on a disposable profile; tab fronted before waiting on boot
+- [ ] Server started by me on a disposable profile; page opened in the headless helper and mounted
 - [ ] runId and start timestamp noted; debug plugin active
 - [ ] Given verified from a snapshot, QA: artifacts confirmed absent
 - [ ] Each step one operation call; each Expect judged from a snapshot or query

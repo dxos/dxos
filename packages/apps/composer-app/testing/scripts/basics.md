@@ -84,3 +84,191 @@ Removes only what this run created: the two remaining documents, then the space.
      have this workspace" meanwhile.
 - **Expect**: `snapshot` lists no space whose name starts with `QA:`, `layout.workspace` is the
   default space, and `errors` is empty.
+
+## Chapter 2: Rename, undo and a second space
+
+Independent of Chapter 1: its setup creates what it needs.
+
+### Given
+
+- **Agent**: `snapshot { since: <start> }`
+- **Expect**: as Chapter 1 — a `SPACE_READY` default space, no `QA:` space, `errors` empty.
+
+### Setup
+
+- **Do**: Create a space `QA: Undo <runId>` (the navtree switches to it), then a document named
+  `QA: Note` in it.
+- **Agent**:
+  1. `invoke org.dxos.operation.space.create { name: "QA: Undo <runId>" }` → capture `id` as `<spaceId>`.
+  2. `invoke org.dxos.operation.appToolkit.switchWorkspace { subject: "root/<spaceId>" }`
+  3. `invoke org.dxos.operation.markdown.create { name: "QA: Note", content: "# QA: Note\n\nRun <runId>.\n" } in <spaceId>`
+     → capture `id` as `<note>`.
+
+### Steps
+
+#### 1. Rename the document
+
+- **Do**: Open the `⋮` menu on `QA: Note` in the navtree, choose **Rename**, enter `QA: Note (renamed)`.
+- **Agent**: `invoke org.dxos.operation.space.updateObject { object: ref <note>, properties: { name: "QA: Note (renamed)" } } in <spaceId>`
+  — the menu's own operation only opens the rename dialog; the update is what the dialog commits.
+- **Expect**: `invoke org.dxos.operation.space.queryObjects { typename: "org.dxos.type.document" } in <spaceId>`
+  returns the one document labelled `QA: Note (renamed)`, and the navtree row reads the same.
+
+#### 2. Open, delete, undo
+
+- **Do**: Click the document to open it. Delete it from its `⋮` menu. Click **Undo** in the
+  **Document deleted** toast.
+- **Agent**:
+  1. `invoke org.dxos.operation.appToolkit.open { subject: ["root/<spaceId>/content/collections/<objectId of note>"] }`
+  2. `invoke org.dxos.operation.space.removeObjects { objects: [object <note>] }`
+  3. `invoke org.dxos.operation.debug.revertLast {}` — the toast's Undo, as an operation.
+- **Expect**: After 2, `snapshot` shows the **Document deleted** toast and no active plank. After 3,
+  `queryObjects` lists the document again, `layout.active` holds its path once more (the restore
+  reopens what was open), and `errors` is empty. Clicking **Undo** also dismisses the toast; the
+  operation bypasses the toast, so for the agent it stays until it times out.
+
+#### 3. A second space
+
+- **Do**: Create a space `QA: Undo B <runId>`; the navtree switches to it and shows no documents.
+  Switch back to `QA: Undo <runId>` from the space list.
+- **Agent**:
+  1. `invoke org.dxos.operation.space.create { name: "QA: Undo B <runId>" }` → capture `id` as `<spaceB>`.
+  2. `invoke org.dxos.operation.appToolkit.switchWorkspace { subject: "root/<spaceB>" }`
+  3. `invoke org.dxos.operation.space.queryObjects { typename: "org.dxos.type.document" } in <spaceB>`
+  4. `invoke org.dxos.operation.appToolkit.switchWorkspace { subject: "root/<spaceId>" }`
+- **Expect**: After 2, `snapshot.layout.workspace` is `root/<spaceB>` and `spaces` lists both `QA:`
+  spaces `SPACE_READY`. Step 3 returns no documents. After 4, the workspace is `root/<spaceId>`
+  again and its document is still listed.
+
+### Teardown
+
+- **Do**: Delete the document, then both spaces from their settings; pick the default space.
+- **Agent**:
+  1. `invoke org.dxos.operation.space.removeObjects { objects: [object <note>] }`
+  2. `invoke org.dxos.operation.space.delete { space: space <spaceId> }`
+  3. `invoke org.dxos.operation.space.delete { space: space <spaceB> }`
+  4. `invoke org.dxos.operation.appToolkit.switchWorkspace { subject: "root/<default space id>" }`
+- **Expect**: `snapshot` lists no `QA:` space, the workspace is the default space, `errors` is empty.
+
+## Chapter 3: Comments
+
+Create, reply to, resolve, and delete comments on a document. The human works in the comments
+companion; the agent drives the same review operations and reads the threads off the `snapshot`
+(`planks[].comments`).
+
+### Given
+
+- **Agent**: `snapshot { since: <start> }`
+- **Expect**: a `SPACE_READY` default space, no `QA:` space, `errors` empty.
+
+### Setup
+
+- **Do**: Create a space `QA: Comments <runId>`, a document `QA: Draft` in it whose first line reads
+  `Comments go here.`, and open the document.
+- **Agent**:
+  1. `invoke org.dxos.operation.space.create { name: "QA: Comments <runId>" }` → capture `id` as `<spaceId>`.
+  2. `invoke org.dxos.operation.appToolkit.switchWorkspace { subject: "root/<spaceId>" }`
+  3. `invoke org.dxos.operation.markdown.create { name: "QA: Draft", content: "# QA: Draft\n\nComments go here.\n" } in <spaceId>`
+     → capture `id` as `<doc>`.
+  4. `invoke org.dxos.operation.appToolkit.open { subject: ["root/<spaceId>/content/collections/<objectId of doc>"] }`
+
+### Steps
+
+#### 1. Create a comment
+
+- **Do**: Select the words `Comments go here` in the editor, click **Comment** in the toolbar, type
+  `First comment` and send it. The comments companion opens with the thread.
+- **Agent**: `invoke org.dxos.operation.review.create { subject: object <doc>, range: { from: 12, to: 28 }, text: "First comment", sender: { name: "QA" } }`
+  → capture `threadId` as `<thread>` and `anchorId` as `<anchor>`. The range is the selection's
+  character offsets, which the operation turns into the editor's cursor anchor; a first `text`
+  submits the thread, as the send button does.
+- **Expect**: `snapshot` shows the document plank with one entry in `comments`: status `active`,
+  one message `First comment` from `QA`, and a cursor `anchor`. `errors` is empty.
+
+#### 2. Reply
+
+- **Do**: Type `Second comment` into the thread's reply box and send.
+- **Agent**: `invoke org.dxos.operation.review.addMessage { subject: object <doc>, anchor: object echo://<spaceId>/<anchor>, sender: { name: "QA" }, text: "Second comment" }`
+- **Expect**: the thread in `snapshot` now has two messages, `First comment` then `Second comment`.
+
+#### 3. Resolve, then reopen
+
+- **Do**: Click the thread's **Resolve** control; the thread moves to the resolved state. Click it
+  again to reopen.
+- **Agent**:
+  1. `invoke org.dxos.operation.review.setResolved { thread: object echo://<spaceId>/<thread>, resolved: true }`
+  2. `invoke org.dxos.operation.review.setResolved { thread: object echo://<spaceId>/<thread>, resolved: false }`
+- **Expect**: `snapshot` reports the thread's status `resolved` after 1 and `active` after 2.
+
+#### 4. Delete the reply
+
+- **Do**: Open the second message's menu and choose **Delete**.
+- **Agent**: `invoke org.dxos.operation.review.deleteMessage { subject: object <doc>, anchor: object echo://<spaceId>/<anchor>, messageId: "<id of the second message, from the snapshot>" }`
+- **Expect**: the thread has one message again, `First comment`; a **Comment deleted** toast may
+  show. `errors` is empty.
+
+#### 5. Delete the thread
+
+- **Do**: Open the thread's menu and choose **Delete**.
+- **Agent**: `invoke org.dxos.operation.review.delete { subject: object <doc>, anchor: object echo://<spaceId>/<anchor> }`
+- **Expect**: `snapshot` shows the plank with no `comments`, and `errors` is empty.
+
+### Teardown
+
+- **Agent**:
+  1. `invoke org.dxos.operation.space.removeObjects { objects: [object <doc>] }`
+  2. `invoke org.dxos.operation.space.delete { space: space <spaceId> }`
+  3. `invoke org.dxos.operation.appToolkit.switchWorkspace { subject: "root/<default space id>" }`
+- **Expect**: no `QA:` space; the workspace is the default space; `errors` is empty.
+
+## Chapter 4: The assistant edits the document
+
+Ask the document's assistant to change part of the text in place. This chapter needs an AI provider
+the app can reach (the assistant settings' provider, EDGE by default); without one, the prompt fails
+and the chapter reports blocked rather than failed.
+
+### Given
+
+- **Agent**: `snapshot { since: <start> }`
+- **Expect**: a `SPACE_READY` default space, no `QA:` space, `errors` empty.
+
+### Setup
+
+- **Do**: Create a space `QA: Assistant <runId>` and a document `QA: Essay` with three short English
+  paragraphs; open it.
+- **Agent**:
+  1. `invoke org.dxos.operation.space.create { name: "QA: Assistant <runId>" }` → capture `id` as `<spaceId>`.
+  2. `invoke org.dxos.operation.appToolkit.switchWorkspace { subject: "root/<spaceId>" }`
+  3. `invoke org.dxos.operation.markdown.create { name: "QA: Essay", content: "# QA: Essay\n\nThe first paragraph stays in English.\n\nThe second paragraph is about the weather. It is sunny today and the sky is blue.\n\nThe third paragraph also stays in English.\n" } in <spaceId>`
+     → capture `id` as `<doc>`.
+  4. `invoke org.dxos.operation.appToolkit.open { subject: ["root/<spaceId>/content/collections/<objectId of doc>"] }`
+
+### Steps
+
+#### 1. Open the document's assistant
+
+- **Do**: Click the assistant companion on the document plank. A chat bound to the document opens
+  beside it.
+- **Agent**: `invoke org.dxos.operation.assistant.ensureCompanionChat { companionTo: object <doc> } in <spaceId>`
+- **Expect**: the result names a chat (`persisted: false` until its first message); `errors` is
+  empty.
+
+#### 2. Translate the second paragraph in place
+
+- **Do**: In the chat, send: `Translate the second paragraph of this document into French, in place.
+Leave the other paragraphs unchanged.` Wait for the reply; the editor updates the paragraph.
+- **Agent**: `invoke org.dxos.operation.assistant.runPromptInChat { companionTo: object <doc>, prompt: "Translate the second paragraph of this document into French, in place. Leave the other paragraphs unchanged." } in <spaceId>`
+  — `companionTo` names the document's own chat, which is not in the database until its first
+  message, so an id cannot name it — then `snapshot` until the open plank's `subject.text` changes
+  (up to two minutes).
+- **Expect**: the document's text keeps the first and third paragraphs verbatim and the second
+  paragraph is now French (it mentions `soleil` or `ciel`, and no longer `sunny`). `errors` is empty.
+
+### Teardown
+
+- **Agent**:
+  1. `invoke org.dxos.operation.space.removeObjects { objects: [object <doc>] }` — the companion chat
+     is the document's child and goes with it.
+  2. `invoke org.dxos.operation.space.delete { space: space <spaceId> }`
+  3. `invoke org.dxos.operation.appToolkit.switchWorkspace { subject: "root/<default space id>" }`
+- **Expect**: no `QA:` space; the workspace is the default space; `errors` is empty.
