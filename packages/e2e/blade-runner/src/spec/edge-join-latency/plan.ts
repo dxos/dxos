@@ -32,6 +32,14 @@ export type EdgeJoinLatencySpec = {
   /** Peers that accept an invitation, each an identity of its own, each timed independently. */
   joiners: number;
   /**
+   * Give the seeder an EDGE agent.
+   *
+   * Required, not cosmetic: `shareSpace` opens a DELEGATED invitation, which EDGE redeems on behalf
+   * of a member, and with no agent `EdgeInvitationHandler` answers `No agents in the space.` and
+   * retries until the join fails. Exposed rather than hardcoded so the no-agent path stays testable.
+   */
+  agents: boolean;
+  /**
    * Ceiling on one joiner's catch-up. Exceeding it fails that joiner rather than the run, so a
    * single stuck peer still yields timings for the rest.
    */
@@ -86,6 +94,7 @@ export const DEFAULT_SPEC: EdgeJoinLatencySpec = {
   edge: 'local',
   objects: 100,
   joiners: 5,
+  agents: true,
   joinTimeoutMs: 5 * 60_000,
   seedTimeoutMs: 10 * 60_000,
   cleanup: true,
@@ -157,11 +166,11 @@ export class EdgeJoinLatency implements TestPlan<EdgeJoinLatencySpec, EdgeJoinLa
     let spaceId: string | undefined;
     let seedMs = 0;
 
-    const spawn = async (label: string): Promise<ReplicantBrain<ClientReplicant>> => {
+    const spawn = async (label: string, agent = false): Promise<ReplicantBrain<ClientReplicant>> => {
       const replicant = await env.spawn(ClientReplicant, { platform: spec.platform });
       // Never `partitions`: the offline proxy cannot front an `https:` endpoint, and nothing here
       // cuts a link anyway.
-      await replicant.brain.init({ edgeUrl, agents: false, partitions: false });
+      await replicant.brain.init({ edgeUrl, agents: spec.agents, partitions: false });
       const { identityDid } = await replicant.brain.createIdentity({ displayName: label });
       identityDids.push(identityDid);
       // The self-serve cleanup routes 403 an identity with no Hub account; one fixed alias per slot
@@ -169,6 +178,9 @@ export class EdgeJoinLatency implements TestPlan<EdgeJoinLatencySpec, EdgeJoinLa
       // and `DX_HUB_API_KEY` is the only way the run's data gets deleted.
       if (isDevLikeTarget(spec.edge)) {
         await replicant.brain.bindTestAccount({ hubUrl, email: `test+bladerunner-join-${label}@dxos.org` });
+      }
+      if (agent && spec.agents) {
+        await replicant.brain.createAgent();
       }
       spawned.push(replicant);
       return replicant;
@@ -183,7 +195,8 @@ export class EdgeJoinLatency implements TestPlan<EdgeJoinLatencySpec, EdgeJoinLa
     });
 
     try {
-      const seeder = await spawn('seeder');
+      // The seeder hosts every invitation, so it is the one that needs the agent.
+      const seeder = await spawn('seeder', true);
       const created = await seeder.brain.createSpace({ label: 'join-latency' });
       // Kept in a local as well: the outer binding is what `finally` cleans up, but only this one
       // is narrowed to a string for the closures below.
@@ -245,7 +258,10 @@ export class EdgeJoinLatency implements TestPlan<EdgeJoinLatencySpec, EdgeJoinLa
             objects: spec.objects,
             msPerObject: undefined,
             ok: false,
-            error: err instanceof Error ? err.message : String(err),
+            // Message alone is not enough from CI: `Invalid space id.` named neither the call that
+            // threw nor the cause under it, and the replicant never logged it because the error
+            // crossed the RPC boundary. The artifact has to carry what a local repro would show.
+            error: describeError(err),
           });
         }
         log.info('joiner measured', { ...measurements[measurements.length - 1] });
@@ -395,4 +411,21 @@ const renderSummary = (result: EdgeJoinLatencyResult): string => {
     rows,
     '',
   ].join('\n');
+};
+
+/** An error as the artifact should record it: message, cause chain, and the top of the stack. */
+const describeError = (err: unknown): string => {
+  if (!(err instanceof Error)) {
+    return String(err);
+  }
+  const causes: string[] = [];
+  for (let cause = err.cause; cause instanceof Error && causes.length < 4; cause = cause.cause) {
+    causes.push(cause.message);
+  }
+  // Four frames: enough to name the call that threw without turning the summary table into a dump.
+  const frames = (err.stack ?? '')
+    .split('\n')
+    .slice(1, 5)
+    .map((line) => line.trim());
+  return [err.message, ...causes.map((cause) => `caused by: ${cause}`), ...frames].join(' | ');
 };

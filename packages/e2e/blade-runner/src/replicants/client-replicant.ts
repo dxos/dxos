@@ -67,6 +67,9 @@ export type SpaceDigest = {
   docs: Record<string, DocumentDigest>;
 };
 
+/** How long the account binding may take to become readable by EDGE's agent service. */
+const ACCOUNT_VISIBILITY_TIMEOUT = 90_000;
+
 const INVITATION_TIMEOUT = 60_000;
 const SPACE_READY_TIMEOUT = 60_000;
 const DOCUMENT_READY_TIMEOUT = 60_000;
@@ -242,10 +245,32 @@ export class ClientReplicant {
     return { accountId: response.accountId };
   }
 
+  /**
+   * Create this identity's EDGE agent, waiting out the account binding becoming readable.
+   *
+   * `bindTestAccount` writes the account through hub-service, and EDGE's agent service reads it
+   * back through a different worker; against a deployed environment that read can still miss and
+   * answer `Identity is not associated with an account.` Retrying is waiting for a write already
+   * known to have succeeded — the bind returned an `accountId` — not papering over a failure, so
+   * only that one condition is retried and everything else propagates on the first attempt.
+   */
   @trace.span()
   async createAgent(): Promise<void> {
     const client = this.#getClient();
-    await client.services.services.EdgeAgentService!.createAgent(undefined, { timeout: 30_000 });
+    const deadline = Date.now() + ACCOUNT_VISIBILITY_TIMEOUT;
+    for (let attempt = 1; ; attempt++) {
+      try {
+        await client.services.services.EdgeAgentService!.createAgent(undefined, { timeout: 30_000 });
+        return;
+      } catch (err) {
+        const unbound = err instanceof Error && /not associated with an account/i.test(err.message);
+        if (!unbound || Date.now() > deadline) {
+          throw err;
+        }
+        log.info('account not visible to the agent service yet; retrying', { attempt });
+        await sleep(2_000);
+      }
+    }
   }
 
   /**
