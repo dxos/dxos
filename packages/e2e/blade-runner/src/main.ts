@@ -89,6 +89,10 @@ const start = async () => {
       headless: { type: 'boolean', default: true, describe: 'run browser agents in headless browsers' },
       browser: { type: 'boolean', default: true, describe: 'build the browser bundle', alias: 'b' },
       seed: { type: 'string', describe: 'random seed; fixes the generated command sequence' },
+      spec: {
+        type: 'string',
+        describe: 'JSON object of spec fields, merged over the spec file or the plan defaults',
+      },
     })
     .demandCommand(1, `need to provide name of test to run\navailable tests: ${Object.keys(plans).join(', ')}`)
     .help().argv;
@@ -128,8 +132,26 @@ const start = async () => {
     });
   }
 
+  // A spec file replaces the spec wholesale rather than merging, so without this every one-off
+  // variant of a run — another EDGE, cleanup off, a fixed plan — needed a config file of its own.
+  const props = plan();
+  const overrides = argv.spec === undefined ? undefined : parseSpecOverride(argv.spec);
+
   log.info(`\nrunning test: ${name}`, { options });
-  await runPlan(plan());
+  await runPlan(overrides === undefined ? props : { ...props, spec: { ...props.spec, ...overrides } });
+};
+
+/**
+ * `--spec '{"edge":"dev","cleanup":false}'` — only the fields a run changes. Returned as
+ * `object` rather than a record so the merge needs no cast.
+ */
+const parseSpecOverride = (text: string): object => {
+  const parsed: unknown = JSON.parse(text);
+  invariant(
+    typeof parsed === 'object' && parsed !== null && !Array.isArray(parsed),
+    `--spec must be a JSON object: ${text}`,
+  );
+  return parsed;
 };
 
 /**

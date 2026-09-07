@@ -22,9 +22,16 @@ import {
 // Spec.
 //
 
+/**
+ * Which EDGE to run against. Only these two carry the dev-only test-email hatch that binds test
+ * identities to Hub accounts, which the self-serve cleanup routes require; preview and production
+ * would leave every run's data behind.
+ */
+export type EdgeTarget = 'local' | 'dev';
+
 export type EdgeStressSpec = {
   platform: Platform;
-  edgeUrl: string;
+  edge: EdgeTarget;
 
   /** Devices per identity; its length is the identity count and its sum the client count. */
   devicesPerIdentity: number[];
@@ -48,21 +55,13 @@ export type EdgeStressSpec = {
   /** Draw `GoOffline`/`GoOnline`/`Restart`. Off isolates convergence from partition tolerance. */
   partitions: boolean;
   /**
-   * Hub-service base URL (e.g. `http://localhost:8787/hub/`). When set, every identity is bound to
-   * a Hub account at setup through the dev-only `test+*@dxos.org` hatch — which is what the
-   * self-serve cleanup routes require on a deployed environment. Unset skips binding.
+   * Run this plan instead of drawing one: the commands inline, or the path of a
+   * `command-trace.jsonl` from an earlier run (its last `plan` entry is used). Turns a
+   * counterexample into a fixture — and lets one be shrunk by hand, since a sampled sequence has no
+   * fast-check shrinker.
    */
-  hubUrl?: string;
-  /**
-   * Replay this plan instead of drawing one: a `command-trace.jsonl` from an earlier run, or any
-   * file whose last `plan` entry carries a `plan` array. Turns a counterexample into a fixture —
-   * and lets one be shrunk by hand, since a sampled sequence has no fast-check shrinker.
-   */
-  planFile?: string;
-  /**
-   * Delete the spaces and identities the run created. A no-op without `DX_HUB_API_KEY`, so it is
-   * safe to leave on for local EDGE, where the state is ephemeral anyway.
-   */
+  plan?: string | unknown[];
+  /** Delete the spaces and identities the run created, through the self-serve routes first. */
   cleanup: boolean;
 };
 
@@ -90,6 +89,8 @@ const CALL_BUDGET_MS = 30_000;
  */
 export type Real = {
   spec: EdgeStressSpec;
+  /** Resolved from `spec.edge`; the admin-key cleanup fallback posts here. */
+  edgeUrl: string;
   deadline: number;
   replicants: ReplicantBrain<ClientReplicant>[];
   spaceIds: string[];
@@ -256,7 +257,7 @@ export const cleanupRun = async (model: Model, real: Real): Promise<void> => {
       // Identity DIDs and space ids never collide, so one pass over both is unambiguous.
       const path = id.startsWith('did:') ? `/admin/identities/${id}` : `/admin/spaces/${id}`;
       try {
-        const response = await fetch(new URL(path, real.spec.edgeUrl), {
+        const response = await fetch(new URL(path, real.edgeUrl), {
           method: 'DELETE',
           // Canonical `edgeAuth` admin form. `X-Admin-Key` also works today but is legacy and is
           // rejected wherever a route sets `legacyHeaders: false`.

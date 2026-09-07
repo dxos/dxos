@@ -20,6 +20,10 @@
 
 import { readFileSync } from 'node:fs';
 
+// Duplicated from `EDGE_URLS` in @dxos/config rather than imported: this script runs under bare
+// node, which cannot load that package's TypeScript source. Only the two targets a run can name.
+const EDGE_URLS = { local: 'http://localhost:8787', dev: 'https://dev.dxos.network' };
+
 const args = process.argv.slice(2);
 const dryRun = args.includes('--dry-run');
 const urlFlag = args.indexOf('--edge-url');
@@ -48,7 +52,7 @@ for (const trace of traces) {
     }
     const entry = JSON.parse(line);
     if (entry.event === 'run' && !edgeUrl) {
-      edgeUrl = entry.spec?.edgeUrl;
+      edgeUrl = EDGE_URLS[entry.spec?.edge ?? 'local'];
     }
     if (entry.detail === 'spaceId' && entry.spaceId) {
       spaceIds.add(entry.spaceId);

@@ -7,6 +7,7 @@ import { FastCheck } from 'effect/testing';
 import fs from 'node:fs';
 import path from 'node:path';
 
+import { EDGE_URLS } from '@dxos/config';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
@@ -18,6 +19,7 @@ import { type Model, makeFleetModel } from './model';
 import {
   type EdgeStressResult,
   type EdgeStressSpec,
+  type EdgeTarget,
   type Real,
   BudgetExhausted,
   assertFullyReplicated,
@@ -34,6 +36,50 @@ import {
 const COMMAND_POOL_FACTOR = 8;
 
 /**
+ * The one place a spec is written down; every run starts here and overrides what it changes.
+ *
+ * `readYAMLSpecFile` replaces the spec wholesale rather than merging it over the defaults, so
+ * without this each variant of the run needed its own copy of every field — which is how a single
+ * plan came to have six config files that then drifted apart.
+ */
+export const defaultsFor = (edge: EdgeTarget): EdgeStressSpec => ({
+  platform: 'nodejs',
+  edge,
+  // Small by default so a local run finishes in minutes; a nightly run scales this up.
+  devicesPerIdentity: [2, 1],
+  agents: false,
+  maxSpaces: 2,
+  maxDocumentsPerSpace: 4,
+  maxCommands: 25,
+  sampleDraws: 12,
+  // Every wait is longer against dev, where each operation crosses the public internet.
+  maxRuntimeMs: edge === 'dev' ? 15 * 60_000 : 10 * 60_000,
+  quiescenceTimeoutMs: edge === 'dev' ? 90_000 : 60_000,
+  checkpoints: true,
+  // Off until finding 5 (a cut link crashes the peer) is fixed; see RESULTS.md.
+  partitions: false,
+  cleanup: true,
+});
+
+/**
+ * `edge` is read before the merge, since it selects the defaults everything else lands on. The
+ * empty default covers a spec file that sets nothing, which yields `undefined` rather than `{}`.
+ */
+export const resolveSpec = (overrides: Partial<EdgeStressSpec> = {}): EdgeStressSpec => ({
+  ...defaultsFor(overrides?.edge ?? 'local'),
+  ...overrides,
+});
+
+/**
+ * Both endpoints of one EDGE deployment: the Hub is served under `/hub/` of the same origin, so a
+ * spec names its target once and cannot point the two halves at different deployments.
+ */
+export const urlsFor = (edge: EdgeTarget): { edgeUrl: string; hubUrl: string } => {
+  const edgeUrl = EDGE_URLS[edge];
+  return { edgeUrl, hubUrl: `${edgeUrl}/hub/` };
+};
+
+/**
  * Randomized stress test of a fleet of real clients replicating through EDGE.
  *
  * The orchestrator owns the model and every decision; replicants only execute. See
@@ -42,27 +88,14 @@ const COMMAND_POOL_FACTOR = 8;
  */
 export class EdgeStress implements TestPlan<EdgeStressSpec, EdgeStressResult> {
   defaultSpec(): EdgeStressSpec {
-    return {
-      platform: 'nodejs',
-      edgeUrl: 'http://localhost:8787',
-      // Small by default so a local run finishes in minutes; the nightly spec scales this up.
-      devicesPerIdentity: [2, 1],
-      agents: false,
-      maxSpaces: 2,
-      maxDocumentsPerSpace: 4,
-      maxCommands: 25,
-      sampleDraws: 12,
-      maxRuntimeMs: 10 * 60_000,
-      quiescenceTimeoutMs: 60_000,
-      checkpoints: true,
-      partitions: true,
-      cleanup: true,
-      hubUrl: 'http://localhost:8787/hub/',
-    };
+    return defaultsFor('local');
   }
 
   async run(env: SchedulerEnvImpl<EdgeStressSpec>, params: TestProps<EdgeStressSpec>): Promise<EdgeStressResult> {
-    const spec = params.spec;
+    // A spec file and `--spec` both supply only the fields they change, so what arrives here is a
+    // partial spec even though the harness types it whole.
+    const spec = resolveSpec(params.spec);
+    const { edgeUrl, hubUrl } = urlsFor(spec.edge);
     const limits: Model['limits'] = {
       maxSpaces: spec.maxSpaces,
       maxDocumentsPerSpace: spec.maxDocumentsPerSpace,
@@ -75,17 +108,17 @@ export class EdgeStress implements TestPlan<EdgeStressSpec, EdgeStressResult> {
       traceStream.write(`${JSON.stringify(entry)}\n`);
     };
 
-    log.info('edge-stress starting', { seed: params.randomSeed, clientCount, spec });
+    log.info('edge-stress starting', { seed: params.randomSeed, clientCount, edgeUrl, spec });
     trace({ event: 'run', seed: params.randomSeed, spec });
 
     // Decided before a single process exists: the fleet model is pure, so the sequence is a
     // function of the seed alone and the recorded plan is exactly what will run.
-    const plan = this._drawPlan(params, limits, clientCount);
-    // Both forms: `commands` for a human reading the trace, `plan` for `planFile` to replay.
+    const plan = this._drawPlan(spec, params.randomSeed, limits, clientCount);
+    // Both forms: `commands` for a human reading the trace, `plan` to replay via `spec.plan`.
     trace({ event: 'plan', seed: params.randomSeed, commands: plan.map(describe), plan });
 
     const setupBegin = Date.now();
-    const { replicants, model, identityDids } = await this._setupFleet(env, params, limits);
+    const { replicants, model, identityDids } = await this._setupFleet(env, spec, { edgeUrl, hubUrl }, limits);
     const setupTimeMs = Date.now() - setupBegin;
     log.info('fleet ready', { setupTimeMs });
     // Same reason as the per-space `spaceId` detail: identities a dead run leaves behind must be
@@ -94,6 +127,7 @@ export class EdgeStress implements TestPlan<EdgeStressSpec, EdgeStressResult> {
 
     const real: Real = {
       spec,
+      edgeUrl,
       replicants,
       deadline: Number.MAX_SAFE_INTEGER,
       spaceIds: [],
@@ -161,10 +195,15 @@ export class EdgeStress implements TestPlan<EdgeStressSpec, EdgeStressResult> {
    * The sequence this seed will run: sample several pools, simulate each, keep the one that
    * replicates the most.
    */
-  private _drawPlan(params: TestProps<EdgeStressSpec>, limits: Model['limits'], clientCount: number): Command[] {
-    const spec = params.spec;
-    if (spec.planFile) {
-      const plan = readPlanFile(spec.planFile).map((entry) => Schema.decodeUnknownSync(Command)(entry));
+  private _drawPlan(
+    spec: EdgeStressSpec,
+    seed: string | undefined,
+    limits: Model['limits'],
+    clientCount: number,
+  ): Command[] {
+    if (spec.plan !== undefined) {
+      const entries = typeof spec.plan === 'string' ? readPlanFile(spec.plan) : spec.plan;
+      const plan = entries.map((entry) => Schema.decodeUnknownSync(Command)(entry));
       // Simulated against the same starting model the run will use, so an edited plan reports a
       // command that cannot run rather than being quietly truncated at execution time.
       const executable = simulate(plan, makeFleetModel({ devicesPerIdentity: spec.devicesPerIdentity, limits }));
@@ -172,7 +211,10 @@ export class EdgeStress implements TestPlan<EdgeStressSpec, EdgeStressResult> {
         executable.length === plan.length,
         `plan is not executable from the initial state: ${plan.length - executable.length} of ${plan.length} commands cannot run`,
       );
-      log.info('replaying a fixed plan', { planFile: spec.planFile, commands: plan.length });
+      log.info('replaying a fixed plan', {
+        source: typeof spec.plan === 'string' ? spec.plan : 'inline',
+        commands: plan.length,
+      });
       return plan;
     }
 
@@ -190,7 +232,7 @@ export class EdgeStress implements TestPlan<EdgeStressSpec, EdgeStressResult> {
     });
 
     const draws = FastCheck.sample(pool, {
-      seed: hashSeed(params.randomSeed ?? ''),
+      seed: hashSeed(seed ?? ''),
       numRuns: spec.sampleDraws,
     });
     const candidates = draws.map((draw) =>
@@ -206,7 +248,7 @@ export class EdgeStress implements TestPlan<EdgeStressSpec, EdgeStressResult> {
     // but `CreateSpace` needs a space, so a short pool can contain nothing runnable at all.
     invariant(
       chosen.length > 0,
-      `no executable command drawn from ${spec.sampleDraws} pools; raise maxCommands or set planFile`,
+      `no executable command drawn from ${spec.sampleDraws} pools; raise maxCommands or set plan`,
     );
 
     log.info('command sequence drawn', {
@@ -228,16 +270,16 @@ export class EdgeStress implements TestPlan<EdgeStressSpec, EdgeStressResult> {
    */
   private async _setupFleet(
     env: SchedulerEnvImpl<EdgeStressSpec>,
-    params: TestProps<EdgeStressSpec>,
+    spec: EdgeStressSpec,
+    urls: { edgeUrl: string; hubUrl: string },
     limits: Model['limits'],
   ): Promise<{ replicants: ReplicantBrain<ClientReplicant>[]; model: Model; identityDids: string[] }> {
-    const spec = params.spec;
     const model = makeFleetModel({ devicesPerIdentity: spec.devicesPerIdentity, limits });
 
     const replicants: ReplicantBrain<ClientReplicant>[] = [];
     for (let index = 0; index < model.clients.length; index++) {
       const replicant = await env.spawn(ClientReplicant, { platform: spec.platform });
-      await replicant.brain.init({ edgeUrl: spec.edgeUrl, agents: spec.agents, partitions: spec.partitions });
+      await replicant.brain.init({ edgeUrl: urls.edgeUrl, agents: spec.agents, partitions: spec.partitions });
       replicants.push(replicant);
     }
 
@@ -248,13 +290,13 @@ export class EdgeStress implements TestPlan<EdgeStressSpec, EdgeStressResult> {
         displayName: `edge-stress-identity-${identity}`,
       });
       identityDids.push(identityDid);
-      if (spec.hubUrl) {
-        // One fixed alias per identity slot: the hatch rebinds, so every run reuses the same rows.
-        await replicants[owner].brain.bindTestAccount({
-          hubUrl: spec.hubUrl,
-          email: `test+bladerunner-${identity}@dxos.org`,
-        });
-      }
+      // Unconditional: the self-serve cleanup routes 403 an identity with no Hub account, so a run
+      // that skipped this could only be cleaned up with an admin key. One fixed alias per identity
+      // slot — the hatch rebinds, so every run reuses the same rows.
+      await replicants[owner].brain.bindTestAccount({
+        hubUrl: urls.hubUrl,
+        email: `test+bladerunner-${identity}@dxos.org`,
+      });
       if (spec.agents) {
         await replicants[owner].brain.createAgent();
       }

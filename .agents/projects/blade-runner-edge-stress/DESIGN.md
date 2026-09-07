@@ -24,17 +24,17 @@ Cleanup of everything a run creates is **required before G3 turns on** and is sp
 
 ## 2. Prior art (what we reuse)
 
-| Piece | Where | What we take |
-| --- | --- | --- |
-| blade-runner harness | `packages/e2e/blade-runner` | Scheduler/replicant model (§3). |
-| `EdgeReplicant` | `src/replicants/edge-replicant.ts` | Real `Client` + edge config, persistent storage under `outDir`, agent creation, `waitForReplication`. |
-| `ReplicationTestPlan` | `src/spec/replication.ts` | N-replicant topology bookkeeping. |
-| fast-check model runs | `teleport-extension-replicator/src/stress.test.ts`, `client-services/.../pipeline-stress.test.ts` | `fc.commands` + `fc.asyncModelRun` shape: `check(model)` preconditions, `run(model, real)`, Model/Real split, explicit `examples`. Both are `test.skip` today — this project is their successor at the client↔EDGE level. |
-| Real-client invitations | `packages/sdk/client-e2e/src/spaces-invitations*.test.ts`, `performInvitation` (`@dxos/client-services/testing`) | Interactive + delegated multi-use invitations that survive the original host going away. |
-| Manual edge e2e | `packages/sdk/client/test/e2e/sync.test.ts`, `edge-recovery.test.ts` | Edge quiescence predicate (`isEdgePeerId` peer with `missingOnRemote = missingOnLocal = differentDocuments = 0`), `setEdgeReplicationPreference(ENABLED)`, direct `LocalClientServices` construction. |
-| Env presets | `packages/sdk/config/src/edge-services.ts` | `EDGE_URLS`: `local`, `dev`, `preview`, `production`. |
-| Edge data-management API | edge repo `packages/services/edge/src/data-management/api.ts` | Space/identity deletion — both self-serve and admin (§13). |
-| fast-check | `effect/testing` re-export (4.9.0) | No separate dependency: `effect` already ships it. |
+| Piece                    | Where                                                                                                            | What we take                                                                                                                                                                                                              |
+| ------------------------ | ---------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| blade-runner harness     | `packages/e2e/blade-runner`                                                                                      | Scheduler/replicant model (§3).                                                                                                                                                                                           |
+| `EdgeReplicant`          | `src/replicants/edge-replicant.ts`                                                                               | Real `Client` + edge config, persistent storage under `outDir`, agent creation, `waitForReplication`.                                                                                                                     |
+| `ReplicationTestPlan`    | `src/spec/replication.ts`                                                                                        | N-replicant topology bookkeeping.                                                                                                                                                                                         |
+| fast-check model runs    | `teleport-extension-replicator/src/stress.test.ts`, `client-services/.../pipeline-stress.test.ts`                | `fc.commands` + `fc.asyncModelRun` shape: `check(model)` preconditions, `run(model, real)`, Model/Real split, explicit `examples`. Both are `test.skip` today — this project is their successor at the client↔EDGE level. |
+| Real-client invitations  | `packages/sdk/client-e2e/src/spaces-invitations*.test.ts`, `performInvitation` (`@dxos/client-services/testing`) | Interactive + delegated multi-use invitations that survive the original host going away.                                                                                                                                  |
+| Manual edge e2e          | `packages/sdk/client/test/e2e/sync.test.ts`, `edge-recovery.test.ts`                                             | Edge quiescence predicate (`isEdgePeerId` peer with `missingOnRemote = missingOnLocal = differentDocuments = 0`), `setEdgeReplicationPreference(ENABLED)`, direct `LocalClientServices` construction.                     |
+| Env presets              | `packages/sdk/config/src/edge-services.ts`                                                                       | `EDGE_URLS`: `local`, `dev`, `preview`, `production`.                                                                                                                                                                     |
+| Edge data-management API | edge repo `packages/services/edge/src/data-management/api.ts`                                                    | Space/identity deletion — both self-serve and admin (§13).                                                                                                                                                                |
+| fast-check               | `effect/testing` re-export (4.9.0)                                                                               | No separate dependency: `effect` already ships it.                                                                                                                                                                        |
 
 ## 3. Blade-runner architecture (what the implementation must fit into)
 
@@ -73,7 +73,7 @@ Consequences for us:
   cleanup we need beyond killing processes (§13) must be inside `plan.run`'s own `try/finally`,
   because nothing plan-specific runs after the throw.
 - `options.randomSeed && seedrandom(options.randomSeed, { global: true })` already seeds `Math.random`
-  **globally in the orchestrator only** — replicants are separate processes and are *not* seeded.
+  **globally in the orchestrator only** — replicants are separate processes and are _not_ seeded.
 - `analyze()` receives `(params, replicantsSummary, result)` — note `run-plan.ts`'s repeat-analysis
   path calls it with only two arguments, a latent inconsistency; don't depend on that path.
 
@@ -222,11 +222,11 @@ from disk. `space.internal.setEdgeReplicationPreference(ENABLED)` on every creat
 
 A client is in exactly one of three states, and the distinction is the point of D6:
 
-| State | Process | Edge link | Can act locally | Mechanism |
-| --- | --- | --- | --- | --- |
-| `online` | up | connected | yes | — |
-| `offline` | up | severed | **yes — edits accumulate locally** | `host.edgeConnection.close()` |
-| `down` | client destroyed | n/a | no | `client.destroy()` |
+| State     | Process          | Edge link | Can act locally                    | Mechanism                     |
+| --------- | ---------------- | --------- | ---------------------------------- | ----------------------------- |
+| `online`  | up               | connected | yes                                | —                             |
+| `offline` | up               | severed   | **yes — edits accumulate locally** | `host.edgeConnection.close()` |
+| `down`    | client destroyed | n/a       | no                                 | `client.destroy()`            |
 
 `LocalClientServices.host` is public (`packages/sdk/client/src/services/local-client-services.ts:175`)
 and `ClientServicesHost.edgeConnection` is a public getter over an `EdgeClient`
@@ -242,15 +242,21 @@ Plain data in the orchestrator; no CRDT internals modeled.
 type Model = {
   identities: Map<IdentityId, { devices: ClientId[]; agent: boolean }>;
   clients: Map<ClientId, { identity: IdentityId; state: 'online' | 'offline' | 'down' }>;
-  spaces: Map<SpaceId, {
-    members: Set<IdentityId>;         // joined
-    pending: Set<IdentityId>;         // will join on next opportunity (D2 — eventually joins)
-    docs: Map<DocId, {
-      deleted: boolean;
-      tokens: Set<string>;            // unique tokens spliced into content
-      counters: Map<ClientId, number>;// single-writer registers
-    }>;
-  }>;
+  spaces: Map<
+    SpaceId,
+    {
+      members: Set<IdentityId>; // joined
+      pending: Set<IdentityId>; // will join on next opportunity (D2 — eventually joins)
+      docs: Map<
+        DocId,
+        {
+          deleted: boolean;
+          tokens: Set<string>; // unique tokens spliced into content
+          counters: Map<ClientId, number>; // single-writer registers
+        }
+      >;
+    }
+  >;
   opSeq: number;
 };
 ```
@@ -259,10 +265,10 @@ type Model = {
 undecidable for arbitrary concurrent text edits without re-implementing the CRDT merge. Instead
 every edit is order-insensitive and individually verifiable:
 
-- *Text edit* = splice the unique token `⟦c<clientId>-<opSeq>⟧` at a pseudo-random position.
-  Assertion: final content contains **each model token exactly once** (catches loss *and*
+- _Text edit_ = splice the unique token `⟦c<clientId>-<opSeq>⟧` at a pseudo-random position.
+  Assertion: final content contains **each model token exactly once** (catches loss _and_
   duplication) and contains nothing but model tokens (catches corruption and resurrection).
-- *Counter edit* = increment field `counter_<clientId>`. Only that client ever writes that field,
+- _Counter edit_ = increment field `counter_<clientId>`. Only that client ever writes that field,
   so the model knows the exact final value regardless of merge order.
 
 Exact model equality, while the real text CRDT still does real concurrent merges underneath.
@@ -276,18 +282,18 @@ No Composer types: they add plugin dependencies and change nothing about sync be
 Preconditions are evaluated on the **model only**; fast-check discards a command whose `check`
 fails at that point in the sequence.
 
-| Action | Precondition (model) | Model effect | System effect |
-| --- | --- | --- | --- |
-| `GoOffline(c)` | `state(c) = online` | `state(c) := offline` | `goOffline()` |
-| `GoOnline(c)` | `state(c) = offline` | `state(c) := online`; resolve pending joins for `identity(c)` | `goOnline()`; redeem stored invitations |
-| `Restart(c)` | `state(c) ≠ down` | `state(c) := online`; resolve pending joins | `destroy()` then `init()` (recovers from disk) |
-| `CreateSpace(c)` | `state(c) = online ∧ |spaces| < maxSpaces` | new space; `members := {identity(c)}`; every other identity → `pending` | `createSpace()` + `shareSpace()`; orchestrator stores the invitation code |
-| `JoinSpace(c, s)` | `state(c) = online ∧ identity(c) ∈ pending(s) ∧ ∃ online admitting device` | move identity `pending → members` | `joinSpace(code)` |
-| `CreateDocument(c, s)` | `state(c) ≠ down ∧ identity(c) ∈ members(s) ∧ docs(s) < maxDocs` | add empty doc | `createDocument()` |
-| `EditText(c, s, d)` | `state(c) ≠ down ∧ member ∧ exists(d) ∧ ¬deleted(d)` | `tokens(d) += tok` | `editDocumentText()` |
-| `EditCounter(c, s, d)` | as `EditText` | `counters(d)[c] += 1` | `editDocumentCounter()` |
-| `DeleteDocument(c, s, d)` | as `EditText` | `deleted(d) := true` | `deleteDocument()` |
-| `Checkpoint` | ≥1 online client | — | quiesce + assert §9-B (D14) |
+| Action                    | Precondition (model)                                                       | Model effect                                                  | System effect                                  |
+| ------------------------- | -------------------------------------------------------------------------- | ------------------------------------------------------------- | ---------------------------------------------- |
+| `GoOffline(c)`            | `state(c) = online`                                                        | `state(c) := offline`                                         | `goOffline()`                                  |
+| `GoOnline(c)`             | `state(c) = offline`                                                       | `state(c) := online`; resolve pending joins for `identity(c)` | `goOnline()`; redeem stored invitations        |
+| `Restart(c)`              | `state(c) ≠ down`                                                          | `state(c) := online`; resolve pending joins                   | `destroy()` then `init()` (recovers from disk) |
+| `CreateSpace(c)`          | `state(c) = online ∧                                                       | spaces                                                        | < maxSpaces`                                   | new space; `members := {identity(c)}`; every other identity → `pending` | `createSpace()` + `shareSpace()`; orchestrator stores the invitation code |
+| `JoinSpace(c, s)`         | `state(c) = online ∧ identity(c) ∈ pending(s) ∧ ∃ online admitting device` | move identity `pending → members`                             | `joinSpace(code)`                              |
+| `CreateDocument(c, s)`    | `state(c) ≠ down ∧ identity(c) ∈ members(s) ∧ docs(s) < maxDocs`           | add empty doc                                                 | `createDocument()`                             |
+| `EditText(c, s, d)`       | `state(c) ≠ down ∧ member ∧ exists(d) ∧ ¬deleted(d)`                       | `tokens(d) += tok`                                            | `editDocumentText()`                           |
+| `EditCounter(c, s, d)`    | as `EditText`                                                              | `counters(d)[c] += 1`                                         | `editDocumentCounter()`                        |
+| `DeleteDocument(c, s, d)` | as `EditText`                                                              | `deleted(d) := true`                                          | `deleteDocument()`                             |
+| `Checkpoint`              | ≥1 online client                                                           | —                                                             | quiesce + assert §9-B (D14)                    |
 
 Notes:
 
@@ -342,29 +348,42 @@ Notes:
 
 ## 11. Parameters (spec)
 
+As implemented (`src/spec/edge-stress/system.ts`). Three departures from the sketch this replaces:
+`fleet` is flat, since `devicesPerIdentity` already carries the identity count; per-command
+`weights` live on the command declarations rather than the spec, so a command's frequency sits next
+to its semantics; and `shrink`/`numRuns` are gone — a sampled sequence has no fast-check shrinker,
+so `plan` replays a hand-shrunk counterexample instead.
+
 ```ts
 type EdgeStressSpec = {
-  platform: Platform;                 // 'nodejs' for now
-  edgeEnv: 'local' | 'preview' | { url: string };
-  fleet: {
-    identities: number;               // 7
-    devicesPerIdentity: number[];     // [2,2,2,1,1,1,1] -> 10 clients
-    agents: boolean;                  // true (D11)
-  };
-  maxSpaces: number;                  // 10
+  platform: Platform; // 'nodejs' for now
+  edge: 'local' | 'dev'; // also selects the default timeouts
+  devicesPerIdentity: number[]; // [2,1] -> 2 identities, 3 clients
+  agents: boolean; // D11
+  maxSpaces: number;
   maxDocumentsPerSpace: number;
-  maxCommands: number;
-  numRuns: number;
-  maxRuntimeMs: number;               // 60 min nightly (D12)
+  maxCommands: number; // executable commands, not drawn ones
+  sampleDraws: number; // pools drawn per seed; the one with the most data ops runs
+  maxRuntimeMs: number;
   quiescenceTimeoutMs: number;
-  weights: { goOffline; goOnline; restart; createSpace; joinSpace; createDocument; editText; editCounter; deleteDocument; checkpoint };
-  shrink: boolean;
-  seed?: string;
+  checkpoints: boolean;
+  partitions: boolean; // off by default while finding 5 stands
+  plan?: string | unknown[]; // replay: inline commands, or a `command-trace.jsonl` path
   cleanup: boolean;
 };
 ```
 
-Nightly defaults (D12): 10 clients / 7 identities / 10 spaces / 60-minute budget / node-only.
+**Every field is optional at the edges and complete in the middle.** `defaultsFor(edge)` in
+`plan.ts` is the only place a default is written down, `resolveSpec` merges the overrides over it
+(reading `edge` first, since it selects them), and `urlsFor(edge)` derives `edgeUrl` and the
+`/hub/` endpoint from that one field so the two halves cannot name different deployments. Both
+inputs are partial and both are merged, never substituted:
+
+- `configs/edge-stress-default.yml` — the one config file, every knob documented and commented out.
+- `--spec '<json>'` — a one-off variant (`{"edge":"dev"}`, `{"cleanup":false}`,
+  `{"plan":"out/<run>/command-trace.jsonl"}`), merged over whichever of the two came first.
+
+Nightly targets (D12): 10 clients / 7 identities / 10 spaces / 60-minute budget / node-only.
 
 ## 12. Environments
 
@@ -389,22 +408,22 @@ every run, and a nightly that leaks all of it is not shippable.
 
 **A. Self-serve, no secrets** — authenticated by the caller's own verifiable presentation:
 
-| Endpoint | Authorization |
-| --- | --- |
-| `DELETE /data/space/:spaceId` | caller must be a member of the space |
-| `DELETE /data/identity/:identity` | caller must be that identity (DID or hex key) |
-| `GET /data/space/:spaceId`, `GET /data/identity/:identity` | same, for verification |
+| Endpoint                                                   | Authorization                                 |
+| ---------------------------------------------------------- | --------------------------------------------- |
+| `DELETE /data/space/:spaceId`                              | caller must be a member of the space          |
+| `DELETE /data/identity/:identity`                          | caller must be that identity (DID or hex key) |
+| `GET /data/space/:spaceId`, `GET /data/identity/:identity` | same, for verification                        |
 
 Deletion is **enqueued**, not synchronous — both answer `202`, so a cleanup pass must poll the
 inspect endpoints rather than trust the response.
 
 **B. Admin-key (`Authorization: Bearer`, `DX_HUB_API_KEY`)** — for sweeping what a crashed run left:
 
-| Endpoint | Use |
-| --- | --- |
-| `GET /admin/spaces`, `GET /admin/identities` | leak detection (paged) |
-| `DELETE /admin/spaces/:spaceId`, `DELETE /admin/identities/:identity` | delete regardless of membership |
-| `POST /admin/selective-purge` | keep-list purge; destructive, dry-run supported |
+| Endpoint                                                              | Use                                             |
+| --------------------------------------------------------------------- | ----------------------------------------------- |
+| `GET /admin/spaces`, `GET /admin/identities`                          | leak detection (paged)                          |
+| `DELETE /admin/spaces/:spaceId`, `DELETE /admin/identities/:identity` | delete regardless of membership                 |
+| `POST /admin/selective-purge`                                         | keep-list purge; destructive, dry-run supported |
 
 The dxos-side client already supports both: `BaseHttpClient` mints VP auth headers from the client
 identity, and `BaseHttpClientOptions.apiKey` sends an admin bearer instead — "for headless callers
@@ -465,25 +484,25 @@ Concrete things the implementation must confirm or fix — found by reading the 
 
 A failure bundle must answer "what happened" without a rerun: the command trace up to the failing
 assertion, the model-vs-client digest diff, every client's sync state at failure time, and each
-client's `agent.log`. Rerunning with the same seed reproduces the same *sequence* (not the same
+client's `agent.log`. Rerunning with the same seed reproduces the same _sequence_ (not the same
 timing); the trace is what turns a nightly failure into a deterministic `examples: [...]` regression
 case in the spec — the pattern the existing stress tests already use.
 
 ## 17. Decisions (review answers, 2026-08-27)
 
-| # | Decision |
-| --- | --- |
-| D1 | **Mixed identity topology** — some clients are additional devices of one identity, others are distinct identities exercising invitations through edge. Both in the same run (§5). |
-| D2 | **Eventually joins** — a client that could not join when a space was created joins at its next opportunity; the final phase forces all pending joins to resolve. |
-| D3 | **ECHO objects** as the document type (not Composer types). |
-| D4 | Edit encoding: whatever gives the strongest assertion — the unique-token + single-writer-counter design stands (§7). |
-| D5 | Delete-wins is the assumed semantics; it is a distributed system, so this is an assumption to be validated, and a violation is a finding to escalate. |
-| D6 | **Both** disconnect kinds: `client.destroy()` (down) *and* a severed transport with the process alive (offline), so **offline edits** are exercised (§6). |
-| D7 | **Edge-only data replication.** |
-| D8 | Nightly is a CI soak job — shrinking off there, available locally (§10). |
-| D9 | **CI runs only against deployed preview edge** — no edge build in CI. |
-| D10 | Cleanup deferred, marked **important**; the edge repo does have the deletion API (§13, verified). |
-| D11 | **Every identity creates an edge agent.** |
-| D12 | Nightly scale: **60 minutes, 10 spaces, 10 clients, some with 2 devices** (7 identities). |
-| D13 | Failure routing decided later. |
-| D14 | **Mid-run checkpoint assertions included.** |
+| #   | Decision                                                                                                                                                                          |
+| --- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| D1  | **Mixed identity topology** — some clients are additional devices of one identity, others are distinct identities exercising invitations through edge. Both in the same run (§5). |
+| D2  | **Eventually joins** — a client that could not join when a space was created joins at its next opportunity; the final phase forces all pending joins to resolve.                  |
+| D3  | **ECHO objects** as the document type (not Composer types).                                                                                                                       |
+| D4  | Edit encoding: whatever gives the strongest assertion — the unique-token + single-writer-counter design stands (§7).                                                              |
+| D5  | Delete-wins is the assumed semantics; it is a distributed system, so this is an assumption to be validated, and a violation is a finding to escalate.                             |
+| D6  | **Both** disconnect kinds: `client.destroy()` (down) _and_ a severed transport with the process alive (offline), so **offline edits** are exercised (§6).                         |
+| D7  | **Edge-only data replication.**                                                                                                                                                   |
+| D8  | Nightly is a CI soak job — shrinking off there, available locally (§10).                                                                                                          |
+| D9  | **CI runs only against deployed preview edge** — no edge build in CI.                                                                                                             |
+| D10 | Cleanup deferred, marked **important**; the edge repo does have the deletion API (§13, verified).                                                                                 |
+| D11 | **Every identity creates an edge agent.**                                                                                                                                         |
+| D12 | Nightly scale: **60 minutes, 10 spaces, 10 clients, some with 2 devices** (7 identities).                                                                                         |
+| D13 | Failure routing decided later.                                                                                                                                                    |
+| D14 | **Mid-run checkpoint assertions included.**                                                                                                                                       |

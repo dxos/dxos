@@ -48,7 +48,20 @@ cd packages/services/edge && pnpm exec tsx scripts/dev.mts \
 # 2. The test (in the dxos repo).
 redis-server --port 6379 &
 cd packages/e2e/blade-runner
-GRAVITY_OUT_BASE=$PWD node --import tsx src/main.ts edgeStress --no-browser --seed <seed> [-s spec.yml]
+GRAVITY_OUT_BASE=$PWD node --import tsx src/main.ts edgeStress --no-browser --seed <seed> \
+  [-s configs/edge-stress-default.yml] [--spec '{"edge":"dev"}']
+```
+
+Every default lives in `defaultsFor` (`src/spec/edge-stress/plan.ts`); `configs/edge-stress-default.yml`
+documents the knobs with all of them commented out, and both it and `--spec` are merged over the
+defaults rather than replacing them. So a variant of a run — another EDGE, cleanup off, partitions
+on, a fixed plan — is a `--spec` flag, not a config file:
+
+```bash
+--spec '{"edge":"dev"}'                              # against dev.dxos.network (DX_HUB_API_KEY for the fallback)
+--spec '{"cleanup":false}'                           # leave state behind for the sweeper
+--spec '{"partitions":true}'                         # include GoOffline/GoOnline/Restart (finding 5)
+--spec '{"plan":"out/<run>/command-trace.jsonl"}'    # replay a failed run's own plan
 ```
 
 Notes that cost time to find:
@@ -73,18 +86,18 @@ spawned** — `makeFleetModel` is pure, so the plan is a function of the seed al
 Every run below planned **25 of 25** commands, against 24 planned / 3–5 executed before the
 generator was fixed.
 
-| Run | Seed | Profile | Executed | Stopped by |
-| --- | --- | --- | --- | --- |
-| A | `run-a-2026-08-31` | full | 6 | replicant 0 crashed — finding 5 |
-| B | `run-b-nopart` | `partitions: false` | 12 | `document not found: s0-d2` — modelling error, fixed |
-| C | `run-b-nopart` | `partitions: false` | 5 | `peers disagree on space 0` at the first checkpoint — barrier too weak, fixed |
-| D | `run-b-nopart` | `partitions: false` | 8 | `sync did not quiesce for space 1 within 60000ms` — finding 6 |
-| E | `run-e-second-seed` | `partitions: false` | 8 | `Cannot modify ECHO object property "0"` — replicant bug, fixed |
-| F | `run-e-second-seed` | `partitions: false` | **25** | final assertion: `differentDocuments: 1` after 21 data operations — finding 6 |
-| G | `run-e-second-seed` | `partitions: false`, **linked stack** | **25** | identical failure to F — finding 6 is not version skew |
-| K | `run-e-second-seed` | linked, single-char tokens | 10 + 1 thrown | command 11: a document client 2 created one command earlier never reached client 0 in 60 s |
-| L | `run-e-second-seed` | linked, single-char tokens | **25** | final assertion, space 1, client 0 only: `differentDocuments: 1` |
-| T | `run-e-second-seed` | linked, declarative `COMMANDS` | 21 + 1 thrown | command 22: two documents client 1 created at 20–21 never reached client 2 (`missingOnLocal` ×2, `missingOnRemote: []`) |
+| Run | Seed                | Profile                               | Executed      | Stopped by                                                                                                              |
+| --- | ------------------- | ------------------------------------- | ------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| A   | `run-a-2026-08-31`  | full                                  | 6             | replicant 0 crashed — finding 5                                                                                         |
+| B   | `run-b-nopart`      | `partitions: false`                   | 12            | `document not found: s0-d2` — modelling error, fixed                                                                    |
+| C   | `run-b-nopart`      | `partitions: false`                   | 5             | `peers disagree on space 0` at the first checkpoint — barrier too weak, fixed                                           |
+| D   | `run-b-nopart`      | `partitions: false`                   | 8             | `sync did not quiesce for space 1 within 60000ms` — finding 6                                                           |
+| E   | `run-e-second-seed` | `partitions: false`                   | 8             | `Cannot modify ECHO object property "0"` — replicant bug, fixed                                                         |
+| F   | `run-e-second-seed` | `partitions: false`                   | **25**        | final assertion: `differentDocuments: 1` after 21 data operations — finding 6                                           |
+| G   | `run-e-second-seed` | `partitions: false`, **linked stack** | **25**        | identical failure to F — finding 6 is not version skew                                                                  |
+| K   | `run-e-second-seed` | linked, single-char tokens            | 10 + 1 thrown | command 11: a document client 2 created one command earlier never reached client 0 in 60 s                              |
+| L   | `run-e-second-seed` | linked, single-char tokens            | **25**        | final assertion, space 1, client 0 only: `differentDocuments: 1`                                                        |
+| T   | `run-e-second-seed` | linked, declarative `COMMANDS`        | 21 + 1 thrown | command 22: two documents client 1 created at 20–21 never reached client 2 (`missingOnLocal` ×2, `missingOnRemote: []`) |
 
 B, C and D share a seed and drew byte-identical `plan` lines across three intervening changes to
 the executor — the generator depends on the seed and nothing else. The seed fixes the sequence,
@@ -151,7 +164,7 @@ EditCounter(0,1,1) EditText(0,0,1,0)
   of what the system can do, and the dispatchers never switch on a tag. The `Command` union is
   the one place the ten are listed, because TypeScript derives a precise union type only from a
   tuple. Slots are plain integers whose range is a parameter
-  of *generation* (uniform over the fleet shape, so draws still collide on the same slot) rather
+  of _generation_ (uniform over the fleet shape, so draws still collide on the same slot) rather
   than of the type; a generated value is decoded through the union, so nothing the declaration
   would not accept can be drawn. Measured identical to the previous factory-built schema: 25/25
   executable on every seed, 14.7 / 20.8 data operations with and without partitions; live, a
@@ -190,8 +203,10 @@ EditCounter(0,1,1) EditText(0,0,1,0)
    - have `EdgeClient.send` throw `EdgeConnectionClosedError` rather than a bare `TimeoutError`
      when the ready trigger times out — the connection is, in fact, not open, and every caller
      already handles that error.
-   The `partitions: false` spec (`configs/edge-stress-no-partitions.yml`) exists to exercise
-   convergence while this stands.
+
+   `partitions` therefore defaults to off, which is what lets convergence be exercised at all while
+   this stands; `--spec '{"partitions":true}'` turns it back on.
+
 6. **A document stops halfway: discovered but never delivered.** Run D, second checkpoint, space 1
    (created by client 2, one document created in it):
 
@@ -213,7 +228,7 @@ EditCounter(0,1,1) EditText(0,0,1,0)
    ```
 
    Run F, which executed the whole sequence, reaches the same wall from the other side — after 21
-   data operations the final assertion finds one document whose *content* differs and stays
+   data operations the final assertion finds one document whose _content_ differs and stays
    different:
 
    ```
@@ -254,6 +269,7 @@ EditCounter(0,1,1) EditText(0,0,1,0)
    warns `unexpected inbound frame type` on the `collection-state` the client sends
    (`echo-network-adapter.ts:198`). `collection-state` predates the catalog pin, so this is not
    version skew.
+
 7. **`POST /db/spaces/:id/notarization` 500s on the local stack** while `GET` on the same path
    succeeds. Seen on every run; the delegated join still completes, so it is not blocking. Not
    filed — needs a look at the local stack's own logs first.
@@ -261,7 +277,7 @@ EditCounter(0,1,1) EditText(0,0,1,0)
 ## 4b. Against deployed dev EDGE (dev.dxos.network)
 
 `edge dev` was redeployed (all 12 workers), and a minimal probe — one identity, one device, one
-space, `configs/edge-stress-dev-probe.yml` — was run against it. Two things came out of it, both
+space — was run against it (`--spec '{"edge":"dev","devicesPerIdentity":[1],"maxSpaces":1,"plan":[...]}'`). Two things came out of it, both
 fixed or characterised; the probe itself failed and its space and identity are still there
 (`BLHSBW7YTLRFZZVFWT4M4MRVX5OO2XJHB`, `did:halo:BDFMLFLXMZ5NOCYIF3VLBN6KYPG5XXEPC`), pending a key.
 
@@ -287,13 +303,14 @@ Setup against dev is fast: identity minted and space created in **4.9 s**, again
 
 ## 4c. Minimal reproduction — and a bug in the test, not the product
 
-`spec.planFile` replays a recorded plan instead of drawing one: the plan trace entry now carries the
+`spec.plan` replays a fixed plan instead of drawing one — the commands inline, or the path of an
+earlier run's `command-trace.jsonl`, whose last `plan` entry is used: the plan trace entry now carries the
 commands structurally as well as readably, and a replayed plan is simulated before execution so an
 edited one reports which command cannot run. That turns a counterexample into a fixture, which a
 sampled sequence otherwise lacks — there is no fast-check shrinker to lean on.
 
-Hand-shrinking run F/G's 25-command plan to five
-(`configs/plans/finding-6-candidate.json`, `configs/edge-stress-finding-6.yml`):
+Hand-shrinking run F/G's 25-command plan to five (the `plan:` block commented in
+`configs/edge-stress-default.yml`):
 
 ```
 CreateSpace(2)  CreateDocument(2, 0)  EditText(0, 0, 0, 0.5)  EditText(1, 0, 0, 0.5)  EditCounter(0, 0, 0)
@@ -311,7 +328,7 @@ client 0 diverged from the model on space 0:
 
 **This was the test's fault, and it was briefly written up here as an Automerge interleaving
 anomaly. It is not one.** `editDocumentText` inserts at `floor(positionRatio * content.length)`
-computed from the client's *local* text. Once a peer has received the first client's six-character
+computed from the client's _local_ text. Once a peer has received the first client's six-character
 token, a ratio of 0.5 resolves to index 3, which is inside it — and splicing the second token there
 produces exactly the observed string, reproduced by arithmetic alone. The runs that passed are the
 ones where the second client had not yet received the first's edit, so both inserted at index 0 and
@@ -327,10 +344,10 @@ the digest reads `[...content]` with no parsing to get wrong.
 
 Measured, same plan, same local stack:
 
-| tokens | runs | diverged |
-| --- | --- | --- |
-| multi-character (`⟦c0-1⟧`) | 5 | 4 |
-| single character | 6 | **0** |
+| tokens                     | runs | diverged |
+| -------------------------- | ---- | -------- |
+| multi-character (`⟦c0-1⟧`) | 5    | 4        |
+| single character           | 6    | **0**    |
 
 Two lessons worth keeping:
 
@@ -344,7 +361,7 @@ Two lessons worth keeping:
 The dev probe (`maxCommands: 1`) drew `plan: []` and exited 0 having executed nothing — the same
 vacuity as the old "24 planned, 3 executed", reached from the other direction: every command except
 `CreateSpace` needs a space to exist, so a short pool can contain nothing runnable at all. `_drawPlan`
-now rejects an empty plan outright, and the probe uses a fixed two-command `planFile` instead of
+now rejects an empty plan outright, and the probe uses a fixed two-command `plan` instead of
 drawing — a probe whose job is to prove cleanup has to create something to clean up.
 
 ### Cleaning up after a run that never got to clean up
@@ -357,8 +374,8 @@ SIGKILL, container loss. Two pieces close that:
 - `scripts/sweep-edge-stress.mjs` replays one or more traces into admin-API deletions
   (`--dry-run` to list without a key; the edge URL comes from each trace's own `run` event).
 
-Proven end to end against the local stack: a `cleanup: false` run
-(`configs/edge-stress-no-cleanup.yml`) left one space and one identity; the sweeper deleted both
+Proven end to end against the local stack: a `--spec '{"cleanup":false,"devicesPerIdentity":[1]}'`
+run left one space and one identity; the sweeper deleted both
 (`accepted`, exit 0). That was also the first live exercise of the admin-key path — a locally
 minted `DX_HUB_API_KEY` in the edge worker's `.env`, sent as `Authorization: Bearer`.
 
@@ -370,16 +387,17 @@ carries a dev-only hatch for exactly this: `POST /account/invitation-code/redeem
 and deliberate **rebind** semantics — gated on `isDevLikeEnvironment`, so it is live on local
 wrangler dev and the deployed dev sandbox and off on preview/labs/staging/production.
 
-Setup now binds every identity when `spec.hubUrl` is set (`bindTestAccount`, via the SDK's
+Setup now binds every identity unconditionally (`bindTestAccount`, via the SDK's
 `HubHttpClient.redeemInvitationCode`), one **fixed alias per identity slot**
 (`test+bladerunner-<slot>@dxos.org`): the email column is unique and rebinds to the newest
 identity, so every run reuses the same account rows and leaves none behind. Both edge origins serve
-the hub under `/hub/` (`http://localhost:8787/hub/`, `https://dev.dxos.network/hub/`).
+the hub under `/hub/`, which is why `spec.edge` names the deployment once and `urlsFor` derives both
+endpoints from it — the two halves cannot be pointed at different deployments.
 
 Verified both ends: locally, both identities bound and `account/email/exists` confirms the rows;
 against **deployed dev**, the probe bound its identity and then **self-serve cleanup succeeded with
 no admin key** — the request that previously answered 403. Reconfirmed on a later container with a
-deterministic two-command probe (`configs/plans/dev-probe.json`):
+deterministic two-command probe (`--spec '{"plan":[{"_tag":"CreateSpace","client":0},{"_tag":"CreateDocument","client":0,"space":0}]}'`):
 
 ```
 {"event":"plan","commands":["CreateSpace(0)","CreateDocument(0, 0)"]}
@@ -449,7 +467,7 @@ sync did not quiesce for space 0 within 60000ms:
 
 So finding 6 stands on its own: it is a convergence defect, not a consequence of running a client
 against older workers. Runs K and L (post token fix, §4c) confirm two more things: it is independent
-of the retracted token-encoding bug, and its *location* is nondeterministic — the same plan stalled
+of the retracted token-encoding bug, and its _location_ is nondeterministic — the same plan stalled
 at command 11 in one run (a fresh document never delivered to a second identity, while the creator's
 log shows `missingOnRemote` naming it for the full window) and completed all 25 in the next, failing
 on a different space at the final assertion. One reading semantics note for the table above: the
