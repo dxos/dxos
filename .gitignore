@@ -8,6 +8,9 @@
 .claude/.mode
 # The focus pin that rides alongside it — a task, so even less repo policy.
 .claude/.focus
+# The phase (discuss|build|debug) and its debug flag — runtime, like the mode.
+.claude/.phase
+.claude/.debug
 # Transitional: pre-rename state file, deleted on first mode.sh run.
 .claude/.response-mode
 

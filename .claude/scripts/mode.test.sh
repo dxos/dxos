@@ -27,6 +27,8 @@ hook="$repo/.claude/hooks/mode.sh"
 script="$repo/.claude/scripts/mode.sh"
 state="$sandbox/.claude/.mode"
 focus="$sandbox/.claude/.focus"
+phase="$sandbox/.claude/.phase"
+debug="$sandbox/.claude/.debug"
 
 pass=0
 fail=0
@@ -44,7 +46,7 @@ check() {
 
 run() { printf '%s' "$1" | bash "$hook"; }
 payload() { jq -nc --arg p "$1" --arg t "${2:-}" '{prompt: $p, transcript_path: $t}'; }
-reset() { rm -f "$state" "$focus"; }
+reset() { rm -f "$state" "$focus" "$phase" "$debug"; }
 pin_state() { [ -e "$focus" ] && printf 'present' || printf 'absent'; }
 
 transcript="$sandbox/transcript.jsonl"
@@ -156,6 +158,26 @@ check '10e get on an unpinned session succeeds' '0' "$(
   bash "$script" focus get > /dev/null 2>&1
   echo $?
 )"
+
+echo '=== 11. the phase subcommand round-trips by hand'
+reset
+check '11a default phase is discuss' 'discuss' "$(bash "$script" phase get)"
+bash "$script" phase set build > /dev/null
+check '11b set build' 'build' "$(bash "$script" phase get)"
+check '11c build leaves debug off' 'off' "$(bash "$script" debug get)"
+bash "$script" phase set debug > /dev/null
+check '11d set debug' 'debug' "$(bash "$script" phase get)"
+check '11e debug turns the flag on' 'on' "$(bash "$script" debug get)"
+bash "$script" phase set discuss > /dev/null
+check '11f discuss clears the flag' 'off' "$(bash "$script" debug get)"
+check '11g bad phase is a usage error' '2' "$(
+  bash "$script" phase set plan > /dev/null 2>&1
+  echo $?
+)"
+printf 'garbage' > "$phase"
+check '11h garbage canonicalises to discuss' 'discuss' "$(bash "$script" phase get)"
+bash "$script" set terse > /dev/null
+check '11i verbosity does not touch the phase' 'garbage' "$(cat "$phase")"
 
 printf '\n%s passed, %s failed\n' "$pass" "$fail"
 [ "$fail" -eq 0 ]

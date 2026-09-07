@@ -26,6 +26,11 @@
 #                          terse first, so a failed pin leaves the session
 #                          unpinned rather than stale)
 #   mode.sh focus clear -> remove the pin
+#   mode.sh phase get   -> print the phase (discuss|build|debug); discuss when unset
+#   mode.sh phase set <discuss|build|debug>
+#                       -> set the phase; debug also sets the debug flag, any
+#                          other phase clears it
+#   mode.sh debug get   -> print the debug flag (on|off)
 #   mode.sh context     -> print the response rules injected into each prompt; the
 #                       invariants are emitted in BOTH modes, only the length
 #                       clause varies. Never silent — a mode that says nothing
@@ -39,6 +44,8 @@ set -euo pipefail
 root="${CLAUDE_PROJECT_DIR:-$(git rev-parse --show-toplevel 2>/dev/null || pwd)}"
 state="$root/.claude/.mode"
 focus="$root/.claude/.focus"
+phase="$root/.claude/.phase"
+debug="$root/.claude/.debug"
 legacy="$root/.claude/.response-mode"
 
 canonical() {
@@ -47,6 +54,28 @@ canonical() {
     *) printf 'normal' ;;
   esac
 }
+
+# Anything that is not build or debug is discuss, so a stale or hand-edited file
+# cannot wedge a session in an unknown phase.
+canonical_phase() {
+  case "$1" in
+    build | debug) printf '%s' "$1" ;;
+    *) printf 'discuss' ;;
+  esac
+}
+read_phase() {
+  [ -e "$phase" ] || return 0
+  cat "$phase" 2>/dev/null || return 1
+}
+current_phase() {
+  local value
+  if ! value=$(read_phase); then
+    printf 'WARNING: %s exists but could not be read; using discuss.\n' "$phase" >&2
+    value=''
+  fi
+  canonical_phase "$value"
+}
+debug_on() { [ -e "$debug" ]; }
 
 # Print the raw stored value; exit 1 when the file exists but cannot be read, so
 # callers can tell "no state" (safe to default) from "unknown state" (never safe
@@ -175,6 +204,31 @@ case "${1:-get}" in
       *) printf 'usage: mode.sh focus {get|set <text>|clear}\n' >&2; exit 2 ;;
     esac
     ;;
+  phase)
+    case "${2:-get}" in
+      get)
+        current_phase; printf '\n'
+        ;;
+      set)
+        case "${3:-}" in
+          discuss | build | debug) next=$3 ;;
+          *) printf 'usage: mode.sh phase set {discuss|build|debug}\n' >&2; exit 2 ;;
+        esac
+        write_file "$phase" "$next" || { printf 'ERROR: could not write %s\n' "$phase" >&2; exit 1; }
+        # The flag rides on the phase: debug turns it on, any other phase turns it off.
+        if [ "$next" = 'debug' ]; then
+          write_file "$debug" 'on' || { printf 'ERROR: could not write %s\n' "$debug" >&2; exit 1; }
+        else
+          rm -f "$debug" 2>/dev/null || { printf 'ERROR: could not clear %s\n' "$debug" >&2; exit 1; }
+        fi
+        printf 'Phase: %s\n' "$(printf '%s' "$next" | tr '[:lower:]' '[:upper:]')"
+        ;;
+      *) printf 'usage: mode.sh phase {get|set <phase>}\n' >&2; exit 2 ;;
+    esac
+    ;;
+  debug)
+    if debug_on; then printf 'on\n'; else printf 'off\n'; fi
+    ;;
   context)
     # Emitted in BOTH modes. The invariants are state-independent, and a rule
     # stated only in always-loaded markdown is diluted to nothing by mid-session
@@ -220,6 +274,6 @@ EOF
 EOF
     ;;
   *)
-    printf 'usage: mode.sh {get|toggle|set <mode>|focus {get|set <text>|clear}|context}\n' >&2; exit 2
+    printf 'usage: mode.sh {get|toggle|set <mode>|focus {get|set <text>|clear}|phase {get|set <phase>}|debug get|context}\n' >&2; exit 2
     ;;
 esac

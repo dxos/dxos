@@ -215,6 +215,14 @@ settled 1x1 with the user; order of delivery is phase → watcher → checklist.
       the foreground guard is an `ask`, never a deny, in every phase.
 - [ ] **Phase axis** — `.claude/.phase` + `.claude/.debug`, `mode.sh phase set`,
       hook branch, `focus` implies `build`, `context` emits the PHASE clause.
+  - [x] **Task 1: backend** — `mode.sh phase get|set {discuss|build|debug}` and
+        `mode.sh debug get`; the debug flag rides on the phase (`debug` sets it,
+        anything else clears it); a stale or hand-edited `.phase` canonicalises to
+        `discuss`. `reset()` in `mode.test.sh` now clears all four state files.
+        `.claude/hooks/mode.sh` untouched — hook wiring and the `context` PHASE
+        clause are later tasks.
+  - [ ] Hook branch + `focus` implies `build`.
+  - [ ] `context` emits the PHASE clause.
 - [ ] **Watcher singleton** — `diagnose.sh` round-robin over `launch.json` ports
       plus 9009/5199, `~/.cache/dxos/watch/{status,watcher.pid}`, `--status`,
       `--restart`; `context` renders SERVERS with a `THIS` marker.
