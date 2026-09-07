@@ -311,9 +311,9 @@ export class EdgeJoinLatency implements TestPlan<EdgeJoinLatencySpec, EdgeJoinLa
    * Every identity deletes itself; the seeder also deletes the space it owns. Nothing throws — a
    * cleanup failure must not mask the measurement.
    *
-   * Two layers, because self-serve is unavailable wherever the test-email hatch is closed: whatever
-   * the identity cannot delete is retried with the admin key. Against preview the first layer
-   * refuses everything and the second is the only one that works.
+   * Self-serve only: the identity signs a verifiable presentation for exactly the data it created.
+   * No admin-key fallback, deliberately — a shared secret that can delete anything is not something
+   * a test should carry, and it would mask the case this cleanup exists to prove.
    */
   private async _cleanup(
     edgeUrl: string,
@@ -335,36 +335,11 @@ export class EdgeJoinLatency implements TestPlan<EdgeJoinLatencySpec, EdgeJoinLa
       }
     }
 
-    const adminKey = process.env.DX_HUB_API_KEY;
-    const stillRefused: string[] = [];
-    for (const id of refused) {
-      if (!adminKey) {
-        stillRefused.push(id);
-        continue;
-      }
-      // Identity DIDs and space ids never collide, so one pass over both is unambiguous.
-      const path = id.startsWith('did:') ? `/admin/identities/${id}` : `/admin/spaces/${id}`;
-      try {
-        const response = await fetch(new URL(path, edgeUrl), {
-          method: 'DELETE',
-          headers: { Authorization: `Bearer ${adminKey}` },
-        });
-        if (response.ok) {
-          accepted++;
-        } else {
-          stillRefused.push(id);
-          log.warn('admin cleanup failed', { path, status: response.status });
-        }
-      } catch (err) {
-        stillRefused.push(id);
-        log.warn('admin cleanup threw', { path, err });
-      }
-    }
-    if (stillRefused.length > 0) {
+    if (refused.length > 0) {
       // Loud: these are real rows left in a shared environment, and the trace is the only record.
-      log.error('cleanup left data behind', { edgeUrl, ids: stillRefused, hasAdminKey: Boolean(adminKey) });
+      log.error('cleanup left data behind', { edgeUrl, ids: refused });
     }
-    log.info('cleanup done', { accepted, refused: stillRefused });
+    log.info('cleanup done', { accepted, refused });
   }
 
   async analyze(

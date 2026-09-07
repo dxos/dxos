@@ -10,11 +10,17 @@ name: EDGE nightly
 # its tail-logger unconnected each successive joiner measured slower than the last — a local run
 # measures wrangler, not EDGE.
 #
-# `DX_HUB_API_KEY` IS REQUIRED HERE. `preview` is not `isDevLikeEnvironment`, so the test-email
-# hatch that binds a run's identities to Hub accounts is closed and every self-serve delete is
-# refused; the admin key is the only thing that removes what a run creates. Both plans refuse to
-# start without it rather than leak (`assertCanCleanUp`). Cleanup runs in the plan's own `finally`,
-# so a failed assertion cleans up too.
+# Cleanup is self-serve only: each identity signs a verifiable presentation and deletes exactly the
+# data it created, with no shared admin secret in CI. That requires the identity to be bound to a
+# Hub account, which is why this runs against `dev`.
+#
+# `preview` CANNOT be the target today, measured rather than assumed: `POST /hub/account/
+# invitation-code/redeem` with a `test+*@dxos.org` email answers 200 on dev and 400
+# `invitation_code_required` on preview, because `PREVIEW` is excluded from `isDevLikeEnvironment`.
+# Without a bound account every self-serve delete is 403, and the invitation-code path is no
+# substitute -- `redeemCode` is single-use and also consumes the email, so a nightly run would burn
+# five codes and five permanently dead account rows every night. `assertCanCleanUp` refuses a
+# non-dev-like target rather than leak. Cleanup runs in the plan's own `finally` and on SIGTERM.
 
 on:
   schedule:
@@ -26,8 +32,8 @@ on:
       edge:
         type: choice
         description: 'Which EDGE to run against'
-        options: [preview, dev, local]
-        default: preview
+        options: [dev, local]
+        default: dev
       objects:
         type: string
         description: 'Join latency: objects in the space under test'
@@ -83,7 +89,6 @@ jobs:
           --health-cmd "redis-cli ping" --health-interval 5s --health-timeout 3s --health-retries 10
     env:
       DX_REDIS_HOST: redis
-      DX_HUB_API_KEY: ${{ secrets.DX_HUB_API_KEY }}
     steps:
       - name: Checkout
         uses: actions/checkout@v5
@@ -102,7 +107,7 @@ jobs:
       - name: Measure join latency
         working-directory: packages/e2e/blade-runner
         env:
-          EDGE: ${{ inputs.edge || 'preview' }}
+          EDGE: ${{ inputs.edge || 'dev' }}
           OBJECTS: ${{ inputs.objects || '100' }}
           JOINERS: ${{ inputs.joiners || '5' }}
         run: |
@@ -145,7 +150,6 @@ jobs:
           --health-cmd "redis-cli ping" --health-interval 5s --health-timeout 3s --health-retries 10
     env:
       DX_REDIS_HOST: redis
-      DX_HUB_API_KEY: ${{ secrets.DX_HUB_API_KEY }}
     steps:
       - name: Checkout
         uses: actions/checkout@v5
@@ -164,7 +168,7 @@ jobs:
       - name: Soak
         working-directory: packages/e2e/blade-runner
         env:
-          EDGE: ${{ inputs.edge || 'preview' }}
+          EDGE: ${{ inputs.edge || 'dev' }}
           MINUTES: ${{ inputs.soak_minutes || '60' }}
           COMMANDS: ${{ inputs.soak_commands || '200' }}
         run: |

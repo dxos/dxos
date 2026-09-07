@@ -46,8 +46,8 @@ export const isDevLikeTarget = (edge: EdgeTarget): boolean => edge === 'local' |
  */
 export const assertCanCleanUp = (edge: EdgeTarget, cleanup: boolean): void => {
   invariant(
-    !cleanup || isDevLikeTarget(edge) || Boolean(process.env.DX_HUB_API_KEY),
-    `${edge} has no test-email hatch, so self-serve cleanup is refused there: set DX_HUB_API_KEY, or pass cleanup:false and accept the leak`,
+    !cleanup || isDevLikeTarget(edge),
+    `${edge} is not a dev-like environment, so an identity cannot bind a Hub account there and the self-serve delete routes answer 403; cleanup would leave every space and identity behind`,
   );
 };
 
@@ -264,12 +264,11 @@ export const quiesce = async (real: Real, spaceSlot: number, clients: ClientInde
 /**
  * Delete what the run created, so a shared environment is left as it was found.
  *
- * Self-serve first: each identity's first device deletes the spaces its identity created and then
- * itself, authenticating with a verifiable presentation it signs (`/data/space/:id`,
- * `/data/identity/:did`). That needs no shared secret — but those routes also require the identity
- * to be bound to a Hub account, and an identity minted by `halo.createIdentity` is not, so against
- * a deployed EDGE they answer 403 (measured on dev). `DX_HUB_API_KEY`, when set, mops up whatever
- * self-serve refused, through the admin API (`Authorization: Bearer`, envelope-wrapped response).
+ * Self-serve only, deliberately. Each identity's first device deletes the spaces its identity
+ * created and then itself (`DELETE /data/space/:id`, `/data/identity/:did`), authenticating with a
+ * verifiable presentation it signs — the credential the run already holds, scoped to exactly the
+ * data it created. There is no admin-key fallback: a shared secret that can delete anything is not
+ * something a test should carry, and having one masks the case this cleanup is supposed to prove.
  *
  * Nothing here throws: a cleanup failure must never mask the run's own result.
  */
@@ -297,30 +296,9 @@ export const cleanupRun = async (model: Model, real: Real): Promise<void> => {
     }
   }
 
-  const adminKey = process.env.DX_HUB_API_KEY;
-  if (refused.length > 0 && adminKey) {
-    for (const id of refused) {
-      // Identity DIDs and space ids never collide, so one pass over both is unambiguous.
-      const path = id.startsWith('did:') ? `/admin/identities/${id}` : `/admin/spaces/${id}`;
-      try {
-        const response = await fetch(new URL(path, real.edgeUrl), {
-          method: 'DELETE',
-          // Canonical `edgeAuth` admin form. `X-Admin-Key` also works today but is legacy and is
-          // rejected wherever a route sets `legacyHeaders: false`.
-          headers: { Authorization: `Bearer ${adminKey}` },
-        });
-        const envelope = (await response.json().catch(() => ({}))) as { success?: boolean; message?: string };
-        if (!response.ok || envelope.success === false) {
-          log.warn('admin cleanup failed', { path, status: response.status, message: envelope.message });
-        } else {
-          accepted++;
-        }
-      } catch (err) {
-        log.warn('admin cleanup threw', { path, err });
-      }
-    }
-  } else if (refused.length > 0) {
-    log.warn('cleanup incomplete and no DX_HUB_API_KEY to fall back on', { refused });
+  if (refused.length > 0) {
+    // Loud: these are real rows left in a shared environment, and the trace is the only record.
+    log.error('cleanup left data behind', { edgeUrl: real.edgeUrl, refused });
   }
 
   // Deletion is enqueued rather than synchronous, so this counts requests accepted, not state gone.
