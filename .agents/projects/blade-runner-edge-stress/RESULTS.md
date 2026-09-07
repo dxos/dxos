@@ -144,11 +144,13 @@ EditCounter(0,1,1) EditText(0,0,1,0)
   which `client.destroy()` hangs 10s in `leaveSwarm`. Each replicant now runs a loopback TCP proxy
   in front of EDGE and cuts it — closer to "no network" anyway, and needs no SDK change. **The SDK
   defect stands and is unfixed**: an `EdgeClient` cannot be restarted once closed.
-- **Operations are static Effect schemas, and each is declared once.** Every command is a
-  module-level `Schema.TaggedStruct` (`GoOffline`, `CreateSpace`, `EditText`, …) joined by one
-  `Schema.Union`, and a single `COMMANDS` table gives each its kind, draw weight, precondition,
-  model transition and fleet action — `commands.ts` reads as a description of what the system can
-  do, and the dispatchers never switch on a tag. Slots are plain integers whose range is a parameter
+- **Each operation is one declaration.** `GoOffline`, `CreateSpace`, `EditText`, … are each a
+  single value built by `command(tag, fields, spec)`: the arguments as a `Schema.TaggedStruct`
+  (what a trace line holds and what a replayed line decodes into) together with the kind, draw
+  weight, precondition, model transition and fleet action — `commands.ts` reads as a description
+  of what the system can do, and the dispatchers never switch on a tag. The `Command` union is
+  the one place the ten are listed, because TypeScript derives a precise union type only from a
+  tuple. Slots are plain integers whose range is a parameter
   of *generation* (uniform over the fleet shape, so draws still collide on the same slot) rather
   than of the type; a generated value is decoded through the union, so nothing the declaration
   would not accept can be drawn. Measured identical to the previous factory-built schema: 25/25

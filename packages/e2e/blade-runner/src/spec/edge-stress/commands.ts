@@ -25,61 +25,9 @@ import {
 import { type Real, BudgetExhausted, awaitSpaceOnAllDevices, runCheckpoint } from './system';
 
 //
-// Vocabulary. One declaration per operation: what may be generated, what a trace line holds, and
-// what a trace line decodes back into.
-//
-
-// Each slot is its own schema instance so the generator can tell them apart by identity; the
-// fleet shape that bounds them is a run-time parameter of generation, not of the type.
-const ClientSlot = Schema.Int.annotate({ identifier: 'ClientSlot' });
-const SpaceSlot = Schema.Int.annotate({ identifier: 'SpaceSlot' });
-const DocumentSlot = Schema.Int.annotate({ identifier: 'DocumentSlot' });
-// Boundary-heavy on purpose: concurrent inserts at the same offset are what exercise text merge.
-const Position = Schema.Literals([0, 0.25, 0.5, 0.75, 0.999]);
-
-export const GoOffline = Schema.TaggedStruct('GoOffline', { client: ClientSlot });
-export const GoOnline = Schema.TaggedStruct('GoOnline', { client: ClientSlot });
-export const Restart = Schema.TaggedStruct('Restart', { client: ClientSlot });
-export const CreateSpace = Schema.TaggedStruct('CreateSpace', { client: ClientSlot });
-export const JoinSpace = Schema.TaggedStruct('JoinSpace', { client: ClientSlot, space: SpaceSlot });
-export const CreateDocument = Schema.TaggedStruct('CreateDocument', { client: ClientSlot, space: SpaceSlot });
-export const EditText = Schema.TaggedStruct('EditText', {
-  client: ClientSlot,
-  space: SpaceSlot,
-  document: DocumentSlot,
-  position: Position,
-});
-export const EditCounter = Schema.TaggedStruct('EditCounter', {
-  client: ClientSlot,
-  space: SpaceSlot,
-  document: DocumentSlot,
-});
-export const DeleteDocument = Schema.TaggedStruct('DeleteDocument', {
-  client: ClientSlot,
-  space: SpaceSlot,
-  document: DocumentSlot,
-});
-export const Checkpoint = Schema.TaggedStruct('Checkpoint', {});
-
-export const Command = Schema.Union([
-  GoOffline,
-  GoOnline,
-  Restart,
-  CreateSpace,
-  JoinSpace,
-  CreateDocument,
-  EditText,
-  EditCounter,
-  DeleteDocument,
-  Checkpoint,
-]);
-export type Command = typeof Command.Type;
-
-type Tag = Command['_tag'];
-type CommandOf<T extends Tag> = Extract<Command, { _tag: T }>;
-
-//
-// Semantics. Each entry is the whole of one operation; the dispatchers below never switch on a tag.
+// What the system can do. Each command below is one declaration: its arguments (the schema, which
+// is also what a trace line holds and what a replayed line decodes back into), when it may run,
+// what it does to the model, and what it does to the fleet.
 //
 
 /**
@@ -94,6 +42,9 @@ export type Transition = {
   documentSlot?: number;
   token?: string;
 };
+
+/** What a command decides beyond the joins and learns it records through `ModelOps`. */
+type Decision = Partial<Omit<Transition, 'joins' | 'learned'>>;
 
 /** The model-side moves every command composes from; each records what it did on the transition. */
 type ModelOps = {
@@ -116,7 +67,7 @@ type CommandKind =
   /** Compares peers mid-run; excluded by `checkpoints: false`. */
   | 'assertion';
 
-type CommandSpec<C extends Command> = {
+type CommandSpec<C> = {
   kind: CommandKind;
   /**
    * Relative draw frequency. A uniform draw spends the whole budget before it tests anything:
@@ -132,8 +83,20 @@ type CommandSpec<C extends Command> = {
   run: (real: Real, command: C, transition: Transition, model: Model) => Promise<void>;
 };
 
-/** What a command decides beyond the joins and learns it records through `ModelOps`. */
-type Decision = Partial<Omit<Transition, 'joins' | 'learned'>>;
+/** Binds a command's arguments to its semantics, so one value describes the whole operation. */
+const command = <Tag extends string, Fields extends Schema.Struct.Fields>(
+  tag: Tag,
+  fields: Fields,
+  spec: CommandSpec<Schema.TaggedStruct<Tag, Fields>['Type']>,
+) => ({ ...spec, schema: Schema.TaggedStruct(tag, fields) });
+
+// Each slot is its own schema instance so the generator can tell them apart by identity; the
+// fleet shape that bounds them is a run-time parameter of generation, not of the type.
+const ClientSlot = Schema.Int.annotate({ identifier: 'ClientSlot' });
+const SpaceSlot = Schema.Int.annotate({ identifier: 'SpaceSlot' });
+const DocumentSlot = Schema.Int.annotate({ identifier: 'DocumentSlot' });
+// Boundary-heavy on purpose: concurrent inserts at the same offset are what exercise text merge.
+const Position = Schema.Literals([0, 0.25, 0.5, 0.75, 0.999]);
 
 const brainOf = (real: Real, client: ClientIndex) => real.replicants[client].brain;
 
@@ -142,8 +105,24 @@ const decided = <T>(value: T | undefined, what: string): T => {
   return value;
 };
 
-export const COMMANDS: { [T in Tag]: CommandSpec<CommandOf<T>> } = {
-  GoOffline: {
+/** Back online, a device joins what it can and catches up on every space its identity already has. */
+const catchUp = (model: Model, client: ClientIndex, { join, learn }: ModelOps): Decision => {
+  for (const slot of resolvablePendingSpaces(model, client)) {
+    join(client, slot);
+  }
+  const identity = identityOf(model, client);
+  model.spaces.forEach((space, slot) => {
+    if (space.members.has(identity)) {
+      learn(slot, identity);
+    }
+  });
+  return {};
+};
+
+export const GoOffline = command(
+  'GoOffline',
+  { client: ClientSlot },
+  {
     kind: 'partition',
     weight: 3,
     check: (model, { client }) => model.clients[client].state === 'online',
@@ -155,8 +134,12 @@ export const COMMANDS: { [T in Tag]: CommandSpec<CommandOf<T>> } = {
       await brainOf(real, client).goOffline();
     },
   },
+);
 
-  GoOnline: {
+export const GoOnline = command(
+  'GoOnline',
+  { client: ClientSlot },
+  {
     kind: 'partition',
     weight: 3,
     check: (model, { client }) => model.clients[client].state === 'offline',
@@ -168,8 +151,12 @@ export const COMMANDS: { [T in Tag]: CommandSpec<CommandOf<T>> } = {
       await brainOf(real, client).goOnline();
     },
   },
+);
 
-  Restart: {
+export const Restart = command(
+  'Restart',
+  { client: ClientSlot },
+  {
     kind: 'partition',
     weight: 2,
     check: (model, { client }) => model.clients[client].state !== 'down',
@@ -181,8 +168,12 @@ export const COMMANDS: { [T in Tag]: CommandSpec<CommandOf<T>> } = {
       await brainOf(real, client).restart();
     },
   },
+);
 
-  CreateSpace: {
+export const CreateSpace = command(
+  'CreateSpace',
+  { client: ClientSlot },
+  {
     kind: 'membership',
     weight: 3,
     check: (model, { client }) =>
@@ -222,8 +213,12 @@ export const COMMANDS: { [T in Tag]: CommandSpec<CommandOf<T>> } = {
       real.trace({ seq: real.counters.commands, detail: 'spaceId', spaceId });
     },
   },
+);
 
-  JoinSpace: {
+export const JoinSpace = command(
+  'JoinSpace',
+  { client: ClientSlot, space: SpaceSlot },
+  {
     kind: 'membership',
     weight: 3,
     check: (model, { client, space }) =>
@@ -238,8 +233,12 @@ export const COMMANDS: { [T in Tag]: CommandSpec<CommandOf<T>> } = {
     // The join itself is a consequence of the transition, performed by `execute` for every command.
     run: async () => {},
   },
+);
 
-  CreateDocument: {
+export const CreateDocument = command(
+  'CreateDocument',
+  { client: ClientSlot, space: SpaceSlot },
+  {
     kind: 'data',
     weight: 4,
     check: (model, { client, space }) =>
@@ -262,8 +261,12 @@ export const COMMANDS: { [T in Tag]: CommandSpec<CommandOf<T>> } = {
       });
     },
   },
+);
 
-  EditText: {
+export const EditText = command(
+  'EditText',
+  { client: ClientSlot, space: SpaceSlot, document: DocumentSlot, position: Position },
+  {
     kind: 'data',
     weight: 8,
     check: (model, { client, space, document }) =>
@@ -284,8 +287,12 @@ export const COMMANDS: { [T in Tag]: CommandSpec<CommandOf<T>> } = {
       });
     },
   },
+);
 
-  EditCounter: {
+export const EditCounter = command(
+  'EditCounter',
+  { client: ClientSlot, space: SpaceSlot, document: DocumentSlot },
+  {
     kind: 'data',
     weight: 5,
     check: (model, { client, space, document }) =>
@@ -303,8 +310,12 @@ export const COMMANDS: { [T in Tag]: CommandSpec<CommandOf<T>> } = {
       });
     },
   },
+);
 
-  DeleteDocument: {
+export const DeleteDocument = command(
+  'DeleteDocument',
+  { client: ClientSlot, space: SpaceSlot, document: DocumentSlot },
+  {
     kind: 'data',
     // Rare: a deleted slot still counts against `maxDocumentsPerSpace`, so frequent deletes starve
     // the run of anything to edit.
@@ -322,37 +333,63 @@ export const COMMANDS: { [T in Tag]: CommandSpec<CommandOf<T>> } = {
       });
     },
   },
+);
 
-  Checkpoint: {
+export const Checkpoint = command(
+  'Checkpoint',
+  {},
+  {
     kind: 'assertion',
     weight: 2,
     check: (model) => model.clients.some((client) => client.state === 'online'),
     advance: () => ({}),
     run: (real, _command, _transition, model) => runCheckpoint(model, real),
   },
-};
+);
 
-/** Back online, a device joins what it can and catches up on every space its identity already has. */
-const catchUp = (model: Model, client: ClientIndex, { join, learn }: ModelOps): Decision => {
-  for (const slot of resolvablePendingSpaces(model, client)) {
-    join(client, slot);
-  }
-  const identity = identityOf(model, client);
-  model.spaces.forEach((space, slot) => {
-    if (space.members.has(identity)) {
-      learn(slot, identity);
-    }
-  });
-  return {};
+// Listed rather than derived from `COMMANDS`: TypeScript takes a precise union type only from a
+// tuple, and this is where `Command` gets its type from.
+export const Command = Schema.Union([
+  GoOffline.schema,
+  GoOnline.schema,
+  Restart.schema,
+  CreateSpace.schema,
+  JoinSpace.schema,
+  CreateDocument.schema,
+  EditText.schema,
+  EditCounter.schema,
+  DeleteDocument.schema,
+  Checkpoint.schema,
+]);
+export type Command = typeof Command.Type;
+
+type Tag = Command['_tag'];
+type CommandOf<T extends Tag> = Extract<Command, { _tag: T }>;
+
+// Keyed by tag so a command can be looked up by what a trace line or a drawn value carries; the
+// annotation is what lets the dispatchers below stay generic over the tag without a cast.
+export const COMMANDS: {
+  [T in Tag]: CommandSpec<CommandOf<T>> & { readonly schema: { readonly fields: Schema.Struct.Fields } };
+} = {
+  GoOffline,
+  GoOnline,
+  Restart,
+  CreateSpace,
+  JoinSpace,
+  CreateDocument,
+  EditText,
+  EditCounter,
+  DeleteDocument,
+  Checkpoint,
 };
 
 //
-// Dispatch. The table above is the only place a tag is interpreted.
+// Dispatch. The declarations above are the only place a command is interpreted.
 //
 
 const specOf = <T extends Tag>(tag: T): CommandSpec<CommandOf<T>> => COMMANDS[tag];
 
-/** Slots are plain integers now, so a plan replayed against a smaller fleet must not index past it. */
+/** Slots are plain integers, so a plan replayed against a smaller fleet must not index past it. */
 const addressesFleet = (command: Command, model: Model): boolean =>
   !('client' in command) || model.clients[command.client] !== undefined;
 
@@ -457,15 +494,6 @@ export const execute = async <T extends Tag>(command: CommandOf<T>, model: Model
   await settleLearned(real, transition.learned);
 };
 
-/** The table is the authority on which tags exist, so it is also what narrows a decoded one. */
-const isTag = (value: unknown): value is Tag => typeof value === 'string' && value in COMMANDS;
-
-const tagOf = (member: (typeof Command.members)[number]): Tag => {
-  const { literal } = member.fields._tag.ast;
-  invariant(isTag(literal), `not a command tag: ${String(literal)}`);
-  return literal;
-};
-
 export const describe = (command: Command): string => {
   const { _tag, ...args } = command;
   const values = Object.values(args);
@@ -483,9 +511,9 @@ export type FleetShape = { clients: number; spaces: number; documents: number };
 /**
  * The weighted generator over the whole vocabulary.
  *
- * Each member's arbitrary is built from its own declared fields, with the three slot schemas bound
- * to the fleet shape and everything else derived from the schema; the result is decoded through
- * `Command`, so a generated value that the declaration would not accept cannot exist.
+ * Each command's arbitrary is built from its own declared fields, with the three slot schemas
+ * bound to the fleet shape and everything else derived from the schema; the result is decoded
+ * through `Command`, so a generated value that the declaration would not accept cannot exist.
  */
 export const makeCommandArbitrary = ({
   checkpoints,
@@ -493,7 +521,7 @@ export const makeCommandArbitrary = ({
   ...shape
 }: FleetShape & { checkpoints: boolean; partitions: boolean }): FastCheck.Arbitrary<Command> => {
   // Uniform over the slots, as the literal unions were: `integer` biases toward small values,
-  // which would concentrate draws on slot 0 instead of colliding across all of them.
+  // which would crowd draws onto slot 0 instead of colliding across the whole fleet.
   const slots = (count: number) =>
     FastCheck.constantFrom(...Array.from({ length: Math.max(count, 1) }, (_, index) => index));
   const bounded = new Map<unknown, FastCheck.Arbitrary<unknown>>([
@@ -502,16 +530,13 @@ export const makeCommandArbitrary = ({
     [DocumentSlot, slots(shape.documents)],
   ]);
   const decode = Schema.decodeUnknownSync(Command);
-  const members = Command.members
-    .filter((member) => {
-      const { kind } = specOf(tagOf(member));
-      return (kind !== 'assertion' || checkpoints) && (kind !== 'partition' || partitions);
-    })
-    .map((member) => ({
-      weight: specOf(tagOf(member)).weight,
+  const members = Object.values(COMMANDS)
+    .filter(({ kind }) => (kind !== 'assertion' || checkpoints) && (kind !== 'partition' || partitions))
+    .map(({ weight, schema }) => ({
+      weight,
       arbitrary: FastCheck.record(
         Object.fromEntries(
-          Object.entries(member.fields).map(([name, field]) => [
+          Object.entries(schema.fields).map(([name, field]) => [
             name,
             bounded.get(field) ?? Schema.toArbitrary(field)(FastCheck),
           ]),
