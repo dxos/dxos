@@ -291,7 +291,7 @@ catalog:
   '@uiw/codemirror-theme-vscode': ^4.25.2
   '@valtown/codemirror-continue': ^2.3.1
   '@valtown/codemirror-ts': ^2.3.1
-  '@vitejs/plugin-react': ^6.0.5
+  '@vitejs/plugin-react': ^6.1.1
   '@vitejs/plugin-react-swc': ^4.3.3
   '@vitest/browser': 4.1.10
   '@vitest/browser-playwright': ^4.1.10
@@ -517,6 +517,7 @@ catalog:
   once: ^1.4.0
   openapi-types: ^12.1.3
   oxc-resolver: ^11.9.0
+  oxc-transform-react: ^0.145.0
   oxlint-tsgolint: ^7.0.2001
   papaparse: ^5.5.3
   parjs: ^1.3.9

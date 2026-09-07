@@ -154,6 +154,7 @@
     "node-fetch": "catalog:",
     "nyc": "catalog:",
     "oxc-resolver": "catalog:",
+    "oxc-transform-react": "catalog:",
     "oxfmt": "^0.63.0",
     "oxlint": "1.78.0",
     "oxlint-tsgolint": "catalog:",
