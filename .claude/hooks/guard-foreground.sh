@@ -35,7 +35,7 @@ matches '(^|[;&|[:space:]])pnpm[[:space:]]+(install|i)([[:space:]]|$)' \
 # A package test without a file argument runs the whole suite.
 matches '(^|[;&|[:space:]])moon[[:space:]]+run[[:space:]]+[^[:space:]:]+:test([[:space:]]*$|[[:space:]]+--[[:space:]]*$)' \
   && exit 0
-matches '(^|[;&|[:space:]])moon[[:space:]]+run[[:space:]]+[^[:space:]]+:serve' \
+matches '(^|[;&|[:space:]])moon[[:space:]]+(run|exec)[[:space:]]+[^[:space:]]+:serve' \
   && ask 'A serve task never exits.'
 matches 'storybook[[:space:]]+dev([[:space:]]|$)' \
   && ask 'storybook dev never exits.'
@@ -44,7 +44,8 @@ matches '(^|[;&|[:space:]])(pnpm[[:space:]]+format|(npx[[:space:]]+)?oxfmt([[:sp
 matches '(^|[;&|[:space:]])until[[:space:]].*;[[:space:]]*do[[:space:]].*sleep' \
   && ask 'A polling loop in the foreground.'
 if matches '(^|[;&|[:space:]])sleep[[:space:]]+[0-9]+'; then
-  seconds=$(printf '%s' "$normalized" | sed -nE 's/.*(^|[;&| ])sleep +([0-9]+).*/\2/p' | head -1)
+  # Take the longest sleep in the command — a short sleep after a long one must not mask it.
+  seconds=$(printf '%s' "$normalized" | grep -oE '(^|[;&| ])sleep +[0-9]+' | grep -oE '[0-9]+' | sort -rn | head -1) || true
   [ -n "$seconds" ] && [ "$seconds" -ge 30 ] && ask "sleep ${seconds}s in the foreground."
 fi
 
