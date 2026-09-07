@@ -12,7 +12,7 @@ import { withPluginManager } from '@dxos/app-framework/testing';
 import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { AppSurface } from '@dxos/app-toolkit/ui';
-import { Obj, Query } from '@dxos/echo';
+import { Obj, Query, Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { DXN } from '@dxos/keys';
 import { promptRunExtension } from '@dxos/plugin-assistant/extensions';
@@ -28,14 +28,11 @@ import { useAsyncEffect } from '@dxos/react-ui';
 import { withLayout } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
 
+import DXOS_CONTENT from '../content/DXOS.md?raw';
 import README_CONTENT from '../content/README.md?raw';
-import { README_DOCUMENT_NAME } from './default-content';
+import { DXOS_DOCUMENT_NAME, DXOS_URI_PLACEHOLDER, README_DOCUMENT_NAME } from './default-content';
 
-/**
- * Contributes the assistant's prompt-run extension so the ```prompt blocks in the README (e.g. the
- * "Create a project…" prompt) render their run button. Clicking it surfaces the prompt text — the
- * story stub logs it rather than spawning a chat, so the interaction is testable without an LLM.
- */
+/** Contributes the prompt-run extension so the README's ```prompt block renders its run button, logging instead of calling an LLM. */
 const PromptExtensionPlugin = Plugin.define(
   Plugin.makeMeta({
     key: DXN.make('org.dxos.plugin.onboarding.story.promptExtension'),
@@ -58,7 +55,8 @@ const PromptExtensionPlugin = Plugin.define(
 const DefaultStory = () => {
   const { invokePromise } = useOperationInvoker();
   const [space] = useSpaces();
-  const [doc] = useQuery(space?.db, Query.type(Markdown.Document));
+  const docs = useQuery(space?.db, Query.type(Markdown.Document));
+  const doc = docs.find((markdownDoc) => markdownDoc.name === README_DOCUMENT_NAME);
   const id = doc && Obj.getURI(doc);
 
   useAsyncEffect(async () => {
@@ -89,7 +87,16 @@ const meta = {
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
               const { defaultSpace } = yield* initializeIdentity(client);
-              defaultSpace.db.add(Markdown.make({ name: README_DOCUMENT_NAME, content: README_CONTENT }));
+              // Mirror the production seeder: create the vision doc first so its URI can be
+              // substituted into the README's placeholder link.
+              const visionDoc = Markdown.make({ name: DXOS_DOCUMENT_NAME, content: DXOS_CONTENT });
+              defaultSpace.db.add(visionDoc);
+              defaultSpace.db.add(
+                Markdown.make({
+                  name: README_DOCUMENT_NAME,
+                  content: README_CONTENT.replace(DXOS_URI_PLACEHOLDER, Ref.make(visionDoc).uri),
+                }),
+              );
               yield* Effect.promise(() => defaultSpace.db.flush({ indexes: true }));
             }),
         }),
