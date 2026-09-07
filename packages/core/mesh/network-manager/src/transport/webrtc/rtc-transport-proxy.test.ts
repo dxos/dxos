@@ -9,7 +9,7 @@ import { Event as AsyncEvent, Trigger, sleep } from '@dxos/async';
 import { TestStream } from '@dxos/async/testing';
 import { ErrorStream } from '@dxos/debug';
 import { PublicKey } from '@dxos/keys';
-import { schema } from '@dxos/protocols/proto';
+import { getBufService } from '@dxos/protocols/buf-service';
 import { type BridgeService } from '@dxos/protocols/proto/dxos/mesh/bridge';
 import { type RpcPort, createLinkedPorts, createProtoRpcPeer } from '@dxos/rpc';
 
@@ -37,11 +37,11 @@ describe.skip('RtcPeerTransportProxy', () => {
       },
     });
     const peer = await setupProxy({}, mockTransport.factory);
-    const errors = handleChannelErrors(peer.proxy);
+    const errorRaised = new Trigger();
+    peer.proxy.errors.handle(() => errorRaised.wake());
     await peer.proxy.open();
-    await sleep(20);
+    await errorRaised.wait();
     expect(peer.proxy.isOpen).toBeFalsy();
-    await errors.expectErrorRaised();
   });
 
   test('transport error before connected closes proxy', async () => {
@@ -50,9 +50,8 @@ describe.skip('RtcPeerTransportProxy', () => {
     const errors = handleChannelErrors(peer.proxy);
     await peer.proxy.open();
     mockTransport.transport.errors.raise(new Error());
-    await sleep(20);
-    expect(peer.proxy.isOpen).toBeFalsy();
     await errors.expectErrorRaised();
+    expect(peer.proxy.isOpen).toBeFalsy();
   });
 
   test('transport close closes proxy', async () => {
@@ -77,7 +76,6 @@ describe.skip('RtcPeerTransportProxy', () => {
       connected = true;
     });
     mockTransport.transport.connected.emit();
-    await sleep(20);
 
     expect(connected).toBeFalsy();
     peer.proxy.errors.assertNoUnhandledErrors();
@@ -90,9 +88,8 @@ describe.skip('RtcPeerTransportProxy', () => {
     await peer.proxy.open();
     await connectAndWaitProxy(peer, mockTransport);
     mockTransport.transport.errors.raise(new Error());
-    await sleep(20);
-    expect(peer.proxy.isOpen).toBeFalsy();
     await errors.expectErrorRaised();
+    expect(peer.proxy.isOpen).toBeFalsy();
   });
 
   test('transport error raised after close is ignored', async () => {
@@ -100,10 +97,8 @@ describe.skip('RtcPeerTransportProxy', () => {
     const peer = await setupProxy({}, mockTransport.factory);
     await peer.proxy.open();
     await connectAndWaitProxy(peer, mockTransport);
-    await sleep(20);
     await closeAndWaitProxy(peer, mockTransport);
     mockTransport.transport.errors.raise(new Error());
-    await sleep(20);
     expect(peer.proxy.isOpen).toBeFalsy();
     peer.proxy.errors.assertNoUnhandledErrors();
   });
@@ -125,7 +120,6 @@ describe.skip('RtcPeerTransportProxy', () => {
     await mockTransport.sendSignalFromTransport({ payload: { data: { type: 'candidate' } } });
     await failed.wait();
 
-    await sleep(20);
     expect(peer.proxy.isOpen).toBeTruthy();
     peer.proxy.errors.assertNoUnhandledErrors();
   });
@@ -149,7 +143,6 @@ describe.skip('RtcPeerTransportProxy', () => {
       await mockTransport.sendSignalFromTransport({ payload: { data: { type } } });
       await failed.wait();
 
-      await sleep(20);
       await errors.expectErrorRaised();
     }
   });
@@ -170,7 +163,6 @@ describe.skip('RtcPeerTransportProxy', () => {
     await peer.proxy.onSignal({ payload: { data: { type: 'offer' } } });
     await failed.wait();
 
-    await sleep(20);
     await errors.expectErrorRaised();
   });
 
@@ -201,11 +193,14 @@ describe.skip('RtcPeerTransportProxy', () => {
     await connectAndWaitProxy(peer, mockTransport);
     mockTransport.stream.push(messageParts[0]);
     mockTransport.stream.push(messageParts[1]);
-    await sleep(20);
     await peer.stream.assertReceivedAsync(Buffer.concat(messageParts));
     await peer.proxy.close();
+    // Confirmed by testing: awaiting close() alone isn't enough — the underlying pipe teardown
+    // needs real settling time before a post-close write is safe (else it throws write-after-end).
     await sleep(20);
     mockTransport.stream.push(Buffer.from('!!!'));
+    // No event signals "no further data arrived": assertReceivedAsync's condition is already
+    // satisfied by the earlier write, so it can't wait for a stray post-close write either.
     await sleep(20);
 
     await peer.stream.assertReceivedAsync(Buffer.concat(messageParts));
@@ -290,7 +285,7 @@ describe.skip('RtcPeerTransportProxy', () => {
     const service = createProtoRpcPeer({
       requested: {},
       exposed: {
-        BridgeService: schema.getService('dxos.mesh.bridge.BridgeService'),
+        BridgeService: getBufService<BridgeService>('dxos.mesh.bridge.BridgeService'),
       },
       handlers: { BridgeService: rtcTransportService },
       port,
@@ -310,7 +305,7 @@ describe.skip('RtcPeerTransportProxy', () => {
   const createClient = async (port: RpcPort) => {
     const rpcClient = createProtoRpcPeer({
       requested: {
-        BridgeService: schema.getService('dxos.mesh.bridge.BridgeService'),
+        BridgeService: getBufService<BridgeService>('dxos.mesh.bridge.BridgeService'),
       },
       port,
       noHandshake: true,

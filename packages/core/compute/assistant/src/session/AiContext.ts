@@ -8,6 +8,7 @@ import * as EArray from 'effect/Array';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
+import * as Order from 'effect/Order';
 import * as Schema from 'effect/Schema';
 import * as Atom from 'effect/unstable/reactivity/Atom';
 import * as AtomRegistry from 'effect/unstable/reactivity/AtomRegistry';
@@ -168,7 +169,7 @@ export class Binder extends Resource {
       return;
     }
 
-    const bindings = this._reduce(items);
+    const bindings = this._reduce(inAppendOrder(items));
 
     log('_updateBindings', {
       items: items.length,
@@ -333,6 +334,9 @@ export class Binder extends Resource {
 
   /**
    * Reduce results into sets of skills and objects.
+   *
+   * Order-sensitive: a later removal must fold after the addition it undoes, so callers pass items
+   * in append order (see {@link inAppendOrder}).
    */
   private _reduce(items: Binding[]): Bindings {
     return Function.pipe(
@@ -401,3 +405,12 @@ export class Binder extends Resource {
       .filter(isNonNullable);
   }
 }
+
+/**
+ * Bindings in the order they were appended, which is the order the fold has to see them: a query
+ * returns an unordered set, so an unsorted fold can apply a removal before the addition it undoes
+ * and silently keep the object bound. Server-assigned position is authoritative; a locally-written
+ * block has none yet and sorts last, which is correct — it is the newest.
+ */
+const inAppendOrder = (items: readonly Binding[]): Binding[] =>
+  EArray.sort(items, Order.mapInput(Order.Number, Feed.getPosition));

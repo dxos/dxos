@@ -5,6 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo } from 'react';
 
+import { withPluginManager } from '@dxos/app-framework/testing';
 import { createObject } from '@dxos/echo-client';
 import { Panel } from '@dxos/react-ui';
 import { AttendableContainer } from '@dxos/react-ui-attention';
@@ -52,6 +53,7 @@ const CONTENT = [
 // Per-column editor config; the column's view mode is taken from `defaultViewMode`.
 type StoryArgs = {
   columns: Markdown.Settings[];
+  content?: string;
 };
 
 const EditorArticle = (props: MarkdownEditorEditorRootProps) => (
@@ -69,7 +71,7 @@ const EditorArticle = (props: MarkdownEditorEditorRootProps) => (
 );
 
 const EditorColumn = ({ id, object, settings }: Pick<MarkdownEditorProviderProps, 'id' | 'object' | 'settings'>) => (
-  <AttendableContainer id={id} tabIndex={0} classNames='dx-container'>
+  <AttendableContainer id={id} tabIndex={0} classNames='dx-expand'>
     <MarkdownEditorProvider
       id={id}
       attendableId={id}
@@ -83,12 +85,12 @@ const EditorColumn = ({ id, object, settings }: Pick<MarkdownEditorProviderProps
 );
 
 // Renders one column per config; all columns bind to the same raw ECHO object, so edits sync live via automerge.
-const DefaultStory = ({ columns }: StoryArgs) => {
+const DefaultStory = ({ columns, content = CONTENT }: StoryArgs) => {
   // An automerge-backed ECHO object created without a client or database.
-  const object = useMemo(() => createObject(Text.make({ content: CONTENT })), []);
+  const object = useMemo(() => createObject(Text.make({ content })), [content]);
 
   return (
-    <div className='dx-container grid' style={{ gridTemplateColumns: `repeat(${columns.length}, minmax(0, 1fr))` }}>
+    <div className='dx-expand grid' style={{ gridTemplateColumns: `repeat(${columns.length}, minmax(0, 1fr))` }}>
       {columns.map((settings, index) => (
         <EditorColumn key={index} id={`${object.id}/${index}`} object={object} settings={settings} />
       ))}
@@ -117,6 +119,24 @@ export const Default: Story = {
         defaultViewMode: 'preview',
       },
     ],
+  },
+};
+
+/**
+ * Reproduces the first-mount path for `dxn:`/`echo:` embeds: the block widget host must exist on
+ * the very first render (no view-mode toggle, no edit). Without a db the component renders its
+ * missing-object placeholder — the assertion is about the widget/decoration layer, not the data.
+ */
+export const WithEmbed: Story = {
+  // The embed widget resolves surfaces/operations, so it needs a (bare) plugin manager.
+  decorators: [withLayout({ layout: 'column' }), withAttention(), withPluginManager({ plugins: [] })],
+  args: {
+    columns: [
+      {
+        defaultViewMode: 'preview',
+      },
+    ],
+    content: ['# Embed', '', 'Inline link: [README](echo:/123)', '', '![Big Game](echo:/456)', ''].join('\n'),
   },
 };
 

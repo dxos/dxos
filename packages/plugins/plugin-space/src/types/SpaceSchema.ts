@@ -9,7 +9,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
 import { type PublicKey } from '@dxos/client';
 import * as Operation from '@dxos/compute/Operation';
-import { Collection, Database, Obj } from '@dxos/echo';
+import { Annotation, Collection, Database, Obj } from '@dxos/echo';
 import { type ComplexMap } from '@dxos/util';
 
 import { meta } from '#meta';
@@ -135,7 +135,12 @@ export interface TypedObjectSerializer<T extends Obj.Unknown = Obj.Unknown> {
  */
 export type CreateObjectResult = {
   id: string;
-  object: Obj.Unknown;
+  /**
+   * Absent where the create only starts the work and the object appears out of band — a connector
+   * handing off to an OAuth popup or a credential dialog is the case in tree. Callers must not
+   * navigate to it without checking.
+   */
+  object?: Obj.Unknown;
 };
 
 /**
@@ -163,4 +168,8 @@ export const SpaceForm = Schema.Struct({
   hue: Schema.optional(Schema.String.annotate({ title: 'Color', [HueAnnotationId]: true })),
   private: Schema.optional(Schema.Boolean.annotate({ title: 'Private space' })),
   edgeReplication: Schema.optional(Schema.Boolean.annotate({ title: 'Enable EDGE Replication' })),
+  /** Id of a contributed `SpaceTemplate`; the picker below the form sets it, so it renders no field. */
+  template: Schema.optional(
+    Schema.String.annotate({ title: 'Template' }).pipe(Annotation.FormInputAnnotation.set(false)),
+  ),
 });

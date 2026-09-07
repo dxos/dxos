@@ -331,7 +331,7 @@ const ScheduleEditor = ({ value, onChange }: { value: ScheduleValue; onChange: (
     //     <div>
     //       <Field label={t('schedule.at.label')}>
     //         <Input.DateTime
-    //           classNames='min-w-0 overflow-hidden'
+    //           classNames='overflow-hidden'
     //           hourCycle={12}
     //           value={value.date ?? ''}
     //           onValueChange={(date) => onChange({ kind: 'once', date: date || undefined })}
@@ -373,7 +373,7 @@ const ScheduleEditor = ({ value, onChange }: { value: ScheduleValue; onChange: (
 
     case 'weekly':
       return (
-        <div className='@container dx-inline-size-container min-w-0 flex justify-between items-center gap-2 overflow-x-auto scrollbar-none'>
+        <div className='@container dx-container-type-inline-size flex justify-between items-center gap-2 overflow-x-auto scrollbar-none'>
           <Field label={t('schedule.at.label')}>
             <Input.Root>
               <Input.Time hourCycle={12} value={value.time} onValueChange={(time) => onChange({ ...value, time })} />

@@ -25,9 +25,9 @@ const itemClassName = 'flex items-center gap-3 px-3 py-2 aria-current:bg-neutral
 
 const Container = ({ classNames, children }: ThemedClassName<PropsWithChildren>) => {
   return (
-    <div className='dx-container grid grid-cols-[1fr_2fr_1fr]'>
+    <div className='dx-expand grid grid-cols-[1fr_2fr_1fr]'>
       <div className='border-e border-separator' />
-      <div className='dx-expander grid grid-rows-[1fr_2fr_1fr]'>
+      <div className='dx-expand grid grid-rows-[1fr_2fr_1fr]'>
         <div className='border-b border-separator' />
         <div className={mx('h-full flex flex-col gap-2', classNames)}>{children}</div>
         <div className='border-t border-separator' />

@@ -90,10 +90,6 @@ export const runWatchSupervisor = ({ entry, args, bundled, execPath }: WatchSupe
     let failed = false;
     let settle: NodeJS.Timeout | undefined;
 
-    const toChild = (line: string) => child.stdin.write(`${line}\n`);
-    const toClient = (message: unknown) => process.stdout.write(`${JSON.stringify(message)}\n`);
-    const note = (message: string) => process.stderr.write(`[dx mcp serve --watch] ${message}\n`);
-
     /** Resumes at most once — `error` and `exit` can both fire for the same dead child. */
     const fail = (error: WatchError) => {
       if (failed || stopping) {
@@ -119,7 +115,7 @@ export const runWatchSupervisor = ({ entry, args, bundled, execPath }: WatchSupe
           pending.add(message.id);
         }
       }
-      toChild(line);
+      child.stdin.write(`${line}\n`);
     };
 
     const flush = () => {
@@ -131,14 +127,18 @@ export const runWatchSupervisor = ({ entry, args, bundled, execPath }: WatchSupe
     /** Completes the replayed handshake and tells the client its surface may have changed. */
     const completeReplay = () => {
       if (initialized) {
-        toChild(JSON.stringify(initialized));
+        child.stdin.write(`${JSON.stringify(initialized)}\n`);
       }
       ready = true;
       flush();
       // Emitted here rather than left to the server: it announces its toolkits while building the
       // layer, which happens before the replay above creates the session to announce them into.
-      toClient({ jsonrpc: '2.0', method: 'notifications/tools/list_changed', params: {} });
-      toClient({ jsonrpc: '2.0', method: 'notifications/prompts/list_changed', params: {} });
+      process.stdout.write(
+        `${JSON.stringify({ jsonrpc: '2.0', method: 'notifications/tools/list_changed', params: {} })}\n`,
+      );
+      process.stdout.write(
+        `${JSON.stringify({ jsonrpc: '2.0', method: 'notifications/prompts/list_changed', params: {} })}\n`,
+      );
     };
 
     // Two windows are accepted as inherent to in-place reload: a frame sent between bun's realm
@@ -155,17 +155,19 @@ export const runWatchSupervisor = ({ entry, args, bundled, execPath }: WatchSupe
         return;
       }
 
-      note(`reloaded, replaying handshake (reload ${starts - 1})`);
+      process.stderr.write(`[dx mcp serve --watch] reloaded, replaying handshake (reload ${starts - 1})\n`);
       ready = false;
       for (const id of pending) {
-        toClient({
-          jsonrpc: '2.0',
-          id,
-          error: { code: RESTART_ERROR_CODE, message: 'Server reloaded; retry the request.' },
-        });
+        process.stdout.write(
+          `${JSON.stringify({
+            jsonrpc: '2.0',
+            id,
+            error: { code: RESTART_ERROR_CODE, message: 'Server reloaded; retry the request.' },
+          })}\n`,
+        );
       }
       pending.clear();
-      toChild(JSON.stringify({ ...initialize, id: REPLAY_ID }));
+      child.stdin.write(`${JSON.stringify({ ...initialize, id: REPLAY_ID })}\n`);
     };
 
     const onClientLine = (line: string) => {
@@ -204,7 +206,7 @@ export const runWatchSupervisor = ({ entry, args, bundled, execPath }: WatchSupe
       }
       if (readyLine.malformed) {
         // Silently arming nothing would look identical to having no dev plugins.
-        note('ready payload malformed; watching nothing');
+        process.stderr.write('[dx mcp serve --watch] ready payload malformed; watching nothing\n');
       }
       onReady(readyLine.watch);
     };
@@ -235,12 +237,14 @@ export const runWatchSupervisor = ({ entry, args, bundled, execPath }: WatchSupe
           );
         } catch (error) {
           // A dev plugin whose directory has been moved or deleted should not take the server down.
-          note(`cannot watch ${path}: ${(error as Error).message}`);
+          process.stderr.write(`[dx mcp serve --watch] cannot watch ${path}: ${(error as Error).message}\n`);
         }
       }
       if (starts === 1) {
-        note(
-          watchers.size > 0 ? `watching ${watchers.size} dev plugin(s)` : 'no dev plugins installed; nothing to watch',
+        process.stderr.write(
+          `[dx mcp serve --watch] ${
+            watchers.size > 0 ? `watching ${watchers.size} dev plugin(s)` : 'no dev plugins installed; nothing to watch'
+          }\n`,
         );
       }
     };
@@ -289,7 +293,9 @@ export const runWatchSupervisor = ({ entry, args, bundled, execPath }: WatchSupe
       child.stderr.on('data', splitLines(onChildError));
       // Surfaced rather than left to throw: a write racing the child's death is EPIPE here, and the
       // exit handler below is what actually reports the failure.
-      child.stdin.on('error', (error) => note(`child stdin: ${error.message}`));
+      child.stdin.on('error', (error) =>
+        process.stderr.write(`[dx mcp serve --watch] child stdin: ${error.message}\n`),
+      );
       child.on('error', (error) =>
         fail(new WatchError({ message: 'Failed to start the watched server.', cause: error })),
       );

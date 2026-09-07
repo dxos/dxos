@@ -35,8 +35,9 @@ Each extension is defined in the Appendix or resolved via its URI.
 | `feat`      | `org.dxos.mdl.feat@1.0`       |
 | `test`      | `org.dxos.mdl.test@1.0`       |
 | `component` | `org.dxos.mdl.component@1.0`  |
-| `op`        | `org.dxos.mdl.op@1.0`         |
+| `op`        | `org.dxos.mdl.op@1.1`         |
 | `service`   | `org.dxos.mdl.service@1.0`    |
+| `flow`      | `org.dxos.mdl.flow@1.0`       |
 
 ## Types
 
@@ -190,6 +191,7 @@ sandbox is involved.
 
 ```mdl
 op verifySpec
+  key: org.dxos.operation.code.verifySpec
   desc: |
     Static verification of a DEUS spec — lint + structural checks. Phase-1
     stub returns `{ ok: true, messages: [] }`. Will eventually delegate to
@@ -200,12 +202,13 @@ op verifySpec
   effects: [echo:read]
   requires: [Database]
   note: |
-    Operation key: `org.dxos.function.code.verify-spec`.
+    Operation key: `org.dxos.operation.code.verifySpec`.
     Exposed as a skill tool on CoderSkill.
 ```
 
 ```mdl
 op runBuildAgent
+  key: org.dxos.operation.code.runBuildAgent
   desc: |
     Dispatches a build of the project via the EDGE BuildAgent. Phase-1 stub
     returns `{ status: "queued" }` without performing any work.
@@ -215,34 +218,37 @@ op runBuildAgent
   effects: [echo:read, http]
   requires: [Database, Credentials]
   note: |
-    Operation key: `org.dxos.function.code.run-build-agent`.
+    Operation key: `org.dxos.operation.code.runBuildAgent`.
     Phase-2: reads the Anthropic API key via Credentials and POSTs to the
     EDGE BuildAgent endpoint configured in Settings.endpoint.
 ```
 
 ```mdl
 op listFiles
+  key: org.dxos.operation.code.listFiles
   desc: List the source files in a CodeProject (path + size).
   input:  { project: Ref<CodeProject> }
   output: { files: { path: string, size: number }[] }   # sorted ascending by path
   effects: [echo:read]
   requires: [Database]
-  note:   Operation key `org.dxos.function.code.list-files`.
+  note:   Operation key `org.dxos.operation.code.listFiles`.
 ```
 
 ```mdl
 op readFile
+  key: org.dxos.operation.code.readFile
   desc: Read the content of a single file in a CodeProject.
   input:  { project: Ref<CodeProject>, path: string }
   output: { path: string, content: string }
   errors: [FileNotFound]
   effects: [echo:read]
   requires: [Database]
-  note:   Operation key `org.dxos.function.code.read-file`.
+  note:   Operation key `org.dxos.operation.code.readFile`.
 ```
 
 ```mdl
 op writeFile
+  key: org.dxos.operation.code.writeFile
   desc: |
     Create or overwrite a file in a CodeProject. Whole-file write — for
     targeted edits, prefer reading first and writing back the new content.
@@ -251,21 +257,23 @@ op writeFile
   output: { path: string, created: boolean }
   effects: [echo:read, echo:write]
   requires: [Database]
-  note:   Operation key `org.dxos.function.code.write-file`.
+  note:   Operation key `org.dxos.operation.code.writeFile`.
 ```
 
 ```mdl
 op deleteFile
+  key: org.dxos.operation.code.deleteFile
   desc: Remove a file from a CodeProject by path.
   input:  { project: Ref<CodeProject>, path: string }
   output: { path: string, deleted: boolean }
   effects: [echo:read, echo:write]
   requires: [Database]
-  note:   Operation key `org.dxos.function.code.delete-file`.
+  note:   Operation key `org.dxos.operation.code.deleteFile`.
 ```
 
 ```mdl
 op scaffoldProject
+  key: org.dxos.operation.code.scaffold
   desc: |
     Seed a CodeProject with a minimal Composer plugin scaffold
     (package.json, src/plugin.ts, README.md). Idempotent — overwrites any
@@ -279,6 +287,7 @@ op scaffoldProject
 
 ```mdl
 op helloWorld
+  key: org.dxos.operation.code.writeHelloWorld
   desc: |
     Sanity-check operation. Writes (or overwrites) a single `src/hello.ts`
     file containing a Hello World program. Used to verify end-to-end that
@@ -288,11 +297,12 @@ op helloWorld
   output: { path: string, created: boolean }
   effects: [echo:read, echo:write]
   requires: [Database]
-  note:   Operation key `org.dxos.function.code.hello-world`.
+  note:   Operation key `org.dxos.operation.code.writeHelloWorld`.
 ```
 
 ```mdl
 op resetProject
+  key: org.dxos.operation.code.reset
   desc: |
     Delete every source file in a CodeProject. Destructive; intended for
     testing and iteration when the agent needs a clean slate. Removes
@@ -307,6 +317,7 @@ op resetProject
 
 ```mdl
 op buildProject
+  key: org.dxos.operation.code.buildProject
   desc: |
     Compile the project's TypeScript sources in-browser. F-12a transpiles a
     single entry file (`src/hello.ts` if present, else `src/plugin.ts`) with
@@ -323,11 +334,12 @@ op buildProject
   }
   effects: [echo:read]
   requires: [Database]
-  note:   Operation key `org.dxos.function.code.build-project`.
+  note:   Operation key `org.dxos.operation.code.buildProject`.
 ```
 
 ```mdl
 op runBuild
+  key: org.dxos.operation.code.runBuild
   desc: |
     Build the project and, on a clean build, execute the entry source on the
     main thread inside a `console`-capturing wrapper. Captures `console.log`
@@ -343,7 +355,7 @@ op runBuild
   }
   effects: [echo:read]
   requires: [Database]
-  note:   Operation key `org.dxos.function.code.run-build`.
+  note:   Operation key `org.dxos.operation.code.runBuild`.
 ```
 
 ## Skills
@@ -796,6 +808,72 @@ test T-18: Multi-file bundle round-trip (F-12b)
   when: op:buildProject is invoked
   then: the result is `{ ok: false, diagnostics: [{severity: "error", message: <unresolved import>}] }`
         (host externals are deferred to F-13)
+```
+
+---
+
+## QA
+
+Executable flows. Each step carries a human instruction (`do`) and, where the step maps to an
+invocable operation, an agent binding (`invoke`). Report failures by flow and step number.
+
+```mdl
+flow QA-1: Scaffold, edit and build a CodeProject
+  desc: |
+    The core round-trip — create a project, scaffold it, hand-edit a file, build/run it, then
+    reset back to empty. `plugin-code` is dev-only: it is enabled by default only in `isDev`
+    builds (composer-app's `getDefaults`), off in production.
+  actors: both
+  covers: [F-2.1, F-2.3, F-8.1, F-9.1, F-11.1, F-11.2, F-12a]
+  status: unverified
+  given:
+    - an identity exists
+    - space: a space is open
+    - collection: a collection in that space, to create into
+    - plugin-code is enabled — dev builds default it on; elsewhere enable it via the plugin
+      registry first
+    - no CodeProject named "QA Project" exists — ABORT rather than deleting one this flow did
+      not create
+  test:
+    - name: Create the project
+      do: In the navtree, click + on a collection and choose Code Project. Name it "QA Project".
+      capture: project
+      expect: a CodeProject named "QA Project" appears under the collection, with an empty Spec
+        referenced and no source files
+      note: |
+        NO `invoke` — there is no create operation for CodeProject (F-2.3 is a navtree action);
+        this step is human-only.
+    - name: Scaffold the project
+      do: Ask the assistant (Coder skill) to scaffold the project, or trigger it from the toolbar.
+      invoke: [op:scaffoldProject] { project: $project.id }
+      capture: scaffolded
+      expect: the file tree shows package.json, src/plugin.ts and README.md
+      assert: return $result.files.some((f) => f.path === 'src/plugin.ts');
+    - name: Write the sanity file
+      do: Ask the assistant to run the Hello World sanity check on the project.
+      invoke: [op:helloWorld] { project: $project.id }
+      expect: src/hello.ts appears in the file tree containing a Hello World program
+      assert: return $result.path === 'src/hello.ts';
+    - name: Read it back
+      do: Click src/hello.ts in the file tree.
+      invoke: [op:readFile] { project: $project.id, path: "src/hello.ts" }
+      expect: the editor opens src/hello.ts and shows the same content the write produced
+      assert: return $result.content.length > 0;
+    - name: Build and run it
+      do: Click "Run" in the CodeArticle toolbar.
+      invoke: [op:runBuild] { project: $project.id }
+      expect: the build succeeds with no error diagnostics and stdout shows the program's output
+      assert: return $result.ok === true && $result.diagnostics.every((d) => d.severity !== 'error');
+  after:
+    - name: Reset the project
+      do: Ask the assistant to reset the project, or use the "Reset" action in the toolbar.
+      invoke: [op:resetProject] { project: $project.id }
+      expect: the file tree is empty
+      assert: return $result.removed > 0;
+    - name: Delete the project
+      do: Right-click "QA Project" in the navtree and choose Delete.
+      invoke: org.dxos.operation.space.removeObjects { objects: [$project.id], target: $given.collection }
+      expect: the row leaves the navtree
 ```
 
 ---

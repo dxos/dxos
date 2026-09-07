@@ -84,7 +84,7 @@ const DefaultStory = (props: StoryArgs) => {
 
   return (
     <Editor.Root>
-      <Editor.View {...props} classNames='dx-container border border-subdued-separator' extensions={extensions} />
+      <Editor.View {...props} classNames='dx-expand border border-subdued-separator' extensions={extensions} />
     </Editor.Root>
   );
 };

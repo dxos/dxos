@@ -66,7 +66,7 @@ describe('Alarm skill', () => {
 
   // The set-alarm operation reaches the live host through HarnessService Tier B. createSession spawns
   // an AgentProcess stamped as the harness host, so invoking the operation against that conversation
-  // dispatches over the process RPC loopback to the host's AlarmManager (no LLM turn required).
+  // dispatches over the process RPC loopback, appending an Alarm record to the feed (no LLM turn required).
   describe('set-alarm operation (Tier B)', () => {
     it.effect(
       'arms a self-wake on the owning host for a relative duration',
@@ -80,7 +80,7 @@ describe('Alarm skill', () => {
           );
 
           // A success message (rather than a NotSupportedError) proves the operation resolved the live
-          // host and the Tier B RPC armed the alarm. Fire timing is covered by the AlarmManager unit
+          // host and the Tier B RPC appended the alarm. Fire timing is covered by the SessionStore
           // tests and the process control-surface test in functions-runtime.
           expect(result).toContain('Alarm scheduled to wake you at');
         },

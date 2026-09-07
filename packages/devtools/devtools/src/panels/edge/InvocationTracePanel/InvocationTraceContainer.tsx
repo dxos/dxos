@@ -15,11 +15,10 @@ import { EncodedReference } from '@dxos/echo-protocol';
 import { Format } from '@dxos/echo/Format';
 import { type URI } from '@dxos/keys';
 import { type SerializedError } from '@dxos/protocols';
-import { Panel, Toolbar } from '@dxos/react-ui';
+import { Panel, Tabs, Toolbar } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { DynamicTable, type TableFeatures, type TablePropertyDefinition } from '@dxos/react-ui-table';
-import { Tabs } from '@dxos/react-ui-tabs';
 import { mx } from '@dxos/ui-theme';
 
 import { DataSpaceSelector } from '../../../containers';
@@ -180,8 +179,8 @@ export const InvocationTraceContainer = composable<HTMLDivElement, InvocationTra
             </Panel.Toolbar>
           )}
           <Panel.Content>
-            <div className='relative flex-1 min-h-0'>
-              <div className={mx('absolute inset-0 overflow-hidden', gridLayout)}>
+            <div className='relative dx-grow'>
+              <div className={mx('dx-fullscreen overflow-hidden', gridLayout)}>
                 <DynamicTable properties={properties} rows={rows} features={features} onRowClick={handleRowClick} />
                 {selectedInvocation && <Selected span={selectedInvocation} />}
               </div>
@@ -213,7 +212,7 @@ const Selected: FC<{ span: InvocationSpan }> = ({ span }) => {
 
   return (
     <Tabs.Root asChild orientation='horizontal' value={activeTab} onValueChange={setActiveTab}>
-      <div className='grid grid-cols-1 grid-rows-[min-content_1fr] min-h-0 overflow-hidden border-separator [&>[role="tabpanel"]]:min-h-0 [&>[role="tabpanel"][data-state="active"]]:grid border-t border-separator'>
+      <div className='grid grid-cols-1 grid-rows-[min-content_1fr] overflow-hidden border-separator [&>[role="tabpanel"]]:min-h-0 [&>[role="tabpanel"][data-state="active"]]:grid border-t border-separator'>
         <Tabs.Tablist classNames='border-b border-separator'>
           <Tabs.Button value='input'>Input</Tabs.Button>
           {isLogQueue && <Tabs.Button value='logs'>Logs</Tabs.Button>}
@@ -222,7 +221,7 @@ const Selected: FC<{ span: InvocationSpan }> = ({ span }) => {
           {span.error && <Tabs.Button value='failure'>Failure</Tabs.Button>}
           {contents === 'execution-graph' && <Tabs.Button value='execution-graph'>Execution Graph</Tabs.Button>}
         </Tabs.Tablist>
-        <Tabs.Panel value='input' classNames='min-h-0 min-w-0 w-full overflow-auto'>
+        <Tabs.Panel value='input' classNames='w-full overflow-auto'>
           <JsonHighlighter data={span.input} />
         </Tabs.Panel>
         {isLogQueue && (
@@ -236,7 +235,7 @@ const Selected: FC<{ span: InvocationSpan }> = ({ span }) => {
           </Tabs.Panel>
         )}
         {isLogQueue && (
-          <Tabs.Panel value='raw' classNames='min-h-0 min-w-0 w-full overflow-auto'>
+          <Tabs.Panel value='raw' classNames='w-full overflow-auto'>
             <RawDataPanel classNames='text-xs' span={span} objects={objects} />
           </Tabs.Panel>
         )}

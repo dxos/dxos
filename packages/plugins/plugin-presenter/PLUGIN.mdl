@@ -17,7 +17,9 @@ Each extension is defined in the Appendix or resolved via its URI.
 | `feat`      | `org.dxos.mdl.feat@1.0`       |
 | `test`      | `org.dxos.mdl.test@1.0`       |
 | `component` | `org.dxos.mdl.component@1.0`  |
-| `op`        | `org.dxos.mdl.op@1.0`         |
+| `op`        | `org.dxos.mdl.op@1.1`         |
+| `flow`      | `org.dxos.mdl.flow@1.0`       |
+| `step`      | `org.dxos.mdl.step@1.0`       |
 
 ## Types
 
@@ -109,6 +111,7 @@ component SlideArticle
 
 ```mdl
 op TogglePresentation
+  key: org.dxos.operation.presenter.setPresenting
   desc: |
     Toggles presentation mode for a Markdown document or Collection.
     Opens the presenter companion node via the Deck plugin, driving the deck's ephemeral
@@ -239,6 +242,58 @@ test T-7: Keyboard shortcut registered
   then:
     - action with key TogglePresentation is present on the node
     - keyBinding shows Shift+Cmd+P on macOS
+```
+
+---
+
+## QA
+
+Executable flows. Each step carries a human instruction (`do`) and, where the step maps to an
+invocable operation, an agent binding (`invoke`). Report failures by flow and step number.
+
+```mdl
+flow QA-1: Present a document and exit
+  desc: The core presenter round-trip — create a document with slide separators, toggle presentation mode on, then off.
+  actors: both
+  covers: [F-1.1, F-1.3, F-2.1, F-2.2, T-1, T-3]
+  status: unverified
+  given:
+    - an identity exists
+    - space: a space is open
+    - collection: a collection in that space, to create into
+    - plugin-presenter is enabled — it is OFF by default (absent from `getDefaults` in
+      `plugin-defs.tsx`), though the plugin itself is registered unconditionally so it always
+      appears in the plugin registry to enable manually
+    - no document named "QA Slides" exists — ABORT rather than deleting one this flow did not create
+  test:
+    - name: Create a document with slides
+      do: In the navtree, click + on a collection and choose Markdown. Name it "QA Slides".
+      invoke: org.dxos.operation.markdown.createDraft { name: "QA Slides", content: "# Slide one\n\n---\n\n# Slide two\n" }
+      capture: created
+      expect: a Document named "QA Slides" now exists with two `---`-separated sections
+      assert: return !!$created.object
+    - name: Place it
+      do: (the navtree create action places it for you)
+      invoke: org.dxos.operation.space.addObject { object: $created.object, target: $given.collection }
+      expect: "QA Slides" appears as a row under the collection
+    - name: Enter presentation mode
+      do: Open "QA Slides", then press Shift+Cmd+P (macOS) / Shift+Alt+P (Windows/Linux).
+      invoke: org.dxos.operation.presenter.setPresenting { object: $created.object, state: true }
+      expect: Composer switches to solo-fullscreen layout; DocumentArticle's RevealPlayer shows "Slide one" with a visible next-slide control
+      assert: return document.body.innerText.includes('Slide one');
+      note: |
+        The runtime op requires `state` (not optional as the `op` block above still documents —
+        there is no "flip" behavior at the operation layer; only the keyboard shortcut toggles).
+    - name: Exit presentation mode
+      do: Press Escape.
+      invoke: org.dxos.operation.presenter.setPresenting { object: $created.object, state: false }
+      expect: Composer navigates back to the ordinary DocumentArticle view for "QA Slides"; RevealPlayer is no longer shown
+      assert: return !document.querySelector('.reveal');
+  after:
+    - name: Delete the document
+      do: Right-click "QA Slides" in the navtree and choose Delete.
+      invoke: org.dxos.operation.space.removeObjects { objects: [$created.object], target: $given.collection }
+      expect: the row leaves the navtree and its plank closes
 ```
 
 ---

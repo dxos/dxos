@@ -72,14 +72,6 @@ export const EdgeTracesSurface = () => {
 
 export const EdgeTestingSurface = () => {
   const { invokePromise } = useOperationInvoker();
-  const onSpaceCreate = useCallback(
-    async (space: Space) => {
-      await space.waitUntilReady();
-      await invokePromise(SpaceOperation.Migrate, { space });
-      await space.db.flush();
-    },
-    [invokePromise],
-  );
   const onScriptPluginOpen = useCallback(
     async (space: Space) => {
       await space.waitUntilReady();
@@ -101,5 +93,5 @@ export const EdgeTestingSurface = () => {
     [invokePromise],
   );
 
-  return <TestingPanel onSpaceCreate={onSpaceCreate} onScriptPluginOpen={onScriptPluginOpen} />;
+  return <TestingPanel onScriptPluginOpen={onScriptPluginOpen} />;
 };

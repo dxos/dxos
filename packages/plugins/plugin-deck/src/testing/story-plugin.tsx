@@ -278,7 +278,7 @@ const NavContainer = forwardRef<HTMLDivElement, NavContainerProps>((_props, forw
   const activeSet = useMemo(() => new Set(layout.active), [layout.active]);
 
   return (
-    <div className='dx-container overflow-y-auto p-2' ref={forwardedRef}>
+    <div className='dx-expand overflow-y-auto p-2' ref={forwardedRef}>
       <Listbox.Root>
         <Listbox.Content aria-label='Navigation'>
           {items.map((node) => (

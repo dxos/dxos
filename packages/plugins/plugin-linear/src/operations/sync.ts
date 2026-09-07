@@ -85,7 +85,9 @@ type TaskSnapshot = {
   description: string;
   status: 'todo' | 'started' | 'done';
   priority: 'low' | 'medium' | 'high' | 'urgent' | undefined;
-  estimate: number | undefined;
+  // The size, not Linear's points: the snapshot is what a later sync compares the local field
+  // against, and comparing a size to a point count would report every task as diverged.
+  estimate: Task.Estimate | undefined;
 };
 
 // Per-field three-way merge primitives are shared with other integration plugins (Trello, GitHub)
@@ -264,7 +266,7 @@ export const upsertTask = Effect.fn('upsertTask')(function* (
     description: issue.description ?? '',
     status,
     priority,
-    estimate: issue.estimate ?? undefined,
+    estimate: LinearApi.estimatePointsToTaskEstimate(issue.estimate ?? undefined),
   };
 
   const existing = yield* findByForeignId<Task.Task>(Task.Task, issue.id);
@@ -294,7 +296,9 @@ export const upsertTask = Effect.fn('upsertTask')(function* (
       remoteFields.priority,
       snapshotField(snapshot, 'priority'),
     );
-    const estimateResult = mergeField<number | undefined>(
+    // Compared as sizes: the snapshot and remote sides are mapped on the way in, so all three
+    // arms of the merge speak the same vocabulary.
+    const estimateResult = mergeField<Task.Estimate | undefined>(
       existing.estimate,
       remoteFields.estimate,
       snapshotField(snapshot, 'estimate'),
@@ -343,7 +347,7 @@ export const upsertTask = Effect.fn('upsertTask')(function* (
     description: issue.description ?? '',
     status,
     priority,
-    estimate: issue.estimate ?? undefined,
+    estimate: LinearApi.estimatePointsToTaskEstimate(issue.estimate ?? undefined),
     milestone: milestone ? Ref.make(milestone) : undefined,
   });
   const persisted = yield* Database.add(created);
@@ -494,7 +498,7 @@ export const pushTeamUpdates: <E, R>(
         // Send `null` when the user cleared the estimate locally; Linear
         // treats explicit `null` as a clear (undefined would leave it
         // unchanged on the remote).
-        input.estimate = localEstimate ?? null;
+        input.estimate = LinearApi.taskEstimateToEstimatePoints(localEstimate) ?? null;
         diverged = true;
       }
       if (!diverged) {
@@ -654,10 +658,7 @@ const syncTeamBinding = Effect.fn(function* (binding: Cursor.ExternalCursor) {
           tasks: syncResult.success.pushedTasks,
         },
       };
-    }).pipe(
-      Effect.provide(Database.layer(db)),
-      Effect.provide(LinearApi.LinearCredentials.fromAccessToken(binding.spec.source)),
-    ),
+    }).pipe(Effect.provide(Database.layer(db)), Effect.provide(LinearApi.fromAccessToken(binding.spec.source))),
   );
 
   if (outcome._tag === 'Success') {

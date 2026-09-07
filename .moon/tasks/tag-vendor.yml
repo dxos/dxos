@@ -1,21 +1,29 @@
 # For vendored deps.
 # I.e. external deps that we pre-build in our monorepo to eliminate tooling inconsistencies.
+#
+# Same single-pass vite build as `ts-vite-build`, minus declaration emit: these packages are
+# JavaScript with hand-written `.d.ts` alongside the sources, so there is nothing for `tsc`
+# to read. Their `vite.config.ts` sets `declarations: false` to match.
 
 $schema: https://moonrepo.dev/schemas/tasks.json
 tasks:
   build:
-    command: pnpm exec dx-compile
-    args:
-      - --outputPath=dist/lib
+    command: pnpm exec vite build --logLevel silent
     deps:
-      - dx-compile:build
+      - esbuild-plugins:build
+      - vite-plugin-import-source:build
       - ^:build
     inputs:
+      - /tsconfig.base.json
+      - /vite.base.config.ts
+      - /vitest.base.config.ts
+      - /tools/vite-plugin-log/src/**/*
+      - vite.config.ts
       - '@group(production)'
     outputs:
       - dist/lib/
     options:
-      timeout: 10
+      timeout: 60
 
 inheritedBy:
   tags: vendor

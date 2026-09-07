@@ -19,6 +19,8 @@ Each extension is defined in the Appendix or resolved via its URI.
 | `test`      | `org.dxos.mdl.test@1.0`       |
 | `component` | `org.dxos.mdl.component@1.0`  |
 | `op`        | `org.dxos.mdl.op@1.0`         |
+| `flow`      | `org.dxos.mdl.flow@1.0`       |
+| `step`      | `org.dxos.mdl.step@1.0`       |
 
 ## Types
 
@@ -188,6 +190,57 @@ test T-5: Plugin activates on markdown event
   given: MermaidPlugin and ProcessManagerPlugin are loaded
   when: MarkdownEvents.SetupExtensions fires
   then: the markdown module is in the active module list
+```
+
+---
+
+## QA
+
+Executable flows. Each step carries a human instruction (`do`) and, where the step maps to an
+invocable operation, an agent binding (`invoke`). Report failures by flow and step number.
+
+```mdl
+flow QA-1: A Mermaid fence renders and re-renders after edit
+  desc: |
+    The plugin contributes no operation of its own — `renderDiagram` is a CodeMirror widget
+    callback into the Mermaid JS API, not an invocable op — so this flow drives the fixture
+    through plugin-markdown's real operations and asserts on the rendered DOM.
+  actors: both
+  covers: [F-1.1, F-1.2, F-1.3, F-2.1, F-2.2, T-1, T-2, T-3]
+  status: unverified
+  given:
+    - an identity exists
+    - space: a space is open
+    - collection: a collection in that space, to create into
+    - no document named "QA Mermaid" exists — ABORT rather than deleting one this flow did not create
+  test:
+    - name: Create a document with a Mermaid fence
+      do: In the navtree, click + on a collection and choose Markdown. Name it "QA Mermaid".
+      invoke: org.dxos.operation.markdown.createDraft { name: "QA Mermaid", content: "# QA Mermaid\n\n```mermaid\ngraph TD; A-->B;\n```\n" }
+      capture: created
+      expect: a Document named "QA Mermaid" now exists with that body
+      assert: return !!$created.object
+    - name: Place and open it
+      id: open
+      do: (the navtree create action places it for you) Click "QA Mermaid" in the navtree.
+      invoke: org.dxos.operation.space.addObject { object: $created.object, target: $given.collection }
+      expect: the fenced block is replaced by a rendered SVG diagram widget, and no error text is shown
+      note: Coalesced — placement, opening, and the render assertion below all need the live editor DOM, not a serializable result.
+      assert: return !!document.querySelector('.cm-mermaid-widget svg, [data-mermaid] svg');
+    - name: Move the cursor into the fence
+      do: Click inside the fenced code block, between the backtick lines.
+      expect: the raw ```mermaid source is revealed and the rendered widget is hidden
+      note: NO `invoke` — this exercises `cm-mermaid-hidden` toggling on real cursor movement, which the debug port cannot synthesize (CodeMirror ignores synthetic input events).
+    - name: Correct the diagram source
+      do: Move the cursor out of the fence, then back in and change the arrow to a labeled edge, e.g. `A-->|yes| B`.
+      invoke: org.dxos.operation.markdown.update { doc: $created.object, edits: [{ oldString: "A-->B;", newString: "A-->|yes| B;" }] }
+      expect: the widget re-renders with the new edge label and no error text appears
+      assert: return $result.newContent.includes('A-->|yes| B;');
+  after:
+    - name: Delete the document
+      do: Right-click "QA Mermaid" in the navtree and choose Delete.
+      invoke: org.dxos.operation.space.removeObjects { objects: [$created.object], target: $given.collection }
+      expect: the row leaves the navtree and the open plank closes
 ```
 
 ---

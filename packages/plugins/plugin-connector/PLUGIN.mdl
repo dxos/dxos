@@ -24,7 +24,8 @@ Each extension is defined in the Appendix or resolved via its URI.
 | `feat`      | `org.dxos.mdl.feat@1.0`       |
 | `test`      | `org.dxos.mdl.test@1.0`       |
 | `component` | `org.dxos.mdl.component@1.0`  |
-| `op`        | `org.dxos.mdl.op@1.0`         |
+| `op`        | `org.dxos.mdl.op@1.1`         |
+| `flow`      | `org.dxos.mdl.flow@1.0`       |
 
 ## Types
 
@@ -202,13 +203,18 @@ component CustomTokenDialog
 
 ```mdl
 op CreateIntegration
+  key: org.dxos.operation.connector.createConnection
   desc: Creates a new Integration bound to an existing AccessToken.
   input:
     accessToken: Ref<AccessToken>
     name?: string
   output: Integration
   effects: [echo:write]
-  note: Derives the target Database from the accessToken ref's object graph.
+  note: |
+    Derives the target Database from the accessToken ref's object graph. The runtime operation
+    and its Effect types are named `Connection` (`@dxos/link`), while this document's types and
+    coordinator flow still say `Integration` — the key is real, the class-name drift is not this
+    change's to fix.
 ```
 
 ```mdl
@@ -442,6 +448,66 @@ test T-10: onTokenCreated failure does not abort finalize
     - error is logged with log.warn
     - AccessToken and Integration are still persisted
     - navigation to Integration article still occurs
+```
+
+## QA
+
+Executable flows. Each step carries a human instruction (`do`) and, where the step maps to an
+invocable operation, an agent binding (`invoke`). Report failures by flow and step number.
+
+```mdl
+flow QA-1: Bind an access token to a new Integration and configure targets
+  desc: |
+    plugin-connector is core infrastructure (`getCorePlugins` in composer-app), always active —
+    there is no "enable it first" precondition, unlike a content plugin. This flow drives the
+    generic create-form path (F-8): an AccessToken already exists (from a prior OAuth or
+    custom-token flow, covered informally by F-2/F-4 — those coordinator flows involve a real
+    popup or redirect and are exercised by a human, not scripted here), and creating the
+    Integration/Connection object from it is the one step with a real operation behind it.
+  actors: human
+  covers: [F-6.1, F-6.2, F-7.1, F-7.2, F-8.1, F-8.2]
+  status: unverified
+  given:
+    - an identity exists
+    - space: a space is open
+    - collection: a collection in that space, to create into
+    - accessToken: an unbound AccessToken exists in the space for a registered provider — added
+      directly via `space.db.add(AccessToken.make({ source, scopes, token }))`, NOT through
+      Settings -> Connections' credential-form dialog, whose `submitCredentialForm` always
+      persists a bound Connection in the same submit (see `connector-coordinator.ts`), which
+      would violate the next precondition
+    - no Integration bound to that AccessToken exists yet — ABORT rather than deleting one this
+      flow did not create
+  test:
+    - name: Create the Integration from the token
+      do: In the navtree, click + on a collection and choose Integration. Pick the provider in
+        the dropdown (F-8's SelectField, populated live from registered IntegrationProvider
+        entries) and select the existing access token.
+      invoke: org.dxos.operation.connector.createConnection { accessToken: Ref.make($given.accessToken), name: "QA Integration" }
+      capture: created
+      expect: an Integration named "QA Integration" appears under the collection, and Composer
+        navigates to its article in the active Deck
+      assert: return !!$created;
+    - name: Inspect the article
+      do: Confirm the IntegrationArticle is open.
+      expect: the article lists the Integration's targets (initially none) with name / lastSyncAt
+        / lastError columns
+    - name: Add sync targets
+      do: Click "Add targets" and confirm a selection in the SyncTargetsChecklist dialog.
+      expect: the target list updates with the chosen rows, each showing a fresh (empty)
+        lastSyncAt until the provider's next sync
+      note: |
+        NO `invoke` — target reconciliation (`op:SetIntegrationTargets` in this document) is not
+        a registered operation in the runtime; it is `reconcileCursors`, called directly from the
+        dialog's submit handler with no DXN key, so it cannot be driven through the invoker. This
+        step is human-only.
+  after:
+    - name: Delete the Integration
+      do: In the IntegrationArticle, click "Delete" (or right-click the row in the navtree and
+        choose Delete).
+      invoke: org.dxos.operation.space.removeObjects { objects: [$created], target: $given.collection }
+      expect: the Integration and its AccessToken are removed from ECHO (F-7.4) and the row
+        leaves the navtree
 ```
 
 ---

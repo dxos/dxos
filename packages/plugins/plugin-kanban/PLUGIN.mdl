@@ -17,7 +17,9 @@ Each extension is defined in the Appendix or resolved via its URI.
 | `feat`      | `org.dxos.mdl.feat@1.0`        |
 | `test`      | `org.dxos.mdl.test@1.0`        |
 | `component` | `org.dxos.mdl.component@1.0`   |
-| `op`        | `org.dxos.mdl.op@1.0`          |
+| `op`        | `org.dxos.mdl.op@1.1`          |
+| `flow`      | `org.dxos.mdl.flow@1.0`        |
+| `step`      | `org.dxos.mdl.step@1.0`        |
 
 ## Types
 
@@ -130,6 +132,7 @@ component KanbanSettings
 
 ```mdl
 op deleteCard
+  key: org.dxos.operation.kanban.deleteCard
   desc: Removes a card object from the ECHO database.
   input:
     card: object               # the card to remove
@@ -139,6 +142,7 @@ op deleteCard
 
 ```mdl
 op deleteCardField
+  key: org.dxos.operation.kanban.deleteCardField
   desc: Removes a field projection from the View's schema; returns enough data to undo.
   input:
     view: View
@@ -150,6 +154,7 @@ op deleteCardField
 
 ```mdl
 op restoreCard
+  key: org.dxos.operation.kanban.restoreCard
   desc: Undo counterpart to deleteCard — re-adds a previously removed card to the database.
   input:
     card: object               # the card snapshot to restore
@@ -159,6 +164,7 @@ op restoreCard
 
 ```mdl
 op restoreCardField
+  key: org.dxos.operation.kanban.restoreCardField
   desc: Undo counterpart to deleteCardField — re-inserts a field projection at its original index.
   input:
     view: View
@@ -329,6 +335,59 @@ test T-7: Switch pivot column field
   then:
     - View.projection.pivotFieldId updated to "priority"
     - board re-renders with columns derived from "priority" enum values
+```
+
+## QA
+
+Executable flows. Each step carries a human instruction (`do`) and, where the step maps to an
+invocable operation, an agent binding (`invoke`). Report failures by flow and step number.
+
+```mdl
+flow QA-1: Create a board, add a card, delete and restore it
+  desc: The core kanban round-trip — create a view-variant board over a single-select field, add a
+    card, then exercise the one destructive/undo op pair the plugin ships.
+  actors: human
+  covers: [F-1.1, F-3.1, F-3.2, F-3.3]
+  status: unverified
+  given:
+    - an identity exists
+    - space: a space is open
+    - collection: a collection in that space, to create into
+    - a custom ECHO type with a single-select field "status" (e.g. Tasks) exists in the space
+    - no Kanban named "QA Board" exists — ABORT rather than deleting one this flow did not create
+    - board: the Kanban "QA Board" this flow creates — no create op exists (human-only step), so
+      the runner binds this once that step completes
+    - card: the card added to the board — no create op exists (human-only step), so the runner
+      binds this once that step completes
+  test:
+    - name: Create the board
+      do: In the navtree, click + on a collection and choose Kanban. Name it "QA Board", pick the
+        typename with a "status" field, and select "status" as the pivot column.
+      expect: a Kanban named "QA Board" appears with columns matching "status"'s enum values
+      note: |
+        NO `invoke` — no create operation is registered for kanban (op:deleteCard and its siblings
+        are the only ops this plugin ships); the board and its View are created by the UI factory.
+        This step is human-only.
+    - name: Add a card
+      do: Click "Add card" in the first column.
+      expect: a new card appears at the bottom of that column, with its pivot field set to the
+        column's value
+      note: NO `invoke` — addCard is a KanbanArticle component action, not a registered op.
+    - name: Delete the card
+      do: Right-click the new card and choose Delete (or trigger the undo-capable delete action).
+      invoke: [op:deleteCard] { card: $given.card }
+      capture: deleted
+      expect: the card is removed from the board and from the ECHO database
+      assert: return !!$deleted.card
+    - name: Restore the card
+      do: Trigger Undo.
+      invoke: [op:restoreCard] { card: $deleted.card }
+      expect: the card reappears in its original column
+  after:
+    - name: Delete the board
+      do: Right-click "QA Board" in the navtree and choose Delete.
+      invoke: org.dxos.operation.space.removeObjects { objects: [$given.board], target: $given.collection }
+      expect: the row leaves the navtree
 ```
 
 ---

@@ -36,13 +36,13 @@ describe('InvitationStateMachine', () => {
   });
 
   test('invitation delegated', async () => {
-    const stateMachine = createStateMachine();
+    const stateMachine = new InvitationStateMachine();
     await stateMachine.process(await delegateInvitation(baseInvitation));
     expectHasInvitation(stateMachine, baseInvitation);
   });
 
   test('multiple invitations', async () => {
-    const stateMachine = createStateMachine();
+    const stateMachine = new InvitationStateMachine();
     const invitations = range(3, () => ({ ...baseInvitation, invitationId: PublicKey.random().toHex() }));
     await Promise.all(
       invitations.map(async (invitation) => {
@@ -53,7 +53,7 @@ describe('InvitationStateMachine', () => {
   });
 
   test('expired invitations are ignored', async () => {
-    const stateMachine = createStateMachine();
+    const stateMachine = new InvitationStateMachine();
     await stateMachine.process(
       await delegateInvitation({
         ...baseInvitation,
@@ -64,7 +64,7 @@ describe('InvitationStateMachine', () => {
   });
 
   test('single use invitation redeemed when a member joins', async () => {
-    const stateMachine = createStateMachine();
+    const stateMachine = new InvitationStateMachine();
     const delegatedInvitation = await delegateInvitation(baseInvitation);
     await stateMachine.process(delegatedInvitation);
     await stateMachine.process(await admitMember(delegatedInvitation));
@@ -72,7 +72,7 @@ describe('InvitationStateMachine', () => {
   });
 
   test('invitation stays if unrelated admission credential', async () => {
-    const stateMachine = createStateMachine();
+    const stateMachine = new InvitationStateMachine();
     const unrelatedInvitation = await delegateInvitation({
       ...baseInvitation,
       invitationId: PublicKey.random().toHex(),
@@ -83,7 +83,7 @@ describe('InvitationStateMachine', () => {
   });
 
   test('multi-use invitations', async () => {
-    const stateMachine = createStateMachine();
+    const stateMachine = new InvitationStateMachine();
     const multiUseInvitation = { ...baseInvitation, multiUse: true };
     const delegatedInvitation = await delegateInvitation(multiUseInvitation);
     await stateMachine.process(delegatedInvitation);
@@ -93,7 +93,7 @@ describe('InvitationStateMachine', () => {
   });
 
   test('explicit cancellation', async () => {
-    const stateMachine = createStateMachine();
+    const stateMachine = new InvitationStateMachine();
     const delegatedInvitation = await delegateInvitation(baseInvitation);
     await stateMachine.process(delegatedInvitation);
     await stateMachine.process(await cancelInvitation(delegatedInvitation));
@@ -101,7 +101,7 @@ describe('InvitationStateMachine', () => {
   });
 
   test('out of order joining', async () => {
-    const stateMachine = createStateMachine();
+    const stateMachine = new InvitationStateMachine();
     const delegatedInvitation = await delegateInvitation(baseInvitation);
     await stateMachine.process(await admitMember(delegatedInvitation));
     await stateMachine.process(delegatedInvitation);
@@ -109,7 +109,7 @@ describe('InvitationStateMachine', () => {
   });
 
   test('out of order cancellation', async () => {
-    const stateMachine = createStateMachine();
+    const stateMachine = new InvitationStateMachine();
     const delegatedInvitation = await delegateInvitation(baseInvitation);
     await stateMachine.process(await cancelInvitation(delegatedInvitation));
     await stateMachine.process(delegatedInvitation);
@@ -162,5 +162,3 @@ describe('InvitationStateMachine', () => {
     });
   };
 });
-
-const createStateMachine = () => new InvitationStateMachine();

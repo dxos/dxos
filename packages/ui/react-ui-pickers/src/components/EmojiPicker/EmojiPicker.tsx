@@ -4,9 +4,9 @@
 
 import './emoji.css';
 
-import { useControllableState } from '@radix-ui/react-use-controllable-state';
 import React, { Suspense, lazy, useState } from 'react';
 
+import { useControllableState } from '@dxos/react-hooks';
 import {
   Button,
   ButtonGroup,

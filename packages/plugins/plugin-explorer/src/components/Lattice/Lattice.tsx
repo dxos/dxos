@@ -76,7 +76,7 @@ export const Lattice = ({ nodes, padding = 16, onNodeHover }: LatticeProps) => {
   }, [cells, width, height, padding]);
 
   return (
-    <div ref={setRef} className='dx-expander relative'>
+    <div ref={setRef} className='dx-expand relative'>
       {width > 0 && height > 0 && (
         <svg
           ref={svgRef}

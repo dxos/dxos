@@ -5,13 +5,13 @@
 import { RegistryContext } from '@effect/atom-react/RegistryContext';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
-import { useContext, useMemo, useState } from 'react';
+import { useContext, useEffect, useMemo, useState } from 'react';
 
 import { AiService, OpaqueToolkit } from '@dxos/ai';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import { useCapability } from '@dxos/app-framework/ui';
 import { AiSession } from '@dxos/assistant';
-import { type Chat } from '@dxos/assistant-toolkit';
+import type * as Chat from '@dxos/assistant/Chat';
 import * as AgentService from '@dxos/compute/AgentService';
 import * as Credential from '@dxos/compute/Credential';
 import * as ServiceResolver from '@dxos/compute/ServiceResolver';
@@ -99,6 +99,11 @@ export const useChatProcessor = ({
       provider: preset?.provider,
     });
   }, [runtime, session, registry, preset, chat, feed, db?.spaceId]);
+
+  // A remount (e.g. the user navigated to another page mid-turn) gets a fresh processor whose
+  // active/streaming state starts empty, while the agent process for the feed keeps running;
+  // adopting it restores the running indicator and the streamed blocks.
+  useEffect(() => processor?.adopt(), [processor]);
 
   return processor;
 };

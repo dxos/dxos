@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 import * as RpcClient from 'effect/unstable/rpc/RpcClient';
 import * as RpcServer from 'effect/unstable/rpc/RpcServer';
 
-import { makeWorkerRuntime } from '@dxos/client-services';
+import { type ClientServicesHost, makeWorkerRuntime } from '@dxos/client-services';
 import { Config } from '@dxos/config';
 import { EffectEx } from '@dxos/effect';
 import { log } from '@dxos/log';
@@ -18,6 +18,8 @@ import { STORAGE_LOCK_KEY } from '../../lock-key';
 export type RunDedicatedWorkerOptions = {
   /** Called with the worker config before the runtime starts. Use to e.g. initialize observability in the worker. */
   onBeforeStart?: (config: Config) => Promise<void>;
+  /** Runs once the runtime has started, with the host it serves from. */
+  onStart?: (host: ClientServicesHost) => Promise<void>;
 };
 
 /**
@@ -68,6 +70,9 @@ export const runDedicatedWorker = (options: RunDedicatedWorkerOptions = {}): voi
         log('dedicated-worker: starting WorkerRuntime');
         yield* runtime.start();
         log('dedicated-worker: WorkerRuntime started');
+        if (options.onStart) {
+          yield* Effect.promise(() => options.onStart!(runtime.host));
+        }
 
         return {
           stop: async () => EffectEx.runPromise(runtime.stop()),

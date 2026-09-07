@@ -3,7 +3,7 @@
 //
 
 import { type CleanupFn } from '@dxos/async';
-import { type BlobBackend } from '@dxos/echo-protocol';
+import { type BlobBackend } from '@dxos/blob';
 import { type URI } from '@dxos/keys';
 
 import type * as Database from './Database';

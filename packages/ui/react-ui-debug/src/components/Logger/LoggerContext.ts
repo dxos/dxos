@@ -2,10 +2,10 @@
 // Copyright 2026 DXOS.org
 //
 
-import { createContext } from '@radix-ui/react-context';
 import * as Schema from 'effect/Schema';
 
 import { LogLevel } from '@dxos/log';
+import { createContext } from '@dxos/react-ui';
 import { ViewState } from '@dxos/react-ui-attention';
 
 import { type LogRow } from './log-buffer';

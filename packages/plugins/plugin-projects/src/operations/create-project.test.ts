@@ -15,6 +15,7 @@ import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as ClientEvents from '@dxos/plugin-client/ClientEvents';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import * as SpacePlugin from '@dxos/plugin-space/SpacePlugin';
+import * as TasksPlugin from '@dxos/plugin-tasks/TasksPlugin';
 import { createComposerTestApp } from '@dxos/plugin-testing/harness';
 
 import { ProjectsPlugin } from '#plugin';
@@ -99,7 +100,8 @@ type Harness = Awaited<ReturnType<typeof createComposerTestApp>>;
 
 const setup = async (): Promise<Harness> => {
   const harness = await createComposerTestApp({
-    plugins: [ClientPlugin.make({}), SpacePlugin.make({}), ProjectsPlugin()],
+    // Tasks is declared in `dependsOn`, so the manager refuses to resolve Projects without it.
+    plugins: [ClientPlugin.make({}), SpacePlugin.make({}), TasksPlugin.make(), ProjectsPlugin()],
   });
   const client = harness.get(ClientCapabilities.Client);
   await EffectEx.runAndForwardErrors(initializeIdentity(client));

@@ -2,9 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
-import { SeverityNumber } from '@opentelemetry/api-logs';
+import { type Context, context as otelContext, trace } from '@opentelemetry/api';
+import { type AnyValueMap, SeverityNumber } from '@opentelemetry/api-logs';
 import { OTLPLogExporter } from '@opentelemetry/exporter-logs-otlp-http';
-import { BatchLogRecordProcessor, LoggerProvider } from '@opentelemetry/sdk-logs';
+import { BatchLogRecordProcessor, LoggerProvider, type LogRecordExporter } from '@opentelemetry/sdk-logs';
 import { ATTR_SERVICE_VERSION } from '@opentelemetry/semantic-conventions';
 
 import {
@@ -16,12 +17,18 @@ import {
   getRelativeFilename,
 } from '@dxos/log';
 
-import { type OtelOptions, resolveOtlpUrl, setDiagLogger } from './otel';
+import { type OtelOptions, setDiagLogger, signalUrl } from './otel';
 
 const FLATTEN_DEPTH = 1;
 
 export type OtelLogOptions = OtelOptions & {
   logLevel: LogLevel;
+  exporter?: LogRecordExporter;
+  /**
+   * Called with the trace id of every entry at warning or above emitted inside a span, before the
+   * export level is applied, so the tail sampler can keep that trace.
+   */
+  onTraceFlagged?: (traceId: string) => void;
   /**
    * Include logs forwarded from the shared worker via LoggingService.
    *
@@ -34,23 +41,30 @@ export class OtelLogs {
   private _loggerProvider: LoggerProvider;
   constructor(private readonly options: OtelLogOptions) {
     setDiagLogger(options.consoleDiagLogLevel);
-    const logExporter = new OTLPLogExporter({
-      url: resolveOtlpUrl(this.options.endpoint + '/v1/logs'),
-      headers: this.options.headers,
-      concurrencyLimit: 10, // an optional limit on pending requests
-    });
     this._loggerProvider = new LoggerProvider({
       resource: this.options.resource,
-      processors: [new BatchLogRecordProcessor({ exporter: logExporter })],
+      processors: this.options.destinations.map(
+        (destination) =>
+          new BatchLogRecordProcessor({
+            exporter:
+              options.exporter ??
+              new OTLPLogExporter({
+                url: signalUrl(destination, 'logs'),
+                headers: destination.headers,
+                concurrencyLimit: 10,
+              }),
+          }),
+      ),
     });
   }
 
   public readonly logProcessor: LogProcessor = (_config: LogConfig, entry: LogEntry) => {
-    const logger = this._loggerProvider.getLogger(
-      'dxos-observability',
-      this.options.resource.attributes[ATTR_SERVICE_VERSION]?.toString(),
-    );
-
+    if (entry.level >= LogLevel.WARN && this.options.onTraceFlagged) {
+      const traceId = trace.getSpan(otelContext.active())?.spanContext().traceId;
+      if (traceId !== undefined) {
+        this.options.onTraceFlagged(traceId);
+      }
+    }
     if (
       entry.level < this.options.logLevel ||
       (!this.options.includeSharedWorkerLogs && entry.meta?.S?.remoteSessionId)
@@ -58,19 +72,40 @@ export class OtelLogs {
       return;
     }
 
-    const attributes = {
-      ...this.options.getTags(),
-      ...(entry.meta ? { meta: { file: getRelativeFilename(entry.meta.F), line: entry.meta.L } } : {}),
-      ...(entry.error ? { error: entry.error.stack } : {}),
-      ...stringifyValues(getContextFromEntry(entry), 'ctx_'),
-    };
-
-    logger.emit({
+    this.emit({
       severityNumber: convertLevel(entry.level),
       body: entry.message,
-      attributes,
+      timestamp: new Date(entry.timestamp),
+      attributes: {
+        ...(entry.meta ? { meta: { file: getRelativeFilename(entry.meta.F), line: entry.meta.L } } : {}),
+        ...(entry.error ? { error: entry.error.stack } : {}),
+        ...stringifyValues(getContextFromEntry(entry), 'ctx_'),
+      },
+      context: otelContext.active(),
     });
   };
+
+  emit(record: {
+    severityNumber: SeverityNumber;
+    body?: string;
+    timestamp: Date;
+    attributes: AnyValueMap;
+    /** Context whose span the record links to; absent for a record with no trace. */
+    context?: Context;
+  }): void {
+    const logger = this._loggerProvider.getLogger(
+      'dxos-observability',
+      this.options.resource.attributes[ATTR_SERVICE_VERSION]?.toString(),
+    );
+
+    logger.emit({
+      severityNumber: record.severityNumber,
+      body: record.body,
+      timestamp: record.timestamp,
+      attributes: { ...this.options.getTags(), ...record.attributes },
+      context: record.context,
+    });
+  }
 
   flush(): Promise<void> {
     return this._loggerProvider.forceFlush();
@@ -82,7 +117,7 @@ export class OtelLogs {
 }
 
 /** Maps {@link LogLevel} to OpenTelemetry {@link SeverityNumber}. */
-const convertLevel = (level: LogLevel): SeverityNumber => {
+export const convertLevel = (level: LogLevel): SeverityNumber => {
   switch (level) {
     case LogLevel.TRACE:
       return SeverityNumber.TRACE;

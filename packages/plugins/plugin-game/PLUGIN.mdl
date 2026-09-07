@@ -21,6 +21,7 @@ Each extension is defined in the Appendix or resolved via its URI.
 | `test`      | `org.dxos.mdl.test@1.0`       |
 | `component` | `org.dxos.mdl.component@1.0`  |
 | `op`        | `org.dxos.mdl.op@1.0`         |
+| `flow`      | `org.dxos.mdl.flow@1.0`       |
 
 ## Types
 
@@ -262,6 +263,57 @@ test T-7: Unsupported variant fallback
   given: a Game whose variant typename has no registered GameVariant
   when: GameArticle renders
   then: "Unsupported game variant" message is shown instead of crashing
+```
+
+---
+
+## QA
+
+Executable flows. Each step carries a human instruction (`do`) and, where the step maps to an
+invocable operation, an agent binding (`invoke`). Report failures by flow and step number.
+
+```mdl
+flow QA-1: Create a game through the variant picker and render it
+  desc: |
+    The generic host round-trip — pick a registered variant, create the Game wrapper plus its
+    hidden variant state, and confirm dispatch renders the variant's article. Uses
+    plugin-chess's variant since it is the only one shipped and enabled by default; the flow
+    tests plugin-game's dispatch, not chess's own gameplay (see plugin-chess's QA for that).
+  actors: human
+  covers: [F-1.2, F-2.1, F-2.4, F-3.1, T-2, T-4]
+  status: unverified
+  given:
+    - an identity exists
+    - space: a space is open
+    - collection: a collection in that space, to create into
+    - plugin-chess (or another GameVariant contributor) is enabled, so the picker lists at least one variant
+    - no game named "QA Game" exists — ABORT rather than deleting one this flow did not create
+    - game: (bound during the run, not beforehand) the Game object the "Select the Chess variant" step creates — recorded by the tester, since no invoke captures it
+  test:
+    - name: Open the create-game panel
+      do: In the navtree, click + on a collection and choose Game.
+      expect: CreateGamePanel opens showing a searchable list including a "Chess" row
+      note: |
+        NO `invoke` — `createGame` is registered as a `CreateObjectEntry.customPanel`, not an
+        `Operation.make` with a runtime key, so there is no key to invoke through the operation
+        invoker; opening the panel is itself the create-object gesture (see `code-style`/`operations`
+        conventions: only `Operation.make` instances get a DXN, and this factory is not one).
+    - name: Select the Chess variant
+      do: Click the "Chess" row (it has no inputSchema, so no form stage follows).
+      expect: a Game object appears under the collection, named after the default, with hidden chess variant state referenced by `game.variant`
+      note: |
+        NO `invoke` for the same reason as the previous step — this whole creation gesture is
+        human-only until `createGame` (or an equivalent) is exposed as an invocable operation.
+        Because nothing here is scriptable, there is no captured result to thread forward; the
+        tester notes the new Game's id manually for the `after` stage below.
+    - name: Open the game and confirm dispatch
+      do: Click the Game row in the navtree.
+      expect: GameArticle resolves `game.variant` to the chess state object and delegates to chess's own article — a starting chess position renders, not the "Unsupported game variant" fallback
+  after:
+    - name: Delete the game
+      do: Right-click the Game row in the navtree and choose Delete.
+      invoke: org.dxos.operation.space.removeObjects { objects: [$given.game], target: $given.collection }
+      expect: the Game row leaves the navtree, its plank closes if open, and the hidden variant state object is also removed
 ```
 
 ---

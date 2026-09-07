@@ -10,9 +10,9 @@ import { type Obj } from '@dxos/echo';
 import { type EchoDatabase, type SpaceSyncState } from '@dxos/echo-client';
 import { type PublicKey, type SpaceId } from '@dxos/keys';
 import { type Messenger } from '@dxos/protocols';
+import { type Invitation } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 import {
   type Contact,
-  type Invitation,
   type Space as SpaceData,
   type SpaceMember,
   type SpaceState,

@@ -22,9 +22,9 @@ import * as LMStudioResolver from './resolvers/lmstudio/LMStudioResolver';
 const SONNET = DXN.make('com.anthropic.model.claude-sonnet-4-6.default');
 const GEMMA = DXN.make('com.google.model.gemma-3-27b.default');
 
-const TestRouter = AiModelResolver.AiModelResolver.buildAiService.pipe(
+const TestRouter = AiModelResolver.buildAiService.pipe(
   Layer.provide(
-    AiModelResolver.AiModelResolver.resolver(
+    AiModelResolver.resolver(
       {
         name: 'Anthropic',
       },
@@ -36,7 +36,7 @@ const TestRouter = AiModelResolver.AiModelResolver.buildAiService.pipe(
     ),
   ),
   Layer.provide(
-    AiModelResolver.AiModelResolver.resolver(
+    AiModelResolver.resolver(
       {
         name: 'LM Studio',
       },

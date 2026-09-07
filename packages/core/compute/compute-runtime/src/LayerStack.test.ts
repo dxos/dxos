@@ -8,10 +8,12 @@ import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import * as Layer from 'effect/Layer';
 import * as Scope from 'effect/Scope';
+import * as Tracer from 'effect/Tracer';
 
 import { ServiceNotAvailableError } from '@dxos/compute';
 import * as LayerSpec from '@dxos/compute/LayerSpec';
 import { EffectEx } from '@dxos/effect';
+import { makeRecordingTracer } from '@dxos/effect/testing';
 import { SpaceId } from '@dxos/keys';
 
 import * as LayerStack from './LayerStack';
@@ -31,7 +33,26 @@ class ServiceD extends Context.Service<ServiceD, { readonly value: string }>()('
 const resolveWithScope = <A, E>(effect: Effect.Effect<A, E, Scope.Scope>) =>
   Effect.scoped(effect) as Effect.Effect<A, E, never>;
 
+const sliceSpans: Tracer.Span[] = [];
+
 describe('LayerStack', () => {
+  it.effect(
+    'builds service layers under the ambient tracer',
+    Effect.fn(
+      function* ({ expect }) {
+        const layer = LayerSpec.make({ affinity: 'application', requires: [], provides: [ServiceA] }, () =>
+          Layer.effect(ServiceA, Effect.succeed({ value: 'a' }).pipe(Effect.withSpan('Slice.build'))),
+        );
+
+        const stack = new LayerStack.LayerStack({ layers: [layer] });
+        yield* resolveWithScope(stack.getServiceResolver().resolve(ServiceA, {}));
+
+        expect(sliceSpans.map(({ name }) => name)).toContain('Slice.build');
+      },
+      Effect.provide(Layer.succeed(Tracer.Tracer, makeRecordingTracer(sliceSpans))),
+    ),
+  );
+
   describe('application-affinity resolution', () => {
     it.effect(
       'resolves a single service provided by an application-affinity layer',

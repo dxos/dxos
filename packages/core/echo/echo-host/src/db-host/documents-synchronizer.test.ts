@@ -155,12 +155,36 @@ describe('DocumentsSynchronizer', () => {
 
         const handle = await host.loadDoc<{ text: string }>(Context.default(), documentId);
         invariant(handle);
-        await handle.whenReady();
+        await handle.waitUntilReady();
 
         expect(handle.doc().text).to.equal(text);
 
         await host.close();
       }
     });
+  });
+
+  // Unsubscribing must release the host's lease, or a client releasing an object frees nothing here.
+  test('unsubscribing releases the document on the host', async () => {
+    const { runtime, dispose } = createTestSqliteRuntime();
+    onTestFinished(() => dispose());
+    const host = new AutomergeHost({ runtime });
+    await openAndClose(host);
+
+    const created = await host.createDoc<{ text: string }>({ text: 'subscribed' });
+    const documentId = created.documentId;
+    await host.flush(Context.default());
+    created[Symbol.dispose]();
+
+    const synchronizer = new DocumentsSynchronizer({ automergeHost: host, sendUpdates: () => {} });
+    await openAndClose(synchronizer);
+    await synchronizer.addDocuments([documentId]);
+    await host.drainEvictions();
+    expect(host.loadedDocumentIds).to.contain(documentId);
+
+    synchronizer.removeDocuments([documentId]);
+    await host.drainEvictions();
+    expect(host.loadedDocumentIds).to.not.contain(documentId);
+    expect(host.leasedDocsCount).to.equal(0);
   });
 });

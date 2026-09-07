@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Atom from 'effect/unstable/reactivity/Atom';
 import type * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 import React, { useEffect, useRef } from 'react';
-import { expect, userEvent, within } from 'storybook/test';
+import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
@@ -33,6 +33,10 @@ import { translations } from '#translations';
 random.seed(1234);
 
 const StoryState = Capability.makeSingleton<Atom.Atom<{ tab: string }>>()('org.dxos.test.storyState');
+
+// How many times a row's selection asked the layout to open it: the observable a story has, since
+// the tree's selection here is a model the stubbed layout never updates.
+let opens = 0;
 
 const container = 'flex flex-col grow gap-2 p-4 rounded-md';
 
@@ -164,6 +168,12 @@ const meta = {
                   registry.set(storyStateAtom, { tab: subject });
                 }),
               ),
+              Operation.withHandler(LayoutOperation.Open, () =>
+                Effect.sync((): readonly string[] => {
+                  opens += 1;
+                  return [];
+                }),
+              ),
             ),
           ),
         ];
@@ -184,13 +194,13 @@ export const Default: Story = {
   play: async ({ canvasElement }: { canvasElement: HTMLElement }) => {
     const canvas = within(canvasElement);
 
-    // Plugin startup is async; the treegrid only appears after the Startup event
+    // Plugin startup is async; the tree only appears after the Startup event
     // fires and the graph is built. Use a generous timeout so slower CI runners
     // don't race the default 1 s limit.
-    const treegridElement = await canvas.findByRole('treegrid', {}, { timeout: 10000 });
-    const treegridParent = treegridElement.parentElement;
-    if (treegridParent) {
-      await userEvent.click(treegridParent);
+    const treeElement = await canvas.findByRole('tree', {}, { timeout: 10000 });
+    const treeParent = treeElement.parentElement;
+    if (treeParent) {
+      await userEvent.click(treeParent);
     }
 
     // Press Escape
@@ -225,6 +235,39 @@ export const Default: Story = {
 
     // Confirm that focus is now on an element with data-main-landmark="1"
     await expect(document.activeElement).toHaveAttribute('data-main-landmark', '1');
+  },
+};
+
+/** Opening a row's action menu is not choosing the row: the menu stays open and the selection stays put. */
+export const RowMenu: Story = {
+  play: async ({ canvasElement }: { canvasElement: HTMLElement }) => {
+    const canvas = within(canvasElement);
+    const tree = await canvas.findByRole('tree', {}, { timeout: 10000 });
+    // A row's actions arrive once the row is hovered; level 0 is the workspace header outside the
+    // tree, so a row's menu is level 1 or deeper.
+    await userEvent.hover(await within(tree).findByText('Object 2', {}, { timeout: 10000 }));
+    const trigger = (
+      await within(tree).findAllByTestId(/navtree\.treeItem\.actionsLevel[1-9]/, {}, { timeout: 10000 })
+    )[0];
+    // The `treeitem` carries `aria-selected` for a leaf and a branch alike (a branch's visible row is
+    // its control, and its columns are siblings of it, not descendants).
+    const row = trigger.closest<HTMLElement>('[role="treeitem"]')!;
+    const selectedBefore = row.getAttribute('aria-selected');
+
+    opens = 0;
+    await userEvent.click(trigger);
+    const menu = await within(document.body).findByRole('menu');
+    await expect(menu).toBeVisible();
+    await expect(trigger).toHaveAttribute('data-state', 'open');
+    await expect(row.getAttribute('aria-selected')).toBe(selectedBefore);
+    // The operation is invoked asynchronously, so a beat before reading the count.
+    await new Promise((resolve) => setTimeout(resolve, 250));
+    await expect(opens).toBe(0);
+
+    // The row itself still navigates.
+    await userEvent.keyboard('{Escape}');
+    await userEvent.click(within(row).getByTestId('treeItem.heading'));
+    await waitFor(() => expect(opens).toBe(1));
   },
 };
 

@@ -13,7 +13,7 @@ import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log, logInfo } from '@dxos/log';
 import { RpcClosedError, TimeoutError } from '@dxos/protocols';
-import { schema } from '@dxos/protocols/proto';
+import { getBufService } from '@dxos/protocols/buf-service';
 import { type FeedInfo, type ReplicatorService } from '@dxos/protocols/proto/dxos/mesh/teleport/replicator';
 import { type ProtoRpcPeer, createProtoRpcPeer } from '@dxos/rpc';
 import { type ExtensionContext, type TeleportExtension } from '@dxos/teleport';
@@ -97,10 +97,10 @@ export class ReplicatorExtension implements TeleportExtension {
 
     this._rpc = createProtoRpcPeer<ServiceBundle, ServiceBundle>({
       requested: {
-        ReplicatorService: schema.getService('dxos.mesh.teleport.replicator.ReplicatorService'),
+        ReplicatorService: getBufService<ReplicatorService>('dxos.mesh.teleport.replicator.ReplicatorService'),
       },
       exposed: {
-        ReplicatorService: schema.getService('dxos.mesh.teleport.replicator.ReplicatorService'),
+        ReplicatorService: getBufService<ReplicatorService>('dxos.mesh.teleport.replicator.ReplicatorService'),
       },
       handlers: {
         ReplicatorService: {

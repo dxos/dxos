@@ -2,7 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import { useArrowNavigationGroup, useFocusableGroup } from '@fluentui/react-tabster';
 import React, { forwardRef } from 'react';
 // TODO(thure): This needed to be imported in the package.json specifically to pacify TS2742. See if this is resolved with typescript@5.5.x.
 // eslint-disable-next-line unused-imports/no-unused-imports
@@ -12,22 +11,25 @@ import { type TooltipRenderProps } from 'react-joyride';
 // eslint-disable-next-line unused-imports/no-unused-imports
 import _typefest from 'type-fest';
 
-import { Button, Icon, IconButton } from '@dxos/react-ui';
+import { useFocusGroup } from '@dxos/react-focus';
+import { Button, Icon, IconButton, useMergeRefs } from '@dxos/react-ui';
 
 // TODO(burdon): Add info link to docs.
 export const Tooltip = forwardRef<HTMLDivElement, TooltipRenderProps>(
   ({ step: { title, content }, index, size, isLastStep, backProps, closeProps, primaryProps }, forwardedRef) => {
-    const arrowNavigationAttrs = useArrowNavigationGroup({ axis: 'horizontal' });
-    const focusableGroupAttrs = useFocusableGroup({ tabBehavior: 'limited-trap-focus' });
+    const { ref: focusGroupRef, ...focusGroupProps } = useFocusGroup({ tabBehavior: 'limited-trap-focus' });
+    const { ref: actionsRef, ...actionsProps } = useFocusGroup({ axis: 'horizontal' });
 
     return (
       <div
-        className='flex flex-col w-[15rem] min-h-[10rem] overflow-hidden rounded-md shadow-xl bg-accent-bg text-accent-fg'
+        className='flex flex-col w-60 min-h-40 overflow-hidden rounded-md shadow-xl bg-accent-bg text-accent-fg'
         role='tooltip'
         data-testid='helpPlugin.tooltip'
         data-step={index + 1}
-        {...focusableGroupAttrs}
-        ref={forwardedRef}
+        // The trap returns Escape focus to the container, which has to be a focus target to receive it.
+        tabIndex={0}
+        {...focusGroupProps}
+        ref={useMergeRefs<HTMLDivElement>([forwardedRef, focusGroupRef])}
       >
         <div className='flex p-2'>
           <h2 className='grow px-2 py-1 text-lg font-medium text-accent-fg'>{title}</h2>
@@ -43,7 +45,7 @@ export const Tooltip = forwardRef<HTMLDivElement, TooltipRenderProps>(
           />
         </div>
         <div className='flex grow px-4 my-2'>{content}</div>
-        <div className='flex p-2 items-center justify-between' {...arrowNavigationAttrs}>
+        <div className='flex p-2 items-center justify-between' {...actionsProps} ref={actionsRef}>
           {
             <IconButton
               classNames={[!(index > 0 && backProps) && 'invisible']}

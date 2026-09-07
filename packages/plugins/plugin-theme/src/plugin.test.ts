@@ -124,6 +124,23 @@ describe('ThemePlugin', () => {
     expect(document.documentElement.classList.contains('dark')).toBe(false); // Follows light system.
   });
 
+  test('accent setting rewrites the root accent tokens, and clears them when unset', async ({ expect }) => {
+    await using harness = await createTestApp({
+      plugins: [ProcessManagerPlugin(), ThemePlugin({})],
+    });
+    const registry = harness.get(Capabilities.AtomRegistry);
+    const settingsAtom = harness.get(ThemeCapabilities.Settings);
+    const root = document.documentElement;
+
+    registry.set(settingsAtom, { accent: 'red' });
+    await Promise.resolve();
+    expect(root.style.getPropertyValue('--color-accent-bg')).toContain('--color-red-');
+
+    registry.set(settingsAtom, {});
+    await Promise.resolve();
+    expect(root.style.getPropertyValue('--color-accent-bg')).toBe('');
+  });
+
   test("appearance 'system' follows the OS preference", async ({ expect }) => {
     stubMatchMedia(true); // System preference = dark.
     await using _harness = await createTestApp({

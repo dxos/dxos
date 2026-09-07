@@ -93,23 +93,22 @@ export const Default: Story = {};
  */
 export const Spec: Story = {
   play: async ({ canvasElement }) => {
-    const keyboard = (text: string) => userEvent.keyboard(text);
     await waitForTerminal(canvasElement, 'demo>');
 
-    await runCommand(canvasElement, 'greet world', keyboard);
+    await runCommand(canvasElement, 'greet world', userEvent.keyboard);
     await waitForTerminal(canvasElement, 'Hello, world.');
 
     // Options are parsed, not merely echoed.
-    await runCommand(canvasElement, 'greet ada --loud', keyboard);
+    await runCommand(canvasElement, 'greet ada --loud', userEvent.keyboard);
     await waitForTerminal(canvasElement, 'HELLO, ADA!');
 
     // An unknown command is reported once, by the CLI itself — which answers with the command's
     // help rather than a one-line message.
-    await runCommand(canvasElement, 'bogus', keyboard);
+    await runCommand(canvasElement, 'bogus', userEvent.keyboard);
     await waitForTerminal(canvasElement, 'USAGE');
 
     // The shell survives the failure and keeps accepting commands.
-    await runCommand(canvasElement, 'greet again', keyboard);
+    await runCommand(canvasElement, 'greet again', userEvent.keyboard);
     await waitForTerminal(canvasElement, 'Hello, again.');
   },
 };

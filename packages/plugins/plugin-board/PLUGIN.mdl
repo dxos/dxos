@@ -19,6 +19,7 @@ Each extension is defined in the Appendix or resolved via its URI.
 | `test`      | `org.dxos.mdl.test@1.0`       |
 | `component` | `org.dxos.mdl.component@1.0`  |
 | `op`        | `org.dxos.mdl.op@1.0`         |
+| `flow`      | `org.dxos.mdl.flow@1.0`       |
 
 ## Types
 
@@ -265,6 +266,54 @@ test T-6: Toolbar gated by attention
   then: Board.Toolbar is disabled
   when: board gains focus
   then: Board.Toolbar is interactive
+```
+
+## QA
+
+Executable flows. Each step carries a human instruction (`do`) and, where the step maps to an
+invocable operation, an agent binding (`invoke`). Report failures by flow and step number.
+
+None of the four `op` blocks above have a runtime counterpart: `createBoard` is `Board.makeBoard`
+(a local factory, not an `Operation.make`) placed via the generic `space.addObject`, and
+`addItem` / `removeItem` / `moveItem` are component actions that call `Obj.update` directly —
+there is nothing to `invoke` for any of them. Every flow below is `actors: human` for that reason.
+
+```mdl
+flow QA-1: Create a board, add and move an item, remove it
+  desc: The core board round-trip — create, add an existing object to the canvas, drag it, remove it.
+  actors: human
+  covers: [F-1.1, F-1.2, F-1.3, F-2.2, F-2.3, F-3.1, F-3.2, F-4.1, F-4.2]
+  status: unverified
+  given:
+    - an identity exists
+    - space: a space is open
+    - collection: a collection in that space, to create into
+    - a Document named "Meeting notes" exists in the space, for the ObjectPicker step
+    - no Board named "QA Board" exists — ABORT rather than deleting one this flow did not create
+  test:
+    - name: Create the board
+      do: In the navtree, click + on a collection and choose Board. Name it "QA Board".
+      expect: a Board appears under the collection, with an empty canvas
+      note: NO `invoke` — `Board.makeBoard` is a local factory, not an operation.
+    - name: Add "Meeting notes" via the picker
+      do: With no position given, click the toolbar "+"; the ObjectPicker opens listing space
+        objects other than the board. Select "Meeting notes".
+      expect: a cell for "Meeting notes" appears on the canvas at the default position (0, 0),
+        and the picker closes
+      note: NO `invoke` — `addItem` mutates `board.items`/`board.layout` directly in the component.
+    - name: Drag the cell to a new position
+      do: Drag the "Meeting notes" cell to a visibly different spot on the grid.
+      expect: the cell renders at the new position; no other cell moves
+      note: NO `invoke` — `moveItem` is a drag handler, not an operation.
+  after:
+    - name: Delete the board
+      do: Right-click "QA Board" in the navtree and choose Delete.
+      expect: the row leaves the navtree and its plank closes if it was open
+      note: |
+        NO `invoke` — the board is created by a UI gesture in step 1, which has no operation to
+        `capture` it from, so there is no bound value for `space.removeObjects` to name; deletion
+        stays human-only like the rest of this flow. `space.removeObjects` deletes the Board object
+        itself; "Meeting notes" is unaffected — the board only referenced it.
 ```
 
 ---

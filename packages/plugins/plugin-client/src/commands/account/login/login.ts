@@ -18,7 +18,7 @@ import { CommandConfig, openBrowser, print } from '@dxos/cli-util';
 import { type LocalCallbackServer, startLocalCallbackServer } from '@dxos/cli-util/callback';
 import { performRecoveryOAuthFlow } from '@dxos/cli-util/oauth';
 import { type Client, ClientService } from '@dxos/client';
-import { Invitation, InvitationEncoder } from '@dxos/client/invitations';
+import { Invitation_State, InvitationEncoder } from '@dxos/client/invitations';
 import { Context as DxContext } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { ATPROTO_OAUTH_SCOPES, OAuthProvider } from '@dxos/protocols';
@@ -158,9 +158,7 @@ const loginWithPasskey = (client: Client) =>
     });
 
     return yield* Effect.gen(function* () {
-      // Addressed to the hub itself: it redirects the browser on to whichever origin its relying
-      // party covers, so the CLI needs no knowledge of that hostname.
-      const url = new URL('/auth/verify', Account.getHubUrl(client));
+      const url = new URL('/auth/verify', Account.getAuthUrl(client));
       url.searchParams.set('purpose', 'device');
       url.searchParams.set('callback', server.origin);
 
@@ -300,10 +298,10 @@ const loginWithDeviceInvitation = (client: Client, encoded: string) =>
       code = new URL(code).searchParams.get('deviceInvitationCode') ?? code;
     }
     const invitation = client.halo.join(InvitationEncoder.decode(code));
-    yield* waitForState(invitation, Invitation.State.READY_FOR_AUTHENTICATION);
+    yield* waitForState(invitation, Invitation_State.READY_FOR_AUTHENTICATION);
     const authCode = yield* Prompt.text({ message: 'Enter the authentication code' }).pipe(Prompt.run);
     yield* Effect.tryPromise(() => invitation.authenticate(authCode));
-    yield* waitForState(invitation, Invitation.State.SUCCESS);
+    yield* waitForState(invitation, Invitation_State.SUCCESS);
     const identity = client.halo.identity.get();
     invariant(identity, 'Device invitation completed but no identity is present.');
     return identity;

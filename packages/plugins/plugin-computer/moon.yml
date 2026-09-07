@@ -10,7 +10,7 @@ tasks:
   # import graph proves the two halves stay apart.
   check-module-structure:
     command: >-
-      pnpm exec dx-trace-imports
+      bun $workspaceRoot/tools/dx-trace-imports/cli.js
       --export .
       --to "node:child_process"
       --conditions source,browser,import

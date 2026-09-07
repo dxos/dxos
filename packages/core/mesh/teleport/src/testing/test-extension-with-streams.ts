@@ -8,7 +8,7 @@ import { type Duplex } from 'node:stream';
 import { Trigger } from '@dxos/async';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { schema } from '@dxos/protocols/proto';
+import { getBufService } from '@dxos/protocols/buf-service';
 import { type TestServiceWithStreams } from '@dxos/protocols/proto/example/testing/rpc';
 import { type ProtoRpcPeer, createProtoRpcPeer } from '@dxos/rpc';
 
@@ -135,10 +135,10 @@ export class TestExtensionWithStreams implements TeleportExtension {
         contentType: 'application/x-protobuf; messageType="dxos.rpc.Message"',
       }),
       requested: {
-        TestServiceWithStreams: schema.getService('example.testing.rpc.TestServiceWithStreams'),
+        TestServiceWithStreams: getBufService<TestServiceWithStreams>('example.testing.rpc.TestServiceWithStreams'),
       },
       exposed: {
-        TestServiceWithStreams: schema.getService('example.testing.rpc.TestServiceWithStreams'),
+        TestServiceWithStreams: getBufService<TestServiceWithStreams>('example.testing.rpc.TestServiceWithStreams'),
       },
       handlers: {
         TestServiceWithStreams: {

@@ -5,14 +5,15 @@
 import { EditorView } from '@codemirror/view';
 import { useAtomValue } from '@effect/atom-react/Hooks';
 import * as Option from 'effect/Option';
+import type * as Atom from 'effect/unstable/reactivity/Atom';
 import React, { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
 
-import { type Chat } from '@dxos/assistant-toolkit';
+import type * as Chat from '@dxos/assistant/Chat';
 import { type Event } from '@dxos/async';
 import * as Project from '@dxos/compute/Project';
 import { type Database, Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
-import { Input, type ThemedClassName, useDynamicRef, useTranslation } from '@dxos/react-ui';
+import { type ThemedClassName, useDynamicRef, useTranslation } from '@dxos/react-ui';
 import {
   ChatEditor,
   type ChatEditorController,
@@ -20,11 +21,12 @@ import {
   ChatStatusIndicator,
   commands,
 } from '@dxos/react-ui-chat';
+import { type ActionGraphProps } from '@dxos/react-ui-menu';
 import { pendingText } from '@dxos/ui-editor';
 import { mx } from '@dxos/ui-theme';
 import { type Merge } from '@dxos/util';
 
-import { useChatKeymapExtensions, usePlatform } from '#hooks';
+import { useChatKeymapExtensions } from '#hooks';
 import { meta } from '#meta';
 import { AssistantPreset } from '#types';
 
@@ -46,8 +48,18 @@ export type ChatPromptProps = Merge<
     chat?: Chat.Chat;
     processor: AiChatProcessor;
     event: Event<ChatEvent>;
-    /** Read-only indicator of whether the configured provider is the remote (online) service. */
-    online?: boolean;
+    /** Whether the checklist beside the prompt is shown; the toggle renders only when provided. */
+    tasksVisible?: boolean;
+    /** The prompt's graph node, which is what contributed actions are filed under. */
+    attendableId?: string;
+    /** Toolbar actions other plugins filed on this chat's node (see `ChatActions`). */
+    customActions?: Atom.Atom<ActionGraphProps>;
+    /**
+     * The graph node those actions were filed on. Keys the dictation session, because the mic that
+     * opens it is one of them and carries the same id — anything else here is a session this prompt
+     * would never hear.
+     */
+    nodeId?: string;
     placeholder?: ChatEditorProps['placeholder'];
     /** Object the chat is attached to; its project instructions (if any) supply sentinel-command completion. */
     companionTo?: Obj.Unknown;
@@ -62,7 +74,10 @@ export const ChatPrompt = ({
   chat,
   processor,
   event,
-  online,
+  tasksVisible,
+  attendableId,
+  customActions,
+  nodeId,
   placeholder,
   onPresetChange,
   settings = true,
@@ -71,13 +86,9 @@ export const ChatPrompt = ({
   companionTo,
 }: ChatPromptProps) => {
   const { t } = useTranslation(meta.profile.key);
-
-  const platform = usePlatform();
-
   const error = useAtomValue(processor.error).pipe(Option.getOrUndefined);
   const streaming = useAtomValue(processor.streaming);
   const active = useAtomValue(processor.active);
-  const activeRef = useDynamicRef(active);
 
   const editorRef = useRef<ChatEditorController>(null);
   useEffect(() => {
@@ -90,7 +101,10 @@ export const ChatPrompt = ({
   }, [event]);
 
   const fallbackDocId = useId();
-  const docId = chat?.id ?? fallbackDocId;
+  // The node the mic action was filed on, which is what it keys the recording session by. A chat
+  // rendered as a companion is a companion node, not the chat object's own, so the object id is only
+  // the fallback for a prompt rendered outside a plank.
+  const docId = nodeId ?? (chat ? Obj.getURI(chat) : fallbackDocId);
   useChatVoiceInput(docId, editorRef);
 
   const keymapExtensions = useChatKeymapExtensions({ event });
@@ -127,21 +141,22 @@ export const ChatPrompt = ({
     [],
   );
 
-  // Keyed to `active`, the same signal `handleSubmit` guards on — `streaming` only flips on the
-  // first agent token, so gating on it would leave the control enabled but inert until then.
-  const canSend = hasText && !active;
+  // There is something to send, whether or not a turn is running: a prompt submitted mid-turn is
+  // queued behind it rather than dropped, so text is the only precondition. `ChatActions` reads this
+  // to decide which affordance the primary control offers (Send with text, Stop without).
+  const canSend = hasText;
 
   const extensions = useMemo(
     () => [keymapExtensions, pendingText(), commandsExtension, emptinessExtension],
     [keymapExtensions, commandsExtension, emptinessExtension],
   );
 
+  // Submits while a turn is running too: the agent's input queue is feed state, so the prompt is
+  // queued behind the running turn rather than dropped (`Chat.Root` routes it to `enqueue`).
   const handleSubmit = useCallback<NonNullable<ChatEditorProps['onSubmit']>>(
     (text) => {
-      if (!activeRef.current) {
-        event.emit({ type: 'submit', text });
-        return true;
-      }
+      event.emit({ type: 'submit', text });
+      return true;
     },
     [event],
   );
@@ -195,8 +210,8 @@ export const ChatPrompt = ({
       {db && settings && (
         <div className='flex items-center overflow-hidden p-1.5'>
           <ChatOptions
-            chat={chat}
             db={db}
+            chat={chat}
             registry={processor.registry}
             context={processor.context}
             preset={preset}
@@ -210,21 +225,16 @@ export const ChatPrompt = ({
 
           <ChatActions
             classNames='col-span-2'
-            microphone={true}
-            docId={docId}
-            processing={streaming}
+            attendableId={attendableId}
+            customActions={customActions}
+            // `active`, not `streaming`: a turn parked in a tool call streams nothing,
+            // and the reader still needs a way to stop it.
+            processing={active}
             canSend={canSend}
+            tasksVisible={tasksVisible}
             onSend={handleSend}
             onEvent={handleEvent}
-          >
-            {online !== undefined && platform !== 'mobile' && (
-              <Input.Root>
-                <Input.Label srOnly>{t('online-switch.label')}</Input.Label>
-                {/* Read-only: the provider is configured in Assistant settings, not toggled here. */}
-                <Input.Switch classNames='mx-1' checked={online} disabled />
-              </Input.Root>
-            )}
-          </ChatActions>
+          />
         </div>
       )}
     </div>

@@ -27,6 +27,7 @@ Each extension is defined in the Appendix or resolved via its URI.
 | `test`      | `org.dxos.mdl.test@1.0`       |
 | `component` | `org.dxos.mdl.component@1.0`  |
 | `op`        | `org.dxos.mdl.op@1.0`         |
+| `flow`      | `org.dxos.mdl.flow@1.0`       |
 
 ## Types
 
@@ -345,6 +346,55 @@ test T-7: WnfsInstance cache hit
   given: a WnfsInstance is cached for the current forest CID
   when: loadWnfs is called again for the same space
   then: the cached instance is returned; no blockstore reads occur
+```
+
+---
+
+## QA
+
+Executable flows. Each step carries a human instruction (`do`) and, where the step maps to an
+invocable operation, an agent binding (`invoke`). Report failures by flow and step number.
+
+```mdl
+flow QA-1: Upload a file and resolve it back through the wnfs:// scheme
+  desc: |
+    plugin-wnfs has no ECHO type or navtree surface of its own — it is a `BlobBackend`
+    (`schemes: ['wnfs']`) that `plugin-file` dispatches to transparently through
+    `Blob.fromBytes`/`Blob.read`/`Blob.url`. None of its operations (`wnfsBlobPut`,
+    `wnfsBlobGet`, `wnfsBlobHas`, `wnfsBlobGetUrl`, `uploadFile`) is an `Operation.make` with a
+    `key:` — they are internal backend methods dispatched by core Blob.ts, not entries an
+    invoker can look up — so this flow is human-only end to end.
+  actors: human
+  covers: [F-1.1, F-1.2, F-1.3, F-2.1, F-2.3]
+  status: unverified
+  given:
+    - an identity exists
+    - space: a space is open
+    - plugin-wnfs is enabled — it ships only in the experimental set; it is OFF by default
+    - plugin-file is enabled, so drag-and-drop upload and the File article are available
+    - the space's file storage backend is set to WNFS (Settings -> Space -> Storage, or the
+      space's default when plugin-wnfs is the only storage backend enabled)
+    - no file named "qa-upload.png" exists in the space — ABORT rather than deleting one this
+      flow did not create
+  test:
+    - name: Upload a file
+      do: Drag "qa-upload.png" onto the space (or a collection) in the navtree.
+      expect: a File object named "qa-upload.png" appears in the navtree
+      note: |
+        NO `invoke` — `wnfsBlobPut` is reached through `Blob.fromBytes`, called by plugin-file's
+        upload handler, not through the operation invoker; there is no `key:` to resolve.
+    - name: Confirm the blob URI uses the wnfs scheme
+      do: Right-click the file and choose "Copy link" (or inspect its properties panel).
+      expect: the underlying blob URI starts with `wnfs://spaces/`
+    - name: Open the file
+      do: Click "qa-upload.png" in the navtree.
+      expect: the image renders in the File article — `wnfsBlobGetUrl` resolved the bytes to a
+        displayable `blob:` object URL
+  after:
+    - name: Delete the file
+      do: Right-click "qa-upload.png" in the navtree and choose Delete.
+      expect: the row leaves the navtree and its plank closes
+      note: NO `invoke` — the uploaded File was never captured (no step above invokes anything), so there is no live ref to pass to `space.removeObjects`; deletion is a navtree click.
 ```
 
 ---

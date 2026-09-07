@@ -1,8 +1,7 @@
+import { createContext } from '@dxos/react-ui';
 //
 // Copyright 2026 DXOS.org
 //
-
-import { createContext } from '@radix-ui/react-context';
 
 import {
   type ReorderActive,
@@ -22,6 +21,8 @@ export type OrderedListContextValue<T extends ListItemRecord> = {
   reorder: ReorderListController<T>;
   disclosure: UseListDisclosureReturn;
   navigation: UseListNavigationReturn;
+  /** Mirrors the mode given to `useListNavigation`, so a row knows which aria grammar it is in. */
+  navigationMode: 'list' | 'listbox';
   readonly?: boolean;
   active: ReorderActive<T>;
   /**

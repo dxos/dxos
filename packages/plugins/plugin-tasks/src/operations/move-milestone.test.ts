@@ -10,9 +10,6 @@ import { TestDatabaseLayer } from '@dxos/echo-client/testing';
 import { Milestone, Task, TaskSet } from '@dxos/types';
 
 import moveMilestone from './move-milestone';
-import { addMilestoneToSet } from './task-set-membership';
-
-const testLayer = () => TestDatabaseLayer({ types: [Milestone.Milestone, Task.Task, TaskSet.TaskSet] });
 
 describe('move-milestone', () => {
   it.effect('inserts before the anchor, since array order is the milestone sequence', () =>
@@ -23,7 +20,7 @@ describe('move-milestone', () => {
       yield* moveMilestone.handler({ milestone: Ref.make(gamma), before: Ref.make(alpha) });
 
       expect(names(taskSet)).toEqual(['gamma', 'alpha', 'beta']);
-    }).pipe(Effect.provide(testLayer())),
+    }).pipe(Effect.provide(TestDatabaseLayer({ types: [Milestone.Milestone, Task.Task, TaskSet.TaskSet] }))),
   );
 
   it.effect('an omitted anchor moves to the end', () =>
@@ -34,7 +31,7 @@ describe('move-milestone', () => {
       yield* moveMilestone.handler({ milestone: Ref.make(alpha) });
 
       expect(names(taskSet)).toEqual(['beta', 'gamma', 'alpha']);
-    }).pipe(Effect.provide(testLayer())),
+    }).pipe(Effect.provide(TestDatabaseLayer({ types: [Milestone.Milestone, Task.Task, TaskSet.TaskSet] }))),
   );
 
   it.effect('anchoring a milestone on itself leaves the sequence alone', () =>
@@ -45,7 +42,7 @@ describe('move-milestone', () => {
       yield* moveMilestone.handler({ milestone: Ref.make(alpha), before: Ref.make(alpha) });
 
       expect(names(taskSet)).toEqual(['alpha', 'beta']);
-    }).pipe(Effect.provide(testLayer())),
+    }).pipe(Effect.provide(TestDatabaseLayer({ types: [Milestone.Milestone, Task.Task, TaskSet.TaskSet] }))),
   );
 
   it.effect('a milestone belonging to no set is rejected rather than silently dropped', () =>
@@ -57,7 +54,7 @@ describe('move-milestone', () => {
 
       expect(exit._tag).toBe('Failure');
       expect(String(exit)).toContain('InvalidOperationInput');
-    }).pipe(Effect.provide(testLayer())),
+    }).pipe(Effect.provide(TestDatabaseLayer({ types: [Milestone.Milestone, Task.Task, TaskSet.TaskSet] }))),
   );
 });
 
@@ -67,7 +64,7 @@ const seed = (names: readonly string[]) =>
     const milestones = [];
     for (const name of names) {
       const milestone = yield* Database.add(Milestone.make({ name }));
-      addMilestoneToSet(taskSet, milestone);
+      TaskSet.addMilestoneToSet(taskSet, milestone);
       milestones.push(milestone);
     }
     yield* Database.flush();

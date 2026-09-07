@@ -6,8 +6,6 @@ import { describe, expect, test } from 'vitest';
 
 import { extractArticle, pruneTrailingChrome } from './article';
 
-const parse = (html: string): Document => new DOMParser().parseFromString(html, 'text/html');
-
 describe('extractArticle', () => {
   test('returns empty result for empty input', async () => {
     const result = await extractArticle('');
@@ -95,7 +93,8 @@ describe('extractArticle', () => {
     // Direct DOM test — defuddle's later passes may independently drop a
     // lone trailing heading, so we assert against the post-prune DOM rather
     // than the final markdown to isolate the pruner's guard.
-    const doc = parse(`
+    const doc = new DOMParser().parseFromString(
+      `
       <html><body>
         <article>
           <h1>The piece</h1>
@@ -103,7 +102,9 @@ describe('extractArticle', () => {
           <h2>Conclusion</h2>
         </article>
       </body></html>
-    `);
+    `,
+      'text/html',
+    );
     pruneTrailingChrome(doc);
     const article = doc.querySelector('article')!;
     expect(article.querySelector('h2')?.textContent).toBe('Conclusion');
@@ -111,7 +112,8 @@ describe('extractArticle', () => {
   });
 
   test('pruneTrailingChrome strips the heading paired with a chrome block it titles', () => {
-    const doc = parse(`
+    const doc = new DOMParser().parseFromString(
+      `
       <html><body>
         <article>
           <h1>The piece</h1>
@@ -123,7 +125,9 @@ describe('extractArticle', () => {
           </ul>
         </article>
       </body></html>
-    `);
+    `,
+      'text/html',
+    );
     pruneTrailingChrome(doc);
     const article = doc.querySelector('article')!;
     expect(article.querySelector('ul')).toBeNull();

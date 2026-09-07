@@ -9,6 +9,7 @@ import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 import * as Record from 'effect/Record';
 import * as Schema from 'effect/Schema';
+import * as Stream from 'effect/Stream';
 import * as Tool from 'effect/unstable/ai/Tool';
 import type * as Toolkit from 'effect/unstable/ai/Toolkit';
 
@@ -140,20 +141,29 @@ export const makeToolExecutionService = <E, R>(opts: {
       const toolkit = yield* toolkitProvider.getToolkit();
 
       const toolkitHandler = yield* toolkit.toolkit.pipe(Effect.provide(toolkit.layer));
-      invariant(isHandlerLike(toolkitHandler));
+      if (!isHandlerLike(toolkitHandler)) {
+        return yield* Effect.die(new Error('Toolkit produced a handler-less toolkit instance'));
+      }
 
       return {
         handlersFor: (toolkit) => {
           const makeHandler = (tool: Tool.Any): ((params: unknown) => Effect.Effect<unknown, any, any>) => {
-            return Effect.fn(`toolFunctionHandler ${tool.name}`)(function* (input: any) {
+            return Effect.fn(`toolFunctionHandler ${tool.name}`)(function* (input: unknown) {
               if (toolkitHandler.tools[tool.name]) {
                 if (Tool.isProviderDefined(tool)) {
                   throw new Error('Attempted to call a provider-defined tool');
                 }
 
-                // TODO(wittjosiah): Everything is `never` here.
-                const { result } = yield* (toolkitHandler.handle as any)(tool.name, input);
-                return result;
+                // `handle` streams preliminary results before the final one; the toolkit
+                // interrupts the handler fiber once its effect settles, so the final result is
+                // always the last item emitted — `Stream.runLast` recovers exactly that value.
+                const resultStream = yield* toolkitHandler.handle(tool.name, input);
+                const lastResult = yield* Stream.runLast(resultStream);
+                const handlerResult = yield* Option.match(lastResult, {
+                  onNone: () => Effect.die(new Error(`Tool "${tool.name}" handler produced no result`)),
+                  onSome: Effect.succeed,
+                });
+                return handlerResult.result;
               }
 
               // Every `invoke` implementation (in-process, or a child process spawned by the agent)
@@ -205,7 +215,7 @@ export const ToolExecutionServices = Layer.mergeAll(
 
 class FunctionToolAnnotation extends Context.Service<
   FunctionToolAnnotation,
-  { definition: Operation.Definition.Any; parameters: Schema.Codec<any, any> }
+  { definition: Operation.Definition.Any; parameters: Schema.Codec<unknown, unknown> }
 >()('@dxos/assistant/FunctionToolAnnotation') {}
 
 export const getOperationFromTool = (tool: Tool.Any): Option.Option<Operation.Definition.Any> => {
@@ -285,7 +295,7 @@ export const projectFunctionToTool = (fn: Operation.Definition.Any): Tool.Any =>
  * `required` — the same contract ECHO's own emitter keeps (`stripUndefinedMember`) and the one the
  * pre-migration corpus was recorded against.
  */
-const toModelJsonSchema = (schema: Schema.Codec<any, any>): JsonSchema.JsonSchema => {
+const toModelJsonSchema = (schema: Schema.Codec<unknown, unknown>): JsonSchema.JsonSchema => {
   // A recursive parameter renders as `$ref: '#/$defs/…'` with the bodies in a separate `definitions`
   // record; keeping only the root would advertise a dangling reference to the model.
   const { schema: root, definitions } = Schema.toJsonSchemaDocument(schema);
@@ -302,6 +312,8 @@ const toModelJsonSchema = (schema: Schema.Codec<any, any>): JsonSchema.JsonSchem
  */
 const statePropertyOpenness = (node: JsonSchema.JsonSchema): JsonSchema.JsonSchema => {
   if (Array.isArray(node)) {
+    // `JsonSchema.JsonSchema` (effect's own type) is a bare index signature that structurally
+    // excludes arrays, even though a JSON Schema document legitimately nests them (e.g. `anyOf`).
     return node.map(statePropertyOpenness) as unknown as JsonSchema.JsonSchema;
   }
   if (typeof node !== 'object' || node === null) {
@@ -319,7 +331,7 @@ const statePropertyOpenness = (node: JsonSchema.JsonSchema): JsonSchema.JsonSche
 };
 
 /** Property names the schema marks required; only optional properties carry the spurious null branch. */
-const asStringArray = (schema: Schema.Codec<any, any>): readonly string[] => {
+const asStringArray = (schema: Schema.Codec<unknown, unknown>): readonly string[] => {
   const { required } = Schema.toJsonSchemaDocument(schema).schema;
   return Array.isArray(required) ? required.map(String) : [];
 };
@@ -360,8 +372,8 @@ const withoutNull = (value: unknown): unknown => {
  * Exported for testing.
  */
 export const createStructFieldsFromSchema = (
-  schema: Schema.Codec<any, any>,
-): Record<string, Schema.Codec<any, any>> => {
+  schema: Schema.Codec<unknown, unknown>,
+): Record<string, Schema.Codec<unknown, unknown>> => {
   switch (schema.ast._tag) {
     case 'Objects': {
       // One cache for the whole struct: sibling properties may reach the same recursive body.
@@ -429,6 +441,15 @@ const mapSchemaTypeForLLM = (
   return SchemaEx.mapAst(ast, (child) => mapSchemaTypeForLLM(child, expansions));
 };
 
-const isHandlerLike = (value: unknown): value is Toolkit.WithHandler<Record<string, Tool.Any>> => {
-  return typeof (value as any).tools === 'object' && typeof (value as any).handle === 'function';
+/** Narrows `value` to {@link Toolkit.WithHandler} when it carries a non-null `tools` object and a `handle` function. */
+export const isHandlerLike = (value: unknown): value is Toolkit.WithHandler<Record<string, Tool.Any>> => {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    'tools' in value &&
+    typeof value.tools === 'object' &&
+    value.tools !== null &&
+    'handle' in value &&
+    typeof value.handle === 'function'
+  );
 };

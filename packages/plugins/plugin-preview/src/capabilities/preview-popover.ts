@@ -95,19 +95,28 @@ export default Capability.makeModule(
         return;
       }
 
-      const title = titleProp ?? Obj.getLabel(result.object, { fallback: 'typename' });
+      // Same fallback chain as the graph node label (AppNode.getObjectGraphNodePartials), so an
+      // unnamed object shows its per-type placeholder (e.g. "New game") rather than the raw typename.
+      const fallbackTitle: [string, { ns: string; defaultValue?: string }] = [
+        'object-name.placeholder',
+        { ns: Obj.getTypename(result.object) ?? '', defaultValue: 'New item' },
+      ];
+      const title = titleProp ?? Obj.getLabel(result.object) ?? fallbackTitle;
 
-      await invokePromise(LayoutOperation.UpdatePopover, {
+      const input = {
         subjectRef: dxn,
         subject: result.object,
         state: true,
         variant: 'virtual',
         anchor: trigger,
-        ...(kind && { kind }),
-        ...(title && { title }),
         ...(side && { side }),
         ...(props && { props }),
-      });
+      } as const;
+      // The union discriminates on `kind`: only the card member carries a title.
+      await invokePromise(
+        LayoutOperation.UpdatePopover,
+        kind === 'card' ? { ...input, kind, title } : { ...input, kind },
+      );
     };
 
     let cleanup: () => void;

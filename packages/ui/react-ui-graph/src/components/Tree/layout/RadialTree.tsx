@@ -107,7 +107,7 @@ export const RadialTree = ({
   }, [root, width, height, r, padding, label, slots, collapsed, cluster]);
 
   return (
-    <div ref={setRef} className={mx('dx-expander relative', classNames)}>
+    <div ref={setRef} className={mx('dx-expand relative', classNames)}>
       {width > 0 && height > 0 && (
         <svg
           ref={svgRef}

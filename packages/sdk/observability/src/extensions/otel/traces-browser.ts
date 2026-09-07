@@ -14,49 +14,71 @@ import { getWebAutoInstrumentations } from '@opentelemetry/auto-instrumentations
 import { W3CTraceContextPropagator } from '@opentelemetry/core';
 import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-http';
 import { registerInstrumentations } from '@opentelemetry/instrumentation';
-import {
-  AlwaysOnSampler,
-  BatchSpanProcessor,
-  ParentBasedSampler,
-  TraceIdRatioBasedSampler,
-} from '@opentelemetry/sdk-trace-base';
-import { WebTracerProvider } from '@opentelemetry/sdk-trace-web';
+import { AlwaysOnSampler, BatchSpanProcessor } from '@opentelemetry/sdk-trace-base';
+import { StackContextManager, WebTracerProvider } from '@opentelemetry/sdk-trace-web';
 import { ATTR_SERVICE_VERSION } from '@opentelemetry/semantic-conventions';
 
 import { log } from '@dxos/log';
 import { type RemoteSpan, type StartSpanOptions, TRACE_ALL_KEY, TRACE_PROCESSOR } from '@dxos/tracing';
 
-import { type OtelOptions, resolveOtlpUrl } from './otel';
+import * as AiContent from './ai-content';
+import { type OtelOptions, signalUrl } from './otel';
+import * as OtelSpanSink from './OtelSpanSink';
+import * as SpanFanout from './span-fanout';
 import { TagInjectorSpanProcessor } from './span-processors';
+import * as TailSampling from './tail-sampling';
+
+export type OtelTracesOptions = OtelOptions & {
+  /**
+   * When set, ended spans are posted to the observability worker's `OtelSpanSink` instead of
+   * being batched and exported here. Sampling, IDs, and propagation stay in this realm.
+   */
+  spanSink?: OtelSpanSink.Handle;
+};
 
 export class OtelTraces {
   private _tracer: Tracer;
   private readonly _tracerProvider: WebTracerProvider;
+  readonly #samplingProcessors: TailSampling.TailSamplingSpanProcessor[];
 
-  constructor(private readonly options: OtelOptions) {
+  constructor(private readonly options: OtelTracesOptions) {
     propagation.setGlobalPropagator(new W3CTraceContextPropagator());
 
     const forceTraceAll = typeof localStorage !== 'undefined' && localStorage.getItem(TRACE_ALL_KEY) === 'true';
 
+    this.#samplingProcessors = options.spanSink
+      ? []
+      : this.options.destinations.map(
+          (destination) =>
+            new TailSampling.TailSamplingSpanProcessor(
+              new AiContent.AiContentStrippingSpanProcessor(
+                new BatchSpanProcessor(
+                  new OTLPTraceExporter({
+                    url: signalUrl(destination, 'traces'),
+                    headers: destination.headers,
+                    concurrencyLimit: 10,
+                  }),
+                  { scheduledDelayMillis: 5_000 },
+                ),
+              ),
+              { ratio: forceTraceAll ? 1 : undefined },
+            ),
+        );
+
     this._tracerProvider = new WebTracerProvider({
       resource: this.options.resource,
-      sampler: new ParentBasedSampler({
-        root: forceTraceAll ? new AlwaysOnSampler() : new TraceIdRatioBasedSampler(0.3),
-      }),
+      sampler: new AlwaysOnSampler(),
       spanProcessors: [
         new TagInjectorSpanProcessor(this.options.getTags),
-        new BatchSpanProcessor(
-          new OTLPTraceExporter({
-            url: resolveOtlpUrl(this.options.endpoint + '/v1/traces'),
-            headers: this.options.headers,
-            concurrencyLimit: 10,
-          }),
-          { scheduledDelayMillis: 5_000 },
-        ),
+        new SpanFanout.FanoutSpanProcessor(),
+        ...(options.spanSink ? [new OtelSpanSink.PortSpanProcessor(options.spanSink.post)] : this.#samplingProcessors),
       ],
     });
 
     trace.setGlobalTracerProvider(this._tracerProvider);
+    // Without a context manager `context.active()` is always the root, so the Effect tracer's
+    // context hook is inert and a log emitted inside a span cannot find it.
+    otelContext.setGlobalContextManager(new StackContextManager().enable());
 
     this._tracer = trace.getTracer(
       'dxos-observability',
@@ -84,6 +106,16 @@ export class OtelTraces {
    */
   public async close(): Promise<void> {
     await this._tracerProvider.shutdown();
+  }
+
+  /**
+   * Keeps the rest of a trace a warning or error log named. Reaches the in-thread sampler only;
+   * with a worker deciding, its own log sink promotes there instead.
+   */
+  public promote(traceId: string): void {
+    for (const processor of this.#samplingProcessors) {
+      processor.promote(traceId);
+    }
   }
 
   public start(): void {

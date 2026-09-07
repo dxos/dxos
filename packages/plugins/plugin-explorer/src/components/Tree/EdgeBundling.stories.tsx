@@ -72,7 +72,7 @@ const DefaultStory = ({ variant = 'edge', tension }: { variant?: TreeComponentPr
   }
 
   return (
-    <div className='relative flex h-full w-full'>
+    <div className='relative flex dx-fill'>
       <Tree
         data={data}
         edges={edges}

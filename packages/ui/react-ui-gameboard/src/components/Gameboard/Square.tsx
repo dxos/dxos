@@ -16,13 +16,13 @@ import { type DOMRectBounds } from './util';
 
 type HoveredState = 'idle' | 'validMove' | 'invalidMove';
 
+const SQUARE_NAME = 'Square';
+
 export type SquareProps = ThemedClassName<{
   location: Location;
   bounds: DOMRectBounds;
   label?: string;
 }>;
-
-const SQUARE_NAME = 'Square';
 
 export const Square = memo(({ location, bounds, label, classNames }: SquareProps) => {
   const ref = useRef<HTMLDivElement>(null);
@@ -64,8 +64,8 @@ export const Square = memo(({ location, bounds, label, classNames }: SquareProps
       style={bounds}
       className={mx(
         'absolute flex justify-center items-center border-2 box-border select-none',
-        classNames,
         state === 'validMove' ? 'border-neutral-800' : 'border-transparent',
+        classNames,
       )}
     >
       {label && <div className={mx('absolute bottom-1 left-1 text-xs text-neutral-500')}>{label}</div>}

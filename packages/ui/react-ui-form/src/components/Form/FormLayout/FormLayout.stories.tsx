@@ -342,7 +342,7 @@ const PlaygroundStory = ({ card = false }: PlaygroundStoryArgs) => {
     <Tooltip.Provider>
       <div
         className={mx(
-          'dx-container grid grid-rows-1 p-4 gap-4 overflow-hidden',
+          'dx-expand grid grid-rows-1 p-4 gap-4',
           card ? 'grid-cols-[var(--spacing-card-min-width)_var(--spacing-card-min-width)_1fr]' : 'grid-cols-2',
         )}
       >

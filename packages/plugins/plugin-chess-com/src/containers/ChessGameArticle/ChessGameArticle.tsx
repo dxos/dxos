@@ -11,7 +11,7 @@ import { useObject, useQuery } from '@dxos/echo-react';
 import * as Game from '@dxos/plugin-game/Game';
 import { Card, Flex, Icon, IconButton, Panel, Toolbar, useTranslation } from '@dxos/react-ui';
 import { Masonry } from '@dxos/react-ui-masonry';
-import { Menu } from '@dxos/react-ui-menu';
+import { ActionMenu } from '@dxos/react-ui-menu';
 
 import { meta } from '#meta';
 import { ChessComAccount, ChessComOperation } from '#types';
@@ -52,30 +52,29 @@ export const ChessGameArticle = ({ role, subject, attendableId }: ChessGameArtic
 
   return (
     <Panel.Root role={role}>
-      <Menu.Root attendableId={attendableId}>
-        <Panel.Toolbar asChild>
-          <Toolbar.Root>
-            <Toolbar.IconButton
-              icon='ph--arrows-clockwise--regular'
-              label={t('sync-games.button')}
-              onClick={handleSync}
-            />
-            {account?.username && (
-              <span className='text-subdued text-sm px-2'>
-                {account.username}
-                {account.league ? ` · ${account.league}` : ''}
-              </span>
-            )}
-            <div className='grow' />
-          </Toolbar.Root>
-        </Panel.Toolbar>
-      </Menu.Root>
+      <Panel.Toolbar asChild>
+        <Toolbar.Root>
+          <Toolbar.IconButton
+            icon='ph--arrows-clockwise--regular'
+            label={t('sync-games.button')}
+            onClick={handleSync}
+          />
+          {account?.username && (
+            <span className='text-subdued text-sm px-2'>
+              {account.username}
+              {account.league ? ` · ${account.league}` : ''}
+            </span>
+          )}
+          <div className='grow' />
+        </Toolbar.Root>
+      </Panel.Toolbar>
       <Panel.Content>
         {empty ? (
           <Flex center classNames='h-full text-subdued text-sm'>
             {t('empty-games.message')}
           </Flex>
         ) : (
+          // TODO(burdon): This seems wrong?
           <Masonry.Root Tile={GameTile} minColumnWidth={18} maxColumnWidth={24}>
             <Masonry.Content thin centered padding>
               <Masonry.Viewport classNames='py-2' items={sortedGames} getId={(game) => game.id} />
@@ -95,34 +94,31 @@ const GameTile = ({ data: game }: { data: Game.Game }) => {
   const icon = Obj.getIcon(game)?.icon ?? 'ph--sword--regular';
 
   return (
-    <Menu.Root>
-      <Card.Root ref={cardRef} fullWidth>
-        <Card.Header>
-          <Card.Block>
-            <Icon icon={icon} />
-          </Card.Block>
-          <Card.Title>{Obj.getLabel(game, { fallback: 'typename' })}</Card.Title>
-          <Card.Block end>
-            <Menu.Trigger asChild disabled={!objectMenuItems?.length}>
-              <IconButton
-                iconOnly
-                variant='ghost'
-                icon='ph--dots-three-vertical--regular'
-                label={t('game-actions.label')}
-              />
-            </Menu.Trigger>
-            <Menu.Content items={objectMenuItems} />
-          </Card.Block>
-        </Card.Header>
-        <Card.Body>
-          <Surface.Surface
-            type={AppSurface.CardContent}
-            limit={1}
-            data={{ subject: game } satisfies AppSurface.ObjectCardData}
-          />
-        </Card.Body>
-      </Card.Root>
-    </Menu.Root>
+    <Card.Root ref={cardRef} fullWidth>
+      <Card.Header>
+        <Card.Block>
+          <Icon icon={icon} />
+        </Card.Block>
+        <Card.Title>{Obj.getLabel(game, { fallback: 'typename' })}</Card.Title>
+        <Card.Block end>
+          <ActionMenu disabled={!objectMenuItems?.length} actions={objectMenuItems}>
+            <IconButton
+              iconOnly
+              variant='ghost'
+              icon='ph--dots-three-vertical--regular'
+              label={t('game-actions.label')}
+            />
+          </ActionMenu>
+        </Card.Block>
+      </Card.Header>
+      <Card.Body>
+        <Surface.Surface
+          type={AppSurface.CardContent}
+          limit={1}
+          data={{ subject: game } satisfies AppSurface.ObjectCardData}
+        />
+      </Card.Body>
+    </Card.Root>
   );
 };
 

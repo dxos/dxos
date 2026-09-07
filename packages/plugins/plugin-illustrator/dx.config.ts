@@ -31,6 +31,11 @@ export default Config2.make({
     source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-illustrator',
     icon: { key: 'ph--compass-tool--regular', hue: 'indigo' },
     spec: 'PLUGIN.mdl',
+    screenshots: [
+      {
+        dark: 'https://pub-39066a86073446d7b77b1c157b660bb5.r2.dev/demos/2026-08-27-qa-flows/plugin-illustrator-QA-1.webm',
+      },
+    ],
     tags: ['alpha'],
   },
 });

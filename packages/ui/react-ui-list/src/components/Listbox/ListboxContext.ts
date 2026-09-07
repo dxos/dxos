@@ -2,12 +2,12 @@
 // Copyright 2022 DXOS.org
 //
 
-import { createContext } from '@radix-ui/react-context';
+import { createContext } from '@dxos/react-ui';
 
 import { type UseListSelectionReturn } from '../../hooks';
 
 //
-// Contexts — plain Radix contexts (un-scoped). Scoped composition (nested Listboxes,
+// Contexts — plain `createContext` contexts from `@dxos/react-hooks` (un-scoped). Scoped composition (nested Listboxes,
 // Combobox embeddings) is a future expansion; when needed, switch to `createContextScope`
 // and thread `__listboxScope` through every subcomponent's props in one focused PR.
 //
@@ -25,6 +25,11 @@ export type ListboxContextValue = {
    * `aria-selected`, and whether row clicks update the selection model.
    */
   selectable: boolean;
+  /**
+   * Externally-managed multi-select: rows are `option`s in an `aria-multiselectable` listbox and
+   * carry the caller's `selected` state, but the internal selection model stays disengaged.
+   */
+  multiselectable: boolean;
   /** Selection aspect binding factory; items consume their own bindings from this. */
   selection: UseListSelectionReturn;
 };

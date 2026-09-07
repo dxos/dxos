@@ -578,7 +578,7 @@ const syncBoardBinding = Effect.fn(function* (bound: Cursor.ExternalCursor) {
         }),
       ),
       Effect.provide(Database.layer(db)),
-      Effect.provide(TrelloApi.TrelloCredentials.fromAccessToken(bound.spec.source)),
+      Effect.provide(TrelloApi.fromAccessToken(bound.spec.source)),
     ),
   );
 

@@ -2,8 +2,6 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type Heads } from '@automerge/automerge';
-import { type DocumentId } from '@automerge/automerge-repo';
 import * as EffectContext from 'effect/Context';
 
 import { type Context } from '@dxos/context';
@@ -15,7 +13,7 @@ import { type AutomergeProtocolMessage, type SubductionProtocolMessage } from '@
  *
  * @remarks
  * - {@link AutomergeProtocolMessage}: the classical automerge-repo sync frames
- *   (carried by `EchoEdgeReplicator`, mesh, in-memory `TestAdapter`).
+ *   (carried by mesh replication and the in-memory `TestAdapter`).
  * - {@link SubductionProtocolMessage}: the in-process subduction shape
  *   (carried by `EchoEdgeSubductionReplicator` — envelopes are unwrapped to
  *   raw `SubductionConnectionMessage` before they reach the stream).
@@ -112,23 +110,6 @@ export interface AutomergeReplicatorConnection {
    * @returns true if the collection should be synced to this peer.
    */
   shouldSyncCollection(params: ShouldSyncCollectionProps): boolean;
-
-  /**
-   * Batch syncing considered enabled if AutomergeReplicatorConnection implements `pushBatch` and `pullBatch` methods.
-   * @returns true if the batch syncing is enabled.
-   */
-  get bundleSyncEnabled(): boolean;
-
-  /**
-   * Pushes the batch of documents to the remote peer.
-   */
-  pushBundle?(ctx: Context, bundle: { documentId: DocumentId; data: Uint8Array; heads: Heads }[]): Promise<void>;
-
-  /**
-   * Pulls the batch of documents from the remote peer.
-   */
-  // TODO(mykola): Use automerge-repo-bundles Bundle type here.
-  pullBundle?(ctx: Context, docHeads: Record<DocumentId, Heads>): Promise<Record<DocumentId, Uint8Array>>;
 }
 
 export type ShouldAdvertiseProps = {

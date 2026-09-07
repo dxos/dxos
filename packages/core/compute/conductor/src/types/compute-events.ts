@@ -72,9 +72,9 @@ export const ComputeCustomEvent = Trace.EventType('compute.custom', {
  */
 export class ComputeNodeContext extends Context.Service<ComputeNodeContext, { readonly nodeId: string }>()(
   '@dxos/conductor/ComputeNodeContext',
-) {
-  static layerNoop: Layer.Layer<ComputeNodeContext> = Layer.succeed(ComputeNodeContext, { nodeId: '' });
-}
+) {}
+
+export const layerNoop: Layer.Layer<ComputeNodeContext> = Layer.succeed(ComputeNodeContext, { nodeId: '' });
 
 /**
  * Records a custom event on the trace tagged with the current compute node id.

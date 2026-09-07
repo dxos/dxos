@@ -8,7 +8,7 @@ import { meta } from '../meta';
 import { type OnboardingManager } from '../onboarding-manager';
 
 export type OnboardingOptions = {
-  generateExemplarSpace: boolean;
+  generateSampleSpace: boolean;
 };
 
 export namespace OnboardingCapabilities {

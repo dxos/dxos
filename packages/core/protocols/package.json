@@ -42,9 +42,17 @@
       "browser": "./dist/src/buf/shape-compat.js",
       "import": "./dist/src/buf/shape-compat.js"
     },
+    "./buf-service": {
+      "browser": "./dist/src/buf/service.js",
+      "import": "./dist/src/buf/service.js"
+    },
     "./buf-registry": {
       "browser": "./dist/src/buf/registry.js",
       "import": "./dist/src/buf/registry.js"
+    },
+    "./service-contract": {
+      "browser": "./dist/src/service-contract.js",
+      "import": "./dist/src/service-contract.js"
     },
     "./buf/*": {
       "browser": "./dist/src/buf/proto/gen/*.js",
@@ -61,11 +69,13 @@
     "@bufbuild/protobuf": "catalog:",
     "@dxos/async": "workspace:*",
     "@dxos/codec-protobuf": "workspace:*",
+    "@dxos/context": "workspace:*",
     "@dxos/effect": "workspace:*",
     "@dxos/errors": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
-    "@dxos/timeframe": "workspace:*"
+    "@dxos/timeframe": "workspace:*",
+    "@dxos/util": "workspace:*"
   },
   "devDependencies": {
     "@bufbuild/buf": "catalog:",

@@ -24,7 +24,9 @@ Each extension is defined in the Appendix or resolved via its URI.
 | `feat`      | `org.dxos.mdl.feat@1.0`       |
 | `test`      | `org.dxos.mdl.test@1.0`       |
 | `component` | `org.dxos.mdl.component@1.0`  |
-| `op`        | `org.dxos.mdl.op@1.0`         |
+| `op`        | `org.dxos.mdl.op@1.1`         |
+| `flow`      | `org.dxos.mdl.flow@1.0`       |
+| `step`      | `org.dxos.mdl.step@1.0`       |
 
 ## Types
 
@@ -192,6 +194,7 @@ op createMap
 
 ```mdl
 op toggleMapView
+  key: org.dxos.operation.map.setControlType
   desc: Toggles the active MapState between map and globe rendering modes.
   input:
   output: void
@@ -339,6 +342,57 @@ test T-7: MapTiler tiles when key configured
   given: settings contain an apiKey for domain 'maptiler.com'
   when: MapArticle renders in map mode
   then: the Leaflet tile layer uses the MapTiler URL (key in query); otherwise OSM
+```
+
+## QA
+
+Executable flows. Each step carries a human instruction (`do`) and, where the step maps to an
+invocable operation, an agent binding (`invoke`). Report failures by flow and step number.
+
+plugin-map is NOT in `getDefaults` under any environment (not even `isDev`) — it is OFF by default
+in every build. Enabling is a UI action (Settings -> plugin registry).
+
+```mdl
+flow QA-1: Create a map over a dataset, see markers, toggle to globe
+  desc: The core map round-trip — create a Map from an existing GeoPoint-bearing dataset, confirm
+    markers render, then flip to globe mode.
+  actors: human
+  covers: [F-1.1, F-1.2, F-2.1, F-2.2, F-3.1]
+  status: unverified
+  given:
+    - an identity exists
+    - space: a space is open
+    - collection: a collection in that space, to create into
+    - plugin-map is enabled — it is OFF by default in every environment
+    - a schema typename with a GeoPoint field "location" exists in the space, with at least one
+      row populated
+    - no Map named "QA Map" exists — ABORT rather than deleting one this flow did not create
+  test:
+    - name: Create the map
+      do: In the navtree, click + on a collection and choose Map. Name it "QA Map", select the
+        typename, and pick "location" as the geolocation field.
+      capture: created
+      expect: a Map named "QA Map" appears under the collection; a View is created and
+        Map.view references it
+      note: |
+        NO `invoke` — op:createMap has no `key:`; no `org.dxos.operation.map.createMap` (or
+        similar) is registered in `src/types/MapOperation.ts` — only `setControlType` is. Creation
+        goes through the create-object UI factory (`capabilities/create-object.ts`). This step is
+        human-only.
+    - name: See markers render
+      do: Open "QA Map" as an article.
+      expect: one pin appears per row with a valid GeoPoint on the location field; rows with a
+        missing/malformed GeoPoint are silently omitted
+    - name: Toggle to globe
+      do: Click the map/globe toggle in the toolbar.
+      invoke: [op:toggleMapView] { type: "globe" }
+      expect: GlobeControl renders in place of MapControl, and any other open map surface reflects
+        the same mode (MapState is plugin-scoped)
+  after:
+    - name: Delete the map
+      do: Right-click "QA Map" in the navtree and choose Delete.
+      invoke: org.dxos.operation.space.removeObjects { objects: [$created.object], target: $given.collection }
+      expect: the row leaves the navtree
 ```
 
 ---

@@ -94,6 +94,15 @@ session may be attached to it. Never `pkill` by pattern (`vite`, `storybook`, �
 reaches across every worktree and session on the machine. If a server you need must
 change (port, env, restart), state the intent and ask.
 
+**A wedged storybook is evidence, not an obstacle.** The dev server periodically
+stops answering (or answers while pegging a core) and the reflex is to restart it
+— which destroys the only record of why. `serve` arms a watcher that captures
+automatically; if the server was started another way, run
+`bash tools/storybook-react/diagnose.sh` BEFORE restarting. Report the path it
+writes. Note also that more than one storybook may be alive: an orphaned keeper
+from a dead session was found restarting one for five days, so the server you are
+measuring may be competing with another for CPU and file watchers.
+
 If you cannot drive a browser at all, say so in your first report and agree the
 verification protocol up front — do not discover this mid-loop.
 
@@ -135,6 +144,15 @@ app  →  storybook story (fixture-first)  →  unit test
   other until the signatures match. Do not patch the symptom at the level that
   happens to be green.
 
+## Bisect the repro before crediting a fix
+
+A candidate repro that passes on the current code proves nothing until it has been shown to
+**fail on the code from before the change**. Swap the pre-change module in (`git show <sha>:<path>`
+into place, run, restore) and keep the pair of results in the report. A repro that passes on both is
+not the user's repro — say so and go back to the contract. This is what separated the toast
+"phantom slot" (real, old module fails) from the fix that was credited for it (the repro passed on
+both, so it had fixed something else).
+
 ## Verification contract
 
 A bug is **fixed** only when the agreed repro passes — the original symptom is
@@ -149,7 +167,18 @@ tools; ask only if no tool reaches it.
 - Storybook green ≠ done. Your own metric green ≠ done. Build/lint/tests green ≠ done.
 - Rule out your own measurement artifacts (hidden tabs suspend rAF; synthetic
   `.click()` does not move attention/focus; smooth-scroll glides abort on reflow)
-  before trusting a trace — and before blaming the code.
+  before trusting a trace — and before blaming the code. **Print `document.hidden`
+  first**: the in-app Browser pane and an occluded Chrome-extension window both
+  report `true`, and a layout machine (toast, popover, menu) never settles there.
+  Raise the extension's window from the shell (`osascript` → Chrome `activate`,
+  `set index of window i to 1`) rather than asking the user to.
+- The storybook test runner renders under StrictMode only through the
+  `FRAMEWORK_OPTIONS` define in `vite.base.config.ts` (kept in parity with the
+  dev server's `framework.options.strictMode`). A defect that only double-invoked
+  effects expose shows in the dev storybook and nowhere else if that parity slips.
+- Read the runner's stderr, not just its ✓/× lines: a passing run that logs
+  React warnings (`flushSync was called from inside a lifecycle method`, act
+  warnings) is evidence of the class of bug you are hunting.
 - Never propose removing a working feature as the fix; that is a symptom patch with
   the largest possible blast radius.
 
@@ -217,6 +246,9 @@ Every status message to the user is, in order:
 
 - `debugging` — @dxos/log runtime instrumentation pipeline (app.log / test-browser.log,
   `#region DEBUG` markers, query-logs.mjs) for hypothesis testing at any ladder level.
+- `reactivity` — when the symptom is stale or missing data (updates only after navigating
+  away and back, items absent on cold load), the diagnosis usually lands on one of its
+  numbered anti-patterns; load it before writing the fix.
 - `composer-ui` — storybook setup and story conventions for new fixtures.
 - `browser-e2e-tests` — Playwright targeting rules (data-testid) when a repro
   graduates to a regression spec.

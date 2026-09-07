@@ -32,6 +32,7 @@ Each extension is defined in the Appendix or resolved via its URI.
 | `type` | `org.dxos.mdl.type@1.0`        |
 | `feat` | `org.dxos.mdl.feat@1.0`        |
 | `test` | `org.dxos.mdl.test@1.0`        |
+| `flow` | `org.dxos.mdl.flow@1.0`        |
 
 ## Types
 
@@ -481,6 +482,84 @@ test T-12: Operation failure
   then:
     - ack is { ok: false, error: 'operationFailed' }
     - an error toast is shown
+```
+
+---
+
+## QA
+
+Executable flows. Each step carries a human instruction (`do`) and, where the step maps to an
+invocable operation, an agent binding (`invoke`). Report failures by flow and step number.
+
+Note: this document declares no `op` blocks, so the operations below are referenced by their full
+runtime key rather than `[op:...]` — see `src/types/CrxOperation.ts`.
+
+```mdl
+flow QA-1: Add a Person from a page snapshot
+  desc: |
+    The core snapshot → object mapping (F-6.1), standing in for the browser extension's picker,
+    which an agent cannot drive — the extension is a separate, unautomatable browser process. This
+    flow invokes the target operation directly with a synthetic snapshot, exactly as the plugin's
+    own invoke handler does after resolving `{ snapshot, target }` (F-5.6).
+  actors: agent
+  covers: [F-3.1, F-5.6, F-6.1, T-5]
+  status: unverified
+  given:
+    - an identity exists
+    - space: a space is open
+    - plugin-crx is enabled — it is OFF by default (not in `getDefaults` and not in the dev-only
+      default set; see `packages/apps/composer-app/src/plugin-defs.tsx`)
+    - no Person named "QA Snapshot Person" exists — ABORT rather than reusing one this flow did
+      not create
+  test:
+    - name: Add the person from a snapshot
+      do: |
+        (Real path, not automatable here: with the extension installed, open the popup on a page
+        and choose the "Person" picker action, then select the page region to capture.)
+      invoke: |
+        org.dxos.operation.crx.addPersonFromSnapshot {
+          snapshot: { source: { url: "https://example.com/qa", title: "QA Page", clippedAt: "2026-08-27T00:00:00.000Z" },
+                      hints: { h1: "QA Snapshot Person" } },
+          target: $given.space.db
+        }
+      capture: created
+      expect: a Person named "QA Snapshot Person" now exists in the space
+      assert: return !!$created.id
+  after:
+    - name: Delete the Person
+      do: Right-click "QA Snapshot Person" in the navtree and choose Delete.
+      invoke: org.dxos.operation.space.removeObjects { objects: [{ "/": "echo://$given.space.id/" + $created.id }], target: $given.space }
+      expect: the row leaves the navtree
+      note: |
+        `addPersonFromSnapshot` returns a bare `id`, not a live ref, so the DXN envelope is built
+        by hand for the removal call — see Rule 4 in `op@1.1`'s parent doc about resolving by the
+        invoker path rather than guessing a shortcut.
+```
+
+```mdl
+flow QA-2: Accept-extension-actions toggle gates invocation
+  desc: |
+    The settings enforcement path (F-2c.1) — no operation exists for the settings atom itself
+    (it is a plain app-framework settings store), so this step is human-only.
+  actors: human
+  covers: [F-1.1, F-2.1, F-2c.1]
+  status: unverified
+  given:
+    - an identity exists
+    - plugin-crx is enabled — it is OFF by default (see QA-1)
+    - the Settings panel's CRX section is reachable
+  test:
+    - name: Disable "Accept extension actions"
+      do: Open Settings, find the CRX section, and toggle "Accept extension actions" off.
+      expect: the toggle shows off and the preference persists across a reload
+      note: |
+        NO `invoke` — the Settings atom has no operation binding; per F-2c.1, an invoke request
+        that arrives while this is off is still acked (error `disabled`), which requires the
+        extension itself to exercise and cannot be driven from the debug port alone.
+  after:
+    - name: Re-enable "Accept extension actions"
+      do: Toggle "Accept extension actions" back on.
+      expect: the toggle shows on again
 ```
 
 ---

@@ -225,9 +225,9 @@ const DefaultStory = ({
         )}
       </Toolbar.Root>
 
-      <div ref={bodyRef} className='grow min-h-0 flex gap-2'>
+      <div ref={bodyRef} className='dx-grow flex gap-2'>
         <Window
-          classNames='grow min-h-0'
+          classNames='dx-grow'
           model={model}
           extents={{ of: declared ?? ((index) => model.at(index)?.extent ?? 100), exact }}
           axis={axis}

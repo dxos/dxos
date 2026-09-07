@@ -254,7 +254,7 @@ export const RichTextEditor = ({ text }: { text: Text.Text }) => {
     }
   }, [signature, reconcile]);
 
-  return <div ref={parentRef} className='min-h-0 overflow-auto' data-testid='rich-text-editor' />;
+  return <div ref={parentRef} className='overflow-auto' data-testid='rich-text-editor' />;
 };
 
 /**

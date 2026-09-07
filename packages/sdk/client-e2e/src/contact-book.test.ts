@@ -10,7 +10,8 @@ import type { Space } from '@dxos/client-protocol';
 import { TestBuilder, TestSchema, performInvitation, waitForSpace } from '@dxos/client/testing';
 import { Obj } from '@dxos/echo';
 import { type PublicKey } from '@dxos/keys';
-import { type Contact, Invitation } from '@dxos/protocols/proto/dxos/client/services';
+import { Invitation_State } from '@dxos/protocols/buf/dxos/client/invitation_pb';
+import { type Contact } from '@dxos/protocols/proto/dxos/client/services';
 import { range } from '@dxos/util';
 
 describe('ContactBook', () => {
@@ -76,7 +77,7 @@ describe('ContactBook', () => {
     test('contact appears in contact book after joining a space', async () => {
       const [client1, client2] = await createInitializedClients(2);
       const space = await client1.spaces.create();
-      expectNoContacts(client1);
+      expect(client1.halo.contacts.get().length).to.eq(0);
       await inviteMember(space, client2);
       const contacts = await waitForContactBookSize(client1, 1);
       expectInContactBook(contacts, client2);
@@ -143,8 +144,6 @@ describe('ContactBook', () => {
     return initialized;
   };
 
-  const expectNoContacts = (client: Client) => expect(client.halo.contacts.get().length).to.eq(0);
-
   const waitForContactBookSize = async (client: Client, size: number): Promise<Contact[]> => {
     await waitForCondition({ condition: () => client.halo.contacts.get().length === size });
     return client.halo.contacts.get();
@@ -158,7 +157,7 @@ describe('ContactBook', () => {
 
   const inviteMember = async (host: Space, guest: Client) => {
     const [{ invitation: hostInvitation }] = await Promise.all(performInvitation({ host, guest: guest.spaces }));
-    expect(hostInvitation?.state).to.eq(Invitation.State.SUCCESS);
+    expect(hostInvitation?.state).to.eq(Invitation_State.SUCCESS);
   };
 
   const findSpace = (client: Client, spaceKey: PublicKey) => {

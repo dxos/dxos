@@ -63,6 +63,6 @@ export const handleExport = ({
   const solid = solidsRef.current.get(selectedObjectId);
   if (solid) {
     const buffer = exportSTL(solid);
-    downloadFile(buffer, 'object.stl');
+    void downloadFile(buffer, 'object.stl');
   }
 };

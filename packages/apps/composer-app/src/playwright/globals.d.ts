@@ -7,6 +7,8 @@
 // hooks appear only once the app has mounted (and `composer.manager` only after React does), so the
 // call sites still guard — the declaration buys type-checking, not a presence guarantee.
 
+import type * as Plugin from '@dxos/app-framework/Plugin';
+
 import type { ProfilerSnapshot } from '../util/profiler';
 
 // `globalThis.composer` itself is declared by `@dxos/app-framework`; a second `var composer` here
@@ -16,8 +18,8 @@ declare module '@dxos/app-framework' {
   interface ComposerDevtools {
     profiler?: { snapshot?: () => ProfilerSnapshot };
     changeStorageVersionInMetadata?: (version: number) => void;
-    /** The plugin manager; shape is framework-internal, so readers narrow what they use. */
-    manager?: { getModules?: () => unknown[] };
+    /** The plugin manager; readers narrow the module shape to what they use. */
+    manager?: { getModules?: () => readonly Plugin.PluginModule[] };
     /** The focused markdown editor, exposed so specs can drive selection the way a user would. */
     editorView?: {
       state: { doc: { toString: () => string } };

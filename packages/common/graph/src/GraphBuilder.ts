@@ -437,7 +437,7 @@ export class GraphBuilder<
   }
 
   _expandRelation(id: string, relation: string): void {
-    const key = connectorKey(id, relation);
+    const key = primaryKey(id, relation);
     const cancel = this._registry.subscribe(
       this._connectors(key),
       (entries) => {
@@ -478,10 +478,10 @@ export class GraphBuilder<
    */
   _onReleaseRelation({ id, relation }: { id: string; relation: string }): void {
     const forNode = this._subscriptions.get(id);
-    const cancel = forNode?.get(connectorKey(id, relation));
+    const cancel = forNode?.get(primaryKey(id, relation));
     if (cancel) {
       cancel();
-      forNode!.delete(connectorKey(id, relation));
+      forNode!.delete(primaryKey(id, relation));
       if (forNode!.size === 0) {
         this._subscriptions.delete(id);
       }
@@ -614,10 +614,8 @@ const modelStore = (model: Model, hooks: StoreHooks): Store<ModelNode, ModelNode
     }),
   );
 
-  const edgeId = ({ source, target, relation }: Edge) => GraphEdge.createId({ source, target, relation });
-
   const addEdge = (edge: Edge): void => {
-    const id = edgeId(edge);
+    const id = GraphEdge.createId({ source: edge.source, target: edge.target, relation: edge.relation });
     if (!model.findEdge(id)) {
       model.addEdge({ id, type: edge.relation, source: edge.source, target: edge.target, data: { order: 0 } });
     }
@@ -646,8 +644,17 @@ const modelStore = (model: Model, hooks: StoreHooks): Store<ModelNode, ModelNode
     addEdges: (edges) => model.batch(() => edges.forEach(addEdge)),
     removeEdges: (edges, removeOrphans) =>
       model.batch(() => {
-        const present = edges.filter((edge) => model.findEdge(edgeId(edge)) !== undefined);
-        model.removeEdges(present.map(edgeId));
+        const present = edges.filter(
+          (edge) =>
+            model.findEdge(
+              GraphEdge.createId({ source: edge.source, target: edge.target, relation: edge.relation }),
+            ) !== undefined,
+        );
+        model.removeEdges(
+          present.map((edge) =>
+            GraphEdge.createId({ source: edge.source, target: edge.target, relation: edge.relation }),
+          ),
+        );
         if (removeOrphans) {
           // Mirrors the app store: a node a connector stopped producing leaves with its last edge.
           const orphans = [...new Set(present.flatMap(({ source, target }) => [source, target]))].filter(
@@ -850,8 +857,6 @@ type ArgOf<B> = B extends GraphBuilder<any, infer Arg, any, any, any> ? Arg : ne
 type RelationOf<B> = B extends GraphBuilder<any, any, infer Rel, any, any> ? Rel : never;
 type MetaOf<B> = B extends GraphBuilder<any, any, any, infer Meta, any> ? Meta : never;
 type ExtensionOf<B> = Extension<NodeOf<B>, ArgOf<B>, RelationOf<B>, MetaOf<B>>;
-
-const connectorKey = (id: string, relation: string): string => primaryKey(id, relation);
 
 const relationFromConnectorKey = (key: string): { id: string; relation: string } => {
   const [id, relation] = primaryParts(key);

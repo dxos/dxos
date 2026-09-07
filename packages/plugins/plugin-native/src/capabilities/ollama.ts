@@ -38,7 +38,7 @@ export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const registry = yield* Capabilities.AtomRegistry;
 
-    const runtime = ManagedRuntime.make(OllamaSidecar.layerLive);
+    const runtime = ManagedRuntime.make(OllamaSidecarLive);
 
     // Layer for the sidecar but the lifecycle is managed by the runtime.
     const sidecarLayer = Layer.effectContext(runtime.contextEffect.pipe(Effect.map(Context.pick(OllamaSidecar))));
@@ -280,41 +280,41 @@ class OllamaSidecar extends Context.Service<
   {
     endpoint: string;
   }
->()('@dxos/plugin-native/OllamaSidecar') {
-  static layerLive = Layer.effect(
-    OllamaSidecar,
-    Effect.gen(function* () {
-      // The `ollama` launcher discovers `llama-server` + its libraries relative to its own
-      // executable (`<exe>/lib/ollama/`), ignoring OLLAMA_LIBRARY_PATH, so the runtime ships into
-      // `Contents/MacOS/lib/ollama` next to the signed sidecar (see tauri.conf bundle.macOS.files).
-      const command = Command.sidecar('sidecar/ollama', ['serve'], {
-        env: {
-          OLLAMA_HOST,
-          OLLAMA_ORIGINS: '*', // CORS
-        },
-      });
+>()('@dxos/plugin-native/OllamaSidecar') {}
 
-      // Ollama writes nearly all of its output (including normal startup/inference logs) to stderr,
-      // so route by the structured `level=` field rather than the stream to avoid flooding the
-      // console with red errors. Kept on `console.*` for Ollama's own line formatting.
-      command.stdout.on('data', (data) => logSidecar(data.toString()));
-      command.stderr.on('data', (data) => logSidecar(data.toString()));
-      command.on('close', (code) => log.info('Ollama process exited', { code }));
-      command.on('error', (error) => log.error('Ollama error', { error }));
-      const child = yield* Effect.promise(() => command.spawn());
-      yield* Effect.addFinalizer(
-        Effect.fn(function* () {
-          yield* Effect.promise(() => child.kill());
-        }),
-      );
-      log.info('Running ollama', { pid: child.pid });
+const OllamaSidecarLive = Layer.effect(
+  OllamaSidecar,
+  Effect.gen(function* () {
+    // The `ollama` launcher discovers `llama-server` + its libraries relative to its own
+    // executable (`<exe>/lib/ollama/`), ignoring OLLAMA_LIBRARY_PATH, so the runtime ships into
+    // `Contents/MacOS/lib/ollama` next to the signed sidecar (see tauri.conf bundle.macOS.files).
+    const command = Command.sidecar('sidecar/ollama', ['serve'], {
+      env: {
+        OLLAMA_HOST,
+        OLLAMA_ORIGINS: '*', // CORS
+      },
+    });
 
-      return {
-        endpoint: OLLAMA_HOST,
-      };
-    }),
-  );
-}
+    // Ollama writes nearly all of its output (including normal startup/inference logs) to stderr,
+    // so route by the structured `level=` field rather than the stream to avoid flooding the
+    // console with red errors. Kept on `console.*` for Ollama's own line formatting.
+    command.stdout.on('data', (data) => logSidecar(data.toString()));
+    command.stderr.on('data', (data) => logSidecar(data.toString()));
+    command.on('close', (code) => log.info('Ollama process exited', { code }));
+    command.on('error', (error) => log.error('Ollama error', { error }));
+    const child = yield* Effect.promise(() => command.spawn());
+    yield* Effect.addFinalizer(
+      Effect.fn(function* () {
+        yield* Effect.promise(() => child.kill());
+      }),
+    );
+    log.info('Running ollama', { pid: child.pid });
+
+    return {
+      endpoint: OLLAMA_HOST,
+    };
+  }),
+);
 
 const OllamaSidecarModelResolver: Layer.Layer<AiModelResolver.AiModelResolver, never, OllamaSidecar> = Layer.unwrap(
   Effect.gen(function* () {

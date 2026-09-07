@@ -487,17 +487,17 @@ const DeckPlankTile: MosaicStackTileComponent<string> = (props) => {
     // type across a presentation change — the reconciliation that keeps a plank's DOM (and therefore
     // its content state and scroll) alive when the deck crosses 1↔2 planks.
     return (
-      <Mosaic.Tile {...props} classNames='relative h-full w-full'>
+      <Mosaic.Tile {...props} classNames='relative dx-fill'>
         {companion ? (
           <CompanionSplit
             id={id}
             companionId={companion}
             active={deck.active}
             companionSize={soloCompanionSize}
-            classNames={mx('absolute inset-0', mainPaddingTransitions)}
+            classNames={mx('dx-fullscreen', mainPaddingTransitions)}
           />
         ) : (
-          <DeckPlank id={id} part='main' active={deck.active} classNames={mx('absolute inset-0', mainIntrinsicSize)} />
+          <DeckPlank id={id} part='main' active={deck.active} classNames={mx('dx-fullscreen', mainIntrinsicSize)} />
         )}
       </Mosaic.Tile>
     );
@@ -506,7 +506,7 @@ const DeckPlankTile: MosaicStackTileComponent<string> = (props) => {
   // Mobile planks are fixed full-viewport-width scroll-snap points, not user-resizable.
   if (isMobile) {
     return (
-      <Mosaic.Tile {...props} classNames='relative h-full w-full snap-start'>
+      <Mosaic.Tile {...props} classNames='relative dx-fill snap-start'>
         <DeckPlank id={id} part='main' active={deck.active} classNames='size-full' />
       </Mosaic.Tile>
     );
@@ -1747,12 +1747,7 @@ export const DeckPlanks = () => {
         {fullscreen && fullscreenId ? (
           <>
             <ExitFullscreenButton onExit={toggleFullscreen} />
-            <DeckPlank
-              id={fullscreenId}
-              part='main'
-              fullscreen
-              classNames={mx('absolute inset-0', mainIntrinsicSize)}
-            />
+            <DeckPlank id={fullscreenId} part='main' fullscreen classNames={mx('dx-fullscreen', mainIntrinsicSize)} />
           </>
         ) : (
           // Every non-fullscreen presentation renders through this one pipeline — fullbleed included
@@ -1761,7 +1756,7 @@ export const DeckPlanks = () => {
           // fullbleed branch here remounted the surviving plank on every message open/close (the
           // mailbox-list flash). The stack is `w-full` when not sliding so the lone tile's `w-full`
           // resolves against the viewport instead of a shrink-wrapped flex row.
-          <Mosaic.Container orientation='horizontal' classNames={['absolute inset-0', mainPaddingTransitions]}>
+          <Mosaic.Container orientation='horizontal' classNames={['dx-fullscreen', mainPaddingTransitions]}>
             <ScrollArea.Root orientation='horizontal' classNames='size-full'>
               <ScrollArea.Viewport
                 ref={viewportRef}
@@ -1780,7 +1775,7 @@ export const DeckPlanks = () => {
                   // sliding deck; it is a gap only, so the deck runs flush to both ends of the viewport.
                   classNames={
                     breakpoint === 'mobile'
-                      ? 'h-full w-full'
+                      ? 'dx-fill'
                       : isSliding
                         ? mx(
                             'h-full gap-(--main-spacing)',
@@ -1791,7 +1786,7 @@ export const DeckPlanks = () => {
                             // along with the row.
                             expose && 'origin-left translate-x-(--deck-expose-inset) scale-(--deck-expose-scale)',
                           )
-                        : 'h-full w-full'
+                        : 'dx-fill'
                   }
                   getId={getPlankId}
                   items={planks}

@@ -8,7 +8,6 @@ import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import {
   AgentHandlers,
   AgentSkillHandlers,
-  AgentWizardHandlers,
   ChatContextHandlers,
   DelegationSkillHandlers,
   SkillManagerHandlers,
@@ -27,7 +26,6 @@ const handlerSet = OperationHandlerSet.merge(
   SkillManagerHandlers,
   ChatContextHandlers,
   WebSearchHandlers,
-  AgentWizardHandlers,
   DelegationSkillHandlers,
 );
 

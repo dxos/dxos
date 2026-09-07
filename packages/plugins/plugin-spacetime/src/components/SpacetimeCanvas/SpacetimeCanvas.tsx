@@ -513,7 +513,7 @@ export const SpacetimeCanvas = composable<HTMLDivElement, SpacetimeCanvasProps>(
         }}
       >
         <canvas
-          className='absolute inset-0 w-full h-full block outline-none'
+          className='dx-fullscreen dx-fill block outline-none'
           onContextMenu={(event) => event.preventDefault()}
           ref={canvasRef}
         />

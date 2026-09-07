@@ -3,8 +3,7 @@
 //
 
 import { sleep } from '@dxos/async';
-import { type Codec } from '@dxos/codec-protobuf';
-import { createCodecEncoding } from '@dxos/hypercore';
+import { type ValueCodec, createCodecEncoding } from '@dxos/hypercore';
 import { random } from '@dxos/random';
 import type { AbstractValueEncoding } from '@dxos/vendor-hypercore/hypercore';
 
@@ -16,7 +15,7 @@ export type TestItem = {
   value: string;
 };
 
-export const defaultCodec: Codec<any> = {
+export const defaultCodec: ValueCodec<any> = {
   encode: (obj: any) => Buffer.from(JSON.stringify(obj)),
   decode: (buffer: Uint8Array) => JSON.parse(buffer.toString()),
 };

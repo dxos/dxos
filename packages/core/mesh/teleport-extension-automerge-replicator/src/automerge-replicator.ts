@@ -7,7 +7,7 @@ import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { RpcClosedError } from '@dxos/protocols';
-import { schema } from '@dxos/protocols/proto';
+import { getBufService } from '@dxos/protocols/buf-service';
 import {
   type AutomergeReplicatorService,
   type PeerInfo,
@@ -78,10 +78,14 @@ export class AutomergeReplicator implements TeleportExtension {
     this._rpc = createProtoRpcPeer<ServiceBundle, ServiceBundle>({
       timeout: RPC_TIMEOUT,
       requested: {
-        AutomergeReplicatorService: schema.getService('dxos.mesh.teleport.automerge.AutomergeReplicatorService'),
+        AutomergeReplicatorService: getBufService<AutomergeReplicatorService>(
+          'dxos.mesh.teleport.automerge.AutomergeReplicatorService',
+        ),
       },
       exposed: {
-        AutomergeReplicatorService: schema.getService('dxos.mesh.teleport.automerge.AutomergeReplicatorService'),
+        AutomergeReplicatorService: getBufService<AutomergeReplicatorService>(
+          'dxos.mesh.teleport.automerge.AutomergeReplicatorService',
+        ),
       },
       handlers: {
         AutomergeReplicatorService: {

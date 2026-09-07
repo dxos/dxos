@@ -8,11 +8,12 @@ import { ClientService } from '@dxos/client';
 import * as Operation from '@dxos/compute/Operation';
 import { Database } from '@dxos/echo';
 
+import { SandboxOperation } from '#types';
+
 import { mergeExecEnv } from '../../services/sandbox-env';
 import { createSandboxClient } from '../../services/sandbox-url';
-import { Exec } from './definitions';
 
-export default Exec.pipe(
+export default SandboxOperation.Exec.pipe(
   Operation.withHandler(
     Effect.fn(function* ({ sandbox, command, cwd, env, timeout }) {
       const { db } = yield* Database.Service;

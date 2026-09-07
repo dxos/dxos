@@ -61,7 +61,7 @@ export const EditorStory = forwardRef<EditorController, EditorStoryArgs>(
     );
 
     return (
-      <div className={mx('dx-container grid', debug && 'grid-cols-2 lg:grid-cols-[1fr_600px]')}>
+      <div className={mx('dx-expand grid', debug && 'grid-cols-2 lg:grid-cols-[1fr_600px]')}>
         <EditorComponent ref={mergedRef} object={object} text={text} extensions={extensions} {...props} />
 
         {debug && (

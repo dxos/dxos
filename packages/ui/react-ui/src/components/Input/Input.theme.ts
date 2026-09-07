@@ -34,17 +34,22 @@ const textInputSurfaceFocus =
 
 const textInputSurfaceHover = 'hover:bg-focus-surface';
 
-// TODO(burdon): Replace with semantic tokens.
+/**
+ * The control's border takes the valence's semantic border token, and so does its focus band: the
+ * `dx-input` focus rule paints ring and border from `--dx-input-focus-ring`, which is set here
+ * because that rule's compound selector outranks any single utility. Repeated under `focus-within`
+ * for the non-visible focus, where `dx-input` restores the plain separator.
+ */
 const valence = (valence?: MessageValence) => {
   switch (valence) {
     case 'success':
-      return 'shadow-emerald-500/50 dark:shadow-emerald-600/50';
+      return 'border-success-border focus-within:border-success-border [--dx-input-focus-ring:var(--color-success-border)]';
     case 'info':
-      return 'shadow-cyan-500/50 dark:shadow-cyan-600/50';
+      return 'border-info-border focus-within:border-info-border [--dx-input-focus-ring:var(--color-info-border)]';
     case 'warning':
-      return 'shadow-amber-500/50 dark:shadow-amber-600/50';
+      return 'border-warning-border focus-within:border-warning-border [--dx-input-focus-ring:var(--color-warning-border)]';
     case 'error':
-      return 'shadow-rose-500/50 dark:shadow-rose-600/50';
+      return 'border-error-border focus-within:border-error-border [--dx-input-focus-ring:var(--color-error-border)]';
   }
 };
 
@@ -86,7 +91,13 @@ const input: ComponentFunction<InputStyleProps> = (props, ...etc) =>
       ? mx(...sharedStaticInputStyles(props), ...etc)
       : mx(...sharedDefaultInputStyles(props), valence(props.validationValence), ...etc);
 
-const textArea: ComponentFunction<InputStyleProps> = (props, ...etc) => input(props, ...etc);
+// An `<input>` centres its single line inside `--dx-control`, so `py-0` still reads as inset; a
+// textarea lays text from the top edge, where the same rule puts the first line against the border.
+// The inline pad is reused for the block axis: it lands within ~1.5px of the input's optical inset
+// (6.5px against a 32px control) and tracks density with it. Centring it exactly would need
+// `calc((var(--dx-control) - 1lh) / 2)`, and `lh` is newer than this app's browser targets
+// (chrome108 / firefox104 / safari16), where the whole declaration would be dropped.
+const textArea: ComponentFunction<InputStyleProps> = (props, ...etc) => input(props, 'py-(--dx-control-pad)', ...etc);
 
 // Container that carries the input surface/border/focus when the field has adornments; the inner
 // `<input>` renders "bare" (subdued) so the box wraps the whole row (start adornment · field · end).
@@ -107,8 +118,8 @@ const adornment: ComponentFunction<Partial<{ side: 'start' | 'end' }>> = (props,
 const checkbox: ComponentFunction<InputStyleProps> = ({ size = 4 }, ...etc) =>
   mx('dx-checkbox dx-focus-ring', getSize(size), ...etc);
 
-const checkboxIndicator: ComponentFunction<InputStyleProps> = ({ size = 4, checked }, ...etc) =>
-  mx(getSize(snapSize(sizeValue(size) * 0.65, 4)), !checked && 'invisible', ...etc);
+const checkboxIndicator: ComponentFunction<InputStyleProps> = ({ size = 4 }, ...etc) =>
+  mx(getSize(snapSize(sizeValue(size) * 0.65, 4)), ...etc);
 
 const switch_: ComponentFunction<InputStyleProps> = (_props, ...etc) => mx('dx-checkbox--switch dx-focus-ring', ...etc);
 
@@ -133,8 +144,17 @@ const segment: ComponentFunction<InputStyleProps> = (props, ...etc) =>
     ...etc,
   );
 
+// The field's element: it exists so the machine can watch for its texts, not to lay anything out,
+// so it takes no box unless a consumer gives it one. Its parts stand where it stands in a Column
+// grid — the grid places direct children only, and a box-less root would strand them in the gutter.
+const root: ComponentFunction<InputStyleProps> = (_props, ...etc) =>
+  mx('contents [&>*]:[grid-column:var(--dx-col,auto)]', ...etc);
+
+// Matches `react-ui-form`'s `fieldLabel` geometry: a control-height row with the text centred, so a
+// label sits the same distance from its field in a bare `Input.Root` as in a schema-driven form.
+// Only when visible — an sr-only label is out of flow, and a min-height on it would be meaningless.
 const label: ComponentFunction<InputMetaStyleProps> = (props, ...etc) =>
-  mx('block text-sm text-description', props.srOnly && 'sr-only', ...etc);
+  mx('text-sm text-description', props.srOnly ? 'sr-only' : 'flex items-center min-h-(--dx-control)', ...etc);
 
 const description: ComponentFunction<InputMetaStyleProps> = (props, ...etc) =>
   mx('text-description', props.srOnly && 'sr-only', ...etc);
@@ -157,6 +177,7 @@ const block: ComponentFunction<InputStyleProps> = (props, ...etc) =>
   mx('grid place-items-center w-[var(--dx-rail-item)] h-[var(--dx-rail-item)]', ...etc);
 
 export const inputTheme = {
+  root,
   input,
   container,
   adornment,

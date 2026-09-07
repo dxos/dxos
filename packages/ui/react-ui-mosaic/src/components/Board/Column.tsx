@@ -16,7 +16,7 @@ import { Obj, Ref } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { IconButton, ScrollArea, type ThemedClassName, Toolbar, useTranslation } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
-import { Menu, createMenuAction } from '@dxos/react-ui-menu';
+import { ActionMenu, createMenuAction } from '@dxos/react-ui-menu';
 import { mx } from '@dxos/ui-theme';
 
 import { translationKey } from '#translations';
@@ -66,7 +66,7 @@ const BoardColumnRootInner = composable<HTMLDivElement, BoardColumnRootProps>(
           border
           classNames={mx(
             'group/column',
-            'h-full w-full md:w-card-default-width snap-center dx-deck-surface',
+            'dx-fill md:w-card-default-width snap-center dx-deck-surface',
             'overflow-hidden',
             classNames,
           )}
@@ -112,7 +112,7 @@ const BoardColumnHeader = composable<HTMLDivElement, BoardColumnHeaderProps>(
     );
 
     return (
-      <Menu.Root>
+      <>
         {/* TODO(burdon): Use Card.Header. */}
         <Toolbar.Root
           {...composableProps(props, { classNames: 'gap-0' })}
@@ -124,17 +124,16 @@ const BoardColumnHeader = composable<HTMLDivElement, BoardColumnHeaderProps>(
             {label}
           </Toolbar.Text>
           {/* TODO(wittjosiah): Reconcile with Card.Menu. */}
-          <Menu.Trigger asChild disabled={!columnMenuItems?.length}>
+          <ActionMenu disabled={!columnMenuItems?.length} actions={columnMenuItems}>
             <Toolbar.IconButton
               iconOnly
               variant='ghost'
               icon='ph--dots-three-vertical--regular'
               label={t('action-menu.label')}
             />
-          </Menu.Trigger>
-          <Menu.Content items={columnMenuItems} />
+          </ActionMenu>
         </Toolbar.Root>
-      </Menu.Root>
+      </>
     );
   },
 );

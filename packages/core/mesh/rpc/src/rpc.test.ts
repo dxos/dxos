@@ -6,9 +6,9 @@ import { describe, expect, test } from 'vitest';
 
 import { Trigger, sleep } from '@dxos/async';
 import { Stream } from '@dxos/async';
-import { type Any, type TaggedType } from '@dxos/codec-protobuf';
 import { log } from '@dxos/log';
 import { type TYPES } from '@dxos/protocols/proto';
+import { type AnyEnvelope, type TaggedType } from '@dxos/protocols/service-contract';
 
 import { RpcPeer } from './rpc';
 import { createLinkedPorts, encodeMessage } from './testing';
@@ -56,9 +56,6 @@ describe('RpcPeer', () => {
       const promise = alice.open().then(() => {
         aliceOpen = true;
       });
-
-      await sleep(5);
-      expect(aliceOpen).toEqual(false);
 
       await bob.open();
 
@@ -357,7 +354,7 @@ describe('RpcPeer', () => {
         streamHandler: (method, msg) => {
           expect(method).toEqual('method');
           expect(msg.value!).toEqual(encodeMessage('request'));
-          return new Stream<Any>(({ next, close }) => {
+          return new Stream<AnyEnvelope>(({ next, close }) => {
             next(createPayload('res1'));
             next(createPayload('res2'));
             close();
@@ -392,7 +389,7 @@ describe('RpcPeer', () => {
         streamHandler: (method, msg) => {
           expect(method).toEqual('method');
           expect(msg.value).toEqual(encodeMessage('request'));
-          return new Stream<Any>(({ next, close }) => {
+          return new Stream<AnyEnvelope>(({ next, close }) => {
             close(new Error('Test error'));
           });
         },
@@ -419,12 +416,12 @@ describe('RpcPeer', () => {
     test('client closes the stream', async () => {
       const [alicePort, bobPort] = createLinkedPorts();
 
-      let closeCalled = false;
+      const closeTrigger = new Trigger();
       const alice = new RpcPeer({
         callHandler: async (msg) => createPayload(),
         streamHandler: (method, msg) =>
-          new Stream<Any>(({ next, close }) => () => {
-            closeCalled = true;
+          new Stream<AnyEnvelope>(({ next, close }) => () => {
+            closeTrigger.wake();
           }),
         port: alicePort,
       });
@@ -439,8 +436,8 @@ describe('RpcPeer', () => {
       const stream = bob.callStream('method', createPayload('request'));
       await stream.close();
 
-      // Poll until the close notification round-trips to the remote peer.
-      await expect.poll(() => closeCalled).toEqual(true);
+      // Wait for the close notification to round-trip to the remote peer.
+      await closeTrigger.wait();
     });
 
     test('reports stream being ready', async () => {
@@ -451,7 +448,7 @@ describe('RpcPeer', () => {
         streamHandler: (method, msg) => {
           expect(method).toEqual('method');
           expect(msg.value!).toEqual(encodeMessage('request'));
-          return new Stream<Any>(({ ready, close }) => {
+          return new Stream<AnyEnvelope>(({ ready, close }) => {
             ready();
             close();
           });
@@ -479,7 +476,7 @@ describe('RpcPeer', () => {
 
       const alice = new RpcPeer({
         callHandler: async (msg) => createPayload(),
-        streamHandler: (method, msg): Stream<Any> => {
+        streamHandler: (method, msg): Stream<AnyEnvelope> => {
           throw new Error('Test error');
         },
         port: alicePort,

@@ -65,6 +65,9 @@
       "path": "../../sdk/types"
     },
     {
+      "path": "../../ui/react-primitives/react-focus"
+    },
+    {
       "path": "../../ui/react-primitives/react-hooks"
     },
     {
@@ -93,9 +96,6 @@
     },
     {
       "path": "../../ui/react-ui-syntax-highlighter"
-    },
-    {
-      "path": "../../ui/react-ui-tabs"
     },
     {
       "path": "../../ui/ui-editor"

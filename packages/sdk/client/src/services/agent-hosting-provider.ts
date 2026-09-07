@@ -10,7 +10,7 @@ import { type Config, getEnvString } from '@dxos/config';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { schema } from '@dxos/protocols/proto';
+import { getBufService } from '@dxos/protocols/buf-service';
 import { type Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { type AgentManager, InitAuthSequenceResponse } from '@dxos/protocols/proto/dxos/service/agentmanager';
 import { type WebsocketRpcClient } from '@dxos/websocket-rpc';
@@ -211,7 +211,7 @@ export class AgentManagerClient implements AgentHostingProviderClient {
     const { WebsocketRpcClient } = await import('@dxos/websocket-rpc');
     this._rpc = new WebsocketRpcClient({
       url: this._wsDxrpcUrl,
-      requested: { AgentManager: schema.getService('dxos.service.agentmanager.AgentManager') },
+      requested: { AgentManager: getBufService<AgentManager>('dxos.service.agentmanager.AgentManager') },
       noHandshake: true,
     });
 

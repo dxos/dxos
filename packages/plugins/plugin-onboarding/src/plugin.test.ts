@@ -15,7 +15,7 @@ const moduleId = (name: string) => `${meta.profile.key}.module.${name}`;
 describe('OnboardingPlugin', () => {
   test('modules activate on the expected events', async ({ expect }) => {
     await using harness = await createComposerTestApp({
-      plugins: [OnboardingPlugin({ generateExemplarSpace: false })],
+      plugins: [OnboardingPlugin({ generateSampleSpace: false })],
     });
 
     // All dependency-mode roots, so they activate immediately during the startup dependency pass.

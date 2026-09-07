@@ -2,8 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
-import { createContext } from '@radix-ui/react-context';
 import { type MutableRefObject } from 'react';
+
+import { createContext } from '@dxos/react-ui';
 
 import { type GridConstraints, type GridMode, type GridPosition, type Layout } from './engine';
 import { type GridCellSize } from './geometry';

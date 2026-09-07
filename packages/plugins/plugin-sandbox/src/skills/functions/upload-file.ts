@@ -11,10 +11,11 @@ import { Blob, Database } from '@dxos/echo';
 // eslint-disable-next-line unused-imports/no-unused-imports
 import { type File } from '@dxos/types';
 
-import { createSandboxClient } from '../../services/sandbox-url';
-import { UploadFile } from './definitions';
+import { SandboxOperation } from '#types';
 
-export default UploadFile.pipe(
+import { createSandboxClient } from '../../services/sandbox-url';
+
+export default SandboxOperation.UploadFile.pipe(
   Operation.withHandler(
     Effect.fn(function* ({ sandbox, file, path }) {
       const { db } = yield* Database.Service;

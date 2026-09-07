@@ -23,7 +23,7 @@ const TestLayer = AssistantTestLayer({
   types: [Organization.Organization, Person.Person, Employer.Employer, Tag.Tag, Skill.Skill, Feed.Feed],
   skills: [ChatContextSkill.make()],
   tracing: 'pretty',
-  model: DXN.make('com.anthropic.model.claude-sonnet-4-6.default'),
+  model: DXN.make('com.anthropic.model.claude-sonnet-5.default'),
   aiServicePreset: 'direct',
 });
 

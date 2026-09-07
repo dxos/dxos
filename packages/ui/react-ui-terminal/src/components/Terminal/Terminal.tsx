@@ -10,7 +10,7 @@ import * as Effect from 'effect/Effect';
 import * as Fiber from 'effect/Fiber';
 import type * as Layer from 'effect/Layer';
 import type * as Command from 'effect/unstable/cli/Command';
-import React, { useEffect, useRef } from 'react';
+import React, { type Ref, useEffect, useImperativeHandle, useRef } from 'react';
 
 import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
@@ -18,7 +18,15 @@ import { mx } from '@dxos/ui-theme';
 import { XtermBridge, XtermContext, runShell } from '../../cli';
 import { createXtermTheme } from './theme';
 
+/** Imperative surface for hosts that render controls beside the terminal (a clear button, e.g.). */
+export type TerminalApi = {
+  clear: () => void;
+  focus: () => void;
+};
+
 export type TerminalProps<Name extends string, Input, ContextInput, E, R> = ThemedClassName<{
+  /** Publishes the {@link TerminalApi} while mounted. */
+  ref?: Ref<TerminalApi>;
   /**
    * Root of an Effect CLI command tree; typically built with `Command.withSubcommands`.
    */
@@ -36,6 +44,12 @@ export type TerminalProps<Name extends string, Input, ContextInput, E, R> = Them
   prompt?: string;
   banner?: string;
   fontSize?: number;
+  /**
+   * Fixed cell grid. With this the terminal renders exactly `cols × rows` and the element hugs the
+   * grid, so a host sized by its content (a popover) shows no rounding slack; without it the
+   * terminal fits itself to the container, whose trailing partial cells read as a gap.
+   */
+  dimensions?: { cols: number; rows: number };
 }>;
 
 /**
@@ -45,6 +59,7 @@ export type TerminalProps<Name extends string, Input, ContextInput, E, R> = Them
  * client, for instance) persists across commands the way it does in a long-lived shell.
  */
 export const Terminal = <Name extends string, Input, ContextInput, E, R>({
+  ref,
   classNames,
   command,
   layer,
@@ -53,8 +68,21 @@ export const Terminal = <Name extends string, Input, ContextInput, E, R>({
   prompt,
   banner,
   fontSize = 13,
+  dimensions,
 }: TerminalProps<Name, Input, ContextInput, E, R>) => {
   const containerRef = useRef<HTMLDivElement>(null);
+
+  // The instance is reached through a ref rather than published from the effect, so a host taking a
+  // new ref object on re-render re-reads it without the terminal being torn down and rebuilt.
+  const xtermRef = useRef<Xterm | null>(null);
+  useImperativeHandle(
+    ref,
+    () => ({
+      clear: () => xtermRef.current?.clear(),
+      focus: () => xtermRef.current?.focus(),
+    }),
+    [],
+  );
 
   useEffect(() => {
     const container = containerRef.current;
@@ -69,17 +97,21 @@ export const Terminal = <Name extends string, Input, ContextInput, E, R>({
       fontSize,
       fontFamily: styles.getPropertyValue('--font-mono').trim() || 'monospace',
       cursorBlink: true,
+      ...dimensions,
     });
 
-    const fitAddon = new FitAddon();
-    xterm.loadAddon(fitAddon);
+    // Fixed-grid mode needs no fitting: the terminal is its own size and the host hugs it.
+    const fitAddon = dimensions ? undefined : new FitAddon();
+    if (fitAddon) {
+      xterm.loadAddon(fitAddon);
+    }
     xterm.open(container);
 
     // Fitting a zero-sized container pins the terminal to its one-column minimum, and fitting
     // before xterm's render service exists throws, so the observer's initial callback — which
     // lands once the element is measurable and the renderer is up — drives the first fit too.
     const fit = () => {
-      if (container.clientWidth > 0 && container.clientHeight > 0) {
+      if (fitAddon && container.clientWidth > 0 && container.clientHeight > 0) {
         fitAddon.fit();
       }
     };
@@ -96,6 +128,7 @@ export const Terminal = <Name extends string, Input, ContextInput, E, R>({
     themeObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['class', 'style'] });
 
     xterm.focus();
+    xtermRef.current = xterm;
 
     const bridge = new XtermBridge(xterm);
     const shell = runShell(bridge, { command, name, version, prompt, banner }).pipe(
@@ -108,6 +141,7 @@ export const Terminal = <Name extends string, Input, ContextInput, E, R>({
     observer.observe(container);
 
     return () => {
+      xtermRef.current = null;
       cancelAnimationFrame(frame);
       themeObserver.disconnect();
       observer.disconnect();
@@ -124,7 +158,12 @@ export const Terminal = <Name extends string, Input, ContextInput, E, R>({
         ),
       );
     };
-  }, [command, layer, name, version, prompt, banner, fontSize]);
+  }, [command, layer, name, version, prompt, banner, fontSize, dimensions?.cols, dimensions?.rows]);
 
-  return <div ref={containerRef} className={mx('grow w-full h-full overflow-hidden bg-base-surface', classNames)} />;
+  return (
+    <div
+      className={mx('p-1 overflow-hidden', dimensions ? 'w-max h-max' : 'grow dx-fill', classNames)}
+      ref={containerRef}
+    />
+  );
 };

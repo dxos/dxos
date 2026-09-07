@@ -78,9 +78,8 @@ export const compatible = (source: SchemaEx.SchemaProperty, target: SchemaEx.Sch
   if (SchemaAST.isDeclaration(source.type)) {
     // Two absent identifiers must not compare equal, or unrelated declarations would map to each
     // other; the explicit `undefined` check below is what prevents that.
-    const identifier = (ast: SchemaAST.AST) => SchemaAST.getIdentifierAnnotation(ast);
-    const sourceIdentifier = identifier(source.type);
-    return sourceIdentifier !== undefined && sourceIdentifier === identifier(target.type);
+    const sourceIdentifier = SchemaAST.getIdentifierAnnotation(source.type);
+    return sourceIdentifier !== undefined && sourceIdentifier === SchemaAST.getIdentifierAnnotation(target.type);
   }
 
   return true;

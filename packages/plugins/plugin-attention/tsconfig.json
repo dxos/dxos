@@ -19,9 +19,6 @@
   ],
   "references": [
     {
-      "path": "../../common/keyboard"
-    },
-    {
       "path": "../../common/util"
     },
     {
@@ -32,6 +29,9 @@
     },
     {
       "path": "../../sdk/app-toolkit"
+    },
+    {
+      "path": "../../ui/react-primitives/react-focus"
     },
     {
       "path": "../../ui/react-ui"

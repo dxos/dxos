@@ -229,7 +229,6 @@ const Controls = ({ children }: PropsWithChildren) => {
           <Select.TriggerButton placeholder='Select value' />
           <Select.Portal>
             <Select.Content>
-              <Select.ScrollUpButton />
               <Select.Viewport>
                 {Object.keys(actionWeights).map((action) => (
                   <Select.Option key={action} value={action}>
@@ -237,8 +236,6 @@ const Controls = ({ children }: PropsWithChildren) => {
                   </Select.Option>
                 ))}
               </Select.Viewport>
-              <Select.ScrollDownButton />
-              <Select.Arrow />
             </Select.Content>
           </Select.Portal>
         </Select.Root>

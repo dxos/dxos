@@ -1,35 +1,75 @@
 # CI — design notes
 
-The build/test pipeline itself: runners, caching, and the workflows in `.github/workflows`.
+The build/test pipeline itself: runners, caching, and the workflows in `.depot/workflows`
+(Depot CI) and `.github/workflows`.
 Measurements live in [`REPORT.md`](./REPORT.md), open work in [`TASKS.md`](./TASKS.md), and the
 cache's operational runbook in [`tools/moon-cache/`](../../../tools/moon-cache/README.md).
 
 ## Shape of the pipeline
 
-One workflow, **Check** (`.github/workflows/check.yml`) — build, test, lint, fmt. Seven job types
-on `depot-ubuntu-24.04-8`, all inside `ghcr.io/dxos/gh-actions`, with e2e sharded further. Roughly
-300 tasks in the composer-app dependency closure, so ~10 concurrent cache clients per run.
+One workflow, **Check** (`.depot/workflows/check.yml`, on Depot CI) — build, test, lint, fmt. Seven
+job types on `depot-ubuntu-24.04-8`, all inside `ghcr.io/dxos/gh-actions`, with e2e sharded further.
+Roughly 300 tasks in the composer-app dependency closure, so ~10 concurrent cache clients per run.
 
 Everything routes through `moon`, and `.moon/workspace.yml` decides where the remote cache lives.
 
-### The `check` job runs in three stages, ordered by cost
+### What runs is decided once per job, not per step
 
-Its steps are cheap-first, because what the ordering buys is time-to-red-signal on a broken PR — not
-a shorter Check, whose length is set by the `test` shards, not by `check` (~8 min). Stage boundaries
-are the dependency edges:
+`.depot/actions/affected` resolves the trigger to `MOON_AFFECTED`/`MOON_BASE` (or to nothing, for a
+full run) immediately after setup, and every `moon` step is then unconditional — no `--affected`
+flag, no `if:`. The previous shape carried an Affected and an All variant of each step gated on
+`branch != 'main'`, which is a proxy that gets several triggers wrong and which doubled again in
+`test` for the presence of `TRUNK_TOKEN` (four steps for one command). Three things follow:
 
-1. **No-build gates, ~30 s combined** — `format-check` first (one unformatted file fails every job
-   in the workflow), then the packaging scripts, then the peer-dependency resolution.
-2. **The compile gate** — `moon run :lint :build`, ~15 s warm and the job's floor cold.
+- **The base comes from the event, not from `vcs.defaultBranch`.** `moon`'s own `remote` scope is
+  right only for a topic-branch PR; `pull_request.base.sha` and `merge_group.base_sha` are exact.
+- **A missing event resolves too.** With no `GITHUB_*` in the environment the resolver falls back to
+  the merge-base with `origin/main`, so running it by hand in a checkout scopes the way the real
+  trigger would rather than rebuilding the world. The resolver's `--event <name>` emulates any
+  trigger; the full table is in `.depot/actions/affected/README.md`.
+- **An unresolvable base means a full run, never an empty one.** `moon` exits 0 having run nothing
+  when the affected set comes back empty, so a base that silently fails to resolve turns every gate
+  green — the failure mode below, in a second guise.
+
+### The `check` job runs in three stages, ordered by dependency
+
+Stage boundaries are the dependency edges. Within a stage, independent steps run concurrently
+(Depot CI `parallel:` blocks), so a stage costs its slowest member rather than the sum:
+
+1. **No-build gates** — nine independent node scripts at 1–6 s each, one `parallel:` block with
+   `fail-fast: false`. They used to be a cheap-first sequence, which bought time-to-red-signal at
+   the price of reporting one failure per run; concurrent + report-all gets both, and a PR with an
+   unformatted file _and_ a bad publish config learns both in one cycle. The peer-dependency check
+   is **excluded** and stays sequential: `--no-frozen-lockfile` can rewrite `pnpm-lock.yaml`, an
+   input to every moon task, and the `trap` that restores it does not survive a hard cancellation —
+   a cancelled sibling would leave stages 2 and 3 missing the cache.
+2. **The compile gate** — `moon run :lint :build :test-types`, ~15 s warm and the job's floor cold.
    `check-module-structure` belongs here and not in stage 1 despite costing 5 s: it declares
    `deps: [build]`, so ahead of the gate it would pull the builds along with it.
-3. **The two slow checks** — `knip` (2m36s–3m21s, and the bulk of the job's real work) and
-   `check-plugin-set`. Only this stage is report-all (`continue-on-error` plus a gate step):
-   fail-fast costs nothing when steps cost seconds, but here it hides one failure behind the other
-   for a whole further run of the job. `check-boot-budget` was the second of the two until it moved
-   to its own `boot-budget` job; `check-plugin-set` stayed because its `DX_PLUGIN_SET=production`
-   bundle is cheap only on a runner where stage 2 has already warmed `^:build` (22 s there, against
-   the boot budget's 41 s when the two shared this job).
+3. **The slow checks** — `knip` (2m36s–3m21s, and the bulk of the job's real work) in one lane
+   against `check-plugin-set` + `docs:bundle` in the other, `fail-fast: false`. The stage now costs
+   knip rather than all three, and the block's own failure semantics replace the
+   `continue-on-error`-plus-gate-step pair that existed to keep it report-all. The two moon checks
+   share **one** invocation rather than a lane each: they overlap in `^:build`, and moon schedules
+   that graph once instead of two processes contending for the same task locks and cache writes.
+
+   That invocation is wrapped in `env -u MOON_AFFECTED -u MOON_BASE -u MOON_HEAD`, and it is the one
+   place in the workflow that opts out of the job-level scope. Both checks catch a property of an
+   IMPORT EDGE, where the offending edit lands in a package neither project's inputs name — the same
+   reason `check-boot-budget` runs unscoped on its own job — so scoping them to composer-app's and
+   docs' own sources would skip them on exactly the PRs they exist to catch. **Unset, not
+   `MOON_AFFECTED=''`:** empty is not "off" — moon reads it as an empty base and still filters, which
+   is how this regressed once already (it was caught in review of the same change that introduced it,
+   after a run where the step silently reported "No tasks affected").
+   `check-boot-budget` was among these until it moved to its own `boot-budget` job;
+   `check-plugin-set` stayed because its `DX_PLUGIN_SET=production` bundle is cheap only on a runner
+   where stage 2 has already warmed `^:build` (22 s there, against the boot budget's 41 s when the
+   two shared this job).
+
+**Two things a `parallel:` block must not contain**, and both are why the blocks stop where they do:
+a step that mutates a moon task input, and a second concurrent `moon` process in the same workspace.
+Filesystem state is shared across a block — only step outputs, env and `$GITHUB_PATH` are snapshotted
+per unit and merged back on join.
 
 Two facts the ordering depends on, both verified rather than assumed:
 
@@ -68,6 +108,13 @@ A live example: `preview.yml`, `upload-introspect-cache.yml` and `publish-all.ym
 action and run moon tasks but never set `DEPOT_TOKEN`, so they have had **no remote cache at all**
 for an unknown length of time, with no signal.
 
+`scripts/check-cache-wiring.mjs`, the guard added against exactly that, then fell to the same class
+itself: it matched `./.github/actions/setup` under `.github/workflows`, and the Depot CI migration
+moved every call site to `./.depot/actions/setup` under `.depot/workflows`. It passed by matching
+nothing. It now scans both directories, accepts both spellings, flattens `parallel:`/`sequential:`
+groups, and **fails when it finds zero call sites** — a checker that matches nothing reports the same
+green as a correctly wired repo.
+
 ## Cache: where it stands
 
 Depot's hosted cache hydrates a 324-task `:build` in ~1,100 s; a self-hosted `bazel-remote` does it
@@ -97,8 +144,8 @@ negation is honoured by `moon query` but NOT by `moon exec --query` — a bare `
 nothing there, and it is still ignored beside a positive clause, so `moon exec ':e2e' --query
 project!=composer-app` ran composer's 36 tests in the pool cell on top of the 8 suites (78 tests in
 one cell). MQL parentheses are also a parse error. An earlier `e2e-ci` marker task (a clone of `e2e`
-that composer excluded) solved the same problem with a duplicate task and its own cache entries. Job layout and the JUnit paths Trunk reads are in
-[`.github/workflows/README.md`](../../../.github/workflows/README.md).
+that composer excluded) solved the same problem with a duplicate task and its own cache entries. Job
+layout and the JUnit paths Trunk reads are in [`.depot/README.md`](../../../.depot/README.md).
 
 The browser rides an env var rather than per-browser task variants (`e2e-chromium`, …) so it does not
 multiply with the shard dimension in the task namespace. Being a hash input already gives each

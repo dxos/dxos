@@ -3,13 +3,12 @@
 //
 
 import { EditorView } from '@codemirror/view';
-import { composeRefs } from '@radix-ui/react-compose-refs';
 import React, { useEffect } from 'react';
 
 import { type Ref } from '@dxos/echo';
 import { Doc } from '@dxos/echo-doc';
 import { useObject } from '@dxos/echo-react';
-import { composable, composableProps, useThemeContext } from '@dxos/react-ui';
+import { composable, composableProps, composeRefs, useThemeContext } from '@dxos/react-ui';
 import { useTextEditor } from '@dxos/react-ui-editor';
 import { type Text } from '@dxos/schema';
 import {
@@ -89,7 +88,7 @@ export const Transcript = composable<HTMLDivElement, TranscriptProps>(
 
     return (
       <div
-        {...composableProps(props, { classNames: ['dx-container', classNames] })}
+        {...composableProps(props, { classNames: ['dx-expand', classNames] })}
         ref={composeRefs(parentRef, forwardedRef)}
       />
     );

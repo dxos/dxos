@@ -11,7 +11,7 @@ import { isAiServiceUnavailable } from './ai-gate';
 
 describe('isAiServiceUnavailable', () => {
   test('true for a ServiceNotAvailableError naming the AiService tag (structured context)', ({ expect }) => {
-    const error = new ServiceNotAvailableError(AiService.AiService.key);
+    const error = new ServiceNotAvailableError(AiService.key);
     expect(isAiServiceUnavailable(error)).toBe(true);
   });
 
@@ -19,7 +19,7 @@ describe('isAiServiceUnavailable', () => {
     // The process-invocation boundary can flatten a structured error to a plain Error; the gate
     // must still recognise it from the formatted message the LayerStack produces.
     const error = new Error(
-      `ServiceNotAvailable: Service not available: ${AiService.AiService.key} (affinity=process) [space=<missing>]`,
+      `ServiceNotAvailable: Service not available: ${AiService.key} (affinity=process) [space=<missing>]`,
     );
     expect(isAiServiceUnavailable(error)).toBe(true);
   });

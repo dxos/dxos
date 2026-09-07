@@ -25,16 +25,16 @@ import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { AiContext } from '@dxos/assistant';
 import {
-  Agent,
   AgentHandlers,
   AgentSkill,
-  Chat,
   DelegationSkill,
   DelegationSkillHandlers,
   PlanningHandlers,
   PlanningSkill,
   makeDelegationStrategy,
 } from '@dxos/assistant-toolkit';
+import * as Agent from '@dxos/assistant/Agent';
+import * as Chat from '@dxos/assistant/Chat';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';

@@ -4,6 +4,13 @@
 
 export const DX_ANCHOR_ACTIVATE = 'dx-anchor-activate';
 
+/**
+ * Attribute stamped on popover content elements so hover-driven anchors (`dx-anchor`) can tell that
+ * the pointer traveled onto the open card and must not dismiss it. Shared contract between
+ * `@dxos/lit-ui` (which cannot depend on React) and `@dxos/react-ui`'s Popover.
+ */
+export const DX_POPOVER_CONTENT_ATTR = 'data-dx-popover-content';
+
 export type DxAnchorActivateProps = {
   dxn: string;
   label: string;

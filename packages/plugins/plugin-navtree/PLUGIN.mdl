@@ -17,7 +17,9 @@ Each extension is defined in the Appendix or resolved via its URI.
 | `feat`      | `org.dxos.mdl.feat@1.0`       |
 | `test`      | `org.dxos.mdl.test@1.0`       |
 | `component` | `org.dxos.mdl.component@1.0`  |
-| `op`        | `org.dxos.mdl.op@1.0`         |
+| `op`        | `org.dxos.mdl.op@1.1`         |
+| `flow`      | `org.dxos.mdl.flow@1.0`       |
+| `step`      | `org.dxos.mdl.step@1.0`       |
 
 ## Types
 
@@ -150,6 +152,7 @@ component CommandsTrigger
 
 ```mdl
 op expose
+  key: org.dxos.operation.appToolkit.expose
   desc: Expands tree nodes along the path to a subject and marks each as open so the item becomes visible in the NavTree.
   input:
     subject: string        # attendable DXN or node id
@@ -309,6 +312,71 @@ test T-6: Drag-and-drop rearrange
   then:
     - onRearrange callback is called with the reordered array
     - tree re-renders with the new order
+```
+
+---
+
+## QA
+
+Executable flows. Each step carries a human instruction (`do`) and, where the step maps to an
+invocable operation, an agent binding (`invoke`). Report failures by flow and step number.
+
+```mdl
+flow QA-1: Expose a nested document and select it
+  desc: |
+    NavTree itself is system-tagged and force-enabled (never a user-facing toggle — see
+    `getCorePlugins` in `plugin-defs.core.tsx`). Its own `expose` op resolves to
+    `LayoutOperation.Expose`, owned by `app-toolkit` and keyed
+    `org.dxos.operation.appToolkit.expose` — the same namespace `plugin-markdown`'s worked
+    example uses for `open`. The core round-trip: collapse the tree, create a document nested two
+    levels deep, then expose it and confirm every ancestor expands and the row becomes visible.
+  actors: both
+  covers: [F-2.4, F-3.1, T-3, T-4]
+  status: unverified
+  given:
+    - an identity exists
+    - space: a space is open
+    - collection: a top-level collection in that space
+    - subcollection: a second collection nested inside `collection`
+    - the navtree is fully collapsed — no descendant of `collection` is currently open
+    - no document named "QA Exposed" exists — ABORT rather than deleting one this flow did not create
+  test:
+    - name: Create a nested document
+      do: In the navtree, click + on the nested subcollection and choose Markdown. Name it "QA Exposed".
+      invoke: org.dxos.operation.markdown.createDraft { name: "QA Exposed", content: "# QA Exposed\n" }
+      capture: created
+      expect: a Document named "QA Exposed" now exists
+      assert: return !!$created.object
+    - name: Place it in the subcollection
+      do: (the navtree create action places it for you)
+      invoke: org.dxos.operation.space.addObject { object: $created.object, target: $given.subcollection }
+      expect: "QA Exposed" is a row under the subcollection, but the subcollection itself is still collapsed since we did not expand it
+      assert: |
+        return $given.subcollection.objects.some((ref) => ref.target?.id === $created.object.id);
+    - name: Expose the document
+      id: expose
+      do: (no direct gesture — `expose` is invoked internally when e.g. following a search result or a deep link to this document)
+      invoke: org.dxos.operation.appToolkit.expose { subject: $created.object.id }
+      expect: the top-level collection AND the nested subcollection are both now expanded, and the "QA Exposed" row is visible in the navtree
+      assert: |
+        return Array.from(document.querySelectorAll('[data-testid="navtree.treeItem"]'))
+          .some((el) => el.textContent?.includes('QA Exposed'));
+      note: |
+        Per Execution Rule 2, the `expose` handler expands each ancestor and marks it open in
+        `NavTreeCapabilities.State` — verify by re-reading the DOM after invocation rather than
+        the op's `void` return value.
+    - name: Select it
+      do: Click "QA Exposed" in the now-visible navtree row.
+      invoke: org.dxos.operation.appToolkit.open { subject: ["root/$given.space.id/content/collections/$created.object.id"] }
+      expect: the document opens in the editor and its navtree row is marked current/selected
+      assert: |
+        return Array.from(document.querySelectorAll('[aria-current], [aria-selected="true"]'))
+          .some((el) => el.textContent?.includes('QA Exposed'));
+  after:
+    - name: Delete the document
+      do: Right-click "QA Exposed" in the navtree and choose Delete.
+      invoke: org.dxos.operation.space.removeObjects { objects: [$created.object], target: $given.subcollection }
+      expect: the row leaves the navtree and its plank closes
 ```
 
 ---

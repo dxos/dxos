@@ -73,7 +73,7 @@ export const DateField = ({
             return (
               <div className='grid grid-cols-[minmax(0,1fr)_min-content] gap-1 items-stretch tabular-nums'>
                 <Input.Date
-                  classNames='min-w-0 overflow-hidden'
+                  classNames='overflow-hidden'
                   disabled={readonly}
                   value={value ?? ''}
                   onValueChange={handleSimpleChange}
@@ -95,7 +95,7 @@ export const DateField = ({
             return (
               <div className='grid grid-cols-[minmax(0,1fr)_min-content] gap-1 items-stretch tabular-nums'>
                 <Input.DateTime
-                  classNames='min-w-0 overflow-hidden'
+                  classNames='overflow-hidden'
                   disabled={readonly}
                   value={isoToLocalDateTime(value)}
                   onValueChange={handleDateTimeChange}

@@ -18,17 +18,26 @@ import { iconValues } from '@dxos/ui-types';
 
 import { SpaceCapabilities, SpaceEvents, SpaceOperation } from '#types';
 
-import { SpaceNotReadyError } from '../errors';
+import { SpaceNotReadyError, TemplateApplyError, TemplateNotFoundError } from '../errors';
 
 /** Bounds how long space creation waits for the new space's properties object to become available. */
 const SPACE_READY_TIMEOUT = Duration.seconds(10);
 
 const handler: Operation.WithHandler<typeof SpaceOperation.Create> = SpaceOperation.Create.pipe(
   Operation.withHandler(
-    Effect.fnUntraced(function* ({ name, hue: hue_, icon: icon_, private: isPrivate, edgeReplication }) {
+    Effect.fnUntraced(function* ({ name, hue: hue_, icon: icon_, private: isPrivate, edgeReplication, template }) {
       const client = yield* Capability.get(ClientCapabilities.Client);
       const hue = hue_ ?? hues[Math.floor(Math.random() * hues.length)];
       const icon = icon_ ?? iconValues[Math.floor(Math.random() * iconValues.length)];
+
+      // Resolved before the space exists: the form is uncontrolled, so it keeps the template's id,
+      // name, icon and hue even if the contributing plugin deactivates while the dialog is open.
+      // Matching afterwards would create a space styled as a template and silently leave it empty.
+      const templates = template ? yield* Capability.getAll(SpaceCapabilities.SpaceTemplate) : [];
+      const match = template ? templates.find(({ id }) => id === template) : undefined;
+      if (template && !match) {
+        return yield* Effect.fail(new TemplateNotFoundError({ context: { template } }));
+      }
       const space = yield* Effect.promise(() =>
         client.spaces.create(
           {
@@ -63,6 +72,19 @@ const handler: Operation.WithHandler<typeof SpaceOperation.Create> = SpaceOperat
         }
       });
 
+      // After the root collection exists, so a template writes into a space the navtree can reach.
+      // A failure here is held rather than thrown: the space is already created and still needs its
+      // callbacks to run, so it is reported once initialization below is complete.
+      const applyError = match
+        ? yield* Effect.tryPromise({
+            try: () => match.apply({ client, space }),
+            catch: (cause) => new TemplateApplyError({ context: { template, spaceId: space.id }, cause }),
+          }).pipe(
+            Effect.as(undefined),
+            Effect.catch((error) => Effect.succeed(error)),
+          )
+        : undefined;
+
       yield* Plugin.activate(SpaceEvents.SpaceCreated);
       const onCreateSpaceCallbacks = yield* Capability.getAll(SpaceCapabilities.OnCreateSpace);
       yield* Effect.all(
@@ -70,6 +92,13 @@ const handler: Operation.WithHandler<typeof SpaceOperation.Create> = SpaceOperat
           onCreateSpace({ space, isDefault: false, rootCollection: collection }),
         ),
       );
+
+      // Reported only now: the space and its callbacks are complete, so the caller gets a real
+      // failure to surface rather than a success naming a template that never wrote anything.
+      if (applyError) {
+        log.catch(applyError);
+        return yield* Effect.fail(applyError);
+      }
 
       return { id: space.id, subject: [space.id], space };
     }),

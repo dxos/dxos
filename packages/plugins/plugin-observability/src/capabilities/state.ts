@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import { createKvsStore } from '@dxos/effect';
-import { Observability } from '@dxos/observability';
+import * as Observability from '@dxos/observability/Observability';
 
 import { meta } from '#meta';
 import { ObservabilityCapabilities } from '#types';

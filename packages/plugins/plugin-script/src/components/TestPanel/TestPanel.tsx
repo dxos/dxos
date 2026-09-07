@@ -5,7 +5,7 @@
 import React, { forwardRef, useRef, useState } from 'react';
 
 import { log } from '@dxos/log';
-import { Avatar, Icon, Input, ScrollArea, type ThemedClassName, Toolbar, useTranslation } from '@dxos/react-ui';
+import { Avatar, Grid, Icon, Input, ScrollArea, type ThemedClassName, Toolbar, useTranslation } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { mx } from '@dxos/ui-theme';
@@ -140,26 +140,28 @@ type MessageThreadProps = {
   history: Message[];
 };
 
+const MESSAGE_COLS = ['var(--dx-rail-item)', '1fr', 'var(--dx-rail-item)'];
+
 const MessageThread = forwardRef<HTMLDivElement, MessageThreadProps>(
   ({ state, history }: MessageThreadProps, forwardedRef) => {
     return (
       <ScrollArea.Root orientation='vertical' classNames='h-full' ref={forwardedRef}>
         <ScrollArea.Viewport classNames='gap-6 p-2'>
           {history.map((message, i) => (
-            <div key={i} className='grid grid-cols-[var(--dx-rail-item)_1fr_var(--dx-rail-item)]'>
+            <Grid key={i} cols={MESSAGE_COLS} grow={false}>
               <div className='p-1'>{message.type === 'response' && <RobotAvatar />}</div>
               <div className='overflow-auto'>
                 <MessageItem message={message} />
               </div>
-            </div>
+            </Grid>
           ))}
 
           {state === 'pending' && (
-            <div className='grid grid-cols-[var(--dx-rail-item)_1fr_var(--dx-rail-item)]'>
+            <Grid cols={MESSAGE_COLS} grow={false}>
               <div className='p-1'>
                 <Icon icon='ph--spinner--regular' size={6} classNames='animate-spin' />
               </div>
-            </div>
+            </Grid>
           )}
         </ScrollArea.Viewport>
       </ScrollArea.Root>

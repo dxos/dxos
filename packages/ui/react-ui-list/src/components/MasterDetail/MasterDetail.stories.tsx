@@ -4,7 +4,7 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
-import { expect, waitFor, within } from 'storybook/test';
+import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { Panel, ScrollArea } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
@@ -40,7 +40,7 @@ const ITEMS: Record<string, Row[]> = {
 // flex column that a horizontal `MasterDetail` fills via `flex-1`. Fixing scroll here fixes it there.
 const PageFrame = ({ children }: { children: React.ReactNode }) => (
   <Panel.Root>
-    <Panel.Content classNames='flex flex-col min-h-0 p-2'>{children}</Panel.Content>
+    <Panel.Content classNames='flex flex-col dx-grow'>{children}</Panel.Content>
   </Panel.Root>
 );
 
@@ -53,7 +53,7 @@ const HorizontalStory = () => {
     <PageFrame>
       <MasterDetail<Row>
         orientation='horizontal'
-        classNames='flex-1 min-h-0'
+        classNames='dx-grow'
         items={MANY}
         selectedId={selectedId}
         onSelect={setSelectedId}
@@ -77,7 +77,7 @@ const NestedStory = () => {
     <PageFrame>
       <MasterDetail<Row>
         orientation='horizontal'
-        classNames='flex-1 min-h-0'
+        classNames='dx-grow'
         items={CATEGORIES}
         selectedId={category}
         onSelect={(id) => {
@@ -91,7 +91,7 @@ const NestedStory = () => {
           category ? (
             <MasterDetail<Row>
               orientation='horizontal'
-              classNames='flex-1 min-h-0'
+              classNames='dx-grow'
               items={items}
               selectedId={item}
               onSelect={setItem}
@@ -112,18 +112,18 @@ const BasicStory = () => {
   const selected = CATEGORIES.find((row) => row.id === selectedId);
   return (
     <Panel.Root>
-      <Panel.Content asChild classNames='pt-trim-md'>
+      <Panel.Content asChild classNames='py-trim-md'>
         <ScrollArea.Root orientation='vertical'>
           <ScrollArea.Viewport>
             <MasterDetail<Row>
               classNames='dx-document'
               items={CATEGORIES}
+              detail={selected ? <div className='p-2 text-sm'>Selected: {selected.label}</div> : null}
               selectedId={selectedId}
-              onSelect={setSelectedId}
               getLabel={(_get, row) => row.label}
               getIcon={(_get, row) => ({ icon: row.icon })}
               emptyLabel='No categories'
-              detail={selected ? <div className='p-2 text-sm'>Selected: {selected.label}</div> : null}
+              onSelect={setSelectedId}
             />
           </ScrollArea.Viewport>
         </ScrollArea.Root>
@@ -145,6 +145,31 @@ type Story = StoryObj<typeof meta>;
 export const Basic: Story = {
   render: () => <BasicStory />,
   decorators: [withLayout({ layout: 'column' })],
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const options = await waitFor(async () => {
+      const found = canvas.getAllByRole('option');
+      await expect(found.length).toBeGreaterThan(1);
+      return found;
+    });
+
+    // Arrows step row to row. Each row holds its own overflow menu, so without a groupper the first
+    // ArrowDown would land on that button instead of the next entry.
+    options[0].focus();
+    await expect(options[0]).toHaveFocus();
+    await userEvent.keyboard('{ArrowDown}');
+    await waitFor(async () => expect(options[1]).toHaveFocus());
+    await userEvent.keyboard('{ArrowUp}');
+    await waitFor(async () => expect(options[0]).toHaveFocus());
+
+    // ...and Enter selects the focused row, which an option does not do natively. Row 0 starts
+    // selected and this story's click toggles, so the assertion moves to a row that is not.
+    await userEvent.keyboard('{ArrowDown}');
+    await waitFor(async () => expect(options[1]).toHaveFocus());
+    await expect(options[1].getAttribute('aria-selected')).toEqual('false');
+    await userEvent.keyboard('{Enter}');
+    await waitFor(async () => expect(canvas.getAllByRole('option')[1].getAttribute('aria-selected')).toEqual('true'));
+  },
 };
 
 // Horizontal and nested run full-page (not centered) so the columns' width behaviour is exercised.
@@ -153,10 +178,11 @@ export const Horizontal: Story = {
   decorators: [withLayout({ layout: 'fullscreen' })],
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    // The master list renders as a `role=list`; its nearest scroll viewport must overflow (scroll) rather
-    // than stretch to fit all 40 rows — proving vertical per-column scroll in horizontal orientation.
-    await waitFor(() => expect(canvas.getAllByRole('listitem').length).toBeGreaterThan(0));
-    const viewport = canvasElement.querySelector('[role="list"]')?.closest('.overflow-y-scroll');
+    // The master list carries a selection, so its rows are options in a listbox; its nearest scroll
+    // viewport must overflow (scroll) rather than stretch to fit all 40 rows — proving vertical
+    // per-column scroll in horizontal orientation.
+    await waitFor(() => expect(canvas.getAllByRole('option').length).toBeGreaterThan(0));
+    const viewport = canvasElement.querySelector('[role="listbox"]')?.closest('.overflow-y-scroll');
     if (!(viewport instanceof HTMLElement)) {
       throw new Error('master scroll viewport not found');
     }

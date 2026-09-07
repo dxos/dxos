@@ -98,6 +98,25 @@ export const Brand: Story = {
   ),
 };
 
+/**
+ * Extended icons (the `px--` set), sourced from `@dxos/ui-icons` — glyphs Phosphor does not provide.
+ * Referenced by literal name rather than through the package's `PxIcons` map, since `@dxos/ui-icons`
+ * is private and `@dxos/react-ui` is published.
+ */
+export const Extended: Story = {
+  args: {
+    icon: 'px--anthropic--regular',
+  },
+  render: () => (
+    <div className='flex items-end gap-8'>
+      <Icon icon='px--anthropic--regular' classNames={getSize(12)} />
+      <Icon icon='px--anthropic--regular' classNames={getSize(8)} />
+      <Icon icon='px--anthropic--regular' classNames={getSize(5)} />
+      <Icon icon='ph--circle--regular' classNames={getSize(5)} />
+    </div>
+  ),
+};
+
 export const Dynamic: Story = {
   args: {
     icon: 'ph--github-logo--regular',

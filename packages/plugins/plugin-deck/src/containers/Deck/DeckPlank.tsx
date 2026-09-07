@@ -2,13 +2,13 @@
 // Copyright 2026 DXOS.org
 //
 
-import { useFocusFinders } from '@fluentui/react-tabster';
 import React, { type KeyboardEvent, memo, useCallback, useEffect, useMemo, useRef } from 'react';
 
 import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as NotFound from '@dxos/app-toolkit/NotFound';
 import { AppSurface } from '@dxos/app-toolkit/ui';
+import { findFirstFocusable } from '@dxos/react-focus';
 import { type ThemedClassName } from '@dxos/react-ui';
 import { Attention } from '@dxos/react-ui-attention';
 
@@ -52,7 +52,6 @@ export const DeckPlank = memo(({ id, part, fullscreen = false, active, path, cla
 DeckPlank.displayName = 'DeckPlank';
 
 const DeckPlankInner = ({ id, part, fullscreen = false, active, path, classNames }: DeckPlankProps) => {
-  const { findFirstFocusable } = useFocusFinders();
   const { invokePromise } = useOperationInvoker();
   const rootRef = useRef<HTMLDivElement>(null);
   const {
@@ -98,22 +97,19 @@ const DeckPlankInner = ({ id, part, fullscreen = false, active, path, classNames
     }
   }, [scrollIntoView, id, onScrollIntoView]);
 
-  // Tabster's focus group should move focus to Main on Escape, but something blocks it; handle directly.
-  const handleKeyDown = useCallback(
-    (event: KeyboardEvent<HTMLDivElement>) => {
-      if (event.target === event.currentTarget) {
-        switch (event.key) {
-          case 'Escape':
-            event.currentTarget.closest('main')?.focus();
-            break;
-          case 'Enter':
-            findFirstFocusable(event.currentTarget)?.focus();
-            break;
-        }
+  // The landmark focus group should move focus to Main on Escape, but something blocks it; handle directly.
+  const handleKeyDown = useCallback((event: KeyboardEvent<HTMLDivElement>) => {
+    if (event.target === event.currentTarget) {
+      switch (event.key) {
+        case 'Escape':
+          event.currentTarget.closest('main')?.focus();
+          break;
+        case 'Enter':
+          findFirstFocusable(event.currentTarget)?.focus();
+          break;
       }
-    },
-    [findFirstFocusable],
-  );
+    }
+  }, []);
 
   // Stable reference so Plank's useMemo on articleData doesn't bust every render. An unresolved plank
   // addresses the not-found article rather than its own (absent) node, while the shell below stays

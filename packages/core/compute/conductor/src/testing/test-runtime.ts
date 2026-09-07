@@ -12,12 +12,13 @@ import { GraphExecutor } from '../compiler';
 import {
   type ComputeGraphModel,
   type ComputeNode,
-  ComputeNodeContext,
+  type ComputeNodeContext,
   type ComputeRequirements,
   type ConductorError,
   type Executable,
   type ValueBag,
   type ValueRecord,
+  layerNoop as computeNodeContextLayerNoop,
 } from '../types';
 import { WorkflowLoader } from '../workflow';
 
@@ -64,7 +65,7 @@ export class TestRuntime {
     return Effect.gen({ self: this }, function* () {
       const program = yield* Effect.promise(() => this._workflowLoader.load(graphUri));
       return yield* program.run(input);
-    }).pipe(Effect.withSpan('compute-graph'), Effect.provide(ComputeNodeContext.layerNoop));
+    }).pipe(Effect.withSpan('compute-graph'), Effect.provide(computeNodeContextLayerNoop));
   }
 
   // TODO(dmaretskyi): Support cases where the are no or multiple "input" nodes.
@@ -91,6 +92,6 @@ export class TestRuntime {
       }
 
       return result;
-    }).pipe(Effect.withSpan('compute-graph'), Effect.provide(ComputeNodeContext.layerNoop));
+    }).pipe(Effect.withSpan('compute-graph'), Effect.provide(computeNodeContextLayerNoop));
   }
 }

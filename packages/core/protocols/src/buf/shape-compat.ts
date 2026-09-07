@@ -7,7 +7,6 @@
 import {
   type DescField,
   type DescMessage,
-  type Message,
   ScalarType,
   create,
   fromBinary,
@@ -19,6 +18,7 @@ import {
 } from '@bufbuild/protobuf';
 import { StructSchema } from '@bufbuild/protobuf/wkt';
 
+import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { Timeframe } from '@dxos/timeframe';
 
@@ -47,16 +47,34 @@ export type CompatOptions = {
 
 const NO_OPTIONS: CompatOptions = {};
 
-type Substitution = {
+/**
+ * A field substitution, generic over the JS type (`T`) substituted in on the protobuf.js side.
+ * Declared with method syntax, not arrow-typed properties, so entries with different `T`s stay
+ * assignable to the shared `Record<string, Substitution>` registry below (method parameters
+ * compare bivariantly; arrow-typed ones don't).
+ */
+type Substitution<T = unknown> = {
   /** Substituted JS value -> plain object accepted by the buf message constructor. */
-  readonly toProto: (value: any) => unknown;
+  toProto(value: T): unknown;
   /** Decoded buf message -> substituted JS value. */
-  readonly fromProto: (value: any) => unknown;
+  fromProto(value: unknown): T;
 };
 
-const publicKeySubstitution: Substitution = {
-  toProto: (value: PublicKey) => ({ data: value.asUint8Array() }),
-  fromProto: (value: any) => PublicKey.from(value.data),
+/** Narrows a decoded buf message (or nested field) to a plain field bag. */
+const asRecord = (value: unknown): Record<string, unknown> => {
+  invariant(typeof value === 'object' && value !== null, 'expected an object');
+  return value as Record<string, unknown>;
+};
+
+/** Narrows a field read off an `asRecord` bag to bytes. */
+const asBytes = (value: unknown): Uint8Array => {
+  invariant(value instanceof Uint8Array, 'expected bytes');
+  return value;
+};
+
+const publicKeySubstitution: Substitution<PublicKey> = {
+  toProto: (value) => ({ data: value.asUint8Array() }),
+  fromProto: (value) => PublicKey.from(asBytes(asRecord(value).data)),
 };
 
 const substitutions: Record<string, Substitution> = {
@@ -65,26 +83,30 @@ const substitutions: Record<string, Substitution> = {
   // The legacy substitution decodes to a Buffer.
   'dxos.keys.PrivateKey': {
     toProto: (value: Buffer) => ({ data: new Uint8Array(value) }),
-    fromProto: (value: any) => PublicKey.from(new Uint8Array(value.data)).asBuffer(),
+    fromProto: (value) => PublicKey.from(new Uint8Array(asBytes(asRecord(value).data))).asBuffer(),
   },
 
   'dxos.echo.timeframe.TimeframeVector': {
     toProto: (timeframe: Timeframe) => ({
       frames: timeframe.frames().map(([feedKey, seq]) => ({ feedKey: feedKey.asUint8Array(), seq })),
     }),
-    fromProto: (value: any) =>
-      new Timeframe(
-        (value.frames ?? [])
-          .filter((frame: any) => frame.feedKey != null && frame.seq != null)
-          .map((frame: any) => [PublicKey.from(frame.feedKey), frame.seq]),
-      ),
+    fromProto: (value) => {
+      const frames = asRecord(value).frames;
+      invariant(Array.isArray(frames), 'expected an array');
+      return new Timeframe(
+        frames
+          .map((frame) => asRecord(frame))
+          .filter((frame) => frame.feedKey != null && frame.seq != null)
+          .map((frame) => [PublicKey.from(asBytes(frame.feedKey)), frame.seq as number]),
+      );
+    },
   },
 
   // `protoc-gen-es` presents a Struct field as the same plain `JsonObject` the legacy substitution
   // produces, so re-encoding it would emit a Struct whose one key is `fields`.
   'google.protobuf.Struct': {
-    toProto: (value: Record<string, any>) => value,
-    fromProto: (value: any) => value,
+    toProto: (value: Record<string, unknown>) => value,
+    fromProto: (value) => value,
   },
 
   // Nanos are derived from the floored-seconds boundary so they stay in proto's required
@@ -99,7 +121,10 @@ const substitutions: Record<string, Substitution> = {
         nanos: (unixMilliseconds - seconds * 1000) * 1e6,
       };
     },
-    fromProto: (value: any) => new Date(Number(value.seconds ?? 0n) * 1000 + (value.nanos ?? 0) / 1e6),
+    fromProto: (value) => {
+      const { seconds, nanos } = asRecord(value);
+      return new Date(Number(seconds ?? 0n) * 1000 + Number(nanos ?? 0) / 1e6);
+    },
   },
 };
 
@@ -154,7 +179,9 @@ const anyToProto = (field: DescField, value: any, options: CompatOptions): unkno
 const anyFromProto = (field: DescField, value: any, options: CompatOptions): unknown => {
   // The legacy shape keys the packed payload `type_url`, where buf's message uses `typeUrl`.
   const typeUrl: string = value.typeUrl ?? '';
-  const bytes = normalizeBytes(value.value ?? new Uint8Array());
+  // Not flattened: the nested decode below reads its byte fields as views over this buffer, so
+  // flattening here would strip Buffer-ness from every byte field inside the payload.
+  const bytes = asBytes(value.value ?? new Uint8Array());
   if (isPreservedAny(field, options)) {
     return packedAny(typeUrl, bytes);
   }
@@ -166,7 +193,7 @@ const anyFromProto = (field: DescField, value: any, options: CompatOptions): unk
     // An unresolvable type stays packed rather than failing, matching the legacy codec.
     return packedAny(typeUrl, bytes);
   }
-  return { ...decodeCompat(desc, bytes, options), '@type': typeUrl };
+  return { ...decodeCompat<Record<string, unknown>>(desc, bytes, options), '@type': typeUrl };
 };
 
 const anySubstitution = (field: DescField, options: CompatOptions): Substitution => ({
@@ -213,37 +240,58 @@ const nestedMessage = (field: DescField): DescMessage | undefined => {
   }
 };
 
-const mapValue = (field: DescField, value: any, convert: (nested: DescMessage, value: any) => any): any => {
+const mapValue = (
+  field: DescField,
+  value: unknown,
+  convert: (nested: DescMessage, value: unknown) => unknown,
+): unknown => {
   const nested = nestedMessage(field);
   if (nested === undefined) {
     return value;
   }
   switch (field.fieldKind) {
     case 'list':
-      return (value ?? []).map((entry: any) => convert(nested, entry));
+      return ((value as unknown[] | undefined) ?? []).map((entry) => convert(nested, entry));
     case 'map':
-      return Object.fromEntries(Object.entries(value ?? {}).map(([key, entry]) => [key, convert(nested, entry)]));
+      return Object.fromEntries(
+        Object.entries((value as Record<string, unknown> | undefined) ?? {}).map(([key, entry]) => [
+          key,
+          convert(nested, entry),
+        ]),
+      );
     default:
       return convert(nested, value);
   }
 };
 
-const substituteField = (field: DescField, value: any, substitution: Substitution, direction: keyof Substitution) => {
+const substituteField = (
+  field: DescField,
+  value: unknown,
+  substitution: Substitution,
+  direction: keyof Substitution,
+): unknown => {
   switch (field.fieldKind) {
     case 'list':
-      return (value ?? []).map((entry: any) => substitution[direction](entry));
+      return ((value as unknown[] | undefined) ?? []).map((entry) => substitution[direction](entry));
     case 'map':
       return Object.fromEntries(
-        Object.entries(value ?? {}).map(([key, entry]) => [key, substitution[direction](entry)]),
+        Object.entries((value as Record<string, unknown> | undefined) ?? {}).map(([key, entry]) => [
+          key,
+          substitution[direction](entry),
+        ]),
       );
     default:
       return substitution[direction](value);
   }
 };
 
-// buf returns `bytes` fields as views into the input buffer, so a Buffer input yields Buffer
-// fields that protobuf.js output never contains.
-const normalizeBytes = (value: any): any =>
+// Both codecs return `bytes` as a view into the buffer they decoded, so the view type follows the
+// input: a Buffer input yields Buffer fields. Decoding must leave that alone — flattening it to a
+// bare Uint8Array drops the Buffer methods `AuthExtension` needs to verify a credential against the
+// challenge it sent, which fails silently as an auth failure under the browser's Buffer polyfill.
+//
+// buf accepts any view on the way in, so only the encode direction flattens a Buffer subclass.
+const toWireBytes = (value: unknown): unknown =>
   value instanceof Uint8Array && value.constructor !== Uint8Array ? new Uint8Array(value) : value;
 
 const isBytesField = (field: DescField): boolean =>
@@ -252,16 +300,19 @@ const isBytesField = (field: DescField): boolean =>
 
 const convertField = (
   field: DescField,
-  fieldValue: any,
+  fieldValue: unknown,
   direction: keyof Substitution,
   options: CompatOptions,
-): any => {
+): unknown => {
   const substitution = substitutionFor(field, options);
   if (substitution !== undefined) {
     return substituteField(field, fieldValue, substitution, direction);
   }
   if (isBytesField(field)) {
-    return Array.isArray(fieldValue) ? fieldValue.map(normalizeBytes) : normalizeBytes(fieldValue);
+    if (direction === 'fromProto') {
+      return fieldValue;
+    }
+    return Array.isArray(fieldValue) ? fieldValue.map(toWireBytes) : toWireBytes(fieldValue);
   }
   return mapValue(field, fieldValue, (nested, entry) => convert(nested, entry, direction, options));
 };
@@ -269,8 +320,8 @@ const convertField = (
 // Translates oneof groups, which buf shapes as `{ case, value }` and protobuf.js as a flat field.
 const convertOneofs = (
   schema: DescMessage,
-  value: any,
-  result: Record<string, any>,
+  value: Record<string, unknown>,
+  result: Record<string, unknown>,
   direction: keyof Substitution,
   options: CompatOptions,
 ) => {
@@ -287,50 +338,66 @@ const convertOneofs = (
         };
       }
     } else {
-      const group = value[oneof.localName];
+      const group = value[oneof.localName] === undefined ? undefined : asRecord(value[oneof.localName]);
       delete result[oneof.localName];
-      const selected = group?.case && oneof.fields.find((field) => field.localName === group.case);
-      if (selected) {
-        result[selected.localName] = convertField(selected, group.value, direction, options);
+      const groupCase = typeof group?.case === 'string' ? group.case : undefined;
+      const selected =
+        groupCase !== undefined ? oneof.fields.find((field) => field.localName === groupCase) : undefined;
+      if (selected !== undefined) {
+        result[selected.localName] = convertField(selected, group?.value, direction, options);
       }
     }
   }
 };
 
-const convert = (schema: DescMessage, value: any, direction: keyof Substitution, options: CompatOptions): any => {
+const convert = (
+  schema: DescMessage,
+  value: unknown,
+  direction: keyof Substitution,
+  options: CompatOptions,
+): unknown => {
   if (value == null) {
     return value;
   }
-  const { $typeName: _typeName, $unknown: _unknown, '@type': _type, ...rest } = value;
-  const result: Record<string, any> = rest;
+  // `record` stays untouched (unlike `result`, aliased to `rest`) so `convertOneofs` can still read
+  // a field it is about to delete from `result` — reading and deleting the same object raced.
+  const record = asRecord(value);
+  const { $typeName: _typeName, $unknown: _unknown, '@type': _type, ...rest } = record;
+  const result: Record<string, unknown> = rest;
   for (const field of schema.fields) {
     if (field.oneof !== undefined) {
       continue;
     }
-    const fieldValue = value[field.localName];
+    const fieldValue = record[field.localName];
     if (fieldValue == null) {
       continue;
     }
     result[field.localName] = convertField(field, fieldValue, direction, options);
   }
-  convertOneofs(schema, value, result, direction, options);
+  convertOneofs(schema, record, result, direction, options);
   return result;
 };
 
 /**
  * Encodes a value carrying protobuf.js-shaped fields to protobuf wire bytes via buf.
  */
-export const encodeCompat = <T extends Message>(
-  schema: DescMessage,
-  value: any,
-  options: CompatOptions = NO_OPTIONS,
-): Uint8Array => toBinary(schema, create(schema, convert(schema, value, 'toProto', options)) as T);
+export const encodeCompat = <V>(schema: DescMessage, value: V, options: CompatOptions = NO_OPTIONS): Uint8Array => {
+  const converted = convert(schema, value, 'toProto', options);
+  return toBinary(schema, create(schema, converted == null ? undefined : asRecord(converted)));
+};
 
 /**
  * Decodes protobuf wire bytes via buf, returning protobuf.js-shaped fields.
+ *
+ * `V`, the caller's expected protobuf.js-generated message type, can't be derived from `schema`
+ * alone since substitutions (see {@link substitutions}) change field types the descriptor doesn't
+ * capture, so the caller supplies it explicitly.
  */
-export const decodeCompat = (schema: DescMessage, bytes: Uint8Array, options: CompatOptions = NO_OPTIONS): any =>
-  convert(schema, fromBinary(schema, bytes), 'fromProto', options);
+export const decodeCompat = <V = unknown>(
+  schema: DescMessage,
+  bytes: Uint8Array,
+  options: CompatOptions = NO_OPTIONS,
+): V => convert(schema, fromBinary(schema, bytes), 'fromProto', options) as V;
 
 /** A codec over protobuf.js-shaped values, matching the surface a persisted store needs. */
 export type CompatCodec<T> = {
@@ -343,5 +410,5 @@ export type CompatCodec<T> = {
  */
 export const compatCodec = <T>(messageSchema: DescMessage): CompatCodec<T> => ({
   encode: (value, options) => encodeCompat(messageSchema, value, options),
-  decode: (bytes, options) => decodeCompat(messageSchema, bytes, options),
+  decode: (bytes, options) => decodeCompat<T>(messageSchema, bytes, options),
 });

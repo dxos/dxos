@@ -42,12 +42,12 @@ const empty = Object.freeze([]);
 export type TimelineProps = ThemedClassName<{
   /** Optional whitelist. */
   branches?: string[];
-  commits?: Commit[];
   /**
    * Controlled value for the highlighted branch.
    * When provided, takes precedence over the branch derived from the currently selected commit.
    */
-  currentBranch?: string | null;
+  branch?: string | null;
+  commits?: Commit[];
   showTimestamp?: boolean;
   showIcon?: boolean;
   compact?: boolean;
@@ -70,8 +70,8 @@ export const Timeline = memo(
     (
       {
         branches: branchesProp,
+        branch,
         commits = empty,
-        currentBranch,
         showTimestamp = false,
         showIcon = true,
         compact = false,
@@ -202,8 +202,8 @@ export const Timeline = memo(
       const selectedRef = useDynamicRef<number | undefined>(undefined);
       const currentCommit = useMemo(() => (current !== undefined ? commits[current] : undefined), [current, commits]);
 
-      // Controlled `currentBranch` takes precedence over the branch derived from the selected commit.
-      const highlightedBranch = currentBranch ?? currentCommit?.branch;
+      // Controlled `branch` takes precedence over the branch derived from the selected commit.
+      const highlightedBranch = branch ?? currentCommit?.branch;
 
       useEffect(() => {
         onChange?.({ current, commit: current === undefined ? undefined : commits[current] });
@@ -211,23 +211,23 @@ export const Timeline = memo(
         el?.scrollIntoView({ behavior: 'instant', block: 'nearest' });
       }, [onChange, current]);
 
-      // When the controlled `currentBranch` changes, jump to the first commit on that branch — but
+      // When the controlled `branch` changes, jump to the first commit on that branch — but
       // never override an explicit commit selection that already sits on that branch. Otherwise a
-      // click that selects a commit (and drives `currentBranch` via the parent) would be snapped
+      // click that selects a commit (and drives `branch` via the parent) would be snapped
       // back to the branch's first commit.
       useEffect(() => {
-        if (!currentBranch) {
+        if (!branch) {
           return;
         }
-        if (currentRef.current !== undefined && commits[currentRef.current]?.branch === currentBranch) {
+        if (currentRef.current !== undefined && commits[currentRef.current]?.branch === branch) {
           return;
         }
 
-        const index = commits.findIndex((commit) => commit.branch === currentBranch);
+        const index = commits.findIndex((commit) => commit.branch === branch);
         if (index >= 0) {
           setCurrent(index);
         }
-      }, [currentBranch]);
+      }, [branch]);
 
       useEffect(() => {
         if (!containerRef.current) {

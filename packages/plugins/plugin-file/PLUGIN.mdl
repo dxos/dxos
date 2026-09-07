@@ -24,6 +24,7 @@ Each extension is defined in the Appendix or resolved via its URI.
 | `test`      | `org.dxos.mdl.test@1.0`       |
 | `component` | `org.dxos.mdl.component@1.0`  |
 | `op`        | `org.dxos.mdl.op@1.0`         |
+| `flow`      | `org.dxos.mdl.flow@1.0`       |
 
 ## Types
 
@@ -59,11 +60,22 @@ type Settings
 ## Components
 
 ```mdl
-component FilePreview
+component Preview
   desc: |
-    Renders a File object using the appropriate HTML element for its MIME type.
-    Images use <img>, videos use <video controls>, PDFs use <iframe>, and
-    all other types fall back to a download link.
+    Composite preview of a file's content, in Radix parts. Preview.Root holds
+    the source and whatever the content discovers about it, Preview.Content
+    renders by MIME type, and Preview.Toolbar sits above with controls. Split
+    this way because the toolbar needs facts only the content discovers — a
+    PDF's page count is known after pdf.js parses the document.
+
+    Root renders no element of its own: its parts are placed into slots that
+    belong to the surrounding container (Panel.Toolbar / Panel.Content), so a
+    wrapper would break the panel's grid.
+
+    Images, video and audio go through react-ui's MediaPlayer. PDFs render
+    through pdf.js to stacked canvases — one per page — rather than an
+    <iframe>, whose built-in viewer lives in another origin and cannot be
+    themed. Everything else falls back to a download link.
   props:
     type: string             # MIME type
     url: string              # renderable data:, blob:, or http(s): URL
@@ -108,18 +120,21 @@ component FileArticle
     Full-viewport article container rendered for article, section, and slide
     roles. Loads the File's referenced Blob and resolves a renderable URL via
     Blob.url; if the backend has no getUrl, falls back to Blob.read and
-    constructs a blob: object URL (revoked on unmount). Delegates to
-    FilePreview. Shows an empty state while the URL is resolving or if the
-    File is not attached to a database.
+    constructs a blob: object URL (revoked on unmount). Composes Preview's
+    parts into the panel's toolbar and content slots. Shows an empty state
+    while the URL is resolving or if the File is not attached to a database.
+
+    Full plank width, not the reading column: `dx-document` is right for prose
+    and wrong for a preview.
   props:
     role: AppSurface.Role
     subject: File
   layout: |
     ┌──────────────────────────────┐
-    │                              │
-    │      FilePreview             │
+    │  Preview.Toolbar   (n pages) │
+    ├──────────────────────────────┤
+    │      Preview.Content         │
     │      (fills container)       │
-    │                              │
     └──────────────────────────────┘
 ```
 
@@ -200,14 +215,23 @@ feat F-2: Backend capability system
 feat F-3: File preview
 
   req F-3.1: FileArticle MUST resolve a renderable URL via Blob.url before
-    rendering FilePreview. For inline files this is always a data: URL
+    rendering Preview. For inline files this is always a data: URL
     (constructed synchronously from the stored bytes, no Blob.read needed). For
     external files with no registered getUrl, FileArticle falls back to
     Blob.read and constructs a blob: URL, revoked on unmount.
 
-  req F-3.2: FilePreview MUST render the appropriate element for each MIME class:
-    image/* → <img>, video/* → <video controls>, application/pdf → <iframe>,
-    other → <a download>.
+  req F-3.2: Preview.Content MUST render the appropriate element for each MIME
+    class: image/*, video/* and audio/* → MediaPlayer, application/pdf → pdf.js
+    canvases, other → <a download>.
+
+  req F-3.4: A PDF MUST render every page, not one at a time. The <iframe> this
+    replaced scrolled the whole document, so paginating would silently hide
+    content behind navigation that does not exist.
+
+  req F-3.5: Rendering MUST be cancelled before the document is torn down.
+    pdf.js rejects in-flight render and getPage promises with
+    RenderingCancelledException / "Transport destroyed" once the transport is
+    destroyed, and those rejections are unhandled if nothing cancels first.
 
   req F-3.3: FileArticle surfaces are registered for article, section,
     and slide roles so files embed correctly in Markdown and Presenter layouts.
@@ -314,6 +338,98 @@ test T-9: No backend error
   given: no BackendDescriptor capability is registered
   when: op:Create is invoked
   then: NoBackendError is returned
+```
+
+---
+
+## QA
+
+Executable flows. Each step carries a human instruction (`do`) and, where the step maps to an
+invocable operation, an agent binding (`invoke`). Report failures by flow and step number.
+
+plugin-file is on by default (`FilePlugin.meta.profile.key` is in `getDefaults`; see
+`packages/apps/composer-app/src/plugin-defs.tsx`).
+
+```mdl
+flow QA-1: Upload an image and preview it
+  desc: The core file round-trip — upload an inline image via the Create Object form, place it, and read the preview back.
+  actors: both
+  covers: [F-1.1, F-1.3, F-3.1, F-3.2, T-1, T-4]
+  status: unverified
+  given:
+    - an identity exists
+    - space: a space is open
+    - collection: a collection in that space, to create into
+    - only the inline BackendDescriptor is registered (default)
+    - no File named "qa-image.png" exists — ABORT rather than reusing one this flow did not create
+  test:
+    - name: Upload the image
+      do: In the navtree, click + on a collection and choose File. Drop a small PNG (e.g. 10 KB) named "qa-image.png".
+      invoke: |
+        org.dxos.operation.file.create {
+          file: new File([Uint8Array.from(atob("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII="), (c) => c.charCodeAt(0))], "qa-image.png", { type: "image/png" }),
+          db: $given.space.db
+        }
+      capture: created
+      expect: a File object is created with type "image/png", the given size, and a Blob whose
+        data resolves inline
+      assert: return $created.object.type === 'image/png' && !!$created.object.data
+      note: |
+        `file` is a browser `File` object, not a plain literal — the runner constructs it inline
+        with `new File(...)` in the invoke snippet rather than passing JSON, since `BrowserFile`
+        has no serializable shape.
+    - name: Place it in the collection
+      do: (the Create Object form places it for you)
+      invoke: org.dxos.operation.space.addObject { object: $created.object, target: $given.collection }
+      expect: "qa-image.png" appears as a row under the collection
+      assert: |
+        return $given.collection.objects.some((ref) => ref.target?.id === $created.object.id);
+      note: Coalesced with the previous step — `created.object` is live and cannot cross a snippet boundary.
+    - name: Open it and view the preview
+      do: Click "qa-image.png" in the navtree.
+      invoke: org.dxos.operation.appToolkit.open { subject: ["root/$given.space.id/content/collections/$created.object.id"] }
+      expect: FileArticle renders an <img> element showing the uploaded image, resolved via a data: URL
+      assert: |
+        const img = document.querySelector('img[src^="data:"]');
+        return !!img && img.complete && img.naturalWidth > 0;
+  after:
+    - name: Delete the File
+      do: Right-click "qa-image.png" in the navtree and choose Delete.
+      invoke: org.dxos.operation.space.removeObjects { objects: [$created.object], target: $given.collection }
+      expect: the row leaves the navtree and its plank closes
+```
+
+```mdl
+flow QA-2: Reject an oversized or unsupported upload
+  desc: The two rejection paths (F-1.4, F-1.5) — a validation round-trip that must leave no ECHO write behind.
+  actors: agent
+  covers: [F-1.4, F-1.5, T-2, T-3]
+  status: unverified
+  given:
+    - an identity exists
+    - space: a space is open
+    - only the inline BackendDescriptor is registered (4 MB cap applies)
+  test:
+    - name: Reject an unsupported MIME type
+      do: In the Create Object form, attempt to upload a .zip file.
+      invoke: |
+        org.dxos.operation.file.create {
+          file: new File([new Uint8Array([80, 75])], "qa.zip", { type: "application/zip" }),
+          db: $given.space.db
+        }
+      expect: the upload is refused with UnsupportedFileTypeError and no File object is created
+      assert: |
+        return /UnsupportedFileType/.test($error?.message ?? $error?._tag ?? '');
+    - name: Reject an oversized file
+      do: Attempt to upload a PNG larger than 4 MB.
+      invoke: |
+        org.dxos.operation.file.create {
+          file: new File([new Uint8Array(5 * 1024 * 1024)], "qa-big.png", { type: "image/png" }),
+          db: $given.space.db
+        }
+      expect: the upload is refused with FileTooLargeError and no File object is created
+      assert: |
+        return /FileTooLarge/.test($error?.message ?? $error?._tag ?? '');
 ```
 
 ---

@@ -197,6 +197,7 @@ const buildPromises = platforms.map(async ({ target, platform, arch, ext }) => {
     // so nothing in the environment can flip it.
     define: {
       'globalThis.DX_CLI_BUNDLED': 'true',
+      'globalThis.DX_CLI_POSTHOG_TOKEN': JSON.stringify(process.env.DX_CLI_POSTHOG_API_KEY ?? ''),
     },
     compile: {
       target,

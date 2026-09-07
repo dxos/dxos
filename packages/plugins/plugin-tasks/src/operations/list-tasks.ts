@@ -49,15 +49,16 @@ const handler: Operation.WithHandler<typeof TaskOperation.ListTasks> = TaskOpera
           : undefined;
       }
 
-      const all = taskSet ? TaskSet.resolveTasks(taskSet) : [];
-      const scoped = includeSubtasks ? all : TaskSet.rootTasks(all);
+      // Loaded, not resolved: cold refs dropped from the list would silently shorten it.
+      const all = taskSet ? yield* TaskSet.loadTasks(taskSet) : [];
+      const scoped = includeSubtasks ? all : Task.rootTasks(all);
       // Resolved against the whole set, not `scoped`: a root task's milestone can only be its own,
       // but the inheritance walk still has to see every ancestor.
       // Loaded, not read off `.target`: an unresolved ref would leave `milestoneId` undefined and
       // silently return every task instead of the filtered set.
       const milestoneId = milestone ? (yield* Database.load(milestone)).id : undefined;
       // Built once — `effectiveMilestoneId` maps the whole set per call, so filtering with it is quadratic.
-      const milestoneIds = milestoneId === undefined ? undefined : TaskSet.effectiveMilestoneIds(all);
+      const milestoneIds = milestoneId === undefined ? undefined : Task.effectiveMilestoneIds(all);
       const filtered = scoped.filter(
         (task) =>
           (status === undefined || (task.status ?? 'todo') === status) &&

@@ -2,8 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Primitive } from '@radix-ui/react-primitive';
-import { Slot } from '@radix-ui/react-slot';
+import { ark } from '@ark-ui/react/factory';
 import React, { type ComponentPropsWithRef, forwardRef, memo } from 'react';
 
 import { type Density, type Elevation } from '@dxos/ui-types';
@@ -13,7 +12,7 @@ import { type ThemedClassName } from '../../util';
 import { Icon } from '../Icon';
 import { BUTTON_GROUP_NAME, BUTTON_NAME, ButtonGroupProvider, useButtonGroupContext } from './ButtonGroupContext';
 
-type ButtonProps = ThemedClassName<ComponentPropsWithRef<typeof Primitive.button>> & {
+type ButtonProps = ThemedClassName<ComponentPropsWithRef<typeof ark.button>> & {
   variant?: 'default' | 'primary' | 'outline' | 'ghost' | 'destructive' | 'valence';
   density?: Density;
   elevation?: Elevation;
@@ -41,9 +40,9 @@ const Button = memo(
       const { tx } = useThemeContext();
       const elevation = useElevationContext(elevationProp);
       const density = useDensityContext(densityProp);
-      const Comp = asChild ? Slot : Primitive.button;
       return (
-        <Comp
+        <ark.button
+          asChild={asChild}
           ref={ref}
           {...props}
           data-variant={variant}
@@ -62,8 +61,8 @@ const Button = memo(
           )}
           {...(props.disabled && { disabled: true })}
         >
-          {/* `asChild` forwards a single child via Slot (React.Children.only); only add the caret in
-              the non-`asChild` case so Slot still receives exactly one child. */}
+          {/* `asChild` clones its single child; only add the caret in the non-`asChild` case so the
+              child stays exactly one element. */}
           {caretDown && !asChild ? (
             <>
               {children}
@@ -72,7 +71,7 @@ const Button = memo(
           ) : (
             children
           )}
-        </Comp>
+        </ark.button>
       );
     },
   ),
@@ -80,7 +79,7 @@ const Button = memo(
 
 Button.displayName = BUTTON_NAME;
 
-type ButtonGroupProps = ThemedClassName<ComponentPropsWithRef<typeof Primitive.div>> & {
+type ButtonGroupProps = ThemedClassName<ComponentPropsWithRef<typeof ark.div>> & {
   elevation?: Elevation;
   asChild?: boolean;
 };
@@ -89,11 +88,15 @@ const ButtonGroup = forwardRef<HTMLDivElement, ButtonGroupProps>(
   ({ children, elevation: propsElevation, classNames, asChild, ...props }, forwardedRef) => {
     const { tx } = useThemeContext();
     const elevation = useElevationContext(propsElevation);
-    const Comp = asChild ? Slot : Primitive.div;
     return (
-      <Comp {...props} className={tx('button.group', { elevation }, classNames)} ref={forwardedRef}>
+      <ark.div
+        asChild={asChild}
+        {...props}
+        className={tx('button.group', { elevation }, classNames)}
+        ref={forwardedRef}
+      >
         <ButtonGroupProvider inGroup>{children}</ButtonGroupProvider>
-      </Comp>
+      </ark.div>
     );
   },
 );

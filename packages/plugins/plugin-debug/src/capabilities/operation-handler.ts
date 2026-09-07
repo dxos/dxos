@@ -11,6 +11,14 @@ import { DebugOperationHandlerSet } from '#operations';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
+    setupDevtools();
     return Capability.contribute(Capabilities.OperationHandler, DebugOperationHandlerSet.handlers);
   }),
 );
+
+// Console sugar for the snapshot operation (see app-framework/docs/INTROSPECTION.md §3.1).
+const setupDevtools = () => {
+  const composer = (globalThis.composer ??= {});
+  // `input` passes through, so a caller can scope the error window (`{ since }`).
+  composer.snapshot = (input: { since?: number } = {}) => composer.invoke?.('org.dxos.operation.debug.snapshot', input);
+};

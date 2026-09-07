@@ -108,13 +108,12 @@ export const writeSerializedSpaceArchive = async (
   collectObjectsFromDoc(rootDoc, objects);
 
   for (const linkedUrl of databaseRoot.getAllLinkedDocuments()) {
-    const handle = await echoHost.loadDoc<DatabaseDirectory>(Context.default(), linkedUrl as AutomergeUrl);
-    if (!handle) {
+    using lease = await echoHost.loadDoc<DatabaseDirectory>(Context.default(), linkedUrl as AutomergeUrl);
+    if (!lease) {
       log.warn('linked document handle not available; skipping', { url: linkedUrl });
       continue;
     }
-    const doc = handle.doc();
-    collectObjectsFromDoc(doc, objects);
+    collectObjectsFromDoc(lease.doc(), objects);
   }
 
   // Export queue/feed messages for every Feed object in the space.

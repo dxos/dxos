@@ -7,6 +7,7 @@ import * as Rpc from 'effect/unstable/rpc/Rpc';
 import type * as RpcClient from 'effect/unstable/rpc/RpcClient';
 import * as RpcGroup from 'effect/unstable/rpc/RpcGroup';
 
+import { SignalResponseSchema, SubscribeToSpacesResponseSchema } from './buf/proto/gen/dxos/devtools/host_pb.ts';
 import { SignedMessageSchema } from './buf/proto/gen/dxos/halo/signed_pb.ts';
 import { SignalState } from './proto/gen/dxos/mesh/signal.ts';
 import { bufMessage, protoMessage, serviceError } from './service-rpc.ts';
@@ -336,7 +337,7 @@ export class Rpcs extends RpcGroup.make(
   }),
   Rpc.make('subscribeToSpaces', {
     payload: SubscribeToSpacesRequest,
-    success: protoMessage('dxos.devtools.host.SubscribeToSpacesResponse'),
+    success: bufMessage(SubscribeToSpacesResponseSchema),
     error: serviceError,
     stream: true,
   }),
@@ -393,7 +394,7 @@ export class Rpcs extends RpcGroup.make(
     stream: true,
   }),
   Rpc.make('subscribeToSignal', {
-    success: protoMessage('dxos.devtools.host.SignalResponse'),
+    success: bufMessage(SignalResponseSchema),
     error: serviceError,
     stream: true,
   }),

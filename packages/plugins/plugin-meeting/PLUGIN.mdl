@@ -17,7 +17,9 @@ Each extension is defined in the Appendix or resolved via its URI.
 | `feat`      | `org.dxos.mdl.feat@1.0`       |
 | `test`      | `org.dxos.mdl.test@1.0`       |
 | `component` | `org.dxos.mdl.component@1.0`  |
-| `op`        | `org.dxos.mdl.op@1.0`         |
+| `op`        | `org.dxos.mdl.op@1.1`         |
+| `flow`      | `org.dxos.mdl.flow@1.0`       |
+| `step`      | `org.dxos.mdl.step@1.0`       |
 
 ## Types
 
@@ -97,27 +99,32 @@ component MeetingsList
 
 ```mdl
 op Create
+  key: org.dxos.operation.meeting.create
   desc: Creates a new Meeting object in the given space, including linked Transcript, notes, and summary Text objects.
   input:
     name?: string
-    channel: Channel
-  output: Meeting
+    channel?: Channel
+  output:
+    object: Meeting
   effects: [echo:write]
   note: Also invokes TranscriptOperation.Create to initialise the transcript feed.
 ```
 
 ```mdl
 op SetActive
+  key: org.dxos.operation.meeting.setActive
   desc: Sets the currently active meeting in plugin state and broadcasts the meeting DXN to the call layer as an activity payload.
   input:
     object?: Meeting
-  output: Meeting
+  output:
+    object?: Meeting
   effects: [calls:activity]
   requires: [MeetingCapabilities.State, CallsCapabilities.Manager]
 ```
 
 ```mdl
 op HandlePayload
+  key: org.dxos.operation.meeting.handlePayload
   desc: Processes an incoming call-layer meeting payload; resolves the Meeting and Transcript feed objects from ECHO and updates transcription state.
   input:
     meetingId?: string
@@ -131,6 +138,7 @@ op HandlePayload
 
 ```mdl
 op Summarize
+  key: org.dxos.operation.meeting.summarize
   desc: Reads transcript and notes content from the active Meeting, sends them to the AI model, and writes the resulting markdown back to meeting.summary.
   input:
     meeting: Meeting
@@ -300,6 +308,57 @@ test T-7: Transcription lifecycle
   then:
     - TranscriptionManager is closed
     - plugin state is reset to empty
+```
+
+---
+
+## QA
+
+Executable flows. Each step carries a human instruction (`do`) and, where the step maps to an
+invocable operation, an agent binding (`invoke`). Report failures by flow and step number.
+
+```mdl
+flow QA-1: Create a meeting, set it active, and generate a summary
+  desc: The core meeting round-trip — create against a call channel, make it the active meeting, generate an AI summary.
+  actors: agent
+  covers: [F-1.1, F-1.2, F-1.3, F-1.4, F-2.1, F-2.2, F-4.1, F-4.2, T-1, T-2, T-5]
+  status: unverified
+  given:
+    - an identity exists
+    - space: a space is open
+    - channel: a call Channel object exists in that space (plugin-calls) — meeting creation requires either a channel or an event anchor
+    - plugin-meeting is enabled — it is OFF by default outside `isDev`/local dev builds (see `getDefaults` in `plugin-defs.tsx`, which only lists it under the `isDev` block)
+    - no Meeting named "QA Meeting" exists — ABORT rather than deleting one this flow did not create
+  test:
+    - name: Create the meeting
+      do: In the call's MeetingsList panel, click "Create Meeting" and name it "QA Meeting".
+      invoke: [op:Create] { name: "QA Meeting", channel: $given.channel }
+      capture: created
+      expect: a Meeting named "QA Meeting" is returned, linked to an empty Transcript, notes Text, and summary Text
+      assert: return !!$created.object && !!$created.object.transcript && !!$created.object.notes;
+    - name: Set it active
+      do: (the MeetingsList "Create Meeting" action does this automatically; selecting a row from the list does the same for an existing meeting)
+      invoke: [op:SetActive] { object: $created.object }
+      capture: active
+      expect: MeetingArticle opens for "QA Meeting" and the call layer's activity payload carries its DXN
+      assert: return $active.object?.id === $created.object.id;
+      note: Coalesced with the previous step — `created.object` is live and cannot cross a snippet boundary.
+    - name: Generate the summary
+      do: In MeetingArticle, click "Generate Summary".
+      invoke: [op:Summarize] { meeting: $created.object }
+      expect: meeting.summary.content is non-empty and differs from its pre-invoke value
+      assert: return (await $created.object.summary.load()).content.trim().length > 0;
+      note: |
+        Calls a live AI model (claude-3-5-haiku-latest) — non-deterministic output and real
+        inference cost/latency. Meaningful content requires the meeting's transcript or notes to
+        be non-empty first; against the empty fixture this flow creates on its own, prime notes
+        with a sentence before this step, or expect a thin/near-empty summary rather than an
+        error.
+  after:
+    - name: Delete the meeting
+      do: Right-click "QA Meeting" in the navtree (or its MeetingsList row) and choose Delete.
+      invoke: org.dxos.operation.space.removeObjects { objects: [$created.object], target: $given.space }
+      expect: the meeting leaves the MeetingsList and any open plank closes
 ```
 
 ---

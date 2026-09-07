@@ -18,6 +18,8 @@ Objects can be dragged between columns and the pipeline state persists collabora
 | `test`      | `org.dxos.mdl.test@1.0`       |
 | `component` | `org.dxos.mdl.component@1.0`  |
 | `op`        | `org.dxos.mdl.op@1.0`         |
+| `flow`      | `org.dxos.mdl.flow@1.0`       |
+| `step`      | `org.dxos.mdl.step@1.0`       |
 
 ## Types
 
@@ -278,6 +280,51 @@ test T-6: Research template missing mailbox
   given: a space with no Mailbox
   when: createResearchProject is called
   then: returns null
+```
+
+---
+
+## QA
+
+Executable flows. Each step carries a human instruction (`do`) and, where the step maps to an
+invocable operation, an agent binding (`invoke`). Report failures by flow and step number.
+
+```mdl
+flow QA-1: Create a Pipeline and add a column
+  desc: |
+    Pipeline creation delegates to `SpaceOperation.AddObject` behind the generic
+    `CreateObjectEntry` factory (same pattern as plugin-chess's `startGame`), and column
+    management (`addColumn`/`renameColumn`/`deleteColumn`/`setQuery`) is direct `Obj.update` from
+    `PipelineProperties` — none of it is an `Operation.make` with a runtime key. Every step here
+    is therefore human-only.
+  actors: human
+  covers: [F-1.1, F-1.2, F-1.3, F-2.2, F-2.3, T-1, T-2, T-3]
+  status: unverified
+  given:
+    - an identity exists
+    - space: a space is open
+    - collection: a collection in that space, to create into
+    - no Pipeline named "QA Pipeline" exists — ABORT rather than deleting one this flow did not create
+    - pipeline: the Pipeline the first step creates — its creating step is human-only, so an agent
+      run resolves it by name ("QA Pipeline") before the teardown step references it
+  test:
+    - name: Create the Pipeline
+      do: In the navtree, click + on a collection and choose Pipeline. Name it "QA Pipeline".
+      expect: an empty Pipeline appears under the collection, with no columns
+      note: NO `invoke` — `createPipeline` is `SpaceCapabilities.CreateObjectEntry`, not an operation; there is no key to call.
+    - name: Add a column
+      do: In PipelineArticle, click "+" in the toolbar, then "+" again in the Settings panel that opens.
+      expect: a new unnamed Column is appended, with an empty ViewModel and a Filter.nothing() query
+      note: NO `invoke` — `addColumn()` is a direct `Obj.update` on `pipeline.columns` from `PipelineProperties`.
+    - name: Rename the column
+      do: In the expanded column editor, type "Leads" in the name field.
+      expect: the column tile in the board re-renders headed "Leads"
+      note: NO `invoke` — `renameColumn` is also a direct `Obj.update`.
+  after:
+    - name: Delete the Pipeline
+      do: Right-click "QA Pipeline" in the navtree and choose Delete.
+      invoke: org.dxos.operation.space.removeObjects { objects: [$given.pipeline], target: $given.collection }
+      expect: the row leaves the navtree and its plank closes, and the column's ViewModel object is also removed
 ```
 
 ---

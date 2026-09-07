@@ -3,11 +3,9 @@
 //
 
 import { type CleanupFn } from '@dxos/async';
+import { type BlobBackend, digestHexFromBytes } from '@dxos/blob';
 import { Blob, Error as EchoError } from '@dxos/echo';
-import { type BlobBackend } from '@dxos/echo-protocol';
 import { type SpaceId } from '@dxos/keys';
-
-import { digestHexFromBytes } from './ni-uri';
 
 const BASE64_CHUNK_SIZE = 0x8000;
 

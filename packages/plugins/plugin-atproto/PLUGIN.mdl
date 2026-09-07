@@ -16,6 +16,7 @@ publish/sync status, and reconciles records (publish / re-publish / unpublish) o
 | `type`      | `org.dxos.mdl.type@1.0`        |
 | `feat`      | `org.dxos.mdl.feat@1.0`        |
 | `test`      | `org.dxos.mdl.test@1.0`        |
+| `flow`      | `org.dxos.mdl.flow@1.0`        |
 
 ## Types
 
@@ -88,4 +89,87 @@ test T-3: Browse and import (storybook, mock repo)
   then: it renders as a readonly ECHO object with an Import action
   when: imported
   then: the object exists in the space, foreign-key-bound to the record's AT-URI
+```
+
+## QA
+
+Executable flows. Each step carries a human instruction (`do`) and, where the step maps to an
+invocable operation, an agent binding (`invoke`). Report failures by flow and step number.
+
+There is no `Operation` module in this plugin — `publish` / `unpublish` / `import` are called
+directly from the companion's own UI handlers (`publish.ts`, `PdsBrowser.tsx`), not through the
+operation invoker. Every step below is therefore human-only; a flow containing them cannot
+declare `actors: agent`.
+
+```mdl
+flow QA-1: Publish an object, detect drift, unpublish
+  desc: The core publish/reconcile round-trip against a real PDS account.
+  actors: human
+  covers: [F-1.1, F-1.2, F-3.1, F-3.2, F-3.3, F-3.4, F-3.5, T-2]
+  status: unverified
+  given:
+    - an identity exists
+    - space: a space is open
+    - an atproto Connection exists in the space, backed by a real (or test) PDS account —
+      this is an external-service dependency the debug port cannot fabricate
+    - an object exists whose type carries an AtprotoRecordAnnotation (e.g. a Bluesky post draft)
+      and is not currently published
+  test:
+    - name: Open the publishing companion
+      do: Select the annotated object; open its "Publish" companion panel.
+      expect: the panel lists the object's fields with globe/lock markers and status reads "Not published"
+      note: NO `invoke` — this is a UI panel with no operation behind it.
+    - name: Publish
+      do: Click "Publish" and confirm in the dialog (first publish requires confirmation).
+      expect: status becomes "Published (in sync)" and the object gains an atproto foreign key
+      note: NO `invoke` — publish.ts is called directly from the button handler.
+    - name: Edit a published field and observe drift
+      do: Change a published field's value and save.
+      expect: status becomes "Published (out of date)"
+    - name: Re-publish
+      do: Click "Publish" again — no confirmation dialog this time.
+      expect: status returns to "Published (in sync)" and the PDS record reflects the new value
+  after:
+    - name: Unpublish
+      do: Click "Unpublish" in the companion panel.
+      expect: status returns to "Not published", the record is deleted from the PDS, and no
+        AtprotoPublication remains on the object
+```
+
+```mdl
+flow QA-2: Browse the PDS and import a record
+  desc: The read side — list collections and records on the connected PDS, import one as an ECHO object.
+  actors: human
+  covers: [F-4.1, F-4.2, F-4.3, F-4.4, F-4.5, F-4.6, T-3]
+  status: unverified
+  given:
+    - an identity exists
+    - space: a space is open, with an atproto Connection to a real PDS account
+    - the account's repo holds at least one record in a collection this app has a schema mapping for
+  test:
+    - name: Open the PDS browser
+      do: In the navigation system section, click the "PDS" node (visible only with a connection present).
+      expect: an account selector shows the connection, defaulted to the first, and the repo's
+        collections are listed with mapped ones marked
+      note: NO `invoke` — this is a read-only browser view, not backed by an operation.
+    - name: List records in a mapped collection
+      do: Click a mapped collection.
+      expect: its records are listed
+    - name: View a record and import it
+      id: import
+      do: Select a record, then click "Import".
+      expect: the record renders as a readonly ECHO object with an Import button, and after
+        clicking, the object appears in the space bound as already-published (foreign key set,
+        AtprotoPublication in sync)
+      note: |
+        No `capture` — the imported object has no operation return value to capture; identify it
+        for the teardown step by the record's known AT-URI instead.
+  after:
+    - name: Remove the imported object
+      do: Right-click the imported object in the navtree and choose Delete.
+      invoke: org.dxos.operation.space.removeObjects { objects: [<the object created at QA-2.import>], target: $given.space.db }
+      expect: the object no longer appears in the space
+      note: |
+        Deletion goes through the standard space operation even though creation (import) did not —
+        `space.removeObjects` is owned by another plugin and is always available.
 ```

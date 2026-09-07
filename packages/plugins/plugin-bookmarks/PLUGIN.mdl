@@ -22,6 +22,7 @@ Each extension is defined in the Appendix or resolved via its URI.
 | `type` | `org.dxos.mdl.type@1.0`        |
 | `feat` | `org.dxos.mdl.feat@1.0`        |
 | `test` | `org.dxos.mdl.test@1.0`        |
+| `flow` | `org.dxos.mdl.flow@1.0`        |
 
 ## Types
 
@@ -185,6 +186,72 @@ test T-3: AddFromSnapshot persists a Bookmark
   then:
     - a Bookmark object exists in the database
     - the operation returns the object's id
+```
+
+## QA
+
+Executable flows. Each step carries a human instruction (`do`) and, where the step maps to an
+invocable operation, an agent binding (`invoke`). Report failures by flow and step number.
+
+```mdl
+flow QA-1: Save a bookmark and summarize it
+  desc: The core round-trip — capture a page snapshot as a Bookmark, then generate its AI summary.
+  actors: both
+  covers: [F-1.1, F-2.1, F-2.2, F-5.1, F-5.2]
+  status: unverified
+  given:
+    - an identity exists
+    - space: a space is open
+    - no Bookmark with url "https://example.com/qa-notes" exists — ABORT rather than deleting
+      one this flow did not create
+  test:
+    - name: Add a bookmark from a captured snapshot
+      do: |
+        On https://example.com/qa-notes, open the Composer browser extension popup and click
+        "Add bookmark". The extension captures title, url, og metadata and any selection and
+        invokes the operation on the active space.
+      invoke: |
+        org.dxos.operation.bookmarks.addFromSnapshot {
+          snapshot: { source: { url: "https://example.com/qa-notes", title: "QA Notes", clippedAt: "2026-08-27T00:00:00Z" }, hints: { ogTitle: "QA Notes Page" } },
+          target: $given.space.db
+        }
+      capture: created
+      expect: a Bookmark titled "QA Notes Page" now exists with url "https://example.com/qa-notes"
+      assert: return !!$created.id
+      note: |
+        `target` is the database itself, not a collection — AddFromSnapshot writes directly and
+        has no separate placement step, unlike a navtree-created object.
+    - name: Summarize the bookmark
+      do: Open the bookmark and click "Summarize" in the article toolbar.
+      invoke: |
+        org.dxos.operation.bookmarks.summarize { bookmark: { "/": "echo://$given.space.id/$created.id" } }
+      expect: the article surface now renders a generated markdown summary
+      assert: return !!$result.summary
+  after:
+    - name: Delete the bookmark
+      do: Right-click the bookmark card and choose Delete.
+      invoke: |
+        org.dxos.operation.space.removeObjects { objects: [{ "/": "echo://$given.space.id/$created.id" }], target: $given.space.db }
+      expect: the bookmark no longer appears in the space
+```
+
+```mdl
+flow QA-2: Page action is contributed to the extension
+  desc: The plugin-crx integration surface — no operation invokes this, it is a registration check.
+  actors: human
+  covers: [F-3.1, F-3.2]
+  status: unverified
+  given:
+    - an identity exists
+    - the Composer browser extension is installed and pointed at this space
+    - a normal http(s) page is open in the browser
+  test:
+    - name: Open the extension popup
+      do: Click the Composer extension icon in the browser toolbar.
+      expect: the popup lists "Add bookmark" among the available page actions
+      note: |
+        NO `invoke` — this checks the extension's own popup UI, not an ECHO effect; there is
+        nothing in the database to assert against until the action is actually run (QA-1).
 ```
 
 ---

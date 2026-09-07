@@ -3,8 +3,10 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React from 'react';
+import React, { type PropsWithChildren } from 'react';
+import { expect, userEvent, waitFor, within } from 'storybook/test';
 
+import { mx } from '@dxos/ui-theme';
 import { type MessageValence } from '@dxos/ui-types';
 
 import { withLayoutVariants, withTheme } from '../../testing';
@@ -44,8 +46,66 @@ type StoryArgs = Partial<{
   validationMessage: string;
 }>;
 
+type RowProps = PropsWithChildren<
+  Pick<
+    StoryArgs,
+    | 'label'
+    | 'labelVisuallyHidden'
+    | 'description'
+    | 'descriptionVisuallyHidden'
+    | 'validationMessage'
+    | 'validationValence'
+  > & {
+    /** Lead with the control: a checkbox or switch reads control-then-label. */
+    inline?: boolean;
+  }
+>;
+
+/** Label, control and the meta text on one line, so the valence border and message are seen together. */
+const Row = ({
+  inline,
+  label,
+  validationValence,
+  labelVisuallyHidden,
+  description,
+  descriptionVisuallyHidden,
+  validationMessage,
+  children,
+}: RowProps) => (
+  <Input.Root validationValence={validationValence}>
+    <div className='flex flex-col gap-1'>
+      {(inline && (
+        <div className='flex items-center gap-2'>
+          {children}
+          <Input.Label srOnly={labelVisuallyHidden} classNames='shrink-0'>
+            {label}
+          </Input.Label>
+        </div>
+      )) || (
+        <>
+          <Input.Label srOnly={labelVisuallyHidden} classNames='shrink-0'>
+            {label}
+          </Input.Label>
+          {children}
+        </>
+      )}
+
+      <Input.DescriptionAndValidation
+        srOnly={descriptionVisuallyHidden}
+        classNames={mx('flex grow shrink-0 text-description whitespace-nowrap', validationMessage && 'justify-end')}
+      >
+        {validationMessage ? (
+          <Input.Validation classNames='block'>{validationMessage}</Input.Validation>
+        ) : (
+          <Input.Description>{description}</Input.Description>
+        )}
+      </Input.DescriptionAndValidation>
+    </div>
+  </Input.Root>
+);
+
 const DefaultStory = ({
-  kind,
+  kind = 'text',
   label,
   description,
   labelVisuallyHidden,
@@ -54,32 +114,39 @@ const DefaultStory = ({
   validationMessage,
   ...props
 }: StoryArgs) => {
+  const control = (() => {
+    switch (kind) {
+      case 'text':
+        return <Input.TextInput {...props} />;
+      case 'pin':
+        return <Input.PinInput {...props} />;
+      case 'textarea':
+        return <Input.TextArea {...props} />;
+      case 'time':
+        return <Input.Time {...props} />;
+      case 'date':
+        return <Input.Date {...props} />;
+      case 'datetime':
+        return <Input.DateTime {...props} />;
+      case 'checkbox':
+        return <Input.Checkbox {...props} />;
+      case 'switch':
+        return <Input.Switch {...props} />;
+    }
+  })();
+
   return (
-    <Input.Root {...{ validationValence }}>
-      <Input.Label srOnly={labelVisuallyHidden}>{label}</Input.Label>
-
-      {kind === 'text' && <Input.TextInput {...props} />}
-      {kind === 'pin' && <Input.PinInput {...props} />}
-      {kind === 'textarea' && <Input.TextArea {...props} />}
-      {kind === 'time' && <Input.Time {...props} />}
-      {kind === 'date' && <Input.Date {...props} />}
-      {kind === 'datetime' && <Input.DateTime {...props} />}
-      {kind === 'checkbox' && (
-        <Input.Block>
-          <Input.Checkbox {...props} />
-        </Input.Block>
-      )}
-      {kind === 'switch' && (
-        <Input.Block>
-          <Input.Switch {...props} />
-        </Input.Block>
-      )}
-
-      <Input.DescriptionAndValidation srOnly={descriptionVisuallyHidden}>
-        {validationMessage && <Input.Validation classNames='block'>{validationMessage}</Input.Validation>}
-        <Input.Description>{description}</Input.Description>
-      </Input.DescriptionAndValidation>
-    </Input.Root>
+    <Row
+      validationValence={validationValence}
+      inline={kind === 'checkbox' || kind === 'switch'}
+      label={label}
+      labelVisuallyHidden={labelVisuallyHidden}
+      description={description}
+      descriptionVisuallyHidden={descriptionVisuallyHidden}
+      validationMessage={validationMessage}
+    >
+      {control}
+    </Row>
   );
 };
 
@@ -87,7 +154,7 @@ const meta = {
   title: 'ui/react-ui-core/components/Input',
   component: Input.Root as any,
   render: DefaultStory,
-  decorators: [withTheme(), withLayoutVariants()],
+  decorators: [withTheme(), withLayoutVariants({ classNames: 'w-[40rem]' })],
 } satisfies Meta<typeof DefaultStory>;
 
 export default meta;
@@ -192,10 +259,15 @@ export const _TextInput: Story = {
   render: () => (
     <div className='flex flex-col gap-3 min-w-[24rem]'>
       {TEXT_INPUT_TYPES.map(({ type, placeholder }) => (
-        <Input.Root key={type}>
-          <Input.Label>{`type="${type}"`}</Input.Label>
-          <Input.TextInput type={type} placeholder={placeholder} />
-        </Input.Root>
+        // `Input.Root` renders no element, so without this wrapper the gap falls between each label
+        // and its own field rather than between the groups — making the label spacing look unlike
+        // every other story's.
+        <div key={type}>
+          <Input.Root>
+            <Input.Label>{`type="${type}"`}</Input.Label>
+            <Input.TextInput type={type} placeholder={placeholder} />
+          </Input.Root>
+        </div>
       ))}
     </div>
   ),
@@ -208,7 +280,7 @@ export const _TextInput: Story = {
  */
 export const TextInputAdornments: Story = {
   render: () => (
-    <div className='flex flex-col gap-4 min-w-[28rem]'>
+    <div className='flex flex-col'>
       <Input.Root>
         <Input.Label>Start icon</Input.Label>
         <Input.TextInput start={<Icon icon='ph--magnifying-glass--regular' size={4} />} placeholder='Search…' />
@@ -290,6 +362,29 @@ export const DateTime: Story = {
   },
 };
 
+/**
+ * The picker must open at its field. It is positioned through a virtual anchor because the
+ * react-aria field keeps an `id` handed to it for its input, so an `Anchor asChild` would leave
+ * the popover machine nothing to find and the calendar would open at the page's origin.
+ */
+const opensAtField = async ({ canvasElement }: { canvasElement: HTMLElement }) => {
+  const canvas = within(canvasElement);
+  const [field] = canvasElement.querySelectorAll<HTMLElement>('[data-density]');
+  await userEvent.click(canvas.getAllByRole('button')[0]);
+  const dialog = await waitFor(async () => {
+    const element = document.querySelector<HTMLElement>('[role="dialog"]');
+    await expect(element).not.toBeNull();
+    return element!;
+  });
+  await waitFor(async () => {
+    const rect = dialog.getBoundingClientRect();
+    const anchor = field.getBoundingClientRect();
+    await expect(Math.abs(rect.left - anchor.left)).toBeLessThan(8);
+    await expect(rect.top).toBeGreaterThanOrEqual(anchor.bottom);
+    await expect(rect.top - anchor.bottom).toBeLessThan(16);
+  });
+};
+
 export const DateWithPicker: Story = {
   render: () => (
     <Input.Root>
@@ -301,6 +396,7 @@ export const DateWithPicker: Story = {
       <Input.Description>Click the calendar icon to open the date picker.</Input.Description>
     </Input.Root>
   ),
+  play: opensAtField,
 };
 
 export const DateTimeWithPicker: Story = {
@@ -314,6 +410,7 @@ export const DateTimeWithPicker: Story = {
       <Input.Description>Click the calendar icon to open the date picker.</Input.Description>
     </Input.Root>
   ),
+  play: opensAtField,
 };
 
 export const Checkbox: Story = {

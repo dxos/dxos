@@ -5,7 +5,7 @@
 import { type Trigger, scheduleTask } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { ProtocolError } from '@dxos/protocols';
-import { schema } from '@dxos/protocols/proto';
+import { getBufService } from '@dxos/protocols/buf-service';
 import { type Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
 import {
   type AdmissionDiscoveryService,
@@ -31,7 +31,9 @@ export class CredentialRetrieverExtension extends RpcExtension<
   ) {
     super({
       requested: {
-        AdmissionDiscoveryService: schema.getService('dxos.mesh.teleport.AdmissionDiscoveryService'),
+        AdmissionDiscoveryService: getBufService<AdmissionDiscoveryService>(
+          'dxos.mesh.teleport.AdmissionDiscoveryService',
+        ),
       },
     });
   }
@@ -68,7 +70,9 @@ export class CredentialServerExtension extends RpcExtension<
   constructor(private readonly _space: Space) {
     super({
       exposed: {
-        AdmissionDiscoveryService: schema.getService('dxos.mesh.teleport.AdmissionDiscoveryService'),
+        AdmissionDiscoveryService: getBufService<AdmissionDiscoveryService>(
+          'dxos.mesh.teleport.AdmissionDiscoveryService',
+        ),
       },
     });
   }

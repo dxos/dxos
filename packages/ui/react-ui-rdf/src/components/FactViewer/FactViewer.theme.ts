@@ -19,7 +19,7 @@ const factViewerStyles = tv({
 
     // Graph view.
     graphContent: 'overflow-hidden',
-    graphTree: 'w-full h-full',
+    graphTree: 'dx-fill',
 
     // Subject group card.
     group: 'shrink-0 flex flex-col dx-card-surface border border-subdued-separator rounded-sm overflow-hidden',

@@ -17,7 +17,8 @@ Each extension is defined in the Appendix or resolved via its URI.
 | `feat`      | `org.dxos.mdl.feat@1.0`        |
 | `test`      | `org.dxos.mdl.test@1.0`        |
 | `component` | `org.dxos.mdl.component@1.0`   |
-| `op`        | `org.dxos.mdl.op@1.0`          |
+| `op`        | `org.dxos.mdl.op@1.1`          |
+| `flow`      | `org.dxos.mdl.flow@1.0`        |
 
 ## Types
 
@@ -116,38 +117,55 @@ component SketchSettings
 
 ## Operations
 
+> **Architecture has moved since this section was written.** `plugin-tldraw` no longer owns a
+> `Sketch`/`Canvas` type or a `createSketch`/`readSketch`/`editSketch` operation — there is no
+> `operations/` directory and no `Sketch` class in `src/` at all. Tldraw is now a **render/create
+> variant** contributed to `plugin-illustrator`'s `Drawing` type
+> (`src/capabilities/drawing-variant.ts`, `IllustratorCapabilities.VariantProvider`, id
+> `tldraw.com/2`) — `TldrawArticle`/`TldrawCard` render a `Drawing.Canvas` whose `schema` is
+> `tldraw.com/2`, and the Scene DSL create/read/edit operations documented below actually live in
+> `@dxos/plugin-illustrator` (`org.dxos.operation.illustrator.{create,read,edit}`), invoked with
+> `variant: 'tldraw.com/2'` to select this plugin's renderer. The type/component sections above
+> (`Canvas`, `Sketch`, `Scene`, `WorldObject`, `Command`) and F-7/F-8 below describe the DSL
+> correctly in spirit but attribute it to the wrong plugin; QA-1/QA-2 below invoke the real keys.
+
 ```mdl
 op createSketch
-  desc: Creates a new Sketch with an associated Canvas and adds it to the target space or collection.
+  key: org.dxos.operation.illustrator.create
+  desc: |
+    Owned by plugin-illustrator, not this plugin (see note above). Creates a Drawing with an
+    associated Canvas and adds it to the target space or collection; `variant: 'tldraw.com/2'`
+    selects the tldraw renderer instead of another registered DrawingVariant.
   input:
     name?: string
-    schema?: string              # tldraw schema version (default: tldraw.com/2)
-    content?: Map<string, any>   # optional initial tldraw store snapshot
-  output: Sketch
+    variant?: string              # canvas typename; here 'tldraw.com/2' — defaults to the first registered variant
+  output: { object: Drawing }
   effects: [echo:write]
 ```
 
 ```mdl
 op readSketch
+  key: org.dxos.operation.illustrator.read
   desc: |
-    Returns the derived Scene (world objects with object-local coordinates) read
-    from the live canvas records, plus a count of unmanaged (hand-drawn) shapes.
-    Origins derive from bounding boxes, so the scene stays coherent after users
-    drag shapes. The agent calls this before editing an existing sketch.
+    Owned by plugin-illustrator (see note above). Returns the derived Scene (world objects with
+    object-local coordinates) read from the live canvas records, plus a count of unmanaged
+    (hand-drawn) shapes. Origins derive from bounding boxes, so the scene stays coherent after
+    users drag shapes. The agent calls this before editing an existing sketch.
   input:
-    sketch: Ref<Sketch>
+    drawing: Ref<Drawing>
   output: { scene: Scene, unmanaged: number }
   requires: [Database]
 ```
 
 ```mdl
 op editSketch
+  key: org.dxos.operation.illustrator.edit
   desc: |
-    Applies scene commands atomically (one Obj.update): upsert/move/remove world
-    objects or individual elements by id. Returns the resulting scene so the
-    agent can maintain its mental model across turns.
+    Owned by plugin-illustrator (see note above). Applies scene commands atomically (one
+    Obj.update): upsert/move/remove world objects or individual elements by id. Returns the
+    resulting scene so the agent can maintain its mental model across turns.
   input:
-    sketch: Ref<Sketch>
+    drawing: Ref<Drawing>
     commands: Command[]
   output: { scene: Scene, unmanaged: number, upserted: string[], removed: number }
   effects: [echo:write]
@@ -346,6 +364,107 @@ test T-8: Conversational drawing (live AI)
 ```
 
 ---
+
+## QA
+
+Executable flows. Each step carries a human instruction (`do`) and, where the step maps to an
+invocable operation, an agent binding (`invoke`). Report failures by flow and step number.
+Tldraw is enabled by default in every environment (`plugin-defs.tsx` `getDefaults`).
+
+```mdl
+flow QA-1: Create a tldraw sketch and draw on it
+  desc: The core whiteboard round-trip — create a Drawing bound to the tldraw variant, draw, reload.
+  actors: both
+  covers: [F-1.1, F-1.2, F-2.1, F-2.2, T-1, T-2]
+  status: unverified
+  given:
+    - an identity exists
+    - space: a space is open
+    - collection: a collection in that space, to create into
+    - no Drawing named "QA Sketch" exists — ABORT rather than deleting one this flow did not create
+  test:
+    - name: Create the sketch
+      do: In the navtree, click + on a collection and choose Sketch (tldraw). Name it "QA Sketch".
+      invoke: [op:createSketch] { name: "QA Sketch", variant: "tldraw.com/2" }
+      capture: created
+      expect: a Drawing named "QA Sketch" opens in TldrawArticle with an empty canvas
+      assert: return !!$created.object
+    - name: Place it in the collection
+      do: (no separate gesture — the navtree create action places it)
+      invoke: org.dxos.operation.space.addObject { object: $created.object, target: $given.collection }
+      expect: "QA Sketch" appears as a row under the collection
+    - name: Draw a shape
+      do: With the sketch open and focused (attention), select the rectangle tool and draw a rectangle on the canvas.
+      expect: the rectangle appears on the canvas
+      note: |
+        NO `invoke` — freehand drawing is a pointer gesture inside the tldraw canvas, with no
+        operation behind it; the DSL ops (`op:editSketch`) address semantic world objects, not
+        raw hand-drawn shapes. This step is human-only.
+  after:
+    - name: Delete the sketch
+      do: Right-click "QA Sketch" in the navtree and choose Delete.
+      invoke: org.dxos.operation.space.removeObjects { objects: [$created.object], target: $given.collection }
+      expect: the row leaves the navtree and its plank closes if it was open
+```
+
+```mdl
+flow QA-2: Scene DSL round-trip — draw a face, then add a hat without redrawing it
+  desc: |
+    The agent-facing DSL path (F-8 / T-7): create, read, and edit a scene addressed by semantic
+    object ids, verifying an edit to one world object leaves siblings untouched.
+  actors: agent
+  covers: [F-7.1, F-7.2, F-8.2, F-8.3, T-7]
+  status: unverified
+  given:
+    - an identity exists
+    - space: a space is open
+    - collection: a collection in that space, to create into
+    - no Drawing named "QA Face" exists — ABORT rather than deleting one this flow did not create
+  test:
+    - name: Create the sketch
+      do: (agent-only step — DSL editing has no human equivalent gesture; a human would draw freehand instead)
+      invoke: [op:createSketch] { name: "QA Face", variant: "tldraw.com/2" }
+      capture: created
+      expect: an empty Drawing named "QA Face" is created
+      assert: return !!$created.object
+    - name: Place it in the collection
+      do: (no separate gesture)
+      invoke: org.dxos.operation.space.addObject { object: $created.object, target: $given.collection }
+      expect: "QA Face" appears as a row under the collection
+    - name: Draw a face
+      do: (no human gesture — this is the DSL path)
+      invoke: |
+        org.dxos.operation.illustrator.edit {
+          drawing: $created.object,
+          commands: [{ kind: "upsert-object", id: "face", elements: [
+            { id: "head", type: "circle" },
+            { id: "smile", type: "arc" }
+          ] }]
+        }
+      capture: withFace
+      expect: the canvas renders a circle ("head") and an arc ("smile"); reading the scene returns
+        a "face" object with both element ids
+      assert: return $result.upserted.includes('face')
+    - name: Add a hat without touching the face
+      do: (no human gesture — this is the DSL path)
+      invoke: |
+        org.dxos.operation.illustrator.edit {
+          drawing: $created.object,
+          commands: [{ kind: "upsert-object", id: "hat", elements: [{ id: "brim", type: "triangle" }] }]
+        }
+      expect: the canvas now also renders the hat; the face's "head" and "smile" records are
+        byte-identical to the previous step's — the edit touched only the "hat" object
+      assert: return $result.upserted.includes('hat') && !$result.upserted.includes('face')
+      note: |
+        This is the mental-model regression T-8 describes for live AI conversation — asserting on
+        `upserted` (which object ids the edit actually touched) is the falsifiable form of "the
+        face was not redrawn," per Rule 5.
+  after:
+    - name: Delete the sketch
+      do: Right-click "QA Face" in the navtree and choose Delete.
+      invoke: org.dxos.operation.space.removeObjects { objects: [$created.object], target: $given.collection }
+      expect: the row leaves the navtree and its plank closes if it was open
+```
 
 ## Appendix: Extension Definitions
 

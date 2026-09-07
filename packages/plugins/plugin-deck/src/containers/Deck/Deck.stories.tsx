@@ -100,7 +100,7 @@ const TestArticle = ({ title, content }: { title: string; content: string }) => 
   return (
     <Editor.Root>
       <div className='contents' data-testid='story.article' data-title={title}>
-        <Editor.View value={content} extensions={extensions} classNames='dx-container' />
+        <Editor.View value={content} extensions={extensions} classNames='dx-expand' />
       </div>
     </Editor.Root>
   );

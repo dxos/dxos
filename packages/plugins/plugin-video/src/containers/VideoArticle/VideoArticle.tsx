@@ -8,9 +8,9 @@ import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj, Ref } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
-import { IconButton, Panel, Toolbar, useTranslation } from '@dxos/react-ui';
-import { Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
-import { Tabs } from '@dxos/react-ui-tabs';
+import { IconButton, Panel, Tabs, Toolbar, useTranslation } from '@dxos/react-ui';
+import { useAttention } from '@dxos/react-ui-attention';
+import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 
 import { meta } from '#meta';
 import { Video, VideoOperation } from '#types';
@@ -94,36 +94,32 @@ export const VideoArticle = ({ role, attendableId, subject }: VideoArticleProps)
   );
 
   return (
-    <Menu.Root {...menuActions} attendableId={attendableId}>
-      <Panel.Root role={role}>
-        <Panel.Toolbar asChild>
-          <Menu.Toolbar>
-            <Menu.Items />
-          </Menu.Toolbar>
-        </Panel.Toolbar>
-        <Panel.Content classNames='grid grid-rows-[auto_1fr]'>
-          <Surface.Surface
-            type={AppSurface.Section}
-            data={{
-              subject,
-              attendableId,
-              part: 'player',
-            }}
-            limit={1}
-          />
-          <TranscriptTabs
-            attendableId={attendableId}
-            subject={subject}
-            role={role}
-            tab={tab}
-            onTabChange={setTab}
-            onRegenerate={handleRegenerate}
-            isRegenerateDisabled={!hasTranscript || summarizing}
-            isSummarizing={summarizing}
-          />
-        </Panel.Content>
-      </Panel.Root>
-    </Menu.Root>
+    <Panel.Root role={role}>
+      <Panel.Toolbar asChild>
+        <ActionToolbar {...menuActions} attendableId={attendableId} />
+      </Panel.Toolbar>
+      <Panel.Content classNames='grid grid-rows-[auto_1fr]'>
+        <Surface.Surface
+          type={AppSurface.Section}
+          data={{
+            subject,
+            attendableId,
+            part: 'player',
+          }}
+          limit={1}
+        />
+        <TranscriptTabs
+          attendableId={attendableId}
+          subject={subject}
+          role={role}
+          tab={tab}
+          onTabChange={setTab}
+          onRegenerate={handleRegenerate}
+          isRegenerateDisabled={!hasTranscript || summarizing}
+          isSummarizing={summarizing}
+        />
+      </Panel.Content>
+    </Panel.Root>
   );
 };
 
@@ -158,9 +154,16 @@ const TranscriptTabs = ({
   onRegenerate,
 }: TranscriptTabsProps) => {
   const { t } = useTranslation(meta.profile.key);
+  // The selected tab reads as primary while this article has attention.
+  const { hasAttention } = useAttention(attendableId);
   return (
     <Panel.Root asChild role={role}>
-      <Tabs.Root orientation='horizontal' value={tab} attendableId={attendableId} onValueChange={onTabChange}>
+      <Tabs.Root
+        orientation='horizontal'
+        value={tab}
+        selectedVariant={hasAttention ? 'primary' : 'default'}
+        onValueChange={onTabChange}
+      >
         <Panel.Toolbar asChild>
           <Toolbar.Root>
             <Tabs.Tablist classNames='p-0'>
@@ -182,7 +185,7 @@ const TranscriptTabs = ({
           </Toolbar.Root>
         </Panel.Toolbar>
         <Panel.Content asChild>
-          <Tabs.Viewport classNames='dx-container grid grid-rows-[auto_1fr]'>
+          <Tabs.Viewport classNames='dx-expand grid grid-rows-[auto_1fr]'>
             <Tabs.Panel value='transcript' tabIndex={-1} classNames='overflow-hidden'>
               <Surface.Surface
                 type={AppSurface.Tabpanel}

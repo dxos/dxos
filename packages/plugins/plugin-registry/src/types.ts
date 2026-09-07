@@ -15,6 +15,14 @@ import { meta } from '#meta';
 // cannot live in the dialog component's module without dragging React in behind it.
 export const LOAD_PLUGIN_DIALOG = DXN.make(`${meta.profile.key}.loadPluginDialog`);
 
+export type RegistryPluginOptions = {
+  /**
+   * Whether the build can install plugins it did not bundle: the public catalog category, the
+   * load-by-URL dialog and the dev-server loader.
+   */
+  externalPlugins?: boolean;
+};
+
 export const RegistrySettingsSchema = Schema.Struct({
   experimental: Schema.optional(Schema.Boolean),
   /**

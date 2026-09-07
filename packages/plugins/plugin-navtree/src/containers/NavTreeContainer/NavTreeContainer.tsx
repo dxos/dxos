@@ -18,7 +18,7 @@ import { AppSurface, useAppGraph, useLayout } from '@dxos/app-toolkit/ui';
 import * as GraphNode from '@dxos/graph/GraphNode';
 import { useActionRunner } from '@dxos/plugin-graph/hooks';
 import { useMediaQuery, useSidebars } from '@dxos/react-ui';
-import { type TreeData, isTreeData } from '@dxos/react-ui-list';
+import { type TreeData, isTreeDataFor } from '@dxos/react-ui-list';
 import { arrayMove } from '@dxos/util';
 
 import { NAV_TREE_ITEM, NavTree, NavTreeContext } from '#components';
@@ -193,7 +193,9 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
     // TODO(wittjosiah): Factor out hook.
     useEffect(() => {
       return monitorForElements({
-        canMonitor: ({ source }) => isTreeData(source.data),
+        // Scoped to this tree: monitors are global and every tree's payload has the same shape, so
+        // without the id this claimed a task list's drag and then read its item as a graph node.
+        canMonitor: ({ source }) => isTreeDataFor(source.data, GraphNode.RootId),
         onDrop: ({ location, source }) => {
           // Didn't drop on anything.
           if (!location.current.dropTargets.length) {

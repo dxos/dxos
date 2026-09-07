@@ -141,13 +141,17 @@ const parseFeed = (url: string, xml: string): FetchResult => {
   return { feed, posts };
 };
 
+/** fast-xml-parser's shape for an Atom `<link>` element, or the plain text an RSS `<link>` parses to. */
+type FeedLink = string | { '@_href'?: string; '@_rel'?: string };
+
 /** The channel-level link: RSS carries it as text, Atom as the `rel="alternate"` href. */
-const channelLink = (channel: any, isAtom: boolean): string | undefined => {
+const channelLink = (channel: { link?: FeedLink | FeedLink[] }, isAtom: boolean): string | undefined => {
   if (!isAtom) {
     return text(channel.link) || undefined;
   }
 
-  const links = Array.isArray(channel.link) ? channel.link : [channel.link];
-  const alternate = links.find((link: any) => link?.['@_rel'] === 'alternate') ?? links[0];
-  return (alternate?.['@_href'] ?? text(alternate)) || undefined;
+  const links = Array.isArray(channel.link) ? channel.link : channel.link !== undefined ? [channel.link] : [];
+  const alternate = links.find((link) => typeof link === 'object' && link['@_rel'] === 'alternate') ?? links[0];
+  const href = typeof alternate === 'object' ? alternate?.['@_href'] : undefined;
+  return (href ?? text(alternate)) || undefined;
 };

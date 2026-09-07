@@ -5,8 +5,17 @@
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
+import * as Tracer from 'effect/Tracer';
 
 import { runAndForwardErrors, unwrapExit } from './internal/errors';
+import { makeGlobalTracer } from './otel';
+
+let defaultTracer: Context.Context<never> | undefined;
+
+const withDefaultTracer = <R>(context: Context.Context<R>): Context.Context<R> => {
+  defaultTracer ??= Context.make(Tracer.Tracer, makeGlobalTracer('@dxos/effect/RuntimeProvider'));
+  return Context.merge(defaultTracer, context);
+};
 
 /**
  * Provides effect runtime with services to run effects.
@@ -36,7 +45,7 @@ export const runPromise =
   <R>(provider: RuntimeProvider<R>) =>
   async <A>(effect: Effect.Effect<A, any, R>): Promise<A> => {
     const context = await runAndForwardErrors(provider);
-    return unwrapExit(await Effect.runPromiseExit(Effect.provideContext(effect, context)));
+    return unwrapExit(await Effect.runPromiseExit(Effect.provideContext(effect, withDefaultTracer(context))));
   };
 
 /**
@@ -45,4 +54,4 @@ export const runPromise =
 export const provide: {
   <R2>(runtime: RuntimeProvider<R2>): <A, E, R>(self: Effect.Effect<A, E, R>) => Effect.Effect<A, E, Exclude<R, R2>>;
 } = (runtimeProvider) => (effect) =>
-  Effect.flatMap(runtimeProvider, (context) => Effect.provideContext(effect, context));
+  Effect.flatMap(runtimeProvider, (context) => Effect.provideContext(effect, withDefaultTracer(context)));

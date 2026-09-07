@@ -3,3 +3,5 @@
 //
 
 export * from './extension';
+export { addSpanProcessor } from './span-fanout';
+export { activeTraceContext } from './trace-context';

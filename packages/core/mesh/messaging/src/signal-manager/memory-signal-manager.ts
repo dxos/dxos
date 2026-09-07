@@ -3,7 +3,6 @@
 //
 
 import { Event, Trigger } from '@dxos/async';
-import { type Any } from '@dxos/codec-protobuf';
 import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
@@ -12,6 +11,8 @@ import { decodeCompat } from '@dxos/protocols/buf-shape-compat';
 import { ReliablePayloadSchema } from '@dxos/protocols/buf/dxos/mesh/messaging_pb';
 import { type SwarmResponse } from '@dxos/protocols/proto/dxos/edge/messenger';
 import { type QueryRequest } from '@dxos/protocols/proto/dxos/edge/signal';
+import { type ReliablePayload } from '@dxos/protocols/proto/dxos/mesh/messaging';
+import { type AnyEnvelope } from '@dxos/protocols/service-contract';
 import { ComplexMap, ComplexSet } from '@dxos/util';
 
 import {
@@ -250,12 +251,12 @@ export class MemorySignalManager implements SignalManager {
       });
   }
 }
-const dec = (payload: Any) => {
+const dec = (payload: AnyEnvelope) => {
   if (!payload.type_url.endsWith('ReliablePayload')) {
     return {};
   }
 
-  const relPayload = decodeCompat(ReliablePayloadSchema, payload.value);
+  const relPayload = decodeCompat<ReliablePayload>(ReliablePayloadSchema, payload.value);
 
   if (typeof relPayload?.payload?.data === 'object') {
     return { payload: Object.keys(relPayload?.payload?.data)[0], sessionId: relPayload?.payload?.sessionId };

@@ -7,10 +7,13 @@
 import * as Schema from 'effect/Schema';
 
 import * as Capability from '@dxos/app-framework/Capability';
+import * as Chat from '@dxos/assistant/Chat';
+import { AgentService } from '@dxos/compute/AgentService';
 import * as Operation from '@dxos/compute/Operation';
 import * as Project from '@dxos/compute/Project';
 import { Database, Obj, Ref, Type } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
+import { Task } from '@dxos/types';
 import { trim } from '@dxos/util';
 
 /**
@@ -32,6 +35,36 @@ import { trim } from '@dxos/util';
  * A generic object create makes one empty object; this one returns a whole wired graph, and the
  * navigation path to the result.
  */
+/**
+ * Opens one conversation about a list of tasks: a new chat, filed in the space, carrying them in its
+ * `tasks` checklist in the order given, so the agent starts with the work already in front of it.
+ *
+ * One chat for the whole list rather than one per task: a reader delegating three tasks is handing
+ * over a body of work, and three parallel sessions could not see each other's results.
+ *
+ * The checklist is a plain ref array, so a delegated task keeps the task set it came from — the chat
+ * works on it, it does not take it.
+ */
+export const DelegateTaskToChat = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.operation.projects.delegateTaskToChat'),
+    name: 'Delegate Tasks To Chat',
+    description: 'Creates a chat for one or more tasks and places them in its checklist.',
+    icon: 'ph--chat-text--regular',
+  },
+  // `AgentService` because the operation runs the chat's first turn: a message written to the
+  // feed is a message nobody read.
+  services: [Capability.Service, Database.Service, AgentService],
+  input: Schema.Struct({
+    // A plain array rather than `Schema.NonEmptyArray`, which serializes to `prefixItems` — a
+    // keyword the persisted-operation JSON schema does not carry. The handler rejects an empty list.
+    tasks: Schema.Array(Ref.Ref(Task.Task)),
+  }),
+  output: Schema.Struct({
+    chat: Type.getSchema(Chat.Chat),
+  }),
+}).pipe(Operation.mutation('write'));
+
 export const Create = Operation.make({
   meta: {
     // `projectCreate`, not `create`: the whole key derives the tool name, so a bare `create` would
@@ -113,7 +146,8 @@ export const ArtifactAdd = Operation.make({
       Files an object into a project's artifacts collection.
       Use this after creating an object (document, outline, sheet, contact, …) while working in a
       project's context, so the project owns it and it appears in the project's artifacts list.
-      Adding the same object twice is a no-op.
+      When the object was produced for a task on your checklist, pass that task too, so the finished
+      task shows what it made. Adding the same object twice is a no-op.
     `,
   },
   input: Schema.Struct({
@@ -123,6 +157,13 @@ export const ArtifactAdd = Operation.make({
     object: Ref.Ref(Obj.Unknown).annotate({
       description: 'The object to file as an artifact.',
     }),
+    task: Schema.optional(
+      Ref.Ref(Task.Task).annotate({
+        description:
+          'The task this object was produced for, when working one — records it on the task as well, ' +
+          'so a finished task shows what it made.',
+      }),
+    ),
   }),
   output: Schema.Void,
   services: [Database.Service],

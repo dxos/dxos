@@ -10,15 +10,28 @@ import { type EdgeConnection } from '@dxos/edge-client';
 import { EffectEx } from '@dxos/effect';
 import { type SignalManager, type UnsubscribeCallback } from '@dxos/messaging';
 import { type SwarmNetworkManager } from '@dxos/network-manager';
-import { type NetworkStatus } from '@dxos/protocols/proto/dxos/client/services';
-import { type SwarmResponse } from '@dxos/protocols/proto/dxos/edge/messenger';
+import { buf } from '@dxos/protocols/buf';
+import { type NetworkStatus, NetworkStatusSchema } from '@dxos/protocols/buf/dxos/client/services_pb';
+import { type SwarmResponse } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
 import {
   type JoinRequest,
   type LeaveRequest,
   type Message,
   type QueryRequest,
-} from '@dxos/protocols/proto/dxos/edge/signal';
+} from '@dxos/protocols/buf/dxos/edge/signal_pb';
+import { type Message as LegacyMessage } from '@dxos/protocols/proto/dxos/edge/signal';
 import { type NetworkService } from '@dxos/protocols/rpc';
+
+import {
+  fromBufJoinRequest,
+  fromBufLeaveRequest,
+  fromBufMessage,
+  fromBufPeer,
+  fromBufQueryRequest,
+  toBufMessage,
+  toBufSwarmInfo,
+  toBufSwarmResponse,
+} from './utils';
 
 export class NetworkServiceImpl implements NetworkService.Handlers {
   'constructor'(
@@ -31,11 +44,13 @@ export class NetworkServiceImpl implements NetworkService.Handlers {
     return EffectEx.streamFromEmitter<NetworkStatus, Error>((emit) => {
       const ctx = Context.default();
       const update = () => {
-        void emit.single({
-          swarm: this.networkManager.connectionState,
-          connectionInfo: this.networkManager.connectionLog?.swarms,
-          signaling: this.signalManager.getStatus?.().map(({ host, state }) => ({ server: host, state })),
-        });
+        void emit.single(
+          buf.create(NetworkStatusSchema, {
+            swarm: this.networkManager.connectionState,
+            connectionInfo: this.networkManager.connectionLog?.swarms.map(toBufSwarmInfo),
+            signaling: this.signalManager.getStatus?.().map(({ host, state }) => ({ server: host, state })),
+          }),
+        );
       };
 
       this.networkManager.connectionStateChanged.on(ctx, () => update());
@@ -58,7 +73,7 @@ export class NetworkServiceImpl implements NetworkService.Handlers {
   ['NetworkService.joinSwarm'](request: JoinRequest): Effect.Effect<void, Error> {
     return Effect.tryPromise({
       try: async () => {
-        await this.signalManager.join(Context.default(), request);
+        await this.signalManager.join(Context.default(), fromBufJoinRequest(request));
       },
       catch: (error) => error as Error,
     });
@@ -67,7 +82,7 @@ export class NetworkServiceImpl implements NetworkService.Handlers {
   ['NetworkService.leaveSwarm'](request: LeaveRequest): Effect.Effect<void, Error> {
     return Effect.tryPromise({
       try: async () => {
-        await this.signalManager.leave(Context.default(), request);
+        await this.signalManager.leave(Context.default(), fromBufLeaveRequest(request));
       },
       catch: (error) => error as Error,
     });
@@ -76,7 +91,7 @@ export class NetworkServiceImpl implements NetworkService.Handlers {
   ['NetworkService.querySwarm'](request: QueryRequest): Effect.Effect<SwarmResponse, Error> {
     return Effect.tryPromise({
       try: async () => {
-        return this.signalManager.query(Context.default(), request);
+        return toBufSwarmResponse(await this.signalManager.query(Context.default(), fromBufQueryRequest(request)));
       },
       catch: (error) => error as Error,
     });
@@ -89,7 +104,7 @@ export class NetworkServiceImpl implements NetworkService.Handlers {
       const ctx = Context.default();
       this.signalManager.swarmState?.on(ctx, (state) => {
         if (request.topic.equals(state.swarmKey)) {
-          void emit.single(state);
+          void emit.single(toBufSwarmResponse(state));
         }
       });
 
@@ -100,7 +115,7 @@ export class NetworkServiceImpl implements NetworkService.Handlers {
   ['NetworkService.sendMessage'](message: Message): Effect.Effect<void, Error> {
     return Effect.tryPromise({
       try: async () => {
-        await this.signalManager.sendMessage(Context.default(), message);
+        await this.signalManager.sendMessage(Context.default(), fromBufMessage(message));
       },
       catch: (error) => error as Error,
     });
@@ -113,11 +128,10 @@ export class NetworkServiceImpl implements NetworkService.Handlers {
     return EffectEx.streamFromEmitter<Message, Error>((emit) => {
       const ctx = Context.default();
 
-      // This stream crosses the client-services RPC (protobufjs codec, e.g. dedicated worker → main
-      // thread). Its `Message.payload` is a `google.protobuf.Any` without `preserve_any`, and the
-      // codec refuses to encode an Any lacking '@type' — stamping the opaque form
-      // ('@type': 'google.protobuf.Any' + type_url/value) makes it pass through verbatim.
-      const encodableAny = (payload: Message['payload']): Message['payload'] => ({
+      // `toBufMessage` re-encodes through the protobufjs codec, which refuses an Any lacking
+      // '@type' because `Message.payload` has no `preserve_any` — stamping the opaque form makes it
+      // pass through verbatim.
+      const encodableAny = (payload: LegacyMessage['payload']): LegacyMessage['payload'] => ({
         ...payload,
         '@type': 'google.protobuf.Any',
       });
@@ -128,10 +142,10 @@ export class NetworkServiceImpl implements NetworkService.Handlers {
       let unsubscribe: UnsubscribeCallback | undefined;
       void this.signalManager
         .subscribeMessages({
-          peer,
+          peer: fromBufPeer(peer),
           tags,
           onMessage: (message) => {
-            void emit.single({ ...message, payload: encodableAny(message.payload) });
+            void emit.single(toBufMessage({ ...message, payload: encodableAny(message.payload) }));
           },
         })
         .then((unsub) => {

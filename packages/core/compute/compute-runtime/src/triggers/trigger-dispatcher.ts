@@ -28,7 +28,7 @@ import * as Process from '@dxos/compute/Process';
 import * as Trigger from '@dxos/compute/Trigger';
 import * as TriggerEvent from '@dxos/compute/TriggerEvent';
 import { Annotation, Database, Entity, Feed, Filter, Obj, Query, QueryResult, Ref } from '@dxos/echo';
-import { EffectEx } from '@dxos/effect';
+import { EffectEx, SpanAttributes } from '@dxos/effect';
 import { failedInvariant, invariant } from '@dxos/invariant';
 import { EntityId, type URI } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -252,7 +252,7 @@ export class TriggerDispatcher extends Context.Service<
     Layer.effect(
       TriggerDispatcher,
       Effect.gen(function* () {
-        const services = yield* Effect.context<TriggerDispatcherServices>();
+        const services = yield* EffectEx.contextWithoutParentSpan<TriggerDispatcherServices>();
         return new TriggerDispatcherImpl({ ...options, services });
       }),
     );
@@ -625,7 +625,15 @@ class TriggerDispatcherImpl implements Context.Service.Shape<typeof TriggerDispa
       }));
 
       return triggerExecutionResult;
-    }).pipe(Effect.provide(this._services));
+    }).pipe(
+      Effect.withSpan('TriggerDispatcher.invokeTrigger', {
+        attributes: {
+          [SpanAttributes.TRIGGER.id]: options.trigger.id,
+          ...(options.trigger.spec ? { [SpanAttributes.TRIGGER.kind]: options.trigger.spec.kind } : {}),
+        },
+      }),
+      Effect.provide(this._services),
+    );
 
   /**
    * Distinguish a {@link RunAgainError} re-invocation request from a genuine failure. The process
@@ -864,7 +872,12 @@ class TriggerDispatcherImpl implements Context.Service.Shape<typeof TriggerDispa
       invocations.push(...(yield* this._drainRetries({ untilExhausted })));
 
       return invocations;
-    }).pipe(Effect.provide(this._services));
+    }).pipe(
+      Effect.withSpan('TriggerDispatcher.invokeScheduledTriggers', {
+        attributes: { [SpanAttributes.TRIGGER.kind]: kinds },
+      }),
+      Effect.provide(this._services),
+    );
 
   /**
    * Re-invoke triggers with a pending {@link RunAgainError} retry. Retries respect the global
@@ -1054,7 +1067,7 @@ class TriggerDispatcherImpl implements Context.Service.Shape<typeof TriggerDispa
           // otherwise a refresh forked just before shutdown could still complete afterward, see
           // `this.#triggerQuery` as already cleared, fall back to a fresh one-shot query, and
           // repopulate trigger state after the dispatcher has stopped.
-          this.#pendingRefreshFiber = Effect.runFork(
+          this.#pendingRefreshFiber = Effect.runForkWith(this._services)(
             this.refreshTriggers().pipe(
               Effect.tapCause((cause) =>
                 Effect.sync(() => log.error('failed to refresh triggers', { error: EffectEx.causeToError(cause) })),
@@ -1156,7 +1169,7 @@ class TriggerDispatcherImpl implements Context.Service.Shape<typeof TriggerDispa
     // boundary runs its finalizer before `runFork` returns, so the finalizer must tolerate not
     // having the fiber yet — and the add below must not then resurrect a completed one.
     const forked: { fiber?: Fiber.Fiber<void, never>; done?: boolean } = {};
-    forked.fiber = Effect.runFork(
+    forked.fiber = Effect.runForkWith(this._services)(
       this.#reactiveDispatchLock
         .withPermits(1)(this.invokeScheduledTriggers({ kinds: [kind], triggerIds: [triggerId], untilExhausted: true }))
         .pipe(

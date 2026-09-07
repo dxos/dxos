@@ -135,7 +135,7 @@ const GraphCanvasInner = ({ classNames, children, graph: graphProp, grid, map }:
 
   return (
     <ReactFlow
-      className={mx('dx-expander', classNames)}
+      className={mx('dx-expand', classNames)}
       colorMode={themeMode}
       edges={edges}
       fitView={true}

@@ -11,6 +11,7 @@ import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
 import { Card } from '@dxos/react-ui';
 import { Row } from '@dxos/react-ui-card';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import { translations as reactUiTranslations } from '@dxos/react-ui/translations';
 import { type Actor, Person } from '@dxos/types';
 
 import { ContactPreview, useContactCreate } from '#testing';
@@ -100,7 +101,7 @@ const meta = {
   ],
   parameters: {
     layout: 'fullscreen',
-    translations,
+    translations: [...translations, ...reactUiTranslations],
   },
 } satisfies Meta<typeof DefaultStory>;
 
@@ -175,13 +176,7 @@ export const Spec: Story = {
       timeout: 5_000,
     });
 
-    // `Row.Star` labels itself from react-ui's own translation namespace, which this isolated story
-    // does not load — so the accessible name is the raw key. Asserting on it still pins the behaviour
-    // under test: the star owns its state, and toggling swaps which action the button offers.
-    // `find`, not `get`: creating the contact re-renders the row, so the star can be briefly absent.
-    await userEvent.click(
-      await canvas.findByRole('button', { name: 'system-button.unstar.label' }, { timeout: 5_000 }),
-    );
-    await canvas.findByRole('button', { name: 'system-button.star.label' }, { timeout: 5_000 });
+    await userEvent.click(await canvas.findByRole('button', { name: 'Unstar' }, { timeout: 5_000 }));
+    await canvas.findByRole('button', { name: 'Star' }, { timeout: 5_000 });
   },
 };

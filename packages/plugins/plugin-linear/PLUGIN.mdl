@@ -36,7 +36,9 @@ Each extension is defined in the Appendix or resolved via its URI.
 | `feat`      | `org.dxos.mdl.feat@1.0`       |
 | `test`      | `org.dxos.mdl.test@1.0`       |
 | `component` | `org.dxos.mdl.component@1.0`  |
-| `op`        | `org.dxos.mdl.op@1.0`         |
+| `op`        | `org.dxos.mdl.op@1.1`         |
+| `flow`      | `org.dxos.mdl.flow@1.0`       |
+| `step`      | `org.dxos.mdl.step@1.0`       |
 
 ## Types
 
@@ -128,19 +130,21 @@ type PullResult
 
 ```mdl
 op GetLinearTeams
+  key: org.dxos.operation.linear.getTeams
   desc: |
     Discovery only — list Linear teams reachable from the integration's token.
     Returns one descriptor per team across the user's workspace, sorted by key.
     Read-only: NEVER materializes local objects. Materialization happens lazily
     in SyncLinearTeams on first sync of a target.
   input:
-    integration: Ref<Integration>
+    connection: Ref<Connection>
   output: GetSyncTargetsOutput
   effects: [http]
 ```
 
 ```mdl
 op SyncLinearTeams
+  key: org.dxos.operation.linear.syncTeams
   desc: |
     Reconcile Linear data for currently-selected team targets in an Integration.
     Pull-then-push per team.
@@ -152,7 +156,7 @@ op SyncLinearTeams
     Per-target failures record lastError on that target and continue.
     A toast is emitted on completion regardless of per-target outcomes.
   input:
-    integration: Ref<Integration>
+    connection: Ref<Connection>
     team?: Ref<Project>
   output: SyncLinearTeamsOutput
   effects: [echo:read, echo:write, http]
@@ -353,6 +357,66 @@ test T-8: Push skips soft-deleted objects
   given: local Task is soft-deleted; foreign key present in snapshot
   when: SyncLinearTeams push phase runs
   then: Linear.issueUpdate is NOT called for that Task
+```
+
+## QA
+
+Executable flows. Each step carries a human instruction (`do`) and, where the step maps to an
+invocable operation, an agent binding (`invoke`). Report failures by flow and step number.
+
+plugin-linear is registered only in the `experimental` array in `plugin-defs.tsx` — it is not in
+`getDefaults` under any environment, so it is OFF by default even in dev builds, and enabling it
+is a Settings action. The whole flow additionally requires a real Linear OAuth `Integration` with
+a Bearer token — there is no local fixture for the Linear GraphQL API in this repo's QA harness.
+
+```mdl
+flow QA-1: Connect an Integration and pull a team's teams, projects and issues
+  desc: The core linear round-trip — discover reachable teams, select one as a sync target, and
+    pull its projects/issues into ECHO. Push (F-4, F-5) is a live PATCH against Linear and is not
+    exercised here; it needs a second, disposable Linear-side edit to verify safely.
+  actors: human
+  covers: [F-1.1, F-2.1, F-3.1]
+  status: blocked
+  given:
+    - an identity exists
+    - space: a space is open
+    - plugin-linear is enabled — it is OFF by default (experimental, not in any default set)
+    - connection: a Linear OAuth Connection with a valid Bearer token exists in the space
+  test:
+    - name: Discover teams
+      do: Open the Linear integration's target picker.
+      invoke: [op:GetLinearTeams] { connection: $given.connection }
+      capture: teams
+      expect: one SyncTarget per reachable Linear team is listed, sorted by key; no local object
+        is created yet
+      assert: return Array.isArray($teams.targets);
+      blocked: |
+        Requires a real Linear account and OAuth token — the operation makes a live GraphQL call
+        with no offline fixture. Note also that this op's runtime key
+        (`org.dxos.operation.linear.getTeams`) differs from the `op:GetLinearTeams` block name in
+        this document — resolve by `key:`, never by guessing from the block name (Execution Rule 6).
+    - name: Select a team
+      do: Select a team from the picker.
+      invoke: org.dxos.operation.linear.materializeTarget { connection: $given.connection, remoteTarget: $teams.targets[0] }
+      capture: materialized
+      expect: an empty local root Project appears, bound to the selected team's foreign id
+      assert: return !!$materialized.target;
+    - name: Sync
+      do: Confirm the sync — this is automatic once the binding is created.
+      invoke: [op:SyncLinearTeams] { connection: $given.connection }
+      capture: synced
+      expect: a Project per remote project and a Task per remote issue appear under the root
+        Project, keyed by their Linear ids, with title/description/status/priority/estimate
+        populated
+      assert: return $synced.pulled.teams >= 0 && $synced.pulled.projects >= 0 && $synced.pulled.tasks >= 0;
+      blocked: Same live-API dependency as the previous step; pull is not idempotent-safe to
+        fabricate against a fixture without risking a real workspace's data shape.
+  after:
+    - name: Remove the synced objects
+      do: Right-click the root Project (and its pulled Projects/Tasks) in the navtree and choose
+        Delete.
+      invoke: org.dxos.operation.space.removeObjects { objects: [$materialized.target], target: $given.space }
+      expect: the rows leave the navtree
 ```
 
 ---

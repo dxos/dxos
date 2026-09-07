@@ -89,7 +89,7 @@ export class Keyring implements KeyringApi {
       const recordBytes = await file.read(0, size);
       await file.close();
 
-      const record = decodeCompat(KeyRecordSchema, recordBytes);
+      const record = decodeCompat<KeyRecord>(KeyRecordSchema, recordBytes);
       const publicKey = PublicKey.from(record.publicKey);
       invariant(key.equals(publicKey), 'Corrupted keyring: Key mismatch');
       invariant(record.privateKey, 'Corrupted keyring: Missing private key');

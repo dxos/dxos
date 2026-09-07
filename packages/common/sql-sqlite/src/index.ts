@@ -7,6 +7,7 @@
 // `SqliteMigrator` that `./SqliteMigrator` exists to narrow.
 export * as OpfsPool from './OpfsPool';
 export * as OpfsWorker from './OpfsWorker';
+export * as SqlExport from './SqlExport';
 export * as SqlMigrations from './SqlMigrations';
 export * as SqliteClient from './SqliteClient';
 export * as SqliteMigrator from './SqliteMigrator';

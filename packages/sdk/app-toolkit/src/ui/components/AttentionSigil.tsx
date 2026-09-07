@@ -5,7 +5,7 @@
 import React, { Fragment, type PropsWithChildren, forwardRef, useState } from 'react';
 
 import type * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
-import { keySymbols } from '@dxos/keyboard';
+import { keySymbols } from '@dxos/react-focus';
 import { Button, type ButtonProps, DropdownMenu, Icon, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { Attention, useAttention } from '@dxos/react-ui-attention';
 import { mx, osTranslations } from '@dxos/ui-theme';

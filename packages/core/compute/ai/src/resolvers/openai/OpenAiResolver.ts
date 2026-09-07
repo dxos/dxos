@@ -15,7 +15,7 @@ import * as Model from '../../Model';
 import * as Provider from '../../Provider';
 
 export const make = () =>
-  AiModelResolver.AiModelResolver.fromModelMap(
+  AiModelResolver.fromModelMap(
     {
       name: 'OpenAI',
     },

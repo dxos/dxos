@@ -13,7 +13,7 @@ import { ScriptedLanguageModel } from '@dxos/ai/testing';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { AiContext } from '@dxos/assistant';
-import { AgentWizardSkill, ChatContextSkill, RunInstructions, SkillManagerSkill } from '@dxos/assistant-toolkit';
+import { ChatContextSkill, RunInstructions, SkillManagerSkill } from '@dxos/assistant-toolkit';
 import * as AgentService from '@dxos/compute/AgentService';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Operation from '@dxos/compute/Operation';
@@ -236,11 +236,10 @@ describe('AssistantPlugin', () => {
 
       await harness.runPromise(
         Effect.gen(function* () {
-          const skills = yield* Effect.forEach(
-            [ChatContextSkill, AssistantSkill, SkillManagerSkill, AgentWizardSkill],
-            (_) => Skill.resolve(_.key),
+          const skills = yield* Effect.forEach([ChatContextSkill, AssistantSkill, SkillManagerSkill], (_) =>
+            Skill.resolve(_.key),
           );
-          expect(skills).toHaveLength(4);
+          expect(skills).toHaveLength(3);
 
           const agent = yield* AgentServiceRuntime.createSession({
             skills,

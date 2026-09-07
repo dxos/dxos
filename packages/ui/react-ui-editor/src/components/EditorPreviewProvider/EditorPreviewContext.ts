@@ -2,8 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { createContext } from '@radix-ui/react-context';
-
+import { createContext } from '@dxos/react-hooks';
 import { type PreviewLinkRef, type PreviewLinkTarget } from '@dxos/ui-types';
 
 // Kept out of `EditorPreviewProvider.tsx`: react-refresh only fast-refreshes a module whose exports are all

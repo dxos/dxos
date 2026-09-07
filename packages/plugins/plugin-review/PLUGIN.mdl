@@ -39,6 +39,7 @@ The following extension dialects are used in this document.
 | `component` | `org.dxos.mdl.component@1.0`   |
 | `op`        | `org.dxos.mdl.op@1.0`          |
 | `service`   | `org.dxos.mdl.service@1.0`     |
+| `flow`      | `org.dxos.mdl.flow@1.0`        |
 
 ## External types & capabilities
 
@@ -575,3 +576,51 @@ test T-8: Walkthroughs
   then: The agent pre-runs every automatable step headlessly; a human pass confirms feel (latency,
     flicker, hover) that assertions cannot.
 ```
+
+## QA
+
+Executable flows. Each step carries a human instruction (`do`) and, where the step maps to an
+invocable operation, an agent binding (`invoke`). Report failures by flow and step number.
+
+```mdl
+flow QA-1: Comment on a document, reply, and resolve
+  desc: The comment-thread round-trip — anchor a thread on a document, reply, then resolve it.
+  actors: agent
+  covers: [F-5.1, F-5.3, T-1, T-7]
+  status: unverified
+  given:
+    - identity: an identity exists, its Actor used as the comment `sender`
+    - space: a space is open
+    - collection: a collection in that space, to create into
+    - doc: a Markdown document named "QA Review Doc" exists in the collection (created via
+      plugin-markdown's [op:createDraft] and placed with `space.addObject`, per its own QA-1)
+    - no comment thread anchored to "QA Review Doc" exists — ABORT rather than reusing one this
+      flow did not create
+  test:
+    - name: Create a comment thread
+      do: Select a word in the editor and click the comment icon in the selection popover.
+      invoke: org.dxos.operation.review.create { subject: $given.doc, anchor: "typo", name: "QA thread" }
+      capture: created
+      expect: a staged comment thread appears in the CommentsArticle companion, anchored to the
+        selection
+      assert: return !!$result.thread
+
+    - name: Add a message
+      do: Type "please fix this" and press Enter to send.
+      invoke: org.dxos.operation.review.addMessage { subject: $given.doc, anchor: $created.anchor, sender: $given.identity, text: "please fix this" }
+      capture: added
+      expect: the message appears in the thread, promoting it from staged to active
+      assert: return $result.thread.messages.some((m) => m.id === $added.message?.id)
+
+    - name: Resolve the thread
+      do: Click the checkmark on the thread header.
+      invoke: org.dxos.operation.review.setResolved { thread: $added.thread, resolved: true }
+      expect: the thread moves from the Unresolved tab to All, marked resolved
+      assert: return $result.status === 'resolved'
+  after:
+    - name: Delete the thread
+      do: Right-click the thread and choose Delete.
+      invoke: org.dxos.operation.review.delete { anchor: $created.anchor, subject: $given.doc, thread: $added.thread }
+      expect: the thread no longer appears in the companion
+```
+

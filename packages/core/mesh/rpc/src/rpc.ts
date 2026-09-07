@@ -4,7 +4,6 @@
 
 import { Trigger, asyncTimeout, synchronized } from '@dxos/async';
 import { Stream } from '@dxos/async';
-import { type Any, type RequestOptions } from '@dxos/codec-protobuf';
 import { type Context, ContextRpcCodec } from '@dxos/context';
 import { StackTrace } from '@dxos/debug';
 import { invariant } from '@dxos/invariant';
@@ -13,6 +12,7 @@ import { RpcClosedError, RpcNotOpenError, encodeError } from '@dxos/protocols';
 import { type CompatCodec, compatCodec } from '@dxos/protocols/buf-shape-compat';
 import { RpcMessageSchema } from '@dxos/protocols/buf/dxos/rpc_pb';
 import { type Request, type Response, type RpcMessage } from '@dxos/protocols/proto/dxos/rpc';
+import { type AnyEnvelope, type RequestOptions } from '@dxos/protocols/service-contract';
 import { exponentialBackoffInterval } from '@dxos/util';
 
 import { decodeRpcError } from './errors';
@@ -32,8 +32,8 @@ export interface RpcPeerOptions {
    */
   timeout?: number;
 
-  callHandler: (method: string, request: Any, options?: RequestOptions) => MaybePromise<Any>;
-  streamHandler?: (method: string, request: Any, options?: RequestOptions) => Stream<Any>;
+  callHandler: (method: string, request: AnyEnvelope, options?: RequestOptions) => MaybePromise<AnyEnvelope>;
+  streamHandler?: (method: string, request: AnyEnvelope, options?: RequestOptions) => Stream<AnyEnvelope>;
 
   /**
    * Do not require or send handshake messages.
@@ -376,7 +376,7 @@ export class RpcPeer {
    * Make RPC call. Will trigger a handler on the other side.
    * Peer should be open before making this call.
    */
-  async call(method: string, request: Any, options?: RequestOptions): Promise<Any> {
+  async call(method: string, request: AnyEnvelope, options?: RequestOptions): Promise<AnyEnvelope> {
     DEBUG_CALLS && log.trace('calling...', { method });
     throwIfNotOpen(this._state);
 
@@ -439,7 +439,7 @@ export class RpcPeer {
    * Will trigger a handler on the other side.
    * Peer should be open before making this call.
    */
-  callStream(method: string, request: Any, options?: RequestOptions): Stream<Any> {
+  callStream(method: string, request: AnyEnvelope, options?: RequestOptions): Stream<AnyEnvelope> {
     throwIfNotOpen(this._state);
     const id = this._nextId++;
 

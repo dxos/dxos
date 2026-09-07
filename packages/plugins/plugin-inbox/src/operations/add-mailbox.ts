@@ -8,7 +8,6 @@ import * as CollectionModel from '@dxos/app-toolkit/CollectionModel';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
-import * as Binding from '@dxos/plugin-connector/Binding';
 import * as ObservabilityOperation from '@dxos/plugin-observability/ObservabilityOperation';
 
 import { InboxOperation } from '#types';
@@ -20,7 +19,7 @@ const handler: Operation.WithHandler<typeof InboxOperation.AddMailbox> = InboxOp
     Effect.fnUntraced(function* (input) {
       const { target, object } = input;
       // The database is the runtime's, resolved from the invocation's space id, so the collection
-      // write and the binding below both run against it without a service override.
+      // write runs against it without a service override.
       const { db } = yield* Database.Service;
       invariant(db, 'Database not found.');
       // The space id names the database, so the target has to live in it; one from another space —
@@ -30,11 +29,6 @@ const handler: Operation.WithHandler<typeof InboxOperation.AddMailbox> = InboxOp
       }
 
       yield* CollectionModel.add({ object, target });
-
-      // A mailbox is inert until a provider binds it, so when exactly one account is already
-      // authorized for this type there is nothing for the user to choose — bind it here rather than
-      // leaving a Connect menu whose single entry is the only possible answer.
-      yield* Binding.autoBind({ target: object });
 
       yield* Operation.schedule(ObservabilityOperation.SendEvent, {
         name: 'space.object.add',

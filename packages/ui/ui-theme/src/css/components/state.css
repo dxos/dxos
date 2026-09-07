@@ -56,7 +56,7 @@
   }
 
   /*
-   * Pairs with Radix-managed `data-highlighted`. Don't set the attribute manually.
+   * Pairs with the machine-managed `data-highlighted` (Zag). Don't set the attribute manually.
    */
   .dx-highlighted {
     @apply data-[highlighted]:bg-current-surface

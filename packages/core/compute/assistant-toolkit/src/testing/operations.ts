@@ -4,6 +4,8 @@
 
 import { AssistantTestLayerWithTriggers } from '@dxos/agent-runtime/testing';
 import { AiContext } from '@dxos/assistant';
+import * as Agent from '@dxos/assistant/Agent';
+import * as Chat from '@dxos/assistant/Chat';
 import { SpaceProperties } from '@dxos/client-protocol';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
@@ -15,7 +17,6 @@ import { Text } from '@dxos/schema';
 import { Employer, Organization, Outline, Person, Task, TaskSet } from '@dxos/types';
 
 import { AgentHandlers } from '../operations';
-import { AgentWizardHandlers } from '../skills/agent-wizard/operations';
 import { AgentSkillHandlers } from '../skills/agent/operations';
 import { AlarmHandlers } from '../skills/alarm/operations';
 import { ChatContextHandlers } from '../skills/chat-context/operations';
@@ -23,7 +24,6 @@ import { DelegationSkillHandlers } from '../skills/delegation/operations';
 import { MemoryHandlers } from '../skills/memory/operations';
 import { PlanningHandlers } from '../skills/planning/operations';
 import { SkillManagerHandlers } from '../skills/skill-manager/operations';
-import { Agent, Chat } from '../types';
 import { Memory } from '../types/Memory';
 
 /**
@@ -35,7 +35,6 @@ export const OperationTestLayer = AssistantTestLayerWithTriggers({
   operationHandlers: OperationHandlerSet.merge(
     AgentHandlers,
     AgentSkillHandlers,
-    AgentWizardHandlers,
     AlarmHandlers,
     ChatContextHandlers,
     DelegationSkillHandlers,

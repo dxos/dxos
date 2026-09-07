@@ -7,28 +7,30 @@ import { describe, expect, onTestFinished, test } from 'vitest';
 import { waitForCondition } from '@dxos/async';
 import { type Client } from '@dxos/client';
 import { type Space } from '@dxos/client-protocol';
+import { toSpaceMemberRole } from '@dxos/client-services';
 import { performInvitation } from '@dxos/client-services/testing';
 import { createInitializedClientsWithContext } from '@dxos/client/testing';
 import { Context } from '@dxos/context';
 import { AlreadyJoinedError, AuthorizationError } from '@dxos/protocols';
-import { ConnectionState, Invitation, SpaceMember } from '@dxos/protocols/proto/dxos/client/services';
-import { SpaceMember as HaloSpaceMember } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { Invitation_State } from '@dxos/protocols/buf/dxos/client/invitation_pb';
+import { SpaceMember_Role } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
+import { ConnectionState, SpaceMember } from '@dxos/protocols/proto/dxos/client/services';
 
 describe('Spaces/member-management', () => {
   test('admins can remove members', async () => {
     const [client1, client2] = await createInitializedClients(2);
     const space = await client1.spaces.create();
     expect(space.members.get().length).to.eq(1);
-    await inviteMember(space, client2, HaloSpaceMember.Role.EDITOR);
+    await inviteMember(space, client2, SpaceMember_Role.EDITOR);
     expect(space.members.get().length).to.eq(2);
-    await updateRole(space, client1, client2, HaloSpaceMember.Role.REMOVED, { waitUpdated: [space] });
+    await updateRole(space, client1, client2, SpaceMember_Role.REMOVED, { waitUpdated: [space] });
   });
 
   test('admins can change member roles', async () => {
     const [client1, client2] = await createInitializedClients(2);
     const space1 = await client1.spaces.create();
-    await inviteMember(space1, client2, HaloSpaceMember.Role.ADMIN);
-    await updateRole(space1, client1, client2, HaloSpaceMember.Role.EDITOR, {
+    await inviteMember(space1, client2, SpaceMember_Role.ADMIN);
+    await updateRole(space1, client1, client2, SpaceMember_Role.EDITOR, {
       waitUpdated: [space1, getClientSpace(client2, space1)],
     });
   });
@@ -36,18 +38,18 @@ describe('Spaces/member-management', () => {
   test('admins can add new admins who can add members', async () => {
     const [client1, client2, client3] = await createInitializedClients(3);
     const space1 = await client1.spaces.create();
-    await inviteMember(space1, client2, HaloSpaceMember.Role.ADMIN);
+    await inviteMember(space1, client2, SpaceMember_Role.ADMIN);
     const space2 = getClientSpace(client2, space1);
     await space2.waitUntilReady();
-    await waitHasRole(space2, client2, HaloSpaceMember.Role.ADMIN);
-    await inviteMember(space2, client3, HaloSpaceMember.Role.ADMIN);
-    await waitHasRole(space1, client3, HaloSpaceMember.Role.ADMIN);
+    await waitHasRole(space2, client2, SpaceMember_Role.ADMIN);
+    await inviteMember(space2, client3, SpaceMember_Role.ADMIN);
+    await waitHasRole(space1, client3, SpaceMember_Role.ADMIN);
   });
 
   test("editors can't invite new members", async () => {
     const [client1, client2, client3] = await createInitializedClients(3);
     const space1 = await client1.spaces.create();
-    await inviteMember(space1, client2, HaloSpaceMember.Role.EDITOR);
+    await inviteMember(space1, client2, SpaceMember_Role.EDITOR);
     const space2 = getClientSpace(client2, space1);
     await space2.waitUntilReady();
     const { error } = await performInvitation({ host: space2, guest: client3.spaces })[0];
@@ -57,8 +59,8 @@ describe('Spaces/member-management', () => {
   test("invitation can't be created for a removed members", async () => {
     const [client1, client2] = await createInitializedClients(2);
     const space1 = await client1.spaces.create();
-    await inviteMember(space1, client2, HaloSpaceMember.Role.ADMIN);
-    await updateRole(space1, client1, client2, HaloSpaceMember.Role.REMOVED, { waitUpdated: [space1] });
+    await inviteMember(space1, client2, SpaceMember_Role.ADMIN);
+    await updateRole(space1, client1, client2, SpaceMember_Role.REMOVED, { waitUpdated: [space1] });
     const { error } = await performInvitation({ host: space1, guest: client2.spaces })[1];
     expect(error).to.be.instanceof(AlreadyJoinedError);
   });
@@ -66,12 +68,12 @@ describe('Spaces/member-management', () => {
   test('removed member fails to authenticate going online', async () => {
     const [client1, client2, client3] = await createInitializedClients(3);
     const space1 = await client1.spaces.create();
-    await inviteMember(space1, [client2, client3], HaloSpaceMember.Role.ADMIN);
+    await inviteMember(space1, [client2, client3], SpaceMember_Role.ADMIN);
     expect(space1.members.get().length).to.eq(3);
     const space3 = getClientSpace(client3, space1);
 
     await waitHasStatus([space1, space3], client2, SpaceMember.PresenceState.ONLINE);
-    await updateRole(space1, client1, client2, HaloSpaceMember.Role.REMOVED, { waitUpdated: [space1, space3] });
+    await updateRole(space1, client1, client2, SpaceMember_Role.REMOVED, { waitUpdated: [space1, space3] });
     await waitHasStatus([space1, space3], client2, SpaceMember.PresenceState.OFFLINE);
     await client2.mesh.updateConfig(ConnectionState.OFFLINE);
     await client2.mesh.updateConfig(ConnectionState.ONLINE);
@@ -83,16 +85,16 @@ describe('Spaces/member-management', () => {
   test('removed member can rejoin with new role', async () => {
     const [client1, client2, client3] = await createInitializedClients(3);
     const space1 = await client1.spaces.create();
-    await inviteMember(space1, [client2, client3], HaloSpaceMember.Role.ADMIN);
+    await inviteMember(space1, [client2, client3], SpaceMember_Role.ADMIN);
     expect(space1.members.get().length).to.eq(3);
     const space3 = getClientSpace(client3, space1);
 
     await waitHasStatus([space1, space3], client2, SpaceMember.PresenceState.ONLINE);
-    await updateRole(space1, client1, client2, HaloSpaceMember.Role.REMOVED, { waitUpdated: [space1, space3] });
+    await updateRole(space1, client1, client2, SpaceMember_Role.REMOVED, { waitUpdated: [space1, space3] });
     await waitHasStatus([space1, space3], client2, SpaceMember.PresenceState.OFFLINE);
 
     await client2.mesh.updateConfig(ConnectionState.OFFLINE);
-    await updateRole(space1, client1, client2, HaloSpaceMember.Role.EDITOR);
+    await updateRole(space1, client1, client2, SpaceMember_Role.EDITOR);
     await client2.mesh.updateConfig(ConnectionState.ONLINE);
     await waitHasStatus([space1, space3], client2, SpaceMember.PresenceState.ONLINE);
 
@@ -110,13 +112,13 @@ describe('Spaces/member-management', () => {
   };
 });
 
-const inviteMember = async (host: Space, guestOrMany: Client | Client[], role: HaloSpaceMember.Role) => {
+const inviteMember = async (host: Space, guestOrMany: Client | Client[], role: SpaceMember_Role) => {
   const guests = Array.isArray(guestOrMany) ? guestOrMany : [guestOrMany];
   for (const guest of guests) {
     const [{ invitation: hostInvitation }] = await Promise.all(
       performInvitation({ host, guest: guest.spaces, options: { role } }),
     );
-    expect(hostInvitation?.state).to.eq(Invitation.State.SUCCESS);
+    expect(hostInvitation?.state).to.eq(Invitation_State.SUCCESS);
     await waitHasRole(host, guest, role);
   }
 };
@@ -125,7 +127,7 @@ const updateRole = async (
   space: Space,
   host: Client,
   target: Client,
-  newRole: HaloSpaceMember.Role,
+  newRole: SpaceMember_Role,
   options?: { waitUpdated: Space[] },
 ) => {
   const echoSpace = host.spaces.get().find((s) => s.key.equals(space.key))!;
@@ -142,8 +144,10 @@ const findMember = (space: Space, client: Client) => {
   return space.members.get().find((m) => m.identity.identityKey.equals(client.halo.identity.get()!.identityKey));
 };
 
-const waitHasRole = async (spaceOrMany: Space | Space[], client: Client, role: HaloSpaceMember.Role) => {
-  return waitForMemberState(spaceOrMany, client, (m) => m?.role === role);
+const waitHasRole = async (spaceOrMany: Space | Space[], client: Client, role: SpaceMember_Role) => {
+  // The member's role is read back through SpacesService, which still serves protobuf.js shapes.
+  const memberRole = toSpaceMemberRole(role);
+  return waitForMemberState(spaceOrMany, client, (m) => m?.role === memberRole);
 };
 
 const waitHasStatus = async (

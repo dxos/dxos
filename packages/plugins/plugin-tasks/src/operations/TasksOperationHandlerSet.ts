@@ -19,6 +19,7 @@ export const handlers = OperationHandlerSet.lazy([
   TaskOperation.MoveMilestone.pipe(Operation.lazyHandler(() => import('./move-milestone'))),
   TaskOperation.MoveTask.pipe(Operation.lazyHandler(() => import('./move-task'))),
   OutlineOperation.QuickJournalEntry.pipe(Operation.lazyHandler(() => import('./quick-entry'))),
+  TaskOperation.RestoreTasks.pipe(Operation.lazyHandler(() => import('./restore-tasks'))),
   OutlineOperation.UpdateOutline.pipe(Operation.lazyHandler(() => import('./update-outline'))),
   TaskOperation.UpdateTask.pipe(Operation.lazyHandler(() => import('./update-task'))),
 ]);

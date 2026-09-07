@@ -11,7 +11,7 @@ import turbosnap from 'vite-plugin-turbosnap';
 import wasm from 'vite-plugin-wasm';
 
 import { ThemePlugin } from '@dxos/ui-theme/plugin';
-import { IconsPlugin } from '@dxos/vite-plugin-icons';
+import { IconsPlugin, iconSymbolPattern } from '@dxos/vite-plugin-icons';
 import importSource from '@dxos/vite-plugin-import-source';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -38,6 +38,7 @@ const staticDir = resolve(baseDir, './static');
 const agentCwd = process.env.DX_AGENT_CWD;
 const iconsDir = resolve(rootDir, 'node_modules/@phosphor-icons/core/assets');
 const dxosIconsDir = resolve(rootDir, 'packages/ui/brand/assets/icons');
+const extendedIconsDir = resolve(rootDir, 'packages/ui/ui-icons/assets');
 // tldraw self-hosts its fonts/icons; plugin-tldraw points tldraw at `/assets/plugin-tldraw` and the
 // app serves them via a copy step (see composer-app `copy:assets`). Mirror that here so sketch
 // surfaces render (tldraw blocks the editor behind an asset preload).
@@ -136,6 +137,26 @@ const optimizeDepsInclude = [
  * and every write costs a chokidar event on a watcher already spanning the monorepo.
  */
 const watchIgnored = ['**/dist/**', '**/out/**', '**/.moon/**', '**/temp/**', '**/.playwright-mcp/**'];
+
+/**
+ * Watcher options for the dev server.
+ *
+ * `useFsEvents: false` is the load-bearing one. Vite inlines a patched chokidar 3 into its own
+ * bundle, and chokidar 3's fsevents backend fans every raw event out over one `Set` of listeners
+ * per watched tree, each listener re-building `resolvedPath + sep` and running `indexOf` on the
+ * event path. Vite registers one listener per file it transforms from outside `root`, and serving
+ * every `@dxos/**` package from source puts tens of thousands of files there — measured at 17k
+ * listeners on a single tree, ~1.3ms of main-thread time per raw event, and ~4s of blocked event
+ * loop for one `moon run <pkg>:build`. `watchIgnored` cannot help: chokidar consults it only when
+ * registering a watch, never on the raw-event path. The `fs.watch` backend has no such fan-out.
+ *
+ * This only changes macOS: chokidar's fsevents backend does not exist elsewhere, so Linux (CI, the
+ * e2e config) already runs the `fs.watch` path this selects.
+ *
+ * `usePolling: false` is not redundant — chokidar 3 turns polling ON by default on macOS whenever
+ * `useFsEvents` is false, which would be far worse than what it replaces.
+ */
+const watchOptions = { ignored: watchIgnored, useFsEvents: false, usePolling: false };
 
 // Minimal structural view of a Babel AST node for a dependency-free traversal.
 type AstNode = { type: string } & Record<string, unknown>;
@@ -362,7 +383,7 @@ export const createConfig = ({
           },
           // Vite leaks the file watcher's handles on close, hanging single-pass teardown; disable it
           // in run mode only, so interactive `storybook dev` (local + e2e) and `vitest watch` keep HMR.
-          ...(isVitestRun ? { watch: null } : { watch: { ignored: watchIgnored } }),
+          ...(isVitestRun ? { watch: null } : { watch: watchOptions }),
         },
         optimizeDeps: {
           // WASM modules.
@@ -473,19 +494,23 @@ export const createConfig = ({
           },
 
           IconsPlugin({
-            // The leading negative lookahead restricts the `dx` set to the `regular` weight only
-            // (custom brand SVGs have no weight variants); the `ph` set retains all Phosphor weights.
-            symbolPattern:
-              '(?!dx--[a-z]+[a-z-]*--(?:bold|duotone|fill|light|thin))(ph|dx)--([a-z]+[a-z-]*)--(bold|duotone|fill|light|regular|thin)',
+            // Built rather than written out: `ph` carries every weight while `dx` and `px` are regular-only.
+            symbolPattern: iconSymbolPattern({ sets: ['ph', 'dx', 'px'], regularOnly: ['dx', 'px'] }),
             assetPath: (iconSet, name, variant) => {
               switch (iconSet) {
                 case 'dx':
                   return `${dxosIconsDir}/${name}.svg`;
+                case 'px':
+                  return `${extendedIconsDir}/${name}.svg`;
                 default:
                   return `${iconsDir}/${variant}/${name}${variant === 'regular' ? '' : `-${variant}`}.svg`;
               }
             },
             contentPaths: content,
+            // Keeps every `PxIcons` entry in the sprite so stories paint without a round trip.
+            scanPaths: [resolve(rootDir, 'packages/ui/ui-icons/src/index.ts')],
+            // Only `px` is served: the Phosphor catalog is ~9,000 files, too many to hand to a story.
+            assets: [{ route: '/px-icons', dir: extendedIconsDir }],
             spriteFile: 'icons.svg',
           }),
 

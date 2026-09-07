@@ -18,6 +18,7 @@ import { createIntrospector } from './introspector';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const FIXTURE_SRC = join(__dirname, '__fixtures__');
+const CACHE_DIR = join('node_modules', '.cache');
 
 // Each test gets its own temp copy of the fixture so the cache file lands at
 // a known path we control. The cache lives under <root>/node_modules/.cache/
@@ -32,7 +33,9 @@ describe('symbol cache reuse', { timeout: 30_000 }, () => {
     // Mirror the fixture monorepo into the temp dir, then nuke any stale
     // cache that came along from a prior run of any other test.
     const { cp } = await import('node:fs/promises');
-    await cp(FIXTURE_SRC, root, { recursive: true });
+    // `build-index.test.ts` writes and rmSync's the cache under the source fixture, which races
+    // this walk when the two files run in parallel; the copy never needs it.
+    await cp(FIXTURE_SRC, root, { recursive: true, filter: (source) => !source.includes(CACHE_DIR) });
     await rm(join(root, 'node_modules/.cache'), { recursive: true, force: true }).catch(() => undefined);
   });
 

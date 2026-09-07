@@ -15,6 +15,7 @@ runtime:
     # Deployed: hub-service is not part of the local edge dev setup.
     hub:
       url: https://dev.dxos.network/hub/
+      authUrl: https://account.dev.composer.space
     edge:
       url: http://localhost:8787/
     # Production even though `edge` is localhost: a local edge has no TURN token to mint with.

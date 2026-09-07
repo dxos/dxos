@@ -14,14 +14,18 @@ const instanceContexts = ((globalThis as any)[symbol] ??= new WeakMap<
   }
 >());
 
+/** Map key for a null-prototype instance, shared through `globalThis` like the contexts it keys. */
+const NULL_PROTOTYPE = ((globalThis as any)[Symbol.for('dxos.null-prototype')] ??= Object.freeze({}));
+
 /**
  * Returns a unique instance id for a given object.
  * Ids are generated as incrementing numbers.
  * Ids are only unique within the scope of a given prototype.
  * Instances of different classes may have the same id.
  */
+
 export const getPrototypeSpecificInstanceId = (instance: any): number => {
-  const prototype = Object.getPrototypeOf(instance);
+  const prototype = Object.getPrototypeOf(instance) ?? NULL_PROTOTYPE;
   const instanceCtx = defaultMap(instanceContexts as any, prototype, () => ({
     nextId: 0,
     instanceIds: new WeakMap(),
@@ -41,6 +45,8 @@ export const getDebugName = (instance: any): string => {
     return 'null';
   }
 
-  const prototype = Object.getPrototypeOf(instance);
-  return `${prototype.constructor?.name ?? 'Object'}#${getPrototypeSpecificInstanceId(instance)}`;
+  // A module namespace object has no prototype, which is what a module-scope `log.*` call is
+  // attributed to.
+  const name = Object.getPrototypeOf(instance)?.constructor?.name ?? 'Module';
+  return `${name}#${getPrototypeSpecificInstanceId(instance)}`;
 };

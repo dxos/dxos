@@ -1,8 +1,0 @@
-//
-// Copyright 2026 DXOS.org
-//
-
-export * as ClaudeAgentOperation from './ClaudeAgentOperation';
-export * as ClaudeAgentSession from './ClaudeAgentSession';
-export * as ClaudeAgentsEvents from './ClaudeAgentsEvents';
-export * as ClaudeManagedAgent from './ClaudeManagedAgent';

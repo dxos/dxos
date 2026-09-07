@@ -2,11 +2,10 @@
 // Copyright 2026 DXOS.org
 //
 
-import { useComposedRefs } from '@radix-ui/react-compose-refs';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useMemo, useState } from 'react';
 
-import { Panel, Toolbar, composable, composableProps, useThemeContext } from '@dxos/react-ui';
+import { Panel, Toolbar, composable, composableProps, useComposedRefs, useThemeContext } from '@dxos/react-ui';
 import { useTextEditor } from '@dxos/react-ui-editor';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { EditorView, createBasicExtensions, createMermaidExtensions, createThemeExtensions } from '@dxos/ui-editor';
@@ -91,7 +90,7 @@ const DefaultStory = ({ source, projection, background }: StoryArgs) => {
   const pinned = Object.keys(overlay.positions ?? {}).length;
 
   return (
-    <div className='dx-container grid' style={{ gridTemplateColumns: text !== undefined ? '1fr 1fr' : '1fr' }}>
+    <div className='dx-expand grid' style={{ gridTemplateColumns: text !== undefined ? '1fr 1fr' : '1fr' }}>
       {text !== undefined && (
         <Panel.Root>
           <Panel.Toolbar asChild>

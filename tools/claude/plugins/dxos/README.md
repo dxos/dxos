@@ -1,28 +1,127 @@
-# `dxos` — project tracking and QA flows for coding agents
+# `dxos` plugin for Claude Code
 
-Durable, resumable project and task tracking. A committed **registry** of
-work-streams, a **`TASKS.md` ledger** per project, and one command to drive them.
+The `dxos` plugin packages the DXOS Composer MCP server for Claude Code. Its main
+workflow is durable project tracking through `/dxos:project`. It also includes
+`/dxos:qa` for running QA flows.
 
-The problem it solves: an agent's own todo list is ephemeral. It dies with the
-context window, so the next session starts blind — re-deriving what was done,
-what is in flight, and what comes next. `dxos` keeps that state in the repo, where
-both you and the agent can read it weeks later.
+The marketplace manifest is
+[`.claude-plugin/marketplace.json`](../../../../.claude-plugin/marketplace.json).
+It publishes this plugin from `tools/claude/plugins/dxos`.
 
 ## Install
 
-```bash
-claude plugin marketplace add dxos/dxos
-```
+Register the marketplace once, then install the plugin:
 
 ```bash
+claude plugin marketplace add dxos/dxos
 claude plugin install dxos@dxos
 ```
+
+Start a new Claude Code session after installing.
+
+## Update
+
+Update the marketplace and plugin from a terminal:
+
+```bash
+claude plugin marketplace update dxos
+claude plugin update dxos@dxos
+```
+
+Start a new Claude Code session after updating.
+
+## Uninstall
+
+Uninstall the plugin before removing its marketplace:
+
+```bash
+claude plugin uninstall dxos@dxos
+claude plugin marketplace remove dxos
+```
+
+## Claude Code Desktop
+
+Desktop shares its plugin configuration with the CLI, so the commands above
+work for both. You can manage the plugin through the Desktop UI instead:
+
+- To install, register the marketplace with the first install command, then
+  click **+**, **Plugins**, **Add plugin**, and install **dxos**.
+- To update or uninstall, click **+**, **Plugins**, **Manage plugins**, and select
+  **DXOS Project Tracking**. Marketplace updates and removal still use the
+  terminal commands above.
+- After installing or updating, start a new Desktop session.
+
+## Connect Composer
+
+The plugin provides the Composer MCP server. Do not add its URL manually.
+
+Create an account at [composer.space](https://composer.space), then open its
+settings and create a passkey.
+
+### CLI
+
+Run `claude` from your project directory, enter `/mcp`, and select `composer`.
+Enable it if needed, then choose **Authenticate** and complete the passkey
+sign-in in your browser.
+
+### Claude Code Desktop
+
+1. Start a new Desktop session. Click **+**, **Plugins**, **Manage plugins**,
+   **DXOS Project Tracking**, **Connectors**, then select `composer`.
+2. Click **Connect** and complete the passkey sign-in in your browser.
+
+## Use Composer for project tracking
+
+Skip this whole section if you are staying on `file`.
+
+### Steps
+
+**1. Select the backend.** `DX_PROJECT_BACKEND` is read by the hook process, so
+it has to be in that process's environment. A desktop session is not launched
+from your shell and inherits nothing from `.zshrc`, so set it in `settings.json`,
+which Claude Code passes to every session and its subprocesses:
+
+```json
+{ "env": { "DX_PROJECT_BACKEND": "mcp" } }
+```
+
+`.claude/settings.local.json` in the repo keeps it to you. `.claude/settings.json`
+commits it for everyone working in the repo. `~/.claude/settings.json` turns it on
+for every repo you open.
+
+**2. Bind the space.** Run `/dxos:project setup`. It lists the spaces you own by
+name, asks which one this repo's projects belong in, confirms the session can
+write to it, and records the answer:
+
+```yaml
+# .agents/projects/space.yml — the ECHO space this repo's projects live in.
+spaceId: <id>
+```
+
+Commit that file. It binds every future session in the repo, on any machine and
+for anyone who clones it. Pass a name to skip the question when it is
+unambiguous: `/dxos:project setup Acme Product`.
+
+The procedure itself belongs to the `project` skill the server serves, so the
+verb loads that skill and follows it rather than carrying its own copy.
+
+## Troubleshooting
+
+### Composer is turned off for the session
+
+Claude saves the enabled state of an MCP server per project. Installing or
+enabling the plugin does not clear an older disabled choice.
+
+1. Open a terminal in the same project directory and run `claude`.
+2. Enter `/mcp`, select `composer`, and choose **Enable**.
+3. Start a new Desktop session and connect again.
 
 ## Use
 
 | Command                          | Does                                                                     |
 | -------------------------------- | ------------------------------------------------------------------------ |
 | `/dxos:project`                  | Status of the current project — worktree, branch, docs, uncommitted work |
+| `/dxos:project setup [space]`    | Bind this repo to the space its projects live in (`mcp` only)           |
 | `/dxos:project list [all]`       | Numbered table of active projects; reply with a row number to resume     |
 | `/dxos:project tasks [all]`      | Open `- [ ]` items from the current project's `TASKS.md`                 |
 | `/dxos:project spawn <N...>` | Spin the numbered open tasks out into background task chips              |
@@ -109,7 +208,14 @@ merely mentioned it — including the message asking for it to be replaced.
 | --------------------- | -------------------------------- | ----------------------------------------------- |
 | `DX_PROJECT_REGISTRY` | `.agents/projects/registry.yml`  | Registry location, relative to the project root (`file` only) |
 | `DX_PROJECT_BACKEND`  | `file`                           | Where projects are stored — `file` or `mcp`     |
-| `DX_PROJECT_SPACE`    | resolved via `listSpaces`        | Space holding the projects (`mcp` only)         |
+| `DX_PROJECT_SPACE`    | unset                            | Guard against a stale binding (`mcp` only)      |
+
+The space itself is bound per repo in the committed `.agents/projects/space.yml`,
+written by `/dxos:project setup` (see
+[Use Composer for project tracking](#use-composer-for-project-tracking)), because
+a repo's projects belong to one space whoever opens it. `DX_PROJECT_SPACE` is a
+guard on top of that: set it, and the agent stops if it disagrees with the
+committed binding.
 
 Every directive ends with a `BACKEND:` line naming the store and how to read or
 write it. The verbs, the command file and the skill are all backend-agnostic —
@@ -122,11 +228,19 @@ no services running.
 
 ### `mcp` — DXOS Composer
 
-Projects become live objects in a Composer space, reached through the MCP tools
-`dx mcp serve` exposes. A registry entry is a `Project`, its ledger is
-`Project.outline` (one markdown document), durable items are `Task` objects under
-the project's TaskSet, and design docs are artifact documents — so the same work
-is editable in Composer and from any machine, without a committed file.
+Projects become live objects in a Composer space, reached through MCP tools. A
+registry entry is a `Project`, its ledger is `Project.outline` (one markdown
+document), durable items are `Task` objects under the project's TaskSet, and
+design docs are artifact documents — so the same work is editable in Composer and
+from any machine, without a committed file.
+
+#### The bundled connector
+
+The plugin ships the deployed server, so there is nothing to add:
+
+```json
+"mcpServers": { "composer": { "type": "http", "url": "https://composer.dxos.network/mcp" } }
+```
 
 Two rules the directive enforces:
 

@@ -68,6 +68,11 @@
       "source": "./src/SandboxPlugin.ts",
       "types": "./dist/types/src/SandboxPlugin.d.ts",
       "import": "./dist/lib/SandboxPlugin.mjs"
+    },
+    "./SandboxOperation": {
+      "source": "./src/types/SandboxOperation.ts",
+      "types": "./dist/types/src/types/SandboxOperation.d.ts",
+      "import": "./dist/lib/SandboxOperation.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -78,6 +83,9 @@
       ],
       "SandboxEvents": [
         "dist/types/src/types/SandboxEvents.d.ts"
+      ],
+      "SandboxOperation": [
+        "dist/types/src/types/SandboxOperation.d.ts"
       ]
     }
   },

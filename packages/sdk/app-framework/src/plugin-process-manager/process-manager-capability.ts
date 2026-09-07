@@ -5,6 +5,7 @@
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
+import * as Tracer from 'effect/Tracer';
 import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 
 import {
@@ -19,6 +20,7 @@ import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import * as Process from '@dxos/compute/Process';
 import * as ServiceResolver from '@dxos/compute/ServiceResolver';
 import * as Trace from '@dxos/compute/Trace';
+import { makeGlobalTracer } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 // Explicit import so the emitted `.d.ts` references the package via its public
@@ -98,28 +100,30 @@ export default Capability.makeModule(
     // contributed by plugins enabled later do not join the stack (same as the event window).
     const layerSpecs = layerSpecContributions.get();
 
-    // The snapshot is restart-scoped — the stack below bakes into one runtime, and rebuilding it
-    // for a late arrival would tear down every live service on it. A LayerSpec contributed after
-    // this point is therefore silently absent, and the failure surfaces hops away as a missing
-    // service (which is exactly how it has bitten us). Name it here instead.
-    const layerSpecModulesAtSnapshot = new Set(
-      Object.keys(atomRegistry.get(capabilityManager.atomByModule(Capabilities.LayerSpec))),
-    );
-    const cancelLayerSpecWatch = atomRegistry.subscribe(
-      capabilityManager.atomByModule(Capabilities.LayerSpec),
-      (byModule) => {
+    const warnOnLateContribution = <T>(capability: Capability.InterfaceDef<T>, label: string, fix: string) => {
+      const atom = capabilityManager.atomByModule(capability);
+      const modulesAtSnapshot = new Set(Object.keys(atomRegistry.get(atom)));
+      return atomRegistry.subscribe(atom, (byModule) => {
         for (const moduleId of Object.keys(byModule)) {
-          if (!layerSpecModulesAtSnapshot.has(moduleId)) {
-            layerSpecModulesAtSnapshot.add(moduleId);
-            log.error('LayerSpec contributed after the runtime was built — it is ignored until the next boot', {
+          if (!modulesAtSnapshot.has(moduleId)) {
+            modulesAtSnapshot.add(moduleId);
+            log.error(`${label} contributed after the runtime was built — it is ignored until the next boot`, {
               module: moduleId,
-              fix: 'contribute it with AppCapability.layerSpec (or declare activatesOn: ActivationEvents.Startup)',
+              fix,
             });
           }
         }
-      },
-    );
-    yield* Effect.addFinalizer(() => Effect.sync(cancelLayerSpecWatch));
+      });
+    };
+
+    const cancelLateContributionWatches = [
+      warnOnLateContribution(
+        Capabilities.LayerSpec,
+        'LayerSpec',
+        'contribute it with AppCapability.layerSpec (or declare activatesOn: ActivationEvents.Startup)',
+      ),
+    ];
+    yield* Effect.addFinalizer(() => Effect.sync(() => cancelLateContributionWatches.forEach((cancel) => cancel())));
     // Optional swarm-backed remote trace source (DX-1125); first contribution wins, else empty.
     const remoteTraceMonitors = remoteTraceMonitorContributions.get();
 
@@ -174,8 +178,8 @@ export default Capability.makeModule(
 
     // Base services required by ProcessManager and the operation invoker.
     // Sensible defaults are provided here; plugins that want alternative
-    // implementations (e.g. persistent KV store, real tracing) can contribute
-    // their own LayerSpec entries against the ServiceResolver.
+    // implementations (e.g. persistent KV store) can contribute their own LayerSpec entries
+    // against the ServiceResolver.
     const baseLayer = Layer.mergeAll(
       Layer.succeed(Capability.Service, capabilityManager),
       Layer.succeed(Plugin.Service, pluginManager),
@@ -184,6 +188,9 @@ export default Capability.makeModule(
       OperationHandlerSet.provide(handlerSet),
       layerIdb,
       Layer.succeed(Trace.TraceSink, mergedTraceSink),
+      // Over the OTel global provider, a proxy that no-ops until one is registered, so this is
+      // installed whether or not observability exists.
+      Layer.succeed(Tracer.Tracer, makeGlobalTracer('@dxos/app-framework/process-manager')),
     );
 
     const processManagerLayer = ProcessManager.layer({ runtimeName: Trace.CommonRuntimeName.local }).pipe(
@@ -257,6 +264,7 @@ export default Capability.makeModule(
       Capability.contribute(Capabilities.ServiceResolver, serviceResolver),
       Capability.contribute(Capabilities.ProcessMonitor, processMonitor),
       Capability.contribute(Capabilities.OperationInvoker, operationInvoker),
+      Capability.contribute(Capabilities.OperationHandlers, handlerSet),
     ];
   }),
 );

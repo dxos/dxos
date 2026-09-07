@@ -23,9 +23,20 @@ export const EditorPreviewProvider = ({ children, onLookup }: EditorPreviewProvi
   const triggerRef = useRef<HTMLElement | null>(null);
   const [value, setValue] = useState<EditorPreviewPopoverValue>({});
   const [open, setOpen] = useState(false);
+  // Monotonic activation token: only the most recent open may commit its async lookup result, so a
+  // slow lookup for a closed/superseded anchor cannot fill the popover for a later one.
+  const activationRef = useRef(0);
 
   const handleActivate = useCallback(
     (event: DxAnchorActivate) => {
+      // Hover-driven anchors dispatch `state: false` when the pointer leaves the anchor/card.
+      if (event.state === false) {
+        activationRef.current++;
+        setOpen(false);
+        return;
+      }
+
+      const sequence = ++activationRef.current;
       const { dxn, label, trigger } = event;
       setValue((value) => ({
         ...value,
@@ -35,16 +46,27 @@ export const EditorPreviewProvider = ({ children, onLookup }: EditorPreviewProvi
 
       triggerRef.current = trigger;
       queueMicrotask(() => setOpen(true));
-      void onLookup?.({ label, dxn }).then((target) =>
+      void onLookup?.({ label, dxn }).then((target) => {
+        if (sequence !== activationRef.current) {
+          return;
+        }
         setValue((value) => ({
           ...value,
           target: target ?? undefined,
           pending: false,
-        })),
-      );
+        }));
+      });
     },
     [onLookup],
   );
+
+  // Dismissals from the popover itself (Escape, outside click) also invalidate in-flight lookups.
+  const handleOpenChange = useCallback((next: boolean) => {
+    if (!next) {
+      activationRef.current++;
+    }
+    setOpen(next);
+  }, []);
 
   const [root, setRoot] = useState<HTMLDivElement | null>(null);
   useEffect(() => {
@@ -60,7 +82,7 @@ export const EditorPreviewProvider = ({ children, onLookup }: EditorPreviewProvi
 
   return (
     <EditorPreviewContextProvider pending={value.pending} link={value.link} target={value.target}>
-      <Popover.Root open={open} onOpenChange={setOpen}>
+      <Popover.Root open={open} onOpenChange={handleOpenChange}>
         <Popover.VirtualTrigger virtualRef={triggerRef as unknown as RefObject<HTMLButtonElement>} />
         <div className='contents' ref={setRoot}>
           {children}

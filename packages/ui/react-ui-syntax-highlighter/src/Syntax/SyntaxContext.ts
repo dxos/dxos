@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Scope, createContextScope } from '@radix-ui/react-context';
+import { createContext } from '@dxos/react-hooks';
 
 import { type SyntaxContextValue } from './Syntax';
 
@@ -11,7 +11,4 @@ import { type SyntaxContextValue } from './Syntax';
 
 export const SYNTAX_NAME = 'Syntax';
 
-export type SyntaxScopedProps<P> = P & { __scopeSyntax?: Scope };
-
-export const [createSyntaxContext, createSyntaxScope] = createContextScope(SYNTAX_NAME);
-export const [SyntaxProvider, useSyntaxContext] = createSyntaxContext<SyntaxContextValue>(SYNTAX_NAME);
+export const [SyntaxProvider, useSyntaxContext] = createContext<SyntaxContextValue>(SYNTAX_NAME);

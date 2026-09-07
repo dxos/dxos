@@ -13,8 +13,6 @@ import createMilestone from './create-milestone';
 import createTask from './create-task';
 import deleteMilestone from './delete-milestone';
 
-const testLayer = () => TestDatabaseLayer({ types: [Milestone.Milestone, Task.Task, TaskSet.TaskSet] });
-
 describe('delete-milestone', () => {
   it.effect('releases its tasks to the backlog instead of deleting them', () =>
     Effect.gen(function* () {
@@ -33,6 +31,6 @@ describe('delete-milestone', () => {
       expect(taskSet.milestones).toHaveLength(0);
       expect(taskSet.tasks.map((ref) => ref.target?.id)).toEqual([task.id]);
       expect(task.milestone).toBeUndefined();
-    }).pipe(Effect.provide(testLayer())),
+    }).pipe(Effect.provide(TestDatabaseLayer({ types: [Milestone.Milestone, Task.Task, TaskSet.TaskSet] }))),
   );
 });

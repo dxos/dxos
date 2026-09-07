@@ -8,6 +8,8 @@ import * as Effect from 'effect/Effect';
 import { AssistantTestLayer, collectEphemeral, messageTextIncludes, waitForMessage } from '@dxos/agent-runtime/testing';
 import { ScriptedLanguageModel } from '@dxos/ai/testing';
 import { AiContext } from '@dxos/assistant';
+import * as Agent from '@dxos/assistant/Agent';
+import * as Chat from '@dxos/assistant/Chat';
 import { getSession } from '@dxos/compute/AgentService';
 import * as Operation from '@dxos/compute/Operation';
 import * as Project from '@dxos/compute/Project';
@@ -16,12 +18,11 @@ import { TestHelpers } from '@dxos/effect/testing';
 import { invariant } from '@dxos/invariant';
 import { EntityId } from '@dxos/keys';
 import { Text } from '@dxos/schema';
-import { Message, Outline, Task, TaskSet } from '@dxos/types';
+import { Message, Outline, Task } from '@dxos/types';
 
 import { AgentHandlers } from '../operations';
 import { DelegationSkill, DelegationSkillHandlers } from '../skills';
 import { DelegateTask } from '../skills/delegation/operations/definitions';
-import { Agent, Chat } from '../types';
 import { makeDelegationStrategy } from './delegation-strategy';
 
 const { text, toolCall, promptIncludes, scriptedAiService } = ScriptedLanguageModel;
@@ -62,7 +63,6 @@ const TestLayer = AssistantTestLayer({
     Agent.Agent,
     Outline.Outline,
     Task.Task,
-    TaskSet.TaskSet,
     Chat.Chat,
     AiContext.Binding,
     Text.Text,
@@ -106,7 +106,6 @@ const FailingTestLayer = AssistantTestLayer({
     Agent.Agent,
     Outline.Outline,
     Task.Task,
-    TaskSet.TaskSet,
     Chat.Chat,
     AiContext.Binding,
     Text.Text,
@@ -131,14 +130,14 @@ describe('makeDelegationStrategy', () => {
 
         const chat = yield* Agent.loadChat(agent);
         invariant(chat, 'Agent chat not found.');
-        // Delegation files into the PROJECT's task set here: the agent is parented rather than the
-        // chat, which reaches the project through it (a standalone chat would use its own set).
+        // Parented like the app runs it — the agent, not its chat — even though the delegated task
+        // is recorded on the chat's own checklist.
         const project = yield* Database.add(Project.make({ name: 'Test project' }));
         Obj.setParent(agent, project);
         yield* Database.flush();
         const feed = yield* Database.load(chat.feed);
 
-        const session = yield* getSession(feed);
+        const session = yield* getSession(chat);
         const ephemeral = yield* collectEphemeral(session);
 
         yield* session.submitPrompt('Delegate a task to a sub-agent to compute 10 factorial.');
@@ -152,10 +151,8 @@ describe('makeDelegationStrategy', () => {
           .join('');
         expect(streamedText).toContain('On it');
 
-        // DelegateTask promoted the work to a durable agent task under the project's task set.
-        const taskSet = project.taskSet ? yield* Database.load(project.taskSet) : undefined;
-        invariant(taskSet, 'Task set not created.');
-        const tasks = TaskSet.resolveTasks(taskSet);
+        // DelegateTask promoted the work to a durable agent task on the chat's checklist.
+        const tasks = yield* Chat.loadTasks(chat);
         expect(tasks).toHaveLength(1);
         expect(tasks[0]).toMatchObject({ title: TASK_TITLE, assignee: { role: 'assistant' } });
 
@@ -165,7 +162,7 @@ describe('makeDelegationStrategy', () => {
         expect(Message.extractText(notification)).toContain(TASK_TITLE);
         expect(Message.extractText(notification)).toContain('3628800');
 
-        // ...and marked the durable task done — the task set is the working surface.
+        // ...and marked the durable task done — the checklist is the working surface.
         expect(tasks[0].status).toEqual('done');
       },
       Effect.provide(TestLayer),
@@ -194,7 +191,7 @@ describe('makeDelegationStrategy', () => {
         yield* Database.flush();
         const feed = yield* Database.load(chat.feed);
 
-        const session = yield* getSession(feed);
+        const session = yield* getSession(chat);
         yield* session.submitPrompt('Delegate a task to a sub-agent to compute 10 factorial.');
         yield* session.waitForCompletion();
 
@@ -205,9 +202,7 @@ describe('makeDelegationStrategy', () => {
         // The full cause (with stack frames) belongs to the log, not the conversation.
         expect(messageText).not.toMatch(/\bat .*[/(]/);
 
-        const taskSet = project.taskSet ? yield* Database.load(project.taskSet) : undefined;
-        invariant(taskSet, 'Task set not created.');
-        expect(TaskSet.resolveTasks(taskSet)[0]?.status).toEqual('failed');
+        expect((yield* Chat.loadTasks(chat))[0]?.status).toEqual('failed');
       },
       Effect.provide(FailingTestLayer),
       TestHelpers.provideTestContext,

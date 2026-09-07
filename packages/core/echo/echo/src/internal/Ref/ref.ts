@@ -190,8 +190,19 @@ export interface Ref<T> extends Pipeable.Pipeable {
    * @returns The reference target.
    * May return `undefined` if the object is not loaded in the working set.
    * Accessing this property, even if it returns `undefined` will trigger the object to be loaded to the working set.
+   * @deprecated A read with side effects (triggers loading, registers a resolution callback) that
+   * can also throw. Use {@link peek} for a side-effect-free synchronous read, {@link load} to
+   * resolve asynchronously, or the ref's atom for reactive access.
    */
   get target(): T | undefined;
+
+  /**
+   * @returns The target when it is already materialized: the pinned target, or a side-effect-free
+   * working-set lookup. Never throws and never triggers loading — the synchronous counterpart of
+   * {@link tryLoad}. A just-added object can resolve here before it has settled into its own
+   * document; callers that need a settled document must load instead.
+   */
+  peek(): T | undefined;
 
   /**
    * @returns Promise that will resolves with the target object.
@@ -541,6 +552,23 @@ export class RefImpl<T> implements Ref<T> {
 
     invariant(this.#resolver, 'Resolver is not set');
     return this.#resolver.resolveSync(this.#uri, true, this.#resolverCallback) as T | undefined;
+  }
+
+  /**
+   * @inheritdoc
+   */
+  peek(): T | undefined {
+    if (this.#target) {
+      return this.#target;
+    }
+    if (!this.#resolver) {
+      return undefined;
+    }
+    try {
+      return this.#resolver.resolveSync(this.#uri, false, undefined) as T | undefined;
+    } catch {
+      return undefined;
+    }
   }
 
   /**

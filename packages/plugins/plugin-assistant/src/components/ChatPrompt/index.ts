@@ -3,9 +3,11 @@
 //
 
 export * from './ChatActions';
+export * from './ChatActivity';
 export * from './ChatMcpErrors';
 export * from './ChatOptions';
 export * from './ChatPresets';
 export * from './ChatPrompt';
 export * from './ChatReferences';
 export * from './ChatStatus';
+export * from './ChatStatusStack';

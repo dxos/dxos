@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Observability } from '@dxos/observability';
+import type * as Observability from '@dxos/observability/Observability';
 
 export type ObservabilityPluginOptions = {
   namespace: string;

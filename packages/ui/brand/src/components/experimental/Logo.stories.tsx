@@ -55,7 +55,7 @@ export const Default: Story = {
     };
 
     return (
-      <div className='absolute flex inset-0 items-center justify-center'>
+      <div className='dx-fullscreen flex items-center justify-center'>
         <div className='absolute left-4 top-4'>
           <Button onClick={handleSpin}>Spin</Button>
         </div>
@@ -97,7 +97,7 @@ export const Colors: Story = {
     ];
 
     return (
-      <div className='absolute inset-0 flex justify-center items-center'>
+      <div className='dx-fullscreen flex justify-center items-center'>
         <div className='grid grid-cols-3 gap-20 w-[800px]'>
           {colors.map((classNames, i) => (
             <div key={i} className='flex justify-center items-center'>
@@ -113,7 +113,7 @@ export const Colors: Story = {
 export const Pacman: Story = {
   render: () => {
     return (
-      <div className='absolute inset-0 flex flex-col justify-center'>
+      <div className='dx-fullscreen flex flex-col justify-center'>
         <div className='flex flex-col'>
           <div className='flex items-center p-4'>
             <div className='flex ml-8 mr-[100px]'>
@@ -185,7 +185,7 @@ const SpinnerContainer = () => {
 export const Spinner: Story = {
   render: () => {
     return (
-      <div className='absolute inset-0 flex items-center justify-center'>
+      <div className='dx-fullscreen flex items-center justify-center'>
         <SpinnerContainer />
       </div>
     );
@@ -196,7 +196,7 @@ export const Spinner: Story = {
 export const Linear: Story = {
   render: () => {
     return (
-      <div className='absolute flex flex-col inset-0 bg-black'>
+      <div className='dx-fullscreen flex flex-col bg-black'>
         <div
           className={'h-[1px] translateX(-100%) animate-progress-linear'}
           style={{
@@ -220,7 +220,7 @@ export const Radial: Story = {
     const endAngle = -(5 / 4) * Math.PI;
 
     return (
-      <div className='absolute inset-0 flex items-center justify-center'>
+      <div className='dx-fullscreen flex items-center justify-center'>
         <svg width={size} height={size}>
           <g transform={`translate(${totalRadius}, ${totalRadius})`}>
             {brandColors.map((color, i) => {
@@ -251,7 +251,7 @@ export const Oblique: Story = {
     const size = 512;
 
     return (
-      <div className='absolute inset-0 grid place-items-center'>
+      <div className='dx-fullscreen grid place-items-center'>
         <div className='absolute top-4 left-4'>
           <IconButton icon='ph--square--duotone' label='Visibility' onClick={() => setVisible()} />
         </div>

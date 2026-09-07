@@ -17,7 +17,8 @@ Each extension is defined in the Appendix or resolved via its URI.
 | `feat`      | `org.dxos.mdl.feat@1.0`        |
 | `test`      | `org.dxos.mdl.test@1.0`        |
 | `component` | `org.dxos.mdl.component@1.0`   |
-| `op`        | `org.dxos.mdl.op@1.0`          |
+| `op`        | `org.dxos.mdl.op@1.1`          |
+| `flow`      | `org.dxos.mdl.flow@1.0`        |
 
 ## Types
 
@@ -111,6 +112,7 @@ component RangeList
 
 ```mdl
 op insertAxis
+  key: org.dxos.operation.sheet.insertAxis
   desc: Inserts one or more rows or columns at the given index in the sheet model.
   input:
     model: SheetModel
@@ -123,6 +125,7 @@ op insertAxis
 
 ```mdl
 op dropAxis
+  key: org.dxos.operation.sheet.dropAxis
   desc: Removes a row or column by axis index, returning data needed to restore it (undo).
   input:
     model: SheetModel
@@ -134,6 +137,7 @@ op dropAxis
 
 ```mdl
 op restoreAxis
+  key: org.dxos.operation.sheet.restoreAxis
   desc: Restores a previously dropped row or column (undo of dropAxis).
   input:
     model: SheetModel
@@ -148,6 +152,7 @@ op restoreAxis
 
 ```mdl
 op scrollToAnchor
+  key: org.dxos.operation.sheet.scrollToAnchor
   desc: Programmatically scrolls and highlights a cell range in an active grid instance.
   input:
     subject: string              # attendable ID of the target sheet
@@ -155,6 +160,41 @@ op scrollToAnchor
     ref?: any                    # active refs for highlight overlay
   output: void
   effects: [ui:scroll]
+```
+
+Agent-facing skill operations (not previously documented here — found in `src/types/SheetOperation.ts`):
+
+```mdl
+op create
+  key: org.dxos.operation.sheet.create
+  desc: Creates a new Sheet and adds it to the space.
+  input:
+    name?: string
+    rows?: number                # default 50
+    columns?: number             # default 26
+  output: { id: string }         # DXN of the created sheet
+  effects: [echo:write]
+  requires: [Database.Service]
+
+op getRange
+  key: org.dxos.operation.sheet.getRange
+  desc: Reads cell values from a sheet as a 2D array. Omit `range` for the entire occupied area.
+  input:
+    sheet: Ref<Sheet>
+    range?: string                # A1 notation, e.g. "A1:C5"
+  output: { values: any[][], range: string }
+  effects: [echo:read]
+  requires: [Database.Service]
+
+op setRange
+  key: org.dxos.operation.sheet.setRange
+  desc: Sets multiple cell values in a sheet at once, keyed by A1 address.
+  input:
+    sheet: Ref<Sheet>
+    cells: Record<string, any>    # e.g. { "A1": "Name", "B1": 42, "C1": "=A1+B1" }
+  output: void
+  effects: [echo:write]
+  requires: [Database.Service]
 ```
 
 ## Features
@@ -290,6 +330,72 @@ test T-6: Scroll to anchor
   then:
     - the grid scrolls so that E10 is visible
     - E10 is highlighted via activeRefs
+```
+
+---
+
+## QA
+
+Executable flows. Each step carries a human instruction (`do`) and, where the step maps to an
+invocable operation, an agent binding (`invoke`). Report failures by flow and step number.
+
+```mdl
+flow QA-1: Create a sheet, set values, evaluate a formula, read back
+  desc: The core spreadsheet round-trip — create, set cells (including a formula), read the
+    evaluated result back.
+  actors: agent
+  covers: [F-1.1, F-1.2, F-2.1, F-2.3, T-1, T-2]
+  status: unverified
+  given:
+    - an identity exists
+    - space: a space is open
+    - root: the space's root collection — [op:create] takes no target and files the Sheet
+      there via `CollectionModel.add`, so the flow cannot choose a different one
+    - no Sheet named "QA Sheet" exists — ABORT rather than reusing one this flow did not create
+  test:
+    - name: Create the sheet
+      do: In the navtree, click + on a collection and choose Sheet. Name it "QA Sheet".
+      invoke: [op:create] { name: "QA Sheet" }
+      capture: created
+      expect: a Sheet named "QA Sheet" now exists
+      assert: return !!$created.id
+
+    - name: Place it in the root collection
+      do: (no separate gesture — the navtree create action places it)
+      expect: "QA Sheet" appears as a row under the space's root collection
+      note: |
+        NO `invoke` — [op:create] places the sheet in the space itself, so a following
+        `space.addObject` is redundant. `$created.id` is a DXN string, not an object;
+        resolve it (`db.getObjectById` on the DXN's last segment) before any step that
+        needs the live Sheet.
+
+    - name: Resolve the sheet and set values
+      do: Click cell A1 and type "10", Enter. Click A2 and type "20", Enter. Click A3 and type
+        "=A1+A2", Enter.
+      invoke: [op:setRange] { sheet: space.db.makeRef($created.id), cells: { A1: 10, A2: 20, A3: "=A1+A2" } }
+      expect: A1 shows 10, A2 shows 20, and A3 shows 30 (evaluated by HyperFormula)
+      note: |
+        `sheet` is a `Ref` and `op:create` returns only `{ id }` (a DXN string) — `db.makeRef`
+        builds the `Ref` straight from that DXN, no load needed; `Ref.make` needs a live object,
+        which nothing captured here has.
+
+    - name: Read the range back
+      do: (agent-only — confirm the evaluated values)
+      invoke: [op:getRange] { sheet: space.db.makeRef($created.id), range: "A1:A3" }
+      expect: A3 renders 30 in the grid
+      assert: |
+        // getRange returns STORED cell content, not the evaluated result — A3 comes back as
+        // the formula string. Judge the evaluated value in the UI (`expect`), not here.
+        return $result.values.flat().slice(0, 2).join(',') === '10,20';
+  after:
+    - name: Delete the sheet
+      do: Right-click "QA Sheet" in the navtree and choose Delete.
+      invoke: org.dxos.operation.space.removeObjects { objects: [space.db.getObjectById($created.id.split('/').pop())] }
+      expect: the row leaves the navtree and its plank closes if it was open
+      note: |
+        No `target` — `op:create` calls `CollectionModel.add({ object })` with no target, so the
+        Sheet lands in the space's root collection; omitting `target` here lets `removeObjects`
+        default to that same collection rather than a different one.
 ```
 
 ---

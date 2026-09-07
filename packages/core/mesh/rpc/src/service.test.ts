@@ -6,7 +6,6 @@ import { beforeEach, describe, expect, test } from 'vitest';
 
 import { latch, sleep } from '@dxos/async';
 import { Stream } from '@dxos/async';
-import { type RequestOptions } from '@dxos/codec-protobuf';
 import { Context, TRACE_SPAN_ATTRIBUTE } from '@dxos/context';
 import { schema } from '@dxos/protocols/proto';
 import {
@@ -14,6 +13,7 @@ import {
   type TestService,
   type TestStreamService,
 } from '@dxos/protocols/proto/example/testing/rpc';
+import { type RequestOptions } from '@dxos/protocols/service-contract';
 
 import { type ProtoRpcPeer, createProtoRpcPeer, createServiceBundle } from './service';
 import { createLinkedPorts, encodeMessage } from './testing';

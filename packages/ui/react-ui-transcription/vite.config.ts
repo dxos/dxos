@@ -8,6 +8,7 @@ export default defineConfig({
   entry: {
     index: 'src/index.ts',
     capture: 'src/capture/index.ts',
+    translations: 'src/translations.ts',
   },
   jsx: 'react',
   test: { node: true },

@@ -25,16 +25,16 @@ import {
   ComputeGraph,
   ComputeGraphModel,
   type ComputeNode,
-  ComputeNodeContext,
   type ComputeResult,
   type Executable,
   ValueBag,
+  layerNoop as computeNodeContextLayerNoop,
   synchronizedComputeFunction,
 } from '../types';
 import { WorkflowLoader, type WorkflowLoaderProps } from './loader';
 
 const TestLayer = Layer.mergeAll(
-  ComputeNodeContext.layerNoop,
+  computeNodeContextLayerNoop,
   Layer.succeed(Operation.Service, {
     invoke: () => Effect.die('Operation.Service not available in test.'),
     schedule: () => Effect.die('Operation.Service not available in test.'),
@@ -55,7 +55,7 @@ describe('workflow', () => {
         const graph = createSimpleTransformGraph((input) => input.num1 + input.num2);
         const workflowLoader = new WorkflowLoader(createResolver(graph));
         const workflow = yield* Effect.promise(() => workflowLoader.load(graph.graphUri));
-        const result = yield* executeEffect(workflow.run(makeInput({ num1: 2, num2: 3 })));
+        const result = yield* executeEffect(workflow.run(ValueBag.make({ input: { num1: 2, num2: 3 } })));
         expect(result).toEqual(5);
       },
       Effect.provide(TestLayer),
@@ -74,7 +74,7 @@ describe('workflow', () => {
         });
         const workflowLoader = new WorkflowLoader(createResolver(graph));
         const workflow = yield* Effect.promise(() => workflowLoader.load(graph.graphUri));
-        const input = makeInput({ num1: 2, num2: 3 });
+        const input = ValueBag.make({ input: { num1: 2, num2: 3 } });
         expect(() => workflow.run(input)).toThrow(/.*Ambiguous workflow.*entrypoint.*/);
         expect(yield* executeEffect(workflow.runFrom('sum', input))).toEqual(5);
         expect(yield* executeEffect(workflow.runFrom('product', input))).toBeUndefined();
@@ -97,7 +97,7 @@ describe('workflow', () => {
         });
         const workflowLoader = new WorkflowLoader(createResolver(graph));
         const workflow = yield* Effect.promise(() => workflowLoader.load(graph.graphUri));
-        const input = makeInput({ num1: 2, num2: 3 });
+        const input = ValueBag.make({ input: { num1: 2, num2: 3 } });
         expect(() => workflow.run(input)).throws();
         expect(yield* executeEffect(workflow.runFrom('sum', input))).toBeUndefined();
         expect(sumSideEffect).toEqual(5);
@@ -117,7 +117,7 @@ describe('workflow', () => {
         const workflowLoader = new WorkflowLoader(createResolver(graph));
         const workflow = yield* Effect.promise(() => workflowLoader.load(graph.graphUri));
         const executable = yield* Effect.promise(() => workflow.asExecutable());
-        const result = yield* executeEffect(executable.exec!(makeInput({ num1: 2, num2: 3 })));
+        const result = yield* executeEffect(executable.exec!(ValueBag.make({ input: { num1: 2, num2: 3 } })));
         expect(result).toEqual(5);
       },
       Effect.provide(TestLayer),
@@ -134,7 +134,7 @@ describe('workflow', () => {
           const graph = createSubgraphTransform(subgraph.graphUri);
           const workflowLoader = new WorkflowLoader(createResolver(graph, subgraph));
           const workflow = yield* Effect.promise(() => workflowLoader.load(graph.graphUri));
-          const result = yield* executeEffect(workflow.run(makeInput({ num1: 2, num2: 3 })));
+          const result = yield* executeEffect(workflow.run(ValueBag.make({ input: { num1: 2, num2: 3 } })));
           expect(result).toEqual(5);
         },
         Effect.provide(TestLayer),
@@ -179,8 +179,6 @@ describe('workflow', () => {
       Effect.map((r) => r.result),
     );
   };
-
-  const makeInput = (input: any) => ValueBag.make({ input });
 
   const createSimpleTransformGraph = (transform: Transform): TestWorkflowGraph => {
     return createGraphFromTransformMap('I', { I: transform });

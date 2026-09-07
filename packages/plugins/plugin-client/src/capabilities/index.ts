@@ -42,6 +42,7 @@ export const Client = Capability.lazyModule(
     activatesOn: ActivationEvents.Startup,
     provides: [
       ClientCapabilities.Client,
+      ClientCapabilities.InitializeTimeout,
       Capabilities.Layer,
       ClientCapabilities.IdentityService,
       ClientCapabilities.SpaceService,

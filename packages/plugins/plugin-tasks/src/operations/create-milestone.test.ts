@@ -11,8 +11,6 @@ import { Milestone, Task, TaskSet } from '@dxos/types';
 
 import createMilestone from './create-milestone';
 
-const testLayer = () => TestDatabaseLayer({ types: [Milestone.Milestone, Task.Task, TaskSet.TaskSet] });
-
 describe('create-milestone', () => {
   it.effect("appends to the set's milestone sequence", () =>
     Effect.gen(function* () {
@@ -32,6 +30,6 @@ describe('create-milestone', () => {
       expect(alpha.description).toBe('Ships to staging');
       expect(taskSet.milestones.map((ref) => ref.target?.id)).toEqual([alpha.id, beta.id]);
       expect(Obj.getParent(alpha)?.id).toBe(taskSet.id);
-    }).pipe(Effect.provide(testLayer())),
+    }).pipe(Effect.provide(TestDatabaseLayer({ types: [Milestone.Milestone, Task.Task, TaskSet.TaskSet] }))),
   );
 });

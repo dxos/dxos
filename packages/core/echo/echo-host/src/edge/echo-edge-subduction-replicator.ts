@@ -90,9 +90,8 @@ export type EchoEdgeSubductionReplicatorProps = {
  * {@link AutomergeReplicatorConnection}. Outbound repo messages are wrapped in a router
  * frame and sent to the edge.
  *
- * No classical automerge-repo sync, collection-query/state, bundle sync, or rate-limiting
- * runs through this class — Subduction's sedimentree protocol replaces those
- * responsibilities. For the classical sync path see {@link EchoEdgeReplicator}.
+ * No automerge-repo sync, collection-query/state, or rate-limiting runs through this class —
+ * Subduction's sedimentree protocol replaces those responsibilities.
  */
 export class EchoEdgeSubductionReplicator implements EdgeAutomergeReplicator {
   private readonly _edgeConnection: EdgeConnection;
@@ -439,10 +438,6 @@ class EdgeSubductionReplicatorConnection extends Resource implements AutomergeRe
 
   get peerId(): string {
     return this._remotePeerId;
-  }
-
-  get bundleSyncEnabled(): boolean {
-    return false;
   }
 
   async shouldAdvertise(params: ShouldAdvertiseProps): Promise<boolean> {

@@ -40,7 +40,7 @@ const SideBySideStory = () => {
   }
 
   return (
-    <div className='absolute inset-0 grid grid-cols-3 gap-3 p-3 overflow-hidden'>
+    <div className='dx-fullscreen grid grid-cols-3 gap-3 p-3 overflow-hidden'>
       <CanonicalTaskPanel task={task} />
       <LensedGtdPanel task={task} />
       <RawInspector task={task} />

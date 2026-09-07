@@ -25,8 +25,8 @@
     "src"
   ],
   "dependencies": {
-    "@fluentui/react-tabster": "catalog:",
-    "@radix-ui/react-context": "catalog:",
+    "@dxos/react-focus": "workspace:*",
+    "@dxos/react-hooks": "workspace:*",
     "react-resize-detector": "catalog:"
   },
   "devDependencies": {

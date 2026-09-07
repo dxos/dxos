@@ -12,6 +12,8 @@ import {
   OperationHandler,
   PluginAsset,
   ReactSurface,
+  SampleSpaces,
+  SpaceTemplates,
   StatsPanel,
   Translations,
 } from '#capabilities';
@@ -26,6 +28,8 @@ export const DebugPlugin = Plugin.define<Debug.DebugPluginOptions>(meta).pipe(
   Plugin.addModule(OperationHandler),
   Plugin.addModule(PluginAsset),
   Plugin.addModule(ReactSurface),
+  Plugin.addModule(SampleSpaces),
+  Plugin.addModule(SpaceTemplates),
   Plugin.addModule(StatsPanel),
   Plugin.addModule(Translations),
   Plugin.make,

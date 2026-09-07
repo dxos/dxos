@@ -34,7 +34,7 @@ const handler: Operation.WithHandler<typeof MarkdownOperation.Update> = Markdown
           Obj.update(binding.object, () => {
             newContent = Text.apply(binding.object, 'content', edits);
           });
-          return { newContent };
+          return { applied: edits.length, length: newContent.length };
         } finally {
           binding.dispose();
         }
@@ -45,7 +45,8 @@ const handler: Operation.WithHandler<typeof MarkdownOperation.Update> = Markdown
       Obj.update(content, () => {
         newContent = Text.apply(content, 'content', edits);
       });
-      return { newContent };
+
+      return { applied: edits.length, length: newContent.length };
     }),
   ),
 );

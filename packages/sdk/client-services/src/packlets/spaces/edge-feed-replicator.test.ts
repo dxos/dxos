@@ -10,7 +10,7 @@ import { Trigger, sleep } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { EdgeClient, EdgeIdentityChangedError, createEphemeralEdgeIdentity } from '@dxos/edge-client';
 import { createTestEdgeWsServer } from '@dxos/edge-client/testing';
-import { FeedFactory, FeedStore, type FeedWrapper } from '@dxos/feed-store';
+import { FeedFactory, FeedStore } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';
 import { SpaceId } from '@dxos/keys';
 import { EdgeStatus } from '@dxos/protocols/proto/dxos/client/services';
@@ -58,7 +58,7 @@ describe('EdgeFeedReplicator', () => {
     const { feed } = await attachReplicator(messenger);
 
     admitConnection.wake();
-    await appendMessage(feed);
+    await feed.append({ timeframe: new Timeframe() });
 
     await expect.poll(() => messageSink.length).toEqual(2);
     expect(messageSink[1].type).toEqual('data');
@@ -105,7 +105,7 @@ describe('EdgeFeedReplicator', () => {
     const { messenger, sendSpy, reconnectTrigger } = await createClient(endpoint);
 
     const { feed } = await attachReplicator(messenger);
-    await appendMessage(feed);
+    await feed.append({ timeframe: new Timeframe() });
 
     sendSpy.mockImplementationOnce(async (_ctx: any, request: any) => {
       sendResponseMessage(request, encodeCbor({ type: 'metadata', feedKey: feed.key.toHex(), length: 0 }));
@@ -169,7 +169,7 @@ describe('EdgeFeedReplicator', () => {
 
     admitConnection.reset();
     await updateIdentity(messenger);
-    await appendMessage(feed);
+    await feed.append({ timeframe: new Timeframe() });
     await sleep(20);
     admitConnection.wake();
 
@@ -184,7 +184,7 @@ describe('EdgeFeedReplicator', () => {
     admitConnection.wake();
     await sleep(10);
 
-    void appendMessage(feed);
+    void feed.append({ timeframe: new Timeframe() });
     await updateIdentity(messenger);
 
     await expect.poll(() => feedLength()).toEqual(1);
@@ -253,6 +253,4 @@ describe('EdgeFeedReplicator', () => {
   const updateIdentity = async (messenger: EdgeClient) => {
     messenger.setIdentity(await createEphemeralEdgeIdentity());
   };
-
-  const appendMessage = (feed: FeedWrapper<FeedMessage>) => feed.append({ timeframe: new Timeframe() });
 });

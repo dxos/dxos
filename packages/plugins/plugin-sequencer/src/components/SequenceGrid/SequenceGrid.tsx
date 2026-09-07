@@ -561,7 +561,7 @@ export const SequenceGrid = ({
   const loopMaxBeats = Math.max(sequence.length, 256);
 
   return (
-    <div ref={paneRef} className={mx('relative w-full h-full', classNames)}>
+    <div ref={paneRef} className={mx('relative dx-fill', classNames)}>
       <CellGrid
         atoms={atoms as any}
         rows={rows}

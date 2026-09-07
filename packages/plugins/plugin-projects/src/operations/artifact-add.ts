@@ -7,6 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Obj, type Ref } from '@dxos/echo';
 import { EID } from '@dxos/keys';
+import { Task } from '@dxos/types';
 
 import { ProjectOperation } from '#types';
 
@@ -18,13 +19,21 @@ const refKey = (ref: Ref.Ref<Obj.Unknown>): string => {
 
 const handler: Operation.WithHandler<typeof ProjectOperation.ArtifactAdd> = ProjectOperation.ArtifactAdd.pipe(
   Operation.withHandler(
-    Effect.fn(function* ({ project: projectRef, object: objectRef }) {
+    Effect.fn(function* ({ project: projectRef, object: objectRef, task: taskRef }) {
       const project = yield* Database.load(projectRef);
 
       if (!project.artifacts.some((ref) => refKey(ref) === refKey(objectRef))) {
         Obj.update(project, (project) => {
           project.artifacts = [...project.artifacts, objectRef];
         });
+      }
+
+      // Also on the task, when the object was made working one: the project holds everything it
+      // owns, the task holds what it produced, and a reader wants both.
+      if (taskRef) {
+        const task = yield* Database.load(taskRef);
+        const object = yield* Database.load(objectRef);
+        Task.addArtifact(task, object);
       }
 
       yield* Database.flush();

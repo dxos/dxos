@@ -9,12 +9,14 @@ import * as Plugin from '@dxos/app-framework/Plugin';
 
 import {
   ClientReady,
+  Commands,
   InvocationListener,
   Namespace,
   Observability,
   ObservabilitySettings,
   ObservabilityState,
   OperationHandler,
+  PrivacyBanner,
   PrivacyNotice,
   ReactSurface,
   Translations,
@@ -24,12 +26,14 @@ import { ObservabilityCapabilities, ObservabilityOptions } from '#types';
 
 export const ObservabilityPlugin = Plugin.define<ObservabilityOptions.ObservabilityPluginOptions>(meta).pipe(
   Plugin.addModule(ClientReady),
+  Plugin.addModule(Commands),
   Plugin.addModule(InvocationListener),
   Plugin.addModule(Namespace),
   Plugin.addModule(Observability),
   Plugin.addModule(ObservabilitySettings),
   Plugin.addModule(ObservabilityState),
   Plugin.addModule(OperationHandler),
+  Plugin.addModule(PrivacyBanner),
   Plugin.addModule(PrivacyNotice),
   Plugin.addModule(ReactSurface),
   Plugin.addModule(Translations),

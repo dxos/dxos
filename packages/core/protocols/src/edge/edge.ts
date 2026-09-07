@@ -21,7 +21,6 @@ export const BYOK_HEADER = 'X-BYOK';
 // TODO(burdon): Rename EdgerRouterEndpoint.
 // If we would rename it, we need to be careful to not break composer production.
 export enum EdgeService {
-  AUTOMERGE_REPLICATOR = 'automerge-replicator',
   SUBDUCTION_REPLICATOR = 'subduction-replicator',
   /**
    * Control feed replicator (hypercore append only logs) for the space.
@@ -197,7 +196,7 @@ export type JoinSpaceRequest = {
   identityKey: string;
   /**
    * Base64 encoded signed challenge.
-   * Used to verify the IdentityKey in case of `invitation.authMethod === Invitation.AuthMethod.KNOWN_PUBLIC_KEY`
+   * Used to verify the IdentityKey in case of `invitation.authMethod === Invitation_AuthMethod.KNOWN_PUBLIC_KEY`.
    */
   signature?: string;
 };
@@ -304,22 +303,6 @@ export type UploadFunctionResponseBody = {
      */
     outputSchema?: object;
   };
-};
-
-export type CreateSpaceRequest = {
-  /**
-   * HEX encoded public key of the agent.
-   */
-  agentKey: string;
-};
-
-export type CreateSpaceResponseBody = {
-  /**
-   * HEX encoded public key of the space.
-   */
-  spaceKey: string;
-  spaceId: SpaceId;
-  automergeRoot: string;
 };
 
 export enum EdgeAgentStatus {
@@ -468,52 +451,6 @@ export type EdgeStatus = {
     fetchError?: string;
   };
 };
-
-//
-// Space import/export.
-//
-
-export type ImportBundleRequest = {
-  bundle: {
-    /**
-     * DocumentId.
-     */
-    documentId: string;
-    /**
-     * Encoded mutation.
-     */
-    mutation: string;
-    /**
-     * Heads of the document.
-     */
-    heads: string[];
-  }[];
-};
-
-export type ExportBundleRequest = {
-  /**
-   * DocumentId -> Heads (decoded heads since which we want to export).
-   */
-  docHeads: Record<string, string[]>;
-};
-
-export type ExportBundleResponse = {
-  bundle: {
-    /**
-     * DocumentId.
-     */
-    documentId: string;
-    /**
-     * Encoded mutation.
-     */
-    mutation: string;
-  }[];
-};
-
-export const DocumentCodec = Object.freeze({
-  encode: (doc: Uint8Array) => Buffer.from(doc).toString('base64'),
-  decode: (doc: string) => new Uint8Array(Buffer.from(doc, 'base64')),
-});
 
 const MAX_ERROR_DEPTH = 3;
 

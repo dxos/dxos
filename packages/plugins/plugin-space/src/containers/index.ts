@@ -4,7 +4,10 @@
 
 import { type ComponentType, lazy } from 'react';
 
+import { type ObjectMasonryArticleProps } from './ObjectMasonry';
+
 export type { ObjectFormDialogProps } from './ObjectFormDialog';
+export type { ObjectMasonryArticleProps };
 export type { RenameSubject } from './RenamePopover';
 
 export const CollectionArticle: ComponentType<any> = lazy(() => import('./CollectionArticle'));
@@ -17,6 +20,11 @@ export const JoinDialog: ComponentType<any> = lazy(() => import('./JoinDialog'))
 export const MembersContainer: ComponentType<any> = lazy(() => import('./MembersContainer'));
 export const MergePreview: ComponentType<any> = lazy(() => import('./MergePreview'));
 export const ObjectCardStack: ComponentType<any> = lazy(() => import('./ObjectCardStack'));
+// Lazy like its siblings — the masonry and card stack are a chunk no consumer should pay for until
+// it renders one.
+export const ObjectMasonryArticle: ComponentType<ObjectMasonryArticleProps> = lazy(() =>
+  import('./ObjectMasonry').then(({ ObjectMasonryArticle }) => ({ default: ObjectMasonryArticle })),
+);
 export const ObjectFormDialog: ComponentType<any> = lazy(() => import('./ObjectFormDialog'));
 export const RecordArticle: ComponentType<any> = lazy(() => import('./RecordArticle'));
 export const RelatedArticle: ComponentType<any> = lazy(() => import('./RelatedArticle'));

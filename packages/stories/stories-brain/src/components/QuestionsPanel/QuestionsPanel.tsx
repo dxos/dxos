@@ -56,7 +56,7 @@ export const QuestionsPanel = ({ classNames, questions, disabled, onAdd }: Quest
           />
         </Toolbar.Root>
       </Panel.Toolbar>
-      <Panel.Content classNames='dx-container overflow-y-auto'>
+      <Panel.Content classNames='overflow-y-auto'>
         {questions.length === 0 ? (
           <p className='p-2 text-subdued-text'>No questions yet.</p>
         ) : (

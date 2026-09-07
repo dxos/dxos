@@ -39,7 +39,7 @@ import { scrollPastEnd } from '../streaming/scrolling';
 //
 
 /**
- * Enable tabbing into editor (required for tabster to work).
+ * Enable tabbing into editor (required for focus-group navigation to reach it).
  */
 export const tabbable = EditorView.contentAttributes.of({ tabindex: '0' });
 
@@ -215,7 +215,7 @@ export type ThemeExtensionsOptions = {
 
 export const grow: ThemeExtensionsOptions['slots'] = {
   editor: {
-    className: 'w-full h-full',
+    className: 'dx-fill',
   },
 } as const;
 

@@ -96,7 +96,7 @@ const DefaultStory = ({ playback }: StoryArgs) => {
   };
 
   return (
-    <div className='absolute inset-0'>
+    <div className='dx-fullscreen'>
       <SequenceGrid
         sequence={sequence}
         track={sampleTrack}

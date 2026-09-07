@@ -56,20 +56,19 @@ export const Default: Story = {};
  */
 export const Spec: Story = {
   play: async ({ canvasElement }) => {
-    const keyboard = (text: string) => userEvent.keyboard(text);
     await waitForTerminal(canvasElement, 'dx>');
 
     // `space list` reaches the client and reports its space.
-    await runCommand(canvasElement, 'space list', keyboard);
+    await runCommand(canvasElement, 'space list', userEvent.keyboard);
     await waitForTerminal(canvasElement, 'SPACE_READY');
 
     // `database query` reaches ECHO through the layer the command provides for itself.
-    await runCommand(canvasElement, 'database query', keyboard);
+    await runCommand(canvasElement, 'database query', userEvent.keyboard);
     await waitForTerminal(canvasElement, 'org.dxos.type.spaceProperties');
 
     // A command from another plugin, whose service arrives via that plugin's contributed layer
     // rather than anything this panel names.
-    await runCommand(canvasElement, 'config view', keyboard);
+    await runCommand(canvasElement, 'config view', userEvent.keyboard);
     await waitForTerminal(canvasElement, 'runtime');
   },
 };

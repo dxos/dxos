@@ -24,5 +24,7 @@ export default defineConfig({
     types: 'src/types/index.ts',
   },
   jsx: 'react',
-  test: { node: true },
+  // The first story in a file pays the whole lazy module-load bill — for pdf.js that includes the
+  // worker — which the 15s browser-mode default cannot cover.
+  test: { node: true, storybook: { timeout: 60_000 } },
 });

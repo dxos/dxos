@@ -82,8 +82,12 @@ emit_list() {
   emit "$(printf 'TASK-PLANNING PROJECT DIRECTIVE: `/dxos:project list` — args: "%s". Render the active projects as a markdown table whose FIRST column is a 1-based row number (# | name | status | user | host | one-line summary). BY DEFAULT show only projects whose `user` matches the current user (run `whoami`); if none match, say so and mention `/dxos:project list all` — do not show other users unasked. Args `all`: list every user. Then tell the user they can reply with a row number to resume that project — a lone number in their next message means "resume the project at that row" (same as `/dxos:project resume <name>`). Confirm in one short line.' "$1")"
 }
 
+emit_setup() {
+  emit "$(printf 'TASK-PLANNING PROJECT DIRECTIVE: `/dxos:project setup` — args: "%s". Bind this repo to the ECHO space its projects live in, by writing the committed `.agents/projects/space.yml` (`spaceId: <id>`). The procedure belongs to the `project` skill the MCP server serves, so LOAD THAT SKILL FIRST (`loadSkill` where present, else the projected `project` prompt) and follow its setup section rather than improvising one: it lists the spaces by name, asks which, cross-checks the pick against the spaces this session can actually write to, and writes the file. The space is ALWAYS an explicit choice by the user — never infer one from a name resembling the repo, and a single space is not consent. Args, when present, name the space, and skip the question only when they match exactly one. If the BACKEND line below says `file`, write the binding anyway and say plainly that nothing reads it until DX_PROJECT_BACKEND is `mcp`. If the session advertises no MCP tools at all, say so and STOP rather than hand-writing a spaceId you cannot verify.' "$1")"
+}
+
 emit_new() {
-  emit "$(printf 'TASK-PLANNING PROJECT DIRECTIVE: `/dxos:project new` — args: "%s". Add an `active` registry entry (user = `whoami`, host = `hostname -s`, created = today) and scaffold `<registry-dir>/<name>/{TASKS,DESIGN}.md` unless the docs already live elsewhere (record that path instead). Confirm in one line.' "$1")"
+  emit "$(printf 'TASK-PLANNING PROJECT DIRECTIVE: `/dxos:project new` — args: "%s". Add an `active` registry entry (user = `whoami`, host = `hostname -s`, created = today) and scaffold `<registry-dir>/<name>/{TASKS,DESIGN}.md` unless the docs already live elsewhere (record that path instead). Set this session'"'"'s title to the project name via the session-management set_session_title tool (session_id "self") when that tool is available. Confirm in one line.' "$1")"
 }
 
 emit_end() {
@@ -99,7 +103,7 @@ emit_history() {
 }
 
 emit_help() {
-  emit 'TASK-PLANNING PROJECT DIRECTIVE: `/dxos:project help` — render the verbs as a markdown table with columns: command | description. Rows, in this order and no others: `/dxos:project` (status of the current project — worktree, branch, docs, PRs, uncommitted files, next action); `/dxos:project list [all]` (numbered table of active projects; reply with a row number to resume — `all` covers every user); `/dxos:project tasks [all|<phase>]` (open `- [ ]` items from the current project, numbered and grouped by phase); `/dxos:project spawn <N...>` (spin the numbered open tasks out into background task chips); `/dxos:project history [all]` (table of the PRs the project produced — date, author, one-sentence summary); `/dxos:project new <name>` (register a project and scaffold its TASKS.md + DESIGN.md); `/dxos:project end <name>` (move the entry to `ended`, recording final status); `/dxos:project track <text>` (record a follow-up in the active TASKS.md — never a task chip); `/dxos:project hydrate` (checkpoint before stopping or opening a PR; alias `checkpoint`); `/dxos:project resume [name]` (reload project state at the start of a session). Then add ONE line noting that bare `/project` also matches every verb, and ONE line naming the store from the BACKEND line below. Add nothing else — no preamble, no numbered options, no next-action suggestion.'
+  emit 'TASK-PLANNING PROJECT DIRECTIVE: `/dxos:project help` — render the verbs as a markdown table with columns: command | description. Rows, in this order and no others: `/dxos:project` (status of the current project — worktree, branch, docs, PRs, uncommitted files, next action); `/dxos:project setup [space]` (bind this repo to the ECHO space its projects live in — `mcp` backend only); `/dxos:project list [all]` (numbered table of active projects; reply with a row number to resume — `all` covers every user); `/dxos:project tasks [all|<phase>]` (open `- [ ]` items from the current project, numbered and grouped by phase); `/dxos:project spawn <N...>` (spin the numbered open tasks out into background task chips); `/dxos:project history [all]` (table of the PRs the project produced — date, author, one-sentence summary); `/dxos:project new <name>` (register a project and scaffold its TASKS.md + DESIGN.md); `/dxos:project end <name>` (move the entry to `ended`, recording final status); `/dxos:project track <text>` (record a follow-up in the active TASKS.md — never a task chip); `/dxos:project hydrate` (checkpoint before stopping or opening a PR; alias `checkpoint`); `/dxos:project resume [name]` (reload project state at the start of a session). Then add ONE line noting that bare `/project` also matches every verb, and ONE line naming the store from the BACKEND line below. Add nothing else — no preamble, no numbered options, no next-action suggestion.'
 }
 
 emit_spawn() {
@@ -107,11 +111,11 @@ emit_spawn() {
 }
 
 emit_hydrate() {
-  emit 'TASK-PLANNING HYDRATE: `/dxos:project hydrate`. Follow the task-planning skill "Project handoff" -> hydrate: identify the CURRENT project (the single `active` entry for the current user; if more than one, ask which), reconcile its TASKS.md (check off done, note next step on in-progress items), update its `resume` field + the doc resume pointer, push decisions into its DESIGN.md and durable direction to memory, run git status and account for EVERY uncommitted file, then confirm the checkpoint in one short block (done / in-progress / next / uncommitted).'
+  emit 'TASK-PLANNING HYDRATE: `/dxos:project hydrate`. Follow the task-planning skill "Project handoff" -> hydrate: identify the CURRENT project (the single `active` entry for the current user; if more than one, ask which), reconcile its TASKS.md (check off done, note next step on in-progress items), update its `resume` field + the doc resume pointer, push decisions into its DESIGN.md and durable direction to memory, run git status and account for EVERY uncommitted file, then confirm the checkpoint in one short block (done / in-progress / next / uncommitted). If the checkpoint records a PR in the entry'"'"'s `prs` (opening one is the usual reason to hydrate), set this session'"'"'s title to `<project> - #<PR>` — the NEWEST PR when the entry lists several — via the session-management set_session_title tool (session_id "self") when that tool is available.'
 }
 
 emit_resume() {
-  emit "$(printf 'TASK-PLANNING RESUME: `/dxos:project resume`. Follow the task-planning skill "Project handoff" -> resume: pick the project — %s. Stay in this session'"'"'s assigned worktree: NEVER cd into, edit in, or adopt another project'"'"'s worktree or branch — if the prior work lives on an unmerged branch elsewhere, report that and ask the user instead of following it. Read the project'"'"'s `tasks` (TASKS.md) + `design` doc, check git status + recent git log, report a concise state (done / in-progress / next action / uncommitted), then continue with the next action unless the user directed otherwise.' "$1")"
+  emit "$(printf 'TASK-PLANNING RESUME: `/dxos:project resume`. Follow the task-planning skill "Project handoff" -> resume: pick the project — %s. Stay in this session'"'"'s assigned worktree: NEVER cd into, edit in, or adopt another project'"'"'s worktree or branch — if the prior work lives on an unmerged branch elsewhere, report that and ask the user instead of following it. Read the project'"'"'s `tasks` (TASKS.md) + `design` doc, check git status + recent git log, report a concise state (done / in-progress / next action / uncommitted), set this session'"'"'s title to `<project> - #<PR>` — the NEWEST PR in the entry'"'"'s `prs` when it lists several, bare `<project>` when it lists none — via the session-management set_session_title tool (session_id "self") when that tool is available - the desktop app shows the title where a statusline would be - then continue with the next action unless the user directed otherwise.' "$1")"
 }
 
 # First line only — a slash command leads the message, and restricting the match
@@ -130,6 +134,7 @@ if [ -n "${raw:-}" ]; then
 
   case "$verb" in
     '') emit_info ;;
+    setup) emit_setup "$rest" ;;
     list) emit_list "$(printf '%s' "$rest" | tr -cd 'a-zA-Z0-9 -')" ;;
     tasks) emit_tasks "$(printf '%s' "$rest" | tr -cd 'a-zA-Z0-9 -')" ;;
     new) emit_new "$rest" ;;
@@ -148,7 +153,7 @@ if [ -n "${raw:-}" ]; then
       fi
       ;;
     *)
-      printf 'TASK-PLANNING: `/dxos:project %s` — verb not recognized (valid: bare | list [all] | tasks [all] | new <name> | end <name> | track <text> | history [all] | spawn <N...> | help | hydrate | resume [name]). Ask which was meant.\n' "$verb"
+      printf 'TASK-PLANNING: `/dxos:project %s` — verb not recognized (valid: bare | setup [space] | list [all] | tasks [all] | new <name> | end <name> | track <text> | history [all] | spawn <N...> | help | hydrate | resume [name]). Ask which was meant.\n' "$verb"
       ;;
   esac
 fi

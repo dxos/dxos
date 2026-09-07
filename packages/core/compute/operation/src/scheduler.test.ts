@@ -45,10 +45,9 @@ describe('Scheduler', () => {
     it.effect('tracks scheduled operations', () =>
       Effect.gen(function* () {
         const executed: string[] = [];
-        const invokeFn = ((_op: any, input: { id: string }) =>
+        const invokeFn = ((_op: Operation.Definition.Any, input: { id: string }) =>
           Effect.sync(() => {
             executed.push(input.id);
-            return undefined as any;
           })) as Scheduler.InvokeFn;
 
         const scheduler = Scheduler.make(invokeFn);
@@ -75,10 +74,9 @@ describe('Scheduler', () => {
     it.effect('tracks multiple scheduled operations', () =>
       Effect.gen(function* () {
         const executed: string[] = [];
-        const invokeFn = ((_op: any, input: { id: string }) =>
+        const invokeFn = ((_op: Operation.Definition.Any, input: { id: string }) =>
           Effect.sync(() => {
             executed.push(input.id);
-            return undefined as any;
           })) as Scheduler.InvokeFn;
 
         const scheduler = Scheduler.make(invokeFn);
@@ -103,7 +101,7 @@ describe('Scheduler', () => {
     it.effect('schedules arbitrary effects', () =>
       Effect.gen(function* () {
         let executed = false;
-        const invokeFn = (() => Effect.succeed(undefined as any)) as Scheduler.InvokeFn;
+        const invokeFn = (() => Effect.succeed(undefined)) as Scheduler.InvokeFn;
 
         const scheduler = Scheduler.make(invokeFn);
 
@@ -123,13 +121,12 @@ describe('Scheduler', () => {
     it.effect('handles errors in followups gracefully', () =>
       Effect.gen(function* () {
         const executed: string[] = [];
-        const invokeFn = ((_op: any, input: { id: string }) =>
+        const invokeFn = ((_op: Operation.Definition.Any, input: { id: string }) =>
           Effect.gen(function* () {
             executed.push(input.id);
             if (input.id === 'b') {
               return yield* Effect.fail(new Error('Intentional error'));
             }
-            return undefined as any;
           })) as Scheduler.InvokeFn;
 
         const scheduler = Scheduler.make(invokeFn);
@@ -153,13 +150,12 @@ describe('Scheduler', () => {
         const executed: string[] = [];
         const deferred = yield* Deferred.make<void>();
 
-        const invokeFn = ((_op: any, input: { id: string }) =>
+        const invokeFn = ((_op: Operation.Definition.Any, input: { id: string }) =>
           Effect.gen(function* () {
             if (input.id === 'slow') {
               yield* Deferred.await(deferred);
             }
             executed.push(input.id);
-            return undefined as any;
           })) as Scheduler.InvokeFn;
 
         const scheduler = Scheduler.make(invokeFn);

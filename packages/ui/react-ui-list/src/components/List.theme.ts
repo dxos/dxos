@@ -10,7 +10,7 @@ import { tv } from '@dxos/ui-theme';
  * Each slot function accepts an optional `{ class: ... }` override for per-instance merging.
  *
  * Structural pattern shared across list components:
- * - viewport: ScrollArea wrapper (`dx-container`)
+ * - viewport: ScrollArea wrapper (`dx-expand`)
  * - content:  flex-col item container
  * - item:     base row (interactive affordances come from dx-hover / dx-selected / dx-current)
  */
@@ -19,36 +19,41 @@ const listStyles = tv({
     //
     // Accordion
     //
-    accordionItem: 'overflow-hidden',
+    // No `overflow-hidden` here: the body does its own clipping for the slide, and clipping at the
+    // item would cut the top and bottom edges off the trigger's inset focus ring. The end items
+    // instead carry the frame's own rounding, which the header and trigger inherit so a focus ring
+    // at either end follows the corner rather than cutting across it.
+    accordionItem: 'first:rounded-t-md last:rounded-b-md',
     // Row trigger: spans the full width and pins the trailing caret to the inline-end edge.
     accordionTrigger:
-      'group flex items-start justify-between gap-trim-sm p-trim-sm dx-focus-ring-inset w-full text-start',
+      'group flex items-start justify-between gap-trim-sm p-trim-sm dx-focus-ring-inset w-full text-start rounded-[inherit]',
     // Leading / trailing icon wrappers: fixed height so they sit on the centerline of the first
     // content line even when the header spans multiple lines.
     accordionTriggerIcon: 'flex items-center h-(--dx-control-sm) shrink-0',
     accordionTriggerContent: 'min-w-0 flex-1',
     // Interactive controls that sit beside the trigger; matches its vertical padding.
     accordionTrailing: 'flex items-center h-(--dx-control-sm) shrink-0 my-trim-sm me-trim-sm',
-    // Slide animations are driven by Radix Accordion's data-state attribute.
+    // Slide animations are driven by the Ark accordion's data-state attribute.
     accordionBody: 'overflow-hidden data-[state=closed]:animate-slide-up data-[state=open]:animate-slide-down',
     accordionBodyContent: 'p-trim-sm',
 
     //
     // Listbox
     //
-    listboxViewport: 'dx-container',
+    listboxViewport: 'dx-expand',
     listboxContent: 'flex flex-col',
     // `dx-selected` pairs with `aria-selected="true"` set per-option (see
     // `ui-theme/src/css/components/state.md`). `outline-none` removes the native focus
-    // ring; Tabster / `dx-focus-ring` handles keyboard focus at the container level.
+    // ring; `dx-focus-ring-inset` restores a themed indicator on the focused row — without it,
+    // arrow navigation is invisible wherever selection does not follow focus (multi-select).
     listboxItem:
-      'flex items-center dx-hover dx-selected min-h-(--dx-control) px-(--dx-control-pad) cursor-pointer outline-none',
+      'flex items-center dx-hover dx-selected min-h-(--dx-control) px-(--dx-control-pad) cursor-pointer outline-none dx-focus-ring-inset',
     listboxItemLabel: 'grow truncate',
 
     //
     // OrderedList
     //
-    orderedListViewport: 'dx-container',
+    orderedListViewport: 'dx-expand',
     orderedListContent: 'flex flex-col',
     // `dx-current` enables `aria-current` row styling (not listbox/option semantics).
     orderedListItem: 'relative dx-current',

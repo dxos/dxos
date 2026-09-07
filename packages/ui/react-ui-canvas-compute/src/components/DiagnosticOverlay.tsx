@@ -12,9 +12,9 @@ export type DiagnosticOverlayProps = {
 
 export const DiagnosticOverlay = ({ diagnostics }: DiagnosticOverlayProps) => {
   return (
-    <div className='absolute inset-0 pointer-events-none'>
+    <div className='dx-fullscreen pointer-events-none'>
       {diagnostics.map((diagnostic, index) => (
-        <div key={index} className='absolute inset-0 pointer-events-none'>
+        <div key={index} className='dx-fullscreen pointer-events-none'>
           {diagnostic.message}
         </div>
       ))}

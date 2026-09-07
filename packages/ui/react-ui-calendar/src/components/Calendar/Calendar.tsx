@@ -602,7 +602,7 @@ const CalendarGrid = composable<HTMLDivElement, CalendarGridProps>(
                     onPointerUp={() => handleDayPointerUp(date)}
                   >
                     {/* Selection range */}
-                    {inRange && <div className='absolute inset-0 bg-primary-500/20' />}
+                    {inRange && <div className='dx-fullscreen bg-primary-500/20' />}
                     {/* Month */}
                     {!dateClassNames && date.getDate() === 1 && (
                       <span className='absolute top-0 text-xs text-description'>{format(date, 'MMM')}</span>
@@ -632,7 +632,7 @@ const CalendarGrid = composable<HTMLDivElement, CalendarGridProps>(
       <div
         {...composableProps(props, {
           role: 'none',
-          classNames: ['flex flex-col h-full w-full justify-center overflow-hidden outline-hidden', classNames],
+          classNames: ['flex flex-col dx-fill justify-center overflow-hidden outline-hidden', classNames],
         })}
         ref={(node: HTMLDivElement | null) => {
           gridRef.current = node;
@@ -651,7 +651,7 @@ const CalendarGrid = composable<HTMLDivElement, CalendarGridProps>(
         </div>
 
         {/* Grid */}
-        <div className='flex flex-col h-full w-full justify-center overflow-hidden' ref={containerRef}>
+        <div className='flex flex-col dx-fill justify-center overflow-hidden' ref={containerRef}>
           <List
             ref={listRef}
             className='scrollbar-none outline-hidden'

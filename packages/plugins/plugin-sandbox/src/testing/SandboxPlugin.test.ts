@@ -13,9 +13,9 @@ import { TestContextService } from '@dxos/effect/testing';
 import { EntityId } from '@dxos/keys';
 import { File } from '@dxos/types';
 
-import { Sandbox } from '#types';
+import { Sandbox, SandboxOperation } from '#types';
 
-import { CreateSandbox, DownloadFile, Exec, SandboxHandlers, UploadFile } from '../skills/functions';
+import { SandboxHandlers } from '../skills/functions';
 import SandboxSkill from '../skills/sandbox-skill';
 
 EntityId.dangerouslyDisableRandomness();
@@ -32,7 +32,7 @@ describe.skip('SandboxPlugin', () => {
     'create sandbox',
     (ctx) =>
       Effect.gen(function* () {
-        const result = yield* Operation.invoke(CreateSandbox, { name: 'test-sandbox' });
+        const result = yield* Operation.invoke(SandboxOperation.CreateSandbox, { name: 'test-sandbox' });
         expect(result.sandboxId).toBeTruthy();
       }).pipe(Effect.provide(TestLayer), Effect.provideService(TestContextService, ctx)),
     60_000,
@@ -45,7 +45,7 @@ describe.skip('SandboxPlugin', () => {
         const sandbox = Sandbox.make({ name: 'exec-test' });
         yield* Database.add(sandbox);
 
-        const result = yield* Operation.invoke(Exec, {
+        const result = yield* Operation.invoke(SandboxOperation.Exec, {
           sandbox: Ref.make(sandbox),
           command: 'echo hello world',
         });
@@ -69,13 +69,13 @@ describe.skip('SandboxPlugin', () => {
         const fileObj = yield* File.fromBytes(bytes, { name: 'test.txt', type: 'text/plain' });
         yield* Database.add(fileObj);
 
-        yield* Operation.invoke(UploadFile, {
+        yield* Operation.invoke(SandboxOperation.UploadFile, {
           sandbox: Ref.make(sandbox),
           file: Ref.make(fileObj),
           path: '/workspace/test.txt',
         });
 
-        const downloadResult = yield* Operation.invoke(DownloadFile, {
+        const downloadResult = yield* Operation.invoke(SandboxOperation.DownloadFile, {
           sandbox: Ref.make(sandbox),
           path: '/workspace/test.txt',
         });

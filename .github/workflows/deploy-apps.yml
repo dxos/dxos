@@ -297,6 +297,26 @@ jobs:
         env:
           NODE_ENV: production
 
+      - name: Upload source maps to PostHog
+        if: env.POSTHOG_CLI_API_KEY != ''
+        continue-on-error: true
+        working-directory: packages/apps/composer-app
+        env:
+          # Not DX_POSTHOG_API_HOST, which this job also exports: that is the app's ingestion proxy and
+          # serves no authenticated API.
+          POSTHOG_CLI_HOST: https://eu.posthog.com
+          POSTHOG_CLI_PROJECT_ID: ${{ env.COMPOSER_APP_POSTHOG_PROJECT_ID }}
+          RELEASE_VERSION: ${{ needs.version.outputs.version }}
+        run: >-
+          pnpm dlx @posthog/cli@0.16.0 sourcemap process
+          --directory out/composer
+          --release-name composer
+          --release-version "$RELEASE_VERSION"
+
+      - name: Warn that source maps were skipped
+        if: env.POSTHOG_CLI_API_KEY == ''
+        run: echo "::warning::POSTHOG_CLI_API_KEY is unset - skipped the source map upload, so this build's stack traces will not symbolicate."
+
       - name: Upload Composer bundle
         uses: actions/upload-artifact@v4
         with:

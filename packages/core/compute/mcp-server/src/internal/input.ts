@@ -17,8 +17,8 @@ import { JsonSchema } from '@dxos/echo';
  * `Ref`s, which do not survive an RPC boundary.
  */
 export type Codec = {
-  decode: Schema.Codec<any, any>;
-  encode: Schema.Codec<any, any>;
+  decode: Schema.Codec<unknown, unknown>;
+  encode: Schema.Codec<unknown, unknown>;
 };
 
 /** The input codec for a record; a non-object input yields none, having no fields to decode through. */
@@ -45,7 +45,7 @@ export const declaresSpaceId = (record: Operation.PersistentOperation): boolean 
  * carry no decoding or encoding services, and saying so keeps the tool handlers' requirement
  * channel empty.
  */
-export type Fields = { readonly [key: string]: Schema.Codec<any, any> };
+export type Fields = { readonly [key: string]: Schema.Codec<unknown, unknown> };
 
 /** `$id` of the reference declaration ECHO emits for a `Ref` field. */
 const REF_SCHEMA_ID = '/schemas/echo/ref';
@@ -56,8 +56,13 @@ const REF_SCHEMA_ID = '/schemas/echo/ref';
  * Compositions are walked because a ref field carrying its own annotations renders as
  * `{ allOf: [<declaration>], description }`, which a top-level `$id` match would miss.
  */
-const isRefProperty = (property: any): boolean => {
-  if (property == null || typeof property !== 'object') {
+/** Distinguishes the array-of-schemas branch of a `Fields` value from a single schema. */
+const isSchemaArray = (
+  value: JsonSchema.JsonSchema | ReadonlyArray<JsonSchema.JsonSchema>,
+): value is ReadonlyArray<JsonSchema.JsonSchema> => Array.isArray(value);
+
+const isRefProperty = (property: JsonSchema.JsonSchema | ReadonlyArray<JsonSchema.JsonSchema> | undefined): boolean => {
+  if (property == null || typeof property !== 'object' || isSchemaArray(property)) {
     return false;
   }
   if (property.$id === REF_SCHEMA_ID) {
@@ -80,13 +85,13 @@ const isRefProperty = (property: any): boolean => {
  * the schema would state the shape and this widening would not exist. Deferred: it changes
  * persisted schemas and older readers decode such a reference as a plain struct.
  */
-export const tolerateStringifiedRefs = (fields: Fields, inputSchema: any): Fields => {
+export const tolerateStringifiedRefs = (fields: Fields, inputSchema: JsonSchema.JsonSchema): Fields => {
   const properties = inputSchema?.properties;
   if (properties == null) {
     return fields;
   }
 
-  const widened: Record<string, Schema.Codec<any, any>> = { ...fields };
+  const widened: Record<string, Schema.Codec<unknown, unknown>> = { ...fields };
   for (const [name, field] of Object.entries(fields)) {
     if (!isRefProperty(properties[name])) {
       continue;
@@ -124,9 +129,10 @@ export const tolerateStringifiedRefs = (fields: Fields, inputSchema: any): Field
  * field as optional.
  */
 const isOptionalField = (
-  field: Schema.Codec<any, any>,
-): field is Schema.Codec<any, any> & { readonly schema: Schema.Codec<any, any> } =>
+  field: Schema.Codec<unknown, unknown>,
+): field is Schema.Codec<unknown, unknown> & { readonly schema: Schema.Codec<unknown, unknown> } =>
   SchemaAST.isOptional(field.ast) && 'schema' in field && Schema.isSchema(field.schema);
 
-const isStruct = (schema: Schema.Codec<any, any>): schema is Schema.Codec<any, any> & { readonly fields: Fields } =>
-  'fields' in schema;
+const isStruct = (
+  schema: Schema.Codec<unknown, unknown>,
+): schema is Schema.Codec<unknown, unknown> & { readonly fields: Fields } => 'fields' in schema;

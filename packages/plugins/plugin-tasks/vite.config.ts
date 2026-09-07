@@ -19,6 +19,7 @@ export default defineConfig({
     Journal: 'src/types/Journal.ts',
     OutlineOperation: 'src/types/OutlineOperation.ts',
     TaskOperation: 'src/types/TaskOperation.ts',
+    TasksCapabilities: 'src/types/TasksCapabilities.ts',
     TasksEvents: 'src/types/TasksEvents.ts',
     TasksUtil: 'src/types/TasksUtil.ts',
     types: 'src/types/index.ts',

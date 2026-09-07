@@ -7,7 +7,7 @@ tags:
 tasks:
   check-module-structure:
     command: >-
-      pnpm exec dx-trace-imports
+      bun $workspaceRoot/tools/dx-trace-imports/cli.js
       --export ./OnboardingPlugin
       --to "{react,react-dom}"
       --conditions workerd,worker
@@ -22,13 +22,14 @@ tasks:
       - /pnpm-lock.yaml
     options:
       timeout: 60
-  build-exemplar:
-    script: pnpm run --silent build-exemplar
+  build-sample:
+    script: pnpm run --silent build-sample
     deps:
       - ^:build
     inputs:
-      - scripts/build-exemplar-space.ts
-      - src/content/space-tour.md
-      - src/content/about-bramble.md
+      - scripts/build-sample-space.ts
+      - scripts/sample/*.ts
+      - src/content/sample/README.md
+      - src/content/sample/ABOUT.md
     outputs:
-      - src/content/exemplar-space.dx.json
+      - src/content/sample/space.dx.json

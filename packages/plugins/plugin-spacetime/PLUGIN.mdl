@@ -17,6 +17,7 @@ and ECHO for collaborative persistence of scenes and objects.
 | `test`      | `org.dxos.mdl.test@1.0`       |
 | `component` | `org.dxos.mdl.component@1.0`  |
 | `op`        | `org.dxos.mdl.op@1.0`         |
+| `flow`      | `org.dxos.mdl.flow@1.0`       |
 
 ## Types
 
@@ -452,6 +453,54 @@ test T-FR-8: Keyboard scope
   given: focus is in a text input (not canvas)
   when: user presses "m" or "e" or "x"
   then: no tool action fires
+```
+
+## QA
+
+Executable flows. Each step carries a human instruction (`do`) and, where the step maps to an
+invocable operation, an agent binding (`invoke`). Report failures by flow and step number.
+
+```mdl
+flow QA-1: Create a scene, add an object, and export it
+  desc: |
+    The core CAD round-trip. None of the steps below have a runtime `invoke` binding — the ops
+    documented above (`createScene`, `addObject`, `booleanSubtract`, `exportSTL`, …) are
+    descriptive of engine behavior, not registered Operations: no `org.dxos.operation.spacetime.*`
+    key exists anywhere in `src` (grepped for `DXN.make` and `Operation.make` — only the ECHO
+    types `Scene` and `Object` register keys, both `org.dxos.type.*`). The whole flow is therefore
+    `actors: human`, per Field Rule 2 — a drag on the 3D canvas is not something a debug-port
+    invoke can stand in for.
+  actors: human
+  covers: [FR-1.1, FR-2.1, FR-6.4, FR-7.2, T-FR-1.1]
+  status: unverified
+  given:
+    - an identity exists
+    - space: a space is open
+    - plugin-spacetime is enabled — it ships in the "experimental" set (`plugin-defs.tsx`) and is
+      OFF by default; it is not listed in `getDefaults`
+    - no Scene named "QA Scene" exists — ABORT rather than deleting one this flow did not create
+  test:
+    - name: Create the scene
+      do: In the navtree, click + on the space and choose Spacetime (Scene). Name it "QA Scene".
+      expect: a Scene article opens showing a single default cube Object
+      note: NO invoke — see the flow desc.
+    - name: Add a second object
+      do: Using the toolbar's object-template picker, add a sphere primitive to the scene.
+      expect: a second Object (sphere) appears in the scene and in the outliner
+    - name: Boolean-subtract the sphere from the cube
+      do: Select the cube, then Shift+click the sphere so the cube is primary, and invoke the
+        Subtract tool.
+      expect: |
+        the cube and sphere are replaced by a single new mesh Object at the cube's position
+        (T-FR-7.2)
+    - name: Export as STL
+      do: With the resulting mesh selected, choose Export -> STL.
+      expect: a binary .stl file download starts for the selected object
+  after:
+    - name: Delete the scene
+      do: Right-click "QA Scene" in the navtree and choose Delete.
+      expect: the row leaves the navtree and its plank closes
+      note: NO invoke — no step captures a Scene reference to bind, per the flow desc.
 ```
 
 ---

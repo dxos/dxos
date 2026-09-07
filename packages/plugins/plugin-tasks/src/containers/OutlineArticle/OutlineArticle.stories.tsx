@@ -8,14 +8,17 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { PropsWithChildren, useCallback, useMemo } from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
+import { withPluginManager } from '@dxos/app-framework/testing';
 import { Filter, Obj } from '@dxos/echo';
 import { Doc } from '@dxos/echo-doc';
 import { invariant } from '@dxos/invariant';
+import { corePlugins } from '@dxos/plugin-testing';
 import { useQuery, useSpaces } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { Panel, useThemeContext } from '@dxos/react-ui';
 import { useTextEditor } from '@dxos/react-ui-editor';
-import { TaskList, type TaskPatch } from '@dxos/react-ui-task';
+import { createMenuAction } from '@dxos/react-ui-menu';
+import { TaskList } from '@dxos/react-ui-task';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
 import { Outline, Task, TaskSet } from '@dxos/types';
@@ -54,7 +57,7 @@ const DefaultStory = ({ content, name }: StoryArgs) => {
   }
 
   return (
-    <div className='dx-container grid grid-cols-3 gap-3 p-3'>
+    <div className='dx-expand grid grid-cols-3 gap-3 p-3'>
       <Column>
         <OutlineArticle role='article' subject={outline} taskSet={taskSet} attendableId='story' />
       </Column>
@@ -69,7 +72,7 @@ const DefaultStory = ({ content, name }: StoryArgs) => {
 };
 
 const Column = ({ children }: PropsWithChildren) => (
-  <div className='dx-expander border border-separator rounded-md overflow-hidden'>{children}</div>
+  <div className='dx-expand border border-separator rounded-md overflow-hidden'>{children}</div>
 );
 
 /**
@@ -87,15 +90,15 @@ const TaskSetView = ({ outline, taskSet }: { outline: Outline.Outline; taskSet?:
   }, [tasks, taskSet]);
 
   const handleCreate = useCallback(
-    (title: string) => {
+    ({ title, ...props }: Task.Draft) => {
       if (db && taskSet) {
-        TaskSet.addTask(db, taskSet, title);
+        TaskSet.addTask(db, taskSet, title, props);
       }
     },
     [db, taskSet],
   );
 
-  const handleUpdate = useCallback((task: Task.Task, patch: TaskPatch) => {
+  const handleUpdate = useCallback((task: Task.Task, patch: Task.Edit) => {
     Obj.update(task, (task) => {
       Object.assign(task, patch);
     });
@@ -108,6 +111,17 @@ const TaskSetView = ({ outline, taskSet }: { outline: Outline.Outline; taskSet?:
     [db],
   );
 
+  const getTaskActions = useCallback(
+    (task: Task.Task) => [
+      createMenuAction(`delete-${task.id}`, () => handleDelete(task), {
+        label: 'Delete task',
+        icon: 'ph--x--regular',
+        testId: 'tasks.task.delete',
+      }),
+    ],
+    [handleDelete],
+  );
+
   return (
     <Panel.Root>
       <Panel.Toolbar />
@@ -116,10 +130,10 @@ const TaskSetView = ({ outline, taskSet }: { outline: Outline.Outline; taskSet?:
           tasks={filtered}
           onTaskCreate={handleCreate}
           onTaskUpdate={handleUpdate}
-          onTaskDelete={handleDelete}
+          getTaskActions={getTaskActions}
         >
           <TaskList.Content />
-          <TaskList.Create />
+          <TaskList.Edit grid />
         </TaskList.Root>
       </Panel.Content>
     </Panel.Root>
@@ -157,6 +171,10 @@ const meta = {
   decorators: [
     withTheme(),
     withLayout({ layout: 'fullscreen' }),
+    // The article reads `MarkdownCapabilities.ExtensionProvider` for its editor's contributed
+    // extensions, which needs a plugin manager; nothing here contributes any, which is the point —
+    // the outline builds the same editor with an empty list.
+    withPluginManager({ plugins: corePlugins() }),
     withClientProvider({
       createIdentity: true,
       createSpace: true,
@@ -239,7 +257,9 @@ export const ConvertToTask: Story = {
 
 /** The task-list pane (third column); re-queried per assertion since React may replace the node. */
 const taskListPane = (canvasElement: HTMLElement): HTMLElement => {
-  const pane = canvasElement.querySelector<HTMLElement>('[aria-label="Tasks"]');
+  // By accessible name, not `aria-label`: the tree is named through the machine's own `Label` part,
+  // which it points `aria-labelledby` at.
+  const pane = within(canvasElement).queryByRole('tree', { name: 'Tasks' });
   invariant(pane, 'Task list not found.');
   return pane;
 };

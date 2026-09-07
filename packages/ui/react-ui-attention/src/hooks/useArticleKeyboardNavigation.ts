@@ -2,9 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
-import { useEffect, useMemo } from 'react';
+import { useMemo } from 'react';
 
-import { Keyboard, nestKeyboardContext } from '@dxos/keyboard';
+import { useHotkeys } from '@dxos/react-focus';
 
 import { useAttention } from '../components';
 
@@ -39,7 +39,7 @@ export const advance = ({
 };
 
 export type UseArticleKeyboardNavigationOptions<T> = {
-  /** Stable id for the article (used as the keyboard context path). */
+  /** Stable id for the article; also the hotkey command id. */
   articleId: string;
   /** Ordered list of selectable items as they appear in the article. */
   items: readonly T[];
@@ -52,12 +52,13 @@ export type UseArticleKeyboardNavigationOptions<T> = {
 };
 
 /**
- * Wire 'j' (next) and 'k' (previous) keyboard shortcuts for an article that
- * navigates a list of items (e.g., messages, events). Bindings are scoped to
- * the article's keyboard context so they only fire while the article has attention.
+ * Wire 'j' (next) and 'k' (previous) for an article that navigates a list of items (e.g. messages,
+ * events). This moves the *selection*, never focus, and it is gated on the article having
+ * attention — so it is a hotkey rather than a focus group, and the gate is `enabled` rather than a
+ * scope, since attention is already React state here.
  *
  * Pass the items directly; ids are derived via `getId` (defaults to `item.id`).
- * Clamps at list boundaries. Active only when the article is attended.
+ * Clamps at list boundaries.
  */
 export const useArticleKeyboardNavigation: {
   <T extends { id: string }>(options: UseArticleKeyboardNavigationOptions<T>): void;
@@ -69,49 +70,18 @@ export const useArticleKeyboardNavigation: {
   // so the fallback is sound; the cast bridges the generic erased by the implementation signature.
   const ids = useMemo(() => items.map((item) => (getId ? getId(item) : (item as { id: string }).id)), [items, getId]);
 
-  useEffect(() => {
-    if (!hasAttention) {
-      return;
+  const move = (delta: 1 | -1) => {
+    const target = advance({ ids, currentId, delta });
+    if (target !== undefined) {
+      onSelect(target);
     }
+  };
 
-    const contextPath = nestKeyboardContext(articleId);
-    const context = Keyboard.singleton.getContext(contextPath);
-    const prevContext = Keyboard.singleton.getCurrentContext();
-    Keyboard.singleton.setCurrentContext(contextPath);
-
-    const nextBinding = {
-      shortcut: 'j',
-      handler: () => {
-        const target = advance({ ids, currentId, delta: 1 });
-        if (target !== undefined) {
-          onSelect(target);
-        }
-      },
-      data: 'Next item',
-      disableInput: true,
-    };
-    const prevBinding = {
-      shortcut: 'k',
-      handler: () => {
-        const target = advance({ ids, currentId, delta: -1 });
-        if (target !== undefined) {
-          onSelect(target);
-        }
-      },
-      data: 'Previous item',
-      disableInput: true,
-    };
-
-    context.bind(nextBinding);
-    context.bind(prevBinding);
-
-    return () => {
-      context.unbind('j');
-      context.unbind('k');
-      // Restore the prior context if we were the ones who set it.
-      if (Keyboard.singleton.getCurrentContext() === contextPath) {
-        Keyboard.singleton.setCurrentContext(prevContext);
-      }
-    };
-  }, [articleId, ids, currentId, onSelect, hasAttention]);
+  useHotkeys({
+    id: articleId,
+    commands: [
+      { hotkey: 'j', label: 'Next item', enabled: () => hasAttention, action: () => move(1) },
+      { hotkey: 'k', label: 'Previous item', enabled: () => hasAttention, action: () => move(-1) },
+    ],
+  });
 };

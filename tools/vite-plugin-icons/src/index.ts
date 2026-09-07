@@ -8,11 +8,16 @@
 
 import { type BundleParams, makeSprite, scanString } from '@ch-ui/icons';
 import fs from 'fs';
-import { join, resolve } from 'path';
+import { dirname, join, resolve } from 'path';
 import picomatch from 'picomatch';
 import type { Plugin, ViteDevServer } from 'vite';
 
 import { type IconAssets, iconAssetsPlugin } from './icon-assets.ts';
+import { normalizeSprite } from './normalize-sprite.ts';
+import { resolveSymbols } from './resolve-symbols.ts';
+import { type SymbolPatternParams, WEIGHTS, iconSymbolPattern } from './symbol-pattern.ts';
+
+export { type SymbolPatternParams, WEIGHTS, iconSymbolPattern };
 
 export type { IconAssets };
 
@@ -79,32 +84,128 @@ export const IconsPlugin = ({
   // work contends with the deps optimizer. Coalescing collapses N "new
   // icon" detections in the same idle window into a single write.
   //
-  // Also skip the write when the symbol set hasn't actually grown beyond
-  // what's already on disk — a cheap guard against repeating the work
-  // when the same icons get re-detected after a reload.
+  // Also skip the write when the sprite's contents would be identical — a cheap guard against
+  // repeating the work when the same icons get re-detected after a reload.
   let writeTimer: NodeJS.Timeout | null = null;
-  let lastWrittenSize = 0;
+  let lastFingerprint: string | null = null;
   const writeDebounceMs = Number(process.env.DX_ICONS_DEBOUNCE_MS) || 200;
 
-  // Single source of truth for writing the sprite to disk. Skips the write
-  // when the symbol set hasn't grown since the last write.
-  const writeSprite = async () => {
-    if (detectedSymbols.size === lastWrittenSize) {
+  // Symbols already reported as having no asset, so a rewrite doesn't repeat the warning. A name
+  // stays reported until its file appears, at which point the next write picks it up.
+  const warnedMissing = new Set<string>();
+
+  const statAsset = (path: string) => {
+    try {
+      const { mtimeMs, size } = fs.statSync(path);
+      return { mtimeMs, size };
+    } catch {
+      return undefined;
+    }
+  };
+
+  // Resolved asset files handed to Vite's watcher. They sit outside `contentPaths` (and, for
+  // Phosphor, inside node_modules), so nothing would otherwise notice a glyph being redrawn.
+  // Registered per file rather than per directory: an icon-set catalog is thousands of SVGs, and
+  // watching those directories would cost far more than the few hundred actually in use.
+  const watchedAssets = new Set<string>();
+
+  // Directories to watch for a file appearing, for symbols whose asset does not exist yet: a path
+  // that isn't there cannot be watched, so the directory stands in for it. Only ever the handful of
+  // directories belonging to unresolved names.
+  const watchedDirs = new Set<string>();
+
+  const watchAssets = (paths: string[]) => {
+    if (!server) {
       return;
     }
-    // Capture the size now; advance `lastWrittenSize` only after a successful
-    // write so a failed `makeSprite` leaves it unchanged and the next call
-    // retries instead of skipping. (`makeSprite` snapshots the set on entry, so
-    // symbols added during the await leave size > lastWrittenSize and re-fire.)
-    const writtenSize = detectedSymbols.size;
-    await makeSprite({ assetPath, symbolPattern, spritePath, contentPaths, config }, detectedSymbols);
-    lastWrittenSize = writtenSize;
+    for (const path of paths) {
+      if (!watchedAssets.has(path)) {
+        watchedAssets.add(path);
+        server.watcher.add(path);
+      }
+    }
+  };
+
+  const watchMissing = (paths: string[]) => {
+    if (!server) {
+      return;
+    }
+    for (const path of paths) {
+      const dir = dirname(path);
+      if (!watchedDirs.has(dir) && fs.existsSync(dir)) {
+        watchedDirs.add(dir);
+        server.watcher.add(dir);
+      }
+    }
+  };
+
+  const warnMissing = (missing: { symbol: string; path: string }[]) => {
+    const fresh = missing.filter(({ symbol }) => !warnedMissing.has(symbol));
+    if (fresh.length > 0) {
+      fresh.forEach(({ symbol }) => warnedMissing.add(symbol));
+      console.warn(
+        `[icons] No asset for ${fresh.length === 1 ? 'symbol' : 'symbols'}: ` +
+          `${fresh.map(({ symbol }) => symbol).join(', ')} — omitted from the sprite, so the icon renders blank. ` +
+          'Check the name against the icon set.',
+      );
+    }
+    // Drop names that have since been satisfied, so a later disappearance is reported again.
+    const names = new Set(missing.map(({ symbol }) => symbol));
+    for (const symbol of warnedMissing) {
+      if (!names.has(symbol)) {
+        warnedMissing.delete(symbol);
+      }
+    }
+  };
+
+  // Symbols already reported as pinning a color, so a rewrite doesn't repeat the warning.
+  const warnedHardcoded = new Set<string>();
+
+  // Forces `fill="currentColor"` onto every symbol `makeSprite` just wrote. A glyph that declares
+  // no fill defaults to black and disappears against a dark surface, and vector editors drop the
+  // attribute on every re-export — patching the source SVG loses that race. Runs here rather than
+  // via svg-sprite's `shape.transform` so it also applies to a caller-supplied `config`.
+  const normalizeSpriteFile = () => {
+    const { svg, hardcoded } = normalizeSprite(fs.readFileSync(spritePath, 'utf8'));
+    fs.writeFileSync(spritePath, svg);
+    const fresh = hardcoded.filter((id) => !warnedHardcoded.has(id));
+    if (fresh.length > 0) {
+      fresh.forEach((id) => warnedHardcoded.add(id));
+      console.warn(
+        `[icons] Hardcoded color in ${fresh.length === 1 ? 'symbol' : 'symbols'}: ${fresh.join(', ')} — ` +
+          'a paint declaration on the glyph itself (a `style` or a `fill`/`stroke` attribute) overrides ' +
+          'the symbol fill, so it will not follow the theme. Replace the literal with `currentColor` ' +
+          'in the source SVG.',
+      );
+    }
+  };
+
+  // Single source of truth for writing the sprite to disk. Skips the write when the sprite would be
+  // byte-identical, and omits symbols with no asset so one bad name cannot fail the write.
+  const writeSprite = async () => {
+    const { resolved, missing, fingerprint } = resolveSymbols({
+      symbols: detectedSymbols,
+      symbolPattern,
+      assetPath,
+      stat: statAsset,
+    });
+    warnMissing(missing);
+    watchMissing(missing.map(({ path }) => path));
+    if (fingerprint === lastFingerprint) {
+      return;
+    }
+    // Capture the fingerprint now; advance `lastFingerprint` only after a successful write so a
+    // failed `makeSprite` leaves it unchanged and the next call retries instead of skipping.
+    const written = fingerprint;
+    const symbols = new Set(resolved.map(({ symbol }) => symbol));
+    await makeSprite({ assetPath, symbolPattern, spritePath, contentPaths, config }, symbols);
+    normalizeSpriteFile();
+    lastFingerprint = written;
+    watchAssets(resolved.map(({ path }) => path));
     if (verbose) {
-      const symbols = Array.from(detectedSymbols.values());
-      symbols.sort();
       console.log(
         'Sprite updated:',
-        JSON.stringify({ path: spritePath, size: detectedSymbols.size, symbols }, null, 2),
+        JSON.stringify({ path: spritePath, size: symbols.size, symbols: Array.from(symbols).sort() }, null, 2),
       );
     }
   };
@@ -153,6 +254,26 @@ export const IconsPlugin = ({
 
       configureServer: (_server) => {
         server = _server;
+
+        // Rebuild when a glyph already in the sprite is redrawn. The sprite is served as a static
+        // file, and the icon registry ingests it once per document, so the write alone changes
+        // nothing on screen — hence the full reload.
+        const rebuild = () => {
+          // The watcher has told us the file changed, which is better evidence than the fingerprint:
+          // mtime and size can both survive an edit (a same-length change written within the same
+          // millisecond), and skipping here would reload the page against the old sprite.
+          lastFingerprint = null;
+          void flushSprite().then(
+            () => server?.hot.send({ type: 'full-reload' }),
+            (err) => console.error('[icons] Failed to rebuild the sprite:', err),
+          );
+        };
+        const onAssetChange = (file: string) => watchedAssets.has(file) && rebuild();
+        // An `add` under a watched directory is the asset a reported-missing symbol was waiting for.
+        const onAssetAdd = (file: string) => watchedDirs.has(dirname(file)) && rebuild();
+        server.watcher.on('change', onAssetChange);
+        server.watcher.on('unlink', onAssetChange);
+        server.watcher.on('add', onAssetAdd);
 
         // Ensure `/icons.svg` is complete before it is served. On a cold start
         // the browser requests the sprite as soon as the first <Icon> paints —
@@ -237,8 +358,11 @@ export const IconsPlugin = ({
           writeTimer = null;
           // Route through `flushSprite` (not `writeSprite`) so a concurrent
           // `/icons.svg` request coalesces onto this same in-flight write
-          // instead of racing it. No-op when the symbol set hasn't grown.
-          void flushSprite();
+          // instead of racing it. No-op when the sprite would be unchanged.
+          // Caught, not discarded: nothing awaits this, so a rejection would reach the process as
+          // an unhandled rejection and exit the dev server. `buildEnd` still awaits and so still
+          // fails a production build.
+          void flushSprite().catch((err) => console.error('[icons] Failed to write the sprite:', err));
         }, writeDebounceMs);
       },
       // Force a final write at build close so production builds aren't

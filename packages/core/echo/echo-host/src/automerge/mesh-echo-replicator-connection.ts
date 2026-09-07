@@ -111,10 +111,6 @@ export class MeshReplicatorConnection extends Resource implements AutomergeRepli
     return this._isEnabled;
   }
 
-  get bundleSyncEnabled(): boolean {
-    return false;
-  }
-
   async shouldAdvertise(params: ShouldAdvertiseProps): Promise<boolean> {
     return this._params.shouldAdvertise(params);
   }

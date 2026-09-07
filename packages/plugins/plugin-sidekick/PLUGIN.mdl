@@ -22,6 +22,7 @@ Each extension is defined in the Appendix or resolved via its URI.
 | `component` | `org.dxos.mdl.component@1.0` |
 | `op`        | `org.dxos.mdl.op@1.0`        |
 | `service`   | `org.dxos.mdl.service@1.0`   |
+| `flow`      | `org.dxos.mdl.flow@1.0`      |
 
 ## Types
 
@@ -399,6 +400,54 @@ test T-7: Voice input tolerance
 - Multi-space person deduplication.
 - Agent-to-agent communication.
 - Data migration tooling for schema evolution.
+
+---
+
+## QA
+
+Executable flows. Each step carries a human instruction (`do`) and, where the step maps to an
+invocable operation, an agent binding (`invoke`). Report failures by flow and step number.
+
+```mdl
+flow QA-1: Create a Sidekick agent and view its dashboard
+  desc: |
+    The core round-trip — create an Agent instance carrying the sidekick skill, and confirm the
+    dashboard surface renders for it. Profile/journal population (F-2, F-3, F-4) is autonomous
+    LLM behavior on a running agent session, not a deterministic step this flow can drive; it is
+    left to manual observation, per Phase 1/2 in Phased Rollout.
+  actors: human
+  covers: [F-1.1, F-5.1]
+  status: unverified
+  given:
+    - an identity exists
+    - space: a space is open
+    - plugin-sidekick is enabled — it is OFF by default everywhere except `isDev` builds
+      (`plugin-defs.tsx`: `isDev && SidekickPlugin.make()`), and its skill is unregistered until
+      the plugin is on. Enabling is a UI action (Settings -> plugin registry).
+    - no Agent named "QA Sidekick" exists — ABORT rather than deleting one this flow did not create
+  test:
+    - name: Create the agent
+      do: In the navtree, click + on the space and choose Agent (or the sidekick creation
+        affordance), name it "QA Sidekick", and select the Sidekick skill.
+      expect: an Agent named "QA Sidekick" exists with the sidekick skill attached
+      note: |
+        NO `invoke` — agent creation has no operation binding, so it is a UI action. It also stops
+        short of F-1.3/F-1.4/F-1.5 (chat, queue, journal, memory doc): those are wired by the
+        running agent session on first activation.
+    - name: Place it and open the dashboard
+      do: Place "QA Sidekick" in the space (if not already) and click it in the navtree.
+      expect: the SidekickArticle surface renders — Day Ahead, Action Items, People, Your Profile,
+        and Permissions sections are all present, even if empty on a freshly created agent
+      note: |
+        NO `invoke` — this is the Article surface resolving for an Agent whose skill matches
+        `org.dxos.skill.sidekick` (component `SidekickArticle`); there is no operation that opens
+        a surface deterministically without also asserting navigation, which Rule 3 asks the
+        assertion to avoid conflating with creation.
+  after:
+    - name: Delete the agent
+      do: Right-click "QA Sidekick" in the navtree and choose Delete.
+      expect: the row leaves the navtree and its plank closes
+```
 
 ---
 

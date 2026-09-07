@@ -44,7 +44,7 @@ const DefaultStory = () => {
   );
 
   return (
-    <Window classNames='grow min-h-0' axis='inline' model={model} extents={extents} controllerRef={controller}>
+    <Window classNames='dx-grow' axis='inline' model={model} extents={extents} controllerRef={controller}>
       {(index) => (
         // Padding, never margin: a child's margin is outside its parent's offsetWidth, so the
         // measured extent would disagree with the rendered pitch by exactly the gap.

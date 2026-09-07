@@ -137,4 +137,53 @@ describe('pipeline/Pipeline', () => {
     await processedEvent.waitForCondition(() => processedSequenceNumbers.length === 10);
     expect(processedSequenceNumbers).toEqual(expectedSequenceNumbers);
   });
+
+  test('consume started before start() delivers messages without spinning', async () => {
+    // Regression: a consumer that obtains the iterator's generator before `start()` marks it
+    // running got back a generator that finished immediately; polling it span the microtask queue
+    // forever, starving the thread (the composer boot wedge). The consumer must instead wait for
+    // the iterator to run and take a fresh generator.
+    const pipeline = new Pipeline();
+
+    const builder = new TestFeedBuilder();
+    const feedStore = builder.createFeedStore();
+    const key = await builder.keyring.createKey();
+    const feed = await feedStore.openFeed(key, { writable: true });
+    await pipeline.addFeed(feed);
+    pipeline.setWriteFeed(feed);
+
+    const messageCount = 3;
+    for (const _ of range(messageCount)) {
+      await pipeline.writer.write({});
+    }
+
+    // Launch start() but do not await: its iterator is assigned early while `open()` (which marks
+    // it running) is still awaiting feed-queue opens — the window the consumer races.
+    const started = pipeline.start();
+    // `consume` requires the iterator to exist; the race under test is with it *running*. Poll on
+    // microtasks so the consumer slips in between the iterator's assignment and its `open()`.
+    while (true) {
+      try {
+        pipeline.getFeeds();
+        break;
+      } catch {
+        await Promise.resolve();
+      }
+    }
+    const consumed = (async () => {
+      let count = 0;
+      for await (const _ of pipeline.consume()) {
+        if (++count === messageCount) {
+          void pipeline.stop();
+        }
+      }
+      return count;
+    })();
+    await started;
+
+    const timeout = sleep(5_000).then(() => {
+      throw new Error('consumer starved (pre-start consume spin)');
+    });
+    expect(await Promise.race([consumed, timeout])).toEqual(messageCount);
+  });
 });

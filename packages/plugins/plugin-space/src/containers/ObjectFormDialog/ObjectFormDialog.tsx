@@ -123,8 +123,9 @@ export const ObjectFormDialog = ({
     [createObjectEntries],
   );
 
-  // The type selector is shown while no type has been resolved; the registry button is only relevant then.
-  const showTypeSelector = !(typename && resolve(typename));
+  // Matches the panel's own gate: the selector shows while no type has been *chosen*, not while its
+  // entry is still resolving — otherwise the registry button blinks in for the same frame.
+  const showTypeSelector = !typename;
   // Gated here as well as in the button: `Dialog.Close asChild` needs an element child, so the
   // action bar cannot wrap a button that renders nothing.
   const registryAvailable = usePluginRegistryAvailable();
@@ -316,7 +317,11 @@ export const ObjectFormDialog = ({
         // Settled before navigating, as in the live path: the object is created and persisted by
         // this point, so a navigation failure must not report it to the caller as a dismissal.
         handle?.settle(result.object);
-        yield* navigateTo(result.object);
+        // A create may legitimately finish without an object: the connector entry hands off to an
+        // OAuth popup or credential dialog and the Connection appears later, out of band.
+        if (result.object) {
+          yield* navigateTo(result.object);
+        }
       }).pipe(
         // A failed create still has to settle, or the operation waiting on the dialog never returns.
         Effect.ensuring(Effect.sync(() => handle?.settle())),
@@ -328,7 +333,9 @@ export const ObjectFormDialog = ({
   );
 
   return (
-    <Dialog.Content>
+    // A click outside must not dismiss: this dialog holds unsaved form input, and a stray click on
+    // the overlay would discard it with no undo. Escape and the close button remain.
+    <Dialog.Content onInteractOutside={(event) => event.preventDefault()}>
       <Dialog.Header>
         <Dialog.Title>
           {t('create-object-dialog.title', {

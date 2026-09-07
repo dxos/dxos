@@ -7,7 +7,7 @@ import { Context } from '@dxos/context';
 import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { RpcClosedError } from '@dxos/protocols';
-import { schema } from '@dxos/protocols/proto';
+import { getBufService } from '@dxos/protocols/buf-service';
 import { type ControlService } from '@dxos/protocols/proto/dxos/mesh/teleport/control';
 import { type ProtoRpcPeer, createProtoRpcPeer } from '@dxos/rpc';
 import { Callback } from '@dxos/util';
@@ -54,10 +54,10 @@ export class ControlExtension implements TeleportExtension {
 
     this._rpc = createProtoRpcPeer<ControlRpcBundle, ControlRpcBundle>({
       requested: {
-        Control: schema.getService('dxos.mesh.teleport.control.ControlService'),
+        Control: getBufService<ControlService>('dxos.mesh.teleport.control.ControlService'),
       },
       exposed: {
-        Control: schema.getService('dxos.mesh.teleport.control.ControlService'),
+        Control: getBufService<ControlService>('dxos.mesh.teleport.control.ControlService'),
       },
       handlers: {
         Control: {

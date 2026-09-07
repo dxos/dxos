@@ -36,7 +36,7 @@ export const DiagramNode = ({ data, selected }: DiagramNodeProps) => {
     <>
       <div
         className={mx(
-          'flex flex-col w-full h-full overflow-hidden rounded-sm border bg-base-surface',
+          'flex flex-col dx-fill overflow-hidden rounded-sm border bg-base-surface',
           selected ? 'border-primary-500 ring-1 ring-primary-500' : 'border-separator',
         )}
       >
@@ -85,10 +85,7 @@ export const DiagramGroup = ({ data, selected }: DiagramNodeProps) => {
 
   return (
     <div
-      className={mx(
-        'w-full h-full rounded-sm border border-dashed',
-        selected ? 'border-primary-500' : 'border-separator',
-      )}
+      className={mx('dx-fill rounded-sm border border-dashed', selected ? 'border-primary-500' : 'border-separator')}
     >
       {node.label && <div className='px-2 py-1 text-xs text-description truncate'>{node.label}</div>}
     </div>

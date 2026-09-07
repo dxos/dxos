@@ -11,6 +11,7 @@ import { Obj } from '@dxos/echo';
 import { Doc } from '@dxos/echo-doc';
 import { useObject } from '@dxos/echo-react';
 import { type Identity } from '@dxos/halo';
+import { EID } from '@dxos/keys';
 import { getSpace } from '@dxos/react-client/echo';
 import { useThemeContext } from '@dxos/react-ui';
 import { Selection, ViewState } from '@dxos/react-ui-attention/types';
@@ -221,8 +222,20 @@ const createBaseExtensions = ({
             'link-preview': {
               block: false,
               urlSchemes: ['dxn:', 'echo:'],
+              // A bare `#`/`@` label is a name-less link; resolve the object's actual label once
+              // loaded. The resolver is only created when a db exists so `AnchorWidget.eq` sees the
+              // db's arrival as a change and rebuilds the chip.
               factory: ({ label, dxn }: XmlWidgetProps<{ label: string; dxn: string }>) =>
-                label && dxn ? new AnchorWidget(label, dxn) : null,
+                label && dxn
+                  ? new AnchorWidget(
+                      label,
+                      dxn,
+                      undefined,
+                      (label === '#' || label === '@') && space?.db
+                        ? createAnchorLabelResolver(space.db, dxn)
+                        : undefined,
+                    )
+                  : null,
             },
           },
           setWidgets,
@@ -268,6 +281,20 @@ const selectionChange = (viewState: ViewState.Manager) => {
       debouncedHandler(update);
     }
   });
+};
+
+/** Resolves an anchor's display label from the linked object (for name-less `#`/`@` links). */
+const createAnchorLabelResolver = (db: Space['db'], dxn: string) => async () => {
+  const eid = EID.tryParse(dxn);
+  if (!eid) {
+    return undefined;
+  }
+  try {
+    const object = await db.makeRef(eid).load();
+    return Obj.getLabel(object as Obj.Unknown) ?? undefined;
+  } catch {
+    return undefined;
+  }
 };
 
 const createRenderLink =

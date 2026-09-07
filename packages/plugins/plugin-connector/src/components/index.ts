@@ -3,3 +3,4 @@
 //
 
 export * from './ConnectionView';
+export * from './CreateConnectionPanel';

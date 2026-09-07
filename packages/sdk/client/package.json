@@ -105,6 +105,7 @@
     "@automerge/automerge-repo": "catalog:",
     "@bufbuild/protobuf": "catalog:",
     "@dxos/async": "workspace:*",
+    "@dxos/blob": "workspace:*",
     "@dxos/client-protocol": "workspace:*",
     "@dxos/client-services": "workspace:*",
     "@dxos/config": "workspace:*",

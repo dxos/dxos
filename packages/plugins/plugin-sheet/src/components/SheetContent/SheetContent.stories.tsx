@@ -30,7 +30,7 @@ export const Basic = () => {
 
   return (
     <SheetRoot graph={graph} sheet={sheet} attendableId='test' ignoreAttention>
-      <div className='grid h-full w-full'>
+      <div className='grid dx-fill'>
         <SheetContent />
       </div>
     </SheetRoot>

@@ -20,3 +20,51 @@ live `ChannelBackend` capability are implemented. Authenticated send is
 validated against the freeq reference client but not yet confirmed against a
 server that accepts app-password `pds-session` SASL tokens; v1 ships
 read-capable, with guest (unauthenticated) channels supported end-to-end.
+
+## Extensions
+
+| Term   | URI                        |
+|--------|----------------------------|
+| `flow` | `org.dxos.mdl.flow@1.0`    |
+
+## QA
+
+Executable flows. Each step carries a human instruction (`do`) and, where the step maps to an
+invocable operation, an agent binding (`invoke`). Report failures by flow and step number.
+
+```mdl
+flow QA-1: Join a guest channel and read backfilled history
+  desc: |
+    The plugin's only user-visible surface — plugin-thread renders a Channel whose
+    `backend.config` is a FreeqChannel; freeq itself contributes no app graph action, no create
+    operation, and no runtime operation of any kind (`grep` for `Operation.make` under
+    `src/` returns nothing). Reaching this flow requires a Channel object whose backend config
+    already points at a live freeq server, which today can only be constructed in code
+    (`makeFreeqChannel`) — there is no navtree/UI path to attach one.
+  actors: human
+  covers: []
+  status: blocked            # 2026-08-27; no operation exists to create or join a channel from the running app
+  given:
+    - plugin-freeq is enabled — it IS on by default (`FreeqPlugin.make()` unconditional in plugin-defs.tsx)
+    - plugin-thread is enabled, since freeq only supplies a backend for its Channel object
+    - a reachable freeq server and IRC channel with existing history (e.g. `wss://freeq.example`, `#general`)
+    - a Channel object in the open space whose `backend.config` is a `FreeqChannel` pointing at
+      that server/channel with no `handle` set (guest/read-only) — there is no in-app action to
+      create this; it must be pre-seeded via `makeFreeqChannel` and `space.db.add` before the flow starts
+  test:
+    - name: Open the channel
+      do: Click the freeq-backed Channel in the navtree.
+      expect: the thread pane opens, the WebSocket connects (guest SASL), and the channel's REST-backfilled history renders as messages
+      blocked: |
+        No `invoke` exists — freeq contributes no operations, and connection/join is driven
+        entirely by `ConnectionManager.acquire` inside `ChannelBackend`'s React lifecycle, not
+        through anything the operation invoker can call.
+    - name: Receive a live message
+      do: From another IRC client, post a message to the same channel.
+      expect: the message appears in the thread pane in real time, attributed to the sender's nick
+      blocked: No operation surfaces the live WebSocket stream to the debug port; this can only be observed visually.
+  after:
+    - name: Close the channel
+      do: Navigate away from the Channel plank.
+      expect: the shared WebSocket connection is released once no open channel targets that server/identity pair
+```

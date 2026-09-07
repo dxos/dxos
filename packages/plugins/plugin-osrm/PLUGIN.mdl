@@ -56,6 +56,8 @@ Each extension is defined in the Appendix of the core template or resolved via i
 | `op`        | `org.dxos.mdl.op@1.0`        |
 | `component` | `org.dxos.mdl.component@1.0` |
 | `test`      | `org.dxos.mdl.test@1.0`      |
+| `flow`      | `org.dxos.mdl.flow@1.0`      |
+| `step`      | `org.dxos.mdl.step@1.0`      |
 
 ## Cross-package additions
 
@@ -405,3 +407,71 @@ test buildTileUrl (plugin-map)
   rate-limit backoff, caching). Prototype uses the public demo instances.
 - A map "tile preview" thumbnail in the provider picker; labels + hints
   only in v1.
+
+## QA
+
+Executable flows. Each step carries a human instruction (`do`) and, where the step maps to an
+invocable operation, an agent binding (`invoke`). Report failures by flow and step number.
+
+```mdl
+flow QA-1: Plan a driving route across two road segments
+  desc: |
+    plugin-osrm contributes no operation of its own — it registers a `RoutingService` capability
+    that `plugin-trip`'s `PlanRoute` operation resolves and calls. The core round-trip therefore
+    runs through plugin-trip: build a Trip with two road segments naming real cities, invoke
+    `PlanRoute`, and confirm both segments come back enriched with a computed route.
+  actors: both
+  covers: [OsrmRoutingService, PlanRoute operation (plugin-trip)]
+  status: unverified
+  given:
+    - an identity exists
+    - space: a space is open
+    - collection: a collection in that space, to create into
+    - plugin-osrm and plugin-trip are both enabled — both default OFF outside `isDev` (see the
+      `isDev` block of `getDefaults` in `plugin-defs.tsx`, which lists `OsrmPlugin` and
+      implicitly requires `plugin-trip`, itself gated the same way)
+    - network access to `nominatim.openstreetmap.org` and `router.project-osrm.org` — both public
+      demo services, rate-limited (Nominatim ≤ 1 req/s) and explicitly "not for production use";
+      a flaky or slow result here may be the upstream demo instance, not a defect
+    - no Trip named "QA Road Trip" exists — ABORT rather than deleting one this flow did not create
+    - trip: the Trip "QA Road Trip" this flow creates — no create op exists (human-only step), so
+      the runner binds this once that step completes
+  before:
+    - name: Create the trip
+      do: In the navtree, click + on a collection and choose Trip. Name it "QA Road Trip".
+      expect: "QA Road Trip" appears as a row under the collection, with an empty itinerary
+      note: |
+        NO `invoke` — Trip creation is `SpaceCapabilities.CreateObjectEntry`
+        (`plugin-trip/src/capabilities/create-object.ts`), the same factory-through-navtree path
+        as plugin-chess's `startGame`; there is no operation key to call, and the navtree action
+        both creates and places the row in one gesture, so no separate placement step is needed.
+  test:
+    - name: Add the first road segment
+      do: In TripArticle, choose "Add segment → Road" and set origin "London" and destination "Paris".
+      invoke: org.dxos.operation.trip.addSegment { trip: $given.trip, kind: "road", origin: "London", destination: "Paris" }
+      capture: seg1
+      expect: a road segment "London → Paris" appears in the itinerary
+      assert: return !!$seg1.segmentId;
+    - name: Add the second road segment
+      do: Repeat with origin "Paris" and destination "Amsterdam".
+      invoke: org.dxos.operation.trip.addSegment { trip: $given.trip, kind: "road", origin: "Paris", destination: "Amsterdam" }
+      capture: seg2
+      expect: a second road segment "Paris → Amsterdam" appears below the first
+      assert: return !!$seg2.segmentId;
+    - name: Plan the route
+      do: Click "Plan route" in the TripArticle toolbar.
+      invoke: org.dxos.operation.trip.planRoute { trip: $given.trip }
+      capture: planned
+      expect: both segments show computed distance/duration and a map polyline instead of the straight-arc fallback
+      assert: return $planned.legs === 2 && $planned.distanceMeters > 0 && $planned.durationSeconds > 0;
+      note: |
+        `PlanRoute` is owned by plugin-trip, not this plugin — written as the full key literal per
+        the QA DSL's cross-plugin rule. It resolves `TripCapabilities.RoutingService` via
+        `Capability.getAll`; with only plugin-osrm's provider registered, this exercises the OSRM
+        implementation specifically.
+  after:
+    - name: Delete the trip
+      do: Right-click "QA Road Trip" in the navtree and choose Delete.
+      invoke: org.dxos.operation.space.removeObjects { objects: [$given.trip], target: $given.collection }
+      expect: the row leaves the navtree and its plank closes
+```

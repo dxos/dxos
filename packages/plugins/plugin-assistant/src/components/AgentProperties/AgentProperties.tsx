@@ -4,7 +4,7 @@
 
 import React, { useCallback, useMemo } from 'react';
 
-import { type Agent } from '@dxos/assistant-toolkit';
+import type * as Agent from '@dxos/assistant/Agent';
 import * as Trigger from '@dxos/compute/Trigger';
 import { Filter, Obj, Ref, Type } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
@@ -15,7 +15,7 @@ import { isFeedOwnerSchema } from '@dxos/schema';
 
 import { meta } from '#meta';
 
-/** Mirrors the foreign keys stamped by the agent-wizard automation compiler (`sync-automation`). */
+/** Mirrors the foreign keys stamped by the agent skill's automation compiler (`sync-automation`). */
 const AGENT_TRIGGER_EXTENSION_KEY = 'org.dxos.extension.AgentTrigger';
 const AGENT_TRIGGER_TARGET_EXTENSION_KEY = 'org.dxos.extension.AgentTriggerTarget';
 

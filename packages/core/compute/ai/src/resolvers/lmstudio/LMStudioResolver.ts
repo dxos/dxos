@@ -39,6 +39,7 @@ export const make = ({
   const clientLayer = ChatCompletionsAdapter.clientLayer({
     baseUrl: endpoint,
     apiFormat: 'openai',
+    provider: 'lmstudio',
     transformClient,
   }).pipe(Layer.provide(FetchHttpClient.layer));
 
@@ -52,9 +53,5 @@ export const make = ({
     modelMap[model.id] = createModelLayer(model.backend);
   }
 
-  return AiModelResolver.AiModelResolver.fromModelMap(
-    { name: 'LM Studio' },
-    Provider.lmStudio.id,
-    Effect.succeed(modelMap),
-  );
+  return AiModelResolver.fromModelMap({ name: 'LM Studio' }, Provider.lmStudio.id, Effect.succeed(modelMap));
 };

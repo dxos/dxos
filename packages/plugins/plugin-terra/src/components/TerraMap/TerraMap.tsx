@@ -56,7 +56,7 @@ export const TerraMap = ({ objects, config, selectedId, onSelect, terrain = true
     <svg
       viewBox={`0 0 ${MAP_WIDTH} ${MAP_HEIGHT}`}
       preserveAspectRatio='xMidYMid meet'
-      className='w-full h-full text-description'
+      className='dx-fill text-description'
       data-testid='terra.map'
     >
       {/* Catches clicks outside any object, which clear the selection. */}

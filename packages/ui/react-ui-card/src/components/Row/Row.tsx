@@ -358,7 +358,7 @@ export const ContactAvatar = ({
           // as a heavier stand-in for the face.
           size={Number(size) >= 8 ? 5 : 4}
           label={t('create-contact.label')}
-          classNames='absolute inset-0 opacity-0 group-hover/contact:opacity-100 focus-visible:opacity-100'
+          classNames='dx-fullscreen opacity-0 group-hover/contact:opacity-100 focus-visible:opacity-100'
           onClick={handleContactCreate}
         />
       )}

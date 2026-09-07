@@ -113,11 +113,11 @@ const SystemStory = () => {
           )}
         />
         <SystemPresetRow
-          name='Expander'
+          name='Disclosure'
           button={(props) => (
-            <SystemIconButton.Expander
-              active={state.expander}
-              onClick={() => setState((prev) => ({ ...prev, expander: !prev.expander }))}
+            <SystemIconButton.Disclosure
+              active={state.disclosure}
+              onClick={() => setState((prev) => ({ ...prev, disclosure: !prev.disclosure }))}
               {...props}
             />
           )}

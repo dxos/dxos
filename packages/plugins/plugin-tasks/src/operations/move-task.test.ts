@@ -12,8 +12,6 @@ import { Milestone, Task, TaskSet } from '@dxos/types';
 import createTask from './create-task';
 import moveTask from './move-task';
 
-const testLayer = () => TestDatabaseLayer({ types: [Milestone.Milestone, Task.Task, TaskSet.TaskSet] });
-
 describe('move-task', () => {
   it.effect('reorders within the set, since array order is the task order', () =>
     Effect.gen(function* () {
@@ -26,12 +24,12 @@ describe('move-task', () => {
       }
       const [first, , third] = created;
 
-      yield* moveTask.handler({ task: Ref.make(third), before: Ref.make(first) });
+      yield* moveTask.handler({ taskSet: Ref.make(taskSet), task: Ref.make(third), before: Ref.make(first) });
       expect(titles(TaskSet.resolveTasks(taskSet))).toEqual(['c', 'a', 'b']);
 
-      yield* moveTask.handler({ task: Ref.make(third) });
+      yield* moveTask.handler({ taskSet: Ref.make(taskSet), task: Ref.make(third) });
       expect(titles(TaskSet.resolveTasks(taskSet))).toEqual(['a', 'b', 'c']);
-    }).pipe(Effect.provide(testLayer())),
+    }).pipe(Effect.provide(TestDatabaseLayer({ types: [Milestone.Milestone, Task.Task, TaskSet.TaskSet] }))),
   );
 
   it.effect('re-parents and repositions in one call, so a drop is a single mutation', () =>
@@ -41,19 +39,24 @@ describe('move-task', () => {
       const [first, second, third] = yield* seedTasks(taskSet, ['a', 'b', 'c']);
 
       // `c` becomes a child of `a`, positioned before `b` in the array.
-      yield* moveTask.handler({ task: Ref.make(third), before: Ref.make(second), parentTask: Ref.make(first) });
+      yield* moveTask.handler({
+        taskSet: Ref.make(taskSet),
+        task: Ref.make(third),
+        before: Ref.make(second),
+        parentTask: Ref.make(first),
+      });
 
       const tasks = TaskSet.resolveTasks(taskSet);
       expect(titles(tasks)).toEqual(['a', 'c', 'b']);
-      expect(titles(TaskSet.rootTasks(tasks))).toEqual(['a', 'b']);
-      expect(titles(TaskSet.subTasks(tasks, tasks[0]))).toEqual(['c']);
+      expect(titles(Task.rootTasks(tasks))).toEqual(['a', 'b']);
+      expect(titles(Task.subTasks(tasks, tasks[0]))).toEqual(['c']);
 
       // `null` promotes back to a root, still repositioning in the same call.
-      yield* moveTask.handler({ task: Ref.make(third), parentTask: null });
+      yield* moveTask.handler({ taskSet: Ref.make(taskSet), task: Ref.make(third), parentTask: null });
       const promoted = TaskSet.resolveTasks(taskSet);
       expect(titles(promoted)).toEqual(['a', 'b', 'c']);
-      expect(titles(TaskSet.rootTasks(promoted))).toEqual(['a', 'b', 'c']);
-    }).pipe(Effect.provide(testLayer())),
+      expect(titles(Task.rootTasks(promoted))).toEqual(['a', 'b', 'c']);
+    }).pipe(Effect.provide(TestDatabaseLayer({ types: [Milestone.Milestone, Task.Task, TaskSet.TaskSet] }))),
   );
 
   it.effect('a moved task keeps its sub-tasks: the subtree travels with it', () =>
@@ -61,24 +64,82 @@ describe('move-task', () => {
       const taskSet = yield* Database.add(TaskSet.make({ name: 'Sprint' }));
       yield* Database.flush();
       const [parent, child, grandchild, other] = yield* seedTasks(taskSet, ['a', 'b', 'c', 'd']);
-      yield* moveTask.handler({ task: Ref.make(child), parentTask: Ref.make(parent) });
-      yield* moveTask.handler({ task: Ref.make(grandchild), parentTask: Ref.make(child) });
+      yield* moveTask.handler({ taskSet: Ref.make(taskSet), task: Ref.make(child), parentTask: Ref.make(parent) });
+      yield* moveTask.handler({ taskSet: Ref.make(taskSet), task: Ref.make(grandchild), parentTask: Ref.make(child) });
 
       // `a` (holding b -> c) becomes a child of `d`. Only `a`'s own entry and parent ref are written;
       // the descendants' `parentTask` refs are untouched, which is what carries them along.
-      yield* moveTask.handler({ task: Ref.make(parent), parentTask: Ref.make(other) });
+      yield* moveTask.handler({ taskSet: Ref.make(taskSet), task: Ref.make(parent), parentTask: Ref.make(other) });
 
       const tasks = TaskSet.resolveTasks(taskSet);
-      expect(titles(TaskSet.rootTasks(tasks))).toEqual(['d']);
-      const [movedParent] = TaskSet.subTasks(
+      expect(titles(Task.rootTasks(tasks))).toEqual(['d']);
+      const [movedParent] = Task.subTasks(
         tasks,
         tasks.find(({ title }) => title === 'd')!,
       );
       expect(movedParent.title).toEqual('a');
-      const [movedChild] = TaskSet.subTasks(tasks, movedParent);
+      const [movedChild] = Task.subTasks(tasks, movedParent);
       expect(movedChild.title).toEqual('b');
-      expect(titles(TaskSet.subTasks(tasks, movedChild))).toEqual(['c']);
-    }).pipe(Effect.provide(testLayer())),
+      expect(titles(Task.subTasks(tasks, movedChild))).toEqual(['c']);
+    }).pipe(Effect.provide(TestDatabaseLayer({ types: [Milestone.Milestone, Task.Task, TaskSet.TaskSet] }))),
+  );
+
+  it.effect('the pure reorder transform predicts the handler resulting order', () =>
+    Effect.gen(function* () {
+      const taskSet = yield* Database.add(TaskSet.make({ name: 'Sprint' }));
+      yield* Database.flush();
+      const [first, , third, fourth] = yield* seedTasks(taskSet, ['a', 'b', 'c', 'd']);
+
+      const anchored = TaskSet.reorderItems(TaskSet.resolveTasks(taskSet), (row) => row.id, third.id, first.id);
+      yield* moveTask.handler({ taskSet: Ref.make(taskSet), task: Ref.make(third), before: Ref.make(first) });
+      expect(titles(TaskSet.resolveTasks(taskSet))).toEqual(titles(anchored));
+
+      // Unanchored move to the end.
+      const unanchored = TaskSet.reorderItems(TaskSet.resolveTasks(taskSet), (row) => row.id, fourth.id, undefined);
+      yield* moveTask.handler({ taskSet: Ref.make(taskSet), task: Ref.make(fourth) });
+      expect(titles(TaskSet.resolveTasks(taskSet))).toEqual(titles(unanchored));
+    }).pipe(Effect.provide(TestDatabaseLayer({ types: [Milestone.Milestone, Task.Task, TaskSet.TaskSet] }))),
+  );
+
+  it.effect('executes under Effect.runSync, so a drop can write in the gesture frame', () =>
+    Effect.gen(function* () {
+      const taskSet = yield* Database.add(TaskSet.make({ name: 'Sprint' }));
+      yield* Database.flush();
+      const [first, , third] = yield* seedTasks(taskSet, ['a', 'b', 'c']);
+
+      const { task } = Effect.runSync(
+        moveTask.handler({ taskSet: Ref.make(taskSet), task: Ref.make(third), before: Ref.make(first) }),
+      );
+      expect(task.id).toEqual(third.id);
+      expect(titles(TaskSet.resolveTasks(taskSet))).toEqual(['c', 'a', 'b']);
+
+      Effect.runSync(
+        moveTask.handler({ taskSet: Ref.make(taskSet), task: Ref.make(third), parentTask: Ref.make(first) }),
+      );
+      const tasks = TaskSet.resolveTasks(taskSet);
+      expect(
+        titles(
+          Task.subTasks(
+            tasks,
+            tasks.find(({ title }) => title === 'a')!,
+          ),
+        ),
+      ).toEqual(['c']);
+    }).pipe(Effect.provide(TestDatabaseLayer({ types: [Milestone.Milestone, Task.Task, TaskSet.TaskSet] }))),
+  );
+
+  it.effect('rejects a task that is not a member of the given set, leaving both sets untouched', () =>
+    Effect.gen(function* () {
+      const taskSet = yield* Database.add(TaskSet.make({ name: 'Sprint' }));
+      const otherSet = yield* Database.add(TaskSet.make({ name: 'Other' }));
+      yield* Database.flush();
+      const [task] = yield* seedTasks(taskSet, ['a']);
+
+      const result = yield* Effect.exit(moveTask.handler({ taskSet: Ref.make(otherSet), task: Ref.make(task) }));
+      expect(result._tag).toEqual('Failure');
+      expect(titles(TaskSet.resolveTasks(taskSet))).toEqual(['a']);
+      expect(otherSet.tasks.length).toEqual(0);
+    }).pipe(Effect.provide(TestDatabaseLayer({ types: [Milestone.Milestone, Task.Task, TaskSet.TaskSet] }))),
   );
 
   it.effect('rejects a parent inside its own subtree, leaving the order untouched', () =>
@@ -86,16 +147,21 @@ describe('move-task', () => {
       const taskSet = yield* Database.add(TaskSet.make({ name: 'Sprint' }));
       yield* Database.flush();
       const [parent, child, other] = yield* seedTasks(taskSet, ['a', 'b', 'c']);
-      yield* moveTask.handler({ task: Ref.make(child), parentTask: Ref.make(parent) });
+      yield* moveTask.handler({ taskSet: Ref.make(taskSet), task: Ref.make(child), parentTask: Ref.make(parent) });
       const before = titles(TaskSet.resolveTasks(taskSet));
 
       const result = yield* Effect.exit(
-        moveTask.handler({ task: Ref.make(parent), before: Ref.make(other), parentTask: Ref.make(child) }),
+        moveTask.handler({
+          taskSet: Ref.make(taskSet),
+          task: Ref.make(parent),
+          before: Ref.make(other),
+          parentTask: Ref.make(child),
+        }),
       );
       expect(result._tag).toEqual('Failure');
       // The reorder must not have run either: the whole gesture is rejected, not half-applied.
       expect(titles(TaskSet.resolveTasks(taskSet))).toEqual(before);
-    }).pipe(Effect.provide(testLayer())),
+    }).pipe(Effect.provide(TestDatabaseLayer({ types: [Milestone.Milestone, Task.Task, TaskSet.TaskSet] }))),
   );
 });
 

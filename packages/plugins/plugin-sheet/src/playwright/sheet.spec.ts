@@ -12,6 +12,7 @@ import { SheetManager } from './sheet-manager';
 test.describe('plugin-sheet', () => {
   let page: Page;
   let sheet: SheetManager;
+  let close: () => Promise<void>;
 
   test.beforeEach(async ({ browser }) => {
     const setup = await setupPage(browser, {
@@ -19,12 +20,13 @@ test.describe('plugin-sheet', () => {
       viewportSize: { width: 1280, height: 720 },
     });
     page = setup.page;
+    close = setup.close;
     sheet = new SheetManager(page);
     await sheet.ready();
   });
 
   test.afterEach(async () => {
-    await page.close();
+    await close();
   });
 
   test('basic interactions', async () => {

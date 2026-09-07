@@ -41,8 +41,8 @@ describe('space visibility', () => {
     expect(AppSpace.isVisibleSpace(makeSpace([]))).toBe(true);
   });
 
-  test('the exemplar space and pre-migration personal spaces stay visible', ({ expect }) => {
-    expect(AppSpace.isVisibleSpace(makeSpace([AppSpace.EXEMPLAR_SPACE_TAG]))).toBe(true);
+  test('the sample space and pre-migration personal spaces stay visible', ({ expect }) => {
+    expect(AppSpace.isVisibleSpace(makeSpace([AppSpace.SAMPLE_SPACE_TAG]))).toBe(true);
     expect(AppSpace.isVisibleSpace(makeSpace([AppSpace.PERSONAL_SPACE_TAG]))).toBe(true);
   });
 

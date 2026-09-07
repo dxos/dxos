@@ -3,11 +3,11 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React, { useEffect } from 'react';
+import React from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { Keyboard } from '@dxos/keyboard';
 import { translations as themeTranslations } from '@dxos/plugin-theme/translations';
+import { useHotkeys } from '@dxos/react-focus';
 import { withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
@@ -15,18 +15,13 @@ import { translations } from '#translations';
 import { ShortcutsList } from './ShortcutsList';
 
 const DefaultStory = () => {
-  useEffect(() => {
-    Keyboard.singleton.bind({
-      shortcut: 'meta+k',
-      handler: () => {},
-      data: 'Commands',
-    });
-    Keyboard.singleton.bind({
-      shortcut: "meta+'",
-      handler: () => {},
-      data: 'Settings',
-    });
-  }, []);
+  useHotkeys({
+    id: 'shortcuts-story',
+    commands: [
+      { hotkey: 'meta+k', label: 'Commands', action: () => {} },
+      { hotkey: "meta+'", label: 'Settings', action: () => {} },
+    ],
+  });
 
   return <ShortcutsList />;
 };

@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { Chat } from '@dxos/assistant-toolkit';
+import * as Chat from '@dxos/assistant/Chat';
 import { Filter, Obj, Query, Type } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';

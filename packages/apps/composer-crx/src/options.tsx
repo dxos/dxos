@@ -14,7 +14,7 @@ import { Options, Root } from './components';
 const OptionsApp = () => {
   return (
     <Root name='options'>
-      <div className='absolute inset-0 flex justify-center overflow-hidden dx-modal-surface'>
+      <div className='dx-fullscreen flex justify-center overflow-hidden dx-modal-surface'>
         <div className='dx-document dx-base-surface'>
           <Options />
         </div>

@@ -18,7 +18,7 @@ import * as RpcGroup from 'effect/unstable/rpc/RpcGroup';
 import * as RpcServer from 'effect/unstable/rpc/RpcServer';
 import { describe, expect, onTestFinished, test } from 'vitest';
 
-import { Trigger, sleep } from '@dxos/async';
+import { Trigger } from '@dxos/async';
 import { Stream as PbStream } from '@dxos/async';
 import {
   ClientRpcServer,
@@ -30,13 +30,24 @@ import {
 import { EffectEx } from '@dxos/effect';
 import { PublicKey } from '@dxos/keys';
 import { IdentityNotInitializedError, TimeoutError } from '@dxos/protocols';
-import { ConfigSchema } from '@dxos/protocols/buf/dxos/config_pb';
+import { buf, fromPublicKey, toPublicKey } from '@dxos/protocols/buf';
 import {
   Invitation,
+  Invitation_AuthMethod,
+  Invitation_Kind,
+  Invitation_State,
+  Invitation_Type,
+  InvitationSchema,
+} from '@dxos/protocols/buf/dxos/client/invitation_pb';
+import { SpaceSchema } from '@dxos/protocols/buf/dxos/client/services_pb';
+import {
   QueryInvitationsResponse,
-  SpaceState,
-  SystemStatus,
-} from '@dxos/protocols/proto/dxos/client/services';
+  QueryInvitationsResponse_Action,
+  QueryInvitationsResponse_Type,
+  QueryInvitationsResponseSchema,
+} from '@dxos/protocols/buf/dxos/client/services_pb';
+import { ConfigSchema } from '@dxos/protocols/buf/dxos/config_pb';
+import { SpaceState, SystemStatus } from '@dxos/protocols/proto/dxos/client/services';
 import { MembershipPolicy } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { InvitationsService, SpacesService, SystemService } from '@dxos/protocols/rpc';
 
@@ -132,20 +143,21 @@ describe('client services effect-rpc', () => {
     const proxy = await setup(() => ({
       SpacesService: mockService<SpacesService.Handlers>({
         ['SpacesService.createSpace']: () =>
-          Effect.succeed({
-            id: 'test-space',
-            spaceKey,
-            state: SpaceState.SPACE_READY,
-            membershipPolicy: MembershipPolicy.INVITE,
-            metrics: {},
-          }),
+          Effect.succeed(
+            buf.create(SpaceSchema, {
+              id: 'test-space',
+              spaceKey: fromPublicKey(spaceKey),
+              state: SpaceState.SPACE_READY,
+              membershipPolicy: MembershipPolicy.INVITE,
+            }),
+          ),
       }),
     }));
 
     const space = await proxy.SpacesService!.createSpace({ membershipPolicy: MembershipPolicy.INVITE });
     expect(space.id).toEqual('test-space');
-    expect(space.spaceKey).toBeInstanceOf(PublicKey);
-    expect(space.spaceKey.equals(spaceKey)).toBe(true);
+    expect(toPublicKey(space.spaceKey)).toBeInstanceOf(PublicKey);
+    expect(toPublicKey(space.spaceKey)?.equals(spaceKey)).toBe(true);
   });
 
   test('streaming call round trip', async ({ expect }) => {
@@ -190,30 +202,30 @@ describe('client services effect-rpc', () => {
   // could not encode. The response failed to serialize, so the stream died before delivering the
   // initial snapshot that `InvitationsProxy.open()` (and therefore the whole app boot) waited on.
   test('an existing-invitations snapshot with a delegated invitation reaches the client', async ({ expect }) => {
-    const delegated: Invitation = {
+    const delegated: Invitation = buf.create(InvitationSchema, {
       invitationId: 'delegated-invitation',
-      type: Invitation.Type.DELEGATED,
-      kind: Invitation.Kind.SPACE,
-      authMethod: Invitation.AuthMethod.KNOWN_PUBLIC_KEY,
-      state: Invitation.State.INIT,
-      swarmKey: PublicKey.random(),
-      spaceKey: PublicKey.random(),
-      delegationCredentialId: PublicKey.random(),
+      type: Invitation_Type.DELEGATED,
+      kind: Invitation_Kind.SPACE,
+      authMethod: Invitation_AuthMethod.KNOWN_PUBLIC_KEY,
+      state: Invitation_State.INIT,
+      swarmKey: fromPublicKey(PublicKey.random()),
+      spaceKey: fromPublicKey(PublicKey.random()),
+      delegationCredentialId: fromPublicKey(PublicKey.random()),
       lifetime: remainingLifetimeSeconds(new Date(Date.now() + 604_799_123)),
       multiUse: true,
       persistent: false,
-    };
+    });
 
-    const snapshot: QueryInvitationsResponse = {
-      action: QueryInvitationsResponse.Action.ADDED,
-      type: QueryInvitationsResponse.Type.CREATED,
+    const snapshot: QueryInvitationsResponse = buf.create(QueryInvitationsResponseSchema, {
+      action: QueryInvitationsResponse_Action.ADDED,
+      type: QueryInvitationsResponse_Type.CREATED,
       invitations: [delegated],
       existing: true,
-    };
+    });
 
     const proxy = await setup(() => ({
       InvitationsService: mockService<InvitationsService.Handlers>({
-        ['InvitationsService.queryInvitations']: (): Stream.Stream<QueryInvitationsResponse, Error> =>
+        ['InvitationsService.queryInvitations']: (): Stream.Stream<QueryInvitationsResponse, never> =>
           Stream.fromIterable([snapshot]),
       }),
     }));
@@ -262,6 +274,7 @@ describe('client services effect-rpc', () => {
 
   test('onRequest gates dispatch until ready', async ({ expect }) => {
     const ready = new Trigger();
+    const arrived = new Trigger();
     let called = false;
     const proxy = await setup(
       () => ({
@@ -273,11 +286,18 @@ describe('client services effect-rpc', () => {
             }),
         }),
       }),
-      { onRequest: () => ready.wait() },
+      {
+        onRequest: () => {
+          arrived.wake();
+          return ready.wait();
+        },
+      },
     );
 
     const request = proxy.SystemService!.getConfig();
-    await sleep(50);
+    // `onRequest` runs before the gated handler, so waiting on `arrived` proves the request
+    // reached the gate without depending on how long dispatch across the MessageChannel takes.
+    await arrived.wait();
     expect(called).toBe(false);
 
     ready.wake();

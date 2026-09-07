@@ -14,7 +14,7 @@ import * as Model from '../../Model';
 import * as Provider from '../../Provider';
 
 export const make = () =>
-  AiModelResolver.AiModelResolver.resolver(
+  AiModelResolver.resolver(
     {
       name: 'Anthropic',
     },
@@ -36,7 +36,11 @@ export const make = () =>
         const thinking =
           info.characteristics?.thinking && (options?.thinking ?? true)
             ? // The Effect-AI Anthropic binding's `thinking.type` union predates Anthropic's `adaptive` mode.
-              ({ type: 'adaptive' as any } as const)
+              ({
+                type: 'adaptive',
+                // The API default omits thinking blocks from the stream; summaries keep them visible.
+                display: 'summarized',
+              } as const)
             : undefined;
         return AnthropicLanguageModel.layer({ model: info.backend, config: { thinking, max_tokens } }).pipe(
           Layer.provide(clientLayer),

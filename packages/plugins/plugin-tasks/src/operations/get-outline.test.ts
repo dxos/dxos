@@ -12,8 +12,6 @@ import { Outline } from '@dxos/types';
 
 import getOutline from './get-outline';
 
-const testLayer = () => TestDatabaseLayer({ types: [Outline.Outline, Text.Text] });
-
 describe('get-outline', () => {
   it.effect('returns the markdown and its parsed items', () =>
     Effect.gen(function* () {
@@ -27,7 +25,7 @@ describe('get-outline', () => {
         { title: 'first', done: false },
         { title: 'second', done: true },
       ]);
-    }).pipe(Effect.provide(testLayer())),
+    }).pipe(Effect.provide(TestDatabaseLayer({ types: [Outline.Outline, Text.Text] }))),
   );
 });
 

@@ -126,11 +126,11 @@ export class AutomergeDataSource implements IndexDataSource {
 
       for (const { documentId, heads: docHeads } of changedDocuments) {
         try {
-          const handle = yield* Effect.promise(() => this.#automergeHost.loadDoc<DatabaseDirectory>(ctx, documentId));
-          if (!handle) {
+          using lease = yield* Effect.promise(() => this.#automergeHost.loadDoc<DatabaseDirectory>(ctx, documentId));
+          if (!lease) {
             continue;
           }
-          const doc = handle.doc();
+          const doc: DatabaseDirectory = lease.doc();
 
           // Skip outdated docs.
           if (doc.version !== SpaceDocVersion.CURRENT) {

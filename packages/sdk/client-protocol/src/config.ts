@@ -25,6 +25,12 @@ export const defaultConfig = { version: 1 };
  */
 export const DEFAULT_HUB_URL = 'https://dxos.network/hub/';
 
+/**
+ * Passkey prompt origin, not derived from {@link DEFAULT_HUB_URL} because only an origin under the
+ * `composer.space` relying party can present a passkey.
+ */
+export const DEFAULT_AUTH_URL = 'https://account.composer.space';
+
 // TODO(burdon): Allow override via env? Generalize since currently NodeJS only.
 const HOME = typeof process !== 'undefined' ? (process?.env?.HOME ?? '') : '';
 

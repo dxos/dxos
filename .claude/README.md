@@ -69,7 +69,7 @@ stdout as context the agent reads. Every other event needs
 | `~/.claude/hooks/branch-beacon.sh`                                                                                | `UserPromptSubmit`        | agent          | derived, recomputed each turn             |
 | `~/.claude/hooks/guard-branch.sh`, `deny-git-worktree-add.sh`                                                     | `PreToolUse(Bash)`        | deny           | derived                                   |
 | `~/.claude/hooks/guard-worktree.sh` + [repo copy](./hooks/guard-worktree.sh)                                      | `PreToolUse(Edit\|Write)` | deny           | derived                                   |
-| [`hooks/mode.sh`](./hooks/mode.sh) → [`scripts/mode.sh`](./scripts/mode.sh)   | `UserPromptSubmit`        | agent          | **persisted** `.claude/.mode`    |
+| [`hooks/mode.sh`](./hooks/mode.sh) → [`scripts/mode.sh`](./scripts/mode.sh)   | `UserPromptSubmit`        | agent          | **persisted** `.claude/.mode` + `.claude/.focus` |
 | `dxos` plugin → `hooks/track.sh` ([tools/claude/plugins/dxos](../tools/claude/plugins/dxos))                            | `UserPromptSubmit`        | agent          | persisted, backend-resolved (registry)    |
 | [`AGENTS.md`](../AGENTS.md) (+ `CLAUDE.md` / `GEMINI.md` symlinks), [`CLAUDE.md`](./CLAUDE.md)                    | —                         | agent          | static                                    |
 | `skills/` → `../.agents/skills/` (25)                                                                             | —                         | agent          | on demand                                 |
@@ -147,6 +147,7 @@ A sentinel is a **marker typed inside a normal message** that a
 | Marker                          | Hook                                 | Effect                                                     |
 | ------------------------------- | ------------------------------------ | ---------------------------------------------------------- |
 | `/mode terse` / `/mode normal`  | [`hooks/mode.sh`](./hooks/mode.sh)   | sets response verbosity mode (see aliases below)            |
+| `/mode focus [task]`            | [`hooks/mode.sh`](./hooks/mode.sh)   | terse, plus one pinned task the session is confined to      |
 | `/dxos:project VERB [ARGS]`       | `dxos` plugin (see below)              | task-planning: list / tasks / new / end / track / hydrate / resume |
 
 They exist because a hook can act on them **before the model runs**, which makes
@@ -174,6 +175,24 @@ The two mode values are `terse` and `normal` (the default when the state file is
 absent). `concise` aliases `terse`; `natural`, `default` and `off` alias
 `normal`. The state file is canonicalised on read, so a stale or hand-edited
 value cannot wedge the machine — anything that is not `terse` means `normal`.
+
+**`focus` is not a third value.** `/mode focus [task]` writes `terse` to
+`.claude/.mode` and the task to `.claude/.focus`, so the mode keeps exactly two
+values and every reader of it is unchanged; the pin is nothing more than that
+second file existing, and `context` appends a `FOCUS:` clause when it does. With
+no task on the line the hook reads the previous user instruction out of the
+event's `transcript_path` — deriving it in the hook is the whole point, since
+asking the agent to remember what to pin would be persuasion (kind 1) where the
+rest of this mechanism is interception (kind 3). Nothing pinnable means terse
+and no pin, said out loud rather than guessed at. Any write to the mode clears
+the pin — naming a verbosity is how you leave focus — and the clear happens
+after the mode write, so a half-applied change ends unpinned rather than stuck.
+Like the mode, the pin is per-worktree, so concurrent sessions in one worktree
+share it.
+
+[`scripts/mode.test.sh`](./scripts/mode.test.sh) covers both files by feeding
+the hook the JSON the event carries, against a throwaway `CLAUDE_PROJECT_DIR`
+so a run cannot clobber the state of the session running it.
 
 **`mode.sh context` emits in BOTH states.** This is the point of the mechanism,
 not an implementation detail: the invariants it carries — number every question,

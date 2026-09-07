@@ -12,7 +12,7 @@ import { mx } from '@dxos/ui-theme';
 import { Outline, type OutlineMarker } from '../components';
 import { type MessageChromeProps, MessageList, useMessageList } from '../components';
 import { type Decoration, DecorationsProvider, ItemSelectionProvider } from '../hooks';
-import { SearchHit, defaultRenderer, searchFeed, sliceFeed, useFeedModel } from '../model';
+import { SearchHit, defaultRenderer, isPrompt, searchFeed, sliceFeed, useFeedModel } from '../model';
 import { FeedStats, useFeedDebug } from './debug';
 import { createMessages } from './generator';
 import { type FeedScenario, createScenario } from './scenarios';
@@ -313,11 +313,11 @@ export const FeedStory = ({
               </Toolbar.Root>
             </Panel.Toolbar>
 
-            <Panel.Content classNames='relative dx-container'>
+            <Panel.Content classNames='relative'>
               <div className='z-10 absolute left-0 top-0 bottom-0 grid grid-rows-[1fr_4fr_1fr] justify-center'>
                 <FeedOutline classNames='row-start-2' messages={messages} />
               </div>
-              <MessageList.Viewport classNames='absolute inset-0' padding ref={viewportRef} />
+              <MessageList.Viewport classNames='dx-fullscreen' padding ref={viewportRef} />
             </Panel.Content>
           </Panel.Root>
           <FeedStats meter={meter} streaming={streaming} selected={selectedIds.size} hits={hits.length} />
@@ -342,7 +342,7 @@ const FeedOutline = ({ classNames, messages }: ThemedClassName<{ messages: reado
     // Every prompt is passed; the rail thins them to whatever its height affords.
     return messages
       .map((message, index) => ({ message, index }))
-      .filter(({ message }) => message.sender.role === 'user')
+      .filter(({ message }) => isPrompt(message))
       .map(({ message, index }) => ({
         id: message.id,
         title: `#${index} · ${message.sender.name ?? message.sender.role}`,

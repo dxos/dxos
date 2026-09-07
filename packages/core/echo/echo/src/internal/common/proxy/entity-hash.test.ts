@@ -22,20 +22,20 @@ const Container = Schema.Struct({
 
 describe('entity Hash/Equal traits', () => {
   test('objects implement both traits', ({ expect }) => {
-    const person = makePerson('Alice');
+    const person = Obj.make(TestSchema.Person, { name: 'Alice' });
     expect(Hash.isHash(person)).to.be.true;
     expect(Equal.isEqual(person)).to.be.true;
   });
 
   test('hash is derived from the id, not the contents', ({ expect }) => {
-    const person = makePerson('Alice');
+    const person = Obj.make(TestSchema.Person, { name: 'Alice' });
     // A detached (non-database) object must hash without touching the database or the URI codec.
     expect(() => Hash.hash(person)).to.not.throw();
     expect(Hash.hash(person)).to.eq(Hash.hash(person.id));
   });
 
   test('hash is stable across mutation', ({ expect }) => {
-    const person = makePerson('Alice');
+    const person = Obj.make(TestSchema.Person, { name: 'Alice' });
     const before = Hash.hash(person);
     Obj.update(person, (person) => {
       person.name = 'Bob';
@@ -44,12 +44,12 @@ describe('entity Hash/Equal traits', () => {
   });
 
   test('an object equals itself', ({ expect }) => {
-    const person = makePerson('Alice');
+    const person = Obj.make(TestSchema.Person, { name: 'Alice' });
     expect(Equal.equals(person, person)).to.be.true;
   });
 
   test('a duplicate proxy (invariant violation) still resolves to one entity', ({ expect }) => {
-    const person = makePerson('Alice');
+    const person = Obj.make(TestSchema.Person, { name: 'Alice' });
     const duplicate = duplicateProxy(person);
     expect(duplicate).to.not.eq(person);
 
@@ -58,11 +58,14 @@ describe('entity Hash/Equal traits', () => {
   });
 
   test('distinct ids, identical contents — not equal', ({ expect }) => {
-    expect(Equal.equals(makePerson('Alice'), makePerson('Alice'))).to.be.false;
+    const first = Obj.make(TestSchema.Person, { name: 'Alice' });
+    const second = Obj.make(TestSchema.Person, { name: 'Alice' });
+    expect(Equal.equals(first, second)).to.be.false;
+    expect(Equal.equals(second, first)).to.be.false;
   });
 
   test('an entity never equals a non-entity', ({ expect }) => {
-    const person = makePerson('Alice');
+    const person = Obj.make(TestSchema.Person, { name: 'Alice' });
     expect(Equal.equals(person, { id: person.id, name: 'Alice' })).to.be.false;
   });
 
@@ -87,7 +90,7 @@ describe('entity Hash/Equal traits', () => {
   });
 
   test('an application-level id on a nested record is not an entity id', ({ expect }) => {
-    const person = makePerson('Alice');
+    const person = Obj.make(TestSchema.Person, { name: 'Alice' });
     const container = Obj.make(Container, { item: { id: person.id, label: 'a' } });
 
     // Both directions: Effect caches an equality verdict for the pair, so one `true` would settle
@@ -100,10 +103,12 @@ describe('entity Hash/Equal traits', () => {
   });
 
   test('Atom.family keys by entity, not by contents', ({ expect }) => {
-    const person = makePerson('Alice');
+    const person = Obj.make(TestSchema.Person, { name: 'Alice' });
     expect(Obj.atom(person)).to.eq(Obj.atom(person));
 
-    expect(Obj.atom(makePerson('Alice'))).to.not.eq(Obj.atom(makePerson('Alice')));
+    expect(Obj.atom(Obj.make(TestSchema.Person, { name: 'Alice' }))).to.not.eq(
+      Obj.atom(Obj.make(TestSchema.Person, { name: 'Alice' })),
+    );
 
     // An atom is looked up throughout an object's life, so mutation must not re-key it mid-flight.
     Obj.update(person, (person) => {
@@ -114,20 +119,18 @@ describe('entity Hash/Equal traits', () => {
 
   test('a family keyed directly by an entity round-trips', ({ expect }) => {
     const family = Atom.family((obj: Obj.Unknown) => Atom.make(() => obj.id));
-    const person = makePerson('Alice');
+    const person = Obj.make(TestSchema.Person, { name: 'Alice' });
     expect(family(person)).to.eq(family(person));
-    expect(family(person)).to.not.eq(family(makePerson('Alice')));
+    expect(family(person)).to.not.eq(family(Obj.make(TestSchema.Person, { name: 'Alice' })));
 
     // Two atoms racing over one entity is the failure a duplicate proxy would otherwise cause.
     expect(family(person)).to.eq(family(duplicateProxy(person)));
   });
 });
 
-const makePerson = (name: string) => Obj.make(TestSchema.Person, { name });
-
 const makeEmployment = (role: string) =>
   Relation.make(TestSchema.EmployedBy, {
-    [Relation.Source]: makePerson('Alice'),
+    [Relation.Source]: Obj.make(TestSchema.Person, { name: 'Alice' }),
     [Relation.Target]: Obj.make(TestSchema.Organization, { name: 'DXOS' }),
     role,
   });

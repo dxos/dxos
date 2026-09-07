@@ -14,6 +14,8 @@ import { type BootLoaderApi } from './types';
  */
 export const createBridge = (store: LoaderStore, dismissNow: () => void): BootLoaderApi => ({
   status: (payload) => store.pushStatus(payload),
+  plugins: (entries) => store.setPlugins(entries),
+  activated: (id) => store.activatePlugin(id),
   progress: (fraction) => store.setProgress(fraction),
   stalled: (onAbort) => store.stalled(onAbort),
   ready: () => store.ready(),

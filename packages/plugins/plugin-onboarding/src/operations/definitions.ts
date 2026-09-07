@@ -11,14 +11,16 @@ import { DXN } from '@dxos/keys';
 // TODO(wittjosiah): Consider if any of this is generic enough for client plugin.
 
 /**
- * Imports the bundled Bramble Coffee Roasters exemplar space and stamps it with the current migration
+ * Imports the bundled Bramble Coffee Roasters sample space and stamps it with the current migration
  * version so it is treated as already migrated (same as newly-created spaces).
- * Idempotent: if a space tagged with EXEMPLAR_SPACE_TAG already exists it is returned as-is.
+ * Idempotent: if a space tagged with SAMPLE_SPACE_TAG already exists it is returned as-is.
  */
-export const ImportExemplarSpace = Operation.make({
+export const ImportSampleSpace = Operation.make({
   meta: {
+    // The key keeps its `exemplar` spelling: operation keys can be referenced from persisted
+    // user-side state, so renaming one is a data change rather than a rename.
     key: DXN.make('org.dxos.operation.onboarding.importExemplarSpace'),
-    name: 'Import Exemplar Space',
+    name: 'Import Sample Space',
     icon: 'ph--potted-plant--regular',
   },
   services: [Capability.Service],

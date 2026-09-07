@@ -16,7 +16,7 @@ export default Config2.make({
       other plugins via CredentialsService. This plugin is headless — it contributes the connector only
       and has no UI surfaces.
     `,
-    icon: { key: 'ph--brain--regular', hue: 'indigo' },
+    icon: { key: 'px--deepseek--regular', hue: 'blue' },
     source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-deepseek',
     tags: ['labs'],
   },

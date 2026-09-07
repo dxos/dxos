@@ -8,7 +8,7 @@ import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj, Ref } from '@dxos/echo';
 import { Panel, useTranslation } from '@dxos/react-ui';
-import { Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
+import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 
 import { Flashcard } from '#components';
 import { meta } from '#meta';
@@ -25,7 +25,7 @@ export type FlashcardsArticleProps = AppSurface.ObjectArticleProps<Vocabulary.Vo
 export const FlashcardsArticle = ({ role, subject: deck, attendableId }: FlashcardsArticleProps) => {
   const { t } = useTranslation(meta.profile.key);
   const { invokePromise } = useOperationInvoker();
-  // `Menu.Toolbar` gates itself on `useAttention(attendableId)`, so without an id the toolbar is
+  // `ActionToolbar` gates itself on `useAttention(attendableId)`, so without an id the toolbar is
   // permanently disabled; fall back to the subject's URI when the surface supplies none.
   const attentionId = attendableId ?? Obj.getURI(deck);
   const words = useDeckWords(deck);
@@ -94,31 +94,27 @@ export const FlashcardsArticle = ({ role, subject: deck, attendableId }: Flashca
   );
 
   return (
-    <Menu.Root {...menuActions} attendableId={attentionId}>
-      <Panel.Root role={role}>
-        <Panel.Toolbar asChild classNames='dx-container'>
-          <Menu.Toolbar>
-            <Menu.Items />
-          </Menu.Toolbar>
-        </Panel.Toolbar>
-        <Panel.Content classNames='dx-container flex flex-col'>
-          {word ? (
-            <Flashcard
-              key={word.id}
-              word={word}
-              revealed={revealed}
-              onReveal={() => setRevealed(true)}
-              onAnswer={handleAnswer}
-            />
-          ) : (
-            <div className='flex flex-col items-center gap-2 p-8 text-description'>
-              <span>{queue.length === 0 ? t('empty-deck.message') : t('session-complete.message')}</span>
-              {session.answered > 0 && <span>{t('session-score.message', session)}</span>}
-            </div>
-          )}
-        </Panel.Content>
-      </Panel.Root>
-    </Menu.Root>
+    <Panel.Root role={role}>
+      <Panel.Toolbar asChild classNames='dx-expand'>
+        <ActionToolbar {...menuActions} attendableId={attentionId} />
+      </Panel.Toolbar>
+      <Panel.Content classNames='flex flex-col'>
+        {word ? (
+          <Flashcard
+            key={word.id}
+            word={word}
+            revealed={revealed}
+            onReveal={() => setRevealed(true)}
+            onAnswer={handleAnswer}
+          />
+        ) : (
+          <div className='flex flex-col items-center gap-2 p-8 text-description'>
+            <span>{queue.length === 0 ? t('empty-deck.message') : t('session-complete.message')}</span>
+            {session.answered > 0 && <span>{t('session-score.message', session)}</span>}
+          </div>
+        )}
+      </Panel.Content>
+    </Panel.Root>
   );
 };
 

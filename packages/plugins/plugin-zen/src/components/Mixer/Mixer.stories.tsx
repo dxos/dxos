@@ -39,7 +39,7 @@ const DefaultStory = () => {
   }
 
   return (
-    <div className='dx-container grid grid-cols-[1fr_1fr] gap-8 px-8'>
+    <div className='dx-expand grid grid-cols-[1fr_1fr] gap-8 px-8'>
       <Mixer dream={dream} engine={engine} />
       <div className='flex flex-col justify-center'>
         <Oscilloscope classNames='h-[400px] border-green-500' mode='waveform' active={playing} source={outputNode} />

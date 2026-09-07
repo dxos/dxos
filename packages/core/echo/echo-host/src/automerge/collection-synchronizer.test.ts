@@ -103,7 +103,8 @@ describe('CollectionSynchronizer', () => {
     peer.onConnectionOpen(peerId2);
 
     peer.setLocalCollectionState(collectionId, STATE_1);
-    await sleep(10);
+    // Flushes the single `queueMicrotask` hop `_scheduleBroadcast`/`onConnectionOpen` schedule.
+    await Promise.resolve();
 
     expect(sentStates.map((m) => m.peerId).sort()).to.deep.equal([peerId1, peerId2].sort());
     // `_broadcastLocalState` wraps in `withoutEmptyHeads`, so compare against the
@@ -142,11 +143,13 @@ describe('CollectionSynchronizer', () => {
     // microtask adds peers to `interestedPeers` without ever calling
     // `_broadcastLocalState` (so `lastBroadcast` stays unset for them).
     peer.setLocalCollectionState(collectionId, STATE_1);
-    await sleep(10);
+    // Flushes the single `queueMicrotask` hop `_scheduleBroadcast`/`onConnectionOpen` schedule.
+    await Promise.resolve();
 
     peer.onConnectionOpen(peerId1);
     peer.onConnectionOpen(peerId2);
-    await sleep(10);
+    // Flushes the single `queueMicrotask` hop `_scheduleBroadcast`/`onConnectionOpen` schedule.
+    await Promise.resolve();
 
     connected.delete(peerId2);
     peer.onConnectionClosed(peerId2);
@@ -154,7 +157,8 @@ describe('CollectionSynchronizer', () => {
     // Without the fix, peer2 is still in `interestedPeers` with no `lastBroadcast`
     // entry, so the broadcast gate passes and `sendCollectionState` throws.
     peer.setLocalCollectionState(collectionId, STATE_2);
-    await sleep(10);
+    // Flushes the single `queueMicrotask` hop `_scheduleBroadcast`/`onConnectionOpen` schedule.
+    await Promise.resolve();
 
     expect(sentTo).to.deep.equal([peerId1]);
   });
@@ -185,7 +189,8 @@ describe('CollectionSynchronizer', () => {
 
     peer.onConnectionOpen(peerId);
     peer.setLocalCollectionState(collectionId, STATE_1);
-    await sleep(10);
+    // Flushes the single `queueMicrotask` hop `_scheduleBroadcast`/`onConnectionOpen` schedule.
+    await Promise.resolve();
     updates.length = 0;
 
     // STATE_2 diverges from STATE_1 on `b`, and is missing `c` entirely.
@@ -220,7 +225,8 @@ describe('CollectionSynchronizer', () => {
 
     peer.onConnectionOpen(peerId);
     peer.setLocalCollectionState(collectionId, STATE_1);
-    await sleep(10);
+    // Flushes the single `queueMicrotask` hop `_scheduleBroadcast`/`onConnectionOpen` schedule.
+    await Promise.resolve();
     updates.length = 0;
 
     peer.onRemoteStateReceived(collectionId, peerId, structuredClone(STATE_1));
@@ -298,9 +304,9 @@ describe('CollectionSynchronizer', () => {
   });
 
   test('peerCollectionStateUpdated fires with newDocsAppeared=false for edge peer orphans', async ({ expect }) => {
-    // peerId prefix must satisfy `isEdgePeerId` — anchored on the AUTOMERGE_REPLICATOR
+    // peerId prefix must satisfy `isEdgePeerId` — anchored on the SUBDUCTION_REPLICATOR
     // service name from `@dxos/protocols`.
-    const edgePeerId = 'automerge-replicator:edge-space-1:abc' as PeerId;
+    const edgePeerId = 'subduction-replicator:edge-space-1:abc' as PeerId;
     const collectionId = 'collection-test';
 
     const peer = await new CollectionSynchronizer({

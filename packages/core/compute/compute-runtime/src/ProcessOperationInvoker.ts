@@ -15,13 +15,14 @@ import * as Option from 'effect/Option';
 import * as PubSub from 'effect/PubSub';
 import * as Ref from 'effect/Ref';
 import * as Stream from 'effect/Stream';
+import * as Tracer from 'effect/Tracer';
 
 import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import * as Process from '@dxos/compute/Process';
 import * as Trace from '@dxos/compute/Trace';
 import { Context as DxosContext } from '@dxos/context';
-import { EffectEx } from '@dxos/effect';
+import { EffectEx, SpanAttributes } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { type OperationInvoker } from '@dxos/operation';
@@ -109,13 +110,23 @@ const fiberFromProcess = <T>(handle: ProcessManager.Handle<any, T, never>): Effe
  * When `remoteInvoker` is supplied, invocations requesting edge execution (`InvokeOptions.on === 'edge'`)
  * are dispatched to the remote runtime by the operation's `meta.deployedId` instead of spawning a local
  * process. Absent a remote invoker, edge invocations die with a descriptive error.
+ *
+ * `tracer` is the runtime's tracer, applied as a fallback on every invocation.
  */
 export const make = (opts: {
   manager: ProcessManager.Manager;
   handlerSet: OperationHandlerSet.OperationHandlerSet;
   parentProcessId?: Process.ID;
   remoteInvoker?: RemoteOperationInvoker.Invoker;
+  tracer: Tracer.Tracer;
 }): Operation.OperationService & OperationInvoker.OperationInvokerInternal & ProcessOperationInvoker => {
+  const tracerContext = Context.make(Tracer.Tracer, opts.tracer);
+
+  // Beneath the caller's context: `invokePromise` starts a fresh, empty-context fiber that would
+  // otherwise fall back to Effect's native tracer, whose spans never reach OpenTelemetry.
+  const withFallbackTracer = <A, E>(effect: Effect.Effect<A, E>): Effect.Effect<A, E> =>
+    effect.pipe(Effect.updateContext((context: Context.Context<never>) => Context.merge(tracerContext, context)));
+
   const pubsub = Effect.runSync(PubSub.unbounded<OperationInvoker.InvocationEvent>());
   const pendingCount = Effect.runSync(Ref.make(0));
   const pendingFibers = new Set<Fiber.Fiber<any>>();
@@ -179,11 +190,15 @@ export const make = (opts: {
       log('lifecycle: operation input submitted', { opKey: op.meta.key, handle });
       return fiber;
     }).pipe(
+      Effect.withSpan('ProcessOperationInvoker.invoke', {
+        attributes: { [SpanAttributes.OPERATION.key]: op.meta.key.toString() },
+      }),
       Effect.onInterrupt(() =>
         Effect.sync(() => {
           log('operation interrupted', { opKey: op.meta.key });
         }),
       ),
+      withFallbackTracer,
     );
 
   const attachFiber = <T>(pid: Process.ID): Effect.Effect<OperationFiber<T>> =>
@@ -201,7 +216,7 @@ export const make = (opts: {
       const newFiber = yield* fiberFromProcess(handle);
       fiberCache.set(pid, newFiber);
       return newFiber;
-    });
+    }).pipe(withFallbackTracer);
 
   const invoke: Operation.OperationService['invoke'] = <I, O>(
     op: Operation.Definition<I, O>,
@@ -216,6 +231,7 @@ export const make = (opts: {
       log('invoking operation on edge', { opKey: op.meta.key, deployedId: op.meta.deployedId });
       return invokeRemote<I, O>(op, input).pipe(
         Effect.tap((output) => PubSub.publish(pubsub, { operation: op, input, output, timestamp: Date.now() })),
+        withFallbackTracer,
       );
     }
 
@@ -249,6 +265,7 @@ export const make = (opts: {
           log.error('operation invocation failed', { opKey: op.meta.key, cause: Cause.pretty(cause) });
         }),
       ),
+      withFallbackTracer,
     );
   };
 
@@ -274,7 +291,7 @@ export const make = (opts: {
         fiber.addObserver(() => {
           pendingFibers.delete(fiber);
         });
-      });
+      }).pipe(withFallbackTracer);
     }
 
     const traceMeta = options?.tracing as Trace.Meta | undefined;
@@ -319,6 +336,7 @@ export const make = (opts: {
           log('operation schedule interrupted', { opKey: op.meta.key });
         }),
       ),
+      withFallbackTracer,
     );
   };
 
@@ -370,7 +388,8 @@ export const layer: Layer.Layer<
     // Optional: edge dispatch (`InvokeOptions.on === 'edge'`) is only available when a
     // `RemoteOperationInvoker.Service` is present in context; otherwise edge invocations die.
     const remoteInvoker = yield* Effect.serviceOption(RemoteOperationInvoker.Service);
-    const service = make({ manager, handlerSet, remoteInvoker: Option.getOrUndefined(remoteInvoker) });
+    const tracer = yield* Effect.tracer;
+    const service = make({ manager, handlerSet, remoteInvoker: Option.getOrUndefined(remoteInvoker), tracer });
     return Layer.mergeAll(Layer.succeed(Operation.Service, service), Layer.succeed(Service, service));
   }),
 );

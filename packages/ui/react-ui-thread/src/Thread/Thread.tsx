@@ -43,8 +43,6 @@ import { ThreadContextProvider, useThreadContext } from '../context';
 import { Message } from '../Message';
 import { type MessageMetadata, type ThreadContextValue } from '../types';
 
-const getMessageId = (message: MessageType.Message) => Obj.getURI(message);
-
 //
 // Root
 //
@@ -297,7 +295,7 @@ const groupMessages = (
     if (currentGroup && sameSenderAsGroup && withinGroupWindow) {
       currentGroup.messages.push(message);
     } else {
-      currentGroup = { kind: 'group', id: getMessageId(message), messages: [message] };
+      currentGroup = { kind: 'group', id: Obj.getURI(message), messages: [message] };
       items.push(currentGroup);
     }
     lastGroupMessage = message;
@@ -393,7 +391,7 @@ const ThreadMessages = ({
       currentId={currentId}
       eventHandler={eventHandler}
     >
-      <ScrollArea.Root classNames={mx('col-span-2 flex-1 min-h-0', classNames)} orientation='vertical'>
+      <ScrollArea.Root classNames={mx('col-span-2 dx-grow', classNames)} orientation='vertical'>
         <ScrollArea.Viewport ref={setViewport}>
           <Mosaic.VirtualStack
             Tile={ThreadItemAdapter}

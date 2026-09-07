@@ -11,7 +11,13 @@ import { EffectEx } from '@dxos/effect';
 
 import { Assistant, AssistantCapabilities, AssistantPreset, Ollama } from '#types';
 
-import { type AiServicePreset, defaultsKeyForProvider, presetsForProvider, resolveProvider } from '../processor';
+import {
+  type AiServicePreset,
+  defaultsKeyForProvider,
+  pickPreset,
+  presetsForProvider,
+  resolveProvider,
+} from '../processor';
 
 export type UsePresets = {
   preset: AiServicePreset | undefined;
@@ -70,8 +76,7 @@ export const usePresets = (settings: Assistant.Settings): UsePresets => {
 
   // Default to the provider's configured model, else the first available preset.
   useEffect(() => {
-    const configured = defaultModel ? presets.find((preset) => preset.model === defaultModel) : undefined;
-    setPreset(configured ?? presets[0]);
+    setPreset(pickPreset(presets, defaultModel));
   }, [presets, defaultModel]);
 
   const handlePresetChange = useCallback<NonNullable<AssistantPreset.ChatPresetProps['onPresetChange']>>(

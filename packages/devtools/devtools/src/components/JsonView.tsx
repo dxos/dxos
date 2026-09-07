@@ -12,7 +12,7 @@ import { arrayToBuffer } from '@dxos/util';
 
 // TODO(burdon): Move util to SyntaxHighlighter.
 export const JsonView: FC<{ data?: object; truncate?: boolean }> = ({ data, truncate = true }) => {
-  return <JsonHighlighter classNames='dx-expander' data={data} replacer={replacer(truncate)} />;
+  return <JsonHighlighter classNames='dx-expand' data={data} replacer={replacer(truncate)} />;
 };
 
 // TODO(burdon): Factor out.
@@ -56,7 +56,7 @@ const replacer =
             // viewer formats.
             return {
               '@type': value.type_url,
-              ...decodeCompat(desc, value.value),
+              ...decodeCompat<Record<string, unknown>>(desc, value.value),
             };
           }
         } catch {}

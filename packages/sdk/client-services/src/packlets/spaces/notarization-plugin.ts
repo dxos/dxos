@@ -12,6 +12,7 @@ import { PublicKey } from '@dxos/keys';
 import { type SpaceId } from '@dxos/keys';
 import { log, logInfo } from '@dxos/log';
 import { EdgeCallFailedError } from '@dxos/protocols';
+import { getBufService } from '@dxos/protocols/buf-service';
 import { type Runtime_Client_EdgeFeatures } from '@dxos/protocols/buf/dxos/config_pb';
 import { schema } from '@dxos/protocols/proto';
 import { type Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
@@ -410,10 +411,10 @@ export class NotarizationTeleportExtension extends RpcExtension<Services, Servic
   constructor(private readonly _params: NotarizationTeleportExtensionProps) {
     super({
       requested: {
-        NotarizationService: schema.getService('dxos.mesh.teleport.notarization.NotarizationService'),
+        NotarizationService: getBufService<NotarizationService>('dxos.mesh.teleport.notarization.NotarizationService'),
       },
       exposed: {
-        NotarizationService: schema.getService('dxos.mesh.teleport.notarization.NotarizationService'),
+        NotarizationService: getBufService<NotarizationService>('dxos.mesh.teleport.notarization.NotarizationService'),
       },
     });
   }

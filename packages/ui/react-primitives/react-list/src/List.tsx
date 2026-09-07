@@ -30,22 +30,14 @@
 //   - `packages/ui/react-ui-list/AUDIT.md` for why this layering exists.
 //   - https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Roles/listbox_role
 
-import { Primitive } from '@radix-ui/react-primitive';
+import { ark } from '@ark-ui/react/factory';
 import React, { forwardRef } from 'react';
 
-import { LIST_NAME, type ListProps, ListProvider, type ListScopedProps } from './ListContext';
+import { LIST_NAME, type ListProps, ListProvider } from './ListContext';
 
-const List = forwardRef<HTMLOListElement, ListProps>((props: ListScopedProps<ListProps>, forwardedRef) => {
-  const {
-    __listScope,
-    variant = 'ordered',
-    selectable = false,
-    multiSelectable = false,
-    itemSizes,
-    children,
-    ...rootProps
-  } = props;
-  const ListRoot = variant === 'ordered' ? Primitive.ol : Primitive.ul;
+const List = forwardRef<HTMLOListElement, ListProps>((props: ListProps, forwardedRef) => {
+  const { variant = 'ordered', selectable = false, multiSelectable = false, itemSizes, children, ...rootProps } = props;
+  const ListRoot = variant === 'ordered' ? ark.ol : ark.ul;
   return (
     <ListRoot
       // `aria-multiselectable` is only meaningful on `role="listbox"`,
@@ -60,7 +52,6 @@ const List = forwardRef<HTMLOListElement, ListProps>((props: ListScopedProps<Lis
     >
       <ListProvider
         {...{
-          scope: __listScope,
           variant,
           selectable,
           itemSizes,

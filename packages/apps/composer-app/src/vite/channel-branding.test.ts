@@ -5,7 +5,7 @@
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
-import { afterEach, describe, test } from 'vitest';
+import { afterEach, describe, test, vi } from 'vitest';
 
 import { applyChannelFavicons, bootMarkPath, channelVariant } from './channel-branding';
 
@@ -22,6 +22,7 @@ const scratches: string[] = [];
 
 afterEach(() => {
   scratches.splice(0).forEach((dir) => rmSync(dir, { recursive: true, force: true }));
+  vi.unstubAllEnvs();
 });
 
 describe('channelVariant', () => {
@@ -30,6 +31,9 @@ describe('channelVariant', () => {
   });
 
   test('an unset environment is a local build, not a channel', ({ expect }) => {
+    // `environment` defaults to `process.env.DX_ENVIRONMENT`, so passing `undefined` reads the
+    // ambient value — a developer who exports one (a machine name, say) fails this otherwise.
+    vi.stubEnv('DX_ENVIRONMENT', '');
     expect(channelVariant('build', '')).toBeUndefined();
     expect(channelVariant('build', undefined)).toBeUndefined();
   });
