@@ -157,8 +157,14 @@ export const DxAliasPlugin = (alias: Record<string, string>, isBundled: (id: str
       return null;
     }
     const aliased = alias[key] + id.slice(key.length);
-    const relative = aliased.startsWith('.') || aliased.startsWith('/');
-    if (relative || isBundled(aliased)) {
+    // A relative target names a file in the aliasing package, not one next to whichever
+    // (often third-party) module did the import.
+    if (aliased.startsWith('.')) {
+      return this.resolve(path.resolve(process.cwd(), aliased), importer, { ...options, skipSelf: true });
+    }
+    // `node:*` goes back through `DxNodeStdPlugin`, which decides between a `@dxos/node-std`
+    // polyfill and a bare `node:` external.
+    if (aliased.startsWith('/') || aliased.startsWith('node:') || isBundled(aliased)) {
       return this.resolve(aliased, importer, { ...options, skipSelf: true });
     }
     return { id: aliased, external: true };
@@ -916,6 +922,12 @@ export interface DxConfigOptions {
   outDir?: string;
   /** Skip DxNodeStdPlugin (for node-only packages that don't target browser). Default: false. */
   nodeTarget?: boolean;
+  /**
+   * Emit `.d.ts` via `tsc` alongside the JS bundle. Default: true. Off for the vendored
+   * bundles, which ship hand-written declarations next to their sources and have no
+   * TypeScript of their own for `tsc` to read.
+   */
+  declarations?: boolean;
   /** JSX runtime for `.tsx`/`.jsx` source files. */
   jsx?: 'react' | 'solid';
   /**
@@ -940,6 +952,11 @@ export interface DxConfigOptions {
   bundle?: string[];
   /** Import aliases, applied before resolution (e.g. `{ '@effect/wa-sqlite': '@dxos/wa-sqlite' }`). */
   alias?: Record<string, string>;
+  /**
+   * `package.json` fields to try when resolving a dependency, highest priority first. For deps
+   * whose ESM entry is broken or node-only — the vendored bundles pick the browser build.
+   */
+  mainFields?: string[];
   /**
    * Output module formats. Default: `['es']` (`<entry>.mjs`). Adding `'cjs'` emits a parallel
    * `<entry>.cjs` — needed only by consumers that `require()` the package, such as a
@@ -1051,11 +1068,13 @@ export const defineConfig = (options: DxConfigOptions = {}): UserConfig => {
     entry = 'src/index.ts',
     outDir = 'dist/lib',
     nodeTarget = false,
+    declarations = true,
     jsx,
     jsxRuntime,
     assetsAsFiles = false,
     bundle = [],
     alias,
+    mainFields,
     formats = ['es'],
     injectGlobals = false,
     importGlobals = false,
@@ -1144,6 +1163,7 @@ export const defineConfig = (options: DxConfigOptions = {}): UserConfig => {
         },
       },
     },
+    ...(mainFields ? { resolve: { mainFields } } : {}),
     plugins: [
       ...(alias ? [DxAliasPlugin(alias, isBundled)] : []),
       DxWorkerResolvePlugin(),
@@ -1156,7 +1176,7 @@ export const defineConfig = (options: DxConfigOptions = {}): UserConfig => {
         ? [{ ...inject({ modules: NODE_STD_GLOBALS, sourceMap: true }), enforce: 'post' as const }]
         : []),
       DxosLogPlugin({ logToFile: false, transform: { enabled: true } }),
-      DxDeclarationsPlugin(),
+      ...(declarations ? [DxDeclarationsPlugin()] : []),
     ],
     ...(test ? { test: buildTestConfig(process.cwd(), test, jsx) } : {}),
   });
