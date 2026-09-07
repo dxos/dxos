@@ -23,11 +23,14 @@ Environment, in order:
 1. Confirm `moon` runs (`pnpm exec moon --version`). If the toolchain plugin cannot load (the
    cloud-sandbox skill's `plugin::loader::registry::load_failure`), stop and report that the
    sandbox cannot build; do not improvise a build.
-2. Start the QA dev server in the background and wait for it (first start builds the graph, budget
-   15 minutes):
-     DX_DEBUG_PORT_SESSION=$(node -e 'console.log(crypto.randomUUID())') \
-       pnpm exec moon run composer-app:serve-qa -- --port 5182 --strictPort --host 127.0.0.1 > /tmp/qa-server.log 2>&1 &
-   Choosing the session yourself (DX_DEBUG_PORT_SESSION) means you never need the sidecar.
+2. Choose the debug-port session up front and export it, so the same shell can pass it to every
+   later command (an inline assignment would reach only the server):
+     export DX_DEBUG_PORT_SESSION=$(node -e 'console.log(crypto.randomUUID())')
+   Then start the QA dev server in the background, keeping its PID for cleanup, and wait for it
+   (first start builds the graph, budget 15 minutes):
+     pnpm exec moon run composer-app:serve-qa -- --port 5182 --strictPort --host 127.0.0.1 > /tmp/qa-server.log 2>&1 &
+     SERVER_PID=$!
+   Choosing the session yourself means you never need the sidecar.
    Wait until `curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:5182/` prints 200.
 3. Open the app in the repo's headless browser helper, which stays alive for the whole run.
    Loopback is unproxied, so localhost needs no proxy flags; a headless page counts as visible, so
@@ -35,6 +38,7 @@ Environment, in order:
    at it:
      PW_CHROMIUM_PATH=/opt/pw-browsers/chromium \
        node packages/apps/composer-app/testing/scripts/bin/qa-browser.mjs http://127.0.0.1:5182/ > /tmp/qa-browser.log 2>&1 &
+     BROWSER_PID=$!
    Wait for `mounted` in /tmp/qa-browser.log. If the app never mounts, attach the log to the
    report and stop.
 4. Drive every step through the port exactly as the README's notation translates it:
@@ -59,7 +63,8 @@ The run:
   push, so the run leaves an artifact.
 - When the app contradicted the script (a key moved, a return shape changed), fix the script in
   the same commit and say what changed in the report's Findings.
-- Finish by stopping the server and the browser you started, and reply with the step table and the
+- Finish by stopping the browser and the server you started (`kill $BROWSER_PID $SERVER_PID`, then
+  confirm nothing listens on 5182 with `lsof -ti :5182`), and reply with the step table and the
   report path. A defect is reported, not fixed, unless the task says otherwise.
 ```
 
