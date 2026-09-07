@@ -22,6 +22,7 @@ import { defineHiddenProperty } from './define-hidden-property';
 import { createTextMethodError } from './errors';
 import { batchEvents } from './event-batch';
 import {
+  changeKeyOf,
   getEchoRoot,
   getOwner,
   getRawTarget,
@@ -204,19 +205,6 @@ defineHiddenProperty(TypedObjectPrototype, symbolReactivePrototype, true);
 // The ECHO system surface is exposed as accessors on the behaviour prototype rather than as
 // branches in the `get` trap. `this` is the proxy receiver (or the raw target when read directly);
 // `getRawTarget` resolves either to the underlying target.
-/**
- * Keyed by the root target, and `undefined` until the root owns an `[EventId]`: an object under
- * construction is not yet gated, which is what lets `init` fill it before any context exists.
- */
-const changeKeyOf = function (this: ProxyTarget) {
-  const root = getEchoRoot(getRawTarget(this));
-  return EventId in root ? root : undefined;
-};
-
-// An array keeps its `ReactiveArray` chain and is never compacted onto `TypedObjectPrototype`, so it
-// carries the gate key itself; it resolves to the same root as the record holding it.
-Object.defineProperty(ReactiveArray.prototype, ChangeKeyId, { get: changeKeyOf });
-
 Object.defineProperties(TypedObjectPrototype, {
   // TODO(burdon): Remove?
   [objectData]: {
@@ -225,7 +213,9 @@ Object.defineProperties(TypedObjectPrototype, {
     },
   },
   [ChangeKeyId]: {
-    get: changeKeyOf,
+    get(this: ProxyTarget) {
+      return changeKeyOf(this);
+    },
   },
   [ChangeId]: {
     // A function that runs a mutation inside a controlled change context. Only root objects (which
@@ -561,9 +551,14 @@ export class TypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
       }
     }
 
-    // Convert arrays to reactive arrays.
+    // Convert arrays to reactive arrays — the whole subtree, as construction does, not just the top
+    // level: an array reached through an assigned record is proxied like any other and must be gated
+    // and reactive too.
     if (Array.isArray(value) && !(value instanceof ReactiveArray)) {
       value = ReactiveArray.from(value);
+    }
+    if (value != null && typeof value === 'object' && !isProxy(value)) {
+      makeArraysReactive(value);
     }
 
     const validatedValue = this._validateValue(target, prop, value);
@@ -730,16 +725,23 @@ export const prepareDecodedTypedTarget = <T>(target: T, schema: Schema.Schema<T>
   setSchemaProperties(target, schema, undefined, true);
 };
 
+/**
+ * Convert every plain array in a subtree to a {@link ReactiveArray}, in place. A plain array has
+ * neither the batched mutating methods nor the `[ChangeKeyId]` the read-only gate reads off its
+ * prototype, so one left in the tree would mutate silently and notify nobody.
+ *
+ * An already-proxied child is skipped: it belongs to the graph already and writing through its proxy
+ * would run the whole assignment path again.
+ */
 const makeArraysReactive = (target: any) => {
   for (const key in target) {
-    if (isProxy(target)) {
+    const value = target[key];
+    if (value == null || typeof value !== 'object' || isProxy(value)) {
       continue;
     }
-    if (Array.isArray(target[key])) {
-      target[key] = ReactiveArray.from(target[key]);
+    if (Array.isArray(value) && !(value instanceof ReactiveArray)) {
+      target[key] = ReactiveArray.from(value);
     }
-    if (typeof target[key] === 'object') {
-      makeArraysReactive(target[key]);
-    }
+    makeArraysReactive(target[key]);
   }
 };
