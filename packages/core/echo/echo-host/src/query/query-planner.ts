@@ -1285,6 +1285,11 @@ const feedScanForLimit = (
         }
         break;
       case 'SkipStep':
+        // A skip below the order composes the other way round: the plan drops rows in scan order
+        // and orders what is left, where an inflated scan limit orders first and drops from that.
+        if (orderStepIndex !== -1 && index < orderStepIndex) {
+          return undefined;
+        }
         break;
       default:
         return undefined;

@@ -264,6 +264,16 @@ describe('Feed query pagination', () => {
     expect(newest.map((obj) => (obj as TestSchema.Task).title)).toEqual(['e', 'd']);
   });
 
+  test('a skip below the order drops in append order, not from the newest', async ({ expect }) => {
+    const { db, feed } = await setupFeedWithTasks(builder, ['a', 'b', 'c', 'd', 'e', 'f']);
+
+    const window = await db
+      .query(Query.select(Filter.everything()).skip(2).orderBy(Order.natural('desc')).limit(3).from(feed))
+      .run();
+
+    expect(window.map((obj) => (obj as TestSchema.Task).title)).toEqual(['f', 'e', 'd']);
+  });
+
   test('a limited read still sees a deleted item as absent, and still returns the limit', async ({ expect }) => {
     const titles = ['a', 'b', 'c', 'd'];
     const { db, feed } = await setupFeedWithTasks(builder, titles);

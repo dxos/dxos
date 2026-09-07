@@ -2287,6 +2287,13 @@ describe('QueryPlanner', () => {
       expect(selectStep(query.ast).feedScan).toBeUndefined();
     });
 
+    test('a skip below the order keeps the limit downstream', () => {
+      // `skip(2).orderBy(desc)` drops two rows in scan order and orders what is left; an inflated
+      // scan limit would order first and drop the two NEWEST, which is a different page.
+      const query = Query.select(Filter.everything()).skip(2).orderBy(Order.natural('desc')).limit(3).from(feedScope);
+      expect(selectStep(query.ast).feedScan).toBeUndefined();
+    });
+
     test('a content-based order keeps the limit downstream', () => {
       const query = Query.select(Filter.everything()).orderBy(Order.property('title', 'asc')).limit(5).from(feedScope);
       const step = selectStep(query.ast);
