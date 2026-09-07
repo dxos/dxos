@@ -15,23 +15,23 @@
   "exports": {
     ".": {
       "types": "./dist/types/src/index.d.ts",
-      "import": "./dist/lib/index.mjs"
+      "default": "./dist/lib/index.mjs"
     },
     "./SqliteClient": {
       "types": "./dist/types/src/SqliteClient.d.ts",
-      "import": "./dist/lib/SqliteClient.mjs"
+      "default": "./dist/lib/SqliteClient.mjs"
     },
     "./OpfsPool": {
       "types": "./dist/types/src/OpfsPool.d.ts",
-      "import": "./dist/lib/OpfsPool.mjs"
+      "default": "./dist/lib/OpfsPool.mjs"
     },
     "./OpfsWorker": {
       "types": "./dist/types/src/OpfsWorker.d.ts",
-      "import": "./dist/lib/OpfsWorker.mjs"
+      "default": "./dist/lib/OpfsWorker.mjs"
     },
     "./SqliteMigrator": {
       "types": "./dist/types/src/SqliteMigrator.d.ts",
-      "import": "./dist/lib/SqliteMigrator.mjs"
+      "default": "./dist/lib/SqliteMigrator.mjs"
     },
     "./platform": {
       "types": "./dist/types/src/platform/browser.d.ts",
@@ -41,15 +41,15 @@
     },
     "./SqlExport": {
       "types": "./dist/types/src/SqlExport.d.ts",
-      "import": "./dist/lib/SqlExport.mjs"
+      "default": "./dist/lib/SqlExport.mjs"
     },
     "./SqlTransaction": {
       "types": "./dist/types/src/SqlTransaction.d.ts",
-      "import": "./dist/lib/SqlTransaction.mjs"
+      "default": "./dist/lib/SqlTransaction.mjs"
     },
     "./SqlMigrations": {
       "types": "./dist/types/src/SqlMigrations.d.ts",
-      "import": "./dist/lib/SqlMigrations.mjs"
+      "default": "./dist/lib/SqlMigrations.mjs"
     }
   },
   "files": [

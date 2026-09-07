@@ -38,13 +38,13 @@
     ".": {
       "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
-      "import": "./dist/lib/index.mjs"
+      "default": "./dist/lib/index.mjs"
     },
     "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
     "./MapPlugin": {
       "source": "./src/MapPlugin.ts",
       "types": "./dist/types/src/MapPlugin.d.ts",
-      "import": "./dist/lib/MapPlugin.mjs"
+      "default": "./dist/lib/MapPlugin.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",

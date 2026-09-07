@@ -16,17 +16,17 @@
     ".": {
       "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
-      "import": "./dist/lib/index.mjs"
+      "default": "./dist/lib/index.mjs"
     },
     "./react": {
       "source": "./src/react.ts",
       "types": "./dist/types/src/react.d.ts",
-      "import": "./dist/lib/react.mjs"
+      "default": "./dist/lib/react.mjs"
     },
     "./wasm": {
       "source": "./src/wasm.ts",
       "types": "./dist/types/src/wasm.d.ts",
-      "import": "./dist/lib/wasm.mjs"
+      "default": "./dist/lib/wasm.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",

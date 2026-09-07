@@ -60,28 +60,28 @@
     ".": {
       "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
-      "import": "./dist/lib/index.mjs"
+      "default": "./dist/lib/index.mjs"
     },
     "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
     "./translations": {
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
-      "import": "./dist/lib/translations.mjs"
+      "default": "./dist/lib/translations.mjs"
     },
     "./Book": {
       "source": "./src/types/Book.ts",
       "types": "./dist/types/src/types/Book.d.ts",
-      "import": "./dist/lib/Book.mjs"
+      "default": "./dist/lib/Book.mjs"
     },
     "./LibraryEvents": {
       "source": "./src/types/LibraryEvents.ts",
       "types": "./dist/types/src/types/LibraryEvents.d.ts",
-      "import": "./dist/lib/LibraryEvents.mjs"
+      "default": "./dist/lib/LibraryEvents.mjs"
     },
     "./LibraryPlugin": {
       "source": "./src/LibraryPlugin.ts",
       "types": "./dist/types/src/LibraryPlugin.d.ts",
-      "import": "./dist/lib/LibraryPlugin.mjs"
+      "default": "./dist/lib/LibraryPlugin.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",

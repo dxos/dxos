@@ -1,7 +1,7 @@
 {
   "name": "@dxos/shell",
   "version": "0.11.1",
-  "description": "DXOS’s OS experiences",
+  "description": "DXOS\u2019s OS experiences",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "repository": {
@@ -22,15 +22,15 @@
     "./style.css": "./dist/bundle/shell.css",
     "./react": {
       "types": "./dist/types/src/react.d.ts",
-      "import": "./dist/lib/react.mjs"
+      "default": "./dist/lib/react.mjs"
     },
     "./translations": {
       "types": "./dist/types/src/translations.d.ts",
-      "import": "./dist/lib/translations.mjs"
+      "default": "./dist/lib/translations.mjs"
     },
     "./testing": {
       "types": "./dist/types/src/testing/index.d.ts",
-      "import": "./dist/lib/testing.mjs"
+      "default": "./dist/lib/testing.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",

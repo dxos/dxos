@@ -60,38 +60,38 @@
     ".": {
       "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
-      "import": "./dist/lib/index.mjs"
+      "default": "./dist/lib/index.mjs"
     },
     "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
     "./testing": {
       "source": "./src/testing.ts",
       "types": "./dist/types/src/testing.d.ts",
-      "import": "./dist/lib/testing.mjs"
+      "default": "./dist/lib/testing.mjs"
     },
     "./translations": {
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
-      "import": "./dist/lib/translations.mjs"
+      "default": "./dist/lib/translations.mjs"
     },
     "./AtprotoCapabilities": {
       "source": "./src/types/AtprotoCapabilities.ts",
       "types": "./dist/types/src/types/AtprotoCapabilities.d.ts",
-      "import": "./dist/lib/AtprotoCapabilities.mjs"
+      "default": "./dist/lib/AtprotoCapabilities.mjs"
     },
     "./AtprotoEvents": {
       "source": "./src/types/AtprotoEvents.ts",
       "types": "./dist/types/src/types/AtprotoEvents.d.ts",
-      "import": "./dist/lib/AtprotoEvents.mjs"
+      "default": "./dist/lib/AtprotoEvents.mjs"
     },
     "./AtprotoPlugin": {
       "source": "./src/AtprotoPlugin.ts",
       "types": "./dist/types/src/AtprotoPlugin.d.ts",
-      "import": "./dist/lib/AtprotoPlugin.mjs"
+      "default": "./dist/lib/AtprotoPlugin.mjs"
     },
     "./AtprotoPublication": {
       "source": "./src/types/AtprotoPublication.ts",
       "types": "./dist/types/src/types/AtprotoPublication.d.ts",
-      "import": "./dist/lib/AtprotoPublication.mjs"
+      "default": "./dist/lib/AtprotoPublication.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",

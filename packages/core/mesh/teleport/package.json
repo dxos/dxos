@@ -15,11 +15,11 @@
   "exports": {
     ".": {
       "types": "./dist/types/src/index.d.ts",
-      "import": "./dist/lib/index.mjs"
+      "default": "./dist/lib/index.mjs"
     },
     "./testing": {
       "types": "./dist/types/src/testing/index.d.ts",
-      "import": "./dist/lib/testing.mjs"
+      "default": "./dist/lib/testing.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
