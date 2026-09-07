@@ -56,7 +56,7 @@ import * as Schema from 'effect/Schema';
 import { Event } from '@dxos/async';
 import { type DevtoolsFormatter, devtoolsFormatter } from '@dxos/debug';
 import { Entity, Obj, Type } from '@dxos/echo';
-import { DATA_NAMESPACE, EncodedReference, isEncodedReference } from '@dxos/echo-protocol';
+import { DATA_NAMESPACE, EncodedReference, PROPERTY_ID, isEncodedReference } from '@dxos/echo-protocol';
 import {
   type AnyProperties,
   ATTR_DELETED,
@@ -141,16 +141,6 @@ const getNamespace = (target: ProxyTarget): string => target[symbolNamespace];
 
 /** Recover the raw target from a receiver (the proxy when reached through a trap). */
 const rawTarget = (self: ProxyTarget): ProxyTarget => (isProxy(self) ? getProxyTarget(self) : self);
-
-export const getDecodedValueAtPath = (target: ProxyTarget, prop?: string): DecodedValueAtPath => {
-  const dataPath = [...target[symbolPath]];
-  if (prop != null) {
-    dataPath.push(prop);
-  }
-  const fullPath = [getNamespace(target), ...dataPath];
-  const value: any = target[symbolInternals].getDecoded(fullPath);
-  return { namespace: getNamespace(target), value, dataPath };
-};
 
 export const getReified = (target: ProxyTarget): any => {
   const fullPath = [getNamespace(target), ...target[symbolPath]];
@@ -793,10 +783,32 @@ export const adoptInstanceState = (target: ProxyTarget, state: ProxyTarget): voi
  * `rebindRelationEndpoints`) *after* `createObject` to re-stamp the stored refs once the
  * database (and thus space) is known. They are creation-handoff data, like `[ParentId]`.
  */
+// A record must present as a plain object, and `constructor` is read off the real prototype chain now
+// that there is no `get` trap to intercept it. Reporting `EchoRecord` breaks callers that use it to
+// decide whether an object is plain: Effect's `Hash.structure` walks the prototype chain of anything
+// whose constructor is not `Object` and *reads* every accessor it finds there, which throws on the
+// relation endpoints of a non-relation. `EchoArray` already does the same with `Array`.
+for (const prototype of [EchoRecordPrototype, EchoRootPrototype, EchoMetaRootPrototype]) {
+  Object.defineProperty(prototype, 'constructor', {
+    enumerable: false,
+    writable: true,
+    configurable: true,
+    value: Object,
+  });
+}
+
 const SYSTEM_KEYS: ReadonlyArray<string | symbol> = [
   ...Reflect.ownKeys(EchoRootPrototype),
   ...Reflect.ownKeys(EchoRecordPrototype),
-].filter((key) => key !== 'constructor' && key !== RelationSourceId && key !== RelationTargetId);
+].filter(
+  (key) =>
+    key !== 'constructor' &&
+    key !== RelationSourceId &&
+    key !== RelationTargetId &&
+    // A root object carries `id` as a real own property — that is the representation, not a leftover
+    // shadowing the accessor, and stripping it would leave the key set short of what a read returns.
+    key !== PROPERTY_ID,
+);
 
 /**
  * Remove own properties left behind by a previous handler that would shadow the ECHO system
@@ -808,10 +820,4 @@ export const stripShadowingProperties = (target: ProxyTarget): void => {
       delete (target as any)[key];
     }
   }
-};
-
-type DecodedValueAtPath = {
-  namespace: string;
-  value: any;
-  dataPath: Doc.KeyPath;
 };

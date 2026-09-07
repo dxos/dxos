@@ -60,7 +60,6 @@ import {
   adoptInstanceState,
   createInstanceState,
   createRecordTarget,
-  getDecodedValueAtPath,
   getReified,
   getSchema,
   getTypename,
@@ -136,6 +135,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
         this._refreshArray(target);
       }
     } else {
+      this._defineId(target, core);
       if (isRootDataObject(target)) {
         core.refreshTargets = (scope) => this._refreshAll(core, target, scope);
       }
@@ -154,74 +154,8 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     return core.hasDoc;
   }
 
-  ownKeys(target: ProxyTarget): ArrayLike<string | symbol> {
-    const record = this._record(target);
-    // The document object carries its own symbol-keyed metadata, which a decoded copy never had.
-    const keys: (string | symbol)[] =
-      typeof record !== 'object' || record === null
-        ? []
-        : target instanceof EchoArray
-          ? Reflect.ownKeys(record)
-          : Object.keys(record);
-    if (isRootDataObject(target)) {
-      keys.push(PROPERTY_ID);
-    }
-
-    return keys;
-  }
-
-  getOwnPropertyDescriptor(target: ProxyTarget, p: string | symbol): PropertyDescriptor | undefined {
-    if (isRootDataObject(target) && p === PROPERTY_ID) {
-      return { enumerable: true, configurable: true, writable: false };
-    }
-
-    const record = this._record(target);
-    if (typeof record !== 'object' || record === null) {
-      return undefined;
-    }
-    if (target instanceof EchoArray) {
-      return Reflect.getOwnPropertyDescriptor(record, p);
-    }
-    // The document is frozen; the descriptor describes the key as a decoded copy would carry it.
-    if (typeof p !== 'string' || !Object.hasOwn(record, p)) {
-      return undefined;
-    }
-    return { value: getDecodedValueAtPath(target, p).value, writable: true, enumerable: true, configurable: true };
-  }
-
   defineProperty(target: ProxyTarget, property: string | symbol, attributes: PropertyDescriptor): boolean {
     return this.set(target, property, attributes.value, target);
-  }
-
-  has(target: ProxyTarget, p: string | symbol): boolean {
-    if (target instanceof EchoArray) {
-      return this._arrayHas(target, p);
-    }
-
-    // The ECHO system surface (id, type, meta, relation refs, ...) is carried on
-    // the prototype chain, so `Reflect.has` answers for it structurally — root
-    // objects report it, nested/meta records do not.
-    if (Reflect.has(target, p)) {
-      return true;
-    }
-
-    const record = this._record(target);
-    if (typeof record !== 'object' || record === null) {
-      return false;
-    }
-    return typeof p === 'string' && Object.hasOwn(record, p);
-  }
-
-  /**
-   * The record the key-set traps read: the document's own record object for a record target, a fresh
-   * decode for an array.
-   */
-  private _record(target: ProxyTarget): unknown {
-    if (target instanceof EchoArray) {
-      return getDecodedValueAtPath(target).value;
-    }
-    const core = target[symbolInternals];
-    return core.hasDoc ? core.getRaw([target[symbolNamespace], ...target[symbolPath]]) : undefined;
   }
 
   /**
@@ -325,9 +259,26 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       }
     }
     for (const key of Object.keys(target)) {
-      if (!present || !Object.hasOwn(record, key)) {
+      if (key !== PROPERTY_ID && (!present || !Object.hasOwn(record, key))) {
         delete (target as any)[key];
       }
+    }
+    this._defineId(target, core);
+  }
+
+  /**
+   * `id` is part of a root object's key set but is not in its record — it belongs to the core. Carried as
+   * a real own property so the target's own shape is the whole answer and no `ownKeys` trap is needed to
+   * synthesize it. Non-writable, like the accessor it shadows, which had no setter.
+   */
+  private _defineId(target: ProxyTarget, core: ObjectCore): void {
+    if (isRootDataObject(target) && !Object.hasOwn(target, PROPERTY_ID) && core.id != null) {
+      Object.defineProperty(target, PROPERTY_ID, {
+        value: core.id,
+        writable: false,
+        enumerable: true,
+        configurable: true,
+      });
     }
   }
 
@@ -460,10 +411,6 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
    * `Object.getPrototypeOf(obj)` and `instanceof Object`/`Array` behave as for a
    * plain object/array.
    */
-  getPrototypeOf(target: ProxyTarget): object | null {
-    return target instanceof EchoArray ? Array.prototype : Object.prototype;
-  }
-
   /**
    * Takes a decoded value from the document, and wraps it in a proxy if required.
    * We use it to wrap records and arrays to provide deep mutability.
@@ -492,10 +439,13 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       const targetKey = TargetKey.new(dataPath, namespace, 'array');
       const newTarget = defaultMap(target[symbolInternals].targetsMap, targetKey, (): ProxyTarget => {
         const array = new EchoArray();
-        array[symbolInternals] = target[symbolInternals];
-        array[symbolPath] = dataPath;
-        array[symbolNamespace] = namespace;
-        array[symbolHandler] = this;
+        // Hidden rather than assigned: an assignment to a declared class field leaves it enumerable, and
+        // with no `ownKeys` trap to filter them these would show up in `Reflect.ownKeys`, in a spread and
+        // in a deep-equality comparison.
+        defineHiddenProperty(array, symbolInternals, target[symbolInternals]);
+        defineHiddenProperty(array, symbolPath, dataPath);
+        defineHiddenProperty(array, symbolNamespace, namespace);
+        defineHiddenProperty(array, symbolHandler, this);
         defineHiddenProperty(array, EventId, target[EventId]);
         return array as any as ProxyTarget;
       });
@@ -523,20 +473,6 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     }
 
     return decoded;
-  }
-
-  private _arrayHas(target: ProxyTarget, prop: string | symbol): boolean {
-    invariant(target instanceof EchoArray);
-    if (typeof prop === 'string') {
-      const parsedIndex = parseInt(prop);
-      const { value: length } = getDecodedValueAtPath(target, 'length');
-      invariant(typeof length === 'number');
-      if (!isNaN(parsedIndex)) {
-        return parsedIndex < length;
-      }
-    }
-
-    return Reflect.has(target, prop);
   }
 
   private _validateValue(target: ProxyTarget, path: Doc.KeyPath, value: any): any {

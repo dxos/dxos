@@ -402,14 +402,6 @@ export class TypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
     }
   }
 
-  /**
-   * Hide the internal instance-state prototype so consumers see a plain object; arrays keep their
-   * real (ReactiveArray) prototype.
-   */
-  getPrototypeOf(target: ProxyTarget): object | null {
-    return Array.isArray(target) ? Reflect.getPrototypeOf(target) : Object.prototype;
-  }
-
   set(target: ProxyTarget, prop: string | symbol, value: any, receiver: any): boolean {
     const echoRoot = getEchoRoot(target);
     const isInitialized = assertMutableWithinChange(echoRoot, prop);
@@ -436,10 +428,6 @@ export class TypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
       this._inSet = false;
     }
     return result;
-  }
-
-  ownKeys(target: ProxyTarget): ArrayLike<string | symbol> {
-    return Reflect.ownKeys(target);
   }
 
   deleteProperty(target: ProxyTarget, property: string | symbol): boolean {

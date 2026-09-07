@@ -129,10 +129,9 @@ export const createProxy = <T extends object>(target: T, handler: ReactiveHandle
 };
 
 /**
- * The handler a target was created with, or the one {@link setProxyHandler} later gave it. Each trap
- * below dispatches on the handler *defining* that trap rather than on what it returned: several traps
- * answer `undefined` or `null` legitimately — a missing property has no descriptor, a null-prototype
- * object has no prototype — and treating that as "not handled" would silently fall back to the default.
+ * The variant's handler, reached only on a write. Reads, key enumeration and `getPrototypeOf` are all
+ * answered without it — the target carries the whole answer — so this is the only dispatch left, and it
+ * is on the cold path.
  */
 const trapOf = <K extends keyof ReactiveHandler<any>>(
   target: object,
@@ -144,13 +143,22 @@ const trapOf = <K extends keyof ReactiveHandler<any>>(
 };
 
 /**
- * The handler behind every reactive proxy. There is no `get` trap: a target carries its data as own
- * properties, so the engine serves reads off it with no JavaScript call at all — which is the whole
- * read-path win, and the reason this can be one shared object rather than one per proxy (trap presence
- * is a property of the handler object, and the trap lookup is told nothing about which proxy is being
- * read). Every other trap dispatches to the target's handler, falling back to the default behaviour.
+ * The handler behind every reactive proxy — one object, shared by every variant, with four traps.
+ *
+ * There is no `get`, `has`, `ownKeys` or `getOwnPropertyDescriptor`: a target carries its data as own
+ * properties, so the engine answers all of those off the target itself with no JavaScript call. What is
+ * left is the write gate, which exists because only a `Proxy` can make an assignment throw, and
+ * `getPrototypeOf`, which hides the internal instance-state prototype so consumers see a plain object.
+ * Neither of those needs to know which variant it is looking at, so `getPrototypeOf` does not dispatch
+ * at all and the write traps dispatch only to reach the variant's write logic.
  */
 const REACTIVE_PROXY_HANDLER: ProxyHandler<any> = {
+  set: (target, property, value, receiver) => {
+    const trap = trapOf(target, 'set');
+    return trap
+      ? trap.fn.call(trap.handler, target, property, value, receiver)
+      : Reflect.set(target, property, value, receiver);
+  },
   defineProperty: (target, property, attributes) => {
     const trap = trapOf(target, 'defineProperty');
     return trap
@@ -161,38 +169,7 @@ const REACTIVE_PROXY_HANDLER: ProxyHandler<any> = {
     const trap = trapOf(target, 'deleteProperty');
     return trap ? trap.fn.call(trap.handler, target, property) : Reflect.deleteProperty(target, property);
   },
-  getOwnPropertyDescriptor: (target, property) => {
-    const trap = trapOf(target, 'getOwnPropertyDescriptor');
-    return trap ? trap.fn.call(trap.handler, target, property) : Reflect.getOwnPropertyDescriptor(target, property);
-  },
-  getPrototypeOf: (target) => {
-    const trap = trapOf(target, 'getPrototypeOf');
-    return trap ? trap.fn.call(trap.handler, target) : Reflect.getPrototypeOf(target);
-  },
-  has: (target, property) => {
-    const trap = trapOf(target, 'has');
-    return trap ? trap.fn.call(trap.handler, target, property) : Reflect.has(target, property);
-  },
-  isExtensible: (target) => {
-    const trap = trapOf(target, 'isExtensible');
-    return trap ? trap.fn.call(trap.handler, target) : Reflect.isExtensible(target);
-  },
-  ownKeys: (target) => {
-    const trap = trapOf(target, 'ownKeys');
-    return trap ? trap.fn.call(trap.handler, target) : Reflect.ownKeys(target);
-  },
-  preventExtensions: (target) => {
-    const trap = trapOf(target, 'preventExtensions');
-    return trap ? trap.fn.call(trap.handler, target) : Reflect.preventExtensions(target);
-  },
-  set: (target, property, value, receiver) => {
-    const trap = trapOf(target, 'set');
-    return trap
-      ? trap.fn.call(trap.handler, target, property, value, receiver)
-      : Reflect.set(target, property, value, receiver);
-  },
-  setPrototypeOf: (target, prototype) => {
-    const trap = trapOf(target, 'setPrototypeOf');
-    return trap ? trap.fn.call(trap.handler, target, prototype) : Reflect.setPrototypeOf(target, prototype);
-  },
+  // An array's real prototype chain is already what a consumer should see; only a record hides an
+  // instance-state prototype behind `Object.prototype`.
+  getPrototypeOf: (target) => (Array.isArray(target) ? Reflect.getPrototypeOf(target) : Object.prototype),
 };

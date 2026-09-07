@@ -15,11 +15,13 @@ export class EchoArray<T> extends Array<T> {
     return Array;
   }
 
-  // Will be initialize when the proxy is created.
-  [symbolInternals]: ObjectCore = null as any;
-  [symbolPath]: Doc.KeyPath = null as any;
-  [symbolNamespace]: string = null as any;
-  [symbolHandler]: EchoReactiveHandler = null as any;
+  // Declared, not initialized: a class field would be an enumerable own property, and with no `ownKeys`
+  // trap to filter it these would leak into `Reflect.ownKeys`, spreads and deep-equality comparisons.
+  // The handler installs them as hidden properties when it builds the array.
+  declare [symbolInternals]: ObjectCore;
+  declare [symbolPath]: Doc.KeyPath;
+  declare [symbolNamespace]: string;
+  declare [symbolHandler]: EchoReactiveHandler;
 
   // Installed by the handler's `init`, like every other target's; declared so an array is structurally
   // a `ProxyTarget` and the refresh paths can take one without a cast.
