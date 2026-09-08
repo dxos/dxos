@@ -22,9 +22,9 @@ import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import {
   type ControlPipelineSnapshot,
   type EchoMetadata,
-  EdgeReplicationSetting as LegacyEdgeReplicationSetting,
   type IdentityRecord,
   type LargeSpaceMetadata,
+  EdgeReplicationSetting as LegacyEdgeReplicationSetting,
   type SpaceMetadata,
 } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { type Directory, type File } from '@dxos/random-access-storage';
