@@ -62,9 +62,9 @@ export const NativeSettings = () => {
       <Form.Viewport scroll>
         <Form.Content>
           <Form.Section title={meta.profile.name ?? meta.profile.key}>
-            <Form.Row label={t('settings.updates.label')} description={description}>
+            <Form.Field label={t('settings.updates.label')} description={description}>
               {button}
-            </Form.Row>
+            </Form.Field>
           </Form.Section>
         </Form.Content>
       </Form.Viewport>

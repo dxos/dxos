@@ -6,7 +6,7 @@ import React, { useCallback, useState } from 'react';
 
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { log } from '@dxos/log';
-import { Banner, Button, Input, useTranslation } from '@dxos/react-ui';
+import { Banner, Button, Field, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 
 import { meta } from '#meta';
@@ -29,7 +29,7 @@ export type RegistrySettingsProps = AppSurface.SettingsProps<
  * dev server is offline at boot, the toggle stays on and a warning is logged
  * (the manager's `failed` atom also surfaces a badge on the plugin list).
  *
- * The URL input and toggle are rendered as `Form.Row` action rows (not schema
+ * The URL input and toggle are rendered as `Form.Field` action rows (not schema
  * fields): the input needs a dynamic disabled state and the toggle runs async
  * enable/disable side effects, neither of which a plain schema field expresses.
  */
@@ -99,18 +99,18 @@ export const RegistrySettings = ({
                 <Banner.Body>{t('dev-plugin.description')}</Banner.Body>
               </Banner.Content>
             </Banner.Root>
-            <Form.Row label={t('dev-plugin.url.label')} description={t('dev-plugin.url.description')}>
-              <Input.Root>
-                <Input.TextInput
+            <Form.Field label={t('dev-plugin.url.label')} description={t('dev-plugin.url.description')}>
+              <Field.Root>
+                <Field.Input
                   disabled={!onSettingsChange || enabled || busy}
                   value={url}
                   onChange={(event) =>
                     onSettingsChange?.((current) => ({ ...current, devPluginUrl: event.target.value }))
                   }
                 />
-              </Input.Root>
-            </Form.Row>
-            <Form.Row label={t('dev-plugin.toggle.label')} description={t('dev-plugin.toggle.description')}>
+              </Field.Root>
+            </Form.Field>
+            <Form.Field label={t('dev-plugin.toggle.label')} description={t('dev-plugin.toggle.description')}>
               <Button
                 variant={enabled ? undefined : 'primary'}
                 disabled={!onSettingsChange || busy || (!enabled && !trimmedUrl)}
@@ -118,7 +118,7 @@ export const RegistrySettings = ({
               >
                 {buttonLabel}
               </Button>
-            </Form.Row>
+            </Form.Field>
             {enabled && !loadedDevId && !busy && (
               <Banner.Root valence='warning'>
                 <Banner.Content>

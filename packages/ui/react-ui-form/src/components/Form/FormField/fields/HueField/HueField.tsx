@@ -8,7 +8,7 @@ import { HuePicker } from '@dxos/react-ui-pickers';
 
 import { type FormFieldRendererProps } from '#types';
 
-import { FormRow } from '../../FormRow';
+import { FormField } from '../../FormField';
 
 /**
  * A field whose value is one of the theme's hues: the hue picker in a form row, with the field's label
@@ -18,7 +18,7 @@ export const HueField = ({ type, readonly, onValueChange, ...props }: FormFieldR
   const handleChange = useCallback((hue: string) => onValueChange(type, hue), [onValueChange, type]);
   const handleReset = useCallback(() => onValueChange(type, undefined), [onValueChange, type]);
   return (
-    <FormRow<string | undefined> readonly={readonly} {...props}>
+    <FormField<string | undefined> readonly={readonly} {...props}>
       {({ value }) => (
         <HuePicker
           label={props.label}
@@ -28,7 +28,7 @@ export const HueField = ({ type, readonly, onValueChange, ...props }: FormFieldR
           onReset={handleReset}
         />
       )}
-    </FormRow>
+    </FormField>
   );
 };
 

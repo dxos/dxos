@@ -33,11 +33,13 @@ export type EdgeJoinLatencySpec = {
   /** Peers that accept an invitation, each an identity of its own, each timed independently. */
   joiners: number;
   /**
-   * Give the seeder an EDGE agent.
+   * Give every client an EDGE agent.
    *
    * Required, not cosmetic: `shareSpace` opens a DELEGATED invitation, which EDGE redeems on behalf
    * of a member, and with no agent `EdgeInvitationHandler` answers `No agents in the space.` and
-   * retries until the join fails. Exposed rather than hardcoded so the no-agent path stays testable.
+   * the seeder admits each joiner itself — a different system than this plan measures. Exposed
+   * rather than hardcoded so the no-agent path stays testable; with it on, a client that cannot get
+   * an agent fails the run.
    */
   agents: boolean;
   /**
@@ -93,10 +95,12 @@ export type EdgeJoinLatencyResult = {
    */
   monotonicGrowth: boolean;
   /**
-   * Whether the seeder got its EDGE agent. Without one the DELEGATED invitation is admitted by the
-   * seeder directly, which is slower — so latency is only comparable across runs where this matches.
+   * Whether EDGE redeemed the DELEGATED invitations or the seeder admitted each joiner itself.
+   * `disabled` and `failed` are not the same run: the first deliberately measures the slower
+   * fallback, the second is a broken environment whose numbers mean nothing. Latency is comparable
+   * across runs only where this matches.
    */
-  agent: boolean;
+  agents: 'disabled' | 'provisioned' | 'failed';
 };
 
 export const DEFAULT_SPEC: EdgeJoinLatencySpec = {
@@ -114,6 +118,23 @@ export const resolveSpec = (overrides: Partial<EdgeJoinLatencySpec> = {}): EdgeJ
   ...DEFAULT_SPEC,
   ...overrides,
 });
+
+/**
+ * An EDGE agent could not be provisioned. Distinct from a join failure so the per-joiner fallback
+ * can rethrow it: a client without an agent is a broken precondition, not a slow joiner, and
+ * running the remaining joiners against it only spends minutes producing rows that say the same
+ * thing.
+ */
+class AgentProvisioningError extends Error {
+  static is(err: unknown): err is AgentProvisioningError {
+    return err instanceof AgentProvisioningError;
+  }
+
+  constructor(label: string, options: { cause: unknown }) {
+    super(`EDGE agent could not be provisioned for ${label}`, options);
+    this.name = 'AgentProvisioningError';
+  }
+}
 
 //
 // The measurement.
@@ -175,34 +196,55 @@ export class EdgeJoinLatency implements TestPlan<EdgeJoinLatencySpec, EdgeJoinLa
     const measurements: JoinMeasurement[] = [];
     let spaceId: string | undefined;
     let seedMs = 0;
-    let agentCreated = false;
+    // Falsified by the first client that cannot get an agent, never the other way round: `disabled`
+    // and `failed` describe different runs, and collapsing them would have the summary blame a
+    // broken environment on a config choice.
+    let agents: EdgeJoinLatencyResult['agents'] = spec.agents ? 'provisioned' : 'disabled';
 
-    const spawn = async (label: string, agent = false): Promise<ReplicantBrain<ClientReplicant>> => {
+    const spawn = async (label: string): Promise<ReplicantBrain<ClientReplicant>> => {
       const replicant = await env.spawn(ClientReplicant, { platform: spec.platform });
       // Never `partitions`: the offline proxy cannot front an `https:` endpoint, and nothing here
       // cuts a link anyway.
       await replicant.brain.init({ edgeUrl, agents: spec.agents, partitions: false });
       const { identityDid } = await replicant.brain.createIdentity({ displayName: label });
       identityDids.push(identityDid);
+      // Tracked from the moment an identity exists, not once the client is fully provisioned:
+      // `_cleanup` walks `spawned`, so a client that fails a later step would otherwise leave its
+      // identity behind in a shared environment. Kept index-aligned with `identityDids`, which
+      // `_cleanup` reads by index to name what it could not delete.
+      spawned.push(replicant);
       // The self-serve cleanup routes 403 an identity with no Hub account; one fixed alias per slot
-      // rebinds rather than accumulating rows. On preview the hatch is closed, so this is skipped
-      // and `DX_HUB_API_KEY` is the only way the run's data gets deleted.
+      // rebinds rather than accumulating rows. It is also what `createAgent` needs — EDGE hosts an
+      // agent only for an identity bound to an account.
+      // Fatal for the same reason `createAgent` is, and counted as the same failure: EDGE hosts an
+      // agent only for an identity bound to an account, so a binding that fails has already decided
+      // the agent cannot exist.
       if (isDevLikeTarget(spec.edge)) {
-        await replicant.brain.bindTestAccount({ hubUrl, email: `test+bladerunner-join-${label}@dxos.org` });
-      }
-      if (agent && spec.agents) {
         try {
-          await replicant.brain.createAgent();
-          agentCreated = true;
+          await replicant.brain.bindTestAccount({ hubUrl, email: `test+bladerunner-join-${label}@dxos.org` });
         } catch (err) {
-          // Best-effort, same reasoning as the soak plan: without an agent the DELEGATED invitation
-          // has to be admitted by the seeder itself, which is online throughout, so the join is
-          // slower rather than impossible. Recorded in the result because it changes what the
-          // number means.
-          log.error('agent unavailable; joins will be admitted by the seeder directly', { err });
+          if (spec.agents) {
+            agents = 'failed';
+          }
+          throw new AgentProvisioningError(label, { cause: err });
         }
       }
-      spawned.push(replicant);
+      // The seeder's agent is what makes the invitation an EDGE-redeemed DELEGATED one; the
+      // joiners get one too so every client in the fleet is agent-backed, which is the topology a
+      // real deployment has and the one this measurement is meant to describe.
+      //
+      // Fatal, not best-effort: without an agent `EdgeInvitationHandler` answers `No agents in the
+      // space.` and the seeder admits every joiner directly, which is a different system than the
+      // one this plan exists to measure. A green run of the wrong measurement is worse than a red
+      // one — the numbers land in a nightly trend that nobody re-reads the caveat for.
+      if (spec.agents) {
+        try {
+          await replicant.brain.createAgent();
+        } catch (err) {
+          agents = 'failed';
+          throw new AgentProvisioningError(label, { cause: err });
+        }
+      }
       return replicant;
     };
 
@@ -215,8 +257,7 @@ export class EdgeJoinLatency implements TestPlan<EdgeJoinLatencySpec, EdgeJoinLa
     });
 
     try {
-      // The seeder hosts every invitation, so it is the one that needs the agent.
-      const seeder = await spawn('seeder', true);
+      const seeder = await spawn('seeder');
       const created = await seeder.brain.createSpace({ label: 'join-latency' });
       // Kept in a local as well: the outer binding is what `finally` cleans up, but only this one
       // is narrowed to a string for the closures below.
@@ -274,6 +315,11 @@ export class EdgeJoinLatency implements TestPlan<EdgeJoinLatencySpec, EdgeJoinLa
             error: settled.ok ? undefined : `digest still differed after ${spec.joinTimeoutMs}ms`,
           });
         } catch (err) {
+          // The fallback is for a joiner that failed to sync — one bad row, the rest still measured.
+          // A missing agent is not that: it is the precondition for every remaining joiner too.
+          if (AgentProvisioningError.is(err)) {
+            throw err;
+          }
           measurements.push({
             joiner,
             admittedMs,
@@ -292,7 +338,7 @@ export class EdgeJoinLatency implements TestPlan<EdgeJoinLatencySpec, EdgeJoinLa
         log.info('joiner measured', { ...measurements[measurements.length - 1] });
       }
 
-      const result = this._summarize(edgeUrl, spec, seedMs, measurements, agentCreated);
+      const result = this._summarize(edgeUrl, spec, seedMs, measurements, agents);
       invariant(
         result.ok,
         `joiners failed to sync: ${measurements
@@ -304,7 +350,7 @@ export class EdgeJoinLatency implements TestPlan<EdgeJoinLatencySpec, EdgeJoinLa
     } finally {
       // In `finally` so the artifacts exist however the run ended: a green/red verdict with no
       // numbers behind it is the one output a CI job must never produce.
-      const summary = this._summarize(edgeUrl, spec, seedMs, measurements, agentCreated);
+      const summary = this._summarize(edgeUrl, spec, seedMs, measurements, agents);
       fs.writeFileSync(resultPath, `${JSON.stringify(summary, null, 2)}\n`);
       fs.writeFileSync(path.join(params.outDir, 'summary.md'), renderSummary(summary));
       unregisterCleanup();
@@ -320,7 +366,7 @@ export class EdgeJoinLatency implements TestPlan<EdgeJoinLatencySpec, EdgeJoinLa
     spec: EdgeJoinLatencySpec,
     seedMs: number,
     measurements: JoinMeasurement[],
-    agent: boolean,
+    agents: EdgeJoinLatencyResult['agents'],
   ): EdgeJoinLatencyResult {
     const ok = measurements.filter((measurement) => measurement.ok);
     const median = (pick: (measurement: JoinMeasurement) => number | undefined): number | undefined => {
@@ -347,7 +393,7 @@ export class EdgeJoinLatency implements TestPlan<EdgeJoinLatencySpec, EdgeJoinLa
       // Compared in join order, not sorted: the question is whether each joiner paid more than the
       // one before it.
       monotonicGrowth: synced.length > 1 && synced.every((value, index) => index === 0 || value > synced[index - 1]),
-      agent,
+      agents,
     };
   }
 
@@ -428,7 +474,11 @@ const renderSummary = (result: EdgeJoinLatencyResult): string => {
     `## ${result.ok ? '✅' : '❌'} Join latency — ${result.objects} objects, ${result.joiners} joiners`,
     '',
     `Against \`${result.edge}\`. Seeded and flushed to EDGE in ${ms(result.seedMs)}.${
-      result.agent ? '' : ' ⚠️ No EDGE agent — the seeder admitted every joiner itself, which is slower.'
+      {
+        provisioned: '',
+        disabled: ' ⚠️ Agents off — the seeder admitted every joiner itself, which is slower.',
+        failed: ' ❌ An EDGE agent could not be provisioned; the run stopped and these numbers are partial.',
+      }[result.agents]
     }`,
     '',
     '| | Median | Share of total |',

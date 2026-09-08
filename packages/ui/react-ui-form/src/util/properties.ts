@@ -55,7 +55,7 @@ export const getDiscriminatorDefaults = (ast: SchemaAST.AST | undefined): Record
  * discriminator value, with the discriminator field keeping the union-wide set of literals so it stays
  * switchable. (`SchemaAST.getPropertySignatures` on a union returns only the common discriminator, so a
  * union root would otherwise render just that one field.) Non-union roots are unchanged. Nested unions are
- * unaffected — those are expanded per-field by `FormField`, which passes a single-member type literal here.
+ * unaffected — those are expanded per-field by `FormFieldDispatch`, which passes a single-member type literal here.
  */
 export const getRootFormProperties = (
   ast: SchemaAST.AST,

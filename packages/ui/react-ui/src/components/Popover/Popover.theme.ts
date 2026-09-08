@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { mx, surfaceShadow, surfaceZIndex, surfaceZIndexVar } from '@dxos/ui-theme';
+import { mx, positionerUnplaced, surfaceShadow, surfaceZIndex, surfaceZIndexVar } from '@dxos/ui-theme';
 import { type ComponentFunction, type Elevation, type Theme } from '@dxos/ui-types';
 
 export type PopoverStyleProps = Partial<{
@@ -16,7 +16,7 @@ export type PopoverStyleProps = Partial<{
  * outranks any `z-*` class, so the layer is handed over through the variable.
  */
 const positioner: ComponentFunction<PopoverStyleProps> = ({ elevation }, ...etc) =>
-  mx(surfaceZIndexVar({ elevation, level: 'menu' }), ...etc);
+  mx(positionerUnplaced, surfaceZIndexVar({ elevation, level: 'menu' }), ...etc);
 
 const content: ComponentFunction<PopoverStyleProps> = ({ elevation }, ...etc) =>
   mx(

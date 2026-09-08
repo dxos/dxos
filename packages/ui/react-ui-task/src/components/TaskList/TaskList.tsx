@@ -17,10 +17,10 @@ import { useObject, useQuery } from '@dxos/echo-react';
 import {
   Button,
   DxAnchorActivate,
+  Field,
   Icon,
   IconBlock,
   IconButton,
-  Input,
   Tag,
   Toolbar,
   composable,
@@ -926,8 +926,8 @@ const TaskListEdit = composable<HTMLDivElement, TaskListEditProps>(
         >
           <Icon icon={current ? 'ph--pencil-simple--regular' : 'ph--plus--regular'} classNames='text-subdued' />
         </span>
-        <Input.Root>
-          <Input.TextInput
+        <Field.Root>
+          <Field.Input
             variant='subdued'
             classNames={mx('px-0', grid && 'col-start-[title] -col-end-2')}
             data-testid='taskList.edit.title'
@@ -937,7 +937,7 @@ const TaskListEdit = composable<HTMLDivElement, TaskListEditProps>(
             onKeyDown={handleTitleKeyDown}
             onBlur={handleTitleBlur}
           />
-        </Input.Root>
+        </Field.Root>
         {showDescription && (current ? onTaskUpdate : onTaskCreate) && (
           <span
             data-testid='taskList.edit.description'

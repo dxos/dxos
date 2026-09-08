@@ -38,7 +38,7 @@ export const SampleSettings = () => {
       <Form.Viewport scroll>
         <Form.Content>
           <Form.Section title={t('settings.section.title')}>
-            <Form.Row
+            <Form.Field
               label={t('settings.recreate-sample.label')}
               description={t('settings.recreate-sample.description')}
             >
@@ -49,7 +49,7 @@ export const SampleSettings = () => {
                 disabled={busy}
                 onClick={handleRecreate}
               />
-            </Form.Row>
+            </Form.Field>
           </Form.Section>
         </Form.Content>
       </Form.Viewport>

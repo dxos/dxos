@@ -6,9 +6,9 @@ import { Store } from '@tldraw/store';
 import {
   DocumentRecordType,
   PageRecordType,
-  TLDOCUMENT_ID,
   type TLDefaultColorStyle,
   type TLDefaultFillStyle,
+  TLDOCUMENT_ID,
   type TLGeoShape,
   type TLPageId,
   type TLParentId,

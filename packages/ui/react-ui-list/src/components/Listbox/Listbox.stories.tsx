@@ -6,7 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
 import { random } from '@dxos/random';
-import { Icon, Input, Panel, Toolbar } from '@dxos/react-ui';
+import { Field, Icon, Panel, Toolbar } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { mx } from '@dxos/ui-theme';
 
@@ -118,14 +118,10 @@ const WithToolbarStory = () => {
       <Panel.Root>
         <Panel.Toolbar asChild>
           <Toolbar.Root>
-            <Input.Root>
-              <Input.Label srOnly>Filter items</Input.Label>
-              <Input.TextInput
-                placeholder='Filter…'
-                value={filter}
-                onChange={(event) => setFilter(event.target.value)}
-              />
-            </Input.Root>
+            <Field.Root>
+              <Field.Label srOnly>Filter items</Field.Label>
+              <Field.Input placeholder='Filter…' value={filter} onChange={(event) => setFilter(event.target.value)} />
+            </Field.Root>
           </Toolbar.Root>
         </Panel.Toolbar>
         <Panel.Content asChild>

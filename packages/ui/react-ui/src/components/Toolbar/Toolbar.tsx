@@ -40,7 +40,7 @@ import {
 } from '../Button';
 import { Icon } from '../Icon';
 import { Link, type LinkProps } from '../Link';
-import { DropdownMenu } from '../Menu';
+import { Menu } from '../Menu';
 import { Separator, type SeparatorProps } from '../Separator';
 
 //
@@ -334,31 +334,31 @@ function ToolbarMenu<T extends any | void = void>({ context, items }: ToolbarMen
   const { t } = useTranslation(translationKey);
 
   return (
-    <DropdownMenu.Root>
-      <DropdownMenu.Trigger disabled={!items?.length} asChild>
+    <Menu.Root>
+      <Menu.Trigger disabled={!items?.length} asChild>
         <ToolbarIconButton
           iconOnly
           variant='ghost'
           icon='ph--dots-three-vertical--regular'
           label={t('toolbar-menu.label')}
         />
-      </DropdownMenu.Trigger>
+      </Menu.Trigger>
       {(items?.length ?? 0) > 0 && (
-        <DropdownMenu.Portal>
-          <DropdownMenu.Content>
-            <DropdownMenu.Viewport>
+        <Menu.Portal>
+          <Menu.Content>
+            <Menu.Viewport>
               {items?.map(({ label, icon, onClick: onSelect }, index) => (
-                <DropdownMenu.Item key={index} onSelect={() => onSelect(context as T)}>
+                <Menu.Item key={index} onSelect={() => onSelect(context as T)}>
                   {icon && <Icon icon={icon} />}
                   {label}
-                </DropdownMenu.Item>
+                </Menu.Item>
               ))}
-            </DropdownMenu.Viewport>
-            <DropdownMenu.Arrow />
-          </DropdownMenu.Content>
-        </DropdownMenu.Portal>
+            </Menu.Viewport>
+            <Menu.Arrow />
+          </Menu.Content>
+        </Menu.Portal>
       )}
-    </DropdownMenu.Root>
+    </Menu.Root>
   );
 }
 

@@ -9,7 +9,7 @@ import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { debounce } from '@dxos/async';
 import { type Identity } from '@dxos/halo';
 import { useIdentity } from '@dxos/halo-react';
-import { ButtonGroup, Clipboard, Flex, Input, useTranslation } from '@dxos/react-ui';
+import { ButtonGroup, Clipboard, Field, Flex, useTranslation } from '@dxos/react-ui';
 import { Form, type FormFieldMap, type FormUpdateMeta } from '@dxos/react-ui-form';
 import { EmojiPickerBlock, HuePicker } from '@dxos/react-ui-pickers';
 import { hexToEmoji, hexToHue } from '@dxos/util';
@@ -105,16 +105,16 @@ export const ProfileContainer = () => {
         );
 
         return (
-          <Form.Row label={label} description={t('display-name.description')}>
-            <Input.Root>
-              <Input.TextInput
+          <Form.Field label={label} description={t('display-name.description')}>
+            <Field.Root>
+              <Field.Input
                 value={getValue()}
                 onChange={handleChange}
                 placeholder={t('display-name-input.placeholder')}
                 classNames='w-64 max-w-full min-w-0'
               />
-            </Input.Root>
-          </Form.Row>
+            </Field.Root>
+          </Form.Field>
         );
       },
       emoji: ({ type, label, getValue, onValueChange }) => {
@@ -125,7 +125,7 @@ export const ProfileContainer = () => {
         );
 
         return (
-          <Form.Row label={label} description={t('icon.description')}>
+          <Form.Field label={label} description={t('icon.description')}>
             <EmojiPickerBlock
               triggerVariant='default'
               emoji={getValue()}
@@ -133,7 +133,7 @@ export const ProfileContainer = () => {
               onClickClear={handleEmojiReset}
               classNames='justify-self-end'
             />
-          </Form.Row>
+          </Form.Field>
         );
       },
       hue: ({ type, label, getValue, onValueChange }) => {
@@ -144,26 +144,26 @@ export const ProfileContainer = () => {
         );
 
         return (
-          <Form.Row label={label} description={t('hue.description')}>
+          <Form.Field label={label} description={t('hue.description')}>
             <Flex classNames='justify-self-end'>
               <HuePicker value={getValue()} onChange={handleChange} onReset={handleHueReset} />
             </Flex>
-          </Form.Row>
+          </Form.Field>
         );
       },
       // TODO(wittjosiah): We need text input annotations for disabled and copyable.
       did: ({ label, getValue }) => {
         return (
-          <Form.Row label={label} description={t('did.description')}>
-            <Input.Root>
+          <Form.Field label={label} description={t('did.description')}>
+            <Field.Root>
               <ButtonGroup classNames='w-full'>
                 {/* `flex-1 min-w-0` lets the field shrink below its content width so the copy button
                     stays inside the row at phone widths; a fixed `min-w-*` would push it past the panel edge. */}
-                <Input.TextInput value={getValue()} disabled classNames='w-full min-w-0' />
+                <Field.Input value={getValue()} disabled classNames='w-full min-w-0' />
                 <Clipboard.IconButton value={getValue() ?? ''} />
               </ButtonGroup>
-            </Input.Root>
-          </Form.Row>
+            </Field.Root>
+          </Form.Field>
         );
       },
     }),
