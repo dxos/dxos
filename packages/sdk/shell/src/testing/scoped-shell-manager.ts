@@ -59,9 +59,22 @@ export class ScopedShellManager {
     const peer = scope || this.page;
     // TODO(wittjosiah): Update ids.
     const input = peer.getByTestId(`${type === 'device' ? 'halo' : 'space'}-auth-code-input`);
-    // The input is conditionally mounted by the invitation state machine, so a bare timeout cannot say
-    // whether the invitation stalled before this step; name what the shell is showing instead.
-    await input.waitFor({ state: 'visible' }).catch(async (err) => {
+    // An invitation that fails outright renders the rescuer's error screen, where the auth-code input
+    // stays mounted but disabled — so waiting on the input alone burns the full timeout and then
+    // reports a stall, which is the wrong diagnosis. Race the rescuer so a failed invitation is named
+    // as one immediately (DX-1264).
+    const rescuer = peer.getByTestId('invitation-rescuer-reset');
+    const inputVisible = input.waitFor({ state: 'visible' });
+    const rescuerVisible = rescuer.waitFor({ state: 'visible' });
+    // Whichever loses the race still rejects on its own timeout later; give each a handler now so
+    // that rejection is never unhandled. The race keeps using the originals.
+    void inputVisible.catch(() => {});
+    void rescuerVisible.catch(() => {});
+    // Only a rejection here means neither appeared — that is the stall the inventory below explains.
+    const outcome = await Promise.race([
+      inputVisible.then(() => 'ready' as const),
+      rescuerVisible.then(() => 'failed' as const),
+    ]).catch(async (err) => {
       const showing = await peer
         .locator('[data-testid]')
         .evaluateAll((elements) => [...new Set(elements.map((element) => element.dataset.testid))].join(', '))
@@ -70,6 +83,9 @@ export class ScopedShellManager {
         cause: err,
       });
     });
+    if (outcome === 'failed') {
+      throw new Error(`${type} invitation failed; the shell is offering to start over`);
+    }
     await input.fill(authCode);
     await peer.getByTestId(`${type === 'device' ? 'halo' : 'space'}-invitation-authenticator-next`).click();
   }
