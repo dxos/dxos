@@ -1,8 +1,5 @@
 ---
-'@dxos/protocols': patch
-'@dxos/client': patch
-'@dxos/client-protocol': patch
-'@dxos/client-services': patch
+'@dxos/echo': patch
 ---
 
 Fix `space.postMessage` dropping its payload. The request carried a bare `google.protobuf.Any`,

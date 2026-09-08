@@ -17,21 +17,6 @@ import { codec } from './codec';
 // buf needs the signature to survive it -- and blocks written by protobuf.js to still read back.
 const legacyCodec = schema.getCodecForType('dxos.echo.feed.FeedMessage');
 
-const createSignedFeedMessage = async (): Promise<FeedMessage> => {
-  const keyring = new Keyring();
-  const identityKey = await keyring.createKey();
-  const deviceKey = await keyring.createKey();
-  const credential = await createCredentialSignerWithKey(keyring, identityKey).createCredential({
-    subject: deviceKey,
-    assertion: { '@type': 'dxos.halo.credentials.AuthorizedDevice', deviceKey, identityKey },
-  });
-
-  return {
-    timeframe: new Timeframe([[PublicKey.random(), 3]]),
-    payload: { credential: { credential } },
-  };
-};
-
 describe('pipeline/codec', () => {
   test('a signed credential still verifies after a round-trip through the feed codec', async () => {
     const message = await createSignedFeedMessage();
@@ -46,7 +31,7 @@ describe('pipeline/codec', () => {
     const message = await createSignedFeedMessage();
     const decoded = codec.decode(legacyCodec.encode(message));
 
-    expect(decoded.timeframe?.frames()).toHaveLength(1);
+    expect(decoded.timeframe?.frames()).to.deep.equal(message.timeframe?.frames());
     const credential = decoded.payload?.credential?.credential;
     expect(credential).toBeDefined();
     expect((await verifyCredential(credential!)).kind).toEqual('pass');
@@ -56,8 +41,24 @@ describe('pipeline/codec', () => {
     const message = await createSignedFeedMessage();
     const decoded: FeedMessage = legacyCodec.decode(codec.encode(message));
 
+    expect(decoded.timeframe?.frames()).to.deep.equal(message.timeframe?.frames());
     const credential = decoded.payload?.credential?.credential;
     expect(credential).toBeDefined();
     expect((await verifyCredential(credential!)).kind).toEqual('pass');
   });
 });
+
+const createSignedFeedMessage = async (): Promise<FeedMessage> => {
+  const keyring = new Keyring();
+  const identityKey = await keyring.createKey();
+  const deviceKey = await keyring.createKey();
+  const credential = await createCredentialSignerWithKey(keyring, identityKey).createCredential({
+    subject: deviceKey,
+    assertion: { '@type': 'dxos.halo.credentials.AuthorizedDevice', deviceKey, identityKey },
+  });
+
+  return {
+    timeframe: new Timeframe([[PublicKey.random(), 3]]),
+    payload: { credential: { credential } },
+  };
+};
