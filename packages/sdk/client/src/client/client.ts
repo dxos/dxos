@@ -705,14 +705,6 @@ export class Client {
     this._resetting = true;
     invariant(this._services, 'Client not initialized.');
 
-    // Quiesce the page-side writers BEFORE the host tears its storage down, while the RPC endpoint
-    // is still live. `_close()` below would do this too, but by then `SystemService.reset` has
-    // already dropped the far end, so every `Database`/`FeedHandle` draining through it writes into
-    // a dead endpoint (DX-1264). Closing first lets those drains actually land, and leaves nothing
-    // holding the endpoint during the window between reset and the join shell's reload — a window
-    // with no upper bound, since `_resetting` suppresses the reload-on-terminated path.
-    await this._echoClient.close(this._ctx);
-
     await runServiceCall(this._effectRuntime, this._services.rpc['SystemService.reset'](undefined), {
       label: 'SystemService.reset',
     });
