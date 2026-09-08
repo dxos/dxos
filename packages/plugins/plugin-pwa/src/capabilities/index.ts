@@ -11,6 +11,7 @@ import * as Schedule from 'effect/Schedule';
 import * as Atom from 'effect/unstable/reactivity/Atom';
 import { registerSW } from 'virtual:pwa-register';
 
+import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
@@ -234,6 +235,16 @@ export const UpdateProgress = Capability.inlineModule(
     );
     return [];
   }),
+);
+
+export const PwaSettings = AppCapability.settings(() => import('./settings'), {
+  activatesOn: ActivationEvents.Idle,
+});
+
+export const ReactSurface = Capability.lazyModule(
+  'ReactSurface',
+  { provides: [Capabilities.ReactSurface] },
+  () => import('./react-surface'),
 );
 
 export const Translations = AppCapability.translations(translations);
