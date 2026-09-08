@@ -197,7 +197,16 @@ export class AppManager {
    */
   async #openSpaceSettingsPage(testId: string, timeout: number): Promise<void> {
     await this.expandSection('spacePlugin.settings', timeout);
-    await this.currentWorkspace.getByTestId(testId).first().getByTestId('treeItem.heading').first().click({ timeout });
+    // Wait for the row itself rather than trusting the expand: `#expandRow` decides from a single
+    // `aria-expanded` read, which is `null` on a row that is attached but has not had the attribute
+    // applied yet — so it can click an already-open section shut. Waiting here means a mis-toggle
+    // shows up as a visibly absent row, not as a 30s click on a detached element (DX-1264).
+    const heading = this.currentWorkspace.getByTestId(testId).first().getByTestId('treeItem.heading').first();
+    await heading.waitFor({ state: 'visible', timeout }).catch(async () => {
+      await this.expandSection('spacePlugin.settings', timeout);
+      await heading.waitFor({ state: 'visible', timeout });
+    });
+    await heading.click({ timeout });
   }
 
   async createSpaceInvitation(): Promise<string> {

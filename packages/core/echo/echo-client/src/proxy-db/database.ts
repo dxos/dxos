@@ -1100,7 +1100,15 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
     feedService?: FeedService.Client;
   }): void {
     this._entityManager._updateServices({ dataService, queryService });
-    if (feedService !== undefined) {
+    if (feedService !== undefined && feedService !== this.#feedService) {
+      // A handle captures its service at construction, so a swapped service (a dedicated-worker
+      // leader change, say) leaves every cached handle bound to an endpoint that can no longer read
+      // or write. Drop them here; the next access builds a fresh handle on the live service.
+      const stale = [...this.#feeds.values()];
+      this.#feeds.clear();
+      for (const handle of stale) {
+        void handle.dispose().catch((err) => log.catch(err));
+      }
       this.#feedService = feedService;
     }
   }

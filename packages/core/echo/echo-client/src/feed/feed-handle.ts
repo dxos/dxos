@@ -780,10 +780,12 @@ const isSqliteNotOpenError = (err: any) => err.cause?.message?.includes('The dat
 
 /** True when a call failed because the RPC endpoint is gone, rather than for a retryable reason. */
 const isEndpointClosedError = (err: unknown): boolean => {
-  for (let cause = err; cause != null; cause = (cause as { cause?: unknown }).cause) {
+  const seen = new Set<unknown>();
+  for (let cause = err; cause != null && !seen.has(cause); cause = (cause as { cause?: unknown }).cause) {
     if (cause instanceof RpcClosedError || cause instanceof RpcNotOpenError) {
       return true;
     }
+    seen.add(cause);
   }
   return false;
 };

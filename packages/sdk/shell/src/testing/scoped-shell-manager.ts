@@ -63,7 +63,12 @@ export class ScopedShellManager {
     // stays mounted but disabled — so waiting on the input alone burns the full timeout and then
     // reports a stall, which is the wrong diagnosis. Race the rescuer so a failed invitation is named
     // as one immediately (DX-1264).
-    const rescuer = peer.getByTestId('invitation-rescuer-reset');
+    // Scoped to this kind's rescuer view: the panel mounts the Halo and Space rescuers at once and
+    // both carry this testid, so an unscoped locator matches two elements the moment either has a
+    // fail reason — a strict-mode violation that would surface as the stall misdiagnosis below.
+    const rescuer = peer
+      .locator(`#${type === 'device' ? 'halo' : 'space'}-invitation-rescuer`)
+      .getByTestId('invitation-rescuer-reset');
     const inputVisible = input.waitFor({ state: 'visible' });
     const rescuerVisible = rescuer.waitFor({ state: 'visible' });
     // Whichever loses the race still rejects on its own timeout later; give each a handler now so

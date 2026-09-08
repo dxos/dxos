@@ -26,6 +26,10 @@ const MEMORY_TRANSPORT_DELAY = 1;
  * real signaling in tests, where one hop through a deployed router measures ~0.6s p50 / 1.4s max —
  * the previous 1s default failed ~3.5% of handshakes on latency alone (DX-1264). Sits just under
  * `Connection`'s own 10s transport-connect abort, which is the deadline that should actually fire.
+ *
+ * The tradeoff is deliberate: a genuinely lost signal now surfaces at 9s with little room for the
+ * swarm to retry inside its own budget, where 1s left room but misdiagnosed slow handshakes as lost
+ * ones 3.5% of the time. Losing a handshake that would have succeeded is the worse failure.
  */
 const REMOTE_SIGNAL_TIMEOUT = 9_000;
 
@@ -140,6 +144,9 @@ export class MemoryTransport implements Transport {
   async close(): Promise<this> {
     log('closing...');
     this._closed = true;
+    // Release the receiver's pending signal wait, so a transport closed before its remote signal
+    // arrives does not hold a timer for the rest of the (now 9s) timeout.
+    this._remote.throw(new Error('Transport closed before the remote signal arrived.'));
 
     MemoryTransport._connections.delete(this._instanceId);
     if (this._remoteConnection) {

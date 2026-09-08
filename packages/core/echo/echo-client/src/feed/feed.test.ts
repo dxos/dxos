@@ -364,9 +364,9 @@ describe('Feed', () => {
       const feed = db.add(Feed.make({ name: 'closed' }));
       db.add(Obj.make(TestSchema.Person, { name: 'john' }), { to: feed });
 
-      // Past the first two backoff steps (1s, then 2s), so a single attempt here means the closed
-      // endpoint latched rather than merely being rate-limited — this handle's service is captured
-      // at construction, so no retry from it could ever reach a live endpoint.
+      // Past the first backoff step (1s), so a single attempt here means the closed endpoint latched
+      // rather than merely being rate-limited: a bounded-but-unlatched retry would already have made
+      // a second call by now.
       await sleep(2_500);
       expect(callCount).toBe(1);
     });

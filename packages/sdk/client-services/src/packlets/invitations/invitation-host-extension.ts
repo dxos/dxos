@@ -98,7 +98,10 @@ export class InvitationHostExtension
     return this._invitationFlowLock != null;
   }
 
-  /** Where this connection's own flow got to, as opposed to the invitation-wide shared state. */
+  /**
+   * The last state THIS connection tried to set, as opposed to the invitation-wide shared state.
+   * Records the attempt, not the guard's acceptance, so the two can differ when a write was rejected.
+   */
   private _lastSetState: Invitation_State = Invitation_State.INIT;
 
   private _setState(state: Invitation_State): void {
@@ -296,7 +299,7 @@ export class InvitationHostExtension
       // this one — report both so a failure says which of those happened (DX-1264).
       throw new InvariantViolation(
         `Expected ${stateToString(invitation.state)} to be one of [${validStates.map(stateToString).join(', ')}]` +
-          ` (this connection last set ${stateToString(this._lastSetState)}, holdsFlowLock=${this.hasFlowLock()})`,
+          ` (this connection last attempted ${stateToString(this._lastSetState)}, holdsFlowLock=${this.hasFlowLock()})`,
       );
     }
   }
