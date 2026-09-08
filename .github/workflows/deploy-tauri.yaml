@@ -40,11 +40,9 @@ permissions:
 
 env:
   CN_APPLICATION: dxos/composer
-  # actions-use-homebrew-tools restores its tool cache by untarring a snapshot of /opt/homebrew back as
-  # root, so brew's own tree ends up owned by root and pinned to whenever that cache was written. The
-  # next `brew` call auto-updates, half-writes the newer vendored gems before hitting permission denied,
-  # and then aborts on the two sorbet versions it just loaded. That is what broke every desktop build
-  # from 2026-09-06 on, inside setup-rust-toolchain's own `brew install bash`.
+  # Nothing here wants a brew that rewrites itself mid-job: an auto-update is minutes of git against a tree
+  # no step asked to change, and when it fails it takes the install that triggered it down with it. That is
+  # what broke every desktop build from 2026-09-06 on, inside setup-rust-toolchain's own `brew install bash`.
   HOMEBREW_NO_AUTO_UPDATE: '1'
   HOMEBREW_NO_ENV_HINTS: '1'
   # Released binaries are built from source, never restored from a cache any CI job can write to.
@@ -150,10 +148,10 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y jq webkit2gtk-4.1
 
-      - uses: tecolicom/actions-use-homebrew-tools@v1
-        if: matrix.os == 'depot-macos-latest'
-        with:
-          tools: cairo giflib git-lfs jpeg jq libpng librsvg pango pkg-config python-setuptools git unzip gzip xz
+      # No Homebrew step: the cairo/pango/librsvg set this used to install is tauri's *Linux* prerequisite
+      # list, and the crate links none of it (rustls, no openssl, no GTK). Everything the workflow actually
+      # shells out to — jq, git, unzip, gzip, xz — ships in the runner image. See build_tauri_ios for why
+      # installing them anyway was worse than installing nothing.
 
       - name: Update tauri.conf.json
         uses: ./.github/actions/cn-config
@@ -365,9 +363,13 @@ jobs:
           filter: blob:none
           ref: ${{ inputs.ref || github.sha }}
 
-      - uses: tecolicom/actions-use-homebrew-tools@v1
-        with:
-          tools: cairo giflib git-lfs jpeg jq libpng librsvg pango pkg-config python-setuptools git unzip gzip xz xcodegen
+      # xcodegen is the one tool the image lacks; ios-init.sh runs it to generate the Xcode project.
+      # This was actions-use-homebrew-tools with tauri's Linux prerequisite list, which cached its tools by
+      # untarring a whole /opt/homebrew snapshot back as root. On a cache hit that froze brew at whenever
+      # the snapshot was written; on the first miss (2026-09-08) the fontconfig/glib/gdk-pixbuf/librsvg
+      # postinstall hooks failed and took `brew install`'s exit code with them. The crate links none of it.
+      - name: Install xcodegen
+        run: brew install xcodegen
 
       - name: Update tauri.conf.json
         uses: ./.github/actions/cn-config
