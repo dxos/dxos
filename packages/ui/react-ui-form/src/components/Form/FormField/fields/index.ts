@@ -9,6 +9,7 @@ export * from './BooleanField';
 export * from './ComboboxField';
 export * from './DateField';
 export * from './GeoPointField';
+export * from './HueField';
 export * from './MarkdownField';
 export * from './NumberField';
 export * from './PasswordField';

@@ -2,9 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
-import { useControllableState } from '@radix-ui/react-use-controllable-state';
 import React, { type FC, useEffect, useState } from 'react';
 
+import { useControllableState } from '@dxos/react-hooks';
 import { Button, DropdownMenu, Icon, type IconProps, type ThemedClassName, Toolbar, Tooltip } from '@dxos/react-ui';
 
 export type PickerButtonProps = ThemedClassName<{
@@ -48,15 +48,17 @@ export const PickerButton = ({
 
   return (
     <DropdownMenu.Root modal={false} open={open} onOpenChange={setOpen}>
-      <Tooltip.Trigger asChild content={label} side='bottom'>
-        <DropdownMenu.Trigger asChild>
+      {/* The menu trigger is outermost: both machines find the button by its id, and the tooltip adopts
+          the id it is handed while the menu would lose its own to one set above it. */}
+      <DropdownMenu.Trigger asChild>
+        <Tooltip.Trigger asChild content={label} side='bottom'>
           <TriggerRoot classNames={['gap-2 py-1', classNames]} disabled={disabled}>
             <span className='sr-only'>{label}</span>
             {(value && <Component value={value} size={iconSize} />) || <Icon icon={icon} size={iconSize} />}
             <Icon icon='ph--caret-down--bold' size={3} />
           </TriggerRoot>
-        </DropdownMenu.Trigger>
-      </Tooltip.Trigger>
+        </Tooltip.Trigger>
+      </DropdownMenu.Trigger>
       <DropdownMenu.Portal>
         <DropdownMenu.Content side='bottom' classNames='!w-min'>
           <DropdownMenu.Viewport classNames='grid grid-cols-[repeat(6,min-content)]'>

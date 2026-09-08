@@ -26,21 +26,7 @@ export const handler = Effect.fn(function* ({ displayName }: { displayName: stri
     return;
   }
 
-  const identityService = client.services.services.IdentityService;
-  if (!identityService) {
-    if (json) {
-      yield* Console.log(JSON.stringify({ error: 'IdentityService not found' }, null, 2));
-    } else {
-      yield* Console.log('IdentityService not found.');
-    }
-    return;
-  }
-
-  const updatedIdentity = yield* Effect.tryPromise(() =>
-    identityService.updateProfile({
-      displayName,
-    }),
-  );
+  const updatedIdentity = yield* Effect.tryPromise(() => client.halo.updateProfile({ displayName }));
 
   if (json) {
     yield* Console.log(

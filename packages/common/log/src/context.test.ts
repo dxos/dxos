@@ -9,7 +9,7 @@ import { LogEntry, getContextFromEntry } from './context';
 
 const meta = { F: 'test.ts', L: 1, S: undefined };
 
-const entry = (init: { context?: any; error?: Error }) =>
+const entry = (init: { context?: unknown; error?: Error }) =>
   new LogEntry({ level: LogLevel.ERROR, message: 'test', meta, ...init });
 
 describe('getContextFromEntry', () => {

@@ -25,7 +25,7 @@ import { Migrations, MigrationVersionAnnotation } from '@dxos/migrations';
 // alias instead of a relative `node_modules` path (TS2883).
 import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabilities';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
-import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
+import { EdgeReplicationSetting } from '@dxos/protocols/buf/dxos/echo/metadata_pb';
 import { ComplexMap, reduceGroupBy } from '@dxos/util';
 
 import { SpaceCapabilities, SpaceOperation } from '#types';

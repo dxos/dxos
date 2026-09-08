@@ -2,12 +2,11 @@
 // Copyright 2026 DXOS.org
 //
 
-import { createContext } from '@radix-ui/react-context';
-
 import { type Alarm } from '@dxos/assistant';
 import type * as ChatModule from '@dxos/assistant/Chat';
 import { type Event } from '@dxos/async';
 import { type Database } from '@dxos/echo';
+import { createContext } from '@dxos/react-hooks';
 import { type ChatThreadController } from '@dxos/react-ui-assistant';
 import { type MessageRange } from '@dxos/react-ui-feed';
 import { type Message } from '@dxos/types';

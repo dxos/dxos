@@ -6,9 +6,9 @@ import { describe, expect, test } from 'vitest';
 
 import { Trigger, sleep } from '@dxos/async';
 import { Stream } from '@dxos/async';
-import { type Any, type TaggedType } from '@dxos/codec-protobuf';
 import { log } from '@dxos/log';
 import { type TYPES } from '@dxos/protocols/proto';
+import { type AnyEnvelope, type TaggedType } from '@dxos/protocols/service-contract';
 
 import { RpcPeer } from './rpc';
 import { createLinkedPorts, encodeMessage } from './testing';
@@ -124,11 +124,19 @@ describe('RpcPeer', () => {
     test('open hangs on half-open streams', async () => {
       const [alicePort, bobPort] = createLinkedPorts();
 
+      // Fires once alice has processed bob's "open" message (and, per this port's design, failed
+      // to ack it back — her `send` is a no-op) — an observable point at which the handshake has
+      // genuinely been attempted, rather than an arbitrary delay.
+      const aliceReceivedMessage = new Trigger();
       const alice: RpcPeer = new RpcPeer({
         callHandler: async (msg) => createPayload(),
         port: {
           send: (msg) => {},
-          subscribe: alicePort.subscribe,
+          subscribe: (cb) =>
+            alicePort.subscribe((msg) => {
+              cb(msg);
+              aliceReceivedMessage.wake();
+            }),
         },
       });
 
@@ -142,7 +150,7 @@ describe('RpcPeer', () => {
         open = true;
       });
 
-      await sleep(5);
+      await aliceReceivedMessage.wait();
 
       expect(open).toEqual(false);
 
@@ -354,7 +362,7 @@ describe('RpcPeer', () => {
         streamHandler: (method, msg) => {
           expect(method).toEqual('method');
           expect(msg.value!).toEqual(encodeMessage('request'));
-          return new Stream<Any>(({ next, close }) => {
+          return new Stream<AnyEnvelope>(({ next, close }) => {
             next(createPayload('res1'));
             next(createPayload('res2'));
             close();
@@ -389,7 +397,7 @@ describe('RpcPeer', () => {
         streamHandler: (method, msg) => {
           expect(method).toEqual('method');
           expect(msg.value).toEqual(encodeMessage('request'));
-          return new Stream<Any>(({ next, close }) => {
+          return new Stream<AnyEnvelope>(({ next, close }) => {
             close(new Error('Test error'));
           });
         },
@@ -420,7 +428,7 @@ describe('RpcPeer', () => {
       const alice = new RpcPeer({
         callHandler: async (msg) => createPayload(),
         streamHandler: (method, msg) =>
-          new Stream<Any>(({ next, close }) => () => {
+          new Stream<AnyEnvelope>(({ next, close }) => () => {
             closeTrigger.wake();
           }),
         port: alicePort,
@@ -448,7 +456,7 @@ describe('RpcPeer', () => {
         streamHandler: (method, msg) => {
           expect(method).toEqual('method');
           expect(msg.value!).toEqual(encodeMessage('request'));
-          return new Stream<Any>(({ ready, close }) => {
+          return new Stream<AnyEnvelope>(({ ready, close }) => {
             ready();
             close();
           });
@@ -476,7 +484,7 @@ describe('RpcPeer', () => {
 
       const alice = new RpcPeer({
         callHandler: async (msg) => createPayload(),
-        streamHandler: (method, msg): Stream<Any> => {
+        streamHandler: (method, msg): Stream<AnyEnvelope> => {
           throw new Error('Test error');
         },
         port: alicePort,

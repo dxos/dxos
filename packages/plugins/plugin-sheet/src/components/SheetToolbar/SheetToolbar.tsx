@@ -12,7 +12,7 @@ import { type CompleteCellRange } from '@dxos/compute-hyperformula';
 import { composable, composableProps } from '@dxos/react-ui';
 import {
   type ActionGraphProps,
-  Menu,
+  ActionToolbar,
   createGapSeparator,
   graphActions,
   isToolbarAction,
@@ -82,13 +82,7 @@ export const SheetToolbar = composable<HTMLDivElement, SheetToolbarProps>((props
   );
   const menuActions = useMenuActions(actionsCreator);
 
-  return (
-    <Menu.Root {...menuActions} attendableId={attendableId}>
-      <Menu.Toolbar {...composableProps(props)} ref={forwardedRef}>
-        <Menu.Items />
-      </Menu.Toolbar>
-    </Menu.Root>
-  );
+  return <ActionToolbar {...menuActions} attendableId={attendableId} {...composableProps(props)} ref={forwardedRef} />;
 });
 
 SheetToolbar.displayName = 'SheetToolbar';

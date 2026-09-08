@@ -101,7 +101,7 @@ export const make = (
 /** Adds a routine to the project as an owned child; `SetParent` on the field cascades it. */
 export const addRoutine = (project: Project, routine: Routine.Routine): void => {
   Obj.update(project, (project) => {
-    project.routines = [...project.routines, Ref.make(routine)];
+    project.routines.push(Ref.make(routine));
   });
 };
 

@@ -7,7 +7,7 @@ import React, { useMemo, useState } from 'react';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { Panel } from '@dxos/react-ui';
-import { Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
+import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 
 import { WordList } from '#components';
 import { meta } from '#meta';
@@ -28,7 +28,7 @@ export type VocabularyArticleProps = AppSurface.ObjectArticleProps<Vocabulary.Vo
 
 /** Deck contents: every word with its translation and drill progress. */
 export const VocabularyArticle = ({ role, subject, attendableId }: VocabularyArticleProps) => {
-  // `Menu.Toolbar` gates itself on `useAttention(attendableId)`, so without an id the toolbar is
+  // `ActionToolbar` gates itself on `useAttention(attendableId)`, so without an id the toolbar is
   // permanently disabled; fall back to the subject's URI when the surface supplies none.
   const attentionId = attendableId ?? Obj.getURI(subject);
   const words = useDeckWords(subject);
@@ -60,18 +60,14 @@ export const VocabularyArticle = ({ role, subject, attendableId }: VocabularyArt
   );
 
   return (
-    <Menu.Root {...menuActions} attendableId={attentionId}>
-      <Panel.Root role={role}>
-        <Panel.Toolbar asChild classNames='dx-expand'>
-          <Menu.Toolbar>
-            <Menu.Items />
-          </Menu.Toolbar>
-        </Panel.Toolbar>
-        <Panel.Content>
-          <WordList words={sorted} />
-        </Panel.Content>
-      </Panel.Root>
-    </Menu.Root>
+    <Panel.Root role={role}>
+      <Panel.Toolbar asChild classNames='dx-expand'>
+        <ActionToolbar {...menuActions} attendableId={attentionId} />
+      </Panel.Toolbar>
+      <Panel.Content>
+        <WordList words={sorted} />
+      </Panel.Content>
+    </Panel.Root>
   );
 };
 

@@ -6,7 +6,7 @@ import { format as formatDate } from 'date-fns';
 import React, { Component, type PropsWithChildren, type ReactNode, type Ref } from 'react';
 
 import { Format } from '@dxos/echo';
-import { Icon, Input, type ThemedClassName, Tooltip } from '@dxos/react-ui';
+import { Collapsible, Icon, Input, type ThemedClassName, Tooltip } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 import { type FormFieldRendererProps } from '#types';
@@ -45,7 +45,12 @@ export type FormFieldLabelProps = ThemedClassName<
      * as an interactive control the way `button` does.
      */
     labelEnd?: ReactNode;
-    onClick?: () => void;
+    /**
+     * Render the row as the trigger of the enclosing `Collapsible` — a button rather than a div, so the
+     * disclosure is reachable from the keyboard and announces its state. `button` then holds no
+     * interactive content of its own (a caret, not a control), since a button cannot nest one.
+     */
+    trigger?: boolean;
   } & Pick<FormFieldRendererProps, 'label' | 'readonly' | 'required'>
 >;
 
@@ -60,7 +65,7 @@ export const FormFieldLabel = ({
   standalone,
   button,
   labelEnd,
-  onClick,
+  trigger,
 }: FormFieldLabelProps) => {
   const styles = formTheme.styles({ variant });
   // Render the required asterisk via a `::after` pseudo-element rather than a DOM node: it keeps the
@@ -84,8 +89,8 @@ export const FormFieldLabel = ({
       <Input.Label classNames={labelClassNames}>{label}</Input.Label>
     );
 
-  return (
-    <div className={styles.fieldLabel({ class: mx(onClick && 'cursor-pointer', classNames) })} onClick={onClick}>
+  const content = (
+    <>
       {labelNode}
       {labelEnd}
       {error ? (
@@ -96,7 +101,16 @@ export const FormFieldLabel = ({
         <span />
       )}
       {button}
-    </div>
+    </>
+  );
+
+  // `group` lets the caret in `button` read the disclosure state off the trigger.
+  return trigger ? (
+    <Collapsible.Trigger classNames={styles.fieldLabel({ class: mx('group', classNames) })}>
+      {content}
+    </Collapsible.Trigger>
+  ) : (
+    <div className={styles.fieldLabel({ class: mx(classNames) })}>{content}</div>
   );
 };
 

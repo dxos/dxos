@@ -29,7 +29,8 @@ const handler: Operation.WithHandler<typeof AddPost> = AddPost.pipe(
       }).pipe(Effect.provide(Database.layer(db)));
 
       Obj.update(publication, (publication) => {
-        publication.posts = [...(publication.posts ?? []), Ref.make(post)];
+        publication.posts ??= [];
+        publication.posts.push(Ref.make(post));
       });
 
       return Ref.make(post);

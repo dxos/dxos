@@ -7,6 +7,21 @@ tags:
   - pack
 
 tasks:
+  # Renders docs/diagrams/*.mmd to .svg through the SVG variant and prints the layout report;
+  # `-- --scoreboard` prints the strategy × metric table instead. See docs/diagrams/README.md.
+  render-diagrams:
+    # vite-node, not bun: bun's CJS interop cannot construct elkjs's bundled fake worker.
+    command: vite-node scripts/render-diagrams.tsx
+    inputs:
+      - scripts/render-diagrams.tsx
+      - docs/diagrams/*.mmd
+      - src/**/*
+    outputs:
+      - docs/diagrams/*.svg
+    options:
+      cache: false
+      runInCI: false
+
   check-module-structure:
     # The plugin now generates node/workerd capability barrels, so the headless entry must stay
     # UI-free: fail if React ever becomes reachable from it under either condition.
@@ -26,3 +41,10 @@ tasks:
       - /pnpm-lock.yaml
     options:
       timeout: 60
+
+  test:
+    # The mermaid/UML layout suites run ~180s locally but exceed the 600s preset default under CI
+    # contention, so the task was killed with every test passing. Raised until the CI-side slowdown
+    # is understood; see https://github.com/dxos/dxos/pull/12985 for the measurements.
+    options:
+      timeout: 1800

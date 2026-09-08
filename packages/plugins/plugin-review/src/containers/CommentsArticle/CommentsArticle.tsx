@@ -19,9 +19,8 @@ import { useIdentity, useMembers } from '@dxos/halo-react';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import * as MarkdownOperation from '@dxos/plugin-markdown/MarkdownOperation';
 import { type Space, getSpace } from '@dxos/react-client/echo';
-import { Banner, Card, Icon, Panel, ScrollArea, Toolbar, Trans, useTranslation } from '@dxos/react-ui';
+import { Banner, Card, Icon, Panel, ScrollArea, Tabs, Toolbar, Trans, useTranslation } from '@dxos/react-ui';
 import { useViewState, useViewStateActions } from '@dxos/react-ui-attention';
-import { Tabs } from '@dxos/react-ui-tabs';
 import { type MessageMetadata, type ObjectTileComponent } from '@dxos/react-ui-thread';
 import { AnchoredTo, type Message as MessageType, Thread } from '@dxos/types';
 import { hoverableControls, hoverableFocusedWithinControls, mx, toHue } from '@dxos/ui-theme';
@@ -263,9 +262,7 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
         return;
       }
 
-      // The object id, matching what the comment-sync extension registers comments under; a URI
-      // misses that lookup and `scrollCommentIntoView` then silently no-ops.
-      const threadId = (Relation.getSource(anchor) as Thread.Thread).id;
+      const thread = Relation.getSource(anchor) as Thread.Thread;
 
       // This is what tells the editor which thread is current, so skipping it leaves the previous
       // comment highlighted while the app selection moves on.
@@ -275,7 +272,7 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
         void invokePromise(commentConfig.scrollToAnchor, {
           subject: attendableId ?? subjectId,
           cursor: anchor.anchor,
-          id: threadId,
+          id: Ref.make(thread),
         });
       }
     },
@@ -322,11 +319,11 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
   );
 
   const handleMessageDelete = useCallback(
-    (anchor: AnchoredTo.AnchoredTo, messageId: string) =>
+    (anchor: AnchoredTo.AnchoredTo, message: Ref.Ref<MessageType.Message>) =>
       invokePromise(CommentOperation.DeleteMessage, {
         anchor,
         subject,
-        messageId,
+        message,
       }),
     [invokePromise, subject],
   );

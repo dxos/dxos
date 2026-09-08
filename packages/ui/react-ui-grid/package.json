@@ -29,11 +29,10 @@
     "@codemirror/state": "catalog:",
     "@codemirror/view": "catalog:",
     "@dxos/lit-grid": "workspace:*",
+    "@dxos/react-hooks": "workspace:*",
     "@dxos/react-ui-editor": "workspace:*",
     "@dxos/ui-editor": "workspace:*",
-    "@lit/react": "catalog:",
-    "@radix-ui/react-context": "catalog:",
-    "@radix-ui/react-use-controllable-state": "catalog:"
+    "@lit/react": "catalog:"
   },
   "devDependencies": {
     "@dxos/random": "workspace:*",

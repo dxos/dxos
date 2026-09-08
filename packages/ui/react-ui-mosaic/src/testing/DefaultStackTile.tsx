@@ -6,7 +6,7 @@ import React, { useMemo, useRef, useState } from 'react';
 
 import { Obj } from '@dxos/echo';
 import { Card, IconButton } from '@dxos/react-ui';
-import { Menu, createMenuAction } from '@dxos/react-ui-menu';
+import { ActionMenu, createMenuAction } from '@dxos/react-ui-menu';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 
 import { Focus, Mosaic, type MosaicStackTileComponent } from '../components';
@@ -25,7 +25,7 @@ export const DefaultStackTile: MosaicStackTileComponent<Obj.Any> = (props) => {
   );
 
   return (
-    <Menu.Root>
+    <>
       {/*
        * `Mosaic.Tile` sets `aria-current` from `props.current`, which the
        * Slot composition propagates down to `Card.Root`'s div. That's what
@@ -39,11 +39,10 @@ export const DefaultStackTile: MosaicStackTileComponent<Obj.Any> = (props) => {
               <Card.DragHandle ref={dragHandleRef} />
               <Card.Title>{Obj.getLabel(props.data) ?? props.data.id}</Card.Title>
               <Card.Block end>
-                <Menu.Trigger asChild disabled={!menuItems?.length}>
+                <ActionMenu disabled={!menuItems?.length} actions={menuItems}>
                   <IconButton iconOnly variant='ghost' icon='ph--dots-three-vertical--regular' label='Menu' />
-                </Menu.Trigger>
+                </ActionMenu>
               </Card.Block>
-              <Menu.Content items={menuItems} />
             </Card.Header>
             {open && (
               <Card.Row>
@@ -53,7 +52,7 @@ export const DefaultStackTile: MosaicStackTileComponent<Obj.Any> = (props) => {
           </Card.Root>
         </Focus.Item>
       </Mosaic.Tile>
-    </Menu.Root>
+    </>
   );
 };
 

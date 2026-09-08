@@ -9,8 +9,9 @@ import * as EffectStream from 'effect/Stream';
 import { type Event } from '@dxos/async';
 import { type Config } from '@dxos/config';
 import { EffectEx } from '@dxos/effect';
+import { type Platform } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { type Config as ConfigProto, ConfigSchema } from '@dxos/protocols/buf/dxos/config_pb';
-import { type Platform, type SystemStatus } from '@dxos/protocols/proto/dxos/client/services';
+import { type SystemStatus } from '@dxos/protocols/proto/dxos/client/services';
 import { SystemService } from '@dxos/protocols/rpc';
 import { type MaybePromise, jsonKeyReplacer } from '@dxos/util';
 

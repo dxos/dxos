@@ -9,7 +9,7 @@ import { safeStringify } from '@dxos/util';
 
 import { translationKey } from '#translations';
 
-import { useTranslation } from '../../primitives';
+import { useTranslation } from '../../providers';
 import { IconButton } from '../Button';
 import { ErrorStack } from './ErrorStack';
 

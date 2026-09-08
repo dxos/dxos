@@ -9,7 +9,9 @@ import { Client } from '@dxos/client';
 import { performInvitation } from '@dxos/client-services/testing';
 import { TestBuilder } from '@dxos/client/testing';
 import { invariant } from '@dxos/invariant';
-import { DeviceKind } from '@dxos/protocols/proto/dxos/client/services';
+import { buf } from '@dxos/protocols/buf';
+import { DeviceKind } from '@dxos/protocols/buf/dxos/client/services_pb';
+import { DeviceProfileDocumentSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
 describe('Halo', () => {
   test('creates a identity', async () => {
@@ -199,9 +201,9 @@ describe('Halo', () => {
     expect(await client2.halo.devices.get()).to.have.lengthOf(2);
 
     invariant(client1.services.services?.DevicesService, 'DevicesService is not available');
-    await client1?.services?.services?.DevicesService?.updateDevice({
-      label: 'updated-device-profile',
-    });
+    await client1?.services?.services?.DevicesService?.updateDevice(
+      buf.create(DeviceProfileDocumentSchema, { label: 'updated-device-profile' }),
+    );
 
     const trigger = new Trigger();
     client2.halo.devices.subscribe((devices) => {

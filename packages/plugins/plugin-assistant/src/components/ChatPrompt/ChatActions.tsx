@@ -6,7 +6,7 @@ import type * as Atom from 'effect/unstable/reactivity/Atom';
 import React, { type PropsWithChildren } from 'react';
 
 import { IconButton, type ThemedClassName, useTranslation } from '@dxos/react-ui';
-import { type ActionGraphProps, Menu, useMenuActions } from '@dxos/react-ui-menu';
+import { type ActionGraphProps, ActionToolbar, useMenuActions } from '@dxos/react-ui-menu';
 import { mx } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
@@ -123,13 +123,7 @@ const ContributedActions = ({
   attendableId?: string;
 }) => {
   const menuActions = useMenuActions(actions);
-  return (
-    <Menu.Root {...menuActions} attendableId={attendableId} alwaysActive>
-      {/* Plain (non-`custom`) items render `Toolbar.*` primitives, which throw without the roving-focus
-          context `Menu.Toolbar` provides; `contents` keeps the items in the prompt's own row. */}
-      <Menu.Toolbar classNames='contents'>
-        <Menu.Items />
-      </Menu.Toolbar>
-    </Menu.Root>
-  );
+  // Plain (non-`custom`) items render `Toolbar.*` primitives, which throw without the roving-focus
+  // context `ActionToolbar` provides; `contents` keeps the items in the prompt's own row.
+  return <ActionToolbar {...menuActions} attendableId={attendableId} alwaysActive classNames='contents' />;
 };

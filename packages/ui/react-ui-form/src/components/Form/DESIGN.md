@@ -11,7 +11,7 @@ Form.Root                               context: schema, values, validation, onV
    └─ Form.Content
       ├─ Form.Section                   titled group of fields
       │  ├─ Form.FieldSet               schema-driven field set
-      │  │  └─ FormFieldSetContainer    group wrapper: FormFieldHeader (label + collapse) over the body
+      │  │  └─ FormFieldSetContainer    group wrapper: a Collapsible whose trigger is the FormFieldHeader, over the body
       │  │     └─ FormField             one per schema property; dispatches by type:
       │  │        ├─ ArrayField         array → FormFieldHeader + item rows
       │  │        ├─ Form.FieldSet      nested object → recurses (its own FormFieldSetContainer)

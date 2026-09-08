@@ -2,6 +2,40 @@
 // Copyright 2026 DXOS.org
 //
 
+/**
+ * Minimal layout discussion piece: three packages with three types each — an inheritance fan-in
+ * (B, C extend A), a chain with a has-many (X ⇒ Y → Z), and a fan-in (P, R → Q), plus two
+ * cross-package references (Y → A, Q → X) so routes must leave and enter frames. Small enough to
+ * reason about every placement and route by eye. Relationship kinds are carried by the edge
+ * tokens (UML end markers), not labels.
+ */
+export const BASIC = `
+flowchart TB
+  subgraph pkgA [Package A]
+    A[A]
+    B[B]
+    C[C]
+  end
+  subgraph pkgX [Package X]
+    X[X]
+    Y[Y]
+    Z[Z]
+  end
+  subgraph pkgP [Package P]
+    P[P]
+    Q[Q]
+    R[R]
+  end
+  B --|> A
+  C --|> A
+  X --{ Y
+  Y --> Z
+  P --> Q
+  R --> Q
+  Y --> A
+  Q --> X
+`;
+
 /** Exercises class blocks, a stereotype, generics, cardinalities, and every relation kind. */
 export const CLASS_DIAGRAM = `
 classDiagram

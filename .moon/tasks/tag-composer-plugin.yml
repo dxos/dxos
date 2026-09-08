@@ -11,7 +11,7 @@ tasks:
   gen-modules:
     command: pnpm exec dx-plugin gen
     deps:
-      - app-framework:compile-plugin-cli
+      - app-framework:build
     inputs:
       # The whole source tree, not just `src/capabilities/index.ts`: `parseBarrel` follows
       # `export * from` and `export { X } from` into arbitrary files and slices statements out of

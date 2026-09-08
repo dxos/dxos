@@ -9,7 +9,7 @@ import * as Schema from 'effect/Schema';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import { SpaceSchema } from '@dxos/client/echo';
-import { CancellableInvitationObservable, Invitation } from '@dxos/client/invitations';
+import { CancellableInvitationObservable, Invitation_AuthMethod, Invitation_Type } from '@dxos/client/invitations';
 import * as Operation from '@dxos/compute/Operation';
 import { Collection, Database, DXN, Entity, Obj, QueryAST, Ref, Tag, Type, View } from '@dxos/echo';
 import { SpacesService } from '@dxos/protocols/rpc';
@@ -102,8 +102,8 @@ export const Share = Operation.make({
   },
   input: Schema.Struct({
     space: SpaceSchema,
-    type: Schema.Enum(Invitation.Type),
-    authMethod: Schema.Enum(Invitation.AuthMethod),
+    type: Schema.Enum(Invitation_Type),
+    authMethod: Schema.Enum(Invitation_AuthMethod),
     multiUse: Schema.Boolean,
     target: Schema.optional(Schema.String),
   }),
@@ -653,7 +653,7 @@ export const MergeDuplicates = Operation.make({
   services: [Capability.Service, Database.Service],
   input: Schema.Struct({
     typename: Schema.String,
-    objectIds: Schema.Array(Schema.String).annotate({ description: 'Members of the group to merge.' }),
+    objectIds: Schema.Array(Ref.Ref(Obj.Unknown)).annotate({ description: 'Members of the group to merge.' }),
     overrides: Schema.optional(Obj.Unknown).annotate({
       description: 'User-edited preview; folded in last so confirmed edits win.',
     }),

@@ -26,6 +26,9 @@ import { RemoteMetricsForwarder } from './remote-metrics';
 
 export type OtelWorkerMessage = OtelLogSink.Message | OtelMetricsSink.Message | OtelSpanSink.Message;
 
+/** The OTEL extension always implements `close`, unlike the general (optional) `Extension` API. */
+type OtelExtension = ObservabilityExtension.Extension & { close(): Effect.Effect<void> };
+
 /** One-way send handle into the observability worker. */
 export type OtelWorkerPort = { post: (message: OtelWorkerMessage) => void };
 
@@ -179,7 +182,7 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Observabi
           })
         : undefined;
 
-    const extension: ObservabilityExtension.Extension = {
+    const extension: OtelExtension = {
       initialize: () =>
         Effect.sync(() => {
           if (logs) {
@@ -230,7 +233,7 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Observabi
         yield* Effect.promise(() => storeObservabilityDisabled(namespace, true));
         // TODO(wittjosiah): `close` drains by design, so revoking still ships what is queued;
         //   discarding it means shutting each exporter down before its provider.
-        yield* extension.close!();
+        yield* extension.close();
       }),
       close: () =>
         Effect.promise(async () => {

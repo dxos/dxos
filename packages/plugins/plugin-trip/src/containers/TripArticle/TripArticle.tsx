@@ -17,7 +17,7 @@ import * as MapRole from '@dxos/plugin-map/MapRole';
 import { Panel } from '@dxos/react-ui';
 import { Attention, useArticleKeyboardNavigation, useSelection } from '@dxos/react-ui-attention';
 import { Calendar as NaturalCalendar } from '@dxos/react-ui-calendar';
-import { Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
+import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 import { mx } from '@dxos/ui-theme';
 
 import { type SegmentCardAction, SegmentStack } from '#components';
@@ -283,12 +283,8 @@ export const TripArticle = ({ role, subject, attendableId, defaultShowGlobe }: T
           </NaturalCalendar.Root>
 
           <Panel.Root>
-            <Panel.Toolbar>
-              <Menu.Root {...menuActions} attendableId={attendableId}>
-                <Menu.Toolbar>
-                  <Menu.Items />
-                </Menu.Toolbar>
-              </Menu.Root>
+            <Panel.Toolbar asChild>
+              <ActionToolbar {...menuActions} attendableId={attendableId} />
             </Panel.Toolbar>
             <Panel.Content asChild>
               <SegmentStack id={id} segments={segments} currentId={currentId} onAction={handleAction} />

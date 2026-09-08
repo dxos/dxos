@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type Primitive } from '@radix-ui/react-primitive';
+import { ark } from '@ark-ui/react/factory';
 import React, { type ComponentPropsWithRef, type CSSProperties, forwardRef, useMemo } from 'react';
 
 import { mx } from '@dxos/ui-theme';
@@ -83,7 +83,7 @@ export type AttentionGlyphProps = {
   containsAttended?: boolean;
   syncing?: boolean;
   presence?: 'none' | 'one' | 'many';
-} & ThemedClassName<Omit<ComponentPropsWithRef<typeof Primitive.span>, 'children'>>;
+} & ThemedClassName<Omit<ComponentPropsWithRef<typeof ark.span>, 'children'>>;
 
 export const AttentionGlyph = forwardRef<HTMLSpanElement, AttentionGlyphProps>(
   ({ presence, attended, syncing, containsAttended, classNames, ...props }, forwardedRef) => {
