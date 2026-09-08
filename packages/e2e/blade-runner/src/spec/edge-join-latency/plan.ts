@@ -216,8 +216,18 @@ export class EdgeJoinLatency implements TestPlan<EdgeJoinLatencySpec, EdgeJoinLa
       // The self-serve cleanup routes 403 an identity with no Hub account; one fixed alias per slot
       // rebinds rather than accumulating rows. It is also what `createAgent` needs — EDGE hosts an
       // agent only for an identity bound to an account.
+      // Fatal for the same reason `createAgent` is, and counted as the same failure: EDGE hosts an
+      // agent only for an identity bound to an account, so a binding that fails has already decided
+      // the agent cannot exist.
       if (isDevLikeTarget(spec.edge)) {
-        await replicant.brain.bindTestAccount({ hubUrl, email: `test+bladerunner-join-${label}@dxos.org` });
+        try {
+          await replicant.brain.bindTestAccount({ hubUrl, email: `test+bladerunner-join-${label}@dxos.org` });
+        } catch (err) {
+          if (spec.agents) {
+            agents = 'failed';
+          }
+          throw new AgentProvisioningError(label, { cause: err });
+        }
       }
       // The seeder's agent is what makes the invitation an EDGE-redeemed DELEGATED one; the
       // joiners get one too so every client in the fleet is agent-backed, which is the topology a
