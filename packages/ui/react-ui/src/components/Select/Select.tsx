@@ -31,7 +31,7 @@ import { useComposedRefs } from '@dxos/react-hooks';
 import { useElevationContext, useSafeCollisionPadding, useThemeContext } from '../../hooks';
 import { type ThemedClassName } from '../../util';
 import { Button, type ButtonProps } from '../Button';
-import { Icon } from '../Icon';
+import { Icon, IconBlock } from '../Icon';
 import { ScrollArea } from '../ScrollArea';
 import { SELECT_NAME, type SelectOptionEntry, SelectProvider, useSelectContext } from './SelectContext';
 
@@ -214,7 +214,7 @@ const SelectTriggerButton = forwardRef<HTMLButtonElement, SelectTriggerButtonPro
         <Button {...props} classNames={tx('select.triggerButton', {}, classNames)}>
           <SelectValue placeholder={placeholder}>{children}</SelectValue>
           <SelectPrimitive.Indicator asChild>
-            <Icon size={3} icon='ph--caret-down--bold' />
+            <Icon icon='ph--caret-down--bold' size={3} classNames='mx-0.5' />
           </SelectPrimitive.Indicator>
         </Button>
       </SelectPrimitive.Trigger>

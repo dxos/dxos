@@ -55,7 +55,7 @@ export const PickerButton = ({
           <TriggerRoot classNames={['gap-2 py-1', classNames]} disabled={disabled}>
             <span className='sr-only'>{label}</span>
             {(value && <Component value={value} size={iconSize} />) || <Icon icon={icon} size={iconSize} />}
-            <Icon icon='ph--caret-down--bold' size={3} />
+            <Icon icon='ph--caret-down--bold' size={3} classNames='mx-0.5' />
           </TriggerRoot>
         </Tooltip.Trigger>
       </DropdownMenu.Trigger>

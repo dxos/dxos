@@ -206,7 +206,7 @@ export const RefField = (props: RefFieldProps) => {
                       {placeholder || label || t('ref-field.placeholder')}
                     </span>
                   </div>
-                  <Icon size={3} icon='ph--caret-down--bold' />
+                  <Icon icon='ph--caret-down--bold' size={3} classNames='mx-0.5' />
                 </Button>
               )}
             </ObjectPicker.Trigger>

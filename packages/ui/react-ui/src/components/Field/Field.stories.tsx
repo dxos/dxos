@@ -9,7 +9,7 @@ import { expect, userEvent, waitFor, within } from 'storybook/test';
 import { mx } from '@dxos/ui-theme';
 import { type MessageValence } from '@dxos/ui-types';
 
-import { withLayoutVariants, withTheme } from '../../testing';
+import { withLayout, withLayoutVariants, withTheme } from '../../testing';
 import { Icon } from '../Icon';
 import {
   type CheckboxProps,
@@ -126,7 +126,6 @@ const DefaultStory = ({
         return <Field.Date {...props} />;
       case 'datetime':
         return <Field.DateTime {...props} />;
-      // The standard form: the control is its own label.
       case 'checkbox':
         return <Field.Checkbox {...props}>{label}</Field.Checkbox>;
       case 'switch':
@@ -153,7 +152,11 @@ const meta = {
   title: 'ui/react-ui-core/components/Field',
   component: Field.Root as any,
   render: DefaultStory,
-  decorators: [withTheme(), withLayoutVariants({ classNames: 'w-[40rem]' })],
+  decorators: [
+    withTheme(),
+    withLayoutVariants(),
+    withLayout({ layout: 'column', scroll: true, classNames: 'bg-transparent' }),
+  ],
 } satisfies Meta<typeof DefaultStory>;
 
 export default meta;

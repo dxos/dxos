@@ -3,7 +3,7 @@
 //
 
 import { dataDisabled } from '@dxos/ui-theme';
-import { mx, surfaceShadow, surfaceZIndex, surfaceZIndexVar } from '@dxos/ui-theme';
+import { mx, positionerUnplaced, surfaceShadow, surfaceZIndex, surfaceZIndexVar } from '@dxos/ui-theme';
 import { type ComponentFunction, type Elevation, type Theme } from '@dxos/ui-types';
 
 export type MenuStyleProps = Partial<{
@@ -16,7 +16,7 @@ export type MenuStyleProps = Partial<{
  * outranks any `z-*` class, so the layer is handed over through the variable.
  */
 const positioner: ComponentFunction<MenuStyleProps> = ({ elevation }, ...etc) =>
-  mx(surfaceZIndexVar({ elevation, level: 'menu' }), ...etc);
+  mx(positionerUnplaced, surfaceZIndexVar({ elevation, level: 'menu' }), ...etc);
 
 const content: ComponentFunction<MenuStyleProps> = ({ elevation }, ...etc) =>
   mx(

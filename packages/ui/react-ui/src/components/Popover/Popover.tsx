@@ -28,7 +28,7 @@ import { useComposedRefs, useControllableState } from '@dxos/react-hooks';
 import { DX_POPOVER_CONTENT_ATTR } from '@dxos/ui-types';
 
 import { useElevationContext, useSafeCollisionPadding, useThemeContext } from '../../hooks';
-import { type ThemedClassName } from '../../util';
+import { type ThemedClassName, toAnchorElement } from '../../util';
 import { ColumnContext } from '../Column';
 import {
   POPOVER_NAME,
@@ -124,9 +124,7 @@ const PopoverRoot: FC<PopoverRootProps> = ({ children, open: openProp, defaultOp
       flip: avoidCollisions,
       hideWhenDetached,
       boundary,
-      ...(virtualAnchor && {
-        getAnchorRect: () => virtualAnchor.current?.getBoundingClientRect() ?? null,
-      }),
+      ...(virtualAnchor && { getAnchorElement: () => toAnchorElement(virtualAnchor.current) }),
     }),
     [side, align, sideOffset, alignOffset, overflowPadding, avoidCollisions, hideWhenDetached, boundary, virtualAnchor],
   );

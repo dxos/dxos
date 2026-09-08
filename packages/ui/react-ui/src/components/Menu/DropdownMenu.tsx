@@ -28,7 +28,7 @@ import React, {
 import { composeEventHandlers, useComposedRefs, useControllableState } from '@dxos/react-hooks';
 
 import { useElevationContext, useSafeCollisionPadding, useThemeContext } from '../../hooks';
-import { type ThemedClassName } from '../../util';
+import { type ThemedClassName, toAnchorElement } from '../../util';
 import { ColumnContext } from '../Column/ColumnContext';
 import { ScrollArea } from '../ScrollArea';
 import {
@@ -147,9 +147,7 @@ const MenuRootImpl: FC<MenuRootImplProps> = ({
       arrowPadding: 12,
       flip: avoidCollisions,
       boundary,
-      ...(virtualAnchor && {
-        getAnchorRect: () => virtualAnchor.current?.getBoundingClientRect() ?? null,
-      }),
+      ...(virtualAnchor && { getAnchorElement: () => toAnchorElement(virtualAnchor.current) }),
     }),
     [side, align, sideOffset, alignOffset, overflowPadding, avoidCollisions, boundary, virtualAnchor],
   );

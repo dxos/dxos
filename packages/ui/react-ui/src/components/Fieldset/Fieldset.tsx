@@ -11,7 +11,7 @@ import { Fieldset as FieldsetPrimitive } from '@ark-ui/react/fieldset';
 import React, { type ComponentPropsWithRef, forwardRef } from 'react';
 
 import { useThemeContext } from '../../hooks';
-import { type ThemedClassName } from '../../util';
+import { type ThemedClassName, composable, composableProps } from '../../util';
 
 //
 // Root
@@ -21,16 +21,15 @@ const ROOT_NAME = 'Fieldset.Root';
 
 type FieldsetRootProps = ThemedClassName<ComponentPropsWithRef<typeof FieldsetPrimitive.Root>>;
 
-const FieldsetRoot = forwardRef<HTMLFieldSetElement, FieldsetRootProps>(
-  ({ classNames, children, ...props }, forwardedRef) => {
-    const { tx } = useThemeContext();
-    return (
-      <FieldsetPrimitive.Root {...props} className={tx('fieldset.root', {}, classNames)} ref={forwardedRef}>
-        {children}
-      </FieldsetPrimitive.Root>
-    );
-  },
-);
+const FieldsetRoot = composable<HTMLFieldSetElement, FieldsetRootProps>(({ children, ...props }, forwardedRef) => {
+  const { tx } = useThemeContext();
+  const { className, ...rest } = composableProps(props);
+  return (
+    <FieldsetPrimitive.Root {...rest} className={tx('fieldset.root', {}, className)} ref={forwardedRef}>
+      {children}
+    </FieldsetPrimitive.Root>
+  );
+});
 
 FieldsetRoot.displayName = ROOT_NAME;
 

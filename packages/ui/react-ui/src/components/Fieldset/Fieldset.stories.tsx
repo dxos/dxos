@@ -6,7 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 import { expect, within } from 'storybook/test';
 
-import { withTheme } from '../../testing';
+import { withLayout, withTheme } from '../../testing';
 import { Field } from '../Field';
 import { Fieldset } from './Fieldset';
 
@@ -17,7 +17,7 @@ type StoryArgs = {
 
 /** Two fields under one legend; the fieldset's state reaches both, and its texts describe the group. */
 const DefaultStory = ({ disabled, invalid }: StoryArgs) => (
-  <Fieldset.Root disabled={disabled} invalid={invalid} classNames='flex flex-col gap-2 w-[24rem]'>
+  <Fieldset.Root disabled={disabled} invalid={invalid} classNames='flex flex-col'>
     <Fieldset.Legend>Shipping address</Fieldset.Legend>
     <Fieldset.HelperText>Where the order is sent.</Fieldset.HelperText>
     <Field.Root>
@@ -35,8 +35,8 @@ const DefaultStory = ({ disabled, invalid }: StoryArgs) => (
 const meta = {
   title: 'ui/react-ui-core/components/Fieldset',
   component: DefaultStory,
-  decorators: [withTheme()],
-  parameters: { layout: 'centered' },
+  decorators: [withTheme(), withLayout({ layout: 'column' })],
+  parameters: { layout: 'fullscreen' },
   args: { disabled: false, invalid: false },
 } satisfies Meta<typeof DefaultStory>;
 
