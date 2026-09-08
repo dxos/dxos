@@ -135,12 +135,22 @@ export class EdgeStress implements TestPlan<EdgeStressSpec, EdgeStressResult> {
     trace({ event: 'plan', seed: params.randomSeed, commands: plan.map(describe), plan });
 
     const setupBegin = Date.now();
-    const { replicants, model, identityDids, deviceDids } = await this._setupFleet(
-      env,
-      spec,
-      { edgeUrl, hubUrl },
-      limits,
-    );
+    // Owned here, not by `_setupFleet`, so a throw part-way through still leaves the caller holding
+    // every client that was created. Setup runs before the run's own cleanup registration and
+    // `finally`, so without this a failed setup leaks its identities into a shared environment and
+    // never closes the trace stream. `createAgent` is fatal now, which makes that path reachable.
+    const spawned: ReplicantBrain<ClientReplicant>[] = [];
+    let fleet: Awaited<ReturnType<EdgeStress['_setupFleet']>>;
+    try {
+      fleet = await this._setupFleet(env, spec, { edgeUrl, hubUrl }, limits, spawned);
+    } catch (err) {
+      if (spec.cleanup) {
+        await this._cleanupPartialFleet(edgeUrl, spawned);
+      }
+      traceStream.end();
+      throw err;
+    }
+    const { replicants, model, identityDids, deviceDids } = fleet;
     const setupTimeMs = Date.now() - setupBegin;
     log.info('fleet ready', { setupTimeMs });
     // Same reason as the per-space `spaceId` detail: identities a dead run leaves behind must be
@@ -323,11 +333,36 @@ export class EdgeStress implements TestPlan<EdgeStressSpec, EdgeStressResult> {
    * The topology comes from the same `makeFleetModel` the plan was simulated against, so the fleet
    * cannot be shaped differently from what the plan assumed.
    */
+  /**
+   * Best-effort self-serve delete for a fleet that never finished setting up. `cleanupRun` cannot
+   * be used: it walks the model's identities and indexes `real.replicants` by device, and neither
+   * exists yet when setup throws part-way. No spaces have been created at this point, so each
+   * client only has its own identity to drop.
+   */
+  private async _cleanupPartialFleet(edgeUrl: string, spawned: ReplicantBrain<ClientReplicant>[]): Promise<void> {
+    const refused: string[] = [];
+    for (const [index, replicant] of spawned.entries()) {
+      try {
+        const result = await replicant.brain.deleteOwnData({ spaceIds: [] });
+        refused.push(...result.refused);
+      } catch (err) {
+        log.warn('partial-fleet cleanup threw', { index, err });
+        refused.push(`replicant-${index}`);
+      }
+    }
+    if (refused.length > 0) {
+      // Loud: these are real rows left in a shared environment by a run that never started.
+      log.error('setup left data behind', { edgeUrl, refused });
+    }
+  }
+
   private async _setupFleet(
     env: SchedulerEnvImpl<EdgeStressSpec>,
     spec: EdgeStressSpec,
     urls: { edgeUrl: string; hubUrl: string },
     limits: Model['limits'],
+    /** Filled as each client is spawned, so a caller can clean up a partial fleet; see `run`. */
+    spawned: ReplicantBrain<ClientReplicant>[],
   ): Promise<{
     replicants: ReplicantBrain<ClientReplicant>[];
     model: Model;
@@ -336,7 +371,7 @@ export class EdgeStress implements TestPlan<EdgeStressSpec, EdgeStressResult> {
   }> {
     const model = makeFleetModel({ devicesPerIdentity: spec.devicesPerIdentity, limits });
 
-    const replicants: ReplicantBrain<ClientReplicant>[] = [];
+    const replicants = spawned;
     for (let index = 0; index < model.clients.length; index++) {
       const replicant = await env.spawn(ClientReplicant, { platform: spec.platform });
       await replicant.brain.init({ edgeUrl: urls.edgeUrl, agents: spec.agents, partitions: spec.partitions });

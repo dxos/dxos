@@ -178,7 +178,10 @@ export class EdgeJoinLatency implements TestPlan<EdgeJoinLatencySpec, EdgeJoinLa
     const measurements: JoinMeasurement[] = [];
     let spaceId: string | undefined;
     let seedMs = 0;
-    let agentCreated = false;
+    // Starts true for an `agents: true` run and is falsified by the first client that cannot get
+    // one. Never the other way round: a later client's failure has to be able to correct it, or the
+    // artifact reports an agent-backed fleet on a run where one client had no agent.
+    let agentsProvisioned = spec.agents;
 
     const spawn = async (label: string): Promise<ReplicantBrain<ClientReplicant>> => {
       const replicant = await env.spawn(ClientReplicant, { platform: spec.platform });
@@ -187,6 +190,11 @@ export class EdgeJoinLatency implements TestPlan<EdgeJoinLatencySpec, EdgeJoinLa
       await replicant.brain.init({ edgeUrl, agents: spec.agents, partitions: false });
       const { identityDid } = await replicant.brain.createIdentity({ displayName: label });
       identityDids.push(identityDid);
+      // Tracked from the moment an identity exists, not once the client is fully provisioned:
+      // `_cleanup` walks `spawned`, so a client that fails a later step would otherwise leave its
+      // identity behind in a shared environment. Kept index-aligned with `identityDids`, which
+      // `_cleanup` reads by index to name what it could not delete.
+      spawned.push(replicant);
       // The self-serve cleanup routes 403 an identity with no Hub account; one fixed alias per slot
       // rebinds rather than accumulating rows. It is also what `createAgent` needs — EDGE hosts an
       // agent only for an identity bound to an account.
@@ -202,10 +210,15 @@ export class EdgeJoinLatency implements TestPlan<EdgeJoinLatencySpec, EdgeJoinLa
       // one this plan exists to measure. A green run of the wrong measurement is worse than a red
       // one — the numbers land in a nightly trend that nobody re-reads the caveat for.
       if (spec.agents) {
-        await replicant.brain.createAgent();
-        agentCreated = true;
+        try {
+          await replicant.brain.createAgent();
+        } catch (err) {
+          // A joiner's failure is caught below and recorded as its own row, so without this the
+          // run would go on and the artifact would still claim `agent: true`.
+          agentsProvisioned = false;
+          throw err;
+        }
       }
-      spawned.push(replicant);
       return replicant;
     };
 
@@ -294,7 +307,7 @@ export class EdgeJoinLatency implements TestPlan<EdgeJoinLatencySpec, EdgeJoinLa
         log.info('joiner measured', { ...measurements[measurements.length - 1] });
       }
 
-      const result = this._summarize(edgeUrl, spec, seedMs, measurements, agentCreated);
+      const result = this._summarize(edgeUrl, spec, seedMs, measurements, agentsProvisioned);
       invariant(
         result.ok,
         `joiners failed to sync: ${measurements
@@ -306,7 +319,7 @@ export class EdgeJoinLatency implements TestPlan<EdgeJoinLatencySpec, EdgeJoinLa
     } finally {
       // In `finally` so the artifacts exist however the run ended: a green/red verdict with no
       // numbers behind it is the one output a CI job must never produce.
-      const summary = this._summarize(edgeUrl, spec, seedMs, measurements, agentCreated);
+      const summary = this._summarize(edgeUrl, spec, seedMs, measurements, agentsProvisioned);
       fs.writeFileSync(resultPath, `${JSON.stringify(summary, null, 2)}\n`);
       fs.writeFileSync(path.join(params.outDir, 'summary.md'), renderSummary(summary));
       unregisterCleanup();
