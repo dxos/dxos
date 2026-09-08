@@ -91,6 +91,15 @@ export interface AgentProcessOptions {
 export const AGENT_PROCESS_KEY = 'org.dxos.testing.process.agent';
 
 /**
+ * How long to wait before re-reading a queue that contradicts a write this process just made, and
+ * how many times. A hosted runtime serves the read from an eventually-consistent index, and the lag
+ * measured on EDGE is single-digit milliseconds — the cap is what keeps a write that never lands
+ * from waking the agent forever.
+ */
+const UNSEEN_WRITE_RETRY_MS = 250;
+const MAX_UNSEEN_WRITE_WAKES = 20;
+
+/**
  * Hosts a persistent, suspendible AiAgent that can process a number of prompts.
  * The process target is a queue DXN string.
  */
@@ -225,6 +234,16 @@ export const AgentProcess = (options: AgentProcessOptions) =>
         // handle, leaving the reader with no reply and no error.
         let turnRan = false;
 
+        // Queue entries this incarnation wrote but has not yet read back. A hosted process's queue
+        // read is served by the space INDEX, which is eventually consistent: the agent appends a
+        // prompt and, milliseconds later, its own read returns empty — the index catches up a beat
+        // afterwards, but by then the agent has already concluded there is no work and gone idle,
+        // and nothing looks again. Locally the same read is served from the resident feed handle, so
+        // this never happens off a hosted runtime. Counted rather than flagged so a burst of prompts
+        // is not mistaken for one.
+        let unseenWrites = 0;
+        let unseenWriteWakes = 0;
+
         const pendingWork = (state: PendingState): boolean =>
           isAgentWorkPending({
             toolResults,
@@ -294,6 +313,7 @@ export const AgentProcess = (options: AgentProcessOptions) =>
                 feed,
                 Message.make({ sender: { role: 'user' }, blocks: [...content] }),
               );
+              unseenWrites++;
               yield* ctx.setAlarm(0);
             }),
           }),
@@ -301,6 +321,7 @@ export const AgentProcess = (options: AgentProcessOptions) =>
             log('agent onInput received', { backlog: toolResults.length });
             const content = typeof prompt === 'string' ? [ContentBlock.Text.make({ text: prompt })] : [...prompt];
             yield* sessionStore.enqueueMessage(feed, Message.make({ sender: { role: 'user' }, blocks: content }));
+            unseenWrites++;
             yield* ctx.setAlarm(0);
             log('agent onInput enqueued to feed');
           }),
@@ -330,6 +351,8 @@ export const AgentProcess = (options: AgentProcessOptions) =>
                 const dueAlarm = state.pendingAlarms.find((alarm) => alarm.wakeAt <= now());
                 if (message !== undefined) {
                   log('agent onAlarm handling', { tag: 'message', id: message.id });
+                  unseenWrites = Math.max(0, unseenWrites - 1);
+                  unseenWriteWakes = 0;
                   dequeued = message;
                   prompt = [...message.blocks];
                 } else if (dueAlarm !== undefined) {
@@ -341,6 +364,18 @@ export const AgentProcess = (options: AgentProcessOptions) =>
                       disposition: 'synthetic',
                     }),
                   ];
+                } else if (unseenWrites > 0 && unseenWriteWakes < MAX_UNSEEN_WRITE_WAKES) {
+                  // Read-your-writes over an eventually-consistent read: this incarnation appended an
+                  // entry the query has not caught up to, so look again shortly rather than conclude
+                  // the queue is drained. Bounded, so a write that never materialises degrades to the
+                  // idle path instead of waking forever.
+                  unseenWriteWakes++;
+                  log('agent onAlarm empty queue with an unread write, waking again', {
+                    unseenWrites,
+                    attempt: unseenWriteWakes,
+                  });
+                  yield* ctx.setAlarm(UNSEEN_WRITE_RETRY_MS);
+                  return;
                 } else {
                   log('agent onAlarm empty queue', {});
                   yield* reconcileAlarmWith(state);

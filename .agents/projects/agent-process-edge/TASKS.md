@@ -301,3 +301,93 @@ AgentService, or Operation.Service".
       manager rather than a `ProcessManager.Service` injection. 12/12.
 - [ ] `Operation.Service` is the other place the review names as a unifying layer; nothing there
       dispatches on local vs remote yet, so it is untouched.
+
+## Phase 8 — the model round trip (session of 2026-09-08)
+
+The one remaining item from Phase 5's `resume` ("the agent model round trip needs the memoized
+Anthropic fixture") turned out to sit behind FIVE defects, each hiding the next. Diagnosed against a
+new round-trip test rather than by reading: every hypothesis reached from source alone was wrong.
+
+### Runtime defects fixed (dxos, commit c78bea1b12 + working tree)
+
+- [x] **`RemoteProcessManager` is a required dependency of `AgentService.layer`**, not an optional
+      read. A `LayerSpec` stack never has a tag its spec does not require in context, so
+      `Effect.serviceOption` always came back empty and every `location: 'edge'` session failed with
+      "no RemoteProcessManager is available" while the app had materialised one all along. Hosts
+      without EDGE satisfy it with `RemoteProcessManager.layerNoop`.
+- [x] **`EdgeProcessManager.fromClient` supplies the process-control surface.** It was cancel-only,
+      deferring to a `forSpace` that exists nowhere in the repo, so the manager an app builds lacked
+      `spawn`/`list` entirely ("offers no process control").
+- [x] **A `Process` definition declares the schemas its data model needs** (`Process.types`), and the
+      host registers them with the process's database. `FunctionContext._open` does the registering;
+      passing `types` to the constructor alone was inert, which cost a full cycle to notice.
+      `SessionStore` reads the conversation with a TYPED query, so on a host that registered nothing
+      the agent appended a prompt and read the queue back empty — a lost write, in appearance.
+- [x] **A fresh agent no longer completes on its first empty-queue wake** (`turnRan`). `onSpawn`
+      discards what it inherits, so a new process always starts empty; treating that as "work
+      drained" ended the agent ~50ms after spawn, and the prompt it was spawned for then landed on a
+      finished handle and was dropped with a warning.
+- [x] **Read-your-writes over an eventually-consistent queue read.** A hosted process's feed read is
+      served by the space INDEX: the agent appends a prompt and its own read, 11ms later, returns
+      empty; the index catches up ~3ms after that, but the agent has already gone idle and nothing
+      looks again. `onAlarm` now re-arms a short alarm while a write it made is unread (bounded by
+      `MAX_UNSEEN_WRITE_WAKES`), instead of concluding the queue is drained. Locally this never
+      reproduces — the same read is served from the resident feed handle.
+
+### Harness defect (edge, working tree) — the actual blocker for fixtures
+
+- [x] **`pruneAbsentTargets` silently pruned every function-valued service binding.** It derives a
+      target worker from `binding.name`, and a FUNCTION has a `.name`, so
+      `createMemoizedAnthropicHandler()`, `stubFetch('HUB_SERVICE')` and friends resolved to a
+      target that is not hosted and were dropped from the worker's env. Miniflare 4 accepts
+      `(request, miniflare) => Response` as a binding value, so the declarations were always valid —
+      they just never arrived. This is why `MEMOIZED_AI_INFERENCE_SERVICE` was absent from
+      compute-service's env (verified by dumping `this.env` inside the DO).
+
+      **Consequence beyond this project: the memoized-AI path was broken for ROUTINES too**, not
+      just hosted agents. `ai.node.test.ts` is tagged `manual`, so nothing exercised it. Worth
+      checking whether any other harness behaviour depended on a pruned stub.
+
+### Test infrastructure added (edge)
+
+- [x] `POST /compute/processes/:spaceId/:pid/drain` behind `testEndpoint()`, plus
+      `harness.drainProcess()`: runs a hosted process until it stops recording events, the same
+      shape as the `/db/test/…/drain` barrier for replication and indexing. A process advances on
+      wall-clock alarms, so a test that waits turns a lost wake-up into a timeout instead of a
+      failure — which is exactly how the read-your-writes bug read for several rounds.
+- [x] `ProcessManager.Handle.requestAlarm` (optional — a handle for a process in another runtime
+      cannot arm that runtime's timer, so `RemoteProcessHandle` does not implement it).
+- [x] `agent-process.node.test.ts` grew from lifecycle-only to five tests: reply, context across two
+      turns, a tool call through a bound skill, and a self-wake on a due alarm (deliberately NOT
+      drained, so a broken alarm mirror still fails).
+- [x] Every test that reads the conversation first asserts it can SEE a message written through
+      EDGE's own queue route. Three earlier revisions read the feed via `exec-query`/`Scope.feed`
+      and via the peer, and both reported an empty feed for messages that demonstrably existed. A
+      silent probe turns a working agent into a phantom bug; it produced three confident, wrong
+      diagnoses this session before the control existed.
+- [x] Assertions match only ASSISTANT-role messages. Matching the conversation at large passed on
+      the prompt itself (`/paris/i` is in the question) and on an alarm record carrying its own
+      reminder text — two false positives that briefly showed green.
+
+### Where it stands
+
+- `answers a prompt` gets as far as a real model call: prompt enqueued, retry wakes the agent,
+  message dequeued, turn begins, `AnthropicClient.createMessageStream` reached. It then fails
+  because the fixture store is unreachable — the `pruneAbsentTargets` fix above is written but was
+  never run against the suite.
+- `_mirrorAlarm` also treats a past-due recorded alarm as not-pending (a stale due-time made every
+  later `setAlarm` a no-op). Kept on its own merits; it was NOT the bug it was written for.
+- Debugging channel that finally worked: `packages/services/edge/edge-test.log` (JSONL, file sink
+  defaults to `debug`; set `DX_TEST_FILE`). The agent's own `log()` lines were on disk the whole
+  time — `agent onInput enqueued to feed` / `agent onAlarm empty queue` answered in one look what
+  four rounds of source-reading got wrong. Read it FIRST.
+
+### Next
+
+- [ ] Run the suite with the `pruneAbsentTargets` fix; record the memoized fixtures
+      (`ALLOW_LLM_GENERATION=1`), then confirm the suite is green with generation OFF.
+- [ ] The tool/skill test needs the real operation handler set on the host — the standing
+      `handlerSet: OperationHandlerSet.empty` TODO in `ProcessObject`. Expect it to fail until then.
+- [ ] Strip the remaining scaffolding: the `DO env probe` log in `ProcessObject`.
+- [ ] Revert edge's `package.json` / `pnpm-lock.yaml` (`pnpm link-packages` `file:` overrides) before
+      landing, per the existing blocker note.
