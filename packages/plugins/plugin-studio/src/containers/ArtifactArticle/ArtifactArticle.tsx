@@ -388,15 +388,9 @@ export const ArtifactArticle = ({ role, subject: artifact, attendableId }: Artif
             </Field.Root>
             <Flex justify='end' classNames='h-6'>
               {selectedVariant && !selectedVariant.jobId && (
-                <Field.Root>
-                  <Flex gap='sm' align='center'>
-                    <Field.Checkbox
-                      checked={isCover}
-                      onCheckedChange={(checked) => handleCoverChange(checked === true)}
-                    />
-                    <Field.Label>{t('cover.label')}</Field.Label>
-                  </Flex>
-                </Field.Root>
+                <Field.Checkbox checked={isCover} onCheckedChange={(checked) => handleCoverChange(checked === true)}>
+                  {t('cover.label')}
+                </Field.Checkbox>
               )}
             </Flex>
           </Flex>

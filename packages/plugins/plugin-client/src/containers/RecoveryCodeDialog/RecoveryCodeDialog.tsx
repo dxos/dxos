@@ -32,14 +32,13 @@ export const RecoveryCodeDialog = ({ code }: RecoveryCodeDialogProps) => {
           <p>{t('recovery-code-dialog-warning-2.message')}</p>
         </Flex>
         <Flex gap='sm' align='center' classNames='pb-4'>
-          <Field.Root>
-            <Field.Checkbox
-              data-testid='recoveryCode.confirm'
-              checked={confirmation}
-              onCheckedChange={handleConfirmation}
-            />
-            <Field.Label>{t('recovery-code-confirmation.label')}</Field.Label>
-          </Field.Root>
+          <Field.Checkbox
+            data-testid='recoveryCode.confirm'
+            checked={confirmation}
+            onCheckedChange={handleConfirmation}
+          >
+            {t('recovery-code-confirmation.label')}
+          </Field.Checkbox>
         </Flex>
       </AlertDialog.Body>
       <AlertDialog.ActionBar>

@@ -85,34 +85,28 @@ const main = async () => {
           <Tooltip.Provider>
             <div className='buttons'>
               <Tooltip.Trigger asChild content='Offline mode' className='flex'>
-                <Field.Root>
-                  <Field.Switch
-                    data-testid='airplane-mode'
-                    classNames='mr-2'
-                    onCheckedChange={(e) => {
-                      setOffline(!offline);
-                      return handleToggleNetwork(e);
-                    }}
-                  />
-                  <Field.Label>
-                    <Icon icon='ph--airplane--regular' size={28} classNames={mx(offline && 'active')} />
-                  </Field.Label>
-                </Field.Root>
+                <Field.Switch
+                  data-testid='airplane-mode'
+                  classNames='mr-2'
+                  onCheckedChange={(e) => {
+                    setOffline(!offline);
+                    return handleToggleNetwork(e);
+                  }}
+                >
+                  <Icon icon='ph--airplane--regular' size={28} classNames={mx(offline && 'active')} />
+                </Field.Switch>
               </Tooltip.Trigger>
               <Tooltip.Trigger content='Write batching' className='flex'>
-                <Field.Root>
-                  <Field.Switch
-                    data-testid='batching'
-                    classNames='mr-2'
-                    onCheckedChange={(e) => {
-                      setBatching(!batching);
-                      return handleToggleBatching(e);
-                    }}
-                  />
-                  <Field.Label>
-                    <Icon icon='ph--stack--regular' size={28} classNames={mx(batching && 'active')} />
-                  </Field.Label>
-                </Field.Root>
+                <Field.Switch
+                  data-testid='batching'
+                  classNames='mr-2'
+                  onCheckedChange={(e) => {
+                    setBatching(!batching);
+                    return handleToggleBatching(e);
+                  }}
+                >
+                  <Icon icon='ph--stack--regular' size={28} classNames={mx(batching && 'active')} />
+                </Field.Switch>
               </Tooltip.Trigger>
             </div>
           </Tooltip.Provider>

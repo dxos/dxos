@@ -1026,8 +1026,12 @@ against the Radix-era names react-ui kept, Popover first.
       codemodded. Decision recorded: `Field.*` holds the wrapper parts plus the standard, field-wired
       form of every control (`Field.Checkbox` is the flat one, like Ark's own `Field.Input`), and
       composite anatomies (`Checkbox.*`, `Switch.*`) are added only when a consumer needs a part.
-- [ ] **`Field.Checkbox` / `Field.Switch` take label children** (decided 2026-09-08, next pass): the
-      standard form renders Ark's `Checkbox.Root` label around control and text, so the 27 sites that
-      hand-build `Flex > Checkbox + Label` collapse to one element.
+- [x] **`Field.Checkbox` / `Field.Switch` take label children** DONE 2026-09-08: with children the
+      root is a `<label>` around control and text (Ark's checkbox anatomy for the checkbox, a plain
+      label for the switch), so a labelled control is one element; 13 hand-built
+      `Field.Root > Flex > control + Field.Label` rows collapsed. Left-label settings rows (label
+      column, control column) keep `Field.Root` + `Field.Label`, which is the right form for them.
+      Story `Field/CheckboxWithLabel` clicks the text; jsdom cannot toggle a controlled checkbox from
+      a synthetic click, so the node test asserts labelling only.
 - [ ] **Goal 3**: Popover vs Ark's `Positioner`/`Content`/`Viewport` (tracked below under
       "Reconcile Ark's anatomy").

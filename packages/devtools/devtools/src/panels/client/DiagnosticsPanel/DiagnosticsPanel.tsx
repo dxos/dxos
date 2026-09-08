@@ -60,10 +60,9 @@ export const DiagnosticsPanel = () => {
     <Panel.Root>
       <Panel.Toolbar asChild>
         <Toolbar.Root>
-          <Field.Root>
-            <Field.Checkbox checked={recording} onCheckedChange={(recording) => handleSetRecording(!!recording)} />
-            <Field.Label>Record metrics</Field.Label>
-          </Field.Root>
+          <Field.Checkbox checked={recording} onCheckedChange={(recording) => handleSetRecording(!!recording)}>
+            Record metrics
+          </Field.Checkbox>
           <div className='grow' />
           <Toolbar.Button onClick={handleRefresh}>Run Diagnostics</Toolbar.Button>
           <Toolbar.IconButton icon='ph--download--regular' label='Download diagnostics' onClick={handleDownload} />

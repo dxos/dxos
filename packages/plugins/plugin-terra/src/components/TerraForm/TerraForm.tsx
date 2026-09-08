@@ -132,12 +132,7 @@ export const TerraForm = ({ config, onChange, onWaterSheen }: TerraFormProps) =>
 
       <IconButton icon='ph--arrow-clockwise--regular' label='Reseed' onClick={handleReseed} />
 
-      <Field.Root>
-        <div className='flex items-center gap-2'>
-          <Field.Checkbox onCheckedChange={handleWaterSheenChange} />
-          <Field.Label>Water sheen</Field.Label>
-        </div>
-      </Field.Root>
+      <Field.Checkbox onCheckedChange={handleWaterSheenChange}>Water sheen</Field.Checkbox>
     </div>
   );
 };

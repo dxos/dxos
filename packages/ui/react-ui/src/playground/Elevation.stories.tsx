@@ -41,12 +41,7 @@ const DefaultStory = ({ disabled, invalid }: StoryArgs) => (
         <Field.HelperText>Letters, digits and dashes.</Field.HelperText>
       )}
     </Field.Root>
-    <Field.Root>
-      <div className='flex items-center gap-2'>
-        <Field.Switch />
-        <Field.Label>Show my presence</Field.Label>
-      </div>
-    </Field.Root>
+    <Field.Switch>Show my presence</Field.Switch>
     <Fieldset.ErrorText>Some fields need attention.</Fieldset.ErrorText>
   </Fieldset.Root>
 );

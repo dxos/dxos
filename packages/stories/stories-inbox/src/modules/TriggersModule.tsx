@@ -101,19 +101,16 @@ const TriggersModuleContainer = ({ space }: { space: Space }) => {
                 <li key={trigger.id} className='flex flex-col gap-1 rounded border border-separator p-2'>
                   <div className='font-mono text-xs truncate'>{trigger.id}</div>
                   <div className='text-description'>{formatTriggerSpec(trigger)}</div>
-                  <Field.Root>
-                    <div className='flex items-center gap-2'>
-                      <Field.Switch
-                        checked={trigger.remote === true}
-                        onCheckedChange={(checked) => {
-                          Obj.update(trigger, (trigger) => {
-                            trigger.remote = checked;
-                          });
-                        }}
-                      />
-                      <Field.Label>{trigger.remote ? 'Remote (edge)' : 'Local'}</Field.Label>
-                    </div>
-                  </Field.Root>
+                  <Field.Switch
+                    checked={trigger.remote === true}
+                    onCheckedChange={(checked) => {
+                      Obj.update(trigger, (trigger) => {
+                        trigger.remote = checked;
+                      });
+                    }}
+                  >
+                    {trigger.remote ? 'Remote (edge)' : 'Local'}
+                  </Field.Switch>
                   {lastInvocation && (
                     <div className='text-xs'>
                       Last run: {formatInvocationResult(lastInvocation.result)}

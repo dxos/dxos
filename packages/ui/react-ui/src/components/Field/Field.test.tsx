@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { cleanup, render, screen, waitFor } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import React, { type PropsWithChildren } from 'react';
 import { afterEach, beforeAll, describe, test, vi } from 'vitest';
 
@@ -83,5 +83,28 @@ describe('Input', () => {
     const [checkbox, toggle] = Array.from(document.querySelectorAll<HTMLInputElement>('input[type="checkbox"]'));
     expect(screen.getByText('Agree').getAttribute('for')).toBe(checkbox.id);
     expect(screen.getByText('Notify').getAttribute('for')).toBe(toggle.id);
+  });
+
+  test('a checkbox and a switch with label children are labelled by them, with no field root', ({ expect }) => {
+    const onSwitch = vi.fn();
+    render(
+      <>
+        <Field.Checkbox>Agree</Field.Checkbox>
+        <Field.Switch onCheckedChange={onSwitch}>Notify</Field.Switch>
+      </>,
+      { wrapper: Wrapper },
+    );
+
+    // The root is the label, so the text names the form input. (The toggle itself is exercised by
+    // the `CheckboxWithLabel` story: a controlled checkbox does not toggle from a synthetic click
+    // under jsdom.)
+    const checkbox = screen.getByLabelText('Agree') as HTMLInputElement;
+    expect(checkbox.type).toBe('checkbox');
+    expect(checkbox.closest('label')).not.toBeNull();
+
+    const toggle = screen.getByLabelText('Notify') as HTMLInputElement;
+    expect(toggle.closest('label')).not.toBeNull();
+    fireEvent.click(toggle);
+    expect(onSwitch).toHaveBeenCalledWith(true);
   });
 });

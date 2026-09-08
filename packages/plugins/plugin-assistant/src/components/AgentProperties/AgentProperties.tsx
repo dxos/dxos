@@ -89,17 +89,15 @@ export const AgentProperties = ({ agent, onSubscriptionsChanged }: AgentProperti
       </Field.Root>
 
       {subscribedObjects.map((object) => (
-        <Field.Root key={object.id}>
-          <div className='flex items-center gap-2'>
-            <Field.Checkbox
-              checked={subscribedUris.has(Obj.getURI(object))}
-              onCheckedChange={(checked) => {
-                handleSubscriptionChange(object, checked === true);
-              }}
-            />
-            <Field.Label>{Obj.getLabel(object) ?? object.id}</Field.Label>
-          </div>
-        </Field.Root>
+        <Field.Checkbox
+          key={object.id}
+          checked={subscribedUris.has(Obj.getURI(object))}
+          onCheckedChange={(checked) => {
+            handleSubscriptionChange(object, checked === true);
+          }}
+        >
+          {Obj.getLabel(object) ?? object.id}
+        </Field.Checkbox>
       ))}
     </Form.Section>
   );

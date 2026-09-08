@@ -12,7 +12,6 @@ import { Row } from '@dxos/react-ui-card';
 import { type EditorController } from '@dxos/react-ui-editor';
 import { EMAIL_REGEX, REF_REGEX, RefEditor } from '@dxos/react-ui-form';
 import { type Actor, type Event as EventType, Person } from '@dxos/types';
-import { mx } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
 
@@ -214,12 +213,9 @@ export const EventEditor = ({ event, db, onContactCreate }: EventEditorProps) =>
                 <Field.DateTime value={toDateTimeInput(data.startDate)} onValueChange={handleStartDateTimeChange} />
               )}
             </div>
-            <Field.Root>
-              <div className={mx('flex items-center gap-2', trailingClasses)}>
-                <Field.Switch checked={allDay} onCheckedChange={handleAllDayChange} />
-                <Field.Label>{t('event-all-day.label')}</Field.Label>
-              </div>
-            </Field.Root>
+            <Field.Switch checked={allDay} onCheckedChange={handleAllDayChange}>
+              {t('event-all-day.label')}
+            </Field.Switch>
           </div>
         </Card.Row>
       </Field.Root>

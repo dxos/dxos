@@ -123,6 +123,13 @@ const checkboxIndicator: ComponentFunction<InputStyleProps> = ({ size = 4 }, ...
 
 const switch_: ComponentFunction<InputStyleProps> = (_props, ...etc) => mx('dx-checkbox--switch dx-focus-ring', ...etc);
 
+/** A checkbox or switch laid out with its own label: the root is the `<label>`, so the text toggles it. */
+const checkboxRoot: ComponentFunction<InputStyleProps> = (props, ...etc) =>
+  mx('inline-flex items-center gap-2', props.disabled ? 'cursor-not-allowed' : 'cursor-pointer', ...etc);
+
+/** The text beside a control in its own label; the same type as a field label. */
+const controlLabel: ComponentFunction<InputStyleProps> = (_props, ...etc) => mx('text-sm text-description', ...etc);
+
 const pin: ComponentFunction<InputStyleProps> = (props, ...etc) =>
   mx(
     'font-mono selection:bg-transparent mx-auto',
@@ -186,6 +193,8 @@ export const fieldTheme = {
   checkbox,
   checkboxIndicator,
   switch: switch_,
+  checkboxRoot,
+  controlLabel,
   block,
   errorText,
   triggerIcon,

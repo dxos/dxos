@@ -384,12 +384,16 @@ type CheckboxProps = ThemedClassName<Omit<ComponentPropsWithoutRef<'div'>, 'defa
   form?: string;
   /** Submitted with the form (default `on`). */
   value?: string;
+  /** The control's own label, laid out beside it; without one the root is box-less and a `Field.Label` names the control. */
+  children?: ReactNode;
 };
 
 /**
  * A native checkbox, visually hidden, behind a styled control. The `Field.Root` id lands on the
  * input so `Field.Label` reaches it; everything else (test ids, handlers) lands on the visible
- * control, which is what a pointer or a test hits.
+ * control, which is what a pointer or a test hits. This is the standard form of Ark's checkbox
+ * anatomy: with `children` the root is Ark's `<label>` around control and text, so a labelled
+ * checkbox is one element rather than a row built at the call site.
  */
 const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(
   (
@@ -406,6 +410,7 @@ const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(
       form,
       value,
       onClick,
+      children,
       ...props
     },
     forwardedRef,
@@ -449,7 +454,10 @@ const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(
     );
 
     return (
-      <CheckboxPrimitive.RootProvider value={checkbox} className='contents'>
+      <CheckboxPrimitive.RootProvider
+        value={checkbox}
+        className={children ? tx('field.checkboxRoot', { disabled: checkbox.disabled }) : 'contents'}
+      >
         <CheckboxPrimitive.Control
           {...props}
           // Focusable by pointer only, so a press lands focus here (as it did on the button this
@@ -465,6 +473,9 @@ const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(
             <Icon icon='ph--minus--regular' classNames={tx('field.checkboxIndicator', { size })} />
           </CheckboxPrimitive.Indicator>
         </CheckboxPrimitive.Control>
+        {children && (
+          <CheckboxPrimitive.Label className={tx('field.controlLabel', {})}>{children}</CheckboxPrimitive.Label>
+        )}
         <CheckboxPrimitive.HiddenInput
           aria-describedby={field?.ariaDescribedby}
           {...(validationValence === 'error' && { 'aria-errormessage': field?.ids.errorText })}
@@ -482,9 +493,14 @@ Checkbox.displayName = 'Field.Checkbox';
 //
 
 type SwitchProps = ThemedClassName<
-  Omit<ComponentPropsWithRef<'input'>, 'children' | 'onChange'> & { onCheckedChange?: (checked: boolean) => void }
+  Omit<ComponentPropsWithRef<'input'>, 'children' | 'onChange'> & {
+    onCheckedChange?: (checked: boolean) => void;
+    /** The control's own label, laid out beside it; without one a `Field.Label` names the control. */
+    children?: ReactNode;
+  }
 >;
 
+/** The standard switch: with `children` a `<label>` around the control and its text, as `Checkbox` does. */
 const Switch = forwardRef<HTMLInputElement, SwitchProps>(
   (
     {
@@ -492,6 +508,7 @@ const Switch = forwardRef<HTMLInputElement, SwitchProps>(
       checked: propsChecked,
       defaultChecked: propsDefaultChecked,
       onCheckedChange: propsOnCheckedChange,
+      children,
       ...props
     },
     forwardedRef,
@@ -503,11 +520,10 @@ const Switch = forwardRef<HTMLInputElement, SwitchProps>(
       onChange: propsOnCheckedChange,
     });
 
-    // The field owns the id and the described-by/error wiring; the valence is ours.
     const field = useFieldContext();
     const { validationValence } = useFieldValence(FIELD_NAME);
 
-    return (
+    const control = (
       <input
         type='checkbox'
         className={tx('field.switch', { disabled: props.disabled }, classNames)}
@@ -525,9 +541,17 @@ const Switch = forwardRef<HTMLInputElement, SwitchProps>(
         ref={forwardedRef}
       />
     );
+
+    return children ? (
+      <label className={tx('field.checkboxRoot', { disabled: props.disabled })}>
+        {control}
+        <span className={tx('field.controlLabel', {})}>{children}</span>
+      </label>
+    ) : (
+      control
+    );
   },
 );
-
 Switch.displayName = 'Field.Switch';
 
 //

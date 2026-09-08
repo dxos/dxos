@@ -210,10 +210,9 @@ const OnlineSwitch = () => {
 
   return (
     <div className='px-1 flex items-center gap-2'>
-      <Field.Root>
-        <Field.Switch checked={online} onCheckedChange={handleChange} data-testid='assistant.online' />
-        <Field.Label>{t('online-switch.label')}</Field.Label>
-      </Field.Root>
+      <Field.Switch checked={online} onCheckedChange={handleChange} data-testid='assistant.online'>
+        {t('online-switch.label')}
+      </Field.Switch>
     </div>
   );
 };

@@ -16,21 +16,18 @@ export const NetworkToggle = ({ clients }: { clients: Client[] }) => {
 
   return (
     <div className='flex'>
-      <Field.Root>
-        <Field.Checkbox classNames='mr-2' onCheckedChange={toggleNetwork} />
-        <Field.Label>
-          Disable{' '}
-          <a
-            href='https://docs.dxos.org/guide/platform/'
-            target='_blank'
-            rel='noreferrer'
-            className='text-primary-600 dark:text-primary-400'
-          >
-            replication
-          </a>{' '}
-          (go offline)
-        </Field.Label>
-      </Field.Root>
+      <Field.Checkbox classNames='mr-2' onCheckedChange={toggleNetwork}>
+        Disable{' '}
+        <a
+          href='https://docs.dxos.org/guide/platform/'
+          target='_blank'
+          rel='noreferrer'
+          className='text-primary-600 dark:text-primary-400'
+        >
+          replication
+        </a>{' '}
+        (go offline)
+      </Field.Checkbox>
     </div>
   );
 };

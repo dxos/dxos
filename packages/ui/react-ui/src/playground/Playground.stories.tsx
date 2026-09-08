@@ -251,26 +251,13 @@ const TextFieldsSection = () => {
 
 const ControlsSection = () => (
   <Section title='Checkbox, switch, PIN'>
-    <Field.Root>
-      <Field.Checkbox defaultChecked />
-      <Field.Label>Checked</Field.Label>
-    </Field.Root>
-    <Field.Root>
-      <Field.Checkbox />
-      <Field.Label>Unchecked</Field.Label>
-    </Field.Root>
-    <Field.Root>
-      <Field.Checkbox defaultChecked disabled />
-      <Field.Label>Disabled</Field.Label>
-    </Field.Root>
-    <Field.Root>
-      <Field.Switch defaultChecked />
-      <Field.Label>Switch</Field.Label>
-    </Field.Root>
-    <Field.Root>
-      <Field.Switch disabled />
-      <Field.Label>Disabled</Field.Label>
-    </Field.Root>
+    <Field.Checkbox defaultChecked>Checked</Field.Checkbox>
+    <Field.Checkbox>Unchecked</Field.Checkbox>
+    <Field.Checkbox defaultChecked disabled>
+      Disabled
+    </Field.Checkbox>
+    <Field.Switch defaultChecked>Switch</Field.Switch>
+    <Field.Switch disabled>Disabled</Field.Switch>
     <Field.Root>
       <Field.PinInput length={4} />
     </Field.Root>

@@ -96,16 +96,14 @@ export const CallDebugPanel = ({ state: stateOverride }: CallDebugPanelProps) =>
     >
       <Flex column classNames='w-full text-xs'>
         <Flex gap='sm' align='center'>
-          <Field.Root>
-            <Field.Switch checked={showDetailedWebRTCStats} onCheckedChange={handleShowDetailedWebRTCStats} />
-            <Field.Label>{t('show-webrtc-stats.title')}</Field.Label>
-          </Field.Root>
+          <Field.Switch checked={showDetailedWebRTCStats} onCheckedChange={handleShowDetailedWebRTCStats}>
+            {t('show-webrtc-stats.title')}
+          </Field.Switch>
         </Flex>
         <Flex gap='sm' align='center'>
-          <Field.Root>
-            <Field.Switch checked={showServiceHistory} onCheckedChange={handleToggleServiceHistory} />
-            <Field.Label>{t('show-calls-history.title')}</Field.Label>
-          </Field.Root>
+          <Field.Switch checked={showServiceHistory} onCheckedChange={handleToggleServiceHistory}>
+            {t('show-calls-history.title')}
+          </Field.Switch>
         </Flex>
         <Flex gap='sm' align='center'>
           <IconButton icon='ph--copy--regular' label={'copy raw'} onClick={handleCopyRaw} />

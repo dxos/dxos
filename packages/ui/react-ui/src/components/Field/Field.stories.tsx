@@ -432,3 +432,28 @@ export const Switch: Story = {
     description: 'On or off',
   },
 };
+
+/** The standard form: a control with its own label, no field root, one element at the call site. */
+export const CheckboxWithLabel: Story = {
+  render: () => (
+    <div className='flex flex-col gap-2'>
+      <Field.Checkbox defaultChecked>Remember me</Field.Checkbox>
+      <Field.Checkbox disabled>Unavailable</Field.Checkbox>
+      <Field.Switch defaultChecked>Notifications</Field.Switch>
+      <Field.Switch disabled>Locked</Field.Switch>
+    </div>
+  ),
+  play: async ({ canvasElement }: { canvasElement: HTMLElement }) => {
+    // Each control is one `<label>` holding its text and its form input; clicking the text toggles it.
+    const [remember, unavailable, notifications] = Array.from(canvasElement.querySelectorAll('label'));
+    const input = (label: HTMLLabelElement) => label.querySelector('input') as HTMLInputElement;
+    await expect(remember).toHaveTextContent('Remember me');
+    await expect(input(remember).checked).toBe(true);
+    await userEvent.click(remember.querySelector('[data-part="label"]') as HTMLElement);
+    await expect(input(remember).checked).toBe(false);
+    await expect(input(unavailable)).toBeDisabled();
+    await expect(input(notifications).checked).toBe(true);
+    await userEvent.click(notifications.querySelector('span') as HTMLElement);
+    await expect(input(notifications).checked).toBe(false);
+  },
+};
