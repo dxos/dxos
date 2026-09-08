@@ -30,6 +30,20 @@ export const SupportIssueResult = Schema.Struct({
 
 export type SupportIssueResult = Schema.Schema.Type<typeof SupportIssueResult>;
 
+/**
+ * The service filed the report but answered with something this build cannot read, so there is no
+ * ticket id to show or to tag the flushed logs with. Nothing is recoverable; say so legibly rather
+ * than surfacing a raw schema error.
+ */
+const decodeResult = <T>(schema: Schema.Codec<T>, body: unknown): T => {
+  try {
+    return Schema.decodeUnknownSync(schema)(body);
+  } catch (err) {
+    log.warn('unexpected support service response', { body, err });
+    throw new Error('The support service returned an unexpected response.');
+  }
+};
+
 export const supportEndpoint = (config: Config): string | undefined =>
   getEnvString(config, 'DX_DISCORD_SERVICE_URL') ?? getEdgeServiceEndpoint(config, EdgeServiceName.Discord);
 
@@ -48,7 +62,8 @@ export const submitSupportReport = async ({
   did,
   screenshotUrl,
 }: SubmitSupportReportOptions): Promise<SupportReportResult> => {
-  const logKey = report.includeLogs !== false ? await observability.support.uploadLogs() : undefined;
+  const includeLogs = report.includeLogs !== false;
+  const logKey = includeLogs ? await observability.support.uploadLogs() : undefined;
   const response = await fetch(`${endpoint}/feedback`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -68,8 +83,8 @@ export const submitSupportReport = async ({
   if (!response.ok) {
     throw new Error(`support service returned ${response.status}`);
   }
-  const result = Schema.decodeUnknownSync(SupportReportResult)(await response.json());
-  if (logKey) {
+  const result = decodeResult(SupportReportResult, await response.json());
+  if (includeLogs) {
     void observability.support
       .flushLogs({ ticketId: result.ticketId })
       .catch((err) => log.warn('support logs flush failed', { err }));
@@ -92,7 +107,8 @@ export const submitSupportIssue = async ({
   did,
   screenshotUrl,
 }: SubmitSupportIssueOptions): Promise<SupportIssueResult> => {
-  const logKey = report.includeLogs !== false ? await observability.support.uploadLogs() : undefined;
+  const includeLogs = report.includeLogs !== false;
+  const logKey = includeLogs ? await observability.support.uploadLogs() : undefined;
   const response = await fetch(`${endpoint}/issue`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -119,8 +135,8 @@ export const submitSupportIssue = async ({
       .catch(() => '');
     throw new Error(`support service returned ${response.status}${detail ? `: ${detail}` : ''}`);
   }
-  const result = Schema.decodeUnknownSync(SupportIssueResult)(await response.json());
-  if (logKey) {
+  const result = decodeResult(SupportIssueResult, await response.json());
+  if (includeLogs) {
     void observability.support
       .flushLogs({ reportId: result.reportId })
       .catch((err) => log.warn('support logs flush failed', { err }));

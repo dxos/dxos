@@ -11,6 +11,8 @@ import * as ObservabilityCapabilities from '@dxos/plugin-observability/Observabi
 
 import { SupportOperation, SupportService } from '#types';
 
+import { SupportSubmitError, SupportUnavailableError } from './errors';
+
 const handler: Operation.WithHandler<typeof SupportOperation.SubmitIssue> = SupportOperation.SubmitIssue.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* (input) {
@@ -18,11 +20,11 @@ const handler: Operation.WithHandler<typeof SupportOperation.SubmitIssue> = Supp
       const observability = yield* Capability.get(ObservabilityCapabilities.Observability);
       const endpoint = SupportService.supportEndpoint(client.config);
       if (!endpoint) {
-        return yield* Effect.fail(new Error('No support service is configured.'));
+        return yield* Effect.fail(new SupportUnavailableError());
       }
       const did = client.halo.identity.get()?.did;
       if (!did) {
-        return yield* Effect.fail(new Error('No identity to file the issue as.'));
+        return yield* Effect.fail(new SupportSubmitError({ context: { reason: 'no identity to file the issue as' } }));
       }
       const version = input.report.version ?? client.config.values.runtime?.app?.build?.version;
       return yield* Effect.tryPromise({
@@ -34,7 +36,7 @@ const handler: Operation.WithHandler<typeof SupportOperation.SubmitIssue> = Supp
             did,
             screenshotUrl: input.screenshotUrl,
           }),
-        catch: (cause) => (cause instanceof Error ? cause : new Error(String(cause))),
+        catch: (cause) => new SupportSubmitError({ cause }),
       });
     }),
   ),

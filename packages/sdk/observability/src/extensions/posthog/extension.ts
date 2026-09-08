@@ -223,7 +223,7 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Observabi
             if (ndjson.length === 0) {
               return undefined;
             }
-            return (await uploadLogs(feedbackLogsEndpoint, ndjson)) ?? 'failed';
+            return await uploadLogs(feedbackLogsEndpoint, ndjson);
           },
           sessionContext: () => {
             if (!posthog.__loaded) {
@@ -235,7 +235,7 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Observabi
                 widgetSessionId: widgetSessionId(),
                 sessionId: posthog.get_session_id(),
                 replayUrl: posthog.get_session_replay_url({ withTimestamp: true, timestampLookBack: 30 }),
-                currentUrl: window.location.href.split('#')[0],
+                currentUrl: `${window.location.origin}${window.location.pathname}`,
               };
             } catch (err) {
               log.warn('PostHog session context unavailable', { err });

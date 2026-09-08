@@ -11,6 +11,8 @@ import * as ObservabilityCapabilities from '@dxos/plugin-observability/Observabi
 
 import { SupportOperation, SupportService } from '#types';
 
+import { SupportSubmitError, SupportUnavailableError } from './errors';
+
 const handler: Operation.WithHandler<typeof SupportOperation.SubmitReport> = SupportOperation.SubmitReport.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* (input) {
@@ -18,7 +20,7 @@ const handler: Operation.WithHandler<typeof SupportOperation.SubmitReport> = Sup
       const observability = yield* Capability.get(ObservabilityCapabilities.Observability);
       const endpoint = SupportService.supportEndpoint(client.config);
       if (!endpoint) {
-        return yield* Effect.fail(new Error('No support service is configured.'));
+        return yield* Effect.fail(new SupportUnavailableError());
       }
       return yield* Effect.tryPromise({
         try: () =>
@@ -29,7 +31,7 @@ const handler: Operation.WithHandler<typeof SupportOperation.SubmitReport> = Sup
             did: input.did,
             screenshotUrl: input.screenshotUrl,
           }),
-        catch: (cause) => (cause instanceof Error ? cause : new Error(String(cause))),
+        catch: (cause) => new SupportSubmitError({ cause }),
       });
     }),
   ),

@@ -178,6 +178,7 @@
     "@dxos/debug": "workspace:*",
     "@dxos/echo": "workspace:*",
     "@dxos/effect": "workspace:*",
+    "@dxos/errors": "workspace:*",
     "@dxos/graph": "workspace:*",
     "@dxos/halo-react": "workspace:*",
     "@dxos/keys": "workspace:*",

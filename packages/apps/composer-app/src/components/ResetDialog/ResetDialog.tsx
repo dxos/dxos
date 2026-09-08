@@ -107,9 +107,15 @@ export const ResetDialog = ({
         return;
       }
 
-      void onSubmitReport(values).catch((err) => log.warn('crash report not filed', { err }));
       setFeedbackOpen(false);
-      setFeedbackSent(true);
+      try {
+        await onSubmitReport(values);
+        setFeedbackSent(true);
+      } catch (err) {
+        // The dialog is already showing a fatal error; a second one helps nobody, so the only
+        // signal is that the sent confirmation never appears.
+        log.warn('crash report not filed', { err });
+      }
     },
     [onSubmitReport],
   );
