@@ -108,10 +108,20 @@ test.describe('HALO tests', () => {
     await guest.getPluginToggle(StackPlugin.meta.profile.key).click();
     await expect(guest.getPluginToggle(StackPlugin.meta.profile.key)).not.toBeChecked();
 
-    // Asserting the host after the guest has settled: a leaked write would have replicated by now.
-    await expect(guest.getPluginToggle(StackPlugin.meta.profile.key)).not.toBeChecked({ timeout: 30_000 });
+    // 3. The host keeps the account's decision.
+    //
+    // Proving that needs a guest-to-host write that IS expected to arrive, or the assertion passes
+    // on a channel that has simply not delivered yet. Only the plugin SET is local on the guest, so
+    // an ordinary setting still syncs: once the host sees this one, anything the guest leaked would
+    // have arrived with it.
+    const marker = 'http://localhost:4321';
+    await guest.openPluginSettings('org.dxos.plugin.registry');
+    await guest.getDevPluginUrlInput().fill(marker);
+    await host.openPluginSettings('org.dxos.plugin.registry');
+    await expect(host.getDevPluginUrlInput()).toHaveValue(marker, { timeout: 60_000 });
+
     await host.openRegistryCategory('recommended');
-    await expect(host.getPluginToggle(StackPlugin.meta.profile.key)).toBeChecked({ timeout: 30_000 });
+    await expect(host.getPluginToggle(StackPlugin.meta.profile.key)).toBeChecked();
   });
 
   test('deleting a space replicates across devices', async () => {

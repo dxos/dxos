@@ -233,12 +233,17 @@ export const conflictingKeys = (settings: Snapshot, namespace: string, local: Va
   return getPinnedKeys(settings, namespace).filter((key) => key in shared && differs(local[key], shared[key]));
 };
 
-/** Route every changed key of a resolved-value edit to its owning layer; dropped keys are cleared from both. */
+/**
+ * Route every changed key of a resolved-value edit to its owning layer.
+ *
+ * A dropped key is cleared only where the write would have reached the account anyway. Dropping a
+ * key this device keeps is a local event, and the account's value is not this device's to delete.
+ */
 export const applyResolved = (draft: Draft, namespace: string, before: Values, after: Values): void => {
   for (const key of changedKeys(before, after)) {
     if (key in after) {
       setValue(draft, namespace, key, after[key]);
-    } else {
+    } else if (isSynced(draft, namespace) && !isPinned(draft, namespace, key)) {
       clearValue(draft, namespace, key);
     }
   }

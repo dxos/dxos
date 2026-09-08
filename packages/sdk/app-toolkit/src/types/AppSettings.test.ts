@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { describe, expect, test } from 'vitest';
+import { describe, test } from 'vitest';
 
 import * as AppSettings from './AppSettings';
 
@@ -42,7 +42,7 @@ const settle = (target: Device, namespace = NS) => {
 };
 
 describe('resolve', () => {
-  test('the account wins over the local store, except where this device pins a key', () => {
+  test('the account wins over the local store, except where this device pins a key', ({ expect }) => {
     const target = device({
       shared: { [NS]: { toolbar: false, folding: true } },
       local: { toolbar: true, folding: false, debug: false },
@@ -52,14 +52,14 @@ describe('resolve', () => {
     expect(resolve(target)).toEqual({ toolbar: false, folding: false, debug: false });
   });
 
-  test('another device is unaffected by a pin', () => {
+  test('another device is unaffected by a pin', ({ expect }) => {
     const target = device({ shared: { [NS]: { toolbar: false } }, local: { toolbar: true } });
     AppSettings.setKeySynced(target.settings, NS, 'toolbar', false);
 
     expect(resolve(otherDevice(target))).toEqual({ toolbar: false });
   });
 
-  test('a pin whose value agrees survives a change made elsewhere', () => {
+  test('a pin whose value agrees survives a change made elsewhere', ({ expect }) => {
     const target = device({ shared: { [NS]: { toolbar: true } }, local: { toolbar: true } });
     AppSettings.setKeySynced(target.settings, NS, 'toolbar', false);
 
@@ -71,7 +71,7 @@ describe('resolve', () => {
 });
 
 describe('setValue', () => {
-  test('writes to the account by default', () => {
+  test('writes to the account by default', ({ expect }) => {
     const target = device();
     write(target, 'toolbar', true);
 
@@ -79,7 +79,7 @@ describe('setValue', () => {
     expect(target.settings.local).toEqual({});
   });
 
-  test('records a pin instead of writing, once the namespace is local', () => {
+  test('records a pin instead of writing, once the namespace is local', ({ expect }) => {
     const target = device({ shared: { [NS]: { toolbar: true } }, local: { toolbar: true } });
     AppSettings.setSynced(target.settings, NS, false, target.local);
 
@@ -91,7 +91,7 @@ describe('setValue', () => {
 });
 
 describe('setSynced', () => {
-  test('leaving with a freeze changes nothing here and nothing elsewhere', () => {
+  test('leaving with a freeze changes nothing here and nothing elsewhere', ({ expect }) => {
     const target = device({ shared: { [NS]: { toolbar: false } }, local: { toolbar: true, folding: true } });
     settle(target);
     const before = resolve(target);
@@ -102,7 +102,7 @@ describe('setSynced', () => {
     expect(resolve(otherDevice(target, before))).toEqual(before);
   });
 
-  test('once frozen, a change made elsewhere no longer lands here', () => {
+  test('once frozen, a change made elsewhere no longer lands here', ({ expect }) => {
     const target = device({ shared: { [NS]: { toolbar: true } }, local: { toolbar: true } });
     AppSettings.setSynced(target.settings, NS, false, target.local, { freeze: true });
 
@@ -111,7 +111,7 @@ describe('setSynced', () => {
     expect(resolve(target)).toEqual({ toolbar: true });
   });
 
-  test('a key the account gains after the freeze still arrives', () => {
+  test('a key the account gains after the freeze still arrives', ({ expect }) => {
     const target = device({ shared: { [NS]: { toolbar: true } }, local: { toolbar: true } });
     AppSettings.setSynced(target.settings, NS, false, target.local, { freeze: true });
 
@@ -121,7 +121,7 @@ describe('setSynced', () => {
     expect(resolve(target)).toEqual({ toolbar: true, folding: true });
   });
 
-  test('rejoining keeps the account’s value where the two disagree', () => {
+  test('rejoining keeps the account’s value where the two disagree', ({ expect }) => {
     const target = device({ shared: { [NS]: { toolbar: true } }, local: { toolbar: true } });
     AppSettings.setSynced(target.settings, NS, false, target.local, { freeze: true });
     write(target, 'toolbar', false);
@@ -134,7 +134,7 @@ describe('setSynced', () => {
     expect(target.settings.local[NS]).toBeUndefined();
   });
 
-  test('rejoining with adopt local publishes this device’s values to the account', () => {
+  test('rejoining with adopt local publishes this device’s values to the account', ({ expect }) => {
     const target = device({
       shared: { [NS]: { toolbar: true, folding: true } },
       local: { toolbar: true, folding: true },
@@ -149,7 +149,7 @@ describe('setSynced', () => {
     expect(target.settings.local[NS]).toBeUndefined();
   });
 
-  test('adopt local leaves keys the account has but this device never pinned', () => {
+  test('adopt local leaves keys the account has but this device never pinned', ({ expect }) => {
     const target = device({ shared: { [NS]: { toolbar: true } }, local: { toolbar: true } });
     AppSettings.setSynced(target.settings, NS, false, target.local);
     write(target, 'folding', true);
@@ -161,7 +161,7 @@ describe('setSynced', () => {
     expect(target.settings.shared[NS]).toEqual({ toolbar: false, folding: true });
   });
 
-  test('taking one namespace local leaves the others shared', () => {
+  test('taking one namespace local leaves the others shared', ({ expect }) => {
     const other = 'org.dxos.plugin.chess';
     const target = device();
     AppSettings.setSynced(target.settings, NS, false, target.local);
@@ -176,7 +176,7 @@ describe('setSynced', () => {
 });
 
 describe('applyResolved', () => {
-  test('routes changed keys by whether the namespace still shares', () => {
+  test('routes changed keys by whether the namespace still shares', ({ expect }) => {
     const target = device({
       shared: { [NS]: { toolbar: true, folding: true } },
       local: { toolbar: true, folding: true },
@@ -189,17 +189,25 @@ describe('applyResolved', () => {
     expect(target.settings.local[NS].keys).toEqual(['toolbar']);
   });
 
-  test('a dropped key is cleared from the account and unpinned', () => {
+  test('dropping a key the account governs clears it', ({ expect }) => {
+    const target = device({ shared: { [NS]: { toolbar: true } }, local: { toolbar: true } });
+
+    AppSettings.applyResolved(target.settings, NS, { toolbar: true }, {});
+
+    expect(target.settings.shared[NS]).toEqual({});
+  });
+
+  test('dropping a key this device keeps leaves the account alone', ({ expect }) => {
     const target = device({ shared: { [NS]: { toolbar: true } }, local: { toolbar: false } });
     AppSettings.setKeySynced(target.settings, NS, 'toolbar', false);
 
     AppSettings.applyResolved(target.settings, NS, { toolbar: false }, {});
 
-    expect(target.settings.shared[NS]).toEqual({});
-    expect(target.settings.local[NS]).toBeUndefined();
+    // The other devices' value is not this one's to delete.
+    expect(target.settings.shared[NS]).toEqual({ toolbar: true });
   });
 
-  test('an unchanged value writes nothing', () => {
+  test('an unchanged value writes nothing', ({ expect }) => {
     const target = device({ shared: { [NS]: { snippets: ['a', 'b'] } } });
     AppSettings.applyResolved(target.settings, NS, { snippets: ['a', 'b'] }, { snippets: ['a', 'b'] });
 
@@ -231,18 +239,18 @@ describe('plugins', () => {
 
   const enabledOn = (target: Device) => AppSettings.getEnabledPlugins(resolve(target, PLUGINS)).sort();
 
-  test('an id with no recorded decision follows the local set', () => {
+  test('an id with no recorded decision follows the local set', ({ expect }) => {
     expect(enabledOn(pluginDevice([MARKDOWN]))).toEqual([MARKDOWN]);
   });
 
-  test('a shared decision adds and removes plugins on every device', () => {
+  test('a shared decision adds and removes plugins on every device', ({ expect }) => {
     const target = pluginDevice();
     record(target, [MARKDOWN, CHESS], [MARKDOWN, CHESS, SKETCH]);
 
     expect(enabledOn(otherDevice(target, { [SKETCH]: true }))).toEqual([CHESS, MARKDOWN]);
   });
 
-  test('a device using its own plugin set diverges only on what it changes', () => {
+  test('a device using its own plugin set diverges only on what it changes', ({ expect }) => {
     const target = pluginDevice();
     record(target, [MARKDOWN, CHESS], [MARKDOWN, CHESS]);
 
@@ -256,7 +264,7 @@ describe('plugins', () => {
     expect(target.settings.local[PLUGINS].keys).toEqual([CHESS]);
   });
 
-  test('a plugin enabled elsewhere still arrives on a device with its own plugin set', () => {
+  test('a plugin enabled elsewhere still arrives on a device with its own plugin set', ({ expect }) => {
     const target = pluginDevice();
     record(target, [MARKDOWN, CHESS], [MARKDOWN, CHESS]);
     AppSettings.setSynced(target.settings, PLUGINS, false, target.local);
@@ -267,7 +275,7 @@ describe('plugins', () => {
     expect(enabledOn(target)).toEqual([MARKDOWN, SKETCH]);
   });
 
-  test('rejoining the account restores the shared plugin set', () => {
+  test('rejoining the account restores the shared plugin set', ({ expect }) => {
     const target = pluginDevice();
     record(target, [MARKDOWN, CHESS], [MARKDOWN, CHESS]);
     AppSettings.setSynced(target.settings, PLUGINS, false, target.local);
@@ -278,7 +286,7 @@ describe('plugins', () => {
     expect(enabledOn(target)).toEqual([CHESS, MARKDOWN]);
   });
 
-  test('installed remote plugins are shared entry-by-entry', () => {
+  test('installed remote plugins are shared entry-by-entry', ({ expect }) => {
     const installed = AppSettings.INSTALLED_NAMESPACE;
     const target = device();
     const entry: AppSettings.InstalledPlugin = {
@@ -299,14 +307,14 @@ describe('conflictingKeys', () => {
   const conflicts = (target: Device, namespace = NS) =>
     AppSettings.conflictingKeys(target.settings, namespace, target.local);
 
-  test('nothing to decide when the device has pinned nothing', () => {
+  test('nothing to decide when the device has pinned nothing', ({ expect }) => {
     const target = device({ shared: { [NS]: { toolbar: true } }, local: { toolbar: true } });
     AppSettings.setSynced(target.settings, NS, false, target.local);
 
     expect(conflicts(target)).toEqual([]);
   });
 
-  test('a pin whose value agrees is not a conflict', () => {
+  test('a pin whose value agrees is not a conflict', ({ expect }) => {
     const target = device({ shared: { [NS]: { toolbar: true } }, local: { toolbar: true } });
     AppSettings.setSynced(target.settings, NS, false, target.local, { freeze: true });
 
@@ -314,7 +322,7 @@ describe('conflictingKeys', () => {
     expect(conflicts(target)).toEqual([]);
   });
 
-  test('a differing pin conflicts', () => {
+  test('a differing pin conflicts', ({ expect }) => {
     const target = device({ shared: { [NS]: { toolbar: true } }, local: { toolbar: true } });
     AppSettings.setSynced(target.settings, NS, false, target.local);
     write(target, 'toolbar', false);
@@ -322,7 +330,7 @@ describe('conflictingKeys', () => {
     expect(conflicts(target)).toEqual(['toolbar']);
   });
 
-  test('a key only this device holds is not a conflict — rejoining adopts it', () => {
+  test('a key only this device holds is not a conflict — rejoining adopts it', ({ expect }) => {
     const target = device();
     AppSettings.setSynced(target.settings, NS, false, target.local);
     write(target, 'folding', true);
@@ -333,7 +341,7 @@ describe('conflictingKeys', () => {
     expect(target.settings.shared[NS]).toEqual({ folding: true });
   });
 
-  test('a key only the account holds does not conflict', () => {
+  test('a key only the account holds does not conflict', ({ expect }) => {
     const target = device({ shared: { [NS]: { toolbar: true } }, local: { toolbar: true } });
     AppSettings.setSynced(target.settings, NS, false, target.local);
     write(target, 'folding', true);
@@ -342,7 +350,7 @@ describe('conflictingKeys', () => {
     expect(conflicts(target)).toEqual([]);
   });
 
-  test('compares by value, so an equal object is not a conflict', () => {
+  test('compares by value, so an equal object is not a conflict', ({ expect }) => {
     const target = device({ shared: { [NS]: { layout: { columns: 2 } } } });
     AppSettings.setSynced(target.settings, NS, false, target.local);
     write(target, 'layout', { columns: 2 });
@@ -352,7 +360,7 @@ describe('conflictingKeys', () => {
 });
 
 describe('per-key pins', () => {
-  test('pinning changes nothing visible, here or elsewhere', () => {
+  test('pinning changes nothing visible, here or elsewhere', ({ expect }) => {
     const target = device({ shared: { [NS]: { toolbar: true } }, local: { toolbar: true } });
     const before = resolve(target);
 
@@ -363,7 +371,7 @@ describe('per-key pins', () => {
     expect(AppSettings.isKeySynced(target.settings, NS, 'toolbar')).toBe(false);
   });
 
-  test('a pinned key takes writes here while the rest of the namespace still shares', () => {
+  test('a pinned key takes writes here while the rest of the namespace still shares', ({ expect }) => {
     const target = device({
       shared: { [NS]: { toolbar: true, folding: true } },
       local: { toolbar: true, folding: true },
@@ -378,7 +386,7 @@ describe('per-key pins', () => {
     expect(resolve(otherDevice(target))).toEqual({ toolbar: true, folding: false });
   });
 
-  test('a pinned key ignores the account changing it', () => {
+  test('a pinned key ignores the account changing it', ({ expect }) => {
     const target = device({ shared: { [NS]: { toolbar: true } }, local: { toolbar: true } });
     AppSettings.setKeySynced(target.settings, NS, 'toolbar', false);
 
@@ -387,7 +395,7 @@ describe('per-key pins', () => {
     expect(resolve(target)).toEqual({ toolbar: true });
   });
 
-  test('unpinning hands the key back to the account', () => {
+  test('unpinning hands the key back to the account', ({ expect }) => {
     const target = device({ shared: { [NS]: { toolbar: true } }, local: { toolbar: true } });
     AppSettings.setKeySynced(target.settings, NS, 'toolbar', false);
     write(target, 'toolbar', false);
@@ -399,7 +407,7 @@ describe('per-key pins', () => {
     expect(target.settings.local[NS]).toBeUndefined();
   });
 
-  test('pinning a key still on its schema default holds the default', () => {
+  test('pinning a key still on its schema default holds the default', ({ expect }) => {
     // Nobody has written `toolbar`, so the account has no entry for it.
     const target = device({ local: { toolbar: true } });
     AppSettings.setKeySynced(target.settings, NS, 'toolbar', false);
@@ -409,7 +417,7 @@ describe('per-key pins', () => {
     expect(resolve(target)).toEqual({ toolbar: true });
   });
 
-  test('a plugin pinned off stays off while the rest of the set follows the account', () => {
+  test('a plugin pinned off stays off while the rest of the set follows the account', ({ expect }) => {
     const PLUGINS = AppSettings.PLUGINS_NAMESPACE;
     const chess = 'org.dxos.plugin.chess';
     const stack = 'org.dxos.plugin.stack';

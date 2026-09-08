@@ -67,8 +67,10 @@ export class Reconciler {
         return;
       }
 
-      this.#agreed = resolved;
+      // Recorded only once the write lands: a binding that throws leaves the old baseline, so the
+      // next pull retries instead of skipping a change it never applied.
       this._binding.write(resolved);
+      this.#agreed = resolved;
     });
   }
 
@@ -76,15 +78,31 @@ export class Reconciler {
   push(): void {
     this.#guard(() => {
       const local = this._binding.read();
-      if (AppSettings.changedKeys(this.#agreed, local).length === 0) {
+      const before = this.#baseline(local);
+      if (AppSettings.changedKeys(before, local).length === 0) {
         return;
       }
 
       this._store.update((draft) => {
-        AppSettings.applyResolved(draft, this._binding.namespace, this.#agreed, local);
+        AppSettings.applyResolved(draft, this._binding.namespace, before, local);
       });
       this.#agreed = this.#resolved();
     });
+  }
+
+  /**
+   * What a local edit is diffed against.
+   *
+   * A sparse binding is narrowed to the keys it reports: the ones it leaves out are keys it has no
+   * opinion about — a plugin registered on another device — and diffing against them would read as
+   * a deletion and take the account's decision with it.
+   */
+  #baseline(local: AppSettings.Values): AppSettings.Values {
+    if (!this._binding.sparse) {
+      return this.#agreed;
+    }
+
+    return Object.fromEntries(Object.keys(local).map((key) => [key, this.#agreed[key]]));
   }
 
   /** Values held by the store for this namespace, with no local defaults mixed in. */

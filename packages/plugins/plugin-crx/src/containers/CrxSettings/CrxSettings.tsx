@@ -58,7 +58,7 @@ export const CrxSettings = ({ subject, readonly }: CrxSettingsProps) => {
           <Form.Section
             title={meta.profile.name ?? meta.profile.key}
             description={t('settings.description')}
-            actions={<SettingsScope prefix={subject.prefix} />}
+            actions={readonly ? undefined : <SettingsScope prefix={subject.prefix} />}
           >
             <Form.FieldSet />
           </Form.Section>

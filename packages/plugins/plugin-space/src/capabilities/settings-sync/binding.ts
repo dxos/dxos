@@ -19,6 +19,11 @@ export type Binding = {
   write: (values: AppSettings.Values) => void;
   /** Report local edits, returning an unsubscribe. Omit where the local side cannot notify. */
   subscribe?: (onChange: () => void) => () => void;
+  /**
+   * Whether `read` reports only part of the namespace, so a key it omits is one this device has no
+   * opinion about rather than one that was removed.
+   */
+  sparse?: boolean;
 };
 
 /** One plugin's contributed settings atom. */
@@ -43,6 +48,9 @@ export const pluginSet = (manager: PluginManager.PluginManager, registry: AtomRe
 
   return {
     namespace: AppSettings.PLUGINS_NAMESPACE,
+    // Only plugins registered here are reported, and the account carries decisions about plugins
+    // that are not.
+    sparse: true,
     read: () => {
       const enabled = manager.getEnabled();
       return Object.fromEntries(toggleable().map((id) => [id, enabled.includes(id)]));

@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { describe, expect, test } from 'vitest';
+import { describe, test } from 'vitest';
 
 import * as AppSettings from '@dxos/app-toolkit/AppSettings';
 
@@ -35,7 +35,7 @@ const makeStore = () => {
 };
 
 /** Local side of a binding: a plain value cell that notifies on write, like a settings atom. */
-const makeLocal = (initial: AppSettings.Values, namespace: string = NS) => {
+const makeLocal = (initial: AppSettings.Values, namespace: string = NS, sparse = false) => {
   let value = initial;
   const listeners: (() => void)[] = [];
   return {
@@ -47,6 +47,7 @@ const makeLocal = (initial: AppSettings.Values, namespace: string = NS) => {
     },
     binding: {
       namespace,
+      sparse,
       read: () => value,
       write: (next: AppSettings.Values) => {
         value = next;
@@ -74,7 +75,7 @@ const bindTo = (
 };
 
 describe('Reconciler', () => {
-  test('seeding adopts settings this device already had', () => {
+  test('seeding adopts settings this device already had', ({ expect }) => {
     const store = makeStore();
     const local = makeLocal({ toolbar: true, folding: false });
     const view = store.device();
@@ -83,7 +84,7 @@ describe('Reconciler', () => {
     expect(store.shared[NS]).toEqual({ toolbar: true, folding: false });
   });
 
-  test('seeding prefers the account over the joining device', () => {
+  test('seeding prefers the account over the joining device', ({ expect }) => {
     const store = makeStore();
     store.shared[NS] = { toolbar: false };
     const local = makeLocal({ toolbar: true, folding: true });
@@ -94,7 +95,7 @@ describe('Reconciler', () => {
     expect(store.shared[NS]).toEqual({ toolbar: false, folding: true });
   });
 
-  test('a local edit reaches the shared layer', () => {
+  test('a local edit reaches the shared layer', ({ expect }) => {
     const store = makeStore();
     const local = makeLocal({ toolbar: true });
     const view = store.device();
@@ -105,7 +106,7 @@ describe('Reconciler', () => {
     expect(store.shared[NS]).toEqual({ toolbar: false });
   });
 
-  test('a local edit stays here once the namespace is unsynced', () => {
+  test('a local edit stays here once the namespace is unsynced', ({ expect }) => {
     const store = makeStore();
     const local = makeLocal({ toolbar: true });
     const view = store.device();
@@ -118,7 +119,7 @@ describe('Reconciler', () => {
     expect(view.local[NS].keys).toEqual(['toolbar']);
   });
 
-  test('a change from another device lands locally', () => {
+  test('a change from another device lands locally', ({ expect }) => {
     const store = makeStore();
     const local = makeLocal({ toolbar: true });
     const view = store.device();
@@ -129,7 +130,7 @@ describe('Reconciler', () => {
     expect(local.get()).toEqual({ toolbar: false });
   });
 
-  test('an unsynced namespace ignores a change to a value it froze', () => {
+  test('an unsynced namespace ignores a change to a value it froze', ({ expect }) => {
     const store = makeStore();
     const local = makeLocal({ toolbar: true });
     const view = store.device();
@@ -141,7 +142,7 @@ describe('Reconciler', () => {
     expect(local.get()).toEqual({ toolbar: true });
   });
 
-  test('rejoining the account replaces this device’s values', () => {
+  test('rejoining the account replaces this device’s values', ({ expect }) => {
     const store = makeStore();
     const local = makeLocal({ toolbar: true });
     const view = store.device();
@@ -154,7 +155,7 @@ describe('Reconciler', () => {
     expect(local.get()).toEqual({ toolbar: true });
   });
 
-  test('applying a remote change does not echo back as a local edit', () => {
+  test('applying a remote change does not echo back as a local edit', ({ expect }) => {
     const store = makeStore();
     const local = makeLocal({ toolbar: true });
     const view = store.device();
@@ -165,7 +166,7 @@ describe('Reconciler', () => {
     expect(view.local).toEqual({});
   });
 
-  test('the plugin set rides the same reconciliation, keyed by plugin id', () => {
+  test('the plugin set rides the same reconciliation, keyed by plugin id', ({ expect }) => {
     const markdown = 'org.dxos.plugin.markdown';
     const chess = 'org.dxos.plugin.chess';
     const store = makeStore();
@@ -180,7 +181,23 @@ describe('Reconciler', () => {
     expect(AppSettings.getEnabledPlugins(here.get()).sort()).toEqual([chess, markdown]);
   });
 
-  test('a device with its own plugin set still receives a plugin enabled elsewhere', () => {
+  test('a plugin registered only on another device keeps its decision', ({ expect }) => {
+    const markdown = 'org.dxos.plugin.markdown';
+    const chess = 'org.dxos.plugin.chess';
+    const store = makeStore();
+    // The plugin set is sparse: this device has never heard of chess, so it reports no key for it.
+    const here = makeLocal({ [markdown]: true }, AppSettings.PLUGINS_NAMESPACE, true);
+    const there = makeLocal({ [markdown]: true, [chess]: true }, AppSettings.PLUGINS_NAMESPACE, true);
+    bindTo(store, store.device(), there);
+    bindTo(store, store.device(), here);
+
+    // An unrelated edit here must not read chess's absence as a decision to uninstall it.
+    here.set({ [markdown]: false });
+
+    expect(store.shared[AppSettings.PLUGINS_NAMESPACE]).toEqual({ [markdown]: false, [chess]: true });
+  });
+
+  test('a device with its own plugin set still receives a plugin enabled elsewhere', ({ expect }) => {
     const markdown = 'org.dxos.plugin.markdown';
     const chess = 'org.dxos.plugin.chess';
     const sketch = 'org.dxos.plugin.sketch';

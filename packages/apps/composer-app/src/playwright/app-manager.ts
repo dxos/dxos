@@ -44,6 +44,9 @@ const JOIN_IDENTITY_BOOT_TIMEOUT = 60_000;
 /** The default space's Home, which a first-run boot lands on. */
 const DEFAULT_WORKSPACE_URL = /\/w\/[A-Z0-9]{20,}\/home/;
 
+/** A joined device stops at the inviter's workspace root rather than reaching its `/home` plank. */
+const JOINED_WORKSPACE_URL = /\/w\/[A-Z0-9]{20,}/;
+
 /** How long the URL must hold still before boot counts as finished. */
 const BOOT_QUIET_PERIOD = 1_000;
 
@@ -142,6 +145,19 @@ export class AppManager {
    * waits for the URL to stop moving rather than for its first arrival.
    */
   async waitForDefaultWorkspace(): Promise<void> {
+    await this.#waitForBoot(DEFAULT_WORKSPACE_URL);
+  }
+
+  /**
+   * Waits out the same boot navigation for a device that has just joined an existing identity. Such
+   * a device stops at the inviter's workspace root, never reaching `/home`, hence the looser pattern.
+   */
+  async waitForJoinedWorkspace(): Promise<void> {
+    await this.#waitForBoot(JOINED_WORKSPACE_URL);
+  }
+
+  /** Arrive at `url`, then wait for boot to stop navigating away from it. */
+  async #waitForBoot(url: RegExp): Promise<void> {
     let lastNavigation = Date.now();
     const onNavigated = (frame: Frame) => {
       if (frame === this.page.mainFrame()) {
@@ -151,7 +167,7 @@ export class AppManager {
 
     this.page.on('framenavigated', onNavigated);
     try {
-      await this.page.waitForURL(DEFAULT_WORKSPACE_URL, { timeout: 60_000 });
+      await this.page.waitForURL(url, { timeout: 60_000 });
       await expect
         .poll(() => Date.now() - lastNavigation, { timeout: 30_000, intervals: [50] })
         .toBeGreaterThanOrEqual(BOOT_QUIET_PERIOD);
@@ -159,15 +175,7 @@ export class AppManager {
       this.page.off('framenavigated', onNavigated);
     }
 
-    await expect(this.page).toHaveURL(DEFAULT_WORKSPACE_URL);
-  }
-
-  /**
-   * Waits out the same boot navigation for a device that has just joined an existing identity. Such
-   * a device stops at the inviter's workspace root, never reaching `/home`, hence the looser pattern.
-   */
-  async waitForJoinedWorkspace(): Promise<void> {
-    await this.page.waitForURL(/\/w\/[A-Z0-9]{20,}/, { timeout: 60_000 });
+    await expect(this.page).toHaveURL(url);
   }
 
   async openUserAccount(): Promise<void> {
