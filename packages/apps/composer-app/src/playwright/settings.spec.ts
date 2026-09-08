@@ -32,7 +32,10 @@ test.describe('Settings sync', () => {
   });
 
   test.afterEach(async () => {
-    await host.close();
+    // Playwright runs `afterEach` even when `beforeEach` skipped, so the manager may not exist.
+    if (host !== undefined) {
+      await host.close();
+    }
   });
 
   test('a device-local change leaves the account value intact', async () => {
