@@ -657,11 +657,16 @@ export class ClientReplicant {
     });
     // It only resolves on a truthy value, but its return type keeps the predicate's `undefined`.
     invariant(space, `space not found: ${spaceId}`);
-    // Bounded like the lookup above. `waitUntilReady` resolves only once the space reaches
-    // SPACE_READY, which a space whose root document never arrives never does — unbounded, that
-    // reaches the orchestrator as a call that simply does not return, naming whichever assertion
-    // happened to touch the space rather than the space itself.
-    await asyncTimeout(space.waitUntilReady(), SPACE_READY_TIMEOUT, new Error(`space never became ready: ${spaceId}`));
+    // Bounded on the same budget as the lookup above: `waitUntilReady` resolves only once the space
+    // reaches SPACE_READY, which a space whose root document never arrives never does. Unbounded, it
+    // reaches the orchestrator as a call that simply does not return, named after whichever
+    // assertion happened to touch the space. Both replicant and space are named because the error
+    // wins the race against the orchestrator's own deadline, whose label carries the pair.
+    await asyncTimeout(
+      space.waitUntilReady(),
+      SPACE_READY_TIMEOUT,
+      new Error(`space never became ready: ${spaceId} (replicant ${this.#env.params.replicantId})`),
+    );
     return space;
   }
 
