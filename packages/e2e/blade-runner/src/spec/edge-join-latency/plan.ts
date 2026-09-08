@@ -33,11 +33,13 @@ export type EdgeJoinLatencySpec = {
   /** Peers that accept an invitation, each an identity of its own, each timed independently. */
   joiners: number;
   /**
-   * Give the seeder an EDGE agent.
+   * Give every client an EDGE agent.
    *
    * Required, not cosmetic: `shareSpace` opens a DELEGATED invitation, which EDGE redeems on behalf
    * of a member, and with no agent `EdgeInvitationHandler` answers `No agents in the space.` and
-   * retries until the join fails. Exposed rather than hardcoded so the no-agent path stays testable.
+   * the seeder admits each joiner itself — a different system than this plan measures. Exposed
+   * rather than hardcoded so the no-agent path stays testable; with it on, a client that cannot get
+   * an agent fails the run.
    */
   agents: boolean;
   /**
@@ -93,8 +95,9 @@ export type EdgeJoinLatencyResult = {
    */
   monotonicGrowth: boolean;
   /**
-   * Whether the seeder got its EDGE agent. Without one the DELEGATED invitation is admitted by the
-   * seeder directly, which is slower — so latency is only comparable across runs where this matches.
+   * Whether the clients got their EDGE agents, i.e. whether EDGE redeemed the DELEGATED invitations
+   * rather than the seeder admitting each joiner itself. False only for a `agents: false` run, which
+   * measures the slower fallback — latency is comparable across runs only where this matches.
    */
   agent: boolean;
 };
@@ -177,7 +180,7 @@ export class EdgeJoinLatency implements TestPlan<EdgeJoinLatencySpec, EdgeJoinLa
     let seedMs = 0;
     let agentCreated = false;
 
-    const spawn = async (label: string, agent = false): Promise<ReplicantBrain<ClientReplicant>> => {
+    const spawn = async (label: string): Promise<ReplicantBrain<ClientReplicant>> => {
       const replicant = await env.spawn(ClientReplicant, { platform: spec.platform });
       // Never `partitions`: the offline proxy cannot front an `https:` endpoint, and nothing here
       // cuts a link anyway.
@@ -185,22 +188,22 @@ export class EdgeJoinLatency implements TestPlan<EdgeJoinLatencySpec, EdgeJoinLa
       const { identityDid } = await replicant.brain.createIdentity({ displayName: label });
       identityDids.push(identityDid);
       // The self-serve cleanup routes 403 an identity with no Hub account; one fixed alias per slot
-      // rebinds rather than accumulating rows. On preview the hatch is closed, so this is skipped
-      // and `DX_HUB_API_KEY` is the only way the run's data gets deleted.
+      // rebinds rather than accumulating rows. It is also what `createAgent` needs — EDGE hosts an
+      // agent only for an identity bound to an account.
       if (isDevLikeTarget(spec.edge)) {
         await replicant.brain.bindTestAccount({ hubUrl, email: `test+bladerunner-join-${label}@dxos.org` });
       }
-      if (agent && spec.agents) {
-        try {
-          await replicant.brain.createAgent();
-          agentCreated = true;
-        } catch (err) {
-          // Best-effort, same reasoning as the soak plan: without an agent the DELEGATED invitation
-          // has to be admitted by the seeder itself, which is online throughout, so the join is
-          // slower rather than impossible. Recorded in the result because it changes what the
-          // number means.
-          log.error('agent unavailable; joins will be admitted by the seeder directly', { err });
-        }
+      // The seeder's agent is what makes the invitation an EDGE-redeemed DELEGATED one; the
+      // joiners get one too so every client in the fleet is agent-backed, which is the topology a
+      // real deployment has and the one this measurement is meant to describe.
+      //
+      // Fatal, not best-effort: without an agent `EdgeInvitationHandler` answers `No agents in the
+      // space.` and the seeder admits every joiner directly, which is a different system than the
+      // one this plan exists to measure. A green run of the wrong measurement is worse than a red
+      // one — the numbers land in a nightly trend that nobody re-reads the caveat for.
+      if (spec.agents) {
+        await replicant.brain.createAgent();
+        agentCreated = true;
       }
       spawned.push(replicant);
       return replicant;
@@ -215,8 +218,7 @@ export class EdgeJoinLatency implements TestPlan<EdgeJoinLatencySpec, EdgeJoinLa
     });
 
     try {
-      // The seeder hosts every invitation, so it is the one that needs the agent.
-      const seeder = await spawn('seeder', true);
+      const seeder = await spawn('seeder');
       const created = await seeder.brain.createSpace({ label: 'join-latency' });
       // Kept in a local as well: the outer binding is what `finally` cleans up, but only this one
       // is narrowed to a string for the closures below.
@@ -428,7 +430,7 @@ const renderSummary = (result: EdgeJoinLatencyResult): string => {
     `## ${result.ok ? '✅' : '❌'} Join latency — ${result.objects} objects, ${result.joiners} joiners`,
     '',
     `Against \`${result.edge}\`. Seeded and flushed to EDGE in ${ms(result.seedMs)}.${
-      result.agent ? '' : ' ⚠️ No EDGE agent — the seeder admitted every joiner itself, which is slower.'
+      result.agent ? '' : ' ⚠️ Agents off — the seeder admitted every joiner itself, which is slower.'
     }`,
     '',
     '| | Median | Share of total |',
