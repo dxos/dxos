@@ -8,17 +8,17 @@ import type * as AtomRegistry from 'effect/unstable/reactivity/AtomRegistry';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
-import * as UrlLoader from '@dxos/app-framework/UrlLoader';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppSettings from '@dxos/app-toolkit/AppSettings';
 import { type Space } from '@dxos/client/echo';
 import { Filter, Obj } from '@dxos/echo';
-import { EffectEx, createKvsStore } from '@dxos/effect';
+import { createKvsStore } from '@dxos/effect';
 import { log } from '@dxos/log';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 
 import { resolveSettingsSpace } from '../../util';
-import { type Binding, Reconciler, type Store } from './binding';
+import { Reconcilers, type Store } from './binding';
+import { installedPlugins, pluginSet, pluginSettings } from './bindings';
 
 /**
  * The space's {@link AppSettings.AppSettings} singleton, created on first use. Two devices racing
@@ -54,7 +54,7 @@ const makeStore = (
 /**
  * Binds every settings surface the app already has — each plugin's settings atom, the enabled
  * plugin set, and the remote plugin install list — to the {@link AppSettings.AppSettings} object in
- * the settings space, so they follow the identity across devices with per-key device overrides.
+ * the settings space, so they follow the identity across devices with per-key device pins.
  */
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
@@ -70,122 +70,60 @@ export default Capability.makeModule(
     const space = yield* resolveSettingsSpace(client);
     const settings = yield* getOrCreateSettings(space);
     // This device's pins. One per device, so the key names no device.
-    const deviceStore = createKvsStore({
+    const device = createKvsStore({
       key: 'org.dxos.app-toolkit.settings-scope',
       schema: AppSettings.DeviceSettings,
       defaultValue: AppSettings.makeDeviceSettings,
     });
-    const store = makeStore(settings, deviceStore, registry);
+    const store = makeStore(settings, device, registry);
+    const reconcilers = new Reconcilers(store);
 
-    // Copied out: the atom compares by identity, and the stored value keeps its identity across a write.
-    const readUnsynced = () => [...AppSettings.getUnsynced(store.read())];
-    const unsynced = Atom.make<readonly string[]>(readUnsynced()).pipe(Atom.keepAlive);
-    const readPinned = () => structuredClone(store.read().local);
-    const pinned = Atom.make<AppSettings.DeviceSettings>(readPinned()).pipe(Atom.keepAlive);
+    //
+    // Bindings. Plugin settings arrive over the session as plugins lazily activate, so that set
+    // follows the capability list; the other two exist from the start.
+    //
 
-    const reconcilers: Reconciler[] = [];
-    const subscriptions: (() => void)[] = [];
-
-    /** Start reconciling one namespace, seeding it before either direction can fire. */
-    const bind = (binding: Binding, subscribe: (onChange: () => void) => () => void) => {
-      const reconciler = new Reconciler(store, binding);
-      reconciler.seed();
-      reconcilers.push(reconciler);
-      subscriptions.push(subscribe(() => reconciler.push()));
-    };
-
-    // Contributions arrive over time as plugins lazily activate, so this follows the capability list.
     const bound = new Set<string>();
     const bindSettings = (entries: readonly AppCapabilities.Settings[]) => {
-      for (const entry of entries) {
-        if (bound.has(entry.prefix)) {
-          continue;
-        }
-
+      for (const entry of entries.filter((entry) => !bound.has(entry.prefix))) {
         bound.add(entry.prefix);
-        bind(
-          {
-            namespace: entry.prefix,
-            read: () => registry.get(entry.atom),
-            write: (values) => registry.set(entry.atom, values),
-          },
-          (onChange) => registry.subscribe(entry.atom, onChange),
-        );
+        reconcilers.add(pluginSettings(entry, registry));
       }
     };
 
-    const settingsAtom = manager.capabilities.atom(AppCapabilities.Settings);
-    bindSettings(registry.get(settingsAtom));
-    subscriptions.push(registry.subscribe(settingsAtom, bindSettings));
+    const contributed = manager.capabilities.atom(AppCapabilities.Settings);
+    bindSettings(registry.get(contributed));
+    reconcilers.add(pluginSet(manager, registry));
+    reconcilers.add(installedPlugins());
 
-    // Core plugins are force-enabled by the host and are not the user's to toggle.
-    const toggleable = () =>
-      manager
-        .getPlugins()
-        .map((plugin) => plugin.meta.profile.key)
-        .filter((id) => !manager.getCore().includes(id));
+    //
+    // Republish on any change, from either half of the store.
+    //
 
-    bind(
-      {
-        namespace: AppSettings.PLUGINS_NAMESPACE,
-        read: () => {
-          const enabled = manager.getEnabled();
-          return Object.fromEntries(toggleable().map((id) => [id, enabled.includes(id)]));
-        },
-        write: (decisions) => {
-          const target = new Set(AppSettings.getEnabledPlugins(decisions));
-          const current = manager.getEnabled();
-          for (const id of toggleable()) {
-            // An id with no decision is one no device has an opinion about yet.
-            if (!(id in decisions) || target.has(id) === current.includes(id)) {
-              continue;
-            }
-
-            void EffectEx.runAndForwardErrors(target.has(id) ? manager.enable(id) : manager.disable(id));
-          }
-        },
-      },
-      (onChange) => {
-        const unsubscribe = [
-          registry.subscribe(manager.enabled, onChange),
-          registry.subscribe(manager.plugins, onChange),
-        ];
-        return () => unsubscribe.forEach((fn) => fn());
-      },
-    );
-
-    bind(
-      {
-        namespace: AppSettings.INSTALLED_NAMESPACE,
-        read: () => Object.fromEntries(UrlLoader.getRemoteEntries().map((entry) => [entry.id, entry])),
-        write: (entries) => {
-          UrlLoader.setRemoteEntries(
-            Object.values(entries).filter((entry): entry is AppSettings.InstalledPlugin => !!entry?.url),
-          );
-        },
-      },
-      // `UrlLoader`'s store has no change notification, so this direction is pull-only.
-      () => () => {},
-    );
+    // Copied out: the atom compares by identity, and the stored value keeps its identity across a write.
+    const readUnsynced = () => [...AppSettings.getUnsynced(store.read())];
+    const readPinned = () => structuredClone(store.read().local);
+    const unsynced = Atom.make<readonly string[]>(readUnsynced()).pipe(Atom.keepAlive);
+    const pinned = Atom.make<AppSettings.DeviceSettings>(readPinned()).pipe(Atom.keepAlive);
 
     const refresh = () => {
       registry.set(unsynced, readUnsynced());
       registry.set(pinned, readPinned());
-      for (const reconciler of reconcilers) {
-        reconciler.pull();
-      }
+      reconcilers.pull();
     };
-    subscriptions.push(Obj.subscribe(settings, refresh));
-    subscriptions.push(registry.subscribe(deviceStore, refresh));
+
+    const unsubscribe = [
+      registry.subscribe(contributed, bindSettings),
+      Obj.subscribe(settings, refresh),
+      registry.subscribe(device, refresh),
+    ];
 
     yield* Effect.addFinalizer(() =>
       Effect.sync(() => {
-        subscriptions.forEach((unsubscribe) => unsubscribe());
+        unsubscribe.forEach((fn) => fn());
+        reconcilers.dispose();
       }),
     );
-
-    const localValues = (namespace: string): AppSettings.Values =>
-      reconcilers.find((reconciler) => reconciler.namespace === namespace)?.local() ?? {};
 
     return Capability.contribute(AppCapabilities.SettingsSync, {
       unsynced,
@@ -195,10 +133,13 @@ export default Capability.makeModule(
         // later still arrive here.
         const freeze = namespace !== AppSettings.PLUGINS_NAMESPACE;
         store.update((draft) =>
-          AppSettings.setSynced(draft, namespace, synced, localValues(namespace), { freeze, adopt: options?.adopt }),
+          AppSettings.setSynced(draft, namespace, synced, reconcilers.local(namespace), {
+            freeze,
+            adopt: options?.adopt,
+          }),
         );
       },
-      conflicts: (namespace) => AppSettings.conflictingKeys(store.read(), namespace, localValues(namespace)),
+      conflicts: (namespace) => AppSettings.conflictingKeys(store.read(), namespace, reconcilers.local(namespace)),
       setKeySynced: (namespace, key, synced) => {
         store.update((draft) => AppSettings.setKeySynced(draft, namespace, key, synced));
       },

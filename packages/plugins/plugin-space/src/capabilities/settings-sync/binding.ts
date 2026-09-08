@@ -11,6 +11,8 @@ export type Binding = {
   read: () => AppSettings.Values;
   /** Put resolved values into effect locally. */
   write: (values: AppSettings.Values) => void;
+  /** Report local edits, returning an unsubscribe. Omit where the local side cannot notify. */
+  subscribe?: (onChange: () => void) => () => void;
 };
 
 /** Read and write access to the settings store's two layers. */
@@ -114,5 +116,46 @@ export class Reconciler {
     } finally {
       this.#busy = false;
     }
+  }
+}
+
+/**
+ * Every namespace being reconciled against one store.
+ *
+ * Bindings arrive over the session as plugins activate, and the capability needs the whole set at
+ * once — to pull them when either half of the store moves, and to release their subscriptions when
+ * it shuts down.
+ */
+export class Reconcilers {
+  readonly #entries: Reconciler[] = [];
+  readonly #unsubscribe: (() => void)[] = [];
+
+  constructor(private readonly _store: Store) {}
+
+  /** Reconcile one more namespace, seeding it before either direction can fire. */
+  add(binding: Binding): void {
+    const reconciler = new Reconciler(this._store, binding);
+    reconciler.seed();
+    this.#entries.push(reconciler);
+    const unsubscribe = binding.subscribe?.(() => reconciler.push());
+    if (unsubscribe) {
+      this.#unsubscribe.push(unsubscribe);
+    }
+  }
+
+  /** Put newly resolved values into effect everywhere, after the store moved. */
+  pull(): void {
+    for (const reconciler of this.#entries) {
+      reconciler.pull();
+    }
+  }
+
+  /** One namespace's own store, which holds the value of every pinned key. */
+  local(namespace: string): AppSettings.Values {
+    return this.#entries.find((reconciler) => reconciler.namespace === namespace)?.local() ?? {};
+  }
+
+  dispose(): void {
+    this.#unsubscribe.forEach((unsubscribe) => unsubscribe());
   }
 }

@@ -52,8 +52,11 @@ const makeLocal = (initial: AppSettings.Values, namespace: string = NS) => {
         value = next;
         listeners.forEach((listener) => listener());
       },
+      subscribe: (onChange: () => void) => {
+        listeners.push(onChange);
+        return () => {};
+      },
     },
-    subscribe: (listener: () => void) => listeners.push(listener),
   };
 };
 
@@ -65,7 +68,7 @@ const bindTo = (
 ) => {
   const reconciler = new Reconciler(view.store, local.binding);
   reconciler.seed();
-  local.subscribe(() => reconciler.push());
+  local.binding.subscribe(() => reconciler.push());
   store.subscribe(() => reconciler.pull());
   return reconciler;
 };
