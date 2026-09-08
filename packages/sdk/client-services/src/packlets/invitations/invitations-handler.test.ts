@@ -42,7 +42,7 @@ type StateUpdateSink = PushStream<Invitation> & {
 // TODO(burdon): Flaky.
 describe.skipIf(process.env.CI && !process.env.RUN_FLAKY_TESTS)(
   'InvitationHandler',
-  { retry: 3, timeout: 30_000 },
+  { timeout: 30_000 },
   () => {
     let testBuilder: TestBuilder;
 
