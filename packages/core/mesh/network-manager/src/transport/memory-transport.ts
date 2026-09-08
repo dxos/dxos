@@ -19,6 +19,17 @@ import { type Transport, type TransportFactory, type TransportOptions } from './
 const MEMORY_TRANSPORT_DELAY = 1;
 
 /**
+ * How long the receiving side waits for the initiator's `transportId` signal.
+ *
+ * That signal only leaves the initiator after the answer has made its own trip, so the wait spans
+ * two signaling round trips. In-process that is microseconds, but this transport is also paired with
+ * real signaling in tests, where one hop through a deployed router measures ~0.6s p50 / 1.4s max —
+ * the previous 1s default failed ~3.5% of handshakes on latency alone (DX-1264). Sits just under
+ * `Connection`'s own 10s transport-connect abort, which is the deadline that should actually fire.
+ */
+const REMOTE_SIGNAL_TIMEOUT = 9_000;
+
+/**
  * Creates a binary stream that delays data being sent through the stream by the specified amount of time.
  */
 const createStreamDelay = (delay: number): NodeJS.ReadWriteStream => {
@@ -86,7 +97,7 @@ export class MemoryTransport implements Transport {
     } else {
       // Don't block the open method.
       this._remote
-        .wait({ timeout: this._options.timeout ?? 1_000 })
+        .wait({ timeout: this._options.timeout ?? REMOTE_SIGNAL_TIMEOUT })
         .then((remoteId) => {
           if (this._closed) {
             return;

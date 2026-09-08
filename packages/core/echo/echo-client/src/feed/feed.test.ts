@@ -9,12 +9,12 @@ import * as Option from 'effect/Option';
 import * as Scope from 'effect/Scope';
 import { afterEach, beforeEach, describe, onTestFinished, test } from 'vitest';
 
-import { Event } from '@dxos/async';
+import { Event, sleep } from '@dxos/async';
 import { Database, Feed, Scope as FeedScope, Filter, Obj, Query, Ref } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 import { EffectEx } from '@dxos/effect';
 import { EID, PublicKey } from '@dxos/keys';
-import { FeedProtocol, makeInProcessClient } from '@dxos/protocols';
+import { FeedProtocol, RpcClosedError, makeInProcessClient } from '@dxos/protocols';
 import { FeedService } from '@dxos/protocols/rpc';
 
 import { EchoTestBuilder } from '../testing';
@@ -342,6 +342,33 @@ describe('Feed', () => {
       const results = await db.query(Query.select(Filter.everything()).from(FeedScope.feed(feedUri))).run();
       expect(results).toHaveLength(1);
       expect((results[0] as TestSchema.Person).name).toEqual('john');
+    });
+
+    // Regression (DX-1264): the retry loop was unbounded and made no distinction for a closed RPC
+    // endpoint, so one failed append became ~9.8k rejections/s on the main thread — enough to keep
+    // the device-invitation join shell from mounting inside its 60s budget.
+    test('append stops retrying once the rpc endpoint is closed', async ({ expect }) => {
+      await using peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Person] });
+      const db = await peer.createDatabase();
+
+      let callCount = 0;
+      const closedHandlers: FeedService.Handlers = {
+        ...peer.host.feedService,
+        'FeedService.insertIntoFeed': () => {
+          callCount++;
+          return Effect.fail(new RpcClosedError());
+        },
+      };
+      db._setFeedService(await makeFeedClient(closedHandlers));
+
+      const feed = db.add(Feed.make({ name: 'closed' }));
+      db.add(Obj.make(TestSchema.Person, { name: 'john' }), { to: feed });
+
+      // Past the first two backoff steps (1s, then 2s), so a single attempt here means the closed
+      // endpoint latched rather than merely being rate-limited — this handle's service is captured
+      // at construction, so no retry from it could ever reach a live endpoint.
+      await sleep(2_500);
+      expect(callCount).toBe(1);
     });
 
     test('disposing the feed handle flushes a same-tick update instead of dropping it', async ({ expect }) => {

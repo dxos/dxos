@@ -23,7 +23,7 @@ import { defineHiddenProperty } from '@dxos/echo/internal';
 import { failedInvariant, invariant } from '@dxos/invariant';
 import { EID, EntityId, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { RpcClosedError, runServiceCall, subscribeStream } from '@dxos/protocols';
+import { RpcClosedError, RpcNotOpenError, runServiceCall, subscribeStream } from '@dxos/protocols';
 import { type FeedService } from '@dxos/protocols/rpc';
 
 import { type DatabaseImpl } from '../proxy-db';
@@ -44,6 +44,14 @@ const RECONNECT_INITIAL_DELAY = 1_000;
  * moment a reconnected stream observes data.
  */
 const RECONNECT_MAX_DELAY = 30_000;
+
+const APPEND_RETRY_INITIAL_DELAY = 1_000;
+
+/**
+ * Ceiling for the append retry backoff, mirroring {@link RECONNECT_MAX_DELAY}. A failed append
+ * re-queues its cores, so without a delay between attempts the retry runs at microtask rate.
+ */
+const APPEND_RETRY_MAX_DELAY = 30_000;
 
 /**
  * Client-side handle for a single feed, backed by an EDGE queue.
@@ -178,6 +186,17 @@ export class FeedHandle {
    */
   #subscriptionGeneration = 0;
 
+  /** Pending append retry after a failed send; cancelled on dispose. */
+  #appendRetryTimer: NodeJS.Timeout | null = null;
+  /** Current append retry delay; doubles per consecutive failure, resets once a send succeeds. */
+  #appendRetryDelay = APPEND_RETRY_INITIAL_DELAY;
+  /**
+   * Latched once a send fails because the RPC endpoint is gone. The service is captured at
+   * construction and the handle is cached per database, so no retry from here can ever reach a live
+   * endpoint — retrying is pure spin, and the writes are only recoverable by a fresh handle.
+   */
+  #endpointClosed = false;
+
   constructor(
     private readonly _service: FeedService.Client,
     private readonly _runtime: EffectContext.Context<never>,
@@ -245,16 +264,7 @@ export class FeedHandle {
     this.#addOptimistic(cores);
 
     const encoded = batch.map(({ json }) => JSON.stringify(json));
-    const sendPromise = this.#sendAppendBatches(encoded).catch((err) => {
-      log.catch(err);
-      this._error = err as Error;
-      this.updated.emit();
-      for (const { core, token } of batch) {
-        core.revertCapture(token);
-        this.#dirtyCores.add(core);
-      }
-      this.#appendScheduler.trigger();
-    });
+    const sendPromise = this.#sendAppendBatches(encoded).catch((err) => this.#onAppendFailed(err, batch));
     this.#inFlight.add(sendPromise);
     try {
       await sendPromise;
@@ -380,6 +390,48 @@ export class FeedHandle {
         }),
       );
     }
+    this.#appendRetryDelay = APPEND_RETRY_INITIAL_DELAY;
+  }
+
+  /**
+   * Handles a failed append: re-queue the batch and retry after a backoff.
+   *
+   * Two bounds, both absent before and both load-bearing for the page staying responsive. A closed
+   * endpoint latches {@link #endpointClosed} and stops retrying outright, because this handle's
+   * service can never come back (it is captured at construction and the handle is cached per
+   * database, so the retry could only ever re-fail). Any other failure retries on a doubling delay
+   * rather than an immediate `trigger()`, which the scheduler would run at microtask rate.
+   */
+  #onAppendFailed(err: unknown, batch: { core: FeedObjectCore; token: string }[]): void {
+    const endpointClosed = isEndpointClosedError(err);
+    if (!endpointClosed) {
+      log.catch(err);
+    }
+    this._error = err as Error;
+    this.updated.emit();
+
+    for (const { core, token } of batch) {
+      core.revertCapture(token);
+      this.#dirtyCores.add(core);
+    }
+
+    if (endpointClosed) {
+      this.#endpointClosed = true;
+      log.verbose('feed append abandoned; rpc endpoint closed', { feedId: this._feedId, pending: this.#dirtyCores.size });
+      return;
+    }
+
+    if (this.#appendRetryTimer || this._ctx.disposed) {
+      return;
+    }
+    const delay = this.#appendRetryDelay;
+    this.#appendRetryDelay = Math.min(this.#appendRetryDelay * 2, APPEND_RETRY_MAX_DELAY);
+    this.#appendRetryTimer = setTimeout(() => {
+      this.#appendRetryTimer = null;
+      if (!this._ctx.disposed) {
+        this.#appendScheduler.trigger();
+      }
+    }, delay);
   }
 
   /**
@@ -388,8 +440,13 @@ export class FeedHandle {
    * {@link waitForPendingWrites}.
    */
   async #flushDirty(): Promise<void> {
-    if (this.#dirtyCores.size === 0) {
+    if (this.#dirtyCores.size === 0 || this.#endpointClosed) {
       return;
+    }
+    // Flushing now, so a retry armed by an earlier failure has nothing left to wake for.
+    if (this.#appendRetryTimer) {
+      clearTimeout(this.#appendRetryTimer);
+      this.#appendRetryTimer = null;
     }
     const batch = [...this.#dirtyCores].map((core) => {
       const { json, token } = core.captureForAppend();
@@ -398,16 +455,7 @@ export class FeedHandle {
     this.#dirtyCores.clear();
 
     const encoded = batch.map(({ json }) => JSON.stringify(json));
-    const sendPromise = this.#sendAppendBatches(encoded).catch((err) => {
-      log.catch(err);
-      this._error = err as Error;
-      this.updated.emit();
-      for (const { core, token } of batch) {
-        core.revertCapture(token);
-        this.#dirtyCores.add(core);
-      }
-      this.#appendScheduler.trigger();
-    });
+    const sendPromise = this.#sendAppendBatches(encoded).catch((err) => this.#onAppendFailed(err, batch));
     this.#inFlight.add(sendPromise);
     try {
       await sendPromise;
@@ -701,6 +749,10 @@ export class FeedHandle {
     await this.waitForPendingWrites();
 
     this._pollingHandlers = 0;
+    if (this.#appendRetryTimer) {
+      clearTimeout(this.#appendRetryTimer);
+      this.#appendRetryTimer = null;
+    }
     this.#teardownFeedSubscription();
     for (const core of this.#cores.values()) {
       core.dispose();
@@ -722,3 +774,13 @@ const objectSetChanged = (before: Entity.Unknown[], after: Entity.Unknown[]) => 
 };
 
 const isSqliteNotOpenError = (err: any) => err.cause?.message?.includes('The database connection is not open');
+
+/** True when a call failed because the RPC endpoint is gone, rather than for a retryable reason. */
+const isEndpointClosedError = (err: unknown): boolean => {
+  for (let cause = err; cause != null; cause = (cause as { cause?: unknown }).cause) {
+    if (cause instanceof RpcClosedError || cause instanceof RpcNotOpenError) {
+      return true;
+    }
+  }
+  return false;
+};
