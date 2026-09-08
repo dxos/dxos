@@ -33,7 +33,7 @@ A Claude routine (skill + command) that closes the loop for any plugin:
 
 Each part is independently useful; (c) is the one that needs the language to be right first.
 
-## Phase 2: QA framework unification — 2026-09-08
+## Phase 2: QA framework unification — 2026-09-08 — PR #12986
 
 Decisions (all by the user, one at a time):
 

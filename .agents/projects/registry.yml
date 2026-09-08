@@ -607,7 +607,7 @@ projects:
     summary: Extend the DEUS pattern-specification language (`.mdl`) — core syntax, the standard dialect, and the DXOS domain dialect — plus the CodeMirror extension that has to follow any syntax change.
     tasks: packages/reflect/deus/TASKS.md
     design: packages/reflect/deus/docs/DESIGN.md
-    prs: []
+    prs: [12986]
     resume: "Phase 2 (QA framework unification) landed 2026-09-08 on branch claude/composer-qa-framework-50u4gz: xUnit
       naming across every .mdl (scenario = given/when/then, test QA-n = executable with before/steps/after,
       suite = container by reference with tags), lang/qa.mdl 1.1 ($snapshot after every step, Obj/Ref/Space
