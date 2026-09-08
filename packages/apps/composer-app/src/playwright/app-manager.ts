@@ -350,11 +350,17 @@ export class AppManager {
    * Deletes the space at the given index (default: the first non-default space) via its
    * settings danger zone, including the confirmation step.
    */
-  async deleteSpace(nth = 1): Promise<void> {
-    // Select the space so its Settings section is available in the navtree.
-    await this.getSpaceItems().nth(nth).click();
+  async deleteSpace(nth = 1, timeout = 30_000): Promise<void> {
+    // Select the space so its Settings section is available in the navtree, and wait for the
+    // selection to land before opening settings. The delete button is `disabled={isDefaultSpace}`
+    // (SpaceSettingsContainer), so settings opened while the default space is still selected shows
+    // a permanently disabled button and the click below burns its whole timeout on
+    // "element is not enabled" (DX-1264).
+    const space = this.getSpaceItems().nth(nth);
+    await space.click();
+    await expect(space).toHaveAttribute('aria-selected', 'true', { timeout });
     await this.openSpaceSettings();
-    await this.page.getByTestId('spaceSettings.deleteSpace').click();
+    await this.page.getByTestId('spaceSettings.deleteSpace').click({ timeout });
     await this.page.getByTestId('spaceSettings.deleteSpaceConfirm').click();
   }
 
