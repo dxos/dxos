@@ -29,6 +29,7 @@ import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import * as Process from '@dxos/compute/Process';
 import * as ServiceResolver from '@dxos/compute/ServiceResolver';
 import * as Skill from '@dxos/compute/Skill';
+import * as Template from '@dxos/compute/Template';
 import * as Trace from '@dxos/compute/Trace';
 import { Annotation, Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
@@ -865,6 +866,36 @@ describe('Agent Service (control plane)', () => {
       },
       Effect.provide(TestLayer()),
       Effect.provide(Layer.succeed(Tracer.Tracer, makeRecordingTracer(turnSpans))),
+      TestHelpers.provideTestContext,
+    ),
+    { timeout: LanguageModelFixture.isUpdateEnabled() ? 60_000 : undefined },
+  );
+  // Appended last on purpose: the module PRNG is shared file-wide, so a test inserted earlier would
+  // shift every later fixture's object ids and invalidate their recorded conversations.
+  it.effect(
+    'binds a space-authored skill, which carries no registry key',
+    Effect.fnUntraced(
+      function* (_) {
+        // Authored in the space rather than provided by the registry, so it has no meta key at all —
+        // the case that used to be dropped on the way into the context binder (DX-1248).
+        const skill = yield* Database.add(
+          Obj.make(Skill.Skill, {
+            name: 'Codename',
+            instructions: Template.make({ source: 'The codename of the project is Kingfisher.' }),
+            tools: [],
+          }),
+        );
+        expect(Obj.getMeta(skill).key).toBeUndefined();
+
+        const session = yield* AgentService.createSession({ skills: [skill] });
+        yield* session.submitPrompt('What is the codename of the project?');
+        yield* session.waitForCompletion();
+
+        const messages = yield* Feed.query(session.feed, Filter.type(Message.Message)).run;
+        const text = messages.map(Message.extractText).join('\n');
+        expect(text.toLocaleLowerCase()).toContain('kingfisher');
+      },
+      Effect.provide(TestLayer()),
       TestHelpers.provideTestContext,
     ),
     { timeout: LanguageModelFixture.isUpdateEnabled() ? 60_000 : undefined },

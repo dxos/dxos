@@ -86,7 +86,8 @@ export const runSyncPosts = (
       // `publication` is already attached (only ever created via AddPublication), so pushing
       // `Ref.make(post)` onto `posts` attaches `post` too — no separate `Database.add` needed.
       Obj.update(publication, (publication) => {
-        publication.posts = [...(publication.posts ?? []), Ref.make(post)];
+        publication.posts ??= [];
+        publication.posts.push(Ref.make(post));
       });
       onProgress?.(++done, total);
     }

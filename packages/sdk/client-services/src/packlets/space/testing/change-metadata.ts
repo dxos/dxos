@@ -3,12 +3,14 @@
 //
 
 import { log } from '@dxos/log';
-import { schema } from '@dxos/protocols/proto';
+import { compatCodec } from '@dxos/protocols/buf-shape-compat';
+import { EchoMetadataSchema } from '@dxos/protocols/buf/dxos/echo/metadata_pb';
+import { type EchoMetadata as EchoMetadataShape } from '@dxos/protocols/proto/dxos/echo/metadata';
 import type { Storage } from '@dxos/random-access-storage';
 
 import { MetadataStore } from '../../metadata';
 
-const EchoMetadata = schema.getCodecForType('dxos.echo.metadata.EchoMetadata');
+const EchoMetadata = compatCodec<EchoMetadataShape>(EchoMetadataSchema);
 
 /**
  * This function will change the storage version in the metadata.

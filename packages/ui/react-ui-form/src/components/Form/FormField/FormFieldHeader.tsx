@@ -44,6 +44,7 @@ export const FormFieldHeader = ({
     required={required}
     readonly={readonly}
     path={path}
+    trigger={trigger}
     button={
       (!readonly && add) || actions ? (
         <>
@@ -59,6 +60,5 @@ export const FormFieldHeader = ({
         </>
       ) : undefined
     }
-    trigger={trigger}
   />
 );

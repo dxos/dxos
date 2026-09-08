@@ -17,8 +17,9 @@ import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { DataCorruptionError, STORAGE_VERSION } from '@dxos/protocols';
 import { compatCodec } from '@dxos/protocols/buf-shape-compat';
+import { SpaceState } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 import { EchoMetadataSchema, LargeSpaceMetadataSchema } from '@dxos/protocols/buf/dxos/echo/metadata_pb';
-import { Invitation, SpaceState } from '@dxos/protocols/proto/dxos/client/services';
+import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import {
   type ControlPipelineSnapshot,
   type EchoMetadata,
@@ -32,7 +33,13 @@ import { type Timeframe } from '@dxos/timeframe';
 import { ComplexMap, arrayToBuffer, forEachAsync, isNonNullable } from '@dxos/util';
 
 import { MIGRATIONS, MIGRATIONS_TABLE } from '../migrations/metadata';
-import { type IMetadataStore, IMetadataStoreService, hasInvitationExpired } from './metadata-store';
+import {
+  type IMetadataStore,
+  IMetadataStoreService,
+  fromLegacyEdgeReplication,
+  hasInvitationExpired,
+  toLegacyEdgeReplication,
+} from './metadata-store';
 
 // SqlTransaction.SqlTransaction is the Tag class exported from the SqlTransaction namespace.
 type SqlTransactionTag = SqlTransaction.SqlTransaction;
@@ -242,11 +249,11 @@ export class SqliteMetadataStore implements IMetadataStore {
   }
 
   getSpaceEdgeReplicationSetting(spaceKey: PublicKey): EdgeReplicationSetting | undefined {
-    return this.hasSpace(spaceKey) ? this.#getSpace(spaceKey).edgeReplication : undefined;
+    return this.hasSpace(spaceKey) ? fromLegacyEdgeReplication(this.#getSpace(spaceKey).edgeReplication) : undefined;
   }
 
   async setSpaceEdgeReplicationSetting(spaceKey: PublicKey, setting: EdgeReplicationSetting): Promise<void> {
-    this.#getSpace(spaceKey).edgeReplication = setting;
+    this.#getSpace(spaceKey).edgeReplication = toLegacyEdgeReplication(setting);
     await this._save();
   }
 

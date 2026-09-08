@@ -8,7 +8,9 @@ import * as Rpc from 'effect/unstable/rpc/Rpc';
 import type * as RpcClient from 'effect/unstable/rpc/RpcClient';
 import * as RpcGroup from 'effect/unstable/rpc/RpcGroup';
 
-import { protoMessage, serviceError } from './service-rpc.ts';
+import { DeviceSchema } from './buf/proto/gen/dxos/client/services_pb.ts';
+import { DeviceProfileDocumentSchema } from './buf/proto/gen/dxos/halo/credentials_pb.ts';
+import { bufMessage, serviceError } from './service-rpc.ts';
 import { mutableArray } from './service-schemas.ts';
 
 //
@@ -16,7 +18,7 @@ import { mutableArray } from './service-schemas.ts';
 //
 
 export const QueryDevicesResponse = Schema.Struct({
-  devices: Schema.optional(mutableArray(protoMessage('dxos.client.services.Device'))),
+  devices: Schema.optional(mutableArray(bufMessage(DeviceSchema))),
 });
 export interface QueryDevicesResponse extends Schema.Schema.Type<typeof QueryDevicesResponse> {}
 
@@ -26,8 +28,8 @@ export interface QueryDevicesResponse extends Schema.Schema.Type<typeof QueryDev
  */
 export class Rpcs extends RpcGroup.make(
   Rpc.make('updateDevice', {
-    payload: protoMessage('dxos.halo.credentials.DeviceProfileDocument'),
-    success: protoMessage('dxos.client.services.Device'),
+    payload: bufMessage(DeviceProfileDocumentSchema),
+    success: bufMessage(DeviceSchema),
     error: serviceError,
   }),
   Rpc.make('queryDevices', {

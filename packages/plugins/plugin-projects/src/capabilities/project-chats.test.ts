@@ -101,8 +101,7 @@ describe('project chats graph extension', () => {
     const chat = await addChat('Chat');
 
     // Owned Instructions/task sets are parented to a project too; only chats are navtree children.
-    const other = db.add(Feed.make());
-    Obj.setParent(other, project);
+    const other = db.add(Feed.make({ [Obj.Parent]: project }));
     await db.flush();
     await flush();
 

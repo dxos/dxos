@@ -24,14 +24,16 @@ import { PublicKey, SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { ApiError, runServiceCall, subscribeStream } from '@dxos/protocols';
 import { Invitation, Invitation_Kind } from '@dxos/protocols/buf/dxos/client/invitation_pb';
-import { type Space as SerializedSpace, SpaceState } from '@dxos/protocols/proto/dxos/client/services';
+import { SpaceState } from '@dxos/protocols/buf/dxos/client/invitation_pb';
+import { MembershipPolicy } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
+import { type Space as SerializedSpace } from '@dxos/protocols/proto/dxos/client/services';
 import { type IndexConfig } from '@dxos/protocols/proto/dxos/echo/indexing';
-import { MembershipPolicy } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { type SpacesService } from '@dxos/protocols/rpc';
 import { trace } from '@dxos/tracing';
 
 import { RPC_TIMEOUT } from '../common';
 import { InvitationsProxy } from '../invitations';
+import { fromBufSpace } from '../services/legacy-codec';
 import { SpaceProxy } from './space-proxy';
 
 export class SpaceList extends MulticastObservable<Space[]> implements Echo {
@@ -197,7 +199,9 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
     };
 
     this._streamSubscriptions.add(
-      subscribeStream(this._runtime, this._serviceProvider.rpc['SpacesService.querySpaces'](undefined), { onData }),
+      subscribeStream(this._runtime, this._serviceProvider.rpc['SpacesService.querySpaces'](undefined), {
+        onData: (data) => onData({ spaces: data.spaces.map(fromBufSpace) }),
+      }),
     );
   }
 
@@ -272,13 +276,15 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
     options?: { tags?: string[]; membershipPolicy?: MembershipPolicy },
   ): Promise<Space> {
     log('creating space');
-    const space = await runServiceCall(
-      this._runtime,
-      this._serviceProvider.rpc['SpacesService.createSpace']({
-        tags: options?.tags ?? [],
-        membershipPolicy: options?.membershipPolicy ?? MembershipPolicy.INVITE,
-      }),
-      { timeout: RPC_TIMEOUT, label: 'SpacesService.createSpace' },
+    const space = fromBufSpace(
+      await runServiceCall(
+        this._runtime,
+        this._serviceProvider.rpc['SpacesService.createSpace']({
+          tags: options?.tags ?? [],
+          membershipPolicy: options?.membershipPolicy ?? MembershipPolicy.INVITE,
+        }),
+        { timeout: RPC_TIMEOUT, label: 'SpacesService.createSpace' },
+      ),
     );
 
     await this._spaceCreated.waitForCondition(() => {
@@ -334,12 +340,13 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
       this._serviceProvider.rpc['SpacesService.joinBySpaceKey']({ spaceKey }),
       { label: 'SpacesService.joinBySpaceKey' },
     );
+    const space = fromBufSpace(response.space ?? failedInvariant());
     // The proxy appears via the `querySpaces` stream, not the call's own response, so the two race —
     // same wait `createSpace` and `import` do before resolving their proxy.
     await this._spaceCreated.waitForCondition(() => {
-      return this.get().some(({ key }) => key.equals(response.space.spaceKey));
+      return this.get().some(({ key }) => key.equals(space.spaceKey));
     });
-    return this._findProxy(response.space);
+    return this._findProxy(space);
   }
 
   // Odd way to define methods types from a typedef.

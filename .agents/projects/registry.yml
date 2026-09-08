@@ -6,6 +6,26 @@
 # status: active | paused | blocked | ended
 
 projects:
+  - name: echo-plain-objects
+    status: active
+    user: dmaretskyi
+    host: cloud-sandbox
+    created: 2026-09-05
+    summary: 'Take the cost of the JS Proxy off the ECHO object read path. Delivered: the object stays a Proxy, but its target carries the record as own data properties, so the get trap is dropped and the engine forwards every read to the target — reads fell from 297/1690/271ns (unpersisted/automerge/feed) to ~25ns, flat in object width. Motivated by echo-client-e2e/property-access.bench.ts.'
+    tasks: .agents/projects/echo-plain-objects/TASKS.md
+    design: .agents/projects/echo-plain-objects/DESIGN.md
+    prs: [12951]
+    resume: 'PR #12951 open. Stage E was rebuilt after the abandonment in D12 proved unfounded (D14): one shared REACTIVE_PROXY_HANDLER, no get trap, key-set traps gone. Since then: the read-only gate is unified and fail-closed, the change context is REFERENCE-BASED (Obj.update hands the callback a mutable view; the outer reference stays read-only), consistent-update-param is an error with 87 sites migrated, and _proxyMap/symbolHandler/event-batch dead code is removed. OUTSTANDING: plugin-magazine postReadAtom throws via effect Hash.structure because Reflect.ownKeys now exposes the internal symbols to the hasher (dropping the ownKeys trap in cf4c23bf made it reachable; pre-dates the reference-based work, proved by A/B against ef2b9fe7) — fix is a minimal ownKeys trap filtering only internal symbols, awaiting the go-ahead. Use the depot-ci skill for Check logs and retries.'
+  - name: blade-runner-edge-stress
+    status: active
+    user: mykola
+    host: cloud-sandbox
+    created: 2026-08-27
+    summary: 'Randomized, model-checked end-to-end test in blade-runner: a fleet of real clients replicating through EDGE, driven by a seeded command sequence against an in-memory model; main assertion is full convergence (all peers equal the model). Goals: design -> local edge -> preview env with post-run cleanup -> nightly CI.'
+    tasks: .agents/projects/blade-runner-edge-stress/TASKS.md
+    design: .agents/projects/blade-runner-edge-stress/DESIGN.md
+    prs: [12817]
+    resume: "PR #12817 OPEN (https://github.com/dxos/dxos/pull/12817). Phases 0-2 done; runs reach local EDGE and execute real command sequences. The generator was rewritten: `fc.commands` is state-blind and `asyncModelRun` silently drops failed preconditions, so plans of 25 executed 3-5; each command's model transition (`advance`) is now split from its system half, a pool is simulated against a pure `makeFleetModel` before anything spawns, and only the survivors are recorded and run (25/25 executable, 9-16 data ops). Three modelling errors found and fixed by running: membership is not per-device possession (`knownBy`), a document is not instantly everywhere (`#findDocument` waits), and convergence is temporal so checkpoints retry within the quiescence budget. Open findings in RESULTS.md §4: (5) cutting the EDGE link crashes the peer - `EdgeFeedReplicator`'s async `append` listener leaks an unhandled rejection, so `partitions: false` exists to work around it; (6) a document is discovered but never delivered - `sync did not quiesce for space 1 within 60000ms`, with `AutomergeHost: collection sync not converging` naming the doc. NEXT: link the edge stack to this checkout (`pnpm link-packages ../dxos --all --install`) and repeat the run-D seed to confirm finding 6 upstream; then Phase 1's remaining fixture-scale task and the preview-env run."
   - name: agent-process-edge
     status: active
     user: dmaretskyi

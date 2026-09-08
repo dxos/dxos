@@ -59,6 +59,12 @@ export type ObjectCoreOptions = {
 };
 
 /**
+ * The single key a write is touching, so the proxy targets are refreshed for that key alone.
+ * @internal
+ */
+export type TargetRefreshScope = { target: object; key: string };
+
+/**
  *
  */
 // TODO(burdon): Comment.
@@ -105,6 +111,67 @@ export class ObjectCore {
    * Fires on real data changes (local writes, remote sync) and backs the subscription channel.
    */
   public readonly updates = new Event();
+
+  /**
+   * Re-fills every proxy target of this core from the document. Installed by the proxy handler once a
+   * root proxy exists; called ahead of every update notification, and directly after a write to a
+   * bound document, so a target never serves a value the document no longer holds even when the DB
+   * does not route the change event back to this core.
+   */
+  public refreshTargets: ((scope?: TargetRefreshScope) => void) | undefined;
+
+  /** Narrows the refresh while a {@link changeTargetKey} scope is open. */
+  #refreshScope: TargetRefreshScope | undefined;
+
+  /**
+   * Runs `fn` — a write of exactly `key` on `target` — with the refresh narrowed to that one key. The
+   * unnarrowed refresh re-reads every key of the record, which would make a single-property write cost
+   * the width of the object. Narrowed rather than deferred because the write notifies subscribers
+   * synchronously, and they must already see the new value.
+   */
+  changeTargetKey<T>(target: object, key: string, fn: () => T): T {
+    const previous = this.#refreshScope;
+    this.#refreshScope = { target, key };
+    try {
+      return fn();
+    } finally {
+      this.#refreshScope = previous;
+    }
+  }
+
+  /**
+   * Set by {@link #refresh} while a bound write is in flight, so the write can tell whether the DB
+   * already routed the change event back to this core and refreshed from it.
+   */
+  #refreshedDuringWrite = false;
+
+  #refresh(): void {
+    this.#refreshedDuringWrite = true;
+    this.refreshTargets?.(this.#refreshScope);
+  }
+
+  /**
+   * Run a write against the bound document, refreshing afterwards only if the DB did not route the
+   * change event back to this core and refresh from it (it does for a routed core, synchronously,
+   * inside `write`). A core bound to a branch, or dropped from the DB's `_objects`, stays bound but
+   * unrouted and would otherwise never refresh — so this cannot simply be dropped.
+   *
+   * The second pass was not merely redundant: for a container write `_writeThrough` sees the proxy
+   * the first pass installed, returns false, and falls through to a refresh of the object's full
+   * width with the narrowing scope already closed.
+   */
+  #writeAndRefresh<T>(write: () => T): T {
+    this.#refreshedDuringWrite = false;
+    try {
+      return write();
+    } finally {
+      const refreshed = this.#refreshedDuringWrite;
+      this.#refreshedDuringWrite = false;
+      if (!refreshed) {
+        this.#refresh();
+      }
+    }
+  }
 
   // -------------------------------------------------------------------------
   // Fields merged from ObjectInternals (formerly echo-proxy-target.ts).
@@ -217,6 +284,13 @@ export class ObjectCore {
     throw new Error('Invalid ObjectCore state');
   }
 
+  /**
+   * False only between construction and `initNewObject`/`bind`, while {@link getDoc} would throw.
+   */
+  get hasDoc(): boolean {
+    return this.doc != null || this.docHandle != null;
+  }
+
   getObjectStructure(): EntityStructure {
     return getDeep(this.getDoc(), this.mountPath) as EntityStructure;
   }
@@ -238,9 +312,10 @@ export class ObjectCore {
       // No change event is emitted here since we are not using the doc handle. Notify listeners manually.
       this.notifyUpdate();
     } else {
-      invariant(this.docHandle);
-      this.docHandle.change(changeFn, options);
-      // Note: We don't need to notify listeners here, since `change` event is already processed by DB.
+      const docHandle = this.docHandle;
+      invariant(docHandle);
+      // No manual notification: the DB already processes the `change` event.
+      this.#writeAndRefresh(() => docHandle.change(changeFn, options));
     }
   }
 
@@ -266,9 +341,10 @@ export class ObjectCore {
       // No change event is emitted here since we are not using the doc handle. Notify listeners manually.
       this.notifyUpdate();
     } else {
-      invariant(this.docHandle);
-      result = this.docHandle.changeAt(heads, callback, options);
-      // Note: We don't need to notify listeners here, since `change` event is already processed by DB.
+      const docHandle = this.docHandle;
+      invariant(docHandle);
+      // No manual notification: the DB already processes the `change` event.
+      result = this.#writeAndRefresh(() => docHandle.changeAt(heads, callback, options));
     }
 
     return result;
@@ -313,8 +389,15 @@ export class ObjectCore {
    * This function can be used unbound.
    */
   public readonly notifyUpdate = () => {
+    // Refresh before the emit, so a subscriber reading the object inside its callback sees fresh values;
+    // guarded separately from it, so a refresh that fails still lets subscribers hear about the change.
+    this.#reportingErrors(() => this.#refresh());
+    this.#reportingErrors(() => this.updates.emit());
+  };
+
+  #reportingErrors(fn: () => void): void {
     try {
-      this.updates.emit();
+      fn();
     } catch (err: any) {
       // Print the error message synchronously for easier debugging.
       // The stack trace and details will be printed asynchronously.
@@ -326,7 +409,7 @@ export class ObjectCore {
       // TODO(dmaretskyi): Take some inspiration from facebook/react/packages/shared/invokeGuardedCallbackImpl.js
       throwUnhandledError(err);
     }
-  };
+  }
 
   /**
    * Encode a value to be stored in the Automerge document.
@@ -411,7 +494,11 @@ export class ObjectCore {
     return newLength;
   }
 
-  private _getRaw(path: Doc.KeyPath): AutomergeDoc<EntityStructure> | AutomergeDoc<DatabaseDirectory> {
+  /**
+   * The stored value at `path` as the document holds it, undecoded. The document is immutable, so the
+   * result can be held for as long as the generation it was read at.
+   */
+  getRaw(path: Doc.KeyPath): AutomergeDoc<EntityStructure> | AutomergeDoc<DatabaseDirectory> {
     const fullPath = [...this.mountPath, ...path];
 
     let value = this.getDoc();
@@ -432,7 +519,7 @@ export class ObjectCore {
 
   // TODO(dmaretskyi): Rename to `get`.
   getDecoded(path: Doc.KeyPath): DecodedAutomergePrimaryValue {
-    const decoded = this.decode(this._getRaw(path));
+    const decoded = this.decode(this.getRaw(path));
     return upgradeMeta(path, decoded) as DecodedAutomergePrimaryValue;
   }
 
@@ -454,7 +541,7 @@ export class ObjectCore {
   }
 
   getKind(): EntityKind {
-    return (this._getRaw([SYSTEM_NAMESPACE, 'kind']) as any) ?? EntityKind.Object;
+    return (this.getRaw([SYSTEM_NAMESPACE, 'kind']) as any) ?? EntityKind.Object;
   }
 
   // TODO(dmaretskyi): Just set statically during construction.
@@ -463,7 +550,7 @@ export class ObjectCore {
   }
 
   getSource(): EncodedReference | undefined {
-    const res = this._getRaw([SYSTEM_NAMESPACE, 'source']);
+    const res = this.getRaw([SYSTEM_NAMESPACE, 'source']);
     if (!res || !EncodedReference.isEncodedReference(res)) {
       return undefined;
     }
@@ -476,7 +563,7 @@ export class ObjectCore {
   }
 
   getTarget(): EncodedReference | undefined {
-    const res = this._getRaw([SYSTEM_NAMESPACE, 'target']);
+    const res = this.getRaw([SYSTEM_NAMESPACE, 'target']);
     if (!res || !EncodedReference.isEncodedReference(res)) {
       return undefined;
     }
@@ -489,7 +576,7 @@ export class ObjectCore {
   }
 
   getParent(): EncodedReference | undefined {
-    const res = this._getRaw([SYSTEM_NAMESPACE, 'parent']);
+    const res = this.getRaw([SYSTEM_NAMESPACE, 'parent']);
     if (!res || !EncodedReference.isEncodedReference(res)) {
       return undefined;
     }
@@ -505,7 +592,7 @@ export class ObjectCore {
   }
 
   getType(): EncodedReference | undefined {
-    const res = this._getRaw([SYSTEM_NAMESPACE, 'type']);
+    const res = this.getRaw([SYSTEM_NAMESPACE, 'type']);
     if (!res || !EncodedReference.isEncodedReference(res)) {
       return undefined;
     }
@@ -533,7 +620,7 @@ export class ObjectCore {
    * created before this field was introduced.
    */
   getCreatedAt(): number | undefined {
-    const value = this._getRaw([SYSTEM_NAMESPACE, 'createdAt']);
+    const value = this.getRaw([SYSTEM_NAMESPACE, 'createdAt']);
     return typeof value === 'number' ? value : undefined;
   }
 
@@ -571,7 +658,7 @@ export class ObjectCore {
   }
 
   isDeleted(remainingDepth: number = 10): boolean {
-    const value = this._getRaw([SYSTEM_NAMESPACE, 'deleted']);
+    const value = this.getRaw([SYSTEM_NAMESPACE, 'deleted']);
     const ownDeleted = typeof value === 'boolean' ? value : false;
     if (ownDeleted) {
       return true;

@@ -63,9 +63,12 @@ const meta = {
               yield* Effect.promise(() => space.waitUntilReady());
               const artifact = space.db.add(Artifact.make({ name: 'Mountain lake', kind: 'image' }));
               const variant = space.db.add(
-                Variant.make({ contentType: 'image/png', url: 'https://picsum.photos/seed/studio-card/512/512' }),
+                Variant.make({
+                  [Obj.Parent]: artifact,
+                  contentType: 'image/png',
+                  url: 'https://picsum.photos/seed/studio-card/512/512',
+                }),
               );
-              Obj.setParent(variant, artifact);
               Obj.update(artifact, (artifact) => {
                 artifact.variants = [Ref.make(variant)];
                 artifact.cover = Ref.make(variant);

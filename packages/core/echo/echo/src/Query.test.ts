@@ -869,8 +869,7 @@ describe('query api', () => {
 
     test('hasParent matches via toPredicate', ({ expect }) => {
       const parent = Obj.make(TestSchema.Person, { name: 'Parent' });
-      const child = Obj.make(TestSchema.Person, { name: 'Child' });
-      Obj.setParent(child, parent);
+      const child = Obj.make(TestSchema.Person, { [Obj.Parent]: parent, name: 'Child' });
       expect(Filter.toPredicate(child, Filter.hasParent())).toBe(true);
       expect(Filter.toPredicate(child, Filter.hasParent(false))).toBe(false);
       expect(Filter.toPredicate(parent, Filter.hasParent(false))).toBe(true);

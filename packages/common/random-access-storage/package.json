@@ -19,15 +19,14 @@
         "default": "./src/node/index.ts"
       },
       "types": "./dist/types/src/node/index.d.ts",
-      "browser": "./dist/lib/browser/browser/index.mjs",
-      "default": "./dist/lib/node-esm/node/index.mjs"
+      "browser": "./dist/lib/browser.mjs",
+      "default": "./dist/lib/node.mjs"
     }
   },
   "exports": {
     ".": {
       "types": "./dist/types/src/index.d.ts",
-      "browser": "./dist/lib/browser/index.mjs",
-      "node": "./dist/lib/node-esm/index.mjs"
+      "default": "./dist/lib/index.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",

@@ -52,8 +52,6 @@
       "@dxos/discord-bot",
       "@dxos/discord-worker",
       "@dxos/display-name",
-      "@dxos/dx-build",
-      "@dxos/dx-compile",
       "@dxos/dx-tools",
       "@dxos/dx-trace-imports",
       "@dxos/echo",

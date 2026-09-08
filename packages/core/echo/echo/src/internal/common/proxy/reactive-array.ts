@@ -2,35 +2,12 @@
 // Copyright 2024 DXOS.org
 //
 
-import { isInChangeContext } from './change-context';
+import { assertMutable } from './change-context';
 import { createArrayMethodError } from './errors';
 import { batchEvents } from './event-batch';
-import { getEchoRoot } from './ownership';
-import { getProxyTarget, isProxy } from './proxy-utils';
-import { EventId } from './symbols';
-
-/**
- * Check if array mutation is allowed (inside a change context).
- * Throws a descriptive error if not.
- */
-const checkArrayMutationAllowed = (arr: any, method: string): void => {
-  // Get the raw target - if arr is a proxy, get its underlying target.
-  const target = isProxy(arr) ? getProxyTarget(arr) : arr;
-
-  // Find the root ECHO object.
-  const echoRoot = getEchoRoot(target);
-
-  // A root object owns an `EventId` once initialized; before that, mutations are allowed.
-  const isInitialized = EventId in echoRoot;
-  if (!isInitialized) {
-    // Array is still being initialized, allow mutations.
-    return;
-  }
-
-  if (!isInChangeContext(echoRoot)) {
-    throw createArrayMethodError(method);
-  }
-};
+import { changeKeyOf } from './ownership';
+import { canonicalOf } from './proxy-utils';
+import { ChangeKeyId } from './symbols';
 
 /**
  * Extends the native array to make sure that arrays methods are correctly reactive.
@@ -39,6 +16,15 @@ const checkArrayMutationAllowed = (arr: any, method: string): void => {
 export class ReactiveArray<T> extends Array<T> {
   static override get [Symbol.species]() {
     return Array;
+  }
+
+  /**
+   * The read-only gate's key. An array keeps this prototype chain rather than being compacted onto the
+   * record behaviour prototype, so it answers for itself; the key is the same root the record holding
+   * it is gated by.
+   */
+  get [ChangeKeyId](): object | undefined {
+    return changeKeyOf(this);
   }
 
   static {
@@ -56,14 +42,16 @@ export class ReactiveArray<T> extends Array<T> {
       Object.defineProperty(this.prototype, method, {
         enumerable: false,
         value: function (this: ReactiveArray<any>, ...args: any[]) {
-          // Check change context before allowing mutation.
-          checkArrayMutationAllowed(this, method);
+          // A method call is invisible to the proxy, so it runs the same gate the traps run.
+          assertMutable(this, method, createArrayMethodError);
 
           let result!: any;
           batchEvents(() => {
             result = Array.prototype[method].apply(this, args);
           });
-          return result;
+          // `sort`/`reverse` answer the receiver. Inside `Obj.update` that is the mutable view, which is
+          // callback-scoped: hand back the array's canonical identity so `arr.sort() === arr` holds.
+          return result === this ? canonicalOf(this) : result;
         },
       });
     }
