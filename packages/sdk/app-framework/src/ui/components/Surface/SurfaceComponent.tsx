@@ -23,13 +23,14 @@ import React, {
 import { EffectEx } from '@dxos/effect';
 import { log } from '@dxos/log';
 import { ErrorBoundary } from '@dxos/react-error-boundary';
+import { useStable } from '@dxos/react-hooks';
 import { Position } from '@dxos/util';
 
 import { ActivationEvents, Capabilities, Role } from '../../../common';
 import { type PluginManager } from '../../../core';
 import { useOptionalPluginManager, usePluginManager } from '../PluginManager';
 import { SurfaceContext } from './context';
-import { useShallowStable } from './shallowStable';
+import { shallowEqual } from './shallowEqual';
 import { DebugSurface, isSurfaceDebugEnabled, isSurfaceWrapperEnabled } from './SurfaceDebug';
 import { type SurfaceManager } from './SurfaceManager';
 import { useSurfaceManager } from './SurfaceManagerContext';
@@ -225,12 +226,11 @@ export const SurfaceComponent = memo(
     placeholder = DEFAULT_PLACEHOLDER,
     ...rest
   }: TypedProps<Role.Role<any>>) => {
-    // Stabilizing `data` here is what keeps a surface a real memo boundary: almost every call site
-    // passes an object literal, so without this the subtree below re-renders on every ancestor
-    // render even when nothing it reads has changed. Replaces a `useDefaultValue` that mirrored the
-    // prop into state via an effect, which could not stabilize identity and delivered each change
-    // one commit late.
-    const data = useShallowStable(dataProp ?? EMPTY_DATA);
+    // Keeps a surface a real memo boundary: almost every call site passes an object literal, so an
+    // unstable `data` re-renders the subtree on every ancestor render. Shallow is the right depth:
+    // the values inside carry stable identities of their own, and a surface subtree stays fresh
+    // through its own subscriptions rather than through renders propagated from above.
+    const data = useStable(dataProp ?? EMPTY_DATA, shallowEqual);
     const surfaceManager = useSurfaceManager();
     // Subscribe only to this role's contributions: contributing/removing a surface for a
     // different role keeps this bucket referentially stable, so the atom does not re-render us.
