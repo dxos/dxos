@@ -337,8 +337,9 @@ export const L0Menu = ({
       ]}
     >
       {/* TODO(wittjosiah): Use L0Item trigger. */}
-      <ActionMenu onAction={handleAction} data-testid='spacePlugin.addSpace' group={parent} actions={menuActions}>
-        <div className='grid place-items-center'>
+      <ActionMenu onAction={handleAction} group={parent} actions={menuActions}>
+        {/* The trigger clones this child, so the testid belongs here rather than on `ActionMenu`. */}
+        <div className='grid place-items-center' data-testid='spacePlugin.addSpace'>
           <IconButton
             density='lg'
             variant='ghost'
