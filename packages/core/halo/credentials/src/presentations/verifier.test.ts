@@ -2,13 +2,12 @@
 // Copyright 2022 DXOS.org
 //
 
+import { create } from '@bufbuild/protobuf';
 import { describe, expect, test } from 'vitest';
 
 import { randomBytes } from '@dxos/crypto';
 import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
-import { create } from '@bufbuild/protobuf';
-
 import { fromDate, fromPublicKey } from '@dxos/protocols/buf';
 import {
   AuthorizedDeviceSchema,
@@ -188,8 +187,11 @@ describe('presentation verifier', () => {
         // Re-signed by a key the chain does not authorize.
         chain: create(ChainSchema, {
           credential: {
-            ...chainCredential,
-            proof: { ...proofOf(chainCredential), signer: fromPublicKey(PublicKey.random()) },
+            ...chainCredentialOf(credential),
+            proof: {
+              ...proofOf(chainCredentialOf(credential)),
+              signer: fromPublicKey(PublicKey.random()),
+            },
           },
         }),
 

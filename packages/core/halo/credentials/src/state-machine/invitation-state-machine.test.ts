@@ -2,12 +2,11 @@
 // Copyright 2022 DXOS.org
 //
 
+import { create } from '@bufbuild/protobuf';
 import { beforeEach, describe, expect, test } from 'vitest';
 
 import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
-import { create } from '@bufbuild/protobuf';
-
 import { fromDate, fromPublicKey } from '@dxos/protocols/buf';
 import { Invitation_AuthMethod } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 import { type Credential, SpaceMember_Role, SpaceMemberSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';

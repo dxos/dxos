@@ -27,9 +27,9 @@ describe('a credential signed by an earlier build', () => {
   test('and its signing payload is reproduced byte for byte', () => {
     // The payload is the whole signature format: a field that moves, gains a default, or serialises
     // differently shows up here as a diff rather than as an unverifiable credential in the field.
-    expect(
-      Buffer.from(getCredentialProofPayload(fromBinary(CredentialSchema, golden))).toString('utf8'),
-    ).toEqual(GOLDEN_CREDENTIAL_PROOF_PAYLOAD);
+    expect(Buffer.from(getCredentialProofPayload(fromBinary(CredentialSchema, golden))).toString('utf8')).toEqual(
+      GOLDEN_CREDENTIAL_PROOF_PAYLOAD,
+    );
   });
 
   test('and re-encoding it is byte-identical', () => {
