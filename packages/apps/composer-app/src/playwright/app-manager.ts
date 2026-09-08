@@ -376,9 +376,9 @@ export class AppManager {
         .getByTestId(/navtree\.treeItem\.actionsLevel\d+/)
         .first()
         .click();
-      await this.page.keyboard.press('ArrowDown');
-      await this.page.getByTestId('spacePlugin.createObject').last().focus();
-      await this.page.keyboard.press('Enter');
+      // Menu items are clicked, never focused-and-Entered: the menu machine activates whichever
+      // item it has highlighted, and a programmatic `focus()` does not make one highlighted.
+      await this.page.getByTestId('spacePlugin.createObject').last().click();
     } else {
       await this.currentWorkspace.getByTestId('spacePlugin.createObject').first().click();
     }
@@ -410,8 +410,6 @@ export class AppManager {
       .getByTestId(/navtree\.treeItem\.actionsLevel\d+/)
       .first()
       .click();
-    // Clicked, not focused-and-Entered: the menu machine activates whichever item it has
-    // highlighted, and a programmatic `focus()` does not make an item the highlighted one.
     await this.page.getByTestId('spacePlugin.renameObject').last().click();
     await this.page.getByTestId('spacePlugin.rename.input').fill(newName);
     await this.page.getByTestId('spacePlugin.rename.input').press('Enter');
