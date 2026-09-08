@@ -19,7 +19,7 @@ import {
   type Message,
   type QueryRequest,
 } from '@dxos/protocols/buf/dxos/edge/signal_pb';
-import { type Message as LegacyMessage } from '@dxos/protocols/proto/dxos/edge/signal';
+import { type Message as LegacyMessage } from '@dxos/protocols/buf/dxos/edge/signal_pb';
 import { type NetworkService } from '@dxos/protocols/rpc';
 
 import {

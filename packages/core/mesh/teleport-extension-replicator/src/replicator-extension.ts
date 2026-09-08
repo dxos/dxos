@@ -14,7 +14,7 @@ import { PublicKey } from '@dxos/keys';
 import { log, logInfo } from '@dxos/log';
 import { RpcClosedError, TimeoutError } from '@dxos/protocols';
 import { getBufService } from '@dxos/protocols/buf-service';
-import { type FeedInfo, type ReplicatorService } from '@dxos/protocols/proto/dxos/mesh/teleport/replicator';
+import { type FeedInfo, type ReplicatorService } from '@dxos/protocols/buf/dxos/mesh/teleport/replicator_pb';
 import { type ProtoRpcPeer, createProtoRpcPeer } from '@dxos/rpc';
 import { type ExtensionContext, type TeleportExtension } from '@dxos/teleport';
 import { ComplexMap } from '@dxos/util';

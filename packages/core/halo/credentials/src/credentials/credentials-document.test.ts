@@ -7,7 +7,7 @@ import { describe, expect, test } from 'vitest';
 import { PublicKey, SpaceId } from '@dxos/keys';
 import { compatCodec } from '@dxos/protocols/buf-shape-compat';
 import { CredentialSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
-import { type Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { type Credential } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
 import {
   CREDENTIALS_DOCUMENT_TYPE,

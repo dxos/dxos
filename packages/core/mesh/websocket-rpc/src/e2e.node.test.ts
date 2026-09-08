@@ -5,7 +5,7 @@
 import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { getBufService } from '@dxos/protocols/buf-service';
-import { type TestService } from '@dxos/protocols/proto/example/testing/rpc';
+import { type TestService } from '@dxos/protocols/buf/example/testing/rpc_pb';
 import { type ServiceTypesOf, createServiceBundle } from '@dxos/rpc';
 
 import { WebsocketRpcClient } from './client';

@@ -12,7 +12,7 @@ import { FeedFactory, FeedStore } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';
 import { MemorySignalManager, MemorySignalManagerContext } from '@dxos/messaging';
 import { MemoryTransportFactory, SwarmNetworkManager } from '@dxos/network-manager';
-import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
+import type { FeedMessage } from '@dxos/protocols/buf/dxos/echo/feed_pb';
 import { type Storage, StorageType, createStorage } from '@dxos/random-access-storage';
 
 import { MetadataStore } from '../metadata';

@@ -21,7 +21,7 @@ import {
   SwarmRequestSchema,
   SwarmResponseSchema,
 } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
-import { type SwarmResponse } from '@dxos/protocols/proto/dxos/edge/messenger';
+import { type SwarmResponse } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
 import { ComplexMap, ComplexSet } from '@dxos/util';
 
 import {

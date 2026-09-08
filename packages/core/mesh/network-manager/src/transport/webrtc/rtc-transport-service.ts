@@ -20,7 +20,7 @@ import {
   type SignalRequest,
   type StatsRequest,
   type StatsResponse,
-} from '@dxos/protocols/proto/dxos/mesh/bridge';
+} from '@dxos/protocols/buf/dxos/mesh/bridge_pb';
 import { ComplexMap } from '@dxos/util';
 
 import { type IceProvider } from '../../signal';

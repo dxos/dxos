@@ -10,7 +10,7 @@ import { type Context, type Lifecycle, Resource } from '@dxos/context';
 import { type CredentialProcessor, getCredentialAssertion } from '@dxos/credentials';
 import { assertState } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { type Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { type Credential } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
 import { type Identity } from '../identity';
 import { DataSpaceManager, DataSpaceManagerService } from '../spaces';

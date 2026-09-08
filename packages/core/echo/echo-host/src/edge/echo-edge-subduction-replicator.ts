@@ -34,11 +34,11 @@ import {
   type SubductionProtocolMessageEnveloped,
 } from '@dxos/protocols';
 import { buf } from '@dxos/protocols/buf';
+import { EdgeStatus } from '@dxos/protocols/buf/dxos/client/services_pb';
 import {
   type Message as RouterMessage,
   MessageSchema as RouterMessageSchema,
 } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
-import { EdgeStatus } from '@dxos/protocols/proto/dxos/client/services';
 import { trace } from '@dxos/tracing';
 import { bufferToArray, compositeKey } from '@dxos/util';
 

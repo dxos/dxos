@@ -8,7 +8,7 @@ import { type PublicKey } from '@dxos/keys';
 import { buf } from '@dxos/protocols/buf';
 import { decodeCompat } from '@dxos/protocols/buf-shape-compat';
 import { SubscribeToFeedBlocksResponseSchema } from '@dxos/protocols/buf/dxos/devtools/host_pb';
-import { type SubscribeToFeedBlocksResponse } from '@dxos/protocols/proto/dxos/devtools/host';
+import { type SubscribeToFeedBlocksResponse } from '@dxos/protocols/buf/dxos/devtools/host_pb';
 import { useDevtools, useStream } from '@dxos/react-client/devtools';
 
 import { useDevtoolsState } from './useDevtoolsContext';

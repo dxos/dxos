@@ -14,8 +14,8 @@ import { Space as HaloSpace, SpaceError } from '@dxos/halo';
 import { IdentityDid, type SpaceId } from '@dxos/keys';
 import { EdgeReplicationSetting } from '@dxos/protocols/buf/dxos/echo/metadata_pb';
 import { MembershipPolicy } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
-import { type SpaceMember } from '@dxos/protocols/proto/dxos/client/services';
-import { SpaceMember as HaloSpaceMember } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { type SpaceMember } from '@dxos/protocols/buf/dxos/client/services_pb';
+import { SpaceMember as HaloSpaceMember } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { SpacesService } from '@dxos/protocols/rpc';
 
 import {

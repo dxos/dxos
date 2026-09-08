@@ -8,8 +8,8 @@ import * as EffectStream from 'effect/Stream';
 import { NotImplementedError, RuntimeServiceError } from '@dxos/errors';
 import { log } from '@dxos/log';
 import { type EdgeFunctionEnv } from '@dxos/protocols';
-import { type IndexConfig } from '@dxos/protocols/proto/dxos/echo/indexing';
-import { type QueryRequest, type QueryResponse } from '@dxos/protocols/proto/dxos/echo/query';
+import { type IndexConfig } from '@dxos/protocols/buf/dxos/echo/indexing_pb';
+import { type QueryRequest, type QueryResponse } from '@dxos/protocols/buf/dxos/echo/query_pb';
 import { type QueryService } from '@dxos/protocols/rpc';
 
 export class QueryServiceImpl implements QueryService.Handlers {

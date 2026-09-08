@@ -7,7 +7,6 @@ import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import * as Layer from 'effect/Layer';
 import * as Scope from 'effect/Scope';
-import * as EffectStream from 'effect/Stream';
 import * as RpcClient from 'effect/unstable/rpc/RpcClient';
 
 import { type Stream as PbStream } from '@dxos/async';
@@ -20,29 +19,9 @@ import {
   type SignalRequest,
   type StatsRequest,
 } from '@dxos/protocols/buf/dxos/mesh/bridge_pb';
-import { type BridgeService as BridgeServiceRpc } from '@dxos/protocols/proto/dxos/mesh/bridge';
+import { type BridgeService as BridgeServiceRpc } from '@dxos/protocols/buf/dxos/mesh/bridge_pb';
 import { BridgeService } from '@dxos/protocols/rpc';
 
-import {
-  fromBufBridgeEvent,
-  fromBufCloseRequest,
-  fromBufConnectionRequest,
-  fromBufDataRequest,
-  fromBufDetailsRequest,
-  fromBufDetailsResponse,
-  fromBufSignalRequest,
-  fromBufStatsRequest,
-  fromBufStatsResponse,
-  toBufBridgeEvent,
-  toBufCloseRequest,
-  toBufConnectionRequest,
-  toBufDataRequest,
-  toBufDetailsRequest,
-  toBufDetailsResponse,
-  toBufSignalRequest,
-  toBufStatsRequest,
-  toBufStatsResponse,
-} from './bridge-codec';
 import * as Rpc from './Rpc';
 import { pbStreamToStream, streamToPbStream } from './service-rpc';
 
@@ -69,20 +48,12 @@ export const serveBridgeService = (port: MessagePort, service: BridgeServiceRpc)
       Effect.tryPromise({ try: () => method(payload), catch: toError });
 
   const handlers = {
-    'BridgeService.open': (payload: ConnectionRequest) =>
-      EffectStream.map(
-        pbStreamToStream(() => service.open(fromBufConnectionRequest(payload))),
-        toBufBridgeEvent,
-      ),
-    'BridgeService.sendSignal': unary((request: SignalRequest) => service.sendSignal(fromBufSignalRequest(request))),
-    'BridgeService.sendData': unary((request: DataRequest) => service.sendData(fromBufDataRequest(request))),
-    'BridgeService.close': unary((request: CloseRequest) => service.close(fromBufCloseRequest(request))),
-    'BridgeService.getDetails': unary(async (request: DetailsRequest) =>
-      toBufDetailsResponse(await service.getDetails(fromBufDetailsRequest(request))),
-    ),
-    'BridgeService.getStats': unary(async (request: StatsRequest) =>
-      toBufStatsResponse(await service.getStats(fromBufStatsRequest(request))),
-    ),
+    'BridgeService.open': (payload: ConnectionRequest) => pbStreamToStream(() => service.open(payload)),
+    'BridgeService.sendSignal': unary((request: SignalRequest) => service.sendSignal(request)),
+    'BridgeService.sendData': unary((request: DataRequest) => service.sendData(request)),
+    'BridgeService.close': unary((request: CloseRequest) => service.close(request)),
+    'BridgeService.getDetails': unary((request: DetailsRequest) => service.getDetails(request)),
+    'BridgeService.getStats': unary((request: StatsRequest) => service.getStats(request)),
   };
 
   return Rpc.serve(port, BridgeService.Rpcs, BridgeService.Rpcs.toLayer(handlers), {
@@ -123,20 +94,12 @@ const bridgeServiceClientFromEffect = async (
   const client = (await EffectEx.runPromise(makeClient(scope))) as BridgeService.Client;
 
   const bridgeService: BridgeServiceRpc = {
-    open: (request) =>
-      streamToPbStream(
-        Context.empty(),
-        EffectStream.map(client['BridgeService.open'](toBufConnectionRequest(request)), fromBufBridgeEvent),
-      ),
-    sendSignal: (request) => EffectEx.runPromise(client['BridgeService.sendSignal'](toBufSignalRequest(request))),
-    sendData: (request) => EffectEx.runPromise(client['BridgeService.sendData'](toBufDataRequest(request))),
-    close: (request) => EffectEx.runPromise(client['BridgeService.close'](toBufCloseRequest(request))),
-    getDetails: async (request) =>
-      fromBufDetailsResponse(
-        await EffectEx.runPromise(client['BridgeService.getDetails'](toBufDetailsRequest(request))),
-      ),
-    getStats: async (request) =>
-      fromBufStatsResponse(await EffectEx.runPromise(client['BridgeService.getStats'](toBufStatsRequest(request)))),
+    open: (request) => streamToPbStream(Context.empty(), client['BridgeService.open'](request)),
+    sendSignal: (request) => EffectEx.runPromise(client['BridgeService.sendSignal'](request)),
+    sendData: (request) => EffectEx.runPromise(client['BridgeService.sendData'](request)),
+    close: (request) => EffectEx.runPromise(client['BridgeService.close'](request)),
+    getDetails: (request) => EffectEx.runPromise(client['BridgeService.getDetails'](request)),
+    getStats: (request) => EffectEx.runPromise(client['BridgeService.getStats'](request)),
   };
 
   return {

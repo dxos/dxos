@@ -19,7 +19,7 @@ import {
   type DeviceProfileDocument as LegacyDeviceProfileDocument,
   type Presentation as LegacyPresentation,
   type ProfileDocument as LegacyProfileDocument,
-} from '@dxos/protocols/proto/dxos/halo/credentials';
+} from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
 //
 // The client services speak buf while `@dxos/credentials` keeps the protobuf.js shapes — the

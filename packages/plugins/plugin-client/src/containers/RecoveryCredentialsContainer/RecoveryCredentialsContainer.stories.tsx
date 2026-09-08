@@ -10,7 +10,7 @@ import { ProcessManagerPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { type Client, PublicKey } from '@dxos/client';
 import { invariant } from '@dxos/invariant';
-import { IdentityRecovery } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { IdentityRecovery } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { ClientPlugin } from '#plugin';

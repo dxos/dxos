@@ -5,7 +5,7 @@
 import { type ValueCodec, createCodecEncoding } from '@dxos/hypercore';
 import { compatCodec } from '@dxos/protocols/buf-shape-compat';
 import { FeedMessageSchema } from '@dxos/protocols/buf/dxos/echo/feed_pb';
-import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
+import type { FeedMessage } from '@dxos/protocols/buf/dxos/echo/feed_pb';
 
 /**
  * Codec for feed messages.

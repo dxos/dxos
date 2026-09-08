@@ -18,7 +18,7 @@ import {
   DeviceSchema,
 } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { type DeviceProfileDocument } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
-import { EdgeStatus, type Device as LegacyDevice } from '@dxos/protocols/proto/dxos/client/services';
+import { EdgeStatus, type Device as LegacyDevice } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { type DevicesService } from '@dxos/protocols/rpc';
 
 import { type IdentityManager } from '../identity';

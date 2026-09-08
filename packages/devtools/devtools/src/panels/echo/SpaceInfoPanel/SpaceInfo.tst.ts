@@ -5,7 +5,7 @@
 import { describe, expect, it } from 'tstyche';
 
 import { type SubscribeToSpacesResponse_SpaceInfo } from '@dxos/protocols/buf/dxos/devtools/host_pb';
-import { type SubscribeToSpacesResponse as LegacyResponse } from '@dxos/protocols/proto/dxos/devtools/host';
+import { type SubscribeToSpacesResponse as LegacyResponse } from '@dxos/protocols/buf/dxos/devtools/host_pb';
 
 import { useSpacesInfo } from '../../../hooks';
 import { type PipelineTableProps } from './PipelineTable';

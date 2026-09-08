@@ -5,7 +5,7 @@
 import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { Trigger } from '@dxos/async';
-import { type PeerInfo, type SyncMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/automerge';
+import { type PeerInfo, type SyncMessage } from '@dxos/protocols/buf/dxos/mesh/teleport/automerge_pb';
 import { TestBuilder, type TestConnection, TestPeer } from '@dxos/teleport/testing';
 
 import { AutomergeReplicator, type AutomergeReplicatorCallbacks } from './automerge-replicator';

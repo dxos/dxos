@@ -21,7 +21,7 @@ import {
   type QueryRequest,
   type QueryResponse,
   type QueryResult,
-} from '@dxos/protocols/proto/dxos/echo/query';
+} from '@dxos/protocols/buf/dxos/echo/query_pb';
 import { QueryService } from '@dxos/protocols/rpc';
 
 import { type ObjectUpdate } from './index-query-source-provider';

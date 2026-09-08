@@ -7,7 +7,7 @@ import { PublicKey } from '@dxos/keys';
 import { MemorySignalManager, MemorySignalManagerContext, type SignalManager } from '@dxos/messaging';
 import { getBufService } from '@dxos/protocols/buf-service';
 import { ConnectionState } from '@dxos/protocols/buf/dxos/client/services_pb';
-import { type BridgeService } from '@dxos/protocols/proto/dxos/mesh/bridge';
+import { type BridgeService } from '@dxos/protocols/buf/dxos/mesh/bridge_pb';
 import { type ProtoRpcPeer, createLinkedPorts, createProtoRpcPeer } from '@dxos/rpc';
 import { ComplexMap } from '@dxos/util';
 

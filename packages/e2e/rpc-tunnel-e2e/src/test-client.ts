@@ -5,7 +5,7 @@
 import { Event } from '@dxos/async';
 import { Stream } from '@dxos/async';
 import { log } from '@dxos/log';
-import { type TestStreamService } from '@dxos/protocols/proto/example/testing/rpc';
+import { type TestStreamService } from '@dxos/protocols/buf/example/testing/rpc_pb';
 
 const STORAGE_KEY = 'testclient';
 

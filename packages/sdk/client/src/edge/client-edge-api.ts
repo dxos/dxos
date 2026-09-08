@@ -11,7 +11,7 @@ import { type EdgeHttpClient } from '@dxos/edge-client/http';
 import { invariant } from '@dxos/invariant';
 import { type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { QueryReactivity } from '@dxos/protocols/proto/dxos/echo/query';
+import { QueryReactivity } from '@dxos/protocols/buf/dxos/echo/query_pb';
 
 import { type Client } from '../client';
 

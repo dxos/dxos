@@ -24,8 +24,8 @@ import {
   type RecoverIdentityResponseBody,
 } from '@dxos/protocols';
 import { schema } from '@dxos/protocols/proto';
-import { type RecoverIdentityRequest } from '@dxos/protocols/proto/dxos/client/services';
-import { type Credential, IdentityRecovery } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { type RecoverIdentityRequest } from '@dxos/protocols/buf/dxos/client/services_pb';
+import { type Credential, IdentityRecovery } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { type IdentityService } from '@dxos/protocols/rpc';
 import { Timeframe } from '@dxos/timeframe';
 import { ComplexSet } from '@dxos/util';

@@ -18,7 +18,7 @@ import {
   EdgeReplicationSetting,
   LargeSpaceMetadataSchema,
 } from '@dxos/protocols/buf/dxos/echo/metadata_pb';
-import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
+import { Invitation } from '@dxos/protocols/buf/dxos/client/services_pb';
 import {
   type ControlPipelineSnapshot,
   type EchoMetadata,
@@ -26,7 +26,7 @@ import {
   type LargeSpaceMetadata,
   EdgeReplicationSetting as LegacyEdgeReplicationSetting,
   type SpaceMetadata,
-} from '@dxos/protocols/proto/dxos/echo/metadata';
+} from '@dxos/protocols/buf/dxos/echo/metadata_pb';
 import { type Directory, type File } from '@dxos/random-access-storage';
 import { type Timeframe } from '@dxos/timeframe';
 import { ComplexMap, arrayToBuffer, forEachAsync, isNonNullable } from '@dxos/util';

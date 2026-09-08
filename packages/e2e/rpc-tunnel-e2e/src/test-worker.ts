@@ -4,7 +4,7 @@
 
 import { log } from '@dxos/log';
 import { getBufService } from '@dxos/protocols/buf-service';
-import { type TestStreamService } from '@dxos/protocols/proto/example/testing/rpc';
+import { type TestStreamService } from '@dxos/protocols/buf/example/testing/rpc_pb';
 import { createProtoRpcPeer } from '@dxos/rpc';
 import { PortMuxer } from '@dxos/rpc-tunnel';
 

@@ -5,7 +5,7 @@
 import React, { useMemo } from 'react';
 
 import { Format } from '@dxos/echo/Format';
-import { type Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { type Credential } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { type Space } from '@dxos/react-client/echo';
 import { Panel, Toolbar } from '@dxos/react-ui';
 import { type TablePropertyDefinition } from '@dxos/react-ui-table';

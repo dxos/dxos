@@ -10,7 +10,7 @@ import { TestBuilder } from '@dxos/client/testing';
 import { Config } from '@dxos/config';
 import { verifyPresentation } from '@dxos/credentials';
 import { PublicKey } from '@dxos/keys';
-import { type Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { type Credential } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
 describe('Halo', () => {
   test('presentation', async () => {

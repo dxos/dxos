@@ -27,7 +27,7 @@ import {
   InvitationSchema,
 } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 import { SpaceMember_Role } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
-import { type DeviceProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { type DeviceProfileDocument } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { type InvitationsService } from '@dxos/protocols/rpc';
 import { trace } from '@dxos/tracing';
 

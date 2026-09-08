@@ -52,15 +52,15 @@ import {
   type Space as SpaceData,
   type SpaceMember,
   SpaceState,
-} from '@dxos/protocols/proto/dxos/client/services';
-import { type SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
+} from '@dxos/protocols/buf/dxos/client/services_pb';
+import { type SpaceSnapshot } from '@dxos/protocols/buf/dxos/echo/snapshot_pb';
 import {
   type Credential,
   type Epoch,
   SpaceMember as HaloSpaceMember,
   MembershipPolicy,
-} from '@dxos/protocols/proto/dxos/halo/credentials';
-import { type GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
+} from '@dxos/protocols/buf/dxos/halo/credentials_pb';
+import { type GossipMessage } from '@dxos/protocols/buf/dxos/mesh/teleport/gossip_pb';
 import { SpacesService } from '@dxos/protocols/rpc';
 import { Timeframe } from '@dxos/timeframe';
 import { trace } from '@dxos/tracing';

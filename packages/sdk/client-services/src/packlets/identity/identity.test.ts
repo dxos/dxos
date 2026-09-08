@@ -17,9 +17,9 @@ import { type PublicKey } from '@dxos/keys';
 import { MemorySignalManager, MemorySignalManagerContext } from '@dxos/messaging';
 import { MemoryTransportFactory, SwarmNetworkManager } from '@dxos/network-manager';
 import { Runtime_Client_EdgeFeaturesSchema } from '@dxos/protocols/buf/dxos/config_pb';
-import { EdgeStatus } from '@dxos/protocols/proto/dxos/client/services';
-import { type FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
-import { AdmittedFeed } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { EdgeStatus } from '@dxos/protocols/buf/dxos/client/services_pb';
+import { type FeedMessage } from '@dxos/protocols/buf/dxos/echo/feed_pb';
+import { AdmittedFeed } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { StorageType, createStorage } from '@dxos/random-access-storage';
 
 import { MetadataStore } from '../metadata';

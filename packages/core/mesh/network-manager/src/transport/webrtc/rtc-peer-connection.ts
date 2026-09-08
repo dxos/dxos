@@ -6,7 +6,7 @@ import { Mutex, Trigger, synchronized } from '@dxos/async';
 import { invariant } from '@dxos/invariant';
 import { log, logInfo } from '@dxos/log';
 import { ConnectivityError } from '@dxos/protocols';
-import { type Signal } from '@dxos/protocols/proto/dxos/mesh/swarm';
+import { type Signal } from '@dxos/protocols/buf/dxos/mesh/swarm_pb';
 
 import type { IceProvider } from '../../signal';
 import { type TransportOptions } from '../transport';

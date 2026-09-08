@@ -30,26 +30,26 @@ import type {
   SubscribeToMetadataResponse,
   SubscribeToSpacesResponse,
 } from '@dxos/protocols/buf/dxos/devtools/host_pb';
+import type { IndexConfig } from '@dxos/protocols/buf/dxos/echo/indexing_pb';
+import type {
+  QueryRequest as EchoQueryRequest,
+  QueryResponse as EchoQueryResponse,
+} from '@dxos/protocols/buf/dxos/echo/query_pb';
+import type { SwarmResponse } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
+import type {
+  QueryRequest as EdgeQueryRequest,
+  JoinRequest,
+  LeaveRequest,
+  Message,
+} from '@dxos/protocols/buf/dxos/edge/signal_pb';
 import type {
   Credential,
   DeviceProfileDocument,
   Presentation,
   ProfileDocument,
 } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
+import type { AppService, ShellService } from '@dxos/protocols/buf/dxos/iframe_pb';
 import type { GossipMessage } from '@dxos/protocols/buf/dxos/mesh/teleport/gossip_pb';
-import type { IndexConfig } from '@dxos/protocols/proto/dxos/echo/indexing';
-import type {
-  QueryRequest as EchoQueryRequest,
-  QueryResponse as EchoQueryResponse,
-} from '@dxos/protocols/proto/dxos/echo/query';
-import type { SwarmResponse } from '@dxos/protocols/proto/dxos/edge/messenger';
-import type {
-  QueryRequest as EdgeQueryRequest,
-  JoinRequest,
-  LeaveRequest,
-  Message,
-} from '@dxos/protocols/proto/dxos/edge/signal';
-import type { AppService, ShellService } from '@dxos/protocols/proto/dxos/iframe';
 import type {
   DataService as RpcDataService,
   DevicesService as RpcDevicesService,

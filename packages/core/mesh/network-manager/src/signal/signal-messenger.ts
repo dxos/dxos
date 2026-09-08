@@ -5,7 +5,7 @@
 import { Context } from '@dxos/context';
 import { type PublicKey } from '@dxos/keys';
 import { type PeerInfo } from '@dxos/messaging';
-import { type Answer, type Offer, type Signal, type SignalBatch } from '@dxos/protocols/proto/dxos/mesh/swarm';
+import { type Answer, type Offer, type Signal, type SignalBatch } from '@dxos/protocols/buf/dxos/mesh/swarm_pb';
 
 export interface OfferMessage {
   author: PeerInfo;

@@ -12,14 +12,14 @@ import { InvalidInvitationExtensionRoleError } from '@dxos/protocols';
 import { toPublicKey } from '@dxos/protocols/buf';
 import { getBufService } from '@dxos/protocols/buf-service';
 import { Invitation, Invitation_AuthMethod, Invitation_State } from '@dxos/protocols/buf/dxos/client/invitation_pb';
-import { type ProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { type ProfileDocument } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import {
   type AdmissionRequest,
   type AdmissionResponse,
   AuthenticationResponse,
   type InvitationHostService,
   InvitationOptions,
-} from '@dxos/protocols/proto/dxos/halo/invitations';
+} from '@dxos/protocols/buf/dxos/halo/invitations_pb';
 import { type ExtensionContext, RpcExtension } from '@dxos/teleport';
 
 import type { FlowLockHolder } from './invitation-state';

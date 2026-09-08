@@ -20,7 +20,7 @@ import {
   type QueryEdgeStatusResponse,
   QueryEdgeStatusResponseSchema,
 } from '@dxos/protocols/buf/dxos/client/services_pb';
-import { EdgeStatus as LegacyEdgeStatus } from '@dxos/protocols/proto/dxos/client/services';
+import { EdgeStatus as LegacyEdgeStatus } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { type EdgeAgentService } from '@dxos/protocols/rpc';
 
 import { type EdgeAgentManager } from './edge-agent-manager';

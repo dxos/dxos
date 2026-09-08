@@ -12,7 +12,7 @@ import { log } from '@dxos/log';
 import { fromPublicKey, toPublicKey } from '@dxos/protocols/buf';
 import { decodeCompat, encodeCompat } from '@dxos/protocols/buf-shape-compat';
 import { type PeerState, PeerStateSchema } from '@dxos/protocols/buf/dxos/mesh/presence_pb';
-import { type GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
+import { type GossipMessage } from '@dxos/protocols/buf/dxos/mesh/teleport/gossip_pb';
 import { ComplexMap } from '@dxos/util';
 
 import { type Gossip } from './gossip';

@@ -56,8 +56,8 @@ import {
   type Space as LegacySpace,
   SpaceMember,
   SpaceState,
-} from '@dxos/protocols/proto/dxos/client/services';
-import { type GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
+} from '@dxos/protocols/buf/dxos/client/services_pb';
+import { type GossipMessage } from '@dxos/protocols/buf/dxos/mesh/teleport/gossip_pb';
 import { FeedService, SpacesService } from '@dxos/protocols/rpc';
 import { trace } from '@dxos/tracing';
 import { type Provider } from '@dxos/util';

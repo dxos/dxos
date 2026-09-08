@@ -13,8 +13,8 @@ import {
   InvitationSchema,
 } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 import { SpaceMember_Role } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
-import { Invitation as LegacyInvitation } from '@dxos/protocols/proto/dxos/client/services';
-import { SpaceMember } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { Invitation as LegacyInvitation } from '@dxos/protocols/buf/dxos/client/services_pb';
+import { SpaceMember } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
 /** Names an invitation state for logging; falls back to `unknown` for a value outside the enum. */
 export const stateToString = (state: Invitation_State): string => {

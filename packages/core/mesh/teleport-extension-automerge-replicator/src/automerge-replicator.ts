@@ -12,7 +12,7 @@ import {
   type AutomergeReplicatorService,
   type PeerInfo,
   type SyncMessage,
-} from '@dxos/protocols/proto/dxos/mesh/teleport/automerge';
+} from '@dxos/protocols/buf/dxos/mesh/teleport/automerge_pb';
 import { type ProtoRpcPeer, createProtoRpcPeer } from '@dxos/rpc';
 import { type ExtensionContext, type TeleportExtension } from '@dxos/teleport';
 

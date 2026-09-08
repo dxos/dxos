@@ -19,7 +19,7 @@ import {
   MessageSchema as RouterMessageSchema,
 } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
 import type { FeedBlock, ProtocolMessage } from '@dxos/protocols/feed-replication';
-import { EdgeStatus } from '@dxos/protocols/proto/dxos/client/services';
+import { EdgeStatus } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { ComplexMap, arrayToBuffer, bufferToArray, defaultMap, rangeFromTo } from '@dxos/util';
 
 export type EdgeFeedReplicatorProps = {

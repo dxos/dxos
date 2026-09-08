@@ -18,7 +18,7 @@ import { writeMessages } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { SpaceState } from '@dxos/protocols/buf/dxos/client/invitation_pb';
-import { SpaceMember, type SpaceMember as SpaceMemberAssertion } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { SpaceMember, type SpaceMember as SpaceMemberAssertion } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { openAndClose } from '@dxos/test-utils';
 
 import { AuthStatus } from '../space';

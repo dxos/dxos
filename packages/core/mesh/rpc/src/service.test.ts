@@ -14,7 +14,7 @@ import {
   type TestRpcResponse,
   type TestService,
   type TestStreamService,
-} from '@dxos/protocols/proto/example/testing/rpc';
+} from '@dxos/protocols/buf/example/testing/rpc_pb';
 import { type RequestOptions } from '@dxos/protocols/service-contract';
 
 import { type ProtoRpcPeer, createProtoRpcPeer, createServiceBundle } from './service';

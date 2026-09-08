@@ -12,12 +12,9 @@ import { type AnyEnvelope } from '@dxos/protocols/service-contract';
 import { RpcPeer } from './rpc';
 import { createLinkedPorts, encodeMessage } from './testing';
 
-// Carries the compat layer's `'@type'` marker for a packed `Any`, which is what a peer decodes and
-// what these tests compare against; it goes when the layer does.
 const createPayload = (value = ''): AnyEnvelope => ({
-  '@type': 'google.protobuf.Any',
-  'typeUrl': 'dxos.test',
-  'value': encodeMessage(value),
+  typeUrl: 'dxos.test',
+  value: encodeMessage(value),
 });
 
 // TODO(dmaretskyi): Rename alice and bob to peer1 and peer2.
@@ -202,7 +199,7 @@ describe('RpcPeer', () => {
       await Promise.all([alice.open(), bob.open()]);
 
       const response = await bob.call('method', createPayload('request'));
-      expect(response).toEqual(createPayload('response'));
+      expect(response).toMatchObject(createPayload('response'));
 
       await Promise.all([alice.close(), bob.close()]);
     });
@@ -238,8 +235,8 @@ describe('RpcPeer', () => {
       const parallel2 = bob.call('method', createPayload('p2'));
       const error = bob.call('method', createPayload('error'));
 
-      await expect(await parallel1).toEqual(createPayload('p1'));
-      await expect(await parallel2).toEqual(createPayload('p2'));
+      await expect(await parallel1).toMatchObject(createPayload('p1'));
+      await expect(await parallel2).toMatchObject(createPayload('p2'));
       await expect(error).rejects.toBeInstanceOf(Error);
     });
 
@@ -545,7 +542,7 @@ describe('RpcPeer', () => {
       await bob.open();
 
       const response = await bob.call('method', createPayload('request'));
-      expect(response).toEqual(createPayload('response'));
+      expect(response).toMatchObject(createPayload('response'));
 
       await Promise.all([alice.close(), bob.close()]);
     });

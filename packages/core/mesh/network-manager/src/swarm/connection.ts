@@ -10,7 +10,7 @@ import { PublicKey } from '@dxos/keys';
 import { log, logInfo } from '@dxos/log';
 import { type PeerInfo } from '@dxos/messaging';
 import { CancelledError, ConnectionResetError, ConnectivityError, ProtocolError, TimeoutError } from '@dxos/protocols';
-import { type Signal } from '@dxos/protocols/proto/dxos/mesh/swarm';
+import { type Signal } from '@dxos/protocols/buf/dxos/mesh/swarm_pb';
 
 import { type SignalMessage, type SignalMessenger } from '../signal';
 import { type Transport, type TransportFactory, type TransportStats } from '../transport';

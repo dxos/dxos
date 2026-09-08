@@ -13,10 +13,10 @@ export {
   createSubscription,
 } from '@dxos/echo-client';
 
-export { IndexKind } from '@dxos/protocols/proto/dxos/echo/indexing';
+export { IndexKind } from '@dxos/protocols/buf/dxos/echo/indexing_pb';
 export { SpaceState } from '@dxos/protocols/buf/dxos/client/invitation_pb';
-export { SpaceMember } from '@dxos/protocols/proto/dxos/client/services';
-export { SpaceMember as HaloSpaceMember } from '@dxos/protocols/proto/dxos/halo/credentials';
+export { SpaceMember } from '@dxos/protocols/buf/dxos/client/services_pb';
+export { SpaceMember as HaloSpaceMember } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 export { type SpaceSyncState } from '@dxos/echo-client';
 
 export { type ImportSpaceOptions, importSpace } from './import';

@@ -26,8 +26,8 @@ import { ApiError, runServiceCall, subscribeStream } from '@dxos/protocols';
 import { Invitation, Invitation_Kind } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 import { SpaceState } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 import { MembershipPolicy } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
-import { type Space as SerializedSpace } from '@dxos/protocols/proto/dxos/client/services';
-import { type IndexConfig } from '@dxos/protocols/proto/dxos/echo/indexing';
+import { type Space as SerializedSpace } from '@dxos/protocols/buf/dxos/client/services_pb';
+import { type IndexConfig } from '@dxos/protocols/buf/dxos/echo/indexing_pb';
 import { type SpacesService } from '@dxos/protocols/rpc';
 import { trace } from '@dxos/tracing';
 

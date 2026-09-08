@@ -2,17 +2,24 @@
 // Copyright 2022 DXOS.org
 //
 
+import { create } from '@bufbuild/protobuf';
 import { randomBytes } from 'node:crypto';
 import { type Duplex } from 'node:stream';
 
 import { Trigger } from '@dxos/async';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { getBufService } from '@dxos/protocols/buf-service';
-import { type TestServiceWithStreams } from '@dxos/protocols/proto/example/testing/rpc';
+import { type BufService, getBufService } from '@dxos/protocols/buf-service';
+import {
+  TestServiceWithStreams as TestServiceWithStreamsDesc,
+  TestStreamRpcRequestSchema,
+  TestStreamRpcResponseSchema,
+} from '@dxos/protocols/buf/example/testing/rpc_pb';
 import { type ProtoRpcPeer, createProtoRpcPeer } from '@dxos/rpc';
 
 import { type ExtensionContext, type TeleportExtension } from '../teleport';
+
+type TestServiceWithStreams = BufService<typeof TestServiceWithStreamsDesc>;
 
 interface TestExtensionWithStreamsCallbacks {
   onOpen?: () => Promise<void>;
@@ -147,22 +154,20 @@ export class TestExtensionWithStreams implements TeleportExtension {
 
             await this._openStream(streamTag, streamLoadInterval, streamLoadChunkSize);
 
-            return {
-              data: streamTag,
-            };
+            return create(TestStreamRpcResponseSchema, { data: streamTag });
           },
           closeTestStream: async (request) => {
             const streamTag = request.data;
             const { bytesSent, bytesReceived, sendErrors, receiveErrors, runningTime } = this._closeStream(streamTag);
 
-            return {
+            return create(TestStreamRpcResponseSchema, {
               data: streamTag,
               bytesSent,
               bytesReceived,
               sendErrors,
               receiveErrors,
               runningTime,
-            };
+            });
           },
         },
       },
@@ -199,11 +204,9 @@ export class TestExtensionWithStreams implements TeleportExtension {
     if (!streamTag) {
       streamTag = `stream-${randomBytes(4).toString('hex')}`;
     }
-    const { data } = await this._rpc.rpc.TestServiceWithStreams.requestTestStream({
-      data: streamTag,
-      streamLoadInterval,
-      streamLoadChunkSize,
-    });
+    const { data } = await this._rpc.rpc.TestServiceWithStreams.requestTestStream(
+      create(TestStreamRpcRequestSchema, { data: streamTag, streamLoadInterval, streamLoadChunkSize }),
+    );
     invariant(data === streamTag);
 
     await this._openStream(streamTag, streamLoadInterval, streamLoadChunkSize);
@@ -213,9 +216,9 @@ export class TestExtensionWithStreams implements TeleportExtension {
   async closeStream(streamTag: string): Promise<TestStreamStats> {
     await this.open.wait({ timeout: 1500 });
     const { data, bytesSent, bytesReceived, sendErrors, receiveErrors, runningTime } =
-      await this._rpc.rpc.TestServiceWithStreams.closeTestStream({
-        data: streamTag,
-      });
+      await this._rpc.rpc.TestServiceWithStreams.closeTestStream(
+        create(TestStreamRpcRequestSchema, { data: streamTag }),
+      );
 
     invariant(data === streamTag);
 

@@ -17,8 +17,8 @@ import {
 } from '@dxos/client/invitations';
 import { EffectEx } from '@dxos/effect';
 import { Invitation as HaloInvitation, Space as HaloSpace, InvitationError } from '@dxos/halo';
-import { SpaceMember } from '@dxos/protocols/proto/dxos/client/services';
-import { SpaceMember as HaloSpaceMember } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { SpaceMember } from '@dxos/protocols/buf/dxos/client/services_pb';
+import { SpaceMember as HaloSpaceMember } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
 /**
  * Bridges a {@link MulticastObservable} into an Effect {@link Stream}. The current value is

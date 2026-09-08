@@ -9,7 +9,7 @@ import { ErrorStream } from '@dxos/debug';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log, logInfo } from '@dxos/log';
-import { type Signal } from '@dxos/protocols/proto/dxos/mesh/swarm';
+import { type Signal } from '@dxos/protocols/buf/dxos/mesh/swarm_pb';
 import { ComplexMap } from '@dxos/util';
 
 import { type Transport, type TransportFactory, type TransportOptions } from './transport';

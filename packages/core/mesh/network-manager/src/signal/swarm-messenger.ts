@@ -2,16 +2,23 @@
 // Copyright 2020 DXOS.org
 //
 
+import { create, fromBinary, toBinary } from '@bufbuild/protobuf';
+
 import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type Message, type PeerInfo } from '@dxos/messaging';
 import { TimeoutError } from '@dxos/protocols';
-import { compatCodec } from '@dxos/protocols/buf-shape-compat';
-import { SwarmMessageSchema } from '@dxos/protocols/buf/dxos/mesh/swarm_pb';
-import { type Answer, type SwarmMessage } from '@dxos/protocols/proto/dxos/mesh/swarm';
-import { ComplexMap, type MakeOptional } from '@dxos/util';
+import { fromPublicKey, toPublicKey } from '@dxos/protocols/buf';
+import {
+  type Answer,
+  type MessageData,
+  MessageDataSchema,
+  type SwarmMessage,
+  SwarmMessageSchema,
+} from '@dxos/protocols/buf/dxos/mesh/swarm_pb';
+import { ComplexMap } from '@dxos/util';
 
 import { type OfferMessage, type SignalMessage, type SignalMessenger } from './signal-messenger';
 
@@ -25,8 +32,6 @@ export type SwarmMessengerOptions = {
   onSignal: (ctx: Context, message: SignalMessage) => Promise<void>;
   topic: PublicKey;
 };
-
-const SwarmMessage = compatCodec<SwarmMessage>(SwarmMessageSchema);
 
 /**
  * Adds offer/answer and signal interfaces.
@@ -53,44 +58,47 @@ export class SwarmMessenger implements SignalMessenger {
     }
     // Swarm signaling is point-to-point; a broadcast (DX-1125) never carries a SwarmMessage payload.
     invariant(recipient, 'Recipient is required');
-    const message: SwarmMessage = SwarmMessage.decode(payload.value);
+    const message = fromBinary(SwarmMessageSchema, payload.value);
 
-    if (!this._topic.equals(message.topic)) {
+    if (!toPublicKey(message.topic)?.equals(this._topic)) {
       // Ignore messages from wrong topics.
       return;
     }
 
     log('received', { from: author, to: recipient, msg: message });
 
-    if (message.data?.offer) {
-      await this._handleOffer(ctx, { author, recipient, message });
-    } else if (message.data?.answer) {
-      await this._resolveAnswers(message);
-    } else if (message.data?.signal) {
-      await this._handleSignal(ctx, { author, recipient, message });
-    } else if (message.data?.signalBatch) {
-      await this._handleSignal(ctx, { author, recipient, message });
-    } else {
-      log.warn('unknown message', { message });
+    switch (message.data?.payload.case) {
+      case 'offer':
+        await this._handleOffer(ctx, { author, recipient, message });
+        break;
+      case 'answer':
+        await this._resolveAnswers(message);
+        break;
+      case 'signal':
+      case 'signalBatch':
+        await this._handleSignal(ctx, { author, recipient, message });
+        break;
+      default:
+        log.warn('unknown message', { message });
     }
   }
 
   async signal(ctx: Context, message: SignalMessage): Promise<void> {
-    invariant(message.data?.signal || message.data?.signalBatch, 'Invalid message');
+    const data = message.data.signal
+      ? messageData({ case: 'signal', value: message.data.signal })
+      : messageData({ case: 'signalBatch', value: message.data.signalBatch });
     await this._sendReliableMessage(ctx, {
       author: message.author,
       recipient: message.recipient,
-      message,
+      message: swarmMessage(message, data),
     });
   }
 
   async offer(ctx: Context, message: OfferMessage): Promise<Answer> {
-    const networkMessage: SwarmMessage = {
-      ...message,
-      messageId: PublicKey.random(),
-    };
+    const messageId = PublicKey.random();
+    const networkMessage = swarmMessage(message, messageData({ case: 'offer', value: message.data.offer }), messageId);
     return new Promise<Answer>((resolve, reject) => {
-      this._offerRecords.set(networkMessage.messageId!, { resolve });
+      this._offerRecords.set(messageId, { resolve });
       this._sendReliableMessage(ctx, {
         author: message.author,
         recipient: message.recipient,
@@ -108,14 +116,13 @@ export class SwarmMessenger implements SignalMessenger {
     }: {
       author: PeerInfo;
       recipient: PeerInfo;
-      message: MakeOptional<SwarmMessage, 'messageId'>;
+      message: SwarmMessage;
     },
   ): Promise<void> {
-    const networkMessage: SwarmMessage = {
-      ...message,
-      // Setting unique message_id if it not specified yet.
-      messageId: message.messageId ?? PublicKey.random(),
-    };
+    // Setting unique message_id if it not specified yet.
+    const networkMessage = message.messageId
+      ? message
+      : create(SwarmMessageSchema, { ...message, messageId: fromPublicKey(PublicKey.random()) });
 
     log('sending', { from: author, to: recipient, msg: networkMessage });
     await this._sendMessage(ctx, {
@@ -123,19 +130,21 @@ export class SwarmMessenger implements SignalMessenger {
       recipient,
       payload: {
         typeUrl: 'dxos.mesh.swarm.SwarmMessage',
-        value: SwarmMessage.encode(networkMessage),
+        value: toBinary(SwarmMessageSchema, networkMessage),
       },
     });
   }
 
   private async _resolveAnswers(message: SwarmMessage): Promise<void> {
-    invariant(message.data?.answer?.offerMessageId, 'No offerMessageId');
-    const offerRecord = this._offerRecords.get(message.data.answer.offerMessageId);
+    invariant(message.data?.payload.case === 'answer', 'No answer');
+    const answer = message.data.payload.value;
+    const offerMessageId = toPublicKey(answer.offerMessageId);
+    invariant(offerMessageId, 'No offerMessageId');
+    const offerRecord = this._offerRecords.get(offerMessageId);
     if (offerRecord) {
-      this._offerRecords.delete(message.data.answer.offerMessageId);
-      invariant(message.data?.answer, 'No answer');
-      log('resolving', { answer: message.data.answer });
-      offerRecord.resolve(message.data.answer);
+      this._offerRecords.delete(offerMessageId);
+      log('resolving', { answer });
+      offerRecord.resolve(answer);
     }
   }
 
@@ -151,24 +160,27 @@ export class SwarmMessenger implements SignalMessenger {
       message: SwarmMessage;
     },
   ): Promise<void> {
-    invariant(message.data.offer, 'No offer');
-    const offerMessage: OfferMessage = {
+    invariant(message.data?.payload.case === 'offer', 'No offer');
+    const topic = toPublicKey(message.topic);
+    const sessionId = toPublicKey(message.sessionId);
+    invariant(topic && sessionId, 'Swarm message is missing its topic or session.');
+    const answer = await this._onOffer(ctx, {
       author,
       recipient,
-      ...message,
-      data: { offer: message.data.offer },
-    };
-    const answer = await this._onOffer(ctx, offerMessage);
+      topic,
+      sessionId,
+      data: { offer: message.data.payload.value },
+    });
     answer.offerMessageId = message.messageId;
     try {
       await this._sendReliableMessage(ctx, {
         author: recipient,
         recipient: author,
-        message: {
+        message: create(SwarmMessageSchema, {
           topic: message.topic,
           sessionId: message.sessionId,
-          data: { answer },
-        },
+          data: messageData({ case: 'answer', value: answer }),
+        }),
       });
     } catch (err) {
       if (err instanceof TimeoutError) {
@@ -192,17 +204,34 @@ export class SwarmMessenger implements SignalMessenger {
     },
   ): Promise<void> {
     invariant(message.messageId);
-    invariant(message.data.signal || message.data.signalBatch, 'Invalid message');
-    const signalMessage: SignalMessage = {
+    const payload = message.data?.payload;
+    invariant(payload?.case === 'signal' || payload?.case === 'signalBatch', 'Invalid message');
+    const topic = toPublicKey(message.topic);
+    const sessionId = toPublicKey(message.sessionId);
+    invariant(topic && sessionId, 'Swarm message is missing its topic or session.');
+
+    await this._onSignal(ctx, {
       author,
       recipient,
-      ...message,
-      data: {
-        signal: message.data.signal,
-        signalBatch: message.data.signalBatch,
-      },
-    };
-
-    await this._onSignal(ctx, signalMessage);
+      topic,
+      sessionId,
+      data: payload.case === 'signal' ? { signal: payload.value } : { signalBatch: payload.value },
+    });
   }
 }
+
+/** Wraps a signalling payload as the swarm message's `data` oneof. */
+const messageData = (payload: MessageData['payload']): MessageData => create(MessageDataSchema, { payload });
+
+/** The wire message for a domain offer or signal, whose keys are `PublicKey` instances. */
+const swarmMessage = (
+  message: { topic: PublicKey; sessionId: PublicKey },
+  data: MessageData,
+  messageId?: PublicKey,
+): SwarmMessage =>
+  create(SwarmMessageSchema, {
+    topic: fromPublicKey(message.topic),
+    sessionId: fromPublicKey(message.sessionId),
+    data,
+    messageId: messageId && fromPublicKey(messageId),
+  });

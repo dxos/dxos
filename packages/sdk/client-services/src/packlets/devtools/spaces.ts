@@ -14,7 +14,7 @@ import {
   SubscribeToSpacesResponse_SpaceInfoSchema,
   SubscribeToSpacesResponseSchema,
 } from '@dxos/protocols/buf/dxos/devtools/host_pb';
-import { type SpaceMetadata } from '@dxos/protocols/proto/dxos/echo/metadata';
+import { type SpaceMetadata } from '@dxos/protocols/buf/dxos/echo/metadata_pb';
 import { type DevtoolsHost } from '@dxos/protocols/rpc';
 
 import { type ServiceContext } from '../services';

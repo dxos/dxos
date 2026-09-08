@@ -5,7 +5,7 @@
 import { describe, expect, it } from 'tstyche';
 
 import { type SignalResponse } from '@dxos/protocols/buf/dxos/devtools/host_pb';
-import { type SignalResponse as LegacySignalResponse } from '@dxos/protocols/proto/dxos/devtools/host';
+import { type SignalResponse as LegacySignalResponse } from '@dxos/protocols/buf/dxos/devtools/host_pb';
 
 import { useSignal } from './useSignal';
 

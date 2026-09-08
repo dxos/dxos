@@ -16,9 +16,9 @@ import { type FeedStore, FeedStoreService } from '@dxos/feed-store';
 import { PublicKey, SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type SwarmNetworkManager, SwarmNetworkManagerService } from '@dxos/network-manager';
-import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
-import { type SpaceMetadata } from '@dxos/protocols/proto/dxos/echo/metadata';
-import type { Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
+import type { FeedMessage } from '@dxos/protocols/buf/dxos/echo/feed_pb';
+import { type SpaceMetadata } from '@dxos/protocols/buf/dxos/echo/metadata_pb';
+import type { Credential } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { type Teleport } from '@dxos/teleport';
 import { ComplexMap } from '@dxos/util';
 

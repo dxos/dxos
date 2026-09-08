@@ -11,7 +11,7 @@ import { log } from '@dxos/log';
 import { RpcClosedError, RpcNotOpenError, encodeError } from '@dxos/protocols';
 import { type CompatCodec, compatCodec } from '@dxos/protocols/buf-shape-compat';
 import { RpcMessageSchema } from '@dxos/protocols/buf/dxos/rpc_pb';
-import { type Request, type Response, type RpcMessage } from '@dxos/protocols/proto/dxos/rpc';
+import { type Request, type Response, type RpcMessage } from '@dxos/protocols/buf/dxos/rpc_pb';
 import { type AnyEnvelope, type RequestOptions } from '@dxos/protocols/service-contract';
 import { exponentialBackoffInterval } from '@dxos/util';
 

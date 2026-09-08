@@ -9,7 +9,7 @@ import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log, logInfo } from '@dxos/log';
 import { type ListeningHandle, type Messenger, type PeerInfo, PeerInfoHash, type SwarmEvent } from '@dxos/messaging';
-import { type Answer } from '@dxos/protocols/proto/dxos/mesh/swarm';
+import { type Answer } from '@dxos/protocols/buf/dxos/mesh/swarm_pb';
 import { ComplexMap, isNonNullable } from '@dxos/util';
 
 import { type OfferMessage, type SignalMessage, SwarmMessenger } from '../signal';

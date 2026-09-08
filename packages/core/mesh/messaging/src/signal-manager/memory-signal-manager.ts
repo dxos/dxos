@@ -8,10 +8,10 @@ import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { decodeCompat } from '@dxos/protocols/buf-shape-compat';
+import { type SwarmResponse } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
+import { type QueryRequest } from '@dxos/protocols/buf/dxos/edge/signal_pb';
 import { ReliablePayloadSchema } from '@dxos/protocols/buf/dxos/mesh/messaging_pb';
-import { type SwarmResponse } from '@dxos/protocols/proto/dxos/edge/messenger';
-import { type QueryRequest } from '@dxos/protocols/proto/dxos/edge/signal';
-import { type ReliablePayload } from '@dxos/protocols/proto/dxos/mesh/messaging';
+import { type ReliablePayload } from '@dxos/protocols/buf/dxos/mesh/messaging_pb';
 import { type AnyEnvelope } from '@dxos/protocols/service-contract';
 import { ComplexMap, ComplexSet } from '@dxos/util';
 

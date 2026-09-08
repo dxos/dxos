@@ -18,7 +18,7 @@ import {
   QueryReactivity,
   type QueryResponse,
   type QueryResult as RemoteQueryResult,
-} from '@dxos/protocols/proto/dxos/echo/query';
+} from '@dxos/protocols/buf/dxos/echo/query_pb';
 import { type QueryService } from '@dxos/protocols/rpc';
 import { isNonNullable } from '@dxos/util';
 

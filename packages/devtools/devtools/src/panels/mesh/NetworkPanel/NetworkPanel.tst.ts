@@ -5,7 +5,7 @@
 import { describe, expect, it } from 'tstyche';
 
 import { type PeerState } from '@dxos/protocols/buf/dxos/mesh/presence_pb';
-import { type PeerState as LegacyPeerState } from '@dxos/protocols/proto/dxos/mesh/presence';
+import { type PeerState as LegacyPeerState } from '@dxos/protocols/buf/dxos/mesh/presence_pb';
 
 import { type NetworkGraphNode } from './NetworkPanel';
 

@@ -2,6 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
+import { create } from '@bufbuild/protobuf';
 import { Duplex } from 'node:stream';
 
 import { Event, Trigger, asyncTimeout, scheduleTaskInterval } from '@dxos/async';
@@ -12,9 +13,9 @@ import { type PublicKey } from '@dxos/keys';
 import { log, logInfo } from '@dxos/log';
 import { TimeoutError } from '@dxos/protocols';
 import { compatCodec } from '@dxos/protocols/buf-shape-compat';
+import { type ConnectionInfo_StreamStats } from '@dxos/protocols/buf/dxos/devtools/swarm_pb';
 import { CommandSchema } from '@dxos/protocols/buf/dxos/mesh/muxer_pb';
-import { type ConnectionInfo } from '@dxos/protocols/proto/dxos/devtools/swarm';
-import { type Command } from '@dxos/protocols/proto/dxos/mesh/muxer';
+import { type Command, CommandSchema } from '@dxos/protocols/buf/dxos/mesh/muxer_pb';
 
 import { Balancer } from './balancer';
 import { type RpcPort } from './rpc-port';
@@ -39,7 +40,7 @@ export type CreateChannelOpts = {
 
 export type MuxerStats = {
   timestamp: number;
-  channels: ConnectionInfo.StreamStats[];
+  channels: ConnectionInfo_StreamStats[];
   bytesSent: number;
   bytesReceived: number;
   bytesSentRate?: number;
@@ -182,13 +183,12 @@ export class Muxer {
     // NOTE: Make sure channel.push is set before sending the command.
     try {
       await this._sendCommand(
-        {
-          openChannel: {
-            id: channel.id,
-            tag: channel.tag,
-            contentType: channel.contentType,
+        create(CommandSchema, {
+          payload: {
+            case: 'openChannel',
+            value: { id: channel.id, tag: channel.tag, contentType: channel.contentType },
           },
-        },
+        }),
         SYSTEM_CHANNEL_ID,
       );
     } catch (err: any) {
@@ -242,13 +242,12 @@ export class Muxer {
     // NOTE: Make sure channel.push is set before sending the command.
     try {
       await this._sendCommand(
-        {
-          openChannel: {
-            id: channel.id,
-            tag: channel.tag,
-            contentType: channel.contentType,
+        create(CommandSchema, {
+          payload: {
+            case: 'openChannel',
+            value: { id: channel.id, tag: channel.tag, contentType: channel.contentType },
           },
-        },
+        }),
         SYSTEM_CHANNEL_ID,
       );
     } catch (err: any) {
@@ -274,11 +273,7 @@ export class Muxer {
     this._closing = true;
 
     await this._sendCommand(
-      {
-        close: {
-          error: err?.message,
-        },
-      },
+      create(CommandSchema, { payload: { case: 'close', value: { error: err?.message } } }),
       SYSTEM_CHANNEL_ID,
       DESTROY_COMMAND_SEND_TIMEOUT,
     ).catch(async (err: any) => {
@@ -311,11 +306,7 @@ export class Muxer {
       // as a courtesy to the peer, send destroy command but ignore errors sending
 
       await this._sendCommand(
-        {
-          close: {
-            error: err?.message,
-          },
-        },
+        create(CommandSchema, { payload: { case: 'close', value: { error: err?.message } } }),
         SYSTEM_CHANNEL_ID,
       ).catch(async (err: any) => {
         log('error sending courtesy close command', { err });
@@ -358,7 +349,7 @@ export class Muxer {
       return;
     }
 
-    if (cmd.close) {
+    if (cmd.payload.case === 'close') {
       if (!this._closing) {
         log('received peer close, initiating my own graceful close');
         await this.close(new Error('received peer close'));
@@ -369,33 +360,29 @@ export class Muxer {
       return;
     }
 
-    if (cmd.openChannel) {
+    if (cmd.payload.case === 'openChannel') {
       const channel = this._getOrCreateStream({
-        tag: cmd.openChannel.tag,
-        contentType: cmd.openChannel.contentType,
+        tag: cmd.payload.value.tag,
+        contentType: cmd.payload.value.contentType,
       });
-      channel.remoteId = cmd.openChannel.id;
+      const remoteId = cmd.payload.value.id;
+      channel.remoteId = remoteId;
 
       // Flush any buffered data.
       for (const data of channel.buffer) {
         await this._sendCommand(
-          {
-            data: {
-              channelId: channel.remoteId!,
-              data,
-            },
-          },
+          create(CommandSchema, { payload: { case: 'data', value: { channelId: remoteId, data } } }),
           channel.id,
         );
       }
       channel.buffer = [];
-    } else if (cmd.data) {
-      const stream = this._channelsByLocalId.get(cmd.data.channelId) ?? failUndefined();
+    } else if (cmd.payload.case === 'data') {
+      const stream = this._channelsByLocalId.get(cmd.payload.value.channelId) ?? failUndefined();
       if (!stream.push) {
         log.warn('Received data for channel before it was opened', { tag: stream.tag });
         return;
       }
-      stream.push(cmd.data.data);
+      stream.push(cmd.payload.value.data);
     }
   }
 
@@ -452,12 +439,7 @@ export class Muxer {
       return;
     }
     await this._sendCommand(
-      {
-        data: {
-          channelId: channel.remoteId,
-          data,
-        },
-      },
+      create(CommandSchema, { payload: { case: 'data', value: { channelId: channel.remoteId, data } } }),
       channel.id,
       timeout,
     );

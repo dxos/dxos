@@ -10,13 +10,13 @@ import {
   type Device,
   type Identity,
   type RecoverIdentityRequest,
-} from '@dxos/protocols/proto/dxos/client/services';
+} from '@dxos/protocols/buf/dxos/client/services_pb';
 import {
   type Credential,
   type DeviceProfileDocument,
   type Presentation,
   type ProfileDocument,
-} from '@dxos/protocols/proto/dxos/halo/credentials';
+} from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
 import { type AuthenticatingInvitation, type CancellableInvitation } from './invitations';
 

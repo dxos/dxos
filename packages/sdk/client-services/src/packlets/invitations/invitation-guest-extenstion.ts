@@ -9,7 +9,7 @@ import { log } from '@dxos/log';
 import { InvalidInvitationExtensionRoleError } from '@dxos/protocols';
 import { getBufService } from '@dxos/protocols/buf-service';
 import { Invitation_State } from '@dxos/protocols/buf/dxos/client/invitation_pb';
-import { type InvitationHostService, InvitationOptions } from '@dxos/protocols/proto/dxos/halo/invitations';
+import { type InvitationHostService, InvitationOptions } from '@dxos/protocols/buf/dxos/halo/invitations_pb';
 import { type ExtensionContext, RpcExtension } from '@dxos/teleport';
 
 import { type FlowLockHolder } from './invitation-state';

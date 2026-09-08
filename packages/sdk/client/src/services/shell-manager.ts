@@ -16,7 +16,7 @@ import {
   type InvitationUrlRequest,
   type LayoutRequest,
   ShellDisplay,
-} from '@dxos/protocols/proto/dxos/iframe';
+} from '@dxos/protocols/buf/dxos/iframe_pb';
 import { type ProtoRpcPeer, createProtoRpcPeer } from '@dxos/rpc';
 import { createIFramePort } from '@dxos/rpc-tunnel';
 

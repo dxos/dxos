@@ -16,7 +16,7 @@ import { type NetworkStatus, type NetworkStatus_Signal } from '@dxos/protocols/b
 // Value imports come straight from protocols: reaching them through the `@dxos/client` barrels
 // puts echo-client (and wa-sqlite, automerge-repo with it) in the app's eager boot graph.
 import { ConnectionState, DeviceKind } from '@dxos/protocols/buf/dxos/client/services_pb';
-import { Platform } from '@dxos/protocols/proto/dxos/client/services';
+import { Platform } from '@dxos/protocols/buf/dxos/client/services_pb';
 
 import * as Observability from '../Observability';
 import { type CrossRealmMemory, measureCrossRealmMemory, readHeap, supportsCrossRealmMemory } from './memory';

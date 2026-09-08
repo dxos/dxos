@@ -7,7 +7,7 @@ import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { type Messenger } from '@dxos/protocols';
-import { type GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
+import { type GossipMessage } from '@dxos/protocols/buf/dxos/mesh/teleport/gossip_pb';
 
 import { type AwarenessInfo, type AwarenessPosition, type AwarenessProvider, type AwarenessState } from './awareness';
 

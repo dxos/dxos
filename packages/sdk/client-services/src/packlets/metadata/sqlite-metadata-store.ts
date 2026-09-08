@@ -19,7 +19,7 @@ import { DataCorruptionError, STORAGE_VERSION } from '@dxos/protocols';
 import { compatCodec } from '@dxos/protocols/buf-shape-compat';
 import { SpaceState } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 import { EchoMetadataSchema, LargeSpaceMetadataSchema } from '@dxos/protocols/buf/dxos/echo/metadata_pb';
-import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
+import { Invitation } from '@dxos/protocols/buf/dxos/client/services_pb';
 import {
   type ControlPipelineSnapshot,
   type EchoMetadata,
@@ -27,7 +27,7 @@ import {
   type IdentityRecord,
   type LargeSpaceMetadata,
   type SpaceMetadata,
-} from '@dxos/protocols/proto/dxos/echo/metadata';
+} from '@dxos/protocols/buf/dxos/echo/metadata_pb';
 import { SqlTransaction } from '@dxos/sql-sqlite';
 import { type Timeframe } from '@dxos/timeframe';
 import { ComplexMap, arrayToBuffer, forEachAsync, isNonNullable } from '@dxos/util';

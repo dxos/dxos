@@ -22,12 +22,12 @@ import {
   Invitation_Type,
 } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 import { schema } from '@dxos/protocols/proto';
-import { type DeviceProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { type DeviceProfileDocument } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import {
   type AdmissionRequest,
   type AdmissionResponse,
   type SpaceAdmissionRequest,
-} from '@dxos/protocols/proto/dxos/halo/invitations';
+} from '@dxos/protocols/buf/dxos/halo/invitations_pb';
 import { trace } from '@dxos/tracing';
 
 import { type InvitationProtocol } from './invitation-protocol';

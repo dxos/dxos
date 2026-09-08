@@ -2,7 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type DescMethod, type DescService } from '@bufbuild/protobuf';
+import { type DescMethod, type DescService, type Message } from '@bufbuild/protobuf';
+import { type GenMessage, type GenService } from '@bufbuild/protobuf/codegenv2';
 
 import { Stream } from '@dxos/async';
 import { invariant } from '@dxos/invariant';
@@ -27,6 +28,27 @@ import { type CompatCodec, type CompatOptions, compatCodec } from './shape-compa
  * dot-free form goes on the wire unchanged rather than being re-prefixed to imitate the old value.
  */
 const typeUrlFor = (desc: { readonly typeName: string }): string => desc.typeName;
+
+/** The message a generated schema describes. */
+type MessageOf<Schema> = Schema extends GenMessage<infer M> ? M : never;
+
+/**
+ * The handler interface a generated service describes: one method per RPC, buf messages either side.
+ *
+ * `protoc-gen-es` emits a service as a descriptor value rather than an interface, where protobuf.js
+ * generated one; deriving it from the descriptor keeps a service's shape in the `.proto` instead of
+ * restating it in TypeScript.
+ */
+export type BufService<Service> =
+  Service extends GenService<infer Methods>
+    ? {
+        [Name in keyof Methods]: Methods[Name] extends { methodKind: 'unary'; input: infer I; output: infer O }
+          ? (request: MessageOf<I>, options?: RequestOptions) => Promise<MessageOf<O>>
+          : Methods[Name] extends { methodKind: 'server_streaming'; input: infer I; output: infer O }
+            ? (request: MessageOf<I>, options?: RequestOptions) => Stream<MessageOf<O>>
+            : never;
+      }
+    : never;
 
 type MethodCodecs = {
   readonly method: DescMethod;

@@ -13,7 +13,7 @@ import { RuntimeProvider } from '@dxos/effect';
 import { log } from '@dxos/log';
 import { decodeCompat, encodeCompat } from '@dxos/protocols/buf-shape-compat';
 import { HeadsSchema } from '@dxos/protocols/buf/dxos/echo/query_pb';
-import { type Heads as HeadsProto } from '@dxos/protocols/proto/dxos/echo/query';
+import { type Heads as HeadsProto } from '@dxos/protocols/buf/dxos/echo/query_pb';
 import { SqlTransaction } from '@dxos/sql-sqlite';
 
 import { MIGRATIONS, MIGRATIONS_TABLE } from '../migrations/heads';

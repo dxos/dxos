@@ -64,7 +64,7 @@ import { InvalidStorageVersionError, STORAGE_VERSION } from '@dxos/protocols';
 import { toPublicKey } from '@dxos/protocols/buf';
 import { Invitation, Invitation_Kind } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 import { SystemStatus } from '@dxos/protocols/buf/dxos/client/services_pb';
-import { type Credential, type ProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { type Credential, type ProfileDocument } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import {
   ContactsService,
   DataService,

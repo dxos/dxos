@@ -22,8 +22,8 @@ import {
   type Identity as ClientIdentity,
   Device,
   DeviceKind,
-} from '@dxos/protocols/proto/dxos/client/services';
-import { type Credential, IdentityRecovery } from '@dxos/protocols/proto/dxos/halo/credentials';
+} from '@dxos/protocols/buf/dxos/client/services_pb';
+import { type Credential, IdentityRecovery } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { ComplexSet } from '@dxos/util';
 
 import { makeFlow, streamFromClientObservable, toShareOptions } from './util';

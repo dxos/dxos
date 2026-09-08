@@ -3,7 +3,7 @@
 //
 
 import { Event } from '@dxos/async';
-import { MessageTrace } from '@dxos/protocols/proto/dxos/rpc';
+import { MessageTrace } from '@dxos/protocols/buf/dxos/rpc_pb';
 
 import { type RpcPort } from './rpc';
 

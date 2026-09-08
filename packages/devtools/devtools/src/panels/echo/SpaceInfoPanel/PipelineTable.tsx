@@ -9,7 +9,7 @@ import { PublicKey } from '@dxos/keys';
 import { toPublicKey } from '@dxos/protocols/buf';
 import { type SubscribeToSpacesResponse_SpaceInfo } from '@dxos/protocols/buf/dxos/devtools/host_pb';
 import { type PublicKey as BufPublicKey } from '@dxos/protocols/buf/dxos/keys_pb';
-import { type Space as SpaceProto } from '@dxos/protocols/proto/dxos/client/services';
+import { type Space as SpaceProto } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { DynamicTable, type TableFeatures, type TablePropertyDefinition } from '@dxos/react-ui-table';
 import { Timeframe } from '@dxos/timeframe';
 import { ComplexSet } from '@dxos/util';

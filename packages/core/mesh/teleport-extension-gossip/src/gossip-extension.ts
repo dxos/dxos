@@ -5,8 +5,11 @@
 import { Trigger } from '@dxos/async';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { getBufService } from '@dxos/protocols/buf-service';
-import { type GossipMessage, type GossipService } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
+import { type BufService, getBufService } from '@dxos/protocols/buf-service';
+import {
+  GossipService as GossipServiceDesc,
+  type GossipMessage,
+} from '@dxos/protocols/buf/dxos/mesh/teleport/gossip_pb';
 import { type ProtoRpcPeer, createProtoRpcPeer } from '@dxos/rpc';
 import { type ExtensionContext, type TeleportExtension } from '@dxos/teleport';
 
@@ -87,6 +90,8 @@ export class GossipExtension implements TeleportExtension {
     await this._rpc.rpc.GossipService.announce(message);
   }
 }
+
+type GossipService = BufService<typeof GossipServiceDesc>;
 
 type ServiceBundle = {
   GossipService: GossipService;

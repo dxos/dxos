@@ -10,12 +10,12 @@ import { type PublicKey } from '@dxos/keys';
 import { AlreadyJoinedError } from '@dxos/protocols';
 import { fromPublicKey } from '@dxos/protocols/buf';
 import { Invitation, Invitation_Kind } from '@dxos/protocols/buf/dxos/client/invitation_pb';
-import type { DeviceProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
+import type { DeviceProfileDocument } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import {
   type AdmissionRequest,
   type AdmissionResponse,
   type IntroductionRequest,
-} from '@dxos/protocols/proto/dxos/halo/invitations';
+} from '@dxos/protocols/buf/dxos/halo/invitations_pb';
 
 import { type Identity, type JoinIdentityProps } from '../identity';
 import { type InvitationProtocol } from './invitation-protocol';

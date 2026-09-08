@@ -22,7 +22,7 @@ import { FeedProtocol } from '@dxos/protocols';
 import { EdgeService } from '@dxos/protocols';
 import { createBuf } from '@dxos/protocols/buf';
 import { type Message as RouterMessage } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
-import { EdgeStatus } from '@dxos/protocols/proto/dxos/client/services';
+import { EdgeStatus } from '@dxos/protocols/buf/dxos/client/services_pb';
 import type { SqlTransaction } from '@dxos/sql-sqlite';
 import { bufferToArray } from '@dxos/util';
 

@@ -21,17 +21,17 @@ import {
   type QueryRequest,
   QueryRequestSchema,
 } from '@dxos/protocols/buf/dxos/edge/signal_pb';
-import { type SwarmInfo as LegacySwarmInfo } from '@dxos/protocols/proto/dxos/devtools/swarm';
+import { type SwarmInfo as LegacySwarmInfo } from '@dxos/protocols/buf/dxos/devtools/swarm_pb';
 import {
   type Peer as LegacyPeer,
   type SwarmResponse as LegacySwarmResponse,
-} from '@dxos/protocols/proto/dxos/edge/messenger';
+} from '@dxos/protocols/buf/dxos/edge/messenger_pb';
 import {
   type JoinRequest as LegacyJoinRequest,
   type LeaveRequest as LegacyLeaveRequest,
   type Message as LegacyMessage,
   type QueryRequest as LegacyQueryRequest,
-} from '@dxos/protocols/proto/dxos/edge/signal';
+} from '@dxos/protocols/buf/dxos/edge/signal_pb';
 
 //
 // `SignalManager` is still written against the protobuf.js shapes while the service speaks buf.

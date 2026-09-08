@@ -15,7 +15,7 @@ import { log } from '@dxos/log';
 import { buf } from '@dxos/protocols/buf';
 import { ActivitySchema } from '@dxos/protocols/buf/dxos/edge/calls_pb';
 import { ConnectionState } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
-import { type SwarmResponse } from '@dxos/protocols/proto/dxos/edge/messenger';
+import { type SwarmResponse } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
 import { isNonNullable } from '@dxos/util';
 
 import { type ActivityState, type UserState, codec } from './types';

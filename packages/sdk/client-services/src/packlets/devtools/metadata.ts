@@ -13,7 +13,7 @@ import {
   type SubscribeToMetadataResponse,
   SubscribeToMetadataResponseSchema,
 } from '@dxos/protocols/buf/dxos/devtools/host_pb';
-import { type EchoMetadata } from '@dxos/protocols/proto/dxos/echo/metadata';
+import { type EchoMetadata } from '@dxos/protocols/buf/dxos/echo/metadata_pb';
 
 import { type ServiceContext } from '../services';
 

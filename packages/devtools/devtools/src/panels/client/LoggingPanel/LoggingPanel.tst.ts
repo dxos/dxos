@@ -8,7 +8,7 @@ import { type LogEntry, type QueryLogsRequest } from '@dxos/protocols/buf/dxos/c
 import {
   type LogEntry as LegacyLogEntry,
   type QueryLogsRequest as LegacyRequest,
-} from '@dxos/protocols/proto/dxos/client/services';
+} from '@dxos/protocols/buf/dxos/client/services_pb';
 
 // Carrier group E: `LoggingService.queryLogs` moved to `bufMessage` on both the payload and the
 // response, so this pins both directions — the panel builds the request as well as reading entries.

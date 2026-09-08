@@ -5,7 +5,7 @@
 import { createCredential } from '@dxos/credentials';
 import { failUndefined } from '@dxos/debug';
 import { type KeyringApi } from '@dxos/keyring';
-import { AdmittedFeed, MembershipPolicy, SpaceMember } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { AdmittedFeed, MembershipPolicy, SpaceMember } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { Timeframe } from '@dxos/timeframe';
 
 import { type Space } from '../space';

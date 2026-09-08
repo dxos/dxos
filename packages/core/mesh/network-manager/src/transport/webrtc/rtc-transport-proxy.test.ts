@@ -10,7 +10,7 @@ import { TestStream } from '@dxos/async/testing';
 import { ErrorStream } from '@dxos/debug';
 import { PublicKey } from '@dxos/keys';
 import { getBufService } from '@dxos/protocols/buf-service';
-import { type BridgeService } from '@dxos/protocols/proto/dxos/mesh/bridge';
+import { type BridgeService } from '@dxos/protocols/buf/dxos/mesh/bridge_pb';
 import { type RpcPort, createLinkedPorts, createProtoRpcPeer } from '@dxos/rpc';
 
 import { type Transport, type TransportFactory, type TransportOptions, type TransportStats } from '../transport';

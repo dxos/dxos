@@ -33,13 +33,13 @@ import {
   type Device as LegacyDevice,
   type Identity as LegacyIdentity,
   type Space as LegacySpace,
-} from '@dxos/protocols/proto/dxos/client/services';
+} from '@dxos/protocols/buf/dxos/client/services_pb';
 import {
   type Credential as LegacyCredential,
   type DeviceProfileDocument as LegacyDeviceProfileDocument,
   type Presentation as LegacyPresentation,
   type ProfileDocument as LegacyProfileDocument,
-} from '@dxos/protocols/proto/dxos/halo/credentials';
+} from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
 //
 // The client services speak buf while this package's public API still exposes the protobuf.js

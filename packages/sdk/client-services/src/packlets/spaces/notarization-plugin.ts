@@ -15,8 +15,8 @@ import { EdgeCallFailedError } from '@dxos/protocols';
 import { getBufService } from '@dxos/protocols/buf-service';
 import { type Runtime_Client_EdgeFeatures } from '@dxos/protocols/buf/dxos/config_pb';
 import { schema } from '@dxos/protocols/proto';
-import { type Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
-import { type NotarizationService, type NotarizeRequest } from '@dxos/protocols/proto/dxos/mesh/teleport/notarization';
+import { type Credential } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
+import { type NotarizationService, type NotarizeRequest } from '@dxos/protocols/buf/dxos/mesh/teleport/notarization_pb';
 import { type ExtensionContext, RpcExtension } from '@dxos/teleport';
 import { ComplexMap, ComplexSet, entry } from '@dxos/util';
 

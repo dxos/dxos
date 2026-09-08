@@ -16,8 +16,8 @@ import {
   type SubscribeToFeedBlocksResponse,
   SubscribeToFeedBlocksResponseSchema,
 } from '@dxos/protocols/buf/dxos/devtools/host_pb';
-import { type SubscribeToFeedBlocksResponse as LegacySubscribeToFeedBlocksResponse } from '@dxos/protocols/proto/dxos/devtools/host';
-import { type FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
+import { type SubscribeToFeedBlocksResponse as LegacySubscribeToFeedBlocksResponse } from '@dxos/protocols/buf/dxos/devtools/host_pb';
+import { type FeedMessage } from '@dxos/protocols/buf/dxos/echo/feed_pb';
 import { type DevtoolsHost } from '@dxos/protocols/rpc';
 import { ComplexMap } from '@dxos/util';
 

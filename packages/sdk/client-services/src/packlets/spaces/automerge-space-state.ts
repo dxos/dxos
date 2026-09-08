@@ -5,7 +5,7 @@
 import { Event } from '@dxos/async';
 import { type Context, Resource } from '@dxos/context';
 import { type CredentialProcessor, type SpecificCredential, checkCredentialType } from '@dxos/credentials';
-import { type Credential, type Epoch } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { type Credential, type Epoch } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
 export class AutomergeSpaceState extends Resource implements CredentialProcessor {
   public rootUrl: string | undefined = undefined;

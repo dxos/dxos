@@ -13,8 +13,8 @@ import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { ConnectionResetError, ConnectivityError, TimeoutError } from '@dxos/protocols';
 import { ConnectionState } from '@dxos/protocols/buf/dxos/mesh/bridge_pb';
-import { type BridgeEvent, type BridgeService } from '@dxos/protocols/proto/dxos/mesh/bridge';
-import { type Signal } from '@dxos/protocols/proto/dxos/mesh/swarm';
+import { type BridgeEvent, type BridgeService } from '@dxos/protocols/buf/dxos/mesh/bridge_pb';
+import { type Signal } from '@dxos/protocols/buf/dxos/mesh/swarm_pb';
 import { arrayToBuffer } from '@dxos/util';
 
 import { type Transport, type TransportFactory, type TransportOptions, type TransportStats } from '../transport';

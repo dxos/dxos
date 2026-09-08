@@ -6,7 +6,7 @@ import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { Trigger } from '@dxos/async';
 import { PublicKey } from '@dxos/keys';
-import { type GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
+import { type GossipMessage } from '@dxos/protocols/buf/dxos/mesh/teleport/gossip_pb';
 import { TestBuilder, TestPeer } from '@dxos/teleport/testing';
 
 import { GossipExtension } from './gossip-extension';

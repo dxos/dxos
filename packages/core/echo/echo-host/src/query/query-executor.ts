@@ -30,7 +30,7 @@ import {
 import { invariant } from '@dxos/invariant';
 import { EID, EntityId, SpaceId, type URI } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { type QueryReactivity, type QueryResult } from '@dxos/protocols/proto/dxos/echo/query';
+import { type QueryReactivity, type QueryResult } from '@dxos/protocols/buf/dxos/echo/query_pb';
 import { compositeKey, getDeep, isNonNullable } from '@dxos/util';
 
 import type { AutomergeHost } from '../automerge';

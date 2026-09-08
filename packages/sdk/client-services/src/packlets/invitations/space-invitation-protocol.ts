@@ -21,12 +21,12 @@ import {
   Invitation_Kind,
   Invitation_Type,
 } from '@dxos/protocols/buf/dxos/client/invitation_pb';
-import { type ProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { type ProfileDocument } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import {
   type AdmissionRequest,
   type AdmissionResponse,
   type IntroductionRequest,
-} from '@dxos/protocols/proto/dxos/halo/invitations';
+} from '@dxos/protocols/buf/dxos/halo/invitations_pb';
 
 import { type DataSpaceManager, type SigningContext } from '../spaces';
 import { type InvitationProtocol } from './invitation-protocol';

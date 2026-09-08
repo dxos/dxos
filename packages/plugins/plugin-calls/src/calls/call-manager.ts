@@ -13,7 +13,7 @@ import { EdgeServiceName, getEdgeServiceEndpoint } from '@dxos/config';
 import { Resource } from '@dxos/context';
 import { type Identity } from '@dxos/halo';
 import { invariant } from '@dxos/invariant';
-import { type Tracks } from '@dxos/protocols/proto/dxos/edge/calls';
+import { type Tracks } from '@dxos/protocols/buf/dxos/edge/calls_pb';
 import { isNonNullable } from '@dxos/util';
 
 import { type CallState, CallSwarmSynchronizer } from './call-swarm-synchronizer';

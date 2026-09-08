@@ -9,7 +9,7 @@ import * as Script from '@dxos/compute/Script';
 import { Obj } from '@dxos/echo';
 import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { type Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { type Credential } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
 /**
  * Get the function URL for a given script and client configuration

@@ -21,8 +21,8 @@ import { log } from '@dxos/log';
 import { CancelledError, type FeedProtocol, SystemError } from '@dxos/protocols';
 import { SpaceState } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 import { type Runtime_Client_EdgeFeatures } from '@dxos/protocols/buf/dxos/config_pb';
-import { type Space as SpaceProto } from '@dxos/protocols/proto/dxos/client/services';
-import { type FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
+import { type Space as SpaceProto } from '@dxos/protocols/buf/dxos/client/services_pb';
+import { type FeedMessage } from '@dxos/protocols/buf/dxos/echo/feed_pb';
 import {
   AdmittedFeed,
   type Credential,
@@ -30,8 +30,8 @@ import {
   MembershipPolicy,
   type ProfileDocument,
   SpaceMember,
-} from '@dxos/protocols/proto/dxos/halo/credentials';
-import { type GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
+} from '@dxos/protocols/buf/dxos/halo/credentials_pb';
+import { type GossipMessage } from '@dxos/protocols/buf/dxos/mesh/teleport/gossip_pb';
 import { type SpacesService } from '@dxos/protocols/rpc';
 import { type Gossip, type Presence } from '@dxos/teleport-extension-gossip';
 import { Timeframe } from '@dxos/timeframe';

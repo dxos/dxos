@@ -19,14 +19,14 @@ import { invariant } from '@dxos/invariant';
 import { type IdentityDid, PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type Runtime_Client_EdgeFeatures } from '@dxos/protocols/buf/dxos/config_pb';
-import { type FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
+import { type FeedMessage } from '@dxos/protocols/buf/dxos/echo/feed_pb';
 import {
   AdmittedFeed,
   type Credential,
   type DeviceProfileDocument,
   type ProfileDocument,
-} from '@dxos/protocols/proto/dxos/halo/credentials';
-import { type DeviceAdmissionRequest } from '@dxos/protocols/proto/dxos/halo/invitations';
+} from '@dxos/protocols/buf/dxos/halo/credentials_pb';
+import { type DeviceAdmissionRequest } from '@dxos/protocols/buf/dxos/halo/invitations_pb';
 import { type Presence } from '@dxos/teleport-extension-gossip';
 import { trace } from '@dxos/tracing';
 import { type ComplexMap, ComplexSet } from '@dxos/util';

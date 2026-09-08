@@ -18,9 +18,9 @@ import {
   type NetworkStatus,
   type Platform,
 } from '@dxos/protocols/buf/dxos/client/services_pb';
-import { SpaceMember, type Space as SpaceProto } from '@dxos/protocols/proto/dxos/client/services';
-import { type SwarmInfo } from '@dxos/protocols/proto/dxos/devtools/swarm';
-import { type Epoch } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { SpaceMember, type Space as SpaceProto } from '@dxos/protocols/buf/dxos/client/services_pb';
+import { type SwarmInfo } from '@dxos/protocols/buf/dxos/devtools/swarm_pb';
+import { type Epoch } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { type DevtoolsHost, type LoggingService } from '@dxos/protocols/rpc';
 
 import { DXOS_VERSION } from '../../version';

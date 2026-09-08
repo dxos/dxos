@@ -17,13 +17,13 @@ import { buf } from '@dxos/protocols/buf';
 import { Invitation, Invitation_Kind } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 import { DeviceKind } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { PresentationSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
-import { type Contact, type Device, type Identity } from '@dxos/protocols/proto/dxos/client/services';
+import { type Contact, type Device, type Identity } from '@dxos/protocols/buf/dxos/client/services_pb';
 import {
   type Credential,
   type DeviceProfileDocument,
   type Presentation,
   type ProfileDocument,
-} from '@dxos/protocols/proto/dxos/halo/credentials';
+} from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { trace } from '@dxos/tracing';
 
 import { RPC_TIMEOUT } from '../common';

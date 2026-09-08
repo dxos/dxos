@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as AppSpace from '@dxos/app-toolkit/AppSpace';
 import { type Client } from '@dxos/client';
 import { type Space } from '@dxos/client-protocol';
-import { type Identity } from '@dxos/protocols/proto/dxos/client/services';
+import { type Identity } from '@dxos/protocols/buf/dxos/client/services_pb';
 
 export type InitializeIdentityResult = {
   identity: Identity;

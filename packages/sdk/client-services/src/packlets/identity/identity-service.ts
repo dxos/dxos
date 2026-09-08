@@ -20,8 +20,8 @@ import {
   RecoverIdentityRequest_ExternalSignatureSchema,
 } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { type Credential, type Presentation, type ProfileDocument } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
-import { type RecoverIdentityRequest as LegacyRecoverIdentityRequest } from '@dxos/protocols/proto/dxos/client/services';
-import { type ProfileDocument as LegacyProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { type RecoverIdentityRequest as LegacyRecoverIdentityRequest } from '@dxos/protocols/buf/dxos/client/services_pb';
+import { type ProfileDocument as LegacyProfileDocument } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { type IdentityService } from '@dxos/protocols/rpc';
 
 import {

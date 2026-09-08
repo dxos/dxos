@@ -32,9 +32,9 @@ import {
   Invitation_State,
   Invitation_Type,
 } from '@dxos/protocols/buf/dxos/client/invitation_pb';
-import { type DeviceProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
-import { AuthenticationResponse, type IntroductionResponse } from '@dxos/protocols/proto/dxos/halo/invitations';
-import { InvitationOptions } from '@dxos/protocols/proto/dxos/halo/invitations';
+import { type DeviceProfileDocument } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
+import { AuthenticationResponse, type IntroductionResponse } from '@dxos/protocols/buf/dxos/halo/invitations_pb';
+import { InvitationOptions } from '@dxos/protocols/buf/dxos/halo/invitations_pb';
 import { type ExtensionContext, type TeleportExtension, type TeleportProps } from '@dxos/teleport';
 import { trace as _trace } from '@dxos/tracing';
 import { ComplexSet } from '@dxos/util';

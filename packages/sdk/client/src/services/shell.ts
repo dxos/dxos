@@ -4,7 +4,7 @@
 
 import type { MulticastObservable } from '@dxos/async';
 import { type PublicKey } from '@dxos/keys';
-import { type LayoutRequest, ShellDisplay, ShellLayout } from '@dxos/protocols/proto/dxos/iframe';
+import { type LayoutRequest, ShellDisplay, ShellLayout } from '@dxos/protocols/buf/dxos/iframe_pb';
 import { ComplexSet } from '@dxos/util';
 
 import type { Space, SpaceMember } from '../echo';

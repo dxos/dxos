@@ -6,7 +6,7 @@ import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import type { SwarmController, Topology } from '@dxos/network-manager';
-import { InvitationOptions } from '@dxos/protocols/proto/dxos/halo/invitations';
+import { InvitationOptions } from '@dxos/protocols/buf/dxos/halo/invitations_pb';
 import { ComplexSet } from '@dxos/util';
 
 /**

@@ -9,7 +9,7 @@ import { OPFS_SQLITE_DB_FILENAME, isValidSqliteDatabase } from '@dxos/client-ser
 import { PublicKey } from '@dxos/keys';
 import { compatCodec } from '@dxos/protocols/buf-shape-compat';
 import { EchoMetadataSchema } from '@dxos/protocols/buf/dxos/echo/metadata_pb';
-import type { EchoMetadata } from '@dxos/protocols/proto/dxos/echo/metadata';
+import type { EchoMetadata } from '@dxos/protocols/buf/dxos/echo/metadata_pb';
 import * as OpfsPool from '@dxos/sql-sqlite/OpfsPool';
 import * as SqliteClient from '@dxos/sql-sqlite/SqliteClient';
 

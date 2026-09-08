@@ -15,8 +15,8 @@ import { EffectEx } from '@dxos/effect';
 import { type RuntimeProvider } from '@dxos/effect';
 import { type IndexEngine } from '@dxos/index-core';
 import { log } from '@dxos/log';
-import { type IndexConfig } from '@dxos/protocols/proto/dxos/echo/indexing';
-import { type QueryRequest, type QueryResponse, type QueryResult } from '@dxos/protocols/proto/dxos/echo/query';
+import { type IndexConfig } from '@dxos/protocols/buf/dxos/echo/indexing_pb';
+import { type QueryRequest, type QueryResponse, type QueryResult } from '@dxos/protocols/buf/dxos/echo/query_pb';
 import { type QueryService } from '@dxos/protocols/rpc';
 import { trace } from '@dxos/tracing';
 

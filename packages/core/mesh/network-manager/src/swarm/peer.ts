@@ -9,7 +9,7 @@ import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type PeerInfo } from '@dxos/messaging';
 import { CancelledError, SystemError } from '@dxos/protocols';
-import { type Answer } from '@dxos/protocols/proto/dxos/mesh/swarm';
+import { type Answer } from '@dxos/protocols/buf/dxos/mesh/swarm_pb';
 
 import { type OfferMessage, type SignalMessage, type SignalMessenger } from '../signal';
 import { type TransportFactory } from '../transport';

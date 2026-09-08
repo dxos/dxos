@@ -11,8 +11,8 @@ import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { getBufService } from '@dxos/protocols/buf-service';
-import { type Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
-import { type AgentManager, InitAuthSequenceResponse } from '@dxos/protocols/proto/dxos/service/agentmanager';
+import { type Credential } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
+import { type AgentManager, InitAuthSequenceResponse } from '@dxos/protocols/buf/dxos/service/agentmanager_pb';
 import { type WebsocketRpcClient } from '@dxos/websocket-rpc';
 
 export type AgentHostingProvider = {

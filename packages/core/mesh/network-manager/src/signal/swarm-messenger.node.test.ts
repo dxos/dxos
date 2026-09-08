@@ -7,7 +7,7 @@ import { beforeEach, describe, expect, onTestFinished, test } from 'vitest';
 import { Context } from '@dxos/context';
 import { PublicKey } from '@dxos/keys';
 import { MemorySignalManager, MemorySignalManagerContext, Messenger } from '@dxos/messaging';
-import { type Answer } from '@dxos/protocols/proto/dxos/mesh/swarm';
+import { type Answer } from '@dxos/protocols/buf/dxos/mesh/swarm_pb';
 
 import { type OfferMessage, type SignalMessage } from './signal-messenger';
 import { SwarmMessenger } from './swarm-messenger';

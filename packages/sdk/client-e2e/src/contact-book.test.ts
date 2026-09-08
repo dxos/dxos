@@ -11,7 +11,7 @@ import { TestBuilder, TestSchema, performInvitation, waitForSpace } from '@dxos/
 import { Obj } from '@dxos/echo';
 import { type PublicKey } from '@dxos/keys';
 import { Invitation_State } from '@dxos/protocols/buf/dxos/client/invitation_pb';
-import { type Contact } from '@dxos/protocols/proto/dxos/client/services';
+import { type Contact } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { range } from '@dxos/util';
 
 describe('ContactBook', () => {

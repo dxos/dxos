@@ -7,7 +7,7 @@ import path from 'node:path';
 import { sleep } from '@dxos/async';
 import { type ConfigProto } from '@dxos/config';
 import { log } from '@dxos/log';
-import { type IndexConfig, IndexKind } from '@dxos/protocols/proto/dxos/echo/indexing';
+import { type IndexConfig, IndexKind } from '@dxos/protocols/buf/dxos/echo/indexing_pb';
 
 import { TraceReader } from '../analysys/traces';
 import { type SchedulerEnvImpl } from '../env';
