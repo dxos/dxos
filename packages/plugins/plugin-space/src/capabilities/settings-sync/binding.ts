@@ -2,7 +2,13 @@
 // Copyright 2026 DXOS.org
 //
 
+import type * as AtomRegistry from 'effect/unstable/reactivity/AtomRegistry';
+
+import type * as PluginManager from '@dxos/app-framework/PluginManager';
+import * as UrlLoader from '@dxos/app-framework/UrlLoader';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppSettings from '@dxos/app-toolkit/AppSettings';
+import { EffectEx } from '@dxos/effect';
 
 /** One namespace's two-way link between a local value and the synced store. */
 export type Binding = {
@@ -15,147 +21,68 @@ export type Binding = {
   subscribe?: (onChange: () => void) => () => void;
 };
 
-/** Read and write access to the settings store's two layers. */
-export type Store = {
-  read: () => AppSettings.Snapshot;
-  update: (fn: (draft: AppSettings.Draft) => void) => void;
+/** One plugin's contributed settings atom. */
+export const pluginSettings = (entry: AppCapabilities.Settings, registry: AtomRegistry.AtomRegistry): Binding => ({
+  namespace: entry.prefix,
+  read: () => registry.get(entry.atom),
+  write: (values) => registry.set(entry.atom, values),
+  subscribe: (onChange) => registry.subscribe(entry.atom, onChange),
+});
+
+/**
+ * Which plugins are enabled, keyed by plugin id.
+ *
+ * Core plugins are left out: the host force-enables them, so they are not the user's to toggle.
+ */
+export const pluginSet = (manager: PluginManager.PluginManager, registry: AtomRegistry.AtomRegistry): Binding => {
+  const toggleable = () =>
+    manager
+      .getPlugins()
+      .map((plugin) => plugin.meta.profile.key)
+      .filter((id) => !manager.getCore().includes(id));
+
+  return {
+    namespace: AppSettings.PLUGINS_NAMESPACE,
+    read: () => {
+      const enabled = manager.getEnabled();
+      return Object.fromEntries(toggleable().map((id) => [id, enabled.includes(id)]));
+    },
+    write: (decisions) => {
+      const target = new Set(AppSettings.getEnabledPlugins(decisions));
+      const current = manager.getEnabled();
+      for (const id of toggleable()) {
+        // An id with no decision is one no device has an opinion about yet.
+        if (!(id in decisions) || target.has(id) === current.includes(id)) {
+          continue;
+        }
+
+        void EffectEx.runAndForwardErrors(target.has(id) ? manager.enable(id) : manager.disable(id));
+      }
+    },
+    // `plugins` as well as `enabled`, so a newly registered plugin gets a decision recorded rather
+    // than waiting for the next unrelated toggle.
+    subscribe: (onChange) => {
+      const unsubscribe = [
+        registry.subscribe(manager.enabled, onChange),
+        registry.subscribe(manager.plugins, onChange),
+      ];
+      return () => unsubscribe.forEach((fn) => fn());
+    },
+  };
 };
 
 /**
- * Two-way reconciler for one namespace. {@link Reconciler.pull} and {@link Reconciler.push} are
- * guarded against reentrancy: a push writes ECHO, whose change notification would pull straight back.
- */
-export class Reconciler {
-  /** Values last known to be in agreement, and the base every local edit is diffed against. */
-  #agreed: AppSettings.Values;
-  #busy = false;
-
-  constructor(
-    private readonly _store: Store,
-    private readonly _binding: Binding,
-  ) {
-    this.#agreed = this.#resolved();
-  }
-
-  get namespace(): string {
-    return this._binding.namespace;
-  }
-
-  /** The values in effect on this device, defaults included. */
-  current(): AppSettings.Values {
-    return this.#resolved();
-  }
-
-  /** The namespace's own store, which holds the value of every pinned key. */
-  local(): AppSettings.Values {
-    return this._binding.read();
-  }
-
-  /**
-   * First reconciliation: the store wins for keys it holds, and keys only this device has are
-   * adopted into the shared layer.
-   */
-  seed(): void {
-    const stored = this.#stored();
-    const local = this._binding.read();
-    const merged = { ...local, ...stored };
-    this.#guard(() => {
-      this._store.update((draft) => {
-        AppSettings.applyResolved(draft, this._binding.namespace, stored, merged);
-      });
-      this._binding.write(this.#resolved());
-      this.#agreed = this.#resolved();
-    });
-  }
-
-  /** Store changed: put the newly resolved values into effect locally. */
-  pull(): void {
-    this.#guard(() => {
-      const resolved = this.#resolved();
-      if (AppSettings.changedKeys(this.#agreed, resolved).length === 0) {
-        return;
-      }
-
-      this.#agreed = resolved;
-      this._binding.write(resolved);
-    });
-  }
-
-  /** Local value changed: route each changed key to the layer that owns it. */
-  push(): void {
-    this.#guard(() => {
-      const local = this._binding.read();
-      if (AppSettings.changedKeys(this.#agreed, local).length === 0) {
-        return;
-      }
-
-      this._store.update((draft) => {
-        AppSettings.applyResolved(draft, this._binding.namespace, this.#agreed, local);
-      });
-      this.#agreed = this.#resolved();
-    });
-  }
-
-  /** Values held by the store for this namespace, with no local defaults mixed in. */
-  #stored(): AppSettings.Values {
-    return AppSettings.resolve(this._store.read(), this._binding.namespace);
-  }
-
-  #resolved(): AppSettings.Values {
-    return AppSettings.resolve(this._store.read(), this._binding.namespace, this._binding.read());
-  }
-
-  #guard(fn: () => void): void {
-    if (this.#busy) {
-      return;
-    }
-
-    this.#busy = true;
-    try {
-      fn();
-    } finally {
-      this.#busy = false;
-    }
-  }
-}
-
-/**
- * Every namespace being reconciled against one store.
+ * Plugins installed from a URL, keyed by plugin id.
  *
- * Bindings arrive over the session as plugins activate, and the capability needs the whole set at
- * once — to pull them when either half of the store moves, and to release their subscriptions when
- * it shuts down.
+ * No `subscribe`: `UrlLoader`'s store has no change notification, and an install goes through a full
+ * reload anyway, so this direction is pull-only.
  */
-export class Reconcilers {
-  readonly #entries: Reconciler[] = [];
-  readonly #unsubscribe: (() => void)[] = [];
-
-  constructor(private readonly _store: Store) {}
-
-  /** Reconcile one more namespace, seeding it before either direction can fire. */
-  add(binding: Binding): void {
-    const reconciler = new Reconciler(this._store, binding);
-    reconciler.seed();
-    this.#entries.push(reconciler);
-    const unsubscribe = binding.subscribe?.(() => reconciler.push());
-    if (unsubscribe) {
-      this.#unsubscribe.push(unsubscribe);
-    }
-  }
-
-  /** Put newly resolved values into effect everywhere, after the store moved. */
-  pull(): void {
-    for (const reconciler of this.#entries) {
-      reconciler.pull();
-    }
-  }
-
-  /** One namespace's own store, which holds the value of every pinned key. */
-  local(namespace: string): AppSettings.Values {
-    return this.#entries.find((reconciler) => reconciler.namespace === namespace)?.local() ?? {};
-  }
-
-  dispose(): void {
-    this.#unsubscribe.forEach((unsubscribe) => unsubscribe());
-  }
-}
+export const installedPlugins = (): Binding => ({
+  namespace: AppSettings.INSTALLED_NAMESPACE,
+  read: () => Object.fromEntries(UrlLoader.getRemoteEntries().map((entry) => [entry.id, entry])),
+  write: (entries) => {
+    UrlLoader.setRemoteEntries(
+      Object.values(entries).filter((entry): entry is AppSettings.InstalledPlugin => !!entry?.url),
+    );
+  },
+});

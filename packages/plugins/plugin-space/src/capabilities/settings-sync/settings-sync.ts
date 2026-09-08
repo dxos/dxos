@@ -17,8 +17,9 @@ import { log } from '@dxos/log';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 
 import { resolveSettingsSpace } from '../../util';
-import { Reconcilers, type Store } from './binding';
-import { installedPlugins, pluginSet, pluginSettings } from './bindings';
+import { installedPlugins, pluginSet, pluginSettings } from './binding';
+import { type Store } from './reconciler';
+import { Sync } from './sync';
 
 /**
  * The space's {@link AppSettings.AppSettings} singleton, created on first use. Two devices racing
@@ -76,7 +77,7 @@ export default Capability.makeModule(
       defaultValue: AppSettings.makeDeviceSettings,
     });
     const store = makeStore(settings, device, registry);
-    const reconcilers = new Reconcilers(store);
+    const sync = new Sync(store);
 
     //
     // Bindings. Plugin settings arrive over the session as plugins lazily activate, so that set
@@ -87,14 +88,14 @@ export default Capability.makeModule(
     const bindSettings = (entries: readonly AppCapabilities.Settings[]) => {
       for (const entry of entries.filter((entry) => !bound.has(entry.prefix))) {
         bound.add(entry.prefix);
-        reconcilers.add(pluginSettings(entry, registry));
+        sync.bind(pluginSettings(entry, registry));
       }
     };
 
     const contributed = manager.capabilities.atom(AppCapabilities.Settings);
     bindSettings(registry.get(contributed));
-    reconcilers.add(pluginSet(manager, registry));
-    reconcilers.add(installedPlugins());
+    sync.bind(pluginSet(manager, registry));
+    sync.bind(installedPlugins());
 
     //
     // Republish on any change, from either half of the store.
@@ -109,7 +110,7 @@ export default Capability.makeModule(
     const refresh = () => {
       registry.set(unsynced, readUnsynced());
       registry.set(pinned, readPinned());
-      reconcilers.pull();
+      sync.pull();
     };
 
     const unsubscribe = [
@@ -121,7 +122,7 @@ export default Capability.makeModule(
     yield* Effect.addFinalizer(() =>
       Effect.sync(() => {
         unsubscribe.forEach((fn) => fn());
-        reconcilers.dispose();
+        sync.dispose();
       }),
     );
 
@@ -133,13 +134,13 @@ export default Capability.makeModule(
         // later still arrive here.
         const freeze = namespace !== AppSettings.PLUGINS_NAMESPACE;
         store.update((draft) =>
-          AppSettings.setSynced(draft, namespace, synced, reconcilers.local(namespace), {
+          AppSettings.setSynced(draft, namespace, synced, sync.local(namespace), {
             freeze,
             adopt: options?.adopt,
           }),
         );
       },
-      conflicts: (namespace) => AppSettings.conflictingKeys(store.read(), namespace, reconcilers.local(namespace)),
+      conflicts: (namespace) => AppSettings.conflictingKeys(store.read(), namespace, sync.local(namespace)),
       setKeySynced: (namespace, key, synced) => {
         store.update((draft) => AppSettings.setKeySynced(draft, namespace, key, synced));
       },
