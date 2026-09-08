@@ -2,10 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
+import { create } from '@bufbuild/protobuf';
 import { afterEach, describe, it, test, vi } from 'vitest';
 
 import { Context } from '@dxos/context';
-import { type Presentation } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { type Presentation, PresentationSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
 import { createEphemeralEdgeIdentity } from './auth';
 import { EdgeHttpClient } from './edge-http-client';
@@ -68,7 +69,7 @@ describe('EdgeHttpClient auth refresh', () => {
   const identity = {
     peerKey: 'peer-key',
     identityDid: 'did:halo:test',
-    presentCredentials: async (): Promise<Presentation> => ({}),
+    presentCredentials: async (): Promise<Presentation> => create(PresentationSchema, {}),
   };
 
   const makeFetchMock = (authData: Record<string, unknown>) =>
@@ -323,7 +324,7 @@ describe('EdgeHttpClient blobs', () => {
     client.setIdentity({
       peerKey: 'peer-key',
       identityDid: 'did:halo:test',
-      presentCredentials: async (): Promise<Presentation> => ({}),
+      presentCredentials: async (): Promise<Presentation> => create(PresentationSchema, {}),
     });
     const bytes = new Uint8Array([1, 2, 3]);
     await client.putBlob(Context.default(), 'abc123', bytes, { contentType: 'application/octet-stream' });
@@ -343,7 +344,7 @@ describe('EdgeHttpClient blobs', () => {
     const identity: EdgeIdentity = {
       peerKey: 'peer-key',
       identityDid: 'did:halo:test',
-      presentCredentials: async (): Promise<Presentation> => ({}),
+      presentCredentials: async (): Promise<Presentation> => create(PresentationSchema, {}),
     };
 
     const fetchMock = vi.fn(async (input: any, init?: RequestInit) => {
@@ -383,7 +384,7 @@ describe('EdgeHttpClient blobs', () => {
       const identity: EdgeIdentity = {
         peerKey: 'peer-key',
         identityDid: 'did:halo:test',
-        presentCredentials: async (): Promise<Presentation> => ({}),
+        presentCredentials: async (): Promise<Presentation> => create(PresentationSchema, {}),
       };
 
       const fetchMock = vi.fn(async (input: RequestInfo | URL) => {

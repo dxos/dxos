@@ -44,7 +44,7 @@ import {
 import {
   type QueryRequest as QueryRequestProto,
   type QueryResponse as QueryResponseProto,
-} from '@dxos/protocols/proto/dxos/echo/query';
+} from '@dxos/protocols/buf/dxos/echo/query_pb';
 import { createUrl } from '@dxos/util';
 
 import { BaseHttpClient, type BaseHttpClientOptions, type EdgeHttpCallArgs } from './base-http-client';

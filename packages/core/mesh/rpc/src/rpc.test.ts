@@ -7,13 +7,14 @@ import { describe, expect, test } from 'vitest';
 import { Trigger, sleep } from '@dxos/async';
 import { Stream } from '@dxos/async';
 import { log } from '@dxos/log';
-import { type TYPES } from '@dxos/protocols/proto';
-import { type AnyEnvelope, type TaggedType } from '@dxos/protocols/service-contract';
+import { type AnyEnvelope } from '@dxos/protocols/service-contract';
 
 import { RpcPeer } from './rpc';
 import { createLinkedPorts, encodeMessage } from './testing';
 
-const createPayload = (value = ''): TaggedType<TYPES, 'google.protobuf.Any'> => ({
+// Carries the compat layer's `'@type'` marker for a packed `Any`, which is what a peer decodes and
+// what these tests compare against; it goes when the layer does.
+const createPayload = (value = ''): AnyEnvelope => ({
   '@type': 'google.protobuf.Any',
   'typeUrl': 'dxos.test',
   'value': encodeMessage(value),
