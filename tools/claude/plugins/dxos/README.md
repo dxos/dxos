@@ -223,7 +223,8 @@ The spaces themselves are bound per repo in the committed
 because a repo's projects belong to the same spaces whoever opens it. The file
 carries the allowed `spaces` and the `default` among them; a space it does not
 list is not a candidate. `DX_PROJECT_SPACE` is a guard on top of that: set it,
-and the agent stops if it disagrees with the committed binding.
+and the agent stops if it names a space `spaces` does not list. A listed space
+other than `default` is accepted.
 
 Every directive ends with a `BACKEND:` line naming the store and how to read or
 write it. The verbs, the command file and the skill are all backend-agnostic —
