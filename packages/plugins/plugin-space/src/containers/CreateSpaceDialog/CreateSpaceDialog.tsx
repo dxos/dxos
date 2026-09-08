@@ -77,7 +77,7 @@ export const CreateSpaceDialog = () => {
   );
 
   return (
-    <Dialog.Content>
+    <Dialog.Content data-testid='create-space-dialog'>
       {/* The form spans the whole dialog rather than just its body, so the action row can stay pinned
           below the scrolling fields while still reading the form's context. */}
       <Form.Root

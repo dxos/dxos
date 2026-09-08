@@ -232,22 +232,15 @@ export class AppManager {
   }
 
   async shareSpace(): Promise<void> {
-    // Members is nested under the Settings section in the navtree. Scope
-    // the generic treeItem.toggle / treeItem.heading testids to the
-    // settings/members rows by their row testids, and expand settings
-    // first if its members heading isn't visible yet.
+    // Members is nested under the Settings section, so scope the generic `treeItem.heading` testid
+    // to the members row and expand Settings first when that heading is not showing yet.
     const membersHeading = this.currentWorkspace
       .getByTestId('spacePlugin.members')
       .first()
       .getByTestId('treeItem.heading')
       .first();
     if (!(await membersHeading.isVisible())) {
-      await this.currentWorkspace
-        .getByTestId('spacePlugin.settings')
-        .first()
-        .getByTestId('treeItem.toggle')
-        .first()
-        .click();
+      await this.expandSection('spacePlugin.settings');
     }
     await membersHeading.click();
   }
@@ -300,11 +293,15 @@ export class AppManager {
 
   /** Opens the add-space dialog, submits it, and waits for it to close. */
   async #submitCreateSpaceForm(): Promise<void> {
+    const dialog = this.page.getByTestId('create-space-dialog');
     await this.page.getByTestId('spacePlugin.addSpace').click();
     await this.page.getByTestId('spacePlugin.createSpace').click();
+    await expect(dialog).toBeVisible({ timeout: 15_000 });
 
     const form = this.page.getByTestId('create-space-form');
-    const save = form.getByTestId('save-button');
+    // The action row is pinned outside the scrolling field region, so it is scoped to the dialog,
+    // not to `create-space-form` (which marks the fields alone).
+    const save = this.page.getByTestId('create-space-dialog').getByTestId('save-button');
     // Gate on ENABLED, not merely visible: fields arrive through a Surface lookup and can remount the
     // control mid-click, so waiting for `disabled` to clear absorbs that remount.
     await expect(save).toBeEnabled({ timeout: 15_000 });
@@ -375,12 +372,7 @@ export class AppManager {
       .getByTestId('treeItem.heading')
       .first();
     if (!(await generalHeading.isVisible())) {
-      await this.currentWorkspace
-        .getByTestId('spacePlugin.settings')
-        .first()
-        .getByTestId('treeItem.toggle')
-        .first()
-        .click();
+      await this.expandSection('spacePlugin.settings');
     }
     await generalHeading.click();
   }
@@ -410,14 +402,28 @@ export class AppManager {
     }
   }
 
-  toggleCollectionCollapsed(nth = 0, delay = 100): Promise<void> {
-    return this.getObjectLinks().nth(nth).getByRole('button').first().click({ delay });
+  /** Discloses a row's children, leaving an already-open row alone. */
+  async #expandRow(row: Locator, timeout: number): Promise<void> {
+    const toggle = row.getByTestId('treeItem.toggle').first();
+    if ((await toggle.getAttribute('aria-expanded')) === 'true') {
+      return;
+    }
+    // Hovering the row is what expands it in the graph, and a row with no children yet has a
+    // disabled chevron — which Playwright would wait on forever, since it only moves the mouse
+    // once the target is actionable.
+    await row.hover();
+    await expect(toggle).toBeEnabled({ timeout });
+    await toggle.click();
   }
 
-  async toggleSection(testId: string, delay = 100, timeout = 15_000): Promise<void> {
-    const section = this.currentWorkspace.getByTestId(testId);
+  async expandCollection(nth = 0, timeout = 15_000): Promise<void> {
+    await this.#expandRow(this.getObjectLinks().nth(nth), timeout);
+  }
+
+  async expandSection(testId: string, timeout = 15_000): Promise<void> {
+    const section = this.currentWorkspace.getByTestId(testId).first();
     await section.waitFor({ state: 'attached', timeout });
-    await section.getByRole('button').first().click({ delay });
+    await this.#expandRow(section, timeout);
   }
 
   async createObject({ type, name, nth }: { type: string; name?: string; nth?: number }): Promise<void> {
@@ -428,9 +434,9 @@ export class AppManager {
         .getByTestId(/navtree\.treeItem\.actionsLevel\d+/)
         .first()
         .click();
-      await this.page.keyboard.press('ArrowDown');
-      await this.page.getByTestId('spacePlugin.createObject').last().focus();
-      await this.page.keyboard.press('Enter');
+      // Menu items are clicked, never focused-and-Entered: the menu machine activates whichever
+      // item it has highlighted, and a programmatic `focus()` does not make one highlighted.
+      await this.page.getByTestId('spacePlugin.createObject').last().click();
     } else {
       await this.currentWorkspace.getByTestId('spacePlugin.createObject').first().click();
     }
@@ -438,8 +444,15 @@ export class AppManager {
     const option = this.page.getByTestId(`create-object-form.type.${OBJECT_TYPENAMES[type]}`);
     await option.click({ timeout: 15_000 });
 
+    // Waited for, not sampled: `isVisible()` answers immediately, so a form that has not painted
+    // yet reads as absent and this returns with the dialog still open, stranding the next caller.
+    // Types that create without a form legitimately never show one, hence the bounded wait.
     const objectForm = this.page.getByTestId('create-object-form');
-    if (!(await objectForm.isVisible())) {
+    const hasForm = await objectForm
+      .waitFor({ state: 'visible', timeout: 5_000 })
+      .then(() => true)
+      .catch(() => false);
+    if (!hasForm) {
       return;
     }
 
@@ -447,6 +460,9 @@ export class AppManager {
       await objectForm.getByLabel('Name').fill(name);
     }
     await objectForm.getByTestId('save-button').click();
+    // Reopening the dialog before it has finished closing reuses the instance, which is still on
+    // the form rather than back at the type list, so the next caller must start from a clean one.
+    await objectForm.waitFor({ state: 'detached', timeout: 30_000 });
   }
 
   async navigateToObject(nth = 0, delay = 100): Promise<void> {
@@ -462,10 +478,7 @@ export class AppManager {
       .getByTestId(/navtree\.treeItem\.actionsLevel\d+/)
       .first()
       .click();
-    // TODO(thure): For some reason, actions move around when simulating the mouse in Firefox.
-    await this.page.keyboard.press('ArrowDown');
-    await this.page.getByTestId('spacePlugin.renameObject').last().focus();
-    await this.page.keyboard.press('Enter');
+    await this.page.getByTestId('spacePlugin.renameObject').last().click();
     await this.page.getByTestId('spacePlugin.rename.input').fill(newName);
     await this.page.getByTestId('spacePlugin.rename.input').press('Enter');
     await this.page.mouse.move(0, 0, { steps: 4 });
@@ -477,10 +490,7 @@ export class AppManager {
       .getByTestId(/navtree\.treeItem\.actionsLevel\d+/)
       .first()
       .click();
-    // TODO(thure): For some reason, actions move around when simulating the mouse in Firefox.
-    await this.page.keyboard.press('ArrowDown');
-    await this.page.getByTestId('spacePlugin.deleteObject').last().focus();
-    await this.page.keyboard.press('Enter');
+    await this.page.getByTestId('spacePlugin.deleteObject').last().click();
   }
 
   getObject(nth = 0): Locator {
