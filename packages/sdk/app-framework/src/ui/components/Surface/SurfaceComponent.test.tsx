@@ -528,8 +528,6 @@ const stableMeta = Plugin.makeMeta({
   name: 'SurfaceStableTest',
 });
 
-// Counts renders of the CONTRIBUTED component — the subtree a surface is supposed to fence off —
-// rather than commits of the Surface itself, which re-renders either way.
 const StablePlugin = (counts: { value: number }) =>
   Plugin.define(stableMeta).pipe(
     Plugin.addModule({
@@ -557,13 +555,11 @@ describe('SurfaceComponent data stability', () => {
     const counts = { value: 0 };
     await using harness = await createTestApp({ plugins: [StablePlugin(counts)] });
 
-    // Stands in for an ECHO object: a singleton proxy whose identity survives every mutation.
     const subject = { id: 'x' };
     let bump: () => void = () => {};
     const Host = () => {
       const [, setN] = useState(0);
       bump = () => setN((n) => n + 1);
-      // The shape ~69% of call sites use: a fresh object literal on every host render.
       return <SurfaceComponent type={RoleStable} data={{ subject }} />;
     };
 

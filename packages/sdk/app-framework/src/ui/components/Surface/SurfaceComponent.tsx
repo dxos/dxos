@@ -217,19 +217,10 @@ SurfaceContextProvider.displayName = 'SurfaceContextProvider';
  * inside their contributed component.
  */
 export const SurfaceComponent = memo(
-  ({
-    id: _id,
-    type,
-    data: dataProp,
-    limit,
-    placeholder = DEFAULT_PLACEHOLDER,
-    ...rest
-  }: TypedProps<Role.Role<any>>) => {
-    // Keeps a surface a real memo boundary: almost every call site passes an object literal, so an
-    // unstable `data` re-renders the subtree on every ancestor render. Shallow is the right depth:
-    // the values inside carry stable identities of their own, and a surface subtree stays fresh
-    // through its own subscriptions rather than through renders propagated from above.
-    const data = useStable(dataProp ?? EMPTY_DATA, shallowEqual);
+  ({ id: _id, type, data, limit, placeholder = DEFAULT_PLACEHOLDER, ...rest }: TypedProps<Role.Role<any>>) => {
+    // Shallow is the right depth: an ECHO object is a singleton proxy whose identity survives
+    // mutation, and a surface subtree stays fresh through its own subscriptions.
+    const stableData = useStable(data ?? EMPTY_DATA, shallowEqual);
     const surfaceManager = useSurfaceManager();
     // Subscribe only to this role's contributions: contributing/removing a surface for a
     // different role keeps this bucket referentially stable, so the atom does not re-render us.
@@ -247,7 +238,7 @@ export const SurfaceComponent = memo(
     }, [surfaceManager, pluginManager, effectiveRole]);
 
     // NOTE: The data guard runs per render so the surface re-dispatches on reactive data changes.
-    const matched = matchCandidates(roleCandidates, effectiveRole, data);
+    const matched = matchCandidates(roleCandidates, effectiveRole, stableData);
     const definitions = holdFallbacks(matched, rolePending);
     // `limit != null` (not truthiness) so an explicit `limit={0}` renders nothing.
     const candidates = limit != null ? definitions.slice(0, limit) : definitions;
@@ -259,10 +250,9 @@ export const SurfaceComponent = memo(
       if (!isSurfaceDebugEnabled() || effectiveRole === '') {
         return;
       }
-      // Measured on the raw prop: `data` is stabilized above, so the churn would never be visible.
       const previous = churnRef.current;
-      const churn = previous.data === undefined ? 0 : nextDataChurn(previous.data, dataProp, previous.churn);
-      churnRef.current = { data: dataProp, churn };
+      const churn = previous.data === undefined ? 0 : nextDataChurn(previous.data, data, previous.churn);
+      churnRef.current = { data, churn };
       for (const definition of candidates) {
         surfaceMetrics.recordDispatch(definition.id, effectiveRole, {
           candidates: candidates.length,
@@ -292,7 +282,7 @@ export const SurfaceComponent = memo(
         return placeholder;
       }
       if (DEBUG) {
-        log.warn('no candidates for surface', { role: effectiveRole, data });
+        log.warn('no candidates for surface', { role: effectiveRole, data: stableData });
       }
       return null;
     }
@@ -304,7 +294,7 @@ export const SurfaceComponent = memo(
             key={definition.id}
             id={definition.id}
             role={effectiveRole}
-            data={data}
+            data={stableData}
             limit={limit}
             definition={definition}
             {...rest}
