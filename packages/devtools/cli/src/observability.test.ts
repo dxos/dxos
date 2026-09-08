@@ -31,12 +31,16 @@ describe('CLI observability', () => {
     const namespace = fs.mkdtempSync(path.join(os.tmpdir(), 'dx-identify-test-'));
     const calls: string[] = [];
     const observability = {
-      alias: (did: string, previous?: string) => calls.push(`alias ${previous}->${did}`),
-      identify: (did: string) => calls.push(`identify ${did}`),
-    } as unknown as Parameters<typeof identifySession>[0];
-    const client = { halo: { identity: { get: () => ({ did: DID }) } } } as unknown as Parameters<
-      typeof identifySession
-    >[1];
+      alias: (did: string, previous?: string): void => {
+        calls.push(`alias ${previous}->${did}`);
+      },
+      identify: (did: string): void => {
+        calls.push(`identify ${did}`);
+      },
+    } as Parameters<typeof identifySession>[0];
+    const client = {
+      halo: { identity: { get: (): { did: string } => ({ did: DID }) } },
+    } as Parameters<typeof identifySession>[1];
 
     try {
       await identifySession(observability, client, namespace, INSTALLATION_ID);
@@ -52,10 +56,16 @@ describe('CLI observability', () => {
   test('reports nothing for a profile with no identity', async ({ expect }) => {
     const calls: string[] = [];
     const observability = {
-      alias: () => calls.push('alias'),
-      identify: () => calls.push('identify'),
-    } as unknown as Parameters<typeof identifySession>[0];
-    const client = { halo: { identity: { get: () => undefined } } } as unknown as Parameters<typeof identifySession>[1];
+      alias: (did: string, previous?: string): void => {
+        calls.push('alias');
+      },
+      identify: (did: string): void => {
+        calls.push('identify');
+      },
+    } as Parameters<typeof identifySession>[0];
+    const client = {
+      halo: { identity: { get: (): null => null } },
+    } as Parameters<typeof identifySession>[1];
 
     await identifySession(observability, client, '/nonexistent', undefined);
     expect(calls).to.be.empty;

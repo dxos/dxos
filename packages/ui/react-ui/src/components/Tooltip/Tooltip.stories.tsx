@@ -6,6 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
+import { invariant } from '@dxos/invariant';
 import { random } from '@dxos/random';
 
 import { withTheme } from '../../testing';
@@ -97,7 +98,8 @@ export const TestHover: Story = {
     const tooltip = await waitFor(async () => {
       const element = document.querySelector<HTMLElement>('[role="tooltip"]');
       await expect(element).not.toBeNull();
-      return element!;
+      invariant(element);
+      return element;
     });
     await waitFor(() => expect(tooltip.textContent).toContain('First tip'));
     await expect(first.getAttribute('aria-describedby')).toContain(tooltip.id);

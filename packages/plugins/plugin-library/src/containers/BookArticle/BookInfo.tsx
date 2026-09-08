@@ -124,7 +124,7 @@ export const BookInfo = ({ book }: { book: Book.Book }) => {
       if (paths.length === 0) {
         return;
       }
-      Obj.update(book, () => {
+      Obj.update(book, (book) => {
         for (const path of paths) {
           Obj.setValue(book, SchemaEx.splitJsonPath(path), SchemaEx.getValue(values, path));
         }

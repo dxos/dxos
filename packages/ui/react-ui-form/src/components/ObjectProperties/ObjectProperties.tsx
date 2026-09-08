@@ -108,7 +108,7 @@ export const ObjectProperties = composable<HTMLDivElement, ObjectPropertiesProps
         // Handle other property changes.
         const nonTagPaths = changedPaths.filter((path) => SchemaEx.splitJsonPath(path)[0] !== META_TAGS_KEY);
         if (nonTagPaths.length > 0) {
-          Obj.update(object, () => {
+          Obj.update(object, (object) => {
             for (const path of nonTagPaths) {
               const parts = SchemaEx.splitJsonPath(path);
               const value = Obj.getValue(values as any, parts);

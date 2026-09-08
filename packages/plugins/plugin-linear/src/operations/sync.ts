@@ -140,7 +140,7 @@ const setTaskContainer = Effect.fn('setTaskContainer')(function* (task: Task.Tas
     });
   }
   Obj.update(container, (container) => {
-    container.tasks = [...container.tasks, Ref.make(task)];
+    container.tasks.push(Ref.make(task));
   });
   Obj.setParent(task, container);
 });
@@ -233,7 +233,7 @@ export const upsertMilestone = Effect.fn('upsertMilestone')(function* (
   // Sequence is the `milestones` array; the parent edge only carries deletion cascade.
   if (!taskSet.milestones.some(Ref.hasEntityId(milestone.id))) {
     Obj.update(taskSet, (taskSet) => {
-      taskSet.milestones = [...taskSet.milestones, Ref.make(milestone)];
+      taskSet.milestones.push(Ref.make(milestone));
     });
     Obj.setParent(milestone, taskSet);
   }

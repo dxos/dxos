@@ -23,7 +23,7 @@ export type SchemaTableProps = ThemedClassName<{
  * The field is `presetLabel` rather than `name` because a class-based type entity already has a
  * `name` — its JS class name — so keying off that suppressed the count on every real type row.
  */
-const rowName = (type: any, typename: string | undefined): string =>
+const rowName = (type: { presetLabel?: string }, typename: string | undefined): string =>
   (typeof type.presetLabel === 'string' ? type.presetLabel : undefined) ?? typename ?? '';
 
 export const SchemaTable = ({ classNames, types, objects = {}, label, onClick }: SchemaTableProps) => {
