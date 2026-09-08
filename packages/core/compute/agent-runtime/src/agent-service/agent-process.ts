@@ -242,7 +242,12 @@ export const AgentProcess = (options: AgentProcessOptions) =>
         // and nothing looks again. Locally the same read is served from the resident feed handle, so
         // this never happens off a hosted runtime. Counted rather than flagged so a burst of prompts
         // is not mistaken for one.
-        let unseenWrites = 0;
+        // Held by id, not counted: a resumed process can dequeue an OLDER entry it did not write,
+        // and a bare count would treat that as its own write becoming visible — zeroing the budget
+        // while this incarnation's prompt is still unread, so the next empty read completes the
+        // process and drops it. In memory because it describes this incarnation's writes only; a
+        // later one re-reads the feed from scratch.
+        const unseenWriteIds = new Set<string>();
         let unseenWriteWakes = 0;
 
         const pendingWork = (state: PendingState): boolean =>
@@ -316,19 +321,18 @@ export const AgentProcess = (options: AgentProcessOptions) =>
               yield* reconcileAlarm;
             }),
             enqueueMessage: Effect.fn(function* ({ content }) {
-              yield* sessionStore.enqueueMessage(
-                feed,
-                Message.make({ sender: { role: 'user' }, blocks: [...content] }),
-              );
-              unseenWrites++;
+              const message = Message.make({ sender: { role: 'user' }, blocks: [...content] });
+              yield* sessionStore.enqueueMessage(feed, message);
+              unseenWriteIds.add(message.id);
               yield* ctx.setAlarm(0);
             }),
           }),
           onInput: Effect.fnUntraced(function* (prompt: string | readonly ContentBlock.Any[]) {
             log('agent onInput received', { backlog: toolResults.length });
             const content = typeof prompt === 'string' ? [ContentBlock.Text.make({ text: prompt })] : [...prompt];
-            yield* sessionStore.enqueueMessage(feed, Message.make({ sender: { role: 'user' }, blocks: content }));
-            unseenWrites++;
+            const message = Message.make({ sender: { role: 'user' }, blocks: content });
+            yield* sessionStore.enqueueMessage(feed, message);
+            unseenWriteIds.add(message.id);
             yield* ctx.setAlarm(0);
             log('agent onInput enqueued to feed');
           }),
@@ -369,7 +373,7 @@ export const AgentProcess = (options: AgentProcessOptions) =>
                 const dueAlarm = state.pendingAlarms.find((alarm) => alarm.wakeAt <= now() && !acked.has(alarm.id));
                 if (message !== undefined) {
                   log('agent onAlarm handling', { tag: 'message', id: message.id });
-                  unseenWrites = Math.max(0, unseenWrites - 1);
+                  unseenWriteIds.delete(message.id);
                   unseenWriteWakes = 0;
                   dequeued = message;
                   prompt = [...message.blocks];
@@ -382,14 +386,14 @@ export const AgentProcess = (options: AgentProcessOptions) =>
                       disposition: 'synthetic',
                     }),
                   ];
-                } else if (unseenWrites > 0 && unseenWriteWakes < MAX_UNSEEN_WRITE_WAKES) {
+                } else if (unseenWriteIds.size > 0 && unseenWriteWakes < MAX_UNSEEN_WRITE_WAKES) {
                   // Read-your-writes over an eventually-consistent read: this incarnation appended an
                   // entry the query has not caught up to, so look again shortly rather than conclude
                   // the queue is drained. Bounded, so a write that never materialises degrades to the
                   // idle path instead of waking forever.
                   unseenWriteWakes++;
                   log('agent onAlarm empty queue with an unread write, waking again', {
-                    unseenWrites,
+                    unseenWrites: unseenWriteIds.size,
                     attempt: unseenWriteWakes,
                   });
                   yield* ctx.setAlarm(UNSEEN_WRITE_RETRY_MS);

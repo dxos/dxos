@@ -11,6 +11,7 @@ import { McpServer } from '@dxos/assistant-toolkit';
 import type * as ChatModule from '@dxos/assistant/Chat';
 import { type Database, Filter, Obj, type Registry, Type, URI } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
+import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import { IconButton, Input, Popover, Select, Tabs, Toolbar, useTranslation } from '@dxos/react-ui';
 import { type ChatView } from '@dxos/react-ui-assistant';
 import { Listbox } from '@dxos/react-ui-list';
@@ -178,13 +179,20 @@ const ViewPanel = ({ chat }: Pick<ChatOptionsProps, 'chat'>) => {
 const EnvironmentPanel = ({ chat }: Pick<ChatOptionsProps, 'chat'>) => {
   const { t } = useTranslation(meta.profile.key);
   const [remote, setRemote] = useObject(chat, 'remote');
+  const client = useOptionalCapability(ClientCapabilities.Client);
+  // Offered only where an edge service is configured, which is the same condition that decides
+  // whether `RemoteProcessManager` is the real manager or `layerNoop`: against the noop a spawn has
+  // no `list` or `spawn`, so choosing `remote` would persist a flag the next prompt cannot honour.
+  const environments = client?.config.values.runtime?.services?.edge?.url
+    ? CHAT_ENVIRONMENTS
+    : CHAT_ENVIRONMENTS.filter((environment) => environment !== 'remote');
   const value: ChatEnvironment = remote ? 'remote' : 'local';
   const handleChange = useCallback((value: string) => setRemote(value === 'remote'), [setRemote]);
 
   return (
     <Listbox.Root value={value} onValueChange={handleChange} autoFocus>
       <Listbox.Content aria-label={t('options.environment.title')}>
-        {CHAT_ENVIRONMENTS.map((environment) => (
+        {environments.map((environment) => (
           <Listbox.Item key={environment} id={environment} classNames='px-2 py-1 dx-focus-ring rounded-xs'>
             <Listbox.ItemLabel>{t(`chat-environment.${environment}.label`)}</Listbox.ItemLabel>
             <Listbox.Indicator />

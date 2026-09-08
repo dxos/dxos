@@ -140,6 +140,16 @@ export interface AgentServiceOptions {
   getMcpServers?: () => McpServer.McpServer[];
 }
 
+/**
+ * The `AgentService` layer.
+ *
+ * Requires BOTH process managers: `ProcessManager.Service` runs a session locally, and
+ * `RemoteProcessManager.Service` is what a session asking for `location: 'edge'` is spawned on.
+ * The remote one is required rather than read optionally — a tag a `LayerSpec` does not require is
+ * never in its context, so an optional read always came back empty and edge sessions failed with
+ * the manager present in the app. A host without EDGE satisfies it with
+ * `RemoteProcessManager.layerNoop`.
+ */
 export const layer = (
   opts?: AgentServiceOptions,
 ): Layer.Layer<AgentService, never, ProcessManager.Service | RemoteProcessManager.Service> =>
