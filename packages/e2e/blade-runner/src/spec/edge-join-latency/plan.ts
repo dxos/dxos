@@ -95,11 +95,12 @@ export type EdgeJoinLatencyResult = {
    */
   monotonicGrowth: boolean;
   /**
-   * Whether the clients got their EDGE agents, i.e. whether EDGE redeemed the DELEGATED invitations
-   * rather than the seeder admitting each joiner itself. False only for a `agents: false` run, which
-   * measures the slower fallback — latency is comparable across runs only where this matches.
+   * Whether EDGE redeemed the DELEGATED invitations or the seeder admitted each joiner itself.
+   * `disabled` and `failed` are not the same run: the first deliberately measures the slower
+   * fallback, the second is a broken environment whose numbers mean nothing. Latency is comparable
+   * across runs only where this matches.
    */
-  agent: boolean;
+  agents: 'disabled' | 'provisioned' | 'failed';
 };
 
 export const DEFAULT_SPEC: EdgeJoinLatencySpec = {
@@ -117,6 +118,23 @@ export const resolveSpec = (overrides: Partial<EdgeJoinLatencySpec> = {}): EdgeJ
   ...DEFAULT_SPEC,
   ...overrides,
 });
+
+/**
+ * An EDGE agent could not be provisioned. Distinct from a join failure so the per-joiner fallback
+ * can rethrow it: a client without an agent is a broken precondition, not a slow joiner, and
+ * running the remaining joiners against it only spends minutes producing rows that say the same
+ * thing.
+ */
+class AgentProvisioningError extends Error {
+  static is(err: unknown): err is AgentProvisioningError {
+    return err instanceof AgentProvisioningError;
+  }
+
+  constructor(label: string, options: { cause: unknown }) {
+    super(`EDGE agent could not be provisioned for ${label}`, options);
+    this.name = 'AgentProvisioningError';
+  }
+}
 
 //
 // The measurement.
@@ -178,10 +196,10 @@ export class EdgeJoinLatency implements TestPlan<EdgeJoinLatencySpec, EdgeJoinLa
     const measurements: JoinMeasurement[] = [];
     let spaceId: string | undefined;
     let seedMs = 0;
-    // Starts true for an `agents: true` run and is falsified by the first client that cannot get
-    // one. Never the other way round: a later client's failure has to be able to correct it, or the
-    // artifact reports an agent-backed fleet on a run where one client had no agent.
-    let agentsProvisioned = spec.agents;
+    // Falsified by the first client that cannot get an agent, never the other way round: `disabled`
+    // and `failed` describe different runs, and collapsing them would have the summary blame a
+    // broken environment on a config choice.
+    let agents: EdgeJoinLatencyResult['agents'] = spec.agents ? 'provisioned' : 'disabled';
 
     const spawn = async (label: string): Promise<ReplicantBrain<ClientReplicant>> => {
       const replicant = await env.spawn(ClientReplicant, { platform: spec.platform });
@@ -213,10 +231,8 @@ export class EdgeJoinLatency implements TestPlan<EdgeJoinLatencySpec, EdgeJoinLa
         try {
           await replicant.brain.createAgent();
         } catch (err) {
-          // A joiner's failure is caught below and recorded as its own row, so without this the
-          // run would go on and the artifact would still claim `agent: true`.
-          agentsProvisioned = false;
-          throw err;
+          agents = 'failed';
+          throw new AgentProvisioningError(label, { cause: err });
         }
       }
       return replicant;
@@ -289,6 +305,11 @@ export class EdgeJoinLatency implements TestPlan<EdgeJoinLatencySpec, EdgeJoinLa
             error: settled.ok ? undefined : `digest still differed after ${spec.joinTimeoutMs}ms`,
           });
         } catch (err) {
+          // The fallback is for a joiner that failed to sync — one bad row, the rest still measured.
+          // A missing agent is not that: it is the precondition for every remaining joiner too.
+          if (AgentProvisioningError.is(err)) {
+            throw err;
+          }
           measurements.push({
             joiner,
             admittedMs,
@@ -307,7 +328,7 @@ export class EdgeJoinLatency implements TestPlan<EdgeJoinLatencySpec, EdgeJoinLa
         log.info('joiner measured', { ...measurements[measurements.length - 1] });
       }
 
-      const result = this._summarize(edgeUrl, spec, seedMs, measurements, agentsProvisioned);
+      const result = this._summarize(edgeUrl, spec, seedMs, measurements, agents);
       invariant(
         result.ok,
         `joiners failed to sync: ${measurements
@@ -319,7 +340,7 @@ export class EdgeJoinLatency implements TestPlan<EdgeJoinLatencySpec, EdgeJoinLa
     } finally {
       // In `finally` so the artifacts exist however the run ended: a green/red verdict with no
       // numbers behind it is the one output a CI job must never produce.
-      const summary = this._summarize(edgeUrl, spec, seedMs, measurements, agentsProvisioned);
+      const summary = this._summarize(edgeUrl, spec, seedMs, measurements, agents);
       fs.writeFileSync(resultPath, `${JSON.stringify(summary, null, 2)}\n`);
       fs.writeFileSync(path.join(params.outDir, 'summary.md'), renderSummary(summary));
       unregisterCleanup();
@@ -335,7 +356,7 @@ export class EdgeJoinLatency implements TestPlan<EdgeJoinLatencySpec, EdgeJoinLa
     spec: EdgeJoinLatencySpec,
     seedMs: number,
     measurements: JoinMeasurement[],
-    agent: boolean,
+    agents: EdgeJoinLatencyResult['agents'],
   ): EdgeJoinLatencyResult {
     const ok = measurements.filter((measurement) => measurement.ok);
     const median = (pick: (measurement: JoinMeasurement) => number | undefined): number | undefined => {
@@ -362,7 +383,7 @@ export class EdgeJoinLatency implements TestPlan<EdgeJoinLatencySpec, EdgeJoinLa
       // Compared in join order, not sorted: the question is whether each joiner paid more than the
       // one before it.
       monotonicGrowth: synced.length > 1 && synced.every((value, index) => index === 0 || value > synced[index - 1]),
-      agent,
+      agents,
     };
   }
 
@@ -443,7 +464,11 @@ const renderSummary = (result: EdgeJoinLatencyResult): string => {
     `## ${result.ok ? '✅' : '❌'} Join latency — ${result.objects} objects, ${result.joiners} joiners`,
     '',
     `Against \`${result.edge}\`. Seeded and flushed to EDGE in ${ms(result.seedMs)}.${
-      result.agent ? '' : ' ⚠️ Agents off — the seeder admitted every joiner itself, which is slower.'
+      {
+        provisioned: '',
+        disabled: ' ⚠️ Agents off — the seeder admitted every joiner itself, which is slower.',
+        failed: ' ❌ An EDGE agent could not be provisioned; the run stopped and these numbers are partial.',
+      }[result.agents]
     }`,
     '',
     '| | Median | Share of total |',
