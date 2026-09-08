@@ -189,7 +189,6 @@ export const ArrayField = ({
   const header = (layout !== 'static' || (values && values.length > 0)) && (
     <FormFieldHeader
       label={label}
-      path={SchemaEx.createJsonPath(path ?? [])}
       readonly={readonly}
       add={
         layout !== 'static'

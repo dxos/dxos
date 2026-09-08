@@ -10,48 +10,41 @@ import { safeParseFloat } from '@dxos/util';
 
 import { type FormFieldRendererProps } from '#types';
 
-import { FormFieldLabel } from '../../FormField';
-
 const gridCols = ['grid-cols-1', 'grid-cols-2', 'grid-cols-3', 'grid-cols-4'];
 
 export const TupleField = ({
   binding,
   type,
   readonly,
-  label,
-  jsonPath,
-  getStatus,
   getValue,
   onValueChange,
   onBlur,
 }: FormFieldRendererProps<Record<string, number>> & {
   binding: string[];
 }) => {
-  const { status, error } = getStatus();
-
   // TODO(burdon): Generalize number/float/string, etc.
   const values: Record<string, number> = getValue() ?? {};
 
   return (
-    <Field.Root validationValence={status}>
-      <FormFieldLabel error={error} readonly={readonly} label={label} path={jsonPath} />
-      <div className={mx('grid gap-form-gap', gridCols[binding.length - 1])}>
-        {binding.map((prop) => (
-          <Field.Input
-            key={prop}
-            type='number'
-            disabled={!!readonly}
-            value={values[prop]}
-            onChange={(event) => {
-              onValueChange(type, {
-                ...values,
-                [prop]: safeParseFloat(event.target.value, 0),
-              });
-            }}
-            onBlur={onBlur}
-          />
-        ))}
-      </div>
-    </Field.Root>
+    <div className={mx('grid gap-form-gap', gridCols[binding.length - 1])}>
+      {binding.map((prop) => (
+        <Field.Input
+          key={prop}
+          type='number'
+          disabled={!!readonly}
+          value={values[prop]}
+          onChange={(event) => {
+            onValueChange(type, {
+              ...values,
+              [prop]: safeParseFloat(event.target.value, 0),
+            });
+          }}
+          onBlur={onBlur}
+        />
+      ))}
+    </div>
   );
 };
+
+// Several inputs: the row's label names none of them.
+TupleField.standalone = true;

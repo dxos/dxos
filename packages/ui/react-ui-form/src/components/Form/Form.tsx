@@ -7,46 +7,42 @@ import {
   type FormActionsProps,
   FormContent,
   type FormContentProps,
-  FormError,
-  FormFieldSetContainer,
-  FormGroup,
-  type FormGroupProps,
+  FormErrorText,
   FormLayoutController,
   type FormLayoutProps,
   FormRoot,
   type FormRootProps,
-  FormSection,
-  type FormSectionProps,
   FormSubmit,
   type FormSubmitProps,
   FormViewport,
   type FormViewportProps,
 } from './FormControls';
 import { FormField, FormFieldLabel, type FormFieldProps } from './FormField';
+import { FormFields, type FormFieldsProps } from './FormFields';
+import { FormFieldSet, type FormFieldSetProps } from './FormFieldSet';
 
 export const Form = {
   Root: FormRoot,
   Viewport: FormViewport,
   Content: FormContent,
-  Section: FormSection,
-  Group: FormGroup,
-  FieldSet: FormFieldSetContainer,
+  FieldSet: FormFieldSet,
+  Fields: FormFields,
   Layout: FormLayoutController,
   Label: FormFieldLabel,
   Field: FormField,
   Actions: FormActions,
   Submit: FormSubmit,
-  Error: FormError,
+  ErrorText: FormErrorText,
 };
 
 export type {
   FormActionsProps,
   FormContentProps,
   FormFieldProps,
-  FormGroupProps,
+  FormFieldSetProps,
+  FormFieldsProps,
   FormLayoutProps,
   FormRootProps,
-  FormSectionProps,
   FormSubmitProps,
   FormViewportProps,
 };

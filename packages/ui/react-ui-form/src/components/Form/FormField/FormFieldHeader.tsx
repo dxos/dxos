@@ -9,8 +9,6 @@ import { CompactIconButton } from './FormFieldDispatch';
 
 export type FormFieldHeaderProps = {
   label: string;
-  /** JSON path forwarded to the label as field metadata. */
-  path?: string;
   required?: boolean;
   readonly?: boolean;
   classNames?: string;
@@ -25,11 +23,10 @@ export type FormFieldHeaderProps = {
 /**
  * Header row for a labelled group or list: a label with optional trailing controls (an inline add
  * affordance and/or arbitrary `actions`). Shared by array/list fields ({@link ArrayField}, the view
- * editor) and {@link FormFieldSetContainer}'s disclosure header, so all group/list headers render identically.
+ * editor) and {@link `Form.FieldSet`'s disclosure header, so all group/list headers render identically.
  */
 export const FormFieldHeader = ({
   label,
-  path,
   required,
   readonly,
   classNames,
@@ -43,7 +40,6 @@ export const FormFieldHeader = ({
     label={label}
     required={required}
     readonly={readonly}
-    path={path}
     trigger={trigger}
     button={
       (!readonly && add) || actions ? (

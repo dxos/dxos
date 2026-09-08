@@ -10,7 +10,6 @@ import {
   type ColumnRootProps,
   DIALOG_AUTOFOCUS_ATTRIBUTE,
   Field,
-  Fieldset,
   IconButton,
   type IconButtonProps,
   ScrollArea,
@@ -22,7 +21,6 @@ import {
   useTranslation,
   withColumn,
 } from '@dxos/react-ui';
-import { MarkdownView } from '@dxos/react-ui-markdown';
 import { mx } from '@dxos/ui-theme';
 import { type MakeOptional, type Merge } from '@dxos/util';
 
@@ -38,7 +36,7 @@ import {
   useKeyHandler,
 } from '../../hooks';
 import { formTheme } from './Form.theme';
-import { FormFieldSet, type FormFieldSetProps as NaturalFormFieldSetProps } from './FormFieldSet';
+import { type FormFieldsProps } from './FormFields';
 import { FormLayout, type FormLayoutProps as NaturalFormLayoutProps } from './FormLayout';
 
 //
@@ -48,7 +46,7 @@ import { FormLayout, type FormLayoutProps as NaturalFormLayoutProps } from './Fo
 export type FormRootProps<T extends AnyProperties = AnyProperties> = Merge<
   Omit<FormContextValue<T>, 'form'>,
   Pick<FormHandlerProps<T>, 'schema' | 'autoSave' | 'values' | 'defaultValues' | 'onValidate' | 'onValuesChanged'>,
-  Omit<NaturalFormFieldSetProps<T>, 'path'>,
+  Omit<FormFieldsProps<T>, 'path' | 'schema'>,
   PropsWithChildren<{
     /**
      * Called when the form is submitted and passes validation.
@@ -184,23 +182,6 @@ export const FormContent = composable<HTMLDivElement, FormContentProps>(({ child
 FormContent.displayName = FORM_CONTENT_NAME;
 
 //
-// FieldSet
-//
-
-const FORM_FIELDSET_NAME = 'Form.FieldSet';
-
-export type FormFieldSetContainerProps = ThemedClassName<NaturalFormFieldSetProps<any>>;
-
-/** Context-reading binding for `Form.FieldSet`: pulls the schema + field context off the form and delegates to {@link FormFieldSet}. */
-export const FormFieldSetContainer = ({ classNames, ...props }: FormFieldSetContainerProps) => {
-  const { form, variant: _variant, ...contextProps } = useFormContext(FORM_FIELDSET_NAME);
-
-  return <FormFieldSet schema={form.schema} classNames={classNames} {...contextProps} {...props} />;
-};
-
-FormFieldSetContainer.displayName = FORM_FIELDSET_NAME;
-
-//
 // Layout
 //
 
@@ -281,75 +262,6 @@ export const FormActions = ({ classNames, submitLabel, submitIcon }: FormActions
 FormActions.displayName = FORM_ACTIONS_NAME;
 
 //
-// Section
-//
-
-const FORM_SECTION_NAME = 'Form.Section';
-
-export type FormSectionProps = ThemedClassName<{
-  title?: string;
-  description?: string;
-}>;
-
-/**
- * A titled group of fields: a fieldset named by its heading, so assistive technology announces the
- * title on entering the group and the heading still serves navigation.
- */
-export const FormSection = composable<HTMLFieldSetElement, FormSectionProps>(
-  ({ children, title, description, ...props }, forwardedRef) => {
-    const { variant = 'default' } = useFormContext(FORM_SECTION_NAME);
-    const styles = formTheme.styles({ variant });
-
-    return (
-      <Fieldset.Root {...composableProps(props, { classNames: styles.section() })} ref={forwardedRef}>
-        {title && (
-          // A real `<legend>` as the fieldset's own child: only that names the group, and the heading
-          // inside it still serves navigation. The header gap sits on whichever of legend or
-          // description comes last.
-          <Fieldset.Legend classNames={description ? undefined : styles.sectionHeader()}>
-            <h2 className={styles.sectionTitle()}>{title}</h2>
-          </Fieldset.Legend>
-        )}
-        {description && (
-          <MarkdownView
-            classNames={styles.sectionHeader({ class: styles.sectionDescription() })}
-            content={description}
-          />
-        )}
-        {children}
-      </Fieldset.Root>
-    );
-  },
-);
-
-FormSection.displayName = FORM_SECTION_NAME;
-
-//
-// Group
-//
-
-const FORM_GROUP_NAME = 'Form.Group';
-
-export type FormGroupProps = ThemedClassName<PropsWithChildren>;
-
-/**
- * A bordered card grouping related rows/controls (e.g., an entity card in a list).
- * Layout-only and context-free — unlike `Form.FieldSet` it is not schema-driven.
- */
-export const FormGroup = composable<HTMLDivElement, FormGroupProps>(({ children, ...props }, forwardedRef) => {
-  const { variant = 'default' } = useFormContext(FORM_SECTION_NAME);
-  const styles = formTheme.styles({ variant });
-
-  return (
-    <div {...composableProps(props, { classNames: styles.group() })} ref={forwardedRef}>
-      {children}
-    </div>
-  );
-});
-
-FormGroup.displayName = FORM_GROUP_NAME;
-
-//
 // Submit
 //
 
@@ -388,15 +300,15 @@ export const FormSubmit = ({ classNames, label, icon, disabled }: FormSubmitProp
 FormSubmit.displayName = FORM_SUBMIT_NAME;
 
 //
-// Error
+// ErrorText
 //
 
-const FORM_ERROR_NAME = 'Form.Error';
+const FORM_ERROR_TEXT_NAME = 'Form.ErrorText';
 
-export type FormErrorProps = ThemedClassName<PropsWithChildren>;
+export type FormErrorTextProps = ThemedClassName<PropsWithChildren>;
 
 /** Form-level error/validation message (e.g. a failed submit), styled via the error valence. */
-export const FormError = ({ children, classNames }: FormErrorProps) => {
+export const FormErrorText = ({ children, classNames }: FormErrorTextProps) => {
   if (!children) {
     return null;
   }
@@ -410,4 +322,4 @@ export const FormError = ({ children, classNames }: FormErrorProps) => {
   );
 };
 
-FormError.displayName = FORM_ERROR_NAME;
+FormErrorText.displayName = FORM_ERROR_TEXT_NAME;

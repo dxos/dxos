@@ -38,7 +38,8 @@ export type FormPresentation = 'full' | 'compact' | 'inline' | 'static';
 export type FormFieldStateProps<T = any> = {
   getStatus: () => FormFieldStatus;
   getValue: () => T | undefined;
-  onBlur: (event: FocusEvent<HTMLElement>) => void;
+  /** Marks the field touched, so its error may show; the event is not read. */
+  onBlur: (event?: FocusEvent<HTMLElement>) => void;
   onValueChange: (type: SchemaAST.AST, value: T) => void;
 };
 
@@ -69,7 +70,12 @@ export type FormFieldRendererProps<T = any> = {
   required?: boolean;
 } & FormFieldStateProps<T>;
 
-export type FormFieldRenderer = FC<FormFieldRendererProps>;
+/**
+ * A control the dispatcher places in a `Form.Field` row. `standalone` declares that it holds several
+ * labelled inputs (a coordinate pair), so the row's label is text rather than a `<label>`; `ownsRow`
+ * that it renders its own `Form.Field` (it needs `labelEnd`, say) and is not to be wrapped.
+ */
+export type FormFieldRenderer = FC<FormFieldRendererProps> & { standalone?: boolean; ownsRow?: boolean };
 
 export type FormFieldMap = Record<string, FormFieldRenderer>;
 

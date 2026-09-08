@@ -202,7 +202,7 @@ export const FieldEditor = ({ readonly, projection, field, registry, view, onSav
       onCancel={handleCancel}
     >
       <Form.Content>
-        <Form.FieldSet />
+        <Form.Fields />
         <Form.Actions />
       </Form.Content>
     </Form.Root>

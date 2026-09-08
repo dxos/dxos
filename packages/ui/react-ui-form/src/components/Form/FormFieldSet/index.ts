@@ -1,6 +1,6 @@
 //
-// Copyright 2024 DXOS.org
+// Copyright 2026 DXOS.org
 //
 
 export * from './FormFieldSet';
-export * from './FormFieldSetContainer';
+export * from './FormFieldSetContext';

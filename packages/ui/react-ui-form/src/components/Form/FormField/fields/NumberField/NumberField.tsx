@@ -9,17 +9,19 @@ import { safeParseFloat } from '@dxos/util';
 
 import { type FormFieldRendererProps } from '#types';
 
-import { FormField } from '../../FormField';
+import { FormStaticValue } from '../../FormField';
+import { presentationFor } from '../../presentation';
 import { getNumericConstraints } from './numeric-constraints';
 
 export const NumberField = ({
   type,
+  format,
   readonly,
   placeholder,
+  presentation,
   getValue,
   onValueChange,
   onBlur,
-  ...props
 }: FormFieldRendererProps<number>) => {
   const { min, max, integer } = getNumericConstraints(type);
 
@@ -85,21 +87,21 @@ export const NumberField = ({
     [raw, getValue, onBlur, clamp],
   );
 
+  if (presentationFor(presentation).isStatic) {
+    return <FormStaticValue value={externalValue} format={format} />;
+  }
+
   return (
-    <FormField<number> readonly={readonly} getValue={getValue} {...props}>
-      {() => (
-        <Field.Input
-          type='number'
-          disabled={!!readonly}
-          placeholder={placeholder}
-          value={raw}
-          min={min}
-          max={max}
-          step={integer ? 1 : undefined}
-          onChange={handleChange}
-          onBlur={handleBlur}
-        />
-      )}
-    </FormField>
+    <Field.Input
+      type='number'
+      disabled={!!readonly}
+      placeholder={placeholder}
+      value={raw}
+      min={min}
+      max={max}
+      step={integer ? 1 : undefined}
+      onChange={handleChange}
+      onBlur={handleBlur}
+    />
   );
 };

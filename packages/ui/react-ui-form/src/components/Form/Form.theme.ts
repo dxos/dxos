@@ -16,15 +16,16 @@ const formStyles = tv({
     // Bottom padding on the body, so the last field never sits flush against its host's edge
     // (a form in a card, a dialog body, a scrolled panel all need it).
     content: 'pb-form-padding',
-    section: 'flex flex-col py-form-section-gap first:pt-0',
-    group: 'flex flex-col gap-trim-md p-trim-md border border-separator rounded-sm',
-    sectionHeader: '',
-    sectionTitle: 'text-lg',
-    sectionDescription: 'text-description',
     // A `<fieldset>`: laid out as a column so its legend (floated by the fieldset theme) is a child
-    // in flow rather than the browser's border-drawn legend.
+    // in flow rather than the browser's border-drawn legend. The depth variant decides the chrome.
     fieldSet: 'flex flex-col',
     fieldSetLegend: 'w-full',
+    fieldSetTitle: '',
+    fieldSetDescription: 'text-description',
+    // Padding under whichever of legend or description comes last.
+    fieldSetHeader: '',
+    // The folding body of a collapsible field set.
+    fieldSetBody: 'flex flex-col',
     field: '',
     // Columns: label (fills) → optional `labelEnd` readout → error icon (or its spacer) → optional trailing `button`.
     // Height comes from the label cell (`Field.Label` is a control-height row); this only lays the
@@ -38,28 +39,12 @@ const formStyles = tv({
     actions: 'grid grid-flow-col gap-form-gap auto-cols-fr py-form-padding',
     // Standalone submit row (full-width primary button).
     submit: 'flex w-full pt-form-padding',
-    // Collapsible field-set body: indented column of sub-fields.
-    fieldSetBody: 'flex flex-col px-trim-sm pb-trim-sm',
-    // Bordered container wrapping a collapsible nested group, plus its top spacing.
-    fieldSetBox: 'flex flex-col border border-subdued-separator rounded-sm',
-    fieldSetBoxOuter: '',
   },
   variants: {
     variant: {
       default: {},
       settings: {
         content: 'dx-document',
-        // Gap on the section spaces its direct children — section title/description and, for action
-        // panels, the `Form.Field`s placed directly in the section (which have no `fieldSet` wrapper).
-        section: 'py-form-section-gap! gap-trim-md',
-        sectionHeader: 'pb-form-section-gap',
-        sectionTitle: 'px-trim-md text-xl',
-        sectionDescription: 'px-trim-md',
-        // No top padding: the section gap already separates the field set from the title above it.
-        fieldSet: 'flex flex-col gap-trim-md',
-        // Nested groups render their sub-fields through `fieldSetBody`, so it needs the same gap as
-        // `fieldSet` — otherwise fields inside a group sit flush while their top-level siblings don't.
-        fieldSetBody: 'flex flex-col gap-trim-md px-trim-sm pb-trim-sm',
         field: mx(
           'grid',
           'grid-cols-1 [grid-template-areas:"header""description""control""validation"]',
@@ -79,9 +64,43 @@ const formStyles = tv({
         fieldValidation: '[grid-area:validation]',
       },
     },
+    // A top-level field set is a titled section; a nested one is an indented, bordered group.
+    depth: {
+      root: {
+        fieldSet: 'py-form-section-gap first:pt-0',
+        fieldSetTitle: 'text-lg',
+      },
+      nested: {
+        fieldSet: 'border border-subdued-separator rounded-sm px-trim-sm pb-trim-sm',
+      },
+    },
   },
+  compoundVariants: [
+    {
+      variant: 'settings',
+      depth: 'root',
+      class: {
+        // The gap spaces the section's direct children: its header and every field or group in it.
+        fieldSet: 'py-form-section-gap! gap-trim-md',
+        fieldSetHeader: 'pb-form-section-gap',
+        fieldSetTitle: 'px-trim-md text-xl',
+        fieldSetDescription: 'px-trim-md',
+        fieldSetBody: 'gap-trim-md',
+      },
+    },
+    {
+      variant: 'settings',
+      depth: 'nested',
+      class: {
+        // The same gap as the root, or fields inside a group sit flush while their siblings do not.
+        fieldSet: 'gap-trim-md',
+        fieldSetBody: 'gap-trim-md',
+      },
+    },
+  ],
   defaultVariants: {
     variant: 'default',
+    depth: 'root',
   },
 });
 

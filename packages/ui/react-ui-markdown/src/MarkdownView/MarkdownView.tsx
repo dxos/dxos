@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { type PropsWithChildren } from 'react';
+import React, { type ComponentPropsWithRef } from 'react';
 import ReactMarkdown, { type Options as ReactMarkdownOptions } from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 
@@ -11,10 +11,10 @@ import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { mx } from '@dxos/ui-theme';
 
 export type MarkdownViewProps = ThemedClassName<
-  PropsWithChildren<{
+  ComponentPropsWithRef<'div'> & {
     content?: string;
     components?: ReactMarkdownOptions['components'];
-  }>
+  }
 >;
 
 /**
@@ -23,9 +23,17 @@ export type MarkdownViewProps = ThemedClassName<
  * markdown -> remark -> [mdast -> remark plugins] -> [hast -> rehype plugins] -> components -> react elements.
  * Consider using @dxos/react-ui-editor.
  */
-export const MarkdownView = ({ classNames, children, components, content = '' }: MarkdownViewProps) => {
+// Spreads the rest so a parent rendering it `asChild` (a fieldset's helper text) lands its attributes here.
+export const MarkdownView = ({
+  classNames,
+  className,
+  children,
+  components,
+  content = '',
+  ...props
+}: MarkdownViewProps) => {
   return (
-    <div className={mx(classNames)}>
+    <div {...props} className={mx(classNames, className)}>
       <ReactMarkdown remarkPlugins={[remarkGfm]} skipHtml components={{ ...defaultComponents, ...components }}>
         {content}
       </ReactMarkdown>
