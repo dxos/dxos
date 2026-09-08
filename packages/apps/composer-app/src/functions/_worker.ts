@@ -5,6 +5,7 @@
 // Import from the focused leaf modules rather than the `../util` barrel: the barrel re-exports
 // modules (config/halo/storage) that pull Automerge's wasm into this Cloudflare Worker bundle, which
 // esbuild cannot load.
+import { IMMUTABLE_CACHE_CONTROL, isHashedAssetPath, isMissingAsset } from '../util/assets';
 import { FEEDBACK_LOGS_PATH, LOG_STORE_MAX_BYTES } from '../util/constants';
 import { corsHeaders, isAllowedOrigin, nativeOrigins } from '../util/cors';
 
@@ -12,6 +13,11 @@ type Env = {
   ASSETS: Fetcher;
   APPLE_TEAM_ID?: string;
   ENVIRONMENT?: string;
+  /**
+   * Assets from previous builds, keyed by their path. Optional: while it is unbound the Worker
+   * behaves as if every previous build were gone, which is the behaviour that predates it.
+   */
+  ASSET_ARCHIVE?: R2Bucket;
   FEEDBACK_LOGS?: R2Bucket;
   SIGNOZ_INGEST_URL?: string;
   SIGNOZ_INGESTION_KEY?: string;
@@ -266,6 +272,95 @@ const handleWellKnown = (request: Request, document: object | undefined): Respon
   });
 };
 
+/**
+ * Serve an asset a previous build shipped, from the retention bucket.
+ *
+ * A deploy replaces the asset manifest wholesale, so the moment a new version goes live every chunk
+ * the previous build owned stops resolving — and a tab open across that deploy still imports them.
+ * Every deploy mirrors its `assets/` into this bucket, keyed by path, so those requests keep working
+ * for the environment's retention window.
+ *
+ * Returns `undefined` when there is nothing to serve, leaving the caller to 404: the bucket may be
+ * unbound, and a hit is by definition the uncommon path — the live manifest answers everything the
+ * current build references.
+ */
+const serveArchivedAsset = async (request: Request, env: Env, url: URL): Promise<Response | undefined> => {
+  if (!env.ASSET_ARCHIVE || !url.pathname.startsWith('/assets/')) {
+    return undefined;
+  }
+
+  // Keys are stored without the leading slash so the bucket listing reads as a path.
+  const key = url.pathname.slice(1);
+  const object = request.method === 'HEAD' ? await env.ASSET_ARCHIVE.head(key) : await env.ASSET_ARCHIVE.get(key);
+  if (!object) {
+    return undefined;
+  }
+
+  const headers = new Headers();
+  object.writeHttpMetadata(headers);
+  headers.set('ETag', object.httpEtag);
+  // Same reasoning as the live path: these are content-hashed, so they can never change under a
+  // client. Only the flat output is hashed, but the archive holds nothing else.
+  headers.set('Cache-Control', IMMUTABLE_CACHE_CONTROL);
+  // Distinguishes a retention hit from a live one in the logs, which is how we learn whether the
+  // window is long enough without instrumenting the client.
+  headers.set('X-Asset-Source', 'archive');
+
+  return new Response('body' in object ? object.body : null, { status: 200, headers });
+};
+
+/**
+ * Serve a static asset, correcting two things the asset server does not do for us.
+ *
+ * `not_found_handling: "single-page-application"` answers EVERY unmatched path with `index.html` and a
+ * 200, asset paths included. A chunk dropped by a later deploy therefore resolves to an HTML document
+ * with a success status, and the browser reports a module parse or MIME failure rather than a missing
+ * file — which is why a stale tab's lazy import reads as an unrelated crash. Subresource requests that
+ * name a file get a real 404 instead.
+ *
+ * The check is gated on `Sec-Fetch-Mode` rather than on the path alone: a navigation must keep the SPA
+ * fallback whatever its URL looks like, so a client-side route containing a dot cannot be mistaken for
+ * a missing file.
+ *
+ * Content-hashed assets are also permanently immutable, yet Cloudflare's documented default for static
+ * assets is `max-age=0, must-revalidate` — a conditional request per chunk on every load and on every
+ * service worker install, where the precache fetches ~4,200 entries through the HTTP cache. `_headers`
+ * cannot override this while the Worker has a `main`, so the header is set here.
+ */
+const serveAsset = async (request: Request, env: Env): Promise<Response> => {
+  const url = new URL(request.url);
+  const response = await env.ASSETS.fetch(request);
+
+  if (
+    isMissingAsset({
+      status: response.status,
+      pathname: url.pathname,
+      secFetchMode: request.headers.get('Sec-Fetch-Mode'),
+      contentType: response.headers.get('Content-Type'),
+    })
+  ) {
+    const archived = await serveArchivedAsset(request, env, url);
+    return (
+      archived ??
+      new Response('Not found', {
+        status: 404,
+        headers: { 'Content-Type': 'text/plain', 'Cache-Control': 'no-store' },
+      })
+    );
+  }
+
+  if (isHashedAssetPath(url.pathname)) {
+    // Headers on a fetched Response are immutable, so the response is rebuilt rather than patched.
+    // `body` is passed through unread to keep it streaming, and the status is preserved so a 304 or a
+    // range response survives.
+    const headers = new Headers(response.headers);
+    headers.set('Cache-Control', IMMUTABLE_CACHE_CONTROL);
+    return new Response(response.body, { status: response.status, statusText: response.statusText, headers });
+  }
+
+  return response;
+};
+
 const OTEL_PREFIX = '/api/otel';
 const OTEL_SIGNALS = new Set(['/v1/traces', '/v1/logs', '/v1/metrics']);
 
@@ -388,7 +483,7 @@ const handler: ExportedHandler<Env> = {
       }
     }
 
-    return env.ASSETS.fetch(request);
+    return serveAsset(request, env);
   },
 };
 

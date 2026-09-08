@@ -53,11 +53,13 @@ import {
   PARAM_SAFE_MODE,
   type Profiler,
   WorkerLogProcessor,
+  clearChunkRecovery,
   defaultStorageIsEmpty,
   downloadLogs,
   initializeObservability,
   isFalse,
   isTrue,
+  readChunkRecovery,
   runStorageResetMigration,
   setSafeModeUrl,
   setupConfig,
@@ -407,7 +409,19 @@ const main = async () => {
       if (startupFailureReported) {
         return;
       }
-      captureStartup('composer.startup', 'ready');
+      // A boot that follows a chunk-recovery reload reports it on the startup event rather than a
+      // separate one, so the rate is filterable against the same denominator. Released only here, on
+      // a boot that actually succeeded: clearing it after a failure would re-arm the reload for a
+      // build broken by something a reload cannot fix.
+      const recovery = readChunkRecovery();
+      captureStartup(
+        'composer.startup',
+        'ready',
+        recovery && { chunkRecovered: true, chunkRecoveryReason: recovery.reason },
+      );
+      if (recovery) {
+        clearChunkRecovery();
+      }
     },
     { once: true },
   );

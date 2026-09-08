@@ -2,6 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
+export * from './chunk-recovery';
 export * from './config';
 export * from './constants';
 export * from './dev-rss-banner';
