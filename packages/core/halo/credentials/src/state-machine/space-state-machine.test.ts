@@ -25,17 +25,6 @@ import {
 import { createCredential, getCredentialAssertion, subjectIdOf, verifyCredential } from '../credentials';
 import { type SpaceState, SpaceStateMachine } from './space-state-machine';
 
-// The keychain a device signs with is the space's own AuthorizedDevice credential for it.
-const deviceAuthorization = (state: SpaceState, deviceKey: PublicKey): Credential => {
-  const credential = state.credentials.find(
-    (candidate) =>
-      getCredentialAssertion(candidate).$typeName === 'dxos.halo.credentials.AuthorizedDevice' &&
-      subjectIdOf(candidate).equals(deviceKey),
-  );
-  invariant(credential, 'Device is not authorized in this space.');
-  return credential;
-};
-
 describe('SpaceStateMachine', () => {
   test('basic space creation', async () => {
     const keyring = new Keyring();
@@ -570,3 +559,14 @@ describe('SpaceStateMachine', () => {
     expect(spaceState.feeds.size).toEqual(1);
   });
 });
+
+// The keychain a device signs with is the space's own AuthorizedDevice credential for it.
+const deviceAuthorization = (state: SpaceState, deviceKey: PublicKey): Credential => {
+  const credential = state.credentials.find(
+    (candidate) =>
+      getCredentialAssertion(candidate).$typeName === 'dxos.halo.credentials.AuthorizedDevice' &&
+      subjectIdOf(candidate).equals(deviceKey),
+  );
+  invariant(credential, 'Device is not authorized in this space.');
+  return credential;
+};

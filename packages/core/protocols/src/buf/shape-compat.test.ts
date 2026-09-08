@@ -535,6 +535,16 @@ describe('a bare Any as the schema itself', () => {
     });
   });
 
+  test('a sparse array slot becomes null too', ({ expect }) => {
+    // A hole is not `undefined` in the eyes of `Array.prototype.map`, which skips it and leaves the
+    // slot absent; `fromJson` then reads it back as `undefined` and rejects the payload.
+    const encoded = encodeCompat(AnySchema, { '@type': 'google.protobuf.Struct', 'values': new Array(1) });
+    expect(decodeCompat(AnySchema, encoded)).to.deep.equal({
+      '@type': 'google.protobuf.Struct',
+      'values': [null],
+    });
+  });
+
   test('a payload without an @type is rejected rather than silently emptied', ({ expect }) => {
     expect(() => encodeCompat(AnySchema, { data: 'no type' })).to.throw(/without an '@type'/);
   });

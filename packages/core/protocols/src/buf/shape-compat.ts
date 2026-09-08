@@ -161,7 +161,9 @@ const isPreservedAny = (field: DescField, options: CompatOptions): boolean =>
  */
 const asJsonValue = (value: unknown): unknown => {
   if (Array.isArray(value)) {
-    return value.map((entry) => (entry === undefined ? null : asJsonValue(entry)));
+    // `Array.from`, not `map`: `map` preserves a sparse slot as a hole, which `fromJson` then reads
+    // back as `undefined` and rejects. A hole is `null` in JSON, and `null` is what `ListValue` holds.
+    return Array.from(value, (entry) => (entry === undefined ? null : asJsonValue(entry)));
   }
   if (value !== null && typeof value === 'object') {
     return Object.fromEntries(
