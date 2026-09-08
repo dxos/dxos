@@ -19,6 +19,7 @@ import { AiService, OpaqueToolkit } from '@dxos/ai';
 import {
   AgentRequestBegin,
   AgentRequestEnd,
+  AiContext,
   Alarm,
   HarnessControl,
   type PendingState,
@@ -35,6 +36,7 @@ import * as Credential from '@dxos/compute/Credential';
 import * as McpServer from '@dxos/compute/McpServer';
 import * as Operation from '@dxos/compute/Operation';
 import * as Process from '@dxos/compute/Process';
+import * as Skill from '@dxos/compute/Skill';
 import * as StorageService from '@dxos/compute/StorageService';
 import * as Trace from '@dxos/compute/Trace';
 import { Annotation, Database, Feed, Obj, Ref, Registry } from '@dxos/echo';
@@ -114,7 +116,11 @@ export const AgentProcess = (options: AgentProcessOptions) =>
       // (`Filter.type(Message)`/`Filter.type(Alarm)`), so without these registered every read comes
       // back empty on a host that did not happen to register them itself: the prompt appends fine and
       // the agent then finds nothing to do. `Chat`/`Feed` are resolved by DXN at startup.
-      types: [Chat.Chat, Feed.Feed, Message.Message, Alarm.Alarm],
+      // `AiContext.Binding` and `Skill` belong here for the same reason the rest do: the host
+      // registers exactly these with the process's database, and a typed query for a type it does
+      // not know matches nothing. Without them a hosted agent reads its own skill bindings back
+      // empty and runs every turn with an EMPTY TOOLKIT — the model can only answer in prose.
+      types: [Chat.Chat, Feed.Feed, Message.Message, Alarm.Alarm, AiContext.Binding, Skill.Skill],
       services: [
         Database.Service,
         OpaqueToolkit.OpaqueToolkitProvider,
