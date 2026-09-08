@@ -136,12 +136,6 @@
       "path": "packages/common/display-name/tsconfig.json"
     },
     {
-      "path": "tools/dx-build/tsconfig.json"
-    },
-    {
-      "path": "tools/dx-compile/tsconfig.json"
-    },
-    {
       "path": "tools/dx-tools/tsconfig.json"
     },
     {
@@ -706,9 +700,6 @@
       "path": "packages/ui/react-primitives/react-hooks/tsconfig.json"
     },
     {
-      "path": "packages/ui/react-primitives/react-input/tsconfig.json"
-    },
-    {
       "path": "packages/ui/react-primitives/react-list/tsconfig.json"
     },
     {
@@ -818,9 +809,6 @@
     },
     {
       "path": "packages/ui/react-ui-table/tsconfig.json"
-    },
-    {
-      "path": "packages/ui/react-ui-tabs/tsconfig.json"
     },
     {
       "path": "packages/ui/react-ui-task/tsconfig.json"

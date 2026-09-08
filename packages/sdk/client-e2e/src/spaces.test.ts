@@ -4,7 +4,7 @@
 
 import { describe, expect, onTestFinished, test } from 'vitest';
 
-import { Trigger, asyncTimeout, latch, sleep } from '@dxos/async';
+import { Trigger, asyncTimeout, latch } from '@dxos/async';
 import { Client } from '@dxos/client';
 import { type Space, SpaceProperties } from '@dxos/client-protocol';
 import { performInvitation } from '@dxos/client-services/testing';
@@ -24,9 +24,11 @@ import { Serializer } from '@dxos/echo-client';
 import { getObjectCore } from '@dxos/echo-client/testing';
 import { EncodedReference } from '@dxos/echo-protocol';
 import { TestSchema as TestSchema$ } from '@dxos/echo/testing';
+import { invariant } from '@dxos/invariant';
 import { DXN, SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { MembershipPolicy } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { toPublicKey } from '@dxos/protocols/buf';
+import { MembershipPolicy } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { range } from '@dxos/util';
 
 describe('Spaces', () => {
@@ -115,7 +117,7 @@ describe('Spaces', () => {
     await client.destroy();
   });
 
-  test('post and listen to messages', async () => {
+  test('post and listen to messages', { timeout: 60_000 }, async () => {
     const [client1, client2] = await createInitializedClients(2);
 
     log('initialized');
@@ -125,7 +127,10 @@ describe('Spaces', () => {
     const [, { invitation: guestInvitation }] = await Promise.all(
       performInvitation({ host: space1, guest: client2.spaces }),
     );
-    const space2 = await waitForSpace(client2, guestInvitation!.spaceKey!, {
+    invariant(guestInvitation);
+    const guestSpaceKey = toPublicKey(guestInvitation.spaceKey);
+    invariant(guestSpaceKey);
+    const space2 = await waitForSpace(client2, guestSpaceKey, {
       ready: true,
     });
 
@@ -149,7 +154,9 @@ describe('Spaces', () => {
       await space1.postMessage('goodbye', { data: 'Goodbye' });
     }
 
-    await asyncTimeout(Promise.all([hello.wait(), goodbye.wait()]), 200);
+    // Guards against a hang, so it is generous: two peers replicating is not a latency assertion, and
+    // both 200ms and 2s were under the round trip's own cost on a loaded runner.
+    await asyncTimeout(Promise.all([hello.wait(), goodbye.wait()]), 30_000);
   });
 
   // Trying to read from the feed, even if the range is not set to be downloaded, will trigger a download.
@@ -178,7 +185,7 @@ describe('Spaces', () => {
     {
       // Create mutations and epoch.
       for (const i of range(amount)) {
-        const expando = createObject({ id: i.toString(), data: i.toString() });
+        const expando = Obj.make(TestSchema$.Expando, { id: i.toString(), data: i.toString() });
         space1.db.add(expando);
       }
       // Wait to process all mutations.
@@ -207,7 +214,7 @@ describe('Spaces', () => {
 
     {
       // Create more mutations on first peer.
-      const expando = createObject({ id: 'another one', data: 'something' });
+      const expando = Obj.make(TestSchema$.Expando, { id: 'another one', data: 'something' });
       space1.db.add(expando);
 
       // Wait to process new mutation on second peer.
@@ -240,7 +247,7 @@ describe('Spaces', () => {
 
     const space = await client.spaces.create();
 
-    const obj = space.db.add(createObject({ data: 'test' }));
+    const obj = space.db.add(Obj.make(TestSchema$.Expando, { data: 'test' }));
     expect(getSpace(obj)).to.equal(space);
   });
 
@@ -250,7 +257,7 @@ describe('Spaces', () => {
 
     const space = await client.spaces.create();
 
-    const { id } = space.db.add(createObject({ data: 'test' }));
+    const { id } = space.db.add(Obj.make(TestSchema$.Expando, { data: 'test' }));
     await space.db.flush();
 
     await space.close();
@@ -292,7 +299,7 @@ describe('Spaces', () => {
     await client1.halo.createIdentity({ displayName: 'test-user' });
 
     const space1 = await client1.spaces.create();
-    const obj = space1.db.add(createObject({ data: 'test' }));
+    const obj = space1.db.add(Obj.make(TestSchema$.Expando, { data: 'test' }));
     await space1.db.flush();
 
     const space2 = await waitForSpace(client2, space1.key, { ready: true });
@@ -341,7 +348,7 @@ describe('Spaces', () => {
 
     // Now both clients have the space open.
     // Client 1 creates an object.
-    const obj = space1.db.add(createObject({ data: 'test-reactive' }));
+    const obj = space1.db.add(Obj.make(TestSchema$.Expando, { data: 'test-reactive' }));
     await space1.db.flush();
 
     // Client 2 should see the object via reactive notification.
@@ -424,7 +431,13 @@ describe('Spaces', () => {
     const sharedDoc = bobSharedSpace.db.add(createDocument());
 
     await waitForObject(aliceSharedSpace, sharedDoc);
-    await sleep(50);
+
+    // Anchor on a positive signal instead of a fixed delay: a marker created after
+    // `bobPersonalDoc` that DOES replicate bounds the window in which any (incorrect)
+    // replication of `bobPersonalDoc` would also have arrived.
+    const marker = bobSharedSpace.db.add(createDocument());
+    await waitForObject(aliceSharedSpace, marker);
+
     expect(aliceSharedSpace.db.getObjectById(bobPersonalDoc.id)).toBeUndefined();
   });
 
@@ -435,13 +448,19 @@ describe('Spaces', () => {
     // Eve should not gain transitive access to the document created by bob in space A
     const [aliceSpaceA, bobSpaceA] = await createSharedSpace(alice, bob);
     const doc1 = bobSpaceA.db.add(createDocument());
-    const [__, eveSpaceB] = await createSharedSpace(bob, eve);
+    const [bobSpaceB, eveSpaceB] = await createSharedSpace(bob, eve);
 
     // Create a document in a space to which Eve shouldn't have access.
     const doc2 = bobSpaceA.db.add(createDocument());
 
     await Promise.all([doc1, doc2].map((doc) => waitForObject(aliceSpaceA, doc)));
-    await sleep(50);
+
+    // Anchor on a positive signal instead of a fixed delay: a marker created in the
+    // bob/eve shared space after doc1/doc2 bounds the window in which any (incorrect)
+    // transitive replication of doc1/doc2 into eveSpaceB would also have arrived.
+    const marker = bobSpaceB.db.add(createDocument());
+    await waitForObject(eveSpaceB, marker);
+
     [doc1, doc2].forEach((doc) => expect(eveSpaceB.db.getObjectById(doc.id)).toBeUndefined());
   });
 
@@ -491,8 +510,8 @@ describe('Spaces', () => {
     const spaceA = await client.spaces.create();
     const spaceB = await client.spaces.create();
 
-    const objA = spaceA.db.add(createObject({ data: 'object A' }));
-    const objB = spaceB.db.add(createObject({ data: 'object B' }));
+    const objA = spaceA.db.add(Obj.make(TestSchema$.Expando, { data: 'object A' }));
+    const objB = spaceB.db.add(Obj.make(TestSchema$.Expando, { data: 'object B' }));
 
     await spaceA.db.flush();
     await spaceB.db.flush();
@@ -540,7 +559,9 @@ describe('Spaces', () => {
 
     const hostSpace = await host.spaces.create();
     await hostSpace.waitUntilReady();
-    const hostRoot = hostSpace.db.add(createObject({ entries: [Ref.make(createObject({ name: 'first' }))] }));
+    const hostRoot = hostSpace.db.add(
+      Obj.make(TestSchema$.Expando, { entries: [Ref.make(Obj.make(TestSchema$.Expando, { name: 'first' }))] }),
+    );
 
     await Promise.all(performInvitation({ host: hostSpace, guest: guest.spaces }));
     const guestSpace = await waitForSpace(guest, hostSpace.key, {
@@ -562,7 +583,7 @@ describe('Spaces', () => {
       onTestFinished(() => unsub());
 
       Obj.update(hostRoot, (hostRoot) => {
-        hostRoot.entries.push(Ref.make(createObject({ name: 'second' })));
+        hostRoot.entries.push(Ref.make(Obj.make(TestSchema$.Expando, { name: 'second' })));
       });
       await done.wait({ timeout: 1_000 });
     }
@@ -601,8 +622,8 @@ describe('Spaces', () => {
     const feedObj = space.db.add(Feed.make({}));
     await space.db.flush();
     await space.db.appendToFeed(feedObj, [
-      createObject({ name: 'queue-item-1' }),
-      createObject({ name: 'queue-item-2' }),
+      Obj.make(TestSchema$.Expando, { name: 'queue-item-1' }),
+      Obj.make(TestSchema$.Expando, { name: 'queue-item-2' }),
     ]);
 
     const archive = await space.internal.export();
@@ -665,8 +686,8 @@ describe('Spaces', () => {
     const feedDXN = Feed.getFeedUri(feedObj);
     expect(feedDXN).toBeDefined();
     await space.db.appendToFeed(feedObj, [
-      createObject({ name: 'queue-item-1' }),
-      createObject({ name: 'queue-item-2' }),
+      Obj.make(TestSchema$.Expando, { name: 'queue-item-1' }),
+      Obj.make(TestSchema$.Expando, { name: 'queue-item-2' }),
     ]);
 
     const archive = await space.internal.export({ format: SpacesService.SpaceArchiveFormat.enums.JSON });
@@ -703,7 +724,10 @@ describe('Spaces', () => {
     await space.db.flush();
     const feedDXN = Feed.getFeedUri(feedObj);
     expect(feedDXN).toBeDefined();
-    await space.db.appendToFeed(feedObj, [createObject({ name: 'msg-1' }), createObject({ name: 'msg-2' })]);
+    await space.db.appendToFeed(feedObj, [
+      Obj.make(TestSchema$.Expando, { name: 'msg-1' }),
+      Obj.make(TestSchema$.Expando, { name: 'msg-2' }),
+    ]);
 
     // Export as JSON, import on client 2.
     const archive = await space.internal.export({ format: SpacesService.SpaceArchiveFormat.enums.JSON });
@@ -741,7 +765,7 @@ describe('Spaces', () => {
     // Create source space with objects.
     const sourceSpace = await client.spaces.create({ name: 'Source' });
     await sourceSpace.waitUntilReady();
-    const obj = sourceSpace.db.add(createObject({ name: 'test-object' }));
+    const obj = sourceSpace.db.add(Obj.make(TestSchema$.Expando, { name: 'test-object' }));
     await sourceSpace.db.flush();
 
     // Export source space.
@@ -771,13 +795,16 @@ describe('Spaces', () => {
     // Create source space with Feed + queue messages.
     const sourceSpace = await client.spaces.create({ name: 'Source' });
     await sourceSpace.waitUntilReady();
-    const obj = sourceSpace.db.add(createObject({ name: 'doc-in-source' }));
+    const obj = sourceSpace.db.add(Obj.make(TestSchema$.Expando, { name: 'doc-in-source' }));
     const feedObj = sourceSpace.db.add(Feed.make({ name: 'test-feed', namespace: 'data' }));
     await sourceSpace.db.flush();
 
     const feedURI = Feed.getFeedUri(feedObj);
     expect(feedURI).toBeDefined();
-    await sourceSpace.db.appendToFeed(feedObj, [createObject({ name: 'msg-1' }), createObject({ name: 'msg-2' })]);
+    await sourceSpace.db.appendToFeed(feedObj, [
+      Obj.make(TestSchema$.Expando, { name: 'msg-1' }),
+      Obj.make(TestSchema$.Expando, { name: 'msg-2' }),
+    ]);
 
     // Export: ECHO objects + feed data.
     const serializer = new Serializer();
@@ -842,7 +869,7 @@ describe('Spaces', () => {
     // Create source space.
     const sourceSpace = await client.spaces.create({ name: 'Source' });
     await sourceSpace.waitUntilReady();
-    const obj = sourceSpace.db.add(createObject({ name: 'old-format-obj' }));
+    const obj = sourceSpace.db.add(Obj.make(TestSchema$.Expando, { name: 'old-format-obj' }));
     await sourceSpace.db.flush();
 
     // Export without feeds (old format).
@@ -915,10 +942,6 @@ describe('Spaces', () => {
       title: 'Test document',
       content: Ref.make(text),
     });
-  };
-
-  const createObject = <T extends {}>(props: T) => {
-    return Obj.make(TestSchema$.Expando, props);
   };
 
   const waitForObject = async (space: Space, object: Obj.Unknown) => {

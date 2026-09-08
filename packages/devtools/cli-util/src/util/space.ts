@@ -14,7 +14,7 @@ import { type Space } from '@dxos/client/echo';
 import { Database, type Key } from '@dxos/echo';
 import { BaseError, type BaseErrorOptions } from '@dxos/errors';
 import { log } from '@dxos/log';
-import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
+import { EdgeReplicationSetting } from '@dxos/protocols/buf/dxos/echo/metadata_pb';
 import { isBun } from '@dxos/util';
 
 import { CommandConfig } from '../services';

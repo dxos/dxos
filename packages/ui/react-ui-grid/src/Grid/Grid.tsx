@@ -3,7 +3,6 @@
 //
 
 import { type EventName, createComponent } from '@lit/react';
-import { useControllableState } from '@radix-ui/react-use-controllable-state';
 import React, {
   type ComponentProps,
   type PropsWithChildren,
@@ -15,8 +14,9 @@ import React, {
 
 import '@dxos/lit-grid/dx-grid.pcss';
 import { type DxAxisResize, type DxEditRequest, type DxGridCellsSelect, DxGrid as NaturalDxGrid } from '@dxos/lit-grid';
+import { useControllableState } from '@dxos/react-hooks';
 
-import { GRID_NAME, GridProvider, type GridScopedProps, useGridContext } from './GridContext';
+import { GRID_NAME, GridProvider, useGridContext } from './GridContext';
 
 type DxGridElement = NaturalDxGrid;
 
@@ -65,14 +65,7 @@ type GridRootProps = PropsWithChildren<
 >;
 
 // TODO(burdon): Make headless.
-const GridRoot = ({
-  __gridScope,
-  children,
-  id,
-  editing: propsEditing,
-  defaultEditing,
-  onEditingChange,
-}: GridScopedProps<GridRootProps>) => {
+const GridRoot = ({ children, id, editing: propsEditing, defaultEditing, onEditingChange }: GridRootProps) => {
   const [editing = null, setEditing] = useControllableState({
     prop: propsEditing,
     defaultProp: defaultEditing,
@@ -80,14 +73,7 @@ const GridRoot = ({
   });
   const [editBox, setEditBox] = useState<GridEditBox>(initialBox);
   return (
-    <GridProvider
-      id={id}
-      editing={editing}
-      setEditing={setEditing}
-      editBox={editBox}
-      setEditBox={setEditBox}
-      scope={__gridScope}
-    >
+    <GridProvider id={id} editing={editing} setEditing={setEditing} editBox={editBox} setEditBox={setEditBox}>
       <div className='dx-grid-host' style={{ display: 'contents' }}>
         {children}
       </div>
@@ -104,8 +90,8 @@ type GridContentProps = Omit<ComponentProps<typeof DxGrid>, 'onEdit'> & {
   activeRefs?: string;
 };
 
-const GridContent = forwardRef<NaturalDxGrid, GridScopedProps<GridContentProps>>((props, forwardedRef) => {
-  const { id, editing, setEditBox, setEditing } = useGridContext(GRID_CONTENT_NAME, props.__gridScope);
+const GridContent = forwardRef<NaturalDxGrid, GridContentProps>((props, forwardedRef) => {
+  const { id, editing, setEditBox, setEditing } = useGridContext(GRID_CONTENT_NAME);
   const [dxGrid, setDxGridInternal] = useState<NaturalDxGrid | null>(null);
 
   // NOTE(thure): using `useState` instead of `useRef` works with refs provided by `@lit/react` and gives us

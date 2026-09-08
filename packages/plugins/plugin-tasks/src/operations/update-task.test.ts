@@ -101,11 +101,10 @@ describe('update-task', () => {
     Effect.gen(function* () {
       // A task outside a task set has no parent to fall back to, so the edge must be cleared outright.
       const parent = yield* Database.add(Task.make({ title: 'Parent', status: 'todo' }));
-      const child = yield* Database.add(Task.make({ title: 'Child', status: 'todo' }));
+      const child = yield* Database.add(Task.make({ [Obj.Parent]: parent, title: 'Child', status: 'todo' }));
       Obj.update(child, (child) => {
         child.parentTask = Ref.make(parent);
       });
-      Obj.setParent(child, parent);
       yield* Database.flush();
 
       yield* updateTask.handler({ task: Ref.make(child), parentTask: null });

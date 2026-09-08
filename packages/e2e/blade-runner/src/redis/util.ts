@@ -6,7 +6,6 @@ import { cbor } from '@automerge/automerge-repo';
 import type Redis from 'ioredis';
 
 import { scheduleMicroTask } from '@dxos/async';
-import { type Any } from '@dxos/codec-protobuf';
 import { Context } from '@dxos/context';
 import { type RpcPort } from '@dxos/rpc';
 
@@ -85,12 +84,4 @@ export const subscribeToRedisQueue = ({
   return () => {
     void ctx.dispose();
   };
-};
-
-export const rpcCodec = {
-  encode: (value: any): Any => ({
-    type_url: 'google.protobuf.Any',
-    value: Buffer.from(JSON.stringify(value ?? [undefined])),
-  }),
-  decode: (value: Any): any => JSON.parse(Buffer.from(value.value).toString()),
 };

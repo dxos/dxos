@@ -2,9 +2,17 @@
 // Copyright 2026 DXOS.org
 //
 
+import { useFieldContext } from '@ark-ui/react/field';
 import { CalendarDate, CalendarDateTime, Time, parseDate, parseDateTime, parseTime } from '@internationalized/date';
-import { useControllableState } from '@radix-ui/react-use-controllable-state';
-import React, { type ComponentProps, ReactNode, forwardRef, useCallback, useState } from 'react';
+import React, {
+  type ComponentProps,
+  ReactNode,
+  type RefObject,
+  forwardRef,
+  useCallback,
+  useRef,
+  useState,
+} from 'react';
 import {
   DateField,
   type DateFieldProps,
@@ -14,13 +22,14 @@ import {
   type TimeFieldProps,
 } from 'react-aria-components';
 
-import { INPUT_NAME, type InputScopedProps, useInputContext } from '@dxos/react-input';
+import { useComposedRefs, useControllableState } from '@dxos/react-hooks';
 
 import { useDensityContext, useElevationContext, useThemeContext } from '../../hooks';
 import { type ThemedClassName } from '../../util';
 import { DatePicker } from '../DatePicker';
 import { Popover } from '../Popover';
 import { type InputSharedProps } from './Input';
+import { INPUT_NAME, useInputValence } from './InputContext';
 import { useInputTrigger } from './InputTriggerContext';
 
 //
@@ -139,28 +148,39 @@ type SegmentedTimeBearingProps = SegmentedInputBaseProps & {
 //
 
 const useFieldChrome = ({
-  __inputScope,
   density: densityProp,
   elevation: elevationProp,
 }: {
-  __inputScope?: any;
   density: InputSharedProps['density'];
   elevation: InputSharedProps['elevation'];
 }) => {
   const { tx } = useThemeContext();
   const density = useDensityContext(densityProp);
   const elevation = useElevationContext(elevationProp);
-  const { id: contextId, validationValence, descriptionId, errorMessageId } = useInputContext(INPUT_NAME, __inputScope);
-  return { tx, density, elevation, validationValence, contextId, descriptionId, errorMessageId };
+  // The field owns the id and the described-by/error wiring; the valence is ours.
+  const field = useFieldContext();
+  const { validationValence } = useInputValence(INPUT_NAME);
+  return {
+    tx,
+    density,
+    elevation,
+    validationValence,
+    contextId: field?.ids.control,
+    descriptionId: field?.ariaDescribedby,
+    errorMessageId: field?.ids.errorText,
+  };
 };
 
 /**
- * Wraps a field with `Popover.Anchor` and a `DatePicker.Root` whose open state is driven by
- * the surrounding `Input.Root`'s registered trigger. `Input.TriggerIcon` (a sibling under
- * `Input.Root`) calls the registered handler on press; the popover anchors to this field.
+ * Wraps a field with a `DatePicker.Root` whose open state is driven by the surrounding
+ * `Input.Root`'s registered trigger. `Input.TriggerIcon` (a sibling under `Input.Root`) calls the
+ * registered handler on press; the popover positions at the field through a virtual anchor,
+ * because an `Anchor asChild` would hand its id to the react-aria field, which keeps it for the
+ * input and leaves the machine nothing to find — the popover then opens at the page's origin.
  */
 const PickerWrapper = ({
   children,
+  anchorRef,
   pickerValue,
   withTime,
   disabled = false,
@@ -168,6 +188,8 @@ const PickerWrapper = ({
   onPickerChange,
 }: {
   children: ReactNode;
+  /** The field's element, which the popover positions at. */
+  anchorRef: RefObject<HTMLDivElement | null>;
   pickerValue: Date | undefined;
   withTime: boolean;
   disabled?: boolean;
@@ -190,7 +212,8 @@ const PickerWrapper = ({
       open={open}
       onOpenChange={setOpen}
     >
-      <Popover.Anchor asChild>{children}</Popover.Anchor>
+      {children}
+      <Popover.VirtualTrigger virtualRef={anchorRef} />
       <DatePicker.Content>{calendar}</DatePicker.Content>
     </DatePicker.Root>
   );
@@ -202,10 +225,9 @@ const PickerWrapper = ({
 
 type SegmentedDateProps = SegmentedInputBaseProps;
 
-const SegmentedDate = forwardRef<HTMLDivElement, InputScopedProps<SegmentedDateProps>>(
+const SegmentedDate = forwardRef<HTMLDivElement, SegmentedDateProps>(
   (
     {
-      __inputScope,
       classNames,
       density: densityProp,
       elevation: elevationProp,
@@ -221,7 +243,6 @@ const SegmentedDate = forwardRef<HTMLDivElement, InputScopedProps<SegmentedDateP
     forwardedRef,
   ) => {
     const { tx, density, elevation, validationValence, contextId, descriptionId, errorMessageId } = useFieldChrome({
-      __inputScope,
       density: densityProp,
       elevation: elevationProp,
     });
@@ -244,10 +265,11 @@ const SegmentedDate = forwardRef<HTMLDivElement, InputScopedProps<SegmentedDateP
       'shouldForceLeadingZeros': true,
     };
 
+    const anchorRef = useRef<HTMLDivElement | null>(null);
     const field = (
       <DateField {...fieldProps}>
         <DateInput
-          ref={forwardedRef}
+          ref={useComposedRefs(forwardedRef, anchorRef)}
           {...((id ?? contextId) ? { id: id ?? contextId } : {})}
           {...(descriptionId ? { 'aria-describedby': descriptionId } : {})}
           {...(validationValence === 'error' && errorMessageId
@@ -268,6 +290,7 @@ const SegmentedDate = forwardRef<HTMLDivElement, InputScopedProps<SegmentedDateP
 
     return (
       <PickerWrapper
+        anchorRef={anchorRef}
         pickerValue={parsed ? new Date(parsed.year, parsed.month - 1, parsed.day) : undefined}
         onPickerChange={(next) => setStringValue(next ? formatCalendarDate(toCalendarDate(next)) : '')}
         withTime={false}
@@ -287,10 +310,9 @@ SegmentedDate.displayName = 'Input.SegmentedDate';
 
 type SegmentedTimeProps = SegmentedTimeBearingProps;
 
-const SegmentedTime = forwardRef<HTMLDivElement, InputScopedProps<SegmentedTimeProps>>(
+const SegmentedTime = forwardRef<HTMLDivElement, SegmentedTimeProps>(
   (
     {
-      __inputScope,
       classNames,
       density: densityProp,
       elevation: elevationProp,
@@ -307,7 +329,6 @@ const SegmentedTime = forwardRef<HTMLDivElement, InputScopedProps<SegmentedTimeP
     forwardedRef,
   ) => {
     const { tx, density, elevation, validationValence, contextId, descriptionId, errorMessageId } = useFieldChrome({
-      __inputScope,
       density: densityProp,
       elevation: elevationProp,
     });
@@ -362,10 +383,9 @@ SegmentedTime.displayName = 'Input.SegmentedTime';
 
 type SegmentedDateTimeProps = SegmentedTimeBearingProps;
 
-const SegmentedDateTime = forwardRef<HTMLDivElement, InputScopedProps<SegmentedDateTimeProps>>(
+const SegmentedDateTime = forwardRef<HTMLDivElement, SegmentedDateTimeProps>(
   (
     {
-      __inputScope,
       classNames,
       density: densityProp,
       elevation: elevationProp,
@@ -382,7 +402,6 @@ const SegmentedDateTime = forwardRef<HTMLDivElement, InputScopedProps<SegmentedD
     forwardedRef,
   ) => {
     const { tx, density, elevation, validationValence, contextId, descriptionId, errorMessageId } = useFieldChrome({
-      __inputScope,
       density: densityProp,
       elevation: elevationProp,
     });
@@ -406,10 +425,11 @@ const SegmentedDateTime = forwardRef<HTMLDivElement, InputScopedProps<SegmentedD
       'shouldForceLeadingZeros': true,
     };
 
+    const anchorRef = useRef<HTMLDivElement | null>(null);
     const field = (
       <DateField {...fieldProps}>
         <DateInput
-          ref={forwardedRef}
+          ref={useComposedRefs(forwardedRef, anchorRef)}
           {...((id ?? contextId) ? { id: id ?? contextId } : {})}
           {...(descriptionId ? { 'aria-describedby': descriptionId } : {})}
           {...(validationValence === 'error' && errorMessageId
@@ -430,6 +450,7 @@ const SegmentedDateTime = forwardRef<HTMLDivElement, InputScopedProps<SegmentedD
 
     return (
       <PickerWrapper
+        anchorRef={anchorRef}
         pickerValue={
           parsed ? new Date(parsed.year, parsed.month - 1, parsed.day, parsed.hour, parsed.minute) : undefined
         }

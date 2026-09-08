@@ -100,12 +100,13 @@ export const projectAlarms = ({ feedAlarms }: { feedAlarms: readonly Alarm.Alarm
 /**
  * Blocks that are the machinery of a turn rather than anything the reader wrote or read.
  *
- * `reasoning` is machinery too: the model explains itself before each call, so a run of calls is
- * interleaved with it and treating it as prose would split every run into one panel per call. A
- * tool result recovered across a reload arrives as a synthetic text block rather than a tool result
- * (its call id can no longer be answered), which is machinery on the same grounds.
+ * `reasoning` and `status` are machinery too: the model explains itself and narrates what it is
+ * about to do between calls, so a run of calls is interleaved with both and treating either as prose
+ * would split every run into one panel per call. A tool result recovered across a reload arrives as
+ * a synthetic text block rather than a tool result (its call id can no longer be answered), which is
+ * machinery on the same grounds.
  */
-const TOOL_BLOCKS = new Set(['toolCall', 'toolResult', 'stats', 'reasoning']);
+const TOOL_BLOCKS = new Set(['toolCall', 'toolResult', 'stats', 'reasoning', 'status']);
 
 const isMachinery = (block: Message.Message['blocks'][number]): boolean =>
   TOOL_BLOCKS.has(block._tag) ||

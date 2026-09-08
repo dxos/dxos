@@ -37,6 +37,9 @@
       "path": "../../core/compute/operation"
     },
     {
+      "path": "../../devtools/cli-util"
+    },
+    {
       "path": "../../sdk/app-framework"
     },
     {

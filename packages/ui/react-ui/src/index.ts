@@ -10,6 +10,8 @@ export * from '@dxos/ui-types';
 
 export * from './components';
 export * from './hooks';
-export * from './primitives';
+export * from './flow';
+export * from './layout';
+export * from './providers';
 export * from './theme';
 export * from './util';

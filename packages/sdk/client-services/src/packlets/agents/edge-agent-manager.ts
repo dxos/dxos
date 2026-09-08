@@ -15,9 +15,9 @@ import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { EdgeAgentStatus, EdgeCallFailedError } from '@dxos/protocols';
+import { SpaceState } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 import { type Runtime_Client_EdgeFeatures } from '@dxos/protocols/buf/dxos/config_pb';
-import { SpaceState } from '@dxos/protocols/proto/dxos/client/services';
-import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
+import { EdgeReplicationSetting } from '@dxos/protocols/buf/dxos/echo/metadata_pb';
 
 import { type Identity, type IdentityProvider, IdentityProviderService } from '../identity';
 import { type DataSpaceManager, DataSpaceManagerService } from '../spaces';

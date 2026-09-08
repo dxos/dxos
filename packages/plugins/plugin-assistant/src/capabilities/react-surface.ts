@@ -68,7 +68,13 @@ export default Capability.makeModule(() =>
           (data) => data.variant !== ASSISTANT_COMPANION_VARIANT,
         ),
         component: ChatArticle,
-        props: ({ role, ref, data: { subject, attendableId } }) => ({ role, subject, attendableId, ref }),
+        props: ({ role, ref, data: { subject, attendableId, nodeId } }) => ({
+          role,
+          subject,
+          attendableId,
+          nodeId,
+          ref,
+        }),
       }),
       Surface.create({
         id: 'agent',
@@ -89,10 +95,11 @@ export default Capability.makeModule(() =>
           (data) => Obj.isObject(data.companionTo) && Obj.instanceOf(Chat.Chat, data.subject),
         ),
         component: ChatCompanion,
-        props: ({ role, ref, data: { subject, attendableId, companionTo } }) => ({
+        props: ({ role, ref, data: { subject, attendableId, nodeId, companionTo } }) => ({
           role,
           subject,
           attendableId,
+          nodeId,
           companionTo,
           ref,
         }),

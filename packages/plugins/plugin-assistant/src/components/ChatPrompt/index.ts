@@ -10,3 +10,4 @@ export * from './ChatPresets';
 export * from './ChatPrompt';
 export * from './ChatReferences';
 export * from './ChatStatus';
+export * from './ChatStatusStack';

@@ -2,49 +2,103 @@
 // Copyright 2023 DXOS.org
 //
 
-import * as ToggleGroupPrimitive from '@radix-ui/react-toggle-group';
-import React, { forwardRef } from 'react';
+import { ToggleGroup as ToggleGroupPrimitive } from '@ark-ui/react/toggle-group';
+import React, { type ComponentPropsWithoutRef, forwardRef } from 'react';
 
 import { Button, ButtonGroup, type ButtonGroupProps, type ButtonProps } from './Button';
 import { IconButton, type IconButtonProps } from './IconButton';
 
-type ToggleGroupProps =
-  | Omit<ToggleGroupPrimitive.ToggleGroupSingleProps, 'className'>
-  | Omit<ToggleGroupPrimitive.ToggleGroupMultipleProps, 'className'>;
+type ToggleGroupCommonProps = Omit<ComponentPropsWithoutRef<'div'>, 'defaultValue' | 'dir' | 'onChange'> & {
+  disabled?: boolean;
+  /** Arrow keys move focus between the items; off when an enclosing group (e.g. a toolbar) does that. */
+  rovingFocus?: boolean;
+  /** Wrap arrow navigation at the ends. */
+  loop?: boolean;
+  orientation?: 'horizontal' | 'vertical';
+};
+
+type ToggleGroupSingleProps = ToggleGroupCommonProps & {
+  type: 'single';
+  value?: string;
+  defaultValue?: string;
+  /** The empty string when the pressed item is released. */
+  onValueChange?: (value: string) => void;
+};
+
+type ToggleGroupMultipleProps = ToggleGroupCommonProps & {
+  type: 'multiple';
+  value?: string[];
+  defaultValue?: string[];
+  onValueChange?: (value: string[]) => void;
+};
+
+type ToggleGroupProps = ToggleGroupSingleProps | ToggleGroupMultipleProps;
+
+/** The machine speaks arrays; a single-select group speaks one value or none. */
+const toMachineValue = (value: string | string[] | undefined): string[] | undefined =>
+  value === undefined ? undefined : Array.isArray(value) ? value : value ? [value] : [];
 
 const ToggleGroup = forwardRef<HTMLDivElement, ToggleGroupProps & ButtonGroupProps>(
-  ({ classNames, children, ...props }, forwardedRef) => {
+  ({ classNames, children, elevation, ...props }, forwardedRef) => {
+    const { type, value, defaultValue, onValueChange, loop, rovingFocus, ...rootProps } = props;
+    const handleValueChange = ({ value }: { value: string[] }) => {
+      if (props.type === 'single') {
+        props.onValueChange?.(value[0] ?? '');
+      } else {
+        props.onValueChange?.(value);
+      }
+    };
+
     return (
-      <ToggleGroupPrimitive.Root {...props} asChild>
-        <ButtonGroup {...{ classNames, children }} ref={forwardedRef} />
+      <ToggleGroupPrimitive.Root
+        {...rootProps}
+        multiple={type === 'multiple'}
+        value={toMachineValue(value)}
+        defaultValue={toMachineValue(defaultValue)}
+        onValueChange={handleValueChange}
+        loopFocus={loop}
+        rovingFocus={rovingFocus}
+        asChild
+      >
+        <ButtonGroup {...{ classNames, children, elevation }} ref={forwardedRef} />
       </ToggleGroupPrimitive.Root>
     );
   },
 );
 
-type ToggleGroupItemProps = Omit<ToggleGroupPrimitive.ToggleGroupItemProps, 'className'> & ButtonProps;
+ToggleGroup.displayName = 'ToggleGroup';
+
+type ToggleGroupItemProps = ButtonProps & {
+  value: string;
+};
 
 const ToggleGroupItem = forwardRef<HTMLButtonElement, ToggleGroupItemProps>(
-  ({ variant, elevation, density, classNames, children, ...props }, forwardedRef) => {
+  ({ value, disabled, variant, elevation, density, classNames, children, ...props }, forwardedRef) => {
     return (
-      <ToggleGroupPrimitive.Item {...props} asChild>
-        <Button {...{ variant, elevation, density, classNames, children }} ref={forwardedRef} />
+      <ToggleGroupPrimitive.Item value={value} disabled={disabled} asChild>
+        <Button {...props} {...{ variant, elevation, density, classNames, children }} ref={forwardedRef} />
       </ToggleGroupPrimitive.Item>
     );
   },
 );
 
-type ToggleGroupIconItemProps = Omit<ToggleGroupPrimitive.ToggleGroupItemProps, 'className'> & IconButtonProps;
+ToggleGroupItem.displayName = 'ToggleGroup.Item';
+
+type ToggleGroupIconItemProps = IconButtonProps & {
+  value: string;
+};
 
 const ToggleGroupIconItem = forwardRef<HTMLButtonElement, ToggleGroupIconItemProps>(
-  ({ variant, label, icon, size, elevation, density, classNames, ...props }, forwardedRef) => {
+  ({ value, disabled, variant, label, icon, size, elevation, density, classNames, ...props }, forwardedRef) => {
     return (
-      <ToggleGroupPrimitive.Item {...props} asChild>
-        <IconButton {...{ variant, elevation, density, classNames, label, icon, size }} ref={forwardedRef} />
+      <ToggleGroupPrimitive.Item value={value} disabled={disabled} asChild>
+        <IconButton {...props} {...{ variant, elevation, density, classNames, label, icon, size }} ref={forwardedRef} />
       </ToggleGroupPrimitive.Item>
     );
   },
 );
 
+ToggleGroupIconItem.displayName = 'ToggleGroup.IconItem';
+
 export { ToggleGroup, ToggleGroupIconItem, ToggleGroupItem };
-export type { ToggleGroupItemProps, ToggleGroupProps };
+export type { ToggleGroupIconItemProps, ToggleGroupItemProps, ToggleGroupProps };

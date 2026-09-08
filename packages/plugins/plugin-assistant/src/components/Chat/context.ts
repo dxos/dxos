@@ -2,12 +2,11 @@
 // Copyright 2026 DXOS.org
 //
 
-import { createContext } from '@radix-ui/react-context';
-
 import { type Alarm } from '@dxos/assistant';
 import type * as ChatModule from '@dxos/assistant/Chat';
 import { type Event } from '@dxos/async';
 import { type Database } from '@dxos/echo';
+import { createContext } from '@dxos/react-hooks';
 import { type ChatThreadController } from '@dxos/react-ui-assistant';
 import { type MessageRange } from '@dxos/react-ui-feed';
 import { type Message } from '@dxos/types';
@@ -52,3 +51,18 @@ export type ChatContextValue = {
 // package (e.g. `ChatStreamStatus`) without dragging in `Chat.tsx`'s heavy transitive
 // imports (transcription, etc.).
 export const [ChatContextProvider, useChatContext] = createContext<ChatContextValue>('Chat');
+
+/**
+ * Report path for agent-requested surfaces rendered inside the thread (`<surface>` blocks): a
+ * completed inline flow (a connector authorized, a plugin enabled) has to reach the agent, which
+ * otherwise waits on a click it never observes. `submit` posts the report as an ordinary user turn.
+ */
+export type ChatReportContextValue = {
+  submit: (text: string) => void;
+};
+
+// Defaulted (unlike `ChatContext`) so a surface rendered outside a chat — a storybook, a standalone
+// preview — drops its report instead of throwing.
+export const [ChatReportContextProvider, useChatReportContext] = createContext<ChatReportContextValue>('ChatReport', {
+  submit: () => {},
+});

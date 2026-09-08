@@ -4,3 +4,4 @@
 
 export * as RpcTiming from './RpcTiming';
 export * as WorkerProtocol from './WorkerProtocol';
+export * from './errors';

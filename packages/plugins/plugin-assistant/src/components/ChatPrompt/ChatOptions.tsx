@@ -11,11 +11,10 @@ import { McpServer } from '@dxos/assistant-toolkit';
 import type * as ChatModule from '@dxos/assistant/Chat';
 import { type Database, Filter, Obj, type Registry, Type, URI } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
-import { IconButton, Input, Popover, Select, Toolbar, useTranslation } from '@dxos/react-ui';
+import { IconButton, Input, Popover, Select, Tabs, Toolbar, useTranslation } from '@dxos/react-ui';
 import { type ChatView } from '@dxos/react-ui-assistant';
 import { Listbox } from '@dxos/react-ui-list';
 import { SearchList, useSearchListResults } from '@dxos/react-ui-search';
-import { Tabs } from '@dxos/react-ui-tabs';
 import { getStyles, mx } from '@dxos/ui-theme';
 
 import { getSkillId, useActiveSkills, useContextObjects, useFilteredTypes, useSkillHandlers, useSkills } from '#hooks';
@@ -441,7 +440,6 @@ export const ObjectsPanel = ({ db, context }: Pick<ChatOptionsProps, 'db' | 'con
           <Select.TriggerButton placeholder={t('type-filter.placeholder')} />
           <Select.Portal>
             <Select.Content>
-              <Select.ScrollUpButton />
               <Select.Viewport>
                 <Select.Option value={ANY}>{t('any-type-filter.label')}</Select.Option>
                 {typeOptions.map(({ uri, label }) => (
@@ -450,8 +448,6 @@ export const ObjectsPanel = ({ db, context }: Pick<ChatOptionsProps, 'db' | 'con
                   </Select.Option>
                 ))}
               </Select.Viewport>
-              <Select.ScrollDownButton />
-              <Select.Arrow />
             </Select.Content>
           </Select.Portal>
         </Select.Root>

@@ -7,11 +7,13 @@
 //
 // What the consumer holds is a Proxy; everything below is its target's prototype chain:
 //
-//   proxy ──Proxy(target, ProxyHandlerSlot → EchoReactiveHandler)
-//     │         the handler's get/set/has/... traps run here
+//   proxy ──Proxy(target, REACTIVE_PROXY_HANDLER → EchoReactiveHandler)
+//     │         the handler's set/has/... traps run here; there is no `get` trap, so reads land
+//     │         on the target, which the refresh keeps filled
 //     ▼
-//   target            a CLEAN, empty object (`{}`). User data is NOT stored here — it is
-//     │ [[Prototype]] virtual, decoded on demand from the Automerge document via `ObjectCore`.
+//   target            holds the record's CURRENT user data as own properties — primitives decoded,
+//     │ [[Prototype]] nested records and arrays as their sub-proxies, refs as `Ref`s. The handler's
+//     │               refresh keeps it mirroring the Automerge document; reads never decode.
 //     ▼
 //   instanceState     per-object, created by `createInstanceState`. Hidden (non-enumerable) data
 //     │ [[Prototype]] properties: [symbolInternals]=ObjectCore, [symbolNamespace], [symbolPath],
@@ -25,10 +27,11 @@
 //     │               nested/meta records get the EchoRecord base. This replaces the old
 //     │               `isRootDataObject(target)` branching in the traps.
 //     ▼
-//   Object.prototype ──▶ null     ordinary class-prototype termination. The get/has traps use
+//   Object.prototype ──▶ null     ordinary class-prototype termination. The `has` trap uses
 //                     `Reflect.has(target, prop)` to split "system property" (present on the chain
-//                     → delegate to the accessor) from "virtual user data" (absent → read from the
-//                     document). Object.prototype members (`toString`, `hasOwnProperty`, ...) are
+//                     → the accessor answers) from user data (an own property of the target), and the
+//                     refresh skips any key the prototype chain already answers so it cannot shadow
+//                     one. Object.prototype members (`toString`, `hasOwnProperty`, ...) are
 //                     therefore treated as system and resolve to their normal implementations,
 //                     which is exactly how a plain object behaves — and a `getPrototypeOf` trap
 //                     reports `Object.prototype` so consumers do observe a plain object. (Practical
@@ -36,8 +39,8 @@
 //                     same as on a plain `{}`.)
 //
 // `this` inside the accessors/methods below:
-//   - Reached THROUGH the proxy (the common case): the get trap calls
-//     `Reflect.get(target, prop, receiver)`, so `this` === the PROXY (the receiver).
+//   - Reached THROUGH the proxy (the common case): with no `get` trap the engine reads the target
+//     with the proxy as the receiver, so `this` === the PROXY.
 //   - Reached on the RAW target directly (e.g. internal code holding the unwrapped target):
 //     `this` === the raw target.
 //   Both resolve `this[symbolInternals]` (and the other hidden props) the same way, through the
@@ -53,14 +56,16 @@ import * as Schema from 'effect/Schema';
 import { Event } from '@dxos/async';
 import { type DevtoolsFormatter, devtoolsFormatter } from '@dxos/debug';
 import { Entity, Obj, Type } from '@dxos/echo';
-import { DATA_NAMESPACE, EncodedReference, isEncodedReference } from '@dxos/echo-protocol';
+import { DATA_NAMESPACE, EncodedReference, PROPERTY_ID, isEncodedReference } from '@dxos/echo-protocol';
 import {
+  type AnyProperties,
   ATTR_DELETED,
   ATTR_META,
   ATTR_RELATION_SOURCE,
   ATTR_RELATION_TARGET,
   ATTR_TYPE,
   ChangeId,
+  ChangeKeyId,
   EntityKind,
   type EntityMeta,
   type EntityMetaJSON,
@@ -76,6 +81,9 @@ import {
   ParentId,
   type Ref,
   RefImpl,
+  type RefResolver,
+  type RefResolverRequest,
+  type RefSource,
   RelationSourceDXNId,
   RelationSourceId,
   RelationTargetDXNId,
@@ -102,13 +110,20 @@ import {
 } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { EID, EntityId, type URI } from '@dxos/keys';
-import { deepMapValues } from '@dxos/util';
+import { deepMapValues, defaultMap } from '@dxos/util';
 
 import * as Doc from '../automerge/Doc';
 import { type ObjectCore } from '../core-db';
 import { type EchoDatabase } from '../proxy-db';
 import { getBody, getHeader } from './devtools-formatter';
-import { type ProxyTarget, getEchoDatabase, symbolInternals, symbolNamespace, symbolPath } from './echo-proxy-target';
+import {
+  type ProxyTarget,
+  TargetKey,
+  getEchoDatabase,
+  symbolInternals,
+  symbolNamespace,
+  symbolPath,
+} from './echo-proxy-target';
 
 const META_NAMESPACE = 'meta';
 
@@ -127,16 +142,6 @@ const getNamespace = (target: ProxyTarget): string => target[symbolNamespace];
 
 /** Recover the raw target from a receiver (the proxy when reached through a trap). */
 const rawTarget = (self: ProxyTarget): ProxyTarget => (isProxy(self) ? getProxyTarget(self) : self);
-
-export const getDecodedValueAtPath = (target: ProxyTarget, prop?: string): DecodedValueAtPath => {
-  const dataPath = [...target[symbolPath]];
-  if (prop != null) {
-    dataPath.push(prop);
-  }
-  const fullPath = [getNamespace(target), ...dataPath];
-  const value: any = target[symbolInternals].getDecoded(fullPath);
-  return { namespace: getNamespace(target), value, dataPath };
-};
 
 export const getReified = (target: ProxyTarget): any => {
   const fullPath = [getNamespace(target), ...target[symbolPath]];
@@ -350,12 +355,12 @@ export const getVersion = (target: ProxyTarget): Obj.Version => {
 /** The meta sub-proxy for the object. `self` is the proxy (its handler backs the meta proxy). */
 const getMeta = (self: ProxyTarget): EntityMeta => {
   const target = rawTarget(self);
-  // Reuse the root target's events so subscribers of the meta proxy are notified: the central
-  // core subscriptions emit on the root's events only (see the nested-record path).
-  const metaTarget = createRecordTarget(
-    createInstanceState(target[symbolInternals], META_NAMESPACE, [], {
-      event: target[EventId],
-    }),
+  const core = target[symbolInternals];
+  // One target per core, kept in `targetsMap` like the nested records, so the refresh that follows every
+  // change reaches a meta proxy the caller holds. Reuses the root target's event so subscribers of the
+  // meta proxy are notified: the central core subscriptions emit on the root's event only.
+  const metaTarget = defaultMap(core.targetsMap, TargetKey.new([], META_NAMESPACE, 'record'), (): ProxyTarget =>
+    createRecordTarget(createInstanceState(core, META_NAMESPACE, [], { event: target[EventId] })),
   );
   return createProxy(metaTarget, getProxyHandler(self)) as any;
 };
@@ -373,26 +378,90 @@ export const handleStoredSchema = (target: ProxyTarget, object: any): any => {
   return object;
 };
 
-export const lookupRef = (target: ProxyTarget, encodedRef: EncodedReference): Ref<any> | undefined => {
-  const dxn = EncodedReference.toURI(encodedRef);
-  const database = getEchoDatabase(target[symbolInternals]);
-  if (database) {
-    const refImpl = new RefImpl(dxn);
-    // The resolver materializes persisted schema objects into their registered `Type.Type` entity.
-    setRefResolver(refImpl, database.graph.createRefResolver({ context: { space: database.spaceId } }));
-    return refImpl;
-  } else {
-    invariant(target[symbolInternals].linkCache);
-    const parsedEchoUri = EID.tryParse(dxn);
-    const objectId = parsedEchoUri ? EID.getEntityId(parsedEchoUri) : undefined;
-    // Not every ref addresses an object: `Ref.fromURI` also names a registry entry by type DXN (an
-    // unpersisted routine draft binds its runnable that way). The link cache is keyed by entity id,
-    // so such a ref simply has no local target — resolving it needs a database.
-    if (!objectId) {
-      return new RefImpl(dxn);
+/**
+ * A resolver bound to the core rather than to whatever the core happened to hold when the ref was
+ * built. Both of the things a ref resolves through arrive *after* the values are materialized —
+ * `db.add` sets the database and clears the link cache, and `clone` fills the link cache only once
+ * every clone exists — so a ref that captured either at mint time is wrong for the rest of its life.
+ * Deciding per call instead is what lets a target be filled before its core has a database.
+ */
+class CoreRefResolver implements RefResolver {
+  #delegate: RefResolver | undefined;
+
+  constructor(private readonly _target: ProxyTarget) {}
+
+  /** The database's resolver, once there is one; cached, since the database is never reassigned. */
+  #database(): RefResolver | undefined {
+    if (!this.#delegate) {
+      const database = getEchoDatabase(this._target[symbolInternals]);
+      if (database) {
+        // The resolver materializes persisted schema objects into their registered `Type.Type` entity.
+        this.#delegate = database.graph.createRefResolver({ context: { space: database.spaceId } });
+      }
     }
-    return new RefImpl(dxn, handleStoredSchema(target, target[symbolInternals].linkCache.get(objectId)));
+    return this.#delegate;
   }
+
+  /**
+   * The local object a ref names, for a core with no database. Not every ref addresses an object:
+   * `Ref.fromURI` also names a registry entry by type DXN (an unpersisted routine draft binds its
+   * runnable that way), and such a ref has no local target — resolving it needs a database.
+   */
+  /**
+   * Whether this core could ever resolve `uri`: with a database anything can be resolved, and without
+   * one only an entity the link cache is keyed by — which it may not hold yet, since `clone` fills the
+   * cache after building every clone.
+   */
+  canResolve(uri: URI.URI): boolean {
+    return getEchoDatabase(this._target[symbolInternals]) != null || EID.tryParse(uri) != null;
+  }
+
+  pinned(uri: URI.URI): AnyProperties | undefined {
+    const linkCache = this._target[symbolInternals].linkCache;
+    const parsed = EID.tryParse(uri);
+    const objectId = parsed ? EID.getEntityId(parsed) : undefined;
+    return linkCache && objectId ? handleStoredSchema(this._target, linkCache.get(objectId)) : undefined;
+  }
+
+  resolve(uri: URI.URI, options: { source: RefSource }): RefResolverRequest {
+    const database = this.#database();
+    invariant(database, 'Ref cannot be resolved before its object is added to a database.');
+    return database.resolve(uri, options);
+  }
+
+  resolveSync(uri: URI.URI, load: boolean, onLoad?: () => void): AnyProperties | undefined {
+    return this.#database()?.resolveSync(uri, load, onLoad) ?? this.pinned(uri);
+  }
+
+  async resolveLegacy(uri: URI.URI): Promise<AnyProperties | undefined> {
+    return (await this.#database()?.resolveLegacy(uri)) ?? this.pinned(uri);
+  }
+
+  async resolveSchema(uri: URI.URI): Promise<Schema.Codec<any, any> | undefined> {
+    return this.#database()?.resolveSchema(uri);
+  }
+
+  async resolveType(uri: URI.URI): Promise<unknown | undefined> {
+    return this.#database()?.resolveType?.(uri);
+  }
+}
+
+/** One resolver per target, since every ref read off it resolves the same way. */
+const refResolvers = new WeakMap<ProxyTarget, CoreRefResolver>();
+
+export const lookupRef = (target: ProxyTarget, encodedRef: EncodedReference): Ref<any> | undefined => {
+  const uri = EncodedReference.toURI(encodedRef);
+  const resolver = defaultMap(refResolvers, target, () => new CoreRefResolver(target));
+  // Pinned when the link cache already names the object, so assigning this ref onward still carries the
+  // local target (`getRefSavedTarget`) as it did before; the resolver covers every other case.
+  const refImpl = new RefImpl(uri, resolver.pinned(uri));
+  // Not every ref addresses an object: `Ref.fromURI` also names a registry entry by type DXN (an
+  // unpersisted routine draft binds its runnable that way). Off-database such a ref has nothing to
+  // resolve through, and `isAvailable` reports a resolver it was given, so it is left without one.
+  if (resolver.canResolve(uri)) {
+    setRefResolver(refImpl, resolver);
+  }
+  return refImpl;
 };
 
 const compactMeta = (meta: EntityMeta): Partial<EntityMeta> => {
@@ -503,6 +572,15 @@ const isRootDataObject = (target: ProxyTarget): boolean =>
  * the same `ObjectCore` via the chain. See the layering diagram at the top of this file.
  */
 export class EchoRecord {
+  /**
+   * Keyed by the `ObjectCore`, which every target of one object shares, so a nested record and the meta
+   * root are gated by the same context their root opens. Never `undefined`: a database-backed object is
+   * gated from the moment it exists.
+   */
+  get [ChangeKeyId](): object {
+    return this[symbolInternals];
+  }
+
   declare readonly [symbolInternals]: ObjectCore;
   declare readonly [symbolNamespace]: string;
   declare readonly [symbolPath]: Doc.KeyPath;
@@ -525,6 +603,25 @@ export class EchoRecord {
 
   get [devtoolsFormatter](): DevtoolsFormatter {
     return getDevtoolsFormatter(this);
+  }
+}
+
+/**
+ * Behaviour prototype for the root of the `meta` namespace. `createdAt`/`updatedAt` are not stored in
+ * the meta section: they come from the system section and the Automerge change graph, so they are
+ * accessors here rather than data on the target.
+ */
+export class EchoMetaRoot extends EchoRecord {
+  private constructor() {
+    super();
+  }
+
+  get createdAt(): number | undefined {
+    return this[symbolInternals].getCreatedAt();
+  }
+
+  get updatedAt(): number | undefined {
+    return this[symbolInternals].getUpdatedAt();
   }
 }
 
@@ -632,6 +729,7 @@ export class EchoRoot extends EchoRecord {
 
 const EchoRecordPrototype: object = EchoRecord.prototype;
 const EchoRootPrototype: object = EchoRoot.prototype;
+const EchoMetaRootPrototype: object = EchoMetaRoot.prototype;
 
 //
 // Instance state and target construction.
@@ -649,8 +747,15 @@ export const createInstanceState = (
   path: Doc.KeyPath,
   options?: { event?: Event<void> },
 ): ProxyTarget => {
-  const root = namespace === DATA_NAMESPACE && path.length === 0;
-  const state = Object.create(root ? EchoRootPrototype : EchoRecordPrototype) as ProxyTarget;
+  const prototype =
+    path.length > 0
+      ? EchoRecordPrototype
+      : namespace === DATA_NAMESPACE
+        ? EchoRootPrototype
+        : namespace === META_NAMESPACE
+          ? EchoMetaRootPrototype
+          : EchoRecordPrototype;
+  const state = Object.create(prototype) as ProxyTarget;
   defineHiddenProperty(state, symbolInternals, core);
   defineHiddenProperty(state, symbolNamespace, namespace);
   defineHiddenProperty(state, symbolPath, path);
@@ -659,10 +764,10 @@ export const createInstanceState = (
 };
 
 /**
- * Build a clean proxy target whose prototype chain carries the ECHO system surface.
- * User data is virtual (Automerge-backed) and never lives on the target; `initialData`
- * is only used transiently by `createObject` to seed the new object before the data is
- * migrated into the document and the keys are cleared.
+ * Build a proxy target whose prototype chain carries the ECHO system surface. The handler fills the
+ * target with the record's current values from the document (`EchoReactiveHandler.init`) and keeps them
+ * current, so reads are forwarded to it; `initialData` is only used transiently by `createObject` to
+ * seed the new object before the data is migrated into the document and the keys are cleared.
  */
 export const createRecordTarget = (state: ProxyTarget, initialData?: object): ProxyTarget => {
   const target = (initialData ? { ...initialData } : {}) as ProxyTarget;
@@ -688,10 +793,32 @@ export const adoptInstanceState = (target: ProxyTarget, state: ProxyTarget): voi
  * `rebindRelationEndpoints`) *after* `createObject` to re-stamp the stored refs once the
  * database (and thus space) is known. They are creation-handoff data, like `[ParentId]`.
  */
+// A record must present as a plain object, and `constructor` is read off the real prototype chain now
+// that there is no `get` trap to intercept it. Reporting `EchoRecord` breaks callers that use it to
+// decide whether an object is plain: Effect's `Hash.structure` walks the prototype chain of anything
+// whose constructor is not `Object` and *reads* every accessor it finds there, which throws on the
+// relation endpoints of a non-relation. `EchoArray` already does the same with `Array`.
+for (const prototype of [EchoRecordPrototype, EchoRootPrototype, EchoMetaRootPrototype]) {
+  Object.defineProperty(prototype, 'constructor', {
+    enumerable: false,
+    writable: true,
+    configurable: true,
+    value: Object,
+  });
+}
+
 const SYSTEM_KEYS: ReadonlyArray<string | symbol> = [
   ...Reflect.ownKeys(EchoRootPrototype),
   ...Reflect.ownKeys(EchoRecordPrototype),
-].filter((key) => key !== 'constructor' && key !== RelationSourceId && key !== RelationTargetId);
+].filter(
+  (key) =>
+    key !== 'constructor' &&
+    key !== RelationSourceId &&
+    key !== RelationTargetId &&
+    // A root object carries `id` as a real own property — that is the representation, not a leftover
+    // shadowing the accessor, and stripping it would leave the key set short of what a read returns.
+    key !== PROPERTY_ID,
+);
 
 /**
  * Remove own properties left behind by a previous handler that would shadow the ECHO system
@@ -703,10 +830,4 @@ export const stripShadowingProperties = (target: ProxyTarget): void => {
       delete (target as any)[key];
     }
   }
-};
-
-type DecodedValueAtPath = {
-  namespace: string;
-  value: any;
-  dataPath: Doc.KeyPath;
 };

@@ -118,8 +118,12 @@ export type BranchBinding<T extends Obj.Unknown = Obj.Unknown> = {
 
 /**
  * Identifier denoting an ECHO Database.
+ *
+ * Namespaced (like `@dxos/echo/Database/Service` below) rather than the bare `@dxos/echo/Database`:
+ * that key belongs to the `[ObjectDatabaseId]` accessor every ECHO object carries, and a shared
+ * registry key would make `TypeId in obj` true for every object in the graph.
  */
-export const TypeId = Symbol.for('@dxos/echo/Database');
+export const TypeId = Symbol.for('@dxos/echo/Database/TypeId');
 export type TypeId = typeof TypeId;
 
 /**

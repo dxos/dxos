@@ -11,10 +11,9 @@ import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import { useAppGraph } from '@dxos/app-toolkit/ui';
 import * as DeckSchema from '@dxos/plugin-deck/DeckSchema';
 import { useActionRunner, useEdges } from '@dxos/plugin-graph/hooks';
-import { DensityProvider, IconButton, ScrollArea, toLocalizedString, useTranslation } from '@dxos/react-ui';
+import { DensityProvider, IconButton, ScrollArea, Tabs, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { Empty, Tree } from '@dxos/react-ui-list';
-import { Menu, type MenuItem } from '@dxos/react-ui-menu';
-import { Tabs } from '@dxos/react-ui-tabs';
+import { ActionMenu, type MenuItem } from '@dxos/react-ui-menu';
 import { hoverableControlItem, hoverableOpenControlItem } from '@dxos/ui-theme';
 
 import { getListActions, useActions, useLoadDescendents } from '#hooks';
@@ -245,20 +244,17 @@ const MenuActions = ({
   }
 
   return (
-    <Menu.Root caller={NAV_TREE_ITEM} onAction={onAction}>
-      <Menu.Trigger asChild>
-        <IconButton
-          classNames={['shrink-0 px-2 pointer-fine:px-1', hoverableControlItem, hoverableOpenControlItem]}
-          variant='ghost'
-          icon='ph--dots-three-vertical--regular'
-          iconOnly
-          size={4}
-          label={t('tree-item-actions.label')}
-          data-testid='navtree.treeItem.actionsLevel0'
-        />
-      </Menu.Trigger>
-      <Menu.Content group={item} items={menuActions as MenuItem[]} />
-    </Menu.Root>
+    <ActionMenu caller={NAV_TREE_ITEM} onAction={onAction} group={item} actions={menuActions as MenuItem[]}>
+      <IconButton
+        classNames={['shrink-0 px-2 pointer-fine:px-1', hoverableControlItem, hoverableOpenControlItem]}
+        variant='ghost'
+        icon='ph--dots-three-vertical--regular'
+        iconOnly
+        size={4}
+        label={t('tree-item-actions.label')}
+        data-testid='navtree.treeItem.actionsLevel0'
+      />
+    </ActionMenu>
   );
 };
 

@@ -3,6 +3,7 @@
 //
 
 import type { AutomergeUrl } from '@automerge/automerge-repo';
+import { toBinary } from '@bufbuild/protobuf';
 import * as Effect from 'effect/Effect';
 import * as EffectStream from 'effect/Stream';
 
@@ -31,22 +32,33 @@ import {
   encodeError,
   makeInProcessClient,
 } from '@dxos/protocols';
+import { buf, fromTimeframe, toPublicKey } from '@dxos/protocols/buf';
+import { decodeCompat, encodeCompat } from '@dxos/protocols/buf-shape-compat';
+import {
+  type CreateEpochResponse,
+  CreateEpochResponseSchema,
+  type JoinSpaceResponse,
+  JoinSpaceResponseSchema,
+  type QuerySpacesResponse,
+  QuerySpacesResponseSchema,
+  type Space,
+  SpaceSchema,
+} from '@dxos/protocols/buf/dxos/client/services_pb';
+import { type Credential } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
+import { PeerStateSchema } from '@dxos/protocols/buf/dxos/mesh/presence_pb';
 import {
   type ContactAdmission,
-  type CreateEpochResponse,
-  type JoinSpaceResponse,
-  type QuerySpacesResponse,
-  type Space,
+  type Space as LegacySpace,
   SpaceMember,
   SpaceState,
 } from '@dxos/protocols/proto/dxos/client/services';
-import { type Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { type GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
 import { FeedService, SpacesService } from '@dxos/protocols/rpc';
 import { trace } from '@dxos/tracing';
 import { type Provider } from '@dxos/util';
 
 import { type IdentityManager } from '../identity';
+import { fromBufCredential, toBufCredential } from '../services/credentials-codec';
 import { type SpaceManager } from '../space';
 import {
   SpaceArchiveWriter,
@@ -58,6 +70,9 @@ import {
 } from '../space-export';
 import { type DataSpace } from './data-space';
 import { type DataSpaceManager } from './data-space-manager';
+
+/** Reads the space as the buf message the service returns. */
+const toBufSpace = (space: LegacySpace): Space => buf.fromBinary(SpaceSchema, encodeCompat(SpaceSchema, space));
 
 export class SpacesServiceImpl implements SpacesService.Handlers {
   'constructor'(
@@ -168,7 +183,7 @@ export class SpacesServiceImpl implements SpacesService.Handlers {
           );
           log('update', () => ({ ids: spaces.map((space) => space.id) }));
           await this._updateMetrics();
-          void emit.single({ spaces });
+          void emit.single(buf.create(QuerySpacesResponseSchema, { spaces }));
         },
         { maxFrequency: process.env.NODE_ENV === 'test' ? undefined : 2 },
       );
@@ -215,7 +230,7 @@ export class SpacesServiceImpl implements SpacesService.Handlers {
       });
 
       if (!this._identityManager.identity) {
-        void emit.single({ spaces: [] });
+        void emit.single(buf.create(QuerySpacesResponseSchema, { spaces: [] }));
       }
 
       return Effect.promise(() => ctx.dispose());
@@ -266,7 +281,7 @@ export class SpacesServiceImpl implements SpacesService.Handlers {
 
       const processor: CredentialProcessor = {
         processCredential: async (credential) => {
-          void emit.single(credential);
+          void emit.single(toBufCredential(credential));
         },
       };
       ctx.onDispose(() => space.spaceState.removeCredentialProcessor(processor));
@@ -288,7 +303,8 @@ export class SpacesServiceImpl implements SpacesService.Handlers {
     return Effect.tryPromise({
       try: async () => {
         const space = this._spaceManager.spaces.get(spaceKey) ?? raise(new SpaceNotFoundError(spaceKey));
-        for (const credential of credentials ?? []) {
+        for (const bufCredential of credentials ?? []) {
+          const credential = fromBufCredential(bufCredential);
           if (credential.proof) {
             await space.controlPipeline.writer.write({ credential: { credential } });
           } else {
@@ -318,7 +334,10 @@ export class SpacesServiceImpl implements SpacesService.Handlers {
         const dataSpaceManager = await this._getDataSpaceManager();
         const space = dataSpaceManager.spaces.get(spaceKey) ?? raise(new SpaceNotFoundError(spaceKey));
         const result = await space.createEpoch({ migration, newAutomergeRoot: automergeRootUrl });
-        return { epochCredential: result?.credential, controlTimeframe: result?.timeframe };
+        return buf.create(CreateEpochResponseSchema, {
+          epochCredential: result?.credential && toBufCredential(result.credential),
+          controlTimeframe: result?.timeframe && fromTimeframe(result.timeframe),
+        });
       },
       catch: (error) => error as Error,
     });
@@ -330,7 +349,7 @@ export class SpacesServiceImpl implements SpacesService.Handlers {
         const dataSpaceManager = await this._getDataSpaceManager();
         await dataSpaceManager.admitMember({
           spaceKey: request.spaceKey,
-          identityKey: request.contact.identityKey,
+          identityKey: toPublicKey(request.contact.identityKey)!,
           role: request.role,
         });
       },
@@ -497,10 +516,18 @@ export class SpacesServiceImpl implements SpacesService.Handlers {
       await myIdentity.controlPipeline.writer.write({ credential: { credential } });
     }
 
-    return { space: await this._serializeSpace(dataSpace) };
+    return buf.create(JoinSpaceResponseSchema, { space: await this._serializeSpace(dataSpace) });
   }
 
   private async '_serializeSpace'(space: DataSpace): Promise<Space> {
+    return toBufSpace(await this.#serializeLegacySpace(space));
+  }
+
+  /**
+   * Builds the space in the protobuf.js shape the domain objects already speak, which
+   * {@link toBufSpace} then carries across in one step rather than field by field.
+   */
+  async #serializeLegacySpace(space: DataSpace): Promise<LegacySpace> {
     return {
       id: space.id,
       spaceKey: space.key,
@@ -525,7 +552,7 @@ export class SpacesServiceImpl implements SpacesService.Handlers {
       },
       members: await Promise.all(
         Array.from(space.inner.spaceState.members.values()).map(async (member) => {
-          const peers = space.presence.getPeersOnline().filter(({ identityKey }) => identityKey.equals(member.key));
+          const peers = space.presence.getPeersByIdentityKey(member.key);
           const isMe = this._identityManager.identity?.identityKey.equals(member.key);
 
           if (isMe) {
@@ -540,7 +567,9 @@ export class SpacesServiceImpl implements SpacesService.Handlers {
             },
             role: member.role,
             presence: peers.length > 0 ? SpaceMember.PresenceState.ONLINE : SpaceMember.PresenceState.OFFLINE,
-            peerStates: peers,
+            // `Space` is still `protoMessage`-carried, so presence's buf messages convert back
+            // here — one boundary, via the codec rather than a hand-written field map.
+            peerStates: peers.map((peer) => decodeCompat(PeerStateSchema, toBinary(PeerStateSchema, peer))),
           };
         }),
       ),

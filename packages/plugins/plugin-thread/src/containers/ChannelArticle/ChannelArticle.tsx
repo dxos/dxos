@@ -14,7 +14,7 @@ import { log } from '@dxos/log';
 import * as CallsCapabilities from '@dxos/plugin-calls/CallsCapabilities';
 import { getSpace } from '@dxos/react-client/echo';
 import { Panel } from '@dxos/react-ui';
-import { Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
+import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 import { type Channel } from '@dxos/types';
 
 import { MessageThread } from '#components';
@@ -114,13 +114,9 @@ export const ChannelArticle = ({ role, subject: channel, attendableId, chatOnly 
   return (
     <Panel.Root role={role}>
       {canStartCall && (
-        <Menu.Root {...menuActions} attendableId={attendableId}>
-          <Panel.Toolbar asChild>
-            <Menu.Toolbar>
-              <Menu.Items />
-            </Menu.Toolbar>
-          </Panel.Toolbar>
-        </Menu.Root>
+        <Panel.Toolbar asChild>
+          <ActionToolbar {...menuActions} attendableId={attendableId} />
+        </Panel.Toolbar>
       )}
       {showCall ? (
         <Panel.Content>

@@ -7,17 +7,47 @@ import * as Option from 'effect/Option';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
+import * as Plugin from '@dxos/app-framework/Plugin';
+import * as Chat from '@dxos/assistant/Chat';
 import { getSession } from '@dxos/compute/AgentService';
 import * as Operation from '@dxos/compute/Operation';
+import { Obj } from '@dxos/echo';
+import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 
-import { AssistantCapabilities, AssistantOperation } from '#types';
+import { AssistantCapabilities, AssistantEvents, AssistantOperation } from '#types';
 
+import { ChatNotSpecifiedError } from '../errors';
 import { defaultPreset } from '../processor';
 
 const handler: Operation.WithHandler<typeof AssistantOperation.RunPromptInChat> =
   AssistantOperation.RunPromptInChat.pipe(
     Operation.withHandler(
-      Effect.fnUntraced(function* ({ chat, prompt }) {
+      Effect.fnUntraced(function* ({ chat: chatProp, companionTo, prompt }) {
+        // Activation first: the state and session providers this reads come from lazy modules that
+        // otherwise activate only once the assistant UI has been opened, so a caller arriving through
+        // an operation alone (an agent) would find them missing.
+        const pluginManager = yield* Effect.serviceOption(Plugin.Service);
+        yield* Option.match(pluginManager, {
+          onNone: () => Effect.void,
+          onSome: (manager) => manager.activate(AssistantEvents.Start),
+        });
+        const companion =
+          chatProp === undefined && companionTo !== undefined
+            ? yield* Operation.invoke(AssistantOperation.EnsureCompanionChat, { companionTo })
+            : undefined;
+        const chat = chatProp ?? companion?.chat;
+        if (chat === undefined) {
+          return yield* Effect.fail(new ChatNotSpecifiedError());
+        }
+        // As the companion's own submit does: a transient chat is persisted under its subject before
+        // the first request, so the agent process can resolve a durable conversation feed and space.
+        const db = companionTo !== undefined ? Obj.getDatabase(companionTo) : undefined;
+        if (companionTo !== undefined && db && !Obj.getDatabase(chat)) {
+          Chat.linkCompanion({ chat, subject: companionTo });
+          yield* Operation.invoke(SpaceOperation.AddObject, { object: chat }, { spaceId: db.spaceId });
+          yield* Operation.invoke(AssistantOperation.SetCurrentChat, { companionTo, chat });
+          yield* Effect.promise(() => db.flush());
+        }
         const preset = yield* chatPreset;
         const session = yield* getSession(chat, {
           model: preset?.model,

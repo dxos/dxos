@@ -10,7 +10,7 @@ tasks:
     # Verify headless entrypoints resolve under workerd conditions, then fail when the
     # root export pulls in React (Composer UI lives only behind `./ui`).
     script: |
-      pnpm exec dx-trace-imports \
+      bun $workspaceRoot/tools/dx-trace-imports/cli.js \
         --export . \
         --to "{react,react-dom}" \
         --conditions workerd,worker \

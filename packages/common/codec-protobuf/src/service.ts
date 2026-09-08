@@ -50,7 +50,12 @@ export class ServiceDescriptor<S> implements ServiceDescriptorLike<S> {
     return this._service.fullName.slice(1);
   }
 
-  createClient(backend: ServiceBackend, encodingOptions?: EncodingOptions): Service & S {
+  /**
+   * Declared as `S` rather than `Service & S`: `Service` is this file's dynamic stub holder and
+   * contributes nothing a caller can name, while leaking it makes a service bundle infer
+   * `Service & S`, which no plain handler object can then satisfy.
+   */
+  createClient(backend: ServiceBackend, encodingOptions?: EncodingOptions): S {
     return new Service(backend, this._service, this._schema, encodingOptions) as Service & S;
   }
 

@@ -5,6 +5,7 @@
 import { Event } from '@dxos/async';
 import { log } from '@dxos/log';
 
+import { workerErrorFromEvent } from '../internal/worker-errors';
 import * as WorkerProtocol from '../WorkerProtocol';
 
 // The DOM `SharedWorker` global, referenced through `globalThis` because the exported class below
@@ -22,7 +23,7 @@ export class SharedWorker implements WorkerProtocol.WorkerCoordinator {
   constructor(options: SharedWorkerOptions) {
     this.#worker = options.createWorker();
     this.#worker.onerror = (event: ErrorEvent) => {
-      log.error('coordinator worker error', { error: event.error });
+      log.error('coordinator worker error', { error: workerErrorFromEvent(event, 'coordinator') });
     };
     this.#worker.port.onmessage = (event: MessageEvent<WorkerProtocol.CoordinatorMessage>) => {
       this.onMessage.emit(event.data);

@@ -181,7 +181,7 @@ When you do need a box — inside `ScrollArea.Viewport`, between `Panel` parts, 
 already give you one — reach for these before writing `<div className='flex …'>`. All take `asChild`, so
 the layout can project onto a semantic element (`<header>`, `<ul>`) at no extra DOM node.
 `Flex`/`Grid`/`Container` live in
-[`packages/ui/react-ui/src/primitives/`](../../../packages/ui/react-ui/src/primitives) (not
+[`packages/ui/react-ui/src/layout/`](../../../packages/ui/react-ui/src/layout) (not
 `components/`); `Column` is in `components/Column`.
 
 - **`Flex`** — `column`, `gap`, `align`, `justify`, `wrap`, `grow`, `center`. `grow` is
@@ -217,7 +217,7 @@ body and pulls the scrollbar inboard. Nest with `subgrid` when a `Column` (or `C
 3-track grid and must inherit its rules rather than invent new ones.
 
 **`gap` takes ramp steps, not Tailwind numbers.** `xs | sm | md | lg | xl | 2xl | form | form-section`
-([`primitives/layout.ts`](../../../packages/ui/react-ui/src/primitives/layout.ts)) — a `gap-2` literal is
+([`layout/layout.ts`](../../../packages/ui/react-ui/src/layout/layout.ts)) — a `gap-2` literal is
 precisely the drift the prop exists to prevent. `Flex` grows **no** padding or colour props on purpose
 (components own their spacing); everything else goes through `classNames`. There is no implicit `align`:
 row-centering is common, but defaulting it would silently restyle consumers relying on CSS `stretch`.
@@ -444,7 +444,7 @@ export const FooCard = forwardRef<HTMLDivElement, FooCardProps>(({ subject, curr
 ));
 ```
 
-For authoring brand-new composite primitives (Radix-style `Foo.Root`/`Foo.Content` with `slottable()` /
+For authoring brand-new composite primitives (`Foo.Root`/`Foo.Content` with `slottable()` /
 `composableProps`), see [[composite-components]].
 
 ## Attention & density

@@ -38,7 +38,7 @@ import { UsageQuotaExceededError } from '@dxos/edge-client';
 import { EffectEx } from '@dxos/effect';
 import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { Message } from '@dxos/types';
+import { type ContentBlock, Message } from '@dxos/types';
 
 import { AssistantOperation } from '#types';
 
@@ -81,6 +81,8 @@ export type ProcessorRequestOptions = {};
 
 export type ProcessorRequest = {
   message: string;
+  /** `synthetic` marks system-generated turn content (e.g. a completed inline flow reporting itself). */
+  disposition?: ContentBlock.Text['disposition'];
   /** Ephemeral context (e.g. companion-document selection) captured at submit time. */
   context?: ProcessorRequestContext;
   options?: ProcessorRequestOptions;
@@ -351,8 +353,9 @@ export class AiChatProcessor {
         log('chat processor submitPrompt returned, waiting for agent', {});
 
         // On the first message (no name yet), schedule rename immediately so it
-        // runs concurrently with the AI response rather than waiting for completion.
-        if (!this._options.chat?.target?.name) {
+        // runs concurrently with the AI response rather than waiting for completion. A synthetic
+        // turn is system-generated, so it would name the chat after a report nobody wrote.
+        if (!this._options.chat?.target?.name && requestProp.disposition !== 'synthetic') {
           yield* this.#updateChatName(requestProp.message);
         }
 

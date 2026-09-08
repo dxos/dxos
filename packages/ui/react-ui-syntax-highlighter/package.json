@@ -25,10 +25,10 @@
     "src"
   ],
   "dependencies": {
+    "@dxos/react-hooks": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
     "@dxos/ui-types": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@radix-ui/react-context": "catalog:",
     "jsonpath-plus": "catalog:",
     "react-syntax-highlighter": "catalog:"
   },

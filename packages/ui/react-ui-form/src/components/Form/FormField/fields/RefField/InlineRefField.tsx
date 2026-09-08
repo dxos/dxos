@@ -121,7 +121,7 @@ const InlineForm = ({ reference, db, readonly, useType = defaultUseType }: Inlin
       if (changedPaths.length === 0) {
         return;
       }
-      Obj.update(target, () => {
+      Obj.update(target, (target) => {
         for (const path of changedPaths) {
           const parts = SchemaEx.splitJsonPath(path);
           Obj.setValue(target, parts, Obj.getValue(values, parts));

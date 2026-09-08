@@ -13,8 +13,6 @@ import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import { translations } from '#translations';
 import { ObservabilityCapabilities, ObservabilityEvents, ObservabilityOptions } from '#types';
 
-// The telemetry pipeline reads browser storage and the user's telemetry preference, neither of
-// which exists headlessly; only `OperationHandler` ships to headless runtimes.
 export const ClientReady = Capability.lazyModule(
   'ClientReady',
   {
@@ -61,10 +59,22 @@ export const PrivacyNotice = Capability.lazyModule(
   },
   () => import('./privacy-notice'),
 );
+export const PrivacyBanner = Capability.lazyModule(
+  'PrivacyBanner',
+  {
+    environments: ['node'],
+    requires: [ObservabilityCapabilities.Namespace],
+    provides: [],
+    activatesOn: ObservabilityEvents.IdentityCreatedEvent,
+  },
+  () => import('#privacy-banner'),
+);
+// `#commands` resolves per condition: only a host with a CLI has anywhere to put them.
+export const Commands = AppCapability.commands(() => import('#commands'));
 export const Namespace = Capability.inlineModule(
   'namespace',
   {
-    environments: [],
+    environments: ['node'],
     provides: [ObservabilityCapabilities.Namespace],
     props: (options: ObservabilityOptions.ObservabilityPluginOptions) => options.namespace,
   },
@@ -73,7 +83,7 @@ export const Namespace = Capability.inlineModule(
 export const Observability = Capability.inlineModule(
   'observability',
   {
-    environments: [],
+    environments: ['node'],
     provides: [ObservabilityCapabilities.Observability],
     props: (options: ObservabilityOptions.ObservabilityPluginOptions) => options.observability,
   },
@@ -84,14 +94,13 @@ export const Observability = Capability.inlineModule(
       return [Capability.contribute(ObservabilityCapabilities.Observability, obs)];
     }),
 );
-// `#operation-handler` resolves per condition: no headless host can send real telemetry (see
-// `operation-handler.headless.ts` for why), so they get a no-op `SendEvent` handler.
 export const OperationHandler = AppCapability.operationHandler(() => import('#operation-handler'));
 export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
   roles: ['org.dxos.role.article'],
 });
 export const ObservabilitySettings = AppCapability.settings(() => import('./settings'), {
   provides: [ObservabilityCapabilities.Settings],
+  environments: [],
 });
 export const ObservabilityState = Capability.lazyModule(
   'ObservabilityState',

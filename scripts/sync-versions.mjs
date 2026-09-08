@@ -5,7 +5,8 @@
 
 // Stamps source version files from their owning package's version, so generated artifacts match the
 // version Changesets assigned. Run inside `changeset:version`:
-//   - `version.ts` (DXOS_VERSION) for @dxos/client, @dxos/client-services (Group A) and @dxos/cli (Group B).
+//   - `version.ts` (DXOS_VERSION) for @dxos/client, @dxos/client-services, @dxos/observability (Group A)
+//     and @dxos/cli (Group B).
 //   - `tauri.conf.json` ($.version) for the Composer desktop build (composer-app's own independent line).
 //
 // Each target tracks the version of the package it lives in — no group assumption — so it stays correct
@@ -19,7 +20,12 @@ const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const CHECK = process.argv.includes('--check');
 
 // Each version.ts tracks the version of the package directory it lives in.
-const VERSION_TS = ['packages/sdk/client', 'packages/sdk/client-services', 'packages/devtools/cli'].map((pkgDir) => ({
+const VERSION_TS = [
+  'packages/sdk/client',
+  'packages/sdk/client-services',
+  'packages/sdk/observability',
+  'packages/devtools/cli',
+].map((pkgDir) => ({
   versionFile: join(ROOT, pkgDir, 'src/version.ts'),
   packageFile: join(ROOT, pkgDir, 'package.json'),
 }));

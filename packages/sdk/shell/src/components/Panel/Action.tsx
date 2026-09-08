@@ -2,7 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import { useControllableState } from '@radix-ui/react-use-controllable-state';
 import React, {
   type ComponentPropsWithoutRef,
   type Dispatch,
@@ -11,6 +10,7 @@ import React, {
   forwardRef,
 } from 'react';
 
+import { useControllableState } from '@dxos/react-hooks';
 import {
   Button,
   type ButtonProps,

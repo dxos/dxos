@@ -16,7 +16,7 @@ import {
   type SubscribeToFeedBlocksResponse,
   type SubscribeToMetadataResponse,
   type SubscribeToSpacesResponse,
-} from '@dxos/protocols/proto/dxos/devtools/host';
+} from '@dxos/protocols/buf/dxos/devtools/host_pb';
 import { type DevtoolsHost } from '@dxos/protocols/rpc';
 
 import { type ServiceContext } from '../services';

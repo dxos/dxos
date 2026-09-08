@@ -59,7 +59,7 @@
       "import": "./dist/lib/plugin/vite-plugin.mjs"
     }
   },
-  "main": "dist/lib/node/index.cjs",
+  "main": "dist/lib/index.mjs",
   "types": "dist/types/src/index.d.ts",
   "files": [
     "dist",

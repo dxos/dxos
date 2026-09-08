@@ -30,7 +30,7 @@ import { Attention, useArticleKeyboardNavigation, useSelection } from '@dxos/rea
 import { ProgressMeter } from '@dxos/react-ui-components';
 import { type EditorController } from '@dxos/react-ui-editor';
 import {
-  Menu,
+  ActionToolbar,
   MenuBuilder,
   TOOLBAR_DISPOSITION,
   graphActions,
@@ -442,13 +442,9 @@ export const MailboxArticle = ({
   return (
     <Panel.Root data-testid='inbox.mailbox'>
       <ElevationProvider elevation='positioned'>
-        <Menu.Root {...menuActions} onAction={runAction} attendableId={id}>
-          <Panel.Toolbar asChild>
-            <Menu.Toolbar>
-              <Menu.Items />
-            </Menu.Toolbar>
-          </Panel.Toolbar>
-        </Menu.Root>
+        <Panel.Toolbar asChild>
+          <ActionToolbar {...menuActions} onAction={runAction} attendableId={id} />
+        </Panel.Toolbar>
       </ElevationProvider>
       <Panel.Content>
         <Deferred pending={showEmptyState} fallback={() => <InitializeMailbox mailbox={mailbox} />}>

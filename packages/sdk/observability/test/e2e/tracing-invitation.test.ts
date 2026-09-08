@@ -12,8 +12,7 @@ import { LocalClientServices } from '@dxos/client/local';
 import { EffectEx } from '@dxos/effect';
 import { log } from '@dxos/log';
 import { MemoryTransportFactory } from '@dxos/network-manager';
-import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
-import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
+import { EdgeReplicationSetting } from '@dxos/protocols/buf/dxos/echo/metadata_pb';
 
 import * as Otel from '../../src/extensions/otel';
 import * as Observability from '../../src/Observability';
@@ -137,8 +136,8 @@ describe.skip('tracing invitation e2e (dev-only)', { timeout: 300_000, retry: 0,
           host: space,
           guest: guest.spaces,
           options: {
-            type: Invitation.Type.DELEGATED,
-            authMethod: Invitation.AuthMethod.KNOWN_PUBLIC_KEY,
+            type: Invitation_Type.DELEGATED,
+            authMethod: Invitation_AuthMethod.KNOWN_PUBLIC_KEY,
             multiUse: false,
           },
         }),

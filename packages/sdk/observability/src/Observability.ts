@@ -62,6 +62,7 @@ export interface Observability {
   events: ObservabilityExtension.Events;
   feedback: ObservabilityExtension.Feedback;
   ai: ObservabilityExtension.Ai;
+  mcp: ObservabilityExtension.Mcp;
   /** True if at least one extension of the given kind reports as available. */
   isAvailable(kind: ObservabilityExtension.Kind): Effect.Effect<boolean>;
   metrics: ObservabilityExtension.Metrics;
@@ -224,6 +225,21 @@ class ObservabilityImpl implements Observability {
       captureEvent: (event, attributes) => {
         for (const extension of this._getExtensions('events')) {
           extension.captureEvent(event, attributes);
+        }
+      },
+    };
+  }
+
+  get mcp(): ObservabilityExtension.Mcp {
+    return {
+      captureInitialize: (client) => {
+        for (const extension of this._getExtensions('mcp')) {
+          extension.captureInitialize(client);
+        }
+      },
+      captureToolCall: (call) => {
+        for (const extension of this._getExtensions('mcp')) {
+          extension.captureToolCall(call);
         }
       },
     };

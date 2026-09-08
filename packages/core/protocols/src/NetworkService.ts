@@ -8,7 +8,15 @@ import * as Rpc from 'effect/unstable/rpc/Rpc';
 import type * as RpcClient from 'effect/unstable/rpc/RpcClient';
 import * as RpcGroup from 'effect/unstable/rpc/RpcGroup';
 
-import { protoMessage, serviceError } from './service-rpc.ts';
+import { NetworkStatusSchema } from './buf/proto/gen/dxos/client/services_pb.ts';
+import { PeerSchema, SwarmResponseSchema } from './buf/proto/gen/dxos/edge/messenger_pb.ts';
+import {
+  JoinRequestSchema,
+  LeaveRequestSchema,
+  MessageSchema,
+  QueryRequestSchema,
+} from './buf/proto/gen/dxos/edge/signal_pb.ts';
+import { bufMessage, serviceError } from './service-rpc.ts';
 import { mutableArray, publicKey } from './service-schemas.ts';
 
 //
@@ -33,7 +41,7 @@ export interface SubscribeSwarmStateRequest extends Schema.Schema.Type<typeof Su
 
 export const SubscribeMessagesRequest = Schema.Struct({
   /** The subscribing peer; point-to-point messages addressed to this peerKey are always delivered. */
-  peer: protoMessage('dxos.edge.messenger.Peer'),
+  peer: bufMessage(PeerSchema),
   /** OR-subscription: deliver any broadcast message whose tags intersect this set. */
   tags: Schema.optional(mutableArray(Schema.String)),
 });
@@ -49,39 +57,39 @@ export class Rpcs extends RpcGroup.make(
     error: serviceError,
   }),
   Rpc.make('queryStatus', {
-    success: protoMessage('dxos.client.services.NetworkStatus'),
+    success: bufMessage(NetworkStatusSchema),
     error: serviceError,
     stream: true,
   }),
   Rpc.make('joinSwarm', {
-    payload: protoMessage('dxos.edge.signal.JoinRequest'),
+    payload: bufMessage(JoinRequestSchema),
     error: serviceError,
   }),
   Rpc.make('leaveSwarm', {
-    payload: protoMessage('dxos.edge.signal.LeaveRequest'),
+    payload: bufMessage(LeaveRequestSchema),
     error: serviceError,
   }),
   /**
    * Query the swarm state without joining it.
    */
   Rpc.make('querySwarm', {
-    payload: protoMessage('dxos.edge.signal.QueryRequest'),
-    success: protoMessage('dxos.edge.messenger.SwarmResponse'),
+    payload: bufMessage(QueryRequestSchema),
+    success: bufMessage(SwarmResponseSchema),
     error: serviceError,
   }),
   Rpc.make('subscribeSwarmState', {
     payload: SubscribeSwarmStateRequest,
-    success: protoMessage('dxos.edge.messenger.SwarmResponse'),
+    success: bufMessage(SwarmResponseSchema),
     error: serviceError,
     stream: true,
   }),
   Rpc.make('sendMessage', {
-    payload: protoMessage('dxos.edge.signal.Message'),
+    payload: bufMessage(MessageSchema),
     error: serviceError,
   }),
   Rpc.make('subscribeMessages', {
     payload: SubscribeMessagesRequest,
-    success: protoMessage('dxos.edge.signal.Message'),
+    success: bufMessage(MessageSchema),
     error: serviceError,
     stream: true,
   }),

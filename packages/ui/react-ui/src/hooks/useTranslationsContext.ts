@@ -4,6 +4,6 @@
 
 import { useContext } from 'react';
 
-import { TranslationsContext } from '../primitives';
+import { TranslationsContext } from '../providers';
 
 export const useTranslationsContext = () => useContext(TranslationsContext);
