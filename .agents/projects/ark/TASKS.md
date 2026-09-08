@@ -1015,7 +1015,18 @@ against the Radix-era names react-ui kept, Popover first.
       per schema property) is `FormFieldDispatch`, with the decision extracted as the pure
       `resolveFieldRenderer` (tested by kind); `Form.Row` is `Form.Field` — one label + control is a
       field, and a field set holds fields. 150 call sites across 17 plugins renamed.
-- [ ] **`Form.Field` in action mode is not a field**: a hand-written settings row (Debug and most
+- [ ] **Phase 18 — the form ontology** (started 2026-09-08, design in
+      `packages/ui/react-ui-form/docs/DESIGN.md`; one PR after #12998 lands, core + sweep):
+  1. `Form.FieldSet` is chrome only (`label`, `description`, `collapsible`; depth from context; border
+     from the theme variant and depth); `Form.Section` and `Form.Group` deleted.
+  2. `Form.Fields` walks the schema (`path`, `include`, `exclude`, `sort`, `filter`), resolved from
+     the root; a nested object renders `Form.FieldSet` + `Form.Fields`.
+  3. `Form.Field` is one `Field.Root` row: `path` binds, else `label`/`description`/`error` props;
+     `standalone` for no-single-control rows; `useFormField()` for a custom control inside a bound row.
+  4. The dispatcher renders the row; the renderers become controls.
+  5. In-package consumers, stories, tests. 6. The sweep: 83 rows, 68 sections, 2 groups, 86 field
+     sets, 14 `fieldMap` and 5 `fieldProvider` sites. `Form.List` and `Form.Root path` are follow-ups.
+- [ ] **`Form.Field` in action mode is not a field** (absorbed by Phase 18 step 3): a hand-written settings row (Debug and most
       settings panels) renders a bare `div`, so its label and description are not field parts.
       Render every row through `Input.Root` (a `Field`) and give hand-written rows the same
       `fieldSet` gap as the schema path (reported from Deck vs Debug settings, 2026-09-08).
