@@ -92,7 +92,6 @@ The first field set holds the walker; the second is hand-written, but the bound
       </Form.Layout>
       <Form.FieldSet label={t('address.label')} collapsible>
         <Form.Root path='address'>
-          {' '}
           {/* hand-placed fields of a nested object, then the rest */}
           <Form.Field path='street' />
           <Form.Fields exclude={['street']} />
