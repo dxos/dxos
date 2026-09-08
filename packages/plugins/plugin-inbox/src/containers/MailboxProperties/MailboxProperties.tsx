@@ -10,7 +10,7 @@ import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
-import { Flex, IconButton, Input, useTranslation } from '@dxos/react-ui';
+import { Field, Flex, IconButton, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 
 import { useSyncTrigger } from '#hooks';
@@ -40,11 +40,11 @@ export const MailboxProperties = ({ subject }: MailboxPropertiesProps) => {
 
   return (
     <Form.Section>
-      <Input.Root>
-        <Input.Label>{t('mailbox-sync.label')}</Input.Label>
+      <Field.Root>
+        <Field.Label>{t('mailbox-sync.label')}</Field.Label>
         <Flex align='center'>
           {/* TODO(burdon): Pad Switch like button/icon (square with padding). */}
-          <Input.Switch
+          <Field.Switch
             checked={syncEnabled ?? false}
             disabled={pending}
             onCheckedChange={() => {
@@ -55,7 +55,7 @@ export const MailboxProperties = ({ subject }: MailboxPropertiesProps) => {
             <IconButton iconOnly icon='ph--gear--regular' label={t('view-trigger.label')} onClick={handleViewTrigger} />
           )}
         </Flex>
-      </Input.Root>
+      </Field.Root>
     </Form.Section>
   );
 };

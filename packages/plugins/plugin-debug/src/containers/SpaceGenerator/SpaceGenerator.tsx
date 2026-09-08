@@ -19,9 +19,9 @@ import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { useClient } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';
 import {
+  Field,
   Flex,
   IconButton,
-  Input,
   Panel,
   ScrollArea,
   ThemedClassName,
@@ -30,7 +30,7 @@ import {
 } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
 import { ProgressMeter } from '@dxos/react-ui-components';
-import { type ActionGraphProps, Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
+import { type ActionGraphProps, ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 import { Organization, Person, Task } from '@dxos/types';
 import { mx } from '@dxos/ui-theme';
 import { sortKeys } from '@dxos/util';
@@ -185,64 +185,62 @@ export const SpaceGenerator = composable<HTMLDivElement, SpaceGeneratorProps>(
     return (
       // `alwaysActive`: the toolbar gates itself on the menu scope's attention, and this debug panel
       // is not an attendable surface, so without it every action renders disabled.
-      <Menu.Root {...menuActions} alwaysActive>
-        <Panel.Root {...composableProps(props)} ref={forwardedRef}>
-          <Panel.Toolbar>
-            <Menu.Toolbar classNames='dx-document'>
-              <Menu.Items />
-              <Input.Root>
-                <Input.TextInput
-                  type='number'
-                  placeholder='Count'
-                  classNames='w-[4rem] text-right'
-                  min={1}
-                  max={100}
-                  size={8}
-                  value={count}
-                  onChange={(event) => setCount(parseInt(event.target.value))}
-                />
-              </Input.Root>
-            </Menu.Toolbar>
-          </Panel.Toolbar>
-          <Panel.Content asChild>
-            <ScrollArea.Root thin orientation='vertical'>
-              <ScrollArea.Viewport classNames='dx-document gap-4 divide-y divide-subdued-separator'>
+
+      <Panel.Root {...composableProps(props)} ref={forwardedRef}>
+        <Panel.Toolbar>
+          <ActionToolbar {...menuActions} alwaysActive classNames='dx-document'>
+            <Field.Root>
+              <Field.Input
+                type='number'
+                placeholder='Count'
+                classNames='w-[4rem] text-right'
+                min={1}
+                max={100}
+                size={8}
+                value={count}
+                onChange={(event) => setCount(parseInt(event.target.value))}
+              />
+            </Field.Root>
+          </ActionToolbar>
+        </Panel.Toolbar>
+        <Panel.Content asChild>
+          <ScrollArea.Root thin orientation='vertical'>
+            <ScrollArea.Viewport classNames='dx-document gap-4 divide-y divide-subdued-separator'>
+              <SchemaTable
+                classNames='py-1'
+                types={staticTypes}
+                objects={info.objects}
+                label='Static Types'
+                onClick={handleCreateData}
+              />
+              <SchemaTable
+                classNames='py-1'
+                types={recordTypes}
+                objects={info.objects}
+                label='Record Types'
+                onClick={handleCreateData}
+              />
+              <SchemaTable
+                classNames='py-1'
+                types={presets.types}
+                objects={info.objects}
+                label='Presets'
+                onClick={handleCreateData}
+              />
+              {sampleSpaces.length > 0 && (
                 <SchemaTable
                   classNames='py-1'
-                  types={staticTypes}
+                  types={sampleSpaces.map(({ id, label }) => ({ typename: id, presetLabel: label }))}
                   objects={info.objects}
-                  label='Static Types'
+                  label='Sample Spaces'
                   onClick={handleCreateData}
                 />
-                <SchemaTable
-                  classNames='py-1'
-                  types={recordTypes}
-                  objects={info.objects}
-                  label='Record Types'
-                  onClick={handleCreateData}
-                />
-                <SchemaTable
-                  classNames='py-1'
-                  types={presets.types}
-                  objects={info.objects}
-                  label='Presets'
-                  onClick={handleCreateData}
-                />
-                {sampleSpaces.length > 0 && (
-                  <SchemaTable
-                    classNames='py-1'
-                    types={sampleSpaces.map(({ id, label }) => ({ typename: id, presetLabel: label }))}
-                    objects={info.objects}
-                    label='Sample Spaces'
-                    onClick={handleCreateData}
-                  />
-                )}
-                <ProgressGenerator classNames='py-1' />
-              </ScrollArea.Viewport>
-            </ScrollArea.Root>
-          </Panel.Content>
-        </Panel.Root>
-      </Menu.Root>
+              )}
+              <ProgressGenerator classNames='py-1' />
+            </ScrollArea.Viewport>
+          </ScrollArea.Root>
+        </Panel.Content>
+      </Panel.Root>
     );
   },
 );

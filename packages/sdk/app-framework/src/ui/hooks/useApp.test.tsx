@@ -12,6 +12,7 @@ import { DXN } from '@dxos/keys';
 
 import { ActivationEvents, Capabilities } from '../../common';
 import { Capability, Plugin, PluginManager } from '../../core';
+import { STARTUP_WATCHDOG_TICK_MS } from './startup-watchdog';
 import { STARTUP_FAILED_EVENT, type StartupDiagnostics, useApp } from './useApp';
 
 const String = Capability.makeSingleton<{ string: string }>()('org.dxos.test.string');
@@ -37,6 +38,44 @@ const TimedHost = ({ manager }: { manager: PluginManager.PluginManager }) => {
 };
 
 describe('useApp startup failure reporting', () => {
+  it.effect('a completed boot never times out', () =>
+    Effect.gen(function* () {
+      const plugin = Plugin.define(testMeta).pipe(
+        Plugin.addModule({
+          id: 'Hello',
+          activatesOn: ActivationEvents.Startup,
+          provides: [String],
+          activate: () => Effect.succeed([Capability.contribute(String, { string: 'hello' })]),
+        }),
+        Plugin.make,
+      )();
+
+      const manager = PluginManager.make({ pluginLoader: pluginLoader([plugin]), plugins: [plugin] });
+      const reported: StartupDiagnostics[] = [];
+      const listener = (event: CustomEvent<StartupDiagnostics>) => reported.push(event.detail);
+      window.addEventListener(STARTUP_FAILED_EVENT, listener);
+
+      // Fake the watchdog's own timers (as `startup-watchdog.test.ts` does) so the "never times
+      // out" window is asserted by advancing virtual time rather than waiting out real seconds;
+      // installed before mount so the watchdog's `setInterval`/`performance.now` are fake from creation.
+      vi.useFakeTimers({ toFake: ['setInterval', 'clearInterval', 'performance'] });
+      let unmount = () => {};
+      try {
+        ({ unmount } = render(<TimedHost manager={manager} />));
+        yield* Effect.promise(() => waitFor(() => assert.isTrue(manager.getActive().length > 0)));
+        vi.advanceTimersByTime(2 * STARTUP_WATCHDOG_TICK_MS);
+      } finally {
+        // Restore real timers even if the render/wait/advance above throws, so a failure here
+        // can't leak fake timers into whichever test runs next in this worker.
+        window.removeEventListener(STARTUP_FAILED_EVENT, listener);
+        unmount();
+        vi.useRealTimers();
+      }
+
+      assert.deepStrictEqual(reported, []);
+    }),
+  );
+
   it.effect('a module that fails to activate reports diagnostics on the error and the event', () =>
     Effect.gen(function* () {
       const plugin = Plugin.define(testMeta).pipe(

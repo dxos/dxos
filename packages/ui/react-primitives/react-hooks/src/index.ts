@@ -2,12 +2,15 @@
 // Copyright 2022 DXOS.org
 //
 
-export { useComposedRefs } from '@radix-ui/react-compose-refs';
 export { useScroller, useSize } from 'mini-virtual-list';
 
+export * from './composeEventHandlers';
+export * from './createContext';
 export * from './useAsyncEffect';
 export * from './useAtomState';
 export * from './useAsyncState';
+export * from './useComposedRefs';
+export * from './useControllableState';
 export * from './useControlledState';
 export * from './useDebugDeps';
 export * from './useDefaultValue';
@@ -20,6 +23,7 @@ export * from './useIsFocused';
 export * from './useMediaQuery';
 export * from './useMulticastObservable';
 export * from './useRefCallback';
+export * from './useStable';
 export * from './useViewportResize';
 export * from './useTimeout';
 export * from './useTransitions';

@@ -239,7 +239,10 @@ export const useFollow = ({
   // as the estimates are replaced.
   // Whether the feed has arrived at its tail once. Opening a populated feed is not motion to
   // follow — the reader was not watching the travel, so it arrives; the glide is for content
-  // arriving at a tail they are looking at.
+  // arriving at a tail they are looking at. Earned by the settle pass below rather than by an
+  // effect that finds itself at the target: StrictMode re-runs the effect in the same tick as the
+  // arrival, and an opening still settling (the reserve lands a beat after the first write) would
+  // otherwise be glided as if the reader had watched it.
   const positioned = useRef(false);
 
   useLayoutEffect(() => {
@@ -252,7 +255,6 @@ export const useFollow = ({
     const current = axis === 'block' ? scroller.scrollTop : scroller.scrollLeft;
     const gap = target - current;
     if (Math.abs(gap) <= 1) {
-      positioned.current = true;
       return;
     }
 
@@ -303,7 +305,12 @@ export const useFollow = ({
     // Bounded, shrink-only repayment (positive residue is growth, which the gate owns).
     let verifies = SETTLE_FRAMES;
     const verify = () => {
-      if (!following.current || verifies-- <= 0) {
+      if (!following.current) {
+        return;
+      }
+
+      if (verifies-- <= 0) {
+        positioned.current = true;
         return;
       }
 

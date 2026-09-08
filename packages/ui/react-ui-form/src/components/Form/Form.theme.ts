@@ -16,15 +16,21 @@ const formStyles = tv({
     // Bottom padding on the body, so the last field never sits flush against its host's edge
     // (a form in a card, a dialog body, a scrolled panel all need it).
     content: 'pb-form-padding',
-    section: 'flex flex-col py-form-section-gap first:pt-0',
+    // `relative` anchors `sectionActions`; the legend stays the fieldset's own child to name the group.
+    section: 'relative flex flex-col py-form-section-gap first:pt-0',
     group: 'flex flex-col gap-trim-md p-trim-md border border-separator rounded-sm',
     sectionHeader: '',
+    // Out of flow, so a description below the title does not push it down.
+    sectionActions: 'absolute inset-block-start-0 inset-inline-end-0 flex items-center',
     sectionTitle: 'text-lg',
     sectionDescription: 'text-description',
-    fieldSet: '',
+    // A `<fieldset>`: laid out as a column so its legend (floated by the fieldset theme) is a child
+    // in flow rather than the browser's border-drawn legend.
+    fieldSet: 'flex flex-col',
+    fieldSetLegend: 'w-full',
     field: '',
     // Columns: label (fills) → optional `labelEnd` readout → error icon (or its spacer) → optional trailing `button`.
-    // Height comes from the label cell (`Input.Label` is a control-height row); this only lays the
+    // Height comes from the label cell (`Field.Label` is a control-height row); this only lays the
     // columns out and centres the trailing cells against it.
     fieldLabel: 'grid grid-cols-[1fr_auto_auto_auto] items-center',
     fieldLabelText: '',
@@ -38,7 +44,7 @@ const formStyles = tv({
     // Collapsible field-set body: indented column of sub-fields.
     fieldSetBody: 'flex flex-col px-trim-sm pb-trim-sm',
     // Bordered container wrapping a collapsible nested group, plus its top spacing.
-    fieldSetBox: 'border border-subdued-separator rounded-sm',
+    fieldSetBox: 'flex flex-col border border-subdued-separator rounded-sm',
     fieldSetBoxOuter: '',
   },
   variants: {
@@ -47,9 +53,10 @@ const formStyles = tv({
       settings: {
         content: 'dx-document',
         // Gap on the section spaces its direct children — section title/description and, for action
-        // panels, the `Form.Row`s placed directly in the section (which have no `fieldSet` wrapper).
+        // panels, the `Form.Field`s placed directly in the section (which have no `fieldSet` wrapper).
         section: 'py-form-section-gap! gap-trim-md',
         sectionHeader: 'pb-form-section-gap',
+        sectionActions: 'inset-block-start-form-section-gap px-trim-md',
         sectionTitle: 'px-trim-md text-xl',
         sectionDescription: 'px-trim-md',
         // No top padding: the section gap already separates the field set from the title above it.

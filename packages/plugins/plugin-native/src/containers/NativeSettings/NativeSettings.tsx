@@ -9,7 +9,7 @@ import * as Schema from 'effect/Schema';
 import React, { type ReactNode, useState } from 'react';
 
 import { useCapability } from '@dxos/app-framework/ui';
-import { type AppSurface } from '@dxos/app-toolkit/ui';
+import { type AppSurface, SettingsScope } from '@dxos/app-toolkit/ui';
 import { Button, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 
@@ -61,10 +61,13 @@ export const NativeSettings = () => {
     <Form.Root schema={Schema.Struct({})} values={{}} variant='settings'>
       <Form.Viewport scroll>
         <Form.Content>
-          <Form.Section title={meta.profile.name ?? meta.profile.key}>
-            <Form.Row label={t('settings.updates.label')} description={description}>
+          <Form.Section
+            title={meta.profile.name ?? meta.profile.key}
+            actions={<SettingsScope prefix={meta.profile.key} />}
+          >
+            <Form.Field label={t('settings.updates.label')} description={description}>
               {button}
-            </Form.Row>
+            </Form.Field>
           </Form.Section>
         </Form.Content>
       </Form.Viewport>

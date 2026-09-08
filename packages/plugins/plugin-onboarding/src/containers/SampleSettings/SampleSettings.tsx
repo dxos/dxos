@@ -6,6 +6,7 @@ import * as Schema from 'effect/Schema';
 import React, { useCallback, useState } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
+import { SettingsScope } from '@dxos/app-toolkit/ui';
 import { log } from '@dxos/log';
 import { IconButton, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
@@ -37,8 +38,8 @@ export const SampleSettings = () => {
     <Form.Root schema={Schema.Struct({})} values={{}} variant='settings'>
       <Form.Viewport scroll>
         <Form.Content>
-          <Form.Section title={t('settings.section.title')}>
-            <Form.Row
+          <Form.Section title={t('settings.section.title')} actions={<SettingsScope prefix={meta.profile.key} />}>
+            <Form.Field
               label={t('settings.recreate-sample.label')}
               description={t('settings.recreate-sample.description')}
             >
@@ -49,7 +50,7 @@ export const SampleSettings = () => {
                 disabled={busy}
                 onClick={handleRecreate}
               />
-            </Form.Row>
+            </Form.Field>
           </Form.Section>
         </Form.Content>
       </Form.Viewport>

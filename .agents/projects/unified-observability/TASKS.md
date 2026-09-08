@@ -1,6 +1,6 @@
 # Unified observability — Tasks
 
-_Resume: land dxos/dxos#12939, then Phase 3 in an edge worktree pinned to its merge commit. Uncommitted: none. Last: PR opened, CI pending._
+_Resume: land dxos/dxos#12609 then #12939 (stacked), then Phase 3 in an edge worktree pinned to the merge commit. Uncommitted: none. Last: stacked on #12609, sync module replaced by the settings reactor._
 
 ## Phase 1: `@dxos/observability` on workerd (dxos)
 
@@ -19,12 +19,13 @@ pieces EDGE plugs into `otel-cf-workers`.
       `FanoutSpanProcessor`/`addSpanProcessor`, `TagInjectorSpanProcessor`.
 - [x] **Tests** — Relay extension, workerd traces variant.
 
-## Phase 2: settings-space preferences (dxos, plugin-observability)
+## Phase 2: settings-space opt-in (dxos, plugin-observability)
 
-- [x] **Annotation** — `enabled` on the settings space properties.
-- [x] **Operation** — `SetEnabled` writes the annotation.
-- [x] **`SettingsSync` module** — on spaces ready: read annotations, seed from local on first
-      device, apply remote changes live.
+Stacked on dxos#12609, whose generic binder syncs every plugin settings atom through the
+`AppSettings` object in the settings space.
+
+- [x] **`SettingsReactor` module** — follows the settings atom's `enabled` into the backends and
+      the local mirror, so a change synced from another device applies like the toggle.
 - [x] **Workerd `Observability` module** — `Observability` and `Namespace` modules split for
       workerd; delete `operation-handler.workerd.ts`.
 - [x] **Changeset, build, lint, tests, PR.** — dxos/dxos#12939
@@ -45,8 +46,8 @@ pieces EDGE plugs into `otel-cf-workers`.
 ## Phase 4: follow-ups
 
 - [ ] Per-invocation opt-in on EDGE: resolve the invoking identity's settings space
-      (`DataService.getSpaceTags`), read `enabled`, gate the AI sink on it, then add the fanout to
-      the `otel-cf-workers` config.
+      (`DataService.getSpaceTags`), read `AppSettings.shared["org.dxos.plugin.observability"]`,
+      gate the AI sink on it, then add the fanout to the `otel-cf-workers` config.
 - [ ] `dx` reads the settings-space preference.
 - [ ] Shared log flattening (`ctx_` vs `ctx.`) and severity mapping; OTLP logs from tail-logger.
 

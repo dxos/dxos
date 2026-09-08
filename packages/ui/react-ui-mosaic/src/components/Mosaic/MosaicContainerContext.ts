@@ -2,8 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { createContext } from '@radix-ui/react-context';
-
+import { createContext } from '@dxos/react-hooks';
 import { type AllowedAxis } from '@dxos/react-ui';
 import { type DndContainerHandler, type DndDraggingState, type DndLocation } from '@dxos/react-ui-dnd';
 

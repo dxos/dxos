@@ -9,7 +9,7 @@ import { getStyles } from '@dxos/ui-theme';
 
 import { type FormFieldRendererProps } from '#types';
 
-import { FormRow } from '../../FormRow';
+import { FormField } from '../../FormField';
 
 export type SelectFieldOptions = FormFieldRendererProps & {
   options?: Array<{ value: string | number; label?: string; secondaryLabel?: string; icon?: string; iconHue?: string }>;
@@ -22,7 +22,7 @@ export const SelectField = ({ type, readonly, placeholder, options, onValueChang
   );
 
   return (
-    <FormRow<string>
+    <FormField<string>
       readonly={readonly}
       renderStatic={(value) => (
         <p className='truncate min-w-0'>
@@ -49,13 +49,12 @@ export const SelectField = ({ type, readonly, placeholder, options, onValueChang
                     </Select.Option>
                   ))}
                 </Select.Viewport>
-                <Select.Arrow />
               </Select.Content>
             </Select.Portal>
           )}
         </Select.Root>
       )}
-    </FormRow>
+    </FormField>
   );
 };
 

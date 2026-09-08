@@ -85,19 +85,12 @@ export default Capability.makeModule(
       AppGraph.expandSync(graph, defaultSpace.id, 'child');
     }
 
-    const homePath = GraphPath.getSpaceHomePath(defaultSpace.id);
-    yield* Effect.gen(function* () {
-      // Claim the workspace before setting the plank: `plugin-space` switches to the default space
-      // from a forked fiber, and a switch restores the target workspace's (empty) persisted deck, so
-      // a plank set first is wiped. Switching here also satisfies that fiber's `workspace === default`
-      // guard, leaving it a no-op.
-      yield* Operation.invoke(LayoutOperation.SwitchWorkspace, {
-        subject: GraphPath.getSpacePath(defaultSpace.id),
-      });
-      // Land on the default space's Home, which surfaces the seeded README among its recent objects.
-      yield* Operation.invoke(LayoutOperation.Set, { subject: [homePath] });
-      // Expose is scheduled because the navtree may not have rendered yet at this point.
-      yield* Operation.schedule(LayoutOperation.Expose, { subject: homePath });
+    // Land on the default space's Home, which surfaces the seeded README among its recent objects.
+    // `Open` claims the workspace and schedules the expose itself, so it does not race the switch
+    // `plugin-space` makes from its own fiber.
+    yield* Operation.invoke(LayoutOperation.Open, {
+      subject: [GraphPath.getSpaceHomePath(defaultSpace.id)],
+      workspace: GraphPath.getSpacePath(defaultSpace.id),
     }).pipe(Effect.provideService(Operation.Service, operationInvoker));
 
     return [];

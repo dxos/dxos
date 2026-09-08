@@ -159,11 +159,74 @@ Tasks run through `moon` (`moon run <package>:<task>`). See a package's
 - Lint & fix: `moon run :lint -- --fix`
 - Format: `pnpm format` (oxfmt — CI checks `oxfmt --check`, not prettier)
 - Unused deps & dead files: `pnpm knip` (root deps are excluded — see `REPOSITORY_GUIDE.md`)
-- Storybook: `moon run storybook-react:serve` (port 9009)
+- Storybook: `moon run storybook-react:serve` (port 9009). **One server, shared with
+  the user — see "Sharing long-running servers" below.** It periodically wedges;
+  `serve` arms a watcher that captures the cause. If it wedges under a server you
+  started another way, run `bash tools/storybook-react/diagnose.sh` BEFORE restarting —
+  a restart destroys the evidence. → `REPOSITORY_GUIDE.md` §Storybooks.
 
 A remote-cache warning from moon is harmless — builds work, they just don't share the team's
 cache. Worth fixing anyway: `tools/moon-cache/install-certs.sh --op` installs the certificates
 once per machine, for every worktree.
+
+## Sharing long-running servers
+
+Applies to every long-running server the user might be looking at — storybook on 9009,
+the Composer app on 5199, any `*:serve` task. Ports and specifics below are storybook's;
+the rules are the same for the others.
+
+**Each server serves ONE worktree, and that is invisible from the outside.** A server
+answering on its usual port may be serving a different worktree entirely — the app boots,
+the page renders, and none of your changes are in it. Before using one to verify, confirm
+whose tree it serves: fetch a file that exists only in yours
+(`/@fs/<abs path to a file you just wrote>` returns 200), or check the process's cwd with
+`lsof -a -p <pid> -d cwd -Fn`. If it is serving another worktree, restart it from yours
+rather than starting a second — and say so, since it moves a window someone may be using.
+
+**There is ONE storybook server, on port 9009, and the user is looking at it.** Never
+start a second one "on a free port" to avoid disturbing them — two servers on one machine
+starve each other (each holds a monorepo-wide watcher and 1-2GB), and each one's file
+writes wedge the other, which is how a debugging session ends up chasing its own noise.
+
+- **Reuse before starting.**
+  `curl -s -o /dev/null -w '%{http_code}' --connect-timeout 2 --max-time 5 http://localhost:9009/`
+  — bounded, so a wedged server cannot hang the probe. Reuse it only on a `200`, and only after
+  the worktree check below: a `000` is not a free port, and any other code is not a storybook.
+- **The server serves ONE worktree.** If 9009 is serving a different worktree than the one
+  you are editing, restart it against yours (`moon run storybook-react:serve` from your
+  worktree) rather than adding a second server. Say so in your reply — you are moving a
+  window the user may be looking at.
+- **Unresponsive is usually not dead.** The server stalls for a minute or two whenever a
+  file under `packages/` is written (a chokidar fsevents pathology — see
+  `tools/storybook-react/diagnose.sh`), then recovers by itself. Wait ~3 minutes before
+  concluding anything. If it is still down, run `diagnose.sh` to capture the cause BEFORE
+  restarting; a restart destroys the only evidence.
+- **Never `pkill -f storybook`.** Kill by the PID you own, established via
+  `lsof -ti :9009 -sTCP:LISTEN`, and only after the wait above.
+- **Do not run `moon run <pkg>:build` while a server is up** unless you need it — a build
+  rewrites dist under the live watcher and reliably stalls the server. A package
+  typecheck (`npx tsc --noEmit -p tsconfig.json`) verifies as much without the churn.
+- **The one exception:** a session whose actual subject is the storybook server (profiling
+  a wedge, testing a watcher fix) may run its own instrumented server on its own port —
+  but it MUST do so from its own worktree. An instrumented server in someone else's
+  worktree perturbs their server and contaminates its own measurements.
+
+## Working across dxos and edge
+
+The EDGE worker repo (`dxos/edge`) consumes `@dxos/*` as pinned `pkg.pr.new` builds, so a change here
+is invisible there until something publishes it.
+
+- **When both repos are checked out, link locally — never publish to see your own change.** From the
+  edge checkout: `pnpm link-packages` (`scripts/link-packages.mjs ../dxos --all --install`) packs this
+  workspace and installs it over `pnpm.overrides` `file:` entries. It is faster than a publish round
+  trip, depends on no external service, and picks up an export or subpath that does not exist in any
+  published build yet — which is exactly the inner loop for a feature spanning both repos.
+- Do not dispatch `.github/workflows/pkg-pr-new.yml` to unblock local work. A pinned build is for a
+  commit someone else consumes (a catalog bump, edge CI), not for iterating.
+- The `file:` overrides live in edge's root `package.json` and must not be committed there; edge's
+  `CLAUDE.md` covers the undo.
+
+## Long-running tasks
 
 **Run every long task in the background.** A repo-wide build, `pnpm install`, a full `:test` sweep,
 a repo-wide `oxfmt`, a storybook or dev server — anything expected to run past ~30s — goes in the
@@ -218,6 +281,12 @@ Deeper conventions:
   failure, not pre-existing; fix the root cause on the branch, never merge
   around it. Inspect: `gh run list --branch <branch> --workflow "Check"`, then
   `gh run view <id> --log-failed`.
+- **Check runs on Depot, not GitHub Actions** (`.depot/workflows/check.yml`), so the
+  GitHub API returns empty output for every `Check / …` check run and its `details_url`
+  redirects to SSO. That is not "logs unreachable": `DEPOT_TOKEN` is in the environment
+  and the `depot` CLI reads it — `depot ci logs <job-id>`, `depot tests <job-id> --ci`,
+  `depot ci diagnose --job <job-id>`, `depot ci retry <run-id> --job <job-id>`. The
+  `?job=` parameter of the check run's `details_url` is the job id. → `depot-ci` skill.
 - Commit hygiene → see "Commit nothing silently" in Non-negotiables.
 - Creating or landing a PR is a procedure — use the `submit-pr` and `land`
   skills. Always surface the Composer preview URL next to the PR link.
@@ -275,6 +344,9 @@ Do not paste real credential values into any shell command, and do not paste the
 - **Skills** (`.agents/skills/*`) — deep, task-specific how-to. Follow the
   relevant skill for the area you're working in (echo, effect, composer-ui,
   operations, testing, code-style, submit-pr, land, …).
+- **Reading a red `Check` run** — CI logs, failed test lists, failure diagnoses and
+  job retries via the `depot` CLI and `DEPOT_TOKEN` → `depot-ci` skill
+  (`.agents/skills/depot-ci/SKILL.md`).
 - **Flaky test quarantining** — investigating a flaky/red CI run or setting up
   Trunk test uploads → `trunk-quarantine` skill
   (`.agents/skills/trunk-quarantine/SKILL.md`); adding the Trunk MCP server →
@@ -284,6 +356,11 @@ Do not paste real credential values into any shell command, and do not paste the
   [`.agents/projects/sql-migrations/DESIGN.md`](.agents/projects/sql-migrations/DESIGN.md).
   Read it before reaching for Prisma: there is no driver adapter for the
   browser client, which is why the schema is hand-written SQL.
+- **Working a task with no questions asked** — `/autonomous [task]` pins a task the
+  session must finish against a written definition of done, resolving scope from a
+  verbatim log of what the user already said → `autonomous-mode` skill
+  (`.agents/skills/autonomous-mode/SKILL.md`); Claude-harness specifics in
+  `.claude/CLAUDE.md`.
 - **`REPOSITORY_GUIDE.md`** — toolchain setup, prerequisites, and how to run
   apps/services (Composer, Tasks, Docs).
 - **`OPS_GUIDE.md`** / **`TROUBLESHOOTING.md`** — operations and common issues.

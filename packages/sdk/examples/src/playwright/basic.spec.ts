@@ -17,6 +17,10 @@ test.describe('Demo', () => {
     await app.init();
   });
 
+  test.afterAll(async () => {
+    await app.close();
+  });
+
   test('peers can see cursors', async () => {
     expect(await app.getCollaboratorCursors().count()).toEqual(0);
 

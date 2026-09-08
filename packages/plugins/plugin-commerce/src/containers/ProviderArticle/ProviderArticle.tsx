@@ -12,7 +12,7 @@ import { Flex, Panel, useTranslation } from '@dxos/react-ui';
 import {
   type ActionExecutor,
   type ActionGraphProps,
-  Menu,
+  ActionToolbar,
   MenuBuilder,
   graphActions,
   isToolbarAction,
@@ -66,12 +66,8 @@ export const ProviderArticle = ({ role, subject, attendableId }: ProviderArticle
 
   return (
     <Panel.Root role={role}>
-      <Panel.Toolbar>
-        <Menu.Root {...actions} attendableId={attendableId} onAction={onAction}>
-          <Menu.Toolbar>
-            <Menu.Items />
-          </Menu.Toolbar>
-        </Menu.Root>
+      <Panel.Toolbar asChild>
+        <ActionToolbar {...actions} attendableId={attendableId} onAction={onAction} />
       </Panel.Toolbar>
       <Panel.Content classNames='flex flex-col gap-2 p-3'>
         <span className='text-sm text-description'>{t('search-fields.label')}</span>

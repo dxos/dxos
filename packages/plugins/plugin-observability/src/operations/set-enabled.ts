@@ -6,39 +6,42 @@ import * as Effect from 'effect/Effect';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as Operation from '@dxos/compute/Operation';
+import * as Observability from '@dxos/observability/Observability';
 
-import { ObservabilityCapabilities, ObservabilityOperation } from '#types';
-
-import { applyTelemetryEnabled, readySettingsSpace, writeTelemetryEnabled } from '../util';
+import { meta } from '#meta';
+import { ObservabilityCapabilities, ObservabilityOperation, Settings } from '#types';
 
 const handler: Operation.WithHandler<typeof ObservabilityOperation.SetEnabled> = ObservabilityOperation.SetEnabled.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* (input) {
-      const observability = yield* Capability.get(ObservabilityCapabilities.Observability);
       const namespace = yield* Capability.get(ObservabilityCapabilities.Namespace);
+      const observability = yield* Capability.get(ObservabilityCapabilities.Observability);
       const capabilities = yield* Capability.Service;
-      const enabled = input.state;
+      const newEnabled = input.state;
 
-      observability.events.captureEvent('observability.toggle', { enabled });
-      yield* applyTelemetryEnabled(
-        {
-          observability,
-          namespace,
-          registry: capabilities.get(Capabilities.AtomRegistry),
-          settingsAtom: capabilities.getAll(ObservabilityCapabilities.Settings)[0],
-        },
-        enabled,
-      );
+      observability.events.captureEvent('observability.toggle', {
+        enabled: newEnabled,
+      });
 
-      // The choice replicates to the user's other devices; a host without the space keeps it local.
-      const [client] = capabilities.getAll(ObservabilityCapabilities.ClientCapability);
-      const settingsSpace = client && readySettingsSpace(client);
-      if (settingsSpace) {
-        writeTelemetryEnabled(settingsSpace, enabled);
+      if (newEnabled) {
+        yield* observability.enable();
+      } else {
+        yield* observability.disable();
+      }
+      yield* Effect.promise(() => Observability.storeObservabilityDisabled(namespace, !newEnabled));
+
+      const settingsObj = capabilities
+        .getAll(AppCapabilities.Settings)
+        .find((candidate: AppCapabilities.Settings) => candidate.prefix === meta.profile.key);
+      if (settingsObj) {
+        const registry = capabilities.get(Capabilities.AtomRegistry);
+        const settings = registry.get(settingsObj.atom) as Settings.Settings;
+        registry.set(settingsObj.atom, { ...settings, enabled: newEnabled });
       }
 
-      return enabled;
+      return newEnabled;
     }),
   ),
 );

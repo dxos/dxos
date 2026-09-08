@@ -2,12 +2,10 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { Children, type PropsWithChildren, useState } from 'react';
+import React, { Children, type PropsWithChildren } from 'react';
 
-import { type ThemedClassName, ToggleIconButton, useTranslation } from '@dxos/react-ui';
+import { Collapsible, Fieldset, Icon, type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
-
-import { translationKey } from '#translations';
 
 import { useFormContext } from '../../../hooks';
 import { formTheme } from '../Form.theme';
@@ -23,7 +21,7 @@ export type FormFieldSetContainerProps = ThemedClassName<
     readonly?: boolean;
     presentation: FormFieldPresentation;
     /**
-     * Render a collapse toggle in the header and wrap the body in an indented, bordered box.
+     * Make the header a disclosure for the body and wrap both in an indented, bordered box.
      * Used for nested objects (struct fields, object-array items, inline refs).
      */
     collapsible?: boolean;
@@ -31,9 +29,11 @@ export type FormFieldSetContainerProps = ThemedClassName<
 >;
 
 /**
- * Shared chrome for a labelled group of sub-fields: an optional header (label + collapse toggle) and,
- * when collapsible, an indented bordered container around the body. Nested structs, object-array items,
- * and inline refs all reach this via `FormFieldSet`, so their visual containment is identical.
+ * Shared chrome for a labelled group of sub-fields: an optional header and, when collapsible, an
+ * indented bordered container that is a `Collapsible` with the header as its trigger. Each nested
+ * object folds on its own — the form owns no set across siblings, so there is nothing for an accordion
+ * to coordinate. Nested structs, object-array items, and inline refs all reach this via `FormFieldSet`,
+ * so their visual containment is identical.
  */
 export const FormFieldSetContainer = ({
   classNames,
@@ -44,58 +44,57 @@ export const FormFieldSetContainer = ({
   collapsible,
   children,
 }: FormFieldSetContainerProps) => {
-  const { t } = useTranslation(translationKey);
   // Resolved per render, not once at module scope: a module-scope `formTheme.styles()` silently pins
   // the `default` variant, so a `settings` form's nested groups lost the gap between their sub-fields
   // and rendered flush. Every path here passes through `Form.FieldSet`, which reads the same context.
   const { variant = 'default' } = useFormContext(FORM_FIELDSET_CONTAINER_NAME);
   const styles = formTheme.styles({ variant });
-  // TODO(burdon): Generalize collapse state (cf. useSelection in react-ui-attention, plugin-markdown cursor state).
-  const [collapsed, setCollapsed] = useState(false);
-  // An empty object/array renders no sub-fields, so there is nothing to collapse — offering the
-  // toggle (and the click target on the header) would be a control that does nothing.
+  // An empty object/array renders no sub-fields, so there is nothing to fold — a disclosure on the
+  // header would be a control that does nothing.
   const canCollapse = collapsible && Children.toArray(children).length > 0;
-  const showBody = !(canCollapse && collapsed);
 
-  const content = (
-    <>
-      {presentation.showLabel && label && (
-        <FormFieldHeader
-          label={label}
-          path={path}
-          readonly={readonly}
-          classNames='pl-2'
-          actions={
-            canCollapse ? (
-              <ToggleIconButton
-                active={!collapsed}
-                classNames='px-1 mr-0.5'
-                variant='ghost'
-                density='sm'
-                iconOnly
-                icon='ph--caret-right--regular'
-                label={t(collapsed ? 'expand-fields.label' : 'collapse-fields.label')}
-              />
-            ) : undefined
-          }
-          onClick={canCollapse ? () => setCollapsed((value) => !value) : undefined}
-        />
-      )}
-      {showBody && (canCollapse ? <div className={styles.fieldSetBody()}>{children}</div> : children)}
-    </>
-  );
-
-  // Nested groups render inside an indented, bordered container with a collapse toggle. A non-collapsible
-  // group only materializes a wrapper when `classNames` is supplied — otherwise the body flows straight
-  // into the parent grid (the default, grid-transparent behavior).
+  // Nested groups fold inside an indented, bordered container: the box is the fieldset and the
+  // `Collapsible` at once, its legend holds the trigger and its body is the content, so the group's
+  // name, box and disclosure state sit on one element.
   if (canCollapse) {
     return (
       <div className={styles.fieldSetBoxOuter()}>
-        <div className={styles.fieldSetBox({ class: mx(classNames) })}>{content}</div>
+        <Collapsible.Root defaultOpen asChild>
+          <Fieldset.Root classNames={styles.fieldSetBox({ class: mx(classNames) })}>
+            {presentation.showLabel && label && (
+              <Fieldset.Legend classNames={styles.fieldSetLegend()}>
+                <FormFieldHeader
+                  label={label}
+                  path={path}
+                  readonly={readonly}
+                  classNames='pl-2'
+                  trigger
+                  actions={
+                    <Icon
+                      icon='ph--caret-right--regular'
+                      size={4}
+                      classNames='mx-1.5 transition-transform group-data-[state=open]:rotate-90'
+                    />
+                  }
+                />
+              </Fieldset.Legend>
+            )}
+            <Collapsible.Content classNames={styles.fieldSetBody()}>{children}</Collapsible.Content>
+          </Fieldset.Root>
+        </Collapsible.Root>
       </div>
     );
   }
 
-  // Only materialize a wrapper when `classNames` is supplied; otherwise stay grid-transparent.
-  return classNames ? <div className={mx(classNames)}>{content}</div> : <>{content}</>;
+  // A plain group is still a fieldset named by its legend; the column layout keeps the legend in flow.
+  return (
+    <Fieldset.Root classNames={styles.fieldSet({ class: mx(classNames) })}>
+      {presentation.showLabel && label && (
+        <Fieldset.Legend classNames={styles.fieldSetLegend()}>
+          <FormFieldHeader label={label} path={path} readonly={readonly} classNames='pl-2' />
+        </Fieldset.Legend>
+      )}
+      {children}
+    </Fieldset.Root>
+  );
 };

@@ -75,8 +75,8 @@ export const seedAgentSuggestions = async (doc: Markdown.Document, parent: Text.
   for (const agent of STORY_AGENTS) {
     const branch = await Branch.suggestion(doc, parent, agent.did);
     const binding = await Branch.bind(doc, branch);
-    Obj.update(binding.object, () => {
-      EchoText.update(binding.object, 'content', agent.content);
+    Obj.update(binding.object, (object) => {
+      EchoText.update(object, 'content', agent.content);
     });
     binding.dispose();
   }

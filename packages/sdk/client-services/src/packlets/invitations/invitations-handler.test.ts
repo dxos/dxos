@@ -7,7 +7,14 @@ import { beforeEach, describe, expect, onTestFinished, test } from 'vitest';
 import { type PushStream, Trigger, sleep, waitForCondition } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { PublicKey } from '@dxos/keys';
-import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
+import { fromPublicKey, toPublicKey } from '@dxos/protocols/buf';
+import {
+  Invitation,
+  Invitation_AuthMethod,
+  Invitation_Kind,
+  Invitation_State,
+  Invitation_Type,
+} from '@dxos/protocols/buf/dxos/client/invitation_pb';
 import { openAndClose } from '@dxos/test-utils';
 import { range } from '@dxos/util';
 
@@ -27,9 +34,9 @@ interface PeerSetup {
 
 type StateUpdateSink = PushStream<Invitation> & {
   sink: Invitation[];
-  lastState: Invitation.State | undefined;
-  hasState(startingFrom: number, state: Invitation.State): boolean;
-  waitFor(state: Invitation.State): Promise<void>;
+  lastState: Invitation_State | undefined;
+  hasState(startingFrom: number, state: Invitation_State): boolean;
+  waitFor(state: Invitation_State): Promise<void>;
 };
 
 // TODO(burdon): Flaky.
@@ -53,12 +60,11 @@ describe.skipIf(process.env.CI && !process.env.RUN_FLAKY_TESTS)(
           const guest = await createPeer(host.spaceKey);
           await performAuth(guest, invitation);
 
-          await sleep(15);
-          expect(guest.ctx.disposed).to.be.true;
+          await waitForCondition({ condition: () => guest.ctx.disposed });
           if (multiUse) {
             expect(host.ctx.disposed).to.be.false;
           } else {
-            expect(host.ctx.disposed).to.be.true;
+            await waitForCondition({ condition: () => host.ctx.disposed });
           }
         });
       }
@@ -73,10 +79,10 @@ describe.skipIf(process.env.CI && !process.env.RUN_FLAKY_TESTS)(
         const guest = await createPeer(host.spaceKey);
         await acceptInvitation(guest, invitation);
 
-        await guest.sink.waitFor(Invitation.State.READY_FOR_AUTHENTICATION);
+        await guest.sink.waitFor(Invitation_State.READY_FOR_AUTHENTICATION);
         await sleep(200);
-        await host.sink.waitFor(Invitation.State.CONNECTING);
-        await guest.sink.waitFor(Invitation.State.TIMEOUT);
+        await host.sink.waitFor(Invitation_State.CONNECTING);
+        await guest.sink.waitFor(Invitation_State.TIMEOUT);
 
         await sleep(10);
         expect(host.ctx.disposed).to.be.false;
@@ -93,9 +99,9 @@ describe.skipIf(process.env.CI && !process.env.RUN_FLAKY_TESTS)(
         const guest = await createPeer(host.spaceKey);
         await acceptInvitation(guest, invitation);
 
-        await guest.sink.waitFor(Invitation.State.READY_FOR_AUTHENTICATION);
+        await guest.sink.waitFor(Invitation_State.READY_FOR_AUTHENTICATION);
         await guest.peer.networkManager.close(Context.default());
-        await host.sink.waitFor(Invitation.State.CONNECTING);
+        await host.sink.waitFor(Invitation_State.CONNECTING);
 
         await sleep(10);
         expect(host.ctx.disposed).to.be.false;
@@ -108,15 +114,14 @@ describe.skipIf(process.env.CI && !process.env.RUN_FLAKY_TESTS)(
 
         const badGuest = await createPeer(host.spaceKey);
         await failAuth(badGuest, invitation);
-        await badGuest.sink.waitFor(Invitation.State.ERROR);
+        await badGuest.sink.waitFor(Invitation_State.ERROR);
 
         const goodGuest = await createPeer(host.spaceKey);
         await performAuth(goodGuest, invitation);
-        await host.sink.waitFor(Invitation.State.SUCCESS);
+        await host.sink.waitFor(Invitation_State.SUCCESS);
 
-        await sleep(10);
-        expect(goodGuest.ctx.disposed).to.be.true;
-        expect(host.ctx.disposed).to.be.true;
+        await waitForCondition({ condition: () => goodGuest.ctx.disposed });
+        await waitForCondition({ condition: () => host.ctx.disposed });
       });
 
       test('multiUse invitation with multiple guests', async () => {
@@ -129,8 +134,7 @@ describe.skipIf(process.env.CI && !process.env.RUN_FLAKY_TESTS)(
         const guest2 = await createPeer(host.spaceKey);
         await performAuth(guest2, invitation);
 
-        await sleep(5);
-        [guest1, guest2].forEach((g) => expect(g.ctx.disposed).to.be.true);
+        await Promise.all([guest1, guest2].map((g) => waitForCondition({ condition: () => g.ctx.disposed })));
         expect(host.ctx.disposed).to.be.false;
       });
 
@@ -142,11 +146,13 @@ describe.skipIf(process.env.CI && !process.env.RUN_FLAKY_TESTS)(
 
         const guest = await createPeer(host.spaceKey);
         const codeInput = await failAuth(guest, invitation);
-        while (!guest.ctx.disposed) {
-          codeInput.wake(invitation.authCode!);
-          await sleep(10);
-        }
-        await guest.sink.waitFor(Invitation.State.SUCCESS);
+        await waitForCondition({
+          condition: () => {
+            codeInput.wake(invitation.authCode!);
+            return guest.ctx.disposed;
+          },
+        });
+        await guest.sink.waitFor(Invitation_State.SUCCESS);
       });
 
       test('single guest - many hosts', async () => {
@@ -160,9 +166,8 @@ describe.skipIf(process.env.CI && !process.env.RUN_FLAKY_TESTS)(
 
         const guest = await createPeer(host.spaceKey);
         await performAuth(guest, invitation);
-        await guest.sink.waitFor(Invitation.State.SUCCESS);
-        await sleep(10);
-        expect(guest.ctx.disposed).to.be.true;
+        await guest.sink.waitFor(Invitation_State.SUCCESS);
+        await waitForCondition({ condition: () => guest.ctx.disposed });
       });
 
       test('guest gives up after trying with three hosts', { timeout: 20_000 }, async () => {
@@ -181,8 +186,7 @@ describe.skipIf(process.env.CI && !process.env.RUN_FLAKY_TESTS)(
           await sleep(10);
         }
 
-        await sleep(10);
-        expect(guest.sink.lastState).to.eq(Invitation.State.ERROR);
+        await waitForCondition({ condition: () => guest.sink.lastState === Invitation_State.ERROR });
       });
 
       test('single host - many guests', async () => {
@@ -198,10 +202,14 @@ describe.skipIf(process.env.CI && !process.env.RUN_FLAKY_TESTS)(
           }),
         );
 
-        await sleep(10);
+        await Promise.all(
+          guests.map((g) =>
+            waitForCondition({ condition: () => g.ctx.disposed && g.sink.lastState === Invitation_State.SUCCESS }),
+          ),
+        );
         guests.forEach((g) => {
           expect(g.ctx.disposed).to.be.true;
-          expect(g.sink.lastState).to.eq(Invitation.State.SUCCESS);
+          expect(g.sink.lastState).to.eq(Invitation_State.SUCCESS);
         });
       });
 
@@ -220,10 +228,14 @@ describe.skipIf(process.env.CI && !process.env.RUN_FLAKY_TESTS)(
             return guest;
           }),
         );
-        await sleep(10);
+        await Promise.all(
+          guests.map((g) =>
+            waitForCondition({ condition: () => g.ctx.disposed && g.sink.lastState === Invitation_State.SUCCESS }),
+          ),
+        );
         guests.forEach((g) => {
           expect(g.ctx.disposed).to.be.true;
-          expect(g.sink.lastState).to.eq(Invitation.State.SUCCESS);
+          expect(g.sink.lastState).to.eq(Invitation_State.SUCCESS);
         });
       });
 
@@ -233,7 +245,7 @@ describe.skipIf(process.env.CI && !process.env.RUN_FLAKY_TESTS)(
         await hostInvitation(host, invitation);
         const guests = await Promise.all(
           range(5).map(async () => {
-            const guest = await createPeer(invitation.spaceKey);
+            const guest = await createPeer(toPublicKey(invitation.spaceKey));
             const authCodeInput2 = await acceptInvitation(guest, invitation);
             authCodeInput2.wake(invitation.authCode!);
             return guest;
@@ -241,10 +253,10 @@ describe.skipIf(process.env.CI && !process.env.RUN_FLAKY_TESTS)(
         );
 
         await waitForCondition({
-          condition: () => guests.find((g) => g.sink.lastState === Invitation.State.SUCCESS) != null,
+          condition: () => guests.find((g) => g.sink.lastState === Invitation_State.SUCCESS) != null,
         });
         await sleep(40);
-        const success = guests.filter((g) => g.sink.lastState === Invitation.State.SUCCESS);
+        const success = guests.filter((g) => g.sink.lastState === Invitation_State.SUCCESS);
         expect(success.length).to.eq(1);
       });
     });
@@ -292,7 +304,7 @@ describe.skipIf(process.env.CI && !process.env.RUN_FLAKY_TESTS)(
 
     const failAuth = async (setup: PeerSetup, invitation: Invitation) => {
       const wrongAuthCodeInput = await acceptInvitation(setup, invitation);
-      await setup.sink.waitFor(Invitation.State.READY_FOR_AUTHENTICATION);
+      await setup.sink.waitFor(Invitation_State.READY_FOR_AUTHENTICATION);
       await failCodeInput(setup, wrongAuthCodeInput, invitation);
       return wrongAuthCodeInput;
     };
@@ -303,18 +315,21 @@ describe.skipIf(process.env.CI && !process.env.RUN_FLAKY_TESTS)(
       invitation: Invitation,
     ): Promise<void> => {
       const checkFrom = setup.sink.sink.length;
-      while (
-        !setup.ctx.disposed &&
-        !setup.sink.hasState(checkFrom, Invitation.State.ERROR) &&
-        !setup.sink.hasState(checkFrom, Invitation.State.CONNECTED)
-      ) {
-        codeInput.wake(invitation.authCode + '1');
-        await sleep(20);
-      }
+      await waitForCondition({
+        condition: () => {
+          codeInput.wake(invitation.authCode + '1');
+          return (
+            setup.ctx.disposed ||
+            setup.sink.hasState(checkFrom, Invitation_State.ERROR) ||
+            setup.sink.hasState(checkFrom, Invitation_State.CONNECTED)
+          );
+        },
+        interval: 20,
+      });
     };
 
     const createNewHost = async (invitation: Invitation): Promise<PeerSetup> => {
-      const newHost = await createPeer(invitation.spaceKey!);
+      const newHost = await createPeer(toPublicKey(invitation.spaceKey));
       await performAuth(newHost, invitation);
       await sleep(30);
       await hostInvitation(newHost, invitation);
@@ -323,14 +338,14 @@ describe.skipIf(process.env.CI && !process.env.RUN_FLAKY_TESTS)(
 
     const performAuth = async (setup: PeerSetup, invitation: Invitation) => {
       const authCodeInput2 = await acceptInvitation(setup, invitation);
-      await setup.sink.waitFor(Invitation.State.READY_FOR_AUTHENTICATION);
+      await setup.sink.waitFor(Invitation_State.READY_FOR_AUTHENTICATION);
       authCodeInput2.wake(invitation.authCode!);
-      await setup.sink.waitFor(Invitation.State.SUCCESS);
+      await setup.sink.waitFor(Invitation_State.SUCCESS);
     };
 
     const newStateUpdateSink = (): StateUpdateSink => {
       const sink: Invitation[] = [];
-      const hasState = (startingIndex: number, state: Invitation.State): boolean => {
+      const hasState = (startingIndex: number, state: Invitation_State): boolean => {
         return sink
           .slice(startingIndex)
           .map((i) => i.state)
@@ -345,7 +360,7 @@ describe.skipIf(process.env.CI && !process.env.RUN_FLAKY_TESTS)(
         get lastState() {
           return sink[sink.length - 1]?.state;
         },
-        waitFor: async (state: Invitation.State): Promise<void> => {
+        waitFor: async (state: Invitation_State): Promise<void> => {
           if (sink[sink.length - 1]?.state === state) {
             return;
           }
@@ -359,17 +374,17 @@ describe.skipIf(process.env.CI && !process.env.RUN_FLAKY_TESTS)(
 
     const createInvitation = async (setup: PeerSetup, options?: Partial<Invitation>): Promise<Invitation> => {
       const observable = await setup.peer.invitationsManager.createInvitation(setup.ctx, {
-        type: Invitation.Type.DELEGATED,
-        kind: Invitation.Kind.SPACE,
-        authMethod: Invitation.AuthMethod.SHARED_SECRET,
-        spaceKey: setup.spaceKey,
+        type: Invitation_Type.DELEGATED,
+        kind: Invitation_Kind.SPACE,
+        authMethod: Invitation_AuthMethod.SHARED_SECRET,
+        spaceKey: fromPublicKey(setup.spaceKey),
         multiUse: false,
         ...options,
       });
-      // cancel to avoid interfering with invitations-handler direct invocations
+      // Cancel to avoid interfering with the direct invitations-handler invocations.
       const invitation = observable.get();
       await setup.peer.invitationsManager.cancelInvitation(invitation);
-      return { ...invitation, swarmKey: PublicKey.random() };
+      return { ...invitation, swarmKey: fromPublicKey(PublicKey.random()) };
     };
   },
 );

@@ -9,7 +9,7 @@ import { Select } from '@dxos/react-ui';
 
 import { type FormFieldRenderer, type FormFieldRendererProps } from '#types';
 
-import { FormRow } from '../../FormRow';
+import { FormField } from '../../FormField';
 import { type SelectFieldOption } from './SelectField';
 
 // Kept out of `SelectField.tsx`: react-refresh only fast-refreshes a module whose
@@ -33,7 +33,7 @@ export const createSelectField = ({
 }: CreateSelectFieldOptions): FormFieldRenderer => {
   const normalized = options.map((option) => (typeof option === 'string' ? { value: option, label: option } : option));
   const hasDefault = defaultLabel !== null;
-  // The sentinel maps to `undefined`. Radix forbids an empty-string `Select.Item` value, so use a
+  // The sentinel maps to `undefined`. `Select.Root` reads an empty-string value as no selection, so use a
   // non-empty placeholder; reserved (a real option with this value would be unrepresentable).
   const sentinel = '__default__';
   invariant(
@@ -42,7 +42,7 @@ export const createSelectField = ({
   );
 
   return ({ type, readonly, onValueChange, ...props }: FormFieldRendererProps<string | undefined>) => (
-    <FormRow<string>
+    <FormField<string>
       readonly={readonly}
       renderStatic={(value) => (
         <p className='truncate min-w-0'>
@@ -69,12 +69,11 @@ export const createSelectField = ({
                     </Select.Option>
                   ))}
                 </Select.Viewport>
-                <Select.Arrow />
               </Select.Content>
             </Select.Portal>
           )}
         </Select.Root>
       )}
-    </FormRow>
+    </FormField>
   );
 };

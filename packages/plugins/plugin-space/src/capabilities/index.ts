@@ -89,6 +89,7 @@ export const Repair = Capability.lazyModule(
   () => import('./repair'),
 );
 export const Schema = AppCapability.schema(() => import('./schema'));
+export { SettingsSync } from './settings-sync';
 export const SpaceSettings = AppCapability.settings(() => import('./settings'), {
   provides: [SpaceCapabilities.SettingsAtom],
 });

@@ -13,7 +13,7 @@ import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as SettingsOperation from '@dxos/app-toolkit/SettingsOperation';
 import { EffectEx } from '@dxos/effect';
 import * as ObservabilityOperation from '@dxos/plugin-observability/ObservabilityOperation';
-import { Input, Panel, ScrollArea, Toolbar, useTranslation } from '@dxos/react-ui';
+import { Field, Panel, ScrollArea, Toolbar, useTranslation } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
 
 import { PluginList, type PluginListProps } from '#components';
@@ -47,6 +47,7 @@ export type BaseRegistryArticleProps = {
   | 'updateAvailableIds'
   | 'extraTagsById'
   | 'failuresById'
+  | 'deviceOnlyIds'
   | 'onInstall'
   | 'onUpdate'
 >;
@@ -64,6 +65,7 @@ export const BaseRegistryArticle = composable<HTMLDivElement, BaseRegistryArticl
       updateAvailableIds,
       extraTagsById,
       failuresById,
+      deviceOnlyIds,
       onInstall,
       onUpdate,
       ...props
@@ -137,14 +139,14 @@ export const BaseRegistryArticle = composable<HTMLDivElement, BaseRegistryArticl
       <Panel.Root {...composableProps(props)} ref={forwardedRef}>
         <Panel.Toolbar asChild>
           <Toolbar.Root>
-            <Input.Root>
-              <Input.Label srOnly>{t('filter.label')}</Input.Label>
-              <Input.TextInput
+            <Field.Root>
+              <Field.Label srOnly>{t('filter.label')}</Field.Label>
+              <Field.Input
                 placeholder={t('filter.placeholder')}
                 value={filter}
                 onChange={(event) => setFilter(event.target.value)}
               />
-            </Input.Root>
+            </Field.Root>
           </Toolbar.Root>
         </Panel.Toolbar>
         <Panel.Content asChild>
@@ -160,6 +162,7 @@ export const BaseRegistryArticle = composable<HTMLDivElement, BaseRegistryArticl
                   updateAvailableIds={updateAvailableIds}
                   extraTagsById={extraTagsById}
                   failuresById={failuresById}
+                  deviceOnlyIds={deviceOnlyIds}
                   onClick={handleClick}
                   onChange={handleChange}
                   onInstall={onInstall}

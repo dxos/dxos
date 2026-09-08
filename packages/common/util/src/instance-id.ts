@@ -5,17 +5,23 @@
 import { defaultMap } from './map';
 
 const symbol = Symbol.for('dxos.instance-contexts');
+const nullPrototypeSymbol = Symbol.for('dxos.null-prototype');
 
-const instanceContexts = ((globalThis as any)[symbol] ??= new WeakMap<
+type InstanceContexts = WeakMap<
   any,
   {
     nextId: number;
     instanceIds: WeakMap<any, number>;
   }
->());
+>;
+
+/** Typed view onto `globalThis`, narrow enough to key by our symbols without `any`. */
+const globals = globalThis as Record<symbol, unknown>;
+
+const instanceContexts = (globals[symbol] ??= new WeakMap()) as InstanceContexts;
 
 /** Map key for a null-prototype instance, shared through `globalThis` like the contexts it keys. */
-const NULL_PROTOTYPE = ((globalThis as any)[Symbol.for('dxos.null-prototype')] ??= Object.freeze({}));
+const NULL_PROTOTYPE = (globals[nullPrototypeSymbol] ??= Object.freeze({}));
 
 /**
  * Returns a unique instance id for a given object.

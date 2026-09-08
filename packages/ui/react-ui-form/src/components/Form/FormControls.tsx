@@ -2,15 +2,17 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { type PropsWithChildren, useRef } from 'react';
+import React, { type PropsWithChildren, type ReactNode, useRef } from 'react';
 
 import { type AnyProperties } from '@dxos/echo/internal';
 import {
   Column,
   type ColumnRootProps,
+  DIALOG_AUTOFOCUS_ATTRIBUTE,
+  Field,
+  Fieldset,
   IconButton,
   type IconButtonProps,
-  Input,
   ScrollArea,
   type ThemedClassName,
   composable,
@@ -191,16 +193,8 @@ export type FormFieldSetContainerProps = ThemedClassName<NaturalFormFieldSetProp
 
 /** Context-reading binding for `Form.FieldSet`: pulls the schema + field context off the form and delegates to {@link FormFieldSet}. */
 export const FormFieldSetContainer = ({ classNames, ...props }: FormFieldSetContainerProps) => {
-  const { form, variant = 'default', ...contextProps } = useFormContext(FORM_FIELDSET_NAME);
-  const styles = formTheme.styles({ variant });
-  return (
-    <FormFieldSet
-      schema={form.schema}
-      classNames={styles.fieldSet({ class: classNames })}
-      {...contextProps}
-      {...props}
-    />
-  );
+  const { form, variant: _variant, ...contextProps } = useFormContext(FORM_FIELDSET_NAME);
+  return <FormFieldSet schema={form.schema} classNames={classNames} {...contextProps} {...props} />;
 };
 
 FormFieldSetContainer.displayName = FORM_FIELDSET_NAME;
@@ -211,7 +205,9 @@ FormFieldSetContainer.displayName = FORM_FIELDSET_NAME;
 
 const FORM_LAYOUT_NAME = 'Form.Layout';
 
-export type FormLayoutProps = Omit<NaturalFormLayoutProps, 'schema'> & { schema?: NaturalFormLayoutProps['schema'] };
+export type FormLayoutProps = Omit<NaturalFormLayoutProps, 'schema'> & {
+  schema?: NaturalFormLayoutProps['schema'];
+};
 
 /** Context-reading binding for `Form.Layout`: resolves the schema (prop or form) and delegates to {@link FormLayout}. */
 export const FormLayoutController = ({ schema, ...props }: FormLayoutProps) => {
@@ -261,6 +257,9 @@ export const FormActions = ({ classNames, submitLabel, submitIcon }: FormActions
           label={t('cancel-button.label')}
           onClick={onCancel}
           data-testid='cancel-button'
+          // Inside a dialog this claims the initial focus, so a reflexive Enter dismisses rather than
+          // commits; the attribute is inert anywhere else.
+          {...{ [DIALOG_AUTOFOCUS_ATTRIBUTE]: '' }}
         />
       )}
       {onSave && (
@@ -290,22 +289,40 @@ const FORM_SECTION_NAME = 'Form.Section';
 export type FormSectionProps = ThemedClassName<{
   title?: string;
   description?: string;
+  /**
+   * Controls acting on the section as a whole, rendered at the end of its heading row. Rendered only
+   * alongside a `title` or `description`.
+   */
+  actions?: ReactNode;
 }>;
 
-export const FormSection = composable<HTMLDivElement, FormSectionProps>(
-  ({ children, title, description, ...props }, forwardedRef) => {
+/**
+ * A titled group of fields: a fieldset named by its heading, so assistive technology announces the
+ * title on entering the group and the heading still serves navigation.
+ */
+export const FormSection = composable<HTMLFieldSetElement, FormSectionProps>(
+  ({ children, title, description, actions, ...props }, forwardedRef) => {
     const { variant = 'default' } = useFormContext(FORM_SECTION_NAME);
     const styles = formTheme.styles({ variant });
     return (
-      <div {...composableProps(props, { classNames: styles.section() })} ref={forwardedRef}>
-        {(title || description) && (
-          <div className={styles.sectionHeader()}>
-            {title && <h2 className={styles.sectionTitle()}>{title}</h2>}
-            {description && <MarkdownView classNames={styles.sectionDescription()} content={description} />}
-          </div>
+      <Fieldset.Root {...composableProps(props, { classNames: styles.section() })} ref={forwardedRef}>
+        {title && (
+          // A real `<legend>` as the fieldset's own child: only that names the group, and the heading
+          // inside it still serves navigation. The header gap sits on whichever of legend or
+          // description comes last.
+          <Fieldset.Legend classNames={description ? undefined : styles.sectionHeader()}>
+            <h2 className={styles.sectionTitle()}>{title}</h2>
+          </Fieldset.Legend>
         )}
+        {description && (
+          <MarkdownView
+            classNames={styles.sectionHeader({ class: styles.sectionDescription() })}
+            content={description}
+          />
+        )}
+        {actions && <div className={styles.sectionActions()}>{actions}</div>}
         {children}
-      </div>
+      </Fieldset.Root>
     );
   },
 );
@@ -390,11 +407,11 @@ export const FormError = ({ children, classNames }: FormErrorProps) => {
   }
 
   return (
-    <Input.Root validationValence='error'>
-      <Input.Validation classNames={classNames} data-testid='form.error'>
+    <Field.Root validationValence='error'>
+      <Field.ErrorText classNames={classNames} data-testid='form.error'>
         {children}
-      </Input.Validation>
-    </Input.Root>
+      </Field.ErrorText>
+    </Field.Root>
   );
 };
 

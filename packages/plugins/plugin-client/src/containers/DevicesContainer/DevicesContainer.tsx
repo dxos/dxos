@@ -3,7 +3,6 @@
 //
 
 import React, { useCallback, useEffect, useState } from 'react';
-import { QR } from 'react-qr-rounded';
 
 import { useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
 import { EffectEx } from '@dxos/effect';
@@ -12,7 +11,7 @@ import { useDevices, useInvitationFlow } from '@dxos/halo-react';
 import { log } from '@dxos/log';
 import { useClient } from '@dxos/react-client';
 import { useNetworkStatus } from '@dxos/react-client/mesh';
-import { Button, Clipboard, Flex, Icon, IconButton, useId, useTranslation } from '@dxos/react-ui';
+import { Button, Clipboard, Flex, Icon, IconButton, QrCode, useId, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 import { Listbox } from '@dxos/react-ui-list';
 import { AuthCode, Centered, DeviceListItem, Emoji, Viewport } from '@dxos/shell/react';
@@ -74,23 +73,23 @@ export const DevicesContainer = ({ createInvitationUrl, identityTestActions }: D
               </Form.Group>
             </Form.Section>
             <Form.Section title={t('logout-section.title')} description={t('logout-section.description')}>
-              <Form.Row label={t('logout.label')} description={t('logout.description')}>
+              <Form.Field label={t('logout.label')} description={t('logout.description')}>
                 <Button variant='destructive' onClick={handleLogout} data-testid='devicesContainer.logout'>
                   {t('logout.label')}
                 </Button>
-              </Form.Row>
+              </Form.Field>
             </Form.Section>
             {identityTestActions && (
               <Form.Section
                 title={t('identity-test-section.title')}
                 description={t('identity-test-section.description')}
               >
-                <Form.Row label={t('recover-identity.label')} description={t('recover-identity.description')}>
+                <Form.Field label={t('recover-identity.label')} description={t('recover-identity.description')}>
                   <Button variant='destructive' onClick={handleRecover} data-testid='devicesContainer.recover'>
                     {t('recover-identity.label')}
                   </Button>
-                </Form.Row>
-                <Form.Row label={t('join-new-identity.label')} description={t('join-new-identity.description')}>
+                </Form.Field>
+                <Form.Field label={t('join-new-identity.label')} description={t('join-new-identity.description')}>
                   <Button
                     variant='destructive'
                     onClick={handleJoinNewIdentity}
@@ -98,7 +97,7 @@ export const DevicesContainer = ({ createInvitationUrl, identityTestActions }: D
                   >
                     {t('join-new-identity.label')}
                   </Button>
-                </Form.Row>
+                </Form.Field>
               </Form.Section>
             )}
           </Form.Content>
@@ -257,16 +256,7 @@ const InvitationQR = ({ id, url, onCancel }: { id: string; url: string; onCancel
       <div role='group' className='grid grid-cols-[1fr_min-content]'>
         <Flex justify='center' classNames='py-4'>
           <div className='w-full md:max-w-80 aspect-square relative text-description'>
-            <QR
-              rounding={100}
-              backgroundColor='transparent'
-              color='currentColor'
-              aria-labelledby={qrLabel}
-              errorCorrectionLevel='Q'
-              cutout={true}
-            >
-              {url ?? 'never'}
-            </QR>
+            <QrCode aria-labelledby={qrLabel} errorCorrection='Q' value={url ?? 'never'} />
             <Centered>
               <Emoji text={emoji} />
             </Centered>

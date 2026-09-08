@@ -8,7 +8,7 @@ import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { AiContext } from '@dxos/assistant';
-import { AlarmSkill, ChatContextSkill } from '@dxos/assistant-toolkit';
+import { AlarmSkill, ChatContextSkill, PlanningSkill } from '@dxos/assistant-toolkit';
 import * as Chat from '@dxos/assistant/Chat';
 import * as Operation from '@dxos/compute/Operation';
 import * as Skill from '@dxos/compute/Skill';
@@ -53,6 +53,11 @@ const handler: Operation.WithHandler<typeof AssistantOperation.CreateChat> = Ass
               ChatContextSkill,
               SkillManagerSkill,
               AlarmSkill,
+              // Bound by default rather than agent-enabled: the conversation's checklist is durable
+              // and invisible to the model, so a chat without this skill cannot read or update the
+              // tasks it is already carrying — and a model that enables it mid-turn has already
+              // answered a task question from nothing.
+              PlanningSkill,
               ...(pluginManagerContributed ? [PluginManagerSkill] : []),
             ].map(({ key }) => Ref.fromURI(Skill.registryURI(key))),
             objects: [Ref.make(chat)],

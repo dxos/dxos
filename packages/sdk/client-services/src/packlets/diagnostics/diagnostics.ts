@@ -10,20 +10,22 @@ import { createDidFromIdentityKey, credentialTypeFilter } from '@dxos/credential
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
 import { STORAGE_VERSION } from '@dxos/protocols';
+import { buf, fromPublicKey } from '@dxos/protocols/buf';
 import {
   type Device,
   type Identity,
+  IdentitySchema,
   type NetworkStatus,
   type Platform,
-  SpaceMember,
-  type Space as SpaceProto,
-} from '@dxos/protocols/proto/dxos/client/services';
+} from '@dxos/protocols/buf/dxos/client/services_pb';
+import { SpaceMember, type Space as SpaceProto } from '@dxos/protocols/proto/dxos/client/services';
 import { type SwarmInfo } from '@dxos/protocols/proto/dxos/devtools/swarm';
 import { type Epoch } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { type DevtoolsHost, type LoggingService } from '@dxos/protocols/rpc';
 
 import { DXOS_VERSION } from '../../version';
 import { type ServiceContext } from '../services';
+import { toBufProfileDocument } from '../services/credentials-codec';
 import { getPlatform } from '../services/platform';
 import { type DataSpace } from '../spaces';
 
@@ -106,12 +108,12 @@ export const createDiagnostics = async (
       const identity = serviceContext.identityManager.identity;
       if (identity) {
         // Identity.
-        diagnostics.identity = {
+        diagnostics.identity = buf.create(IdentitySchema, {
           did: identity.did,
-          identityKey: identity.identityKey,
-          spaceKey: identity.space.key,
-          profile: identity.profileDocument,
-        };
+          identityKey: fromPublicKey(identity.identityKey),
+          spaceKey: fromPublicKey(identity.space.key),
+          profile: toBufProfileDocument(identity.profileDocument),
+        });
 
         // Devices.
         const { devices } =
@@ -178,7 +180,7 @@ const getSpaceStats = async (space: DataSpace): Promise<SpaceStats> => {
           },
         },
         presence:
-          space.presence.getPeersOnline().filter(({ identityKey }) => identityKey.equals(member.key)).length > 0
+          space.presence.getPeersByIdentityKey(member.key).length > 0
             ? SpaceMember.PresenceState.ONLINE
             : SpaceMember.PresenceState.OFFLINE,
       })),

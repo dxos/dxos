@@ -102,22 +102,19 @@ export const ObservabilitySettings = AppCapability.settings(() => import('./sett
   provides: [ObservabilityCapabilities.Settings],
   environments: [],
 });
-export const SettingsSync = Capability.lazyModule(
-  'SettingsSync',
+export const SettingsReactor = Capability.lazyModule(
+  'SettingsReactor',
   {
     environments: [],
     requires: [
       Capabilities.AtomRegistry,
-      ObservabilityCapabilities.ClientCapability,
       ObservabilityCapabilities.Namespace,
       ObservabilityCapabilities.Observability,
       ObservabilityCapabilities.Settings,
     ],
     provides: [],
-    // The settings space's properties are readable from this point (mirrored by identifier).
-    activatesOn: ObservabilityEvents.SpacesReadyEvent,
   },
-  () => import('./settings-sync'),
+  () => import('./settings-reactor'),
 );
 export const ObservabilityState = Capability.lazyModule(
   'ObservabilityState',

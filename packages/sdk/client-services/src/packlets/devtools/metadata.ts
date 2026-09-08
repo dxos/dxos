@@ -7,9 +7,19 @@ import * as EffectStream from 'effect/Stream';
 
 import { Context } from '@dxos/context';
 import { EffectEx } from '@dxos/effect';
-import { type SubscribeToMetadataResponse } from '@dxos/protocols/proto/dxos/devtools/host';
+import { buf } from '@dxos/protocols/buf';
+import { encodeCompat } from '@dxos/protocols/buf-shape-compat';
+import {
+  type SubscribeToMetadataResponse,
+  SubscribeToMetadataResponseSchema,
+} from '@dxos/protocols/buf/dxos/devtools/host_pb';
+import { type EchoMetadata } from '@dxos/protocols/proto/dxos/echo/metadata';
 
 import { type ServiceContext } from '../services';
+
+/** The metadata store keeps the protobuf.js shape, which crosses to buf as the shared wire bytes. */
+const toBufResponse = (metadata: EchoMetadata): SubscribeToMetadataResponse =>
+  buf.fromBinary(SubscribeToMetadataResponseSchema, encodeCompat(SubscribeToMetadataResponseSchema, { metadata }));
 
 export const subscribeToMetadata = ({
   context,
@@ -18,8 +28,8 @@ export const subscribeToMetadata = ({
 }): EffectStream.Stream<SubscribeToMetadataResponse, Error> =>
   EffectEx.streamFromEmitter<SubscribeToMetadataResponse, Error>((emit) => {
     const ctx = Context.default();
-    context.metadataStore.update.on(ctx, (data) => emit.single({ metadata: data }));
-    emit.single({ metadata: context.metadataStore.metadata });
+    context.metadataStore.update.on(ctx, (data) => emit.single(toBufResponse(data)));
+    emit.single(toBufResponse(context.metadataStore.metadata));
 
     return Effect.promise(() => ctx.dispose());
   });

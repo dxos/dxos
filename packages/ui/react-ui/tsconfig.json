@@ -46,9 +46,6 @@
       "path": "../react-primitives/react-hooks"
     },
     {
-      "path": "../react-primitives/react-input"
-    },
-    {
       "path": "../ui-theme"
     },
     {

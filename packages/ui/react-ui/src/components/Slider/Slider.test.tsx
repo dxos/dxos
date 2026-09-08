@@ -6,7 +6,7 @@ import { cleanup, render, screen } from '@testing-library/react';
 import React, { type PropsWithChildren } from 'react';
 import { afterEach, describe, test } from 'vitest';
 
-import { ThemeProvider } from '../../primitives';
+import { ThemeProvider } from '../../providers';
 import { defaultTx } from '../../theme';
 import { Slider } from './Slider';
 
@@ -53,7 +53,7 @@ describe('Slider', () => {
       wrapper: Wrapper,
     });
 
-    // `role="slider"` has no visible text an `Input.Label`'s `htmlFor` can reach; `thumbLabels`
+    // `role="slider"` has no visible text an `Field.Label`'s `htmlFor` can reach; `thumbLabels`
     // is the only way to give it a name exposed to assistive tech.
     expect(screen.getByRole('slider', { name: 'Minimum' })).toBeTruthy();
     expect(screen.getByRole('slider', { name: 'Maximum' })).toBeTruthy();

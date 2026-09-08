@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type Browser, type ConsoleMessage, type Locator, type Page, expect } from '@playwright/test';
+import { type Browser, type ConsoleMessage, type Frame, type Locator, type Page, expect } from '@playwright/test';
 import os from 'node:os';
 
 import { Trigger } from '@dxos/async';
@@ -41,6 +41,15 @@ export const INITIAL_SPACE_COUNT = 1;
  */
 const JOIN_IDENTITY_BOOT_TIMEOUT = 60_000;
 
+/** The default space's Home, which a first-run boot lands on. */
+const DEFAULT_WORKSPACE_URL = /\/w\/[A-Z0-9]{20,}\/home/;
+
+/** A joined device stops at the inviter's workspace root rather than reaching its `/home` plank. */
+const JOINED_WORKSPACE_URL = /\/w\/[A-Z0-9]{20,}/;
+
+/** How long the URL must hold still before boot counts as finished. */
+const BOOT_QUIET_PERIOD = 1_000;
+
 /**
  * Typenames behind the friendly names specs pass to `createObject()`, keyed by typename since the
  * type-picker's testid uses it (its label is localized). A missing name fails on the locator instead
@@ -61,6 +70,7 @@ export class AppManager {
 
   private readonly _inIframe: boolean | undefined = undefined;
   private _initialized = false;
+  private _close?: () => Promise<void>;
   private _invitationCode = new Trigger<string>();
   private _authCode = new Trigger<string>();
   // Rolling tail of console errors: the app reports operation failures generically to the user, and
@@ -80,8 +90,9 @@ export class AppManager {
       return;
     }
 
-    const { page } = await setupPage(this._browser, { url: INITIAL_URL });
+    const { page, close } = await setupPage(this._browser, { url: INITIAL_URL });
     this.page = page;
+    this._close = close;
     this.page.on('console', (message) => this._onConsoleMessage(message));
 
     // Assert boot rather than proceed on a swallowed `false`, so a failed boot fails here instead of as
@@ -95,10 +106,8 @@ export class AppManager {
     this.deck = new DeckManager(this.page);
   }
 
-  async closePage(): Promise<void> {
-    if (this.page !== undefined) {
-      await this.page.close();
-    }
+  async close(): Promise<void> {
+    await this._close?.();
   }
 
   //
@@ -128,6 +137,45 @@ export class AppManager {
 
   get currentWorkspace(): Locator {
     return this.page.getByTestId('navtree.workspace.visible');
+  }
+
+  /**
+   * Waits out the boot-time navigation to the default space, which lands seconds after `init()`
+   * returns and replaces whatever route ran in the meantime. Boot navigates more than once, so this
+   * waits for the URL to stop moving rather than for its first arrival.
+   */
+  async waitForDefaultWorkspace(): Promise<void> {
+    await this.#waitForBoot(DEFAULT_WORKSPACE_URL);
+  }
+
+  /**
+   * Waits out the same boot navigation for a device that has just joined an existing identity. Such
+   * a device stops at the inviter's workspace root, never reaching `/home`, hence the looser pattern.
+   */
+  async waitForJoinedWorkspace(): Promise<void> {
+    await this.#waitForBoot(JOINED_WORKSPACE_URL);
+  }
+
+  /** Arrive at `url`, then wait for boot to stop navigating away from it. */
+  async #waitForBoot(url: RegExp): Promise<void> {
+    let lastNavigation = Date.now();
+    const onNavigated = (frame: Frame) => {
+      if (frame === this.page.mainFrame()) {
+        lastNavigation = Date.now();
+      }
+    };
+
+    this.page.on('framenavigated', onNavigated);
+    try {
+      await this.page.waitForURL(url, { timeout: 60_000 });
+      await expect
+        .poll(() => Date.now() - lastNavigation, { timeout: 30_000, intervals: [50] })
+        .toBeGreaterThanOrEqual(BOOT_QUIET_PERIOD);
+    } finally {
+      this.page.off('framenavigated', onNavigated);
+    }
+
+    await expect(this.page).toHaveURL(url);
   }
 
   async openUserAccount(): Promise<void> {
@@ -176,22 +224,15 @@ export class AppManager {
   }
 
   async shareSpace(): Promise<void> {
-    // Members is nested under the Settings section in the navtree. Scope
-    // the generic treeItem.toggle / treeItem.heading testids to the
-    // settings/members rows by their row testids, and expand settings
-    // first if its members heading isn't visible yet.
+    // Members is nested under the Settings section, so scope the generic `treeItem.heading` testid
+    // to the members row and expand Settings first when that heading is not showing yet.
     const membersHeading = this.currentWorkspace
       .getByTestId('spacePlugin.members')
       .first()
       .getByTestId('treeItem.heading')
       .first();
     if (!(await membersHeading.isVisible())) {
-      await this.currentWorkspace
-        .getByTestId('spacePlugin.settings')
-        .first()
-        .getByTestId('treeItem.toggle')
-        .first()
-        .click();
+      await this.expandSection('spacePlugin.settings');
     }
     await membersHeading.click();
   }
@@ -244,11 +285,15 @@ export class AppManager {
 
   /** Opens the add-space dialog, submits it, and waits for it to close. */
   async #submitCreateSpaceForm(): Promise<void> {
+    const dialog = this.page.getByTestId('create-space-dialog');
     await this.page.getByTestId('spacePlugin.addSpace').click();
     await this.page.getByTestId('spacePlugin.createSpace').click();
+    await expect(dialog).toBeVisible({ timeout: 15_000 });
 
     const form = this.page.getByTestId('create-space-form');
-    const save = form.getByTestId('save-button');
+    // The action row is pinned outside the scrolling field region, so it is scoped to the dialog,
+    // not to `create-space-form` (which marks the fields alone).
+    const save = this.page.getByTestId('create-space-dialog').getByTestId('save-button');
     // Gate on ENABLED, not merely visible: fields arrive through a Surface lookup and can remount the
     // control mid-click, so waiting for `disabled` to clear absorbs that remount.
     await expect(save).toBeEnabled({ timeout: 15_000 });
@@ -319,12 +364,7 @@ export class AppManager {
       .getByTestId('treeItem.heading')
       .first();
     if (!(await generalHeading.isVisible())) {
-      await this.currentWorkspace
-        .getByTestId('spacePlugin.settings')
-        .first()
-        .getByTestId('treeItem.toggle')
-        .first()
-        .click();
+      await this.expandSection('spacePlugin.settings');
     }
     await generalHeading.click();
   }
@@ -354,14 +394,28 @@ export class AppManager {
     }
   }
 
-  toggleCollectionCollapsed(nth = 0, delay = 100): Promise<void> {
-    return this.getObjectLinks().nth(nth).getByRole('button').first().click({ delay });
+  /** Discloses a row's children, leaving an already-open row alone. */
+  async #expandRow(row: Locator, timeout: number): Promise<void> {
+    const toggle = row.getByTestId('treeItem.toggle').first();
+    if ((await toggle.getAttribute('aria-expanded')) === 'true') {
+      return;
+    }
+    // Hovering the row is what expands it in the graph, and a row with no children yet has a
+    // disabled chevron — which Playwright would wait on forever, since it only moves the mouse
+    // once the target is actionable.
+    await row.hover();
+    await expect(toggle).toBeEnabled({ timeout });
+    await toggle.click();
   }
 
-  async toggleSection(testId: string, delay = 100, timeout = 15_000): Promise<void> {
-    const section = this.currentWorkspace.getByTestId(testId);
+  async expandCollection(nth = 0, timeout = 15_000): Promise<void> {
+    await this.#expandRow(this.getObjectLinks().nth(nth), timeout);
+  }
+
+  async expandSection(testId: string, timeout = 15_000): Promise<void> {
+    const section = this.currentWorkspace.getByTestId(testId).first();
     await section.waitFor({ state: 'attached', timeout });
-    await section.getByRole('button').first().click({ delay });
+    await this.#expandRow(section, timeout);
   }
 
   async createObject({ type, name, nth }: { type: string; name?: string; nth?: number }): Promise<void> {
@@ -372,9 +426,9 @@ export class AppManager {
         .getByTestId(/navtree\.treeItem\.actionsLevel\d+/)
         .first()
         .click();
-      await this.page.keyboard.press('ArrowDown');
-      await this.page.getByTestId('spacePlugin.createObject').last().focus();
-      await this.page.keyboard.press('Enter');
+      // Menu items are clicked, never focused-and-Entered: the menu machine activates whichever
+      // item it has highlighted, and a programmatic `focus()` does not make one highlighted.
+      await this.page.getByTestId('spacePlugin.createObject').last().click();
     } else {
       await this.currentWorkspace.getByTestId('spacePlugin.createObject').first().click();
     }
@@ -382,8 +436,15 @@ export class AppManager {
     const option = this.page.getByTestId(`create-object-form.type.${OBJECT_TYPENAMES[type]}`);
     await option.click({ timeout: 15_000 });
 
+    // Waited for, not sampled: `isVisible()` answers immediately, so a form that has not painted
+    // yet reads as absent and this returns with the dialog still open, stranding the next caller.
+    // Types that create without a form legitimately never show one, hence the bounded wait.
     const objectForm = this.page.getByTestId('create-object-form');
-    if (!(await objectForm.isVisible())) {
+    const hasForm = await objectForm
+      .waitFor({ state: 'visible', timeout: 5_000 })
+      .then(() => true)
+      .catch(() => false);
+    if (!hasForm) {
       return;
     }
 
@@ -391,6 +452,9 @@ export class AppManager {
       await objectForm.getByLabel('Name').fill(name);
     }
     await objectForm.getByTestId('save-button').click();
+    // Reopening the dialog before it has finished closing reuses the instance, which is still on
+    // the form rather than back at the type list, so the next caller must start from a clean one.
+    await objectForm.waitFor({ state: 'detached', timeout: 30_000 });
   }
 
   async navigateToObject(nth = 0, delay = 100): Promise<void> {
@@ -406,10 +470,7 @@ export class AppManager {
       .getByTestId(/navtree\.treeItem\.actionsLevel\d+/)
       .first()
       .click();
-    // TODO(thure): For some reason, actions move around when simulating the mouse in Firefox.
-    await this.page.keyboard.press('ArrowDown');
-    await this.page.getByTestId('spacePlugin.renameObject').last().focus();
-    await this.page.keyboard.press('Enter');
+    await this.page.getByTestId('spacePlugin.renameObject').last().click();
     await this.page.getByTestId('spacePlugin.rename.input').fill(newName);
     await this.page.getByTestId('spacePlugin.rename.input').press('Enter');
     await this.page.mouse.move(0, 0, { steps: 4 });
@@ -421,10 +482,7 @@ export class AppManager {
       .getByTestId(/navtree\.treeItem\.actionsLevel\d+/)
       .first()
       .click();
-    // TODO(thure): For some reason, actions move around when simulating the mouse in Firefox.
-    await this.page.keyboard.press('ArrowDown');
-    await this.page.getByTestId('spacePlugin.deleteObject').last().focus();
-    await this.page.keyboard.press('Enter');
+    await this.page.getByTestId('spacePlugin.deleteObject').last().click();
   }
 
   getObject(nth = 0): Locator {
@@ -464,6 +522,70 @@ export class AppManager {
     await this.page.getByTestId('treeView.appSettings').click();
   }
 
+  /** Opens one plugin's settings panel from the settings workspace tree. */
+  async openPluginSettings(plugin: string): Promise<void> {
+    await this.openSettings();
+    const item = this.page.getByTestId(`settings.${plugin}`);
+    await expect(item).toBeVisible();
+    await item.click();
+    await expect(item).toHaveAttribute('aria-selected', 'true');
+  }
+
+  /** The scope toggle group in a settings panel's heading: one item per scope, the active one pressed. */
+  getSettingsScopeToggle(scope: 'synced' | 'local'): Locator {
+    return this.page.getByTestId(`settingsScope.${scope}`);
+  }
+
+  /** Takes the open settings panel off the account. */
+  async useSettingsForThisDeviceOnly(): Promise<void> {
+    const local = this.getSettingsScopeToggle('local');
+    await expect(local).toBeVisible();
+    await local.click();
+    await expect(local).toHaveAttribute('data-state', 'on');
+  }
+
+  /**
+   * Rejoins the account for the open settings panel, keeping the account's values. The confirmation
+   * only appears when the two sides differ, so the dialog is dismissed only if it opened.
+   */
+  async rejoinAccountSettings(): Promise<void> {
+    await this.getSettingsScopeToggle('synced').click();
+    const keepShared = this.page.getByTestId('settingsScope.keepShared');
+    if (await keepShared.isVisible({ timeout: 5_000 }).catch(() => false)) {
+      await keepShared.click();
+    }
+    await expect(this.getSettingsScopeToggle('synced')).toHaveAttribute('data-state', 'on');
+  }
+
+  /** Rejoins the account but publishes this device's values to it, from the conflict dialog. */
+  async rejoinAccountSettingsKeepingLocal(): Promise<void> {
+    await this.getSettingsScopeToggle('synced').click();
+    await this.page.getByTestId('settingsScope.keepLocal').click();
+    await expect(this.getSettingsScopeToggle('synced')).toHaveAttribute('data-state', 'on');
+  }
+
+  /** The registry's dev-plugin URL field — an ordinary synced plugin setting. */
+  getDevPluginUrlInput(): Locator {
+    return this.page.getByTestId('registrySettings.devPluginUrl');
+  }
+
+  /**
+   * The "use a different plugin set on this device" switch in the registry's settings panel. Absent
+   * until the settings space opens.
+   */
+  getPluginScopeToggle(): Locator {
+    return this.page.getByTestId('registrySettings.pluginScope');
+  }
+
+  /** Detaches this device's plugin set from the account. */
+  async usePluginSetForThisDeviceOnly(): Promise<void> {
+    const toggle = this.getPluginScopeToggle();
+    await expect(toggle).toBeVisible();
+    await expect(toggle).not.toBeChecked();
+    await toggle.click();
+    await expect(toggle).toBeChecked();
+  }
+
   async openPluginRegistry(): Promise<void> {
     // Direct-navigate to the registry workspace rather than clicking the
     // pinned tree node. The click path requires the layout/settings
@@ -477,31 +599,15 @@ export class AppManager {
   }
 
   async openRegistryCategory(category: string): Promise<void> {
-    // A category node's id is the bare category name, addressed as the `category` key.
-    await this.page.goto(`${workspaceUrl(REGISTRY_WORKSPACE)}/category/${category}`);
-    await this.page.getByTestId(`pluginRegistry.${category}`).waitFor({ state: 'visible' });
+    // Clicked rather than deep-linked: a cold load of `<workspace>/category/<name>` restores the
+    // workspace but not the category plank, so the list never opens.
+    await this.openPluginRegistry();
+    await this.page.getByTestId(`pluginRegistry.${category}`).click();
+    await expect(this.page.locator('[data-testid^="pluginList."]').first()).toBeVisible();
   }
 
   getPluginToggle(plugin: string): Locator {
     return this.page.getByTestId(`pluginList.${plugin}`).locator('input[type="checkbox"]');
-  }
-
-  async enablePlugin(plugin: string): Promise<void> {
-    const toggle = this.getPluginToggle(plugin);
-    // Wait for the toggle to be present and stable before clicking — the
-    // plugin list re-renders after the workspace switch and the React
-    // onClick handler may not be bound on the first render that produces
-    // the checkbox element.
-    await expect(toggle).toBeVisible();
-    await expect(toggle).not.toBeChecked();
-    await toggle.click();
-    // Wait for the click to actually flip the toggle's checked state before
-    // reloading — the click handler persists the enable into storage and
-    // navigating mid-write leaves the new page's plugin manager in an
-    // inconsistent state where the lazy plugin chunk fetch can be cancelled.
-    await expect(toggle).toBeChecked();
-    await this.page.goto(INITIAL_URL);
-    await this.page.getByTestId('treeView.userAccount').waitFor();
   }
 
   async changeStorageVersionInMetadata(version: number): Promise<void> {

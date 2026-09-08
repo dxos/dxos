@@ -9,9 +9,9 @@ import { type Database, Obj } from '@dxos/echo';
 import {
   Button,
   Column,
+  Field,
   Icon,
   IconButton,
-  Input,
   ScrollArea,
   composable,
   composableProps,
@@ -297,9 +297,9 @@ export const EditMessage = composable<HTMLDivElement, EditMessageProps>(
                 </>
               )}
 
-              <Input.Root>
-                <Input.Label srOnly>{t('draft-subject.label')}</Input.Label>
-                <Input.TextInput
+              <Field.Root>
+                <Field.Label srOnly>{t('draft-subject.label')}</Field.Label>
+                <Field.Input
                   ref={subjectRef}
                   classNames='col-span-3'
                   placeholder={t('draft-subject.placeholder')}
@@ -313,7 +313,7 @@ export const EditMessage = composable<HTMLDivElement, EditMessageProps>(
                     }
                   }}
                 />
-              </Input.Root>
+              </Field.Root>
             </Column.Center>
 
             <Column.Center classNames='flex flex-col dx-grow py-3'>

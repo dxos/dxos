@@ -220,7 +220,7 @@ export const ObjectHistory = forwardRef<HTMLElement, ObjectHistoryProps>(({ role
       <Panel.Content asChild>
         <ScrollArea.Root orientation='vertical'>
           <ScrollArea.Viewport>
-            <Timeline commits={commits} branches={branches} currentBranch={currentBranch} onSelect={handleSelect} />
+            <Timeline branches={branches} branch={currentBranch} commits={commits} onSelect={handleSelect} />
           </ScrollArea.Viewport>
         </ScrollArea.Root>
       </Panel.Content>

@@ -84,6 +84,7 @@ const runPlanner = async <S>({ plan, spec, options }: RunPlanProps<S>) => {
     testId,
     outDir,
     spec,
+    randomSeed: options.randomSeed,
   };
 
   if (options.shouldBuildBrowser) {

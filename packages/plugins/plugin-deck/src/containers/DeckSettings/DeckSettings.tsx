@@ -5,7 +5,7 @@
 import React from 'react';
 
 import { useSettingsState } from '@dxos/app-framework/ui';
-import { type AppSurface } from '@dxos/app-toolkit/ui';
+import { type AppSurface, SettingsScope } from '@dxos/app-toolkit/ui';
 import { useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 
@@ -22,14 +22,17 @@ export const DeckSettings = ({ subject }: DeckSettingsProps) => {
 
   return (
     <Form.Root
-      variant='settings'
       schema={Settings.Settings}
       values={settings}
+      variant='settings'
       onValuesChanged={(values) => updateSettings((current) => ({ ...current, ...values }))}
     >
       <Form.Viewport scroll>
         <Form.Content>
-          <Form.Section title={meta.profile.name ?? meta.profile.key}>
+          <Form.Section
+            title={meta.profile.name ?? meta.profile.key}
+            actions={<SettingsScope prefix={subject.prefix} />}
+          >
             <Form.FieldSet
               filter={(properties) =>
                 isSocket ? properties.filter((property) => property.name !== 'enableNativeRedirect') : properties

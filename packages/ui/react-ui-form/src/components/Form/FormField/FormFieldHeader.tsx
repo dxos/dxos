@@ -4,8 +4,8 @@
 
 import React, { type ReactNode } from 'react';
 
-import { CompactIconButton } from './FormField';
-import { FormFieldLabel } from './FormRow';
+import { FormFieldLabel } from './FormField';
+import { CompactIconButton } from './FormFieldDispatch';
 
 export type FormFieldHeaderProps = {
   label: string;
@@ -16,16 +16,16 @@ export type FormFieldHeaderProps = {
   classNames?: string;
   /** Trailing inline add affordance; omit to hide it. */
   add?: { icon?: string; label: string; disabled?: boolean; onClick: () => void };
-  /** Extra trailing controls placed after the add affordance (e.g. a collapse toggle). */
+  /** Extra trailing content placed after the add affordance (e.g. a disclosure caret). */
   actions?: ReactNode;
-  /** Header row click (e.g. toggle collapse). The add affordance stops propagation so it doesn't trigger this. */
-  onClick?: () => void;
+  /** Render the row as the enclosing `Collapsible`'s trigger; incompatible with `add`, a button inside a button. */
+  trigger?: boolean;
 };
 
 /**
  * Header row for a labelled group or list: a label with optional trailing controls (an inline add
  * affordance and/or arbitrary `actions`). Shared by array/list fields ({@link ArrayField}, the view
- * editor) and {@link FormFieldSetContainer}'s collapse header, so all group/list headers render identically.
+ * editor) and {@link FormFieldSetContainer}'s disclosure header, so all group/list headers render identically.
  */
 export const FormFieldHeader = ({
   label,
@@ -35,7 +35,7 @@ export const FormFieldHeader = ({
   classNames,
   add,
   actions,
-  onClick,
+  trigger,
 }: FormFieldHeaderProps) => (
   <FormFieldLabel
     standalone
@@ -44,6 +44,7 @@ export const FormFieldHeader = ({
     required={required}
     readonly={readonly}
     path={path}
+    trigger={trigger}
     button={
       (!readonly && add) || actions ? (
         <>
@@ -52,17 +53,12 @@ export const FormFieldHeader = ({
               disabled={add.disabled}
               icon={add.icon ?? 'ph--plus--regular'}
               label={add.label}
-              onClick={(event) => {
-                // Don't let the add click bubble to the header's onClick (e.g. collapse toggle).
-                event.stopPropagation();
-                add.onClick();
-              }}
+              onClick={add.onClick}
             />
           )}
           {actions}
         </>
       ) : undefined
     }
-    onClick={onClick}
   />
 );

@@ -6,6 +6,7 @@ import { expect, test } from '@playwright/test';
 import { platform } from 'node:os';
 
 import { AppManager, INITIAL_SPACE_COUNT, INITIAL_URL } from './app-manager';
+import { StackPlugin } from './plugins';
 
 // TODO(wittjosiah): WebRTC only available in chromium browser for testing currently.
 //   https://github.com/microsoft/playwright/issues/2973
@@ -31,11 +32,9 @@ test.describe('HALO tests', () => {
   });
 
   test.afterEach(async () => {
-    // NOTE: `afterEach` even if the test is skipped in the beforeEach!
-    // Guard against uninitialized app managers.
-    if (host !== undefined || guest !== undefined) {
-      await host.closePage();
-      await guest.closePage();
+    // Playwright runs `afterEach` even when `beforeEach` skipped, so neither manager may exist.
+    if (host !== undefined && guest !== undefined) {
+      await Promise.all([host.close(), guest.close()]);
     }
   });
 
@@ -56,8 +55,7 @@ test.describe('HALO tests', () => {
     // for it — no need to race the reload against a fixed deadline.
     await guest.joinNewIdentity();
     await guest.shell.acceptDeviceInvitation(invitationCode);
-    // Read after the guest connects: the host learns the auth code from `readyForAuthentication`,
-    // which the flow only reaches once there is a guest on the other side.
+    // Read after the guest connects: `readyForAuthentication` is only reached with a guest present.
     const authCode = await host.getAuthCode();
     await guest.shell.authenticateDevice(authCode);
 
@@ -72,6 +70,58 @@ test.describe('HALO tests', () => {
     // await waitForExpect(async () => {
     //   expect(await host.shell.getDisplayName()).to.equal(await guest.shell.getDisplayName());
     // });
+  });
+
+  test('settings sync across devices, and one device can keep its own', async () => {
+    test.setTimeout(180_000);
+
+    // Both boots have to land first: the navigation to the default space arrives seconds after the
+    // shell renders and closes any dialog opened before it.
+    await host.waitForDefaultWorkspace();
+    await guest.waitForDefaultWorkspace();
+    await host.openUserDevices();
+    const invitationCode = await host.createDeviceInvitation();
+    await guest.openUserDevices();
+    await guest.joinNewIdentity();
+    await guest.shell.acceptDeviceInvitation(invitationCode);
+    // Read after the guest connects: the host learns the auth code from `readyForAuthentication`,
+    // which the flow only reaches once there is a guest on the other side.
+    const authCode = await host.getAuthCode();
+    await guest.shell.authenticateDevice(authCode);
+    await expect(guest.getSpaceItems()).toHaveCount(INITIAL_SPACE_COUNT, { timeout: 60_000 });
+    await guest.waitForJoinedWorkspace();
+
+    await host.openRegistryCategory('recommended');
+    await expect(host.getPluginToggle(StackPlugin.meta.profile.key)).not.toBeChecked();
+    await host.getPluginToggle(StackPlugin.meta.profile.key).click();
+    await expect(host.getPluginToggle(StackPlugin.meta.profile.key)).toBeChecked();
+
+    // 1. Sync: the host's decision replicates to the guest.
+    await guest.openRegistryCategory('recommended');
+    await expect(guest.getPluginToggle(StackPlugin.meta.profile.key)).toBeChecked({ timeout: 60_000 });
+
+    // 2. Local override: the guest leaves the account for the plugin set only.
+    await guest.openPluginSettings('org.dxos.plugin.registry');
+    await guest.usePluginSetForThisDeviceOnly();
+
+    await guest.openRegistryCategory('recommended');
+    await guest.getPluginToggle(StackPlugin.meta.profile.key).click();
+    await expect(guest.getPluginToggle(StackPlugin.meta.profile.key)).not.toBeChecked();
+
+    // 3. The host keeps the account's decision.
+    //
+    // Proving that needs a guest-to-host write that IS expected to arrive, or the assertion passes
+    // on a channel that has simply not delivered yet. Only the plugin SET is local on the guest, so
+    // an ordinary setting still syncs: once the host sees this one, anything the guest leaked would
+    // have arrived with it.
+    const marker = 'http://localhost:4321';
+    await guest.openPluginSettings('org.dxos.plugin.registry');
+    await guest.getDevPluginUrlInput().fill(marker);
+    await host.openPluginSettings('org.dxos.plugin.registry');
+    await expect(host.getDevPluginUrlInput()).toHaveValue(marker, { timeout: 60_000 });
+
+    await host.openRegistryCategory('recommended');
+    await expect(host.getPluginToggle(StackPlugin.meta.profile.key)).toBeChecked();
   });
 
   test('deleting a space replicates across devices', async () => {

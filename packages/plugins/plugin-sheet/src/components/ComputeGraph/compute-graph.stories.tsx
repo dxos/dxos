@@ -10,7 +10,7 @@ import * as Operation from '@dxos/compute/Operation';
 import { Filter, Obj } from '@dxos/echo';
 import { useSpaces } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
-import { Button, Input, Toolbar } from '@dxos/react-ui';
+import { Button, Field, Toolbar } from '@dxos/react-ui';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { withTheme } from '@dxos/react-ui/testing';
 
@@ -70,14 +70,9 @@ const DefaultStory = () => {
   return (
     <div className='flex flex-col gap-2 '>
       <Toolbar.Root>
-        <Input.Root>
-          <Input.TextInput
-            ref={inputRef}
-            placeholder='Formula'
-            value={text}
-            onChange={(ev) => setText(ev.target.value)}
-          />
-        </Input.Root>
+        <Field.Root>
+          <Field.Input ref={inputRef} placeholder='Formula' value={text} onChange={(ev) => setText(ev.target.value)} />
+        </Field.Root>
         <Button onClick={handleTest}>Test</Button>
       </Toolbar.Root>
       <JsonHighlighter data={{ space: space?.id, graph: graph?.id, sheet: sheet?.id, model: model?.id, result }} />

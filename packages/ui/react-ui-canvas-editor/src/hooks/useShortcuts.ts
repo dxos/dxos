@@ -19,11 +19,36 @@ export const useShortcuts = () => {
   useHotkeys({
     id: `canvas:${id}`,
     commands: [
-      { hotkey: 'meta+z', label: 'Undo', scopes: [id], action: () => void actionHandler?.({ type: 'undo' }) },
-      { hotkey: 'shift+meta+z', label: 'Redo', scopes: [id], action: () => void actionHandler?.({ type: 'redo' }) },
-      { hotkey: 'meta+x', label: 'Cut', scopes: [id], action: () => void actionHandler?.({ type: 'cut' }) },
-      { hotkey: 'meta+c', label: 'Copy', scopes: [id], action: () => void actionHandler?.({ type: 'copy' }) },
-      { hotkey: 'meta+v', label: 'Paste', scopes: [id], action: () => void actionHandler?.({ type: 'paste' }) },
+      {
+        hotkey: 'meta+z',
+        label: 'Undo',
+        scopes: [id],
+        action: () => void actionHandler?.({ type: 'undo' }),
+      },
+      {
+        hotkey: 'shift+meta+z',
+        label: 'Redo',
+        scopes: [id],
+        action: () => void actionHandler?.({ type: 'redo' }),
+      },
+      {
+        hotkey: 'meta+x',
+        label: 'Cut',
+        scopes: [id],
+        action: () => void actionHandler?.({ type: 'cut' }),
+      },
+      {
+        hotkey: 'meta+c',
+        label: 'Copy',
+        scopes: [id],
+        action: () => void actionHandler?.({ type: 'copy' }),
+      },
+      {
+        hotkey: 'meta+v',
+        label: 'Paste',
+        scopes: [id],
+        action: () => void actionHandler?.({ type: 'paste' }),
+      },
       {
         hotkey: 'Backspace',
         label: 'Delete',
@@ -53,8 +78,18 @@ export const useShortcuts = () => {
             ids: [...graph.nodes.map((node) => node.id), ...graph.edges.map((edge) => edge.id)],
           }),
       },
-      { hotkey: "meta+'", label: 'Toggle grid', scopes: [id], action: () => void actionHandler?.({ type: 'grid' }) },
-      { hotkey: 'Home', label: 'Home', scopes: [id], action: () => void actionHandler?.({ type: 'home' }) },
+      {
+        hotkey: "meta+'",
+        label: 'Toggle grid',
+        scopes: [id],
+        action: () => void actionHandler?.({ type: 'grid' }),
+      },
+      {
+        hotkey: 'Home',
+        label: 'Home',
+        scopes: [id],
+        action: () => void actionHandler?.({ type: 'home' }),
+      },
     ],
   });
 };

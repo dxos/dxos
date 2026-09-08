@@ -19,7 +19,7 @@ import {
   PrivacyBanner,
   PrivacyNotice,
   ReactSurface,
-  SettingsSync,
+  SettingsReactor,
   Translations,
 } from '#capabilities';
 import { meta } from '#meta';
@@ -37,7 +37,7 @@ export const ObservabilityPlugin = Plugin.define<ObservabilityOptions.Observabil
   Plugin.addModule(PrivacyBanner),
   Plugin.addModule(PrivacyNotice),
   Plugin.addModule(ReactSurface),
-  Plugin.addModule(SettingsSync),
+  Plugin.addModule(SettingsReactor),
   Plugin.addModule(Translations),
   Plugin.addModule(({ downloadLogs }: ObservabilityOptions.ObservabilityPluginOptions) => ({
     id: 'log-downloader',

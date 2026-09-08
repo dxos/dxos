@@ -248,6 +248,14 @@ export const Article: Role.Role<ArticleData<any>> = Role.make('org.dxos.role.art
 /** Surface data for article role (from PlankComponent). */
 export type ArticleData<Subject = unknown, Props extends {} = {}, CompanionTo = unknown> = {
   attendableId: string;
+  /**
+   * The graph node this surface renders, which is what its contributed actions are filed under.
+   *
+   * Distinct from `attendableId`: a companion shares its host plank's attention id, so the two are
+   * the same for a primary plank and differ for a companion. A surface that reads its own actions
+   * from `attendableId` therefore renders the host's toolbar when it is a companion.
+   */
+  nodeId?: string;
   subject: Subject;
   properties?: Record<string, any>; // TODO(burdon): What is this for?
   variant?: string;
@@ -331,12 +339,16 @@ export type SettingsProps<T extends {}, Props extends {} = {}> = {
   onSettingsChange?: (cb: (current: T) => T) => void;
 } & Props;
 
+/** Filter: matches any plugin-settings article, for the generic settings surface. */
+export function settings(token: Role.Role<any>): Surface.Filter<SettingsData>;
 /**
- * Filter: matches a plugin-settings article. When `prefix` is omitted the
- * filter matches any settings subject (used by the generic default settings
- * surface); pass a `prefix` to match a single plugin's settings.
+ * Filter: matches one plugin's settings article.
+ *
+ * @deprecated Contribute a schema and atom and let `plugin-settings`' generic surface render the
+ * panel; a bespoke article re-implements the panel chrome by hand.
  */
-export const settings = (token: Role.Role<any>, prefix?: string): Surface.Filter<SettingsData> => {
+export function settings(token: Role.Role<any>, prefix: string): Surface.Filter<SettingsData>;
+export function settings(token: Role.Role<any>, prefix?: string): Surface.Filter<SettingsData> {
   const guard = (data: unknown): boolean => {
     if (typeof data !== 'object' || data === null) {
       return false;
@@ -346,7 +358,7 @@ export const settings = (token: Role.Role<any>, prefix?: string): Surface.Filter
     return AppCapabilities.isSettings(subject) && (prefix === undefined || subject.prefix === prefix);
   };
   return { bindings: [{ role: token.role, guard }] };
-};
+}
 
 //
 // Section
@@ -377,6 +389,8 @@ export const Related: Role.Role<{ attendableId?: string; subject: any }> = Role.
  */
 export type SectionData<Subject = unknown, Props extends {} = {}> = {
   attendableId: string;
+  /** The graph node this surface renders; see {@link ArticleData.nodeId}. */
+  nodeId?: string;
   subject: Subject;
   /**
    * Set when the section is sized by its container (e.g. a user-resized embed) rather than its

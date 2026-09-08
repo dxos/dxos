@@ -139,11 +139,11 @@ const sharedPlugins = (env: ConfigEnv): PluginOption[] => [
   //     text in `dist`).
   //   * `?url` static-asset imports (e.g. plugin-zen's m4a samples,
   //     plugin-script's `esbuild.wasm`) get real bundled URLs instead of
-  //     the `""` empty-url stub that `dx-compile` writes into `dist`.
+  //     an empty-string stub.
   // Under `DX_FASTBUNDLE` (smoke-test/preview build) only the `@dxos/**`-to-source
   // forcing is skipped, where build speed wins over correctness for unchanged source.
   // Package-internal `#*` subpath imports must still resolve to source, or they fall
-  // through to `dist/lib/neutral/*` and fail when a package has not been compiled.
+  // through to `dist/lib/*` and fail when a package has not been compiled.
   // Packages whose source is not vite-safe publish no `source` condition at all, so they resolve
   // to dist here exactly as they do under node/bun — no app-local exclude list, and no divergence
   // between runtimes. The `dist-runtime` moon tag keeps their dist built for `serve`. The same

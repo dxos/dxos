@@ -43,10 +43,12 @@ the diagnostics-channel exporter on EDGE exactly as it wraps the OTLP exporter i
 platform-specific; EDGE supplies `channel('dxos:observability').publish` and tail-logger decodes
 the same envelope type.
 
-**The telemetry opt-in lives in the settings space.** One annotation on the settings space
-properties, `enabled`, replicating across the user's devices. Local storage keeps a mirror so the
-choice applies before the space is readable at boot, and the first device with the space migrates
-its local value in.
+**The telemetry opt-in lives in the settings space, through the app's settings sync.** dxos#12609
+binds every plugin's settings atom to the `AppSettings` object in the settings space, so the
+observability `enabled` field replicates with no plugin-specific code. The plugin follows its
+atom into the backends and the local mirror (the value the next boot reads before the atom
+exists). EDGE reads `AppSettings.shared["org.dxos.plugin.observability"].enabled` from the same
+space.
 
 **AI content capture is not a separate consent.** Content goes out when telemetry is on and the
 space is one EDGE already sees in plaintext. A space EDGE can read is one EDGE may observe, under
@@ -66,8 +68,8 @@ pkg.pr.new publishes only on push to `main`, so the dxos PR lands first and the 
 catalog to its merge commit.
 
 1. dxos: `@dxos/observability` bundles on workerd, Relay extension, `SpanProcessors` subpath;
-   plugin-observability settings-space opt-in, workerd `Observability` module, delete the workerd
-   handler stub.
+   plugin-observability settings reactor, workerd `Observability` module, delete the workerd
+   handler stub. Stacked on dxos#12609, which carries the settings sync itself.
 2. edge: catalog bump; `otel-instrument.ts` adds content stripping; `edge-platform` builds the
    per-isolate `Observability` from Relay; tail-logger consumes `dxos:observability` into
    posthog-node; operation-service passes the observability to the plugin.

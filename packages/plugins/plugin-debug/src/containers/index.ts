@@ -9,9 +9,6 @@ import { type DebugPanelStatusProps } from './DebugPanelStatus';
 export const DebugObjectPanel: ComponentType<any> = lazy(() => import('./DebugObjectPanel'));
 export const DebugSettings: ComponentType<any> = lazy(() => import('./DebugSettings'));
 export const DebugSpaceObjectsPanel: ComponentType<any> = lazy(() => import('./DebugSpaceObjectsPanel'));
-export const DebugPanel: ComponentType<any> = lazy(() =>
-  import('./DebugPanel').then((module) => ({ default: module.DebugPanel })),
-);
 export const DebugPanelStatus: ComponentType<DebugPanelStatusProps> = lazy(() =>
   import('./DebugPanelStatus').then((module) => ({ default: module.DebugPanelStatus })),
 );

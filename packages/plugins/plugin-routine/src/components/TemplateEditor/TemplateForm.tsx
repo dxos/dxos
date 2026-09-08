@@ -7,7 +7,7 @@ import React, { Fragment, useCallback, useEffect } from 'react';
 
 import type * as Template from '@dxos/compute/Template';
 import { type Obj } from '@dxos/echo';
-import { Grid, Input, Select, useTranslation } from '@dxos/react-ui';
+import { Field, Grid, Select, useTranslation } from '@dxos/react-ui';
 import { isNonNullable } from '@dxos/util';
 
 import { meta } from '#meta';
@@ -68,7 +68,7 @@ export const TemplateForm = ({ id, template, onChange }: TemplateFormProps) => {
             <Fragment key={input.name}>
               <div className='ps-3 text-blue-text'>{input.name}</div>
 
-              <Input.Root>
+              <Field.Root>
                 <Select.Root
                   value={input.kind}
                   onValueChange={(kind) => handleInputKindChange(input.name, kind as Template.InputKind)}
@@ -83,22 +83,21 @@ export const TemplateForm = ({ id, template, onChange }: TemplateFormProps) => {
                           </Select.Option>
                         ))}
                       </Select.Viewport>
-                      <Select.Arrow />
                     </Select.Content>
                   </Select.Portal>
                 </Select.Root>
-              </Input.Root>
+              </Field.Root>
 
               <div>
                 {input.kind === 'value' && (
-                  <Input.Root>
-                    <Input.TextInput
+                  <Field.Root>
+                    <Field.Input
                       placeholder={t('command.placeholder')}
                       classNames='w-full bg-transparent'
                       value={input.default ?? ''}
                       onChange={(event) => handleInputDefaultChange(input.name, event.target.value)}
                     />
-                  </Input.Root>
+                  </Field.Root>
                 )}
               </div>
             </Fragment>

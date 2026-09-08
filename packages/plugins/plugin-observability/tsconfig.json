@@ -37,9 +37,6 @@
       "path": "../../core/compute/operation"
     },
     {
-      "path": "../../core/echo/echo"
-    },
-    {
       "path": "../../devtools/cli-util"
     },
     {

@@ -5,12 +5,12 @@
 import React, { useCallback, useRef, useState } from 'react';
 
 import { useSettingsState } from '@dxos/app-framework/ui';
-import { type AppSurface } from '@dxos/app-toolkit/ui';
+import { type AppSurface, SettingsScope } from '@dxos/app-toolkit/ui';
 import { Filter, Obj } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { AccessToken } from '@dxos/link';
 import { useSpaces } from '@dxos/react-client/echo';
-import { Input, useTranslation } from '@dxos/react-ui';
+import { Field, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 
 import { meta } from '#meta';
@@ -67,10 +67,13 @@ export const CodeSettings = ({ subject }: CodeSettingsProps) => {
     >
       <Form.Viewport scroll>
         <Form.Content>
-          <Form.Section title={meta.profile.name ?? meta.profile.key}>
-            <Form.Row label={t('api-key.label')}>
-              <Input.Root>
-                <Input.TextInput
+          <Form.Section
+            title={meta.profile.name ?? meta.profile.key}
+            actions={<SettingsScope prefix={subject.prefix} />}
+          >
+            <Form.Field label={t('api-key.label')}>
+              <Field.Root>
+                <Field.Input
                   type='password'
                   placeholder={existing ? t('api-key.set.placeholder') : t('api-key.empty.placeholder')}
                   value={draft}
@@ -80,8 +83,8 @@ export const CodeSettings = ({ subject }: CodeSettingsProps) => {
                   }}
                   onBlur={handleCommit}
                 />
-              </Input.Root>
-            </Form.Row>
+              </Field.Root>
+            </Form.Field>
             <Form.FieldSet />
           </Form.Section>
         </Form.Content>

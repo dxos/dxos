@@ -11,14 +11,13 @@ import { McpServer } from '@dxos/assistant-toolkit';
 import type * as ChatModule from '@dxos/assistant/Chat';
 import { type Database, Filter, Obj, type Registry, Type, URI } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
-import { IconButton, Input, Popover, Select, Toolbar, useTranslation } from '@dxos/react-ui';
+import { Field, IconButton, Popover, Select, Tabs, Toolbar, useTranslation } from '@dxos/react-ui';
 import { type ChatView } from '@dxos/react-ui-assistant';
 import { Listbox } from '@dxos/react-ui-list';
 import { SearchList, useSearchListResults } from '@dxos/react-ui-search';
-import { Tabs } from '@dxos/react-ui-tabs';
 import { getStyles, mx } from '@dxos/ui-theme';
 
-import { useActiveSkills, useContextObjects, useFilteredTypes, useSkillHandlers, useSkills } from '#hooks';
+import { getSkillId, useActiveSkills, useContextObjects, useFilteredTypes, useSkillHandlers, useSkills } from '#hooks';
 import { meta } from '#meta';
 import { Assistant, AssistantCapabilities, AssistantPreset } from '#types';
 
@@ -110,7 +109,7 @@ const SkillsPanel = ({ registry, db, context }: Pick<ChatOptionsProps, 'registry
 
   const skills = useSkills({ registry, db });
   const activeSkills = useActiveSkills({ context });
-  const { onUpdateSkill } = useSkillHandlers({ db, context, registry });
+  const { onUpdateSkill } = useSkillHandlers({ context });
   const { results, handleSearch } = useSearchListResults({
     items: skills,
     extract: (skill) => skill.name,
@@ -123,16 +122,16 @@ const SkillsPanel = ({ registry, db, context }: Pick<ChatOptionsProps, 'registry
             centered search surface, so the scroll strip is not reserved on both sides. */}
         <SearchList.Viewport padding={false}>
           {results.map((skill) => {
-            const skillKey = Obj.getMeta(skill).key ?? skill.id;
-            const isActive = activeSkills.has(skillKey);
+            const skillId = getSkillId(skill);
+            const isActive = activeSkills.has(skillId);
             return (
               <SearchList.Item
                 classNames='flex items-center overflow-hidden'
-                key={skillKey}
-                value={skillKey}
+                key={skillId}
+                value={skillId}
                 label={skill.name}
                 checked={isActive}
-                onSelect={() => onUpdateSkill?.(skillKey, !isActive)}
+                onSelect={() => onUpdateSkill?.(skill, !isActive)}
               />
             );
           })}
@@ -211,10 +210,9 @@ const OnlineSwitch = () => {
 
   return (
     <div className='px-1 flex items-center gap-2'>
-      <Input.Root>
-        <Input.Switch checked={online} onCheckedChange={handleChange} data-testid='assistant.online' />
-        <Input.Label>{t('online-switch.label')}</Input.Label>
-      </Input.Root>
+      <Field.Switch checked={online} onCheckedChange={handleChange} data-testid='assistant.online'>
+        {t('online-switch.label')}
+      </Field.Switch>
     </div>
   );
 };
@@ -280,10 +278,10 @@ const McpServerRow = ({ server, onRemove }: McpServerRowProps) => {
 
   return (
     <div className='flex items-center gap-2 px-form-chrome'>
-      <Input.Root>
-        <Input.Label srOnly>{server.name}</Input.Label>
-        <Input.Switch checked={enabled !== false} onCheckedChange={(checked) => setEnabled(!!checked)} />
-      </Input.Root>
+      <Field.Root>
+        <Field.Label srOnly>{server.name}</Field.Label>
+        <Field.Switch checked={enabled !== false} onCheckedChange={(checked) => setEnabled(!!checked)} />
+      </Field.Root>
       <span className='flex-1 truncate text-sm'>{server.name}</span>
       <span className='truncate text-xs text-description'>{server.url}</span>
       <IconButton
@@ -318,23 +316,23 @@ const McpServerForm = ({ onSubmit, onCancel }: McpServerFormProps) => {
 
   return (
     <div className='space-y-2 px-form-chrome'>
-      <Input.Root>
-        <Input.Label srOnly>{t('mcp-server-name.label')}</Input.Label>
-        <Input.TextInput
+      <Field.Root>
+        <Field.Label srOnly>{t('mcp-server-name.label')}</Field.Label>
+        <Field.Input
           placeholder={t('mcp-server-name.placeholder')}
           value={name}
           onChange={(event) => setName(event.target.value)}
           autoFocus
         />
-      </Input.Root>
-      <Input.Root>
-        <Input.Label srOnly>{t('mcp-server-url.label')}</Input.Label>
-        <Input.TextInput
+      </Field.Root>
+      <Field.Root>
+        <Field.Label srOnly>{t('mcp-server-url.label')}</Field.Label>
+        <Field.Input
           placeholder={t('mcp-server-url.placeholder')}
           value={url}
           onChange={(event) => setUrl(event.target.value)}
         />
-      </Input.Root>
+      </Field.Root>
       <Select.Root value={protocol} onValueChange={(value) => setProtocol(value as 'sse' | 'http')}>
         <Select.TriggerButton placeholder={t('mcp-server-protocol.label')} />
         <Select.Portal>
@@ -346,15 +344,15 @@ const McpServerForm = ({ onSubmit, onCancel }: McpServerFormProps) => {
           </Select.Content>
         </Select.Portal>
       </Select.Root>
-      <Input.Root>
-        <Input.Label srOnly>{t('mcp-server-api-key.label')}</Input.Label>
-        <Input.TextInput
+      <Field.Root>
+        <Field.Label srOnly>{t('mcp-server-api-key.label')}</Field.Label>
+        <Field.Input
           type='password'
           placeholder={t('mcp-server-api-key.placeholder')}
           value={apiKey}
           onChange={(event) => setApiKey(event.target.value)}
         />
-      </Input.Root>
+      </Field.Root>
       <div className='flex gap-2'>
         <IconButton
           variant='ghost'
@@ -441,7 +439,6 @@ export const ObjectsPanel = ({ db, context }: Pick<ChatOptionsProps, 'db' | 'con
           <Select.TriggerButton placeholder={t('type-filter.placeholder')} />
           <Select.Portal>
             <Select.Content>
-              <Select.ScrollUpButton />
               <Select.Viewport>
                 <Select.Option value={ANY}>{t('any-type-filter.label')}</Select.Option>
                 {typeOptions.map(({ uri, label }) => (
@@ -450,8 +447,6 @@ export const ObjectsPanel = ({ db, context }: Pick<ChatOptionsProps, 'db' | 'con
                   </Select.Option>
                 ))}
               </Select.Viewport>
-              <Select.ScrollDownButton />
-              <Select.Arrow />
             </Select.Content>
           </Select.Portal>
         </Select.Root>

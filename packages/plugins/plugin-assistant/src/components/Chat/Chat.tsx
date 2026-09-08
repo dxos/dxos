@@ -32,7 +32,7 @@ import {
   isPrompt,
   useFeedModel,
 } from '@dxos/react-ui-feed';
-import { Menu, MenuRootProps, createMenuAction } from '@dxos/react-ui-menu';
+import { ActionToolbar, type ActionToolbarProps, createMenuAction } from '@dxos/react-ui-menu';
 import { TaskList } from '@dxos/react-ui-task';
 import { Message, Task } from '@dxos/types';
 import { keyToFallback } from '@dxos/util';
@@ -50,7 +50,13 @@ import {
   type ChatPromptProps as NaturalChatPromptProps,
 } from '../ChatPrompt';
 import { ChatQueue as NaturalChatQueue, type ChatQueueProps as NaturalChatQueueProps } from '../ChatQueue';
-import { ChatContextProvider, type ChatContextValue, type ChatRequestTiming, useChatContext } from './context';
+import {
+  ChatContextProvider,
+  type ChatContextValue,
+  ChatReportContextProvider,
+  type ChatRequestTiming,
+  useChatContext,
+} from './context';
 import { type ChatEvent } from './events';
 import { SurfaceWidget } from './SurfaceWidget';
 import { projectAlarms, projectThread, resolveRewind } from './thread';
@@ -234,6 +240,20 @@ const ChatRoot = ({
           break;
         }
 
+        case 'report': {
+          const text = ev.text.trim();
+          if (text.length) {
+            // Same seam as a submitted prompt (persist first, queue while a turn runs), but the
+            // content is synthetic — nobody typed it.
+            void Promise.resolve(onSubmit?.(text)).then(() =>
+              active
+                ? processor.enqueue({ message: text, disposition: 'synthetic' })
+                : processor.request({ message: text, disposition: 'synthetic' }),
+            );
+          }
+          break;
+        }
+
         case 'rewind': {
           // Edit-and-resend: discard the prompt and everything after it, and put its text back in the
           // composer so it can be revised. Recorded on the feed rather than the chat because the
@@ -273,6 +293,10 @@ const ChatRoot = ({
     // them the handler would keep resolving rewinds against whatever was mounted first.
   }, [event, dump, processor, streaming, active, onEvent, onSubmit, getContext, feed, messages, chat, db]);
 
+  // An inline surface (connector prompt, plugin prompt) reports its completed flow as a synthetic
+  // turn, so the agent resumes without the report reading as something the user typed.
+  const handleReport = useCallback((text: string) => event.emit({ type: 'report', text }), [event]);
+
   return (
     <ChatContextProvider
       debug={debug}
@@ -291,7 +315,7 @@ const ChatRoot = ({
       setVisibleRange={setVisibleRange}
       {...props}
     >
-      {children}
+      <ChatReportContextProvider submit={handleReport}>{children}</ChatReportContextProvider>
     </ChatContextProvider>
   );
 };
@@ -317,7 +341,7 @@ const useRequestTiming = ({ active }: { active: boolean }) => {
 
 const CHAT_TOOLBAR_NAME = 'Chat.Toolbar';
 
-type ChatToolbarProps = Pick<MenuRootProps, 'attendableId' | 'alwaysActive'> &
+type ChatToolbarProps = Pick<ActionToolbarProps, 'attendableId' | 'alwaysActive'> &
   PropsWithChildren<{
     companionTo?: Obj.Unknown;
   }>;
@@ -328,12 +352,15 @@ const ChatToolbar = composable<HTMLDivElement, ChatToolbarProps>(
     const menuActions = useChatToolbarActions({ chat, companionTo });
 
     return (
-      <Menu.Root {...menuActions} attendableId={attendableId} alwaysActive={alwaysActive}>
-        <Menu.Toolbar {...composableProps(props)} ref={forwardedRef}>
-          <Menu.Items />
-          {children}
-        </Menu.Toolbar>
-      </Menu.Root>
+      <ActionToolbar
+        {...menuActions}
+        attendableId={attendableId}
+        alwaysActive={alwaysActive}
+        {...composableProps(props)}
+        ref={forwardedRef}
+      >
+        {children}
+      </ActionToolbar>
     );
   },
 );

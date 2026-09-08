@@ -22,7 +22,7 @@ import { EID } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { useConfig } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';
-import { Avatar, Input, type ThemedClassName, Toolbar, useAsyncEffect } from '@dxos/react-ui';
+import { Avatar, Field, type ThemedClassName, Toolbar, useAsyncEffect } from '@dxos/react-ui';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { mx } from '@dxos/ui-theme';
 
@@ -162,8 +162,8 @@ export const WorkflowDebugPanel = (props: WorkflowDebugPanelProps) => {
       <MessageThread ref={scrollerRef} history={history} />
 
       <Toolbar.Root>
-        <Input.Root>
-          <Input.TextInput
+        <Field.Root>
+          <Field.Input
             ref={inputRef}
             autoFocus
             placeholder={'Input JSON'}
@@ -171,7 +171,7 @@ export const WorkflowDebugPanel = (props: WorkflowDebugPanelProps) => {
             onChange={(ev) => setInput(ev.target.value)}
             onKeyDown={(ev) => ev.key === 'Enter' && handleRequest(input)}
           />
-        </Input.Root>
+        </Field.Root>
         <Toolbar.IconButton icon='ph--play--regular' label='Execute' iconOnly onClick={() => handleRequest(input)} />
         <Toolbar.IconButton
           icon={isExecuting ? 'ph--stop--regular' : 'ph--trash--regular'}

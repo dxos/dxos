@@ -35,6 +35,8 @@ import { IdbLogStore } from '@dxos/log-store-idb';
 import * as Observability from '@dxos/observability/Observability';
 import * as ObservabilityExtension from '@dxos/observability/ObservabilityExtension';
 import { translations as observabilityTranslations } from '@dxos/plugin-observability/translations';
+import type * as SupportOperation from '@dxos/plugin-support/SupportOperation';
+import * as SupportService from '@dxos/plugin-support/SupportService';
 import { ErrorBoundary, ErrorFallback } from '@dxos/react-error-boundary';
 import { ThemeProvider, Tooltip } from '@dxos/react-ui';
 import { defaultTx } from '@dxos/react-ui';
@@ -72,14 +74,6 @@ import { initAutomergeWasm } from './util/automerge-wasm';
 // (react-ui-form, editor, pickers) which must stay out of the static boot graph.
 const ResetDialog = lazy(() => import('./components').then((module) => ({ default: module.ResetDialog })));
 
-/**
- * Startup deadline override, in SECONDS (`VITE_DX_STARTUP_TIMEOUT=2`).
- *
- * Exists to exercise the deadline itself: shortening it does not fake a stall, it moves the line
- * that startup has genuinely not crossed yet, so the real path runs with real work behind it. Dev
- * only — in production the deadline is fatal, and a shorter one would just fail a boot sooner.
- * Seconds rather than milliseconds because it is typed by hand.
- */
 const startupTimeout = (() => {
   if (!import.meta.env.DEV) {
     return undefined;
@@ -89,6 +83,15 @@ const startupTimeout = (() => {
   const timeout = seconds * 1_000;
   return Number.isFinite(timeout) && timeout > 0 ? timeout : undefined;
 })();
+
+/**
+ * Whether the boot loader logs each plugin's activation ("Activating Markdown").
+ * Off by default: the default log is the host's own phases, which is what a user booting the app
+ * is asking about. Opt in with `VITE_DX_BOOT_VERBOSE=true` or `?boot-verbose` on the URL, which
+ * makes it reachable on a deployed origin when diagnosing a slow or stalled boot.
+ */
+const verboseStatus =
+  import.meta.env.VITE_DX_BOOT_VERBOSE === 'true' || new URLSearchParams(window.location.search).has('boot-verbose');
 
 // Injected by the `define` block in vite.config.ts; '' in production builds.
 declare const __DX_DEV_SERVER_BOOT_ID__: string;
@@ -120,8 +123,10 @@ declare global {
 
   interface ImportMetaEnv {
     DEV: string;
-    /** Startup deadline override in SECONDS, dev only — see `startupTimeout` below. */
+    /** Startup stall window override in SECONDS; dev only. */
     VITE_DX_STARTUP_TIMEOUT?: string;
+    /** Log per-plugin activation in the boot loader — see `verboseStatus` below. */
+    VITE_DX_BOOT_VERBOSE?: string;
   }
 
   // Debug hook: run `downloadLogs()` from devtools to save buffered logs (same as Reset dialog).
@@ -587,7 +592,7 @@ const main = async () => {
     }),
   );
 
-  bootStatus('Starting Composer…');
+  bootStatus('Building Composer…');
   // Park the ring at 50% — preload done, activation about to take over.
   bootLoader?.progress(0.5);
   const remotePlugins: Plugin.Plugin[] = remotePluginsResult;
@@ -601,6 +606,21 @@ const main = async () => {
 
   startupMark('plugins:end');
   startupMeasure('plugins-init', 'plugins:start', 'plugins:end');
+
+  // The fatal dialog renders outside the plugin manager, so it cannot resolve the support service
+  // itself; it gets a bound submit, or nothing when there is no service to file against.
+  const supportEndpoint = SupportService.supportEndpoint(config);
+  const submitReport = supportEndpoint
+    ? async (report: SupportOperation.SupportRequest) => {
+        await EffectEx.runPromise(
+          SupportService.submitSupportReport({
+            endpoint: supportEndpoint,
+            observability: await observability,
+            report,
+          }),
+        );
+      }
+    : undefined;
 
   const Fallback = ({ error }: { error: Error }) => {
     const {
@@ -644,7 +664,7 @@ const main = async () => {
               <ResetDialog
                 error={error}
                 logStore={logStore}
-                observability={observability}
+                onSubmitReport={submitReport}
                 needRefresh={needRefresh}
                 onRefresh={needRefresh ? () => void updateServiceWorker(true) : undefined}
                 onReset={import.meta.env.DEV ? handleReset : undefined}
@@ -681,6 +701,7 @@ const main = async () => {
       // Shortened only to exercise the deadline (`VITE_DX_STARTUP_TIMEOUT=2` puts the loader's
       // stalled offer two seconds in). `undefined` leaves `useApp` on its own 30s default.
       timeout: startupTimeout,
+      verboseStatus,
     });
 
     // Rendered instead of `App`, not thrown: `Main` sits above the app-level error boundary, so a

@@ -54,6 +54,12 @@ export type ChatPromptProps = Merge<
     attendableId?: string;
     /** Toolbar actions other plugins filed on this chat's node (see `ChatActions`). */
     customActions?: Atom.Atom<ActionGraphProps>;
+    /**
+     * The graph node those actions were filed on. Keys the dictation session, because the mic that
+     * opens it is one of them and carries the same id — anything else here is a session this prompt
+     * would never hear.
+     */
+    nodeId?: string;
     placeholder?: ChatEditorProps['placeholder'];
     /** Object the chat is attached to; its project instructions (if any) supply sentinel-command completion. */
     companionTo?: Obj.Unknown;
@@ -71,6 +77,7 @@ export const ChatPrompt = ({
   tasksVisible,
   attendableId,
   customActions,
+  nodeId,
   placeholder,
   onPresetChange,
   settings = true,
@@ -94,7 +101,10 @@ export const ChatPrompt = ({
   }, [event]);
 
   const fallbackDocId = useId();
-  const docId = chat?.id ?? fallbackDocId;
+  // The node the mic action was filed on, which is what it keys the recording session by. A chat
+  // rendered as a companion is a companion node, not the chat object's own, so the object id is only
+  // the fallback for a prompt rendered outside a plank.
+  const docId = nodeId ?? (chat ? Obj.getURI(chat) : fallbackDocId);
   useChatVoiceInput(docId, editorRef);
 
   const keymapExtensions = useChatKeymapExtensions({ event });

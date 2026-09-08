@@ -3,7 +3,6 @@
 //
 
 import { type EditorView } from '@codemirror/view';
-import { useControllableState } from '@radix-ui/react-use-controllable-state';
 import React, {
   Fragment,
   type KeyboardEvent,
@@ -16,11 +15,12 @@ import React, {
 
 import { addEventListener } from '@dxos/async';
 import { invariant } from '@dxos/invariant';
+import { useControllableState } from '@dxos/react-hooks';
 import {
   DX_ANCHOR_ACTIVATE,
   type DxAnchorActivate,
+  Field,
   Icon,
-  Input,
   Popover,
   ScrollArea,
   toLocalizedString,
@@ -56,7 +56,7 @@ export type EditorMenuProviderProps = PropsWithChildren<{
 
 /**
  * Implements the Popover and listens for the `dx-anchor-activate` event from the `popover` extension's decoration.
- * NOTE: We don't use DropdownMenu because the command menu needs to manage focus explicitly.
+ * NOTE: We don't use Menu because the command menu needs to manage focus explicitly.
  * I.e., focus must remain in the editor while displaying the menu (for type-ahead).
  */
 export const EditorMenuProvider = ({
@@ -194,7 +194,7 @@ export const EditorMenuProvider = ({
             // The search input shares the box, so `numItems` keeps meaning "items visible".
             maxBlockSize: 36 * numItems + 10 + (search ? 36 : 0),
           }}
-          // NOTE: We keep the focus in the editor, but Radix routes escape key.
+          // Focus stays in the editor; the menu machine still routes Escape here.
           onEscapeKeyDown={() => {
             const currentView = getViewRef.current?.();
             if (currentView) {
@@ -205,8 +205,8 @@ export const EditorMenuProvider = ({
           onOpenAutoFocus={search ? undefined : (event) => event.preventDefault()}
         >
           {search && (
-            <Input.Root>
-              <Input.TextInput
+            <Field.Root>
+              <Field.Input
                 ref={searchInputRef}
                 density='sm'
                 variant='subdued'
@@ -219,7 +219,7 @@ export const EditorMenuProvider = ({
                 onChange={(event) => onQueryChange?.(event.target.value)}
                 onKeyDown={handleSearchKeyDown}
               />
-            </Input.Root>
+            </Field.Root>
           )}
           <Popover.Viewport asChild classNames='dx-expand'>
             <ScrollArea.Root thin>

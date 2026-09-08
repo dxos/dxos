@@ -14,10 +14,9 @@
 import type * as Schema from 'effect/Schema';
 import React, { type PropsWithChildren, type ReactNode } from 'react';
 
-import { type Align, Button, Flex, type Gap, Grid, Input, type Justify } from '@dxos/react-ui';
+import { type Align, Button, Field, Flex, type Gap, Grid, type Justify, Tabs } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 import { Combobox, Listbox } from '@dxos/react-ui-list';
-import { Tabs } from '@dxos/react-ui-tabs';
 import { mx } from '@dxos/ui-theme';
 
 import { type Binding, type ModuleView, type Node, type Scope, resolve } from '../model';
@@ -169,17 +168,17 @@ export const createReactRenderer = ({
       );
     } else {
       return (
-        <Input.Root key={path}>
+        <Field.Root key={path}>
           <Flex column>
-            {props.label ? <Input.Label>{asText(props.label)}</Input.Label> : null}
-            <Input.TextInput
+            {props.label ? <Field.Label>{asText(props.label)}</Field.Label> : null}
+            <Field.Input
               placeholder={asText(props.placeholder)}
               value={asText(data.value)}
               // MVU: the input is controlled from published state; each change dispatches.
               onChange={(event) => handlers.input?.(event.target.value)}
             />
           </Flex>
-        </Input.Root>
+        </Field.Root>
       );
     }
   },

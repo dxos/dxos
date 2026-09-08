@@ -1,0 +1,54 @@
+%% @dxos/app-framework — plugins contribute capabilities; dependency-driven activation; React surfaces.
+flowchart TB
+  subgraph Authoring [Authoring]
+    Plugin[Plugin + modules]
+    CapabilityTag[Capability tags]
+    Contribution[Contribution]
+    AppCapability[AppCapability makers]
+  end
+  subgraph Runtime [Runtime]
+    PluginManager[PluginManager]
+    Catalog[PluginCatalog]
+    Scheduler[ActivationScheduler]
+    ActivationGraph[ActivationGraph]
+    ModuleLoader[ModuleLoader]
+    CapabilityManager[CapabilityManager]
+    ActivationEvent[Activation events]
+    ProcessManager[ProcessManagerPlugin]
+  end
+  subgraph ReactLayer [React layer]
+    UseApp[useApp / App]
+    Surface[Surface]
+  end
+  AppCapability -->|module makers| Plugin
+  CapabilityTag -->|requires / provides| Plugin
+  Plugin -->|registered in| Catalog
+  PluginManager -->|owns| Catalog
+  PluginManager -->|start / activate| Scheduler
+  PluginManager -->|owns| CapabilityManager
+  Catalog -->|enabled modules| Scheduler
+  ActivationEvent -->|activatesOn| Scheduler
+  Scheduler -->|rounds and waves| ActivationGraph
+  Scheduler -->|load module| ModuleLoader
+  ModuleLoader -->|activate returns| Contribution
+  Contribution -->|expand to entries| CapabilityManager
+  CapabilityManager -->|OperationHandler| ProcessManager
+  ProcessManager -->|OperationInvoker| CapabilityManager
+  CapabilityManager -->|ReactSurface atom| Surface
+  CapabilityManager -->|ReactContext / Root| UseApp
+  UseApp -->|creates| PluginManager
+  Surface -->|SurfacesRequested| ActivationEvent
+  %% ref Plugin packages/sdk/app-framework/src/core/plugin.ts
+  %% ref CapabilityTag packages/sdk/app-framework/src/core/capability.ts
+  %% ref Contribution packages/sdk/app-framework/src/core/capability.ts
+  %% ref AppCapability packages/sdk/app-toolkit/src/app-framework/AppCapability.ts
+  %% ref PluginManager packages/sdk/app-framework/src/core/plugin-manager/plugin-manager.ts
+  %% ref Catalog packages/sdk/app-framework/src/core/plugin-manager/plugin-catalog.ts
+  %% ref Scheduler packages/sdk/app-framework/src/core/plugin-manager/activation-scheduler.ts
+  %% ref ActivationGraph packages/sdk/app-framework/src/core/plugin-manager/activation-graph.ts
+  %% ref ModuleLoader packages/sdk/app-framework/src/core/plugin-manager/module-loader.ts
+  %% ref CapabilityManager packages/sdk/app-framework/src/core/capability-manager.ts
+  %% ref ActivationEvent packages/sdk/app-framework/src/core/activation-event.ts
+  %% ref ProcessManager packages/sdk/app-framework/src/plugin-process-manager/ProcessManagerPlugin.ts
+  %% ref UseApp packages/sdk/app-framework/src/ui/hooks/useApp.tsx
+  %% ref Surface packages/sdk/app-framework/src/ui/components/Surface/SurfaceComponent.tsx

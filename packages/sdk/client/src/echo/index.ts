@@ -14,7 +14,8 @@ export {
 } from '@dxos/echo-client';
 
 export { IndexKind } from '@dxos/protocols/proto/dxos/echo/indexing';
-export { SpaceMember, SpaceState } from '@dxos/protocols/proto/dxos/client/services';
+export { SpaceState } from '@dxos/protocols/buf/dxos/client/invitation_pb';
+export { SpaceMember } from '@dxos/protocols/proto/dxos/client/services';
 export { SpaceMember as HaloSpaceMember } from '@dxos/protocols/proto/dxos/halo/credentials';
 export { type SpaceSyncState } from '@dxos/echo-client';
 

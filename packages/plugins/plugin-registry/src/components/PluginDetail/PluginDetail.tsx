@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { type PropsWithChildren } from 'react';
+import React, { type PropsWithChildren, type ReactNode } from 'react';
 
 import type * as Plugin from '@dxos/app-framework/Plugin';
 import type * as PluginManager from '@dxos/app-framework/PluginManager';
@@ -10,9 +10,9 @@ import { useLayout } from '@dxos/app-toolkit/ui';
 import {
   Button,
   Carousel,
+  Field,
   Grid,
   Icon,
-  Input,
   Link,
   ScrollArea,
   Select,
@@ -31,6 +31,8 @@ import { PluginFailureBadge } from '../PluginFailureBadge';
 
 export type PluginDetailProps = {
   plugin: Plugin.Plugin;
+  /** Scope control for this one plugin, rendered under the enable switch. */
+  scope?: ReactNode;
   enabled?: boolean;
   /** True while an in-flight install is running. Disables the install button. */
   installing?: boolean;
@@ -110,6 +112,7 @@ export const PluginDetail = composable<HTMLDivElement, PluginDetailProps>(
   (
     {
       plugin,
+      scope,
       enabled,
       installing,
       updating,
@@ -186,15 +189,22 @@ export const PluginDetail = composable<HTMLDivElement, PluginDetailProps>(
                   {installing ? t('installing.label') : t('install.label')}
                 </Button>
               ) : (
-                <Input.Root>
-                  <Input.Switch classNames='self-center' checked={enabled} onCheckedChange={onEnabledChange} />
-                </Input.Root>
+                <Field.Root>
+                  <Field.Switch classNames='self-center' checked={enabled} onCheckedChange={onEnabledChange} />
+                </Field.Root>
               )}
               <div className='flex items-center gap-1 pt-0.5 text-sm text-description'>
                 {slug}
                 {author && <span className='dx-tag dx-tag--info'>{author}</span>}
               </div>
             </Grid>
+
+            {scope && (
+              <Section.Root>
+                <Section.Heading title={t('plugin-scope.section.title')} />
+                <Section.Body>{scope}</Section.Body>
+              </Section.Root>
+            )}
 
             {description && (
               <Section.Root>

@@ -2,8 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type Scope, createContextScope } from '@radix-ui/react-context';
-import { useControllableState } from '@radix-ui/react-use-controllable-state';
 import React, {
   type ComponentPropsWithRef,
   type Dispatch,
@@ -14,6 +12,7 @@ import React, {
 } from 'react';
 
 import { KEYBOARD_MODALITY_ATTR, findFirstFocusable } from '@dxos/react-focus';
+import { createContext, useControllableState } from '@dxos/react-hooks';
 import { type ThemedClassName, useForwardedRef } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
@@ -27,11 +26,7 @@ type ViewportContextValue = {
   setActiveView: Dispatch<SetStateAction<string | undefined>>;
 };
 
-type ViewportScopedProps<P> = P & { __viewportScope?: Scope };
-
-const [createViewportContext, createViewportScope] = createContextScope(VIEWPORT_NAME, []);
-
-const [ViewportProvider, useViewportContext] = createViewportContext<ViewportContextValue>(VIEWPORT_NAME);
+const [ViewportProvider, useViewportContext] = createContext<ViewportContextValue>(VIEWPORT_NAME);
 
 type ViewportRootProps = ThemedClassName<ComponentPropsWithRef<'div'>> &
   Partial<{
@@ -42,7 +37,6 @@ type ViewportRootProps = ThemedClassName<ComponentPropsWithRef<'div'>> &
   }>;
 
 const ViewportRoot = ({
-  __viewportScope,
   classNames,
   children,
   defaultActiveView,
@@ -50,19 +44,14 @@ const ViewportRoot = ({
   focusManaged = false,
   onActiveViewChange,
   ...props
-}: ViewportScopedProps<ViewportRootProps>) => {
+}: ViewportRootProps) => {
   const [activeView = 'never', setActiveView] = useControllableState({
     prop: propsActiveView,
     defaultProp: defaultActiveView,
     onChange: onActiveViewChange,
   });
   return (
-    <ViewportProvider
-      focusManaged={focusManaged}
-      activeView={activeView}
-      setActiveView={setActiveView}
-      scope={__viewportScope}
-    >
+    <ViewportProvider focusManaged={focusManaged} activeView={activeView} setActiveView={setActiveView}>
       <div role='region' aria-live='polite' {...props} className={mx('w-full overflow-hidden', classNames)}>
         {children}
       </div>
@@ -89,9 +78,9 @@ type ViewportViewProps = ThemedClassName<Omit<ComponentPropsWithRef<'div'>, 'id'
   id: string;
 };
 
-const ViewportView = forwardRef<HTMLDivElement, ViewportScopedProps<ViewportViewProps>>(
-  ({ __viewportScope, classNames, children, id, ...props }, forwardedRef) => {
-    const { activeView, focusManaged }: ViewportContextValue = useViewportContext(VIEW_NAME, __viewportScope);
+const ViewportView = forwardRef<HTMLDivElement, ViewportViewProps>(
+  ({ classNames, children, id, ...props }, forwardedRef) => {
+    const { activeView, focusManaged }: ViewportContextValue = useViewportContext(VIEW_NAME);
     const isActive = id === activeView;
     const ref = useForwardedRef(forwardedRef);
     useEffect(() => {
@@ -121,6 +110,6 @@ export const Viewport = {
   View: ViewportView,
 };
 
-export { createViewportScope, useViewportContext };
+export { useViewportContext };
 
-export type { ViewportRootProps, ViewportScopedProps, ViewportViewProps, ViewportViewsProps };
+export type { ViewportRootProps, ViewportViewProps, ViewportViewsProps };

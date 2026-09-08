@@ -27,6 +27,8 @@ export type PluginListProps = Omit<PluginItemProps, 'plugin' | 'extraTags' | 'ha
    * badge next to the plugin name. Sourced from `PluginManager.failed`.
    */
   failuresById?: Record<string, PluginManager.PluginFailure>;
+  /** Ids whose value on this device differs from the account's. */
+  deviceOnlyIds?: ReadonlySet<string>;
 };
 
 export const PluginList = ({
@@ -34,6 +36,7 @@ export const PluginList = ({
   extraTagsById,
   updateAvailableIds,
   failuresById,
+  deviceOnlyIds,
   ...props
 }: PluginListProps) => {
   return (
@@ -49,6 +52,7 @@ export const PluginList = ({
             extraTags={extraTagsById?.[plugin.meta.profile.key]}
             hasUpdate={updateAvailableIds?.has(plugin.meta.profile.key)}
             failure={failuresById?.[plugin.meta.profile.key]}
+            deviceOnly={deviceOnlyIds?.has(plugin.meta.profile.key)}
             {...props}
           />
         ))}
