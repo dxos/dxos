@@ -31,7 +31,6 @@ export default Capability.makeModule(
       if (enabled === applied) {
         return;
       }
-      applied = enabled;
       if (enabled) {
         yield* observability.enable();
       } else {
@@ -39,6 +38,8 @@ export default Capability.makeModule(
       }
       // The mirror the next boot reads before the atom exists.
       yield* Effect.promise(() => Observability.storeObservabilityDisabled(namespace, !enabled));
+      // Recorded last, so a failure above leaves the value to be retried by the next change.
+      applied = enabled;
     });
 
     // One at a time, in order, so a slower earlier apply cannot land after a newer value.
