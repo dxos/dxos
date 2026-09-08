@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+import { AnySchema } from '@bufbuild/protobuf/wkt';
 import { describe, test } from 'vitest';
 
 import { invariant } from '@dxos/invariant';
@@ -476,5 +477,40 @@ describe('buf shape-compat', () => {
     expect(Buffer.isBuffer(legacyDecoded.assertion.challenge)).toBe(true);
     expect(Buffer.isBuffer(compatDecoded.assertion.challenge)).toBe(true);
     expect(Buffer.from(compatDecoded.assertion.challenge).equals(Buffer.from(challenge))).toBe(true);
+  });
+});
+
+describe('a bare Any as the schema itself', () => {
+  // `SpacesService.postMessage` carries an `Any` as its whole payload rather than as a field of a
+  // message, so the substitution has to apply at the root too -- it previously encoded to an empty
+  // Any, silently dropping the payload.
+  const payload = { '@type': 'google.protobuf.Struct', 'data': 'Hello, world!', 'count': 42 };
+
+  test('round-trips a Struct payload', ({ expect }) => {
+    const encoded = encodeCompat(AnySchema, payload);
+    expect(encoded.length).toBeGreaterThan(0);
+    expect(decodeCompat(AnySchema, encoded)).to.deep.equal(payload);
+  });
+
+  test('round-trips a registered message payload', ({ expect }) => {
+    const credential = { '@type': 'dxos.halo.credentials.AuthorizedDevice', 'deviceKey': PublicKey.random() };
+    const decoded = decodeCompat<typeof credential>(AnySchema, encodeCompat(AnySchema, credential));
+    expect(decoded['@type']).to.equal('dxos.halo.credentials.AuthorizedDevice');
+    expect(PublicKey.from(decoded.deviceKey).equals(credential.deviceKey)).to.be.true;
+  });
+
+  test('and a legacy reader still understands what buf writes', ({ expect }) => {
+    // The legacy codec cannot express this payload at the root at all -- its `encode` is typed to the
+    // packed `{type_url, value}` form, and given one it writes an empty Any, which is the defect that
+    // made `SpacesService.postMessage` send nothing. So only this direction is meaningful, and the
+    // packed form is what a legacy reader sees.
+    const legacyAnyCodec = schema.getCodecForType('google.protobuf.Any');
+    const seen: any = legacyAnyCodec.decode(encodeCompat(AnySchema, payload));
+    expect(seen.type_url).to.equal('google.protobuf.Struct');
+    expect(seen.value).to.have.length.greaterThan(0);
+  });
+
+  test('a payload without an @type is rejected rather than silently emptied', ({ expect }) => {
+    expect(() => encodeCompat(AnySchema, { data: 'no type' })).to.throw(/without an '@type'/);
   });
 });

@@ -7,8 +7,10 @@ import { beforeEach, describe, expect, test } from 'vitest';
 import { latch, sleep } from '@dxos/async';
 import { Stream } from '@dxos/async';
 import { Context, TRACE_SPAN_ATTRIBUTE } from '@dxos/context';
-import { schema } from '@dxos/protocols/proto';
+import { getBufService } from '@dxos/protocols/buf-service';
 import {
+  type PingService,
+  type TestAnyService,
   type TestRpcResponse,
   type TestService,
   type TestStreamService,
@@ -26,7 +28,7 @@ describe('Protobuf service', () => {
 
     const server = createProtoRpcPeer({
       exposed: {
-        TestService: schema.getService('example.testing.rpc.TestService'),
+        TestService: getBufService<TestService>('example.testing.rpc.TestService'),
       },
       handlers: {
         TestService: {
@@ -42,7 +44,7 @@ describe('Protobuf service', () => {
 
     const client = createProtoRpcPeer({
       requested: {
-        TestService: schema.getService('example.testing.rpc.TestService'),
+        TestService: getBufService<TestService>('example.testing.rpc.TestService'),
       },
       port: bobPort,
     });
@@ -61,7 +63,7 @@ describe('Protobuf service', () => {
 
     const server = createProtoRpcPeer({
       exposed: {
-        TestService: schema.getService('example.testing.rpc.TestService'),
+        TestService: getBufService<TestService>('example.testing.rpc.TestService'),
       },
       handlers: {
         TestService: {
@@ -81,7 +83,7 @@ describe('Protobuf service', () => {
 
     const client = createProtoRpcPeer({
       requested: {
-        TestService: schema.getService('example.testing.rpc.TestService'),
+        TestService: getBufService<TestService>('example.testing.rpc.TestService'),
       },
       port: bobPort,
     });
@@ -106,7 +108,7 @@ describe('Protobuf service', () => {
 
     const server = createProtoRpcPeer({
       exposed: {
-        TestService: schema.getService('example.testing.rpc.TestService'),
+        TestService: getBufService<TestService>('example.testing.rpc.TestService'),
       },
       handlers: {
         TestService: {
@@ -122,7 +124,7 @@ describe('Protobuf service', () => {
 
     const client = createProtoRpcPeer({
       requested: {
-        TestService: schema.getService('example.testing.rpc.TestService'),
+        TestService: getBufService<TestService>('example.testing.rpc.TestService'),
       },
       port: bobPort,
     });
@@ -141,7 +143,7 @@ describe('Protobuf service', () => {
 
       server = createProtoRpcPeer({
         exposed: {
-          TestStreamService: schema.getService('example.testing.rpc.TestStreamService'),
+          TestStreamService: getBufService<TestStreamService>('example.testing.rpc.TestStreamService'),
         },
         handlers: {
           TestStreamService: {
@@ -165,7 +167,7 @@ describe('Protobuf service', () => {
 
       client = createProtoRpcPeer({
         requested: {
-          TestStreamService: schema.getService('example.testing.rpc.TestStreamService'),
+          TestStreamService: getBufService<TestStreamService>('example.testing.rpc.TestStreamService'),
         },
         port: bobPort,
       });
@@ -208,8 +210,8 @@ describe('Protobuf service', () => {
     test('call different services', async () => {
       const [alicePort, bobPort] = createLinkedPorts();
 
-      const TestService = schema.getService('example.testing.rpc.TestService');
-      const PingService = schema.getService('example.testing.rpc.PingService');
+      const TestService = getBufService<TestService>('example.testing.rpc.TestService');
+      const PingService = getBufService<PingService>('example.testing.rpc.PingService');
 
       const services = createServiceBundle({
         TestService,
@@ -254,10 +256,10 @@ describe('Protobuf service', () => {
 
       const alice = createProtoRpcPeer({
         requested: {
-          TestService: schema.getService('example.testing.rpc.TestService'),
+          TestService: getBufService<TestService>('example.testing.rpc.TestService'),
         },
         exposed: {
-          PingService: schema.getService('example.testing.rpc.PingService'),
+          PingService: getBufService<PingService>('example.testing.rpc.PingService'),
         },
         handlers: {
           PingService: {
@@ -269,10 +271,10 @@ describe('Protobuf service', () => {
 
       const bob = createProtoRpcPeer({
         requested: {
-          PingService: schema.getService('example.testing.rpc.PingService'),
+          PingService: getBufService<PingService>('example.testing.rpc.PingService'),
         },
         exposed: {
-          TestService: schema.getService('example.testing.rpc.TestService'),
+          TestService: getBufService<TestService>('example.testing.rpc.TestService'),
         },
         handlers: {
           TestService: {
@@ -302,7 +304,7 @@ describe('Protobuf service', () => {
     test('sync function', async () => {
       const [alicePort, bobPort] = createLinkedPorts();
 
-      const TestService = schema.getService('example.testing.rpc.TestService');
+      const TestService = getBufService<TestService>('example.testing.rpc.TestService');
 
       const services = createServiceBundle({
         TestService,
@@ -338,7 +340,7 @@ describe('Protobuf service', () => {
     test('async function', async () => {
       const [alicePort, bobPort] = createLinkedPorts();
 
-      const TestService = schema.getService('example.testing.rpc.TestService');
+      const TestService = getBufService<TestService>('example.testing.rpc.TestService');
 
       const services = createServiceBundle({
         TestService,
@@ -378,7 +380,7 @@ describe('Protobuf service', () => {
       const [alicePort, bobPort] = createLinkedPorts();
 
       const services = createServiceBundle({
-        TestStreamService: schema.getService('example.testing.rpc.TestStreamService'),
+        TestStreamService: getBufService<TestStreamService>('example.testing.rpc.TestStreamService'),
       });
 
       const server = createProtoRpcPeer({
@@ -425,7 +427,7 @@ describe('Protobuf service', () => {
       const [alicePort, bobPort] = createLinkedPorts();
 
       const services = createServiceBundle({
-        TestStreamService: schema.getService('example.testing.rpc.TestStreamService'),
+        TestStreamService: getBufService<TestStreamService>('example.testing.rpc.TestStreamService'),
       });
 
       const server = createProtoRpcPeer({
@@ -458,7 +460,7 @@ describe('Protobuf service', () => {
 
       const server = createProtoRpcPeer({
         exposed: {
-          TestAnyService: schema.getService('example.testing.rpc.TestAnyService'),
+          TestAnyService: getBufService<TestAnyService>('example.testing.rpc.TestAnyService'),
         },
         handlers: {
           TestAnyService: {
@@ -479,7 +481,7 @@ describe('Protobuf service', () => {
 
       const client = createProtoRpcPeer({
         requested: {
-          TestAnyService: schema.getService('example.testing.rpc.TestAnyService'),
+          TestAnyService: getBufService<TestAnyService>('example.testing.rpc.TestAnyService'),
         },
         port: bobPort,
       });
@@ -502,7 +504,7 @@ describe('Protobuf service', () => {
 
       const server = createProtoRpcPeer({
         exposed: {
-          TestAnyService: schema.getService('example.testing.rpc.TestAnyService'),
+          TestAnyService: getBufService<TestAnyService>('example.testing.rpc.TestAnyService'),
         },
         handlers: {
           TestAnyService: {
@@ -527,7 +529,7 @@ describe('Protobuf service', () => {
 
       const client = createProtoRpcPeer({
         requested: {
-          TestAnyService: schema.getService('example.testing.rpc.TestAnyService'),
+          TestAnyService: getBufService<TestAnyService>('example.testing.rpc.TestAnyService'),
         },
         port: bobPort,
         encodingOptions: {
@@ -554,7 +556,7 @@ describe('Protobuf service', () => {
 
     const server = createProtoRpcPeer({
       exposed: {
-        TestService: schema.getService('example.testing.rpc.TestService'),
+        TestService: getBufService<TestService>('example.testing.rpc.TestService'),
       },
       handlers: {
         TestService: {
@@ -570,7 +572,7 @@ describe('Protobuf service', () => {
 
     const client = createProtoRpcPeer({
       requested: {
-        TestService: schema.getService('example.testing.rpc.TestService'),
+        TestService: getBufService<TestService>('example.testing.rpc.TestService'),
       },
       port: bobPort,
       timeout: 10_000,
@@ -598,7 +600,7 @@ describe('Protobuf service', () => {
 
     const server = createProtoRpcPeer({
       exposed: {
-        TestService: schema.getService('example.testing.rpc.TestService'),
+        TestService: getBufService<TestService>('example.testing.rpc.TestService'),
       },
       handlers: {
         TestService: {
@@ -616,7 +618,7 @@ describe('Protobuf service', () => {
 
     const client = createProtoRpcPeer({
       requested: {
-        TestService: schema.getService('example.testing.rpc.TestService'),
+        TestService: getBufService<TestService>('example.testing.rpc.TestService'),
       },
       port: bobPort,
     });
@@ -637,7 +639,7 @@ describe('Protobuf service', () => {
 
     const server = createProtoRpcPeer({
       exposed: {
-        TestService: schema.getService('example.testing.rpc.TestService'),
+        TestService: getBufService<TestService>('example.testing.rpc.TestService'),
       },
       handlers: {
         TestService: {
@@ -653,7 +655,7 @@ describe('Protobuf service', () => {
 
     const client = createProtoRpcPeer({
       requested: {
-        TestService: schema.getService('example.testing.rpc.TestService'),
+        TestService: getBufService<TestService>('example.testing.rpc.TestService'),
       },
       port: bobPort,
     });
@@ -675,7 +677,7 @@ describe('Protobuf service', () => {
 
     const server = createProtoRpcPeer({
       exposed: {
-        TestStreamService: schema.getService('example.testing.rpc.TestStreamService'),
+        TestStreamService: getBufService<TestStreamService>('example.testing.rpc.TestStreamService'),
       },
       handlers: {
         TestStreamService: {
@@ -695,7 +697,7 @@ describe('Protobuf service', () => {
 
     const client = createProtoRpcPeer({
       requested: {
-        TestStreamService: schema.getService('example.testing.rpc.TestStreamService'),
+        TestStreamService: getBufService<TestStreamService>('example.testing.rpc.TestStreamService'),
       },
       port: bobPort,
     });

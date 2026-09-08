@@ -4,6 +4,7 @@
 
 import type { AutomergeUrl } from '@automerge/automerge-repo';
 import { toBinary } from '@bufbuild/protobuf';
+import { AnySchema } from '@bufbuild/protobuf/wkt';
 import * as Effect from 'effect/Effect';
 import * as EffectStream from 'effect/Stream';
 
@@ -47,6 +48,10 @@ import {
 import { type Credential } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { PeerStateSchema } from '@dxos/protocols/buf/dxos/mesh/presence_pb';
 import {
+  type GossipMessage as BufGossipMessage,
+  GossipMessageSchema,
+} from '@dxos/protocols/buf/dxos/mesh/teleport/gossip_pb';
+import {
   type ContactAdmission,
   type Space as LegacySpace,
   SpaceMember,
@@ -70,6 +75,10 @@ import {
 } from '../space-export';
 import { type DataSpace } from './data-space';
 import { type DataSpaceManager } from './data-space-manager';
+
+/** Gossip hands announces back in the protobuf.js shape, which crosses as the shared wire bytes. */
+const toBufGossipMessage = (message: GossipMessage): BufGossipMessage =>
+  buf.fromBinary(GossipMessageSchema, encodeCompat(GossipMessageSchema, message));
 
 /** Reads the space as the buf message the service returns. */
 const toBufSpace = (space: LegacySpace): Space => buf.fromBinary(SpaceSchema, encodeCompat(SpaceSchema, space));
@@ -246,7 +255,9 @@ export class SpacesServiceImpl implements SpacesService.Handlers {
       try: async () => {
         const dataSpaceManager = await this._getDataSpaceManager();
         const space = dataSpaceManager.spaces.get(spaceKey) ?? raise(new SpaceNotFoundError(spaceKey));
-        await space.postMessage(getChannelId(channel), message);
+        // The gossip wire carries the protobuf.js Any shape, so the request's buf Any is unpacked.
+        // The gossip wire carries the protobuf.js Any shape, so the request's buf Any is unpacked.
+        await space.postMessage(getChannelId(channel), decodeCompat(AnySchema, buf.toBinary(AnySchema, message)));
       },
       catch: (error) => error as Error,
     });
@@ -255,14 +266,14 @@ export class SpacesServiceImpl implements SpacesService.Handlers {
   ['SpacesService.subscribeMessages']({
     spaceKey,
     channel,
-  }: SpacesService.SubscribeMessagesRequest): EffectStream.Stream<GossipMessage, Error> {
-    return EffectEx.streamFromEmitter<GossipMessage, Error>((emit) => {
+  }: SpacesService.SubscribeMessagesRequest): EffectStream.Stream<BufGossipMessage, Error> {
+    return EffectEx.streamFromEmitter<BufGossipMessage, Error>((emit) => {
       const ctx = Context.default();
       scheduleTask(ctx, async () => {
         const dataSpaceManager = await this._getDataSpaceManager();
         const space = dataSpaceManager.spaces.get(spaceKey) ?? raise(new SpaceNotFoundError(spaceKey));
         const handle = space.listen(getChannelId(channel), (message) => {
-          void emit.single(message);
+          void emit.single(toBufGossipMessage(message));
         });
         ctx.onDispose(() => handle.unsubscribe());
       });

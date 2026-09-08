@@ -150,17 +150,17 @@ const isPreservedAny = (field: DescField, options: CompatOptions): boolean =>
     hasExtension(field.proto.options, preserve_any) &&
     getExtension(field.proto.options, preserve_any) === true);
 
-const anyToProto = (field: DescField, value: any, options: CompatOptions): unknown => {
+const anyToProto = (site: AnySite, value: any, options: CompatOptions): unknown => {
   const packed = { typeUrl: value.type_url ?? '', value: value.value ?? new Uint8Array() };
-  if (isPreservedAny(field, options)) {
+  if (site.preserved) {
     if (value['@type'] !== undefined && value['@type'] !== ANY_TYPE_NAME) {
-      throw new AnyEncodingError(`Field ${field.name} preserves Any, so its payload cannot be packed here.`);
+      throw new AnyEncodingError(`${site.label} preserves Any, so its payload cannot be packed here.`);
     }
     return packed;
   }
   const typeName = value['@type'];
   if (typeof typeName !== 'string') {
-    throw new AnyEncodingError(`Cannot pack ${field.name} without an '@type' string.`);
+    throw new AnyEncodingError(`Cannot pack ${site.label} without an '@type' string.`);
   }
   if (typeName === ANY_TYPE_NAME) {
     return packed;
@@ -176,13 +176,13 @@ const anyToProto = (field: DescField, value: any, options: CompatOptions): unkno
   return { typeUrl: typeName, value: encodeCompat(desc, payload, options) };
 };
 
-const anyFromProto = (field: DescField, value: any, options: CompatOptions): unknown => {
+const anyFromProto = (site: AnySite, value: any, options: CompatOptions): unknown => {
   // The legacy shape keys the packed payload `type_url`, where buf's message uses `typeUrl`.
   const typeUrl: string = value.typeUrl ?? '';
   // Not flattened: the nested decode below reads its byte fields as views over this buffer, so
   // flattening here would strip Buffer-ness from every byte field inside the payload.
   const bytes = asBytes(value.value ?? new Uint8Array());
-  if (isPreservedAny(field, options)) {
+  if (site.preserved) {
     return packedAny(typeUrl, bytes);
   }
   if (typeUrl === STRUCT_TYPE_NAME) {
@@ -196,9 +196,29 @@ const anyFromProto = (field: DescField, value: any, options: CompatOptions): unk
   return { ...decodeCompat<Record<string, unknown>>(desc, bytes, options), '@type': typeUrl };
 };
 
-const anySubstitution = (field: DescField, options: CompatOptions): Substitution => ({
-  toProto: (value) => anyToProto(field, value, options),
-  fromProto: (value) => anyFromProto(field, value, options),
+/**
+ * Where an `Any` is being substituted. A field carries the `preserve_any` option and a name for
+ * errors; at the schema root there is no field, so the caller's option decides on its own.
+ */
+type AnySite = {
+  readonly preserved: boolean;
+  readonly label: string;
+};
+
+const anySubstitution = (site: AnySite, options: CompatOptions): Substitution => ({
+  toProto: (value) => anyToProto(site, value, options),
+  fromProto: (value) => anyFromProto(site, value, options),
+});
+
+const anyFieldSite = (field: DescField, options: CompatOptions): AnySite => ({
+  preserved: isPreservedAny(field, options),
+  label: `Field ${field.name}`,
+});
+
+// A bare `Any` has no enclosing field, so only the caller's option can preserve it.
+const anyRootSite = (options: CompatOptions): AnySite => ({
+  preserved: options.preserveAny === true,
+  label: ANY_TYPE_NAME,
 });
 
 // Field traversal.
@@ -209,7 +229,7 @@ const substitutionFor = (field: DescField, options: CompatOptions): Substitution
     return undefined;
   }
   if (typeName === ANY_TYPE_NAME) {
-    return anySubstitution(field, options);
+    return anySubstitution(anyFieldSite(field, options), options);
   }
   return substitutions[typeName];
 };
@@ -358,6 +378,11 @@ const convert = (
 ): unknown => {
   if (value == null) {
     return value;
+  }
+  // An `Any` reached as the schema itself, not as a field of one: walking its own `typeUrl`/`value`
+  // fields would drop the substitution the shape depends on.
+  if (schema.typeName === ANY_TYPE_NAME) {
+    return anySubstitution(anyRootSite(options), options)[direction](value);
   }
   // `record` stays untouched (unlike `result`, aliased to `rest`) so `convertOneofs` can still read
   // a field it is about to delete from `result` — reading and deleting the same object raced.

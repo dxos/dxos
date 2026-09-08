@@ -2,6 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
+import { AnySchema } from '@bufbuild/protobuf/wkt';
 import * as EffectContext from 'effect/Context';
 import * as EffectStream from 'effect/Stream';
 import isEqualWith from 'lodash.isequalwith';
@@ -41,9 +42,11 @@ import { invariant } from '@dxos/invariant';
 import { type PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { decodeError, runServiceCall, subscribeStream } from '@dxos/protocols';
-import { fromPublicKey, toTimeframe } from '@dxos/protocols/buf';
+import { buf, fromPublicKey, toTimeframe } from '@dxos/protocols/buf';
+import { decodeCompat, encodeCompat } from '@dxos/protocols/buf-shape-compat';
 import { Invitation, Invitation_Kind } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 import { EdgeReplicationSetting } from '@dxos/protocols/buf/dxos/echo/metadata_pb';
+import { GossipMessageSchema } from '@dxos/protocols/buf/dxos/mesh/teleport/gossip_pb';
 import {
   type Contact,
   type Space as SpaceData,
@@ -554,10 +557,12 @@ export class SpaceProxy implements Space, CustomInspectable {
       this._clientServices.rpc['SpacesService.postMessage']({
         spaceKey: this.key,
         channel,
-        message: {
-          ...message,
-          '@type': message['@type'] || 'google.protobuf.Struct',
-        },
+        // Packed here rather than by the schema: the payload is the request's whole `Any`, and a
+        // caller's own '@type' wins over the Struct default.
+        message: buf.fromBinary(
+          AnySchema,
+          encodeCompat(AnySchema, { ...message, '@type': message['@type'] || 'google.protobuf.Struct' }),
+        ),
       }),
       { timeout: RPC_TIMEOUT, label: 'SpacesService.postMessage' },
     );
@@ -570,7 +575,12 @@ export class SpaceProxy implements Space, CustomInspectable {
     const cleanup = subscribeStream(
       this._runtime,
       this._clientServices.rpc['SpacesService.subscribeMessages']({ spaceKey: this.key, channel }),
-      { onData: callback },
+      {
+        // Listeners read the payload by '@type', which is the protobuf.js Any substitution, so the
+        // buf message crosses back as the shared wire bytes.
+        onData: (message) =>
+          callback(decodeCompat<GossipMessage>(GossipMessageSchema, buf.toBinary(GossipMessageSchema, message))),
+      },
     );
     return async () => cleanup();
   }

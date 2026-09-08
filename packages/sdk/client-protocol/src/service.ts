@@ -36,6 +36,7 @@ import type {
   Presentation,
   ProfileDocument,
 } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
+import type { GossipMessage } from '@dxos/protocols/buf/dxos/mesh/teleport/gossip_pb';
 import type { IndexConfig } from '@dxos/protocols/proto/dxos/echo/indexing';
 import type {
   QueryRequest as EchoQueryRequest,
@@ -49,7 +50,6 @@ import type {
   Message,
 } from '@dxos/protocols/proto/dxos/edge/signal';
 import type { AppService, ShellService } from '@dxos/protocols/proto/dxos/iframe';
-import type { GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
 import type {
   DataService as RpcDataService,
   DevicesService as RpcDevicesService,
