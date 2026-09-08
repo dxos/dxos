@@ -278,6 +278,11 @@ export const AssistantTestBaseLayer = ({
   types = Array.dedupeWith(types, (a, b) => Type.getTypename(a) === Type.getTypename(b));
 
   return Layer.empty.pipe(
+    // A skill referenced by its registry URI resolves through the DATABASE's registry (production
+    // wires that up via plugin-instructions' `RegistrySync`), which is not the `Registry.Service`
+    // seeded below — so a seeded skill has to land in both, or such a ref silently resolves to
+    // nothing and the conversation loses the skill.
+    Layer.provideMerge(seedDatabaseRegistry(skills)),
     Layer.provideMerge(
       TestDatabaseLayer({
         spaceKey: 'fixed',
@@ -305,6 +310,18 @@ export const AssistantTestBaseLayer = ({
     Layer.orDie,
   );
 };
+
+/** Registers the seeded skills with the database's registry, so their registry-URI refs resolve. */
+const seedDatabaseRegistry = (skills: readonly Skill.Skill[]): Layer.Layer<never, never, Database.Service> =>
+  Layer.effectDiscard(
+    Effect.gen(function* () {
+      if (skills.length === 0) {
+        return;
+      }
+      const { db } = yield* Database.Service;
+      db.registry.add(skills);
+    }),
+  );
 
 const AssistantTestTracingLayer = (
   mode: 'noop' | 'console' | 'pretty' | 'feed',

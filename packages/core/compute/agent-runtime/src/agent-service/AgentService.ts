@@ -57,6 +57,9 @@ export interface CreateSessionOptions {
   readonly systemPrompt?: string;
 }
 
+/**
+ * Creates a session on a fresh feed and chat, with `opts.skills` and `opts.context` bound to it.
+ */
 export const createSession: (
   opts?: CreateSessionOptions,
 ) => Effect.Effect<Session, never, Database.Service | Registry.Service | AgentService> = Effect.fn('createSession')(
