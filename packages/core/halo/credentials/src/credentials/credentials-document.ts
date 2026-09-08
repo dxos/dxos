@@ -4,13 +4,15 @@
 
 import { type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { schema } from '@dxos/protocols/proto';
+import { compatCodec } from '@dxos/protocols/buf-shape-compat';
+import { CredentialSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { type Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
 
-// Resolved on first use, not at import: building the codec generates a mapper from source, which
-// workerd rejects as codegen-from-strings, and this module is reachable from a worker bundle.
-let credentialCodec: ReturnType<typeof schema.getCodecForType<'dxos.halo.credentials.Credential'>> | undefined;
-const getCredentialCodec = () => (credentialCodec ??= schema.getCodecForType('dxos.halo.credentials.Credential'));
+// Built at import rather than on first use: buf reads a descriptor instead of generating a mapper
+// from source, so it no longer trips workerd's codegen-from-strings rejection in a worker bundle.
+// The shape stays protobuf.js -- the ordering below reads its substitutions, and a credential's
+// signature covers that shape.
+const credentialCodec = compatCodec<Credential>(CredentialSchema);
 
 /** Versioned DXN in the same form `EntitySystem.type` carries. */
 export const CREDENTIALS_DOCUMENT_TYPE = 'dxn:org.dxos.document.spaceCredentials:0.1.0';
@@ -112,7 +114,7 @@ const rankGenesis = (credential: Credential): number =>
 const decodeCredential = (id: string, entry: CredentialsDocumentEntry): Credential | undefined => {
   let credential: Credential;
   try {
-    credential = getCredentialCodec().decode(entry);
+    credential = credentialCodec.decode(entry);
   } catch (err) {
     log.warn('undecodable credential entry', { id, err });
     return undefined;

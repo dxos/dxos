@@ -5,7 +5,8 @@
 import { describe, expect, test } from 'vitest';
 
 import { PublicKey, SpaceId } from '@dxos/keys';
-import { schema } from '@dxos/protocols/proto';
+import { compatCodec } from '@dxos/protocols/buf-shape-compat';
+import { CredentialSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { type Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
 
 import {
@@ -88,7 +89,7 @@ describe('credentials document', () => {
   });
 });
 
-const credentialCodec = schema.getCodecForType('dxos.halo.credentials.Credential');
+const credentialCodec = compatCodec<Credential>(CredentialSchema);
 
 const credential = (
   issuanceDate: string,
