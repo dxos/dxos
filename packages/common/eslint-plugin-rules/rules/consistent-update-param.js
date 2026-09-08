@@ -3,8 +3,8 @@
 //
 
 /**
- * ESLint rule to enforce that every mutation inside Obj.update(), Relation.update() and
- * Entity.update() goes through the callback's parameter, and that the parameter is named after the
+ * ESLint rule to enforce that every mutation inside Obj.update(), Relation.update(),
+ * Entity.update() and Type.update() goes through the callback's parameter, and that it is named after the
  * first argument so it shadows it.
  *
  * Writability belongs to the reference the callback is handed, not to the callback's dynamic extent:
@@ -26,7 +26,7 @@ export default {
     type: 'suggestion',
     docs: {
       description:
-        'Enforce that Obj.update, Relation.update and Entity.update mutate through a callback parameter named after the first argument.',
+        'Enforce that Obj.update, Relation.update, Entity.update and Type.update mutate through a callback parameter named after the first argument.',
       category: 'Best Practices',
       recommended: true,
     },
@@ -255,7 +255,7 @@ export default {
         if (
           callee.type !== 'MemberExpression' ||
           callee.object.type !== 'Identifier' ||
-          !['Obj', 'Relation', 'Entity'].includes(callee.object.name) ||
+          !['Obj', 'Relation', 'Entity', 'Type'].includes(callee.object.name) ||
           callee.property.type !== 'Identifier' ||
           callee.property.name !== 'update'
         ) {
