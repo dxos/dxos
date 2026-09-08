@@ -510,6 +510,23 @@ describe('a bare Any as the schema itself', () => {
     expect(seen.value).to.have.length.greaterThan(0);
   });
 
+  test('an undefined field is dropped rather than rejected', ({ expect }) => {
+    // `fromJson` rejects `undefined` outright, but callers spread optional values into a payload, so
+    // an absent field arrives as `undefined`. Packing it used to throw "cannot decode message
+    // google.protobuf.Value from JSON undefined" and take down the whole test run as an unhandled
+    // rejection, since `space.postMessage` is called without an awaited result.
+    const encoded = encodeCompat(AnySchema, { '@type': 'google.protobuf.Struct', 'set': 1, 'unset': undefined });
+    expect(decodeCompat(AnySchema, encoded)).to.deep.equal({ '@type': 'google.protobuf.Struct', 'set': 1 });
+  });
+
+  test('an undefined array entry becomes null, as JSON renders it', ({ expect }) => {
+    const encoded = encodeCompat(AnySchema, { '@type': 'google.protobuf.Struct', 'items': [1, undefined, 3] });
+    expect(decodeCompat(AnySchema, encoded)).to.deep.equal({
+      '@type': 'google.protobuf.Struct',
+      'items': [1, null, 3],
+    });
+  });
+
   test('a payload without an @type is rejected rather than silently emptied', ({ expect }) => {
     expect(() => encodeCompat(AnySchema, { data: 'no type' })).to.throw(/without an '@type'/);
   });

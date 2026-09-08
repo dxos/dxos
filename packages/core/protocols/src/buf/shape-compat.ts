@@ -7,6 +7,7 @@
 import {
   type DescField,
   type DescMessage,
+  type JsonValue,
   ScalarType,
   create,
   fromBinary,
@@ -150,6 +151,28 @@ const isPreservedAny = (field: DescField, options: CompatOptions): boolean =>
     hasExtension(field.proto.options, preserve_any) &&
     getExtension(field.proto.options, preserve_any) === true);
 
+/**
+ * Drops `undefined` the way `JSON.stringify` does, so a caller's plain object can be packed.
+ *
+ * `fromJson` rejects an `undefined` field value outright ("cannot decode message
+ * google.protobuf.Value from JSON undefined"), but an absent field on a JS object is routinely
+ * `undefined` rather than missing — `space.postMessage` callers spread optional values in. A hole in
+ * an array becomes `null`, which is what JSON does and what `ListValue` holds.
+ */
+const asJsonValue = (value: unknown): unknown => {
+  if (Array.isArray(value)) {
+    return value.map((entry) => (entry === undefined ? null : asJsonValue(entry)));
+  }
+  if (value !== null && typeof value === 'object') {
+    return Object.fromEntries(
+      Object.entries(value)
+        .filter(([, entry]) => entry !== undefined)
+        .map(([key, entry]) => [key, asJsonValue(entry)]),
+    );
+  }
+  return value;
+};
+
 const anyToProto = (site: AnySite, value: any, options: CompatOptions): unknown => {
   const packed = { typeUrl: value.type_url ?? '', value: value.value ?? new Uint8Array() };
   if (site.preserved) {
@@ -167,7 +190,10 @@ const anyToProto = (site: AnySite, value: any, options: CompatOptions): unknown 
   }
   const { '@type': _type, ...payload } = value;
   if (typeName === STRUCT_TYPE_NAME) {
-    return { typeUrl: typeName, value: toBinary(StructSchema, fromJson(StructSchema, payload)) };
+    return {
+      typeUrl: typeName,
+      value: toBinary(StructSchema, fromJson(StructSchema, asJsonValue(payload) as JsonValue)),
+    };
   }
   const desc = bufRegistry.getMessage(typeName);
   if (desc === undefined) {
