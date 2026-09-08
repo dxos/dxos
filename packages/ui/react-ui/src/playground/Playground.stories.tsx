@@ -28,9 +28,9 @@ import {
   Dialog,
   DropdownMenu,
   Editable,
+  Field,
   Icon,
   IconButton,
-  Input,
   type InputVariant,
   Link,
   Popover,
@@ -122,7 +122,7 @@ const Frame = ({ children }: PropsWithChildren) => {
 const Section = ({ title, fields = false, children }: PropsWithChildren<{ title: string; fields?: boolean }>) => (
   <section className='flex flex-col gap-3'>
     <h2 className='text-sm font-medium text-description'>{title}</h2>
-    {/* `Input.Root` renders no element, so a row of fields has the fields as its own children. */}
+    {/* `Field.Root` renders no element, so a row of fields has the fields as its own children. */}
     <div className={mx('flex flex-wrap items-center gap-3', fields && '[&>*]:w-64')}>{children}</div>
   </section>
 );
@@ -191,15 +191,15 @@ const TextFieldsSection = () => {
   return (
     <Section title='Text field' fields>
       {VARIANTS.map((variant) => (
-        <Input.Root key={variant}>
-          <Input.TextInput variant={variant} placeholder={variant} />
-        </Input.Root>
+        <Field.Root key={variant}>
+          <Field.Input variant={variant} placeholder={variant} />
+        </Field.Root>
       ))}
-      <Input.Root>
-        <Input.TextInput placeholder='Search' start={<Icon icon='ph--magnifying-glass--regular' />} />
-      </Input.Root>
-      <Input.Root>
-        <Input.TextInput
+      <Field.Root>
+        <Field.Input placeholder='Search' start={<Icon icon='ph--magnifying-glass--regular' />} />
+      </Field.Root>
+      <Field.Root>
+        <Field.Input
           placeholder='Type to clear'
           value={value}
           onChange={(event) => setValue(event.target.value)}
@@ -209,16 +209,16 @@ const TextFieldsSection = () => {
             ) : undefined
           }
         />
-      </Input.Root>
-      <Input.Root>
-        <Input.TextInput
+      </Field.Root>
+      <Field.Root>
+        <Field.Input
           placeholder='Command'
           start={<Icon icon='ph--terminal--regular' />}
           end={<kbd className='text-xs text-description'>⌘K</kbd>}
         />
-      </Input.Root>
-      <Input.Root>
-        <Input.TextInput
+      </Field.Root>
+      <Field.Root>
+        <Field.Input
           placeholder='With action'
           end={
             <Button density='sm' variant='primary'>
@@ -226,54 +226,54 @@ const TextFieldsSection = () => {
             </Button>
           }
         />
-      </Input.Root>
-      <Input.Root>
-        <Input.TextInput placeholder='Disabled' disabled />
-      </Input.Root>
-      <Input.Root>
-        <Input.TextInput readOnly defaultValue='Read only' />
-      </Input.Root>
-      <Input.Root validationValence='error'>
-        <Input.TextInput defaultValue='Not an email' />
-      </Input.Root>
-      <Input.Root validationValence='warning'>
-        <Input.TextInput defaultValue='Weak' />
-      </Input.Root>
-      <Input.Root validationValence='success'>
-        <Input.TextInput defaultValue='Available' />
-      </Input.Root>
-      <Input.Root>
-        <Input.TextArea placeholder='Text area' rows={3} classNames='resize-none' />
-      </Input.Root>
+      </Field.Root>
+      <Field.Root>
+        <Field.Input placeholder='Disabled' disabled />
+      </Field.Root>
+      <Field.Root>
+        <Field.Input readOnly defaultValue='Read only' />
+      </Field.Root>
+      <Field.Root validationValence='error'>
+        <Field.Input defaultValue='Not an email' />
+      </Field.Root>
+      <Field.Root validationValence='warning'>
+        <Field.Input defaultValue='Weak' />
+      </Field.Root>
+      <Field.Root validationValence='success'>
+        <Field.Input defaultValue='Available' />
+      </Field.Root>
+      <Field.Root>
+        <Field.Textarea placeholder='Text area' rows={3} classNames='resize-none' />
+      </Field.Root>
     </Section>
   );
 };
 
 const ControlsSection = () => (
   <Section title='Checkbox, switch, PIN'>
-    <Input.Root>
-      <Input.Checkbox defaultChecked />
-      <Input.Label>Checked</Input.Label>
-    </Input.Root>
-    <Input.Root>
-      <Input.Checkbox />
-      <Input.Label>Unchecked</Input.Label>
-    </Input.Root>
-    <Input.Root>
-      <Input.Checkbox defaultChecked disabled />
-      <Input.Label>Disabled</Input.Label>
-    </Input.Root>
-    <Input.Root>
-      <Input.Switch defaultChecked />
-      <Input.Label>Switch</Input.Label>
-    </Input.Root>
-    <Input.Root>
-      <Input.Switch disabled />
-      <Input.Label>Disabled</Input.Label>
-    </Input.Root>
-    <Input.Root>
-      <Input.PinInput length={4} />
-    </Input.Root>
+    <Field.Root>
+      <Field.Checkbox defaultChecked />
+      <Field.Label>Checked</Field.Label>
+    </Field.Root>
+    <Field.Root>
+      <Field.Checkbox />
+      <Field.Label>Unchecked</Field.Label>
+    </Field.Root>
+    <Field.Root>
+      <Field.Checkbox defaultChecked disabled />
+      <Field.Label>Disabled</Field.Label>
+    </Field.Root>
+    <Field.Root>
+      <Field.Switch defaultChecked />
+      <Field.Label>Switch</Field.Label>
+    </Field.Root>
+    <Field.Root>
+      <Field.Switch disabled />
+      <Field.Label>Disabled</Field.Label>
+    </Field.Root>
+    <Field.Root>
+      <Field.PinInput length={4} />
+    </Field.Root>
   </Section>
 );
 

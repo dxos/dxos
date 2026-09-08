@@ -8,7 +8,7 @@ import { afterEach, beforeAll, describe, test, vi } from 'vitest';
 
 import { ThemeProvider } from '../../providers';
 import { defaultTx } from '../../theme';
-import { Input } from './Input';
+import { Field } from './Field';
 
 const Wrapper = ({ children }: PropsWithChildren) => <ThemeProvider tx={defaultTx}>{children}</ThemeProvider>;
 
@@ -29,13 +29,11 @@ describe('Input', () => {
 
   test('a valid field is described by its whole meta row', async ({ expect }) => {
     render(
-      <Input.Root>
-        <Input.Label>Name</Input.Label>
-        <Input.TextInput />
-        <Input.DescriptionAndValidation>
-          <Input.Description>Your full name.</Input.Description>
-        </Input.DescriptionAndValidation>
-      </Input.Root>,
+      <Field.Root>
+        <Field.Label>Name</Field.Label>
+        <Field.Input />
+        <Field.HelperText>Your full name.</Field.HelperText>
+      </Field.Root>,
       { wrapper: Wrapper },
     );
 
@@ -48,14 +46,12 @@ describe('Input', () => {
 
   test('an invalid field names its error and is described by the description alone', async ({ expect }) => {
     render(
-      <Input.Root validationValence='error' required>
-        <Input.Label>Name</Input.Label>
-        <Input.TextInput />
-        <Input.DescriptionAndValidation>
-          <Input.Validation>Required.</Input.Validation>
-          <Input.Description>Your full name.</Input.Description>
-        </Input.DescriptionAndValidation>
-      </Input.Root>,
+      <Field.Root validationValence='error' required>
+        <Field.Label>Name</Field.Label>
+        <Field.Input />
+        <Field.ErrorText>Required.</Field.ErrorText>
+        <Field.HelperText>Your full name.</Field.HelperText>
+      </Field.Root>,
       { wrapper: Wrapper },
     );
 
@@ -72,14 +68,14 @@ describe('Input', () => {
   test('a checkbox and a switch take the field id the label points at', ({ expect }) => {
     render(
       <>
-        <Input.Root>
-          <Input.Checkbox />
-          <Input.Label>Agree</Input.Label>
-        </Input.Root>
-        <Input.Root>
-          <Input.Switch />
-          <Input.Label>Notify</Input.Label>
-        </Input.Root>
+        <Field.Root>
+          <Field.Checkbox />
+          <Field.Label>Agree</Field.Label>
+        </Field.Root>
+        <Field.Root>
+          <Field.Switch />
+          <Field.Label>Notify</Field.Label>
+        </Field.Root>
       </>,
       { wrapper: Wrapper },
     );

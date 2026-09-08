@@ -8,7 +8,7 @@ import React, { useCallback, useMemo } from 'react';
 import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { Cursor } from '@dxos/link';
-import { Button, Input, Panel, ScrollArea, useTranslation } from '@dxos/react-ui';
+import { Button, Field, Panel, ScrollArea, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 import { Empty } from '@dxos/react-ui-list';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
@@ -123,8 +123,8 @@ export const ConnectionView = ({
 
                     {onRename && (
                       <Form.Field label={t('connection-name.label')}>
-                        <Input.Root>
-                          <Input.TextInput
+                        <Field.Root>
+                          <Field.Input
                             // Remounted when the stored name changes. The input is uncontrolled, so
                             // React would otherwise keep the old text after a replicated rename
                             // arrives — and the next blur would write that stale value back over it.
@@ -147,7 +147,7 @@ export const ConnectionView = ({
                             }}
                             onKeyDown={(event) => event.key === 'Enter' && event.currentTarget.blur()}
                           />
-                        </Input.Root>
+                        </Field.Root>
                       </Form.Field>
                     )}
 

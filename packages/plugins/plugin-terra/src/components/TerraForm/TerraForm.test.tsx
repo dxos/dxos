@@ -34,7 +34,7 @@ describe('TerraForm', () => {
 
     // Regression test for the `Input` must be used within `Input` runtime error: the custom
     // slider field renderer originally rendered `Form.Label` directly instead of going through
-    // `Form.Field`'s field-mode render-prop, so it never got `Form.Field`'s `Input.Root` wrapper —
+    // `Form.Field`'s field-mode render-prop, so it never got `Form.Field`'s `Field.Root` wrapper —
     // every slider field was swallowed by `FormFieldErrorBoundary` and replaced with a red
     // "ERROR" row instead of throwing (a render-time context failure invisible to build/lint/test).
     expect(screen.queryByText('ERROR')).toBeNull();
@@ -49,12 +49,12 @@ describe('TerraForm', () => {
     // Human `title` annotations on `Terra.TerraConfig`, not raw property names ("waterLevel").
     const label = screen.getByText('Water level');
     // Exact textContent match enforces the sibling constraint: `labelEnd`'s readout must never be
-    // nested inside `Input.Label`, or the label's accessible name would churn on every slider drag.
+    // nested inside `Field.Label`, or the label's accessible name would churn on every slider drag.
     expect(label.textContent).toBe('Water level');
     // `getByText` throws if no match is found, which is assertion enough that the readout rendered.
     expect(screen.getByText('0.46')).toBeTruthy();
 
-    // `Input.Label`'s `htmlFor` cannot reach the slider thumb (it isn't a labelable form control),
+    // `Field.Label`'s `htmlFor` cannot reach the slider thumb (it isn't a labelable form control),
     // so the thumb needs its own accessible name via `thumbLabels`.
     expect(screen.getByRole('slider', { name: 'Water level' })).toBeTruthy();
   });

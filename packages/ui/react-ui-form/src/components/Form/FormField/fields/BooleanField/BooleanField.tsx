@@ -4,7 +4,7 @@
 
 import React, { useCallback } from 'react';
 
-import { Input, type SwitchProps } from '@dxos/react-ui';
+import { Field, type SwitchProps } from '@dxos/react-ui';
 
 import { type FormFieldRendererProps } from '#types';
 
@@ -19,9 +19,9 @@ export const BooleanField = ({ type, readonly, onValueChange, ...props }: FormFi
   return (
     <FormField<boolean> readonly={readonly} {...props}>
       {({ value }) => (
-        <Input.Block>
-          <Input.Switch disabled={!!readonly} checked={value} onCheckedChange={handleChange} />
-        </Input.Block>
+        <Field.Block>
+          <Field.Switch disabled={!!readonly} checked={value} onCheckedChange={handleChange} />
+        </Field.Block>
       )}
     </FormField>
   );

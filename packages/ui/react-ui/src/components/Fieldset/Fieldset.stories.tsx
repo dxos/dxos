@@ -7,7 +7,7 @@ import React from 'react';
 import { expect, within } from 'storybook/test';
 
 import { withTheme } from '../../testing';
-import { Input } from '../Input';
+import { Field } from '../Field';
 import { Fieldset } from './Fieldset';
 
 type StoryArgs = {
@@ -20,14 +20,14 @@ const DefaultStory = ({ disabled, invalid }: StoryArgs) => (
   <Fieldset.Root disabled={disabled} invalid={invalid} classNames='flex flex-col gap-2 w-[24rem]'>
     <Fieldset.Legend>Shipping address</Fieldset.Legend>
     <Fieldset.HelperText>Where the order is sent.</Fieldset.HelperText>
-    <Input.Root>
-      <Input.Label>Street</Input.Label>
-      <Input.TextInput placeholder='1 Main St' />
-    </Input.Root>
-    <Input.Root>
-      <Input.Label>City</Input.Label>
-      <Input.TextInput placeholder='Springfield' />
-    </Input.Root>
+    <Field.Root>
+      <Field.Label>Street</Field.Label>
+      <Field.Input placeholder='1 Main St' />
+    </Field.Root>
+    <Field.Root>
+      <Field.Label>City</Field.Label>
+      <Field.Input placeholder='Springfield' />
+    </Field.Root>
     <Fieldset.ErrorText>The address could not be verified.</Fieldset.ErrorText>
   </Fieldset.Root>
 );

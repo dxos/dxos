@@ -14,7 +14,7 @@ import { Client, ClientProvider } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';
 import { ConnectionState } from '@dxos/react-client/mesh';
 import { TestBuilder, performInvitation } from '@dxos/react-client/testing';
-import { Icon, Input, Progress, ThemeProvider, Tooltip } from '@dxos/react-ui';
+import { Field, Icon, Progress, ThemeProvider, Tooltip } from '@dxos/react-ui';
 import { defaultTx } from '@dxos/react-ui';
 import { Text } from '@dxos/schema';
 import { mx } from '@dxos/ui-theme';
@@ -85,8 +85,8 @@ const main = async () => {
           <Tooltip.Provider>
             <div className='buttons'>
               <Tooltip.Trigger asChild content='Offline mode' className='flex'>
-                <Input.Root>
-                  <Input.Switch
+                <Field.Root>
+                  <Field.Switch
                     data-testid='airplane-mode'
                     classNames='mr-2'
                     onCheckedChange={(e) => {
@@ -94,14 +94,14 @@ const main = async () => {
                       return handleToggleNetwork(e);
                     }}
                   />
-                  <Input.Label>
+                  <Field.Label>
                     <Icon icon='ph--airplane--regular' size={28} classNames={mx(offline && 'active')} />
-                  </Input.Label>
-                </Input.Root>
+                  </Field.Label>
+                </Field.Root>
               </Tooltip.Trigger>
               <Tooltip.Trigger content='Write batching' className='flex'>
-                <Input.Root>
-                  <Input.Switch
+                <Field.Root>
+                  <Field.Switch
                     data-testid='batching'
                     classNames='mr-2'
                     onCheckedChange={(e) => {
@@ -109,10 +109,10 @@ const main = async () => {
                       return handleToggleBatching(e);
                     }}
                   />
-                  <Input.Label>
+                  <Field.Label>
                     <Icon icon='ph--stack--regular' size={28} classNames={mx(batching && 'active')} />
-                  </Input.Label>
-                </Input.Root>
+                  </Field.Label>
+                </Field.Root>
               </Tooltip.Trigger>
             </div>
           </Tooltip.Provider>

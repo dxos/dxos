@@ -9,7 +9,7 @@ import * as Trigger from '@dxos/compute/Trigger';
 import { Filter, Obj, Ref, Type } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { URI } from '@dxos/keys';
-import { Input, useTranslation } from '@dxos/react-ui';
+import { Field, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 import { isFeedOwnerSchema } from '@dxos/schema';
 
@@ -84,22 +84,22 @@ export const AgentProperties = ({ agent, onSubscriptionsChanged }: AgentProperti
 
   return (
     <Form.Section>
-      <Input.Root>
-        <Input.Label classNames='mt-form-gap'>{t('subscriptions.label')}</Input.Label>
-      </Input.Root>
+      <Field.Root>
+        <Field.Label classNames='mt-form-gap'>{t('subscriptions.label')}</Field.Label>
+      </Field.Root>
 
       {subscribedObjects.map((object) => (
-        <Input.Root key={object.id}>
+        <Field.Root key={object.id}>
           <div className='flex items-center gap-2'>
-            <Input.Checkbox
+            <Field.Checkbox
               checked={subscribedUris.has(Obj.getURI(object))}
               onCheckedChange={(checked) => {
                 handleSubscriptionChange(object, checked === true);
               }}
             />
-            <Input.Label>{Obj.getLabel(object) ?? object.id}</Input.Label>
+            <Field.Label>{Obj.getLabel(object) ?? object.id}</Field.Label>
           </div>
-        </Input.Root>
+        </Field.Root>
       ))}
     </Form.Section>
   );

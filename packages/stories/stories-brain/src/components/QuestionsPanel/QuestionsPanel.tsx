@@ -4,7 +4,7 @@
 
 import React, { useState } from 'react';
 
-import { IconButton, Input, Panel, type ThemedClassName, Toolbar } from '@dxos/react-ui';
+import { Field, IconButton, Panel, type ThemedClassName, Toolbar } from '@dxos/react-ui';
 
 export type QuestionRow = {
   readonly id: string;
@@ -38,15 +38,15 @@ export const QuestionsPanel = ({ classNames, questions, disabled, onAdd }: Quest
     <Panel.Root classNames={classNames}>
       <Panel.Toolbar asChild>
         <Toolbar.Root>
-          <Input.Root>
-            <Input.TextInput
+          <Field.Root>
+            <Field.Input
               placeholder='Ask a standing question…'
               value={text}
               disabled={disabled}
               onChange={(event) => setText(event.target.value)}
               onKeyDown={(event) => event.key === 'Enter' && handleAdd()}
             />
-          </Input.Root>
+          </Field.Root>
           <IconButton
             icon='ph--plus--regular'
             iconOnly

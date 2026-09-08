@@ -6,7 +6,7 @@ import { format as formatDate } from 'date-fns';
 import React, { Component, type PropsWithChildren, type ReactNode, type Ref } from 'react';
 
 import { Format } from '@dxos/echo';
-import { Collapsible, Icon, Input, type ThemedClassName, Tooltip } from '@dxos/react-ui';
+import { Collapsible, Field, Icon, type ThemedClassName, Tooltip } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 import { type FormFieldRendererProps } from '#types';
@@ -21,7 +21,7 @@ import { type FormFieldPresentation, presentationFor } from './presentation';
 
 export type FormFieldLabelProps = ThemedClassName<
   {
-    /** Render a plain `<span>` instead of an input-associated `Input.Label`, for labels used outside an `Input.Root` (e.g. section/group headers). */
+    /** Render a plain `<span>` instead of an input-associated `Field.Label`, for labels used outside an `Field.Root` (e.g. section/group headers). */
     standalone?: boolean;
     /** Class applied to the inner label text node, overriding the default size/color (e.g. `text-lg`). */
     labelClassName?: string;
@@ -40,7 +40,7 @@ export type FormFieldLabelProps = ThemedClassName<
     button?: ReactNode;
     /**
      * Read-only content rendered right after the label text (e.g. a live numeric readout for a
-     * slider field) — a sibling of `Input.Label`, never a child, so the label's `textContent`
+     * slider field) — a sibling of `Field.Label`, never a child, so the label's `textContent`
      * stays exactly `label` (see the comment on `labelClassNames` below) and doesn't masquerade
      * as an interactive control the way `button` does.
      */
@@ -72,7 +72,7 @@ export const FormFieldLabel = ({
   // label's `textContent` exactly `label`, so fields stay locatable by their exact label text
   // (`getByLabelText('Name')`), which the DOM-text-based query would otherwise miss as `Name *`.
   // The `fieldLabelText` slot is applied last so a variant/caller size/color (e.g. `text-lg`) wins over
-  // The control-height row comes from `Input.Label` itself; the read-only/standalone `span` is not
+  // The control-height row comes from `Field.Label` itself; the read-only/standalone `span` is not
   // one, so it repeats the geometry to keep the row the same height either way.
   const labelClassNames = mx(
     'flex items-center min-h-(--dx-control) text-sm text-description',
@@ -80,13 +80,13 @@ export const FormFieldLabel = ({
     styles.fieldLabelText({ class: labelClassName }),
   );
 
-  // `Input.Label` is a themed primitive that reads `classNames` (and ignores `className`), whereas the
+  // `Field.Label` is a themed primitive that reads `classNames` (and ignores `className`), whereas the
   // plain `span` used for read-only/standalone labels reads `className`.
   const labelNode =
     readonly || standalone ? (
       <span className={labelClassNames}>{label}</span>
     ) : (
-      <Input.Label classNames={labelClassNames}>{label}</Input.Label>
+      <Field.Label classNames={labelClassNames}>{label}</Field.Label>
     );
 
   const content = (
@@ -179,7 +179,7 @@ export type FormFieldProps<T = any> = ThemedClassName<
        */
       validation?: ReactNode;
       /**
-       * The control. A render-prop binds to the form value (field mode: `Input.Root` validation, static
+       * The control. A render-prop binds to the form value (field mode: `Field.Root` validation, static
        * rendering, value via `getValue`). Plain nodes render an arbitrary control with no value wiring
        * (action mode, e.g. a button) — the labeled-card escape hatch for an arbitrary control.
        *
@@ -234,7 +234,7 @@ export const FormField = <T,>({
       : children({ value, presentation: resolved });
 
     return (
-      <Input.Root validationValence={status}>
+      <Field.Root validationValence={status}>
         <div className={styles.field({ class: classNames })} ref={rootRef}>
           {resolved.showLabel && (
             <FormFieldLabel
@@ -249,23 +249,21 @@ export const FormField = <T,>({
             />
           )}
           {showDescription && description && (
-            <Input.Description classNames={styles.fieldDescription()}>{description}</Input.Description>
+            <Field.HelperText classNames={styles.fieldDescription()}>{description}</Field.HelperText>
           )}
           <div className={styles.fieldControl()}>{control}</div>
           {resolved.showError && error && (
             <div className={styles.fieldValidation()}>
-              <Input.DescriptionAndValidation>
-                <Input.Validation>{error}</Input.Validation>
-              </Input.DescriptionAndValidation>
+              <Field.ErrorText>{error}</Field.ErrorText>
             </div>
           )}
         </div>
-      </Input.Root>
+      </Field.Root>
     );
   }
 
   //
-  // Action mode: an arbitrary control with a standalone label; no value/`Input.Root` wiring.
+  // Action mode: an arbitrary control with a standalone label; no value/`Field.Root` wiring.
   //
   return (
     <div ref={rootRef} className={styles.field({ class: classNames })}>

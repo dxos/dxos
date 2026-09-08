@@ -28,9 +28,9 @@ import { useDensityContext, useElevationContext, useThemeContext } from '../../h
 import { type ThemedClassName } from '../../util';
 import { DatePicker } from '../DatePicker';
 import { Popover } from '../Popover';
-import { type InputSharedProps } from './Input';
-import { INPUT_NAME, useInputValence } from './InputContext';
-import { useInputTrigger } from './InputTriggerContext';
+import { type FieldSharedProps } from './Field';
+import { FIELD_NAME, useFieldValence } from './FieldContext';
+import { useFieldTrigger } from './FieldTriggerContext';
 
 //
 // Value <-> @internationalized/date adapters.
@@ -127,7 +127,7 @@ const renderSegment = (segment: DateSegmentData, classNames = segmentClassNames)
 // Shared props.
 //
 
-type SegmentedInputBaseProps = InputSharedProps &
+type SegmentedInputBaseProps = FieldSharedProps &
   ThemedClassName<{
     'id'?: string;
     'value'?: string;
@@ -151,15 +151,15 @@ const useFieldChrome = ({
   density: densityProp,
   elevation: elevationProp,
 }: {
-  density: InputSharedProps['density'];
-  elevation: InputSharedProps['elevation'];
+  density: FieldSharedProps['density'];
+  elevation: FieldSharedProps['elevation'];
 }) => {
   const { tx } = useThemeContext();
   const density = useDensityContext(densityProp);
   const elevation = useElevationContext(elevationProp);
   // The field owns the id and the described-by/error wiring; the valence is ours.
   const field = useFieldContext();
-  const { validationValence } = useInputValence(INPUT_NAME);
+  const { validationValence } = useFieldValence(FIELD_NAME);
   return {
     tx,
     density,
@@ -173,7 +173,7 @@ const useFieldChrome = ({
 
 /**
  * Wraps a field with a `DatePicker.Root` whose open state is driven by the surrounding
- * `Input.Root`'s registered trigger. `Input.TriggerIcon` (a sibling under `Input.Root`) calls the
+ * `Field.Root`'s registered trigger. `Field.TriggerIcon` (a sibling under `Field.Root`) calls the
  * registered handler on press; the popover positions at the field through a virtual anchor,
  * because an `Anchor asChild` would hand its id to the react-aria field, which keeps it for the
  * input and leaves the machine nothing to find — the popover then opens at the page's origin.
@@ -202,7 +202,7 @@ const PickerWrapper = ({
       setOpen(true);
     }
   }, [disabled]);
-  useInputTrigger(disabled ? undefined : openPicker);
+  useFieldTrigger(disabled ? undefined : openPicker);
   return (
     <DatePicker.Root
       mode='single'
@@ -277,7 +277,7 @@ const SegmentedDate = forwardRef<HTMLDivElement, SegmentedDateProps>(
             : {})}
           data-density={density}
           className={tx(
-            'input.input',
+            'field.input',
             { variant, disabled, density, elevation, validationValence },
             fieldClassNames,
             classNames,
@@ -363,7 +363,7 @@ const SegmentedTime = forwardRef<HTMLDivElement, SegmentedTimeProps>(
             : {})}
           data-density={density}
           className={tx(
-            'input.input',
+            'field.input',
             { variant, disabled, density, elevation, validationValence },
             fieldClassNames,
             classNames,
@@ -437,7 +437,7 @@ const SegmentedDateTime = forwardRef<HTMLDivElement, SegmentedDateTimeProps>(
             : {})}
           data-density={density}
           className={tx(
-            'input.input',
+            'field.input',
             { variant, disabled, density, elevation, validationValence },
             fieldClassNames,
             classNames,

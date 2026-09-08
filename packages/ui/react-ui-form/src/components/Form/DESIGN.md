@@ -31,8 +31,9 @@ Form.Root                               context: schema, values, validation, onV
 
 What each form component is built from, one layer down (`@dxos/react-ui`) and two layers down
 (`@ark-ui/react`). A blank cell means the layer adds nothing there: the component is plain markup.
-`Input` in `@dxos/react-ui` is Ark's `Field` under another name and is due to be renamed `Field`, so
-the middle column already reads as that mapping.
+`@dxos/react-ui`'s `Field` is Ark's `Field` plus the standard form of each control (`Field.Input`,
+`Field.Textarea`, `Field.Checkbox`, `Field.Switch`, …): one component per control, pre-wired to the
+enclosing field, usable without a root. The composite anatomies (`Checkbox.*`, `Switch.*`) are Ark's.
 
 | `@dxos/react-ui-form`                         | `@dxos/react-ui`                                                                            | `@ark-ui/react`                                                    |
 | --------------------------------------------- | ------------------------------------------------------------------------------------------- | ------------------------------------------------------------------ |
@@ -43,16 +44,16 @@ the middle column already reads as that mapping.
 | `Form.Group`                                  |                                                                                             |                                                                    |
 | `Form.FieldSet` / `FormFieldSetContainer`     | `Fieldset.Root`, `Fieldset.Legend`; `Collapsible.Root`/`Trigger`/`Content` when collapsible | `Fieldset.*`, `Collapsible.*`                                      |
 | `FormFieldHeader`                             | `Form.Label` (standalone), `IconButton`                                                     |                                                                    |
-| `Form.Field` — field mode (schema field)      | `Input.Root`, `Input.Label`, `Input.Description`, `Input.Validation`                        | `Field.Root`, `Field.Label`, `Field.HelperText`, `Field.ErrorText` |
+| `Form.Field` — field mode (schema field)      | `Field.Root`, `Field.Label`, `Field.Description`, `Field.Validation`                        | `Field.Root`, `Field.Label`, `Field.HelperText`, `Field.ErrorText` |
 | `Form.Field` — action mode (element children) | plain `<div>` / `<span>` / `<p>`                                                            |                                                                    |
-| `Form.Label`                                  | `Input.Label`                                                                               | `Field.Label`                                                      |
+| `Form.Label`                                  | `Field.Label`                                                                               | `Field.Label`                                                      |
 | `Form.Actions`, `Form.Submit`                 | `Button`                                                                                    |                                                                    |
-| `Form.Error`                                  | `Input.Root` (error valence), `Input.Validation`                                            | `Field.Root`, `Field.ErrorText`                                    |
+| `Form.Error`                                  | `Field.Root` (error valence), `Field.Validation`                                            | `Field.Root`, `Field.ErrorText`                                    |
 |                                               |                                                                                             |                                                                    |
-| `TextField`, `PasswordField`, `NumberField`   | `Input.TextInput`                                                                           | `Field.Input`                                                      |
-| `TextAreaField`, `MarkdownField`              | `Input.TextArea` / editor                                                                   | `Field.Textarea`                                                   |
-| `BooleanField`                                | `Input.Switch`                                                                              | `Switch`                                                           |
-| `DateField`                                   | `Input.Date`, `Input.DateTime`, `Input.Time`                                                | `Field` parts + `Popover` (react-aria date field)                  |
+| `TextField`, `PasswordField`, `NumberField`   | `Field.TextInput`                                                                           | `Field.Input`                                                      |
+| `TextAreaField`, `MarkdownField`              | `Field.TextArea` / editor                                                                   | `Field.Textarea`                                                   |
+| `BooleanField`                                | `Field.Switch`                                                                              | `Switch`                                                           |
+| `DateField`                                   | `Field.Date`, `Field.DateTime`, `Field.Time`                                                | `Field` parts + `Popover` (react-aria date field)                  |
 | `SelectField`, `SelectOptionField`            | `Select.Root`                                                                               | `Select`                                                           |
 | `ComboboxField`, `RefField`                   | `Combobox.Root`                                                                             | `Combobox`                                                         |
 | `ArrayField`                                  | `FormFieldHeader` + rows                                                                    |                                                                    |

@@ -6,7 +6,7 @@ import * as Schema from 'effect/Schema';
 import * as Struct from 'effect/Struct';
 import React, { useCallback } from 'react';
 
-import { IconButton, Input, Slider } from '@dxos/react-ui';
+import { Field, IconButton, Slider } from '@dxos/react-ui';
 import { Form, type FormFieldMap, type FormFieldRendererProps } from '@dxos/react-ui-form';
 
 import { Terra } from '#types';
@@ -52,8 +52,8 @@ const nextSeed = (seed: string): string => {
 /**
  * Renders a numeric field as a `Slider` with a live readout on the label line, in place of the
  * schema's default numeric input. Delegates the label/status/validation chrome to `Form.Field`'s
- * render-prop (field mode) — it, not this renderer, wraps the row in `Input.Root`, which
- * `Input.Label`/`Input.DescriptionAndValidation` require via context. Rendering those parts (or
+ * render-prop (field mode) — it, not this renderer, wraps the row in `Field.Root`, which
+ * `Field.Label`/`Field.HelperText`/`Field.ErrorText` require via context. Rendering those parts (or
  * anything relying on them) outside `Form.Field` throws.
  */
 const createSliderField = (key: SliderKey): FormFieldMap[string] => {
@@ -65,7 +65,7 @@ const createSliderField = (key: SliderKey): FormFieldMap[string] => {
       <Form.Field<number>
         {...rowProps}
         getValue={getValue}
-        // A sibling of the label text (never a child) — keeps `Input.Label`'s `textContent` exactly
+        // A sibling of the label text (never a child) — keeps `Field.Label`'s `textContent` exactly
         // `label` and avoids re-deriving the input's accessible name on every drag frame.
         labelEnd={<span className='text-sm text-description tabular-nums'>{current.toFixed(spec.decimals)}</span>}
         renderStatic={(value) => <p className='tabular-nums'>{(value ?? spec.min).toFixed(spec.decimals)}</p>}
@@ -132,12 +132,12 @@ export const TerraForm = ({ config, onChange, onWaterSheen }: TerraFormProps) =>
 
       <IconButton icon='ph--arrow-clockwise--regular' label='Reseed' onClick={handleReseed} />
 
-      <Input.Root>
+      <Field.Root>
         <div className='flex items-center gap-2'>
-          <Input.Checkbox onCheckedChange={handleWaterSheenChange} />
-          <Input.Label>Water sheen</Input.Label>
+          <Field.Checkbox onCheckedChange={handleWaterSheenChange} />
+          <Field.Label>Water sheen</Field.Label>
         </div>
-      </Input.Root>
+      </Field.Root>
     </div>
   );
 };

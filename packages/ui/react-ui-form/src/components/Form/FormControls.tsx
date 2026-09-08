@@ -9,10 +9,10 @@ import {
   Column,
   type ColumnRootProps,
   DIALOG_AUTOFOCUS_ATTRIBUTE,
+  Field,
   Fieldset,
   IconButton,
   type IconButtonProps,
-  Input,
   ScrollArea,
   type ThemedClassName,
   composable,
@@ -401,11 +401,11 @@ export const FormError = ({ children, classNames }: FormErrorProps) => {
   }
 
   return (
-    <Input.Root validationValence='error'>
-      <Input.Validation classNames={classNames} data-testid='form.error'>
+    <Field.Root validationValence='error'>
+      <Field.ErrorText classNames={classNames} data-testid='form.error'>
         {children}
-      </Input.Validation>
-    </Input.Root>
+      </Field.ErrorText>
+    </Field.Root>
   );
 };
 

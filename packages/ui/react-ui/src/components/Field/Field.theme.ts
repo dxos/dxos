@@ -97,7 +97,7 @@ const input: ComponentFunction<InputStyleProps> = (props, ...etc) =>
 // (6.5px against a 32px control) and tracks density with it. Centring it exactly would need
 // `calc((var(--dx-control) - 1lh) / 2)`, and `lh` is newer than this app's browser targets
 // (chrome108 / firefox104 / safari16), where the whole declaration would be dropped.
-const textArea: ComponentFunction<InputStyleProps> = (props, ...etc) => input(props, 'py-(--dx-control-pad)', ...etc);
+const textarea: ComponentFunction<InputStyleProps> = (props, ...etc) => input(props, 'py-(--dx-control-pad)', ...etc);
 
 // Container that carries the input surface/border/focus when the field has adornments; the inner
 // `<input>` renders "bare" (subdued) so the box wraps the whole row (start adornment · field · end).
@@ -151,18 +151,15 @@ const root: ComponentFunction<InputStyleProps> = (_props, ...etc) =>
   mx('contents [&>*]:[grid-column:var(--dx-col,auto)]', ...etc);
 
 // Matches `react-ui-form`'s `fieldLabel` geometry: a control-height row with the text centred, so a
-// label sits the same distance from its field in a bare `Input.Root` as in a schema-driven form.
+// label sits the same distance from its field in a bare `Field.Root` as in a schema-driven form.
 // Only when visible — an sr-only label is out of flow, and a min-height on it would be meaningless.
 const label: ComponentFunction<InputMetaStyleProps> = (props, ...etc) =>
   mx('text-sm text-description', props.srOnly ? 'sr-only' : 'flex items-center min-h-(--dx-control)', ...etc);
 
-const description: ComponentFunction<InputMetaStyleProps> = (props, ...etc) =>
+const helperText: ComponentFunction<InputMetaStyleProps> = (props, ...etc) =>
   mx('text-description', props.srOnly && 'sr-only', ...etc);
 
-const descriptionAndValidation: ComponentFunction<InputMetaStyleProps> = (props, ...etc) =>
-  mx('leading-none my-1.5', props.srOnly && 'sr-only', ...etc);
-
-const validation: ComponentFunction<InputMetaStyleProps> = (props, ...etc) =>
+const errorText: ComponentFunction<InputMetaStyleProps> = (props, ...etc) =>
   mx('text-sm text-description', props.srOnly ? 'sr-only' : textValence(props.validationValence), ...etc);
 
 const triggerIcon: ComponentFunction<{}> = (_p, ...etc) =>
@@ -176,21 +173,20 @@ const triggerIcon: ComponentFunction<{}> = (_p, ...etc) =>
 const block: ComponentFunction<InputStyleProps> = (props, ...etc) =>
   mx('grid place-items-center w-[var(--dx-rail-item)] h-[var(--dx-rail-item)]', ...etc);
 
-export const inputTheme = {
+export const fieldTheme = {
   root,
   input,
   container,
   adornment,
-  textArea,
+  textarea,
   pin,
   segment,
   label,
-  description,
+  helperText,
   checkbox,
   checkboxIndicator,
   switch: switch_,
   block,
-  validation,
-  descriptionAndValidation,
+  errorText,
   triggerIcon,
 };

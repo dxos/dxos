@@ -11,7 +11,7 @@ import { type ConfigInit, SaveConfig, Storage, defs } from '@dxos/config';
 import { log } from '@dxos/log';
 import { type IdbLogStore, MANUAL_LOG_EXPORT_MAX_BYTES } from '@dxos/log-store-idb';
 import { useClient } from '@dxos/react-client';
-import { IconButton, Input, Select, Toast, useFileDownload, useTranslation } from '@dxos/react-ui';
+import { Field, IconButton, Select, Toast, useFileDownload, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 import { TRACE_ALL_KEY } from '@dxos/tracing';
 import { setDeep } from '@dxos/util';
@@ -159,18 +159,18 @@ export const DebugSettings = ({ settings, onSettingsChange, logStore, onUpload }
         <Form.Content>
           <Form.Section title={meta.profile.name ?? meta.profile.key}>
             <Form.Field label={t('settings.wireframe.label')} description={t('settings.wireframe.description')}>
-              <Input.Root>
-                <Input.Switch
+              <Field.Root>
+                <Field.Switch
                   disabled={!onSettingsChange}
                   checked={settings.wireframe}
                   onCheckedChange={handleWireframeChange}
                 />
-              </Input.Root>
+              </Field.Root>
             </Form.Field>
             <Form.Field label={t('settings.trace-all.label')} description={t('settings.trace-all.description')}>
-              <Input.Root>
-                <Input.Switch disabled={!onSettingsChange} checked={traceAll} onCheckedChange={handleTraceAllChange} />
-              </Input.Root>
+              <Field.Root>
+                <Field.Switch disabled={!onSettingsChange} checked={traceAll} onCheckedChange={handleTraceAllChange} />
+              </Field.Root>
             </Form.Field>
             <Form.Field label={t('settings.tracing-panel.label')} description={t('settings.tracing-panel.description')}>
               <IconButton

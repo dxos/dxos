@@ -5,7 +5,7 @@
 import React from 'react';
 
 import { type Space } from '@dxos/react-client/echo';
-import { IconButton, Input, Select, toLocalizedString, useTranslation } from '@dxos/react-ui';
+import { Field, IconButton, Select, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 import { Listbox } from '@dxos/react-ui-list';
 
@@ -43,13 +43,13 @@ export const SpaceSettings = ({
         <Form.Content>
           <Form.Section title={t('plugin.name')}>
             <Form.Field label={t('settings.show-hidden.label')} description={t('settings.show-hidden.description')}>
-              <Input.Root>
-                <Input.Switch
+              <Field.Root>
+                <Field.Switch
                   disabled={!onSettingsChange}
                   checked={settings?.showHidden}
                   onCheckedChange={(checked) => onSettingsChange?.((s) => ({ ...s, showHidden: !!checked }))}
                 />
-              </Input.Root>
+              </Field.Root>
             </Form.Field>
           </Form.Section>
           <Form.Section title={t('space-settings.label')} description={t('space-settings.description')}>

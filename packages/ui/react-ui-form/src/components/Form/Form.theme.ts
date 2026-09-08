@@ -27,7 +27,7 @@ const formStyles = tv({
     fieldSetLegend: 'w-full',
     field: '',
     // Columns: label (fills) → optional `labelEnd` readout → error icon (or its spacer) → optional trailing `button`.
-    // Height comes from the label cell (`Input.Label` is a control-height row); this only lays the
+    // Height comes from the label cell (`Field.Label` is a control-height row); this only lays the
     // columns out and centres the trailing cells against it.
     fieldLabel: 'grid grid-cols-[1fr_auto_auto_auto] items-center',
     fieldLabelText: '',

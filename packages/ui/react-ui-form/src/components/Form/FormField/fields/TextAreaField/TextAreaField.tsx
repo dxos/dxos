@@ -4,7 +4,7 @@
 
 import React, { useCallback } from 'react';
 
-import { Input, type TextAreaProps } from '@dxos/react-ui';
+import { Field, type TextareaProps } from '@dxos/react-ui';
 
 import { type FormFieldRendererProps } from '#types';
 
@@ -18,7 +18,7 @@ export const TextAreaField = ({
   onBlur,
   ...props
 }: FormFieldRendererProps<string>) => {
-  const handleChange = useCallback<NonNullable<TextAreaProps['onChange']>>(
+  const handleChange = useCallback<NonNullable<TextareaProps['onChange']>>(
     (event) => onValueChange(type, event.target.value),
     [type, onValueChange],
   );
@@ -26,7 +26,7 @@ export const TextAreaField = ({
   return (
     <FormField<string> readonly={readonly} {...props}>
       {({ value = '' }) => (
-        <Input.TextArea
+        <Field.Textarea
           rows={5}
           disabled={!!readonly}
           placeholder={placeholder}

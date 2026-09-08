@@ -6,7 +6,7 @@ import React from 'react';
 
 import { type Client } from '@dxos/react-client';
 import { ConnectionState } from '@dxos/react-client/mesh';
-import { Input } from '@dxos/react-ui';
+import { Field } from '@dxos/react-ui';
 
 export const NetworkToggle = ({ clients }: { clients: Client[] }) => {
   const toggleNetwork = async (checked: boolean) => {
@@ -16,9 +16,9 @@ export const NetworkToggle = ({ clients }: { clients: Client[] }) => {
 
   return (
     <div className='flex'>
-      <Input.Root>
-        <Input.Checkbox classNames='mr-2' onCheckedChange={toggleNetwork} />
-        <Input.Label>
+      <Field.Root>
+        <Field.Checkbox classNames='mr-2' onCheckedChange={toggleNetwork} />
+        <Field.Label>
           Disable{' '}
           <a
             href='https://docs.dxos.org/guide/platform/'
@@ -29,8 +29,8 @@ export const NetworkToggle = ({ clients }: { clients: Client[] }) => {
             replication
           </a>{' '}
           (go offline)
-        </Input.Label>
-      </Input.Root>
+        </Field.Label>
+      </Field.Root>
     </div>
   );
 };

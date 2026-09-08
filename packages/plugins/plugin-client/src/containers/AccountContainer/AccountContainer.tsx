@@ -9,7 +9,7 @@ import { useCapability, useOperationInvoker } from '@dxos/app-framework/ui';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { Context } from '@dxos/context';
 import { useIdentity } from '@dxos/halo-react';
-import { Banner, Button, Flex, Icon, IconButton, Input, useAsyncEffect, useTranslation } from '@dxos/react-ui';
+import { Banner, Button, Field, Flex, Icon, IconButton, useAsyncEffect, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 
 import { meta } from '#meta';
@@ -131,8 +131,8 @@ export const AccountContainer = () => {
                     <span className='text-sm text-description'>{t('access-request-submitted.message')}</span>
                   ) : (
                     <form onSubmit={handleRequestAccess} className='flex gap-2 items-center justify-end'>
-                      <Input.Root>
-                        <Input.TextInput
+                      <Field.Root>
+                        <Field.Input
                           type='email'
                           required
                           placeholder={t('access-request-email.placeholder')}
@@ -140,7 +140,7 @@ export const AccountContainer = () => {
                           onChange={(event) => setRequestEmail(event.target.value)}
                           classNames='w-64 max-w-full min-w-0'
                         />
-                      </Input.Root>
+                      </Field.Root>
                       <Button type='submit' density='sm'>
                         {t('request-access.label')}
                       </Button>

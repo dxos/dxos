@@ -5,7 +5,7 @@
 import React, { useCallback, useSyncExternalStore } from 'react';
 
 import { type DebugPortController, getDebugPortController } from '@dxos/react-client/devtools';
-import { Flex, IconButton, Input, useTranslation } from '@dxos/react-ui';
+import { Field, Flex, IconButton, useTranslation } from '@dxos/react-ui';
 import { Logger, type LogRow } from '@dxos/react-ui-debug';
 import { Form } from '@dxos/react-ui-form';
 
@@ -65,9 +65,9 @@ export const DebugPortSettings = ({ controller = getDebugPortController(), disab
               {t('settings.debug-port.running.label')} <span className='font-mono'>{status.origin}</span>
             </span>
           )}
-          <Input.Root>
-            <Input.Switch checked={status.running} disabled={disabled} onCheckedChange={handleToggle} />
-          </Input.Root>
+          <Field.Root>
+            <Field.Switch checked={status.running} disabled={disabled} onCheckedChange={handleToggle} />
+          </Field.Root>
         </Flex>
       </Form.Field>
 

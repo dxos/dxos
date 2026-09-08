@@ -7,7 +7,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { type Parser } from '@dxos/nlp';
 import {
   Button,
-  Input,
+  Field,
   Panel,
   ScrollArea,
   Select,
@@ -147,12 +147,12 @@ export const InputPanel = ({
           </Button>
           <div className='grow' />
           {mode === 'document' && parse && (
-            <Input.Root>
+            <Field.Root>
               <div className='flex items-center gap-2 px-2'>
-                <Input.Switch checked={underline} onCheckedChange={(checked) => setUnderline(checked === true)} />
-                <Input.Label classNames='text-sm text-description'>POS</Input.Label>
+                <Field.Switch checked={underline} onCheckedChange={(checked) => setUnderline(checked === true)} />
+                <Field.Label classNames='text-sm text-description'>POS</Field.Label>
               </div>
-            </Input.Root>
+            </Field.Root>
           )}
         </Toolbar.Root>
       </Panel.Toolbar>
@@ -184,15 +184,15 @@ export const InputPanel = ({
                 {onLoadDataset && (
                   <>
                     <Toolbar.Separator />
-                    <Input.Root>
-                      <Input.TextInput
+                    <Field.Root>
+                      <Field.Input
                         type='number'
                         min={1}
                         value={String(count)}
                         onChange={(event) => setCount(Math.max(1, Number(event.target.value) || 1))}
                         classNames='w-20'
                       />
-                    </Input.Root>
+                    </Field.Root>
                     <Button disabled={busy} onClick={() => onLoadDataset(count)}>
                       Load
                     </Button>

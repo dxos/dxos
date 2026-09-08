@@ -946,7 +946,7 @@ dist/types/src: ENOTEMPTY` — a concurrent writer. A Cursor TypeScript native-p
       plugin's context rendered `Toast.Viewport` beside its `Tooltip.Provider`, so the undo toast's close
       button had no provider. The viewport moved inside the provider; `react-context.test.tsx` renders a
       closable toast through the plugin's context and fails without the move.
-- [ ] **Rename `Input` → `Field`** (own PR, a codemod over ~900 sites: `Root` 443, `Label` 215,
+- [x] **Rename `Input` → `Field`** DONE 2026-09-08 (see Phase 17) (own PR, a codemod over ~900 sites: `Root` 443, `Label` 215,
       `TextInput` 119, `Switch` 40, `Checkbox` 25, `DescriptionAndValidation` 22, `Validation` 13,
       `TextArea` 12, `Description` 11, `PinInput` 4). Proposed names follow Ark where the part is
       Ark's: `Field.Root`, `Field.Label`, `Field.Input` (`TextInput`), `Field.Textarea`,
@@ -1020,7 +1020,14 @@ against the Radix-era names react-ui kept, Popover first.
       Render every row through `Input.Root` (a `Field`) and give hand-written rows the same
       `fieldSet` gap as the schema path (reported from Deck vs Debug settings, 2026-09-08).
 - [ ] **`Form.Group` is a styled `div`**; it should be a `Fieldset` too.
-- [ ] **Goal 1 remainder**: rename `Input` → `Field` (tracked below) and reconcile the `Input`
-      parts with Ark's `Field` anatomy one to one.
+- [x] **`Input` → `Field`** DONE 2026-09-08: the namespace, its files, theme key and context are
+      `Field`; parts take Ark's names (`HelperText`, `ErrorText`, `Input`, `Textarea`);
+      `DescriptionAndValidation` dropped (helper and error are two parts, as in Ark); 133 files
+      codemodded. Decision recorded: `Field.*` holds the wrapper parts plus the standard, field-wired
+      form of every control (`Field.Checkbox` is the flat one, like Ark's own `Field.Input`), and
+      composite anatomies (`Checkbox.*`, `Switch.*`) are added only when a consumer needs a part.
+- [ ] **`Field.Checkbox` / `Field.Switch` take label children** (decided 2026-09-08, next pass): the
+      standard form renders Ark's `Checkbox.Root` label around control and text, so the 27 sites that
+      hand-build `Flex > Checkbox + Label` collapse to one element.
 - [ ] **Goal 3**: Popover vs Ark's `Positioner`/`Content`/`Viewport` (tracked below under
       "Reconcile Ark's anatomy").

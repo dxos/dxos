@@ -10,7 +10,7 @@ import { useType as defaultUseType } from '@dxos/echo-react';
 import { ReferenceAnnotationId, type ReferenceAnnotationValue } from '@dxos/echo/Annotation';
 import { SchemaEx } from '@dxos/effect';
 import { DXN, URI } from '@dxos/keys';
-import { IconButton, Input, useTranslation } from '@dxos/react-ui';
+import { Field, IconButton, useTranslation } from '@dxos/react-ui';
 
 import { translationKey } from '#translations';
 
@@ -69,7 +69,7 @@ export const InlineRefField = (props: RefFieldProps) => {
   }
 
   return (
-    <Input.Root>
+    <Field.Root>
       {resolved.showLabel && <FormFieldLabel readonly={readonly} required={required} label={label} path={jsonPath} />}
       {reference ? (
         <InlineForm reference={reference} db={db} readonly={readonly} useType={useType} />
@@ -85,7 +85,7 @@ export const InlineRefField = (props: RefFieldProps) => {
           />
         )
       )}
-    </Input.Root>
+    </Field.Root>
   );
 };
 

@@ -6,7 +6,7 @@ import React, { useCallback, useState } from 'react';
 
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { log } from '@dxos/log';
-import { Banner, Button, Input, useTranslation } from '@dxos/react-ui';
+import { Banner, Button, Field, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 
 import { meta } from '#meta';
@@ -100,15 +100,15 @@ export const RegistrySettings = ({
               </Banner.Content>
             </Banner.Root>
             <Form.Field label={t('dev-plugin.url.label')} description={t('dev-plugin.url.description')}>
-              <Input.Root>
-                <Input.TextInput
+              <Field.Root>
+                <Field.Input
                   disabled={!onSettingsChange || enabled || busy}
                   value={url}
                   onChange={(event) =>
                     onSettingsChange?.((current) => ({ ...current, devPluginUrl: event.target.value }))
                   }
                 />
-              </Input.Root>
+              </Field.Root>
             </Form.Field>
             <Form.Field label={t('dev-plugin.toggle.label')} description={t('dev-plugin.toggle.description')}>
               <Button

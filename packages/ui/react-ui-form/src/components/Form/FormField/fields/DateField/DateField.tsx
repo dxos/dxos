@@ -6,7 +6,7 @@ import { format as formatDate } from 'date-fns';
 import React, { useCallback } from 'react';
 
 import { Format } from '@dxos/echo';
-import { Input } from '@dxos/react-ui';
+import { Field } from '@dxos/react-ui';
 
 import { type FormFieldRendererProps } from '#types';
 
@@ -19,9 +19,9 @@ import { FormField } from '../../FormField';
  * - `Format.Time`     -> `HH:mm:ss`.
  *
  * Segmented input value shapes (react-aria-components-backed):
- * - `Input.DateTime` -> `YYYY-MM-DDTHH:mm` in local time.
- * - `Input.Date`     -> `YYYY-MM-DD`.
- * - `Input.Time`     -> `HH:mm`.
+ * - `Field.DateTime` -> `YYYY-MM-DDTHH:mm` in local time.
+ * - `Field.Date`     -> `YYYY-MM-DD`.
+ * - `Field.Time`     -> `HH:mm`.
  */
 
 /** ISO 8601 → `YYYY-MM-DDTHH:mm` in the user's local timezone. */
@@ -72,18 +72,18 @@ export const DateField = ({
           case Format.TypeFormat.Date:
             return (
               <div className='grid grid-cols-[minmax(0,1fr)_min-content] gap-1 items-stretch tabular-nums'>
-                <Input.Date
+                <Field.Date
                   classNames='overflow-hidden'
                   disabled={readonly}
                   value={value ?? ''}
                   onValueChange={handleSimpleChange}
                 />
-                <Input.TriggerIcon />
+                <Field.TriggerIcon />
               </div>
             );
           case Format.TypeFormat.Time:
             return (
-              <Input.Time
+              <Field.Time
                 classNames='tabular-nums'
                 disabled={!!readonly}
                 value={value ?? ''}
@@ -94,13 +94,13 @@ export const DateField = ({
           default:
             return (
               <div className='grid grid-cols-[minmax(0,1fr)_min-content] gap-1 items-stretch tabular-nums'>
-                <Input.DateTime
+                <Field.DateTime
                   classNames='overflow-hidden'
                   disabled={readonly}
                   value={isoToLocalDateTime(value)}
                   onValueChange={handleDateTimeChange}
                 />
-                <Input.TriggerIcon />
+                <Field.TriggerIcon />
               </div>
             );
         }

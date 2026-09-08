@@ -5,7 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { type ChangeEvent, useCallback } from 'react';
 
-import { Input } from '@dxos/react-ui';
+import { Field } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { type FormFieldRendererProps } from '#types';
@@ -32,7 +32,7 @@ const DefaultStory = ({
         <Form.Content>
           <FormField<string> {...props}>
             {({ value = '' }) => (
-              <Input.TextInput
+              <Field.Input
                 disabled={!!readonly}
                 placeholder={placeholder}
                 noAutoFill

@@ -7,7 +7,7 @@ import React from 'react';
 
 import { translations } from '#translations';
 
-import { Fieldset, Input } from '../components';
+import { Field, Fieldset } from '../components';
 import { withLayoutVariants, withTheme } from '../testing';
 
 type StoryArgs = {
@@ -23,34 +23,30 @@ const DefaultStory = ({ disabled, invalid }: StoryArgs) => (
   <Fieldset.Root disabled={disabled} invalid={invalid} classNames='flex flex-col'>
     <Fieldset.Legend>Profile</Fieldset.Legend>
     <Fieldset.HelperText>Shown to other members of the space.</Fieldset.HelperText>
-    <Input.Root>
-      <Input.Label>Display name</Input.Label>
-      <Input.TextInput placeholder='Alice' />
-    </Input.Root>
-    <Input.Root>
-      <Input.Label>Bio</Input.Label>
-      <Input.TextArea placeholder='A line or two.' rows={2} />
-      <Input.DescriptionAndValidation>
-        <Input.Description>Plain text; links are not rendered.</Input.Description>
-      </Input.DescriptionAndValidation>
-    </Input.Root>
-    <Input.Root validationValence={invalid ? 'error' : undefined}>
-      <Input.Label>Handle</Input.Label>
-      <Input.TextInput placeholder='alice' start={<span className='text-sm'>@</span>} />
-      <Input.DescriptionAndValidation>
-        {invalid ? (
-          <Input.Validation>That handle is taken.</Input.Validation>
-        ) : (
-          <Input.Description>Letters, digits and dashes.</Input.Description>
-        )}
-      </Input.DescriptionAndValidation>
-    </Input.Root>
-    <Input.Root>
+    <Field.Root>
+      <Field.Label>Display name</Field.Label>
+      <Field.Input placeholder='Alice' />
+    </Field.Root>
+    <Field.Root>
+      <Field.Label>Bio</Field.Label>
+      <Field.Textarea placeholder='A line or two.' rows={2} />
+      <Field.HelperText>Plain text; links are not rendered.</Field.HelperText>
+    </Field.Root>
+    <Field.Root validationValence={invalid ? 'error' : undefined}>
+      <Field.Label>Handle</Field.Label>
+      <Field.Input placeholder='alice' start={<span className='text-sm'>@</span>} />
+      {invalid ? (
+        <Field.ErrorText>That handle is taken.</Field.ErrorText>
+      ) : (
+        <Field.HelperText>Letters, digits and dashes.</Field.HelperText>
+      )}
+    </Field.Root>
+    <Field.Root>
       <div className='flex items-center gap-2'>
-        <Input.Switch />
-        <Input.Label>Show my presence</Input.Label>
+        <Field.Switch />
+        <Field.Label>Show my presence</Field.Label>
       </div>
-    </Input.Root>
+    </Field.Root>
     <Fieldset.ErrorText>Some fields need attention.</Fieldset.ErrorText>
   </Fieldset.Root>
 );

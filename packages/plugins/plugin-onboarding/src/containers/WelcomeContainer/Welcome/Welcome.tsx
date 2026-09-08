@@ -21,7 +21,7 @@ import * as NativeOAuth from '@dxos/app-toolkit/NativeOAuth';
 import * as NativePasskey from '@dxos/app-toolkit/NativePasskey';
 import { DXOSHorizontalType } from '@dxos/brand';
 import { log } from '@dxos/log';
-import { Button, DropdownMenu, Flex, Icon, Input, Tabs, ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { Button, DropdownMenu, Field, Flex, Icon, Tabs, ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 import { meta } from '../../../meta';
@@ -761,9 +761,9 @@ const LoginTab = ({
             <span>{pending ? t('passkey-pending.label') : t('sign-in-with-passkey-button.label')}</span>
           </Button>
           {error?.startsWith('passkey-') && (
-            <Input.Root>
+            <Field.Root>
               <ValidationMessage>{t(passkeyErrorKey(error, moreOptions.length === 0))}</ValidationMessage>
-            </Input.Root>
+            </Field.Root>
           )}
         </Flex>
       )}
@@ -809,9 +809,9 @@ const LoginTab = ({
         </Flex>
       )}
       {!methodAvailable[primary] && moreOptions.length === 0 && (
-        <Input.Root>
+        <Field.Root>
           <ValidationMessage>{t('login-unavailable.message')}</ValidationMessage>
-        </Input.Root>
+        </Field.Root>
       )}
       {moreOptions.length > 0 && (
         <DropdownMenu.Root>
@@ -869,7 +869,7 @@ const InlineForm = ({
   validation,
   onSubmit,
 }: {
-  inputProps: Omit<ComponentProps<typeof Input.TextInput>, 'classNames'> & {
+  inputProps: Omit<ComponentProps<typeof Field.Input>, 'classNames'> & {
     classNames?: string;
     ref?: Ref<HTMLInputElement>;
   };
@@ -882,9 +882,9 @@ const InlineForm = ({
 }) => {
   const { classNames: inputClasses, ref, ...rest } = inputProps;
   return (
-    <Input.Root>
+    <Field.Root>
       <div className='flex flex-col md:gap-1 flex-row gap-0 sm:items-stretch'>
-        <Input.TextInput
+        <Field.Input
           {...rest}
           disabled={pending || rest.disabled}
           classNames={mx('bg-deck-surface flex-1 sm:rounded-r-none', inputClasses)}
@@ -900,19 +900,17 @@ const InlineForm = ({
         </Button>
       </div>
       {validation && <ValidationMessage>{validation}</ValidationMessage>}
-    </Input.Root>
+    </Field.Root>
   );
 };
 
 /**
  * Error text under a login control. Shared with {@link InlineForm} so a failure reads the same
  * whether it came from a field (email, invitation code) or a button (passkey). Callers outside
- * `InlineForm` must supply their own `Input.Root` — it is context only and renders no markup.
+ * `InlineForm` must supply their own `Field.Root` — it is context only and renders no markup.
  */
 const ValidationMessage = ({ children }: PropsWithChildren) => (
-  <Input.DescriptionAndValidation>
-    <Input.Validation classNames='flex px-2 pt-2 text-error-text'>{children}</Input.Validation>
-  </Input.DescriptionAndValidation>
+  <Field.ErrorText classNames='flex px-2 pt-2 text-error-text'>{children}</Field.ErrorText>
 );
 
 /** Horizontal "or" separator between alternative auth methods. */

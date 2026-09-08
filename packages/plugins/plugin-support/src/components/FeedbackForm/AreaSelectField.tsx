@@ -4,7 +4,7 @@
 
 import React, { useCallback } from 'react';
 
-import { Input, Select, type SelectRootProps } from '@dxos/react-ui';
+import { Field, Select, type SelectRootProps } from '@dxos/react-ui';
 import { FormFieldLabel, type FormFieldRendererProps } from '@dxos/react-ui-form';
 
 import type { FeedbackPluginOption } from './types';
@@ -53,7 +53,7 @@ export const AreaSelectField = ({
   const resolved = plugins.find((plugin) => plugin.id === value);
 
   return (
-    <Input.Root validationValence={status}>
+    <Field.Root validationValence={status}>
       {presentation !== 'inline' && <FormFieldLabel error={error} readonly={readonly} label={label} path={jsonPath} />}
       {presentation === 'static' ? (
         <p>{resolved ? `${resolved.name} (${resolved.id})` : String(value)}</p>
@@ -79,7 +79,7 @@ export const AreaSelectField = ({
           </Select.Portal>
         </Select.Root>
       )}
-      {presentation === 'full' && <Input.DescriptionAndValidation>{error}</Input.DescriptionAndValidation>}
-    </Input.Root>
+      {presentation === 'full' && <Field.HelperText>{error}</Field.HelperText>}
+    </Field.Root>
   );
 };

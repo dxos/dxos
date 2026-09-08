@@ -9,7 +9,7 @@ import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { debounce } from '@dxos/async';
 import { type Identity } from '@dxos/halo';
 import { useIdentity } from '@dxos/halo-react';
-import { ButtonGroup, Clipboard, Flex, Input, useTranslation } from '@dxos/react-ui';
+import { ButtonGroup, Clipboard, Field, Flex, useTranslation } from '@dxos/react-ui';
 import { Form, type FormFieldMap, type FormUpdateMeta } from '@dxos/react-ui-form';
 import { EmojiPickerBlock, HuePicker } from '@dxos/react-ui-pickers';
 import { hexToEmoji, hexToHue } from '@dxos/util';
@@ -106,14 +106,14 @@ export const ProfileContainer = () => {
 
         return (
           <Form.Field label={label} description={t('display-name.description')}>
-            <Input.Root>
-              <Input.TextInput
+            <Field.Root>
+              <Field.Input
                 value={getValue()}
                 onChange={handleChange}
                 placeholder={t('display-name-input.placeholder')}
                 classNames='w-64 max-w-full min-w-0'
               />
-            </Input.Root>
+            </Field.Root>
           </Form.Field>
         );
       },
@@ -155,14 +155,14 @@ export const ProfileContainer = () => {
       did: ({ label, getValue }) => {
         return (
           <Form.Field label={label} description={t('did.description')}>
-            <Input.Root>
+            <Field.Root>
               <ButtonGroup classNames='w-full'>
                 {/* `flex-1 min-w-0` lets the field shrink below its content width so the copy button
                     stays inside the row at phone widths; a fixed `min-w-*` would push it past the panel edge. */}
-                <Input.TextInput value={getValue()} disabled classNames='w-full min-w-0' />
+                <Field.Input value={getValue()} disabled classNames='w-full min-w-0' />
                 <Clipboard.IconButton value={getValue() ?? ''} />
               </ButtonGroup>
-            </Input.Root>
+            </Field.Root>
           </Form.Field>
         );
       },

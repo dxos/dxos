@@ -6,7 +6,7 @@ import React from 'react';
 
 import { useSettingsState } from '@dxos/app-framework/ui';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
-import { Input } from '@dxos/react-ui';
+import { Field } from '@dxos/react-ui';
 import { Form, FormField, type FormFieldRendererProps } from '@dxos/react-ui-form';
 
 import { meta } from '#meta';
@@ -44,7 +44,7 @@ export const MarkdownSettings = ({ subject }: MarkdownSettingsProps) => {
 const SnippetsField = ({ type, readonly, onValueChange, onBlur, ...props }: FormFieldRendererProps<string>) => (
   <FormField<string> readonly={readonly} {...props}>
     {({ value }) => (
-      <Input.TextArea
+      <Field.Textarea
         disabled={!!readonly}
         rows={5}
         value={value ?? ''}

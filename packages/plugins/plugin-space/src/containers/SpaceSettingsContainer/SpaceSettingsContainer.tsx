@@ -16,7 +16,7 @@ import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata
 import { MembershipPolicy } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { SpacesService } from '@dxos/protocols/rpc';
 import { useClient } from '@dxos/react-client';
-import { Button, Dialog, DropdownMenu, Flex, Icon, IconButton, Input, useTranslation } from '@dxos/react-ui';
+import { Button, Dialog, DropdownMenu, Field, Flex, Icon, IconButton, useTranslation } from '@dxos/react-ui';
 import { Form, type FormFieldMap } from '@dxos/react-ui-form';
 import { HuePicker, IconPicker } from '@dxos/react-ui-pickers';
 
@@ -96,14 +96,14 @@ export const SpaceSettingsContainer = ({ space }: AppSurface.SpaceArticleProps) 
         );
         return (
           <Form.Field label={label} description={t('display-name.description')}>
-            <Input.Root>
-              <Input.TextInput
+            <Field.Root>
+              <Field.Input
                 value={getValue()}
                 onChange={handleChange}
                 placeholder={t('display-name-input.placeholder')}
                 classNames='w-64 max-w-full min-w-0'
               />
-            </Input.Root>
+            </Field.Root>
           </Form.Field>
         );
       },
@@ -133,18 +133,18 @@ export const SpaceSettingsContainer = ({ space }: AppSurface.SpaceArticleProps) 
       // Read-only: the membership policy is written into the genesis credential at creation.
       private: ({ label, getValue }) => (
         <Form.Field label={label} description={t('private.description')}>
-          <Input.Root>
-            <Input.Switch checked={getValue()} disabled classNames='justify-self-end' />
-          </Input.Root>
+          <Field.Root>
+            <Field.Switch checked={getValue()} disabled classNames='justify-self-end' />
+          </Field.Root>
         </Form.Field>
       ),
       edgeReplication: ({ type, label, getValue, onValueChange }) => {
         const handleChange = useCallback((checked: boolean) => onValueChange(type, checked), [onValueChange, type]);
         return (
           <Form.Field label={label} description={t('edge-replication.description')}>
-            <Input.Root>
-              <Input.Switch checked={getValue()} onCheckedChange={handleChange} classNames='justify-self-end' />
-            </Input.Root>
+            <Field.Root>
+              <Field.Switch checked={getValue()} onCheckedChange={handleChange} classNames='justify-self-end' />
+            </Field.Root>
           </Form.Field>
         );
       },
@@ -208,9 +208,9 @@ export const SpaceSettingsContainer = ({ space }: AppSurface.SpaceArticleProps) 
           <Form.Section title={t('space-controls.title')} description={t('space-controls.description')}>
             <Form.Field label={t('space-id.title')} description={t('space-id.description')}>
               <Flex gap='sm' align='center'>
-                <Input.Root>
-                  <Input.TextInput value={space.id} disabled classNames='flex-1 font-mono text-xs' />
-                </Input.Root>
+                <Field.Root>
+                  <Field.Input value={space.id} disabled classNames='flex-1 font-mono text-xs' />
+                </Field.Root>
                 <IconButton
                   icon='ph--copy--regular'
                   iconOnly

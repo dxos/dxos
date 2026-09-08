@@ -4,7 +4,7 @@
 
 import React, { useCallback } from 'react';
 
-import { Input, type TextInputProps } from '@dxos/react-ui';
+import { Field, type InputProps } from '@dxos/react-ui';
 
 import { type FormFieldRendererProps } from '#types';
 
@@ -18,7 +18,7 @@ export const PasswordField = ({
   onValueChange,
   ...props
 }: FormFieldRendererProps<string>) => {
-  const handleChange = useCallback<NonNullable<TextInputProps['onChange']>>(
+  const handleChange = useCallback<NonNullable<InputProps['onChange']>>(
     (event) => onValueChange(type, event.target.value),
     [type, onValueChange],
   );
@@ -26,7 +26,7 @@ export const PasswordField = ({
   return (
     <FormField<string> readonly={readonly} {...props}>
       {({ value = '' }) => (
-        <Input.TextInput
+        <Field.Input
           type='password'
           noAutoFill
           spellCheck={false}

@@ -10,7 +10,7 @@ import { random } from '@dxos/random';
 
 import { withTheme } from '../../testing';
 import { Button } from '../Button';
-import { Input } from '../Input';
+import { Field } from '../Field';
 import { ScrollArea } from '../ScrollArea';
 import { Dialog, DIALOG_AUTOFOCUS_ATTRIBUTE, type DialogContentProps } from './Dialog';
 
@@ -45,9 +45,9 @@ const DefaultStory = ({ size, title, description, openTrigger, closeTrigger, blo
           </Dialog.Header>
           <Dialog.Body>
             <Dialog.Description>{description}</Dialog.Description>
-            <Input.Root>
-              <Input.TextInput placeholder='Enter value' />
-            </Input.Root>
+            <Field.Root>
+              <Field.Input placeholder='Enter value' />
+            </Field.Root>
           </Dialog.Body>
           <Dialog.ActionBar>
             <Dialog.Close asChild>
@@ -236,9 +236,9 @@ export const TestActionBarFocus: StoryObj = {
             </Dialog.Close>
           </Dialog.Header>
           <Dialog.Body>
-            <Input.Root>
-              <Input.TextInput placeholder='A field that comes first too' />
-            </Input.Root>
+            <Field.Root>
+              <Field.Input placeholder='A field that comes first too' />
+            </Field.Root>
           </Dialog.Body>
           <Dialog.ActionBar>
             <Button>Cancel</Button>

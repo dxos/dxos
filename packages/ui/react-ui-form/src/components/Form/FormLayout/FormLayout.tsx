@@ -10,7 +10,7 @@ import React, { Fragment, useMemo } from 'react';
 import { Annotation } from '@dxos/echo';
 import { type AnyProperties } from '@dxos/echo/internal';
 import { SchemaEx } from '@dxos/effect';
-import { Input } from '@dxos/react-ui';
+import { Field } from '@dxos/react-ui';
 
 import { type FormPresentation } from '#types';
 
@@ -167,7 +167,7 @@ const LabelField = ({ schema, label, path, layout }: LabelFieldProps) => {
 
   const presentation = presentationFor(layout);
   return (
-    <Input.Root>
+    <Field.Root>
       <div className={styles.field()}>
         {presentation.showLabel && (
           <FormFieldLabel variant={variant} readonly label={label} path={SchemaEx.createJsonPath(path)} />
@@ -178,6 +178,6 @@ const LabelField = ({ schema, label, path, layout }: LabelFieldProps) => {
           </p>
         </div>
       </div>
-    </Input.Root>
+    </Field.Root>
   );
 };
