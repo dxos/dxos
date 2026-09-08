@@ -31,7 +31,7 @@ import { useComposedRefs } from '@dxos/react-hooks';
 import { useElevationContext, useSafeCollisionPadding, useThemeContext } from '../../hooks';
 import { type ThemedClassName } from '../../util';
 import { Button, type ButtonProps } from '../Button';
-import { Icon, IconBlock } from '../Icon';
+import { Icon } from '../Icon';
 import { ScrollArea } from '../ScrollArea';
 import { SELECT_NAME, type SelectOptionEntry, SelectProvider, useSelectContext } from './SelectContext';
 
