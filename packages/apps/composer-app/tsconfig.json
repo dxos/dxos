@@ -94,6 +94,9 @@
       "path": "../../devtools/devtools"
     },
     {
+      "path": "../../plugins/plugin-archify"
+    },
+    {
       "path": "../../plugins/plugin-assistant"
     },
     {
