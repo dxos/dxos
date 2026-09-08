@@ -25,19 +25,19 @@ export type FormFieldSetProps<T extends AnyProperties> = Merge<
     /** Applied to the field set's container (the bordered box when collapsible). */
     classNames?: string;
     label?: string;
-    sort?: string[];
     /**
      * When set, renders a toggle button at the end of the label row that
      * shows/hides the field set body. Used for nested objects.
      */
     collapsible?: boolean;
-    filter?: (props: SchemaEx.SchemaProperty[]) => SchemaEx.SchemaProperty[];
     /**
      * Picks a named layout out of `FormLayoutAnnotation` when present.
      * Falls back to `'default'`. Ignored when the schema has no annotation
      * (linear rendering then takes over).
      */
     layoutName?: string;
+    sort?: string[];
+    filter?: (props: SchemaEx.SchemaProperty[]) => SchemaEx.SchemaProperty[];
   },
   Pick<FormHandlerProps<T>, 'schema'>,
   Pick<FormFieldDispatchProps, 'path' | 'autoFocus'>,

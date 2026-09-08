@@ -24,7 +24,7 @@ import {
 } from '@dxos/react-ui';
 import { MarkdownView } from '@dxos/react-ui-markdown';
 import { mx } from '@dxos/ui-theme';
-import { type Merge } from '@dxos/util';
+import { type MakeOptional, type Merge } from '@dxos/util';
 
 import { translationKey } from '#translations';
 
@@ -46,6 +46,9 @@ import { FormLayout, type FormLayoutProps as NaturalFormLayoutProps } from './Fo
 //
 
 export type FormRootProps<T extends AnyProperties = AnyProperties> = Merge<
+  Omit<FormContextValue<T>, 'form'>,
+  Pick<FormHandlerProps<T>, 'schema' | 'autoSave' | 'values' | 'defaultValues' | 'onValidate' | 'onValuesChanged'>,
+  Omit<NaturalFormFieldSetProps<T>, 'path'>,
   PropsWithChildren<{
     /**
      * Called when the form is submitted and passes validation.
@@ -56,10 +59,7 @@ export type FormRootProps<T extends AnyProperties = AnyProperties> = Merge<
      * Called when the form is canceled to abandon/undo any pending changes.
      */
     onCancel?: () => void;
-  }>,
-  Omit<FormContextValue<T>, 'form'>,
-  Pick<FormHandlerProps<T>, 'schema' | 'autoSave' | 'values' | 'defaultValues' | 'onValidate' | 'onValuesChanged'>,
-  Omit<NaturalFormFieldSetProps<T>, 'schema' | 'path'>
+  }>
 >;
 
 export const FormRoot = <T extends AnyProperties = AnyProperties>({
@@ -194,6 +194,7 @@ export type FormFieldSetContainerProps = ThemedClassName<NaturalFormFieldSetProp
 /** Context-reading binding for `Form.FieldSet`: pulls the schema + field context off the form and delegates to {@link FormFieldSet}. */
 export const FormFieldSetContainer = ({ classNames, ...props }: FormFieldSetContainerProps) => {
   const { form, variant: _variant, ...contextProps } = useFormContext(FORM_FIELDSET_NAME);
+
   return <FormFieldSet schema={form.schema} classNames={classNames} {...contextProps} {...props} />;
 };
 
@@ -205,13 +206,12 @@ FormFieldSetContainer.displayName = FORM_FIELDSET_NAME;
 
 const FORM_LAYOUT_NAME = 'Form.Layout';
 
-export type FormLayoutProps = Omit<NaturalFormLayoutProps, 'schema'> & {
-  schema?: NaturalFormLayoutProps['schema'];
-};
+export type FormLayoutProps = MakeOptional<NaturalFormLayoutProps, 'schema'>;
 
 /** Context-reading binding for `Form.Layout`: resolves the schema (prop or form) and delegates to {@link FormLayout}. */
 export const FormLayoutController = ({ schema, ...props }: FormLayoutProps) => {
   const { form, ...contextProps } = useFormContext(FORM_LAYOUT_NAME);
+
   const resolvedSchema = schema ?? form.schema;
   if (!resolvedSchema) {
     return null;
@@ -299,6 +299,7 @@ export const FormSection = composable<HTMLFieldSetElement, FormSectionProps>(
   ({ children, title, description, ...props }, forwardedRef) => {
     const { variant = 'default' } = useFormContext(FORM_SECTION_NAME);
     const styles = formTheme.styles({ variant });
+
     return (
       <Fieldset.Root {...composableProps(props, { classNames: styles.section() })} ref={forwardedRef}>
         {title && (
@@ -332,7 +333,7 @@ const FORM_GROUP_NAME = 'Form.Group';
 export type FormGroupProps = ThemedClassName<PropsWithChildren>;
 
 /**
- * A bordered card grouping related rows/controls (e.g. an entity card in a list).
+ * A bordered card grouping related rows/controls (e.g., an entity card in a list).
  * Layout-only and context-free — unlike `Form.FieldSet` it is not schema-driven.
  */
 export const FormGroup = composable<HTMLDivElement, FormGroupProps>(({ children, ...props }, forwardedRef) => {

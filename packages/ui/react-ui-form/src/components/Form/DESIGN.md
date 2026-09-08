@@ -9,7 +9,7 @@ from the schema, and the renderers themselves live in `FormField/fields/*Field`.
 
 ## Component hierarchy
 
-```text
+````text
 Form.Root                               context: schema, values, validation, onValuesChanged
 └─ Form.Viewport                        scroll chrome
    └─ Form.Content
@@ -113,7 +113,7 @@ description, format }` to whatever is inside. "Field" means what it means in a f
 <Field.Root variant='settings' label={t('wireframe.label')} description={t('wireframe.description')}>
   <Field.Switch checked={settings.wireframe} onCheckedChange={setWireframe} />
 </Field.Root>
-```
+````
 
 What changes for consumers: the ~70 hand-written rows become `Field.Root` with a variant (or keep a
 thin `Form.Field`-shaped alias that is that), the 17 renderers become controls, and `Form.Row`-era
@@ -122,11 +122,6 @@ the boundary. The steps, in order and each landable alone: (1) the row is always
 with `standalone` for rows without a single control — this closes the two gaps above; (2) the
 modes move to `Form.Root` context; (3) `useFormField` and the binding boundary, renderers become
 controls, the dispatcher renders the row.
-||||||| original
-
-=======
-
-## Primitive mapping
 
 What each form component is built from, one layer down (`@dxos/react-ui`) and two layers down
 (`@ark-ui/react`). A blank cell means the layer adds nothing there: the component is plain markup.
@@ -160,4 +155,3 @@ enclosing field, usable without a root. The composite anatomies (`Checkbox.*`, `
 The two gaps this table makes visible: `Form.Field` in action mode is not a `Field`, so a hand-written
 settings row has no field scope for its label and description; and `Form.Group` is a styled `div`
 rather than a `Fieldset`.
->>>>>>> theirs
