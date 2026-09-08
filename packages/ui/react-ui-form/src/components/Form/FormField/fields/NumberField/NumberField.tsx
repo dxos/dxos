@@ -4,12 +4,12 @@
 
 import React, { useCallback, useEffect, useState } from 'react';
 
-import { Input, type TextInputProps } from '@dxos/react-ui';
+import { Field, type InputProps } from '@dxos/react-ui';
 import { safeParseFloat } from '@dxos/util';
 
 import { type FormFieldRendererProps } from '#types';
 
-import { FormRow } from '../../FormRow';
+import { FormField } from '../../FormField';
 import { getNumericConstraints } from './numeric-constraints';
 
 export const NumberField = ({
@@ -56,7 +56,7 @@ export const NumberField = ({
     }
   }, [externalValue]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const handleChange = useCallback<NonNullable<TextInputProps['onChange']>>(
+  const handleChange = useCallback<NonNullable<InputProps['onChange']>>(
     (event) => {
       const value = event.target.value;
       setRaw(value);
@@ -86,9 +86,9 @@ export const NumberField = ({
   );
 
   return (
-    <FormRow<number> readonly={readonly} getValue={getValue} {...props}>
+    <FormField<number> readonly={readonly} getValue={getValue} {...props}>
       {() => (
-        <Input.TextInput
+        <Field.Input
           type='number'
           disabled={!!readonly}
           placeholder={placeholder}
@@ -100,6 +100,6 @@ export const NumberField = ({
           onBlur={handleBlur}
         />
       )}
-    </FormRow>
+    </FormField>
   );
 };

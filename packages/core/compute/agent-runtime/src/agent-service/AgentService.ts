@@ -69,31 +69,39 @@ export interface CreateSessionOptions {
   readonly systemPrompt?: string;
 }
 
+/**
+ * Creates a session on a fresh feed and chat, with `opts.skills` and `opts.context` bound to it.
+ */
 export const createSession: (
   opts?: CreateSessionOptions,
-) => Effect.Effect<Session, Skill.NotFoundError, Database.Service | Registry.Service | AgentService> = Effect.fn(
-  'createSession',
-)(function* (opts) {
-  const skills = yield* Effect.forEach(opts?.skills ?? [], (skill) =>
-    Skill.upsert(Skill.getKey(skill)).pipe(Effect.map(Ref.make)),
-  );
+) => Effect.Effect<Session, never, Database.Service | Registry.Service | AgentService> = Effect.fn('createSession')(
+  function* (opts) {
+    // A skill already in a database is bound as-is: it is either space-authored (no registry key at
+    // all) or a fork carrying the user's edits, and resolving it through the registry would substitute
+    // the pristine copy for the one the caller handed us. Anything else is referenced by its registry
+    // URI, so the registry stays the one copy rather than being cloned into the space.
+    const skills = (opts?.skills ?? []).map((skill) =>
+      Obj.getDatabase(skill) !== undefined ? Ref.make(skill) : Ref.fromURI(Skill.registryURI(Skill.getKey(skill))),
+    );
 
-  const feed = yield* Database.add(Feed.make());
-  const runtime = yield* Effect.context<Database.Service>();
-  const binder = yield* EffectEx.acquireReleaseResource(() => new AiContext.Binder({ feed, runtime }));
+    const feed = yield* Database.add(Feed.make());
+    const runtime = yield* Effect.context<Database.Service>();
+    const binder = yield* EffectEx.acquireReleaseResource(() => new AiContext.Binder({ feed, runtime }));
 
-  yield* Effect.promise(() =>
-    binder.bind({
-      skills,
-      objects: opts?.context ?? [],
-    }),
-  );
+    yield* Effect.promise(() =>
+      binder.bind({
+        skills,
+        objects: opts?.context ?? [],
+      }),
+    );
 
-  // The agent process runs on a chat, so the conversation gets one even when the caller only
-  // wanted a bare session.
-  const chat = yield* Database.add(Chat.make({ feed: Ref.make(feed) }));
-  return yield* getSession(chat, { model: opts?.model, provider: opts?.provider });
-}, Effect.scoped);
+    // The agent process runs on a chat, so the conversation gets one even when the caller only
+    // wanted a bare session.
+    const chat = yield* Database.add(Chat.make({ feed: Ref.make(feed) }));
+    return yield* getSession(chat, { model: opts?.model, provider: opts?.provider });
+  },
+  Effect.scoped,
+);
 
 export interface AgentServiceOptions {
   systemPrompt?: string;

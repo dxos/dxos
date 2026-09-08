@@ -12,6 +12,7 @@ import { translations } from '#translations';
 
 import { withTheme } from '../../testing';
 import { Button } from '../Button';
+import { ScrollArea } from '../ScrollArea';
 import { FloatingPanel, type FloatingPanelPoint, type FloatingPanelSize } from './FloatingPanel';
 
 const paragraphs = Array.from({ length: 4 }, () => random.lorem.paragraph(3));
@@ -57,12 +58,16 @@ const DefaultStory = ({ draggable = true, resizable = true, persistRect = true }
                 <FloatingPanel.CloseTrigger />
               </FloatingPanel.Control>
             </FloatingPanel.Header>
-            <FloatingPanel.Body classNames='p-3 overflow-y-auto text-sm'>
-              {paragraphs.map((text, index) => (
-                <p key={index} className='mb-2'>
-                  {text}
-                </p>
-              ))}
+            <FloatingPanel.Body>
+              <ScrollArea.Root>
+                <ScrollArea.Viewport classNames='text-sm'>
+                  {paragraphs.map((text, index) => (
+                    <p key={index} className='px-2 mb-2'>
+                      {text}
+                    </p>
+                  ))}
+                </ScrollArea.Viewport>
+              </ScrollArea.Root>
             </FloatingPanel.Body>
             <FloatingPanel.Resizers />
           </FloatingPanel.Content>

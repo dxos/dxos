@@ -22,7 +22,7 @@ import {
   FormViewport,
   type FormViewportProps,
 } from './FormControls';
-import { FormFieldLabel, FormRow, type FormRowProps } from './FormField';
+import { FormField, FormFieldLabel, type FormFieldProps } from './FormField';
 
 export const Form = {
   Root: FormRoot,
@@ -33,7 +33,7 @@ export const Form = {
   FieldSet: FormFieldSetContainer,
   Layout: FormLayoutController,
   Label: FormFieldLabel,
-  Row: FormRow,
+  Field: FormField,
   Actions: FormActions,
   Submit: FormSubmit,
   Error: FormError,
@@ -42,10 +42,10 @@ export const Form = {
 export type {
   FormActionsProps,
   FormContentProps,
+  FormFieldProps,
   FormGroupProps,
   FormLayoutProps,
   FormRootProps,
-  FormRowProps,
   FormSectionProps,
   FormSubmitProps,
   FormViewportProps,

@@ -521,58 +521,60 @@ describe('SurfaceComponent quantified comparison (per-role vs global subscriptio
   });
 });
 
-describe('SurfaceComponent data stability', () => {
-  const RoleStable = Role.make<{ subject: { id: string } }>('org.dxos.test.role.stable');
+const RoleStable = Role.make<{ subject: { id: string } }>('org.dxos.test.role.stable');
 
-  const stableMeta = Plugin.makeMeta({
-    key: DXN.make('org.dxos.plugin.test.surfaceStable'),
-    name: 'SurfaceStableTest',
-  });
+const stableMeta = Plugin.makeMeta({
+  key: DXN.make('org.dxos.plugin.test.surfaceStable'),
+  name: 'SurfaceStableTest',
+});
 
-  // Counts renders of the CONTRIBUTED component — the subtree a surface is supposed to fence off —
-  // rather than commits of the Surface itself, which re-renders either way.
-  const StablePlugin = (counts: { value: number }) =>
-    Plugin.define(stableMeta).pipe(
-      Plugin.addModule({
-        id: 'surfaces',
-        provides: [Capabilities.ReactSurface],
-        activate: () =>
-          Effect.succeed([
-            Capability.contributeAll(Capabilities.ReactSurface, [
-              create({
-                id: 'stable',
-                filter: makeFilter(RoleStable),
-                component: ({ data: { subject } }) => {
-                  counts.value++;
-                  return <span data-testid='stable'>{subject.id}</span>;
-                },
-              }),
-            ]),
+const StablePlugin = (counts: { value: number }) =>
+  Plugin.define(stableMeta).pipe(
+    Plugin.addModule({
+      id: 'surfaces',
+      provides: [Capabilities.ReactSurface],
+      activate: () =>
+        Effect.succeed([
+          Capability.contributeAll(Capabilities.ReactSurface, [
+            create({
+              id: 'stable',
+              filter: makeFilter(RoleStable),
+              component: ({ data: { subject } }) => {
+                counts.value++;
+                return <span data-testid='stable'>{subject.id}</span>;
+              },
+            }),
           ]),
-      }),
-      Plugin.make,
-    )();
+        ]),
+    }),
+    Plugin.make,
+  )();
 
+/** Mounts a host that passes `data` as an object literal, and hands back the two ways to move it. */
+const mountStableHost = async (harness: Awaited<ReturnType<typeof createTestApp>>, initial: { id: string }) => {
+  const controls = { rerender: () => {}, setSubject: (_: { id: string }) => {} };
+  const Host = () => {
+    const [, setNonce] = useState(0);
+    const [subject, setSubject] = useState(initial);
+    controls.rerender = () => setNonce((nonce) => nonce + 1);
+    controls.setSubject = setSubject;
+    return <SurfaceComponent type={RoleStable} data={{ subject }} />;
+  };
+
+  const view = render(harness, <Host />);
+  await view.findByTestId('stable');
+  return { view, ...controls };
+};
+
+describe('SurfaceComponent data stability', () => {
   test('an inline `data` literal does not re-render the subtree when an ancestor renders', async ({ expect }) => {
     const counts = { value: 0 };
     await using harness = await createTestApp({ plugins: [StablePlugin(counts)] });
-
-    // Stands in for an ECHO object: a singleton proxy whose identity survives every mutation.
-    const subject = { id: 'x' };
-    let bump: () => void = () => {};
-    const Host = () => {
-      const [, setN] = useState(0);
-      bump = () => setN((n) => n + 1);
-      // The shape ~69% of call sites use: a fresh object literal on every host render.
-      return <SurfaceComponent type={RoleStable} data={{ subject }} />;
-    };
-
-    const view = render(harness, <Host />);
-    await view.findByTestId('stable');
+    const { rerender } = await mountStableHost(harness, { id: 'x' });
     const baseline = counts.value;
 
     for (let i = 0; i < 5; i++) {
-      act(() => bump());
+      act(() => rerender());
     }
 
     expect(counts.value).toBe(baseline);
@@ -581,21 +583,10 @@ describe('SurfaceComponent data stability', () => {
   test('a genuine `data` change still re-renders the subtree', async ({ expect }) => {
     const counts = { value: 0 };
     await using harness = await createTestApp({ plugins: [StablePlugin(counts)] });
-
-    const first = { id: 'first' };
-    const second = { id: 'second' };
-    let swap: () => void = () => {};
-    const Host = () => {
-      const [subject, setSubject] = useState(first);
-      swap = () => setSubject(second);
-      return <SurfaceComponent type={RoleStable} data={{ subject }} />;
-    };
-
-    const view = render(harness, <Host />);
-    await view.findByTestId('stable');
+    const { view, setSubject } = await mountStableHost(harness, { id: 'first' });
     const baseline = counts.value;
 
-    act(() => swap());
+    act(() => setSubject({ id: 'second' }));
 
     expect(counts.value).toBeGreaterThan(baseline);
     expect((await view.findByTestId('stable')).textContent).toBe('second');

@@ -6,7 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
 import { IdentityDid } from '@dxos/keys';
-import { ConnectionState } from '@dxos/protocols/proto/dxos/client/services';
+import { ConnectionState } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { random } from '@dxos/random';
 import { PublicKey } from '@dxos/react-client';
 import { Invitation_State } from '@dxos/react-client/invitations';

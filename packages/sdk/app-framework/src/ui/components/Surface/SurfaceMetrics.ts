@@ -4,7 +4,7 @@
 
 import { useSyncExternalStore } from 'react';
 
-import { shallowEqual } from './shallowStable';
+import { shallowEqual } from '@dxos/util';
 
 /**
  * Per-surface dev metrics, complementing the render-timing data collected by the
@@ -155,16 +155,9 @@ export const surfaceMetrics = new SurfaceMetricsStore();
 /**
  * Updates the running churn count for the caller's raw `data` prop.
  *
- * Churn is measured on the raw prop rather than the stabilized one so the signal survives
- * {@link useShallowStable}, which absorbs the identity change before it reaches the subtree. A
- * flagged surface is therefore a hygiene finding — the call site rebuilds `data` every render and
- * the framework is paying to normalize it — not a live re-render hazard.
- *
  * @returns the new churn count (0 when `data` changed value or is unchanged).
  */
 export const nextDataChurn = (previous: unknown, next: unknown, churn: number): number => {
-  // Unchanged reference: preserve churn rather than resetting, so a caller that alternates
-  // between a stable and a rebuilt `data` still trips the threshold.
   if (Object.is(previous, next)) {
     return churn;
   }

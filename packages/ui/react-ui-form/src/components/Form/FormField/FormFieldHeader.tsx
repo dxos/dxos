@@ -4,8 +4,8 @@
 
 import React, { type ReactNode } from 'react';
 
-import { CompactIconButton } from './FormField';
-import { FormFieldLabel } from './FormRow';
+import { FormFieldLabel } from './FormField';
+import { CompactIconButton } from './FormFieldDispatch';
 
 export type FormFieldHeaderProps = {
   label: string;
@@ -44,6 +44,7 @@ export const FormFieldHeader = ({
     required={required}
     readonly={readonly}
     path={path}
+    trigger={trigger}
     button={
       (!readonly && add) || actions ? (
         <>
@@ -59,6 +60,5 @@ export const FormFieldHeader = ({
         </>
       ) : undefined
     }
-    trigger={trigger}
   />
 );

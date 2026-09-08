@@ -99,7 +99,7 @@ const meta = {
                 root.content = 'alpha\nbravo\n';
               });
               Version.create(doc, { name: 'Second draft', target: root });
-              Obj.update(doc, () => {
+              Obj.update(doc, (doc) => {
                 History.ensure(doc).branches.push(
                   Branch.make({ name: 'draft', key: BRANCH_KEY, parent: Ref.make(root), anchor: [] }),
                 );

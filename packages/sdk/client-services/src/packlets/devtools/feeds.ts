@@ -10,12 +10,22 @@ import { EffectEx } from '@dxos/effect';
 import { FeedIterator, type FeedStore, type FeedWrapper } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { type SubscribeToFeedBlocksResponse } from '@dxos/protocols/proto/dxos/devtools/host';
+import { buf } from '@dxos/protocols/buf';
+import { encodeCompat } from '@dxos/protocols/buf-shape-compat';
+import {
+  type SubscribeToFeedBlocksResponse,
+  SubscribeToFeedBlocksResponseSchema,
+} from '@dxos/protocols/buf/dxos/devtools/host_pb';
+import { type SubscribeToFeedBlocksResponse as LegacySubscribeToFeedBlocksResponse } from '@dxos/protocols/proto/dxos/devtools/host';
 import { type FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { type DevtoolsHost } from '@dxos/protocols/rpc';
 import { ComplexMap } from '@dxos/util';
 
 import { type SpaceManager } from '../space';
+
+/** Feed blocks come off the iterator in the protobuf.js shape, which crosses as the shared wire bytes. */
+const toBufResponse = (response: LegacySubscribeToFeedBlocksResponse): SubscribeToFeedBlocksResponse =>
+  buf.fromBinary(SubscribeToFeedBlocksResponseSchema, encodeCompat(SubscribeToFeedBlocksResponseSchema, response));
 
 type FeedInfo = {
   feed: FeedWrapper<FeedMessage>;
@@ -101,7 +111,7 @@ export const subscribeToFeedBlocks = (
 
       const update = async () => {
         if (!feed.properties.length) {
-          emit.single({ blocks: [] });
+          emit.single(toBufResponse({ blocks: [] }));
           return;
         }
 
@@ -115,9 +125,7 @@ export const subscribeToFeedBlocks = (
           }
         }
 
-        emit.single({
-          blocks: blocks.slice(-maxBlocks),
-        });
+        emit.single(toBufResponse({ blocks: blocks.slice(-maxBlocks) }));
 
         await iterator.close();
       };

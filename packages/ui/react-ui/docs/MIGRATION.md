@@ -192,7 +192,7 @@ namespaces per component; Zag sets one generic set on the positioner.
 95 occurrences across 12 source files today, of which 20 are the aliasing blocks in
 [`Tooltip.tsx:577`](../src/components/Tooltip/Tooltip.tsx),
 [`Popover.tsx:489`](../src/components/Popover/Popover.tsx) and
-[`DropdownMenu.tsx:281`](../src/components/Menu/DropdownMenu.tsx) that re-map `---popper-*` onto
+[`Menu.tsx`](../src/components/Menu/Menu.tsx) that re-map `---popper-*` onto
 per-component names — those delete entirely.
 
 |                                                                                     | Zag                                              |

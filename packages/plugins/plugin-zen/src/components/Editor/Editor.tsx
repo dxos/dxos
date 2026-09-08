@@ -21,7 +21,7 @@ export const Editor = ({ dream }: EditorProps) => {
   const handleSave = useCallback(
     (values: any, { changed }: { changed: Record<string, boolean> }) => {
       const paths = Object.keys(changed).filter((path) => changed[path]);
-      Obj.update(dream, () => {
+      Obj.update(dream, (dream) => {
         for (const path of paths) {
           const value = values[path];
           const parts = SchemaEx.splitJsonPath(path as SchemaEx.JsonPath);

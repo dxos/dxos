@@ -2,11 +2,13 @@
 // Copyright 2026 DXOS.org
 //
 
+import inject from '@rollup/plugin-inject';
 import { storybookTest } from '@storybook/addon-vitest/vitest-plugin';
 import react from '@vitejs/plugin-react';
 import { playwright } from '@vitest/browser-playwright';
 import { execFile } from 'node:child_process';
 import { existsSync, readFileSync } from 'node:fs';
+import { rm } from 'node:fs/promises';
 import path, { join } from 'node:path';
 import { promisify } from 'node:util';
 import pkgUp from 'pkg-up';
@@ -45,6 +47,12 @@ const NODE_STD_MODULES = [
   'stream',
   'util',
 ];
+
+// Free-identifier globals `@dxos/node-std/inject-globals` re-exports, for the `importGlobals`
+// option. Keep in sync with packages/common/node-std/src/inject-globals.js.
+const NODE_STD_GLOBALS = Object.fromEntries(
+  ['global', 'Buffer', 'process'].map((name) => [name, ['@dxos/node-std/inject-globals', name]]),
+);
 
 // This file sits at the workspace root. `import.meta.dirname` rather than `__dirname` so the file
 // loads unchanged under vite's native config loader, where it is a real ESM module in node.
@@ -135,11 +143,21 @@ const WORKERD_COMPATIBILITY_FLAGS = ['nodejs_compat'];
 /**
  * Remaps `node:*` and bare Node.js built-ins to `@dxos/node-std/*` externals.
  * Lets browser consumers resolve polyfills via their app's alias config.
+ *
+ * `isBundled` exempts a specifier the package asked to inline, so a `bundle` entry that shadows a
+ * stdlib name (`events`, `buffer`, `util`, …) still resolves to the npm package.
  */
-export const DxNodeStdPlugin = (): Plugin => ({
+export const DxNodeStdPlugin = (isBundled: (id: string) => boolean = () => false): Plugin => ({
   name: 'DxNodeStd',
   enforce: 'pre',
   resolveId(id) {
+    // A package that asked to inline a stdlib-shadowing package (`events`, `buffer`, `util`, …)
+    // means the npm package of that name, so the remap below must not claim it first — the
+    // esbuild pipeline only ever remapped `node:`-prefixed specifiers for this reason. Otherwise
+    // the inlined copy reaches `@dxos/node-std/events` through a `require()` no bundler rewrites.
+    if (isBundled(id)) {
+      return null;
+    }
     if (id.startsWith('node:')) {
       const mod = id.slice(5);
       if (NODE_STD_MODULES.includes(mod)) {
@@ -154,6 +172,93 @@ export const DxNodeStdPlugin = (): Plugin => ({
     if (NODE_STD_MODULES.includes(id)) {
       return { id: `@dxos/node-std/${id}`, external: true };
     }
+  },
+});
+
+/**
+ * Hoists `require()` of an external out of inlined CommonJS into a real ESM import.
+ *
+ * Rolldown wraps each inlined CJS module in a `__commonJSMin` factory and leaves its
+ * `require("pkg")` calls verbatim, guarded by a `__require` shim that throws in any realm without
+ * `require` — so a browser consumer of the bundle dies on the first such call ("Calling `require`
+ * for X in an environment that doesn't expose the `require` function"). The calls sit inside the
+ * factory bodies rather than at the top level, which is why rolldown's own
+ * `esmExternalRequirePlugin` cannot lift them.
+ *
+ * Rewriting the emitted chunk is what the retired `dx-compile` did for the same reason, and the
+ * hoist is safe for the same reason: a factory body runs after module initialization, so the
+ * binding it reads is already populated.
+ */
+export const DxHoistRequirePlugin = (): Plugin => {
+  // The two forms rolldown emits. Destructuring (`var { a, b } = ...`) reads named exports, so it
+  // needs a namespace import; a single binding (`var X = ...`) is the whole `module.exports`, so it
+  // needs a DEFAULT import — `inherits` and friends are bare `module.exports = fn`, and a namespace
+  // object in their place fails as `inherits is not a function`.
+  const NAMED_REQUIRE = /var \{[\s\S]+?\} = __require\("(.+?)"\)/g;
+  const DEFAULT_REQUIRE = /var [^{}\n]+? = __require\("(.+?)"\)/g;
+  const slug = (specifier: string) => specifier.replace(/[^a-zA-Z0-9]/g, '_');
+  const namespaceId = (specifier: string) => `__dx_req_ns_${slug(specifier)}`;
+  const defaultId = (specifier: string) => `__dx_req_default_${slug(specifier)}`;
+
+  return {
+    name: 'DxHoistRequire',
+    apply: 'build',
+    renderChunk(code) {
+      if (!code.includes('__require("')) {
+        return null;
+      }
+      const namespaces = new Set<string>();
+      const defaults = new Set<string>();
+      // Destructuring first: its pattern is the narrower of the two, and the single-binding pattern
+      // would otherwise also match the head of a destructuring statement.
+      let out = code.replace(NAMED_REQUIRE, (match, specifier: string) => {
+        namespaces.add(specifier);
+        return match.replace(`__require("${specifier}")`, namespaceId(specifier));
+      });
+      out = out.replace(DEFAULT_REQUIRE, (match, specifier: string) => {
+        defaults.add(specifier);
+        return match.replace(`__require("${specifier}")`, defaultId(specifier));
+      });
+      if (namespaces.size === 0 && defaults.size === 0) {
+        return null;
+      }
+      const imports = [
+        ...[...namespaces].map((specifier) => `import * as ${namespaceId(specifier)} from '${specifier}';`),
+        ...[...defaults].map((specifier) => `import ${defaultId(specifier)} from '${specifier}';`),
+      ].join('\n');
+      return { code: `${imports}\n${out}`, map: null };
+    },
+  };
+};
+
+/**
+ * Rewrites import specifiers per an alias map, then hands the result back to normal resolution
+ * so a rewritten bare specifier is externalized under its new name.
+ *
+ * Not `resolve.alias`: vite's alias plugin only rewrites ids it goes on to resolve, and the
+ * library build externalizes bare specifiers before that happens — so an aliased external
+ * (`@effect/wa-sqlite` -> `@dxos/wa-sqlite`) stayed in the output under its original name.
+ */
+export const DxAliasPlugin = (alias: Record<string, string>, isBundled: (id: string) => boolean): Plugin => ({
+  name: 'DxAlias',
+  enforce: 'pre',
+  async resolveId(id, importer, options) {
+    const key = Object.keys(alias).find((name) => id === name || id.startsWith(`${name}/`));
+    if (!key) {
+      return null;
+    }
+    const aliased = alias[key] + id.slice(key.length);
+    // A relative target names a file in the aliasing package, not one next to whichever
+    // (often third-party) module did the import.
+    if (aliased.startsWith('.')) {
+      return this.resolve(path.resolve(process.cwd(), aliased), importer, { ...options, skipSelf: true });
+    }
+    // `node:*` goes back through `DxNodeStdPlugin`, which decides between a `@dxos/node-std`
+    // polyfill and a bare `node:` external.
+    if (aliased.startsWith('/') || aliased.startsWith('node:') || isBundled(aliased)) {
+      return this.resolve(aliased, importer, { ...options, skipSelf: true });
+    }
+    return { id: aliased, external: true };
   },
 });
 
@@ -205,28 +310,64 @@ export const DxRawAssetsPlugin = (): Plugin => {
 
 const execFileAsync = promisify(execFile);
 
-const runDxBuild = async (): Promise<void> => {
+/** Matches TypeScript diagnostic file paths, including `../` segments and multi-part extensions. */
+const DIAGNOSTIC_FILE = String.raw`[\w./-]+\.[A-Za-z0-9]+(?:\.[A-Za-z0-9]+)*`;
+
+const ANSI = String.raw`\x1B\[[0-9;]*m`;
+
+const ansiGap = String.raw`(?:${ANSI})*`;
+
+/**
+ * Rewrite compiler diagnostic paths from package-relative to repo-relative so moon/IDE output
+ * is clickable from the monorepo root. Handles classic `(line,col):`, pretty `:line:col -`,
+ * related-location lines, summary footers, and ANSI color codes from pretty mode.
+ */
+const rewriteDiagnosticPaths = (output: string, cwd: string, repoRoot: string): string => {
+  const toRepoPath = (filePath: string): string => path.relative(repoRoot, path.resolve(cwd, filePath));
+
+  const classic = new RegExp(String.raw`^(${DIAGNOSTIC_FILE})\((\d+),(\d+)\):`, 'gm');
+  const pretty = new RegExp(
+    String.raw`^(\s*)${ansiGap}(${DIAGNOSTIC_FILE})${ansiGap}:${ansiGap}(\d+)${ansiGap}:${ansiGap}(\d+)${ansiGap} -`,
+    'gm',
+  );
+  const summary = new RegExp(String.raw`starting at: ${ansiGap}(${DIAGNOSTIC_FILE})${ansiGap}:(\d+)`, 'g');
+
+  return output
+    .replace(classic, (_, filePath, line, col) => `${toRepoPath(filePath)}(${line},${col}):`)
+    .replace(pretty, (_, indent, filePath, line, col) => `${indent}${toRepoPath(filePath)}:${line}:${col} -`)
+    .replace(summary, (_, filePath, line) => `starting at: ${toRepoPath(filePath)}:${line}`);
+};
+
+/**
+ * Declaration emit: clean `dist/types/` then run `tsc`.
+ *
+ * The clean is not housekeeping — a surviving `tsconfig.tsbuildinfo` makes an incremental
+ * `tsc` consider the (already deleted by vite) outputs up to date and emit nothing at all,
+ * so the package ships a `types` entry pointing at a missing file.
+ */
+const runDeclarationBuild = async (): Promise<void> => {
+  await rm(join(process.cwd(), 'dist/types'), { recursive: true, force: true });
   try {
-    const { stdout, stderr } = await execFileAsync('pnpm', ['exec', 'dx-build']);
+    const { stdout, stderr } = await execFileAsync('pnpm', ['exec', 'tsc']);
     if (stdout.length > 0) {
-      process.stdout.write(stdout);
+      process.stdout.write(rewriteDiagnosticPaths(stdout, process.cwd(), workspaceRoot));
     }
     if (stderr.length > 0) {
-      process.stderr.write(stderr);
+      process.stderr.write(rewriteDiagnosticPaths(stderr, process.cwd(), workspaceRoot));
     }
   } catch (error) {
     // execFileAsync captures the subprocess stdio on the rejected value; without this,
     // rolldown swallows the compiler's actual diagnostic output and the plugin error carries only
     // a generic exit-code message.
-    const err = error as { stdout?: string | Buffer; stderr?: string | Buffer };
+    const err = error as { stdout?: string; stderr?: string };
     if (err.stdout && err.stdout.length > 0) {
-      process.stdout.write(err.stdout);
+      process.stdout.write(rewriteDiagnosticPaths(err.stdout, process.cwd(), workspaceRoot));
     }
     if (err.stderr && err.stderr.length > 0) {
-      process.stderr.write(err.stderr);
+      process.stderr.write(rewriteDiagnosticPaths(err.stderr, process.cwd(), workspaceRoot));
     }
     const message = error instanceof Error ? error.message : String(error);
-    throw new Error(`dx-build failed: ${message} cwd=${process.cwd()}`);
+    throw new Error(`tsc failed: ${message} cwd=${process.cwd()}`);
   }
 };
 
@@ -327,20 +468,20 @@ export const DxWorkerResolvePlugin = (): Plugin => {
 };
 
 /**
- * Kicks off `dx-build` (tsc wrapper) at build start so declaration emit runs in
- * parallel with the JS bundle. Generates per-file `.d.ts` files in `dist/types/src/`.
+ * Kicks off `tsc` at build start so declaration emit runs in parallel with the JS bundle.
+ * Generates per-file `.d.ts` files in `dist/types/src/`.
  */
 export const DxDeclarationsPlugin = (): Plugin => {
-  let dxBuildTask: Promise<void> | undefined;
+  let declarationTask: Promise<void> | undefined;
 
   return {
     name: 'DxDeclarations',
     apply: 'build',
     buildStart() {
-      dxBuildTask = runDxBuild();
+      declarationTask = runDeclarationBuild();
     },
     async closeBundle() {
-      await dxBuildTask;
+      await declarationTask;
     },
   };
 };
@@ -875,6 +1016,12 @@ export interface DxConfigOptions {
   outDir?: string;
   /** Skip DxNodeStdPlugin (for node-only packages that don't target browser). Default: false. */
   nodeTarget?: boolean;
+  /**
+   * Emit `.d.ts` via `tsc` alongside the JS bundle. Default: true. Off for the vendored
+   * bundles, which ship hand-written declarations next to their sources and have no
+   * TypeScript of their own for `tsc` to read.
+   */
+  declarations?: boolean;
   /** JSX runtime for `.tsx`/`.jsx` source files. */
   jsx?: 'react' | 'solid';
   /**
@@ -900,6 +1047,31 @@ export interface DxConfigOptions {
    * for packages that import large binary assets (e.g. plugin-zen's `.m4a` soundscapes).
    */
   assetsAsFiles?: boolean;
+  /**
+   * Third-party packages to inline into the bundle rather than leave external. For deps that
+   * ship CJS, WASM, or node-only builds a consumer's bundler cannot resolve on its own.
+   * Matches the package and any of its subpaths.
+   */
+  bundle?: string[];
+  /** Import aliases, applied before resolution (e.g. `{ '@effect/wa-sqlite': '@dxos/wa-sqlite' }`). */
+  alias?: Record<string, string>;
+  /**
+   * `package.json` fields to try when resolving a dependency, highest priority first. For deps
+   * whose ESM entry is broken or node-only — the vendored bundles pick the browser build.
+   */
+  mainFields?: string[];
+  /**
+   * Prepend `import '@dxos/node-std/globals'` to every entry, installing `Buffer`/`process`/
+   * `global` on `globalThis` as a side effect. For packages whose deps read those globals
+   * without importing them.
+   */
+  injectGlobals?: boolean;
+  /**
+   * Rewrite free references to `global` / `Buffer` / `process` into imports from
+   * `@dxos/node-std/inject-globals`. Module-scoped, unlike `injectGlobals`, so it works in
+   * bundles that must not touch `globalThis`.
+   */
+  importGlobals?: boolean;
   /** Vitest configuration; omit for build-only packages. */
   test?: TestOptions;
 }
@@ -998,12 +1170,23 @@ export const defineConfig = (options: DxConfigOptions = {}): UserConfig => {
     entry = 'src/index.ts',
     outDir = 'dist/lib',
     nodeTarget = false,
+    declarations = true,
     jsx,
     jsxRuntime,
     reactCompiler = false,
     assetsAsFiles = false,
+    bundle = [],
+    alias,
+    mainFields,
+    injectGlobals = false,
+    importGlobals = false,
     test,
   } = options;
+  // `id === name` catches the package root, `id.startsWith(name + '/')` its subpaths — a bare
+  // prefix test would also swallow unrelated neighbours (`buffer` matching `buffer-alloc`).
+  const isBundled = (id: string) => bundle.some((name) => id === name || id.startsWith(`${name}/`));
+  const aliasKeys = Object.keys(alias ?? {});
+  const isAliased = (id: string) => aliasKeys.some((name) => id === name || id.startsWith(`${name}/`));
   // Solid: ssr-aware client transform.
   const jsxPlugin: Plugin[] =
     jsx === 'react'
@@ -1029,8 +1212,9 @@ export const defineConfig = (options: DxConfigOptions = {}): UserConfig => {
     worker: {
       format: 'es',
       plugins: () => [
+        ...(alias ? [DxAliasPlugin(alias, isBundled)] : []),
         DxWorkerResolvePlugin(),
-        ...(!nodeTarget ? [DxNodeStdPlugin()] : []),
+        ...(!nodeTarget ? [DxNodeStdPlugin(isBundled)] : []),
         ...(assetsAsFiles ? [DxRawAssetsPlugin()] : []),
         WasmPlugin(),
         DxosLogPlugin({ logToFile: false, transform: { enabled: true } }),
@@ -1039,6 +1223,10 @@ export const defineConfig = (options: DxConfigOptions = {}): UserConfig => {
     build: {
       lib: {
         entry: resolvedEntry,
+        // ESM only. A package that also needs CJS gets its own config rather than a `formats`
+        // option here: the two formats have to disagree about `chunkFileNames` (and often about
+        // a transform, as `@dxos/ui-theme/plugin` does for `import.meta.dirname`), which one
+        // shared output object cannot express.
         formats: ['es'],
         fileName: (_, name) => `${name}.mjs`,
       },
@@ -1062,7 +1250,10 @@ export const defineConfig = (options: DxConfigOptions = {}): UserConfig => {
         //   rolldown injects when lowering `@decorator` / `async` / `for-await`. The
         //   helpers aren't declared deps so we bundle them inline.
         external: (id) => {
-          if (id.startsWith('node:')) {
+          // An aliased specifier must reach `DxAliasPlugin`'s `resolveId` to be renamed — rollup
+          // consults this predicate on the raw specifier first and, on `true`, externalizes it
+          // under that name without ever calling a plugin.
+          if (id.startsWith('node:') || isBundled(id) || isAliased(id)) {
             return false;
           }
           return (
@@ -1070,6 +1261,7 @@ export const defineConfig = (options: DxConfigOptions = {}): UserConfig => {
           );
         },
         output: {
+          ...(injectGlobals ? { banner: "import '@dxos/node-std/globals';" } : {}),
           chunkFileNames: 'chunk-[name].mjs',
           // Keep emitted assets adjacent to the entry chunks so consumers' bundlers
           // can resolve them via the same relative path the JS already references.
@@ -1077,13 +1269,22 @@ export const defineConfig = (options: DxConfigOptions = {}): UserConfig => {
         },
       },
     },
+    ...(mainFields ? { resolve: { mainFields } } : {}),
     plugins: [
+      ...(alias ? [DxAliasPlugin(alias, isBundled)] : []),
       DxWorkerResolvePlugin(),
-      ...(!nodeTarget ? [DxNodeStdPlugin()] : []),
+      ...(!nodeTarget ? [DxNodeStdPlugin(isBundled)] : []),
       ...(assetsAsFiles ? [DxRawAssetsPlugin()] : []),
       ...jsxPlugin,
+      // `enforce: 'post'` so the rewrite sees transpiled output: the JSX/TS transforms above can
+      // introduce `process.env` references of their own, and inject must run after them.
+      ...(importGlobals
+        ? [{ ...inject({ modules: NODE_STD_GLOBALS, sourceMap: true }), enforce: 'post' as const }]
+        : []),
       DxosLogPlugin({ logToFile: false, transform: { enabled: true } }),
-      DxDeclarationsPlugin(),
+      // After the log transform so it sees the final emitted chunk.
+      ...(bundle.length > 0 ? [DxHoistRequirePlugin()] : []),
+      ...(declarations ? [DxDeclarationsPlugin()] : []),
     ],
     ...(test ? { test: buildTestConfig(process.cwd(), test, jsx, reactCompiler) } : {}),
   });

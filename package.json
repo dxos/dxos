@@ -70,8 +70,6 @@
     "@cloudflare/workers-types": "catalog:",
     "@dxos/async": "workspace:*",
     "@dxos/client": "workspace:*",
-    "@dxos/dx-build": "workspace:*",
-    "@dxos/dx-compile": "workspace:*",
     "@dxos/dx-tools": "workspace:*",
     "@dxos/dx-trace-imports": "workspace:*",
     "@dxos/esbuild-plugins": "workspace:*",

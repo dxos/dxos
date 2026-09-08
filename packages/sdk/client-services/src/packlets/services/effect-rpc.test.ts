@@ -30,7 +30,7 @@ import {
 import { EffectEx } from '@dxos/effect';
 import { PublicKey } from '@dxos/keys';
 import { IdentityNotInitializedError, TimeoutError } from '@dxos/protocols';
-import { buf, fromPublicKey } from '@dxos/protocols/buf';
+import { buf, fromPublicKey, toPublicKey } from '@dxos/protocols/buf';
 import {
   Invitation,
   Invitation_AuthMethod,
@@ -39,6 +39,8 @@ import {
   Invitation_Type,
   InvitationSchema,
 } from '@dxos/protocols/buf/dxos/client/invitation_pb';
+import { SpaceState } from '@dxos/protocols/buf/dxos/client/invitation_pb';
+import { SpaceSchema } from '@dxos/protocols/buf/dxos/client/services_pb';
 import {
   QueryInvitationsResponse,
   QueryInvitationsResponse_Action,
@@ -46,8 +48,8 @@ import {
   QueryInvitationsResponseSchema,
 } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { ConfigSchema } from '@dxos/protocols/buf/dxos/config_pb';
-import { SpaceState, SystemStatus } from '@dxos/protocols/proto/dxos/client/services';
-import { MembershipPolicy } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { MembershipPolicy } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
+import { SystemStatus } from '@dxos/protocols/proto/dxos/client/services';
 import { InvitationsService, SpacesService, SystemService } from '@dxos/protocols/rpc';
 
 import { remainingLifetimeSeconds } from '../spaces/data-space-manager';
@@ -142,20 +144,21 @@ describe('client services effect-rpc', () => {
     const proxy = await setup(() => ({
       SpacesService: mockService<SpacesService.Handlers>({
         ['SpacesService.createSpace']: () =>
-          Effect.succeed({
-            id: 'test-space',
-            spaceKey,
-            state: SpaceState.SPACE_READY,
-            membershipPolicy: MembershipPolicy.INVITE,
-            metrics: {},
-          }),
+          Effect.succeed(
+            buf.create(SpaceSchema, {
+              id: 'test-space',
+              spaceKey: fromPublicKey(spaceKey),
+              state: SpaceState.SPACE_READY,
+              membershipPolicy: MembershipPolicy.INVITE,
+            }),
+          ),
       }),
     }));
 
     const space = await proxy.SpacesService!.createSpace({ membershipPolicy: MembershipPolicy.INVITE });
     expect(space.id).toEqual('test-space');
-    expect(space.spaceKey).toBeInstanceOf(PublicKey);
-    expect(space.spaceKey.equals(spaceKey)).toBe(true);
+    expect(toPublicKey(space.spaceKey)).toBeInstanceOf(PublicKey);
+    expect(toPublicKey(space.spaceKey)?.equals(spaceKey)).toBe(true);
   });
 
   test('streaming call round trip', async ({ expect }) => {

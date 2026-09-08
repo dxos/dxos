@@ -10,13 +10,13 @@ import { useType as defaultUseType } from '@dxos/echo-react';
 import { ReferenceAnnotationId, type ReferenceAnnotationValue } from '@dxos/echo/Annotation';
 import { SchemaEx } from '@dxos/effect';
 import { DXN, URI } from '@dxos/keys';
-import { IconButton, Input, useTranslation } from '@dxos/react-ui';
+import { Field, IconButton, useTranslation } from '@dxos/react-ui';
 
 import { translationKey } from '#translations';
 
 import { omitId } from '../../../../../util';
 import { FormContent, FormFieldSetContainer, FormRoot } from '../../../FormControls';
-import { FormFieldLabel } from '../../FormRow';
+import { FormFieldLabel } from '../../FormField';
 import { presentationFor } from '../../presentation';
 import { type RefFieldProps } from './RefField';
 
@@ -69,7 +69,7 @@ export const InlineRefField = (props: RefFieldProps) => {
   }
 
   return (
-    <Input.Root>
+    <Field.Root>
       {resolved.showLabel && <FormFieldLabel readonly={readonly} required={required} label={label} path={jsonPath} />}
       {reference ? (
         <InlineForm reference={reference} db={db} readonly={readonly} useType={useType} />
@@ -85,7 +85,7 @@ export const InlineRefField = (props: RefFieldProps) => {
           />
         )
       )}
-    </Input.Root>
+    </Field.Root>
   );
 };
 
@@ -121,7 +121,7 @@ const InlineForm = ({ reference, db, readonly, useType = defaultUseType }: Inlin
       if (changedPaths.length === 0) {
         return;
       }
-      Obj.update(target, () => {
+      Obj.update(target, (target) => {
         for (const path of changedPaths) {
           const parts = SchemaEx.splitJsonPath(path);
           Obj.setValue(target, parts, Obj.getValue(values, parts));

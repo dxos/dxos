@@ -14,10 +14,10 @@ import { fileURLToPath } from 'node:url';
 import { type Plugin } from 'vite';
 
 import css from './loader-app/boot-loader.css?raw';
-// The loader-app Solid sources are inlined as raw text (never parsed by
-// dx-compile — app-framework is a React package, so its build can't compile
-// Solid JSX). They are compiled to a self-contained browser IIFE at the
-// consuming app's build time by {@link compileLoaderBundle} below.
+// The loader-app Solid sources are inlined as raw text: app-framework is a React
+// package, so its own build cannot compile Solid JSX. They are compiled to a
+// self-contained browser IIFE at the consuming app's build time by
+// {@link compileLoaderBundle} below.
 import bridgeSrc from './loader-app/bridge.ts?raw';
 import entrySrc from './loader-app/entry.tsx?raw';
 import loaderSrc from './loader-app/Loader.tsx?raw';
@@ -79,8 +79,8 @@ const resolveDir = dirname(fileURLToPath(import.meta.url));
 /**
  * Compile the loader-app from its inlined raw sources into a single
  * self-contained IIFE (Solid runtime bundled in) suitable for inlining into
- * `index.html`. Mirrors dx-compile's Solid pipeline: `@babel/preset-typescript`
- * strips types, then `babel-preset-solid` compiles JSX into reactive primitives.
+ * `index.html`. `@babel/preset-typescript` strips types, then `babel-preset-solid`
+ * compiles JSX into reactive primitives.
  */
 const compileLoaderBundle = async (): Promise<string> => {
   const virtualSolid = (): EsbuildPlugin => ({

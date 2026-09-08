@@ -5,7 +5,7 @@
 import { describe, test } from 'vitest';
 
 import { PublicKey } from '@dxos/keys';
-import { ConnectionState } from '@dxos/protocols/proto/dxos/mesh/bridge';
+import { ConnectionState } from '@dxos/protocols/buf/dxos/mesh/bridge_pb';
 
 import {
   fromBufBridgeEvent,

@@ -5,7 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { Input, ScrollArea, ScrollAreaRootProps, Toolbar } from '../../components';
+import { Field, ScrollArea, ScrollAreaRootProps, Toolbar } from '../../components';
 import { withLayout, withTheme } from '../../testing';
 import { composable, composableProps } from '../../util';
 import { Panel } from './Panel';
@@ -43,9 +43,9 @@ const DefaultStory = () => {
       <Panel.Toolbar asChild>
         <Toolbar.Root>
           <Toolbar.IconButton icon='ph--plus--regular' variant='primary' label='Add' />
-          <Input.Root>
-            <Input.TextInput placeholder='Search' />
-          </Input.Root>
+          <Field.Root>
+            <Field.Input placeholder='Search' />
+          </Field.Root>
           <Toolbar.IconButton icon='ph--dots-three-vertical--regular' iconOnly label='Menu' />
         </Toolbar.Root>
       </Panel.Toolbar>

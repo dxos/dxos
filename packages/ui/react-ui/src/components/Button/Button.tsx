@@ -66,7 +66,7 @@ const Button = memo(
           {caretDown && !asChild ? (
             <>
               {children}
-              <Icon size={3} icon='ph--caret-down--bold' />
+              <Icon icon='ph--caret-down--bold' size={3} classNames='mx-0.5' />
             </>
           ) : (
             children

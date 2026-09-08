@@ -127,7 +127,7 @@ describe('Chat', () => {
           owner.tasks = [Ref.make(delegated)];
         });
         Obj.update(chat, (chat) => {
-          chat.tasks = [...chat.tasks, Ref.make(delegated)];
+          chat.tasks.push(Ref.make(delegated));
         });
         yield* Database.flush();
 

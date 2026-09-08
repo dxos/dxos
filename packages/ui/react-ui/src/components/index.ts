@@ -22,7 +22,7 @@ export * from './Focus';
 export * from './Icon';
 export * from './Image';
 export * from './Editable';
-export * from './Input';
+export * from './Field';
 export * from './Link';
 export * from './Main';
 export * from './MediaPlayer';

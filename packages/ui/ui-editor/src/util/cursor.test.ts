@@ -18,21 +18,24 @@ describe('Cursor', () => {
       return Number(cursor.slice(1));
     },
   };
-  const withConverter = () => EditorState.create({ doc: 'hello world', extensions: [Cursor.converter.of(converter)] });
-  const withDefault = () => EditorState.create({ doc: 'hello world' });
 
   test('a range round-trips through the converter', ({ expect }) => {
-    const state = withConverter();
+    const state = EditorState.create({ doc: 'hello world', extensions: [Cursor.converter.of(converter)] });
     const cursor = Cursor.getCursorFromRange(state, { from: 2, to: 7 });
     expect(Cursor.getRangeFromCursor(state, cursor)).toEqual({ from: 2, to: 7 });
   });
 
   test('a cursor the converter throws on decodes to undefined', ({ expect }) => {
-    expect(Cursor.getRangeFromCursor(withConverter(), '12:28')).toBeUndefined();
+    expect(
+      Cursor.getRangeFromCursor(
+        EditorState.create({ doc: 'hello world', extensions: [Cursor.converter.of(converter)] }),
+        '12:28',
+      ),
+    ).toBeUndefined();
   });
 
   test('the default converter round-trips and rejects anything but canonical decimals', ({ expect }) => {
-    const state = withDefault();
+    const state = EditorState.create({ doc: 'hello world' });
     expect(Cursor.getRangeFromCursor(state, Cursor.getCursorFromRange(state, { from: 2, to: 7 }))).toEqual({
       from: 2,
       to: 7,

@@ -20,7 +20,7 @@ import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import { corePlugins } from '@dxos/plugin-testing';
 import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { random } from '@dxos/random';
-import { Focus, IconButton, Input, Main, Panel, Toolbar } from '@dxos/react-ui';
+import { Field, Focus, IconButton, Main, Panel, Toolbar } from '@dxos/react-ui';
 import { useAttention, useAttentionAttributes } from '@dxos/react-ui-attention';
 import { withLayout } from '@dxos/react-ui/testing';
 import { mx } from '@dxos/ui-theme';
@@ -93,14 +93,14 @@ const StoryPlank = ({ attendableId }: { attendableId: string }) => {
           </Toolbar.Root>
 
           <div className={mx(container, 'm-2 bg-current-surface')}>
-            <Input.Root>
-              <Input.Label>Level 1 (group)</Input.Label>
-            </Input.Root>
+            <Field.Root>
+              <Field.Label>Level 1 (group)</Field.Label>
+            </Field.Root>
             <div className={mx(container, 'dx-base-surface')}>
-              <Input.Root>
-                <Input.Label>Level 2 (base)</Input.Label>
-                <Input.TextArea placeholder='Enter text' />
-              </Input.Root>
+              <Field.Root>
+                <Field.Label>Level 2 (base)</Field.Label>
+                <Field.Textarea placeholder='Enter text' />
+              </Field.Root>
             </div>
           </div>
         </Panel.Content>

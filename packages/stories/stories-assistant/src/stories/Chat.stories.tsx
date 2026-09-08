@@ -83,11 +83,10 @@ const seedProjectTask = async ({
   binder: AiContext.Binder;
 }) => {
   const project = db.add(Project.make({ name: 'Coffee launch' }));
-  const taskSet = db.add(TaskSet.make({}));
+  const taskSet = db.add(TaskSet.make({ [Obj.Parent]: project }));
   Obj.update(project, (project) => {
     project.taskSet = Ref.make(taskSet);
   });
-  Obj.setParent(taskSet, project);
 
   // A named reviewer is what sends the finished task to `review` rather than `done`.
   const task = AssistantChat.addTask(db, chat, POEM_TASK_TITLE, {

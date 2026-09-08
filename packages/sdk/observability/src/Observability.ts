@@ -32,7 +32,7 @@ const attachAiCapture = async (observability: Observability): Promise<CleanupFn>
 
 // TODO(wittjosiah): Figure out how to handle when telemetry is disabled.
 //   In theory the setting should be both persisted and synchronized.
-//   Initialize probably should still run for the cases where data is emitted manually (e.g., feedback).
+//   Initialize probably should still run for the cases where data is emitted manually (e.g., support tickets).
 
 /**
  * Provider of observability data.
@@ -60,7 +60,7 @@ export interface Observability {
   enabled: boolean;
   errors: ObservabilityExtension.Errors;
   events: ObservabilityExtension.Events;
-  feedback: ObservabilityExtension.Feedback;
+  support: ObservabilityExtension.Support;
   ai: ObservabilityExtension.Ai;
   mcp: ObservabilityExtension.Mcp;
   /** True if at least one extension of the given kind reports as available. */
@@ -82,9 +82,12 @@ class ObservabilityImpl implements Observability {
     const initializedExtensions: ObservabilityExtension.Extension[] = [];
 
     return Effect.gen({ self: this }, function* () {
+      const context: ObservabilityExtension.ExtensionContext = {
+        setTags: (tags, kind) => this.setTags(tags, kind),
+      };
       for (const extension of this._extensions) {
         if (extension.initialize) {
-          yield* extension.initialize();
+          yield* extension.initialize(context);
         }
         initializedExtensions.push(extension);
       }
@@ -202,7 +205,7 @@ class ObservabilityImpl implements Observability {
           .filter((entry): entry is [string, string | number | boolean] => entry[1] !== undefined)
           .map(([key, value]) => [key, value.toString()]),
       );
-      extension.setTags?.(processedTags);
+      extension.setTags?.(processedTags, kind);
     }
   }
 
@@ -265,14 +268,28 @@ class ObservabilityImpl implements Observability {
     };
   }
 
-  get feedback(): ObservabilityExtension.Feedback {
+  get support(): ObservabilityExtension.Support {
     return {
-      captureUserFeedback: async (form) => {
-        let eventUuid: string | undefined;
-        for (const extension of this._getExtensions('feedback')) {
-          eventUuid = (await extension.captureUserFeedback(form)) ?? eventUuid;
+      uploadLogs: async () => {
+        let key: string | undefined;
+        for (const extension of this._getExtensions('support')) {
+          key = (await extension.uploadLogs()) ?? key;
         }
-        return eventUuid;
+        return key;
+      },
+      sessionContext: () => {
+        for (const extension of this._getExtensions('support')) {
+          const context = extension.sessionContext();
+          if (context) {
+            return context;
+          }
+        }
+        return undefined;
+      },
+      flushLogs: async (attributes) => {
+        for (const extension of this._getExtensions('support')) {
+          await extension.flushLogs(attributes);
+        }
       },
     };
   }

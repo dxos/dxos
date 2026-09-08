@@ -147,7 +147,7 @@ describe('deleting a project', () => {
     // An artifact is listed on the project by ref; its parent stays wherever it was created.
     const artifact = db.add(Feed.make());
     Obj.update(project, (project) => {
-      project.artifacts = [...project.artifacts, Ref.make(artifact)];
+      project.artifacts.push(Ref.make(artifact));
     });
     await db.flush();
 

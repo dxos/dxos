@@ -70,6 +70,8 @@ stdout as context the agent reads. Every other event needs
 | `~/.claude/hooks/guard-branch.sh`, `deny-git-worktree-add.sh`                                                     | `PreToolUse(Bash)`        | deny           | derived                                   |
 | `~/.claude/hooks/guard-worktree.sh` + [repo copy](./hooks/guard-worktree.sh)                                      | `PreToolUse(Edit\|Write)` | deny           | derived                                   |
 | [`hooks/mode.sh`](./hooks/mode.sh) → [`scripts/mode.sh`](./scripts/mode.sh)   | `UserPromptSubmit`        | agent          | **persisted** `.claude/.mode` + `.claude/.focus` |
+| [`hooks/autonomous.sh`](./hooks/autonomous.sh) → [`scripts/autonomous.sh`](./scripts/autonomous.sh) | `UserPromptSubmit`        | agent          | **persisted** `.claude/.autonomous*` (task, DoD, two logs) |
+| [`hooks/autonomous-stop.sh`](./hooks/autonomous-stop.sh)                                                          | `Stop`                    | block          | reads the same state                      |
 | `dxos` plugin → `hooks/track.sh` ([tools/claude/plugins/dxos](../tools/claude/plugins/dxos))                            | `UserPromptSubmit`        | agent          | persisted, backend-resolved (registry)    |
 | [`AGENTS.md`](../AGENTS.md) (+ `CLAUDE.md` / `GEMINI.md` symlinks), [`CLAUDE.md`](./CLAUDE.md)                    | —                         | agent          | static                                    |
 | `skills/` → `../.agents/skills/` (25)                                                                             | —                         | agent          | on demand                                 |
@@ -148,6 +150,7 @@ A sentinel is a **marker typed inside a normal message** that a
 | ------------------------------- | ------------------------------------ | ---------------------------------------------------------- |
 | `/mode terse` / `/mode normal`  | [`hooks/mode.sh`](./hooks/mode.sh)   | sets response verbosity mode (see aliases below)            |
 | `/mode focus [task]`            | [`hooks/mode.sh`](./hooks/mode.sh)   | terse, plus one pinned task the session is confined to      |
+| `/autonomous [task]`            | [`hooks/autonomous.sh`](./hooks/autonomous.sh) | pins a task the session must finish without asking questions |
 | `/dxos:project VERB [ARGS]`       | `dxos` plugin (see below)              | task-planning: list / tasks / new / end / track / hydrate / resume |
 
 They exist because a hook can act on them **before the model runs**, which makes
@@ -211,6 +214,47 @@ the guidance files in play". Carrying it per turn as well made every reply open
 with a restatement — noise, and duplicated state the two channels could disagree
 about. Per-turn injection is a strong channel; putting a once-per-session rule on
 it is a misuse.
+
+**`/autonomous [task]` is the same recipe applied to the _work_ rather than the
+reply.** `focus` narrows what the agent may work on; `autonomous` removes its
+ability to hand the work back. The hook writes the task, the per-turn injection
+carries the directives (no questions, log decisions, a blocker is work, finish
+against the definition of done), and — the part that cannot be argued with — a
+**`Stop` hook** blocks the turn from ending while a run is active, quoting the
+agent's own definition of done back at it. That placement is the whole design:
+kinds 1–2 decay as the session fills, and stopping early is precisely the
+failure that shows up late in a long session.
+
+Its state is four files, split by writer. The hook owns the task
+(`.autonomous`) and the **user log** (`.autonomous-user.md`, every user message
+verbatim, appended on every turn whether or not a run is active); the agent owns
+the **definition of done** (`.autonomous-dod`) and the **decision log**
+(`.autonomous-log.md`). The two logs are not one file on purpose: the user log
+is evidence, the decision log is accountability, and mixing them would let a
+summary of what the user said sit where the quote belongs. An agent that may not
+ask a question still has to answer scoping and PR-size questions somehow, and
+the user has almost always already said — three turns earlier, in an aside — so
+the log it greps must be what they actually typed. Starting a run mid-session
+backfills the log from the event's `transcript_path`, for the same reason the
+focus pin is derived there: a record on disk is mechanism, an agent asked to
+remember is not.
+
+The clean exit is `autonomous.sh stop <reason>` — the reason is mandatory and
+logged, because a run that ends without one is indistinguishable from one that
+was abandoned. It clears the state, which is what silences the `Stop` hook. The
+block is **bounded at three per user turn** and the counter is reset by every
+`UserPromptSubmit`: an unbounded `Stop` block is an infinite loop, since an
+agent cannot be argued into a capability it does not have, and a session that
+can never end is worse than a task honestly reported unfinished. On the fourth
+attempt the hook lets the turn end and tells the **user** — via `systemMessage`,
+the only channel they read — that the run is still open.
+
+[`scripts/autonomous.test.sh`](./scripts/autonomous.test.sh) drives both hooks
+with the JSON their events carry, against a throwaway `CLAUDE_PROJECT_DIR`.
+The doctrine — how to resolve a question from evidence, what counts as trying
+to get around a blocker, the adversarial review expected before stopping — is
+the `autonomous-mode` skill, not the injection, which stays short enough to
+survive being read every turn.
 
 > **Caveat — keep the grammar unambiguous.** The hook greps raw message text and
 > cannot tell a command from a mention of one. Both markers were bitten by this

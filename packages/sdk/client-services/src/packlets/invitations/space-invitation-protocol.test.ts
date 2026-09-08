@@ -7,6 +7,7 @@ import { describe, expect, onTestFinished, test } from 'vitest';
 import { Trigger, chain } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { raise } from '@dxos/debug';
+import { invariant } from '@dxos/invariant';
 import { AlreadyJoinedError } from '@dxos/protocols';
 import { fromPublicKey, toPublicKey } from '@dxos/protocols/buf';
 import { Invitation, Invitation_Kind, Invitation_State } from '@dxos/protocols/buf/dxos/client/invitation_pb';
@@ -139,10 +140,16 @@ describe('services/space-invitations-protocol', () => {
     expect(invitation1?.spaceKey).to.deep.eq(invitation2?.spaceKey);
 
     {
-      const space1 = host.dataSpaceManager!.spaces.get(toPublicKey(invitation1!.spaceKey)!)!;
-      const space2 = guest.dataSpaceManager!.spaces.get(toPublicKey(invitation2!.spaceKey)!)!;
+      const hostDataSpaceManager = host.dataSpaceManager ?? raise(new Error('host.dataSpaceManager is not set'));
+      const guestDataSpaceManager = guest.dataSpaceManager ?? raise(new Error('guest.dataSpaceManager is not set'));
+      const hostSpaceKey = toPublicKey(invitation1?.spaceKey) ?? raise(new Error('invitation1.spaceKey is not set'));
+      const guestSpaceKey = toPublicKey(invitation2?.spaceKey) ?? raise(new Error('invitation2.spaceKey is not set'));
+      const space1 = hostDataSpaceManager.spaces.get(hostSpaceKey);
+      const space2 = guestDataSpaceManager.spaces.get(guestSpaceKey);
       expect(space1).not.to.be.undefined;
       expect(space2).not.to.be.undefined;
+      invariant(space1);
+      invariant(space2);
 
       await host.dataSpaceManager?.waitUntilSpaceReady(space1.key);
       await guest.dataSpaceManager?.waitUntilSpaceReady(space2.key);
