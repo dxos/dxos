@@ -117,6 +117,14 @@ export class InvitationHostExtension
         options: async (options) => {
           invariant(!this._remoteOptions, 'Remote options already set.');
           this._remoteOptions = options;
+          // Transition here, synchronously with receiving the guest's options, rather than only in
+          // `onOpen`'s continuation: the muxer can dispatch the guest's `options` and `introduce`
+          // from one chunk without yielding, and `introduce` asserts CONNECTED. Gated on already
+          // holding the flow lock — before that `onOpen` has not set CONNECTING and this connection
+          // is not yet the invitation's active one. `onOpen` still sets it for the other ordering.
+          if (options.role === InvitationOptions.Role.GUEST && this.hasFlowLock()) {
+            this._setState(Invitation_State.CONNECTED);
+          }
           this._remoteOptionsTrigger.wake();
         },
 
@@ -253,6 +261,11 @@ export class InvitationHostExtension
       // CONNECTING and errors the whole invitation (DX-1264). Receiving the guest's own options is
       // the condition that actually orders the two, so gate on that alone.
       const optionsAcknowledged = this.rpc.InvitationHostService.options({ role: InvitationOptions.Role.HOST });
+      // Handled now, not at the `await` below: everything between can throw (the options timeout,
+      // the role check), and the `catch` closes the teleport, which rejects this outstanding request
+      // with `RpcClosedError`. Without a handler here that lands as an unhandled rejection on
+      // exactly the guest-never-sent-options path this branch exists to diagnose.
+      void optionsAcknowledged.catch(() => {});
       log.verbose('options sent');
       await cancelWithContext(this._ctx, this._remoteOptionsTrigger.wait({ timeout: OPTIONS_TIMEOUT }));
       log.verbose('options received');

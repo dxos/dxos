@@ -23,7 +23,7 @@ import { defineHiddenProperty } from '@dxos/echo/internal';
 import { failedInvariant, invariant } from '@dxos/invariant';
 import { EID, EntityId, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { RpcClosedError, RpcNotOpenError, runServiceCall, subscribeStream } from '@dxos/protocols';
+import { RpcClosedError, runServiceCall, subscribeStream } from '@dxos/protocols';
 import { type FeedService } from '@dxos/protocols/rpc';
 
 import { type DatabaseImpl } from '../proxy-db';
@@ -263,6 +263,13 @@ export class FeedHandle {
 
     this.#addOptimistic(cores);
 
+    if (this.#endpointClosed) {
+      // The endpoint is gone for good, so skip the RPC that can only re-fail. Surfaced through
+      // `error` rather than thrown, matching this method's pre-existing best-effort contract.
+      this.updated.emit();
+      return;
+    }
+
     const encoded = batch.map(({ json }) => JSON.stringify(json));
     const sendPromise = this.#sendAppendBatches(encoded).catch((err) => this.#onAppendFailed(err, batch));
     this.#inFlight.add(sendPromise);
@@ -412,7 +419,11 @@ export class FeedHandle {
 
     for (const { core, token } of batch) {
       core.revertCapture(token);
-      this.#dirtyCores.add(core);
+      // Re-queue only if a later flush can still run. Once latched, `#flushDirty` refuses to drain,
+      // so adding here would grow a strong-referenced set that nothing ever empties.
+      if (!endpointClosed) {
+        this.#dirtyCores.add(core);
+      }
     }
 
     if (endpointClosed) {
@@ -778,11 +789,17 @@ const objectSetChanged = (before: Entity.Unknown[], after: Entity.Unknown[]) => 
 
 const isSqliteNotOpenError = (err: any) => err.cause?.message?.includes('The database connection is not open');
 
-/** True when a call failed because the RPC endpoint is gone, rather than for a retryable reason. */
+/**
+ * True when a call failed because the RPC endpoint is gone for good.
+ *
+ * `RpcClosedError` only — deliberately NOT `RpcNotOpenError`, which `RpcPeer` throws for the INITIAL
+ * state, meaning the peer has not finished opening yet. That is transient and self-healing, and
+ * latching on it would permanently stop a handle that merely raced a booting peer.
+ */
 const isEndpointClosedError = (err: unknown): boolean => {
   const seen = new Set<unknown>();
   for (let cause = err; cause != null && !seen.has(cause); cause = (cause as { cause?: unknown }).cause) {
-    if (cause instanceof RpcClosedError || cause instanceof RpcNotOpenError) {
+    if (cause instanceof RpcClosedError) {
       return true;
     }
     seen.add(cause);

@@ -205,8 +205,6 @@ export class AppManager {
    * `isVisible()` answers immediately, so right after a navigation it reads `false` for a navtree
    * that has not painted and `true` for a heading that is mid-remount — the second skips the expand
    * and leaves the click waiting on a detached element for its whole 30s budget (DX-1264).
-   * `expandSection` waits for the row and leaves an already-open one alone, so this is a no-op when
-   * Settings is open.
    */
   async #openSpaceSettingsPage(testId: string, timeout: number): Promise<void> {
     await this.expandSection('spacePlugin.settings', timeout);
@@ -380,6 +378,12 @@ export class AppManager {
   /** Discloses a row's children, leaving an already-open row alone. */
   async #expandRow(row: Locator, timeout: number): Promise<void> {
     const toggle = row.getByTestId('treeItem.toggle').first();
+    // Waited for, not sampled: `getAttribute` reads `null` on a row that is attached but has not had
+    // `aria-expanded` applied yet, which reads as "collapsed" and clicks an already-open section
+    // shut. Waiting for the attribute to exist makes the decision on a settled row (DX-1264).
+    await expect(toggle)
+      .toHaveAttribute('aria-expanded', /true|false/, { timeout })
+      .catch(() => {});
     if ((await toggle.getAttribute('aria-expanded')) === 'true') {
       return;
     }
