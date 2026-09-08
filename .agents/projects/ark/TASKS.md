@@ -1035,3 +1035,4 @@ against the Radix-era names react-ui kept, Popover first.
       a synthetic click, so the node test asserts labelling only.
 - [ ] **Goal 3**: Popover vs Ark's `Positioner`/`Content`/`Viewport` (tracked below under
       "Reconcile Ark's anatomy").
+- [ ] `plugin-sheet:test-storybook` fails on CI shard 2 with a `Missing file` during teardown while every test passes (seen twice on #12971 and #12987, 2026-09-06 and 2026-09-08); rerun passes. Track the cause or quarantine.
