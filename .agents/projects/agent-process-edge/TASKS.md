@@ -496,3 +496,52 @@ under `.store/conversations/` encode repeated turns. Re-record from a clean `git
   fails on the missing binary.
 - Full bootstrap is ~30 min: `.config/claude-code-setup.sh` in both repos, `moon exec :build` in
   dxos, then `pnpm link-packages` in edge.
+
+## Phase 10 — what the hosted agent still cannot do (session of 2026-09-08b, continued)
+
+Six runtime defects fixed this session, each found by driving the real hosted agent rather than by
+reading (the edge suite went 1/5 to 3/5):
+
+- [x] A handled queue entry is never retired — the ack is a feed append read back through the
+      eventually-consistent index, so the same turn re-ran forever. Durable `AckedEntriesCell`.
+- [x] A tool result reported inside its turn kept `pendingWork` true with nothing left to arm a
+      wake, so `waitForCompletion` hung on any tool-using agent.
+- [x] `unseenWrites` was a count, so a resumed process dequeuing an older entry zeroed the budget
+      while its own prompt was unread. Held by id now.
+- [x] A second prompt on one session was dropped ("input dropped (already finished)"). `submitPrompt`
+      re-enters `getSession`, and asks the MANAGER whether the process is alive — the handle's own
+      status is a client-side snapshot that still read RUNNING 175ms after the host had succeeded.
+- [x] The retry budget being spent fell through to completion, discarding a prompt the index had not
+      caught up to. Stays resident instead.
+- [x] Tests this branch broke: `Chat.test` field list, `delegate-task-to-chat` and the
+      `ProjectArticle` stories missing `RoutinePlugin` (which provides the now-required
+      `RemoteProcessManager`), and the `queue-scripted` hang above.
+
+### THE OPEN BLOCKER: a hosted agent has no tools
+
+`a hosted agent calls a tool from a bound skill` still fails, and the operation dispatch path has
+never executed — `dispatching operation to operation-service` is 0 in every run. The agent's own log
+says why:
+
+```
+run query results {"resolver":"SpaceQuerySource","count":0, ... Filter.type(contextBinding) ...}
+sync complete {"skills":0,"skillKeys":"[]"}
+toolkit {"tools":"[]"}
+```
+
+The `AiContext.Binding` the client appends to the feed is NOT visible to the hosted process, so no
+skill resolves and every turn runs with an empty toolkit. In the whole edge log, every mention of
+`contextBinding` is a QUERY — the record itself never appears on the host side.
+
+**A wrong turn worth recording:** this looked like the Phase-8 defect one layer over (a typed query
+on a host that registered nothing), so `AiContext.Binding` and `Skill` were added to the process's
+declared `types`. That did NOT fix it — with the types registered the query still returns 0. The
+change is defensible on its own (the process does query those types) but it is not the cause, and
+`f14e477a`'s message overstates it. Do not treat that commit as the fix.
+
+- [ ] Establish whether the `Binding` record replicates to EDGE at all. The messages in the same feed
+      do arrive, but those are written by the AGENT on the host; the binding is written by the CLIENT
+      and must replicate. Read it back through EDGE's own queue route first (the same control the
+      other tests use) before touching any resolution code — three earlier rounds of this project
+      went wrong by trusting a silent probe.
+- [ ] The alarm self-wake test also still fails; not investigated since the ack work.
