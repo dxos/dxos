@@ -72,7 +72,7 @@ export const FileProperties = ({ subject: file }: FilePropertiesProps) => {
     // Its own provider: `useClipboard` falls back to a no-op context, so a copy button outside one
     // fails silently rather than visibly.
     <Clipboard.Provider>
-      <Form.Section>
+      <Form.FieldSet>
         {reference && (
           <Field.Root>
             <Field.Label>{t('properties.reference.label')}</Field.Label>
@@ -99,7 +99,7 @@ export const FileProperties = ({ subject: file }: FilePropertiesProps) => {
             <Field.HelperText>{t('properties.url.description')}</Field.HelperText>
           </Field.Root>
         )}
-      </Form.Section>
+      </Form.FieldSet>
     </Clipboard.Provider>
   );
 };

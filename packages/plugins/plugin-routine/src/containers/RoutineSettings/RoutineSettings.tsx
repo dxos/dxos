@@ -38,13 +38,11 @@ export const RoutineSettings = () => {
     <Form.Root variant='settings'>
       <Form.Viewport scroll>
         <Form.Content>
-          <Form.Section title={t('routine-verbose.label')} description={t('routine.description')}>
+          <Form.FieldSet label={t('routine-verbose.label')} description={t('routine.description')}>
             <Form.Field label={t('runtime.label')} description={t('runtime.description')}>
-              <Field.Root>
-                <Field.Switch checked={enabled} onCheckedChange={handleToggle} />
-              </Field.Root>
+              <Field.Switch checked={enabled} onCheckedChange={handleToggle} />
             </Form.Field>
-          </Form.Section>
+          </Form.FieldSet>
         </Form.Content>
       </Form.Viewport>
     </Form.Root>

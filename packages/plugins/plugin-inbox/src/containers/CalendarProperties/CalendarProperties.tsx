@@ -38,7 +38,7 @@ export const CalendarProperties = ({ subject }: CalendarPropertiesProps) => {
   }, [invokePromise, db]);
 
   return (
-    <Form.Section>
+    <Form.FieldSet>
       <Field.Root>
         <Field.Label>{t('calendar-sync.label')}</Field.Label>
         {/* TODO(burdon): Replace custom components with Field.Switch. */}
@@ -62,7 +62,7 @@ export const CalendarProperties = ({ subject }: CalendarPropertiesProps) => {
           </ButtonGroup>
         </Flex>
       </Field.Root>
-    </Form.Section>
+    </Form.FieldSet>
   );
 };
 

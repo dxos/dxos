@@ -157,22 +157,22 @@ export const DebugSettings = ({ settings, onSettingsChange, logStore, onUpload }
     <Form.Root schema={Settings.Settings} values={settings} variant='settings' readonly={!onSettingsChange}>
       <Form.Viewport scroll>
         <Form.Content>
-          <Form.Section title={meta.profile.name ?? meta.profile.key}>
+          <Form.FieldSet label={meta.profile.name ?? meta.profile.key}>
             <Form.Field label={t('settings.wireframe.label')} description={t('settings.wireframe.description')}>
-              <Field.Root>
-                <Field.Switch
-                  disabled={!onSettingsChange}
-                  checked={settings.wireframe}
-                  onCheckedChange={handleWireframeChange}
-                />
-              </Field.Root>
+              <Field.Switch
+                disabled={!onSettingsChange}
+                checked={settings.wireframe}
+                onCheckedChange={handleWireframeChange}
+              />
             </Form.Field>
             <Form.Field label={t('settings.trace-all.label')} description={t('settings.trace-all.description')}>
-              <Field.Root>
-                <Field.Switch disabled={!onSettingsChange} checked={traceAll} onCheckedChange={handleTraceAllChange} />
-              </Field.Root>
+              <Field.Switch disabled={!onSettingsChange} checked={traceAll} onCheckedChange={handleTraceAllChange} />
             </Form.Field>
-            <Form.Field label={t('settings.tracing-panel.label')} description={t('settings.tracing-panel.description')}>
+            <Form.Field
+              standalone
+              label={t('settings.tracing-panel.label')}
+              description={t('settings.tracing-panel.description')}
+            >
               <IconButton
                 icon='ph--arrow-square-out--regular'
                 iconOnly
@@ -181,6 +181,7 @@ export const DebugSettings = ({ settings, onSettingsChange, logStore, onUpload }
               />
             </Form.Field>
             <Form.Field
+              standalone
               label={t('settings.download-diagnostics.label')}
               description={t('settings.download-diagnostics.description')}
             >
@@ -191,7 +192,11 @@ export const DebugSettings = ({ settings, onSettingsChange, logStore, onUpload }
                 onClick={handleDownload}
               />
             </Form.Field>
-            <Form.Field label={t('settings.download-logs.label')} description={t('settings.download-logs.description')}>
+            <Form.Field
+              standalone
+              label={t('settings.download-logs.label')}
+              description={t('settings.download-logs.description')}
+            >
               <IconButton
                 icon='ph--download-simple--regular'
                 iconOnly
@@ -199,7 +204,7 @@ export const DebugSettings = ({ settings, onSettingsChange, logStore, onUpload }
                 onClick={handleDownloadLogs}
               />
             </Form.Field>
-            <Form.Field label={t('settings.repair.label')} description={t('settings.repair.description')}>
+            <Form.Field standalone label={t('settings.repair.label')} description={t('settings.repair.description')}>
               <IconButton
                 icon='ph--first-aid-kit--regular'
                 iconOnly
@@ -245,7 +250,7 @@ export const DebugSettings = ({ settings, onSettingsChange, logStore, onUpload }
                 </Select.Portal>
               </Select.Root>
             </Form.Field>
-          </Form.Section>
+          </Form.FieldSet>
 
           <DebugPortSettings disabled={!onSettingsChange} />
         </Form.Content>

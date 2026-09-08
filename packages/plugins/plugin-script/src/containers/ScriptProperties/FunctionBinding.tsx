@@ -50,9 +50,7 @@ export const FunctionBinding = ({ object }: FunctionBindingProps) => {
   }
 
   return (
-    <Flex column>
-      <Form.Section title={t('remote-function-settings.heading')} />
-
+    <Form.FieldSet label={t('remote-function-settings.heading')}>
       {functionUrl && (
         <Field.Root>
           <Field.Label>{t('function-url.label')}</Field.Label>
@@ -78,7 +76,7 @@ export const FunctionBinding = ({ object }: FunctionBindingProps) => {
           onBlur={handleBindingBlur}
         />
       </Field.Root>
-    </Flex>
+    </Form.FieldSet>
   );
 };
 

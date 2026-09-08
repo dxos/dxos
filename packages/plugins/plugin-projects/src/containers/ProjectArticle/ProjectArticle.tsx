@@ -167,40 +167,40 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
             <Form.Root schema={HeaderValues} defaultValues={defaultValues} onValuesChanged={handleValuesChanged}>
               <Form.Viewport scroll>
                 <Form.Content>
-                  <Form.FieldSet />
+                  <Form.Fields />
 
                   {instructions && <InstructionsEditor db={db} instructions={instructions} />}
 
                   {/* Standing context (inputs bound into every project session) — deliberately a
                     separate labeled section from Artifacts (outputs the project owns). */}
                   {instructions && (
-                    <Form.Section title={t('context.label')}>
+                    <Form.FieldSet label={t('context.label')}>
                       <InstructionsEditor db={db} instructions={instructions} fields={CONTEXT_FIELDS} />
-                    </Form.Section>
+                    </Form.FieldSet>
                   )}
 
                   {/* Above Tasks: the outline is where work is drafted, the task set where it lands.
                     `taskSet` rides along so promoting an item files it into THIS project's ledger
                     rather than into a set owned by the outline. */}
                   {outline && (
-                    <Form.Section title={t('outline.label')}>
+                    <Form.FieldSet label={t('outline.label')}>
                       <Surface.Surface
                         type={AppSurface.Section}
                         data={{ subject: outline, attendableId, taskSet }}
                         limit={1}
                       />
-                    </Form.Section>
+                    </Form.FieldSet>
                   )}
 
                   {milestoneRefs.length > 0 && (
-                    <Form.Section title={t('milestones.label')}>
+                    <Form.FieldSet label={t('milestones.label')}>
                       <MilestoneList refs={milestoneRefs} />
-                    </Form.Section>
+                    </Form.FieldSet>
                   )}
 
-                  <Form.Section title={t('artifacts.label')}>
+                  <Form.FieldSet label={t('artifacts.label')}>
                     <ObjectGallery refs={project.artifacts} onOpen={handleOpen} onDelete={handleDeleteArtifact} />
-                  </Form.Section>
+                  </Form.FieldSet>
                 </Form.Content>
               </Form.Viewport>
             </Form.Root>
