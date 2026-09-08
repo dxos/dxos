@@ -21,6 +21,7 @@ export * from './defer-function';
 export * from './defer';
 export * from './download';
 export * from './entry';
+export * from './equals';
 export * from './error-format';
 export * from './filename';
 export * from './for-each-async';

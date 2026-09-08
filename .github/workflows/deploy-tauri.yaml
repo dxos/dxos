@@ -40,6 +40,9 @@ permissions:
 
 env:
   CN_APPLICATION: dxos/composer
+  # A brew auto-update can fail and take the `brew install` that triggered it down with it.
+  HOMEBREW_NO_AUTO_UPDATE: '1'
+  HOMEBREW_NO_ENV_HINTS: '1'
   # Released binaries are built from source, never restored from a cache any CI job can write to.
   # Empty disables moon's remote cache; set here rather than via the setup action's
   # `remote-cache` input because this workflow does not use that action.
@@ -142,11 +145,6 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y jq webkit2gtk-4.1
-
-      - uses: tecolicom/actions-use-homebrew-tools@v1
-        if: matrix.os == 'depot-macos-latest'
-        with:
-          tools: cairo giflib git-lfs jpeg jq libpng librsvg pango pkg-config python-setuptools git unzip gzip xz
 
       - name: Update tauri.conf.json
         uses: ./.github/actions/cn-config
@@ -358,9 +356,9 @@ jobs:
           filter: blob:none
           ref: ${{ inputs.ref || github.sha }}
 
-      - uses: tecolicom/actions-use-homebrew-tools@v1
-        with:
-          tools: cairo giflib git-lfs jpeg jq libpng librsvg pango pkg-config python-setuptools git unzip gzip xz xcodegen
+      # The only tool ios-init.sh needs that the runner image does not ship.
+      - name: Install xcodegen
+        run: brew install xcodegen
 
       - name: Update tauri.conf.json
         uses: ./.github/actions/cn-config
