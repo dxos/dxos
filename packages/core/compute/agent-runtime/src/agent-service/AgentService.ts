@@ -354,7 +354,18 @@ export const layer = (
                 const releaseSession = () => {
                   sessionCache.delete(chat.id);
                 };
-                const session = makeSession(handle, chat, feed, releaseSession);
+                // A process that finished its turn releases its host, so the NEXT prompt on this
+                // session has nowhere to land — it is dropped as "input dropped (already finished)"
+                // and the conversation silently stops accepting turns. Re-entering `getSession`
+                // spawns a fresh process for the same feed (history is replayed from it), which is
+                // the path an app already takes when it re-reads the session per prompt.
+                const databaseContext = yield* Effect.context<Database.Service>();
+                const resubmit = (prompt: string | ContentBlock.Any[]): Effect.Effect<void> =>
+                  service.getSession(chat, options).pipe(
+                    Effect.flatMap((next) => next.submitPrompt(prompt)),
+                    Effect.provide(databaseContext),
+                  );
+                const session = makeSession(handle, chat, feed, releaseSession, resubmit);
                 sessionCache.set(chat.id, { model, provider, instructions, location, handle, session });
                 return session;
               }),
@@ -372,6 +383,7 @@ const makeSession = (
   chat: Conversation,
   feed: Feed.Feed,
   releaseSession: () => void,
+  resubmit: (prompt: string | ContentBlock.Any[]) => Effect.Effect<void>,
 ): Session => ({
   chat,
   feed,
@@ -392,7 +404,10 @@ const makeSession = (
         }),
       );
     }).pipe(Effect.scoped),
-  submitPrompt: (prompt: string | ContentBlock.Any[]) => process.submitInput(prompt),
+  // Suspended so the state is read per call: a session outlives the process that served its last
+  // turn, and submitting to a finished one drops the prompt.
+  submitPrompt: (prompt: string | ContentBlock.Any[]) =>
+    Effect.suspend(() => (isTerminalProcess(process.status.state) ? resubmit(prompt) : process.submitInput(prompt))),
   // Derived from the process's status atom, written on the app-wide registry the UI reads.
   running: Atom.make(
     (get) =>
