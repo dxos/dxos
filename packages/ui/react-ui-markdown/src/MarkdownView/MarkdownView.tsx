@@ -15,7 +15,10 @@ export type MarkdownViewProps = ThemedClassName<
     content?: string;
     components?: ReactMarkdownOptions['components'];
   }
->;
+> & {
+  /** Merged by a parent rendering this `asChild`; consumers use `classNames`. */
+  className?: string;
+};
 
 /**
  * Transforms markdown text into react elements.

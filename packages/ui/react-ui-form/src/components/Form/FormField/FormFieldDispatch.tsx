@@ -272,11 +272,14 @@ export const FormFieldDispatch = (props: FormFieldDispatchProps) => {
     return null;
   }
 
-  // A custom renderer that renders its own row says so; every other renderer is a control, and the
-  // row is rendered here, once, around it.
-  if (resolution.kind === 'custom' && resolution.component.ownsRow) {
+  // A renderer the form supplied owns its row (its label, description and `labelEnd` are its own);
+  // everything the dispatcher picks is a control, and the row is rendered here, once, around it.
+  if (resolution.kind === 'custom') {
     const CustomField = resolution.component;
     return <CustomField {...fieldProps} />;
+  }
+  if (resolution.kind === 'provided') {
+    return resolution.element;
   }
 
   // A list and a nested object are groups with their own header, not rows.
@@ -334,7 +337,7 @@ export const FormFieldDispatch = (props: FormFieldDispatchProps) => {
     presentation: layout,
   };
 
-  const standalone = (resolution.kind === 'custom' || resolution.kind === 'scalar') && resolution.component.standalone;
+  const standalone = resolution.kind === 'scalar' && resolution.component.standalone;
   return (
     <FormFieldRow
       label={label}
@@ -350,12 +353,6 @@ export const FormFieldDispatch = (props: FormFieldDispatchProps) => {
 
   function renderControl(resolution: FieldRendererResolution): ReactNode {
     switch (resolution.kind) {
-      case 'custom': {
-        const CustomField = resolution.component;
-        return <CustomField {...fieldProps} />;
-      }
-      case 'provided':
-        return resolution.element;
       case 'lookup':
         return resolution.combobox ? (
           <ComboboxField {...fieldProps} lookup={resolution.lookup} />

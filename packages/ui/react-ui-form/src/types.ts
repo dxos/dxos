@@ -71,11 +71,11 @@ export type FormFieldRendererProps<T = any> = {
 } & FormFieldStateProps<T>;
 
 /**
- * A control the dispatcher places in a `Form.Field` row. `standalone` declares that it holds several
- * labelled inputs (a coordinate pair), so the row's label is text rather than a `<label>`; `ownsRow`
- * that it renders its own `Form.Field` (it needs `labelEnd`, say) and is not to be wrapped.
+ * A field renderer. The built-in ones are controls the dispatcher places in a `Form.Field` row;
+ * `standalone` declares that a control holds several labelled inputs (a coordinate pair), so the
+ * row's label is text rather than a `<label>`. A renderer from `fieldMap` renders its own row.
  */
-export type FormFieldRenderer = FC<FormFieldRendererProps> & { standalone?: boolean; ownsRow?: boolean };
+export type FormFieldRenderer = FC<FormFieldRendererProps> & { standalone?: boolean };
 
 export type FormFieldMap = Record<string, FormFieldRenderer>;
 
