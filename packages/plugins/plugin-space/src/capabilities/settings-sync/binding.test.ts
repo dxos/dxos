@@ -11,14 +11,14 @@ import { Reconciler, type Store } from './binding';
 const NS = 'org.dxos.plugin.markdown';
 
 /**
- * In-memory stand-in for the two halves a store spans: one shared layer, and a local layer per
+ * In-memory stand-in for the two halves a store spans: one shared layer, and one set of pins per
  * device. Devices share the `shared` object and its notifications, as replication gives them.
  */
 const makeStore = () => {
   const shared: AppSettings.Namespaces = {};
   const listeners: (() => void)[] = [];
 
-  /** One device's view: the common shared layer plus a local layer of its own. */
+  /** One device's view: the common shared layer plus pins of its own. */
   const device = () => {
     const local = AppSettings.makeDeviceSettings();
     const store: Store = {
@@ -108,11 +108,11 @@ describe('Reconciler', () => {
     const view = store.device();
     const reconciler = bindTo(store, view, local);
 
-    view.store.update((draft) => AppSettings.setSynced(draft, NS, false, { snapshot: reconciler.current() }));
+    view.store.update((draft) => AppSettings.setSynced(draft, NS, false, reconciler.local(), { freeze: true }));
     local.set({ toolbar: false });
 
     expect(store.shared[NS]).toEqual({ toolbar: true });
-    expect(view.local.overrides[NS]).toEqual({ toolbar: false });
+    expect(view.local[NS].keys).toEqual(['toolbar']);
   });
 
   test('a change from another device lands locally', () => {
@@ -132,7 +132,7 @@ describe('Reconciler', () => {
     const view = store.device();
     const reconciler = bindTo(store, view, local);
 
-    view.store.update((draft) => AppSettings.setSynced(draft, NS, false, { snapshot: reconciler.current() }));
+    view.store.update((draft) => AppSettings.setSynced(draft, NS, false, reconciler.local(), { freeze: true }));
     store.device().store.update((draft) => AppSettings.setValue(draft, NS, 'toolbar', false));
 
     expect(local.get()).toEqual({ toolbar: true });
@@ -144,9 +144,9 @@ describe('Reconciler', () => {
     const view = store.device();
     const reconciler = bindTo(store, view, local);
 
-    view.store.update((draft) => AppSettings.setSynced(draft, NS, false, { snapshot: reconciler.current() }));
+    view.store.update((draft) => AppSettings.setSynced(draft, NS, false, reconciler.local(), { freeze: true }));
     local.set({ toolbar: false });
-    view.store.update((draft) => AppSettings.setSynced(draft, NS, true));
+    view.store.update((draft) => AppSettings.setSynced(draft, NS, true, reconciler.local()));
 
     expect(local.get()).toEqual({ toolbar: true });
   });
@@ -159,7 +159,7 @@ describe('Reconciler', () => {
 
     store.device().store.update((draft) => AppSettings.setValue(draft, NS, 'toolbar', false));
     expect(store.shared[NS]).toEqual({ toolbar: false });
-    expect(view.local.overrides).toEqual({});
+    expect(view.local).toEqual({});
   });
 
   test('the plugin set rides the same reconciliation, keyed by plugin id', () => {
@@ -188,8 +188,8 @@ describe('Reconciler', () => {
     bindTo(store, view, here);
     bindTo(store, store.device(), there);
 
-    // Soft fork: no snapshot, so only what this device changes afterwards diverges.
-    view.store.update((draft) => AppSettings.setSynced(draft, AppSettings.PLUGINS_NAMESPACE, false));
+    // Soft fork: no freeze, so only what this device changes afterwards diverges.
+    view.store.update((draft) => AppSettings.setSynced(draft, AppSettings.PLUGINS_NAMESPACE, false, here.get()));
     here.set({ [markdown]: true, [chess]: false });
     there.set({ [markdown]: true, [chess]: true, [sketch]: true });
 

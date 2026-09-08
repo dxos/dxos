@@ -14,23 +14,32 @@ export const Values = Schema.Record(Schema.String, Schema.Any);
 /** Values for every namespace, keyed by namespace id. */
 export const Namespaces = Schema.Record(Schema.String, Values);
 
-/** This device's own settings layer, persisted locally and never replicated. */
-export const DeviceSettings = Schema.Struct({
-  /** Values this device overrides. A key's presence is the override, not its value. */
-  overrides: Schema.mutableKey(Schema.Record(Schema.String, Schema.mutableKey(Values))),
-  /** Namespaces whose writes go to this device's overrides instead of the shared layer. */
-  unsynced: Schema.mutable(Schema.Array(Schema.String)),
+/** How one namespace departs from the account on this device. */
+export const Pin = Schema.Struct({
+  /** Writes to this namespace stay here, including keys that do not exist yet. */
+  local: Schema.Boolean,
+  /** Keys whose value on this device wins over the account's. */
+  keys: Schema.mutable(Schema.Array(Schema.String)),
 });
+
+/**
+ * Which settings this device keeps to itself, by namespace. Absent means the namespace follows the
+ * account entirely.
+ *
+ * Records only WHICH settings are pinned. The values themselves are already in each namespace's own
+ * local store, which is what the app renders from, so a second copy could only go stale.
+ */
+export const DeviceSettings = Schema.Record(Schema.String, Schema.mutableKey(Pin));
 
 /**
  * App configuration that replicates across a user's devices.
  *
  * A singleton in the settings space (`AppSpace.SETTINGS_SPACE_TAG`), which is hidden and
- * membership-locked; see {@link DeviceSettings} for the half that stays on the device.
+ * membership-locked; see {@link DeviceSettings} for what stays on the device.
  */
 export class AppSettings extends Type.makeObject<AppSettings>(DXN.make('org.dxos.app.type.settings', '0.1.0'))(
   Schema.Struct({
-    /** Values in effect on every device unless a device overrides them. */
+    /** Values in effect on every device unless a device pins them. */
     shared: Namespaces,
   }),
 ) {}
@@ -39,7 +48,7 @@ export class AppSettings extends Type.makeObject<AppSettings>(DXN.make('org.dxos
 export const make = (): AppSettings => Obj.make(AppSettings, { shared: {} });
 
 /** Create an empty device layer, for the local store's initial value. */
-export const makeDeviceSettings = (): DeviceSettings => ({ overrides: {}, unsynced: [] });
+export const makeDeviceSettings = (): DeviceSettings => ({});
 
 /** Mutable field values for one namespace. */
 export type Values = Record<string, any>;
@@ -47,8 +56,11 @@ export type Values = Record<string, any>;
 /** Values for every namespace, keyed by namespace id. Mutable counterpart of {@link Namespaces}. */
 export type Namespaces = Record<string, Values>;
 
+/** Mutable counterpart of {@link Pin}. */
+export type Pin = { local: boolean; keys: string[] };
+
 /** Mutable counterpart of {@link DeviceSettings}. */
-export type DeviceSettings = { overrides: Namespaces; unsynced: string[] };
+export type DeviceSettings = Record<string, Pin>;
 
 /** The plugin set, keyed by plugin id: present means decided, `true` means enabled. */
 export const PLUGINS_NAMESPACE = 'org.dxos.app-framework.plugins';
@@ -59,39 +71,48 @@ export const INSTALLED_NAMESPACE = 'org.dxos.app-framework.plugins.installed';
 /** Value shape stored under {@link INSTALLED_NAMESPACE}. */
 export type InstalledPlugin = { id: string; url: string; version?: string };
 
-/** Shape the resolution helpers read: the replicated layer paired with this device's own. */
+/** Shape the resolution helpers read: the replicated layer paired with this device's pins. */
 export type Snapshot = {
   readonly shared: Namespaces;
-  readonly local: { readonly overrides: Namespaces; readonly unsynced?: readonly string[] };
+  readonly local: DeviceSettings;
 };
 
-/** Values this device overrides in a namespace. Empty when the device overrides nothing. */
-export const getOverrides = (settings: Snapshot, namespace: string): Values =>
-  settings.local.overrides[namespace] ?? {};
+/** Keys this device pins in a namespace. */
+export const getPinnedKeys = (settings: Snapshot, namespace: string): readonly string[] =>
+  settings.local[namespace]?.keys ?? [];
 
 /** Namespaces this device writes locally rather than sharing. */
-export const getUnsynced = (settings: Snapshot): readonly string[] => settings.local.unsynced ?? [];
+export const getUnsynced = (settings: Snapshot): readonly string[] =>
+  Object.keys(settings.local).filter((namespace) => settings.local[namespace].local);
 
 /** Whether edits to `namespace` on this device are shared with the user's other devices. */
-export const isSynced = (settings: Snapshot, namespace: string): boolean => !getUnsynced(settings).includes(namespace);
+export const isSynced = (settings: Snapshot, namespace: string): boolean => !settings.local[namespace]?.local;
 
-/** Whether this device holds its own value for one key. */
-export const isOverridden = (settings: Snapshot, namespace: string, key: string): boolean =>
-  key in getOverrides(settings, namespace);
+/** Whether this device pins one key, so the account's value for it is ignored. */
+export const isPinned = (settings: Snapshot, namespace: string, key: string): boolean =>
+  getPinnedKeys(settings, namespace).includes(key);
 
 /** Whether one key's edits reach the user's other devices — the per-key counterpart of {@link isSynced}. */
 export const isKeySynced = (settings: Snapshot, namespace: string, key: string): boolean =>
-  isSynced(settings, namespace) && !isOverridden(settings, namespace, key);
+  isSynced(settings, namespace) && !isPinned(settings, namespace, key);
 
 /**
- * The values in effect on this device: `defaults`, overlaid with the shared values, overlaid with
- * this device's overrides. The shared layer is read even for an unsynced namespace.
+ * The values in effect on this device: `local` overlaid with the shared values, except where this
+ * device pins a key and keeps its own.
+ *
+ * `local` is the namespace's own store — both the base for keys the account has no opinion on, and
+ * the source for pinned ones.
  */
-export const resolve = (settings: Snapshot, namespace: string, defaults?: Values): Values => ({
-  ...defaults,
-  ...settings.shared[namespace],
-  ...getOverrides(settings, namespace),
-});
+export const resolve = (settings: Snapshot, namespace: string, local: Values = {}): Values => {
+  const resolved: Values = { ...local, ...settings.shared[namespace] };
+  for (const key of getPinnedKeys(settings, namespace)) {
+    if (key in local) {
+      resolved[key] = local[key];
+    }
+  }
+
+  return resolved;
+};
 
 /** Mutable view of {@link Snapshot}. Call the mutators inside `Obj.update(settings, ...)`. */
 export type Draft = {
@@ -101,74 +122,102 @@ export type Draft = {
 
 const namespaceOf = (container: Namespaces, namespace: string): Values => (container[namespace] ??= {});
 
+const pinOf = (draft: Draft, namespace: string): Pin => (draft.local[namespace] ??= { local: false, keys: [] });
+
 /**
- * Write `key` to whichever layer owns it: this device's overrides when the namespace is unsynced or
- * the key is already overridden, the shared layer otherwise.
+ * Route a write to the account, or record that this device keeps the key.
+ *
+ * A pinned key's value is not stored here: it is already in the namespace's own store, which is
+ * where every reader gets it from.
  */
 export const setValue = (draft: Draft, namespace: string, key: string, value: unknown): void => {
-  const local = !isSynced(draft, namespace) || isOverridden(draft, namespace, key);
-  const target = local ? namespaceOf(draft.local.overrides, namespace) : namespaceOf(draft.shared, namespace);
-  target[key] = value;
+  if (isSynced(draft, namespace) && !isPinned(draft, namespace, key)) {
+    namespaceOf(draft.shared, namespace)[key] = value;
+    return;
+  }
+
+  const pin = pinOf(draft, namespace);
+  if (!pin.keys.includes(key)) {
+    pin.keys.push(key);
+  }
 };
 
-/** Remove `key` from both layers, so it falls back to the plugin's schema default. */
+/** Stop sharing `key`, and drop any pin, so it falls back to the namespace's own store. */
 export const clearValue = (draft: Draft, namespace: string, key: string): void => {
   delete draft.shared[namespace]?.[key];
-  delete draft.local.overrides[namespace]?.[key];
+  unpin(draft, namespace, key);
 };
 
 /** Which side wins for the keys that {@link conflictingKeys} reports, when rejoining the account. */
 export type Adopt = 'shared' | 'local';
 
 export type SetSyncedOptions = {
-  /** Values in effect here, frozen into the device layer when leaving. Omit to diverge from the next write on. */
-  snapshot?: Values;
+  /** Pin every key in `local` when leaving. Omit to diverge from the next write on. */
+  freeze?: boolean;
   /** Which side wins when rejoining, for the keys {@link conflictingKeys} reports. */
   adopt?: Adopt;
 };
 
-/** Turn sharing of a namespace on or off for this device. */
+/**
+ * Turn sharing of a namespace on or off for this device.
+ *
+ * `local` is the namespace's own store, which holds the values either direction acts on.
+ */
 export const setSynced = (
   draft: Draft,
   namespace: string,
   synced: boolean,
-  { snapshot, adopt = 'shared' }: SetSyncedOptions = {},
+  local: Values,
+  { freeze, adopt = 'shared' }: SetSyncedOptions = {},
 ): void => {
-  if (synced) {
-    const overrides = draft.local.overrides[namespace];
-    if (overrides && Object.keys(overrides).length > 0) {
-      const shared = namespaceOf(draft.shared, namespace);
-      draft.shared[namespace] = adopt === 'local' ? { ...shared, ...overrides } : { ...overrides, ...shared };
-    }
-    draft.local.unsynced = draft.local.unsynced.filter((entry) => entry !== namespace);
-    delete draft.local.overrides[namespace];
-  } else {
-    if (!draft.local.unsynced.includes(namespace)) {
-      draft.local.unsynced = [...draft.local.unsynced, namespace];
-    }
-    if (snapshot) {
-      draft.local.overrides[namespace] = { ...snapshot };
+  if (!synced) {
+    draft.local[namespace] = {
+      local: true,
+      keys: freeze ? Object.keys(local) : getPinnedKeys(draft, namespace).slice(),
+    };
+    return;
+  }
+
+  // A pinned key the account does not hold is adopted whichever side wins: the account has no
+  // competing opinion, so nothing is lost by keeping it. `adopt` decides only the rest, which is
+  // what {@link conflictingKeys} reports and what the reader was asked about.
+  const shared = namespaceOf(draft.shared, namespace);
+  for (const key of getPinnedKeys(draft, namespace)) {
+    if (key in local && (adopt === 'local' || !(key in shared))) {
+      shared[key] = local[key];
     }
   }
+
+  delete draft.local[namespace];
 };
 
 /**
  * Pin one key to this device, or hand it back to the account.
  *
- * `snapshot` is the value in effect: a key still on its schema default is absent from both layers,
- * and pinning it must capture the default rather than nothing.
+ * Nothing is copied either way: pinning records the key, and the value it pins is the one already in
+ * the namespace's own store.
  */
-export const setKeySynced = (
-  draft: Draft,
-  namespace: string,
-  key: string,
-  synced: boolean,
-  snapshot?: unknown,
-): void => {
+export const setKeySynced = (draft: Draft, namespace: string, key: string, synced: boolean): void => {
   if (synced) {
-    delete draft.local.overrides[namespace]?.[key];
-  } else {
-    namespaceOf(draft.local.overrides, namespace)[key] = snapshot;
+    unpin(draft, namespace, key);
+    return;
+  }
+
+  const pin = pinOf(draft, namespace);
+  if (!pin.keys.includes(key)) {
+    pin.keys.push(key);
+  }
+};
+
+const unpin = (draft: Draft, namespace: string, key: string): void => {
+  const pin = draft.local[namespace];
+  if (!pin) {
+    return;
+  }
+
+  pin.keys = pin.keys.filter((entry) => entry !== key);
+  if (!pin.local && pin.keys.length === 0) {
+    delete draft.local[namespace];
   }
 };
 
@@ -179,10 +228,9 @@ export const changedKeys = (before: Values, after: Values): string[] =>
   [...new Set([...Object.keys(before), ...Object.keys(after)])].filter((key) => differs(before[key], after[key]));
 
 /** Keys where rejoining the account forces a choice, because both sides hold the key and disagree. */
-export const conflictingKeys = (settings: Snapshot, namespace: string): string[] => {
-  const overrides = getOverrides(settings, namespace);
+export const conflictingKeys = (settings: Snapshot, namespace: string, local: Values): string[] => {
   const shared = settings.shared[namespace] ?? {};
-  return Object.keys(overrides).filter((key) => key in shared && differs(overrides[key], shared[key]));
+  return getPinnedKeys(settings, namespace).filter((key) => key in shared && differs(local[key], shared[key]));
 };
 
 /** Route every changed key of a resolved-value edit to its owning layer; dropped keys are cleared from both. */

@@ -17,7 +17,6 @@ import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 
 import { resolveSettingsSpace } from '../../util';
 import { type Binding, Reconciler } from './binding';
-import { awaitDevice } from './device';
 import { getOrCreateSettings, makeDeviceStore, makeStore } from './store';
 
 /**
@@ -36,18 +35,16 @@ export default Capability.makeModule(
       return [];
     }
 
-    const device = yield* awaitDevice(client.halo);
-
     const space = yield* resolveSettingsSpace(client);
     const settings = yield* getOrCreateSettings(space);
-    const deviceStore = makeDeviceStore(device.deviceKey.toHex());
+    const deviceStore = makeDeviceStore();
     const store = makeStore(settings, deviceStore, registry);
 
     // Copied out: the atom compares by identity, and the stored value keeps its identity across a write.
     const readUnsynced = () => [...AppSettings.getUnsynced(store.read())];
     const unsynced = Atom.make<readonly string[]>(readUnsynced()).pipe(Atom.keepAlive);
-    const readOverrides = () => structuredClone(store.read().local.overrides);
-    const overrides = Atom.make<AppSettings.Namespaces>(readOverrides()).pipe(Atom.keepAlive);
+    const readPinned = () => structuredClone(store.read().local);
+    const pinned = Atom.make<AppSettings.DeviceSettings>(readPinned()).pipe(Atom.keepAlive);
 
     const reconcilers: Reconciler[] = [];
     const subscriptions: (() => void)[] = [];
@@ -136,7 +133,7 @@ export default Capability.makeModule(
 
     const refresh = () => {
       registry.set(unsynced, readUnsynced());
-      registry.set(overrides, readOverrides());
+      registry.set(pinned, readPinned());
       for (const reconciler of reconcilers) {
         reconciler.pull();
       }
@@ -150,24 +147,23 @@ export default Capability.makeModule(
       }),
     );
 
+    const localValues = (namespace: string): AppSettings.Values =>
+      reconcilers.find((reconciler) => reconciler.namespace === namespace)?.local() ?? {};
+
     return Capability.contribute(AppCapabilities.SettingsSync, {
       unsynced,
-      overrides,
+      pinned,
       setSynced: (namespace, synced, options) => {
-        // Unsyncing the plugin set deliberately takes no snapshot, so plugins enabled on another
-        // device later still arrive here.
-        const snapshot =
-          synced || namespace === AppSettings.PLUGINS_NAMESPACE
-            ? undefined
-            : reconcilers.find((reconciler) => reconciler.namespace === namespace)?.current();
-        store.update((draft) => AppSettings.setSynced(draft, namespace, synced, { snapshot, adopt: options?.adopt }));
+        // Leaving the plugin set deliberately pins nothing, so plugins enabled on another device
+        // later still arrive here.
+        const freeze = namespace !== AppSettings.PLUGINS_NAMESPACE;
+        store.update((draft) =>
+          AppSettings.setSynced(draft, namespace, synced, localValues(namespace), { freeze, adopt: options?.adopt }),
+        );
       },
-      conflicts: (namespace) => AppSettings.conflictingKeys(store.read(), namespace),
+      conflicts: (namespace) => AppSettings.conflictingKeys(store.read(), namespace, localValues(namespace)),
       setKeySynced: (namespace, key, synced) => {
-        const snapshot = synced
-          ? undefined
-          : reconcilers.find((reconciler) => reconciler.namespace === namespace)?.current()[key];
-        store.update((draft) => AppSettings.setKeySynced(draft, namespace, key, synced, snapshot));
+        store.update((draft) => AppSettings.setKeySynced(draft, namespace, key, synced));
       },
     });
   }),

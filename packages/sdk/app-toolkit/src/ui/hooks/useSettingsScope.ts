@@ -13,7 +13,7 @@ import * as AppSettings from '../../types/AppSettings';
 
 /** Stable fallback so the atom hook keeps a constant identity while the sync is unavailable. */
 const emptyUnsynced = Atom.make<readonly string[]>([]);
-const emptyOverrides = Atom.make<AppSettings.Namespaces>({});
+const emptyPinned = Atom.make<AppSettings.DeviceSettings>({});
 
 export type SettingsScopeState = {
   /** Whether the device-synced settings store is available at all. */
@@ -52,9 +52,9 @@ export const useSettingsScope = (prefix: string): SettingsScopeState => {
 /** Reactive sync scope for one key within a prefix, rather than the prefix as a whole. */
 export const useSettingsKeyScope = (prefix: string, key: string): SettingsKeyScopeState => {
   const sync = useOptionalCapability(AppCapabilities.SettingsSync);
-  const overrides = useAtomValue(sync?.overrides ?? emptyOverrides);
+  const pins = useAtomValue(sync?.pinned ?? emptyPinned);
   const setSynced = useCallback((synced: boolean) => sync?.setKeySynced(prefix, key, synced), [sync, prefix, key]);
-  const pinned = key in (overrides[prefix] ?? {});
+  const pinned = (pins[prefix]?.keys ?? []).includes(key);
 
   return {
     available: !!sync,
@@ -70,10 +70,10 @@ export const useSettingsKeyScope = (prefix: string, key: string): SettingsKeySco
  */
 export const useSettingsDivergedKeys = (prefix: string): ReadonlySet<string> => {
   const sync = useOptionalCapability(AppCapabilities.SettingsSync);
-  const overrides = useAtomValue(sync?.overrides ?? emptyOverrides);
+  const pins = useAtomValue(sync?.pinned ?? emptyPinned);
 
   return useMemo(() => {
-    void overrides;
+    void pins;
     return new Set(sync?.conflicts(prefix) ?? []);
-  }, [sync, prefix, overrides]);
+  }, [sync, prefix, pins]);
 };

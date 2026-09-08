@@ -23,21 +23,18 @@ export const getOrCreateSettings = Effect.fnUntraced(function* (space: Space) {
   return canonical ?? space.db.add(AppSettings.make());
 });
 
-/**
- * This device's own layer, in local storage. Keyed by device key so a profile joined to a different
- * identity on the same browser starts clean.
- */
-export const makeDeviceStore = (deviceKey: string): Atom.Writable<AppSettings.DeviceSettings> =>
+/** This device's pins, in local storage. One per device, so the key names no device. */
+export const makeDeviceStore = (): Atom.Writable<AppSettings.DeviceSettings> =>
   createKvsStore({
-    key: `org.dxos.app-toolkit.settings-scope/${deviceKey}`,
+    key: 'org.dxos.app-toolkit.settings-scope',
     schema: AppSettings.DeviceSettings,
     defaultValue: AppSettings.makeDeviceSettings,
   });
 
 /**
  * Adapt the two halves to the reconciler's storage interface: the shared layer in ECHO, this
- * device's own in local storage. A write opens both, since only {@link AppSettings.setValue} knows
- * which layer an edit belongs to.
+ * device's pins in local storage. A write opens both, since only {@link AppSettings.setValue} knows
+ * whether an edit reaches the account.
  */
 export const makeStore = (
   settings: AppSettings.AppSettings,
@@ -47,10 +44,7 @@ export const makeStore = (
   read: () => ({ shared: settings.shared, local: registry.get(device) }),
   update: (fn) => {
     const before = registry.get(device);
-    const local: AppSettings.DeviceSettings = {
-      overrides: structuredClone(before.overrides),
-      unsynced: [...before.unsynced],
-    };
+    const local: AppSettings.DeviceSettings = structuredClone(before);
     Obj.update(settings, (settings) => fn({ shared: settings.shared, local }));
     if (JSON.stringify(local) !== JSON.stringify(before)) {
       registry.set(device, local);

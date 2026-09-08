@@ -200,8 +200,8 @@ export type SettingsSync = {
   setSynced(prefix: string, synced: boolean, options?: { adopt?: AppSettings.Adopt }): void;
   /** Keys that rejoining the account would change. Read on demand rather than reactively. */
   conflicts(prefix: string): readonly string[];
-  /** Keys this device holds its own value for, by prefix. */
-  readonly overrides: Atom.Atom<AppSettings.Namespaces>;
+  /** Which settings this device keeps to itself, by prefix. */
+  readonly pinned: Atom.Atom<AppSettings.DeviceSettings>;
   /** Pin one key to this device, or hand it back — the per-key counterpart of {@link setSynced}. */
   setKeySynced(prefix: string, key: string, synced: boolean): void;
 };

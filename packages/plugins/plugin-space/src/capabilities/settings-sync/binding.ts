@@ -44,6 +44,11 @@ export class Reconciler {
     return this.#resolved();
   }
 
+  /** The namespace's own store, which holds the value of every pinned key. */
+  local(): AppSettings.Values {
+    return this._binding.read();
+  }
+
   /**
    * First reconciliation: the store wins for keys it holds, and keys only this device has are
    * adopted into the shared layer.
