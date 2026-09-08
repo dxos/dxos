@@ -42,6 +42,16 @@ describe('nodeArgsUnchanged', () => {
       .be.false;
   });
 
+  test('data changing between a record and an array reads as changed', ({ expect }) => {
+    expect(nodeArgsUnchanged([node({ data: {} })], [node({ data: [] })])).to.be.false;
+    expect(nodeArgsUnchanged([node({ data: [] })], [node({ data: {} })])).to.be.false;
+  });
+
+  test('data arrays of differing length read as changed', ({ expect }) => {
+    expect(nodeArgsUnchanged([node({ data: [] })], [node({ data: new Array(1) })])).to.be.false;
+    expect(nodeArgsUnchanged([node({ data: [1] })], [node({ data: [1, 2] })])).to.be.false;
+  });
+
   // An action's `data` is its invoke closure, rebuilt inline on every connector run, so action-bearing
   // output can never compare unchanged.
   test('a re-created action closure reads as changed', ({ expect }) => {

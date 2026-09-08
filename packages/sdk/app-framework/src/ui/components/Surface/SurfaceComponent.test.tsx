@@ -550,25 +550,31 @@ const StablePlugin = (counts: { value: number }) =>
     Plugin.make,
   )();
 
+/** Mounts a host that passes `data` as an object literal, and hands back the two ways to move it. */
+const mountStableHost = async (harness: Awaited<ReturnType<typeof createTestApp>>, initial: { id: string }) => {
+  const controls = { rerender: () => {}, setSubject: (_: { id: string }) => {} };
+  const Host = () => {
+    const [, setNonce] = useState(0);
+    const [subject, setSubject] = useState(initial);
+    controls.rerender = () => setNonce((nonce) => nonce + 1);
+    controls.setSubject = setSubject;
+    return <SurfaceComponent type={RoleStable} data={{ subject }} />;
+  };
+
+  const view = render(harness, <Host />);
+  await view.findByTestId('stable');
+  return { view, ...controls };
+};
+
 describe('SurfaceComponent data stability', () => {
   test('an inline `data` literal does not re-render the subtree when an ancestor renders', async ({ expect }) => {
     const counts = { value: 0 };
     await using harness = await createTestApp({ plugins: [StablePlugin(counts)] });
-
-    const subject = { id: 'x' };
-    let bump: () => void = () => {};
-    const Host = () => {
-      const [, setN] = useState(0);
-      bump = () => setN((n) => n + 1);
-      return <SurfaceComponent type={RoleStable} data={{ subject }} />;
-    };
-
-    const view = render(harness, <Host />);
-    await view.findByTestId('stable');
+    const { rerender } = await mountStableHost(harness, { id: 'x' });
     const baseline = counts.value;
 
     for (let i = 0; i < 5; i++) {
-      act(() => bump());
+      act(() => rerender());
     }
 
     expect(counts.value).toBe(baseline);
@@ -577,21 +583,10 @@ describe('SurfaceComponent data stability', () => {
   test('a genuine `data` change still re-renders the subtree', async ({ expect }) => {
     const counts = { value: 0 };
     await using harness = await createTestApp({ plugins: [StablePlugin(counts)] });
-
-    const first = { id: 'first' };
-    const second = { id: 'second' };
-    let swap: () => void = () => {};
-    const Host = () => {
-      const [subject, setSubject] = useState(first);
-      swap = () => setSubject(second);
-      return <SurfaceComponent type={RoleStable} data={{ subject }} />;
-    };
-
-    const view = render(harness, <Host />);
-    await view.findByTestId('stable');
+    const { view, setSubject } = await mountStableHost(harness, { id: 'first' });
     const baseline = counts.value;
 
-    act(() => swap());
+    act(() => setSubject({ id: 'second' }));
 
     expect(counts.value).toBeGreaterThan(baseline);
     expect((await view.findByTestId('stable')).textContent).toBe('second');
