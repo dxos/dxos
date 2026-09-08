@@ -7,8 +7,6 @@
 import * as Cause from 'effect/Cause';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
-import * as Option from 'effect/Option';
-import type * as Scope from 'effect/Scope';
 import * as Semaphore from 'effect/Semaphore';
 import * as Atom from 'effect/unstable/reactivity/Atom';
 
@@ -133,24 +131,21 @@ export interface AgentServiceOptions {
    */
   getMcpServers?: () => McpServer.McpServer[];
 
-  /**
-   * Resolves the manager that hosts `location: 'edge'` sessions, on demand. Absent — only local
-   * agents can run. Resolved per call rather than required by this layer: a build-time requirement
-   * would prune the whole provider (and `AgentService` with it) on a stack hosting only local
-   * agents.
-   */
-  getRemoteManager?: () => Effect.Effect<RemoteProcessManager.Manager, unknown, Scope.Scope>;
 }
 
-export const layer = (opts?: AgentServiceOptions): Layer.Layer<AgentService, never, ProcessManager.Service> =>
+export const layer = (
+  opts?: AgentServiceOptions,
+): Layer.Layer<AgentService, never, ProcessManager.Service | RemoteProcessManager.Service> =>
   Layer.effect(
     AgentService,
     Effect.gen(function* () {
       const processManager = yield* ProcessManager.Service;
-      // Read, never required: a plain layer stack provides the tag beneath this layer, while a
-      // `LayerSpec` stack that declared it would prune this whole provider (and `AgentService` with
-      // it) wherever only local agents are hosted. `getRemoteManager` overrides it for the latter.
-      const remote = yield* Effect.serviceOption(RemoteProcessManager.Service);
+      // Required, not read optionally: an optional read is invisible to a `LayerSpec` stack, where a
+      // tag this spec does not require is never in its context -- so every `location: 'edge'` session
+      // failed on a manager that was present in the app all along. A host that runs only local agents
+      // satisfies this with `RemoteProcessManager.layerNoop`, which is explicit about offering no
+      // process control instead of silently disabling edge.
+      const remote = yield* RemoteProcessManager.Service;
 
       // Spaces an edge session has been opened on this run. One remote manager spans them all and
       // each of its verbs takes the space it addresses, so this is what `hydrate` has to walk.
@@ -177,15 +172,8 @@ export const layer = (opts?: AgentServiceOptions): Layer.Layer<AgentService, nev
         if (!spaceId) {
           throw new Error('Agent requested on edge, but its conversation has no space.');
         }
-        const getRemoteManager =
-          opts?.getRemoteManager ?? (Option.isSome(remote) ? () => Effect.succeed(remote.value) : undefined);
-        if (!getRemoteManager) {
-          throw new Error('Agent requested on edge, but no RemoteProcessManager is available.');
-        }
-        // Scoped per call: the manager itself is owned by the stack that resolves it, so the scope
-        // covers only the resolution.
         const withRemote = <A>(use: (manager: RemoteProcessManager.Manager) => Effect.Effect<A>) =>
-          Effect.scoped(Effect.flatMap(getRemoteManager(), use)).pipe(Effect.orDie);
+          use(remote).pipe(Effect.orDie);
         remoteSpaces.add(spaceId);
         return {
           list: (options: ProcessManager.ListOptions) =>

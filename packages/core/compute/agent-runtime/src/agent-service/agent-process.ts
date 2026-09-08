@@ -101,6 +101,11 @@ export const AgentProcess = (options: AgentProcessOptions) =>
       // Accepts plain text or content blocks.
       input: Schema.Union([Schema.String, Schema.Array(ContentBlock.Any)]),
       output: Schema.Void,
+      // The conversation's own data model. `SessionStore` reads the queue with a TYPED query
+      // (`Filter.type(Message)`/`Filter.type(Alarm)`), so without these registered every read comes
+      // back empty on a host that did not happen to register them itself: the prompt appends fine and
+      // the agent then finds nothing to do. `Chat`/`Feed` are resolved by DXN at startup.
+      types: [Chat.Chat, Feed.Feed, Message.Message, Alarm.Alarm],
       services: [
         Database.Service,
         OpaqueToolkit.OpaqueToolkitProvider,
@@ -212,6 +217,14 @@ export const AgentProcess = (options: AgentProcessOptions) =>
           });
         });
 
+        // Whether this incarnation has actually run a turn. An empty queue means two different things:
+        // after a turn it means the work drained and the process should finish, but on a fresh spawn
+        // it is simply a conversation nobody has spoken to yet — `onSpawn` discards what it inherits,
+        // so a new process ALWAYS starts empty. Completing on the latter ends the agent before the
+        // prompt that spawned it arrives, and `submitInput` then drops that prompt on a finished
+        // handle, leaving the reader with no reply and no error.
+        let turnRan = false;
+
         const pendingWork = (state: PendingState): boolean =>
           isAgentWorkPending({
             toolResults,
@@ -224,6 +237,14 @@ export const AgentProcess = (options: AgentProcessOptions) =>
         const maybeCompleteWith = (state: PendingState) =>
           Effect.gen(function* () {
             if (pendingWork(state)) {
+              return;
+            }
+
+            if (!turnRan) {
+              // Idle, not done: stay resident so the prompt this process was spawned for can still
+              // land. Ahead of the hooks below, which are end-of-REQUEST hooks — there has been no
+              // request to end. Nothing is scheduled; the next `onInput` arms the alarm.
+              log('agent idle before its first turn, staying resident');
               return;
             }
 
@@ -355,6 +376,7 @@ export const AgentProcess = (options: AgentProcessOptions) =>
                   ),
                 );
               log('end request');
+              turnRan = true;
               yield* ToolResultsCell.set(toolResults);
 
               // Ack only now: the turn is what the queue entry was for, so a process that dies before

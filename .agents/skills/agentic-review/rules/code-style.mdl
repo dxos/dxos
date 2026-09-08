@@ -83,6 +83,36 @@ rule operations-take-refs-not-ids: Operations identify objects by Ref, never by 
   severity: warn
 ```
 
+```mdl
+rule declare-optional-services-with-noop-layers: An optional service is a declared requirement plus a noop layer, never a callback
+  A layer that needs a service only sometimes must still DECLARE it — in the
+  `Layer` signature's requirements, and in a `LayerSpec`'s `requires` — and the
+  hosts that lack a real implementation must satisfy it with a documented noop
+  layer (`layerNoop`). Do not reach for the alternatives: an
+  `Effect.serviceOption` read is invisible to a `LayerSpec` stack, where a tag
+  the spec does not require is never in its context, so the read comes back
+  empty even when the app materialises the service elsewhere; and a
+  `getFooManager?: () => Effect<Foo>` callback option moves the wiring out of
+  the layer graph into a caller that has to re-derive it, so the graph no longer
+  tells you what the layer needs and each host wires it differently — or
+  forgets to. The usual justification for both is that requiring the tag would
+  prune the provider on a host that does not use the feature; a noop layer
+  answers that directly, and fails loudly at the point of use rather than
+  silently disabling the feature at construction. Flag an
+  `Effect.serviceOption` whose tag is not in the enclosing layer's
+  requirements, a `LayerSpec` factory reading a tag absent from its `requires`,
+  and an options field typed as a thunk returning a service or an `Effect` of
+  one. `Effect.serviceOption` for a genuinely optional *value* (a config
+  default, a capability list that may be empty) is NOT a violation, and neither
+  is a callback that supplies behaviour rather than a service — a strategy, a
+  factory the host parameterises.
+  scope: repo
+  files:
+    - packages/**/*.ts
+  grep: serviceOption|get[A-Z]\w*(Manager|Service|Provider)\?:
+  severity: warn
+```
+
 ## Appendix
 
 ```mdl
