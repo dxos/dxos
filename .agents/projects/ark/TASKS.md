@@ -1010,7 +1010,7 @@ against the Radix-era names react-ui kept, Popover first.
       lets a flex-column fieldset keep it in flow. `Form.Section`'s legend was inside a header
       `div`, so it never named the group; it is the fieldset's first child now. Story
       `react-ui-form/FormFieldSet` asserts the groups by role and name in both variants;
-      `Form/DESIGN.md` carries the react-ui-form → react-ui → Ark mapping table.
+      `react-ui-form/docs/DESIGN.md` carries the react-ui-form → react-ui → Ark mapping table.
 - [x] **Names say what things are** DONE 2026-09-08: `FormField` (a factory that picked a renderer
       per schema property) is `FormFieldDispatch`, with the decision extracted as the pure
       `resolveFieldRenderer` (tested by kind); `Form.Row` is `Form.Field` — one label + control is a
