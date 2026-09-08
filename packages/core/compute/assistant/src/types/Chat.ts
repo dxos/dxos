@@ -29,7 +29,7 @@ export class Chat extends Type.makeObject<Chat>(DXN.make('org.dxos.type.assistan
      * Runs this conversation's agent on the edge rather than locally, mirroring a trigger's own
      * `remote` flag. When unset, the agent runs locally on the client.
      */
-    remote: Schema.Boolean.pipe(Schema.annotate({ title: 'Remote' }), FormInputAnnotation.set(false), Schema.optional),
+    remote: Schema.Boolean.pipe(Schema.annotate({ title: 'Remote' }), Schema.optional),
 
     /** Message feed, owned by the chat so `SetParent` cascades it. */
     feed: Ref.Ref(Feed.Feed).pipe(Annotation.SetParent.set(true), FormInputAnnotation.set(false)),
