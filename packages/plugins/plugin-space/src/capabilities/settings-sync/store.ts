@@ -58,7 +58,7 @@ export const makeStore = (
       overrides: structuredClone(before.overrides),
       unsynced: [...before.unsynced],
     };
-    Obj.update(settings, (draft) => fn({ shared: draft.shared, local }));
+    Obj.update(settings, (settings) => fn({ shared: settings.shared, local }));
     // Only republish when this half actually moved: an edit routed to the shared layer leaves it
     // untouched, and setting it regardless would wake every reader on every write.
     if (JSON.stringify(local) !== JSON.stringify(before)) {
