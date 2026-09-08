@@ -25,7 +25,7 @@ Form.Root                               context: schema, values, validation, onV
       └─ Form.Actions
          └─ Form.Submit
             Form.Error
-```
+```<<<<<<< ours
 
 ## Primitive mapping
 
@@ -122,3 +122,42 @@ the boundary. The steps, in order and each landable alone: (1) the row is always
 with `standalone` for rows without a single control — this closes the two gaps above; (2) the
 modes move to `Form.Root` context; (3) `useFormField` and the binding boundary, renderers become
 controls, the dispatcher renders the row.
+||||||| original
+
+=======
+
+## Primitive mapping
+
+What each form component is built from, one layer down (`@dxos/react-ui`) and two layers down
+(`@ark-ui/react`). A blank cell means the layer adds nothing there: the component is plain markup.
+`@dxos/react-ui`'s `Field` is Ark's `Field` plus the standard form of each control (`Field.Input`,
+`Field.Textarea`, `Field.Checkbox`, `Field.Switch`, …): one component per control, pre-wired to the
+enclosing field, usable without a root. The composite anatomies (`Checkbox.*`, `Switch.*`) are Ark's.
+
+| `@dxos/react-ui-form`                         | `@dxos/react-ui`                                                                            | `@ark-ui/react`                                                    |
+| --------------------------------------------- | ------------------------------------------------------------------------------------------- | ------------------------------------------------------------------ |
+| `Form.Root`                                   |                                                                                             |                                                                    |
+| `Form.Viewport`                               | `ScrollArea`                                                                                | `ScrollArea`                                                       |
+| `Form.Content`                                |                                                                                             |                                                                    |
+| `Form.Section`                                | `Fieldset.Root`, `Fieldset.Legend` (around an `<h2>`)                                       | `Fieldset.Root`, `Fieldset.Legend`                                 |
+| `Form.Group`                                  |                                                                                             |                                                                    |
+| `Form.FieldSet` / `FormFieldSetContainer`     | `Fieldset.Root`, `Fieldset.Legend`; `Collapsible.Root`/`Trigger`/`Content` when collapsible | `Fieldset.*`, `Collapsible.*`                                      |
+| `FormFieldHeader`                             | `Form.Label` (standalone), `IconButton`                                                     |                                                                    |
+| `Form.Field` — field mode (schema field)      | `Field.Root`, `Field.Label`, `Field.Description`, `Field.Validation`                        | `Field.Root`, `Field.Label`, `Field.HelperText`, `Field.ErrorText` |
+| `Form.Field` — action mode (element children) | plain `<div>` / `<span>` / `<p>`                                                            |                                                                    |
+| `Form.Label`                                  | `Field.Label`                                                                               | `Field.Label`                                                      |
+| `Form.Actions`, `Form.Submit`                 | `Button`                                                                                    |                                                                    |
+| `Form.Error`                                  | `Field.Root` (error valence), `Field.Validation`                                            | `Field.Root`, `Field.ErrorText`                                    |
+|                                               |                                                                                             |                                                                    |
+| `TextField`, `PasswordField`, `NumberField`   | `Field.TextInput`                                                                           | `Field.Input`                                                      |
+| `TextAreaField`, `MarkdownField`              | `Field.TextArea` / editor                                                                   | `Field.Textarea`                                                   |
+| `BooleanField`                                | `Field.Switch`                                                                              | `Switch`                                                           |
+| `DateField`                                   | `Field.Date`, `Field.DateTime`, `Field.Time`                                                | `Field` parts + `Popover` (react-aria date field)                  |
+| `SelectField`, `SelectOptionField`            | `Select.Root`                                                                               | `Select`                                                           |
+| `ComboboxField`, `RefField`                   | `Combobox.Root`                                                                             | `Combobox`                                                         |
+| `ArrayField`                                  | `FormFieldHeader` + rows                                                                    |                                                                    |
+
+The two gaps this table makes visible: `Form.Field` in action mode is not a `Field`, so a hand-written
+settings row has no field scope for its label and description; and `Form.Group` is a styled `div`
+rather than a `Fieldset`.
+>>>>>>> theirs
