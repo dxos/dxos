@@ -26,39 +26,7 @@ One mechanism to schedule a process, such that:
 
 ## Current implementation
 
-### Schematic
-
-```mermaid
-flowchart LR
-  subgraph Space
-    T[Trigger] -->|runnable| OP[PersistentOperation]
-    R[Routine] -.wireTriggers.-> T
-    I[Instructions]
-    C[Chat] --> F[(Feed: messages, queue, alarms)]
-    TF[(Trace feed)]
-  end
-
-  subgraph Client
-    TD[TriggerDispatcher<br/>per space] -->|spawn| PM[ProcessManager]
-    PM --> OPP[Operation process]
-    PM --> AP[AgentProcess]
-    AP -->|invoke| OPP
-    PM --> KV[(IndexedDB)]
-  end
-
-  subgraph EDGE
-    IX[Indexer] --> DO[TriggersDispatcher DO<br/>per space]
-    DO --> FI[FunctionInvoker]
-    FI --> OS[operation-service<br/>handler inline]
-    DO --> Q[(DO queues:<br/>changes, continuations)]
-  end
-
-  T -->|!remote| TD
-  T -->|remote| DO
-  OPP --> TF
-  OS --> TF
-  OP -->|RunInstructions| I
-```
+![Current implementation](./diagrams/process-manager.drawio.svg)
 
 ### Modules
 
