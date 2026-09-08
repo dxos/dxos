@@ -14,14 +14,14 @@ import { type RpcPort } from './rpc';
 import { type ProtoRpcPeer, createProtoRpcPeer } from './service';
 import { createLinkedPorts } from './testing';
 
-// `ServiceHandler` writes protobuf.js's `fullName` into `Any.type_url`, which carries a leading dot;
+// `ServiceHandler` writes protobuf.js's `fullName` into `Any.typeUrl`, which carries a leading dot;
 // buf's `DescService` reports the same type without one. These fixtures gate `#8` by proving a peer
 // is indifferent to which form it receives, so the rebuild can change it.
 
 const codec = compatCodec<RpcMessage>(RpcMessageSchema);
 
-describe('Any.type_url across the legacy/buf service boundary', () => {
-  test('the legacy service path writes a dotted type_url', async ({ expect }) => {
+describe('Any.typeUrl across the legacy/buf service boundary', () => {
+  test('the legacy service path writes a dotted typeUrl', async ({ expect }) => {
     const [clientPort, serverPort] = createLinkedPorts();
     const { port, seen } = rewriteOutgoingTypeUrl(clientPort, (typeUrl) => typeUrl);
     await withPair(port, serverPort, async (client) => {
@@ -33,7 +33,7 @@ describe('Any.type_url across the legacy/buf service boundary', () => {
     expect(seen.every((typeUrl) => typeUrl.startsWith('.'))).toBe(true);
   });
 
-  test('a buf-shaped client (dot-free type_url) is understood by a legacy server', async ({ expect }) => {
+  test('a buf-shaped client (dot-free typeUrl) is understood by a legacy server', async ({ expect }) => {
     const [clientPort, serverPort] = createLinkedPorts();
     const { port, seen } = rewriteOutgoingTypeUrl(clientPort, stripLeadingDot);
     await withPair(port, serverPort, async (client) => {
@@ -43,7 +43,7 @@ describe('Any.type_url across the legacy/buf service boundary', () => {
     expect(seen.some((typeUrl) => typeUrl.startsWith('.'))).toBe(true);
   });
 
-  test('a buf-shaped server (dot-free type_url) is understood by a legacy client', async ({ expect }) => {
+  test('a buf-shaped server (dot-free typeUrl) is understood by a legacy client', async ({ expect }) => {
     const [clientPort, serverPort] = createLinkedPorts();
     const { port, seen } = rewriteOutgoingTypeUrl(serverPort, stripLeadingDot);
     await withPair(clientPort, port, async (client) => {
@@ -70,7 +70,7 @@ type Rewriter = (typeUrl: string) => string;
 type Bundle = { TestService: TestService };
 
 /**
- * Wraps a port so every `Any.type_url` leaving it is rewritten, making one peer emit exactly what a
+ * Wraps a port so every `Any.typeUrl` leaving it is rewritten, making one peer emit exactly what a
  * `DescService`-backed implementation would. Counts rewrites so a fixture cannot pass vacuously.
  */
 const rewriteOutgoingTypeUrl = (port: RpcPort, rewrite: Rewriter) => {
@@ -79,9 +79,9 @@ const rewriteOutgoingTypeUrl = (port: RpcPort, rewrite: Rewriter) => {
     send: (msg, timeout) => {
       const decoded = codec.decode(msg, { preserveAny: true });
       for (const payload of [decoded.request?.payload, decoded.response?.payload]) {
-        if (payload?.type_url) {
-          seen.push(payload.type_url);
-          payload.type_url = rewrite(payload.type_url);
+        if (payload?.typeUrl) {
+          seen.push(payload.typeUrl);
+          payload.typeUrl = rewrite(payload.typeUrl);
         }
       }
       return port.send(codec.encode(decoded, { preserveAny: true }), timeout);

@@ -191,7 +191,7 @@ export class EdgeSignalManager extends Resource implements SignalManager {
         source: author,
         target: recipient != null ? [recipient] : undefined,
         tags,
-        payload: { typeUrl: payload.type_url, value: payload.value },
+        payload: { typeUrl: payload.typeUrl, value: payload.value },
       }),
     );
   }
@@ -323,7 +323,7 @@ export class EdgeSignalManager extends Resource implements SignalManager {
       this._deliver({
         author: message.source,
         tags: message.tags ?? [],
-        payload: { type_url: payload.typeUrl, value: payload.value },
+        payload: { typeUrl: payload.typeUrl, value: payload.value },
       });
       return;
     }
@@ -335,7 +335,7 @@ export class EdgeSignalManager extends Resource implements SignalManager {
       author: message.source,
       recipient: message.target[0],
       payload: {
-        type_url: payload.typeUrl,
+        typeUrl: payload.typeUrl,
         value: payload.value,
       },
     });

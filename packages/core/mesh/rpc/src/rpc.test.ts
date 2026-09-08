@@ -15,7 +15,7 @@ import { createLinkedPorts, encodeMessage } from './testing';
 
 const createPayload = (value = ''): TaggedType<TYPES, 'google.protobuf.Any'> => ({
   '@type': 'google.protobuf.Any',
-  'type_url': 'dxos.test',
+  'typeUrl': 'dxos.test',
   'value': encodeMessage(value),
 });
 

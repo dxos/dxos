@@ -134,12 +134,12 @@ const substitutions: Record<string, Substitution> = {
 const ANY_TYPE_NAME = 'google.protobuf.Any';
 const STRUCT_TYPE_NAME = 'google.protobuf.Struct';
 
-// The legacy codec hands a packed payload back as a `Buffer`, and consumers branch on that --
-// `JsonView` tests `value.type === 'Buffer'`, and an RPC handler receiving a preserved `Any` compares
-// against one -- so this is part of the shape rather than an incidental view type.
+// A preserved `Any` stays packed in buf's own shape, which is what the RPC seam moves. The payload
+// is handed back as a `Buffer`: consumers branch on that (`JsonView` tests `value.type === 'Buffer'`,
+// and an RPC handler receiving a preserved `Any` compares against one).
 const packedAny = (typeUrl: string, value: Uint8Array) => ({
   '@type': ANY_TYPE_NAME,
-  'type_url': typeUrl,
+  'typeUrl': typeUrl,
   'value': Buffer.from(value),
 });
 
@@ -174,7 +174,7 @@ const asJsonValue = (value: unknown): unknown => {
 };
 
 const anyToProto = (site: AnySite, value: any, options: CompatOptions): unknown => {
-  const packed = { typeUrl: value.type_url ?? '', value: value.value ?? new Uint8Array() };
+  const packed = { typeUrl: value.typeUrl ?? '', value: value.value ?? new Uint8Array() };
   if (site.preserved) {
     if (value['@type'] !== undefined && value['@type'] !== ANY_TYPE_NAME) {
       throw new AnyEncodingError(`${site.label} preserves Any, so its payload cannot be packed here.`);
@@ -203,7 +203,6 @@ const anyToProto = (site: AnySite, value: any, options: CompatOptions): unknown 
 };
 
 const anyFromProto = (site: AnySite, value: any, options: CompatOptions): unknown => {
-  // The legacy shape keys the packed payload `type_url`, where buf's message uses `typeUrl`.
   const typeUrl: string = value.typeUrl ?? '';
   // Not flattened: the nested decode below reads its byte fields as views over this buffer, so
   // flattening here would strip Buffer-ness from every byte field inside the payload.

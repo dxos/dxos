@@ -82,7 +82,7 @@ const decodeValue = (value: unknown): unknown => {
  */
 export const rpcCodec = {
   encode: (value: any): Any => ({
-    type_url: 'google.protobuf.Any',
+    typeUrl: 'google.protobuf.Any',
     value: Buffer.from(JSON.stringify(encodeValue(value ?? [undefined]))),
   }),
   decode: (value: Any): any => decodeValue(JSON.parse(Buffer.from(value.value).toString())),

@@ -25,11 +25,11 @@ export type RequestOptions = {
 /**
  * The still-packed request/response envelope a backend moves.
  *
- * `type_url` is snake_case because that is the shape the compat layer produces; it becomes buf's
- * `typeUrl` when the shape-compat layer retires, not before.
+ * Structural rather than `google.protobuf.Any` itself, so a backend can move an envelope without
+ * constructing a branded message for every call.
  */
 export type AnyEnvelope = {
-  type_url: string;
+  typeUrl: string;
   value: Uint8Array;
 };
 

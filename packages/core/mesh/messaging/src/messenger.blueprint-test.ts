@@ -92,7 +92,7 @@ export const messengerTests = (signalManagerFactory: TestBuilder['createSignalMa
     const onMessage1: Message[] = [];
     await peer2.messenger.listen({
       peer: peer2.peerInfo,
-      payloadType: PAYLOAD_1.type_url,
+      payloadType: PAYLOAD_1.typeUrl,
       onMessage: async (message) => {
         onMessage1.push(message);
       },
@@ -102,7 +102,7 @@ export const messengerTests = (signalManagerFactory: TestBuilder['createSignalMa
     const onMessage2: Message[] = [];
     await peer2.messenger.listen({
       peer: peer2.peerInfo,
-      payloadType: PAYLOAD_1.type_url,
+      payloadType: PAYLOAD_1.typeUrl,
       onMessage: async (message) => {
         onMessage2.push(message);
       },
@@ -112,7 +112,7 @@ export const messengerTests = (signalManagerFactory: TestBuilder['createSignalMa
     const onMessage3: Message[] = [];
     await peer2.messenger.listen({
       peer: peer2.peerInfo,
-      payloadType: PAYLOAD_2.type_url,
+      payloadType: PAYLOAD_2.typeUrl,
       onMessage: async (message) => {
         onMessage3.push(message);
       },
@@ -149,7 +149,7 @@ export const messengerTests = (signalManagerFactory: TestBuilder['createSignalMa
     const messages1: Message[] = [];
     await peer2.messenger.listen({
       peer: peer2.peerInfo,
-      payloadType: PAYLOAD_1.type_url,
+      payloadType: PAYLOAD_1.typeUrl,
       onMessage: async (message) => {
         messages1.push(message);
       },
@@ -159,7 +159,7 @@ export const messengerTests = (signalManagerFactory: TestBuilder['createSignalMa
     const messages2: Message[] = [];
     const listenerHandle2 = await peer2.messenger.listen({
       peer: peer2.peerInfo,
-      payloadType: PAYLOAD_1.type_url,
+      payloadType: PAYLOAD_1.typeUrl,
       onMessage: async (message) => {
         messages2.push(message);
       },

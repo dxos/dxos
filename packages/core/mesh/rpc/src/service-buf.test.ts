@@ -59,7 +59,7 @@ describe('Buf service descriptor', () => {
   });
 
   test('a server-streaming method round-trips from a buf server to a legacy client', async ({ expect }) => {
-    // `BufServiceHandler.callStream` writes each element's response `type_url` through a different
+    // `BufServiceHandler.callStream` writes each element's response `typeUrl` through a different
     // path from the legacy handler, so one direction does not imply the other.
     expect(await streamAcross(bufStreamService(), schema.getService(STREAM_SERVICE))).toEqual(['one', 'two']);
   });

@@ -174,7 +174,7 @@ export class TestPeer {
       author: this.peerId,
       recipient: to,
       payload: {
-        type_url: 'example.Message',
+        typeUrl: 'example.Message',
         value: randomBytes(32),
       },
     };

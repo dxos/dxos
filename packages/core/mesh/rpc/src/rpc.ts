@@ -283,7 +283,7 @@ export class RpcPeer {
         this._callStreamHandler(req, (response) => {
           log.trace('sending stream response', {
             method: req.method,
-            response: response.payload?.type_url,
+            response: response.payload?.typeUrl,
             error: response.error,
             close: response.close,
           });
@@ -298,7 +298,7 @@ export class RpcPeer {
         DEBUG_CALLS &&
           log.trace('sending response', {
             method: req.method,
-            response: response.payload?.type_url,
+            response: response.payload?.typeUrl,
             error: response.error,
           });
         await this._sendMessage({ response });
@@ -322,7 +322,7 @@ export class RpcPeer {
         this._outgoingRequests.delete(responseId);
       }
 
-      DEBUG_CALLS && log.trace('response', { type_url: decoded.response.payload?.type_url });
+      DEBUG_CALLS && log.trace('response', { typeUrl: decoded.response.payload?.typeUrl });
       item.resolve(decoded.response);
     } else if (decoded.open) {
       log('received open message', { state: this._state });

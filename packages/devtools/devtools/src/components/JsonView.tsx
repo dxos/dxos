@@ -48,14 +48,14 @@ const replacer =
 
       if (value?.['@type'] === 'google.protobuf.Any') {
         try {
-          // `type_url` may carry a prefix (`type.googleapis.com/example.Message`), which the
+          // `typeUrl` may carry a prefix (`type.googleapis.com/example.Message`), which the
           // registry keys do not.
-          const desc = bufRegistry.getMessage(value.type_url.slice(value.type_url.lastIndexOf('/') + 1));
+          const desc = bufRegistry.getMessage(value.typeUrl.slice(value.typeUrl.lastIndexOf('/') + 1));
           if (desc) {
             // Decoded through the compat layer so a substituted field renders as the shape this
             // viewer formats.
             return {
-              '@type': value.type_url,
+              '@type': value.typeUrl,
               ...decodeCompat<Record<string, unknown>>(desc, value.value),
             };
           }

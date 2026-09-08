@@ -22,7 +22,7 @@ import { type CompatCodec, type CompatOptions, compatCodec } from './shape-compa
 // `docs/audits/protobufjs-to-buf.md` (`#8`).
 
 /**
- * Legacy `Any.type_url` carried protobuf.js's `fullName`, which is dot-prefixed; buf's `typeName` is
+ * Legacy `Any.typeUrl` carried protobuf.js's `fullName`, which is dot-prefixed; buf's `typeName` is
  * not. `service-type-url.test.ts` establishes that no peer reads it on the service path, so the
  * dot-free form goes on the wire unchanged rather than being re-prefixed to imitate the old value.
  */
@@ -74,7 +74,7 @@ export class BufServiceDescriptor<Service> {
     invariant(codecs, `Method not found: ${method.name}`);
     const request = (value: unknown): AnyEnvelope => ({
       value: codecs.request.encode(value, encodingOptions),
-      type_url: typeUrlFor(method.input),
+      typeUrl: typeUrlFor(method.input),
     });
 
     if (method.methodKind === 'server_streaming') {
@@ -119,7 +119,7 @@ export class BufServiceHandler<Service> implements ServiceBackend {
     const handler = await this.#handler(method);
     const response = await handler(requestCodec.decode(request.value, this._encodingOptions), options);
 
-    return { value: responseCodec.encode(response, this._encodingOptions), type_url: typeUrlFor(method.output) };
+    return { value: responseCodec.encode(response, this._encodingOptions), typeUrl: typeUrlFor(method.output) };
   }
 
   callStream(methodName: string, request: AnyEnvelope, options?: RequestOptions): Stream<AnyEnvelope> {
@@ -136,7 +136,7 @@ export class BufServiceHandler<Service> implements ServiceBackend {
 
     return Stream.map(responses, (data): AnyEnvelope => ({
       value: responseCodec.encode(data, this._encodingOptions),
-      type_url: typeUrlFor(method.output),
+      typeUrl: typeUrlFor(method.output),
     }));
   }
 

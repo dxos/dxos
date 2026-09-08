@@ -47,7 +47,7 @@ export class SwarmMessenger implements SignalMessenger {
   }
 
   async receiveMessage(ctx: Context, { author, recipient, payload }: Message): Promise<void> {
-    if (payload.type_url !== 'dxos.mesh.swarm.SwarmMessage') {
+    if (payload.typeUrl !== 'dxos.mesh.swarm.SwarmMessage') {
       // Ignore not swarm messages.
       return;
     }
@@ -122,7 +122,7 @@ export class SwarmMessenger implements SignalMessenger {
       author,
       recipient,
       payload: {
-        type_url: 'dxos.mesh.swarm.SwarmMessage',
+        typeUrl: 'dxos.mesh.swarm.SwarmMessage',
         value: SwarmMessage.encode(networkMessage),
       },
     });

@@ -510,11 +510,11 @@ describe('Protobuf service', () => {
           TestAnyService: {
             testCall: async (req) => {
               expect(req.payload['@type']).toEqual('google.protobuf.Any');
-              expect(req.payload.type_url).toEqual('example.testing.Example');
+              expect(req.payload.typeUrl).toEqual('example.testing.Example');
               expect(req.payload.value).toEqual(encodeMessage('hello'));
               return {
                 payload: {
-                  type_url: 'example.testing.Example',
+                  typeUrl: 'example.testing.Example',
                   value: encodeMessage('world'),
                 },
               };
@@ -541,12 +541,12 @@ describe('Protobuf service', () => {
 
       const response = await client.rpc.TestAnyService.testCall({
         payload: {
-          type_url: 'example.testing.Example',
+          typeUrl: 'example.testing.Example',
           value: encodeMessage('hello'),
         },
       });
 
-      expect(response.payload.type_url).toEqual('example.testing.Example');
+      expect(response.payload.typeUrl).toEqual('example.testing.Example');
       expect(response.payload.value).toEqual(encodeMessage('world'));
     });
   });

@@ -67,9 +67,14 @@ const populate = (desc: DescMessage, depth = 0): Record<string, unknown> | undef
   const messageValue = (message: DescMessage): unknown => {
     if (message.typeName === 'google.protobuf.Any') {
       const payload = bufRegistry.getMessage(ANY_PAYLOAD_TYPE);
-      return payload === undefined
-        ? undefined
-        : { typeUrl: ANY_PAYLOAD_TYPE, value: toBinary(payload, create(payload, { hashes: ['any-payload'] })) };
+      if (payload === undefined) {
+        return undefined;
+      }
+      // Keyed both ways: a preserved `Any` is `typeUrl` on the buf side and `type_url` on the
+      // legacy one, and each encoder reads its own key. Feeding only one leaves the other encoding
+      // an empty `Any`, which agrees only because both are then empty.
+      const value = toBinary(payload, create(payload, { hashes: ['any-payload'] }));
+      return { typeUrl: ANY_PAYLOAD_TYPE, type_url: ANY_PAYLOAD_TYPE, value };
     }
     return populate(message, depth + 1);
   };
@@ -129,11 +134,13 @@ const populate = (desc: DescMessage, depth = 0): Record<string, unknown> | undef
 };
 
 /**
- * Compares byte content rather than view class.
+ * Compares byte content rather than view class, and the packed-`Any` key by one name.
  *
  * protobuf.js returns Node `Buffer`s for bytes fields where buf returns `Uint8Array`. The
  * distinction is not observable on the wire and cannot reach a signature — `canonicalStringify`
- * normalises both to hex — so it is not treated as a divergence.
+ * normalises both to hex — so it is not treated as a divergence. A preserved `Any` is the same case:
+ * the two codecs write the identical field to the wire and differ only in what they name it once
+ * decoded (`type_url` against buf's `typeUrl`).
  */
 const byBytes = (value: unknown): unknown => {
   if (typeof value === 'bigint') {
@@ -149,14 +156,23 @@ const byBytes = (value: unknown): unknown => {
     return value.map(byBytes);
   }
   if (value !== null && typeof value === 'object') {
-    return Object.fromEntries(Object.entries(value).map(([key, entry]) => [key, byBytes(entry)]));
+    return Object.fromEntries(
+      Object.entries(value).map(([key, entry]) => [key === 'type_url' ? 'typeUrl' : key, byBytes(entry)]),
+    );
   }
   return value;
 };
 
-/** Field paths at which two decoded shapes disagree, so a divergence is keyed on where it happens. */
-const divergingPaths = (left: unknown, right: unknown, path = ''): string[] => {
-  if (JSON.stringify(byBytes(left)) === JSON.stringify(byBytes(right))) {
+/**
+ * Field paths at which two decoded shapes disagree, so a divergence is keyed on where it happens.
+ *
+ * Both sides are normalised by {@link byBytes} first: recursing over the raw objects would report a
+ * renamed field as absent on both sides rather than equal on both.
+ */
+const divergingPaths = (rawLeft: unknown, rawRight: unknown, path = ''): string[] => {
+  const left = byBytes(rawLeft);
+  const right = byBytes(rawRight);
+  if (JSON.stringify(left) === JSON.stringify(right)) {
     return [];
   }
   const bothObjects =
@@ -222,6 +238,12 @@ const covered = [...bufRegistry]
  * `Date` is expected), where the compat layer leaves it absent. It is the legacy codec's own
  * asymmetry — its encoder then rejects what its decoder produced — and predates this migration.
  * Entries are expected to disappear as messages move to buf, never to be added.
+ *
+ * The `encode` entries on the six messages carrying a `preserve_any` field are the one exception to
+ * "the legacy codec's own asymmetry": the compat layer now decodes a preserved `Any` into buf's own
+ * `typeUrl`, which the legacy encoder does not read, so it writes an empty `Any` where buf writes the
+ * payload. That is the seam moving to buf rather than a defect — nothing in the workspace still routes
+ * an RPC envelope through protobuf.js — and it goes when this file does.
  */
 const KNOWN_DIVERGENCES: { typeName: string; decode: string[]; encode: string[] }[] = [
   {
@@ -330,35 +352,35 @@ const KNOWN_DIVERGENCES: { typeName: string; decode: string[]; encode: string[] 
       'mutations',
       'snapshot.model.@type',
       'snapshot.model.hashes',
-      'snapshot.model.type_url',
+      'snapshot.model.typeUrl',
       'snapshot.model.value',
     ],
-    encode: [],
+    encode: ['mutations', 'snapshot.model.typeUrl'],
   },
   {
     typeName: 'dxos.echo.object.EchoObject.Mutation',
-    decode: ['model.@type', 'model.hashes', 'model.type_url', 'model.value'],
-    encode: [],
+    decode: ['model.@type', 'model.hashes', 'model.typeUrl', 'model.value'],
+    encode: ['model.typeUrl'],
   },
   {
     typeName: 'dxos.echo.object.EchoObject.Snapshot',
-    decode: ['model.@type', 'model.hashes', 'model.type_url', 'model.value'],
-    encode: [],
+    decode: ['model.@type', 'model.hashes', 'model.typeUrl', 'model.value'],
+    encode: ['model.typeUrl'],
   },
   {
     typeName: 'dxos.echo.query.QueryResponse',
     decode: ['objects', 'results'],
-    encode: [],
+    encode: ['objects'],
   },
   {
     typeName: 'dxos.echo.snapshot.EchoSnapshot',
     decode: ['items'],
-    encode: [],
+    encode: ['items'],
   },
   {
     typeName: 'dxos.echo.snapshot.SpaceSnapshot',
     decode: ['database.items'],
-    encode: [],
+    encode: ['database.items'],
   },
   {
     typeName: 'dxos.edge.calls.Activity',

@@ -66,10 +66,10 @@ export const subscribeToSignal = ({
                     recipient: message.recipient
                       ? PublicKey.from(message.recipient.peerKey).asUint8Array()
                       : new Uint8Array(),
-                    // Messaging keeps payloads packed and dispatches on `type_url`, so this is a
+                    // Messaging keeps payloads packed and dispatches on `typeUrl`, so this is a
                     // field map — the payload is never resolved here.
                     payload: create(AnySchema, {
-                      typeUrl: message.payload.type_url,
+                      typeUrl: message.payload.typeUrl,
                       value: message.payload.value,
                     }),
                   },

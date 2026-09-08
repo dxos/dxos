@@ -34,7 +34,7 @@ describe('SignalResponse', () => {
   });
 
   it('leaves the message payload packed', () => {
-    // Resolving a `type_url` on the consumer is what the panel must not do; the payload stays an
+    // Resolving a `typeUrl` on the consumer is what the panel must not do; the payload stays an
     // `Any` and the views dispatch on `typeUrl`.
     const message = response.data.case === 'message' ? response.data.value : undefined;
     expect(message?.payload?.typeUrl).type.toBe<string | undefined>();

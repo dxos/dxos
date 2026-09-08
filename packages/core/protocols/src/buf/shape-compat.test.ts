@@ -268,29 +268,31 @@ describe('buf shape-compat', () => {
   test('an Any whose type is not in the registry stays packed', ({ expect }) => {
     const value = {
       id: PublicKey.random(),
-      assertion: { '@type': 'google.protobuf.Any', 'type_url': 'com.example.Unknown', 'value': new Uint8Array([1]) },
+      assertion: { '@type': 'google.protobuf.Any', 'typeUrl': 'com.example.Unknown', 'value': new Uint8Array([1]) },
     };
 
     const decoded = decodeCompat<Claim>(ClaimSchema, encodeCompat(ClaimSchema, value));
     expect(decoded.assertion['@type']).toBe('google.protobuf.Any');
-    expect(decoded.assertion.type_url).toBe('com.example.Unknown');
+    expect(decoded.assertion.typeUrl).toBe('com.example.Unknown');
     expect(new Uint8Array(decoded.assertion.value)).toEqual(new Uint8Array([1]));
   });
 
   test('a preserve_any field leaves its payload packed', ({ expect }) => {
     const codec = schema.getCodecForType('dxos.echo.object.EchoObject.Snapshot');
     const value = {
-      model: { '@type': 'google.protobuf.Any', 'type_url': 'com.example.Model', 'value': new Uint8Array([4, 5]) },
+      model: { '@type': 'google.protobuf.Any', 'typeUrl': 'com.example.Model', 'value': new Uint8Array([4, 5]) },
     };
 
-    const legacyBytes = codec.encode(value);
+    // The legacy codec reads the packed payload from `type_url`, so it is given the same value under
+    // its own key; the two then write identical bytes.
+    const legacyBytes = codec.encode({ model: { ...value.model, type_url: value.model.typeUrl } });
     expect(new Uint8Array(encodeCompat(EchoObject_SnapshotSchema, value))).toEqual(new Uint8Array(legacyBytes));
 
     // The compat layer normalises the packed bytes to a `Uint8Array`, where protobuf.js hands back
     // a `Buffer` view.
     const decoded = decodeCompat<EchoObject.Snapshot>(EchoObject_SnapshotSchema, legacyBytes);
     expect(decoded.model['@type']).toBe('google.protobuf.Any');
-    expect(decoded.model.type_url).toBe('com.example.Model');
+    expect(decoded.model.typeUrl).toBe('com.example.Model');
     expect(decoded.model.value).toEqual(codec.decode(legacyBytes).model.value);
   });
 
@@ -377,21 +379,24 @@ describe('buf shape-compat', () => {
         stream: false,
         payload: {
           '@type': 'google.protobuf.Any',
-          'type_url': 'example.testing.data.TestPayload',
+          'typeUrl': 'example.testing.data.TestPayload',
           'value': new Uint8Array([1, 2, 3, 4]),
         },
       },
     };
     const options = { preserveAny: true } as const;
 
-    const legacyBytes = codec.encode(value, options);
+    const legacyBytes = codec.encode(
+      { request: { ...value.request, payload: { ...value.request.payload, type_url: value.request.payload.typeUrl } } },
+      options,
+    );
     const bufBytes = encodeCompat(RpcMessageSchema, value, options);
 
     // The payload must come back packed rather than resolved, in both directions.
     const decoded = decodeCompat<RpcMessage>(RpcMessageSchema, legacyBytes, options);
     invariant(decoded.request);
     expect(decoded.request.payload['@type']).toBe('google.protobuf.Any');
-    expect(decoded.request.payload.type_url).toBe('example.testing.data.TestPayload');
+    expect(decoded.request.payload.typeUrl).toBe('example.testing.data.TestPayload');
     expect(new Uint8Array(decoded.request.payload.value)).toEqual(new Uint8Array([1, 2, 3, 4]));
     expect(codec.decode(bufBytes, options).request?.payload?.type_url).toBe('example.testing.data.TestPayload');
     const redecoded = decodeCompat<RpcMessage>(RpcMessageSchema, bufBytes, options);
@@ -408,15 +413,18 @@ describe('buf shape-compat', () => {
       messageId: PublicKey.random(),
       payload: {
         '@type': 'google.protobuf.Any',
-        'type_url': 'example.testing.data.TestPayload',
+        'typeUrl': 'example.testing.data.TestPayload',
         'value': new Uint8Array([9, 9]),
       },
     };
     const options = { preserveAny: true } as const;
 
-    const legacyBytes = codec.encode(value, options);
+    const legacyBytes = codec.encode(
+      { ...value, payload: { ...value.payload, type_url: value.payload.typeUrl } },
+      options,
+    );
     expect(new Uint8Array(encodeCompat(ReliablePayloadSchema, value, options))).toEqual(new Uint8Array(legacyBytes));
-    expect(decodeCompat<ReliablePayload>(ReliablePayloadSchema, legacyBytes, options).payload.type_url).toBe(
+    expect(decodeCompat<ReliablePayload>(ReliablePayloadSchema, legacyBytes, options).payload.typeUrl).toBe(
       'example.testing.data.TestPayload',
     );
   });
@@ -503,7 +511,7 @@ describe('a bare Any as the schema itself', () => {
     // The legacy codec cannot express this payload at the root at all -- its `encode` is typed to the
     // packed `{type_url, value}` form, and given one it writes an empty Any, which is the defect that
     // made `SpacesService.postMessage` send nothing. So only this direction is meaningful, and the
-    // packed form is what a legacy reader sees.
+    // packed form is what a legacy reader sees, under its own key.
     const legacyAnyCodec = schema.getCodecForType('google.protobuf.Any');
     const seen: any = legacyAnyCodec.decode(encodeCompat(AnySchema, payload));
     expect(seen.type_url).to.equal('google.protobuf.Struct');
