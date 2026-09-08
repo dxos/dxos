@@ -80,12 +80,15 @@ const createProject = (space: Space, storyGeneration: number) => {
   });
   Obj.setParent(instructions, project);
 
-  const task = space.db.add(Task.make({ title: TASK_TITLE, status: 'todo' }));
-  Obj.setParent(task, taskSet);
+  const task = space.db.add(Task.make({ [Obj.Parent]: taskSet, title: TASK_TITLE, status: 'todo' }));
   const linkTask = space.db.add(
-    Task.make({ title: LINK_TASK_TITLE, description: LINK_TASK_DESCRIPTION, status: 'todo' }),
+    Task.make({
+      [Obj.Parent]: taskSet,
+      title: LINK_TASK_TITLE,
+      description: LINK_TASK_DESCRIPTION,
+      status: 'todo',
+    }),
   );
-  Obj.setParent(linkTask, taskSet);
   Obj.update(taskSet, (taskSet) => {
     taskSet.tasks = [Ref.make(task), Ref.make(linkTask)];
   });
@@ -113,10 +116,11 @@ const seedContent = async () => {
 
 /** Adds a task to the set the way the verbs do — array membership plus the lifecycle parent edge. */
 const addTask = (space: Space, taskSet: TaskSet.TaskSet, title: string, milestone?: Milestone.Milestone) => {
-  const task = space.db.add(Task.make({ title, status: 'todo', milestone: milestone && Ref.make(milestone) }));
-  Obj.setParent(task, taskSet);
+  const task = space.db.add(
+    Task.make({ [Obj.Parent]: taskSet, title, status: 'todo', milestone: milestone && Ref.make(milestone) }),
+  );
   Obj.update(taskSet, (taskSet) => {
-    taskSet.tasks = [...taskSet.tasks, Ref.make(task)];
+    taskSet.tasks.push(Ref.make(task));
   });
   return task;
 };
@@ -448,10 +452,9 @@ export const Updates: Story = {
 
     // 3. A task filed under a milestone is still just a row: the article renders one flat list and
     //    does not group by milestone yet (see TASKS.md), so no heading or backlog split appears.
-    const milestone = space.db.add(Milestone.make({ name: MILESTONE_NAME }));
-    Obj.setParent(milestone, taskSet);
+    const milestone = space.db.add(Milestone.make({ [Obj.Parent]: taskSet, name: MILESTONE_NAME }));
     Obj.update(taskSet, (taskSet) => {
-      taskSet.milestones = [...taskSet.milestones, Ref.make(milestone)];
+      taskSet.milestones.push(Ref.make(milestone));
     });
     const MILESTONE_TASK = 'Filed under the milestone';
     addTask(space, taskSet, MILESTONE_TASK, milestone);
@@ -473,7 +476,7 @@ export const Updates: Story = {
     const ADDED_ARTIFACT = 'Added artifact';
     const artifact = space.db.add(Text.make({ name: ADDED_ARTIFACT, content: 'More notes.' }));
     Obj.update(project, (project) => {
-      project.artifacts = [...project.artifacts, Ref.make(artifact)];
+      project.artifacts.push(Ref.make(artifact));
     });
     await findPainted(canvas, ADDED_ARTIFACT);
 

@@ -317,7 +317,8 @@ const quote = (value: string): string => (value.length > 60 ? `"${value.slice(0,
  */
 export const appendHistory = (task: Task, entry: HistoryEntry): void => {
   Obj.update(task, (task) => {
-    task.history = [...(task.history ?? []), entry];
+    task.history ??= [];
+    task.history.push(entry);
   });
 };
 
@@ -430,7 +431,8 @@ export const update = (task: Task, requested: Edit, options: EditOptions = {}): 
         task.assignee = changes.assignee;
       }
     }
-    task.history = [...(task.history ?? []), entry];
+    task.history ??= [];
+    task.history.push(entry);
   });
 
   return entry;
@@ -458,7 +460,8 @@ export const addArtifact = (task: Task, artifact: Obj.Unknown): void => {
     return;
   }
   Obj.update(task, (task) => {
-    task.artifacts = [...(task.artifacts ?? []), Ref.make(artifact)];
+    task.artifacts ??= [];
+    task.artifacts.push(Ref.make(artifact));
   });
 };
 

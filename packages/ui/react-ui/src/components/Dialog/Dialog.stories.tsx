@@ -6,6 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
+import { invariant } from '@dxos/invariant';
 import { random } from '@dxos/random';
 
 import { withTheme } from '../../testing';
@@ -207,7 +208,8 @@ export const TestOpenClose: StoryObj = {
     const dialog = await waitFor(async () => {
       const element = dialogElement();
       await expect(element).not.toBeNull();
-      return element!;
+      invariant(element);
+      return element;
     });
     await expect(dialog.getAttribute('aria-modal')).toBe('true');
     await waitFor(async () => {
@@ -282,7 +284,8 @@ export const TestNoDescriptionAutoFocus: StoryObj = {
     const dialog = await waitFor(async () => {
       const element = dialogElement();
       await expect(element).not.toBeNull();
-      return element!;
+      invariant(element);
+      return element;
     });
     // The machine assumes both parts until its first-frame check finds which are rendered.
     await waitFor(async () => {

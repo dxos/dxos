@@ -57,8 +57,6 @@ import {
 } from './types';
 import { getInlineAndLinkChanges, getRemovedObjectIds } from './util';
 
-const THROTTLED_UPDATE_FREQUENCY = 10;
-
 const TRACE_LOADING = false;
 
 /** A satisfaction request that will not change again without a new load. */
@@ -238,13 +236,9 @@ export class EntityManager implements IDatabaseBinding {
    */
   async open(ctx: Context): Promise<void> {
     this._ctx = ctx;
-    this._updateScheduler = new UpdateScheduler(
-      ctx,
-      async () => this._emitDbUpdateEvents(ctx),
-      // Throttling is disabled by bypassing it at every call site; configuring a rate and then always
-      // overriding it just made the two disagree.
-      DISABLE_THROTTLING ? {} : { maxFrequency: THROTTLED_UPDATE_FREQUENCY },
-    );
+    // Unthrottled: every call site already bypassed the rate, so configuring one only made the two
+    // disagree.
+    this._updateScheduler = new UpdateScheduler(ctx, async () => this._emitDbUpdateEvents(ctx), {});
 
     await this._repoProxy.open();
     ctx.onDispose(() => this._unsubscribeFromHandles());
@@ -2041,5 +2035,3 @@ export class EntityManager implements IDatabaseBinding {
 }
 
 const RPC_TIMEOUT = 20_000;
-
-const DISABLE_THROTTLING = true;

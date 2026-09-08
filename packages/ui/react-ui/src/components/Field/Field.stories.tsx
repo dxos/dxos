@@ -6,6 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { type PropsWithChildren } from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
+import { invariant } from '@dxos/invariant';
 import { mx } from '@dxos/ui-theme';
 import { type MessageValence } from '@dxos/ui-types';
 
@@ -400,7 +401,8 @@ const opensAtField = async ({ canvasElement }: { canvasElement: HTMLElement }) =
   const dialog = await waitFor(async () => {
     const element = document.querySelector<HTMLElement>('[role="dialog"]');
     await expect(element).not.toBeNull();
-    return element!;
+    invariant(element);
+    return element;
   });
   await waitFor(async () => {
     const rect = dialog.getBoundingClientRect();

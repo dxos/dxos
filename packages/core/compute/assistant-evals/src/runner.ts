@@ -270,7 +270,8 @@ export function createEvalRunner<I, O, D>(
           if (seeded.objects?.length) {
             const objects = seeded.objects;
             Obj.update(instructions, (instructions) => {
-              instructions.objects = [...(instructions.objects ?? []), ...objects];
+              instructions.objects ??= [];
+              instructions.objects.push(...objects);
             });
           }
         }

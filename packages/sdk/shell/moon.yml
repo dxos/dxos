@@ -15,6 +15,9 @@ tasks:
     command: pnpm exec vite build -c vite.bundle.config.ts
     options:
       mergeOutputs: replace
+      # Args merge by append, so without this the `vite` tag's own `exec vite build` is concatenated
+      # onto this command's and vite rejects the duplicated positionals.
+      mergeArgs: replace
     inputs:
       - vite.bundle.config.ts
     outputs:

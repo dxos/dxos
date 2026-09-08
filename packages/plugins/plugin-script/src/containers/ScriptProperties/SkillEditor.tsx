@@ -58,7 +58,8 @@ export const SkillEditor = ({ object }: SkillEditorProps) => {
           const toolId = ToolId.make(fnKey);
           if (!existingSkill.tools?.includes(toolId)) {
             Obj.update(existingSkill, (existingSkill) => {
-              existingSkill.tools = [...(existingSkill.tools ?? []), toolId];
+              existingSkill.tools ??= [];
+              existingSkill.tools.push(toolId);
             });
           }
         }

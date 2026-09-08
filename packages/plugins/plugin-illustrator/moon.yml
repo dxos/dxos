@@ -7,11 +7,12 @@ tags:
   - pack
 
 tasks:
-  # The corpus test's ELK candidate sweeps take ~10 minutes on a loaded CI runner, so the shared
-  # 600s cap kills the task on any branch that invalidates its cache.
   test:
+    # The mermaid/UML layout suites run ~180s locally but exceed the 600s preset default under CI
+    # contention, so the task was killed with every test passing. Raised until the CI-side slowdown
+    # is understood; see https://github.com/dxos/dxos/pull/12985 for the measurements.
     options:
-      timeout: 1500
+      timeout: 1800
   # Renders docs/diagrams/*.mmd to .svg through the SVG variant and prints the layout report;
   # `-- --scoreboard` prints the strategy × metric table instead. See docs/diagrams/README.md.
   render-diagrams:

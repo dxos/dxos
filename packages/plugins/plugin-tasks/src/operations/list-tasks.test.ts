@@ -82,7 +82,7 @@ describe('list-tasks', () => {
 
         const { db } = yield* Database.Service;
         Obj.update(taskSet, (taskSet) => {
-          taskSet.tasks = [...taskSet.tasks, db.makeRef(URI.make('echo:///01M122P4GNVZ1P982K1K0QG8AY'))];
+          taskSet.tasks.push(db.makeRef(URI.make('echo:///01M122P4GNVZ1P982K1K0QG8AY')));
         });
         yield* Database.flush();
       }).pipe(

@@ -653,7 +653,7 @@ export const MergeDuplicates = Operation.make({
   services: [Capability.Service, Database.Service],
   input: Schema.Struct({
     typename: Schema.String,
-    objectIds: Schema.Array(Schema.String).annotate({ description: 'Members of the group to merge.' }),
+    objectIds: Schema.Array(Ref.Ref(Obj.Unknown)).annotate({ description: 'Members of the group to merge.' }),
     overrides: Schema.optional(Obj.Unknown).annotate({
       description: 'User-edited preview; folded in last so confirmed edits win.',
     }),

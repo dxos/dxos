@@ -358,7 +358,7 @@ export const createProjectArtifactsActionExtension = () =>
               }
 
               Obj.update(project, (project) => {
-                project.artifacts = [...project.artifacts, ref];
+                project.artifacts.push(ref);
               });
             }),
           properties: {

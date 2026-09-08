@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 import { describe, expect, onTestFinished, test } from 'vitest';
 
-import { Event, Trigger, asyncTimeout, sleep } from '@dxos/async';
+import { Event, Trigger, asyncTimeout, sleep, waitForCondition } from '@dxos/async';
 
 import * as Client from './Client';
 import { WorkerConnectionError } from './errors';
@@ -415,8 +415,9 @@ describe('Connection multi-client', () => {
       await wedgedOpen;
     });
 
-    // ~20 port timeouts' worth of runway, so an unbounded steal loop has room to show itself.
-    await sleep(4_000);
+    // Anchor on the steal budget actually exhausting (escalation fires) rather than guessing a
+    // duration long enough for an unbounded steal loop to have shown itself.
+    await waitForCondition({ condition: () => wedged.failures.length > 0, timeout: 10_000 });
 
     // Bounded by the steal budget: at most `maxLeaderFailures` evictions, one worker re-creation each.
     expect(leaderWorkers).toBeLessThanOrEqual(1 + 2);

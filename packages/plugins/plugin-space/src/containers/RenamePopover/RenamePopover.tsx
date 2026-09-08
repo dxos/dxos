@@ -34,7 +34,7 @@ const setName = (subject: RenameSubject, name: string): void => {
       properties.name = name;
     });
   } else {
-    Entity.update(subject, () => Entity.setLabel(subject, name));
+    Entity.update(subject, (subject) => Entity.setLabel(subject, name));
   }
 };
 

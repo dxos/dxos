@@ -132,7 +132,7 @@ export const DeleteMessage = Operation.make({
   input: Schema.Struct({
     anchor: Type.getSchema(AnchoredTo.AnchoredTo),
     subject: Obj.Unknown,
-    messageId: Schema.String,
+    message: Ref.Ref(Message.Message),
   }),
   output: DeleteMessageOutput,
 });
