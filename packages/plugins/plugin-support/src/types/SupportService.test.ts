@@ -6,7 +6,7 @@ import { afterEach, describe, expect, test, vi } from 'vitest';
 
 import type * as Observability from '@dxos/observability/Observability';
 
-import * as SupportOperation from './SupportOperation';
+import * as SupportService from './SupportService';
 
 const observabilityWith = (support: Observability.Observability['support']): Observability.Observability =>
   ({ support }) as unknown as Observability.Observability;
@@ -22,7 +22,7 @@ describe('submitSupportReport', () => {
     );
     vi.stubGlobal('fetch', fetchMock);
     const flushLogs = vi.fn(async () => {});
-    const result = await SupportOperation.submitSupportReport({
+    const result = await SupportService.submitSupportReport({
       endpoint: 'https://edge.test/discord',
       observability: observabilityWith({
         uploadLogs: async () => 'logs/1.ndjson',
@@ -54,7 +54,7 @@ describe('submitSupportReport', () => {
     );
     const uploadLogs = vi.fn(async () => 'never');
     const flushLogs = vi.fn(async () => {});
-    await SupportOperation.submitSupportReport({
+    await SupportService.submitSupportReport({
       endpoint: 'https://edge.test/discord',
       observability: observabilityWith({ uploadLogs, sessionContext: () => undefined, flushLogs }),
       report: { title: 'Broken', body: 'It broke.', includeLogs: false },
@@ -69,7 +69,7 @@ describe('submitSupportReport', () => {
       vi.fn(async () => new Response('nope', { status: 502 })),
     );
     await expect(
-      SupportOperation.submitSupportReport({
+      SupportService.submitSupportReport({
         endpoint: 'https://edge.test/discord',
         observability: observabilityWith({
           uploadLogs: async () => undefined,
@@ -97,7 +97,7 @@ describe('submitSupportIssue', () => {
     const fetchMock = vi.fn(async () => new Response(JSON.stringify(issue)));
     vi.stubGlobal('fetch', fetchMock);
     const flushLogs = vi.fn(async () => {});
-    const result = await SupportOperation.submitSupportIssue({
+    const result = await SupportService.submitSupportIssue({
       endpoint: 'https://edge.test/discord',
       observability: observabilityWith({
         uploadLogs: async () => 'logs/1.ndjson',
@@ -121,7 +121,7 @@ describe('submitSupportIssue', () => {
       vi.fn(async () => new Response(JSON.stringify({ error: 'internal accounts only' }), { status: 403 })),
     );
     await expect(
-      SupportOperation.submitSupportIssue({
+      SupportService.submitSupportIssue({
         endpoint: 'https://edge.test/discord',
         observability: observabilityWith({
           uploadLogs: async () => undefined,

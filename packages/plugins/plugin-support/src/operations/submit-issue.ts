@@ -9,14 +9,14 @@ import * as Operation from '@dxos/compute/Operation';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as ObservabilityCapabilities from '@dxos/plugin-observability/ObservabilityCapabilities';
 
-import { SupportOperation } from '#types';
+import { SupportOperation, SupportService } from '#types';
 
 const handler: Operation.WithHandler<typeof SupportOperation.SubmitIssue> = SupportOperation.SubmitIssue.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* (input) {
       const client = yield* Capability.get(ClientCapabilities.Client);
       const observability = yield* Capability.get(ObservabilityCapabilities.Observability);
-      const endpoint = SupportOperation.supportEndpoint(client.config);
+      const endpoint = SupportService.supportEndpoint(client.config);
       if (!endpoint) {
         return yield* Effect.fail(new Error('No support service is configured.'));
       }
@@ -27,7 +27,7 @@ const handler: Operation.WithHandler<typeof SupportOperation.SubmitIssue> = Supp
       const version = input.report.version ?? client.config.values.runtime?.app?.build?.version;
       return yield* Effect.tryPromise({
         try: () =>
-          SupportOperation.submitSupportIssue({
+          SupportService.submitSupportIssue({
             endpoint,
             observability,
             report: { ...input.report, version },

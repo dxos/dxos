@@ -15,7 +15,7 @@ import { osTranslations } from '@dxos/ui-theme';
 import { FeedbackForm, type FeedbackSubmitHandler } from '#components';
 import { useDiscordPresence } from '#hooks';
 import { meta } from '#meta';
-import { SupportOperation } from '#types';
+import { SupportOperation, SupportService } from '#types';
 
 import { useScreenshotAttachment } from './useScreenshotAttachment';
 
@@ -86,7 +86,7 @@ export const useSupportSubmit = (): FeedbackSubmitHandler => {
           icon: 'ph--discord-logo--regular',
           duration: Infinity,
           title: 'discord-feedback-toast.label',
-          actionLabel: 'discord-feedback-toast.action',
+          actionLabel: 'open-thread.label',
           onAction: () => window.open(threadUrl, '_blank'),
         });
         return;
@@ -106,7 +106,7 @@ export const useSupportSubmit = (): FeedbackSubmitHandler => {
 export const SupportSubmitAction = () => {
   const { t } = useTranslation(meta.profile.key);
   const config = useConfig();
-  const endpoint = SupportOperation.supportEndpoint(config);
+  const endpoint = SupportService.supportEndpoint(config);
   const discordPresence = useDiscordPresence(endpoint);
 
   return (

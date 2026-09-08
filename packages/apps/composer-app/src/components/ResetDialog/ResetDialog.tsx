@@ -8,7 +8,8 @@ import { log } from '@dxos/log';
 import { type IdbLogStore } from '@dxos/log-store-idb';
 import type * as Observability from '@dxos/observability/Observability';
 import { FeedbackForm } from '@dxos/plugin-support/components';
-import * as SupportOperation from '@dxos/plugin-support/SupportOperation';
+import type * as SupportOperation from '@dxos/plugin-support/SupportOperation';
+import * as SupportService from '@dxos/plugin-support/SupportService';
 import {
   AlertDialog,
   type AlertDialogRootProps,
@@ -110,7 +111,7 @@ export const ResetDialog = ({
       }
 
       const observability = await observabilityProp;
-      void SupportOperation.submitSupportReport({ endpoint: supportEndpoint, observability, report: values }).catch(
+      void SupportService.submitSupportReport({ endpoint: supportEndpoint, observability, report: values }).catch(
         (err) => log.warn('crash report not filed', { err }),
       );
       setFeedbackOpen(false);

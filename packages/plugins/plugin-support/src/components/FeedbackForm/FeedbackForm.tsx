@@ -2,15 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, {
-  type PropsWithChildren,
-  type RefObject,
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from 'react';
+import React, { type PropsWithChildren, useCallback, useMemo, useState } from 'react';
 
 import { log } from '@dxos/log';
 import { createContext } from '@dxos/react-hooks';

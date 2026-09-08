@@ -8,12 +8,10 @@ import * as Schema from 'effect/Schema';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Operation from '@dxos/compute/Operation';
-import { type Config, EdgeServiceName, getEdgeServiceEndpoint, getEnvString } from '@dxos/config';
 import { Annotation, Database, DXN, Format, Ref, Type } from '@dxos/echo';
-import { log } from '@dxos/log';
-import type * as Observability from '@dxos/observability/Observability';
 
 import * as Support from './Support';
+import { SupportIssueResult, SupportReportResult } from './SupportService';
 
 // Schema annotations consumed by `react-ui-form`. Strings duplicated in translations.ts
 // — kept inline here to avoid an import cycle (translations -> #types -> SupportOperation).
@@ -73,13 +71,6 @@ export const SupportRequest = Schema.Struct({
 
 export type SupportRequest = Schema.Schema.Type<typeof SupportRequest>;
 
-export const SupportReportResult = Schema.Struct({
-  ticketId: Schema.String,
-  threadUrl: Schema.optional(Schema.String),
-});
-
-export type SupportReportResult = Schema.Schema.Type<typeof SupportReportResult>;
-
 export const SubmitReport = Operation.make({
   meta: {
     key: DXN.make('org.dxos.operation.support.submitReport'),
@@ -96,15 +87,6 @@ export const SubmitReport = Operation.make({
   output: SupportReportResult,
 });
 
-export const SupportIssueResult = Schema.Struct({
-  reportId: Schema.String,
-  issueId: Schema.String,
-  issueIdentifier: Schema.String,
-  issueUrl: Schema.String,
-});
-
-export type SupportIssueResult = Schema.Schema.Type<typeof SupportIssueResult>;
-
 export const SubmitIssue = Operation.make({
   meta: {
     key: DXN.make('org.dxos.operation.support.submitIssue'),
@@ -119,104 +101,6 @@ export const SubmitIssue = Operation.make({
   }),
   output: SupportIssueResult,
 });
-
-export const supportEndpoint = (config: Config): string | undefined =>
-  getEnvString(config, 'DX_DISCORD_SERVICE_URL') ?? getEdgeServiceEndpoint(config, EdgeServiceName.Discord);
-
-export type SubmitSupportReportOptions = {
-  endpoint: string;
-  observability: Observability.Observability;
-  report: SupportRequest;
-  did?: string;
-  screenshotUrl?: string;
-};
-
-export const submitSupportReport = async ({
-  endpoint,
-  observability,
-  report,
-  did,
-  screenshotUrl,
-}: SubmitSupportReportOptions): Promise<SupportReportResult> => {
-  const logKey = report.includeLogs !== false ? await observability.support.uploadLogs() : undefined;
-  const response = await fetch(`${endpoint}/feedback`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      title: report.title,
-      body: report.body,
-      type: report.type,
-      severity: report.severity,
-      area: report.area,
-      version: report.version,
-      did,
-      screenshotUrl,
-      logKey,
-      posthog: observability.support.sessionContext(),
-    }),
-  });
-  if (!response.ok) {
-    throw new Error(`support service returned ${response.status}`);
-  }
-  const result = Schema.decodeUnknownSync(SupportReportResult)(await response.json());
-  if (logKey) {
-    void observability.support
-      .flushLogs({ ticketId: result.ticketId })
-      .catch((err) => log.warn('support logs flush failed', { err }));
-  }
-  return result;
-};
-
-export type SubmitSupportIssueOptions = {
-  endpoint: string;
-  observability: Observability.Observability;
-  report: SupportRequest;
-  did: string;
-  screenshotUrl?: string;
-};
-
-export const submitSupportIssue = async ({
-  endpoint,
-  observability,
-  report,
-  did,
-  screenshotUrl,
-}: SubmitSupportIssueOptions): Promise<SupportIssueResult> => {
-  const logKey = report.includeLogs !== false ? await observability.support.uploadLogs() : undefined;
-  const response = await fetch(`${endpoint}/issue`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      title: report.title,
-      body: report.body,
-      type: report.type,
-      severity: report.severity,
-      area: report.area,
-      version: report.version,
-      did,
-      screenshotUrl,
-      logKey,
-      posthog: observability.support.sessionContext(),
-    }),
-  });
-  if (response.status === 403) {
-    throw new Error('Filing Linear issues is limited to internal accounts.');
-  }
-  if (!response.ok) {
-    const detail = await response
-      .text()
-      .then((text) => text.slice(0, 200))
-      .catch(() => '');
-    throw new Error(`support service returned ${response.status}${detail ? `: ${detail}` : ''}`);
-  }
-  const result = Schema.decodeUnknownSync(SupportIssueResult)(await response.json());
-  if (logKey) {
-    void observability.support
-      .flushLogs({ reportId: result.reportId })
-      .catch((err) => log.warn('support logs flush failed', { err }));
-  }
-  return result;
-};
 
 export const CreateTicket = Operation.make({
   meta: {

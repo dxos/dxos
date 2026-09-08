@@ -63,7 +63,7 @@ export const translations = [
         'feedback-failed-toast.description':
           'Support is unavailable right now. Your report is still in the form; please try again in a moment.',
         'discord-feedback-toast.label': 'Help thread started in Discord',
-        'discord-feedback-toast.action': 'Open thread',
+        'open-thread.label': 'Open thread',
         // Welcome tour + keyboard shortcuts (absorbed from plugin-help).
         'open-help-tour.message': 'Show welcome tour',
         'open-shortcuts.label': 'Show shortcuts',
