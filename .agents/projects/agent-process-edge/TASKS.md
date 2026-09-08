@@ -444,7 +444,19 @@ and what keeps `answers a prompt` at the timeout. It is very likely the same gro
 `agent-feed-messages` project covers (atomic dequeue by echoing the item with an `AckAnnotation` and
 removing the original) — check there before writing a fix.
 
-- [ ] Find why the handled message is not removed/acked on a hosted turn.
+- [x] **Root cause: the ack is a feed APPEND, read back through the same eventually-consistent
+      index.** `SessionStore.ack` marks the item `ConsumedAnnotation` and re-appends it; the hosted
+      process's next `loadPending` is served by the space INDEX, which has not caught up, so the
+      wake re-reads the un-acked original and redelivers it. This is the SAME read-your-writes
+      hazard Phase 8 fixed for the enqueue side (`onAlarm empty queue with an unread write`) — that
+      fix covers "my write is not visible yet", not "the entry I just acked is still visible". The
+      ~3.5s spacing between repeated handlings matches the re-arm cadence, each wake re-reading a
+      stale index. Never reproduces locally: the same read is served from the resident feed handle.
+- [ ] Fix it. Shape that matches the existing remedy: have the process remember the ids it acked in
+      its own durable KV and hold them out of `loadPending` until the index catches up, mirroring
+      `MAX_UNSEEN_WRITE_WAKES`. Confirm against `agent-feed-messages` first — its whole subject is
+      making this dequeue atomic (echo the item with an `AckAnnotation`, remove the original), which
+      would replace this mechanism rather than extend it.
 - [ ] `agent work complete, succeeding` fires after a single turn in one run — re-check `turnRan`
       against the non-acking queue, since "drained" is being decided from a queue that never shrinks.
 
