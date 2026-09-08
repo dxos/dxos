@@ -203,6 +203,24 @@ describe('UrlPath', () => {
     }
   });
 
+  describe('readWorkspace', () => {
+    test('reads the leading workspace without a key table', ({ expect }) => {
+      expect(Option.getOrThrow(UrlPath.readWorkspace(`/w/${WORKSPACE_A}`))).toBe(WORKSPACE_A);
+    });
+
+    test('reads it from a chain whose later keys are unregistered', ({ expect }) => {
+      // The point of the function: this is what the deck can know before the builders have run.
+      expect(Option.getOrThrow(UrlPath.readWorkspace(`/w/${WORKSPACE_A}/unknown/abc`))).toBe(WORKSPACE_A);
+      expect(Option.isNone(UrlPath.parse(`/w/${WORKSPACE_A}/unknown/abc`, table))).toBe(true);
+    });
+
+    test('rejects a path that does not open with the anchor key', ({ expect }) => {
+      expect(Option.isNone(UrlPath.readWorkspace('/'))).toBe(true);
+      expect(Option.isNone(UrlPath.readWorkspace('/doc/abc'))).toBe(true);
+      expect(Option.isNone(UrlPath.readWorkspace('/w'))).toBe(true);
+    });
+  });
+
   describe('isReservedKey', () => {
     test('does not reserve w (it is a declared anchor key)', ({ expect }) => {
       expect(UrlPath.isReservedKey('w')).toBe(false);

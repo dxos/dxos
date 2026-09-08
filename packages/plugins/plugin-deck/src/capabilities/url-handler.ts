@@ -17,6 +17,7 @@ import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as NotFound from '@dxos/app-toolkit/NotFound';
 import * as UrlPath from '@dxos/app-toolkit/UrlPath';
 import * as Operation from '@dxos/compute/Operation';
+import { Key } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
@@ -31,6 +32,7 @@ import {
   getCandidateEntityIds,
   getRenderedPlanks,
   isCompanionOpen,
+  makeUrlApplication,
   resolveCompanionAnchor,
   serializeDeckToUrl,
 } from '../util';
@@ -69,6 +71,10 @@ export default Capability.makeModule(
     // so both the inbound (URL -> state) resolution and the outbound sync below share this handle.
     const builder = yield* AppCapabilities.AppGraph;
     const manager = yield* Plugin.Service;
+
+    // Marks the deck writes made in service of applying a URL, so the subscription below can tell
+    // them from a change that supersedes the URL being applied.
+    const urlApplication = makeUrlApplication(registry.get(stateAtom));
 
     /**
      * Dispatch all NavigationHandler contributions with a given URL.
@@ -141,7 +147,16 @@ export default Capability.makeModule(
       lastRepresentation.set(nodeId, node);
     };
 
-    const handleNavigation = Effect.fn(function* (url?: URL, options?: { abortIf?: () => boolean }) {
+    /** Move the deck onto `workspacePath`, unless it is already there. */
+    const switchWorkspace = (workspacePath: string) =>
+      workspacePath === registry.get(stateAtom).activeDeck
+        ? Effect.void
+        : urlApplication.applying(Operation.invoke(LayoutOperation.SwitchWorkspace, { subject: workspacePath }));
+
+    const handleNavigation = Effect.fn(function* (url?: URL) {
+      // Supersedes whichever URL was being applied: a Back press mid-restore must win over the
+      // restore it interrupts, which would otherwise `Set` its own planks over the traversal.
+      const application = urlApplication.begin();
       const resolvedUrl = url ?? new URL(window.location.href);
       // When native redirect is active, check-app-scheme owns the initial dispatch
       // to prevent one-time tokens from being consumed before the native app can use them.
@@ -170,6 +185,19 @@ export default Capability.makeModule(
         // soon as the deck state is next read, so this is not a dead end.
         return;
       }
+
+      // Claimed before the parse below, which waits on URL keys the client-gated builders register
+      // seconds later. Until the deck leaves the unresolved-workspace sentinel, plugin-space's boot
+      // bootstrap switches it to the default space (`spaces-ready.ts`) and takes the deck out from
+      // under this restore. The workspace tier is grammar rather than a registered key, so it is
+      // readable now; a segment that is not a space id is left to the parse to reject.
+      yield* UrlPath.readWorkspace(pathname).pipe(
+        Option.filter(Key.SpaceId.isValid),
+        Option.match({
+          onNone: () => Effect.void,
+          onSome: (workspace) => switchWorkspace(GraphPath.getSpacePath(workspace)),
+        }),
+      );
 
       const parseUrl = () => UrlPath.parse(pathname, PathResolution.buildUrlKeyTable(builder));
       const parsed = yield* parseUrl().pipe(
@@ -206,17 +234,19 @@ export default Capability.makeModule(
       // parse above can wait out its full deadline, and the not-found branch below writes and
       // returns — so a check placed only before `Set` would let a timed-out restore knock the user
       // out of whatever they had opened in the meantime.
-      if (options?.abortIf?.()) {
+      if (application.superseded()) {
         return;
       }
 
       if (Option.isNone(parsed)) {
         // Unknown/malformed path: same outcome as an unresolvable subject id always had — open the
         // not-found sentinel. `immediate` skips validation, which is redundant for the sentinel anyway.
-        yield* Operation.invoke(LayoutOperation.Open, {
-          subject: [NotFound.NOT_FOUND_PATH],
-          navigation: 'immediate',
-        });
+        yield* urlApplication.applying(
+          Operation.invoke(LayoutOperation.Open, {
+            subject: [NotFound.NOT_FOUND_PATH],
+            navigation: 'immediate',
+          }),
+        );
         return;
       }
 
@@ -225,10 +255,7 @@ export default Capability.makeModule(
       // to the sentinel rather than to `root/default`, which resolves to no node and so can never heal.
       const workspacePath =
         workspace === DeckSchema.DEFAULT_DECK_ID ? DeckSchema.DEFAULT_DECK_ID : GraphPath.getSpacePath(workspace);
-      const state = registry.get(stateAtom);
-      if (workspacePath !== state.activeDeck) {
-        yield* Operation.invoke(LayoutOperation.SwitchWorkspace, { subject: workspacePath });
-      }
+      yield* switchWorkspace(workspacePath);
 
       if (pairs.length === 0) {
         // Workspace-only URL: SwitchWorkspace above already restored the workspace's persisted deck.
@@ -270,7 +297,9 @@ export default Capability.makeModule(
                   Effect.catch(() => Effect.succeed<AppCapabilities.NavigationTargetVerdict>('unknown')),
                 ),
               ),
-            ).pipe(Effect.tap((results) => Effect.sync(() => (verdicts[index] = combineVerdicts(results.flat())))));
+            ).pipe(
+              Effect.tap((results) => Effect.sync(() => (verdicts[index] = combineVerdicts(results.flat())))),
+            );
           },
           { concurrency: 'unbounded' },
         );
@@ -320,7 +349,7 @@ export default Capability.makeModule(
 
       // Re-checked after resolution, which is a second multi-second wait: `Set` overrides the deck
       // wholesale, so applying it now would undo whatever the user opened while it ran.
-      if (options?.abortIf?.()) {
+      if (application.superseded()) {
         return;
       }
 
@@ -329,7 +358,7 @@ export default Capability.makeModule(
 
       // `Set` already means "override the deck's active list wholesale" — exactly a URL-driven
       // restore, for one plank or many, with no separate disposition to invent.
-      yield* Operation.invoke(LayoutOperation.Set, { subject: plankIds });
+      yield* urlApplication.applying(Operation.invoke(LayoutOperation.Set, { subject: plankIds }));
 
       // Attention is never serialized; on load it defaults to the last plank in the chain — except when
       // the chain carries a companion, whose position *is* serialized and which only renders beside the
@@ -341,10 +370,15 @@ export default Capability.makeModule(
 
       // The companion is part of the URL-derived deck state too: explicitly close it when the chain
       // carries no companion pair, rather than leaving a stale companion open from before navigation.
-      yield* Operation.invoke(LayoutOperation.UpdateCompanion, { subject: companionNodeId });
+      yield* urlApplication.applying(Operation.invoke(LayoutOperation.UpdateCompanion, { subject: companionNodeId }));
     });
 
-    const onPopState = () => void EffectEx.runAndForwardErrors(provideServices(handleNavigation()));
+    // The URL follows the deck a traversal actually applied, not the decks it passed through on the
+    // way; `replace` because the traversed entry already exists.
+    const onPopState = () =>
+      void EffectEx.runAndForwardErrors(
+        provideServices(handleNavigation()).pipe(Effect.andThen(Effect.sync(() => syncUrl('replace')))),
+      );
 
     // Install before handleNavigation()/state-sync push entries on top of the sentinel.
     const sentinelKey = installLeaveTrap();
@@ -485,18 +519,14 @@ export default Capability.makeModule(
       }
     };
 
-    // Subscribed HERE, not from the restore fiber: the restore can now wait seconds for URL keys and
-    // for its nodes, and a navigation during that window would otherwise have no subscriber at all —
-    // the first navigation after a reload silently failed to update the URL. The writes are gated
-    // instead, so nothing overwrites the URL being restored from with the pre-restore deck.
-    // Subscribed at activation and NOT gated on the restore: these fire only on an actual write, and
-    // a write means someone — the user or the restore itself — changed the deck, so the URL should
-    // follow it. Gating them instead swallowed every navigation made while the restore was still
-    // waiting on its nodes, which is up to the full deadline.
-    let userNavigated = false;
-    const unsubscribeState = registry.subscribe(stateAtom, () => {
-      userNavigated = true;
-      syncUrl();
+    // Subscribed at activation, not from the restore fiber: the restore waits seconds for URL keys
+    // and for its nodes, and a navigation during that window would otherwise have no subscriber at
+    // all. Only a change from outside a URL application counts — one made while applying a URL is
+    // the URL's own doing, so it neither supersedes the application nor drives the URL back.
+    const unsubscribeState = registry.subscribe(stateAtom, (state) => {
+      if (urlApplication.observe(state)) {
+        syncUrl();
+      }
     });
     const unsubscribeCompanionVariant = viewState.subscribe(CompanionViewState.aspect, CompanionViewState.CONTEXT, () =>
       syncUrl(),
@@ -512,11 +542,7 @@ export default Capability.makeModule(
     // Forked because this module sits on the startup pass: the restore can now wait for
     // late-arriving URL keys (see `awaitUrlKeys`), and awaiting that here would hold the whole
     // pass — and the boot loader with it — until the client is up.
-    yield* Effect.forkScoped(
-      provideServices(handleNavigation(undefined, { abortIf: () => userNavigated })).pipe(
-        Effect.andThen(Effect.sync(startUrlSync)),
-      ),
-    );
+    yield* Effect.forkScoped(provideServices(handleNavigation()).pipe(Effect.andThen(Effect.sync(startUrlSync))));
 
     yield* Effect.addFinalizer(() =>
       Effect.sync(() => {

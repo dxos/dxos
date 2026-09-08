@@ -73,6 +73,19 @@ export const isReservedKey = (key: string): boolean =>
   RESERVED_KEYS.has(key) || Key.SpaceId.isValid(key) || Key.EntityId.isValid(key);
 
 /**
+ * Read the leading `/<anchor>/<workspace>` workspace token, without a key table.
+ *
+ * The workspace tier is grammar rather than a registered key, so it is readable before the builders
+ * that register the chain's keys have run. Returns `Option.none()` for any pathname that does not
+ * open with the anchor key followed by a workspace segment.
+ */
+export const readWorkspace = (pathname: string): Option.Option<string> => {
+  const trimmed = decodeURIComponent(pathname).replace(/^\/+|\/+$/g, '');
+  const [anchor, workspace] = trimmed.split('/');
+  return anchor === WORKSPACE_KEY && workspace ? Option.some(workspace) : Option.none();
+};
+
+/**
  * Parse a browser pathname into a workspace plus an ordered chain of pairs, against a
  * caller-supplied key table.
  *
