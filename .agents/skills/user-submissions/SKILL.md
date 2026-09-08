@@ -47,6 +47,16 @@ token` — the access key id is the token's id, the secret is the **sha256 of th
 token value** (how Cloudflare authenticates the R2 S3 API with an API token).
 Never paste it into chat; see AGENTS.md → "Handing an agent a credential".
 
+**The item's name is a misnomer on both counts, and treating it literally has
+cost time more than once.** It is not read-only — the same pair writes and
+deletes — and it is not scoped to the survey logs: it reaches every bucket in
+the account, including `agent-artifacts` (the `hosting-artifacts` skill) and the
+`composer-assets*` retention buckets the deploy pipeline writes on every deploy
+(`.github/workflows/scripts/upload-assets.mjs`). Measured, not assumed. Two
+consequences: never point a delete at a path you have not checked, and rotating
+this token breaks four things at once, so coordinate it. The name is load-bearing
+in `survey-to-linear.mjs`, which is why it has not simply been corrected.
+
 Write the bundle to the scratchpad, not the working tree. They run 50 MB+ and
 100k+ lines.
 
