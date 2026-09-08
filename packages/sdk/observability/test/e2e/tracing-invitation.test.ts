@@ -12,7 +12,7 @@ import { LocalClientServices } from '@dxos/client/local';
 import { EffectEx } from '@dxos/effect';
 import { log } from '@dxos/log';
 import { MemoryTransportFactory } from '@dxos/network-manager';
-import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
+import { EdgeReplicationSetting } from '@dxos/protocols/buf/dxos/echo/metadata_pb';
 
 import * as Otel from '../../src/extensions/otel';
 import * as Observability from '../../src/Observability';

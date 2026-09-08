@@ -24,9 +24,10 @@ import { PublicKey, SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { ApiError, runServiceCall, subscribeStream } from '@dxos/protocols';
 import { Invitation, Invitation_Kind } from '@dxos/protocols/buf/dxos/client/invitation_pb';
-import { type Space as SerializedSpace, SpaceState } from '@dxos/protocols/proto/dxos/client/services';
+import { SpaceState } from '@dxos/protocols/buf/dxos/client/invitation_pb';
+import { MembershipPolicy } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
+import { type Space as SerializedSpace } from '@dxos/protocols/proto/dxos/client/services';
 import { type IndexConfig } from '@dxos/protocols/proto/dxos/echo/indexing';
-import { MembershipPolicy } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { type SpacesService } from '@dxos/protocols/rpc';
 import { trace } from '@dxos/tracing';
 

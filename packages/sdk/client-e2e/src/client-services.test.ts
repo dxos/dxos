@@ -15,7 +15,8 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { toPublicKey } from '@dxos/protocols/buf';
 import { Invitation_AuthMethod, Invitation_State } from '@dxos/protocols/buf/dxos/client/invitation_pb';
-import { Device, DeviceKind, SpaceMember } from '@dxos/protocols/proto/dxos/client/services';
+import { DeviceKind } from '@dxos/protocols/buf/dxos/client/services_pb';
+import { Device, SpaceMember } from '@dxos/protocols/proto/dxos/client/services';
 
 // TODO(burdon): Use as set-up for test suite.
 // TODO(burdon): Timeouts and progress callback/events.

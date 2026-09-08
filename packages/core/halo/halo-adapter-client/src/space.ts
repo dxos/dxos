@@ -12,9 +12,10 @@ import { type Client } from '@dxos/client';
 import { type Space as ClientSpace, SpaceState } from '@dxos/client/echo';
 import { Space as HaloSpace, SpaceError } from '@dxos/halo';
 import { IdentityDid, type SpaceId } from '@dxos/keys';
+import { EdgeReplicationSetting } from '@dxos/protocols/buf/dxos/echo/metadata_pb';
+import { MembershipPolicy } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { type SpaceMember } from '@dxos/protocols/proto/dxos/client/services';
-import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
-import { SpaceMember as HaloSpaceMember, MembershipPolicy } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { SpaceMember as HaloSpaceMember } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { SpacesService } from '@dxos/protocols/rpc';
 
 import {

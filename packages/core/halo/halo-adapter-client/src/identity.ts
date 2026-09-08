@@ -15,6 +15,7 @@ import { InvitationEncoder } from '@dxos/client/invitations';
 import { createIdFromSpaceKey } from '@dxos/echo-protocol';
 import { Identity as HaloIdentity, IdentityError } from '@dxos/halo';
 import { IdentityDid, PublicKey } from '@dxos/keys';
+import { DeviceType } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { type TypedMessage } from '@dxos/protocols/proto';
 import {
   type Device as ClientDevice,
@@ -22,7 +23,7 @@ import {
   Device,
   DeviceKind,
 } from '@dxos/protocols/proto/dxos/client/services';
-import { type Credential, DeviceType, IdentityRecovery } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { type Credential, IdentityRecovery } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { ComplexSet } from '@dxos/util';
 
 import { makeFlow, streamFromClientObservable, toShareOptions } from './util';
