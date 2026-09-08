@@ -98,22 +98,79 @@ description, format }` to whatever is inside. "Field" means what it means in a f
 - **`Form.Section`, `Form.FieldSet` and `Form.Group` are the fieldset layer** and are unchanged:
   `Fieldset.Root` named by a `Fieldset.Legend`, collapsible where a nested group asks for it.
 
+### Bound and unbound are layers, not modes
+
+The distinction between a row whose value lives in the form model and one whose value the caller
+owns survives, but nothing in the row expresses it. A row is bound when it sits inside a
+`Form.Field path` boundary, whose context its controls read; the same row outside a boundary is
+unbound and its controls are wired by the caller. The row has no prop and no branch for this.
+
+**Schema-driven.** The dispatcher renders this for every property; a consumer never writes it, but
+it is the same anatomy as the hand-written cases below.
+
 ```tsx
-// Schema-driven: the dispatcher renders this for every property.
 <Form.Field path='name'>
-  <Field.Root variant='settings'>
+  <Field.Root>
     <Field.Label />
     <Field.HelperText />
     <Field.Input />
     <Field.ErrorText />
   </Field.Root>
 </Form.Field>
+```
 
-// Hand-written settings row: the same row, no binding.
-<Field.Root variant='settings' label={t('wireframe.label')} description={t('wireframe.description')}>
-  <Field.Switch checked={settings.wireframe} onCheckedChange={setWireframe} />
+`Field.Label`, `Field.HelperText` and `Field.ErrorText` with no children take their text from the
+binding (the schema's title, description and the current validation error); `Field.Input` takes its
+value, `onChange`, `required` and `readonly` from it too.
+
+**Bound, hand-written.** A custom control for one property of a schema form, in place of the
+dispatcher's choice — today's `fieldMap` / custom renderer case. The boundary supplies the value; the
+consumer supplies the control.
+
+```tsx
+<Form.Root schema={ProjectSchema} values={project} onValuesChanged={setProject}>
+  <Form.Section title={t('project.label')}>
+    <Form.FieldSet exclude={['hue']} />
+    <Form.Field path='hue'>
+      <Field.Root>
+        <Field.Label />
+        <HuePicker />  {/* reads { value, setValue } with useFormField() */}
+      </Field.Root>
+    </Form.Field>
+  </Form.Section>
+</Form.Root>
+```
+
+**Unbound.** A settings row whose state is a plugin settings atom the form knows nothing about.
+No `Form.Field`, no path: the caller wires the control and the row still labels and describes it.
+
+```tsx
+<Form.Root variant='settings'>
+  <Form.Section title={t('settings.title')}>
+    <Field.Root label={t('wireframe.label')} description={t('wireframe.description')}>
+      <Field.Switch checked={settings.wireframe} onCheckedChange={(checked) => setSettings({ wireframe: checked })} />
+    </Field.Root>
+    <Field.Root label={t('theme.label')} description={t('theme.description')}>
+      <Select.Root value={settings.theme} onValueChange={(theme) => setSettings({ theme })}>…</Select.Root>
+    </Field.Root>
+  </Form.Section>
+</Form.Root>
+```
+
+`label` and `description` on `Field.Root` are the shorthand for a `Field.Label` and `Field.HelperText`
+with children, for the common one-control row; the parts remain available when the row needs
+something between them. The row is the settings card because `Form.Root`'s `variant` reaches it
+through context, not because it knows it is in a settings panel.
+
+**Unbound, no single control.** A row whose "control" is an action or a readout. Nothing is
+labelled by the label, so the row says `standalone` and renders the label as text; the button keeps
+its own name.
+
+```tsx
+<Field.Root standalone label={t('reset.label')} description={t('reset.description')}>
+  <Button onClick={handleReset}>{t('reset.button')}</Button>
 </Field.Root>
-````
+```
 
 What changes for consumers: the ~70 hand-written rows become `Field.Root` with a variant (or keep a
 thin `Form.Field`-shaped alias that is that), the 17 renderers become controls, and `Form.Row`-era
@@ -155,3 +212,4 @@ enclosing field, usable without a root. The composite anatomies (`Checkbox.*`, `
 The two gaps this table makes visible: `Form.Field` in action mode is not a `Field`, so a hand-written
 settings row has no field scope for its label and description; and `Form.Group` is a styled `div`
 rather than a `Fieldset`.
+````
