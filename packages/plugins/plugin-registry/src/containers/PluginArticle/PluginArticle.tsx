@@ -7,9 +7,11 @@ import React, { useCallback, useMemo } from 'react';
 
 import type * as Plugin from '@dxos/app-framework/Plugin';
 import { useOperationInvoker, usePluginManager } from '@dxos/app-framework/ui';
+import * as AppSettings from '@dxos/app-toolkit/AppSettings';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
+import { useSettingsKeyScope } from '@dxos/app-toolkit/ui';
 
-import { PluginDetail } from '#components';
+import { PluginDetail, PluginScope } from '#components';
 
 import {
   useCatalogEntry,
@@ -41,6 +43,7 @@ export const PluginArticle = ({ subject: plugin }: PluginArticleProps) => {
   });
 
   const enabled = manager.getEnabled().includes(pluginId);
+  const scope = useSettingsKeyScope(AppSettings.PLUGINS_NAMESPACE, pluginId);
   const failed = useAtomValue(manager.failed);
   const failure = useMemo(() => failed.find((entry) => entry.id === pluginId), [failed, pluginId]);
   const isInstalled = useMemo(
@@ -98,6 +101,7 @@ export const PluginArticle = ({ subject: plugin }: PluginArticleProps) => {
   return (
     <PluginDetail
       plugin={plugin}
+      scope={scope.available ? <PluginScope synced={scope.synced} onSyncedChange={scope.setSynced} /> : undefined}
       enabled={enabled}
       installing={actions.installing}
       updating={actions.updating}

@@ -338,3 +338,81 @@ describe('conflictingKeys', () => {
     expect(AppSettings.conflictingKeys(settings, NS)).toEqual([]);
   });
 });
+
+describe('per-key overrides', () => {
+  test('pinning a key freezes what is in effect and changes nothing visible', () => {
+    const settings = draft({ shared: { [NS]: { toolbar: true } } });
+    const before = AppSettings.resolve(settings, NS);
+
+    AppSettings.setKeySynced(settings, NS, 'toolbar', false, before.toolbar);
+
+    expect(AppSettings.resolve(settings, NS)).toEqual(before);
+    expect(AppSettings.isKeySynced(settings, NS, 'toolbar')).toBe(false);
+  });
+
+  test('a pinned key takes writes here while the rest of the namespace still shares', () => {
+    const settings = draft({ shared: { [NS]: { toolbar: true, folding: true } } });
+    AppSettings.setKeySynced(settings, NS, 'toolbar', false, true);
+
+    AppSettings.setValue(settings, NS, 'toolbar', false);
+    AppSettings.setValue(settings, NS, 'folding', false);
+
+    // The pinned key diverged; its neighbour reached the account.
+    expect(settings.local.overrides[NS]).toEqual({ toolbar: false });
+    expect(settings.shared[NS]).toEqual({ toolbar: true, folding: false });
+    expect(AppSettings.resolve(otherDevice(settings), NS)).toEqual({ toolbar: true, folding: false });
+  });
+
+  test('a pinned key ignores the account changing it', () => {
+    const settings = draft({ shared: { [NS]: { toolbar: true } } });
+    AppSettings.setKeySynced(settings, NS, 'toolbar', false, true);
+
+    AppSettings.setValue(otherDevice(settings), NS, 'toolbar', false);
+
+    // Pinned on its value, not by it: the pin holds even though the two agreed when it was made.
+    expect(AppSettings.resolve(settings, NS)).toEqual({ toolbar: true });
+  });
+
+  test('unpinning hands the key back to the account', () => {
+    const settings = draft({ shared: { [NS]: { toolbar: true } } });
+    AppSettings.setKeySynced(settings, NS, 'toolbar', false, true);
+    AppSettings.setValue(settings, NS, 'toolbar', false);
+
+    AppSettings.setKeySynced(settings, NS, 'toolbar', true);
+
+    expect(AppSettings.resolve(settings, NS)).toEqual({ toolbar: true });
+    expect(AppSettings.isKeySynced(settings, NS, 'toolbar')).toBe(true);
+  });
+
+  test('a pinned key whose value matches is not a conflict, so unpinning need not ask', () => {
+    const settings = draft({ shared: { [NS]: { toolbar: true } } });
+    AppSettings.setKeySynced(settings, NS, 'toolbar', false, true);
+
+    expect(AppSettings.conflictingKeys(settings, NS)).toEqual([]);
+  });
+
+  test('pinning a key still on its schema default captures the default', () => {
+    const settings = draft();
+    // Nobody has written `toolbar`, so it lives in neither layer.
+    AppSettings.setKeySynced(settings, NS, 'toolbar', false, true);
+
+    AppSettings.setValue(otherDevice(settings), NS, 'toolbar', false);
+
+    expect(AppSettings.resolve(settings, NS)).toEqual({ toolbar: true });
+  });
+
+  test('a plugin pinned off stays off while the rest of the set follows the account', () => {
+    const PLUGINS = AppSettings.PLUGINS_NAMESPACE;
+    const chess = 'org.dxos.plugin.chess';
+    const stack = 'org.dxos.plugin.stack';
+    const settings = draft({ shared: { [PLUGINS]: { [chess]: true, [stack]: true } } });
+
+    AppSettings.setKeySynced(settings, PLUGINS, chess, false, true);
+    AppSettings.setValue(settings, PLUGINS, chess, false);
+
+    expect(AppSettings.getEnabledPlugins(AppSettings.resolve(settings, PLUGINS)).sort()).toEqual([stack]);
+    expect(AppSettings.getEnabledPlugins(AppSettings.resolve(otherDevice(settings), PLUGINS)).sort()).toEqual(
+      [chess, stack].sort(),
+    );
+  });
+});

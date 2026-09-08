@@ -127,6 +127,23 @@ export const getUnsynced = (settings: Snapshot): readonly string[] => settings.l
 export const isSynced = (settings: Snapshot, namespace: string): boolean => !getUnsynced(settings).includes(namespace);
 
 /**
+ * Whether this device holds its own value for one key, so edits to it stay here even while the rest
+ * of the namespace follows the account.
+ *
+ * Presence is the override, not the value: a key pinned to what the account currently says must stay
+ * pinned when another device changes it.
+ */
+export const isOverridden = (settings: Snapshot, namespace: string, key: string): boolean =>
+  key in getOverrides(settings, namespace);
+
+/**
+ * Whether one key's edits reach the user's other devices — the per-key counterpart of
+ * {@link isSynced}, and what a control offering to pin a single key reads.
+ */
+export const isKeySynced = (settings: Snapshot, namespace: string, key: string): boolean =>
+  isSynced(settings, namespace) && !isOverridden(settings, namespace, key);
+
+/**
  * The values in effect on this device: `defaults`, overlaid with the shared values, overlaid with
  * this device's overrides.
  *
@@ -166,9 +183,11 @@ const namespaceOf = (container: Namespaces, namespace: string): Values => (conta
  * the shared layer otherwise. This is the routing rule that makes settings shared by default.
  */
 export const setValue = (draft: Draft, namespace: string, key: string, value: unknown): void => {
-  const target = isSynced(draft, namespace)
-    ? namespaceOf(draft.shared, namespace)
-    : namespaceOf(draft.local.overrides, namespace);
+  // A key already overridden keeps taking writes here even while the namespace follows the account:
+  // that is what lets one plugin be pinned to this device without forking the whole set. The same
+  // rule reads follow — presence in the device layer is the override, whatever its value.
+  const local = !isSynced(draft, namespace) || isOverridden(draft, namespace, key);
+  const target = local ? namespaceOf(draft.local.overrides, namespace) : namespaceOf(draft.shared, namespace);
   target[key] = value;
 };
 
@@ -228,6 +247,30 @@ export const setSynced = (
     if (snapshot) {
       draft.local.overrides[namespace] = { ...snapshot };
     }
+  }
+};
+
+/**
+ * Pin one key to this device, or hand it back to the account.
+ *
+ * Pinning is lossless: it freezes the value already in effect, so nothing visibly changes here and
+ * no other device is touched. Unpinning drops this device's value for the key, which is only a loss
+ * where the two sides disagree — {@link conflictingKeys} names those, so a caller can ask first.
+ *
+ * `snapshot` is the value in effect, which the caller has to supply: a key still on its schema
+ * default is absent from both layers, and pinning it must capture the default rather than nothing.
+ */
+export const setKeySynced = (
+  draft: Draft,
+  namespace: string,
+  key: string,
+  synced: boolean,
+  snapshot?: unknown,
+): void => {
+  if (synced) {
+    delete draft.local.overrides[namespace]?.[key];
+  } else {
+    namespaceOf(draft.local.overrides, namespace)[key] = snapshot;
   }
 };
 

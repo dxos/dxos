@@ -214,6 +214,20 @@ export type SettingsSync = {
    * reader asks to rejoin.
    */
   conflicts(prefix: string): readonly string[];
+  /**
+   * Keys this device holds its own value for, by prefix. An atom rather than a lookup because
+   * {@link unsynced} does not move when a key is pinned, so a marker keyed off that alone would
+   * never re-render.
+   */
+  readonly overrides: Atom.Atom<AppSettings.Namespaces>;
+  /**
+   * Pin one key to this device, or hand it back to the account — the per-key counterpart of
+   * {@link setSynced}, for a single plugin rather than the whole set.
+   *
+   * Pinning is lossless. Releasing drops this device's value, which only loses something where the
+   * two disagree; {@link conflicts} names those.
+   */
+  setKeySynced(prefix: string, key: string, synced: boolean): void;
 };
 
 /**

@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { type PropsWithChildren } from 'react';
+import React, { type PropsWithChildren, type ReactNode } from 'react';
 
 import type * as Plugin from '@dxos/app-framework/Plugin';
 import type * as PluginManager from '@dxos/app-framework/PluginManager';
@@ -31,6 +31,11 @@ import { PluginFailureBadge } from '../PluginFailureBadge';
 
 export type PluginDetailProps = {
   plugin: Plugin.Plugin;
+  /**
+   * Scope control for this one plugin, rendered under the enable switch. A node rather than state so
+   * this component stays presentational — it has no business knowing the settings sync exists.
+   */
+  scope?: ReactNode;
   enabled?: boolean;
   /** True while an in-flight install is running. Disables the install button. */
   installing?: boolean;
@@ -110,6 +115,7 @@ export const PluginDetail = composable<HTMLDivElement, PluginDetailProps>(
   (
     {
       plugin,
+      scope,
       enabled,
       installing,
       updating,
@@ -195,6 +201,13 @@ export const PluginDetail = composable<HTMLDivElement, PluginDetailProps>(
                 {author && <span className='dx-tag dx-tag--info'>{author}</span>}
               </div>
             </Grid>
+
+            {scope && (
+              <Section.Root>
+                <Section.Heading title={t('plugin-scope.section.title')} />
+                <Section.Body>{scope}</Section.Body>
+              </Section.Root>
+            )}
 
             {description && (
               <Section.Root>

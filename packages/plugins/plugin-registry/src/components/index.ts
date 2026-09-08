@@ -6,4 +6,5 @@ export * from './DisableDependentsAlert';
 export * from './PluginDetail';
 export * from './PluginFailureBadge';
 export * from './PluginList';
+export * from './PluginScope';
 export * from './RegistrySettings';

@@ -56,6 +56,10 @@ export default Capability.makeModule(
     // identity across a reassignment, and the atom compares by identity, so it would never notify.
     const readUnsynced = () => [...AppSettings.getUnsynced(store.read())];
     const unsynced = Atom.make<readonly string[]>(readUnsynced()).pipe(Atom.keepAlive);
+    // Copied out for the same reason as `unsynced`: handed over live, the record keeps its identity
+    // across a write and the atom would never notify.
+    const readOverrides = () => structuredClone(store.read().local.overrides);
+    const overrides = Atom.make<AppSettings.Namespaces>(readOverrides()).pipe(Atom.keepAlive);
 
     const reconcilers: Reconciler[] = [];
     const subscriptions: (() => void)[] = [];
@@ -164,6 +168,7 @@ export default Capability.makeModule(
     // scope control does. Both land the same way — republish the scope, then re-resolve.
     const refresh = () => {
       registry.set(unsynced, readUnsynced());
+      registry.set(overrides, readOverrides());
       for (const reconciler of reconcilers) {
         reconciler.pull();
       }
@@ -179,6 +184,7 @@ export default Capability.makeModule(
 
     return Capability.contribute(AppCapabilities.SettingsSync, {
       unsynced,
+      overrides,
       setSynced: (namespace, synced, options) => {
         // Whether unsyncing freezes the current values is a property of the namespace, not of the
         // UI: a plugin's settings freeze so the switch is visibly a no-op, while the plugin set
@@ -192,6 +198,14 @@ export default Capability.makeModule(
         store.update((draft) => AppSettings.setSynced(draft, namespace, synced, { snapshot, adopt: options?.adopt }));
       },
       conflicts: (namespace) => AppSettings.conflictingKeys(store.read(), namespace),
+      setKeySynced: (namespace, key, synced) => {
+        // The value in effect, which only the reconciler knows for a key still on its schema default
+        // and therefore absent from both layers.
+        const snapshot = synced
+          ? undefined
+          : reconcilers.find((reconciler) => reconciler.namespace === namespace)?.current()[key];
+        store.update((draft) => AppSettings.setKeySynced(draft, namespace, key, synced, snapshot));
+      },
     });
   }),
 );

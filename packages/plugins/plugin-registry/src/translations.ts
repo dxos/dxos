@@ -17,6 +17,9 @@ export const translations = [
         'home-page.label': 'Website',
         'source.label': 'Source',
         'resources.label': 'Resources',
+        'plugin-scope.section.title': 'Availability',
+        'plugin-scope.shared.label': 'On all your devices',
+        'plugin-scope.device-only.label': 'Only on this device',
         'plugin-scope.label': 'Use a different plugin set on this device',
         'plugin-scope.description':
           'Your plugins follow your account. Turn this on to change which plugins are enabled here without affecting your other devices.',
