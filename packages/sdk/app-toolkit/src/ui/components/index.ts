@@ -5,6 +5,7 @@
 export * from './AttentionSigil';
 export * from './CardIconSlot';
 export * from './NotFoundArticle';
+export * from './UpdateRow';
 export * from './PluginRegistryButton';
 
 export * as AppSurface from './app-surface';
