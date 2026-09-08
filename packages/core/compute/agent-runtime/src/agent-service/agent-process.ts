@@ -153,6 +153,7 @@ export const AgentProcess = (options: AgentProcessOptions) =>
         // KV holds only undelivered tool results; queued prompts and alarms live in the feed via
         // `sessionStore`.
         let toolResults: ToolResultEvent[] = [...(yield* ToolResultsCell.get)];
+        let ackedEntries: string[] = [...(yield* AckedEntriesCell.get)];
         const storageService = yield* StorageService.StorageService;
         const toolCallManager = new ToolCallManager(storageService);
         yield* toolCallManager.load();
@@ -347,8 +348,19 @@ export const AgentProcess = (options: AgentProcessOptions) =>
                 prompt = toolResultPrompt(toolResult);
               } else {
                 const state = yield* sessionStore.loadPending(feed);
-                const message = state.pendingMessages[0];
-                const dueAlarm = state.pendingAlarms.find((alarm) => alarm.wakeAt <= now());
+                // An id still in the pending set has not caught up yet; one that has left it is
+                // durably acked and no longer needs remembering.
+                const stillPending = new Set([
+                  ...state.pendingMessages.map((message) => message.id),
+                  ...state.pendingAlarms.map((alarm) => alarm.id),
+                ]);
+                if (ackedEntries.some((id) => !stillPending.has(id))) {
+                  ackedEntries = ackedEntries.filter((id) => stillPending.has(id));
+                  yield* AckedEntriesCell.set(ackedEntries);
+                }
+                const acked = new Set(ackedEntries);
+                const message = state.pendingMessages.find((candidate) => !acked.has(candidate.id));
+                const dueAlarm = state.pendingAlarms.find((alarm) => alarm.wakeAt <= now() && !acked.has(alarm.id));
                 if (message !== undefined) {
                   log('agent onAlarm handling', { tag: 'message', id: message.id });
                   unseenWrites = Math.max(0, unseenWrites - 1);
@@ -418,6 +430,8 @@ export const AgentProcess = (options: AgentProcessOptions) =>
               // this point must find the entry still pending and redeliver it.
               if (dequeued !== undefined) {
                 yield* sessionStore.ack(feed, dequeued);
+                ackedEntries = [...ackedEntries, dequeued.id];
+                yield* AckedEntriesCell.set(ackedEntries);
               }
               const after = yield* sessionStore.loadPending(feed);
 
@@ -576,6 +590,25 @@ type Delegation = Schema.Schema.Type<typeof Delegation>;
 const DelegationsCell = StorageService.cell(
   Schema.fromJsonString(Schema.Array(Delegation).pipe(Schema.mutable)),
   'delegations',
+).pipe(StorageService.withDefault(() => []));
+
+/**
+ * Ids of queue entries this process has ACKED, held until the ack is visible in the feed read.
+ *
+ * The ack is a feed append and a hosted process reads the feed back through the eventually
+ * consistent space index, so `loadPending` keeps returning an entry whose ack has not landed yet —
+ * and `loadPending` deliberately includes in-flight entries, so that an interrupted turn is
+ * redelivered. Without this the two combine into a redelivery loop: the agent re-runs the same turn
+ * on every wake, forever. Durable rather than in-memory because the isolate does not survive
+ * between turns, and pruned as soon as the entry leaves the pending set, so it cannot grow
+ * unbounded.
+ *
+ * This does NOT weaken at-least-once delivery: an entry is recorded only after its turn ran, which
+ * is the same point the ack is written, so a crash before that still redelivers.
+ */
+const AckedEntriesCell = StorageService.cell(
+  Schema.fromJsonString(Schema.Array(Schema.String).pipe(Schema.mutable)),
+  'ackedEntries',
 ).pipe(StorageService.withDefault(() => []));
 
 const ToolCallState = Schema.Struct({
