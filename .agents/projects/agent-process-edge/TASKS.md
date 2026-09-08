@@ -344,9 +344,9 @@ new round-trip test rather than by reading: every hypothesis reached from source
       they just never arrived. This is why `MEMOIZED_AI_INFERENCE_SERVICE` was absent from
       compute-service's env (verified by dumping `this.env` inside the DO).
 
-      **Consequence beyond this project: the memoized-AI path was broken for ROUTINES too**, not
-          just hosted agents. `ai.node.test.ts` is tagged `manual`, so nothing exercised it. Worth
-          checking whether any other harness behaviour depended on a pruned stub.
+**Consequence beyond this project: the memoized-AI path was broken for ROUTINES too**, not just
+hosted agents. `ai.node.test.ts` is tagged `manual`, so nothing exercised it. Worth checking whether
+any other harness behaviour depended on a pruned stub.
 
 ### Test infrastructure added (edge)
 
@@ -472,9 +472,9 @@ removing the original) — check there before writing a fix.
       `drainProcess` in the context test. Verify before chasing anything else in that test.
 - [ ] **The tool test times out** (150s) waiting for the `Person` object. The handler set is wired
       but was never observed executing a tool — unknown whether it works.
-- [ ] `Failed to get handler to worker` (workerd RPC) with `accountLookupViaHubService failed
-    { failOpen: true }` — the `HUB_SERVICE` stub is not resolving an entrypoint. Fails open, so it
-      breaks nothing today, but it is the same class as `pruneAbsentTargets`.
+- [ ] `Failed to get handler to worker` (workerd RPC) alongside a failing `accountLookupViaHubService`
+      that fails open — the `HUB_SERVICE` stub is not resolving an entrypoint. Breaks nothing today,
+      but it is the same class as `pruneAbsentTargets`.
 
 ### Fixture store
 
