@@ -7,14 +7,15 @@ import * as Effect from 'effect/Effect';
 
 import { OPFS_SQLITE_DB_FILENAME, isValidSqliteDatabase } from '@dxos/client-services';
 import { PublicKey } from '@dxos/keys';
-import { schema } from '@dxos/protocols/proto';
+import { compatCodec } from '@dxos/protocols/buf-shape-compat';
+import { EchoMetadataSchema } from '@dxos/protocols/buf/dxos/echo/metadata_pb';
 import type { EchoMetadata } from '@dxos/protocols/proto/dxos/echo/metadata';
 import * as OpfsPool from '@dxos/sql-sqlite/OpfsPool';
 import * as SqliteClient from '@dxos/sql-sqlite/SqliteClient';
 
 import { exportOpfsSqlite } from './opfs-export';
 
-const EchoMetadataCodec = schema.getCodecForType('dxos.echo.metadata.EchoMetadata');
+const EchoMetadataCodec = compatCodec<EchoMetadata>(EchoMetadataSchema);
 
 const HALO_FEED_PARTS = ['key', 'secret_key', 'data', 'tree', 'bitfield', 'signatures'] as const;
 

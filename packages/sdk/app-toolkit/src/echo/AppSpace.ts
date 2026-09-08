@@ -12,8 +12,8 @@ import type * as CapabilityManager from '@dxos/app-framework/CapabilityManager';
 import { type Client } from '@dxos/client';
 import { type Space, SpaceState } from '@dxos/client/echo';
 import { Annotation, Obj } from '@dxos/echo';
-import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
-import { MembershipPolicy } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { EdgeReplicationSetting } from '@dxos/protocols/buf/dxos/echo/metadata_pb';
+import { MembershipPolicy } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
 import { GraphPath } from '../app';
 import { AppCapabilities } from '../app-framework';

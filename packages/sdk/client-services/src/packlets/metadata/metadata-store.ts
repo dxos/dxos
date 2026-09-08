@@ -12,12 +12,17 @@ import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { DataCorruptionError, STORAGE_VERSION } from '@dxos/protocols';
 import { type CompatCodec, compatCodec } from '@dxos/protocols/buf-shape-compat';
-import { EchoMetadataSchema, LargeSpaceMetadataSchema } from '@dxos/protocols/buf/dxos/echo/metadata_pb';
-import { Invitation, SpaceState } from '@dxos/protocols/proto/dxos/client/services';
+import { SpaceState } from '@dxos/protocols/buf/dxos/client/invitation_pb';
+import {
+  EchoMetadataSchema,
+  EdgeReplicationSetting,
+  LargeSpaceMetadataSchema,
+} from '@dxos/protocols/buf/dxos/echo/metadata_pb';
+import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import {
   type ControlPipelineSnapshot,
   type EchoMetadata,
-  type EdgeReplicationSetting,
+  EdgeReplicationSetting as LegacyEdgeReplicationSetting,
   type IdentityRecord,
   type LargeSpaceMetadata,
   type SpaceMetadata,
@@ -27,6 +32,30 @@ import { type Timeframe } from '@dxos/timeframe';
 import { ComplexMap, arrayToBuffer, forEachAsync, isNonNullable } from '@dxos/util';
 
 const EXPIRED_INVITATION_CLEANUP_INTERVAL = 60 * 60 * 1000; // 1 hour
+
+// The stores' public surface carries the buf enum, while the persisted `SpaceMetadata` shape is
+// still protobuf.js, so the setting is mapped exhaustively at that one field rather than cast.
+export const toLegacyEdgeReplication = (setting: EdgeReplicationSetting): LegacyEdgeReplicationSetting => {
+  switch (setting) {
+    case EdgeReplicationSetting.ENABLED:
+      return LegacyEdgeReplicationSetting.ENABLED;
+    case EdgeReplicationSetting.DISABLED:
+      return LegacyEdgeReplicationSetting.DISABLED;
+  }
+};
+
+export const fromLegacyEdgeReplication = (
+  setting: LegacyEdgeReplicationSetting | undefined,
+): EdgeReplicationSetting | undefined => {
+  switch (setting) {
+    case LegacyEdgeReplicationSetting.ENABLED:
+      return EdgeReplicationSetting.ENABLED;
+    case LegacyEdgeReplicationSetting.DISABLED:
+      return EdgeReplicationSetting.DISABLED;
+    case undefined:
+      return undefined;
+  }
+};
 
 /**
  * Shared interface for file-based and SQLite-backed metadata stores.
@@ -413,11 +442,11 @@ export class MetadataStore implements IMetadataStore {
   }
 
   getSpaceEdgeReplicationSetting(spaceKey: PublicKey): EdgeReplicationSetting | undefined {
-    return this.hasSpace(spaceKey) ? this._getSpace(spaceKey).edgeReplication : undefined;
+    return this.hasSpace(spaceKey) ? fromLegacyEdgeReplication(this._getSpace(spaceKey).edgeReplication) : undefined;
   }
 
   async setSpaceEdgeReplicationSetting(spaceKey: PublicKey, setting: EdgeReplicationSetting): Promise<void> {
-    this._getSpace(spaceKey).edgeReplication = setting;
+    this._getSpace(spaceKey).edgeReplication = toLegacyEdgeReplication(setting);
     await this._save();
     await this.flush();
   }

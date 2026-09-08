@@ -23,7 +23,7 @@ import {
   QueryInvitationsResponse_Action,
   QueryInvitationsResponse_Type,
 } from '@dxos/protocols/buf/dxos/client/services_pb';
-import { MembershipPolicy } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { MembershipPolicy } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
 // Mirror of `spaces-invitations.test.ts`, run with `useSubduction: true`. Subduction
 // is the sedimentree-based byte transport (see `.claude/skills/effect/subduction/SKILL.md`)

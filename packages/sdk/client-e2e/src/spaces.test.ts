@@ -27,7 +27,7 @@ import { TestSchema as TestSchema$ } from '@dxos/echo/testing';
 import { DXN, SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { toPublicKey } from '@dxos/protocols/buf';
-import { MembershipPolicy } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { MembershipPolicy } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { range } from '@dxos/util';
 
 describe('Spaces', () => {

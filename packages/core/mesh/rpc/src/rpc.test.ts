@@ -7,16 +7,14 @@ import { describe, expect, test } from 'vitest';
 import { Trigger, sleep } from '@dxos/async';
 import { Stream } from '@dxos/async';
 import { log } from '@dxos/log';
-import { type TYPES } from '@dxos/protocols/proto';
-import { type AnyEnvelope, type TaggedType } from '@dxos/protocols/service-contract';
+import { type AnyEnvelope } from '@dxos/protocols/service-contract';
 
 import { RpcPeer } from './rpc';
 import { createLinkedPorts, encodeMessage } from './testing';
 
-const createPayload = (value = ''): TaggedType<TYPES, 'google.protobuf.Any'> => ({
-  '@type': 'google.protobuf.Any',
-  'type_url': 'dxos.test',
-  'value': encodeMessage(value),
+const createPayload = (value = ''): AnyEnvelope => ({
+  type_url: 'dxos.test',
+  value: encodeMessage(value),
 });
 
 // TODO(dmaretskyi): Rename alice and bob to peer1 and peer2.

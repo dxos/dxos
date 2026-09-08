@@ -10,8 +10,8 @@ import { performInvitation } from '@dxos/client-services/testing';
 import { TestBuilder } from '@dxos/client/testing';
 import { invariant } from '@dxos/invariant';
 import { buf } from '@dxos/protocols/buf';
+import { DeviceKind } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { DeviceProfileDocumentSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
-import { DeviceKind } from '@dxos/protocols/proto/dxos/client/services';
 
 describe('Halo', () => {
   test('creates a identity', async () => {

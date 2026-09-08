@@ -41,7 +41,7 @@ import {
   Invitation_Kind,
   Invitation_State,
 } from '@dxos/protocols/buf/dxos/client/invitation_pb';
-import { ConnectionState } from '@dxos/protocols/proto/dxos/client/services';
+import { ConnectionState } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { StorageType, createStorage } from '@dxos/random-access-storage';
 
 const closeAfterTest = async (peer: ServiceContext) => {
