@@ -256,6 +256,12 @@ export const AgentProcess = (options: AgentProcessOptions) =>
 
         const maybeCompleteWith = (state: PendingState) =>
           Effect.gen(function* () {
+            // A result reported inside the turn it belongs to is still sitting in the queue; it is
+            // not outstanding work, and counting it as such keeps the agent from ever completing —
+            // the head-drop at the top of `onAlarm` cannot help, because nothing arms another wake.
+            for (const pid of dropReportedToolResults(toolResults, (pid) => toolCallManager.isReported(pid))) {
+              log('drop tool result reported within its turn', { pid });
+            }
             if (pendingWork(state)) {
               return;
             }
