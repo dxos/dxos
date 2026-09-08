@@ -6,10 +6,8 @@ import React, { useCallback, useEffect, useState } from 'react';
 
 import { log } from '@dxos/log';
 import { type IdbLogStore } from '@dxos/log-store-idb';
-import type * as Observability from '@dxos/observability/Observability';
 import { FeedbackForm } from '@dxos/plugin-support/components';
 import type * as SupportOperation from '@dxos/plugin-support/SupportOperation';
-import * as SupportService from '@dxos/plugin-support/SupportService';
 import {
   AlertDialog,
   type AlertDialogRootProps,
@@ -50,8 +48,8 @@ const parseError = (t: (name: string, context?: object) => string, error: Error)
 export type ResetDialogProps = Pick<AlertDialogRootProps, 'defaultOpen' | 'open' | 'onOpenChange'> & {
   error?: Error;
   logStore: IdbLogStore;
-  observability?: Promise<Observability.Observability>;
-  supportEndpoint?: string;
+  /** Files the report. Absent when nothing can file one, which hides the feedback affordance. */
+  onSubmitReport?: (report: SupportOperation.SupportRequest) => Promise<void>;
   needRefresh?: boolean;
   onRefresh?: () => void;
   onReset?: () => Promise<void>;
@@ -60,8 +58,7 @@ export type ResetDialogProps = Pick<AlertDialogRootProps, 'defaultOpen' | 'open'
 export const ResetDialog = ({
   error: errorProp,
   logStore,
-  observability: observabilityProp,
-  supportEndpoint,
+  onSubmitReport,
   needRefresh,
   defaultOpen,
   open,
@@ -106,18 +103,15 @@ export const ResetDialog = ({
 
   const handleSaveFeedback = useCallback(
     async (values: SupportOperation.SupportRequest) => {
-      if (!observabilityProp || !supportEndpoint) {
+      if (!onSubmitReport) {
         return;
       }
 
-      const observability = await observabilityProp;
-      void SupportService.submitSupportReport({ endpoint: supportEndpoint, observability, report: values }).catch(
-        (err) => log.warn('crash report not filed', { err }),
-      );
+      void onSubmitReport(values).catch((err) => log.warn('crash report not filed', { err }));
       setFeedbackOpen(false);
       setFeedbackSent(true);
     },
-    [observabilityProp, supportEndpoint],
+    [onSubmitReport],
   );
 
   const handleRefresh = useCallback(() => {
@@ -232,8 +226,7 @@ export const ResetDialog = ({
             )}
 
             <div className='flex-grow' />
-            {observabilityProp &&
-              supportEndpoint &&
+            {onSubmitReport &&
               isNotMobile &&
               (feedbackSent ? (
                 <IconButton icon='ph--check--regular' label={t('feedback-sent.label')} disabled />
