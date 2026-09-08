@@ -10,13 +10,7 @@ import { type InspectOptionsStylized } from 'node:util';
 import { Event } from '@dxos/async';
 import { inspectCustom } from '@dxos/debug';
 import { Entity, Obj, Type } from '@dxos/echo';
-import {
-  DATA_NAMESPACE,
-  EncodedReference,
-  type EntityStructure,
-  PROPERTY_ID,
-  isEncodedReference,
-} from '@dxos/echo-protocol';
+import { DATA_NAMESPACE, EncodedReference, PROPERTY_ID, isEncodedReference } from '@dxos/echo-protocol';
 import {
   type AnyProperties,
   EntityKind,
@@ -58,7 +52,7 @@ import * as Doc from '../automerge/Doc';
 import { type DecodedAutomergePrimaryValue, META_NAMESPACE, ObjectCore, type TargetRefreshScope } from '../core-db';
 import { type EchoDatabase } from '../proxy-db';
 import { EchoArray } from './echo-array';
-import { getObjectCore, isEchoObject, isRootDataObject } from './echo-object-utils';
+import { isEchoObject, isRootDataObject } from './echo-object-utils';
 import {
   adoptInstanceState,
   createInstanceState,
@@ -832,15 +826,6 @@ export const throwIfCustomClass = (prop: Doc.KeyPath[number], value: any) => {
 };
 
 /**
- * @returns Automerge document (or a part of it) that backs the object.
- * Mostly used for debugging.
- */
-export const getObjectDocument = (obj: Obj.Any): A.Doc<EntityStructure> => {
-  const core = getObjectCore(obj);
-  return getDeep(core.getDoc(), core.mountPath)!;
-};
-
-/**
  * @returns True if `value` is part of another EchoObjectSchema but not the root data object.
  */
 const isEchoObjectField = (value: any) => {
@@ -950,20 +935,7 @@ export const createObject = <T extends AnyProperties>(obj: T): CreateObjectRetur
     }
     adoptInstanceState(target, createInstanceState(core, DATA_NAMESPACE, [], { event: existingEvent }));
 
-    core.subscriptions.push(
-      core.updates.on(() => {
-        // Invalidate the lazily-rebuilt `[StaticTypeSchemaSlot]` cache so it
-        // gets recomputed from the (possibly new) `jsonSchema` on next read.
-        target[symbolInternals].cachedStaticSlot = undefined;
-        if (isInChangeContext(core)) {
-          // Defer notification until the change context exits.
-          queueNotification(core);
-        } else {
-          // Immediate notification for external changes (sync from peers).
-          target[EventId]?.emit();
-        }
-      }),
-    );
+    subscribeCoreUpdates(core, target);
 
     // NOTE: This call is recursively linking all nested objects
     //  which can cause recursive loops of `createObject` if `EchoReactiveHandler` is not set prior to this call.
@@ -989,20 +961,7 @@ export const createObject = <T extends AnyProperties>(obj: T): CreateObjectRetur
     // only so `initCore` can migrate them into the document (then `init` clears them).
     const target = createRecordTarget(createInstanceState(core, DATA_NAMESPACE, []), obj as any);
     core.rootSchema = type;
-    core.subscriptions.push(
-      core.updates.on(() => {
-        // Invalidate the lazily-rebuilt `[StaticTypeSchemaSlot]` cache so it
-        // gets recomputed from the (possibly new) `jsonSchema` on next read.
-        target[symbolInternals].cachedStaticSlot = undefined;
-        if (isInChangeContext(core)) {
-          // Defer notification until the change context exits.
-          queueNotification(core);
-        } else {
-          // Immediate notification for external changes (sync from peers).
-          target[EventId]?.emit();
-        }
-      }),
-    );
+    subscribeCoreUpdates(core, target);
 
     initCore(core, target);
     const proxy = createProxy<ProxyTarget>(target, EchoReactiveHandler.instance);
@@ -1039,6 +998,24 @@ export const destroyObject = <T extends Obj.Unknown>(proxy: T) => {
   for (const unsubscribe of core.subscriptions) {
     unsubscribe();
   }
+};
+
+/**
+ * Route the core's document updates to the target: drop the lazily-rebuilt schema-slot cache, then
+ * notify — deferred to the change context's exit when one is open, so a batch of writes emits once,
+ * and immediately otherwise (a sync from a peer).
+ */
+const subscribeCoreUpdates = (core: ObjectCore, target: ProxyTarget): void => {
+  core.subscriptions.push(
+    core.updates.on(() => {
+      target[symbolInternals].cachedStaticSlot = undefined;
+      if (isInChangeContext(core)) {
+        queueNotification(core);
+      } else {
+        target[EventId]?.emit();
+      }
+    }),
+  );
 };
 
 const initCore = (core: ObjectCore, target: ProxyTarget) => {
