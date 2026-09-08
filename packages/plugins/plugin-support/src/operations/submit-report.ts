@@ -11,7 +11,7 @@ import * as ObservabilityCapabilities from '@dxos/plugin-observability/Observabi
 
 import { SupportOperation, SupportService } from '#types';
 
-import { SupportSubmitError, SupportUnavailableError } from './errors';
+import { SupportSubmitError, SupportUnavailableError } from '../errors';
 
 const handler: Operation.WithHandler<typeof SupportOperation.SubmitReport> = SupportOperation.SubmitReport.pipe(
   Operation.withHandler(
