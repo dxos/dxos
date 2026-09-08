@@ -60,7 +60,7 @@ describe('verifier', () => {
       });
 
       // Tamper with the signature.
-      credential.proof.value[0]++;
+      proofOf(credential).value[0]++;
 
       expect(await verifyCredential(credential)).toMatchObject({
         kind: 'fail',
@@ -85,7 +85,7 @@ describe('verifier', () => {
       });
 
       // Tamper with the credential.
-      credential.issuer = spaceKey;
+      credential.issuer = fromPublicKey(spaceKey);
 
       expect(await verifyCredential(credential)).toMatchObject({
         kind: 'fail',

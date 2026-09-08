@@ -6,10 +6,10 @@
  * A real `AuthorizedDevice` credential, signed by the protobuf.js codec and frozen here.
  *
  * Every credential ever issued is signed over the canonical stringification of its *decoded* shape,
- * so a shape change anywhere in the codec path silently invalidates all of them. The tests that
- * compare the two codecs cannot catch that: both regenerate from the same `src/proto` tree, so an
- * edit moves them together and they still agree. This vector is the missing half — bytes and signing
- * payload produced by a build that predates the change under test.
+ * so a shape change anywhere in the codec path silently invalidates all of them. A test that signs
+ * with the current tree cannot catch that — it moves with the tree and keeps agreeing with itself.
+ * This vector is the missing half: bytes and signing payload produced by a build that predates the
+ * change under test.
  *
  * Regenerate ONLY when the signature format is deliberately changing, which is a breaking change for
  * every existing space: it makes previously-issued credentials unverifiable.
