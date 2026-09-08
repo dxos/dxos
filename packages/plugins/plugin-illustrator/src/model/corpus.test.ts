@@ -15,6 +15,16 @@ import type * as Scene from './scene';
 // with no hard defects, its soft metrics are golden-filed, and every `%% ref` must name a path
 // that exists in the repository — a diagram of the code should not drift from the code.
 //
+// Tagged manual, so it does not run in CI. The ELK candidate sweep is ~170s of the package's ~185s
+// on a 4-core sandbox and exceeds ten minutes on CI hardware even with every other task cached,
+// which is the task timeout: the suite failed its shard deterministically rather than flakily.
+// Run it directly, and before changing anything about layout or the corpus:
+//
+//   DX_RUN_MANUAL_TESTS=1 moon run plugin-illustrator:test -- src/model/corpus.test.ts
+//
+// TODO(burdon): Make the sweep affordable in CI — memoize the layout per diagram hash, or sample
+// the corpus — and drop the gate. Skipping it means corpus drift is caught only when run by hand.
+//
 
 const DIAGRAMS = join(__dirname, '../../docs/diagrams');
 const REPO = join(__dirname, '../../../../..');
@@ -27,7 +37,10 @@ const corpus = readdirSync(DIAGRAMS)
   .sort()
   .map((file) => [basename(file, '.mmd'), readFileSync(join(DIAGRAMS, file), 'utf8')] as const);
 
-describe.each(corpus)('corpus: %s', (_name, source) => {
+// eslint-disable-next-line no-restricted-syntax -- the gate is the point; see the note above.
+const MANUAL = !!process.env.DX_RUN_MANUAL_TESTS;
+
+describe.skipIf(!MANUAL).each(corpus)('corpus: %s', (_name, source) => {
   // One search per diagram: the candidate sweep is seconds of ELK and the tests only read its result.
   let objects: Scene.WorldObject[];
   beforeAll(async () => {
