@@ -560,10 +560,11 @@ change is defensible on its own (the process does query those types) but it is n
       registry. Only then can the operation-dispatch path this project added actually run.
 
 Two leads were tried BEFORE the seeding fix and both failed; do not repeat them: declaring
-      `AiContext.Binding`/`Skill` in the process's `types` (f14e477a), and registering
-      `AiContext.Binding` on the test peer (edge 3631bad). Neither changes the empty read, because
-      the record is not on EDGE to be typed or queried in the first place. Start from why
-      `Feed.append` + `db.flush` + `syncToEdge` leaves EDGE's queue empty here, while the same
-      helpers make a message visible in the tests that DO pass (`assertConversationReadable`) — the
-      difference between those paths is the whole lead.
+`AiContext.Binding`/`Skill` in the process's `types` (f14e477a), and registering
+`AiContext.Binding` on the test peer (edge 3631bad). Neither changes the empty read, because
+the record is not on EDGE to be typed or queried in the first place. Start from why
+`Feed.append` + `db.flush` + `syncToEdge` leaves EDGE's queue empty here, while the same
+helpers make a message visible in the tests that DO pass (`assertConversationReadable`) — the
+difference between those paths is the whole lead.
+
 - [ ] The alarm self-wake test also still fails; not investigated since the ack work.
