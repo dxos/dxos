@@ -5,7 +5,7 @@
 import React from 'react';
 
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
-import { EdgeStatus } from '@dxos/protocols/proto/dxos/client/services';
+import { EdgeStatus_ConnectionState } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { type Space, useSpaceSyncState } from '@dxos/react-client/echo';
 import { Tooltip, useTranslation } from '@dxos/react-ui';
@@ -21,7 +21,7 @@ export const InlineSyncStatus = ({ space, open }: { space: Space; open?: boolean
   const { hasAttention, isAncestor, isRelated } = useAttention(qualifiedId);
   const attended = hasAttention || isRelated;
   const containsAttended = isAncestor && !open;
-  const connectedToEdge = useEdgeStatus().state === EdgeStatus.ConnectionState.CONNECTED;
+  const connectedToEdge = useEdgeStatus().state === EdgeStatus_ConnectionState.CONNECTED;
   // TODO(wittjosiah): This is not reactive.
   const edgeSyncEnabled = space.internal.data.edgeReplication === EdgeReplicationSetting.ENABLED;
   const syncState = useSpaceSyncState(space);

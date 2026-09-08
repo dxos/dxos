@@ -18,6 +18,7 @@ import {
 import { type InvitationsService } from '@dxos/protocols/rpc';
 import { trace } from '@dxos/tracing';
 
+import { fromBufDeviceProfileDocument } from '../services/credentials-codec';
 import { type InvitationsManager } from './invitations-manager';
 
 /**
@@ -56,7 +57,12 @@ export class InvitationsServiceImpl implements InvitationsService.Handlers {
   ): EffectStream.Stream<Invitation, Error> {
     return EffectEx.streamFromEmitter<Invitation, Error>((emit) => {
       const ctx = Context.default();
-      const invitation = this._invitationsManager.acceptInvitation(ctx, request);
+      // The profile ends up inside a signed device credential, so the manager keeps the
+      // protobuf.js shape and the buf request converts here, at the service boundary.
+      const invitation = this._invitationsManager.acceptInvitation(ctx, {
+        ...request,
+        deviceProfile: request.deviceProfile && fromBufDeviceProfileDocument(request.deviceProfile),
+      });
       invitation.subscribe(
         (value) => void emit.single(value),
         (err) => void emit.fail(err),

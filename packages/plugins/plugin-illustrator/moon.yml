@@ -41,3 +41,10 @@ tasks:
       - /pnpm-lock.yaml
     options:
       timeout: 60
+
+  test:
+    # The mermaid/UML layout suites run ~180s locally but exceed the 600s preset default under CI
+    # contention, so the task was killed with every test passing. Raised until the CI-side slowdown
+    # is understood; see https://github.com/dxos/dxos/pull/12985 for the measurements.
+    options:
+      timeout: 1800

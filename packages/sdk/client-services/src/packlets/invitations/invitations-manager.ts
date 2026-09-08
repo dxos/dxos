@@ -27,6 +27,7 @@ import {
   InvitationSchema,
 } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 import { SpaceMember_Role } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
+import { type DeviceProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { type InvitationsService } from '@dxos/protocols/rpc';
 import { trace } from '@dxos/tracing';
 
@@ -157,7 +158,17 @@ export class InvitationsManager {
     }
   }
 
-  acceptInvitation(ctx: Context, request: InvitationsService.AcceptInvitationRequest): AuthenticatingInvitation {
+  /**
+   * The profile is the shape the device credential is signed over, not the wire shape the
+   * service receives — {@link InvitationsServiceImpl} converts before calling this.
+   */
+  acceptInvitation(
+    ctx: Context,
+    request: {
+      invitation: InvitationsService.AcceptInvitationRequest['invitation'];
+      deviceProfile?: DeviceProfileDocument;
+    },
+  ): AuthenticatingInvitation {
     const options = request.invitation;
     const existingInvitation = this._acceptInvitations.get(options.invitationId);
     if (existingInvitation) {

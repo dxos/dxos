@@ -41,7 +41,7 @@ import { invariant } from '@dxos/invariant';
 import { type PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { decodeError, runServiceCall, subscribeStream } from '@dxos/protocols';
-import { fromPublicKey } from '@dxos/protocols/buf';
+import { fromPublicKey, toTimeframe } from '@dxos/protocols/buf';
 import { Invitation, Invitation_Kind } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 import {
   type Contact,
@@ -64,6 +64,7 @@ import { trace } from '@dxos/tracing';
 
 import { RPC_TIMEOUT } from '../common';
 import { InvitationsProxy } from '../invitations';
+import { fromBufCredential, toBufContact } from '../services/legacy-codec';
 import { createDeviceLocalBranchStore } from './branch-store';
 
 const EPOCH_CREATION_TIMEOUT = 60_000;
@@ -589,7 +590,7 @@ export class SpaceProxy implements Space, CustomInspectable {
       this._clientServices.rpc['SpacesService.admitContact']({
         spaceKey: this.key,
         role: HaloSpaceMember.Role.ADMIN,
-        contact,
+        contact: toBufContact(contact),
       }),
       { label: 'SpacesService.admitContact' },
     );
@@ -653,7 +654,7 @@ export class SpaceProxy implements Space, CustomInspectable {
     } = {},
   ): Promise<void> {
     log('create epoch', { migration, automergeRootUrl });
-    const { controlTimeframe: targetTimeframe } = await runServiceCall(
+    const { controlTimeframe } = await runServiceCall(
       this._runtime,
       this._clientServices.rpc['SpacesService.createEpoch']({
         spaceKey: this.key,
@@ -662,6 +663,7 @@ export class SpaceProxy implements Space, CustomInspectable {
       }),
       { timeout: EPOCH_CREATION_TIMEOUT, label: 'SpacesService.createEpoch' },
     );
+    const targetTimeframe = toTimeframe(controlTimeframe);
 
     if (targetTimeframe) {
       await warnAfterTimeout(5_000, 'Waiting for the created epoch to be applied', () =>
@@ -680,7 +682,7 @@ export class SpaceProxy implements Space, CustomInspectable {
         EffectStream.runCollect,
       ),
     );
-    return [...credentials];
+    return credentials.map(fromBufCredential);
   }
 
   private async _getEpochs(): Promise<SpecificCredential<Epoch>[]> {
