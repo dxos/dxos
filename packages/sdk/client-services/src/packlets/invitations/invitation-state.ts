@@ -38,20 +38,6 @@ export const createGuardedInvitationState = (
     if (ctx.disposed || (lockHolder !== null && mutex.isLocked() && !lockHolder.hasFlowLock())) {
       return false;
     }
-    // A connection that no longer drives the flow, and that another connection has since taken over
-    // from, is superseded: its teardown must not rewind the state the live connection set. Without
-    // this, an edge drop mid-invitation lets the dropped connection write `CONNECTING` behind the
-    // live one, and the live guest's `introduce` — which asserts CONNECTED — errors the whole
-    // invitation (DX-1264). A genuinely new connection is unaffected: it acquires the flow lock
-    // before it writes, so `hasFlowLock()` holds.
-    if (
-      lockHolder !== null &&
-      !lockHolder.hasFlowLock() &&
-      lastActiveLockHolder !== null &&
-      lastActiveLockHolder !== lockHolder
-    ) {
-      return false;
-    }
     return lockHolder == null || lastActiveLockHolder !== lockHolder || isNonTerminalState(currentInvitation.state);
   };
   return {

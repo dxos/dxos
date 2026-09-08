@@ -243,7 +243,13 @@ export class InvitationHostExtension
       this._invitationFlowLock = await tryAcquireBeforeContextDisposed(this._ctx, this._invitationFlowMutex);
       log.verbose('host lock acquired');
       this._setState(Invitation_State.CONNECTING);
-      await this.rpc.InvitationHostService.options({ role: InvitationOptions.Role.HOST });
+      // Started, not awaited yet. The guest sends `introduce` as soon as it has RECEIVED these
+      // options, and its reply to this call travels on the extension's other channel — so the reply
+      // can land after that `introduce`. Gating CONNECTED on the reply therefore leaves a window
+      // where `introduce`, which asserts CONNECTED, arrives while this connection is still
+      // CONNECTING and errors the whole invitation (DX-1264). Receiving the guest's own options is
+      // the condition that actually orders the two, so gate on that alone.
+      const optionsAcknowledged = this.rpc.InvitationHostService.options({ role: InvitationOptions.Role.HOST });
       log.verbose('options sent');
       await cancelWithContext(this._ctx, this._remoteOptionsTrigger.wait({ timeout: OPTIONS_TIMEOUT }));
       log.verbose('options received');
@@ -257,6 +263,8 @@ export class InvitationHostExtension
         });
       }
       this._setState(Invitation_State.CONNECTED);
+      // Awaited after the transition, so a transport failure on our own call still surfaces here.
+      await cancelWithContext(this._ctx, optionsAcknowledged);
       this._callbacks.onOpen(this._ctx, context);
     } catch (err: any) {
       if (this._invitationFlowLock != null) {
