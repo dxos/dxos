@@ -2,7 +2,6 @@
 // Copyright 2026 DXOS.org
 //
 
-import type * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { EntityId } from '@dxos/keys';
 
 /**
@@ -15,20 +14,3 @@ import { EntityId } from '@dxos/keys';
  */
 export const getCandidateEntityIds = (pairId: string, tailSeparator: string): string[] =>
   pairId.split(tailSeparator).filter((segment) => EntityId.isValid(segment));
-
-/**
- * Fold the verdicts gathered for one pair (across its candidate ids and every loader).
- *
- * `absent` requires unanimity over a non-empty set: silence is not disconfirmation.
- */
-export const combineVerdicts = (
-  verdicts: readonly AppCapabilities.NavigationTargetVerdict[],
-): AppCapabilities.NavigationTargetVerdict => {
-  if (verdicts.includes('exists')) {
-    return 'exists';
-  }
-  if (verdicts.length === 0 || verdicts.includes('unknown')) {
-    return 'unknown';
-  }
-  return 'absent';
-};

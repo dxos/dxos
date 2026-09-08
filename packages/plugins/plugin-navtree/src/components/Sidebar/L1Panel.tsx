@@ -8,7 +8,7 @@ import React, { memo, useCallback, useMemo } from 'react';
 import * as AppGraph from '@dxos/app-graph/AppGraph';
 import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
-import { useAppGraph } from '@dxos/app-toolkit/ui';
+import { useAppGraph, useNavigationPresence } from '@dxos/app-toolkit/ui';
 import * as DeckSchema from '@dxos/plugin-deck/DeckSchema';
 import { useActionRunner, useEdges } from '@dxos/plugin-graph/hooks';
 import { DensityProvider, IconButton, ScrollArea, Tabs, toLocalizedString, useTranslation } from '@dxos/react-ui';
@@ -24,12 +24,6 @@ import { useNavTreeContext } from '../NavTreeContext';
 import { NavTreeItemColumns } from '../NavTreeItem/NavTreeItemColumns';
 
 /**
- * Delay before the unavailable-workspace message appears, timed from the last change to the set of
- * space workspaces rather than from mount, so it lands only once that set has held still.
- */
-const RENDER_DELAY = '1s';
-
-/**
  * Width held for the item-end slot, whose surface resolves after the tree has painted: a
  * `min-content` track would start collapsed and re-truncate every label when it lands. Sized to
  * what fills it, an `AttentionGlyph` (`w-3`) inset by `mx-1`.
@@ -43,12 +37,6 @@ export type L1PanelProps = {
   id: string;
   /** Absent when the workspace is not in the graph; the panel then renders the unavailable message. */
   item?: AppGraphNode.Node;
-  /**
-   * Identity of the set of space workspaces, which the unavailable message is a claim about. Empty
-   * means not-loaded-yet rather than nothing-to-show, since every identity ends up with at least a
-   * settings space.
-   */
-  spaces?: string;
   isCurrent: boolean;
   onBack?: () => void;
 };
@@ -58,14 +46,15 @@ export type L1PanelProps = {
  * longer exists, or persisted deck state pointing at one after a profile switch — the panel body is the
  * unavailable-workspace message, so the sidebar is never blank.
  */
-const L1PanelInner = ({ open, path, id, item, spaces, isCurrent, onBack }: L1PanelProps) => {
+const L1PanelInner = ({ open, path, id, item, isCurrent, onBack }: L1PanelProps) => {
   const { t } = useTranslation(meta.profile.key);
+  const { graph } = useAppGraph();
   const title = item ? toLocalizedString(item.properties.label, t) : t('workspace-unavailable.heading');
   const isActivated = useIsActivatedWorkspace(id);
   const shouldRenderContent = isCurrent || isActivated;
-  // Needs a published space list to make the claim against, and a workspace actually being asked
-  // for — the sentinel deck means none has resolved yet.
-  const reportUnavailable = !!spaces && id !== DeckSchema.DEFAULT_DECK_ID;
+  // The sentinel deck names no workspace, so there is nothing to make a claim about; anything else
+  // waits for a store to answer rather than reading a missing node as a missing space.
+  const presence = useNavigationPresence(graph, id === DeckSchema.DEFAULT_DECK_ID ? undefined : id);
 
   return (
     <Tabs.Panel
@@ -91,15 +80,12 @@ const L1PanelInner = ({ open, path, id, item, spaces, isCurrent, onBack }: L1Pan
         (item ? (
           <L1PanelContent open={open} path={path} item={item} onBack={onBack} />
         ) : (
-          reportUnavailable && (
+          presence === 'absent' && (
             <Empty
-              // Spaces publish one at a time, so remounting restarts the delay until they stop.
-              key={spaces}
               label={t('workspace-unavailable.description')}
               // Second grid row, so the message clears the rail exactly as the tree does, and
               // hugging its top rather than stretching to the row's full height.
-              classNames='row-start-2 self-start animate-fade-in'
-              style={{ animationDelay: RENDER_DELAY, animationFillMode: 'backwards' }}
+              classNames='row-start-2 self-start'
             />
           )
         ))}

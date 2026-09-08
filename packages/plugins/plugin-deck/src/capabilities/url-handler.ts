@@ -28,7 +28,6 @@ import { isTauri } from '@dxos/util';
 import { CompanionViewState, DeckCapabilities, DeckSchema } from '#types';
 
 import {
-  combineVerdicts,
   getCandidateEntityIds,
   getRenderedPlanks,
   isCompanionOpen,
@@ -63,7 +62,6 @@ export default Capability.makeModule(
     const navigationTargetLoaders = yield* AppCapabilities.NavigationTargetLoader;
     const registry = yield* Capabilities.AtomRegistry;
     const stateAtom = yield* DeckCapabilities.State;
-    const ephemeralAtom = yield* DeckCapabilities.EphemeralState;
     const settingsAtom = yield* DeckCapabilities.Settings;
     const viewState = yield* AttentionCapabilities.ViewState;
     const attention = yield* AttentionCapabilities.Attention;
@@ -239,8 +237,9 @@ export default Capability.makeModule(
       }
 
       if (Option.isNone(parsed)) {
-        // Unknown/malformed path: same outcome as an unresolvable subject id always had — open the
-        // not-found sentinel. `immediate` skips validation, which is redundant for the sentinel anyway.
+        // The last writer of the sentinel into deck state: a path that does not parse names no pair,
+        // so there is nothing to key a plank on. `immediate` skips validation, which is redundant here.
+        // TODO(wittjosiah): Render this as deck-level ephemeral state once planks carry pair identity.
         yield* urlApplication.applying(
           Operation.invoke(LayoutOperation.Open, {
             subject: [NotFound.NOT_FOUND_PATH],
@@ -298,7 +297,7 @@ export default Capability.makeModule(
                 ),
               ),
             ).pipe(
-              Effect.tap((results) => Effect.sync(() => (verdicts[index] = combineVerdicts(results.flat())))),
+              Effect.tap((results) => Effect.sync(() => (verdicts[index] = NotFound.combineVerdicts(results.flat())))),
             );
           },
           { concurrency: 'unbounded' },
@@ -317,7 +316,6 @@ export default Capability.makeModule(
       // Planks resolve in chain order; a `companion/<variant>` pair belongs to the plank before it rather
       // than being a plank of its own, so it drives that plank's companion state and the selected variant.
       const plankIds: string[] = [];
-      const unresolved: string[] = [];
       let companionNodeId: string | null = null;
       let companionAnchorId: string | undefined;
       pairs.forEach((pair, index) => {
@@ -334,15 +332,15 @@ export default Capability.makeModule(
           return;
         }
         // Keyed on the id it would have, not the sentinel, which is a different object: `useNode`
-        // then renders it the moment the node lands.
-        const candidateId = resolved[index]?.candidateId;
-        if (!candidateId) {
-          // An unknown key names nothing to address.
-          plankIds.push(NotFound.NOT_FOUND_PATH);
-          return;
-        }
+        // then renders it the moment the node lands. A key whose extensions all resolve dynamically
+        // (a file entry, a collection object) yields no candidate until their data loads, so the pair
+        // itself names the plank until then — a path no node occupies, which renders as not found.
+        const candidateId =
+          resolved[index]?.candidateId ??
+          [GraphPath.getSpacePath(pair.workspace), pair.key, pair.id]
+            .filter((segment) => segment !== undefined)
+            .join('/');
         plankIds.push(candidateId);
-        unresolved.push(candidateId);
         // An absent node has no graph provenance, so only the URL itself can represent this pair.
         seedRepresentation(candidateId, { key: pair.key, id: pair.id, workspace: pair.workspace });
       });
@@ -352,9 +350,6 @@ export default Capability.makeModule(
       if (application.superseded()) {
         return;
       }
-
-      // Recorded before `Set` so the planks never render as blank loaders in the frame that adds them.
-      registry.set(ephemeralAtom, { ...registry.get(ephemeralAtom), unresolved });
 
       // `Set` already means "override the deck's active list wholesale" — exactly a URL-driven
       // restore, for one plank or many, with no separate disposition to invent.

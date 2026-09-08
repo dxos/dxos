@@ -6,7 +6,7 @@ import { describe, test } from 'vitest';
 
 import { EntityId } from '@dxos/keys';
 
-import { combineVerdicts, getCandidateEntityIds } from './navigation-target';
+import { getCandidateEntityIds } from './navigation-target';
 
 const SEPARATOR = '+';
 
@@ -42,26 +42,5 @@ describe('getCandidateEntityIds', () => {
 
   test('does not mistake a space id for an object id', ({ expect }) => {
     expect(getCandidateEntityIds('BA25QRC2FEWCSAMRP4RZL65LWJ7352CKE', SEPARATOR)).toEqual([]);
-  });
-});
-
-describe('combineVerdicts', () => {
-  test('one store saying yes settles it', ({ expect }) => {
-    expect(combineVerdicts(['absent', 'exists'])).toBe('exists');
-    expect(combineVerdicts(['unknown', 'exists'])).toBe('exists');
-  });
-
-  test('absent requires unanimity', ({ expect }) => {
-    expect(combineVerdicts(['absent'])).toBe('absent');
-    expect(combineVerdicts(['absent', 'absent'])).toBe('absent');
-  });
-
-  // `absent` is the one verdict that revokes the caller's wait.
-  test('a single unknown blocks absent', ({ expect }) => {
-    expect(combineVerdicts(['absent', 'unknown'])).toBe('unknown');
-  });
-
-  test('nothing to ask is unknown, not absent', ({ expect }) => {
-    expect(combineVerdicts([])).toBe('unknown');
   });
 });

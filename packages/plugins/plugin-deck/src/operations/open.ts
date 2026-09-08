@@ -13,7 +13,7 @@ import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as NotFound from '@dxos/app-toolkit/NotFound';
 import * as Operation from '@dxos/compute/Operation';
-import { EID, Obj } from '@dxos/echo';
+import { Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
 import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabilities';
 import * as ObservabilityOperation from '@dxos/plugin-observability/ObservabilityOperation';
@@ -40,51 +40,12 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperat
         Effect.catch(() => Effect.succeed('desktop' as const)),
       );
 
-      // Validate navigation targets, redirecting to 404 if not found. Existence/loading is delegated
-      // to the NavigationTargetLoader capability (contributed by plugin-client) so this layout plugin
-      // has no direct client dependency; loading the object also materializes its graph node.
-      const loaders = yield* Capability.getAll(AppCapabilities.NavigationTargetLoader).pipe(
-        Effect.catch(() => Effect.succeed([])),
-      );
-      const checkExistence: NotFound.ExistenceChecker | undefined =
-        loaders.length > 0
-          ? (id: EID.EID) =>
-              Effect.gen(function* () {
-                const spaceId = EID.getSpaceId(id);
-                const entityId = EID.getEntityId(id);
-                if (!spaceId || !entityId) {
-                  return false;
-                }
-                for (const loader of loaders) {
-                  // Anything short of a store answering "no" counts as existing: a 404 here replaces
-                  // the plank outright, so an unreachable edge must not be able to trigger one.
-                  if ((yield* loader.load({ spaceId, entityId })) !== 'absent') {
-                    return true;
-                  }
-                }
-                return false;
-              })
-          : undefined;
-
-      // Immediate: skip 404 / resolver checks but still expand the path (same as validate’s first step).
-      if (input.navigation === 'immediate') {
-        for (const subjectId of input.subject) {
-          NotFound.expandPath(graph, subjectId);
-        }
+      // Expanding materializes the target's node when it is reachable. Existence is NOT decided here:
+      // a plank derives its own presence at render (see `useNavigationPresence`), so a slow target
+      // shows loading and a confirmed-missing one shows not found, with no check on the click path.
+      for (const subjectId of input.subject) {
+        NotFound.expandPath(graph, subjectId);
       }
-
-      const validatedSubjects = yield* Effect.all(
-        input.subject.map((subjectId) =>
-          input.navigation === 'immediate'
-            ? Effect.succeed(subjectId)
-            : NotFound.validateNavigationTarget({
-                graph,
-                subjectId,
-                checkLocalExistence: checkExistence,
-              }),
-        ),
-      );
-      input = { ...input, subject: validatedSubjects };
 
       {
         const state = yield* Capabilities.getAtomValue(DeckCapabilities.State);
@@ -253,7 +214,9 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperat
         }
       }
 
-      return validatedSubjects;
+      // The subjects as opened: an unresolvable one keeps its own id, so a caller that reads this
+      // back gets what it asked to open rather than the sentinel.
+      return input.subject;
     }),
   ),
 );
