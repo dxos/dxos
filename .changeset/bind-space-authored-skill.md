@@ -17,4 +17,5 @@ form from the conversation.
 `AgentService.createSession` likewise binds a skill that is already in a database as-is and
 references any other skill by its registry URI, instead of cloning it into the space through the
 deprecated `Skill.upsert` — which threw outright on a space-authored skill and would have
-substituted the pristine registry copy for a fork.
+substituted the pristine registry copy for a fork. Such a URI resolves through the database's own
+registry, so the assistant test layer now seeds a skill there as well as into `Registry.Service`.
