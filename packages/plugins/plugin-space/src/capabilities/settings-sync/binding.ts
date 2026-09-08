@@ -19,7 +19,10 @@ export type Binding = {
   write: (values: AppSettings.Values) => void;
 };
 
-/** Read and write access to the synced store, so the reconciler stays free of ECHO. */
+/**
+ * Read and write access to the settings store, so the reconciler stays free of both ECHO and local
+ * storage — the two halves a snapshot spans.
+ */
 export type Store = {
   read: () => AppSettings.Snapshot;
   update: (fn: (draft: AppSettings.Draft) => void) => void;
@@ -39,7 +42,6 @@ export class Reconciler {
 
   constructor(
     private readonly _store: Store,
-    private readonly _deviceKey: string,
     private readonly _binding: Binding,
   ) {
     this.#agreed = this.#resolved();
@@ -68,7 +70,7 @@ export class Reconciler {
     const merged = { ...local, ...stored };
     this.#guard(() => {
       this._store.update((draft) => {
-        AppSettings.applyResolved(draft, this._deviceKey, this._binding.namespace, stored, merged);
+        AppSettings.applyResolved(draft, this._binding.namespace, stored, merged);
       });
       this._binding.write(this.#resolved());
       this.#agreed = this.#resolved();
@@ -97,7 +99,7 @@ export class Reconciler {
       }
 
       this._store.update((draft) => {
-        AppSettings.applyResolved(draft, this._deviceKey, this._binding.namespace, this.#agreed, local);
+        AppSettings.applyResolved(draft, this._binding.namespace, this.#agreed, local);
       });
       this.#agreed = this.#resolved();
     });
@@ -105,11 +107,11 @@ export class Reconciler {
 
   /** Values held by the store for this namespace, with no local defaults mixed in. */
   #stored(): AppSettings.Values {
-    return AppSettings.resolve(this._store.read(), this._deviceKey, this._binding.namespace);
+    return AppSettings.resolve(this._store.read(), this._binding.namespace);
   }
 
   #resolved(): AppSettings.Values {
-    return AppSettings.resolve(this._store.read(), this._deviceKey, this._binding.namespace, this._binding.read());
+    return AppSettings.resolve(this._store.read(), this._binding.namespace, this._binding.read());
   }
 
   #guard(fn: () => void): void {

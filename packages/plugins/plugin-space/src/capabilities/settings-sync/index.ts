@@ -18,7 +18,7 @@ import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import { resolveSettingsSpace } from '../../util';
 import { type Binding, Reconciler } from './binding';
 import { awaitDevice } from './device';
-import { getOrCreateSettings, makeStore } from './store';
+import { getOrCreateSettings, makeDeviceStore, makeStore } from './store';
 
 /**
  * Binds every settings surface the app already has — each plugin's settings atom, the enabled
@@ -46,19 +46,15 @@ export default Capability.makeModule(
 
     const device = yield* awaitDevice(client.halo);
 
-    const deviceKey = device.deviceKey.toHex();
     const space = yield* resolveSettingsSpace(client);
     const settings = yield* getOrCreateSettings(space);
-    const store = makeStore(settings);
+    // The device key names this device's local store; it is not written to the space.
+    const deviceStore = makeDeviceStore(device.deviceKey.toHex());
+    const store = makeStore(settings, deviceStore, registry);
 
-    const label = device.profile?.label;
-    if (label) {
-      store.update((draft) => AppSettings.setDeviceLabel(draft, deviceKey, label));
-    }
-
-    // Copied out of ECHO rather than handed over live: the array proxy keeps its identity across a
-    // reassignment, and the atom compares by identity, so a live value would never notify.
-    const readUnsynced = () => [...AppSettings.getUnsynced(settings, deviceKey)];
+    // Copied out rather than handed over live: an array read straight from the store keeps its
+    // identity across a reassignment, and the atom compares by identity, so it would never notify.
+    const readUnsynced = () => [...AppSettings.getUnsynced(store.read())];
     const unsynced = Atom.make<readonly string[]>(readUnsynced()).pipe(Atom.keepAlive);
 
     const reconcilers: Reconciler[] = [];
@@ -66,7 +62,7 @@ export default Capability.makeModule(
 
     /** Start reconciling one namespace, seeding it before either direction can fire. */
     const bind = (binding: Binding, subscribe: (onChange: () => void) => () => void) => {
-      const reconciler = new Reconciler(store, deviceKey, binding);
+      const reconciler = new Reconciler(store, binding);
       reconciler.seed();
       reconcilers.push(reconciler);
       subscriptions.push(subscribe(() => reconciler.push()));
@@ -164,14 +160,16 @@ export default Capability.makeModule(
       () => () => {},
     );
 
-    subscriptions.push(
-      Obj.subscribe(settings, () => {
-        registry.set(unsynced, readUnsynced());
-        for (const reconciler of reconcilers) {
-          reconciler.pull();
-        }
-      }),
-    );
+    // Either half can move: the shared layer when another device writes, this device's own when the
+    // scope control does. Both land the same way — republish the scope, then re-resolve.
+    const refresh = () => {
+      registry.set(unsynced, readUnsynced());
+      for (const reconciler of reconcilers) {
+        reconciler.pull();
+      }
+    };
+    subscriptions.push(Obj.subscribe(settings, refresh));
+    subscriptions.push(registry.subscribe(deviceStore, refresh));
 
     yield* Effect.addFinalizer(() =>
       Effect.sync(() => {
@@ -180,7 +178,6 @@ export default Capability.makeModule(
     );
 
     return Capability.contribute(AppCapabilities.SettingsSync, {
-      deviceKey,
       unsynced,
       setSynced: (namespace, synced, options) => {
         // Whether unsyncing freezes the current values is a property of the namespace, not of the
@@ -192,11 +189,9 @@ export default Capability.makeModule(
           synced || namespace === AppSettings.PLUGINS_NAMESPACE
             ? undefined
             : reconcilers.find((reconciler) => reconciler.namespace === namespace)?.current();
-        store.update((draft) =>
-          AppSettings.setSynced(draft, deviceKey, namespace, synced, { snapshot, adopt: options?.adopt }),
-        );
+        store.update((draft) => AppSettings.setSynced(draft, namespace, synced, { snapshot, adopt: options?.adopt }));
       },
-      conflicts: (namespace) => AppSettings.conflictingKeys(settings, deviceKey, namespace),
+      conflicts: (namespace) => AppSettings.conflictingKeys(store.read(), namespace),
     });
   }),
 );

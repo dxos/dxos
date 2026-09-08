@@ -19,39 +19,46 @@ export const Values = Schema.Record(Schema.String, Schema.Any);
 /** Values for every namespace, keyed by namespace id. */
 export const Namespaces = Schema.Record(Schema.String, Values);
 
-/** One of the user's devices, and the settings it keeps to itself. */
-export const Device = Schema.Struct({
-  /** Human-readable device label, for the UI that attributes override sets. */
-  label: Schema.optional(Schema.String),
+/**
+ * This device's own settings layer, persisted locally and never replicated.
+ *
+ * It stays out of ECHO because nothing else can act on it: every read is by the device that wrote
+ * it. Replicating it would hand every other device a copy it cannot use, keep machine-specific
+ * values (a local model endpoint, say) on machines they do not describe, and leave an override set
+ * stranded whenever a re-created profile takes a new device key.
+ */
+export const DeviceSettings = Schema.Struct({
   /**
    * Values this device overrides. A key's PRESENCE is the override, not its value — an overridden
    * key whose value equals the shared one must stay local when another device changes the shared one.
    */
-  overrides: Namespaces,
+  overrides: Schema.mutableKey(Schema.Record(Schema.String, Schema.mutableKey(Values))),
   /**
    * Namespaces whose WRITES go to this device's overrides instead of the shared layer. Reads still
    * layer shared underneath, so a key this device has never written keeps following the account.
    */
-  unsynced: Schema.Array(Schema.String),
+  unsynced: Schema.mutable(Schema.Array(Schema.String)),
 });
 
 /**
  * App configuration that replicates across a user's devices.
  *
  * A singleton in the settings space (`AppSpace.SETTINGS_SPACE_TAG`): hidden, membership-locked and
- * EDGE-replicated, so this follows the identity and is never shared with anyone else.
+ * EDGE-replicated, so this follows the identity and is never shared with anyone else. It holds only
+ * the shared layer; see {@link DeviceSettings} for the half that stays on the device.
  */
 export class AppSettings extends Type.makeObject<AppSettings>(DXN.make('org.dxos.app.type.settings', '0.1.0'))(
   Schema.Struct({
     /** Values in effect on every device unless a device overrides them. */
     shared: Namespaces,
-    /** Per-device override sets, keyed by device key (hex). */
-    devices: Schema.Record(Schema.String, Device),
   }),
 ) {}
 
 /** Create an empty settings object. */
-export const make = (): AppSettings => Obj.make(AppSettings, { shared: {}, devices: {} });
+export const make = (): AppSettings => Obj.make(AppSettings, { shared: {} });
+
+/** Create an empty device layer, for the local store's initial value. */
+export const makeDeviceSettings = (): DeviceSettings => ({ overrides: {}, unsynced: [] });
 
 /**
  * Field values for one namespace.
@@ -64,6 +71,9 @@ export type Values = Record<string, any>;
 
 /** Values for every namespace, keyed by namespace id. Mutable counterpart of {@link Namespaces}. */
 export type Namespaces = Record<string, Values>;
+
+/** Mutable counterpart of {@link DeviceSettings}. */
+export type DeviceSettings = { overrides: Namespaces; unsynced: string[] };
 
 //
 // Well-known namespaces.
@@ -92,30 +102,32 @@ export type InstalledPlugin = { id: string; url: string; version?: string };
 //
 // Resolution.
 //
-// Pure over a plain snapshot so the merge rules can be tested without a database. Every reader
-// takes the settings object (live proxy or snapshot) plus the acting device key.
+// Pure over a plain snapshot so the merge rules can be tested without a database. A snapshot pairs
+// the replicated layer with this device's own; the acting device is implicit, because the local
+// layer only ever belongs to it.
 //
 
-/** Shape the resolution helpers read. Structural so both the live proxy and a snapshot satisfy it. */
+/**
+ * Shape the resolution helpers read. Structural so the live ECHO proxy satisfies `shared` and the
+ * local store's atom value satisfies `local`.
+ */
 export type Snapshot = {
   readonly shared: Namespaces;
-  readonly devices: Record<string, { readonly overrides: Namespaces; readonly unsynced?: readonly string[] }>;
+  readonly local: { readonly overrides: Namespaces; readonly unsynced?: readonly string[] };
 };
 
 /** Values this device overrides in a namespace. Empty when the device overrides nothing. */
-export const getOverrides = (settings: Snapshot, deviceKey: string, namespace: string): Values =>
-  settings.devices[deviceKey]?.overrides[namespace] ?? {};
+export const getOverrides = (settings: Snapshot, namespace: string): Values =>
+  settings.local.overrides[namespace] ?? {};
 
 /** Namespaces this device writes locally rather than sharing. */
-export const getUnsynced = (settings: Snapshot, deviceKey: string): readonly string[] =>
-  settings.devices[deviceKey]?.unsynced ?? [];
+export const getUnsynced = (settings: Snapshot): readonly string[] => settings.local.unsynced ?? [];
 
 /** Whether edits to `namespace` on this device are shared with the user's other devices. */
-export const isSynced = (settings: Snapshot, deviceKey: string, namespace: string): boolean =>
-  !getUnsynced(settings, deviceKey).includes(namespace);
+export const isSynced = (settings: Snapshot, namespace: string): boolean => !getUnsynced(settings).includes(namespace);
 
 /**
- * The values in effect on `deviceKey`: `defaults`, overlaid with the shared values, overlaid with
+ * The values in effect on this device: `defaults`, overlaid with the shared values, overlaid with
  * this device's overrides.
  *
  * The shared layer is read even for an unsynced namespace — {@link isSynced} governs where writes
@@ -126,10 +138,10 @@ export const isSynced = (settings: Snapshot, deviceKey: string, namespace: strin
  * no other device has heard of — so such a key follows the device rather than being forced to
  * nothing.
  */
-export const resolve = (settings: Snapshot, deviceKey: string, namespace: string, defaults?: Values): Values => ({
+export const resolve = (settings: Snapshot, namespace: string, defaults?: Values): Values => ({
   ...defaults,
   ...settings.shared[namespace],
-  ...getOverrides(settings, deviceKey, namespace),
+  ...getOverrides(settings, namespace),
 });
 
 //
@@ -138,36 +150,32 @@ export const resolve = (settings: Snapshot, deviceKey: string, namespace: string
 // Each takes a mutable draft — call inside `Obj.update(settings, (draft) => ...)`.
 //
 
-/** Mutable view of {@link Snapshot}, as handed to an `Obj.update` callback. */
+/**
+ * Mutable view of {@link Snapshot}. `shared` is handed to an `Obj.update` callback; `local` is a
+ * mutable copy the caller writes back to the device store afterwards.
+ */
 export type Draft = {
   shared: Namespaces;
-  devices: Record<string, { label?: string; overrides: Namespaces; unsynced: string[] }>;
+  local: DeviceSettings;
 };
 
 const namespaceOf = (container: Namespaces, namespace: string): Values => (container[namespace] ??= {});
-
-const deviceOf = (draft: Draft, deviceKey: string) => {
-  const device = (draft.devices[deviceKey] ??= { overrides: {}, unsynced: [] });
-  // Entries written before `unsynced` existed lack the field, and every caller below mutates it.
-  device.unsynced ??= [];
-  return device;
-};
 
 /**
  * Write `key` to whichever layer owns it: this device's overrides when the namespace is unsynced,
  * the shared layer otherwise. This is the routing rule that makes settings shared by default.
  */
-export const setValue = (draft: Draft, deviceKey: string, namespace: string, key: string, value: unknown): void => {
-  const target = isSynced(draft, deviceKey, namespace)
+export const setValue = (draft: Draft, namespace: string, key: string, value: unknown): void => {
+  const target = isSynced(draft, namespace)
     ? namespaceOf(draft.shared, namespace)
-    : namespaceOf(deviceOf(draft, deviceKey).overrides, namespace);
+    : namespaceOf(draft.local.overrides, namespace);
   target[key] = value;
 };
 
 /** Remove `key` from both layers, so it falls back to the plugin's schema default. */
-export const clearValue = (draft: Draft, deviceKey: string, namespace: string, key: string): void => {
+export const clearValue = (draft: Draft, namespace: string, key: string): void => {
   delete draft.shared[namespace]?.[key];
-  delete draft.devices[deviceKey]?.overrides[namespace]?.[key];
+  delete draft.local.overrides[namespace]?.[key];
 };
 
 /** Which side wins for the keys that {@link conflictingKeys} reports, when rejoining the account. */
@@ -197,14 +205,12 @@ export type SetSyncedOptions = {
  */
 export const setSynced = (
   draft: Draft,
-  deviceKey: string,
   namespace: string,
   synced: boolean,
   { snapshot, adopt = 'shared' }: SetSyncedOptions = {},
 ): void => {
-  const device = deviceOf(draft, deviceKey);
   if (synced) {
-    const overrides = device.overrides[namespace];
+    const overrides = draft.local.overrides[namespace];
     if (overrides && Object.keys(overrides).length > 0) {
       // Rejoining merges on the same rule as the first reconciliation: a key only one side holds is
       // adopted, since the other has no competing opinion and nothing is lost by keeping it. `adopt`
@@ -213,21 +219,16 @@ export const setSynced = (
       const shared = namespaceOf(draft.shared, namespace);
       draft.shared[namespace] = adopt === 'local' ? { ...shared, ...overrides } : { ...overrides, ...shared };
     }
-    device.unsynced = device.unsynced.filter((entry) => entry !== namespace);
-    delete device.overrides[namespace];
+    draft.local.unsynced = draft.local.unsynced.filter((entry) => entry !== namespace);
+    delete draft.local.overrides[namespace];
   } else {
-    if (!device.unsynced.includes(namespace)) {
-      device.unsynced = [...device.unsynced, namespace];
+    if (!draft.local.unsynced.includes(namespace)) {
+      draft.local.unsynced = [...draft.local.unsynced, namespace];
     }
     if (snapshot) {
-      device.overrides[namespace] = { ...snapshot };
+      draft.local.overrides[namespace] = { ...snapshot };
     }
   }
-};
-
-/** Record a device's label so override sets can be attributed in the UI. */
-export const setDeviceLabel = (draft: Draft, deviceKey: string, label: string): void => {
-  deviceOf(draft, deviceKey).label = label;
 };
 
 //
@@ -247,8 +248,8 @@ export const changedKeys = (before: Values, after: Values): string[] =>
  * direction the reader picks. Nor is an override equal to the shared value. Empty therefore means
  * rejoining is lossless and there is nothing to put to the reader.
  */
-export const conflictingKeys = (settings: Snapshot, deviceKey: string, namespace: string): string[] => {
-  const overrides = getOverrides(settings, deviceKey, namespace);
+export const conflictingKeys = (settings: Snapshot, namespace: string): string[] => {
+  const overrides = getOverrides(settings, namespace);
   const shared = settings.shared[namespace] ?? {};
   return Object.keys(overrides).filter((key) => key in shared && differs(overrides[key], shared[key]));
 };
@@ -257,18 +258,12 @@ export const conflictingKeys = (settings: Snapshot, deviceKey: string, namespace
  * Apply a resolved-value edit back to the layered store: every key that changed is routed to its
  * owning layer, and keys the caller dropped entirely are cleared from both.
  */
-export const applyResolved = (
-  draft: Draft,
-  deviceKey: string,
-  namespace: string,
-  before: Values,
-  after: Values,
-): void => {
+export const applyResolved = (draft: Draft, namespace: string, before: Values, after: Values): void => {
   for (const key of changedKeys(before, after)) {
     if (key in after) {
-      setValue(draft, deviceKey, namespace, key, after[key]);
+      setValue(draft, namespace, key, after[key]);
     } else {
-      clearValue(draft, deviceKey, namespace, key);
+      clearValue(draft, namespace, key);
     }
   }
 };

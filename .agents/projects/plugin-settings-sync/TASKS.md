@@ -56,7 +56,8 @@ per-namespace scope: `unsynced` routes writes, reads still layer shared undernea
 
 - [ ] `DeviceScoped` schema annotation, so an author can mark one machine-specific field without
       forcing the user to unsync the whole plugin (deferred — add when the need shows up)
-- [ ] Garbage-collect override sets for devices no longer in `client.halo.devices`
+- [x] ~~Garbage-collect override sets for devices no longer in `client.halo.devices`~~ — moot: the
+      device layer moved to local storage, so nothing device-specific is left in the space
 - [ ] Per-namespace schema version + migration for settings whose shape changed
 - [ ] Surface "this is different on N other devices" somewhere
 - [ ] Decide whether installed-plugin sync should install without a reload

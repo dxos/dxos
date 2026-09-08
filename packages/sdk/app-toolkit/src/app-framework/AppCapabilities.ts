@@ -195,8 +195,6 @@ export const Settings = Capability$.make<Settings>()('org.dxos.app-framework.cap
  * and in hosts with no client at all (stories, node), settings stay device-local.
  */
 export type SettingsSync = {
-  /** Key of the device this app instance writes settings for. */
-  readonly deviceKey: string;
   /**
    * Settings prefixes this device writes locally rather than sharing. Reactive, so settings UI
    * re-renders when the scope changes here or on another device.

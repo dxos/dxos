@@ -38,23 +38,37 @@ This design is the category-level pattern instead, with the plugin set getting S
 
 ## Model
 
-One ECHO object, `AppSettings`, in the settings space:
+Two stores, one per audience. The shared layer replicates; this device's own does not.
 
 ```ts
+// ECHO, in the settings space — replicates to every device.
 AppSettings {
-  shared:  Record<namespace, Record<key, value>>
-  devices: Record<deviceKey, {
-    label?,
-    overrides: Record<namespace, Record<key, value>>,
-    unsynced: string[],          // namespaces this device WRITES locally
-  }>
+  shared: Record<namespace, Record<key, value>>
+}
+
+// Local storage, keyed by device key — never leaves this device.
+DeviceSettings {
+  overrides: Record<namespace, Record<key, value>>,
+  unsynced: string[],            // namespaces this device WRITES locally
 }
 ```
 
-Reads always layer all three:
+The device layer stayed in ECHO at first, as a `devices` map keyed by device key. Nothing ever read
+another device's entry — every access was by the device that wrote it — so replicating it bought
+nothing and cost three things: a copy of every device's overrides on every device, machine-specific
+values (a local model endpoint, say) landing on machines they do not describe, and an override set
+stranded whenever a re-created profile took a new device key. Splitting the stores removed all three,
+and with them the GC that the ECHO shape would have needed.
+
+The cost is that the merge rules now span two stores rather than one object. `Snapshot` and `Draft`
+pair them, so the pure layer is unchanged in spirit and still testable without a database; the
+composite `Store` in `settings-sync/store.ts` is the only place that knows one half is ECHO and the
+other is local storage.
+
+Reads still layer all three:
 
 ```
-resolved[key] = device.overrides[ns][key] ?? shared[ns][key] ?? default[key]
+resolved[key] = local.overrides[ns][key] ?? shared[ns][key] ?? default[key]
 ```
 
 **`unsynced` governs where writes go, not what reads see.** That single choice is what makes an
@@ -141,9 +155,8 @@ differ enough (icon button versus form row) that only the state is worth sharing
 
 ## Open questions
 
-1. Device identity is `client.halo.device.deviceKey` — stable per device, but a re-created profile on
-   the same machine gets a new key, orphaning its override set. No GC for devices no longer in
-   `client.halo.devices`.
+1. ~~Device identity orphaning override sets, with no GC.~~ Settled: the device layer is local, so a
+   re-created profile simply starts clean and there is nothing in the space to collect.
 2. Conflict semantics are last-writer-wins per key via Automerge. Fine for scalars; a settings field
    holding a nested object merges structurally, which may surprise.
 3. Values are stored as `Schema.Any`. A plugin that changes its settings schema will read stale
