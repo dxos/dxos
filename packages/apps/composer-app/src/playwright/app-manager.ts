@@ -136,13 +136,23 @@ export class AppManager {
     return anchor === WORKSPACE_KEY ? workspace : undefined;
   }
 
-  async openUserAccount(): Promise<void> {
+  async openUserAccount(timeout = 15_000): Promise<void> {
     await this.page.getByTestId('clientPlugin.account').click();
+    // The account panel's tree is what the callers below click into, so returning before it is
+    // showing hands them a target that is not there yet.
+    await this.page.getByTestId('clientPlugin.devices').waitFor({ state: 'visible', timeout });
   }
 
-  async openUserDevices(): Promise<void> {
-    await this.openUserAccount();
+  /**
+   * Opens the account panel's Devices page, waiting for the panel's own content rather than for the
+   * click alone. The two clicks used to be issued back to back with nothing between them, so the
+   * second could land while the account panel was still mounting and be swallowed — leaving every
+   * `devicesContainer.*` target absent for the caller's whole timeout (DX-1264).
+   */
+  async openUserDevices(timeout = 15_000): Promise<void> {
+    await this.openUserAccount(timeout);
     await this.page.getByTestId('clientPlugin.devices').click();
+    await this.page.getByTestId('devicesContainer.logout').waitFor({ state: 'visible', timeout });
   }
 
   async createDeviceInvitation(): Promise<string> {
