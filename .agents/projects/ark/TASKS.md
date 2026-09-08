@@ -1033,7 +1033,13 @@ against the Radix-era names react-ui kept, Popover first.
       column, control column) keep `Field.Root` + `Field.Label`, which is the right form for them.
       The `Field/Checkbox` and `Field/Switch` stories click the text; jsdom cannot toggle a controlled checkbox from
       a synthetic click, so the node test asserts labelling only.
-- [ ] **Goal 3**: Popover vs Ark's `Positioner`/`Content`/`Viewport` (tracked below under
-      "Reconcile Ark's anatomy").
+- [x] **Goal 3: floating anatomy reviewed** DONE 2026-09-08: the mapping table and rules are in
+      `DESIGN.md` ("Floating anatomy"). `Positioner` stays inside `Content`, `Viewport` is the bounded
+      region inside it, `Portal` stays a part, `Dialog.Overlay` is the backdrop with content nested.
+      One `usePositioning` hook now builds the machine's `positioning` for Popover, Menu (and its
+      helpers for Select), replacing two copies of the placement/boundary/virtual-anchor block;
+      `PlacementOptions` is one type; `Menu.Content` gains `hideWhenDetached` and loses the unused
+      `constrainBlockSize`. Positioners default `--x`/`--y` off screen and a virtual anchor is the
+      machine's anchor element (scroll-following), both from the dx-anchor popover report.
 - [ ] `plugin-sheet:test-storybook` fails on CI shard 2 with a `Missing file` during teardown while every test passes (seen twice on #12971 and #12987, 2026-09-06 and 2026-09-08); rerun passes. Track the cause or quarantine.
 - [ ] `plugin-illustrator:test` runs ~570s on a CI runner (six diagrams through ELK candidate sweeps in `corpus.test.ts`, 83s locally) and was killed at moon's 600s cap on every run of #12987; the task's timeout is raised to 1500s in its moon.yml as a stopgap. Make the corpus compile cheaper or run it outside the sharded job.

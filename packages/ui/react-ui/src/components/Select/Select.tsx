@@ -28,16 +28,12 @@ import React, {
 
 import { useComposedRefs } from '@dxos/react-hooks';
 
-import { useElevationContext, useSafeCollisionPadding, useThemeContext } from '../../hooks';
+import { toOverflowPadding, useElevationContext, useSafeCollisionPadding, useThemeContext } from '../../hooks';
 import { type ThemedClassName } from '../../util';
 import { Button, type ButtonProps } from '../Button';
 import { Icon } from '../Icon';
 import { ScrollArea } from '../ScrollArea';
 import { SELECT_NAME, type SelectOptionEntry, SelectProvider, useSelectContext } from './SelectContext';
-
-/** Consumers hand the machine a per-side padding; it takes one number, so the widest side wins. */
-const toOverflowPadding = (padding: { top: number; right: number; bottom: number; left: number }) =>
-  Math.max(padding.top, padding.right, padding.bottom, padding.left);
 
 /** Document order, which is the order keyboard navigation and typeahead follow. */
 const byDocumentPosition = (a: SelectOptionEntry, b: SelectOptionEntry) => {

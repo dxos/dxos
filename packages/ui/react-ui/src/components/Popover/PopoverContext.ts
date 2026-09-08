@@ -7,15 +7,15 @@ import { type RefObject } from 'react';
 
 import { createContext } from '@dxos/react-hooks';
 
-import { type CollisionPadding } from '../../hooks';
+import { type PlacementOptions, type PositionAlign, type PositionSide } from '../../hooks';
 
 // Kept out of `Popover.tsx`: react-refresh only fast-refreshes a module whose exports are all
 // components, so a context and its hook exported beside them force a full page reload on every edit.
 
 export const POPOVER_NAME = 'Popover';
 
-export type PopoverSide = 'top' | 'right' | 'bottom' | 'left';
-export type PopoverAlign = 'start' | 'center' | 'end';
+export type PopoverSide = PositionSide;
+export type PopoverAlign = PositionAlign;
 
 type DismissHandler<K extends keyof PopoverPrimitiveRootProps> = NonNullable<PopoverPrimitiveRootProps[K]>;
 
@@ -24,17 +24,7 @@ export type PopoverPointerDownOutsideEvent = Parameters<DismissHandler<'onPointe
 export type PopoverFocusOutsideEvent = Parameters<DismissHandler<'onFocusOutside'>>[0];
 export type PopoverEscapeKeyDownEvent = Parameters<DismissHandler<'onEscapeKeyDown'>>[0];
 
-/** How the content wants to be placed; the machine, which the root owns, does the placing. */
-export type PopoverPlacementOptions = {
-  side?: PopoverSide;
-  align?: PopoverAlign;
-  sideOffset?: number;
-  alignOffset?: number;
-  collisionPadding?: CollisionPadding;
-  collisionBoundary?: Element | null | Array<Element | null>;
-  avoidCollisions?: boolean;
-  hideWhenDetached?: boolean;
-};
+export type PopoverPlacementOptions = PlacementOptions;
 
 /** Focus and dismissal hooks the content declares; read by the root at event time. */
 export type PopoverContentHandlers = {

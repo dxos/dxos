@@ -27,8 +27,8 @@ import React, {
 
 import { composeEventHandlers, useComposedRefs, useControllableState } from '@dxos/react-hooks';
 
-import { useElevationContext, useSafeCollisionPadding, useThemeContext } from '../../hooks';
-import { type ThemedClassName, toAnchorElement } from '../../util';
+import { type Positioning, useElevationContext, usePositioning, useThemeContext } from '../../hooks';
+import { type ThemedClassName } from '../../util';
 import { ColumnContext } from '../Column/ColumnContext';
 import { ScrollArea } from '../ScrollArea';
 import {
@@ -41,12 +41,6 @@ import {
   type MenuSide,
   useMenuContext,
 } from './DropdownMenuContext';
-
-const toPlacement = (side: MenuSide, align: MenuAlign) => (align === 'center' ? side : (`${side}-${align}` as const));
-
-/** Consumers hand the machine a per-side padding; it takes one number, so the widest side wins. */
-const toOverflowPadding = (padding: { top: number; right: number; bottom: number; left: number }) =>
-  Math.max(padding.top, padding.right, padding.bottom, padding.left);
 
 //
 // Root
@@ -72,7 +66,7 @@ type MenuRootImplProps = MenuRootProps & {
 };
 
 /** Re-places open content when its requested placement changes; needs the machine's api. */
-const MenuReposition = ({ open, positioning }: { open: boolean; positioning: Record<string, unknown> }) => {
+const MenuReposition = ({ open, positioning }: { open: boolean; positioning: Positioning }) => {
   const menu = useMenuPrimitiveContext();
   const reposition = menu.reposition;
   useEffect(() => {
@@ -107,50 +101,14 @@ const MenuRootImpl: FC<MenuRootImplProps> = ({
   const contentId = useId();
   const triggerRef = useRef<HTMLElement | null>(null);
   const handlersRef = useRef<MenuContentHandlers>({});
-  const [virtualAnchor, setVirtualAnchorState] = useState<RefObject<Element | null> | null>(null);
   const [placementOptions, setPlacement] = useState<MenuPlacementOptions>({});
-  const setVirtualAnchor = useCallback((ref: RefObject<Element | null>) => {
-    setVirtualAnchorState(ref);
-    return () => setVirtualAnchorState((current) => (current === ref ? null : current));
-  }, []);
-
-  const {
-    side = defaultSide,
-    align = defaultAlign,
-    sideOffset = 0,
-    alignOffset,
-    collisionPadding = 8,
-    collisionBoundary,
-    avoidCollisions = true,
-  } = placementOptions;
-  const safeCollisionPadding = useSafeCollisionPadding(collisionPadding);
-  const overflowPadding = toOverflowPadding(safeCollisionPadding);
-
-  // The closest annotated ancestor bounds the content.
-  const boundary = useMemo(() => {
-    const closest = triggerRef.current?.closest<HTMLElement>('[data-popover-collision-boundary]') ?? null;
-    const given = Array.isArray(collisionBoundary) ? collisionBoundary : collisionBoundary ? [collisionBoundary] : [];
-    const elements = [closest, ...given].filter((element): element is Element => !!element);
-    return elements.length ? () => elements : undefined;
-    // The trigger is read when the menu opens, which is when the boundary matters.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, collisionBoundary]);
-
-  const positioning = useMemo(
-    () => ({
-      strategy: 'fixed' as const,
-      placement: toPlacement(side, align),
-      gutter: sideOffset,
-      ...(alignOffset !== undefined && { offset: { mainAxis: sideOffset, crossAxis: alignOffset } }),
-      overflowPadding,
-      // Keeps the arrow off the rounded corners, where its fill would paint over the curve.
-      arrowPadding: 12,
-      flip: avoidCollisions,
-      boundary,
-      ...(virtualAnchor && { getAnchorElement: () => toAnchorElement(virtualAnchor.current) }),
-    }),
-    [side, align, sideOffset, alignOffset, overflowPadding, avoidCollisions, boundary, virtualAnchor],
-  );
+  const { positioning, setVirtualAnchor } = usePositioning({
+    open,
+    triggerRef,
+    placement: placementOptions,
+    defaultSide,
+    defaultAlign,
+  });
 
   const context = useMemo(
     () => ({
@@ -276,9 +234,7 @@ const CONTENT_NAME = 'DropdownMenu.Content';
 
 type MenuContentProps = ThemedClassName<ComponentPropsWithRef<typeof MenuPrimitive.Content>> &
   MenuPlacementOptions &
-  MenuContentHandlers & {
-    constrainBlockSize?: boolean;
-  };
+  MenuContentHandlers;
 
 const MenuContent = forwardRef<HTMLDivElement, MenuContentProps>(
   (
@@ -292,7 +248,7 @@ const MenuContent = forwardRef<HTMLDivElement, MenuContentProps>(
       collisionPadding,
       collisionBoundary,
       avoidCollisions,
-      constrainBlockSize,
+      hideWhenDetached,
       onCloseAutoFocus,
       onInteractOutside,
       onPointerDownOutside,
@@ -308,8 +264,27 @@ const MenuContent = forwardRef<HTMLDivElement, MenuContentProps>(
 
     // Placement is state on the root (it re-positions); the handlers are read at event time.
     useLayoutEffect(() => {
-      setPlacement({ side, align, sideOffset, alignOffset, collisionPadding, collisionBoundary, avoidCollisions });
-    }, [setPlacement, side, align, sideOffset, alignOffset, collisionPadding, collisionBoundary, avoidCollisions]);
+      setPlacement({
+        side,
+        align,
+        sideOffset,
+        alignOffset,
+        collisionPadding,
+        collisionBoundary,
+        avoidCollisions,
+        hideWhenDetached,
+      });
+    }, [
+      setPlacement,
+      side,
+      align,
+      sideOffset,
+      alignOffset,
+      collisionPadding,
+      collisionBoundary,
+      avoidCollisions,
+      hideWhenDetached,
+    ]);
     handlersRef.current = {
       onCloseAutoFocus,
       onInteractOutside,
@@ -323,7 +298,7 @@ const MenuContent = forwardRef<HTMLDivElement, MenuContentProps>(
         <MenuPrimitive.Content
           data-arrow-keys='up down'
           {...props}
-          className={tx('menu.content', { elevation, constrainBlockSize }, classNames)}
+          className={tx('menu.content', { elevation }, classNames)}
           ref={forwardedRef}
         >
           {children}

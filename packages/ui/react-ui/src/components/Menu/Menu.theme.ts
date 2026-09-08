@@ -7,7 +7,6 @@ import { mx, positionerUnplaced, surfaceShadow, surfaceZIndex, surfaceZIndexVar 
 import { type ComponentFunction, type Elevation, type Theme } from '@dxos/ui-types';
 
 export type MenuStyleProps = Partial<{
-  constrainBlockSize: boolean;
   elevation: Elevation;
 }>;
 
