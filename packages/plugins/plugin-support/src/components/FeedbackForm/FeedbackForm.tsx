@@ -6,7 +6,7 @@ import React, { type PropsWithChildren, useCallback, useMemo, useState } from 'r
 
 import { log } from '@dxos/log';
 import { createContext } from '@dxos/react-hooks';
-import { IconButton, useTranslation } from '@dxos/react-ui';
+import { Banner, IconButton, useTranslation } from '@dxos/react-ui';
 import { Form, type FormFieldRenderer, type FormFieldRendererProps, type FormUpdateMeta } from '@dxos/react-ui-form';
 
 import { type DiscordPresence } from '#hooks';
@@ -155,7 +155,11 @@ const FeedbackFormSubmit = ({ disabled }: FeedbackFormSubmitProps) => {
 
   return (
     <>
-      <p className='text-xs text-description text-center px-2 py-1'>{t('public-report.description')}</p>
+      <Banner.Root valence='neutral'>
+        <Banner.Content>
+          <Banner.Body>{t('public-report.description')}</Banner.Body>
+        </Banner.Content>
+      </Banner.Root>
       <Form.Submit
         classNames={pending ? '[&_svg]:animate-spin' : undefined}
         icon={pending ? 'ph--spinner-gap--regular' : 'ph--paper-plane-tilt--regular'}
