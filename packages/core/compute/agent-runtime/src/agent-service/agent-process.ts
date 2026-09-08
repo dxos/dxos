@@ -398,6 +398,17 @@ export const AgentProcess = (options: AgentProcessOptions) =>
                   });
                   yield* ctx.setAlarm(UNSEEN_WRITE_RETRY_MS);
                   return;
+                } else if (unseenWriteIds.size > 0) {
+                  // Retry budget spent and a write this incarnation made is still unread. The bound
+                  // stops the waking, but completing here would drop that prompt for good — there is
+                  // no guaranteed upper bound on index lag — so the process stays resident instead,
+                  // to be woken by the next input or alarm.
+                  log.warn('agent giving up on an unread write, staying resident', {
+                    unseenWrites: unseenWriteIds.size,
+                    wakes: unseenWriteWakes,
+                  });
+                  yield* reconcileAlarmWith(state);
+                  return;
                 } else {
                   log('agent onAlarm empty queue', {});
                   yield* reconcileAlarmWith(state);
