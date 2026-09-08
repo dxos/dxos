@@ -69,9 +69,9 @@ export const FundamentalsPanel = ({ snapshot, loading, error, onRefresh }: Funda
         return (
           <>
             {entries.map(([concept, factValue]) => (
-              <Form.Row key={concept} label={formatConceptLabel(concept)}>
+              <Form.Field key={concept} label={formatConceptLabel(concept)}>
                 {formatFundamentalValue(Format.TypeFormat.Currency, concept, factValue)}
-              </Form.Row>
+              </Form.Field>
             ))}
           </>
         );
@@ -80,9 +80,9 @@ export const FundamentalsPanel = ({ snapshot, loading, error, onRefresh }: Funda
         return null;
       }
       return (
-        <Form.Row label={label} description={description}>
+        <Form.Field label={label} description={description}>
           {formatFundamentalValue(format, jsonPath, value)}
-        </Form.Row>
+        </Form.Field>
       );
     },
     [],
@@ -138,7 +138,7 @@ export const FundamentalsPanel = ({ snapshot, loading, error, onRefresh }: Funda
         </Form.Section>
 
         <Form.Section>
-          <Form.Row label={t('fundamentals.source.label')} />
+          <Form.Field label={t('fundamentals.source.label')} />
         </Form.Section>
       </Form.Content>
     </Form.Root>

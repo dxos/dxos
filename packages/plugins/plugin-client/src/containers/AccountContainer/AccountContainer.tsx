@@ -9,7 +9,7 @@ import { useCapability, useOperationInvoker } from '@dxos/app-framework/ui';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { Context } from '@dxos/context';
 import { useIdentity } from '@dxos/halo-react';
-import { Banner, Button, Flex, Icon, IconButton, Input, useAsyncEffect, useTranslation } from '@dxos/react-ui';
+import { Banner, Button, Field, Flex, Icon, IconButton, useAsyncEffect, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 
 import { meta } from '#meta';
@@ -126,13 +126,13 @@ export const AccountContainer = () => {
                     <Banner.Body>{t('no-edge-access.description')}</Banner.Body>
                   </Banner.Content>
                 </Banner.Root>
-                <Form.Row label={t('request-access.label')} description={t('request-access.description')}>
+                <Form.Field label={t('request-access.label')} description={t('request-access.description')}>
                   {requestSubmitted ? (
                     <span className='text-sm text-description'>{t('access-request-submitted.message')}</span>
                   ) : (
                     <form onSubmit={handleRequestAccess} className='flex gap-2 items-center justify-end'>
-                      <Input.Root>
-                        <Input.TextInput
+                      <Field.Root>
+                        <Field.Input
                           type='email'
                           required
                           placeholder={t('access-request-email.placeholder')}
@@ -140,13 +140,13 @@ export const AccountContainer = () => {
                           onChange={(event) => setRequestEmail(event.target.value)}
                           classNames='w-64 max-w-full min-w-0'
                         />
-                      </Input.Root>
+                      </Field.Root>
                       <Button type='submit' density='sm'>
                         {t('request-access.label')}
                       </Button>
                     </form>
                   )}
-                </Form.Row>
+                </Form.Field>
               </>
             ) : accountState === 'error' && !account ? (
               <Banner.Root valence='error'>
@@ -157,7 +157,7 @@ export const AccountContainer = () => {
               </Banner.Root>
             ) : account ? (
               <>
-                <Form.Row label={t('email.label')} description={account.email}>
+                <Form.Field label={t('email.label')} description={account.email}>
                   {account.emailVerified ? (
                     <Icon icon='ph--check-circle--duotone' size={5} classNames='text-success-text justify-self-end' />
                   ) : (
@@ -171,25 +171,25 @@ export const AccountContainer = () => {
                       {resendStatus ? <span className='text-xs text-description'>{resendStatus}</span> : null}
                     </Flex>
                   )}
-                </Form.Row>
-                <Form.Row label={t('delete-account.label')} description={t('delete-account.description')}>
+                </Form.Field>
+                <Form.Field label={t('delete-account.label')} description={t('delete-account.description')}>
                   <Button variant='destructive' onClick={handleDeleteAccount}>
                     {t('delete-account.label')}
                   </Button>
-                </Form.Row>
+                </Form.Field>
               </>
             ) : null}
           </Form.Section>
           {account ? (
             <Form.Section title={t('account-page-section.title')} description={t('account-page-section.description')}>
-              <Form.Row label={t('open-account-page.label')} description={t('open-account-page.description')}>
+              <Form.Field label={t('open-account-page.label')} description={t('open-account-page.description')}>
                 <IconButton
                   icon='ph--arrow-square-out--regular'
                   label={t('open-account-page.label')}
                   variant='default'
                   onClick={openAccountPage}
                 />
-              </Form.Row>
+              </Form.Field>
             </Form.Section>
           ) : null}
         </Form.Content>

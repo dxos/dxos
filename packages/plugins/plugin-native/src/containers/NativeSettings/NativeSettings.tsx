@@ -65,9 +65,9 @@ export const NativeSettings = () => {
             title={meta.profile.name ?? meta.profile.key}
             actions={<SettingsScope prefix={meta.profile.key} />}
           >
-            <Form.Row label={t('settings.updates.label')} description={description}>
+            <Form.Field label={t('settings.updates.label')} description={description}>
               {button}
-            </Form.Row>
+            </Form.Field>
           </Form.Section>
         </Form.Content>
       </Form.Viewport>

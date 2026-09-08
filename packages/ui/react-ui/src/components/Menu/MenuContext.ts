@@ -7,15 +7,15 @@ import { type RefObject } from 'react';
 
 import { createContext } from '@dxos/react-hooks';
 
-import { type CollisionPadding } from '../../hooks';
+import { type PlacementOptions, type PositionAlign, type PositionSide } from '../../hooks';
 
-// Kept out of `DropdownMenu.tsx`: react-refresh only fast-refreshes a module whose exports are all
+// Kept out of `Menu.tsx`: react-refresh only fast-refreshes a module whose exports are all
 // components, so a context and its hook exported beside them force a full page reload on every edit.
 
 export const MENU_NAME = 'Menu';
 
-export type MenuSide = 'top' | 'right' | 'bottom' | 'left';
-export type MenuAlign = 'start' | 'center' | 'end';
+export type MenuSide = PositionSide;
+export type MenuAlign = PositionAlign;
 
 type DismissHandler<K extends keyof MenuPrimitiveRootProps> = NonNullable<MenuPrimitiveRootProps[K]>;
 
@@ -24,16 +24,7 @@ export type MenuPointerDownOutsideEvent = Parameters<DismissHandler<'onPointerDo
 export type MenuFocusOutsideEvent = Parameters<DismissHandler<'onFocusOutside'>>[0];
 export type MenuEscapeKeyDownEvent = Parameters<DismissHandler<'onEscapeKeyDown'>>[0];
 
-/** How the content wants to be placed; the machine, which the root owns, does the placing. */
-export type MenuPlacementOptions = {
-  side?: MenuSide;
-  align?: MenuAlign;
-  sideOffset?: number;
-  alignOffset?: number;
-  collisionPadding?: CollisionPadding;
-  collisionBoundary?: Element | null | Array<Element | null>;
-  avoidCollisions?: boolean;
-};
+export type MenuPlacementOptions = PlacementOptions;
 
 /** Dismissal hooks the content declares; read by the root at event time. */
 export type MenuContentHandlers = {

@@ -4,7 +4,7 @@
 
 import React, { useEffect, useState } from 'react';
 
-import { Icon, Input, Select, Toolbar } from '@dxos/react-ui';
+import { Field, Icon, Select, Toolbar } from '@dxos/react-ui';
 import { safeParseInt } from '@dxos/util';
 
 export type DataView = 'table' | 'list' | 'debug';
@@ -29,13 +29,13 @@ export const DataToolbar = ({ types, onAdd, onTypeChange, onFilterChange, onView
   return (
     <Toolbar.Root>
       <Toolbar.IconButton icon='ph--plus--regular' iconOnly label='Create objects' onClick={() => onAdd(count)} />
-      <Input.Root>
-        <Input.TextInput
+      <Field.Root>
+        <Field.Input
           classNames='max-w-16 text-right'
           value={count}
           onChange={(event) => setCount(safeParseInt(event.target.value) ?? count)}
         />
-      </Input.Root>
+      </Field.Root>
       {!!types?.length && (
         <Select.Root value={type} onValueChange={(type) => setType(type)}>
           <Toolbar.Button asChild>
@@ -55,13 +55,13 @@ export const DataToolbar = ({ types, onAdd, onTypeChange, onFilterChange, onView
         </Select.Root>
       )}
       {onFilterChange && (
-        <Input.Root>
-          <Input.TextInput
+        <Field.Root>
+          <Field.Input
             placeholder='Filter objects...'
             value={filter ?? ''}
             onChange={(event) => setFilter(event.target.value)}
           />
-        </Input.Root>
+        </Field.Root>
       )}
       {onViewChange && (
         <Toolbar.ToggleGroup type='single' value={view} onValueChange={(value) => setView(value as DataView)}>

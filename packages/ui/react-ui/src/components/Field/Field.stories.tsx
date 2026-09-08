@@ -10,24 +10,24 @@ import { invariant } from '@dxos/invariant';
 import { mx } from '@dxos/ui-theme';
 import { type MessageValence } from '@dxos/ui-types';
 
-import { withLayoutVariants, withTheme } from '../../testing';
+import { withLayout, withLayoutVariants, withTheme } from '../../testing';
 import { Icon } from '../Icon';
 import {
   type CheckboxProps,
   type DateInputProps,
   type DateTimeInputProps,
-  Input,
+  Field,
+  type InputProps,
   type PinInputProps,
   type SwitchProps,
-  type TextAreaProps,
-  type TextInputProps,
+  type TextareaProps,
   type TimeProps,
-} from './Input';
+} from './Field';
 
 type VariantMap = {
-  text: TextInputProps;
+  text: InputProps;
   pin: PinInputProps;
-  textarea: TextAreaProps;
+  textarea: TextareaProps;
   time: TimeProps;
   date: DateInputProps;
   datetime: DateTimeInputProps;
@@ -57,14 +57,14 @@ type RowProps = PropsWithChildren<
     | 'validationMessage'
     | 'validationValence'
   > & {
-    /** Lead with the control: a checkbox or switch reads control-then-label. */
-    inline?: boolean;
+    /** The control carries its own label (a checkbox or switch with label children), so the row adds none. */
+    selfLabelled?: boolean;
   }
 >;
 
 /** Label, control and the meta text on one line, so the valence border and message are seen together. */
 const Row = ({
-  inline,
+  selfLabelled,
   label,
   validationValence,
   labelVisuallyHidden,
@@ -73,36 +73,34 @@ const Row = ({
   validationMessage,
   children,
 }: RowProps) => (
-  <Input.Root validationValence={validationValence}>
+  <Field.Root validationValence={validationValence}>
     <div className='flex flex-col gap-1'>
-      {(inline && (
-        <div className='flex items-center gap-2'>
-          {children}
-          <Input.Label srOnly={labelVisuallyHidden} classNames='shrink-0'>
-            {label}
-          </Input.Label>
-        </div>
-      )) || (
+      {selfLabelled ? (
+        children
+      ) : (
         <>
-          <Input.Label srOnly={labelVisuallyHidden} classNames='shrink-0'>
+          <Field.Label srOnly={labelVisuallyHidden} classNames='shrink-0'>
             {label}
-          </Input.Label>
+          </Field.Label>
           {children}
         </>
       )}
 
-      <Input.DescriptionAndValidation
-        srOnly={descriptionVisuallyHidden}
-        classNames={mx('flex grow shrink-0 text-description whitespace-nowrap', validationMessage && 'justify-end')}
+      <div
+        className={mx(
+          'flex grow shrink-0 text-description whitespace-nowrap',
+          validationMessage && 'justify-end',
+          descriptionVisuallyHidden && 'sr-only',
+        )}
       >
         {validationMessage ? (
-          <Input.Validation classNames='block'>{validationMessage}</Input.Validation>
+          <Field.ErrorText classNames='block'>{validationMessage}</Field.ErrorText>
         ) : (
-          <Input.Description>{description}</Input.Description>
+          <Field.HelperText>{description}</Field.HelperText>
         )}
-      </Input.DescriptionAndValidation>
+      </div>
     </div>
-  </Input.Root>
+  </Field.Root>
 );
 
 const DefaultStory = ({
@@ -118,28 +116,28 @@ const DefaultStory = ({
   const control = (() => {
     switch (kind) {
       case 'text':
-        return <Input.TextInput {...props} />;
+        return <Field.Input {...props} />;
       case 'pin':
-        return <Input.PinInput {...props} />;
+        return <Field.PinInput {...props} />;
       case 'textarea':
-        return <Input.TextArea {...props} />;
+        return <Field.Textarea {...props} />;
       case 'time':
-        return <Input.Time {...props} />;
+        return <Field.Time {...props} />;
       case 'date':
-        return <Input.Date {...props} />;
+        return <Field.Date {...props} />;
       case 'datetime':
-        return <Input.DateTime {...props} />;
+        return <Field.DateTime {...props} />;
       case 'checkbox':
-        return <Input.Checkbox {...props} />;
+        return <Field.Checkbox {...props}>{label}</Field.Checkbox>;
       case 'switch':
-        return <Input.Switch {...props} />;
+        return <Field.Switch {...props}>{label}</Field.Switch>;
     }
   })();
 
   return (
     <Row
       validationValence={validationValence}
-      inline={kind === 'checkbox' || kind === 'switch'}
+      selfLabelled={kind === 'checkbox' || kind === 'switch'}
       label={label}
       labelVisuallyHidden={labelVisuallyHidden}
       description={description}
@@ -152,10 +150,14 @@ const DefaultStory = ({
 };
 
 const meta = {
-  title: 'ui/react-ui-core/components/Input',
-  component: Input.Root as any,
+  title: 'ui/react-ui-core/components/Field',
+  component: Field.Root as any,
   render: DefaultStory,
-  decorators: [withTheme(), withLayoutVariants({ classNames: 'w-[40rem]' })],
+  decorators: [
+    withTheme(),
+    withLayoutVariants(),
+    withLayout({ layout: 'column', scroll: true, classNames: 'bg-transparent' }),
+  ],
 } satisfies Meta<typeof DefaultStory>;
 
 export default meta;
@@ -204,7 +206,7 @@ export const WithDescription: Story = {
   },
 };
 
-export const WithErrorAndDescription: Story = {
+export const WithError: Story = {
   args: {
     kind: 'text',
     label: 'Described invalid input',
@@ -215,28 +217,8 @@ export const WithErrorAndDescription: Story = {
   },
 };
 
-export const WithValidationAndDescription: Story = {
-  args: {
-    kind: 'text',
-    label: 'Described input with validation message',
-    placeholder: 'This input is styled to express a validation valence',
-    description: 'This description is extra.',
-    validationValence: 'success',
-    validationMessage: 'This validation message is really part of the description.',
-  },
-};
-
-export const TextArea: Story = {
-  args: {
-    kind: 'textarea',
-    label: 'This input is a text area input',
-    description: 'Type a long paragraph',
-    placeholder: 'Lorem ipsum dolor sit amet',
-  },
-};
-
 /**
- * Native HTML input types. `Input.TextInput` accepts every standard
+ * Native HTML input types. `Field.Input` accepts every standard
  * `<input type="…">` value via its `type` prop; this story exercises the most
  * commonly used ones so the rendering across themes/browsers can be
  * inspected at a glance.
@@ -256,18 +238,18 @@ const TEXT_INPUT_TYPES: { type: string; placeholder: string }[] = [
   { type: 'week', placeholder: '' },
 ];
 
-export const _TextInput: Story = {
+export const Input: Story = {
   render: () => (
     <div className='flex flex-col gap-3 min-w-[24rem]'>
       {TEXT_INPUT_TYPES.map(({ type, placeholder }) => (
-        // `Input.Root` renders no element, so without this wrapper the gap falls between each label
+        // `Field.Root` renders no element, so without this wrapper the gap falls between each label
         // and its own field rather than between the groups — making the label spacing look unlike
         // every other story's.
         <div key={type}>
-          <Input.Root>
-            <Input.Label>{`type="${type}"`}</Input.Label>
-            <Input.TextInput type={type} placeholder={placeholder} />
-          </Input.Root>
+          <Field.Root>
+            <Field.Label>{`type="${type}"`}</Field.Label>
+            <Field.Input type={type} placeholder={placeholder} />
+          </Field.Root>
         </div>
       ))}
     </div>
@@ -279,27 +261,71 @@ export const _TextInput: Story = {
  * surface/border/focus (via `focus-within`) and the field renders bare. `subdued` drops the box for a
  * borderless row (compose a bottom rule via `classNames`).
  */
-export const TextInputAdornments: Story = {
+export const InputAdornments: Story = {
   render: () => (
     <div className='flex flex-col'>
-      <Input.Root>
-        <Input.Label>Start icon</Input.Label>
-        <Input.TextInput start={<Icon icon='ph--magnifying-glass--regular' size={4} />} placeholder='Search…' />
-      </Input.Root>
-      <Input.Root>
-        <Input.Label>End text</Input.Label>
-        <Input.TextInput end={<span className='text-sm'>.dxos.org</span>} placeholder='workspace' />
-      </Input.Root>
-      <Input.Root>
-        <Input.Label>Both</Input.Label>
-        <Input.TextInput
+      <Field.Root>
+        <Field.Label>Start icon</Field.Label>
+        <Field.Input start={<Icon icon='ph--magnifying-glass--regular' size={4} />} placeholder='Search…' />
+      </Field.Root>
+      <Field.Root>
+        <Field.Label>End text</Field.Label>
+        <Field.Input end={<span className='text-sm'>.dxos.org</span>} placeholder='workspace' />
+      </Field.Root>
+      <Field.Root>
+        <Field.Label>Both</Field.Label>
+        <Field.Input
           start={<span className='text-sm'>$</span>}
           end={<Icon icon='ph--currency-circle-dollar--regular' size={4} />}
           placeholder='0.00'
         />
-      </Input.Root>
+      </Field.Root>
     </div>
   ),
+};
+
+export const TextArea: Story = {
+  args: {
+    kind: 'textarea',
+    label: 'This input is a text area input',
+    description: 'Type a long paragraph',
+    placeholder: 'Lorem ipsum dolor sit amet',
+  },
+};
+
+/** The control is one `<label>` holding its text and its form input, so clicking the text toggles it. */
+const togglesFromItsLabel = async (canvasElement: HTMLElement, label: string) => {
+  const root = canvasElement.querySelector('label') as HTMLLabelElement;
+  await expect(root).toHaveTextContent(label);
+  const input = root.querySelector('input') as HTMLInputElement;
+  await expect(input.checked).toBe(false);
+  await userEvent.click(within(root).getByText(label));
+  await expect(input.checked).toBe(true);
+  await userEvent.click(within(root).getByText(label));
+  await expect(input.checked).toBe(false);
+  await userEvent.click(within(root).getByText(label));
+  await expect(input.checked).toBe(true);
+};
+
+export const Checkbox: Story = {
+  args: {
+    kind: 'checkbox',
+    label: 'This is a checkbox',
+    description: 'Checked, indeterminate, or unchecked',
+    size: 5,
+  },
+  play: async ({ canvasElement }: { canvasElement: HTMLElement }) =>
+    togglesFromItsLabel(canvasElement, 'This is a checkbox'),
+};
+
+export const Switch: Story = {
+  args: {
+    kind: 'switch',
+    label: 'This is a switch',
+    description: 'On or off',
+  },
+  play: async ({ canvasElement }: { canvasElement: HTMLElement }) =>
+    togglesFromItsLabel(canvasElement, 'This is a switch'),
 };
 
 export const PinInput: Story = {
@@ -389,45 +415,28 @@ const opensAtField = async ({ canvasElement }: { canvasElement: HTMLElement }) =
 
 export const DateWithPicker: Story = {
   render: () => (
-    <Input.Root>
-      <Input.Label>Date (with picker)</Input.Label>
+    <Field.Root>
+      <Field.Label>Date (with picker)</Field.Label>
       <div className='flex items-center gap-1'>
-        <Input.Date defaultValue='2026-06-01' />
-        <Input.TriggerIcon />
+        <Field.Date defaultValue='2026-06-01' />
+        <Field.TriggerIcon />
       </div>
-      <Input.Description>Click the calendar icon to open the date picker.</Input.Description>
-    </Input.Root>
+      <Field.HelperText>Click the calendar icon to open the date picker.</Field.HelperText>
+    </Field.Root>
   ),
   play: opensAtField,
 };
 
 export const DateTimeWithPicker: Story = {
   render: () => (
-    <Input.Root>
-      <Input.Label>Date & time (with picker)</Input.Label>
+    <Field.Root>
+      <Field.Label>Date & time (with picker)</Field.Label>
       <div className='flex items-center gap-1'>
-        <Input.DateTime defaultValue='2026-06-01T15:30' />
-        <Input.TriggerIcon />
+        <Field.DateTime defaultValue='2026-06-01T15:30' />
+        <Field.TriggerIcon />
       </div>
-      <Input.Description>Click the calendar icon to open the date picker.</Input.Description>
-    </Input.Root>
+      <Field.HelperText>Click the calendar icon to open the date picker.</Field.HelperText>
+    </Field.Root>
   ),
   play: opensAtField,
-};
-
-export const Checkbox: Story = {
-  args: {
-    kind: 'checkbox',
-    label: 'This is a checkbox',
-    description: 'Checked, indeterminate, or unchecked',
-    size: 5,
-  },
-};
-
-export const Switch: Story = {
-  args: {
-    kind: 'switch',
-    label: 'This is a switch',
-    description: 'On or off',
-  },
 };

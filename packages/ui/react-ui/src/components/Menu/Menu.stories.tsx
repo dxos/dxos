@@ -8,92 +8,92 @@ import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { withTheme } from '../../testing';
 import { Button } from '../Button';
-import { DropdownMenu } from './DropdownMenu';
+import { Menu } from './Menu';
 
 const DefaultStory = () => {
   return (
-    <DropdownMenu.Root defaultOpen>
-      <DropdownMenu.Trigger asChild>
+    <Menu.Root defaultOpen>
+      <Menu.Trigger asChild>
         <Button>Customise options</Button>
-      </DropdownMenu.Trigger>
+      </Menu.Trigger>
 
-      <DropdownMenu.Content sideOffset={4} collisionPadding={8}>
-        <DropdownMenu.Viewport>
-          <DropdownMenu.Item>
+      <Menu.Content sideOffset={4} collisionPadding={8}>
+        <Menu.Viewport>
+          <Menu.Item>
             <span className='grow'>New Tab</span>
             <span className='opacity-50'>⌘+T</span>
-          </DropdownMenu.Item>
-          <DropdownMenu.Item>
+          </Menu.Item>
+          <Menu.Item>
             <span className='grow'>New Window</span>
             <span className='opacity-50'>⌘+N</span>
-          </DropdownMenu.Item>
-          <DropdownMenu.Item disabled>
+          </Menu.Item>
+          <Menu.Item disabled>
             <span className='grow'>New Private Window</span>
             <span className='opacity-50'>⇧+⌘+N</span>
-          </DropdownMenu.Item>
-          {/* <DropdownMenu.Sub> */}
-          {/*  <DropdownMenu.SubTrigger> */}
+          </Menu.Item>
+          {/* <Menu.Sub> */}
+          {/*  <Menu.SubTrigger> */}
           {/*    More Tools */}
           {/*    <div> */}
           {/*      <ChevronRightIcon /> */}
           {/*    </div> */}
-          {/*  </DropdownMenu.SubTrigger> */}
-          {/*  <DropdownMenu.Portal> */}
-          {/*    <DropdownMenu.SubContent sideOffset={2} alignOffset={-5}> */}
-          {/*      <DropdownMenu.Item> */}
+          {/*  </Menu.SubTrigger> */}
+          {/*  <Menu.Portal> */}
+          {/*    <Menu.SubContent sideOffset={2} alignOffset={-5}> */}
+          {/*      <Menu.Item> */}
           {/*        Save Page As… <div>⌘+S</div> */}
-          {/*      </DropdownMenu.Item> */}
-          {/*      <DropdownMenu.Item>Create Shortcut…</DropdownMenu.Item> */}
-          {/*      <DropdownMenu.Item>Name Window…</DropdownMenu.Item> */}
-          {/*      <DropdownMenu.Separator /> */}
-          {/*      <DropdownMenu.Item>Developer Tools</DropdownMenu.Item> */}
-          {/*    </DropdownMenu.SubContent> */}
-          {/*  </DropdownMenu.Portal> */}
-          {/* </DropdownMenu.Sub> */}
+          {/*      </Menu.Item> */}
+          {/*      <Menu.Item>Create Shortcut…</Menu.Item> */}
+          {/*      <Menu.Item>Name Window…</Menu.Item> */}
+          {/*      <Menu.Separator /> */}
+          {/*      <Menu.Item>Developer Tools</Menu.Item> */}
+          {/*    </Menu.SubContent> */}
+          {/*  </Menu.Portal> */}
+          {/* </Menu.Sub> */}
 
-          {/* <DropdownMenu.Separator /> */}
+          {/* <Menu.Separator /> */}
 
-          {/* <DropdownMenu.CheckboxItem checked={bookmarksChecked} onCheckedChange={setBookmarksChecked}> */}
-          {/*  <DropdownMenu.ItemIndicator> */}
+          {/* <Menu.CheckboxItem checked={bookmarksChecked} onCheckedChange={setBookmarksChecked}> */}
+          {/*  <Menu.ItemIndicator> */}
           {/*    <CheckIcon /> */}
-          {/*  </DropdownMenu.ItemIndicator> */}
+          {/*  </Menu.ItemIndicator> */}
           {/*  Show Bookmarks <div>⌘+B</div> */}
-          {/* </DropdownMenu.CheckboxItem> */}
-          {/* <DropdownMenu.CheckboxItem checked={urlsChecked} onCheckedChange={setUrlsChecked}> */}
-          {/*  <DropdownMenu.ItemIndicator> */}
+          {/* </Menu.CheckboxItem> */}
+          {/* <Menu.CheckboxItem checked={urlsChecked} onCheckedChange={setUrlsChecked}> */}
+          {/*  <Menu.ItemIndicator> */}
           {/*    <CheckIcon /> */}
-          {/*  </DropdownMenu.ItemIndicator> */}
+          {/*  </Menu.ItemIndicator> */}
           {/*  Show Full URLs */}
-          {/* </DropdownMenu.CheckboxItem> */}
+          {/* </Menu.CheckboxItem> */}
 
-          <DropdownMenu.Separator />
+          <Menu.Separator />
 
-          <DropdownMenu.GroupLabel>People</DropdownMenu.GroupLabel>
-          {/* <DropdownMenu.RadioGroup value={person} onValueChange={setPerson}> */}
-          {/*  <DropdownMenu.RadioItem value='pedro'> */}
-          {/*    <DropdownMenu.ItemIndicator> */}
+          <Menu.GroupLabel>People</Menu.GroupLabel>
+          {/* <Menu.RadioGroup value={person} onValueChange={setPerson}> */}
+          {/*  <Menu.RadioItem value='pedro'> */}
+          {/*    <Menu.ItemIndicator> */}
           {/*      <DotFilledIcon /> */}
-          {/*    </DropdownMenu.ItemIndicator> */}
+          {/*    </Menu.ItemIndicator> */}
           {/*    Pedro Duarte */}
-          {/*  </DropdownMenu.RadioItem> */}
-          {/*  <DropdownMenu.RadioItem value='colm'> */}
-          {/*    <DropdownMenu.ItemIndicator> */}
+          {/*  </Menu.RadioItem> */}
+          {/*  <Menu.RadioItem value='colm'> */}
+          {/*    <Menu.ItemIndicator> */}
           {/*      <DotFilledIcon /> */}
-          {/*    </DropdownMenu.ItemIndicator> */}
+          {/*    </Menu.ItemIndicator> */}
           {/*    Colm Tuite */}
-          {/*  </DropdownMenu.RadioItem> */}
-          {/* </DropdownMenu.RadioGroup> */}
-        </DropdownMenu.Viewport>
+          {/*  </Menu.RadioItem> */}
+          {/* </Menu.RadioGroup> */}
+        </Menu.Viewport>
 
-        <DropdownMenu.Arrow />
-      </DropdownMenu.Content>
-    </DropdownMenu.Root>
+        <Menu.Arrow />
+      </Menu.Content>
+    </Menu.Root>
   );
 };
 
 const meta = {
-  title: 'ui/react-ui-core/components/DropdownMenu',
-  component: DropdownMenu.Root,
+  title: 'ui/react-ui-core/components/Menu',
+  component: Menu.Root,
   render: DefaultStory,
   decorators: [withTheme()],
 } satisfies Meta<typeof DefaultStory>;
@@ -115,31 +115,31 @@ export const VirtualTrigger = {
         <Button onClick={() => setMenuOpen(true)} ref={buttonRef}>
           Customise options
         </Button>
-        <DropdownMenu.Root open={menuOpen} onOpenChange={setMenuOpen}>
-          <DropdownMenu.VirtualTrigger virtualRef={buttonRef} />
-          <DropdownMenu.Content sideOffset={4} collisionPadding={8}>
-            <DropdownMenu.Viewport>
-              <DropdownMenu.Item>
+        <Menu.Root open={menuOpen} onOpenChange={setMenuOpen}>
+          <Menu.VirtualTrigger virtualRef={buttonRef} />
+          <Menu.Content sideOffset={4} collisionPadding={8}>
+            <Menu.Viewport>
+              <Menu.Item>
                 <span className='grow'>New Tab</span>
                 <span className='opacity-50'>⌘+T</span>
-              </DropdownMenu.Item>
-              <DropdownMenu.Item>
+              </Menu.Item>
+              <Menu.Item>
                 <span className='grow'>New Window</span>
                 <span className='opacity-50'>⌘+N</span>
-              </DropdownMenu.Item>
-              <DropdownMenu.Item disabled>
+              </Menu.Item>
+              <Menu.Item disabled>
                 <span className='grow'>New Private Window</span>
                 <span className='opacity-50'>⇧+⌘+N</span>
-              </DropdownMenu.Item>
+              </Menu.Item>
 
-              <DropdownMenu.Separator />
+              <Menu.Separator />
 
-              <DropdownMenu.GroupLabel>People</DropdownMenu.GroupLabel>
-            </DropdownMenu.Viewport>
+              <Menu.GroupLabel>People</Menu.GroupLabel>
+            </Menu.Viewport>
 
-            <DropdownMenu.Arrow />
-          </DropdownMenu.Content>
-        </DropdownMenu.Root>
+            <Menu.Arrow />
+          </Menu.Content>
+        </Menu.Root>
       </>
     );
   },
@@ -154,26 +154,26 @@ export const TestSelect: StoryObj = {
     const [picked, setPicked] = useState<string[]>([]);
     return (
       <div className='flex flex-col gap-2'>
-        <DropdownMenu.Root>
-          <DropdownMenu.Trigger asChild>
+        <Menu.Root>
+          <Menu.Trigger asChild>
             <Button>Open menu</Button>
-          </DropdownMenu.Trigger>
-          <DropdownMenu.Portal>
-            <DropdownMenu.Content>
-              <DropdownMenu.Viewport>
-                <DropdownMenu.Item onSelect={() => setPicked((items) => [...items, 'one'])}>One</DropdownMenu.Item>
-                <DropdownMenu.Item
+          </Menu.Trigger>
+          <Menu.Portal>
+            <Menu.Content>
+              <Menu.Viewport>
+                <Menu.Item onSelect={() => setPicked((items) => [...items, 'one'])}>One</Menu.Item>
+                <Menu.Item
                   onSelect={(event) => {
                     event.preventDefault();
                     setPicked((items) => [...items, 'sticky']);
                   }}
                 >
                   Sticky
-                </DropdownMenu.Item>
-              </DropdownMenu.Viewport>
-            </DropdownMenu.Content>
-          </DropdownMenu.Portal>
-        </DropdownMenu.Root>
+                </Menu.Item>
+              </Menu.Viewport>
+            </Menu.Content>
+          </Menu.Portal>
+        </Menu.Root>
         <span data-testid='picked'>{picked.join(',')}</span>
       </div>
     );

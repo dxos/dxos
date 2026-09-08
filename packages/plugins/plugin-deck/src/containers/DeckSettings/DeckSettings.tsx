@@ -22,9 +22,9 @@ export const DeckSettings = ({ subject }: DeckSettingsProps) => {
 
   return (
     <Form.Root
-      variant='settings'
       schema={Settings.Settings}
       values={settings}
+      variant='settings'
       onValuesChanged={(values) => updateSettings((current) => ({ ...current, ...values }))}
     >
       <Form.Viewport scroll>

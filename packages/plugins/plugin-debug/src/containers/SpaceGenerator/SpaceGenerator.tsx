@@ -19,9 +19,9 @@ import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { useClient } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';
 import {
+  Field,
   Flex,
   IconButton,
-  Input,
   Panel,
   ScrollArea,
   ThemedClassName,
@@ -189,8 +189,8 @@ export const SpaceGenerator = composable<HTMLDivElement, SpaceGeneratorProps>(
       <Panel.Root {...composableProps(props)} ref={forwardedRef}>
         <Panel.Toolbar>
           <ActionToolbar {...menuActions} alwaysActive classNames='dx-document'>
-            <Input.Root>
-              <Input.TextInput
+            <Field.Root>
+              <Field.Input
                 type='number'
                 placeholder='Count'
                 classNames='w-[4rem] text-right'
@@ -200,7 +200,7 @@ export const SpaceGenerator = composable<HTMLDivElement, SpaceGeneratorProps>(
                 value={count}
                 onChange={(event) => setCount(parseInt(event.target.value))}
               />
-            </Input.Root>
+            </Field.Root>
           </ActionToolbar>
         </Panel.Toolbar>
         <Panel.Content asChild>

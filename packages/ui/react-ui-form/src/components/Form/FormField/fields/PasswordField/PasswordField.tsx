@@ -4,11 +4,11 @@
 
 import React, { useCallback } from 'react';
 
-import { Input, type TextInputProps } from '@dxos/react-ui';
+import { Field, type InputProps } from '@dxos/react-ui';
 
 import { type FormFieldRendererProps } from '#types';
 
-import { FormRow } from '../../FormRow';
+import { FormField } from '../../FormField';
 
 export const PasswordField = ({
   type,
@@ -18,15 +18,15 @@ export const PasswordField = ({
   onValueChange,
   ...props
 }: FormFieldRendererProps<string>) => {
-  const handleChange = useCallback<NonNullable<TextInputProps['onChange']>>(
+  const handleChange = useCallback<NonNullable<InputProps['onChange']>>(
     (event) => onValueChange(type, event.target.value),
     [type, onValueChange],
   );
 
   return (
-    <FormRow<string> readonly={readonly} {...props}>
+    <FormField<string> readonly={readonly} {...props}>
       {({ value = '' }) => (
-        <Input.TextInput
+        <Field.Input
           type='password'
           noAutoFill
           spellCheck={false}
@@ -37,6 +37,6 @@ export const PasswordField = ({
           onChange={handleChange}
         />
       )}
-    </FormRow>
+    </FormField>
   );
 };

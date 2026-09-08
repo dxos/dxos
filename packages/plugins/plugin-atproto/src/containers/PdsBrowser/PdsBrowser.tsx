@@ -12,7 +12,7 @@ import { Panproto } from '@dxos/echo-panproto';
 import { EffectEx } from '@dxos/effect';
 import { AccessToken, Connection } from '@dxos/link';
 import { type Space, useQuery } from '@dxos/react-client/echo';
-import { Button, Card, Flex, Icon, Input, Panel, ScrollArea, Toolbar, useTranslation } from '@dxos/react-ui';
+import { Button, Card, Field, Flex, Icon, Panel, ScrollArea, Toolbar, useTranslation } from '@dxos/react-ui';
 import { MasterDetail, type MasterDetailAdornment, type MasterDetailIcon } from '@dxos/react-ui-list';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { getStyles } from '@dxos/ui-theme';
@@ -239,8 +239,8 @@ export const PdsBrowser = ({ role, space }: PdsBrowserProps) => {
       <Panel.Toolbar asChild>
         <Toolbar.Root classNames='px-2'>
           <Icon icon='ph--at--regular' size={4} classNames='text-description' />
-          <Input.Root>
-            <Input.TextInput
+          <Field.Root>
+            <Field.Input
               classNames='grow'
               placeholder={t('handle.placeholder')}
               value={handleInput}
@@ -251,7 +251,7 @@ export const PdsBrowser = ({ role, space }: PdsBrowserProps) => {
                 }
               }}
             />
-          </Input.Root>
+          </Field.Root>
           <Button onClick={() => setActiveHandle(handleInput.trim() || undefined)}>{t('browse.label')}</Button>
         </Toolbar.Root>
       </Panel.Toolbar>

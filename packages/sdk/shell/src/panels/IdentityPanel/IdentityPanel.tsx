@@ -12,7 +12,7 @@ import { type Identity, useDevices, useHaloInvitations, useIdentity } from '@dxo
 import { useInvitationStatus } from '@dxos/react-client/invitations';
 import { type CancellableInvitationObservable } from '@dxos/react-client/invitations';
 import { ConnectionState, useNetworkStatus } from '@dxos/react-client/mesh';
-import { Avatar, Clipboard, Input, Toolbar, useId, useTranslation } from '@dxos/react-ui';
+import { Avatar, Clipboard, Field, Toolbar, useId, useTranslation } from '@dxos/react-ui';
 import { EmojiPickerToolbarButton, HuePicker } from '@dxos/react-ui-pickers';
 import { hexToEmoji, hexToHue, keyToFallback } from '@dxos/util';
 
@@ -106,9 +106,9 @@ const IdentityHeading = ({
           {identity.profile?.displayName ?? generateName(identity.identityKey.toHex())}
         </Avatar.Label>
 
-        <Input.Root>
-          <Input.Label srOnly>{t('display-name-input.label')}</Input.Label>
-          <Input.TextInput
+        <Field.Root>
+          <Field.Label srOnly>{t('display-name-input.label')}</Field.Label>
+          <Field.Input
             variant='subdued'
             data-testid='display-name-input'
             placeholder={t('display-name-input.placeholder')}
@@ -116,7 +116,7 @@ const IdentityHeading = ({
             value={displayName}
             onChange={({ target: { value } }) => setDisplayName(value)}
           />
-        </Input.Root>
+        </Field.Root>
 
         <Toolbar.Root classNames='justify-center pt-3'>
           <EmojiPickerToolbarButton emoji={emoji} onChangeEmoji={setEmoji} classNames='h-(--dx-rail-action)' />

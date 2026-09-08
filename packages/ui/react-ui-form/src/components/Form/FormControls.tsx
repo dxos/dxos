@@ -9,10 +9,10 @@ import {
   Column,
   type ColumnRootProps,
   DIALOG_AUTOFOCUS_ATTRIBUTE,
+  Field,
   Fieldset,
   IconButton,
   type IconButtonProps,
-  Input,
   ScrollArea,
   type ThemedClassName,
   composable,
@@ -193,16 +193,8 @@ export type FormFieldSetContainerProps = ThemedClassName<NaturalFormFieldSetProp
 
 /** Context-reading binding for `Form.FieldSet`: pulls the schema + field context off the form and delegates to {@link FormFieldSet}. */
 export const FormFieldSetContainer = ({ classNames, ...props }: FormFieldSetContainerProps) => {
-  const { form, variant = 'default', ...contextProps } = useFormContext(FORM_FIELDSET_NAME);
-  const styles = formTheme.styles({ variant });
-  return (
-    <FormFieldSet
-      schema={form.schema}
-      classNames={styles.fieldSet({ class: classNames })}
-      {...contextProps}
-      {...props}
-    />
-  );
+  const { form, variant: _variant, ...contextProps } = useFormContext(FORM_FIELDSET_NAME);
+  return <FormFieldSet schema={form.schema} classNames={classNames} {...contextProps} {...props} />;
 };
 
 FormFieldSetContainer.displayName = FORM_FIELDSET_NAME;
@@ -213,7 +205,9 @@ FormFieldSetContainer.displayName = FORM_FIELDSET_NAME;
 
 const FORM_LAYOUT_NAME = 'Form.Layout';
 
-export type FormLayoutProps = Omit<NaturalFormLayoutProps, 'schema'> & { schema?: NaturalFormLayoutProps['schema'] };
+export type FormLayoutProps = Omit<NaturalFormLayoutProps, 'schema'> & {
+  schema?: NaturalFormLayoutProps['schema'];
+};
 
 /** Context-reading binding for `Form.Layout`: resolves the schema (prop or form) and delegates to {@link FormLayout}. */
 export const FormLayoutController = ({ schema, ...props }: FormLayoutProps) => {
@@ -313,19 +307,21 @@ export const FormSection = composable<HTMLFieldSetElement, FormSectionProps>(
     const styles = formTheme.styles({ variant });
     return (
       <Fieldset.Root {...composableProps(props, { classNames: styles.section() })} ref={forwardedRef}>
-        {(title || description) && (
-          <div className={styles.sectionHeader()}>
-            <div className={styles.sectionHeading()}>
-              {title && (
-                <Fieldset.Legend asChild>
-                  <h2 className={styles.sectionTitle()}>{title}</h2>
-                </Fieldset.Legend>
-              )}
-              {description && <MarkdownView classNames={styles.sectionDescription()} content={description} />}
-            </div>
-            {actions && <div className={styles.sectionActions()}>{actions}</div>}
-          </div>
+        {title && (
+          // A real `<legend>` as the fieldset's own child: only that names the group, and the heading
+          // inside it still serves navigation. The header gap sits on whichever of legend or
+          // description comes last.
+          <Fieldset.Legend classNames={description ? undefined : styles.sectionHeader()}>
+            <h2 className={styles.sectionTitle()}>{title}</h2>
+          </Fieldset.Legend>
         )}
+        {description && (
+          <MarkdownView
+            classNames={styles.sectionHeader({ class: styles.sectionDescription() })}
+            content={description}
+          />
+        )}
+        {actions && <div className={styles.sectionActions()}>{actions}</div>}
         {children}
       </Fieldset.Root>
     );
@@ -412,11 +408,11 @@ export const FormError = ({ children, classNames }: FormErrorProps) => {
   }
 
   return (
-    <Input.Root validationValence='error'>
-      <Input.Validation classNames={classNames} data-testid='form.error'>
+    <Field.Root validationValence='error'>
+      <Field.ErrorText classNames={classNames} data-testid='form.error'>
         {children}
-      </Input.Validation>
-    </Input.Root>
+      </Field.ErrorText>
+    </Field.Root>
   );
 };
 

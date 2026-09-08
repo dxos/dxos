@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-// `Input` — a labelled control on Ark's field: the field owns the ids and the wiring between a
+// `Field` — a labelled control on Ark's field: the field owns the ids and the wiring between a
 // label, its control, the helper text and the error text (`htmlFor`, `aria-describedby`,
 // `aria-errormessage`, `aria-invalid`, the required/disabled/read-only state on every part). DXOS
 // owns the controls and their surfaces, the finer `validationValence` the theme colours by, and the
@@ -33,8 +33,8 @@ import { useDensityContext, useElevationContext, useThemeContext } from '../../h
 import { type ThemedClassName } from '../../util';
 import { IconButton, IconButtonProps } from '../Button';
 import { Icon } from '../Icon';
-import { INPUT_NAME, type InputValence, InputValenceProvider, useInputValence } from './InputContext';
-import { type InputTriggerHandler, InputTriggerProvider, useInputTriggerContext } from './InputTriggerContext';
+import { FIELD_NAME, type FieldValence, FieldValenceProvider, useFieldValence } from './FieldContext';
+import { type FieldTriggerHandler, FieldTriggerProvider, useFieldTriggerContext } from './FieldTriggerContext';
 import { PinInput as PinInputPrimitive, type PinInputProps as PinInputPrimitiveProps } from './PinInput';
 import {
   SegmentedDate,
@@ -47,18 +47,18 @@ import {
 
 type InputVariant = 'default' | 'subdued';
 
-type InputSharedProps = Partial<{ density: Density; elevation: Elevation; variant: InputVariant }>;
+type FieldSharedProps = Partial<{ density: Density; elevation: Elevation; variant: InputVariant }>;
 
 //
 // Root — the field, with the trigger registry a date field's picker button reaches through.
 //
 
-type InputRootProps = ThemedClassName<
+type FieldRootProps = ThemedClassName<
   PropsWithChildren<{
     /** The control's id, which the label points at; generated when absent. */
     id?: string;
     /** The tone of the validation message; `error` is what the field reports as invalid. */
-    validationValence?: InputValence;
+    validationValence?: FieldValence;
     required?: boolean;
     disabled?: boolean;
     readOnly?: boolean;
@@ -76,12 +76,12 @@ const Root = ({
   disabled,
   readOnly,
   asChild,
-}: InputRootProps) => {
+}: FieldRootProps) => {
   const { tx } = useThemeContext();
-  const handlerRef = useRef<InputTriggerHandler | null>(null);
+  const handlerRef = useRef<FieldTriggerHandler | null>(null);
   const [hasTrigger, setHasTrigger] = useState(false);
 
-  const registerTrigger = useCallback((handler: InputTriggerHandler) => {
+  const registerTrigger = useCallback((handler: FieldTriggerHandler) => {
     handlerRef.current = handler;
     setHasTrigger(true);
     return () => {
@@ -97,8 +97,8 @@ const Root = ({
   }, []);
 
   return (
-    <InputTriggerProvider registerTrigger={registerTrigger} trigger={trigger} hasTrigger={hasTrigger}>
-      <InputValenceProvider validationValence={validationValence}>
+    <FieldTriggerProvider registerTrigger={registerTrigger} trigger={trigger} hasTrigger={hasTrigger}>
+      <FieldValenceProvider validationValence={validationValence}>
         {/* The field needs an element to watch its texts from; `contents` keeps it out of the layout. */}
         <FieldPrimitive.Root
           id={id}
@@ -107,30 +107,30 @@ const Root = ({
           disabled={disabled}
           readOnly={readOnly}
           asChild={asChild}
-          className={tx('input.root', {}, classNames)}
+          className={tx('field.root', {}, classNames)}
         >
           {children}
         </FieldPrimitive.Root>
-      </InputValenceProvider>
-    </InputTriggerProvider>
+      </FieldValenceProvider>
+    </FieldTriggerProvider>
   );
 };
 
-Root.displayName = 'Input.Root';
+Root.displayName = 'Field.Root';
 
 //
 // TriggerIcon — sibling button that opens the picker of the registered field. Renders nothing
-// when no field in the surrounding `Input.Root` has registered an opener.
+// when no field in the surrounding `Field.Root` has registered an opener.
 //
 
-// `label` and `icon` have defaults below, so both are optional for callers (e.g. `<Input.TriggerIcon />`).
+// `label` and `icon` have defaults below, so both are optional for callers (e.g. `<Field.TriggerIcon />`).
 // `onClick` is reserved — the trigger always opens the registered picker.
 type TriggerIconProps = Omit<IconButtonProps, 'label' | 'onClick'> & { label?: string };
 
 const TriggerIcon = forwardRef<HTMLButtonElement, TriggerIconProps>(
   ({ classNames, icon = 'ph--calendar--regular', 'aria-label': ariaLabel, label, ...props }, forwardedRef) => {
     const { t } = useTranslation(translationKey);
-    const ctx = useInputTriggerContext('Input.TriggerIcon');
+    const ctx = useFieldTriggerContext('Field.TriggerIcon');
     if (!ctx.hasTrigger) {
       return null;
     }
@@ -151,7 +151,7 @@ const TriggerIcon = forwardRef<HTMLButtonElement, TriggerIconProps>(
   },
 );
 
-TriggerIcon.displayName = 'Input.TriggerIcon';
+TriggerIcon.displayName = 'Field.TriggerIcon';
 
 //
 // Label
@@ -162,101 +162,68 @@ type LabelProps = ThemedClassName<ComponentPropsWithRef<typeof FieldPrimitive.La
 const Label = forwardRef<HTMLLabelElement, LabelProps>(({ classNames, children, srOnly, ...props }, forwardedRef) => {
   const { tx } = useThemeContext();
   return (
-    <FieldPrimitive.Label {...props} className={tx('input.label', { srOnly }, classNames)} ref={forwardedRef}>
+    <FieldPrimitive.Label {...props} className={tx('field.label', { srOnly }, classNames)} ref={forwardedRef}>
       {children}
     </FieldPrimitive.Label>
   );
 });
 
-Label.displayName = 'Input.Label';
+Label.displayName = 'Field.Label';
 
 //
 // Description
 //
 
-type DescriptionProps = ThemedClassName<Omit<ComponentPropsWithRef<typeof ark.span>, 'id'>> & { srOnly?: boolean };
+type HelperTextProps = ThemedClassName<Omit<ComponentPropsWithRef<typeof ark.span>, 'id'>> & { srOnly?: boolean };
 
-/**
- * What describes the control. While the field is valid the whole `DescriptionAndValidation` row
- * does, so this is plain text inside it; once invalid the validation becomes the error message and
- * this alone is the helper text the field points `aria-describedby` at.
- */
-const Description = forwardRef<HTMLSpanElement, DescriptionProps>(
+/** What describes the control: the field points `aria-describedby` at it. */
+const HelperText = forwardRef<HTMLSpanElement, HelperTextProps>(
   ({ classNames, children, srOnly, ...props }, forwardedRef) => {
     const { tx } = useThemeContext();
-    const { validationValence } = useInputValence(INPUT_NAME);
-    const Comp = validationValence === 'error' ? FieldPrimitive.HelperText : ark.span;
     return (
-      <Comp {...props} className={tx('input.description', { srOnly }, classNames)} ref={forwardedRef}>
+      <FieldPrimitive.HelperText
+        {...props}
+        className={tx('field.helperText', { srOnly }, classNames)}
+        ref={forwardedRef}
+      >
         {children}
-      </Comp>
+      </FieldPrimitive.HelperText>
     );
   },
 );
 
-Description.displayName = 'Input.Description';
+HelperText.displayName = 'Field.HelperText';
 
 //
-// Validation
+// ErrorText
 //
 
-type ValidationProps = ThemedClassName<Omit<ComponentPropsWithRef<typeof ark.span>, 'id'>> & { srOnly?: boolean };
+type ErrorTextProps = ThemedClassName<Omit<ComponentPropsWithRef<typeof ark.span>, 'id'>> & { srOnly?: boolean };
 
 /**
  * The validation message, coloured by the valence. An error is the field's error text — the control
  * names it through `aria-errormessage` and it announces itself — while any other tone is plain text.
  */
-const Validation = forwardRef<HTMLSpanElement, ValidationProps>(
+const ErrorText = forwardRef<HTMLSpanElement, ErrorTextProps>(
   ({ classNames, children, srOnly, ...props }, forwardedRef) => {
     const { tx } = useThemeContext();
-    const { validationValence } = useInputValence(INPUT_NAME);
+    const { validationValence } = useFieldValence(FIELD_NAME);
     const Comp = validationValence === 'error' ? FieldPrimitive.ErrorText : ark.span;
     return (
-      <Comp {...props} className={tx('input.validation', { srOnly, validationValence }, classNames)} ref={forwardedRef}>
+      <Comp {...props} className={tx('field.errorText', { srOnly, validationValence }, classNames)} ref={forwardedRef}>
         {children}
       </Comp>
     );
   },
 );
 
-Validation.displayName = 'Input.Validation';
-
-//
-// DescriptionAndValidation
-//
-
-type DescriptionAndValidationProps = ThemedClassName<Omit<ComponentPropsWithRef<typeof ark.p>, 'id'>> & {
-  srOnly?: boolean;
-};
-
-/**
- * The row under the control. While the field is valid it is the helper text as a whole (description
- * and any non-error message); once invalid the parts inside speak for themselves (see `Description`).
- */
-const DescriptionAndValidation = forwardRef<HTMLParagraphElement, DescriptionAndValidationProps>(
-  ({ classNames, children, srOnly, ...props }, forwardedRef) => {
-    const { tx } = useThemeContext();
-    const { validationValence } = useInputValence(INPUT_NAME);
-    const paragraph = (
-      <p {...props} className={tx('input.descriptionAndValidation', { srOnly }, classNames)} ref={forwardedRef}>
-        {children}
-      </p>
-    );
-    return validationValence === 'error' ? (
-      paragraph
-    ) : (
-      <FieldPrimitive.HelperText asChild>{paragraph}</FieldPrimitive.HelperText>
-    );
-  },
-);
-
-DescriptionAndValidation.displayName = 'Input.DescriptionAndValidation';
+ErrorText.displayName = 'Field.ErrorText';
 
 //
 // PinInput
 //
 
-type PinInputProps = ThemedClassName<InputSharedProps & Omit<PinInputPrimitiveProps, 'className' | 'segmentClassName'>>;
+type PinInputProps = ThemedClassName<FieldSharedProps & Omit<PinInputPrimitiveProps, 'className' | 'segmentClassName'>>;
 
 const PinInput = forwardRef<HTMLInputElement, PinInputProps>(
   ({ classNames, density: propsDensity, elevation: propsElevation, ...props }, forwardedRef) => {
@@ -271,18 +238,18 @@ const PinInput = forwardRef<HTMLInputElement, PinInputProps>(
           ...props,
           ...(props.autoFocus && !hasIosKeyboard && { autoFocus: true }),
         }}
-        className={tx('input.pin', { disabled: props.disabled }, classNames) || ''}
-        segmentClassName={tx('input.segment', { disabled: props.disabled, density, elevation }) || ''}
+        className={tx('field.pin', { disabled: props.disabled }, classNames) || ''}
+        segmentClassName={tx('field.segment', { disabled: props.disabled, density, elevation }) || ''}
         ref={forwardedRef}
       />
     );
   },
 );
 
-PinInput.displayName = 'Input.PinInput';
+PinInput.displayName = 'Field.PinInput';
 
 //
-// TextInput
+// Input
 //
 
 type AutoFillProps = {
@@ -296,12 +263,12 @@ type AdornmentProps = {
   end?: ReactNode;
 };
 
-type TextInputProps = InputSharedProps &
+type InputProps = FieldSharedProps &
   ThemedClassName<Omit<ComponentPropsWithRef<typeof FieldPrimitive.Input>, 'id'>> &
   AutoFillProps &
   AdornmentProps;
 
-const TextInput = forwardRef<HTMLInputElement, TextInputProps>(
+const Input = forwardRef<HTMLInputElement, InputProps>(
   (
     { classNames, density: densityProp, elevation: elevationProp, variant, noAutoFill, start, end, ...props },
     forwardedRef,
@@ -310,7 +277,7 @@ const TextInput = forwardRef<HTMLInputElement, TextInputProps>(
     const { tx } = useThemeContext();
     const density = useDensityContext(densityProp);
     const elevation = useElevationContext(elevationProp);
-    const { validationValence } = useInputValence(INPUT_NAME);
+    const { validationValence } = useFieldValence(FIELD_NAME);
     const adorned = start != null || end != null;
 
     const field = (
@@ -322,7 +289,7 @@ const TextInput = forwardRef<HTMLInputElement, TextInputProps>(
         // override of them (see theme/spacing.css), so a `density` prop still works standalone.
         data-density={density}
         className={tx(
-          'input.input',
+          'field.input',
           {
             // When adorned the surrounding container owns the surface/border/focus, so the field is
             // rendered "bare" (subdued) regardless of the requested variant.
@@ -346,39 +313,39 @@ const TextInput = forwardRef<HTMLInputElement, TextInputProps>(
     return (
       <div
         data-density={density}
-        className={tx('input.container', { variant, disabled: props.disabled, density, validationValence }, classNames)}
+        className={tx('field.container', { variant, disabled: props.disabled, density, validationValence }, classNames)}
       >
-        {start != null && <span className={tx('input.adornment', { side: 'start' })}>{start}</span>}
+        {start != null && <span className={tx('field.adornment', { side: 'start' })}>{start}</span>}
         {field}
-        {end != null && <span className={tx('input.adornment', { side: 'end' })}>{end}</span>}
+        {end != null && <span className={tx('field.adornment', { side: 'end' })}>{end}</span>}
       </div>
     );
   },
 );
 
-TextInput.displayName = 'Input.TextInput';
+Input.displayName = 'Field.Input';
 
 //
-// TextArea
+// Textarea
 //
 
-type TextAreaProps = InputSharedProps &
+type TextareaProps = FieldSharedProps &
   ThemedClassName<Omit<ComponentPropsWithRef<typeof FieldPrimitive.Textarea>, 'id'>>;
 
-const TextArea = forwardRef<HTMLTextAreaElement, TextAreaProps>(
+const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
   ({ classNames, density: propsDensity, elevation: propsElevation, variant, ...props }, forwardedRef) => {
     const { hasIosKeyboard } = useThemeContext();
     const { tx } = useThemeContext();
     const density = useDensityContext(propsDensity);
     const elevation = useElevationContext(propsElevation);
-    const { validationValence } = useInputValence(INPUT_NAME);
+    const { validationValence } = useFieldValence(FIELD_NAME);
 
     return (
       <FieldPrimitive.Textarea
         {...props}
         data-density={density}
         className={tx(
-          'input.textArea',
+          'field.textarea',
           {
             variant,
             disabled: props.disabled,
@@ -395,7 +362,7 @@ const TextArea = forwardRef<HTMLTextAreaElement, TextAreaProps>(
   },
 );
 
-TextArea.displayName = 'Input.TextArea';
+Textarea.displayName = 'Field.Textarea';
 
 //
 // Checkbox
@@ -417,12 +384,16 @@ type CheckboxProps = ThemedClassName<Omit<ComponentPropsWithoutRef<'div'>, 'defa
   form?: string;
   /** Submitted with the form (default `on`). */
   value?: string;
+  /** The control's own label, laid out beside it; without one the root is box-less and a `Field.Label` names the control. */
+  children?: ReactNode;
 };
 
 /**
- * A native checkbox, visually hidden, behind a styled control. The `Input.Root` id lands on the
- * input so `Input.Label` reaches it; everything else (test ids, handlers) lands on the visible
- * control, which is what a pointer or a test hits.
+ * A native checkbox, visually hidden, behind a styled control. The `Field.Root` id lands on the
+ * input so `Field.Label` reaches it; everything else (test ids, handlers) lands on the visible
+ * control, which is what a pointer or a test hits. This is the standard form of Ark's checkbox
+ * anatomy: with `children` the root is Ark's `<label>` around control and text, so a labelled
+ * checkbox is one element rather than a row built at the call site.
  */
 const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(
   (
@@ -439,13 +410,14 @@ const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(
       form,
       value,
       onClick,
+      children,
       ...props
     },
     forwardedRef,
   ) => {
     // The field owns the id and the described-by/error wiring; the valence is ours.
     const field = useFieldContext();
-    const { validationValence } = useInputValence(INPUT_NAME);
+    const { validationValence } = useFieldValence(FIELD_NAME);
     const { tx } = useThemeContext();
     const inputRef = useRef<HTMLInputElement>(null);
     const checkbox = useCheckbox({
@@ -482,22 +454,28 @@ const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(
     );
 
     return (
-      <CheckboxPrimitive.RootProvider value={checkbox} className='contents'>
+      <CheckboxPrimitive.RootProvider
+        value={checkbox}
+        className={children ? tx('field.checkboxRoot', { disabled: checkbox.disabled }) : 'contents'}
+      >
         <CheckboxPrimitive.Control
           {...props}
           // Focusable by pointer only, so a press lands focus here (as it did on the button this
           // replaces) instead of on the nearest focusable ancestor, which a tree row re-renders on.
           tabIndex={-1}
           onClick={handleClick}
-          className={tx('input.checkbox', { size }, 'shrink-0', classNames)}
+          className={tx('field.checkbox', { size }, 'shrink-0', classNames)}
         >
           <CheckboxPrimitive.Indicator asChild>
-            <Icon icon='ph--check--regular' classNames={tx('input.checkboxIndicator', { size })} />
+            <Icon icon='ph--check--regular' classNames={tx('field.checkboxIndicator', { size })} />
           </CheckboxPrimitive.Indicator>
           <CheckboxPrimitive.Indicator indeterminate asChild>
-            <Icon icon='ph--minus--regular' classNames={tx('input.checkboxIndicator', { size })} />
+            <Icon icon='ph--minus--regular' classNames={tx('field.checkboxIndicator', { size })} />
           </CheckboxPrimitive.Indicator>
         </CheckboxPrimitive.Control>
+        {children && (
+          <CheckboxPrimitive.Label className={tx('field.controlLabel', {})}>{children}</CheckboxPrimitive.Label>
+        )}
         <CheckboxPrimitive.HiddenInput
           aria-describedby={field?.ariaDescribedby}
           {...(validationValence === 'error' && { 'aria-errormessage': field?.ids.errorText })}
@@ -508,16 +486,21 @@ const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(
   },
 );
 
-Checkbox.displayName = 'Input.Checkbox';
+Checkbox.displayName = 'Field.Checkbox';
 
 //
 // Switch
 //
 
 type SwitchProps = ThemedClassName<
-  Omit<ComponentPropsWithRef<'input'>, 'children' | 'onChange'> & { onCheckedChange?: (checked: boolean) => void }
+  Omit<ComponentPropsWithRef<'input'>, 'children' | 'onChange'> & {
+    onCheckedChange?: (checked: boolean) => void;
+    /** The control's own label, laid out beside it; without one a `Field.Label` names the control. */
+    children?: ReactNode;
+  }
 >;
 
+/** The standard switch: with `children` a `<label>` around the control and its text, as `Checkbox` does. */
 const Switch = forwardRef<HTMLInputElement, SwitchProps>(
   (
     {
@@ -525,6 +508,7 @@ const Switch = forwardRef<HTMLInputElement, SwitchProps>(
       checked: propsChecked,
       defaultChecked: propsDefaultChecked,
       onCheckedChange: propsOnCheckedChange,
+      children,
       ...props
     },
     forwardedRef,
@@ -536,14 +520,13 @@ const Switch = forwardRef<HTMLInputElement, SwitchProps>(
       onChange: propsOnCheckedChange,
     });
 
-    // The field owns the id and the described-by/error wiring; the valence is ours.
     const field = useFieldContext();
-    const { validationValence } = useInputValence(INPUT_NAME);
+    const { validationValence } = useFieldValence(FIELD_NAME);
 
-    return (
+    const control = (
       <input
         type='checkbox'
-        className={tx('input.switch', { disabled: props.disabled }, classNames)}
+        className={tx('field.switch', { disabled: props.disabled }, classNames)}
         checked={checked}
         onChange={(event) => {
           onCheckedChange(event.target.checked);
@@ -558,10 +541,18 @@ const Switch = forwardRef<HTMLInputElement, SwitchProps>(
         ref={forwardedRef}
       />
     );
+
+    return children ? (
+      <label className={tx('field.checkboxRoot', { disabled: props.disabled })}>
+        {control}
+        <span className={tx('field.controlLabel', {})}>{children}</span>
+      </label>
+    ) : (
+      control
+    );
   },
 );
-
-Switch.displayName = 'Input.Switch';
+Switch.displayName = 'Field.Switch';
 
 //
 // Wrapper for Switch/Checkbox to center them within the input row height.
@@ -570,13 +561,13 @@ Switch.displayName = 'Input.Switch';
 const Block = forwardRef<HTMLDivElement, PropsWithChildren>(({ children, ...props }, forwardedRef) => {
   const { tx } = useThemeContext();
   return (
-    <div {...props} className={tx('input.block')} ref={forwardedRef}>
+    <div {...props} className={tx('field.block')} ref={forwardedRef}>
       {children}
     </div>
   );
 });
 
-Block.displayName = 'Input.Block';
+Block.displayName = 'Field.Block';
 
 //
 // Date / Time / DateTime — segmented react-aria-components fields with locale-aware ordering,
@@ -584,8 +575,8 @@ Block.displayName = 'Input.Block';
 //   - Date     `YYYY-MM-DD`
 //   - Time     `HH:mm`
 //   - DateTime `YYYY-MM-DDTHH:mm`
-// Pair `Input.Date` or `Input.DateTime` with a sibling `Input.TriggerIcon` inside an
-// `Input.Root` to expose a calendar popover; `Input.Time` has no picker.
+// Pair `Field.Date` or `Field.DateTime` with a sibling `Field.TriggerIcon` inside an
+// `Field.Root` to expose a calendar popover; `Field.Time` has no picker.
 //
 
 const Time = SegmentedTime;
@@ -600,12 +591,12 @@ type DateTimeInputProps = SegmentedDateTimeProps;
 // Input
 //
 
-export const Input = {
+export const Field = {
   Root,
   TriggerIcon,
   PinInput,
-  TextInput,
-  TextArea,
+  Input,
+  Textarea,
   Time,
   Date,
   DateTime,
@@ -613,9 +604,8 @@ export const Input = {
   Switch,
   Block,
   Label,
-  Description,
-  Validation,
-  DescriptionAndValidation,
+  HelperText,
+  ErrorText,
 };
 
 export type {
@@ -623,17 +613,16 @@ export type {
   CheckedState,
   DateInputProps,
   DateTimeInputProps,
-  DescriptionAndValidationProps,
-  DescriptionProps,
-  InputRootProps,
-  InputSharedProps,
-  InputValence,
+  ErrorTextProps,
+  FieldRootProps,
+  FieldSharedProps,
+  FieldValence,
+  HelperTextProps,
+  InputProps,
   InputVariant,
   LabelProps,
   PinInputProps,
   SwitchProps,
-  TextAreaProps,
-  TextInputProps,
+  TextareaProps,
   TimeProps,
-  ValidationProps,
 };

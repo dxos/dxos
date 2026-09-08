@@ -946,7 +946,7 @@ dist/types/src: ENOTEMPTY` — a concurrent writer. A Cursor TypeScript native-p
       plugin's context rendered `Toast.Viewport` beside its `Tooltip.Provider`, so the undo toast's close
       button had no provider. The viewport moved inside the provider; `react-context.test.tsx` renders a
       closable toast through the plugin's context and fails without the move.
-- [ ] **Rename `Input` → `Field`** (own PR, a codemod over ~900 sites: `Root` 443, `Label` 215,
+- [x] **Rename `Input` → `Field`** DONE 2026-09-08 (see Phase 17) (own PR, a codemod over ~900 sites: `Root` 443, `Label` 215,
       `TextInput` 119, `Switch` 40, `Checkbox` 25, `DescriptionAndValidation` 22, `Validation` 13,
       `TextArea` 12, `Description` 11, `PinInput` 4). Proposed names follow Ark where the part is
       Ark's: `Field.Root`, `Field.Label`, `Field.Input` (`TextInput`), `Field.Textarea`,
@@ -996,3 +996,55 @@ dist/types/src: ENOTEMPTY` — a concurrent writer. A Cursor TypeScript native-p
       HTML5 DnD, which does not fire from touch in iPhone WKWebView, so Tree reordering is
       desktop-only under Tauri mobile. Library-independent; verify on device first. Tracked
       2026-09-02, unowned.
+
+## Phase 17: Normalize react-ui, react-ui-form and Ark anatomy (2026-09-08)
+
+The session's goals, in order: (1) normalize react-ui's field primitives on Ark — `Input` is Ark's
+`Field` under another name, `Fieldset` is new; (2) normalize react-ui-form on those primitives
+rather than on divs; (3) review Ark's structural parts (`Positioner`, `Content`, `Viewport`, `Portal`)
+against the Radix-era names react-ui kept, Popover first.
+
+- [x] **`FormFieldSetContainer` and `Form.Section` on `Fieldset`** DONE 2026-09-08: every group in
+      a form is a `<fieldset>` named by its `<legend>` (a nested object's legend holds the
+      disclosure); react-ui's legend is floated so it lays out as an ordinary child, which is what
+      lets a flex-column fieldset keep it in flow. `Form.Section`'s legend was inside a header
+      `div`, so it never named the group; it is the fieldset's first child now. Story
+      `react-ui-form/FormFieldSet` asserts the groups by role and name in both variants;
+      `Form/DESIGN.md` carries the react-ui-form → react-ui → Ark mapping table.
+- [x] **Names say what things are** DONE 2026-09-08: `FormField` (a factory that picked a renderer
+      per schema property) is `FormFieldDispatch`, with the decision extracted as the pure
+      `resolveFieldRenderer` (tested by kind); `Form.Row` is `Form.Field` — one label + control is a
+      field, and a field set holds fields. 150 call sites across 17 plugins renamed.
+- [ ] **`Form.Field` in action mode is not a field**: a hand-written settings row (Debug and most
+      settings panels) renders a bare `div`, so its label and description are not field parts.
+      Render every row through `Input.Root` (a `Field`) and give hand-written rows the same
+      `fieldSet` gap as the schema path (reported from Deck vs Debug settings, 2026-09-08).
+- [ ] **`Form.Group` is a styled `div`**; it should be a `Fieldset` too.
+- [x] **`Input` → `Field`** DONE 2026-09-08: the namespace, its files, theme key and context are
+      `Field`; parts take Ark's names (`HelperText`, `ErrorText`, `Input`, `Textarea`);
+      `DescriptionAndValidation` dropped (helper and error are two parts, as in Ark); 133 files
+      codemodded. Decision recorded: `Field.*` holds the wrapper parts plus the standard, field-wired
+      form of every control (`Field.Checkbox` is the flat one, like Ark's own `Field.Input`), and
+      composite anatomies (`Checkbox.*`, `Switch.*`) are added only when a consumer needs a part.
+- [x] **`Field.Checkbox` / `Field.Switch` take label children** DONE 2026-09-08: with children the
+      root is a `<label>` around control and text (Ark's checkbox anatomy for the checkbox, a plain
+      label for the switch), so a labelled control is one element; 13 hand-built
+      `Field.Root > Flex > control + Field.Label` rows collapsed. Left-label settings rows (label
+      column, control column) keep `Field.Root` + `Field.Label`, which is the right form for them.
+      The `Field/Checkbox` and `Field/Switch` stories click the text; jsdom cannot toggle a controlled checkbox from
+      a synthetic click, so the node test asserts labelling only.
+- [x] **`DropdownMenu`/`ContextMenu` aliases removed** DONE 2026-09-08: 25 consumer files across
+      16 packages moved to `Menu` (`ContextMenu.Trigger` → `Menu.ContextTrigger`); the module is
+      `Menu/Menu.tsx` + `MenuContext.ts`, display names and story titles follow, the alias type
+      exports are gone. Every consumer package typechecks; Menu, MenuButton, Card and Toolbar
+      stories pass.
+- [x] **Goal 3: floating anatomy reviewed** DONE 2026-09-08: the mapping table and rules are in
+      `DESIGN.md` ("Floating anatomy"). `Positioner` stays inside `Content`, `Viewport` is the bounded
+      region inside it, `Portal` stays a part, `Dialog.Overlay` is the backdrop with content nested.
+      One `usePositioning` hook now builds the machine's `positioning` for Popover, Menu (and its
+      helpers for Select), replacing two copies of the placement/boundary/virtual-anchor block;
+      `PlacementOptions` is one type; `Menu.Content` gains `hideWhenDetached` and loses the unused
+      `constrainBlockSize`. Positioners default `--x`/`--y` off screen and a virtual anchor is the
+      machine's anchor element (scroll-following), both from the dx-anchor popover report.
+- [ ] `plugin-sheet:test-storybook` fails on CI shard 2 with a `Missing file` during teardown while every test passes (seen twice on #12971 and #12987, 2026-09-06 and 2026-09-08); rerun passes. Track the cause or quarantine.
+- [ ] `plugin-illustrator:test` runs ~570s on a CI runner (six diagrams through ELK candidate sweeps in `corpus.test.ts`, 83s locally) and was killed at moon's 600s cap on every run of #12987; main raised the task's timeout to 1800s (#12985) as the same stopgap. Make the corpus compile cheaper or run it outside the sharded job.

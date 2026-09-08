@@ -11,7 +11,7 @@ import { ANY_OBJECT_TYPENAME, ReferenceAnnotationId, type ReferenceAnnotationVal
 import { SchemaEx } from '@dxos/effect';
 import { DXN, URI } from '@dxos/keys';
 import { DxAnchor } from '@dxos/lit-ui/react';
-import { Button, Icon, Input, useTranslation } from '@dxos/react-ui';
+import { Button, Field, Icon, useTranslation } from '@dxos/react-ui';
 import { ParentLabelAnnotationId } from '@dxos/schema';
 
 import { translationKey } from '#translations';
@@ -20,7 +20,7 @@ import { type CreateOptions, type FormFieldRendererProps, type RefFieldDataProps
 import { omitHiddenFormFields, omitId } from '../../../../../util';
 import { ObjectPicker } from '../../../../ObjectPicker';
 import { filterTagCandidates } from '../../../meta-tags';
-import { FormFieldLabel } from '../../FormRow';
+import { FormFieldLabel } from '../../FormField';
 import { presentationFor } from '../../presentation';
 import { findRefOption } from './find-ref-option';
 
@@ -175,7 +175,7 @@ export const RefField = (props: RefFieldProps) => {
   }
 
   return (
-    <Input.Root validationValence={status}>
+    <Field.Root validationValence={status}>
       {resolved.showLabel && (
         <FormFieldLabel error={error} readonly={readonly} required={required} label={label} path={jsonPath} />
       )}
@@ -195,9 +195,9 @@ export const RefField = (props: RefFieldProps) => {
                 // No layout of its own: the trigger it stands in for (`asChild`) is already a grid,
                 // and a `flex` here only competes with it.
                 <div className='w-full'>
-                  <Input.Root key={item.id}>
-                    <Input.TextInput value={item.label} readOnly classNames='w-full' />
-                  </Input.Root>
+                  <Field.Root key={item.id}>
+                    <Field.Input value={item.label} readOnly classNames='w-full' />
+                  </Field.Root>
                 </div>
               ) : (
                 <Button classNames='w-full text-start gap-form-gap'>
@@ -206,7 +206,7 @@ export const RefField = (props: RefFieldProps) => {
                       {placeholder || label || t('ref-field.placeholder')}
                     </span>
                   </div>
-                  <Icon size={3} icon='ph--caret-down--bold' />
+                  <Icon icon='ph--caret-down--bold' size={3} classNames='mx-0.5' />
                 </Button>
               )}
             </ObjectPicker.Trigger>
@@ -237,7 +237,7 @@ export const RefField = (props: RefFieldProps) => {
           </ObjectPicker.Root>
         )}
       </div>
-      {resolved.showError && <Input.DescriptionAndValidation>{error}</Input.DescriptionAndValidation>}
-    </Input.Root>
+      {resolved.showError && <Field.HelperText>{error}</Field.HelperText>}
+    </Field.Root>
   );
 };

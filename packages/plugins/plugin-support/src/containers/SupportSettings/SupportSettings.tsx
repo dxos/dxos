@@ -60,9 +60,9 @@ export const SupportSettings = ({ subject }: SupportSettingsProps) => {
             actions={<SettingsScope prefix={subject.prefix} />}
           >
             {onShowWelcome && (
-              <Form.Row label={t('show-welcome.label')}>
+              <Form.Field label={t('show-welcome.label')}>
                 <Button onClick={onShowWelcome}>{t('show-welcome.label')}</Button>
-              </Form.Row>
+              </Form.Field>
             )}
             <Form.FieldSet />
           </Form.Section>
