@@ -6,7 +6,6 @@ import React, { useCallback, useEffect, useState } from 'react';
 
 import { log } from '@dxos/log';
 import { type IdbLogStore } from '@dxos/log-store-idb';
-import type * as Observability from '@dxos/observability/Observability';
 import { FeedbackForm } from '@dxos/plugin-support/components';
 import type * as SupportOperation from '@dxos/plugin-support/SupportOperation';
 import {
@@ -49,7 +48,8 @@ const parseError = (t: (name: string, context?: object) => string, error: Error)
 export type ResetDialogProps = Pick<AlertDialogRootProps, 'defaultOpen' | 'open' | 'onOpenChange'> & {
   error?: Error;
   logStore: IdbLogStore;
-  observability?: Promise<Observability.Observability>;
+  /** Files the report. Absent when nothing can file one, which hides the feedback affordance. */
+  onSubmitReport?: (report: SupportOperation.SupportRequest) => Promise<void>;
   needRefresh?: boolean;
   onRefresh?: () => void;
   onReset?: () => Promise<void>;
@@ -58,7 +58,7 @@ export type ResetDialogProps = Pick<AlertDialogRootProps, 'defaultOpen' | 'open'
 export const ResetDialog = ({
   error: errorProp,
   logStore,
-  observability: observabilityProp,
+  onSubmitReport,
   needRefresh,
   defaultOpen,
   open,
@@ -103,29 +103,21 @@ export const ResetDialog = ({
 
   const handleSaveFeedback = useCallback(
     async (values: SupportOperation.SupportRequest) => {
-      if (!observabilityProp) {
+      if (!onSubmitReport) {
         return;
       }
 
-      // Collapse the richer SupportRequest into the legacy `{ message, includeLogs }`
-      // shape consumed by Observability. Triage metadata (type/severity/area/version)
-      // is embedded as a Markdown trailer so it travels with the message.
-      const trailer = [
-        `**Type:** ${values.type}`,
-        `**Severity:** ${values.severity}`,
-        values.area && `**Area:** ${values.area}`,
-        values.version && `**Version:** ${values.version}`,
-      ]
-        .filter(Boolean)
-        .join('\n');
-      const message = [`# ${values.title}`, values.body, '---', trailer].filter(Boolean).join('\n\n');
-
-      const observability = await observabilityProp;
-      void observability.feedback.captureUserFeedback({ message, includeLogs: values.includeLogs });
       setFeedbackOpen(false);
-      setFeedbackSent(true);
+      try {
+        await onSubmitReport(values);
+        setFeedbackSent(true);
+      } catch (err) {
+        // The dialog is already showing a fatal error; a second one helps nobody, so the only
+        // signal is that the sent confirmation never appears.
+        log.warn('crash report not filed', { err });
+      }
     },
-    [observabilityProp],
+    [onSubmitReport],
   );
 
   const handleRefresh = useCallback(() => {
@@ -240,7 +232,7 @@ export const ResetDialog = ({
             )}
 
             <div className='flex-grow' />
-            {observabilityProp &&
+            {onSubmitReport &&
               isNotMobile &&
               (feedbackSent ? (
                 <IconButton icon='ph--check--regular' label={t('feedback-sent.label')} disabled />
@@ -252,11 +244,11 @@ export const ResetDialog = ({
                   <Popover.Portal>
                     <Popover.Content>
                       <Popover.Viewport>
-                        <FeedbackForm.Root>
+                        <FeedbackForm.Root onSubmit={handleSaveFeedback}>
                           <Form.Viewport>
                             <Form.Content>
                               <Form.FieldSet />
-                              <FeedbackForm.SubmitPosthog onSubmit={handleSaveFeedback} />
+                              <FeedbackForm.Submit />
                             </Form.Content>
                           </Form.Viewport>
                         </FeedbackForm.Root>
