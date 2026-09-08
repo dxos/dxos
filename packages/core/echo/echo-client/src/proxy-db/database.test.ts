@@ -18,7 +18,7 @@ import { PublicKey } from '@dxos/keys';
 import { openAndClose } from '@dxos/test-utils';
 import { range } from '@dxos/util';
 
-import { clone, getObjectCore } from '../echo-handler';
+import { getObjectCore } from '../echo-handler';
 import { type DatabaseImpl } from '../proxy-db';
 import { EchoTestBuilder, createTmpPath } from '../testing';
 
@@ -353,7 +353,7 @@ describe('Database', () => {
     db1.add(task1);
     await db1.flush();
 
-    const task2 = clone(task1);
+    const task2 = Obj.clone(task1, { retainId: true });
     expect(task2 !== task1).to.be.true;
     expect(task2.id).to.equal(task1.id);
     expect(task2.title).to.equal(task1.title);
