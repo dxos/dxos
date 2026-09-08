@@ -5,13 +5,13 @@
 import React, { type ChangeEvent, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { GeoLocation, type GeoPoint } from '@dxos/echo/Format';
-import { Input, useTranslation } from '@dxos/react-ui';
+import { Field, useTranslation } from '@dxos/react-ui';
 import { safeParseFloat } from '@dxos/util';
 
 import { translationKey } from '#translations';
 import { type FormFieldRendererProps } from '#types';
 
-import { FormRow } from '../../FormRow';
+import { FormField } from '../../FormField';
 
 export const GeoPointField = ({
   type,
@@ -52,7 +52,7 @@ export const GeoPointField = ({
   );
 
   return (
-    <FormRow<GeoPoint>
+    <FormField<GeoPoint>
       readonly={readonly}
       getValue={getValue}
       standalone
@@ -66,9 +66,9 @@ export const GeoPointField = ({
       {({ presentation }) => (
         <div className='grid grid-cols-2 gap-form-gap'>
           <div>
-            <Input.Root>
-              {presentation.showLabel && <Input.Label>{t('latitude.label')}</Input.Label>}
-              <Input.TextInput
+            <Field.Root>
+              {presentation.showLabel && <Field.Label>{t('latitude.label')}</Field.Label>}
+              <Field.Input
                 type='number'
                 step='0.00001'
                 min='-90'
@@ -79,12 +79,12 @@ export const GeoPointField = ({
                 onChange={handleChange('latitude', setLatitudeText)}
                 onBlur={onBlur}
               />
-            </Input.Root>
+            </Field.Root>
           </div>
           <div>
-            <Input.Root>
-              {presentation.showLabel && <Input.Label>{t('longitude.label')}</Input.Label>}
-              <Input.TextInput
+            <Field.Root>
+              {presentation.showLabel && <Field.Label>{t('longitude.label')}</Field.Label>}
+              <Field.Input
                 type='number'
                 step='0.00001'
                 min='-180'
@@ -95,11 +95,11 @@ export const GeoPointField = ({
                 onChange={handleChange('longitude', setLongitudeText)}
                 onBlur={onBlur}
               />
-            </Input.Root>
+            </Field.Root>
           </div>
         </div>
       )}
-    </FormRow>
+    </FormField>
   );
 };
 

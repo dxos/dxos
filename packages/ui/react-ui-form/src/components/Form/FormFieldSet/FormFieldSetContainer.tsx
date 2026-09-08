@@ -4,7 +4,7 @@
 
 import React, { Children, type PropsWithChildren } from 'react';
 
-import { Collapsible, Icon, type ThemedClassName } from '@dxos/react-ui';
+import { Collapsible, Fieldset, Icon, type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 import { useFormContext } from '../../../hooks';
@@ -53,44 +53,48 @@ export const FormFieldSetContainer = ({
   // header would be a control that does nothing.
   const canCollapse = collapsible && Children.toArray(children).length > 0;
 
-  // Nested groups fold inside an indented, bordered container: the box is the `Collapsible`, its header
-  // the trigger and its body the content, so the disclosure adds no element of its own.
+  // Nested groups fold inside an indented, bordered container: the box is the fieldset and the
+  // `Collapsible` at once, its legend holds the trigger and its body is the content, so the group's
+  // name, box and disclosure state sit on one element.
   if (canCollapse) {
     return (
       <div className={styles.fieldSetBoxOuter()}>
-        <Collapsible.Root defaultOpen classNames={styles.fieldSetBox({ class: mx(classNames) })}>
-          {presentation.showLabel && label && (
-            <FormFieldHeader
-              label={label}
-              path={path}
-              readonly={readonly}
-              classNames='pl-2'
-              trigger
-              actions={
-                <Icon
-                  icon='ph--caret-right--regular'
-                  size={4}
-                  classNames='mx-1.5 transition-transform group-data-[state=open]:rotate-90'
+        <Collapsible.Root defaultOpen asChild>
+          <Fieldset.Root classNames={styles.fieldSetBox({ class: mx(classNames) })}>
+            {presentation.showLabel && label && (
+              <Fieldset.Legend classNames={styles.fieldSetLegend()}>
+                <FormFieldHeader
+                  label={label}
+                  path={path}
+                  readonly={readonly}
+                  classNames='pl-2'
+                  trigger
+                  actions={
+                    <Icon
+                      icon='ph--caret-right--regular'
+                      size={4}
+                      classNames='mx-1.5 transition-transform group-data-[state=open]:rotate-90'
+                    />
+                  }
                 />
-              }
-            />
-          )}
-          <Collapsible.Content classNames={styles.fieldSetBody()}>{children}</Collapsible.Content>
+              </Fieldset.Legend>
+            )}
+            <Collapsible.Content classNames={styles.fieldSetBody()}>{children}</Collapsible.Content>
+          </Fieldset.Root>
         </Collapsible.Root>
       </div>
     );
   }
 
-  const content = (
-    <>
+  // A plain group is still a fieldset named by its legend; the column layout keeps the legend in flow.
+  return (
+    <Fieldset.Root classNames={styles.fieldSet({ class: mx(classNames) })}>
       {presentation.showLabel && label && (
-        <FormFieldHeader label={label} path={path} readonly={readonly} classNames='pl-2' />
+        <Fieldset.Legend classNames={styles.fieldSetLegend()}>
+          <FormFieldHeader label={label} path={path} readonly={readonly} classNames='pl-2' />
+        </Fieldset.Legend>
       )}
       {children}
-    </>
+    </Fieldset.Root>
   );
-
-  // A non-collapsible group only materializes a wrapper when `classNames` is supplied — otherwise the
-  // body flows straight into the parent grid (the default, grid-transparent behavior).
-  return classNames ? <div className={mx(classNames)}>{content}</div> : <>{content}</>;
 };

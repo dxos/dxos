@@ -20,7 +20,7 @@ import { type FormFieldStateProps } from '#types';
 
 import { useFormValues } from '../../../../../hooks';
 import { getFormProperties } from '../../../../../util';
-import { CompactIconButton, FormField, type FormFieldProps } from '../../FormField';
+import { CompactIconButton, FormFieldDispatch, type FormFieldDispatchProps } from '../../FormFieldDispatch';
 import { FormFieldHeader } from '../../FormFieldHeader';
 import { getDefaultValue } from './default-value';
 
@@ -44,7 +44,7 @@ const getOrderedId = (item: OrderedItem): string => item[DND_ID];
 export type ArrayFieldProps = {
   label: string;
   fieldProps: FormFieldStateProps;
-} & FormFieldProps;
+} & FormFieldDispatchProps;
 
 export const ArrayField = ({
   type,
@@ -160,11 +160,11 @@ export const ArrayField = ({
 
   const renderItemAsObject = elementType && SchemaEx.isNestedType(elementType) && !Ref.isRefType(elementType);
 
-  // Object items: a recursively-rendered FormField (multiple sub-rows for the
-  // object's fields). Scalar items (refs, primitives): a single inline FormField.
+  // Object items: a recursively-rendered FormFieldDispatch (multiple sub-rows for the
+  // object's fields). Scalar items (refs, primitives): a single inline FormFieldDispatch.
   const renderField = (index: number, isLast: boolean): ReactNode => {
     const field = (
-      <FormField
+      <FormFieldDispatch
         {...props}
         autoFocus={isLast}
         type={elementType}

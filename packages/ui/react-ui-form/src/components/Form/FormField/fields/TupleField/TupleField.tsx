@@ -4,13 +4,13 @@
 
 import React from 'react';
 
-import { Input } from '@dxos/react-ui';
+import { Field } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 import { safeParseFloat } from '@dxos/util';
 
 import { type FormFieldRendererProps } from '#types';
 
-import { FormFieldLabel } from '../../FormRow';
+import { FormFieldLabel } from '../../FormField';
 
 const gridCols = ['grid-cols-1', 'grid-cols-2', 'grid-cols-3', 'grid-cols-4'];
 
@@ -33,11 +33,11 @@ export const TupleField = ({
   const values: Record<string, number> = getValue() ?? {};
 
   return (
-    <Input.Root validationValence={status}>
+    <Field.Root validationValence={status}>
       <FormFieldLabel error={error} readonly={readonly} label={label} path={jsonPath} />
       <div className={mx('grid gap-form-gap', gridCols[binding.length - 1])}>
         {binding.map((prop) => (
-          <Input.TextInput
+          <Field.Input
             key={prop}
             type='number'
             disabled={!!readonly}
@@ -52,6 +52,6 @@ export const TupleField = ({
           />
         ))}
       </div>
-    </Input.Root>
+    </Field.Root>
   );
 };

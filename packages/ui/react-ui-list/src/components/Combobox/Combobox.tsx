@@ -211,7 +211,7 @@ const ComboboxTrigger = composable<HTMLButtonElement, ComboboxTriggerProps>(
               <span className={styles.comboboxTriggerText({ class: !value && 'text-placeholder' })}>
                 {displayValue || value || placeholder}
               </span>
-              <Icon icon='ph--caret-down--bold' size={3} />
+              <Icon icon='ph--caret-down--bold' size={3} classNames='mx-0.5' />
             </>
           )}
         </Button>

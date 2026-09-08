@@ -5,7 +5,7 @@
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 
 import {
-  Input,
+  Field,
   Toolbar,
   type ToolbarRootProps,
   Tooltip,
@@ -114,7 +114,7 @@ const SwitchToolbarItem = ({ menu, action }: ItemProps<{ action: MenuAction }>) 
   }
 
   const switchInput = (
-    <Input.Switch
+    <Field.Switch
       checked={checked}
       disabled={disabled}
       aria-label={iconOnly ? labelStr : undefined}
@@ -124,16 +124,16 @@ const SwitchToolbarItem = ({ menu, action }: ItemProps<{ action: MenuAction }>) 
   );
 
   return (
-    <Input.Root>
+    <Field.Root>
       {iconOnly ? (
         <Tooltip.Trigger asChild content={labelStr}>
-          <Input.Block>{switchInput}</Input.Block>
+          <Field.Block>{switchInput}</Field.Block>
         </Tooltip.Trigger>
       ) : (
-        <Input.Block>{switchInput}</Input.Block>
+        <Field.Block>{switchInput}</Field.Block>
       )}
-      {!iconOnly && <Input.Label>{labelStr}</Input.Label>}
-    </Input.Root>
+      {!iconOnly && <Field.Label>{labelStr}</Field.Label>}
+    </Field.Root>
   );
 };
 

@@ -15,7 +15,7 @@ import { createDataExtensions } from '@dxos/ui-editor';
 import { translationKey } from '#translations';
 import { type FormFieldRendererProps } from '#types';
 
-import { FormRow } from '../../FormRow';
+import { FormField } from '../../FormField';
 
 /**
  * Form field that edits a markdown value in a CodeMirror editor.
@@ -71,9 +71,9 @@ export const MarkdownField = ({
   };
 
   return (
-    <FormRow readonly={readonly} getValue={getValue} renderStatic={renderStatic} {...props}>
+    <FormField readonly={readonly} getValue={getValue} renderStatic={renderStatic} {...props}>
       {({ value }) => renderEditor(value)}
-    </FormRow>
+    </FormField>
   );
 };
 

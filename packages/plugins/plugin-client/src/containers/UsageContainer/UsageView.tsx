@@ -194,13 +194,13 @@ export const UsageView = ({ state, data, lastUpdated, onRefresh }: UsageViewProp
     ({ fieldProps: { label, description, getValue } }) => {
       const percent = getValue();
       return (
-        <Form.Row label={label} description={description}>
+        <Form.Field label={label} description={description}>
           {typeof percent === 'number' ? (
             <Progress progress={percent / 100} aria-label={t('usage-percent-used.label', { percent })} />
           ) : (
             t('usage-unlimited.label')
           )}
-        </Form.Row>
+        </Form.Field>
       );
     },
     [t],
@@ -225,7 +225,7 @@ export const UsageView = ({ state, data, lastUpdated, onRefresh }: UsageViewProp
 
           {/* {state === 'ready' && data && (
             <Form.Section>
-              <Form.Row
+              <Form.Field
                 label={
                   lastUpdated !== undefined
                     ? t('usage-last-updated.label', { time: new Date(lastUpdated).toLocaleTimeString() })
@@ -241,13 +241,13 @@ export const UsageView = ({ state, data, lastUpdated, onRefresh }: UsageViewProp
                     onClick={onRefresh}
                   />
                 )}
-              </Form.Row>
+              </Form.Field>
             </Form.Section>
           )} */}
 
           {/* {state === 'ready' && data && (
             <Form.Section>
-              <Form.Row label={t('usage-raw-json.label')}>
+              <Form.Field label={t('usage-raw-json.label')}>
                 <ToggleIconButton
                   iconOnly
                   variant='ghost'
@@ -256,7 +256,7 @@ export const UsageView = ({ state, data, lastUpdated, onRefresh }: UsageViewProp
                   label={t('usage-raw-json.label')}
                   onClick={() => setRawExpanded((value) => !value)}
                 />
-              </Form.Row>
+              </Form.Field>
               {rawExpanded && <JsonHighlighter data={data} testId='usage-raw-json' />}
             </Form.Section>
           )} */}
