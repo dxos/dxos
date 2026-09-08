@@ -18,7 +18,7 @@ import {
   TypeId,
 } from '../types';
 import { ATTR_META, type EntityMeta } from '../types/meta';
-import { MetaId } from '../types/model-symbols';
+import { ATTR_DELETED, MetaId, ObjectDeletedId } from '../types/model-symbols';
 
 /**
  * Attaches a toJSON method to the object for typed serialization.
@@ -56,6 +56,12 @@ export const typedJsonSerializer = function (this: any) {
 
   if (this[SelfURIId]) {
     result[ATTR_SELF_URI] = this[SelfURIId];
+  }
+
+  // Emitted only when set, mirroring `objectFromJSON`'s `=== true` read: without it a tombstone
+  // snapshot round-tripped through JSON came back as a live object.
+  if (this[ObjectDeletedId]) {
+    result[ATTR_DELETED] = true;
   }
 
   if (this[RelationSourceDXNId]) {

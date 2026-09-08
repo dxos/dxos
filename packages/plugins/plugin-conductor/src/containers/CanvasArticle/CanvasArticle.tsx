@@ -42,7 +42,12 @@ export const CanvasArticle = ({ role, subject, attendableId: _attendableId }: Ca
   const [canvas] = useObject(subject);
   const id = Obj.getURI(canvas);
   const graph = useMemo(
-    () => CanvasGraphModel.create<ComputeShape>(canvas.layout, (fn) => Obj.update(subject, fn)),
+    () =>
+      CanvasGraphModel.create<ComputeShape>(canvas.layout, (fn) =>
+        // The mirror has to come out of the transaction: the `canvas.layout` captured here is
+        // read-only, since writability travels with the reference.
+        Obj.update(subject, (subject) => fn(subject.layout)),
+      ),
     [subject, canvas.layout],
   );
   // Structural edits from other peers (or undo) land in the object, not through the model.

@@ -96,8 +96,9 @@ export const getSchemaFromPropertyDefinitions = (
   const typeSchema = Type.makeObject(DXN.make(typename, '0.1.0'))(Schema.Struct(fields));
   const schema = createEchoSchema(Type.getSchema(typeSchema));
 
-  // Wrap schema modifications in Type.update so they run inside the schema's change context.
-  Type.update(schema, () => {
+  // Wrap schema modifications in Type.update so they run inside the schema's change context, and reach
+  // them through the parameter: the `schema` bound above is read-only.
+  Type.update(schema, (schema) => {
     for (const prop of properties) {
       const jsonProp = schema.jsonSchema.properties![prop.name] as Mutable<JsonSchemaType>;
       if (prop.config?.options) {
