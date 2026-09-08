@@ -539,9 +539,31 @@ declared `types`. That did NOT fix it — with the types registered the query st
 change is defensible on its own (the process does query those types) but it is not the cause, and
 `f14e477a`'s message overstates it. Do not treat that commit as the fix.
 
-- [ ] Establish whether the `Binding` record replicates to EDGE at all. The messages in the same feed
-      do arrive, but those are written by the AGENT on the host; the binding is written by the CLIENT
-      and must replicate. Read it back through EDGE's own queue route first (the same control the
-      other tests use) before touching any resolution code — three earlier rounds of this project
-      went wrong by trusting a silent probe.
+- [x] **Established: the binding does NOT reach EDGE — and neither does anything else the client
+      writes to that feed.** A control added to the tool test reads the conversation through EDGE's
+      own queue route right after `syncToEdge`, and gets `[]`:
+      `AssertionError: expected '[]' to contain 'contextBinding'`. The feed is EMPTY, not merely
+      missing the binding. So this is a replication/seeding problem at the point the test binds the
+      skill, NOT a type-registration or tool-resolution one.
+- [x] **Seeding fixed (edge `a277eab`): the binding is now on EDGE and the skill RESOLVES.**
+      `IndexQuerySource count: 1`, then
+      `sync complete {skills: 1, skillKeys: ["org.dxos.skill.database"]}`. The test seeds through
+      EDGE's queue route instead of a client `Feed.append`, and carries the control permanently.
+- [ ] **What remains: a RESOLVED skill still yields `toolkit: []`.** The chain is now fully mapped,
+      and the last link is the tool INDEX, not the binding. `makeToolResolverFromOperations` builds
+      its index from `Operation.PersistentOperation` records read through `Registry.Service` — and
+      the hosted run logs ZERO mentions of that type. `DatabaseSkill`'s operations live in
+      operation-service's PLUGIN registry (which is what `makeOperationServiceHandlerSet` dispatches
+      to), not in the space's ECHO registry that the resolver reads. So the skill names tools the
+      host cannot turn into tool definitions. Decide which side moves: publish the operations into
+      the space registry when a skill is bound, or give the hosted resolver a view of the worker's
+      registry. Only then can the operation-dispatch path this project added actually run.
+
+Two leads were tried BEFORE the seeding fix and both failed; do not repeat them: declaring
+      `AiContext.Binding`/`Skill` in the process's `types` (f14e477a), and registering
+      `AiContext.Binding` on the test peer (edge 3631bad). Neither changes the empty read, because
+      the record is not on EDGE to be typed or queried in the first place. Start from why
+      `Feed.append` + `db.flush` + `syncToEdge` leaves EDGE's queue empty here, while the same
+      helpers make a message visible in the tests that DO pass (`assertConversationReadable`) — the
+      difference between those paths is the whole lead.
 - [ ] The alarm self-wake test also still fails; not investigated since the ack work.
