@@ -10,12 +10,7 @@ import { type InspectOptionsStylized } from 'node:util';
 import { Event } from '@dxos/async';
 import { inspectCustom } from '@dxos/debug';
 import { Entity, Obj, Type } from '@dxos/echo';
-import {
-  DATA_NAMESPACE,
-  EncodedReference,
-  PROPERTY_ID,
-  isEncodedReference,
-} from '@dxos/echo-protocol';
+import { DATA_NAMESPACE, EncodedReference, PROPERTY_ID, isEncodedReference } from '@dxos/echo-protocol';
 import {
   type AnyProperties,
   EntityKind,

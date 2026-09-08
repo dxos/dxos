@@ -43,10 +43,11 @@ filter that hides configurable symbols (a generic walker that read `[symbolReact
 `Object.keys`, spread and structural hashing go through; `Reflect.ownKeys` on the **raw** target
 still shows everything).
 
-Writability belongs to the **reference**, not to a dynamic extent. The read-only proxy's write traps
-throw before consulting any handler (`assertReadOnly`, O(1), fail-closed), so the proxy named outside
-`Obj.update` stays read-only for the callback's whole duration. All variant dispatch is now reached
-only through the mutable view.
+Writability belongs to the **reference**, not to a dynamic extent. For a **string-keyed** write — all
+user data — the read-only proxy's traps throw before consulting any handler (`assertReadOnly`, O(1),
+fail-closed), so the proxy named outside `Obj.update` stays read-only for the callback's whole
+duration. A symbol-keyed write is exempt and does still dispatch: the system stamps `[ParentId]` and
+friends outside any update, on objects consumers hold read-only.
 
 ### Symbols carried on a target
 
@@ -205,9 +206,11 @@ there is no state to be wrong about, which is what a context lookup could not pr
 exempt because they are never user data — the system stamps `[ParentId]` and friends on objects
 consumers hold read-only, outside any update.
 
-Dispatch survives in exactly one place, the mutable view, and the change context still exists — but
-only to batch notifications and to gate the mutations a proxy cannot intercept (`Array` methods, text
-CRDT ops), which call `assertMutable(target, name, …)` directly against `[ChangeKeyId]`.
+For user data, dispatch survives in exactly one place, the mutable view — a symbol-keyed write is the
+one exception, taking the read-only handler through to `handler.set` for the system's own bookkeeping.
+The change context still exists, but only to batch notifications and to gate the mutations a proxy
+cannot intercept (`Array` methods, text CRDT ops), which call `assertMutable(target, name, …)`
+directly against `[ChangeKeyId]`.
 
 Two invariants hold the design together:
 

@@ -277,8 +277,9 @@ const assertReadOnly = (property: string | symbol, createError: (property: strin
  *
  * The read-only path through this handler is therefore identical for every variant and dispatches
  * nowhere: `getPrototypeOf` is one `Array.isArray`, `ownKeys` one `Reflect.ownKeys` and a filter, and a
- * write outside `Obj.update` throws before any handler is consulted. Dispatch happens only through the
- * mutable view, for a mutation that is actually allowed.
+ * string-keyed write outside `Obj.update` — all user data — throws before any handler is consulted.
+ * Dispatch happens through the mutable view, for a mutation that is actually allowed, or here for a
+ * symbol-keyed write, which `assertReadOnly` exempts as the system's own bookkeeping.
  */
 const REACTIVE_PROXY_HANDLER: ProxyHandler<any> = {
   set: (target, property, value, receiver) => {
