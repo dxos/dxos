@@ -2,11 +2,19 @@
 // Copyright 2023 DXOS.org
 //
 
-import * as CheckboxPrimitive from '@radix-ui/react-checkbox';
-import { useControllableState } from '@radix-ui/react-use-controllable-state';
+// `Input` — a labelled control on Ark's field: the field owns the ids and the wiring between a
+// label, its control, the helper text and the error text (`htmlFor`, `aria-describedby`,
+// `aria-errormessage`, `aria-invalid`, the required/disabled/read-only state on every part). DXOS
+// owns the controls and their surfaces, the finer `validationValence` the theme colours by, and the
+// picker trigger a date field registers with its root.
+
+import { Checkbox as CheckboxPrimitive, useCheckbox } from '@ark-ui/react/checkbox';
+import { ark } from '@ark-ui/react/factory';
+import { Field as FieldPrimitive, useFieldContext } from '@ark-ui/react/field';
 import React, {
+  type ComponentPropsWithoutRef,
   type ComponentPropsWithRef,
-  type ForwardRefExoticComponent,
+  type MouseEvent,
   PropsWithChildren,
   type ReactNode,
   forwardRef,
@@ -16,27 +24,7 @@ import React, {
 } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import {
-  DescriptionAndValidation as DescriptionAndValidationPrimitive,
-  type DescriptionAndValidationProps as DescriptionAndValidationPrimitiveProps,
-  Description as DescriptionPrimitive,
-  type DescriptionProps as DescriptionPrimitiveProps,
-  INPUT_NAME,
-  InputRoot,
-  type InputRootProps,
-  type InputScopedProps,
-  Label as LabelPrimitive,
-  type LabelProps as LabelPrimitiveProps,
-  PinInput as PinInputPrimitive,
-  type PinInputProps as PinInputPrimitiveProps,
-  TextArea as TextAreaPrimitive,
-  type TextAreaProps as TextAreaPrimitiveProps,
-  TextInput as TextInputPrimitive,
-  type TextInputProps as TextInputPrimitiveProps,
-  Validation as ValidationPrimitive,
-  type ValidationProps as ValidationPrimitiveProps,
-  useInputContext,
-} from '@dxos/react-input';
+import { useComposedRefs, useControllableState } from '@dxos/react-hooks';
 import { type Density, type Elevation, type Size } from '@dxos/ui-types';
 
 import { translationKey } from '#translations';
@@ -45,7 +33,9 @@ import { useDensityContext, useElevationContext, useThemeContext } from '../../h
 import { type ThemedClassName } from '../../util';
 import { IconButton, IconButtonProps } from '../Button';
 import { Icon } from '../Icon';
+import { INPUT_NAME, type InputValence, InputValenceProvider, useInputValence } from './InputContext';
 import { type InputTriggerHandler, InputTriggerProvider, useInputTriggerContext } from './InputTriggerContext';
+import { PinInput as PinInputPrimitive, type PinInputProps as PinInputPrimitiveProps } from './PinInput';
 import {
   SegmentedDate,
   type SegmentedDateProps,
@@ -60,10 +50,34 @@ type InputVariant = 'default' | 'subdued';
 type InputSharedProps = Partial<{ density: Density; elevation: Elevation; variant: InputVariant }>;
 
 //
-// Root — wraps the @dxos/react-input primitive root with the trigger registry.
+// Root — the field, with the trigger registry a date field's picker button reaches through.
 //
 
-const Root = (props: InputRootProps) => {
+type InputRootProps = ThemedClassName<
+  PropsWithChildren<{
+    /** The control's id, which the label points at; generated when absent. */
+    id?: string;
+    /** The tone of the validation message; `error` is what the field reports as invalid. */
+    validationValence?: InputValence;
+    required?: boolean;
+    disabled?: boolean;
+    readOnly?: boolean;
+    /** Merge the field's root into the single child instead of rendering a box of its own. */
+    asChild?: boolean;
+  }>
+>;
+
+const Root = ({
+  children,
+  classNames,
+  id,
+  validationValence = 'neutral',
+  required,
+  disabled,
+  readOnly,
+  asChild,
+}: InputRootProps) => {
+  const { tx } = useThemeContext();
   const handlerRef = useRef<InputTriggerHandler | null>(null);
   const [hasTrigger, setHasTrigger] = useState(false);
 
@@ -84,7 +98,20 @@ const Root = (props: InputRootProps) => {
 
   return (
     <InputTriggerProvider registerTrigger={registerTrigger} trigger={trigger} hasTrigger={hasTrigger}>
-      <InputRoot {...props} />
+      <InputValenceProvider validationValence={validationValence}>
+        {/* The field needs an element to watch its texts from; `contents` keeps it out of the layout. */}
+        <FieldPrimitive.Root
+          id={id}
+          invalid={validationValence === 'error'}
+          required={required}
+          disabled={disabled}
+          readOnly={readOnly}
+          asChild={asChild}
+          className={tx('input.root', {}, classNames)}
+        >
+          {children}
+        </FieldPrimitive.Root>
+      </InputValenceProvider>
     </InputTriggerProvider>
   );
 };
@@ -130,14 +157,14 @@ TriggerIcon.displayName = 'Input.TriggerIcon';
 // Label
 //
 
-type LabelProps = ThemedClassName<LabelPrimitiveProps> & { srOnly?: boolean };
+type LabelProps = ThemedClassName<ComponentPropsWithRef<typeof FieldPrimitive.Label>> & { srOnly?: boolean };
 
 const Label = forwardRef<HTMLLabelElement, LabelProps>(({ classNames, children, srOnly, ...props }, forwardedRef) => {
   const { tx } = useThemeContext();
   return (
-    <LabelPrimitive {...props} className={tx('input.label', { srOnly }, classNames)} ref={forwardedRef}>
+    <FieldPrimitive.Label {...props} className={tx('input.label', { srOnly }, classNames)} ref={forwardedRef}>
       {children}
-    </LabelPrimitive>
+    </FieldPrimitive.Label>
   );
 });
 
@@ -147,15 +174,22 @@ Label.displayName = 'Input.Label';
 // Description
 //
 
-type DescriptionProps = ThemedClassName<DescriptionPrimitiveProps> & { srOnly?: boolean };
+type DescriptionProps = ThemedClassName<Omit<ComponentPropsWithRef<typeof ark.span>, 'id'>> & { srOnly?: boolean };
 
+/**
+ * What describes the control. While the field is valid the whole `DescriptionAndValidation` row
+ * does, so this is plain text inside it; once invalid the validation becomes the error message and
+ * this alone is the helper text the field points `aria-describedby` at.
+ */
 const Description = forwardRef<HTMLSpanElement, DescriptionProps>(
   ({ classNames, children, srOnly, ...props }, forwardedRef) => {
     const { tx } = useThemeContext();
+    const { validationValence } = useInputValence(INPUT_NAME);
+    const Comp = validationValence === 'error' ? FieldPrimitive.HelperText : ark.span;
     return (
-      <DescriptionPrimitive {...props} className={tx('input.description', { srOnly }, classNames)} ref={forwardedRef}>
+      <Comp {...props} className={tx('input.description', { srOnly }, classNames)} ref={forwardedRef}>
         {children}
-      </DescriptionPrimitive>
+      </Comp>
     );
   },
 );
@@ -166,20 +200,21 @@ Description.displayName = 'Input.Description';
 // Validation
 //
 
-type ValidationProps = ThemedClassName<ValidationPrimitiveProps> & { srOnly?: boolean };
+type ValidationProps = ThemedClassName<Omit<ComponentPropsWithRef<typeof ark.span>, 'id'>> & { srOnly?: boolean };
 
-const Validation = forwardRef<HTMLSpanElement, InputScopedProps<ValidationProps>>(
-  ({ __inputScope, classNames, children, srOnly, ...props }, forwardedRef) => {
+/**
+ * The validation message, coloured by the valence. An error is the field's error text — the control
+ * names it through `aria-errormessage` and it announces itself — while any other tone is plain text.
+ */
+const Validation = forwardRef<HTMLSpanElement, ValidationProps>(
+  ({ classNames, children, srOnly, ...props }, forwardedRef) => {
     const { tx } = useThemeContext();
-    const { validationValence } = useInputContext(INPUT_NAME, __inputScope);
+    const { validationValence } = useInputValence(INPUT_NAME);
+    const Comp = validationValence === 'error' ? FieldPrimitive.ErrorText : ark.span;
     return (
-      <ValidationPrimitive
-        {...props}
-        className={tx('input.validation', { srOnly, validationValence }, classNames)}
-        ref={forwardedRef}
-      >
+      <Comp {...props} className={tx('input.validation', { srOnly, validationValence }, classNames)} ref={forwardedRef}>
         {children}
-      </ValidationPrimitive>
+      </Comp>
     );
   },
 );
@@ -190,19 +225,27 @@ Validation.displayName = 'Input.Validation';
 // DescriptionAndValidation
 //
 
-type DescriptionAndValidationProps = ThemedClassName<DescriptionAndValidationPrimitiveProps> & { srOnly?: boolean };
+type DescriptionAndValidationProps = ThemedClassName<Omit<ComponentPropsWithRef<typeof ark.p>, 'id'>> & {
+  srOnly?: boolean;
+};
 
+/**
+ * The row under the control. While the field is valid it is the helper text as a whole (description
+ * and any non-error message); once invalid the parts inside speak for themselves (see `Description`).
+ */
 const DescriptionAndValidation = forwardRef<HTMLParagraphElement, DescriptionAndValidationProps>(
   ({ classNames, children, srOnly, ...props }, forwardedRef) => {
     const { tx } = useThemeContext();
-    return (
-      <DescriptionAndValidationPrimitive
-        {...props}
-        className={tx('input.descriptionAndValidation', { srOnly }, classNames)}
-        ref={forwardedRef}
-      >
+    const { validationValence } = useInputValence(INPUT_NAME);
+    const paragraph = (
+      <p {...props} className={tx('input.descriptionAndValidation', { srOnly }, classNames)} ref={forwardedRef}>
         {children}
-      </DescriptionAndValidationPrimitive>
+      </p>
+    );
+    return validationValence === 'error' ? (
+      paragraph
+    ) : (
+      <FieldPrimitive.HelperText asChild>{paragraph}</FieldPrimitive.HelperText>
     );
   },
 );
@@ -240,7 +283,6 @@ PinInput.displayName = 'Input.PinInput';
 
 //
 // TextInput
-// TODO(burdon): Implement inline icon within button: e.g., https://www.radix-ui.com/themes/playground#text-field
 //
 
 type AutoFillProps = {
@@ -254,32 +296,25 @@ type AdornmentProps = {
   end?: ReactNode;
 };
 
-type TextInputProps = InputSharedProps & ThemedClassName<TextInputPrimitiveProps> & AutoFillProps & AdornmentProps;
+type TextInputProps = InputSharedProps &
+  ThemedClassName<Omit<ComponentPropsWithRef<typeof FieldPrimitive.Input>, 'id'>> &
+  AutoFillProps &
+  AdornmentProps;
 
-const TextInput = forwardRef<HTMLInputElement, InputScopedProps<TextInputProps>>(
+const TextInput = forwardRef<HTMLInputElement, TextInputProps>(
   (
-    {
-      __inputScope,
-      classNames,
-      density: densityProp,
-      elevation: elevationProp,
-      variant,
-      noAutoFill,
-      start,
-      end,
-      ...props
-    },
+    { classNames, density: densityProp, elevation: elevationProp, variant, noAutoFill, start, end, ...props },
     forwardedRef,
   ) => {
     const { hasIosKeyboard } = useThemeContext();
     const { tx } = useThemeContext();
     const density = useDensityContext(densityProp);
     const elevation = useElevationContext(elevationProp);
-    const { validationValence } = useInputContext(INPUT_NAME, __inputScope);
+    const { validationValence } = useInputValence(INPUT_NAME);
     const adorned = start != null || end != null;
 
     const field = (
-      <TextInputPrimitive
+      <FieldPrimitive.Input
         {...props}
         // TODO(wittjosiah): Factor out autofill properies.
         {...{ 'data-1p-ignore': noAutoFill }}
@@ -327,18 +362,19 @@ TextInput.displayName = 'Input.TextInput';
 // TextArea
 //
 
-type TextAreaProps = InputSharedProps & ThemedClassName<TextAreaPrimitiveProps>;
+type TextAreaProps = InputSharedProps &
+  ThemedClassName<Omit<ComponentPropsWithRef<typeof FieldPrimitive.Textarea>, 'id'>>;
 
-const TextArea = forwardRef<HTMLTextAreaElement, InputScopedProps<TextAreaProps>>(
-  ({ __inputScope, classNames, density: propsDensity, elevation: propsElevation, variant, ...props }, forwardedRef) => {
+const TextArea = forwardRef<HTMLTextAreaElement, TextAreaProps>(
+  ({ classNames, density: propsDensity, elevation: propsElevation, variant, ...props }, forwardedRef) => {
     const { hasIosKeyboard } = useThemeContext();
     const { tx } = useThemeContext();
     const density = useDensityContext(propsDensity);
     const elevation = useElevationContext(propsElevation);
-    const { validationValence } = useInputContext(INPUT_NAME, __inputScope);
+    const { validationValence } = useInputValence(INPUT_NAME);
 
     return (
-      <TextAreaPrimitive
+      <FieldPrimitive.Textarea
         {...props}
         data-density={density}
         className={tx(
@@ -365,55 +401,109 @@ TextArea.displayName = 'Input.TextArea';
 // Checkbox
 //
 
-type CheckboxProps = ThemedClassName<Omit<CheckboxPrimitive.CheckboxProps, 'children'>> & {
+type CheckedState = boolean | 'indeterminate';
+
+/** Element props reach the visible control (a div); the form fields reach the hidden input. */
+type CheckboxProps = ThemedClassName<Omit<ComponentPropsWithoutRef<'div'>, 'defaultChecked' | 'defaultValue'>> & {
+  checked?: CheckedState;
+  defaultChecked?: CheckedState;
+  // A method signature, so a handler typed for the boolean it will get still fits.
+  onCheckedChange?(checked: CheckedState): void;
   size?: Size;
+  disabled?: boolean;
+  required?: boolean;
+  readOnly?: boolean;
+  name?: string;
+  form?: string;
+  /** Submitted with the form (default `on`). */
+  value?: string;
 };
 
-const Checkbox: ForwardRefExoticComponent<CheckboxProps> = forwardRef<
-  HTMLButtonElement,
-  InputScopedProps<CheckboxProps>
->(
+/**
+ * A native checkbox, visually hidden, behind a styled control. The `Input.Root` id lands on the
+ * input so `Input.Label` reaches it; everything else (test ids, handlers) lands on the visible
+ * control, which is what a pointer or a test hits.
+ */
+const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(
   (
     {
-      __inputScope,
       classNames,
-      checked: propsChecked,
-      defaultChecked: propsDefaultChecked,
-      onCheckedChange: propsOnCheckedChange,
+      checked,
+      defaultChecked,
+      onCheckedChange,
       size,
+      disabled,
+      required,
+      readOnly,
+      name,
+      form,
+      value,
+      onClick,
       ...props
     },
     forwardedRef,
   ) => {
-    const [checked, onCheckedChange] = useControllableState({
-      prop: propsChecked,
-      defaultProp: propsDefaultChecked,
-      onChange: propsOnCheckedChange,
-    });
-    const { id, validationValence, descriptionId, errorMessageId } = useInputContext(INPUT_NAME, __inputScope);
+    // The field owns the id and the described-by/error wiring; the valence is ours.
+    const field = useFieldContext();
+    const { validationValence } = useInputValence(INPUT_NAME);
     const { tx } = useThemeContext();
+    const inputRef = useRef<HTMLInputElement>(null);
+    const checkbox = useCheckbox({
+      ids: { hiddenInput: field?.ids.control },
+      checked,
+      defaultChecked,
+      onCheckedChange: onCheckedChange && (({ checked }) => onCheckedChange(checked)),
+      disabled: disabled ?? field?.disabled,
+      required: required ?? field?.required,
+      readOnly: readOnly ?? field?.readOnly,
+      invalid: validationValence === 'error',
+      name,
+      form,
+      value,
+    });
+
+    // The machine toggles through the label's activation of the input, which any ancestor that
+    // calls `preventDefault()` on the click (a tree row does) cancels. Clicking the input here and
+    // cancelling the activation keeps exactly one toggle per click, on the same path the keyboard
+    // takes, wherever the control sits.
+    const handleClick = useCallback(
+      (event: MouseEvent<HTMLDivElement>) => {
+        onClick?.(event);
+        if (event.defaultPrevented) {
+          return;
+        }
+        event.preventDefault();
+        if (!checkbox.disabled && !readOnly) {
+          inputRef.current?.click();
+          inputRef.current?.focus();
+        }
+      },
+      [onClick, checkbox.disabled, readOnly],
+    );
 
     return (
-      <CheckboxPrimitive.Root
-        {...{
-          ...props,
-          checked,
-          onCheckedChange,
-          id,
-          'aria-describedby': descriptionId,
-          ...(validationValence === 'error' && {
-            'aria-invalid': 'true' as const,
-            'aria-errormessage': errorMessageId,
-          }),
-          'className': tx('input.checkbox', { size }, 'shrink-0', classNames),
-        }}
-        ref={forwardedRef}
-      >
-        <Icon
-          icon={checked === 'indeterminate' ? 'ph--minus--regular' : 'ph--check--regular'}
-          classNames={tx('input.checkboxIndicator', { size, checked })}
+      <CheckboxPrimitive.RootProvider value={checkbox} className='contents'>
+        <CheckboxPrimitive.Control
+          {...props}
+          // Focusable by pointer only, so a press lands focus here (as it did on the button this
+          // replaces) instead of on the nearest focusable ancestor, which a tree row re-renders on.
+          tabIndex={-1}
+          onClick={handleClick}
+          className={tx('input.checkbox', { size }, 'shrink-0', classNames)}
+        >
+          <CheckboxPrimitive.Indicator asChild>
+            <Icon icon='ph--check--regular' classNames={tx('input.checkboxIndicator', { size })} />
+          </CheckboxPrimitive.Indicator>
+          <CheckboxPrimitive.Indicator indeterminate asChild>
+            <Icon icon='ph--minus--regular' classNames={tx('input.checkboxIndicator', { size })} />
+          </CheckboxPrimitive.Indicator>
+        </CheckboxPrimitive.Control>
+        <CheckboxPrimitive.HiddenInput
+          aria-describedby={field?.ariaDescribedby}
+          {...(validationValence === 'error' && { 'aria-errormessage': field?.ids.errorText })}
+          ref={useComposedRefs(forwardedRef, inputRef)}
         />
-      </CheckboxPrimitive.Root>
+      </CheckboxPrimitive.RootProvider>
     );
   },
 );
@@ -428,10 +518,9 @@ type SwitchProps = ThemedClassName<
   Omit<ComponentPropsWithRef<'input'>, 'children' | 'onChange'> & { onCheckedChange?: (checked: boolean) => void }
 >;
 
-const Switch = forwardRef<HTMLInputElement, InputScopedProps<SwitchProps>>(
+const Switch = forwardRef<HTMLInputElement, SwitchProps>(
   (
     {
-      __inputScope,
       classNames,
       checked: propsChecked,
       defaultChecked: propsDefaultChecked,
@@ -447,7 +536,9 @@ const Switch = forwardRef<HTMLInputElement, InputScopedProps<SwitchProps>>(
       onChange: propsOnCheckedChange,
     });
 
-    const { id, validationValence, descriptionId, errorMessageId } = useInputContext(INPUT_NAME, __inputScope);
+    // The field owns the id and the described-by/error wiring; the valence is ours.
+    const field = useFieldContext();
+    const { validationValence } = useInputValence(INPUT_NAME);
 
     return (
       <input
@@ -457,12 +548,12 @@ const Switch = forwardRef<HTMLInputElement, InputScopedProps<SwitchProps>>(
         onChange={(event) => {
           onCheckedChange(event.target.checked);
         }}
-        id={id}
-        aria-describedby={descriptionId}
+        id={field?.ids.control}
+        aria-describedby={field?.ariaDescribedby}
         {...props}
         {...(validationValence === 'error' && {
           'aria-invalid': 'true' as const,
-          'aria-errormessage': errorMessageId,
+          'aria-errormessage': field?.ids.errorText,
         })}
         ref={forwardedRef}
       />
@@ -529,12 +620,14 @@ export const Input = {
 
 export type {
   CheckboxProps,
+  CheckedState,
   DateInputProps,
   DateTimeInputProps,
   DescriptionAndValidationProps,
   DescriptionProps,
   InputRootProps,
   InputSharedProps,
+  InputValence,
   InputVariant,
   LabelProps,
   PinInputProps,

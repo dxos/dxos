@@ -4,10 +4,10 @@
 
 import { type Extension } from '@codemirror/state';
 import { type EditorView } from '@codemirror/view';
-import { createContext } from '@radix-ui/react-context';
 import type * as Atom from 'effect/unstable/reactivity/Atom';
 import React, { type ReactNode, useCallback, useMemo, useState } from 'react';
 
+import { createContext } from '@dxos/react-hooks';
 import { type ThemedClassName } from '@dxos/react-ui';
 import {
   type EditorRootProps,

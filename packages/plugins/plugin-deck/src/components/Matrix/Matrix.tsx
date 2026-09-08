@@ -2,11 +2,11 @@
 // Copyright 2026 DXOS.org
 //
 
-import { createContext } from '@radix-ui/react-context';
 import React, { type PropsWithChildren, forwardRef, useCallback, useEffect, useImperativeHandle, useRef } from 'react';
 
 import { Obj } from '@dxos/echo';
 import { findFirstFocusable } from '@dxos/react-focus';
+import { createContext } from '@dxos/react-hooks';
 import { ScrollArea } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
 import { useAttended } from '@dxos/react-ui-attention';

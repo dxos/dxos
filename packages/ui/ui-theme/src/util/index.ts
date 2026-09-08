@@ -2,6 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
+export * from './accent';
 export * from './elevation';
 export * from './hash-styles';
 export * from './mx';

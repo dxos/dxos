@@ -16,7 +16,7 @@ import { mx } from '@dxos/ui-theme';
 
 import { translationKey } from '#translations';
 
-import { useTranslation } from '../../primitives';
+import { useTranslation } from '../../providers';
 import { type ThemedClassName, composable, composableProps } from '../../util';
 import { IconButton } from '../Button';
 import { type MediaKind, MediaPlayer } from '../MediaPlayer';
@@ -307,6 +307,7 @@ const CarouselCaption = ({ children, classNames }: CarouselCaptionProps) => {
   if (content == null || content === false || content === '') {
     return null;
   }
+
   return (
     // TODO(burdon): Move to ui-theme.
     <div className='col-start-2'>

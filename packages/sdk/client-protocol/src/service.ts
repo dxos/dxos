@@ -4,26 +4,31 @@
 
 import { type Event } from '@dxos/async';
 import type { Stream } from '@dxos/async';
-import type { RequestOptions } from '@dxos/codec-protobuf';
 import { getBufService } from '@dxos/protocols/buf-service';
+import type { Invitation } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 import type { LogEntry, QueryLogsRequest } from '@dxos/protocols/buf/dxos/client/logging_pb';
-import { Config } from '@dxos/protocols/buf/dxos/config_pb';
-import type { SignalResponse, SubscribeToSpacesResponse } from '@dxos/protocols/buf/dxos/devtools/host_pb';
+import type { QueryInvitationsResponse } from '@dxos/protocols/buf/dxos/client/services_pb';
 import type {
   CreateEpochResponse,
   Device,
   Identity,
-  Invitation,
   JoinSpaceResponse,
   NetworkStatus,
   Platform,
   QueryAgentStatusResponse,
   QueryEdgeStatusResponse,
-  QueryInvitationsResponse,
   QuerySpacesResponse,
   RecoverIdentityRequest,
   Space,
-} from '@dxos/protocols/proto/dxos/client/services';
+} from '@dxos/protocols/buf/dxos/client/services_pb';
+import { Config } from '@dxos/protocols/buf/dxos/config_pb';
+import type { SignalResponse, SubscribeToSpacesResponse } from '@dxos/protocols/buf/dxos/devtools/host_pb';
+import type {
+  Credential,
+  DeviceProfileDocument,
+  Presentation,
+  ProfileDocument,
+} from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import type {
   GetSpaceSnapshotResponse,
   SaveSpaceSnapshotResponse,
@@ -42,12 +47,6 @@ import type {
   LeaveRequest,
   Message,
 } from '@dxos/protocols/proto/dxos/edge/signal';
-import type {
-  Credential,
-  DeviceProfileDocument,
-  Presentation,
-  ProfileDocument,
-} from '@dxos/protocols/proto/dxos/halo/credentials';
 import type { AppService, ShellService } from '@dxos/protocols/proto/dxos/iframe';
 import type { GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
 import type {
@@ -62,6 +61,7 @@ import type {
   SpacesService as RpcSpacesService,
   SystemService as RpcSystemService,
 } from '@dxos/protocols/rpc';
+import type { RequestOptions } from '@dxos/protocols/service-contract';
 import { type ServiceBundle } from '@dxos/rpc';
 
 import { type ClientServicesRpc } from './service-rpc';

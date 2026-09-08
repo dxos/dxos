@@ -2,13 +2,13 @@
 // Copyright 2025 DXOS.org
 //
 
-import { createContext } from '@radix-ui/react-context';
 import React, { type PropsWithChildren, useState } from 'react';
 
 import { type Database, Obj } from '@dxos/echo';
+import { createContext } from '@dxos/react-hooks';
 import { ScrollArea, type ThemedClassName } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
-import { Menu, MenuRootProps } from '@dxos/react-ui-menu';
+import { ActionToolbar, type ActionToolbarProps } from '@dxos/react-ui-menu';
 import { type Actor, type Event as EventType } from '@dxos/types';
 import { mx } from '@dxos/ui-theme';
 
@@ -68,7 +68,7 @@ type EventToolbarProps = Pick<
   UseEventToolbarActionsProps,
   'graph' | 'onOpen' | 'onSave' | 'saveDisabled' | 'onDelete' | 'editing'
 > &
-  Pick<MenuRootProps, 'alwaysActive'>;
+  Pick<ActionToolbarProps, 'alwaysActive'>;
 
 const EventToolbar = composable<HTMLDivElement, EventToolbarProps>(
   ({ alwaysActive, graph, onOpen, onSave, saveDisabled, onDelete, editing, ...props }, forwardedRef) => {
@@ -86,11 +86,13 @@ const EventToolbar = composable<HTMLDivElement, EventToolbarProps>(
     });
 
     return (
-      <Menu.Root {...menuActions} attendableId={attendableId} alwaysActive={alwaysActive}>
-        <Menu.Toolbar {...composableProps(props)} ref={forwardedRef}>
-          <Menu.Items />
-        </Menu.Toolbar>
-      </Menu.Root>
+      <ActionToolbar
+        {...menuActions}
+        attendableId={attendableId}
+        alwaysActive={alwaysActive}
+        {...composableProps(props)}
+        ref={forwardedRef}
+      />
     );
   },
 );

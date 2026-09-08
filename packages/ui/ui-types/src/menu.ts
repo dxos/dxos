@@ -18,6 +18,8 @@ export type MenuItemChrome = {
   disabled?: boolean;
   hidden?: boolean;
   testId?: string;
+  /** Shown beside the label; a record is keyed by host platform (`macos`, `windows`, …). */
+  keyBinding?: string | Partial<Record<string, string>>;
   /** Applied to the button element rendered for this action. */
   classNames?: ClassNameValue;
   /** Applied to the inner `<Icon>` element when the action renders as an icon button. */

@@ -4,8 +4,6 @@
 
 import { EditorSelection, type Extension } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
-import { composeRefs } from '@radix-ui/react-compose-refs';
-import { createContext } from '@radix-ui/react-context';
 import React, {
   type PropsWithChildren,
   type RefObject,
@@ -19,6 +17,7 @@ import React, {
 } from 'react';
 
 import { Doc } from '@dxos/echo-doc';
+import { composeRefs, createContext } from '@dxos/react-hooks';
 import {
   DX_ANCHOR_ACTIVATE,
   DxAnchorActivate,

@@ -17,10 +17,11 @@ import { withClientProvider } from '@dxos/react-client/testing';
 import { Toolbar, Tooltip } from '@dxos/react-ui';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
+import { hues } from '@dxos/ui-types';
 
 import { translations } from '#translations';
 
-import { AutofillAnnotation, OptionsLookupAnnotation, autofill, optionsLookup } from '../../annotations';
+import { AutofillAnnotation, HueAnnotation, OptionsLookupAnnotation, autofill, optionsLookup } from '../../annotations';
 import { Organization, Person, TestLayout } from '../../testing';
 import { type ExcludeId, omitId } from '../../util';
 import { Form, type FormRootProps } from './Form';
@@ -166,6 +167,13 @@ const SettingsSchema = Schema.Struct({
   ),
   fontSize: Schema.optional(
     Schema.Number.annotate({ title: 'Font size', description: 'Editor font size, in pixels.' }),
+  ),
+  // A hue-annotated literal renders the hue picker rather than a select.
+  accent: Schema.optional(
+    Schema.Literals(hues).pipe(
+      HueAnnotation.set(true),
+      Schema.annotate({ title: 'Accent color', description: 'The hue of buttons, links and selection.' }),
+    ),
   ),
 }).mapFields(Struct.map(Schema.mutableKey));
 

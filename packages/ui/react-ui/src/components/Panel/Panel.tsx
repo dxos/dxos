@@ -2,8 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Primitive } from '@radix-ui/react-primitive';
-import { Slot } from '@radix-ui/react-slot';
+import { ark } from '@ark-ui/react/factory';
 import React, { type CSSProperties } from 'react';
 
 import { type SlottableProps } from '@dxos/ui-types';
@@ -24,10 +23,10 @@ type PanelRootProps = SlottableProps<{ style?: CSSProperties }>;
 const PanelRoot = slottable<HTMLDivElement, { style?: CSSProperties }>(
   ({ children, asChild, role, style, ...props }, forwardedRef) => {
     const { className, ...rest } = composableProps(props);
-    const Comp = asChild ? Slot : Primitive.div;
     const { tx } = useThemeContext();
     return (
-      <Comp
+      <ark.div
+        asChild={asChild}
         {...rest}
         role={role ?? 'none'}
         style={{
@@ -39,7 +38,7 @@ const PanelRoot = slottable<HTMLDivElement, { style?: CSSProperties }>(
         ref={forwardedRef}
       >
         {children}
-      </Comp>
+      </ark.div>
     );
   },
 );
@@ -55,12 +54,17 @@ type PanelToolbarProps = SlottableProps & Pick<PanelStyleProps, 'size'>;
 const PanelToolbar = slottable<HTMLDivElement, Pick<PanelStyleProps, 'size'>>(
   ({ children, asChild, size, ...props }, forwardedRef) => {
     const { className, ...rest } = composableProps(props);
-    const Comp = asChild ? Slot : Primitive.div;
     const { tx } = useThemeContext();
     return (
-      <Comp {...rest} data-slot='toolbar' className={tx('panel.toolbar', { size }, className)} ref={forwardedRef}>
+      <ark.div
+        asChild={asChild}
+        {...rest}
+        data-slot='toolbar'
+        className={tx('panel.toolbar', { size }, className)}
+        ref={forwardedRef}
+      >
         {children}
-      </Comp>
+      </ark.div>
     );
   },
 );
@@ -75,12 +79,17 @@ type PanelContentProps = SlottableProps;
 
 const PanelContent = slottable<HTMLDivElement>(({ children, asChild, ...props }, forwardedRef) => {
   const { className, ...rest } = composableProps(props);
-  const Comp = asChild ? Slot : Primitive.div;
   const { tx } = useThemeContext();
   return (
-    <Comp {...rest} data-slot='content' className={tx('panel.content', {}, className)} ref={forwardedRef}>
+    <ark.div
+      asChild={asChild}
+      {...rest}
+      data-slot='content'
+      className={tx('panel.content', {}, className)}
+      ref={forwardedRef}
+    >
       {children}
-    </Comp>
+    </ark.div>
   );
 });
 
@@ -95,12 +104,17 @@ type PanelStatusbarProps = SlottableProps & Pick<PanelStyleProps, 'size'>;
 const PanelStatusbar = slottable<HTMLDivElement, Pick<PanelStyleProps, 'size'>>(
   ({ children, asChild, size, ...props }, forwardedRef) => {
     const { className, ...rest } = composableProps(props);
-    const Comp = asChild ? Slot : Primitive.div;
     const { tx } = useThemeContext();
     return (
-      <Comp {...rest} data-slot='statusbar' className={tx('panel.statusbar', { size }, className)} ref={forwardedRef}>
+      <ark.div
+        asChild={asChild}
+        {...rest}
+        data-slot='statusbar'
+        className={tx('panel.statusbar', { size }, className)}
+        ref={forwardedRef}
+      >
         {children}
-      </Comp>
+      </ark.div>
     );
   },
 );

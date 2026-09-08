@@ -1,8 +1,7 @@
+import { createContext } from '@dxos/react-ui';
 //
 // Copyright 2025 DXOS.org
 //
-
-import { createContext } from '@radix-ui/react-context';
 
 // See `AccordionRoot.tsx` for the rationale on `ListItemRecord = any`.
 type ListItemRecord = any;

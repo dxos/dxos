@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Slot } from '@radix-ui/react-slot';
+import { ark } from '@ark-ui/react/factory';
 import React, { type ComponentPropsWithRef, forwardRef } from 'react';
 
 import { AttentionSigilButton } from '@dxos/app-toolkit/ui';
@@ -51,9 +51,9 @@ PaneRoot.displayName = 'Pane.Root';
 //
 
 const PaneToolbar = slottable<HTMLDivElement>(({ children, asChild, ...props }, forwardedRef) => {
-  const Comp = asChild ? Slot : 'div';
   return (
-    <Comp
+    <ark.div
+      asChild={asChild}
       {...composableProps(props, {
         style: iconSize(5),
         classNames: 'flex items-center gap-1 px-1 shrink-0 h-(--dx-rail-content) dx-header-surface',
@@ -61,7 +61,7 @@ const PaneToolbar = slottable<HTMLDivElement>(({ children, asChild, ...props }, 
       ref={forwardedRef}
     >
       <DensityProvider density='lg'>{children}</DensityProvider>
-    </Comp>
+    </ark.div>
   );
 });
 
@@ -72,11 +72,10 @@ PaneToolbar.displayName = 'Pane.Toolbar';
 //
 
 const PaneContent = slottable<HTMLDivElement>(({ children, asChild, ...props }, forwardedRef) => {
-  const Comp = asChild ? Slot : 'div';
   return (
-    <Comp {...composableProps(props, { classNames: 'dx-grow' })} ref={forwardedRef}>
+    <ark.div asChild={asChild} {...composableProps(props, { classNames: 'dx-grow' })} ref={forwardedRef}>
       {children}
-    </Comp>
+    </ark.div>
   );
 });
 

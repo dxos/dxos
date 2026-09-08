@@ -49,14 +49,8 @@
   }
 
   .dx-card-square {
-    inline-size: min(
-      min(var(--radix-popper-available-width), var(--spacing-card-max-width)),
-      min(var(--radix-popper-available-height), 100dvh)
-    );
-    block-size: min(
-      min(var(--radix-popper-available-width), var(--spacing-card-max-width)),
-      min(var(--radix-popper-available-height), 100dvh)
-    );
+    inline-size: min(min(var(--available-width), var(--spacing-card-max-width)), min(var(--available-height), 100dvh));
+    block-size: min(min(var(--available-width), var(--spacing-card-max-width)), min(var(--available-height), 100dvh));
   }
 
   .dx-card-default-width {
@@ -73,8 +67,8 @@
 
   .dx-card-popover {
     @apply inline-card-max-width bg-popover-surface;
-    max-width: min(var(--radix-popper-available-width), var(--spacing-card-max-width));
-    max-height: min(var(--radix-popper-available-height), var(--spacing-card-max-height));
+    max-width: min(var(--available-width), var(--spacing-card-max-width));
+    max-height: min(var(--available-height), var(--spacing-card-max-height));
   }
 }
 

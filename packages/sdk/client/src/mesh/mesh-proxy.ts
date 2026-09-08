@@ -8,7 +8,8 @@ import { Event, MulticastObservable, SubscriptionList } from '@dxos/async';
 import { type ClientServicesProvider } from '@dxos/client-protocol';
 import { log } from '@dxos/log';
 import { runServiceCall, subscribeStream } from '@dxos/protocols';
-import { ConnectionState, type NetworkStatus } from '@dxos/protocols/proto/dxos/client/services';
+import { buf } from '@dxos/protocols/buf';
+import { ConnectionState, type NetworkStatus, NetworkStatusSchema } from '@dxos/protocols/buf/dxos/client/services_pb';
 
 import { RPC_TIMEOUT } from '../common';
 
@@ -17,10 +18,10 @@ import { RPC_TIMEOUT } from '../common';
  */
 export class MeshProxy {
   private readonly _networkStatusUpdated = new Event<NetworkStatus>();
-  private readonly _networkStatus = MulticastObservable.from(this._networkStatusUpdated, {
-    swarm: ConnectionState.OFFLINE,
-    signaling: [],
-  });
+  private readonly _networkStatus = MulticastObservable.from(
+    this._networkStatusUpdated,
+    buf.create(NetworkStatusSchema, { swarm: ConnectionState.OFFLINE, signaling: [] }),
+  );
 
   /** Subscriptions for RPC streams that need to be re-established on reconnect. */
   private readonly _streamSubscriptions = new SubscriptionList();

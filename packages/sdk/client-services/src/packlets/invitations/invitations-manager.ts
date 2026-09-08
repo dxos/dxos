@@ -18,14 +18,22 @@ import { generatePasscode } from '@dxos/credentials';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
-import { SpaceMember } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { buf, bufInit, bufWkt, fromPublicKey } from '@dxos/protocols/buf';
+import {
+  Invitation,
+  Invitation_AuthMethod,
+  Invitation_State,
+  Invitation_Type,
+  InvitationSchema,
+} from '@dxos/protocols/buf/dxos/client/invitation_pb';
+import { SpaceMember_Role } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { type InvitationsService } from '@dxos/protocols/rpc';
 import { trace } from '@dxos/tracing';
 
 import { type IMetadataStore, IMetadataStoreService, hasInvitationExpired } from '../metadata';
 import type { InvitationProtocol } from './invitation-protocol';
 import { type InvitationsHandler, InvitationsHandlerService, createAdmissionKeypair } from './invitations-handler';
+import { fromBufInvitation, toBufInvitation } from './utils';
 
 /**
  * Effect service tag for {@link InvitationsManager}.
@@ -135,7 +143,7 @@ export class InvitationsManager {
 
       const loadTasks = freshInvitations.map((persistentInvitation) => {
         invariant(!this._createInvitations.get(persistentInvitation.invitationId), 'invitation already exists');
-        return this.createInvitation(ctx, { ...persistentInvitation, persistent: false });
+        return this.createInvitation(ctx, { ...toBufInvitation(persistentInvitation), persistent: false });
       });
       const cInvitations = await Promise.all(loadTasks);
 
@@ -202,7 +210,7 @@ export class InvitationsManager {
       if (created.get().persistent) {
         await this._metadataStore.removeInvitation(invitationId);
       }
-      if (created.get().type === Invitation.Type.DELEGATED) {
+      if (created.get().type === Invitation_Type.DELEGATED) {
         const handler = this._getHandler(created.get());
         await handler.cancelDelegation(created.get());
       }
@@ -239,24 +247,24 @@ export class InvitationsManager {
   private _createInvitation(protocol: InvitationProtocol, _options?: Partial<Invitation>): Invitation {
     const {
       invitationId = PublicKey.random().toHex(),
-      type = Invitation.Type.INTERACTIVE,
-      authMethod = Invitation.AuthMethod.SHARED_SECRET,
-      state = Invitation.State.INIT,
+      type = Invitation_Type.INTERACTIVE,
+      authMethod = Invitation_AuthMethod.SHARED_SECRET,
+      state = Invitation_State.INIT,
       timeout = INVITATION_TIMEOUT,
-      swarmKey = PublicKey.random(),
-      persistent = _options?.authMethod !== Invitation.AuthMethod.KNOWN_PUBLIC_KEY,
-      created = new Date(),
+      swarmKey = fromPublicKey(PublicKey.random()),
+      persistent = _options?.authMethod !== Invitation_AuthMethod.KNOWN_PUBLIC_KEY,
+      created = bufWkt.timestampNow(),
       guestKeypair = undefined,
-      role = SpaceMember.Role.ADMIN,
-      lifetime = 86400 * 7, // 7 days,
+      role = SpaceMember_Role.ADMIN,
+      lifetime = 86400 * 7, // 7 days.
       multiUse = false,
       ...options
     } = _options ?? {};
     const authCode =
       options?.authCode ??
-      (authMethod === Invitation.AuthMethod.SHARED_SECRET ? generatePasscode(AUTHENTICATION_CODE_LENGTH) : undefined);
+      (authMethod === Invitation_AuthMethod.SHARED_SECRET ? generatePasscode(AUTHENTICATION_CODE_LENGTH) : undefined);
 
-    return {
+    return buf.create(InvitationSchema, {
       invitationId,
       type,
       authMethod,
@@ -264,17 +272,17 @@ export class InvitationsManager {
       swarmKey,
       authCode,
       timeout,
-      persistent: persistent && type !== Invitation.Type.DELEGATED, // delegated invitations are persisted in control feed
+      persistent: persistent && type !== Invitation_Type.DELEGATED, // Delegated invitations are persisted in the control feed.
       guestKeypair:
-        guestKeypair ?? (authMethod === Invitation.AuthMethod.KNOWN_PUBLIC_KEY ? createAdmissionKeypair() : undefined),
+        guestKeypair ?? (authMethod === Invitation_AuthMethod.KNOWN_PUBLIC_KEY ? createAdmissionKeypair() : undefined),
       created,
       lifetime,
       role,
       multiUse,
       delegationCredentialId: options?.delegationCredentialId,
-      ...options,
-      ...protocol.getInvitationContext(),
-    } satisfies Invitation;
+      ...bufInit(options),
+      ...bufInit(protocol.getInvitationContext()),
+    });
   }
 
   private _createObservableInvitation(
@@ -297,7 +305,7 @@ export class InvitationsManager {
       initialInvitation: invitation,
       subscriber: stream.observable,
       onCancel: async () => {
-        stream.next({ ...invitation, state: Invitation.State.CANCELLED });
+        stream.next({ ...invitation, state: Invitation_State.CANCELLED });
         await invitationCtx.dispose();
       },
     });
@@ -321,10 +329,10 @@ export class InvitationsManager {
       onError: (err) => {
         if (err instanceof TimeoutError) {
           log('timeout', { ...handler.toJSON() });
-          stream.next({ ...initialState, state: Invitation.State.TIMEOUT });
+          stream.next({ ...initialState, state: Invitation_State.TIMEOUT });
         } else {
           log.warn('auth failed', err);
-          stream.next({ ...initialState, state: Invitation.State.ERROR });
+          stream.next({ ...initialState, state: Invitation_State.ERROR });
         }
         void ctx.dispose();
       },
@@ -337,7 +345,7 @@ export class InvitationsManager {
       initialInvitation: initialState,
       subscriber: stream.observable,
       onCancel: async () => {
-        stream.next({ ...initialState, state: Invitation.State.CANCELLED });
+        stream.next({ ...initialState, state: Invitation_State.CANCELLED });
         await ctx.dispose();
       },
       onAuthenticate: async (code: string) => {
@@ -353,11 +361,11 @@ export class InvitationsManager {
     changeStream: PushStream<Invitation>,
     invitation: Invitation,
   ): Promise<void> {
-    if (invitation.type === Invitation.Type.DELEGATED && invitation.delegationCredentialId == null) {
+    if (invitation.type === Invitation_Type.DELEGATED && invitation.delegationCredentialId == null) {
       const delegationCredentialId = await handler.delegate(invitation);
-      changeStream.next({ ...invitation, delegationCredentialId });
+      changeStream.next({ ...invitation, delegationCredentialId: fromPublicKey(delegationCredentialId) });
     } else if (invitation.persistent) {
-      await this._metadataStore.addInvitation(invitation);
+      await this._metadataStore.addInvitation(fromBufInvitation(invitation));
       this.saved.emit(invitation);
     }
   }

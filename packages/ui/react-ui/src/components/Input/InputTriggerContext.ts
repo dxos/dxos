@@ -2,10 +2,11 @@
 // Copyright 2023 DXOS.org
 //
 
-import { createContext } from '@radix-ui/react-context';
 import { useEffect } from 'react';
 
-import { INPUT_NAME } from '@dxos/react-input';
+import { createContext } from '@dxos/react-hooks';
+
+import { INPUT_NAME } from './InputContext';
 
 // Kept out of `Input.tsx`: react-refresh only fast-refreshes a module whose exports are all
 // components, so a context and its hook exported beside them force a full page reload on every edit.

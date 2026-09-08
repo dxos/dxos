@@ -2,13 +2,13 @@
 // Copyright 2021 DXOS.org
 //
 
+import { invariant } from '@dxos/invariant';
+import { type CompatOptions } from '@dxos/protocols/buf-shape-compat';
 import {
-  type EncodingOptions,
   type ServiceBackend,
   type ServiceDescriptorLike,
   type ServiceProvider,
-} from '@dxos/codec-protobuf';
-import { invariant } from '@dxos/invariant';
+} from '@dxos/protocols/service-contract';
 
 import { RpcPeer, type RpcPeerOptions } from './rpc';
 
@@ -71,7 +71,7 @@ export interface ProtoRpcPeerOptions<Client, Server> extends Omit<RpcPeerOptions
   /**
    * Encoding options passed to the underlying proto codec.
    */
-  encodingOptions?: EncodingOptions;
+  encodingOptions?: CompatOptions;
 }
 
 /**

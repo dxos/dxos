@@ -2,8 +2,6 @@
 // Copyright 2026 DXOS.org
 //
 
-// Aliased: dx-compile's node banner injects its own `createRequire` binding into the bundle, so
-// the bare name would collide.
 import fs from 'node:fs';
 import { createRequire as nodeCreateRequire } from 'node:module';
 import path from 'node:path';

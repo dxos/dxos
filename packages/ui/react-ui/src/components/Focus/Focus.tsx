@@ -2,12 +2,11 @@
 // Copyright 2026 DXOS.org
 //
 
-import { useComposedRefs } from '@radix-ui/react-compose-refs';
-import { Primitive } from '@radix-ui/react-primitive';
-import { Slot } from '@radix-ui/react-slot';
+import { ark } from '@ark-ui/react/factory';
 import React, { type FocusEvent, type KeyboardEvent, type MouseEvent, useCallback, useRef, useState } from 'react';
 
 import { useFocusGroup } from '@dxos/react-focus';
+import { useComposedRefs } from '@dxos/react-hooks';
 import { type Axis } from '@dxos/ui-types';
 
 import { useThemeContext } from '../../hooks';
@@ -34,7 +33,6 @@ type GroupProps = {
 //   Perhaps react-ui-attention comes under the mosaic umbrella as it supports selection?
 const Group = slottable<HTMLDivElement, GroupProps>(
   ({ children, asChild, orientation = 'vertical', border = false, onKeyDown, ...props }, forwardedRef) => {
-    const Comp = asChild ? Slot : Primitive.div;
     const { tx } = useThemeContext();
     const rootRef = useRef<HTMLDivElement>(null);
     const {
@@ -71,7 +69,8 @@ const Group = slottable<HTMLDivElement, GroupProps>(
     const { className, ...rest } = composableProps(props);
     return (
       <FocusContext.Provider value={{ setFocus: setState, groupHasFocus }}>
-        <Comp
+        <ark.div
+          asChild={asChild}
           {...rest}
           tabIndex={0}
           className={tx('focus.group', { border }, className)}
@@ -85,7 +84,7 @@ const Group = slottable<HTMLDivElement, GroupProps>(
           ref={useComposedRefs<HTMLDivElement>(rootRef, forwardedRef, focusGroupRef)}
         >
           {children}
-        </Comp>
+        </ark.div>
       </FocusContext.Provider>
     );
   },
@@ -113,7 +112,6 @@ const Item = slottable<HTMLDivElement, ItemProps>(
     { children, asChild, current, border = false, onCurrentChange, onClick, onFocus, onBlur, ...props },
     forwardedRef,
   ) => {
-    const Comp = asChild ? Slot : Primitive.div;
     const { tx } = useThemeContext();
     // Enter selects the item rather than moving focus into it.
     const {
@@ -164,7 +162,8 @@ const Item = slottable<HTMLDivElement, ItemProps>(
 
     const { className, ...rest } = composableProps(props);
     return (
-      <Comp
+      <ark.div
+        asChild={asChild}
         {...rest}
         tabIndex={0}
         className={tx('focus.item', { border }, className)}
@@ -177,7 +176,7 @@ const Item = slottable<HTMLDivElement, ItemProps>(
         ref={useComposedRefs<HTMLDivElement>(forwardedRef, focusGroupRef)}
       >
         {children}
-      </Comp>
+      </ark.div>
     );
   },
 );

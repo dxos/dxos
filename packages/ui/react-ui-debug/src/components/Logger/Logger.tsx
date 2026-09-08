@@ -32,7 +32,7 @@ import {
 } from '@dxos/react-ui';
 import { useViewState, useViewStateActions } from '@dxos/react-ui-attention';
 import { Listbox } from '@dxos/react-ui-list';
-import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
+import { JsonHighlighter, Syntax } from '@dxos/react-ui-syntax-highlighter';
 import { mx } from '@dxos/ui-theme';
 import { type ComposableProps } from '@dxos/ui-types';
 
@@ -246,7 +246,6 @@ const LoggerToolbar = composable<HTMLDivElement>((props, forwardedRef) => {
         <Select.TriggerButton classNames='w-[6rem] text-sm' placeholder={t('level.label')} />
         <Select.Portal>
           <Select.Content>
-            <Select.ScrollUpButton />
             <Select.Viewport>
               {LEVELS.map((level) => (
                 <Select.Option key={level} value={level} classNames='text-sm'>
@@ -254,8 +253,6 @@ const LoggerToolbar = composable<HTMLDivElement>((props, forwardedRef) => {
                 </Select.Option>
               ))}
             </Select.Viewport>
-            <Select.ScrollDownButton />
-            <Select.Arrow />
           </Select.Content>
         </Select.Portal>
       </Select.Root>
@@ -367,7 +364,6 @@ const LoggerLevels = ({ classNames }: LoggerLevelsProps) => {
                                   />
                                   <Select.Portal>
                                     <Select.Content>
-                                      <Select.ScrollUpButton />
                                       <Select.Viewport>
                                         <Select.Option value='inherit' classNames='text-sm'>
                                           {t('levels.inherit.label')}
@@ -378,8 +374,6 @@ const LoggerLevels = ({ classNames }: LoggerLevelsProps) => {
                                           </Select.Option>
                                         ))}
                                       </Select.Viewport>
-                                      <Select.ScrollDownButton />
-                                      <Select.Arrow />
                                     </Select.Content>
                                   </Select.Portal>
                                 </Select.Root>
@@ -521,14 +515,17 @@ const LoggerList = ({ classNames }: LoggerListProps) => {
                 />
                 {isExpanded && (
                   <div className='col-span-full'>
-                    <JsonHighlighter
-                      classNames='p-2'
-                      data={{
-                        file: record.line ? `${record.file}:${record.line}` : record.file,
-                        message: record.message,
-                        context: record.context,
-                      }}
-                    />
+                    {/* The viewport owns the scrolling, so a long line gets the themed bar, not the native one. */}
+                    <Syntax.Viewport>
+                      <JsonHighlighter
+                        classNames='p-2 overflow-visible'
+                        data={{
+                          file: record.line ? `${record.file}:${record.line}` : record.file,
+                          message: record.message,
+                          context: record.context,
+                        }}
+                      />
+                    </Syntax.Viewport>
                     {frames && <ErrorStack classNames='p-1 dx-input-surface' frames={frames} />}
                   </div>
                 )}
