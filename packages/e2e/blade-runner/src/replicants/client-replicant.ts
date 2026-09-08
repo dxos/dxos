@@ -6,7 +6,7 @@ import { next as A } from '@automerge/automerge';
 import * as Schema from 'effect/Schema';
 import net from 'node:net';
 
-import { Trigger, sleep, waitForCondition } from '@dxos/async';
+import { Trigger, asyncTimeout, sleep, waitForCondition } from '@dxos/async';
 import { Client, Config } from '@dxos/client';
 import { type CancellableInvitation, InvitationEncoder } from '@dxos/client-protocol';
 import { createEdgeIdentity } from '@dxos/client/edge';
@@ -657,7 +657,11 @@ export class ClientReplicant {
     });
     // It only resolves on a truthy value, but its return type keeps the predicate's `undefined`.
     invariant(space, `space not found: ${spaceId}`);
-    await space.waitUntilReady();
+    // Bounded like the lookup above. `waitUntilReady` resolves only once the space reaches
+    // SPACE_READY, which a space whose root document never arrives never does — unbounded, that
+    // reaches the orchestrator as a call that simply does not return, naming whichever assertion
+    // happened to touch the space rather than the space itself.
+    await asyncTimeout(space.waitUntilReady(), SPACE_READY_TIMEOUT, new Error(`space never became ready: ${spaceId}`));
     return space;
   }
 

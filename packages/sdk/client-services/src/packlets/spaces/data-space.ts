@@ -483,7 +483,9 @@ export class DataSpace {
   }
 
   private _onNewAutomergeRoot(rootUrl: string): void {
-    log('loading automerge root doc for space', { space: this.key, rootUrl });
+    // Info, not debug: this fetch is what promotes the space to SPACE_READY and it is unbounded, so
+    // when it does not return this is the only line that says which document the space is waiting on.
+    log.info('loading automerge root doc for space', { spaceId: this.id, space: this.key, rootUrl });
 
     let lease: DocumentLease<DatabaseDirectory> | null = null;
 

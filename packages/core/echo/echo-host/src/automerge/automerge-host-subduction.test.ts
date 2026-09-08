@@ -23,6 +23,7 @@ import { range } from '@dxos/util';
 
 import { TestReplicationNetwork, createTestSqliteRuntime } from '../testing';
 import { AutomergeHost } from './automerge-host';
+import { type DocumentLease } from './document-lease';
 import { MeshEchoReplicator } from './mesh-echo-replicator';
 
 // TODO(mykola): subduction wasm/network tests are flaky on CI runners
@@ -618,6 +619,134 @@ describe.skipIf(process.env.CI)('AutomergeHost with Subduction', () => {
     });
   });
 
+  /**
+   * The fetch that nobody answers when it is issued.
+   *
+   * `DataSpace._onNewAutomergeRoot` fetches the space root, and the root is what promotes a space to
+   * `SPACE_READY`. A device learns the root's URL from the control feed, so it can — and in
+   * EDGE-nightly's soak did — ask for the document before the peer is in a position to serve it.
+   * These pin down what the fetcher does on its own, so a soak failure where the document never
+   * arrives can be read as the holder's.
+   */
+  describe('a fetch nobody answers when it is issued', () => {
+    test('is answered once a peer creates the document', { timeout: 30_000 }, async ({ expect }) => {
+      const { runtime: runtime1, dispose: dispose1 } = createRuntime();
+      onTestFinished(() => dispose1());
+      const host1 = await setupAutomergeHost({ runtime: runtime1 });
+
+      const { runtime: runtime2, dispose: dispose2 } = createRuntime();
+      onTestFinished(() => dispose2());
+      const host2 = await setupAutomergeHost({ runtime: runtime2 });
+
+      // Minted here rather than by `createDoc`, so the fetch can name a document that does not
+      // exist anywhere yet — exactly what a control feed hands a device ahead of replication.
+      const { documentId } = parseAutomergeUrl(generateAutomergeUrl());
+
+      const network = await new TestReplicationNetwork().open();
+      try {
+        await host1.addReplicator(Context.default(), await network.createReplicator());
+        await host2.addReplicator(Context.default(), await network.createReplicator());
+
+        const fetch = trackFetch<{ text: string }>(host1, documentId);
+        await sleep(1_000);
+        expect(fetch.done).toBe(false);
+
+        await host2.createDoc(Automerge.save(Automerge.from({ text: 'created after the fetch' })), {
+          documentId,
+          preserveHistory: true,
+        });
+        await host2.flush(Context.default());
+        await waitForSubductionSave();
+
+        await expect.poll(() => fetch.done, { timeout: 15_000 }).toBe(true);
+        expect(fetch.error).toBeUndefined();
+        expect(fetch.lease?.doc()?.text).toEqual('created after the fetch');
+      } finally {
+        await host1.close();
+        await host2.close();
+        await network.close();
+      }
+    });
+
+    test('is answered once the peer holding the document connects', { timeout: 30_000 }, async ({ expect }) => {
+      const { runtime: runtime1, dispose: dispose1 } = createRuntime();
+      onTestFinished(() => dispose1());
+      const host1 = await setupAutomergeHost({ runtime: runtime1 });
+
+      const { runtime: runtime2, dispose: dispose2 } = createRuntime();
+      onTestFinished(() => dispose2());
+      const host2 = await setupAutomergeHost({ runtime: runtime2 });
+
+      const handle = await host2.createDoc({ text: 'held by the peer all along' });
+      await host2.flush(Context.default());
+      await waitForSubductionSave();
+
+      // Requested with no replicator attached: the space-root fetch is scheduled off the control
+      // pipeline, which does not wait for the connection the answer has to come over.
+      const fetch = trackFetch<{ text: string }>(host1, handle.documentId);
+      await sleep(1_000);
+      expect(fetch.done).toBe(false);
+
+      const network = await new TestReplicationNetwork().open();
+      try {
+        await host1.addReplicator(Context.default(), await network.createReplicator());
+        await host2.addReplicator(Context.default(), await network.createReplicator());
+
+        await expect.poll(() => fetch.done, { timeout: 15_000 }).toBe(true);
+        expect(fetch.error).toBeUndefined();
+        expect(fetch.lease?.doc()?.text).toEqual('held by the peer all along');
+      } finally {
+        await host1.close();
+        await host2.close();
+        await network.close();
+      }
+    });
+
+    /**
+     * The nearest local analogue of the soak failure, and the reason it is read as an EDGE-side one.
+     *
+     * A refusal the holder later lifts leaves the fetcher holding a query that was announced once,
+     * to a peer that said no — the shape the soak's stuck device was in. The fetcher recovers from
+     * it here with nothing kicking the holder, so a fetch that stays unanswered against EDGE is not
+     * explained by the fetcher having no way back.
+     */
+    test('recovers from a lifted refusal without the holder being kicked', { timeout: 30_000 }, async ({ expect }) => {
+      const { runtime: runtime1, dispose: dispose1 } = createRuntime();
+      onTestFinished(() => dispose1());
+      const host1 = await setupAutomergeHost({ runtime: runtime1 });
+
+      const { runtime: runtime2, dispose: dispose2 } = createRuntime();
+      onTestFinished(() => dispose2());
+      const host2 = await setupAutomergeHost({ runtime: runtime2 });
+
+      const handle = await host2.createDoc({ text: 'refused, then allowed' });
+      await host2.flush(Context.default());
+      await waitForSubductionSave();
+
+      const network = await new TestReplicationNetwork().open();
+      try {
+        const holder = await network.createReplicator({ shouldAdvertise: () => false });
+        await host1.addReplicator(Context.default(), await network.createReplicator({ shouldAdvertise: () => true }));
+        await host2.addReplicator(Context.default(), holder);
+
+        // Issued while the holder refuses, so it is announced to a peer that says no.
+        const fetch = trackFetch<{ text: string }>(host1, handle.documentId);
+        await sleep(POLICY_NEGATIVE_DELAY_MS);
+        expect(fetch.done).toBe(false);
+
+        holder.shouldAdvertise = () => true;
+
+        await expect.poll(() => fetch.done, { timeout: 20_000 }).toBe(true);
+        expect(fetch.error).toBeUndefined();
+        expect(fetch.lease?.doc()?.text).toEqual('refused, then allowed');
+      } finally {
+        await host1.close();
+        await host2.close();
+        await network.close();
+      }
+    });
+  });
+
   test('collection synchronization is bidirectional', { timeout: 10_000 }, async ({ expect }) => {
     const host1DocumentIds: DocumentId[] = [];
     const host2DocumentIds: DocumentId[] = [];
@@ -863,6 +992,28 @@ type RuntimeArg = RuntimeHandle['runtime'];
 
 const createRuntime = (tmpPath?: string): RuntimeHandle => {
   return createTestSqliteRuntime(tmpPath ? tmpPath + '.db' : ':memory:');
+};
+
+type TrackedFetch<T> = { lease?: DocumentLease<T> | null; error?: unknown; done: boolean };
+
+/**
+ * Start an unbounded `loadDoc` and record how it ends, without letting the promise escape: the
+ * assertions are about whether it settles at all, and teardown disposes the context out from under
+ * a fetch that is still pending.
+ */
+const trackFetch = <T>(host: AutomergeHost, documentId: DocumentId): TrackedFetch<T> => {
+  const tracked: TrackedFetch<T> = { done: false };
+  void host.loadDoc<T>(Context.default(), documentId).then(
+    (lease) => {
+      tracked.lease = lease;
+      tracked.done = true;
+    },
+    (error) => {
+      tracked.error = error;
+      tracked.done = true;
+    },
+  );
+  return tracked;
 };
 
 const waitForSubductionSave = async () => {
