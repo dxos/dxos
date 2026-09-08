@@ -300,6 +300,21 @@ const REACTIVE_PROXY_HANDLER: ProxyHandler<any> = {
       ? handler.deleteProperty(target, property)
       : Reflect.deleteProperty(target, property);
   },
+  // Symbol keys are hidden from enumeration. A symbol on a target is always internal bookkeeping — the
+  // same invariant the write gate relies on — and every one of them leads somewhere a generic walker
+  // must not go: `[symbolReactiveHandler]` to the handler, `[EventId]` to an `Event`, `[symbolInternals]`
+  // to the `ObjectCore`. A consumer that enumerates own keys and reads each value, as structural hashing
+  // and deep-equality do, otherwise walks into one of those, on to its prototype methods, and dies
+  // reading `Function.prototype.caller`. Filtering is legal because these are all configurable; the
+  // proxy invariant only compels a handler to report non-configurable own keys.
+  ownKeys: (target) =>
+    Reflect.ownKeys(target).filter(
+      (key) =>
+        typeof key !== 'symbol' ||
+        // A non-configurable own key must be reported or the engine rejects the trap result;
+        // `[TypeId]` and `[SchemaId]` are locked by `setTypename`/`setSchema`.
+        Reflect.getOwnPropertyDescriptor(target, key)?.configurable === false,
+    ),
   // An array's real prototype chain is already what a consumer should see; only a record hides an
   // instance-state prototype behind `Object.prototype`.
   getPrototypeOf: (target) => (Array.isArray(target) ? Reflect.getPrototypeOf(target) : Object.prototype),
