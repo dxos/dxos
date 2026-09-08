@@ -6,8 +6,8 @@ import React from 'react';
 
 import { useSettingsState } from '@dxos/app-framework/ui';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
-import { Input } from '@dxos/react-ui';
-import { Form, type FormFieldRendererProps, FormRow } from '@dxos/react-ui-form';
+import { Field } from '@dxos/react-ui';
+import { Form, FormField, type FormFieldRendererProps } from '@dxos/react-ui-form';
 
 import { meta } from '#meta';
 import { Markdown } from '#types';
@@ -42,9 +42,9 @@ export const MarkdownSettings = ({ subject }: MarkdownSettingsProps) => {
 
 /** Multi-line snippet editor; replaces the single-line text input the schema would otherwise render. */
 const SnippetsField = ({ type, readonly, onValueChange, onBlur, ...props }: FormFieldRendererProps<string>) => (
-  <FormRow<string> readonly={readonly} {...props}>
+  <FormField<string> readonly={readonly} {...props}>
     {({ value }) => (
-      <Input.TextArea
+      <Field.Textarea
         disabled={!!readonly}
         rows={5}
         value={value ?? ''}
@@ -52,7 +52,7 @@ const SnippetsField = ({ type, readonly, onValueChange, onBlur, ...props }: Form
         onChange={(event) => onValueChange(type, event.target.value)}
       />
     )}
-  </FormRow>
+  </FormField>
 );
 
 MarkdownSettings.displayName = 'MarkdownSettings';

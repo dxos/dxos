@@ -14,7 +14,7 @@ import { type FieldContext } from '#types';
 
 import { type FormHandlerProps, useFormValues } from '../../../hooks';
 import { getRootFormProperties } from '../../../util';
-import { FormField, FormFieldErrorBoundary, type FormFieldProps, presentationFor } from '../FormField';
+import { FormFieldDispatch, type FormFieldDispatchProps, FormFieldErrorBoundary, presentationFor } from '../FormField';
 import { FormLayout } from '../FormLayout';
 import { FormFieldSetContainer } from './FormFieldSetContainer';
 
@@ -40,7 +40,7 @@ export type FormFieldSetProps<T extends AnyProperties> = Merge<
     layoutName?: string;
   },
   Pick<FormHandlerProps<T>, 'schema'>,
-  Pick<FormFieldProps, 'path' | 'autoFocus'>,
+  Pick<FormFieldDispatchProps, 'path' | 'autoFocus'>,
   FieldContext
 >;
 
@@ -86,7 +86,7 @@ export const FormFieldSet = ({
         const name = property.name.toString();
         return (
           <FormFieldErrorBoundary key={name} path={[...(path ?? []), name]}>
-            <FormField
+            <FormFieldDispatch
               type={property.type}
               name={name}
               path={[...(path ?? []), name]}

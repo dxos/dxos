@@ -5,7 +5,7 @@
 import { JSONPath } from 'jsonpath-plus';
 import React, { type PropsWithChildren, forwardRef, useCallback, useMemo, useState } from 'react';
 
-import { Input, ScrollArea } from '@dxos/react-ui';
+import { Field, ScrollArea } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
 import { type ComposableProps } from '@dxos/ui-types';
 
@@ -160,8 +160,8 @@ const SyntaxFilter = forwardRef<HTMLInputElement, SyntaxFilterProps>(
     }
 
     return (
-      <Input.Root validationValence={filterError ? 'error' : 'success'}>
-        <Input.TextInput
+      <Field.Root validationValence={filterError ? 'error' : 'success'}>
+        <Field.Input
           classNames={['p-1 px-2 font-mono', filterError && 'border-rose-500', classNames]}
           variant='subdued'
           value={filterText}
@@ -169,7 +169,7 @@ const SyntaxFilter = forwardRef<HTMLInputElement, SyntaxFilterProps>(
           onChange={(event) => setFilterText(event.target.value)}
           ref={forwardedRef}
         />
-      </Input.Root>
+      </Field.Root>
     );
   },
 );
@@ -191,8 +191,8 @@ type SyntaxDepthProps = ComposableProps;
 const SyntaxDepth = forwardRef<HTMLInputElement, SyntaxDepthProps>(({ classNames }, forwardedRef) => {
   const { depth, setDepth } = useSyntaxContext(SYNTAX_DEPTH_NAME);
   return (
-    <Input.Root>
-      <Input.TextInput
+    <Field.Root>
+      <Field.Input
         classNames={['p-1 px-2 font-mono', classNames]}
         variant='subdued'
         type='number'
@@ -203,7 +203,7 @@ const SyntaxDepth = forwardRef<HTMLInputElement, SyntaxDepthProps>(({ classNames
         onChange={(event) => setDepth(Math.max(0, Number(event.target.value) || 0))}
         ref={forwardedRef}
       />
-    </Input.Root>
+    </Field.Root>
   );
 });
 

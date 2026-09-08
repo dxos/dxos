@@ -6,7 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
 import { proxyFetchLegacy } from '@dxos/edge-client';
-import { Button, Input } from '@dxos/react-ui';
+import { Button, Field } from '@dxos/react-ui';
 import { Listbox } from '@dxos/react-ui-list';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
@@ -137,16 +137,16 @@ const ProviderHarness = () => {
 
   return (
     <div className='dx-expand flex flex-col gap-4 p-4 max-w-[40rem]'>
-      <Input.Root>
-        <Input.Label>HeyGen API key</Input.Label>
-        <Input.TextInput
+      <Field.Root>
+        <Field.Label>HeyGen API key</Field.Label>
+        <Field.Input
           type='password'
           noAutoFill
           placeholder='Paste API key'
           value={apiKey}
           onChange={(event) => setApiKey(event.target.value)}
         />
-      </Input.Root>
+      </Field.Root>
       <div className='flex gap-2'>
         <Button disabled={!apiKey.trim() || busy != null} onClick={() => run('avatars')}>
           {busy === 'avatars' ? 'Loading avatars…' : 'List avatars'}

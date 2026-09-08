@@ -16,7 +16,7 @@ import { EdgeReplicationSetting } from '@dxos/protocols/buf/dxos/echo/metadata_p
 import { MembershipPolicy } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { SpacesService } from '@dxos/protocols/rpc';
 import { useClient } from '@dxos/react-client';
-import { Button, Dialog, DropdownMenu, Flex, Icon, IconButton, Input, useTranslation } from '@dxos/react-ui';
+import { Button, Dialog, Field, Flex, Icon, IconButton, Menu, useTranslation } from '@dxos/react-ui';
 import { Form, type FormFieldMap } from '@dxos/react-ui-form';
 import { HuePicker, IconPicker } from '@dxos/react-ui-pickers';
 
@@ -95,57 +95,57 @@ export const SpaceSettingsContainer = ({ space }: AppSurface.SpaceArticleProps) 
           [onValueChange, type],
         );
         return (
-          <Form.Row label={label} description={t('display-name.description')}>
-            <Input.Root>
-              <Input.TextInput
+          <Form.Field label={label} description={t('display-name.description')}>
+            <Field.Root>
+              <Field.Input
                 value={getValue()}
                 onChange={handleChange}
                 placeholder={t('display-name-input.placeholder')}
                 classNames='w-64 max-w-full min-w-0'
               />
-            </Input.Root>
-          </Form.Row>
+            </Field.Root>
+          </Form.Field>
         );
       },
       icon: ({ type, label, getValue, onValueChange }) => {
         const handleChange = useCallback((icon: string) => onValueChange(type, icon), [onValueChange, type]);
         const handleReset = useCallback(() => onValueChange(type, undefined), [onValueChange, type]);
         return (
-          <Form.Row label={label} description={t('icon.description')}>
+          <Form.Field label={label} description={t('icon.description')}>
             <IconPicker
               value={getValue()}
               onChange={handleChange}
               onReset={handleReset}
               classNames='justify-self-end'
             />
-          </Form.Row>
+          </Form.Field>
         );
       },
       hue: ({ type, label, getValue, onValueChange }) => {
         const handleChange = useCallback((nextHue: string) => onValueChange(type, nextHue), [onValueChange, type]);
         const handleReset = useCallback(() => onValueChange(type, undefined), [onValueChange, type]);
         return (
-          <Form.Row label={label} description={t('hue.description')}>
+          <Form.Field label={label} description={t('hue.description')}>
             <HuePicker value={getValue()} onChange={handleChange} onReset={handleReset} classNames='justify-self-end' />
-          </Form.Row>
+          </Form.Field>
         );
       },
       // Read-only: the membership policy is written into the genesis credential at creation.
       private: ({ label, getValue }) => (
-        <Form.Row label={label} description={t('private.description')}>
-          <Input.Root>
-            <Input.Switch checked={getValue()} disabled classNames='justify-self-end' />
-          </Input.Root>
-        </Form.Row>
+        <Form.Field label={label} description={t('private.description')}>
+          <Field.Root>
+            <Field.Switch checked={getValue()} disabled classNames='justify-self-end' />
+          </Field.Root>
+        </Form.Field>
       ),
       edgeReplication: ({ type, label, getValue, onValueChange }) => {
         const handleChange = useCallback((checked: boolean) => onValueChange(type, checked), [onValueChange, type]);
         return (
-          <Form.Row label={label} description={t('edge-replication.description')}>
-            <Input.Root>
-              <Input.Switch checked={getValue()} onCheckedChange={handleChange} classNames='justify-self-end' />
-            </Input.Root>
-          </Form.Row>
+          <Form.Field label={label} description={t('edge-replication.description')}>
+            <Field.Root>
+              <Field.Switch checked={getValue()} onCheckedChange={handleChange} classNames='justify-self-end' />
+            </Field.Root>
+          </Form.Field>
         );
       },
     }),
@@ -206,11 +206,11 @@ export const SpaceSettingsContainer = ({ space }: AppSurface.SpaceArticleProps) 
           </Form.Section>
 
           <Form.Section title={t('space-controls.title')} description={t('space-controls.description')}>
-            <Form.Row label={t('space-id.title')} description={t('space-id.description')}>
+            <Form.Field label={t('space-id.title')} description={t('space-id.description')}>
               <Flex gap='sm' align='center'>
-                <Input.Root>
-                  <Input.TextInput value={space.id} disabled classNames='flex-1 font-mono text-xs' />
-                </Input.Root>
+                <Field.Root>
+                  <Field.Input value={space.id} disabled classNames='flex-1 font-mono text-xs' />
+                </Field.Root>
                 <IconButton
                   icon='ph--copy--regular'
                   iconOnly
@@ -220,37 +220,35 @@ export const SpaceSettingsContainer = ({ space }: AppSurface.SpaceArticleProps) 
                   }}
                 />
               </Flex>
-            </Form.Row>
-            <Form.Row label={t('backup-space.title')} description={t('backup-space.description')}>
-              <DropdownMenu.Root>
-                <DropdownMenu.Trigger asChild>
+            </Form.Field>
+            <Form.Field label={t('backup-space.title')} description={t('backup-space.description')}>
+              <Menu.Root>
+                <Menu.Trigger asChild>
                   <Button>
                     {t('download-backup.label')}
                     <Icon icon='ph--caret-down--regular' size={4} classNames='ms-2' />
                   </Button>
-                </DropdownMenu.Trigger>
-                <DropdownMenu.Content>
-                  <DropdownMenu.Viewport>
-                    <DropdownMenu.Item onClick={handleBackupBinary}>
-                      {t('download-backup-binary.label')}
-                    </DropdownMenu.Item>
-                    <DropdownMenu.Item onClick={handleBackupJson}>{t('download-backup-json.label')}</DropdownMenu.Item>
-                  </DropdownMenu.Viewport>
-                </DropdownMenu.Content>
-              </DropdownMenu.Root>
-            </Form.Row>
-            <Form.Row label={t('repair-space.title')} description={t('repair-space.description')}>
+                </Menu.Trigger>
+                <Menu.Content>
+                  <Menu.Viewport>
+                    <Menu.Item onClick={handleBackupBinary}>{t('download-backup-binary.label')}</Menu.Item>
+                    <Menu.Item onClick={handleBackupJson}>{t('download-backup-json.label')}</Menu.Item>
+                  </Menu.Viewport>
+                </Menu.Content>
+              </Menu.Root>
+            </Form.Field>
+            <Form.Field label={t('repair-space.title')} description={t('repair-space.description')}>
               <Button onClick={handleRepair}>{t('repair-space.label')}</Button>
-            </Form.Row>
-            <Form.Row label={t('reset-home.title')} description={t('reset-home.description')}>
+            </Form.Field>
+            <Form.Field label={t('reset-home.title')} description={t('reset-home.description')}>
               <Button onClick={handleResetHome}>{t('reset-home.label')}</Button>
-            </Form.Row>
+            </Form.Field>
           </Form.Section>
 
           <Form.Section title={t('danger-zone.title')} description={t('danger-zone.description')}>
             {/* Shown but disabled on the default space: hiding it reads as "this space cannot be
                 deleted" rather than "pick a different default space first". */}
-            <Form.Row
+            <Form.Field
               label={t('delete-space.title')}
               description={isDefaultSpace ? t('delete-default-space.description') : t('delete-space.description')}
             >
@@ -285,7 +283,7 @@ export const SpaceSettingsContainer = ({ space }: AppSurface.SpaceArticleProps) 
                   </Dialog.Overlay>
                 </Dialog.Portal>
               </Dialog.Root>
-            </Form.Row>
+            </Form.Field>
           </Form.Section>
         </Form.Content>
       </Form.Viewport>

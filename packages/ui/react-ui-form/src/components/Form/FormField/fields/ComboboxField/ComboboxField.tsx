@@ -11,7 +11,7 @@ import { type FormFieldRendererProps } from '#types';
 
 import { type OptionsLookup, type OptionsLookupEntry } from '../../../../../annotations';
 import { pickValues, useAsyncFieldEffect, useFormValues } from '../../../../../hooks';
-import { FormRow } from '../../FormRow';
+import { FormField } from '../../FormField';
 
 export type ComboboxFieldProps = FormFieldRendererProps<string> & {
   /** Loads suggestions from the lookup's declared dependency fields (typically the field's own value). */
@@ -71,7 +71,7 @@ export const ComboboxField = ({ lookup, type, readonly, placeholder, onValueChan
   }, []);
 
   return (
-    <FormRow<string>
+    <FormField<string>
       readonly={readonly}
       renderStatic={(value) => <p className='truncate min-w-0'>{selectedLabel ?? value ?? ''}</p>}
       {...props}
@@ -107,7 +107,7 @@ export const ComboboxField = ({ lookup, type, readonly, placeholder, onValueChan
           </Combobox.Portal>
         </Combobox.Root>
       )}
-    </FormRow>
+    </FormField>
   );
 };
 

@@ -57,9 +57,9 @@ export const SupportSettings = ({ subject }: SupportSettingsProps) => {
         <Form.Content>
           <Form.Section title={meta.profile.name ?? meta.profile.key}>
             {onShowWelcome && (
-              <Form.Row label={t('show-welcome.label')}>
+              <Form.Field label={t('show-welcome.label')}>
                 <Button onClick={onShowWelcome}>{t('show-welcome.label')}</Button>
-              </Form.Row>
+              </Form.Field>
             )}
             <Form.FieldSet />
           </Form.Section>

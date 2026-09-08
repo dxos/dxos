@@ -4,7 +4,7 @@
 
 import React, { useCallback, useState } from 'react';
 
-import { AlertDialog, Button, Clipboard, Flex, Input, useTranslation } from '@dxos/react-ui';
+import { AlertDialog, Button, Clipboard, Field, Flex, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';
 
@@ -32,14 +32,13 @@ export const RecoveryCodeDialog = ({ code }: RecoveryCodeDialogProps) => {
           <p>{t('recovery-code-dialog-warning-2.message')}</p>
         </Flex>
         <Flex gap='sm' align='center' classNames='pb-4'>
-          <Input.Root>
-            <Input.Checkbox
-              data-testid='recoveryCode.confirm'
-              checked={confirmation}
-              onCheckedChange={handleConfirmation}
-            />
-            <Input.Label>{t('recovery-code-confirmation.label')}</Input.Label>
-          </Input.Root>
+          <Field.Checkbox
+            data-testid='recoveryCode.confirm'
+            checked={confirmation}
+            onCheckedChange={handleConfirmation}
+          >
+            {t('recovery-code-confirmation.label')}
+          </Field.Checkbox>
         </Flex>
       </AlertDialog.Body>
       <AlertDialog.ActionBar>

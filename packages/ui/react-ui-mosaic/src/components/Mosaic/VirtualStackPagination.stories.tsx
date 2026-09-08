@@ -13,7 +13,7 @@ import { random } from '@dxos/random';
 import { type Client, useClient } from '@dxos/react-client';
 import { useSpaces } from '@dxos/react-client/echo';
 import { persistentClientServices, withClientProvider } from '@dxos/react-client/testing';
-import { Button, Card, Input, Panel, ScrollArea, Select, Toolbar } from '@dxos/react-ui';
+import { Button, Card, Field, Panel, ScrollArea, Select, Toolbar } from '@dxos/react-ui';
 import { Dnd } from '@dxos/react-ui-dnd';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 
@@ -291,15 +291,15 @@ const FeedPaginationStory = () => {
         <Panel.Toolbar asChild>
           <Toolbar.Root>
             <div className='shrink-0' style={{ inlineSize: '6rem' }}>
-              <Input.Root>
-                <Input.TextInput
+              <Field.Root>
+                <Field.Input
                   type='number'
                   min={1}
                   value={addCount}
                   onChange={(event) => setAddCount(event.target.valueAsNumber || 0)}
                   classNames='w-full'
                 />
-              </Input.Root>
+              </Field.Root>
             </div>
             <Button onClick={handleAdd} classNames='shrink-0'>
               Add

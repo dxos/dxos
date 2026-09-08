@@ -113,7 +113,7 @@ export const ConnectorCompanion = ({ subject, role }: ConnectorCompanionProps) =
               <Form.Viewport>
                 <Form.Content>
                   <Form.Section title={title} description={source}>
-                    <Form.Row
+                    <Form.Field
                       label={t('sync-target.label')}
                       description={status}
                       validation={
@@ -137,13 +137,13 @@ export const ConnectorCompanion = ({ subject, role }: ConnectorCompanionProps) =
                           </Form.Content>
                         </Form.Root>
                       )}
-                    </Form.Row>
+                    </Form.Field>
 
                     {/* TODO(wittjosiah): Ideally this would be in the section header but there's no place to add actions in there currently. */}
                     {!sourceMissing && (
-                      <Form.Row label={t('open-connection.label')}>
+                      <Form.Field label={t('open-connection.label')}>
                         <Button onClick={handleOpenConnection}>{t('open-connection.label')}</Button>
-                      </Form.Row>
+                      </Form.Field>
                     )}
                   </Form.Section>
                 </Form.Content>
