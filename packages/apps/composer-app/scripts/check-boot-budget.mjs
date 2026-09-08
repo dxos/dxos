@@ -76,6 +76,11 @@ const MAX_PRELOAD_ENTRIES = 25;
  * with `react-toast` still holding the Radix layer. Phase 4b (Toast) measured 4,546,844 with no
  * `@radix-ui` bytes left in the graph: the Zag machines are the new floor, ~186 KB above the
  * 2026-08-31 figure, so the ceiling stays where the Phase 3 re-baseline put it.
+ *
+ * This constant is code-owned: raising it needs a strong, written motivation for the growth being
+ * accepted, not a passing build.
+ *
+ * TODO(wittjosiah): Bring this back to at least 4.25 MB, the lowest ceiling this budget has held.
  */
 const MAX_PRELOAD_BYTES = 4.55 * 1024 * 1024;
 
