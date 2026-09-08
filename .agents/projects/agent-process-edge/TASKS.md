@@ -345,8 +345,8 @@ new round-trip test rather than by reading: every hypothesis reached from source
       compute-service's env (verified by dumping `this.env` inside the DO).
 
       **Consequence beyond this project: the memoized-AI path was broken for ROUTINES too**, not
-      just hosted agents. `ai.node.test.ts` is tagged `manual`, so nothing exercised it. Worth
-      checking whether any other harness behaviour depended on a pruned stub.
+          just hosted agents. `ai.node.test.ts` is tagged `manual`, so nothing exercised it. Worth
+          checking whether any other harness behaviour depended on a pruned stub.
 
 ### Test infrastructure added (edge)
 
@@ -391,3 +391,90 @@ new round-trip test rather than by reading: every hypothesis reached from source
 - [ ] Strip the remaining scaffolding: the `DO env probe` log in `ProcessObject`.
 - [ ] Revert edge's `package.json` / `pnpm-lock.yaml` (`pnpm link-packages` `file:` overrides) before
       landing, per the existing blocker note.
+
+## Phase 9 — the fixture path, and what it uncovered (session of 2026-09-08b)
+
+Phase 8 ended with the `pruneAbsentTargets` fix "written but never run". Running it took two more
+harness defects, and then the agent got far enough to expose a real runtime bug.
+
+### Confirmed from Phase 8
+
+- [x] **`pruneAbsentTargets` works.** `MEMOIZED_AI_INFERENCE_SERVICE` reaches compute-service; the
+      prompt is enqueued, the agent wakes, dequeues, and begins a turn. Everything Phase 8 fixed in
+      dxos (`c78bea1b`, `c99c328f`) holds up under a real run.
+
+### Harness defects found and fixed (edge)
+
+- [x] **`AI_SERVICE` was bound to the real `ai-service` worker** (`test-worker.ts`), so a hosted
+      agent's model call demanded a live `ANTHROPIC_API_KEY` — the invariant every one of these
+      tests died on. The comment above the binding already described the opposite, and
+      `stripAnthropicProxyPrefix` sat 50 lines up referenced by nothing: the binding was the one
+      part of that fix never applied. Now `memoizedAnthropicHandler` through the strip helper.
+- [x] **`drain` was missing from `ProcessObject`'s `rpcMethods`**, so `lazyDurableObject` never
+      forwarded it and the barrier answered 500 in ~2ms — before doing any work. Verbatim the
+      pitfall `edge/CLAUDE.md` marks CRITICAL. This is why two tests sat at the 120s timeout: they
+      were waiting on wall-clock alarms with no barrier at all, which is the exact scenario the
+      barrier was added to remove. Now 200.
+
+### Tool operations now dispatch to operation-service (edge)
+
+- [x] `ProcessObject` ran on `OperationHandlerSet.empty`, so an agent's tool call had no handler.
+      `makeOperationServiceHandlerSet` dispatches each handler body over the existing
+      `OPERATION_SERVICE` binding, under the same invocation timeout as the function-invoker path.
+      Only `getHandlerFor` is served: `Process.fromOperation` already holds the caller's definition
+      and uses the resolved entry solely to invoke its handler, and tools resolve from the space's
+      `PersistentOperation` records (`makeToolResolverFromOperations`) rather than from the set — so
+      the synchronous `definitions()`, which a remote registry an RPC away cannot answer, is unused.
+      Resolution is optimistic; an unhosted key fails with operation-service's own message.
+
+### THE OPEN BUG: a handled message is never acked
+
+A hosted agent now answers a real prompt through EDGE — the context test returns `reply: 'Paris'`.
+But the agent's own log shows **the same message id handled over and over**:
+
+```
+14:38:22.223 agent onAlarm handling {"tag":"message","id":"01M20Q9AQ2ASCTPA9N56TZKDNM"}
+14:38:25.657 agent onAlarm handling {"tag":"message","id":"01M20Q9AQ2ASCTPA9N56TZKDNM"}
+14:38:29.126 agent onAlarm handling {"tag":"message","id":"01M20Q9AQ2ASCTPA9N56TZKDNM"}   (×5)
+```
+
+The dequeue does not consume the entry, so the agent re-runs the same turn indefinitely. This is
+what burns the fixture store (one prompt → a dozen recorded conversations, each a longer history)
+and what keeps `answers a prompt` at the timeout. It is very likely the same ground the
+`agent-feed-messages` project covers (atomic dequeue by echoing the item with an `AckAnnotation` and
+removing the original) — check there before writing a fix.
+
+- [ ] Find why the handled message is not removed/acked on a hosted turn.
+- [ ] `agent work complete, succeeding` fires after a single turn in one run — re-check `turnRan`
+      against the non-acking queue, since "drained" is being decided from a queue that never shrinks.
+
+### Also open
+
+- [ ] **Second prompt on one conversation produces no reply.** The context test's turn 1 answers
+      `Paris`; turn 2 ("what country did I just ask about") adds nothing — `replies()` stays `Paris`.
+      Probably a consequence of the ack bug, but confirm rather than assume.
+- [ ] **The alarm wake produces no reply.** The `Alarm` record is in the queue with a `wakeAt`, and
+      no assistant message follows it.
+- [ ] **`session.waitForCompletion()` looks like it never resolves for a hosted session** — the one
+      test that calls it (`answers a prompt`) times out where the same prompt succeeds under
+      `drainProcess` in the context test. Verify before chasing anything else in that test.
+- [ ] **The tool test times out** (150s) waiting for the `Person` object. The handler set is wired
+      but was never observed executing a tool — unknown whether it works.
+- [ ] `Failed to get handler to worker` (workerd RPC) with `accountLookupViaHubService failed
+    { failOpen: true }` — the `HUB_SERVICE` stub is not resolving an entrypoint. Fails open, so it
+      breaks nothing today, but it is the same class as `pruneAbsentTargets`.
+
+### Fixture store
+
+Left UNCOMMITTED on purpose. Every recording so far ran with the agent looping, so the ~95 entries
+under `.store/conversations/` encode repeated turns. Re-record from a clean `git clean -f
+.store/conversations/` once the ack bug is fixed, then confirm green with generation OFF.
+
+### Environment notes (cloud sandbox)
+
+- `DX_ANTHROPIC_API_KEY` is present; the memo server already falls back to it, so recording needs
+  only `ALLOW_LLM_GENERATION=1` (no `.secrets/` handoff).
+- `git push` in dxos needs `git-lfs` installed (`apt-get install -y git-lfs`) or the pre-push hook
+  fails on the missing binary.
+- Full bootstrap is ~30 min: `.config/claude-code-setup.sh` in both repos, `moon exec :build` in
+  dxos, then `pnpm link-packages` in edge.

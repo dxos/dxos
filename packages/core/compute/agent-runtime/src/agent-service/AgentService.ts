@@ -130,7 +130,6 @@ export interface AgentServiceOptions {
    * Provider for space-level MCP server configs.
    */
   getMcpServers?: () => McpServer.McpServer[];
-
 }
 
 export const layer = (
