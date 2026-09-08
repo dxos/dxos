@@ -9,7 +9,6 @@ export { getObjectCore } from './echo-object-utils';
 export { isEchoObject } from './echo-object-utils';
 export * from './edit-history';
 export { type ProxyTarget } from './echo-proxy-target';
-export * from './errors';
 export * from './subscription';
 export * from './util';
 export * from './version';

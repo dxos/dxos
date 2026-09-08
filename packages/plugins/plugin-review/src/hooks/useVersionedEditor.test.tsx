@@ -168,7 +168,7 @@ describe('editor binding lifecycle', () => {
     const root = doc.content.target;
     invariant(root, 'root not loaded');
     act(() => {
-      Obj.update(root, () => {
+      Obj.update(root, (root) => {
         EchoText.update(root, 'content', 'alpha\nbravo\nworld\n');
       });
     });
@@ -196,7 +196,7 @@ describe('editor binding lifecycle', () => {
     const branchText = result.current.editor.ownBranchText;
     invariant(branchText, 'own branch not bound');
     act(() => {
-      Obj.update(branchText, () => {
+      Obj.update(branchText, (branchText) => {
         EchoText.update(branchText, 'content', 'alpha\nbravo\nSuggest 1\n');
       });
     });
@@ -207,7 +207,7 @@ describe('editor binding lifecycle', () => {
     const root = doc.content.target;
     invariant(root, 'root not loaded');
     act(() => {
-      Obj.update(root, () => {
+      Obj.update(root, (root) => {
         EchoText.update(root, 'content', 'alpha\nbravo\nText 2\n');
       });
     });

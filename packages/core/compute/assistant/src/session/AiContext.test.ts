@@ -6,8 +6,11 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 import { describe, test } from 'vitest';
 
+import * as Skill from '@dxos/compute/Skill';
+import * as Template from '@dxos/compute/Template';
 import { Database, DXN, Feed, Obj, Ref, Type } from '@dxos/echo';
 import { TestDatabaseLayer } from '@dxos/echo-client/testing';
+import { Text } from '@dxos/schema';
 
 import * as AiContext from './AiContext';
 
@@ -15,7 +18,40 @@ const TypeA = Type.makeObject(DXN.make('org.dxos.type.a', '0.1.0'))(Schema.Struc
 const TypeB = Type.makeObject(DXN.make('org.dxos.type.b', '0.1.0'))(Schema.Struct({}));
 
 describe('AiContext.Binder', () => {
-  const TestLayer = TestDatabaseLayer({ types: [Feed.Feed, TypeA, TypeB] });
+  const TestLayer = TestDatabaseLayer({ types: [Feed.Feed, TypeA, TypeB, Skill.Skill, Text.Text] });
+
+  // A skill the user authored in a space has no registry key; it used to be dropped on the way in,
+  // which made the picker's toggle a silent no-op (DX-1248).
+  test.for([
+    ['keyed', () => Skill.make({ key: 'org.dxos.skill.local', name: 'Local' })],
+    ['keyless', () => Obj.make(Skill.Skill, { name: 'Local', instructions: Template.make(), tools: [] })],
+  ] as const)('binds a %s skill stored in the space DB', async ([, makeSkill], { expect }) => {
+    await Effect.gen(function* () {
+      const feed = yield* Database.add(Feed.make());
+      const runtime = yield* Effect.context<Database.Service>();
+
+      const skill = yield* Database.add(makeSkill());
+
+      const binder = new AiContext.Binder({ feed, runtime });
+      yield* Effect.promise(() => binder.open());
+      yield* Effect.promise(() => binder.bind({ skills: [Ref.make(skill)] }));
+      const afterBind = binder.getSkills();
+      yield* Effect.promise(() => binder.sync());
+      const afterSync = binder.getSkills();
+      yield* Effect.promise(() => binder.close());
+
+      const reader = new AiContext.Binder({ feed, runtime });
+      yield* Effect.promise(() => reader.open());
+      const afterReopen = reader.getSkills();
+      yield* Effect.promise(() => reader.close());
+
+      expect(afterBind.map((bound) => Obj.getURI(bound))).toEqual([Obj.getURI(skill)]);
+      expect(afterSync.map((bound) => Obj.getURI(bound))).toEqual([Obj.getURI(skill)]);
+      expect(afterReopen.map((bound) => Obj.getURI(bound))).toEqual([Obj.getURI(skill)]);
+    })
+      .pipe(Effect.provide(TestLayer))
+      .pipe(Effect.runPromise);
+  });
 
   test('reopened binder resolves all distinct bound objects', async ({ expect }) => {
     await Effect.gen(function* () {

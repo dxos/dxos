@@ -237,7 +237,7 @@ export class TestPeer {
         if (invitation.kind === Invitation_Kind.SPACE) {
           return new SpaceInvitationProtocol(
             this.dataSpaceManager,
-            this.identity!,
+            this.identity,
             this.keyring,
             toPublicKey(invitation.spaceKey),
           );

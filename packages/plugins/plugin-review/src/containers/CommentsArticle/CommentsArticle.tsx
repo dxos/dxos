@@ -262,9 +262,7 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
         return;
       }
 
-      // The object id, matching what the comment-sync extension registers comments under; a URI
-      // misses that lookup and `scrollCommentIntoView` then silently no-ops.
-      const threadId = (Relation.getSource(anchor) as Thread.Thread).id;
+      const thread = Relation.getSource(anchor) as Thread.Thread;
 
       // This is what tells the editor which thread is current, so skipping it leaves the previous
       // comment highlighted while the app selection moves on.
@@ -274,7 +272,7 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
         void invokePromise(commentConfig.scrollToAnchor, {
           subject: attendableId ?? subjectId,
           cursor: anchor.anchor,
-          id: threadId,
+          id: Ref.make(thread),
         });
       }
     },
@@ -321,11 +319,11 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
   );
 
   const handleMessageDelete = useCallback(
-    (anchor: AnchoredTo.AnchoredTo, messageId: string) =>
+    (anchor: AnchoredTo.AnchoredTo, message: Ref.Ref<MessageType.Message>) =>
       invokePromise(CommentOperation.DeleteMessage, {
         anchor,
         subject,
-        messageId,
+        message,
       }),
     [invokePromise, subject],
   );

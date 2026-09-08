@@ -7,7 +7,6 @@ import { type AnyDocumentId, type DocumentId, interpretAsDocumentId } from '@aut
 import * as Context from 'effect/Context';
 
 import { Event, Trigger, UpdateScheduler, scheduleTask, sleep } from '@dxos/async';
-import { type Struct } from '@dxos/codec-protobuf';
 import { LifecycleState, Resource } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { PublicKey, type SpaceId } from '@dxos/keys';
@@ -450,7 +449,9 @@ export class RepoProxy extends Resource {
         this._runtime,
         this._dataService['DataService.createDocument']({
           spaceId: this._spaceId,
-          initialValue: initialValue as Struct,
+          // A doc's declared type is an interface without an index signature, which the Struct
+          // field's `Record` type does not accept; the value is a plain JSON object at runtime.
+          initialValue: initialValue as Record<string, unknown>,
         }),
         { timeout: RPC_TIMEOUT },
       )

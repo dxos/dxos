@@ -12,7 +12,7 @@ import { PublicKey } from '@dxos/keys';
 import { subscribeStream } from '@dxos/protocols';
 import { toPublicKey } from '@dxos/protocols/buf';
 import { type Space } from '@dxos/protocols/buf/dxos/client/services_pb';
-import { MembershipPolicy } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { MembershipPolicy } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
 import { type ServiceContext } from '../services';
 import { createServiceContext } from '../testing';

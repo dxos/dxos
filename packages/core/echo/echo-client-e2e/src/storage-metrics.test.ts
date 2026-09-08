@@ -152,8 +152,7 @@ describe('storage metrics & garbage collection', () => {
     const db = await peer.createDatabase();
 
     const parent = db.add(Obj.make(TestSchema.Expando, { name: 'parent' }));
-    const child = db.add(Obj.make(TestSchema.Expando, { name: 'child' }));
-    Obj.setParent(child, parent);
+    const child = db.add(Obj.make(TestSchema.Expando, { [Obj.Parent]: parent, name: 'child' }));
     await db.flush();
 
     const before = await db.stats();

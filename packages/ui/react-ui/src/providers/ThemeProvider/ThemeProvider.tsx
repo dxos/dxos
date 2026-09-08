@@ -14,8 +14,8 @@ import { ElevationProvider } from '../ElevationProvider';
 import { IconRegistryProvider } from './IconRegistry';
 import { TranslationsProvider, type TranslationsProviderProps } from './TranslationsProvider';
 
-export type ThemeContextValue = {
-  tx: ThemeFunction<any>;
+export type ThemeContextValue<P extends Record<string, any> = Record<string, any>> = {
+  tx: ThemeFunction<P>;
   themeMode: ThemeMode;
   hasIosKeyboard: boolean;
   safeAreaPadding?: SafeAreaPadding;
@@ -27,8 +27,11 @@ export type ThemeContextValue = {
  */
 export const ThemeContext = createContext<ThemeContextValue | undefined>(undefined);
 
-export type ThemeProviderProps = Omit<TranslationsProviderProps, 'children'> &
-  Partial<Omit<ThemeContextValue, 'safeAreaPadding'>> &
+export type ThemeProviderProps<P extends Record<string, any> = Record<string, any>> = Omit<
+  TranslationsProviderProps,
+  'children'
+> &
+  Partial<Omit<ThemeContextValue<P>, 'safeAreaPadding'>> &
   PropsWithChildren<{
     rootDensity?: Density;
     rootElevation?: Elevation;

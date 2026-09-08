@@ -93,8 +93,8 @@ const handler: Operation.WithHandler<typeof CodeOperation.ScaffoldProject> = Cod
 
       if (additions.length > 0) {
         Obj.update(code, (code) => {
-          const next = [...(code.files ?? []), ...additions.map((entry) => entry.ref)];
-          (code as Obj.Mutable<typeof code>).files = next;
+          code.files ??= [];
+          code.files.push(...additions.map((entry) => entry.ref));
         });
       }
 

@@ -342,15 +342,13 @@ describe('history', () => {
       // Append-only by convention: an entry records something that happened, so the write adds
       // rather than rewrites.
       Obj.update(task, (task) => {
-        task.history = [
-          ...(task.history ?? []),
-          {
-            date: '2026-08-02T10:30:00.000Z',
-            actor: { name: 'Scout', role: 'assistant' },
-            event: 'updated',
-            description: 'Status changed from todo to done.',
-          },
-        ];
+        task.history ??= [];
+        task.history.push({
+          date: '2026-08-02T10:30:00.000Z',
+          actor: { name: 'Scout', role: 'assistant' },
+          event: 'updated',
+          description: 'Status changed from todo to done.',
+        });
       });
       yield* Database.flush();
 
