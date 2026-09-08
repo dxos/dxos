@@ -109,7 +109,7 @@ rule declare-optional-services-with-noop-layers: An optional service is a declar
   scope: repo
   files:
     - packages/**/*.ts
-  grep: serviceOption|LayerSpec|get[A-Z]\w*(Manager|Service|Provider)\?:
+  grep: serviceOption|LayerSpec|\w+\?:.*=>.*(Service|Manager|Provider|Layer)\b
   severity: warn
 ```
 
