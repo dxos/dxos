@@ -360,12 +360,30 @@ export const layer = (
                 // spawns a fresh process for the same feed (history is replayed from it), which is
                 // the path an app already takes when it re-reads the session per prompt.
                 const databaseContext = yield* Effect.context<Database.Service>();
+                // The handle's own status is a snapshot the client polls, so a REMOTE process that
+                // finished moments ago still reads as running here — and the host then drops the
+                // prompt. What the host actually knows is the manager's `list`.
+                const isFinished: Effect.Effect<boolean> = Effect.suspend(() =>
+                  isTerminalProcess(handle.status.state)
+                    ? Effect.succeed(true)
+                    : agentProcesses.list({ target, key: executable.key }).pipe(
+                        Effect.map((live) => {
+                          const current = live.find((process) => process.pid === handle.pid);
+                          return current === undefined || isTerminalProcess(current.status.state);
+                        }),
+                        Effect.orElseSucceed(() => false),
+                      ),
+                );
+                // Releasing the cache first is what keeps this from recursing: `getSession` then
+                // takes its spawn path and returns a NEW session whose process is live, so that
+                // session's own `submitPrompt` submits directly.
                 const resubmit = (prompt: string | ContentBlock.Any[]): Effect.Effect<void> =>
-                  service.getSession(chat, options).pipe(
+                  Effect.sync(releaseSession).pipe(
+                    Effect.andThen(service.getSession(chat, options)),
                     Effect.flatMap((next) => next.submitPrompt(prompt)),
                     Effect.provide(databaseContext),
                   );
-                const session = makeSession(handle, chat, feed, releaseSession, resubmit);
+                const session = makeSession(handle, chat, feed, releaseSession, isFinished, resubmit);
                 sessionCache.set(chat.id, { model, provider, instructions, location, handle, session });
                 return session;
               }),
@@ -383,6 +401,7 @@ const makeSession = (
   chat: Conversation,
   feed: Feed.Feed,
   releaseSession: () => void,
+  isFinished: Effect.Effect<boolean>,
   resubmit: (prompt: string | ContentBlock.Any[]) => Effect.Effect<void>,
 ): Session => ({
   chat,
@@ -407,7 +426,7 @@ const makeSession = (
   // Suspended so the state is read per call: a session outlives the process that served its last
   // turn, and submitting to a finished one drops the prompt.
   submitPrompt: (prompt: string | ContentBlock.Any[]) =>
-    Effect.suspend(() => (isTerminalProcess(process.status.state) ? resubmit(prompt) : process.submitInput(prompt))),
+    Effect.flatMap(isFinished, (finished) => (finished ? resubmit(prompt) : process.submitInput(prompt))),
   // Derived from the process's status atom, written on the app-wide registry the UI reads.
   running: Atom.make(
     (get) =>
