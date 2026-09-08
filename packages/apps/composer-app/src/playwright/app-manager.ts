@@ -237,8 +237,10 @@ export class AppManager {
 
   /** Opens the add-space dialog, submits it, and waits for it to close. */
   async #submitCreateSpaceForm(): Promise<void> {
+    const dialog = this.page.getByTestId('create-space-dialog');
     await this.page.getByTestId('spacePlugin.addSpace').click();
     await this.page.getByTestId('spacePlugin.createSpace').click();
+    await expect(dialog).toBeVisible({ timeout: 15_000 });
 
     const form = this.page.getByTestId('create-space-form');
     // The action row is pinned outside the scrolling field region, so it is scoped to the dialog,
