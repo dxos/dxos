@@ -19,7 +19,10 @@
     "ENVIRONMENT": "local",
     "SIGNOZ_INGEST_URL": "https://ingest.eu.signoz.cloud",
   },
-  "r2_buckets": [{ "binding": "FEEDBACK_LOGS", "bucket_name": "composer-feedback-logs-dev" }],
+  "r2_buckets": [
+    { "binding": "FEEDBACK_LOGS", "bucket_name": "composer-feedback-logs-dev" },
+    { "binding": "ASSET_ARCHIVE", "bucket_name": "composer-assets-dev" },
+  ],
   "assets": {
     "directory": "./out/composer",
     "binding": "ASSETS",
@@ -39,7 +42,10 @@
         "ENVIRONMENT": "production",
         "SIGNOZ_INGEST_URL": "https://ingest.eu.signoz.cloud",
       },
-      "r2_buckets": [{ "binding": "FEEDBACK_LOGS", "bucket_name": "composer-feedback-logs" }],
+      "r2_buckets": [
+        { "binding": "FEEDBACK_LOGS", "bucket_name": "composer-feedback-logs" },
+        { "binding": "ASSET_ARCHIVE", "bucket_name": "composer-assets" },
+      ],
     },
     "staging": {
       "name": "composer-staging",
@@ -48,7 +54,10 @@
         "ENVIRONMENT": "staging",
         "SIGNOZ_INGEST_URL": "https://ingest.eu.signoz.cloud",
       },
-      "r2_buckets": [{ "binding": "FEEDBACK_LOGS", "bucket_name": "composer-feedback-logs-preview" }],
+      "r2_buckets": [
+        { "binding": "FEEDBACK_LOGS", "bucket_name": "composer-feedback-logs-preview" },
+        { "binding": "ASSET_ARCHIVE", "bucket_name": "composer-assets-staging" },
+      ],
     },
     // The daily dogfood build (preview.composer.space) — deployed from `main` on a schedule, talking to
     // EDGE production. Distinct from the per-PR previews, which are Worker versions of `dev` below.
@@ -59,7 +68,10 @@
         "ENVIRONMENT": "preview",
         "SIGNOZ_INGEST_URL": "https://ingest.eu.signoz.cloud",
       },
-      "r2_buckets": [{ "binding": "FEEDBACK_LOGS", "bucket_name": "composer-feedback-logs-dev" }],
+      "r2_buckets": [
+        { "binding": "FEEDBACK_LOGS", "bucket_name": "composer-feedback-logs-dev" },
+        { "binding": "ASSET_ARCHIVE", "bucket_name": "composer-assets-preview" },
+      ],
     },
     // Deployed on demand, talking to EDGE preview; also the Worker PR previews upload versions to.
     "dev": {
@@ -69,7 +81,10 @@
         "ENVIRONMENT": "dev",
         "SIGNOZ_INGEST_URL": "https://ingest.eu.signoz.cloud",
       },
-      "r2_buckets": [{ "binding": "FEEDBACK_LOGS", "bucket_name": "composer-feedback-logs-dev" }],
+      "r2_buckets": [
+        { "binding": "FEEDBACK_LOGS", "bucket_name": "composer-feedback-logs-dev" },
+        { "binding": "ASSET_ARCHIVE", "bucket_name": "composer-assets-dev" },
+      ],
     },
   },
 }
