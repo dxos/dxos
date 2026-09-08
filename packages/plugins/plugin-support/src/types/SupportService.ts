@@ -13,7 +13,7 @@ import { type Config, EdgeServiceName, getEdgeServiceEndpoint, getEnvString } fr
 import type * as Observability from '@dxos/observability/Observability';
 
 import { SupportForbiddenError, SupportSubmitError } from '../errors';
-import * as SupportOperation from './SupportOperation';
+import type * as SupportOperation from './SupportOperation';
 
 export const SupportReportResult = Schema.Struct({
   ticketId: Schema.String,
