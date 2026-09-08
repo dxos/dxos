@@ -14,6 +14,7 @@ registry skill also now shadows the registry entry in the picker (it carries the
 same precedence `Skill.resolveAnnotatedSkills` already applies), and toggling it off clears either
 form from the conversation.
 
-`AgentService.createSession` likewise binds a skill that is already in a database as-is, instead of
-resolving its key through the registry — which threw outright on a space-authored skill and would
-have substituted the pristine registry copy for a fork.
+`AgentService.createSession` likewise binds a skill that is already in a database as-is and
+references any other skill by its registry URI, instead of cloning it into the space through the
+deprecated `Skill.upsert` — which threw outright on a space-authored skill and would have
+substituted the pristine registry copy for a fork.
