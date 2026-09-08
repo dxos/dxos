@@ -5,7 +5,7 @@
 import React, { type FC, useEffect, useState } from 'react';
 
 import { useControllableState } from '@dxos/react-hooks';
-import { Button, DropdownMenu, Icon, type IconProps, type ThemedClassName, Toolbar, Tooltip } from '@dxos/react-ui';
+import { Button, Icon, type IconProps, Menu, type ThemedClassName, Toolbar, Tooltip } from '@dxos/react-ui';
 
 export type PickerButtonProps = ThemedClassName<{
   Component: FC<{ value: string; size?: IconProps['size'] }>;
@@ -47,10 +47,10 @@ export const PickerButton = ({
   const TriggerRoot = rootVariant === 'toolbar-button' ? Toolbar.Button : Button;
 
   return (
-    <DropdownMenu.Root modal={false} open={open} onOpenChange={setOpen}>
+    <Menu.Root modal={false} open={open} onOpenChange={setOpen}>
       {/* The menu trigger is outermost: both machines find the button by its id, and the tooltip adopts
           the id it is handed while the menu would lose its own to one set above it. */}
-      <DropdownMenu.Trigger asChild>
+      <Menu.Trigger asChild>
         <Tooltip.Trigger asChild content={label} side='bottom'>
           <TriggerRoot classNames={['gap-2 py-1', classNames]} disabled={disabled}>
             <span className='sr-only'>{label}</span>
@@ -58,34 +58,34 @@ export const PickerButton = ({
             <Icon icon='ph--caret-down--bold' size={3} classNames='mx-0.5' />
           </TriggerRoot>
         </Tooltip.Trigger>
-      </DropdownMenu.Trigger>
-      <DropdownMenu.Portal>
-        <DropdownMenu.Content side='bottom' classNames='!w-min'>
-          <DropdownMenu.Viewport classNames='grid grid-cols-[repeat(6,min-content)]'>
+      </Menu.Trigger>
+      <Menu.Portal>
+        <Menu.Content side='bottom' classNames='!w-min'>
+          <Menu.Viewport classNames='grid grid-cols-[repeat(6,min-content)]'>
             {values.map((_value) => {
               return (
-                <DropdownMenu.CheckboxItem
+                <Menu.CheckboxItem
                   key={_value}
                   checked={_value === value}
                   onCheckedChange={() => setValue(_value)}
                   classNames={'p-1 items-center justify-center aspect-square'}
                 >
                   <Component value={_value} size={iconSize} />
-                </DropdownMenu.CheckboxItem>
+                </Menu.CheckboxItem>
               );
             })}
             {onReset && (
-              <DropdownMenu.CheckboxItem
+              <Menu.CheckboxItem
                 onCheckedChange={() => onReset()}
                 classNames={'p-1 items-center justify-center aspect-square'}
               >
                 <Icon icon='ph--x--regular' size={iconSize} />
-              </DropdownMenu.CheckboxItem>
+              </Menu.CheckboxItem>
             )}
-          </DropdownMenu.Viewport>
-          <DropdownMenu.Arrow />
-        </DropdownMenu.Content>
-      </DropdownMenu.Portal>
-    </DropdownMenu.Root>
+          </Menu.Viewport>
+          <Menu.Arrow />
+        </Menu.Content>
+      </Menu.Portal>
+    </Menu.Root>
   );
 };

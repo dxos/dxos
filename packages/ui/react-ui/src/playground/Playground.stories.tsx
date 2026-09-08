@@ -23,16 +23,15 @@ import {
   Card,
   Carousel,
   Collapsible,
-  ContextMenu,
   DatePicker,
   Dialog,
-  DropdownMenu,
   Editable,
   Field,
   Icon,
   IconButton,
   type InputVariant,
   Link,
+  Menu,
   Popover,
   Progress,
   QrCode,
@@ -506,37 +505,37 @@ const OverlaysSection = () => (
         </Popover.Content>
       </Popover.Portal>
     </Popover.Root>
-    <DropdownMenu.Root>
-      <DropdownMenu.Trigger asChild>
+    <Menu.Root>
+      <Menu.Trigger asChild>
         <Button>Menu</Button>
-      </DropdownMenu.Trigger>
-      <DropdownMenu.Portal>
-        <DropdownMenu.Content>
-          <DropdownMenu.Viewport>
-            <DropdownMenu.Item>New</DropdownMenu.Item>
-            <DropdownMenu.Item>Open</DropdownMenu.Item>
-            <DropdownMenu.Separator />
-            <DropdownMenu.CheckboxItem checked>Checked</DropdownMenu.CheckboxItem>
-          </DropdownMenu.Viewport>
-          <DropdownMenu.Arrow />
-        </DropdownMenu.Content>
-      </DropdownMenu.Portal>
-    </DropdownMenu.Root>
-    <ContextMenu.Root>
-      <ContextMenu.Trigger asChild>
+      </Menu.Trigger>
+      <Menu.Portal>
+        <Menu.Content>
+          <Menu.Viewport>
+            <Menu.Item>New</Menu.Item>
+            <Menu.Item>Open</Menu.Item>
+            <Menu.Separator />
+            <Menu.CheckboxItem checked>Checked</Menu.CheckboxItem>
+          </Menu.Viewport>
+          <Menu.Arrow />
+        </Menu.Content>
+      </Menu.Portal>
+    </Menu.Root>
+    <Menu.Root>
+      <Menu.ContextTrigger asChild>
         <div className='flex items-center justify-center w-40 h-12 border border-dashed border-separator rounded-sm text-description'>
           Right click
         </div>
-      </ContextMenu.Trigger>
-      <ContextMenu.Content>
-        <ContextMenu.Viewport>
-          <ContextMenu.Item>Cut</ContextMenu.Item>
-          <ContextMenu.Item>Copy</ContextMenu.Item>
-          <ContextMenu.Item>Paste</ContextMenu.Item>
-        </ContextMenu.Viewport>
-        <ContextMenu.Arrow />
-      </ContextMenu.Content>
-    </ContextMenu.Root>
+      </Menu.ContextTrigger>
+      <Menu.Content>
+        <Menu.Viewport>
+          <Menu.Item>Cut</Menu.Item>
+          <Menu.Item>Copy</Menu.Item>
+          <Menu.Item>Paste</Menu.Item>
+        </Menu.Viewport>
+        <Menu.Arrow />
+      </Menu.Content>
+    </Menu.Root>
   </Section>
 );
 

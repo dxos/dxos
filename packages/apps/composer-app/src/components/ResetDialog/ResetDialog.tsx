@@ -13,8 +13,8 @@ import {
   AlertDialog,
   type AlertDialogRootProps,
   Banner,
-  DropdownMenu,
   IconButton,
+  Menu,
   Popover,
   useFileDownload,
   useMediaQuery,
@@ -216,8 +216,8 @@ export const ResetDialog = ({
               data-testid='resetDialog.recovery'
             />
             {onReset && (
-              <DropdownMenu.Root>
-                <DropdownMenu.Trigger asChild>
+              <Menu.Root>
+                <Menu.Trigger asChild>
                   <IconButton
                     icon='ph--trash--regular'
                     iconOnly
@@ -225,18 +225,18 @@ export const ResetDialog = ({
                     data-testid='resetDialog.reset'
                     variant='destructive'
                   />
-                </DropdownMenu.Trigger>
-                <DropdownMenu.Portal>
-                  <DropdownMenu.Content side='top'>
-                    <DropdownMenu.Viewport>
-                      <DropdownMenu.Item data-testid='resetDialog.confirmReset' onClick={onReset}>
+                </Menu.Trigger>
+                <Menu.Portal>
+                  <Menu.Content side='top'>
+                    <Menu.Viewport>
+                      <Menu.Item data-testid='resetDialog.confirmReset' onClick={onReset}>
                         {t('reset-app-confirm.label')}
-                      </DropdownMenu.Item>
-                    </DropdownMenu.Viewport>
-                    <DropdownMenu.Arrow />
-                  </DropdownMenu.Content>
-                </DropdownMenu.Portal>
-              </DropdownMenu.Root>
+                      </Menu.Item>
+                    </Menu.Viewport>
+                    <Menu.Arrow />
+                  </Menu.Content>
+                </Menu.Portal>
+              </Menu.Root>
             )}
 
             <div className='flex-grow' />

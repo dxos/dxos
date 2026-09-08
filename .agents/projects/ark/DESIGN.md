@@ -16,8 +16,8 @@ Viewport · Item · ItemIndicator · CheckboxItem · RadioGroup · RadioItem · 
 Separator · Arrow · Sub · SubTrigger · SubContent`. Ark's `Positioner` stays inside `Content`
   (elevation and placement live there); `Portal` stays a part because it is optional, takes a
   container and re-bridges React context across the DOM move; `Viewport` stays a part because it is
-  the bounded scroll area the `Arrow` must sit outside of. `DropdownMenu` and `ContextMenu` become
-  aliases of `Menu` and are removed in a later sweep of the ~100 part-level sites.
+  the bounded scroll area the `Arrow` must sit outside of. `DropdownMenu` and `ContextMenu` were
+  aliases of `Menu` until 2026-09-08, when the ~100 part-level sites moved to `Menu`.
 - **`react-ui-menu` builds from the action graph.** It keeps the data side as it is — `MenuBuilder`,
   `useMenuBuilder`, `useMenuActions`, `useGraphMenuActions`, `createMenuAction`, dispositions,
   `applyPresentation` — and renders through two builders that _compose_ `react-ui` rather than

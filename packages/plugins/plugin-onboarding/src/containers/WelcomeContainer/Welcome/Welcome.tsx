@@ -21,7 +21,7 @@ import * as NativeOAuth from '@dxos/app-toolkit/NativeOAuth';
 import * as NativePasskey from '@dxos/app-toolkit/NativePasskey';
 import { DXOSHorizontalType } from '@dxos/brand';
 import { log } from '@dxos/log';
-import { Button, DropdownMenu, Field, Flex, Icon, Tabs, ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { Button, Field, Flex, Icon, Menu, Tabs, ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 import { meta } from '../../../meta';
@@ -814,8 +814,8 @@ const LoginTab = ({
         </Field.Root>
       )}
       {moreOptions.length > 0 && (
-        <DropdownMenu.Root>
-          <DropdownMenu.Trigger asChild>
+        <Menu.Root>
+          <Menu.Trigger asChild>
             <button
               type='button'
               className='flex items-center justify-center gap-1 text-sm text-description hover:text-white underline underline-offset-4 outline-none'
@@ -823,31 +823,31 @@ const LoginTab = ({
               <span>{t('more-ways-to-sign-in.label')}</span>
               <Icon icon='ph--caret-down--regular' size={4} />
             </button>
-          </DropdownMenu.Trigger>
-          <DropdownMenu.Portal>
+          </Menu.Trigger>
+          <Menu.Portal>
             {/* Raise above the dialog overlay (z-40): radix copies the content's computed z-index
                 onto the popper wrapper, and the default menu z-20 renders behind the overlay. */}
-            <DropdownMenu.Content
+            <Menu.Content
               side='bottom'
               sideOffset={8}
               collisionPadding={16}
               classNames='!w-80 !z-50'
               onCloseAutoFocus={handleMoreMenuCloseAutoFocus}
             >
-              <DropdownMenu.Viewport>
+              <Menu.Viewport>
                 {moreOptions.map((opt) => (
-                  <DropdownMenu.Item key={opt.key} onSelect={opt.onClick} classNames='gap-3'>
+                  <Menu.Item key={opt.key} onSelect={opt.onClick} classNames='gap-3'>
                     <Icon icon={opt.icon} size={6} classNames={mx('shrink-0', opt.classNames)} />
                     <Flex column gap='xs'>
                       <span>{opt.label}</span>
                       <span className='text-xs text-description font-normal'>{opt.description}</span>
                     </Flex>
-                  </DropdownMenu.Item>
+                  </Menu.Item>
                 ))}
-              </DropdownMenu.Viewport>
-            </DropdownMenu.Content>
-          </DropdownMenu.Portal>
-        </DropdownMenu.Root>
+              </Menu.Viewport>
+            </Menu.Content>
+          </Menu.Portal>
+        </Menu.Root>
       )}
     </Flex>
   );

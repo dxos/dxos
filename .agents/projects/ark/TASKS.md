@@ -1033,6 +1033,11 @@ against the Radix-era names react-ui kept, Popover first.
       column, control column) keep `Field.Root` + `Field.Label`, which is the right form for them.
       The `Field/Checkbox` and `Field/Switch` stories click the text; jsdom cannot toggle a controlled checkbox from
       a synthetic click, so the node test asserts labelling only.
+- [x] **`DropdownMenu`/`ContextMenu` aliases removed** DONE 2026-09-08: 25 consumer files across
+      16 packages moved to `Menu` (`ContextMenu.Trigger` → `Menu.ContextTrigger`); the module is
+      `Menu/Menu.tsx` + `MenuContext.ts`, display names and story titles follow, the alias type
+      exports are gone. Every consumer package typechecks; Menu, MenuButton, Card and Toolbar
+      stories pass.
 - [x] **Goal 3: floating anatomy reviewed** DONE 2026-09-08: the mapping table and rules are in
       `DESIGN.md` ("Floating anatomy"). `Positioner` stays inside `Content`, `Viewport` is the bounded
       region inside it, `Portal` stays a part, `Dialog.Overlay` is the backdrop with content nested.

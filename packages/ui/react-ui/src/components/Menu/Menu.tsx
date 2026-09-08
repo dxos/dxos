@@ -3,8 +3,7 @@
 //
 
 // One menu machine serves dropdown, context and sub menus (`Menu.Trigger` for a dropdown,
-// `Menu.ContextTrigger` for a context menu, a nested `Menu.Root` for a submenu). This file is the
-// shared anatomy, exported as both the `DropdownMenu` and `ContextMenu` namespaces.
+// `Menu.ContextTrigger` for a context menu, a nested `Menu.Root` for a submenu).
 
 import { ark } from '@ark-ui/react/factory';
 import { Menu as MenuPrimitive, useMenuContext as useMenuPrimitiveContext } from '@ark-ui/react/menu';
@@ -40,7 +39,7 @@ import {
   type MenuSelectHandler,
   type MenuSide,
   useMenuContext,
-} from './DropdownMenuContext';
+} from './MenuContext';
 
 //
 // Root
@@ -155,34 +154,34 @@ MenuRoot.displayName = MENU_NAME;
 // Trigger
 //
 
-const TRIGGER_NAME = 'DropdownMenu.Trigger';
+const TRIGGER_NAME = 'Menu.Trigger';
 
 type MenuTriggerProps = ComponentPropsWithRef<typeof MenuPrimitive.Trigger>;
 
-const DropdownMenuTrigger = forwardRef<HTMLButtonElement, MenuTriggerProps>((props, forwardedRef) => {
+const MenuTrigger = forwardRef<HTMLButtonElement, MenuTriggerProps>((props, forwardedRef) => {
   const { triggerRef } = useMenuContext(TRIGGER_NAME);
   return <MenuPrimitive.Trigger data-arrow-keys='down' {...props} ref={useComposedRefs(forwardedRef, triggerRef)} />;
 });
 
-DropdownMenuTrigger.displayName = TRIGGER_NAME;
+MenuTrigger.displayName = TRIGGER_NAME;
 
 const CONTEXT_TRIGGER_NAME = 'Menu.ContextTrigger';
 
-type ContextMenuTriggerProps = ComponentPropsWithRef<typeof MenuPrimitive.ContextTrigger>;
+type MenuContextTriggerProps = ComponentPropsWithRef<typeof MenuPrimitive.ContextTrigger>;
 
-const ContextMenuTrigger = forwardRef<HTMLButtonElement, ContextMenuTriggerProps>((props, forwardedRef) => {
+const MenuContextTrigger = forwardRef<HTMLButtonElement, MenuContextTriggerProps>((props, forwardedRef) => {
   const { triggerRef, markContextTrigger } = useMenuContext(CONTEXT_TRIGGER_NAME);
   useLayoutEffect(() => markContextTrigger(), [markContextTrigger]);
   return <MenuPrimitive.ContextTrigger {...props} ref={useComposedRefs(forwardedRef, triggerRef)} />;
 });
 
-ContextMenuTrigger.displayName = CONTEXT_TRIGGER_NAME;
+MenuContextTrigger.displayName = CONTEXT_TRIGGER_NAME;
 
 //
 // VirtualTrigger
 //
 
-const VIRTUAL_TRIGGER_NAME = 'DropdownMenu.VirtualTrigger';
+const VIRTUAL_TRIGGER_NAME = 'Menu.VirtualTrigger';
 
 type MenuVirtualTriggerProps = {
   /** The element the content is positioned at and focus returns to; it renders nothing itself. */
@@ -224,13 +223,13 @@ const MenuPortal = ({ children, container }: MenuPortalProps) => {
   );
 };
 
-MenuPortal.displayName = 'DropdownMenu.Portal';
+MenuPortal.displayName = 'Menu.Portal';
 
 //
 // Content
 //
 
-const CONTENT_NAME = 'DropdownMenu.Content';
+const CONTENT_NAME = 'Menu.Content';
 
 type MenuContentProps = ThemedClassName<ComponentPropsWithRef<typeof MenuPrimitive.Content>> &
   MenuPlacementOptions &
@@ -337,7 +336,7 @@ const MenuViewport = forwardRef<HTMLDivElement, MenuViewportProps>(
   },
 );
 
-MenuViewport.displayName = 'DropdownMenu.Viewport';
+MenuViewport.displayName = 'Menu.Viewport';
 
 //
 // Group
@@ -349,7 +348,7 @@ const MenuGroup = forwardRef<HTMLDivElement, MenuGroupProps>((props, forwardedRe
   return <MenuPrimitive.ItemGroup {...props} ref={forwardedRef} />;
 });
 
-MenuGroup.displayName = 'DropdownMenu.Group';
+MenuGroup.displayName = 'Menu.Group';
 
 /** A heading over the entries that follow; a plain element, so it works inside a group or without one. */
 type MenuGroupLabelProps = ThemedClassName<ComponentPropsWithRef<typeof ark.div>>;
@@ -359,13 +358,13 @@ const MenuGroupLabel = forwardRef<HTMLDivElement, MenuGroupLabelProps>(({ classN
   return <ark.div {...props} className={tx('menu.groupLabel', {}, classNames)} ref={forwardedRef} />;
 });
 
-MenuGroupLabel.displayName = 'DropdownMenu.GroupLabel';
+MenuGroupLabel.displayName = 'Menu.GroupLabel';
 
 //
 // Item
 //
 
-const ITEM_NAME = 'DropdownMenu.Item';
+const ITEM_NAME = 'Menu.Item';
 
 /**
  * Selection handled on the item's own click — which keyboard activation reaches too, since the
@@ -426,7 +425,7 @@ MenuItem.displayName = ITEM_NAME;
 // CheckboxItem
 //
 
-const CHECKBOX_ITEM_NAME = 'DropdownMenu.CheckboxItem';
+const CHECKBOX_ITEM_NAME = 'Menu.CheckboxItem';
 
 type MenuCheckboxItemProps = ThemedClassName<
   Omit<ComponentPropsWithRef<typeof MenuPrimitive.CheckboxItem>, 'value' | 'checked' | 'onCheckedChange'>
@@ -477,9 +476,9 @@ const MenuRadioGroup = forwardRef<HTMLDivElement, MenuRadioGroupProps>(({ onValu
   );
 });
 
-MenuRadioGroup.displayName = 'DropdownMenu.RadioGroup';
+MenuRadioGroup.displayName = 'Menu.RadioGroup';
 
-const RADIO_ITEM_NAME = 'DropdownMenu.RadioItem';
+const RADIO_ITEM_NAME = 'Menu.RadioItem';
 
 type MenuRadioItemProps = ThemedClassName<ComponentPropsWithRef<typeof MenuPrimitive.RadioItem>> & {
   onSelect?: MenuSelectHandler;
@@ -515,7 +514,7 @@ const MenuItemIndicator = forwardRef<HTMLDivElement, MenuItemIndicatorProps>((pr
   return <MenuPrimitive.ItemIndicator {...props} ref={forwardedRef} />;
 });
 
-MenuItemIndicator.displayName = 'DropdownMenu.ItemIndicator';
+MenuItemIndicator.displayName = 'Menu.ItemIndicator';
 
 //
 // Separator
@@ -528,7 +527,7 @@ const MenuSeparator = forwardRef<HTMLHRElement, MenuSeparatorProps>(({ className
   return <MenuPrimitive.Separator {...props} className={tx('menu.separator', {}, classNames)} ref={forwardedRef} />;
 });
 
-MenuSeparator.displayName = 'DropdownMenu.Separator';
+MenuSeparator.displayName = 'Menu.Separator';
 
 //
 // Arrow
@@ -545,13 +544,13 @@ const MenuArrow = forwardRef<HTMLDivElement, MenuArrowProps>(({ classNames, ...p
   );
 });
 
-MenuArrow.displayName = 'DropdownMenu.Arrow';
+MenuArrow.displayName = 'Menu.Arrow';
 
 //
 // Sub
 //
 
-const SUB_NAME = 'DropdownMenu.Sub';
+const SUB_NAME = 'Menu.Sub';
 
 type MenuSubProps = {
   children?: ReactNode;
@@ -574,7 +573,7 @@ const MenuSubTrigger = forwardRef<HTMLDivElement, MenuSubTriggerProps>(({ classN
   return <MenuPrimitive.TriggerItem {...props} className={tx('menu.item', {}, classNames)} ref={forwardedRef} />;
 });
 
-MenuSubTrigger.displayName = 'DropdownMenu.SubTrigger';
+MenuSubTrigger.displayName = 'Menu.SubTrigger';
 
 //
 // Namespaces
@@ -587,8 +586,8 @@ MenuSubTrigger.displayName = 'DropdownMenu.SubTrigger';
  */
 export const Menu = {
   Root: MenuRoot,
-  Trigger: DropdownMenuTrigger,
-  ContextTrigger: ContextMenuTrigger,
+  Trigger: MenuTrigger,
+  ContextTrigger: MenuContextTrigger,
   VirtualTrigger: MenuVirtualTrigger,
   Portal: MenuPortal,
   Content: MenuContent,
@@ -608,17 +607,11 @@ export const Menu = {
   SubContent: MenuContent,
 };
 
-/** Alias of {@link Menu}, kept until the part-level sites are re-pointed. */
-export const DropdownMenu = Menu;
-
-/** Alias of {@link Menu} whose `Trigger` is the context trigger, kept until the sites are re-pointed. */
-export const ContextMenu = { ...Menu, Trigger: ContextMenuTrigger };
-
 export type {
   MenuArrowProps,
   MenuCheckboxItemProps,
   MenuContentProps,
-  ContextMenuTriggerProps as MenuContextTriggerProps,
+  MenuContextTriggerProps,
   MenuGroupLabelProps,
   MenuGroupProps,
   MenuItemIndicatorProps,
@@ -633,33 +626,4 @@ export type {
   MenuTriggerProps,
   MenuViewportProps,
   MenuVirtualTriggerProps,
-};
-
-export type {
-  MenuCheckboxItemProps as ContextMenuCheckboxItemProps,
-  MenuContentProps as ContextMenuContentProps,
-  MenuItemProps as ContextMenuItemProps,
-  MenuRadioItemProps as ContextMenuRadioItemProps,
-  MenuRootProps as ContextMenuRootProps,
-  MenuSeparatorProps as ContextMenuSeparatorProps,
-  ContextMenuTriggerProps,
-  MenuViewportProps as ContextMenuViewportProps,
-  MenuArrowProps as DropdownMenuArrowProps,
-  MenuCheckboxItemProps as DropdownMenuCheckboxItemProps,
-  MenuContentProps as DropdownMenuContentProps,
-  MenuGroupProps as DropdownMenuGroupProps,
-  MenuItemIndicatorProps as DropdownMenuItemIndicatorProps,
-  MenuItemProps as DropdownMenuItemProps,
-  MenuGroupLabelProps as DropdownMenuLabelProps,
-  MenuPortalProps as DropdownMenuPortalProps,
-  MenuRadioGroupProps as DropdownMenuRadioGroupProps,
-  MenuRadioItemProps as DropdownMenuRadioItemProps,
-  MenuRootProps as DropdownMenuRootProps,
-  MenuSeparatorProps as DropdownMenuSeparatorProps,
-  MenuContentProps as DropdownMenuSubContentProps,
-  MenuSubProps as DropdownMenuSubProps,
-  MenuSubTriggerProps as DropdownMenuSubTriggerProps,
-  MenuTriggerProps as DropdownMenuTriggerProps,
-  MenuViewportProps as DropdownMenuViewportProps,
-  MenuVirtualTriggerProps as DropdownMenuVirtualTriggerProps,
 };

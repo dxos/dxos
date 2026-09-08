@@ -16,7 +16,7 @@ import { EdgeReplicationSetting } from '@dxos/protocols/buf/dxos/echo/metadata_p
 import { MembershipPolicy } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { SpacesService } from '@dxos/protocols/rpc';
 import { useClient } from '@dxos/react-client';
-import { Button, Dialog, DropdownMenu, Field, Flex, Icon, IconButton, useTranslation } from '@dxos/react-ui';
+import { Button, Dialog, Field, Flex, Icon, IconButton, Menu, useTranslation } from '@dxos/react-ui';
 import { Form, type FormFieldMap } from '@dxos/react-ui-form';
 import { HuePicker, IconPicker } from '@dxos/react-ui-pickers';
 
@@ -222,22 +222,20 @@ export const SpaceSettingsContainer = ({ space }: AppSurface.SpaceArticleProps) 
               </Flex>
             </Form.Field>
             <Form.Field label={t('backup-space.title')} description={t('backup-space.description')}>
-              <DropdownMenu.Root>
-                <DropdownMenu.Trigger asChild>
+              <Menu.Root>
+                <Menu.Trigger asChild>
                   <Button>
                     {t('download-backup.label')}
                     <Icon icon='ph--caret-down--regular' size={4} classNames='ms-2' />
                   </Button>
-                </DropdownMenu.Trigger>
-                <DropdownMenu.Content>
-                  <DropdownMenu.Viewport>
-                    <DropdownMenu.Item onClick={handleBackupBinary}>
-                      {t('download-backup-binary.label')}
-                    </DropdownMenu.Item>
-                    <DropdownMenu.Item onClick={handleBackupJson}>{t('download-backup-json.label')}</DropdownMenu.Item>
-                  </DropdownMenu.Viewport>
-                </DropdownMenu.Content>
-              </DropdownMenu.Root>
+                </Menu.Trigger>
+                <Menu.Content>
+                  <Menu.Viewport>
+                    <Menu.Item onClick={handleBackupBinary}>{t('download-backup-binary.label')}</Menu.Item>
+                    <Menu.Item onClick={handleBackupJson}>{t('download-backup-json.label')}</Menu.Item>
+                  </Menu.Viewport>
+                </Menu.Content>
+              </Menu.Root>
             </Form.Field>
             <Form.Field label={t('repair-space.title')} description={t('repair-space.description')}>
               <Button onClick={handleRepair}>{t('repair-space.label')}</Button>

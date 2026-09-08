@@ -28,7 +28,7 @@ import { Button, IconButton } from '../Button';
 import { Column, type ColumnRootProps } from '../Column';
 import { Icon } from '../Icon';
 import { Image, type ImageProps } from '../Image';
-import { DropdownMenu } from '../Menu';
+import { Menu } from '../Menu';
 import { type ToolbarActionIconButtonProps, type ToolbarDragHandleProps, type ToolbarMenuProps } from '../Toolbar';
 
 //
@@ -219,8 +219,8 @@ function CardMenu<T extends any | void = void>({ context, items }: CardMenuProps
   const stopPropagation = useCallback<MouseEventHandler>((event) => event.stopPropagation(), []);
   return (
     <CardBlock end>
-      <DropdownMenu.Root>
-        <DropdownMenu.Trigger disabled={!items?.length} asChild>
+      <Menu.Root>
+        <Menu.Trigger disabled={!items?.length} asChild>
           <IconButton
             onClick={stopPropagation}
             iconOnly
@@ -228,25 +228,25 @@ function CardMenu<T extends any | void = void>({ context, items }: CardMenuProps
             icon='ph--dots-three-vertical--regular'
             label={t('toolbar-menu.label')}
           />
-        </DropdownMenu.Trigger>
+        </Menu.Trigger>
         {(items?.length ?? 0) > 0 && (
-          <DropdownMenu.Portal>
-            <DropdownMenu.Content onClick={stopPropagation}>
-              <DropdownMenu.Viewport>
+          <Menu.Portal>
+            <Menu.Content onClick={stopPropagation}>
+              <Menu.Viewport>
                 {items?.map(({ label, icon, onClick: onSelect }, index) => (
                   // `context` is the generic payload threaded to each handler; the cast is the
                   // generic boundary (T may be `void`, so `context` is typed `T | undefined`).
-                  <DropdownMenu.Item key={index} onSelect={() => onSelect(context as T)}>
+                  <Menu.Item key={index} onSelect={() => onSelect(context as T)}>
                     {icon && <Icon icon={icon} />}
                     {label}
-                  </DropdownMenu.Item>
+                  </Menu.Item>
                 ))}
-              </DropdownMenu.Viewport>
-              <DropdownMenu.Arrow />
-            </DropdownMenu.Content>
-          </DropdownMenu.Portal>
+              </Menu.Viewport>
+              <Menu.Arrow />
+            </Menu.Content>
+          </Menu.Portal>
         )}
-      </DropdownMenu.Root>
+      </Menu.Root>
     </CardBlock>
   );
 }
