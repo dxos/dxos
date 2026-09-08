@@ -1015,7 +1015,7 @@ against the Radix-era names react-ui kept, Popover first.
       per schema property) is `FormFieldDispatch`, with the decision extracted as the pure
       `resolveFieldRenderer` (tested by kind); `Form.Row` is `Form.Field` — one label + control is a
       field, and a field set holds fields. 150 call sites across 17 plugins renamed.
-- [x] **Phase 18 — the form ontology** DONE 2026-09-08 (core + sweep on this branch; see the notes below the steps; design in
+- [x] **Phase 18 — the form ontology** DONE 2026-09-08 (PR #13003, stacked on #12998; see the notes below the steps; design in
       `packages/ui/react-ui-form/docs/DESIGN.md`; one PR after #12998 lands, core + sweep):
   1. `Form.FieldSet` is chrome only (`label`, `description`, `collapsible`; depth from context; border
      from the theme variant and depth); `Form.Section` and `Form.Group` deleted.
