@@ -9,6 +9,10 @@ import { Markdown } from './plugins';
 
 const perfomInvitation = async (host: AppManager, guest: AppManager) => {
   const sharedWorkspace = host.workspaceId;
+  // Without this the wait below can be vacuous: if the host is not on a `/w/<id>` URL,
+  // `toBe(undefined)` is satisfied the moment the guest is also undefined — which is the very hole
+  // that wait exists to close.
+  expect(sharedWorkspace, 'the host must be in a workspace before it can share one').toBeDefined();
   await host.shareSpace();
   const invitationCode = await host.createSpaceInvitation();
   const authCode = await host.getAuthCode();

@@ -197,12 +197,7 @@ export class AppManager {
    */
   async #openSpaceSettingsPage(testId: string, timeout: number): Promise<void> {
     await this.expandSection('spacePlugin.settings', timeout);
-    await this.currentWorkspace
-      .getByTestId(testId)
-      .first()
-      .getByTestId('treeItem.heading')
-      .first()
-      .click({ timeout });
+    await this.currentWorkspace.getByTestId(testId).first().getByTestId('treeItem.heading').first().click({ timeout });
   }
 
   async createSpaceInvitation(): Promise<string> {

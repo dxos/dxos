@@ -417,7 +417,10 @@ export class FeedHandle {
 
     if (endpointClosed) {
       this.#endpointClosed = true;
-      log.verbose('feed append abandoned; rpc endpoint closed', { feedId: this._feedId, pending: this.#dirtyCores.size });
+      log.verbose('feed append abandoned; rpc endpoint closed', {
+        feedId: this._feedId,
+        pending: this.#dirtyCores.size,
+      });
       return;
     }
 
