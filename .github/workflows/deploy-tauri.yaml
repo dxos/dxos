@@ -40,6 +40,13 @@ permissions:
 
 env:
   CN_APPLICATION: dxos/composer
+  # actions-use-homebrew-tools restores its tool cache by untarring a snapshot of /opt/homebrew back as
+  # root, so brew's own tree ends up owned by root and pinned to whenever that cache was written. The
+  # next `brew` call auto-updates, half-writes the newer vendored gems before hitting permission denied,
+  # and then aborts on the two sorbet versions it just loaded. That is what broke every desktop build
+  # from 2026-09-06 on, inside setup-rust-toolchain's own `brew install bash`.
+  HOMEBREW_NO_AUTO_UPDATE: '1'
+  HOMEBREW_NO_ENV_HINTS: '1'
   # Released binaries are built from source, never restored from a cache any CI job can write to.
   # Empty disables moon's remote cache; set here rather than via the setup action's
   # `remote-cache` input because this workflow does not use that action.
