@@ -4,12 +4,16 @@
 
 import { describe, test } from 'vitest';
 
-import { shallowEqual } from './shallowEqual';
+import { shallowEqual } from './equals';
 
 describe('shallowEqual', () => {
   test('same reference', ({ expect }) => {
     const value = { a: 1 };
     expect(shallowEqual(value, value)).toBe(true);
+  });
+
+  test('same own keys with identical values', ({ expect }) => {
+    expect(shallowEqual({ a: 1, b: 'x' }, { a: 1, b: 'x' })).toBe(true);
   });
 
   test('distinct objects with the same top-level entries', ({ expect }) => {

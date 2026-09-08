@@ -4,7 +4,7 @@
 
 import { useSyncExternalStore } from 'react';
 
-import { shallowEqual } from './shallowEqual';
+import { shallowEqual } from '@dxos/util';
 
 /**
  * Per-surface dev metrics, complementing the render-timing data collected by the

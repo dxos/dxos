@@ -24,13 +24,12 @@ import { EffectEx } from '@dxos/effect';
 import { log } from '@dxos/log';
 import { ErrorBoundary } from '@dxos/react-error-boundary';
 import { useStable } from '@dxos/react-hooks';
-import { Position } from '@dxos/util';
+import { Position, shallowEqual } from '@dxos/util';
 
 import { ActivationEvents, Capabilities, Role } from '../../../common';
 import { type PluginManager } from '../../../core';
 import { useOptionalPluginManager, usePluginManager } from '../PluginManager';
 import { SurfaceContext } from './context';
-import { shallowEqual } from './shallowEqual';
 import { DebugSurface, isSurfaceDebugEnabled, isSurfaceWrapperEnabled } from './SurfaceDebug';
 import { type SurfaceManager } from './SurfaceManager';
 import { useSurfaceManager } from './SurfaceManagerContext';

@@ -14,7 +14,7 @@ export const shallowEqual = (a: unknown, b: unknown): boolean => {
     return false;
   }
   // An array and a record are never the same value, and a sparse array's holes are absent from
-  // `Object.keys` — so `[]` would otherwise equal `{}`, and `new Array(1)` would equal `[]`.
+  // `Object.keys`, so `[]` would otherwise equal `{}` and `new Array(1)` would equal `[]`.
   const isArray = Array.isArray(a);
   if (isArray !== Array.isArray(b)) {
     return false;
