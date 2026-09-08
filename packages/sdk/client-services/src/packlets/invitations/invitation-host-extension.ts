@@ -98,6 +98,14 @@ export class InvitationHostExtension
     return this._invitationFlowLock != null;
   }
 
+  /** Where this connection's own flow got to, as opposed to the invitation-wide shared state. */
+  private _lastSetState: Invitation_State = Invitation_State.INIT;
+
+  private _setState(state: Invitation_State): void {
+    this._lastSetState = state;
+    this._callbacks.onStateUpdate(state);
+  }
+
   protected override async getHandlers(): Promise<{ InvitationHostService: InvitationHostService }> {
     return {
       // TODO(dmaretskyi): For now this is just forwarding the data to callbacks since we don't have session-specific logic.
@@ -127,7 +135,7 @@ export class InvitationHostExtension
 
           log.verbose('guest introduced themselves', { guestProfile: profile });
           this.guestProfile = profile;
-          this._callbacks.onStateUpdate(Invitation_State.READY_FOR_AUTHENTICATION);
+          this._setState(Invitation_State.READY_FOR_AUTHENTICATION);
           this._challenge =
             invitation.authMethod === Invitation_AuthMethod.KNOWN_PUBLIC_KEY ? randomBytes(32) : undefined;
 
@@ -146,7 +154,7 @@ export class InvitationHostExtension
           let status = AuthenticationResponse.Status.OK;
 
           this._assertInvitationState([Invitation_State.AUTHENTICATING, Invitation_State.READY_FOR_AUTHENTICATION]);
-          this._callbacks.onStateUpdate(Invitation_State.AUTHENTICATING);
+          this._setState(Invitation_State.AUTHENTICATING);
 
           switch (invitation.authMethod) {
             case Invitation_AuthMethod.NONE: {
@@ -234,7 +242,7 @@ export class InvitationHostExtension
       log.verbose('host acquire lock');
       this._invitationFlowLock = await tryAcquireBeforeContextDisposed(this._ctx, this._invitationFlowMutex);
       log.verbose('host lock acquired');
-      this._callbacks.onStateUpdate(Invitation_State.CONNECTING);
+      this._setState(Invitation_State.CONNECTING);
       await this.rpc.InvitationHostService.options({ role: InvitationOptions.Role.HOST });
       log.verbose('options sent');
       await cancelWithContext(this._ctx, this._remoteOptionsTrigger.wait({ timeout: OPTIONS_TIMEOUT }));
@@ -248,7 +256,7 @@ export class InvitationHostExtension
           },
         });
       }
-      this._callbacks.onStateUpdate(Invitation_State.CONNECTED);
+      this._setState(Invitation_State.CONNECTED);
       this._callbacks.onOpen(this._ctx, context);
     } catch (err: any) {
       if (this._invitationFlowLock != null) {
@@ -274,8 +282,13 @@ export class InvitationHostExtension
     const validStates = Array.isArray(stateOrMany) ? stateOrMany : [stateOrMany];
     if (!validStates.includes(invitation.state)) {
       scheduleTask(this._ctx, () => this.close());
+      // `invitation.state` is shared across every connection to this invitation, while
+      // `_lastSetState` is where THIS connection's own flow got to. They diverge when a second
+      // connection takes the flow lock and rewinds the shared state under an in-flight request on
+      // this one — report both so a failure says which of those happened (DX-1264).
       throw new InvariantViolation(
-        `Expected ${stateToString(invitation.state)} to be one of [${validStates.map(stateToString).join(', ')}]`,
+        `Expected ${stateToString(invitation.state)} to be one of [${validStates.map(stateToString).join(', ')}]` +
+          ` (this connection last set ${stateToString(this._lastSetState)}, holdsFlowLock=${this.hasFlowLock()})`,
       );
     }
   }
