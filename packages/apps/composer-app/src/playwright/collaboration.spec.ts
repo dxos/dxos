@@ -8,12 +8,23 @@ import { AppManager } from './app-manager';
 import { Markdown } from './plugins';
 
 const perfomInvitation = async (host: AppManager, guest: AppManager) => {
+  const sharedWorkspace = host.workspaceId;
   await host.shareSpace();
   const invitationCode = await host.createSpaceInvitation();
   const authCode = await host.getAuthCode();
   await guest.joinSpace();
   await guest.shell.acceptSpaceInvitation(invitationCode);
   await guest.shell.authenticate(authCode);
+
+  // `authenticate()` returns as soon as the shell's next button is clicked; the join completing and
+  // the app switching into the shared workspace both happen after that. Waiting for the guest to
+  // actually be in the host's workspace is what makes the later assertions mean anything — against
+  // the guest's own navtree, which holds exactly one object too, `toHaveCount(1)` passes whether or
+  // not the join landed, so the test's outcome came down to whether the switch beat the assertion
+  // (DX-1264).
+  await expect.poll(() => guest.workspaceId, { timeout: 30_000 }).toBe(sharedWorkspace);
+  await guest.waitForSpaceReady(30_000);
+
   await navigateToNewDocument(host);
 };
 
@@ -24,16 +35,7 @@ const navigateToNewDocument = async (app: AppManager) => {
 // Two-peer WebRTC runs on all browsers in CI. The Claude cloud sandbox is the exception — webkit peers
 // there time out waiting for transport, so cross-browser results come from CI, not local runs. Ignore
 // webkit's `'allow-presentation'` console flood here, from MediaPlayer's iframe sandbox.
-//
-// Stability here waits on DX-1152 (production-edge two-peer stalls: invitations and replication) —
-// these tests stay ENABLED in the meantime, both as sensors for that defect and because skipping one
-// victim of a shared cause just moves the failure to the next test.
 test.describe('Collaboration tests', () => {
-  // TODO(wittjosiah): STRICTLY temporary, remove when DX-1152 lands. Retries here exist solely
-  //   because of the endemic edge stalls named above; the defect is known and tracked, and Trunk
-  //   still records every first-attempt failure. Do not copy this pattern without a tracked issue.
-  test.describe.configure({ retries: 2 });
-
   let host: AppManager;
   let guest: AppManager;
 

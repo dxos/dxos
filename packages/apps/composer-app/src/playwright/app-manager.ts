@@ -130,6 +130,12 @@ export class AppManager {
     return this.page.getByTestId('navtree.workspace.visible');
   }
 
+  /** The workspace segment of the current pair-chain URL (`/<anchor>/<workspace>/...`). */
+  get workspaceId(): string | undefined {
+    const [anchor, workspace] = new URL(this.page.url()).pathname.split('/').filter(Boolean);
+    return anchor === WORKSPACE_KEY ? workspace : undefined;
+  }
+
   async openUserAccount(): Promise<void> {
     await this.page.getByTestId('clientPlugin.account').click();
   }
@@ -175,18 +181,28 @@ export class AppManager {
     });
   }
 
-  async shareSpace(): Promise<void> {
-    // Members is nested under the Settings section, so scope the generic `treeItem.heading` testid
-    // to the members row and expand Settings first when that heading is not showing yet.
-    const membersHeading = this.currentWorkspace
-      .getByTestId('spacePlugin.members')
+  async shareSpace(timeout = 15_000): Promise<void> {
+    await this.#openSpaceSettingsPage('spacePlugin.members', timeout);
+  }
+
+  /**
+   * Opens one of the pages nested under a space's Settings section (Members, General, ...).
+   *
+   * Expands Settings unconditionally rather than sampling whether the heading is already showing:
+   * `isVisible()` answers immediately, so right after a navigation it reads `false` for a navtree
+   * that has not painted and `true` for a heading that is mid-remount — the second skips the expand
+   * and leaves the click waiting on a detached element for its whole 30s budget (DX-1264).
+   * `expandSection` waits for the row and leaves an already-open one alone, so this is a no-op when
+   * Settings is open.
+   */
+  async #openSpaceSettingsPage(testId: string, timeout: number): Promise<void> {
+    await this.expandSection('spacePlugin.settings', timeout);
+    await this.currentWorkspace
+      .getByTestId(testId)
       .first()
       .getByTestId('treeItem.heading')
-      .first();
-    if (!(await membersHeading.isVisible())) {
-      await this.expandSection('spacePlugin.settings');
-    }
-    await membersHeading.click();
+      .first()
+      .click({ timeout });
   }
 
   async createSpaceInvitation(): Promise<string> {
@@ -309,16 +325,8 @@ export class AppManager {
    * Opens the General settings panel (SpaceSettingsContainer) for the currently active space,
    * expanding the Settings section first if necessary.
    */
-  async openSpaceSettings(): Promise<void> {
-    const generalHeading = this.currentWorkspace
-      .getByTestId('spacePlugin.general')
-      .first()
-      .getByTestId('treeItem.heading')
-      .first();
-    if (!(await generalHeading.isVisible())) {
-      await this.expandSection('spacePlugin.settings');
-    }
-    await generalHeading.click();
+  async openSpaceSettings(timeout = 15_000): Promise<void> {
+    await this.#openSpaceSettingsPage('spacePlugin.general', timeout);
   }
 
   /**
