@@ -9,6 +9,7 @@ import { Select } from '@dxos/react-ui';
 
 import { type FormFieldRenderer, type FormFieldRendererProps } from '#types';
 
+import { FormField } from '../../FormField';
 import { presentationFor } from '../../presentation';
 import { type SelectFieldOption } from './SelectField';
 
@@ -41,17 +42,22 @@ export const createSelectField = ({
     `createSelectField: option value '${sentinel}' is reserved.`,
   );
 
-  return ({ type, readonly, presentation, getValue, onValueChange }: FormFieldRendererProps<string | undefined>) => {
+  // A `fieldMap` renderer owns its row: bound at the field's path, so label and description are the schema's.
+  return ({
+    type,
+    label,
+    jsonPath,
+    readonly,
+    presentation,
+    getValue,
+    onValueChange,
+  }: FormFieldRendererProps<string | undefined>) => {
     const value = getValue();
-    if (presentationFor(presentation).isStatic) {
-      return (
-        <p className='truncate min-w-0'>
-          {normalized.find((option) => option.value === value)?.label ?? String(value ?? '')}
-        </p>
-      );
-    }
-
-    return (
+    const control = presentationFor(presentation).isStatic ? (
+      <p className='truncate min-w-0'>
+        {normalized.find((option) => option.value === value)?.label ?? String(value ?? '')}
+      </p>
+    ) : (
       <Select.Root
         disabled={!!readonly}
         value={value ?? sentinel}
@@ -73,6 +79,12 @@ export const createSelectField = ({
           </Select.Portal>
         )}
       </Select.Root>
+    );
+
+    return (
+      <FormField path={jsonPath} label={label} readonly={readonly} presentation={presentation}>
+        {control}
+      </FormField>
     );
   };
 };
