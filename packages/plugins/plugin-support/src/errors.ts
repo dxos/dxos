@@ -10,5 +10,11 @@ export class SupportUnavailableError extends BaseError.extend(
   'No support service is configured',
 ) {}
 
+/** The service refused the report because the identity is not an internal account. */
+export class SupportForbiddenError extends BaseError.extend(
+  'SupportForbiddenError',
+  'Filing Linear issues is limited to internal accounts',
+) {}
+
 /** The support service refused or failed to file the report. */
 export class SupportSubmitError extends BaseError.extend('SupportSubmitError', 'Failed to file the support report') {}

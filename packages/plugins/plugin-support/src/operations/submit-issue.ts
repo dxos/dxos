@@ -27,16 +27,12 @@ const handler: Operation.WithHandler<typeof SupportOperation.SubmitIssue> = Supp
         return yield* Effect.fail(new SupportSubmitError({ context: { reason: 'no identity to file the issue as' } }));
       }
       const version = input.report.version ?? client.config.values.runtime?.app?.build?.version;
-      return yield* Effect.tryPromise({
-        try: () =>
-          SupportService.submitSupportIssue({
-            endpoint,
-            observability,
-            report: { ...input.report, version },
-            did,
-            screenshotUrl: input.screenshotUrl,
-          }),
-        catch: (cause) => new SupportSubmitError({ cause }),
+      return yield* SupportService.submitSupportIssue({
+        endpoint,
+        observability,
+        report: { ...input.report, version },
+        did,
+        screenshotUrl: input.screenshotUrl,
       });
     }),
   ),

@@ -612,11 +612,13 @@ const main = async () => {
   const supportEndpoint = SupportService.supportEndpoint(config);
   const submitReport = supportEndpoint
     ? async (report: SupportOperation.SupportRequest) => {
-        await SupportService.submitSupportReport({
-          endpoint: supportEndpoint,
-          observability: await observability,
-          report,
-        });
+        await EffectEx.runPromise(
+          SupportService.submitSupportReport({
+            endpoint: supportEndpoint,
+            observability: await observability,
+            report,
+          }),
+        );
       }
     : undefined;
 

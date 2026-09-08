@@ -6,12 +6,13 @@
 // the app entry and the crash dialog both need it at startup, and reaching it through the module
 // that defines operations pulled @dxos/compute and @dxos/echo into the eager boot graph.
 
+import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
 import { type Config, EdgeServiceName, getEdgeServiceEndpoint, getEnvString } from '@dxos/config';
-import { log } from '@dxos/log';
 import type * as Observability from '@dxos/observability/Observability';
 
+import { SupportForbiddenError, SupportSubmitError } from '../errors';
 import * as SupportOperation from './SupportOperation';
 
 export const SupportReportResult = Schema.Struct({
@@ -30,22 +31,70 @@ export const SupportIssueResult = Schema.Struct({
 
 export type SupportIssueResult = Schema.Schema.Type<typeof SupportIssueResult>;
 
+/** Config only, so it stays plain: the caller needs it before it has anything to run. */
+export const supportEndpoint = (config: Config): string | undefined =>
+  getEnvString(config, 'DX_DISCORD_SERVICE_URL') ?? getEdgeServiceEndpoint(config, EdgeServiceName.Discord);
+
+/** What every report sends, whichever route files it. */
+const reportBody = (
+  report: SupportOperation.SupportRequest,
+  observability: Observability.Observability,
+  extra: { did?: string; screenshotUrl?: string; logKey?: string },
+) => ({
+  title: report.title,
+  body: report.body,
+  type: report.type,
+  severity: report.severity,
+  area: report.area,
+  version: report.version,
+  ...extra,
+  posthog: observability.support.sessionContext(),
+});
+
+const postJson = (url: string, body: unknown): Effect.Effect<Response, SupportSubmitError> =>
+  Effect.tryPromise({
+    try: () =>
+      fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }),
+    catch: (cause) => new SupportSubmitError({ cause }),
+  });
+
 /**
  * The service filed the report but answered with something this build cannot read, so there is no
  * ticket id to show or to tag the flushed logs with. Nothing is recoverable; say so legibly rather
  * than surfacing a raw schema error.
  */
-const decodeResult = <T>(schema: Schema.Codec<T>, body: unknown): T => {
-  try {
-    return Schema.decodeUnknownSync(schema)(body);
-  } catch (err) {
-    log.warn('unexpected support service response', { body, err });
-    throw new Error('The support service returned an unexpected response.');
-  }
-};
+const decodeBody = <A>(schema: Schema.Codec<A>, response: Response): Effect.Effect<A, SupportSubmitError> =>
+  Effect.tryPromise({ try: () => response.json(), catch: (cause) => new SupportSubmitError({ cause }) }).pipe(
+    Effect.flatMap((body) =>
+      Effect.try({
+        try: () => Schema.decodeUnknownSync(schema)(body),
+        catch: (cause) =>
+          new SupportSubmitError({ message: 'The support service returned an unexpected response', cause }),
+      }),
+    ),
+  );
 
-export const supportEndpoint = (config: Config): string | undefined =>
-  getEnvString(config, 'DX_DISCORD_SERVICE_URL') ?? getEdgeServiceEndpoint(config, EdgeServiceName.Discord);
+/** Uploads the debug-log dump, whose key travels with the report. */
+const uploadLogs = (
+  observability: Observability.Observability,
+  includeLogs: boolean,
+): Effect.Effect<string | undefined, SupportSubmitError> =>
+  includeLogs
+    ? Effect.tryPromise({
+        try: () => observability.support.uploadLogs(),
+        catch: (cause) => new SupportSubmitError({ message: 'Failed to upload the debug logs', cause }),
+      })
+    : Effect.succeed(undefined);
+
+/**
+ * Ships the dump to PostHog Logs tagged with the id the service minted. Detached: the report is
+ * already filed by this point, and the dump can be large.
+ */
+const flushLogs = (observability: Observability.Observability, attributes: Record<string, string>) =>
+  Effect.tryPromise({ try: () => observability.support.flushLogs(attributes as never), catch: (cause) => cause }).pipe(
+    Effect.catchCause((cause) => Effect.logWarning('support logs flush failed', { cause })),
+    Effect.forkDetach,
+  );
 
 export type SubmitSupportReportOptions = {
   endpoint: string;
@@ -55,42 +104,34 @@ export type SubmitSupportReportOptions = {
   screenshotUrl?: string;
 };
 
-export const submitSupportReport = async ({
+/**
+ * Files the report as a support ticket with a public Discord thread: upload the dump, ask the
+ * service to file everything, then flush the same dump tagged with the ticket.
+ */
+export const submitSupportReport = ({
   endpoint,
   observability,
   report,
   did,
   screenshotUrl,
-}: SubmitSupportReportOptions): Promise<SupportReportResult> => {
-  const includeLogs = report.includeLogs !== false;
-  const logKey = includeLogs ? await observability.support.uploadLogs() : undefined;
-  const response = await fetch(`${endpoint}/feedback`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      title: report.title,
-      body: report.body,
-      type: report.type,
-      severity: report.severity,
-      area: report.area,
-      version: report.version,
-      did,
-      screenshotUrl,
-      logKey,
-      posthog: observability.support.sessionContext(),
-    }),
+}: SubmitSupportReportOptions): Effect.Effect<SupportReportResult, SupportSubmitError> =>
+  Effect.gen(function* () {
+    const includeLogs = report.includeLogs !== false;
+    const logKey = yield* uploadLogs(observability, includeLogs);
+    const response = yield* postJson(
+      `${endpoint}/feedback`,
+      reportBody(report, observability, { did, screenshotUrl, logKey }),
+    );
+    if (!response.ok) {
+      return yield* Effect.fail(new SupportSubmitError({ context: { status: response.status } }));
+    }
+
+    const result = yield* decodeBody(SupportReportResult, response);
+    if (includeLogs) {
+      yield* flushLogs(observability, { ticketId: result.ticketId });
+    }
+    return result;
   });
-  if (!response.ok) {
-    throw new Error(`support service returned ${response.status}`);
-  }
-  const result = decodeResult(SupportReportResult, await response.json());
-  if (includeLogs) {
-    void observability.support
-      .flushLogs({ ticketId: result.ticketId })
-      .catch((err) => log.warn('support logs flush failed', { err }));
-  }
-  return result;
-};
 
 export type SubmitSupportIssueOptions = {
   endpoint: string;
@@ -100,46 +141,34 @@ export type SubmitSupportIssueOptions = {
   screenshotUrl?: string;
 };
 
-export const submitSupportIssue = async ({
+/**
+ * The team's path: files a Linear issue directly, no ticket and no public thread. The service
+ * refuses any identity the hub does not know as an internal account.
+ */
+export const submitSupportIssue = ({
   endpoint,
   observability,
   report,
   did,
   screenshotUrl,
-}: SubmitSupportIssueOptions): Promise<SupportIssueResult> => {
-  const includeLogs = report.includeLogs !== false;
-  const logKey = includeLogs ? await observability.support.uploadLogs() : undefined;
-  const response = await fetch(`${endpoint}/issue`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      title: report.title,
-      body: report.body,
-      type: report.type,
-      severity: report.severity,
-      area: report.area,
-      version: report.version,
-      did,
-      screenshotUrl,
-      logKey,
-      posthog: observability.support.sessionContext(),
-    }),
+}: SubmitSupportIssueOptions): Effect.Effect<SupportIssueResult, SupportSubmitError | SupportForbiddenError> =>
+  Effect.gen(function* () {
+    const includeLogs = report.includeLogs !== false;
+    const logKey = yield* uploadLogs(observability, includeLogs);
+    const response = yield* postJson(
+      `${endpoint}/issue`,
+      reportBody(report, observability, { did, screenshotUrl, logKey }),
+    );
+    if (response.status === 403) {
+      return yield* Effect.fail(new SupportForbiddenError());
+    }
+    if (!response.ok) {
+      return yield* Effect.fail(new SupportSubmitError({ context: { status: response.status } }));
+    }
+
+    const result = yield* decodeBody(SupportIssueResult, response);
+    if (includeLogs) {
+      yield* flushLogs(observability, { reportId: result.reportId });
+    }
+    return result;
   });
-  if (response.status === 403) {
-    throw new Error('Filing Linear issues is limited to internal accounts.');
-  }
-  if (!response.ok) {
-    const detail = await response
-      .text()
-      .then((text) => text.slice(0, 200))
-      .catch(() => '');
-    throw new Error(`support service returned ${response.status}${detail ? `: ${detail}` : ''}`);
-  }
-  const result = decodeResult(SupportIssueResult, await response.json());
-  if (includeLogs) {
-    void observability.support
-      .flushLogs({ reportId: result.reportId })
-      .catch((err) => log.warn('support logs flush failed', { err }));
-  }
-  return result;
-};

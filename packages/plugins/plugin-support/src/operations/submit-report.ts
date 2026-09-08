@@ -11,7 +11,7 @@ import * as ObservabilityCapabilities from '@dxos/plugin-observability/Observabi
 
 import { SupportOperation, SupportService } from '#types';
 
-import { SupportSubmitError, SupportUnavailableError } from '../errors';
+import { SupportUnavailableError } from '../errors';
 
 const handler: Operation.WithHandler<typeof SupportOperation.SubmitReport> = SupportOperation.SubmitReport.pipe(
   Operation.withHandler(
@@ -22,16 +22,12 @@ const handler: Operation.WithHandler<typeof SupportOperation.SubmitReport> = Sup
       if (!endpoint) {
         return yield* Effect.fail(new SupportUnavailableError());
       }
-      return yield* Effect.tryPromise({
-        try: () =>
-          SupportService.submitSupportReport({
-            endpoint,
-            observability,
-            report: input.report,
-            did: input.did,
-            screenshotUrl: input.screenshotUrl,
-          }),
-        catch: (cause) => new SupportSubmitError({ cause }),
+      return yield* SupportService.submitSupportReport({
+        endpoint,
+        observability,
+        report: input.report,
+        did: input.did,
+        screenshotUrl: input.screenshotUrl,
       });
     }),
   ),
