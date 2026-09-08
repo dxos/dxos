@@ -41,12 +41,12 @@ Each extension is defined in the Appendix or resolved via its URI.
 |-------------|--------------------------------|
 | `type`      | `org.dxos.mdl.type@1.0`        |
 | `feat`      | `org.dxos.mdl.feat@1.0`        |
-| `test`      | `org.dxos.mdl.test@1.0`        |
+| `scenario`  | `org.dxos.mdl.scenario@1.0`    |
 | `component` | `org.dxos.mdl.component@1.0`   |
 | `op`        | `org.dxos.mdl.op@1.0`          |
 | `service`   | `org.dxos.mdl.service@1.0`     |
 | `capability`| `org.dxos.mdl.capability@1.0`  |
-| `flow`      | `org.dxos.mdl.flow@1.0`        |
+| `test`      | `org.dxos.mdl.test@1.0`        |
 
 ## Types
 
@@ -655,7 +655,7 @@ feat F-11: Event / Meeting linkage (out of scope — see plugin-meeting)
 ## Acceptance
 
 ```mdl
-test T-1: Join a call from a Channel
+scenario T-1: Join a call from a Channel
   given: a Channel article is open and the identity has a display name
   when: user clicks "Start video call"
   then:
@@ -667,7 +667,7 @@ test T-1: Join a call from a Channel
 ```
 
 ```mdl
-test T-2: Concurrent chat + call
+scenario T-2: Concurrent chat + call
   given: in a call on Channel X
   when: user navigates back to the Channel X article
   then:
@@ -677,7 +677,7 @@ test T-2: Concurrent chat + call
 ```
 
 ```mdl
-test T-3: Leave a call
+scenario T-3: Leave a call
   given: CallState.joined === true on roomId R
   when: user clicks Leave
   then:
@@ -689,7 +689,7 @@ test T-3: Leave a call
 ```
 
 ```mdl
-test T-4: Display-name gate
+scenario T-4: Display-name gate
   given: identity.profile.displayName is undefined
   when: user clicks "Start video call"
   then:
@@ -700,7 +700,7 @@ test T-4: Display-name gate
 ```
 
 ```mdl
-test T-5: Extension receives lifecycle callbacks
+scenario T-5: Extension receives lifecycle callbacks
   given: a contributor has registered CallsCapabilities.EventHandler with
          onJoin / onLeave callbacks
   when: a call is started then ended
@@ -710,7 +710,7 @@ test T-5: Extension receives lifecycle callbacks
 ```
 
 ```mdl
-test T-6: plugin-thread renders without plugin-calls
+scenario T-6: plugin-thread renders without plugin-calls
   given: composer-app registers ThreadPlugin but NOT CallsPlugin
   when: a Channel article is opened
   then:
@@ -720,7 +720,7 @@ test T-6: plugin-thread renders without plugin-calls
 ```
 
 ```mdl
-test T-7: Media toggle
+scenario T-7: Media toggle
   given: in a call, microphone is on
   when: user clicks the mic-off button in the Toolbar
   then:
@@ -730,7 +730,7 @@ test T-7: Media toggle
 ```
 
 ```mdl
-test T-8: SpeakingMonitor signal
+scenario T-8: SpeakingMonitor signal
   given: SpeakingMonitor is watching the local audio track
   when: the user speaks above the threshold for 300ms
   then:
@@ -739,7 +739,7 @@ test T-8: SpeakingMonitor signal
 ```
 
 ```mdl
-test T-9: Devtools surface displays call diagnostics
+scenario T-9: Devtools surface displays call diagnostics
   given: CallState.joined === true and the devtools panel is open
   when: user views the CallDebugPanel in the devtools-overview surface
   then:
@@ -749,7 +749,7 @@ test T-9: Devtools surface displays call diagnostics
 ```
 
 ```mdl
-test T-10: Provision a slim persistent Call
+scenario T-10: Provision a slim persistent Call
   given: a DXOS space is available
   when: op:provisionCall is invoked with no transportKind
   then:
@@ -761,7 +761,7 @@ test T-10: Provision a slim persistent Call
 ```
 
 ```mdl
-test T-13: Resume a Call after the live session ends
+scenario T-13: Resume a Call after the live session ends
   given: a Call that was joined then left (live session torn down)
   when: the Call is joined again
   then:
@@ -772,19 +772,19 @@ test T-13: Resume a Call after the live session ends
 
 ## QA
 
-Executable flows. Each step carries a human instruction (`do`) and, where the step maps to an
-invocable operation, an agent binding (`invoke`). Report failures by flow and step number.
+Executable tests. Each step carries a human instruction (`do`) and, where the step maps to an
+invocable operation, an agent binding (`invoke`). Report failures by test and step number.
 
 None of the `op` blocks above have a runtime `Operation.make` counterpart — `startCall`,
 `leaveCall`, `toggleAudio`/`toggleVideo`/`toggleScreenshare`, `raiseHand`, `pinParticipant`, and
 `provisionCall` are all plain async methods on `CallManager` (`packages/plugins/plugin-calls/src/calls/call-manager.ts`),
-called directly from UI handlers — there is no invoker key for any of them. Every flow below is
+called directly from UI handlers — there is no invoker key for any of them. Every test below is
 therefore `actors: human`. Joining a live call additionally needs a camera/microphone and a
 reachable Cloudflare Calls SFU, which the debug port cannot substitute for — this is a real device
 and network dependency, not a design gap, so it is declared in `given` rather than `blocked`.
 
 ```mdl
-flow QA-1: Start a video call from a Channel, toggle media, leave
+test QA-1: Start a video call from a Channel, toggle media, leave
   desc: The core calls round-trip — join from a chat Channel, exercise media controls, leave cleanly.
   actors: human
   covers: [F-1.2, F-2.1, F-2.2, F-3.1, F-3.2, F-4.1, F-4.2, F-4.3, T-1, T-2, T-3, T-7]
@@ -797,8 +797,8 @@ flow QA-1: Start a video call from a Channel, toggle media, leave
     - plugin-calls is enabled — it defaults ON only in dev environments (isDev); elsewhere it must
       be enabled via the plugin registry
     - camera and microphone permissions are available to the browser, and the Cloudflare Calls SFU
-      is reachable — this flow cannot run headless or in an environment without real media devices
-  test:
+      is reachable — this test cannot run headless or in an environment without real media devices
+  steps:
     - name: Start the call
       do: Open the Channel article and click "Start video call" in its toolbar.
       expect: an "Active Call" deck companion appears alongside the chat; the local participant's
@@ -823,7 +823,7 @@ flow QA-1: Start a video call from a Channel, toggle media, leave
 ```
 
 ```mdl
-flow QA-2: Provision a resumable Call without joining
+test QA-2: Provision a resumable Call without joining
   desc: The persistence-only path — provisionCall writes a slim Call to the space with no live session.
   actors: human
   covers: [F-9.2, F-9.3, F-10.1, F-10.3, T-10]
@@ -832,7 +832,7 @@ flow QA-2: Provision a resumable Call without joining
     - an identity exists
     - space: a space is open
     - plugin-calls is enabled
-  test:
+  steps:
     - name: Provision a Call
       do: (no direct UI gesture in plugin-calls alone — this path is driven by a consumer such as
         plugin-meeting, which calls provisionCall when scheduling a meeting; a bare Call object can
@@ -842,7 +842,7 @@ flow QA-2: Provision a resumable Call without joining
         and `created` set — and with no notes / summary / transcript / participants fields
       note: |
         NO `invoke` — `provisionCall` has no operation key; this step is exercised indirectly
-        through plugin-meeting's QA flows in normal use. Listed `blocked` would be wrong here (the
+        through plugin-meeting's QA tests in normal use. Listed `blocked` would be wrong here (the
         step CAN run, just not through this plugin's own UI), so it stays human/unverified.
   after:
     - name: Delete the Call
@@ -851,7 +851,7 @@ flow QA-2: Provision a resumable Call without joining
       note: |
         NO `invoke` — the Call is provisioned outside plugin-calls' own UI (see the test step
         above), so there is no bound value for `space.removeObjects` to name; deletion stays
-        human-only like the rest of this flow.
+        human-only like the rest of this test.
 ```
 
 ---
@@ -883,8 +883,8 @@ ext feat
 ```
 
 ```mdl
-ext test
-  uri: dxos.spec/ext/test@1.0
+ext scenario
+  uri: dxos.spec/ext/scenario@1.0
   desc: An acceptance scenario expressed as given / when / then steps.
   fields:
     given?: Step | Step[]

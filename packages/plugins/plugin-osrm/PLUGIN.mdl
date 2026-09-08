@@ -55,8 +55,8 @@ Each extension is defined in the Appendix of the core template or resolved via i
 | `feat`      | `org.dxos.mdl.feat@1.0`      |
 | `op`        | `org.dxos.mdl.op@1.0`        |
 | `component` | `org.dxos.mdl.component@1.0` |
+| `scenario`  | `org.dxos.mdl.scenario@1.0`  |
 | `test`      | `org.dxos.mdl.test@1.0`      |
-| `flow`      | `org.dxos.mdl.flow@1.0`      |
 | `step`      | `org.dxos.mdl.step@1.0`      |
 
 ## Cross-package additions
@@ -410,11 +410,11 @@ test buildTileUrl (plugin-map)
 
 ## QA
 
-Executable flows. Each step carries a human instruction (`do`) and, where the step maps to an
-invocable operation, an agent binding (`invoke`). Report failures by flow and step number.
+Executable tests. Each step carries a human instruction (`do`) and, where the step maps to an
+invocable operation, an agent binding (`invoke`). Report failures by test and step number.
 
 ```mdl
-flow QA-1: Plan a driving route across two road segments
+test QA-1: Plan a driving route across two road segments
   desc: |
     plugin-osrm contributes no operation of its own — it registers a `RoutingService` capability
     that `plugin-trip`'s `PlanRoute` operation resolves and calls. The core round-trip therefore
@@ -433,8 +433,8 @@ flow QA-1: Plan a driving route across two road segments
     - network access to `nominatim.openstreetmap.org` and `router.project-osrm.org` — both public
       demo services, rate-limited (Nominatim ≤ 1 req/s) and explicitly "not for production use";
       a flaky or slow result here may be the upstream demo instance, not a defect
-    - no Trip named "QA Road Trip" exists — ABORT rather than deleting one this flow did not create
-    - trip: the Trip "QA Road Trip" this flow creates — no create op exists (human-only step), so
+    - no Trip named "QA Road Trip" exists — ABORT rather than deleting one this test did not create
+    - trip: the Trip "QA Road Trip" this test creates — no create op exists (human-only step), so
       the runner binds this once that step completes
   before:
     - name: Create the trip
@@ -445,7 +445,7 @@ flow QA-1: Plan a driving route across two road segments
         (`plugin-trip/src/capabilities/create-object.ts`), the same factory-through-navtree path
         as plugin-chess's `startGame`; there is no operation key to call, and the navtree action
         both creates and places the row in one gesture, so no separate placement step is needed.
-  test:
+  steps:
     - name: Add the first road segment
       do: In TripArticle, choose "Add segment → Road" and set origin "London" and destination "Paris".
       invoke: org.dxos.operation.trip.addSegment { trip: $given.trip, kind: "road", origin: "London", destination: "Paris" }

@@ -1,0 +1,5 @@
+# Spec sync state — written by the spec-sync Routine (agents/routines/spec-sync.md).
+# `main` is the origin/main commit the last incremental run reconciled against; `plugins` records,
+# per plugin short name, the commit its PLUGIN.mdl was last reconciled with. Absent = never synced.
+main: null
+plugins: {}

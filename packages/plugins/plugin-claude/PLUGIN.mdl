@@ -23,8 +23,8 @@ Each extension is defined in the Appendix or resolved via its URI.
 |--------|--------------------------------|
 | `type` | `org.dxos.mdl.type@1.0`        |
 | `feat` | `org.dxos.mdl.feat@1.0`        |
+| `scenario` | `org.dxos.mdl.scenario@1.0`    |
 | `test` | `org.dxos.mdl.test@1.0`        |
-| `flow` | `org.dxos.mdl.flow@1.0`        |
 
 ## Types
 
@@ -254,7 +254,7 @@ feat F-7: Session credentials
 ## Acceptance
 
 ```mdl
-test T-1: Config projection defaults and omissions
+scenario T-1: Config projection defaults and omissions
   given: a ClaudeManagedAgent with only a name
   when: toAgentConfig is applied
   then:
@@ -264,14 +264,14 @@ test T-1: Config projection defaults and omissions
 ```
 
 ```mdl
-test T-2: Effort is projected onto the model object
+scenario T-2: Effort is projected onto the model object
   given: a ClaudeManagedAgent with effort "high"
   when: toAgentConfig is applied
   then: model === { id: "claude-opus-5", effort: "high" }
 ```
 
 ```mdl
-test T-3: Transcript keeps prose only
+scenario T-3: Transcript keeps prose only
   given: an event list mixing user.message, agent.message, agent.tool_use and
          session.status_idle events
   when: toTranscript is applied
@@ -281,7 +281,7 @@ test T-3: Transcript keeps prose only
 ```
 
 ```mdl
-test T-4: Method-specific retryable statuses
+scenario T-4: Method-specific retryable statuses
   given: GET and POST requests with ClaudeAgentApiError values
   when: isRetryable is applied
   then:
@@ -292,11 +292,11 @@ test T-4: Method-specific retryable statuses
 
 ## QA
 
-Executable flows. Each step carries a human instruction (`do`) and, where the step maps to an
-invocable operation, an agent binding (`invoke`). Report failures by flow and step number.
+Executable tests. Each step carries a human instruction (`do`) and, where the step maps to an
+invocable operation, an agent binding (`invoke`). Report failures by test and step number.
 
 ```mdl
-flow QA-1: Configure, deploy and run a Claude managed agent
+test QA-1: Configure, deploy and run a Claude managed agent
   desc: |
     The full round-trip — create a local agent configuration, deploy it to Anthropic, start a
     session and read the transcript back. Deploy and everything after it calls the live
@@ -312,9 +312,9 @@ flow QA-1: Configure, deploy and run a Claude managed agent
     - plugin-claude is enabled — it is OFF by default, and no claude operation is
       registered until it is on. Enabling is a UI action (Settings -> plugin registry);
       `manager.enable()` returns without error from the debug port and does not enable it.
-    - no ClaudeManagedAgent named "QA Agent" exists — ABORT rather than deleting one this flow
+    - no ClaudeManagedAgent named "QA Agent" exists — ABORT rather than deleting one this test
       did not create
-  test:
+  steps:
     - name: Create the agent configuration
       do: In the navtree, click + on a collection and choose Claude Agent. Name it "QA Agent".
       invoke: org.dxos.operation.claude.createAgent { name: "QA Agent" }
@@ -384,8 +384,8 @@ ext feat
 ```
 
 ```mdl
-ext test
-  uri: dxos.spec/ext/test@1.0
+ext scenario
+  uri: dxos.spec/ext/scenario@1.0
   desc: An acceptance scenario expressed as given / when / then steps.
   fields:
     given?: Step | Step[]

@@ -2,8 +2,10 @@
 
 Project: `deus` · Design: [docs/DESIGN.md](./docs/DESIGN.md) · Idioms: [docs/IDIOMS.md](./docs/IDIOMS.md)
 
-_Resume: Phase 1 (Deus.QA) materialized 2026-08-23 — dialect, DESIGN section, execution skill, and
-a verified flow. Next: APP.mdl, then re-run QA-1 through the skill to test the contract itself._
+_Resume: Phase 2 (QA framework unification) landed 2026-09-08 — xUnit naming (`scenario` /
+`test` / `suite`), `composer-qa` skill, `spec/APP.mdl` with four app tests and tagged suites, and
+the two Routine prompts under `agents/routines/`. Next: run `--tag smoke` live and set the app
+tests' `status:`; register the Routines; the spec-sync sweep._
 
 ## Goal
 
@@ -30,6 +32,64 @@ A Claude routine (skill + command) that closes the loop for any plugin:
       port and report a per-step pass/fail table.
 
 Each part is independently useful; (c) is the one that needs the language to be right first.
+
+## Phase 2: QA framework unification — 2026-09-08
+
+Decisions (all by the user, one at a time):
+
+- **Naming is xUnit + Gherkin.** The old given/when/then `test` block is `scenario` (Gherkin's
+  Scenario, under `feat`); the executable case is `test QA-n` with stages `before` / `steps` /
+  `after` (vitest's own terms); `suite` is a container by reference with `tags:`, selected by name
+  or tag. Suites are order-independent by construction and have no `before` of their own.
+- **One operation per step; the snapshot is the agent's eyes.** The runner takes
+  `org.dxos.operation.debug.snapshot` after every step and binds it as `$snapshot` for `assert`;
+  `$<capture>.snapshot` is the state after an earlier step. Extend the snapshot rather than
+  screenshot.
+- **The spec mirrors the code**: one `op` per runtime key; a design-only op keeps its block with
+  `status: unimplemented`.
+- **App-level tests live in `packages/apps/composer-app/spec/APP.mdl`**; plugin specs move to
+  `plugin-xxx/spec/PLUGIN.mdl` later (below).
+- **Reports from a Routine go on the `qa` branch**, synced from main at the start of each run, with
+  the commit hash, time and environment in the header.
+
+Done:
+
+- [x] Mechanical rename across 93 `.mdl` files: `test T-n` → `scenario T-n`, `flow QA-n` →
+      `test QA-n`, stage `test:` → `steps:`, `ext test` → `ext scenario`, Extensions tables.
+- [x] `lang/qa.mdl` 1.1: `test` / `step` / `suite`, `$snapshot`, `space:` on a step, input literal
+      resolvers (`Obj`, `Ref`, `Space`, `$uri.objectId`), `status: blocked` in the enum, Execution
+      Rules 11–12 (snapshot after every step; a suite continues past a failed test).
+- [x] `docs/DESIGN.md` Deus.Std `scenario` + Deus.QA rewritten; `core.mdl`, template, examples.
+- [x] `src/extension/constants.ts` block types: + `scenario`, `suite`; − `flow` (23 parser tests
+      green).
+- [x] `.agents/skills/composer-qa` replaces `qa` + `running-qa-flows`; `composer-debug` trimmed to
+      the read-only transport reference; `/qa` command removed; `/dxos:qa` gains `suites`,
+      `run --suite|--tag`, `snapshot`; `scripts/list-tests.mjs` (was `list-flows.mjs`) parses
+      suites and resolves tags.
+- [x] `composer-app/spec/APP.mdl`: QA-1..4 from `testing/scripts/basics.md` (deleted), suites
+      `smoke`, `basics`, `assistant`, `editor`; `testing/README.md`, `reports/TEMPLATE.md` rewritten;
+      `bin/qa-browser.mjs` moved to `testing/bin/`; `REMOTE.md` folded into the Routine.
+- [x] `agents/routines/composer-qa.md` (nightly / on-merge QA) and `agents/routines/spec-sync.md`
+      (incremental + sweep), with `.agents/spec-sync.yml` as the sync state.
+
+Later (tracked, not started):
+
+- [ ] **Run `--tag smoke` live** and set the four app tests' `status:`. Blocked in the cloud sandbox
+      that authored this phase: the egress policy answers 403 to `moonrepo.dev` (proto) and the
+      ghcr blob host (moon's toolchain plugin), so no `moon` and no dev-server graph; a standalone
+      `vite build` fails in `DxDeclarations` without built dependency types. Run locally or from a
+      sandbox whose environment ran `.config/claude-code-setup.sh` successfully.
+- [ ] **Register the Routines** (`create_trigger`): nightly QA on `qa` (`source_revision`/
+      `outcome_branch: qa`), on-merge smoke, daily spec-sync. Create the `qa` branch from main first.
+- [ ] **Move every `PLUGIN.mdl` to `plugin-xxx/spec/PLUGIN.mdl`**, updating `list-tests.mjs`,
+      `tools/qa-lint/*`, the `composer-plugins` skill, the template and every path in docs.
+- [ ] **Spec-sync sweep** over all plugins in batches of 8 (`sweep 8`), then incremental.
+- [ ] **Migrate `scenario` content**: 542 given/when/then blocks; fold each into its `feat`'s `req`
+      or promote to a runnable `test` where an operation exists. Authoring, done per plugin by the
+      sweep, not a rename.
+- [ ] `APP.mdl` structure sections (`node`, `deck`, `plank`, `surface` per `app.mdl`).
+- [ ] Snapshot additions as tests need them (navtree selection, editor selection, dialog state).
+- [ ] `qa-lint`: `plugin-deepseek` QA-2 references `$given.space` without binding it (pre-existing on main).
 
 ## Phase 1: Deus.QA dialect
 

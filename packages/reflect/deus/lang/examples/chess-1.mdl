@@ -15,7 +15,7 @@ Each extension is defined in the Appendix or resolved via its URI.
 |--------|-----------------------------|
 | `type` | `org.dxos.mdl.type@1.0`     |
 | `feat` | `org.dxos.mdl.feat@1.0`     |
-| `test` | `org.dxos.mdl.test@1.0`     |
+| `scenario` | `org.dxos.mdl.scenario@1.0` |
 
 ## Types
 
@@ -94,7 +94,7 @@ feat F-2: Make Move
 ## Acceptance
 
 ```mdl
-test T-1: New game starting position
+scenario T-1: New game starting position
   given: a new game is started
   then:
     - Board.turn === white
@@ -103,7 +103,7 @@ test T-1: New game starting position
 ```
 
 ```mdl
-test T-2: Illegal move rejected
+scenario T-2: Illegal move rejected
   given: it is white's turn
   when: white attempts to move a black piece
   then: WrongTurn error; Board unchanged
@@ -138,8 +138,8 @@ ext feat
 ```
 
 ```mdl
-ext test
-  uri: dxos.spec/ext/test@1.0
+ext scenario
+  uri: dxos.spec/ext/scenario@1.0
   desc: An acceptance scenario expressed as given / when / then steps.
   fields:
     given?: Step | Step[]

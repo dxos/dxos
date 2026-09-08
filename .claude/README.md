@@ -72,7 +72,7 @@ stdout as context the agent reads. Every other event needs
 | [`hooks/mode.sh`](./hooks/mode.sh) → [`scripts/mode.sh`](./scripts/mode.sh)   | `UserPromptSubmit`        | agent          | **persisted** `.claude/.mode` + `.claude/.focus` |
 | `dxos` plugin → `hooks/track.sh` ([tools/claude/plugins/dxos](../tools/claude/plugins/dxos))                            | `UserPromptSubmit`        | agent          | persisted, backend-resolved (registry)    |
 | [`AGENTS.md`](../AGENTS.md) (+ `CLAUDE.md` / `GEMINI.md` symlinks), [`CLAUDE.md`](./CLAUDE.md)                    | —                         | agent          | static                                    |
-| `skills/` → `../.agents/skills/` (25)                                                                             | —                         | agent          | on demand                                 |
+| `skills/` → `../.agents/skills/` (35)                                                                             | —                         | agent          | on demand                                 |
 | [`agents/`](./agents) (2), [`commands/`](./commands) (2)                                                          | —                         | agent          | on demand                                 |
 
 The guards exist as **both** a global `~/.claude/` copy and a repo copy. That is

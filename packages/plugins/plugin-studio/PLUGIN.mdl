@@ -40,8 +40,8 @@ the cross-cutting ontology and the generic authoring UI; concrete media
 | `feat`      | `org.dxos.mdl.feat@1.0`      |
 | `op`        | `org.dxos.mdl.op@1.1`        |
 | `component` | `org.dxos.mdl.component@1.0` |
+| `scenario`  | `org.dxos.mdl.scenario@1.0`  |
 | `test`      | `org.dxos.mdl.test@1.0`      |
-| `flow`      | `org.dxos.mdl.flow@1.0`      |
 
 ## Types
 
@@ -257,22 +257,22 @@ feat F-4: Navigation hub
 ## Acceptance
 
 ```mdl
-test T-1: Generate appends variants (mock provider)
+scenario T-1: Generate appends variants (mock provider)
   given: an Artifact{kind:'image'}; a mock GenerationService for 'image' with a requestSchema
   when: op:generate runs
   then: artifact.variants gains a Variant per result (each with a Generation); cover seeded; output.count matches
 
-test T-2: Renderer resolution by contentType
+scenario T-2: Renderer resolution by contentType
   given: variants with contentType image/png and video/mp4
   then: each renders via the matching VariantRenderer default; a Position.first override wins
 
-test T-3: Kind-specific request form
+scenario T-3: Kind-specific request form
   given: a provider requestSchema
   then: the default GenerateForm renders a schema-driven Form; a kind GenerateForm surface overrides it
 
-test T-4: Gallery create/delete + multi-select
+scenario T-4: Gallery create/delete + multi-select
 
-test T-5: Video playback
+scenario T-5: Video playback
   given: an Artifact{kind:'video'} whose cover Variant url is a YouTube/Vimeo/direct URL
   then: VideoVariant renders an embeddable player; uploaded video bytes play in <video>
 ```
@@ -302,11 +302,11 @@ Both depend on `@dxos/plugin-studio/types` and resolve their credential via
 
 ## QA
 
-Executable flows. Each step carries a human instruction (`do`) and, where the step maps to an
-invocable operation, an agent binding (`invoke`). Report failures by flow and step number.
+Executable tests. Each step carries a human instruction (`do`) and, where the step maps to an
+invocable operation, an agent binding (`invoke`). Report failures by test and step number.
 
 ```mdl
-flow QA-1: Create an image Artifact and generate a variant
+test QA-1: Create an image Artifact and generate a variant
   desc: The core studio round-trip — create an Artifact, generate a variant against a mock/real provider, read it back.
   actors: both
   covers: [F-1.1, F-1.2, F-2.1, T-1]
@@ -316,8 +316,8 @@ flow QA-1: Create an image Artifact and generate a variant
     - space: a space is open
     - collection: a collection in that space, to create into
     - a GenerationService for kind 'image' is registered (e.g. plugin-ideogram, with a connected credential)
-    - no Artifact named "QA Artifact" exists — ABORT rather than deleting one this flow did not create
-  test:
+    - no Artifact named "QA Artifact" exists — ABORT rather than deleting one this test did not create
+  steps:
     - name: Create the Artifact
       id: create
       do: In the navtree, click + on a collection and choose Artifact (image). Name it "QA Artifact".

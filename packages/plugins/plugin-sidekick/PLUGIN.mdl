@@ -18,11 +18,11 @@ Each extension is defined in the Appendix or resolved via its URI.
 | ----------- | ---------------------------- |
 | `type`      | `org.dxos.mdl.type@1.0`      |
 | `feat`      | `org.dxos.mdl.feat@1.0`      |
-| `test`      | `org.dxos.mdl.test@1.0`      |
+| `scenario`  | `org.dxos.mdl.scenario@1.0`  |
 | `component` | `org.dxos.mdl.component@1.0` |
 | `op`        | `org.dxos.mdl.op@1.0`        |
 | `service`   | `org.dxos.mdl.service@1.0`   |
-| `flow`      | `org.dxos.mdl.flow@1.0`      |
+| `test`      | `org.dxos.mdl.test@1.0`      |
 
 ## Types
 
@@ -304,7 +304,7 @@ feat F-8: Comment Thread Responses (Phase 2)
 ## Acceptance
 
 ```mdl
-test T-1: Agent initialization
+scenario T-1: Agent initialization
   given: user activates sidekick in a space
   then:
     - Agent.Agent created with sidekick skill
@@ -315,7 +315,7 @@ test T-1: Agent initialization
 ```
 
 ```mdl
-test T-2: Person profile creation
+scenario T-2: Person profile creation
   given: space contains a Person "Alice" without a linked profile
   when: agent processes persons in space
   then:
@@ -325,7 +325,7 @@ test T-2: Person profile creation
 ```
 
 ```mdl
-test T-3: Person tagging
+scenario T-3: Person tagging
   given: Person "Alice" has no category tag
   when: agent analyzes available information about Alice
   then:
@@ -334,7 +334,7 @@ test T-3: Person tagging
 ```
 
 ```mdl
-test T-4: User profile maintenance
+scenario T-4: User profile maintenance
   given: agent is initialized with user profile
   when: user chats "I'm focusing on fundraising this quarter"
   then:
@@ -343,7 +343,7 @@ test T-4: User profile maintenance
 ```
 
 ```mdl
-test T-5: Journal entry creation
+scenario T-5: Journal entry creation
   given: agent is running, no entry exists for today
   when: agent identifies an important event (e.g., key email received)
   then:
@@ -352,7 +352,7 @@ test T-5: Journal entry creation
 ```
 
 ```mdl
-test T-6: Dashboard rendering
+scenario T-6: Dashboard rendering
   given: sidekick agent exists with journal, profiles, and tracked persons
   when: user opens the agent's Article view
   then:
@@ -364,7 +364,7 @@ test T-6: Dashboard rendering
 ```
 
 ```mdl
-test T-7: Voice input tolerance
+scenario T-7: Voice input tolerance
   given: user speaks "schedule a call with alice tomorrow"
   when: transcription produces "schedule a call with Alice tomorrow"
   then:
@@ -405,15 +405,15 @@ test T-7: Voice input tolerance
 
 ## QA
 
-Executable flows. Each step carries a human instruction (`do`) and, where the step maps to an
-invocable operation, an agent binding (`invoke`). Report failures by flow and step number.
+Executable tests. Each step carries a human instruction (`do`) and, where the step maps to an
+invocable operation, an agent binding (`invoke`). Report failures by test and step number.
 
 ```mdl
-flow QA-1: Create a Sidekick agent and view its dashboard
+test QA-1: Create a Sidekick agent and view its dashboard
   desc: |
     The core round-trip — create an Agent instance carrying the sidekick skill, and confirm the
     dashboard surface renders for it. Profile/journal population (F-2, F-3, F-4) is autonomous
-    LLM behavior on a running agent session, not a deterministic step this flow can drive; it is
+    LLM behavior on a running agent session, not a deterministic step this test can drive; it is
     left to manual observation, per Phase 1/2 in Phased Rollout.
   actors: human
   covers: [F-1.1, F-5.1]
@@ -424,8 +424,8 @@ flow QA-1: Create a Sidekick agent and view its dashboard
     - plugin-sidekick is enabled — it is OFF by default everywhere except `isDev` builds
       (`plugin-defs.tsx`: `isDev && SidekickPlugin.make()`), and its skill is unregistered until
       the plugin is on. Enabling is a UI action (Settings -> plugin registry).
-    - no Agent named "QA Sidekick" exists — ABORT rather than deleting one this flow did not create
-  test:
+    - no Agent named "QA Sidekick" exists — ABORT rather than deleting one this test did not create
+  steps:
     - name: Create the agent
       do: In the navtree, click + on the space and choose Agent (or the sidekick creation
         affordance), name it "QA Sidekick", and select the Sidekick skill.
@@ -478,8 +478,8 @@ ext feat
 ```
 
 ```mdl
-ext test
-  uri: dxos.spec/ext/test@1.0
+ext scenario
+  uri: dxos.spec/ext/scenario@1.0
   desc: An acceptance scenario expressed as given / when / then steps.
   fields:
     given?: Step | Step[]

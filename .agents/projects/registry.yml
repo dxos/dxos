@@ -608,22 +608,18 @@ projects:
     tasks: packages/reflect/deus/TASKS.md
     design: packages/reflect/deus/docs/DESIGN.md
     prs: []
-    resume: "Phase 1 (Deus.QA) BUILT: lang/qa.mdl defines flow + step with nine execution rules, the
-      DESIGN.md section draws the test/flow boundary, .agents/skills/running-qa-flows is the agent-side
-      contract, /dxos:qa (dxos plugin, scripts/list-flows.mjs) lists and runs them, and the
-      agent-startable debug port works end to end (DX_DEBUG_PORT -> vite define -> main.tsx ->
-      temp/debug-port.json sidecar; started from main.tsx, NOT plugin-debug, which a plain local serve
-      leaves disabled). markdown QA-1 passes 4/4 and has been run three times; markdown QA-2/QA-3 and
-      chess QA-1 are authored but status: unverified. Also landed on this branch: the MenuExtension
-      capability letting plugins contribute slash-menu commands (one group per plugin, entries name an
-      Operation not a callback) with plugin-debug''s InsertLoremIpsum as the first contributor, and two
-      table-insert fixes in ui-editor. KEY FINDINGS, all in TASKS.md: the pass rate never told us
-      anything (QA-1 was 4/4 while two of four asserts were vacuous); requires: cannot predict
-      runnability so the runner always uses the invoker with a spaceId; any part of a flow without a
-      dual face diverges (cleanup was prose and the two actors picked different mechanisms); and the
-      op key gap is everywhere — chess declares six operations of which one has a runtime counterpart
-      and startGame has none. NEXT: run the three unverified flows, then routine part (a) (reconcile a
-      PLUGIN.mdl against Operation.make), then composer-app/APP.mdl."
+    resume: "Phase 2 (QA framework unification) landed 2026-09-08 on branch claude/composer-qa-framework-50u4gz: xUnit
+      naming across every .mdl (scenario = given/when/then, test QA-n = executable with before/steps/after,
+      suite = container by reference with tags), lang/qa.mdl 1.1 ($snapshot after every step, Obj/Ref/Space
+      input resolvers, space: on a step), .agents/skills/composer-qa replacing qa + running-qa-flows, /dxos:qa
+      with suites / run --suite|--tag / snapshot over scripts/list-tests.mjs, composer-app/spec/APP.mdl with
+      QA-1..4 (from the deleted testing/scripts/basics.md) and suites smoke/basics/assistant/editor, and two
+      Routine prompts under agents/routines/ (composer-qa nightly+on-merge on the qa branch; spec-sync
+      incremental+sweep with .agents/spec-sync.yml). BLOCKED IN THAT SANDBOX: the live smoke run — proto and
+      moon's toolchain plugin are 403 through the egress policy, and a standalone vite build fails in
+      DxDeclarations. NEXT (packages/reflect/deus/TASKS.md Phase 2 'Later'): run --tag smoke locally and set
+      the app tests' status:, register the three Routines, move PLUGIN.mdl files to plugin-xxx/spec/, run the
+      spec-sync sweep in batches of 8, then migrate the 542 scenario blocks per plugin."
   - name: agent-composer-introspection
     status: active
     user: burdon

@@ -4,7 +4,7 @@
 
 // Keeps a headless Chromium page on the QA server so the app boots without a visible pane; the
 // agent debug port runs inside this page. Stays alive until killed.
-//   node packages/apps/composer-app/testing/scripts/bin/qa-browser.mjs [url]
+//   node packages/apps/composer-app/testing/bin/qa-browser.mjs [url]
 import { chromium } from '@playwright/test';
 
 const url = process.argv[2] ?? 'http://localhost:5182/';

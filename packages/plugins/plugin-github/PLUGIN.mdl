@@ -22,10 +22,10 @@ Each extension is defined in the Appendix or resolved via its URI.
 |-------------|--------------------------------|
 | `type`      | `org.dxos.mdl.type@1.0`       |
 | `feat`      | `org.dxos.mdl.feat@1.0`       |
-| `test`      | `org.dxos.mdl.test@1.0`       |
+| `scenario`  | `org.dxos.mdl.scenario@1.0`   |
 | `component` | `org.dxos.mdl.component@1.0`  |
 | `op`        | `org.dxos.mdl.op@1.1`         |
-| `flow`      | `org.dxos.mdl.flow@1.0`       |
+| `test`      | `org.dxos.mdl.test@1.0`       |
 
 ## Types
 
@@ -343,7 +343,7 @@ feat F-7: Error Handling and Resilience
 ## Acceptance
 
 ```mdl
-test T-1: Token account populated on connect
+scenario T-1: Token account populated on connect
   given: user completes GitHub OAuth
   when: onTokenCreated fires
   then:
@@ -352,7 +352,7 @@ test T-1: Token account populated on connect
 ```
 
 ```mdl
-test T-2: Repository discovery is read-only
+scenario T-2: Repository discovery is read-only
   given: valid GitHub integration
   when: GetGitHubRepositories is invoked
   then:
@@ -361,7 +361,7 @@ test T-2: Repository discovery is read-only
 ```
 
 ```mdl
-test T-3: First sync — create Project and Tasks
+scenario T-3: First sync — create Project and Tasks
   given: integration with one selected repo (no prior local mirror)
   when: SyncGitHubRepositories runs
   then:
@@ -372,7 +372,7 @@ test T-3: First sync — create Project and Tasks
 ```
 
 ```mdl
-test T-4: Incremental pull — remote-wins merge
+scenario T-4: Incremental pull — remote-wins merge
   given: integration with a previously synced repo; remote title changed
   when: SyncGitHubRepositories runs
   then:
@@ -381,7 +381,7 @@ test T-4: Incremental pull — remote-wins merge
 ```
 
 ```mdl
-test T-5: Push issue edit
+scenario T-5: Push issue edit
   given: Task.description differs from TaskSnapshot.description; issue is not a PR
   when: SyncGitHubRepositories runs
   then:
@@ -390,7 +390,7 @@ test T-5: Push issue edit
 ```
 
 ```mdl
-test T-6: PR status not pushed
+scenario T-6: PR status not pushed
   given: Task (backed by a PR) status differs from snapshot
   when: SyncGitHubRepositories runs
   then:
@@ -399,7 +399,7 @@ test T-6: PR status not pushed
 ```
 
 ```mdl
-test T-7: Inaccessible repo error surfaced
+scenario T-7: Inaccessible repo error surfaced
   given: integration target whose repo id is not in fetchUserRepos response
   when: SyncGitHubRepositories runs
   then:
@@ -408,7 +408,7 @@ test T-7: Inaccessible repo error surfaced
 ```
 
 ```mdl
-test T-8: Org deduplication
+scenario T-8: Org deduplication
   given: two selected repos with the same owner org
   when: SyncGitHubRepositories runs
   then:
@@ -417,7 +417,7 @@ test T-8: Org deduplication
 ```
 
 ```mdl
-test T-9: Personal-account owner skips org pull
+scenario T-9: Personal-account owner skips org pull
   given: selected repo owned by a GitHub user (not an org)
   when: SyncGitHubRepositories runs
   then:
@@ -426,7 +426,7 @@ test T-9: Personal-account owner skips org pull
 ```
 
 ```mdl
-test T-10: maxDaysBack filters issue window
+scenario T-10: maxDaysBack filters issue window
   given: target with maxDaysBack = 7
   when: SyncGitHubRepositories runs
   then:
@@ -438,11 +438,11 @@ test T-10: maxDaysBack filters issue window
 
 ## QA
 
-Executable flows. Each step carries a human instruction (`do`) and, where the step maps to an
-invocable operation, an agent binding (`invoke`). Report failures by flow and step number.
+Executable tests. Each step carries a human instruction (`do`) and, where the step maps to an
+invocable operation, an agent binding (`invoke`). Report failures by test and step number.
 
 ```mdl
-flow QA-1: Connect, select a repository, and sync
+test QA-1: Connect, select a repository, and sync
   desc: The core round-trip — authorize a GitHub connection, discover repos, materialize and sync one as a Project with its issues as Tasks.
   actors: both
   covers: [F-1.1, F-1.2, F-2.1, F-2.2, F-4.1, F-5.1, T-2, T-3]
@@ -452,11 +452,11 @@ flow QA-1: Connect, select a repository, and sync
     - space: a space is open
     - a GitHub account reachable for OAuth, owning at least one repo with at least one open issue
     - no Project with foreign key [source: "github.com", id: <that repo's numeric id>] exists —
-      ABORT rather than reusing a Project this flow did not create
-  test:
+      ABORT rather than reusing a Project this test did not create
+  steps:
     - name: Connect a GitHub account
       id: connect
-      do: Open the GitHub connector panel (Settings -> Connectors -> GitHub) and complete the OAuth authorization flow.
+      do: Open the GitHub connector panel (Settings -> Connectors -> GitHub) and complete the OAuth authorization test.
       capture: connection
       expect: a Connection object exists with accessToken.account set to the authorized user's GitHub login
       note: |
@@ -492,7 +492,7 @@ flow QA-1: Connect, select a repository, and sync
 ```
 
 ```mdl
-flow QA-2: Local edit pushes back to GitHub
+test QA-2: Local edit pushes back to GitHub
   desc: A push-direction check — editing a synced Task's title round-trips to the GitHub issue via PATCH.
   actors: human
   covers: [F-6.2, T-5]
@@ -503,13 +503,13 @@ flow QA-2: Local edit pushes back to GitHub
     - a GitHub account reachable for OAuth, with write access to a repo owning at least one open
       (non-PR) issue
     - no Project with foreign key [source: "github.com", id: <that repo's numeric id>] exists —
-      ABORT rather than reusing a Project this flow did not create
+      ABORT rather than reusing a Project this test did not create
     - connection: a fresh GitHub Connection, authorized against that account (same human-only
       OAuth step as QA-1's "Connect a GitHub account")
     - materialized: the target repo materialized and synced as a Project via
       op:MaterializeGitHubTarget then op:SyncGitHubRepositories (same steps as QA-1), leaving at
       least one open (non-PR) Task
-  test:
+  steps:
     - name: Edit the task title
       do: Open the synced Task and change its title.
       expect: the edit is saved locally
@@ -575,8 +575,8 @@ ext feat
 ```
 
 ```mdl
-ext test
-  uri: dxos.spec/ext/test@1.0
+ext scenario
+  uri: dxos.spec/ext/scenario@1.0
   desc: An acceptance scenario expressed as given / when / then steps.
   fields:
     given?: Step | Step[]

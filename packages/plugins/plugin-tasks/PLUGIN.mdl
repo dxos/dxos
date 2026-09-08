@@ -16,10 +16,10 @@ Each extension is defined in the Appendix or resolved via its URI.
 |-------------|--------------------------------|
 | `type`      | `org.dxos.mdl.type@1.0`        |
 | `feat`      | `org.dxos.mdl.feat@1.0`        |
-| `test`      | `org.dxos.mdl.test@1.0`        |
+| `scenario`  | `org.dxos.mdl.scenario@1.0`    |
 | `component` | `org.dxos.mdl.component@1.0`   |
 | `op`        | `org.dxos.mdl.op@1.1`          |
-| `flow`      | `org.dxos.mdl.flow@1.0`        |
+| `test`      | `org.dxos.mdl.test@1.0`        |
 
 ## Types
 
@@ -223,7 +223,7 @@ feat F-5: ECHO Persistence and Collaboration
 ## Acceptance
 
 ```mdl
-test T-1: Create and edit an outline
+scenario T-1: Create and edit an outline
   given: an empty space with OutlinerPlugin active
   when: op:createOutline runs with name "Meeting Notes"
   then:
@@ -232,7 +232,7 @@ test T-1: Create and edit an outline
 ```
 
 ```mdl
-test T-2: Indent and outdent list items
+scenario T-2: Indent and outdent list items
   given: OutlineArticle is open with at least two list items
   when: cursor is on the second item and user presses Tab
   then:
@@ -243,7 +243,7 @@ test T-2: Indent and outdent list items
 ```
 
 ```mdl
-test T-3: Journal auto-creates today entry
+scenario T-3: Journal auto-creates today entry
   given: a Journal with no entry for today
   when: JournalArticle renders
   then:
@@ -254,7 +254,7 @@ test T-3: Journal auto-creates today entry
 ```
 
 ```mdl
-test T-4: Quick journal entry appended
+scenario T-4: Quick journal entry appended
   given: a personal space with a Journal containing today's entry
   when: op:quickJournalEntry runs with text "Buy milk"
   then:
@@ -262,7 +262,7 @@ test T-4: Quick journal entry appended
 ```
 
 ```mdl
-test T-5: Quick journal entry creates journal when absent
+scenario T-5: Quick journal entry creates journal when absent
   given: a personal space with no Journal object
   when: op:quickJournalEntry runs with text "Call dentist"
   then:
@@ -271,7 +271,7 @@ test T-5: Quick journal entry creates journal when absent
 ```
 
 ```mdl
-test T-6: Calendar sidebar toggle
+scenario T-6: Calendar sidebar toggle
   given: JournalArticle is open
   when: user clicks the calendar toggle in the toolbar
   then:
@@ -285,11 +285,11 @@ test T-6: Calendar sidebar toggle
 
 ## QA
 
-Executable flows. Each step carries a human instruction (`do`) and, where the step maps to an
-invocable operation, an agent binding (`invoke`). Report failures by flow and step number.
+Executable tests. Each step carries a human instruction (`do`) and, where the step maps to an
+invocable operation, an agent binding (`invoke`). Report failures by test and step number.
 
 ```mdl
-flow QA-1: Create an outline and edit it
+test QA-1: Create an outline and edit it
   desc: The core outliner round-trip — create an Outline, type into it, read it back.
   actors: human
   covers: [F-1.1, F-1.2, T-1]
@@ -299,8 +299,8 @@ flow QA-1: Create an outline and edit it
     - space: a space is open
     - plugin-tasks is enabled — it is off by default outside dev builds (`isDev` in
       `plugin-defs.tsx`); enabling is a UI action (Settings -> plugin registry)
-    - no Outline named "QA Outline" exists — ABORT rather than deleting one this flow did not create
-  test:
+    - no Outline named "QA Outline" exists — ABORT rather than deleting one this test did not create
+  steps:
     - name: Create the outline
       do: In the navtree, click + on the space and choose Outline. Name it "QA Outline".
       expect: an Outline appears under the space and opens in OutlineArticle
@@ -328,7 +328,7 @@ flow QA-1: Create an outline and edit it
 ```
 
 ```mdl
-flow QA-2: Quick-add a journal bullet from anywhere
+test QA-2: Quick-add a journal bullet from anywhere
   desc: The op:quickJournalEntry round-trip — the one agent-invocable path in this plugin.
   actors: both
   covers: [F-2.1, F-4.1, T-4, T-5]
@@ -339,7 +339,7 @@ flow QA-2: Quick-add a journal bullet from anywhere
     - plugin-tasks is enabled — it is off by default outside dev builds
     - today's JournalEntry does not already contain the literal text "QA quick entry" — ABORT
       rather than asserting against a dirty fixture
-  test:
+  steps:
     - name: Append a bullet via the quick-entry path
       do: Open the QuickEntryDialog (e.g. via its keyboard shortcut) and enter "QA quick entry", then Save.
       invoke: [op:quickJournalEntry] { text: "QA quick entry" }
@@ -390,8 +390,8 @@ ext feat
 ```
 
 ```mdl
-ext test
-  uri: org.dxos.mdl.test@1.0
+ext scenario
+  uri: org.dxos.mdl.scenario@1.0
   desc: An acceptance scenario expressed as given / when / then steps.
   fields:
     given?: Step | Step[]

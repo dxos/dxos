@@ -23,9 +23,9 @@ Each extension is defined in the Appendix or resolved via its URI.
 |-------------|--------------------------------|
 | `type`      | `org.dxos.mdl.type@1.0`       |
 | `feat`      | `org.dxos.mdl.feat@1.0`       |
-| `test`      | `org.dxos.mdl.test@1.0`       |
+| `scenario`  | `org.dxos.mdl.scenario@1.0`   |
 | `component` | `org.dxos.mdl.component@1.0`  |
-| `flow`      | `org.dxos.mdl.flow@1.0`       |
+| `test`      | `org.dxos.mdl.test@1.0`       |
 | `step`      | `org.dxos.mdl.step@1.0`       |
 
 ## Types
@@ -142,43 +142,43 @@ feat F-4: Source of the projection
 ## Acceptance
 
 ```mdl
-test T-1: A running task takes over the display
+scenario T-1: A running task takes over the display
   given: a determinate progress task at 45.6% and a space with statistics
   then: one goal frame is pushed with current 46, end 100, and no statistic frames
 ```
 
 ```mdl
-test T-2: An indeterminate task still says something
+scenario T-2: An indeterminate task still says something
   given: a progress task reporting a current count but no total
   then: a text frame carries the task's title and count, and no goal frame is pushed
 ```
 
 ```mdl
-test T-3: Statistics fit without scrolling
+scenario T-3: Statistics fit without scrolling
   given: a space with 42 objects
   then: the frame reads "42 obj", which is narrower than the 37-pixel matrix
 ```
 
 ```mdl
-test T-4: The device is only addressed when it is configured
+scenario T-4: The device is only addressed when it is configured
   given: an address and a widget but no device API key
   then: no transport is built and no request is made
 ```
 
 ```mdl
-test T-7: The DIY widget is found on the device
+scenario T-7: The DIY widget is found on the device
   given: a device app list containing the clock and the `com.lametric.diy.devwidget` package
   then: the widget UUID of the DIY package is selected, and nothing is selected when it is absent
 ```
 
 ```mdl
-test T-5: A burst of space changes becomes one push
+scenario T-5: A burst of space changes becomes one push
   given: three different payloads inside the minimum push interval
   then: the first is sent immediately and only the last of the remainder is sent on the trailing edge
 ```
 
 ```mdl
-test T-6: The request is what the device expects
+scenario T-6: The request is what the device expects
   given: a stand-in HTTP device and a configured local transport
   then: it receives POST /api/v2/widget/update/com.lametric.diy.devwidget/<widget> with a Basic
     `dev:<api key>` credential and the frames as its body
@@ -186,8 +186,8 @@ test T-6: The request is what the device expects
 
 ## QA
 
-Executable flows. Each step carries a human instruction (`do`) and, where the step maps to an
-invocable operation, an agent binding (`invoke`). Report failures by flow and step number.
+Executable tests. Each step carries a human instruction (`do`) and, where the step maps to an
+invocable operation, an agent binding (`invoke`). Report failures by test and step number.
 
 This plugin has no `op` extension and ships no registered operations — the driver is a settings
 config plus a background push loop, not something a user object-model action drives. It is
@@ -195,7 +195,7 @@ dev-only in `getDefaults` (`isDev`), so OFF for a normal user; enabling it is a 
 same caveat as plugin-chess's own enable step.
 
 ```mdl
-flow QA-1: Configure a local device and see the display take over
+test QA-1: Configure a local device and see the display take over
   desc: The one user-visible surface — entering transport settings and watching the driver push.
     No object is created, invoked, or read back through ECHO; the "device" itself is external
     hardware or a stand-in HTTP server, neither of which the debug port can drive.
@@ -207,7 +207,7 @@ flow QA-1: Configure a local device and see the display take over
     - plugin-lametric is enabled — it is OFF by default (isDev-only default). Enabling is a UI
       action (Settings -> plugin registry); no operation enables it programmatically.
     - a LaMetric TIME device is reachable on the LAN, with its address, API key and widget id known
-  test:
+  steps:
     - name: Enter the device address and API key
       do: Open Settings -> LaMetric and fill in address, port, scheme, and the `dev` Basic API key.
       expect: PushStatus moves from idle toward pushed once the widget id is discovered
@@ -258,8 +258,8 @@ ext feat
 ```
 
 ```mdl
-ext test
-  uri: dxos.spec/ext/test@1.0
+ext scenario
+  uri: dxos.spec/ext/scenario@1.0
   desc: An acceptance scenario expressed as given / when / then steps.
   fields:
     given?: Step | Step[]

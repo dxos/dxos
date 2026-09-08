@@ -33,11 +33,11 @@ Each extension is defined in the Appendix or resolved via its URI.
 |-------------|--------------------------------|
 | `type`      | `org.dxos.mdl.type@1.0`       |
 | `feat`      | `org.dxos.mdl.feat@1.0`       |
-| `test`      | `org.dxos.mdl.test@1.0`       |
+| `scenario`  | `org.dxos.mdl.scenario@1.0`   |
 | `component` | `org.dxos.mdl.component@1.0`  |
 | `op`        | `org.dxos.mdl.op@1.1`         |
 | `service`   | `org.dxos.mdl.service@1.0`    |
-| `flow`      | `org.dxos.mdl.flow@1.0`       |
+| `test`      | `org.dxos.mdl.test@1.0`       |
 
 ## Types
 
@@ -624,7 +624,7 @@ feat F-12b: Local build & run — multi-file bundling
 ## Acceptance
 
 ```mdl
-test T-1: Rename preserves Spec compatibility
+scenario T-1: Rename preserves Spec compatibility
   given: a space already containing a Spec object created by plugin-spec
   when: the renamed plugin-code is loaded
   then:
@@ -634,7 +634,7 @@ test T-1: Rename preserves Spec compatibility
 ```
 
 ```mdl
-test T-2: Create CodeProject
+scenario T-2: Create CodeProject
   given: composer-app with plugin-code loaded
   when: user invokes "Create CodeProject" from a space
   then:
@@ -644,7 +644,7 @@ test T-2: Create CodeProject
 ```
 
 ```mdl
-test T-3: Editor renders mdl content
+scenario T-3: Editor renders mdl content
   given: a Spec containing an mdl fenced block
   when: CodeArticle mounts
   then:
@@ -654,7 +654,7 @@ test T-3: Editor renders mdl content
 ```
 
 ```mdl
-test T-4: Toolbar tab toggle
+scenario T-4: Toolbar tab toggle
   given: a CodeArticle is open showing the Spec view
   when: user clicks the Code tab
   then:
@@ -665,7 +665,7 @@ test T-4: Toolbar tab toggle
 ```
 
 ```mdl
-test T-5: Save API key persists AccessToken
+scenario T-5: Save API key persists AccessToken
   given: CodeSettings is open and no AccessToken exists for `anthropic.com`
   when: user enters a key and clicks save
   then:
@@ -674,7 +674,7 @@ test T-5: Save API key persists AccessToken
 ```
 
 ```mdl
-test T-6: Clear API key removes AccessToken
+scenario T-6: Clear API key removes AccessToken
   given: an AccessToken exists for `anthropic.com`
   when: user clicks clear
   then:
@@ -683,7 +683,7 @@ test T-6: Clear API key removes AccessToken
 ```
 
 ```mdl
-test T-7: Skill registers tools
+scenario T-7: Skill registers tools
   given: composer-app with plugin-code loaded
   when: AppCapabilities.SkillDefinition is queried for `org.dxos.skill.coder`
   then:
@@ -692,7 +692,7 @@ test T-7: Skill registers tools
 ```
 
 ```mdl
-test T-8: Stub operations resolve
+scenario T-8: Stub operations resolve
   given: an assistant chat with the Coder skill loaded
   when: the assistant invokes verifySpec on a Spec
   then: the call returns `{ ok: true, messages: [] }`
@@ -701,7 +701,7 @@ test T-8: Stub operations resolve
 ```
 
 ```mdl
-test T-9: Scaffold seeds project files
+scenario T-9: Scaffold seeds project files
   given: an empty CodeProject
   when: op:scaffoldProject is invoked with name "demo"
   then:
@@ -710,7 +710,7 @@ test T-9: Scaffold seeds project files
 ```
 
 ```mdl
-test T-10: Round-trip read/write/delete
+scenario T-10: Round-trip read/write/delete
   given: a CodeProject with one file at "src/foo.ts"
   when: op:writeFile is called with path "src/foo.ts" and content "X"
   then: op:writeFile returns `created: false`; op:readFile returns content "X"
@@ -721,14 +721,14 @@ test T-10: Round-trip read/write/delete
 ```
 
 ```mdl
-test T-11: CodeArticle reflects ECHO mutations
+scenario T-11: CodeArticle reflects ECHO mutations
   given: a CodeArticle is mounted on a CodeProject
   when: a new SourceFile is added to `project.files` via op:writeFile
   then: the FileTree shows the new path on next render without manual reload
 ```
 
 ```mdl
-test T-12: Coder skill exposes file tools
+scenario T-12: Coder skill exposes file tools
   given: composer-app with plugin-code loaded
   when: AppCapabilities.SkillDefinition is queried for `org.dxos.skill.coder`
   then:
@@ -738,7 +738,7 @@ test T-12: Coder skill exposes file tools
 ```
 
 ```mdl
-test T-13: Hello World sanity round-trip
+scenario T-13: Hello World sanity round-trip
   given: a CodeProject with no files
   when: op:helloWorld is invoked
   then:
@@ -750,7 +750,7 @@ test T-13: Hello World sanity round-trip
 ```
 
 ```mdl
-test T-14: Reset clears project files
+scenario T-14: Reset clears project files
   given: a CodeProject with N (>0) files
   when: op:resetProject is invoked
   then:
@@ -763,7 +763,7 @@ test T-14: Reset clears project files
 ```
 
 ```mdl
-test T-15: Build the Hello World scaffold
+scenario T-15: Build the Hello World scaffold
   given: a CodeProject with `src/hello.ts` containing the helloWorld scaffold
   when: op:buildProject is invoked
   then:
@@ -777,7 +777,7 @@ test T-15: Build the Hello World scaffold
 ```
 
 ```mdl
-test T-16: Run the Hello World scaffold
+scenario T-16: Run the Hello World scaffold
   given: a CodeProject containing only the helloWorld scaffold
   when: op:runBuild is invoked
   then:
@@ -789,14 +789,14 @@ test T-16: Run the Hello World scaffold
 ```
 
 ```mdl
-test T-17: Coder skill exposes build/run tools
+scenario T-17: Coder skill exposes build/run tools
   given: composer-app with plugin-code loaded
   when: AppCapabilities.SkillDefinition is queried for `org.dxos.skill.coder`
   then: the skill's tool set includes buildProject and runBuild
 ```
 
 ```mdl
-test T-18: Multi-file bundle round-trip (F-12b)
+scenario T-18: Multi-file bundle round-trip (F-12b)
   given: a CodeProject with two files:
          - src/util.ts: `export const MESSAGE = "from util";`
          - src/hello.ts: `import { MESSAGE } from "./util"; console.log(MESSAGE);`
@@ -814,11 +814,11 @@ test T-18: Multi-file bundle round-trip (F-12b)
 
 ## QA
 
-Executable flows. Each step carries a human instruction (`do`) and, where the step maps to an
-invocable operation, an agent binding (`invoke`). Report failures by flow and step number.
+Executable tests. Each step carries a human instruction (`do`) and, where the step maps to an
+invocable operation, an agent binding (`invoke`). Report failures by test and step number.
 
 ```mdl
-flow QA-1: Scaffold, edit and build a CodeProject
+test QA-1: Scaffold, edit and build a CodeProject
   desc: |
     The core round-trip — create a project, scaffold it, hand-edit a file, build/run it, then
     reset back to empty. `plugin-code` is dev-only: it is enabled by default only in `isDev`
@@ -832,9 +832,9 @@ flow QA-1: Scaffold, edit and build a CodeProject
     - collection: a collection in that space, to create into
     - plugin-code is enabled — dev builds default it on; elsewhere enable it via the plugin
       registry first
-    - no CodeProject named "QA Project" exists — ABORT rather than deleting one this flow did
+    - no CodeProject named "QA Project" exists — ABORT rather than deleting one this test did
       not create
-  test:
+  steps:
     - name: Create the project
       do: In the navtree, click + on a collection and choose Code Project. Name it "QA Project".
       capture: project
@@ -905,8 +905,8 @@ ext feat
 ```
 
 ```mdl
-ext test
-  uri: dxos.spec/ext/test@1.0
+ext scenario
+  uri: dxos.spec/ext/scenario@1.0
   desc: An acceptance scenario expressed as given / when / then steps.
   fields:
     given?: Step | Step[]

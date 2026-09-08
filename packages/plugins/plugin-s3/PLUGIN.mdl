@@ -27,7 +27,7 @@ so a server-custodied token resolves through EDGE unchanged.
 | ------ | ----------------------- |
 | `type` | `org.dxos.mdl.type@1.0` |
 | `feat` | `org.dxos.mdl.feat@1.0` |
-| `test` | `org.dxos.mdl.test@1.0` |
+| `scenario` | `org.dxos.mdl.scenario@1.0` |
 
 ## Addressing
 

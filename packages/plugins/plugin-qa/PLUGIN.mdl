@@ -19,11 +19,11 @@ Each extension is defined in the Appendix or resolved via its URI.
 |-------------|--------------------------------|
 | `type`      | `org.dxos.mdl.type@1.0`        |
 | `feat`      | `org.dxos.mdl.feat@1.0`        |
-| `test`      | `org.dxos.mdl.test@1.0`        |
+| `scenario`  | `org.dxos.mdl.scenario@1.0`    |
 | `component` | `org.dxos.mdl.component@1.0`   |
 | `op`        | `org.dxos.mdl.op@1.1`          |
 | `skill`     | `org.dxos.mdl.skill@1.0`       |
-| `flow`      | `org.dxos.mdl.flow@1.0`        |
+| `test`      | `org.dxos.mdl.test@1.0`        |
 | `step`      | `org.dxos.mdl.step@1.0`        |
 
 ## Ontology
@@ -471,43 +471,43 @@ component TestCaseArticle
 ## Acceptance
 
 ```mdl
-test T-1: A run rolls up to the worst outcome
+scenario T-1: A run rolls up to the worst outcome
   given: a plan with three cases, and a started run
   when: results are pushed as passed, blocked, passed
   then: completeRun sets the run status to blocked, not passed
 
-test T-2: A failure dominates a block
+scenario T-2: A failure dominates a block
   given: a started run
   when: results are pushed as failed and blocked
   then: completeRun sets the run status to failed
 
-test T-3: A run covering nothing seals as skipped
+scenario T-3: A run covering nothing seals as skipped
   given: a plan with no cases
   when: a run is started and finished without pushing anything
   then: the run status is skipped
   note: the same holds for startRun called with cases: [] on a plan that has cases
 
-test T-4: An unreported case cannot seal as passed
+scenario T-4: An unreported case cannot seal as passed
   given: a run started over three cases
   when: one result is pushed as passed and the run is finished
   then: the run status is skipped, and `unreported` names the two cases that never reported
 
-test T-5: A finished run is immutable
+scenario T-5: A finished run is immutable
   given: a finished run
   when: pushResult is invoked for one of its cases
   then: it fails with RunFinishedError and the run is unchanged
 
-test T-6: Re-generation preserves case identity
+scenario T-6: Re-generation preserves case identity
   given: a plan whose case QA-1 has results in two past runs
   when: setCase is invoked with key QA-1 and a changed title
   then: the same TestCase object is updated, and both past results still resolve to it
 
-test T-7: Artifacts are references, not copies
+scenario T-7: Artifacts are references, not copies
   given: a Document in the space
   when: a result is pushed with that document as an artifact
   then: the result holds a Ref to the existing object and no new object is created
 
-test T-8: A mid-run plan edit does not reject a captured case
+scenario T-8: A mid-run plan edit does not reject a captured case
   given: a run started over cases QA-1 and QA-2
   when: QA-2 is removed from the plan, then a result for QA-2 is pushed
   then: the push succeeds — the capture, not the plan, decides what the run may report
@@ -516,7 +516,7 @@ test T-8: A mid-run plan edit does not reject a captured case
 ## QA
 
 ```mdl
-flow QA-1: Record a run against a plan
+test QA-1: Record a run against a plan
   actors: both
   covers: [F-1.1, F-2.1, F-2.2, F-2.3, F-2.4, F-4.1]
   given:
@@ -545,10 +545,10 @@ flow QA-1: Record a run against a plan
       invoke: [op:setCase] { plan: $plan.plan, key: "QA-2", title: "It saves", steps: [{ do: "Edit and reload", expect: "the edit survives" }] }
       expect: the case list shows QA-1 and QA-2
       note: Two cases, so the partial-run rollup in the `test` stage has something to be partial about.
-  test:
+  steps:
     - name: Start a run
       do: Click "Run" on the plan.
-      invoke: [op:startRun] { plan: $plan.plan, runner: { name: "qa-flow", role: "assistant" } }
+      invoke: [op:startRun] { plan: $plan.plan, runner: { name: "qa-test", role: "assistant" } }
       capture: run
       expect: a run row appears in the feed with status `running`, tallying 0/2
       assert: return $run.cases.length === 2
