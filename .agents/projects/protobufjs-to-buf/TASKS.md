@@ -153,3 +153,31 @@ Everything remaining — groups 1 through 5, including retiring the shape-compat
 conversion at that one boundary, named for what it is (the credential signing shape) rather than
 surviving as generic compat scaffolding. Every previously-issued credential stays verifiable, and
 the golden vector is the guard.
+
+## Endgame, as measured mid-migration
+
+The teardown is narrower than §1a assumed. Two findings from doing it:
+
+1. **The import sweep deletes bridges rather than migrating them.** Once both halves of a
+   whole-message bridge resolve to the same buf type, its functions are identity. That removed all
+   four boundary bridges — `client-protocol/bridge-codec.ts` (18 functions),
+   `client/services/legacy-codec.ts`, `client-services/services/credentials-codec.ts` and
+   `client-services/network/utils.ts` (22 between them) — as deletions, not rewrites.
+2. **There is one keystone, not a family of them.** `service-rpc.ts` (the Effect-RPC path) is
+   already native: `bufMessage` reads and writes binary directly. Every remaining RPC use of the
+   compat layer funnels through a single line, `buf/service.ts:120`, which wraps each mesh method's
+   input and output in `compatCodec`. Flipping that one line to `fromBinary`/`toBinary` retires the
+   layer for the whole RPC surface.
+
+So the finish line is:
+
+- [ ] Finish the per-site shapes so every mesh RPC handler takes and returns buf messages
+      (`create(Schema, …)`, `oneof` reads by tag, `PublicKey`/`Timestamp` conversion at the edges).
+- [ ] Flip `buf/service.ts:120` to native binary and drop `CompatOptions` from the service surface.
+- [ ] Move the substitution walker into the credentials package as the signing-shape resolver — its
+      one permanent consumer — and delete the rest of `shape-compat.ts`.
+- [ ] Then groups 3-5 as written: the generated tree, the two packages, the `protobufjs` pin.
+
+**`BufService<typeof Desc>`** (`buf/service.ts`) was the missing prerequisite for any of this:
+`protoc-gen-es` emits a service as a descriptor value where protobuf.js generated an interface, so
+a service handler had no type to implement. It is derived from the descriptor rather than restated.
