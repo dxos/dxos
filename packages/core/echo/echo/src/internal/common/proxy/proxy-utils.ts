@@ -267,16 +267,18 @@ const assertReadOnly = (property: string | symbol, createError: (property: strin
 };
 
 /**
- * The handler behind every reactive proxy — one object, shared by every variant, with four traps.
+ * The handler behind every reactive proxy — one object, shared by every variant, with five traps.
  *
- * There is no `get`, `has`, `ownKeys` or `getOwnPropertyDescriptor`: a target carries its data as own
- * properties, so the engine answers all of those off the target itself with no JavaScript call. What is
- * left is the write gate, which exists because only a `Proxy` can make an assignment throw, and
- * `getPrototypeOf`, which hides the internal instance-state prototype so consumers see a plain object.
+ * There is no `get`, `has` or `getOwnPropertyDescriptor`: a target carries its data as own properties,
+ * so the engine answers all of those off the target itself with no JavaScript call. What is left is the
+ * write gate, which exists because only a `Proxy` can make an assignment throw, plus two traps that
+ * hide internals — `getPrototypeOf` (the instance-state prototype, so consumers see a plain object) and
+ * `ownKeys` (see below).
  *
  * The read-only path through this handler is therefore identical for every variant and dispatches
- * nowhere: `getPrototypeOf` is one `Array.isArray`, and a write outside `Obj.update` throws before any
- * handler is consulted. Dispatch happens only for a mutation that is actually allowed.
+ * nowhere: `getPrototypeOf` is one `Array.isArray`, `ownKeys` one `Reflect.ownKeys` and a filter, and a
+ * write outside `Obj.update` throws before any handler is consulted. Dispatch happens only through the
+ * mutable view, for a mutation that is actually allowed.
  */
 const REACTIVE_PROXY_HANDLER: ProxyHandler<any> = {
   set: (target, property, value, receiver) => {
