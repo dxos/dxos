@@ -27,5 +27,12 @@ export const shallowEqual = (a: unknown, b: unknown): boolean => {
   if (aKeys.length !== bKeys.length) {
     return false;
   }
-  return aKeys.every((key) => Object.is((a as Record<string, unknown>)[key], (b as Record<string, unknown>)[key]));
+  // `b` must own the key, not merely resolve it to the same value: an equal key COUNT with
+  // different key NAMES compares `undefined` against `undefined` and would otherwise report equal
+  // (`{ a: undefined }` vs `{ b: undefined }`).
+  return aKeys.every(
+    (key) =>
+      Object.hasOwn(b as Record<string, unknown>, key) &&
+      Object.is((a as Record<string, unknown>)[key], (b as Record<string, unknown>)[key]),
+  );
 };

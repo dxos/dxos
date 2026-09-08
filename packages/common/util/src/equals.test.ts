@@ -48,6 +48,16 @@ describe('shallowEqual', () => {
     expect(shallowEqual([subject], [subject])).toBe(true);
   });
 
+  // Equal key counts with different names: both sides resolve the missing key to `undefined`, so
+  // the value comparison alone reports equal.
+  test('differing key names with undefined values', ({ expect }) => {
+    expect(shallowEqual({ a: undefined }, { b: undefined })).toBe(false);
+  });
+
+  test('a key present on one side only, holding undefined', ({ expect }) => {
+    expect(shallowEqual({ a: 1, b: undefined }, { a: 1, c: undefined })).toBe(false);
+  });
+
   test('non-objects', ({ expect }) => {
     expect(shallowEqual(1, 1)).toBe(true);
     expect(shallowEqual(1, 2)).toBe(false);
