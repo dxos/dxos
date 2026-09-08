@@ -23,16 +23,15 @@ import {
   Card,
   Carousel,
   Collapsible,
-  ContextMenu,
   DatePicker,
   Dialog,
-  DropdownMenu,
   Editable,
+  Field,
   Icon,
   IconButton,
-  Input,
   type InputVariant,
   Link,
+  Menu,
   Popover,
   Progress,
   QrCode,
@@ -122,7 +121,7 @@ const Frame = ({ children }: PropsWithChildren) => {
 const Section = ({ title, fields = false, children }: PropsWithChildren<{ title: string; fields?: boolean }>) => (
   <section className='flex flex-col gap-3'>
     <h2 className='text-sm font-medium text-description'>{title}</h2>
-    {/* `Input.Root` renders no element, so a row of fields has the fields as its own children. */}
+    {/* `Field.Root` renders no element, so a row of fields has the fields as its own children. */}
     <div className={mx('flex flex-wrap items-center gap-3', fields && '[&>*]:w-64')}>{children}</div>
   </section>
 );
@@ -191,15 +190,15 @@ const TextFieldsSection = () => {
   return (
     <Section title='Text field' fields>
       {VARIANTS.map((variant) => (
-        <Input.Root key={variant}>
-          <Input.TextInput variant={variant} placeholder={variant} />
-        </Input.Root>
+        <Field.Root key={variant}>
+          <Field.Input variant={variant} placeholder={variant} />
+        </Field.Root>
       ))}
-      <Input.Root>
-        <Input.TextInput placeholder='Search' start={<Icon icon='ph--magnifying-glass--regular' />} />
-      </Input.Root>
-      <Input.Root>
-        <Input.TextInput
+      <Field.Root>
+        <Field.Input placeholder='Search' start={<Icon icon='ph--magnifying-glass--regular' />} />
+      </Field.Root>
+      <Field.Root>
+        <Field.Input
           placeholder='Type to clear'
           value={value}
           onChange={(event) => setValue(event.target.value)}
@@ -209,16 +208,16 @@ const TextFieldsSection = () => {
             ) : undefined
           }
         />
-      </Input.Root>
-      <Input.Root>
-        <Input.TextInput
+      </Field.Root>
+      <Field.Root>
+        <Field.Input
           placeholder='Command'
           start={<Icon icon='ph--terminal--regular' />}
           end={<kbd className='text-xs text-description'>⌘K</kbd>}
         />
-      </Input.Root>
-      <Input.Root>
-        <Input.TextInput
+      </Field.Root>
+      <Field.Root>
+        <Field.Input
           placeholder='With action'
           end={
             <Button density='sm' variant='primary'>
@@ -226,54 +225,41 @@ const TextFieldsSection = () => {
             </Button>
           }
         />
-      </Input.Root>
-      <Input.Root>
-        <Input.TextInput placeholder='Disabled' disabled />
-      </Input.Root>
-      <Input.Root>
-        <Input.TextInput readOnly defaultValue='Read only' />
-      </Input.Root>
-      <Input.Root validationValence='error'>
-        <Input.TextInput defaultValue='Not an email' />
-      </Input.Root>
-      <Input.Root validationValence='warning'>
-        <Input.TextInput defaultValue='Weak' />
-      </Input.Root>
-      <Input.Root validationValence='success'>
-        <Input.TextInput defaultValue='Available' />
-      </Input.Root>
-      <Input.Root>
-        <Input.TextArea placeholder='Text area' rows={3} classNames='resize-none' />
-      </Input.Root>
+      </Field.Root>
+      <Field.Root>
+        <Field.Input placeholder='Disabled' disabled />
+      </Field.Root>
+      <Field.Root>
+        <Field.Input readOnly defaultValue='Read only' />
+      </Field.Root>
+      <Field.Root validationValence='error'>
+        <Field.Input defaultValue='Not an email' />
+      </Field.Root>
+      <Field.Root validationValence='warning'>
+        <Field.Input defaultValue='Weak' />
+      </Field.Root>
+      <Field.Root validationValence='success'>
+        <Field.Input defaultValue='Available' />
+      </Field.Root>
+      <Field.Root>
+        <Field.Textarea placeholder='Text area' rows={3} classNames='resize-none' />
+      </Field.Root>
     </Section>
   );
 };
 
 const ControlsSection = () => (
   <Section title='Checkbox, switch, PIN'>
-    <Input.Root>
-      <Input.Checkbox defaultChecked />
-      <Input.Label>Checked</Input.Label>
-    </Input.Root>
-    <Input.Root>
-      <Input.Checkbox />
-      <Input.Label>Unchecked</Input.Label>
-    </Input.Root>
-    <Input.Root>
-      <Input.Checkbox defaultChecked disabled />
-      <Input.Label>Disabled</Input.Label>
-    </Input.Root>
-    <Input.Root>
-      <Input.Switch defaultChecked />
-      <Input.Label>Switch</Input.Label>
-    </Input.Root>
-    <Input.Root>
-      <Input.Switch disabled />
-      <Input.Label>Disabled</Input.Label>
-    </Input.Root>
-    <Input.Root>
-      <Input.PinInput length={4} />
-    </Input.Root>
+    <Field.Checkbox defaultChecked>Checked</Field.Checkbox>
+    <Field.Checkbox>Unchecked</Field.Checkbox>
+    <Field.Checkbox defaultChecked disabled>
+      Disabled
+    </Field.Checkbox>
+    <Field.Switch defaultChecked>Switch</Field.Switch>
+    <Field.Switch disabled>Disabled</Field.Switch>
+    <Field.Root>
+      <Field.PinInput length={4} />
+    </Field.Root>
   </Section>
 );
 
@@ -519,37 +505,37 @@ const OverlaysSection = () => (
         </Popover.Content>
       </Popover.Portal>
     </Popover.Root>
-    <DropdownMenu.Root>
-      <DropdownMenu.Trigger asChild>
+    <Menu.Root>
+      <Menu.Trigger asChild>
         <Button>Menu</Button>
-      </DropdownMenu.Trigger>
-      <DropdownMenu.Portal>
-        <DropdownMenu.Content>
-          <DropdownMenu.Viewport>
-            <DropdownMenu.Item>New</DropdownMenu.Item>
-            <DropdownMenu.Item>Open</DropdownMenu.Item>
-            <DropdownMenu.Separator />
-            <DropdownMenu.CheckboxItem checked>Checked</DropdownMenu.CheckboxItem>
-          </DropdownMenu.Viewport>
-          <DropdownMenu.Arrow />
-        </DropdownMenu.Content>
-      </DropdownMenu.Portal>
-    </DropdownMenu.Root>
-    <ContextMenu.Root>
-      <ContextMenu.Trigger asChild>
+      </Menu.Trigger>
+      <Menu.Portal>
+        <Menu.Content>
+          <Menu.Viewport>
+            <Menu.Item>New</Menu.Item>
+            <Menu.Item>Open</Menu.Item>
+            <Menu.Separator />
+            <Menu.CheckboxItem checked>Checked</Menu.CheckboxItem>
+          </Menu.Viewport>
+          <Menu.Arrow />
+        </Menu.Content>
+      </Menu.Portal>
+    </Menu.Root>
+    <Menu.Root>
+      <Menu.ContextTrigger asChild>
         <div className='flex items-center justify-center w-40 h-12 border border-dashed border-separator rounded-sm text-description'>
           Right click
         </div>
-      </ContextMenu.Trigger>
-      <ContextMenu.Content>
-        <ContextMenu.Viewport>
-          <ContextMenu.Item>Cut</ContextMenu.Item>
-          <ContextMenu.Item>Copy</ContextMenu.Item>
-          <ContextMenu.Item>Paste</ContextMenu.Item>
-        </ContextMenu.Viewport>
-        <ContextMenu.Arrow />
-      </ContextMenu.Content>
-    </ContextMenu.Root>
+      </Menu.ContextTrigger>
+      <Menu.Content>
+        <Menu.Viewport>
+          <Menu.Item>Cut</Menu.Item>
+          <Menu.Item>Copy</Menu.Item>
+          <Menu.Item>Paste</Menu.Item>
+        </Menu.Viewport>
+        <Menu.Arrow />
+      </Menu.Content>
+    </Menu.Root>
   </Section>
 );
 

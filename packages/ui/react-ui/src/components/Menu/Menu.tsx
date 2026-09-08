@@ -3,8 +3,7 @@
 //
 
 // One menu machine serves dropdown, context and sub menus (`Menu.Trigger` for a dropdown,
-// `Menu.ContextTrigger` for a context menu, a nested `Menu.Root` for a submenu). This file is the
-// shared anatomy, exported as both the `DropdownMenu` and `ContextMenu` namespaces.
+// `Menu.ContextTrigger` for a context menu, a nested `Menu.Root` for a submenu).
 
 import { ark } from '@ark-ui/react/factory';
 import { Menu as MenuPrimitive, useMenuContext as useMenuPrimitiveContext } from '@ark-ui/react/menu';
@@ -27,7 +26,7 @@ import React, {
 
 import { composeEventHandlers, useComposedRefs, useControllableState } from '@dxos/react-hooks';
 
-import { useElevationContext, useSafeCollisionPadding, useThemeContext } from '../../hooks';
+import { type Positioning, useElevationContext, usePositioning, useThemeContext } from '../../hooks';
 import { type ThemedClassName } from '../../util';
 import { ColumnContext } from '../Column/ColumnContext';
 import { ScrollArea } from '../ScrollArea';
@@ -40,13 +39,7 @@ import {
   type MenuSelectHandler,
   type MenuSide,
   useMenuContext,
-} from './DropdownMenuContext';
-
-const toPlacement = (side: MenuSide, align: MenuAlign) => (align === 'center' ? side : (`${side}-${align}` as const));
-
-/** Consumers hand the machine a per-side padding; it takes one number, so the widest side wins. */
-const toOverflowPadding = (padding: { top: number; right: number; bottom: number; left: number }) =>
-  Math.max(padding.top, padding.right, padding.bottom, padding.left);
+} from './MenuContext';
 
 //
 // Root
@@ -72,7 +65,7 @@ type MenuRootImplProps = MenuRootProps & {
 };
 
 /** Re-places open content when its requested placement changes; needs the machine's api. */
-const MenuReposition = ({ open, positioning }: { open: boolean; positioning: Record<string, unknown> }) => {
+const MenuReposition = ({ open, positioning }: { open: boolean; positioning: Positioning }) => {
   const menu = useMenuPrimitiveContext();
   const reposition = menu.reposition;
   useEffect(() => {
@@ -107,52 +100,14 @@ const MenuRootImpl: FC<MenuRootImplProps> = ({
   const contentId = useId();
   const triggerRef = useRef<HTMLElement | null>(null);
   const handlersRef = useRef<MenuContentHandlers>({});
-  const [virtualAnchor, setVirtualAnchorState] = useState<RefObject<Element | null> | null>(null);
   const [placementOptions, setPlacement] = useState<MenuPlacementOptions>({});
-  const setVirtualAnchor = useCallback((ref: RefObject<Element | null>) => {
-    setVirtualAnchorState(ref);
-    return () => setVirtualAnchorState((current) => (current === ref ? null : current));
-  }, []);
-
-  const {
-    side = defaultSide,
-    align = defaultAlign,
-    sideOffset = 0,
-    alignOffset,
-    collisionPadding = 8,
-    collisionBoundary,
-    avoidCollisions = true,
-  } = placementOptions;
-  const safeCollisionPadding = useSafeCollisionPadding(collisionPadding);
-  const overflowPadding = toOverflowPadding(safeCollisionPadding);
-
-  // The closest annotated ancestor bounds the content.
-  const boundary = useMemo(() => {
-    const closest = triggerRef.current?.closest<HTMLElement>('[data-popover-collision-boundary]') ?? null;
-    const given = Array.isArray(collisionBoundary) ? collisionBoundary : collisionBoundary ? [collisionBoundary] : [];
-    const elements = [closest, ...given].filter((element): element is Element => !!element);
-    return elements.length ? () => elements : undefined;
-    // The trigger is read when the menu opens, which is when the boundary matters.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, collisionBoundary]);
-
-  const positioning = useMemo(
-    () => ({
-      strategy: 'fixed' as const,
-      placement: toPlacement(side, align),
-      gutter: sideOffset,
-      ...(alignOffset !== undefined && { offset: { mainAxis: sideOffset, crossAxis: alignOffset } }),
-      overflowPadding,
-      // Keeps the arrow off the rounded corners, where its fill would paint over the curve.
-      arrowPadding: 12,
-      flip: avoidCollisions,
-      boundary,
-      ...(virtualAnchor && {
-        getAnchorRect: () => virtualAnchor.current?.getBoundingClientRect() ?? null,
-      }),
-    }),
-    [side, align, sideOffset, alignOffset, overflowPadding, avoidCollisions, boundary, virtualAnchor],
-  );
+  const { positioning, setVirtualAnchor } = usePositioning({
+    open,
+    triggerRef,
+    placement: placementOptions,
+    defaultSide,
+    defaultAlign,
+  });
 
   const context = useMemo(
     () => ({
@@ -199,34 +154,34 @@ MenuRoot.displayName = MENU_NAME;
 // Trigger
 //
 
-const TRIGGER_NAME = 'DropdownMenu.Trigger';
+const TRIGGER_NAME = 'Menu.Trigger';
 
 type MenuTriggerProps = ComponentPropsWithRef<typeof MenuPrimitive.Trigger>;
 
-const DropdownMenuTrigger = forwardRef<HTMLButtonElement, MenuTriggerProps>((props, forwardedRef) => {
+const MenuTrigger = forwardRef<HTMLButtonElement, MenuTriggerProps>((props, forwardedRef) => {
   const { triggerRef } = useMenuContext(TRIGGER_NAME);
   return <MenuPrimitive.Trigger data-arrow-keys='down' {...props} ref={useComposedRefs(forwardedRef, triggerRef)} />;
 });
 
-DropdownMenuTrigger.displayName = TRIGGER_NAME;
+MenuTrigger.displayName = TRIGGER_NAME;
 
 const CONTEXT_TRIGGER_NAME = 'Menu.ContextTrigger';
 
-type ContextMenuTriggerProps = ComponentPropsWithRef<typeof MenuPrimitive.ContextTrigger>;
+type MenuContextTriggerProps = ComponentPropsWithRef<typeof MenuPrimitive.ContextTrigger>;
 
-const ContextMenuTrigger = forwardRef<HTMLButtonElement, ContextMenuTriggerProps>((props, forwardedRef) => {
+const MenuContextTrigger = forwardRef<HTMLButtonElement, MenuContextTriggerProps>((props, forwardedRef) => {
   const { triggerRef, markContextTrigger } = useMenuContext(CONTEXT_TRIGGER_NAME);
   useLayoutEffect(() => markContextTrigger(), [markContextTrigger]);
   return <MenuPrimitive.ContextTrigger {...props} ref={useComposedRefs(forwardedRef, triggerRef)} />;
 });
 
-ContextMenuTrigger.displayName = CONTEXT_TRIGGER_NAME;
+MenuContextTrigger.displayName = CONTEXT_TRIGGER_NAME;
 
 //
 // VirtualTrigger
 //
 
-const VIRTUAL_TRIGGER_NAME = 'DropdownMenu.VirtualTrigger';
+const VIRTUAL_TRIGGER_NAME = 'Menu.VirtualTrigger';
 
 type MenuVirtualTriggerProps = {
   /** The element the content is positioned at and focus returns to; it renders nothing itself. */
@@ -268,19 +223,17 @@ const MenuPortal = ({ children, container }: MenuPortalProps) => {
   );
 };
 
-MenuPortal.displayName = 'DropdownMenu.Portal';
+MenuPortal.displayName = 'Menu.Portal';
 
 //
 // Content
 //
 
-const CONTENT_NAME = 'DropdownMenu.Content';
+const CONTENT_NAME = 'Menu.Content';
 
 type MenuContentProps = ThemedClassName<ComponentPropsWithRef<typeof MenuPrimitive.Content>> &
   MenuPlacementOptions &
-  MenuContentHandlers & {
-    constrainBlockSize?: boolean;
-  };
+  MenuContentHandlers;
 
 const MenuContent = forwardRef<HTMLDivElement, MenuContentProps>(
   (
@@ -294,7 +247,7 @@ const MenuContent = forwardRef<HTMLDivElement, MenuContentProps>(
       collisionPadding,
       collisionBoundary,
       avoidCollisions,
-      constrainBlockSize,
+      hideWhenDetached,
       onCloseAutoFocus,
       onInteractOutside,
       onPointerDownOutside,
@@ -310,8 +263,27 @@ const MenuContent = forwardRef<HTMLDivElement, MenuContentProps>(
 
     // Placement is state on the root (it re-positions); the handlers are read at event time.
     useLayoutEffect(() => {
-      setPlacement({ side, align, sideOffset, alignOffset, collisionPadding, collisionBoundary, avoidCollisions });
-    }, [setPlacement, side, align, sideOffset, alignOffset, collisionPadding, collisionBoundary, avoidCollisions]);
+      setPlacement({
+        side,
+        align,
+        sideOffset,
+        alignOffset,
+        collisionPadding,
+        collisionBoundary,
+        avoidCollisions,
+        hideWhenDetached,
+      });
+    }, [
+      setPlacement,
+      side,
+      align,
+      sideOffset,
+      alignOffset,
+      collisionPadding,
+      collisionBoundary,
+      avoidCollisions,
+      hideWhenDetached,
+    ]);
     handlersRef.current = {
       onCloseAutoFocus,
       onInteractOutside,
@@ -325,7 +297,7 @@ const MenuContent = forwardRef<HTMLDivElement, MenuContentProps>(
         <MenuPrimitive.Content
           data-arrow-keys='up down'
           {...props}
-          className={tx('menu.content', { elevation, constrainBlockSize }, classNames)}
+          className={tx('menu.content', { elevation }, classNames)}
           ref={forwardedRef}
         >
           {children}
@@ -364,7 +336,7 @@ const MenuViewport = forwardRef<HTMLDivElement, MenuViewportProps>(
   },
 );
 
-MenuViewport.displayName = 'DropdownMenu.Viewport';
+MenuViewport.displayName = 'Menu.Viewport';
 
 //
 // Group
@@ -376,7 +348,7 @@ const MenuGroup = forwardRef<HTMLDivElement, MenuGroupProps>((props, forwardedRe
   return <MenuPrimitive.ItemGroup {...props} ref={forwardedRef} />;
 });
 
-MenuGroup.displayName = 'DropdownMenu.Group';
+MenuGroup.displayName = 'Menu.Group';
 
 /** A heading over the entries that follow; a plain element, so it works inside a group or without one. */
 type MenuGroupLabelProps = ThemedClassName<ComponentPropsWithRef<typeof ark.div>>;
@@ -386,13 +358,13 @@ const MenuGroupLabel = forwardRef<HTMLDivElement, MenuGroupLabelProps>(({ classN
   return <ark.div {...props} className={tx('menu.groupLabel', {}, classNames)} ref={forwardedRef} />;
 });
 
-MenuGroupLabel.displayName = 'DropdownMenu.GroupLabel';
+MenuGroupLabel.displayName = 'Menu.GroupLabel';
 
 //
 // Item
 //
 
-const ITEM_NAME = 'DropdownMenu.Item';
+const ITEM_NAME = 'Menu.Item';
 
 /**
  * Selection handled on the item's own click — which keyboard activation reaches too, since the
@@ -453,7 +425,7 @@ MenuItem.displayName = ITEM_NAME;
 // CheckboxItem
 //
 
-const CHECKBOX_ITEM_NAME = 'DropdownMenu.CheckboxItem';
+const CHECKBOX_ITEM_NAME = 'Menu.CheckboxItem';
 
 type MenuCheckboxItemProps = ThemedClassName<
   Omit<ComponentPropsWithRef<typeof MenuPrimitive.CheckboxItem>, 'value' | 'checked' | 'onCheckedChange'>
@@ -504,9 +476,9 @@ const MenuRadioGroup = forwardRef<HTMLDivElement, MenuRadioGroupProps>(({ onValu
   );
 });
 
-MenuRadioGroup.displayName = 'DropdownMenu.RadioGroup';
+MenuRadioGroup.displayName = 'Menu.RadioGroup';
 
-const RADIO_ITEM_NAME = 'DropdownMenu.RadioItem';
+const RADIO_ITEM_NAME = 'Menu.RadioItem';
 
 type MenuRadioItemProps = ThemedClassName<ComponentPropsWithRef<typeof MenuPrimitive.RadioItem>> & {
   onSelect?: MenuSelectHandler;
@@ -542,7 +514,7 @@ const MenuItemIndicator = forwardRef<HTMLDivElement, MenuItemIndicatorProps>((pr
   return <MenuPrimitive.ItemIndicator {...props} ref={forwardedRef} />;
 });
 
-MenuItemIndicator.displayName = 'DropdownMenu.ItemIndicator';
+MenuItemIndicator.displayName = 'Menu.ItemIndicator';
 
 //
 // Separator
@@ -555,7 +527,7 @@ const MenuSeparator = forwardRef<HTMLHRElement, MenuSeparatorProps>(({ className
   return <MenuPrimitive.Separator {...props} className={tx('menu.separator', {}, classNames)} ref={forwardedRef} />;
 });
 
-MenuSeparator.displayName = 'DropdownMenu.Separator';
+MenuSeparator.displayName = 'Menu.Separator';
 
 //
 // Arrow
@@ -572,13 +544,13 @@ const MenuArrow = forwardRef<HTMLDivElement, MenuArrowProps>(({ classNames, ...p
   );
 });
 
-MenuArrow.displayName = 'DropdownMenu.Arrow';
+MenuArrow.displayName = 'Menu.Arrow';
 
 //
 // Sub
 //
 
-const SUB_NAME = 'DropdownMenu.Sub';
+const SUB_NAME = 'Menu.Sub';
 
 type MenuSubProps = {
   children?: ReactNode;
@@ -601,7 +573,7 @@ const MenuSubTrigger = forwardRef<HTMLDivElement, MenuSubTriggerProps>(({ classN
   return <MenuPrimitive.TriggerItem {...props} className={tx('menu.item', {}, classNames)} ref={forwardedRef} />;
 });
 
-MenuSubTrigger.displayName = 'DropdownMenu.SubTrigger';
+MenuSubTrigger.displayName = 'Menu.SubTrigger';
 
 //
 // Namespaces
@@ -614,8 +586,8 @@ MenuSubTrigger.displayName = 'DropdownMenu.SubTrigger';
  */
 export const Menu = {
   Root: MenuRoot,
-  Trigger: DropdownMenuTrigger,
-  ContextTrigger: ContextMenuTrigger,
+  Trigger: MenuTrigger,
+  ContextTrigger: MenuContextTrigger,
   VirtualTrigger: MenuVirtualTrigger,
   Portal: MenuPortal,
   Content: MenuContent,
@@ -635,17 +607,11 @@ export const Menu = {
   SubContent: MenuContent,
 };
 
-/** Alias of {@link Menu}, kept until the part-level sites are re-pointed. */
-export const DropdownMenu = Menu;
-
-/** Alias of {@link Menu} whose `Trigger` is the context trigger, kept until the sites are re-pointed. */
-export const ContextMenu = { ...Menu, Trigger: ContextMenuTrigger };
-
 export type {
   MenuArrowProps,
   MenuCheckboxItemProps,
   MenuContentProps,
-  ContextMenuTriggerProps as MenuContextTriggerProps,
+  MenuContextTriggerProps,
   MenuGroupLabelProps,
   MenuGroupProps,
   MenuItemIndicatorProps,
@@ -660,33 +626,4 @@ export type {
   MenuTriggerProps,
   MenuViewportProps,
   MenuVirtualTriggerProps,
-};
-
-export type {
-  MenuCheckboxItemProps as ContextMenuCheckboxItemProps,
-  MenuContentProps as ContextMenuContentProps,
-  MenuItemProps as ContextMenuItemProps,
-  MenuRadioItemProps as ContextMenuRadioItemProps,
-  MenuRootProps as ContextMenuRootProps,
-  MenuSeparatorProps as ContextMenuSeparatorProps,
-  ContextMenuTriggerProps,
-  MenuViewportProps as ContextMenuViewportProps,
-  MenuArrowProps as DropdownMenuArrowProps,
-  MenuCheckboxItemProps as DropdownMenuCheckboxItemProps,
-  MenuContentProps as DropdownMenuContentProps,
-  MenuGroupProps as DropdownMenuGroupProps,
-  MenuItemIndicatorProps as DropdownMenuItemIndicatorProps,
-  MenuItemProps as DropdownMenuItemProps,
-  MenuGroupLabelProps as DropdownMenuLabelProps,
-  MenuPortalProps as DropdownMenuPortalProps,
-  MenuRadioGroupProps as DropdownMenuRadioGroupProps,
-  MenuRadioItemProps as DropdownMenuRadioItemProps,
-  MenuRootProps as DropdownMenuRootProps,
-  MenuSeparatorProps as DropdownMenuSeparatorProps,
-  MenuContentProps as DropdownMenuSubContentProps,
-  MenuSubProps as DropdownMenuSubProps,
-  MenuSubTriggerProps as DropdownMenuSubTriggerProps,
-  MenuTriggerProps as DropdownMenuTriggerProps,
-  MenuViewportProps as DropdownMenuViewportProps,
-  MenuVirtualTriggerProps as DropdownMenuVirtualTriggerProps,
 };

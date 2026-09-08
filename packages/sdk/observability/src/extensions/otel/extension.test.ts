@@ -110,7 +110,7 @@ describe('otel extension', () => {
   test('detaches the log processor before the opt-out is written', async () => {
     processorsWhenStored = [];
     const extension = await make();
-    await EffectEx.runPromise(extension.initialize!());
+    await EffectEx.runPromise(extension.initialize!({ setTags: () => {} }));
     expect(log.runtimeConfig.processors).to.have.length.greaterThan(0);
     const processor = log.runtimeConfig.processors.at(-1);
 

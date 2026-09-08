@@ -63,22 +63,22 @@ export const RecoveryCredentialsContainer = () => {
       <Form.Viewport scroll>
         <Form.Content>
           <Form.Section title={t('recovery-setup-dialog.title')} description={t('recovery-setup-dialog.description')}>
-            <Form.Row label={t('create-passkey.label')} description={t('create-passkey.description')}>
+            <Form.Field label={t('create-passkey.label')} description={t('create-passkey.description')}>
               <IconButton
                 label={t('create-passkey.label')}
                 icon='ph--key--duotone'
                 variant='primary'
                 onClick={() => invokePromise(ClientOperation.CreatePasskey)}
               />
-            </Form.Row>
-            <Form.Row label={t('create-recovery-code.label')} description={t('create-recovery-code.description')}>
+            </Form.Field>
+            <Form.Field label={t('create-recovery-code.label')} description={t('create-recovery-code.description')}>
               <IconButton
                 label={t('create-recovery-code.label')}
                 icon='ph--receipt--duotone'
                 variant='default'
                 onClick={() => invokePromise(ClientOperation.CreateRecoveryCode)}
               />
-            </Form.Row>
+            </Form.Field>
           </Form.Section>
           <Form.Section title={t('credentials-list.label')}>
             {recoveryCredentials.length < 1 ? (
@@ -137,14 +137,14 @@ export const RecoveryCredentialsContainer = () => {
               </Banner.Root>
             )}
             {recoveryCredentials.length > 0 && (
-              <Form.Row label={t('manage-passkeys.label')} description={t('manage-passkeys.description')}>
+              <Form.Field label={t('manage-passkeys.label')} description={t('manage-passkeys.description')}>
                 <IconButton
                   label={t('manage-passkeys.label')}
                   icon='ph--arrow-square-out--regular'
                   variant='default'
                   onClick={openAccountPage}
                 />
-              </Form.Row>
+              </Form.Field>
             )}
           </Form.Section>
         </Form.Content>

@@ -33,6 +33,7 @@ const levelFromShortName = new Map<string, LogLevel>(
 
 export type Options = {
   exporter?: LogRecordExporter;
+  batch?: { maxQueueSize?: number; maxExportBatchSize?: number };
   /**
    * Called with the trace id of every record at warning or above that names one, before the export
    * level is applied: a warning the sink does not export still marks its trace as worth keeping.
@@ -56,6 +57,7 @@ export class Sink {
       getTags: () => this.#tags,
       logLevel: init.logLevel,
       exporter: options.exporter,
+      batch: options.batch,
     });
   }
 

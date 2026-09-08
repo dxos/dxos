@@ -17,7 +17,7 @@ import React, {
 
 import { useForwardedRef, useIsFocused } from '@dxos/react-hooks';
 
-import { INPUT_NAME, useInputValence } from './InputContext';
+import { FIELD_NAME, useFieldValence } from './FieldContext';
 
 type PinInputProps = Omit<ComponentPropsWithRef<'input'>, 'type' | 'maxLength'> & {
   /** Class name applied to each segment div. */
@@ -43,7 +43,7 @@ const PinInput = forwardRef<HTMLInputElement, PinInputProps>(
   ) => {
     // The field owns the id and the described-by/error wiring; the valence is ours.
     const field = useFieldContext();
-    const { validationValence } = useInputValence(INPUT_NAME);
+    const { validationValence } = useFieldValence(FIELD_NAME);
     const inputRef = useForwardedRef(forwardedRef);
     const inputFocused = useIsFocused(inputRef);
     const [internalValue, setInternalValue] = useState('');
