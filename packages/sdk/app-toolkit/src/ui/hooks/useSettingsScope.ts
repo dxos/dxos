@@ -16,22 +16,13 @@ const emptyUnsynced = Atom.make<readonly string[]>([]);
 const emptyOverrides = Atom.make<AppSettings.Namespaces>({});
 
 export type SettingsScopeState = {
-  /**
-   * Whether the device-synced settings store is available at all. `false` before the settings space
-   * opens and in hosts with no client, where settings are device-local with nothing to choose.
-   */
+  /** Whether the device-synced settings store is available at all. */
   readonly available: boolean;
   /** Whether this prefix follows the account rather than staying on this device. */
   readonly synced: boolean;
-  /**
-   * Leave or rejoin the account for this prefix. Leaving is lossless; rejoining keeps one side of
-   * each conflicting key — the account's by default, this device's with `adopt: 'local'`.
-   */
+  /** Leave or rejoin the account for this prefix. Rejoining keeps the side named by `adopt`. */
   setSynced: (synced: boolean, options?: { adopt?: AppSettings.Adopt }) => void;
-  /**
-   * Keys rejoining would change, read at the moment of asking. Empty means rejoining loses nothing,
-   * so there is no question to put to the reader.
-   */
+  /** Keys rejoining would change, read at the moment of asking. */
   getConflicts: () => readonly string[];
 };
 
@@ -40,21 +31,12 @@ export type SettingsKeyScopeState = {
   readonly available: boolean;
   /** Whether this key follows the account, rather than being pinned to this device. */
   readonly synced: boolean;
-  /**
-   * Whether this key's value here actually differs from the account's. A pinned key that agrees is
-   * not diverged, and marking it as though it were reads as a change nobody made.
-   */
+  /** Whether this key's value here actually differs from the account's. */
   readonly diverged: boolean;
-  /** Pin this key to the device, or hand it back. Pinning is lossless. */
   setSynced: (synced: boolean) => void;
 };
 
-/**
- * Reactive sync scope for one settings prefix.
- *
- * The state seam shared by the settings plank header and the plugin registry — the two render very
- * different controls (an icon button versus a switch row), so only the state is worth sharing.
- */
+/** Reactive sync scope for one settings prefix. */
 export const useSettingsScope = (prefix: string): SettingsScopeState => {
   const sync = useOptionalCapability(AppCapabilities.SettingsSync);
   const unsynced = useAtomValue(sync?.unsynced ?? emptyUnsynced);
@@ -67,10 +49,7 @@ export const useSettingsScope = (prefix: string): SettingsScopeState => {
   return { available: !!sync, synced: !unsynced.includes(prefix), setSynced, getConflicts };
 };
 
-/**
- * Reactive sync scope for one key within a prefix — one plugin's place in the plugin set, rather
- * than the set as a whole.
- */
+/** Reactive sync scope for one key within a prefix, rather than the prefix as a whole. */
 export const useSettingsKeyScope = (prefix: string, key: string): SettingsKeyScopeState => {
   const sync = useOptionalCapability(AppCapabilities.SettingsSync);
   const overrides = useAtomValue(sync?.overrides ?? emptyOverrides);
@@ -80,20 +59,14 @@ export const useSettingsKeyScope = (prefix: string, key: string): SettingsKeySco
   return {
     available: !!sync,
     synced: !pinned,
-    // Read on demand: the conflicting set is derived from both layers, and only the store knows the
-    // account's side.
     diverged: pinned && (sync?.conflicts(prefix) ?? []).includes(key),
     setSynced,
   };
 };
 
 /**
- * Keys within a prefix whose value here differs from the account's.
- *
- * For marking a list: a key pinned to a value the account agrees with is not diverged, so it is not
- * included. Re-derived whenever the device layer is republished, which the sync does on any settings
- * change — including one made on another device, which is what turns an agreeing pin into a
- * diverging one.
+ * Keys within a prefix whose value here differs from the account's. Re-derived whenever the device
+ * layer is republished, which the sync does on any settings change.
  */
 export const useSettingsDivergedKeys = (prefix: string): ReadonlySet<string> => {
   const sync = useOptionalCapability(AppCapabilities.SettingsSync);

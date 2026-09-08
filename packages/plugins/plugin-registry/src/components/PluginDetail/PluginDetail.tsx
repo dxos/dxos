@@ -31,10 +31,7 @@ import { PluginFailureBadge } from '../PluginFailureBadge';
 
 export type PluginDetailProps = {
   plugin: Plugin.Plugin;
-  /**
-   * Scope control for this one plugin, rendered under the enable switch. A node rather than state so
-   * this component stays presentational — it has no business knowing the settings sync exists.
-   */
+  /** Scope control for this one plugin, rendered under the enable switch. */
   scope?: ReactNode;
   enabled?: boolean;
   /** True while an in-flight install is running. Disables the install button. */

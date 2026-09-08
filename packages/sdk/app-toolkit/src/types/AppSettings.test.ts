@@ -15,9 +15,8 @@ const draft = (init?: Partial<AppSettings.Draft>): AppSettings.Draft => ({
 });
 
 /**
- * Another of the user's devices: its own local layer over the same replicated one. Sharing the
- * `shared` reference is what replication does, so a write through this view is what the account
- * sees change.
+ * Another of the user's devices: its own local layer over the same replicated one, shared by
+ * reference as replication would.
  */
 const otherDevice = (settings: AppSettings.Draft): AppSettings.Draft => ({
   shared: settings.shared,
@@ -130,7 +129,6 @@ describe('setSynced', () => {
 
     AppSettings.setSynced(settings, NS, true, { adopt: 'local' });
 
-    // Both devices now see this device's value, and the key it never disagreed on is untouched.
     expect(AppSettings.resolve(settings, NS)).toEqual({ toolbar: false, folding: true });
     expect(AppSettings.resolve(otherDevice(settings), NS)).toEqual({ toolbar: false, folding: true });
     expect(settings.local.overrides[NS]).toBeUndefined();
@@ -194,9 +192,8 @@ describe('applyResolved', () => {
 });
 
 /**
- * The plugin set is an ordinary namespace whose keys are plugin ids and whose values are booleans.
- * Unsyncing it is a SOFT fork — the switch changes where this device's decisions are written, and
- * plugins it never touched keep following the account.
+ * The plugin set is an ordinary namespace keyed by plugin id. Unsyncing it is a soft fork: plugins
+ * this device never touched keep following the account.
  */
 describe('plugins', () => {
   const PLUGINS = AppSettings.PLUGINS_NAMESPACE;
@@ -295,7 +292,6 @@ describe('conflictingKeys', () => {
     const settings = draft({ shared: { [NS]: { toolbar: true } } });
     AppSettings.setSynced(settings, NS, false, { snapshot: AppSettings.resolve(settings, NS) });
 
-    // Frozen on leaving, so the device holds the key — but it agrees, so nothing is lost either way.
     expect(settings.local.overrides[NS]).toEqual({ toolbar: true });
     expect(AppSettings.conflictingKeys(settings, NS)).toEqual([]);
   });
@@ -325,8 +321,6 @@ describe('conflictingKeys', () => {
     AppSettings.setValue(settings, NS, 'folding', true);
     AppSettings.setValue(otherDevice(settings), NS, 'toolbar', false);
 
-    // `toolbar` follows the account here already and `folding` is this device's alone, so neither
-    // forces a choice.
     expect(AppSettings.conflictingKeys(settings, NS)).toEqual([]);
   });
 
@@ -357,7 +351,6 @@ describe('per-key overrides', () => {
     AppSettings.setValue(settings, NS, 'toolbar', false);
     AppSettings.setValue(settings, NS, 'folding', false);
 
-    // The pinned key diverged; its neighbour reached the account.
     expect(settings.local.overrides[NS]).toEqual({ toolbar: false });
     expect(settings.shared[NS]).toEqual({ toolbar: true, folding: false });
     expect(AppSettings.resolve(otherDevice(settings), NS)).toEqual({ toolbar: true, folding: false });
@@ -369,7 +362,6 @@ describe('per-key overrides', () => {
 
     AppSettings.setValue(otherDevice(settings), NS, 'toolbar', false);
 
-    // Pinned on its value, not by it: the pin holds even though the two agreed when it was made.
     expect(AppSettings.resolve(settings, NS)).toEqual({ toolbar: true });
   });
 

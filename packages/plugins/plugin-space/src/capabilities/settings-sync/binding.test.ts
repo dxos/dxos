@@ -12,8 +12,7 @@ const NS = 'org.dxos.plugin.markdown';
 
 /**
  * In-memory stand-in for the two halves a store spans: one shared layer, and a local layer per
- * device. Every device sees the same `shared` object, which is what replication gives them, and
- * notification reaches all of them, which is what an ECHO change does.
+ * device. Devices share the `shared` object and its notifications, as replication gives them.
  */
 const makeStore = () => {
   const shared: AppSettings.Namespaces = {};
@@ -159,8 +158,6 @@ describe('Reconciler', () => {
     bindTo(store, view, local);
 
     store.device().store.update((draft) => AppSettings.setValue(draft, NS, 'toolbar', false));
-    // The echo would have re-derived the value from the local cell and written it to the shared
-    // layer as though the user had made the edit here.
     expect(store.shared[NS]).toEqual({ toolbar: false });
     expect(view.local.overrides).toEqual({});
   });

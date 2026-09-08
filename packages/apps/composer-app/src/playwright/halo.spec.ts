@@ -55,8 +55,7 @@ test.describe('HALO tests', () => {
     // for it — no need to race the reload against a fixed deadline.
     await guest.joinNewIdentity();
     await guest.shell.acceptDeviceInvitation(invitationCode);
-    // Read after the guest connects: the host learns the auth code from `readyForAuthentication`,
-    // which the flow only reaches once there is a guest on the other side.
+    // Read after the guest connects: `readyForAuthentication` is only reached with a guest present.
     const authCode = await host.getAuthCode();
     await guest.shell.authenticateDevice(authCode);
 
@@ -76,9 +75,8 @@ test.describe('HALO tests', () => {
   test('settings sync across devices, and one device can keep its own', async () => {
     test.setTimeout(180_000);
 
-    // Both devices on one identity, so they share a settings space. Both boots have to land first:
-    // the navigation to the default space arrives seconds after the shell renders and closes any
-    // dialog opened before it.
+    // Both boots have to land first: the navigation to the default space arrives seconds after the
+    // shell renders and closes any dialog opened before it.
     await host.waitForDefaultWorkspace();
     await guest.waitForDefaultWorkspace();
     await host.openUserDevices();
@@ -93,14 +91,12 @@ test.describe('HALO tests', () => {
     await expect(guest.getSpaceItems()).toHaveCount(INITIAL_SPACE_COUNT, { timeout: 60_000 });
     await guest.waitForJoinedWorkspace();
 
-    // The plugin set is an ordinary synced namespace keyed by plugin id, so enabling one here is
-    // the same mechanism as changing any other setting.
     await host.openRegistryCategory('recommended');
     await expect(host.getPluginToggle(StackPlugin.meta.profile.key)).not.toBeChecked();
     await host.getPluginToggle(StackPlugin.meta.profile.key).click();
     await expect(host.getPluginToggle(StackPlugin.meta.profile.key)).toBeChecked();
 
-    // 1. Sync: the host's decision replicates to the guest through the settings space.
+    // 1. Sync: the host's decision replicates to the guest.
     await guest.openRegistryCategory('recommended');
     await expect(guest.getPluginToggle(StackPlugin.meta.profile.key)).toBeChecked({ timeout: 60_000 });
 
@@ -112,8 +108,7 @@ test.describe('HALO tests', () => {
     await guest.getPluginToggle(StackPlugin.meta.profile.key).click();
     await expect(guest.getPluginToggle(StackPlugin.meta.profile.key)).not.toBeChecked();
 
-    // The guest's change stays put and the host is untouched. Asserting the host after the guest
-    // has settled is the real check: a leaked write would have replicated by now.
+    // Asserting the host after the guest has settled: a leaked write would have replicated by now.
     await expect(guest.getPluginToggle(StackPlugin.meta.profile.key)).not.toBeChecked({ timeout: 30_000 });
     await host.openRegistryCategory('recommended');
     await expect(host.getPluginToggle(StackPlugin.meta.profile.key)).toBeChecked({ timeout: 30_000 });

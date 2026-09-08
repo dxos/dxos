@@ -143,10 +143,8 @@ export const getRemoteEntries = (options: Options = {}): readonly RemotePluginVi
 };
 
 /**
- * Replaces the persisted remote plugin entries wholesale.
- *
- * Entries are read during {@link preload}, before the client exists, so a device-sync layer can
- * only write them through to local storage here and have them take effect on the next reload.
+ * Replaces the persisted remote plugin entries wholesale. Entries are read during {@link preload},
+ * so a replacement takes effect on the next reload.
  */
 export const setRemoteEntries = (entries: readonly RemotePluginView[], options: Options = {}): void => {
   const storage = options.storage ?? defaultStorage();

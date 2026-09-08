@@ -86,10 +86,8 @@ export default Capability.makeModule(
     }
 
     // Land on the default space's Home, which surfaces the seeded README among its recent objects.
-    // One operation rather than three: `Open` takes the workspace and switches only when it is not
-    // already active, and it schedules the expose itself. Claiming the workspace separately and then
-    // setting the plank raced the switch that `plugin-space` makes from its own fiber, and the plank
-    // write arrived late enough to overwrite wherever the reader had gone in the meantime.
+    // `Open` claims the workspace and schedules the expose itself, so it does not race the switch
+    // `plugin-space` makes from its own fiber.
     yield* Operation.invoke(LayoutOperation.Open, {
       subject: [GraphPath.getSpaceHomePath(defaultSpace.id)],
       workspace: GraphPath.getSpacePath(defaultSpace.id),

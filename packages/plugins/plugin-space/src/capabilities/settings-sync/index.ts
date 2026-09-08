@@ -24,9 +24,6 @@ import { getOrCreateSettings, makeDeviceStore, makeStore } from './store';
  * Binds every settings surface the app already has — each plugin's settings atom, the enabled
  * plugin set, and the remote plugin install list — to the {@link AppSettings.AppSettings} object in
  * the settings space, so they follow the identity across devices with per-key device overrides.
- *
- * Nothing plugin-side changes: the atoms stay `localStorage`-backed, which makes local storage the
- * boot cache the app renders from before the space opens.
  */
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
@@ -34,11 +31,6 @@ export default Capability.makeModule(
     const manager = yield* Capabilities.PluginManager;
     const registry = yield* Capabilities.AtomRegistry;
 
-    // A host with no identity has nothing to sync and never will, so it stops here. Everywhere else
-    // the device is only a matter of time: `halo.device` reads a stream that fills in
-    // asynchronously, and on a device that has just joined an existing identity it is still empty
-    // when spaces become ready. Bailing on that emptiness left the joining device with no sync and
-    // no scope control until its next reload, so this waits for the stream instead.
     if (!client.halo.identity.get()) {
       log.warn('no identity; settings will not sync');
       return [];
@@ -48,16 +40,12 @@ export default Capability.makeModule(
 
     const space = yield* resolveSettingsSpace(client);
     const settings = yield* getOrCreateSettings(space);
-    // The device key names this device's local store; it is not written to the space.
     const deviceStore = makeDeviceStore(device.deviceKey.toHex());
     const store = makeStore(settings, deviceStore, registry);
 
-    // Copied out rather than handed over live: an array read straight from the store keeps its
-    // identity across a reassignment, and the atom compares by identity, so it would never notify.
+    // Copied out: the atom compares by identity, and the stored value keeps its identity across a write.
     const readUnsynced = () => [...AppSettings.getUnsynced(store.read())];
     const unsynced = Atom.make<readonly string[]>(readUnsynced()).pipe(Atom.keepAlive);
-    // Copied out for the same reason as `unsynced`: handed over live, the record keeps its identity
-    // across a write and the atom would never notify.
     const readOverrides = () => structuredClone(store.read().local.overrides);
     const overrides = Atom.make<AppSettings.Namespaces>(readOverrides()).pipe(Atom.keepAlive);
 
@@ -72,11 +60,7 @@ export default Capability.makeModule(
       subscriptions.push(subscribe(() => reconciler.push()));
     };
 
-    //
-    // Plugin settings. Contributions arrive over time as plugins lazily activate, so this follows
-    // the capability list rather than taking a snapshot of it.
-    //
-
+    // Contributions arrive over time as plugins lazily activate, so this follows the capability list.
     const bound = new Set<string>();
     const bindSettings = (entries: readonly AppCapabilities.Settings[]) => {
       for (const entry of entries) {
@@ -100,12 +84,7 @@ export default Capability.makeModule(
     bindSettings(registry.get(settingsAtom));
     subscriptions.push(registry.subscribe(settingsAtom, bindSettings));
 
-    //
-    // Plugin set. Keyed by plugin id so a device override affects one plugin rather than replacing
-    // the list — see `AppSettings.PLUGINS_NAMESPACE`. Core plugins are excluded: they are
-    // force-enabled by the host and are not the user's to toggle.
-    //
-
+    // Core plugins are force-enabled by the host and are not the user's to toggle.
     const toggleable = () =>
       manager
         .getPlugins()
@@ -123,8 +102,7 @@ export default Capability.makeModule(
           const target = new Set(AppSettings.getEnabledPlugins(decisions));
           const current = manager.getEnabled();
           for (const id of toggleable()) {
-            // An id with no decision is one no device has an opinion about yet — leave it alone
-            // rather than reading the missing entry as "disabled".
+            // An id with no decision is one no device has an opinion about yet.
             if (!(id in decisions) || target.has(id) === current.includes(id)) {
               continue;
             }
@@ -133,8 +111,6 @@ export default Capability.makeModule(
           }
         },
       },
-      // Both atoms: `enabled` for the user's toggles, `plugins` so a newly registered plugin gets a
-      // decision recorded rather than waiting for the next unrelated toggle.
       (onChange) => {
         const unsubscribe = [
           registry.subscribe(manager.enabled, onChange),
@@ -143,11 +119,6 @@ export default Capability.makeModule(
         return () => unsubscribe.forEach((fn) => fn());
       },
     );
-
-    //
-    // Remote plugin installs. Read during preload, before the client exists, so this can only write
-    // them through to the loader's local store; they take effect on the next reload.
-    //
 
     bind(
       {
@@ -159,13 +130,10 @@ export default Capability.makeModule(
           );
         },
       },
-      // The loader's store is plain `localStorage` with no change notification, and installs go
-      // through a full reload anyway, so this direction is pull-only.
+      // `UrlLoader`'s store has no change notification, so this direction is pull-only.
       () => () => {},
     );
 
-    // Either half can move: the shared layer when another device writes, this device's own when the
-    // scope control does. Both land the same way — republish the scope, then re-resolve.
     const refresh = () => {
       registry.set(unsynced, readUnsynced());
       registry.set(overrides, readOverrides());
@@ -186,11 +154,8 @@ export default Capability.makeModule(
       unsynced,
       overrides,
       setSynced: (namespace, synced, options) => {
-        // Whether unsyncing freezes the current values is a property of the namespace, not of the
-        // UI: a plugin's settings freeze so the switch is visibly a no-op, while the plugin set
-        // deliberately does not, so plugins enabled on another device later still arrive here.
-        // Snapshots come from the reconciler — only it knows the value in effect for a key that is
-        // still on its schema default and therefore absent from ECHO.
+        // Unsyncing the plugin set deliberately takes no snapshot, so plugins enabled on another
+        // device later still arrive here.
         const snapshot =
           synced || namespace === AppSettings.PLUGINS_NAMESPACE
             ? undefined
@@ -199,8 +164,6 @@ export default Capability.makeModule(
       },
       conflicts: (namespace) => AppSettings.conflictingKeys(store.read(), namespace),
       setKeySynced: (namespace, key, synced) => {
-        // The value in effect, which only the reconciler knows for a key still on its schema default
-        // and therefore absent from both layers.
         const snapshot = synced
           ? undefined
           : reconcilers.find((reconciler) => reconciler.namespace === namespace)?.current()[key];

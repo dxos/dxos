@@ -44,10 +44,7 @@ const JOIN_IDENTITY_BOOT_TIMEOUT = 60_000;
 /** The default space's Home, which a first-run boot lands on. */
 const DEFAULT_WORKSPACE_URL = /\/w\/[A-Z0-9]{20,}\/home/;
 
-/**
- * How long the URL must hold still before boot counts as finished. Comfortably over the gaps between
- * boot's own navigations, which have run to a few hundred milliseconds.
- */
+/** How long the URL must hold still before boot counts as finished. */
 const BOOT_QUIET_PERIOD = 1_000;
 
 /**
@@ -140,18 +137,9 @@ export class AppManager {
   }
 
   /**
-   * Waits out the boot-time navigation to the default space.
-   *
-   * `init()` returns as soon as the shell renders, but spaces resolve seconds later and the app
-   * opens the default one when they do — replacing whatever route ran in the meantime. Anything that
-   * navigates early (settings, the registry) has to let that land first or it is silently undone.
-   *
-   * Arriving is not one step: `plugin-space` resolves the workspace sentinel, and switching to a
-   * workspace opens its first openable child in turn, so the URL moves more than once before it
-   * settles. Wait for it to STOP moving rather than for its first sign of having arrived. A reader
-   * is never inside those gaps — they close long before anyone finds the settings button — but
-   * Playwright clicks within milliseconds of a URL change, and a click landing between two of boot's
-   * own writes is undone by the later one.
+   * Waits out the boot-time navigation to the default space, which lands seconds after `init()`
+   * returns and replaces whatever route ran in the meantime. Boot navigates more than once, so this
+   * waits for the URL to stop moving rather than for its first arrival.
    */
   async waitForDefaultWorkspace(): Promise<void> {
     let lastNavigation = Date.now();
@@ -171,16 +159,12 @@ export class AppManager {
       this.page.off('framenavigated', onNavigated);
     }
 
-    // Boot settled where it was supposed to: anything else means it is still moving, and every
-    // navigation this suite makes from here would be racing it.
     await expect(this.page).toHaveURL(DEFAULT_WORKSPACE_URL);
   }
 
   /**
-   * Waits out the same boot navigation for a device that has just joined an existing identity.
-   * Such a device adopts the inviter's workspace and stops at its root, never reaching the `/home`
-   * plank a first-run device lands on, so it needs the looser pattern. There is no first-run seeding
-   * on this path and so no scheduled expose to wait out.
+   * Waits out the same boot navigation for a device that has just joined an existing identity. Such
+   * a device stops at the inviter's workspace root, never reaching `/home`, hence the looser pattern.
    */
   async waitForJoinedWorkspace(): Promise<void> {
     await this.page.waitForURL(/\/w\/[A-Z0-9]{20,}/, { timeout: 60_000 });
@@ -544,10 +528,7 @@ export class AppManager {
     return this.page.getByTestId(`settingsScope.${scope}`);
   }
 
-  /**
-   * Takes the open settings panel off the account. Leaving is lossless and immediate, so unlike
-   * rejoining it has no confirmation to dismiss.
-   */
+  /** Takes the open settings panel off the account. */
   async useSettingsForThisDeviceOnly(): Promise<void> {
     const local = this.getSettingsScopeToggle('local');
     await expect(local).toBeVisible();
@@ -556,14 +537,8 @@ export class AppManager {
   }
 
   /**
-   * Puts the open settings panel back under the account, confirming the prompt. Rejoining discards
-   * this device's values, which is why this direction asks.
-   */
-  /**
-   * Rejoins the account for the open settings panel, keeping the account's values.
-   *
-   * The confirmation only appears when the two sides actually differ; with nothing to decide the
-   * rejoin just happens, so the dialog is dismissed only if it opened.
+   * Rejoins the account for the open settings panel, keeping the account's values. The confirmation
+   * only appears when the two sides differ, so the dialog is dismissed only if it opened.
    */
   async rejoinAccountSettings(): Promise<void> {
     await this.getSettingsScopeToggle('synced').click();
@@ -588,16 +563,13 @@ export class AppManager {
 
   /**
    * The "use a different plugin set on this device" switch in the registry's settings panel. Absent
-   * until the settings space opens, which is what backs the device-synced settings store.
+   * until the settings space opens.
    */
   getPluginScopeToggle(): Locator {
     return this.page.getByTestId('registrySettings.pluginScope');
   }
 
-  /**
-   * Detaches this device's plugin set from the account. Leaving is lossless and immediate; only
-   * rejoining prompts, so this path has no confirmation to dismiss.
-   */
+  /** Detaches this device's plugin set from the account. */
   async usePluginSetForThisDeviceOnly(): Promise<void> {
     const toggle = this.getPluginScopeToggle();
     await expect(toggle).toBeVisible();
@@ -620,10 +592,8 @@ export class AppManager {
 
   async openRegistryCategory(category: string): Promise<void> {
     // Clicked rather than deep-linked: a cold load of `<workspace>/category/<name>` restores the
-    // workspace but not the category plank, so the list never opens. The category's tree node is
-    // present either way, so the open list is the only thing worth waiting on.
+    // workspace but not the category plank, so the list never opens.
     await this.openPluginRegistry();
-    // The row is itself the tree's control since the Ark rebuild — it holds no nested button.
     await this.page.getByTestId(`pluginRegistry.${category}`).click();
     await expect(this.page.locator('[data-testid^="pluginList."]').first()).toBeVisible();
   }

@@ -14,10 +14,8 @@ import { createKvsStore } from '@dxos/effect';
 import { type Store } from './binding';
 
 /**
- * The space's {@link AppSettings.AppSettings} singleton, created on first use.
- *
- * Two devices racing first use create two objects; the lowest id wins so every device converges on
- * the same one rather than each following its own.
+ * The space's {@link AppSettings.AppSettings} singleton, created on first use. Two devices racing
+ * first use create two objects; the lowest id wins so every device converges on the same one.
  */
 export const getOrCreateSettings = Effect.fnUntraced(function* (space: Space) {
   const existing = yield* Effect.promise(() => space.db.query(Filter.type(AppSettings.AppSettings)).run());
@@ -26,10 +24,8 @@ export const getOrCreateSettings = Effect.fnUntraced(function* (space: Space) {
 });
 
 /**
- * This device's own layer, in local storage.
- *
- * Keyed by device key so a profile joined to a different identity on the same browser starts clean,
- * which is what the per-device entry in ECHO used to give for free.
+ * This device's own layer, in local storage. Keyed by device key so a profile joined to a different
+ * identity on the same browser starts clean.
  */
 export const makeDeviceStore = (deviceKey: string): Atom.Writable<AppSettings.DeviceSettings> =>
   createKvsStore({
@@ -40,11 +36,8 @@ export const makeDeviceStore = (deviceKey: string): Atom.Writable<AppSettings.De
 
 /**
  * Adapt the two halves to the reconciler's storage interface: the shared layer in ECHO, this
- * device's own in local storage.
- *
- * A write opens both, since a single edit routes to one layer or the other and only
- * {@link AppSettings.setValue} knows which. The local half is copied out, mutated and written back,
- * because the atom compares by identity and would not notify on an in-place change.
+ * device's own in local storage. A write opens both, since only {@link AppSettings.setValue} knows
+ * which layer an edit belongs to.
  */
 export const makeStore = (
   settings: AppSettings.AppSettings,
@@ -59,8 +52,6 @@ export const makeStore = (
       unsynced: [...before.unsynced],
     };
     Obj.update(settings, (settings) => fn({ shared: settings.shared, local }));
-    // Only republish when this half actually moved: an edit routed to the shared layer leaves it
-    // untouched, and setting it regardless would wake every reader on every write.
     if (JSON.stringify(local) !== JSON.stringify(before)) {
       registry.set(device, local);
     }

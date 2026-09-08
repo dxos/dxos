@@ -18,11 +18,7 @@ export type RegistrySettingsProps = AppSurface.SettingsProps<
     activeDevPluginIds: readonly string[];
     onEnableDev: (url: string) => Promise<void>;
     onDisableDev: (id: string) => Promise<void>;
-    /**
-     * Whether this device uses its own plugin set rather than the account's. `undefined` hides the
-     * section — there is no device-synced settings store (no client, or the settings space has not
-     * opened).
-     */
+    /** Whether this device uses its own plugin set rather than the account's; `undefined` hides the section. */
     pluginScopeLocal?: boolean;
     onPluginScopeLocalChange?: (local: boolean) => void;
     /** Section-level controls for the panel heading. */

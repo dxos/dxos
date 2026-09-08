@@ -38,11 +38,7 @@ export type PluginItemProps = {
    * Not persisted to plugin meta; computed per-render by the container.
    */
   extraTags?: readonly string[];
-  /**
-   * Whether this device holds its own answer for this plugin AND that answer differs from the
-   * account's. Pinned-but-agreeing is not marked: nothing has diverged, and saying so would read as
-   * a change nobody made.
-   */
+  /** Whether this device's answer for this plugin differs from the account's. */
   deviceOnly?: boolean;
   onClick?: (id: string) => void;
   onChange?: (id: string, enabled: boolean) => void;

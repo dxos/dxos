@@ -15,16 +15,8 @@ export type SettingsScopeProps = {
 };
 
 /**
- * Whether a settings panel follows the account or stays on this device.
- *
- * Belongs in the heading row of a settings panel's first section, via `Form.Section`'s `actions`
- * slot: the scope is a property of the panel, not of any one field. Every settings panel renders it,
- * the schema-driven default and the bespoke ones alike, so it lives here rather than in
- * `plugin-settings` — which most of them do not depend on.
- *
- * Leaving the account is silent: the current values freeze here and no other device is touched.
- * Rejoining asks only where the two sides actually disagree, and then asks which side to keep —
- * with no disagreement nothing is lost either way, so there is nothing worth interrupting for.
+ * Whether a settings panel follows the account or stays on this device. Belongs in the heading row
+ * of a settings panel's first section, via `Form.Section`'s `actions` slot.
  */
 export const SettingsScope = ({ prefix }: SettingsScopeProps) => {
   const { t } = useTranslation(osTranslations);
@@ -33,12 +25,9 @@ export const SettingsScope = ({ prefix }: SettingsScopeProps) => {
 
   const handleValueChange = useCallback(
     (value: string) => {
-      // Radix clears the value when the pressed item is the active one; only a real change acts.
       if (value === 'local' && synced) {
         setSynced(false);
       } else if (value === 'synced' && !synced) {
-        // Rejoining only takes something away where the two sides disagree. With no disagreement
-        // there is nothing to decide, so it just happens.
         const conflicting = getConflicts();
         if (conflicting.length === 0) {
           setSynced(true);

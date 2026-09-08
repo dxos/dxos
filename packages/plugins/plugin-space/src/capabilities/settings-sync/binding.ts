@@ -4,13 +4,7 @@
 
 import * as AppSettings from '@dxos/app-toolkit/AppSettings';
 
-/**
- * One namespace's two-way link between a local value and the synced store.
- *
- * Deliberately expressed over plain reads and writes rather than atoms or ECHO objects: the same
- * reconciliation drives a plugin's settings atom, the plugin-manager's enabled set and the remote
- * plugin install list, and it is the only part of the sync worth testing on its own.
- */
+/** One namespace's two-way link between a local value and the synced store. */
 export type Binding = {
   namespace: string;
   /** The values in effect locally right now. */
@@ -19,21 +13,15 @@ export type Binding = {
   write: (values: AppSettings.Values) => void;
 };
 
-/**
- * Read and write access to the settings store, so the reconciler stays free of both ECHO and local
- * storage — the two halves a snapshot spans.
- */
+/** Read and write access to the settings store's two layers. */
 export type Store = {
   read: () => AppSettings.Snapshot;
   update: (fn: (draft: AppSettings.Draft) => void) => void;
 };
 
 /**
- * Two-way reconciler for one namespace.
- *
- * Both directions run through {@link Reconciler.pull} / {@link Reconciler.push}, which are guarded
- * against reentrancy: a push writes ECHO, whose change notification would otherwise pull straight
- * back and overwrite the local value mid-edit.
+ * Two-way reconciler for one namespace. {@link Reconciler.pull} and {@link Reconciler.push} are
+ * guarded against reentrancy: a push writes ECHO, whose change notification would pull straight back.
  */
 export class Reconciler {
   /** Values last known to be in agreement, and the base every local edit is diffed against. */
@@ -59,10 +47,6 @@ export class Reconciler {
   /**
    * First reconciliation: the store wins for keys it holds, and keys only this device has are
    * adopted into the shared layer.
-   *
-   * Asymmetric on purpose. A device joining an account must not clobber settings the account
-   * already carries, but a device that has been configuring settings locally (every device, before
-   * this existed) must not have that work discarded either.
    */
   seed(): void {
     const stored = this.#stored();

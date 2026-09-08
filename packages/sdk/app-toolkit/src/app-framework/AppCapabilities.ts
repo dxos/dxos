@@ -191,42 +191,18 @@ export const Settings = Capability$.make<Settings>()('org.dxos.app-framework.cap
  * contribution (plus the plugin set) into the settings space so they follow the identity across
  * devices, with per-key device overrides.
  *
- * Contributed once the settings space is open, so consumers must tolerate its absence: before that,
- * and in hosts with no client at all (stories, node), settings stay device-local.
+ * Contributed once the settings space is open, so consumers must tolerate its absence.
  */
 export type SettingsSync = {
-  /**
-   * Settings prefixes this device writes locally rather than sharing. Reactive, so settings UI
-   * re-renders when the scope changes here or on another device.
-   */
+  /** Settings prefixes this device writes locally rather than sharing. */
   readonly unsynced: Atom.Atom<readonly string[]>;
-  /**
-   * Turn sharing of a prefix on or off for this device.
-   *
-   * Turning it OFF is lossless — nothing visibly changes here and no other device is touched.
-   * Turning it ON keeps one side of every conflicting key: the account's by default, this device's
-   * with `adopt: 'local'`. Ask the reader only when {@link conflicts} is non-empty.
-   */
+  /** Turn sharing of a prefix on or off for this device; rejoining keeps the side named by `adopt`. */
   setSynced(prefix: string, synced: boolean, options?: { adopt?: AppSettings.Adopt }): void;
-  /**
-   * Keys that rejoining the account would change, so a caller can skip the question when there is
-   * nothing to decide. Read on demand rather than reactively: it is consulted at the moment the
-   * reader asks to rejoin.
-   */
+  /** Keys that rejoining the account would change. Read on demand rather than reactively. */
   conflicts(prefix: string): readonly string[];
-  /**
-   * Keys this device holds its own value for, by prefix. An atom rather than a lookup because
-   * {@link unsynced} does not move when a key is pinned, so a marker keyed off that alone would
-   * never re-render.
-   */
+  /** Keys this device holds its own value for, by prefix. */
   readonly overrides: Atom.Atom<AppSettings.Namespaces>;
-  /**
-   * Pin one key to this device, or hand it back to the account — the per-key counterpart of
-   * {@link setSynced}, for a single plugin rather than the whole set.
-   *
-   * Pinning is lossless. Releasing drops this device's value, which only loses something where the
-   * two disagree; {@link conflicts} names those.
-   */
+  /** Pin one key to this device, or hand it back — the per-key counterpart of {@link setSynced}. */
   setKeySynced(prefix: string, key: string, synced: boolean): void;
 };
 

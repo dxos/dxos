@@ -290,9 +290,8 @@ export type FormSectionProps = ThemedClassName<{
   title?: string;
   description?: string;
   /**
-   * Controls scoping the section as a whole, rendered at the end of its heading row. For what acts
-   * on the section rather than on any one field — a settings panel's sync scope, say. Rendered only
-   * alongside a `title` or `description`, since without a heading row there is nothing to trail.
+   * Controls acting on the section as a whole, rendered at the end of its heading row. Rendered only
+   * alongside a `title` or `description`.
    */
   actions?: ReactNode;
 }>;

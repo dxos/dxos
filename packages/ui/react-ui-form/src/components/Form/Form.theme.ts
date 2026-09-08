@@ -16,12 +16,11 @@ const formStyles = tv({
     // Bottom padding on the body, so the last field never sits flush against its host's edge
     // (a form in a card, a dialog body, a scrolled panel all need it).
     content: 'pb-form-padding',
-    // `relative` anchors `sectionActions`, which sits on the heading's row without wrapping the
-    // legend — the legend has to stay the fieldset's own child to name the group.
+    // `relative` anchors `sectionActions`; the legend stays the fieldset's own child to name the group.
     section: 'relative flex flex-col py-form-section-gap first:pt-0',
     group: 'flex flex-col gap-trim-md p-trim-md border border-separator rounded-sm',
     sectionHeader: '',
-    // Pulled out of the flow onto the heading's row, so a description below it does not push it down.
+    // Out of flow, so a description below the title does not push it down.
     sectionActions: 'absolute inset-block-start-0 inset-inline-end-0 flex items-center',
     sectionTitle: 'text-lg',
     sectionDescription: 'text-description',
@@ -57,7 +56,6 @@ const formStyles = tv({
         // panels, the `Form.Field`s placed directly in the section (which have no `fieldSet` wrapper).
         section: 'py-form-section-gap! gap-trim-md',
         sectionHeader: 'pb-form-section-gap',
-        // Inset to the same gutter the title sits in, and down past the section's own top padding.
         sectionActions: 'inset-block-start-form-section-gap px-trim-md',
         sectionTitle: 'px-trim-md text-xl',
         sectionDescription: 'px-trim-md',

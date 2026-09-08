@@ -46,7 +46,6 @@ describe('awaitDevice', () => {
     const halo = makeHalo();
     const pending = EffectEx.runPromise(awaitDevice(halo));
 
-    // The replay on subscribe saw nothing, so this only resolves because the later change is heard.
     halo.arrive({ key: 'device-b' });
 
     await expect(pending).resolves.toEqual({ key: 'device-b' });
