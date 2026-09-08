@@ -96,7 +96,10 @@ const TEST_INSTRUMENT_EXEC_ARGV = [
 // lies about its reads (a bare property read on a live ECHO object during render — anti-pattern #3
 // in the `reactivity` skill) can have that lie memoized into a permanently stale subtree. Audit a
 // package against that catalog before enabling it here.
-const REACT_COMPILER_ALL = !!process.env.DX_REACT_COMPILER;
+// Allowlist rather than truthiness: `DX_REACT_COMPILER=0` and `=false` are how someone turns a
+// flag OFF, and a bare `!!` would read both as ON and silently compile everything. Matches the
+// `DX_RUN_MANUAL_TESTS` check below.
+const REACT_COMPILER_ALL = ['1', 'true'].includes(process.env.DX_REACT_COMPILER ?? '');
 
 /**
  * The React plugin, with the compiler enabled when the package opts in (or `DX_REACT_COMPILER` is set).
