@@ -139,8 +139,38 @@ export class ObjectCore {
     }
   }
 
+  /**
+   * Set by {@link #refresh} while a bound write is in flight, so the write can tell whether the DB
+   * already routed the change event back to this core and refreshed from it.
+   */
+  #refreshedDuringWrite = false;
+
   #refresh(): void {
+    this.#refreshedDuringWrite = true;
     this.refreshTargets?.(this.#refreshScope);
+  }
+
+  /**
+   * Run a write against the bound document, refreshing afterwards only if the DB did not route the
+   * change event back to this core and refresh from it (it does for a routed core, synchronously,
+   * inside `write`). A core bound to a branch, or dropped from the DB's `_objects`, stays bound but
+   * unrouted and would otherwise never refresh — so this cannot simply be dropped.
+   *
+   * The second pass was not merely redundant: for a container write `_writeThrough` sees the proxy
+   * the first pass installed, returns false, and falls through to a refresh of the object's full
+   * width with the narrowing scope already closed.
+   */
+  #writeAndRefresh<T>(write: () => T): T {
+    this.#refreshedDuringWrite = false;
+    try {
+      return write();
+    } finally {
+      const refreshed = this.#refreshedDuringWrite;
+      this.#refreshedDuringWrite = false;
+      if (!refreshed) {
+        this.#refresh();
+      }
+    }
   }
 
   // -------------------------------------------------------------------------
@@ -282,11 +312,10 @@ export class ObjectCore {
       // No change event is emitted here since we are not using the doc handle. Notify listeners manually.
       this.notifyUpdate();
     } else {
-      invariant(this.docHandle);
-      this.docHandle.change(changeFn, options);
-      // Note: We don't need to notify listeners here, since `change` event is already processed by DB.
-      // The refresh still runs, for a core the DB no longer routes the change event to.
-      this.#refresh();
+      const docHandle = this.docHandle;
+      invariant(docHandle);
+      // No manual notification: the DB already processes the `change` event.
+      this.#writeAndRefresh(() => docHandle.change(changeFn, options));
     }
   }
 
@@ -312,10 +341,10 @@ export class ObjectCore {
       // No change event is emitted here since we are not using the doc handle. Notify listeners manually.
       this.notifyUpdate();
     } else {
-      invariant(this.docHandle);
-      result = this.docHandle.changeAt(heads, callback, options);
-      // Note: We don't need to notify listeners here, since `change` event is already processed by DB.
-      this.#refresh();
+      const docHandle = this.docHandle;
+      invariant(docHandle);
+      // No manual notification: the DB already processes the `change` event.
+      result = this.#writeAndRefresh(() => docHandle.changeAt(heads, callback, options));
     }
 
     return result;
