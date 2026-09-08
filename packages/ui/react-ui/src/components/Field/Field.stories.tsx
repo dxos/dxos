@@ -289,6 +289,41 @@ export const TextArea: Story = {
   },
 };
 
+/** The control is one `<label>` holding its text and its form input, so clicking the text toggles it. */
+const togglesFromItsLabel = async (canvasElement: HTMLElement, label: string) => {
+  const root = canvasElement.querySelector('label') as HTMLLabelElement;
+  await expect(root).toHaveTextContent(label);
+  const input = root.querySelector('input') as HTMLInputElement;
+  await expect(input.checked).toBe(false);
+  await userEvent.click(within(root).getByText(label));
+  await expect(input.checked).toBe(true);
+  await userEvent.click(within(root).getByText(label));
+  await expect(input.checked).toBe(false);
+  await userEvent.click(within(root).getByText(label));
+  await expect(input.checked).toBe(true);
+};
+
+export const Checkbox: Story = {
+  args: {
+    kind: 'checkbox',
+    label: 'This is a checkbox',
+    description: 'Checked, indeterminate, or unchecked',
+    size: 5,
+  },
+  play: async ({ canvasElement }: { canvasElement: HTMLElement }) =>
+    togglesFromItsLabel(canvasElement, 'This is a checkbox'),
+};
+
+export const Switch: Story = {
+  args: {
+    kind: 'switch',
+    label: 'This is a switch',
+    description: 'On or off',
+  },
+  play: async ({ canvasElement }: { canvasElement: HTMLElement }) =>
+    togglesFromItsLabel(canvasElement, 'This is a switch'),
+};
+
 export const PinInput: Story = {
   args: {
     kind: 'pin',
@@ -399,37 +434,4 @@ export const DateTimeWithPicker: Story = {
     </Field.Root>
   ),
   play: opensAtField,
-};
-
-/** The control is one `<label>` holding its text and its form input, so clicking the text toggles it. */
-const togglesFromItsLabel = async (canvasElement: HTMLElement, label: string) => {
-  const root = canvasElement.querySelector('label') as HTMLLabelElement;
-  await expect(root).toHaveTextContent(label);
-  const input = root.querySelector('input') as HTMLInputElement;
-  await expect(input.checked).toBe(false);
-  await userEvent.click(within(root).getByText(label));
-  await expect(input.checked).toBe(true);
-  await userEvent.click(within(root).getByText(label));
-  await expect(input.checked).toBe(false);
-};
-
-export const Checkbox: Story = {
-  args: {
-    kind: 'checkbox',
-    label: 'This is a checkbox',
-    description: 'Checked, indeterminate, or unchecked',
-    size: 5,
-  },
-  play: async ({ canvasElement }: { canvasElement: HTMLElement }) =>
-    togglesFromItsLabel(canvasElement, 'This is a checkbox'),
-};
-
-export const Switch: Story = {
-  args: {
-    kind: 'switch',
-    label: 'This is a switch',
-    description: 'On or off',
-  },
-  play: async ({ canvasElement }: { canvasElement: HTMLElement }) =>
-    togglesFromItsLabel(canvasElement, 'This is a switch'),
 };
