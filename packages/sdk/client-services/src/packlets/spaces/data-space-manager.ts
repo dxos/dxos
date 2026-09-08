@@ -58,9 +58,8 @@ import {
   SpaceState,
 } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 import { type Runtime_Client_EdgeFeatures } from '@dxos/protocols/buf/dxos/config_pb';
-import { EdgeReplicationSetting } from '@dxos/protocols/buf/dxos/echo/metadata_pb';
-import { type PeerState } from '@dxos/protocols/buf/dxos/mesh/presence_pb';
 import { type FeedMessage } from '@dxos/protocols/buf/dxos/echo/feed_pb';
+import { EdgeReplicationSetting } from '@dxos/protocols/buf/dxos/echo/metadata_pb';
 import { type SpaceMetadata } from '@dxos/protocols/buf/dxos/echo/metadata_pb';
 import {
   type Credential,
@@ -69,6 +68,7 @@ import {
   SpaceMember,
 } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { type DelegateSpaceInvitation } from '@dxos/protocols/buf/dxos/halo/invitations_pb';
+import { type PeerState } from '@dxos/protocols/buf/dxos/mesh/presence_pb';
 import { type Teleport } from '@dxos/teleport';
 import { Gossip, Presence } from '@dxos/teleport-extension-gossip';
 import { type Timeframe } from '@dxos/timeframe';

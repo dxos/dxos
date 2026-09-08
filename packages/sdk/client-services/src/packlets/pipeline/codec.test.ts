@@ -7,8 +7,8 @@ import { describe, expect, test } from 'vitest';
 import { createCredentialSignerWithKey, verifyCredential } from '@dxos/credentials';
 import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
-import { schema } from '@dxos/protocols/proto';
 import { type FeedMessage } from '@dxos/protocols/buf/dxos/echo/feed_pb';
+import { schema } from '@dxos/protocols/proto';
 import { Timeframe } from '@dxos/timeframe';
 
 import { codec } from './codec';

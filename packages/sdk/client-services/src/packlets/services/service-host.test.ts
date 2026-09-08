@@ -25,7 +25,6 @@ import { MembershipPolicy } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { isNode } from '@dxos/util';
 
 import { createMockCredential, createServiceHost } from '../testing';
-import { fromBufPresentation, toBufCredential } from './credentials-codec';
 
 /**
  * Bridges a host's effect-rpc {@link ClientServices} handlers to the Promise/`Stream` shaped
@@ -99,7 +98,7 @@ describe('ClientServicesHost', () => {
 
     await services.SpacesService?.writeCredentials({
       spaceKey: await haloSpace.wait(),
-      credentials: [toBufCredential(testCredential)],
+      credentials: [testCredential],
     });
 
     const credentials = services.SpacesService!.queryCredentials({ spaceKey: await haloSpace.wait() });
@@ -131,13 +130,13 @@ describe('ClientServicesHost', () => {
 
     const presentation = await services.IdentityService!.signPresentation({
       presentation: buf.create(PresentationSchema, {
-        credentials: [toBufCredential(testCredential)],
+        credentials: [testCredential],
       }),
       nonce,
     });
 
     expect(presentation.proofs?.[0].nonce).to.deep.equal(nonce);
-    expect(await verifyPresentation(fromBufPresentation(presentation))).to.deep.equal({
+    expect(await verifyPresentation(presentation)).to.deep.equal({
       kind: 'pass',
     });
   });

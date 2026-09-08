@@ -11,7 +11,6 @@ import { PresentationSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb
 
 import { type Client } from '../client';
 import { RPC_TIMEOUT } from '../common';
-import { fromBufPresentation } from '../services/legacy-codec';
 
 export const createEdgeIdentity = (client: Client): EdgeIdentity => {
   const identity = client.halo.identity.get();

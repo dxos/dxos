@@ -13,12 +13,12 @@ import { log } from '@dxos/log';
 import { DataCorruptionError, STORAGE_VERSION } from '@dxos/protocols';
 import { type CompatCodec, compatCodec } from '@dxos/protocols/buf-shape-compat';
 import { SpaceState } from '@dxos/protocols/buf/dxos/client/invitation_pb';
+import { Invitation } from '@dxos/protocols/buf/dxos/client/services_pb';
 import {
   EchoMetadataSchema,
   EdgeReplicationSetting,
   LargeSpaceMetadataSchema,
 } from '@dxos/protocols/buf/dxos/echo/metadata_pb';
-import { Invitation } from '@dxos/protocols/buf/dxos/client/services_pb';
 import {
   type ControlPipelineSnapshot,
   type EchoMetadata,

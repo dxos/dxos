@@ -14,8 +14,8 @@ import { Context } from '@dxos/context';
 import { AlreadyJoinedError, AuthorizationError } from '@dxos/protocols';
 import { Invitation_State } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 import { ConnectionState } from '@dxos/protocols/buf/dxos/client/services_pb';
-import { SpaceMember_Role } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { SpaceMember } from '@dxos/protocols/buf/dxos/client/services_pb';
+import { SpaceMember_Role } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
 describe('Spaces/member-management', () => {
   test('admins can remove members', async () => {

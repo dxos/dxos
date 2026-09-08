@@ -24,14 +24,6 @@ import { type RecoverIdentityRequest as LegacyRecoverIdentityRequest } from '@dx
 import { type ProfileDocument as LegacyProfileDocument } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { type IdentityService } from '@dxos/protocols/rpc';
 
-import {
-  fromBufDeviceProfileDocument,
-  fromBufPresentation,
-  fromBufProfileDocument,
-  toBufCredential,
-  toBufPresentation,
-  toBufProfileDocument,
-} from '../services/credentials-codec';
 import { type Identity } from './identity';
 import { type CreateIdentityOptions, type IdentityManager } from './identity-manager';
 import { type EdgeIdentityRecoveryManager } from './identity-recovery-manager';
@@ -67,8 +59,8 @@ export class IdentityServiceImpl extends Resource implements IdentityService.Han
         const ctx = Context.default();
         await this._createIdentity(
           {
-            profile: request.profile && fromBufProfileDocument(request.profile),
-            deviceProfile: request.deviceProfile && fromBufDeviceProfileDocument(request.deviceProfile),
+            profile: request.profile && request.profile,
+            deviceProfile: request.deviceProfile && request.deviceProfile,
           },
           ctx,
         );
@@ -97,7 +89,7 @@ export class IdentityServiceImpl extends Resource implements IdentityService.Han
     return Effect.tryPromise({
       try: async () => {
         invariant(this._identityManager.identity, 'Identity not initialized.');
-        await this._identityManager.updateProfile(fromBufProfileDocument(profile));
+        await this._identityManager.updateProfile(profile);
         await this._onProfileUpdate?.(this._identityManager.identity.profileDocument);
         return this._getIdentity()!;
       },
@@ -173,15 +165,15 @@ export class IdentityServiceImpl extends Resource implements IdentityService.Han
         const { presentation, nonce } = request;
         invariant(this._identityManager.identity, 'Identity not initialized.');
 
-        return toBufPresentation(
+        return 
           await signPresentation({
-            presentation: fromBufPresentation(presentation),
+            presentation: presentation,
             signer: this._keyring,
             signerKey: this._identityManager.identity.deviceKey,
             chain: this._identityManager.identity.deviceCredentialChain,
             nonce,
           }),
-        );
+        ;
       },
       catch: (error) => error as Error,
     });
@@ -194,7 +186,7 @@ export class IdentityServiceImpl extends Resource implements IdentityService.Han
 
         invariant(identity, 'Identity not initialized.');
 
-        return toBufCredential(
+        return 
           await createCredential({
             assertion: { '@type': 'dxos.halo.credentials.Auth' },
             issuer: identity.identityKey,
@@ -203,7 +195,7 @@ export class IdentityServiceImpl extends Resource implements IdentityService.Han
             signingKey: identity.deviceKey,
             signer: this._keyring,
           }),
-        );
+        ;
       },
       catch: (error) => error as Error,
     });
@@ -218,7 +210,7 @@ export class IdentityServiceImpl extends Resource implements IdentityService.Han
       did: this._identityManager.identity.did,
       identityKey: fromPublicKey(this._identityManager.identity.identityKey),
       spaceKey: fromPublicKey(this._identityManager.identity.space.key),
-      profile: toBufProfileDocument(this._identityManager.identity.profileDocument),
+      profile: this._identityManager.identity.profileDocument,
     });
   }
 }

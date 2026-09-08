@@ -12,8 +12,8 @@ import {
   Invitation_State,
   InvitationSchema,
 } from '@dxos/protocols/buf/dxos/client/invitation_pb';
-import { SpaceMember_Role } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { Invitation as LegacyInvitation } from '@dxos/protocols/buf/dxos/client/services_pb';
+import { SpaceMember_Role } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { SpaceMember } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
 /** Names an invitation state for logging; falls back to `unknown` for a value outside the enum. */

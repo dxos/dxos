@@ -18,7 +18,6 @@ import {
 import { type InvitationsService } from '@dxos/protocols/rpc';
 import { trace } from '@dxos/tracing';
 
-import { fromBufDeviceProfileDocument } from '../services/credentials-codec';
 import { type InvitationsManager } from './invitations-manager';
 
 /**
@@ -61,7 +60,7 @@ export class InvitationsServiceImpl implements InvitationsService.Handlers {
       // protobuf.js shape and the buf request converts here, at the service boundary.
       const invitation = this._invitationsManager.acceptInvitation(ctx, {
         ...request,
-        deviceProfile: request.deviceProfile && fromBufDeviceProfileDocument(request.deviceProfile),
+        deviceProfile: request.deviceProfile && request.deviceProfile,
       });
       invitation.subscribe(
         (value) => void emit.single(value),

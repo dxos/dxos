@@ -13,8 +13,8 @@ import { ClientService } from '@dxos/client';
 import { buf } from '@dxos/protocols/buf';
 import { decodeCompat, encodeCompat } from '@dxos/protocols/buf-shape-compat';
 import { DeviceSchema } from '@dxos/protocols/buf/dxos/client/services_pb';
-import { DeviceProfileDocumentSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { type Device } from '@dxos/protocols/buf/dxos/client/services_pb';
+import { DeviceProfileDocumentSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
 import { printDevice } from '../util';
 

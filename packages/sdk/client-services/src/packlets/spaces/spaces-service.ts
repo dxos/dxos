@@ -45,25 +45,24 @@ import {
   type Space,
   SpaceSchema,
 } from '@dxos/protocols/buf/dxos/client/services_pb';
-import { type Credential } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
-import { PeerStateSchema } from '@dxos/protocols/buf/dxos/mesh/presence_pb';
-import {
-  type GossipMessage as BufGossipMessage,
-  GossipMessageSchema,
-} from '@dxos/protocols/buf/dxos/mesh/teleport/gossip_pb';
 import {
   type ContactAdmission,
   type Space as LegacySpace,
   SpaceMember,
   SpaceState,
 } from '@dxos/protocols/buf/dxos/client/services_pb';
+import { type Credential } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
+import { PeerStateSchema } from '@dxos/protocols/buf/dxos/mesh/presence_pb';
+import {
+  type GossipMessage as BufGossipMessage,
+  GossipMessageSchema,
+} from '@dxos/protocols/buf/dxos/mesh/teleport/gossip_pb';
 import { type GossipMessage } from '@dxos/protocols/buf/dxos/mesh/teleport/gossip_pb';
 import { FeedService, SpacesService } from '@dxos/protocols/rpc';
 import { trace } from '@dxos/tracing';
 import { type Provider } from '@dxos/util';
 
 import { type IdentityManager } from '../identity';
-import { fromBufCredential, toBufCredential } from '../services/credentials-codec';
 import { type SpaceManager } from '../space';
 import {
   SpaceArchiveWriter,
@@ -292,7 +291,7 @@ export class SpacesServiceImpl implements SpacesService.Handlers {
 
       const processor: CredentialProcessor = {
         processCredential: async (credential) => {
-          void emit.single(toBufCredential(credential));
+          void emit.single(credential);
         },
       };
       ctx.onDispose(() => space.spaceState.removeCredentialProcessor(processor));
@@ -315,7 +314,7 @@ export class SpacesServiceImpl implements SpacesService.Handlers {
       try: async () => {
         const space = this._spaceManager.spaces.get(spaceKey) ?? raise(new SpaceNotFoundError(spaceKey));
         for (const bufCredential of credentials ?? []) {
-          const credential = fromBufCredential(bufCredential);
+          const credential = bufCredential;
           if (credential.proof) {
             await space.controlPipeline.writer.write({ credential: { credential } });
           } else {
@@ -346,7 +345,7 @@ export class SpacesServiceImpl implements SpacesService.Handlers {
         const space = dataSpaceManager.spaces.get(spaceKey) ?? raise(new SpaceNotFoundError(spaceKey));
         const result = await space.createEpoch({ migration, newAutomergeRoot: automergeRootUrl });
         return buf.create(CreateEpochResponseSchema, {
-          epochCredential: result?.credential && toBufCredential(result.credential),
+          epochCredential: result?.credential && result.credential,
           controlTimeframe: result?.timeframe && fromTimeframe(result.timeframe),
         });
       },

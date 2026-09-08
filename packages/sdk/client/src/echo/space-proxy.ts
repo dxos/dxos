@@ -45,14 +45,13 @@ import { decodeError, runServiceCall, subscribeStream } from '@dxos/protocols';
 import { buf, fromPublicKey, toTimeframe } from '@dxos/protocols/buf';
 import { decodeCompat, encodeCompat } from '@dxos/protocols/buf-shape-compat';
 import { Invitation, Invitation_Kind } from '@dxos/protocols/buf/dxos/client/invitation_pb';
-import { EdgeReplicationSetting } from '@dxos/protocols/buf/dxos/echo/metadata_pb';
-import { GossipMessageSchema } from '@dxos/protocols/buf/dxos/mesh/teleport/gossip_pb';
 import {
   type Contact,
   type Space as SpaceData,
   type SpaceMember,
   SpaceState,
 } from '@dxos/protocols/buf/dxos/client/services_pb';
+import { EdgeReplicationSetting } from '@dxos/protocols/buf/dxos/echo/metadata_pb';
 import { type SpaceSnapshot } from '@dxos/protocols/buf/dxos/echo/snapshot_pb';
 import {
   type Credential,
@@ -60,6 +59,7 @@ import {
   SpaceMember as HaloSpaceMember,
   MembershipPolicy,
 } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
+import { GossipMessageSchema } from '@dxos/protocols/buf/dxos/mesh/teleport/gossip_pb';
 import { type GossipMessage } from '@dxos/protocols/buf/dxos/mesh/teleport/gossip_pb';
 import { SpacesService } from '@dxos/protocols/rpc';
 import { Timeframe } from '@dxos/timeframe';
@@ -67,7 +67,6 @@ import { trace } from '@dxos/tracing';
 
 import { RPC_TIMEOUT } from '../common';
 import { InvitationsProxy } from '../invitations';
-import { fromBufCredential, toBufContact } from '../services/legacy-codec';
 import { createDeviceLocalBranchStore } from './branch-store';
 
 const EPOCH_CREATION_TIMEOUT = 60_000;
@@ -600,7 +599,7 @@ export class SpaceProxy implements Space, CustomInspectable {
       this._clientServices.rpc['SpacesService.admitContact']({
         spaceKey: this.key,
         role: HaloSpaceMember.Role.ADMIN,
-        contact: toBufContact(contact),
+        contact: contact,
       }),
       { label: 'SpacesService.admitContact' },
     );

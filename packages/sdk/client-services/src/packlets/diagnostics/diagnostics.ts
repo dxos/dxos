@@ -25,7 +25,6 @@ import { type DevtoolsHost, type LoggingService } from '@dxos/protocols/rpc';
 
 import { DXOS_VERSION } from '../../version';
 import { type ServiceContext } from '../services';
-import { toBufProfileDocument } from '../services/credentials-codec';
 import { getPlatform } from '../services/platform';
 import { type DataSpace } from '../spaces';
 
@@ -112,7 +111,7 @@ export const createDiagnostics = async (
           did: identity.did,
           identityKey: fromPublicKey(identity.identityKey),
           spaceKey: fromPublicKey(identity.space.key),
-          profile: toBufProfileDocument(identity.profileDocument),
+          profile: identity.profileDocument,
         });
 
         // Devices.

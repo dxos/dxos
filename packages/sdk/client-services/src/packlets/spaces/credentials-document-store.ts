@@ -16,8 +16,8 @@ import { AddOnlySet } from '@dxos/echo-doc';
 import { type DocumentLease, type EchoHost } from '@dxos/echo-host';
 import { invariant } from '@dxos/invariant';
 import { type SpaceId } from '@dxos/keys';
-import { schema } from '@dxos/protocols/proto';
 import { type Credential } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
+import { schema } from '@dxos/protocols/proto';
 
 const credentialCodec = schema.getCodecForType('dxos.halo.credentials.Credential');
 

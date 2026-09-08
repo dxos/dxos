@@ -17,12 +17,11 @@ import {
   DeviceKind,
   DeviceSchema,
 } from '@dxos/protocols/buf/dxos/client/services_pb';
-import { type DeviceProfileDocument } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { EdgeStatus, type Device as LegacyDevice } from '@dxos/protocols/buf/dxos/client/services_pb';
+import { type DeviceProfileDocument } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { type DevicesService } from '@dxos/protocols/rpc';
 
 import { type IdentityManager } from '../identity';
-import { fromBufDeviceProfileDocument, toBufDeviceProfileDocument } from '../services/credentials-codec';
 
 /** Reads a device from the identity manager as the buf message the service returns. */
 const toBufDevice = (device: LegacyDevice): Device => buf.fromBinary(DeviceSchema, encodeCompat(DeviceSchema, device));
@@ -35,8 +34,7 @@ export class DevicesServiceImpl implements DevicesService.Handlers {
 
   ['DevicesService.updateDevice'](request: DeviceProfileDocument): Effect.Effect<Device, Error> {
     return Effect.tryPromise({
-      try: async () =>
-        toBufDevice(await this._identityManager.updateDeviceProfile(fromBufDeviceProfileDocument(request))),
+      try: async () => toBufDevice(await this._identityManager.updateDeviceProfile(request)),
       catch: (error) => error as Error,
     });
   }
@@ -71,7 +69,7 @@ export class DevicesServiceImpl implements DevicesService.Handlers {
               return buf.create(DeviceSchema, {
                 deviceKey: fromPublicKey(key),
                 kind: this._identityManager.identity?.deviceKey.equals(key) ? DeviceKind.CURRENT : DeviceKind.TRUSTED,
-                profile: toBufDeviceProfileDocument(profile),
+                profile: profile,
                 presence,
               });
             }),

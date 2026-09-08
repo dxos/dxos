@@ -16,8 +16,8 @@ import { ApiError, runServiceCall, subscribeStream } from '@dxos/protocols';
 import { buf } from '@dxos/protocols/buf';
 import { Invitation, Invitation_Kind } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 import { DeviceKind } from '@dxos/protocols/buf/dxos/client/services_pb';
-import { PresentationSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { type Contact, type Device, type Identity } from '@dxos/protocols/buf/dxos/client/services_pb';
+import { PresentationSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import {
   type Credential,
   type DeviceProfileDocument,
@@ -28,17 +28,6 @@ import { trace } from '@dxos/tracing';
 
 import { RPC_TIMEOUT } from '../common';
 import { InvitationsProxy } from '../invitations';
-import {
-  fromBufContact,
-  fromBufCredential,
-  fromBufDevice,
-  fromBufIdentity,
-  fromBufPresentation,
-  toBufCredential,
-  toBufDeviceProfileDocument,
-  toBufProfileDocument,
-  toBufRecoverIdentityRequest,
-} from '../services/legacy-codec';
 
 export class HaloProxy implements Halo {
   /** Subscriptions for overall lifecycle (reconnected event listener). */
@@ -169,7 +158,7 @@ export class HaloProxy implements Halo {
       this._runtime,
       this._serviceProvider.rpc['SpacesService.queryCredentials']({ spaceKey: identity.spaceKey! }),
       {
-        onData: (data) => this._credentialsChanged.emit([...this._credentials.get(), fromBufCredential(data)]),
+        onData: (data) => this._credentialsChanged.emit([...this._credentials.get(), data]),
       },
     );
     this._haloCredentialStreamCleanup = cleanup;
@@ -199,7 +188,7 @@ export class HaloProxy implements Halo {
               identityKey: data.identity.identityKey,
               displayName: data.identity.profile?.displayName,
             });
-          this._identityChanged.emit(data.identity ? fromBufIdentity(data.identity) : null);
+          this._identityChanged.emit(data.identity ? data.identity : null);
         },
       }),
     );
@@ -274,26 +263,26 @@ export class HaloProxy implements Halo {
     const identity = await runServiceCall(
       this._runtime,
       this._serviceProvider.rpc['IdentityService.createIdentity']({
-        profile: toBufProfileDocument(profile),
-        deviceProfile: toBufDeviceProfileDocument(deviceProfileWithDefaults),
+        profile: profile,
+        deviceProfile: deviceProfileWithDefaults,
       }),
       { timeout: RPC_TIMEOUT, label: 'IdentityService.createIdentity' },
     );
-    this._identityChanged.emit(fromBufIdentity(identity));
-    return fromBufIdentity(identity);
+    this._identityChanged.emit(identity);
+    return identity;
   }
 
   async recoverIdentity(args: RecoverIdentityArgs): Promise<Identity> {
     const identity = await runServiceCall(
       this._runtime,
-      this._serviceProvider.rpc['IdentityService.recoverIdentity'](toBufRecoverIdentityRequest(args)),
+      this._serviceProvider.rpc['IdentityService.recoverIdentity'](args),
       {
         timeout: RPC_TIMEOUT,
         label: 'IdentityService.recoverIdentity',
       },
     );
-    this._identityChanged.emit(fromBufIdentity(identity));
-    return fromBufIdentity(identity);
+    this._identityChanged.emit(identity);
+    return identity;
   }
 
   async updateProfile(profile: ProfileDocument): Promise<Identity> {
@@ -304,14 +293,14 @@ export class HaloProxy implements Halo {
   private async _updateProfileInternal(ctx: Context, profile: ProfileDocument): Promise<Identity> {
     const identity = await runServiceCall(
       this._runtime,
-      this._serviceProvider.rpc['IdentityService.updateProfile'](toBufProfileDocument(profile)),
+      this._serviceProvider.rpc['IdentityService.updateProfile'](profile),
       {
         timeout: RPC_TIMEOUT,
         label: 'IdentityService.updateProfile',
       },
     );
-    this._identityChanged.emit(fromBufIdentity(identity));
-    return fromBufIdentity(identity);
+    this._identityChanged.emit(identity);
+    return identity;
   }
 
   /**
@@ -408,6 +397,6 @@ export class HaloProxy implements Halo {
       }),
       { timeout: RPC_TIMEOUT, label: 'IdentityService.signPresentation' },
     );
-    return fromBufPresentation(presentation);
+    return presentation;
   }
 }

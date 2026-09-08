@@ -25,15 +25,14 @@ import { log } from '@dxos/log';
 import { ApiError, runServiceCall, subscribeStream } from '@dxos/protocols';
 import { Invitation, Invitation_Kind } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 import { SpaceState } from '@dxos/protocols/buf/dxos/client/invitation_pb';
-import { MembershipPolicy } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { type Space as SerializedSpace } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { type IndexConfig } from '@dxos/protocols/buf/dxos/echo/indexing_pb';
+import { MembershipPolicy } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { type SpacesService } from '@dxos/protocols/rpc';
 import { trace } from '@dxos/tracing';
 
 import { RPC_TIMEOUT } from '../common';
 import { InvitationsProxy } from '../invitations';
-import { fromBufSpace } from '../services/legacy-codec';
 import { SpaceProxy } from './space-proxy';
 
 export class SpaceList extends MulticastObservable<Space[]> implements Echo {
@@ -340,7 +339,7 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
       this._serviceProvider.rpc['SpacesService.joinBySpaceKey']({ spaceKey }),
       { label: 'SpacesService.joinBySpaceKey' },
     );
-    const space = fromBufSpace(response.space ?? failedInvariant());
+    const space = response.space ?? failedInvariant();
     // The proxy appears via the `querySpaces` stream, not the call's own response, so the two race —
     // same wait `createSpace` and `import` do before resolving their proxy.
     await this._spaceCreated.waitForCondition(() => {

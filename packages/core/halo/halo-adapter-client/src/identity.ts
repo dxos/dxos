@@ -15,15 +15,15 @@ import { InvitationEncoder } from '@dxos/client/invitations';
 import { createIdFromSpaceKey } from '@dxos/echo-protocol';
 import { Identity as HaloIdentity, IdentityError } from '@dxos/halo';
 import { IdentityDid, PublicKey } from '@dxos/keys';
-import { DeviceType } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
-import { type TypedMessage } from '@dxos/protocols/proto';
 import {
   type Device as ClientDevice,
   type Identity as ClientIdentity,
   Device,
   DeviceKind,
 } from '@dxos/protocols/buf/dxos/client/services_pb';
+import { DeviceType } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { type Credential, IdentityRecovery } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
+import { type TypedMessage } from '@dxos/protocols/proto';
 import { ComplexSet } from '@dxos/util';
 
 import { makeFlow, streamFromClientObservable, toShareOptions } from './util';

@@ -31,7 +31,6 @@ import {
 import { type DeviceProfileDocument } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
 import { RPC_TIMEOUT } from '../common';
-import { toBufDeviceProfileDocument } from '../services/legacy-codec';
 
 /**
  * Budget for the initial invitations snapshot. Bounded because `open()` sits on the client
@@ -263,7 +262,7 @@ export class InvitationsProxy implements Invitations {
       // silently stalling the accept RPC.
       subscriber: createObservable(
         this._invitationsService.acceptInvitation(
-          deviceProfile ? { invitation, deviceProfile: toBufDeviceProfileDocument(deviceProfile) } : { invitation },
+          deviceProfile ? { invitation, deviceProfile: deviceProfile } : { invitation },
         ),
       ),
       onCancel: async () => {

@@ -20,8 +20,8 @@ import { type KeyringApi, KeyringApiService } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { DeviceKind } from '@dxos/protocols/buf/dxos/client/services_pb';
-import { type Runtime_Client_EdgeFeatures } from '@dxos/protocols/buf/dxos/config_pb';
 import { Device } from '@dxos/protocols/buf/dxos/client/services_pb';
+import { type Runtime_Client_EdgeFeatures } from '@dxos/protocols/buf/dxos/config_pb';
 import { type FeedMessage } from '@dxos/protocols/buf/dxos/echo/feed_pb';
 import { type IdentityRecord, type SpaceMetadata } from '@dxos/protocols/buf/dxos/echo/metadata_pb';
 import {
