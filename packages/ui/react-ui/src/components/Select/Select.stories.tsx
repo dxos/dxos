@@ -85,7 +85,6 @@ export const TestSelect: StoryObj = {
     // The layout-variants decorator renders the story more than once; the first copy is exercised.
     const canvas = within(canvasElement);
     const trigger = canvas.getAllByRole('combobox')[0];
-    const picked = () => canvas.getAllByTestId('picked')[0];
     await waitFor(async () => expect(trigger.textContent).toContain('Two'));
     await userEvent.click(trigger);
     const listbox = await waitFor(async () => {
@@ -95,7 +94,7 @@ export const TestSelect: StoryObj = {
     });
     await expect(within(listbox).getAllByRole('option').length).toBe(4);
     await userEvent.click(within(listbox).getByRole('option', { name: 'Four' }));
-    await waitFor(async () => expect(picked().textContent).toBe('four'));
+    await waitFor(async () => expect(canvas.getAllByTestId('picked')[0].textContent).toBe('four'));
     await waitFor(async () => expect(document.querySelector('[role="listbox"]:not([hidden])')).toBeNull());
     await expect(trigger.textContent).toContain('Four');
     // Keyboard: open, step up past the disabled option, commit.
@@ -103,6 +102,6 @@ export const TestSelect: StoryObj = {
     await userEvent.keyboard('{ArrowDown}');
     await waitFor(async () => expect(document.querySelector('[role="listbox"]:not([hidden])')).not.toBeNull());
     await userEvent.keyboard('{ArrowUp}{Enter}');
-    await waitFor(async () => expect(picked().textContent).toBe('two'));
+    await waitFor(async () => expect(canvas.getAllByTestId('picked')[0].textContent).toBe('two'));
   },
 };

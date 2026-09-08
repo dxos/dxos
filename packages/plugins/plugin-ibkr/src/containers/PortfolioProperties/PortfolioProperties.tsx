@@ -9,7 +9,7 @@ import * as Operation from '@dxos/compute/Operation';
 import * as Trigger from '@dxos/compute/Trigger';
 import { Filter, Obj, Query } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
-import { Input, useTranslation } from '@dxos/react-ui';
+import { Field, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 
 import { Ibkr } from '#types';
@@ -53,10 +53,10 @@ export const PortfolioProperties = ({ subject }: PortfolioPropertiesProps) => {
 
   return (
     <Form.Section>
-      <Input.Root>
-        <Input.Label>{t('daily-sync.label')}</Input.Label>
-        <Input.Switch checked={syncEnabled ?? false} disabled={pending} onCheckedChange={handleToggleSync} />
-      </Input.Root>
+      <Field.Root>
+        <Field.Label>{t('daily-sync.label')}</Field.Label>
+        <Field.Switch checked={syncEnabled ?? false} disabled={pending} onCheckedChange={handleToggleSync} />
+      </Field.Root>
     </Form.Section>
   );
 };

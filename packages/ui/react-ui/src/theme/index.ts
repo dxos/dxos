@@ -15,7 +15,7 @@ export * from '../components/Card/Card.theme';
 export * from '../components/Dialog/Dialog.theme';
 export * from '../components/Focus/Focus.theme';
 export * from '../components/Icon/Icon.theme';
-export * from '../components/Input/Input.theme';
+export * from '../components/Field/Field.theme';
 export * from '../components/Link/Link.theme';
 export * from '../components/Main/Main.theme';
 export * from '../components/Menu/Menu.theme';

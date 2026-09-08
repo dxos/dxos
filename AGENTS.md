@@ -281,6 +281,12 @@ Deeper conventions:
   failure, not pre-existing; fix the root cause on the branch, never merge
   around it. Inspect: `gh run list --branch <branch> --workflow "Check"`, then
   `gh run view <id> --log-failed`.
+- **Check runs on Depot, not GitHub Actions** (`.depot/workflows/check.yml`), so the
+  GitHub API returns empty output for every `Check / …` check run and its `details_url`
+  redirects to SSO. That is not "logs unreachable": `DEPOT_TOKEN` is in the environment
+  and the `depot` CLI reads it — `depot ci logs <job-id>`, `depot tests <job-id> --ci`,
+  `depot ci diagnose --job <job-id>`, `depot ci retry <run-id> --job <job-id>`. The
+  `?job=` parameter of the check run's `details_url` is the job id. → `depot-ci` skill.
 - Commit hygiene → see "Commit nothing silently" in Non-negotiables.
 - Creating or landing a PR is a procedure — use the `submit-pr` and `land`
   skills. Always surface the Composer preview URL next to the PR link.
@@ -338,6 +344,9 @@ Do not paste real credential values into any shell command, and do not paste the
 - **Skills** (`.agents/skills/*`) — deep, task-specific how-to. Follow the
   relevant skill for the area you're working in (echo, effect, composer-ui,
   operations, testing, code-style, submit-pr, land, …).
+- **Reading a red `Check` run** — CI logs, failed test lists, failure diagnoses and
+  job retries via the `depot` CLI and `DEPOT_TOKEN` → `depot-ci` skill
+  (`.agents/skills/depot-ci/SKILL.md`).
 - **Flaky test quarantining** — investigating a flaky/red CI run or setting up
   Trunk test uploads → `trunk-quarantine` skill
   (`.agents/skills/trunk-quarantine/SKILL.md`); adding the Trunk MCP server →
@@ -347,6 +356,11 @@ Do not paste real credential values into any shell command, and do not paste the
   [`.agents/projects/sql-migrations/DESIGN.md`](.agents/projects/sql-migrations/DESIGN.md).
   Read it before reaching for Prisma: there is no driver adapter for the
   browser client, which is why the schema is hand-written SQL.
+- **Working a task with no questions asked** — `/autonomous [task]` pins a task the
+  session must finish against a written definition of done, resolving scope from a
+  verbatim log of what the user already said → `autonomous-mode` skill
+  (`.agents/skills/autonomous-mode/SKILL.md`); Claude-harness specifics in
+  `.claude/CLAUDE.md`.
 - **`REPOSITORY_GUIDE.md`** — toolchain setup, prerequisites, and how to run
   apps/services (Composer, Tasks, Docs).
 - **`OPS_GUIDE.md`** / **`TROUBLESHOOTING.md`** — operations and common issues.

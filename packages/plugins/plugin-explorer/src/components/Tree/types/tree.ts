@@ -179,11 +179,12 @@ export class Tree {
    * Clear tree.
    */
   clear(): void {
-    const root = this._tree.nodes[this._tree.root];
-    root.children.length = 0;
-    Obj.update(this._tree, (obj) => {
-      obj.nodes = {
-        [root.id]: root,
+    const rootId = this._tree.root;
+    Obj.update(this._tree, (tree) => {
+      const root = tree.nodes[rootId];
+      root.children.length = 0;
+      tree.nodes = {
+        [rootId]: root,
       };
     });
   }
@@ -198,9 +199,9 @@ export class Tree {
     }
 
     const nodeToAdd = node;
-    Obj.update(this._tree, (obj) => {
-      obj.nodes[nodeToAdd.id] = nodeToAdd;
-      parent.children.splice(index ?? parent.children.length, 0, nodeToAdd.id);
+    Obj.update(this._tree, (tree) => {
+      tree.nodes[nodeToAdd.id] = nodeToAdd;
+      tree.nodes[parent.id].children.splice(index ?? parent.children.length, 0, nodeToAdd.id);
     });
     return node;
   }
@@ -214,13 +215,13 @@ export class Tree {
       return undefined;
     }
 
-    Obj.update(this._tree, (obj) => {
-      delete obj.nodes[node.id];
+    Obj.update(this._tree, (tree) => {
+      delete tree.nodes[node.id];
     });
     const idx = parent.children.findIndex((child) => child === id);
     if (idx !== -1) {
-      Obj.update(this._tree, () => {
-        parent.children.splice(idx, 1);
+      Obj.update(this._tree, (tree) => {
+        tree.nodes[parent.id].children.splice(idx, 1);
       });
     }
 
@@ -238,9 +239,10 @@ export class Tree {
     }
 
     const child = node.children[from];
-    Obj.update(this._tree, () => {
-      node.children.splice(from, 1);
-      node.children.splice(to, 0, child);
+    Obj.update(this._tree, (tree) => {
+      const children = tree.nodes[node.id].children;
+      children.splice(from, 1);
+      children.splice(to, 0, child);
     });
     return this.getNode(child);
   }
@@ -260,9 +262,9 @@ export class Tree {
     }
 
     const previous = this.getNode(parent.children[idx - 1]);
-    Obj.update(this._tree, () => {
-      parent.children.splice(idx, 1);
-      previous.children.push(node.id);
+    Obj.update(this._tree, (tree) => {
+      tree.nodes[parent.id].children.splice(idx, 1);
+      tree.nodes[previous.id].children.push(node.id);
     });
   }
 
@@ -283,20 +285,21 @@ export class Tree {
     // Remove node from parent and get following siblings.
     const nodeIdx = parent.children.findIndex((id) => id === node.id);
     let rest: Key.EntityId[] = [];
-    Obj.update(this._tree, () => {
-      const removed = parent.children.splice(nodeIdx, parent.children.length - nodeIdx);
+    Obj.update(this._tree, (tree) => {
+      const children = tree.nodes[parent.id].children;
+      const removed = children.splice(nodeIdx, children.length - nodeIdx);
       rest = removed.slice(1); // Skip the node itself.
     });
 
     // Add to ancestor.
     const parentIdx = this.getChildNodes(ancestor).findIndex((n) => n.id === parent.id);
-    Obj.update(this._tree, () => {
-      ancestor.children.splice(parentIdx + 1, 0, node.id);
+    Obj.update(this._tree, (tree) => {
+      tree.nodes[ancestor.id].children.splice(parentIdx + 1, 0, node.id);
     });
 
     // Transplant following siblings to current node.
-    Obj.update(this._tree, () => {
-      node.children.push(...rest);
+    Obj.update(this._tree, (tree) => {
+      tree.nodes[node.id].children.push(...rest);
     });
   }
 }

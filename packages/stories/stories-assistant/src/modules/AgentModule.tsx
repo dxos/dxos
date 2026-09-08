@@ -5,7 +5,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Client } from '@dxos/agent-claude/client';
-import { Icon, IconButton, Input, Panel } from '@dxos/react-ui';
+import { Field, Icon, IconButton, Panel } from '@dxos/react-ui';
 import { ContentBlock } from '@dxos/types';
 import { mx } from '@dxos/ui-theme';
 
@@ -167,8 +167,8 @@ export const AgentModule = () => {
       </div>
 
       <div className='flex gap-2 items-center shrink-0'>
-        <Input.Root>
-          <Input.TextInput
+        <Field.Root>
+          <Field.Input
             classNames='flex-1 min-w-0'
             placeholder='Ask the agent…'
             value={prompt}
@@ -181,7 +181,7 @@ export const AgentModule = () => {
               }
             }}
           />
-        </Input.Root>
+        </Field.Root>
         <IconButton
           classNames='shrink-0'
           icon='ph--paper-plane-right--regular'

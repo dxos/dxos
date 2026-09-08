@@ -11,15 +11,16 @@ import { type EchoDatabase, type SpaceSyncState } from '@dxos/echo-client';
 import { type PublicKey, type SpaceId } from '@dxos/keys';
 import { type Messenger } from '@dxos/protocols';
 import { type Invitation } from '@dxos/protocols/buf/dxos/client/invitation_pb';
+import { type EdgeReplicationSetting } from '@dxos/protocols/buf/dxos/echo/metadata_pb';
+import { type MembershipPolicy } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import {
   type Contact,
   type Space as SpaceData,
   type SpaceMember,
   type SpaceState,
 } from '@dxos/protocols/proto/dxos/client/services';
-import { type EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { type SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
-import { type Credential, type Epoch, type MembershipPolicy } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { type Credential, type Epoch } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { type SpacesService } from '@dxos/protocols/rpc';
 
 import { type CancellableInvitation } from './invitations';

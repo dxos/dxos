@@ -17,7 +17,7 @@ import { type EdgeHttpClient } from '@dxos/edge-client';
 import { writeMessages } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { SpaceState } from '@dxos/protocols/proto/dxos/client/services';
+import { SpaceState } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 import { SpaceMember, type SpaceMember as SpaceMemberAssertion } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { openAndClose } from '@dxos/test-utils';
 

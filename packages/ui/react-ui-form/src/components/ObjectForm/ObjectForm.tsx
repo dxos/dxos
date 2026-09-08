@@ -56,7 +56,7 @@ export const ObjectForm = ({ object, type, schema, showTags = true }: ObjectForm
     const newObject = db.add(Obj.make(type, values));
     if (Obj.instanceOf(Tag.Tag, newObject)) {
       Obj.update(object, (object) => {
-        Obj.getMeta(object).tags = [...Obj.getMeta(object).tags, Ref.make(newObject)];
+        Obj.getMeta(object).tags.push(Ref.make(newObject));
       });
     }
   }, []);
@@ -89,7 +89,7 @@ export const ObjectForm = ({ object, type, schema, showTags = true }: ObjectForm
       // Handle other property changes.
       const nonTagPaths = changedPaths.filter((path) => SchemaEx.splitJsonPath(path)[0] !== META_TAGS_KEY);
       if (nonTagPaths.length > 0) {
-        Obj.update(object, () => {
+        Obj.update(object, (object) => {
           for (const path of nonTagPaths) {
             const parts = SchemaEx.splitJsonPath(path);
             const value = Obj.getValue(values, parts);

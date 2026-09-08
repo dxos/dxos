@@ -11,9 +11,6 @@ import { type MenuActions, type MenuItem, type MenuItemsAccessor } from '../type
 import { createMenuAction } from '../util';
 import { makeMenuActions, useMenuContribution, useMenuItems } from './useMenuActions';
 
-const createTestAction = (id: string, label: string): MenuItem =>
-  createMenuAction(id, () => {}, { label, icon: 'ph--star--regular' });
-
 const createMenu = (baseItems: MenuItem[] = []): MenuActions => {
   const baseItemsAtom = Atom.make<MenuItem[] | null>(baseItems);
   const items: MenuItemsAccessor = () => baseItemsAtom;
@@ -59,7 +56,11 @@ describe('useMenuContribution', () => {
     const menu = createMenu();
     render(
       <>
-        <Contributor menu={menu} id='test' items={[createTestAction('test-1', 'Test Action 1')]} />
+        <Contributor
+          menu={menu}
+          id='test'
+          items={[createMenuAction('test-1', () => {}, { label: 'Test Action 1', icon: 'ph--star--regular' })]}
+        />
         <Consumer menu={menu} />
       </>,
     );
@@ -68,10 +69,16 @@ describe('useMenuContribution', () => {
   });
 
   test('combines base items with contributions', ({ expect }) => {
-    const menu = createMenu([createTestAction('base-1', 'Base Action')]);
+    const menu = createMenu([
+      createMenuAction('base-1', () => {}, { label: 'Base Action', icon: 'ph--star--regular' }),
+    ]);
     render(
       <>
-        <Contributor menu={menu} id='test' items={[createTestAction('contrib-1', 'Contributed Action')]} />
+        <Contributor
+          menu={menu}
+          id='test'
+          items={[createMenuAction('contrib-1', () => {}, { label: 'Contributed Action', icon: 'ph--star--regular' })]}
+        />
         <Consumer menu={menu} />
       </>,
     );
@@ -85,8 +92,18 @@ describe('useMenuContribution', () => {
     const menu = createMenu();
     render(
       <>
-        <Contributor menu={menu} id='low' items={[createTestAction('low', 'Low')]} priority={200} />
-        <Contributor menu={menu} id='high' items={[createTestAction('high', 'High')]} priority={50} />
+        <Contributor
+          menu={menu}
+          id='low'
+          items={[createMenuAction('low', () => {}, { label: 'Low', icon: 'ph--star--regular' })]}
+          priority={200}
+        />
+        <Contributor
+          menu={menu}
+          id='high'
+          items={[createMenuAction('high', () => {}, { label: 'High', icon: 'ph--star--regular' })]}
+          priority={50}
+        />
         <Consumer menu={menu} />
       </>,
     );
@@ -96,15 +113,23 @@ describe('useMenuContribution', () => {
   });
 
   test('replacement mode overrides all items', ({ expect }) => {
-    const menu = createMenu([createTestAction('base-1', 'Base Action')]);
+    const menu = createMenu([
+      createMenuAction('base-1', () => {}, { label: 'Base Action', icon: 'ph--star--regular' }),
+    ]);
     render(
       <>
-        <Contributor menu={menu} id='additive' items={[createTestAction('add-1', 'Added')]} />
+        <Contributor
+          menu={menu}
+          id='additive'
+          items={[createMenuAction('add-1', () => {}, { label: 'Added', icon: 'ph--star--regular' })]}
+        />
         <Contributor
           menu={menu}
           id='replacement'
           mode='replacement'
-          items={[createTestAction('replacement-1', 'Replacement Only')]}
+          items={[
+            createMenuAction('replacement-1', () => {}, { label: 'Replacement Only', icon: 'ph--star--regular' }),
+          ]}
         />
         <Consumer menu={menu} />
       </>,
@@ -115,10 +140,16 @@ describe('useMenuContribution', () => {
   });
 
   test('removes the contribution when the contributor unmounts', ({ expect }) => {
-    const menu = createMenu([createTestAction('base-1', 'Base Action')]);
+    const menu = createMenu([
+      createMenuAction('base-1', () => {}, { label: 'Base Action', icon: 'ph--star--regular' }),
+    ]);
     const { rerender } = render(
       <>
-        <Contributor menu={menu} id='test' items={[createTestAction('contrib-1', 'Contributed Action')]} />
+        <Contributor
+          menu={menu}
+          id='test'
+          items={[createMenuAction('contrib-1', () => {}, { label: 'Contributed Action', icon: 'ph--star--regular' })]}
+        />
         <Consumer menu={menu} />
       </>,
     );

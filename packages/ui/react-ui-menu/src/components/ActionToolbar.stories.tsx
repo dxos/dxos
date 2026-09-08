@@ -8,7 +8,7 @@ import * as Atom from 'effect/unstable/reactivity/Atom';
 import React, { useContext, useMemo, useState } from 'react';
 
 import { random } from '@dxos/random';
-import { IconButton, Input, Toolbar } from '@dxos/react-ui';
+import { Field, IconButton, Toolbar } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
 import { withRegistry } from '@dxos/storybook-utils';
 
@@ -86,7 +86,7 @@ export const UseMenuActionsToolbar: Story = {
 };
 
 /**
- * Toolbar with both labeled and tooltip-only (iconOnly) Input.Switch items.
+ * Toolbar with both labeled and tooltip-only (iconOnly) Field.Switch items.
  */
 export const SwitchToolbar: Story = {
   render: () => {
@@ -120,9 +120,9 @@ export const TrailingChildren: Story = {
 
     return (
       <ActionToolbar {...menu} alwaysActive>
-        <Input.Root>
-          <Input.TextInput variant='subdued' placeholder='Filter…' classNames='grow min-w-40' />
-        </Input.Root>
+        <Field.Root>
+          <Field.Input variant='subdued' placeholder='Filter…' classNames='grow min-w-40' />
+        </Field.Root>
       </ActionToolbar>
     );
   },

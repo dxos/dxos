@@ -10,7 +10,7 @@ import { translations } from '#translations';
 
 import { withTheme } from '../../testing';
 import { type DateRange } from '../Calendar';
-import { Input } from '../Input';
+import { Field } from '../Field';
 import { DatePicker } from './DatePicker';
 
 const toTime = (date: Date | undefined) => (date ? format(date, 'HH:mm') : '');
@@ -67,9 +67,9 @@ export const SingleWithTime: Story = {
         <DatePicker.Trigger format='PPP p' />
         <DatePicker.Content>
           <DatePicker.Calendar />
-          <Input.Root>
-            <Input.Time value={toTime(value)} onValueChange={(next) => setValue(applyTime(value, next))} />
-          </Input.Root>
+          <Field.Root>
+            <Field.Time value={toTime(value)} onValueChange={(next) => setValue(applyTime(value, next))} />
+          </Field.Root>
         </DatePicker.Content>
       </DatePicker.Root>
     );
@@ -84,18 +84,18 @@ export const RangeWithTime: Story = {
         <DatePicker.Trigger format='PPP p' />
         <DatePicker.Content>
           <DatePicker.Calendar />
-          <Input.Root>
-            <Input.Time
+          <Field.Root>
+            <Field.Time
               value={toTime(value?.from)}
               onValueChange={(next) => setValue(value ? { ...value, from: applyTime(value.from, next) } : undefined)}
             />
-          </Input.Root>
-          <Input.Root>
-            <Input.Time
+          </Field.Root>
+          <Field.Root>
+            <Field.Time
               value={toTime(value?.to)}
               onValueChange={(next) => setValue(value?.from ? { ...value, to: applyTime(value.to, next) } : undefined)}
             />
-          </Input.Root>
+          </Field.Root>
         </DatePicker.Content>
       </DatePicker.Root>
     );

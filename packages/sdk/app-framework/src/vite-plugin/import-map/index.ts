@@ -449,7 +449,7 @@ export const importMapPlugin = (options?: { packages?: string[] }): Plugin[] => 
           // instead of the published `dist/` — bails out when `importer` is undefined, so an
           // importer-less `this.resolve(specifier)` falls through to the `default`/dist export.
           // That made wrapper chunks evaluate `dist/` while the host app evaluated `src/`,
-          // duplicating module-local identity (the private `ProxyHandlerSlot` class, `Ref`
+          // duplicating module-local identity (`Ref`
           // brand symbols, React contexts) and breaking `instanceof` across the host↔plugin
           // boundary. Passing a host-rooted importer makes `importSource` resolve these
           // wrappers to the exact same source module the host app uses.
@@ -510,8 +510,8 @@ export const importMapPlugin = (options?: { packages?: string[] }): Plugin[] => 
         // Re-export from the resolved absolute path, not the bare specifier. A bare re-export
         // would let Rolldown resolve `@dxos/echo` a second way (the host app reaches it via the
         // `source` export, this virtual module via the published `dist/`), evaluating the same
-        // source twice and duplicating module-local identity — the private `ProxyHandlerSlot`
-        // class, `Ref` brand symbols, React contexts — which breaks `instanceof` and context
+        // source twice and duplicating module-local identity — `Ref` brand symbols, the reactive
+        // handler singletons, React contexts — which breaks `instanceof` and context
         // lookups across the host↔remote-plugin boundary. The resolved id (see the importer
         // passed to `this.resolve` above) already points at the host's module.
         const filePath = trimQueryString(resolvedId);

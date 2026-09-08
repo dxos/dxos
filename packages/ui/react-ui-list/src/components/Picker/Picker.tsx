@@ -28,7 +28,7 @@ import React, {
 import {
   type Density,
   type Elevation,
-  Input,
+  Field,
   type ThemedClassName,
   composableProps,
   slottable,
@@ -276,8 +276,8 @@ const PickerInput = forwardRef<HTMLInputElement, PickerInputProps>(
     // Only force-control when `value` is provided; otherwise leave the
     // input uncontrolled so it accepts keystrokes without `onValueChange`.
     return (
-      <Input.Root>
-        <Input.TextInput
+      <Field.Root>
+        <Field.Input
           {...props}
           autoFocus={autoFocus && !hasIosKeyboard}
           {...(value !== undefined && { value })}
@@ -285,7 +285,7 @@ const PickerInput = forwardRef<HTMLInputElement, PickerInputProps>(
           onKeyDown={handleKeyDown}
           ref={forwardedRef}
         />
-      </Input.Root>
+      </Field.Root>
     );
   },
 );

@@ -19,8 +19,8 @@ import { useControllableState } from '@dxos/react-hooks';
 import {
   DX_ANCHOR_ACTIVATE,
   type DxAnchorActivate,
+  Field,
   Icon,
-  Input,
   Popover,
   ScrollArea,
   toLocalizedString,
@@ -56,7 +56,7 @@ export type EditorMenuProviderProps = PropsWithChildren<{
 
 /**
  * Implements the Popover and listens for the `dx-anchor-activate` event from the `popover` extension's decoration.
- * NOTE: We don't use DropdownMenu because the command menu needs to manage focus explicitly.
+ * NOTE: We don't use Menu because the command menu needs to manage focus explicitly.
  * I.e., focus must remain in the editor while displaying the menu (for type-ahead).
  */
 export const EditorMenuProvider = ({
@@ -205,8 +205,8 @@ export const EditorMenuProvider = ({
           onOpenAutoFocus={search ? undefined : (event) => event.preventDefault()}
         >
           {search && (
-            <Input.Root>
-              <Input.TextInput
+            <Field.Root>
+              <Field.Input
                 ref={searchInputRef}
                 density='sm'
                 variant='subdued'
@@ -219,7 +219,7 @@ export const EditorMenuProvider = ({
                 onChange={(event) => onQueryChange?.(event.target.value)}
                 onKeyDown={handleSearchKeyDown}
               />
-            </Input.Root>
+            </Field.Root>
           )}
           <Popover.Viewport asChild classNames='dx-expand'>
             <ScrollArea.Root thin>

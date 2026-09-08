@@ -100,12 +100,12 @@ const seedTaskSet = (space: Space) => {
   for (const props of seed) {
     const task = space.db.add(Task.make(props));
     Obj.update(set, (set) => {
-      set.tasks = [...set.tasks, Ref.make(task)];
+      set.tasks.push(Ref.make(task));
     });
   }
   for (const milestone of [roasting, launch]) {
     Obj.update(set, (set) => {
-      set.milestones = [...set.milestones, Ref.make(milestone)];
+      set.milestones.push(Ref.make(milestone));
     });
   }
 
@@ -238,7 +238,7 @@ export const Behavior: Story = {
       Task.make({ title: 'Order sample bags', status: 'todo', milestone: Ref.make(roasting) }),
     );
     Obj.update(taskSet, (taskSet) => {
-      taskSet.tasks = [...taskSet.tasks, Ref.make(added)];
+      taskSet.tasks.push(Ref.make(added));
     });
     await expect(canvas.findByText('Order sample bags', undefined, { timeout: 10_000 })).resolves.toBeTruthy();
 

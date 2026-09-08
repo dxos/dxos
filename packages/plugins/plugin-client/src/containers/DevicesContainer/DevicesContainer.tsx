@@ -73,23 +73,23 @@ export const DevicesContainer = ({ createInvitationUrl, identityTestActions }: D
               </Form.Group>
             </Form.Section>
             <Form.Section title={t('logout-section.title')} description={t('logout-section.description')}>
-              <Form.Row label={t('logout.label')} description={t('logout.description')}>
+              <Form.Field label={t('logout.label')} description={t('logout.description')}>
                 <Button variant='destructive' onClick={handleLogout} data-testid='devicesContainer.logout'>
                   {t('logout.label')}
                 </Button>
-              </Form.Row>
+              </Form.Field>
             </Form.Section>
             {identityTestActions && (
               <Form.Section
                 title={t('identity-test-section.title')}
                 description={t('identity-test-section.description')}
               >
-                <Form.Row label={t('recover-identity.label')} description={t('recover-identity.description')}>
+                <Form.Field label={t('recover-identity.label')} description={t('recover-identity.description')}>
                   <Button variant='destructive' onClick={handleRecover} data-testid='devicesContainer.recover'>
                     {t('recover-identity.label')}
                   </Button>
-                </Form.Row>
-                <Form.Row label={t('join-new-identity.label')} description={t('join-new-identity.description')}>
+                </Form.Field>
+                <Form.Field label={t('join-new-identity.label')} description={t('join-new-identity.description')}>
                   <Button
                     variant='destructive'
                     onClick={handleJoinNewIdentity}
@@ -97,7 +97,7 @@ export const DevicesContainer = ({ createInvitationUrl, identityTestActions }: D
                   >
                     {t('join-new-identity.label')}
                   </Button>
-                </Form.Row>
+                </Form.Field>
               </Form.Section>
             )}
           </Form.Content>

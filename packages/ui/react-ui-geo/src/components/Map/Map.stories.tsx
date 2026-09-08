@@ -5,7 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo, useState } from 'react';
 
-import { Input, Panel, Toolbar } from '@dxos/react-ui';
+import { Field, Panel, Toolbar } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { useMapZoomHandler } from '../../hooks';
@@ -27,14 +27,14 @@ const DefaultStory = ({ url: urlProp, markers = [] }: StoryArgs) => {
       {urlProp && (
         <Panel.Toolbar asChild>
           <Toolbar.Root>
-            <Input.Root>
-              <Input.TextInput
+            <Field.Root>
+              <Field.Input
                 spellCheck={false}
                 placeholder='API KEY'
                 value={key}
                 onChange={(ev) => setKey(ev.target.value)}
               />
-            </Input.Root>
+            </Field.Root>
           </Toolbar.Root>
         </Panel.Toolbar>
       )}

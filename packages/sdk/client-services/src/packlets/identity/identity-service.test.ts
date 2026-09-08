@@ -10,7 +10,9 @@ import { Context } from '@dxos/context';
 import { EffectEx } from '@dxos/effect';
 import { PublicKey } from '@dxos/keys';
 import { subscribeStream } from '@dxos/protocols';
-import { type Identity } from '@dxos/protocols/proto/dxos/client/services';
+import { buf, toPublicKey } from '@dxos/protocols/buf';
+import { type Identity } from '@dxos/protocols/buf/dxos/client/services_pb';
+import { ProfileDocumentSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { IdentityRecovery } from '@dxos/protocols/proto/dxos/halo/credentials';
 
 import { type ServiceContext } from '../services';
@@ -35,17 +37,19 @@ describe('IdentityService', () => {
     test('creates a new identity', async () => {
       const identity = await EffectEx.runPromise(identityService['IdentityService.createIdentity']({}));
 
-      expect(identity.identityKey).to.be.instanceof(PublicKey);
-      expect(identity.spaceKey).to.be.instanceof(PublicKey);
+      expect(toPublicKey(identity.identityKey)).to.be.instanceof(PublicKey);
+      expect(toPublicKey(identity.spaceKey)).to.be.instanceof(PublicKey);
     });
 
     test('creates a new identity with a display name', async () => {
       const identity = await EffectEx.runPromise(
-        identityService['IdentityService.createIdentity']({ profile: { displayName: 'Example' } }),
+        identityService['IdentityService.createIdentity']({
+          profile: buf.create(ProfileDocumentSchema, { displayName: 'Example' }),
+        }),
       );
 
-      expect(identity.identityKey).to.be.instanceof(PublicKey);
-      expect(identity.spaceKey).to.be.instanceof(PublicKey);
+      expect(toPublicKey(identity.identityKey)).to.be.instanceof(PublicKey);
+      expect(toPublicKey(identity.spaceKey)).to.be.instanceof(PublicKey);
       expect(identity.profile?.displayName).to.equal('Example');
     });
 
@@ -114,7 +118,7 @@ describe('IdentityService', () => {
       expect(identity.profile?.displayName).to.be.undefined;
 
       const updatedIdentity = await EffectEx.runPromise(
-        identityService['IdentityService.updateProfile']({ displayName: 'Example' }),
+        identityService['IdentityService.updateProfile'](buf.create(ProfileDocumentSchema, { displayName: 'Example' })),
       );
       expect(updatedIdentity.profile?.displayName).to.equal('Example');
     });

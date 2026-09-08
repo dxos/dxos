@@ -98,14 +98,17 @@ export const Stacked: StoryObj<{ overlap: boolean }> = {
 // Tests
 //
 
-const roots = () => [...document.querySelectorAll<HTMLElement>('[data-scope="toast"][data-part="root"]')];
-const group = () => document.querySelector<HTMLElement>('[data-scope="toast"][data-part="group"]')!;
 const closeToast = async (name: string) => {
-  const target = roots().find((root) => root.textContent!.includes(name))!;
+  const target = [...document.querySelectorAll<HTMLElement>('[data-scope="toast"][data-part="root"]')].find((root) =>
+    root.textContent?.includes(name),
+  );
+  if (!target) {
+    throw new Error(`No toast found with name: ${name}`);
+  }
   await userEvent.click(within(target).getByRole('button', { name: /close/i }));
 };
 const gapsBetweenRows = () => {
-  const rects = roots()
+  const rects = [...document.querySelectorAll<HTMLElement>('[data-scope="toast"][data-part="root"]')]
     .map((root) => root.getBoundingClientRect())
     .sort((a, b) => a.top - b.top);
   return rects.slice(1).map((rect, index) => Math.round(rect.top - rects[index].bottom));
@@ -147,7 +150,10 @@ export const TestLifecycle: StoryObj = {
     const toast = await waitFor(async () => {
       const element = status();
       await expect(element).not.toBeNull();
-      return element!;
+      if (!element) {
+        throw new Error('Toast status element not found');
+      }
+      return element;
     });
     await waitFor(async () => {
       const labelledBy = toast.getAttribute('aria-labelledby');
@@ -166,13 +172,23 @@ export const TestPile: StoryObj = {
     const button = within(canvasElement).getByRole('button', { name: 'Add toast' });
     for (let count = 1; count <= 3; count++) {
       await userEvent.click(button);
-      await waitFor(async () => expect(roots()).toHaveLength(count));
+      await waitFor(async () =>
+        expect([...document.querySelectorAll<HTMLElement>('[data-scope="toast"][data-part="root"]')]).toHaveLength(
+          count,
+        ),
+      );
     }
     await waitFor(async () => {
-      const scales = roots().map((root) => parseFloat(getComputedStyle(root).scale) || 1);
+      const scales = [...document.querySelectorAll<HTMLElement>('[data-scope="toast"][data-part="root"]')].map(
+        (root) => parseFloat(getComputedStyle(root).scale) || 1,
+      );
       await expect(scales.filter((scale) => scale < 1)).toHaveLength(2);
     });
-    await userEvent.hover(group());
+    const group = document.querySelector<HTMLElement>('[data-scope="toast"][data-part="group"]');
+    if (!group) {
+      throw new Error('Toast group element not found');
+    }
+    await userEvent.hover(group);
     await waitFor(async () => expect(gapsBetweenRows()).toEqual([8, 8]));
   },
 };
@@ -188,18 +204,34 @@ export const TestClosesRanks: StoryObj = {
     const button = within(canvasElement).getByRole('button', { name: 'Add toast' });
     for (let count = 1; count <= 7; count++) {
       await userEvent.click(button);
-      await waitFor(async () => expect(roots()).toHaveLength(count));
+      await waitFor(async () =>
+        expect([...document.querySelectorAll<HTMLElement>('[data-scope="toast"][data-part="root"]')]).toHaveLength(
+          count,
+        ),
+      );
     }
     await new Promise((resolve) => setTimeout(resolve, 600));
-    await expect(roots().filter((root) => getComputedStyle(root).opacity === '1')).toHaveLength(7);
-    await userEvent.hover(group());
+    await expect(
+      [...document.querySelectorAll<HTMLElement>('[data-scope="toast"][data-part="root"]')].filter(
+        (root) => getComputedStyle(root).opacity === '1',
+      ),
+    ).toHaveLength(7);
+    const group = document.querySelector<HTMLElement>('[data-scope="toast"][data-part="group"]');
+    if (!group) {
+      throw new Error('Toast group element not found');
+    }
+    await userEvent.hover(group);
     await new Promise((resolve) => setTimeout(resolve, 600));
     await closeToast('Toast 1');
     await closeToast('Toast 2');
     await closeToast('Toast 3');
-    await waitFor(async () => expect(roots()).toHaveLength(4));
+    await waitFor(async () =>
+      expect([...document.querySelectorAll<HTMLElement>('[data-scope="toast"][data-part="root"]')]).toHaveLength(4),
+    );
     await closeToast('Toast 6');
-    await waitFor(async () => expect(roots()).toHaveLength(3));
+    await waitFor(async () =>
+      expect([...document.querySelectorAll<HTMLElement>('[data-scope="toast"][data-part="root"]')]).toHaveLength(3),
+    );
     await waitFor(async () => expect(gapsBetweenRows()).toEqual([8, 8]));
   },
 };

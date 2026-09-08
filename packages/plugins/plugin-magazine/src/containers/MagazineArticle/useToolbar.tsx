@@ -83,7 +83,7 @@ export const useToolbar = ({ magazine }: UseToolbarProps) => {
         const subscription = feed?.target;
         if (Obj.instanceOf(Subscription.Subscription, subscription)) {
           Obj.update(magazine, (magazine) => {
-            magazine.feeds = [...magazine.feeds, Ref.make(subscription)];
+            magazine.feeds.push(Ref.make(subscription));
           });
         }
       }),

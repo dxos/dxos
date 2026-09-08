@@ -9,7 +9,7 @@ import { Trigger } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { EffectEx } from '@dxos/effect';
 import { subscribeStream } from '@dxos/protocols';
-import { ConnectionState } from '@dxos/protocols/proto/dxos/client/services';
+import { ConnectionState } from '@dxos/protocols/buf/dxos/client/services_pb';
 
 import { type ServiceContext } from '../services';
 import { createServiceContext } from '../testing';

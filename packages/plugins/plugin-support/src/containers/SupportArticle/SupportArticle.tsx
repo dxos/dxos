@@ -6,7 +6,7 @@ import React, { useCallback } from 'react';
 
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
-import { Button, Column, Flex, Input, Panel, ScrollArea, Toolbar, useTranslation } from '@dxos/react-ui';
+import { Button, Column, Field, Flex, Panel, ScrollArea, Toolbar, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';
 import { Support } from '#types';
@@ -69,24 +69,24 @@ export const SupportArticle = ({ role, subject: ticket }: SupportArticleProps) =
         <Column.Root>
           <ScrollArea.Root orientation='vertical' padding>
             <ScrollArea.Viewport>
-              <Input.Root>
-                <Input.Label>{t('title.label')}</Input.Label>
-                <Input.TextInput value={ticket.title ?? ''} onChange={(event) => handleSetTitle(event.target.value)} />
-              </Input.Root>
+              <Field.Root>
+                <Field.Label>{t('title.label')}</Field.Label>
+                <Field.Input value={ticket.title ?? ''} onChange={(event) => handleSetTitle(event.target.value)} />
+              </Field.Root>
 
-              <Input.Root>
-                <Input.Label>{t('body.label')}</Input.Label>
-                <Input.TextArea value={ticket.body ?? ''} onChange={(event) => handleSetBody(event.target.value)} />
-              </Input.Root>
+              <Field.Root>
+                <Field.Label>{t('body.label')}</Field.Label>
+                <Field.Textarea value={ticket.body ?? ''} onChange={(event) => handleSetBody(event.target.value)} />
+              </Field.Root>
 
               {status === 'resolved' && (
-                <Input.Root>
-                  <Input.Label>{t('resolution.label')}</Input.Label>
-                  <Input.TextArea
+                <Field.Root>
+                  <Field.Label>{t('resolution.label')}</Field.Label>
+                  <Field.Textarea
                     value={ticket.resolution ?? ''}
                     onChange={(event) => handleSetResolution(event.target.value)}
                   />
-                </Input.Root>
+                </Field.Root>
               )}
 
               <Flex gap='sm' align='center'>

@@ -75,7 +75,12 @@ export const createGuardedInvitationState = (
   };
 };
 
-const logStateUpdate = (invitation: Invitation, actor: any, newState: Invitation_State, error?: Error) => {
+const logStateUpdate = (
+  invitation: Invitation,
+  actor: FlowLockHolder | null | undefined,
+  newState: Invitation_State,
+  error?: Error,
+) => {
   const logContext = {
     invitationId: invitation.invitationId,
     actor: actor?.constructor.name,

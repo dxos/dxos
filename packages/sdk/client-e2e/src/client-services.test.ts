@@ -15,7 +15,8 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { toPublicKey } from '@dxos/protocols/buf';
 import { Invitation_AuthMethod, Invitation_State } from '@dxos/protocols/buf/dxos/client/invitation_pb';
-import { Device, DeviceKind, SpaceMember } from '@dxos/protocols/proto/dxos/client/services';
+import { DeviceKind } from '@dxos/protocols/buf/dxos/client/services_pb';
+import { Device, SpaceMember } from '@dxos/protocols/proto/dxos/client/services';
 
 // TODO(burdon): Use as set-up for test suite.
 // TODO(burdon): Timeouts and progress callback/events.
@@ -147,8 +148,12 @@ describe('Client services', () => {
 
     // Check same identity.
     expect(hostInvitation!.identityKey).not.to.exist;
-    expect(toPublicKey(guestInvitation?.identityKey)).to.deep.eq(client1.halo.identity.get()!.identityKey);
-    expect(toPublicKey(guestInvitation?.identityKey)).to.deep.eq(client2.halo.identity.get()!.identityKey);
+    const identity1 = client1.halo.identity.get();
+    invariant(identity1);
+    const identity2 = client2.halo.identity.get();
+    invariant(identity2);
+    expect(toPublicKey(guestInvitation?.identityKey)).to.deep.eq(identity1.identityKey);
+    expect(toPublicKey(guestInvitation?.identityKey)).to.deep.eq(identity2.identityKey);
     expect(hostInvitation?.state).to.eq(Invitation_State.SUCCESS);
     expect(guestInvitation?.state).to.eq(Invitation_State.SUCCESS);
 
@@ -234,10 +239,13 @@ describe('Client services', () => {
     log('invitation complete');
 
     // TODO(burdon): Space should now be available?
+    invariant(guestInvitation);
+    const guestSpaceKey = toPublicKey(guestInvitation.spaceKey);
+    invariant(guestSpaceKey);
     const trigger = new Trigger<Space>();
     await expect
       .poll(() => {
-        const guestSpace = client2.spaces.get(toPublicKey(guestInvitation!.spaceKey)!);
+        const guestSpace = client2.spaces.get(guestSpaceKey);
         invariant(guestSpace);
         trigger.wake(guestSpace);
         return guestSpace;

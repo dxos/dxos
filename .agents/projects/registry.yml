@@ -6,6 +6,26 @@
 # status: active | paused | blocked | ended
 
 projects:
+  - name: echo-plain-objects
+    status: active
+    user: dmaretskyi
+    host: cloud-sandbox
+    created: 2026-09-05
+    summary: 'Take the cost of the JS Proxy off the ECHO object read path. Delivered: the object stays a Proxy, but its target carries the record as own data properties, so the get trap is dropped and the engine forwards every read to the target — reads fell from 297/1690/271ns (unpersisted/automerge/feed) to ~25ns, flat in object width. Motivated by echo-client-e2e/property-access.bench.ts.'
+    tasks: .agents/projects/echo-plain-objects/TASKS.md
+    design: .agents/projects/echo-plain-objects/DESIGN.md
+    prs: [12951]
+    resume: 'PR #12951 open. Stage E was rebuilt after the abandonment in D12 proved unfounded (D14): one shared REACTIVE_PROXY_HANDLER, no get trap, key-set traps gone. Since then: the read-only gate is unified and fail-closed, the change context is REFERENCE-BASED (Obj.update hands the callback a mutable view; the outer reference stays read-only), consistent-update-param is an error with 87 sites migrated, and _proxyMap/symbolHandler/event-batch dead code is removed. OUTSTANDING: plugin-magazine postReadAtom throws via effect Hash.structure because Reflect.ownKeys now exposes the internal symbols to the hasher (dropping the ownKeys trap in cf4c23bf made it reachable; pre-dates the reference-based work, proved by A/B against ef2b9fe7) — fix is a minimal ownKeys trap filtering only internal symbols, awaiting the go-ahead. Use the depot-ci skill for Check logs and retries.'
+  - name: blade-runner-edge-stress
+    status: active
+    user: mykola
+    host: cloud-sandbox
+    created: 2026-08-27
+    summary: 'Randomized, model-checked end-to-end test in blade-runner: a fleet of real clients replicating through EDGE, driven by a seeded command sequence against an in-memory model; main assertion is full convergence (all peers equal the model). Goals: design -> local edge -> preview env with post-run cleanup -> nightly CI.'
+    tasks: .agents/projects/blade-runner-edge-stress/TASKS.md
+    design: .agents/projects/blade-runner-edge-stress/DESIGN.md
+    prs: [12817]
+    resume: "PR #12817 OPEN (https://github.com/dxos/dxos/pull/12817). Phases 0-2 done; runs reach local EDGE and execute real command sequences. The generator was rewritten: `fc.commands` is state-blind and `asyncModelRun` silently drops failed preconditions, so plans of 25 executed 3-5; each command's model transition (`advance`) is now split from its system half, a pool is simulated against a pure `makeFleetModel` before anything spawns, and only the survivors are recorded and run (25/25 executable, 9-16 data ops). Three modelling errors found and fixed by running: membership is not per-device possession (`knownBy`), a document is not instantly everywhere (`#findDocument` waits), and convergence is temporal so checkpoints retry within the quiescence budget. Open findings in RESULTS.md §4: (5) cutting the EDGE link crashes the peer - `EdgeFeedReplicator`'s async `append` listener leaks an unhandled rejection, so `partitions: false` exists to work around it; (6) a document is discovered but never delivered - `sync did not quiesce for space 1 within 60000ms`, with `AutomergeHost: collection sync not converging` naming the doc. NEXT: link the edge stack to this checkout (`pnpm link-packages ../dxos --all --install`) and repeat the run-D seed to confirm finding 6 upstream; then Phase 1's remaining fixture-scale task and the preview-env run."
   - name: agent-process-edge
     status: active
     user: dmaretskyi
@@ -54,7 +74,7 @@ projects:
     summary: 'Adoption of @ark-ui/react (Zag state machines) — Phase 1 rebuilt Tree in @dxos/react-ui-list on ark TreeView (APG keymap, machine-owned focus and ARIA); Phase 7 rebuilt react-ui-task on it; Phase 16 plans the migration of @dxos/react-ui itself from Radix to Ark (packages/ui/react-ui/docs/MIGRATION.md).'
     tasks: .agents/projects/ark/TASKS.md
     design: packages/ui/react-ui-list/docs/TREE.md
-    prs: [12873, 12890, 12902, 12961]
+    prs: [12873, 12890, 12902, 12961, 12971, 12987]
     resume: 'PRs #12873 and #12890 MERGED (12890 on 2026-09-02: react-ui-task rebuilt on the Tree, Phases 7/14/15 done, three CI regressions fixed at root cause). NOW PLANNING Phase 16 — migrating @dxos/react-ui from Radix to Ark: the plan is packages/ui/react-ui/docs/MIGRATION.md (commit 8a81160f5b; inventory of all 42 components, Radix-to-Ark primitive map and gaps, scaffolding used by 28 sibling packages, six landable phases). Its Phase 0 — port Carousel, Editable, Splitter, Stepper — is IN FLIGHT as background task task_2d437290 on its own worktree from main; do not duplicate it. Calendar and DatePicker are NOT hand-built (react-aria-components) and are a decision, not a port. Phase 1 (own the scaffolding in react-primitives) is the recommended next step and is worth doing regardless. STILL OPEN from earlier: Phase 13 checkbox selection + delegate-to-agent in plugin-projects/plugin-tasks; Phase 15 follow-up re-routing the promoted link through something the host owns; the ProcessTree collapse-height defect; withPluginManager stories not seeding in the agent browser. UNOWNED: Tree drag is native HTML5 DnD and does not fire from touch in iPhone WKWebView (Tauri mobile) — verify on device before planning. Bundle and maintenance numbers are in MIGRATION.md Appendix A; do not re-measure.'
   - name: ui-theme-tree
     status: active
