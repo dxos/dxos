@@ -8,7 +8,6 @@ import type * as Observability from '@dxos/observability/Observability';
 
 import * as SupportOperation from './SupportOperation';
 
-/** Just the support slice of Observability; the rest is never touched here. */
 const observabilityWith = (support: Observability.Observability['support']): Observability.Observability =>
   ({ support }) as unknown as Observability.Observability;
 

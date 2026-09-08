@@ -263,7 +263,6 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Observabi
           await traces?.flush();
         }),
       setTags: (incomingTags, kind) => {
-        // The worker's log sink only ever sees log tags, so both scopes reach it the same way.
         const target = kind === 'logs' ? logTags : tags;
         for (const [key, value] of Object.entries(incomingTags)) {
           target.set(key, value);

@@ -25,8 +25,6 @@ export type ScreenshotAttachment = {
 };
 
 /**
- * Shared "attach screenshot" step for the FeedbackPanel submit path.
- *
  * Collapses the help companion first so the capture shows the screen being reported rather than
  * the form itself, then captures and uploads. Best-effort throughout: a failure yields
  * `{ failed: true }` instead of throwing, since filing the report matters more than the image.

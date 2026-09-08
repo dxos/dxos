@@ -176,19 +176,14 @@ export type Mcp = {
 };
 
 /**
- * Support extension API (kind-specific methods only). The ticket itself is filed by a backend;
- * the extension supplies what only the browser has: the log dump and the session context.
+ * Support extension API (kind-specific methods only).
  */
+export type SupportLogTags = { ticketId: string } | { reportId: string };
+
 export type Support = {
-  /** Uploads the buffered debug logs to long-lived storage; resolves with the key, or undefined when nothing went. */
   uploadLogs(): Promise<string | undefined>;
-  /** The telemetry session to anchor the ticket to, if this extension has one. */
   sessionContext(): SupportSessionContext | undefined;
-  /**
-   * Ships the buffered debug logs to the extension's log store, every record stamped with the
-   * given attributes: the ticket id for a support report, the report id for a team issue.
-   */
-  flushLogs(attributes: Record<string, string>): Promise<void>;
+  flushLogs(attributes: SupportLogTags): Promise<void>;
 };
 
 export type ExtensionApi =
@@ -204,8 +199,8 @@ export type ExtensionApi =
   | ExtensionApiBase<'traces'>;
 
 /**
- * What a browser knows about its own telemetry session, for a backend that files the ticket on
- * its behalf. Shaped after what posthog-js's own widget sends.
+ * What a browser knows about its own telemetry session. Shaped after what posthog-js's own widget
+ * sends.
  */
 export type SupportSessionContext = {
   distinctId: string;
@@ -221,15 +216,13 @@ export type SupportSessionContext = {
  */
 export type Attributes = Record<string, string | number | boolean | undefined>;
 
-/**
- * Implementation of an observability extension API.
- */
-/** What an extension may reach back into once it is initialized. */
 export type ExtensionContext = {
-  /** Tag every signal, or only the signals of one kind, on every extension that emits them. */
   setTags(tags: Attributes, kind?: Kind): void;
 };
 
+/**
+ * Implementation of an observability extension API.
+ */
 export type Extension = {
   initialize?(context: ExtensionContext): Effect.Effect<void, Error>;
   close?(): Effect.Effect<void>;
@@ -238,7 +231,6 @@ export type Extension = {
   flush?(): Effect.Effect<void>;
   identify?(distinctId: string, attributes?: Attributes, setOnceAttributes?: Attributes): void;
   alias?(distinctId: string, previousId?: string): void;
-  /** `kind` narrows the tags to one signal kind; without it they apply to everything the extension emits. */
   setTags?(tags: Record<string, string>, kind?: Kind): void;
   enabled: boolean;
   apis: ExtensionApi[];

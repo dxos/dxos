@@ -26,7 +26,7 @@ const FeedbackFormStory = ({ hidden, onSubmit, onDownloadLogs, discordPresence }
       <Form.Content>
         <Form.FieldSet />
         <FeedbackForm.DownloadLogs onDownloadLogs={onDownloadLogs} />
-        <FeedbackForm.Submit variant='discord' />
+        <FeedbackForm.Submit />
         <FeedbackForm.DiscordPresence discordPresence={discordPresence} />
       </Form.Content>
     </Form.Viewport>

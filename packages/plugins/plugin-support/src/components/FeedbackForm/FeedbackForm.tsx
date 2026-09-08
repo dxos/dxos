@@ -18,14 +18,12 @@ import type { FeedbackPluginOption } from './types';
 
 const FEEDBACK_FORM = 'FeedbackForm';
 
-/** The form's submit handler, given to `FeedbackForm.Root`; button clicks and Enter both reach it. */
 export type FeedbackSubmitHandler = (
   values: SupportOperation.SupportRequest,
   meta: FormUpdateMeta<SupportOperation.SupportRequest>,
 ) => void | Promise<void>;
 
 type FeedbackFormContextValue = {
-  /** True while a submission is in flight. */
   pending: boolean;
 };
 
@@ -48,11 +46,6 @@ const baseDefaults: SupportOperation.SupportRequest = {
 // Root
 //
 
-/**
- * Headless provider + `Form.Root` for support feedback. Compose `Form.Viewport` / `Form.Content` /
- * `Form.FieldSet` with the `FeedbackForm.*` parts; the submit handler lives on the root so the
- * button and the Enter key share it.
- */
 const FeedbackFormRoot = ({ children, onSubmit, hidden, plugins }: FeedbackFormRootProps) => {
   // Submission is async (screenshot capture, PostHog/Discord round-trip); surface it so the form
   // cannot be double-submitted while it runs.
@@ -152,32 +145,24 @@ const FeedbackFormDownloadLogs = ({ onDownloadLogs }: FeedbackFormDownloadLogsPr
 
 FeedbackFormDownloadLogs.displayName = `${FEEDBACK_FORM}.DownloadLogs`;
 
-//
-// Submit
-//
-
 export type FeedbackFormSubmitProps = {
-  /** Where the report goes: a public Discord thread as well as the ticket, or the ticket alone. */
-  variant?: 'discord' | 'ticket';
   disabled?: boolean;
 };
 
-/**
- * The submit button, reflecting the form's in-flight state: a spinner and the pending label while
- * the submission runs, disabled until it settles.
- */
-const FeedbackFormSubmit = ({ variant = 'ticket', disabled }: FeedbackFormSubmitProps) => {
+const FeedbackFormSubmit = ({ disabled }: FeedbackFormSubmitProps) => {
   const { t } = useTranslation(meta.profile.key);
   const { pending } = useFeedbackFormContext(`${FEEDBACK_FORM}.Submit`);
-  const label = variant === 'discord' ? t('send-feedback.label') : t('send-report.label');
 
   return (
-    <Form.Submit
-      classNames={pending ? '[&_svg]:animate-spin' : undefined}
-      icon={pending ? 'ph--spinner-gap--regular' : 'ph--paper-plane-tilt--regular'}
-      label={pending ? t('sending-feedback.label') : label}
-      disabled={disabled || pending || undefined}
-    />
+    <>
+      <p className='text-xs text-description text-center px-2 py-1'>{t('public-report.description')}</p>
+      <Form.Submit
+        classNames={pending ? '[&_svg]:animate-spin' : undefined}
+        icon={pending ? 'ph--spinner-gap--regular' : 'ph--paper-plane-tilt--regular'}
+        label={pending ? t('sending-feedback.label') : t('send-feedback.label')}
+        disabled={disabled || pending || undefined}
+      />
+    </>
   );
 };
 

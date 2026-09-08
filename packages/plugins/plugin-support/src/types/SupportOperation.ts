@@ -29,12 +29,7 @@ export const Severity = Schema.Literals(['High priority', 'Medium priority', 'Lo
 });
 export type Severity = Schema.Schema.Type<typeof Severity>;
 
-/**
- * Form payload for the FeedbackPanel submit action. `version` is a hidden form field populated by
- * the panel from runtime config and forwarded to the backend for triage. `area`, `type`, and
- * `severity` are optional triage metadata — they ride on the private support ticket, not the public
- * Discord post, so the form defaults them to unset rather than guessing.
- */
+/** Form payload for the FeedbackPanel submit action. */
 export const SupportRequest = Schema.Struct({
   title: Schema.String.pipe(
     Schema.check(Schema.isNonEmpty()),
@@ -61,8 +56,7 @@ export const SupportRequest = Schema.Struct({
   image: Schema.Boolean.pipe(
     Schema.annotate({
       title: 'Attach screenshot',
-      description:
-        'Capture the current view and attach it to the report. Sent to our team only — never posted publicly.',
+      description: 'Capture the current view and attach it to the report. Posted publicly with the report.',
     }),
     Schema.optional,
   ),
@@ -79,7 +73,6 @@ export const SupportRequest = Schema.Struct({
 
 export type SupportRequest = Schema.Schema.Type<typeof SupportRequest>;
 
-/** What filing a report produced: the PostHog ticket, and the public thread when one opened. */
 export const SupportReportResult = Schema.Struct({
   ticketId: Schema.String,
   threadUrl: Schema.optional(Schema.String),
@@ -87,11 +80,6 @@ export const SupportReportResult = Schema.Struct({
 
 export type SupportReportResult = Schema.Schema.Type<typeof SupportReportResult>;
 
-/**
- * Files a user report through the support service, which creates the PostHog ticket, notes where
- * the logs went, and opens the public Discord thread. Distinct from {@link CreateTicket}, which
- * creates an ECHO `Support.Ticket` in a space.
- */
 export const SubmitReport = Operation.make({
   meta: {
     key: DXN.make('org.dxos.operation.support.submitReport'),
@@ -102,15 +90,12 @@ export const SubmitReport = Operation.make({
   services: [Capability.Service],
   input: Schema.Struct({
     report: SupportRequest,
-    /** The reporter's identity, for the team's account lookup; absent when there is none yet. */
     did: Schema.optional(Schema.String),
-    /** Public URL of the captured screenshot, when the reporter attached one. */
     screenshotUrl: Schema.optional(Schema.String),
   }),
   output: SupportReportResult,
 });
 
-/** What filing a team issue produced: the Linear issue, and the id the flushed logs are tagged with. */
 export const SupportIssueResult = Schema.Struct({
   reportId: Schema.String,
   issueId: Schema.String,
@@ -120,11 +105,6 @@ export const SupportIssueResult = Schema.Struct({
 
 export type SupportIssueResult = Schema.Schema.Type<typeof SupportIssueResult>;
 
-/**
- * The team's own path: files the report straight to Linear through the support service, with the
- * logs and session attached, and no support ticket or public thread. The service refuses any
- * identity the hub does not know as an internal account.
- */
 export const SubmitIssue = Operation.make({
   meta: {
     key: DXN.make('org.dxos.operation.support.submitIssue'),
@@ -135,13 +115,11 @@ export const SubmitIssue = Operation.make({
   services: [Capability.Service],
   input: Schema.Struct({
     report: SupportRequest,
-    /** Public URL of the captured screenshot, when one was attached. */
     screenshotUrl: Schema.optional(Schema.String),
   }),
   output: SupportIssueResult,
 });
 
-/** The support service, reached through EDGE unless an explicit endpoint is configured. */
 export const supportEndpoint = (config: Config): string | undefined =>
   getEnvString(config, 'DX_DISCORD_SERVICE_URL') ?? getEdgeServiceEndpoint(config, EdgeServiceName.Discord);
 
@@ -153,11 +131,6 @@ export type SubmitSupportReportOptions = {
   screenshotUrl?: string;
 };
 
-/**
- * The submit, in order: upload the log dump (its key travels with the report), ask the support
- * service to file everything, then ship the same dump to PostHog Logs tagged with the ticket. The
- * last step is detached: the ticket and thread exist by then, and the dump can be large.
- */
 export const submitSupportReport = async ({
   endpoint,
   observability,
@@ -202,11 +175,6 @@ export type SubmitSupportIssueOptions = {
   screenshotUrl?: string;
 };
 
-/**
- * Same order as {@link submitSupportReport}, against the service's `/issue` route: upload the
- * dump, file the issue, then flush the dump to PostHog Logs tagged with the report id the
- * service minted. A 403 means the identity is not an internal account.
- */
 export const submitSupportIssue = async ({
   endpoint,
   observability,
@@ -235,7 +203,6 @@ export const submitSupportIssue = async ({
     throw new Error('Filing Linear issues is limited to internal accounts.');
   }
   if (!response.ok) {
-    // The service answers `{ error }` naming which step failed; say so rather than just the status.
     const detail = await response
       .text()
       .then((text) => text.slice(0, 200))

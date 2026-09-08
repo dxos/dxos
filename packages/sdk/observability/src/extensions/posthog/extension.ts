@@ -22,10 +22,6 @@ import {
 } from './llm-analytics';
 import { otelDestination } from './otel-destination';
 
-/**
- * Where the browser keeps the id the widget API uses for access control on anonymous tickets.
- * One per browser profile, minted on first use, so a person's tickets stay reachable together.
- */
 const WIDGET_SESSION_STORAGE_KEY = 'dxos.support.widgetSessionId';
 
 const widgetSessionId = (): string => {
@@ -48,7 +44,6 @@ export type ExtensionsOptions = {
   release?: string;
   /** Deployment environment, e.g. `production` or `staging`. */
   environment?: string;
-  /** `service.name` on the log records a support ticket flushes to PostHog Logs. */
   serviceName?: string;
   posthog?: Partial<PostHogConfig>;
   /**
@@ -140,9 +135,6 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Observabi
     const { logProcessor } = yield* Effect.promise(() => import('./log-processor'));
     let unregisterPosthogProcessors: (() => void) | undefined;
 
-    // The last dump uploaded, kept so the flush to PostHog Logs does not export the store again.
-    let lastDump: string | undefined;
-
     return {
       initialize: (context) =>
         Effect.sync(() => {
@@ -163,9 +155,8 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Observabi
           }
           unregisterPosthogProcessors?.();
           const removePosthogLog = log.addProcessor(logProcessor);
-          // PostHog links a log record to the session replay through a log attribute named
-          // `sessionId` carrying its own session id, which rotates; distinct from the OTel
-          // `session.id` resource attribute the OTel extension mints once per boot.
+          // PostHog joins a log record to its session replay on a log attribute literally named
+          // `sessionId` — not the OTel `session.id` resource attribute — and rotates that id.
           const tagSession = () => context.setTags({ sessionId: posthog.get_session_id() }, 'logs');
           const removeSessionListener = posthog.onSessionId(tagSession);
           tagSession();
@@ -232,7 +223,6 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Observabi
             if (ndjson.length === 0) {
               return undefined;
             }
-            lastDump = ndjson;
             return (await uploadLogs(feedbackLogsEndpoint, ndjson)) ?? 'failed';
           },
           sessionContext: () => {
@@ -252,15 +242,12 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Observabi
               return undefined;
             }
           },
-          // The dump can run to tens of MB and ships after the ticket exists; a failure here loses
-          // the PostHog copy, never the ticket or the R2 copy.
           flushLogs: async (attributes) => {
             const destination = otelDestination(config);
             if (!destination) {
               return;
             }
-            const ndjson = lastDump ?? (await logStore?.export({ maxSize: feedbackLogMaxSize }));
-            lastDump = undefined;
+            const ndjson = await logStore?.export({ maxSize: feedbackLogMaxSize });
             if (!ndjson || ndjson.length === 0) {
               return;
             }

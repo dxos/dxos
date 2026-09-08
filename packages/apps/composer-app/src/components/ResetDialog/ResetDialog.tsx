@@ -50,7 +50,6 @@ export type ResetDialogProps = Pick<AlertDialogRootProps, 'defaultOpen' | 'open'
   error?: Error;
   logStore: IdbLogStore;
   observability?: Promise<Observability.Observability>;
-  /** The support service; without it the dialog offers no report form. */
   supportEndpoint?: string;
   needRefresh?: boolean;
   onRefresh?: () => void;
@@ -110,8 +109,6 @@ export const ResetDialog = ({
         return;
       }
 
-      // The same route the feedback panel uses, thread included. No identity here: the dialog
-      // shows when the client itself may have failed to start.
       const observability = await observabilityProp;
       void SupportOperation.submitSupportReport({ endpoint: supportEndpoint, observability, report: values }).catch(
         (err) => log.warn('crash report not filed', { err }),

@@ -24,7 +24,6 @@ const handler: Operation.WithHandler<typeof SupportOperation.SubmitIssue> = Supp
       if (!did) {
         return yield* Effect.fail(new Error('No identity to file the issue as.'));
       }
-      // The version is what the feedback panel fills in for the user; a console command has no panel.
       const version = input.report.version ?? client.config.values.runtime?.app?.build?.version;
       return yield* Effect.tryPromise({
         try: () =>

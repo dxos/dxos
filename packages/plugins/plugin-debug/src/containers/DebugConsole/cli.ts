@@ -64,7 +64,6 @@ const format = (value: unknown): string => {
   if (value === undefined) {
     return 'undefined';
   }
-  // A string result is a message, not data; quoting it would turn `DX-1 https://…` into JSON.
   if (typeof value === 'string') {
     return value;
   }
@@ -207,8 +206,6 @@ const makeCommand = (options: DebugCliOptions = {}) => {
       }),
   ).pipe(Command.withDescription('Evaluate a snippet with `dxos` and `composer` in scope.'));
 
-  // Invoked by key so the console stays free of plugin-support; the operation refuses any
-  // identity the hub does not know as an internal account, so there is no gate here.
   const report = Command.make(
     'report',
     {

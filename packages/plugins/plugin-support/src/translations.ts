@@ -48,7 +48,6 @@ export const translations = [
         'feedback-textarea.placeholder': 'Please enter your feedback, technical issue, or feature request.',
         'include-debug-logs.label': 'Include debug logs',
         'send-feedback.label': 'Submit report to Discord',
-        'send-report.label': 'Submit report',
         'sending-feedback.label': 'Sending…',
         'public-report.description':
           'Posted publicly to our Discord help channel, screenshot included. Logs go to the Composer team only.',

@@ -20,8 +20,6 @@ import { translations } from '#translations';
 
 import { FeedbackPanel } from './FeedbackPanel';
 
-// Minimal Observability stub — just the support slice the submit path touches. The full
-// interface is large; the cast keeps the story fixture readable.
 const makeObservability = (): Observability.Observability =>
   ({
     isAvailable: () => Effect.succeed(true),
@@ -89,7 +87,6 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-/** Support is available; the submit path logs to the console. */
 export const Default: Story = {
   decorators: [
     withPluginManager({

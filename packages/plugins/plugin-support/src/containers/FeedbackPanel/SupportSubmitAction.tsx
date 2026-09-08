@@ -30,15 +30,8 @@ type Toast = {
 };
 
 /**
- * The one submit path: the support service files the PostHog ticket, notes where the logs went,
- * and opens the public help thread; this takes the user there. No ticket means the form stays
- * open with an error toast. A thread that failed to open never loses the ticket; the success
- * toast just falls back to the plain one.
- *
- * The thread is handed over through the toast's "Open thread" button, never opened by the app: the
- * URL comes back well past the few seconds a browser honours `window.open` after a click, so an
- * automatic open was blocked more often than not. The toast stays until dismissed, since the button
- * is the only way to the thread.
+ * The thread URL arrives well past the few seconds a browser honours `window.open` after a click,
+ * so the app never opens it: the toast's action button does, inside a fresh user gesture.
  */
 export const useSupportSubmit = (): FeedbackSubmitHandler => {
   const { invokePromise } = useOperationInvoker();
@@ -66,7 +59,6 @@ export const useSupportSubmit = (): FeedbackSubmitHandler => {
         });
       const collapse = () => invokePromise(LayoutOperation.UpdateComplementary, { state: 'collapsed' });
 
-      // Capture before submitting, while the reported screen is still on-screen.
       const screenshot = await attachScreenshot(values);
 
       const { data: result, error } = await invokePromise(SupportOperation.SubmitReport, {
@@ -75,7 +67,6 @@ export const useSupportSubmit = (): FeedbackSubmitHandler => {
         screenshotUrl: screenshot.url,
       });
       if (error || !result) {
-        // The panel stays open so nothing the user typed is lost.
         log.error('support report not filed', { error });
         await showToast({
           id: 'feedback-failed',
@@ -112,10 +103,6 @@ export const useSupportSubmit = (): FeedbackSubmitHandler => {
   );
 };
 
-/**
- * The submit affordance for {@link useSupportSubmit}: the public-post notice, the button, and who
- * is online. Disabled when no support service is configured, since nothing could file the report.
- */
 export const SupportSubmitAction = () => {
   const { t } = useTranslation(meta.profile.key);
   const config = useConfig();
@@ -124,8 +111,7 @@ export const SupportSubmitAction = () => {
 
   return (
     <>
-      <p className='text-xs text-description text-center px-2 py-1'>{t('public-report.description')}</p>
-      <FeedbackForm.Submit variant='discord' disabled={!endpoint} />
+      <FeedbackForm.Submit disabled={!endpoint} />
       <FeedbackForm.DiscordPresence discordPresence={discordPresence ?? undefined} />
     </>
   );

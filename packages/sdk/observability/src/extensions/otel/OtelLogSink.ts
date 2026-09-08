@@ -33,7 +33,6 @@ const levelFromShortName = new Map<string, LogLevel>(
 
 export type Options = {
   exporter?: LogRecordExporter;
-  /** See {@link OtelLogs} `batch`; a one-shot dump needs larger batches than the live stream. */
   batch?: { maxQueueSize?: number; maxExportBatchSize?: number };
   /**
    * Called with the trace id of every record at warning or above that names one, before the export

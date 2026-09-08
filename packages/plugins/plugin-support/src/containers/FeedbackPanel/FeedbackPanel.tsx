@@ -14,7 +14,6 @@ import { FeedbackForm, type FeedbackPluginOption } from '#components';
 import { DownloadLogsAction } from './DownloadLogsAction';
 import { SupportSubmitAction, useSupportSubmit } from './SupportSubmitAction';
 
-/** Renders the feedback form; the submit files the report through the support service. */
 export const FeedbackPanel = () => {
   const config = useConfig();
   const manager = usePluginManager();
