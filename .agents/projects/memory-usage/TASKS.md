@@ -21,6 +21,11 @@ RESEARCH.md.
 - [x] Harness landed at `packages/apps/composer-app/scripts/memory/` with a
       README covering which quantity each tool measures and what must be held
       constant between runs.
+- [x] Native app: `native-soak.mjs` samples the installed macOS app's
+      WebContent/GPU/Networking footprints and dirty-memory categories, and
+      the Tauri host logs the same series once a minute to
+      `~/Library/Logs/org.dxos.composer.<channel>/memory.ndjson`. WKWebView
+      exposes no JS heap, so process footprint is the only trajectory.
 
 ## Phase 2: Data-proportional retention
 
