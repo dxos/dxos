@@ -18,27 +18,41 @@ import {
   runPlan,
   runReplicant,
 } from './plan';
-import {
-  AutomergeTestPlan,
-  EdgeSync,
-  EdgeWs,
-  EmptyTestPlan,
-  QueryTestPlan,
-  ReplicationTestPlan,
-  StorageTestPlan,
-  TransportTestPlan,
-} from './spec';
 
-const plans: { [key: string]: () => TestPlan<any, any> } = {
-  edgeSync: () => new EdgeSync(),
-  edgeWs: () => new EdgeWs(),
-  automerge: () => new AutomergeTestPlan(),
-  // signal: () => new SignalTestPlan(),
-  transport: () => new TransportTestPlan(),
-  query: () => new QueryTestPlan(),
-  replication: () => new ReplicationTestPlan(),
-  storage: () => new StorageTestPlan(),
-  empty: () => new EmptyTestPlan(),
+/**
+ * Plans by name, each importing its own spec module on demand.
+ *
+ * A static barrel import would load every plan's dependencies to run any one of them, and
+ * `edge-sync` transitively pulls the function bundler (parsimmon), which fails to load as ESM.
+ */
+const plans: { [key: string]: () => Promise<TestPlan<any, any>> } = {
+  edgeStress: async () => new (await import('./spec/edge-stress')).EdgeStress(),
+  edgeJoinLatency: async () => new (await import('./spec/edge-join-latency')).EdgeJoinLatency(),
+  edgeSync: async () => new (await import('./spec/edge-sync')).EdgeSync(),
+  edgeWs: async () => new (await import('./spec/edge-ws')).EdgeWs(),
+  automerge: async () => new (await import('./spec/automerge')).AutomergeTestPlan(),
+  // signal: async () => new (await import('./spec/signal')).SignalTestPlan(),
+  transport: async () => new (await import('./spec/transport')).TransportTestPlan(),
+  query: async () => new (await import('./spec/query')).QueryTestPlan(),
+  replication: async () => new (await import('./spec/replication')).ReplicationTestPlan(),
+  storage: async () => new (await import('./spec/storage')).StorageTestPlan(),
+  empty: async () => new (await import('./spec/empty')).EmptyTestPlan(),
+};
+
+/**
+ * Replicant modules keyed by the class name the orchestrator sends in `replicantClass`; importing
+ * one registers that class with `ReplicantRegistry` as a side effect.
+ */
+const replicantModules: { [key: string]: () => Promise<unknown> } = {
+  AutomergeReplicant: () => import('./replicants/automerge-replicant'),
+  ClientReplicant: () => import('./replicants/client-replicant'),
+  DumbReplicant: () => import('./replicants/dumb-replicant'),
+  EchoReplicant: () => import('./replicants/echo-replicant'),
+  EdgeReplicant: () => import('./replicants/edge-replicant'),
+  SignalReplicant: () => import('./replicants/signal-replicant'),
+  StorageReplicant: () => import('./replicants/storage-replicant'),
+  TransportReplicant: () => import('./replicants/transport-replicant'),
+  WsReplicant: () => import('./replicants/ws-replicant'),
 };
 
 /**
@@ -51,8 +65,7 @@ const plans: { [key: string]: () => TestPlan<any, any> } = {
 const start = async () => {
   // Entry point for Replicant node process.
   if (process.env.DX_RUN_PARAMS) {
-    const params: RunProps = JSON.parse(process.env.DX_RUN_PARAMS!);
-    await runReplicant(params);
+    await startReplicant(JSON.parse(process.env.DX_RUN_PARAMS));
     return;
   }
 
@@ -61,7 +74,7 @@ const start = async () => {
     log.info('running in browser');
     const params = (globalThis as any).DX_RUN_PARAMS;
     invariant(params, 'missing DX_RUN_PARAMS');
-    await runReplicant(JSON.parse(params));
+    await startReplicant(JSON.parse(params));
     return;
   }
 
@@ -76,6 +89,11 @@ const start = async () => {
       profile: { type: 'boolean', default: false, describe: 'run the node profile for agents' },
       headless: { type: 'boolean', default: true, describe: 'run browser agents in headless browsers' },
       browser: { type: 'boolean', default: true, describe: 'build the browser bundle', alias: 'b' },
+      seed: { type: 'string', describe: 'random seed; fixes the generated command sequence' },
+      spec: {
+        type: 'string',
+        describe: 'JSON object of spec fields, merged over the spec file or the plan defaults',
+      },
     })
     .demandCommand(1, `need to provide name of test to run\navailable tests: ${Object.keys(plans).join(', ')}`)
     .help().argv;
@@ -92,7 +110,7 @@ const start = async () => {
   }
 
   const options: GlobalOptions = {
-    randomSeed: PublicKey.random().toHex(),
+    randomSeed: argv.seed ?? PublicKey.random().toHex(),
     repeatAnalysis: argv.repeatAnalysis,
     profile: argv.profile,
     headless: argv.headless,
@@ -103,11 +121,11 @@ const start = async () => {
     log.info(`\nrepeat analysis from file: ${options.repeatAnalysis}`);
   }
 
+  const testPlan = await planGenerator();
   if (argv.specfile) {
     log.info(`using spec file: ${argv.specfile}`);
-    plan = await readYAMLSpecFile(argv.specfile, planGenerator(), options);
+    plan = await readYAMLSpecFile(argv.specfile, testPlan, options);
   } else {
-    const testPlan = planGenerator();
     plan = () => ({
       plan: testPlan,
       spec: testPlan.defaultSpec(),
@@ -115,8 +133,37 @@ const start = async () => {
     });
   }
 
+  // A spec file replaces the spec wholesale rather than merging, so without this every one-off
+  // variant of a run — another EDGE, cleanup off, a fixed plan — needed a config file of its own.
+  const props = plan();
+  const overrides = argv.spec === undefined ? undefined : parseSpecOverride(argv.spec);
+
   log.info(`\nrunning test: ${name}`, { options });
-  await runPlan(plan());
+  await runPlan(overrides === undefined ? props : { ...props, spec: { ...props.spec, ...overrides } });
+};
+
+/**
+ * `--spec '{"edge":"dev","cleanup":false}'` — only the fields a run changes. Returned as
+ * `object` rather than a record so the merge needs no cast.
+ */
+const parseSpecOverride = (text: string): object => {
+  const parsed: unknown = JSON.parse(text);
+  invariant(
+    typeof parsed === 'object' && parsed !== null && !Array.isArray(parsed),
+    `--spec must be a JSON object: ${text}`,
+  );
+  return parsed;
+};
+
+/**
+ * The child process re-runs this file, so it must register its own replicant class before the
+ * registry is queried; it needs only that one, which is what keeps the map lazy.
+ */
+const startReplicant = async (params: RunProps) => {
+  const loadModule = replicantModules[params.replicantProps.replicantClass];
+  invariant(loadModule, `unknown replicant class: ${params.replicantProps.replicantClass}`);
+  await loadModule();
+  await runReplicant(params);
 };
 
 void start();

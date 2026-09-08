@@ -6,6 +6,16 @@
 # status: active | paused | blocked | ended
 
 projects:
+  - name: blade-runner-edge-stress
+    status: active
+    user: mykola
+    host: cloud-sandbox
+    created: 2026-08-27
+    summary: 'Randomized, model-checked end-to-end test in blade-runner: a fleet of real clients replicating through EDGE, driven by a seeded command sequence against an in-memory model; main assertion is full convergence (all peers equal the model). Goals: design -> local edge -> preview env with post-run cleanup -> nightly CI.'
+    tasks: .agents/projects/blade-runner-edge-stress/TASKS.md
+    design: .agents/projects/blade-runner-edge-stress/DESIGN.md
+    prs: [12817]
+    resume: "PR #12817 OPEN (https://github.com/dxos/dxos/pull/12817). Phases 0-2 done; runs reach local EDGE and execute real command sequences. The generator was rewritten: `fc.commands` is state-blind and `asyncModelRun` silently drops failed preconditions, so plans of 25 executed 3-5; each command's model transition (`advance`) is now split from its system half, a pool is simulated against a pure `makeFleetModel` before anything spawns, and only the survivors are recorded and run (25/25 executable, 9-16 data ops). Three modelling errors found and fixed by running: membership is not per-device possession (`knownBy`), a document is not instantly everywhere (`#findDocument` waits), and convergence is temporal so checkpoints retry within the quiescence budget. Open findings in RESULTS.md §4: (5) cutting the EDGE link crashes the peer - `EdgeFeedReplicator`'s async `append` listener leaks an unhandled rejection, so `partitions: false` exists to work around it; (6) a document is discovered but never delivered - `sync did not quiesce for space 1 within 60000ms`, with `AutomergeHost: collection sync not converging` naming the doc. NEXT: link the edge stack to this checkout (`pnpm link-packages ../dxos --all --install`) and repeat the run-D seed to confirm finding 6 upstream; then Phase 1's remaining fixture-scale task and the preview-env run."
   - name: agent-process-edge
     status: active
     user: dmaretskyi

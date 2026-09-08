@@ -2,7 +2,3 @@ layer: tool
 language: typescript
 tags:
   - ts-compile
-tasks:
-  build:
-    deps:
-      - dx-build:build

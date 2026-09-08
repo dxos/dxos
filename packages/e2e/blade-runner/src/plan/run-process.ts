@@ -2,6 +2,7 @@
 // Copyright 2023 DXOS.org
 
 import { spawn } from 'node:child_process';
+import { createWriteStream } from 'node:fs';
 import { mkdir, readFile } from 'node:fs/promises';
 import { createServer } from 'node:http';
 import { type AddressInfo } from 'node:net';
@@ -18,11 +19,21 @@ import { type GlobalOptions, type Platform, type ReplicantProps, type ReplicantR
 
 const DEBUG_PORT_START = 9229;
 
+export type ProcessExit = { exitCode: number | null; signal: NodeJS.Signals | null };
+
 export type ProcessHandle = {
   /**
    * Kill the replicant process/browser.
    */
   kill: (signal?: NodeJS.Signals | number) => void;
+
+  /**
+   * Resolves when the process/browser ends, for any reason.
+   *
+   * RPC to a replicant has no timeout, so a peer that dies mid-run leaves the orchestrator waiting
+   * on a reply that will never come; the scheduler uses this to abort the peer instead.
+   */
+  exited: Promise<ProcessExit>;
 };
 
 export type RunProps = {
@@ -50,18 +61,28 @@ export const runNode = (params: RunProps): ProcessHandle => {
   const childProcess = spawn(process.execPath, [...execArgv, process.argv[1]], {
     env: { ...process.env, DX_RUN_PARAMS: JSON.stringify(params) },
   });
+
+  // Without this the child's stdout/stderr go nowhere, so a replicant that throws before its log
+  // processor flushes leaves no trace at all.
+  const output = createWriteStream(join(params.replicantProps.outDir, 'replicant.out.log'), { flags: 'a' });
+  childProcess.stdout?.pipe(output);
+  childProcess.stderr?.pipe(output);
   childProcess.on('error', (err) => {
     log.info('child process error', { err });
   });
-  childProcess.on('exit', async (exitCode, signal) => {
-    if (exitCode == null) {
-      log.warn('agent exited with signal', { signal });
-    } else if (exitCode !== 0) {
-      log.warn('agent exited with non-zero exit code', { exitCode });
-    }
+  const exited = new Promise<ProcessExit>((resolve) => {
+    childProcess.on('exit', (exitCode, signal) => {
+      if (exitCode == null) {
+        log.warn('agent exited with signal', { signal });
+      } else if (exitCode !== 0) {
+        log.warn('agent exited with non-zero exit code', { exitCode });
+      }
+      resolve({ exitCode, signal });
+    });
   });
 
   return {
+    exited,
     kill: (signal?: NodeJS.Signals | number) => {
       log.trace('dxos.blade-runner.kill-replicant', { signal });
       childProcess.kill(signal);
@@ -71,6 +92,11 @@ export const runNode = (params: RunProps): ProcessHandle => {
 
 export const runBrowser = async ({ replicantProps, options }: RunProps): Promise<ProcessHandle> => {
   const ctx = new Context();
+  let ended: (exit: ProcessExit) => void;
+  const exited = new Promise<ProcessExit>((resolve) => {
+    ended = resolve;
+  });
+  ctx.onDispose(() => ended({ exitCode: 0, signal: null }));
 
   const start = Date.now();
   invariant(replicantProps.runtime.platform);
@@ -85,6 +111,7 @@ export const runBrowser = async ({ replicantProps, options }: RunProps): Promise
 
   page.on('crash', () => {
     log.error('page crashed');
+    ended({ exitCode: null, signal: null });
   });
   page.on('console', (msg) => {
     if (msg.type() === 'error') {
@@ -157,6 +184,7 @@ export const runBrowser = async ({ replicantProps, options }: RunProps): Promise
   });
 
   return {
+    exited,
     kill: apis.dx_runner_done,
   };
 };
