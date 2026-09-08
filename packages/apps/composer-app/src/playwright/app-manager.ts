@@ -136,7 +136,7 @@ export class AppManager {
     return anchor === WORKSPACE_KEY ? workspace : undefined;
   }
 
-  async openUserAccount(timeout = 15_000): Promise<void> {
+  async openUserAccount(timeout = 30_000): Promise<void> {
     await this.page.getByTestId('clientPlugin.account').click();
     // The account panel's tree is what the callers below click into, so returning before it is
     // showing hands them a target that is not there yet.
@@ -148,8 +148,11 @@ export class AppManager {
    * click alone. The two clicks used to be issued back to back with nothing between them, so the
    * second could land while the account panel was still mounting and be swallowed — leaving every
    * `devicesContainer.*` target absent for the caller's whole timeout (DX-1264).
+   *
+   * The budget matches the `actionTimeout` these waits stand in front of: this panel is measurably
+   * slow to mount, and a tighter gate here only converts that slowness into an earlier failure.
    */
-  async openUserDevices(timeout = 15_000): Promise<void> {
+  async openUserDevices(timeout = 30_000): Promise<void> {
     await this.openUserAccount(timeout);
     await this.page.getByTestId('clientPlugin.devices').click();
     await this.page.getByTestId('devicesContainer.logout').waitFor({ state: 'visible', timeout });
