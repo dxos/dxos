@@ -388,8 +388,15 @@ export class AppManager {
     const option = this.page.getByTestId(`create-object-form.type.${OBJECT_TYPENAMES[type]}`);
     await option.click({ timeout: 15_000 });
 
+    // Waited for, not sampled: `isVisible()` answers immediately, so a form that has not painted
+    // yet reads as absent and this returns with the dialog still open, stranding the next caller.
+    // Types that create without a form legitimately never show one, hence the bounded wait.
     const objectForm = this.page.getByTestId('create-object-form');
-    if (!(await objectForm.isVisible())) {
+    const hasForm = await objectForm
+      .waitFor({ state: 'visible', timeout: 5_000 })
+      .then(() => true)
+      .catch(() => false);
+    if (!hasForm) {
       return;
     }
 
@@ -397,6 +404,9 @@ export class AppManager {
       await objectForm.getByLabel('Name').fill(name);
     }
     await objectForm.getByTestId('save-button').click();
+    // Reopening the dialog before it has finished closing reuses the instance, which is still on
+    // the form rather than back at the type list, so the next caller must start from a clean one.
+    await objectForm.waitFor({ state: 'detached', timeout: 30_000 });
   }
 
   async navigateToObject(nth = 0, delay = 100): Promise<void> {
