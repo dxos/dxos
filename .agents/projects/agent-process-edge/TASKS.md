@@ -558,6 +558,15 @@ change is defensible on its own (the process does query those types) but it is n
       host cannot turn into tool definitions. Decide which side moves: publish the operations into
       the space registry when a skill is bound, or give the hosted resolver a view of the worker's
       registry. Only then can the operation-dispatch path this project added actually run.
+- [ ] **The seam for the second option already exists: `makeToolResolverFromOperations({ toolkit })`.**
+      It merges an `OpaqueToolkit` alongside the registry-built index, so the worker's operations can
+      reach the resolver without any write into a user's space and without wrapping `Registry.Service`.
+      What is missing is a way to pass one in: `AgentProcess` calls the factory with no argument, so
+      the host has no injection point. The contained shape is an `AgentProcess` option carrying a
+      toolkit, with edge building it from the records `operation-service` already serialises in
+      `createOperationRegistryRecords` and executing them through `makeOperationServiceHandlerSet`.
+      Prefer this over publishing into the space registry: read-only, worker-local, and cheap to undo,
+      where publishing writes the whole operation set into every space and is not.
 
 Two leads were tried BEFORE the seeding fix and both failed; do not repeat them: declaring
 `AiContext.Binding`/`Skill` in the process's `types` (f14e477a), and registering
