@@ -58,9 +58,10 @@ import {
   SpaceState,
 } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 import { type Runtime_Client_EdgeFeatures } from '@dxos/protocols/buf/dxos/config_pb';
+import { EdgeReplicationSetting } from '@dxos/protocols/buf/dxos/echo/metadata_pb';
 import { type PeerState } from '@dxos/protocols/buf/dxos/mesh/presence_pb';
 import { type FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
-import { EdgeReplicationSetting, type SpaceMetadata } from '@dxos/protocols/proto/dxos/echo/metadata';
+import { type SpaceMetadata } from '@dxos/protocols/proto/dxos/echo/metadata';
 import {
   type Credential,
   MembershipPolicy,

@@ -22,7 +22,7 @@ import {
   QueryInvitationsResponse_Action,
   QueryInvitationsResponse_Type,
 } from '@dxos/protocols/buf/dxos/client/services_pb';
-import { MembershipPolicy } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { MembershipPolicy } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
 describe('Spaces/invitations', () => {
   test('creates a space and invites a peer', async ({ expect }) => {

@@ -10,7 +10,7 @@ import { assertArgument, invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Messenger, type PeerInfo, type SignalManager } from '@dxos/messaging';
-import { ConnectionState } from '@dxos/protocols/proto/dxos/client/services';
+import { ConnectionState } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { ComplexMap } from '@dxos/util';
 
 import { ConnectionLog } from './connection-log';

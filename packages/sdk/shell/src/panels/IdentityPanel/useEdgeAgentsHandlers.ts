@@ -8,7 +8,7 @@ import { type CancellableInvitation } from '@dxos/client-protocol';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { QueryAgentStatusResponse_AgentStatus } from '@dxos/protocols/buf/dxos/client/services_pb';
-import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
+import { EdgeReplicationSetting } from '@dxos/protocols/buf/dxos/echo/metadata_pb';
 import { useClient } from '@dxos/react-client';
 import { type Identity } from '@dxos/react-client/halo';
 
