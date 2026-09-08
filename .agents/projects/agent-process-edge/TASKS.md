@@ -470,8 +470,14 @@ removing the original) — check there before writing a fix.
 - [ ] **`session.waitForCompletion()` looks like it never resolves for a hosted session** — the one
       test that calls it (`answers a prompt`) times out where the same prompt succeeds under
       `drainProcess` in the context test. Verify before chasing anything else in that test.
-- [ ] **The tool test times out** (150s) waiting for the `Person` object. The handler set is wired
-      but was never observed executing a tool — unknown whether it works.
+- [ ] **A passing test for the `DatabaseSkill` tool, asserted on its SIDE EFFECT — the object the
+      tool created, never the reply text.** A reply claiming success is only the model's word, and a
+      text match also passes on the prompt echoed back. The tool test is already written this way
+      (it waits for a `Person` whose `fullName` contains "Ada"), so what is missing is not the test
+      but the test PASSING: it times out at 150s, and the run log shows zero dispatches through
+      `makeOperationServiceHandlerSet` and zero `invokeOperation` RPCs, so no tool has ever executed
+      on a hosted agent. This is the acceptance criterion for remote tool execution — do not call
+      that feature done on a green reply test.
 - [ ] `Failed to get handler to worker` (workerd RPC) alongside a failing `accountLookupViaHubService`
       that fails open — the `HUB_SERVICE` stub is not resolving an entrypoint. Breaks nothing today,
       but it is the same class as `pruneAbsentTargets`.
