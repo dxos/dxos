@@ -996,3 +996,31 @@ dist/types/src: ENOTEMPTY` — a concurrent writer. A Cursor TypeScript native-p
       HTML5 DnD, which does not fire from touch in iPhone WKWebView, so Tree reordering is
       desktop-only under Tauri mobile. Library-independent; verify on device first. Tracked
       2026-09-02, unowned.
+
+## Phase 17: Normalize react-ui, react-ui-form and Ark anatomy (2026-09-08)
+
+The session's goals, in order: (1) normalize react-ui's field primitives on Ark — `Input` is Ark's
+`Field` under another name, `Fieldset` is new; (2) normalize react-ui-form on those primitives
+rather than on divs; (3) review Ark's structural parts (`Positioner`, `Content`, `Viewport`, `Portal`)
+against the Radix-era names react-ui kept, Popover first.
+
+- [x] **`FormFieldSetContainer` and `Form.Section` on `Fieldset`** DONE 2026-09-08: every group in
+      a form is a `<fieldset>` named by its `<legend>` (a nested object's legend holds the
+      disclosure); react-ui's legend is floated so it lays out as an ordinary child, which is what
+      lets a flex-column fieldset keep it in flow. `Form.Section`'s legend was inside a header
+      `div`, so it never named the group; it is the fieldset's first child now. Story
+      `react-ui-form/FormFieldSet` asserts the groups by role and name in both variants;
+      `Form/DESIGN.md` carries the react-ui-form → react-ui → Ark mapping table.
+- [x] **Names say what things are** DONE 2026-09-08: `FormField` (a factory that picked a renderer
+      per schema property) is `FormFieldDispatch`, with the decision extracted as the pure
+      `resolveFieldRenderer` (tested by kind); `Form.Row` is `Form.Field` — one label + control is a
+      field, and a field set holds fields. 150 call sites across 17 plugins renamed.
+- [ ] **`Form.Field` in action mode is not a field**: a hand-written settings row (Debug and most
+      settings panels) renders a bare `div`, so its label and description are not field parts.
+      Render every row through `Input.Root` (a `Field`) and give hand-written rows the same
+      `fieldSet` gap as the schema path (reported from Deck vs Debug settings, 2026-09-08).
+- [ ] **`Form.Group` is a styled `div`**; it should be a `Fieldset` too.
+- [ ] **Goal 1 remainder**: rename `Input` → `Field` (tracked below) and reconcile the `Input`
+      parts with Ark's `Field` anatomy one to one.
+- [ ] **Goal 3**: Popover vs Ark's `Positioner`/`Content`/`Viewport` (tracked below under
+      "Reconcile Ark's anatomy").

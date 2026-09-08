@@ -51,10 +51,10 @@ const nextSeed = (seed: string): string => {
 
 /**
  * Renders a numeric field as a `Slider` with a live readout on the label line, in place of the
- * schema's default numeric input. Delegates the label/status/validation chrome to `Form.Row`'s
+ * schema's default numeric input. Delegates the label/status/validation chrome to `Form.Field`'s
  * render-prop (field mode) — it, not this renderer, wraps the row in `Input.Root`, which
  * `Input.Label`/`Input.DescriptionAndValidation` require via context. Rendering those parts (or
- * anything relying on them) outside `Form.Row` throws.
+ * anything relying on them) outside `Form.Field` throws.
  */
 const createSliderField = (key: SliderKey): FormFieldMap[string] => {
   const spec = SLIDER_SPECS[key];
@@ -62,7 +62,7 @@ const createSliderField = (key: SliderKey): FormFieldMap[string] => {
     const current = getValue() ?? spec.min;
     const handleValueChange = useCallback(([next]: number[]) => onValueChange(type, next), [type, onValueChange]);
     return (
-      <Form.Row<number>
+      <Form.Field<number>
         {...rowProps}
         getValue={getValue}
         // A sibling of the label text (never a child) — keeps `Input.Label`'s `textContent` exactly
@@ -80,7 +80,7 @@ const createSliderField = (key: SliderKey): FormFieldMap[string] => {
             thumbLabels={[spec.label]}
           />
         )}
-      </Form.Row>
+      </Form.Field>
     );
   };
   SliderField.displayName = `TerraForm.SliderField(${key})`;

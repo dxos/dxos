@@ -12,7 +12,7 @@ import { Terra } from '#types';
 
 import { TerraForm } from './TerraForm';
 
-// `Form.Row`'s label/status chrome and the `Slider` primitive read theme tokens via `useThemeContext`.
+// `Form.Field`'s label/status chrome and the `Slider` primitive read theme tokens via `useThemeContext`.
 const Wrapper = ({ children }: PropsWithChildren) => <ThemeProvider>{children}</ThemeProvider>;
 
 const config: Terra.TerraConfig = {
@@ -34,7 +34,7 @@ describe('TerraForm', () => {
 
     // Regression test for the `Input` must be used within `Input` runtime error: the custom
     // slider field renderer originally rendered `Form.Label` directly instead of going through
-    // `Form.Row`'s field-mode render-prop, so it never got `Form.Row`'s `Input.Root` wrapper —
+    // `Form.Field`'s field-mode render-prop, so it never got `Form.Field`'s `Input.Root` wrapper —
     // every slider field was swallowed by `FormFieldErrorBoundary` and replaced with a red
     // "ERROR" row instead of throwing (a render-time context failure invisible to build/lint/test).
     expect(screen.queryByText('ERROR')).toBeNull();

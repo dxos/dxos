@@ -29,7 +29,7 @@ export type RegistrySettingsProps = AppSurface.SettingsProps<
  * dev server is offline at boot, the toggle stays on and a warning is logged
  * (the manager's `failed` atom also surfaces a badge on the plugin list).
  *
- * The URL input and toggle are rendered as `Form.Row` action rows (not schema
+ * The URL input and toggle are rendered as `Form.Field` action rows (not schema
  * fields): the input needs a dynamic disabled state and the toggle runs async
  * enable/disable side effects, neither of which a plain schema field expresses.
  */
@@ -99,7 +99,7 @@ export const RegistrySettings = ({
                 <Banner.Body>{t('dev-plugin.description')}</Banner.Body>
               </Banner.Content>
             </Banner.Root>
-            <Form.Row label={t('dev-plugin.url.label')} description={t('dev-plugin.url.description')}>
+            <Form.Field label={t('dev-plugin.url.label')} description={t('dev-plugin.url.description')}>
               <Input.Root>
                 <Input.TextInput
                   disabled={!onSettingsChange || enabled || busy}
@@ -109,8 +109,8 @@ export const RegistrySettings = ({
                   }
                 />
               </Input.Root>
-            </Form.Row>
-            <Form.Row label={t('dev-plugin.toggle.label')} description={t('dev-plugin.toggle.description')}>
+            </Form.Field>
+            <Form.Field label={t('dev-plugin.toggle.label')} description={t('dev-plugin.toggle.description')}>
               <Button
                 variant={enabled ? undefined : 'primary'}
                 disabled={!onSettingsChange || busy || (!enabled && !trimmedUrl)}
@@ -118,7 +118,7 @@ export const RegistrySettings = ({
               >
                 {buttonLabel}
               </Button>
-            </Form.Row>
+            </Form.Field>
             {enabled && !loadedDevId && !busy && (
               <Banner.Root valence='warning'>
                 <Banner.Content>

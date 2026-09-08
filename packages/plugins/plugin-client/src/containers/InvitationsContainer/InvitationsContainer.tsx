@@ -71,7 +71,7 @@ export const InvitationsContainer = () => {
         <Form.Viewport scroll>
           <Form.Content>
             <Form.Section title={t('invitations-section.title')} description={t('invitations-section.description')}>
-              <Form.Row
+              <Form.Field
                 label={t('generate-invitation.label')}
                 description={t('generate-invitation.description', { count: remaining })}
               >
@@ -82,7 +82,7 @@ export const InvitationsContainer = () => {
                   onClick={handleIssue}
                   disabled={pending || remaining <= 0}
                 />
-              </Form.Row>
+              </Form.Field>
             </Form.Section>
 
             {available.length > 0 ? (

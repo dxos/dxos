@@ -8,7 +8,7 @@ import { Input, type TextInputProps } from '@dxos/react-ui';
 
 import { type FormFieldRendererProps } from '#types';
 
-import { FormRow } from '../../FormRow';
+import { FormField } from '../../FormField';
 
 export const PasswordField = ({
   type,
@@ -24,7 +24,7 @@ export const PasswordField = ({
   );
 
   return (
-    <FormRow<string> readonly={readonly} {...props}>
+    <FormField<string> readonly={readonly} {...props}>
       {({ value = '' }) => (
         <Input.TextInput
           type='password'
@@ -37,6 +37,6 @@ export const PasswordField = ({
           onChange={handleChange}
         />
       )}
-    </FormRow>
+    </FormField>
   );
 };

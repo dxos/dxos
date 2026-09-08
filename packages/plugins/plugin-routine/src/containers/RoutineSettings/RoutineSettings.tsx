@@ -39,11 +39,11 @@ export const RoutineSettings = () => {
       <Form.Viewport scroll>
         <Form.Content>
           <Form.Section title={t('routine-verbose.label')} description={t('routine.description')}>
-            <Form.Row label={t('runtime.label')} description={t('runtime.description')}>
+            <Form.Field label={t('runtime.label')} description={t('runtime.description')}>
               <Input.Root>
                 <Input.Switch checked={enabled} onCheckedChange={handleToggle} />
               </Input.Root>
-            </Form.Row>
+            </Form.Field>
           </Form.Section>
         </Form.Content>
       </Form.Viewport>

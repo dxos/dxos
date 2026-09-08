@@ -16,7 +16,7 @@ import { translationKey } from '#translations';
 
 import { omitId } from '../../../../../util';
 import { FormContent, FormFieldSetContainer, FormRoot } from '../../../FormControls';
-import { FormFieldLabel } from '../../FormRow';
+import { FormFieldLabel } from '../../FormField';
 import { presentationFor } from '../../presentation';
 import { type RefFieldProps } from './RefField';
 

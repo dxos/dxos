@@ -8,7 +8,7 @@ import { Input, type TextInputProps } from '@dxos/react-ui';
 
 import { type FormFieldRendererProps } from '#types';
 
-import { FormRow } from '../../FormRow';
+import { FormField } from '../../FormField';
 
 export const TextField = ({
   type,
@@ -24,7 +24,7 @@ export const TextField = ({
   );
 
   return (
-    <FormRow<string> readonly={readonly} {...props}>
+    <FormField<string> readonly={readonly} {...props}>
       {({ value = '' }) => (
         <Input.TextInput
           noAutoFill
@@ -35,6 +35,6 @@ export const TextField = ({
           onChange={handleChange}
         />
       )}
-    </FormRow>
+    </FormField>
   );
 };

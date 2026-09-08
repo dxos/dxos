@@ -20,7 +20,7 @@ import { type CreateOptions, type FormFieldRendererProps, type RefFieldDataProps
 import { omitHiddenFormFields, omitId } from '../../../../../util';
 import { ObjectPicker } from '../../../../ObjectPicker';
 import { filterTagCandidates } from '../../../meta-tags';
-import { FormFieldLabel } from '../../FormRow';
+import { FormFieldLabel } from '../../FormField';
 import { presentationFor } from '../../presentation';
 import { findRefOption } from './find-ref-option';
 

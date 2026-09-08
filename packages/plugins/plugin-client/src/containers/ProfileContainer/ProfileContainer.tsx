@@ -105,7 +105,7 @@ export const ProfileContainer = () => {
         );
 
         return (
-          <Form.Row label={label} description={t('display-name.description')}>
+          <Form.Field label={label} description={t('display-name.description')}>
             <Input.Root>
               <Input.TextInput
                 value={getValue()}
@@ -114,7 +114,7 @@ export const ProfileContainer = () => {
                 classNames='w-64 max-w-full min-w-0'
               />
             </Input.Root>
-          </Form.Row>
+          </Form.Field>
         );
       },
       emoji: ({ type, label, getValue, onValueChange }) => {
@@ -125,7 +125,7 @@ export const ProfileContainer = () => {
         );
 
         return (
-          <Form.Row label={label} description={t('icon.description')}>
+          <Form.Field label={label} description={t('icon.description')}>
             <EmojiPickerBlock
               triggerVariant='default'
               emoji={getValue()}
@@ -133,7 +133,7 @@ export const ProfileContainer = () => {
               onClickClear={handleEmojiReset}
               classNames='justify-self-end'
             />
-          </Form.Row>
+          </Form.Field>
         );
       },
       hue: ({ type, label, getValue, onValueChange }) => {
@@ -144,17 +144,17 @@ export const ProfileContainer = () => {
         );
 
         return (
-          <Form.Row label={label} description={t('hue.description')}>
+          <Form.Field label={label} description={t('hue.description')}>
             <Flex classNames='justify-self-end'>
               <HuePicker value={getValue()} onChange={handleChange} onReset={handleHueReset} />
             </Flex>
-          </Form.Row>
+          </Form.Field>
         );
       },
       // TODO(wittjosiah): We need text input annotations for disabled and copyable.
       did: ({ label, getValue }) => {
         return (
-          <Form.Row label={label} description={t('did.description')}>
+          <Form.Field label={label} description={t('did.description')}>
             <Input.Root>
               <ButtonGroup classNames='w-full'>
                 {/* `flex-1 min-w-0` lets the field shrink below its content width so the copy button
@@ -163,7 +163,7 @@ export const ProfileContainer = () => {
                 <Clipboard.IconButton value={getValue() ?? ''} />
               </ButtonGroup>
             </Input.Root>
-          </Form.Row>
+          </Form.Field>
         );
       },
     }),

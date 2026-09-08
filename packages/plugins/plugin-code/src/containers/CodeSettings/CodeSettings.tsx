@@ -68,7 +68,7 @@ export const CodeSettings = ({ subject }: CodeSettingsProps) => {
       <Form.Viewport scroll>
         <Form.Content>
           <Form.Section title={meta.profile.name ?? meta.profile.key}>
-            <Form.Row label={t('api-key.label')}>
+            <Form.Field label={t('api-key.label')}>
               <Input.Root>
                 <Input.TextInput
                   type='password'
@@ -81,7 +81,7 @@ export const CodeSettings = ({ subject }: CodeSettingsProps) => {
                   onBlur={handleCommit}
                 />
               </Input.Root>
-            </Form.Row>
+            </Form.Field>
             <Form.FieldSet />
           </Form.Section>
         </Form.Content>

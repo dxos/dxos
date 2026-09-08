@@ -4,8 +4,8 @@
 
 import React, { type ReactNode } from 'react';
 
-import { CompactIconButton } from './FormField';
-import { FormFieldLabel } from './FormRow';
+import { FormFieldLabel } from './FormField';
+import { CompactIconButton } from './FormFieldDispatch';
 
 export type FormFieldHeaderProps = {
   label: string;

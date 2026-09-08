@@ -9,7 +9,7 @@ import { safeParseFloat } from '@dxos/util';
 
 import { type FormFieldRendererProps } from '#types';
 
-import { FormRow } from '../../FormRow';
+import { FormField } from '../../FormField';
 import { getNumericConstraints } from './numeric-constraints';
 
 export const NumberField = ({
@@ -86,7 +86,7 @@ export const NumberField = ({
   );
 
   return (
-    <FormRow<number> readonly={readonly} getValue={getValue} {...props}>
+    <FormField<number> readonly={readonly} getValue={getValue} {...props}>
       {() => (
         <Input.TextInput
           type='number'
@@ -100,6 +100,6 @@ export const NumberField = ({
           onBlur={handleBlur}
         />
       )}
-    </FormRow>
+    </FormField>
   );
 };

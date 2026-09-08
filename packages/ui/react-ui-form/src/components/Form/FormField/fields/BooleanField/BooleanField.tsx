@@ -8,7 +8,7 @@ import { Input, type SwitchProps } from '@dxos/react-ui';
 
 import { type FormFieldRendererProps } from '#types';
 
-import { FormRow } from '../../FormRow';
+import { FormField } from '../../FormField';
 
 export const BooleanField = ({ type, readonly, onValueChange, ...props }: FormFieldRendererProps<boolean>) => {
   const handleChange = useCallback<NonNullable<SwitchProps['onCheckedChange']>>(
@@ -17,12 +17,12 @@ export const BooleanField = ({ type, readonly, onValueChange, ...props }: FormFi
   );
 
   return (
-    <FormRow<boolean> readonly={readonly} {...props}>
+    <FormField<boolean> readonly={readonly} {...props}>
       {({ value }) => (
         <Input.Block>
           <Input.Switch disabled={!!readonly} checked={value} onCheckedChange={handleChange} />
         </Input.Block>
       )}
-    </FormRow>
+    </FormField>
   );
 };
