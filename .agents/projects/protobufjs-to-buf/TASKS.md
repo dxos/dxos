@@ -143,3 +143,13 @@ converting, never before.
 - [ ] Clear the two string allowlists no import sweep can see:
       `composer-app/src/vite/optimize-deps.ts` (2 entries) and
       `app-framework/src/vite-plugin/packages.ts`.
+
+## Standing instruction
+
+Everything remaining — groups 1 through 5, including retiring the shape-compat layer — lands as a
+**single PR**. Do not chunk it further and do not interrupt for confirmation.
+
+§1b is decided: **the signature format does not change.** `getCredentialProofPayload` keeps a shape
+conversion at that one boundary, named for what it is (the credential signing shape) rather than
+surviving as generic compat scaffolding. Every previously-issued credential stays verifiable, and
+the golden vector is the guard.

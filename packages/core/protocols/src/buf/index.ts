@@ -3,6 +3,7 @@
 //
 
 import { type Message, create } from '@bufbuild/protobuf';
+import { type Timestamp, TimestampSchema } from '@bufbuild/protobuf/wkt';
 
 import { PublicKey } from '@dxos/keys';
 import { Timeframe } from '@dxos/timeframe';
@@ -43,6 +44,31 @@ export const fromTimeframe = (timeframe: Timeframe): TimeframeVector =>
   create(TimeframeVectorSchema, {
     frames: timeframe.frames().map(([feedKey, seq]) => ({ feedKey: feedKey.asUint8Array(), seq })),
   });
+
+/**
+ * Reads `google.protobuf.Timestamp` as a `Date`.
+ *
+ * protobuf.js substituted the timestamp for a `Date`; buf carries the message, whose `seconds` is a
+ * BigInt. Converting at the boundary keeps `Date` the domain type — and keeps a message out of
+ * `JSON.stringify`, which throws on the BigInt.
+ */
+export const toDate = (timestamp: Timestamp | undefined): Date | undefined =>
+  timestamp && new Date(Number(timestamp.seconds) * 1000 + timestamp.nanos / 1e6);
+
+/**
+ * Writes a `Date` as `google.protobuf.Timestamp`.
+ *
+ * Nanos are derived from the floored-seconds boundary so they stay in proto's required [0, 1e9)
+ * range before the epoch, matching the substitution the signing shape reproduces.
+ */
+export const fromDate = (date: Date): Timestamp => {
+  const unixMilliseconds = date.getTime();
+  const seconds = Math.floor(unixMilliseconds / 1000);
+  return create(TimestampSchema, {
+    seconds: BigInt(seconds),
+    nanos: (unixMilliseconds - seconds * 1000) * 1e6,
+  });
+};
 
 /**
  * Drops the message brand so a partial buf message can seed `create`.

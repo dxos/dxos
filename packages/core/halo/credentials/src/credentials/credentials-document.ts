@@ -2,17 +2,13 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type SpaceId } from '@dxos/keys';
-import { log } from '@dxos/log';
-import { compatCodec } from '@dxos/protocols/buf-shape-compat';
-import { CredentialSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
-import { type Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { fromBinary } from '@bufbuild/protobuf';
 
-// Built at import rather than on first use: buf reads a descriptor instead of generating a mapper
-// from source, so it no longer trips workerd's codegen-from-strings rejection in a worker bundle.
-// The shape stays protobuf.js -- the ordering below reads its substitutions, and a credential's
-// signature covers that shape.
-const credentialCodec = compatCodec<Credential>(CredentialSchema);
+import { PublicKey, type SpaceId } from '@dxos/keys';
+import { log } from '@dxos/log';
+import { type Credential, CredentialSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
+
+import { credentialIdOf, getCredentialAssertion, issuanceDateOf } from './index';
 
 /** Versioned DXN in the same form `EntitySystem.type` carries. */
 export const CREDENTIALS_DOCUMENT_TYPE = 'dxn:org.dxos.document.spaceCredentials:0.1.0';
@@ -73,7 +69,7 @@ export const orderCredentials = (encoded: ReadonlyMap<string, CredentialsDocumen
       return genesis;
     }
 
-    const issuance = a.credential.issuanceDate.getTime() - b.credential.issuanceDate.getTime();
+    const issuance = issuanceDateOf(a.credential).getTime() - issuanceDateOf(b.credential).getTime();
     return issuance === 0 ? a.id.localeCompare(b.id) : issuance;
   };
 
@@ -82,7 +78,9 @@ export const orderCredentials = (encoded: ReadonlyMap<string, CredentialsDocumen
     entries.map(({ id, credential }) => [
       id,
       new Set(
-        (credential.parentCredentialIds ?? []).map((parent) => parent.toHex()).filter((parent) => present.has(parent)),
+        credential.parentCredentialIds
+          .map((parent) => PublicKey.from(parent.data).toHex())
+          .filter((parent) => present.has(parent)),
       ),
     ]),
   );
@@ -109,18 +107,18 @@ export const orderCredentials = (encoded: ReadonlyMap<string, CredentialsDocumen
 };
 
 const rankGenesis = (credential: Credential): number =>
-  credential.subject?.assertion?.['@type'] === 'dxos.halo.credentials.SpaceGenesis' ? 0 : 1;
+  getCredentialAssertion(credential).$typeName === 'dxos.halo.credentials.SpaceGenesis' ? 0 : 1;
 
 const decodeCredential = (id: string, entry: CredentialsDocumentEntry): Credential | undefined => {
   let credential: Credential;
   try {
-    credential = credentialCodec.decode(entry);
+    credential = fromBinary(CredentialSchema, entry);
   } catch (err) {
     log.warn('undecodable credential entry', { id, err });
     return undefined;
   }
 
-  if (credential.id?.toHex() !== id) {
+  if (credentialIdOf(credential).toHex() !== id) {
     log.warn('credential entry keyed by something other than its credential id', { id });
     return undefined;
   }

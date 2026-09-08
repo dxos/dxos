@@ -2,18 +2,23 @@
 // Copyright 2022 DXOS.org
 //
 
+import { create } from '@bufbuild/protobuf';
+import { anyPack } from '@bufbuild/protobuf/wkt';
+
 import { type Signer, subtleCrypto } from '@dxos/crypto';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
-import { type TypedMessage } from '@dxos/protocols/proto';
-import { type Chain, type Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { fromDate, fromPublicKey, toPublicKey } from '@dxos/protocols/buf';
+import { bufRegistry } from '@dxos/protocols/buf-registry';
+import { type Chain, type Credential, CredentialSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
+import { type CredentialAssertion } from './assertions';
 import { getCredentialProofPayload } from './signing';
 import { SIGNATURE_TYPE_ED25519, verifyChain } from './verifier';
 
 export type CreateCredentialSignerProps = {
   subject: PublicKey;
-  assertion: TypedMessage;
+  assertion: CredentialAssertion;
   nonce?: Uint8Array;
   parentCredentialIds?: PublicKey[];
 };
@@ -27,9 +32,18 @@ export type CreateCredentialProps = {
   chain?: Chain;
 
   subject: PublicKey;
-  assertion: TypedMessage;
+  assertion: CredentialAssertion;
   nonce?: Uint8Array;
   parentCredentialIds?: PublicKey[];
+};
+
+/**
+ * Packs an assertion into the subject's `Any`, resolving its descriptor from its own `$typeName`.
+ */
+const packAssertion = (assertion: CredentialAssertion) => {
+  const desc = bufRegistry.getMessage(assertion.$typeName);
+  invariant(desc, `Assertion type is missing from the registry: ${assertion.$typeName}`);
+  return anyPack(desc, assertion);
 };
 
 /**
@@ -45,39 +59,41 @@ export const createCredential = async ({
   nonce,
   parentCredentialIds,
 }: CreateCredentialProps): Promise<Credential> => {
-  invariant(assertion['@type'], 'Invalid assertion.');
   invariant(!!signingKey === !!chain, 'Chain must be provided if and only if the signing key differs from the issuer.');
-  if (chain) {
-    const result = await verifyChain(chain, issuer, signingKey!);
+  if (chain && signingKey) {
+    const result = await verifyChain(chain, issuer, signingKey);
     invariant(result.kind === 'pass', 'Invalid chain.');
   }
 
   // Create the credential with proof value and chain fields missing (for signature payload).
-  const credential: Credential = {
-    issuer,
-    issuanceDate: new Date(),
+  const credential = create(CredentialSchema, {
+    issuer: fromPublicKey(issuer),
+    issuanceDate: fromDate(new Date()),
     subject: {
-      id: subject,
-      assertion,
+      id: fromPublicKey(subject),
+      assertion: packAssertion(assertion),
     },
-    parentCredentialIds,
+    parentCredentialIds: (parentCredentialIds ?? []).map(fromPublicKey),
     proof: {
       type: SIGNATURE_TYPE_ED25519,
-      creationDate: new Date(),
-      signer: signingKey ?? issuer,
+      creationDate: fromDate(new Date()),
+      signer: fromPublicKey(signingKey ?? issuer),
       value: new Uint8Array(),
       nonce,
     },
-  };
+  });
 
   // Set proof after creating signature.
   const signedPayload = getCredentialProofPayload(credential);
-  credential.proof!.value = await signer.sign(signingKey ?? issuer, signedPayload);
+  invariant(credential.proof, 'Proof was not created.');
+  credential.proof.value = await signer.sign(signingKey ?? issuer, signedPayload);
   if (chain) {
-    credential.proof!.chain = chain;
+    credential.proof.chain = chain;
   }
 
-  credential.id = PublicKey.from(await subtleCrypto.digest('SHA-256', signedPayload as Uint8Array<ArrayBuffer>));
+  credential.id = fromPublicKey(
+    PublicKey.from(await subtleCrypto.digest('SHA-256', signedPayload as Uint8Array<ArrayBuffer>)),
+  );
 
   return credential;
 };
@@ -120,11 +136,11 @@ export const createCredentialSignerWithChain = (
   chain: Chain,
   signingKey: PublicKey,
 ): CredentialSigner => ({
-  getIssuer: () => chain.credential.issuer,
+  getIssuer: () => chainIssuer(chain),
   createCredential: ({ subject, assertion, nonce, parentCredentialIds }) =>
     createCredential({
       signer,
-      issuer: chain.credential.issuer,
+      issuer: chainIssuer(chain),
       signingKey,
       chain,
       subject,
@@ -133,3 +149,9 @@ export const createCredentialSignerWithChain = (
       parentCredentialIds,
     }),
 });
+
+const chainIssuer = (chain: Chain): PublicKey => {
+  const issuer = toPublicKey(chain.credential?.issuer);
+  invariant(issuer, 'Chain credential has no issuer.');
+  return issuer;
+};
