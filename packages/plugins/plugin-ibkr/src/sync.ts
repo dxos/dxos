@@ -60,8 +60,12 @@ export const createDailySyncTrigger = (
   const op = operation ?? db.add(Operation.serialize(IbkrOperation.SyncPortfolioReport));
   Obj.setParent(op, portfolio);
   const trigger = db.add(
-    Trigger.make({ enabled: true, spec: Trigger.specTimer(IBKR_SYNC_CRON), runnable: Ref.make(op) }),
+    Trigger.make({
+      [Obj.Parent]: portfolio,
+      enabled: true,
+      spec: Trigger.specTimer(IBKR_SYNC_CRON),
+      runnable: Ref.make(op),
+    }),
   );
-  Obj.setParent(trigger, portfolio);
   return trigger;
 };

@@ -56,7 +56,7 @@ export const ObjectForm = ({ object, type, schema, showTags = true }: ObjectForm
     const newObject = db.add(Obj.make(type, values));
     if (Obj.instanceOf(Tag.Tag, newObject)) {
       Obj.update(object, (object) => {
-        Obj.getMeta(object).tags = [...Obj.getMeta(object).tags, Ref.make(newObject)];
+        Obj.getMeta(object).tags.push(Ref.make(newObject));
       });
     }
   }, []);

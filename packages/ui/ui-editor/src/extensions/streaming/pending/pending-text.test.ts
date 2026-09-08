@@ -137,17 +137,16 @@ describe('pendingText extension', () => {
   // the hint sitting behind the words being dictated.
   test('the preview marks the content so the empty-document placeholder can stand aside', ({ expect }) => {
     const view = createView('');
-    const marked = () => view.contentDOM.hasAttribute('data-pending-text');
-    expect(marked()).to.be.false;
+    expect(view.contentDOM.hasAttribute('data-pending-text')).to.be.false;
 
     // Opening a session paints nothing, so the hint stays until there is something to replace it.
     view.dispatch({ effects: setPendingAnchor.of({ anchor: 0 }) });
-    expect(marked()).to.be.false;
+    expect(view.contentDOM.hasAttribute('data-pending-text')).to.be.false;
 
     view.dispatch({ effects: appendPendingText.of('the world is everything') });
-    expect(marked()).to.be.true;
+    expect(view.contentDOM.hasAttribute('data-pending-text')).to.be.true;
 
     view.dispatch({ effects: cancelPendingText.of() });
-    expect(marked()).to.be.false;
+    expect(view.contentDOM.hasAttribute('data-pending-text')).to.be.false;
   });
 });

@@ -259,7 +259,10 @@ export const EmptyBranch: Story = {
     const canvas = within(canvasElement);
     const tree = await canvas.findByRole('tree');
     const toggle = (await canvas.findAllByTestId('treeItem.toggle'))[0];
-    const branch = toggle.closest('[data-part="branch"]')!;
+    const branch = toggle.closest('[data-part="branch"]');
+    if (!branch) {
+      throw new Error('Expected toggle to have a "branch" ancestor.');
+    }
     const height = tree.getBoundingClientRect().height;
 
     await expect(toggle).toBeDisabled();

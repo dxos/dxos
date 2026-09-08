@@ -124,11 +124,19 @@ describe('RpcPeer', () => {
     test('open hangs on half-open streams', async () => {
       const [alicePort, bobPort] = createLinkedPorts();
 
+      // Fires once alice has processed bob's "open" message (and, per this port's design, failed
+      // to ack it back — her `send` is a no-op) — an observable point at which the handshake has
+      // genuinely been attempted, rather than an arbitrary delay.
+      const aliceReceivedMessage = new Trigger();
       const alice: RpcPeer = new RpcPeer({
         callHandler: async (msg) => createPayload(),
         port: {
           send: (msg) => {},
-          subscribe: alicePort.subscribe,
+          subscribe: (cb) =>
+            alicePort.subscribe((msg) => {
+              cb(msg);
+              aliceReceivedMessage.wake();
+            }),
         },
       });
 
@@ -142,7 +150,7 @@ describe('RpcPeer', () => {
         open = true;
       });
 
-      await sleep(5);
+      await aliceReceivedMessage.wait();
 
       expect(open).toEqual(false);
 
