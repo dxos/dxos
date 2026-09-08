@@ -22,19 +22,20 @@ import type {
   Space,
 } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { Config } from '@dxos/protocols/buf/dxos/config_pb';
-import type { SignalResponse, SubscribeToSpacesResponse } from '@dxos/protocols/buf/dxos/devtools/host_pb';
+import type {
+  GetSpaceSnapshotResponse,
+  SaveSpaceSnapshotResponse,
+  SignalResponse,
+  SubscribeToFeedBlocksResponse,
+  SubscribeToMetadataResponse,
+  SubscribeToSpacesResponse,
+} from '@dxos/protocols/buf/dxos/devtools/host_pb';
 import type {
   Credential,
   DeviceProfileDocument,
   Presentation,
   ProfileDocument,
 } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
-import type {
-  GetSpaceSnapshotResponse,
-  SaveSpaceSnapshotResponse,
-  SubscribeToFeedBlocksResponse,
-  SubscribeToMetadataResponse,
-} from '@dxos/protocols/proto/dxos/devtools/host';
 import type { IndexConfig } from '@dxos/protocols/proto/dxos/echo/indexing';
 import type {
   QueryRequest as EchoQueryRequest,
