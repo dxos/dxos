@@ -1031,7 +1031,7 @@ against the Radix-era names react-ui kept, Popover first.
       label for the switch), so a labelled control is one element; 13 hand-built
       `Field.Root > Flex > control + Field.Label` rows collapsed. Left-label settings rows (label
       column, control column) keep `Field.Root` + `Field.Label`, which is the right form for them.
-      Story `Field/CheckboxWithLabel` clicks the text; jsdom cannot toggle a controlled checkbox from
+      The `Field/Checkbox` and `Field/Switch` stories click the text; jsdom cannot toggle a controlled checkbox from
       a synthetic click, so the node test asserts labelling only.
 - [ ] **Goal 3**: Popover vs Ark's `Positioner`/`Content`/`Viewport` (tracked below under
       "Reconcile Ark's anatomy").

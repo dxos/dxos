@@ -96,7 +96,7 @@ describe('Input', () => {
     );
 
     // The root is the label, so the text names the form input. (The toggle itself is exercised by
-    // the `CheckboxWithLabel` story: a controlled checkbox does not toggle from a synthetic click
+    // the `Checkbox` and `Switch` stories: a controlled checkbox does not toggle from a synthetic click
     // under jsdom.)
     const checkbox = screen.getByLabelText('Agree') as HTMLInputElement;
     expect(checkbox.type).toBe('checkbox');

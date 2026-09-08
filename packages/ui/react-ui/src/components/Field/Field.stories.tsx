@@ -56,14 +56,14 @@ type RowProps = PropsWithChildren<
     | 'validationMessage'
     | 'validationValence'
   > & {
-    /** Lead with the control: a checkbox or switch reads control-then-label. */
-    inline?: boolean;
+    /** The control carries its own label (a checkbox or switch with label children), so the row adds none. */
+    selfLabelled?: boolean;
   }
 >;
 
 /** Label, control and the meta text on one line, so the valence border and message are seen together. */
 const Row = ({
-  inline,
+  selfLabelled,
   label,
   validationValence,
   labelVisuallyHidden,
@@ -74,14 +74,9 @@ const Row = ({
 }: RowProps) => (
   <Field.Root validationValence={validationValence}>
     <div className='flex flex-col gap-1'>
-      {(inline && (
-        <div className='flex items-center gap-2'>
-          {children}
-          <Field.Label srOnly={labelVisuallyHidden} classNames='shrink-0'>
-            {label}
-          </Field.Label>
-        </div>
-      )) || (
+      {selfLabelled ? (
+        children
+      ) : (
         <>
           <Field.Label srOnly={labelVisuallyHidden} classNames='shrink-0'>
             {label}
@@ -131,17 +126,18 @@ const DefaultStory = ({
         return <Field.Date {...props} />;
       case 'datetime':
         return <Field.DateTime {...props} />;
+      // The standard form: the control is its own label.
       case 'checkbox':
-        return <Field.Checkbox {...props} />;
+        return <Field.Checkbox {...props}>{label}</Field.Checkbox>;
       case 'switch':
-        return <Field.Switch {...props} />;
+        return <Field.Switch {...props}>{label}</Field.Switch>;
     }
   })();
 
   return (
     <Row
       validationValence={validationValence}
-      inline={kind === 'checkbox' || kind === 'switch'}
+      selfLabelled={kind === 'checkbox' || kind === 'switch'}
       label={label}
       labelVisuallyHidden={labelVisuallyHidden}
       description={description}
@@ -206,7 +202,7 @@ export const WithDescription: Story = {
   },
 };
 
-export const WithErrorAndDescription: Story = {
+export const WithError: Story = {
   args: {
     kind: 'text',
     label: 'Described invalid input',
@@ -214,26 +210,6 @@ export const WithErrorAndDescription: Story = {
     description: 'This description is identified separately in the accessibility tree.',
     validationValence: 'error',
     validationMessage: 'The input has an error.',
-  },
-};
-
-export const WithValidationAndDescription: Story = {
-  args: {
-    kind: 'text',
-    label: 'Described input with validation message',
-    placeholder: 'This input is styled to express a validation valence',
-    description: 'This description is extra.',
-    validationValence: 'success',
-    validationMessage: 'This validation message is really part of the description.',
-  },
-};
-
-export const TextArea: Story = {
-  args: {
-    kind: 'textarea',
-    label: 'This input is a text area input',
-    description: 'Type a long paragraph',
-    placeholder: 'Lorem ipsum dolor sit amet',
   },
 };
 
@@ -258,7 +234,7 @@ const TEXT_INPUT_TYPES: { type: string; placeholder: string }[] = [
   { type: 'week', placeholder: '' },
 ];
 
-export const _TextInput: Story = {
+export const Input: Story = {
   render: () => (
     <div className='flex flex-col gap-3 min-w-[24rem]'>
       {TEXT_INPUT_TYPES.map(({ type, placeholder }) => (
@@ -281,7 +257,7 @@ export const _TextInput: Story = {
  * surface/border/focus (via `focus-within`) and the field renders bare. `subdued` drops the box for a
  * borderless row (compose a bottom rule via `classNames`).
  */
-export const TextInputAdornments: Story = {
+export const InputAdornments: Story = {
   render: () => (
     <div className='flex flex-col'>
       <Field.Root>
@@ -302,6 +278,15 @@ export const TextInputAdornments: Story = {
       </Field.Root>
     </div>
   ),
+};
+
+export const TextArea: Story = {
+  args: {
+    kind: 'textarea',
+    label: 'This input is a text area input',
+    description: 'Type a long paragraph',
+    placeholder: 'Lorem ipsum dolor sit amet',
+  },
 };
 
 export const PinInput: Story = {
@@ -416,6 +401,18 @@ export const DateTimeWithPicker: Story = {
   play: opensAtField,
 };
 
+/** The control is one `<label>` holding its text and its form input, so clicking the text toggles it. */
+const togglesFromItsLabel = async (canvasElement: HTMLElement, label: string) => {
+  const root = canvasElement.querySelector('label') as HTMLLabelElement;
+  await expect(root).toHaveTextContent(label);
+  const input = root.querySelector('input') as HTMLInputElement;
+  await expect(input.checked).toBe(false);
+  await userEvent.click(within(root).getByText(label));
+  await expect(input.checked).toBe(true);
+  await userEvent.click(within(root).getByText(label));
+  await expect(input.checked).toBe(false);
+};
+
 export const Checkbox: Story = {
   args: {
     kind: 'checkbox',
@@ -423,6 +420,8 @@ export const Checkbox: Story = {
     description: 'Checked, indeterminate, or unchecked',
     size: 5,
   },
+  play: async ({ canvasElement }: { canvasElement: HTMLElement }) =>
+    togglesFromItsLabel(canvasElement, 'This is a checkbox'),
 };
 
 export const Switch: Story = {
@@ -431,29 +430,6 @@ export const Switch: Story = {
     label: 'This is a switch',
     description: 'On or off',
   },
-};
-
-/** The standard form: a control with its own label, no field root, one element at the call site. */
-export const CheckboxWithLabel: Story = {
-  render: () => (
-    <div className='flex flex-col gap-2'>
-      <Field.Checkbox defaultChecked>Remember me</Field.Checkbox>
-      <Field.Checkbox disabled>Unavailable</Field.Checkbox>
-      <Field.Switch defaultChecked>Notifications</Field.Switch>
-      <Field.Switch disabled>Locked</Field.Switch>
-    </div>
-  ),
-  play: async ({ canvasElement }: { canvasElement: HTMLElement }) => {
-    // Each control is one `<label>` holding its text and its form input; clicking the text toggles it.
-    const [remember, unavailable, notifications] = Array.from(canvasElement.querySelectorAll('label'));
-    const input = (label: HTMLLabelElement) => label.querySelector('input') as HTMLInputElement;
-    await expect(remember).toHaveTextContent('Remember me');
-    await expect(input(remember).checked).toBe(true);
-    await userEvent.click(remember.querySelector('[data-part="label"]') as HTMLElement);
-    await expect(input(remember).checked).toBe(false);
-    await expect(input(unavailable)).toBeDisabled();
-    await expect(input(notifications).checked).toBe(true);
-    await userEvent.click(notifications.querySelector('span') as HTMLElement);
-    await expect(input(notifications).checked).toBe(false);
-  },
+  play: async ({ canvasElement }: { canvasElement: HTMLElement }) =>
+    togglesFromItsLabel(canvasElement, 'This is a switch'),
 };
