@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+export * as AppUpdate from './AppUpdate';
 export * as NativeOAuth from './NativeOAuth';
 export * as NativePasskey from './NativePasskey';
 export * as NavigationResolver from './NavigationResolver';

@@ -15,6 +15,7 @@ import { meta } from '#meta';
 export const Settings = Capability.makeSingleton<Atom.Writable<import('./Settings').Settings>>()(
   `${meta.profile.key}.capability.settings`,
 );
-export const UpdateManager = Capability.makeSingleton<import('./Update').Manager>()(
-  `${meta.profile.key}.capability.updateManager`,
-);
+// Re-exported rather than declared: the web contributes the same capability from `plugin-pwa`, so a
+// settings surface resolves one identifier and gets whichever platform is present. A second identifier
+// here would mean two rows that can never both be right.
+export { UpdateManager } from '@dxos/app-toolkit/AppCapabilities';

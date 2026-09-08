@@ -15,6 +15,7 @@ export default defineConfig({
     'app-graph/AppNodeMatcher': 'src/app-graph/AppNodeMatcher.ts',
     'app-graph/TypeSection': 'src/app-graph/TypeSection.ts',
     'app/GraphPath': 'src/app/GraphPath.ts',
+    'app/AppUpdate': 'src/app/AppUpdate.ts',
     'app/NativeOAuth': 'src/app/NativeOAuth.ts',
     'app/NativePasskey': 'src/app/NativePasskey.ts',
     'app/NavigationResolver': 'src/app/NavigationResolver.ts',

@@ -53,8 +53,11 @@ export const NativeSettings = () => {
 
   const { description, button } = renderUpdateRow(status, pending, t, {
     onCheck: runAction('check', manager.check),
-    onInstall: runAction('install', manager.install),
-    onRelaunch: runAction('relaunch', manager.relaunch),
+    // `install` is optional on the shared manager because the web has no separate download step
+    // (see AppUpdate.Manager); the native updater always supplies one, and the `available` state that
+    // reaches this handler is only reachable where it does.
+    onInstall: runAction('install', () => manager.install?.() ?? Promise.resolve()),
+    onRelaunch: runAction('relaunch', manager.apply),
   });
 
   return (
@@ -122,7 +125,10 @@ const renderUpdateRow = (
       ),
     })),
     Match.when({ kind: 'downloading' }, (s) => {
-      const percent = s.contentLength > 0 ? Math.round((s.downloaded / s.contentLength) * 100) : 0;
+      // Progress is absent until the first event, and its unit differs by platform — bytes here,
+      // precache entries on the web — so the row reports a percentage rather than a raw count.
+      const percent =
+        s.progress && s.progress.total > 0 ? Math.round((s.progress.completed / s.progress.total) * 100) : 0;
       return {
         description: t('settings.updates.downloading.message', { percent }),
         button: <Button disabled>{t('settings.updates.downloading.label')}</Button>,

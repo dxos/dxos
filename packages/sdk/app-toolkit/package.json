@@ -196,6 +196,11 @@
       "source": "./src/ui/index.ts",
       "types": "./dist/types/src/ui/index.d.ts",
       "import": "./dist/lib/ui.mjs"
+    },
+    "./AppUpdate": {
+      "source": "./src/app/AppUpdate.ts",
+      "types": "./dist/types/src/app/AppUpdate.d.ts",
+      "import": "./dist/lib/app/AppUpdate.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
