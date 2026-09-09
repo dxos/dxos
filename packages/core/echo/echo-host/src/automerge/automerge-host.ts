@@ -1383,14 +1383,7 @@ export class AutomergeHost extends Resource {
     this._nonConvergingSyncPasses.set(syncKey, passes);
     const overThreshold = passes - NON_CONVERGENCE_WARN_THRESHOLD;
     if (overThreshold >= 0 && overThreshold % NON_CONVERGENCE_WARN_INTERVAL === 0) {
-      // A subduction entry that exhausted its heal budget is only re-driven when the connection
-      // generation changes, so a peer whose socket stayed healthy while the *other* side restarted
-      // leaves those documents orphaned for good — the diff below then repeats forever.
-      // `shareConfigChanged()` is the documented recovery: it resets `all-failed` entries to null,
-      // clears the heal backoff and re-syncs. Driven from here, on the warn cadence, because this is
-      // the one place that knows sync has stopped making progress (DX-1264).
-      this._repo.shareConfigChanged?.();
-      log.warn('collection sync not converging; requested a subduction re-drive', {
+      log.warn('collection sync not converging', {
         collectionId,
         peerId,
         passes,
