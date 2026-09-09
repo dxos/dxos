@@ -21,5 +21,6 @@ export default defineConfig({
     StreamDeckCapabilities: 'src/types/StreamDeckCapabilities.ts',
   },
   jsx: 'react',
+  reactCompiler: true,
   test: { node: true, storybook: true },
 });

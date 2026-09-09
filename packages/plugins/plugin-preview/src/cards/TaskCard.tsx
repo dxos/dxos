@@ -6,13 +6,14 @@ import React from 'react';
 
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Type } from '@dxos/echo';
+import { useObjectValue } from '@dxos/echo-react';
 import { type PropertyMetaAnnotation, PropertyMetaAnnotationId } from '@dxos/echo/internal';
 import { SchemaAST } from '@dxos/effect';
 import { Card } from '@dxos/react-ui';
 import { Task } from '@dxos/types';
 
 export const TaskCard = ({ subject }: AppSurface.ObjectCardProps<Task.Task>) => {
-  const { title, status } = subject;
+  const { title, status } = useObjectValue(subject) ?? subject;
   const statusOption = getActiveStatusOption(status);
 
   return (

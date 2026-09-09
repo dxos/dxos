@@ -42,6 +42,7 @@ export default defineConfig({
     'types': 'src/types/index.ts',
   },
   jsx: 'react',
+  reactCompiler: true,
   // Many stories here use `withClientProvider` (ECHO/Automerge-backed); per-file isolation
   // re-instantiates that WASM module graph for every story file and exhausts the single headless
   // chromium's WASM memory partway through the suite (`RangeError: ... Out of memory: Cannot

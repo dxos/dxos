@@ -24,6 +24,7 @@ export default defineConfig({
     types: 'src/types/index.ts',
   },
   jsx: 'react',
+  reactCompiler: true,
   test: {
     node: true,
     // The sample-space stories boot the plugin stack, a client, an identity and a space, then write

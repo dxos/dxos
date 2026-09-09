@@ -11819,6 +11819,9 @@ importers:
       '@dxos/echo-panproto':
         specifier: workspace:*
         version: link:../../core/echo/echo-panproto
+      '@dxos/echo-react':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-react
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../common/effect
@@ -15579,6 +15582,9 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
+      '@dxos/echo-react':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-react
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../common/keys
@@ -15607,9 +15613,6 @@ importers:
         specifier: 4.0.0-rc.108
         version: 4.0.0-rc.108
     devDependencies:
-      '@dxos/echo-react':
-        specifier: workspace:*
-        version: link:../../core/echo/echo-react
       '@dxos/plugin-client':
         specifier: workspace:*
         version: link:../plugin-client

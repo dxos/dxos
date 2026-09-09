@@ -17,5 +17,6 @@ export default defineConfig({
     types: 'src/types.ts',
   },
   jsx: 'react',
+  reactCompiler: true,
   test: { node: true },
 });

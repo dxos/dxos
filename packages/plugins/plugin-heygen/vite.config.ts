@@ -15,5 +15,6 @@ export default defineConfig({
     components: 'src/components/index.ts',
   },
   jsx: 'react',
+  reactCompiler: true,
   test: { node: true },
 });

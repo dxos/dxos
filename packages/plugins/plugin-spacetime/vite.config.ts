@@ -22,6 +22,7 @@ export default defineConfig({
     types: 'src/types/index.ts',
   },
   jsx: 'react',
+  reactCompiler: true,
   assetsAsFiles: true,
   test: { node: true },
 });

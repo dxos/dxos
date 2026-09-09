@@ -13,5 +13,6 @@ export default defineConfig({
     meta: 'src/meta.ts',
   },
   jsx: 'react',
+  reactCompiler: true,
   test: { node: true, storybook: true },
 });

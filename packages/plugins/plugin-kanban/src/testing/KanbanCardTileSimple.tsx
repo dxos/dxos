@@ -5,6 +5,7 @@
 import React, { forwardRef, useCallback, useMemo, useState } from 'react';
 
 import { Obj } from '@dxos/echo';
+import { useObjectValue } from '@dxos/echo-react';
 import { Card, IconButton, useTranslation } from '@dxos/react-ui';
 import { ActionMenu, createMenuAction } from '@dxos/react-ui-menu';
 import { Focus, Mosaic, useBoard } from '@dxos/react-ui-mosaic';
@@ -24,6 +25,8 @@ export const KanbanCardTileSimple = forwardRef<HTMLDivElement, KanbanCardProps>(
     const { onCardRemove } = useKanbanBoard(KANBAN_CARD_TILE_SIMPLE_NAME);
     const [dragHandle, setDragHandle] = useState<HTMLButtonElement | null>(null);
     const dragHandleRef = useCallback((el: HTMLButtonElement | null) => setDragHandle(el), []);
+    // Subscribed here for the same reason as `KanbanCard`: the tile is a memo boundary.
+    const snapshot = useObjectValue(data);
 
     const menuItems = useMemo(
       () =>
@@ -52,7 +55,7 @@ export const KanbanCardTileSimple = forwardRef<HTMLDivElement, KanbanCardProps>(
           <Card.Root ref={forwardedRef} data-testid='board-item'>
             <Card.Header>
               <Card.DragHandle ref={dragHandleRef} />
-              <Card.Title>{Obj.getLabel(data)}</Card.Title>
+              <Card.Title>{Obj.getLabel(snapshot ?? data)}</Card.Title>
               {/* TODO(wittjosiah): Reconcile with Card.Menu. */}
               <Card.Block end>
                 <ActionMenu disabled={!menuItems?.length} actions={menuItems}>

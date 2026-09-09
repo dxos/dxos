@@ -16,5 +16,6 @@ export default defineConfig({
     translations: 'src/translations.ts',
   },
   jsx: 'react',
+  reactCompiler: true,
   test: { node: true, storybook: true },
 });

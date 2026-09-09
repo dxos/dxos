@@ -16,6 +16,7 @@ import { Surface } from '@dxos/app-framework/ui';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import { AppSurface, AttentionSigilButton } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
+import { useObjectValue } from '@dxos/echo-react';
 import { Icon, Menu, ScrollArea, ScrollAreaRootProps, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { useAttentionAttributes } from '@dxos/react-ui-attention';
 import { type DndContainerHandler } from '@dxos/react-ui-dnd';
@@ -187,6 +188,9 @@ const DragHandleGlyph = () => (
 
 const StackSection = ({ data, ...tileProps }: StackSectionProps) => {
   const { id, object } = data;
+  // `data` is a plain tile wrapper, so the subscription has to be on the object inside it. The title
+  // is a mutable field and the section is a memo boundary; `object` stays live for the surface below.
+  const snapshot = useObjectValue(object);
   const { t } = useTranslation(meta.profile.key);
   const { attendableId: parentAttendableId, collapsed, onAdd, onMoveUp, onMoveDown, onCollapse, onDelete } = useStack();
   const [optionsMenuOpen, setOptionsMenuOpen] = useState(false);
@@ -195,7 +199,7 @@ const StackSection = ({ data, ...tileProps }: StackSectionProps) => {
   const surfaceData = useMemo(() => ({ attendableId, subject: object }), [object, attendableId]);
   const isCollapsed = collapsed.has(id);
   const icon = Obj.getIcon(object)?.icon ?? 'ph--circle-dashed--regular';
-  const title = Obj.getLabel(object, { fallback: 'typename' }) ?? t('untitled-section.title');
+  const title = Obj.getLabel(snapshot ?? object, { fallback: 'typename' }) ?? t('untitled-section.title');
 
   const rail = (
     <div className='grid grid-rows-[min-content_1fr]'>

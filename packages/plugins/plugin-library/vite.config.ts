@@ -19,5 +19,6 @@ export default defineConfig({
     LibraryEvents: 'src/types/LibraryEvents.ts',
   },
   jsx: 'react',
+  reactCompiler: true,
   test: { node: true, storybook: true },
 });

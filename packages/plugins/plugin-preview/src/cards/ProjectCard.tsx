@@ -6,11 +6,12 @@ import React from 'react';
 
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
+import { useObjectValue } from '@dxos/echo-react';
 import { Card } from '@dxos/react-ui';
 import { type Pipeline } from '@dxos/types';
 
 export const ProjectCard = ({ subject }: AppSurface.ObjectCardProps<Pipeline.Pipeline>) => {
-  const { image, description } = subject;
+  const { image, description } = useObjectValue(subject) ?? subject;
 
   return (
     <Card.Body>

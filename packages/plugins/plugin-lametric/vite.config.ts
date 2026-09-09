@@ -21,5 +21,6 @@ export default defineConfig({
     'types/Settings': 'src/types/Settings.ts',
   },
   jsx: 'react',
+  reactCompiler: true,
   test: { node: true, storybook: true },
 });
