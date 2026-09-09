@@ -15,6 +15,7 @@ type SpanRecord = {
   ended: boolean;
   endTime?: number;
   error?: unknown;
+  lateAttributes?: Record<string, any>;
   spanContext: TraceContextData;
 };
 
@@ -40,6 +41,9 @@ const createMockBackend = (): { backend: TracingBackend; spans: SpanRecord[] } =
         },
         setError: (err: unknown) => {
           record.error = err;
+        },
+        setAttributes: (attributes: Record<string, any>) => {
+          record.lateAttributes = { ...record.lateAttributes, ...attributes };
         },
         spanContext: record.spanContext,
       };
@@ -292,5 +296,105 @@ describe('buffering backend', () => {
     expect(workSpan!.endTime).toBeTypeOf('number');
     expect(workSpan!.endTime).toBeGreaterThanOrEqual(workSpan!.options.startTime!);
     expect(workSpan!.endTime).toBeLessThanOrEqual(afterEnd);
+  });
+});
+
+//
+// Span attributes.
+//
+
+describe('span attributes', () => {
+  let savedBackend: typeof TRACE_PROCESSOR.tracingBackend;
+
+  beforeEach(() => {
+    savedBackend = TRACE_PROCESSOR.tracingBackend;
+  });
+
+  afterEach(() => {
+    TRACE_PROCESSOR.tracingBackend = savedBackend;
+  });
+
+  test('a literal map is namespaced under ctx.', async ({ expect }) => {
+    const { backend, spans } = createMockBackend();
+    TRACE_PROCESSOR.tracingBackend = backend;
+
+    class Svc {
+      @trace.span({ attributes: { 'kind': 'literal', 'ctx.explicit': 1 } })
+      async work(ctx: Context) {}
+    }
+
+    await new Svc().work(new Context());
+    expect(spans.find((span) => span.options.name === 'Svc.work')!.options.attributes).toEqual({
+      'ctx.kind': 'literal',
+      'ctx.explicit': 1,
+    });
+  });
+
+  test('a function is called with the decorated arguments', async ({ expect }) => {
+    const { backend, spans } = createMockBackend();
+    TRACE_PROCESSOR.tracingBackend = backend;
+
+    class Svc {
+      @trace.span({ attributes: (_ctx: Context, reason: string) => ({ reason }) })
+      async work(ctx: Context, reason: string) {}
+    }
+
+    await new Svc().work(new Context(), 'feed-blocks:2');
+    expect(spans.find((span) => span.options.name === 'Svc.work')!.options.attributes).toEqual({
+      'ctx.reason': 'feed-blocks:2',
+    });
+  });
+
+  test('resultAttributes are derived from the return value and namespaced', async ({ expect }) => {
+    const { backend, spans } = createMockBackend();
+    TRACE_PROCESSOR.tracingBackend = backend;
+
+    class Svc {
+      @trace.span({ resultAttributes: (result: { updated: number }) => ({ updated: result.updated }) })
+      async work(ctx: Context) {
+        return { updated: 7 };
+      }
+    }
+
+    await new Svc().work(new Context());
+    expect(spans.find((span) => span.options.name === 'Svc.work')!.lateAttributes).toEqual({ 'ctx.updated': 7 });
+  });
+
+  test('resultAttributes are not attached when the method throws', async ({ expect }) => {
+    const { backend, spans } = createMockBackend();
+    TRACE_PROCESSOR.tracingBackend = backend;
+
+    class Svc {
+      @trace.span({ resultAttributes: () => ({ updated: 1 }) })
+      async work(ctx: Context): Promise<void> {
+        throw new Error('boom');
+      }
+    }
+
+    await new Svc().work(new Context()).catch(() => {});
+    const span = spans.find((record) => record.options.name === 'Svc.work')!;
+    expect(span.lateAttributes).toBeUndefined();
+    expect(span.ended).toBe(true);
+  });
+
+  test('a throwing resultAttributes does not fail the method or error the span', async ({ expect }) => {
+    const { backend, spans } = createMockBackend();
+    TRACE_PROCESSOR.tracingBackend = backend;
+
+    class Svc {
+      @trace.span({
+        resultAttributes: () => {
+          throw new Error('extractor blew up');
+        },
+      })
+      async work(ctx: Context) {
+        return 'done';
+      }
+    }
+
+    await expect(new Svc().work(new Context())).resolves.toBe('done');
+    const span = spans.find((record) => record.options.name === 'Svc.work')!;
+    expect(span.error).toBeUndefined();
+    expect(span.ended).toBe(true);
   });
 });

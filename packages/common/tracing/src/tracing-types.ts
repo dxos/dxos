@@ -20,6 +20,12 @@ export type RemoteSpan = {
   setError?: (err: unknown) => void;
 
   /**
+   * Attach attributes after the span started, for a value only known once the work finished
+   * (a pass's object count, whether it completed). Values must be OTel primitives.
+   */
+  setAttributes?: (attributes: Record<string, any>) => void;
+
+  /**
    * W3C trace context identifying this span.
    *
    * Stored on the DXOS `Context` attribute (`TRACE_SPAN_ATTRIBUTE`) so that
