@@ -251,10 +251,9 @@ export const FormFieldDispatch = (props: FormFieldDispatchProps) => {
     ...fieldState,
   };
 
-  // Omit empty fields entirely in read-only mode -- an empty value has nothing
-  // to display, so a labelled row with a blank input is just noise. Container fields
-  // (`ArrayField`, nested-struct -> `Form.Fields`) keep their own empty-value checks.
-  if (readonly && hideEmpty && fieldState.getValue() == null) {
+  // A read-only or static field with no value has nothing to show, so the row (or the group a
+  // nested object would open) is omitted rather than left as a labelled blank.
+  if ((readonly || layout === 'static') && hideEmpty && fieldState.getValue() == null) {
     return null;
   }
 
