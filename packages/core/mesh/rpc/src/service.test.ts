@@ -553,9 +553,6 @@ describe('Protobuf service', () => {
           },
         },
         port: alicePort,
-        encodingOptions: {
-          preserveAny: true,
-        },
       });
 
       const client = createProtoRpcPeer({
@@ -563,9 +560,6 @@ describe('Protobuf service', () => {
           TestAnyService: getBufService<TestAnyService>('example.testing.rpc.TestAnyService'),
         },
         port: bobPort,
-        encodingOptions: {
-          preserveAny: true,
-        },
       });
 
       await Promise.all([server.open(), client.open()]);

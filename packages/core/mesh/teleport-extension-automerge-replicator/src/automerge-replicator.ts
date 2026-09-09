@@ -2,19 +2,25 @@
 // Copyright 2023 DXOS.org
 //
 
+import { create } from '@bufbuild/protobuf';
+import { type Empty, EmptySchema } from '@bufbuild/protobuf/wkt';
+
 import { Trigger, sleep } from '@dxos/async';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { RpcClosedError } from '@dxos/protocols';
-import { getBufService } from '@dxos/protocols/buf-service';
+import { type BufService, getBufService } from '@dxos/protocols/buf-service';
 import {
-  type AutomergeReplicatorService,
+  AutomergeReplicatorService as AutomergeReplicatorServiceDesc,
   type PeerInfo,
+  PeerInfoSchema,
   type SyncMessage,
 } from '@dxos/protocols/buf/dxos/mesh/teleport/automerge_pb';
 import { type ProtoRpcPeer, createProtoRpcPeer } from '@dxos/rpc';
 import { type ExtensionContext, type TeleportExtension } from '@dxos/teleport';
+
+type AutomergeReplicatorService = BufService<typeof AutomergeReplicatorServiceDesc>;
 
 export type AutomergeReplicatorProps = {
   /**
@@ -89,12 +95,14 @@ export class AutomergeReplicator implements TeleportExtension {
       },
       handlers: {
         AutomergeReplicatorService: {
-          startReplication: async (info: PeerInfo): Promise<void> => {
+          startReplication: async (info: PeerInfo): Promise<Empty> => {
             log('startReplication', { localPeerId: context.localPeerId, remotePeerId: context.remotePeerId, info });
             await this._callbacks.onStartReplication?.(info, context.remotePeerId);
+            return create(EmptySchema, {});
           },
-          sendSyncMessage: async (message: SyncMessage): Promise<void> => {
+          sendSyncMessage: async (message: SyncMessage): Promise<Empty> => {
             await this._callbacks.onSyncMessage?.(message);
+            return create(EmptySchema, {});
           },
         },
       },
@@ -104,7 +112,9 @@ export class AutomergeReplicator implements TeleportExtension {
     });
     await this._rpc.open();
     // Announce to remote peer that we are ready to start replication.
-    await this._rpc.rpc.AutomergeReplicatorService.startReplication({ id: this._params.peerId });
+    await this._rpc.rpc.AutomergeReplicatorService.startReplication(
+      create(PeerInfoSchema, { id: this._params.peerId }),
+    );
     this._opened.wake();
   }
 

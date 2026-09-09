@@ -8,7 +8,6 @@ import * as EffectStream from 'effect/Stream';
 import { Context } from '@dxos/context';
 import { EffectEx } from '@dxos/effect';
 import { buf } from '@dxos/protocols/buf';
-import { encodeCompat } from '@dxos/protocols/buf-shape-compat';
 import {
   type SubscribeToMetadataResponse,
   SubscribeToMetadataResponseSchema,
@@ -17,9 +16,8 @@ import { type EchoMetadata } from '@dxos/protocols/buf/dxos/echo/metadata_pb';
 
 import { type ServiceContext } from '../services';
 
-/** The metadata store keeps the protobuf.js shape, which crosses to buf as the shared wire bytes. */
 const toBufResponse = (metadata: EchoMetadata): SubscribeToMetadataResponse =>
-  buf.fromBinary(SubscribeToMetadataResponseSchema, encodeCompat(SubscribeToMetadataResponseSchema, { metadata }));
+  buf.create(SubscribeToMetadataResponseSchema, { metadata });
 
 export const subscribeToMetadata = ({
   context,

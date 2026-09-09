@@ -7,8 +7,6 @@ import { type Any } from '@bufbuild/protobuf/wkt';
 import { type Stream } from '@dxos/async';
 import { type Context } from '@dxos/context';
 
-import { type CompatOptions } from './buf/shape-compat.ts';
-
 /**
  * The RPC service contract, shared by the buf-backed descriptor in `./buf/service.ts` and the
  * protobuf.js one that dies with `@dxos/codec-protobuf`.
@@ -47,21 +45,18 @@ export type ServiceProvider<Service> = Service | (() => Service) | (() => Promis
 
 /**
  * What a service bundle needs of a descriptor, so a bundle can hold either implementation.
- *
- * The options are the compat layer's, not protobuf.js's: they exist only while a codec still has to
- * reproduce protobuf.js's substituted shapes, and go when it does.
  */
 export interface ServiceDescriptorLike<Service> {
   /** Fully-qualified proto service name, the key a bundle routes on. */
   readonly name: string;
   /** Builds a client whose methods encode onto `backend` and decode its responses. */
-  createClient(backend: ServiceBackend, encodingOptions?: CompatOptions): Service;
+  createClient(backend: ServiceBackend): Service;
   /**
    * Builds a backend that decodes onto `handlers` and encodes what they return.
    *
-   * `NoInfer` keeps `createClient` the single source of `Service`: a descriptor built against
-   * `@dxos/codec-protobuf`'s own structurally-identical `ServiceProvider` would otherwise make a
-   * bundle infer the provider union here instead of the service.
+   * `NoInfer` keeps `createClient` the single source of `Service`: a descriptor whose own
+   * structurally-identical `ServiceProvider` would otherwise make a bundle infer the provider
+   * union here instead of the service.
    */
-  createServer(handlers: ServiceProvider<NoInfer<Service>>, encodingOptions?: CompatOptions): ServiceBackend;
+  createServer(handlers: ServiceProvider<NoInfer<Service>>): ServiceBackend;
 }

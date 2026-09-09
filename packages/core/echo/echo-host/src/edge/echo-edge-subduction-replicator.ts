@@ -34,7 +34,7 @@ import {
   type SubductionProtocolMessageEnveloped,
 } from '@dxos/protocols';
 import { buf } from '@dxos/protocols/buf';
-import { EdgeStatus } from '@dxos/protocols/buf/dxos/client/services_pb';
+import { EdgeStatus_ConnectionState } from '@dxos/protocols/buf/dxos/client/services_pb';
 import {
   type Message as RouterMessage,
   MessageSchema as RouterMessageSchema,
@@ -261,7 +261,7 @@ export class EchoEdgeSubductionReplicator implements EdgeAutomergeReplicator {
     // (`remove_connection` detaches the peer's muxes with no notification to the requester),
     // costing a full sync-round timeout. The space is already registered in `_connectedSpaces`,
     // so `_handleReconnect` opens this connection once the socket is actually ready.
-    if (this._edgeConnection.status.state !== EdgeStatus.ConnectionState.CONNECTED) {
+    if (this._edgeConnection.status.state !== EdgeStatus_ConnectionState.CONNECTED) {
       log('deferring subduction connection until edge ws is ready', { spaceId });
       return;
     }

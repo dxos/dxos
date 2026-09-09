@@ -5651,6 +5651,9 @@ importers:
       '@automerge/automerge-subduction':
         specifier: 0.16.0
         version: 0.16.0(patch_hash=6c2eab31f38b39d6a71ee88d80615921e44111af935631335727862eabc84669)
+      '@bufbuild/protobuf':
+        specifier: 'catalog:'
+        version: 2.11.0
       '@dxos/async':
         specifier: workspace:*
         version: link:../../../common/async
@@ -6404,6 +6407,9 @@ importers:
 
   packages/core/mesh/teleport-extension-automerge-replicator:
     dependencies:
+      '@bufbuild/protobuf':
+        specifier: 'catalog:'
+        version: 2.11.0
       '@dxos/async':
         specifier: workspace:*
         version: link:../../../common/async
@@ -6519,6 +6525,9 @@ importers:
 
   packages/core/mesh/websocket-rpc:
     dependencies:
+      '@bufbuild/protobuf':
+        specifier: 'catalog:'
+        version: 2.11.0
       '@dxos/async':
         specifier: workspace:*
         version: link:../../../common/async
