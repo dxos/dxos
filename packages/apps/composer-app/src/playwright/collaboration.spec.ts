@@ -73,7 +73,7 @@ test.describe('Collaboration tests', () => {
 
     // Guest waits for the space to be ready and confirms it has the markdown object.
     await guest.waitForSpaceReady();
-    await guest.toggleSection('spacePlugin.collectionsSection');
+    await guest.expandSection('spacePlugin.collectionsSection');
     await expect(guest.getObjectLinks()).toHaveCount(1);
     await navigateToNewDocument(guest);
 
@@ -107,7 +107,7 @@ test.describe('Collaboration tests', () => {
     await perfomInvitation(host, guest);
 
     await guest.waitForSpaceReady();
-    await guest.toggleSection('spacePlugin.collectionsSection');
+    await guest.expandSection('spacePlugin.collectionsSection');
     await expect(guest.getObjectLinks()).toHaveCount(1);
     await navigateToNewDocument(guest);
 
@@ -158,7 +158,7 @@ test.describe('Collaboration tests', () => {
 
     // Guest waits for the space to be ready and confirms it has the markdown object
     await guest.waitForSpaceReady();
-    await guest.toggleSection('spacePlugin.collectionsSection');
+    await guest.expandSection('spacePlugin.collectionsSection');
     await expect(guest.getObjectLinks()).toHaveCount(1);
     await navigateToNewDocument(guest);
 
@@ -217,7 +217,7 @@ test.describe('Collaboration tests', () => {
 
     await perfomInvitation(host, guest);
     await guest.waitForSpaceReady();
-    await guest.toggleSection('spacePlugin.collectionsSection');
+    await guest.expandSection('spacePlugin.collectionsSection');
     await expect(guest.getObjectLinks()).toHaveCount(1);
     await navigateToNewDocument(guest);
 

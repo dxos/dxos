@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { Icon, IconBlock, IconButton, Input, Tag, useTranslation } from '@dxos/react-ui';
+import { Field, Icon, IconBlock, IconButton, Tag, useTranslation } from '@dxos/react-ui';
 import { ActionMenu, createMenuAction } from '@dxos/react-ui-menu';
 import { Task } from '@dxos/types';
 
@@ -138,8 +138,8 @@ export const TaskCheckbox = ({ task, checked, onCheckedChange, classNames }: Tas
     // `IconBlock square` so the box is centred in the same square an `IconButton iconOnly` occupies;
     // bare, the 1rem box hugged the start of a 2rem track beside 2rem controls.
     <IconBlock square aria-hidden={false} classNames={classNames}>
-      <Input.Root>
-        <Input.Checkbox
+      <Field.Root>
+        <Field.Checkbox
           checked={checked}
           data-testid='taskList.item.checkbox'
           aria-label={t('task-check.label')}
@@ -147,7 +147,7 @@ export const TaskCheckbox = ({ task, checked, onCheckedChange, classNames }: Tas
           // The row is the selection target; checking it must not also make it the current row.
           onClick={(event) => event.stopPropagation()}
         />
-      </Input.Root>
+      </Field.Root>
     </IconBlock>
   );
 };

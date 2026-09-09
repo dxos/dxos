@@ -4,11 +4,11 @@
 
 import React, { useCallback } from 'react';
 
-import { Input, type TextAreaProps } from '@dxos/react-ui';
+import { Field, type TextareaProps } from '@dxos/react-ui';
 
 import { type FormFieldRendererProps } from '#types';
 
-import { FormRow } from '../../FormRow';
+import { FormField } from '../../FormField';
 
 export const TextAreaField = ({
   type,
@@ -18,15 +18,15 @@ export const TextAreaField = ({
   onBlur,
   ...props
 }: FormFieldRendererProps<string>) => {
-  const handleChange = useCallback<NonNullable<TextAreaProps['onChange']>>(
+  const handleChange = useCallback<NonNullable<TextareaProps['onChange']>>(
     (event) => onValueChange(type, event.target.value),
     [type, onValueChange],
   );
 
   return (
-    <FormRow<string> readonly={readonly} {...props}>
+    <FormField<string> readonly={readonly} {...props}>
       {({ value = '' }) => (
-        <Input.TextArea
+        <Field.Textarea
           rows={5}
           disabled={!!readonly}
           placeholder={placeholder}
@@ -35,6 +35,6 @@ export const TextAreaField = ({
           onBlur={onBlur}
         />
       )}
-    </FormRow>
+    </FormField>
   );
 };

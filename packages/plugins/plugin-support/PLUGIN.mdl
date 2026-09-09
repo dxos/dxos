@@ -26,7 +26,7 @@ A future iteration will absorb plugin-help (welcome tour, contextual hints,
 keyboard shortcuts) so all user education lives here.
 
 Initial scope is a thin skeleton: a `Ticket` schema, four ticket operations
-wired to a skill, a `FeedbackForm` + `captureUserFeedback` operation, and
+wired to a skill, a `FeedbackForm` + `submitReport` operation, and
 two surfaces (`Ticket` article + `--help` companion). Documentation search and
 issue filing are stubbed — the skill exists so the assistant can be
 exercised end-to-end while the integrations land in later phases.
@@ -177,17 +177,30 @@ op searchDocs
 ```
 
 ```mdl
-op captureUserFeedback
-  key: org.dxos.operation.support.captureFeedback
+op submitIssue
+  key: org.dxos.operation.support.submitIssue
   desc: >
-    Sends a one-shot feedback message (with optional debug logs) to the
-    observability backend. Backed by the Observability capability contributed
-    by plugin-observability — plugin-support owns the UI and operation; the
-    actual transport stays in the observability plugin.
+    Files a report straight to Linear through the support service's `/issue`
+    route: no PostHog ticket, no Discord thread. The log dump and session
+    context travel the same way as submitReport, and the flushed logs are
+    tagged with the report id the service mints. The service refuses any
+    identity the hub does not know as an internal account, so this is the
+    team's path; the debug console's `report` command invokes it by key.
+
+op submitReport
+  key: org.dxos.operation.support.submitReport
+  desc: >
+    Files a user report through the support service (discord-service on EDGE),
+    which creates the PostHog support ticket anchoring the report's telemetry,
+    notes where the debug logs went, and opens the public Discord help thread.
+    The Observability capability supplies the log dump and the PostHog session
+    context; plugin-support owns the UI and operation. Fails when no support
+    service is configured or the service cannot create the ticket.
   input:
-    message: string
-    includeLogs?: boolean
-  output: void
+    report: SupportRequest
+    did?: string
+    screenshotUrl?: string
+  output: { ticketId: string, threadUrl?: string }
 ```
 
 GitHub issue submission is performed inline by the FeedbackPanel — it
@@ -245,7 +258,7 @@ feat F-4: One-shot Feedback
   req F-4.1: plugin-support contributes the deck `--help` companion surface; it renders a FeedbackForm.
   req F-4.2:
     when: user submits the FeedbackForm
-    then: captureUserFeedback runs and forwards to the Observability capability.
+    then: submitReport files the PostHog ticket, then the ticket id anchors the public Discord thread.
   req F-4.3:
     when: feedback succeeds
     then: a confirmation toast is shown and the companion collapses.
@@ -383,7 +396,7 @@ flow QA-2: Send one-shot feedback via the help companion
       note: NO `invoke` — opening a deck companion panel is a UI gesture with no operation behind it.
     - name: Submit feedback
       do: Fill in a short description ("QA smoke test — please ignore") and click Submit.
-      invoke: [op:captureUserFeedback] { message: "QA smoke test — please ignore", includeLogs: false }
+      invoke: [op:submitReport] { report: { title: "QA smoke test — please ignore", body: "Ignore me.", includeLogs: false } }
       expect: a confirmation toast is shown and the companion collapses
   # No `after` — feedback goes straight to the observability backend; no ECHO object is created to remove.
 ```

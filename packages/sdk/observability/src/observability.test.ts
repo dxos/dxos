@@ -259,7 +259,7 @@ describe('Observability', () => {
           Observability.initialize,
         );
         obs.setTags({ key: 'value' });
-        expect(ext.setTags).toHaveBeenCalledWith({ key: 'value' });
+        expect(ext.setTags).toHaveBeenCalledWith({ key: 'value' }, undefined);
       }),
     );
 
@@ -272,7 +272,7 @@ describe('Observability', () => {
           Observability.initialize,
         );
         obs.setTags({ key: 'value', empty: undefined });
-        expect(ext.setTags).toHaveBeenCalledWith({ key: 'value' });
+        expect(ext.setTags).toHaveBeenCalledWith({ key: 'value' }, undefined);
       }),
     );
 
@@ -285,7 +285,7 @@ describe('Observability', () => {
           Observability.initialize,
         );
         obs.setTags({ count: 42, flag: true });
-        expect(ext.setTags).toHaveBeenCalledWith({ count: '42', flag: 'true' });
+        expect(ext.setTags).toHaveBeenCalledWith({ count: '42', flag: 'true' }, undefined);
       }),
     );
 
@@ -305,7 +305,7 @@ describe('Observability', () => {
         );
 
         obs.setTags({ key: 'value' }, 'errors');
-        expect(errorsExt.setTags).toHaveBeenCalledWith({ key: 'value' });
+        expect(errorsExt.setTags).toHaveBeenCalledWith({ key: 'value' }, 'errors');
         // The eventsExt is skipped because its api kind ('events') !== 'errors'.
         expect(eventsExt.setTags).not.toHaveBeenCalled();
       }),
@@ -354,19 +354,23 @@ describe('Observability', () => {
       }),
     );
 
-    it.effect('feedback.captureUserFeedback delegates to feedback-kind extensions only', () =>
+    it.effect('support delegates to support-kind extensions only', () =>
       Effect.gen(function* () {
-        const captureUserFeedback = vi.fn();
-        const feedbackExt = createMockExtension({
-          apis: [{ kind: 'feedback', isAvailable: () => Effect.succeed(true), captureUserFeedback }],
+        const uploadLogs = vi.fn(async () => 'logs/1.ndjson');
+        const sessionContext = vi.fn(() => ({ distinctId: 'd', widgetSessionId: 'w' }));
+        const flushLogs = vi.fn(async () => {});
+        const supportExt = createMockExtension({
+          apis: [{ kind: 'support', isAvailable: () => Effect.succeed(true), uploadLogs, sessionContext, flushLogs }],
         });
         const obs = yield* Function.pipe(
           Observability.make(),
-          Observability.addExtension(Effect.succeed(feedbackExt)),
+          Observability.addExtension(Effect.succeed(supportExt)),
           Observability.initialize,
         );
-        void obs.feedback.captureUserFeedback({ message: 'great app' });
-        expect(captureUserFeedback).toHaveBeenCalledWith({ message: 'great app' });
+        expect(yield* Effect.promise(() => obs.support.uploadLogs())).toBe('logs/1.ndjson');
+        expect(obs.support.sessionContext()).toEqual({ distinctId: 'd', widgetSessionId: 'w' });
+        yield* Effect.promise(() => obs.support.flushLogs({ ticketId: 'ticket-1' }));
+        expect(flushLogs).toHaveBeenCalledWith({ ticketId: 'ticket-1' });
       }),
     );
 

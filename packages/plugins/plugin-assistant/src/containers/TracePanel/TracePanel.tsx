@@ -20,7 +20,7 @@ import { Annotation, Filter } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { EID } from '@dxos/keys';
 import { type Space } from '@dxos/react-client/echo';
-import { Input, Panel, ScrollContainer, ThemedClassName, composable, composableProps } from '@dxos/react-ui';
+import { Field, Panel, ScrollContainer, ThemedClassName, composable, composableProps } from '@dxos/react-ui';
 import { useAttentionAttributes } from '@dxos/react-ui-attention';
 import { type Commit, Timeline } from '@dxos/react-ui-components';
 import { ActionToolbar } from '@dxos/react-ui-menu';
@@ -138,9 +138,9 @@ export const TracePanel = composable<HTMLDivElement, TracePanelProps>(
         >
           {/* TODO(burdon): Select process to show details. */}
           <div className='min-w-0'>
-            <Input.Root>
-              <Input.Label classNames='px-1'>Processes</Input.Label>
-            </Input.Root>
+            <Field.Root>
+              <Field.Label classNames='px-1'>Processes</Field.Label>
+            </Field.Root>
             <ProcessTreeContainer
               classNames='max-h-[8lh]'
               space={space}
@@ -151,9 +151,9 @@ export const TracePanel = composable<HTMLDivElement, TracePanelProps>(
           </div>
 
           <div className='min-w-0'>
-            <Input.Root>
-              <Input.Label classNames='px-1'>Trace</Input.Label>
-            </Input.Root>
+            <Field.Root>
+              <Field.Label classNames='px-1'>Trace</Field.Label>
+            </Field.Root>
             <ScrollContainer.Root pin>
               <ScrollContainer.Content thin>
                 <ScrollContainer.Fade />

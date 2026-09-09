@@ -6,7 +6,7 @@ import React, { type ChangeEvent, type KeyboardEvent, useCallback, useEffect, us
 
 import { type SelectOption } from '@dxos/echo/Format';
 import { PublicKey } from '@dxos/keys';
-import { type ChromaticPalette, IconButton, Input, Tag, ToggleIconButton, useTranslation } from '@dxos/react-ui';
+import { type ChromaticPalette, Field, IconButton, Tag, ToggleIconButton, useTranslation } from '@dxos/react-ui';
 import { OrderedList } from '@dxos/react-ui-list';
 import { HuePicker } from '@dxos/react-ui-pickers';
 import { osTranslations } from '@dxos/ui-theme';
@@ -15,7 +15,7 @@ import { hues } from '@dxos/ui-types';
 import { translationKey } from '#translations';
 import { type FormFieldRendererProps } from '#types';
 
-import { FormFieldLabel } from '../../FormRow';
+import { FormFieldLabel } from '../../FormField';
 
 export const SelectOptionField = ({
   type,
@@ -121,7 +121,7 @@ export const SelectOptionField = ({
   }, [selected, isNewOption]);
 
   return (
-    <Input.Root validationValence={status}>
+    <Field.Root validationValence={status}>
       <FormFieldLabel error={error} readonly={readonly} label={label} path={jsonPath} />
       <div>
         {options && (
@@ -159,9 +159,9 @@ export const SelectOptionField = ({
                     </div>
                     {selected === item.id && (
                       <div className='flex flex-col p-form-padding gap-form-gap dx-density-md'>
-                        <Input.Label classNames='text-sm'>{t('select-option.label')}</Input.Label>
+                        <Field.Label classNames='text-sm'>{t('select-option.label')}</Field.Label>
                         <div className='grid grid-cols-[1fr_min-content_min-content] gap-form-gap'>
-                          <Input.TextInput
+                          <Field.Input
                             disabled={!!readonly}
                             placeholder={t('select-option-label.placeholder')}
                             ref={selected === item.id ? inputRef : undefined}
@@ -196,6 +196,6 @@ export const SelectOptionField = ({
           </OrderedList.Root>
         )}
       </div>
-    </Input.Root>
+    </Field.Root>
   );
 };

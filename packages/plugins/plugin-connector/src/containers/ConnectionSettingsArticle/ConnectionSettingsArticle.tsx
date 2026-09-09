@@ -22,7 +22,7 @@ import { meta } from '#meta';
 import { connectionDeckSubject } from '../../constants';
 
 // The add-connection action uses Form's `settings` variant for its labeled-row chrome
-// (an action-mode `Form.Row`); there are no fields to bind, so the schema is empty.
+// (an action-mode `Form.Field`); there are no fields to bind, so the schema is empty.
 const ACTIONS_SCHEMA = Schema.Struct({});
 const ACTIONS_VALUES = {};
 
@@ -72,9 +72,9 @@ export const ConnectionSettingsArticle = (_props: ConnectionSettingsArticleProps
               <Form.Viewport>
                 <Form.Content>
                   <Form.Section title={t('connections.label')} description={t('connections.description')}>
-                    <Form.Row label={t('add-connection.label')} description={t('connect-service.description')}>
+                    <Form.Field label={t('add-connection.label')} description={t('connect-service.description')}>
                       <Button onClick={handleAdd}>{t('connect.label')}</Button>
-                    </Form.Row>
+                    </Form.Field>
                   </Form.Section>
 
                   {connections.length > 0 && (

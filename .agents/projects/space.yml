@@ -1,2 +1,7 @@
-# The ECHO space this repo's projects live in.
-spaceId: BPBG3HN4O2XTMB5MRDZQXJBAXA7LAH4IA
+# The ECHO spaces this repo's projects can live in.
+# `default` is the one used unless the user names another; it must appear in `spaces`.
+default: BPBG3HN4O2XTMB5MRDZQXJBAXA7LAH4IA
+spaces:
+  - BPBG3HN4O2XTMB5MRDZQXJBAXA7LAH4IA
+  - BUZEPQGWWI6IHVKINC4AVBC74SSG7RL5F
+  - BELXB6FTU4DWWKX72S3WSX6542YP3VP7P

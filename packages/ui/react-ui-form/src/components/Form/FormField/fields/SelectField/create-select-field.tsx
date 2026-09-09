@@ -9,7 +9,7 @@ import { Select } from '@dxos/react-ui';
 
 import { type FormFieldRenderer, type FormFieldRendererProps } from '#types';
 
-import { FormRow } from '../../FormRow';
+import { FormField } from '../../FormField';
 import { type SelectFieldOption } from './SelectField';
 
 // Kept out of `SelectField.tsx`: react-refresh only fast-refreshes a module whose
@@ -42,7 +42,7 @@ export const createSelectField = ({
   );
 
   return ({ type, readonly, onValueChange, ...props }: FormFieldRendererProps<string | undefined>) => (
-    <FormRow<string>
+    <FormField<string>
       readonly={readonly}
       renderStatic={(value) => (
         <p className='truncate min-w-0'>
@@ -74,6 +74,6 @@ export const createSelectField = ({
           )}
         </Select.Root>
       )}
-    </FormRow>
+    </FormField>
   );
 };

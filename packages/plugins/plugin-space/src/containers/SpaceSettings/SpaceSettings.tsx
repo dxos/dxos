@@ -5,7 +5,7 @@
 import React from 'react';
 
 import { type Space } from '@dxos/react-client/echo';
-import { IconButton, Input, Select, toLocalizedString, useTranslation } from '@dxos/react-ui';
+import { Field, IconButton, Select, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 import { Listbox } from '@dxos/react-ui-list';
 
@@ -42,18 +42,18 @@ export const SpaceSettings = ({
       <Form.Viewport scroll>
         <Form.Content>
           <Form.Section title={t('plugin.name')}>
-            <Form.Row label={t('settings.show-hidden.label')} description={t('settings.show-hidden.description')}>
-              <Input.Root>
-                <Input.Switch
+            <Form.Field label={t('settings.show-hidden.label')} description={t('settings.show-hidden.description')}>
+              <Field.Root>
+                <Field.Switch
                   disabled={!onSettingsChange}
                   checked={settings?.showHidden}
                   onCheckedChange={(checked) => onSettingsChange?.((s) => ({ ...s, showHidden: !!checked }))}
                 />
-              </Input.Root>
-            </Form.Row>
+              </Field.Root>
+            </Form.Field>
           </Form.Section>
           <Form.Section title={t('space-settings.label')} description={t('space-settings.description')}>
-            <Form.Row label={t('settings.default-space.label')} description={t('settings.default-space.description')}>
+            <Form.Field label={t('settings.default-space.label')} description={t('settings.default-space.description')}>
               <Select.Root
                 value={defaultSpaceId}
                 onValueChange={(value) => onDefaultSpaceChange?.(value)}
@@ -72,8 +72,8 @@ export const SpaceSettings = ({
                   </Select.Content>
                 </Select.Portal>
               </Select.Root>
-            </Form.Row>
-            <Form.Row label={t('settings.space-list.label')} description={t('settings.space-list.description')}>
+            </Form.Field>
+            <Form.Field label={t('settings.space-list.label')} description={t('settings.space-list.description')}>
               <Listbox.Root>
                 <Listbox.Content aria-label={t('settings.space-list.label')} classNames='w-full gap-trim-sm'>
                   {spaces?.map((space) => (
@@ -93,7 +93,7 @@ export const SpaceSettings = ({
                   ))}
                 </Listbox.Content>
               </Listbox.Root>
-            </Form.Row>
+            </Form.Field>
           </Form.Section>
         </Form.Content>
       </Form.Viewport>

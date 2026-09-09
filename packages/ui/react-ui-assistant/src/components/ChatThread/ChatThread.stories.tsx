@@ -6,7 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 import { expect } from 'storybook/test';
 
-import { IconButton, Input, Panel, Toolbar } from '@dxos/react-ui';
+import { Field, IconButton, Panel, Toolbar } from '@dxos/react-ui';
 import { FeedModel, MessageList, Outline, type OutlineMarker, useMessageList } from '@dxos/react-ui-feed';
 import { Debug, DebugProvider, useDebugProbes, useFrameMeter } from '@dxos/react-ui-feed/debug';
 import { createScenario, streamTurn } from '@dxos/react-ui-feed/testing';
@@ -185,15 +185,15 @@ const PromptInput = ({
 
   return (
     <div className='p-2'>
-      <Input.Root>
-        <Input.TextInput
+      <Field.Root>
+        <Field.Input
           placeholder={busy ? 'Answering…' : 'Ask something…'}
           value={prompt}
           data-testid='assistant.prompt'
           onChange={(event) => setPrompt(event.target.value)}
           onKeyDown={(event) => event.key === 'Enter' && submit()}
         />
-      </Input.Root>
+      </Field.Root>
     </div>
   );
 };
