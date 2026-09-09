@@ -205,17 +205,22 @@ export const ModuleContainer = ({ layout, compact = false }: ModuleContainerProp
   const atomRegistry = useCapability(Capabilities.AtomRegistry);
   const layoutState = useCapability(StorybookCapabilities.LayoutState);
   const { graph } = useAppGraph();
-  const [space] = useSpaces();
+  const spaces = useSpaces();
+  const [space] = spaces;
 
   // A harness may contribute a runtime layout (built by `onInit`); prefer it over the static prop.
   const [layoutAtom] = useCapabilities(StoryLayout.Atom);
   const resolvedLayout = useAtomValue(layoutAtom ?? emptyLayoutAtom) ?? layout ?? [];
 
+  // Falls back to the first space only while the workspace names none that exists: a story may own
+  // the workspace itself (a space picker, say), and pinning the first space would undo its choice.
   useEffect(() => {
-    if (space && AppSpace.getActiveSpaceId(atomRegistry.get(layoutState).workspace) !== space.id) {
+    const activeId = AppSpace.getActiveSpaceId(atomRegistry.get(layoutState).workspace);
+    const active = activeId && spaces.find((space) => space.id === activeId);
+    if (!active && space) {
       atomRegistry.set(layoutState, { ...atomRegistry.get(layoutState), workspace: GraphPath.getSpacePath(space.id) });
     }
-  }, [space, layoutState, atomRegistry]);
+  }, [spaces, space, layoutState, atomRegistry]);
 
   // Materialize object-cell app-graph nodes so object-scoped toolbar/graph actions resolve —
   // the work the deck's navtree normally does on navigation.

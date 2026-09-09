@@ -13,7 +13,7 @@ import { translations as projectsTranslations } from '@dxos/plugin-projects/tran
 import { translations as tasksTranslations } from '@dxos/plugin-tasks/translations';
 
 import { SpaceTemplateToolbar, StoryRole } from '../modules';
-import { ModuleContainer, VoyageSpacePlugin, createDecorators, storyParameters } from '../testing';
+import { ModuleContainer, VoyageSpacePlugin, config, createDecorators, storyParameters } from '../testing';
 
 const meta: Meta<typeof ModuleContainer> = {
   title: 'stories/stories-assistant/Projects',
@@ -37,7 +37,7 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-const decorators = createDecorators({
+const storyOptions = {
   skills: [AssistantSkill.key],
   lazyPlugins: async () => {
     const [
@@ -92,8 +92,18 @@ const decorators = createDecorators({
       ],
     };
   },
-  // No seeding here: the space starts empty and the toolbar's template fills it.
-});
+  // No seeding here: each template owns a space of its own, created by the toolbar.
+};
+
+/**
+ * Persistent storage for the story a human drives: the spaces the templates create — and the
+ * conversations held in them — survive a reload, so switching back to a template reopens its work
+ * rather than scaffolding it again.
+ */
+const persistentDecorators = createDecorators({ ...storyOptions, config: config.persistent });
+
+/** Ephemeral, for the play test: a fixture that outlives the run would make the next one lie. */
+const decorators = createDecorators(storyOptions);
 
 const sharedArgs = {
   layout: [[StoryRole.Project], [StoryRole.Chat], [AppSurface.deckCompanion('trace')]],
@@ -166,7 +176,7 @@ const waitForResponse = async (canvasElement: HTMLElement, needle: string, timeo
  *    tree and documents, and the chat starts empty against it.
  */
 export const Default: Story = {
-  decorators,
+  decorators: persistentDecorators,
   args: sharedArgs,
 };
 
