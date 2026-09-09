@@ -1,12 +1,8 @@
 # ark — Tasks
 
-_Resume: PR [#12873](https://github.com/dxos/dxos/pull/12873) is open — `react-ui-list: rebuild Tree
-on @ark-ui/react TreeView`. Design lives in
-[`packages/ui/react-ui-list/docs/TREE.md`](../../../packages/ui/react-ui-list/docs/TREE.md), not
-here. Bundle impact is measured and accepted (~17 KB brotli on one lazy chunk; the eager boot graph
-moves 1.6 KB and the boot budget is untouched). The open work is the ARIA regression the rebuild
-introduced in navtree, the doc refresh, and a decision on what `Treegrid` is for now that `Tree` no
-longer uses it._
+_Resume: Phase 19 — `Drawer` landed in the tree on this branch; open the PR, then the `Main` port is the
+next ark item (MIGRATION.md Phase 7 has its shape). Uncommitted: none after the Phase 19 commit. Last:
+#13003 (form ontology) merged 2026-09-09._
 
 ## Phase 1: Tree rebuild on Ark (PR #12873)
 
@@ -916,10 +912,11 @@ dist/types/src: ENOTEMPTY` — a concurrent writer. A Cursor TypeScript native-p
       steps, the spotlight and the positioning on the same popper the rest of the library uses.
       Establish first which `react-joyride` features the walkthrough actually relies on (scrolling
       to a target, the beacon, controlled step state) and whether Ark's tour covers them.
-- [ ] **Implement Ark's table of contents (`toc`)** (tracked 2026-09-05): the machine tracks which
-      heading is in view and marks the matching link, which is what a document outline does by
-      hand today. The installed 5.39.1 ships it (`@ark-ui/react/toc`). Decide the consumer —
-      `react-ui-feed`'s `Outline`, the markdown article's heading rail — before writing the component.
+- [ ] **Implement Ark's table of contents (`toc`)** (tracked 2026-09-05, DEFERRED 2026-09-09 by the
+      user): the machine tracks which heading is in view and marks the matching link. The installed
+      5.39.1 ships it (`-ui/react/toc`). Decide the consumer first: the machine observes DOM
+      headings with ids, so rendered markdown fits and the CodeMirror editor does not; `react-ui-feed`'s
+      `Outline` is a tick rail over document offsets, a different thing.
 - [x] **Transcription `Pipeline/Live` story lost its mic** DONE 2026-09-06 (reported). Not the
       toolbar: the story's own graph extension registered at startup, its connector called
       `getDefaultSpace` on a client with no runtime yet and threw before subscribing to anything
@@ -1065,3 +1062,84 @@ against the Radix-era names react-ui kept, Popover first.
       machine's anchor element (scroll-following), both from the dx-anchor popover report.
 - [ ] `plugin-sheet:test-storybook` fails on CI shard 2 with a `Missing file` during teardown while every test passes (seen twice on #12971 and #12987, 2026-09-06 and 2026-09-08); rerun passes. Track the cause or quarantine.
 - [ ] `plugin-illustrator:test` runs ~570s on a CI runner (six diagrams through ELK candidate sweeps in `corpus.test.ts`, 83s locally) and was killed at moon's 600s cap on every run of #12987; main raised the task's timeout to 1800s (#12985) as the same stopgap. Make the corpus compile cheaper or run it outside the sharded job.
+
+## Phase 19: `Drawer` on Ark, and `Main` re-probed (2026-09-09)
+
+Asked for on 2026-09-09: react-ui components for Ark's `drawer` and `toc`, and whether `Drawer` can
+reimplement `Main`. Toc deferred (user, same day); the Main port is a follow-up (user chose probe +
+verdict over porting in the same PR).
+
+- [x] **`Drawer` component** DONE 2026-09-09: `Root` (`side`, `modal`, snap points), `Trigger`,
+      `Portal`, `Overlay`, `Content` (positioner folded in), `Grabber`, `Title`, `Description`,
+      `Close`, `SwipeArea`; theme + `drawer.css` keyed on the machine's `data-swipe-direction`;
+      stories `Default`/`Side`/`BottomSheet`/`NonModal` + two play tests. Verified through the vitest
+      storybook browser and screenshots of all five variants (the 9009 storybook was serving a
+      deleted worktree and could not be replaced from this session). Finding: a fraction snap point
+      is a fraction of the **viewport**, capped by the content's extent — short content shows no snap.
+- [x] **Push mode** DONE 2026-09-09 (asked for after the overlay landed): `Drawer.Root push` renders
+      the panel as a flex item that pushes its neighbours, width following the drag through
+      `--dx-drawer-size ± --drawer-translate-x`; `Push` story = start + end drawers around a
+      `Panel` (toolbar, content, statusbar) with `Toolbar.IconButton` toggles; `TestPush` asserts
+      the main panel takes the closed drawer's width back. BUG FOUND: Zag's dismissable layer stack
+      dismissed the sibling drawer when the first closed (later layers count as nested);
+      `onRequestDismiss` now vetoes cross-layer dismissal in `Drawer.Root`. This also removes the
+      remaining reason `Main` could not sit on the drawer at `lg` — push is the expanded-sidebar case.
+      Sizing a pushed drawer (asked 2026-09-09): nest, do not merge — the `Push` story's inspector sits
+      in a `Splitter` end pane (`anchor='end'`, `mode={open ? 'split' : 'start'}`) with
+      `--dx-drawer-size: 100%` and `draggable={false}`; the seam owns the width in rem and the
+      collapse, the drawer keeps the dialog semantics. Reopening restores the dragged size. A
+      `Drawer.Handle` of its own was the alternative and was not taken.
+      Two fixes fell out (2026-09-09): the Splitter sized panes as percent `flex-grow` and the
+      machine re-derived the anchored share a frame after a container resize, so a neighbour
+      animating its width made the seam jiggle — `Splitter.Panel` now carries a fixed rem
+      `flex-basis` (longhands, since Ark merges `style` key by key) while split; and a pushed
+      drawer's `--dx-drawer-size` must be a length, never `100%`, or the children's anchor width
+      shrinks with the box. `TestPushCollapse` samples both frame by frame; the Browser pane's
+      document is `hidden`, which stalls CSS animations, so exit-animation checks belong in vitest.
+      Later the same day: a pushed box in a grid host hangs from the page edge (`justify-self`), or
+      it grows from the inner edge and the content is revealed instead of sliding in; the drag
+      offset is a registered `@property` and the only thing push mode transitions, so a seam drag
+      lands at once; and a drawer open at the root's first render carries `data-instant` (the
+      machine's own `data-state` outlives the presence's `skipAnimationOnMount`), which the enter
+      keyframes skip.
+      One clock for a drawer in a split pane: push-mode slides run 250ms ease-out, the Splitter's
+      collapse timing; the Splitter flips `animating` during render (an effect-set `transition`
+      arrived a commit after the sizes and animated nothing) and lifts the pane's `minSize` while
+      animating (it snapped from `0%` to `12rem` and held a growing pane at 192px); the child
+      anchor is `!important` because a child's own `min-w-0` (ScrollArea) sits in the utilities
+      layer and beat it.
+      REBUILT (user: "rethink this logic"): push mode is now clip + sheet on Ark's anatomy — the
+      positioner is the clip (`--dx-drawer-size * --dx-drawer-open`, a registered number easing
+      0↔1), the content a fixed-size sheet at the clip's inner edge, mounted while closed (inert,
+      aria-hidden). No child anchoring, no `!important`, no keyframes; the sheet slides in from
+      beyond the edge because the clip opens from the edge. Lesson: never make one box both the
+      clip and the sheet.
+      Two more reasons a sheet stands still while its clip opens, both found by per-frame geometry
+      in vitest (the Browser pane's document is hidden and freezes CSS motion): the machine's own
+      enter slide (`--drawer-translate-x` = content size on open, eased to 0) exactly cancelled the
+      clip's opening — cancelled on the sheet; and an `overflow: hidden` clip is a scroll container,
+      which the machine's open-focus scrolled to the sheet's far end — `overflow: clip`.
+      `TestPushCollapse` now asserts the sheet rides the clip's inner edge and travels.
+      Knobs (asked 2026-09-09): `Drawer.Root transition` (ms, default 250, sets
+      `--dx-drawer-duration` on the clip) and `Drawer.Content size` (rem) match `Splitter.Root`'s
+      `transition`/`size`; the Push story holds both as module constants (500ms, 30rem) and feeds
+      the seam and both drawers from them.
+- [x] **Material-style `elevation` (0–5)** DONE 2026-09-09 on Panel (all parts), Toolbar, Card,
+      Dialog.Content, Popover.Content: the prop maps onto the existing ladder in
+      `ui-theme/css/theme/surfaces.css` (0 sunken … 5 popup) by setting `data-surface`, which the
+      CSS already turns into background + ink + re-derived aspects; `surface.css` adds the level's
+      shadow for raised/overlay/popup. Helpers `elevationSurface`/`elevationAttrs` in ui-theme,
+      types `Surface`/`ElevationLevel` in ui-types. A part with an explicit level drops its default
+      surface class (a toolbar paints its own level even inside a Panel slot). Panel's `Elevation`
+      story walks the ladder; `TestElevation` asserts distinct monotonic tones and the shadows.
+- [x] **`Main` on the drawer machine — probe** DONE 2026-09-09. The 2026-09-05 verdict ("fights the
+      inset slide") was wrong: the machine's inline `transform` and `main.css`'s `inset-inline-start`
+      are independent properties, and a driven touch swipe dismissed the sidebar through
+      `onOpenChange` with the inset slide finishing the exit. Findings and the port's shape are in
+      `react-ui/docs/MIGRATION.md` Phase 7. The probe story lives in git history one commit and is
+      deleted from the tree.
+- [ ] **Port `Main`'s sidebars to the drawer machine** (follow-up): swap `useDialog` for `useDrawer`
+      in `MainSidebar`, delete `useSwipeToDismiss`, add `Drawer.SwipeArea` for edge-swipe-to-open;
+      then verify on a touch device (WKWebView) before landing — that is the case the probe could
+      not cover.
+- [ ] **`Toc`** — deferred; see Phase 16's toc item for the consumer question.
