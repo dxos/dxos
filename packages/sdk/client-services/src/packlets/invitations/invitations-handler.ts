@@ -45,7 +45,6 @@ import { InvitationHostExtension, MAX_OTP_ATTEMPTS, isAuthenticationRequired } f
 import { type InvitationProtocol } from './invitation-protocol';
 import { createGuardedInvitationState } from './invitation-state';
 import { InvitationTopology } from './invitation-topology';
-import { toBufAuthMethod } from './utils';
 
 const metrics = _trace.metrics;
 
@@ -388,7 +387,7 @@ export class InvitationsHandler {
                 ...protocol.toJSON(),
                 authMethod: introductionResponse.authMethod,
               });
-              invitation.authMethod = toBufAuthMethod(introductionResponse.authMethod);
+              invitation.authMethod = introductionResponse.authMethod;
 
               // 2. Get authentication code.
               if (isAuthenticationRequired(invitation)) {

@@ -7,7 +7,7 @@ import { create } from '@bufbuild/protobuf';
 import { type Signer } from '@dxos/crypto';
 import { type PublicKey } from '@dxos/keys';
 import { fromPublicKey, fromTimeframe } from '@dxos/protocols/buf';
-import { type FeedMessage_Payload, FeedMessage_PayloadSchema } from '@dxos/protocols/buf/dxos/echo/feed_pb';
+import { type FeedMessage_Payload } from '@dxos/protocols/buf/dxos/echo/feed_pb';
 import {
   AdmittedFeed_Designation,
   AdmittedFeedSchema,
@@ -31,6 +31,7 @@ import {
 import { Timeframe } from '@dxos/timeframe';
 
 import { type CredentialSigner, createCredential } from './credential-factory';
+import { credentialPayload } from './feed-payload';
 
 // TODO(burdon): Normalize generate and functions below.
 //  Use throughout stack and in tests.
@@ -198,7 +199,7 @@ export const createDeviceAuthorization = async (
     }),
   ]);
 
-  return credentials.map((credential) => feedCredentialPayload(credential));
+  return credentials.map((credential) => credentialPayload(credential));
 };
 
 // TODO(burdon): Reconcile with above (esp. Signer).
@@ -254,7 +255,7 @@ export const createAdmissionCredentials = async ({
     }),
   ]);
 
-  return credentials.map((credential) => feedCredentialPayload(credential));
+  return credentials.map((credential) => credentialPayload(credential));
 };
 
 export const createDelegatedSpaceInvitationCredential = async (
@@ -274,7 +275,7 @@ export const createDelegatedSpaceInvitationCredential = async (
       multiUse: invitation.multiUse,
     }),
   });
-  return feedCredentialPayload(credential);
+  return credentialPayload(credential);
 };
 
 /**
@@ -293,9 +294,5 @@ export const createCancelDelegatedSpaceInvitationCredential = async (
       credentialId: fromPublicKey(invitationCredentialId),
     }),
   });
-  return feedCredentialPayload(credential);
+  return credentialPayload(credential);
 };
-
-/** Wraps a credential as the feed payload that writes it to a control feed. */
-const feedCredentialPayload = (credential: Credential): FeedMessage_Payload =>
-  create(FeedMessage_PayloadSchema, { payload: { case: 'credential', value: { credential } } });

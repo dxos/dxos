@@ -2,10 +2,14 @@
 // Copyright 2023 DXOS.org
 //
 
+import { create } from '@bufbuild/protobuf';
+
 import { type Context } from '@dxos/context';
 import {
   createCancelDelegatedSpaceInvitationCredential,
   createDelegatedSpaceInvitationCredential,
+  credentialIdOf,
+  credentialOfPayload,
   getCredentialAssertion,
 } from '@dxos/credentials';
 import { writeMessages } from '@dxos/feed-store';
@@ -14,7 +18,14 @@ import { type KeyringApi } from '@dxos/keyring';
 import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { AlreadyJoinedError, AuthorizationError, InvalidInvitationError, SpaceNotFoundError } from '@dxos/protocols';
-import { fromPublicKey, toPublicKey } from '@dxos/protocols/buf';
+import {
+  fromDate,
+  fromPublicKey,
+  fromTimeframe,
+  requirePublicKey,
+  toPublicKey,
+  toTimeframe,
+} from '@dxos/protocols/buf';
 import {
   Invitation,
   Invitation_AuthMethod,
@@ -22,15 +33,21 @@ import {
   Invitation_Type,
 } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 import { type ProfileDocument } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
+import { DelegateSpaceInvitationSchema } from '@dxos/protocols/buf/dxos/halo/invitations_pb';
 import {
   type AdmissionRequest,
+  AdmissionRequestSchema,
   type AdmissionResponse,
+  AdmissionResponseSchema,
   type IntroductionRequest,
+  IntroductionRequestSchema,
+  SpaceAdmissionCredentialsSchema,
+  SpaceAdmissionRequestSchema,
 } from '@dxos/protocols/buf/dxos/halo/invitations_pb';
 
 import { type DataSpaceManager, type SigningContext } from '../spaces';
 import { type InvitationProtocol } from './invitation-protocol';
-import { computeExpirationTime, fromBufAuthMethod, toSpaceMemberRole } from './utils';
+import { computeExpirationTime, toSpaceMemberRole } from './utils';
 
 export class SpaceInvitationProtocol implements InvitationProtocol {
   constructor(
@@ -78,24 +95,29 @@ export class SpaceInvitationProtocol implements InvitationProtocol {
     request: AdmissionRequest,
     guestProfile?: ProfileDocument | undefined,
   ): Promise<AdmissionResponse> {
-    invariant(this._spaceKey && request.space);
-    log('writing guest credentials', { host: this._signingContext.deviceKey, guest: request.space.deviceKey });
+    invariant(this._spaceKey && request.kind.case === 'space');
+    const spaceRequest = request.kind.value;
+    log('writing guest credentials', { host: this._signingContext.deviceKey, guest: spaceRequest.deviceKey });
 
     const spaceMemberCredential = await this._spaceManager.admitMember({
       spaceKey: this._spaceKey,
-      identityKey: request.space.identityKey,
+      identityKey: requirePublicKey(spaceRequest.identityKey),
       role: toSpaceMemberRole(invitation.role),
       profile: guestProfile,
       delegationCredentialId: toPublicKey(invitation.delegationCredentialId),
     });
 
     const space = this._spaceManager.spaces.get(this._spaceKey);
-    return {
-      space: {
-        credential: spaceMemberCredential,
-        controlTimeframe: space?.inner.controlPipeline.state.timeframe,
+    const controlTimeframe = space?.inner.controlPipeline.state.timeframe;
+    return create(AdmissionResponseSchema, {
+      kind: {
+        case: 'space',
+        value: create(SpaceAdmissionCredentialsSchema, {
+          credential: spaceMemberCredential,
+          controlTimeframe: controlTimeframe && fromTimeframe(controlTimeframe),
+        }),
       },
-    };
+    });
   }
 
   async delegate(invitation: Invitation): Promise<PublicKey> {
@@ -109,26 +131,26 @@ export class SpaceInvitationProtocol implements InvitationProtocol {
     log('writing delegate space invitation', { host: this._signingContext.deviceKey, id: invitation.invitationId });
     const swarmKey = toPublicKey(invitation.swarmKey);
     invariant(swarmKey, 'swarmKey missing in the invitation');
+    const expiresOn = computeExpirationTime(invitation);
     const credential = await createDelegatedSpaceInvitationCredential(
       this._signingContext.credentialSigner,
       space.key,
-      {
+      create(DelegateSpaceInvitationSchema, {
         invitationId: invitation.invitationId,
-        authMethod: fromBufAuthMethod(invitation.authMethod),
-        swarmKey,
+        authMethod: invitation.authMethod,
+        swarmKey: fromPublicKey(swarmKey),
         role: toSpaceMemberRole(invitation.role),
-        expiresOn: computeExpirationTime(invitation),
+        expiresOn: expiresOn && fromDate(expiresOn),
         multiUse: invitation.multiUse ?? false,
         guestKey:
           invitation.authMethod === Invitation_AuthMethod.KNOWN_PUBLIC_KEY
-            ? toPublicKey(invitation.guestKeypair?.publicKey)
+            ? invitation.guestKeypair?.publicKey
             : undefined,
-      },
+      }),
     );
 
-    invariant(credential.credential);
     await writeMessages(space.inner.controlPipeline.writer, [credential]);
-    return credential.credential.credential.id!;
+    return credentialIdOf(credentialOfPayload(credential));
   }
 
   async cancelDelegation(invitation: Invitation): Promise<void> {
@@ -146,7 +168,6 @@ export class SpaceInvitationProtocol implements InvitationProtocol {
       delegationCredentialId,
     );
 
-    invariant(credential.credential);
     await writeMessages(space.inner.controlPipeline.writer, [credential]);
   }
 
@@ -161,9 +182,7 @@ export class SpaceInvitationProtocol implements InvitationProtocol {
   }
 
   createIntroduction(): IntroductionRequest {
-    return {
-      profile: this._signingContext.getProfile(),
-    };
+    return create(IntroductionRequestSchema, { profile: this._signingContext.getProfile() });
   }
 
   async createAdmissionRequest(): Promise<AdmissionRequest> {
@@ -171,39 +190,44 @@ export class SpaceInvitationProtocol implements InvitationProtocol {
     const controlFeedKey = await this._keyring.createKey();
     const dataFeedKey = await this._keyring.createKey();
 
-    return {
-      space: {
-        identityKey: this._signingContext.identityKey,
-        deviceKey: this._signingContext.deviceKey,
-        controlFeedKey,
-        dataFeedKey,
+    return create(AdmissionRequestSchema, {
+      kind: {
+        case: 'space',
+        value: create(SpaceAdmissionRequestSchema, {
+          identityKey: fromPublicKey(this._signingContext.identityKey),
+          deviceKey: fromPublicKey(this._signingContext.deviceKey),
+          controlFeedKey: fromPublicKey(controlFeedKey),
+          dataFeedKey: fromPublicKey(dataFeedKey),
+        }),
       },
-    };
+    });
   }
 
   async accept(ctx: Context, response: AdmissionResponse): Promise<Partial<Invitation>> {
-    invariant(response.space);
-    const { credential, controlTimeframe, dataTimeframe } = response.space;
+    invariant(response.kind.case === 'space');
+    const { credential, controlTimeframe, dataTimeframe } = response.kind.value;
+    invariant(credential, 'Admission carries no credential.');
     const assertion = getCredentialAssertion(credential);
-    invariant(assertion['@type'] === 'dxos.halo.credentials.SpaceMember', 'Invalid credential');
-    invariant(credential.subject.id.equals(this._signingContext.identityKey));
+    invariant(assertion.$typeName === 'dxos.halo.credentials.SpaceMember', 'Invalid credential');
+    invariant(requirePublicKey(credential.subject?.id).equals(this._signingContext.identityKey));
 
-    if (this._spaceManager.spaces.has(assertion.spaceKey)) {
+    const spaceKey = requirePublicKey(assertion.spaceKey);
+    if (this._spaceManager.spaces.has(spaceKey)) {
       throw new AlreadyJoinedError({ message: 'Already joined space.' });
     }
 
     // Create local space.
     await this._spaceManager.acceptSpace(ctx, {
-      spaceKey: assertion.spaceKey,
-      genesisFeedKey: assertion.genesisFeedKey,
+      spaceKey,
+      genesisFeedKey: requirePublicKey(assertion.genesisFeedKey),
       spaceRootUrl: assertion.spaceRootUrl,
-      controlTimeframe,
-      dataTimeframe,
+      controlTimeframe: controlTimeframe && toTimeframe(controlTimeframe),
+      dataTimeframe: dataTimeframe && toTimeframe(dataTimeframe),
       tags: assertion.tags,
     });
 
     await this._signingContext.recordCredential(credential);
 
-    return { spaceKey: fromPublicKey(assertion.spaceKey) };
+    return { spaceKey: fromPublicKey(spaceKey) };
   }
 }

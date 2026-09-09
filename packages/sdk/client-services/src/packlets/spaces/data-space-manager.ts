@@ -89,7 +89,7 @@ import { trace } from '@dxos/tracing';
 import { ComplexMap, deferFunction, forEachAsync } from '@dxos/util';
 
 import { type Identity, IdentityProviderService, createAuthProvider } from '../identity';
-import { type InvitationsManager, InvitationsManagerService, toBufAuthMethod } from '../invitations';
+import { type InvitationsManager, InvitationsManagerService } from '../invitations';
 import { type IMetadataStore, IMetadataStoreService } from '../metadata';
 import {
   AuthStatus,
@@ -1130,7 +1130,7 @@ export class DataSpaceManager extends Resource {
         type: Invitation_Type.DELEGATED,
         kind: Invitation_Kind.SPACE,
         spaceKey: fromPublicKey(space.key),
-        authMethod: toBufAuthMethod(invitation.authMethod),
+        authMethod: invitation.authMethod,
         invitationId: invitation.invitationId,
         swarmKey: invitation.swarmKey,
         guestKeypair: invitation.guestKey
