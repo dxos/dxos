@@ -363,17 +363,28 @@ test QA-1: Create and open a document
     - collection: a collection in that space, to create into
   steps:
     - name: Create the document
-      do: In the navtree, click + on a collection and choose Markdown. Name it "Notes".
+      do: In the navtree, click + on a collection and choose Markdown. Name it "QA: Notes $runId".
       invoke: [op:createMarkdown] { name: "QA: Notes $runId", content: "# Notes\n" }
       capture: created
-      expect: a Document named "QA: Notes" appears under the collection
-      assert: return $snapshot.planks.length === 0 && !!$created.id
+      expect: a Document named "QA: Notes $runId" is listed under the space, and no plank opens
+      assert: |
+        const rows = await composer.invoke('org.dxos.operation.space.queryObjects',
+          { typename: 'org.dxos.type.document' }, { spaceId: $given.space.id });
+        return rows.results.some((o) => o.dxn === $created.id) && $snapshot.planks.length === 0;
   after:
     - name: Delete it
       do: Right-click the row and choose Delete.
       invoke: org.dxos.operation.space.removeObjects { objects: [Obj($created.id)] }
       expect: the row leaves the navtree
 ```
+
+Which runtime operation `[op:createMarkdown]` binds to decides what that `expect` may claim, which
+is why `op@1.1` carries `key:`. `org.dxos.operation.markdown.create` persists the document and adds
+it to the space's ROOT collection, so it is listed under the space — not under the `given`
+collection, which it never reads. Its sibling `markdown.createDraft` is a true factory: it returns
+a detached object, places nothing, and a step invoking it must assert on the return alone until a
+later `space.addObject` places it. An `expect` written for one and run against the other fails for
+a reason that has nothing to do with the application.
 
 Steps are items of a stage list, not repeated `step <n>:` keys — core declares block bodies as
 `key[?]: value` with an indented `-` list as the multi-line form, and a positional pseudo-key both

@@ -51,12 +51,15 @@ explicit yes for that origin, and a summary of what the test will change first.
 
 ## 3. Start the server and open the port
 
-Choose the port session up front and export it, so every later command in the same shell can pass
-it and you never depend on the sidecar:
+Choose the port session and the HTTP port up front and export both, so every later command in the
+same shell passes them and you never depend on the sidecar. `QA_PORT` is one variable because the
+port appears in five places — serve, the readiness probe, the helper's URL, the reuse check and the
+teardown — and a run that changes it in four of them fails in a way that reads as a boot problem:
 
 ```bash
 export DX_DEBUG_PORT_SESSION=$(node -e 'console.log(crypto.randomUUID())')
-moon run composer-app:serve-qa -- --port 5182 --strictPort --host 127.0.0.1 > temp/qa-server.log 2>&1 &
+export QA_PORT=5182
+moon run composer-app:serve-qa -- --port "$QA_PORT" --strictPort --host 127.0.0.1 > temp/qa-server.log 2>&1 &
 SERVER_PID=$!
 ```
 
@@ -64,10 +67,12 @@ SERVER_PID=$!
 from `main.tsx`; without `DX_DEBUG_PORT_SESSION` the id lands in `temp/debug-port.json`
 (`{ session, pid, port, url }`) and in the server log as `Debug port session: <uuid>`. The first
 start builds the app's dependency graph, which takes minutes on a cold worktree; wait until
-`curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:5182/` prints 200. Through the Browser
-pane, `preview_start` with the `composer-qa` launch configuration is the same task on the same port.
+`curl -s -o /dev/null -w '%{http_code}' --connect-timeout 2 --max-time 5 "http://127.0.0.1:$QA_PORT/"`
+prints 200. Bound every probe like that: an unbounded `curl` against a half-open socket hangs the
+loop it is in, which then reads as a slow build. Through the Browser pane, `preview_start` with the
+`composer-qa` launch configuration is the same task on the same port.
 
-If 5182 is already listening, it is someone's server: check whose worktree it serves before
+If `$QA_PORT` is already listening, it is someone's server: check whose worktree it serves before
 reusing it (`lsof -a -p <pid> -d cwd -Fn`) and never kill it. Pick another port if in doubt.
 
 **Open the page in the headless helper, not a pane tab.** A hidden tab boots slowly or not at all
@@ -75,7 +80,7 @@ reusing it (`lsof -a -p <pid> -d cwd -Fn`) and never kill it. Pick another port 
 fresh profile:
 
 ```bash
-node packages/apps/composer-app/testing/bin/qa-browser.mjs http://127.0.0.1:5182/ > temp/qa-browser.log 2>&1 &
+node packages/apps/composer-app/testing/bin/qa-browser.mjs "http://127.0.0.1:$QA_PORT/" > temp/qa-browser.log 2>&1 &
 BROWSER_PID=$!
 ```
 
@@ -227,14 +232,16 @@ user's own look at what the agent sees. It is one port call
 ## 9. Stop what you started
 
 Stop the browser helper and the server you started (`kill $BROWSER_PID $SERVER_PID`, or
-`preview_stop` for a pane-started server), confirm nothing listens on 5182 (`lsof -ti :5182`), and
-say the port is closed. Leave a server you did not start alone.
+`preview_stop` for a pane-started server), confirm nothing listens on `$QA_PORT`
+(`lsof -ti :$QA_PORT -sTCP:LISTEN`), and say the port is closed. `serve-qa` runs vite as a child of
+the task runner, so killing `$SERVER_PID` can leave that child holding the port — kill what `lsof`
+names. Leave a server you did not start alone.
 
 ## Checklist
 
 ```markdown
 - [ ] Test(s) read in full, including every `given`, stage and `note`
-- [ ] Server started by me on a disposable profile; page opened in the headless helper and mounted
+- [ ] Server started by me on `$QA_PORT`, disposable profile; page mounted AND the client ready
 - [ ] runId and start timestamp noted; debug plugin active
 - [ ] `given` verified from a snapshot; `QA:` artifacts confirmed absent; aborted if unmet
 - [ ] Each step one operation through the invoker with a spaceId, key matched exactly

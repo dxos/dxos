@@ -58,9 +58,17 @@ boots slowly or not at all, and a headless page mounts in seconds on a fresh pro
 node packages/apps/composer-app/testing/bin/qa-browser.mjs http://127.0.0.1:5182/ &
 ```
 
-It prints `mounted` once the app is up and page errors as `[page] …`. In the cloud sandbox set
-`PW_CHROMIUM_PATH=/opt/pw-browsers/chromium` (the image ships an older Chromium than Playwright's
-pin).
+It prints `mounted` once the page has rendered and page errors as `[page] …`. In the cloud sandbox
+set `PW_CHROMIUM_PATH=/opt/pw-browsers/chromium` (the image ships an older Chromium than
+Playwright's pin); there the helper also passes the egress proxy flags, without which every HTTPS
+request from the page is reset.
+
+**`mounted` means the page is up, not the client.** The `dxos` hook is installed at the end of
+`client.initialize()`, which on a cold profile finishes well after the mount — 51 s after it on
+2026-09-09, because the shared-worker leader session times out once and is re-elected. An operation
+invoked in that window has no client to reach, so poll a client-ready probe
+(`typeof dxos !== 'undefined'` and a space in `SPACE_READY`) before the first step, as the
+`composer-qa` skill §3 describes.
 
 ## Running remotely
 

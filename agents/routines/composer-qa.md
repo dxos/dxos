@@ -60,8 +60,11 @@ Environment, in order:
    15 minutes):
      pnpm exec moon run composer-app:serve-qa -- --port 5182 --strictPort --host 127.0.0.1 > temp/qa-server.log 2>&1 &
      SERVER_PID=$!
-   Wait until `curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:5182/` prints 200 — in a
-   background `until` loop bounded to 15 minutes that also stops when `kill -0 $SERVER_PID` fails.
+   Wait until
+   `curl -s -o /dev/null -w '%{http_code}' --connect-timeout 2 --max-time 5 http://127.0.0.1:5182/`
+   prints 200 — in a background `until` loop bounded to 15 minutes that also stops when
+   `kill -0 $SERVER_PID` fails. The two curl timeouts are what keep the loop's own deadline
+   meaningful: an unbounded probe against a half-open socket blocks past it.
    Deadline passed or process gone: write the report with Result **blocked** and the last 40 lines
    of temp/qa-server.log, then go to step 7 and step 9.
 4. Open the app in the repo's headless browser helper, which stays alive for the whole run; the
