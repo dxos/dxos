@@ -3,7 +3,7 @@
 //
 
 import { invariant } from '@dxos/invariant';
-import { buf, toPublicKey } from '@dxos/protocols/buf';
+import { toPublicKey } from '@dxos/protocols/buf';
 import { type Client } from '@dxos/react-client';
 import { type Credential } from '@dxos/react-client/halo';
 
