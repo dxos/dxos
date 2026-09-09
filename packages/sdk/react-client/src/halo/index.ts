@@ -8,6 +8,7 @@ export {
   type Credential,
   type Device,
   DeviceKind,
+  Device_PresenceState,
   DeviceType,
   type Halo,
   type Identity,

@@ -15,7 +15,7 @@ export {
 
 export { type IndexKind, IndexKind_Kind } from '@dxos/protocols/buf/dxos/echo/indexing_pb';
 export { SpaceState } from '@dxos/protocols/buf/dxos/client/invitation_pb';
-export { type SpaceMember } from '@dxos/protocols/buf/dxos/client/services_pb';
+export { type SpaceMember, SpaceMember_PresenceState } from '@dxos/protocols/buf/dxos/client/services_pb';
 export { type SpaceMember as HaloSpaceMember, SpaceMember_Role } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 export { type SpaceSyncState } from '@dxos/echo-client';
 

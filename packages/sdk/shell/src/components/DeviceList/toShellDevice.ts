@@ -2,7 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type Device as ClientDevice, Device, DeviceKind, DeviceType } from '@dxos/react-client/halo';
+import { requirePublicKey } from '@dxos/protocols/buf';
+import { type Device as ClientDevice, DeviceKind, DeviceType, Device_PresenceState } from '@dxos/react-client/halo';
 
 import { type ShellDevice } from './DeviceListProps';
 
@@ -26,7 +27,7 @@ const PRESENCE: Record<Device_PresenceState, ShellDevice['presence']> = {
  * renders, so the same item component serves client- and HALO-backed callers.
  */
 export const toShellDevice = (device: ClientDevice): ShellDevice => ({
-  key: device.deviceKey.toHex(),
+  key: requirePublicKey(device.deviceKey).toHex(),
   kind: device.profile?.type !== undefined ? KINDS[device.profile.type] : undefined,
   label: device.profile?.label,
   os: device.profile?.os,

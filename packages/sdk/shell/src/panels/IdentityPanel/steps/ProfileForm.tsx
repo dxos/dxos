@@ -16,6 +16,7 @@ import { hexToEmoji, hexToHue } from '@dxos/util';
 
 import { Action, ActionBar, InputLabel, TextInput } from '../../../components';
 import { translationKey } from '../../../translations';
+import { profileString } from '../../../util';
 import { type IdentityEvent } from '../identityMachine';
 import { type IdentityPanelStepProps } from '../IdentityPanelProps';
 
@@ -116,16 +117,6 @@ const ProfileFormImpl = ({ active, identity, send, onUpdateProfile, validationMe
       </ActionBar>
     </>
   );
-};
-
-/**
- * Reads a string out of the profile's `google.protobuf.Struct` metadata.
- *
- * The field holds arbitrary JSON, so a caller wanting a string has to check rather than assume.
- */
-const profileString = (identity: Identity | undefined, key: string): string | undefined => {
-  const value = identity?.profile?.data?.[key];
-  return typeof value === 'string' ? value : undefined;
 };
 
 const identityHex = (identity?: Identity) => toPublicKey(identity?.identityKey)?.toHex() ?? '0';

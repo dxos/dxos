@@ -22,6 +22,7 @@ import { hexToEmoji, hexToHue, keyToFallback } from '@dxos/util';
 import { CloseButton, Heading, Viewport } from '../../components';
 import { ConfirmReset, InvitationManager } from '../../steps';
 import { translationKey } from '../../translations';
+import { profileString } from '../../util';
 import { useIdentityMachine } from './identityMachine';
 import {
   type IdentityPanelHeadingProps,
@@ -32,16 +33,6 @@ import { IdentityActionChooser } from './steps';
 import { useAgentHandlers } from './useAgentHandlers';
 
 const viewStyles = 'pt-1 pb-3 px-3';
-
-/**
- * Reads a string out of the profile's `google.protobuf.Struct` metadata.
- *
- * The field holds arbitrary JSON, so a caller wanting a string has to check rather than assume.
- */
-const profileString = (identity: Identity | undefined, key: string): string | undefined => {
-  const value = identity?.profile?.data?.[key];
-  return typeof value === 'string' ? value : undefined;
-};
 
 const identityHex = (identity?: Identity) => toPublicKey(identity?.identityKey)?.toHex() ?? '0';
 

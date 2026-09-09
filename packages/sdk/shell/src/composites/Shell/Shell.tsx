@@ -7,7 +7,12 @@ import React, { useEffect, useState } from 'react';
 
 import { type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { AppContextRequestSchema, LayoutRequestSchema } from '@dxos/protocols/buf/dxos/iframe_pb';
+import { fromPublicKey, toPublicKey } from '@dxos/protocols/buf';
+import {
+  AppContextRequestSchema,
+  InvitationUrlRequestSchema,
+  LayoutRequestSchema,
+} from '@dxos/protocols/buf/dxos/iframe_pb';
 import { useClient } from '@dxos/react-client';
 import {
   type InvitationUrlRequest,
@@ -27,22 +32,26 @@ import { StatusDialog } from '../StatusDialog';
 const blurActiveElement = () => (document.activeElement as HTMLElement | undefined)?.blur?.();
 
 export const Shell = ({ runtime }: { runtime: ShellRuntime }) => {
-  const [{ layout, invitationCode, spaceKey, spaceId, target }, setLayout] = useState<LayoutRequest>({
-    layout: runtime.layout,
-    invitationCode: runtime.invitationCode,
-    spaceKey: runtime.spaceKey,
-    spaceId: runtime.spaceId,
-    target: runtime.target,
-  });
+  const [{ layout, invitationCode, spaceKey, spaceId, target }, setLayout] = useState<LayoutRequest>(
+    create(LayoutRequestSchema, {
+      layout: runtime.layout,
+      invitationCode: runtime.invitationCode,
+      spaceKey: runtime.spaceKey && fromPublicKey(runtime.spaceKey),
+      spaceId: runtime.spaceId,
+      target: runtime.target,
+    }),
+  );
   const [{ invitationUrl, deviceInvitationParam, spaceInvitationParam }, setInvitationUrl] =
-    useState<InvitationUrlRequest>({
-      invitationUrl: runtime.invitationUrl,
-      deviceInvitationParam: runtime.deviceInvitationParam,
-      spaceInvitationParam: runtime.spaceInvitationParam,
-    });
+    useState<InvitationUrlRequest>(
+      create(InvitationUrlRequestSchema, {
+        invitationUrl: runtime.invitationUrl,
+        deviceInvitationParam: runtime.deviceInvitationParam,
+        spaceInvitationParam: runtime.spaceInvitationParam,
+      }),
+    );
 
   const client = useClient();
-  const space = useSpace((spaceId as SpaceId | undefined) ?? spaceKey);
+  const space = useSpace((spaceId as SpaceId | undefined) ?? toPublicKey(spaceKey));
 
   const createDeviceInvitationUrl = (invitationCode: string) => {
     const baseUrl = new URL(invitationUrl);
@@ -109,19 +118,31 @@ export const Shell = ({ runtime }: { runtime: ShellRuntime }) => {
           onResetStorage={async () => {
             runtime.setLayout(create(LayoutRequestSchema, { layout: ShellLayout.STATUS }));
             await client.reset();
-            return runtime.setAppContext({ display: ShellDisplay.NONE, reset: true });
+            return runtime.setAppContext(create(AppContextRequestSchema, { display: ShellDisplay.NONE, reset: true }));
           }}
           onRecover={async () => {
             runtime.setLayout(create(LayoutRequestSchema, { layout: ShellLayout.STATUS }));
             await client.reset();
             // TODO(wittjosiah): Enter join flow without reloading.
-            return runtime.setAppContext({ display: ShellDisplay.NONE, reset: true, target: 'recoverIdentity' });
+            return runtime.setAppContext(
+              create(AppContextRequestSchema, {
+                display: ShellDisplay.NONE,
+                reset: true,
+                target: 'recoverIdentity',
+              }),
+            );
           }}
           onJoinNewIdentity={async () => {
             runtime.setLayout(create(LayoutRequestSchema, { layout: ShellLayout.STATUS }));
             await client.reset();
             // TODO(wittjosiah): Enter join flow without reloading.
-            return runtime.setAppContext({ display: ShellDisplay.NONE, reset: true, target: 'deviceInvitation' });
+            return runtime.setAppContext(
+              create(AppContextRequestSchema, {
+                display: ShellDisplay.NONE,
+                reset: true,
+                target: 'deviceInvitation',
+              }),
+            );
           }}
           onDone={async () => {
             blurActiveElement();
@@ -153,11 +174,13 @@ export const Shell = ({ runtime }: { runtime: ShellRuntime }) => {
           onDone={async (result) => {
             blurActiveElement();
             const target = result?.target ?? undefined;
-            await runtime.setAppContext({
-              display: ShellDisplay.NONE,
-              spaceKey: result?.spaceKey ?? undefined,
-              target,
-            });
+            await runtime.setAppContext(
+              create(AppContextRequestSchema, {
+                display: ShellDisplay.NONE,
+                spaceKey: result?.spaceKey ? fromPublicKey(result.spaceKey) : undefined,
+                target,
+              }),
+            );
             runtime.setLayout(create(LayoutRequestSchema, { layout: ShellLayout.DEFAULT }));
           }}
           onExit={async () => {
