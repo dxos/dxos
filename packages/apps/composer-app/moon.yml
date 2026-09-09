@@ -184,6 +184,13 @@ tasks:
       mergeArgs: replace
     deps:
       - ~:#prebuild
+      # Generated sources behind an INDIRECT dependency, named explicitly for the same reason
+      # `echo-query:prebuild-query-lite` is below: `~:#prebuild`'s own `^:#prebuild` stops at the
+      # first hop, and an all-projects task-tag scope (`:#prebuild`) is not a legal task dep. Both
+      # are reached through plugins, so transform-on-request only fails once the plugin that needs
+      # them is opened, while bundled dev fails the whole build up front.
+      - react-ui-gameboard:prebuild
+      - react-ui-experimental:prebuild
       # dist consumed at runtime.
       - '#dist-runtime:build'
       # dist consumed at config-load time: `vite.config.ts` runs in Node, before importSource is
@@ -219,6 +226,18 @@ tasks:
     extends: serve
     env:
       DX_PLUGIN_SET: production
+  # The same inner loop under Vite 8's full-bundle dev mode: Rolldown builds the whole client graph
+  # up front (lazily per entry) and serves it from memory, instead of transforming each module on
+  # request. Still experimental upstream, so it is its own task rather than the default `serve` —
+  # `vite.config.ts` branches on the flag (see `isBundledDev` there) because bundled dev reuses
+  # `build.rolldownOptions` and runs no dep optimizer.
+  serve-bundle:
+    extends: serve
+    command: pnpm exec vite dev --configLoader native --experimentalBundle
+    options:
+      # `serve` already sets this, but `extends` merges args by append unless the child repeats it,
+      # which would concatenate this command's args onto the parent's.
+      mergeArgs: replace
   # Dev server with the agent debug port already open, for QA flows an agent drives end to end
   # (`packages/reflect/deus` — the `## QA` section of a PLUGIN.mdl). The session id is minted per
   # server start and published to `temp/debug-port.json`; set `DX_DEBUG_PORT_SESSION` to choose it

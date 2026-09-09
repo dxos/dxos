@@ -36,6 +36,46 @@ export const LAYER_ORDER = [
 // `dist/plugin`, where the retired pipeline nested a platform slug and a mirrored source tree.
 const ROOT = '../../';
 
+/**
+ * Disable `@tailwindcss/vite`'s `hotUpdate` hook under Vite's full-bundle dev mode.
+ *
+ * `vite dev --experimentalBundle` routes `hotUpdate` through Rolldown's plugin bridge, which
+ * supplies neither the hook's `server` argument nor the context's `environment` — so the hook
+ * throws on its first dereference and takes the whole rebuild with it (`TypeError: Cannot read
+ * properties of undefined (reading 'environments')`, then `(reading 'name')` once `server` is
+ * threaded through). Its job is to invalidate the generated CSS in Vite's module graph when a
+ * scanned source file changes, and that graph is not what serves CSS under bundled dev, so there
+ * is nothing to salvage by fixing up the arguments: skipping it keeps HMR working for everything
+ * else, at the cost of needing a server restart before a NEWLY USED utility class is generated.
+ *
+ * Only `@tailwindcss/vite:generate:serve` declares `hotUpdate`, and it declares no
+ * `configResolved`, so the hook added here has nothing to chain.
+ */
+const skipHotUpdateInBundledDev = (plugin: Plugin): Plugin => {
+  const hotUpdate = plugin.hotUpdate;
+  const handler = typeof hotUpdate === 'function' ? hotUpdate : hotUpdate?.handler;
+  if (!handler) {
+    return plugin;
+  }
+
+  let bundledDev = false;
+  return {
+    ...plugin,
+    configResolved: (config) => {
+      bundledDev = config.experimental.bundledDev === true;
+    },
+    hotUpdate: {
+      ...(typeof hotUpdate === 'object' ? hotUpdate : {}),
+      handler(context) {
+        if (bundledDev) {
+          return;
+        }
+        return handler.call(this, context);
+      },
+    },
+  };
+};
+
 export type ThemePluginOptions = {
   srcCssPath?: string;
   virtualFileId?: string;
@@ -68,7 +108,10 @@ export const ThemePlugin = (options: ThemePluginOptions): Plugin[] => {
     console.log('ThemePlugin:\n', JSON.stringify(config, null, 2));
   }
 
-  // Trailing-edge debounce handle for theme CSS reloads (see `handleHotUpdate`).
+  // Set under `vite dev --experimentalBundle`; see the guard in `hotUpdate`.
+  let bundledDev = false;
+
+  // Trailing-edge debounce handle for theme CSS reloads (see `hotUpdate`).
   let themeReloadTimer: ReturnType<typeof setTimeout> | undefined;
 
   // Under Vitest there is no HMR, and a live watcher leaks per-file `fs_event` handles: Tailwind's
@@ -81,6 +124,9 @@ export const ThemePlugin = (options: ThemePluginOptions): Plugin[] => {
 
   const themePlugin: Plugin = {
     name: 'vite-plugin-dxos-ui-theme',
+    configResolved: (resolved) => {
+      bundledDev = resolved.experimental.bundledDev === true;
+    },
     config: (): UserConfig => {
       return {
         server: {
@@ -152,6 +198,13 @@ export const ThemePlugin = (options: ThemePluginOptions): Plugin[] => {
       }
     },
     hotUpdate({ type, file, modules }) {
+      // Everything below is an optimization of Vite's per-module dev graph, which full-bundle dev
+      // mode does not have — and Rolldown's plugin bridge passes no `environment` there, so the
+      // first dereference would throw and fail the rebuild instead of updating the page.
+      if (bundledDev) {
+        return;
+      }
+
       // Direct edits to CSS (the theme source or its imports) keep Vite's
       // default immediate update for instant feedback while authoring styles.
       if (this.environment.name !== 'client' || type !== 'update' || file.endsWith('.css')) {
@@ -222,5 +275,5 @@ export const ThemePlugin = (options: ThemePluginOptions): Plugin[] => {
   // `@import 'tailwindcss'`, @source, @plugin, @theme) before the postcss chain runs —
   // postcss-import never sees the raw Tailwind directives. Scan roots come from the @source
   // directives in main.css (relative to that file); no project-root base is needed.
-  return [...tailwindcssVite(), themePlugin];
+  return [...tailwindcssVite().map(skipHotUpdateInBundledDev), themePlugin];
 };
