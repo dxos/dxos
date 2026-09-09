@@ -210,7 +210,6 @@ const MainSidebar = forwardRef<HTMLDivElement, MainSidebarProps>(
     // default, and where the overlay sends a sidebar), so a dismissal returns to it and the swipe
     // area can open from it.
     const drawer = useDrawer({
-<<<<<<< HEAD
       open: !isLg && state === 'expanded',
       onOpenChange: ({ open }) => onStateChange?.(open ? 'expanded' : 'collapsed'),
       modal: false,
@@ -225,27 +224,6 @@ const MainSidebar = forwardRef<HTMLDivElement, MainSidebarProps>(
         const own = event.currentTarget;
         if (!(own instanceof Node && targetLayer?.contains(own))) {
           event.preventDefault();
-||||||| 0c6c18641a
-      'open': !isLg && state !== 'closed',
-      'onOpenChange': ({ open }) => {
-        if (!open) {
-          onStateChange?.('closed');
-=======
-      open: !isLg && state !== 'closed',
-      onOpenChange: ({ open }) => onStateChange?.(open ? 'expanded' : 'closed'),
-      modal: false,
-      trapFocus: false,
-      preventScroll: false,
-      restoreFocus: false,
-      swipeDirection: side === 'w-end' ? 'end' : 'start',
-      // Zag's layer stack takes every later-opened layer for a nested one and dismisses it when a
-      // lower layer leaves, which would close the other sidebar whenever this one closes.
-      onRequestDismiss: (event) => {
-        const { targetLayer } = event.detail;
-        const own = event.currentTarget;
-        if (!(own instanceof Node && targetLayer?.contains(own))) {
-          event.preventDefault();
->>>>>>> origin/main
         }
       },
       initialFocusEl: () => (autoFocusVetoed ? (document.activeElement as HTMLElement | null) : null),
