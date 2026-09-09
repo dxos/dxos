@@ -32,7 +32,11 @@ const positioner: ComponentFunction<TourStyleProps> = (_props, ...etc) =>
 // The card wears the info scheme, as a callout does: guidance, not a menu.
 const content: ComponentFunction<TourStyleProps> = (_props, ...etc) =>
   mx(
-    'flex flex-col gap-2 w-72 p-3 rounded-sm border-2 bg-info-surface border-info-border text-info-fg dx-focus-ring',
+    // Positioned so it is the arrow's containing block, as the popover's backdrop filter makes its
+    // content: the arrow then lands one border inside the edge and `positioning.css` shifts it out
+    // by `--arrow-inset` to straddle it. Unpositioned, the arrow measures against the positioner and
+    // that shift opens a gap.
+    'relative flex flex-col gap-2 w-72 p-3 rounded-sm border-2 bg-primary-surface border-primary-border text-info-fg dx-focus-ring',
     surfaceShadow({ elevation: 'positioned' }),
     ...etc,
   );
@@ -40,8 +44,8 @@ const content: ComponentFunction<TourStyleProps> = (_props, ...etc) =>
 // As `Popover.Arrow`: the tip straddles the border, and `positioning.css` shifts it outward by the border width.
 const arrow: ComponentFunction<TourStyleProps> = (_props, ...etc) =>
   mx(
-    '[--arrow-size:12px] [--arrow-background:var(--color-info-surface)] [--arrow-inset:2px]',
-    '[&>[data-part=arrow-tip]]:border-info-border [&>[data-part=arrow-tip]]:border-t-2 [&>[data-part=arrow-tip]]:border-l-2',
+    '[--arrow-size:12px] [--arrow-background:var(--color-primary-surface)] [--arrow-inset:2px]',
+    '[&>[data-part=arrow-tip]]:border-primary-border [&>[data-part=arrow-tip]]:border-t-2 [&>[data-part=arrow-tip]]:border-l-2',
     ...etc,
   );
 
