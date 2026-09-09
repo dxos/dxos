@@ -55,14 +55,14 @@ export const SupportSettings = ({ subject }: SupportSettingsProps) => {
     >
       <Form.Viewport scroll>
         <Form.Content>
-          <Form.Section title={meta.profile.name ?? meta.profile.key}>
+          <Form.FieldSet label={meta.profile.name ?? meta.profile.key}>
             {onShowWelcome && (
-              <Form.Field label={t('show-welcome.label')}>
+              <Form.Field standalone label={t('show-welcome.label')}>
                 <Button onClick={onShowWelcome}>{t('show-welcome.label')}</Button>
               </Form.Field>
             )}
-            <Form.FieldSet />
-          </Form.Section>
+            <Form.Fields />
+          </Form.FieldSet>
         </Form.Content>
       </Form.Viewport>
     </Form.Root>

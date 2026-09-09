@@ -8,28 +8,30 @@ import { HuePicker } from '@dxos/react-ui-pickers';
 
 import { type FormFieldRendererProps } from '#types';
 
-import { FormField } from '../../FormField';
+import { FormStaticValue } from '../../FormField';
+import { presentationFor } from '../../presentation';
 
 /**
- * A field whose value is one of the theme's hues: the hue picker in a form row, with the field's label
- * as the picker's own label so an unset value still reads as the field.
+ * A control whose value is one of the theme's hues: the hue picker, with the field's label as the
+ * picker's own label so an unset value still reads as the field.
  */
-export const HueField = ({ type, readonly, onValueChange, ...props }: FormFieldRendererProps<string | undefined>) => {
+export const HueField = ({
+  type,
+  format,
+  label,
+  readonly,
+  presentation,
+  getValue,
+  onValueChange,
+}: FormFieldRendererProps<string | undefined>) => {
   const handleChange = useCallback((hue: string) => onValueChange(type, hue), [onValueChange, type]);
   const handleReset = useCallback(() => onValueChange(type, undefined), [onValueChange, type]);
-  return (
-    <FormField<string | undefined> readonly={readonly} {...props}>
-      {({ value }) => (
-        <HuePicker
-          label={props.label}
-          value={value}
-          disabled={!!readonly}
-          onChange={handleChange}
-          onReset={handleReset}
-        />
-      )}
-    </FormField>
-  );
+  const value = getValue();
+  if (presentationFor(presentation).isStatic) {
+    return <FormStaticValue value={value} format={format} />;
+  }
+
+  return <HuePicker label={label} value={value} disabled={!!readonly} onChange={handleChange} onReset={handleReset} />;
 };
 
 HueField.displayName = 'Form.HueField';

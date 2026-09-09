@@ -24,22 +24,26 @@ export const Sound = composable<HTMLDivElement, SoundProps>(({ sequence, onUpdat
   const fieldMap = useMemo<FormFieldMap>(
     () => ({
       'source.type': (fieldProps) => (
-        <SelectField
-          {...fieldProps}
-          options={[
-            { label: 'Sample', value: 'sample' },
-            { label: 'Generator', value: 'generator' },
-          ]}
-        />
+        <Form.Field path={fieldProps.jsonPath}>
+          <SelectField
+            {...fieldProps}
+            options={[
+              { label: 'Sample', value: 'sample' },
+              { label: 'Generator', value: 'generator' },
+            ]}
+          />
+        </Form.Field>
       ),
       'source.sample': (fieldProps) => (
-        <SelectField
-          {...fieldProps}
-          options={Object.keys(SAMPLE_URLS).map((key) => ({
-            label: key,
-            value: key,
-          }))}
-        />
+        <Form.Field path={fieldProps.jsonPath}>
+          <SelectField
+            {...fieldProps}
+            options={Object.keys(SAMPLE_URLS).map((key) => ({
+              label: key,
+              value: key,
+            }))}
+          />
+        </Form.Field>
       ),
     }),
     [],
@@ -85,7 +89,7 @@ export const Sound = composable<HTMLDivElement, SoundProps>(({ sequence, onUpdat
       >
         <Form.Viewport>
           <Form.Content>
-            <Form.FieldSet />
+            <Form.Fields />
           </Form.Content>
         </Form.Viewport>
       </Form.Root>

@@ -33,7 +33,7 @@ const StorybookProjectItem = ({ item, projectionModel }: ItemProps) => {
       <Form.Root schema={personSchema} projection={projectionModel} values={contact} autoSave>
         <Form.Viewport>
           <Form.Content>
-            <Form.FieldSet />
+            <Form.Fields />
           </Form.Content>
         </Form.Viewport>
       </Form.Root>

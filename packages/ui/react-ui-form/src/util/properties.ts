@@ -124,3 +124,39 @@ export const getFormProperties = (ast: SchemaAST.AST): SchemaEx.SchemaProperty[]
       return raw && (SchemaEx.isNestedType(raw) || SchemaEx.isArrayType(raw)) ? { ...prop, type: raw } : prop;
     });
 };
+
+/**
+ * The object type at a path of the schema, for walking a nested object's properties: each segment
+ * is a property name (an array index selects the element type), and a discriminated union is
+ * resolved by the value at that path. `undefined` when the path leads to no object.
+ */
+export const getSchemaAtPath = (
+  ast: SchemaAST.AST,
+  path: (string | number)[],
+  values: AnyProperties | undefined,
+): SchemaAST.AST | undefined => {
+  let node: SchemaAST.AST = ast;
+  for (const segment of path) {
+    if (typeof segment === 'number') {
+      const element = SchemaEx.getArrayElementType(node);
+      if (!element) {
+        return undefined;
+      }
+      node = element;
+      continue;
+    }
+    const literal = SchemaEx.findNode(node, SchemaAST.isObjects);
+    if (!literal) {
+      return undefined;
+    }
+    const prop = SchemaAST.getPropertySignatures(literal).find((candidate) => String(candidate.name) === segment);
+    if (!prop) {
+      return undefined;
+    }
+    node = unwrapOptional(prop);
+  }
+  const union = SchemaEx.findNode(node, SchemaEx.isDiscriminatedUnion);
+  return union
+    ? SchemaEx.getDiscriminatedType(union, SchemaEx.getValue(values ?? {}, SchemaEx.createJsonPath(path)) ?? {})
+    : SchemaEx.findNode(node, SchemaAST.isObjects);
+};
