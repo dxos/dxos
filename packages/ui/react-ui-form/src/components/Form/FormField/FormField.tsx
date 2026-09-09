@@ -9,7 +9,7 @@ import React, { Component, type PropsWithChildren, type ReactNode, type Ref, use
 
 import { Format } from '@dxos/echo';
 import { SchemaAST, SchemaEx } from '@dxos/effect';
-import { Collapsible, Field, Icon, type ThemedClassName, Tooltip } from '@dxos/react-ui';
+import { Field, Icon, type ThemedClassName, Tooltip } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 import { type FormFieldLabelPlacement, type FormFieldRendererProps, type FormPresentation } from '#types';
@@ -31,6 +31,8 @@ export type FormFieldLabelProps = ThemedClassName<
     standalone?: boolean;
     /** Class applied to the inner label text node, overriding the default size/color (e.g. `text-lg`). */
     labelClassName?: string;
+    /** An id on the label text, for what names itself by it (a group, its disclosure). */
+    id?: string;
     /** Form variant; selects the label's chrome (e.g. `settings` enlarges the text and places it in the field grid). */
     variant?: FormVariant;
     error?: string;
@@ -51,18 +53,13 @@ export type FormFieldLabelProps = ThemedClassName<
      * as an interactive control the way `button` does.
      */
     labelEnd?: ReactNode;
-    /**
-     * Render the row as the trigger of the enclosing `Collapsible` — a button rather than a div, so the
-     * disclosure is reachable from the keyboard and announces its state. `button` then holds no
-     * interactive content of its own (a caret, not a control), since a button cannot nest one.
-     */
-    trigger?: boolean;
   } & Pick<FormFieldRendererProps, 'label' | 'readonly' | 'required'>
 >;
 
 export const FormFieldLabel = ({
   classNames,
   labelClassName,
+  id,
   variant = 'default',
   label,
   error,
@@ -71,7 +68,6 @@ export const FormFieldLabel = ({
   standalone,
   button,
   labelEnd,
-  trigger,
 }: FormFieldLabelProps) => {
   const styles = formTheme.styles({ variant });
   // Render the required asterisk via a `::after` pseudo-element rather than a DOM node: it keeps the
@@ -90,9 +86,13 @@ export const FormFieldLabel = ({
   // plain `span` used for read-only/standalone labels reads `className`.
   const labelNode =
     readonly || standalone ? (
-      <span className={labelClassNames}>{label}</span>
+      <span id={id} className={labelClassNames}>
+        {label}
+      </span>
     ) : (
-      <Field.Label classNames={labelClassNames}>{label}</Field.Label>
+      <Field.Label id={id} classNames={labelClassNames}>
+        {label}
+      </Field.Label>
     );
 
   const content = (
@@ -110,14 +110,7 @@ export const FormFieldLabel = ({
     </>
   );
 
-  // `group` lets the caret in `button` read the disclosure state off the trigger.
-  return trigger ? (
-    <Collapsible.Trigger classNames={styles.fieldLabel({ class: mx('group', classNames) })}>
-      {content}
-    </Collapsible.Trigger>
-  ) : (
-    <div className={styles.fieldLabel({ class: mx(classNames) })}>{content}</div>
-  );
+  return <div className={styles.fieldLabel({ class: mx(classNames) })}>{content}</div>;
 };
 
 FormFieldLabel.displayName = 'Form.FieldLabel';

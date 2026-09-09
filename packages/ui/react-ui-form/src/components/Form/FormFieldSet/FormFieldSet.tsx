@@ -2,10 +2,20 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { Children, type PropsWithChildren } from 'react';
+import React, { Children, type PropsWithChildren, useId } from 'react';
 
-import { Collapsible, Fieldset, Icon, type ThemedClassName, composable, composableProps } from '@dxos/react-ui';
+import {
+  Button,
+  Collapsible,
+  Fieldset,
+  Icon,
+  type ThemedClassName,
+  composable,
+  composableProps,
+  useThemeContext,
+} from '@dxos/react-ui';
 import { MarkdownView } from '@dxos/react-ui-markdown';
+import { mx } from '@dxos/ui-theme';
 
 import { useFormContext } from '../../../hooks';
 import { formTheme } from '../Form.theme';
@@ -33,7 +43,9 @@ export type FormFieldSetProps = ThemedClassName<
 export const FormFieldSet = composable<HTMLFieldSetElement, FormFieldSetProps>(
   ({ children, label, description, collapsible, ...props }, forwardedRef) => {
     const { variant = 'default', layout } = useFormContext(FORM_FIELDSET_NAME);
+    const { tx } = useThemeContext();
     const depth = useFormFieldSetDepth();
+    const labelId = useId();
     const styles = formTheme.styles({ variant, depth: depth === 0 ? 'root' : 'nested' });
     const showLabel = layout !== 'inline' && !!label;
     // An empty group has nothing to fold, so a disclosure on its legend would be a control that does nothing.
@@ -42,22 +54,35 @@ export const FormFieldSet = composable<HTMLFieldSetElement, FormFieldSetProps>(
     const legend = showLabel && (
       <Fieldset.Legend classNames={styles.fieldSetLegend({ class: description ? undefined : styles.fieldSetHeader() })}>
         {canCollapse ? (
+          // The caret alone is the disclosure, named by the label text beside it, so the focus ring
+          // frames a button and not the whole row.
           <FormFieldHeader
             label={label}
-            trigger
+            labelId={labelId}
             actions={
-              <Icon
-                icon='ph--caret-right--regular'
-                size={4}
-                classNames='mx-1.5 transition-transform group-data-[state=open]:rotate-90'
-              />
+              <Button
+                asChild
+                variant='ghost'
+                density='sm'
+                classNames={mx(tx('iconButton.root', { iconOnly: true }), 'group')}
+              >
+                <Collapsible.Trigger aria-labelledby={labelId}>
+                  <Icon
+                    icon='ph--caret-right--regular'
+                    size={4}
+                    classNames='transition-transform group-data-[state=open]:rotate-90'
+                  />
+                </Collapsible.Trigger>
+              </Button>
             }
           />
         ) : depth === 0 ? (
           // A heading inside the legend: the group is named by its title, and the title still serves navigation.
-          <h2 className={styles.fieldSetTitle()}>{label}</h2>
+          <h2 id={labelId} className={styles.fieldSetTitle()}>
+            {label}
+          </h2>
         ) : (
-          <FormFieldHeader label={label} />
+          <FormFieldHeader label={label} labelId={labelId} />
         )}
       </Fieldset.Legend>
     );
@@ -82,7 +107,11 @@ export const FormFieldSet = composable<HTMLFieldSetElement, FormFieldSetProps>(
     );
 
     const fieldset = (
-      <Fieldset.Root {...composableProps(props, { classNames: styles.fieldSet() })} ref={forwardedRef}>
+      <Fieldset.Root
+        {...composableProps(props, { classNames: styles.fieldSet() })}
+        aria-labelledby={showLabel ? labelId : undefined}
+        ref={forwardedRef}
+      >
         {legend}
         {helper}
         {body}

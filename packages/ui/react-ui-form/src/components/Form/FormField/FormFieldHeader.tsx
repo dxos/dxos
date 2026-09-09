@@ -9,15 +9,15 @@ import { CompactIconButton } from './FormFieldDispatch';
 
 export type FormFieldHeaderProps = {
   label: string;
+  /** An id on the label text, for what names itself by it. */
+  labelId?: string;
   required?: boolean;
   readonly?: boolean;
   classNames?: string;
   /** Trailing inline add affordance; omit to hide it. */
   add?: { icon?: string; label: string; disabled?: boolean; onClick: () => void };
-  /** Extra trailing content placed after the add affordance (e.g. a disclosure caret). */
+  /** Extra trailing content placed after the add affordance (e.g. a disclosure). */
   actions?: ReactNode;
-  /** Render the row as the enclosing `Collapsible`'s trigger; incompatible with `add`, a button inside a button. */
-  trigger?: boolean;
 };
 
 /**
@@ -27,20 +27,20 @@ export type FormFieldHeaderProps = {
  */
 export const FormFieldHeader = ({
   label,
+  labelId,
   required,
   readonly,
   classNames,
   add,
   actions,
-  trigger,
 }: FormFieldHeaderProps) => (
   <FormFieldLabel
     standalone
     classNames={classNames}
+    id={labelId}
     label={label}
     required={required}
     readonly={readonly}
-    trigger={trigger}
     button={
       (!readonly && add) || actions ? (
         <>
