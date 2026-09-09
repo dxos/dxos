@@ -343,7 +343,7 @@ export class SpacesServiceImpl implements SpacesService.Handlers {
         const space = dataSpaceManager.spaces.get(spaceKey) ?? raise(new SpaceNotFoundError(spaceKey));
         const result = await space.createEpoch({ migration, newAutomergeRoot: automergeRootUrl });
         return buf.create(CreateEpochResponseSchema, {
-          epochCredential: result?.credential.credential,
+          epochCredential: result?.credential,
           controlTimeframe: result?.timeframe && fromTimeframe(result.timeframe),
         });
       },

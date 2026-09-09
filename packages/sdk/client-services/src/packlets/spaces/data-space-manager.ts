@@ -9,6 +9,7 @@ import {
   interpretAsDocumentId,
   isValidAutomergeUrl,
 } from '@automerge/automerge-repo';
+import { create } from '@bufbuild/protobuf';
 import * as EffectContext from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
@@ -19,6 +20,7 @@ import { SpaceProperties } from '@dxos/client-protocol';
 import { Context, LifecycleState, Resource, cancelWithContext } from '@dxos/context';
 import {
   createAdmissionCredentials,
+  credentialOfPayload,
   credentialPayload,
   type CredentialSigner,
   type DelegateInvitationCredential,
@@ -50,8 +52,16 @@ import { type KeyringApi, KeyringApiService } from '@dxos/keyring';
 import { PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { AlreadyJoinedError } from '@dxos/protocols';
-import { toPublicKey } from '@dxos/protocols/buf';
-import { buf, fromPublicKey } from '@dxos/protocols/buf';
+import {
+  buf,
+  fromDate,
+  fromPublicKey,
+  fromTimeframe,
+  requirePublicKey,
+  toDate,
+  toPublicKey,
+  toTimeframe,
+} from '@dxos/protocols/buf';
 import {
   AdmissionKeypairSchema,
   Invitation_Kind,
@@ -59,14 +69,16 @@ import {
   SpaceState,
 } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 import { type Runtime_Client_EdgeFeatures } from '@dxos/protocols/buf/dxos/config_pb';
-import { type FeedMessage } from '@dxos/protocols/buf/dxos/echo/feed_pb';
+import { type FeedMessage, type FeedMessage_Payload } from '@dxos/protocols/buf/dxos/echo/feed_pb';
 import { EdgeReplicationSetting } from '@dxos/protocols/buf/dxos/echo/metadata_pb';
-import { type SpaceMetadata } from '@dxos/protocols/buf/dxos/echo/metadata_pb';
+import { type SpaceMetadata, SpaceMetadataSchema } from '@dxos/protocols/buf/dxos/echo/metadata_pb';
 import {
   type Credential,
   MembershipPolicy,
   type ProfileDocument,
-  SpaceMember,
+  SpaceDeletedSchema,
+  type SpaceMember_Role,
+  SpaceMember_Role as SpaceMemberRole,
 } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { type DelegateSpaceInvitation } from '@dxos/protocols/buf/dxos/halo/invitations_pb';
 import { type PeerState } from '@dxos/protocols/buf/dxos/mesh/presence_pb';
@@ -172,7 +184,7 @@ export type AcceptSpaceOptions = {
 export type AdmitMemberOptions = {
   spaceKey: PublicKey;
   identityKey: PublicKey;
-  role: SpaceMember.Role;
+  role: SpaceMember_Role;
   profile?: ProfileDocument;
   delegationCredentialId?: PublicKey;
   tags?: string[];
@@ -343,7 +355,10 @@ export class DataSpaceManager extends Resource {
     await forEachAsync(this._metadataStore.spaces, async (spaceMetadata) => {
       try {
         // Tombstoned spaces are never constructed, opened, or replicated.
-        if (spaceMetadata.state === SpaceState.SPACE_DELETED || this.isSpaceDeleted(spaceMetadata.key)) {
+        if (
+          spaceMetadata.state === SpaceState.SPACE_DELETED ||
+          this.isSpaceDeleted(requirePublicKey(spaceMetadata.key))
+        ) {
           log('skipping deleted space', { spaceKey: spaceMetadata.key });
           return;
         }
@@ -408,15 +423,15 @@ export class DataSpaceManager extends Resource {
       this._legacyCreatedSpaces.add(spaceId);
     }
 
-    const metadata: SpaceMetadata = {
-      key: spaceKey,
+    const metadata: SpaceMetadata = create(SpaceMetadataSchema, {
+      key: fromPublicKey(spaceKey),
       spaceId,
-      genesisFeedKey: controlFeedKey,
-      controlFeedKey,
-      dataFeedKey,
+      genesisFeedKey: fromPublicKey(controlFeedKey),
+      controlFeedKey: fromPublicKey(controlFeedKey),
+      dataFeedKey: fromPublicKey(dataFeedKey),
       state: SpaceState.SPACE_ACTIVE,
       tags,
-    };
+    });
 
     log('creating space...', { spaceId, spaceKey });
 
@@ -484,7 +499,10 @@ export class DataSpaceManager extends Resource {
     await this._metadataStore.addSpace(metadata);
 
     const memberCredential = credentials[1];
-    invariant(getCredentialAssertion(memberCredential)['@type'] === 'dxos.halo.credentials.SpaceMember');
+    invariant(
+      getCredentialAssertion(memberCredential).$typeName === 'dxos.halo.credentials.SpaceMember',
+      'Invalid credential',
+    );
     await this.signingContext.recordCredential(memberCredential);
 
     await space.initializeDataPipeline(ctx);
@@ -510,14 +528,14 @@ export class DataSpaceManager extends Resource {
     invariant(!this.isSpaceDeleted(opts.spaceKey), 'Cannot accept a deleted space.');
 
     const tags = opts.tags ? Array.from(opts.tags) : [];
-    const metadata: SpaceMetadata = {
-      key: opts.spaceKey,
+    const metadata: SpaceMetadata = create(SpaceMetadataSchema, {
+      key: fromPublicKey(opts.spaceKey),
       spaceId: await createIdFromSpaceKey(opts.spaceKey),
-      genesisFeedKey: opts.genesisFeedKey,
-      controlTimeframe: opts.controlTimeframe,
-      dataTimeframe: opts.dataTimeframe,
+      genesisFeedKey: fromPublicKey(opts.genesisFeedKey),
+      controlTimeframe: opts.controlTimeframe && fromTimeframe(opts.controlTimeframe),
+      dataTimeframe: opts.dataTimeframe && fromTimeframe(opts.dataTimeframe),
       tags,
-    };
+    });
 
     const space = await this._constructSpace(ctx, metadata);
     await space.open(ctx);
@@ -696,7 +714,8 @@ export class DataSpaceManager extends Resource {
     return (
       this._metadataStore.deletedSpaces.some((key) => key.equals(spaceKey)) ||
       this._metadataStore.spaces.some(
-        (spaceMetadata) => spaceMetadata.key.equals(spaceKey) && spaceMetadata.state === SpaceState.SPACE_DELETED,
+        (spaceMetadata) =>
+          requirePublicKey(spaceMetadata.key).equals(spaceKey) && spaceMetadata.state === SpaceState.SPACE_DELETED,
       )
     );
   }
@@ -715,11 +734,10 @@ export class DataSpaceManager extends Resource {
     // Replicates to the user's other devices via the HALO control feed.
     const credential = await this.signingContext.credentialSigner.createCredential({
       subject: spaceKey,
-      assertion: {
-        '@type': 'dxos.halo.credentials.SpaceDeleted',
-        spaceKey,
-        'deletedAt': new Date(),
-      },
+      assertion: create(SpaceDeletedSchema, {
+        spaceKey: fromPublicKey(spaceKey),
+        deletedAt: fromDate(new Date()),
+      }),
     });
     await this.signingContext.recordCredential(credential);
 
@@ -763,7 +781,7 @@ export class DataSpaceManager extends Resource {
     const space = this._spaceManager.spaces.get(options.spaceKey);
     invariant(space);
 
-    if (space.spaceState.getMemberRole(options.identityKey) !== SpaceMember.Role.REMOVED) {
+    if (space.spaceState.getMemberRole(options.identityKey) !== SpaceMemberRole.REMOVED) {
       throw new AlreadyJoinedError();
     }
 
@@ -772,7 +790,7 @@ export class DataSpaceManager extends Resource {
     const spaceRootUrl = options.spaceRootUrl ?? this._echoHost.getSpaceRootRefs(space.id)?.spaceRootDocUrl;
 
     // TODO(burdon): Check if already admitted.
-    const credentials: FeedMessage.Payload[] = await createAdmissionCredentials({
+    const credentials: FeedMessage_Payload[] = await createAdmissionCredentials({
       signer: this.signingContext.credentialSigner,
       identityKey: options.identityKey,
       spaceKey: space.key,
@@ -786,9 +804,11 @@ export class DataSpaceManager extends Resource {
     });
 
     // TODO(dmaretskyi): Refactor.
-    invariant(credentials[0].credential);
-    const spaceMemberCredential = credentials[0].credential.credential;
-    invariant(getCredentialAssertion(spaceMemberCredential)['@type'] === 'dxos.halo.credentials.SpaceMember');
+    const spaceMemberCredential = credentialOfPayload(credentials[0]);
+    invariant(
+      getCredentialAssertion(spaceMemberCredential).$typeName === 'dxos.halo.credentials.SpaceMember',
+      'Invalid credential',
+    );
     await writeMessages(space.controlPipeline.writer, credentials);
 
     return spaceMemberCredential;
@@ -860,10 +880,11 @@ export class DataSpaceManager extends Resource {
     });
 
     const controlFeed =
-      metadata.controlFeedKey && (await this._feedStore.openFeed(metadata.controlFeedKey, { writable: true }));
+      metadata.controlFeedKey &&
+      (await this._feedStore.openFeed(requirePublicKey(metadata.controlFeedKey), { writable: true }));
     const dataFeed =
       metadata.dataFeedKey &&
-      (await this._feedStore.openFeed(metadata.dataFeedKey, {
+      (await this._feedStore.openFeed(requirePublicKey(metadata.dataFeedKey), {
         writable: true,
         sparse: true,
       }));
@@ -966,7 +987,7 @@ export class DataSpaceManager extends Resource {
     });
 
     if (metadata.controlTimeframe) {
-      dataSpace.inner.controlPipeline.state.setTargetTimeframe(metadata.controlTimeframe);
+      dataSpace.inner.controlPipeline.state.setTargetTimeframe(toTimeframe(metadata.controlTimeframe));
     }
 
     // Cleared on the way back up: a closed space can be activated again, and a stale mark would
@@ -1019,7 +1040,7 @@ export class DataSpaceManager extends Resource {
     const unsubscribeFromStateUpdate = dataSpace.stateUpdate.on(this._ctx, attemptAnchor);
     dataSpace.preClose.append(async () => unsubscribeFromStateUpdate());
 
-    this._spaces.set(metadata.key, dataSpace);
+    this._spaces.set(requirePublicKey(metadata.key), dataSpace);
     return dataSpace;
   }
 
@@ -1048,7 +1069,7 @@ export class DataSpaceManager extends Resource {
         return peerId && spaceProtocol.sessions.get(peerId);
       });
       const sessionsToClose = sessions.filter((s): s is SpaceProtocolSession => {
-        return (s && (member.role === SpaceMember.Role.REMOVED) !== (s.authStatus === AuthStatus.FAILURE)) ?? false;
+        return (s && (member.role === SpaceMemberRole.REMOVED) !== (s.authStatus === AuthStatus.FAILURE)) ?? false;
       });
       sessionsToClose.forEach((session) => {
         void session.close().catch(log.error);
@@ -1073,7 +1094,7 @@ export class DataSpaceManager extends Resource {
       return;
     }
     const role = space.spaceState.getMemberRole(identityKey);
-    if (role === SpaceMember.Role.REMOVED) {
+    if (role === SpaceMemberRole.REMOVED) {
       const session = peerId && space.protocol.sessions.get(peerId);
       if (session != null) {
         log('closing a session with a removed peer', { peerId });
@@ -1104,17 +1125,18 @@ export class DataSpaceManager extends Resource {
     invitations: Array<[PublicKey, DelegateSpaceInvitation]>,
   ): Promise<void> {
     const tasks = invitations.map(([credentialId, invitation]) => {
+      const expiresOn = toDate(invitation.expiresOn);
       return this._invitationsManager.createInvitation(this._ctx, {
         type: Invitation_Type.DELEGATED,
         kind: Invitation_Kind.SPACE,
         spaceKey: fromPublicKey(space.key),
         authMethod: toBufAuthMethod(invitation.authMethod),
         invitationId: invitation.invitationId,
-        swarmKey: fromPublicKey(invitation.swarmKey),
+        swarmKey: invitation.swarmKey,
         guestKeypair: invitation.guestKey
-          ? buf.create(AdmissionKeypairSchema, { publicKey: fromPublicKey(invitation.guestKey) })
+          ? buf.create(AdmissionKeypairSchema, { publicKey: invitation.guestKey })
           : undefined,
-        lifetime: invitation.expiresOn ? remainingLifetimeSeconds(invitation.expiresOn) : undefined,
+        lifetime: expiresOn && remainingLifetimeSeconds(expiresOn),
         multiUse: invitation.multiUse,
         delegationCredentialId: fromPublicKey(credentialId),
         persistent: false,
