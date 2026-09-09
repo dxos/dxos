@@ -6,96 +6,95 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import { userEvent, within } from 'storybook/test';
 
 import { AppSurface } from '@dxos/app-toolkit/ui';
-import { Filter, Obj, Ref } from '@dxos/echo';
 import * as AssistantSkill from '@dxos/plugin-assistant/AssistantSkill';
-import { type Space } from '@dxos/react-client/echo';
-import { trim } from '@dxos/util';
+import { translations as inboxTranslations } from '@dxos/plugin-inbox/translations';
+import { translations as projectsTranslations } from '@dxos/plugin-projects/translations';
+import { translations as tasksTranslations } from '@dxos/plugin-tasks/translations';
 
 import { StoryRole } from '../modules';
-import { ModuleContainer, createDecorators, storyParameters } from '../testing';
+import { ModuleContainer, VoyageTemplatePlugin, createDecorators, storyParameters } from '../testing';
+
+/** The subject every project template scaffolds from; the subject-free ones ignore it. */
+const MAILBOX_NAME = 'Clients';
 
 const meta: Meta<typeof ModuleContainer> = {
   title: 'stories/stories-assistant/Projects',
   render: ModuleContainer,
-  parameters: storyParameters,
+  parameters: {
+    ...storyParameters,
+    translations: [
+      ...storyParameters.translations,
+      ...projectsTranslations,
+      ...inboxTranslations,
+      ...tasksTranslations,
+    ],
+  },
 };
 
 export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-// Distinctive directives so a play function (or a human) can tell instructed behavior from chance.
-const PROJECT_INSTRUCTIONS = trim`
-  You are the assistant for the "Voyage" project.
-  Always end every reply with the single word AHOY.
-`;
-
-const PROJECT_COMMANDS = [
-  {
-    sentinel: '$track',
-    description: 'Track a follow-up item',
-    prompt: 'Reply with exactly "TRACKED: <item>" where <item> is the text after the sentinel, then stop.',
-  },
-];
-
-// Captured by `onInit` so play functions can assert on live objects.
-let storySpace: Space | undefined;
-
 const decorators = createDecorators({
   skills: [AssistantSkill.key],
   lazyPlugins: async () => {
-    const [{ Instructions, Project, Routine }, { Collection, Text }, ProjectsPlugin, TasksPlugin] = await Promise.all([
+    const [
+      { Instructions, Project, Routine },
+      { Collection, Feed },
+      { Text, TagIndex },
+      { Mailbox },
+      { SpacePlugin },
+      { InboxPlugin },
+      ProjectsPlugin,
+      TasksPlugin,
+      CrmPlugin,
+    ] = await Promise.all([
       import('@dxos/compute'),
-      Promise.all([import('@dxos/echo'), import('@dxos/schema')]).then(([echo, schema]) => ({
-        Collection: echo.Collection,
-        Text: schema.Text,
-      })),
+      import('@dxos/echo'),
+      import('@dxos/schema'),
+      import('@dxos/plugin-inbox'),
+      import('@dxos/plugin-space/testing'),
+      import('@dxos/plugin-inbox/testing'),
       import('@dxos/plugin-projects/ProjectsPlugin'),
       import('@dxos/plugin-tasks/TasksPlugin'),
+      import('@dxos/plugin-crm/CrmPlugin'),
     ]);
     return {
-      // Declared in Projects' `dependsOn`, so the manager refuses to resolve it without Tasks.
-      plugins: [ProjectsPlugin.make(), TasksPlugin.make()],
-      types: [Project.Project, Instructions.Instructions, Routine.Routine, Collection.Collection, Text.Text],
+      plugins: [
+        // `ProjectOperation.Create` files the scaffolded project with `SpaceOperation.AddObject`,
+        // whose handler plugin-space owns.
+        SpacePlugin({}),
+        InboxPlugin(),
+        ProjectsPlugin.make(),
+        // Declared in Projects' `dependsOn`, so the manager refuses to resolve it without Tasks.
+        TasksPlugin.make(),
+        // Contributes the mailbox-subject templates (Sender Research, CRM Pipeline) that the
+        // picker offers alongside plugin-projects' own Default and Inbox Research.
+        CrmPlugin.make(),
+        VoyageTemplatePlugin,
+      ],
+      types: [
+        Project.Project,
+        Instructions.Instructions,
+        Routine.Routine,
+        Collection.Collection,
+        Text.Text,
+        Mailbox.Mailbox,
+        // The mailbox and every feed trigger spec resolve `Feed`; unregistered, feed-backed reads
+        // come up empty.
+        Feed.Feed,
+        TagIndex.TagIndex,
+      ],
     };
   },
   onInit: async ({ space }) => {
-    storySpace = space;
-    const { Instructions, Project } = await import('@dxos/compute');
-    const project = Project.make({ name: 'Voyage', description: 'Project chat-binding test fixture.' });
-    const instructions = Instructions.make({
-      name: 'Instructions',
-      text: PROJECT_INSTRUCTIONS,
-      commands: PROJECT_COMMANDS,
-    });
-    Obj.update(project, (project) => {
-      project.instructions = Ref.make(instructions);
-    });
-    Obj.setParent(instructions, project);
-    space.db.add(project);
-    await space.db.flush({ indexes: true });
-  },
-  // Mirror ChatCompanion's project wiring: instructions steer via the chat's ref; skills and
-  // context objects (plus the project itself) travel via bindings.
-  onChatCreated: async ({ db, chat, binder }) => {
-    const { Project } = await import('@dxos/compute');
-    const [project] = await db.query(Filter.type(Project.Project)).run();
-    if (!chat.instructions && project.instructions) {
-      const instructionsRef = project.instructions;
-      Obj.update(chat, (chat) => {
-        chat.instructions = instructionsRef;
-      });
-    }
-    const bindings = Project.contextBindings(project);
-    if (bindings.skills.length > 0) {
-      await binder.bind({ skills: [...bindings.skills] });
-    }
-    await binder.bind({ objects: [Ref.make(project), ...bindings.objects] });
+    const { Mailbox } = await import('@dxos/plugin-inbox');
+    space.db.add(Mailbox.make({ name: MAILBOX_NAME }));
   },
 });
 
 const sharedArgs = {
-  layout: [[StoryRole.Chat], [AppSurface.deckCompanion('trace')]],
+  layout: [[StoryRole.Project], [StoryRole.Chat], [AppSurface.deckCompanion('trace')]],
 };
 
 /**
@@ -150,15 +149,18 @@ const waitForResponse = async (canvasElement: HTMLElement, needle: string, timeo
 };
 
 /**
- * Project-bound chat over a live AI stack: the session is bound to the "Voyage" project, whose
- * Instructions (text + sentinel commands) flow into the system prompt via `Project.contextBindings`
- * + `formatSystemPrompt`.
+ * Project-bound chat over a live AI stack, in three columns: the project, its chat, and the trace
+ * panel. The project column's toolbar lists the contributed project templates; picking one resets
+ * the space to a project scaffolded from it, with a fresh chat bound to it. Instructions (text +
+ * sentinel commands) reach the system prompt through that binding.
  *
  * Test:
  * 1. Wait for the chat prompt to activate (context chips show "Voyage" and "Instructions").
  * 2. Send "What project are you assisting with?" — the reply names Voyage and ends with AHOY.
  * 3. Send "$track buy milk" — the reply is exactly "TRACKED: buy milk" (plus AHOY per the instructions).
  * 4. Type "$" in the prompt — the autocomplete offers `$track`.
+ * 5. Pick "Sender Research (CRM)" — the project column shows that project (its own skills, the
+ *    Clients mailbox as context, the sender-research routine) and the chat starts empty.
  */
 export const Default: Story = {
   decorators,
