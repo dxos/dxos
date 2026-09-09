@@ -404,10 +404,9 @@ export const AgentProcess = (options: AgentProcessOptions) =>
                   if (state.pendingAlarms.some((alarm) => alarm.id === id)) {
                     continue;
                   }
+                  entry.wakes++;
                   if (entry.wakes >= MAX_UNSEEN_WRITE_WAKES) {
                     unseenAlarms.delete(id);
-                  } else {
-                    entry.wakes++;
                   }
                 }
                 if (message !== undefined) {
