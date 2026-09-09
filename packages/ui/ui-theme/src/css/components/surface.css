@@ -15,6 +15,25 @@
  */
 
 @layer dx-components {
+  /*
+   * Aspect zones. These do not pick a level — they take a step off whatever hosts them and then
+   * republish that as `--surface-bg`, so a control inside a toolbar or a well derives its own
+   * states from the aspect rather than from the level underneath it. They come first so that an
+   * explicit level (`data-surface="<level>"`, an `elevation` in React) wins on an element that also
+   * carries an aspect class — a toolbar merged into a `Panel.Toolbar` slot — rather than the two
+   * defining `--surface-bg` from each other and both going invalid.
+   */
+  [data-surface='bar'],
+  .dx-toolbar-surface {
+    --surface-bg: var(--color-toolbar-surface);
+  }
+
+  [data-surface='well'],
+  .dx-group-surface,
+  .dx-input-surface {
+    --surface-bg: var(--color-group-surface);
+  }
+
   /* The outer rails sit at the same depth as the deck gaps: they frame the panels rather than
      belonging to them, so L0/R0 read one step behind the L1/R1 sidebars they flank. */
   [data-surface='sunken'],
@@ -58,22 +77,6 @@
   [data-surface='popup'],
   .dx-popover-surface {
     --surface-bg: var(--dx-surface-popup);
-  }
-
-  /*
-   * Aspect zones. These do not pick a level — they take a step off whatever hosts them and then
-   * republish that as `--surface-bg`, so a control inside a toolbar or a well derives its own
-   * states from the aspect rather than from the level underneath it.
-   */
-  [data-surface='bar'],
-  .dx-toolbar-surface {
-    --surface-bg: var(--color-toolbar-surface);
-  }
-
-  [data-surface='well'],
-  .dx-group-surface,
-  .dx-input-surface {
-    --surface-bg: var(--color-group-surface);
   }
 
   /* Every zone paints its published surface and takes the default ink. */
