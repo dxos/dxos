@@ -15,18 +15,21 @@ const LIST_ITEM_REGEX = /^\s*- (\[ \]|\[x\])? /;
 /**
  * Initialize empty document.
  */
-const initialize = () => {
+const initialize = (autoInsert = false) => {
   return ViewPlugin.fromClass(
     class {
       #timer: ReturnType<typeof setTimeout> | null = null;
 
       constructor(view: EditorView) {
+        if (!autoInsert) {
+          return;
+        }
+
         const first = view.state.doc.lineAt(0);
         const text = view.state.sliceDoc(first.from, first.to);
         const match = text.match(LIST_ITEM_REGEX);
         if (!match) {
-          // Deferred so the dispatch runs after the view finishes constructing; cleared on destroy so it
-          // never fires on a torn-down view.
+          // Deferred so the dispatch runs after the view finishes constructing.
           this.#timer = setTimeout(() => {
             this.#timer = null;
             const insert = '- [ ] ';
@@ -41,6 +44,7 @@ const initialize = () => {
       destroy() {
         if (this.#timer != null) {
           clearTimeout(this.#timer);
+          this.#timer = null;
         }
       }
     },
@@ -50,8 +54,8 @@ const initialize = () => {
 /**
  * Handle cursor movement, selection, and editing.
  */
-export const editor = () => [
-  initialize(),
+export const editor = (autoInsert = false) => [
+  initialize(autoInsert),
 
   EditorState.transactionFilter.of((tr) => {
     const tree = tr.state.facet(treeFacet);
