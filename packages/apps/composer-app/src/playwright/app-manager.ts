@@ -345,8 +345,13 @@ export class AppManager {
    * Gated on `data-needs-upload` rather than a `remote-synced` status: that status also requires
    * nothing left to *download*, which is irrelevant to whether our own writes have left and can stay
    * true for unrelated documents, failing the wait for a peer that has in fact pushed everything.
+   *
+   * Two sync rounds' worth of budget, deliberately. A subduction round is fire-and-wait with a 60s
+   * WASM timeout and no per-round re-ask, so ANY disruption — one lost frame is enough — costs the
+   * full 60s before a retry starts. A 60s budget therefore cannot survive a single expected
+   * disruption, which makes it a mis-calibrated wait rather than a signal (DX-1264).
    */
-  async waitForUploadsSettled(timeout = 60_000): Promise<void> {
+  async waitForUploadsSettled(timeout = 130_000): Promise<void> {
     await expect(this.page.getByTestId('spacePlugin.syncStatus')).toHaveAttribute('data-needs-upload', 'false', {
       timeout,
     });

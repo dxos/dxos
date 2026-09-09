@@ -32,7 +32,7 @@ test.describe('HALO tests', () => {
   });
 
   test('join new identity', async () => {
-    test.setTimeout(90_000);
+    test.setTimeout(240_000);
 
     await host.createSpace();
 
@@ -69,7 +69,7 @@ test.describe('HALO tests', () => {
   });
 
   test('deleting a space replicates across devices', async () => {
-    test.setTimeout(120_000);
+    test.setTimeout(240_000);
 
     // Host creates a space; guest joins the host's identity and inherits it.
     await host.createSpace();
