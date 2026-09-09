@@ -56,7 +56,9 @@ export const SyncStatusIndicator = ({
   return (
     <Popover.Root>
       <Popover.Trigger asChild>
-        <StatusBar.Item>
+        {/* `data-status` so a test can wait for replication to settle without reading the label,
+            which is translated. */}
+        <StatusBar.Item data-testid='spacePlugin.syncStatus' data-status={status}>
           {/* The icon and label carry the status; the indicator keeps a single colour in every state. */}
           <IconButton variant='ghost' icon={icon} iconOnly label={t(`${status}.label`)} />
         </StatusBar.Item>

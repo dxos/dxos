@@ -335,6 +335,19 @@ export class AppManager {
     await this.page.waitForTimeout(500);
   }
 
+  /**
+   * Waits for replication to settle, i.e. for this peer to have nothing left to push or pull.
+   *
+   * A test that shares a just-created space needs this before inviting: `createSpace` returns once
+   * the space is locally ready, not once it has reached EDGE, so asserting that a new device
+   * inherits it otherwise races a precondition the test never established (DX-1264).
+   */
+  async waitForSync(timeout = 60_000): Promise<void> {
+    await expect(this.page.getByTestId('spacePlugin.syncStatus')).toHaveAttribute('data-status', 'remote-synced', {
+      timeout,
+    });
+  }
+
   getSpacePresenceMembers(): Locator {
     return this.page.getByTestId('spacePlugin.presence.member');
   }
