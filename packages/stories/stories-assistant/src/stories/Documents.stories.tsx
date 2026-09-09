@@ -15,6 +15,7 @@ import * as AssistantSkill from '@dxos/plugin-assistant/AssistantSkill';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import * as MarkdownSkill from '@dxos/plugin-markdown/MarkdownSkill';
 import * as CommentSkill from '@dxos/plugin-review/CommentSkill';
+import { requirePublicKey } from '@dxos/protocols/buf';
 import { Text } from '@dxos/schema';
 import { Cell } from '@dxos/storybook-testing';
 import { trim } from '@dxos/util';
@@ -192,7 +193,7 @@ export const WithScript: Story = {
         import('@dxos/plugin-script'),
         import('@dxos/plugin-script/templates'),
       ]);
-      const { identityKey } = client.halo.identity.get()!;
+      const identityKey = requirePublicKey(client.halo.identity.get()?.identityKey);
       await client.halo.writeCredentials([getAccessCredential(identityKey)]);
 
       const template = templates.find((template) => template.id === 'com.example.operation.script.forex-effect');
