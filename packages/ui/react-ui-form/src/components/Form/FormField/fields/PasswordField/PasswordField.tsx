@@ -8,35 +8,38 @@ import { Field, type InputProps } from '@dxos/react-ui';
 
 import { type FormFieldRendererProps } from '#types';
 
-import { FormField } from '../../FormField';
+import { FormStaticValue } from '../../FormField';
+import { presentationFor } from '../../presentation';
 
 export const PasswordField = ({
   type,
+  format,
   readonly,
   placeholder,
+  presentation,
+  getValue,
   onBlur,
   onValueChange,
-  ...props
 }: FormFieldRendererProps<string>) => {
   const handleChange = useCallback<NonNullable<InputProps['onChange']>>(
     (event) => onValueChange(type, event.target.value),
     [type, onValueChange],
   );
+  const value = getValue() ?? '';
+  if (presentationFor(presentation).isStatic) {
+    return <FormStaticValue value={value} format={format} />;
+  }
 
   return (
-    <FormField<string> readonly={readonly} {...props}>
-      {({ value = '' }) => (
-        <Field.Input
-          type='password'
-          noAutoFill
-          spellCheck={false}
-          disabled={!!readonly}
-          placeholder={placeholder}
-          value={value}
-          onBlur={onBlur}
-          onChange={handleChange}
-        />
-      )}
-    </FormField>
+    <Field.Input
+      type='password'
+      noAutoFill
+      spellCheck={false}
+      disabled={!!readonly}
+      placeholder={placeholder}
+      value={value}
+      onBlur={onBlur}
+      onChange={handleChange}
+    />
   );
 };

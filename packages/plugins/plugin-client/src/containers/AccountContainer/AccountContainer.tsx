@@ -117,7 +117,7 @@ export const AccountContainer = () => {
     <Form.Root variant='settings'>
       <Form.Viewport scroll>
         <Form.Content>
-          <Form.Section title={t('account-section.title')} description={t('account-section.description')}>
+          <Form.FieldSet label={t('account-section.title')} description={t('account-section.description')}>
             {accountState === 'loading' ? null : accountState === 'missing' ? (
               <>
                 <Banner.Root valence='warning'>
@@ -126,7 +126,7 @@ export const AccountContainer = () => {
                     <Banner.Body>{t('no-edge-access.description')}</Banner.Body>
                   </Banner.Content>
                 </Banner.Root>
-                <Form.Field label={t('request-access.label')} description={t('request-access.description')}>
+                <Form.Field standalone label={t('request-access.label')} description={t('request-access.description')}>
                   {requestSubmitted ? (
                     <span className='text-sm text-description'>{t('access-request-submitted.message')}</span>
                   ) : (
@@ -157,7 +157,7 @@ export const AccountContainer = () => {
               </Banner.Root>
             ) : account ? (
               <>
-                <Form.Field label={t('email.label')} description={account.email}>
+                <Form.Field standalone label={t('email.label')} description={account.email}>
                   {account.emailVerified ? (
                     <Icon icon='ph--check-circle--duotone' size={5} classNames='text-success-text justify-self-end' />
                   ) : (
@@ -172,17 +172,21 @@ export const AccountContainer = () => {
                     </Flex>
                   )}
                 </Form.Field>
-                <Form.Field label={t('delete-account.label')} description={t('delete-account.description')}>
+                <Form.Field standalone label={t('delete-account.label')} description={t('delete-account.description')}>
                   <Button variant='destructive' onClick={handleDeleteAccount}>
                     {t('delete-account.label')}
                   </Button>
                 </Form.Field>
               </>
             ) : null}
-          </Form.Section>
+          </Form.FieldSet>
           {account ? (
-            <Form.Section title={t('account-page-section.title')} description={t('account-page-section.description')}>
-              <Form.Field label={t('open-account-page.label')} description={t('open-account-page.description')}>
+            <Form.FieldSet label={t('account-page-section.title')} description={t('account-page-section.description')}>
+              <Form.Field
+                standalone
+                label={t('open-account-page.label')}
+                description={t('open-account-page.description')}
+              >
                 <IconButton
                   icon='ph--arrow-square-out--regular'
                   label={t('open-account-page.label')}
@@ -190,7 +194,7 @@ export const AccountContainer = () => {
                   onClick={openAccountPage}
                 />
               </Form.Field>
-            </Form.Section>
+            </Form.FieldSet>
           ) : null}
         </Form.Content>
       </Form.Viewport>

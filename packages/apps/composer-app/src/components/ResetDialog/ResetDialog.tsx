@@ -247,7 +247,7 @@ export const ResetDialog = ({
                         <FeedbackForm.Root onSubmit={handleSaveFeedback}>
                           <Form.Viewport>
                             <Form.Content>
-                              <Form.FieldSet />
+                              <Form.Fields />
                               <FeedbackForm.Submit />
                             </Form.Content>
                           </Form.Viewport>

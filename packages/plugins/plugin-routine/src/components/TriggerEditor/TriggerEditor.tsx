@@ -328,10 +328,10 @@ export const TriggerSection = ({ readonly, onClear }: TriggerSectionProps) => {
               />
             )}
           </div>
-          <Form.FieldSet path={TRIGGER_PATH} schema={TriggerForm} classNames='px-2' />
+          <Form.Fields path={TRIGGER_PATH} schema={TriggerForm} />
         </>
       ) : (
-        <Form.FieldSet path={TRIGGER_PATH} schema={TriggerForm} />
+        <Form.Fields path={TRIGGER_PATH} schema={TriggerForm} />
       )}
 
       {/* Currently, email triggers have no configuration; surface an explanatory note instead of an empty body. */}

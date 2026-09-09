@@ -8,33 +8,36 @@ import { Field, type TextareaProps } from '@dxos/react-ui';
 
 import { type FormFieldRendererProps } from '#types';
 
-import { FormField } from '../../FormField';
+import { FormStaticValue } from '../../FormField';
+import { presentationFor } from '../../presentation';
 
 export const TextAreaField = ({
   type,
+  format,
   readonly,
   placeholder,
+  presentation,
+  getValue,
   onValueChange,
   onBlur,
-  ...props
 }: FormFieldRendererProps<string>) => {
   const handleChange = useCallback<NonNullable<TextareaProps['onChange']>>(
     (event) => onValueChange(type, event.target.value),
     [type, onValueChange],
   );
+  const value = getValue() ?? '';
+  if (presentationFor(presentation).isStatic) {
+    return <FormStaticValue value={value} format={format} />;
+  }
 
   return (
-    <FormField<string> readonly={readonly} {...props}>
-      {({ value = '' }) => (
-        <Field.Textarea
-          rows={5}
-          disabled={!!readonly}
-          placeholder={placeholder}
-          value={value}
-          onChange={handleChange}
-          onBlur={onBlur}
-        />
-      )}
-    </FormField>
+    <Field.Textarea
+      rows={5}
+      disabled={!!readonly}
+      placeholder={placeholder}
+      value={value}
+      onChange={handleChange}
+      onBlur={onBlur}
+    />
   );
 };
