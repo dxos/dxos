@@ -109,8 +109,8 @@ const DrawerRoot = ({
 
   return (
     <ElevationProvider elevation='dialog'>
-      {/* Closed content is not in the DOM at all. */}
-      <DrawerPrimitive.RootProvider value={drawer} lazyMount unmountOnExit>
+      {/* Closed content is not in the DOM at all; a drawer that mounts open is simply there. */}
+      <DrawerPrimitive.RootProvider value={drawer} lazyMount unmountOnExit skipAnimationOnMount>
         <DrawerProvider push={push}>{children}</DrawerProvider>
       </DrawerPrimitive.RootProvider>
     </ElevationProvider>

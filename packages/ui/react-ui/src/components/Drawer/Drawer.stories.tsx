@@ -318,6 +318,15 @@ export const TestPushCollapse: Story = {
     await expect(collapse.length).toBeGreaterThan(3);
     await expect(collapse.some(({ pane }) => pane > 0 && pane < inspectorWidth)).toBe(true);
     await expect(collapse.every(({ children }) => children.every((width) => width === inspectorWidth))).toBe(true);
+
+    // And once collapsed, the main panel has all of it.
+    const root = canvasElement.querySelector<HTMLElement>('[data-scope="splitter"][data-part="root"]');
+    await waitFor(async () => {
+      await expect(Math.round(endPane.getBoundingClientRect().width)).toBe(0);
+      await expect(Math.round(canvas.getByRole('main').getBoundingClientRect().width)).toBe(
+        Math.round(root?.getBoundingClientRect().width ?? -1),
+      );
+    });
   },
 };
 
