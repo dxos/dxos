@@ -1108,6 +1108,18 @@ verdict over porting in the same PR).
       animating (it snapped from `0%` to `12rem` and held a growing pane at 192px); the child
       anchor is `!important` because a child's own `min-w-0` (ScrollArea) sits in the utilities
       layer and beat it.
+      REBUILT (user: "rethink this logic"): push mode is now clip + sheet on Ark's anatomy — the
+      positioner is the clip (`--dx-drawer-size * --dx-drawer-open`, a registered number easing
+      0↔1), the content a fixed-size sheet at the clip's inner edge, mounted while closed (inert,
+      aria-hidden). No child anchoring, no `!important`, no keyframes; the sheet slides in from
+      beyond the edge because the clip opens from the edge. Lesson: never make one box both the
+      clip and the sheet.
+      Two more reasons a sheet stands still while its clip opens, both found by per-frame geometry
+      in vitest (the Browser pane's document is hidden and freezes CSS motion): the machine's own
+      enter slide (`--drawer-translate-x` = content size on open, eased to 0) exactly cancelled the
+      clip's opening — cancelled on the sheet; and an `overflow: hidden` clip is a scroll container,
+      which the machine's open-focus scrolled to the sheet's far end — `overflow: clip`.
+      `TestPushCollapse` now asserts the sheet rides the clip's inner edge and travels.
 - [x] **`Main` on the drawer machine — probe** DONE 2026-09-09. The 2026-09-05 verdict ("fights the
       inset slide") was wrong: the machine's inline `transform` and `main.css`'s `inset-inline-start`
       are independent properties, and a driven touch swipe dismissed the sidebar through

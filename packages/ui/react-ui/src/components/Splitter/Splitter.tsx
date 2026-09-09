@@ -131,13 +131,15 @@ const SplitterRoot = slottable<HTMLDivElement, SplitterRootElementProps>(
         setAnimating(true);
       }
     }
+    // Keyed on the mode as well, so a change inside the window re-arms the timer rather than letting
+    // the previous one expire mid-motion.
     useEffect(() => {
       if (!animating) {
         return;
       }
       const timer = setTimeout(() => setAnimating(false), transition);
       return () => clearTimeout(timer);
-    }, [animating, transition]);
+    }, [animating, transition, mode]);
 
     const collapsed = mode !== 'split';
     // The machine sizes panes in percent of the container and re-derives the anchored pane's share

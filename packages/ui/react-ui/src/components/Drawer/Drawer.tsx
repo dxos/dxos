@@ -12,9 +12,18 @@ import {
   type DrawerSnapPointChangeDetails,
   type UseDrawerProps,
   useDrawer,
+  useDrawerContext as useDrawerApi,
 } from '@ark-ui/react/drawer';
 import { Portal } from '@ark-ui/react/portal';
-import React, { type ComponentPropsWithRef, type ReactNode, forwardRef, useEffect, useMemo, useRef } from 'react';
+import React, {
+  type ComponentPropsWithRef,
+  type CSSProperties,
+  type ReactNode,
+  forwardRef,
+  useEffect,
+  useMemo,
+  useRef,
+} from 'react';
 
 import { useControllableState } from '@dxos/react-hooks';
 
@@ -119,8 +128,8 @@ const DrawerRoot = ({
 
   return (
     <ElevationProvider elevation='dialog'>
-      {/* Closed content is not in the DOM at all. */}
-      <DrawerPrimitive.RootProvider value={drawer} lazyMount unmountOnExit>
+      {/* Closed content is not in the DOM at all — except pushed, where the clip closes over it. */}
+      <DrawerPrimitive.RootProvider value={drawer} lazyMount unmountOnExit={!push}>
         <DrawerProvider push={push} instant={instant.current}>
           {children}
         </DrawerProvider>
@@ -187,21 +196,38 @@ DrawerOverlay.displayName = 'Drawer.Overlay';
 
 const DRAWER_CONTENT_NAME = 'Drawer.Content';
 
-type DrawerContentProps = ThemedClassName<ComponentPropsWithRef<typeof DrawerPrimitive.Content>>;
+type DrawerContentProps = ThemedClassName<ComponentPropsWithRef<typeof DrawerPrimitive.Content>> & {
+  /** Pushed: the panel's extent in rem, in place of the theme's default. */
+  size?: number;
+};
+
+/** Extends `CSSProperties` so the custom property satisfies the style prop without a cast. */
+type DrawerSizeStyle = CSSProperties & { '--dx-drawer-size'?: string };
 
 /**
- * The panel, inside the machine's positioner: a fixed layer that pins the panel to the drawer's
- * edge, which the panel carries as `data-swipe-direction` for the theme. Pushing, the positioner
- * steps aside (`display: contents`) and the panel itself is the flex item, its extent following the
- * machine's drag offset.
+ * The panel, inside the machine's positioner. Floating, the positioner is a fixed layer that pins
+ * the panel to the drawer's edge. Pushed, the positioner is the clip: a flex item whose extent
+ * opens and closes and whose neighbours follow it, with the panel a fixed-size sheet at its inner
+ * edge that slides in from beyond the page edge as the clip opens. The panel stays mounted while
+ * closed, inert, so the clip can close over it.
  */
-const DrawerContent = forwardRef<HTMLDivElement, DrawerContentProps>(({ classNames, ...props }, forwardedRef) => {
+const DrawerContent = forwardRef<HTMLDivElement, DrawerContentProps>(({ classNames, size, ...props }, forwardedRef) => {
   const { tx } = useThemeContext();
   const { push, instant } = useDrawerContext(DRAWER_CONTENT_NAME);
+  const { open } = useDrawerApi();
+  const sizeStyle: DrawerSizeStyle | undefined = size === undefined ? undefined : { '--dx-drawer-size': `${size}rem` };
   return (
-    <DrawerPrimitive.Positioner className={tx('drawer.positioner', { push })}>
+    <DrawerPrimitive.Positioner
+      hidden={push ? false : undefined}
+      style={push ? sizeStyle : undefined}
+      className={tx('drawer.positioner', { push })}
+    >
       <DrawerPrimitive.Content
         {...props}
+        hidden={push ? false : undefined}
+        // Closed under its clip, the sheet is out of reach and out of the accessibility tree.
+        inert={push && !open ? true : undefined}
+        aria-hidden={push && !open ? true : undefined}
         data-push={push ? '' : undefined}
         data-instant={instant ? '' : undefined}
         className={tx('drawer.content', { push }, classNames)}

@@ -619,17 +619,22 @@ the strip along the edge a swipe opens it from. `drawer.css` runs the slide keyf
 `transform` the machine drives during a drag, so the close slide starts from wherever a drag left the
 panel. Play stories pin open/Escape/reopen and the no-description `aria-describedby` contract.
 
-**Push mode (2026-09-09).** `Root push` makes the panel part of the page's layout instead of a layer
-over it: the positioner becomes `display: contents`, the panel is the flex item, and its extent is
-`--dx-drawer-size` less the machine's drag offset — so a drag toward the edge narrows the panel and the
-main panel follows in step; the machine's transform is cancelled since the box itself moves. Non-modal,
-and outside clicks do not dismiss it by default. The `Push` story flanks a `Panel` with a start and an
-end drawer. Found doing it: Zag's dismissable layer stack takes every later-opened layer for a nested
-one and dismisses it when a lower layer leaves (`layerStack.remove` → `dismiss` on the layers above),
-so closing one drawer closed its sibling; `Drawer.Root` vetoes the cross-layer `request-dismiss` in
-`onRequestDismiss`. A fraction snap point is a fraction of the viewport capped by the content's own
-extent, so a short panel shows no snap. Testing note: the panels slide in from zero on mount, so a play
-function measures only after `getAnimations()` is empty.
+**Push mode (2026-09-09, rebuilt the same day).** `Root push` makes the panel part of the page's layout
+instead of a layer over it, on Ark's own anatomy: the positioner is the clip — a flex item whose extent
+is `--dx-drawer-size` scaled by `--dx-drawer-open`, a registered number that eases 0↔1 over 250ms
+(the Splitter's collapse timing), so a size change lands at once while an open or close eases — and
+the content is a fixed-size sheet at the clip's inner edge, so it slides in from beyond the page edge
+as the clip opens and needs no anchoring of its children. The sheet stays mounted while closed,
+`inert` and `aria-hidden`, so the clip can close over it. In a grid host the clip hangs from the page edge (`justify-self`). Two things the sheet must not do: carry the machine's transform (the machine sets its drag offset to the content's size on open and expects CSS to ease it to zero — its own enter slide, which ran against the clip's opening and left the sheet standing still; it is cancelled, so a pushed drag has no live feedback), and be scrollable (`overflow: clip`, not `hidden` — focusing the first tabbable on open scrolled a hidden-overflow clip to the sheet's far end, another way to stand still). The first
+build made the content both clip and sheet and spent a day anchoring children inside a shrinking box
+against a second animated box outside it; that shape is what to avoid. Found on the way: Zag's
+dismissable layer stack takes every later-opened layer for a nested one and dismisses it when a lower
+layer leaves, so closing one drawer closed its sibling — `Drawer.Root` vetoes the cross-layer
+`request-dismiss` in `onRequestDismiss`; a fraction snap point is a fraction of the viewport capped by
+the content's own extent; the Splitter set its `transition` from an effect, a commit after the sizes
+landed, and its `minSize` snapped back with the mode and held a growing pane — both fixed in
+`Splitter`; the Browser pane's document is `hidden`, which freezes CSS animations, so motion checks
+belong in the vitest browser (`TestPushCollapse` samples per frame).
 
 **`Main` re-probed (2026-09-09, `MainDrawerProbe.stories.tsx`, kept in history one commit).** The
 navigation sidebar was mounted on `useDrawer` in place of `useDialog` below `lg`, with `main.css`

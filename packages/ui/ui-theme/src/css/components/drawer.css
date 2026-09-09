@@ -22,6 +22,12 @@
   inherits: false;
   initial-value: 0px;
 }
+/* How far open a pushed drawer's clip is, 0 to 1; typed so the open and close can ease over it. */
+@property --dx-drawer-open {
+  syntax: '<number>';
+  inherits: false;
+  initial-value: 0;
+}
 
 @layer dx-components {
   .dx-drawer__overlay {
@@ -111,104 +117,83 @@
   }
 
   /*
-   * Push mode: the positioner steps aside and the panel is a flex item in the page's own row or
-   * column, so what it displaces moves with it. Its extent is `--dx-drawer-size` less the machine's
-   * drag offset, so a drag toward the edge narrows the panel and the neighbours follow in step; the
-   * machine's transform is cancelled, since the box itself is what moves. The slides run 250ms
-   * ease-out, the Splitter's collapse timing, so a drawer in a split pane moves in step with it.
+   * Push mode. The positioner is the clip: a flex item in the page's own row or column whose
+   * extent is `--dx-drawer-size` scaled by `--dx-drawer-open`, a registered number that eases
+   * between 0 and 1 on open and close — so a change of size lands at once while an open or close
+   * takes 250ms ease-out, the Splitter's collapse timing, and a drawer in a split pane moves with
+   * its pane. The panel is a sheet of the full size at the clip's inner edge: as the clip opens from
+   * the page edge, the sheet slides in from beyond it. The clip hangs from that edge in a grid host
+   * (`justify-self`/`align-self`); a flex row places it there already. The machine's transform is
+   * cancelled on the sheet: it carries the machine's own enter slide (the drag offset set to the
+   * content's size on open, eased to zero), which would run against the clip's opening and leave the
+   * sheet standing still — so a pushed drag has no live feedback, and a release past the threshold
+   * closes the clip.
    */
   .dx-drawer__positioner--push {
-    display: contents;
-  }
-
-  .dx-drawer__content--push {
-    @apply relative shrink-0 overflow-hidden;
+    /* `clip`, not `hidden`: a hidden overflow is a scroll container, and focusing a control near the
+       sheet's far end on open (the machine focuses the first tabbable) scrolls it into view — which
+       drags the whole sheet to the clip's far edge and turns the slide into a reveal. */
+    @apply relative flex shrink-0 overflow-clip;
     --dx-drawer-size: min(calc(100dvw - 3rem), 24rem);
-    transform: none !important;
-    transition-property: --drawer-translate-x, --drawer-translate-y;
+    --dx-drawer-open: 0;
+    transition: --dx-drawer-open 250ms ease-out;
+
+    &[data-state='open'] {
+      --dx-drawer-open: 1;
+    }
 
     &[data-swipe-direction='left'],
     &[data-swipe-direction='right'] {
       @apply h-full;
+      inline-size: calc(var(--dx-drawer-size) * var(--dx-drawer-open));
+    }
+    &[data-swipe-direction='up'],
+    &[data-swipe-direction='down'] {
+      @apply w-full flex-col;
+      --dx-drawer-size: 85dvh;
+      block-size: calc(var(--dx-drawer-size) * var(--dx-drawer-open));
+    }
+
+    &[data-swipe-direction='left'] {
+      @apply justify-end justify-self-start;
+    }
+    &[data-swipe-direction='right'] {
+      @apply justify-start justify-self-end;
+    }
+    &[data-swipe-direction='up'] {
+      @apply justify-end self-start;
+    }
+    &[data-swipe-direction='down'] {
+      @apply justify-start self-end;
+    }
+  }
+
+  .dx-drawer__content--push {
+    @apply relative flex flex-col shrink-0 overflow-hidden;
+    transform: none !important;
+
+    &[data-swipe-direction='left'],
+    &[data-swipe-direction='right'] {
+      @apply h-full;
+      inline-size: var(--dx-drawer-size);
     }
     &[data-swipe-direction='up'],
     &[data-swipe-direction='down'] {
       @apply w-full;
-      --dx-drawer-size: 85dvh;
+      block-size: var(--dx-drawer-size);
     }
 
-    /*
-     * The children keep the panel's full extent and sit against its inner edge, so as the box
-     * shrinks they slide out with that edge rather than reflowing into the narrowing space. A
-     * minimum, not a width, so a child's own `w-full` (100% of the shrinking box) cannot undercut it;
-     * important, so a child's own `min-w-0` (a scroll area's, from the utilities layer) cannot either.
-     */
-    /*
-     * And the box itself hangs from the page's edge (`justify-self`/`align-self` for a grid host;
-     * a flex row places it there already), so it grows and shrinks at its inner edge and the
-     * children translate in from beyond the edge rather than being revealed from the inside.
-     */
     &[data-swipe-direction='left'] {
-      @apply items-end justify-self-start border-e border-separator;
-      inline-size: calc(var(--dx-drawer-size) + var(--drawer-translate-x, 0px));
-      & > * {
-        min-inline-size: var(--dx-drawer-size) !important;
-      }
+      @apply border-e border-separator;
     }
     &[data-swipe-direction='right'] {
-      @apply items-start justify-self-end border-s border-separator;
-      inline-size: calc(var(--dx-drawer-size) - var(--drawer-translate-x, 0px));
-      & > * {
-        min-inline-size: var(--dx-drawer-size) !important;
-      }
+      @apply border-s border-separator;
     }
     &[data-swipe-direction='up'] {
-      @apply justify-end self-start border-b border-separator;
-      block-size: calc(var(--dx-drawer-size) + var(--drawer-translate-y, 0px));
+      @apply border-b border-separator;
     }
     &[data-swipe-direction='down'] {
-      @apply justify-start self-end border-t border-separator;
-      block-size: calc(var(--dx-drawer-size) - var(--drawer-translate-y, 0px));
-    }
-
-    &[data-swipe-direction='left'],
-    &[data-swipe-direction='right'] {
-      &[data-state='open']:not([data-instant]) {
-        animation: dx-drawer-push-in-inline 250ms ease-out;
-      }
-      &[data-state='closed'] {
-        animation: dx-drawer-push-out-inline 250ms ease-out forwards;
-      }
-    }
-    &[data-swipe-direction='up'],
-    &[data-swipe-direction='down'] {
-      &[data-state='open']:not([data-instant]) {
-        animation: dx-drawer-push-in-block 250ms ease-out;
-      }
-      &[data-state='closed'] {
-        animation: dx-drawer-push-out-block 250ms ease-out forwards;
-      }
-    }
-  }
-
-  @keyframes dx-drawer-push-in-inline {
-    from {
-      inline-size: 0;
-    }
-  }
-  @keyframes dx-drawer-push-out-inline {
-    to {
-      inline-size: 0;
-    }
-  }
-  @keyframes dx-drawer-push-in-block {
-    from {
-      block-size: 0;
-    }
-  }
-  @keyframes dx-drawer-push-out-block {
-    to {
-      block-size: 0;
+      @apply border-t border-separator;
     }
   }
 

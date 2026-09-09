@@ -3,7 +3,7 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React, { type CSSProperties, useState } from 'react';
+import React, { useState } from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { withLayout, withTheme } from '../../testing';
@@ -23,16 +23,15 @@ type StoryArgs = Pick<DrawerRootProps, 'side' | 'modal' | 'snapPoints'> & {
   filler?: number;
 };
 
-/** Extends `CSSProperties` so the custom property satisfies the style prop without a cast. */
-type DrawerSizeStyle = CSSProperties & { '--dx-drawer-size': string };
-
 /** Filler below the fold, so a snap point short of fully open has something to hide. */
 const Filler = ({ lines }: { lines: number }) => (
   <ScrollArea.Root>
     <ScrollArea.Viewport>
-      <ol className='flex flex-col gap-2 p-2 list-decimal list-inside text-description'>
+      <ol className='flex flex-col gap-2 p-3 list-decimal list-inside text-description'>
         {Array.from({ length: lines }, (_, index) => (
-          <li key={index}>Line {index + 1}</li>
+          <li key={index} className='p-2 border border-separator dx-hover'>
+            Line {index + 1}
+          </li>
         ))}
       </ol>
     </ScrollArea.Viewport>
@@ -88,24 +87,25 @@ const PushStory = () => {
   const [start, setStart] = useState(true);
   const [end, setEnd] = useState(true);
   const [inspectorSize, setInspectorSize] = useState(24);
-  // The drawer fills the pane the seam gives it; its children anchor to that length, not to the pane's
-  // percentage, so a collapsing pane clips them instead of reflowing them.
-  const inspectorStyle: DrawerSizeStyle = { '--dx-drawer-size': `${inspectorSize}rem` };
   return (
     <div className='flex dx-fill'>
       <Drawer.Root open={start} onOpenChange={setStart} side='start' push>
         <Drawer.Content>
-          <Toolbar.Root>
-            <Drawer.Title classNames='grow px-2'>Navigation</Drawer.Title>
-            <Toolbar.IconButton
-              icon='ph--sidebar--regular'
-              iconOnly
-              label='Close navigation'
-              onClick={() => setStart(false)}
-            />
-          </Toolbar.Root>
+          <Panel.Root>
+            <Panel.Toolbar asChild>
+              <Toolbar.Root>
+                <Drawer.Title classNames='grow px-2'>Navigation</Drawer.Title>
+                <Toolbar.IconButton
+                  icon='ph--sidebar--regular'
+                  iconOnly
+                  label='Close navigation'
+                  onClick={() => setStart(false)}
+                />
+              </Toolbar.Root>
+            </Panel.Toolbar>
+          </Panel.Root>
           <Drawer.Description>The Navigation Drawer slides in from the left edge of the viewport.</Drawer.Description>
-          <Filler lines={30} />
+          <Filler lines={50} />
         </Drawer.Content>
       </Drawer.Root>
       {/* The seam owns the inspector's width and animates its collapse; the drawer fills the pane it is given. */}
@@ -132,18 +132,23 @@ const PushStory = () => {
                   />
                 )}
                 <Toolbar.Separator />
-                {!end && (
-                  <Toolbar.IconButton
-                    icon='ph--square-split-horizontal--regular'
-                    iconOnly
-                    label='Toggle inspector'
-                    classNames='[&_svg]:-scale-x-100'
-                    onClick={() => setEnd((open) => !open)}
-                  />
-                )}
+                <Toolbar.IconButton
+                  icon='ph--square-split-horizontal--regular'
+                  iconOnly
+                  label='Toggle inspector'
+                  classNames='[&_svg]:-scale-x-100'
+                  onClick={() => setEnd((open) => !open)}
+                />
               </Toolbar.Root>
             </Panel.Toolbar>
-            <Panel.Content classNames='flex items-center justify-center'>Main</Panel.Content>
+            <Panel.Content>
+              <Panel.Root>
+                <Panel.Toolbar asChild>
+                  <Toolbar.Root />
+                </Panel.Toolbar>
+                <Panel.Root classNames='flex items-center justify-center'>Main</Panel.Root>
+              </Panel.Root>
+            </Panel.Content>
             <Panel.Statusbar asChild>
               <Toolbar.Root classNames='justify-between'>
                 <span className='px-2 text-description'>Ready</span>
@@ -155,7 +160,8 @@ const PushStory = () => {
         <Splitter.Handle />
         <Splitter.Panel position='end'>
           <Drawer.Root open={end} onOpenChange={setEnd} side='end' push>
-            <Drawer.Content draggable={false} style={inspectorStyle}>
+            {/* The sheet is the pane's size, so a seam drag resizes it and a collapse slides it out. */}
+            <Drawer.Content draggable={false} size={inspectorSize}>
               <Toolbar.Root>
                 <Drawer.Title classNames='grow px-2'>Inspector</Drawer.Title>
                 <Toolbar.IconButton
@@ -166,7 +172,7 @@ const PushStory = () => {
                 />
               </Toolbar.Root>
               <Drawer.Description>The Inspector slides in from the right edge of the viewport. </Drawer.Description>
-              <Filler lines={30} />
+              <Filler lines={50} />
             </Drawer.Content>
           </Drawer.Root>
         </Splitter.Panel>
@@ -248,7 +254,7 @@ export const TestPush: Story = {
     await expect(dialogs).toHaveLength(2);
     await expect(dialogs[0]).toHaveAttribute('data-push');
     // Open on first paint, the drawers are simply there: nothing slides in.
-    await expect(dialogs.every((dialog) => dialog.getAnimations().length === 0)).toBe(true);
+    await expect(dialogs.every((dialog) => clipOf(dialog).getAnimations().length === 0)).toBe(true);
     await expect(dialogs[0]).toHaveAttribute('data-instant');
     // The two panels flank the main one in document order, so nothing overlays anything.
     await waitFor(async () => {
@@ -263,16 +269,22 @@ export const TestPush: Story = {
     const navigation = dialogs[0].getBoundingClientRect().width;
 
     await userEvent.click(canvas.getByRole('button', { name: 'Close navigation' }));
+    // A closed pushed panel stays mounted under its closed clip, inert and out of the accessibility tree.
     await waitFor(async () => {
       await expect(canvas.queryAllByRole('dialog')).toHaveLength(1);
+      await expect(Math.round(clipOf(dialogs[0]).getBoundingClientRect().width)).toBe(0);
       await expect(Math.round(main.getBoundingClientRect().width)).toBe(Math.round(before + navigation));
     });
+    await expect(dialogs[0]).toHaveAttribute('inert');
   },
 };
 
+/** Pushed, the motion is the clip's (the positioner's), not the sheet's. */
+const clipOf = (dialog: Element): Element => dialog.parentElement ?? dialog;
+
 const settle = async (elements: Element[]) => {
   await waitFor(async () => {
-    await expect(elements.every((element) => element.getAnimations().length === 0)).toBe(true);
+    await expect(elements.every((element) => clipOf(element).getAnimations().length === 0)).toBe(true);
   });
 };
 
@@ -306,7 +318,7 @@ export const TestPushCollapse: Story = {
     await userEvent.click(canvas.getByRole('button', { name: 'Close navigation' }));
     const seam = await sample(
       () => Math.round(endPane.getBoundingClientRect().width),
-      () => !dialogs[0].isConnected,
+      () => clipOf(dialogs[0]).getBoundingClientRect().width === 0,
     );
     await expect(seam.length).toBeGreaterThan(3);
     await expect(seam.every((width) => width === inspectorWidth)).toBe(true);
@@ -319,11 +331,13 @@ export const TestPushCollapse: Story = {
         pane: Math.round(endPane.getBoundingClientRect().width),
         children: children.map((child) => Math.round(child.getBoundingClientRect().width)),
       }),
-      () => !inspector.isConnected,
+      () => endPane.getBoundingClientRect().width === 0,
     );
     await expect(collapse.length).toBeGreaterThan(3);
     await expect(collapse.some(({ pane }) => pane > 0 && pane < inspectorWidth)).toBe(true);
-    await expect(collapse.every(({ children }) => children.every((width) => width === inspectorWidth))).toBe(true);
+    // The sheet's children never reflow: each keeps the width it had at rest, frame after frame.
+    const rest = collapse[0].children;
+    await expect(collapse.every(({ children }) => children.every((width, index) => width === rest[index]))).toBe(true);
 
     // And once collapsed, the main panel has all of it.
     const root = canvasElement.querySelector<HTMLElement>('[data-scope="splitter"][data-part="root"]');
@@ -338,18 +352,24 @@ export const TestPushCollapse: Story = {
     // moves left, and it is never narrower than the panel. Having closed once, it is no longer instant.
     await userEvent.click(canvas.getByRole('button', { name: 'Toggle inspector' }));
     const reopened = await canvas.findByRole('dialog');
+    const clip = clipOf(reopened);
     await expect(reopened).not.toHaveAttribute('data-instant');
     const title = within(reopened).getByText('Inspector');
     const entry = await sample(
       () => ({
         left: Math.round(title.getBoundingClientRect().left),
-        width: Math.round(reopened.getBoundingClientRect().width),
+        sheet: Math.round(reopened.getBoundingClientRect().left),
+        clipLeft: Math.round(clip.getBoundingClientRect().left),
+        width: Math.round(clip.getBoundingClientRect().width),
         pane: Math.round(endPane.getBoundingClientRect().width),
       }),
-      () => reopened.getAnimations().length === 0 && endPane.getAnimations().length === 0,
+      () => clip.getAnimations().length === 0 && endPane.getAnimations().length === 0,
     );
-    console.log('[probe] entry', JSON.stringify(entry.slice(0, 6)), endPane.getAttribute('style'));
     await expect(entry.length).toBeGreaterThan(3);
+    // The sheet rides the clip's inner edge, so it actually travels: a sheet standing still while the
+    // clip opens over it (the machine's own enter slide cancelling the clip's) is the failure this pins.
+    await expect(entry.every(({ sheet, clipLeft }) => Math.abs(sheet - clipLeft) <= 1)).toBe(true);
+    await expect(entry[0].left - (entry.at(-1)?.left ?? 0)).toBeGreaterThan(inspectorWidth / 4);
     // Monotonic to within a pixel of rounding.
     await expect(entry.every(({ left }, index) => index === 0 || left <= entry[index - 1].left + 1)).toBe(true);
     await expect(entry.some(({ width }) => width > 0 && width < inspectorWidth)).toBe(true);
@@ -366,7 +386,7 @@ export const TestPushCollapse: Story = {
     const step = await sample(
       () => ({
         pane: Math.round(endPane.getBoundingClientRect().width),
-        box: Math.round(reopened.getBoundingClientRect().width),
+        box: Math.round(clip.getBoundingClientRect().width),
       }),
       () => false,
       150,
