@@ -80,6 +80,29 @@ describe('submitSupportReport', () => {
     expect(flushLogs).not.toHaveBeenCalled();
   });
 
+  test('accepts a report the service could only post publicly, and flushes nothing to tag', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => new Response(JSON.stringify({ threadUrl: 'https://discord.test/t' }))),
+    );
+    const flushLogs = vi.fn(async () => {});
+    const { value, error } = await run(
+      SupportService.submitSupportReport({
+        endpoint: 'https://edge.test/discord',
+        observability: observabilityWith({
+          uploadLogs: async () => 'logs/1.ndjson',
+          sessionContext: () => undefined,
+          flushLogs,
+        }),
+        report: { title: 'Broken', body: 'It broke.', includeLogs: true },
+      }),
+    );
+
+    expect(error).toBeUndefined();
+    expect(value).toEqual({ threadUrl: 'https://discord.test/t' });
+    expect(flushLogs).not.toHaveBeenCalled();
+  });
+
   test('fails with a tagged error when the service rejects the report', async () => {
     vi.stubGlobal(
       'fetch',

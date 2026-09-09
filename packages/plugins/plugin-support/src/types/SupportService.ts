@@ -15,8 +15,9 @@ import type * as Observability from '@dxos/observability/Observability';
 import { SupportForbiddenError, SupportSubmitError } from '../errors';
 import type * as SupportOperation from './SupportOperation';
 
+/** Both are optional because the service files what it can: a report that reached only one of them is still filed. */
 export const SupportReportResult = Schema.Struct({
-  ticketId: Schema.String,
+  ticketId: Schema.optional(Schema.String),
   threadUrl: Schema.optional(Schema.String),
 });
 
@@ -127,7 +128,8 @@ export const submitSupportReport = ({
     }
 
     const result = yield* decodeBody(SupportReportResult, response);
-    if (includeLogs) {
+    // The ticket id is what tags the flushed records; with no ticket there is nothing to find them by.
+    if (includeLogs && result.ticketId) {
       yield* flushLogs(observability, { ticketId: result.ticketId });
     }
     return result;
