@@ -372,8 +372,7 @@ export type NavigationTargetVerdict = 'exists' | 'absent' | 'unknown';
  * node), and resolves `exists` if the object is present locally or, as a fallback, remotely. A
  * remote-only object resolves `exists` but cannot render until it replicates locally.
  *
- * Omitting `entityId` asks about the space itself, which is how a workspace is verified: the same
- * three-valued answer, from the same source, as the objects it contains.
+ * Omitting `entityId` asks about the space itself.
  * @category Capability
  */
 export type NavigationTargetLoader = Readonly<{

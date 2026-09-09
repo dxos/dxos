@@ -2,6 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as GraphPath from '@dxos/app-toolkit/GraphPath';
+import * as UrlPath from '@dxos/app-toolkit/UrlPath';
 import { EntityId } from '@dxos/keys';
 
 /**
@@ -14,3 +16,10 @@ import { EntityId } from '@dxos/keys';
  */
 export const getCandidateEntityIds = (pairId: string, tailSeparator: string): string[] =>
   pairId.split(tailSeparator).filter((segment) => EntityId.isValid(segment));
+
+/**
+ * The plank id for a pair no extension could resolve: a path under the workspace that no node
+ * occupies, so the plank renders as not found until one does.
+ */
+export const getUnresolvedPlankId = (pair: UrlPath.Pair): string =>
+  [GraphPath.getSpacePath(pair.workspace), pair.key, pair.id].filter((segment) => segment !== undefined).join('/');

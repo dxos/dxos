@@ -17,8 +17,6 @@ describe('combineVerdicts', () => {
     expect(NotFound.combineVerdicts(['absent', 'absent'])).toBe('absent');
   });
 
-  // `absent` is the one verdict that revokes the caller's wait, and the only one that renders as a
-  // 404 rather than as loading.
   test('a single unknown blocks absent', ({ expect }) => {
     expect(NotFound.combineVerdicts(['absent', 'unknown'])).toBe('unknown');
   });

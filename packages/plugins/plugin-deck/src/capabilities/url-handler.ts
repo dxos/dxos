@@ -30,6 +30,7 @@ import { CompanionViewState, DeckCapabilities, DeckSchema } from '#types';
 import {
   getCandidateEntityIds,
   getRenderedPlanks,
+  getUnresolvedPlankId,
   isCompanionOpen,
   makeUrlApplication,
   resolveCompanionAnchor,
@@ -70,8 +71,6 @@ export default Capability.makeModule(
     const builder = yield* AppCapabilities.AppGraph;
     const manager = yield* Plugin.Service;
 
-    // Marks the deck writes made in service of applying a URL, so the subscription below can tell
-    // them from a change that supersedes the URL being applied.
     const urlApplication = makeUrlApplication(registry.get(stateAtom));
 
     /**
@@ -145,15 +144,12 @@ export default Capability.makeModule(
       lastRepresentation.set(nodeId, node);
     };
 
-    /** Move the deck onto `workspacePath`, unless it is already there. */
     const switchWorkspace = (workspacePath: string) =>
       workspacePath === registry.get(stateAtom).activeDeck
         ? Effect.void
         : urlApplication.applying(Operation.invoke(LayoutOperation.SwitchWorkspace, { subject: workspacePath }));
 
     const handleNavigation = Effect.fn(function* (url?: URL) {
-      // Supersedes whichever URL was being applied: a Back press mid-restore must win over the
-      // restore it interrupts, which would otherwise `Set` its own planks over the traversal.
       const application = urlApplication.begin();
       const resolvedUrl = url ?? new URL(window.location.href);
       // When native redirect is active, check-app-scheme owns the initial dispatch
@@ -184,11 +180,6 @@ export default Capability.makeModule(
         return;
       }
 
-      // Claimed before the parse below, which waits on URL keys the client-gated builders register
-      // seconds later. Until the deck leaves the unresolved-workspace sentinel, plugin-space's boot
-      // bootstrap switches it to the default space (`spaces-ready.ts`) and takes the deck out from
-      // under this restore. The workspace tier is grammar rather than a registered key, so it is
-      // readable now; a segment that is not a space id is left to the parse to reject.
       yield* UrlPath.readWorkspace(pathname).pipe(
         Option.filter(Key.SpaceId.isValid),
         Option.match({
@@ -237,9 +228,6 @@ export default Capability.makeModule(
       }
 
       if (Option.isNone(parsed)) {
-        // The last writer of the sentinel into deck state: a path that does not parse names no pair,
-        // so there is nothing to key a plank on. `immediate` skips validation, which is redundant here.
-        // TODO(wittjosiah): Render this as deck-level ephemeral state once planks carry pair identity.
         yield* urlApplication.applying(
           Operation.invoke(LayoutOperation.Open, {
             subject: [NotFound.NOT_FOUND_PATH],
@@ -331,15 +319,7 @@ export default Capability.makeModule(
           plankIds.push(nodeId);
           return;
         }
-        // Keyed on the id it would have, not the sentinel, which is a different object: `useNode`
-        // then renders it the moment the node lands. A key whose extensions all resolve dynamically
-        // (a file entry, a collection object) yields no candidate until their data loads, so the pair
-        // itself names the plank until then — a path no node occupies, which renders as not found.
-        const candidateId =
-          resolved[index]?.candidateId ??
-          [GraphPath.getSpacePath(pair.workspace), pair.key, pair.id]
-            .filter((segment) => segment !== undefined)
-            .join('/');
+        const candidateId = resolved[index]?.candidateId ?? getUnresolvedPlankId(pair);
         plankIds.push(candidateId);
         // An absent node has no graph provenance, so only the URL itself can represent this pair.
         seedRepresentation(candidateId, { key: pair.key, id: pair.id, workspace: pair.workspace });
@@ -368,8 +348,6 @@ export default Capability.makeModule(
       yield* urlApplication.applying(Operation.invoke(LayoutOperation.UpdateCompanion, { subject: companionNodeId }));
     });
 
-    // The URL follows the deck a traversal actually applied, not the decks it passed through on the
-    // way; `replace` because the traversed entry already exists.
     const onPopState = () =>
       void EffectEx.runAndForwardErrors(
         provideServices(handleNavigation()).pipe(Effect.andThen(Effect.sync(() => syncUrl('replace')))),
@@ -514,10 +492,6 @@ export default Capability.makeModule(
       }
     };
 
-    // Subscribed at activation, not from the restore fiber: the restore waits seconds for URL keys
-    // and for its nodes, and a navigation during that window would otherwise have no subscriber at
-    // all. Only a change from outside a URL application counts — one made while applying a URL is
-    // the URL's own doing, so it neither supersedes the application nor drives the URL back.
     const unsubscribeState = registry.subscribe(stateAtom, (state) => {
       if (urlApplication.observe(state)) {
         syncUrl();

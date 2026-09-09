@@ -40,9 +40,6 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperat
         Effect.catch(() => Effect.succeed('desktop' as const)),
       );
 
-      // Expanding materializes the target's node when it is reachable. Existence is NOT decided here:
-      // a plank derives its own presence at render (see `useNavigationPresence`), so a slow target
-      // shows loading and a confirmed-missing one shows not found, with no check on the click path.
       for (const subjectId of input.subject) {
         NotFound.expandPath(graph, subjectId);
       }
@@ -214,8 +211,6 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperat
         }
       }
 
-      // The subjects as opened: an unresolvable one keeps its own id, so a caller that reads this
-      // back gets what it asked to open rather than the sentinel.
       return input.subject;
     }),
   ),

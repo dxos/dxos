@@ -16,10 +16,6 @@ import { AppCapabilities } from '../../app-framework';
 import * as GraphPath from '../../app/GraphPath';
 import * as NotFound from '../../app/NotFound';
 
-/**
- * The loader query a node id addresses: a workspace path names its space, anything deeper names an
- * object in one. An id that parses to neither is unaddressable and cannot be asked about.
- */
 const toTarget = (graph: AppGraph.ExpandableGraph, id: string): { spaceId: string; entityId?: string } | undefined => {
   const segments = id.split(GraphNode.PathSeparator);
   if (segments[0] !== GraphNode.RootId || !segments[1]) {
@@ -41,10 +37,7 @@ const toTarget = (graph: AppGraph.ExpandableGraph, id: string): { spaceId: strin
 /**
  * Whether the thing `id` addresses is there, as a three-valued answer: the graph node's presence when
  * it has one, otherwise what the {@link AppCapabilities.NavigationTargetLoader}s could determine.
- *
- * Derived rather than recorded, so it cannot go stale: a target that arrives later reads as `exists`
- * on the render after it lands. Callers render `unknown` as loading and `absent` as not found —
- * conflating the two is what makes a slow load look like a deletion.
+ * Callers render `unknown` as loading and `absent` as not found.
  */
 export const useNavigationPresence = (
   graph: AppGraph.ExpandableGraph,
@@ -55,7 +48,6 @@ export const useNavigationPresence = (
   const [verdict, setVerdict] = useState<AppCapabilities.NavigationTargetVerdict>('unknown');
 
   useEffect(() => {
-    // A node in the graph needs no asking, and its arrival supersedes any answer in flight.
     if (!id || present) {
       setVerdict('unknown');
       return;

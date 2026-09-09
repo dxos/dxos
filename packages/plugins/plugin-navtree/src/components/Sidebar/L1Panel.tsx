@@ -52,8 +52,6 @@ const L1PanelInner = ({ open, path, id, item, isCurrent, onBack }: L1PanelProps)
   const title = item ? toLocalizedString(item.properties.label, t) : t('workspace-unavailable.heading');
   const isActivated = useIsActivatedWorkspace(id);
   const shouldRenderContent = isCurrent || isActivated;
-  // The sentinel deck names no workspace, so there is nothing to make a claim about; anything else
-  // waits for a store to answer rather than reading a missing node as a missing space.
   const presence = useNavigationPresence(graph, id === DeckSchema.DEFAULT_DECK_ID ? undefined : id);
 
   return (

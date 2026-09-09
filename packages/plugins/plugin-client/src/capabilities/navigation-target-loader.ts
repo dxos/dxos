@@ -17,13 +17,7 @@ import { ClientCapabilities } from '#types';
 /** Cap on the remote edge existence check so an unreachable edge cannot block navigation. */
 const EDGE_EXISTENCE_TIMEOUT = '3 seconds';
 
-/**
- * Loads a navigation target on behalf of the layout plugins, so they can restore a URL-addressed
- * plank without depending on the client for object loading. Loads the object into local ECHO
- * (materializing its graph node) when it exists locally, and otherwise checks remote existence via
- * edge. A target with no `entityId` asks about the space itself.
- * See {@link AppCapabilities.NavigationTargetLoader}.
- */
+/** See {@link AppCapabilities.NavigationTargetLoader}. */
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const client = yield* ClientCapabilities.Client;
@@ -33,10 +27,6 @@ export default Capability.makeModule(
       client.edge.http.execQuery(new Context(), spaceId, body),
     );
 
-    // Resolves on the space list's first emission, the same signal that fires `ClientEvents.SpacesReady`.
-    // Membership can only be judged once the list is observable; before that a miss means nothing.
-    // Built on demand rather than here: `client.spaces` throws until initialization lands, and this
-    // module activates well before it does.
     let spacesPublished: Promise<void> | undefined;
     const awaitSpacesPublished = () =>
       (spacesPublished ??= new Promise<void>((resolve) => {
@@ -59,8 +49,6 @@ export default Capability.makeModule(
           // fail-fast the plank to not-found.
           yield* Effect.promise(() => client.waitUntilInitialized());
 
-          // The space itself, not an object in it: an id absent from a published list is a space this
-          // identity is not a member of, which no remote check could rescue.
           if (entityId === undefined) {
             yield* Effect.promise(awaitSpacesPublished);
             return client.spaces.get(spaceId) ? 'exists' : 'absent';

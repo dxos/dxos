@@ -275,7 +275,6 @@ export const UnavailableWorkspace: Story = {
   render: UnavailableWorkspaceStory,
   play: async ({ canvasElement }: { canvasElement: HTMLElement }) => {
     const canvas = within(canvasElement);
-    // Plugin startup plus the loader answering; allow for a slow CI runner.
     await canvas.findByTestId('navtree.workspace.unavailable', {}, { timeout: 15000 });
   },
 };

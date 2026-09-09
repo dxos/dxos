@@ -10,14 +10,7 @@ export type Application = {
   readonly superseded: () => boolean;
 };
 
-/**
- * Provenance for deck-state changes, which the atom itself does not carry.
- *
- * Applying a URL writes the deck — switching workspace, then opening the URL's planks — while also
- * having to yield to a user who navigates during its multi-second waits. Without provenance those
- * writes are indistinguishable from that navigation, and the intermediate decks they pass through (a
- * workspace switched but not yet populated) would drive the URL they are being read from.
- */
+/** Provenance for deck-state changes, which the atom itself does not carry. */
 export type UrlApplication<S> = {
   /** Attribute the deck-state writes `effect` performs to applying a URL. */
   readonly applying: <A, E, R>(effect: Effect.Effect<A, E, R>) => Effect.Effect<A, E, R>;
@@ -36,8 +29,6 @@ export type UrlApplication<S> = {
  */
 export const makeUrlApplication = <S>(initial: S): UrlApplication<S> => {
   let last = initial;
-  // Counted rather than a flag: applying a URL writes the deck more than once, and a deep link can
-  // arrive while another application is still in flight.
   let applying = 0;
   let pending: { superseded: boolean } | undefined;
 
@@ -50,7 +41,6 @@ export const makeUrlApplication = <S>(initial: S): UrlApplication<S> => {
 
   return {
     applying: (effect) =>
-      // Suspended so the region opens when the effect runs, not when it is built.
       Effect.suspend(() => {
         applying += 1;
         return Effect.ensuring(

@@ -6,7 +6,7 @@ import { describe, test } from 'vitest';
 
 import { EntityId } from '@dxos/keys';
 
-import { getCandidateEntityIds } from './navigation-target';
+import { getCandidateEntityIds, getUnresolvedPlankId } from './navigation-target';
 
 const SEPARATOR = '+';
 
@@ -42,5 +42,19 @@ describe('getCandidateEntityIds', () => {
 
   test('does not mistake a space id for an object id', ({ expect }) => {
     expect(getCandidateEntityIds('BA25QRC2FEWCSAMRP4RZL65LWJ7352CKE', SEPARATOR)).toEqual([]);
+  });
+});
+
+describe('getUnresolvedPlankId', () => {
+  const WORKSPACE = 'BA25QRC2FEWCSAMRP4RZL65LWJ7352CKE';
+
+  test('a keyed pair', ({ expect }) => {
+    expect(getUnresolvedPlankId({ key: 'file', id: 'notes.md', workspace: WORKSPACE })).toBe(
+      `root/${WORKSPACE}/file/notes.md`,
+    );
+  });
+
+  test('a singleton pair carries no id segment', ({ expect }) => {
+    expect(getUnresolvedPlankId({ key: 'home', workspace: WORKSPACE })).toBe(`root/${WORKSPACE}/home`);
   });
 });

@@ -209,7 +209,6 @@ describe('UrlPath', () => {
     });
 
     test('reads it from a chain whose later keys are unregistered', ({ expect }) => {
-      // The point of the function: this is what the deck can know before the builders have run.
       expect(Option.getOrThrow(UrlPath.readWorkspace(`/w/${WORKSPACE_A}/unknown/abc`))).toBe(WORKSPACE_A);
       expect(Option.isNone(UrlPath.parse(`/w/${WORKSPACE_A}/unknown/abc`, table))).toBe(true);
     });

@@ -17,7 +17,6 @@ type DeckState = typeof DeckState.Type;
 
 const DEFAULT: DeckState = { workspace: 'default', planks: [] };
 
-/** A store that survives across registries, so a test can start from a previous session's deck. */
 const makeStore = (persisted?: DeckState) => {
   const entries = new Map(persisted ? [['deck', JSON.stringify(persisted)]] : []);
   return KeyValueStore.makeStringOnly({
@@ -37,7 +36,6 @@ const makeStateAtom = (persisted?: DeckState) =>
     defaultValue: () => DEFAULT,
   }).pipe(Atom.keepAlive);
 
-/** The url-handler wiring: a persisted deck atom, the change subscription, and the outbound URL write. */
 const setup = (persisted?: DeckState) => {
   const registry = AtomRegistry.make();
   const stateAtom = makeStateAtom(persisted);
@@ -51,7 +49,6 @@ const setup = (persisted?: DeckState) => {
   return { registry, stateAtom, urlApplication, urlWrites };
 };
 
-/** The shape of a URL restore: switch the workspace, wait for the URL's nodes, then set its planks. */
 const restore = (harness: ReturnType<typeof setup>, waiting: Effect.Effect<void>) => {
   const { registry, stateAtom, urlApplication } = harness;
   return Effect.gen(function* () {
@@ -77,7 +74,6 @@ describe('url application', () => {
       notifications += 1;
     });
     registry.get(stateAtom);
-    // Pins the behavior the seeding below defends against; an async backing store would break it.
     expect(notifications).toBe(1);
   });
 
@@ -107,7 +103,6 @@ describe('url application', () => {
 
   test('a newer URL supersedes the one being applied', ({ expect }) => {
     const harness = setup();
-    // A Back press lands while the cold restore is still waiting on its nodes.
     const outcome = Effect.runSync(
       restore(
         harness,

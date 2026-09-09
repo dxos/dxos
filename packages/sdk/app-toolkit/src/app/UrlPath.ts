@@ -75,9 +75,8 @@ export const isReservedKey = (key: string): boolean =>
 /**
  * Read the leading `/<anchor>/<workspace>` workspace token, without a key table.
  *
- * The workspace tier is grammar rather than a registered key, so it is readable before the builders
- * that register the chain's keys have run. Returns `Option.none()` for any pathname that does not
- * open with the anchor key followed by a workspace segment.
+ * Returns `Option.none()` for any pathname that does not open with the anchor key followed by a
+ * workspace segment.
  */
 export const readWorkspace = (pathname: string): Option.Option<string> => {
   const trimmed = decodeURIComponent(pathname).replace(/^\/+|\/+$/g, '');
