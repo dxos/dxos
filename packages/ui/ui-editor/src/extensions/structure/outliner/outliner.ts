@@ -138,10 +138,6 @@ const decorations = () => [
                 ),
               }).range(line.from, line.from),
             );
-          } else {
-            // Prose sits flush with the content edge, so a blank line reads as a gap between lists,
-            // not as a continuation of the item above.
-            decorations.push(Decoration.line({ class: 'cm-outline-prose' }).range(line.from, line.from));
           }
         }
 

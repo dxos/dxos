@@ -567,7 +567,7 @@ const TaskPriorityIcon = ({ task }: { task: Task.Task }) => {
             label: t(`priority-${id}.label`),
             icon: optionIcon,
             iconClassNames: priorityTextStyle(id),
-            checked: priority === id,
+            checked: (priority ?? 'none') === id,
           }),
         )}
       >

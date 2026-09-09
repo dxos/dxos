@@ -49,8 +49,8 @@ module tree
 module editor
   desc: |
     A transactionFilter constraining edits to a valid outline: snaps the caret out of the marker into
-    the content range, allows whole-line deletes, and guards marker/continuation edits. Seeds an empty
-    document with a first item.
+    the content range, allows whole-line deletes, and guards marker/continuation edits. With
+    `autoInsert` (off by default) it seeds an empty document with a first item.
   api:
     editor: () => Extension
 ```
@@ -107,8 +107,9 @@ feat F-1: Document model
     then: the Tree is recomputed and exposed via treeFacet; the document stays valid markdown text
 
   req F-1.3:
-    when: the document is empty
-    then: a first item (`- [ ] `) is seeded and the caret placed in its content
+    when: the document is empty and the editor was created with `autoInsert` (off by default)
+    then: a first item (`- [ ] `) is seeded and the caret placed in its content; otherwise the
+          document stays empty and the add button offers the first item
 ```
 
 ```mdl
