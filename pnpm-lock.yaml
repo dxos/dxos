@@ -19074,6 +19074,9 @@ importers:
       '@dxos/plugin-markdown':
         specifier: workspace:*
         version: link:../../plugins/plugin-markdown
+      '@dxos/plugin-space':
+        specifier: workspace:*
+        version: link:../../plugins/plugin-space
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../sdk/react-client
@@ -19195,9 +19198,6 @@ importers:
       '@dxos/plugin-script':
         specifier: workspace:*
         version: link:../../plugins/plugin-script
-      '@dxos/plugin-space':
-        specifier: workspace:*
-        version: link:../../plugins/plugin-space
       '@dxos/plugin-table':
         specifier: workspace:*
         version: link:../../plugins/plugin-table

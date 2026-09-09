@@ -120,14 +120,16 @@ const TemplateSelect = () => {
     window.location.reload();
   }, [client]);
 
-  // Open the default template's space, so the story starts on a bound conversation.
+  // Open the default template's space, so the story starts on a bound conversation. Gated on that
+  // template rather than on any: each contributing module activates on its own, so the samples can
+  // register a beat before the story's own, and a one-shot on the first arrival would open nothing.
   const [opened, setOpened] = useState(false);
   useAsyncEffect(async () => {
-    if (!opened && !busy.current && sorted.length > 0) {
+    if (!opened && !busy.current && templates.some(({ id }) => id === templateId)) {
       setOpened(true);
       await handleSelect(templateId);
     }
-  }, [opened, sorted, templateId, handleSelect]);
+  }, [opened, templates, templateId, handleSelect]);
 
   return (
     <>
