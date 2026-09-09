@@ -187,7 +187,10 @@ const DragHandleGlyph = () => (
 );
 
 const StackSection = ({ data, ...tileProps }: StackSectionProps) => {
-  const { id, object } = useObjectValue(data) ?? data;
+  const { id, object } = data;
+  // `data` is a plain tile wrapper, so the subscription has to be on the object inside it. The title
+  // is a mutable field and the section is a memo boundary; `object` stays live for the surface below.
+  const snapshot = useObjectValue(object);
   const { t } = useTranslation(meta.profile.key);
   const { attendableId: parentAttendableId, collapsed, onAdd, onMoveUp, onMoveDown, onCollapse, onDelete } = useStack();
   const [optionsMenuOpen, setOptionsMenuOpen] = useState(false);
@@ -196,7 +199,7 @@ const StackSection = ({ data, ...tileProps }: StackSectionProps) => {
   const surfaceData = useMemo(() => ({ attendableId, subject: object }), [object, attendableId]);
   const isCollapsed = collapsed.has(id);
   const icon = Obj.getIcon(object)?.icon ?? 'ph--circle-dashed--regular';
-  const title = Obj.getLabel(object, { fallback: 'typename' }) ?? t('untitled-section.title');
+  const title = Obj.getLabel(snapshot ?? object, { fallback: 'typename' }) ?? t('untitled-section.title');
 
   const rail = (
     <div className='grid grid-rows-[min-content_1fr]'>

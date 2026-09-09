@@ -59,7 +59,10 @@ type SegmentTileProps = Pick<MosaicTileProps<SegmentTileData>, 'data' | 'locatio
  * states uniformly across the stack.
  */
 export const SegmentTile = forwardRef<HTMLDivElement, SegmentTileProps>(({ data, location, current }, forwardedRef) => {
-  const { segment, onAction } = useObjectValue(data) ?? data;
+  const { segment, onAction } = data;
+  // `data` is a plain tile wrapper, so the subscription has to be on the segment inside it. The title
+  // is read off the live object, which `getTitle` types against; this call is what re-renders on edit.
+  useObjectValue(segment);
   const { setCurrentId, setSelected } = useMosaicContainer('SegmentTile');
   const { t } = useTranslation(meta.profile.key);
 
