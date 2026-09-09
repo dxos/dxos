@@ -581,6 +581,18 @@ export class AutomergeHost extends Resource {
   }
 
   /**
+   * Re-opens a subduction round for one document.
+   *
+   * The scheduler only retries rounds it saw fail, and {@link kickStalledSync} only revives
+   * `all-failed`/`no-peers` entries. A round that reports success while leaving the document absent
+   * or its heads diverged is neither, so nothing re-asks; `resyncSubduction` clears the heal state
+   * and marks the entry never-synced so a fresh round opens. No-op under classical sync.
+   */
+  resyncDocument(documentId: AnyDocumentId): void {
+    this._repo.resyncSubduction(interpretAsDocumentId(documentId));
+  }
+
+  /**
    * Leases a document, waiting until it is loaded. The lease is the only route to a `DocHandle`;
    * dispose it (`using`, or in the holder's teardown) so the document can be evicted.
    *
@@ -1409,6 +1421,12 @@ export class AutomergeHost extends Resource {
           different.map((documentId) => [documentId, getHandleState(this._repo, documentId)]),
         ),
       });
+
+      // Heads this far apart for this long are a round that settled without delivering, which
+      // neither the heal scheduler nor the share-policy announce below will ever re-ask for.
+      for (const documentId of different) {
+        this.resyncDocument(documentId);
+      }
     }
 
     const toReplicate = [...different, ...missingOnRemote, ...missingOnLocal];
@@ -1418,8 +1436,8 @@ export class AutomergeHost extends Resource {
     }
 
     // Per-handle state included: a document stuck in `unavailable`/`loading` here on every diff
-    // pass is the signature of a subduction DocumentQuery parked without retry —
-    // `findWithProgress` will not re-issue the query, so the doc never arrives.
+    // pass is the signature of a subduction DocumentQuery parked without retry, which only the
+    // non-convergence resync above re-opens.
     log('replicating documents after collection sync', {
       collectionId,
       peerId,
@@ -1435,19 +1453,6 @@ export class AutomergeHost extends Resource {
     // query for the sedimentreeId. Either way, once bytes arrive `_afterSave` populates
     // `SqliteHeadsStore` so collection sync sees the updated heads on the next diff.
     for (const documentId of toReplicate) {
-      // `findWithProgress` resolves from the existing query for an already-`ready` document and
-      // `_documentsToSync` feeds a share policy Subduction does not consult, so a diverged
-      // document reaching here gets no retry from either — the diff simply repeats next pass.
-      if (this._useSubduction && getHandleState(this._repo, documentId) === 'ready' && different.includes(documentId)) {
-        // Verbose: this fires on every diff pass for docs that are in practice fully synced,
-        // so at warn level it floods the console without indicating a real fault.
-        log.verbose('diverged document has no subduction retry path', {
-          collectionId,
-          peerId,
-          documentId,
-          sedimentreeId: documentIdToSedimentreeIdHex(documentId),
-        });
-      }
       this._documentsToSync.add(documentId);
       this._leaseUntilSettled(documentId as DocumentId);
     }

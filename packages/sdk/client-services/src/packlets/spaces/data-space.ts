@@ -492,12 +492,14 @@ export class DataSpace {
    *
    * `loadDoc` waits on the network with no deadline of its own, and asking again is not enough:
    * `findWithProgress` re-attaches to the same parked subduction query rather than re-issuing it.
-   * Each retry therefore resets the stalled entries first.
+   * Each retry therefore re-opens a round for this document first — a fetch the peer answered
+   * before it held the document settles as success-empty, which the repo-wide kick does not revive.
    */
   async #loadRootDoc(rootUrl: AutomergeUrl): Promise<DocumentLease<DatabaseDirectory> | null> {
     for (let attempt = 0, delay = ROOT_DOC_LOAD_RETRY_INITIAL_DELAY; !this._ctx.disposed; attempt++) {
       try {
         if (attempt > 0) {
+          this._echoHost.automergeHost.resyncDocument(rootUrl);
           this._echoHost.automergeHost.kickStalledSync();
         }
 
