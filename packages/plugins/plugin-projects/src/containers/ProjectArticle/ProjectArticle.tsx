@@ -25,7 +25,7 @@ import { Form } from '@dxos/react-ui-form';
 import { Masonry } from '@dxos/react-ui-masonry';
 import { type ActionGraphProps, ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 import { buildTaskForest, flattenVisibleTasks } from '@dxos/react-ui-task';
-import { type Milestone, Outline, Task, type TaskSet } from '@dxos/types';
+import { type Milestone, Task, type TaskSet } from '@dxos/types';
 
 import { ObjectCard } from '#components';
 import { meta } from '#meta';

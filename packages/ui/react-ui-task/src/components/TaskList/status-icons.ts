@@ -12,17 +12,7 @@ import { getStyles } from '@dxos/ui-theme';
  * left off this list would take its tasks out of a grouped view entirely rather than merely sorting
  * them late.
  */
-export const STATUS_ORDER: Task.Status[] = [
-  'started',
-  'review',
-  'blocked',
-  'todo',
-  'backlog',
-  'done',
-  'failed',
-  'cancelled',
-  'duplicate',
-];
+export const STATUS_ORDER: Task.Status[] = Task.StatusOptions.map(({ id }) => id);
 
 /**
  * The glyph for a field with no value set, whatever the field.
