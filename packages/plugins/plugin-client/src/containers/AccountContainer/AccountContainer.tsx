@@ -16,7 +16,7 @@ import { meta } from '#meta';
 import { ClientCapabilities } from '#types';
 
 import { RESET_DIALOG } from '../../constants';
-import { useAccountUrl, useHubHttpClient } from '../../hooks';
+import { useAccountUrl, useEdgeHttpClient } from '../../hooks';
 
 type AccountState = 'loading' | 'present' | 'missing' | 'error';
 
@@ -34,15 +34,15 @@ export const AccountContainer = () => {
 
   // Single shared instance keeps the VP-auth handshake (request → 401 → signed
   // retry) at one round-trip per session instead of one per panel.
-  const hubHttp = useHubHttpClient();
+  const edgeHttp = useEdgeHttpClient();
   const { openAccountPage } = useAccountUrl();
 
   useAsyncEffect(async () => {
-    if (!hubHttp) {
+    if (!edgeHttp) {
       return;
     }
     try {
-      const account = await hubHttp.getAccount(new Context());
+      const account = await edgeHttp.getAccount(new Context());
       setCache((prev) => ({ ...prev, account, fetchedAt: Date.now() }));
       setAccountState('present');
     } catch (err: any) {
@@ -53,14 +53,14 @@ export const AccountContainer = () => {
         setAccountState((prev) => (prev === 'present' ? 'present' : 'error'));
       }
     }
-  }, [hubHttp, setCache]);
+  }, [edgeHttp, setCache]);
 
   const handleResend = useCallback(async () => {
-    if (!hubHttp) {
+    if (!edgeHttp) {
       return;
     }
     try {
-      const result = await hubHttp.resendVerificationEmail(new Context());
+      const result = await edgeHttp.resendVerificationEmail(new Context());
       if (result.sent) {
         setResendStatus(t('verification-sent.message'));
       } else if (result.cooldownSecondsRemaining) {
@@ -71,31 +71,31 @@ export const AccountContainer = () => {
     } catch {
       setResendStatus(t('verification-failed.message'));
     }
-  }, [hubHttp, t]);
+  }, [edgeHttp, t]);
 
   const handleRequestAccess = useCallback(
     async (event: FormEvent<HTMLFormElement>) => {
       event.preventDefault();
       const email = requestEmail.trim();
-      if (!email || !hubHttp) {
+      if (!email || !edgeHttp) {
         return;
       }
       try {
         const identityDid = identity?.did;
-        await hubHttp.requestAccess(new Context(), { email, identityDid });
+        await edgeHttp.requestAccess(new Context(), { email, identityDid });
       } catch {
         // Surface a generic confirmation; failure details would leak signal.
       }
       setRequestSubmitted(true);
     },
-    [hubHttp, identity, requestEmail],
+    [edgeHttp, identity, requestEmail],
   );
 
   // Opens the standard reset confirmation dialog. The `onBeforeReset` hook
   // deletes the hub account first; if that fails the reset is aborted so the
   // local identity is not wiped while the server record remains.
   const handleDeleteAccount = useCallback(() => {
-    if (!hubHttp) {
+    if (!edgeHttp) {
       return;
     }
     void invokePromise(LayoutOperation.UpdateDialog, {
@@ -104,12 +104,12 @@ export const AccountContainer = () => {
       props: {
         mode: 'reset-storage',
         onBeforeReset: async () => {
-          await hubHttp.deleteAccount(new Context());
+          await edgeHttp.deleteAccount(new Context());
           setCache(() => ({}));
         },
       },
     });
-  }, [hubHttp, invokePromise, setCache]);
+  }, [edgeHttp, invokePromise, setCache]);
 
   const account = cache.account;
 

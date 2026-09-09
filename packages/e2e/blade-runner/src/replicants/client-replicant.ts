@@ -15,7 +15,7 @@ import { Context } from '@dxos/context';
 import { DXN, Filter, Obj, Query, Type } from '@dxos/echo';
 import { Doc } from '@dxos/echo-doc';
 import { isEdgePeerId } from '@dxos/echo-protocol';
-import { HubHttpClient, authenticateViaChallengeEndpoint, encodeAuthHeader } from '@dxos/edge-client';
+import { EdgeHttpClient, authenticateViaChallengeEndpoint, encodeAuthHeader } from '@dxos/edge-client';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -241,11 +241,11 @@ export class ClientReplicant {
    * means a fixed alias per identity slot reuses one account row forever, so runs leave no rows.
    */
   @trace.span()
-  async bindTestAccount({ hubUrl, email }: { hubUrl: string; email: string }): Promise<{ accountId: string }> {
+  async bindTestAccount({ edgeUrl, email }: { edgeUrl: string; email: string }): Promise<{ accountId: string }> {
     const identity = this.#getClient().halo.identity.get();
     invariant(identity, 'no identity to bind');
-    const hub = new HubHttpClient(hubUrl);
-    const response = await hub.redeemInvitationCode(new Context(), {
+    const edge = new EdgeHttpClient(edgeUrl);
+    const response = await edge.redeemInvitationCode(new Context(), {
       email,
       identityDid: identity.did,
       identityKey: identity.identityKey.toHex(),

@@ -12,9 +12,9 @@ runtime:
       dataRoot: /tmp/dx/run
 
   services:
-    # Deployed: hub-service is not part of the local edge dev setup.
+    # Only the passkey origin. Account calls go to `<edge>/hub`, so a local edge needs its
+    # `HUB_SERVICE` binding to answer them.
     hub:
-      url: https://dev.dxos.network/hub/
       authUrl: https://account.dev.composer.space
     edge:
       url: http://localhost:8787/

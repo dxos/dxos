@@ -8,14 +8,12 @@ import * as FileSystem from 'effect/FileSystem';
 import * as Option from 'effect/Option';
 import { afterEach, describe, test } from 'vitest';
 
-import { DEFAULT_HUB_URL } from '@dxos/client-protocol';
 import { EffectEx } from '@dxos/effect';
 
 import { ConfigService } from './config-service';
 import { EDGE_URLS } from './edge-services';
 
-const HUB_SERVICE_URL = 'runtime.services.hub.url';
-const HUB_ENV_URL = 'runtime.app.env.DX_HUB_URL';
+const EDGE_ENV_URL = 'runtime.app.env.DX_EDGE_BASE_URL';
 const EDGE_URL = 'runtime.services.edge.url';
 
 let restoreEnv: (() => void) | undefined;
@@ -26,43 +24,25 @@ describe('ConfigService.load', () => {
     restoreEnv = undefined;
   });
 
-  test('falls back to the built-in hub for a profile that configures none', async ({ expect }) => {
-    restoreEnv = withEnv({ DX_HUB_URL: undefined });
-    const config = await load('version: 1\n');
-    // Profiles created before the endpoints moved into the file have no `hub` key.
-    expect(config.get(HUB_SERVICE_URL)).toEqual(DEFAULT_HUB_URL);
-    expect(config.get(HUB_ENV_URL)).toBeUndefined();
-  });
-
-  test('keeps the hub a profile configures for itself', async ({ expect }) => {
-    restoreEnv = withEnv({ DX_HUB_URL: undefined });
-    const config = await load('version: 1\nruntime:\n  services:\n    hub:\n      url: https://hub.test/\n');
-    expect(config.get(HUB_SERVICE_URL)).toEqual('https://hub.test/');
-    // Nothing may write the higher-precedence key, or the configured URL would never be read.
-    expect(config.get(HUB_ENV_URL)).toBeUndefined();
-  });
-
   test('lets DX_* env override the profile config file', async ({ expect }) => {
-    restoreEnv = withEnv({ DX_HUB_URL: 'https://hub.env/' });
-    const config = await load('version: 1\nruntime:\n  app:\n    env:\n      DX_HUB_URL: https://hub.file/\n');
-    expect(config.get(HUB_ENV_URL)).toEqual('https://hub.env/');
+    restoreEnv = withEnv({ DX_EDGE_BASE_URL: 'https://edge.env/' });
+    const config = await load('version: 1\nruntime:\n  app:\n    env:\n      DX_EDGE_BASE_URL: https://edge.file/\n');
+    expect(config.get(EDGE_ENV_URL)).toEqual('https://edge.env/');
   });
 
   test('writes the endpoints into a freshly created config file', async ({ expect }) => {
-    restoreEnv = withEnv({ DX_HUB_URL: undefined, DX_LOCAL_DEV: undefined });
+    restoreEnv = withEnv({ DX_EDGE_BASE_URL: undefined, DX_LOCAL_DEV: undefined });
     const { config, contents } = await createMissing('endpoints');
 
-    expect(config.get(HUB_SERVICE_URL)).toEqual(DEFAULT_HUB_URL);
     expect(config.get(EDGE_URL)).toEqual('https://dxos.network/');
 
     // Stated in the file the user owns, not substituted from code on every load.
-    expect(contents).toContain('hub');
     expect(contents).toContain('edge');
     expect(contents).toContain('ipfs');
   });
 
   test('keeps features and storage out of the created file so they track the code', async ({ expect }) => {
-    restoreEnv = withEnv({ DX_HUB_URL: undefined, DX_LOCAL_DEV: undefined });
+    restoreEnv = withEnv({ DX_EDGE_BASE_URL: undefined, DX_LOCAL_DEV: undefined });
     const { config, contents } = await createMissing('code-defaults');
 
     expect(contents).not.toContain('edgeFeatures');

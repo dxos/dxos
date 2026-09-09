@@ -9,7 +9,7 @@ import { expect, waitFor, within } from 'storybook/test';
 import { ProcessManagerPlugin } from '@dxos/app-framework';
 import * as Capability from '@dxos/app-framework/Capability';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { HubHttpClient } from '@dxos/edge-client';
+import { EdgeHttpClient } from '@dxos/edge-client';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { ClientPlugin } from '#plugin';
@@ -20,12 +20,12 @@ import { ClientCapabilities } from '#types';
 import { AccountContainer } from './AccountContainer';
 
 /**
- * A `HubHttpClient` whose account lookup is answered locally. Constructed for real and overridden
+ * An `EdgeHttpClient` whose account lookup is answered locally. Constructed for real and overridden
  * per method — a partial stand-in would need a cast, and `setIdentity` (called by the hook on every
  * identity change) has to keep working.
  */
-const stubHubHttpClient = (account: { email: string; emailVerified: boolean }) => {
-  const client = new HubHttpClient('https://hub.test');
+const stubEdgeHttpClient = (account: { email: string; emailVerified: boolean }) => {
+  const client = new EdgeHttpClient('https://edge.test');
   client.getAccount = async () => ({
     identityDid: 'did:key:test',
     email: account.email,
@@ -36,7 +36,7 @@ const stubHubHttpClient = (account: { email: string; emailVerified: boolean }) =
   return client;
 };
 
-const decorators = (hub?: HubHttpClient) => [
+const decorators = (edge?: EdgeHttpClient) => [
   withTheme(),
   withLayout({ layout: 'fullscreen' }),
   withPluginManager({
@@ -49,7 +49,7 @@ const decorators = (hub?: HubHttpClient) => [
       }),
       ProcessManagerPlugin(),
     ],
-    capabilities: hub ? [Capability.contribute(ClientCapabilities.HubHttpClient, hub)] : [],
+    capabilities: edge ? [Capability.contribute(ClientCapabilities.EdgeHttpClient, edge)] : [],
   }),
 ];
 
@@ -73,7 +73,7 @@ export const Default: Story = {
 
 /** The signed-in branch, which is the only one that reaches the account-page section. */
 export const WithAccount: Story = {
-  decorators: decorators(stubHubHttpClient({ email: 'someone@example.com', emailVerified: true })),
+  decorators: decorators(stubEdgeHttpClient({ email: 'someone@example.com', emailVerified: true })),
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await waitFor(async () => expect(canvas.getByText('someone@example.com')).toBeInTheDocument(), { timeout: 20_000 });
@@ -84,7 +84,7 @@ export const WithAccount: Story = {
 
 /** An unverified email offers the resend action instead of the verified check. */
 export const UnverifiedEmail: Story = {
-  decorators: decorators(stubHubHttpClient({ email: 'unverified@example.com', emailVerified: false })),
+  decorators: decorators(stubEdgeHttpClient({ email: 'unverified@example.com', emailVerified: false })),
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await waitFor(

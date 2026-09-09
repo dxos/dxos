@@ -14,7 +14,7 @@ import { Listbox } from '@dxos/react-ui-list';
 import { meta } from '#meta';
 import { AccountCache, ClientCapabilities } from '#types';
 
-import { useHubHttpClient } from '../../hooks';
+import { useEdgeHttpClient } from '../../hooks';
 
 export const InvitationsContainer = () => {
   const { t } = useTranslation(meta.profile.key);
@@ -23,29 +23,28 @@ export const InvitationsContainer = () => {
   const setCache = useAtomSet(accountCacheAtom);
   const [pending, setPending] = useState(false);
 
-  // Account/invitation routes live on hub-service, not the edge worker.
-  const hubClient = useHubHttpClient();
+  const edgeClient = useEdgeHttpClient();
 
   useAsyncEffect(async () => {
-    if (!hubClient) {
+    if (!edgeClient) {
       return;
     }
 
     try {
-      const result = await hubClient.listAccountInvitations(new Context());
+      const result = await edgeClient.listAccountInvitations(new Context());
       setCache((prev) => ({ ...prev, invitations: result.invitations, fetchedAt: Date.now() }));
     } catch {
       // Offline: keep cache.
     }
-  }, [hubClient, setCache]);
+  }, [edgeClient, setCache]);
 
   const handleIssue = useCallback(async () => {
-    if (!hubClient) {
+    if (!edgeClient) {
       return;
     }
     setPending(true);
     try {
-      const result = await hubClient.issueAccountInvitation(new Context());
+      const result = await edgeClient.issueAccountInvitation(new Context());
       // Optimistically push the new code and decrement the remaining quota; the
       // server consumes one slot at issue time. Next refresh reconciles.
       setCache((prev) => ({
@@ -58,7 +57,7 @@ export const InvitationsContainer = () => {
     } finally {
       setPending(false);
     }
-  }, [hubClient, setCache]);
+  }, [edgeClient, setCache]);
 
   const remaining = cache.account?.invitationsRemaining ?? 0;
   const list = cache.invitations ?? [];

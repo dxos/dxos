@@ -9,7 +9,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 // capabilities named after them.
 import { type Client as Client$ } from '@dxos/client';
 import { type Type, type Migration as Migration$ } from '@dxos/echo';
-import { type HubHttpClient as HubHttpClient$ } from '@dxos/edge-client';
+import { type EdgeHttpClient as EdgeHttpClient$ } from '@dxos/edge-client';
 import { type Identity as Identity$, type Space as Space$ } from '@dxos/halo';
 
 import { meta } from '#meta';
@@ -34,7 +34,10 @@ export const Migration = Capability.make<Migration$.Migration[]>()(`${meta.profi
 export const AccountCache = Capability.makeSingleton<Atom.Writable<AccountCacheType>>()(
   `${meta.profile.key}.capability.accountCache`,
 );
-export const HubHttpClient = Capability.makeSingleton<HubHttpClient$>()(`${meta.profile.key}.capability.hubHttpClient`);
+/** EDGE's own routes plus the account API it proxies under `/hub`. */
+export const EdgeHttpClient = Capability.makeSingleton<EdgeHttpClient$>()(
+  `${meta.profile.key}.capability.edgeHttpClient`,
+);
 
 /**
  * The HALO Identity service instance, for imperative (non-React, non-Effect-layer) consumers

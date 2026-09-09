@@ -9,6 +9,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
 import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as CreateAtom from '@dxos/app-graph/CreateAtom';
+import * as Account$ from '@dxos/app-toolkit/Account';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { ConnectionState } from '@dxos/client/mesh';
 import * as Operation from '@dxos/compute/Operation';
@@ -56,9 +57,9 @@ export default Capability.makeModule(
           const [identityService] = get(identityServiceAtom);
           const identity = identityService ? Option.getOrUndefined(get(Identity.atom(identityService))) : undefined;
           const status = get(CreateAtom.fromObservable(client.mesh.networkStatus));
-          // Account, invitations, and usage are all hub-service reads; without a hub URL there is
-          // no `HubHttpClient` capability and those panels render empty shells forever.
-          const hub = !!client.config.values?.runtime?.app?.env?.DX_HUB_URL;
+          // Account, invitations, and usage all read the account API; a build that does not arm
+          // the login page has no account to read and those panels render empty shells forever.
+          const accounts = Account$.showLoginPage(client);
 
           return [
             AppGraphNode.make({
@@ -85,7 +86,7 @@ export default Capability.makeModule(
                     icon: 'ph--user--regular',
                   },
                 }),
-                ...(hub
+                ...(accounts
                   ? [
                       AppGraphNode.make({
                         id: Account.Account,
@@ -117,7 +118,7 @@ export default Capability.makeModule(
                     testId: 'clientPlugin.devices',
                   },
                 }),
-                ...(hub
+                ...(accounts
                   ? [
                       AppGraphNode.make({
                         id: Account.Invitations,

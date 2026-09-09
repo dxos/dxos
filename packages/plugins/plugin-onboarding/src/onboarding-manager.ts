@@ -30,7 +30,8 @@ export type OnboardingManagerProps = {
   invokePromise: Capabilities.OperationInvoker['invokePromise'];
   client: Client;
   firstRun?: Trigger;
-  hubUrl?: string;
+  /** Whether this deployment arms the login page; when it does not, onboarding creates an identity outright. */
+  showLoginPage?: boolean;
   token?: string;
   recoverIdentity?: boolean;
   deviceInvitationCode?: string;
@@ -50,7 +51,6 @@ export class OnboardingManager {
   private readonly _subscriptions = new SubscriptionList();
   private readonly _invokePromise: Capabilities.OperationInvoker['invokePromise'];
   private readonly _client: Client;
-  private readonly _hubUrl?: string;
   private readonly _skipAuth: boolean;
   private readonly _token?: string;
   private readonly _recoverIdentity?: boolean;
@@ -73,7 +73,7 @@ export class OnboardingManager {
   constructor({
     invokePromise,
     client,
-    hubUrl,
+    showLoginPage,
     token,
     recoverIdentity,
     deviceInvitationCode,
@@ -85,8 +85,7 @@ export class OnboardingManager {
 
     this._invokePromise = invokePromise;
     this._client = client;
-    this._hubUrl = hubUrl;
-    this._skipAuth = !this._hubUrl;
+    this._skipAuth = !showLoginPage;
     this._token = token;
     this._recoverIdentity = recoverIdentity || false;
     this._deviceInvitationCode = deviceInvitationCode;
@@ -136,7 +135,7 @@ export class OnboardingManager {
       // URL param: hand it to the redeem endpoint, which is idempotent (the
       // server may auto-bind, return a login token, or reject -- we swallow
       // failures since the resulting state is what we wanted).
-      if (this._email && this._hubUrl) {
+      if (this._email && !this._skipAuth) {
         await this._bindExistingIdentityIfPossible();
         if (aborted()) {
           return;
@@ -290,7 +289,6 @@ export class OnboardingManager {
    */
   private async _redeemAccountInvitation(): Promise<boolean> {
     invariant(this._email);
-    invariant(this._hubUrl, 'hubUrl required for redemption');
 
     const { _email: email, _accountInvitationCode: code } = this;
     const ensureIdentity = Effect.gen({ self: this }, function* () {
@@ -303,7 +301,7 @@ export class OnboardingManager {
     // typed errors are not matchable from a catch block. The catch-all matters: `initialize()` is a
     // fire-and-forget background side-effect, so a rejection here would vanish unhandled.
     const outcome = await EffectEx.runPromise(
-      HubAccount.signUpWithEmail({ hub: HubAccount.createHubClient(this._hubUrl), email, code, ensureIdentity }).pipe(
+      HubAccount.signUpWithEmail({ edge: this._client.edge.http, email, code, ensureIdentity }).pipe(
         Effect.map(() => 'redeemed' as const),
         Effect.catchTag('EmailProbeUnavailableError', () => Effect.succeed('probe-unavailable' as const)),
         Effect.catchTag('EmailAlreadyRegisteredError', () => Effect.succeed('email-registered' as const)),
@@ -341,11 +339,10 @@ export class OnboardingManager {
   private async _bindExistingIdentityIfPossible(): Promise<void> {
     invariant(this._email);
     invariant(this._identity);
-    invariant(this._hubUrl);
 
     await EffectEx.runPromise(
       HubAccount.redeemAccessCode({
-        hub: HubAccount.createHubClient(this._hubUrl),
+        edge: this._client.edge.http,
         identity: this._identity,
         email: this._email,
         code: this._accountInvitationCode,

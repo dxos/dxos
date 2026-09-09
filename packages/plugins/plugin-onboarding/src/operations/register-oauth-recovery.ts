@@ -51,7 +51,7 @@ const handler: Operation.WithHandler<typeof RegisterOAuthRecovery> = RegisterOAu
       yield* Effect.try(() =>
         localStorage.setItem(
           oauthRecoveryPendingKey(accessTokenId),
-          JSON.stringify({ purpose: 'register', code: data.code, hubUrl: data.hubUrl }),
+          JSON.stringify({ purpose: 'register', code: data.code }),
         ),
       ).pipe(
         // Persisting the snapshot is required for the finalizer to complete registration after the

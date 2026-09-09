@@ -109,10 +109,10 @@ export const getCorePlugins = ({
       shareableLinkOrigin: origin,
       // plugin-onboarding owns invitation URL params in Composer.
       invitationUrlHandler: false,
-      // Inverse of the onboarding gate (`DX_HUB_URL` present => welcome screen): where the gate
+      // Inverse of the onboarding gate (`DX_SHOW_LOGIN_PAGE` => welcome screen): where the gate
       // runs it already offers joining a device and recovering an identity on a clean profile, so
       // the storage-wiping variants are only wanted in local testing.
-      identityTestActions: !config.values.runtime?.app?.env?.DX_HUB_URL,
+      identityTestActions: config.values.runtime?.app?.env?.DX_SHOW_LOGIN_PAGE !== 'true',
       // The forked init is outside the render tree, so a failure or a stalled handshake reaches
       // the user only if the entry point raises it — React never sees one.
       onClientInitializationError: ({ error }) => Effect.sync(() => onFatalError?.(error)),

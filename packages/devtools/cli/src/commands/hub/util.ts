@@ -17,22 +17,23 @@ import { type EdgeEnvelope } from '@dxos/protocols';
 
 export class HubApiError extends BaseError.extend('HubApiError', 'Hub API error') {}
 
+/** EDGE proxies hub-service under `/hub`, so the admin API is addressed off the profile's EDGE URL. */
 const hubBaseUrl = Effect.gen(function* () {
   const config = yield* ConfigService;
-  const url = config.values?.runtime?.services?.hub?.url;
+  const url = config.values?.runtime?.services?.edge?.url;
   if (!url) {
-    // The CLI writes a hub URL into every profile it creates, so an absent one means the profile
+    // The CLI writes an EDGE URL into every profile it creates, so an absent one means the profile
     // was edited — report that rather than silently substituting a DXOS-operated host.
-    return yield* Effect.fail(new HubApiError({ message: 'Hub URL is not configured (runtime.services.hub.url).' }));
+    return yield* Effect.fail(new HubApiError({ message: 'EDGE URL is not configured (runtime.services.edge.url).' }));
   }
-  return url;
+  return new URL('hub/', url.endsWith('/') ? url : `${url}/`).toString();
 });
 
 /**
  * Makes an authenticated request to the Hub API and unwraps the response envelope.
  *
  * Uses admin API-key auth (`DX_HUB_API_KEY`) for privileged CLI operations.
- * User-facing hub calls use VP auth via `HubHttpClient` in `@dxos/edge-client`.
+ * User-facing hub calls use VP auth via `EdgeHttpClient` in `@dxos/edge-client`.
  * TODO(wittjosiah): Reconcile with hub client.
  */
 export const hubApiRequest = <T>(
