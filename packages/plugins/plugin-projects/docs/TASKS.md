@@ -662,7 +662,7 @@ function` when a tool-call `doc` ref decodes without a resolver; the five doc-re
 - [x] **Rename `packages/core/echo/echo/src/Err.ts` → `Error.ts`** — DONE 2026-08-20: subpath is
       `@dxos/echo/Error`, barrel namespace is `Error`; modules that also use the global alias as
       `EchoError` locally.
-- [ ] **Derive tool names from DXN keys** (approved 2026-08-19; chip spawned) — replace `makeToolName(meta.name)` with key-derived names (`markdown-create`), unify with `Skill.toolDefinitions`, add `Skill.toolName()` helper + bind-time uniqueness invariant, sweep hardcoded names, regenerate fixtures + the tool AUDIT. Decision record: `packages/core/compute/assistant/src/tool-runtime/AUDIT.md`.
+- [x] **Derive tool names from DXN keys** — MERGED as #12677 (2026-08-24). Was: replace `makeToolName(meta.name)` with key-derived names (`markdown-create`), unify with `Skill.toolDefinitions`, add `Skill.toolName()` helper + bind-time uniqueness invariant, sweep hardcoded names, regenerate fixtures + the tool AUDIT. Decision record: `packages/core/compute/assistant/src/tool-runtime/AUDIT.md`.
 - [ ] **Record the live-model fixture for the Project conversation test** — `packages/core/compute/assistant-toolkit/src/skills/project/conversation.test.ts` gates its live flavor with `.skip`; run `DX_UPDATE_MODEL_FIXTURES=1 moon run assistant-toolkit:test -- src/skills/project/conversation.test.ts` with 1p credentials, commit `.store/conversations/**`, drop the `.skip`.
 - [x] **Normalize Chat ownership onto the ECHO parent edge** — DONE on this branch: `Filter.hasParent`
       landed in `@dxos/echo`; all `CompanionTo` write/read sites migrated to `Obj.setParent` /
