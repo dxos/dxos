@@ -1076,6 +1076,14 @@ verdict over porting in the same PR).
       storybook browser and screenshots of all five variants (the 9009 storybook was serving a
       deleted worktree and could not be replaced from this session). Finding: a fraction snap point
       is a fraction of the **viewport**, capped by the content's extent — short content shows no snap.
+- [x] **Push mode** DONE 2026-09-09 (asked for after the overlay landed): `Drawer.Root push` renders
+      the panel as a flex item that pushes its neighbours, width following the drag through
+      `--dx-drawer-size ± --drawer-translate-x`; `Push` story = start + end drawers around a
+      `Panel` (toolbar, content, statusbar) with `Toolbar.IconButton` toggles; `TestPush` asserts
+      the main panel takes the closed drawer's width back. BUG FOUND: Zag's dismissable layer stack
+      dismissed the sibling drawer when the first closed (later layers count as nested);
+      `onRequestDismiss` now vetoes cross-layer dismissal in `Drawer.Root`. This also removes the
+      remaining reason `Main` could not sit on the drawer at `lg` — push is the expanded-sidebar case.
 - [x] **`Main` on the drawer machine — probe** DONE 2026-09-09. The 2026-09-05 verdict ("fights the
       inset slide") was wrong: the machine's inline `transform` and `main.css`'s `inset-inline-start`
       are independent properties, and a driven touch swipe dismissed the sidebar through

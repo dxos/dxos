@@ -619,6 +619,18 @@ the strip along the edge a swipe opens it from. `drawer.css` runs the slide keyf
 `transform` the machine drives during a drag, so the close slide starts from wherever a drag left the
 panel. Play stories pin open/Escape/reopen and the no-description `aria-describedby` contract.
 
+**Push mode (2026-09-09).** `Root push` makes the panel part of the page's layout instead of a layer
+over it: the positioner becomes `display: contents`, the panel is the flex item, and its extent is
+`--dx-drawer-size` less the machine's drag offset — so a drag toward the edge narrows the panel and the
+main panel follows in step; the machine's transform is cancelled since the box itself moves. Non-modal,
+and outside clicks do not dismiss it by default. The `Push` story flanks a `Panel` with a start and an
+end drawer. Found doing it: Zag's dismissable layer stack takes every later-opened layer for a nested
+one and dismisses it when a lower layer leaves (`layerStack.remove` → `dismiss` on the layers above),
+so closing one drawer closed its sibling; `Drawer.Root` vetoes the cross-layer `request-dismiss` in
+`onRequestDismiss`. A fraction snap point is a fraction of the viewport capped by the content's own
+extent, so a short panel shows no snap. Testing note: the panels slide in from zero on mount, so a play
+function measures only after `getAnimations()` is empty.
+
 **`Main` re-probed (2026-09-09, `MainDrawerProbe.stories.tsx`, kept in history one commit).** The
 navigation sidebar was mounted on `useDrawer` in place of `useDialog` below `lg`, with `main.css`
 untouched, and a synthetic touch swipe was driven through the machine. Findings:

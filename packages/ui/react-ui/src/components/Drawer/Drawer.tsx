@@ -21,6 +21,7 @@ import { useControllableState } from '@dxos/react-hooks';
 import { useThemeContext } from '../../hooks';
 import { ElevationProvider } from '../../providers';
 import { type ThemedClassName } from '../../util';
+import { DrawerProvider, useDrawerContext } from './DrawerContext';
 
 type DrawerSide = 'start' | 'end' | 'top' | 'bottom';
 
@@ -48,6 +49,12 @@ type DrawerRootProps = {
   /** A modal drawer traps focus, locks scroll and hides the page from assistive technology. */
   modal?: boolean;
   /**
+   * The panel takes part in the page's layout and pushes its neighbours aside rather than floating
+   * over them: render it as a flex item beside the content it displaces. Non-modal; the page stays
+   * interactive, so outside clicks do not dismiss it unless `closeOnInteractOutside` says so.
+   */
+  push?: boolean;
+  /**
    * Where the drawer rests: fractions of the viewport, or lengths (`px`/`rem`), each capped by the
    * content's own extent — a short panel is fully open at every point. The last is fully open.
    */
@@ -70,7 +77,8 @@ const DrawerRoot = ({
   snapPoint,
   defaultSnapPoint,
   onSnapPointChange,
-  closeOnInteractOutside = true,
+  push = false,
+  closeOnInteractOutside = !push,
   closeOnEscape = true,
 }: DrawerRootProps) => {
   const [open = false, setOpen] = useControllableState({
@@ -83,11 +91,15 @@ const DrawerRoot = ({
     open,
     onOpenChange: ({ open: next }) => setOpen(next),
     swipeDirection: swipeDirections[side],
-    modal,
-    trapFocus: modal,
-    preventScroll: modal,
+    modal: modal && !push,
+    trapFocus: modal && !push,
+    preventScroll: modal && !push,
     closeOnInteractOutside,
     closeOnEscape,
+    // Zag's layer stack takes every later-opened layer for a nested one and dismisses it when a lower
+    // layer leaves, which would close a sibling drawer whenever another closes; a drawer closes only
+    // on its own account.
+    onRequestDismiss: (event) => event.preventDefault(),
     onSnapPointChange: ({ snapPoint: next }) => onSnapPointChange?.(next),
     // The machine's defaults are spread under the props, so a key present as `undefined` erases one.
     ...(snapPoints && { snapPoints }),
@@ -99,7 +111,7 @@ const DrawerRoot = ({
     <ElevationProvider elevation='dialog'>
       {/* Closed content is not in the DOM at all. */}
       <DrawerPrimitive.RootProvider value={drawer} lazyMount unmountOnExit>
-        {children}
+        <DrawerProvider push={push}>{children}</DrawerProvider>
       </DrawerPrimitive.RootProvider>
     </ElevationProvider>
   );
@@ -153,22 +165,32 @@ DrawerOverlay.displayName = 'Drawer.Overlay';
 // Content
 //
 
+const DRAWER_CONTENT_NAME = 'Drawer.Content';
+
 type DrawerContentProps = ThemedClassName<ComponentPropsWithRef<typeof DrawerPrimitive.Content>>;
 
 /**
  * The panel, inside the machine's positioner: a fixed layer that pins the panel to the drawer's
- * edge, which the panel carries as `data-swipe-direction` for the theme.
+ * edge, which the panel carries as `data-swipe-direction` for the theme. Pushing, the positioner
+ * steps aside (`display: contents`) and the panel itself is the flex item, its extent following the
+ * machine's drag offset.
  */
 const DrawerContent = forwardRef<HTMLDivElement, DrawerContentProps>(({ classNames, ...props }, forwardedRef) => {
   const { tx } = useThemeContext();
+  const { push } = useDrawerContext(DRAWER_CONTENT_NAME);
   return (
-    <DrawerPrimitive.Positioner className={tx('drawer.positioner', {})}>
-      <DrawerPrimitive.Content {...props} className={tx('drawer.content', {}, classNames)} ref={forwardedRef} />
+    <DrawerPrimitive.Positioner className={tx('drawer.positioner', { push })}>
+      <DrawerPrimitive.Content
+        {...props}
+        data-push={push ? '' : undefined}
+        className={tx('drawer.content', { push }, classNames)}
+        ref={forwardedRef}
+      />
     </DrawerPrimitive.Positioner>
   );
 });
 
-DrawerContent.displayName = 'Drawer.Content';
+DrawerContent.displayName = DRAWER_CONTENT_NAME;
 
 //
 // Grabber

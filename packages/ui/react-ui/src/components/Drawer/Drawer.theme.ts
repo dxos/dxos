@@ -7,14 +7,17 @@ import { type ComponentFunction, type Theme } from '@dxos/ui-types';
 
 export type DrawerStyleProps = {
   srOnly?: boolean;
+  push?: boolean;
 };
 
 const overlay: ComponentFunction<DrawerStyleProps> = (_props, ...etc) => mx('dx-drawer__overlay', ...etc);
 
-const positioner: ComponentFunction<DrawerStyleProps> = (_props, ...etc) => mx('dx-drawer__positioner', ...etc);
+const positioner: ComponentFunction<DrawerStyleProps> = ({ push }, ...etc) =>
+  mx(push ? 'dx-drawer__positioner--push' : 'dx-drawer__positioner', ...etc);
 
-const content: ComponentFunction<DrawerStyleProps> = (_props, ...etc) =>
-  mx('dx-drawer__content dx-modal-surface dx-focus-ring', ...etc);
+// A pushed panel sits on the page's own surface: it is part of the layout, not a layer above it.
+const content: ComponentFunction<DrawerStyleProps> = ({ push }, ...etc) =>
+  mx('dx-drawer__content dx-focus-ring', push ? 'dx-drawer__content--push' : 'dx-modal-surface', ...etc);
 
 const grabber: ComponentFunction<DrawerStyleProps> = (_props, ...etc) =>
   mx('flex shrink-0 justify-center py-2 cursor-grab touch-none', ...etc);

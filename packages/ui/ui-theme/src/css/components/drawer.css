@@ -95,6 +95,90 @@
     }
   }
 
+  /*
+   * Push mode: the positioner steps aside and the panel is a flex item in the page's own row or
+   * column, so what it displaces moves with it. Its extent is `--dx-drawer-size` less the machine's
+   * drag offset, so a drag toward the edge narrows the panel and the neighbours follow in step; the
+   * machine's transform is cancelled, since the box itself is what moves.
+   */
+  .dx-drawer__positioner--push {
+    display: contents;
+  }
+
+  .dx-drawer__content--push {
+    @apply relative shrink-0 overflow-hidden;
+    --dx-drawer-size: min(calc(100dvw - 3rem), 24rem);
+    transform: none !important;
+    transition-property: inline-size, block-size;
+
+    &[data-swipe-direction='left'],
+    &[data-swipe-direction='right'] {
+      @apply h-full;
+    }
+    &[data-swipe-direction='up'],
+    &[data-swipe-direction='down'] {
+      @apply w-full;
+      --dx-drawer-size: 85dvh;
+    }
+
+    &[data-swipe-direction='left'] {
+      @apply border-e border-separator;
+      inline-size: calc(var(--dx-drawer-size) + var(--drawer-translate-x, 0px));
+    }
+    &[data-swipe-direction='right'] {
+      @apply border-s border-separator;
+      inline-size: calc(var(--dx-drawer-size) - var(--drawer-translate-x, 0px));
+    }
+    &[data-swipe-direction='up'] {
+      @apply border-b border-separator;
+      block-size: calc(var(--dx-drawer-size) + var(--drawer-translate-y, 0px));
+    }
+    &[data-swipe-direction='down'] {
+      @apply border-t border-separator;
+      block-size: calc(var(--dx-drawer-size) - var(--drawer-translate-y, 0px));
+    }
+
+    &[data-swipe-direction='left'],
+    &[data-swipe-direction='right'] {
+      &[data-state='open'] {
+        animation: dx-drawer-push-in-inline 300ms cubic-bezier(0.16, 1, 0.3, 1);
+      }
+      &[data-state='closed'] {
+        animation: dx-drawer-push-out-inline 200ms ease-in forwards;
+      }
+    }
+    &[data-swipe-direction='up'],
+    &[data-swipe-direction='down'] {
+      &[data-state='open'] {
+        animation: dx-drawer-push-in-block 300ms cubic-bezier(0.16, 1, 0.3, 1);
+      }
+      &[data-state='closed'] {
+        animation: dx-drawer-push-out-block 200ms ease-in forwards;
+      }
+    }
+  }
+
+  @keyframes dx-drawer-push-in-inline {
+    from {
+      inline-size: 0;
+    }
+  }
+  @keyframes dx-drawer-push-out-inline {
+    to {
+      inline-size: 0;
+    }
+  }
+  @keyframes dx-drawer-push-in-block {
+    from {
+      block-size: 0;
+    }
+  }
+  @keyframes dx-drawer-push-out-block {
+    to {
+      block-size: 0;
+    }
+  }
+
   /* The edge strip a swipe opens the drawer from; keyed on the direction that swipe travels. */
   .dx-drawer__swipe-area {
     @apply z-30 fixed;

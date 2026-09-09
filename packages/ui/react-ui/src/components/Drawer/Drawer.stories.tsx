@@ -3,11 +3,13 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React from 'react';
+import React, { useState } from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { withLayout, withTheme } from '../../testing';
 import { Button } from '../Button';
+import { Panel } from '../Panel';
+import { Toolbar } from '../Toolbar';
 import { Drawer, type DrawerRootProps } from './Drawer';
 
 type StoryArgs = Pick<DrawerRootProps, 'side' | 'modal' | 'snapPoints'> & {
@@ -46,24 +48,100 @@ const Body = ({ title, description, grabber, filler = 0 }: StoryArgs) => (
 /** A modal drawer nests its content in the scrim; a non-modal one renders the content alone. */
 const DefaultStory = ({ side, modal, snapPoints, ...props }: StoryArgs) => (
   <Drawer.Root defaultOpen side={side} modal={modal} snapPoints={snapPoints}>
-    <div className='flex items-center justify-center h-full'>
-      <Drawer.Trigger asChild>
-        <Button>Open</Button>
-      </Drawer.Trigger>
-    </div>
-    {modal ? (
-      <Drawer.Overlay>
+    <Panel.Root>
+      <Panel.Toolbar asChild>
+        <Toolbar.Root>
+          <Drawer.Trigger asChild>
+            <Button>Open</Button>
+          </Drawer.Trigger>
+        </Toolbar.Root>
+      </Panel.Toolbar>
+      {modal ? (
+        <Drawer.Overlay>
+          <Drawer.Content>
+            <Body {...props} />
+          </Drawer.Content>
+        </Drawer.Overlay>
+      ) : (
         <Drawer.Content>
           <Body {...props} />
         </Drawer.Content>
-      </Drawer.Overlay>
-    ) : (
-      <Drawer.Content>
-        <Body {...props} />
-      </Drawer.Content>
-    )}
+      )}
+    </Panel.Root>
   </Drawer.Root>
 );
+
+/**
+ * Two pushed drawers flank the main panel, which yields the room they take: the three are flex
+ * siblings, and a drag toward either edge narrows that drawer with the main panel following in step.
+ */
+const PushStory = () => {
+  const [start, setStart] = useState(true);
+  const [end, setEnd] = useState(true);
+  return (
+    <div className='flex dx-fill'>
+      <Drawer.Root open={start} onOpenChange={setStart} side='start' push>
+        <Drawer.Content>
+          <Toolbar.Root>
+            <Drawer.Title classNames='grow px-2'>Navigation</Drawer.Title>
+            <Toolbar.IconButton
+              icon='ph--sidebar--regular'
+              iconOnly
+              label='Close navigation'
+              onClick={() => setStart(false)}
+            />
+          </Toolbar.Root>
+          <Drawer.Description>Pushes the main panel right. Drag toward the left edge to dismiss.</Drawer.Description>
+          <Filler lines={12} />
+        </Drawer.Content>
+      </Drawer.Root>
+      <Panel.Root asChild classNames='flex-1 min-w-0 dx-base-surface'>
+        <main data-testid='drawer.main'>
+          <Panel.Toolbar asChild>
+            <Toolbar.Root>
+              <Toolbar.IconButton
+                icon='ph--sidebar-simple--regular'
+                iconOnly
+                label='Toggle navigation'
+                onClick={() => setStart((open) => !open)}
+              />
+              <div className='grow' />
+              <Toolbar.IconButton
+                icon='ph--sidebar-simple--regular'
+                iconOnly
+                label='Toggle inspector'
+                classNames='[&_svg]:-scale-x-100'
+                onClick={() => setEnd((open) => !open)}
+              />
+            </Toolbar.Root>
+          </Panel.Toolbar>
+          <Panel.Content classNames='flex items-center justify-center'>Main</Panel.Content>
+          <Panel.Statusbar asChild>
+            <Toolbar.Root classNames='justify-between'>
+              <span className='px-2 text-description'>Ready</span>
+              <Toolbar.IconButton variant='ghost' icon='ph--info--regular' iconOnly label='Status' />
+            </Toolbar.Root>
+          </Panel.Statusbar>
+        </main>
+      </Panel.Root>
+      <Drawer.Root open={end} onOpenChange={setEnd} side='end' push>
+        <Drawer.Content>
+          <Toolbar.Root>
+            <Toolbar.IconButton
+              icon='ph--caret-right--regular'
+              iconOnly
+              label='Close inspector'
+              onClick={() => setEnd(false)}
+            />
+            <Drawer.Title classNames='grow px-2'>Inspector</Drawer.Title>
+          </Toolbar.Root>
+          <Drawer.Description>Pushes the main panel left. Drag toward the right edge to dismiss.</Drawer.Description>
+          <Filler lines={12} />
+        </Drawer.Content>
+      </Drawer.Root>
+    </div>
+  );
+};
 
 const meta = {
   title: 'ui/react-ui-core/components/Drawer',
@@ -120,6 +198,42 @@ export const NonModal: Story = {
     modal: false,
     title: 'Inspector',
     description: 'The page behind stays interactive.',
+  },
+};
+
+/** A start and an end drawer, both pushing, with the main panel between them. */
+export const Push: Story = {
+  render: () => <PushStory />,
+};
+
+/** Closing a pushed drawer hands its width back to the main panel; the drawers are the page's own layout. */
+export const TestPush: Story = {
+  render: () => <PushStory />,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const main = canvas.getByTestId('drawer.main');
+    const dialogs = await canvas.findAllByRole('dialog');
+    await expect(dialogs).toHaveLength(2);
+    await expect(dialogs[0]).toHaveAttribute('data-push');
+    // The two panels flank the main one in document order, so nothing overlays anything.
+    await waitFor(async () => {
+      const [start, end] = dialogs.map((dialog) => dialog.getBoundingClientRect());
+      const middle = main.getBoundingClientRect();
+      await expect(start.right).toBeLessThanOrEqual(middle.left + 1);
+      await expect(middle.right).toBeLessThanOrEqual(end.left + 1);
+    });
+    // Measure at rest: both panels slide in from zero width on mount.
+    await waitFor(async () => {
+      await expect(dialogs.every((dialog) => dialog.getAnimations().length === 0)).toBe(true);
+    });
+    const before = main.getBoundingClientRect().width;
+    const navigation = dialogs[0].getBoundingClientRect().width;
+
+    await userEvent.click(canvas.getByRole('button', { name: 'Toggle navigation' }));
+    await waitFor(async () => {
+      await expect(canvas.queryAllByRole('dialog')).toHaveLength(1);
+      await expect(Math.round(main.getBoundingClientRect().width)).toBe(Math.round(before + navigation));
+    });
   },
 };
 
