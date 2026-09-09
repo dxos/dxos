@@ -28,9 +28,6 @@ export default Capability.makeModule(
     const identityServiceAtom = yield* Capability.atom(ClientCapabilities.IdentityService);
     const extensions = yield* AppGraphBuilder.createExtension({
       id: 'root',
-      // The panels are addressable under the account's pinned workspace; without a binding they
-      // could not be planks at all, since the URL is the only record of what is open.
-      url: { key: 'account', kind: 'item', path: [] },
       match: GraphNodeMatcher.whenRoot,
       actions: () =>
         Effect.succeed([
@@ -78,76 +75,155 @@ export default Capability.makeModule(
                 emoji: identity?.data?.emoji,
                 status: status.swarm === ConnectionState.OFFLINE ? 'error' : 'active',
               },
-              nodes: [
-                AppGraphNode.make({
-                  id: Account.Profile,
-                  data: Account.Profile,
-                  type: meta.profile.key,
-                  properties: {
-                    label: ['profile.label', { ns: meta.profile.key }],
-                    icon: 'ph--user--regular',
-                  },
-                }),
-                ...(hub
-                  ? [
-                      AppGraphNode.make({
-                        id: Account.Account,
-                        data: Account.Account,
-                        type: meta.profile.key,
-                        properties: {
-                          label: ['account-panel.label', { ns: meta.profile.key }],
-                          icon: 'ph--identification-card--regular',
-                        },
-                      }),
-                    ]
-                  : []),
-                AppGraphNode.make({
-                  id: Account.Security,
-                  data: Account.Security,
-                  type: meta.profile.key,
-                  properties: {
-                    label: ['security.label', { ns: meta.profile.key }],
-                    icon: 'ph--key--regular',
-                  },
-                }),
-                AppGraphNode.make({
-                  id: Account.Devices,
-                  data: Account.Devices,
-                  type: meta.profile.key,
-                  properties: {
-                    label: ['devices.label', { ns: meta.profile.key }],
-                    icon: 'ph--devices--regular',
-                    testId: 'clientPlugin.devices',
-                  },
-                }),
-                ...(hub
-                  ? [
-                      AppGraphNode.make({
-                        id: Account.Invitations,
-                        data: Account.Invitations,
-                        type: meta.profile.key,
-                        properties: {
-                          label: ['invitations-panel.label', { ns: meta.profile.key }],
-                          icon: 'ph--ticket--regular',
-                        },
-                      }),
-                      AppGraphNode.make({
-                        id: Account.Usage,
-                        data: Account.Usage,
-                        type: meta.profile.key,
-                        properties: {
-                          label: ['usage-panel.label', { ns: meta.profile.key }],
-                          icon: 'ph--chart-bar--regular',
-                        },
-                      }),
-                    ]
-                  : []),
-              ],
             }),
           ];
         }).pipe(Effect.orDie),
     });
 
-    return Capability.contribute(AppCapabilities.AppGraphBuilder, extensions);
+    const accountProfile = yield* AppGraphBuilder.createExtension({
+      id: 'accountProfile',
+      url: { key: Account.Profile, kind: 'singleton', path: [] },
+      match: GraphNodeMatcher.whenId(Account.workspacePath),
+      connector: (_node, get) =>
+        Effect.gen(function* () {
+          return [
+            AppGraphNode.make({
+              id: Account.Profile,
+              data: Account.path(Account.Profile),
+              type: meta.profile.key,
+              properties: {
+                label: ['profile.label', { ns: meta.profile.key }],
+                icon: 'ph--user--regular',
+              },
+            }),
+          ];
+        }).pipe(Effect.orDie),
+    });
+
+    const accountAccount = yield* AppGraphBuilder.createExtension({
+      id: 'accountAccount',
+      url: { key: Account.Account, kind: 'singleton', path: [] },
+      match: GraphNodeMatcher.whenId(Account.workspacePath),
+      connector: (_node, get) =>
+        Effect.gen(function* () {
+          const [client] = get(clientAtom);
+          // Hub-service reads; without a hub URL the panel renders an empty shell forever.
+          if (!client?.config.values?.runtime?.app?.env?.DX_HUB_URL) {
+            return [];
+          }
+          return [
+            AppGraphNode.make({
+              id: Account.Account,
+              data: Account.path(Account.Account),
+              type: meta.profile.key,
+              properties: {
+                label: ['account-panel.label', { ns: meta.profile.key }],
+                icon: 'ph--identification-card--regular',
+              },
+            }),
+          ];
+        }).pipe(Effect.orDie),
+    });
+
+    const accountSecurity = yield* AppGraphBuilder.createExtension({
+      id: 'accountSecurity',
+      url: { key: Account.Security, kind: 'singleton', path: [] },
+      match: GraphNodeMatcher.whenId(Account.workspacePath),
+      connector: (_node, get) =>
+        Effect.gen(function* () {
+          return [
+            AppGraphNode.make({
+              id: Account.Security,
+              data: Account.path(Account.Security),
+              type: meta.profile.key,
+              properties: {
+                label: ['security.label', { ns: meta.profile.key }],
+                icon: 'ph--key--regular',
+              },
+            }),
+          ];
+        }).pipe(Effect.orDie),
+    });
+
+    const accountDevices = yield* AppGraphBuilder.createExtension({
+      id: 'accountDevices',
+      url: { key: Account.Devices, kind: 'singleton', path: [] },
+      match: GraphNodeMatcher.whenId(Account.workspacePath),
+      connector: (_node, get) =>
+        Effect.gen(function* () {
+          return [
+            AppGraphNode.make({
+              id: Account.Devices,
+              data: Account.path(Account.Devices),
+              type: meta.profile.key,
+              properties: {
+                label: ['devices.label', { ns: meta.profile.key }],
+                icon: 'ph--devices--regular',
+                testId: 'clientPlugin.devices',
+              },
+            }),
+          ];
+        }).pipe(Effect.orDie),
+    });
+
+    const accountInvitations = yield* AppGraphBuilder.createExtension({
+      id: 'accountInvitations',
+      url: { key: Account.Invitations, kind: 'singleton', path: [] },
+      match: GraphNodeMatcher.whenId(Account.workspacePath),
+      connector: (_node, get) =>
+        Effect.gen(function* () {
+          const [client] = get(clientAtom);
+          // Hub-service reads; without a hub URL the panel renders an empty shell forever.
+          if (!client?.config.values?.runtime?.app?.env?.DX_HUB_URL) {
+            return [];
+          }
+          return [
+            AppGraphNode.make({
+              id: Account.Invitations,
+              data: Account.path(Account.Invitations),
+              type: meta.profile.key,
+              properties: {
+                label: ['invitations-panel.label', { ns: meta.profile.key }],
+                icon: 'ph--ticket--regular',
+              },
+            }),
+          ];
+        }).pipe(Effect.orDie),
+    });
+
+    const accountUsage = yield* AppGraphBuilder.createExtension({
+      id: 'accountUsage',
+      url: { key: Account.Usage, kind: 'singleton', path: [] },
+      match: GraphNodeMatcher.whenId(Account.workspacePath),
+      connector: (_node, get) =>
+        Effect.gen(function* () {
+          const [client] = get(clientAtom);
+          // Hub-service reads; without a hub URL the panel renders an empty shell forever.
+          if (!client?.config.values?.runtime?.app?.env?.DX_HUB_URL) {
+            return [];
+          }
+          return [
+            AppGraphNode.make({
+              id: Account.Usage,
+              data: Account.path(Account.Usage),
+              type: meta.profile.key,
+              properties: {
+                label: ['usage-panel.label', { ns: meta.profile.key }],
+                icon: 'ph--chart-bar--regular',
+              },
+            }),
+          ];
+        }).pipe(Effect.orDie),
+    });
+
+    return Capability.contribute(AppCapabilities.AppGraphBuilder, [
+      ...extensions,
+      ...accountProfile,
+      ...accountAccount,
+      ...accountSecurity,
+      ...accountDevices,
+      ...accountInvitations,
+      ...accountUsage,
+    ]);
   }),
 );
