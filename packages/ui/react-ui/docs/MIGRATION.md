@@ -75,7 +75,7 @@ not what a migration replaces.
 | Image           |  257 | none                                                                                         | —                                                                  |            | keep                                                                                                                                                                                                |
 | Input           | 1247 | `react-checkbox` + RAC segmented fields                                                      | `checkbox`, `field`, `number-input`, `password-input`, `pin-input` |            | checkbox done (Phase 2); field done 2026-09-05 — `Root`/`Label`/`Description`/`Validation`/`TextInput`/`TextArea` on `field`, `@dxos/react-input` removed; date/time fields follow the RAC decision |
 | Link            |   53 | scaffolding                                                                                  | —                                                                  |            | keep                                                                                                                                                                                                |
-| Main            |  615 | `react-dialog` (sidebars)                                                                    | `dialog` / `drawer`                                                |            | done with Dialog (Phase 4a)                                                                                                                                                                         |
+| Main            |  615 | `react-dialog` (sidebars)                                                                    | `dialog` / `drawer`                                                |            | done with Dialog (Phase 4a); on `drawer` since Phase 7 step 1                                                                                                                                       |
 | MediaPlayer     |  196 | none                                                                                         | —                                                                  |            | keep                                                                                                                                                                                                |
 | Menu            |  896 | **fork** of `react-menu`, `dropdown-menu`, `context-menu`                                    | `menu` (one machine; `contextTrigger` part)                        |        29² | done (Phase 3); graph rendering moved to `react-ui-menu`'s builders                                                                                                                                 |
 | MenuButton      |  109 | `Menu`                                                                                       | —                                                                  |            | done with Menu                                                                                                                                                                                      |
@@ -111,7 +111,7 @@ Ark components with no counterpart in `react-ui`, for reference:
 | `tabs`            | `react-ui` `Tabs` — on Ark                           | done; folded in from `react-ui-tabs`          |
 | `combobox`        | hand-built in `react-ui-list`                        | candidate, not obligation (+87.9 KB raw)      |
 | `listbox`         | hand-built in `react-ui-list`                        | candidate, not obligation (+22.5 KB raw)      |
-| `drawer`          | `react-ui` `Drawer` — on Ark                         | done 2026-09-09 (Phase 7); `Main` port open   |
+| `drawer`          | `react-ui` `Drawer` — on Ark                         | done 2026-09-09 (Phase 7); `Main` step 1 done |
 | `tree-view`       | `react-ui-list` `Tree` — already on Ark              | the reason Ark is in the app                  |
 | `hover-card`      | none                                                 |                                               |
 | `navigation-menu` | none                                                 |                                               |
@@ -606,7 +606,7 @@ The 36 `@-ui/*` catalog entries are gone, with `aria-hidden`, `react-remove-scro
 `tailwindcss-radix` and `react-qr-rounded`; `pnpm knip` is clean. What remains of Radix in the
 lockfile arrives through tldraw, excalidraw and leva.
 
-### Phase 7 — `Drawer`, and `Main` on the drawer machine _(component done 2026-09-09; the port is open)_
+### Phase 7 — `Drawer`, and `Main` on the drawer machine _(component done 2026-09-09; port step 1 done the same day)_
 
 `Drawer` (`react-ui/src/components/Drawer`) wraps Ark's drawer: `Root` names the edge as a `side`
 (`start`/`end`/`top`/`bottom`) and maps it to the machine's `swipeDirection`; `Overlay` is the backdrop
@@ -656,6 +656,35 @@ untouched, and a synthetic touch swipe was driven through the machine. Findings:
   complementary sidebar swipe-to-dismiss, and `Drawer.SwipeArea` adds edge-swipe-to-open on touch,
   which nothing provides today. `closeThreshold` becomes a fraction of the sidebar's width rather
   than 64px. Still unverified: a real touch device (WKWebView), the case that matters.
+
+**`Main` port, step 1 (2026-09-09).** `MainSidebar` below `lg` is `useDrawer` in place of `useDialog`,
+with the same non-modal settings (`modal`, `trapFocus`, `preventScroll`, `restoreFocus` all off) and
+`swipeDirection` from the side; `hidden={false}` keeps the content mounted for `main.css`'s inset slide
+exactly as before. The public API, the three-state model, the `lg` landmark branch, `main.css`'s
+geometry and the deck's focus CSS are untouched — step 2 (push layout at `lg`, on `Drawer push`'s
+clip-and-sheet) is a separate PR. What changed:
+
+- `useSwipeToDismiss` (103 lines, navigation side only, driven off `inset-inline-start` and inline
+  `transition-duration`) is deleted; the machine's content drag replaces it on both sidebars.
+  `swipeToDismiss` is now on by default and maps to the content's `draggable`.
+- `swipeToOpen` (on by default) renders the machine's `SwipeArea` beside the content while the drawer
+  is closed: a touch swipe inward from the edge opens the sidebar through `onOpenChange(true)` →
+  `'expanded'`. The strip is touch-only (`.dx-main-swipe-area`, `@media (pointer: coarse)`), since under
+  a mouse a fixed edge strip takes the clicks aimed at whatever sits at the edge. There is no live
+  preview of the opening swipe: the machine positions the content with its transform from
+  off-screen, but `main.css` holds a closed sidebar at `-100vw`, so the panel slides in on release.
+- The two sidebars are sibling layers in Zag's dismissable stack, which treats the later-opened one as
+  nested and dismisses it when the other leaves; `onRequestDismiss` vetoes a request whose target layer
+  does not contain the sidebar, as `Drawer.Root` does. `TestSwipeToDismiss` opens both on mount and
+  checks the complementary sidebar survives the navigation sidebar's swipe.
+- `onOpenChange` now handles `open: true` (the swipe area's release), not only dismissal.
+- `aria-label` is on the element rather than the machine, so the `lg` landmark carries it too.
+
+`Main.stories.tsx` pins it in the vitest browser at an 800px viewport: swipe-to-dismiss on both sides
+(mid-drag `data-dragging` and a non-zero `--drawer-translate-x`, `closed` on release), a short drag
+snapping back, and a touch swipe from the swipe area opening the navigation sidebar. The deck and
+navtree stories that mount `Main` pass unchanged. Still to do before this reaches users on iOS: the
+WKWebView touch check, and the interaction with the OS back-swipe on the left edge.
 
 ## 5. Net effect
 
