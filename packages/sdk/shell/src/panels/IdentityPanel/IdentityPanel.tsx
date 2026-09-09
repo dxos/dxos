@@ -83,10 +83,13 @@ const IdentityHeading = ({
 
   const setHue = (nextHue: string | undefined) => {
     setHueDirectly(nextHue);
+    // `data` is a `Struct`, which has no `undefined`, so a reset clears the hue by omitting the key
+    // from the replacement rather than assigning it.
+    const { hue: _hue, ...data } = identity.profile?.data ?? {};
     void onUpdateProfile?.(
       create(ProfileDocumentSchema, {
         ...identity.profile,
-        data: { ...identity.profile?.data, hue: nextHue },
+        data: nextHue === undefined ? data : { ...data, hue: nextHue },
       }),
     );
   };
