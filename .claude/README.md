@@ -281,6 +281,10 @@ upserting a `RemoteSession` object keyed on the harness `session_id`:
 | `Stop` | `sessionId`, `${last_assistant_message}` | The turn's final message becomes the object's prose `lastMessage` — the cheapest honest summary that does not read the transcript. |
 | `SessionEnd`, matched `logout\|prompt_input_exit\|other` | `sessionId`, `state: finished` | Its `resume` and `clear` reasons fire while the user is still working, so a blanket close would mark a paused session finished. |
 
+`bash .claude/scripts/plugin-hooks.test.sh` checks the shape of that file. It exists because a
+handler placed at the wrong depth is still valid JSON and the harness simply ignores it — the hook
+then never fires, silently, which is how the prompt-submit report shipped broken once.
+
 They live in the plugin rather than this `settings.json` because the plugin is what bundles the
 server they call: installing it is the consent, and a contributor who has not installed it fires
 nothing. Three details are load-bearing:

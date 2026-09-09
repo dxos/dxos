@@ -10,17 +10,21 @@
         ]
       },
       {
-        "type": "mcp_tool",
-        "server": "plugin:dxos:composer",
-        "tool": "invokeOperation",
-        "input": {
-          "key": "org.dxos.operation.tasks.recordSession",
-          "input": {
-            "sessionId": "${session_id}",
-            "worktree": "${cwd}"
+        "hooks": [
+          {
+            "type": "mcp_tool",
+            "server": "plugin:dxos:composer",
+            "tool": "invokeOperation",
+            "input": {
+              "key": "org.dxos.operation.tasks.recordSession",
+              "input": {
+                "sessionId": "${session_id}",
+                "worktree": "${cwd}"
+              }
+            },
+            "statusMessage": "Reporting session to Composer"
           }
-        },
-        "statusMessage": "Reporting session to Composer"
+        ]
       }
     ],
     "Stop": [
