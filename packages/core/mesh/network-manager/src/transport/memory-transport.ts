@@ -12,26 +12,19 @@ import { log, logInfo } from '@dxos/log';
 import { type Signal } from '@dxos/protocols/proto/dxos/mesh/swarm';
 import { ComplexMap } from '@dxos/util';
 
-import { type Transport, type TransportFactory, type TransportOptions } from './transport';
+import {
+  TRANSPORT_CONNECTION_TIMEOUT,
+  type Transport,
+  type TransportFactory,
+  type TransportOptions,
+} from './transport';
 
 // TODO(burdon): Make configurable.
 // Delay (in milliseconds) for data being sent through in-memory connections to simulate network latency.
 const MEMORY_TRANSPORT_DELAY = 1;
 
-/**
- * How long the receiving side waits for the initiator's `transportId` signal.
- *
- * That signal only leaves the initiator after the answer has made its own trip, so the wait spans
- * two signaling round trips. In-process that is microseconds, but this transport is also paired with
- * real signaling in tests, where one hop through a deployed router measures ~0.6s p50 / 1.4s max —
- * the previous 1s default failed ~3.5% of handshakes on latency alone (DX-1264). Sits just under
- * `Connection`'s own 10s transport-connect abort, which is the deadline that should actually fire.
- *
- * The tradeoff is deliberate: a genuinely lost signal now surfaces at 9s with little room for the
- * swarm to retry inside its own budget, where 1s left room but misdiagnosed slow handshakes as lost
- * ones 3.5% of the time. Losing a handshake that would have succeeded is the worse failure.
- */
-const REMOTE_SIGNAL_TIMEOUT = 9_000;
+/** Sits inside `Connection`'s abort so that deadline, not this one, is what fires. */
+const REMOTE_SIGNAL_TIMEOUT = TRANSPORT_CONNECTION_TIMEOUT - 1_000;
 
 /**
  * Creates a binary stream that delays data being sent through the stream by the specified amount of time.
@@ -144,8 +137,6 @@ export class MemoryTransport implements Transport {
   async close(): Promise<this> {
     log('closing...');
     this._closed = true;
-    // Release the receiver's pending signal wait, so a transport closed before its remote signal
-    // arrives does not hold a timer for the rest of the (now 9s) timeout.
     this._remote.throw(new Error('Transport closed before the remote signal arrived.'));
 
     MemoryTransport._connections.delete(this._instanceId);

@@ -9,9 +9,6 @@ import { Markdown } from './plugins';
 
 const perfomInvitation = async (host: AppManager, guest: AppManager) => {
   const sharedWorkspace = host.workspaceId;
-  // Without this the wait below can be vacuous: if the host is not on a `/w/<id>` URL,
-  // `toBe(undefined)` is satisfied the moment the guest is also undefined — which is the very hole
-  // that wait exists to close.
   expect(sharedWorkspace, 'the host must be in a workspace before it can share one').toBeDefined();
   await host.shareSpace();
   const invitationCode = await host.createSpaceInvitation();
@@ -20,12 +17,6 @@ const perfomInvitation = async (host: AppManager, guest: AppManager) => {
   await guest.shell.acceptSpaceInvitation(invitationCode);
   await guest.shell.authenticate(authCode);
 
-  // `authenticate()` returns as soon as the shell's next button is clicked; the join completing and
-  // the app switching into the shared workspace both happen after that. Waiting for the guest to
-  // actually be in the host's workspace is what makes the later assertions mean anything — against
-  // the guest's own navtree, which holds exactly one object too, `toHaveCount(1)` passes whether or
-  // not the join landed, so the test's outcome came down to whether the switch beat the assertion
-  // (DX-1264).
   await expect.poll(() => guest.workspaceId, { timeout: 30_000 }).toBe(sharedWorkspace);
   await guest.waitForSpaceReady(30_000);
 

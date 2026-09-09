@@ -13,7 +13,7 @@ import { CancelledError, ConnectionResetError, ConnectivityError, ProtocolError,
 import { type Signal } from '@dxos/protocols/proto/dxos/mesh/swarm';
 
 import { type SignalMessage, type SignalMessenger } from '../signal';
-import { type Transport, type TransportFactory, type TransportStats } from '../transport';
+import { TRANSPORT_CONNECTION_TIMEOUT, type Transport, type TransportFactory, type TransportStats } from '../transport';
 import { type WireProtocol } from '../wire-protocol';
 
 /**
@@ -25,7 +25,6 @@ const STARTING_SIGNALLING_DELAY = 10;
 /**
  * How long to wait for the transport to establish connectivity, i.e. for the connection to move between CONNECTING and CONNECTED.
  */
-const TRANSPORT_CONNECTION_TIMEOUT = 10_000;
 
 const TRANSPORT_STATS_INTERVAL = 5_000;
 

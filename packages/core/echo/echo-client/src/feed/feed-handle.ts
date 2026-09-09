@@ -47,10 +47,6 @@ const RECONNECT_MAX_DELAY = 30_000;
 
 const APPEND_RETRY_INITIAL_DELAY = 1_000;
 
-/**
- * Ceiling for the append retry backoff, mirroring {@link RECONNECT_MAX_DELAY}. A failed append
- * re-queues its cores, so without a delay between attempts the retry runs at microtask rate.
- */
 const APPEND_RETRY_MAX_DELAY = 30_000;
 
 /**
@@ -186,15 +182,8 @@ export class FeedHandle {
    */
   #subscriptionGeneration = 0;
 
-  /** Pending append retry after a failed send; cancelled on dispose. */
   #appendRetryTimer: NodeJS.Timeout | null = null;
-  /** Current append retry delay; doubles per consecutive failure, resets once a send succeeds. */
   #appendRetryDelay = APPEND_RETRY_INITIAL_DELAY;
-  /**
-   * Latched once a send fails because the RPC endpoint is gone. The service is captured at
-   * construction and the handle is cached per database, so no retry from here can ever reach a live
-   * endpoint — retrying is pure spin, and the writes are only recoverable by a fresh handle.
-   */
   #endpointClosed = false;
 
   constructor(
@@ -264,8 +253,6 @@ export class FeedHandle {
     this.#addOptimistic(cores);
 
     if (this.#endpointClosed) {
-      // The endpoint is gone for good, so skip the RPC that can only re-fail. Surfaced through
-      // `error` rather than thrown, matching this method's pre-existing best-effort contract.
       this.updated.emit();
       return;
     }
@@ -400,15 +387,6 @@ export class FeedHandle {
     this.#appendRetryDelay = APPEND_RETRY_INITIAL_DELAY;
   }
 
-  /**
-   * Handles a failed append: re-queue the batch and retry after a backoff.
-   *
-   * Two bounds, both absent before and both load-bearing for the page staying responsive. A closed
-   * endpoint latches {@link #endpointClosed} and stops retrying outright, because this handle's
-   * service can never come back (it is captured at construction and the handle is cached per
-   * database, so the retry could only ever re-fail). Any other failure retries on a doubling delay
-   * rather than an immediate `trigger()`, which the scheduler would run at microtask rate.
-   */
   #onAppendFailed(err: unknown, batch: { core: FeedObjectCore; token: string }[]): void {
     const endpointClosed = isEndpointClosedError(err);
     if (!endpointClosed) {
@@ -419,8 +397,6 @@ export class FeedHandle {
 
     for (const { core, token } of batch) {
       core.revertCapture(token);
-      // Re-queue only if a later flush can still run. Once latched, `#flushDirty` refuses to drain,
-      // so adding here would grow a strong-referenced set that nothing ever empties.
       if (!endpointClosed) {
         this.#dirtyCores.add(core);
       }
@@ -457,7 +433,6 @@ export class FeedHandle {
     if (this.#dirtyCores.size === 0 || this.#endpointClosed) {
       return;
     }
-    // Flushing now, so a retry armed by an earlier failure has nothing left to wake for.
     if (this.#appendRetryTimer) {
       clearTimeout(this.#appendRetryTimer);
       this.#appendRetryTimer = null;
@@ -789,13 +764,6 @@ const objectSetChanged = (before: Entity.Unknown[], after: Entity.Unknown[]) => 
 
 const isSqliteNotOpenError = (err: any) => err.cause?.message?.includes('The database connection is not open');
 
-/**
- * True when a call failed because the RPC endpoint is gone for good.
- *
- * `RpcClosedError` only — deliberately NOT `RpcNotOpenError`, which `RpcPeer` throws for the INITIAL
- * state, meaning the peer has not finished opening yet. That is transient and self-healing, and
- * latching on it would permanently stop a handle that merely raced a booting peer.
- */
 const isEndpointClosedError = (err: unknown): boolean => {
   const seen = new Set<unknown>();
   for (let cause = err; cause != null && !seen.has(cause); cause = (cause as { cause?: unknown }).cause) {

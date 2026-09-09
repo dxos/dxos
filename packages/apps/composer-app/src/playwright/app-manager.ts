@@ -34,6 +34,11 @@ const workspaceUrl = (workspace: string) => `${INITIAL_URL.replace(/\/$/, '')}/$
 // Only the default space is seeded on every new identity. The exemplar space is skipped on
 // localhost (see OnboardingPlugin `generateSampleSpace`), which is where e2e tests run.
 export const INITIAL_SPACE_COUNT = 1;
+/** A subduction sync round is fire-and-wait with this deadline and no per-round re-ask. */
+const SYNC_ROUND_TIMEOUT = 60_000;
+
+/** Two rounds plus slack, so one disrupted round does not exhaust the wait by itself. */
+const UPLOAD_SETTLE_TIMEOUT = SYNC_ROUND_TIMEOUT * 2 + 10_000;
 
 /**
  * Budget for `joinNewIdentity()`: spans a storage reset, page reload and app boot, so it is sized well
@@ -130,7 +135,6 @@ export class AppManager {
     return this.page.getByTestId('navtree.workspace.visible');
   }
 
-  /** The workspace segment of the current pair-chain URL (`/<anchor>/<workspace>/...`). */
   get workspaceId(): string | undefined {
     const [anchor, workspace] = new URL(this.page.url()).pathname.split('/').filter(Boolean);
     return anchor === WORKSPACE_KEY ? workspace : undefined;
@@ -138,23 +142,9 @@ export class AppManager {
 
   async openUserAccount(timeout = 60_000): Promise<void> {
     await this.page.getByTestId('clientPlugin.account').click();
-    // The account panel's tree is what the callers below click into, so returning before it is
-    // showing hands them a target that is not there yet.
     await this.page.getByTestId('clientPlugin.devices').waitFor({ state: 'visible', timeout });
   }
 
-  /**
-   * Opens the account panel's Devices page, waiting for the panel's own content rather than for the
-   * click alone. The two clicks used to be issued back to back with nothing between them, so the
-   * second could land while the account panel was still mounting and be swallowed — leaving every
-   * `devicesContainer.*` target absent for the caller's whole timeout (DX-1264).
-   *
-   * The budget is deliberately longer than the generic 30s `actionTimeout`: this panel's tree is
-   * built from the app graph once identity resolves, which after a storage reset is measurably slow,
-   * and a soak with retries off still lost runs to it at 30s. The test's own budget is 120s, so
-   * waiting longer here costs nothing on the passing path and stops reporting a slow mount as a
-   * missing element (DX-1264).
-   */
   async openUserDevices(timeout = 60_000): Promise<void> {
     await this.openUserAccount(timeout);
     await this.page.getByTestId('clientPlugin.devices').click();
@@ -201,20 +191,8 @@ export class AppManager {
     await this.#openSpaceSettingsPage('spacePlugin.members', timeout);
   }
 
-  /**
-   * Opens one of the pages nested under a space's Settings section (Members, General, ...).
-   *
-   * Expands Settings unconditionally rather than sampling whether the heading is already showing:
-   * `isVisible()` answers immediately, so right after a navigation it reads `false` for a navtree
-   * that has not painted and `true` for a heading that is mid-remount — the second skips the expand
-   * and leaves the click waiting on a detached element for its whole 30s budget (DX-1264).
-   */
   async #openSpaceSettingsPage(testId: string, timeout: number): Promise<void> {
     await this.expandSection('spacePlugin.settings', timeout);
-    // Wait for the row itself rather than trusting the expand: `#expandRow` decides from a single
-    // `aria-expanded` read, which is `null` on a row that is attached but has not had the attribute
-    // applied yet — so it can click an already-open section shut. Waiting here means a mis-toggle
-    // shows up as a visibly absent row, not as a 30s click on a detached element (DX-1264).
     const heading = this.currentWorkspace.getByTestId(testId).first().getByTestId('treeItem.heading').first();
     await heading.waitFor({ state: 'visible', timeout }).catch(async () => {
       await this.expandSection('spacePlugin.settings', timeout);
@@ -335,23 +313,7 @@ export class AppManager {
     await this.page.waitForTimeout(500);
   }
 
-  /**
-   * Waits for this peer to have nothing left to push.
-   *
-   * A test that shares a just-created space needs this before inviting: `createSpace` returns once
-   * the space is locally ready, not once it has reached EDGE, so asserting that a new device
-   * inherits it otherwise races a precondition the test never established (DX-1264).
-   *
-   * Gated on `data-needs-upload` rather than a `remote-synced` status: that status also requires
-   * nothing left to *download*, which is irrelevant to whether our own writes have left and can stay
-   * true for unrelated documents, failing the wait for a peer that has in fact pushed everything.
-   *
-   * Two sync rounds' worth of budget, deliberately. A subduction round is fire-and-wait with a 60s
-   * WASM timeout and no per-round re-ask, so ANY disruption — one lost frame is enough — costs the
-   * full 60s before a retry starts. A 60s budget therefore cannot survive a single expected
-   * disruption, which makes it a mis-calibrated wait rather than a signal (DX-1264).
-   */
-  async waitForUploadsSettled(timeout = 130_000): Promise<void> {
+  async waitForUploadsSettled(timeout = UPLOAD_SETTLE_TIMEOUT): Promise<void> {
     await expect(this.page.getByTestId('spacePlugin.syncStatus')).toHaveAttribute('data-needs-upload', 'false', {
       timeout,
     });
@@ -374,17 +336,8 @@ export class AppManager {
    * settings danger zone, including the confirmation step.
    */
   async deleteSpace(nth = 1, timeout = 30_000): Promise<void> {
-    // Select the space so its Settings section is available in the navtree, and wait for the
-    // selection to land before opening settings. The delete button is `disabled={isDefaultSpace}`
-    // (SpaceSettingsContainer), so settings opened while the default space is still selected shows
-    // a permanently disabled button and the click below burns its whole timeout on
-    // "element is not enabled" (DX-1264).
     const space = this.getSpaceItems().nth(nth);
     await space.click();
-    // The rail is a tablist, and a click on it right after a navigation can be swallowed while the
-    // navtree is still settling — the row takes focus and then drops it, never becoming selected.
-    // One bounded re-click covers that; a selection that is genuinely stuck still fails, because the
-    // row is only re-clicked after it has stayed unselected, so this cannot toggle a live selection.
     await expect(space)
       .toHaveAttribute('aria-selected', 'true', { timeout: 10_000 })
       .catch(async () => {
@@ -412,9 +365,6 @@ export class AppManager {
   /** Discloses a row's children, leaving an already-open row alone. */
   async #expandRow(row: Locator, timeout: number): Promise<void> {
     const toggle = row.getByTestId('treeItem.toggle').first();
-    // Waited for, not sampled: `getAttribute` reads `null` on a row that is attached but has not had
-    // `aria-expanded` applied yet, which reads as "collapsed" and clicks an already-open section
-    // shut. Waiting for the attribute to exist makes the decision on a settled row (DX-1264).
     await expect(toggle)
       .toHaveAttribute('aria-expanded', /true|false/, { timeout })
       .catch(() => {});

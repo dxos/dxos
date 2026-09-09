@@ -39,7 +39,6 @@ type StateUpdateSink = PushStream<Invitation> & {
   waitFor(state: Invitation_State): Promise<void>;
 };
 
-// TODO(burdon): Flaky.
 describe.skipIf(process.env.CI && !process.env.RUN_FLAKY_TESTS)(
   'InvitationHandler',
   { retry: 0, timeout: 30_000 },

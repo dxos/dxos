@@ -37,7 +37,6 @@ test.describe('HALO tests', () => {
     await host.createSpace();
 
     await expect(host.getSpaceItems()).toHaveCount(INITIAL_SPACE_COUNT + 1);
-    // As above: the space must reach EDGE before the guest's device can inherit it.
     await host.waitForUploadsSettled();
     // The guest has only its own default space until it joins the host's identity.
     await expect(guest.getSpaceItems()).toHaveCount(INITIAL_SPACE_COUNT);
@@ -74,8 +73,6 @@ test.describe('HALO tests', () => {
     // Host creates a space; guest joins the host's identity and inherits it.
     await host.createSpace();
     await expect(host.getSpaceItems()).toHaveCount(INITIAL_SPACE_COUNT + 1);
-    // The space has to have reached EDGE before a new device can inherit it; `createSpace` only
-    // waits for it to be locally ready.
     await host.waitForUploadsSettled();
 
     await host.openUserDevices();

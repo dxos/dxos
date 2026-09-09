@@ -98,10 +98,6 @@ export class InvitationHostExtension
     return this._invitationFlowLock != null;
   }
 
-  /**
-   * The last state THIS connection tried to set, as opposed to the invitation-wide shared state.
-   * Records the attempt, not the guard's acceptance, so the two can differ when a write was rejected.
-   */
   private _lastSetState: Invitation_State = Invitation_State.INIT;
 
   private _setState(state: Invitation_State): void {
@@ -117,11 +113,6 @@ export class InvitationHostExtension
         options: async (options) => {
           invariant(!this._remoteOptions, 'Remote options already set.');
           this._remoteOptions = options;
-          // Transition here, synchronously with receiving the guest's options, rather than only in
-          // `onOpen`'s continuation: the muxer can dispatch the guest's `options` and `introduce`
-          // from one chunk without yielding, and `introduce` asserts CONNECTED. Gated on already
-          // holding the flow lock — before that `onOpen` has not set CONNECTING and this connection
-          // is not yet the invitation's active one. `onOpen` still sets it for the other ordering.
           if (options.role === InvitationOptions.Role.GUEST && this.hasFlowLock()) {
             this._setState(Invitation_State.CONNECTED);
           }
@@ -254,17 +245,7 @@ export class InvitationHostExtension
       this._invitationFlowLock = await tryAcquireBeforeContextDisposed(this._ctx, this._invitationFlowMutex);
       log.verbose('host lock acquired');
       this._setState(Invitation_State.CONNECTING);
-      // Started, not awaited yet. The guest sends `introduce` as soon as it has RECEIVED these
-      // options, and its reply to this call travels on the extension's other channel — so the reply
-      // can land after that `introduce`. Gating CONNECTED on the reply therefore leaves a window
-      // where `introduce`, which asserts CONNECTED, arrives while this connection is still
-      // CONNECTING and errors the whole invitation (DX-1264). Receiving the guest's own options is
-      // the condition that actually orders the two, so gate on that alone.
       const optionsAcknowledged = this.rpc.InvitationHostService.options({ role: InvitationOptions.Role.HOST });
-      // Handled now, not at the `await` below: everything between can throw (the options timeout,
-      // the role check), and the `catch` closes the teleport, which rejects this outstanding request
-      // with `RpcClosedError`. Without a handler here that lands as an unhandled rejection on
-      // exactly the guest-never-sent-options path this branch exists to diagnose.
       void optionsAcknowledged.catch(() => {});
       log.verbose('options sent');
       await cancelWithContext(this._ctx, this._remoteOptionsTrigger.wait({ timeout: OPTIONS_TIMEOUT }));
@@ -279,7 +260,6 @@ export class InvitationHostExtension
         });
       }
       this._setState(Invitation_State.CONNECTED);
-      // Awaited after the transition, so a transport failure on our own call still surfaces here.
       await cancelWithContext(this._ctx, optionsAcknowledged);
       this._callbacks.onOpen(this._ctx, context);
     } catch (err: any) {
@@ -306,10 +286,6 @@ export class InvitationHostExtension
     const validStates = Array.isArray(stateOrMany) ? stateOrMany : [stateOrMany];
     if (!validStates.includes(invitation.state)) {
       scheduleTask(this._ctx, () => this.close());
-      // `invitation.state` is shared across every connection to this invitation, while
-      // `_lastSetState` is where THIS connection's own flow got to. They diverge when a second
-      // connection takes the flow lock and rewinds the shared state under an in-flight request on
-      // this one — report both so a failure says which of those happened (DX-1264).
       throw new InvariantViolation(
         `Expected ${stateToString(invitation.state)} to be one of [${validStates.map(stateToString).join(', ')}]` +
           ` (this connection last attempted ${stateToString(this._lastSetState)}, holdsFlowLock=${this.hasFlowLock()})`,

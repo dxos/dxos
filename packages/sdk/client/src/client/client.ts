@@ -704,7 +704,6 @@ export class Client {
     log('resetting...');
     this._resetting = true;
     invariant(this._services, 'Client not initialized.');
-
     await runServiceCall(this._effectRuntime, this._services.rpc['SystemService.reset'](undefined), {
       label: 'SystemService.reset',
     });

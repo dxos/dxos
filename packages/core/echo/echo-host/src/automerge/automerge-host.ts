@@ -573,23 +573,19 @@ export class AutomergeHost extends Resource {
   }
 
   /**
-   * Leases a document, waiting until it is loaded. The lease is the only route to a `DocHandle`;
-   * dispose it (`using`, or in the holder's teardown) so the document can be evicted.
-   *
-   * Returns null when `fetchFromNetwork: false` and the document is not on disk.
-   */
-  /**
-   * Resets subduction entries that have exhausted their heal budget and re-drives them.
-   *
-   * `findWithProgress` does not re-issue a parked DocumentQuery, so a document whose query stalled
-   * stays stalled however many times a caller asks for it again. `shareConfigChanged` is the
-   * documented escape hatch: it clears `all-failed` entries and the heal backoff, then re-syncs.
-   * Callers should use it only where they know a document is stuck, since it is repo-wide.
+   * automerge-repo's `findWithProgress` does not re-issue a parked DocumentQuery; repo-wide,
+   * `shareConfigChanged` clears `all-failed` entries and the heal backoff, then re-syncs.
    */
   kickStalledSync(): void {
     (this._repo as { shareConfigChanged?: () => void }).shareConfigChanged?.();
   }
 
+  /**
+   * Leases a document, waiting until it is loaded. The lease is the only route to a `DocHandle`;
+   * dispose it (`using`, or in the holder's teardown) so the document can be evicted.
+   *
+   * Returns null when `fetchFromNetwork: false` and the document is not on disk.
+   */
   async loadDoc<T>(ctx: Context, documentId: AnyDocumentId, opts?: LoadDocOptions): Promise<DocumentLease<T> | null> {
     invariant(this.isOpen, 'AutomergeHost is not open');
     // Leased before the wait, so the document cannot be evicted between becoming ready and the

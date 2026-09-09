@@ -71,6 +71,14 @@ export type TransportOptions = {
   timeout?: number;
 };
 
+/**
+ * How long `Connection` waits for a transport to connect before aborting.
+ *
+ * Lives here so a transport can size its own internal waits against it rather than duplicating the
+ * number: `Connection` is the owner of the deadline that should actually fire.
+ */
+export const TRANSPORT_CONNECTION_TIMEOUT = 10_000;
+
 export interface TransportFactory {
   createTransport(options: TransportOptions): Transport;
 }

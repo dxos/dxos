@@ -344,9 +344,6 @@ describe('Feed', () => {
       expect((results[0] as TestSchema.Person).name).toEqual('john');
     });
 
-    // Regression (DX-1264): the retry loop was unbounded and made no distinction for a closed RPC
-    // endpoint, so one failed append became ~9.8k rejections/s on the main thread — enough to keep
-    // the device-invitation join shell from mounting inside its 60s budget.
     test('append stops retrying once the rpc endpoint is closed', async ({ expect }) => {
       await using peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Person] });
       const db = await peer.createDatabase();
@@ -364,9 +361,6 @@ describe('Feed', () => {
       const feed = db.add(Feed.make({ name: 'closed' }));
       db.add(Obj.make(TestSchema.Person, { name: 'john' }), { to: feed });
 
-      // Past the first backoff step (1s), so a single attempt here means the closed endpoint latched
-      // rather than merely being rate-limited: a bounded-but-unlatched retry would already have made
-      // a second call by now.
       await sleep(2_500);
       expect(callCount).toBe(1);
     });
