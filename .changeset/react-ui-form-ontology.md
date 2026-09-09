@@ -1,5 +1,6 @@
 ---
 '@dxos/react-ui-form': minor
+'@dxos/react-ui': patch
 '@dxos/react-ui-markdown': patch
 ---
 
@@ -11,3 +12,9 @@ The form ontology: three parts that map one for one onto `@dxos/react-ui`'s `Fie
 - **Breaking:** the built-in renderers (`TextField`, `SelectField`, …) are controls with no row of their own; a `fieldMap` or `fieldProvider` renderer owns its row and writes `<Form.Field path={jsonPath}>` around its control. `Form.Error` is `Form.ErrorText`. `FormFieldHeader` no longer takes `path`.
 - `MarkdownView` spreads its remaining props and accepts `className`, so a parent can render it `asChild`.
 - A row can lay its label beside the control (`labelPlacement='beside'`); a boolean does so by default, so a toggle reads with its text on one line in the default variant, while the settings card keeps its label column.
+
+In `@dxos/react-ui`, alongside:
+
+`Menu.Item`, `Menu.CheckboxItem` and `Menu.RadioItem` honour `closeOnSelect={false}`: a toggle keeps the menu open, as `onSelect` with `preventDefault()` already did. The Menu story renders every part (submenu, checkbox items, radio group, context trigger) and asserts them.
+
+`Field.Switch` and `Field.Checkbox` pad themselves to the density's control height through their block margins, so a toggle takes a full row and sits centred in it, bare or beside its label; `Field.Block` sizes by the same token. Their focus ring is inset, so a focused toggle stays inside its row.
