@@ -11,7 +11,7 @@ import { type FormFieldRendererProps } from '#types';
 
 import { type OptionsLookup, type OptionsLookupEntry } from '../../../../../annotations';
 import { pickValues, useAsyncFieldEffect, useFormValues } from '../../../../../hooks';
-import { FormRow } from '../../FormRow';
+import { presentationFor } from '../../presentation';
 
 export type ComboboxFieldProps = FormFieldRendererProps<string> & {
   /** Loads suggestions from the lookup's declared dependency fields (typically the field's own value). */
@@ -25,9 +25,18 @@ export type ComboboxFieldProps = FormFieldRendererProps<string> & {
  * them as you type. The literal typed text is offered as a fallback option at the bottom (deduped), so a
  * value not among the suggestions can still be selected. No options are shown until something is typed.
  */
-export const ComboboxField = ({ lookup, type, readonly, placeholder, onValueChange, ...props }: ComboboxFieldProps) => {
+export const ComboboxField = ({
+  lookup,
+  type,
+  readonly,
+  placeholder,
+  presentation,
+  jsonPath,
+  getValue,
+  onValueChange,
+}: ComboboxFieldProps) => {
   const values = useFormValues<AnyProperties>(ComboboxField.displayName);
-  const ownKey = props.jsonPath;
+  const ownKey = jsonPath;
   const [query, setQuery] = useState('');
   // The stored value is often an opaque id; remember the selected option's label so the trigger shows
   // it (the query-driven suggestions no longer include the option once selected).
@@ -64,50 +73,48 @@ export const ComboboxField = ({ lookup, type, readonly, placeholder, onValueChan
     },
     [onValueChange, type, data],
   );
+
   const handleOpenChange = useCallback((open: boolean) => {
     if (!open) {
       setQuery('');
     }
   }, []);
 
+  const value = getValue() ?? '';
+  if (presentationFor(presentation).isStatic) {
+    return <p className='truncate min-w-0'>{selectedLabel ?? value}</p>;
+  }
+
   return (
-    <FormRow<string>
-      readonly={readonly}
-      renderStatic={(value) => <p className='truncate min-w-0'>{selectedLabel ?? value ?? ''}</p>}
-      {...props}
+    <Combobox.Root
+      value={value}
+      displayValue={selectedLabel}
+      onValueChange={handleValueChange}
+      onOpenChange={handleOpenChange}
+      placeholder={placeholder}
     >
-      {({ value = '' }) => (
-        <Combobox.Root
-          value={value}
-          displayValue={selectedLabel}
-          onValueChange={handleValueChange}
-          onOpenChange={handleOpenChange}
-          placeholder={placeholder}
-        >
-          {/* Full-width trigger (default renders value/placeholder + caret) to match the other fields. */}
-          <Combobox.Trigger disabled={!!readonly} classNames='w-full' />
-          <Combobox.Portal>
-            {/* Keep the first result highlighted as the list changes while typing. */}
-            <Combobox.Content resetSelectionOnChange>
-              <Combobox.Input autoFocus value={query} onValueChange={setQuery} placeholder={placeholder} />
-              <Combobox.List>
-                {results.map((option) => (
-                  <Combobox.Item
-                    key={option.value}
-                    value={option.value}
-                    label={option.label ?? option.value}
-                    suffix={option.secondaryLabel}
-                  />
-                ))}
-                {/* The literal typed text as a fallback option at the bottom, unless a suggestion already is it. */}
-                {normalized.length > 0 && !hasExact && <Combobox.Item value={trimmed} label={trimmed} />}
-              </Combobox.List>
-              <Combobox.Arrow />
-            </Combobox.Content>
-          </Combobox.Portal>
-        </Combobox.Root>
-      )}
-    </FormRow>
+      {/* Full-width trigger (default renders value/placeholder + caret) to match the other fields. */}
+      <Combobox.Trigger disabled={!!readonly} classNames='w-full' />
+      <Combobox.Portal>
+        {/* Keep the first result highlighted as the list changes while typing. */}
+        <Combobox.Content resetSelectionOnChange>
+          <Combobox.Input autoFocus value={query} onValueChange={setQuery} placeholder={placeholder} />
+          <Combobox.List>
+            {results.map((option) => (
+              <Combobox.Item
+                key={option.value}
+                value={option.value}
+                label={option.label ?? option.value}
+                suffix={option.secondaryLabel}
+              />
+            ))}
+            {/* The literal typed text as a fallback option at the bottom, unless a suggestion already is it. */}
+            {normalized.length > 0 && !hasExact && <Combobox.Item value={trimmed} label={trimmed} />}
+          </Combobox.List>
+          <Combobox.Arrow />
+        </Combobox.Content>
+      </Combobox.Portal>
+    </Combobox.Root>
   );
 };
 

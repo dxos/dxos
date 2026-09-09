@@ -35,6 +35,8 @@ import { IdbLogStore } from '@dxos/log-store-idb';
 import * as Observability from '@dxos/observability/Observability';
 import * as ObservabilityExtension from '@dxos/observability/ObservabilityExtension';
 import { translations as observabilityTranslations } from '@dxos/plugin-observability/translations';
+import type * as SupportOperation from '@dxos/plugin-support/SupportOperation';
+import * as SupportService from '@dxos/plugin-support/SupportService';
 import { ErrorBoundary, ErrorFallback } from '@dxos/react-error-boundary';
 import { ThemeProvider, Tooltip } from '@dxos/react-ui';
 import { defaultTx } from '@dxos/react-ui';
@@ -605,6 +607,21 @@ const main = async () => {
   startupMark('plugins:end');
   startupMeasure('plugins-init', 'plugins:start', 'plugins:end');
 
+  // The fatal dialog renders outside the plugin manager, so it cannot resolve the support service
+  // itself; it gets a bound submit, or nothing when there is no service to file against.
+  const supportEndpoint = SupportService.supportEndpoint(config);
+  const submitReport = supportEndpoint
+    ? async (report: SupportOperation.SupportRequest) => {
+        await EffectEx.runPromise(
+          SupportService.submitSupportReport({
+            endpoint: supportEndpoint,
+            observability: await observability,
+            report,
+          }),
+        );
+      }
+    : undefined;
+
   const Fallback = ({ error }: { error: Error }) => {
     const {
       needRefresh: [needRefresh],
@@ -647,7 +664,7 @@ const main = async () => {
               <ResetDialog
                 error={error}
                 logStore={logStore}
-                observability={observability}
+                onSubmitReport={submitReport}
                 needRefresh={needRefresh}
                 onRefresh={needRefresh ? () => void updateServiceWorker(true) : undefined}
                 onReset={import.meta.env.DEV ? handleReset : undefined}

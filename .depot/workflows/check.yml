@@ -217,6 +217,17 @@ jobs:
         continue-on-error: true
         run: moon run composer-app:check-boot-budget
 
+      - name: Trend the boot graph
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        continue-on-error: true
+        env:
+          DX_POSTHOG_API_KEY: ${{ secrets.COMPOSER_APP_PROD_POSTHOG_API_KEY }}
+        run: |
+          node scripts/ci-event.mjs \
+            --event ci.boot-budget \
+            --properties packages/apps/composer-app/out/boot-budget.json \
+            --property app=composer
+
       - name: Record this PR's measurement
         id: head
         if: env.COMPARE == 'true'

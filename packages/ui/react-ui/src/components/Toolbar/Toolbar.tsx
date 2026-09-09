@@ -15,7 +15,8 @@ import { useTranslation } from 'react-i18next';
 
 import { useFocusGroup } from '@dxos/react-focus';
 import { useComposedRefs } from '@dxos/react-hooks';
-import { type SlottableProps } from '@dxos/ui-types';
+import { elevationAttrs, elevationSurface } from '@dxos/ui-theme';
+import { type ElevationLevel, type SlottableProps } from '@dxos/ui-types';
 
 import { translationKey } from '#translations';
 
@@ -40,7 +41,7 @@ import {
 } from '../Button';
 import { Icon } from '../Icon';
 import { Link, type LinkProps } from '../Link';
-import { DropdownMenu } from '../Menu';
+import { Menu } from '../Menu';
 import { Separator, type SeparatorProps } from '../Separator';
 
 //
@@ -48,7 +49,9 @@ import { Separator, type SeparatorProps } from '../Separator';
 //
 
 type ToolbarRootProps = Omit<ComponentPropsWithoutRef<'div'>, 'dir'> &
-  ToolbarStyleProps & {
+  Omit<ToolbarStyleProps, 'surface'> & {
+    /** Material-style elevation, 0–5, onto the surface ladder: the bar paints that level and its shadow. */
+    elevation?: ElevationLevel;
     orientation?: 'horizontal' | 'vertical';
     /** Wrap arrow navigation at the ends (default true). */
     loop?: boolean;
@@ -66,6 +69,7 @@ const ToolbarRoot = composable<HTMLDivElement, ToolbarRootProps>(
       density,
       disabled,
       layoutManaged,
+      elevation,
       orientation = 'horizontal',
       loop = true,
       onKeyDown,
@@ -108,7 +112,12 @@ const ToolbarRoot = composable<HTMLDivElement, ToolbarRootProps>(
         {...(orientation === 'vertical' && { 'aria-orientation': 'vertical' })}
         data-orientation={orientation}
         data-arrow-keys={orientation === 'vertical' ? 'up down' : 'left right'}
-        className={tx('toolbar.root', { density, disabled, layoutManaged }, className)}
+        {...elevationAttrs(elevation)}
+        className={tx(
+          'toolbar.root',
+          { density, disabled, layoutManaged, surface: elevationSurface(elevation) },
+          className,
+        )}
         onKeyDown={handleKeyDown}
         onFocus={handleFocus}
         ref={useComposedRefs<HTMLDivElement>(forwardedRef, focusGroupRef)}
@@ -334,31 +343,31 @@ function ToolbarMenu<T extends any | void = void>({ context, items }: ToolbarMen
   const { t } = useTranslation(translationKey);
 
   return (
-    <DropdownMenu.Root>
-      <DropdownMenu.Trigger disabled={!items?.length} asChild>
+    <Menu.Root>
+      <Menu.Trigger disabled={!items?.length} asChild>
         <ToolbarIconButton
           iconOnly
           variant='ghost'
           icon='ph--dots-three-vertical--regular'
           label={t('toolbar-menu.label')}
         />
-      </DropdownMenu.Trigger>
+      </Menu.Trigger>
       {(items?.length ?? 0) > 0 && (
-        <DropdownMenu.Portal>
-          <DropdownMenu.Content>
-            <DropdownMenu.Viewport>
+        <Menu.Portal>
+          <Menu.Content>
+            <Menu.Viewport>
               {items?.map(({ label, icon, onClick: onSelect }, index) => (
-                <DropdownMenu.Item key={index} onSelect={() => onSelect(context as T)}>
+                <Menu.Item key={index} onSelect={() => onSelect(context as T)}>
                   {icon && <Icon icon={icon} />}
                   {label}
-                </DropdownMenu.Item>
+                </Menu.Item>
               ))}
-            </DropdownMenu.Viewport>
-            <DropdownMenu.Arrow />
-          </DropdownMenu.Content>
-        </DropdownMenu.Portal>
+            </Menu.Viewport>
+            <Menu.Arrow />
+          </Menu.Content>
+        </Menu.Portal>
       )}
-    </DropdownMenu.Root>
+    </Menu.Root>
   );
 }
 

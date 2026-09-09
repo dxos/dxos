@@ -31,7 +31,7 @@ import {
   setOwnerRecursive,
   wouldCreateCycle,
 } from './ownership';
-import { type ReactiveHandler, objectData } from './proxy-types';
+import { type ReactiveHandler } from './proxy-types';
 import {
   createProxy,
   isProxy,
@@ -176,8 +176,8 @@ const copyHiddenProperties = (source: any, target: any): void => {
 //     ▼
 //   TypedObjectPrototype     shared behaviour. Carries [symbolReactivePrototype]=true (so the
 //     │ [[Prototype]] "plain object" gates still treat the record as data) plus the system
-//     │               accessors [objectData], [ChangeId], [StaticTypeSchemaSlot]; the get trap
-//     │               delegates to these via `isBehaviourAccessor` instead of switching.
+//     │               accessors [ChangeId], [ChangeKeyId], [StaticTypeSchemaSlot]. There is no get
+//     │               trap: a read of any of them resolves off this chain by ordinary lookup.
 //     ▼
 //   Object.prototype ──▶ null     a `getPrototypeOf` trap reports `Object.prototype` so consumers
 //                     see a plain object; the real instanceState prototype stays hidden.
@@ -205,12 +205,6 @@ defineHiddenProperty(TypedObjectPrototype, symbolReactivePrototype, true);
 // branches in the `get` trap. `this` is the proxy receiver (or the raw target when read directly);
 // `getRawTarget` resolves either to the underlying target.
 Object.defineProperties(TypedObjectPrototype, {
-  // TODO(burdon): Remove?
-  [objectData]: {
-    get(this: ProxyTarget) {
-      return toJSON(getRawTarget(this));
-    },
-  },
   [ChangeKeyId]: {
     get(this: ProxyTarget) {
       return changeKeyOf(this);
@@ -262,19 +256,6 @@ Object.defineProperties(TypedObjectPrototype, {
     },
   },
 });
-
-/** True if `prop` resolves to an accessor on the behaviour-prototype chain (not an own property). */
-const isBehaviourAccessor = (target: object, prop: symbol): boolean => {
-  let proto = Object.getPrototypeOf(target);
-  while (proto != null && proto !== Object.prototype) {
-    const descriptor = Object.getOwnPropertyDescriptor(proto, prop);
-    if (descriptor != null) {
-      return descriptor.get != null;
-    }
-    proto = Object.getPrototypeOf(proto);
-  }
-  return false;
-};
 
 /**
  * True once the root owns an `[EventId]`, i.e. is past construction and notifies on change. The
@@ -605,14 +586,6 @@ export class TypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
     return `Typed ${inspected}`;
   }
 }
-
-/**
- * @deprecated Use `Obj.toJSON` instead.
- */
-// TODO(burdon): Remove?
-const toJSON = (target: ProxyTarget): any => {
-  return { '@type': 'TypedReactiveObject', ...target };
-};
 
 /**
  * Pointer to a `Type.Type` entity, stamped as the back-reference (`TypeEntityId`)

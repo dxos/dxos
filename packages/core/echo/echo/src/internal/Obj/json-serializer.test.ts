@@ -15,7 +15,7 @@ import { getTypename, getTypeURI } from '../Annotation';
 import { getMetaChecked } from '../common/api';
 import { makeDecodedEntityLive } from '../common/proxy';
 import { type AnyEntity, ATTR_TYPE, EntityKind, KindId, TypeId, getSchema } from '../common/types';
-import { MetaId } from '../common/types/model-symbols';
+import { ATTR_DELETED, MetaId } from '../common/types/model-symbols';
 import { RelationSourceId, RelationTargetId, getObjectEchoUri } from '../Entity';
 import * as JsonSchema from '../JsonSchema';
 import { Ref, type RefResolver, StaticRefResolver } from '../Ref';
@@ -356,6 +356,30 @@ describe('Object JSON serializer', () => {
       expect(blobFromJson.name).toBe('blob');
       expect(blobFromJson.bytes).toBeInstanceOf(Uint8Array);
       expect(Array.from(blobFromJson.bytes)).toEqual(Array.from(bytes));
+    });
+  });
+
+  describe('deletion marker', () => {
+    test('a live object serializes without a deletion marker', async ({ expect }) => {
+      const contact = Obj.make(TestSchema.Person, { name: 'Alice' });
+
+      expect(objectToJSON(contact)[ATTR_DELETED]).toBeUndefined();
+      expect(Obj.isDeleted(contact)).toBe(false);
+    });
+
+    test('a tombstone survives a round trip', async ({ expect }) => {
+      const contact = Obj.make(TestSchema.Person, { name: 'Alice' });
+      const tombstone = { ...objectToJSON(contact), [ATTR_DELETED]: true };
+
+      const refResolver = new StaticRefResolver().addSchema(TestSchema.Person);
+      const decoded = (await objectFromJSON(tombstone, { refResolver })) as TestSchema.Person;
+      expect(Obj.isDeleted(decoded)).toBe(true);
+
+      // `objectFromJSON` reads `@deleted`, so the serializer has to emit it — otherwise a tombstone
+      // re-serialized (feed compaction, a snapshot hand-off) came back as a live object.
+      expect(objectToJSON(decoded)[ATTR_DELETED]).toBe(true);
+      const reDecoded = (await objectFromJSON(objectToJSON(decoded), { refResolver })) as TestSchema.Person;
+      expect(Obj.isDeleted(reDecoded)).toBe(true);
     });
   });
 });

@@ -46,12 +46,17 @@ runs:
         fi
       shell: bash
 
+    # The channel is baked in here for the life of the install, so an install only ever polls the channel it
+    # was built for. Production omits the parameter and polls the default channel.
     - name: Update endpoints in tauri.conf.json
+      env:
+        CHANNEL: ${{ steps.release-channel.outputs.channel }}
       run: |
         jq \
-          --arg channel "${{ steps.release-channel.outputs.channel }}" \
+          --arg channel "$CHANNEL" \
           '.plugins.updater.endpoints = [
-            "https://cdn.crabnebula.app/update/dxos/composer/{{target}}-{{arch}}/{{current_version}}?channel=\($channel)"
+            "https://cdn.crabnebula.app/update/dxos/composer/{{target}}-{{arch}}/{{current_version}}"
+              + (if $channel == "" then "" else "?channel=" + $channel end)
           ]' \
           "${{ steps.find-tauri-config.outputs.tauri_conf_json_path }}" > "${{ steps.find-tauri-config.outputs.tauri_conf_json_path }}.tmp" && \
         mv "${{ steps.find-tauri-config.outputs.tauri_conf_json_path }}.tmp" "${{ steps.find-tauri-config.outputs.tauri_conf_json_path }}"

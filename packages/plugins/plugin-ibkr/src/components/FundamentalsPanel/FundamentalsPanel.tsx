@@ -69,9 +69,9 @@ export const FundamentalsPanel = ({ snapshot, loading, error, onRefresh }: Funda
         return (
           <>
             {entries.map(([concept, factValue]) => (
-              <Form.Row key={concept} label={formatConceptLabel(concept)}>
+              <Form.Field standalone key={concept} label={formatConceptLabel(concept)}>
                 {formatFundamentalValue(Format.TypeFormat.Currency, concept, factValue)}
-              </Form.Row>
+              </Form.Field>
             ))}
           </>
         );
@@ -80,9 +80,9 @@ export const FundamentalsPanel = ({ snapshot, loading, error, onRefresh }: Funda
         return null;
       }
       return (
-        <Form.Row label={label} description={description}>
+        <Form.Field standalone label={label} description={description}>
           {formatFundamentalValue(format, jsonPath, value)}
-        </Form.Row>
+        </Form.Field>
       );
     },
     [],
@@ -98,7 +98,7 @@ export const FundamentalsPanel = ({ snapshot, loading, error, onRefresh }: Funda
   return (
     <Form.Root layout='static' readonly schema={Ibkr.FundamentalsSnapshot} values={snapshot}>
       <Form.Content>
-        <Form.Section>
+        <Form.FieldSet>
           <div className='flex items-start justify-between gap-trim-md pb-form-section-gap'>
             <div className='flex min-w-0 flex-col gap-0.5'>
               <h2 className='text-lg'>{t('fundamentals.heading')}</h2>
@@ -133,13 +133,13 @@ export const FundamentalsPanel = ({ snapshot, loading, error, onRefresh }: Funda
               </Banner.Content>
             </Banner.Root>
           ) : (
-            <Form.FieldSet readonly fieldProvider={fieldProvider} />
+            <Form.Fields readonly fieldProvider={fieldProvider} />
           )}
-        </Form.Section>
+        </Form.FieldSet>
 
-        <Form.Section>
-          <Form.Row label={t('fundamentals.source.label')} />
-        </Form.Section>
+        <Form.FieldSet>
+          <Form.Field label={t('fundamentals.source.label')} />
+        </Form.FieldSet>
       </Form.Content>
     </Form.Root>
   );

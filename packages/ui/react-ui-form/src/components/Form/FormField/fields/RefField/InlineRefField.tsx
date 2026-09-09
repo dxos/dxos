@@ -10,14 +10,14 @@ import { useType as defaultUseType } from '@dxos/echo-react';
 import { ReferenceAnnotationId, type ReferenceAnnotationValue } from '@dxos/echo/Annotation';
 import { SchemaEx } from '@dxos/effect';
 import { DXN, URI } from '@dxos/keys';
-import { IconButton, Input, useTranslation } from '@dxos/react-ui';
+import { IconButton, useTranslation } from '@dxos/react-ui';
 
 import { translationKey } from '#translations';
 
 import { omitId } from '../../../../../util';
-import { FormContent, FormFieldSetContainer, FormRoot } from '../../../FormControls';
-import { FormFieldLabel } from '../../FormRow';
-import { presentationFor } from '../../presentation';
+import { FormContent, FormRoot } from '../../../FormControls';
+import { FormFields } from '../../../FormFields';
+import { FormFieldSet } from '../../../FormFieldSet';
 import { type RefFieldProps } from './RefField';
 
 /**
@@ -30,21 +30,8 @@ import { type RefFieldProps } from './RefField';
  * `ObjectProperties` (without the synthetic meta-tags row).
  */
 export const InlineRefField = (props: RefFieldProps) => {
-  const {
-    type,
-    readonly,
-    label,
-    jsonPath,
-    presentation,
-    required,
-    db,
-    getValue,
-    onValueChange,
-    onCreate,
-    useType = defaultUseType,
-  } = props;
+  const { type, readonly, label, db, getValue, onValueChange, onCreate, useType = defaultUseType } = props;
   const { t } = useTranslation(translationKey);
-  const resolved = presentationFor(presentation);
 
   const reference = getValue() as Ref.Ref<any> | undefined;
   const typename = useMemo(
@@ -69,8 +56,7 @@ export const InlineRefField = (props: RefFieldProps) => {
   }
 
   return (
-    <Input.Root>
-      {resolved.showLabel && <FormFieldLabel readonly={readonly} required={required} label={label} path={jsonPath} />}
+    <FormFieldSet label={label} collapsible>
       {reference ? (
         <InlineForm reference={reference} db={db} readonly={readonly} useType={useType} />
       ) : (
@@ -85,7 +71,7 @@ export const InlineRefField = (props: RefFieldProps) => {
           />
         )
       )}
-    </Input.Root>
+    </FormFieldSet>
   );
 };
 
@@ -138,7 +124,7 @@ const InlineForm = ({ reference, db, readonly, useType = defaultUseType }: Inlin
   return (
     <FormRoot db={db} schema={formSchema} defaultValues={defaultValues as any} onValuesChanged={handleChange}>
       <FormContent>
-        <FormFieldSetContainer collapsible readonly={readonly} />
+        <FormFields readonly={readonly} />
       </FormContent>
     </FormRoot>
   );

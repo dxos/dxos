@@ -6,11 +6,12 @@ import { format as formatDate } from 'date-fns';
 import React, { useCallback } from 'react';
 
 import { Format } from '@dxos/echo';
-import { Input } from '@dxos/react-ui';
+import { Field } from '@dxos/react-ui';
 
 import { type FormFieldRendererProps } from '#types';
 
-import { FormRow } from '../../FormRow';
+import { FormStaticValue } from '../../FormField';
+import { presentationFor } from '../../presentation';
 
 /**
  * Stored value shapes:
@@ -19,9 +20,9 @@ import { FormRow } from '../../FormRow';
  * - `Format.Time`     -> `HH:mm:ss`.
  *
  * Segmented input value shapes (react-aria-components-backed):
- * - `Input.DateTime` -> `YYYY-MM-DDTHH:mm` in local time.
- * - `Input.Date`     -> `YYYY-MM-DD`.
- * - `Input.Time`     -> `HH:mm`.
+ * - `Field.DateTime` -> `YYYY-MM-DDTHH:mm` in local time.
+ * - `Field.Date`     -> `YYYY-MM-DD`.
+ * - `Field.Time`     -> `HH:mm`.
  */
 
 /** ISO 8601 → `YYYY-MM-DDTHH:mm` in the user's local timezone. */
@@ -50,10 +51,9 @@ export const DateField = ({
   type,
   format,
   readonly,
-  placeholder: _placeholder,
+  presentation,
+  getValue,
   onValueChange,
-  onBlur: _onBlur,
-  ...props
 }: FormFieldRendererProps<string>) => {
   const handleSimpleChange = useCallback((next: string) => onValueChange(type, next), [type, onValueChange]);
 
@@ -65,46 +65,45 @@ export const DateField = ({
     [type, onValueChange],
   );
 
-  return (
-    <FormRow<string> {...props} readonly={readonly} format={format}>
-      {({ value }) => {
-        switch (format) {
-          case Format.TypeFormat.Date:
-            return (
-              <div className='grid grid-cols-[minmax(0,1fr)_min-content] gap-1 items-stretch tabular-nums'>
-                <Input.Date
-                  classNames='overflow-hidden'
-                  disabled={readonly}
-                  value={value ?? ''}
-                  onValueChange={handleSimpleChange}
-                />
-                <Input.TriggerIcon />
-              </div>
-            );
-          case Format.TypeFormat.Time:
-            return (
-              <Input.Time
-                classNames='tabular-nums'
-                disabled={!!readonly}
-                value={value ?? ''}
-                onValueChange={handleSimpleChange}
-              />
-            );
-          case Format.TypeFormat.DateTime:
-          default:
-            return (
-              <div className='grid grid-cols-[minmax(0,1fr)_min-content] gap-1 items-stretch tabular-nums'>
-                <Input.DateTime
-                  classNames='overflow-hidden'
-                  disabled={readonly}
-                  value={isoToLocalDateTime(value)}
-                  onValueChange={handleDateTimeChange}
-                />
-                <Input.TriggerIcon />
-              </div>
-            );
-        }
-      }}
-    </FormRow>
-  );
+  const value = getValue();
+  if (presentationFor(presentation).isStatic) {
+    return <FormStaticValue value={value} format={format} />;
+  }
+
+  switch (format) {
+    case Format.TypeFormat.Date:
+      return (
+        <div className='grid grid-cols-[minmax(0,1fr)_min-content] gap-1 items-stretch tabular-nums'>
+          <Field.Date
+            classNames='overflow-hidden'
+            disabled={readonly}
+            value={value ?? ''}
+            onValueChange={handleSimpleChange}
+          />
+          <Field.TriggerIcon />
+        </div>
+      );
+    case Format.TypeFormat.Time:
+      return (
+        <Field.Time
+          classNames='tabular-nums'
+          disabled={!!readonly}
+          value={value ?? ''}
+          onValueChange={handleSimpleChange}
+        />
+      );
+    case Format.TypeFormat.DateTime:
+    default:
+      return (
+        <div className='grid grid-cols-[minmax(0,1fr)_min-content] gap-1 items-stretch tabular-nums'>
+          <Field.DateTime
+            classNames='overflow-hidden'
+            disabled={readonly}
+            value={isoToLocalDateTime(value)}
+            onValueChange={handleDateTimeChange}
+          />
+          <Field.TriggerIcon />
+        </div>
+      );
+  }
 };

@@ -141,8 +141,8 @@ export const ObjectProperties = composable<HTMLDivElement, ObjectPropertiesProps
       >
         <Form.Viewport {...composableProps(props)} scroll ref={forwardedRef}>
           <Form.Content>
-            <Form.FieldSet />
-            <Form.Section>{children}</Form.Section>
+            <Form.Fields />
+            <Form.FieldSet>{children}</Form.FieldSet>
           </Form.Content>
         </Form.Viewport>
       </Form.Root>
@@ -151,14 +151,13 @@ export const ObjectProperties = composable<HTMLDivElement, ObjectPropertiesProps
 );
 
 const createFieldMap: FormFieldMap = {
-  hue: ({ type, label, presentation, getValue, onValueChange }) => {
+  hue: ({ type, label, jsonPath, presentation, getValue, onValueChange }) => {
     const handleChange = useCallback((nextHue: string) => onValueChange(type, nextHue), [onValueChange, type]);
     const handleReset = useCallback(() => onValueChange(type, undefined), [onValueChange, type]);
     return (
-      <>
-        {presentation !== 'inline' && <Form.Label label={label} />}
+      <Form.Field path={jsonPath} label={label} presentation={presentation}>
         <HuePicker value={getValue()} onChange={handleChange} onReset={handleReset} />
-      </>
+      </Form.Field>
     );
   },
 };

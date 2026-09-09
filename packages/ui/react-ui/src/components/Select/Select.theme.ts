@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { mx, surfaceShadow, surfaceZIndexVar } from '@dxos/ui-theme';
+import { mx, positionerUnplaced, surfaceShadow, surfaceZIndexVar } from '@dxos/ui-theme';
 import { type ComponentFunction, type Elevation, type Theme } from '@dxos/ui-types';
 
 export type SelectStyleProps = Partial<{
@@ -11,7 +11,7 @@ export type SelectStyleProps = Partial<{
 
 // The positioner's inline `z-index: var(--z-index)` outranks any class, so the variable is set instead.
 const positioner: ComponentFunction<SelectStyleProps> = ({ elevation }, ...etc) =>
-  mx(surfaceZIndexVar({ elevation, level: 'menu' }), ...etc);
+  mx(positionerUnplaced, surfaceZIndexVar({ elevation, level: 'menu' }), ...etc);
 
 // `--reference-width` and `--available-height` are set by the machine on the positioner.
 const content: ComponentFunction<SelectStyleProps> = (_props, ...etc) => {

@@ -2,13 +2,15 @@
 // Copyright 2022 DXOS.org
 //
 
-import { mx, surfaceShadow, surfaceZIndex, surfaceZIndexVar } from '@dxos/ui-theme';
-import { type ComponentFunction, type Elevation, type Theme } from '@dxos/ui-types';
+import { mx, positionerUnplaced, surfaceShadow, surfaceZIndex, surfaceZIndexVar } from '@dxos/ui-theme';
+import { type ComponentFunction, type Elevation, type Surface, type Theme } from '@dxos/ui-types';
 
 export type PopoverStyleProps = Partial<{
   constrainBlock: boolean;
   constrainInline: boolean;
   elevation: Elevation;
+  /** An explicit level, from `Content elevation`; the popover then paints it instead of `popup`. */
+  surface: Surface;
 }>;
 
 /**
@@ -16,11 +18,12 @@ export type PopoverStyleProps = Partial<{
  * outranks any `z-*` class, so the layer is handed over through the variable.
  */
 const positioner: ComponentFunction<PopoverStyleProps> = ({ elevation }, ...etc) =>
-  mx(surfaceZIndexVar({ elevation, level: 'menu' }), ...etc);
+  mx(positionerUnplaced, surfaceZIndexVar({ elevation, level: 'menu' }), ...etc);
 
-const content: ComponentFunction<PopoverStyleProps> = ({ elevation }, ...etc) =>
+const content: ComponentFunction<PopoverStyleProps> = ({ elevation, surface }, ...etc) =>
   mx(
-    'dx-popover-surface border-2 border-separator rounded-sm',
+    !surface && 'dx-popover-surface',
+    'border-2 border-separator rounded-sm',
     surfaceShadow({ elevation: 'positioned' }),
     surfaceZIndex({ elevation, level: 'menu' }),
     'dx-focus-ring',

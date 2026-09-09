@@ -23,6 +23,7 @@ export * from './useIsFocused';
 export * from './useMediaQuery';
 export * from './useMulticastObservable';
 export * from './useRefCallback';
+export * from './useStable';
 export * from './useViewportResize';
 export * from './useTimeout';
 export * from './useTransitions';

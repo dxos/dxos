@@ -59,13 +59,6 @@ export type ProxyTarget = {
   [EventId]: Event<void>;
 } & ({ [key: keyof any]: any } | EchoArray<any>);
 
-/**
- * Returns a string label for an ObjectCore used in inspection output.
- * @internal
- */
-export const coreInspectLabel = (core: ObjectCore): string =>
-  `ObjectCore(${core.id}${core.entityManager ? ' bound' : ''})`;
-
 // ---------------------------------------------------------------------------
 // EchoDatabase accessor — the database field on ObjectCore is `unknown` to
 // avoid a circular dep between core-db ← proxy-db. This module bridges the

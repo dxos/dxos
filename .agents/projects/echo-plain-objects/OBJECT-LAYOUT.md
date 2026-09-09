@@ -1,9 +1,9 @@
 # ECHO object layout — the V8 objects behind one reactive object
 
 Every node below is one JavaScript object in the heap. Solid arrows are **own property references**
-(labelled with the key); dashed arrows are **`[[Prototype]]` links**. State after Stage E
-(`cf4c23bf`), where every target carries its own data and one shared four-trap handler serves every
-proxy.
+(labelled with the key); dashed arrows are **`[[Prototype]]` links**. State as merged (`0cde959956`),
+where every target carries its own data, one shared five-trap handler serves every read-only proxy,
+and a second handler backs the mutable view an `Obj.update` callback is handed.
 
 **There are two handler classes, not three.** `TypedReactiveHandler` backs in-memory objects and
 `EchoReactiveHandler` backs database-backed ones. A _feed_ object is not a third variant: it is an
@@ -15,35 +15,56 @@ ordinary typed object with a `FeedObjectCore` sidecar syncing it (see diagram 4)
 
 ```mermaid
 graph TD
-  P["<b>Proxy</b> exotic object<br/><i>what the consumer holds</i>"]
-  H["<b>REACTIVE_PROXY_HANDLER</b><br/><i>one module singleton for every proxy</i><br/>4 traps: set · defineProperty · deleteProperty · getPrototypeOf<br/>only the 3 write traps dispatch"]
+  P["<b>Proxy</b> exotic object<br/><i>what the consumer holds — read-only</i>"]
+  H["<b>REACTIVE_PROXY_HANDLER</b><br/><i>one module singleton for every proxy</i><br/>5 traps: set · defineProperty · deleteProperty · ownKeys · getPrototypeOf<br/>none of them dispatch for user data"]
   T["<b>target</b><br/><i>carries the object's data as own properties</i>"]
+  MV["<b>mutable view</b> Proxy<br/><i>what an Obj.update callback is handed</i>"]
+  MH["<b>MUTABLE_PROXY_HANDLER</b><br/>get twins nested proxies · writes dispatch"]
   HANDLER["<b>handler instance</b><br/>TypedReactiveHandler.instance<br/>or EchoReactiveHandler.instance"]
 
   P ==>|"[[ProxyTarget]]"| T
   P ==>|"[[ProxyHandler]]"| H
+  MV ==>|"[[ProxyTarget]]"| T
+  MV ==>|"[[ProxyHandler]]"| MH
   T -->|"Symbol.for @dxos/echo/Proxy"| P
   T -->|"Symbol.for @dxos/echo/ProxyTarget"| T
+  T -->|"Symbol.for @dxos/echo/MutableProxy"| MV
   T -->|"Symbol.for @dxos/echo/ReactiveHandler"| HANDLER
-  H -.->|"read only on a write"| T
+  MH -.->|"read on a write"| T
+  MH -.->|"the only dispatch"| HANDLER
 ```
 
-A read touches **none** of this. There is no `get`, `has`, `ownKeys` or `getOwnPropertyDescriptor`
-trap, so `obj.title`, `'title' in obj`, `Object.keys(obj)`, a spread and a descriptor lookup are all
-answered by the engine off the target with no JavaScript call. `getPrototypeOf` is trapped but does
-not dispatch. The dashed edge is the only dispatch left, and it is reached only by a mutation.
+A read touches **none** of the read-only path. There is no `get`, `has` or
+`getOwnPropertyDescriptor` trap, so `obj.title`, `'title' in obj`, a spread and a descriptor lookup
+are all answered by the engine off the target with no JavaScript call. Two traps exist but never
+dispatch: `getPrototypeOf` is one `Array.isArray`, and `ownKeys` is one `Reflect.ownKeys` plus a
+filter that hides configurable symbols (a generic walker that read `[symbolReactiveHandler]` or
+`[symbolInternals]` and recursed would reach `Function.prototype.caller` and throw — this is what
+`Object.keys`, spread and structural hashing go through; `Reflect.ownKeys` on the **raw** target
+still shows everything).
+
+Writability belongs to the **reference**, not to a dynamic extent. For a **string-keyed** write — all
+user data — the read-only proxy's traps throw before consulting any handler (`assertReadOnly`, O(1),
+fail-closed), so the proxy named outside `Obj.update` stays read-only for the callback's whole
+duration. A symbol-keyed write is exempt and does still dispatch: the system stamps `[ParentId]` and
+friends outside any update, on objects consumers hold read-only.
 
 ### Symbols carried on a target
 
-| Symbol                       | Set by                                        | Purpose                                               |
-| ---------------------------- | --------------------------------------------- | ----------------------------------------------------- |
-| `@dxos/echo/Proxy`           | `createProxy`                                 | identity — `v[sym] === v` iff `v` is a proxy          |
-| `@dxos/echo/ProxyTarget`     | `createProxy`                                 | `getProxyTarget(proxy)` (the proxy forwards the read) |
-| `@dxos/echo/ReactiveHandler` | `createProxy`, rewritten by `setProxyHandler` | trap dispatch                                         |
-| `inspectCustom`              | handler `init`                                | node `util.inspect`                                   |
+| Symbol                       | Set by                                        | Purpose                                                                  |
+| ---------------------------- | --------------------------------------------- | ------------------------------------------------------------------------ |
+| `@dxos/echo/Proxy`           | `createProxy`                                 | identity — `v[sym] === v` iff `v` is a proxy; also the target→proxy memo |
+| `@dxos/echo/ProxyTarget`     | `createProxy`                                 | `getProxyTarget(proxy)` (the proxy forwards the read)                    |
+| `@dxos/echo/ReactiveHandler` | `createProxy`, rewritten by `setProxyHandler` | trap dispatch                                                            |
+| `@dxos/echo/MutableProxy`    | `getMutableProxy` (lazily, on first update)   | the target's mutable view; `canonicalOf` keeps one out of the graph      |
+| `inspectCustom`              | handler `init`                                | node `util.inspect`                                                      |
 
 All are `Symbol.for(...)` registry keys, so a proxy built by one evaluated copy of the module is
 fully usable by another.
+
+`[ChangeKeyId]` (`@dxos/live-object/ChangeKey`) is not stamped on the target — it is an **accessor on
+the behaviour prototype**, resolving to the root target (typed) or the `ObjectCore` (echo). It is the
+one key the array and text gates read, which is why `assertMutable` needs no variant dispatch.
 
 ---
 
@@ -57,7 +78,7 @@ graph TD
   IS["<b>instanceState</b> = Object.create(TypedObjectPrototype)<br/>[EventId] (root only) · [ObjectDeletedId]<br/>[SchemaId] · [TypeId] · [TypeEntityId] · [StaticTypeSchemaSlot]"]
   TP["<b>TypedObjectPrototype</b> <i>(one per process)</i><br/>[symbolReactivePrototype] · [objectData] · [ChangeId]"]
   OP["Object.prototype"]
-  HANDLER["<b>TypedReactiveHandler.instance</b><br/>_proxyMap: WeakMap&lt;target, proxy&gt;"]
+  HANDLER["<b>TypedReactiveHandler.instance</b><br/><i>stateless — the memo lives on the target</i>"]
   EV["Event"]
   NP["<b>Proxy</b> (nested record)"]
   NT["<b>target</b> (nested record)<br/>own data"]
@@ -94,7 +115,7 @@ graph TD
   ER["<b>EchoRoot.prototype</b><br/>id · [SchemaId] · [TypeId] · [MetaId] · [ParentId] · toJSON"]
   ERC["<b>EchoRecord.prototype</b> <i>(base)</i>"]
   OP["Object.prototype"]
-  HANDLER["<b>EchoReactiveHandler.instance</b><br/>_proxyMap: WeakMap&lt;target, proxy&gt;<br/>_rawRecords: WeakMap&lt;target, {docHandle, raw}&gt;"]
+  HANDLER["<b>EchoReactiveHandler.instance</b><br/>_rawRecords: WeakMap&lt;target, {docHandle, raw}&gt;"]
   CORE["<b>ObjectCore</b><br/>id · docHandle · targetsMap · linkCache<br/>refreshTargets · updates: Event"]
   DH["<b>DocHandleProxy</b>"]
   DOC["<b>automerge doc</b> (frozen)<br/>objects/&lt;id&gt;/data · /meta"]
@@ -170,35 +191,41 @@ graph LR
   subgraph read["obj.title — no JavaScript runs"]
     R1["proxy [[Get]]"] --> R2["no get trap<br/>→ engine reads the target"] --> R3["own property<br/>~2-20 ns"]
   end
-  subgraph write["obj.title = x — the only dispatching path (1 of 4 traps)"]
-    W1["proxy [[Set]]"] --> W2["REACTIVE_PROXY_HANDLER.set"] --> W3["read @ReactiveHandler<br/>off the target"] --> W4["handler.set"] --> W5{"isInChangeContext?"}
-    W5 -->|"no"| W6["throw<br/>MutationOutsideChangeContextError"]
-    W5 -->|"yes"| W7["write the document /<br/>own property, then refresh"]
+  subgraph reject["obj.title = x outside Obj.update — no dispatch at all"]
+    X1["proxy [[Set]]"] --> X2["REACTIVE_PROXY_HANDLER.set"] --> X3{"typeof property"}
+    X3 -->|"string"| X4["throw<br/>createPropertySetError"]
+    X3 -->|"symbol"| X5["allowed — system bookkeeping<br/>([ParentId], [SelfURIId], schema slot)"]
+  end
+  subgraph write["Obj.update(obj, (obj) => obj.title = x) — the only dispatching path"]
+    W1["mutable view [[Set]]"] --> W2["MUTABLE_PROXY_HANDLER.set"] --> W3["normalizeForStorage<br/><i>no view may enter the graph</i>"] --> W4["read @ReactiveHandler<br/>off the target"] --> W5["handler.set"] --> W6["write the document /<br/>own property, then refresh"]
   end
 ```
 
-The read path is dispatch-free and trap-free. The write path is where the remaining multiple dispatch
-lives — and outside `Obj.update` it always ends in the same throw regardless of variant, which is the
-argument for rejecting there too, with no handler lookup at all:
+The read path is dispatch-free and trap-free. Rejection is now constant-cost and **fail-closed**:
+there is no state to be wrong about, which is what a context lookup could not promise. Symbols are
+exempt because they are never user data — the system stamps `[ParentId]` and friends on objects
+consumers hold read-only, outside any update.
 
-```js
-const READONLY_PROXY_HANDLER = {
-  set: (target, prop) => {
-    throw createPropertySetError(prop);
-  },
-  defineProperty: (target, prop) => {
-    throw createPropertySetError(prop);
-  },
-  deleteProperty: (target, prop) => {
-    throw createPropertyDeleteError(prop);
-  },
-  getPrototypeOf: (target) => (Array.isArray(target) ? Reflect.getPrototypeOf(target) : Object.prototype),
-};
-```
+For user data, dispatch survives in exactly one place, the mutable view — a symbol-keyed write is the
+one exception, taking the read-only handler through to `handler.set` for the system's own bookkeeping.
+The change context still exists, but only to batch notifications and to gate the mutations a proxy
+cannot intercept (`Array` methods, text CRDT ops), which call `assertMutable(target, name, …)`
+directly against `[ChangeKeyId]`.
 
-The key-set traps are already gone (`cf4c23bf`) — they differed from the raw target in four ways, three
-of which were bugs. What remains before the write traps can reject without dispatching: a single
-change-context predicate (`change-context.ts` keeps one module-global `currentChangeContext`, so
-"is any context open" is an O(1) variant-free check), an exemption for the symbol writes that are
-legitimate outside `Obj.update` (`Obj.setParent` stamps `[ParentId]` after every update), and
-unifying the two packages' differing error messages.
+Two invariants hold the design together:
+
+- **A mutable view must never enter the graph.** Storing one would hand a permanent write capability
+  to every later reader and break identity for anyone holding the read-only reference. `canonicalOf`
+  maps a view back to its read-only twin; `normalizeForStorage` applies it through the literal being
+  assigned (`obj.rows = [obj.rec]`), descending only into plain containers and writing back only
+  where normalization changed something — an unconditional write throws on a frozen constant.
+  `Array.prototype.sort`/`reverse` return `canonicalOf(this)` for the same reason.
+- **`isProxy` still answers true for a view**, with no knowledge of views: the `get` trap twins every
+  proxy-valued read, so `view[symbolProxy] === view` holds. `[symbolTarget]` is not a proxy, so it
+  answers the raw target and `getRawTarget` unwraps a view correctly.
+
+Enforcement is fail-closed rather than advisory, which is what surfaced five latent defects during
+the change (nested arrays ungated, `toJsonSchema` mutating live schema, a view leaking through a
+literal, three sites mutating references captured outside their callback). The
+`consistent-update-param` lint rule catches the last of those **only when the callback body is
+written at the `Obj.update` call site** — two of the three were structurally invisible to it.
