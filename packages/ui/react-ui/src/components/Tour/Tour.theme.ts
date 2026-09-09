@@ -16,8 +16,10 @@ const layer = '[--tour-z-index:50] z-[calc(var(--tour-layer)+var(--tour-z-index)
 
 const backdrop: ComponentFunction<TourStyleProps> = (_props, ...etc) => mx(layer, 'bg-scrim-surface', ...etc);
 
+// The box is the target's own rect (`useTour` zeroes the machine's offset), so an inset ring paints over
+// the target's border rather than around it.
 const spotlight: ComponentFunction<TourStyleProps> = (_props, ...etc) =>
-  mx(layer, 'rounded-sm ring-2 ring-accent-bg', ...etc);
+  mx(layer, 'rounded-sm ring-2 ring-inset ring-accent-bg', ...etc);
 
 // A dialog step has no anchor: the positioner covers the viewport and centres the card.
 const positioner: ComponentFunction<TourStyleProps> = (_props, ...etc) =>
@@ -27,9 +29,10 @@ const positioner: ComponentFunction<TourStyleProps> = (_props, ...etc) =>
     ...etc,
   );
 
+// The card wears the info scheme, as a callout does: guidance, not a menu.
 const content: ComponentFunction<TourStyleProps> = (_props, ...etc) =>
   mx(
-    'dx-popover-surface flex flex-col gap-2 w-72 p-3 border-2 border-separator rounded-sm dx-focus-ring',
+    'flex flex-col gap-2 w-72 p-3 rounded-sm border-2 bg-info-surface border-info-border text-info-fg dx-focus-ring',
     surfaceShadow({ elevation: 'positioned' }),
     ...etc,
   );
@@ -37,16 +40,16 @@ const content: ComponentFunction<TourStyleProps> = (_props, ...etc) =>
 // As `Popover.Arrow`: the tip straddles the border, and `positioning.css` shifts it outward by the border width.
 const arrow: ComponentFunction<TourStyleProps> = (_props, ...etc) =>
   mx(
-    '[--arrow-size:12px] [--arrow-background:var(--surface-bg)] [--arrow-inset:2px]',
-    '[&>[data-part=arrow-tip]]:border-separator [&>[data-part=arrow-tip]]:border-t-2 [&>[data-part=arrow-tip]]:border-l-2',
+    '[--arrow-size:12px] [--arrow-background:var(--color-info-surface)] [--arrow-inset:2px]',
+    '[&>[data-part=arrow-tip]]:border-info-border [&>[data-part=arrow-tip]]:border-t-2 [&>[data-part=arrow-tip]]:border-l-2',
     ...etc,
   );
 
 const title: ComponentFunction<TourStyleProps> = (_props, ...etc) => mx('text-lg font-medium', ...etc);
 
-const description: ComponentFunction<TourStyleProps> = (_props, ...etc) => mx('text-description', ...etc);
+const description: ComponentFunction<TourStyleProps> = (_props, ...etc) => mx(...etc);
 
-const progressText: ComponentFunction<TourStyleProps> = (_props, ...etc) => mx('text-xs text-description', ...etc);
+const progressText: ComponentFunction<TourStyleProps> = (_props, ...etc) => mx('text-xs opacity-70', ...etc);
 
 const control: ComponentFunction<TourStyleProps> = (_props, ...etc) =>
   mx('flex items-center justify-between gap-2', ...etc);

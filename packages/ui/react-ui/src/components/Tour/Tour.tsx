@@ -14,8 +14,8 @@ import {
   type TourStepDetails,
   type UseTourProps,
   type UseTourReturn,
-  useTour,
   useTourContext,
+  useTour as useTourPrimitive,
 } from '@ark-ui/react/tour';
 import React, { type ComponentPropsWithRef, type ReactNode, forwardRef, useMemo } from 'react';
 
@@ -23,6 +23,13 @@ import { useThemeContext } from '../../hooks';
 import { type ThemedClassName } from '../../util';
 
 type TourStepAction = NonNullable<TourStepDetails['actions']>[number];
+
+/**
+ * Creates the machine. The spotlight sits on the target's own rect (the machine's default pads it
+ * by 10px), so the theme's ring paints over the target's border; the card keeps the machine's gutter.
+ */
+const useTour = (props?: UseTourProps): UseTourReturn =>
+  useTourPrimitive({ spotlightOffset: { x: 0, y: 0 }, ...props });
 
 type TourStepPlacement = NonNullable<TourStepDetails['placement']>;
 
