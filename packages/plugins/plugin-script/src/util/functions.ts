@@ -9,7 +9,13 @@ import * as Script from '@dxos/compute/Script';
 import { Obj } from '@dxos/echo';
 import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { type Credential } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
+import { bufWkt, createBuf, fromDate, fromPublicKey } from '@dxos/protocols/buf';
+import {
+  type Credential,
+  ClaimSchema,
+  CredentialSchema,
+  ServiceAccessSchema,
+} from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
 /**
  * Get the function URL for a given script and client configuration
@@ -71,18 +77,21 @@ export const updateFunctionMetadata = (
 };
 
 export const getAccessCredential = (identityKey: PublicKey): Credential => {
-  return {
-    issuer: identityKey,
-    issuanceDate: new Date(),
-    subject: {
-      id: identityKey,
-      assertion: {
-        '@type': 'dxos.halo.credentials.ServiceAccess',
-        'serverName': 'hub.dxos.network',
-        'serverKey': identityKey,
-        identityKey,
-        'capabilities': ['composer:beta'],
-      },
-    },
-  };
+  const key = fromPublicKey(identityKey);
+  return createBuf(CredentialSchema, {
+    issuer: key,
+    issuanceDate: fromDate(new Date()),
+    subject: createBuf(ClaimSchema, {
+      id: key,
+      assertion: bufWkt.anyPack(
+        ServiceAccessSchema,
+        createBuf(ServiceAccessSchema, {
+          serverName: 'hub.dxos.network',
+          serverKey: key,
+          identityKey: key,
+          capabilities: ['composer:beta'],
+        }),
+      ),
+    }),
+  });
 };
