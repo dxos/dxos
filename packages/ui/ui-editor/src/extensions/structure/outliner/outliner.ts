@@ -135,6 +135,8 @@ const decorations = () => [
               }).range(line.from, line.from),
             );
           } else {
+            // Prose sits flush with the content edge, so a blank line reads as a gap between lists,
+            // not as a continuation of the item above.
             decorations.push(Decoration.line({ class: 'cm-outline-prose' }).range(line.from, line.from));
           }
         }
@@ -154,10 +156,6 @@ const decorations = () => [
       // borderRightWidth: '1px',
       paddingLeft: '32px',
       borderColor: 'transparent',
-    },
-    // Prose around and between lists lines up with item content, clear of the grip gutter.
-    '.cm-outline-prose': {
-      paddingLeft: '32px',
     },
     '.cm-list-item.cm-codeblock-start': {
       borderRadius: '0',

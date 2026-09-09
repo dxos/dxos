@@ -130,7 +130,7 @@ feat F-2: Editing constraints
   req F-2.4:
     when: the document holds prose or headings before, between, or after lists
     then: each top-level list is its own island in the tree, the prose belongs to no item, the caret
-          may rest in it, and it is indented to the item content
+          may rest in it, it sits flush with the content edge, and the item menu does not show on it
 
   req F-2.5:
     when: Enter is pressed on an empty, childless item

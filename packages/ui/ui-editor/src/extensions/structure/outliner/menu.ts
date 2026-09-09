@@ -9,6 +9,7 @@ import { type CleanupFn, addEventListener } from '@dxos/async';
 import { Domino } from '@dxos/ui';
 
 import { GUTTER_WIDTH } from '../blocks';
+import { treeFacet } from './tree';
 
 // Square trigger size (px), matching the drag grip (`dx-button` density `xs` + `aspect-square` → `size-6`).
 // The right-hand strip (`GUTTER_WIDTH`, shared with the grip's left strip) centers the trigger within it.
@@ -94,6 +95,12 @@ export const menu = (options: MenuOptions = {}): Extension => [
         const { x, width } = this.view.contentDOM.getBoundingClientRect();
 
         const pos = this.view.state.selection.main.head;
+        // The actions act on an item; a prose line has none to offer.
+        if (!this.view.state.facet(treeFacet).find(pos)) {
+          this.tag.style.display = 'none';
+          return;
+        }
+
         const line = this.view.lineBlockAt(pos);
         const coords = this.view.coordsAtPos(line.from);
         if (!coords) {
