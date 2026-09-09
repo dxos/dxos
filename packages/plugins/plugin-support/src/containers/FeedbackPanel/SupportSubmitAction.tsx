@@ -69,9 +69,9 @@ export const useSupportSubmit = (): FeedbackSubmitHandler => {
       });
       if (error || !result) {
         log.error('support report not filed', { error });
-        // Capturing a screenshot collapsed the companion to get the form out of shot. The report is
-        // still in that form, so the toast saying so is only true while the form is back on screen.
-        await expand();
+        if (screenshot.collapsed) {
+          await expand();
+        }
         await showToast({
           id: 'feedback-failed',
           icon: 'ph--warning--regular',

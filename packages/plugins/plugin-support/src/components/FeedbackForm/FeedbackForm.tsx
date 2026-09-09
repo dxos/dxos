@@ -145,7 +145,6 @@ const FeedbackFormDownloadLogs = ({ onDownloadLogs }: FeedbackFormDownloadLogsPr
 
 FeedbackFormDownloadLogs.displayName = `${FEEDBACK_FORM}.DownloadLogs`;
 
-/** The two notes framing the submit button, which read as one voice only while they share this. */
 const noteClassNames = 'text-xs text-description text-center px-2 py-1';
 
 export type FeedbackFormSubmitProps = {

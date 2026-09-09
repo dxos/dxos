@@ -20,7 +20,7 @@ const content: ComponentFunction<SelectStyleProps> = ({ elevation }, ...etc) => 
     'min-w-(--reference-width) max-h-(--available-height)',
     // On first placement the machine copies this element's computed `z-index` onto the positioner as
     // `--z-index`, overwriting the class above; without one here it copies `auto` and the open menu
-    // paints behind its surroundings. Menu and Popover carry the same pair for the same reason.
+    // paints behind its surroundings.
     surfaceZIndex({ elevation, level: 'menu' }),
     surfaceShadow({ elevation: 'positioned' }),
     ...etc,

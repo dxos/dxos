@@ -22,6 +22,8 @@ export type ScreenshotAttachment = {
   url?: string;
   /** True when the user opted in but capture/upload failed — callers surface this in their toast. */
   failed: boolean;
+  /** Whether the companion was collapsed to take the shot, so a caller knows what to put back. */
+  collapsed: boolean;
 };
 
 /**
@@ -42,7 +44,7 @@ export const useScreenshotAttachment = () => {
       // rasterizing the DOM only to report a failure would read as a broken feature rather than an
       // unconfigured one.
       if (!values.image || !imageServiceUrl) {
-        return { failed: false };
+        return { failed: false, collapsed: false };
       }
 
       await invokePromise(LayoutOperation.UpdateComplementary, { state: 'collapsed' });
@@ -51,18 +53,18 @@ export const useScreenshotAttachment = () => {
       const blob = await captureScreenshot();
       if (!blob) {
         log.warn('feedback: screenshot capture returned no blob');
-        return { failed: true };
+        return { failed: true, collapsed: true };
       }
 
       const url = await uploadScreenshot(blob, imageServiceUrl);
       if (!url) {
         log.warn('feedback: screenshot upload returned no url');
-        return { failed: true };
+        return { failed: true, collapsed: true };
       }
 
       // URL is public but still identifies the user's screenshot; log a flag, not the URL.
       log.info('feedback: screenshot attached', { bytes: blob.size });
-      return { url, failed: false };
+      return { url, failed: false, collapsed: true };
     },
     [invokePromise, imageServiceUrl],
   );
