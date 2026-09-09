@@ -269,6 +269,32 @@ survive being read every turn.
 > Both now match only on the **first line**, where a slash command must appear
 > and prose cannot reach. Any new marker should start there.
 
+### Reporting the session to Composer
+
+Three `mcp_tool` hooks call `sessions_report` on the `plugin:dxos:composer` server, which upserts a
+`RemoteSession` object keyed on the harness `session_id`: `UserPromptSubmit` (heartbeat — every
+prompt stamps `lastCheckedIn`), `Stop` (carries `${last_assistant_message}` into the object's prose
+`lastMessage`), and `SessionEnd` matched to `logout|prompt_input_exit|other` (closes it).
+
+Four things decided the shape, each of them a documented constraint rather than a preference:
+
+- **Not `SessionStart`.** An `mcp_tool` hook needs an already-connected server, and `SessionStart`
+  fires before connection — it can only answer "not connected". The first `UserPromptSubmit` is the
+  earliest reliable open, and the upsert makes it indistinguishable from a later check-in.
+- **`mcp_tool`, not `command` or `http`.** Only `mcp_tool` reuses the session's own MCP connection,
+  so the write happens as the user with no credential anywhere in the repo; an `http` hook would
+  need its own token, and a `command` hook cannot speak MCP at all.
+- **`SessionEnd` is matched, not blanket.** Its `resume` and `clear` reasons fire while the user is
+  still working — closing on those would mark a paused session finished.
+- **Nothing depends on the close landing.** `SessionEnd` cannot block, and a reclaimed cloud
+  container never fires it, which is why the type carries `lastCheckedIn` and an `unknown` state:
+  readers age a stale `running` session out by its heartbeat, never by trusting a close event.
+
+`sessions_report` is the name the deployed host is expected to project for
+`org.dxos.operation.sessions.report`; the operation ships in this change, so until the host serving
+`composer.dxos.network/mcp` carries it, these hooks fail as non-blocking "not connected"/unknown-tool
+errors and nothing else in the session is affected.
+
 ### Commands
 
 A slash command is a markdown file under `.claude/commands/` (e.g.

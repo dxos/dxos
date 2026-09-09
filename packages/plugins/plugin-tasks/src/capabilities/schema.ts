@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Milestone, Outline, Task, TaskSet } from '@dxos/types';
+import { Milestone, Outline, RemoteSession, Task, TaskSet } from '@dxos/types';
 
 import { Journal } from '#types';
 
@@ -15,6 +15,7 @@ export default [
   Journal.Journal,
   Milestone.Milestone,
   Outline.Outline,
+  RemoteSession.RemoteSession,
   Task.Task,
   TaskSet.TaskSet,
 ];
