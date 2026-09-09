@@ -28,6 +28,7 @@ export const translations = [
         'instructions.label': 'Instructions',
         'context.label': 'Context',
         'milestones.label': 'Milestones',
+        'views.label': 'Views',
         'overview.label': 'Overview',
         'tasks.label': 'Tasks',
         'no-task-set.message': 'This project has no task set yet.',

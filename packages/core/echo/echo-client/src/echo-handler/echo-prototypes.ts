@@ -340,7 +340,8 @@ const getStaticTypeSchemaSlot = (target: ProxyTarget, receiver: any): Schema.Cod
   return rebuilt;
 };
 
-export const getVersion = (target: ProxyTarget): Obj.Version => {
+/** Backs the `ObjectVersionId` slot, i.e. `Obj.version`. The only version accessor in this package. */
+const getVersion = (target: ProxyTarget): Obj.Version => {
   const accessor = target[symbolInternals].getDocAccessor();
   const doc = accessor.handle.doc();
   invariant(doc);

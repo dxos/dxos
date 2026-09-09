@@ -64,12 +64,11 @@ const ChatModuleContainer = ({ space }: { space: Space }) => {
         <Panel.Content asChild>
           <Chat.Content>
             <Chat.Thread viewType={view} />
-            {/* What the request is doing before the first token arrives. */}
             <Chat.Activity />
             <Chat.Queue />
-            {/* TODO(dmaretskyi): Breaks layout. */}
-            {/* <Chat.TaskList classNames='shrink-0 border border-separator border-b-0 rounded-t-sm text-description' /> */}
-            <Chat.Prompt classNames='border-none rounded-none' {...chatProps} outline preset={preset?.id} />
+            <div className='p-1'>
+              <Chat.Prompt {...chatProps} outline preset={preset?.id} />
+            </div>
           </Chat.Content>
         </Panel.Content>
       </Panel.Root>
