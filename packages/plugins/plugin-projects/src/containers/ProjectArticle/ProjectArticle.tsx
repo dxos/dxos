@@ -168,7 +168,7 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
         <Panel.Toolbar asChild>
           <ActionToolbar {...menuActions} attendableId={attendableId} />
         </Panel.Toolbar>
-        <Panel.Content classNames='flex flex-col'>
+        <Panel.Content>
           {/* Rendered by hand rather than through `Tabs.Panel`: Radix mounts its content
               hidden for a frame, and the artifact gallery's masonry measures zero there and
               never recovers. The tablist still owns the switching. */}
@@ -363,7 +363,7 @@ const useToolbarActions = ({ project, tabs, checkedTasks, onAddArtifact, onDeleg
           },
           () => {},
         )
-        .separator('line')
+        .separator()
         .action(
           'create-chat',
           {
