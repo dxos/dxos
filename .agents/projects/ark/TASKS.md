@@ -1,9 +1,8 @@
 # ark — Tasks
 
-_Resume: #13024 (Main step 1) MERGED 2026-09-09. On this branch, going out as the next PR: #13024's
-CodeRabbit fix (drawer open only while `expanded`, dismissal rests at `collapsed`), `Toc`, and `Tour` +
-`WelcomeTour` off `react-joyride`. Next: land it, then `Main` step 2 (push layout at `lg`). Uncommitted:
-none._
+_Resume: PR #13030 OPEN — #13024's CodeRabbit fix (drawer open only while `expanded`, dismissal rests at
+`collapsed`), `Toc`, and `Tour` + `WelcomeTour` off `react-joyride`. #13024 (Main step 1) MERGED
+2026-09-09. Next: land #13030, then `Main` step 2 (push layout at `lg`). Uncommitted: none._
 
 ## Phase 1: Tree rebuild on Ark (PR #12873)
 
