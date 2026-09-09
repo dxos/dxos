@@ -3,7 +3,7 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React, { useCallback, useRef } from 'react';
+import React, { Fragment, useCallback, useRef } from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { random } from '@dxos/random';
@@ -27,7 +27,7 @@ const headings: Heading[] = Array.from({ length: SECTIONS }, (_, index) => index
   { value: `section-${section}`, depth: 2, label: `Section ${section}`, paragraphs: [] },
   ...['a', 'b', 'c'].map((sub) => ({
     value: `section-${section}-${sub}`,
-    depth: 3,
+    depth: random.number.int({ min: 2, max: 5 }),
     label: `Section ${section}.${sub}`,
     paragraphs: Array.from({ length: 3 }, () => random.lorem.paragraphs(3)),
   })),
@@ -42,7 +42,7 @@ const Document = () => (
           {label}
         </h2>
       ) : (
-        <React.Fragment key={value}>
+        <Fragment key={value}>
           <h3 id={value} className='pt-3 text-base font-medium'>
             {label}
           </h3>
@@ -51,7 +51,7 @@ const Document = () => (
               {text}
             </p>
           ))}
-        </React.Fragment>
+        </Fragment>
       ),
     )}
   </Toc.Content>
@@ -70,7 +70,8 @@ const DefaultStory = ({ rootMargin, autoScroll, scrollBehavior }: StoryArgs) => 
       rootMargin={rootMargin}
       autoScroll={autoScroll}
       scrollBehavior={scrollBehavior}
-      classNames='grid grid-cols-[1fr_14rem] dx-fill'
+      // One row of the root's own height: an implicit `auto` row would grow to the nav's list.
+      classNames='dx-fill grid grid-cols-[1fr_14rem] grid-rows-[minmax(0,1fr)]'
     >
       <ScrollArea.Root>
         <ScrollArea.Viewport ref={scrollRef} classNames='dx-document' data-testid='toc.scroll'>
@@ -131,37 +132,59 @@ const activeValues = (canvasElement: HTMLElement) =>
     (element) => element.dataset.value,
   );
 
+/** A viewport shorter than the nav's list, so the nav has to scroll; restored after the play. */
+const short = async (play: () => Promise<void>) => {
+  const { page } = await import('@vitest/browser/context');
+  const { innerWidth, innerHeight } = window;
+  await page.viewport(1000, 500);
+  try {
+    await play();
+  } finally {
+    await page.viewport(innerWidth, innerHeight);
+  }
+};
+
 /** Scrolling the document to a heading marks its link and moves the indicator to it. */
 export const TestScroll: Story = {
   args: { scrollBehavior: 'instant' },
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    const scroll = canvas.getByTestId('toc.scroll');
-    const link = await linkOf(canvasElement, 'section-5-b');
-    // Only the headings at the top are in view on first paint.
-    await waitFor(() => expect(activeValues(canvasElement)[0]).toBe('section-1'));
-    await expect(link).not.toHaveAttribute('data-active');
+  play: ({ canvasElement }) =>
+    short(async () => {
+      const canvas = within(canvasElement);
+      const scroll = canvas.getByTestId('toc.scroll');
+      const link = await linkOf(canvasElement, 'section-5-b');
+      // Only the headings at the top are in view on first paint.
+      await waitFor(() => expect(activeValues(canvasElement)[0]).toBe('section-1'));
+      await expect(link).not.toHaveAttribute('data-active');
 
-    const heading = query(canvasElement, '#section-5-b');
-    scroll.scrollTop = heading.offsetTop - scroll.offsetTop;
-    await waitFor(() => expect(link).toHaveAttribute('data-active'));
-    await expect(link).toHaveAttribute('aria-current', 'location');
-    await expect(activeValues(canvasElement)).not.toContain('section-1');
+      const heading = query(canvasElement, '#section-5-b');
+      scroll.scrollTop = heading.offsetTop - scroll.offsetTop;
+      await waitFor(() => expect(link).toHaveAttribute('data-active'));
+      await expect(link).toHaveAttribute('aria-current', 'location');
+      await expect(activeValues(canvasElement)).not.toContain('section-1');
 
-    // The indicator spans the active items, measured against the list.
-    const indicator = query(canvasElement, '[data-part="indicator"]');
-    const list = query(canvasElement, '[data-part="list"]');
-    await waitFor(() => expect(indicator).not.toHaveAttribute('hidden'));
-    const active = canvasElement.querySelectorAll<HTMLElement>('[data-part="item"][data-active]');
-    const first = active[0].getBoundingClientRect();
-    const last = active[active.length - 1].getBoundingClientRect();
-    await waitFor(async () => {
-      const rect = indicator.getBoundingClientRect();
-      await expect(Math.abs(rect.top - first.top)).toBeLessThanOrEqual(1);
-      await expect(Math.abs(rect.bottom - last.bottom)).toBeLessThanOrEqual(1);
-    });
-    await expect(list.contains(indicator)).toBe(true);
-  },
+      // The nav is its own scroll container, and auto-scroll keeps the active item in view.
+      const navViewport = query(canvasElement, 'nav [data-part="list"]').parentElement;
+      await expect(navViewport && navViewport.scrollHeight > navViewport.clientHeight).toBe(true);
+      await waitFor(async () => {
+        const item = query(canvasElement, '[data-part="item"][data-value="section-5-b"]').getBoundingClientRect();
+        const viewport = navViewport?.getBoundingClientRect();
+        await expect(viewport && item.top >= viewport.top && item.bottom <= viewport.bottom).toBe(true);
+      });
+
+      // The indicator spans the active items, measured against the list.
+      const indicator = query(canvasElement, '[data-part="indicator"]');
+      const list = query(canvasElement, '[data-part="list"]');
+      await waitFor(() => expect(indicator).not.toHaveAttribute('hidden'));
+      const active = canvasElement.querySelectorAll<HTMLElement>('[data-part="item"][data-active]');
+      const first = active[0].getBoundingClientRect();
+      const last = active[active.length - 1].getBoundingClientRect();
+      await waitFor(async () => {
+        const rect = indicator.getBoundingClientRect();
+        await expect(Math.abs(rect.top - first.top)).toBeLessThanOrEqual(1);
+        await expect(Math.abs(rect.bottom - last.bottom)).toBeLessThanOrEqual(1);
+      });
+      await expect(list.contains(indicator)).toBe(true);
+    }),
 };
 
 /** Clicking a link scrolls the container to its heading (no page jump) and activates it. */
