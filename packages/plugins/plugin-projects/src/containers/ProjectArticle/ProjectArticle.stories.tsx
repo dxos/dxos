@@ -254,6 +254,17 @@ export const Default: Story = {
   },
 };
 
+/** The article opened on its Tasks tab: the seeded set, its two tasks, and the delegate toolbar. */
+export const Tasks: Story = {
+  ...Default,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await seedContent();
+    await showTab(canvas, 'tasks');
+    await expect(canvas.findByText(TASK_TITLE, undefined, { timeout: 10_000 })).resolves.toBeTruthy();
+  },
+};
+
 /**
  * Each section is asserted by its content rather than its heading, since an invalid surface id is
  * dropped silently and leaves the heading rendering over an empty section.
