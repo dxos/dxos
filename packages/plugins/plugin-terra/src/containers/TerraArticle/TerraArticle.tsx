@@ -359,7 +359,7 @@ export const TerraArticle = ({ role, attendableId, subject: terra }: TerraArticl
             onValueChange={handleViewChange}
             selectedVariant={hasAttention ? 'primary' : 'default'}
           >
-            <Tabs.Tablist classNames='w-auto p-0'>
+            <Tabs.Tablist>
               <Tabs.Button value='scene' data-testid='terra.toolbar.view-scene'>
                 {t('scene-view.label')}
               </Tabs.Button>

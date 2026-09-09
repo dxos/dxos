@@ -511,6 +511,7 @@ export class AiChatProcessor {
       return yield* AgentService.getSession(chat, {
         model: this._options.model,
         provider: this._options.provider,
+        location: chat.remote ? 'edge' : 'local',
       });
     });
   }

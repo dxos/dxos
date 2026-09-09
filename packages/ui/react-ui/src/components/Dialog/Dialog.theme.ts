@@ -3,7 +3,7 @@
 //
 
 import { mx } from '@dxos/ui-theme';
-import { type ComponentFunction, type Elevation, type Theme } from '@dxos/ui-types';
+import { type ComponentFunction, type Elevation, type Surface, type Theme } from '@dxos/ui-types';
 
 import { withColumn } from '../Column/withColumn';
 
@@ -21,14 +21,17 @@ export type DialogStyleProps = {
   inOverlayLayout?: boolean;
   elevation?: Elevation;
   size?: DialogSize;
+  /** An explicit level, from `Content elevation`; the dialog then paints it instead of `overlay`. */
+  surface?: Surface;
 };
 
 const overlay: ComponentFunction<DialogStyleProps> = (_props, ...etc) => mx('dx-dialog__overlay', ...etc);
 
-const content: ComponentFunction<DialogStyleProps> = ({ inOverlayLayout, size = 'md' }, ...etc) => {
+const content: ComponentFunction<DialogStyleProps> = ({ inOverlayLayout, size = 'md', surface }, ...etc) => {
   return mx(
     '@container',
-    'dx-dialog__content dx-focus-ring dx-modal-surface py-4',
+    'dx-dialog__content dx-focus-ring py-4',
+    !surface && 'dx-modal-surface',
     !inOverlayLayout && 'fixed z-50 top-[50%] left-[50%] -translate-x-[50%] -translate-y-[50%]',
     sizeMap[size],
     ...etc,

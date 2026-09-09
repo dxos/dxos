@@ -9,22 +9,22 @@ import { random } from '@dxos/random';
 import { Icon, IconButton } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { Card } from './Card';
+import { Card, type CardRootProps } from './Card';
 
 random.seed(0);
 
-type StoryArgs = {
+type StoryArgs = Pick<CardRootProps, 'elevation'> & {
   title: string;
   description?: string;
   image?: string;
   fullWidth?: boolean;
 };
 
-const DefaultStory = ({ title, description, image, fullWidth }: StoryArgs) => {
+const DefaultStory = ({ title, description, image, fullWidth, elevation }: StoryArgs) => {
   const handleRef = useRef<HTMLButtonElement>(null);
   console.log(title);
   return (
-    <Card.Root fullWidth={fullWidth}>
+    <Card.Root fullWidth={fullWidth} elevation={elevation}>
       <Card.Header>
         <Card.DragHandle ref={handleRef} />
         <Card.Title>{title}</Card.Title>
@@ -65,6 +65,9 @@ const meta = {
       classNames: 'grid w-[30rem] place-items-center bg-transparent',
     }),
   ],
+  argTypes: {
+    elevation: { control: 'select', options: [undefined, 0, 1, 2, 3, 4, 5] },
+  },
 } satisfies Meta<typeof DefaultStory>;
 
 export default meta;

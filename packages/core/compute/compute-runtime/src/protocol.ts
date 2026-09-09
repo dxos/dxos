@@ -96,6 +96,9 @@ export const wrapFunctionHandler = (
       try {
         await using funcContext = await new FunctionContext(context, opts).open();
 
+        // `opts.types` are already registered by `_open`; this adds the FUNCTION's own, which the
+        // context never sees. Re-adding the former is harmless (the registry de-duplicates) and
+        // keeps the two sources in one call.
         const types = [...(opts.types ?? []), ...(func.types ?? [])];
         if (types.length > 0) {
           invariant(funcContext.db, 'Database is required for functions with types');
@@ -205,6 +208,14 @@ export class FunctionContext extends Resource {
 
     await this.db?.setSpaceRoot(this.context.spaceRootUrl ?? failedInvariant('spaceRootUrl missing in context'));
     await this.db?.open();
+
+    // Registered here rather than only in `wrapHandler` below: a hosted process builds its context
+    // directly and never passes through that path, so its declared schemas went unregistered and
+    // every TYPED query it made matched nothing — an agent appended a prompt to its conversation and
+    // read the queue back empty, which reads as a lost write rather than a missing schema.
+    if (this.opts.types?.length && this.db) {
+      this.db.graph.registry.add(this.opts.types);
+    }
 
     // Register the S3 backend so a handler running here can write to a bucket the space is
     // connected to. Without it this host has inline storage only (4 MiB), and an upload would land
