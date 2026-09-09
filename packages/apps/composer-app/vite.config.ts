@@ -65,7 +65,7 @@ const SLIM_WASM_PACKAGES = ['@automerge/automerge', '@automerge/automerge-repo',
 
 /**
  * Resolves {@link SLIM_WASM_PACKAGES} to `slim`, and their subpaths without the `browser`
- * condition — subduction's `browser`-conditioned `/slim` is still the top-level-await bundler
+ * condition — a `browser`-conditioned subpath resolves to that package's own wasm-initializing
  * glue, so pinning the non-browser resolution keeps one wasm instance shared by every importer.
  */
 const slimWasm = (): PluginOption => {
