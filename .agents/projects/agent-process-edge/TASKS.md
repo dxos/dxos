@@ -549,24 +549,29 @@ change is defensible on its own (the process does query those types) but it is n
       `IndexQuerySource count: 1`, then
       `sync complete {skills: 1, skillKeys: ["org.dxos.skill.database"]}`. The test seeds through
       EDGE's queue route instead of a client `Feed.append`, and carries the control permanently.
-- [ ] **What remains: a RESOLVED skill still yields `toolkit: []`.** The chain is now fully mapped,
-      and the last link is the tool INDEX, not the binding. `makeToolResolverFromOperations` builds
-      its index from `Operation.PersistentOperation` records read through `Registry.Service` — and
-      the hosted run logs ZERO mentions of that type. `DatabaseSkill`'s operations live in
-      operation-service's PLUGIN registry (which is what `makeOperationServiceHandlerSet` dispatches
-      to), not in the space's ECHO registry that the resolver reads. So the skill names tools the
-      host cannot turn into tool definitions. Decide which side moves: publish the operations into
-      the space registry when a skill is bound, or give the hosted resolver a view of the worker's
-      registry. Only then can the operation-dispatch path this project added actually run.
-- [ ] **The seam for the second option already exists: `makeToolResolverFromOperations({ toolkit })`.**
-      It merges an `OpaqueToolkit` alongside the registry-built index, so the worker's operations can
-      reach the resolver without any write into a user's space and without wrapping `Registry.Service`.
-      What is missing is a way to pass one in: `AgentProcess` calls the factory with no argument, so
-      the host has no injection point. The contained shape is an `AgentProcess` option carrying a
-      toolkit, with edge building it from the records `operation-service` already serialises in
-      `createOperationRegistryRecords` and executing them through `makeOperationServiceHandlerSet`.
-      Prefer this over publishing into the space registry: read-only, worker-local, and cheap to undo,
-      where publishing writes the whole operation set into every space and is not.
+- [x] **RESOLVED: the hosted agent now gets its tools.** The last link was the tool INDEX, not the
+      binding: `makeToolResolverFromOperations` builds it from `Operation.PersistentOperation`
+      records read through the SPACE registry, while `DatabaseSkill`'s operations live in
+      operation-service's plugin registry. The fix needed no dxos API change at all — `FunctionContext`
+      already accepts `toolkits` and turns them into the `OpaqueToolkitProvider` that `AgentProcess`
+      already requires as a service, and edge was passing only `types`. Edge now projects
+      `operation-service`'s `listOperations` records into that toolkit, with handlers dispatching
+      back over the same RPC the handler set uses.
+      Two seams were tried first and rejected: an `AgentProcess` `{ toolkit }` option is unreachable
+      (the process is resolved by key, never constructed by the host), and `Operation.Service` offers
+      only invoke/schedule, no listing. Note `toolkit.toLayer(record)` typechecks without the
+      `as any` that both in-repo dynamic-toolkit precedents (`McpToolkit`, `session/toolkit.ts`) use.
+- [x] **RESOLVED: a self-scheduled alarm now wakes the agent.** The `setAlarm` RPC handler wrote the
+      `Alarm` record and then armed from a `loadPending` read of it — the same eventually-consistent
+      index this project guards everywhere else — so a wake whose record had not landed armed nothing
+      and nothing looked again. Unlike `onInput`/`enqueueMessage` it registered no unseen write. It
+      now arms from the record `sessionStore.setAlarm` returns, tracked until a read confirms the
+      index has it.
+- [x] **The alarm test was non-deterministic by construction.** `wakeUpPrompt` renders the due time
+      into the prompt, so `wakeAt = now + 1s` gave the turn a different request hash every run and no
+      model fixture could ever match; it passed only while recording. `wakeAt` is now a fixed past
+      instant — already-due fires just as promptly. Caught only by forcing the replay: moon had been
+      serving a cached pass.
 
 Two leads were tried BEFORE the seeding fix and both failed; do not repeat them: declaring
 `AiContext.Binding`/`Skill` in the process's `types` (f14e477a), and registering
