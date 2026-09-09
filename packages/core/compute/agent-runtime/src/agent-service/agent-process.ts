@@ -174,7 +174,10 @@ export const AgentProcess = (options: AgentProcessOptions) =>
         yield* toolCallManager.reconcileWithInputQueue(toolResults);
 
         // Alarms written by this incarnation, keyed by id, until a read confirms the index has them.
-        const unseenAlarms = new Map<string, number>();
+        // `wakes` counts reads that did not show the alarm, which is what distinguishes an index
+        // still catching up from one that is gone — a due time cannot: an alarm set for an instant
+        // already past reads as "due" on the very first look, before the index has had any chance.
+        const unseenAlarms = new Map<string, { wakeAt: number; wakes: number }>();
 
         // Schedules the process alarm from durable state: immediately when work is queued, at the
         // earliest pending alarm otherwise, not at all when idle.
@@ -185,7 +188,10 @@ export const AgentProcess = (options: AgentProcessOptions) =>
             unseenAlarms.delete(alarm.id);
           }
           const observed = state.pendingAlarms[0]?.wakeAt;
-          const wakeAts = [...(observed != null ? [observed] : []), ...unseenAlarms.values()];
+          const wakeAts = [
+            ...(observed != null ? [observed] : []),
+            ...[...unseenAlarms.values()].map(({ wakeAt }) => wakeAt),
+          ];
           const delay = computeAlarmDelay({
             hasPendingWork: toolResults.length > 0 || state.pendingMessages.length > 0,
             wakeAt: wakeAts.length > 0 ? Math.min(...wakeAts) : null,
@@ -336,7 +342,7 @@ export const AgentProcess = (options: AgentProcessOptions) =>
               });
               // Reconciling reads the feed back through the eventually-consistent index, so a wake
               // whose record has not landed yet arms nothing and nothing looks again.
-              unseenAlarms.set(alarm.id, alarm.wakeAt);
+              unseenAlarms.set(alarm.id, { wakeAt: alarm.wakeAt, wakes: 0 });
               yield* reconcileAlarm;
             }),
             enqueueMessage: Effect.fn(function* ({ content }) {
@@ -390,12 +396,18 @@ export const AgentProcess = (options: AgentProcessOptions) =>
                 const acked = new Set(ackedEntries);
                 const message = state.pendingMessages.find((candidate) => !acked.has(candidate.id));
                 const dueAlarm = state.pendingAlarms.find((alarm) => alarm.wakeAt <= now() && !acked.has(alarm.id));
-                // An alarm this incarnation wrote that is past due and still absent from the read is
-                // gone — delivered on an earlier wake, or cancelled — and must stop contributing a
-                // due time, or reconciling would re-arm for it forever.
-                for (const [id, wakeAt] of unseenAlarms) {
-                  if (wakeAt <= now() && !state.pendingAlarms.some((alarm) => alarm.id === id)) {
+                // An alarm this incarnation wrote that enough reads have failed to show is gone —
+                // cancelled, or delivered on an earlier wake — and must stop contributing a due
+                // time, or reconciling would re-arm for it forever. Bounded by reads rather than by
+                // the due time, which would drop an already-due alarm before the index caught up.
+                for (const [id, entry] of unseenAlarms) {
+                  if (state.pendingAlarms.some((alarm) => alarm.id === id)) {
+                    continue;
+                  }
+                  if (entry.wakes >= MAX_UNSEEN_WRITE_WAKES) {
                     unseenAlarms.delete(id);
+                  } else {
+                    entry.wakes++;
                   }
                 }
                 if (message !== undefined) {
