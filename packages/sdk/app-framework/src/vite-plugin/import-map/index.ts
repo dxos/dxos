@@ -295,10 +295,9 @@ export const getPackageEntrypoints = (packageName: string, packageJsonPath: stri
       return [];
     }
 
-    // Skip `.d.ts` subpath exports — these are meant to be imported as raw text
-    // (e.g. `@dxos/echo-query/api.d.ts?raw` for in-editor type hints), not as
-    // ES modules. Enumerating them here would have vite try to bundle the
-    // declaration file's imports (protobufjs, effect, etc.), which breaks.
+    // Skip `.d.ts` subpath exports — these are meant to be imported as raw text (e.g. for
+    // in-editor type hints), not as ES modules. Enumerating them here would have vite try to
+    // bundle the declaration file's imports (protobufjs, effect, etc.), which breaks.
     if (key.endsWith('.d.ts')) {
       return [];
     }
