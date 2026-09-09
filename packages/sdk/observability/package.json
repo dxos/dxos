@@ -84,6 +84,10 @@
       "types": "./dist/types/src/extensions/otel/OtelSpanSink.d.ts",
       "import": "./dist/lib/extensions/otel/OtelSpanSink.mjs"
     },
+    "./Relay": {
+      "types": "./dist/types/src/Relay.d.ts",
+      "import": "./dist/lib/Relay.mjs"
+    },
     "./SpanProcessors": {
       "types": "./dist/types/src/SpanProcessors.d.ts",
       "import": "./dist/lib/SpanProcessors.mjs"
