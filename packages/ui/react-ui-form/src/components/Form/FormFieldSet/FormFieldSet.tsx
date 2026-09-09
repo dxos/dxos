@@ -4,19 +4,8 @@
 
 import React, { Children, type PropsWithChildren, useId } from 'react';
 
-import {
-  Button,
-  Collapsible,
-  Field,
-  Fieldset,
-  Icon,
-  type ThemedClassName,
-  composable,
-  composableProps,
-  useThemeContext,
-} from '@dxos/react-ui';
+import { Collapsible, Field, Fieldset, Icon, type ThemedClassName, composable, composableProps } from '@dxos/react-ui';
 import { MarkdownView } from '@dxos/react-ui-markdown';
-import { mx } from '@dxos/ui-theme';
 
 import { useFormContext } from '../../../hooks';
 import { formTheme } from '../Form.theme';
@@ -44,7 +33,6 @@ export type FormFieldSetProps = ThemedClassName<
 export const FormFieldSet = composable<HTMLFieldSetElement, FormFieldSetProps>(
   ({ children, label, description, collapsible, ...props }, forwardedRef) => {
     const { variant = 'default', layout } = useFormContext(FORM_FIELDSET_NAME);
-    const { tx } = useThemeContext();
     const depth = useFormFieldSetDepth();
     const labelId = useId();
     const styles = formTheme.styles({ variant, depth: depth === 0 ? 'root' : 'nested' });
@@ -62,20 +50,17 @@ export const FormFieldSet = composable<HTMLFieldSetElement, FormFieldSetProps>(
             labelId={labelId}
             actions={
               <Field.Block>
-                <Button
-                  asChild
-                  variant='ghost'
-                  density='sm'
-                  classNames={mx(tx('iconButton.root', { iconOnly: true }), 'group')}
+                {/* Not a `Button`: its open-state styling would read the trigger's `data-state`. */}
+                <Collapsible.Trigger
+                  aria-labelledby={labelId}
+                  classNames='group grid size-6 place-items-center rounded-xs hover:bg-hover-surface'
                 >
-                  <Collapsible.Trigger aria-labelledby={labelId}>
-                    <Icon
-                      icon='ph--caret-right--regular'
-                      size={3}
-                      classNames='transition-transform group-data-[state=open]:rotate-90'
-                    />
-                  </Collapsible.Trigger>
-                </Button>
+                  <Icon
+                    icon='ph--caret-right--regular'
+                    size={3}
+                    classNames='transition-transform group-data-[state=open]:rotate-90'
+                  />
+                </Collapsible.Trigger>
               </Field.Block>
             }
           />
