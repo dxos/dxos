@@ -97,6 +97,50 @@ describe('report-session', () => {
     }).pipe(Effect.provide(TestDatabaseLayer({ types }))),
   );
 
+  it.effect('a duplicate carrying the end of the session is merged, not dropped', () =>
+    Effect.gen(function* () {
+      const earlier = new Date(Date.now() - 60_000).toISOString();
+      // The survivor is the oldest row and still reads running; the duplicate holds the end.
+      const survivor = yield* Database.add(
+        RemoteSession.make({
+          sessionId: 'session_merge',
+          state: 'running',
+          started: earlier,
+          lastCheckedIn: earlier,
+          title: 'Long run',
+        }),
+      );
+      const closed = yield* Database.add(
+        RemoteSession.make({
+          sessionId: 'session_merge',
+          state: 'finished',
+          started: new Date().toISOString(),
+          lastCheckedIn: new Date().toISOString(),
+          finished: new Date().toISOString(),
+          lastMessage: 'Work completed.',
+          branch: 'claude/from-the-duplicate',
+        }),
+      );
+      yield* Database.flush();
+      const [oldest] = [survivor, closed].sort((left, right) => left.id.localeCompare(right.id));
+
+      // A bare heartbeat: it says nothing about state, so nothing but the merge can save the end.
+      const reported = yield* reportSession.handler({ sessionId: 'session_merge' });
+
+      expect(reported.session.id).toBe(oldest.id);
+      expect(reported.session.state).toBe('finished');
+      expect(reported.session.finished).toBeDefined();
+      expect(reported.session.lastMessage).toBe('Work completed.');
+      expect(reported.session.branch).toBe('claude/from-the-duplicate');
+      expect(reported.session.title).toBe('Long run');
+      // The session began when the earliest row says it did.
+      expect(reported.session.started).toBe(earlier);
+
+      const { sessions } = yield* listSessions.handler({ sessionId: 'session_merge' });
+      expect(sessions).toHaveLength(1);
+    }).pipe(Effect.provide(TestDatabaseLayer({ types }))),
+  );
+
   it.effect('keys on sessionId, so two sessions stay distinct', () =>
     Effect.gen(function* () {
       yield* reportSession.handler({ sessionId: 'session_one', title: 'One' });

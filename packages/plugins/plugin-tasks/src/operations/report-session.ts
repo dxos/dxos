@@ -42,6 +42,34 @@ const handler: Operation.WithHandler<typeof RemoteSessionOperation.RecordSession
           return { session, created: true };
         }
 
+        // Duplicates carry history, not noise: each was found by some writer and took its own
+        // updates, so one can hold the end of the session while the survivor still reads running.
+        // Their content is folded in before they are removed, and the incoming patch is applied
+        // after, so the newest report still wins where it says anything.
+        Obj.update(existing, (existing) => {
+          for (const duplicate of duplicates) {
+            existing.title ??= duplicate.title;
+            existing.repo ??= duplicate.repo;
+            existing.branch ??= duplicate.branch;
+            existing.worktree ??= duplicate.worktree;
+            // Latest check-in wins for the prose and the heartbeat, since both describe a moment.
+            if (duplicate.lastCheckedIn !== undefined && duplicate.lastCheckedIn > (existing.lastCheckedIn ?? '')) {
+              existing.lastMessage = duplicate.lastMessage ?? existing.lastMessage;
+              existing.lastCheckedIn = duplicate.lastCheckedIn;
+            }
+            // Earliest start, because the session began when the first of these rows says it did.
+            if (duplicate.started < existing.started) {
+              existing.started = duplicate.started;
+            }
+            // An end recorded anywhere is the end: a terminal state must survive the merge, or
+            // deleting the row that carried it would leave a finished session reading running.
+            if (RemoteSession.isTerminal(duplicate) && !RemoteSession.isTerminal(existing)) {
+              existing.state = duplicate.state;
+              existing.finished = duplicate.finished;
+            }
+          }
+        });
+
         // Every field is patched only when supplied: a hook bound to one event reports the two or
         // three things that event knows, and must not blank what another event wrote.
         Obj.update(existing, (existing) => {
