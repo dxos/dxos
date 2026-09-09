@@ -25,9 +25,10 @@ one for one: `Form.Field` is a `Field`, `Form.FieldSet` is a `Fieldset`. Walking
 third part, `Form.Fields`, which renders no element, so no component's behaviour depends on whether
 it was given children. A form built by hand is `Form.FieldSet`s of `Form.Field`s and never mentions
 `Form.Fields`; the walker appears only where the schema should supply the fields, and a mixed form
-uses both inside one field set. Paths are written from the enclosing `Form.Root`; `Form.Fields path`
-walks a sub-object, and `Form.Root path` re-roots paths only to embed a component written against
-a sub-schema.
+uses both inside one field set. `Form.Root` is the only component that scopes descendant context;
+`Form.Field`, `Form.Fields` and `Form.List` take a `path` for their own binding or enumeration, written
+from the enclosing `Form.Root`. `Form.Root path` re-roots that context only to embed a component written
+against a sub-schema.
 
 | Component        | Built from                                                                                  | Role                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
 | ---------------- | ------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -86,7 +87,7 @@ markdown → `Field.Textarea` / the editor; boolean → `Field.Switch`; date, ti
 
 The first field set holds the walker; the second is hand-written, but the bound
 `Form.Field path='hue'` still takes its label and description from the schema. The simplest form is
-`<Form.Root schema values><Form.Fields /></Form.Root>`, with no field set at all.
+`<Form.Root schema={schema} values={values}><Form.Fields /></Form.Root>`, with no field set at all.
 
 ### An edit dialog with a nested object, a list and actions
 

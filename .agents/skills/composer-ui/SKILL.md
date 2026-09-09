@@ -369,7 +369,7 @@ which own scroll and padding (so, like List/Stack, don't pad them yourself):
 
 - **`Form.Fields`** is driven _entirely_ by the schema and its annotations — fields, order, labels,
   visibility; `path`, `include`, `exclude`, `sort` narrow it. Hide a field with
-  `FormInputAnnotation.set(false)`. The simplest form is `<Form.Root schema values><Form.Fields /></Form.Root>`.
+  `FormInputAnnotation.set(false)`. The simplest form is `<Form.Root schema={schema} values={values}><Form.Fields /></Form.Root>`.
 - **`Form.Field`** is the leaf and always a real field. `<Form.Field path='hue' />` is bound: label,
   description, value and error come from the schema, and the dispatcher picks the control; put a
   child in it for a custom control (read the binding with `useFormField()`). A hand-written row is
