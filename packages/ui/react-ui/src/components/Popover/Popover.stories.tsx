@@ -10,15 +10,19 @@ import { random } from '@dxos/random';
 
 import { withTheme } from '../../testing';
 import { Button } from '../Button';
-import { Popover } from './Popover';
+import { Popover, type PopoverContentProps } from './Popover';
 
 random.seed(1234);
 
-const DefaultStory = ({ openTrigger, children }: PropsWithChildren<{ openTrigger: ReactNode }>) => {
+const DefaultStory = ({
+  openTrigger,
+  elevation,
+  children,
+}: PropsWithChildren<{ openTrigger: ReactNode } & Pick<PopoverContentProps, 'elevation'>>) => {
   return (
     <Popover.Root defaultOpen>
       <Popover.Trigger asChild>{openTrigger}</Popover.Trigger>
-      <Popover.Content>
+      <Popover.Content elevation={elevation}>
         <Popover.Viewport>
           <p className='px-2 py-1 min-w-[18rem] max-w-[30rem]'>{children}</p>
         </Popover.Viewport>
@@ -33,6 +37,9 @@ const meta = {
   component: Popover.Root,
   render: DefaultStory,
   decorators: [withTheme()],
+  argTypes: {
+    elevation: { control: 'select', options: [undefined, 0, 1, 2, 3, 4, 5] },
+  },
 } satisfies Meta<typeof DefaultStory>;
 
 export default meta;
