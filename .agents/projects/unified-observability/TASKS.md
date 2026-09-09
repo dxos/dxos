@@ -10,7 +10,8 @@ pieces EDGE plugs into `otel-cf-workers`.
 ### Tasks
 
 - [x] **Per-condition workerd variants** — `#storage` no-op store, `#otel-traces` variant that
-      attaches to the global tracer provider, `#posthog-transport` stub.
+      attaches to the global tracer provider, `#posthog-transport` resolving to the `posthog-node`
+      transport (it ships a workerd build).
 - [x] **Shared tracing backend helper** — one `TRACE_PROCESSOR.tracingBackend` builder used by the
       node, browser and workerd traces.
 - [x] **`ObservabilityExtension.Relay`** — envelope type + extension publishing events, errors,
