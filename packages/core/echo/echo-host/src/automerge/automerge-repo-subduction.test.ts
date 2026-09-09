@@ -45,6 +45,38 @@ describe.skipIf(process.env.CI)('AutomergeRepo with Subduction', () => {
     await initSubduction();
   });
 
+  test('a fetch answered before the relay has the document recovers when it arrives', async () => {
+    // Models the deployed shape: `client` reaches the holder only through `relay`, the way a peer
+    // reaches another device only through EDGE.
+    const { repos, adapters } = await createRepoTopology({
+      peers: ['client', 'relay', 'holder'],
+      connections: [
+        ['client', 'relay'],
+        ['relay', 'holder'],
+      ],
+    });
+    const [client, relay, holder] = repos;
+    await connectAdapters([adapters[0]]);
+
+    // Created while the holder is still isolated, so the relay cannot have it yet.
+    const handle = holder.create<{ text: string }>({ text: 'arrived late' });
+    const url = handle.url;
+    await waitForSubductionSave();
+
+    // The relay has nothing to give, and the query settles on that rather than staying in flight.
+    const progress = client.findWithProgress<{ text: string }>(url);
+    await waitForQueryState(progress, ['unavailable'], { timeout: 10_000 });
+
+    // The relay now reaches the holder and takes the document.
+    await connectAdapters([adapters[1]]);
+    await findInStates(relay, url, ['ready']);
+
+    // A settled-empty query is re-driven by the relay's subscriber broadcast: the client asked
+    // nothing further, and the document still reaches it.
+    await waitForQueryState(progress, ['ready'], { timeout: 10_000 });
+    expect(progress.peek().state).to.equal('ready');
+  });
+
   test('documents missing from local storage go to loading state', async () => {
     const { repos, adapters } = await createHostClientRepoTopology();
     const [host] = repos;

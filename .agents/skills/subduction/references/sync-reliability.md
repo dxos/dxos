@@ -133,9 +133,12 @@ waiting for recv-drain before flushing) turns that into a deterministic stall.
 - `shareConfigChanged()` re-drives only `all-failed` / `no-peers` entries; it does **not** rescue a
   round still `syncInFlight` (that's the §1 timeout's job) and does **not** recover an
   `authorizePut` deny (needs a fresh holder commit — see the policy skill).
-- A fetch for a doc the peer doesn't have yet settles as **success-empty** — nothing re-asks when it
-  arrives later, so `loadDoc(fetchFromNetwork)` racing a not-yet-pushed doc hangs unboundedly. Tests
-  must barrier on the push landing (`waitForEdgeSyncPeer`) before fetching.
+- A fetch for a doc the peer doesn't have yet settles as **success-empty**, and the query goes
+  `unavailable`. It does **not** hang: once the peer obtains the document its subscriber broadcast
+  drives the waiting query to `ready` with nothing re-asking from this side. Pinned by
+  `'a fetch answered before the relay has the document recovers when it arrives'` in
+  `automerge-repo-subduction.test.ts`. An earlier revision of this file claimed the opposite;
+  four client-side "re-ask" fixes were built on that claim and every one measured as no-change.
 
 ## 10. Diagnosing a non-converging document from logs
 

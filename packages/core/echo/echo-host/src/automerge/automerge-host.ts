@@ -150,13 +150,6 @@ const NON_CONVERGENCE_WARN_THRESHOLD = 6;
 const NON_CONVERGENCE_WARN_INTERVAL = 30;
 
 /**
- * Passes between repeat resync attempts on a non-converging pair. Shorter than the warning
- * interval — repairing is the point, and one round is not always enough — but not every pass, so a
- * collection that is merely slow is not re-driven under itself.
- */
-const NON_CONVERGENCE_RESYNC_INTERVAL = 6;
-
-/**
  * Wall-clock cap for `_repo.shutdown()` during host teardown. Healthy
  * shutdowns finish in single-digit ms; see the comment in
  * {@link AutomergeHost._close} for why the cap is still here.
@@ -585,70 +578,6 @@ export class AutomergeHost extends Resource {
    */
   kickStalledSync(): void {
     this._repo.shareConfigChanged();
-  }
-
-  /**
-   * Re-opens a subduction round for one document.
-   *
-   * The scheduler only retries rounds it saw fail, and {@link kickStalledSync} only revives
-   * `all-failed`/`no-peers` entries. A round that reports success while leaving the document absent
-   * or its heads diverged is neither, so nothing re-asks; `resyncSubduction` clears the heal state
-   * and marks the entry never-synced so a fresh round opens. No-op under classical sync.
-   */
-  resyncDocument(documentId: AnyDocumentId): void {
-    this._repo.resyncSubduction(interpretAsDocumentId(documentId));
-  }
-
-  /**
-   * Drives a subduction round for one document and reports what each peer answered.
-   *
-   * The scheduler's rounds settle without leaving anything a caller can read, so a document that
-   * never arrives says nothing about whether a peer was reached, whether it holds the document, or
-   * whether it sent any of it. Asking directly answers all three, and unlike {@link resyncDocument}
-   * it does not depend on the document already having an entry in the source.
-   */
-  async probeDocumentSync(id: AnyDocumentId, timeout: number): Promise<DocumentSyncProbe> {
-    invariant(this.isOpen, 'AutomergeHost is not open');
-    const documentId = interpretAsDocumentId(id);
-    const sedimentreeIdHex = documentIdToSedimentreeIdHex(documentId);
-    const probe: DocumentSyncProbe = {
-      documentId,
-      sedimentreeIdHex,
-      handleState: getHandleState(this._repo, documentId),
-      connectedPeerIds: [],
-      localCommits: 0,
-      localFragments: 0,
-      peers: [],
-    };
-    if (!this._useSubduction) {
-      return probe;
-    }
-
-    // Dynamic, like the signer import in `_open`: the static entry pulls the WASM bundle in
-    // eagerly, and this runs long after `initSubduction()`.
-    const { SedimentreeId } = await import('@automerge/automerge-subduction');
-    const subduction = await this._repo.subduction;
-    const sedimentreeId = SedimentreeId.fromBytes(documentIdToSedimentreeIdBytes(documentId));
-    probe.connectedPeerIds = (await subduction.getConnectedPeerIds()).map((peerId) => peerId.toString());
-    probe.localCommits = (await subduction.getCommits(sedimentreeId))?.length ?? 0;
-    probe.localFragments = (await subduction.getFragments(sedimentreeId))?.length ?? 0;
-
-    using results = await subduction.syncWithAllPeers(sedimentreeId, true, timeout);
-    for (const result of results.entries()) {
-      using peerResult = result;
-      probe.peers.push({
-        success: peerResult.success,
-        transportErrors: peerResult.transportErrors.map((err) => err.message),
-        commitsReceived: peerResult.stats.commitsReceived,
-        commitsSent: peerResult.stats.commitsSent,
-        fragmentsReceived: peerResult.stats.fragmentsReceived,
-        fragmentsSent: peerResult.stats.fragmentsSent,
-        // The distinguishing field: a peer that answers with heads it will not send is holding the
-        // document and withholding it, which no client-side retry can resolve.
-        remoteHeads: peerResult.stats.remoteHeads.length,
-      });
-    }
-    return probe;
   }
 
   /**
@@ -1461,13 +1390,6 @@ export class AutomergeHost extends Resource {
     const passes = (this._nonConvergingSyncPasses.get(syncKey) ?? 0) + 1;
     this._nonConvergingSyncPasses.set(syncKey, passes);
     const overThreshold = passes - NON_CONVERGENCE_WARN_THRESHOLD;
-    if (overThreshold >= 0 && overThreshold % NON_CONVERGENCE_RESYNC_INTERVAL === 0) {
-      // Heads this far apart for this long are rounds that settled without delivering, which
-      // neither the heal scheduler nor the share-policy announce below will ever re-ask for.
-      for (const documentId of different) {
-        this.resyncDocument(documentId);
-      }
-    }
     if (overThreshold >= 0 && overThreshold % NON_CONVERGENCE_WARN_INTERVAL === 0) {
       log.warn('collection sync not converging', {
         collectionId,
@@ -1496,8 +1418,7 @@ export class AutomergeHost extends Resource {
     }
 
     // Per-handle state included: a document stuck in `unavailable`/`loading` here on every diff
-    // pass is the signature of a subduction DocumentQuery parked without retry, which only the
-    // non-convergence resync above re-opens.
+    // pass is what a stalled fetch looks like from the collection-sync side.
     log('replicating documents after collection sync', {
       collectionId,
       peerId,
@@ -1674,29 +1595,6 @@ const sedimentreeHexToDocumentId = (sedimentreeIdHex: string): DocumentId => {
     bytes[index] = Number.parseInt(sedimentreeIdHex.slice(index * 2, index * 2 + 2), 16);
   }
   return bs58check.encode(bytes) as DocumentId;
-};
-
-/** What one peer answered in a {@link AutomergeHost.probeDocumentSync} round. */
-export type PeerSyncProbe = {
-  success: boolean;
-  transportErrors: string[];
-  commitsReceived: number;
-  commitsSent: number;
-  fragmentsReceived: number;
-  fragmentsSent: number;
-  /** Heads the peer reports for this document. Non-zero with `commitsReceived: 0` means it holds the document and did not send it. */
-  remoteHeads: number;
-};
-
-/** One document's sync state, as {@link AutomergeHost.probeDocumentSync} found it. */
-export type DocumentSyncProbe = {
-  documentId: DocumentId;
-  sedimentreeIdHex: string;
-  handleState: string | undefined;
-  connectedPeerIds: string[];
-  localCommits: number;
-  localFragments: number;
-  peers: PeerSyncProbe[];
 };
 
 export const documentIdToSedimentreeIdBytes = (documentId: DocumentId): Uint8Array => {
