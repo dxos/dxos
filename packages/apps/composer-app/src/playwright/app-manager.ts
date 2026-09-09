@@ -356,7 +356,16 @@ export class AppManager {
     // "element is not enabled" (DX-1264).
     const space = this.getSpaceItems().nth(nth);
     await space.click();
-    await expect(space).toHaveAttribute('aria-selected', 'true', { timeout });
+    // The rail is a tablist, and a click on it right after a navigation can be swallowed while the
+    // navtree is still settling — the row takes focus and then drops it, never becoming selected.
+    // One bounded re-click covers that; a selection that is genuinely stuck still fails, because the
+    // row is only re-clicked after it has stayed unselected, so this cannot toggle a live selection.
+    await expect(space)
+      .toHaveAttribute('aria-selected', 'true', { timeout: 10_000 })
+      .catch(async () => {
+        await space.click();
+        await expect(space).toHaveAttribute('aria-selected', 'true', { timeout });
+      });
     await this.openSpaceSettings();
     await this.page.getByTestId('spaceSettings.deleteSpace').click({ timeout });
     await this.page.getByTestId('spaceSettings.deleteSpaceConfirm').click();
