@@ -390,6 +390,14 @@ export const AgentProcess = (options: AgentProcessOptions) =>
                 const acked = new Set(ackedEntries);
                 const message = state.pendingMessages.find((candidate) => !acked.has(candidate.id));
                 const dueAlarm = state.pendingAlarms.find((alarm) => alarm.wakeAt <= now() && !acked.has(alarm.id));
+                // An alarm this incarnation wrote that is past due and still absent from the read is
+                // gone — delivered on an earlier wake, or cancelled — and must stop contributing a
+                // due time, or reconciling would re-arm for it forever.
+                for (const [id, wakeAt] of unseenAlarms) {
+                  if (wakeAt <= now() && !state.pendingAlarms.some((alarm) => alarm.id === id)) {
+                    unseenAlarms.delete(id);
+                  }
+                }
                 if (message !== undefined) {
                   log('agent onAlarm handling', { tag: 'message', id: message.id });
                   unseenWriteIds.delete(message.id);
