@@ -87,8 +87,7 @@ const make = (
 
 /**
  * Trigger cancel only, from a pre-built edge client: no process control, empty process tree.
- * For the full surface use {@link forSpace} or {@link fromEdgeProcessClient} — processes are
- * per-space, so control needs a space id.
+ * For the full surface use {@link fromClient} or {@link fromEdgeProcessClient}.
  */
 export const fromEdgeClient = (
   edgeClient: EdgeHttpClient,
@@ -107,12 +106,18 @@ export const fromEdgeProcessClient = (
   );
 
 /**
- * Build from a `Client`, deferring edge-client creation until the first cancel
- * (identity / edge config may be absent at boot). Trigger cancel only — see {@link forSpace}.
+ * The full surface from a `Client`: process control, a process tree, and trigger cancel, with both
+ * the edge client and the control deferred until first use (identity / edge config may be absent at
+ * boot). This is what an application stack provides.
+ *
+ * Control is included rather than cancel-only: an agent asking for `location: 'edge'` spawns through
+ * this manager, and a manager built without a control lacks `spawn`/`list` altogether, so the request
+ * failed with "RemoteProcessManager offers no process control" wherever edge was configured. Per-space
+ * addressing is not an obstacle — `Control` takes the space on each call, not at construction.
  */
 export const fromClient = (client: Client): Layer.Layer<RemoteProcessManager.Service, never, Registry.AtomRegistry> => {
   let cached: EdgeHttpClient | undefined;
-  return make(() => (cached ??= createEdgeClient(client)));
+  return make(() => (cached ??= createEdgeClient(client)), EdgeProcessControl.fromClient(client));
 };
 
 /**

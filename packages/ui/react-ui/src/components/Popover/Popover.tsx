@@ -15,7 +15,6 @@ import React, {
   type ReactNode,
   type RefObject,
   forwardRef,
-  useCallback,
   useEffect,
   useId,
   useLayoutEffect,
@@ -25,14 +24,14 @@ import React, {
 } from 'react';
 
 import { useComposedRefs, useControllableState } from '@dxos/react-hooks';
-import { DX_POPOVER_CONTENT_ATTR } from '@dxos/ui-types';
+import { elevationAttrs, elevationSurface } from '@dxos/ui-theme';
+import { DX_POPOVER_CONTENT_ATTR, type ElevationLevel } from '@dxos/ui-types';
 
-import { useElevationContext, useSafeCollisionPadding, useThemeContext } from '../../hooks';
+import { useElevationContext, usePositioning, useThemeContext } from '../../hooks';
 import { type ThemedClassName } from '../../util';
 import { ColumnContext } from '../Column';
 import {
   POPOVER_NAME,
-  type PopoverAlign,
   type PopoverContentHandlers,
   type PopoverEscapeKeyDownEvent,
   type PopoverFocusOutsideEvent,
@@ -40,16 +39,8 @@ import {
   type PopoverPlacementOptions,
   type PopoverPointerDownOutsideEvent,
   PopoverProvider,
-  type PopoverSide,
   usePopoverContext,
 } from './PopoverContext';
-
-const toPlacement = (side: PopoverSide = 'bottom', align: PopoverAlign = 'center') =>
-  align === 'center' ? side : (`${side}-${align}` as const);
-
-/** Consumers hand the machine a per-side padding; it takes one number, so the widest side wins. */
-const toOverflowPadding = (padding: { top: number; right: number; bottom: number; left: number }) =>
-  Math.max(padding.top, padding.right, padding.bottom, padding.left);
 
 /** The answer a `preventDefault()`-style handler gives, asked ahead of the moment it would fire. */
 const prevents = (handler: ((event: Event) => void) | undefined) => {
@@ -82,54 +73,8 @@ const PopoverRoot: FC<PopoverRootProps> = ({ children, open: openProp, defaultOp
   const contentId = useId();
   const triggerRef = useRef<HTMLElement | null>(null);
   const handlersRef = useRef<PopoverContentHandlers>({});
-  const [virtualAnchor, setVirtualAnchorState] = useState<RefObject<Element | null> | null>(null);
   const [placementOptions, setPlacement] = useState<PopoverPlacementOptions>({});
-  const setVirtualAnchor = useCallback((ref: RefObject<Element | null>) => {
-    setVirtualAnchorState(ref);
-    return () => setVirtualAnchorState((current) => (current === ref ? null : current));
-  }, []);
-
-  const {
-    side,
-    align,
-    sideOffset = 0,
-    alignOffset,
-    collisionPadding = 8,
-    collisionBoundary,
-    avoidCollisions = true,
-    hideWhenDetached,
-  } = placementOptions;
-  const safeCollisionPadding = useSafeCollisionPadding(collisionPadding);
-  const overflowPadding = toOverflowPadding(safeCollisionPadding);
-
-  // The closest annotated ancestor bounds the content.
-  const boundary = useMemo(() => {
-    const closest = triggerRef.current?.closest<HTMLElement>('[data-popover-collision-boundary]') ?? null;
-    const given = Array.isArray(collisionBoundary) ? collisionBoundary : collisionBoundary ? [collisionBoundary] : [];
-    const elements = [closest, ...given].filter((element): element is Element => !!element);
-    return elements.length ? () => elements : undefined;
-    // The trigger is read when the popover opens, which is when the boundary matters.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, collisionBoundary]);
-
-  const positioning = useMemo(
-    () => ({
-      strategy: 'fixed' as const,
-      placement: toPlacement(side, align),
-      gutter: sideOffset,
-      ...(alignOffset !== undefined && { offset: { mainAxis: sideOffset, crossAxis: alignOffset } }),
-      overflowPadding,
-      // Keeps the arrow off the rounded corners, where its fill would paint over the curve.
-      arrowPadding: 12,
-      flip: avoidCollisions,
-      hideWhenDetached,
-      boundary,
-      ...(virtualAnchor && {
-        getAnchorRect: () => virtualAnchor.current?.getBoundingClientRect() ?? null,
-      }),
-    }),
-    [side, align, sideOffset, alignOffset, overflowPadding, avoidCollisions, hideWhenDetached, boundary, virtualAnchor],
-  );
+  const { positioning, setVirtualAnchor } = usePositioning({ open, triggerRef, placement: placementOptions });
 
   const popover = usePopover({
     open,
@@ -258,13 +203,17 @@ const CONTENT_NAME = 'Popover.Content';
 
 type PopoverContentProps = ThemedClassName<ComponentPropsWithRef<typeof PopoverPrimitive.Content>> &
   PopoverPlacementOptions &
-  PopoverContentHandlers;
+  PopoverContentHandlers & {
+    /** Material-style elevation, 0–5, onto the surface ladder; a popover is `popup` (5) by default. */
+    elevation?: ElevationLevel;
+  };
 
 const PopoverContent = forwardRef<HTMLDivElement, PopoverContentProps>(
   (
     {
       classNames,
       children,
+      elevation: elevationProp,
       side,
       align,
       sideOffset,
@@ -324,7 +273,8 @@ const PopoverContent = forwardRef<HTMLDivElement, PopoverContentProps>(
         <PopoverPrimitive.Content
           {...props}
           {...{ [DX_POPOVER_CONTENT_ATTR]: '' }}
-          className={tx('popover.content', { elevation }, classNames)}
+          {...elevationAttrs(elevationProp)}
+          className={tx('popover.content', { elevation, surface: elevationSurface(elevationProp) }, classNames)}
           ref={forwardedRef}
         >
           {children}

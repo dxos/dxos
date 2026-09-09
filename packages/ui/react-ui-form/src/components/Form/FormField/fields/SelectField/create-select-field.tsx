@@ -9,7 +9,8 @@ import { Select } from '@dxos/react-ui';
 
 import { type FormFieldRenderer, type FormFieldRendererProps } from '#types';
 
-import { FormRow } from '../../FormRow';
+import { FormField } from '../../FormField';
+import { presentationFor } from '../../presentation';
 import { type SelectFieldOption } from './SelectField';
 
 // Kept out of `SelectField.tsx`: react-refresh only fast-refreshes a module whose
@@ -41,39 +42,49 @@ export const createSelectField = ({
     `createSelectField: option value '${sentinel}' is reserved.`,
   );
 
-  return ({ type, readonly, onValueChange, ...props }: FormFieldRendererProps<string | undefined>) => (
-    <FormRow<string>
-      readonly={readonly}
-      renderStatic={(value) => (
-        <p className='truncate min-w-0'>
-          {normalized.find((option) => option.value === value)?.label ?? String(value ?? '')}
-        </p>
-      )}
-      {...props}
-    >
-      {({ value }) => (
-        <Select.Root
-          disabled={!!readonly}
-          value={value ?? sentinel}
-          onValueChange={(next) => onValueChange(type, hasDefault && next === sentinel ? undefined : next)}
-        >
-          <Select.TriggerButton classNames='w-full' disabled={!!readonly} />
-          {normalized.length > 0 && (
-            <Select.Portal>
-              <Select.Content>
-                <Select.Viewport>
-                  {hasDefault && <Select.Option value={sentinel}>{defaultLabel}</Select.Option>}
-                  {normalized.map((option) => (
-                    <Select.Option key={option.value} value={option.value}>
-                      {option.label ?? option.value}
-                    </Select.Option>
-                  ))}
-                </Select.Viewport>
-              </Select.Content>
-            </Select.Portal>
-          )}
-        </Select.Root>
-      )}
-    </FormRow>
-  );
+  // A `fieldMap` renderer owns its row: bound at the field's path, so label and description are the schema's.
+  return ({
+    type,
+    label,
+    jsonPath,
+    readonly,
+    presentation,
+    getValue,
+    onValueChange,
+  }: FormFieldRendererProps<string | undefined>) => {
+    const value = getValue();
+    const control = presentationFor(presentation).isStatic ? (
+      <p className='truncate min-w-0'>
+        {normalized.find((option) => option.value === value)?.label ?? String(value ?? '')}
+      </p>
+    ) : (
+      <Select.Root
+        disabled={!!readonly}
+        value={value ?? sentinel}
+        onValueChange={(next) => onValueChange(type, hasDefault && next === sentinel ? undefined : next)}
+      >
+        <Select.TriggerButton classNames='w-full' disabled={!!readonly} />
+        {normalized.length > 0 && (
+          <Select.Portal>
+            <Select.Content>
+              <Select.Viewport>
+                {hasDefault && <Select.Option value={sentinel}>{defaultLabel}</Select.Option>}
+                {normalized.map((option) => (
+                  <Select.Option key={option.value} value={option.value}>
+                    {option.label ?? option.value}
+                  </Select.Option>
+                ))}
+              </Select.Viewport>
+            </Select.Content>
+          </Select.Portal>
+        )}
+      </Select.Root>
+    );
+
+    return (
+      <FormField path={jsonPath} label={label} readonly={readonly} presentation={presentation}>
+        {control}
+      </FormField>
+    );
+  };
 };

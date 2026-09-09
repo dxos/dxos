@@ -9,18 +9,22 @@ import React, { Fragment, useMemo } from 'react';
 
 import { Annotation } from '@dxos/echo';
 import { type AnyProperties } from '@dxos/echo/internal';
-import { SchemaEx } from '@dxos/effect';
-import { Input } from '@dxos/react-ui';
 
 import { type FormPresentation } from '#types';
 
-import { useFormContext, useFormFieldState } from '../../../hooks';
-import { formTheme } from '../Form.theme';
-import { FormField, FormFieldErrorBoundary, FormFieldLabel, type FormFieldProps, presentationFor } from '../FormField';
+import { useFormFieldState } from '../../../hooks';
+import { FormFieldDispatch, type FormFieldDispatchProps, FormFieldErrorBoundary, FormFieldRow } from '../FormField';
 import { type LayoutNode, LayoutParseError, parseLayout } from './parser';
 import { resolveLayoutField } from './resolve-layout-field';
 
 const FORM_LAYOUT_NAME = 'Form.Layout';
+
+type FormFieldSetSubset = Pick<
+  FormFieldDispatchProps,
+  'path' | 'readonly' | 'layout' | 'projection' | 'fieldMap' | 'fieldProvider'
+> & {
+  schema: Schema.Schema<AnyProperties>;
+};
 
 export type FormLayoutProps = {
   /**
@@ -35,13 +39,6 @@ export type FormLayoutProps = {
    */
   name?: string;
 } & Pick<FormFieldSetSubset, 'schema' | 'path' | 'readonly' | 'layout' | 'projection' | 'fieldMap' | 'fieldProvider'>;
-
-type FormFieldSetSubset = Pick<
-  FormFieldProps,
-  'path' | 'readonly' | 'layout' | 'projection' | 'fieldMap' | 'fieldProvider'
-> & {
-  schema: Schema.Schema<AnyProperties>;
-};
 
 /**
  * Lays out schema fields according to a `FormLayout` DSL template. The template
@@ -130,7 +127,7 @@ const RenderNode = ({ node, schema, basePath, ...props }: RenderNodeProps) => {
             layout={props.layout}
           />
         ) : (
-          <FormField type={type} name={leafName} path={path} required={required} {...props} />
+          <FormFieldDispatch type={type} name={leafName} path={path} required={required} {...props} />
         )}
       </FormFieldErrorBoundary>
     </div>
@@ -145,13 +142,10 @@ type LabelFieldProps = {
 };
 
 /**
- * Renders a nested struct value as its computed label (via `LabelAnnotation`),
- * as a single read-only text. Empty values are omitted, mirroring the static
- * presentation of regular fields.
+ * Renders a nested struct value as its computed label (via `LabelAnnotation`), as a single
+ * read-only row. Empty values are omitted, mirroring the static presentation of regular fields.
  */
 const LabelField = ({ schema, label, path, layout }: LabelFieldProps) => {
-  const { variant = 'default' } = useFormContext(FORM_LAYOUT_NAME);
-  const styles = formTheme.styles({ variant });
   const { getValue } = useFormFieldState(FORM_LAYOUT_NAME, path);
   const value = getValue();
   const text = value == null ? undefined : Annotation.getLabelWithSchema(schema, value);
@@ -159,19 +153,11 @@ const LabelField = ({ schema, label, path, layout }: LabelFieldProps) => {
     return null;
   }
 
-  const presentation = presentationFor(layout);
   return (
-    <Input.Root>
-      <div className={styles.field()}>
-        {presentation.showLabel && (
-          <FormFieldLabel variant={variant} readonly label={label} path={SchemaEx.createJsonPath(path)} />
-        )}
-        <div className={styles.fieldControl()}>
-          <p className='truncate min-w-0' title={text}>
-            {text}
-          </p>
-        </div>
-      </div>
-    </Input.Root>
+    <FormFieldRow label={label} readonly standalone presentation={layout}>
+      <p className='truncate min-w-0' title={text}>
+        {text}
+      </p>
+    </FormFieldRow>
   );
 };

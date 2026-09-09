@@ -9,9 +9,9 @@ import type * as PluginManager from '@dxos/app-framework/PluginManager';
 import {
   Button,
   type ChromaticPalette,
+  Field,
   Icon,
   IconButton,
-  Input,
   Link,
   type NeutralPalette,
   Tag,
@@ -208,9 +208,9 @@ export const PluginItem = ({
                 {isInstalling ? t('installing.label') : t('install.label')}
               </Button>
             ) : (
-              <Input.Root id={inputId}>
-                <Input.Switch classNames='self-center' checked={isEnabled} onClick={handleChange} />
-              </Input.Root>
+              <Field.Root id={inputId}>
+                <Field.Switch classNames='self-center' checked={isEnabled} onClick={handleChange} />
+              </Field.Root>
             )}
           </div>
         </div>

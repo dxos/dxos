@@ -8,7 +8,7 @@ import React, { type MouseEvent, type RefObject, useCallback, useRef, useState }
 import { defaultRowSize } from '@dxos/lit-grid';
 import { type DxGridPlaneCells } from '@dxos/lit-grid';
 import { random } from '@dxos/random';
-import { DropdownMenu } from '@dxos/react-ui';
+import { Menu } from '@dxos/react-ui';
 import { toPlaneCellIndex } from '@dxos/react-ui-grid';
 import { Combobox, type ComboboxRootProps } from '@dxos/react-ui-list';
 import { useSearchListResults } from '@dxos/react-ui-search';
@@ -72,13 +72,13 @@ const GridStory = ({ initialCells, ...props }: GridStoryArgs) => {
       </Grid.Root>
 
       {/* Menu */}
-      <DropdownMenu.Root open={menuOpen} onOpenChange={setMenuOpen}>
-        <DropdownMenu.VirtualTrigger virtualRef={triggerRef} />
-        <DropdownMenu.Content>
-          <DropdownMenu.Item onClick={() => console.log('[Click on dropdown menu item]')}>Hello</DropdownMenu.Item>
-          <DropdownMenu.Arrow />
-        </DropdownMenu.Content>
-      </DropdownMenu.Root>
+      <Menu.Root open={menuOpen} onOpenChange={setMenuOpen}>
+        <Menu.VirtualTrigger virtualRef={triggerRef} />
+        <Menu.Content>
+          <Menu.Item onClick={() => console.log('[Click on dropdown menu item]')}>Hello</Menu.Item>
+          <Menu.Arrow />
+        </Menu.Content>
+      </Menu.Root>
 
       {/* Multiselect */}
       <Combobox.Root

@@ -342,6 +342,14 @@ Every metric inherits the extension's global tags (`ctx.tag`, `did`, `deviceKey`
   aggregate across clients at all, rather than reading one blended number.
 - **Keep `did`** — bounded per user, needed to roll devices up to users.
 - **Drop `session.id`** (P2) — unbounded, grows forever with page reloads.
+- **Free to keep `service.version` and `vcs.ref.head.revision`** — both are constant for
+  the lifetime of a build, so a client emits exactly one value for each and the concurrent
+  series count is unchanged. The one multiplier is a client that spans a deploy: it reports
+  under the old revision and then the new one, so a window straddling a deploy holds two
+  series for it (the same way a reload with a fresh `deviceKey` already yields two). Bounded
+  by the number of builds actually reporting in the window, not by traffic — which is what
+  makes the "Clients reporting by SDK version" panel and a commit-level regression bisect
+  affordable at the same time.
 - **Never add** `spaceId`, `objectId`, `peerId`, or a raw error string as a metric
   attribute.
 

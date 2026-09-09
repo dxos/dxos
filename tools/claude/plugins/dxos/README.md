@@ -94,9 +94,16 @@ name, asks which one this repo's projects belong in, confirms the session can
 write to it, and records the answer:
 
 ```yaml
-# .agents/projects/space.yml — the ECHO space this repo's projects live in.
-spaceId: <id>
+# .agents/projects/space.yml — the ECHO spaces this repo's projects can live in.
+default: <id>
+spaces:
+  - <id>
 ```
+
+`spaces` is the set a session may write projects to; `default` is the one it
+uses unless you name another, and it is always one of the listed ids. Running
+setup again adds the new pick and makes it the default rather than replacing
+what is there, so a repo whose projects span two spaces lists both.
 
 Commit that file. It binds every future session in the repo, on any machine and
 for anyone who clones it. Pass a name to skip the question when it is
@@ -210,12 +217,14 @@ merely mentioned it — including the message asking for it to be replaced.
 | `DX_PROJECT_BACKEND`  | `file`                           | Where projects are stored — `file` or `mcp`     |
 | `DX_PROJECT_SPACE`    | unset                            | Guard against a stale binding (`mcp` only)      |
 
-The space itself is bound per repo in the committed `.agents/projects/space.yml`,
-written by `/dxos:project setup` (see
-[Use Composer for project tracking](#use-composer-for-project-tracking)), because
-a repo's projects belong to one space whoever opens it. `DX_PROJECT_SPACE` is a
-guard on top of that: set it, and the agent stops if it disagrees with the
-committed binding.
+The spaces themselves are bound per repo in the committed
+`.agents/projects/space.yml`, written by `/dxos:project setup` (see
+[Use Composer for project tracking](#use-composer-for-project-tracking)),
+because a repo's projects belong to the same spaces whoever opens it. The file
+carries the allowed `spaces` and the `default` among them; a space it does not
+list is not a candidate. `DX_PROJECT_SPACE` is a guard on top of that: set it,
+and the agent stops if it names a space `spaces` does not list. A listed space
+other than `default` is accepted.
 
 Every directive ends with a `BACKEND:` line naming the store and how to read or
 write it. The verbs, the command file and the skill are all backend-agnostic —
