@@ -19460,6 +19460,9 @@ importers:
       '@dxos/plugin-routine':
         specifier: workspace:*
         version: link:../../plugins/plugin-routine
+      '@dxos/protocols':
+        specifier: workspace:*
+        version: link:../../core/protocols
       '@dxos/random':
         specifier: workspace:*
         version: link:../../common/random
