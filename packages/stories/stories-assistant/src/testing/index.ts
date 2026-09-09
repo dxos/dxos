@@ -11,4 +11,4 @@ export * from './objects';
 export * from './prompt';
 export * from './schema';
 export * from './agent-claude-plugin';
-export * from './voyage-template';
+export * from './voyage-space';

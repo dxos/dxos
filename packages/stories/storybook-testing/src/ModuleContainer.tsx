@@ -4,7 +4,7 @@
 
 import { useAtomValue } from '@effect/atom-react/Hooks';
 import * as Atom from 'effect/unstable/reactivity/Atom';
-import React, { type FC, useEffect, useState } from 'react';
+import React, { type FC, useEffect, useRef, useState } from 'react';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import type * as Role from '@dxos/app-framework/Role';
@@ -123,6 +123,9 @@ export const normalizeCell = (spec: ModuleSpec, spaceId: string, position = ''):
  * during plugin activation after first paint are not misreported. */
 const BINDING_SETTLE_DELAY = 500;
 
+/** How often the binding is re-checked, so a late contribution replaces the debug hint. */
+const BINDING_POLL_INTERVAL = 500;
+
 /** Describes a value compactly without stringifying large/circular objects (e.g. a `Space`). */
 const describeBinding = (value: unknown): string => {
   if (Obj.isObject(value)) {
@@ -157,18 +160,31 @@ const BindingDebug = ({ role, data }: { role: string; data: Record<string, any> 
 );
 
 /**
- * Dispatches a surface for a cell, falling back to {@link BindingDebug} once no registered surface
+ * Dispatches a surface for a cell, falling back to {@link BindingDebug} while no registered surface
  * matches the binding (after {@link BINDING_SETTLE_DELAY} to tolerate late surface registration).
+ *
+ * The check is re-run on a timer rather than once: a role-gated module loads asynchronously, and
+ * `useIsAvailable` is what fires the demand that loads it, so the first miss is expected and
+ * nothing else would re-render this cell when the contribution lands.
  */
 const SurfaceCell = ({ type, data }: { type: Role.Role<any>; data: Record<string, any> }) => {
   const isAvailable = Surface.useIsAvailable();
   const [settled, setSettled] = useState(false);
+  // Re-read on every poll: the cell renders `data` fresh each time, so a ref keeps the timer
+  // matching the current binding without restarting it.
+  const binding = useRef({ type, data });
+  binding.current = { type, data };
+  const [available, setAvailable] = useState(true);
   useEffect(() => {
     const timer = setTimeout(() => setSettled(true), BINDING_SETTLE_DELAY);
-    return () => clearTimeout(timer);
-  }, []);
+    const poll = setInterval(() => setAvailable(isAvailable(binding.current)), BINDING_POLL_INTERVAL);
+    return () => {
+      clearTimeout(timer);
+      clearInterval(poll);
+    };
+  }, [isAvailable]);
 
-  if (settled && !isAvailable({ type, data })) {
+  if (settled && !available) {
     return <BindingDebug role={type.role} data={data} />;
   }
 

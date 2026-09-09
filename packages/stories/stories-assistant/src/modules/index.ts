@@ -86,3 +86,4 @@ export const moduleSurfaces: Surface.Definition[] = [
 ];
 
 export { AgentModule } from './AgentModule';
+export { SpaceTemplateToolbar } from './SpaceTemplateToolbar';

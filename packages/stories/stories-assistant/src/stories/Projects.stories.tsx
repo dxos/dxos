@@ -3,6 +3,7 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import React from 'react';
 import { userEvent, within } from 'storybook/test';
 
 import { AppSurface } from '@dxos/app-toolkit/ui';
@@ -11,15 +12,16 @@ import { translations as inboxTranslations } from '@dxos/plugin-inbox/translatio
 import { translations as projectsTranslations } from '@dxos/plugin-projects/translations';
 import { translations as tasksTranslations } from '@dxos/plugin-tasks/translations';
 
-import { StoryRole } from '../modules';
-import { ModuleContainer, VoyageTemplatePlugin, createDecorators, storyParameters } from '../testing';
-
-/** The subject every project template scaffolds from; the subject-free ones ignore it. */
-const MAILBOX_NAME = 'Clients';
+import { SpaceTemplateToolbar, StoryRole } from '../modules';
+import { ModuleContainer, VoyageSpacePlugin, createDecorators, storyParameters } from '../testing';
 
 const meta: Meta<typeof ModuleContainer> = {
   title: 'stories/stories-assistant/Projects',
-  render: ModuleContainer,
+  render: (args) => (
+    <SpaceTemplateToolbar>
+      <ModuleContainer {...args} />
+    </SpaceTemplateToolbar>
+  ),
   parameters: {
     ...storyParameters,
     translations: [
@@ -48,6 +50,7 @@ const decorators = createDecorators({
       ProjectsPlugin,
       TasksPlugin,
       CrmPlugin,
+      DebugPlugin,
     ] = await Promise.all([
       import('@dxos/compute'),
       import('@dxos/echo'),
@@ -58,20 +61,22 @@ const decorators = createDecorators({
       import('@dxos/plugin-projects/ProjectsPlugin'),
       import('@dxos/plugin-tasks/TasksPlugin'),
       import('@dxos/plugin-crm/CrmPlugin'),
+      import('@dxos/plugin-debug/DebugPlugin'),
     ]);
     return {
       plugins: [
-        // `ProjectOperation.Create` files the scaffolded project with `SpaceOperation.AddObject`,
-        // whose handler plugin-space owns.
+        // A space template's `apply` writes through the space DB, and the objects it creates surface
+        // through these plugins' articles.
         SpacePlugin({}),
         InboxPlugin(),
         ProjectsPlugin.make(),
         // Declared in Projects' `dependsOn`, so the manager refuses to resolve it without Tasks.
         TasksPlugin.make(),
-        // Contributes the mailbox-subject templates (Sender Research, CRM Pipeline) that the
-        // picker offers alongside plugin-projects' own Default and Inbox Research.
         CrmPlugin.make(),
-        VoyageTemplatePlugin,
+        // Contributes the sample spaces (Northwind Sales, Tidepool, Coding Chatroom) as space
+        // templates — the ones the app's create-space dialog offers.
+        DebugPlugin.make(),
+        VoyageSpacePlugin,
       ],
       types: [
         Project.Project,
@@ -87,10 +92,7 @@ const decorators = createDecorators({
       ],
     };
   },
-  onInit: async ({ space }) => {
-    const { Mailbox } = await import('@dxos/plugin-inbox');
-    space.db.add(Mailbox.make({ name: MAILBOX_NAME }));
-  },
+  // No seeding here: the space starts empty and the toolbar's template fills it.
 });
 
 const sharedArgs = {
@@ -150,17 +152,18 @@ const waitForResponse = async (canvasElement: HTMLElement, needle: string, timeo
 
 /**
  * Project-bound chat over a live AI stack, in three columns: the project, its chat, and the trace
- * panel. The project column's toolbar lists the contributed project templates; picking one resets
- * the space to a project scaffolded from it, with a fresh chat bound to it. Instructions (text +
- * sentinel commands) reach the system prompt through that binding.
+ * panel. The toolbar lists the contributed space templates; picking one resets the space to that
+ * template's content — project, mailbox, accounts, documents — and binds a fresh chat to the
+ * project it created. Instructions (text + sentinel commands) reach the system prompt through that
+ * binding.
  *
  * Test:
  * 1. Wait for the chat prompt to activate (context chips show "Voyage" and "Instructions").
  * 2. Send "What project are you assisting with?" — the reply names Voyage and ends with AHOY.
  * 3. Send "$track buy milk" — the reply is exactly "TRACKED: buy milk" (plus AHOY per the instructions).
  * 4. Type "$" in the prompt — the autocomplete offers `$track`.
- * 5. Pick "Sender Research (CRM)" — the project column shows that project (its own skills, the
- *    Clients mailbox as context, the sender-research routine) and the chat starts empty.
+ * 5. Pick "Tidepool — Offline sync v2" — the project column shows that work-stream with its task
+ *    tree and documents, and the chat starts empty against it.
  */
 export const Default: Story = {
   decorators,
