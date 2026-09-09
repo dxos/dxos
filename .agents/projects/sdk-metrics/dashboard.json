@@ -67,6 +67,152 @@
       }
     ],
     "panels": {
+      "stat-clients": {
+        "kind": "Panel",
+        "spec": {
+          "display": {
+            "name": "Clients reporting",
+            "description": "Number of distinct metric streams in the window \u2014 one per client realm exporting client-level gauges. Counts series, not people: a client that reloads and gets a new deviceKey counts twice, and a client that went away mid-window still counts. This is the denominator for every 'per client' panel below \u2014 an average that moves while this moves is a population change, not a behaviour change."
+          },
+          "links": [],
+          "plugin": {
+            "kind": "signoz/NumberPanel",
+            "spec": {
+              "formatting": {
+                "decimalPrecision": "0",
+                "unit": "none"
+              },
+              "thresholds": null,
+              "visualization": {
+                "timePreference": "global_time"
+              }
+            }
+          },
+          "queries": [
+            {
+              "kind": "scalar",
+              "spec": {
+                "name": "A",
+                "plugin": {
+                  "kind": "signoz/BuilderQuery",
+                  "spec": {
+                    "signal": "metrics",
+                    "aggregations": [
+                      {
+                        "metricName": "dxos.client.spaces.count",
+                        "reduceTo": "last",
+                        "spaceAggregation": "count",
+                        "temporality": "",
+                        "timeAggregation": "latest"
+                      }
+                    ],
+                    "disabled": false,
+                    "filter": {
+                      "expression": "deployment.environment in $deployment.environment AND ctx.tag in $ctx.tag"
+                    },
+                    "functions": [],
+                    "groupBy": [],
+                    "having": {
+                      "expression": ""
+                    },
+                    "legend": "",
+                    "name": "A",
+                    "order": [],
+                    "source": ""
+                  }
+                }
+              }
+            }
+          ]
+        }
+      },
+      "clients-by-version": {
+        "kind": "Panel",
+        "spec": {
+          "display": {
+            "name": "Clients reporting by SDK version",
+            "description": "The same client census as the tile above, split by `service.version` \u2014 which is the SDK constant `DXOS_VERSION`, bumped at release, NOT the app build (that is `vcs.ref.head.revision`). Reads as a rollout curve: an old version's line decaying toward zero is the fleet migrating off it, a line that never decays is clients pinned to a stale build. The lines sum to 'Clients reporting', so a step in the total with no new version line is a population change rather than a deploy."
+          },
+          "links": [],
+          "plugin": {
+            "kind": "signoz/TimeSeriesPanel",
+            "spec": {
+              "axes": {
+                "isLogScale": false,
+                "softMax": 0,
+                "softMin": 0
+              },
+              "chartAppearance": {
+                "fillMode": "none",
+                "lineInterpolation": "spline",
+                "lineStyle": "solid",
+                "showPoints": false,
+                "spanGaps": {
+                  "fillLessThan": "",
+                  "fillOnlyBelow": false
+                }
+              },
+              "formatting": {
+                "decimalPrecision": "0",
+                "unit": "none"
+              },
+              "legend": {
+                "customColors": null,
+                "mode": "list",
+                "position": "bottom"
+              },
+              "thresholds": null,
+              "visualization": {
+                "fillSpans": false,
+                "timePreference": "global_time"
+              }
+            }
+          },
+          "queries": [
+            {
+              "kind": "time_series",
+              "spec": {
+                "name": "A",
+                "plugin": {
+                  "kind": "signoz/BuilderQuery",
+                  "spec": {
+                    "signal": "metrics",
+                    "aggregations": [
+                      {
+                        "metricName": "dxos.client.spaces.count",
+                        "reduceTo": "last",
+                        "spaceAggregation": "count",
+                        "temporality": "",
+                        "timeAggregation": "latest"
+                      }
+                    ],
+                    "disabled": false,
+                    "filter": {
+                      "expression": "deployment.environment in $deployment.environment AND ctx.tag in $ctx.tag"
+                    },
+                    "functions": [],
+                    "groupBy": [
+                      {
+                        "name": "service.version",
+                        "fieldContext": "attribute",
+                        "fieldDataType": "string",
+                        "signal": "metrics"
+                      }
+                    ],
+                    "having": {
+                      "expression": ""
+                    },
+                    "legend": "{{service.version}}",
+                    "name": "A",
+                    "order": [],
+                    "source": ""
+                  }
+                }
+              }
+            }
+          ]
+        }
+      },
       "stat-spaces": {
         "kind": "Panel",
         "spec": {
@@ -2220,7 +2366,7 @@
           "items": [
             {
               "content": {
-                "$ref": "#/spec/panels/stat-spaces"
+                "$ref": "#/spec/panels/stat-clients"
               },
               "height": 3,
               "width": 3,
@@ -2229,7 +2375,7 @@
             },
             {
               "content": {
-                "$ref": "#/spec/panels/stat-docs"
+                "$ref": "#/spec/panels/stat-spaces"
               },
               "height": 3,
               "width": 3,
@@ -2238,11 +2384,20 @@
             },
             {
               "content": {
+                "$ref": "#/spec/panels/stat-docs"
+              },
+              "height": 3,
+              "width": 2,
+              "x": 6,
+              "y": 0
+            },
+            {
+              "content": {
                 "$ref": "#/spec/panels/stat-unsynced"
               },
               "height": 3,
-              "width": 3,
-              "x": 6,
+              "width": 2,
+              "x": 8,
               "y": 0
             },
             {
@@ -2250,9 +2405,18 @@
                 "$ref": "#/spec/panels/stat-heap-pressure"
               },
               "height": 3,
-              "width": 3,
-              "x": 9,
+              "width": 2,
+              "x": 10,
               "y": 0
+            },
+            {
+              "content": {
+                "$ref": "#/spec/panels/clients-by-version"
+              },
+              "height": 6,
+              "width": 12,
+              "x": 0,
+              "y": 3
             },
             {
               "content": {
@@ -2261,7 +2425,7 @@
               "height": 6,
               "width": 6,
               "x": 0,
-              "y": 3
+              "y": 9
             },
             {
               "content": {
@@ -2270,7 +2434,7 @@
               "height": 6,
               "width": 6,
               "x": 6,
-              "y": 3
+              "y": 9
             },
             {
               "content": {
@@ -2279,7 +2443,7 @@
               "height": 6,
               "width": 6,
               "x": 0,
-              "y": 9
+              "y": 15
             },
             {
               "content": {
@@ -2288,7 +2452,7 @@
               "height": 6,
               "width": 6,
               "x": 6,
-              "y": 9
+              "y": 15
             },
             {
               "content": {
@@ -2297,7 +2461,7 @@
               "height": 6,
               "width": 6,
               "x": 0,
-              "y": 15
+              "y": 21
             },
             {
               "content": {
@@ -2306,7 +2470,7 @@
               "height": 6,
               "width": 6,
               "x": 6,
-              "y": 15
+              "y": 21
             },
             {
               "content": {
@@ -2315,7 +2479,7 @@
               "height": 6,
               "width": 6,
               "x": 0,
-              "y": 21
+              "y": 27
             },
             {
               "content": {
@@ -2324,7 +2488,7 @@
               "height": 6,
               "width": 6,
               "x": 6,
-              "y": 21
+              "y": 27
             },
             {
               "content": {
@@ -2333,7 +2497,7 @@
               "height": 6,
               "width": 6,
               "x": 0,
-              "y": 27
+              "y": 33
             },
             {
               "content": {
@@ -2342,7 +2506,7 @@
               "height": 6,
               "width": 6,
               "x": 6,
-              "y": 27
+              "y": 33
             },
             {
               "content": {
@@ -2351,7 +2515,7 @@
               "height": 6,
               "width": 6,
               "x": 0,
-              "y": 33
+              "y": 39
             },
             {
               "content": {
@@ -2360,7 +2524,7 @@
               "height": 6,
               "width": 6,
               "x": 6,
-              "y": 33
+              "y": 39
             },
             {
               "content": {
@@ -2369,7 +2533,7 @@
               "height": 6,
               "width": 6,
               "x": 0,
-              "y": 39
+              "y": 45
             },
             {
               "content": {
@@ -2378,7 +2542,7 @@
               "height": 6,
               "width": 6,
               "x": 6,
-              "y": 39
+              "y": 45
             },
             {
               "content": {
@@ -2387,7 +2551,7 @@
               "height": 6,
               "width": 6,
               "x": 0,
-              "y": 45
+              "y": 51
             }
           ]
         }

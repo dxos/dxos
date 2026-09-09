@@ -301,6 +301,18 @@ exporting on the next deploy with no further action.
 - [ ] **Grant `SIGNOZ_INGESTION_KEY` to any new Worker** — per-Worker secret matched by a
       1Password section named after the raw Worker name, so a newly added environment needs
       `pnpm secrets remote <env> composer` before its clients can export.
+- [x] **Stamp the build commit as `vcs.ref.head.revision`.** `service.version` is
+      `DXOS_VERSION`, a constant bumped at release, so two deploys of one release were
+      indistinguishable in SigNoz and a regression could not be bisected to a commit. The hash
+      was already in config at `runtime.app.build.commitHash` (written by the `ConfigPlugin`
+      from `DX_COMMIT_HASH` or `git rev-parse --short HEAD`) but read only by the console banner
+      and the Help menu. Now in `baseAttributes`, so it reaches logs, metrics, traces and the
+      worker paths at zero extra series — it is constant per build.
+- [x] **Panel: clients per SDK version over time.** `clients-by-version` — the `stat-clients`
+      census (`spaces.count` with `latest`/`count`) grouped by `service.version`, so a rollout
+      reads as one line decaying while another rises. Resource attributes are flattened into
+      metric labels in SigNoz, so it groups as a plain `attribute` context like
+      `dxos.process.type` already does.
 
 ## Phase 5: Dashboard and validation
 
