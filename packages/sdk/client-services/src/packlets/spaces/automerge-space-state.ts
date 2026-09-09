@@ -4,7 +4,7 @@
 
 import { Event } from '@dxos/async';
 import { type Context, Resource } from '@dxos/context';
-import { type CredentialProcessor, type SpecificCredential, checkCredentialType } from '@dxos/credentials';
+import { type CredentialProcessor, type SpecificCredential, specificCredential } from '@dxos/credentials';
 import { type Credential, type Epoch } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
 export class AutomergeSpaceState extends Resource implements CredentialProcessor {
@@ -26,20 +26,21 @@ export class AutomergeSpaceState extends Resource implements CredentialProcessor
   }
 
   async processCredential(credential: Credential): Promise<void> {
-    if (!checkCredentialType(credential, 'dxos.halo.credentials.Epoch')) {
+    const epoch = specificCredential<Epoch>(credential, 'dxos.halo.credentials.Epoch');
+    if (!epoch) {
       return;
     }
 
-    this.lastEpoch = credential;
-    if (credential.subject.assertion.automergeRoot) {
-      this.rootUrl = credential.subject.assertion.automergeRoot;
+    this.lastEpoch = epoch;
+    if (epoch.assertion.automergeRoot) {
+      this.rootUrl = epoch.assertion.automergeRoot;
 
       if (this._isProcessingRootDocs) {
         this._onNewRoot(this.rootUrl);
       }
     }
 
-    this.onNewEpoch.emit(credential);
+    this.onNewEpoch.emit(epoch);
   }
 
   startProcessingRootDocs(): void {

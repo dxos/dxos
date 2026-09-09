@@ -2,6 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
+import { create } from '@bufbuild/protobuf';
 import * as EffectContext from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
@@ -22,7 +23,7 @@ import {
   createTeleportProtocolFactory,
 } from '@dxos/network-manager';
 import { InvalidInvitationError, InvalidInvitationExtensionRoleError } from '@dxos/protocols';
-import { buf, fromPublicKey, toPublicKey } from '@dxos/protocols/buf';
+import { buf, fromPublicKey, requirePublicKey, toPublicKey } from '@dxos/protocols/buf';
 import {
   type AdmissionKeypair,
   AdmissionKeypairSchema,
@@ -33,8 +34,12 @@ import {
   Invitation_Type,
 } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 import { type DeviceProfileDocument } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
-import { AuthenticationResponse, type IntroductionResponse } from '@dxos/protocols/buf/dxos/halo/invitations_pb';
-import { InvitationOptions } from '@dxos/protocols/buf/dxos/halo/invitations_pb';
+import {
+  AuthenticationRequestSchema,
+  AuthenticationResponse_Status,
+  type IntroductionResponse,
+  InvitationOptions_Role,
+} from '@dxos/protocols/buf/dxos/halo/invitations_pb';
 import { type ExtensionContext, type TeleportExtension, type TeleportProps } from '@dxos/teleport';
 import { trace as _trace } from '@dxos/tracing';
 import { ComplexSet } from '@dxos/util';
@@ -161,12 +166,12 @@ export class InvitationsHandler {
               invitationId: invitation.invitationId,
               ...protocol.toJSON(),
             });
-            const deviceKey = admissionRequest.device?.deviceKey ?? admissionRequest.space?.deviceKey;
-            invariant(deviceKey);
+            const deviceKey = admissionRequest.kind.value?.deviceKey;
+            invariant(deviceKey, 'Admission request carries no device key.');
             const admissionResponse = await protocol.admit(invitation, admissionRequest, extension.guestProfile);
 
             // Updating credentials complete.
-            extension.completedTrigger.wake(deviceKey);
+            extension.completedTrigger.wake(requirePublicKey(deviceKey));
 
             return admissionResponse;
           } catch (err: any) {
@@ -262,7 +267,7 @@ export class InvitationsHandler {
 
     let swarmConnection: SwarmConnection;
     scheduleTask(ctx, async () => {
-      swarmConnection = await this._joinSwarm(ctx, invitation, InvitationOptions.Role.HOST, createExtension);
+      swarmConnection = await this._joinSwarm(ctx, invitation, InvitationOptions_Role.HOST, createExtension);
       guardedState.set(null, Invitation_State.CONNECTING);
     });
   }
@@ -495,7 +500,7 @@ export class InvitationsHandler {
         // Timeout if no connection is established.
         scheduleTask(ctx, timeoutInactive, timeout);
 
-        await this._joinSwarm(ctx, invitation, InvitationOptions.Role.GUEST, createExtension);
+        await this._joinSwarm(ctx, invitation, InvitationOptions_Role.GUEST, createExtension);
         guardedState.set(null, Invitation_State.CONNECTING);
       }
     });
@@ -504,11 +509,11 @@ export class InvitationsHandler {
   private async _joinSwarm(
     ctx: Context,
     invitation: Invitation,
-    role: InvitationOptions.Role,
+    role: InvitationOptions_Role,
     extensionFactory: () => TeleportExtension,
   ): Promise<SwarmConnection> {
     let label: string;
-    if (role === InvitationOptions.Role.GUEST) {
+    if (role === InvitationOptions_Role.GUEST) {
       label = 'invitation guest';
     } else if (invitation.kind === Invitation_Kind.DEVICE) {
       label = 'invitation host for device';
@@ -542,12 +547,14 @@ export class InvitationsHandler {
 
       log('sending authentication request');
       setState(Invitation_State.AUTHENTICATING);
-      const response = await extension.rpc.InvitationHostService.authenticate({ authCode });
-      if (response.status === undefined || response.status === AuthenticationResponse.Status.OK) {
+      const response = await extension.rpc.InvitationHostService.authenticate(
+        create(AuthenticationRequestSchema, { authCode }),
+      );
+      if (response.status === undefined || response.status === AuthenticationResponse_Status.OK) {
         break;
       }
 
-      if (response.status === AuthenticationResponse.Status.INVALID_OTP) {
+      if (response.status === AuthenticationResponse_Status.INVALID_OTP) {
         if (attempt === MAX_OTP_ATTEMPTS) {
           throw new Error(`Maximum retry attempts: ${MAX_OTP_ATTEMPTS}`);
         } else {
@@ -573,10 +580,10 @@ export class InvitationsHandler {
     }
     log('sending authentication request');
     const signature = sign(Buffer.from(introductionResponse.challenge), Buffer.from(guestPrivateKey));
-    const response = await extension.rpc.InvitationHostService.authenticate({
-      signedChallenge: signature,
-    });
-    if (response.status !== AuthenticationResponse.Status.OK) {
+    const response = await extension.rpc.InvitationHostService.authenticate(
+      create(AuthenticationRequestSchema, { signedChallenge: signature }),
+    );
+    if (response.status !== AuthenticationResponse_Status.OK) {
       throw new Error(`Authentication failed with code: ${response.status}`);
     }
   }

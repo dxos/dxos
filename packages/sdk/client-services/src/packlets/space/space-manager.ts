@@ -10,12 +10,12 @@ import * as Layer from 'effect/Layer';
 import { Trigger, synchronized, trackLeaks } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { type DelegateInvitationCredential, type MemberInfo, getCredentialAssertion } from '@dxos/credentials';
-import { failUndefined } from '@dxos/debug';
 import { createIdFromSpaceKey } from '@dxos/echo-protocol';
 import { type FeedStore, FeedStoreService } from '@dxos/feed-store';
 import { PublicKey, SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type SwarmNetworkManager, SwarmNetworkManagerService } from '@dxos/network-manager';
+import { requirePublicKey } from '@dxos/protocols/buf';
 import type { FeedMessage } from '@dxos/protocols/buf/dxos/echo/feed_pb';
 import { type SpaceMetadata } from '@dxos/protocols/buf/dxos/echo/metadata_pb';
 import type { Credential } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
@@ -106,9 +106,9 @@ export class SpaceManager {
     log('constructing space...', { spaceKey: metadata.genesisFeedKey });
 
     // The genesis feed will be the same as the control feed if the space was created by the local agent.
-    const genesisFeed = await this._feedStore.openFeed(metadata.genesisFeedKey ?? failUndefined());
+    const genesisFeed = await this._feedStore.openFeed(requirePublicKey(metadata.genesisFeedKey));
 
-    const spaceKey = metadata.key;
+    const spaceKey = requirePublicKey(metadata.key);
     // The carried id is primary; derive only for a space recorded before the field existed.
     const spaceId = metadata.spaceId ? SpaceId.make(metadata.spaceId) : await createIdFromSpaceKey(spaceKey);
     const protocol = new SpaceProtocol({
@@ -175,10 +175,7 @@ export class SpaceManager {
     return [...this._spaces.values()].find((space) => {
       return space.spaceState.credentials.some((credential) => {
         const assertion = getCredentialAssertion(credential);
-        if (assertion['@type'] !== 'dxos.halo.credentials.Epoch') {
-          return false;
-        }
-        if (!assertion?.automergeRoot) {
+        if (assertion.$typeName !== 'dxos.halo.credentials.Epoch' || !assertion.automergeRoot) {
           return false;
         }
         return parseAutomergeUrl(assertion.automergeRoot as AutomergeUrl).documentId === documentId;
