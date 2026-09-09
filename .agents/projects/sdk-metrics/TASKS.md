@@ -307,7 +307,9 @@ exporting on the next deploy with no further action.
       was already in config at `runtime.app.build.commitHash` (written by the `ConfigPlugin`
       from `DX_COMMIT_HASH` or `git rev-parse --short HEAD`) but read only by the console banner
       and the Help menu. Now in `baseAttributes`, so it reaches logs, metrics, traces and the
-      worker paths at zero extra series — it is constant per build.
+      worker paths. Constant per build, so it adds no concurrent metric series; a client that
+      spans a deploy reports under both revisions, so a window straddling one holds two series
+      for it.
 - [x] **Panel: clients per SDK version over time.** `clients-by-version` — the `stat-clients`
       census (`spaces.count` with `latest`/`count`) grouped by `service.version`, so a rollout
       reads as one line decaying while another rises. Resource attributes are flattened into

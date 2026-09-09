@@ -72,7 +72,7 @@
         "spec": {
           "display": {
             "name": "Clients reporting",
-            "description": "Number of distinct metric streams in the window \u2014 one per client realm exporting client-level gauges. Counts series, not people: a client that reloads and gets a new deviceKey counts twice, and a client that went away mid-window still counts. This is the denominator for every 'per client' panel below \u2014 an average that moves while this moves is a population change, not a behaviour change."
+            "description": "Number of distinct metric streams in the window \u2014 one per client realm exporting client-level gauges. Counts series, not people: a client that reloads and gets a new deviceKey counts twice, a client that spans a deploy counts once per build revision, and a client that went away mid-window still counts. This is the denominator for every 'per client' panel below \u2014 an average that moves while this moves is a population change, not a behaviour change."
           },
           "links": [],
           "plugin": {

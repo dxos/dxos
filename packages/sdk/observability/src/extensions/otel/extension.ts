@@ -137,7 +137,7 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Observabi
     }
 
     // `service.version` is the SDK constant and cannot separate two deploys of one release.
-    // Constant per build, so it adds no metric series. The semconv key `vcs.ref.head.revision` is
+    // Constant per build, so it adds no concurrent metric series. The semconv key `vcs.ref.head.revision` is
     // inlined to keep the 14k-export `semantic-conventions/incubating` module out of the bundle.
     const commitHash = config.get('runtime.app.build.commitHash');
 
