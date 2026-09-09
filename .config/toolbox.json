@@ -7,7 +7,6 @@
     "commonKeys": ["license", "author", "homepage", "bugs", "repository"],
     "withCustomExports": [
       "@dxos/async",
-      "@dxos/codec-protobuf",
       "@dxos/context",
       "@dxos/debug",
       "@dxos/invariant",

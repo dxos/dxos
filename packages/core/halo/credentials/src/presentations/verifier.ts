@@ -3,7 +3,8 @@
 //
 
 import { verifySignature } from '@dxos/crypto';
-import { type Presentation, type Proof } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { toPublicKey } from '@dxos/protocols/buf';
+import { type Presentation, type Proof } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
 import { SIGNATURE_TYPE_ED25519, type VerificationResult, verifyChain, verifyCredential } from '../credentials';
 import { getPresentationProofPayload } from './signing';
@@ -13,7 +14,7 @@ export const verifyPresentation = async (presentation: Presentation): Promise<Ve
 
   // Verify all credentials.
   const credentialsVerifications = await Promise.all(
-    presentation.credentials?.map((credential) => verifyCredential(credential)) ?? [],
+    presentation.credentials.map((credential) => verifyCredential(credential)),
   );
   for (const verification of credentialsVerifications) {
     if (verification.kind === 'fail') {
@@ -23,7 +24,7 @@ export const verifyPresentation = async (presentation: Presentation): Promise<Ve
 
   // Verify all proofs.
   const proofVerification = await Promise.all(
-    presentation.proofs?.map(async (proof) => {
+    presentation.proofs.map(async (proof) => {
       const chainVerification = await verifyPresentationChain(presentation, proof);
       if (chainVerification.kind === 'fail') {
         return chainVerification;
@@ -33,7 +34,7 @@ export const verifyPresentation = async (presentation: Presentation): Promise<Ve
         return signatureVerification;
       }
       return { kind: 'pass' } as VerificationResult;
-    }) ?? [],
+    }),
   );
   for (const verification of proofVerification) {
     if (verification.kind === 'fail') {
@@ -56,19 +57,30 @@ export const verifyPresentationChain = async (
   presentation: Presentation,
   proof: Proof,
 ): Promise<VerificationResult> => {
-  for (const credential of presentation.credentials ?? []) {
-    if (!credential.issuer.equals(proof.signer)) {
-      if (!proof.chain) {
-        return {
-          kind: 'fail',
-          errors: ['Delegated credential is missing credential chain.'],
-        };
-      }
+  const signer = toPublicKey(proof.signer);
+  if (!signer) {
+    return { kind: 'fail', errors: ['Proof has no signer.'] };
+  }
 
-      const chainVerification = await verifyChain(proof.chain, credential.subject.id, proof.signer);
-      if (chainVerification.kind === 'fail') {
-        return chainVerification;
-      }
+  for (const credential of presentation.credentials) {
+    if (toPublicKey(credential.issuer)?.equals(signer)) {
+      continue;
+    }
+    if (!proof.chain) {
+      return {
+        kind: 'fail',
+        errors: ['Delegated credential is missing credential chain.'],
+      };
+    }
+
+    const subject = toPublicKey(credential.subject?.id);
+    if (!subject) {
+      return { kind: 'fail', errors: ['Credential has no subject.'] };
+    }
+
+    const chainVerification = await verifyChain(proof.chain, subject, signer);
+    if (chainVerification.kind === 'fail') {
+      return chainVerification;
     }
   }
 
@@ -90,8 +102,13 @@ export const verifyPresentationSignature = async (
     };
   }
 
-  const signData = getPresentationProofPayload(presentation.credentials ?? [], proof);
-  if (!(await verifySignature(proof.signer, signData, proof.value))) {
+  const signer = toPublicKey(proof.signer);
+  if (!signer) {
+    return { kind: 'fail', errors: ['Proof has no signer.'] };
+  }
+
+  const signData = getPresentationProofPayload(presentation.credentials, proof);
+  if (!(await verifySignature(signer, signData, proof.value))) {
     return { kind: 'fail', errors: ['Invalid signature'] };
   }
 

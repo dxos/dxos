@@ -70,9 +70,6 @@
       "path": "packages/sdk/client-services/tsconfig.json"
     },
     {
-      "path": "packages/common/codec-protobuf/tsconfig.json"
-    },
-    {
       "path": "tools/codemorph/tsconfig.json"
     },
     {
@@ -668,9 +665,6 @@
     },
     {
       "path": "packages/e2e/proto-guard/tsconfig.json"
-    },
-    {
-      "path": "packages/common/protobuf-compiler/tsconfig.json"
     },
     {
       "path": "tools/protobuf-test/tsconfig.json"

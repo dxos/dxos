@@ -3,7 +3,6 @@
 //
 
 import { invariant } from '@dxos/invariant';
-import { type CompatOptions } from '@dxos/protocols/buf-shape-compat';
 import {
   type ServiceBackend,
   type ServiceDescriptorLike,
@@ -67,11 +66,6 @@ export interface ProtoRpcPeerOptions<Client, Server> extends Omit<RpcPeerOptions
    * Handlers for the exposed services
    */
   handlers?: ServiceHandlers<Server>;
-
-  /**
-   * Encoding options passed to the underlying proto codec.
-   */
-  encodingOptions?: CompatOptions;
 }
 
 /**
@@ -84,7 +78,6 @@ export const createProtoRpcPeer = <Client = {}, Server = {}>({
   requested,
   exposed,
   handlers,
-  encodingOptions,
   ...rest
 }: ProtoRpcPeerOptions<Client, Server>): ProtoRpcPeer<Client> => {
   // Create map of RPCs.
@@ -94,7 +87,7 @@ export const createProtoRpcPeer = <Client = {}, Server = {}>({
     for (const serviceName of Object.keys(exposed) as (keyof Server)[]) {
       const serviceFqn = exposed[serviceName].name;
       const serviceProvider = handlers[serviceName];
-      exposedRpcs[serviceFqn] = exposed[serviceName].createServer(serviceProvider, encodingOptions);
+      exposedRpcs[serviceFqn] = exposed[serviceName].createServer(serviceProvider);
     }
   }
 
@@ -126,13 +119,10 @@ export const createProtoRpcPeer = <Client = {}, Server = {}>({
     for (const serviceName of Object.keys(requested) as (keyof Client)[]) {
       const serviceFqn = requested[serviceName].name;
 
-      requestedRpcs[serviceName] = requested[serviceName].createClient(
-        {
-          call: (method, req, options) => peer.call(`${serviceFqn}.${method}`, req, options),
-          callStream: (method, req, options) => peer.callStream(`${serviceFqn}.${method}`, req, options),
-        },
-        encodingOptions,
-      );
+      requestedRpcs[serviceName] = requested[serviceName].createClient({
+        call: (method, req, options) => peer.call(`${serviceFqn}.${method}`, req, options),
+        callStream: (method, req, options) => peer.callStream(`${serviceFqn}.${method}`, req, options),
+      });
     }
   }
 

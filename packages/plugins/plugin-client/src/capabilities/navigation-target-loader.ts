@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+import { create } from '@bufbuild/protobuf';
 import * as Effect from 'effect/Effect';
 
 import * as Capability from '@dxos/app-framework/Capability';
@@ -10,6 +11,7 @@ import * as NotFound from '@dxos/app-toolkit/NotFound';
 import { Context } from '@dxos/context';
 import { Database, EID } from '@dxos/echo';
 import { EntityId, SpaceId } from '@dxos/keys';
+import { QueryRequestSchema } from '@dxos/protocols/buf/dxos/echo/query_pb';
 
 import { meta } from '#meta';
 import { ClientCapabilities } from '#types';
@@ -29,7 +31,7 @@ export default Capability.makeModule(
 
     // The fallible probe, not the checker: a failed query must stay distinguishable from an empty one.
     const checkRemote = NotFound.createEdgeExistenceProbe((spaceId, body) =>
-      client.edge.http.execQuery(new Context(), spaceId, body),
+      client.edge.http.execQuery(new Context(), spaceId, create(QueryRequestSchema, body)),
     );
 
     const loader: AppCapabilities.NavigationTargetLoader = {

@@ -8,7 +8,7 @@ import { SpaceState } from '@dxos/client/echo';
 import { type NetworkStatus } from '@dxos/client/mesh';
 import { type EchoDataStats, type EchoStatsDiagnostic } from '@dxos/echo-host';
 import { log } from '@dxos/log';
-import { type QueryEdgeStatusResponse } from '@dxos/protocols/proto/dxos/client/services';
+import { type QueryEdgeStatusResponse } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { useClient } from '@dxos/react-client';
 import { useAsyncEffect } from '@dxos/react-hooks';
 import { DiagnosticsChannel, type DiagnosticsRequest } from '@dxos/tracing';

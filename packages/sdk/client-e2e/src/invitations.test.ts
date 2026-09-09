@@ -2,6 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
+import { create } from '@bufbuild/protobuf';
 import * as EffectContext from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
@@ -42,6 +43,7 @@ import {
   Invitation_State,
 } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 import { ConnectionState } from '@dxos/protocols/buf/dxos/client/services_pb';
+import { ProfileDocumentSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { StorageType, createStorage } from '@dxos/random-access-storage';
 
 const closeAfterTest = async (peer: ServiceContext) => {
@@ -662,7 +664,7 @@ describe('Invitations', () => {
       await host.initialize();
       await guest.initialize();
 
-      await host.halo.createIdentity({ displayName: 'Peer' });
+      await host.halo.createIdentity(create(ProfileDocumentSchema, { displayName: 'Peer' }));
 
       onTestFinished(async () => {
         await Promise.all([host.destroy()]);
@@ -689,8 +691,8 @@ describe('Invitations', () => {
       guest = new Client({ services: testBuilder.createLocalClientServices() });
       await host.initialize();
       await guest.initialize();
-      await host.halo.createIdentity({ displayName: 'Peer 1' });
-      await guest.halo.createIdentity({ displayName: 'Peer 2' });
+      await host.halo.createIdentity(create(ProfileDocumentSchema, { displayName: 'Peer 1' }));
+      await guest.halo.createIdentity(create(ProfileDocumentSchema, { displayName: 'Peer 2' }));
 
       onTestFinished(async () => {
         await Promise.all([host.destroy()]);

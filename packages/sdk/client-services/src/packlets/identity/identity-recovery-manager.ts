@@ -2,6 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
+import { create, fromBinary } from '@bufbuild/protobuf';
 import * as EffectContext from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
@@ -9,7 +10,12 @@ import * as Option from 'effect/Option';
 
 import { synchronized } from '@dxos/async';
 import { type Context } from '@dxos/context';
-import { generateSeedPhrase, getCredentialAssertion, keyPairFromSeedPhrase } from '@dxos/credentials';
+import {
+  credentialPayload,
+  generateSeedPhrase,
+  getCredentialAssertion,
+  keyPairFromSeedPhrase,
+} from '@dxos/credentials';
 import { sign } from '@dxos/crypto';
 import { type EdgeHttpClient, EdgeHttpClientService } from '@dxos/edge-client';
 import { invariant } from '@dxos/invariant';
@@ -23,9 +29,16 @@ import {
   InvalidRecoveryTokenError,
   type RecoverIdentityResponseBody,
 } from '@dxos/protocols';
-import { schema } from '@dxos/protocols/proto';
-import { type RecoverIdentityRequest } from '@dxos/protocols/proto/dxos/client/services';
-import { type Credential, IdentityRecovery } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { fromDate, fromPublicKey, requirePublicKey } from '@dxos/protocols/buf';
+import { type RecoverIdentityRequest_ExternalSignature } from '@dxos/protocols/buf/dxos/client/services_pb';
+import {
+  type Credential,
+  CredentialSchema,
+  type IdentityRecovery,
+  IdentityRecovery_Kind,
+  IdentityRecoveryRevokedSchema,
+  IdentityRecoverySchema,
+} from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { type IdentityService } from '@dxos/protocols/rpc';
 import { Timeframe } from '@dxos/timeframe';
 import { ComplexSet } from '@dxos/util';
@@ -69,13 +82,13 @@ export class EdgeIdentityRecoveryManager {
     let lookupKey: PublicKey;
     let algorithm: string;
     let recoveryCode: string | undefined;
-    let kind: IdentityRecovery.Kind;
+    let kind: IdentityRecovery_Kind;
     let label: string | undefined;
     if (data) {
       recoveryKey = data.recoveryKey;
       lookupKey = data.lookupKey;
       algorithm = data.algorithm;
-      kind = data.kind ?? IdentityRecovery.Kind.UNKNOWN;
+      kind = data.kind ?? IdentityRecovery_Kind.UNKNOWN;
       label = data.label;
     } else {
       // The seed phrase is generated here rather than by the caller, so the label is too.
@@ -84,25 +97,24 @@ export class EdgeIdentityRecoveryManager {
       recoveryKey = PublicKey.from(keypair.publicKey);
       lookupKey = PublicKey.from(keypair.publicKey);
       algorithm = 'ED25519';
-      kind = IdentityRecovery.Kind.RECOVERY_CODE;
+      kind = IdentityRecovery_Kind.RECOVERY_CODE;
       label = 'Recovery code';
     }
 
     const identityKey = identity.identityKey;
     const credential = await identity.getIdentityCredentialSigner().createCredential({
       subject: identityKey,
-      assertion: {
-        '@type': 'dxos.halo.credentials.IdentityRecovery',
-        recoveryKey,
-        identityKey,
+      assertion: create(IdentityRecoverySchema, {
+        recoveryKey: fromPublicKey(recoveryKey),
+        identityKey: fromPublicKey(identityKey),
         algorithm,
-        lookupKey,
+        lookupKey: fromPublicKey(lookupKey),
         label,
         kind,
-      },
+      }),
     });
 
-    const receipt = await identity.controlPipeline.writer.write({ credential: { credential } });
+    const receipt = await identity.controlPipeline.writer.write(credentialPayload(credential));
     await identity.controlPipeline.state.waitUntilTimeframe(new Timeframe([[receipt.feedKey, receipt.seq]]));
 
     return { recoveryCode };
@@ -128,7 +140,7 @@ export class EdgeIdentityRecoveryManager {
     invariant(identity);
 
     const active = this.listActiveRecoveryCredentials();
-    if (!active.some(({ assertion }) => assertion.lookupKey?.equals(lookupKey))) {
+    if (!active.some(({ assertion }) => requirePublicKey(assertion.lookupKey).equals(lookupKey))) {
       throw new Error('Recovery credential is not registered, or is already revoked.');
     }
     if (active.length <= 1) {
@@ -138,15 +150,14 @@ export class EdgeIdentityRecoveryManager {
     const identityKey = identity.identityKey;
     const credential = await identity.getIdentityCredentialSigner().createCredential({
       subject: identityKey,
-      assertion: {
-        '@type': 'dxos.halo.credentials.IdentityRecoveryRevoked',
-        identityKey,
-        lookupKey,
-        'revokedAt': new Date(),
-      },
+      assertion: create(IdentityRecoveryRevokedSchema, {
+        identityKey: fromPublicKey(identityKey),
+        lookupKey: fromPublicKey(lookupKey),
+        revokedAt: fromDate(new Date()),
+      }),
     });
 
-    const receipt = await identity.controlPipeline.writer.write({ credential: { credential } });
+    const receipt = await identity.controlPipeline.writer.write(credentialPayload(credential));
     await identity.controlPipeline.state.waitUntilTimeframe(new Timeframe([[receipt.feedKey, receipt.seq]]));
   }
 
@@ -164,17 +175,19 @@ export class EdgeIdentityRecoveryManager {
     const registered: { credential: Credential; assertion: IdentityRecovery }[] = [];
     for (const credential of identity.space.spaceState.credentials) {
       const assertion = getCredentialAssertion(credential);
-      switch (assertion['@type']) {
+      switch (assertion.$typeName) {
         case 'dxos.halo.credentials.IdentityRecovery':
           registered.push({ credential, assertion });
           break;
         case 'dxos.halo.credentials.IdentityRecoveryRevoked':
-          revoked.add(assertion.lookupKey);
+          revoked.add(requirePublicKey(assertion.lookupKey));
           break;
       }
     }
 
-    return registered.filter(({ assertion }) => !(assertion.lookupKey && revoked.has(assertion.lookupKey)));
+    return registered.filter(
+      ({ assertion }) => !(assertion.lookupKey && revoked.has(requirePublicKey(assertion.lookupKey))),
+    );
   }
 
   public async requestRecoveryChallenge(ctx: Context) {
@@ -211,14 +224,16 @@ export class EdgeIdentityRecoveryManager {
       signature,
       clientDataJson,
       authenticatorData,
-    }: RecoverIdentityRequest.ExternalSignature,
+    }: RecoverIdentityRequest_ExternalSignature,
   ): Promise<void> {
     invariant(this._edgeClient, 'Not connected to EDGE.');
 
+    const deviceKeyValue = requirePublicKey(deviceKey);
+    const controlFeedKeyValue = requirePublicKey(controlFeedKey);
     const request: EdgeRecoverIdentityRequest = {
-      lookupKey: lookupKey.toHex(),
-      deviceKey: deviceKey.toHex(),
-      controlFeedKey: controlFeedKey.toHex(),
+      lookupKey: requirePublicKey(lookupKey).toHex(),
+      deviceKey: deviceKeyValue.toHex(),
+      controlFeedKey: controlFeedKeyValue.toHex(),
       signature:
         clientDataJson && authenticatorData
           ? {
@@ -236,8 +251,8 @@ export class EdgeIdentityRecoveryManager {
       haloGenesisFeedKey: PublicKey.fromHex(response.genesisFeedKey),
       haloSpaceKey: PublicKey.fromHex(response.haloSpaceKey),
       identityKey: PublicKey.fromHex(response.identityKey),
-      deviceKey,
-      controlFeedKey,
+      deviceKey: deviceKeyValue,
+      controlFeedKey: controlFeedKeyValue,
       dataFeedKey: await this._keyring.createKey(),
       haloSpaceRootUrl: response.haloSpaceRootUrl,
     });
@@ -327,11 +342,8 @@ export class EdgeIdentityRecoveryManager {
   }
 }
 
-const decodeCredential = (credentialBase64: string) => {
-  const credentialBytes = Buffer.from(credentialBase64, 'base64');
-  const codec = schema.getCodecForType('dxos.halo.credentials.Credential');
-  return codec.decode(credentialBytes);
-};
+const decodeCredential = (credentialBase64: string): Credential =>
+  fromBinary(CredentialSchema, Buffer.from(credentialBase64, 'base64'));
 
 /**
  * Effect Layer constructing a dormant {@link EdgeIdentityRecoveryManager}.

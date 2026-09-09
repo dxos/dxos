@@ -22,6 +22,7 @@ import { Invitation_State, InvitationEncoder } from '@dxos/client/invitations';
 import { Context as DxContext } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { ATPROTO_OAUTH_SCOPES, OAuthProvider } from '@dxos/protocols';
+import { requirePublicKey } from '@dxos/protocols/buf';
 
 import { ClientOperation } from '#operations';
 
@@ -249,7 +250,7 @@ const loginWithEmail = (client: Client, email: string, invoke: Capabilities.Oper
             edge.login(DxContext.default(), {
               email,
               identityDid: identity.did,
-              identityKey: identity.identityKey.toHex(),
+              identityKey: requirePublicKey(identity.identityKey).toHex(),
             }),
           catch: (cause) =>
             new Error(

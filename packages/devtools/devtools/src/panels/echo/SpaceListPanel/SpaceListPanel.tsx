@@ -9,6 +9,7 @@ import { Obj, Type } from '@dxos/echo';
 import { Format } from '@dxos/echo/Format';
 import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { toDate } from '@dxos/protocols/buf';
 import { SpacesService } from '@dxos/protocols/rpc';
 import { useClient } from '@dxos/react-client';
 import { useSpaces } from '@dxos/react-client/echo';
@@ -51,14 +52,15 @@ export const SpaceListPanel = ({ onSelect }: { onSelect?: (space: SpaceData | un
 
   const rows = useMemo(() => {
     return spaces.map((space) => {
-      const { open, ready } = space.internal.data.metrics ?? {};
+      const openedAt = toDate(space.internal.data.metrics?.open);
+      const readyAt = toDate(space.internal.data.metrics?.ready);
       return {
         id: space.id.toString(),
         name: space.isOpen ? space.properties.name : undefined,
         tags: space.tags.join(', '),
         objects: -1, // TODO(dmaretskyi): Fix this.
         members: space.members.get().length,
-        startup: open && ready ? ready.getTime() - open.getTime() : -1,
+        startup: openedAt && readyAt ? readyAt.getTime() - openedAt.getTime() : -1,
         isOpen: space.isOpen,
       };
     });
