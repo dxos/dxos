@@ -2,10 +2,21 @@
 // Copyright 2022 DXOS.org
 //
 
-import { createCredential } from '@dxos/credentials';
+import { create } from '@bufbuild/protobuf';
+
+import { createCredential, credentialPayload } from '@dxos/credentials';
 import { failUndefined } from '@dxos/debug';
 import { type KeyringApi } from '@dxos/keyring';
-import { AdmittedFeed, MembershipPolicy, SpaceMember } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
+import { fromPublicKey, fromTimeframe } from '@dxos/protocols/buf';
+import {
+  AdmittedFeedSchema,
+  AdmittedFeed_Designation,
+  EpochSchema,
+  MembershipPolicy,
+  SpaceGenesisSchema,
+  SpaceMemberSchema,
+  SpaceMember_Role,
+} from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { Timeframe } from '@dxos/timeframe';
 
 import { type Space } from '../space';
@@ -26,68 +37,59 @@ export const spaceGenesis = async (
       signer: keyring,
       issuer: space.key,
       subject: space.key,
-      assertion: {
-        '@type': 'dxos.halo.credentials.SpaceGenesis',
-        'spaceKey': space.key,
-        'tags': tags ?? [],
-        'membershipPolicy': membershipPolicy ?? MembershipPolicy.INVITE,
-      },
+      assertion: create(SpaceGenesisSchema, {
+        spaceKey: fromPublicKey(space.key),
+        tags: tags ?? [],
+        membershipPolicy: membershipPolicy ?? MembershipPolicy.INVITE,
+      }),
     }),
 
     await createCredential({
       signer: keyring,
       issuer: space.key,
       subject: signingContext.identityKey,
-      assertion: {
-        '@type': 'dxos.halo.credentials.SpaceMember',
-        'spaceKey': space.key,
-        'role': SpaceMember.Role.OWNER,
-        'profile': signingContext.getProfile(),
-        'genesisFeedKey': space.controlFeedKey ?? failUndefined(),
+      assertion: create(SpaceMemberSchema, {
+        spaceKey: fromPublicKey(space.key),
+        role: SpaceMember_Role.OWNER,
+        profile: signingContext.getProfile(),
+        genesisFeedKey: fromPublicKey(space.controlFeedKey ?? failUndefined()),
         spaceRootUrl,
-        'tags': tags ?? [],
-      },
+        tags: tags ?? [],
+      }),
     }),
 
     await signingContext.credentialSigner.createCredential({
       subject: space.controlFeedKey ?? failUndefined(),
-      assertion: {
-        '@type': 'dxos.halo.credentials.AdmittedFeed',
-        'spaceKey': space.key,
-        'identityKey': signingContext.identityKey,
-        'deviceKey': signingContext.deviceKey,
-        'designation': AdmittedFeed.Designation.CONTROL,
-      },
+      assertion: create(AdmittedFeedSchema, {
+        spaceKey: fromPublicKey(space.key),
+        identityKey: fromPublicKey(signingContext.identityKey),
+        deviceKey: fromPublicKey(signingContext.deviceKey),
+        designation: AdmittedFeed_Designation.CONTROL,
+      }),
     }),
 
     await signingContext.credentialSigner.createCredential({
       subject: space.dataFeedKey ?? failUndefined(),
-      assertion: {
-        '@type': 'dxos.halo.credentials.AdmittedFeed',
-        'spaceKey': space.key,
-        'identityKey': signingContext.identityKey,
-        'deviceKey': signingContext.deviceKey,
-        'designation': AdmittedFeed.Designation.DATA,
-      },
+      assertion: create(AdmittedFeedSchema, {
+        spaceKey: fromPublicKey(space.key),
+        identityKey: fromPublicKey(signingContext.identityKey),
+        deviceKey: fromPublicKey(signingContext.deviceKey),
+        designation: AdmittedFeed_Designation.DATA,
+      }),
     }),
 
     await signingContext.credentialSigner.createCredential({
       subject: space.key ?? failUndefined(),
-      assertion: {
-        '@type': 'dxos.halo.credentials.Epoch',
-        'number': 0,
-        'previousId': undefined,
-        'timeframe': new Timeframe(),
-        'snapshotCid': undefined,
+      assertion: create(EpochSchema, {
+        number: 0,
+        timeframe: fromTimeframe(new Timeframe()),
         automergeRoot,
-      },
+      }),
     }),
   ];
 
   for (const credential of credentials) {
-    await space.controlPipeline.writer.write({
-      credential: { credential },
-    });
+    await space.controlPipeline.writer.write(credentialPayload(credential));
   }
 
   return credentials;

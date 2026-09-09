@@ -2,6 +2,8 @@
 // Copyright 2022 DXOS.org
 //
 
+import { create } from '@bufbuild/protobuf';
+
 import { DeferredTask, scheduleMicroTask, sleepWithContext, trackLeaks } from '@dxos/async';
 import { Context } from '@dxos/context';
 import {
@@ -12,12 +14,18 @@ import {
   SpaceStateMachine,
 } from '@dxos/credentials';
 import { type FeedWrapper } from '@dxos/feed-store';
+import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type FeedMessageBlock } from '@dxos/protocols';
+import { fromPublicKey, fromTimeframe, requirePublicKey, toTimeframe } from '@dxos/protocols/buf';
 import type { FeedMessage } from '@dxos/protocols/buf/dxos/echo/feed_pb';
-import { type ControlPipelineSnapshot } from '@dxos/protocols/buf/dxos/echo/metadata_pb';
-import { AdmittedFeed, type Credential } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
+import {
+  type ControlPipelineSnapshot,
+  ControlPipelineSnapshotSchema,
+  ControlPipelineSnapshot_ControlMessageSchema,
+} from '@dxos/protocols/buf/dxos/echo/metadata_pb';
+import { AdmittedFeed_Designation, type Credential } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { Timeframe } from '@dxos/timeframe';
 import { trace } from '@dxos/tracing';
 import { type AsyncCallback, Callback, tracer } from '@dxos/util';
@@ -75,7 +83,7 @@ export class ControlPipeline {
       log('feed admitted', { key: info.key });
 
       // TODO(burdon): Check not stopping.
-      if (info.assertion.designation === AdmittedFeed.Designation.CONTROL && !info.key.equals(genesisFeed.key)) {
+      if (info.assertion.designation === AdmittedFeed_Designation.CONTROL && !info.key.equals(genesisFeed.key)) {
         scheduleMicroTask(this._ctx, async () => {
           try {
             const feed = await feedProvider(info.key);
@@ -142,11 +150,12 @@ export class ControlPipeline {
   }
 
   private async _processSnapshot(snapshot: ControlPipelineSnapshot): Promise<void> {
-    await this._pipeline.setCursor(snapshot.timeframe);
+    await this._pipeline.setCursor(toTimeframe(snapshot.timeframe));
 
     for (const message of snapshot.messages ?? []) {
+      invariant(message.credential, 'Snapshot entry carries no credential.');
       const result = await this._spaceStateMachine.process(message.credential, {
-        sourceFeed: message.feedKey,
+        sourceFeed: requirePublicKey(message.feedKey),
         skipVerification: true,
       });
 
@@ -158,13 +167,20 @@ export class ControlPipeline {
 
   private async _saveSnapshot(): Promise<void> {
     await this._pipeline.pause();
-    const snapshot: ControlPipelineSnapshot = {
-      timeframe: this._pipeline.state.timeframe,
+    const snapshot: ControlPipelineSnapshot = create(ControlPipelineSnapshotSchema, {
+      timeframe: fromTimeframe(this._pipeline.state.timeframe),
       // A snapshot replays into the feed pipeline, so an entry with no source feed has no place in it.
       messages: this._spaceStateMachine.credentialEntries.flatMap((entry) =>
-        entry.sourceFeed ? [{ feedKey: entry.sourceFeed, credential: entry.credential }] : [],
+        entry.sourceFeed
+          ? [
+              create(ControlPipelineSnapshot_ControlMessageSchema, {
+                feedKey: fromPublicKey(entry.sourceFeed),
+                credential: entry.credential,
+              }),
+            ]
+          : [],
       ),
-    };
+    });
     await this._pipeline.unpause();
 
     log('save snapshot', { key: this._spaceKey, snapshot: getSnapshotLoggerContext(snapshot) });
@@ -184,9 +200,11 @@ export class ControlPipeline {
   @trace.span({ showInBrowserTimeline: true, showInRemoteTracing: false })
   private async _processMessage(ctx: Context, msg: FeedMessageBlock): Promise<void> {
     log('processing', { key: msg.feedKey, seq: msg.seq });
-    if (msg.data.payload.credential) {
+    if (msg.data.payload?.payload.case === 'credential') {
+      const credential = msg.data.payload.payload.value.credential;
+      invariant(credential, 'Credentials message is empty.');
       const timer = tracer.mark('dxos.echo.pipeline.control');
-      const result = await this._spaceStateMachine.process(msg.data.payload.credential.credential, {
+      const result = await this._spaceStateMachine.process(credential, {
         sourceFeed: PublicKey.from(msg.feedKey),
       });
 
@@ -231,10 +249,9 @@ export class ControlPipeline {
 }
 
 const getSnapshotLoggerContext = (snapshot: ControlPipelineSnapshot) => {
-  return snapshot.messages?.map((msg) => {
-    const issuer = msg.credential.issuer;
-    const subject = msg.credential.subject.id;
-    const type = msg.credential.subject.assertion['@type'];
-    return { issuer, subject, type };
-  });
+  return snapshot.messages?.map((msg) => ({
+    issuer: msg.credential?.issuer,
+    subject: msg.credential?.subject?.id,
+    type: msg.credential?.subject?.assertion?.typeUrl,
+  }));
 };
