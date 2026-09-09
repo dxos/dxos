@@ -99,7 +99,7 @@ export const accountErrorType = (error: unknown): AccountErrorType | undefined =
 };
 
 //
-// Account client
+// Account client.
 //
 
 /** Origin to send a browser to for a passkey prompt. */
