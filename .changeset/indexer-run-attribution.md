@@ -14,5 +14,5 @@ The trigger and outcome ride on the span rather than a log line: the only level 
 Supporting changes:
 
 - `EffectEx.withContext(ctx)` runs an Effect under a DXOS `Context`: the context's W3C trace identity becomes the effect's parent span, and disposing the context interrupts the fiber. Apply it before `RuntimeProvider.runPromise`/`provide`.
-- `@trace.span({ attributes })` accepts a function of the decorated call's own arguments, and a new `resultAttributes` derives attributes from the return value, attached when it resolves.
+- `@trace.span({ attributes })` accepts a function of the decorated call's own arguments, and a new `resultAttributes` derives attributes from the return value, attached when it resolves. A fault in either extractor costs the span its attributes and never fails the traced method.
 - `RemoteSpan.setAttributes` lets a backend attach attributes after a span started; buffered spans replay them.
