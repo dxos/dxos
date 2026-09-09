@@ -58,35 +58,41 @@ export const GeoPointField = ({
   }
 
   return (
+    // Each coordinate in its own cell: `Field.Root` lays out as `contents`, so without the cell its
+    // label and input would land in the grid as two items of their own.
     <div className='grid grid-cols-2 gap-form-gap'>
-      <Field.Root>
-        {resolved.showLabel && <Field.Label>{t('latitude.label')}</Field.Label>}
-        <Field.Input
-          type='number'
-          step='0.00001'
-          min='-90'
-          max='90'
-          disabled={!!readonly}
-          placeholder={t('latitude.placeholder')}
-          value={latitudeText ?? ''}
-          onChange={handleChange('latitude', setLatitudeText)}
-          onBlur={onBlur}
-        />
-      </Field.Root>
-      <Field.Root>
-        {resolved.showLabel && <Field.Label>{t('longitude.label')}</Field.Label>}
-        <Field.Input
-          type='number'
-          step='0.00001'
-          min='-180'
-          max='180'
-          disabled={!!readonly}
-          placeholder={t('longitude.placeholder')}
-          value={longitudeText ?? ''}
-          onChange={handleChange('longitude', setLongitudeText)}
-          onBlur={onBlur}
-        />
-      </Field.Root>
+      <div>
+        <Field.Root>
+          {resolved.showLabel && <Field.Label>{t('latitude.label')}</Field.Label>}
+          <Field.Input
+            type='number'
+            step='0.00001'
+            min='-90'
+            max='90'
+            disabled={!!readonly}
+            placeholder={t('latitude.placeholder')}
+            value={latitudeText ?? ''}
+            onChange={handleChange('latitude', setLatitudeText)}
+            onBlur={onBlur}
+          />
+        </Field.Root>
+      </div>
+      <div>
+        <Field.Root>
+          {resolved.showLabel && <Field.Label>{t('longitude.label')}</Field.Label>}
+          <Field.Input
+            type='number'
+            step='0.00001'
+            min='-180'
+            max='180'
+            disabled={!!readonly}
+            placeholder={t('longitude.placeholder')}
+            value={longitudeText ?? ''}
+            onChange={handleChange('longitude', setLongitudeText)}
+            onBlur={onBlur}
+          />
+        </Field.Root>
+      </div>
     </div>
   );
 };

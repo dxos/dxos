@@ -7,6 +7,7 @@ import React, { Children, type PropsWithChildren, useId } from 'react';
 import {
   Button,
   Collapsible,
+  Field,
   Fieldset,
   Icon,
   type ThemedClassName,
@@ -60,20 +61,22 @@ export const FormFieldSet = composable<HTMLFieldSetElement, FormFieldSetProps>(
             label={label}
             labelId={labelId}
             actions={
-              <Button
-                asChild
-                variant='ghost'
-                density='sm'
-                classNames={mx(tx('iconButton.root', { iconOnly: true }), 'group')}
-              >
-                <Collapsible.Trigger aria-labelledby={labelId}>
-                  <Icon
-                    icon='ph--caret-right--regular'
-                    size={4}
-                    classNames='transition-transform group-data-[state=open]:rotate-90'
-                  />
-                </Collapsible.Trigger>
-              </Button>
+              <Field.Block>
+                <Button
+                  asChild
+                  variant='ghost'
+                  density='sm'
+                  classNames={mx(tx('iconButton.root', { iconOnly: true }), 'group')}
+                >
+                  <Collapsible.Trigger aria-labelledby={labelId}>
+                    <Icon
+                      icon='ph--caret-right--regular'
+                      size={3}
+                      classNames='transition-transform group-data-[state=open]:rotate-90'
+                    />
+                  </Collapsible.Trigger>
+                </Button>
+              </Field.Block>
             }
           />
         ) : depth === 0 ? (
