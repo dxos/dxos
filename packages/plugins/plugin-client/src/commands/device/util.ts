@@ -3,7 +3,8 @@
 //
 
 import { Doc, FormBuilder } from '@dxos/cli-util';
-import { Device, DeviceKind, DeviceType } from '@dxos/client/halo';
+import { type Device, DeviceKind, DeviceType, Device_PresenceState } from '@dxos/client/halo';
+import { requirePublicKey } from '@dxos/protocols/buf';
 
 const maybeTruncateKey = (key: { toHex(): string; truncate(): string }, truncate = false) =>
   truncate ? key.truncate() : key.toHex();
@@ -21,26 +22,26 @@ export const mapDevices = (devices: Device[], truncateKeys = false) => {
   return devices.map((device) => ({
     label: device.profile?.label,
     type: device.profile?.type ? DeviceType[device.profile?.type] : 'UNKNOWN',
-    key: maybeTruncateKey(device.deviceKey, truncateKeys),
+    key: maybeTruncateKey(requirePublicKey(device.deviceKey), truncateKeys),
     kind: DeviceKind[device.kind],
     platform: device.profile?.platform,
     platformVersion: device.profile?.platformVersion,
     architecture: device.profile?.architecture,
     os: device.profile?.os,
     osVersion: device.profile?.osVersion,
-    presence: device?.kind === DeviceKind.CURRENT ? 'THIS DEVICE' : Device.PresenceState[device.presence],
+    presence: device?.kind === DeviceKind.CURRENT ? 'THIS DEVICE' : Device_PresenceState[device.presence],
   }));
 };
 
 export const printDevice = (device: Device): Doc.Doc<any> =>
   FormBuilder.make({ title: getDeviceTitle(device) }).pipe(
-    FormBuilder.set('deviceKey', device.deviceKey.truncate()),
+    FormBuilder.set('deviceKey', requirePublicKey(device.deviceKey).truncate()),
     FormBuilder.set('label', device.profile?.label ?? '<none>'),
     FormBuilder.set('type', device.profile?.type ? DeviceType[device.profile?.type] : 'UNKNOWN'),
     FormBuilder.set('kind', DeviceKind[device.kind]),
     FormBuilder.set(
       'presence',
-      device?.kind === DeviceKind.CURRENT ? 'THIS DEVICE' : Device.PresenceState[device.presence],
+      device?.kind === DeviceKind.CURRENT ? 'THIS DEVICE' : Device_PresenceState[device.presence],
     ),
     FormBuilder.set('platform', device.profile?.platform ?? '<none>'),
     FormBuilder.set('platformVersion', device.profile?.platformVersion ?? '<none>'),
