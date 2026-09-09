@@ -643,11 +643,12 @@ projects:
       CodeRabbit's 19 findings triaged (10 fixed + resolved, 9 left open as pre-existing spec content for the
       sweep; triage comment on the PR). Smoke run 1 (report testing/reports/2026-09-09-2047-smoke.md): app:QA-1
       10/11, after.2 space.delete timed out because the headless helper's Chromium had no proxy flags — fixed in
-      testing/bin/qa-browser.mjs. Smoke run 2 was started in session 'qa -- take 2' (DXOS env, toolchain and
-      graph warm); its result is whatever the newest commit/report on the branch says. NEXT, in order: (1) if
-      run 2 is 11/11 set nothing more — QA-1 is passing and the ledger's space.delete entry is downgraded to
-      'when signaling is unreachable'; if after.2 still fails the ordering defect in
-      DataSpaceManager._tombstoneSpace is real and gets its own fix PR; (2) land #12986 — check the Check run
+      testing/bin/qa-browser.mjs. Smoke run 2 (testing/reports/2026-09-09-2315-smoke.md, session 'qa -- take 2'): 9/11 under the
+      tightened asserts — proxy fix held (0 resets, errors empty through steps), after.2 failed again on a
+      dropped EDGE socket with the identical stranded space, so the DataSpaceManager._tombstoneSpace
+      ordering defect is confirmed app-side. NEXT, in order: (1) fix PR for space.delete (close before
+      tombstone, or tolerate a failed close and still delete + drop the proxy), verified by smoke 11/11;
+      (2) land #12986 — check the Check run
       and CodeRabbit's re-review, no changeset needed; (3) run --tag nightly (QA-2, QA-3, markdown QA-1/2 are
       unverified transcriptions and will need corrections like QA-1 did); (4) create the qa branch from main and
       register the Routines per agents/routines/*.md in the DXOS environment; (5) spec-sync 'sweep 8', which

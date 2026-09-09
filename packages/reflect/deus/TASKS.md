@@ -2,10 +2,11 @@
 
 Project: `deus` · Design: [docs/DESIGN.md](./docs/DESIGN.md) · Idioms: [docs/IDIOMS.md](./docs/IDIOMS.md)
 
-_Resume: Phase 2 (QA framework unification) is on PR #12986, main merged and review triaged 2026-09-09;
-smoke run 1 gave app:QA-1 10/11 (after.2 = space.delete on unreachable EDGE), run 2 in flight with the
-proxy fix. Next: land the PR, run `--tag nightly`, register the Routines, `sweep 8`. Sessions that run
-the app must be in the `DXOS` cloud environment._
+_Resume: Phase 2 (QA framework unification) is on PR #12986, main merged and review triaged 2026-09-09.
+Two smoke runs of app:QA-1 (10/11, then 9/11 under tightened asserts) both strand the space in `after` 2:
+the `space.delete` ordering defect is confirmed app-side. Next: land the PR, fix PR for `space.delete`,
+`--tag nightly`, register the Routines, `sweep 8`. Sessions that run the app must be in the `DXOS` cloud
+environment._
 
 ## Goal
 
@@ -89,8 +90,16 @@ Later (tracked, not started):
       every HTTPS request from the page reset (E-1/E-3 in the report, and the trigger of `after` 2).
       Fixed: `--proxy-server`, `--proxy-bypass-list`, `--ssl-version-max=tls1.2` under
       `CLAUDE_CODE_REMOTE`. QA-2 also carried the old `queryObjects` shape; fixed, still unverified.
-- [ ] Re-run `--tag smoke` with the proxy fix to see whether `after` 2 passes once EDGE is reachable,
-      then `--tag nightly` for QA-2, QA-3 and the two markdown tests.
+- [x] Re-run `--tag smoke` with the proxy fix — 2026-09-09, run 2 (`testing/reports/2026-09-09-2315-smoke.md`):
+      9/11 under the tightened asserts. The proxy fix held (`ERR_CONNECTION_RESET` 55 → 0, `errors: []`
+      through every `steps` step), and `after` 2 still failed — this time on `Edge connection closed.`
+      after 5.6 s while EDGE dropped the socket on a ~6 s loop — leaving the identical stranded state.
+      Two different transport failures, one stranded space: the ordering in
+      `DataSpaceManager._tombstoneSpace` is the defect, not the environment.
+- [ ] **Fix PR for `space.delete`**: close the space before appending the tombstone, or tolerate a
+      failed close and still run `space.delete()` and drop the proxy from the live list, so a retry is
+      not a no-op. Verify with `--tag smoke` reaching 11/11.
+- [ ] `--tag nightly` for QA-2, QA-3 and the two markdown tests.
 - [ ] **Register the Routines** (`create_trigger`): nightly QA on `qa` (`source_revision`/
       `outcome_branch: qa`), on-merge smoke, daily spec-sync. Create the `qa` branch from main first.
 - [ ] **Move every `PLUGIN.mdl` to `plugin-xxx/spec/PLUGIN.mdl`**, updating `list-tests.mjs`,
@@ -98,7 +107,7 @@ Later (tracked, not started):
 - [ ] **Spec-sync sweep** over all plugins in batches of 8 (`sweep 8`), then incremental. Inputs
       from the PR #12986 review (CodeRabbit, 2026-09-08), all pre-existing content the rename only
       exposed: assistant QA-1 `op:CreateChat` lacks its `db` input and asserts `typeof $result ===
-  'undefined' || true`; brain QA-1 dropped the T-5 Enrich-to-Query coverage; chess QA-1 passes SAN
+'undefined' || true`; brain QA-1 dropped the T-5 Enrich-to-Query coverage; chess QA-1 passes SAN
       strings to `op:submitMove` and reads `$result.pgn`; file T-5 asserts an `<iframe>` against a
       canvas contract; inbox QA-1's `after` uses an unbound `$created`; slack QA-1's `after` passes
       `$discovered` and `$given.space` to `removeObjects`; space's spec declares no
