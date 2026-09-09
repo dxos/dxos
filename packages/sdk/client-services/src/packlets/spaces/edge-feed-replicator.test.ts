@@ -14,6 +14,7 @@ import { FeedFactory, FeedStore } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';
 import { SpaceId } from '@dxos/keys';
 import { EdgeStatus } from '@dxos/protocols/buf/dxos/client/services_pb';
+import { EdgeStatus_ConnectionState } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { type FeedMessage } from '@dxos/protocols/buf/dxos/echo/feed_pb';
 import { createStorage } from '@dxos/random-access-storage';
 import { openAndClose } from '@dxos/test-utils';
@@ -45,7 +46,7 @@ describe('EdgeFeedReplicator', () => {
     const { endpoint, admitConnection, messageSink } = await createEdge();
     const { messenger } = await createClient(endpoint);
     admitConnection.wake();
-    await expect.poll(() => messenger.status.state).toBe(EdgeStatus.ConnectionState.CONNECTED);
+    await expect.poll(() => messenger.status.state).toBe(EdgeStatus_ConnectionState.CONNECTED);
 
     await attachReplicator(messenger);
     await expect.poll(() => messageSink.length).toEqual(1);

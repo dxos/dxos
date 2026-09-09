@@ -2,12 +2,14 @@
 // Copyright 2022 DXOS.org
 //
 
+import { create } from '@bufbuild/protobuf';
 import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { Context } from '@dxos/context';
 import { PublicKey } from '@dxos/keys';
 import { MemorySignalManager, MemorySignalManagerContext } from '@dxos/messaging';
 import { MemoryTransportFactory, SwarmNetworkManager } from '@dxos/network-manager';
+import { PeerSchema } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
 import { Timeframe } from '@dxos/timeframe';
 
 import { AuthStatus, MOCK_AUTH_PROVIDER, MOCK_AUTH_VERIFIER, SpaceProtocol } from './space-protocol';
@@ -67,10 +69,10 @@ describe('space/space-protocol', () => {
       networkManager: new SwarmNetworkManager({
         signalManager: new MemorySignalManager(signalContext),
         transportFactory: MemoryTransportFactory,
-        peerInfo: {
+        peerInfo: create(PeerSchema, {
           peerKey: peerId1.toHex(),
           identityKey: peerId1.toHex(),
-        },
+        }),
       }),
     });
 
@@ -85,10 +87,10 @@ describe('space/space-protocol', () => {
       networkManager: new SwarmNetworkManager({
         signalManager: new MemorySignalManager(signalContext),
         transportFactory: MemoryTransportFactory,
-        peerInfo: {
+        peerInfo: create(PeerSchema, {
           peerKey: peerId2.toHex(),
           identityKey: peerId2.toHex(),
-        },
+        }),
       }),
     });
 

@@ -2,6 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
+import { create } from '@bufbuild/protobuf';
 import * as EffectContext from 'effect/Context';
 import { afterEach, beforeEach, describe, expect, onTestFinished, test } from 'vitest';
 
@@ -14,6 +15,7 @@ import { buf, toPublicKey } from '@dxos/protocols/buf';
 import { type Identity } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { ProfileDocumentSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { IdentityRecovery } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
+import { IdentityRecovery_Kind } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
 import { type ServiceContext } from '../services';
 import { createServiceContext } from '../testing';
@@ -76,7 +78,7 @@ describe('IdentityService', () => {
 
       const [{ assertion }] = serviceContext.recoveryManager.listActiveRecoveryCredentials();
       expect(assertion.label).to.equal('Test passkey');
-      expect(assertion.kind).to.equal(IdentityRecovery.Kind.PASSKEY);
+      expect(assertion.kind).to.equal(IdentityRecovery_Kind.PASSKEY);
     });
 
     test('revoking removes the credential from the active list', async () => {
@@ -88,7 +90,7 @@ describe('IdentityService', () => {
 
       const active = serviceContext.recoveryManager.listActiveRecoveryCredentials();
       expect(active).to.have.length(1);
-      expect(active[0].assertion.lookupKey?.equals(second)).to.be.true;
+      expect(toPublicKey(active[0].assertion.lookupKey)?.equals(second)).to.be.true;
     });
 
     test('refuses to revoke the only remaining credential', async () => {
@@ -161,7 +163,7 @@ const createCredential = async (identityService: IdentityServiceImpl) => {
         lookupKey,
         algorithm: 'ED25519',
         label: 'Test passkey',
-        kind: IdentityRecovery.Kind.PASSKEY,
+        kind: IdentityRecovery_Kind.PASSKEY,
       },
     }),
   );

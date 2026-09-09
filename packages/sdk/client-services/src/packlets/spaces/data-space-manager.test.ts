@@ -17,8 +17,10 @@ import { type EdgeHttpClient } from '@dxos/edge-client';
 import { writeMessages } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { requirePublicKey, toPublicKey } from '@dxos/protocols/buf';
 import { SpaceState } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 import { SpaceMember, type SpaceMember as SpaceMemberAssertion } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
+import { SpaceMember_Role } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { openAndClose } from '@dxos/test-utils';
 
 import { AuthStatus } from '../space';
@@ -77,7 +79,7 @@ describe('DataSpaceManager', () => {
 
     // The admitted member can still find the root from the genesis credentials alone.
     const memberCredential = space.inner.spaceState.credentials.find(
-      (credential) => getCredentialAssertion(credential)['@type'] === 'dxos.halo.credentials.SpaceMember',
+      (credential) => getCredentialAssertion(credential).$typeName === 'dxos.halo.credentials.SpaceMember',
     );
     const assertion = getCredentialAssertion(memberCredential!) as SpaceMemberAssertion;
     expect(assertion.spaceRootUrl).to.equal(refs!.spaceRootDocUrl);
@@ -142,7 +144,7 @@ describe('DataSpaceManager', () => {
     const memberCredential = await peer1.dataSpaceManager.admitMember({
       spaceKey: space1.key,
       identityKey: peer2.identity.identityKey,
-      role: SpaceMember.Role.ADMIN,
+      role: SpaceMember_Role.ADMIN,
     });
 
     // admitMember resolves the root itself, so the credential carries it without the caller passing it.
@@ -195,7 +197,7 @@ describe('DataSpaceManager', () => {
     const memberCredential = await peer1.dataSpaceManager.admitMember({
       spaceKey: space1.key,
       identityKey: peer2.identity.identityKey,
-      role: SpaceMember.Role.ADMIN,
+      role: SpaceMember_Role.ADMIN,
     });
     const assertion = getCredentialAssertion(memberCredential) as SpaceMemberAssertion;
 
@@ -231,7 +233,7 @@ describe('DataSpaceManager', () => {
     const memberCredential = await peer1.dataSpaceManager.admitMember({
       spaceKey: space1.key,
       identityKey: peer2.identity.identityKey,
-      role: SpaceMember.Role.ADMIN,
+      role: SpaceMember_Role.ADMIN,
     });
     const assertion = getCredentialAssertion(memberCredential) as SpaceMemberAssertion;
 
@@ -392,7 +394,7 @@ describe('DataSpaceManager', () => {
     await peer.dataSpaceManager.admitMember({
       spaceKey: space.key,
       identityKey: invitee,
-      role: SpaceMember.Role.EDITOR,
+      role: SpaceMember_Role.EDITOR,
     });
 
     // The admission must have been processed by the feed before the document can be expected to
@@ -402,7 +404,8 @@ describe('DataSpaceManager', () => {
     });
 
     const store = await openCredentialsDocument(new Context(), peer.echoHost, space.id);
-    const feedCredentialIds = () => space.inner.spaceState.credentials.map((credential) => credential.id!.toHex());
+    const feedCredentialIds = () =>
+      space.inner.spaceState.credentials.map((credential) => requirePublicKey(credential.id).toHex());
 
     // DataSpaceManager mirrors credentials as they are processed, so the document fills on its own;
     // both sides are re-read on every poll because the feed can still be delivering.
@@ -439,7 +442,9 @@ describe('DataSpaceManager', () => {
       expect(await replayed.process(credential, { sourceFeed: space.inner.genesisFeedKey })).to.be.true;
     }
 
-    expect(replayed.genesisCredential?.id?.toHex()).to.equal(space.inner.spaceState.genesisCredential?.id?.toHex());
+    expect(toPublicKey(replayed.genesisCredential?.id)?.toHex()).to.equal(
+      toPublicKey(space.inner.spaceState.genesisCredential?.id)?.toHex(),
+    );
     for (const key of replayed.members.keys()) {
       expect([...space.inner.spaceState.members.keys()].map((member) => member.toHex())).to.contain(key.toHex());
     }
@@ -449,7 +454,7 @@ describe('DataSpaceManager', () => {
     // and the document now has to carry instead.
     const replayedInvitee = [...replayed.members.entries()].find(([key]) => key.equals(invitee));
     expect(replayedInvitee, 'the admitted member is missing from the replayed state').to.exist;
-    expect(replayedInvitee![1].role).to.equal(SpaceMember.Role.EDITOR);
+    expect(replayedInvitee![1].role).to.equal(SpaceMember_Role.EDITOR);
   });
 
   test('sync between peers', async () => {

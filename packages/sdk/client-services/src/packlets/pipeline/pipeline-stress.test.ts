@@ -2,6 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
+import { create } from '@bufbuild/protobuf';
 import * as fc from 'fast-check';
 import { inspect } from 'node:util';
 import { describe, expect, test } from 'vitest';
@@ -11,7 +12,11 @@ import { type FeedStore, type FeedWrapper } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type FeedMessageBlock } from '@dxos/protocols';
-import { type FeedMessage } from '@dxos/protocols/buf/dxos/echo/feed_pb';
+import {
+  type FeedMessage,
+  type FeedMessage_Payload,
+  FeedMessage_PayloadSchema,
+} from '@dxos/protocols/buf/dxos/echo/feed_pb';
 import { Timeframe } from '@dxos/timeframe';
 import { range } from '@dxos/util';
 
@@ -110,7 +115,7 @@ class Agent {
     await this.feed.close();
   }
 
-  write(message: FeedMessage.Payload): void {
+  write(message: FeedMessage_Payload): void {
     const prev = this.writePromise;
     const promise = this.pipeline.writer!.write(message);
     this.writePromise = Promise.all([prev, promise]);
@@ -145,7 +150,7 @@ class WriteCommand implements fc.AsyncCommand<Model, Real> {
     const toWrite = Math.min(this.count, NUM_MESSAGES - agent.feed.length);
     if (toWrite > 0) {
       for (const _ of range(toWrite)) {
-        agent.write({}); // Content is not important.
+        agent.write(create(FeedMessage_PayloadSchema, {})); // Content is not important.
       }
     }
   }

@@ -19,6 +19,7 @@ import { failedInvariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
 import { MemorySignalManagerContext } from '@dxos/messaging';
 import { buf, toPublicKey } from '@dxos/protocols/buf';
+import { requirePublicKey } from '@dxos/protocols/buf';
 import { type Identity } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { type Credential, PresentationSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { MembershipPolicy } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
@@ -104,7 +105,7 @@ describe('ClientServicesHost', () => {
     const credentials = services.SpacesService!.queryCredentials({ spaceKey: await haloSpace.wait() });
     const queriedCredential = new Trigger<Credential>();
     credentials.subscribe((credential) => {
-      if (toPublicKey(credential.subject?.id)?.equals(testCredential.subject.id)) {
+      if (toPublicKey(credential.subject?.id)?.equals(requirePublicKey(testCredential.subject?.id))) {
         queriedCredential.wake(credential);
       }
     });
