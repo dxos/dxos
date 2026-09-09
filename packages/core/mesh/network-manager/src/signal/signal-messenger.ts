@@ -20,7 +20,7 @@ export interface SignalMessage {
   recipient: PeerInfo;
   topic: PublicKey;
   sessionId: PublicKey;
-  data: { signal?: Signal; signalBatch?: SignalBatch };
+  data: { signal: Signal; signalBatch?: never } | { signal?: never; signalBatch: SignalBatch };
 }
 
 /**

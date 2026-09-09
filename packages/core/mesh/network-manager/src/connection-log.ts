@@ -7,7 +7,7 @@ import { create } from '@bufbuild/protobuf';
 import { Event } from '@dxos/async';
 import { raise } from '@dxos/debug';
 import { PublicKey } from '@dxos/keys';
-import { fromDate, fromPublicKey } from '@dxos/protocols/buf';
+import { fromDate, fromPublicKey, toDate } from '@dxos/protocols/buf';
 import {
   ConnectionEventSchema,
   type ConnectionInfo,
@@ -145,6 +145,7 @@ export class ConnectionLog {
 
 const gcSwarm = (swarm: SwarmInfo) => {
   swarm.connections = swarm.connections?.filter((connection) => {
-    return connection.lastUpdate ? Date.now() - connection.lastUpdate.getTime() < CONNECTION_GC_THRESHOLD : true;
+    const lastUpdate = toDate(connection.lastUpdate);
+    return lastUpdate ? Date.now() - lastUpdate.getTime() < CONNECTION_GC_THRESHOLD : true;
   });
 };

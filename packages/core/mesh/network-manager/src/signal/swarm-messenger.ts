@@ -12,6 +12,7 @@ import { log } from '@dxos/log';
 import { type Message, type PeerInfo } from '@dxos/messaging';
 import { TimeoutError } from '@dxos/protocols';
 import { fromPublicKey, toPublicKey } from '@dxos/protocols/buf';
+import { MessageSchema } from '@dxos/protocols/buf/dxos/edge/signal_pb';
 import {
   type Answer,
   type MessageData,
@@ -53,12 +54,12 @@ export class SwarmMessenger implements SignalMessenger {
   }
 
   async receiveMessage(ctx: Context, { author, recipient, payload }: Message): Promise<void> {
-    if (payload.typeUrl !== 'dxos.mesh.swarm.SwarmMessage') {
+    if (payload?.typeUrl !== 'dxos.mesh.swarm.SwarmMessage') {
       // Ignore not swarm messages.
       return;
     }
     // Swarm signaling is point-to-point; a broadcast (DX-1125) never carries a SwarmMessage payload.
-    invariant(recipient, 'Recipient is required');
+    invariant(author && recipient, 'Author and recipient are required');
     const message = fromBinary(SwarmMessageSchema, payload.value);
 
     if (!toPublicKey(message.topic)?.equals(this._topic)) {
