@@ -65,6 +65,9 @@ const TemplateSelect = () => {
   /** Creates a fresh chat over the space's project, the way opening a project chat does in the app. */
   const bindChat = useCallback(
     async (space: Space) => {
+      // Indexed first: the query behind the binding reads the index, and a template whose content
+      // has not landed there yet would leave the chat bound to nothing, silently.
+      await space.db.flush({ indexes: true });
       const [project] = await space.db.query(Filter.type(Project.Project)).run();
       const created = await invokePromise(AssistantOperation.CreateChat, {}, { spaceId: space.id });
       if (created.error || !created.data) {
@@ -146,6 +149,8 @@ const TemplateSelect = () => {
           </Select.Content>
         </Select.Portal>
       </Select.Root>
+      {/* Grows to fill, so the destructive action sits at the far end of the toolbar. */}
+      <Toolbar.Separator variant='gap' />
       <Toolbar.IconButton icon='ph--trash--regular' label='Reset' onClick={() => void handleReset()} />
     </>
   );

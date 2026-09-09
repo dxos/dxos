@@ -64,6 +64,9 @@ export const voyageSpace: SpaceCapabilities.SpaceTemplate = {
         commands: PROJECT_COMMANDS,
       }),
     );
+    // Indexed before returning, like the sample-space builder: the caller queries this content as
+    // soon as `apply` resolves, and an unindexed project reads as a space that has none.
+    await space.db.flush({ indexes: true });
   },
 };
 
