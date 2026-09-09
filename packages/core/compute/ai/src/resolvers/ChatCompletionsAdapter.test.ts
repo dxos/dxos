@@ -173,3 +173,101 @@ describe('tool call encoding', () => {
     }),
   );
 });
+
+/** Serves a canned SSE stream, so a provider's terminating sequence can be asserted offline. */
+const serveSseStream = (lines: readonly string[]) => {
+  const stub = HttpClient.make((request) =>
+    Effect.succeed(
+      HttpClientResponse.fromWeb(
+        request,
+        new Response(lines.join('\n'), { status: 200, headers: { 'content-type': 'text/event-stream' } }),
+      ),
+    ),
+  );
+
+  const clientLayer = ChatCompletionsAdapter.clientLayer({
+    baseUrl: 'http://test',
+    apiFormat: 'openai',
+    streamUsage: true,
+  }).pipe(Layer.provide(Layer.succeed(HttpClient.HttpClient, stub)));
+  return ChatCompletionsAdapter.layer('test-model').pipe(Layer.provide(clientLayer));
+};
+
+const chunk = (payload: Record<string, unknown>): string =>
+  `data: ${JSON.stringify({ id: 'test', object: 'chat.completion.chunk', created: 0, model: 'test-model', ...payload })}`;
+
+const delta = (content: string, finishReason: string | null = null) =>
+  chunk({ choices: [{ index: 0, delta: { content }, finish_reason: finishReason }] });
+
+describe('streamed finish part', () => {
+  // OpenAI-format streams end with a `data: [DONE]` sentinel after the `finish_reason` chunk, so
+  // emitting a finish per `done` produced a second one carrying no usage.
+  it.effect(
+    'is emitted exactly once despite the [DONE] sentinel',
+    Effect.fn(function* (_) {
+      const parts = yield* LanguageModel.streamText({ prompt: 'hi' }).pipe(
+        Stream.runCollect,
+        Effect.provide(
+          serveSseStream([
+            delta('ok'),
+            '',
+            chunk({
+              choices: [{ index: 0, delta: { content: '' }, finish_reason: 'stop' }],
+              usage: { prompt_tokens: 7, completion_tokens: 3, total_tokens: 10 },
+            }),
+            '',
+            'data: [DONE]',
+            '',
+          ]),
+        ),
+      );
+
+      const finishes = parts.filter((part) => part.type === 'finish');
+      expect(finishes).toHaveLength(1);
+      expect(finishes[0].usage.inputTokens.total).toBe(7);
+      expect(finishes[0].usage.outputTokens.total).toBe(3);
+    }),
+  );
+
+  // With `stream_options.include_usage`, OpenAI reports usage in a trailing chunk whose `choices`
+  // is empty — after the chunk that carried `finish_reason`.
+  it.effect(
+    'takes usage from a trailing usage-only chunk',
+    Effect.fn(function* (_) {
+      const parts = yield* LanguageModel.streamText({ prompt: 'hi' }).pipe(
+        Stream.runCollect,
+        Effect.provide(
+          serveSseStream([
+            delta('ok'),
+            '',
+            delta('', 'stop'),
+            '',
+            chunk({ choices: [], usage: { prompt_tokens: 11, completion_tokens: 5, total_tokens: 16 } }),
+            '',
+            'data: [DONE]',
+            '',
+          ]),
+        ),
+      );
+
+      const finishes = parts.filter((part) => part.type === 'finish');
+      expect(finishes).toHaveLength(1);
+      expect(finishes[0].reason).toBe('stop');
+      expect(finishes[0].usage.inputTokens.total).toBe(11);
+      expect(finishes[0].usage.outputTokens.total).toBe(5);
+    }),
+  );
+
+  // A stream cut off before any `finish_reason` reports no finish, rather than a synthetic one.
+  it.effect(
+    'is omitted when the stream never finishes',
+    Effect.fn(function* (_) {
+      const parts = yield* LanguageModel.streamText({ prompt: 'hi' }).pipe(
+        Stream.runCollect,
+        Effect.provide(serveSseStream([delta('partial'), ''])),
+      );
+
+      expect(parts.filter((part) => part.type === 'finish')).toHaveLength(0);
+    }),
+  );
+});
