@@ -10,7 +10,8 @@ import { type Context, type Lifecycle, Resource } from '@dxos/context';
 import { type CredentialProcessor, getCredentialAssertion } from '@dxos/credentials';
 import { assertState } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { type Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { requirePublicKey } from '@dxos/protocols/buf';
+import { type Credential } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
 import { type Identity } from '../identity';
 import { DataSpaceManager, DataSpaceManagerService } from '../spaces';
@@ -58,8 +59,9 @@ class CrossDeviceSpaceSynchronizerImpl extends Resource implements CrossDeviceSp
     const assertion = getCredentialAssertion(credential);
 
     // A space was tombstoned on another device: replicate the deletion locally.
-    if (assertion['@type'] === 'dxos.halo.credentials.SpaceDeleted') {
-      if (assertion.spaceKey.equals(this._identity.space.key)) {
+    if (assertion.$typeName === 'dxos.halo.credentials.SpaceDeleted') {
+      const spaceKey = requirePublicKey(assertion.spaceKey);
+      if (spaceKey.equals(this._identity.space.key)) {
         // ignore halo space
         return;
       }
@@ -70,17 +72,18 @@ class CrossDeviceSpaceSynchronizerImpl extends Resource implements CrossDeviceSp
 
       try {
         log('tombstoning space recorded in halo', { details: assertion });
-        await this.dataSpaceManager.handleRemoteSpaceDeleted(this._ctx, assertion.spaceKey);
+        await this.dataSpaceManager.handleRemoteSpaceDeleted(this._ctx, spaceKey);
       } catch (err) {
         log.catch(err);
       }
       return;
     }
 
-    if (assertion['@type'] !== 'dxos.halo.credentials.SpaceMember') {
+    if (assertion.$typeName !== 'dxos.halo.credentials.SpaceMember') {
       return;
     }
-    if (assertion.spaceKey.equals(this._identity.space.key)) {
+    const spaceKey = requirePublicKey(assertion.spaceKey);
+    if (spaceKey.equals(this._identity.space.key)) {
       // ignore halo space
       return;
     }
@@ -89,11 +92,11 @@ class CrossDeviceSpaceSynchronizerImpl extends Resource implements CrossDeviceSp
       return;
     }
     // Do not re-accept a space that has been tombstoned (handles out-of-order credential replay).
-    if (this.dataSpaceManager.isSpaceDeleted(assertion.spaceKey)) {
+    if (this.dataSpaceManager.isSpaceDeleted(spaceKey)) {
       log('space is deleted, ignoring space admission', { details: assertion });
       return;
     }
-    if (this.dataSpaceManager.spaces.has(assertion.spaceKey)) {
+    if (this.dataSpaceManager.spaces.has(spaceKey)) {
       log('space already exists, ignoring space admission', { details: assertion });
       return;
     }
@@ -101,8 +104,8 @@ class CrossDeviceSpaceSynchronizerImpl extends Resource implements CrossDeviceSp
     try {
       log('accepting space recorded in halo', { details: assertion });
       await this.dataSpaceManager.acceptSpace(this._ctx, {
-        spaceKey: assertion.spaceKey,
-        genesisFeedKey: assertion.genesisFeedKey,
+        spaceKey,
+        genesisFeedKey: requirePublicKey(assertion.genesisFeedKey),
         spaceRootUrl: assertion.spaceRootUrl,
         tags: assertion.tags,
       });

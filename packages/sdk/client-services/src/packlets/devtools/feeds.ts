@@ -10,22 +10,31 @@ import { EffectEx } from '@dxos/effect';
 import { FeedIterator, type FeedStore, type FeedWrapper } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { buf } from '@dxos/protocols/buf';
-import { encodeCompat } from '@dxos/protocols/buf-shape-compat';
+import { type FeedMessageBlock } from '@dxos/protocols';
+import { buf, fromPublicKey, requirePublicKey } from '@dxos/protocols/buf';
 import {
   type SubscribeToFeedBlocksResponse,
+  SubscribeToFeedBlocksResponse_BlockSchema,
   SubscribeToFeedBlocksResponseSchema,
 } from '@dxos/protocols/buf/dxos/devtools/host_pb';
-import { type SubscribeToFeedBlocksResponse as LegacySubscribeToFeedBlocksResponse } from '@dxos/protocols/proto/dxos/devtools/host';
-import { type FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
+import { type FeedMessage } from '@dxos/protocols/buf/dxos/echo/feed_pb';
 import { type DevtoolsHost } from '@dxos/protocols/rpc';
 import { ComplexMap } from '@dxos/util';
 
 import { type SpaceManager } from '../space';
 
 /** Feed blocks come off the iterator in the protobuf.js shape, which crosses as the shared wire bytes. */
-const toBufResponse = (response: LegacySubscribeToFeedBlocksResponse): SubscribeToFeedBlocksResponse =>
-  buf.fromBinary(SubscribeToFeedBlocksResponseSchema, encodeCompat(SubscribeToFeedBlocksResponseSchema, response));
+/** The feed's blocks as the devtools RPC message; the iterator yields the domain block shape. */
+const toBufResponse = (blocks: FeedMessageBlock[]): SubscribeToFeedBlocksResponse =>
+  buf.create(SubscribeToFeedBlocksResponseSchema, {
+    blocks: blocks.map((block) =>
+      buf.create(SubscribeToFeedBlocksResponse_BlockSchema, {
+        feedKey: fromPublicKey(block.feedKey),
+        seq: block.seq,
+        data: block.data,
+      }),
+    ),
+  });
 
 type FeedInfo = {
   feed: FeedWrapper<FeedMessage>;
@@ -87,8 +96,8 @@ const findFeedOwner = (
     return undefined;
   }
   return {
-    identity: feedInfo.assertion.identityKey,
-    device: feedInfo.assertion.deviceKey,
+    identity: requirePublicKey(feedInfo.assertion.identityKey),
+    device: requirePublicKey(feedInfo.assertion.deviceKey),
   };
 };
 
@@ -111,7 +120,7 @@ export const subscribeToFeedBlocks = (
 
       const update = async () => {
         if (!feed.properties.length) {
-          emit.single(toBufResponse({ blocks: [] }));
+          emit.single(toBufResponse([]));
           return;
         }
 
@@ -125,7 +134,7 @@ export const subscribeToFeedBlocks = (
           }
         }
 
-        emit.single(toBufResponse({ blocks: blocks.slice(-maxBlocks) }));
+        emit.single(toBufResponse(blocks.slice(-maxBlocks)));
 
         await iterator.close();
       };

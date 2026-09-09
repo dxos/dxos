@@ -2,11 +2,16 @@
 // Copyright 2022 DXOS.org
 //
 
+import { create } from '@bufbuild/protobuf';
 import { beforeEach, describe, expect, onTestFinished, test } from 'vitest';
 
 import { Context } from '@dxos/context';
 import { PublicKey } from '@dxos/keys';
 import { MemorySignalManager, MemorySignalManagerContext, Messenger, type PeerInfo } from '@dxos/messaging';
+import { fromPublicKey } from '@dxos/protocols/buf';
+import { PeerSchema } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
+import { JoinRequestSchema } from '@dxos/protocols/buf/dxos/edge/signal_pb';
+import { AnswerSchema, OfferSchema, SignalSchema } from '@dxos/protocols/buf/dxos/mesh/swarm_pb';
 
 import { type SignalMessage } from './signal-messenger';
 import { SwarmMessenger } from './swarm-messenger';
@@ -20,7 +25,7 @@ describe('Signal Integration Test', () => {
   });
 
   const setupPeer = async ({
-    peer = { peerKey: PublicKey.random().toHex() },
+    peer = create(PeerSchema, { peerKey: PublicKey.random().toHex() }),
     topic = PublicKey.random(),
   }: {
     peer?: PeerInfo;
@@ -49,7 +54,7 @@ describe('Signal Integration Test', () => {
     const messageRouter = new SwarmMessenger({
       sendMessage: (ctx, message) => messenger.sendMessage(ctx, message),
       onSignal: signalMock,
-      onOffer: async (_ctx) => ({ accept: true }),
+      onOffer: async (_ctx) => create(AnswerSchema, { accept: true }),
       topic,
     });
 
@@ -69,14 +74,20 @@ describe('Signal Integration Test', () => {
     const peerNetworking1 = await setupPeer({ topic });
     const peerNetworking2 = await setupPeer({ topic });
     const promise1 = peerNetworking1.signalManager.swarmEvent.waitFor(
-      ({ peerAvailable }) => !!peerAvailable && peerNetworking2.peer.peerKey === peerAvailable.peer.peerKey,
+      ({ event }) => event.case === 'peerAvailable' && peerNetworking2.peer.peerKey === event.value.peer?.peerKey,
     );
     const promise2 = peerNetworking1.signalManager.swarmEvent.waitFor(
-      ({ peerAvailable }) => !!peerAvailable && peerNetworking1.peer.peerKey === peerAvailable.peer.peerKey,
+      ({ event }) => event.case === 'peerAvailable' && peerNetworking1.peer.peerKey === event.value.peer?.peerKey,
     );
 
-    await peerNetworking1.signalManager.join(Context.default(), { topic, peer: peerNetworking1.peer });
-    await peerNetworking2.signalManager.join(Context.default(), { topic, peer: peerNetworking2.peer });
+    await peerNetworking1.signalManager.join(
+      Context.default(),
+      create(JoinRequestSchema, { topic: fromPublicKey(topic), peer: peerNetworking1.peer }),
+    );
+    await peerNetworking2.signalManager.join(
+      Context.default(),
+      create(JoinRequestSchema, { topic: fromPublicKey(topic), peer: peerNetworking2.peer }),
+    );
 
     await promise1;
     await promise2;
@@ -87,9 +98,7 @@ describe('Signal Integration Test', () => {
         author: peerNetworking1.peer,
         recipient: peerNetworking2.peer,
         sessionId: PublicKey.random(),
-        data: {
-          offer: {},
-        },
+        data: { offer: create(OfferSchema, {}) },
       }),
     ).toEqual(expect.objectContaining({ accept: true }));
 
@@ -99,9 +108,7 @@ describe('Signal Integration Test', () => {
         author: peerNetworking2.peer,
         recipient: peerNetworking1.peer,
         sessionId: PublicKey.random(),
-        data: {
-          offer: {},
-        },
+        data: { offer: create(OfferSchema, {}) },
       }),
     ).toEqual(expect.objectContaining({ accept: true }));
 
@@ -111,10 +118,7 @@ describe('Signal Integration Test', () => {
         author: peerNetworking1.peer,
         recipient: peerNetworking2.peer,
         sessionId: PublicKey.random(),
-        data: {
-          signal: { payload: { message: 'Hello world!' } },
-          signalBatch: undefined,
-        },
+        data: { signal: create(SignalSchema, { payload: { message: 'Hello world!' } }) },
       };
       await peerNetworking1.messageRouter.signal(Context.default(), message);
 
@@ -127,10 +131,7 @@ describe('Signal Integration Test', () => {
         author: peerNetworking2.peer,
         recipient: peerNetworking1.peer,
         sessionId: PublicKey.random(),
-        data: {
-          signal: { payload: { foo: 'bar' } },
-          signalBatch: undefined,
-        },
+        data: { signal: create(SignalSchema, { payload: { foo: 'bar' } }) },
       };
       await peerNetworking2.messageRouter.signal(Context.default(), message);
 

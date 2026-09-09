@@ -2,17 +2,20 @@
 // Copyright 2026 DXOS.org
 //
 
+import { create } from '@bufbuild/protobuf';
+import { type Empty, EmptySchema } from '@bufbuild/protobuf/wkt';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import * as Layer from 'effect/Layer';
 import * as Scope from 'effect/Scope';
-import * as EffectStream from 'effect/Stream';
 import * as RpcClient from 'effect/unstable/rpc/RpcClient';
 
 import { type Stream as PbStream } from '@dxos/async';
 import { EffectEx } from '@dxos/effect';
+import { type BufService } from '@dxos/protocols/buf-service';
 import {
+  BridgeService as BridgeServiceDesc,
   type CloseRequest,
   type ConnectionRequest,
   type DataRequest,
@@ -20,31 +23,12 @@ import {
   type SignalRequest,
   type StatsRequest,
 } from '@dxos/protocols/buf/dxos/mesh/bridge_pb';
-import { type BridgeService as BridgeServiceRpc } from '@dxos/protocols/proto/dxos/mesh/bridge';
 import { BridgeService } from '@dxos/protocols/rpc';
 
-import {
-  fromBufBridgeEvent,
-  fromBufCloseRequest,
-  fromBufConnectionRequest,
-  fromBufDataRequest,
-  fromBufDetailsRequest,
-  fromBufDetailsResponse,
-  fromBufSignalRequest,
-  fromBufStatsRequest,
-  fromBufStatsResponse,
-  toBufBridgeEvent,
-  toBufCloseRequest,
-  toBufConnectionRequest,
-  toBufDataRequest,
-  toBufDetailsRequest,
-  toBufDetailsResponse,
-  toBufSignalRequest,
-  toBufStatsRequest,
-  toBufStatsResponse,
-} from './bridge-codec';
 import * as Rpc from './Rpc';
 import { pbStreamToStream, streamToPbStream } from './service-rpc';
+
+type BridgeServiceRpc = BufService<typeof BridgeServiceDesc>;
 
 /**
  * The system channel runs the WebRTC {@link BridgeServiceRpc} in the worker→tab direction: the worker
@@ -58,6 +42,9 @@ import { pbStreamToStream, streamToPbStream } from './service-rpc';
 
 const toError = (cause: unknown): Error => (cause instanceof Error ? cause : new Error(String(cause)));
 
+/** The proto declares `google.protobuf.Empty` where the effect-rpc definition declares no success value. */
+const empty = (): Empty => create(EmptySchema, {});
+
 /**
  * Serves a proto-shaped {@link BridgeServiceRpc} (the tab's `RtcTransportService`) over a
  * {@link MessagePort} via effect-rpc. The worker consumes it with {@link makeBridgeServiceClient}.
@@ -68,21 +55,18 @@ export const serveBridgeService = (port: MessagePort, service: BridgeServiceRpc)
     (payload: Req) =>
       Effect.tryPromise({ try: () => method(payload), catch: toError });
 
+  const unaryVoid =
+    <Req>(method: (request: Req) => Promise<Empty>) =>
+    (payload: Req) =>
+      Effect.asVoid(unary(method)(payload));
+
   const handlers = {
-    'BridgeService.open': (payload: ConnectionRequest) =>
-      EffectStream.map(
-        pbStreamToStream(() => service.open(fromBufConnectionRequest(payload))),
-        toBufBridgeEvent,
-      ),
-    'BridgeService.sendSignal': unary((request: SignalRequest) => service.sendSignal(fromBufSignalRequest(request))),
-    'BridgeService.sendData': unary((request: DataRequest) => service.sendData(fromBufDataRequest(request))),
-    'BridgeService.close': unary((request: CloseRequest) => service.close(fromBufCloseRequest(request))),
-    'BridgeService.getDetails': unary(async (request: DetailsRequest) =>
-      toBufDetailsResponse(await service.getDetails(fromBufDetailsRequest(request))),
-    ),
-    'BridgeService.getStats': unary(async (request: StatsRequest) =>
-      toBufStatsResponse(await service.getStats(fromBufStatsRequest(request))),
-    ),
+    'BridgeService.open': (payload: ConnectionRequest) => pbStreamToStream(() => service.open(payload)),
+    'BridgeService.sendSignal': unaryVoid((request: SignalRequest) => service.sendSignal(request)),
+    'BridgeService.sendData': unaryVoid((request: DataRequest) => service.sendData(request)),
+    'BridgeService.close': unaryVoid((request: CloseRequest) => service.close(request)),
+    'BridgeService.getDetails': unary((request: DetailsRequest) => service.getDetails(request)),
+    'BridgeService.getStats': unary((request: StatsRequest) => service.getStats(request)),
   };
 
   return Rpc.serve(port, BridgeService.Rpcs, BridgeService.Rpcs.toLayer(handlers), {
@@ -123,20 +107,21 @@ const bridgeServiceClientFromEffect = async (
   const client = (await EffectEx.runPromise(makeClient(scope))) as BridgeService.Client;
 
   const bridgeService: BridgeServiceRpc = {
-    open: (request) =>
-      streamToPbStream(
-        Context.empty(),
-        EffectStream.map(client['BridgeService.open'](toBufConnectionRequest(request)), fromBufBridgeEvent),
-      ),
-    sendSignal: (request) => EffectEx.runPromise(client['BridgeService.sendSignal'](toBufSignalRequest(request))),
-    sendData: (request) => EffectEx.runPromise(client['BridgeService.sendData'](toBufDataRequest(request))),
-    close: (request) => EffectEx.runPromise(client['BridgeService.close'](toBufCloseRequest(request))),
-    getDetails: async (request) =>
-      fromBufDetailsResponse(
-        await EffectEx.runPromise(client['BridgeService.getDetails'](toBufDetailsRequest(request))),
-      ),
-    getStats: async (request) =>
-      fromBufStatsResponse(await EffectEx.runPromise(client['BridgeService.getStats'](toBufStatsRequest(request)))),
+    open: (request) => streamToPbStream(Context.empty(), client['BridgeService.open'](request)),
+    sendSignal: async (request) => {
+      await EffectEx.runPromise(client['BridgeService.sendSignal'](request));
+      return empty();
+    },
+    sendData: async (request) => {
+      await EffectEx.runPromise(client['BridgeService.sendData'](request));
+      return empty();
+    },
+    close: async (request) => {
+      await EffectEx.runPromise(client['BridgeService.close'](request));
+      return empty();
+    },
+    getDetails: (request) => EffectEx.runPromise(client['BridgeService.getDetails'](request)),
+    getStats: (request) => EffectEx.runPromise(client['BridgeService.getStats'](request)),
   };
 
   return {

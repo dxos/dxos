@@ -2,8 +2,6 @@
 // Copyright 2021 DXOS.org
 //
 
-import { isNode } from '@dxos/util';
-
 import { type RpcPort } from './rpc';
 
 export type CreateLinkedPortsOptions = {
@@ -42,4 +40,6 @@ export const createLinkedPorts = ({ delay }: CreateLinkedPortsOptions = {}): [Rp
   return [port1, port2];
 };
 
-export const encodeMessage = (msg: string): Uint8Array => (isNode() ? Buffer.from(msg) : new TextEncoder().encode(msg));
+// A plain `Uint8Array` in both runtimes: buf decodes a payload as a view over the frame it read, so
+// a `Buffer` here would only ever match by coincidence of environment.
+export const encodeMessage = (msg: string): Uint8Array => new TextEncoder().encode(msg);

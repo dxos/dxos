@@ -2,6 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
+import { create } from '@bufbuild/protobuf';
 import * as EffectContext from 'effect/Context';
 
 import { Event, synchronized } from '@dxos/async';
@@ -10,7 +11,9 @@ import { assertArgument, invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Messenger, type PeerInfo, type SignalManager } from '@dxos/messaging';
+import { fromPublicKey, toPublicKey } from '@dxos/protocols/buf';
 import { ConnectionState } from '@dxos/protocols/buf/dxos/client/services_pb';
+import { JoinRequestSchema, LeaveRequestSchema } from '@dxos/protocols/buf/dxos/edge/signal_pb';
 import { ComplexMap } from '@dxos/util';
 
 import { ConnectionLog } from './connection-log';
@@ -97,11 +100,18 @@ export class SwarmNetworkManager {
 
     // Listen for signal manager events.
     this._signalManager = signalManager;
-    this._signalManager.swarmEvent.on((event) => this._swarms.get(event.topic)?.onSwarmEvent(event));
+    this._signalManager.swarmEvent.on((event) => {
+      const topic = toPublicKey(event.topic);
+      if (topic) {
+        void this._swarms.get(topic)?.onSwarmEvent(event);
+      }
+    });
     this._messenger = new Messenger({ signalManager: this._signalManager });
     this._signalConnection = {
-      join: (ctx, opts) => this._signalManager.join(ctx, opts),
-      leave: (ctx, opts) => this._signalManager.leave(ctx, opts),
+      join: (ctx, { topic, peer }) =>
+        this._signalManager.join(ctx, create(JoinRequestSchema, { topic: fromPublicKey(topic), peer })),
+      leave: (ctx, { topic, peer }) =>
+        this._signalManager.leave(ctx, create(LeaveRequestSchema, { topic: fromPublicKey(topic), peer })),
     };
     this._peerInfo = peerInfo;
 
