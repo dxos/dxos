@@ -86,6 +86,19 @@ describe('OnboardingManager', () => {
     expect(getCalls(ClientOperation.CreateAgent)).toHaveLength(0);
   });
 
+  test('url-driven signup params mint no account when the login page is disarmed', async ({ expect }) => {
+    // A build with no login page has no account to redeem against, so the params fall through to
+    // the local-identity branch. No `emailProbe` stub: reaching the account API at all would throw
+    // on the unstubbed fetch.
+    const { manager, getCalls } = await createManager({
+      email: 'someone@example.com',
+      accountInvitationCode: 'XK4F9P2A',
+    });
+    await manager.initialize();
+
+    expect(getCalls(ClientOperation.CreateIdentity)).toHaveLength(1);
+  });
+
   test('url-driven signup creates no identity when the email probe is rate-limited', async ({ expect }) => {
     const { manager, getCalls } = await createManager({
       showLoginPage: true,

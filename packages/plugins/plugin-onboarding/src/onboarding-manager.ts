@@ -178,10 +178,12 @@ export class OnboardingManager {
     } else if (this._recoverIdentity) {
       // If recovery flag is present, open recover identity flow.
       await this._openRecoverIdentity();
-    } else if (!this._identity && this._email && this._accountInvitationCode) {
+    } else if (!this._identity && !this._skipAuth && this._email && this._accountInvitationCode) {
       // URL-driven signup: `?accountInvitationCode=...&email=...`. The user
       // landed here from the invitation email; redeem the code with the
-      // emailed address.
+      // emailed address. Gated on auth being armed, so a build with no login
+      // page falls through to the local-identity branch below instead of
+      // minting an account against a deployed hub.
       if (await this._redeemAccountInvitation()) {
         await this._setupRecovery();
         await this._startHelp();
