@@ -13,13 +13,13 @@ import { Context, TRACE_SPAN_ATTRIBUTE } from '@dxos/context';
 import { bufRegistry } from '@dxos/protocols/buf-registry';
 import { type BufService, getBufService } from '@dxos/protocols/buf-service';
 import {
-  PingService as PingServiceDesc,
-  TestAnyService as TestAnyServiceDesc,
+  MessageWithAnySchema,
   type PingReponse,
   PingReponseSchema,
   type PingRequest,
   PingRequestSchema,
-  MessageWithAnySchema,
+  PingService as PingServiceDesc,
+  TestAnyService as TestAnyServiceDesc,
   TestRpcRequestSchema,
   type TestRpcResponse,
   TestRpcResponseSchema,
