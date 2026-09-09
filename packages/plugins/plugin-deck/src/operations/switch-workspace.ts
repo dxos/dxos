@@ -14,7 +14,7 @@ import { invariant } from '@dxos/invariant';
 
 import { DeckCapabilities } from '#types';
 
-import { deckNavigation, navigate } from '../capabilities/navigate';
+import { navigateDeck } from '../capabilities/navigate';
 import { openableChildren } from '../util';
 import { applyWorkspace } from './apply';
 
@@ -41,7 +41,7 @@ const handler: Operation.WithHandler<typeof LayoutOperation.SwitchWorkspace> = L
 
       const workspace = GraphPath.getSpaceIdFromPath(input.subject);
       if (workspace) {
-        yield* navigate(yield* deckNavigation({ workspace, active, companionPlanks: deck.companionPlanks }));
+        yield* navigateDeck({ workspace, active, companionPlanks: deck.companionPlanks });
       }
 
       const first = active[0];

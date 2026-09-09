@@ -9,7 +9,7 @@ import * as Operation from '@dxos/compute/Operation';
 
 import { DeckCapabilities } from '#types';
 
-import { currentNavigation, deckNavigation, navigate } from '../capabilities/navigate';
+import { currentNavigation, navigateDeck } from '../capabilities/navigate';
 import { closeEntry } from '../layout';
 
 const handler: Operation.WithHandler<typeof LayoutOperation.Close> = LayoutOperation.Close.pipe(
@@ -19,8 +19,7 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Close> = LayoutOpera
       const { workspace } = yield* currentNavigation();
 
       const active = input.subject.reduce((acc, id) => closeEntry(acc, id), deck.active);
-      const next = yield* deckNavigation({ workspace, active, companionPlanks: deck.companionPlanks });
-      yield* navigate(next);
+      yield* navigateDeck({ workspace, active, companionPlanks: deck.companionPlanks });
     }),
   ),
 );

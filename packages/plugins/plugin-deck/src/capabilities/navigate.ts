@@ -16,6 +16,7 @@ import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabili
 
 import { CompanionViewState, DeckCapabilities } from '#types';
 
+import { applyActive } from '../operations/apply';
 import { getRenderedPlanks, isCompanionOpen, resolveCompanionAnchor } from '../util';
 import * as Navigation from '../util/navigation';
 import { projectUrl } from './project-url';
@@ -97,20 +98,44 @@ export const deckNavigation = Effect.fnUntraced(function* (params: {
     anchorId && variant && isCompanionOpen(companionPlanks, flatten, anchorId) ? anchorId : undefined;
 
   const pairs: UrlPath.Pair[] = [];
+  const ephemeral: string[] = [];
   for (const nodeId of active) {
-    const segment = Navigation.segmentForNode(builder.graph, nodeId);
-    if (!segment) {
-      log.error('node has no URL binding, so it cannot be opened', {
+    // `representNode`, not the node's stamped `urlSegment`: the stamp needs a live node, and a plank
+    // whose subtree is momentarily out of the graph still has provenance to represent it.
+    const represented = PathResolution.representNode(builder, nodeId);
+    if (Option.isNone(represented)) {
+      // Not addressable, so the URL cannot carry it. The plank still opens, as ephemeral deck state
+      // that a reload drops (the account panels are the standing example).
+      log.info('plank has no URL representation and will not survive a reload', {
         nodeId,
         extension: builder.getNodeExtensionId(nodeId),
       });
+      ephemeral.push(nodeId);
       continue;
     }
-    pairs.push(Navigation.fromSegment(segment, workspace));
+    pairs.push(represented.value);
     if (nodeId === companionAnchor) {
       pairs.push({ key: UrlPath.COMPANION_KEY, id: variant, workspace });
     }
   }
 
-  return { workspace, pairs };
+  return { navigation: { workspace, pairs }, ephemeral };
+});
+
+/**
+ * Navigate to what `params` describes, then re-apply any plank the URL cannot carry.
+ *
+ * The projection sets the deck from the URL, so an unaddressable plank would be dropped by it. Those
+ * planks are deck state the URL does not own, and the only state in that category.
+ */
+export const navigateDeck = Effect.fnUntraced(function* (params: {
+  workspace: string;
+  active: readonly string[];
+  companionPlanks?: readonly string[];
+}) {
+  const { navigation, ephemeral } = yield* deckNavigation(params);
+  yield* navigate(navigation);
+  if (ephemeral.length > 0) {
+    yield* applyActive([...params.active]);
+  }
 });

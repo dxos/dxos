@@ -18,7 +18,7 @@ import { Position } from '@dxos/util';
 
 import { CompanionViewState, DeckCapabilities, DeckOperation, DeckSchema } from '#types';
 
-import { currentNavigation, deckNavigation, navigate } from '../capabilities/navigate';
+import { currentNavigation, navigateDeck } from '../capabilities/navigate';
 import { incrementPlank } from '../layout';
 import { computeActiveUpdates, isCompanionOpen, openCompanionPlank } from '../util';
 
@@ -34,13 +34,11 @@ const handler: Operation.WithHandler<typeof DeckOperation.Adjust> = DeckOperatio
         const next = incrementPlank(deck.active, input);
         const { deckUpdates } = computeActiveUpdates({ next, deck, attention, flatten });
         const { workspace } = yield* currentNavigation();
-        yield* navigate(
-          yield* deckNavigation({
-            workspace,
-            active: deckUpdates.active,
-            companionPlanks: deckUpdates.companionPlanks,
-          }),
-        );
+        yield* navigateDeck({
+          workspace,
+          active: deckUpdates.active,
+          companionPlanks: deckUpdates.companionPlanks,
+        });
       }
 
       if (input.type === 'expand') {
@@ -101,13 +99,11 @@ const handler: Operation.WithHandler<typeof DeckOperation.Adjust> = DeckOperatio
               }));
             }
             const { workspace } = yield* currentNavigation();
-            yield* navigate(
-              yield* deckNavigation({
-                workspace,
-                active: deck.active,
-                companionPlanks: openCompanionPlank(deck.companionPlanks, flatten, input.id),
-              }),
-            );
+            yield* navigateDeck({
+              workspace,
+              active: deck.active,
+              companionPlanks: openCompanionPlank(deck.companionPlanks, flatten, input.id),
+            });
           }
         }
       }

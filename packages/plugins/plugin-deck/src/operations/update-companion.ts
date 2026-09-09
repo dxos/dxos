@@ -13,7 +13,7 @@ import { Attention } from '@dxos/react-ui-attention/types';
 
 import { CompanionViewState, DeckCapabilities } from '#types';
 
-import { currentNavigation, deckNavigation, navigate } from '../capabilities/navigate';
+import { currentNavigation, navigateDeck } from '../capabilities/navigate';
 import { closeCompanionPlank, openCompanionPlank, resolveCompanionAnchor, resolveCompanionPlank } from '../util';
 
 const handler: Operation.WithHandler<typeof LayoutOperation.UpdateCompanion> = LayoutOperation.UpdateCompanion.pipe(
@@ -31,7 +31,7 @@ const handler: Operation.WithHandler<typeof LayoutOperation.UpdateCompanion> = L
         // outright. The selected variant is left intact so reopening restores the last tab.
         const plankId = input.anchor ?? resolveCompanionAnchor(deck.active, attention.getCurrent());
         const companionPlanks = closeCompanionPlank(deck.companionPlanks, flatten, plankId);
-        yield* navigate(yield* deckNavigation({ workspace, active: deck.active, companionPlanks }));
+        yield* navigateDeck({ workspace, active: deck.active, companionPlanks });
         return;
       }
 
@@ -56,7 +56,7 @@ const handler: Operation.WithHandler<typeof LayoutOperation.UpdateCompanion> = L
       }));
 
       const companionPlanks = openCompanionPlank(deck.companionPlanks, flatten, plankId);
-      yield* navigate(yield* deckNavigation({ workspace, active: deck.active, companionPlanks }));
+      yield* navigateDeck({ workspace, active: deck.active, companionPlanks });
     }),
   ),
 );

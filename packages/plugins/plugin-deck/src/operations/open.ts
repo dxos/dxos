@@ -20,7 +20,7 @@ import * as ObservabilityOperation from '@dxos/plugin-observability/Observabilit
 
 import { DeckCapabilities } from '#types';
 
-import { currentNavigation, deckNavigation, navigate } from '../capabilities/navigate';
+import { currentNavigation, navigateDeck } from '../capabilities/navigate';
 import {
   addSubjectsToActiveDeck,
   pushSubjectsToStack,
@@ -179,8 +179,12 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperat
             : deckUpdates.companionPlanks;
         // Names are a preference and stay on the state path; what is open goes through the URL.
         yield* Capabilities.updateAtomValue(DeckCapabilities.State, (state) => updateActiveDeck(state, { plankNames }));
-        const { workspace } = yield* currentNavigation();
-        yield* navigate(yield* deckNavigation({ workspace, active: deckUpdates.active, companionPlanks }));
+        // The workspace this open targets, not the one the URL still names: applying it above does
+        // not move the URL, so reading the URL here would leave the leading workspace stale and
+        // `format` would emit a mid-chain rebase rather than a switch.
+        const current = yield* currentNavigation();
+        const workspace = (input.workspace && GraphPath.getSpaceIdFromPath(input.workspace)) || current.workspace;
+        yield* navigateDeck({ workspace, active: deckUpdates.active, companionPlanks });
       }
 
       // Schedule side-effects for the newly opened items: scroll into view, expose in
