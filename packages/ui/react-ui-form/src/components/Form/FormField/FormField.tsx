@@ -12,7 +12,7 @@ import { SchemaAST, SchemaEx } from '@dxos/effect';
 import { Collapsible, Field, Icon, type ThemedClassName, Tooltip } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
-import { type FormFieldRendererProps, type FormPresentation } from '#types';
+import { type FormFieldLabelPlacement, type FormFieldRendererProps, type FormPresentation } from '#types';
 
 import { useFormContext, useFormFieldState } from '../../../hooks';
 import { type FormVariant, formTheme } from '../Form.theme';
@@ -183,6 +183,8 @@ export type FormFieldProps<T = any> = ThemedClassName<
      * label, never a child, so the label's text stays exactly `label`.
      */
     labelEnd?: ReactNode;
+    /** `beside` lays the label after the control on one line, the shape of a toggle; the theme decides per variant. */
+    labelPlacement?: FormFieldLabelPlacement;
     /** Overrides the form's presentation for this row. */
     presentation?: FormPresentation;
     /** Renders a bound value in the `static` presentation; the default formats by the schema's format. */
@@ -342,6 +344,7 @@ export const FormFieldRow = <T,>({
   readonly: readonlyProp,
   standalone,
   labelEnd,
+  labelPlacement = 'above',
   presentation: presentationProp,
   renderStatic,
   format,
@@ -349,7 +352,7 @@ export const FormFieldRow = <T,>({
   rootRef,
 }: FormFieldRowProps<T>) => {
   const { variant = 'default', layout } = useFormContext(FORM_FIELD_NAME);
-  const styles = formTheme.styles({ variant });
+  const styles = formTheme.styles({ variant, labelPlacement });
   const { showDescription } = formTheme.behavior[variant];
   const resolved = presentationFor(presentationProp ?? binding?.presentation ?? layout);
   const error = binding?.error ?? errorProp;
@@ -372,6 +375,8 @@ export const FormFieldRow = <T,>({
       readOnly={readonly}
     >
       <div className={styles.field({ class: mx(classNames) })} ref={rootRef}>
+        {/* A label beside its control follows it in the DOM, as a toggle's text does; the settings grid places by area either way. */}
+        {labelPlacement === 'beside' && <div className={styles.fieldControl()}>{control}</div>}
         {resolved.showLabel && label && (
           <FormFieldLabel
             variant={variant}
@@ -386,7 +391,7 @@ export const FormFieldRow = <T,>({
         {showDescription && description && (
           <Field.HelperText classNames={styles.fieldDescription()}>{description}</Field.HelperText>
         )}
-        <div className={styles.fieldControl()}>{control}</div>
+        {labelPlacement !== 'beside' && <div className={styles.fieldControl()}>{control}</div>}
         {resolved.showError && error && (
           <div className={styles.fieldValidation()}>
             <Field.ErrorText>{error}</Field.ErrorText>

@@ -34,3 +34,6 @@ export const BooleanField = ({
     </Field.Block>
   );
 };
+
+// A toggle reads with its text beside it; the row lays the label there.
+BooleanField.labelPlacement = 'beside' as const;

@@ -48,7 +48,11 @@ the built-in renderers (`TextField`, `DateField`, `RefField`, …) are controls 
 in a `Form.Field`, not rows of their own. A renderer the form supplies (`fieldMap`, `fieldProvider`)
 is the one exception: it owns its row, because what it customises is usually the row (a description,
 a `labelEnd` readout, several controls), so it writes `<Form.Field path={jsonPath}>` around its
-control and gets the schema's label and description for free. The dispatcher, `FormFieldDispatch`, maps a schema property to a control through
+control and gets the schema's label and description for free. A control declares its shape rather than
+its chrome: `standalone` (several labelled inputs, so the row's label is text) and `labelPlacement:
+'beside'` (a toggle, so the row lays its label after the control on one line). The theme decides what
+a declaration means per variant: the settings card keeps its grid, so a toggle there still has its
+label and description on the left and the switch on the right. The dispatcher, `FormFieldDispatch`, maps a schema property to a control through
 the pure `resolveFieldRenderer` (annotation first, then format, then type) and renders the row once
 around it.
 

@@ -64,6 +64,11 @@ const formStyles = tv({
         fieldValidation: '[grid-area:validation]',
       },
     },
+    // Where the row lays its label; the theme decides how, and the settings card keeps its grid.
+    labelPlacement: {
+      above: {},
+      beside: {},
+    },
     // A top-level field set is a titled section; a nested one is an indented, bordered group.
     depth: {
       root: {
@@ -76,6 +81,16 @@ const formStyles = tv({
     },
   },
   compoundVariants: [
+    {
+      // The control leads and the label follows it on one line; description and error span both.
+      variant: 'default',
+      labelPlacement: 'beside',
+      class: {
+        field: 'grid grid-cols-[auto_1fr] items-center gap-x-2',
+        fieldDescription: 'col-span-2',
+        fieldValidation: 'col-span-2',
+      },
+    },
     {
       variant: 'settings',
       depth: 'root',
@@ -100,6 +115,7 @@ const formStyles = tv({
   ],
   defaultVariants: {
     variant: 'default',
+    labelPlacement: 'above',
     depth: 'root',
   },
 });

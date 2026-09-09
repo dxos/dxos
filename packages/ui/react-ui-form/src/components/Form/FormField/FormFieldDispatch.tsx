@@ -337,6 +337,7 @@ export const FormFieldDispatch = (props: FormFieldDispatchProps) => {
   };
 
   const standalone = resolution.kind === 'scalar' && resolution.component.standalone;
+  const labelPlacement = resolution.kind === 'scalar' ? resolution.component.labelPlacement : undefined;
   return (
     <FormFieldRow
       label={label}
@@ -344,6 +345,7 @@ export const FormFieldDispatch = (props: FormFieldDispatchProps) => {
       format={fieldProps.format}
       binding={binding}
       standalone={standalone}
+      labelPlacement={labelPlacement}
       renderStatic={resolution.kind === 'select' ? renderSelectStatic(resolution.options, projection, name) : undefined}
     >
       {renderControl(resolution)}

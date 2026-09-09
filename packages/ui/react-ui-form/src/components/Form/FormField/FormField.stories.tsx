@@ -20,6 +20,7 @@ import { useFormField } from './FormFieldContext';
 const ProfileSchema = Schema.Struct({
   name: Schema.String.annotate({ title: 'Name', description: 'How you are known.' }),
   hue: Schema.optional(Schema.String.annotate({ title: 'Hue', description: 'Your colour.' })),
+  newsletter: Schema.optional(Schema.Boolean.annotate({ title: 'Newsletter', description: 'Monthly, no more.' })),
 }).mapFields(Struct.map(Schema.mutableKey));
 
 type Profile = Schema.Schema.Type<typeof ProfileSchema>;
@@ -42,7 +43,7 @@ type StoryArgs = {
  * control. Without `path` it takes its label and description as props and its children as the control.
  */
 const DefaultStory = ({ variant, presentation, readonly }: StoryArgs) => {
-  const [values, setValues] = useState<Partial<Profile>>({ name: 'Ada' });
+  const [values, setValues] = useState<Partial<Profile>>({ name: 'Ada', newsletter: true });
   const [notifications, setNotifications] = useState(true);
   return (
     <Form.Root
@@ -60,9 +61,10 @@ const DefaultStory = ({ variant, presentation, readonly }: StoryArgs) => {
             <Form.Field path='hue'>
               <HueControl />
             </Form.Field>
+            <Form.Field path='newsletter' />
           </Form.FieldSet>
           <Form.FieldSet label='Settings'>
-            <Form.Field label='Notifications' description='Tell me when something changes.'>
+            <Form.Field label='Notifications' description='Tell me when something changes.' labelPlacement='beside'>
               <Field.Switch checked={notifications} onCheckedChange={setNotifications} />
             </Form.Field>
             <Form.Field standalone label='Danger zone' description='There is no undo.'>
@@ -91,7 +93,15 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-const rowsAreFields = async (canvasElement: HTMLElement) => {
+/** In the default variant a toggle's text sits right of it on the same line; the settings card keeps its label column. */
+const labelBesideToggle = (canvas: ReturnType<typeof within>, name: string, beside: boolean) => {
+  const input = canvas.getByLabelText(name).getBoundingClientRect();
+  const label = canvas.getByText(name).getBoundingClientRect();
+  const sameLine = Math.abs(label.top + label.height / 2 - (input.top + input.height / 2)) < 8;
+  return expect(sameLine && label.left >= input.right).toBe(beside);
+};
+
+const rowsAreFields = async (canvasElement: HTMLElement, variant: FormVariant) => {
   const canvas = within(canvasElement);
 
   // Bound: the label and value come from the schema and the model; the dispatcher picked the input.
@@ -114,18 +124,23 @@ const rowsAreFields = async (canvasElement: HTMLElement) => {
   await userEvent.click(canvas.getByText('Notifications'));
   await expect(notifications).not.toBeChecked();
 
+  // A schema boolean is a toggle beside its text in the default variant and a settings row otherwise.
+  await expect(canvas.getByLabelText('Newsletter')).toBeChecked();
+  await labelBesideToggle(canvas, 'Newsletter', variant === 'default');
+  await labelBesideToggle(canvas, 'Notifications', variant === 'default');
+
   // Standalone: the button keeps its own name; the row's label names nothing.
   await expect(canvas.getByRole('button', { name: 'Delete everything' })).toBeVisible();
   await expect(canvas.queryByLabelText('Danger zone')).toBeNull();
 };
 
 export const Default: Story = {
-  play: async ({ canvasElement }) => rowsAreFields(canvasElement),
+  play: async ({ canvasElement }) => rowsAreFields(canvasElement, 'default'),
 };
 
 export const Settings: Story = {
   args: { variant: 'settings' },
-  play: async ({ canvasElement }) => rowsAreFields(canvasElement),
+  play: async ({ canvasElement }) => rowsAreFields(canvasElement, 'settings'),
 };
 
 export const Compact: Story = {
