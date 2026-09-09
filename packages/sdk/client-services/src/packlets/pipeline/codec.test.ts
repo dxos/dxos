@@ -12,8 +12,8 @@ import { fromPublicKey, fromTimeframe } from '@dxos/protocols/buf';
 import {
   CredentialsMessageSchema,
   type FeedMessage,
-  FeedMessageSchema,
   FeedMessage_PayloadSchema,
+  FeedMessageSchema,
 } from '@dxos/protocols/buf/dxos/echo/feed_pb';
 import { AuthorizedDeviceSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { Timeframe } from '@dxos/timeframe';

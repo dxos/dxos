@@ -19,13 +19,13 @@ import { type ProfileDocument } from '@dxos/protocols/buf/dxos/halo/credentials_
 import {
   type AdmissionRequest,
   type AdmissionResponse,
-  AuthenticationResponseSchema,
   AuthenticationResponse_Status,
+  AuthenticationResponseSchema,
   IntroductionResponseSchema,
   InvitationHostService as InvitationHostServiceDesc,
   type InvitationOptions,
-  InvitationOptionsSchema,
   InvitationOptions_Role,
+  InvitationOptionsSchema,
 } from '@dxos/protocols/buf/dxos/halo/invitations_pb';
 import { type ExtensionContext, RpcExtension } from '@dxos/teleport';
 

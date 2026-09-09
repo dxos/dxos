@@ -15,8 +15,8 @@ import { Invitation_State } from '@dxos/protocols/buf/dxos/client/invitation_pb'
 import {
   InvitationHostService as InvitationHostServiceDesc,
   type InvitationOptions,
-  InvitationOptionsSchema,
   InvitationOptions_Role,
+  InvitationOptionsSchema,
 } from '@dxos/protocols/buf/dxos/halo/invitations_pb';
 import { type ExtensionContext, RpcExtension } from '@dxos/teleport';
 

@@ -24,8 +24,8 @@ import { log } from '@dxos/log';
 import { fromPublicKey, requirePublicKey } from '@dxos/protocols/buf';
 import { type Runtime_Client_EdgeFeatures } from '@dxos/protocols/buf/dxos/config_pb';
 import {
-  AdmittedFeedSchema,
   AdmittedFeed_Designation,
+  AdmittedFeedSchema,
   AuthorizedDeviceSchema,
   type Credential,
   type DeviceProfileDocument,

@@ -2,7 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import { create } from '@bufbuild/protobuf';
 import * as EffectContext from 'effect/Context';
 import { afterEach, beforeEach, describe, expect, onTestFinished, test } from 'vitest';
 
@@ -14,7 +13,6 @@ import { subscribeStream } from '@dxos/protocols';
 import { buf, toPublicKey } from '@dxos/protocols/buf';
 import { type Identity } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { ProfileDocumentSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
-import { IdentityRecovery } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { IdentityRecovery_Kind } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
 import { type ServiceContext } from '../services';

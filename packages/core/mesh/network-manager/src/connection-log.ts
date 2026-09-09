@@ -10,7 +10,6 @@ import { PublicKey } from '@dxos/keys';
 import { fromDate, fromPublicKey, toDate } from '@dxos/protocols/buf';
 import {
   ConnectionEventSchema,
-  type ConnectionInfo,
   ConnectionInfoSchema,
   type SwarmInfo,
   SwarmInfoSchema,

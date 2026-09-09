@@ -14,9 +14,8 @@ import { log } from '@dxos/log';
 import { fromPublicKey, fromTimeframe } from '@dxos/protocols/buf';
 import { type FeedMessage, FeedMessageSchema } from '@dxos/protocols/buf/dxos/echo/feed_pb';
 import { SpaceMetadataSchema } from '@dxos/protocols/buf/dxos/echo/metadata_pb';
-import { AdmittedFeedSchema, AdmittedFeed_Designation } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
+import { AdmittedFeed_Designation, AdmittedFeedSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { StorageType, createStorage } from '@dxos/random-access-storage';
-import { Timeframe } from '@dxos/timeframe';
 
 import { MetadataStore } from '../metadata';
 import { valueEncoding } from '../pipeline';

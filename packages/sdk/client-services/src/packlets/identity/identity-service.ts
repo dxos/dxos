@@ -48,8 +48,8 @@ export class IdentityServiceImpl extends Resource implements IdentityService.Han
         const ctx = Context.default();
         await this._createIdentity(
           {
-            profile: request.profile && request.profile,
-            deviceProfile: request.deviceProfile && request.deviceProfile,
+            profile: request.profile,
+            deviceProfile: request.deviceProfile,
           },
           ctx,
         );

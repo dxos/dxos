@@ -14,8 +14,8 @@ import { type FeedMessageBlock } from '@dxos/protocols';
 import { buf, fromPublicKey, requirePublicKey } from '@dxos/protocols/buf';
 import {
   type SubscribeToFeedBlocksResponse,
-  SubscribeToFeedBlocksResponseSchema,
   SubscribeToFeedBlocksResponse_BlockSchema,
+  SubscribeToFeedBlocksResponseSchema,
 } from '@dxos/protocols/buf/dxos/devtools/host_pb';
 import { type FeedMessage } from '@dxos/protocols/buf/dxos/echo/feed_pb';
 import { type DevtoolsHost } from '@dxos/protocols/rpc';

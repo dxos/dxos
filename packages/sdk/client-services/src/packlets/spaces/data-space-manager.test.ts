@@ -19,7 +19,7 @@ import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { requirePublicKey, toPublicKey } from '@dxos/protocols/buf';
 import { SpaceState } from '@dxos/protocols/buf/dxos/client/invitation_pb';
-import { SpaceMember, type SpaceMember as SpaceMemberAssertion } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
+import { type SpaceMember as SpaceMemberAssertion } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { SpaceMember_Role } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { openAndClose } from '@dxos/test-utils';
 

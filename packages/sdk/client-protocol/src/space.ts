@@ -14,8 +14,8 @@ import { type Invitation } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 import { type SpaceState } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 import {
   type Contact,
-  type Space as SpaceData,
   type Space_PipelineState,
+  type Space as SpaceData,
   type SpaceMember,
 } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { type EdgeReplicationSetting } from '@dxos/protocols/buf/dxos/echo/metadata_pb';

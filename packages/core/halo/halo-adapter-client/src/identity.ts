@@ -21,8 +21,8 @@ import { fromDate, fromPublicKey, requirePublicKey, toDate, toPublicKey } from '
 import {
   type Device as ClientDevice,
   type Identity as ClientIdentity,
-  DeviceKind,
   Device_PresenceState,
+  DeviceKind,
   RecoverIdentityRequest_ExternalSignatureSchema,
 } from '@dxos/protocols/buf/dxos/client/services_pb';
 import {
@@ -30,9 +30,9 @@ import {
   CredentialSchema,
   DeviceProfileDocumentSchema,
   DeviceType,
-  IdentityRecoverySchema,
-  IdentityRecoveryRevokedSchema,
   IdentityRecovery_Kind,
+  IdentityRecoveryRevokedSchema,
+  IdentityRecoverySchema,
   ProfileDocumentSchema,
   ServiceAccessSchema,
 } from '@dxos/protocols/buf/dxos/halo/credentials_pb';

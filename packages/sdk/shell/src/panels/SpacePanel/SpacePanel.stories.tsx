@@ -8,7 +8,7 @@ import React from 'react';
 
 import { IdentityDid, PublicKey } from '@dxos/keys';
 import { fromPublicKey, toPublicKey } from '@dxos/protocols/buf';
-import { SpaceMemberSchema, SpaceMember_PresenceState } from '@dxos/protocols/buf/dxos/client/services_pb';
+import { SpaceMember_PresenceState, SpaceMemberSchema } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { ProfileDocumentSchema, SpaceMember_Role } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { Invitation_State } from '@dxos/react-client/invitations';
 import { withTheme } from '@dxos/react-ui/testing';

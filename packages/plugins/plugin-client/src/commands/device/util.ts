@@ -3,7 +3,7 @@
 //
 
 import { Doc, FormBuilder } from '@dxos/cli-util';
-import { type Device, DeviceKind, DeviceType, Device_PresenceState } from '@dxos/client/halo';
+import { type Device, Device_PresenceState, DeviceKind, DeviceType } from '@dxos/client/halo';
 import { requirePublicKey } from '@dxos/protocols/buf';
 
 const maybeTruncateKey = (key: { toHex(): string; truncate(): string }, truncate = false) =>

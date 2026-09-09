@@ -14,10 +14,10 @@ import { requirePublicKey } from '@dxos/protocols/buf';
 import { type BufService } from '@dxos/protocols/buf-service';
 import {
   type BridgeEvent,
-  BridgeEventSchema,
   BridgeEvent_ConnectionEventSchema,
   BridgeEvent_DataEventSchema,
   BridgeEvent_SignalEventSchema,
+  BridgeEventSchema,
   BridgeService as BridgeServiceDesc,
   type CloseRequest,
   type ConnectionRequest,

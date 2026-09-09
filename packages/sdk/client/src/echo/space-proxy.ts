@@ -42,14 +42,14 @@ import { invariant } from '@dxos/invariant';
 import { type PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { decodeError, runServiceCall, subscribeStream } from '@dxos/protocols';
-import { buf, fromPublicKey, packJson, requirePublicKey, toTimeframe } from '@dxos/protocols/buf';
+import { fromPublicKey, packJson, requirePublicKey, toTimeframe } from '@dxos/protocols/buf';
 import { Invitation, Invitation_Kind, SpaceState } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 import {
   type Contact,
-  type Space as SpaceData,
-  type SpaceMember,
   type Space_PipelineState,
   Space_PipelineStateSchema,
+  type Space as SpaceData,
+  type SpaceMember,
 } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { EdgeReplicationSetting } from '@dxos/protocols/buf/dxos/echo/metadata_pb';
 import { type SpaceSnapshot } from '@dxos/protocols/buf/dxos/echo/snapshot_pb';

@@ -15,7 +15,6 @@ import { fromPublicKey } from '@dxos/protocols/buf';
 import { type FeedMessage } from '@dxos/protocols/buf/dxos/echo/feed_pb';
 import { type SpaceMetadata, SpaceMetadataSchema } from '@dxos/protocols/buf/dxos/echo/metadata_pb';
 import { PeerSchema } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
-import { AdmittedFeed } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { AdmittedFeed_Designation } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { type Storage, StorageType, createStorage } from '@dxos/random-access-storage';
 import { Gossip, Presence } from '@dxos/teleport-extension-gossip';

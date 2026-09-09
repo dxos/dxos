@@ -35,9 +35,9 @@ import {
   type Credential,
   CredentialSchema,
   type IdentityRecovery,
+  IdentityRecovery_Kind,
   IdentityRecoveryRevokedSchema,
   IdentityRecoverySchema,
-  IdentityRecovery_Kind,
 } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { type IdentityService } from '@dxos/protocols/rpc';
 import { Timeframe } from '@dxos/timeframe';

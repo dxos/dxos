@@ -26,8 +26,8 @@ import { type Space_Metrics, Space_MetricsSchema } from '@dxos/protocols/buf/dxo
 import { type Runtime_Client_EdgeFeatures } from '@dxos/protocols/buf/dxos/config_pb';
 import { type FeedMessage, type FeedMessage_Payload } from '@dxos/protocols/buf/dxos/echo/feed_pb';
 import {
-  AdmittedFeedSchema,
   AdmittedFeed_Designation,
+  AdmittedFeedSchema,
   type Credential,
   type Epoch,
   EpochSchema,

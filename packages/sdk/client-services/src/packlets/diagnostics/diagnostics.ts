@@ -19,13 +19,13 @@ import {
   type Platform,
 } from '@dxos/protocols/buf/dxos/client/services_pb';
 import {
-  IdentitySchema as SpaceIdentitySchema,
-  type SpaceMember,
-  SpaceMemberSchema,
-  SpaceMember_PresenceState,
   type Space_Metrics,
   type Space_PipelineState,
   Space_PipelineStateSchema,
+  IdentitySchema as SpaceIdentitySchema,
+  type SpaceMember,
+  SpaceMember_PresenceState,
+  SpaceMemberSchema,
 } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { type SwarmInfo } from '@dxos/protocols/buf/dxos/devtools/swarm_pb';
 import { type Epoch } from '@dxos/protocols/buf/dxos/halo/credentials_pb';

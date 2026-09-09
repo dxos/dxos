@@ -3,7 +3,7 @@
 //
 
 import { requirePublicKey } from '@dxos/protocols/buf';
-import { type Device as ClientDevice, DeviceKind, DeviceType, Device_PresenceState } from '@dxos/react-client/halo';
+import { type Device as ClientDevice, Device_PresenceState, DeviceKind, DeviceType } from '@dxos/react-client/halo';
 
 import { type ShellDevice } from './DeviceListProps';
 

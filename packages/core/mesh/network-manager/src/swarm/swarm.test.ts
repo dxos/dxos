@@ -18,8 +18,8 @@ import { fromDate, fromPublicKey } from '@dxos/protocols/buf';
 import { PeerSchema } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
 import {
   type SwarmEvent,
-  SwarmEventSchema,
   SwarmEvent_PeerAvailableSchema,
+  SwarmEventSchema,
 } from '@dxos/protocols/buf/dxos/edge/signal_pb';
 import { ComplexSet } from '@dxos/util';
 

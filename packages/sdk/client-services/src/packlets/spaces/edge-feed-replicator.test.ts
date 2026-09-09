@@ -14,7 +14,6 @@ import { FeedFactory, FeedStore } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';
 import { SpaceId } from '@dxos/keys';
 import { createBuf, fromTimeframe } from '@dxos/protocols/buf';
-import { EdgeStatus } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { EdgeStatus_ConnectionState } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { type FeedMessage, FeedMessageSchema } from '@dxos/protocols/buf/dxos/echo/feed_pb';
 import { createStorage } from '@dxos/random-access-storage';

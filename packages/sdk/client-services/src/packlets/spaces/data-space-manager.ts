@@ -19,13 +19,13 @@ import { Event, scheduleTask, synchronized, trackLeaks } from '@dxos/async';
 import { SpaceProperties } from '@dxos/client-protocol';
 import { Context, LifecycleState, Resource, cancelWithContext } from '@dxos/context';
 import {
+  type CredentialSigner,
+  type DelegateInvitationCredential,
+  type MemberInfo,
   createAdmissionCredentials,
   credentialOfPayload,
   credentialPayload,
-  type CredentialSigner,
-  type DelegateInvitationCredential,
   getCredentialAssertion,
-  type MemberInfo,
 } from '@dxos/credentials';
 import { Type } from '@dxos/echo';
 import {

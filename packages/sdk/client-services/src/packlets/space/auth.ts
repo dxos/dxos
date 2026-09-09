@@ -11,9 +11,9 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { type BufService, getBufService } from '@dxos/protocols/buf-service';
 import {
-  AuthService as AuthServiceDesc,
   AuthenticateRequestSchema,
   AuthenticateResponseSchema,
+  AuthService as AuthServiceDesc,
 } from '@dxos/protocols/buf/dxos/mesh/teleport/auth_pb';
 import { type ExtensionContext, RpcExtension } from '@dxos/teleport';
 

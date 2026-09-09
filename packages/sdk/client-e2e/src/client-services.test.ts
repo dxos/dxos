@@ -17,11 +17,7 @@ import { log } from '@dxos/log';
 import { requirePublicKey, toPublicKey } from '@dxos/protocols/buf';
 import { Invitation_AuthMethod, Invitation_State } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 import { DeviceKind } from '@dxos/protocols/buf/dxos/client/services_pb';
-import {
-  Device_PresenceState,
-  type SpaceMember,
-  SpaceMember_PresenceState,
-} from '@dxos/protocols/buf/dxos/client/services_pb';
+import { Device_PresenceState, SpaceMember_PresenceState } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { ProfileDocumentSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
 // TODO(burdon): Use as set-up for test suite.

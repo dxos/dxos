@@ -22,8 +22,8 @@ import { fromPublicKey, fromTimeframe, requirePublicKey, toTimeframe } from '@dx
 import type { FeedMessage } from '@dxos/protocols/buf/dxos/echo/feed_pb';
 import {
   type ControlPipelineSnapshot,
-  ControlPipelineSnapshotSchema,
   ControlPipelineSnapshot_ControlMessageSchema,
+  ControlPipelineSnapshotSchema,
 } from '@dxos/protocols/buf/dxos/echo/metadata_pb';
 import { AdmittedFeed_Designation, type Credential } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { Timeframe } from '@dxos/timeframe';

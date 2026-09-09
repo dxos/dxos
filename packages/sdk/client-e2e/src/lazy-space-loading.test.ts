@@ -16,7 +16,6 @@ import { TestSchema } from '@dxos/echo/testing';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { requirePublicKey, toPublicKey } from '@dxos/protocols/buf';
-import { SpaceMember } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { SpaceMember_PresenceState } from '@dxos/protocols/buf/dxos/client/services_pb';
 
 describe('Lazy Space Loading', () => {

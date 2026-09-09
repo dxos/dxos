@@ -56,12 +56,7 @@ export class InvitationsServiceImpl implements InvitationsService.Handlers {
   ): EffectStream.Stream<Invitation, Error> {
     return EffectEx.streamFromEmitter<Invitation, Error>((emit) => {
       const ctx = Context.default();
-      // The profile ends up inside a signed device credential, so the manager keeps the
-      // protobuf.js shape and the buf request converts here, at the service boundary.
-      const invitation = this._invitationsManager.acceptInvitation(ctx, {
-        ...request,
-        deviceProfile: request.deviceProfile && request.deviceProfile,
-      });
+      const invitation = this._invitationsManager.acceptInvitation(ctx, { ...request });
       invitation.subscribe(
         (value) => void emit.single(value),
         (err) => void emit.fail(err),

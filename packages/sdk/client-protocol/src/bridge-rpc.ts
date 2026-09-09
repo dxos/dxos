@@ -15,13 +15,13 @@ import { type Stream as PbStream } from '@dxos/async';
 import { EffectEx } from '@dxos/effect';
 import { type BufService } from '@dxos/protocols/buf-service';
 import {
+  BridgeService as BridgeServiceDesc,
   type CloseRequest,
   type ConnectionRequest,
   type DataRequest,
   type DetailsRequest,
   type SignalRequest,
   type StatsRequest,
-  BridgeService as BridgeServiceDesc,
 } from '@dxos/protocols/buf/dxos/mesh/bridge_pb';
 import { BridgeService } from '@dxos/protocols/rpc';
 

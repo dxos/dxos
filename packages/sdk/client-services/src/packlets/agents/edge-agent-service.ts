@@ -11,9 +11,6 @@ import { EffectEx } from '@dxos/effect';
 import { EdgeAgentStatus } from '@dxos/protocols';
 import { buf } from '@dxos/protocols/buf';
 import {
-  type EdgeStatus,
-  EdgeStatus_ConnectionState,
-  EdgeStatusSchema,
   type QueryAgentStatusResponse,
   QueryAgentStatusResponse_AgentStatus,
   QueryAgentStatusResponseSchema,

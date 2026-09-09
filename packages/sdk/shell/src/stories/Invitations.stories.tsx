@@ -10,7 +10,7 @@ import { log } from '@dxos/log';
 import { ProfileDocumentSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { random } from '@dxos/random';
 import { useClient } from '@dxos/react-client';
-import { type Space, type SpaceMember, SpaceMember_PresenceState, useSpaces } from '@dxos/react-client/echo';
+import { type Space, SpaceMember_PresenceState, useSpaces } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { type Invitation, Invitation_State, InvitationEncoder } from '@dxos/react-client/invitations';
 import { ConnectionState, useNetworkStatus } from '@dxos/react-client/mesh';

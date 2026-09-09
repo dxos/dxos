@@ -10,11 +10,11 @@ import * as EffectStream from 'effect/Stream';
 import { SubscriptionList, UpdateScheduler, scheduleTask } from '@dxos/async';
 import { Context } from '@dxos/context';
 import {
+  type CredentialProcessor,
   createAdmissionCredentials,
   createDidFromIdentityKey,
   credentialOfPayload,
   credentialPayload,
-  type CredentialProcessor,
   getCredentialAssertion,
 } from '@dxos/credentials';
 import { raise } from '@dxos/debug';
@@ -34,7 +34,7 @@ import {
   encodeError,
   makeInProcessClient,
 } from '@dxos/protocols';
-import { buf, fromPublicKey, fromTimeframe, requirePublicKey, toPublicKey } from '@dxos/protocols/buf';
+import { buf, fromPublicKey, fromTimeframe, requirePublicKey } from '@dxos/protocols/buf';
 import { SpaceState } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 import {
   type CreateEpochResponse,
@@ -50,11 +50,10 @@ import {
   type ContactAdmission,
   ContactAdmissionSchema,
   IdentitySchema,
-  type SpaceMember,
-  SpaceMemberSchema,
-  SpaceMember_PresenceState,
-  Space_MetricsSchema,
   Space_PipelineStateSchema,
+  type SpaceMember,
+  SpaceMember_PresenceState,
+  SpaceMemberSchema,
 } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { type Credential } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { type GossipMessage } from '@dxos/protocols/buf/dxos/mesh/teleport/gossip_pb';

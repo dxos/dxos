@@ -7,7 +7,7 @@ import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { Event, sleep } from '@dxos/async';
 import { fromTimeframe } from '@dxos/protocols/buf';
-import { type FeedMessage, FeedMessageSchema, FeedMessage_PayloadSchema } from '@dxos/protocols/buf/dxos/echo/feed_pb';
+import { type FeedMessage, FeedMessage_PayloadSchema, FeedMessageSchema } from '@dxos/protocols/buf/dxos/echo/feed_pb';
 import { Timeframe } from '@dxos/timeframe';
 import { range } from '@dxos/util';
 

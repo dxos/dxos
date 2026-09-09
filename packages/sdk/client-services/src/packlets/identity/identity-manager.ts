@@ -12,9 +12,9 @@ import platform from 'platform';
 import { Event } from '@dxos/async';
 import { Context } from '@dxos/context';
 import {
+  CredentialGenerator,
   createCredentialSignerWithKey,
   createDidFromIdentityKey,
-  CredentialGenerator,
   credentialPayload,
 } from '@dxos/credentials';
 import { failUndefined } from '@dxos/debug';
@@ -28,9 +28,9 @@ import { log } from '@dxos/log';
 import { fromPublicKey, fromTimeframe, requirePublicKey, toTimeframe } from '@dxos/protocols/buf';
 import {
   type Device,
+  Device_PresenceState,
   DeviceKind,
   DeviceSchema,
-  Device_PresenceState,
 } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { type Runtime_Client_EdgeFeatures } from '@dxos/protocols/buf/dxos/config_pb';
 import { type FeedMessage } from '@dxos/protocols/buf/dxos/echo/feed_pb';

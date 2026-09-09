@@ -9,13 +9,13 @@ import { failUndefined } from '@dxos/debug';
 import { type KeyringApi } from '@dxos/keyring';
 import { fromPublicKey, fromTimeframe } from '@dxos/protocols/buf';
 import {
-  AdmittedFeedSchema,
   AdmittedFeed_Designation,
+  AdmittedFeedSchema,
   EpochSchema,
   MembershipPolicy,
   SpaceGenesisSchema,
-  SpaceMemberSchema,
   SpaceMember_Role,
+  SpaceMemberSchema,
 } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { Timeframe } from '@dxos/timeframe';
 
