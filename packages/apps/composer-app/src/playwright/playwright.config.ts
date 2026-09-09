@@ -15,8 +15,13 @@ export default defineConfig({
   testIgnore: ['**/startup.spec.ts', '**/dev-*.spec.ts', '**/welcome-focus.spec.ts'],
   timeout: 60_000,
   expect: { timeout: 10_000 },
-  // Two-peer specs boot two app instances per worker, so 4 overloads the cell.
-  workers: 3,
+  // No `workers` override: inherits the preset's `PLAYWRIGHT_WORKERS || 2`. This used to hardcode 3,
+  // but the two-peer specs boot two app instances per worker, so 3 means six Composer instances at
+  // once — and measured with retries off, that produces exactly the starvation the preset's own
+  // comment describes: the account panel and space rows never appear inside their 30s budget.
+  // Collaboration + HALO at 20x scored 6 failed/80 at three workers and 80/80 at one, same code and
+  // run count (DX-1264). Dropping the override also restores `PLAYWRIGHT_WORKERS` tuning for CI,
+  // which the hardcoded value disabled.
   webServer: {
     command: 'pnpm vite preview --configLoader native',
     port: 4173,
