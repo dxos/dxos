@@ -25,7 +25,7 @@ import { Form } from '@dxos/react-ui-form';
 import { Masonry } from '@dxos/react-ui-masonry';
 import { type ActionGraphProps, ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 import { buildTaskForest, flattenVisibleTasks } from '@dxos/react-ui-task';
-import { type Milestone, Task, type TaskSet } from '@dxos/types';
+import { type Milestone, Outline, Task, type TaskSet } from '@dxos/types';
 
 import { ObjectCard } from '#components';
 import { meta } from '#meta';
@@ -192,7 +192,11 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
                     `taskSet` rides along so promoting an item files it into THIS project's ledger
                     rather than into a set owned by the outline. */}
                   {outline && (
-                    <Form.FieldSet label={t('outline.label')}>
+                    <Form.FieldSet
+                      label={t('outline.label')}
+                      description={t('outline.description')}
+                      descriptionPlacement='tooltip'
+                    >
                       <Surface.Surface
                         type={AppSurface.Section}
                         data={{ subject: outline, attendableId, taskSet }}

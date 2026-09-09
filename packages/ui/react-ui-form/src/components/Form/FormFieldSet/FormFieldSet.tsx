@@ -2,9 +2,18 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { Children, type PropsWithChildren, useId } from 'react';
+import React, { Children, type PropsWithChildren, type ReactElement, useId } from 'react';
 
-import { Collapsible, Field, Fieldset, Icon, type ThemedClassName, composable, composableProps } from '@dxos/react-ui';
+import {
+  Collapsible,
+  Field,
+  Fieldset,
+  Icon,
+  type ThemedClassName,
+  Tooltip,
+  composable,
+  composableProps,
+} from '@dxos/react-ui';
 import { MarkdownView } from '@dxos/react-ui-markdown';
 
 import { useFormContext } from '../../../hooks';
@@ -17,8 +26,10 @@ const FORM_FIELDSET_NAME = 'Form.FieldSet';
 export type FormFieldSetProps = ThemedClassName<
   PropsWithChildren<{
     label?: string;
-    /** Markdown, rendered under the legend. */
+    /** Markdown, rendered under the legend, or as a tooltip on the label. */
     description?: string;
+    /** Where the description shows: as helper text below the legend (default), or on hover of the label. */
+    descriptionPlacement?: 'below' | 'tooltip';
     /** The legend is a disclosure that folds the body; nested objects fold by default. */
     collapsible?: boolean;
   }>
@@ -31,7 +42,7 @@ export type FormFieldSetProps = ThemedClassName<
  * section, a nested one an indented, bordered group, so the same element serves both.
  */
 export const FormFieldSet = composable<HTMLFieldSetElement, FormFieldSetProps>(
-  ({ children, label, description, collapsible, ...props }, forwardedRef) => {
+  ({ children, label, description, descriptionPlacement = 'below', collapsible, ...props }, forwardedRef) => {
     const { variant = 'default', layout } = useFormContext(FORM_FIELDSET_NAME);
     const depth = useFormFieldSetDepth();
     const labelId = useId();
@@ -40,8 +51,22 @@ export const FormFieldSet = composable<HTMLFieldSetElement, FormFieldSetProps>(
     // An empty group has nothing to fold, so a disclosure on its legend would be a control that does nothing.
     const canCollapse = !!collapsible && Children.toArray(children).length > 0;
 
+    const tooltip = descriptionPlacement === 'tooltip' && !!description;
+    // The tooltip is on the label row rather than under it: the row is the legend, whose hover the
+    // trigger takes over, so the group's chrome stays one line.
+    const withTooltip = (node: ReactElement) =>
+      tooltip ? (
+        <Tooltip.Trigger asChild content={description} side='bottom'>
+          {node}
+        </Tooltip.Trigger>
+      ) : (
+        node
+      );
+
     const legend = showLabel && (
-      <Fieldset.Legend classNames={styles.fieldSetLegend({ class: description ? undefined : styles.fieldSetHeader() })}>
+      <Fieldset.Legend
+        classNames={styles.fieldSetLegend({ class: description && !tooltip ? undefined : styles.fieldSetHeader() })}
+      >
         {canCollapse ? (
           // The caret alone is the disclosure, named by the label text beside it, so the focus ring
           // frames a button and not the whole row.
@@ -66,16 +91,18 @@ export const FormFieldSet = composable<HTMLFieldSetElement, FormFieldSetProps>(
           />
         ) : depth === 0 ? (
           // A heading inside the legend: the group is named by its title, and the title still serves navigation.
-          <h2 id={labelId} className={styles.fieldSetTitle()}>
-            {label}
-          </h2>
+          withTooltip(
+            <h2 id={labelId} className={styles.fieldSetTitle()}>
+              {label}
+            </h2>,
+          )
         ) : (
           <FormFieldHeader label={label} labelId={labelId} />
         )}
       </Fieldset.Legend>
     );
 
-    const helper = description && (
+    const helper = description && !tooltip && (
       <Fieldset.HelperText asChild classNames={styles.fieldSetHeader({ class: styles.fieldSetDescription() })}>
         <MarkdownView content={description} />
       </Fieldset.HelperText>
@@ -94,13 +121,16 @@ export const FormFieldSet = composable<HTMLFieldSetElement, FormFieldSetProps>(
       </FormFieldSetDepthContext.Provider>
     );
 
+    // A header row (nested or collapsible) is the label row itself, so it takes the trigger as a whole.
+    const legendNode = legend && tooltip && (canCollapse || depth > 0) ? withTooltip(legend) : legend;
+
     const fieldset = (
       <Fieldset.Root
         {...composableProps(props, { classNames: styles.fieldSet() })}
         aria-labelledby={showLabel ? labelId : undefined}
         ref={forwardedRef}
       >
-        {legend}
+        {legendNode}
         {helper}
         {body}
       </Fieldset.Root>

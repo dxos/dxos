@@ -37,6 +37,8 @@ export const translations = [
         'chats.label': 'Sessions',
         'chats-empty.message': 'This project has no sessions yet.',
         'outline.label': 'Notes',
+        'outline.description':
+          'Notes are a scratch surface for the project. Use the menu to promote items into assignable tasks.',
         'create-artifact.label': 'Create artifact',
         'create-chat.label': 'Create session',
         'delegate-tasks.label': 'Assign selected tasks to agent',
