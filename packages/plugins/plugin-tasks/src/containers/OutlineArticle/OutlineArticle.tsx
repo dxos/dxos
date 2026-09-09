@@ -195,7 +195,7 @@ const TaskForm = ({ classNames, task }: ThemedClassName<{ task: Task.Task }>) =>
 
   const handleSave = useCallback(
     (values: Record<string, unknown>, { changed }: { changed: Record<string, boolean> }) => {
-      Obj.update(task, () => {
+      Obj.update(task, (task) => {
         for (const path of Object.keys(changed).filter((path) => changed[path])) {
           if (SchemaEx.isJsonPath(path)) {
             Obj.setValue(task, SchemaEx.splitJsonPath(path), values[path]);
@@ -210,7 +210,7 @@ const TaskForm = ({ classNames, task }: ThemedClassName<{ task: Task.Task }>) =>
     <Form.Root schema={schema} values={task} autoSave onSave={handleSave}>
       <Form.Viewport classNames={classNames} scroll>
         <Form.Content>
-          <Form.FieldSet />
+          <Form.Fields />
         </Form.Content>
       </Form.Viewport>
     </Form.Root>

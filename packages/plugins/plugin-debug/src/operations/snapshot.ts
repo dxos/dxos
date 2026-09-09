@@ -18,7 +18,7 @@ import { LogLevel } from '@dxos/log';
 import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabilities';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
-import { SpaceState } from '@dxos/protocols/proto/dxos/client/services';
+import { SpaceState } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 // UI-free subpath: the root barrel reaches the panel components.
 import { logBuffer } from '@dxos/react-ui-debug/log-buffer';
 import { AnchoredTo, type Message, type Thread } from '@dxos/types';

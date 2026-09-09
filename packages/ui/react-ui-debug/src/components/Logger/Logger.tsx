@@ -15,9 +15,9 @@ import React, {
 import { logFileRegistry } from '@dxos/log';
 import {
   ErrorStack,
+  Field,
   Icon,
   IconButton,
-  Input,
   Panel,
   Popover,
   ScrollArea,
@@ -233,15 +233,15 @@ const LoggerToolbar = composable<HTMLDivElement>((props, forwardedRef) => {
 
   return (
     <Toolbar.Root {...composableProps(props)} ref={forwardedRef}>
-      <Input.Root>
-        <Input.TextInput
+      <Field.Root>
+        <Field.Input
           placeholder={t('filter.placeholder')}
           value={filter}
           autoComplete='off'
           spellCheck={false}
           onChange={(ev) => setFilter(ev.target.value)}
         />
-      </Input.Root>
+      </Field.Root>
       <Select.Root value={selectedLevel} onValueChange={setFilter}>
         <Select.TriggerButton classNames='w-[6rem] text-sm' placeholder={t('level.label')} />
         <Select.Portal>
@@ -305,15 +305,15 @@ const LoggerLevels = ({ classNames }: LoggerLevelsProps) => {
             <Panel.Root>
               <Panel.Toolbar asChild>
                 <Toolbar.Root>
-                  <Input.Root>
-                    <Input.TextInput
+                  <Field.Root>
+                    <Field.Input
                       placeholder={t('levels.filter.placeholder')}
                       value={fileFilter}
                       autoComplete='off'
                       spellCheck={false}
                       onChange={(ev) => setFileFilter(ev.target.value)}
                     />
-                  </Input.Root>
+                  </Field.Root>
                   <Toolbar.IconButton
                     icon='ph--trash--regular'
                     iconOnly
@@ -484,14 +484,14 @@ const LoggerList = ({ classNames }: LoggerListProps) => {
                 classNames='group grid grid-cols-[auto_1rem_8rem_1fr_max-content] gap-2 items-center p-0 dx-current'
               >
                 <div className='flex items-center pl-2'>
-                  <Input.Root>
-                    <Input.Checkbox
+                  <Field.Root>
+                    <Field.Checkbox
                       tabIndex={-1}
                       size={3}
                       checked={checked.has(id)}
                       onCheckedChange={() => toggleChecked(id)}
                     />
-                  </Input.Root>
+                  </Field.Root>
                 </div>
                 <span className={mx('justify-self-center', levelColor(entry.level))}>{record.level}</span>
                 <div
@@ -552,8 +552,8 @@ const LoggerFilter = composable<HTMLDivElement>((props, forwardedRef) => {
 
   return (
     <Toolbar.Root {...composableProps(props, { classNames: 'bg-transparent' })} ref={forwardedRef}>
-      <Input.Root>
-        <Input.TextInput
+      <Field.Root>
+        <Field.Input
           placeholder={t('search.placeholder')}
           value={textFilter}
           autoComplete='off'
@@ -561,7 +561,7 @@ const LoggerFilter = composable<HTMLDivElement>((props, forwardedRef) => {
           onChange={(ev) => setTextFilter(ev.target.value)}
           start={<Icon icon='ph--magnifying-glass--regular' />}
         />
-      </Input.Root>
+      </Field.Root>
       {textFilter.length > 0 && (
         <Toolbar.IconButton
           icon='ph--x--regular'

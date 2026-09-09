@@ -2,6 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
+import { create } from '@bufbuild/protobuf';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
@@ -20,6 +21,8 @@ import { MemorySignalManager, MemorySignalManagerContext, type SignalManager } f
 import { MemoryTransportFactory, SwarmNetworkManager } from '@dxos/network-manager';
 import { toPublicKey } from '@dxos/protocols/buf';
 import { Invitation_Kind } from '@dxos/protocols/buf/dxos/client/invitation_pb';
+import { PeerSchema } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
+import { ChainSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { StorageType } from '@dxos/random-access-storage';
 import { layerMemory as sqliteLayerMemory } from '@dxos/sql-sqlite/platform';
 import * as SqlTransaction from '@dxos/sql-sqlite/SqlTransaction';
@@ -237,7 +240,7 @@ export class TestPeer {
         if (invitation.kind === Invitation_Kind.SPACE) {
           return new SpaceInvitationProtocol(
             this.dataSpaceManager,
-            this.identity!,
+            this.identity,
             this.keyring,
             toPublicKey(invitation.spaceKey),
           );
@@ -253,10 +256,12 @@ export class TestPeer {
   async createIdentity(): Promise<void> {
     await this.migrate();
     this._props.signingContext ??= await createSigningContext(this.keyring);
-    this.networkManager.setPeerInfo({
-      identityKey: this._props.signingContext.identityKey.toHex(),
-      peerKey: this._props.signingContext.deviceKey.toHex(),
-    });
+    this.networkManager.setPeerInfo(
+      create(PeerSchema, {
+        identityKey: this._props.signingContext.identityKey.toHex(),
+        peerKey: this._props.signingContext.deviceKey.toHex(),
+      }),
+    );
   }
 
   async migrate(): Promise<void> {
@@ -279,9 +284,9 @@ export const createSigningContext = async (keyring: SqliteKeyring): Promise<Sign
     deviceKey,
     credentialSigner: createCredentialSignerWithChain(
       keyring,
-      {
+      create(ChainSchema, {
         credential: await new CredentialGenerator(keyring, identityKey, deviceKey).createDeviceAuthorization(deviceKey),
-      },
+      }),
       deviceKey,
     ),
     recordCredential: async () => {}, // No-op.

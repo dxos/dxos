@@ -44,8 +44,8 @@ export const FileSettings = ({ subject }: FileSettingsProps) => {
     >
       <Form.Viewport scroll>
         <Form.Content>
-          <Form.Section title={meta.profile.name ?? meta.profile.key}>
-            <Form.Row
+          <Form.FieldSet label={meta.profile.name ?? meta.profile.key}>
+            <Form.Field
               label={t('settings.backend.label')}
               description={active?.description ?? t('settings.backend.description')}
             >
@@ -63,8 +63,8 @@ export const FileSettings = ({ subject }: FileSettingsProps) => {
                   </Select.Content>
                 </Select.Portal>
               </Select.Root>
-            </Form.Row>
-          </Form.Section>
+            </Form.Field>
+          </Form.FieldSet>
         </Form.Content>
       </Form.Viewport>
     </Form.Root>

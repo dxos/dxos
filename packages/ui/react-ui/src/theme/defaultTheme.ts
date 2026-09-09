@@ -15,12 +15,13 @@ import { collapsibleTheme } from '../components/Collapsible/Collapsible.theme';
 import { columnTheme } from '../components/Column/Column.theme';
 import { datePickerTheme } from '../components/DatePicker/DatePicker.theme';
 import { dialogTheme } from '../components/Dialog/Dialog.theme';
+import { drawerTheme } from '../components/Drawer/Drawer.theme';
 import { editableTheme } from '../components/Editable/Editable.theme';
+import { fieldTheme } from '../components/Field/Field.theme';
 import { fieldsetTheme } from '../components/Fieldset/Fieldset.theme';
 import { floatingPanelTheme } from '../components/FloatingPanel/FloatingPanel.theme';
 import { focusTheme } from '../components/Focus/Focus.theme';
 import { iconTheme } from '../components/Icon/Icon.theme';
-import { inputTheme } from '../components/Input/Input.theme';
 import { linkTheme } from '../components/Link/Link.theme';
 import { mainTheme } from '../components/Main/Main.theme';
 import { menuTheme } from '../components/Menu/Menu.theme';
@@ -63,13 +64,14 @@ export const defaultTheme: Theme<Record<string, any>> = {
   collapsible: collapsibleTheme,
   datePicker: datePickerTheme,
   dialog: dialogTheme,
+  drawer: drawerTheme,
   fieldset: fieldsetTheme,
   floatingPanel: floatingPanelTheme,
   focus: focusTheme,
   icon: iconTheme,
   iconButton: iconButtonTheme,
   editable: editableTheme,
-  input: inputTheme,
+  field: fieldTheme,
   link: linkTheme,
   main: mainTheme,
   banner: bannerTheme,

@@ -8,7 +8,7 @@ A store for QA results. A `TestPlan` declares a set of `TestCase`s; each executi
 appends a `TestRun` to the plan's feed, carrying one `TestResult` per case together with the
 documents, screenshots and recordings that evidence it. Plans are authored and results are pushed
 by an agent over the DXOS MCP surface, so the same plan a human reads in Composer is the one a
-`flow QA-n` run reports against.
+`test QA-n` run reports against.
 
 ## Extensions
 
@@ -206,8 +206,8 @@ type TestRun
 feat F-1: Author and maintain plans
 
   req F-1.1: A TestPlan can be created empty, or generated from the `## QA` section of a
-    PLUGIN.mdl — each `flow QA-n` becoming a TestCase whose `key` is the flow id and whose steps
-    are the flow's `test` stage.
+    PLUGIN.mdl — each `test QA-n` becoming a TestCase whose `key` is the test id and whose steps
+    are the test's `steps` stage.
   req F-1.2: Cases are added, updated, reordered and removed through operations, so an agent over
     MCP edits a plan without touching ECHO directly.
   req F-1.3: Re-generating a plan from an updated spec matches existing cases by `key` and updates
@@ -402,7 +402,7 @@ skill QaSkill
   key: org.dxos.skill.qa
   desc: >
     Makes the QA store reachable over the DXOS MCP surface: an agent generates a plan from a
-    spec's `## QA` section, runs the flows, and pushes a run back as it goes.
+    spec's `## QA` section, runs the tests, and pushes a run back as it goes.
   depends_on:
     - org.dxos.skill.database   # query / load, for resolving plans and artifact targets
     - org.dxos.skill.markdown   # authoring the report document an artifact points at
@@ -444,7 +444,7 @@ component TestPlanArticle
     │ QA-2  Link two documents              ✗    │
     ├────────────────────────────────────────────┤
     │ Runs                                       │
-    │ ● 2026-08-31  main@a1b2c3   7/8   qa-flow  │
+    │ ● 2026-08-31  main@a1b2c3   7/8   qa-test  │
     │ ● 2026-08-30  main@9f0e1d   8/8   agent    │
     └────────────────────────────────────────────┘
 ```
@@ -590,7 +590,7 @@ test QA-1: Record a run against a plan
 ## Appendix: Extension Definitions
 
 Extension block types not redefined here (`type`, `feat`, `test`, `component`, `op`, `skill`,
-`flow`, `step`) follow the shared DXOS MDL extension library — `op@1.1`, `flow@1.0` and `step@1.0`
+`test`, `step`) follow the shared DXOS MDL extension library — `op@1.1`, `test@1.0` and `step@1.0`
 are defined in [`packages/reflect/deus/lang/qa.mdl`](../../reflect/deus/lang/qa.mdl); `skill@1.0`
 in [`packages/plugins/plugin-crm/PLUGIN.mdl`](../plugin-crm/PLUGIN.mdl); the remainder in
 [`packages/reflect/deus/lang/PLUGIN-.template.mdl`](../../reflect/deus/lang/PLUGIN-.template.mdl).

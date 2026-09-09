@@ -25,7 +25,8 @@ import { Migrations, MigrationVersionAnnotation } from '@dxos/migrations';
 // alias instead of a relative `node_modules` path (TS2883).
 import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabilities';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
-import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
+import { unpackJson } from '@dxos/protocols/buf';
+import { EdgeReplicationSetting } from '@dxos/protocols/buf/dxos/echo/metadata_pb';
 import { ComplexMap, reduceGroupBy } from '@dxos/util';
 
 import { SpaceCapabilities, SpaceOperation } from '#types';
@@ -284,8 +285,8 @@ export default Capability.makeModule(
 
             void space
               .postMessage('viewing', {
-                identityKey: identity.identityKey,
-                attended: current,
+                identityKey: identity.identityKey ?? '',
+                attended: [...current],
                 added,
                 removed,
               })
@@ -320,9 +321,14 @@ export default Capability.makeModule(
       spaces.forEach((space) => {
         spaceSubscriptions.add(
           space.listen('viewing', (message) => {
-            const { added, removed, attended } = message.payload;
+            // The gossip payload travels as a `google.protobuf.Struct` packed in an `Any`, so it
+            // arrives as opaque JSON that has to be narrowed rather than destructured as typed.
+            const payload = unpackJson(message.payload) ?? {};
+            const { added, removed } = payload;
+            const attended = new Set(Array.isArray(payload.attended) ? payload.attended : []);
 
-            const identityKey = PublicKey.safeFrom(message.payload.identityKey);
+            const identityKey =
+              typeof payload.identityKey === 'string' ? PublicKey.safeFrom(payload.identityKey) : undefined;
             const currentIdentity = Option.getOrUndefined(haloIdentity.getSnapshot());
             if (
               identityKey &&
@@ -339,7 +345,7 @@ export default Capability.makeModule(
                     }
                     ephemeral.viewersByObject[id]!.set(identityKey, {
                       lastSeen: Date.now(),
-                      currentlyAttended: new Set(attended).has(id),
+                      currentlyAttended: attended.has(id),
                     });
                     if (!ephemeral.viewersByIdentity.has(identityKey)) {
                       ephemeral.viewersByIdentity.set(identityKey, new Set());

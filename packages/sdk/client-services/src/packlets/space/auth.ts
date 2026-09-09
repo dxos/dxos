@@ -2,14 +2,22 @@
 // Copyright 2019 DXOS.org
 //
 
+import { create } from '@bufbuild/protobuf';
+
 import { runInContext, scheduleTask } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { randomBytes } from '@dxos/crypto';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { getBufService } from '@dxos/protocols/buf-service';
-import { type AuthService } from '@dxos/protocols/proto/dxos/mesh/teleport/auth';
+import { type BufService, getBufService } from '@dxos/protocols/buf-service';
+import {
+  AuthenticateRequestSchema,
+  AuthenticateResponseSchema,
+  AuthService as AuthServiceDesc,
+} from '@dxos/protocols/buf/dxos/mesh/teleport/auth_pb';
 import { type ExtensionContext, RpcExtension } from '@dxos/teleport';
+
+type AuthService = BufService<typeof AuthServiceDesc>;
 
 export type AuthProvider = (nonce: Uint8Array) => Promise<Uint8Array | undefined>;
 
@@ -50,7 +58,7 @@ export class AuthExtension extends RpcExtension<Services, Services> {
             if (!credential) {
               throw new Error('auth rejected');
             }
-            return { credential };
+            return create(AuthenticateResponseSchema, { credential });
           } catch (err) {
             log.error('failed to generate auth credentials', err);
             throw new Error('auth rejected');
@@ -65,8 +73,10 @@ export class AuthExtension extends RpcExtension<Services, Services> {
     scheduleTask(this._ctx, async () => {
       try {
         const challenge = randomBytes(32);
-        const { credential } = await this.rpc.AuthService.authenticate({ challenge });
-        invariant(credential?.length > 0, 'invalid credential');
+        const { credential } = await this.rpc.AuthService.authenticate(
+          create(AuthenticateRequestSchema, { challenge }),
+        );
+        invariant(credential.length > 0, 'invalid credential');
         const success = await this._authProps.verifier(challenge, credential);
         invariant(success, 'credential not verified');
         runInContext(this._ctx, () => this._authProps.onAuthSuccess());

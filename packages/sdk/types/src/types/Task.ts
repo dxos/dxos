@@ -17,24 +17,21 @@ import { type MakeRequired } from '@dxos/util';
 import * as Actor from './Actor';
 import * as Milestone from './Milestone';
 
+export type Option<T> = { id: T; title: string; color?: string; icon?: string };
+
+export const NullOption: Option<any> = { id: 'none', title: 'None' };
+
 //
 // Priority
 //
 
-export const Priority = Schema.Literals(['none', 'low', 'medium', 'high', 'urgent']);
+export const Priority = Schema.Literals(['low', 'medium', 'high', 'urgent']);
 export type Priority = Schema.Schema.Type<typeof Priority>;
 
-/**
- * `icon` sits beside `color` so a row, its picker and the form's select cannot name the same
- * priority with different glyphs. The ramp is neutral — shape carries the level — which is what
- * leaves `urgent` the only coloured one and so the only one findable in a long list. The extra
- * field is inert to `SelectOption`, which carries id/title/color and ignores the rest.
- */
-export const PriorityOptions: { id: Priority; title: string; color: string; icon: string }[] = [
-  { id: 'none', title: 'None', color: 'gray', icon: 'ph--dot--regular' },
-  { id: 'low', title: 'Low', color: 'gray', icon: 'px--bar-low--regular' },
-  { id: 'medium', title: 'Medium', color: 'gray', icon: 'px--bar-medium--regular' },
-  { id: 'high', title: 'High', color: 'gray', icon: 'px--bar-high--regular' },
+export const PriorityOptions: Option<Priority>[] = [
+  { id: 'low', title: 'Low', color: 'sky', icon: 'px--bar-low--regular' },
+  { id: 'medium', title: 'Medium', color: 'sky', icon: 'px--bar-medium--regular' },
+  { id: 'high', title: 'High', color: 'sky', icon: 'px--bar-high--regular' },
   { id: 'urgent', title: 'Urgent', color: 'rose', icon: 'ph--exclamation-mark--fill' },
 ];
 
@@ -45,18 +42,12 @@ export const PriorityOptions: { id: Priority; title: string; color: string; icon
 export const Estimate = Schema.Literals(['xs', 's', 'm', 'l', 'xl']);
 export type Estimate = Schema.Schema.Type<typeof Estimate>;
 
-/**
- * `none` is a row so a picker built from this table can clear the field. It is not an `Estimate` —
- * an unset estimate is the absent property, not a literal — so it is the one id a writer maps to
- * `null` rather than passing through.
- */
-export const EstimateOptions: { id: Estimate | 'none'; title: string; color: string }[] = [
-  { id: 'none', title: 'None', color: 'gray' },
-  { id: 'xs', title: 'XS', color: 'gray' },
-  { id: 's', title: 'S', color: 'gray' },
-  { id: 'm', title: 'M', color: 'gray' },
-  { id: 'l', title: 'L', color: 'gray' },
-  { id: 'xl', title: 'XL', color: 'gray' },
+export const EstimateOptions: Option<Estimate | 'none'>[] = [
+  { id: 'xs', title: 'XS', color: 'neutral' },
+  { id: 's', title: 'S', color: 'neutral' },
+  { id: 'm', title: 'M', color: 'neutral' },
+  { id: 'l', title: 'L', color: 'neutral' },
+  { id: 'xl', title: 'XL', color: 'neutral' },
 ];
 
 //
@@ -66,26 +57,31 @@ export const EstimateOptions: { id: Estimate | 'none'; title: string; color: str
 export const Status = Schema.Literals([
   'todo',
   'backlog',
-  'duplicate',
   'started',
   'review',
   'done',
+  'duplicate',
   'blocked',
   'cancelled',
   'failed',
 ]);
 export type Status = Schema.Schema.Type<typeof Status>;
 
-export const StatusOptions: { id: Status; title: string; color: string }[] = [
-  { id: 'todo', title: 'Todo', color: 'gray' },
-  { id: 'backlog', title: 'Backlog', color: 'gray' },
-  { id: 'duplicate', title: 'Duplicate', color: 'gray' },
-  { id: 'started', title: 'Started', color: 'sky' },
-  { id: 'review', title: 'In Review', color: 'cyan' },
-  { id: 'done', title: 'Done', color: 'green' },
-  { id: 'blocked', title: 'Blocked', color: 'rose' },
-  { id: 'cancelled', title: 'Cancelled', color: 'rose' },
-  { id: 'failed', title: 'Failed', color: 'rose' },
+/**
+ * `icon` beside `color`, as for {@link PriorityOptions}: the row, its picker and the form's select
+ * all draw a status from this one table. Shape carries the status; the hue is the one its title is
+ * painted in.
+ */
+export const StatusOptions: Option<Status>[] = [
+  { id: 'todo', title: 'Todo', color: 'neutral', icon: 'ph--square--regular' },
+  { id: 'backlog', title: 'Backlog', color: 'neutral', icon: 'ph--tray--regular' },
+  { id: 'started', title: 'Started', color: 'sky', icon: 'ph--hourglass--regular' },
+  { id: 'review', title: 'In Review', color: 'cyan', icon: 'ph--eye--regular' },
+  { id: 'done', title: 'Done', color: 'green', icon: 'ph--check--regular' },
+  { id: 'duplicate', title: 'Duplicate', color: 'orange', icon: 'ph--copy--regular' },
+  { id: 'blocked', title: 'Blocked', color: 'rose', icon: 'ph--prohibit--regular' },
+  { id: 'cancelled', title: 'Cancelled', color: 'rose', icon: 'ph--x--regular' },
+  { id: 'failed', title: 'Failed', color: 'rose', icon: 'ph--x--regular' },
 ];
 
 /**
@@ -317,7 +313,8 @@ const quote = (value: string): string => (value.length > 60 ? `"${value.slice(0,
  */
 export const appendHistory = (task: Task, entry: HistoryEntry): void => {
   Obj.update(task, (task) => {
-    task.history = [...(task.history ?? []), entry];
+    task.history ??= [];
+    task.history.push(entry);
   });
 };
 
@@ -430,7 +427,8 @@ export const update = (task: Task, requested: Edit, options: EditOptions = {}): 
         task.assignee = changes.assignee;
       }
     }
-    task.history = [...(task.history ?? []), entry];
+    task.history ??= [];
+    task.history.push(entry);
   });
 
   return entry;
@@ -458,7 +456,8 @@ export const addArtifact = (task: Task, artifact: Obj.Unknown): void => {
     return;
   }
   Obj.update(task, (task) => {
-    task.artifacts = [...(task.artifacts ?? []), Ref.make(artifact)];
+    task.artifacts ??= [];
+    task.artifacts.push(Ref.make(artifact));
   });
 };
 

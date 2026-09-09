@@ -6,6 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
+import { invariant } from '@dxos/invariant';
 import { random } from '@dxos/random';
 
 import { withTheme } from '../../testing';
@@ -94,13 +95,15 @@ export const TestOutsideClick: StoryObj = {
     const alert = await waitFor(async () => {
       const element = document.querySelector<HTMLElement>('[role="alertdialog"]');
       await expect(element).not.toBeNull();
-      return element!;
+      invariant(element);
+      return element;
     });
     await waitFor(async () => expect(alert.getAttribute('aria-describedby')).not.toBeNull());
     // The modal turns pointer events off outside the alert, which the checked click refuses to
     // cross; the unchecked one reaches the machine's outside-interaction listener, and that is
     // what is under test.
-    const backdrop = document.querySelector<HTMLElement>('[data-scope="dialog"][data-part="backdrop"]')!;
+    const backdrop = document.querySelector<HTMLElement>('[data-scope="dialog"][data-part="backdrop"]');
+    invariant(backdrop);
     await userEvent.setup({ pointerEventsCheck: 0 }).click(backdrop);
     await new Promise((resolve) => setTimeout(resolve, 100));
     await expect(document.querySelector('[role="alertdialog"]')).not.toBeNull();

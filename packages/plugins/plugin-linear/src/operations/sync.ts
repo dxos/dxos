@@ -140,7 +140,7 @@ const setTaskContainer = Effect.fn('setTaskContainer')(function* (task: Task.Tas
     });
   }
   Obj.update(container, (container) => {
-    container.tasks = [...container.tasks, Ref.make(task)];
+    container.tasks.push(Ref.make(task));
   });
   Obj.setParent(task, container);
 });
@@ -233,7 +233,7 @@ export const upsertMilestone = Effect.fn('upsertMilestone')(function* (
   // Sequence is the `milestones` array; the parent edge only carries deletion cascade.
   if (!taskSet.milestones.some(Ref.hasEntityId(milestone.id))) {
     Obj.update(taskSet, (taskSet) => {
-      taskSet.milestones = [...taskSet.milestones, Ref.make(milestone)];
+      taskSet.milestones.push(Ref.make(milestone));
     });
     Obj.setParent(milestone, taskSet);
   }
@@ -288,10 +288,9 @@ export const upsertTask = Effect.fn('upsertTask')(function* (
       remoteFields.status,
       snapshotField(snapshot, 'status'),
     );
-    // Linear's reverse mapper drops `0` (no priority) → undefined, so the
-    // remote/snapshot side never holds 'none'. Widen to the full Task priority
-    // union so a locally-set 'none' typechecks too.
-    const priorityResult = mergeField<'none' | 'low' | 'medium' | 'high' | 'urgent' | undefined>(
+    // Linear's reverse mapper drops `0` (no priority) → undefined, and an unset local priority is the
+    // absent property, so both sides speak `Task.Priority | undefined`.
+    const priorityResult = mergeField<Task.Priority | undefined>(
       existing.priority,
       remoteFields.priority,
       snapshotField(snapshot, 'priority'),

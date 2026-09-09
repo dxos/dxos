@@ -11,7 +11,6 @@ import { TestSchema, updateCounter } from '../../../testing';
 import { createObject } from '../../Obj';
 import { ATTR_META } from '../types/meta';
 import { makeObject } from './make-object';
-import { objectData } from './proxy-types';
 import { change } from './reactive';
 
 describe('proxy', () => {
@@ -44,15 +43,6 @@ const TEST_OBJECT: TestSchema.ExampleSchema = {
       const obj = createObject({ string: 'bar' });
       const str = inspect(obj, { colors: false });
       expect(str).to.eq("Typed { string: 'bar' }");
-    });
-
-    test('data symbol', async () => {
-      const obj = createObject({ ...TEST_OBJECT });
-      const objData: any = (obj as any)[objectData];
-      expect(objData).to.deep.contain({
-        '@type': 'TypedReactiveObject',
-        ...TEST_OBJECT,
-      });
     });
 
     // TODO(wittjosiah): Should we prevent this?

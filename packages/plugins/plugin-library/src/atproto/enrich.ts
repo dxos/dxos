@@ -40,7 +40,7 @@ export const enrichBook = async (object: unknown): Promise<void> => {
     return;
   }
 
-  Obj.update(book, () => {
+  Obj.update(book, (book) => {
     setIfEmpty(book, ['catalog', 'cover'], suggestion.coverUrl);
     setIfEmpty(book, ['catalog', 'thumbnail'], suggestion.thumbnail);
     setIfEmpty(book, ['catalog', 'description'], suggestion.description);

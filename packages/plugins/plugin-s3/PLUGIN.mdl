@@ -114,7 +114,7 @@ feat SigV4
 ```
 
 ```mdl
-test SigV4AwsVectors
+scenario SigV4AwsVectors
   desc: >
     The signer is checked against AWS's own published example signatures
     for both the header-auth and presigned-URL forms, so the tests are

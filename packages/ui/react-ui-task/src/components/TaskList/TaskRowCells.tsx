@@ -4,13 +4,13 @@
 
 import React from 'react';
 
-import { Icon, IconBlock, IconButton, Input, Tag, useTranslation } from '@dxos/react-ui';
+import { Field, Icon, IconBlock, IconButton, Tag, useTranslation } from '@dxos/react-ui';
 import { ActionMenu, createMenuAction } from '@dxos/react-ui-menu';
 import { Task } from '@dxos/types';
 
 import { translationKey } from '#translations';
 
-import { STATUS_ICONS, statusTextStyle } from './status-icons';
+import { statusIcon, statusTextStyle } from './status-icons';
 
 /**
  * Cells shared by the flat row and the tree row.
@@ -44,7 +44,7 @@ export const TaskStatusControl = ({ task, onTaskUpdate, active, classNames }: Ta
   const working = active ?? Task.isAgentWorking(task);
   const { icon, classNames: iconClassNames } = working
     ? { icon: 'ph--spinner--regular', classNames: 'text-info-text animate-spin' }
-    : { icon: STATUS_ICONS[status].icon, classNames: statusTextStyle(status) };
+    : { icon: statusIcon(status), classNames: statusTextStyle(status) };
 
   if (!onTaskUpdate) {
     // `IconBlock square` rather than a bare span: the glyph must hold the same square an
@@ -70,7 +70,7 @@ export const TaskStatusControl = ({ task, onTaskUpdate, active, classNames }: Ta
           actions={Task.StatusOptions.map(({ id }) =>
             createMenuAction(`status-${id}`, () => onTaskUpdate(task, { status: id }), {
               label: t(`status-${id}.label`),
-              icon: STATUS_ICONS[id].icon,
+              icon: statusIcon(id),
               iconClassNames: statusTextStyle(id),
               checked: status === id,
             }),
@@ -138,8 +138,8 @@ export const TaskCheckbox = ({ task, checked, onCheckedChange, classNames }: Tas
     // `IconBlock square` so the box is centred in the same square an `IconButton iconOnly` occupies;
     // bare, the 1rem box hugged the start of a 2rem track beside 2rem controls.
     <IconBlock square aria-hidden={false} classNames={classNames}>
-      <Input.Root>
-        <Input.Checkbox
+      <Field.Root>
+        <Field.Checkbox
           checked={checked}
           data-testid='taskList.item.checkbox'
           aria-label={t('task-check.label')}
@@ -147,7 +147,7 @@ export const TaskCheckbox = ({ task, checked, onCheckedChange, classNames }: Tas
           // The row is the selection target; checking it must not also make it the current row.
           onClick={(event) => event.stopPropagation()}
         />
-      </Input.Root>
+      </Field.Root>
     </IconBlock>
   );
 };

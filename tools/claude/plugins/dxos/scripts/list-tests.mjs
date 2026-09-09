@@ -22,7 +22,8 @@ const SKIP = new Set(['node_modules', 'dist', '.git', '.moon', 'out', 'temp', '.
 const STAGES = ['before', 'steps', 'after'];
 
 const walk = (dir, out = []) => {
-  for (const entry of readdirSync(dir)) {
+  // Sorted: the row numbers are the addressing scheme, and readdir order is filesystem-defined.
+  for (const entry of readdirSync(dir).sort()) {
     if (SKIP.has(entry)) {
       continue;
     }

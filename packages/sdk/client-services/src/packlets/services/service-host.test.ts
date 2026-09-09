@@ -19,13 +19,13 @@ import { failedInvariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
 import { MemorySignalManagerContext } from '@dxos/messaging';
 import { buf, toPublicKey } from '@dxos/protocols/buf';
+import { requirePublicKey } from '@dxos/protocols/buf';
 import { type Identity } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { type Credential, PresentationSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
-import { MembershipPolicy } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { MembershipPolicy } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { isNode } from '@dxos/util';
 
 import { createMockCredential, createServiceHost } from '../testing';
-import { fromBufPresentation, toBufCredential } from './credentials-codec';
 
 /**
  * Bridges a host's effect-rpc {@link ClientServices} handlers to the Promise/`Stream` shaped
@@ -99,13 +99,13 @@ describe('ClientServicesHost', () => {
 
     await services.SpacesService?.writeCredentials({
       spaceKey: await haloSpace.wait(),
-      credentials: [toBufCredential(testCredential)],
+      credentials: [testCredential],
     });
 
     const credentials = services.SpacesService!.queryCredentials({ spaceKey: await haloSpace.wait() });
     const queriedCredential = new Trigger<Credential>();
     credentials.subscribe((credential) => {
-      if (toPublicKey(credential.subject?.id)?.equals(testCredential.subject.id)) {
+      if (toPublicKey(credential.subject?.id)?.equals(requirePublicKey(testCredential.subject?.id))) {
         queriedCredential.wake(credential);
       }
     });
@@ -131,13 +131,13 @@ describe('ClientServicesHost', () => {
 
     const presentation = await services.IdentityService!.signPresentation({
       presentation: buf.create(PresentationSchema, {
-        credentials: [toBufCredential(testCredential)],
+        credentials: [testCredential],
       }),
       nonce,
     });
 
     expect(presentation.proofs?.[0].nonce).to.deep.equal(nonce);
-    expect(await verifyPresentation(fromBufPresentation(presentation))).to.deep.equal({
+    expect(await verifyPresentation(presentation)).to.deep.equal({
       kind: 'pass',
     });
   });

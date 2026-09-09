@@ -3,6 +3,7 @@
 //
 
 import { next as A } from '@automerge/automerge';
+import { create } from '@bufbuild/protobuf';
 import * as Schema from 'effect/Schema';
 import net from 'node:net';
 
@@ -20,6 +21,7 @@ import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { createRtcTransportFactory } from '@dxos/network-manager';
+import { requirePublicKey } from '@dxos/protocols/buf';
 import {
   type Invitation,
   Invitation_AuthMethod,
@@ -27,7 +29,8 @@ import {
   Invitation_Type,
 } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 import { Runtime_Client_Storage_SqliteMode } from '@dxos/protocols/buf/dxos/config_pb';
-import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
+import { EdgeReplicationSetting } from '@dxos/protocols/buf/dxos/echo/metadata_pb';
+import { ProfileDocumentSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { trace } from '@dxos/tracing';
 
 import { type ReplicantEnv, ReplicantRegistry } from '../env';
@@ -142,7 +145,12 @@ export class ClientReplicant {
             // empty and `Restart` tests nothing (observed in every local run — RESULTS.md §5).
             sqliteMode: Runtime_Client_Storage_SqliteMode.FILE,
           },
-          // Edge-only data replication (D7): signaling carries invitations, no client-to-client data path.
+          // Edge-only data replication (D7): signaling carries invitations, no client-to-client data
+          // path. The flag is what actually enforces it — `edgeFeatures` alone leaves the mesh
+          // replicator attached, so peers still swapped documents directly over WebRTC and a run
+          // measured a mixture of both paths (the EDGE-nightly join-latency outlier caught a joiner
+          // syncing against another client's `host-…` peer while its EDGE connection was stalled).
+          disableP2pReplication: true,
           edgeFeatures: { subductionReplicator: true, feedReplicator: true, signaling: true, agents },
         },
       },
@@ -222,7 +230,7 @@ export class ClientReplicant {
 
   @trace.span()
   async createIdentity({ displayName }: { displayName: string }): Promise<{ identityDid: string }> {
-    const identity = await this.#getClient().halo.createIdentity({ displayName });
+    const identity = await this.#getClient().halo.createIdentity(create(ProfileDocumentSchema, { displayName }));
     return { identityDid: identity.did };
   }
 
@@ -243,7 +251,7 @@ export class ClientReplicant {
     const response = await hub.redeemInvitationCode(new Context(), {
       email,
       identityDid: identity.did,
-      identityKey: identity.identityKey.toHex(),
+      identityKey: requirePublicKey(identity.identityKey).toHex(),
     });
     invariant('accountId' in response, `account binding refused: ${JSON.stringify(response)}`);
     log.info('test account bound', { email, accountId: response.accountId });
@@ -282,7 +290,8 @@ export class ClientReplicant {
 
   /**
    * Host half of a HALO device invitation; the returned code admits another replicant as a second
-   * device of this identity.
+   * device of this identity. Never delegated: `EdgeInvitationHandler` redeems only
+   * `Invitation_Kind.SPACE`, so a device invitation is always admitted by this client.
    */
   @trace.span()
   async inviteDevice(): Promise<{ invitationCode: string }> {

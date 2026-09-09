@@ -217,7 +217,7 @@ op SuggestEdit
 
 op scrollToAnchor
   desc: Scrolls the editor for the attendable surface to a cursor position.
-  input: { subject: string, cursor: string, ref?: string }
+  input: { subject: string, cursor: string, id?: Ref<Thread> }
 ```
 
 ## Features

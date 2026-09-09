@@ -56,7 +56,7 @@ export class InvitationsServiceImpl implements InvitationsService.Handlers {
   ): EffectStream.Stream<Invitation, Error> {
     return EffectEx.streamFromEmitter<Invitation, Error>((emit) => {
       const ctx = Context.default();
-      const invitation = this._invitationsManager.acceptInvitation(ctx, request);
+      const invitation = this._invitationsManager.acceptInvitation(ctx, { ...request });
       invitation.subscribe(
         (value) => void emit.single(value),
         (err) => void emit.fail(err),

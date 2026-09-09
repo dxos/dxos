@@ -47,7 +47,9 @@ is the reference for a current spec.
 Mode and selection:
 
 1. Read `.agents/spec-sync.yml` (`main: <sha>`, `plugins: { <name>: <sha> }`). Create it if absent.
-2. INCREMENTAL (the default): `git fetch origin main` and list plugins whose
+2. INCREMENTAL (the default): if `main` is `null` there is no baseline to diff against — run SWEEP
+   with N=8 instead (step 3) and set `main:` at the end, so the next run is incremental. Otherwise
+   `git fetch origin main` and list plugins whose
    `packages/plugins/plugin-<name>/src` changed between the recorded `main` sha and `origin/main`
    (`git diff --name-only <sha> origin/main -- 'packages/plugins/*/src'`). Skip plugins with no
    `PLUGIN.mdl`; list them in the PR body as unspecified. No changes → reply "nothing to sync" and

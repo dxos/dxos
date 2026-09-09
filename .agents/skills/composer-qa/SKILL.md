@@ -226,8 +226,9 @@ user's own look at what the agent sees. It is one port call
 
 ## 9. Stop what you started
 
-Stop the browser helper and the server you started (`kill $BROWSER_PID $SERVER_PID`, then confirm
-nothing listens on 5182), and say the port is closed. Leave a server you did not start alone.
+Stop the browser helper and the server you started (`kill $BROWSER_PID $SERVER_PID`, or
+`preview_stop` for a pane-started server), confirm nothing listens on 5182 (`lsof -ti :5182`), and
+say the port is closed. Leave a server you did not start alone.
 
 ## Checklist
 

@@ -27,13 +27,13 @@ import {
   InvitationSchema,
 } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 import { SpaceMember_Role } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
+import { type DeviceProfileDocument } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { type InvitationsService } from '@dxos/protocols/rpc';
 import { trace } from '@dxos/tracing';
 
 import { type IMetadataStore, IMetadataStoreService, hasInvitationExpired } from '../metadata';
 import type { InvitationProtocol } from './invitation-protocol';
 import { type InvitationsHandler, InvitationsHandlerService, createAdmissionKeypair } from './invitations-handler';
-import { fromBufInvitation, toBufInvitation } from './utils';
 
 /**
  * Effect service tag for {@link InvitationsManager}.
@@ -143,7 +143,7 @@ export class InvitationsManager {
 
       const loadTasks = freshInvitations.map((persistentInvitation) => {
         invariant(!this._createInvitations.get(persistentInvitation.invitationId), 'invitation already exists');
-        return this.createInvitation(ctx, { ...toBufInvitation(persistentInvitation), persistent: false });
+        return this.createInvitation(ctx, { ...persistentInvitation, persistent: false });
       });
       const cInvitations = await Promise.all(loadTasks);
 
@@ -157,7 +157,17 @@ export class InvitationsManager {
     }
   }
 
-  acceptInvitation(ctx: Context, request: InvitationsService.AcceptInvitationRequest): AuthenticatingInvitation {
+  /**
+   * The profile is the shape the device credential is signed over, not the wire shape the
+   * service receives — {@link InvitationsServiceImpl} converts before calling this.
+   */
+  acceptInvitation(
+    ctx: Context,
+    request: {
+      invitation: InvitationsService.AcceptInvitationRequest['invitation'];
+      deviceProfile?: DeviceProfileDocument;
+    },
+  ): AuthenticatingInvitation {
     const options = request.invitation;
     const existingInvitation = this._acceptInvitations.get(options.invitationId);
     if (existingInvitation) {
@@ -365,7 +375,7 @@ export class InvitationsManager {
       const delegationCredentialId = await handler.delegate(invitation);
       changeStream.next({ ...invitation, delegationCredentialId: fromPublicKey(delegationCredentialId) });
     } else if (invitation.persistent) {
-      await this._metadataStore.addInvitation(fromBufInvitation(invitation));
+      await this._metadataStore.addInvitation(invitation);
       this.saved.emit(invitation);
     }
   }

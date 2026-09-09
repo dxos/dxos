@@ -6,15 +6,16 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
+import { invariant } from '@dxos/invariant';
 import { random } from '@dxos/random';
 
 import { withTheme } from '../../testing';
 import { Button } from '../Button';
-import { Input } from '../Input';
+import { Field } from '../Field';
 import { ScrollArea } from '../ScrollArea';
 import { Dialog, DIALOG_AUTOFOCUS_ATTRIBUTE, type DialogContentProps } from './Dialog';
 
-type StoryArgs = Pick<DialogContentProps, 'size'> &
+type StoryArgs = Pick<DialogContentProps, 'size' | 'elevation'> &
   Partial<{
     title: string;
     description: string;
@@ -27,14 +28,14 @@ type StoryArgs = Pick<DialogContentProps, 'size'> &
  * Standard Dialog with non-scrolling content in Dialog.Body.
  * Dialog.Body propagates the Column grid via subgrid. Children auto-center via --dx-col.
  */
-const DefaultStory = ({ size, title, description, openTrigger, closeTrigger, blockAlign }: StoryArgs) => {
+const DefaultStory = ({ size, elevation, title, description, openTrigger, closeTrigger, blockAlign }: StoryArgs) => {
   return (
     <Dialog.Root defaultOpen modal>
       <Dialog.Trigger asChild>
         <Button>{openTrigger}</Button>
       </Dialog.Trigger>
       <Dialog.Overlay blockAlign={blockAlign}>
-        <Dialog.Content size={size}>
+        <Dialog.Content size={size} elevation={elevation}>
           <Dialog.Header>
             <Dialog.Title>{title}</Dialog.Title>
             {closeTrigger && (
@@ -45,9 +46,9 @@ const DefaultStory = ({ size, title, description, openTrigger, closeTrigger, blo
           </Dialog.Header>
           <Dialog.Body>
             <Dialog.Description>{description}</Dialog.Description>
-            <Input.Root>
-              <Input.TextInput placeholder='Enter value' />
-            </Input.Root>
+            <Field.Root>
+              <Field.Input placeholder='Enter value' />
+            </Field.Root>
           </Dialog.Body>
           <Dialog.ActionBar>
             <Dialog.Close asChild>
@@ -65,14 +66,14 @@ const DefaultStory = ({ size, title, description, openTrigger, closeTrigger, blo
  * The ScrollArea breaks out of Body's gutter padding via `--gutter`
  * and applies its own asymmetric padding (accounting for scrollbar width).
  */
-const ScrollingStory = ({ size, title, description, openTrigger, closeTrigger, blockAlign }: StoryArgs) => {
+const ScrollingStory = ({ size, elevation, title, description, openTrigger, closeTrigger, blockAlign }: StoryArgs) => {
   return (
     <Dialog.Root defaultOpen modal>
       <Dialog.Trigger asChild>
         <Button>{openTrigger}</Button>
       </Dialog.Trigger>
       <Dialog.Overlay blockAlign={blockAlign}>
-        <Dialog.Content size={size}>
+        <Dialog.Content size={size} elevation={elevation}>
           <Dialog.Header>
             <Dialog.Title>{title}</Dialog.Title>
             {closeTrigger && (
@@ -104,6 +105,9 @@ const meta = {
   component: Dialog as any,
   render: DefaultStory,
   decorators: [withTheme()],
+  argTypes: {
+    elevation: { control: 'select', options: [undefined, 0, 1, 2, 3, 4, 5] },
+  },
 } satisfies Meta<typeof DefaultStory>;
 
 export default meta;
@@ -207,7 +211,8 @@ export const TestOpenClose: StoryObj = {
     const dialog = await waitFor(async () => {
       const element = dialogElement();
       await expect(element).not.toBeNull();
-      return element!;
+      invariant(element);
+      return element;
     });
     await expect(dialog.getAttribute('aria-modal')).toBe('true');
     await waitFor(async () => {
@@ -236,9 +241,9 @@ export const TestActionBarFocus: StoryObj = {
             </Dialog.Close>
           </Dialog.Header>
           <Dialog.Body>
-            <Input.Root>
-              <Input.TextInput placeholder='A field that comes first too' />
-            </Input.Root>
+            <Field.Root>
+              <Field.Input placeholder='A field that comes first too' />
+            </Field.Root>
           </Dialog.Body>
           <Dialog.ActionBar>
             <Button>Cancel</Button>
@@ -282,7 +287,8 @@ export const TestNoDescriptionAutoFocus: StoryObj = {
     const dialog = await waitFor(async () => {
       const element = dialogElement();
       await expect(element).not.toBeNull();
-      return element!;
+      invariant(element);
+      return element;
     });
     // The machine assumes both parts until its first-frame check finds which are rendered.
     await waitFor(async () => {

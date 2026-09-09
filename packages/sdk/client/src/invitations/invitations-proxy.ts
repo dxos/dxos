@@ -28,7 +28,7 @@ import {
   QueryInvitationsResponse_Action,
   QueryInvitationsResponse_Type,
 } from '@dxos/protocols/buf/dxos/client/services_pb';
-import { type DeviceProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { type DeviceProfileDocument } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
 import { RPC_TIMEOUT } from '../common';
 
@@ -261,7 +261,9 @@ export class InvitationsProxy implements Invitations {
       // drive the optional protobuf codec, which dereferences the missing message and throws,
       // silently stalling the accept RPC.
       subscriber: createObservable(
-        this._invitationsService.acceptInvitation(deviceProfile ? { invitation, deviceProfile } : { invitation }),
+        this._invitationsService.acceptInvitation(
+          deviceProfile ? { invitation, deviceProfile: deviceProfile } : { invitation },
+        ),
       ),
       onCancel: async () => {
         const invitationId = observable.get().invitationId;

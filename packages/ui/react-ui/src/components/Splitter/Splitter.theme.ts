@@ -12,7 +12,10 @@ export type SplitterStyleProps = {
 const root: ComponentFunction<SplitterStyleProps> = ({ orientation }, ...etc) =>
   mx('relative flex dx-fill overflow-hidden', orientation === 'vertical' ? 'flex-col' : 'flex-row', ...etc);
 
-const panel: ComponentFunction<SplitterStyleProps> = (_props, ...etc) => mx('relative grid overflow-hidden', ...etc);
+// One row that is the pane's own height (`minmax(0, 1fr)`, never `auto`), so what a pane holds is
+// capped by the pane and a `h-full` descendant resolves against it rather than growing the track.
+const panel: ComponentFunction<SplitterStyleProps> = (_props, ...etc) =>
+  mx('relative grid grid-rows-[minmax(0,1fr)] overflow-hidden', ...etc);
 
 // A 7px grab area sitting between the panes, containing a persistent 1px divider line that brightens
 // on hover/focus/active. The negative margin cancels its own extent, so the grab area straddles the

@@ -20,7 +20,7 @@ import { type FormFieldStateProps } from '#types';
 
 import { useFormValues } from '../../../../../hooks';
 import { getFormProperties } from '../../../../../util';
-import { CompactIconButton, FormField, type FormFieldProps } from '../../FormField';
+import { CompactIconButton, FormFieldDispatch, type FormFieldDispatchProps } from '../../FormFieldDispatch';
 import { FormFieldHeader } from '../../FormFieldHeader';
 import { getDefaultValue } from './default-value';
 
@@ -44,7 +44,7 @@ const getOrderedId = (item: OrderedItem): string => item[DND_ID];
 export type ArrayFieldProps = {
   label: string;
   fieldProps: FormFieldStateProps;
-} & FormFieldProps;
+} & FormFieldDispatchProps;
 
 export const ArrayField = ({
   type,
@@ -160,11 +160,11 @@ export const ArrayField = ({
 
   const renderItemAsObject = elementType && SchemaEx.isNestedType(elementType) && !Ref.isRefType(elementType);
 
-  // Object items: a recursively-rendered FormField (multiple sub-rows for the
-  // object's fields). Scalar items (refs, primitives): a single inline FormField.
+  // Object items: a recursively-rendered FormFieldDispatch (multiple sub-rows for the
+  // object's fields). Scalar items (refs, primitives): a single inline FormFieldDispatch.
   const renderField = (index: number, isLast: boolean): ReactNode => {
     const field = (
-      <FormField
+      <FormFieldDispatch
         {...props}
         autoFocus={isLast}
         type={elementType}
@@ -172,10 +172,11 @@ export const ArrayField = ({
         // sub-field labels). Scalar items (refs, primitives) take the array's resolved label (e.g. its
         // `title` annotation, `Tags`) so inline-layout children (e.g. RefField) have a real label to use
         // as a fallback placeholder, rather than re-deriving it from the raw array property name (`_tags`).
-        {...(renderItemAsObject || createInline ? { name: null } : { label })}
+        {...(renderItemAsObject || createInline || layout === 'static' ? { name: null } : { label })}
         path={[...(path ?? []), index]}
         readonly={readonly || layout === 'static'}
-        layout={renderItemAsObject ? (layout === 'static' ? 'static' : undefined) : 'inline'}
+        // A static list shows its scalar items as text under the list's own header, so they carry no label.
+        layout={layout === 'static' ? 'static' : renderItemAsObject ? undefined : 'inline'}
         refInline={createInline || undefined}
       />
     );
@@ -189,7 +190,6 @@ export const ArrayField = ({
   const header = (layout !== 'static' || (values && values.length > 0)) && (
     <FormFieldHeader
       label={label}
-      path={SchemaEx.createJsonPath(path ?? [])}
       readonly={readonly}
       add={
         layout !== 'static'

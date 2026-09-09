@@ -4,22 +4,24 @@
 
 import React, { useCallback, useEffect, useState } from 'react';
 
-import { Input, type TextInputProps } from '@dxos/react-ui';
+import { Field, type InputProps } from '@dxos/react-ui';
 import { safeParseFloat } from '@dxos/util';
 
 import { type FormFieldRendererProps } from '#types';
 
-import { FormRow } from '../../FormRow';
+import { FormStaticValue } from '../../FormField';
+import { presentationFor } from '../../presentation';
 import { getNumericConstraints } from './numeric-constraints';
 
 export const NumberField = ({
   type,
+  format,
   readonly,
   placeholder,
+  presentation,
   getValue,
   onValueChange,
   onBlur,
-  ...props
 }: FormFieldRendererProps<number>) => {
   const { min, max, integer } = getNumericConstraints(type);
 
@@ -56,7 +58,7 @@ export const NumberField = ({
     }
   }, [externalValue]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const handleChange = useCallback<NonNullable<TextInputProps['onChange']>>(
+  const handleChange = useCallback<NonNullable<InputProps['onChange']>>(
     (event) => {
       const value = event.target.value;
       setRaw(value);
@@ -85,21 +87,21 @@ export const NumberField = ({
     [raw, getValue, onBlur, clamp],
   );
 
+  if (presentationFor(presentation).isStatic) {
+    return <FormStaticValue value={externalValue} format={format} />;
+  }
+
   return (
-    <FormRow<number> readonly={readonly} getValue={getValue} {...props}>
-      {() => (
-        <Input.TextInput
-          type='number'
-          disabled={!!readonly}
-          placeholder={placeholder}
-          value={raw}
-          min={min}
-          max={max}
-          step={integer ? 1 : undefined}
-          onChange={handleChange}
-          onBlur={handleBlur}
-        />
-      )}
-    </FormRow>
+    <Field.Input
+      type='number'
+      disabled={!!readonly}
+      placeholder={placeholder}
+      value={raw}
+      min={min}
+      max={max}
+      step={integer ? 1 : undefined}
+      onChange={handleChange}
+      onBlur={handleBlur}
+    />
   );
 };

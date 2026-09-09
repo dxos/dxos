@@ -5,7 +5,7 @@
 import React, { useMemo } from 'react';
 
 import { Format } from '@dxos/echo/Format';
-import { type Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { type Credential } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { type Space } from '@dxos/react-client/echo';
 import { Panel, Toolbar } from '@dxos/react-ui';
 import { type TablePropertyDefinition } from '@dxos/react-ui-table';
@@ -13,6 +13,7 @@ import { type TablePropertyDefinition } from '@dxos/react-ui-table';
 import { MasterDetailTable } from '../../../components';
 import { SpaceSelector } from '../../../containers';
 import { useCredentials, useDevtoolsState } from '../../../hooks';
+import { assertionTypeName } from '../../../util';
 
 export const CredentialsPanel = (props: { space?: Space }) => {
   const state = useDevtoolsState();
@@ -33,8 +34,8 @@ export const CredentialsPanel = (props: { space?: Space }) => {
     () =>
       credentials.map((credential: Credential) => ({
         id: credential.id?.toString() ?? '',
-        issuer: credential.issuer.toString(),
-        type: credential.subject.assertion['@type'],
+        issuer: credential.issuer?.toString() ?? '',
+        type: assertionTypeName(credential),
         issuanceDate: credential.issuanceDate,
         _original: credential,
       })),

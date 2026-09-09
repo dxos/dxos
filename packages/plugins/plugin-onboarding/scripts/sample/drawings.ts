@@ -6,8 +6,15 @@ import { Store } from '@tldraw/store';
 import {
   DocumentRecordType,
   PageRecordType,
+  type TLDefaultColorStyle,
+  type TLDefaultFillStyle,
   TLDOCUMENT_ID,
+  type TLGeoShape,
+  type TLPageId,
+  type TLParentId,
   type TLRecord,
+  type TLShapeId,
+  type TLStoreProps,
   createTLSchema,
   geoShapeMigrations,
   geoShapeProps,
@@ -54,14 +61,16 @@ const tlSchema = createTLSchema({
  * the Canvas.content ECHO field.
  */
 const makeTLCanvas = (pageId: string, pageName: string, shapes: TLRecord[]): Record<string, unknown> => {
-  const store = new Store<TLRecord, any>({
-    schema: tlSchema as any,
-    props: { defaultName: '', assets: { upload: async () => '', resolve: () => '' }, onMount: () => {} } as any,
-  });
+  const props: TLStoreProps = {
+    defaultName: '',
+    assets: { upload: async () => '', resolve: () => '' },
+    onMount: () => {},
+  };
+  const store = new Store<TLRecord, TLStoreProps>({ schema: tlSchema, props });
   store.put(
     [
       DocumentRecordType.create({ id: TLDOCUMENT_ID }),
-      PageRecordType.create({ id: pageId as any, name: pageName, index: 'a1' as IndexKey }),
+      PageRecordType.create({ id: pageId as TLPageId, name: pageName, index: 'a1' as IndexKey }),
       ...shapes,
     ],
     'initialize',
@@ -87,18 +96,18 @@ const tlGeo = (
   w: number,
   h: number,
   text: string,
-  color: string,
-  fill: string,
-): TLRecord =>
-  ({
+  color: TLDefaultColorStyle,
+  fill: TLDefaultFillStyle,
+): TLRecord => {
+  const shape: TLGeoShape = {
     typeName: 'shape',
-    id: `shape:${id}`,
+    id: `shape:${id}` as TLShapeId,
     type: 'geo',
     x,
     y,
     rotation: 0,
     index: idx as IndexKey,
-    parentId: page,
+    parentId: page as TLParentId,
     isLocked: false,
     opacity: 1,
     meta: {},
@@ -119,7 +128,9 @@ const tlGeo = (
       url: '',
       scale: 1,
     },
-  }) as unknown as TLRecord;
+  };
+  return shape;
+};
 
 const makeFloorPlanContent = (): Record<string, unknown> => {
   const PAGE = 'page:bramble-floor';
@@ -131,8 +142,8 @@ const makeFloorPlanContent = (): Record<string, unknown> => {
     w: number,
     h: number,
     text: string,
-    color: string,
-    fill: string,
+    color: TLDefaultColorStyle,
+    fill: TLDefaultFillStyle,
   ) => tlGeo(id, PAGE, idx, x, y, w, h, text, color, fill);
 
   return makeTLCanvas(PAGE, 'Roastery Floor Plan', [
@@ -175,8 +186,8 @@ const makeFlavorWheelContent = (): Record<string, unknown> => {
     w: number,
     h: number,
     text: string,
-    color: string,
-    fill: string,
+    color: TLDefaultColorStyle,
+    fill: TLDefaultFillStyle,
   ) => tlGeo(id, PAGE, idx, x, y, w, h, text, color, fill);
 
   const x = (col: number) => col * (COL_W + COL_GAP);

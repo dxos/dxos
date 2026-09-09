@@ -2,15 +2,22 @@
 // Copyright 2022 DXOS.org
 //
 
+import { create, fromBinary, toBinary } from '@bufbuild/protobuf';
+import { AnySchema } from '@bufbuild/protobuf/wkt';
+
 import { TimeoutError, scheduleExponentialBackoffTaskInterval, scheduleTask, scheduleTaskInterval } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { TimeoutError as ProtocolTimeoutError } from '@dxos/protocols';
-import { compatCodec } from '@dxos/protocols/buf-shape-compat';
-import { AcknowledgementSchema, ReliablePayloadSchema } from '@dxos/protocols/buf/dxos/mesh/messaging_pb';
-import { type Acknowledgement, type ReliablePayload } from '@dxos/protocols/proto/dxos/mesh/messaging';
+import { fromPublicKey, toPublicKey } from '@dxos/protocols/buf';
+import { MessageSchema } from '@dxos/protocols/buf/dxos/edge/signal_pb';
+import {
+  AcknowledgementSchema,
+  type ReliablePayload,
+  ReliablePayloadSchema,
+} from '@dxos/protocols/buf/dxos/mesh/messaging_pb';
 import { type AnyEnvelope } from '@dxos/protocols/service-contract';
 import { ComplexMap, ComplexSet } from '@dxos/util';
 
@@ -25,9 +32,6 @@ export interface MessengerOptions {
   signalManager: SignalManager;
   retryDelay?: number;
 }
-
-const ReliablePayload = compatCodec<ReliablePayload>(ReliablePayloadSchema);
-const Acknowledgement = compatCodec<Acknowledgement>(AcknowledgementSchema);
 
 const RECEIVED_MESSAGES_GC_INTERVAL = 120_000;
 
@@ -104,14 +108,13 @@ export class Messenger {
     const { author, recipient, payload } = message;
     // Messenger provides reliable point-to-point delivery; broadcasts are not routed here.
     invariant(recipient, 'Recipient is required');
+    invariant(author, 'Author is required');
     const messageContext = this._ctx.derive();
 
-    const reliablePayload: ReliablePayload = {
-      messageId: PublicKey.random(),
-      payload,
-    };
-    invariant(!this._onAckCallbacks.has(reliablePayload.messageId!));
-    log('send message', { messageId: reliablePayload.messageId, author, recipient });
+    const messageId = PublicKey.random();
+    const reliablePayload = create(ReliablePayloadSchema, { messageId: fromPublicKey(messageId), payload });
+    invariant(!this._onAckCallbacks.has(messageId));
+    log('send message', { messageId, author, recipient });
 
     let messageReceived: () => void;
     let timeoutHit: (err: Error) => void;
@@ -126,7 +129,7 @@ export class Messenger {
     scheduleExponentialBackoffTaskInterval(
       messageContext,
       async () => {
-        log('retrying message', { messageId: reliablePayload.messageId });
+        log('retrying message', { messageId });
         sendAttempts++;
         await this._encodeAndSend(ctx, { author, recipient, reliablePayload }).catch((err) =>
           log('failed to send message', { err }),
@@ -138,8 +141,8 @@ export class Messenger {
     scheduleTask(
       messageContext,
       () => {
-        log('message not delivered', { messageId: reliablePayload.messageId });
-        this._onAckCallbacks.delete(reliablePayload.messageId!);
+        log('message not delivered', { messageId });
+        this._onAckCallbacks.delete(messageId);
         timeoutHit(
           new ProtocolTimeoutError({
             message: 'signaling message not delivered',
@@ -152,9 +155,9 @@ export class Messenger {
       MESSAGE_TIMEOUT,
     );
 
-    this._onAckCallbacks.set(reliablePayload.messageId, () => {
+    this._onAckCallbacks.set(messageId, () => {
       messageReceived();
-      this._onAckCallbacks.delete(reliablePayload.messageId!);
+      this._onAckCallbacks.delete(messageId);
       void messageContext.dispose();
       this._monitor.recordReliableMessage({ sendAttempts, sent: true });
     });
@@ -236,24 +239,31 @@ export class Messenger {
       reliablePayload: ReliablePayload;
     },
   ): Promise<void> {
-    await this._signalManager.sendMessage(ctx, {
-      author,
-      recipient,
-      payload: {
-        type_url: 'dxos.mesh.messaging.ReliablePayload',
-        value: ReliablePayload.encode(reliablePayload, { preserveAny: true }),
-      },
-    });
+    await this._signalManager.sendMessage(
+      ctx,
+      create(MessageSchema, {
+        author,
+        recipient,
+        payload: create(AnySchema, {
+          typeUrl: 'dxos.mesh.messaging.ReliablePayload',
+          value: toBinary(ReliablePayloadSchema, reliablePayload),
+        }),
+      }),
+    );
   }
 
   private async _handleMessage(message: Message): Promise<void> {
-    switch (message.payload.type_url) {
+    const payload = message.payload;
+    if (!payload) {
+      return;
+    }
+    switch (payload.typeUrl) {
       case 'dxos.mesh.messaging.ReliablePayload': {
         await this._handleReliablePayload(message);
         break;
       }
       case 'dxos.mesh.messaging.Acknowledgement': {
-        await this._handleAcknowledgement({ payload: message.payload });
+        await this._handleAcknowledgement({ payload });
         break;
       }
     }
@@ -261,17 +271,20 @@ export class Messenger {
 
   private async _handleReliablePayload(message: Message): Promise<void> {
     const { author, recipient, payload } = message;
-    invariant(payload.type_url === 'dxos.mesh.messaging.ReliablePayload');
+    invariant(payload?.typeUrl === 'dxos.mesh.messaging.ReliablePayload');
     invariant(recipient, 'Recipient is required');
-    const reliablePayload: ReliablePayload = ReliablePayload.decode(payload.value, { preserveAny: true });
+    invariant(author, 'Author is required');
+    const reliablePayload = fromBinary(ReliablePayloadSchema, payload.value);
+    const messageId = toPublicKey(reliablePayload.messageId);
+    invariant(messageId, 'Reliable payload has no message id.');
 
-    log('handling message', { messageId: reliablePayload.messageId });
+    log('handling message', { messageId });
 
     try {
       await this._sendAcknowledgement(this._ctx, {
         author,
         recipient,
-        messageId: reliablePayload.messageId,
+        messageId,
       });
     } catch (err) {
       this._monitor.recordMessageAckFailed();
@@ -279,22 +292,21 @@ export class Messenger {
     }
 
     // Ignore message if it was already received, i.e. from multiple signal servers.
-    if (this._receivedMessages.has(reliablePayload.messageId!)) {
+    if (this._receivedMessages.has(messageId)) {
       return;
     }
 
-    this._receivedMessages.add(reliablePayload.messageId!);
+    this._receivedMessages.add(messageId);
 
-    await this._callListeners({
-      author,
-      recipient,
-      payload: reliablePayload.payload,
-    });
+    await this._callListeners(create(MessageSchema, { author, recipient, payload: reliablePayload.payload }));
   }
 
   private async _handleAcknowledgement({ payload }: { payload: AnyEnvelope }): Promise<void> {
-    invariant(payload.type_url === 'dxos.mesh.messaging.Acknowledgement');
-    this._onAckCallbacks.get(Acknowledgement.decode(payload.value).messageId)?.();
+    invariant(payload.typeUrl === 'dxos.mesh.messaging.Acknowledgement');
+    const messageId = toPublicKey(fromBinary(AcknowledgementSchema, payload.value).messageId);
+    if (messageId) {
+      this._onAckCallbacks.get(messageId)?.();
+    }
   }
 
   private async _sendAcknowledgement(
@@ -311,14 +323,20 @@ export class Messenger {
   ): Promise<void> {
     log('sending ACK', { messageId, from: recipient, to: author });
 
-    await this._signalManager.sendMessage(ctx, {
-      author: recipient,
-      recipient: author,
-      payload: {
-        type_url: 'dxos.mesh.messaging.Acknowledgement',
-        value: Acknowledgement.encode({ messageId }),
-      },
-    });
+    await this._signalManager.sendMessage(
+      ctx,
+      create(MessageSchema, {
+        author: recipient,
+        recipient: author,
+        payload: create(AnySchema, {
+          typeUrl: 'dxos.mesh.messaging.Acknowledgement',
+          value: toBinary(
+            AcknowledgementSchema,
+            create(AcknowledgementSchema, { messageId: fromPublicKey(messageId) }),
+          ),
+        }),
+      }),
+    );
   }
 
   private async _callListeners(message: Message): Promise<void> {
@@ -334,11 +352,10 @@ export class Messenger {
       }
     }
 
-    {
-      const listenerMap = this._listeners.get({
-        peerId: peerKey,
-        payloadType: message.payload.type_url,
-      });
+    // A message with no payload matches no type-keyed listener, only the default ones above.
+    const payloadType = message.payload?.typeUrl;
+    if (payloadType !== undefined) {
+      const listenerMap = this._listeners.get({ peerId: peerKey, payloadType });
       if (listenerMap) {
         for (const listener of listenerMap) {
           await listener(message);

@@ -26,23 +26,24 @@ export {
   type SpaceDocumentHeads,
   objectIsUpdated,
 } from './core-db';
+// One definition, in `echo`, now that the write gate is shared; re-exported so the public name is
+// unchanged for consumers.
 export {
-  type CloneOptions,
-  EchoReactiveHandler,
   MutationOutsideChangeContextError,
-  ObjectVersion,
+  createArrayMethodError,
+  createPropertyDeleteError,
+  createPropertySetError,
+} from '@dxos/echo/internal';
+export {
+  EchoReactiveHandler,
   type ProxyTarget,
   type Selection,
   type SubscriptionHandle,
   type UpdateInfo,
   type VersionDiff,
   checkoutVersion,
-  clone,
-  createArrayMethodError,
   createBranch,
   createObject,
-  createPropertyDeleteError,
-  createPropertySetError,
   createSubscription,
   deleteBranch,
   findObjectWithForeignKey,
@@ -53,7 +54,6 @@ export {
   getEditHistoryWithDiffs,
   getObjectCore,
   getObjectOnBranch,
-  getVersion,
   initEchoReactiveObjectRootProxy,
   isEchoObject,
   matchKeys,

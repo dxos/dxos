@@ -3,12 +3,10 @@
 //
 
 import { log } from '@dxos/log';
-import { schema } from '@dxos/protocols/proto';
+import { EchoMetadataSchema } from '@dxos/protocols/buf/dxos/echo/metadata_pb';
 import type { Storage } from '@dxos/random-access-storage';
 
 import { MetadataStore } from '../../metadata';
-
-const EchoMetadata = schema.getCodecForType('dxos.echo.metadata.EchoMetadata');
 
 /**
  * This function will change the storage version in the metadata.
@@ -22,6 +20,6 @@ export const changeStorageVersionInMetadata = async (storage: Storage, version: 
   const echoMetadata = metadata.metadata;
   echoMetadata.version = version;
   const file = metadata._directory.getOrCreateFile('EchoMetadata');
-  await metadata._writeFile(file, EchoMetadata, echoMetadata);
+  await metadata._writeFile(file, EchoMetadataSchema, echoMetadata);
   await metadata._directory.flush();
 };

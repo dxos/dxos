@@ -185,7 +185,7 @@ export const FormCellEditor = <T extends Type.AnyEntity = Type.AnyEntity>({
             >
               <Form.Viewport>
                 <Form.Content>
-                  <Form.FieldSet />
+                  <Form.Fields />
                   <Form.Actions />
                 </Form.Content>
               </Form.Viewport>

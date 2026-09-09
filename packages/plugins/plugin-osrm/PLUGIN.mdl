@@ -349,14 +349,14 @@ packages/plugins/plugin-osrm/
 ## Acceptance
 
 ```mdl
-test OsrmRoutingService geocoding
+scenario OsrmRoutingService geocoding
   desc: Nominatim geocoding with mocked fetch.
   cases:
     - name-only waypoint → Place with geo populated from first result.
     - Place already carrying geo → not re-geocoded.
     - no result for a name → throws GeocodeError naming the waypoint.
 
-test OsrmRoutingService routing
+scenario OsrmRoutingService routing
   desc: OSRM route parsing with mocked fetch.
   cases:
     - 3 waypoints → { waypoints (3), routes:[Route] }; route has 2 legs,
@@ -364,7 +364,7 @@ test OsrmRoutingService routing
     - geometry coords are [lon, lat] (GeoPoint) order.
     - OSRM code !== 'Ok' → throws RouteError.
 
-test PlanRoute operation (plugin-trip)
+scenario PlanRoute operation (plugin-trip)
   desc: Operation enriches existing road segments in place. Uses a fake
         in-memory RoutingService registered in plugin-trip/src/testing.
   cases:
@@ -374,13 +374,13 @@ test PlanRoute operation (plugin-trip)
     - road segment missing an endpoint is skipped.
     - no RoutingService registered → fails with "No routing service".
 
-test tripMarkerProvider polyline (plugin-trip)
+scenario tripMarkerProvider polyline (plugin-trip)
   desc: Marker provider emits real geometry.
   cases:
     - road segment with RoadDetails.routes → polyline line geometry emitted.
     - road segment without routes → straight-arc fallback.
 
-test buildTileUrl (plugin-map)
+scenario buildTileUrl (plugin-map)
   desc: Tile URL construction across providers.
   cases:
     - tileProvider 'osm' (keyless) → OSM template.

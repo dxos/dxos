@@ -1,390 +1,447 @@
 //
-// Copyright 2025 DXOS.org
+// Copyright 2024 DXOS.org
 //
 
-import * as Match from 'effect/Match';
+import { format as formatDate } from 'date-fns';
 import * as Option from 'effect/Option';
-import * as Schema from 'effect/Schema';
-import * as String from 'effect/String';
-import React, { useMemo } from 'react';
+import * as Str from 'effect/String';
+import React, { Component, type PropsWithChildren, type ReactNode, type Ref, useMemo } from 'react';
 
-import { Annotation, Format } from '@dxos/echo';
+import { Format } from '@dxos/echo';
 import { SchemaAST, SchemaEx } from '@dxos/effect';
-import { IconButton, IconButtonProps, useTranslation } from '@dxos/react-ui';
+import { Field, Icon, type ThemedClassName, Tooltip } from '@dxos/react-ui';
+import { mx } from '@dxos/ui-theme';
 
-import { translationKey } from '#translations';
-import { type FieldContext, type FormFieldRenderer, type FormFieldRendererProps } from '#types';
+import { type FormFieldLabelPlacement, type FormFieldRendererProps, type FormPresentation } from '#types';
 
-import { AutofillAnnotation, HueAnnotation, OptionsLookupAnnotation } from '../../../annotations';
-import { useFormFieldState } from '../../../hooks';
-import { getRefProps } from '../../../util';
-import { FormFieldSet } from '../FormFieldSet';
-import {
-  ArrayField,
-  AsyncSelectField,
-  AutofillField,
-  BooleanField,
-  ComboboxField,
-  DateField,
-  GeoPointField,
-  HueField,
-  InlineRefField,
-  MarkdownField,
-  NumberField,
-  PasswordField,
-  RefField,
-  SelectField,
-  TextAreaField,
-  TextField,
-} from './fields';
+import { useFormContext, useFormFieldState } from '../../../hooks';
+import { type FormVariant, formTheme } from '../Form.theme';
+import { resolveLayoutField } from '../FormLayout/resolve-layout-field';
+import { type FormFieldBinding, FormFieldBindingProvider } from './FormFieldContext';
+import { FormFieldDispatch } from './FormFieldDispatch';
+import { presentationFor } from './presentation';
 
-export type FormFieldProps = {
-  /**
-   * AST of the property to render.
-   */
-  type: SchemaAST.AST;
+//
+// FormFieldLabel
+//
 
-  /**
-   * Name of the property. Used to derive a default label
-   * (`title ?? capitalize(name)`) and as the projection lookup key. Pass
-   * `null` to suppress the header label entirely -- the form still renders
-   * the field/struct, but `FormFieldSet`'s top-level `<FormFieldLabel>` is
-   * skipped. Used by `ArrayField` for object-array items, where every item
-   * would otherwise repeat the array's parent name.
-   */
-  name: string | null;
+export type FormFieldLabelProps = ThemedClassName<
+  {
+    /** Render a plain `<span>` instead of an input-associated `Field.Label`, for labels used outside an `Field.Root` (e.g. section/group headers). */
+    standalone?: boolean;
+    /** Class applied to the inner label text node, overriding the default size/color (e.g. `text-lg`). */
+    labelClassName?: string;
+    /** An id on the label text, for what names itself by it (a group, its disclosure). */
+    id?: string;
+    /** Form variant; selects the label's chrome (e.g. `settings` enlarges the text and places it in the field grid). */
+    variant?: FormVariant;
+    error?: string;
+    /**
+     * JSON path of the field this label describes (e.g. `runtime.client.storage.persistent`).
+     * Field metadata; accepted by callers but not currently rendered.
+     */
+    path?: string;
+    /**
+     * Trailing button rendered at the end of the label row (last grid column).
+     * Used by nested-object field sets to surface a collapse toggle.
+     */
+    button?: ReactNode;
+    /**
+     * Read-only content rendered right after the label text (e.g. a live numeric readout for a
+     * slider field) — a sibling of `Field.Label`, never a child, so the label's `textContent`
+     * stays exactly `label` (see the comment on `labelClassNames` below) and doesn't masquerade
+     * as an interactive control the way `button` does.
+     */
+    labelEnd?: ReactNode;
+  } & Pick<FormFieldRendererProps, 'label' | 'readonly' | 'required'>
+>;
 
-  /**
-   * Explicit label, overriding the `title ?? capitalize(name)` derivation. Used by `ArrayField` to
-   * give scalar/ref items the array's resolved title (e.g. `Tags`) rather than re-capitalizing the
-   * raw array property name (e.g. `_tags`), since the element type carries no title of its own.
-   */
-  label?: string;
-
-  /**
-   * Path to the current object from the root. Used with nested forms.
-   */
-  path?: (string | number)[];
-  autoFocus?: boolean;
-  /** Whether the field is required (non-optional in the schema). Drives the label asterisk. */
-  required?: boolean;
-  /**
-   * Force a `Ref` field to render its target inline (a nested form) instead of the picker.
-   * Set by `ArrayField` for owned-ref arrays (`FormCreateAnnotation`); equivalent to
-   * `FormInlineAnnotation` but driven by the parent array rather than the element's own AST.
-   */
-  refInline?: boolean;
-} & FieldContext;
-
-export const FormField = (props: FormFieldProps) => {
-  const {
-    type,
-    name,
-    label: labelProp,
-    path,
-    required,
-    projection,
-    fieldMap,
-    fieldProvider,
-    readonly,
-    hideEmpty = true,
-    layout,
-
-    // RefFieldProps
-    createTypename,
-    createOptionLabel,
-    createOptionIcon,
-    createInitialValuePath,
-    createFieldMap,
-    db,
-    useType,
-    getOptions,
-    onCreate,
-    resolveCreateEntry,
-    refInline,
-  } = props;
-  const { t } = useTranslation(translationKey);
-  const title = SchemaEx.getAnnotation<string>(SchemaAST.TitleAnnotationId)(type);
-  const description = SchemaEx.getAnnotation<string>(SchemaAST.DescriptionAnnotationId)(type);
-  const examples = SchemaEx.getAnnotation<string[]>(SchemaAST.ExamplesAnnotationId)(type);
-
-  const label = useMemo(
-    () => labelProp ?? title ?? (name == null ? '' : String.capitalize(name)),
-    [labelProp, title, name],
-  );
-  const placeholder = useMemo(
-    () => (examples?.length ? `${t('example.placeholder')}: ${examples[0]}` : (description ?? label)),
-    [examples, description, label, t],
+export const FormFieldLabel = ({
+  classNames,
+  labelClassName,
+  id,
+  variant = 'default',
+  label,
+  error,
+  readonly,
+  required,
+  standalone,
+  button,
+  labelEnd,
+}: FormFieldLabelProps) => {
+  const styles = formTheme.styles({ variant });
+  // Render the required asterisk via a `::after` pseudo-element rather than a DOM node: it keeps the
+  // label's `textContent` exactly `label`, so fields stay locatable by their exact label text
+  // (`getByLabelText('Name')`), which the DOM-text-based query would otherwise miss as `Name *`.
+  // The `fieldLabelText` slot is applied last so a variant/caller size/color (e.g. `text-lg`) wins over
+  // The control-height row comes from `Field.Label` itself; the read-only/standalone `span` is not
+  // one, so it repeats the geometry to keep the row the same height either way.
+  const labelClassNames = mx(
+    'flex items-center min-h-(--dx-control)',
+    required && "after:content-['*'] after:ms-0.5 after:text-warning-text",
+    styles.fieldLabelText({ class: labelClassName }),
   );
 
-  // Build the schema for `fieldProvider` only when one is registered, memoized by `type` (the AST) so
-  // we don't reconstruct it on every render.
-  const providerSchema = useMemo(
-    () => (fieldProvider ? Schema.make<Schema.Codec<any, any>>(type) : undefined),
-    [fieldProvider, type],
+  // `Field.Label` is a themed primitive that reads `classNames` (and ignores `className`), whereas the
+  // plain `span` used for read-only/standalone labels reads `className`.
+  const labelNode =
+    readonly || standalone ? (
+      <span id={id} className={labelClassNames}>
+        {label}
+      </span>
+    ) : (
+      <Field.Label id={id} classNames={labelClassNames}>
+        {label}
+      </Field.Label>
+    );
+
+  const content = (
+    <>
+      {labelNode}
+      {labelEnd}
+      {error ? (
+        <Tooltip.Trigger asChild content={error} side='bottom'>
+          <Icon icon='ph--warning--regular' size={4} classNames='text-error-text' />
+        </Tooltip.Trigger>
+      ) : (
+        <span />
+      )}
+      {button}
+    </>
   );
 
-  const fieldState = useFormFieldState(FormField.displayName, path);
-  const jsonPath = SchemaEx.createJsonPath(path ?? []);
-  const fieldProps: FormFieldRendererProps = {
-    type,
-    format: Format.FormatAnnotation.getFromAst(type).pipe((annotation) => Option.getOrUndefined(annotation)),
-    readonly,
-    label,
-    description,
-    jsonPath,
-    placeholder,
-    presentation: layout,
-    // The asterisk marks what is still outstanding, so it clears once the field holds a value —
-    // otherwise a fully-filled form reads as though every required field were still unanswered.
-    required: required && isEmptyValue(fieldState.getValue()),
-    db,
-    ...fieldState,
-  };
+  return <div className={styles.fieldLabel({ class: mx(classNames) })}>{content}</div>;
+};
 
-  // Omit empty fields entirely in read-only mode -- an empty value has nothing
-  // to display, so a labelled row with a blank input is just noise. This
-  // mirrors what `FormRow` already does for `presentation === 'static'`, but
-  // covers every field type (including those that bypass the wrapper:
-  // RefField, SelectField, MarkdownField, ...). Container fields
-  // (`ArrayField`, nested-struct -> `FormFieldSet`) keep their own
-  // empty-value checks, but those branches only apply when the value is
-  // actually a non-null array/object, so this check doesn't interfere.
-  if (readonly && hideEmpty && fieldState.getValue() == null) {
+FormFieldLabel.displayName = 'Form.FieldLabel';
+
+//
+// FormField
+//
+
+/**
+ * Formats a value for `static` (read-only, plain-DOM) presentation based on its
+ * type `format`. Dates/times are rendered human-readable; everything else falls
+ * back to `String(value)`.
+ */
+const formatStaticValue = (value: unknown, format?: Format.TypeFormat): string => {
+  if (value == null) {
+    return '';
+  }
+
+  switch (format) {
+    case Format.TypeFormat.DateTime:
+    case Format.TypeFormat.Date:
+    case Format.TypeFormat.Time: {
+      const date = new Date(value as string);
+      if (Number.isNaN(date.getTime())) {
+        return String(value);
+      }
+      const pattern = format === Format.TypeFormat.DateTime ? 'PPp' : format === Format.TypeFormat.Date ? 'PP' : 'p';
+      return formatDate(date, pattern);
+    }
+    default:
+      return String(value);
+  }
+};
+
+const FORM_FIELD_NAME = 'Form.Field';
+
+/** A bound value rendered as text: what a `static` presentation shows in place of the control. */
+export const FormStaticValue = ({ value, format }: { value: unknown; format?: Format.TypeFormat }) => (
+  <p className='truncate min-w-0'>{formatStaticValue(value, format)}</p>
+);
+
+export type FormFieldProps<T = any> = ThemedClassName<
+  PropsWithChildren<{
+    /**
+     * Binds the row to the form model at this path, dotted from the root: label, description,
+     * value, error, required and readonly come from the schema and the model, and a control inside
+     * reads them with `useFormField`. With no children the dispatcher picks the control.
+     */
+    path?: string;
+    /** The row's own label, description and error, when it is not bound. */
+    label?: string;
+    description?: string;
+    error?: string;
+    required?: boolean;
+    readonly?: boolean;
+    /**
+     * The label is text rather than a `<label>`: the row holds no single control (a button, a
+     * readout, several inputs), so there is nothing for it to name.
+     */
+    standalone?: boolean;
+    /**
+     * Read-only content after the label text (a live readout for a slider) — a sibling of the
+     * label, never a child, so the label's text stays exactly `label`.
+     */
+    labelEnd?: ReactNode;
+    /** `beside` lays the label after the control on one line, the shape of a toggle; the theme decides per variant. */
+    labelPlacement?: FormFieldLabelPlacement;
+    /** Overrides the form's presentation for this row. */
+    presentation?: FormPresentation;
+    /** Renders a bound value in the `static` presentation; the default formats by the schema's format. */
+    renderStatic?: (value: T | undefined) => ReactNode;
+    rootRef?: Ref<HTMLDivElement>;
+  }>
+>;
+
+/**
+ * The leaf: a `Field.Root` row of label, description, control and error, always a real field
+ * whether the value comes from the form model (`path`) or from the caller (props). Only the binding
+ * differs; nothing in how the row renders does.
+ */
+export const FormField = <T,>({ path, children, ...props }: FormFieldProps<T>) => {
+  if (path !== undefined) {
+    return children === undefined ? (
+      <FormBoundFieldDispatch<T> path={path} {...props} />
+    ) : (
+      <FormBoundField<T> path={path} {...props}>
+        {children}
+      </FormBoundField>
+    );
+  }
+  return <FormFieldRow<T> {...props}>{children}</FormFieldRow>;
+};
+
+FormField.displayName = FORM_FIELD_NAME;
+
+type FormBoundFieldProps<T> = Omit<FormFieldProps<T>, 'path'> & { path: string };
+
+/** A bound row around a hand-written control: resolves the property and the binding, then renders the row. */
+const FormBoundField = <T,>({ path, children, ...props }: FormBoundFieldProps<T>) => {
+  const property = useFormSchemaProperty(FORM_FIELD_NAME, path);
+  const binding = useFormFieldBindingAt<T>(FORM_FIELD_NAME, path, property, props);
+  return (
+    <FormFieldRow<T>
+      label={props.label ?? property?.label ?? ''}
+      description={props.description ?? property?.description}
+      format={property?.format}
+      {...props}
+      binding={binding}
+    >
+      {children}
+    </FormFieldRow>
+  );
+};
+
+/** A bound row with no control of its own: the dispatcher renders the row and picks the control. */
+const FormBoundFieldDispatch = <T,>({ path, ...props }: FormBoundFieldProps<T>) => {
+  const { form: _form, variant: _variant, testId: _testId, ...context } = useFormContext(FORM_FIELD_NAME);
+  const property = useFormSchemaProperty(FORM_FIELD_NAME, path);
+  if (!property) {
     return null;
   }
-
-  //
-  // Custom field.
-  //
-
-  const CustomField = fieldMap?.[jsonPath];
-  if (CustomField) {
-    return <CustomField {...fieldProps} />;
-  }
-
-  if (fieldProvider && providerSchema) {
-    const component = fieldProvider({ schema: providerSchema, prop: name ?? '', fieldProps });
-    if (component) {
-      return component;
-    }
-  }
-
-  //
-  // Dynamic, value-driven fields (options/value/validation loaded via a self-contained Effect annotation).
-  //
-
-  const optionsLookup = Option.getOrUndefined(OptionsLookupAnnotation.getFromAst(type));
-  if (optionsLookup) {
-    return optionsLookup.combobox ? (
-      <ComboboxField {...fieldProps} lookup={optionsLookup} />
-    ) : (
-      <AsyncSelectField {...fieldProps} lookup={optionsLookup} />
-    );
-  }
-
-  const autofill = Option.getOrUndefined(AutofillAnnotation.getFromAst(type));
-  if (autofill) {
-    return <AutofillField {...fieldProps} autofill={autofill} />;
-  }
-
-  if (Option.getOrUndefined(HueAnnotation.getFromAst(type))) {
-    return <HueField {...fieldProps} />;
-  }
-
-  //
-  // Array field.
-  //
-
-  if (SchemaEx.isArrayType(type)) {
-    return <ArrayField fieldProps={fieldState} label={label} {...props} />;
-  }
-
-  //
-  // Regular field.
-  //
-
-  const Field = getFormField(fieldProps);
-  if (Field) {
-    return <Field {...fieldProps} />;
-  }
-
-  //
-  // Select field.
-  //
-
-  const options = getSelectOptions(type);
-  if (options) {
-    // Resolve labels from projection metadata when available.
-    const fieldProjections = projection?.getFieldProjections();
-    const fieldProjection = fieldProjections?.find((fp) => fp.field.path === name);
-    const selectOptions = fieldProjection?.props.options;
-
-    return (
-      <SelectField
-        {...fieldProps}
-        options={options.map((option) => {
-          const selectOption = selectOptions?.find((so) => so.id === globalThis.String(option));
-          return {
-            value: option,
-            label: selectOption?.title ?? option.toString(),
-          };
-        })}
-      />
-    );
-  }
-
-  //
-  // Ref field.
-  //
-
-  const refProps = getRefProps(type);
-  if (refProps) {
-    // Inline a single referenced object's own fields (nested form) instead of a picker. `refInline` lets a
-    // parent (e.g. an owned-ref `ArrayField`) force this for elements whose own AST carries no annotation.
-    const inline =
-      refInline || Annotation.FormInlineAnnotation.getFromAst(refProps.ast).pipe(Option.getOrElse(() => false));
-    if (inline && !refProps.isArray) {
-      return (
-        <InlineRefField
-          {...fieldProps}
-          {...refProps}
-          db={db}
-          useType={useType}
-          onCreate={onCreate}
-          resolveCreateEntry={resolveCreateEntry}
-        />
-      );
-    }
-
-    const isCreateTarget = !createTypename || refProps.typename === createTypename;
-    return (
-      <RefField
-        {...fieldProps}
-        {...refProps}
-        createOptionLabel={isCreateTarget ? createOptionLabel : undefined}
-        createOptionIcon={isCreateTarget ? createOptionIcon : undefined}
-        createInitialValuePath={isCreateTarget ? createInitialValuePath : undefined}
-        createFieldMap={isCreateTarget ? createFieldMap : undefined}
-        db={db}
-        useType={useType}
-        getOptions={getOptions}
-        onCreate={onCreate}
-        resolveCreateEntry={resolveCreateEntry}
-      />
-    );
-  }
-
-  //
-  // Nested Object field.
-  //
-
-  if (SchemaEx.isNestedType(type)) {
-    const baseNode = SchemaEx.findNode(type, SchemaEx.isDiscriminatedUnion);
-    const typeLiteral = baseNode
-      ? SchemaEx.getDiscriminatedType(baseNode, fieldState.getValue() as any)
-      : SchemaEx.findNode(type, SchemaAST.isObjects);
-
-    if (typeLiteral) {
-      const schema = Schema.make<Schema.Codec<any, any>>(typeLiteral);
-      return (
-        <FormFieldSet
-          schema={schema}
-          path={path}
-          readonly={readonly}
-          layout={layout}
-          label={label}
-          collapsible
-          projection={projection}
-          fieldMap={fieldMap}
-          fieldProvider={fieldProvider}
-          createOptionLabel={createOptionLabel}
-          createOptionIcon={createOptionIcon}
-          createInitialValuePath={createInitialValuePath}
-          db={db}
-          useType={useType}
-          getOptions={getOptions}
-          onCreate={onCreate}
-          resolveCreateEntry={resolveCreateEntry}
-        />
-      );
-    }
-  }
-
-  return null;
-};
-
-FormField.displayName = 'Form.FormField';
-
-//
-// Layout components
-//
-
-// End-of-row form buttons occupy a consistent 32px block (matching the standard `h-8` label row) with
-// the button inset so its hover fill never touches the row's top/bottom/right edges.
-export const CompactIconButton = (props: IconButtonProps) => {
+  const segments = SchemaEx.isJsonPath(path) ? SchemaEx.splitJsonPath(path) : [];
   return (
-    <span className='grid size-8 shrink-0 place-items-center'>
-      <IconButton variant='ghost' iconOnly density='sm' {...props} />
-    </span>
+    <FormFieldDispatch
+      {...context}
+      type={property.type}
+      name={String(segments[segments.length - 1])}
+      label={props.label}
+      path={segments}
+      required={props.required ?? property.required}
+      readonly={props.readonly ?? context.readonly}
+      layout={props.presentation ?? context.layout}
+    />
   );
 };
 
-/** Whether a field's value counts as unfilled for the required-marker. `false` and `0` are values. */
+/** The schema property at a path of the form's schema: its type, and what the row derives from it. */
+export const useFormSchemaProperty = (componentName: string, path: string) => {
+  const { form } = useFormContext(componentName);
+  return useMemo(() => {
+    if (!form.schema) {
+      return undefined;
+    }
+    const resolved = resolveLayoutField(form.schema, path);
+    if (!resolved) {
+      return undefined;
+    }
+    const description = SchemaEx.getAnnotation<string>(SchemaAST.DescriptionAnnotationId)(resolved.type);
+    const format = Format.FormatAnnotation.getFromAst(resolved.type).pipe(Option.getOrUndefined);
+    return {
+      type: resolved.type,
+      label: resolved.title ?? Str.capitalize(resolved.leafName),
+      description,
+      format,
+      required: resolved.required,
+    };
+  }, [form.schema, path]);
+};
+
+type SchemaProperty = ReturnType<typeof useFormSchemaProperty>;
+
+/** The binding for a row at a path, from the form handler. */
+const useFormFieldBindingAt = <T,>(
+  componentName: string,
+  path: string,
+  property: SchemaProperty,
+  { required, readonly, presentation }: Pick<FormFieldProps<T>, 'required' | 'readonly' | 'presentation'>,
+): FormFieldBinding<T> => {
+  const { readonly: formReadonly, layout } = useFormContext(componentName);
+  const segments = useMemo(() => (SchemaEx.isJsonPath(path) ? SchemaEx.splitJsonPath(path) : []), [path]);
+  const { getStatus, getValue, onBlur, onValueChange } = useFormFieldState(componentName, segments);
+  const { status, error } = getStatus();
+  const value = getValue() as T | undefined;
+  const type = property?.type ?? SchemaAST.unknownKeyword;
+  return useMemo(
+    () => ({
+      path,
+      type,
+      value,
+      setValue: (next: T | undefined) => onValueChange(type, next),
+      onBlur,
+      status,
+      error,
+      required: required ?? property?.required,
+      readonly: readonly ?? formReadonly,
+      presentation: presentation ?? layout,
+    }),
+    [
+      path,
+      type,
+      value,
+      onValueChange,
+      onBlur,
+      status,
+      error,
+      required,
+      property?.required,
+      readonly,
+      formReadonly,
+      presentation,
+      layout,
+    ],
+  );
+};
+
+export type FormFieldRowProps<T = any> = Omit<FormFieldProps<T>, 'path'> & {
+  /** The schema format of a bound value, for its static rendering. */
+  format?: Format.TypeFormat;
+  /** Present when the row is bound; the control inside reads it with `useFormField`. */
+  binding?: FormFieldBinding<T>;
+};
+
+/**
+ * The row itself, shared by every route into a field: label row (label, `labelEnd`, error icon),
+ * description, control, error text, inside a `Field.Root` that carries the validation valence.
+ */
+export const FormFieldRow = <T,>({
+  classNames,
+  children,
+  label,
+  description,
+  error: errorProp,
+  required: requiredProp,
+  readonly: readonlyProp,
+  standalone,
+  labelEnd,
+  labelPlacement = 'above',
+  presentation: presentationProp,
+  renderStatic,
+  format,
+  binding,
+  rootRef,
+}: FormFieldRowProps<T>) => {
+  const { variant = 'default', layout } = useFormContext(FORM_FIELD_NAME);
+  const styles = formTheme.styles({ variant, labelPlacement });
+  const { showDescription } = formTheme.behavior[variant];
+  const resolved = presentationFor(presentationProp ?? binding?.presentation ?? layout);
+  const error = binding?.error ?? errorProp;
+  const readonly = binding?.readonly ?? readonlyProp;
+  // The asterisk marks what is still outstanding, so a bound row clears it once it holds a value.
+  const required = binding ? binding.required && isEmptyValue(binding.value) : requiredProp;
+
+  let control: ReactNode = children;
+  if (binding && resolved.isStatic) {
+    if (binding.value == null) {
+      return null;
+    }
+    control = renderStatic?.(binding.value) ?? <FormStaticValue value={binding.value} format={format} />;
+  }
+
+  const row = (
+    <Field.Root
+      validationValence={binding?.status ?? (error ? 'error' : undefined)}
+      required={!!required}
+      readOnly={readonly}
+    >
+      <div className={styles.field({ class: mx(classNames) })} ref={rootRef}>
+        {/* A label beside its control follows it in the DOM, as a toggle's text does; the settings grid places by area either way. */}
+        {labelPlacement === 'beside' && <div className={styles.fieldControl()}>{control}</div>}
+        {resolved.showLabel && label && (
+          <FormFieldLabel
+            variant={variant}
+            error={error}
+            readonly={readonly}
+            required={required}
+            standalone={standalone}
+            labelEnd={labelEnd}
+            label={label}
+          />
+        )}
+        {showDescription && description && (
+          <Field.HelperText classNames={styles.fieldDescription()}>{description}</Field.HelperText>
+        )}
+        {labelPlacement !== 'beside' && <div className={styles.fieldControl()}>{control}</div>}
+        {resolved.showError && error && (
+          <div className={styles.fieldValidation()}>
+            <Field.ErrorText>{error}</Field.ErrorText>
+          </div>
+        )}
+      </div>
+    </Field.Root>
+  );
+
+  return binding ? <FormFieldBindingProvider {...binding}>{row}</FormFieldBindingProvider> : row;
+};
+
+FormFieldRow.displayName = 'Form.FieldRow';
+
+/** Whether a value counts as unfilled for the required marker. `false` and `0` are values. */
 const isEmptyValue = (value: unknown): boolean =>
   value == null || value === '' || (Array.isArray(value) && value.length === 0);
 
-/**
- * Get property input component.
- */
-const getFormField = ({
-  type,
-  format,
-}: Pick<FormFieldRendererProps, 'type' | 'format'>): FormFieldRenderer | undefined => {
-  // v4 has no `Refinement` node: `Schema.Number.pipe(Schema.check(...))` IS a `Number` node
-  // carrying checks, so the base-type cases below already match it.
+//
+// FormFieldErrorBoundary
+//
 
-  //
-  // Standard formats.
-  //
-
-  const formatField = Match.value(format).pipe(
-    Match.withReturnType<FormFieldRenderer | undefined>(),
-    Match.when(Format.TypeFormat.Date, () => DateField),
-    Match.when(Format.TypeFormat.DateTime, () => DateField),
-    Match.when(Format.TypeFormat.GeoPoint, () => GeoPointField),
-    Match.when(Format.TypeFormat.Markdown, () => MarkdownField),
-    Match.when(Format.TypeFormat.Password, () => PasswordField),
-    Match.when(Format.TypeFormat.Text, () => TextAreaField),
-    Match.when(Format.TypeFormat.Time, () => DateField),
-    Match.orElse(() => undefined),
-  );
-  if (formatField) {
-    return formatField;
-  }
-
-  //
-  // Standard types.
-  //
-
-  switch (type._tag) {
-    // TODO(wittjosiah): Schema.Any is currently used to represent template inputs.
-    case 'Any':
-    case 'String':
-      return TextField;
-    case 'Number':
-      return NumberField;
-    case 'Boolean':
-      return BooleanField;
-  }
-
-  return undefined;
+type FormFieldErrorState = {
+  error: Error | undefined;
 };
 
-const getSelectOptions = (ast: SchemaAST.AST): Format.Options[] | undefined => {
-  if (SchemaEx.isLiteralUnion(ast)) {
-    return ast.types.map((type) => type.literal).filter((v): v is string | number => v !== null);
+type FormFieldErrorBoundaryProps = PropsWithChildren<{
+  path?: (string | number)[];
+}>;
+
+export class FormFieldErrorBoundary extends Component<FormFieldErrorBoundaryProps, FormFieldErrorState> {
+  static getDerivedStateFromError(error: Error): { error: Error } {
+    return { error };
   }
 
-  return Format.OptionsAnnotation.getFromAst(ast).pipe((annotation) => Option.getOrUndefined(annotation));
-};
+  override state = { error: undefined };
+
+  override componentDidUpdate(prevProps: FormFieldErrorBoundaryProps) {
+    if (prevProps.path !== this.props.path) {
+      this.resetError();
+    }
+  }
+
+  override render() {
+    if (this.state.error) {
+      return (
+        <div className='flex gap-2 border border-error-border font-mono text-sm'>
+          <span className='bg-error-bg text-base-fg px-1 font-thin'>ERROR</span>
+          {String(this.props.path?.join('.'))}
+        </div>
+      );
+    }
+
+    return this.props.children;
+  }
+
+  private resetError() {
+    this.setState({ error: undefined });
+  }
+}

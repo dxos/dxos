@@ -2,6 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+import { type JsonObject, create } from '@bufbuild/protobuf';
+import { anyPack, anyUnpack } from '@bufbuild/protobuf/wkt';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
@@ -15,21 +17,40 @@ import { InvitationEncoder } from '@dxos/client/invitations';
 import { createIdFromSpaceKey } from '@dxos/echo-protocol';
 import { Identity as HaloIdentity, IdentityError } from '@dxos/halo';
 import { IdentityDid, PublicKey } from '@dxos/keys';
-import { type TypedMessage } from '@dxos/protocols/proto';
+import { fromDate, fromPublicKey, requirePublicKey, toDate, toPublicKey } from '@dxos/protocols/buf';
 import {
   type Device as ClientDevice,
   type Identity as ClientIdentity,
-  Device,
+  Device_PresenceState,
   DeviceKind,
-} from '@dxos/protocols/proto/dxos/client/services';
-import { type Credential, DeviceType, IdentityRecovery } from '@dxos/protocols/proto/dxos/halo/credentials';
+  RecoverIdentityRequest_ExternalSignatureSchema,
+} from '@dxos/protocols/buf/dxos/client/services_pb';
+import {
+  type Credential,
+  CredentialSchema,
+  DeviceProfileDocumentSchema,
+  DeviceType,
+  IdentityRecovery_Kind,
+  IdentityRecoveryRevokedSchema,
+  IdentityRecoverySchema,
+  ProfileDocumentSchema,
+  ServiceAccessSchema,
+} from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { ComplexSet } from '@dxos/util';
 
 import { makeFlow, streamFromClientObservable, toShareOptions } from './util';
 
+/**
+ * Narrows arbitrary profile metadata to what a `google.protobuf.Struct` can carry.
+ *
+ * The HALO surface declares `data` as `Record<string, unknown>`, so a non-JSON value has to be
+ * dropped here rather than asserted away.
+ */
+const toJsonObject = (data: Record<string, unknown>): JsonObject => JSON.parse(JSON.stringify(data));
+
 const toInfo = (identity: ClientIdentity): HaloIdentity.Info => ({
   did: IdentityDid.make(identity.did),
-  identityKey: identity.identityKey?.toHex(),
+  identityKey: toPublicKey(identity.identityKey)?.toHex(),
   displayName: identity.profile?.displayName,
   data: identity.profile?.data,
 });
@@ -43,14 +64,14 @@ const DEVICE_KINDS: Record<DeviceType, HaloIdentity.DeviceKind> = {
   [DeviceType.AGENT_MANAGED]: 'agent-managed',
 };
 
-const PRESENCE: Record<Device.PresenceState, HaloIdentity.Presence> = {
-  [Device.PresenceState.ONLINE]: 'online',
-  [Device.PresenceState.OFFLINE]: 'offline',
-  [Device.PresenceState.REMOVED]: 'removed',
+const PRESENCE: Record<Device_PresenceState, HaloIdentity.Presence> = {
+  [Device_PresenceState.ONLINE]: 'online',
+  [Device_PresenceState.OFFLINE]: 'offline',
+  [Device_PresenceState.REMOVED]: 'removed',
 };
 
 const toDeviceInfo = (device: ClientDevice): HaloIdentity.DeviceInfo => ({
-  key: device.deviceKey.toHex(),
+  key: requirePublicKey(device.deviceKey).toHex(),
   kind: device.profile?.type !== undefined ? DEVICE_KINDS[device.profile.type] : undefined,
   label: device.profile?.label,
   os: device.profile?.os,
@@ -59,36 +80,42 @@ const toDeviceInfo = (device: ClientDevice): HaloIdentity.DeviceInfo => ({
   presence: PRESENCE[device.presence],
 });
 
-const RECOVERY_KINDS: Record<IdentityRecovery.Kind, HaloIdentity.RecoveryKind> = {
-  [IdentityRecovery.Kind.UNKNOWN]: 'unknown',
-  [IdentityRecovery.Kind.PASSKEY]: 'passkey',
-  [IdentityRecovery.Kind.RECOVERY_CODE]: 'recovery-code',
-  [IdentityRecovery.Kind.OAUTH]: 'oauth',
+const RECOVERY_KINDS: Record<IdentityRecovery_Kind, HaloIdentity.RecoveryKind> = {
+  [IdentityRecovery_Kind.UNKNOWN]: 'unknown',
+  [IdentityRecovery_Kind.PASSKEY]: 'passkey',
+  [IdentityRecovery_Kind.RECOVERY_CODE]: 'recovery-code',
+  [IdentityRecovery_Kind.OAUTH]: 'oauth',
 };
 
-const RECOVERY_KIND_VALUES: Record<HaloIdentity.RecoveryKind, IdentityRecovery.Kind> = {
-  'unknown': IdentityRecovery.Kind.UNKNOWN,
-  'passkey': IdentityRecovery.Kind.PASSKEY,
-  'recovery-code': IdentityRecovery.Kind.RECOVERY_CODE,
-  'oauth': IdentityRecovery.Kind.OAUTH,
+const RECOVERY_KIND_VALUES: Record<HaloIdentity.RecoveryKind, IdentityRecovery_Kind> = {
+  'unknown': IdentityRecovery_Kind.UNKNOWN,
+  'passkey': IdentityRecovery_Kind.PASSKEY,
+  'recovery-code': IdentityRecovery_Kind.RECOVERY_CODE,
+  'oauth': IdentityRecovery_Kind.OAUTH,
 };
+
+/**
+ * The assertion's fully-qualified proto name, which this surface publishes as the credential type.
+ *
+ * A packed `Any` carries it as a type URL, and unpacking every assertion type here only to read a
+ * name the URL already spells out would couple this adapter to the whole assertion registry.
+ */
+const assertionTypeName = (typeUrl: string | undefined): string => typeUrl?.split('/').pop() ?? '';
 
 const toCredential = (credential: Credential, revoked: ComplexSet<PublicKey>): HaloIdentity.Credential => {
-  // Annotated because the protobuf `Any` decodes untyped, which defeats narrowing on `@type`.
-  const assertion: TypedMessage = credential.subject.assertion;
+  const assertion = credential.subject?.assertion;
+  const recovery = assertion && anyUnpack(assertion, IdentityRecoverySchema);
+  const lookupKey = toPublicKey(recovery?.lookupKey);
   return {
-    id: credential.id?.toHex(),
-    type: assertion['@type'],
-    issuanceDate: credential.issuanceDate,
-    recovery:
-      assertion['@type'] === 'dxos.halo.credentials.IdentityRecovery'
-        ? {
-            lookupKey: assertion.lookupKey?.toHex(),
-            label: assertion.label,
-            kind: RECOVERY_KINDS[assertion.kind ?? IdentityRecovery.Kind.UNKNOWN],
-            revoked: !!assertion.lookupKey && revoked.has(assertion.lookupKey),
-          }
-        : undefined,
+    id: toPublicKey(credential.id)?.toHex(),
+    type: assertionTypeName(assertion?.typeUrl),
+    issuanceDate: toDate(credential.issuanceDate),
+    recovery: recovery && {
+      lookupKey: lookupKey?.toHex(),
+      label: recovery.label,
+      kind: RECOVERY_KINDS[recovery.kind ?? IdentityRecovery_Kind.UNKNOWN],
+      revoked: !!lookupKey && revoked.has(lookupKey),
+    },
   };
 };
 
@@ -99,9 +126,10 @@ const toCredential = (credential: Credential, revoked: ComplexSet<PublicKey>): H
 const collectRevoked = (credentials: readonly Credential[]): ComplexSet<PublicKey> => {
   const revoked = new ComplexSet<PublicKey>(PublicKey.hash);
   for (const credential of credentials) {
-    const assertion: TypedMessage = credential.subject.assertion;
-    if (assertion['@type'] === 'dxos.halo.credentials.IdentityRecoveryRevoked') {
-      revoked.add(assertion.lookupKey);
+    const assertion = credential.subject?.assertion;
+    const lookupKey = assertion && toPublicKey(anyUnpack(assertion, IdentityRecoveryRevokedSchema)?.lookupKey);
+    if (lookupKey) {
+      revoked.add(lookupKey);
     }
   }
   return revoked;
@@ -125,14 +153,14 @@ const toRecoverRequest = (args: HaloIdentity.RecoverArgs): RecoverIdentityArgs =
   }
   const { challenge, lookupKey, signature, clientDataJson, authenticatorData } = args.passkey;
   return {
-    external: {
-      lookupKey: PublicKey.fromHex(lookupKey),
-      deviceKey: PublicKey.fromHex(challenge.deviceKey),
-      controlFeedKey: PublicKey.fromHex(challenge.controlFeedKey),
+    external: create(RecoverIdentityRequest_ExternalSignatureSchema, {
+      lookupKey: fromPublicKey(PublicKey.fromHex(lookupKey)),
+      deviceKey: fromPublicKey(PublicKey.fromHex(challenge.deviceKey)),
+      controlFeedKey: fromPublicKey(PublicKey.fromHex(challenge.controlFeedKey)),
       signature,
       clientDataJson,
       authenticatorData,
-    },
+    }),
   };
 };
 
@@ -180,11 +208,13 @@ export const makeIdentityService = (client: Client): Context.Service.Shape<typeo
       try: async () =>
         toInfo(
           await client.halo.createIdentity(
-            {
+            create(ProfileDocumentSchema, {
               ...(options?.displayName !== undefined && { displayName: options.displayName }),
-              ...(options?.data !== undefined && { data: options.data }),
-            },
-            options?.deviceLabel !== undefined ? { label: options.deviceLabel } : undefined,
+              ...(options?.data !== undefined && { data: toJsonObject(options.data) }),
+            }),
+            options?.deviceLabel !== undefined
+              ? create(DeviceProfileDocumentSchema, { label: options.deviceLabel })
+              : undefined,
           ),
         ),
       catch: (error) => new IdentityError({ context: { error } }),
@@ -194,7 +224,8 @@ export const makeIdentityService = (client: Client): Context.Service.Shape<typeo
     try: async () => {
       // Same pre-initialization contract as `getSnapshot`: none means "unknown", not "absent".
       const spaceKey = client.initialized ? client.halo.identity.get()?.spaceKey : undefined;
-      return spaceKey ? Option.some(await createIdFromSpaceKey(spaceKey)) : Option.none();
+      const key = toPublicKey(spaceKey);
+      return key ? Option.some(await createIdFromSpaceKey(key)) : Option.none();
     },
     catch: (error) => new IdentityError({ context: { error } }),
   }),
@@ -245,7 +276,15 @@ export const makeIdentityService = (client: Client): Context.Service.Shape<typeo
 
   updateProfile: (profile) =>
     Effect.tryPromise({
-      try: async () => toInfo(await client.halo.updateProfile(profile)),
+      try: async () =>
+        toInfo(
+          await client.halo.updateProfile(
+            create(ProfileDocumentSchema, {
+              displayName: profile.displayName,
+              data: profile.data && toJsonObject(profile.data),
+            }),
+          ),
+        ),
       catch: (error) => new IdentityError({ context: { error } }),
     }),
 
@@ -280,20 +319,22 @@ export const makeIdentityService = (client: Client): Context.Service.Shape<typeo
           throw new Error('No identity.');
         }
         await client.halo.writeCredentials([
-          {
+          create(CredentialSchema, {
             issuer: identityKey,
-            issuanceDate: new Date(),
+            issuanceDate: fromDate(new Date()),
             subject: {
               id: identityKey,
-              assertion: {
-                '@type': 'dxos.halo.credentials.ServiceAccess',
-                'serverName': options.serverName,
-                'serverKey': identityKey,
-                identityKey,
-                'capabilities': [...options.capabilities],
-              },
+              assertion: anyPack(
+                ServiceAccessSchema,
+                create(ServiceAccessSchema, {
+                  serverName: options.serverName,
+                  serverKey: identityKey,
+                  identityKey,
+                  capabilities: [...options.capabilities],
+                }),
+              ),
             },
-          },
+          }),
         ]);
       },
       catch: (error) => new IdentityError({ context: { error } }),

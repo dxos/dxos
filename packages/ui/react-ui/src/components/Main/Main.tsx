@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Dialog as DialogPrimitive, useDialog } from '@ark-ui/react/dialog';
+import { Drawer as DrawerPrimitive, useDrawer } from '@ark-ui/react/drawer';
 import { ark } from '@ark-ui/react/factory';
 import React, {
   type ComponentPropsWithRef,
@@ -17,7 +17,7 @@ import React, {
 
 import { addEventListener } from '@dxos/async';
 import { FOCUS_GROUP_ATTR, KEYBOARD_MODALITY_ATTR } from '@dxos/react-focus';
-import { useComposedRefs, useControllableState, useMediaQuery, useMergeRefs } from '@dxos/react-hooks';
+import { useComposedRefs, useControllableState, useMediaQuery } from '@dxos/react-hooks';
 import { osTranslations } from '@dxos/ui-theme';
 
 import { useThemeContext } from '../../hooks';
@@ -25,7 +25,6 @@ import { type Label, toLocalizedString, useTranslation } from '../../providers';
 import { type MainStyleProps } from '../../theme';
 import { type ThemedClassName } from '../../util';
 import { MAIN_NAME, MainProvider, type SidebarState, useLandmarkMover, useMainContext } from './MainContext';
-import { useSwipeToDismiss } from './useSwipeToDismiss';
 
 const MAIN_ROOT_NAME = 'Main.Root';
 const MAIN_OVERLAY_NAME = 'Main.Overlay';
@@ -38,6 +37,7 @@ const prevents = (handler: ((event: Event) => void) | undefined) => {
   if (!handler) {
     return false;
   }
+
   const event = new Event('autofocus', { cancelable: true });
   handler(event);
   return event.defaultPrevented;
@@ -160,7 +160,10 @@ MainOverlay.displayName = MAIN_OVERLAY_NAME;
 //
 
 type MainSidebarProps = ThemedClassName<ComponentPropsWithRef<typeof ark.div>> & {
+  /** Below `lg`, a swipe toward the edge closes the sidebar; on by default. */
   swipeToDismiss?: boolean;
+  /** Below `lg`, a touch swipe inward from the edge opens the sidebar; on by default. */
+  swipeToOpen?: boolean;
   state?: SidebarState;
   resizing?: boolean;
   onStateChange?: (nextState: SidebarState) => void;
@@ -171,47 +174,56 @@ type MainSidebarProps = ThemedClassName<ComponentPropsWithRef<typeof ark.div>> &
 };
 
 /**
- * Below `lg` an open sidebar is a non-modal dialog — the machine owns its dismissal (Escape, a tap
- * outside) and its ARIA — and the content stays mounted so the CSS can slide it; at `lg` it is a
- * plain landmark and the machine stays closed.
+ * Below `lg` an open sidebar is a non-modal drawer — the machine owns its dismissal (Escape, a tap
+ * outside, a swipe toward the edge), the edge swipe that opens it and its ARIA — and the content
+ * stays mounted so the CSS can slide it; at `lg` it is a plain landmark and the machine stays
+ * closed. The machine moves the panel on `transform` during a drag; `main.css` slides it on
+ * `inset-inline-start`, so the two never meet.
  */
 const MainSidebar = forwardRef<HTMLDivElement, MainSidebarProps>(
   (
-    { classNames, children, swipeToDismiss, onOpenAutoFocus, state, resizing, onStateChange, side, label, ...props },
+    {
+      classNames,
+      children,
+      swipeToDismiss = true,
+      swipeToOpen = true,
+      onOpenAutoFocus,
+      state,
+      resizing,
+      onStateChange,
+      side,
+      label,
+      ...props
+    },
     forwardedRef,
   ) => {
     const [isLg] = useMediaQuery('lg');
     const { tx } = useThemeContext();
     const { t } = useTranslation(osTranslations);
-    // A ref object for `useSwipeToDismiss`, merged rather than synced: `useForwardedRef` writes the
-    // forwarded ref once in an effect, which never delivers the node when `Root` swaps between
-    // `ark.div` and the dialog content on a media-query change.
-    const ref = useRef<HTMLDivElement>(null);
-    const composedRef = useMergeRefs<HTMLDivElement>([ref, forwardedRef]);
-    const noopRef = useRef(null);
-
-    useSwipeToDismiss(swipeToDismiss ? ref : noopRef, {
-      onDismiss: () => onStateChange?.('closed'),
-    });
 
     // Pointer-opened, the sidebar leaves focus where it was; the machine always focuses something,
     // so it is handed the element that already has it.
     const autoFocusVetoed = onOpenAutoFocus
       ? prevents(onOpenAutoFocus)
       : !document.body.hasAttribute(KEYBOARD_MODALITY_ATTR);
-    const dialog = useDialog({
-      'open': !isLg && state !== 'closed',
-      'onOpenChange': ({ open }) => {
-        if (!open) {
-          onStateChange?.('closed');
+    const drawer = useDrawer({
+      open: !isLg && state !== 'closed',
+      onOpenChange: ({ open }) => onStateChange?.(open ? 'expanded' : 'closed'),
+      modal: false,
+      trapFocus: false,
+      preventScroll: false,
+      restoreFocus: false,
+      swipeDirection: side === 'w-end' ? 'end' : 'start',
+      // Zag's layer stack takes every later-opened layer for a nested one and dismisses it when a
+      // lower layer leaves, which would close the other sidebar whenever this one closes.
+      onRequestDismiss: (event) => {
+        const { targetLayer } = event.detail;
+        const own = event.currentTarget;
+        if (!(own instanceof Node && targetLayer?.contains(own))) {
+          event.preventDefault();
         }
       },
-      'aria-label': toLocalizedString(label, t),
-      'modal': false,
-      'trapFocus': false,
-      'preventScroll': false,
-      'restoreFocus': false,
-      'initialFocusEl': () => (autoFocusVetoed ? (document.activeElement as HTMLElement | null) : null),
+      initialFocusEl: () => (autoFocusVetoed ? (document.activeElement as HTMLElement | null) : null),
     });
 
     // NOTE(thure): This is a workaround for something further down the tree grabbing focus on Escape. Adding this
@@ -232,12 +244,13 @@ const MainSidebar = forwardRef<HTMLDivElement, MainSidebarProps>(
     const sidebarProps = {
       ...(state === 'closed' && { inert: true }),
       ...props,
+      'aria-label': toLocalizedString(label, t),
       'data-side': side === 'w-end' ? 'ie' : 'is',
       'data-state': state,
       'data-resizing': resizing ? 'true' : 'false',
       'className': tx('main.sidebar', {}, classNames),
       'onKeyDownCapture': handleKeyDown,
-      'ref': composedRef,
+      'ref': forwardedRef,
     };
 
     if (isLg) {
@@ -245,15 +258,18 @@ const MainSidebar = forwardRef<HTMLDivElement, MainSidebarProps>(
     }
 
     return (
-      <DialogPrimitive.RootProvider value={dialog}>
+      <DrawerPrimitive.RootProvider value={drawer}>
         {/* The machine hides closed content; the CSS slides it out instead, so it stays shown. */}
-        <DialogPrimitive.Content tabIndex={-1} {...sidebarProps} hidden={false}>
+        <DrawerPrimitive.Content tabIndex={-1} {...sidebarProps} draggable={swipeToDismiss} hidden={false}>
           {children}
-        </DialogPrimitive.Content>
-      </DialogPrimitive.RootProvider>
+        </DrawerPrimitive.Content>
+        {swipeToOpen && <DrawerPrimitive.SwipeArea className={tx('main.swipeArea', {})} />}
+      </DrawerPrimitive.RootProvider>
     );
   },
 );
+
+MainSidebar.displayName = 'Main.Sidebar';
 
 //
 // Navigation Sidebar

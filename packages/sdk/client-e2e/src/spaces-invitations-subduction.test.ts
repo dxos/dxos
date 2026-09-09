@@ -10,7 +10,9 @@ import { performInvitation } from '@dxos/client-services/testing';
 import { createInitializedClientsWithContext, testSpaceAutomerge, waitForSpace } from '@dxos/client/testing';
 import { Config } from '@dxos/config';
 import { Context } from '@dxos/context';
+import { specificCredential } from '@dxos/credentials';
 import { TestSchema } from '@dxos/echo/testing';
+import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { toPublicKey } from '@dxos/protocols/buf';
 import {
@@ -23,7 +25,8 @@ import {
   QueryInvitationsResponse_Action,
   QueryInvitationsResponse_Type,
 } from '@dxos/protocols/buf/dxos/client/services_pb';
-import { MembershipPolicy } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { MembershipPolicy } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
+import { type SpaceGenesis } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
 // Mirror of `spaces-invitations.test.ts`, run with `useSubduction: true`. Subduction
 // is the sedimentree-based byte transport (see `.claude/skills/effect/subduction/SKILL.md`)
@@ -55,7 +58,10 @@ describe.skipIf(process.env.CI)('Spaces/invitations (subduction)', { timeout: 30
     expect(hostInvitation?.state).to.eq(Invitation_State.SUCCESS);
 
     {
-      const space = await waitForSpace(client2, toPublicKey(guestInvitation!.spaceKey)!, { ready: true });
+      invariant(guestInvitation);
+      const guestSpaceKey = toPublicKey(guestInvitation.spaceKey);
+      invariant(guestSpaceKey);
+      const space = await waitForSpace(client2, guestSpaceKey, { ready: true });
       await testSpaceAutomerge(expect, space.db);
     }
   });
@@ -129,11 +135,11 @@ describe.skipIf(process.env.CI)('Spaces/invitations (subduction)', { timeout: 30
     expect(space.membershipPolicy).toEqual(MembershipPolicy.LOCKED);
 
     const credentials = await space.internal.getCredentials();
-    const genesisCredential = credentials.find(
-      (c) => c.subject.assertion['@type'] === 'dxos.halo.credentials.SpaceGenesis',
-    );
-    expect(genesisCredential).toBeDefined();
-    expect(genesisCredential!.subject.assertion.membershipPolicy).toEqual(MembershipPolicy.LOCKED);
+    const genesis = credentials.flatMap(
+      (credential) => specificCredential<SpaceGenesis>(credential, 'dxos.halo.credentials.SpaceGenesis') ?? [],
+    )[0];
+    expect(genesis).toBeDefined();
+    expect(genesis.assertion.membershipPolicy).toEqual(MembershipPolicy.LOCKED);
   });
 
   const createInvitationTracker = (peer: Client) => {

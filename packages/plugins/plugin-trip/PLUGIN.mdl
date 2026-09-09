@@ -513,19 +513,19 @@ packages/plugins/plugin-trip/src/
 ### Tests
 
 ```mdl
-test parseUnitedFlight
+scenario parseUnitedFlight
   desc: Parser unit tests against fixture emails (canonical + edge cases).
   cases:
     - canonical eTicket itinerary → expected Booking + Flight Segment.
     - missing confirmation code → returns null.
 
-test parseBookingComHotel
+scenario parseBookingComHotel
   desc: Parser unit tests against fixture emails.
   cases:
     - canonical hotel confirmation → expected Booking + Accommodation Segment.
     - missing check-in/check-out → returns null.
 
-test TravelMessageExtractor
+scenario TravelMessageExtractor
   desc: Dispatch, Trip resolution, and Account dedup.
   cases:
     - flight email + no existing Trip → creates new Trip wrapping flight dates.
@@ -533,7 +533,7 @@ test TravelMessageExtractor
     - flight email + target Trip ref → appends to target.
     - same provider + account number twice → reuses existing Account.
 
-test extract-message operation
+scenario extract-message operation
   desc: Operation handler integrates with the capability registry.
   cases:
     - manual mode: extractorId passed → calls exactly that extractor.

@@ -2,6 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
+import { create } from '@bufbuild/protobuf';
 import * as EffectContext from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
@@ -15,9 +16,11 @@ import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { EdgeAgentStatus, EdgeCallFailedError } from '@dxos/protocols';
+import { fromPublicKey, requirePublicKey } from '@dxos/protocols/buf';
+import { SpaceState } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 import { type Runtime_Client_EdgeFeatures } from '@dxos/protocols/buf/dxos/config_pb';
-import { SpaceState } from '@dxos/protocols/proto/dxos/client/services';
-import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
+import { EdgeReplicationSetting } from '@dxos/protocols/buf/dxos/echo/metadata_pb';
+import { DeviceAdmissionRequestSchema } from '@dxos/protocols/buf/dxos/halo/invitations_pb';
 
 import { type Identity, type IdentityProvider, IdentityProviderService } from '../identity';
 import { type DataSpaceManager, DataSpaceManagerService } from '../spaces';
@@ -85,12 +88,14 @@ export class EdgeAgentManager extends Resource {
       return;
     }
 
-    await this.identity.admitDevice({
-      deviceKey,
-      controlFeedKey: PublicKey.fromHex(response.feedKey),
-      // TODO: agents don't have data feed, should be removed
-      dataFeedKey: PublicKey.random(),
-    });
+    await this.identity.admitDevice(
+      create(DeviceAdmissionRequestSchema, {
+        deviceKey: fromPublicKey(deviceKey),
+        controlFeedKey: fromPublicKey(PublicKey.fromHex(response.feedKey)),
+        // TODO: agents don't have data feed, should be removed
+        dataFeedKey: fromPublicKey(PublicKey.random()),
+      }),
+    );
 
     log('agent created', response);
 
@@ -175,7 +180,7 @@ export class EdgeAgentManager extends Resource {
         continue;
       }
       const agentFeedNeedsNotarization = ![...space.inner.spaceState.feeds.values()].some((feed) =>
-        feed.assertion.deviceKey.equals(agentDeviceKey),
+        requirePublicKey(feed.assertion.deviceKey).equals(agentDeviceKey),
       );
       space.notarizationPlugin.setActiveEdgePollingEnabled(agentFeedNeedsNotarization);
       activePollingEnabled = activePollingEnabled || agentFeedNeedsNotarization;

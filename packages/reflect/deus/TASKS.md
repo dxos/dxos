@@ -15,7 +15,8 @@ and an agent tester execute from the same source. Flows live in a `## QA` sectio
 
 ### Major goal — the QA routine
 
-Part (c) has a front door: `/dxos:qa run <flow>`. Parts (a) and (b) do not yet.
+Part (c) has a front door: `/dxos:qa run <plugin> <testId>` and `run --suite|--tag`. Part (a) is
+the spec-sync Routine (`agents/routines/spec-sync.md`); (b) has no front door yet.
 
 A Claude routine (skill + command) that closes the loop for any plugin:
 
@@ -26,10 +27,10 @@ A Claude routine (skill + command) that closes the loop for any plugin:
       keys and services, and chess's `startGame` has no runtime counterpart at all. A single
       `key?: NSID` cannot express either. Split the spec operation, or define one-to-many binding
       semantics, before writing the reconciler.
-- [ ] **(b) Propose candidate flows** — read `feat`/`req`/`test` blocks with no `covers:` pointing
-      at them and draft flows that would exercise them, for human triage.
-- [ ] **(c) Run the plan** — execute selected flows against a live Composer through the debug
-      port and report a per-step pass/fail table.
+- [ ] **(b) Propose candidate tests** — read `feat`/`req`/`scenario` blocks with no `covers:` pointing
+      at them and draft tests that would exercise them, for human triage.
+- [x] **(c) Run the plan** — execute selected tests against a live Composer through the debug
+      port and report a per-step pass/fail table (`composer-qa` skill, `/dxos:qa run`).
 
 Each part is independently useful; (c) is the one that needs the language to be right first.
 
@@ -94,7 +95,15 @@ Later (tracked, not started):
       `outcome_branch: qa`), on-merge smoke, daily spec-sync. Create the `qa` branch from main first.
 - [ ] **Move every `PLUGIN.mdl` to `plugin-xxx/spec/PLUGIN.mdl`**, updating `list-tests.mjs`,
       `tools/qa-lint/*`, the `composer-plugins` skill, the template and every path in docs.
-- [ ] **Spec-sync sweep** over all plugins in batches of 8 (`sweep 8`), then incremental.
+- [ ] **Spec-sync sweep** over all plugins in batches of 8 (`sweep 8`), then incremental. Inputs
+      from the PR #12986 review (CodeRabbit, 2026-09-08), all pre-existing content the rename only
+      exposed: assistant QA-1 `op:CreateChat` lacks its `db` input and asserts `typeof $result ===
+    'undefined' || true`; brain QA-1 dropped the T-5 Enrich-to-Query coverage; chess QA-1 passes SAN
+      strings to `op:submitMove` and reads `$result.pgn`; file T-5 asserts an `<iframe>` against a
+      canvas contract; inbox QA-1's `after` uses an unbound `$created`; slack QA-1's `after` passes
+      `$discovered` and `$given.space` to `removeObjects`; space's spec declares no
+      `space.delete` although its QA-1 invokes it; tasks T-2/T-3/T-6 repeat `when`/`then`; and 24
+      appendices define `op@1.0` while their tables declare `op@1.1`.
 - [ ] **Migrate `scenario` content**: 542 given/when/then blocks; fold each into its `feat`'s `req`
       or promote to a runnable `test` where an operation exists. Authoring, done per plugin by the
       sweep, not a rename.

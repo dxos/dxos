@@ -4,6 +4,7 @@
 
 // @import-as-namespace
 
+import { anyUnpack } from '@bufbuild/protobuf/wkt';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
@@ -12,8 +13,8 @@ import type * as CapabilityManager from '@dxos/app-framework/CapabilityManager';
 import { type Client } from '@dxos/client';
 import { type Space, SpaceState } from '@dxos/client/echo';
 import { Annotation, Obj } from '@dxos/echo';
-import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
-import { MembershipPolicy } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { EdgeReplicationSetting } from '@dxos/protocols/buf/dxos/echo/metadata_pb';
+import { type Credential, DefaultSpaceSchema, MembershipPolicy } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
 import { GraphPath } from '../app';
 import { AppCapabilities } from '../app-framework';
@@ -186,9 +187,6 @@ export const PERSONAL_SPACE_TAG = 'org.dxos.space.personal';
 // TODO(wittjosiah): Remove once all profiles have migrated to the settings space.
 const DEFAULT_SPACE_KEY = '__DEFAULT__';
 
-/** The slice of a HALO credential the legacy `DefaultSpace` lookup reads. */
-type LegacyCredential = { subject?: { assertion?: { spaceId?: unknown } } };
-
 /**
  * Check if a space is the default space of a profile created before the settings space existed.
  * Reads the immutable tag, or the `__DEFAULT__` property older clients wrote before tags existed.
@@ -214,7 +212,7 @@ export const isLegacyDefaultSpace = (space: Space): boolean => {
  * @deprecated
  */
 export const resolveLegacyDefaultSpace = (
-  client: SpaceResolver & { halo: { queryCredentials(options: { type: string }): LegacyCredential[] } },
+  client: SpaceResolver & { halo: { queryCredentials(options: { type: string }): Credential[] } },
 ): Space | undefined => {
   const found = client.spaces.get().find((space) => isLegacyDefaultSpace(space));
   if (found) {
@@ -222,8 +220,9 @@ export const resolveLegacyDefaultSpace = (
   }
 
   const credential = client.halo.queryCredentials({ type: 'dxos.halo.credentials.DefaultSpace' })[0];
-  const spaceId: unknown = credential?.subject?.assertion?.spaceId;
-  return typeof spaceId === 'string' ? client.spaces.get(spaceId) : undefined;
+  const assertion = credential?.subject?.assertion;
+  const spaceId = assertion && anyUnpack(assertion, DefaultSpaceSchema)?.spaceId;
+  return spaceId ? client.spaces.get(spaceId) : undefined;
 };
 
 //

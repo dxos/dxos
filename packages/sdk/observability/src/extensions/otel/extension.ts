@@ -26,6 +26,9 @@ import { RemoteMetricsForwarder } from './remote-metrics';
 
 export type OtelWorkerMessage = OtelLogSink.Message | OtelMetricsSink.Message | OtelSpanSink.Message;
 
+/** The OTEL extension always implements `close`, unlike the general (optional) `Extension` API. */
+type OtelExtension = ObservabilityExtension.Extension & { close(): Effect.Effect<void> };
+
 /** One-way send handle into the observability worker. */
 export type OtelWorkerPort = { post: (message: OtelWorkerMessage) => void };
 
@@ -82,6 +85,9 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Observabi
       storedLogLevel != null ? (LogLevel[storedLogLevel.toUpperCase() as keyof typeof LogLevel] ?? logLevel) : logLevel;
     const enabledRef = yield* Ref.make(!disabled);
     const tags = new Map<string, string>();
+    // Tags for log records only. Kept apart from `tags` because those also land on spans and on
+    // metric attributes, where a per-session value would explode cardinality.
+    const logTags = new Map<string, string>();
 
     const rawEndpoint = isNode()
       ? (process.env.DX_OTEL_ENDPOINT ?? _endpoint ?? buildSecrets.OTEL_ENDPOINT)
@@ -130,12 +136,18 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Observabi
       tags.set('ctx.tag', clientTag);
     }
 
+    // `service.version` is the SDK constant and cannot separate two deploys of one release.
+    // Constant per build, so it adds no concurrent metric series. The semconv key `vcs.ref.head.revision` is
+    // inlined to keep the 14k-export `semantic-conventions/incubating` module out of the bundle.
+    const commitHash = config.get('runtime.app.build.commitHash');
+
     const baseAttributes = {
       [ATTR_SERVICE_NAME]: serviceName,
       [ATTR_SERVICE_VERSION]: serviceVersion,
       'deployment.environment': environment,
       'dxos.process.type': detectProcessType(),
       ...(clientTag ? { 'ctx.tag': clientTag } : {}),
+      ...(commitHash ? { 'vcs.ref.head.revision': commitHash } : {}),
     };
     const sessionId = crypto.randomUUID();
     const { resource, metricsResource } = createResources(baseAttributes, sessionId);
@@ -157,7 +169,7 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Observabi
         ? new OtelLogs({
             destinations,
             resource,
-            getTags: () => Object.fromEntries(tags),
+            getTags: () => ({ ...Object.fromEntries(tags), ...Object.fromEntries(logTags) }),
             logLevel: resolvedLogLevel,
             onTraceFlagged: (traceId) => traces?.promote(traceId),
           })
@@ -176,7 +188,7 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Observabi
           })
         : undefined;
 
-    const extension: ObservabilityExtension.Extension = {
+    const extension: OtelExtension = {
       initialize: () =>
         Effect.sync(() => {
           if (logs) {
@@ -227,7 +239,7 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Observabi
         yield* Effect.promise(() => storeObservabilityDisabled(namespace, true));
         // TODO(wittjosiah): `close` drains by design, so revoking still ships what is queued;
         //   discarding it means shutting each exporter down before its provider.
-        yield* extension.close!();
+        yield* extension.close();
       }),
       close: () =>
         Effect.promise(async () => {
@@ -259,9 +271,10 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Observabi
           }
           await traces?.flush();
         }),
-      setTags: (incomingTags) => {
+      setTags: (incomingTags, kind) => {
+        const target = kind === 'logs' ? logTags : tags;
         for (const [key, value] of Object.entries(incomingTags)) {
-          tags.set(key, value);
+          target.set(key, value);
         }
         remoteLogs?.post({ type: 'otel-tags', tags: { ...incomingTags } });
       },

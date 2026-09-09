@@ -39,6 +39,7 @@ import {
   Invitation_Type,
   InvitationSchema,
 } from '@dxos/protocols/buf/dxos/client/invitation_pb';
+import { SpaceState } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 import { SpaceSchema } from '@dxos/protocols/buf/dxos/client/services_pb';
 import {
   QueryInvitationsResponse,
@@ -46,9 +47,9 @@ import {
   QueryInvitationsResponse_Type,
   QueryInvitationsResponseSchema,
 } from '@dxos/protocols/buf/dxos/client/services_pb';
+import { SystemStatus } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { ConfigSchema } from '@dxos/protocols/buf/dxos/config_pb';
-import { SpaceState, SystemStatus } from '@dxos/protocols/proto/dxos/client/services';
-import { MembershipPolicy } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { MembershipPolicy } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { InvitationsService, SpacesService, SystemService } from '@dxos/protocols/rpc';
 
 import { remainingLifetimeSeconds } from '../spaces/data-space-manager';

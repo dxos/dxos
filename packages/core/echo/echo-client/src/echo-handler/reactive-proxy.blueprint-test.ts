@@ -333,7 +333,7 @@ export const reactiveProxyTests = (testConfigFactory: TestConfigurationFactory):
         const obj = await createObject();
         using updates = updateCounter(obj);
 
-        Obj.update(obj, () => {
+        Obj.update(obj, (obj) => {
           Object.defineProperty(obj, 'string', { value: 'bar' });
         });
         expect(obj.string).to.eq('bar');

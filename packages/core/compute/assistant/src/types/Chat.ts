@@ -25,6 +25,12 @@ export class Chat extends Type.makeObject<Chat>(DXN.make('org.dxos.type.assistan
     name: Schema.String.pipe(Schema.optional),
     viewType: Schema.String.pipe(Schema.optional),
 
+    /**
+     * Runs this conversation's agent on the edge rather than locally, mirroring a trigger's own
+     * `remote` flag. When unset, the agent runs locally on the client.
+     */
+    remote: Schema.Boolean.pipe(Schema.annotate({ title: 'Remote' }), Schema.optional),
+
     /** Message feed, owned by the chat so `SetParent` cascades it. */
     feed: Ref.Ref(Feed.Feed).pipe(Annotation.SetParent.set(true), FormInputAnnotation.set(false)),
 
@@ -74,14 +80,20 @@ export const CompanionChatAnnotation = Annotation.make({
  * subject via {@link CompanionChatAnnotation} plus the ECHO parent edge. Idempotent per chat.
  */
 export const linkCompanion = ({ chat, subject }: { chat: Chat; subject: Obj.Unknown }): void => {
-  Obj.update(subject, (subject) => {
-    const chats = Annotation.get(subject, CompanionChatAnnotation).pipe(
-      Option.getOrElse((): readonly Ref.Ref<Chat>[] => []),
-    );
-    if (!chats.some((ref) => ref.uri === Ref.make(chat).uri)) {
-      Annotation.set(subject, CompanionChatAnnotation, [...chats, Ref.make(chat)]);
+  const existing = Annotation.get(subject, CompanionChatAnnotation);
+  const chats = existing.pipe(Option.getOrElse((): readonly Ref.Ref<Chat>[] => []));
+  if (!chats.some((ref) => ref.uri === Ref.make(chat).uri)) {
+    if (Option.isNone(existing)) {
+      Obj.update(subject, (subject) => {
+        Annotation.set(subject, CompanionChatAnnotation, [Ref.make(chat)]);
+      });
+    } else {
+      // Splice in place so only this ref is appended; Annotation.update validates the result.
+      Annotation.update(subject, CompanionChatAnnotation, (chats) => {
+        chats.push(Ref.make(chat));
+      });
     }
-  });
+  }
   Obj.setParent(chat, subject);
 };
 
@@ -92,13 +104,12 @@ export const addTask = (
   title: string,
   props: Partial<Omit<Obj.MakeProps<typeof Task.Task>, 'title'>> = {},
 ): Task.Task => {
-  const task = db.add(Task.make({ title: title.trim(), status: 'todo', ...props }));
-  Obj.update(chat, (chat) => {
-    chat.tasks = [...chat.tasks, Ref.make(task)];
-  });
   // Ownership is decided at creation rather than by membership, so a task the chat made cascades
   // with it while a delegated one keeps the parent it arrived with.
-  Obj.setParent(task, chat);
+  const task = db.add(Task.make({ title: title.trim(), status: 'todo', ...props, [Obj.Parent]: chat }));
+  Obj.update(chat, (chat) => {
+    chat.tasks.push(Ref.make(task));
+  });
   return task;
 };
 
@@ -121,7 +132,7 @@ export const assignTasks = (chat: Chat, tasks: readonly Ref.Ref<Task.Task>[]): R
       present.add(id);
       added.push(ref);
     }
-    chat.tasks = [...chat.tasks, ...added];
+    chat.tasks.push(...added);
   });
   return added;
 };

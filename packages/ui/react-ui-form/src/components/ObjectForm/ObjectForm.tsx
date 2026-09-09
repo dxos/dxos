@@ -56,7 +56,7 @@ export const ObjectForm = ({ object, type, schema, showTags = true }: ObjectForm
     const newObject = db.add(Obj.make(type, values));
     if (Obj.instanceOf(Tag.Tag, newObject)) {
       Obj.update(object, (object) => {
-        Obj.getMeta(object).tags = [...Obj.getMeta(object).tags, Ref.make(newObject)];
+        Obj.getMeta(object).tags.push(Ref.make(newObject));
       });
     }
   }, []);
@@ -89,7 +89,7 @@ export const ObjectForm = ({ object, type, schema, showTags = true }: ObjectForm
       // Handle other property changes.
       const nonTagPaths = changedPaths.filter((path) => SchemaEx.splitJsonPath(path)[0] !== META_TAGS_KEY);
       if (nonTagPaths.length > 0) {
-        Obj.update(object, () => {
+        Obj.update(object, (object) => {
           for (const path of nonTagPaths) {
             const parts = SchemaEx.splitJsonPath(path);
             const value = Obj.getValue(values, parts);
@@ -116,7 +116,7 @@ export const ObjectForm = ({ object, type, schema, showTags = true }: ObjectForm
     >
       <Form.Viewport>
         <Form.Content>
-          <Form.FieldSet />
+          <Form.Fields />
         </Form.Content>
       </Form.Viewport>
     </Form.Root>
@@ -124,14 +124,13 @@ export const ObjectForm = ({ object, type, schema, showTags = true }: ObjectForm
 };
 
 const createFieldMap: FormFieldMap = {
-  hue: ({ type, label, presentation, getValue, onValueChange }) => {
+  hue: ({ type, label, jsonPath, presentation, getValue, onValueChange }) => {
     const handleChange = useCallback((nextHue: string) => onValueChange(type, nextHue), [onValueChange, type]);
     const handleReset = useCallback(() => onValueChange(type, undefined), [onValueChange, type]);
     return (
-      <>
-        {presentation !== 'inline' && <Form.Label label={label} />}
+      <Form.Field path={jsonPath} label={label} presentation={presentation}>
         <HuePicker value={getValue()} onChange={handleChange} onReset={handleReset} />
-      </>
+      </Form.Field>
     );
   },
 };

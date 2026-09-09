@@ -2,6 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
+import { create, fromBinary, toBinary } from '@bufbuild/protobuf';
+import { EmptySchema } from '@bufbuild/protobuf/wkt';
+
 import { DeferredTask, Event, TimeoutError, Trigger, scheduleMicroTask, scheduleTask, sleep } from '@dxos/async';
 import { type Context, Resource, rejectOnDispose } from '@dxos/context';
 import { type CredentialProcessor, verifyCredential } from '@dxos/credentials';
@@ -12,11 +15,15 @@ import { PublicKey } from '@dxos/keys';
 import { type SpaceId } from '@dxos/keys';
 import { log, logInfo } from '@dxos/log';
 import { EdgeCallFailedError } from '@dxos/protocols';
-import { getBufService } from '@dxos/protocols/buf-service';
+import { requirePublicKey } from '@dxos/protocols/buf';
+import { type BufService, getBufService } from '@dxos/protocols/buf-service';
 import { type Runtime_Client_EdgeFeatures } from '@dxos/protocols/buf/dxos/config_pb';
-import { schema } from '@dxos/protocols/proto';
-import { type Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
-import { type NotarizationService, type NotarizeRequest } from '@dxos/protocols/proto/dxos/mesh/teleport/notarization';
+import { type Credential, CredentialSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
+import {
+  NotarizationService as NotarizationServiceDesc,
+  type NotarizeRequest,
+  NotarizeRequestSchema,
+} from '@dxos/protocols/buf/dxos/mesh/teleport/notarization_pb';
 import { type ExtensionContext, RpcExtension } from '@dxos/teleport';
 import { ComplexMap, ComplexSet, entry } from '@dxos/util';
 
@@ -32,7 +39,7 @@ const MAX_EDGE_RETRIES = 2;
 
 const WRITER_NOT_SET_ERROR_CODE = 'WRITER_NOT_SET';
 
-const credentialCodec = schema.getCodecForType('dxos.halo.credentials.Credential');
+type NotarizationService = BufService<typeof NotarizationServiceDesc>;
 
 export type NotarizationPluginProps = {
   spaceId: SpaceId;
@@ -171,7 +178,9 @@ export class NotarizationPlugin extends Resource implements CredentialProcessor 
       this._scheduleTimeout(ctx, errors, timeout);
     }
 
-    const allNotarized = Promise.all(credentials.map((credential) => this._waitUntilProcessed(credential.id!)));
+    const allNotarized = Promise.all(
+      credentials.map((credential) => this._waitUntilProcessed(requirePublicKey(credential.id))),
+    );
 
     this._tryNotarizeCredentialsWithPeers(ctx, credentials, { retryTimeout, successDelay });
 
@@ -216,9 +225,13 @@ export class NotarizationPlugin extends Resource implements CredentialProcessor 
 
         peersTried.add(peer);
         log('try notarizing', { peer: peer.localPeerId, credentialId: credentials.map((credential) => credential.id) });
-        await peer.rpc.NotarizationService.notarize({
-          credentials: credentials.filter((credential) => !this._processedCredentials.has(credential.id!)),
-        });
+        await peer.rpc.NotarizationService.notarize(
+          create(NotarizeRequestSchema, {
+            credentials: credentials.filter(
+              (credential) => !this._processedCredentials.has(requirePublicKey(credential.id)),
+            ),
+          }),
+        );
         log('success');
 
         await sleep(successDelay); // wait before trying with a new peer
@@ -241,7 +254,7 @@ export class NotarizationPlugin extends Resource implements CredentialProcessor 
     timeouts: NotarizationTimeouts & { jitter?: number },
   ): void {
     const encodedCredentials = credentials.map((credential) => {
-      const binary = credentialCodec.encode(credential);
+      const binary = toBinary(CredentialSchema, credential);
       return Buffer.from(binary).toString('base64');
     });
     scheduleTask(ctx, async () => {
@@ -267,9 +280,10 @@ export class NotarizationPlugin extends Resource implements CredentialProcessor 
     if (!credential.id) {
       return;
     }
-    this._processCredentialsTriggers.get(credential.id)?.wake();
-    this._processedCredentials.add(credential.id);
-    this._processCredentialsTriggers.delete(credential.id);
+    const id = requirePublicKey(credential.id);
+    this._processCredentialsTriggers.get(id)?.wake();
+    this._processedCredentials.add(id);
+    this._processCredentialsTriggers.delete(id);
   }
 
   setWriter(writer: FeedWriter<Credential>): void {
@@ -318,7 +332,7 @@ export class NotarizationPlugin extends Resource implements CredentialProcessor 
 
         const decodedCredentials = credentials.map((credential) => {
           const binary = Buffer.from(credential, 'base64');
-          return credentialCodec.decode(binary);
+          return fromBinary(CredentialSchema, binary);
         });
 
         await this._notarizeCredentials(writer, decodedCredentials);
@@ -349,8 +363,8 @@ export class NotarizationPlugin extends Resource implements CredentialProcessor 
 
   private async _notarizeCredentials(writer: FeedWriter<Credential>, credentials: Credential[]): Promise<void> {
     for (const credential of credentials) {
-      invariant(credential.id, 'Credential must have an id');
-      if (this._processedCredentials.has(credential.id)) {
+      const credentialId = requirePublicKey(credential.id);
+      if (this._processedCredentials.has(credentialId)) {
         continue;
       }
       const verificationResult = await verifyCredential(credential);
@@ -424,6 +438,7 @@ export class NotarizationTeleportExtension extends RpcExtension<Services, Servic
       NotarizationService: {
         notarize: async (request) => {
           await this._params.onNotarize(request);
+          return create(EmptySchema, {});
         },
       },
     };

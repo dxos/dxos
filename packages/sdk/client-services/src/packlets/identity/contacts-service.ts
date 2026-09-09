@@ -20,7 +20,6 @@ import {
 import { type ContactsService } from '@dxos/protocols/rpc';
 import { ComplexMap, ComplexSet } from '@dxos/util';
 
-import { toBufProfileDocument } from '../services/credentials-codec';
 import { type SpaceManager } from '../space';
 import { type DataSpaceManager } from '../spaces';
 import { type IdentityManager } from './identity-manager';
@@ -84,14 +83,14 @@ export class ContactsServiceImpl implements ContactsService.Handlers {
         }
         const existing = acc.get(memberInfo.key);
         if (existing != null) {
-          existing.profile ??= toBufProfileDocument(memberInfo.profile);
+          existing.profile ??= memberInfo.profile;
           existing.commonSpaces.push(fromPublicKey(spaceKey));
         } else {
           acc.set(
             memberInfo.key,
             buf.create(ContactSchema, {
               identityKey: fromPublicKey(memberInfo.key),
-              profile: toBufProfileDocument(memberInfo.profile),
+              profile: memberInfo.profile,
               commonSpaces: [fromPublicKey(spaceKey)],
             }),
           );

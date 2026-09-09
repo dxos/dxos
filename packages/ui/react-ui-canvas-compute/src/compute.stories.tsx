@@ -172,7 +172,7 @@ const DefaultStory = ({
               <Form.Root<ComputeNode> values={getComputeNode(selected.id) ?? {}}>
                 <Form.Viewport>
                   <Form.Content>
-                    <Form.FieldSet />
+                    <Form.Fields />
                     <Form.Actions />
                   </Form.Content>
                 </Form.Viewport>

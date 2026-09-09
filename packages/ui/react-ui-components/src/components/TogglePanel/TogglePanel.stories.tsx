@@ -10,7 +10,7 @@ import type * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 import React, { useContext, useEffect, useMemo, useState } from 'react';
 
 import { random } from '@dxos/random';
-import { Icon, Input, Panel, Toolbar } from '@dxos/react-ui';
+import { Field, Icon, Panel, Toolbar } from '@dxos/react-ui';
 import { MarkdownView } from '@dxos/react-ui-markdown';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { withRegistry } from '@dxos/storybook-utils';
@@ -76,9 +76,9 @@ const DefaultStory = (props: TogglePanelRootProps) => {
     <Panel.Root>
       <Panel.Toolbar asChild>
         <Toolbar.Root>
-          <Input.Root>
-            <Input.Switch checked={running} onCheckedChange={(checked) => setRunning(checked)} />
-          </Input.Root>
+          <Field.Root>
+            <Field.Switch checked={running} onCheckedChange={(checked) => setRunning(checked)} />
+          </Field.Root>
           <div className='grow' />
           <div>{count}</div>
         </Toolbar.Root>

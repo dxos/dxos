@@ -77,7 +77,7 @@ export const CreateSpaceDialog = () => {
   );
 
   return (
-    <Dialog.Content>
+    <Dialog.Content data-testid='create-space-dialog'>
       {/* The form spans the whole dialog rather than just its body, so the action row can stay pinned
           below the scrolling fields while still reading the form's context. */}
       <Form.Root
@@ -102,8 +102,8 @@ export const CreateSpaceDialog = () => {
           <ScrollArea.Root orientation='vertical' padding thin>
             <ScrollArea.Viewport>
               <Form.Content>
-                <Form.FieldSet />
-                <Form.Error>{error}</Form.Error>
+                <Form.Fields />
+                <Form.ErrorText>{error}</Form.ErrorText>
                 {templates.length > 0 && (
                   <div role='group' aria-labelledby='create-space-templates'>
                     <h3 id='create-space-templates' className='my-1 text-sm text-subdued'>

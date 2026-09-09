@@ -10,15 +10,19 @@ import { random } from '@dxos/random';
 
 import { withTheme } from '../../testing';
 import { Button } from '../Button';
-import { Popover } from './Popover';
+import { Popover, type PopoverContentProps } from './Popover';
 
 random.seed(1234);
 
-const DefaultStory = ({ openTrigger, children }: PropsWithChildren<{ openTrigger: ReactNode }>) => {
+const DefaultStory = ({
+  openTrigger,
+  elevation,
+  children,
+}: PropsWithChildren<{ openTrigger: ReactNode } & Pick<PopoverContentProps, 'elevation'>>) => {
   return (
     <Popover.Root defaultOpen>
       <Popover.Trigger asChild>{openTrigger}</Popover.Trigger>
-      <Popover.Content>
+      <Popover.Content elevation={elevation}>
         <Popover.Viewport>
           <p className='px-2 py-1 min-w-[18rem] max-w-[30rem]'>{children}</p>
         </Popover.Viewport>
@@ -33,6 +37,9 @@ const meta = {
   component: Popover.Root,
   render: DefaultStory,
   decorators: [withTheme()],
+  argTypes: {
+    elevation: { control: 'select', options: [undefined, 0, 1, 2, 3, 4, 5] },
+  },
 } satisfies Meta<typeof DefaultStory>;
 
 export default meta;
@@ -139,5 +146,46 @@ export const TestVirtualAnchor: StoryObj = {
     await waitFor(() => expect(near(dialog.getBoundingClientRect(), anchor.getBoundingClientRect())).toBe(true));
     // Auto focus was vetoed, so the anchor keeps focus rather than the content taking it.
     await expect(dialog.contains(document.activeElement)).toBe(false);
+  },
+};
+
+/** The content follows a virtual anchor when the anchor's scroll container moves it. */
+export const TestVirtualAnchorFollowsScroll: StoryObj = {
+  render: () => {
+    const anchorRef = useRef<HTMLButtonElement | null>(null);
+    return (
+      <div data-testid='scroller' className='h-48 w-80 overflow-y-auto border border-separator'>
+        <div className='h-24' />
+        <Button ref={anchorRef}>Anchor</Button>
+        <div className='h-96' />
+        <Popover.Root defaultOpen>
+          <Popover.VirtualTrigger virtualRef={anchorRef} />
+          <Popover.Content side='right' onOpenAutoFocus={(event) => event.preventDefault()}>
+            <Popover.Viewport>
+              <p className='px-2 py-1'>Anchored body</p>
+            </Popover.Viewport>
+          </Popover.Content>
+        </Popover.Root>
+      </div>
+    );
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const anchor = canvas.getByRole('button', { name: 'Anchor' });
+    const scroller = canvas.getByTestId('scroller');
+    const dialog = await waitFor(async () => {
+      const element = document.querySelector<HTMLElement>('[role="dialog"]');
+      await expect(element).not.toBeNull();
+      return element!;
+    });
+    await waitFor(() => expect(near(dialog.getBoundingClientRect(), anchor.getBoundingClientRect())).toBe(true));
+    // The positioner is measured a frame after it mounts; until then it is off screen, never at the origin.
+    const positioner = dialog.parentElement!;
+    await expect(positioner.style.getPropertyValue('--x')).not.toBe('');
+    scroller.scrollTop = 60;
+    await waitFor(() =>
+      expect(anchor.getBoundingClientRect().top).toBeLessThan(scroller.getBoundingClientRect().top + 40),
+    );
+    await waitFor(() => expect(near(dialog.getBoundingClientRect(), anchor.getBoundingClientRect())).toBe(true));
   },
 };

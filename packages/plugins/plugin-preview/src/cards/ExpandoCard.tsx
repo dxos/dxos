@@ -51,7 +51,7 @@ export const ExpandoCard = ({ subject, ignorePaths }: AppSurface.ObjectCardProps
   const handleSave = useCallback(
     (values: any, { changed }: { changed: Record<string, boolean> }) => {
       const paths = Object.keys(changed).filter((path) => changed[path]);
-      Obj.update(subject, () => {
+      Obj.update(subject, (subject) => {
         for (const path of paths) {
           const value = values[path];
           const parts = SchemaEx.splitJsonPath(path as SchemaEx.JsonPath);
@@ -67,7 +67,7 @@ export const ExpandoCard = ({ subject, ignorePaths }: AppSurface.ObjectCardProps
       <Form.Root schema={schema} values={subject} autoSave onSave={handleSave}>
         <Form.Viewport>
           <Form.Content>
-            <Form.FieldSet />
+            <Form.Fields />
           </Form.Content>
         </Form.Viewport>
       </Form.Root>

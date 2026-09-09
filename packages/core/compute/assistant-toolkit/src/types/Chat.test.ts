@@ -53,7 +53,14 @@ describe('Chat', () => {
         // Asserted on the schema, not the instance: `in` reports false for any declared-but-unset
         // optional field. The agent a chat runs as is reached through the ECHO parent edge, never a
         // field — a field was the edge that made Agent and Chat mutually dependent.
-        expect(Object.keys(Chat.fields).sort()).toEqual(['feed', 'instructions', 'name', 'tasks', 'viewType']);
+        expect(Object.keys(Chat.fields).sort()).toEqual([
+          'feed',
+          'instructions',
+          'name',
+          'remote',
+          'tasks',
+          'viewType',
+        ]);
       },
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,
@@ -127,7 +134,7 @@ describe('Chat', () => {
           owner.tasks = [Ref.make(delegated)];
         });
         Obj.update(chat, (chat) => {
-          chat.tasks = [...chat.tasks, Ref.make(delegated)];
+          chat.tasks.push(Ref.make(delegated));
         });
         yield* Database.flush();
 

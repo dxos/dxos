@@ -5,6 +5,7 @@
 export * from './useDensityContext';
 export * from './useElevationContext';
 export * from './useIconHref';
+export * from './usePositioning';
 export * from './useSafeArea';
 export * from './useSafeCollisionPadding';
 export * from './useTranslationsContext';

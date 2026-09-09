@@ -238,7 +238,7 @@ the core `ext` primitive — the only construct the base language provides.
 
 ```mdl
 ext type
-  uri: dxos.spec/ext/type@1.0
+  uri: org.dxos.mdl.type@1.0
   desc: A named data structure with typed fields and optional literals.
   fields:
     desc?: Prose
@@ -249,7 +249,7 @@ ext type
 
 ```mdl
 ext feat
-  uri: dxos.spec/ext/feat@1.0
+  uri: org.dxos.mdl.feat@1.0
   desc: A named feature grouping one or more requirements.
   fields:
     desc?: Prose
@@ -259,7 +259,7 @@ ext feat
 
 ```mdl
 ext scenario
-  uri: dxos.spec/ext/scenario@1.0
+  uri: org.dxos.mdl.scenario@1.0
   desc: An acceptance scenario expressed as given / when / then steps.
   fields:
     given?: Step | Step[]
@@ -270,7 +270,7 @@ ext scenario
 
 ```mdl
 ext component
-  uri: dxos.spec/ext/component@1.0
+  uri: org.dxos.mdl.component@1.0
   desc: A UI component with a described purpose.
   fields:
     desc?: Prose

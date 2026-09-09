@@ -5,7 +5,7 @@
 import React, { useCallback, useSyncExternalStore } from 'react';
 
 import { type DebugPortController, getDebugPortController } from '@dxos/react-client/devtools';
-import { Flex, IconButton, Input, useTranslation } from '@dxos/react-ui';
+import { Field, Flex, IconButton, useTranslation } from '@dxos/react-ui';
 import { Logger, type LogRow } from '@dxos/react-ui-debug';
 import { Form } from '@dxos/react-ui-form';
 
@@ -54,26 +54,26 @@ export const DebugPortSettings = ({ controller = getDebugPortController(), disab
   }, [status.session]);
 
   return (
-    <Form.Section
-      title={t('settings.debug-port.section.label')}
+    <Form.FieldSet
+      label={t('settings.debug-port.section.label')}
       description={t('settings.debug-port.section.description')}
     >
-      <Form.Row label={t('settings.debug-port.label')} description={t('settings.debug-port.description')}>
+      <Form.Field standalone label={t('settings.debug-port.label')} description={t('settings.debug-port.description')}>
         <Flex gap='md' align='center'>
           {status.running && (
             <span className='text-sm text-description'>
               {t('settings.debug-port.running.label')} <span className='font-mono'>{status.origin}</span>
             </span>
           )}
-          <Input.Root>
-            <Input.Switch checked={status.running} disabled={disabled} onCheckedChange={handleToggle} />
-          </Input.Root>
+          <Field.Root>
+            <Field.Switch checked={status.running} disabled={disabled} onCheckedChange={handleToggle} />
+          </Field.Root>
         </Flex>
-      </Form.Row>
+      </Form.Field>
 
       {status.running && (
         <>
-          <Form.Row
+          <Form.Field
             standalone
             label={t('settings.debug-port.session.label')}
             description={t('settings.debug-port.session.description')}
@@ -87,11 +87,11 @@ export const DebugPortSettings = ({ controller = getDebugPortController(), disab
                 onClick={handleCopy}
               />
             </Flex>
-          </Form.Row>
+          </Form.Field>
 
           {/* The settings variant puts the control in a right-hand column; log rows need the full
               width, so this row collapses to a single column. */}
-          <Form.Row
+          <Form.Field
             standalone
             label={t('settings.debug-port.log.label')}
             classNames='md:grid-cols-1 md:[grid-template-areas:"header""description""control""validation"]'
@@ -102,10 +102,10 @@ export const DebugPortSettings = ({ controller = getDebugPortController(), disab
                 <Logger.List />
               </Logger.Content>
             </Logger.Root>
-          </Form.Row>
+          </Form.Field>
         </>
       )}
-    </Form.Section>
+    </Form.FieldSet>
   );
 };
 

@@ -13,6 +13,7 @@ import * as AssistantPlugin from '@dxos/plugin-assistant/AssistantPlugin';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as ClientEvents from '@dxos/plugin-client/ClientEvents';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
+import * as RoutinePlugin from '@dxos/plugin-routine/RoutinePlugin';
 import * as SpacePlugin from '@dxos/plugin-space/SpacePlugin';
 import * as TasksPlugin from '@dxos/plugin-tasks/TasksPlugin';
 import { createComposerTestApp } from '@dxos/plugin-testing/harness';
@@ -57,8 +58,7 @@ describe('ProjectOperation.DelegateTaskToChat', () => {
     );
     const taskSet = await project.taskSet?.tryLoad();
     invariant(taskSet, 'Expected the scaffolded task set.');
-    const task = space.db.add(Task.make({ title: 'Write a poem', status: 'todo' }));
-    Obj.setParent(task, taskSet);
+    const task = space.db.add(Task.make({ [Obj.Parent]: taskSet, title: 'Write a poem', status: 'todo' }));
     await space.db.flush();
 
     const { chat } = await harness.runPromise(
@@ -125,8 +125,7 @@ describe('ProjectOperation.DelegateTaskToChat', () => {
       );
       const taskSet = await project.taskSet?.tryLoad();
       invariant(taskSet, 'Expected the scaffolded task set.');
-      const task = space.db.add(Task.make({ title, status: 'todo' }));
-      Obj.setParent(task, taskSet);
+      const task = space.db.add(Task.make({ [Obj.Parent]: taskSet, title, status: 'todo' }));
       return task;
     };
 
@@ -152,11 +151,14 @@ describe('ProjectOperation.DelegateTaskToChat', () => {
 const setup = async () => {
   const harness = await createComposerTestApp({
     // Tasks is declared in Projects' `dependsOn`; Assistant supplies the `CreateChat` handler.
+    // Routine is what provides `RemoteProcessManager`, which Assistant's `AgentService` spec
+    // requires — without it that spec is pruned and every delegation fails to resolve `AgentService`.
     plugins: [
       ClientPlugin.make({}),
       SpacePlugin.make({}),
       TasksPlugin.make(),
       AssistantPlugin.make(),
+      RoutinePlugin.make(),
       ProjectsPlugin(),
     ],
   });

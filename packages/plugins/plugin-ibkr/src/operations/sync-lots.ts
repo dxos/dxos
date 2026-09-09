@@ -76,10 +76,10 @@ const syncLotsFromReport = Effect.fn(function* (portfolio: Ibkr.Portfolio, repor
       const lot = yield* Database.add(
         Obj.make(Ibkr.Lot, {
           [Obj.Meta]: { keys: [{ source: IBKR_SOURCE, id: foreignId }] },
+          [Obj.Parent]: portfolio,
           ...fields,
         }),
       );
-      Obj.setParent(lot, portfolio);
       existingByKey.set(foreignId, lot);
       created++;
     }

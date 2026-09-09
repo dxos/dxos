@@ -60,14 +60,20 @@ Environment, in order:
    15 minutes):
      pnpm exec moon run composer-app:serve-qa -- --port 5182 --strictPort --host 127.0.0.1 > temp/qa-server.log 2>&1 &
      SERVER_PID=$!
-   Wait until `curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:5182/` prints 200.
+   Wait until `curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:5182/` prints 200 — in a
+   background `until` loop bounded to 15 minutes that also stops when `kill -0 $SERVER_PID` fails.
+   Deadline passed or process gone: write the report with Result **blocked** and the last 40 lines
+   of temp/qa-server.log, then go to step 7 and step 9.
 4. Open the app in the repo's headless browser helper, which stays alive for the whole run; the
    sandbox ships an older Chromium than Playwright's pin, so point the helper at it:
      PW_CHROMIUM_PATH=/opt/pw-browsers/chromium \
        node packages/apps/composer-app/testing/bin/qa-browser.mjs http://127.0.0.1:5182/ > temp/qa-browser.log 2>&1 &
      BROWSER_PID=$!
-   Wait for `mounted` in temp/qa-browser.log. If the app never mounts, attach the log to the
-   report as blocked and go to step 7.
+   Wait for `mounted` in temp/qa-browser.log, bounded to 5 minutes and stopping early when
+   `kill -0 $BROWSER_PID` fails. If the app never mounts, attach the log to the report as blocked
+   and go to step 7 and step 9. Then wait until a port probe returns true —
+   `return typeof dxos !== 'undefined' && dxos.client.spaces.get().some((s) => s.state.get() === 3)`
+   — bounded to 5 more minutes; the client initializes after the mount.
 5. Drive every step through the port exactly as the skill describes, with
    COMPOSER_RECOVERY_TIMEOUT=600000 on every call and never killing a call while a snippet is
    pending. If `composer.snapshot` is missing, enable the debug plugin first.

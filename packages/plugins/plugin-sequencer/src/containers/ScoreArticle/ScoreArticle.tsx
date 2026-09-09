@@ -7,7 +7,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
-import { Button, Flex, Icon, Input, Panel } from '@dxos/react-ui';
+import { Button, Field, Flex, Icon, Panel } from '@dxos/react-ui';
 import { Oscilloscope, OscilloscopeMode } from '@dxos/react-ui-audio';
 import { type ToggleMode } from '@dxos/react-ui-canvas';
 import { ActionToolbar, MenuBuilder, type ToolbarMenuActionGroupProperties, useMenuBuilder } from '@dxos/react-ui-menu';
@@ -440,16 +440,16 @@ export const ScoreArticle = ({ role, subject, attendableId }: ScoreArticleProps)
     <Panel.Root role={role}>
       <Panel.Toolbar asChild>
         <ActionToolbar {...menuActions} attendableId={attendableId}>
-          <Input.Root>
-            <Input.Label classNames='text-xs mr-1'>BPM</Input.Label>
-            <Input.TextInput
+          <Field.Root>
+            <Field.Label classNames='text-xs mr-1'>BPM</Field.Label>
+            <Field.Input
               type='number'
               min={1}
               value={score.tempo}
               onChange={(event) => handleTempoChange(Number(event.target.value))}
               classNames='w-16'
             />
-          </Input.Root>
+          </Field.Root>
         </ActionToolbar>
       </Panel.Toolbar>
 

@@ -20,8 +20,8 @@ test.describe('Collection tests', () => {
 
   test('create collection', async () => {
     await host.createSpace();
-    await host.toggleSection('spacePlugin.collectionsSection');
     await host.createObject({ type: 'Collection' });
+    await host.expandSection('spacePlugin.collectionsSection');
     await expect(host.getObjectByName('New collection')).toHaveCount(1);
   });
 
@@ -30,9 +30,9 @@ test.describe('Collection tests', () => {
     test.skip(browserName !== 'chromium');
 
     await host.createSpace();
-    await host.toggleSection('spacePlugin.collectionsSection');
     await host.createObject({ type: 'Collection' });
     await host.createObject({ type: 'Collection' });
+    await host.expandSection('spacePlugin.collectionsSection');
     await host.renameObject('Collection 1', 0);
     await host.renameObject('Collection 2', 1);
 
@@ -49,13 +49,14 @@ test.describe('Collection tests', () => {
     test.skip(browserName !== 'chromium');
 
     await host.createSpace();
-    await host.toggleSection('spacePlugin.collectionsSection');
     await host.createObject({ type: 'Collection' });
     await host.createObject({ type: 'Collection' });
+    await host.expandSection('spacePlugin.collectionsSection');
     await host.renameObject('Collection 1', 0);
     await host.renameObject('Collection 2', 1);
 
-    await host.toggleCollectionCollapsed(1);
+    // Selected first: an unvisited collection takes the drop beside it rather than inside it.
+    await host.getObject(1).click();
     await host.dragTo(host.getObjectByName('Collection 1'), host.getObjectByName('Collection 2'), { x: 0, y: 0 });
     // Collection 1 is now inside Collection 2: a row's `data-object-id` is the object's canonical
     // graph path, so Collection 1's parent path is exactly Collection 2's path.
@@ -66,11 +67,11 @@ test.describe('Collection tests', () => {
 
   test('delete a collection', async () => {
     await host.createSpace();
-    await host.toggleSection('spacePlugin.collectionsSection');
     await host.createObject({ type: 'Collection' });
-    await host.toggleCollectionCollapsed(0);
-    // Create an item inside the collection.
+    await host.expandSection('spacePlugin.collectionsSection');
+    // Create an item inside the collection, then disclose it — a childless collection has no toggle.
     await host.createObject({ type: 'Collection', nth: 0 });
+    await host.expandCollection(0);
     await expect(host.getObjectLinks()).toHaveCount(2);
 
     // Delete the containing collection.
@@ -80,14 +81,14 @@ test.describe('Collection tests', () => {
 
   test('deletion undo restores collection', async () => {
     await host.createSpace();
-    await host.toggleSection('spacePlugin.collectionsSection');
     await host.createObject({ type: 'Collection' });
-    await host.toggleCollectionCollapsed(0);
-    // Create a collection inside the collection.
+    await host.expandSection('spacePlugin.collectionsSection');
+    // Create a collection inside the collection, then disclose it.
     await host.createObject({ type: 'Collection', nth: 0 });
-    await host.toggleCollectionCollapsed(1);
+    await host.expandCollection(0);
     // Create an item inside the contained collection.
     await host.createObject({ type: 'Collection', nth: 1 });
+    await host.expandCollection(1);
     await expect(host.getObjectLinks()).toHaveCount(3);
 
     // Delete the containing collection.

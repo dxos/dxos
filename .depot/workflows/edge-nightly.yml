@@ -45,10 +45,12 @@ on:
         type: string
         description: 'Soak: wall-clock budget in minutes'
         default: '60'
+      # Sized so the run keeps issuing commands for at least half an hour: a healthy command costs
+      # ~3s against preview, and overshooting is free because `maxRuntimeMs` stops the run early.
       soak_commands:
         type: string
         description: 'Soak: executable commands to plan'
-        default: '200'
+        default: '800'
 
 permissions:
   contents: read
@@ -169,7 +171,7 @@ jobs:
         env:
           EDGE: ${{ inputs.edge || 'preview' }}
           MINUTES: ${{ inputs.soak_minutes || '60' }}
-          COMMANDS: ${{ inputs.soak_commands || '200' }}
+          COMMANDS: ${{ inputs.soak_commands || '800' }}
         run: |
           SEED="soak-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
           echo "Seed: $SEED"

@@ -17,10 +17,10 @@ import { useObject, useQuery } from '@dxos/echo-react';
 import {
   Button,
   DxAnchorActivate,
+  Field,
   Icon,
   IconBlock,
   IconButton,
-  Input,
   Tag,
   Toolbar,
   composable,
@@ -498,10 +498,9 @@ TaskListGroupLabel.displayName = 'TaskList.GroupLabel';
  * reads as two empty controls rather than a dash beside a dot.
  */
 const TaskEstimateControl = ({ task }: { task: Task.Task }) => {
-  const { t } = useTranslation(translationKey);
   const { onTaskUpdate } = useTaskListContext('TaskList.EstimateControl');
   const estimate = task.estimate;
-  const label = estimate?.toUpperCase() ?? <Icon icon={UNSET_ICON} classNames='shrink-0' />;
+  const label = estimate?.toUpperCase() ?? <Icon icon={UNSET_ICON} classNames='text-neutral-500' />;
 
   if (!onTaskUpdate) {
     return <IconBlock classNames={estimateTextStyle(estimate)}>{label}</IconBlock>;
@@ -509,30 +508,19 @@ const TaskEstimateControl = ({ task }: { task: Task.Task }) => {
 
   return (
     <>
-      {/* Sourced from the schema's own option table, so the picker offers exactly what the field
-          accepts and carries the same hue the form's select paints it with. Clearing is offered
-          first; the table has no `none` row because the field is simply absent when unset. */}
       <IconBlock>
-        {/* The button is the trigger, not the block: the button stops the click so the row is not selected
-            too, and a trigger above it would never receive it. The block still gives every control in
-            the row one rail-item square. */}
         <ActionMenu
-          actions={Task.EstimateOptions.map(({ id, title }) =>
-            createMenuAction(
-              `estimate-${id}`,
-              // `none` is not an `Estimate`: an unset estimate is the absent property.
-              () => onTaskUpdate(task, { estimate: id === 'none' ? null : id }),
-              { label: title, classNames: estimateTextStyle(id), checked: (estimate ?? 'none') === id },
-            ),
+          actions={[Task.NullOption, ...Task.EstimateOptions].map(({ id, title }) =>
+            createMenuAction(`estimate-${id}`, () => onTaskUpdate(task, { estimate: id === 'none' ? null : id }), {
+              label: title,
+              checked: (estimate ?? 'none') === id,
+            }),
           )}
         >
           <Button
             variant='ghost'
             data-testid='taskList.item.estimate'
-            // `w-8` fills the block: the label's hit target is the same square as the icon
-            // controls on either side of it.
             classNames={mx('w-8 px-0 text-xs tabular-nums', estimateTextStyle(estimate))}
-            // The row is the selection target; opening the menu must not also select it.
             onClick={(event: MouseEvent) => event.stopPropagation()}
           >
             {label}
@@ -557,28 +545,25 @@ TaskEstimateControl.displayName = 'TaskList.EstimateControl';
 const TaskPriorityIcon = ({ task }: { task: Task.Task }) => {
   const { t } = useTranslation(translationKey);
   const { onTaskUpdate } = useTaskListContext('TaskList.PriorityIcon');
-  const priority = task.priority ?? 'none';
+  const priority = task.priority ?? undefined;
   const icon = priorityIcon(priority);
-  const tint = priorityTextStyle(priority);
+  const styles = priorityTextStyle(priority);
 
   if (!onTaskUpdate) {
     // Falls back to the dot rather than rendering nothing: a readonly row still says "no priority"
     // in the same column its neighbours use, so the list reads as one column and not a ragged one.
     return (
       <IconBlock square>
-        <Icon icon={icon} classNames={mx('shrink-0', tint)} />
+        <Icon icon={icon} classNames={mx('shrink-0', styles)} />
       </IconBlock>
     );
   }
 
   return (
     <IconBlock>
-      {/* The button is the trigger, not the block: the button stops the click so the row is not selected
-            too, and a trigger above it would never receive it. The block still gives every control in
-            the row one rail-item square. */}
       <ActionMenu
-        actions={Task.PriorityOptions.map(({ id, icon: optionIcon }) =>
-          createMenuAction(`priority-${id}`, () => onTaskUpdate(task, { priority: id }), {
+        actions={[Task.NullOption, ...Task.PriorityOptions].map(({ id, icon: optionIcon }) =>
+          createMenuAction(`priority-${id}`, () => onTaskUpdate(task, { priority: id === 'none' ? null : id }), {
             label: t(`priority-${id}.label`),
             icon: optionIcon,
             iconClassNames: priorityTextStyle(id),
@@ -592,10 +577,7 @@ const TaskPriorityIcon = ({ task }: { task: Task.Task }) => {
           iconOnly
           label={t('task-priority.label')}
           data-testid='taskList.item.priority'
-          // The hue goes on the icon, not the button: the row dims icons through `--icons-color`,
-          // which the `Icon` root reads, so a colour set on the button is overridden at rest.
-          iconClassNames={tint}
-          // The row is the selection target; opening the menu must not also select it.
+          iconClassNames={styles}
           onClick={(event) => event.stopPropagation()}
         />
       </ActionMenu>
@@ -926,8 +908,8 @@ const TaskListEdit = composable<HTMLDivElement, TaskListEditProps>(
         >
           <Icon icon={current ? 'ph--pencil-simple--regular' : 'ph--plus--regular'} classNames='text-subdued' />
         </span>
-        <Input.Root>
-          <Input.TextInput
+        <Field.Root>
+          <Field.Input
             variant='subdued'
             classNames={mx('px-0', grid && 'col-start-[title] -col-end-2')}
             data-testid='taskList.edit.title'
@@ -937,7 +919,7 @@ const TaskListEdit = composable<HTMLDivElement, TaskListEditProps>(
             onKeyDown={handleTitleKeyDown}
             onBlur={handleTitleBlur}
           />
-        </Input.Root>
+        </Field.Root>
         {showDescription && (current ? onTaskUpdate : onTaskCreate) && (
           <span
             data-testid='taskList.edit.description'

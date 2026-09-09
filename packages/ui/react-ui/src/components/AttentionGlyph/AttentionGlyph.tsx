@@ -11,7 +11,7 @@ import { type ThemedClassName } from '../../util';
 import { Icon } from '../Icon';
 
 const attentionGlyphStyles = mx(
-  'inline-block rounded-xs w-3 h-3 bg-transparent text-accent-text transition-colors',
+  'inline-block rounded-xs size-3 bg-transparent text-accent-text transition-colors',
   '[[data-contains-attended=true]_&]:bg-attention-contains',
   '[[data-attention=true]_&]:bg-accent-bg',
   '[[data-attention=true]_&]:text-accent-fg',
@@ -21,7 +21,7 @@ const attentionGlyphStyles = mx(
   '[[aria-selected="true"][data-attention=true]_&]:text-accent-fg',
 );
 
-const presenceIconStyles = mx('w-3 h-3');
+const presenceIconStyles = mx('size-3');
 
 const PresenceOne = () => {
   return (

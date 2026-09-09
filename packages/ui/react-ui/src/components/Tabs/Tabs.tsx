@@ -198,8 +198,14 @@ const TabsTablist = ({ children, classNames, ...props }: TabsTablistProps) => {
       data-arrow-keys={orientation === 'vertical' ? 'up down' : 'left right'}
       className={mx(
         'max-h-full w-full',
-        // TODO(burdon): Should be embeddable inside Toolbar (if horizontal).
-        orientation === 'vertical' ? 'overflow-y-auto' : 'flex p-1 gap-1 items-stretch justify-start overflow-x-auto',
+        orientation === 'vertical'
+          ? 'overflow-y-auto'
+          : [
+              'flex p-1 gap-1 items-stretch justify-start overflow-x-auto',
+              // As a toolbar item the list is one control among others: content-sized, unpadded
+              // (the bar owns the gutter) and never squeezed by a `w-full` sibling.
+              '[[role=toolbar]_&]:w-auto [[role=toolbar]_&]:shrink-0 [[role=toolbar]_&]:p-0',
+            ],
         classNames,
       )}
     >

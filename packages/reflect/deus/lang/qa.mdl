@@ -323,6 +323,7 @@ test QA-1: Create a space and a document, then delete the document
     - name: Delete it
       do: Open the row's ⋮ menu and choose Delete.
       invoke: org.dxos.operation.space.removeObjects { objects: [Obj($doc.id)] }
+      space: $space.id
       expect: a "Document deleted" toast with Undo appears and the row is gone
       assert: return $snapshot.toasts.some((t) => t.title === 'Document deleted') && $snapshot.errors.length === 0
   after:

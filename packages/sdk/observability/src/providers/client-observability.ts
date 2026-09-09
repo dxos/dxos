@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+import { anyUnpack } from '@bufbuild/protobuf/wkt';
 import * as Effect from 'effect/Effect';
 
 import { Event, scheduleTaskInterval } from '@dxos/async';
@@ -10,11 +11,14 @@ import { type Space } from '@dxos/client/echo';
 import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { toPublicKey } from '@dxos/protocols/buf';
+import { toDate, toPublicKey, toTimeframe } from '@dxos/protocols/buf';
+import { SpaceState } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 import { type NetworkStatus, type NetworkStatus_Signal } from '@dxos/protocols/buf/dxos/client/services_pb';
 // Value imports come straight from protocols: reaching them through the `@dxos/client` barrels
 // puts echo-client (and wa-sqlite, automerge-repo with it) in the app's eager boot graph.
-import { ConnectionState, DeviceKind, Platform, SpaceState } from '@dxos/protocols/proto/dxos/client/services';
+import { ConnectionState, DeviceKind } from '@dxos/protocols/buf/dxos/client/services_pb';
+import { type Platform, Platform_PLATFORM_TYPE } from '@dxos/protocols/buf/dxos/client/services_pb';
+import { EpochSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
 import * as Observability from '../Observability';
 import { type CrossRealmMemory, measureCrossRealmMemory, readHeap, supportsCrossRealmMemory } from './memory';
@@ -165,7 +169,7 @@ export const runtimeMetricsProvider = (clientServices: Partial<ClientServices>):
     invariant(platform, 'platform is required');
 
     observability.setTags({
-      platformType: Platform.PLATFORM_TYPE[platform.type as number].toLowerCase(),
+      platformType: Platform_PLATFORM_TYPE[platform.type].toLowerCase(),
       platform: platform.platform,
       arch: platform.arch,
       runtime: platform.runtime,
@@ -184,12 +188,19 @@ export const runtimeMetricsProvider = (clientServices: Partial<ClientServices>):
     // The platform reading is an RPC and cross-realm memory waits for a GC, so both are sampled on
     // their own cadence and the gauges read the latest sample.
     let platformMemory: Platform['memory'];
+
+    // The platform reports memory as a `google.protobuf.Struct`, so a gauge reading a byte count
+    // has to check the JSON value rather than assume it is numeric.
+    const memoryNumber = (key: string): number | undefined => {
+      const value = platformMemory?.[key];
+      return typeof value === 'number' ? value : undefined;
+    };
     let crossRealmMemory: CrossRealmMemory | undefined;
 
     const servicesGauges = [
-      ['dxos.client.services.runtime.heapUsed', () => platformMemory?.heapUsed],
-      ['dxos.client.services.runtime.heapTotal', () => platformMemory?.heapTotal],
-      ['dxos.client.services.runtime.rss', () => platformMemory?.rss],
+      ['dxos.client.services.runtime.heapUsed', () => memoryNumber('heapUsed')],
+      ['dxos.client.services.runtime.heapTotal', () => memoryNumber('heapTotal')],
+      ['dxos.client.services.runtime.rss', () => memoryNumber('rss')],
     ] as const;
     for (const [name, read] of servicesGauges) {
       ctx.onDispose(observability.metrics.observe(name, read, undefined, BYTES));
@@ -401,16 +412,19 @@ const mapSpaces = (spaces: Space[], options: MapSpacesOptions = { verbose: false
     // TODO(burdon): Factor out.
     // TODO(burdon): Agent needs to restart before `ready` is available.
     const { open, ready } = space.internal.data.metrics ?? {};
-    const startup = open && ready && ready.getTime() - open.getTime();
+    const openedAt = toDate(open);
+    const readyAt = toDate(ready);
+    const startup = openedAt && readyAt && readyAt.getTime() - openedAt.getTime();
 
     // TODO(burdon): Get feeds from client-services if verbose (factor out from devtools/diagnostics).
     // const host = client.services.services.DevtoolsHost!;
     const pipeline = space.internal.data.pipeline;
-    const startDataMutations = pipeline?.currentEpoch?.subject.assertion.timeframe.totalMessages() ?? 0;
-    const epoch = pipeline?.currentEpoch?.subject.assertion.number;
-    // const appliedEpoch = pipeline?.appliedEpoch?.subject.assertion.number;
-    const currentDataMutations = pipeline?.currentDataTimeframe?.totalMessages() ?? 0;
-    const totalDataMutations = pipeline?.targetDataTimeframe?.totalMessages() ?? 0;
+    const assertion = pipeline?.currentEpoch?.subject?.assertion;
+    const currentEpoch = assertion && anyUnpack(assertion, EpochSchema);
+    const startDataMutations = toTimeframe(currentEpoch?.timeframe).totalMessages();
+    const epoch = currentEpoch?.number;
+    const currentDataMutations = toTimeframe(pipeline?.currentDataTimeframe).totalMessages();
+    const totalDataMutations = toTimeframe(pipeline?.targetDataTimeframe).totalMessages();
 
     return {
       // TODO(nf): truncate keys for DD?

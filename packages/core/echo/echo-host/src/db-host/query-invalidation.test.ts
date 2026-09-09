@@ -11,7 +11,7 @@ import { TestSchema } from '@dxos/echo/testing';
 import { IndexEngine } from '@dxos/index-core';
 import { invariant } from '@dxos/invariant';
 import { DXN, EID, EntityId, SpaceId } from '@dxos/keys';
-import { QueryReactivity } from '@dxos/protocols/proto/dxos/echo/query';
+import { QueryReactivity } from '@dxos/protocols/buf/dxos/echo/query_pb';
 
 import { AutomergeHost } from '../automerge';
 import { QueryExecutor } from '../query/query-executor';
