@@ -27,6 +27,12 @@ export type SpanOptions = {
   showInRemoteTracing?: boolean;
   op?: string;
   attributes?: SpanAttributeSource;
+  /**
+   * Attributes derived from the method's return value, attached when it resolves. For a value only
+   * known once the work finished -- keeping it on the span rather than in a log line, which on a
+   * hot path would flood the browser console at whatever level the sink needs.
+   */
+  resultAttributes?: (result: any, ...args: any[]) => Record<string, any>;
 };
 
 /** Namespaces attribute keys under `ctx.` so they do not collide with OTel semantic conventions. */
@@ -45,7 +51,7 @@ const resolveAttributes = (attributes: SpanAttributeSource | undefined, args: an
  * Calls the TracingBackend directly; no custom TracingSpan objects.
  */
 const span =
-  ({ showInBrowserTimeline = false, showInRemoteTracing = true, op, attributes }: SpanOptions = {}) =>
+  ({ showInBrowserTimeline = false, showInRemoteTracing = true, op, attributes, resultAttributes }: SpanOptions = {}) =>
   (target: any, propertyKey: string, descriptor: TypedPropertyDescriptor<(...args: any) => any>) => {
     const method = descriptor.value!;
 
@@ -79,7 +85,11 @@ const span =
       }
 
       try {
-        return await method.apply(this, callArgs);
+        const result = await method.apply(this, callArgs);
+        if (resultAttributes) {
+          remoteSpan?.setAttributes?.(resolveAttributes(resultAttributes(result, ...args), args));
+        }
+        return result;
       } catch (err) {
         remoteSpan?.setError?.(err);
         throw err;

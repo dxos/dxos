@@ -15,6 +15,7 @@ type SpanRecord = {
   ended: boolean;
   endTime?: number;
   error?: unknown;
+  lateAttributes?: Record<string, any>;
   spanContext: TraceContextData;
 };
 
@@ -40,6 +41,9 @@ const createMockBackend = (): { backend: TracingBackend; spans: SpanRecord[] } =
         },
         setError: (err: unknown) => {
           record.error = err;
+        },
+        setAttributes: (attributes: Record<string, any>) => {
+          record.lateAttributes = { ...record.lateAttributes, ...attributes };
         },
         spanContext: record.spanContext,
       };
@@ -339,5 +343,37 @@ describe('span attributes', () => {
     expect(spans.find((span) => span.options.name === 'Svc.work')!.options.attributes).toEqual({
       'ctx.reason': 'feed-blocks:2',
     });
+  });
+
+  test('resultAttributes are derived from the return value and namespaced', async ({ expect }) => {
+    const { backend, spans } = createMockBackend();
+    TRACE_PROCESSOR.tracingBackend = backend;
+
+    class Svc {
+      @trace.span({ resultAttributes: (result: { updated: number }) => ({ updated: result.updated }) })
+      async work(ctx: Context) {
+        return { updated: 7 };
+      }
+    }
+
+    await new Svc().work(new Context());
+    expect(spans.find((span) => span.options.name === 'Svc.work')!.lateAttributes).toEqual({ 'ctx.updated': 7 });
+  });
+
+  test('resultAttributes are not attached when the method throws', async ({ expect }) => {
+    const { backend, spans } = createMockBackend();
+    TRACE_PROCESSOR.tracingBackend = backend;
+
+    class Svc {
+      @trace.span({ resultAttributes: () => ({ updated: 1 }) })
+      async work(ctx: Context): Promise<void> {
+        throw new Error('boom');
+      }
+    }
+
+    await new Svc().work(new Context()).catch(() => {});
+    const span = spans.find((record) => record.options.name === 'Svc.work')!;
+    expect(span.lateAttributes).toBeUndefined();
+    expect(span.ended).toBe(true);
   });
 });

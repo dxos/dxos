@@ -1115,15 +1115,27 @@ export class EchoHost extends Resource {
    */
   @trace.span({
     op: 'indexer',
-    // Flattened to a string: OTel attribute values are primitives, so a histogram object would be
-    // dropped by the exporter rather than reaching SigNoz.
+    // Flattened to strings/numbers: OTel attribute values are primitives, so a histogram object
+    // would be dropped by the exporter rather than reaching SigNoz.
     attributes: (_ctx: Context, reasons: Record<string, number>) => ({
       reasons: Object.entries(reasons)
         .map(([reason, count]) => `${reason}:${count}`)
         .join(','),
     }),
+    // The outcome rides on the span rather than a log line: the only level the OTLP log sink
+    // exports (INFO) is also one the browser console shows, and at three passes a second that
+    // buries the console it is meant to help.
+    resultAttributes: (outcome: IndexPassOutcome | undefined) => ({
+      updated: outcome?.updated ?? 0,
+      done: outcome?.done ?? false,
+      // A pass that indexed nothing yet still invalidates queries is the signature of a
+      // self-sustaining invalidation loop, so record whether this run re-armed its own trigger.
+      invalidates: outcome?.invalidates ?? false,
+      spaces: outcome?.spaces ?? 0,
+      documents: outcome?.documents ?? 0,
+    }),
   })
-  private async _runIndexPass(ctx: Context, reasons: Record<string, number>): Promise<void> {
+  private async _runIndexPass(ctx: Context, reasons: Record<string, number>): Promise<IndexPassOutcome | undefined> {
     const startedAt = performance.now();
 
     try {
@@ -1174,11 +1186,7 @@ export class EchoHost extends Resource {
       }
 
       const hint = hintFromIndexingResult(combinedResult);
-      // `info`, not `verbose`: the OTLP log sink drops anything below INFO, so at `verbose` this
-      // line -- the only record of what triggers a run -- never leaves the browser. A pass that
-      // indexes nothing is the shape of a self-sustaining loop, and diagnosing it needs the
-      // trigger histogram from the field, not from a local `app.log`.
-      log.info('indexEngine update completed', {
+      log.verbose('indexEngine update completed', {
         reasons,
         durationMs: performance.now() - startedAt,
         // A run that indexed nothing yet still invalidates queries is the signature of a
@@ -1203,6 +1211,14 @@ export class EchoHost extends Resource {
       if (hint) {
         this._queryService.invalidateQueries(hint);
       }
+
+      return {
+        updated: combinedResult.updated,
+        done: combinedResult.done,
+        invalidates: !!hint,
+        spaces: combinedResult.spaces.size,
+        documents: combinedResult.documents.size,
+      };
     } catch (err) {
       if (this._ctx.disposed || !this.isOpen) {
         this._indexesUpToDate = true;
@@ -1217,6 +1233,15 @@ export class EchoHost extends Resource {
 }
 
 export type { EchoDataStats };
+
+/** What one indexing pass did, as the span reports it. */
+type IndexPassOutcome = {
+  updated: number;
+  done: boolean;
+  invalidates: boolean;
+  spaces: number;
+  documents: number;
+};
 
 type MutableIndexingAccumulator = {
   updated: number;
