@@ -24,7 +24,8 @@ import React, {
 } from 'react';
 
 import { useComposedRefs, useControllableState } from '@dxos/react-hooks';
-import { DX_POPOVER_CONTENT_ATTR } from '@dxos/ui-types';
+import { elevationAttrs, elevationSurface } from '@dxos/ui-theme';
+import { DX_POPOVER_CONTENT_ATTR, type ElevationLevel } from '@dxos/ui-types';
 
 import { useElevationContext, usePositioning, useThemeContext } from '../../hooks';
 import { type ThemedClassName } from '../../util';
@@ -202,13 +203,17 @@ const CONTENT_NAME = 'Popover.Content';
 
 type PopoverContentProps = ThemedClassName<ComponentPropsWithRef<typeof PopoverPrimitive.Content>> &
   PopoverPlacementOptions &
-  PopoverContentHandlers;
+  PopoverContentHandlers & {
+    /** Material-style elevation, 0–5, onto the surface ladder; a popover is `popup` (5) by default. */
+    elevation?: ElevationLevel;
+  };
 
 const PopoverContent = forwardRef<HTMLDivElement, PopoverContentProps>(
   (
     {
       classNames,
       children,
+      elevation: elevationProp,
       side,
       align,
       sideOffset,
@@ -268,7 +273,8 @@ const PopoverContent = forwardRef<HTMLDivElement, PopoverContentProps>(
         <PopoverPrimitive.Content
           {...props}
           {...{ [DX_POPOVER_CONTENT_ATTR]: '' }}
-          className={tx('popover.content', { elevation }, classNames)}
+          {...elevationAttrs(elevationProp)}
+          className={tx('popover.content', { elevation, surface: elevationSurface(elevationProp) }, classNames)}
           ref={forwardedRef}
         >
           {children}
