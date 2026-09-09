@@ -9,6 +9,8 @@ import { Context } from '@dxos/context';
 import { PublicKey } from '@dxos/keys';
 import { MemorySignalManager, MemorySignalManagerContext } from '@dxos/messaging';
 import { MemoryTransportFactory, SwarmNetworkManager } from '@dxos/network-manager';
+import { createBuf, fromTimeframe } from '@dxos/protocols/buf';
+import { FeedMessageSchema } from '@dxos/protocols/buf/dxos/echo/feed_pb';
 import { PeerSchema } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
 import { Timeframe } from '@dxos/timeframe';
 
@@ -144,12 +146,12 @@ describe('space/space-protocol', () => {
     //
 
     // TODO(burdon): Append batch of messages.
-    await feed1.append({ timeframe: new Timeframe() });
+    await feed1.append(createBuf(FeedMessageSchema, { timeframe: fromTimeframe(new Timeframe()) }));
     // Received message appended before replication.
     await expect.poll(() => feed2.properties.length).toEqual(1);
 
     // TODO(burdon): Append batch of messages.
-    await feed1.append({ timeframe: new Timeframe() });
+    await feed1.append(createBuf(FeedMessageSchema, { timeframe: fromTimeframe(new Timeframe()) }));
     // Received message appended after replication.
     await expect.poll(() => feed2.properties.length).toEqual(2);
   });
