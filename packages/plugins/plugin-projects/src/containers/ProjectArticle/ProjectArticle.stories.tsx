@@ -18,6 +18,7 @@ import * as AssistantPlugin from '@dxos/plugin-assistant/AssistantPlugin';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import * as GitHubPlugin from '@dxos/plugin-github/GitHubPlugin';
 import * as ProjectsPlugin from '@dxos/plugin-projects/ProjectsPlugin';
+import * as RoutinePlugin from '@dxos/plugin-routine/RoutinePlugin';
 import { translations as routineTranslations } from '@dxos/plugin-routine/translations';
 import * as TasksPlugin from '@dxos/plugin-tasks/TasksPlugin';
 import { translations as tasksTranslations } from '@dxos/plugin-tasks/translations';
@@ -190,6 +191,9 @@ const meta = {
         // handler that action runs.
         ProjectsPlugin.make(),
         AssistantPlugin.make(),
+        // Provides `RemoteProcessManager`, which Assistant's `AgentService` spec now requires — the
+        // spec is pruned without it, so delegating a task fails with "Chat not found".
+        RoutinePlugin.make(),
         // Contributes the `#123` decoration; `project.repo` is what it resolves against.
         GitHubPlugin.make(),
         ClientPlugin.make({

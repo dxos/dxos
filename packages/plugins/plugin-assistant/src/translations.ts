@@ -176,6 +176,7 @@ export const translations: Resource[] = [
         'options.skills.title': 'Skills',
         'options.mcp.title': 'MCP',
         'options.chat-model.title': 'Models',
+        'options.environment.title': 'Environment',
         'remove-object.label': 'Remove object',
 
         'chat-view.title': 'View',
@@ -183,6 +184,8 @@ export const translations: Resource[] = [
         'chat-view.summary.label': 'Summary',
         'chat-view.thinking.label': 'Thinking',
         'chat-view.debug.label': 'Debug',
+        'chat-environment.local.label': 'Local',
+        'chat-environment.remote.label': 'Remote (EDGE)',
         'mcp-server-add.label': 'Add MCP server',
         'mcp-server-remove.label': 'Remove MCP server',
         'mcp-server-name.label': 'Server name',
