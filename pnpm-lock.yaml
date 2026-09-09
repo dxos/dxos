@@ -1704,7 +1704,7 @@ patchedDependencies:
     hash: 945fea45140c833233a293e05de9d0378a7fb31f2c81b54ce6817d86e4724587
     path: patches/@automerge__automerge-repo@2.6.0-subduction.48.patch
   '@automerge/automerge-subduction@0.16.1':
-    hash: 6524e89463bb8a7bec107ebe830cd6c3edde24c62db3ed0baacf9ab15929fc24
+    hash: ea28ed2f6464a2495546c879d2b6abac219db858b9def10415a1db54fd6598c7
     path: patches/@automerge__automerge-subduction@0.16.1.patch
   '@vitest/browser@4.1.10':
     hash: a986f87598d00b4753574afb9fcad1a84d9b0145eaf80189a0b49d32b7af569a
@@ -2204,7 +2204,7 @@ importers:
         version: 2.6.0-subduction.48(patch_hash=945fea45140c833233a293e05de9d0378a7fb31f2c81b54ce6817d86e4724587)
       '@automerge/automerge-subduction':
         specifier: 0.16.1
-        version: 0.16.1(patch_hash=6524e89463bb8a7bec107ebe830cd6c3edde24c62db3ed0baacf9ab15929fc24)
+        version: 0.16.1(patch_hash=ea28ed2f6464a2495546c879d2b6abac219db858b9def10415a1db54fd6598c7)
       '@bufbuild/protobuf':
         specifier: 'catalog:'
         version: 2.11.0
@@ -5650,7 +5650,7 @@ importers:
         version: 2.6.0-subduction.48(patch_hash=945fea45140c833233a293e05de9d0378a7fb31f2c81b54ce6817d86e4724587)
       '@automerge/automerge-subduction':
         specifier: 0.16.1
-        version: 0.16.1(patch_hash=6524e89463bb8a7bec107ebe830cd6c3edde24c62db3ed0baacf9ab15929fc24)
+        version: 0.16.1(patch_hash=ea28ed2f6464a2495546c879d2b6abac219db858b9def10415a1db54fd6598c7)
       '@dxos/async':
         specifier: workspace:*
         version: link:../../../common/async
@@ -43255,7 +43255,7 @@ snapshots:
   '@automerge/automerge-repo@2.6.0-subduction.48(patch_hash=945fea45140c833233a293e05de9d0378a7fb31f2c81b54ce6817d86e4724587)':
     dependencies:
       '@automerge/automerge': 3.3.2
-      '@automerge/automerge-subduction': 0.16.1(patch_hash=6524e89463bb8a7bec107ebe830cd6c3edde24c62db3ed0baacf9ab15929fc24)
+      '@automerge/automerge-subduction': 0.16.1(patch_hash=ea28ed2f6464a2495546c879d2b6abac219db858b9def10415a1db54fd6598c7)
       bs58check: 4.0.0
       cbor-x: 1.6.4
       debug: 4.4.3
@@ -43270,7 +43270,7 @@ snapshots:
       - supports-color
       - utf-8-validate
 
-  '@automerge/automerge-subduction@0.16.1(patch_hash=6524e89463bb8a7bec107ebe830cd6c3edde24c62db3ed0baacf9ab15929fc24)': {}
+  '@automerge/automerge-subduction@0.16.1(patch_hash=ea28ed2f6464a2495546c879d2b6abac219db858b9def10415a1db54fd6598c7)': {}
 
   '@automerge/automerge@3.3.2': {}
 

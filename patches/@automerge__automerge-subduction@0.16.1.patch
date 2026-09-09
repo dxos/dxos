@@ -1,15 +1,11 @@
-diff --git a/package.json b/package.json
-index 875c71c..e643896 100644
---- a/package.json
-+++ b/package.json
-@@ -61,6 +61,10 @@
-     },
-     "./slim": {
-       "types": "./dist/index.d.ts",
-+      "browser": {
-+        "import": "./dist/esm/bundler.js",
-+        "require": "./dist/cjs/slim.cjs"
-+      },
-       "import": "./dist/esm/slim.js",
-       "require": "./dist/cjs/slim.cjs"
-     },
+diff --git a/dist/esm/bundler.js b/dist/esm/bundler.js
+index 51142c6..6635349 100644
+--- a/dist/esm/bundler.js
++++ b/dist/esm/bundler.js
+@@ -1,5 +1 @@
+-import init from '../wasm_bindgen/web/automerge_subduction_wasm.js';
+-await init({
+-  module_or_path: new URL('../automerge-subduction.wasm', import.meta.url),
+-});
+-export * from '../wasm_bindgen/web/automerge_subduction_wasm.js';
++export * from './web.js';
