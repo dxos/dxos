@@ -199,6 +199,9 @@ const walkDirectoryForExtension = (baseDir: string, extension: string): string[]
   return results;
 };
 
+/** Module extensions a wildcard export may expand to. */
+const MODULE_SUFFIX = /\.(m|c)?js$/;
+
 /** Resolves an `exports` value to a single target path for pattern expansion. */
 const pickPatternTarget = (value: unknown): string | undefined => {
   if (typeof value === 'string') {
@@ -234,9 +237,14 @@ const expandWildcardExport = (
   }
   const keyPrefix = exportKey.slice(2, keyStarIndex); // drop leading './'
   const targetPrefix = target.slice(2, targetStarIndex); // drop leading './'
-  const targetSuffix = target.slice(targetStarIndex + 1);
+  const targetSuffix = target.slice(targetStarIndex + 1) || '.js';
+  // The import map maps ES modules, so a pattern targeting raw assets (`@dxos/protocols`
+  // exports its `.proto` sources) would yield extension-stripped specifiers that fail to resolve.
+  if (!MODULE_SUFFIX.test(targetSuffix)) {
+    return [];
+  }
   const baseDir = path.resolve(packageJsonDir, targetPrefix);
-  const files = walkDirectoryForExtension(baseDir, targetSuffix || '.js');
+  const files = walkDirectoryForExtension(baseDir, targetSuffix);
   return files.map((relativeNoExt) => `${packageName}/${keyPrefix}${relativeNoExt}`);
 };
 
