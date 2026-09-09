@@ -14,7 +14,7 @@ import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { ApiError, runServiceCall, subscribeStream } from '@dxos/protocols';
-import { buf, requirePublicKey, toPublicKey } from '@dxos/protocols/buf';
+import { buf, bufWkt, requirePublicKey, toPublicKey } from '@dxos/protocols/buf';
 import { Invitation, Invitation_Kind } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 import { DeviceKind } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { type Contact, type Device, type Identity } from '@dxos/protocols/buf/dxos/client/services_pb';
@@ -320,7 +320,8 @@ export class HaloProxy implements Halo {
       if (ids && !ids.some((id) => id.equals(requirePublicKey(credential.id)))) {
         return false;
       }
-      if (type && credential.subject?.assertion?.typeUrl !== type) {
+      // `anyPack` writes a `type.googleapis.com/` prefix, so the bare type name only matches via `anyIs`.
+      if (type && !(credential.subject?.assertion && bufWkt.anyIs(credential.subject.assertion, type))) {
         return false;
       }
       return true;

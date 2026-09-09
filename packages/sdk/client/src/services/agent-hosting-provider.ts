@@ -12,7 +12,7 @@ import { specificCredential } from '@dxos/credentials/assertions';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { requirePublicKey, toDate } from '@dxos/protocols/buf';
+import { bufWkt, requirePublicKey, toDate } from '@dxos/protocols/buf';
 import { type BufService, getBufService } from '@dxos/protocols/buf-service';
 import { type Credential, type ServiceAccess } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import {
@@ -314,7 +314,8 @@ export class AgentManagerClient implements AgentHostingProviderClient {
     const haloCredentials = this._halo.credentials.get();
 
     return haloCredentials.filter((cred) => {
-      if (type && cred.subject?.assertion?.typeUrl !== type) {
+      // `anyPack` writes a `type.googleapis.com/` prefix, so the bare type name only matches via `anyIs`.
+      if (type && !(cred.subject?.assertion && bufWkt.anyIs(cred.subject.assertion, type))) {
         return false;
       }
       if (predicate && !predicate(cred)) {

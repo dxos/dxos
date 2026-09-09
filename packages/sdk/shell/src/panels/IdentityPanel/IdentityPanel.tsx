@@ -86,7 +86,7 @@ const IdentityHeading = ({
     void onUpdateProfile?.(
       create(ProfileDocumentSchema, {
         ...identity.profile,
-        data: { ...identity.profile?.data, ...(nextHue !== undefined && { hue: nextHue }) },
+        data: { ...identity.profile?.data, hue: nextHue },
       }),
     );
   };

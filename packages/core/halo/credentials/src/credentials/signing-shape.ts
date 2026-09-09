@@ -70,9 +70,15 @@ const packedAny = (typeUrl: string, value: Uint8Array) => ({
   'value': Buffer.from(value),
 });
 
+/**
+ * The bare type name a `type_url` carries. `anyPack` writes `type.googleapis.com/<name>` while the
+ * legacy codec wrote the bare name, and the registry is keyed by the bare name either way.
+ */
+const typeNameOf = (typeUrl: string): string => typeUrl.slice(typeUrl.lastIndexOf('/') + 1);
+
 const anyToSigningShape = (value: unknown): unknown => {
   const packed = asRecord(value);
-  const typeUrl = typeof packed.typeUrl === 'string' ? packed.typeUrl : '';
+  const typeUrl = typeof packed.typeUrl === 'string' ? typeNameOf(packed.typeUrl) : '';
   // Not flattened: the nested decode below reads its byte fields as views over this buffer, so
   // flattening here would strip Buffer-ness from every byte field inside the payload.
   const bytes = asBytes(packed.value ?? new Uint8Array());
