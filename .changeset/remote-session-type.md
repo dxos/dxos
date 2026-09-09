@@ -9,4 +9,4 @@ The object is keyed on `sessionId`, the harness's own session identifier that ev
 
 `Actor` gains an optional untyped `subject` ref, so an actor can stand for something other than a person; a `RemoteSession` set there makes an agent session a task assignee.
 
-Two operations in `plugin-tasks` drive it, both projected to MCP: `org.dxos.operation.sessions.report` (an idempotent upsert keyed on `sessionId` — create, check in and close are one verb, so two hooks bound to different events cannot disagree about a session's state) and `org.dxos.operation.sessions.list`.
+Two operations in `plugin-tasks` drive it, both projected to MCP: `org.dxos.operation.tasks.recordSession` (an idempotent upsert keyed on `sessionId` — create, check in and close are one verb, so two hooks bound to different events cannot disagree about a session's state) and `org.dxos.operation.tasks.listSessions`.

@@ -27,10 +27,10 @@ import { RemoteSession } from '@dxos/types';
  * disagreeing about a session's state. `lastCheckedIn` is stamped on every call, which is what
  * makes a stale `running` session detectable.
  */
-export const ReportSession = Operation.make({
+export const RecordSession = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.operation.sessions.report'),
-    name: 'Report Session',
+    key: DXN.make('org.dxos.operation.tasks.recordSession'),
+    name: 'Record Session',
     description:
       'Create or update a coding-agent session by its harness session id. Stamps the check-in time; pass a terminal state to close it.',
     icon: 'ph--robot--regular',
@@ -58,7 +58,7 @@ export const ReportSession = Operation.make({
 /** Reads the sessions in a space, newest first, so a reader can find stale `running` ones. */
 export const ListSessions = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.operation.sessions.list'),
+    key: DXN.make('org.dxos.operation.tasks.listSessions'),
     name: 'List Sessions',
     description: 'List coding-agent sessions, newest first. Filter by state or by session id.',
     icon: 'ph--list-bullets--regular',

@@ -271,7 +271,7 @@ survive being read every turn.
 
 ### Reporting the session to Composer (opt-in, not wired here)
 
-`org.dxos.operation.sessions.report` upserts a `RemoteSession` object keyed on the harness
+`org.dxos.operation.tasks.recordSession` upserts a `RemoteSession` object keyed on the harness
 `session_id`, so a session can report itself into a space. The hooks that would drive it are
 **deliberately not in this `settings.json`**: the server they call needs a Composer account, so
 wiring them repo-wide would fire a failing authenticated call on every contributor's every turn.
@@ -282,18 +282,18 @@ Add them to your own `.claude/settings.local.json`:
   "hooks": {
     "UserPromptSubmit": [
       { "hooks": [{ "type": "mcp_tool", "server": "plugin:dxos:composer", "tool": "invoke-operation",
-        "input": { "key": "org.dxos.operation.sessions.report",
+        "input": { "key": "org.dxos.operation.tasks.recordSession",
                    "input": { "sessionId": "${session_id}", "worktree": "${cwd}" } } }] }
     ],
     "Stop": [
       { "hooks": [{ "type": "mcp_tool", "server": "plugin:dxos:composer", "tool": "invoke-operation",
-        "input": { "key": "org.dxos.operation.sessions.report",
+        "input": { "key": "org.dxos.operation.tasks.recordSession",
                    "input": { "sessionId": "${session_id}", "lastMessage": "${last_assistant_message}" } } }] }
     ],
     "SessionEnd": [
       { "matcher": "logout|prompt_input_exit|other",
         "hooks": [{ "type": "mcp_tool", "server": "plugin:dxos:composer", "tool": "invoke-operation",
-          "input": { "key": "org.dxos.operation.sessions.report",
+          "input": { "key": "org.dxos.operation.tasks.recordSession",
                      "input": { "sessionId": "${session_id}", "state": "finished" } } }] }
     ]
   }
@@ -305,7 +305,7 @@ Five things decided that shape, each a constraint rather than a preference:
 - **The call goes through the server's dispatcher.** `composer.dxos.network/mcp` exposes
   `queryOperations` / `invokeOperation` / `loadSkill` / `whoami`, not one tool per verb, so the
   operation key is an argument. A host that projects verbs individually names this one
-  `sessions-report` — hyphens, from `Operation.toolNameFromKey`, never underscores.
+  `tasks-record-session` — hyphens, from `Operation.toolNameFromKey`, never underscores.
 - **Not `SessionStart`.** An `mcp_tool` hook needs an already-connected server and `SessionStart`
   fires before connection, so it can only answer "not connected". The first `UserPromptSubmit` is
   the earliest reliable open, and the upsert makes it indistinguishable from a later check-in.

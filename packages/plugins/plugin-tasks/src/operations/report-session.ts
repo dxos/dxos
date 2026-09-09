@@ -10,8 +10,8 @@ import { RemoteSession } from '@dxos/types';
 
 import { RemoteSessionOperation } from '#types';
 
-const handler: Operation.WithHandler<typeof RemoteSessionOperation.ReportSession> =
-  RemoteSessionOperation.ReportSession.pipe(
+const handler: Operation.WithHandler<typeof RemoteSessionOperation.RecordSession> =
+  RemoteSessionOperation.RecordSession.pipe(
     Operation.withHandler(
       Effect.fnUntraced(function* ({ sessionId, title, state, lastMessage, repo, branch, worktree }) {
         const now = new Date().toISOString();
@@ -39,31 +39,31 @@ const handler: Operation.WithHandler<typeof RemoteSessionOperation.ReportSession
 
         // Every field is patched only when supplied: a hook bound to one event reports the two or
         // three things that event knows, and must not blank what another event wrote.
-        Obj.update(existing, (session) => {
+        Obj.update(existing, (existing) => {
           if (title !== undefined) {
-            session.title = title;
+            existing.title = title;
           }
           if (lastMessage !== undefined) {
-            session.lastMessage = lastMessage;
+            existing.lastMessage = lastMessage;
           }
           if (repo !== undefined) {
-            session.repo = repo;
+            existing.repo = repo;
           }
           if (branch !== undefined) {
-            session.branch = branch;
+            existing.branch = branch;
           }
           if (worktree !== undefined) {
-            session.worktree = worktree;
+            existing.worktree = worktree;
           }
           if (state !== undefined) {
-            session.state = state;
+            existing.state = state;
             // Stamped once, on the transition: a later report on an already-finished session is a
             // check-in, and must not move the time the work actually ended.
-            if (state !== 'running' && session.finished === undefined) {
-              session.finished = now;
+            if (state !== 'running' && existing.finished === undefined) {
+              existing.finished = now;
             }
           }
-          session.lastCheckedIn = now;
+          existing.lastCheckedIn = now;
         });
         yield* Database.flush();
         return { session: existing, created: false };
