@@ -95,44 +95,41 @@ const PushStory = () => {
           <Filler lines={12} />
         </Drawer.Content>
       </Drawer.Root>
-      <Panel.Root asChild classNames='flex-1 min-w-0 dx-base-surface'>
-        <main data-testid='drawer.main'>
-          <Panel.Toolbar asChild>
-            <Toolbar.Root>
+      <Panel.Root as='main' classNames='dx-base-surface' data-testid='drawer.main'>
+        <Panel.Toolbar asChild>
+          <Toolbar.Root>
+            {!start && (
               <Toolbar.IconButton
                 icon='ph--sidebar-simple--regular'
                 iconOnly
                 label='Toggle navigation'
                 onClick={() => setStart((open) => !open)}
               />
-              <div className='grow' />
+            )}
+            <Toolbar.Separator />
+            {!end && (
               <Toolbar.IconButton
-                icon='ph--sidebar-simple--regular'
+                icon='ph--square-split-horizontal--regular'
                 iconOnly
                 label='Toggle inspector'
                 classNames='[&_svg]:-scale-x-100'
                 onClick={() => setEnd((open) => !open)}
               />
-            </Toolbar.Root>
-          </Panel.Toolbar>
-          <Panel.Content classNames='flex items-center justify-center'>Main</Panel.Content>
-          <Panel.Statusbar asChild>
-            <Toolbar.Root classNames='justify-between'>
-              <span className='px-2 text-description'>Ready</span>
-              <Toolbar.IconButton variant='ghost' icon='ph--info--regular' iconOnly label='Status' />
-            </Toolbar.Root>
-          </Panel.Statusbar>
-        </main>
+            )}
+          </Toolbar.Root>
+        </Panel.Toolbar>
+        <Panel.Content classNames='flex items-center justify-center'>Main</Panel.Content>
+        <Panel.Statusbar asChild>
+          <Toolbar.Root classNames='justify-between'>
+            <span className='px-2 text-description'>Ready</span>
+            <Toolbar.IconButton variant='ghost' icon='ph--info--regular' iconOnly label='Status' />
+          </Toolbar.Root>
+        </Panel.Statusbar>
       </Panel.Root>
       <Drawer.Root open={end} onOpenChange={setEnd} side='end' push>
         <Drawer.Content>
           <Toolbar.Root>
-            <Toolbar.IconButton
-              icon='ph--caret-right--regular'
-              iconOnly
-              label='Close inspector'
-              onClick={() => setEnd(false)}
-            />
+            <Toolbar.IconButton icon='ph--x--regular' iconOnly label='Close inspector' onClick={() => setEnd(false)} />
             <Drawer.Title classNames='grow px-2'>Inspector</Drawer.Title>
           </Toolbar.Root>
           <Drawer.Description>Pushes the main panel left. Drag toward the right edge to dismiss.</Drawer.Description>
@@ -211,7 +208,7 @@ export const TestPush: Story = {
   render: () => <PushStory />,
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    const main = canvas.getByTestId('drawer.main');
+    const main = canvas.getByRole('main');
     const dialogs = await canvas.findAllByRole('dialog');
     await expect(dialogs).toHaveLength(2);
     await expect(dialogs[0]).toHaveAttribute('data-push');
@@ -229,7 +226,7 @@ export const TestPush: Story = {
     const before = main.getBoundingClientRect().width;
     const navigation = dialogs[0].getBoundingClientRect().width;
 
-    await userEvent.click(canvas.getByRole('button', { name: 'Toggle navigation' }));
+    await userEvent.click(canvas.getByRole('button', { name: 'Close navigation' }));
     await waitFor(async () => {
       await expect(canvas.queryAllByRole('dialog')).toHaveLength(1);
       await expect(Math.round(main.getBoundingClientRect().width)).toBe(Math.round(before + navigation));

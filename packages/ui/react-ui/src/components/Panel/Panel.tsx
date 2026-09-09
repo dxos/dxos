@@ -18,17 +18,28 @@ import { composableProps, slottable } from '../../util';
 const GRID_TEMPLATE_ROWS = 'auto 1fr auto';
 const GRID_TEMPLATE_AREAS = '"toolbar" "content" "statusbar"';
 
-type PanelRootProps = SlottableProps<{ style?: CSSProperties }>;
+/** The landmarks a panel can be: a `div` by default, which carries no role of its own. */
+type PanelElement = 'div' | 'main' | 'section' | 'article' | 'aside' | 'nav';
 
-const PanelRoot = slottable<HTMLDivElement, { style?: CSSProperties }>(
-  ({ children, asChild, role, style, ...props }, forwardedRef) => {
+type PanelRootElementProps = {
+  style?: CSSProperties;
+  /** The element to render, for a panel that is itself a landmark (`main`, `aside`, …). */
+  as?: PanelElement;
+};
+
+type PanelRootProps = SlottableProps<PanelRootElementProps>;
+
+const PanelRoot = slottable<HTMLDivElement, PanelRootElementProps>(
+  ({ children, asChild, as = 'div', role, style, ...props }, forwardedRef) => {
     const { className, ...rest } = composableProps(props);
     const { tx } = useThemeContext();
+    const Root = ark[as];
     return (
-      <ark.div
+      <Root
         asChild={asChild}
         {...rest}
-        role={role ?? 'none'}
+        // A bare div is layout only; a landmark element keeps the role its name gives it.
+        role={role ?? (as === 'div' ? 'none' : undefined)}
         style={{
           gridTemplateRows: GRID_TEMPLATE_ROWS,
           gridTemplateAreas: GRID_TEMPLATE_AREAS,
@@ -38,7 +49,7 @@ const PanelRoot = slottable<HTMLDivElement, { style?: CSSProperties }>(
         ref={forwardedRef}
       >
         {children}
-      </ark.div>
+      </Root>
     );
   },
 );
@@ -132,4 +143,4 @@ export const Panel = {
   Statusbar: PanelStatusbar,
 };
 
-export type { PanelContentProps, PanelRootProps, PanelStatusbarProps, PanelToolbarProps };
+export type { PanelContentProps, PanelElement, PanelRootProps, PanelStatusbarProps, PanelToolbarProps };

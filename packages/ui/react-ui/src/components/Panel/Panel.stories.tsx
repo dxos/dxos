@@ -4,11 +4,12 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
+import { expect, within } from 'storybook/test';
 
 import { Field, ScrollArea, ScrollAreaRootProps, Toolbar } from '../../components';
 import { withLayout, withTheme } from '../../testing';
 import { composable, composableProps } from '../../util';
-import { Panel } from './Panel';
+import { Panel, type PanelRootProps } from './Panel';
 
 const List = composable<HTMLDivElement, ScrollAreaRootProps>((props, forwardedRef) => {
   return (
@@ -37,9 +38,9 @@ const List = composable<HTMLDivElement, ScrollAreaRootProps>((props, forwardedRe
  *   uses: {@link Panel.Root}, {@link Panel.Toolbar}, {@link Panel.Content}, {@link Panel.Statusbar}
  *   related: org.dxos.react-ui-menu.toolbarMenu
  */
-const DefaultStory = () => {
+const DefaultStory = ({ as }: Pick<PanelRootProps, 'as'>) => {
   return (
-    <Panel.Root classNames='dx-document'>
+    <Panel.Root as={as} classNames='dx-document'>
       <Panel.Toolbar asChild>
         <Toolbar.Root>
           <Toolbar.IconButton icon='ph--plus--regular' variant='primary' label='Add' />
@@ -64,17 +65,30 @@ const DefaultStory = () => {
   );
 };
 
-const meta: Meta = {
+const meta = {
   title: 'ui/react-ui-core/components/Panel',
   render: DefaultStory,
+  argTypes: {
+    as: { control: 'select', options: ['div', 'main', 'section', 'article', 'aside', 'nav'] },
+  },
   decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
   parameters: {
     layout: 'fullscreen',
   },
-};
+} satisfies Meta<typeof DefaultStory>;
 
 export default meta;
 
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {};
+
+/** `as='main'` renders the landmark itself, with its own role rather than `none`. */
+export const TestLandmark: Story = {
+  args: { as: 'main' },
+  play: async ({ canvasElement }) => {
+    const main = within(canvasElement).getByRole('main');
+    await expect(main.tagName).toBe('MAIN');
+    await expect(main).not.toHaveAttribute('role');
+  },
+};
