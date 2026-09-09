@@ -17,5 +17,6 @@ export default defineConfig({
     ConductorEvents: 'src/types/ConductorEvents.ts',
   },
   jsx: 'react',
+  reactCompiler: true,
   test: { node: true, storybook: true },
 });

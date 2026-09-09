@@ -27,5 +27,6 @@ export default defineConfig({
     types: 'src/types/index.ts',
   },
   jsx: 'react',
+  reactCompiler: true,
   test: { node: { environment: 'jsdom' }, storybook: true },
 });

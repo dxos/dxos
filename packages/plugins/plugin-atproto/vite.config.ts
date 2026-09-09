@@ -21,5 +21,6 @@ export default defineConfig({
     AtprotoPublication: 'src/types/AtprotoPublication.ts',
   },
   jsx: 'react',
+  reactCompiler: true,
   test: { node: true, storybook: true },
 });
