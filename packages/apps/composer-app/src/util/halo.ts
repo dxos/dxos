@@ -3,7 +3,7 @@
 //
 
 import { invariant } from '@dxos/invariant';
-import { buf } from '@dxos/protocols/buf';
+import { buf, toPublicKey } from '@dxos/protocols/buf';
 import { type Client } from '@dxos/react-client';
 import { type Credential } from '@dxos/react-client/halo';
 
@@ -12,7 +12,7 @@ import { type Credential } from '@dxos/react-client/halo';
 //   Since it is synchronous, it only returns credentials that are already loaded in the client.
 //   This function ensures that all credentials on disk are loaded into the client before returning.
 export const queryAllCredentials = (client: Client) => {
-  const identitySpace = client.halo.identity.get()?.spaceKey;
+  const identitySpace = toPublicKey(client.halo.identity.get()?.spaceKey);
   if (!identitySpace) {
     return Promise.resolve([] as Credential[]);
   }
