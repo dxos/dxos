@@ -1,8 +1,8 @@
 # ark — Tasks
 
-_Resume: #13007 (Drawer, push mode, elevation, Panel `as`, Splitter fixes) MERGED 2026-09-09. Next: the
-`Main` port, step 1 (machine swap) as its own PR from this branch once the user answers the two design
-questions in the registry entry; step 2 (push layout) after. Uncommitted: none._
+_Resume: `Main` port step 1 (machine swap, swipe-to-dismiss on both sides, touch edge swipe-to-open)
+implemented 2026-09-09 on this branch; PR open from it. Next: land it, then step 2 (push layout at
+`lg`) as its own PR. Uncommitted: none._
 
 ## Phase 1: Tree rebuild on Ark (PR #12873)
 
@@ -1138,8 +1138,17 @@ verdict over porting in the same PR).
       `onOpenChange` with the inset slide finishing the exit. Findings and the port's shape are in
       `react-ui/docs/MIGRATION.md` Phase 7. The probe story lives in git history one commit and is
       deleted from the tree.
-- [ ] **Port `Main`'s sidebars to the drawer machine** (follow-up; DESIGNED 2026-09-09 as two steps — see the registry resume line — step 1 = machine swap, step 2 = push layout): swap `useDialog` for `useDrawer`
-      in `MainSidebar`, delete `useSwipeToDismiss`, add `Drawer.SwipeArea` for edge-swipe-to-open;
-      then verify on a touch device (WKWebView) before landing — that is the case the probe could
-      not cover.
+- [x] **Port `Main`'s sidebars to the drawer machine — step 1, machine swap** DONE 2026-09-09.
+      `useDialog` → `useDrawer` below `lg`; `useSwipeToDismiss` deleted, both sidebars swipe to dismiss
+      (`swipeToDismiss`, on by default, → content `draggable`); `swipeToOpen` (on by default) renders the
+      machine's swipe area, touch-only; the sibling-layer dismiss is vetoed as in `Drawer.Root`. API,
+      three-state model, `main.css` geometry and deck CSS untouched. Pinned by `Main.stories.tsx`
+      (dismiss both sides, snap back, swipe to open); deck + navtree stories pass. Details in
+      `react-ui/docs/MIGRATION.md` Phase 7.
+- [ ] **`Main` step 1 — touch check on a device (WKWebView)**: swipe-to-dismiss, edge swipe-to-open
+      and its interaction with the OS back-swipe on the left edge. Cannot be done by the agent.
+- [ ] **`Main` step 2 — push layout at `lg`** (own PR): a flex row of clip-and-sheet on `Drawer push`;
+      delete `dx-main-content-padding` / `dx-main-intrinsic-size` / `--main-sidebar-width`; move
+      `useMainSize`, `focus.css` `data-sidebar-*-state` and the `DeckViewport` vars onto the clips;
+      decide the rail (collapsed = `Drawer.Content size` switching rail↔sidebar).
 - [ ] **`Toc`** — deferred; see Phase 16's toc item for the consumer question.
