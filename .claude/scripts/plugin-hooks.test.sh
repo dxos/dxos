@@ -37,22 +37,48 @@ check 'every event entry carries a hooks array' 'true' \
 check 'every handler names a type' 'true' \
   "$(jq -r '[.hooks[][].hooks[] | has("type")] | all' "$config")"
 
-check 'every mcp_tool handler names a server and a tool' 'true' \
-  "$(jq -r '[.hooks[][].hooks[] | select(.type == "mcp_tool") | has("server") and has("tool")] | all' "$config")"
+# Counted, not `all`-ed: a jq `all` over an empty selection answers true, so an assertion phrased
+# that way passes just as happily when the handler it describes has been deleted. Each reporting
+# hook is therefore required to exist exactly once, by event, with its exact wiring — the whole
+# point of this file is to catch a hook that has silently stopped firing.
+session_handlers() {
+  jq --arg event "$1" '
+    [ .hooks[$event][]?.hooks[]?
+      | select(.type == "mcp_tool")
+      | select(.server == "plugin:dxos:composer")
+      | select(.tool == "invokeOperation")
+      | select(.input.key == "org.dxos.operation.tasks.recordSession")
+      | select(.input.input.sessionId == "${session_id}")
+    ]' "$config"
+}
 
-# The session verb is addressed by key through the dispatcher, so a typo in either is a hook that
-# resolves to nothing at runtime.
-check 'session hooks invoke the record verb through the dispatcher' 'true' \
-  "$(jq -r '[.hooks[][].hooks[] | select(.type == "mcp_tool")
-              | .tool == "invokeOperation" and .input.key == "org.dxos.operation.tasks.recordSession"] | all' "$config")"
+for event in UserPromptSubmit Stop SessionEnd; do
+  check "$event reports the session exactly once, with the full wiring" '1' \
+    "$(session_handlers "$event" | jq -r 'length')"
+done
 
-check 'the session id is substituted into every session hook' 'true' \
-  "$(jq -r '[.hooks[][].hooks[] | select(.type == "mcp_tool") | .input.input.sessionId == "${session_id}"] | all' "$config")"
+# Each event reports what only it knows: the prompt carries the worktree, `Stop` carries the turn's
+# final message, and `SessionEnd` is the only one that may write a terminal state.
+check 'the prompt hook reports the worktree' '"${cwd}"' \
+  "$(session_handlers UserPromptSubmit | jq -c '.[0].input.input.worktree')"
+
+check 'the prompt hook sends no state, so it cannot fight a close' 'null' \
+  "$(session_handlers UserPromptSubmit | jq -r '.[0].input.input.state // "null"')"
+
+check 'the stop hook carries the final assistant message' '"${last_assistant_message}"' \
+  "$(session_handlers Stop | jq -c '.[0].input.input.lastMessage')"
+
+check 'the end hook closes the session' 'finished' \
+  "$(session_handlers SessionEnd | jq -r '.[0].input.input.state')"
 
 # `resume` and `clear` fire while the user is still working; closing on them would mark a paused
 # session finished.
 check 'SessionEnd closes only on the reasons that mean the work is over' 'logout|prompt_input_exit|other' \
   "$(jq -r '.hooks.SessionEnd[0].matcher' "$config")"
+
+# The directive hook is what makes `/dxos:project` work at all, so it is required too.
+check 'the project directive hook is still wired' '1' \
+  "$(jq -r '[.hooks.UserPromptSubmit[].hooks[] | select(.type == "command") | select(.command | test("track.sh"))] | length' "$config")"
 
 printf '\n%s passed, %s failed\n' "$pass" "$fail"
 [ "$fail" -eq 0 ]
