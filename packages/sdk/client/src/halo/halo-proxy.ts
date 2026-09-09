@@ -159,7 +159,9 @@ export class HaloProxy implements Halo {
     this._credentialsChanged.emit([]);
     const cleanup = subscribeStream(
       this._runtime,
-      this._serviceProvider.rpc['SpacesService.queryCredentials']({ spaceKey: identity.spaceKey! }),
+      this._serviceProvider.rpc['SpacesService.queryCredentials']({
+        spaceKey: requirePublicKey(identity.spaceKey),
+      }),
       {
         onData: (data) => this._credentialsChanged.emit([...this._credentials.get(), data]),
       },

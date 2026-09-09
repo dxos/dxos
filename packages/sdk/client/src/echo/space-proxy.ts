@@ -553,7 +553,7 @@ export class SpaceProxy implements Space, CustomInspectable {
     await runServiceCall(
       this._runtime,
       this._clientServices.rpc['SpacesService.postMessage']({
-        spaceKey: fromPublicKey(this.key),
+        spaceKey: this.key,
         channel,
         message: packJson(message),
       }),
@@ -567,7 +567,7 @@ export class SpaceProxy implements Space, CustomInspectable {
   listen(channel: string, callback: (message: GossipMessage) => void): () => Promise<void> {
     const cleanup = subscribeStream(
       this._runtime,
-      this._clientServices.rpc['SpacesService.subscribeMessages']({ spaceKey: fromPublicKey(this.key), channel }),
+      this._clientServices.rpc['SpacesService.subscribeMessages']({ spaceKey: this.key, channel }),
       {
         onData: (message) => callback(message),
       },
@@ -588,7 +588,7 @@ export class SpaceProxy implements Space, CustomInspectable {
     await runServiceCall(
       this._runtime,
       this._clientServices.rpc['SpacesService.admitContact']({
-        spaceKey: fromPublicKey(this.key),
+        spaceKey: this.key,
         role: SpaceMember_Role.ADMIN,
         contact,
       }),
@@ -604,7 +604,7 @@ export class SpaceProxy implements Space, CustomInspectable {
     return runServiceCall(
       this._runtime,
       this._clientServices.rpc['SpacesService.updateMemberRole']({
-        spaceKey: fromPublicKey(this.key),
+        spaceKey: this.key,
         memberKey: request.memberKey,
         newRole: request.newRole,
       }),
@@ -624,8 +624,8 @@ export class SpaceProxy implements Space, CustomInspectable {
     return runServiceCall(
       this._runtime,
       this._clientServices.rpc['SpacesService.updateMemberRole']({
-        spaceKey: fromPublicKey(this.key),
-        memberKey: fromPublicKey(memberKey),
+        spaceKey: this.key,
+        memberKey,
         newRole: SpaceMember_Role.REMOVED,
       }),
       { label: 'SpacesService.updateMemberRole' },
@@ -679,7 +679,7 @@ export class SpaceProxy implements Space, CustomInspectable {
     const credentials = await runServiceCall(
       this._runtime,
       this._clientServices.rpc['SpacesService.queryCredentials']({
-        spaceKey: fromPublicKey(this.key),
+        spaceKey: this.key,
         noTail: true,
       }).pipe(EffectStream.runCollect),
     );
