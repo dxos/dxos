@@ -2,6 +2,8 @@
 // Copyright 2021 DXOS.org
 //
 
+import { create } from '@bufbuild/protobuf';
+
 import { DeferredTask, Event, Trigger, scheduleTask, scheduleTaskInterval, sleep, synchronized } from '@dxos/async';
 import { Context, ContextDisposedError, cancelWithContext } from '@dxos/context';
 import { ErrorStream } from '@dxos/debug';
@@ -10,7 +12,7 @@ import { PublicKey } from '@dxos/keys';
 import { log, logInfo } from '@dxos/log';
 import { type PeerInfo } from '@dxos/messaging';
 import { CancelledError, ConnectionResetError, ConnectivityError, ProtocolError, TimeoutError } from '@dxos/protocols';
-import { type Signal } from '@dxos/protocols/proto/dxos/mesh/swarm';
+import { type Signal, SignalBatchSchema } from '@dxos/protocols/buf/dxos/mesh/swarm_pb';
 
 import { type SignalMessage, type SignalMessenger } from '../signal';
 import { type Transport, type TransportFactory, type TransportStats } from '../transport';
@@ -376,7 +378,7 @@ export class Connection {
         recipient: this.remoteInfo,
         sessionId: this.sessionId,
         topic: this.topic,
-        data: { signalBatch: { signals } },
+        data: { signalBatch: create(SignalBatchSchema, { signals }) },
       });
     } catch (err) {
       // TODO(nf): determine why instanceof doesn't work here
@@ -403,16 +405,11 @@ export class Connection {
       log('dropping signal for incorrect session id');
       return;
     }
-    invariant(msg.data.signal || msg.data.signalBatch);
     invariant(msg.author.peerKey === this.remoteInfo.peerKey);
     invariant(msg.recipient.peerKey === this.localInfo.peerKey);
 
-    const signals = msg.data.signalBatch ? (msg.data.signalBatch.signals ?? []) : [msg.data.signal];
+    const signals = msg.data.signalBatch ? msg.data.signalBatch.signals : [msg.data.signal];
     for (const signal of signals) {
-      if (!signal) {
-        continue;
-      }
-
       if ([ConnectionState.CREATED, ConnectionState.INITIAL].includes(this.state)) {
         log('buffered signal', { peerId: this.localInfo, remoteId: this.remoteInfo, msg: msg.data });
         this._incomingSignalBuffer.push(signal);

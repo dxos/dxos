@@ -234,8 +234,8 @@ export class OnboardingManager {
 
   private async _queryRecoveryCredentials(): Promise<Credential[]> {
     const credentials = await queryAllCredentials(this._client);
-    return credentials.filter(
-      (credential) => credential.subject.assertion['@type'] === 'dxos.halo.credentials.IdentityRecovery',
+    return credentials.filter((credential) =>
+      credential.subject?.assertion?.typeUrl.endsWith('dxos.halo.credentials.IdentityRecovery'),
     );
   }
 

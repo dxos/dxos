@@ -7,6 +7,8 @@ import { describe, expect, onTestFinished, test } from 'vitest';
 import { Context } from '@dxos/context';
 import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
+import { createBuf, fromTimeframe } from '@dxos/protocols/buf';
+import { FeedMessageSchema } from '@dxos/protocols/buf/dxos/echo/feed_pb';
 import { createStorage } from '@dxos/random-access-storage';
 import { Timeframe } from '@dxos/timeframe';
 
@@ -73,10 +75,10 @@ describe('space/space-protocol', () => {
     await protocol1.addFeed(feed1);
     await protocol2.addFeed(feed2);
 
-    await feed1.append({ timeframe: new Timeframe() });
+    await feed1.append(createBuf(FeedMessageSchema, { timeframe: fromTimeframe(new Timeframe()) }));
     await expect.poll(() => feed2.properties.length).toEqual(1);
 
-    await feed1.append({ timeframe: new Timeframe() });
+    await feed1.append(createBuf(FeedMessageSchema, { timeframe: fromTimeframe(new Timeframe()) }));
     await expect.poll(() => feed2.properties.length).toEqual(2);
 
     await builder.close();
@@ -114,10 +116,10 @@ describe('space/space-protocol', () => {
     await protocol1.addFeed(feed1);
     await protocol2.addFeed(feed2);
 
-    await feed1.append({ timeframe: new Timeframe() });
+    await feed1.append(createBuf(FeedMessageSchema, { timeframe: fromTimeframe(new Timeframe()) }));
     await expect.poll(() => feed2.properties.length).toEqual(1);
 
-    await feed1.append({ timeframe: new Timeframe() });
+    await feed1.append(createBuf(FeedMessageSchema, { timeframe: fromTimeframe(new Timeframe()) }));
     await expect.poll(() => feed2.properties.length).toEqual(2);
 
     await builder.close();

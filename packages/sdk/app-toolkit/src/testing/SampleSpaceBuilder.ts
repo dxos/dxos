@@ -2,12 +2,14 @@
 // Copyright 2026 DXOS.org
 //
 
+import { create } from '@bufbuild/protobuf';
 import * as Effect from 'effect/Effect';
 
 import { Client } from '@dxos/client';
 import { TestBuilder } from '@dxos/client/testing';
 import { Config } from '@dxos/config';
 import { type Type } from '@dxos/echo';
+import { ProfileDocumentSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { SpacesService } from '@dxos/protocols/rpc';
 
 import * as SampleSpace from '../sample/SampleSpace';
@@ -53,7 +55,9 @@ export const buildArchive = <Phases extends SampleSpace.PhaseMap, A>(
   Effect.gen(function* () {
     const client = yield* ephemeralClient;
     yield* Effect.promise(() =>
-      client.halo.createIdentity({ displayName: options.identity ?? `${definition.space.name} builder` }),
+      client.halo.createIdentity(
+        create(ProfileDocumentSchema, { displayName: options.identity ?? `${definition.space.name} builder` }),
+      ),
     );
     yield* Effect.promise(() => client.addTypes([...definition.schemas, ...(options.schemas ?? [])]));
 
