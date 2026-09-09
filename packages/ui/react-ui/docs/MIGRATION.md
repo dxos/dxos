@@ -677,7 +677,11 @@ clip-and-sheet) is a separate PR. What changed:
   nested and dismisses it when the other leaves; `onRequestDismiss` vetoes a request whose target layer
   does not contain the sidebar, as `Drawer.Root` does. `TestSwipeToDismiss` opens both on mount and
   checks the complementary sidebar survives the navigation sidebar's swipe.
-- `onOpenChange` now handles `open: true` (the swipe area's release), not only dismissal.
+- The machine is open only while the sidebar is `expanded`: below `lg` that is the one state on
+  screen, and `collapsed` is the resting state there (the deck's default, where the overlay sends a
+  sidebar). A dismissal therefore returns to `collapsed`, not `closed` (the dialog port went to
+  `closed`, which at `lg` is the no-rail state), and the swipe area can open from `collapsed`.
+  `onOpenChange` handles `open: true` (the swipe area's release), not only dismissal.
 - `aria-label` is on the element rather than the machine, so the `lg` landmark carries it too.
 
 `Main.stories.tsx` pins it in the vitest browser at an 800px viewport: swipe-to-dismiss on both sides
