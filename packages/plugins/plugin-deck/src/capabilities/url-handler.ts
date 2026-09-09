@@ -27,6 +27,7 @@ import { isTauri } from '@dxos/util';
 
 import { CompanionViewState, DeckCapabilities, DeckSchema } from '#types';
 
+import { applyActive } from '../operations/apply';
 import {
   getCandidateEntityIds,
   getRenderedPlanks,
@@ -96,8 +97,12 @@ export default Capability.makeModule(
         { concurrency: 'unbounded' },
       );
 
-    const provideServices = <A, E>(effect: Effect.Effect<A, E, Operation.Service>) =>
-      effect.pipe(Effect.provideService(Operation.Service, operationService));
+    const capabilityService = yield* Capability.Service;
+    const provideServices = <A, E>(effect: Effect.Effect<A, E, Operation.Service | Capability.Service>) =>
+      effect.pipe(
+        Effect.provideService(Operation.Service, operationService),
+        Effect.provideService(Capability.Service, capabilityService),
+      );
 
     // Helper to get computed deck from state.
     const getDeck = () => {
@@ -331,9 +336,9 @@ export default Capability.makeModule(
         return;
       }
 
-      // `Set` already means "override the deck's active list wholesale" — exactly a URL-driven
-      // restore, for one plank or many, with no separate disposition to invent.
-      yield* urlApplication.applying(Operation.invoke(LayoutOperation.Set, { subject: plankIds }));
+      // The projection writes the deck directly rather than invoking `Set`: once `Set` navigates, an
+      // operation that navigates and a projection that applies a navigation would call each other.
+      yield* urlApplication.applying(applyActive(plankIds));
 
       // Attention is never serialized; on load it defaults to the last plank in the chain — except when
       // the chain carries a companion, whose position *is* serialized and which only renders beside the
