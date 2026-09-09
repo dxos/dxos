@@ -4,7 +4,7 @@
 
 import { type Event } from '@dxos/async';
 import type { Stream } from '@dxos/async';
-import { getBufService } from '@dxos/protocols/buf-service';
+import { type BufService, getBufService } from '@dxos/protocols/buf-service';
 import type { Invitation } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 import type { LogEntry, QueryLogsRequest } from '@dxos/protocols/buf/dxos/client/logging_pb';
 import type { QueryInvitationsResponse } from '@dxos/protocols/buf/dxos/client/services_pb';
@@ -48,7 +48,7 @@ import type {
   Presentation,
   ProfileDocument,
 } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
-import type { AppService, ShellService } from '@dxos/protocols/buf/dxos/iframe_pb';
+import { AppService as AppServiceDesc, ShellService as ShellServiceDesc } from '@dxos/protocols/buf/dxos/iframe_pb';
 import type { GossipMessage } from '@dxos/protocols/buf/dxos/mesh/teleport/gossip_pb';
 import type {
   DataService as RpcDataService,
@@ -386,6 +386,8 @@ export interface ClientServicesProvider {
   close(): Promise<unknown>;
 }
 
+type AppService = BufService<typeof AppServiceDesc>;
+
 export type AppServiceBundle = {
   AppService: AppService;
 };
@@ -393,6 +395,8 @@ export type AppServiceBundle = {
 export const appServiceBundle: ServiceBundle<AppServiceBundle> = {
   AppService: getBufService<AppService>('dxos.iframe.AppService'),
 };
+
+type ShellService = BufService<typeof ShellServiceDesc>;
 
 export type ShellServiceBundle = {
   ShellService: ShellService;

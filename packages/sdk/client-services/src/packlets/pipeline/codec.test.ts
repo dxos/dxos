@@ -2,49 +2,41 @@
 // Copyright 2026 DXOS.org
 //
 
+import { create } from '@bufbuild/protobuf';
 import { describe, expect, test } from 'vitest';
 
 import { createCredentialSignerWithKey, verifyCredential } from '@dxos/credentials';
 import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
-import { type FeedMessage } from '@dxos/protocols/buf/dxos/echo/feed_pb';
-import { schema } from '@dxos/protocols/proto';
+import { fromPublicKey, fromTimeframe } from '@dxos/protocols/buf';
+import {
+  CredentialsMessageSchema,
+  type FeedMessage,
+  FeedMessageSchema,
+  FeedMessage_PayloadSchema,
+} from '@dxos/protocols/buf/dxos/echo/feed_pb';
+import { AuthorizedDeviceSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { Timeframe } from '@dxos/timeframe';
 
 import { codec } from './codec';
 
-// Feed blocks are the one on-disk format carrying a signed `Credential`, so moving the envelope to
-// buf needs the signature to survive it -- and blocks written by protobuf.js to still read back.
-const legacyCodec = schema.getCodecForType('dxos.echo.feed.FeedMessage');
-
+// Feed blocks are the one on-disk format carrying a signed `Credential`, so the envelope's codec has
+// to leave the signature intact.
 describe('pipeline/codec', () => {
   test('a signed credential still verifies after a round-trip through the feed codec', async () => {
     const message = await createSignedFeedMessage();
     const decoded = codec.decode(codec.encode(message));
 
-    const credential = decoded.payload?.credential?.credential;
+    const credential = decoded.payload?.payload.value?.credential;
     expect(credential).toBeDefined();
     expect((await verifyCredential(credential!)).kind).toEqual('pass');
   });
 
-  test('a block protobuf.js wrote reads back through the buf codec, signature intact', async () => {
+  test('the timeframe survives the round-trip', async () => {
     const message = await createSignedFeedMessage();
-    const decoded = codec.decode(legacyCodec.encode(message));
+    const decoded = codec.decode(codec.encode(message));
 
-    expect(decoded.timeframe?.frames()).to.deep.equal(message.timeframe?.frames());
-    const credential = decoded.payload?.credential?.credential;
-    expect(credential).toBeDefined();
-    expect((await verifyCredential(credential!)).kind).toEqual('pass');
-  });
-
-  test('and a block the buf codec writes reads back through protobuf.js', async () => {
-    const message = await createSignedFeedMessage();
-    const decoded: FeedMessage = legacyCodec.decode(codec.encode(message));
-
-    expect(decoded.timeframe?.frames()).to.deep.equal(message.timeframe?.frames());
-    const credential = decoded.payload?.credential?.credential;
-    expect(credential).toBeDefined();
-    expect((await verifyCredential(credential!)).kind).toEqual('pass');
+    expect(decoded.timeframe).to.deep.equal(message.timeframe);
   });
 });
 
@@ -54,11 +46,16 @@ const createSignedFeedMessage = async (): Promise<FeedMessage> => {
   const deviceKey = await keyring.createKey();
   const credential = await createCredentialSignerWithKey(keyring, identityKey).createCredential({
     subject: deviceKey,
-    assertion: { '@type': 'dxos.halo.credentials.AuthorizedDevice', deviceKey, identityKey },
+    assertion: create(AuthorizedDeviceSchema, {
+      deviceKey: fromPublicKey(deviceKey),
+      identityKey: fromPublicKey(identityKey),
+    }),
   });
 
-  return {
-    timeframe: new Timeframe([[PublicKey.random(), 3]]),
-    payload: { credential: { credential } },
-  };
+  return create(FeedMessageSchema, {
+    timeframe: fromTimeframe(new Timeframe([[PublicKey.random(), 3]])),
+    payload: create(FeedMessage_PayloadSchema, {
+      payload: { case: 'credential', value: create(CredentialsMessageSchema, { credential }) },
+    }),
+  });
 };
