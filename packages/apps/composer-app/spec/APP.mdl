@@ -45,7 +45,7 @@ Conventions shared by every test here:
 test QA-1: Spaces and documents
   desc: The smallest journey through the app — a space, three documents, one deletion, and what survives.
   actors: both
-  status: failing           # 2026-09-09, smoke run
+  status: failing           # 2026-09-09, smoke run 2
   given:
     - defaultSpace: the space flagged `default` in the snapshot, SPACE_READY
     - no space whose name starts with "QA:" exists — ABORT rather than deleting one this test did not create
@@ -144,10 +144,11 @@ test QA-1: Spaces and documents
       assert: return !$snapshot.spaces.some((s) => s.id === $space.id)
       note: |
         Judge by identity: the snapshot hides the name of a space that is not SPACE_READY, so a name
-        check passes against a space that is merely closed. Where EDGE signaling is unreachable (the
-        cloud sandbox without proxy flags), `space.delete` times out after 10 s leaving the swarm and the
-        space stays listed as SPACE_CLOSED — tombstoned in the metadata store, so a retry is a no-op and
-        only a reload drops it. Report it against this step; do not retry more than once.
+        check passes against a space that is merely closed. Any failure while closing the space strands
+        it: the tombstone is written before `space.close()`, so a timeout leaving the swarm (EDGE
+        unreachable) or a dropped socket mid-call (EDGE reachable but disconnecting) both leave it
+        listed as SPACE_CLOSED, and the tombstone makes the retry a no-op — only a reload drops it.
+        Report it against this step; do not retry more than once.
     - name: Return to the default space
       do: Pick the default space in the space list.
       invoke: org.dxos.operation.appToolkit.switchWorkspace { subject: "root/$given.defaultSpace.id" }

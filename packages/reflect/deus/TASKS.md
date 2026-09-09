@@ -98,7 +98,7 @@ Later (tracked, not started):
 - [ ] **Spec-sync sweep** over all plugins in batches of 8 (`sweep 8`), then incremental. Inputs
       from the PR #12986 review (CodeRabbit, 2026-09-08), all pre-existing content the rename only
       exposed: assistant QA-1 `op:CreateChat` lacks its `db` input and asserts `typeof $result ===
-    'undefined' || true`; brain QA-1 dropped the T-5 Enrich-to-Query coverage; chess QA-1 passes SAN
+  'undefined' || true`; brain QA-1 dropped the T-5 Enrich-to-Query coverage; chess QA-1 passes SAN
       strings to `op:submitMove` and reads `$result.pgn`; file T-5 asserts an `<iframe>` against a
       canvas contract; inbox QA-1's `after` uses an unbound `$created`; slack QA-1's `after` passes
       `$discovered` and `$given.space` to `removeObjects`; space's spec declares no
