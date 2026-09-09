@@ -56,9 +56,15 @@ export const SyncStatusIndicator = ({
   return (
     <Popover.Root>
       <Popover.Trigger asChild>
-        {/* `data-status` so a test can wait for replication to settle without reading the label,
-            which is translated. */}
-        <StatusBar.Item data-testid='spacePlugin.syncStatus' data-status={status}>
+        {/* Exposed for tests, which cannot read the label (translated). `data-needs-upload` is
+            separate from `data-status` on purpose: a peer that has pushed everything still reports
+            `downloading` while it pulls, so the composite status is the wrong signal for "my writes
+            have left". */}
+        <StatusBar.Item
+          data-testid='spacePlugin.syncStatus'
+          data-status={status}
+          data-needs-upload={String(needsToUpload)}
+        >
           {/* The icon and label carry the status; the indicator keeps a single colour in every state. */}
           <IconButton variant='ghost' icon={icon} iconOnly label={t(`${status}.label`)} />
         </StatusBar.Item>

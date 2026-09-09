@@ -336,14 +336,18 @@ export class AppManager {
   }
 
   /**
-   * Waits for replication to settle, i.e. for this peer to have nothing left to push or pull.
+   * Waits for this peer to have nothing left to push.
    *
    * A test that shares a just-created space needs this before inviting: `createSpace` returns once
    * the space is locally ready, not once it has reached EDGE, so asserting that a new device
    * inherits it otherwise races a precondition the test never established (DX-1264).
+   *
+   * Gated on `data-needs-upload` rather than a `remote-synced` status: that status also requires
+   * nothing left to *download*, which is irrelevant to whether our own writes have left and can stay
+   * true for unrelated documents, failing the wait for a peer that has in fact pushed everything.
    */
-  async waitForSync(timeout = 60_000): Promise<void> {
-    await expect(this.page.getByTestId('spacePlugin.syncStatus')).toHaveAttribute('data-status', 'remote-synced', {
+  async waitForUploadsSettled(timeout = 60_000): Promise<void> {
+    await expect(this.page.getByTestId('spacePlugin.syncStatus')).toHaveAttribute('data-needs-upload', 'false', {
       timeout,
     });
   }
