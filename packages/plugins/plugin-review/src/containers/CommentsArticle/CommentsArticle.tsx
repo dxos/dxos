@@ -528,7 +528,7 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
       >
         <Panel.Toolbar asChild>
           <Toolbar.Root>
-            <Tabs.Tablist classNames='p-0'>
+            <Tabs.Tablist>
               <Tabs.Button classNames='text-sm' value='unresolved'>
                 {t('show-unresolved.label')}
               </Tabs.Button>
