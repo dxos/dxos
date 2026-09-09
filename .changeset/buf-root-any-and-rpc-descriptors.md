@@ -24,8 +24,16 @@ which neither codec substituted at the schema root, so a serialized transport wr
 and the payload never reached the wire. A gossip channel's payload now travels as JSON packed into
 that `Any` by `packJson`.
 
+Resolve a packed `Any`'s type name by its bare name at every comparison and lookup. `anyPack`
+writes a `type.googleapis.com/` prefix while the buf registry and the legacy codec both key on the
+bare type name, so a check against the raw `type_url` never matched. This fixes
+`halo.queryCredentials({ type })` returning no credentials — which broke default-space resolution
+and the agent-hosting authorization lookups — and the credential signing shape, which had been
+signing an opaque packed blob instead of the substituted shape.
+
 The credential signature format is unchanged. A signature covers the canonical form of the
 credential's substituted shape rather than its wire bytes, so the shape is reproduced from the buf
-descriptor in `@dxos/credentials`, and a checked-in golden vector — a credential signed by an
-earlier build, with its exact signing payload — pins the format so a future change cannot silently
-invalidate previously-issued credentials.
+descriptor in `@dxos/credentials`. A checked-in golden vector — a credential signed by an earlier
+build, with its exact signing payload — pins the format for previously-issued credentials, and a
+companion test pins the flattened shape for credentials minted by this build, which the golden
+vector alone cannot catch.
