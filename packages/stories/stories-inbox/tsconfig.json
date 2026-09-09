@@ -61,9 +61,6 @@
       "path": "../../core/echo/echo-react"
     },
     {
-      "path": "../../core/protocols"
-    },
-    {
       "path": "../../plugins/plugin-assistant"
     },
     {

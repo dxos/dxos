@@ -7204,9 +7204,6 @@ importers:
 
   packages/e2e/proto-guard:
     dependencies:
-      '@bufbuild/protobuf':
-        specifier: 'catalog:'
-        version: 2.11.0
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
@@ -19086,9 +19083,6 @@ importers:
       '@dxos/plugin-markdown':
         specifier: workspace:*
         version: link:../../plugins/plugin-markdown
-      '@dxos/protocols':
-        specifier: workspace:*
-        version: link:../../core/protocols
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../sdk/react-client
@@ -19460,9 +19454,6 @@ importers:
       '@dxos/plugin-routine':
         specifier: workspace:*
         version: link:../../plugins/plugin-routine
-      '@dxos/protocols':
-        specifier: workspace:*
-        version: link:../../core/protocols
       '@dxos/random':
         specifier: workspace:*
         version: link:../../common/random

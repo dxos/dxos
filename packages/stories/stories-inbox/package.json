@@ -30,7 +30,6 @@
     "@dxos/plugin-connector": "workspace:*",
     "@dxos/plugin-debug": "workspace:*",
     "@dxos/plugin-routine": "workspace:*",
-    "@dxos/protocols": "workspace:*",
     "@dxos/random": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui": "workspace:*",

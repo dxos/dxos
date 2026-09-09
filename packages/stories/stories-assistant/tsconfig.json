@@ -65,9 +65,6 @@
       "path": "../../core/echo/echo-query"
     },
     {
-      "path": "../../core/protocols"
-    },
-    {
       "path": "../../plugins/plugin-assistant"
     },
     {
