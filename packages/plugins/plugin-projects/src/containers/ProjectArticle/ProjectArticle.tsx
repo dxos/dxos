@@ -149,7 +149,9 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
     <Tabs.Root asChild orientation='horizontal' value={tab} onValueChange={(value) => setTab(value as Tab)}>
       <Panel.Root role={role}>
         <Panel.Toolbar classNames='flex items-center'>
-          <Tabs.Tablist classNames='w-auto p-0'>
+          {/* The tablist never yields: the action toolbar's own `w-full` would otherwise squeeze it
+              to zero and its scroll container would clip the tabs. */}
+          <Tabs.Tablist classNames='w-auto shrink-0 p-0'>
             <Tabs.Button value='overview' data-testid='projectsPlugin.tab.overview'>
               {t('overview.label')}
             </Tabs.Button>
@@ -157,7 +159,7 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
               {t('tasks.label')}
             </Tabs.Button>
           </Tabs.Tablist>
-          <ActionToolbar {...actions} attendableId={attendableId} classNames='grow' />
+          <ActionToolbar {...actions} attendableId={attendableId} classNames='w-auto min-w-0 grow' />
         </Panel.Toolbar>
         <Panel.Content classNames='flex flex-col'>
           {/* Rendered by hand rather than through `Tabs.Panel`: Radix mounts its content

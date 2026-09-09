@@ -286,6 +286,12 @@ export const Sections: Story = {
     await expect(canvas.findByText('Artifacts', undefined, { timeout: 10_000 })).resolves.toBeTruthy();
     await findPainted(canvas, ARTIFACT_TITLE);
 
+    // The tabs are painted, not just present: a `w-full` sibling toolbar once squeezed the tablist
+    // to zero width, and its scroll container clipped both buttons while every query still found them.
+    const tablist = (await canvas.findByRole('tablist', undefined, { timeout: 10_000 })) as HTMLElement;
+    await waitFor(() => expect(tablist.clientWidth).toBeGreaterThanOrEqual(tablist.scrollWidth), { timeout: 10_000 });
+    await expect(tablist.getBoundingClientRect().width).toBeGreaterThan(0);
+
     // Tasks: behind its own toolbar tab, so switch to it. The task title is the load-bearing
     // assertion — an invalid surface id is dropped silently, leaving an empty panel.
     await showTab(canvas, 'tasks');
