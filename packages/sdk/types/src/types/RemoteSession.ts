@@ -8,6 +8,7 @@ import * as Schema from 'effect/Schema';
 
 import { Annotation, DXN, Format, Obj, Type } from '@dxos/echo';
 import { LabelAnnotation } from '@dxos/echo/Annotation';
+import { type ForeignKey } from '@dxos/echo/Key';
 
 /**
  * Where a session is in its life. `running` and `finished` are the two the harness can report on
@@ -25,13 +26,18 @@ export const StateOptions: { id: State; title: string; color: string; icon: stri
   { id: 'unknown', title: 'Unknown', color: 'gray', icon: 'ph--question--regular' },
 ];
 
+/** The foreign system a session's identifier belongs to — the coding-agent harness itself. */
+export const SOURCE = 'claude.ai/code';
+
 /**
  * A coding-agent session — a Claude Code run — reflected into the graph so the work an agent is
  * doing is visible next to the work it was asked to do.
  *
- * `sessionId` is the foreign key: it is the harness's own session identifier, which every hook
- * event carries, so a hook can address this object without first looking it up by anything softer
- * than an id.
+ * The harness's session identifier is a **foreign key**, not a property: the session is a record
+ * that lives in another system, and `Obj.getMeta().keys` is where ECHO already keeps that
+ * correspondence — the same place sync provenance lives for every other imported object. It also
+ * means a hook can address this object by the one identifier every hook event carries, through
+ * `Filter.foreignKeys`, without a property whose uniqueness nothing enforces.
  *
  * `lastCheckedIn` is separate from `updated` for the reason the `unknown` state exists: a session
  * that stops reporting leaves `state: 'running'` behind forever, and only a heartbeat distinguishes
@@ -39,9 +45,6 @@ export const StateOptions: { id: State; title: string; color: string; icon: stri
  */
 export class RemoteSession extends Type.makeObject<RemoteSession>(DXN.make('org.dxos.type.remoteSession', '0.1.0'))(
   Schema.Struct({
-    /** Harness session identifier; the foreign key every hook event carries. */
-    sessionId: Schema.String.annotate({ title: 'Session ID' }),
-
     /** Human-readable name for the run — normally the task it was started for. */
     title: Schema.optional(Schema.String.annotate({ title: 'Title' })),
 
@@ -68,13 +71,26 @@ export class RemoteSession extends Type.makeObject<RemoteSession>(DXN.make('org.
     worktree: Schema.optional(Schema.String.annotate({ title: 'Worktree' })),
   }).pipe(
     Schema.annotate({ title: 'Remote Session' }),
-    LabelAnnotation.set(['title', 'sessionId']),
+    LabelAnnotation.set(['title']),
     Annotation.IconAnnotation.set({ icon: 'ph--robot--regular', hue: 'indigo' }),
   ),
 ) {}
 
-/** Factory wrapper around `Obj.make` for {@link RemoteSession}. */
-export const make = (props: Obj.MakeProps<typeof RemoteSession>): RemoteSession => Obj.make(RemoteSession, props);
+/** The foreign key for a harness session id, as `Filter.foreignKeys` and `Obj.Meta` both take it. */
+export const key = (sessionId: string): ForeignKey => ({ source: SOURCE, id: sessionId });
+
+/**
+ * Factory for {@link RemoteSession}, taking the harness session id and filing it as the object's
+ * foreign key — the id is not a property, so it cannot be set any other way.
+ */
+export const make = ({
+  sessionId,
+  ...props
+}: Obj.MakeProps<typeof RemoteSession> & { sessionId: string }): RemoteSession =>
+  Obj.make(RemoteSession, { ...props, [Obj.Meta]: { keys: [key(sessionId)] } });
+
+/** The harness session id this object stands for, read back off its foreign keys. */
+export const getSessionId = (session: RemoteSession): string | undefined => Obj.getKeys(session, SOURCE).at(0)?.id;
 
 /** Terminal states: a session in one of these is not expected to check in again. */
 export const isTerminal = (session: RemoteSession): boolean =>

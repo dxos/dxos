@@ -15,11 +15,14 @@ const handler: Operation.WithHandler<typeof RemoteSessionOperation.RecordSession
     Operation.withHandler(
       Effect.fnUntraced(function* ({ sessionId, title, state, lastMessage, repo, branch, worktree }) {
         const now = new Date().toISOString();
-        // Oldest id wins, and the rest are removed below. Nothing constrains uniqueness on
-        // `sessionId`, so two hooks firing their first report at once both see no row and both
-        // create one; converging deterministically keeps every later writer on one object.
+        // Matched on the foreign key, which is where the harness session id lives — there is no
+        // `sessionId` property to filter on. Oldest id wins and the rest are removed below:
+        // nothing constrains uniqueness, so two hooks firing their first report at once both see
+        // no row and both create one, and converging deterministically keeps later writers on one.
         const matches = [
-          ...(yield* Database.query(Query.select(Filter.type(RemoteSession.RemoteSession, { sessionId }))).run),
+          ...(yield* Database.query(
+            Query.select(Filter.foreignKeys(RemoteSession.RemoteSession, [RemoteSession.key(sessionId)])),
+          ).run),
         ].sort((left, right) => left.id.localeCompare(right.id));
         const [existing, ...duplicates] = matches;
 
@@ -39,7 +42,7 @@ const handler: Operation.WithHandler<typeof RemoteSessionOperation.RecordSession
             }),
           );
           yield* Database.flush();
-          return { session, created: true };
+          return { session, sessionId, created: true };
         }
 
         // Duplicates carry history, not noise: each was found by some writer and took its own
@@ -108,7 +111,7 @@ const handler: Operation.WithHandler<typeof RemoteSessionOperation.RecordSession
           yield* Database.remove(duplicate);
         }
         yield* Database.flush();
-        return { session: existing, created: false };
+        return { session: existing, sessionId, created: false };
       }),
     ),
   );

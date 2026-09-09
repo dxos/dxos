@@ -37,7 +37,9 @@ export const RecordSession = Operation.make({
   },
   services: [Database.Service],
   input: Schema.Struct({
-    sessionId: Schema.String.annotate({ description: "The harness session id; the object's foreign key." }),
+    sessionId: Schema.String.annotate({
+      description: "The harness session id, filed as the object's foreign key rather than a property.",
+    }),
     title: Schema.optional(Schema.String),
     state: Schema.optional(RemoteSession.State).annotate({
       description: 'Defaults to running on create; left unchanged on update when omitted.',
@@ -50,6 +52,8 @@ export const RecordSession = Operation.make({
   }),
   output: Schema.Struct({
     session: Type.getSchema(RemoteSession.RemoteSession),
+    /** Echoed back because the id is a foreign key, not a field of the object. */
+    sessionId: Schema.String,
     /** True when this call created the object, so a caller can tell a first report from a check-in. */
     created: Schema.Boolean,
   }),
@@ -70,6 +74,12 @@ export const ListSessions = Operation.make({
     limit: Schema.optional(Schema.Number).annotate({ description: 'Page size (default 50, max 200).' }),
   }),
   output: Schema.Struct({
-    sessions: Schema.Array(Type.getSchema(RemoteSession.RemoteSession)),
+    /** Each row pairs the object with its foreign-key session id, which is not a field of it. */
+    sessions: Schema.Array(
+      Schema.Struct({
+        sessionId: Schema.optional(Schema.String),
+        session: Type.getSchema(RemoteSession.RemoteSession),
+      }),
+    ),
   }),
 }).pipe(Operation.mutation('none'));

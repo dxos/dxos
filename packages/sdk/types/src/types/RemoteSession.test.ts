@@ -11,7 +11,7 @@ import * as RemoteSession from './RemoteSession';
 import * as Task from './Task';
 
 describe('RemoteSession', () => {
-  test('carries the harness session id as its foreign key', ({ expect }) => {
+  test('carries the harness session id as a foreign key, not a property', ({ expect }) => {
     const session = RemoteSession.make({
       sessionId: 'session_016eid',
       title: 'Land the release PR',
@@ -19,7 +19,10 @@ describe('RemoteSession', () => {
       started: new Date().toISOString(),
     });
 
-    expect(session.sessionId).toBe('session_016eid');
+    expect(Obj.getKeys(session, RemoteSession.SOURCE)).toEqual([
+      { source: RemoteSession.SOURCE, id: 'session_016eid' },
+    ]);
+    expect(RemoteSession.getSessionId(session)).toBe('session_016eid');
     expect(Obj.getTypename(session)).toBe('org.dxos.type.remoteSession');
   });
 

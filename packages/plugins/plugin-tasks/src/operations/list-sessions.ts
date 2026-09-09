@@ -25,14 +25,14 @@ const handler: Operation.WithHandler<typeof RemoteSessionOperation.ListSessions>
   RemoteSessionOperation.ListSessions.pipe(
     Operation.withHandler(
       Effect.fnUntraced(function* ({ state, sessionId, limit }) {
-        // A lookup by id is pushed into the query — that is the one case where the whole result set
-        // is not wanted and the filter shape stays constant. The optional `state` narrows in memory
-        // instead: built from optional inputs the filter becomes a union of shapes, which erases the
-        // element type the output schema needs.
+        // A lookup by session id is pushed into the query as a foreign-key filter — that is where
+        // the harness id lives, and it is the one case where the whole result set is not wanted.
+        // The optional `state` narrows in memory instead: built from optional inputs the filter
+        // becomes a union of shapes, which erases the element type the output schema needs.
         const objects = yield* Database.query(
           Query.select(
             sessionId
-              ? Filter.type(RemoteSession.RemoteSession, { sessionId })
+              ? Filter.foreignKeys(RemoteSession.RemoteSession, [RemoteSession.key(sessionId)])
               : Filter.type(RemoteSession.RemoteSession),
           ),
         ).run;
@@ -43,7 +43,9 @@ const handler: Operation.WithHandler<typeof RemoteSessionOperation.ListSessions>
           .sort((left, right) => (left.started < right.started ? 1 : left.started > right.started ? -1 : 0))
           .slice(0, pageSize(limit));
 
-        return { sessions };
+        // Paired with the id rather than carrying it inside the object: the id is the object's
+        // foreign key, and a caller reading the list still has to know which session each row is.
+        return { sessions: sessions.map((session) => ({ sessionId: RemoteSession.getSessionId(session), session })) };
       }),
     ),
   );

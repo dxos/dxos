@@ -269,53 +269,35 @@ survive being read every turn.
 > Both now match only on the **first line**, where a slash command must appear
 > and prose cannot reach. Any new marker should start there.
 
-### Reporting the session to Composer (opt-in, not wired here)
+### Reporting the session to Composer
 
-`org.dxos.operation.tasks.recordSession` upserts a `RemoteSession` object keyed on the harness
-`session_id`, so a session can report itself into a space. The hooks that would drive it are
-**deliberately not in this `settings.json`**: the server they call needs a Composer account, so
-wiring them repo-wide would fire a failing authenticated call on every contributor's every turn.
-Add them to your own `.claude/settings.local.json`:
+The `dxos` plugin ships three `mcp_tool` hooks (`tools/claude/plugins/dxos/hooks/hooks.json`) that
+call `org.dxos.operation.tasks.recordSession` through the bundled `plugin:dxos:composer` server,
+upserting a `RemoteSession` object keyed on the harness `session_id`:
 
-```json
-{
-  "hooks": {
-    "UserPromptSubmit": [
-      { "hooks": [{ "type": "mcp_tool", "server": "plugin:dxos:composer", "tool": "invoke-operation",
-        "input": { "key": "org.dxos.operation.tasks.recordSession",
-                   "input": { "sessionId": "${session_id}", "worktree": "${cwd}" } } }] }
-    ],
-    "Stop": [
-      { "hooks": [{ "type": "mcp_tool", "server": "plugin:dxos:composer", "tool": "invoke-operation",
-        "input": { "key": "org.dxos.operation.tasks.recordSession",
-                   "input": { "sessionId": "${session_id}", "lastMessage": "${last_assistant_message}" } } }] }
-    ],
-    "SessionEnd": [
-      { "matcher": "logout|prompt_input_exit|other",
-        "hooks": [{ "type": "mcp_tool", "server": "plugin:dxos:composer", "tool": "invoke-operation",
-          "input": { "key": "org.dxos.operation.tasks.recordSession",
-                     "input": { "sessionId": "${session_id}", "state": "finished" } } }] }
-    ]
-  }
-}
-```
+| Event | Sends | Why there |
+| --- | --- | --- |
+| `UserPromptSubmit` | `sessionId`, `cwd` | The session's heartbeat, and its open. **Not `SessionStart`** — an `mcp_tool` hook needs an already-connected server and `SessionStart` fires before the connection exists, so it can only answer "not connected". The upsert makes the first prompt indistinguishable from a later check-in. |
+| `Stop` | `sessionId`, `${last_assistant_message}` | The turn's final message becomes the object's prose `lastMessage` — the cheapest honest summary that does not read the transcript. |
+| `SessionEnd`, matched `logout\|prompt_input_exit\|other` | `sessionId`, `state: finished` | Its `resume` and `clear` reasons fire while the user is still working, so a blanket close would mark a paused session finished. |
 
-Five things decided that shape, each a constraint rather than a preference:
+They live in the plugin rather than this `settings.json` because the plugin is what bundles the
+server they call: installing it is the consent, and a contributor who has not installed it fires
+nothing. Three details are load-bearing:
 
-- **The call goes through the server's dispatcher.** `composer.dxos.network/mcp` exposes
+- **The call goes through the server's dispatcher.** `composer.dxos.network/mcp` advertises
   `queryOperations` / `invokeOperation` / `loadSkill` / `whoami`, not one tool per verb, so the
-  operation key is an argument. A host that projects verbs individually names this one
-  `tasks-record-session` — hyphens, from `Operation.toolNameFromKey`, never underscores.
-- **Not `SessionStart`.** An `mcp_tool` hook needs an already-connected server and `SessionStart`
-  fires before connection, so it can only answer "not connected". The first `UserPromptSubmit` is
-  the earliest reliable open, and the upsert makes it indistinguishable from a later check-in.
+  operation key is an argument to `invokeOperation`. (A host that projects verbs individually would
+  name this one `tasks-record-session` — hyphens, from `Operation.toolNameFromKey`.)
 - **The heartbeat sends no `state`.** A prompt says the session is alive, not what it is doing;
-  sending `running` every turn would resurrect a session someone had marked `failed`.
-- **`SessionEnd` is matched, not blanket.** Its `resume` and `clear` reasons fire while the user is
-  still working, and closing on those would mark a paused session finished.
-- **Nothing depends on the close landing.** `SessionEnd` cannot block and a reclaimed cloud
-  container never fires it, which is why the type carries `lastCheckedIn` and an `unknown` state:
-  readers age a stale `running` session out by its heartbeat, never by trusting a close event.
+  sending `running` every turn would fight the terminal state a close already wrote.
+- **No `spaceId` is passed**, so the write lands in the server's session default. A repo that wants
+  its sessions in a specific space should drive the verb through `/dxos:project`, whose directive
+  resolves the committed binding — a hook cannot read a file.
+
+Nothing depends on the close landing: `SessionEnd` cannot block and a reclaimed cloud container
+never fires it, which is why the type carries `lastCheckedIn` and an `unknown` state — readers age
+a stale `running` session out by its heartbeat rather than trusting a close event.
 
 ### Commands
 

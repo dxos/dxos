@@ -30,6 +30,7 @@ describe('report-session', () => {
       const second = yield* reportSession.handler({ sessionId: 'session_abc', lastMessage: 'Tests pass.' });
       expect(second.created).toBe(false);
       expect(second.session.id).toBe(first.session.id);
+      expect(second.sessionId).toBe('session_abc');
       expect(second.session.lastMessage).toBe('Tests pass.');
       // Unsupplied fields survive: each hook reports only what its event knows.
       expect(second.session.title).toBe('Land the PR');
@@ -93,7 +94,7 @@ describe('report-session', () => {
 
       const { sessions } = yield* listSessions.handler({ sessionId: 'session_dup' });
       expect(sessions).toHaveLength(1);
-      expect(sessions[0]!.title).toBe('Survivor');
+      expect(sessions[0]!.session.title).toBe('Survivor');
     }).pipe(Effect.provide(TestDatabaseLayer({ types }))),
   );
 
@@ -146,7 +147,7 @@ describe('report-session', () => {
       yield* reportSession.handler({ sessionId: 'session_one', title: 'One' });
       yield* reportSession.handler({ sessionId: 'session_two', title: 'Two' });
       const { sessions } = yield* listSessions.handler({});
-      expect(sessions.map((session) => session.sessionId).sort()).toEqual(['session_one', 'session_two']);
+      expect(sessions.map((row) => row.sessionId).sort()).toEqual(['session_one', 'session_two']);
     }).pipe(Effect.provide(TestDatabaseLayer({ types }))),
   );
 
@@ -181,11 +182,11 @@ describe('list-sessions', () => {
       yield* reportSession.handler({ sessionId: 'session_b', state: 'finished' });
 
       const running = yield* listSessions.handler({ state: 'running' });
-      expect(running.sessions.map((session) => session.sessionId)).toEqual(['session_a']);
+      expect(running.sessions.map((row) => row.sessionId)).toEqual(['session_a']);
 
       const byId = yield* listSessions.handler({ sessionId: 'session_b' });
       expect(byId.sessions).toHaveLength(1);
-      expect(byId.sessions[0]!.state).toBe('finished');
+      expect(byId.sessions[0]!.session.state).toBe('finished');
     }).pipe(Effect.provide(TestDatabaseLayer({ types }))),
   );
 });
