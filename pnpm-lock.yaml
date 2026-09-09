@@ -6705,6 +6705,9 @@ importers:
 
   packages/devtools/cli-util:
     dependencies:
+      '@bufbuild/protobuf':
+        specifier: 'catalog:'
+        version: 2.11.0
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../sdk/app-framework
