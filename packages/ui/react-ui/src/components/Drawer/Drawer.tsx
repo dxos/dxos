@@ -122,9 +122,16 @@ const DrawerRoot = ({
     closeOnInteractOutside,
     closeOnEscape,
     // Zag's layer stack takes every later-opened layer for a nested one and dismisses it when a lower
-    // layer leaves, which would close a sibling drawer whenever another closes; a drawer closes only
-    // on its own account.
-    onRequestDismiss: (event) => event.preventDefault(),
+    // layer leaves, which would close a sibling drawer whenever another closes. A drawer follows a
+    // layer that actually contains it (a dialog it was opened from); a sibling closes only on its
+    // own account.
+    onRequestDismiss: (event) => {
+      const { targetLayer } = event.detail;
+      const own = event.currentTarget;
+      if (!(own instanceof Node && targetLayer?.contains(own))) {
+        event.preventDefault();
+      }
+    },
     onSnapPointChange: ({ snapPoint: next }) => onSnapPointChange?.(next),
     // The machine's defaults are spread under the props, so a key present as `undefined` erases one.
     ...(snapPoints && { snapPoints }),

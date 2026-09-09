@@ -110,7 +110,7 @@ const PushStory = () => {
             <Panel.Content asChild>
               <Panel.Root>
                 <Panel.Toolbar asChild>
-                  <Toolbar.Root elevation={0}>
+                  <Toolbar.Root elevation={4}>
                     <Toolbar.IconButton icon='ph--plus--regular' iconOnly label='Create' />
                   </Toolbar.Root>
                 </Panel.Toolbar>
