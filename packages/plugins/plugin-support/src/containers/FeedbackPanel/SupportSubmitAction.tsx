@@ -10,8 +10,8 @@ import { useIdentity } from '@dxos/halo-react';
 import { log } from '@dxos/log';
 import { useConfig } from '@dxos/react-client';
 import { useTranslation } from '@dxos/react-ui';
-import { openExternalUrl } from '@dxos/util';
 import { osTranslations } from '@dxos/ui-theme';
+import { openExternalUrl } from '@dxos/util';
 
 import { FeedbackForm, type FeedbackSubmitHandler } from '#components';
 import { useDiscordPresence } from '#hooks';
