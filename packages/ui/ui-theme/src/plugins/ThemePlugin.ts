@@ -39,17 +39,14 @@ const ROOT = '../../';
 /**
  * Disable `@tailwindcss/vite`'s `hotUpdate` hook under Vite's full-bundle dev mode.
  *
- * `vite dev --experimentalBundle` routes `hotUpdate` through Rolldown's plugin bridge, which
- * supplies neither the hook's `server` argument nor the context's `environment` — so the hook
+ * `vite dev --experimentalBundle` routes `hotUpdate` through Rolldown's plugin bridge, whose
+ * options object carries no `server` and whose context carries no `environment` — so the hook
  * throws on its first dereference and takes the whole rebuild with it (`TypeError: Cannot read
  * properties of undefined (reading 'environments')`, then `(reading 'name')` once `server` is
- * threaded through). Its job is to invalidate the generated CSS in Vite's module graph when a
- * scanned source file changes, and that graph is not what serves CSS under bundled dev, so there
- * is nothing to salvage by fixing up the arguments: skipping it keeps HMR working for everything
- * else, at the cost of needing a server restart before a NEWLY USED utility class is generated.
- *
- * Only `@tailwindcss/vite:generate:serve` declares `hotUpdate`, and it declares no
- * `configResolved`, so the hook added here has nothing to chain.
+ * supplied). Its job is to invalidate the generated CSS in Vite's module graph when a scanned
+ * source file changes, and that graph is not what serves CSS under bundled dev, so there is
+ * nothing to salvage by filling the gaps in: skipping it keeps HMR working for everything else,
+ * at the cost of needing a server restart before a NEWLY USED utility class is generated.
  */
 const skipHotUpdateInBundledDev = (plugin: Plugin): Plugin => {
   const hotUpdate = plugin.hotUpdate;
@@ -58,11 +55,18 @@ const skipHotUpdateInBundledDev = (plugin: Plugin): Plugin => {
     return plugin;
   }
 
+  // Chained rather than assigned: only `@tailwindcss/vite:generate:serve` declares `hotUpdate` and
+  // it declares no `configResolved` today, but this package publishes against a caret range where
+  // a later minor could add one, and a clobbered hook would fail silently.
+  const configResolved = plugin.configResolved;
+  const inheritedConfigResolved = typeof configResolved === 'function' ? configResolved : configResolved?.handler;
+
   let bundledDev = false;
   return {
     ...plugin,
-    configResolved: (config) => {
+    configResolved(config) {
       bundledDev = config.experimental.bundledDev === true;
+      return inheritedConfigResolved?.call(this, config);
     },
     hotUpdate: {
       ...(typeof hotUpdate === 'object' ? hotUpdate : {}),

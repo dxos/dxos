@@ -5,9 +5,8 @@
 import { type PluginOption } from 'vite';
 
 /**
- * Named exports to synthesize per node builtin, for builtins the client graph references but
- * never executes. Enumerated rather than proxied so that a newly reached node-only import still
- * fails the build here, instead of silently resolving to `undefined` at runtime.
+ * Named exports to synthesize per node builtin. Enumerated rather than generated, so that a node-only
+ * import this list does not already cover still fails the build instead of resolving to nothing.
  */
 export type NodeBuiltinStubs = Record<string, readonly string[]>;
 
@@ -16,15 +15,18 @@ const VIRTUAL_PREFIX = '\0dxos-node-builtin-stub:';
 /**
  * Give node builtins reached from unexecuted code a module with real named exports.
  *
- * Vite resolves a node builtin in the client graph to `__vite-browser-external`, which exports
- * only a `default` Proxy. The transform-per-module dev server never notices the mismatch — a named
- * import is not checked until the importing module runs — but Rolldown links the whole graph up
- * front and fails it with `MISSING_EXPORT`. Each stubbed name throws on access, matching what the
- * Proxy does at runtime; the point is only that the binding exists so linking succeeds.
+ * Vite resolves a node builtin in the client graph to `__vite-browser-external`, which exports only
+ * a `default`. The per-module dev server never notices the mismatch — a named import is not checked
+ * until the importing module runs — but Rolldown links the whole graph up front and fails it with
+ * `MISSING_EXPORT`. Each stub is a function that throws when called, so reaching one at runtime is
+ * loud rather than silent; linking succeeding is the whole point. No `default` is emitted: a default
+ * import should surface here as a build error too, so it can be answered deliberately.
  */
 export const nodeBuiltinStubs = (stubs: NodeBuiltinStubs): PluginOption => ({
   name: 'dxos-node-builtin-stubs',
   enforce: 'pre',
+  // Browser graphs only: a server environment resolving `node:net` wants the real builtin.
+  applyToEnvironment: (environment) => environment.config.consumer === 'client',
   resolveId: {
     order: 'pre',
     handler: (source, importer) => {
@@ -40,8 +42,11 @@ export const nodeBuiltinStubs = (stubs: NodeBuiltinStubs): PluginOption => ({
       return null;
     }
     const name = id.slice(VIRTUAL_PREFIX.length);
-    const thrower = (exportName: string) =>
-      `export const ${exportName} = () => { throw new Error('node:${name}.${exportName} is not available in the browser'); };`;
-    return [...stubs[name].map(thrower), 'export default {};'].join('\n');
+    return stubs[name]
+      .map(
+        (exportName) =>
+          `export const ${exportName} = () => { throw new Error('node:${name}.${exportName} is not available in the browser'); };`,
+      )
+      .join('\n');
   },
 });

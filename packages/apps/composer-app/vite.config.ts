@@ -47,12 +47,19 @@ const pluginSetFile = PLUGIN_SETS[process.env.DX_PLUGIN_SET ?? ''] ?? 'src/plugi
 const debugPortSession = resolveDebugPortSession();
 const isReducedPluginSet = pluginSetFile !== 'src/plugin-defs.tsx';
 
-// Vite 8's full-bundle dev mode (`vite dev --experimentalBundle`, aka `experimental.bundledDev`)
-// serves a Rolldown dev build instead of per-module transforms: it reuses `build.rolldownOptions`
-// verbatim and runs no dep optimizer, so config written for one or the other has to branch on it.
-// Read from argv because `ConfigEnv` carries no flag and `rolldownOptions` is consumed before any
-// plugin hook could amend it; vite's CLI camel-cases option names, so both spellings arrive here.
-const isBundledDev = process.argv.includes('--experimentalBundle') || process.argv.includes('--experimental-bundle');
+// Vite's full-bundle dev mode: a Rolldown dev build serves the client graph instead of the
+// per-module transform pipeline, reusing `build.rolldownOptions` verbatim and running no dep
+// optimizer — so config written for one pipeline or the other has to branch on it.
+//
+// Read from argv rather than a plugin hook, because `ConfigEnv` carries no flag and
+// `build.rolldownOptions` is consumed before any hook could amend it. Only the `dev` command reads
+// the flag (argv[2] is the subcommand, absent when dev is the default), and cac accepts a
+// dash-cased alias and an `=<value>` form for the same option, so all of those spellings match.
+const BUNDLED_DEV_ARG = /^--experimental-?bundle(=(?!false\b|0\b|$).*)?$/i;
+const viteCommand = process.argv[2]?.startsWith('-') ? undefined : process.argv[2];
+const isBundledDev =
+  (viteCommand === undefined || viteCommand === 'dev' || viteCommand === 'serve') &&
+  process.argv.some((arg) => BUNDLED_DEV_ARG.test(arg));
 
 const rootDir = searchForWorkspaceRoot(process.cwd());
 const phosphorIconsCore = path.join(rootDir, '/node_modules/@phosphor-icons/core/assets');
@@ -140,11 +147,11 @@ const reducedPluginEntries = () => {
   return path.resolve(rootDir, `packages/plugins/plugin-{${[...names].sort().join(',')}}/src/index.{ts,tsx}`);
 };
 
-// Node builtins the client graph references from code it never runs, with the names those
-// importers destructure. `net`/`os` arrive via `@dxos/cli-util/callback`'s `get-port-please`,
-// reached from plugin-client's and plugin-connector's CLI command modules. Only bundled dev needs
-// them (see `nodeBuiltinStubs`); `build` treeshakes the CLI command subtree out of the graph
-// before linking, so leaving the production path untouched keeps the shipped bundle unchanged.
+// Node builtins the client graph references from code it never runs, with the names those importers
+// destructure: `net`/`os` arrive via `@dxos/cli-util/callback`'s `get-port-please`, reached from
+// plugin-client's and plugin-connector's CLI command modules. Only bundled dev needs them (see
+// `nodeBuiltinStubs`) — `build` links the same graph without complaint, so the production path is
+// left alone and the shipped bundle is unchanged.
 const NODE_BUILTIN_STUBS = {
   net: ['createServer'],
   os: ['networkInterfaces'],

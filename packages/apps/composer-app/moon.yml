@@ -234,10 +234,6 @@ tasks:
   serve-bundle:
     extends: serve
     command: pnpm exec vite dev --configLoader native --experimentalBundle
-    options:
-      # `serve` already sets this, but `extends` merges args by append unless the child repeats it,
-      # which would concatenate this command's args onto the parent's.
-      mergeArgs: replace
   # Dev server with the agent debug port already open, for QA flows an agent drives end to end
   # (`packages/reflect/deus` — the `## QA` section of a PLUGIN.mdl). The session id is minted per
   # server start and published to `temp/debug-port.json`; set `DX_DEBUG_PORT_SESSION` to choose it

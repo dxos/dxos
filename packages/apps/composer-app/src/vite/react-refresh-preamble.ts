@@ -4,7 +4,7 @@
 
 import { type PluginOption } from 'vite';
 
-/** Virtual module holding the preamble; resolves to itself, like plugin-react's `/@react-refresh`. */
+/** Resolves to itself and stays URL-shaped (no `\0`), as plugin-react's own `/@react-refresh` does. */
 const PREAMBLE_ID = '/@dxos-react-refresh-preamble';
 
 /**
@@ -12,13 +12,13 @@ const PREAMBLE_ID = '/@dxos-react-refresh-preamble';
  *
  * `@vitejs/plugin-react` still wraps every component module with the refresh registration, whose
  * footer throws `@vitejs/plugin-react can't detect preamble` when `window.$RefreshReg$` is unset —
- * but its own `vite:react-refresh-fbm` hook cannot deliver the preamble there: bundled dev drops
- * INLINE `<script type="module">` tags added by `transformIndexHtml` (a tag with a `src`, or a
- * non-script tag, survives). So the same code is served from a virtual module and referenced by
- * `src`, which the HTML plugin parses as a real script entry and links into the Rolldown graph —
- * where plugin-react's own `/@react-refresh` resolver can satisfy its import.
- *
- * Drop this once upstream carries inline injections through bundled dev.
+ * and its own `vite:react-refresh-fbm` hook does not deliver it there. The hook runs and returns
+ * the tag (verified by calling it directly), but the tag never reaches the served document; a
+ * probe injecting both from one `order: 'pre'` hook showed a `<meta>` arrive and an inline
+ * `<script type="module">` not. Referencing the same code by `src` off a virtual module puts it in
+ * front of the HTML plugin as a real script entry, so it is linked into the Rolldown graph where
+ * plugin-react's own `/@react-refresh` resolver can satisfy its import. Drop this once the
+ * upstream hook's preamble shows up in the document on its own.
  */
 export const reactRefreshPreamble = (preambleCode: string): PluginOption => ({
   name: 'dxos-react-refresh-preamble',
