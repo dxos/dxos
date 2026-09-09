@@ -87,7 +87,7 @@ export const InstructionsEditor = ({
       getOptions={getRefOptions}
       onValuesChanged={handleValuesChanged}
     >
-      <Form.FieldSet filter={(props) => props.filter((prop) => fieldSet.has(prop.name.toString()))} />
+      <Form.Fields filter={(props) => props.filter((prop) => fieldSet.has(prop.name.toString()))} />
     </Form.Root>
   );
 };

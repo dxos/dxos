@@ -112,15 +112,12 @@ export const ConnectorCompanion = ({ subject, role }: ConnectorCompanionProps) =
             <Form.Root variant='settings' schema={EMPTY_SCHEMA} values={EMPTY_VALUES}>
               <Form.Viewport>
                 <Form.Content>
-                  <Form.Section title={title} description={source}>
+                  <Form.FieldSet label={title} description={source}>
                     <Form.Field
+                      standalone
                       label={t('sync-target.label')}
                       description={status}
-                      validation={
-                        !targetMissing && !sourceMissing && subject.lastError ? (
-                          <span className='text-sm text-error-text'>{subject.lastError}</span>
-                        ) : undefined
-                      }
+                      error={!targetMissing && !sourceMissing && subject.lastError ? subject.lastError : undefined}
                     >
                       {targetMissing || sourceMissing ? (
                         <Button onClick={handleRemoveBinding}>{t('remove-binding.label')}</Button>
@@ -133,7 +130,7 @@ export const ConnectorCompanion = ({ subject, role }: ConnectorCompanionProps) =
                           onValuesChanged={handleOptionsChanged}
                         >
                           <Form.Content>
-                            <Form.FieldSet />
+                            <Form.Fields />
                           </Form.Content>
                         </Form.Root>
                       )}
@@ -141,11 +138,11 @@ export const ConnectorCompanion = ({ subject, role }: ConnectorCompanionProps) =
 
                     {/* TODO(wittjosiah): Ideally this would be in the section header but there's no place to add actions in there currently. */}
                     {!sourceMissing && (
-                      <Form.Field label={t('open-connection.label')}>
+                      <Form.Field standalone label={t('open-connection.label')}>
                         <Button onClick={handleOpenConnection}>{t('open-connection.label')}</Button>
                       </Form.Field>
                     )}
-                  </Form.Section>
+                  </Form.FieldSet>
                 </Form.Content>
               </Form.Viewport>
             </Form.Root>

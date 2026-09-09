@@ -410,7 +410,7 @@ export const ArtifactArticle = ({ role, subject: artifact, attendableId }: Artif
             >
               <Form.Viewport scroll>
                 <Form.Content>
-                  <Form.FieldSet />
+                  <Form.Fields />
                 </Form.Content>
               </Form.Viewport>
             </Form.Root>

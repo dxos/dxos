@@ -116,7 +116,7 @@ export const ObjectForm = ({ object, type, schema, showTags = true }: ObjectForm
     >
       <Form.Viewport>
         <Form.Content>
-          <Form.FieldSet />
+          <Form.Fields />
         </Form.Content>
       </Form.Viewport>
     </Form.Root>
@@ -124,14 +124,13 @@ export const ObjectForm = ({ object, type, schema, showTags = true }: ObjectForm
 };
 
 const createFieldMap: FormFieldMap = {
-  hue: ({ type, label, presentation, getValue, onValueChange }) => {
+  hue: ({ type, label, jsonPath, presentation, getValue, onValueChange }) => {
     const handleChange = useCallback((nextHue: string) => onValueChange(type, nextHue), [onValueChange, type]);
     const handleReset = useCallback(() => onValueChange(type, undefined), [onValueChange, type]);
     return (
-      <>
-        {presentation !== 'inline' && <Form.Label label={label} />}
+      <Form.Field path={jsonPath} label={label} presentation={presentation}>
         <HuePicker value={getValue()} onChange={handleChange} onReset={handleReset} />
-      </>
+      </Form.Field>
     );
   },
 };

@@ -102,8 +102,8 @@ export const CreateSpaceDialog = () => {
           <ScrollArea.Root orientation='vertical' padding thin>
             <ScrollArea.Viewport>
               <Form.Content>
-                <Form.FieldSet />
-                <Form.Error>{error}</Form.Error>
+                <Form.Fields />
+                <Form.ErrorText>{error}</Form.ErrorText>
                 {templates.length > 0 && (
                   <div role='group' aria-labelledby='create-space-templates'>
                     <h3 id='create-space-templates' className='my-1 text-sm text-subdued'>

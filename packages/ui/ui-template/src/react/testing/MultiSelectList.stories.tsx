@@ -69,7 +69,7 @@ const DefaultStory = ({ splitter }: StoryArgs) => {
     >
       <Form.Viewport scroll>
         <Form.Content>
-          <Form.FieldSet />
+          <Form.Fields />
           <Form.Actions />
         </Form.Content>
       </Form.Viewport>

@@ -32,7 +32,7 @@ const StringStory = () => (
     <Form.Root schema={TestSchema} defaultValues={{ notes: '# Hello\n\nMarkdown text *here*.' }}>
       <Form.Viewport>
         <Form.Content>
-          <Form.FieldSet />
+          <Form.Fields />
         </Form.Content>
       </Form.Viewport>
     </Form.Root>
@@ -65,7 +65,7 @@ const RefStory = () => {
           <Form.Root schema={TextNoteHolder} values={values as any} db={space.db}>
             <Form.Viewport>
               <Form.Content>
-                <Form.FieldSet />
+                <Form.Fields />
               </Form.Content>
             </Form.Viewport>
           </Form.Root>
@@ -100,7 +100,7 @@ const EmptyRefStory = () => {
           <Form.Root schema={EmptyRefSchema} defaultValues={{}} db={space.db}>
             <Form.Viewport>
               <Form.Content>
-                <Form.FieldSet />
+                <Form.Fields />
               </Form.Content>
             </Form.Viewport>
           </Form.Root>
@@ -137,7 +137,7 @@ export const StringBackedKeepsFocus: Story = {
       <Form.Root schema={TestSchema} defaultValues={{ notes: '' }}>
         <Form.Viewport>
           <Form.Content>
-            <Form.FieldSet />
+            <Form.Fields />
           </Form.Content>
         </Form.Viewport>
       </Form.Root>

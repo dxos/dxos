@@ -89,7 +89,7 @@ export const SearchProperties = ({ search }: SearchPropertiesProps) => {
           onSave={handleSave}
         >
           <Form.Content>
-            <Form.FieldSet />
+            <Form.Fields />
           </Form.Content>
         </Form.Root>
       )}

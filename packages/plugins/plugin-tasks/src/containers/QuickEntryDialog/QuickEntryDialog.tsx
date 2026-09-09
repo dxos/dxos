@@ -149,7 +149,7 @@ export const QuickEntryDialog = () => {
         >
           <Column.Center>
             <Form.Content>
-              <Form.FieldSet />
+              <Form.Fields />
               <QuickEntryActions continueRef={continueRef} formSaveRef={formSaveRef} />
             </Form.Content>
           </Column.Center>

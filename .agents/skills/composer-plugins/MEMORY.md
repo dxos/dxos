@@ -686,9 +686,9 @@ Session-logged rules for agents. Append a dated section per session (newest firs
 
 ### Forms
 
-- Drive forms from an Effect Schema, not hand-rolled `Input`/`Select`: `<Form.Root schema values onValuesChanged><Form.Content><Form.FieldSet/></Form.Content></Form.Root>`. Reuse the operation-input schema (e.g. `BookingSearch.FlightSearchFields`).
+- Drive forms from an Effect Schema, not hand-rolled `Input`/`Select`: `<Form.Root schema values onValuesChanged><Form.Content><Form.Fields/></Form.Content></Form.Root>`. Reuse the operation-input schema (e.g. `BookingSearch.FlightSearchFields`).
 - Labels come from schema `title`. `Format.DateTime` → datetime picker, stored ISO 8601.
-- For multi-field forms, lay out with `Form.Layout template={…}` (grid DSL: `<grid cols="2"><field name="x" span="2"/></grid>`) instead of `Form.FieldSet` — same approach as `SegmentCard`'s `FLIGHT_LAYOUT`. Template controls which fields render (unreferenced fields are hidden). Define the template as a module-level `trim\`…\`` const (`@dxos/util`).
+- For multi-field forms, lay out with `Form.Layout template={…}` (grid DSL: `<grid cols="2"><field name="x" span="2"/></grid>`) instead of `Form.Fields` — same approach as `SegmentCard`'s `FLIGHT_LAYOUT`. Template controls which fields render (unreferenced fields are hidden). Define the template as a module-level `trim\`…\`` const (`@dxos/util`).
 - Form structure (Radix `ScrollArea`-nominal: Viewport=viewing window outside, Content=viewed body inside). Uniform: `Form.Root > Form.Viewport > Form.Content`.
   - **`Form.Viewport`** owns the gutter `Column` (default `gutter='xs'` = chrome side-padding). Content-height by default; **`scroll`** prop makes it fill its parent + scroll (the gutter then hosts the scrollbar). The scroll/grow lives here, not on Content; there is no `grow` prop.
   - **`Form.Content`** is the pure viewed body (centered, `gap-form-gap`, `role=form`). No Column.
@@ -696,7 +696,7 @@ Session-logged rules for agents. Append a dated section per session (newest firs
   - Gotcha: `Card.Root` is itself a `.dx-column-root` and `Card.Body` is `display:contents`, so `Form.Viewport`'s Column must carry `[.dx-column-root_&]:col-span-full` to span the card instead of landing in the narrow icon track. (Built into `Form.Viewport`.)
   - `Settings.*` (from `@dxos/react-ui-form`) is a separate namespace from `Form.*` — settings panels use `Settings.Viewport`/`FieldSet`, unaffected.
 - Submit via `Form.Submit` (full-width primary, calls the form's `onSave`), not a standalone `Button`. Wire `onSave` on `Form.Root`; pass `Form.Submit` `label`/`icon`/`disabled` as needed (`disabled` defaults to `!canSave`).
-- Form-level error/validation text → `<Form.Error>{msg}</Form.Error>` (`react-ui-form`; wraps `Input.Root validationValence='error'` + `Input.Validation`), not a bare `text-error` div.
+- Form-level error/validation text → `<Form.ErrorText>{msg}</Form.ErrorText>` (`react-ui-form`; wraps `Field.Root validationValence='error'` + `Field.ErrorText`), not a bare `text-error` div.
 
 ### Lists
 

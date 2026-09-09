@@ -62,8 +62,8 @@ export const RecoveryCredentialsContainer = () => {
     <Form.Root variant='settings'>
       <Form.Viewport scroll>
         <Form.Content>
-          <Form.Section title={t('recovery-setup-dialog.title')} description={t('recovery-setup-dialog.description')}>
-            <Form.Field label={t('create-passkey.label')} description={t('create-passkey.description')}>
+          <Form.FieldSet label={t('recovery-setup-dialog.title')} description={t('recovery-setup-dialog.description')}>
+            <Form.Field standalone label={t('create-passkey.label')} description={t('create-passkey.description')}>
               <IconButton
                 label={t('create-passkey.label')}
                 icon='ph--key--duotone'
@@ -71,7 +71,11 @@ export const RecoveryCredentialsContainer = () => {
                 onClick={() => invokePromise(ClientOperation.CreatePasskey)}
               />
             </Form.Field>
-            <Form.Field label={t('create-recovery-code.label')} description={t('create-recovery-code.description')}>
+            <Form.Field
+              standalone
+              label={t('create-recovery-code.label')}
+              description={t('create-recovery-code.description')}
+            >
               <IconButton
                 label={t('create-recovery-code.label')}
                 icon='ph--receipt--duotone'
@@ -79,8 +83,8 @@ export const RecoveryCredentialsContainer = () => {
                 onClick={() => invokePromise(ClientOperation.CreateRecoveryCode)}
               />
             </Form.Field>
-          </Form.Section>
-          <Form.Section title={t('credentials-list.label')}>
+          </Form.FieldSet>
+          <Form.FieldSet label={t('credentials-list.label')}>
             {recoveryCredentials.length < 1 ? (
               <Banner.Root valence='error'>
                 <Banner.Content>
@@ -137,7 +141,7 @@ export const RecoveryCredentialsContainer = () => {
               </Banner.Root>
             )}
             {recoveryCredentials.length > 0 && (
-              <Form.Field label={t('manage-passkeys.label')} description={t('manage-passkeys.description')}>
+              <Form.Field standalone label={t('manage-passkeys.label')} description={t('manage-passkeys.description')}>
                 <IconButton
                   label={t('manage-passkeys.label')}
                   icon='ph--arrow-square-out--regular'
@@ -146,7 +150,7 @@ export const RecoveryCredentialsContainer = () => {
                 />
               </Form.Field>
             )}
-          </Form.Section>
+          </Form.FieldSet>
         </Form.Content>
       </Form.Viewport>
     </Form.Root>

@@ -24,7 +24,7 @@ const FeedbackFormStory = ({ hidden, onSubmit, onDownloadLogs, discordPresence }
   <FeedbackForm.Root hidden={hidden} onSubmit={onSubmit ?? (() => {})}>
     <Form.Viewport>
       <Form.Content>
-        <Form.FieldSet />
+        <Form.Fields />
         <FeedbackForm.DownloadLogs onDownloadLogs={onDownloadLogs} />
         <FeedbackForm.Submit />
         <FeedbackForm.DiscordPresence discordPresence={discordPresence} />

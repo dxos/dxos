@@ -31,15 +31,19 @@ export const ScriptSettings = ({ settings, onSettingsChange, onAuthenticate }: S
     >
       <Form.Viewport scroll>
         <Form.Content>
-          <Form.Section title={meta.profile.name ?? meta.profile.key}>
+          <Form.FieldSet label={meta.profile.name ?? meta.profile.key}>
             {/* TODO(wittjosiah): Hide outside of dev environments. */}
-            <Form.Field label={t('authenticate-action.label')} description={t('authenticate-action.description')}>
+            <Form.Field
+              standalone
+              label={t('authenticate-action.label')}
+              description={t('authenticate-action.description')}
+            >
               <Button disabled={!onSettingsChange} onClick={onAuthenticate}>
                 {t('authenticate-button.label')}
               </Button>
             </Form.Field>
-            <Form.FieldSet />
-          </Form.Section>
+            <Form.Fields />
+          </Form.FieldSet>
         </Form.Content>
       </Form.Viewport>
     </Form.Root>
