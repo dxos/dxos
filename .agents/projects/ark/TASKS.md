@@ -1096,6 +1096,12 @@ verdict over porting in the same PR).
       drawer's `--dx-drawer-size` must be a length, never `100%`, or the children's anchor width
       shrinks with the box. `TestPushCollapse` samples both frame by frame; the Browser pane's
       document is `hidden`, which stalls CSS animations, so exit-animation checks belong in vitest.
+      Later the same day: a pushed box in a grid host hangs from the page edge (`justify-self`), or
+      it grows from the inner edge and the content is revealed instead of sliding in; the drag
+      offset is a registered `@property` and the only thing push mode transitions, so a seam drag
+      lands at once; and a drawer open at the root's first render carries `data-instant` (the
+      machine's own `data-state` outlives the presence's `skipAnimationOnMount`), which the enter
+      keyframes skip.
 - [x] **`Main` on the drawer machine — probe** DONE 2026-09-09. The 2026-09-05 verdict ("fights the
       inset slide") was wrong: the machine's inline `transform` and `main.css`'s `inset-inline-start`
       are independent properties, and a driven touch swipe dismissed the sidebar through

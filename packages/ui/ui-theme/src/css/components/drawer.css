@@ -8,11 +8,26 @@
  * wherever a drag left the panel.
  */
 
+/*
+ * The machine's drag offset, typed so it can transition on its own: a pushed panel snaps back over
+ * it after a release, while a change to `--dx-drawer-size` (a seam drag, say) lands at once.
+ */
+@property --drawer-translate-x {
+  syntax: '<length>';
+  inherits: false;
+  initial-value: 0px;
+}
+@property --drawer-translate-y {
+  syntax: '<length>';
+  inherits: false;
+  initial-value: 0px;
+}
+
 @layer dx-components {
   .dx-drawer__overlay {
     @apply z-40 fixed inset-0 bg-scrim-surface backdrop-blur-xs;
 
-    &[data-state='open'] {
+    &[data-state='open']:not([data-instant]) {
       @apply animate-fade-in;
     }
 
@@ -50,7 +65,7 @@
       @apply w-full max-h-[85dvh] rounded-t-lg border-t border-separator;
       padding-block-end: env(safe-area-inset-bottom);
 
-      &[data-state='open'] {
+      &[data-state='open']:not([data-instant]) {
         animation: dx-drawer-in-from-bottom 300ms cubic-bezier(0.16, 1, 0.3, 1);
       }
       &[data-state='closed'] {
@@ -62,7 +77,7 @@
       @apply w-full max-h-[85dvh] rounded-b-lg border-b border-separator;
       padding-block-start: env(safe-area-inset-top);
 
-      &[data-state='open'] {
+      &[data-state='open']:not([data-instant]) {
         animation: dx-drawer-in-from-top 300ms cubic-bezier(0.16, 1, 0.3, 1);
       }
       &[data-state='closed'] {
@@ -74,7 +89,7 @@
       @apply h-full w-[min(calc(100dvw-3rem),24rem)] border-e border-separator;
       padding-inline-start: env(safe-area-inset-left);
 
-      &[data-state='open'] {
+      &[data-state='open']:not([data-instant]) {
         animation: dx-drawer-in-from-left 300ms cubic-bezier(0.16, 1, 0.3, 1);
       }
       &[data-state='closed'] {
@@ -86,7 +101,7 @@
       @apply h-full w-[min(calc(100dvw-3rem),24rem)] border-s border-separator;
       padding-inline-end: env(safe-area-inset-right);
 
-      &[data-state='open'] {
+      &[data-state='open']:not([data-instant]) {
         animation: dx-drawer-in-from-right 300ms cubic-bezier(0.16, 1, 0.3, 1);
       }
       &[data-state='closed'] {
@@ -109,7 +124,7 @@
     @apply relative shrink-0 overflow-hidden;
     --dx-drawer-size: min(calc(100dvw - 3rem), 24rem);
     transform: none !important;
-    transition-property: inline-size, block-size;
+    transition-property: --drawer-translate-x, --drawer-translate-y;
 
     &[data-swipe-direction='left'],
     &[data-swipe-direction='right'] {
@@ -126,32 +141,37 @@
      * shrinks they slide out with that edge rather than reflowing into the narrowing space. A
      * minimum, not a width, so a child's own `w-full` (100% of the shrinking box) cannot undercut it.
      */
+    /*
+     * And the box itself hangs from the page's edge (`justify-self`/`align-self` for a grid host;
+     * a flex row places it there already), so it grows and shrinks at its inner edge and the
+     * children translate in from beyond the edge rather than being revealed from the inside.
+     */
     &[data-swipe-direction='left'] {
-      @apply items-end border-e border-separator;
+      @apply items-end justify-self-start border-e border-separator;
       inline-size: calc(var(--dx-drawer-size) + var(--drawer-translate-x, 0px));
       & > * {
         min-inline-size: var(--dx-drawer-size);
       }
     }
     &[data-swipe-direction='right'] {
-      @apply items-start border-s border-separator;
+      @apply items-start justify-self-end border-s border-separator;
       inline-size: calc(var(--dx-drawer-size) - var(--drawer-translate-x, 0px));
       & > * {
         min-inline-size: var(--dx-drawer-size);
       }
     }
     &[data-swipe-direction='up'] {
-      @apply justify-end border-b border-separator;
+      @apply justify-end self-start border-b border-separator;
       block-size: calc(var(--dx-drawer-size) + var(--drawer-translate-y, 0px));
     }
     &[data-swipe-direction='down'] {
-      @apply justify-start border-t border-separator;
+      @apply justify-start self-end border-t border-separator;
       block-size: calc(var(--dx-drawer-size) - var(--drawer-translate-y, 0px));
     }
 
     &[data-swipe-direction='left'],
     &[data-swipe-direction='right'] {
-      &[data-state='open'] {
+      &[data-state='open']:not([data-instant]) {
         animation: dx-drawer-push-in-inline 300ms cubic-bezier(0.16, 1, 0.3, 1);
       }
       &[data-state='closed'] {
@@ -160,7 +180,7 @@
     }
     &[data-swipe-direction='up'],
     &[data-swipe-direction='down'] {
-      &[data-state='open'] {
+      &[data-state='open']:not([data-instant]) {
         animation: dx-drawer-push-in-block 300ms cubic-bezier(0.16, 1, 0.3, 1);
       }
       &[data-state='closed'] {

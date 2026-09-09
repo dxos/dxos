@@ -12,6 +12,8 @@ export const DRAWER_NAME = 'Drawer';
 export type DrawerContextValue = {
   /** The panel takes part in the page's layout and pushes its neighbours, rather than floating over them. */
   push: boolean;
+  /** The drawer was open when its root first rendered and has not closed since: it is simply there, no entrance. */
+  instant: boolean;
 };
 
 export const [DrawerProvider, useDrawerContext] = createContext<DrawerContextValue>(DRAWER_NAME);

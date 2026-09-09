@@ -14,7 +14,7 @@ import {
   useDrawer,
 } from '@ark-ui/react/drawer';
 import { Portal } from '@ark-ui/react/portal';
-import React, { type ComponentPropsWithRef, type ReactNode, forwardRef, useMemo } from 'react';
+import React, { type ComponentPropsWithRef, type ReactNode, forwardRef, useEffect, useMemo, useRef } from 'react';
 
 import { useControllableState } from '@dxos/react-hooks';
 
@@ -87,6 +87,16 @@ const DrawerRoot = ({
     onChange: onOpenChange,
   });
 
+  // A drawer open on the page's first paint is part of the page, not an arrival; the entrance is
+  // for a drawer the reader opens. The machine's own `data-state` outlives the presence's
+  // `skipAnimationOnMount`, so the exemption is carried here.
+  const instant = useRef(open);
+  useEffect(() => {
+    if (!open) {
+      instant.current = false;
+    }
+  }, [open]);
+
   const drawer = useDrawer({
     open,
     onOpenChange: ({ open: next }) => setOpen(next),
@@ -109,9 +119,11 @@ const DrawerRoot = ({
 
   return (
     <ElevationProvider elevation='dialog'>
-      {/* Closed content is not in the DOM at all; a drawer that mounts open is simply there. */}
-      <DrawerPrimitive.RootProvider value={drawer} lazyMount unmountOnExit skipAnimationOnMount>
-        <DrawerProvider push={push}>{children}</DrawerProvider>
+      {/* Closed content is not in the DOM at all. */}
+      <DrawerPrimitive.RootProvider value={drawer} lazyMount unmountOnExit>
+        <DrawerProvider push={push} instant={instant.current}>
+          {children}
+        </DrawerProvider>
       </DrawerPrimitive.RootProvider>
     </ElevationProvider>
   );
@@ -156,7 +168,15 @@ type DrawerOverlayProps = ThemedClassName<ComponentPropsWithRef<typeof DrawerPri
  */
 const DrawerOverlay = forwardRef<HTMLDivElement, DrawerOverlayProps>(({ classNames, ...props }, forwardedRef) => {
   const { tx } = useThemeContext();
-  return <DrawerPrimitive.Backdrop {...props} className={tx('drawer.overlay', {}, classNames)} ref={forwardedRef} />;
+  const { instant } = useDrawerContext('Drawer.Overlay');
+  return (
+    <DrawerPrimitive.Backdrop
+      {...props}
+      data-instant={instant ? '' : undefined}
+      className={tx('drawer.overlay', {}, classNames)}
+      ref={forwardedRef}
+    />
+  );
 });
 
 DrawerOverlay.displayName = 'Drawer.Overlay';
@@ -177,12 +197,13 @@ type DrawerContentProps = ThemedClassName<ComponentPropsWithRef<typeof DrawerPri
  */
 const DrawerContent = forwardRef<HTMLDivElement, DrawerContentProps>(({ classNames, ...props }, forwardedRef) => {
   const { tx } = useThemeContext();
-  const { push } = useDrawerContext(DRAWER_CONTENT_NAME);
+  const { push, instant } = useDrawerContext(DRAWER_CONTENT_NAME);
   return (
     <DrawerPrimitive.Positioner className={tx('drawer.positioner', { push })}>
       <DrawerPrimitive.Content
         {...props}
         data-push={push ? '' : undefined}
+        data-instant={instant ? '' : undefined}
         className={tx('drawer.content', { push }, classNames)}
         ref={forwardedRef}
       />

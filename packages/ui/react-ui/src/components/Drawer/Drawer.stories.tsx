@@ -244,6 +244,9 @@ export const TestPush: Story = {
     const dialogs = await canvas.findAllByRole('dialog');
     await expect(dialogs).toHaveLength(2);
     await expect(dialogs[0]).toHaveAttribute('data-push');
+    // Open on first paint, the drawers are simply there: nothing slides in.
+    await expect(dialogs.every((dialog) => dialog.getAnimations().length === 0)).toBe(true);
+    await expect(dialogs[0]).toHaveAttribute('data-instant');
     // The two panels flank the main one in document order, so nothing overlays anything.
     await waitFor(async () => {
       const [start, end] = dialogs.map((dialog) => dialog.getBoundingClientRect());
@@ -327,6 +330,38 @@ export const TestPushCollapse: Story = {
         Math.round(root?.getBoundingClientRect().width ?? -1),
       );
     });
+
+    // Reopened, the inspector's content comes in from beyond the right edge: its left edge only ever
+    // moves left, and it is never narrower than the panel. Having closed once, it is no longer instant.
+    await userEvent.click(canvas.getByRole('button', { name: 'Toggle inspector' }));
+    const reopened = await canvas.findByRole('dialog');
+    await expect(reopened).not.toHaveAttribute('data-instant');
+    const title = within(reopened).getByText('Inspector');
+    const entry = await sample(
+      () => ({
+        left: Math.round(title.getBoundingClientRect().left),
+        width: Math.round(reopened.getBoundingClientRect().width),
+      }),
+      () => reopened.getAnimations().length === 0 && endPane.getAnimations().length === 0,
+    );
+    await expect(entry.length).toBeGreaterThan(3);
+    await expect(entry.every(({ left }, index) => index === 0 || left <= entry[index - 1].left)).toBe(true);
+    await expect(entry.some(({ width }) => width > 0 && width < inspectorWidth)).toBe(true);
+
+    // A seam step lands at once: the panel is never a frame behind its pane.
+    canvasElement.querySelector<HTMLElement>('[data-scope="splitter"][data-part="resize-trigger"]')?.focus();
+    await userEvent.keyboard('{ArrowLeft}');
+    const step = await sample(
+      () => ({
+        pane: Math.round(endPane.getBoundingClientRect().width),
+        box: Math.round(reopened.getBoundingClientRect().width),
+      }),
+      () => false,
+      150,
+    );
+    await expect(step.length).toBeGreaterThan(3);
+    await expect(step.every(({ pane, box }) => Math.abs(pane - box) <= 1)).toBe(true);
+    await expect(step.at(-1)?.pane).toBeGreaterThan(inspectorWidth);
   },
 };
 
