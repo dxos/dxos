@@ -5,7 +5,7 @@
 import { useAtomValue } from '@effect/atom-react/Hooks';
 import * as Schema from 'effect/Schema';
 import * as Atom from 'effect/unstable/reactivity/Atom';
-import React, { memo, useCallback, useMemo, useState } from 'react';
+import React, { type ReactNode, memo, useCallback, useMemo, useState } from 'react';
 
 import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
@@ -19,7 +19,7 @@ import { SchemaAST } from '@dxos/effect';
 import * as AssistantOperation from '@dxos/plugin-assistant/AssistantOperation';
 import { InstructionsEditor } from '@dxos/plugin-routine/components';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
-import { Flex, Icon, Panel, Tabs, Toolbar, useTranslation } from '@dxos/react-ui';
+import { Flex, Icon, Panel, Tabs, useTranslation } from '@dxos/react-ui';
 import { useSelection, useSelectionActions } from '@dxos/react-ui-attention';
 import { Form } from '@dxos/react-ui-form';
 import { Masonry } from '@dxos/react-ui-masonry';
@@ -74,8 +74,25 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
   // The rows the embedded `TaskSetArticle` has checked; the toolbar arms its delegate action on them.
   const { checkedTasks, clearChecked } = useCheckedTasks(taskSet);
 
-  const actions = useToolbarActions({
+  // The tabs are a toolbar item like any other, so the one action graph owns the bar's order:
+  // tabs, separator, then the actions. The tablist only needs the `Tabs.Root` context, which
+  // wraps the whole panel.
+  const tabs = useMemo(
+    () => (
+      <Tabs.Tablist>
+        <Tabs.Button value='overview' data-testid='projectsPlugin.tab.overview'>
+          {t('overview.label')}
+        </Tabs.Button>
+        <Tabs.Button value='tasks' data-testid='projectsPlugin.tab.tasks'>
+          {t('tasks.label')}
+        </Tabs.Button>
+      </Tabs.Tablist>
+    ),
+    [t],
+  );
+  const menuActions = useToolbarActions({
     project: subject,
+    tabs,
     checkedTasks,
     onAddArtifact: () => void handleAddArtifact(),
     onDelegated: clearChecked,
@@ -148,22 +165,13 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
   return (
     <Tabs.Root asChild orientation='horizontal' value={tab} onValueChange={(value) => setTab(value as Tab)}>
       <Panel.Root role={role}>
-        <Panel.Toolbar classNames='flex items-center'>
-          <Tabs.Tablist classNames='w-auto shrink-0 p-0'>
-            <Tabs.Button value='overview' data-testid='projectsPlugin.tab.overview'>
-              {t('overview.label')}
-            </Tabs.Button>
-            <Tabs.Button value='tasks' data-testid='projectsPlugin.tab.tasks'>
-              {t('tasks.label')}
-            </Tabs.Button>
-          </Tabs.Tablist>
-          <Toolbar.Separator variant='line' />
-          <ActionToolbar {...actions} attendableId={attendableId} classNames='w-auto min-w-0 grow' />
+        <Panel.Toolbar asChild>
+          <ActionToolbar {...menuActions} attendableId={attendableId} />
         </Panel.Toolbar>
         <Panel.Content classNames='flex flex-col'>
           {/* Rendered by hand rather than through `Tabs.Panel`: Radix mounts its content
-                hidden for a frame, and the artifact gallery's masonry measures zero there and
-                never recovers. The tablist still owns the switching. */}
+              hidden for a frame, and the artifact gallery's masonry measures zero there and
+              never recovers. The tablist still owns the switching. */}
           {tab === 'overview' && (
             <Form.Root schema={HeaderValues} defaultValues={defaultValues} onValuesChanged={handleValuesChanged}>
               <Form.Viewport scroll>
@@ -173,7 +181,7 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
                   {instructions && <InstructionsEditor db={db} instructions={instructions} />}
 
                   {/* Standing context (inputs bound into every project session) — deliberately a
-                    separate labeled section from Artifacts (outputs the project owns). */}
+                      separate labeled section from Artifacts (outputs the project owns). */}
                   {instructions && (
                     <Form.FieldSet label={t('context.label')}>
                       <InstructionsEditor db={db} instructions={instructions} fields={CONTEXT_FIELDS} />
@@ -290,6 +298,8 @@ const useCheckedTasks = (taskSet: TaskSet.TaskSet | undefined) => {
 
 export type ToolbarActionsProps = {
   project: Project.Project;
+  /** The view tabs, rendered as the bar's leading item. */
+  tabs: ReactNode;
   /** The checked rows, which the delegate action hands to one chat, in this order. */
   checkedTasks: readonly Task.Task[];
   onAddArtifact: () => void;
@@ -302,7 +312,7 @@ export type ToolbarActionsProps = {
  * actions are expected to diverge as the toolbar grows, and the graph's create-chat action serves
  * the navtree row.
  */
-const useToolbarActions = ({ project, checkedTasks, onAddArtifact, onDelegated }: ToolbarActionsProps) => {
+const useToolbarActions = ({ project, tabs, checkedTasks, onAddArtifact, onDelegated }: ToolbarActionsProps) => {
   const { invokePromise } = useOperationInvoker();
   // The handler resolves `Database.Service`, which only the space context supplies — without this
   // the invocation fails with ServiceNotAvailable.
@@ -345,6 +355,16 @@ const useToolbarActions = ({ project, checkedTasks, onAddArtifact, onDelegated }
     (): ActionGraphProps =>
       MenuBuilder.make()
         .action(
+          'tabs',
+          {
+            variant: 'custom',
+            label: ['views.label', { ns: meta.profile.key }],
+            render: () => tabs,
+          },
+          () => {},
+        )
+        .separator('line')
+        .action(
           'create-chat',
           {
             label: ['create-chat.label', { ns: meta.profile.key }],
@@ -384,7 +404,7 @@ const useToolbarActions = ({ project, checkedTasks, onAddArtifact, onDelegated }
           'projectsPlugin.overflow',
         )
         .build(),
-    [project, spaceId, invokePromise, onAddArtifact, createChat, delegateTasks, checkedTasks.length],
+    [project, tabs, spaceId, invokePromise, onAddArtifact, createChat, delegateTasks, checkedTasks.length],
   );
 };
 
