@@ -2,18 +2,24 @@
 // Copyright 2022 DXOS.org
 //
 
+import { create } from '@bufbuild/protobuf';
 import React, { StrictMode, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { JSONTree } from 'react-json-tree';
 
-import { getBufService } from '@dxos/protocols/buf-service';
-import { type TestStreamService } from '@dxos/protocols/buf/example/testing/rpc_pb';
+import { type BufService, getBufService } from '@dxos/protocols/buf-service';
+import {
+  TestRpcRequestSchema,
+  TestStreamService as TestStreamServiceDesc,
+} from '@dxos/protocols/buf/example/testing/rpc_pb';
 import { useAsyncEffect } from '@dxos/react-hooks';
 import { createProtoRpcPeer } from '@dxos/rpc';
 import { createIFramePort } from '@dxos/rpc-tunnel';
 
 import { Channels } from './channels';
 import { TestClient } from './test-client';
+
+type TestStreamService = BufService<typeof TestStreamServiceDesc>;
 
 const IN_IFRAME = window.parent !== window;
 
@@ -56,7 +62,7 @@ const App = () => {
       });
       await client.open();
 
-      const stream = client.rpc.TestStreamService.testCall({ data: 'requestData' });
+      const stream = client.rpc.TestStreamService.testCall(create(TestRpcRequestSchema, { data: 'requestData' }));
       stream.subscribe(
         (msg) => {
           setValue(msg.data);

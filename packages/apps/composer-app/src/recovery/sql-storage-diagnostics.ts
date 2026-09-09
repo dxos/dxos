@@ -2,20 +2,18 @@
 // Copyright 2026 DXOS.org
 //
 
+import { fromBinary } from '@bufbuild/protobuf';
 import CRC32 from 'crc-32';
 import * as Effect from 'effect/Effect';
 
 import { OPFS_SQLITE_DB_FILENAME, isValidSqliteDatabase } from '@dxos/client-services';
 import { PublicKey } from '@dxos/keys';
-import { compatCodec } from '@dxos/protocols/buf-shape-compat';
 import { EchoMetadataSchema } from '@dxos/protocols/buf/dxos/echo/metadata_pb';
 import type { EchoMetadata } from '@dxos/protocols/buf/dxos/echo/metadata_pb';
 import * as OpfsPool from '@dxos/sql-sqlite/OpfsPool';
 import * as SqliteClient from '@dxos/sql-sqlite/SqliteClient';
 
 import { exportOpfsSqlite } from './opfs-export';
-
-const EchoMetadataCodec = compatCodec<EchoMetadata>(EchoMetadataSchema);
 
 const HALO_FEED_PARTS = ['key', 'secret_key', 'data', 'tree', 'bitfield', 'signatures'] as const;
 
@@ -75,7 +73,7 @@ const decodeMainMetadata = (bytes: Uint8Array | undefined): EchoMetadata | undef
   if (!payload?.byteLength) {
     return undefined;
   }
-  return EchoMetadataCodec.decode(payload);
+  return fromBinary(EchoMetadataSchema, payload);
 };
 
 const formatPublicKey = (key: PublicKey | undefined): string | undefined => key?.toHex();

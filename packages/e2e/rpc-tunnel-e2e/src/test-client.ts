@@ -2,10 +2,18 @@
 // Copyright 2022 DXOS.org
 //
 
+import { create } from '@bufbuild/protobuf';
+
 import { Event } from '@dxos/async';
 import { Stream } from '@dxos/async';
 import { log } from '@dxos/log';
-import { type TestStreamService } from '@dxos/protocols/buf/example/testing/rpc_pb';
+import { type BufService } from '@dxos/protocols/buf-service';
+import {
+  TestRpcResponseSchema,
+  TestStreamService as TestStreamServiceDesc,
+} from '@dxos/protocols/buf/example/testing/rpc_pb';
+
+type TestStreamService = BufService<typeof TestStreamServiceDesc>;
 
 const STORAGE_KEY = 'testclient';
 
@@ -55,12 +63,12 @@ export class TestClient {
           }
 
           log.info('Opening stream...');
-          next({ data: String(this.value) });
+          next(create(TestRpcResponseSchema, { data: String(this.value) }));
 
           setInterval(() => {
             this._value++;
             this._update.emit();
-            next({ data: String(this.value) });
+            next(create(TestRpcResponseSchema, { data: String(this.value) }));
             log(`Value incremented to ${this._value}`);
 
             if (this._value > 1000000) {

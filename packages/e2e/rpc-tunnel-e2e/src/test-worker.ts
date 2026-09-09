@@ -3,13 +3,15 @@
 //
 
 import { log } from '@dxos/log';
-import { getBufService } from '@dxos/protocols/buf-service';
-import { type TestStreamService } from '@dxos/protocols/buf/example/testing/rpc_pb';
+import { type BufService, getBufService } from '@dxos/protocols/buf-service';
+import { TestStreamService as TestStreamServiceDesc } from '@dxos/protocols/buf/example/testing/rpc_pb';
 import { createProtoRpcPeer } from '@dxos/rpc';
 import { PortMuxer } from '@dxos/rpc-tunnel';
 
 import { Channels } from './channels';
 import { TestClient } from './test-client';
+
+type TestStreamService = BufService<typeof TestStreamServiceDesc>;
 
 const clientOne = new TestClient();
 const clientTwo = new TestClient({ value: 10050 });

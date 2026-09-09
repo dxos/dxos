@@ -6,7 +6,6 @@ import { toBinary } from '@bufbuild/protobuf';
 import stableStringify from 'json-stable-stringify';
 
 import { PublicKey } from '@dxos/keys';
-import { decodeCompat } from '@dxos/protocols/buf-shape-compat';
 import {
   type Credential,
   CredentialSchema,
@@ -15,6 +14,8 @@ import {
 } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { Timeframe } from '@dxos/timeframe';
 import { arrayToBuffer } from '@dxos/util';
+
+import { toSigningShapeFromBinary } from './signing-shape';
 
 /**
  * The credential shape the signature is computed over.
@@ -39,11 +40,11 @@ type SigningShape = {
  * in `testing/golden-credential.ts` is the guard.
  */
 export const toSigningShape = (credential: Credential): SigningShape =>
-  decodeCompat<SigningShape>(CredentialSchema, toBinary(CredentialSchema, credential));
+  toSigningShapeFromBinary<SigningShape>(CredentialSchema, toBinary(CredentialSchema, credential));
 
 /** Resolves a proof into the shape its signature covers, for a presentation's own proofs. */
 export const toProofSigningShape = (proof: Proof): Record<string, unknown> =>
-  decodeCompat<Record<string, unknown>>(ProofSchema, toBinary(ProofSchema, proof));
+  toSigningShapeFromBinary<Record<string, unknown>>(ProofSchema, toBinary(ProofSchema, proof));
 
 /**
  * @returns The input message to be signed for a given credential.
