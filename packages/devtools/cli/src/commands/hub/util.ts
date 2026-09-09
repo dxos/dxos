@@ -20,6 +20,13 @@ export class HubApiError extends BaseError.extend('HubApiError', 'Hub API error'
 /** Loopback hosts a `wrangler dev` EDGE answers on, where cleartext never leaves the machine. */
 const LOOPBACK_HOSTNAMES = ['localhost', '127.0.0.1', '[::1]'];
 
+/**
+ * Whether the hub admin API key may be presented to this origin: every request carries it, so
+ * cleartext is only tolerable when it never leaves the machine.
+ */
+export const allowsAdminKey = (baseUrl: URL): boolean =>
+  baseUrl.protocol === 'https:' || LOOPBACK_HOSTNAMES.includes(baseUrl.hostname);
+
 /** EDGE proxies hub-service under `/hub`, so the admin API is addressed off the profile's EDGE URL. */
 const hubBaseUrl = Effect.gen(function* () {
   const config = yield* ConfigService;
@@ -30,9 +37,7 @@ const hubBaseUrl = Effect.gen(function* () {
     return yield* Effect.fail(new HubApiError({ message: 'EDGE URL is not configured (runtime.services.edge.url).' }));
   }
   const baseUrl = new URL('hub/', url.endsWith('/') ? url : `${url}/`);
-  // Every request below presents the admin API key, so refuse to put it on the wire in cleartext;
-  // a local EDGE is the one case where http never leaves the machine.
-  if (baseUrl.protocol !== 'https:' && !LOOPBACK_HOSTNAMES.includes(baseUrl.hostname)) {
+  if (!allowsAdminKey(baseUrl)) {
     return yield* Effect.fail(
       new HubApiError({
         message: `Refusing to send the hub admin key over ${baseUrl.protocol} to ${baseUrl.hostname}; configure an https EDGE URL.`,
