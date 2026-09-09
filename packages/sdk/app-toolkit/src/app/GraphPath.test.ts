@@ -25,30 +25,8 @@ describe('GraphPath', () => {
       expect(GraphPath.getWorkspaceFromPath('root/myspace/types/doc/obj1')).toBe('root/myspace');
     });
 
-    test('extracts workspace from pinned path', ({ expect }) => {
-      expect(GraphPath.getWorkspaceFromPath('root/!dxos:settings')).toBe('root/!dxos:settings');
-    });
-  });
-
-  describe('isPinnedWorkspace', () => {
-    test('detects pinned workspace', ({ expect }) => {
-      expect(GraphPath.isPinnedWorkspace('root/!dxos:settings')).toBe(true);
-    });
-
-    test('rejects regular workspace', ({ expect }) => {
-      expect(GraphPath.isPinnedWorkspace('root/myspace')).toBe(false);
-    });
-
-    test('rejects bare root', ({ expect }) => {
-      expect(GraphPath.isPinnedWorkspace('root')).toBe(false);
-    });
-
-    test('rejects deep path with ! in later segment', ({ expect }) => {
-      expect(GraphPath.isPinnedWorkspace('root/myspace/!something')).toBe(false);
-    });
-
-    test('rejects default workspace key', ({ expect }) => {
-      expect(GraphPath.isPinnedWorkspace('default')).toBe(false);
+    test('extracts workspace from a non-space workspace path', ({ expect }) => {
+      expect(GraphPath.getWorkspaceFromPath('root/dxos:settings')).toBe('root/dxos:settings');
     });
   });
 

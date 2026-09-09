@@ -7,7 +7,6 @@ import React, { memo, useCallback, useMemo } from 'react';
 
 import * as AppGraph from '@dxos/app-graph/AppGraph';
 import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
-import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import { useAppGraph, useNavigationPresence } from '@dxos/app-toolkit/ui';
 import * as DeckSchema from '@dxos/plugin-deck/DeckSchema';
 import { useActionRunner, useEdges } from '@dxos/plugin-graph/hooks';
@@ -152,7 +151,7 @@ const L1PanelHeader = ({ item, path, onBack }: Pick<L1PanelProps, 'path' | 'onBa
   const { t } = useTranslation(meta.profile.key);
   const { renderItemEnd: ItemEnd } = useNavTreeContext();
   const title = toLocalizedString(item.properties.label, t);
-  const backCapableWorkspace = GraphPath.isPinnedWorkspace(item.id);
+  const backCapableWorkspace = AppGraphNode.isPinnedWorkspace(item);
 
   const { menuActions, onAction } = useL1MenuActions({ item, path });
   useLoadDescendents(item);

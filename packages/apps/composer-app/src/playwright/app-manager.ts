@@ -21,9 +21,9 @@ const modifier = isMac ? 'Meta' : 'Control';
 
 export const INITIAL_URL = 'http://localhost:4173';
 
-// `GraphPath.pinnedWorkspaceId('dxos:plugin-registry')`, restated so this page-object does not import
+// `REGISTRY_ID`, restated so this page-object does not import
 // the registry plugin (its module graph reaches packages that fail to load under playwright's loader).
-const REGISTRY_WORKSPACE = '!dxos:plugin-registry';
+const REGISTRY_WORKSPACE = 'dxos:plugin-registry';
 
 // `UrlPath.WORKSPACE_KEY` — the pair-chain anchor segment, restated for the same reason.
 const WORKSPACE_KEY = 'w';

@@ -4,9 +4,7 @@
 
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 
-// TODO(wittjosiah): The `!` marks a pinned workspace so it is not recorded as the previous deck.
-//  Ideally this should be worked into the data model in a generic way.
-export const id = '!account';
+export const id = 'account';
 
 /**
  * Panel ids, relative to the account workspace they hang off. Each is also its own singleton URL

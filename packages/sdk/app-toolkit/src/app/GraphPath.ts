@@ -13,21 +13,6 @@ import { invariant } from '@dxos/invariant';
 import { DXN, EID, type URI } from '@dxos/keys';
 
 /**
- * Prefix for pinned (non-space) workspace IDs in the graph.
- */
-const PINNED_WORKSPACE_PREFIX = '!';
-
-/**
- * Build a pinned workspace segment ID.
- */
-export const pinnedWorkspaceId = (name: string): string => `${PINNED_WORKSPACE_PREFIX}${name}`;
-
-/**
- * Build a qualified path to a pinned workspace.
- */
-export const getPinnedWorkspacePath = (name: string): string => `${GraphNode.RootId}/${pinnedWorkspaceId(name)}`;
-
-/**
  * Well-known local segment names for the canonical graph tree structure.
  */
 export const Segments = {
@@ -246,13 +231,6 @@ export const createTypeSectionPaths = (type: Type.AnyEntity, options?: { groupId
     getObjectPath: (spaceId: string, objectId: string): string => getSpacePath(spaceId, ...baseSegments, objectId),
   };
 };
-
-/**
- * Check whether a qualified workspace path represents a pinned (non-space) workspace.
- * Pinned workspaces have a `!`-prefixed segment immediately after `root/`.
- */
-export const isPinnedWorkspace = (qualifiedPath: string): boolean =>
-  qualifiedPath.startsWith(`${GraphNode.RootId}/${PINNED_WORKSPACE_PREFIX}`);
 
 /**
  * Derive the workspace qualified path from any qualified graph ID.

@@ -4,7 +4,7 @@
 
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 
-export const SETTINGS_ID = GraphPath.pinnedWorkspaceId('dxos:settings');
+export const SETTINGS_ID = 'dxos:settings';
 export const SETTINGS_KEY = 'settings';
 
 /**

@@ -72,12 +72,12 @@ describe('UrlPath', () => {
       });
     });
 
-    test('pinned workspace names', ({ expect }) => {
-      const parsed = UrlPath.parse('/w/!dxos:settings/doc/A', table);
+    test('a non-space workspace name', ({ expect }) => {
+      const parsed = UrlPath.parse('/w/dxos:settings/doc/A', table);
       expect(Option.getOrThrow(parsed)).toEqual({
-        workspace: '!dxos:settings',
+        workspace: 'dxos:settings',
         workspaceKey: 'w',
-        pairs: [{ key: 'doc', id: 'A', workspace: '!dxos:settings' }],
+        pairs: [{ key: 'doc', id: 'A', workspace: 'dxos:settings' }],
       });
     });
 
@@ -191,7 +191,7 @@ describe('UrlPath', () => {
           { key: 'task', id: 'B', workspace: WORKSPACE_B },
         ],
       },
-      { workspace: '!dxos:settings', workspaceKey: 'w', pairs: [{ key: 'doc', id: 'A', workspace: '!dxos:settings' }] },
+      { workspace: 'dxos:settings', workspaceKey: 'w', pairs: [{ key: 'doc', id: 'A', workspace: 'dxos:settings' }] },
     ];
 
     for (const parsedUrl of cases) {

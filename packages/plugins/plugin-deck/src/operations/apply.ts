@@ -3,10 +3,13 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Option from 'effect/Option';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
-import * as GraphPath from '@dxos/app-toolkit/GraphPath';
+import * as AppGraph from '@dxos/app-graph/AppGraph';
+import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabilities';
 import { Attention } from '@dxos/react-ui-attention/types';
 
@@ -45,8 +48,14 @@ export const applyActive = Effect.fnUntraced(function* (next: string[]) {
 /** Move the deck onto `workspace`, creating its deck on first visit. */
 export const applyWorkspace = Effect.fnUntraced(function* (workspace: string) {
   const state = yield* Capabilities.getAtomValue(DeckCapabilities.State);
-  // TODO(wittjosiah): Pinned workspaces are excluded so `previousDeck` keeps naming a real one.
-  const shouldUpdatePrevious = !GraphPath.isPinnedWorkspace(state.activeDeck);
+  const { graph } = yield* Capability.get(AppCapabilities.AppGraph);
+  // A pinned workspace is somewhere you visit and come back from, so it must not become the deck you
+  // come back TO. A workspace missing from the graph is treated as unpinned, which only means it is
+  // recorded as previous.
+  const shouldUpdatePrevious = Option.match(AppGraph.getNode(graph, state.activeDeck), {
+    onNone: () => true,
+    onSome: (node) => !AppGraphNode.isPinnedWorkspace(node),
+  });
   yield* Capabilities.updateAtomValue(DeckCapabilities.State, (current) => ({
     ...current,
     previousDeck: shouldUpdatePrevious ? current.activeDeck : current.previousDeck,
