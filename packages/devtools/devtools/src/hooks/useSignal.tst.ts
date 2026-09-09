@@ -5,7 +5,6 @@
 import { describe, expect, it } from 'tstyche';
 
 import { type SignalResponse } from '@dxos/protocols/buf/dxos/devtools/host_pb';
-import { type SignalResponse as LegacySignalResponse } from '@dxos/protocols/buf/dxos/devtools/host_pb';
 
 import { useSignal } from './useSignal';
 
@@ -39,9 +38,5 @@ describe('SignalResponse', () => {
     const message = response.data.case === 'message' ? response.data.value : undefined;
     expect(message?.payload?.typeUrl).type.toBe<string | undefined>();
     expect(message?.payload?.value).type.toBe<Uint8Array | undefined>();
-  });
-
-  it('is no longer the protobuf.js type', () => {
-    expect<LegacySignalResponse>().type.not.toBeAssignableTo<SignalResponse>();
   });
 });

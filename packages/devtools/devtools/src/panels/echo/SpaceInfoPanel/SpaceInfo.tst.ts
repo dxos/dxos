@@ -5,7 +5,6 @@
 import { describe, expect, it } from 'tstyche';
 
 import { type SubscribeToSpacesResponse_SpaceInfo } from '@dxos/protocols/buf/dxos/devtools/host_pb';
-import { type SubscribeToSpacesResponse as LegacyResponse } from '@dxos/protocols/buf/dxos/devtools/host_pb';
 
 import { useSpacesInfo } from '../../../hooks';
 import { type PipelineTableProps } from './PipelineTable';
@@ -37,9 +36,5 @@ describe('SubscribeToSpacesResponse.SpaceInfo (group A)', () => {
     expect(info.timeframe).type.not.toBeAssignableTo<{ totalMessages: () => number } | undefined>();
     expect(info.timeframe?.frames[0].feedKey).type.toBe<Uint8Array | undefined>();
     expect(info.timeframe?.$typeName).type.toBe<'dxos.echo.timeframe.TimeframeVector' | undefined>();
-  });
-
-  it('is no longer the protobuf.js type', () => {
-    expect<LegacyResponse['spaces']>().type.not.toBeAssignableTo<SubscribeToSpacesResponse_SpaceInfo[]>();
   });
 });

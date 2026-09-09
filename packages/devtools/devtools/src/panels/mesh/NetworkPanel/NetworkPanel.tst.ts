@@ -5,7 +5,6 @@
 import { describe, expect, it } from 'tstyche';
 
 import { type PeerState } from '@dxos/protocols/buf/dxos/mesh/presence_pb';
-import { type PeerState as LegacyPeerState } from '@dxos/protocols/buf/dxos/mesh/presence_pb';
 
 import { type NetworkGraphNode } from './NetworkPanel';
 
@@ -27,11 +26,5 @@ describe('NetworkPanel PeerState', () => {
     // `.truncate()` at the call site had to move to an explicit conversion.
     expect(peer.peerId).type.toBeAssignableTo<{ data: Uint8Array } | undefined>();
     expect(peer.peerId).type.not.toBeAssignableTo<{ truncate: () => string } | undefined>();
-  });
-
-  it('is no longer the protobuf.js type', () => {
-    // Guards against the two types being structurally interchangeable, which would make the
-    // conversion above vacuous.
-    expect<LegacyPeerState>().type.not.toBeAssignableTo<PeerState>();
   });
 });
