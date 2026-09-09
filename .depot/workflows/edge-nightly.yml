@@ -78,6 +78,9 @@ jobs:
       credentials:
         username: dxos-bot
         password: ${{ secrets.GITHUB_TOKEN }}
+    # Headroom over the plan's own `maxRuntimeMs`, which stops measuring and writes the summary; a
+    # run that hits this timeout instead is cancelled before the report and upload steps, so a red
+    # nightly leaves nothing to read.
     timeout-minutes: 40
     services:
       # The orchestrator talks to its replicants over Redis. A service container is reachable by

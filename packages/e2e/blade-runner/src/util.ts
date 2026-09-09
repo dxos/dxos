@@ -2,6 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
+import { asyncTimeout } from '@dxos/async';
+
 export const randomArraySlice = <T>(array: T[], size: number) => {
   const result = [];
   const arrayCopy = [...array];
@@ -29,3 +31,14 @@ export const describeError = (err: unknown): string => {
     .map((line) => line.trim());
   return [err.message, ...causes.map((cause) => `caused by: ${cause}`), ...frames].join(' | ');
 };
+
+/**
+ * Bound one call to a replicant.
+ *
+ * RPC to a replicant is created with `timeout: 0`, and the scheduler only rescues the run when a
+ * replicant *dies* — a peer that is alive but stuck inside `flush`, a query or a join hangs the
+ * orchestrator for as long as the job lasts, with no diagnosis. Every call a plan awaits gets a
+ * deadline, so that becomes a named failure against a named peer.
+ */
+export const withDeadline = <T>(label: string, budgetMs: number, call: Promise<T>): Promise<T> =>
+  asyncTimeout(call, budgetMs, new Error(`replicant call did not return within ${budgetMs}ms: ${label}`));

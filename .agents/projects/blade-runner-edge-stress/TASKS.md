@@ -93,6 +93,11 @@ blade-runner harness. Spec + decisions: [DESIGN.md](./DESIGN.md); what was measu
       per-replicant logs and storage, uploaded with `if: always()`.
 - [x] **Failure routing** (D13) — a red workflow plus artifacts, as decided. Issue filing or Discord
       stays deferred.
+- [x] **Bounded join-latency plan** — every replicant call in `edge-join-latency` now carries a
+      deadline, one joiner has a whole-iteration ceiling, and the run has a `maxRuntimeMs` under the
+      job timeout. Without them a peer stuck in an uncancellable call (`waitUntilReady` and the hub
+      bind are unbounded inside the replicant) took the 40-minute job timeout, which cancels the
+      report and upload steps — so the run that most needed artifacts produced none.
 
 ## Follow-ups
 

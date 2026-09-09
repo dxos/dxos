@@ -18,7 +18,7 @@ import {
   onCleanupSignal,
 } from '../../plan';
 import { ClientReplicant, type SpaceDigest } from '../../replicants/client-replicant';
-import { describeError } from '../../util';
+import { describeError, withDeadline } from '../../util';
 import { type EdgeTarget, assertCanCleanUp, canonical, isDevLikeTarget, urlsFor } from '../edge-stress';
 
 //
@@ -43,12 +43,23 @@ export type EdgeJoinLatencySpec = {
    */
   agents: boolean;
   /**
-   * Ceiling on one joiner's catch-up. Exceeding it fails that joiner rather than the run, so a
-   * single stuck peer still yields timings for the rest.
+   * Ceiling on one joiner, end to end: bringing the peer up, opening the invitation, being
+   * admitted, and catching up. Exceeding it fails that joiner rather than the run, so a single
+   * stuck peer still yields timings for the rest.
    */
   joinTimeoutMs: number;
   /** Ceiling on the seeder's own upload before any joiner starts; the measurement is invalid without it. */
   seedTimeoutMs: number;
+  /**
+   * Wall-clock ceiling on the measurement as a whole; every budget under it is clamped to what is
+   * left.
+   *
+   * A peer stuck in one unbounded call otherwise takes the job's timeout instead, and that cancels
+   * the step before the report and upload run — so the one output a CI job must never produce, a
+   * verdict with nothing behind it, is exactly what a hang produced. Sized against the workflow's
+   * 40-minute timeout, which must also cover checkout, setup, the build and cleanup.
+   */
+  maxRuntimeMs: number;
   /** Delete the space and identities the run created, through the self-serve routes. */
   cleanup: boolean;
 };
@@ -111,6 +122,7 @@ export const DEFAULT_SPEC: EdgeJoinLatencySpec = {
   agents: true,
   joinTimeoutMs: 5 * 60_000,
   seedTimeoutMs: 10 * 60_000,
+  maxRuntimeMs: 25 * 60_000,
   cleanup: true,
 };
 
@@ -142,6 +154,9 @@ class AgentProvisioningError extends Error {
 
 const POLL_INTERVAL_MS = 250;
 
+/** Cleanup runs after the measurement's budget, so it carries its own; a delete is one round trip. */
+const CLEANUP_BUDGET_MS = 30_000;
+
 /**
  * Poll until `read` matches `expected`, or the budget runs out.
  *
@@ -150,20 +165,39 @@ const POLL_INTERVAL_MS = 250;
  * worse than no number at all.
  */
 const awaitDigest = async (
+  label: string,
   read: () => Promise<SpaceDigest>,
   expected: string,
   budgetMs: number,
-): Promise<{ ok: boolean; elapsedMs: number; last: string }> => {
+): Promise<{ ok: boolean; elapsedMs: number; last: string; error?: string }> => {
   const began = Date.now();
   const deadline = began + budgetMs;
   let last = '';
+  let reads = 0;
   for (;;) {
-    last = canonical(await read());
+    const remainingMs = deadline - Date.now();
+    if (remainingMs <= 0) {
+      return {
+        ok: false,
+        elapsedMs: Date.now() - began,
+        last,
+        // Two different runs: a peer that never caught up, and one that had no budget left to look.
+        error:
+          reads === 0
+            ? `nothing left of the ${budgetMs}ms budget to read a digest with`
+            : `digest still differed after ${budgetMs}ms`,
+      };
+    }
+    try {
+      // Bounded per read as well as between reads: a peer stuck inside one never returns to the
+      // check above, so the budget would go unenforced for as long as the job lasts.
+      last = canonical(await withDeadline(label, remainingMs, read()));
+      reads++;
+    } catch (err) {
+      return { ok: false, elapsedMs: Date.now() - began, last, error: describeError(err) };
+    }
     if (last === expected) {
       return { ok: true, elapsedMs: Date.now() - began, last };
-    }
-    if (Date.now() > deadline) {
-      return { ok: false, elapsedMs: Date.now() - began, last };
     }
     await new Promise((resolve) => setTimeout(resolve, POLL_INTERVAL_MS));
   }
@@ -190,6 +224,10 @@ export class EdgeJoinLatency implements TestPlan<EdgeJoinLatencySpec, EdgeJoinLa
     assertCanCleanUp(spec.edge, spec.cleanup);
     const resultPath = path.join(params.outDir, 'join-latency.json');
     log.info('edge-join-latency starting', { edgeUrl, spec });
+
+    // The plan's own wall clock; every budget below is clamped to what is left of it.
+    const runDeadline = Date.now() + spec.maxRuntimeMs;
+    const budget = (budgetMs: number): number => Math.max(0, Math.min(budgetMs, runDeadline - Date.now()));
 
     const spawned: ReplicantBrain<ClientReplicant>[] = [];
     const identityDids: string[] = [];
@@ -248,6 +286,33 @@ export class EdgeJoinLatency implements TestPlan<EdgeJoinLatencySpec, EdgeJoinLa
       return replicant;
     };
 
+    /**
+     * Bring a peer up under a deadline, keeping the call itself reachable.
+     *
+     * `withDeadline` does not cancel what it gives up on, so a spawn that lands late would register
+     * an identity `_cleanup` has already walked past — an orphan in a shared environment unless
+     * these are drained first.
+     */
+    const inFlight: Promise<unknown>[] = [];
+    const spawnWithin = (label: string, budgetMs: number): Promise<ReplicantBrain<ClientReplicant>> => {
+      const call = spawn(label);
+      inFlight.push(call.catch(() => undefined));
+      return withDeadline(`spawn(${label})`, budgetMs, call);
+    };
+
+    /** A joiner that produced no timing, so every joiner the spec asked for still has a row. */
+    const unmeasured = (joiner: number, admittedMs: number, error: string): JoinMeasurement => ({
+      joiner,
+      admittedMs,
+      spaceReadyMs: undefined,
+      replicationMs: undefined,
+      syncedMs: undefined,
+      objects: spec.objects,
+      msPerObject: undefined,
+      ok: false,
+      error,
+    });
+
     // Same reason as the soak plan: SIGTERM skips `finally`, and a killed run would otherwise leave
     // its space and every identity behind.
     const unregisterCleanup = onCleanupSignal(async () => {
@@ -257,8 +322,12 @@ export class EdgeJoinLatency implements TestPlan<EdgeJoinLatencySpec, EdgeJoinLa
     });
 
     try {
-      const seeder = await spawn('seeder');
-      const created = await seeder.brain.createSpace({ label: 'join-latency' });
+      const seeder = await spawnWithin('seeder', budget(spec.seedTimeoutMs));
+      const created = await withDeadline(
+        'createSpace(seeder)',
+        budget(spec.seedTimeoutMs),
+        seeder.brain.createSpace({ label: 'join-latency' }),
+      );
       // Kept in a local as well: the outer binding is what `finally` cleans up, but only this one
       // is narrowed to a string for the closures below.
       const space = created.spaceId;
@@ -268,14 +337,20 @@ export class EdgeJoinLatency implements TestPlan<EdgeJoinLatencySpec, EdgeJoinLa
       // dimension the latency actually scales with.
       const seedBegan = Date.now();
       for (let index = 0; index < spec.objects; index++) {
-        await seeder.brain.createDocument({
-          spaceId: space,
-          docId: `obj-${index}`,
-          counterSlots: 1,
-        });
+        await withDeadline(
+          `createDocument(obj-${index}, seeder)`,
+          budget(spec.seedTimeoutMs),
+          seeder.brain.createDocument({
+            spaceId: space,
+            docId: `obj-${index}`,
+            counterSlots: 1,
+          }),
+        );
       }
-      await seeder.brain.flush({ spaceId: space });
-      const expected = canonical(await seeder.brain.digest({ spaceId: space }));
+      await withDeadline('flush(seeder)', budget(spec.seedTimeoutMs), seeder.brain.flush({ spaceId: space }));
+      const expected = canonical(
+        await withDeadline('digest(seeder)', budget(spec.seedTimeoutMs), seeder.brain.digest({ spaceId: space })),
+      );
       seedMs = Date.now() - seedBegan;
       log.info('space seeded and flushed to edge', { objects: spec.objects, seedMs });
       invariant(seedMs < spec.seedTimeoutMs, `seeding took ${seedMs}ms, over the ${spec.seedTimeoutMs}ms budget`);
@@ -283,22 +358,44 @@ export class EdgeJoinLatency implements TestPlan<EdgeJoinLatencySpec, EdgeJoinLa
       // Joiners are timed independently and sequentially: run in parallel they would contend for
       // the same EDGE connection budget and measure each other rather than the system.
       for (let joiner = 0; joiner < spec.joiners; joiner++) {
+        const joinerBudgetMs = budget(spec.joinTimeoutMs);
+        // Recorded rather than skipped: the summary is the whole account of the run, and a joiner
+        // absent from it reads as one the spec never asked for.
+        if (joinerBudgetMs === 0) {
+          measurements.push(
+            unmeasured(joiner, 0, `run budget of ${spec.maxRuntimeMs}ms was spent before this joiner started`),
+          );
+          log.info('joiner skipped', { ...measurements[measurements.length - 1] });
+          continue;
+        }
+        // One joiner's whole ceiling, so a peer stuck in any single step costs only its own row.
+        const joinerDeadline = Date.now() + joinerBudgetMs;
+        const left = (): number => Math.max(0, joinerDeadline - Date.now());
         let admittedMs = 0;
         try {
           // Spawning and sharing are inside the try because they fail too — a local stack under
           // load 500s on `/db/spaces/:id/join` — and one joiner's failure must cost only its own
           // row, not every measurement taken so far. Neither is timed: bringing a peer up and
           // opening an invitation are the harness's cost, not the system's.
-          const peer = await spawn(`joiner-${joiner}`);
-          const { invitationCode } = await seeder.brain.shareSpace({ spaceId: space });
-          const joined = await peer.brain.joinSpace({ invitationCode });
+          const peer = await spawnWithin(`joiner-${joiner}`, left());
+          const { invitationCode } = await withDeadline(
+            `shareSpace(joiner-${joiner})`,
+            left(),
+            seeder.brain.shareSpace({ spaceId: space }),
+          );
+          const joined = await withDeadline(
+            `joinSpace(joiner-${joiner})`,
+            left(),
+            peer.brain.joinSpace({ invitationCode }),
+          );
           admittedMs = joined.admittedMs;
           // `async`/`await` rather than returning the call: an RPC handle's return is itself a
           // promise, so passing it through unawaited types as `Promise<Promise<SpaceDigest>>`.
           const settled = await awaitDigest(
+            `digest(joiner-${joiner})`,
             async () => await peer.brain.digest({ spaceId: space }),
             expected,
-            spec.joinTimeoutMs,
+            left(),
           );
           // The space loading locally is replication, not invitation, so it belongs on this side of
           // the split even though `joinSpace` is what waited for it.
@@ -312,7 +409,7 @@ export class EdgeJoinLatency implements TestPlan<EdgeJoinLatencySpec, EdgeJoinLa
             objects: spec.objects,
             msPerObject: replicationMs !== undefined && spec.objects > 0 ? replicationMs / spec.objects : undefined,
             ok: settled.ok,
-            error: settled.ok ? undefined : `digest still differed after ${spec.joinTimeoutMs}ms`,
+            error: settled.error,
           });
         } catch (err) {
           // The fallback is for a joiner that failed to sync — one bad row, the rest still measured.
@@ -320,20 +417,10 @@ export class EdgeJoinLatency implements TestPlan<EdgeJoinLatencySpec, EdgeJoinLa
           if (AgentProvisioningError.is(err)) {
             throw err;
           }
-          measurements.push({
-            joiner,
-            admittedMs,
-            spaceReadyMs: undefined,
-            replicationMs: undefined,
-            syncedMs: undefined,
-            objects: spec.objects,
-            msPerObject: undefined,
-            ok: false,
-            // Message alone is not enough from CI: `Invalid space id.` named neither the call that
-            // threw nor the cause under it, and the replicant never logged it because the error
-            // crossed the RPC boundary. The artifact has to carry what a local repro would show.
-            error: describeError(err),
-          });
+          // Message alone is not enough from CI: `Invalid space id.` named neither the call that
+          // threw nor the cause under it, and the replicant never logged it because the error
+          // crossed the RPC boundary. The artifact has to carry what a local repro would show.
+          measurements.push(unmeasured(joiner, admittedMs, describeError(err)));
         }
         log.info('joiner measured', { ...measurements[measurements.length - 1] });
       }
@@ -355,6 +442,11 @@ export class EdgeJoinLatency implements TestPlan<EdgeJoinLatencySpec, EdgeJoinLa
       fs.writeFileSync(path.join(params.outDir, 'summary.md'), renderSummary(summary));
       unregisterCleanup();
       if (spec.cleanup) {
+        // Bounded, since a hung spawn is exactly what this drains; one still in flight afterwards is
+        // named because the identity it may yet register outlives the run.
+        await withDeadline('spawns in flight', CLEANUP_BUDGET_MS, Promise.all(inFlight)).catch((err) =>
+          log.error('spawn still in flight at cleanup; its identity may outlive the run', { err }),
+        );
         await this._cleanup(edgeUrl, spawned, spaceId, identityDids);
       }
     }
@@ -416,7 +508,11 @@ export class EdgeJoinLatency implements TestPlan<EdgeJoinLatencySpec, EdgeJoinLa
     for (const [index, replicant] of spawned.entries()) {
       try {
         // Only the seeder (index 0) owns the space; a joiner deleting it would be refused.
-        const result = await replicant.brain.deleteOwnData({ spaceIds: index === 0 && spaceId ? [spaceId] : [] });
+        const result = await withDeadline(
+          `deleteOwnData(replicant-${index})`,
+          CLEANUP_BUDGET_MS,
+          replicant.brain.deleteOwnData({ spaceIds: index === 0 && spaceId ? [spaceId] : [] }),
+        );
         accepted += result.accepted.length;
         refused.push(...result.refused);
       } catch (err) {

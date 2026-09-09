@@ -2,12 +2,13 @@
 // Copyright 2026 DXOS.org
 //
 
-import { asyncTimeout, sleep } from '@dxos/async';
+import { sleep } from '@dxos/async';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
 import { type Platform, type ReplicantBrain } from '../../plan';
 import { type ClientReplicant, type SpaceDigest } from '../../replicants/client-replicant';
+import { withDeadline } from '../../util';
 import {
   type ClientIndex,
   type IdentityIndex,
@@ -143,17 +144,6 @@ export type Real = {
   trace: (entry: Record<string, unknown>) => void;
   counters: { commands: number; documents: number };
 };
-
-/**
- * Bound one call to a replicant.
- *
- * RPC to a replicant is created with `timeout: 0`, and the scheduler only rescues the run when a
- * replicant *dies* — a peer that is alive but stuck inside `flush` or a query hangs the orchestrator
- * for as long as the run lasts, with no diagnosis. Every assertion-side call gets a deadline, so
- * that becomes a named failure against a named peer.
- */
-const withDeadline = <T>(label: string, budgetMs: number, call: Promise<T>): Promise<T> =>
-  asyncTimeout(call, budgetMs, new Error(`replicant call did not return within ${budgetMs}ms: ${label}`));
 
 /** Sentinel: the time budget ran out, which ends the sequence normally rather than failing it. */
 export class BudgetExhausted extends Error {}

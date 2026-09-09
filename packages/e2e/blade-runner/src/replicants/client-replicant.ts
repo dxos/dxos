@@ -6,9 +6,9 @@ import { next as A } from '@automerge/automerge';
 import * as Schema from 'effect/Schema';
 import net from 'node:net';
 
-import { Trigger, sleep, waitForCondition } from '@dxos/async';
+import { Trigger, asyncTimeout, sleep, waitForCondition } from '@dxos/async';
 import { Client, Config } from '@dxos/client';
-import { type CancellableInvitation, InvitationEncoder } from '@dxos/client-protocol';
+import { type CancellableInvitation, InvitationEncoder, type Space } from '@dxos/client-protocol';
 import { createEdgeIdentity } from '@dxos/client/edge';
 import { LocalClientServices } from '@dxos/client/local';
 import { Context } from '@dxos/context';
@@ -78,6 +78,19 @@ const ACCOUNT_VISIBILITY_TIMEOUT = 90_000;
 const INVITATION_TIMEOUT = 60_000;
 const SPACE_READY_TIMEOUT = 60_000;
 const DOCUMENT_READY_TIMEOUT = 60_000;
+
+/**
+ * `waitUntilReady` waits on a `Trigger` with no timeout of its own, so a space that never
+ * initializes wedges this replicant — and, over an RPC created with `timeout: 0`, the orchestrator
+ * with it.
+ */
+const awaitSpaceReady = async (space: Space): Promise<void> => {
+  await asyncTimeout(
+    space.waitUntilReady(),
+    SPACE_READY_TIMEOUT,
+    new Error(`space never became ready within ${SPACE_READY_TIMEOUT}ms: ${space.id}`),
+  );
+};
 
 /**
  * One real `@dxos/client` peer, driven entirely over RPC by the `edgeStress` plan.
@@ -315,7 +328,7 @@ export class ClientReplicant {
   @trace.span()
   async createSpace({ label }: { label: string }): Promise<{ spaceId: string }> {
     const space = await this.#getClient().spaces.create({ name: label });
-    await space.waitUntilReady();
+    await awaitSpaceReady(space);
     await space.internal.setEdgeReplicationPreference(EdgeReplicationSetting.ENABLED);
     return { spaceId: space.id };
   }
@@ -382,7 +395,7 @@ export class ClientReplicant {
       error: new Error(`joined space never appeared: ${spaceKey.truncate()}`),
     });
     invariant(space, 'joined space never appeared');
-    await space.waitUntilReady();
+    await awaitSpaceReady(space);
     const spaceReadyMs = Date.now() - began - admittedMs;
     await space.internal.setEdgeReplicationPreference(EdgeReplicationSetting.ENABLED);
     return { spaceId: space.id, admittedMs, spaceReadyMs };
@@ -657,7 +670,7 @@ export class ClientReplicant {
     });
     // It only resolves on a truthy value, but its return type keeps the predicate's `undefined`.
     invariant(space, `space not found: ${spaceId}`);
-    await space.waitUntilReady();
+    await awaitSpaceReady(space);
     return space;
   }
 
