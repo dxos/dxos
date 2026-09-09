@@ -17,14 +17,21 @@ const handler: Operation.WithHandler<typeof RemoteSessionOperation.ListSessions>
   RemoteSessionOperation.ListSessions.pipe(
     Operation.withHandler(
       Effect.fnUntraced(function* ({ state, sessionId, limit }) {
-        // Selected by type and narrowed in memory: a props filter built from optional inputs is a
-        // union of filter shapes, which erases the element type the output schema needs.
-        const objects = yield* Database.query(Query.select(Filter.type(RemoteSession.RemoteSession))).run;
+        // A lookup by id is pushed into the query — that is the one case where the whole result set
+        // is not wanted and the filter shape stays constant. The optional `state` narrows in memory
+        // instead: built from optional inputs the filter becomes a union of shapes, which erases the
+        // element type the output schema needs.
+        const objects = yield* Database.query(
+          Query.select(
+            sessionId
+              ? Filter.type(RemoteSession.RemoteSession, { sessionId })
+              : Filter.type(RemoteSession.RemoteSession),
+          ),
+        ).run;
 
         // Newest first on `started` (ISO-8601, so lexical order is chronological), then paged.
         const sessions = objects
           .filter((session) => (state ? session.state === state : true))
-          .filter((session) => (sessionId ? session.sessionId === sessionId : true))
           .sort((left, right) => (left.started < right.started ? 1 : left.started > right.started ? -1 : 0))
           .slice(0, Math.min(limit ?? DEFAULT_LIMIT, MAX_LIMIT));
 

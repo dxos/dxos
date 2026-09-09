@@ -41,21 +41,6 @@
             "command": "bash \"${CLAUDE_PROJECT_DIR:-$(git rev-parse --show-toplevel 2>/dev/null)}/.claude/hooks/autonomous.sh\""
           }
         ]
-      },
-      {
-        "hooks": [
-          {
-            "type": "mcp_tool",
-            "server": "plugin:dxos:composer",
-            "tool": "sessions_report",
-            "input": {
-              "sessionId": "${session_id}",
-              "state": "running",
-              "worktree": "${cwd}"
-            },
-            "statusMessage": "Reporting session to Composer"
-          }
-        ]
       }
     ],
     "Stop": [
@@ -65,40 +50,6 @@
             "type": "command",
             "command": "bash \"${CLAUDE_PROJECT_DIR:-$(git rev-parse --show-toplevel 2>/dev/null)}/.claude/hooks/autonomous-stop.sh\"",
             "statusMessage": "Checking autonomous mode"
-          }
-        ]
-      },
-      {
-        "hooks": [
-          {
-            "type": "mcp_tool",
-            "server": "plugin:dxos:composer",
-            "tool": "sessions_report",
-            "input": {
-              "sessionId": "${session_id}",
-              "state": "running",
-              "lastMessage": "${last_assistant_message}",
-              "worktree": "${cwd}"
-            },
-            "statusMessage": "Checking in to Composer"
-          }
-        ]
-      }
-    ],
-    "SessionEnd": [
-      {
-        "matcher": "logout|prompt_input_exit|other",
-        "hooks": [
-          {
-            "type": "mcp_tool",
-            "server": "plugin:dxos:composer",
-            "tool": "sessions_report",
-            "input": {
-              "sessionId": "${session_id}",
-              "state": "finished",
-              "worktree": "${cwd}"
-            },
-            "statusMessage": "Closing session in Composer"
           }
         ]
       }

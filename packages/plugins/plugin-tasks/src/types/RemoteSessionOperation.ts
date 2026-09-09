@@ -48,8 +48,6 @@ export const ReportSession = Operation.make({
     branch: Schema.optional(Schema.String),
     worktree: Schema.optional(Schema.String),
   }),
-  // JSON snapshot, not a live object: the handler may run on a remote host where only
-  // serializable values cross the wire — same contract as the task verbs.
   output: Schema.Struct({
     session: Type.getSchema(RemoteSession.RemoteSession),
     /** True when this call created the object, so a caller can tell a first report from a check-in. */

@@ -269,31 +269,53 @@ survive being read every turn.
 > Both now match only on the **first line**, where a slash command must appear
 > and prose cannot reach. Any new marker should start there.
 
-### Reporting the session to Composer
+### Reporting the session to Composer (opt-in, not wired here)
 
-Three `mcp_tool` hooks call `sessions_report` on the `plugin:dxos:composer` server, which upserts a
-`RemoteSession` object keyed on the harness `session_id`: `UserPromptSubmit` (heartbeat — every
-prompt stamps `lastCheckedIn`), `Stop` (carries `${last_assistant_message}` into the object's prose
-`lastMessage`), and `SessionEnd` matched to `logout|prompt_input_exit|other` (closes it).
+`org.dxos.operation.sessions.report` upserts a `RemoteSession` object keyed on the harness
+`session_id`, so a session can report itself into a space. The hooks that would drive it are
+**deliberately not in this `settings.json`**: the server they call needs a Composer account, so
+wiring them repo-wide would fire a failing authenticated call on every contributor's every turn.
+Add them to your own `.claude/settings.local.json`:
 
-Four things decided the shape, each of them a documented constraint rather than a preference:
+```json
+{
+  "hooks": {
+    "UserPromptSubmit": [
+      { "hooks": [{ "type": "mcp_tool", "server": "plugin:dxos:composer", "tool": "invoke-operation",
+        "input": { "key": "org.dxos.operation.sessions.report",
+                   "input": { "sessionId": "${session_id}", "worktree": "${cwd}" } } }] }
+    ],
+    "Stop": [
+      { "hooks": [{ "type": "mcp_tool", "server": "plugin:dxos:composer", "tool": "invoke-operation",
+        "input": { "key": "org.dxos.operation.sessions.report",
+                   "input": { "sessionId": "${session_id}", "lastMessage": "${last_assistant_message}" } } }] }
+    ],
+    "SessionEnd": [
+      { "matcher": "logout|prompt_input_exit|other",
+        "hooks": [{ "type": "mcp_tool", "server": "plugin:dxos:composer", "tool": "invoke-operation",
+          "input": { "key": "org.dxos.operation.sessions.report",
+                     "input": { "sessionId": "${session_id}", "state": "finished" } } }] }
+    ]
+  }
+}
+```
 
-- **Not `SessionStart`.** An `mcp_tool` hook needs an already-connected server, and `SessionStart`
-  fires before connection — it can only answer "not connected". The first `UserPromptSubmit` is the
-  earliest reliable open, and the upsert makes it indistinguishable from a later check-in.
-- **`mcp_tool`, not `command` or `http`.** Only `mcp_tool` reuses the session's own MCP connection,
-  so the write happens as the user with no credential anywhere in the repo; an `http` hook would
-  need its own token, and a `command` hook cannot speak MCP at all.
+Five things decided that shape, each a constraint rather than a preference:
+
+- **The call goes through the server's dispatcher.** `composer.dxos.network/mcp` exposes
+  `queryOperations` / `invokeOperation` / `loadSkill` / `whoami`, not one tool per verb, so the
+  operation key is an argument. A host that projects verbs individually names this one
+  `sessions-report` — hyphens, from `Operation.toolNameFromKey`, never underscores.
+- **Not `SessionStart`.** An `mcp_tool` hook needs an already-connected server and `SessionStart`
+  fires before connection, so it can only answer "not connected". The first `UserPromptSubmit` is
+  the earliest reliable open, and the upsert makes it indistinguishable from a later check-in.
+- **The heartbeat sends no `state`.** A prompt says the session is alive, not what it is doing;
+  sending `running` every turn would resurrect a session someone had marked `failed`.
 - **`SessionEnd` is matched, not blanket.** Its `resume` and `clear` reasons fire while the user is
-  still working — closing on those would mark a paused session finished.
-- **Nothing depends on the close landing.** `SessionEnd` cannot block, and a reclaimed cloud
+  still working, and closing on those would mark a paused session finished.
+- **Nothing depends on the close landing.** `SessionEnd` cannot block and a reclaimed cloud
   container never fires it, which is why the type carries `lastCheckedIn` and an `unknown` state:
   readers age a stale `running` session out by its heartbeat, never by trusting a close event.
-
-`sessions_report` is the name the deployed host is expected to project for
-`org.dxos.operation.sessions.report`; the operation ships in this change, so until the host serving
-`composer.dxos.network/mcp` carries it, these hooks fail as non-blocking "not connected"/unknown-tool
-errors and nothing else in the session is affected.
 
 ### Commands
 
