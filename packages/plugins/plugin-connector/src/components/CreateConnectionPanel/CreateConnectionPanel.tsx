@@ -27,8 +27,10 @@ export type CreateConnectionPanelProps = SpaceCapabilities.CreateObjectCustomPan
  * without an intervening dialog.
  *
  * Replaces a two-step flow whose first dialog collected only `connectorId` and whose second was
- * opened by the coordinator. Merging them costs nothing for OAuth connectors — they declare no
- * `credentialForm`, so there is nothing to fill and pressing Save starts the OAuth flow directly.
+ * opened by the coordinator. A connector with no `credentialForm` has nothing to fill, so picking it
+ * starts the OAuth flow immediately rather than parking the user on a button that asks them to
+ * confirm the choice they just made. The button still renders behind the popup, as the retry
+ * affordance when the flow fails.
  */
 export const CreateConnectionPanel = ({ onCreateObject, connectors: connectorsProp }: CreateConnectionPanelProps) => {
   const { t } = useTranslation(meta.profile.key);
@@ -53,22 +55,21 @@ export const CreateConnectionPanel = ({ onCreateObject, connectors: connectorsPr
   const connector = useMemo(() => connectors.find((entry) => entry.id === connectorId), [connectors, connectorId]);
   const credentialForm = connector?.credentialForm;
 
+  // Takes its connector rather than reading state, so selecting a form-less connector can submit in
+  // the same tick it is chosen — `connectorId` has not been applied yet at that point.
   const submit = useCallback(
-    (values?: Record<string, any>) => {
-      if (!connector) {
-        return;
-      }
+    (target: ConnectorEntry, values?: Record<string, any>) => {
       setError(undefined);
       setPending(true);
 
       // Validation runs here rather than after the panel closes, so its message has somewhere to go.
-      const validate = credentialForm?.onValidate
-        ? credentialForm.onValidate({ values: values as never, connector })
+      const validate = target.credentialForm?.onValidate
+        ? target.credentialForm.onValidate({ values: values as never, connector: target })
         : Effect.void;
 
       void EffectEx.runPromise(
         validate.pipe(
-          Effect.andThen(Effect.promise(async () => onCreateObject({ connectorId: connector.id, values }))),
+          Effect.andThen(Effect.promise(async () => onCreateObject({ connectorId: target.id, values }))),
           Effect.catch((failure) =>
             Effect.sync(() => {
               log.catch(failure);
@@ -79,7 +80,7 @@ export const CreateConnectionPanel = ({ onCreateObject, connectors: connectorsPr
         ),
       );
     },
-    [connector, credentialForm, onCreateObject],
+    [onCreateObject],
   );
 
   if (!connector) {
@@ -98,7 +99,12 @@ export const CreateConnectionPanel = ({ onCreateObject, connectors: connectorsPr
               value={entry.id}
               label={entry.label ?? entry.id}
               icon='ph--plugs-connected--regular'
-              onSelect={() => setConnectorId(entry.id)}
+              onSelect={() => {
+                setConnectorId(entry.id);
+                if (!entry.credentialForm) {
+                  submit(entry);
+                }
+              }}
             />
           ))}
         </SearchList.Viewport>
@@ -115,7 +121,7 @@ export const CreateConnectionPanel = ({ onCreateObject, connectors: connectorsPr
           autoFocus
           schema={credentialForm.schema}
           defaultValues={credentialForm.defaultValues ?? {}}
-          onSave={(values: any) => submit(values)}
+          onSave={(values: any) => submit(connector, values)}
         >
           <Form.Content>
             <Form.Fields />
@@ -123,11 +129,11 @@ export const CreateConnectionPanel = ({ onCreateObject, connectors: connectorsPr
           </Form.Content>
         </Form.Root>
       ) : (
-        // No credential form: nothing further is needed up front, so Save starts the OAuth flow.
+        // No credential form: the flow already started on selection; this is the retry.
         <Button
           variant='primary'
           disabled={pending}
-          onClick={() => submit(undefined)}
+          onClick={() => submit(connector)}
           data-testid='create-connection-panel.connect'
         >
           {t('connect-service.label', { service: connector.label ?? connector.id })}

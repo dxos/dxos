@@ -241,6 +241,7 @@
       "@dxos/plugin-chess-com",
       "@dxos/plugin-claude",
       "@dxos/plugin-client",
+      "@dxos/plugin-cloudflare",
       "@dxos/plugin-code",
       "@dxos/plugin-commerce",
       "@dxos/plugin-computer",

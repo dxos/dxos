@@ -23,6 +23,38 @@ export type OAuthPreset = {
 // TODO(wittjosiah): Copied from plugin-token-manager.
 export const OAUTH_PRESETS: OAuthPreset[] = [
   {
+    provider: OAuthProvider.CLOUDFLARE,
+    source: 'cloudflare.com',
+    label: 'Cloudflare',
+    // Kept in step by hand with `CLOUDFLARE_OAUTH_SCOPES` in plugin-cloudflare, which is canonical
+    // and explains the set. This file cannot import it: providers depend on plugin-connector, so
+    // reading their constants from here would close the cycle. Scope ids come from Cloudflare's
+    // `GET /oauth/scopes`, not from wrangler's colon-delimited namespace.
+    scopes: [
+      'memberships.read',
+      'account-settings.read',
+      'user-details.read',
+      'workers-scripts.write',
+      'workers-scripts.bind',
+      'workers-routes.write',
+      'workers-tail.read',
+      'workers-observability.read',
+      'workers-kv-storage.write',
+      'workers-r2.write',
+      'workers-r2-bucket-item.write',
+      'd1.write',
+      'queues.write',
+      'pipelines.write',
+      'vectorize.write',
+      'query-cache.write',
+      'secrets-store.write',
+      'ai.write',
+      'containers.write',
+      'zone.read',
+      'ssl-and-certificates.write',
+    ],
+  },
+  {
     provider: OAuthProvider.GITHUB,
     source: 'github.com',
     label: 'GitHub',
