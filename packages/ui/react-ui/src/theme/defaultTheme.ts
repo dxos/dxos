@@ -38,6 +38,7 @@ import { splitterTheme } from '../components/Splitter/Splitter.theme';
 import { stepperTheme } from '../components/Stepper/Stepper.theme';
 import { tagTheme } from '../components/Tag/Tag.theme';
 import { toastTheme } from '../components/Toast/Toast.theme';
+import { tocTheme } from '../components/Toc/Toc.theme';
 import { toolbarTheme } from '../components/Toolbar/Toolbar.theme';
 import { tooltipTheme } from '../components/Tooltip/Tooltip.theme';
 import { bindTheme } from './bindTheme';
@@ -88,6 +89,7 @@ export const defaultTheme: Theme<Record<string, any>> = {
   stepper: stepperTheme,
   tag: tagTheme,
   toast: toastTheme,
+  toc: tocTheme,
   toolbar: toolbarTheme,
   tooltip: tooltipTheme,
 };

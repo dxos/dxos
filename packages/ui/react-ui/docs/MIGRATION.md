@@ -134,7 +134,7 @@ Ark components with no counterpart in `react-ui`, for reference:
 | `marquee`         | none (`TextCrawl` is a different thing)              |                                               |
 | `image-cropper`   | none                                                 |                                               |
 | `json-tree-view`  | none (devtools has its own `ObjectsTree` on `Tree`)  |                                               |
-| `toc`             | none                                                 | deferred 2026-09-09: no consumer decided      |
+| `toc`             | `react-ui` `Toc` — on Ark                            | done 2026-09-09 (Phase 7); consumer open      |
 | `angle-slider`    | none                                                 |                                               |
 | `cascade-select`  | none                                                 |                                               |
 
@@ -685,6 +685,22 @@ clip-and-sheet) is a separate PR. What changed:
 snapping back, and a touch swipe from the swipe area opening the navigation sidebar. The deck and
 navtree stories that mount `Main` pass unchanged. Still to do before this reaches users on iOS: the
 WKWebView touch check, and the interaction with the OS back-swipe on the left edge.
+
+### Phase 7b — `Toc` _(2026-09-09)_
+
+`Toc` (`react-ui/src/components/Toc`) wraps Ark's toc machine part for part: `Root` owns the machine
+(`items` as `{ value, depth }`, an optional `scrollEl`, controlled/uncontrolled `activeIds`,
+`rootMargin`/`threshold` for the `IntersectionObserver`, `autoScroll`, `scrollBehavior`) and publishes
+the indicator's rect as `--top`/`--height`; `Content` is the document (an `article`); `Nav` the
+landmark, labelled by `Title`; `List` the positioned ancestor the machine measures item offsets
+against; `Indicator` a bar spanning the active items; `Item` indents by `--depth`; `Link` is the
+anchor, which with a `scrollEl` scrolls the heading into view and pushes the hash instead of letting
+the browser jump. The machine resolves an item by `getElementById(value)`, so it fits rendered
+documents whose headings carry ids — `MarkdownView` does not give its headings ids today, and the
+CodeMirror editor renders no headings at all; the consumer is still to decide (`rehype-slug` on
+`MarkdownView` is the obvious first). `Toc.stories.tsx` pins it in the vitest browser: scrolling the
+container to a heading activates its link and moves the indicator onto the active items; clicking a
+link scrolls the container so the heading lands at its top edge.
 
 ## 5. Net effect
 

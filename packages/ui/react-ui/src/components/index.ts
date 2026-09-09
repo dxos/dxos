@@ -46,5 +46,6 @@ export * from './Tabs';
 export * from './Tag';
 export * from './TextCrawl';
 export * from './Toast';
+export * from './Toc';
 export * from './Toolbar';
 export * from './Tooltip';
