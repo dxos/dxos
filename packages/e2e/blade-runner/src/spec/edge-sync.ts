@@ -2,12 +2,13 @@
 // Copyright 2023 DXOS.org
 //
 
+import { create } from '@bufbuild/protobuf';
 import path from 'node:path';
 
 import { sleep } from '@dxos/async';
-import { type ConfigProto } from '@dxos/config';
 import { log } from '@dxos/log';
-import { type IndexConfig, IndexKind_Kind } from '@dxos/protocols/buf/dxos/echo/indexing_pb';
+import { type Config as ConfigProto, ConfigSchema } from '@dxos/protocols/buf/dxos/config_pb';
+import { type IndexConfig, IndexConfigSchema, IndexKind_Kind } from '@dxos/protocols/buf/dxos/echo/indexing_pb';
 
 import { TraceReader } from '../analysys/traces';
 import { type SchedulerEnvImpl } from '../env';
@@ -61,8 +62,8 @@ export class EdgeSync implements TestPlan<EdgeTestSpec, EdgeSyncResult> {
       },
       maxDocumentsPerInvocation: 5_000,
       simultaneousInvocations: false,
-      indexing: { enabled: false, indexes: [{ kind: IndexKind_Kind.SCHEMA_MATCH }] },
-      config: {
+      indexing: create(IndexConfigSchema, { enabled: false, indexes: [{ kind: IndexKind_Kind.SCHEMA_MATCH }] }),
+      config: create(ConfigSchema, {
         runtime: {
           client: {
             edgeFeatures: {
@@ -84,7 +85,7 @@ export class EdgeSync implements TestPlan<EdgeTestSpec, EdgeSyncResult> {
             },
           },
         },
-      },
+      }),
     };
   }
 

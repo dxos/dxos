@@ -3,9 +3,8 @@
 //
 
 import { create } from '@bufbuild/protobuf';
-import { AnySchema } from '@bufbuild/protobuf/wkt';
+import { type Any, AnySchema } from '@bufbuild/protobuf/wkt';
 
-import { type Any } from '@dxos/codec-protobuf';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 

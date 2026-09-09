@@ -6027,6 +6027,9 @@ importers:
 
   packages/core/halo/halo-adapter-client:
     dependencies:
+      '@bufbuild/protobuf':
+        specifier: 'catalog:'
+        version: 2.11.0
       '@dxos/async':
         specifier: workspace:*
         version: link:../../../common/async

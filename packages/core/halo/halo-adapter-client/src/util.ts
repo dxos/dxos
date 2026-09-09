@@ -17,8 +17,8 @@ import {
 } from '@dxos/client/invitations';
 import { EffectEx } from '@dxos/effect';
 import { Invitation as HaloInvitation, Space as HaloSpace, InvitationError } from '@dxos/halo';
-import { SpaceMember } from '@dxos/protocols/buf/dxos/client/services_pb';
-import { SpaceMember as HaloSpaceMember } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
+import { type SpaceMember, SpaceMember_PresenceState } from '@dxos/protocols/buf/dxos/client/services_pb';
+import { SpaceMember_Role } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
 /**
  * Bridges a {@link MulticastObservable} into an Effect {@link Stream}. The current value is
@@ -165,14 +165,14 @@ const toType = (type?: HaloInvitation.Type): ClientInvitationType => {
  * Maps a legacy space-member role to the Keyhive-aligned {@link HaloSpace.Access} level.
  * Returns `undefined` for `REMOVED` (not a current member).
  */
-export const toAccess = (role: HaloSpaceMember.Role): HaloSpace.Access | undefined => {
+export const toAccess = (role: SpaceMember_Role): HaloSpace.Access | undefined => {
   switch (role) {
-    case HaloSpaceMember.Role.OWNER:
-    case HaloSpaceMember.Role.ADMIN:
+    case SpaceMember_Role.OWNER:
+    case SpaceMember_Role.ADMIN:
       return 'admin';
-    case HaloSpaceMember.Role.EDITOR:
+    case SpaceMember_Role.EDITOR:
       return 'edit';
-    case HaloSpaceMember.Role.READER:
+    case SpaceMember_Role.READER:
       return 'read';
     default:
       return undefined;
@@ -183,14 +183,14 @@ export const toAccess = (role: HaloSpaceMember.Role): HaloSpace.Access | undefin
  * Maps a Keyhive-aligned {@link HaloSpace.Access} level to a legacy space-member role.
  * Returns `undefined` for `pull` (no legacy equivalent — reject at the call site).
  */
-export const fromAccess = (access: HaloSpace.Access): HaloSpaceMember.Role | undefined => {
+export const fromAccess = (access: HaloSpace.Access): SpaceMember_Role | undefined => {
   switch (access) {
     case 'admin':
-      return HaloSpaceMember.Role.ADMIN;
+      return SpaceMember_Role.ADMIN;
     case 'edit':
-      return HaloSpaceMember.Role.EDITOR;
+      return SpaceMember_Role.EDITOR;
     case 'read':
-      return HaloSpaceMember.Role.READER;
+      return SpaceMember_Role.READER;
     default:
       return undefined;
   }
@@ -199,4 +199,4 @@ export const fromAccess = (access: HaloSpace.Access): HaloSpaceMember.Role | und
 /**
  * Whether a member is currently online.
  */
-export const isOnline = (member: SpaceMember): boolean => member.presence === SpaceMember.PresenceState.ONLINE;
+export const isOnline = (member: SpaceMember): boolean => member.presence === SpaceMember_PresenceState.ONLINE;
