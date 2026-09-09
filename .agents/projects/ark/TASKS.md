@@ -1,8 +1,8 @@
 # ark — Tasks
 
-_Resume: Phase 19 — `Drawer` landed in the tree on this branch; open the PR, then the `Main` port is the
-next ark item (MIGRATION.md Phase 7 has its shape). Uncommitted: none after the Phase 19 commit. Last:
-#13003 (form ontology) merged 2026-09-09._
+_Resume: #13007 (Drawer, push mode, elevation, Panel `as`, Splitter fixes) MERGED 2026-09-09. Next: the
+`Main` port, step 1 (machine swap) as its own PR from this branch once the user answers the two design
+questions in the registry entry; step 2 (push layout) after. Uncommitted: none._
 
 ## Phase 1: Tree rebuild on Ark (PR #12873)
 
@@ -1138,7 +1138,7 @@ verdict over porting in the same PR).
       `onOpenChange` with the inset slide finishing the exit. Findings and the port's shape are in
       `react-ui/docs/MIGRATION.md` Phase 7. The probe story lives in git history one commit and is
       deleted from the tree.
-- [ ] **Port `Main`'s sidebars to the drawer machine** (follow-up): swap `useDialog` for `useDrawer`
+- [ ] **Port `Main`'s sidebars to the drawer machine** (follow-up; DESIGNED 2026-09-09 as two steps — see the registry resume line — step 1 = machine swap, step 2 = push layout): swap `useDialog` for `useDrawer`
       in `MainSidebar`, delete `useSwipeToDismiss`, add `Drawer.SwipeArea` for edge-swipe-to-open;
       then verify on a touch device (WKWebView) before landing — that is the case the probe could
       not cover.
