@@ -27,7 +27,7 @@ import { isTauri } from '@dxos/util';
 
 import { CompanionViewState, DeckCapabilities, DeckSchema } from '#types';
 
-import { applyActive } from '../operations/apply';
+import { applyActive, applyCompanion, applyWorkspace } from '../operations/apply';
 import {
   getCandidateEntityIds,
   getRenderedPlanks,
@@ -152,7 +152,7 @@ export default Capability.makeModule(
     const switchWorkspace = (workspacePath: string) =>
       workspacePath === registry.get(stateAtom).activeDeck
         ? Effect.void
-        : urlApplication.applying(Operation.invoke(LayoutOperation.SwitchWorkspace, { subject: workspacePath }));
+        : urlApplication.applying(applyWorkspace(workspacePath));
 
     const handleNavigation = Effect.fn(function* (url?: URL) {
       const application = urlApplication.begin();
@@ -233,12 +233,8 @@ export default Capability.makeModule(
       }
 
       if (Option.isNone(parsed)) {
-        yield* urlApplication.applying(
-          Operation.invoke(LayoutOperation.Open, {
-            subject: [NotFound.NOT_FOUND_PATH],
-            navigation: 'immediate',
-          }),
-        );
+        // A path that does not parse names no pair, so there is nothing to key a plank on.
+        yield* urlApplication.applying(applyActive([NotFound.NOT_FOUND_PATH]));
         return;
       }
 
@@ -350,7 +346,7 @@ export default Capability.makeModule(
 
       // The companion is part of the URL-derived deck state too: explicitly close it when the chain
       // carries no companion pair, rather than leaving a stale companion open from before navigation.
-      yield* urlApplication.applying(Operation.invoke(LayoutOperation.UpdateCompanion, { subject: companionNodeId }));
+      yield* urlApplication.applying(applyCompanion(companionNodeId));
     });
 
     const onPopState = () =>
