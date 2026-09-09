@@ -62,23 +62,24 @@ export class ScopedShellManager {
     const rescuer = peer
       .locator(`#${type === 'device' ? 'halo' : 'space'}-invitation-rescuer`)
       .getByTestId('invitation-rescuer-reset');
-    const inputVisible = input.waitFor({ state: 'visible' });
-    const rescuerVisible = rescuer.waitFor({ state: 'visible' });
-    void inputVisible.catch(() => {});
-    void rescuerVisible.catch(() => {});
-    const outcome = await Promise.race([
-      inputVisible.then(() => 'ready' as const),
-      rescuerVisible.then(() => 'failed' as const),
-    ]).catch(async (err) => {
-      const showing = await peer
-        .locator('[data-testid]')
-        .evaluateAll((elements) => [...new Set(elements.map((element) => element.dataset.testid))].join(', '))
-        .catch(() => '(unavailable)');
-      throw new Error(`${type} invitation never reached the auth-code step; shell is showing: ${showing}`, {
-        cause: err,
+    // One wait over either outcome, so there is no losing promise to leave pending. A failed
+    // invitation routes the panel to its rescuer view, and `Viewport.View` marks inactive views
+    // `invisible`, so the auth-code input stays mounted but never shows — waiting on it alone would
+    // spend the whole timeout and then report a stall, which is the wrong diagnosis.
+    await input
+      .or(rescuer)
+      .first()
+      .waitFor({ state: 'visible' })
+      .catch(async (err) => {
+        const showing = await peer
+          .locator('[data-testid]')
+          .evaluateAll((elements) => [...new Set(elements.map((element) => element.dataset.testid))].join(', '))
+          .catch(() => '(unavailable)');
+        throw new Error(`${type} invitation never reached the auth-code step; shell is showing: ${showing}`, {
+          cause: err,
+        });
       });
-    });
-    if (outcome === 'failed') {
+    if (await rescuer.isVisible()) {
       throw new Error(`${type} invitation failed; the shell is offering to start over`);
     }
     await input.fill(authCode);

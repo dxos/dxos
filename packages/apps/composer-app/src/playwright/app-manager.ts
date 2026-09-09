@@ -337,13 +337,13 @@ export class AppManager {
    */
   async deleteSpace(nth = 1, timeout = 30_000): Promise<void> {
     const space = this.getSpaceItems().nth(nth);
-    await space.click();
-    await expect(space)
-      .toHaveAttribute('aria-selected', 'true', { timeout: 10_000 })
-      .catch(async () => {
-        await space.click();
-        await expect(space).toHaveAttribute('aria-selected', 'true', { timeout });
-      });
+    // The rail is a tablist, and a click landing while the navtree is still settling after a
+    // navigation is dropped — the row takes focus and then loses it, never becoming selected.
+    // Clicking an already-selected row is a no-op, so re-running the block is safe.
+    await expect(async () => {
+      await space.click();
+      await expect(space).toHaveAttribute('aria-selected', 'true', { timeout: 5_000 });
+    }).toPass({ timeout });
     await this.openSpaceSettings();
     await this.page.getByTestId('spaceSettings.deleteSpace').click({ timeout });
     await this.page.getByTestId('spaceSettings.deleteSpaceConfirm').click();
@@ -365,9 +365,9 @@ export class AppManager {
   /** Discloses a row's children, leaving an already-open row alone. */
   async #expandRow(row: Locator, timeout: number): Promise<void> {
     const toggle = row.getByTestId('treeItem.toggle').first();
-    await expect(toggle)
-      .toHaveAttribute('aria-expanded', /true|false/, { timeout })
-      .catch(() => {});
+    // Read the state only once the toggle exists: `getAttribute` on a detached element answers
+    // `null`, which is indistinguishable from "collapsed" and would click an open row shut.
+    await expect(toggle).toBeAttached({ timeout });
     if ((await toggle.getAttribute('aria-expanded')) === 'true') {
       return;
     }
