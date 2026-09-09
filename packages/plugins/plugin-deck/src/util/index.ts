@@ -12,4 +12,3 @@ export * from './set-active';
 export * from './upsert-toast';
 export * from './openable-children';
 export * from './resolve-deck-spec';
-export * from './url-application';
