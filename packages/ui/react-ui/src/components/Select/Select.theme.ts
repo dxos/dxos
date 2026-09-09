@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { mx, positionerUnplaced, surfaceShadow, surfaceZIndexVar } from '@dxos/ui-theme';
+import { mx, positionerUnplaced, surfaceShadow, surfaceZIndex, surfaceZIndexVar } from '@dxos/ui-theme';
 import { type ComponentFunction, type Elevation, type Theme } from '@dxos/ui-types';
 
 export type SelectStyleProps = Partial<{
@@ -14,24 +14,22 @@ const positioner: ComponentFunction<SelectStyleProps> = ({ elevation }, ...etc) 
   mx(positionerUnplaced, surfaceZIndexVar({ elevation, level: 'menu' }), ...etc);
 
 // `--reference-width` and `--available-height` are set by the machine on the positioner.
-const content: ComponentFunction<SelectStyleProps> = (_props, ...etc) => {
+const content: ComponentFunction<SelectStyleProps> = ({ elevation }, ...etc) => {
   return mx(
     'dx-modal-surface rounded-sm border border-separator flex flex-col overflow-hidden',
     'min-w-(--reference-width) max-h-(--available-height)',
+    // On first placement the machine copies this element's computed `z-index` onto the positioner as
+    // `--z-index`, overwriting the class above; without one here it copies `auto` and the open menu
+    // paints behind its surroundings. Menu and Popover carry the same pair for the same reason.
+    surfaceZIndex({ elevation, level: 'menu' }),
     surfaceShadow({ elevation: 'positioned' }),
     ...etc,
   );
 };
 
 // The input-surface utility outranks Button's component-layer hover, so the hover is a utility too.
-// A placeholder rendered at full strength reads as a chosen value, so it takes the same token an
-// input's placeholder does.
 const triggerButton: ComponentFunction<SelectStyleProps> = (_props, ...etc) =>
-  mx(
-    'bg-input-surface enabled:hover:bg-hover-surface grid grid-cols-[1fr_auto] [&>span]:text-left',
-    'data-[placeholder-shown]:text-placeholder',
-    ...etc,
-  );
+  mx('bg-input-surface enabled:hover:bg-hover-surface grid grid-cols-[1fr_auto] [&>span]:text-left', ...etc);
 
 // The scroll area grows into the content's remaining height and scrolls its list.
 const viewport: ComponentFunction<SelectStyleProps> = (_props, ...etc) => mx(...etc);
