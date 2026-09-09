@@ -16,10 +16,13 @@ import * as ObservabilityExtension from './ObservabilityExtension';
 
 export * from './storage';
 
+// Reaches the fanout directly rather than through the extensions barrel: the fanout is what every
+// host's provider consults at span end (EDGE puts it in the `otel-cf-workers` config), so the AI
+// sink attaches the same way whether or not this package owns the provider.
 const attachAiCapture = async (observability: Observability): Promise<CleanupFn> => {
   const { AiSpanProcessor, contentCaptureAllowed } = await import('./ai/AiObservability');
-  const { Otel } = await import('./extensions');
-  return Otel.addSpanProcessor(
+  const { addSpanProcessor } = await import('./extensions/otel/span-fanout');
+  return addSpanProcessor(
     new AiSpanProcessor({
       captureInference: (inference) => observability.ai.captureInference(inference),
       captureTurn: (turn) => observability.ai.captureTurn(turn),

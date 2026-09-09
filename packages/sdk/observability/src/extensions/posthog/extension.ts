@@ -8,7 +8,6 @@ import { type PostHogConfig } from 'posthog-js';
 import { type Config, getEnvString } from '@dxos/config';
 import { log } from '@dxos/log';
 import { type IdbLogStore } from '@dxos/log-store-idb';
-import { isNode } from '@dxos/util';
 
 import * as ObservabilityExtension from '../../ObservabilityExtension';
 import { DXOS_VERSION } from '../../version';
@@ -74,8 +73,18 @@ export type NodeOptions = {
   apiKey?: string;
   /** Ingestion host — a region, or a proxy on your own domain. */
   host?: string;
-  /** Attribution for events captured before `identify`, since there is no ambient person. */
-  distinctId?: string;
+  /**
+   * Who a capture belongs to. A string is this host's one person, used until `identify`. A
+   * function is asked per capture, for a host that serves many people and knows the current one
+   * from context (a relay replaying records stamps each with its person).
+   */
+  distinctId?: string | (() => string | undefined);
+  /**
+   * Attribution for a capture no person claims, such as work a service does in the background.
+   * Captured without a person profile, so the service never becomes a person in PostHog. Absent,
+   * such a capture is dropped.
+   */
+  anonymousDistinctId?: string;
   /** Which MCP server this host is, stamped on every `$mcp_*` event. */
   mcpServer?: { name: string; version: string };
 };
@@ -116,13 +125,11 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Observabi
     feedbackLogsEndpoint = DEFAULT_FEEDBACK_LOGS_ENDPOINT,
     node,
   }) {
-    if (isNode()) {
-      const { extensions: nodeExtensions } = yield* Effect.promise(() => import('#posthog-transport'));
-      return yield* nodeExtensions({ config, release, environment, node });
-    }
+    // Off the browser page, the transport is the condition's: `posthog-node` in node and workerd,
+    // the stub in a browser worker, which has posthog-js in the page instead.
     if (typeof window === 'undefined') {
-      log('PostHog is being stubbed because it is running in a worker.');
-      return stubExtension;
+      const { extensions: hostExtensions } = yield* Effect.promise(() => import('#posthog-transport'));
+      return yield* hostExtensions({ config, release, environment, node });
     }
 
     const apiKey = getEnvString(config, 'DX_POSTHOG_API_KEY');

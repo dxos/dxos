@@ -6,6 +6,16 @@
 # status: active | paused | blocked | ended
 
 projects:
+  - name: unified-observability
+    status: active
+    user: jdw
+    host: jdw-mbp
+    created: 2026-09-03
+    summary: 'One Observability facade and extension contracts across Composer, dx and EDGE: @dxos/observability bundles on workerd, a Relay extension feeds tail-logger (the single EDGE egress) into PostHog, shared span processors attach to otel-cf-workers, telemetry preferences move to the settings space.'
+    tasks: .agents/projects/unified-observability/TASKS.md
+    design: .agents/projects/unified-observability/DESIGN.md
+    prs: [12939]
+    resume: 'dxos/dxos#12939 is stacked on #12609 (settings sync); land #12609 then #12939. Phase 3, the EDGE PR, needs an edge worktree slot (all 5 held) and the merge commit on pkg.pr.new.'
   - name: echo-plain-objects
     status: active
     user: dmaretskyi
