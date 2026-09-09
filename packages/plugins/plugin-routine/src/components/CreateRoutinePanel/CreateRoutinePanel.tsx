@@ -140,7 +140,7 @@ export const CreateRoutinePanel = ({
         onCancel={() => setPendingTemplate(undefined)}
       >
         <Form.Content>
-          <Form.FieldSet />
+          <Form.Fields />
           <Form.Actions submitLabel={t('continue.label')} submitIcon='ph--arrow-right--regular' />
         </Form.Content>
       </Form.Root>

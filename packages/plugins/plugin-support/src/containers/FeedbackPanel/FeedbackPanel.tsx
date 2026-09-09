@@ -39,7 +39,7 @@ export const FeedbackPanel = () => {
         <FeedbackForm.Root hidden={hidden} plugins={plugins} onSubmit={handleSubmit}>
           <Form.Viewport>
             <Form.Content>
-              <Form.FieldSet />
+              <Form.Fields />
               <DownloadLogsAction />
               <SupportSubmitAction />
             </Form.Content>

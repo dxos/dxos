@@ -10,7 +10,7 @@ import React, { type ReactNode, useMemo } from 'react';
 
 import { Annotation, Format } from '@dxos/echo';
 import { SchemaAST, SchemaEx } from '@dxos/effect';
-import { IconButton, IconButtonProps, useTranslation } from '@dxos/react-ui';
+import { Field, IconButton, IconButtonProps, useTranslation } from '@dxos/react-ui';
 
 import { translationKey } from '#translations';
 import { type FieldContext, type FormFieldRenderer, type FormFieldRendererProps } from '#types';
@@ -24,6 +24,7 @@ import {
 } from '../../../annotations';
 import { useFormFieldState } from '../../../hooks';
 import { getRefProps } from '../../../util';
+import { FormFields } from '../FormFields';
 import { FormFieldSet } from '../FormFieldSet';
 import {
   ArrayField,
@@ -43,6 +44,8 @@ import {
   TextAreaField,
   TextField,
 } from './fields';
+import { FormFieldRow } from './FormField';
+import { type FormFieldBinding } from './FormFieldContext';
 
 export type FormFieldDispatchProps = {
   /**
@@ -243,26 +246,16 @@ export const FormFieldDispatch = (props: FormFieldDispatchProps) => {
     presentation: layout,
     // The asterisk marks what is still outstanding, so it clears once the field holds a value —
     // otherwise a fully-filled form reads as though every required field were still unanswered.
-    required: required && isEmptyValue(fieldState.getValue()),
+    required,
     db,
     ...fieldState,
   };
 
-  // Omit empty fields entirely in read-only mode -- an empty value has nothing
-  // to display, so a labelled row with a blank input is just noise. This
-  // mirrors what `FormField` already does for `presentation === 'static'`, but
-  // covers every field type (including those that bypass the wrapper:
-  // RefField, SelectField, MarkdownField, ...). Container fields
-  // (`ArrayField`, nested-struct -> `FormFieldSet`) keep their own
-  // empty-value checks, but those branches only apply when the value is
-  // actually a non-null array/object, so this check doesn't interfere.
-  if (readonly && hideEmpty && fieldState.getValue() == null) {
+  // A read-only or static field with no value has nothing to show, so the row (or the group a
+  // nested object would open) is omitted rather than left as a labelled blank.
+  if ((readonly || layout === 'static') && hideEmpty && fieldState.getValue() == null) {
     return null;
   }
-
-  //
-  // Custom field.
-  //
 
   const resolution = resolveFieldRenderer({
     type,
@@ -274,87 +267,32 @@ export const FormFieldDispatch = (props: FormFieldDispatchProps) => {
     fieldProps,
     refInline,
   });
+  if (!resolution) {
+    return null;
+  }
 
-  switch (resolution?.kind) {
-    case 'custom': {
-      const CustomField = resolution.component;
-      return <CustomField {...fieldProps} />;
-    }
-    case 'provided':
-      return resolution.element;
-    case 'lookup':
-      return resolution.combobox ? (
-        <ComboboxField {...fieldProps} lookup={resolution.lookup} />
-      ) : (
-        <AsyncSelectField {...fieldProps} lookup={resolution.lookup} />
-      );
-    case 'autofill':
-      return <AutofillField {...fieldProps} autofill={resolution.autofill} />;
-    case 'hue':
-      return <HueField {...fieldProps} />;
-    case 'array':
-      return <ArrayField fieldProps={fieldState} label={label} {...props} />;
-    case 'scalar': {
-      const ScalarField = resolution.component;
-      return <ScalarField {...fieldProps} />;
-    }
-    case 'select': {
-      const fieldProjections = projection?.getFieldProjections();
-      const fieldProjection = fieldProjections?.find((fp) => fp.field.path === name);
-      const selectOptions = fieldProjection?.props.options;
-      return (
-        <SelectField
-          {...fieldProps}
-          options={resolution.options.map((option) => {
-            const selectOption = selectOptions?.find((so) => so.id === globalThis.String(option));
-            return {
-              value: option,
-              label: selectOption?.title ?? option.toString(),
-            };
-          })}
-        />
-      );
-    }
-    case 'ref': {
-      const { refProps, inline } = resolution;
-      if (inline) {
-        return (
-          <InlineRefField
-            {...fieldProps}
-            {...refProps}
-            db={db}
-            useType={useType}
-            onCreate={onCreate}
-            resolveCreateEntry={resolveCreateEntry}
-          />
-        );
-      }
-      const isCreateTarget = !createTypename || refProps.typename === createTypename;
-      return (
-        <RefField
-          {...fieldProps}
-          {...refProps}
-          createOptionLabel={isCreateTarget ? createOptionLabel : undefined}
-          createOptionIcon={isCreateTarget ? createOptionIcon : undefined}
-          createInitialValuePath={isCreateTarget ? createInitialValuePath : undefined}
-          createFieldMap={isCreateTarget ? createFieldMap : undefined}
-          db={db}
-          useType={useType}
-          getOptions={getOptions}
-          onCreate={onCreate}
-          resolveCreateEntry={resolveCreateEntry}
-        />
-      );
-    }
-    case 'object':
-      return (
-        <FormFieldSet
+  // A renderer the form supplied owns its row (its label, description and `labelEnd` are its own);
+  // everything the dispatcher picks is a control, and the row is rendered here, once, around it.
+  if (resolution.kind === 'custom') {
+    const CustomField = resolution.component;
+    return <CustomField {...fieldProps} />;
+  }
+  if (resolution.kind === 'provided') {
+    return resolution.element;
+  }
+
+  // A list and a nested object are groups with their own header, not rows.
+  if (resolution.kind === 'array') {
+    return <ArrayField fieldProps={fieldState} label={label} {...props} />;
+  }
+  if (resolution.kind === 'object') {
+    return (
+      <FormFieldSet label={label} collapsible>
+        <FormFields
           schema={resolution.schema}
           path={path}
           readonly={readonly}
           layout={layout}
-          label={label}
-          collapsible
           projection={projection}
           fieldMap={fieldMap}
           fieldProvider={fieldProvider}
@@ -367,31 +305,132 @@ export const FormFieldDispatch = (props: FormFieldDispatchProps) => {
           onCreate={onCreate}
           resolveCreateEntry={resolveCreateEntry}
         />
-      );
-    default:
-      return null;
+      </FormFieldSet>
+    );
+  }
+  if (resolution.kind === 'ref' && resolution.inline) {
+    const { refProps } = resolution;
+    return (
+      <InlineRefField
+        {...fieldProps}
+        {...refProps}
+        db={db}
+        useType={useType}
+        onCreate={onCreate}
+        resolveCreateEntry={resolveCreateEntry}
+      />
+    );
+  }
+
+  const { status, error } = fieldState.getStatus();
+  const binding: FormFieldBinding = {
+    path: jsonPath,
+    type,
+    value: fieldState.getValue(),
+    setValue: (next) => fieldState.onValueChange(type, next),
+    onBlur: fieldState.onBlur,
+    status,
+    error,
+    required: fieldProps.required,
+    readonly,
+    presentation: layout,
+  };
+
+  const standalone = resolution.kind === 'scalar' && resolution.component.standalone;
+  const labelPlacement = resolution.kind === 'scalar' ? resolution.component.labelPlacement : undefined;
+  return (
+    <FormFieldRow
+      label={label}
+      description={description}
+      format={fieldProps.format}
+      binding={binding}
+      standalone={standalone}
+      labelPlacement={labelPlacement}
+      renderStatic={resolution.kind === 'select' ? renderSelectStatic(resolution.options, projection, name) : undefined}
+    >
+      {renderControl(resolution)}
+    </FormFieldRow>
+  );
+
+  function renderControl(resolution: FieldRendererResolution): ReactNode {
+    switch (resolution.kind) {
+      case 'lookup':
+        return resolution.combobox ? (
+          <ComboboxField {...fieldProps} lookup={resolution.lookup} />
+        ) : (
+          <AsyncSelectField {...fieldProps} lookup={resolution.lookup} />
+        );
+      case 'autofill':
+        return <AutofillField {...fieldProps} autofill={resolution.autofill} />;
+      case 'hue':
+        return <HueField {...fieldProps} />;
+      case 'scalar': {
+        const ScalarField = resolution.component;
+        return <ScalarField {...fieldProps} />;
+      }
+      case 'select':
+        return <SelectField {...fieldProps} options={selectOptions(resolution.options, projection, name)} />;
+      case 'ref': {
+        const { refProps } = resolution;
+        const isCreateTarget = !createTypename || refProps.typename === createTypename;
+        return (
+          <RefField
+            {...fieldProps}
+            {...refProps}
+            createOptionLabel={isCreateTarget ? createOptionLabel : undefined}
+            createOptionIcon={isCreateTarget ? createOptionIcon : undefined}
+            createInitialValuePath={isCreateTarget ? createInitialValuePath : undefined}
+            createFieldMap={isCreateTarget ? createFieldMap : undefined}
+            db={db}
+            useType={useType}
+            getOptions={getOptions}
+            onCreate={onCreate}
+            resolveCreateEntry={resolveCreateEntry}
+          />
+        );
+      }
+      default:
+        return null;
+    }
   }
 };
 
 FormFieldDispatch.displayName = 'Form.FieldDispatch';
 
 //
+/** The literal options with the projection's titles, when it has any. */
+const selectOptions = (
+  options: Format.Options[],
+  projection: FormFieldDispatchProps['projection'],
+  name: string | null,
+) => {
+  const fieldProjection = projection?.getFieldProjections().find((candidate) => candidate.field.path === name);
+  const titles = fieldProjection?.props.options;
+  return options.map((option) => ({
+    value: option,
+    label: titles?.find((candidate) => candidate.id === globalThis.String(option))?.title ?? option.toString(),
+  }));
+};
+
+const renderSelectStatic =
+  (options: Format.Options[], projection: FormFieldDispatchProps['projection'], name: string | null) =>
+  (value: unknown): ReactNode => {
+    const option = selectOptions(options, projection, name).find((candidate) => candidate.value === value);
+    return <p className='truncate min-w-0'>{option?.label ?? globalThis.String(value ?? '')}</p>;
+  };
+
 // Layout components
 //
 
-// End-of-row form buttons occupy a consistent 32px block (matching the standard `h-8` label row) with
-// the button inset so its hover fill never touches the row's top/bottom/right edges.
+// An end-of-row button sits in a control cell, so it centres on the same line as a control's own
+// trailing icon (a select's caret, a date field's calendar) and its hover fill never touches the row's edges.
 export const CompactIconButton = (props: IconButtonProps) => {
   return (
-    <span className='grid size-8 shrink-0 place-items-center'>
-      <IconButton variant='ghost' iconOnly density='sm' {...props} />
-    </span>
+    <Field.Block>
+      <IconButton variant='ghost' iconOnly density='sm' size={3} {...props} />
+    </Field.Block>
   );
 };
-
-/** Whether a field's value counts as unfilled for the required-marker. `false` and `0` are values. */
-const isEmptyValue = (value: unknown): boolean =>
-  value == null || value === '' || (Array.isArray(value) && value.length === 0);
 
 /** The renderer for a scalar: by its format first, then by the type's tag. */
 const getScalarRenderer = ({

@@ -93,24 +93,26 @@ export const RegistrySettings = ({
     <Form.Root variant='settings' readonly={!onSettingsChange} schema={RegistrySettingsSchema} values={settings}>
       <Form.Viewport scroll>
         <Form.Content>
-          <Form.Section title={t('dev-plugin.section.title')}>
+          <Form.FieldSet label={t('dev-plugin.section.title')}>
             <Banner.Root valence='neutral'>
               <Banner.Content>
                 <Banner.Body>{t('dev-plugin.description')}</Banner.Body>
               </Banner.Content>
             </Banner.Root>
             <Form.Field label={t('dev-plugin.url.label')} description={t('dev-plugin.url.description')}>
-              <Field.Root>
-                <Field.Input
-                  disabled={!onSettingsChange || enabled || busy}
-                  value={url}
-                  onChange={(event) =>
-                    onSettingsChange?.((current) => ({ ...current, devPluginUrl: event.target.value }))
-                  }
-                />
-              </Field.Root>
+              <Field.Input
+                disabled={!onSettingsChange || enabled || busy}
+                value={url}
+                onChange={(event) =>
+                  onSettingsChange?.((current) => ({ ...current, devPluginUrl: event.target.value }))
+                }
+              />
             </Form.Field>
-            <Form.Field label={t('dev-plugin.toggle.label')} description={t('dev-plugin.toggle.description')}>
+            <Form.Field
+              standalone
+              label={t('dev-plugin.toggle.label')}
+              description={t('dev-plugin.toggle.description')}
+            >
               <Button
                 variant={enabled ? undefined : 'primary'}
                 disabled={!onSettingsChange || busy || (!enabled && !trimmedUrl)}
@@ -126,7 +128,7 @@ export const RegistrySettings = ({
                 </Banner.Content>
               </Banner.Root>
             )}
-          </Form.Section>
+          </Form.FieldSet>
         </Form.Content>
       </Form.Viewport>
     </Form.Root>
