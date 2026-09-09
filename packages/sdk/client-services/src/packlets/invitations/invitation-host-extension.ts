@@ -79,6 +79,11 @@ export class InvitationHostExtension
    * Held to allow only one invitation flow at a time to be active.
    */
   private _invitationFlowLock: MutexGuard | null = null;
+  /**
+   * The last state THIS connection tried to set, as opposed to the invitation-wide shared state.
+   * Records the attempt, not the guard's acceptance, so the two can differ when a write was rejected.
+   */
+  private _lastSetState: Invitation_State = Invitation_State.INIT;
 
   constructor(
     private readonly _invitationFlowMutex: Mutex,
@@ -94,15 +99,13 @@ export class InvitationHostExtension
     });
   }
 
-  public hasFlowLock(): boolean {
-    return this._invitationFlowLock != null;
-  }
-
-  private _lastSetState: Invitation_State = Invitation_State.INIT;
-
   private _setState(state: Invitation_State): void {
     this._lastSetState = state;
     this._callbacks.onStateUpdate(state);
+  }
+
+  public hasFlowLock(): boolean {
+    return this._invitationFlowLock != null;
   }
 
   protected override async getHandlers(): Promise<{ InvitationHostService: InvitationHostService }> {
@@ -259,7 +262,14 @@ export class InvitationHostExtension
           },
         });
       }
-      this._setState(Invitation_State.CONNECTED);
+      // Only if the flow has not already moved on. When `options` and `introduce` are dispatched in
+      // one drain — the overtaking this whole path exists to survive — the `options` handler has set
+      // CONNECTED and `introduce` has since set READY_FOR_AUTHENTICATION. Re-emitting CONNECTED here
+      // would regress that, and the guest's `authenticate` asserts
+      // [AUTHENTICATING, READY_FOR_AUTHENTICATION].
+      if (this._lastSetState !== Invitation_State.READY_FOR_AUTHENTICATION) {
+        this._setState(Invitation_State.CONNECTED);
+      }
       await cancelWithContext(this._ctx, optionsAcknowledged);
       this._callbacks.onOpen(this._ctx, context);
     } catch (err: any) {

@@ -22,10 +22,6 @@ import { type WireProtocol } from '../wire-protocol';
  */
 const STARTING_SIGNALLING_DELAY = 10;
 
-/**
- * How long to wait for the transport to establish connectivity, i.e. for the connection to move between CONNECTING and CONNECTED.
- */
-
 const TRANSPORT_STATS_INTERVAL = 5_000;
 
 /**

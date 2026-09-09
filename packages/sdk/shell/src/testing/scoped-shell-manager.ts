@@ -59,15 +59,18 @@ export class ScopedShellManager {
     const peer = scope || this.page;
     // TODO(wittjosiah): Update ids.
     const input = peer.getByTestId(`${type === 'device' ? 'halo' : 'space'}-auth-code-input`);
-    const rescuer = peer
-      .locator(`#${type === 'device' ? 'halo' : 'space'}-invitation-rescuer`)
-      .getByTestId('invitation-rescuer-reset');
     // Matched on `:visible`, not `.or(...).first()`: every step stays mounted (`Viewport.View` marks
     // inactive ones `invisible`), so `.first()` would resolve by DOM order and wait on that one
     // element forever rather than on whichever step the shell actually reaches.
+    const rescuerView = `#${type === 'device' ? 'halo' : 'space'}-invitation-rescuer`;
     const settled = peer.locator(
       `[data-testid='${type === 'device' ? 'halo' : 'space'}-auth-code-input']:visible, ` +
-        `#${type === 'device' ? 'halo' : 'space'}-invitation-rescuer [data-testid='invitation-rescuer-reset']:visible`,
+        // All three of the rescuer's renderings, not just the failed one: it also shows a blank-reset
+        // (no invitation state) and a cancel (connecting), both of which are dead ends the shell can
+        // sit in, and neither carries `invitation-rescuer-reset`.
+        `${rescuerView} [data-testid='invitation-rescuer-reset']:visible, ` +
+        `${rescuerView} [data-testid='invitation-rescuer-blank-reset']:visible, ` +
+        `${rescuerView} [data-testid='invitation-rescuer-cancel']:visible`,
     );
     await settled
       .first()
@@ -81,8 +84,8 @@ export class ScopedShellManager {
           cause: err,
         });
       });
-    if (await rescuer.isVisible()) {
-      throw new Error(`${type} invitation failed; the shell is offering to start over`);
+    if (await peer.locator(`${rescuerView} [data-testid]:visible`).first().isVisible()) {
+      throw new Error(`${type} invitation stopped at the rescuer screen rather than the auth-code step`);
     }
     await input.fill(authCode);
     await peer.getByTestId(`${type === 'device' ? 'halo' : 'space'}-invitation-authenticator-next`).click();

@@ -577,7 +577,7 @@ export class AutomergeHost extends Resource {
    * `shareConfigChanged` clears `all-failed` entries and the heal backoff, then re-syncs.
    */
   kickStalledSync(): void {
-    (this._repo as { shareConfigChanged?: () => void }).shareConfigChanged?.();
+    this._repo.shareConfigChanged();
   }
 
   /**

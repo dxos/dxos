@@ -253,6 +253,12 @@ export class FeedHandle {
     this.#addOptimistic(cores);
 
     if (this.#endpointClosed) {
+      // Revert first: the capture above cleared each core's dirty flag and left a pending-append
+      // token, so returning without it would drop the write AND leave `reconcile` preferring the
+      // never-sent local state over every inbound block for the life of the handle.
+      for (const { core, token } of batch) {
+        core.revertCapture(token);
+      }
       this.updated.emit();
       return;
     }

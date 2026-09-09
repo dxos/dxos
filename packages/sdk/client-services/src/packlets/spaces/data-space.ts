@@ -496,11 +496,11 @@ export class DataSpace {
    */
   async #loadRootDoc(rootUrl: AutomergeUrl): Promise<DocumentLease<DatabaseDirectory> | null> {
     for (let attempt = 0, delay = ROOT_DOC_LOAD_RETRY_INITIAL_DELAY; !this._ctx.disposed; attempt++) {
-      if (attempt > 0) {
-        this._echoHost.automergeHost.kickStalledSync();
-      }
-
       try {
+        if (attempt > 0) {
+          this._echoHost.automergeHost.kickStalledSync();
+        }
+
         return await warnAfterTimeout(5_000, 'Automerge root doc load timeout (DataSpace)', () =>
           this._echoHost.loadDoc<DatabaseDirectory>(this._ctx, rootUrl, {
             fetchFromNetwork: true,
