@@ -173,12 +173,22 @@ export const AgentProcess = (options: AgentProcessOptions) =>
         // execution path are stale after reload and would cause onAlarm to drop them.
         yield* toolCallManager.reconcileWithInputQueue(toolResults);
 
+        // Alarms written by this incarnation, keyed by id, until a read confirms the index has them.
+        const unseenAlarms = new Map<string, number>();
+
         // Schedules the process alarm from durable state: immediately when work is queued, at the
         // earliest pending alarm otherwise, not at all when idle.
         const reconcileAlarmWith = (state: PendingState): Effect.Effect<void> => {
+          // An alarm this incarnation wrote leaves the unseen set once the read can see it; until
+          // then it is the only record of a wake, so arming from the read alone would arm nothing.
+          for (const alarm of state.pendingAlarms) {
+            unseenAlarms.delete(alarm.id);
+          }
+          const observed = state.pendingAlarms[0]?.wakeAt;
+          const wakeAts = [...(observed != null ? [observed] : []), ...unseenAlarms.values()];
           const delay = computeAlarmDelay({
             hasPendingWork: toolResults.length > 0 || state.pendingMessages.length > 0,
-            wakeAt: state.pendingAlarms[0]?.wakeAt ?? null,
+            wakeAt: wakeAts.length > 0 ? Math.min(...wakeAts) : null,
             now: now(),
           });
           return delay != null ? ctx.setAlarm(delay) : Effect.void;
@@ -320,10 +330,13 @@ export const AgentProcess = (options: AgentProcessOptions) =>
           // durable effect to the feed inline.
           rpcHandlers: yield* HarnessControl.toHandlers({
             setAlarm: Effect.fn(function* ({ at, message }) {
-              yield* sessionStore.setAlarm(feed, {
+              const alarm = yield* sessionStore.setAlarm(feed, {
                 wakeAt: DateTime.toEpochMillis(at),
                 message: message ?? undefined,
               });
+              // Reconciling reads the feed back through the eventually-consistent index, so a wake
+              // whose record has not landed yet arms nothing and nothing looks again.
+              unseenAlarms.set(alarm.id, alarm.wakeAt);
               yield* reconcileAlarm;
             }),
             enqueueMessage: Effect.fn(function* ({ content }) {
@@ -385,6 +398,7 @@ export const AgentProcess = (options: AgentProcessOptions) =>
                   prompt = [...message.blocks];
                 } else if (dueAlarm !== undefined) {
                   log('agent onAlarm self-wake', { firedAt: dueAlarm.wakeAt });
+                  unseenAlarms.delete(dueAlarm.id);
                   dequeued = dueAlarm;
                   prompt = [
                     ContentBlock.Text.make({
