@@ -18,10 +18,11 @@ import type { FeedbackPluginOption } from './types';
 
 const FEEDBACK_FORM = 'FeedbackForm';
 
+/** Resolves to whether the report was filed; the form clears only when it was. */
 export type FeedbackSubmitHandler = (
   values: SupportOperation.SupportRequest,
   meta: FormUpdateMeta<SupportOperation.SupportRequest>,
-) => void | Promise<void>;
+) => boolean | Promise<boolean>;
 
 type FeedbackFormContextValue = {
   pending: boolean;
@@ -50,6 +51,10 @@ const FeedbackFormRoot = ({ children, onSubmit, hidden, plugins }: FeedbackFormR
   // Submission is async (screenshot capture, PostHog/Discord round-trip); surface it so the form
   // cannot be double-submitted while it runs.
   const [pending, setPending] = useState(false);
+
+  // A filed report leaves nothing to edit, and the form holds no reset of its own, so the key
+  // remounts it onto fresh defaults. A failed one keeps what the reporter wrote.
+  const [filedCount, setFiledCount] = useState(0);
 
   // Override the `area` field with a richer plugin picker. The closure captures
   // the runtime plugin list so the schema itself stays static — much cleaner
@@ -83,7 +88,9 @@ const FeedbackFormRoot = ({ children, onSubmit, hidden, plugins }: FeedbackFormR
       };
       setPending(true);
       try {
-        await onSubmit(submitted, formMeta);
+        if (await onSubmit(submitted, formMeta)) {
+          setFiledCount((count) => count + 1);
+        }
       } finally {
         setPending(false);
       }
@@ -94,6 +101,7 @@ const FeedbackFormRoot = ({ children, onSubmit, hidden, plugins }: FeedbackFormR
   return (
     <FeedbackFormProvider pending={pending}>
       <Form.Root
+        key={filedCount}
         schema={SupportOperation.SupportRequest}
         defaultValues={defaultValues}
         fieldMap={fieldMap}

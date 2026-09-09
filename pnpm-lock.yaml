@@ -3978,6 +3978,9 @@ importers:
       '@tauri-apps/plugin-fs':
         specifier: 'catalog:'
         version: 2.5.1
+      '@tauri-apps/plugin-opener':
+        specifier: 'catalog:'
+        version: 2.5.4
     devDependencies:
       '@dxos/crypto':
         specifier: workspace:*
