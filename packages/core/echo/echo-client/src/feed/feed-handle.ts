@@ -458,7 +458,15 @@ export class FeedHandle {
    * {@link waitForPendingWrites}.
    */
   async #flushDirty(): Promise<void> {
-    if (this.#dirtyCores.size === 0 || this.#endpointClosed) {
+    if (this.#dirtyCores.size === 0) {
+      return;
+    }
+    if (this.#endpointClosed) {
+      // Recorded rather than skipped in silence: this handle can never send these, so a caller that
+      // reads `error` after `waitForPendingWrites` learns the flush wrote nothing. They stay dirty —
+      // discarding a local edit here would lose more than it fixes, and `dispose` names the count.
+      this._error = this.#endpointClosed;
+      this.updated.emit();
       return;
     }
     const batch = [...this.#dirtyCores].map((core) => {
