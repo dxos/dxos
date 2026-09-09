@@ -6,10 +6,11 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 import { expect } from 'storybook/test';
 
+import { random } from '@dxos/random';
 import { Field, IconButton, Panel, Toolbar } from '@dxos/react-ui';
 import { FeedModel, MessageList, Outline, type OutlineMarker, useMessageList } from '@dxos/react-ui-feed';
 import { Debug, DebugProvider, useDebugProbes, useFrameMeter } from '@dxos/react-ui-feed/debug';
-import { createScenario, streamTurn } from '@dxos/react-ui-feed/testing';
+import { createScenario, streamTurn, textStream } from '@dxos/react-ui-feed/testing';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Message } from '@dxos/types';
 
@@ -37,6 +38,15 @@ type StoryArgs = {
   calls?: number;
   /** 1-based call that fails. */
   failAt?: number;
+  /**
+   * Stream one text block and nothing else, so the answer only ever grows.
+   *
+   * A full turn shrinks twice — the status block is dropped and the reasoning tag closes — so it
+   * cannot show token-by-token growth on its own: the document is not monotonic. This is the shape
+   * an agent's answer arrives in once its reasoning is done, and the one worth watching a token at
+   * a time.
+   */
+  textOnly?: boolean;
 };
 
 const DefaultStory = ({
@@ -47,8 +57,11 @@ const DefaultStory = ({
   chunkDelay = 120,
   calls = 1,
   failAt,
+  textOnly,
 }: StoryArgs) => {
   const definition = useMemo(() => createScenario({ scenario: 'assistant', count }), [count]);
+  // Fixed for the life of the story so a replayed turn streams the same answer.
+  const prose = useMemo(() => [random.lorem.paragraph(), '', random.lorem.paragraph()].join('\n'), []);
   const model = useMemo(() => new FeedModel({ messages: definition.messages, stops: 'prompt' }), [definition]);
 
   const [prompt, setPrompt] = useState('');
@@ -71,17 +84,36 @@ const DefaultStory = ({
       model.append([reply]);
       model.setStreaming(reply.id);
       try {
-        for await (const blocks of streamTurn({ wordsPerChunk, chunkDelay, calls, failAt })) {
-          // Patched, not mutated: a schema-made message is frozen, so each chunk is a fresh value
-          // under the same identity — which is also what an item needs to reconcile by delta.
-          model.patch(reply.id, { ...reply, blocks } as Message.Message);
+        if (textOnly) {
+          // Each chunk carries the whole answer so far, under one identity — the same growing-prefix
+          // shape an agent's partial blocks arrive in, so what the reader sees here is what a
+          // streamed answer looks like rather than a simulation of one.
+          let text = '';
+          // Prose rather than `createAnswer`: that answer carries headings, lists and a code block,
+          // and markdown SHRINKS as it is parsed — the `## ` and `- ` characters stop being text the
+          // moment they become structure — so a reader watching rendered output would see it jump
+          // backwards. Plain paragraphs grow one token at a time and nothing else moves.
+          for await (const chunk of textStream(prose, { chunkDelay, wordsPerChunk })) {
+            text += chunk;
+            model.patch(reply.id, {
+              ...reply,
+              blocks: [{ _tag: 'text', text, pending: true }],
+            } as Message.Message);
+          }
+          model.patch(reply.id, { ...reply, blocks: [{ _tag: 'text', text }] } as Message.Message);
+        } else {
+          for await (const blocks of streamTurn({ wordsPerChunk, chunkDelay, calls, failAt })) {
+            // Patched, not mutated: a schema-made message is frozen, so each chunk is a fresh value
+            // under the same identity — which is also what an item needs to reconcile by delta.
+            model.patch(reply.id, { ...reply, blocks } as Message.Message);
+          }
         }
       } finally {
         model.setStreaming(undefined);
         setBusy(false);
       }
     },
-    [model, wordsPerChunk, chunkDelay, calls, failAt],
+    [model, wordsPerChunk, chunkDelay, calls, failAt, textOnly, prose],
   );
 
   // The thread's outward events: a suggestion or select click is a submit; the prompt toolbar's
@@ -343,6 +375,63 @@ export const Default: Story = {};
  */
 export const ToolRun: Story = {
   args: { chunkDelay: 40, calls: 3, failAt: 2, count: 4 },
+};
+
+/**
+ * Token-by-token streaming: one word at a time, under one message identity.
+ *
+ * The unit is the point. Every other story here streams in four-word chunks, which is enough to
+ * exercise reconciliation but reads as a document appearing in blocks; at one word the reader sees
+ * the answer being written, and the renderer is doing the harder thing — re-parsing markdown on
+ * every token while holding the tail at rest.
+ *
+ * Text only (`textOnly`), so the document is strictly monotonic and growth is measurable: a full
+ * turn drops its status block and closes its reasoning tag, both of which SHRINK the document, so
+ * it cannot be read as growth.
+ */
+export const TokenByToken: Story = {
+  args: { textOnly: true, wordsPerChunk: 1, chunkDelay: 60, count: 4 },
+  play: async ({ canvasElement }) => {
+    await settle(40);
+    const scroller = canvasElement.querySelector<HTMLElement>('[data-testid="feed.viewport"]')!;
+    const input = canvasElement.querySelector<HTMLInputElement>('[data-testid="assistant.prompt"]')!;
+    // The LAST row, not the window: the window is virtualized, so its text shrinks as earlier rows
+    // unmount under a growing streamed row — which reads as an answer that is not growing.
+    const answerText = () => {
+      const rows = [...scroller.querySelectorAll<HTMLElement>('[data-index]')];
+      return rows[rows.length - 1]?.innerText ?? '';
+    };
+
+    type(input, 'Explain anchor-relative placement.');
+    input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+
+    // Sampled per frame rather than per chunk: what is asserted is what a reader could have seen,
+    // and a sample that waited for the generator would pass on a renderer that only painted once.
+    const lengths: number[] = [];
+    for (let frame = 0; frame < 900; frame++) {
+      await nextFrame();
+      const length = answerText().length;
+      if (lengths.at(-1) !== length) {
+        lengths.push(length);
+      }
+      if (lengths.length > 1 && input.placeholder !== 'Answering…') {
+        break;
+      }
+    }
+
+    // Growth in many small steps is the whole claim: a buffered answer arrives in one step, and a
+    // chunked one in a handful, so the step COUNT is what separates token streaming from either.
+    const grew = lengths.every((length, index) => index === 0 || length >= lengths[index - 1]);
+    await expect({
+      steps: lengths.length > 8,
+      grew,
+      answered: answerText().length > 0,
+    }).toEqual({
+      steps: true,
+      grew: true,
+      answered: true,
+    });
+  },
 };
 
 /**
