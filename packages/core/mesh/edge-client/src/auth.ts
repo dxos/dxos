@@ -11,8 +11,8 @@ import { Keyring } from '@dxos/keyring';
 import { IdentityDid, PublicKey } from '@dxos/keys';
 import { fromPublicKey } from '@dxos/protocols/buf';
 import {
-  AuthSchema,
   AuthorizedDeviceSchema,
+  AuthSchema,
   type Chain,
   ChainSchema,
   type Credential,

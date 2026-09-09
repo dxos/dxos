@@ -7,7 +7,7 @@ import { describe, expect, onTestFinished, test } from 'vitest';
 import { Trigger } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { Keyring } from '@dxos/keyring';
-import { type EdgeStatus, EdgeStatus_ConnectionState } from '@dxos/protocols/buf/dxos/client/services_pb';
+import { EdgeStatus_ConnectionState } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { TextMessageSchema } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
 import { openAndClose } from '@dxos/test-utils';
 
