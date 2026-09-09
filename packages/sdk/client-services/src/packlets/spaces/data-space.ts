@@ -499,13 +499,7 @@ export class DataSpace {
     for (let attempt = 0, delay = ROOT_DOC_LOAD_RETRY_INITIAL_DELAY; !this._ctx.disposed; attempt++) {
       try {
         if (attempt > 0) {
-          // Dropped rather than re-driven: the guest reloads into this path after `joinNewIdentity`
-          // terminates its dedicated worker, and the query the dead worker left is parked — every
-          // re-ask re-attaches to it. Only a document that never loaded is dropped; anything else
-          // falls back to re-opening the round it already has.
-          if (!(await this._echoHost.automergeHost.dropParkedDocument(rootUrl))) {
-            this._echoHost.automergeHost.resyncDocument(rootUrl);
-          }
+          this._echoHost.automergeHost.resyncDocument(rootUrl);
           this._echoHost.automergeHost.kickStalledSync();
         }
 

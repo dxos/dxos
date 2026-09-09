@@ -600,32 +600,6 @@ export class AutomergeHost extends Resource {
   }
 
   /**
-   * Drops a document that never loaded, so the next lookup opens a fresh query for it. Returns
-   * false when the document is loaded or still leased — either means something holds state this
-   * would discard.
-   *
-   * A parked query survives every re-ask: `findWithProgress` re-attaches to it, and
-   * {@link resyncDocument} re-drives the entry it is already bound to. Removing the handle is what
-   * gives the next lookup a new query and a new subduction entry — which is what a document whose
-   * sources died under it needs.
-   */
-  async dropParkedDocument(id: AnyDocumentId): Promise<boolean> {
-    invariant(this.isOpen, 'AutomergeHost is not open');
-    const documentId = interpretAsDocumentId(id);
-    if (!this._repo.handles[documentId]) {
-      return false;
-    }
-    if (getHandleState(this._repo, documentId) === 'ready' || this._leases.isLeased(documentId)) {
-      return false;
-    }
-    await this._repo.removeFromCache(documentId);
-    // Dropped from the registry too, or a later eviction re-creates the very query this removes.
-    this._leases.forget(documentId);
-    log('dropped a parked document so its next lookup opens a fresh query', { documentId });
-    return true;
-  }
-
-  /**
    * Leases a document, waiting until it is loaded. The lease is the only route to a `DocHandle`;
    * dispose it (`using`, or in the holder's teardown) so the document can be evicted.
    *
