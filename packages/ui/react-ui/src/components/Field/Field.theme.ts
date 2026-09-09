@@ -118,13 +118,13 @@ const adornment: ComponentFunction<Partial<{ side: 'start' | 'end' }>> = (props,
 // A toggle is shorter than an input; its block margins pad it to the density's control height, so it
 // takes a full row and sits centred in it, bare or beside its label.
 const checkbox: ComponentFunction<InputStyleProps> = ({ size = 4 }, ...etc) =>
-  mx('dx-checkbox dx-focus-ring my-[calc((var(--dx-control)-1rem)/2)]', getSize(size), ...etc);
+  mx('dx-checkbox dx-focus-ring-inset my-[calc((var(--dx-control)-1rem)/2)]', getSize(size), ...etc);
 
 const checkboxIndicator: ComponentFunction<InputStyleProps> = ({ size = 4 }, ...etc) =>
   mx(getSize(snapSize(sizeValue(size) * 0.65, 4)), ...etc);
 
 const switch_: ComponentFunction<InputStyleProps> = (_props, ...etc) =>
-  mx('dx-checkbox--switch dx-focus-ring my-[calc((var(--dx-control)-1.25rem)/2)]', ...etc);
+  mx('dx-checkbox--switch dx-focus-ring-inset my-[calc((var(--dx-control)-1.25rem)/2)]', ...etc);
 
 /** A checkbox or switch laid out with its own label: the root is the `<label>`, so the text toggles it. */
 const checkboxRoot: ComponentFunction<InputStyleProps> = (props, ...etc) =>
