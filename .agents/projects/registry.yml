@@ -339,7 +339,25 @@ projects:
     tasks: packages/plugins/plugin-projects/docs/TASKS.md
     design: packages/plugins/plugin-projects/docs/DESIGN.md
     prs:
-      [12335, 12365, 12370, 12383, 12386, 12389, 12431, 12440, 12442, 12444, 12595, 12675, 12677, 12735, 12736, 12918, 13016]
+      [
+        12335,
+        12365,
+        12370,
+        12383,
+        12386,
+        12389,
+        12431,
+        12440,
+        12442,
+        12444,
+        12595,
+        12675,
+        12677,
+        12735,
+        12736,
+        12918,
+        13016,
+      ]
     resume: 'M6 Phases 1-2 MERGED as #12595 (2026-08-18: Project@0.4.0 inline artifacts, Milestone type, TaskSet@0.3.0 ordered tasks+milestones, Task@0.3.0 milestone/parentTask, eight task/milestone verbs, linear+github mirror milestones). Follow-ups merged: #12675 chat ownership on the ECHO parent edge (CompanionTo deleted, Filter.hasParent), #12677 tool names derived from operation keys, #12735 chat context bound via a contributed capability, #12736 explicit routine ownership (routines companion dropped), #12918 sample-spaces builder. NEXT: M6 Phase 3 (outline-first skill rule + promote-task verb + promotion eval), then Phase 4 routine staleness and Phase 5 deletion guards. Open follow-ups in TASKS.md: milestone rendering/authoring in TaskSetArticle, ProjectMcpOperation rename + leaf-import guard, setParent ref-less-edge sweep -> invariant, live Project conversation fixture, unify project-context binding, daily goals agent. Do NOT pin a worktree in this pointer.'
   - name: illustrator-scene-dsl
     status: active

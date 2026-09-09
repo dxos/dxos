@@ -54,6 +54,8 @@ export const getCore = (): string[] => [
  * work verbs rather than a chess game. `dx plugin enable` turns them on.
  */
 export const getDefaults = (): string[] => [
+  // Declared in Projects' `dependsOn`, so it is enabled whenever Projects is.
+  AssistantPlugin.meta.profile.key,
   ConnectorPlugin.meta.profile.key,
   InboxPlugin.meta.profile.key,
   MarkdownPlugin.meta.profile.key,
