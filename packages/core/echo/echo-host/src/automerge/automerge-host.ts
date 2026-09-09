@@ -600,6 +600,58 @@ export class AutomergeHost extends Resource {
   }
 
   /**
+   * Drives a subduction round for one document and reports what each peer answered.
+   *
+   * The scheduler's rounds settle without leaving anything a caller can read, so a document that
+   * never arrives says nothing about whether a peer was reached, whether it holds the document, or
+   * whether it sent any of it. Asking directly answers all three, and unlike {@link resyncDocument}
+   * it does not depend on the document already having an entry in the source.
+   */
+  async probeDocumentSync(id: AnyDocumentId, timeout: number): Promise<DocumentSyncProbe> {
+    invariant(this.isOpen, 'AutomergeHost is not open');
+    const documentId = interpretAsDocumentId(id);
+    const sedimentreeIdHex = documentIdToSedimentreeIdHex(documentId);
+    const probe: DocumentSyncProbe = {
+      documentId,
+      sedimentreeIdHex,
+      handleState: getHandleState(this._repo, documentId),
+      connectedPeerIds: [],
+      localCommits: 0,
+      localFragments: 0,
+      peers: [],
+    };
+    if (!this._useSubduction) {
+      return probe;
+    }
+
+    // Dynamic, like the signer import in `_open`: the static entry pulls the WASM bundle in
+    // eagerly, and this runs long after `initSubduction()`.
+    const { SedimentreeId } = await import('@automerge/automerge-subduction');
+    const subduction = await this._repo.subduction;
+    const sedimentreeId = SedimentreeId.fromBytes(documentIdToSedimentreeIdBytes(documentId));
+    probe.connectedPeerIds = (await subduction.getConnectedPeerIds()).map((peerId) => peerId.toString());
+    probe.localCommits = (await subduction.getCommits(sedimentreeId))?.length ?? 0;
+    probe.localFragments = (await subduction.getFragments(sedimentreeId))?.length ?? 0;
+
+    using results = await subduction.syncWithAllPeers(sedimentreeId, true, timeout);
+    for (const result of results.entries()) {
+      using peerResult = result;
+      probe.peers.push({
+        success: peerResult.success,
+        transportErrors: peerResult.transportErrors.map((err) => err.message),
+        commitsReceived: peerResult.stats.commitsReceived,
+        commitsSent: peerResult.stats.commitsSent,
+        fragmentsReceived: peerResult.stats.fragmentsReceived,
+        fragmentsSent: peerResult.stats.fragmentsSent,
+        // The distinguishing field: a peer that answers with heads it will not send is holding the
+        // document and withholding it, which no client-side retry can resolve.
+        remoteHeads: peerResult.stats.remoteHeads.length,
+      });
+    }
+    return probe;
+  }
+
+  /**
    * Leases a document, waiting until it is loaded. The lease is the only route to a `DocHandle`;
    * dispose it (`using`, or in the holder's teardown) so the document can be evicted.
    *
@@ -1624,8 +1676,34 @@ const sedimentreeHexToDocumentId = (sedimentreeIdHex: string): DocumentId => {
   return bs58check.encode(bytes) as DocumentId;
 };
 
-export const documentIdToSedimentreeIdHex = (documentId: DocumentId): string => {
+/** What one peer answered in a {@link AutomergeHost.probeDocumentSync} round. */
+export type PeerSyncProbe = {
+  success: boolean;
+  transportErrors: string[];
+  commitsReceived: number;
+  commitsSent: number;
+  fragmentsReceived: number;
+  fragmentsSent: number;
+  /** Heads the peer reports for this document. Non-zero with `commitsReceived: 0` means it holds the document and did not send it. */
+  remoteHeads: number;
+};
+
+/** One document's sync state, as {@link AutomergeHost.probeDocumentSync} found it. */
+export type DocumentSyncProbe = {
+  documentId: DocumentId;
+  sedimentreeIdHex: string;
+  handleState: string | undefined;
+  connectedPeerIds: string[];
+  localCommits: number;
+  localFragments: number;
+  peers: PeerSyncProbe[];
+};
+
+export const documentIdToSedimentreeIdBytes = (documentId: DocumentId): Uint8Array => {
   const bytes = new Uint8Array(32);
   bytes.set(bs58check.decode(documentId).subarray(0, 16));
-  return Array.from(bytes, (byte) => byte.toString(16).padStart(2, '0')).join('');
+  return bytes;
 };
+
+export const documentIdToSedimentreeIdHex = (documentId: DocumentId): string =>
+  Array.from(documentIdToSedimentreeIdBytes(documentId), (byte) => byte.toString(16).padStart(2, '0')).join('');

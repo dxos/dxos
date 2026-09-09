@@ -98,6 +98,9 @@ const ROOT_DOC_LOAD_ATTEMPT_TIMEOUT = 20_000;
 const ROOT_DOC_LOAD_RETRY_INITIAL_DELAY = 1_000;
 const ROOT_DOC_LOAD_RETRY_MAX_DELAY = 30_000;
 
+/** Bounds one probe round so it cannot outlast the load attempt it precedes. */
+const ROOT_DOC_SYNC_PROBE_TIMEOUT = 15_000;
+
 @trackLeaks('open', 'close')
 export class DataSpace {
   private _ctx = new Context();
@@ -489,16 +492,16 @@ export class DataSpace {
    * Loads a space's root document, re-driving until it arrives or the space closes.
    *
    * `loadDoc` waits on the network with no deadline of its own, and asking again is not enough:
-   * `findWithProgress` re-attaches to the same parked subduction query rather than re-issuing it.
-   * Each retry therefore re-opens a round for this document first — a fetch the peer answered
-   * before it held the document settles as success-empty, which the repo-wide kick does not revive.
+   * `findWithProgress` re-attaches to the same parked subduction query rather than re-issuing it,
+   * and the scheduler only retries rounds it saw fail. Each retry therefore drives a round of its
+   * own, which also reports what every peer answered — the only place that tells a stalled space
+   * whether a peer holds this document and did not send it.
    */
   async #loadRootDoc(rootUrl: AutomergeUrl): Promise<DocumentLease<DatabaseDirectory> | null> {
     for (let attempt = 0, delay = ROOT_DOC_LOAD_RETRY_INITIAL_DELAY; !this._ctx.disposed; attempt++) {
       try {
         if (attempt > 0) {
-          this._echoHost.automergeHost.resyncDocument(rootUrl);
-          this._echoHost.automergeHost.kickStalledSync();
+          await this.#driveRootDocSync(rootUrl, attempt);
         }
 
         return await warnAfterTimeout(5_000, 'Automerge root doc load timeout (DataSpace)', () =>
@@ -527,6 +530,22 @@ export class DataSpace {
     }
 
     return null;
+  }
+
+  /**
+   * Asks every peer for the root document and says what each one answered.
+   *
+   * Diagnostics must not break what they diagnose, so a probe that throws is logged and the retry
+   * proceeds to the load attempt regardless.
+   */
+  async #driveRootDocSync(rootUrl: AutomergeUrl, attempt: number): Promise<void> {
+    try {
+      const probe = await this._echoHost.automergeHost.probeDocumentSync(rootUrl, ROOT_DOC_SYNC_PROBE_TIMEOUT);
+      log.warn('space root doc sync probe', { space: this.key, attempt, ...probe });
+    } catch (err) {
+      log.warn('space root doc sync probe failed', { space: this.key, attempt, err });
+    }
+    this._echoHost.automergeHost.kickStalledSync();
   }
 
   private _onNewAutomergeRoot(rootUrl: string): void {
