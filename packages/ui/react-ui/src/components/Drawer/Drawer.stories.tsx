@@ -86,7 +86,7 @@ const DefaultStory = ({ side, modal, snapPoints, ...props }: StoryArgs) => (
 /** One number for the seam and both drawers: a drawer in a split pane moves on the pane's clock. */
 const TRANSITION = 500;
 /** The inspector's initial width in rem; the seam writes drags back into it. */
-const INSPECTOR_SIZE = 30;
+const INSPECTOR_SIZE = 40;
 
 const PushStory = () => {
   const [start, setStart] = useState(true);
@@ -163,7 +163,9 @@ const PushStory = () => {
             <Panel.Content>
               <Panel.Root>
                 <Panel.Toolbar asChild>
-                  <Toolbar.Root classNames='bg-transparent' />
+                  <Toolbar.Root classNames='bg-transparent'>
+                    <Toolbar.IconButton icon='ph--pen--regular' iconOnly label='Edit' />
+                  </Toolbar.Root>
                 </Panel.Toolbar>
                 <Panel.Root classNames='flex items-center justify-center'>Main</Panel.Root>
               </Panel.Root>
@@ -181,7 +183,7 @@ const PushStory = () => {
           <Drawer.Root open={end} onOpenChange={setEnd} side='end' push transition={TRANSITION}>
             {/* The sheet is the pane's size, so a seam drag resizes it and a collapse slides it out. */}
             <Drawer.Content draggable={false} size={inspectorSize}>
-              <Panel.Root>
+              <Panel.Root classNames='border'>
                 <Panel.Toolbar asChild>
                   <Toolbar.Root>
                     <Drawer.Title classNames='grow px-2'>Inspector</Drawer.Title>
@@ -196,15 +198,18 @@ const PushStory = () => {
                 <Panel.Content asChild>
                   <Panel.Root>
                     <Panel.Toolbar asChild>
-                      <Toolbar.Root classNames='bg-transparent' />
+                      <Toolbar.Root classNames='bg-transparent'>
+                        <Toolbar.IconButton icon='ph--plus--regular' iconOnly label='Create' />
+                      </Toolbar.Root>
                     </Panel.Toolbar>
+                    {/* A column, so the description and the scroll area share the row rather than stacking past it. */}
+                    <Panel.Content classNames='flex flex-col'>
+                      <Drawer.Description>
+                        The Inspector slides in from the right edge of the viewport.
+                      </Drawer.Description>
+                      <Filler lines={50} />
+                    </Panel.Content>
                   </Panel.Root>
-                  <Panel.Content>
-                    <Drawer.Description>
-                      The Inspector slides in from the right edge of the viewport.
-                    </Drawer.Description>
-                    <Filler lines={50} />
-                  </Panel.Content>
                 </Panel.Content>
               </Panel.Root>
             </Drawer.Content>
