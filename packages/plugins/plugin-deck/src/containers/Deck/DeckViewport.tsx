@@ -326,13 +326,20 @@ const resolveMaxTileSize = (maxPlankWidthPx: number, hasCompanion: boolean): num
  * is the content the cap exists to keep reachable, so squeezing the side panel is what a narrowing
  * viewport should do.
  */
+/**
+ * A plank's width hangs off its URL segment, not its id: the id a pair resolves to can change once
+ * the graph catches up, and the width must not change with it. Falls back to the id for a plank the
+ * projection has no segment for.
+ */
+export const sizingKeyFor = (segments: Record<string, string> | undefined, id: string): string => segments?.[id] ?? id;
+
 const resolveTileSizes = (
   plankSizing: Record<string, number>,
-  id: string,
+  sizingKey: string,
   hasCompanion: boolean,
   maxSize: number,
 ): { companionSize: number; tileSize: number } => {
-  const stored = plankSizing[id] ?? DEFAULT_PLANK_SIZE;
+  const stored = plankSizing[sizingKey] ?? DEFAULT_PLANK_SIZE;
   if (!hasCompanion) {
     return { companionSize: 0, tileSize: Math.min(stored, maxSize) };
   }
@@ -446,7 +453,12 @@ const DeckPlankTile: MosaicStackTileComponent<string> = (props) => {
   // Clamp the tile to the viewport-derived cap so its trailing controls stay clear of the piled spines;
   // the cap only ever shrinks the stored width, so widths are restored when the viewport grows.
   const maxSize = resolveMaxTileSize(maxPlankWidthPx, !!companion);
-  const { companionSize, tileSize: storedSize } = resolveTileSizes(deck.plankSizing, id, !!companion, maxSize);
+  const { companionSize, tileSize: storedSize } = resolveTileSizes(
+    deck.plankSizing,
+    sizingKeyFor(state.segments, id),
+    !!companion,
+    maxSize,
+  );
   // Expanded takes the whole cap, which is by construction the viewport less a spine for every other
   // plank — exactly the space between the two piles.
   const tileSize = state.expanded === id ? maxSize : storedSize;
@@ -1697,7 +1709,7 @@ export const DeckPlanks = () => {
     const paired = !!lastPlankCompanionId;
     const { tileSize } = resolveTileSizes(
       deck.plankSizing,
-      lastPlankId,
+      sizingKeyFor(state.segments, lastPlankId),
       paired,
       resolveMaxTileSize(maxPlankWidthPx, paired),
     );
@@ -1719,6 +1731,7 @@ export const DeckPlanks = () => {
     lastPlankCompanionId,
     lastTileWidthPx,
     deck.plankSizing,
+    state.segments,
     maxPlankWidthPx,
     viewportWidthPx,
   ]);

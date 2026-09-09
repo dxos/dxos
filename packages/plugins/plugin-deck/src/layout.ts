@@ -59,14 +59,19 @@ export const addSubjectsToActiveDeck = (
 };
 
 /** `names` with entries for planks no longer open removed, and `name` (when given) bound to `plankId`. */
+/**
+ * Named planks, pruned to what is open. Keyed by URL segment rather than plank id: a name outlives
+ * the id its plank resolves to, and a name pointing at a stale id would open a duplicate rather than
+ * reusing the plank it names.
+ */
 export const updatePlankNames = (
   names: Record<string, string>,
-  active: readonly string[],
-  binding?: { name: string; plankId: string },
+  activeSegments: readonly string[],
+  binding?: { name: string; segment: string },
 ): Record<string, string> => {
-  const next = Object.fromEntries(Object.entries(names).filter(([, plankId]) => active.includes(plankId)));
-  if (binding && active.includes(binding.plankId)) {
-    next[binding.name] = binding.plankId;
+  const next = Object.fromEntries(Object.entries(names).filter(([, segment]) => activeSegments.includes(segment)));
+  if (binding && activeSegments.includes(binding.segment)) {
+    next[binding.name] = binding.segment;
   }
   return next;
 };

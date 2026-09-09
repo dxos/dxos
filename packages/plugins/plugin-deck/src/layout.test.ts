@@ -71,11 +71,11 @@ describe('addSubjectsToActiveDeck', () => {
 
 describe('updatePlankNames', () => {
   test('binds a name to the plank that took it', ({ expect }) => {
-    expect(updatePlankNames({}, ['a'], { name: 'message', plankId: 'a' })).toEqual({ message: 'a' });
+    expect(updatePlankNames({}, ['a'], { name: 'message', segment: 'a' })).toEqual({ message: 'a' });
   });
 
   test('rebinds a name to the plank that replaced its occupant', ({ expect }) => {
-    expect(updatePlankNames({ message: 'a' }, ['b'], { name: 'message', plankId: 'b' })).toEqual({ message: 'b' });
+    expect(updatePlankNames({ message: 'a' }, ['b'], { name: 'message', segment: 'b' })).toEqual({ message: 'b' });
   });
 
   test('drops names whose plank is no longer open', ({ expect }) => {
@@ -83,7 +83,7 @@ describe('updatePlankNames', () => {
   });
 
   test('ignores a binding to a plank that did not end up open', ({ expect }) => {
-    expect(updatePlankNames({}, ['a'], { name: 'message', plankId: 'gone' })).toEqual({});
+    expect(updatePlankNames({}, ['a'], { name: 'message', segment: 'gone' })).toEqual({});
   });
 });
 

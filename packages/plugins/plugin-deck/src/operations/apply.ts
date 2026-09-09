@@ -38,8 +38,10 @@ export const applyActive = Effect.fnUntraced(function* (next: string[]) {
   const { flatten } = yield* Capabilities.getAtomValue(DeckCapabilities.Settings);
 
   const { deckUpdates, toAttend } = computeActiveUpdates({ next, deck, attention, flatten });
+  const { segments } = yield* Capabilities.getAtomValue(DeckCapabilities.EphemeralState);
+  const activeSegments = deckUpdates.active.map((id) => segments?.[id] ?? id);
   yield* Capabilities.updateAtomValue(DeckCapabilities.State, (state) =>
-    updateActiveDeck(state, { ...deckUpdates, plankNames: updatePlankNames(deck.plankNames, deckUpdates.active) }),
+    updateActiveDeck(state, { ...deckUpdates, plankNames: updatePlankNames(deck.plankNames, activeSegments) }),
   );
 
   return toAttend;

@@ -26,6 +26,7 @@ import { DeckCapabilities, DeckSchema } from '#types';
 
 import { applyActive, applyCompanion, applyWorkspace } from '../operations/apply';
 import { getCandidateEntityIds, getUnresolvedPlankId } from '../util';
+import * as Navigation from '../util/navigation';
 import { shouldDeferNavigationHandlers } from './check-app-scheme';
 
 /**
@@ -276,6 +277,7 @@ export const projectUrl = Effect.fnUntraced(function* (url?: URL) {
   // Planks resolve in chain order; a `companion/<variant>` pair belongs to the plank before it rather
   // than being a plank of its own, so it drives that plank's companion state and the selected variant.
   const plankIds: string[] = [];
+  const segments: Record<string, string> = {};
   let companionNodeId: string | null = null;
   let companionAnchorId: string | undefined;
   pairs.forEach((pair, index) => {
@@ -287,16 +289,15 @@ export const projectUrl = Effect.fnUntraced(function* (url?: URL) {
       }
       return;
     }
-    if (nodeId) {
-      plankIds.push(nodeId);
-      return;
-    }
-    const candidateId = resolved[index]?.candidateId ?? getUnresolvedPlankId(pair);
-    plankIds.push(candidateId);
+    const plankId = nodeId ?? resolved[index]?.candidateId ?? getUnresolvedPlankId(pair);
+    plankIds.push(plankId);
+    segments[plankId] = Navigation.toSegment(pair);
   });
 
   // The projection writes the deck directly rather than invoking `Set`: once `Set` navigates, an
   // operation that navigates and a projection that applies a navigation would call each other.
+  // Recorded before the planks so a plank never renders without the key its width hangs off.
+  yield* Capabilities.updateAtomValue(DeckCapabilities.EphemeralState, (state) => ({ ...state, segments }));
   yield* applyActive(plankIds);
 
   // Attention is never serialized; on load it defaults to the last plank in the chain — except when

@@ -104,6 +104,7 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperat
       const navigateSolo = (active: readonly string[]): string[] =>
         input.subject.every((id) => active.includes(id)) ? [...active] : [...input.subject];
 
+      const { segments } = yield* Capabilities.getAtomValue(DeckCapabilities.EphemeralState);
       let previouslyOpenIds: Set<string>;
       {
         const deck = yield* DeckCapabilities.getDeck();
@@ -153,7 +154,11 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperat
           const [attendedId] = anchorToOrigin ? attention.getCurrent() : [];
           const pivotId = input.pivotId ?? (attendedId && deck.active.includes(attendedId) ? attendedId : undefined);
           // A named open reuses the plank already holding that name, the way a browser tab is reused.
-          const replaceId = input.name ? deck.plankNames[input.name] : undefined;
+          // Names are held by segment, so the plank is whichever open one currently carries it.
+          const namedSegment = input.name ? deck.plankNames[input.name] : undefined;
+          const replaceId = namedSegment
+            ? deck.active.find((id) => (segments?.[id] ?? id) === namedSegment)
+            : undefined;
           next = addSubjectsToActiveDeck(deck.active, input.subject, { pivotId, replaceId });
         } else {
           next = navigateSolo(deck.active);
@@ -165,10 +170,12 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperat
         // so names whose plank this open closed are dropped rather than left dangling.
         // A level open binds the name the level owns; an ordinary open binds whatever the caller passed.
         const boundName = levelOpen?.name ?? input.name;
+        const nextSegments = next.map((id) => segments?.[id] ?? id);
+        const boundSegment = input.subject[0] ? (segments?.[input.subject[0]] ?? input.subject[0]) : undefined;
         const plankNames = updatePlankNames(
           deck.plankNames,
-          next,
-          boundName && input.subject[0] ? { name: boundName, plankId: input.subject[0] } : undefined,
+          nextSegments,
+          boundName && boundSegment ? { name: boundName, segment: boundSegment } : undefined,
         );
         // The companion follows a level swap: the new plank stands in for the replaced one, and closing
         // it mid-read would also narrow the deck, which the browser answers by clamping the scroll — a
