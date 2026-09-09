@@ -275,6 +275,8 @@ export type SchemaMeta = TypeMeta & { id: string };
 /**
  * Identifies a schema as hidden from user-facing surfaces (like dotfiles — visible only via an advanced setting).
  */
+// TODO(wittjosiah): Invert the default? Hide every type unless it opts in, so a new type is
+//   invisible until someone marks it as user-facing rather than visible until someone hides it.
 export const HiddenAnnotationId = '@dxos/schema/annotation/Hidden';
 export const HiddenAnnotation = createAnnotationHelper<boolean>(HiddenAnnotationId);
 
