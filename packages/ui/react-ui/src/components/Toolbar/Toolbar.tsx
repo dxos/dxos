@@ -15,7 +15,8 @@ import { useTranslation } from 'react-i18next';
 
 import { useFocusGroup } from '@dxos/react-focus';
 import { useComposedRefs } from '@dxos/react-hooks';
-import { type SlottableProps } from '@dxos/ui-types';
+import { elevationAttrs, elevationSurface } from '@dxos/ui-theme';
+import { type ElevationLevel, type SlottableProps } from '@dxos/ui-types';
 
 import { translationKey } from '#translations';
 
@@ -48,7 +49,9 @@ import { Separator, type SeparatorProps } from '../Separator';
 //
 
 type ToolbarRootProps = Omit<ComponentPropsWithoutRef<'div'>, 'dir'> &
-  ToolbarStyleProps & {
+  Omit<ToolbarStyleProps, 'surface'> & {
+    /** Material-style elevation, 0–5, onto the surface ladder: the bar paints that level and its shadow. */
+    elevation?: ElevationLevel;
     orientation?: 'horizontal' | 'vertical';
     /** Wrap arrow navigation at the ends (default true). */
     loop?: boolean;
@@ -66,6 +69,7 @@ const ToolbarRoot = composable<HTMLDivElement, ToolbarRootProps>(
       density,
       disabled,
       layoutManaged,
+      elevation,
       orientation = 'horizontal',
       loop = true,
       onKeyDown,
@@ -108,7 +112,12 @@ const ToolbarRoot = composable<HTMLDivElement, ToolbarRootProps>(
         {...(orientation === 'vertical' && { 'aria-orientation': 'vertical' })}
         data-orientation={orientation}
         data-arrow-keys={orientation === 'vertical' ? 'up down' : 'left right'}
-        className={tx('toolbar.root', { density, disabled, layoutManaged }, className)}
+        {...elevationAttrs(elevation)}
+        className={tx(
+          'toolbar.root',
+          { density, disabled, layoutManaged, surface: elevationSurface(elevation) },
+          className,
+        )}
         onKeyDown={handleKeyDown}
         onFocus={handleFocus}
         ref={useComposedRefs<HTMLDivElement>(forwardedRef, focusGroupRef)}
