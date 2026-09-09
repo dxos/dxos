@@ -239,7 +239,7 @@ const RoutineFormImpl = ({
     >
       <Form.Viewport scroll {...composableProps(props)} ref={forwardedRef}>
         <Form.Content>
-          <Form.FieldSet schema={GeneralForm} />
+          <Form.Fields schema={GeneralForm} />
 
           <Section title={t('actions.title')}>
             <ActionSection db={db} routine={routine} readonly={readonly} />
@@ -292,7 +292,7 @@ const ActionSection = ({
 
   return (
     <div className='flex flex-col'>
-      <Form.FieldSet path={ACTION_PATH} schema={ActionForm} />
+      <Form.Fields path={ACTION_PATH} schema={ActionForm} />
       {kind === 'instructions' && instructions ? (
         <InstructionsEditor db={db} instructions={instructions} readonly={readonly} />
       ) : null}

@@ -82,7 +82,7 @@ export const SegmentArticle = ({ role, subject: segment }: SegmentArticleProps) 
           <Form.Root key={segment.id} schema={schema} defaultValues={segment} autoSave onSave={handleSave}>
             <Form.Viewport scroll>
               <Form.Content>
-                <Form.FieldSet />
+                <Form.Fields />
               </Form.Content>
             </Form.Viewport>
           </Form.Root>

@@ -118,7 +118,7 @@ export const CreateConnectionPanel = ({ onCreateObject, connectors: connectorsPr
           onSave={(values: any) => submit(values)}
         >
           <Form.Content>
-            <Form.FieldSet />
+            <Form.Fields />
             <Form.Submit disabled={pending ? true : undefined} />
           </Form.Content>
         </Form.Root>

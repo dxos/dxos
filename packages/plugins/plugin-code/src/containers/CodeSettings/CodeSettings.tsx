@@ -67,23 +67,21 @@ export const CodeSettings = ({ subject }: CodeSettingsProps) => {
     >
       <Form.Viewport scroll>
         <Form.Content>
-          <Form.Section title={meta.profile.name ?? meta.profile.key}>
+          <Form.FieldSet label={meta.profile.name ?? meta.profile.key}>
             <Form.Field label={t('api-key.label')}>
-              <Field.Root>
-                <Field.Input
-                  type='password'
-                  placeholder={existing ? t('api-key.set.placeholder') : t('api-key.empty.placeholder')}
-                  value={draft}
-                  onChange={(event) => {
-                    touchedRef.current = true;
-                    setDraft(event.target.value);
-                  }}
-                  onBlur={handleCommit}
-                />
-              </Field.Root>
+              <Field.Input
+                type='password'
+                placeholder={existing ? t('api-key.set.placeholder') : t('api-key.empty.placeholder')}
+                value={draft}
+                onChange={(event) => {
+                  touchedRef.current = true;
+                  setDraft(event.target.value);
+                }}
+                onBlur={handleCommit}
+              />
             </Form.Field>
-            <Form.FieldSet />
-          </Form.Section>
+            <Form.Fields />
+          </Form.FieldSet>
         </Form.Content>
       </Form.Viewport>
     </Form.Root>
