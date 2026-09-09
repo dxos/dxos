@@ -13,6 +13,14 @@ import { RemoteSessionOperation } from '#types';
 const DEFAULT_LIMIT = 50;
 const MAX_LIMIT = 200;
 
+/**
+ * Clamped to a whole number in [0, MAX_LIMIT]. `slice` reads a negative end as an offset from the
+ * end, so an unchecked `limit: -1` from a remote caller returns every session but the last — more
+ * rows than the cap, out of the argument meant to bound them.
+ */
+const pageSize = (limit: number | undefined): number =>
+  limit === undefined ? DEFAULT_LIMIT : Math.min(Math.max(Math.floor(limit), 0), MAX_LIMIT);
+
 const handler: Operation.WithHandler<typeof RemoteSessionOperation.ListSessions> =
   RemoteSessionOperation.ListSessions.pipe(
     Operation.withHandler(
@@ -33,7 +41,7 @@ const handler: Operation.WithHandler<typeof RemoteSessionOperation.ListSessions>
         const sessions = objects
           .filter((session) => (state ? session.state === state : true))
           .sort((left, right) => (left.started < right.started ? 1 : left.started > right.started ? -1 : 0))
-          .slice(0, Math.min(limit ?? DEFAULT_LIMIT, MAX_LIMIT));
+          .slice(0, pageSize(limit));
 
         return { sessions };
       }),

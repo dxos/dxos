@@ -15,8 +15,13 @@ const handler: Operation.WithHandler<typeof RemoteSessionOperation.RecordSession
     Operation.withHandler(
       Effect.fnUntraced(function* ({ sessionId, title, state, lastMessage, repo, branch, worktree }) {
         const now = new Date().toISOString();
-        const existing = (yield* Database.query(Query.select(Filter.type(RemoteSession.RemoteSession, { sessionId })))
-          .run).at(0);
+        // Oldest id wins, and the rest are removed below. Nothing constrains uniqueness on
+        // `sessionId`, so two hooks firing their first report at once both see no row and both
+        // create one; converging deterministically keeps every later writer on one object.
+        const matches = [
+          ...(yield* Database.query(Query.select(Filter.type(RemoteSession.RemoteSession, { sessionId }))).run),
+        ].sort((left, right) => left.id.localeCompare(right.id));
+        const [existing, ...duplicates] = matches;
 
         if (!existing) {
           const session = yield* Database.add(
@@ -55,7 +60,10 @@ const handler: Operation.WithHandler<typeof RemoteSessionOperation.RecordSession
           if (worktree !== undefined) {
             existing.worktree = worktree;
           }
-          if (state !== undefined) {
+          // A terminal session keeps its state. Reports keep arriving after one ends — a queued
+          // hook, a resumed transcript — and letting `running` win would leave a finished session
+          // looking live, contradicting the `finished` time it still carries.
+          if (state !== undefined && !RemoteSession.isTerminal(existing)) {
             existing.state = state;
             // Stamped once, on the transition: a later report on an already-finished session is a
             // check-in, and must not move the time the work actually ended.
@@ -65,6 +73,12 @@ const handler: Operation.WithHandler<typeof RemoteSessionOperation.RecordSession
           }
           existing.lastCheckedIn = now;
         });
+
+        // The duplicates this operation could not prevent do not survive the write that finds
+        // them: leaving them would report one session twice and split its later updates.
+        for (const duplicate of duplicates) {
+          yield* Database.remove(duplicate);
+        }
         yield* Database.flush();
         return { session: existing, created: false };
       }),

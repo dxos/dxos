@@ -5,7 +5,7 @@
 import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 
-import { Ref } from '@dxos/echo';
+import { Database, Ref } from '@dxos/echo';
 import { TestDatabaseLayer } from '@dxos/echo-client/testing';
 import { RemoteSession, Task, TaskSet } from '@dxos/types';
 
@@ -60,6 +60,43 @@ describe('report-session', () => {
     }).pipe(Effect.provide(TestDatabaseLayer({ types }))),
   );
 
+  it.effect('a terminal session is not resurrected by a later running report', () =>
+    Effect.gen(function* () {
+      yield* reportSession.handler({ sessionId: 'session_term', state: 'finished' });
+      const later = yield* reportSession.handler({
+        sessionId: 'session_term',
+        state: 'running',
+        lastMessage: 'a queued hook arriving after the end',
+      });
+
+      expect(later.session.state).toBe('finished');
+      expect(later.session.finished).toBeDefined();
+      // The report is still a check-in: what it carries besides `state` lands.
+      expect(later.session.lastMessage).toBe('a queued hook arriving after the end');
+    }).pipe(Effect.provide(TestDatabaseLayer({ types }))),
+  );
+
+  it.effect('collapses duplicate rows for one sessionId onto the oldest', () =>
+    Effect.gen(function* () {
+      // The race the operation cannot prevent, staged directly: two rows, one sessionId.
+      const first = yield* Database.add(
+        RemoteSession.make({ sessionId: 'session_dup', state: 'running', started: new Date().toISOString() }),
+      );
+      const second = yield* Database.add(
+        RemoteSession.make({ sessionId: 'session_dup', state: 'running', started: new Date().toISOString() }),
+      );
+      yield* Database.flush();
+      const [oldest] = [first, second].sort((left, right) => left.id.localeCompare(right.id));
+
+      const reported = yield* reportSession.handler({ sessionId: 'session_dup', title: 'Survivor' });
+      expect(reported.session.id).toBe(oldest.id);
+
+      const { sessions } = yield* listSessions.handler({ sessionId: 'session_dup' });
+      expect(sessions).toHaveLength(1);
+      expect(sessions[0]!.title).toBe('Survivor');
+    }).pipe(Effect.provide(TestDatabaseLayer({ types }))),
+  );
+
   it.effect('keys on sessionId, so two sessions stay distinct', () =>
     Effect.gen(function* () {
       yield* reportSession.handler({ sessionId: 'session_one', title: 'One' });
@@ -79,6 +116,21 @@ describe('report-session', () => {
 });
 
 describe('list-sessions', () => {
+  it.effect('bounds a negative or fractional limit instead of slicing from the end', () =>
+    Effect.gen(function* () {
+      for (const index of [0, 1, 2]) {
+        yield* reportSession.handler({ sessionId: `session_limit_${index}` });
+      }
+
+      // `slice(0, -1)` would drop only the last row, returning more than any cap allows.
+      const negative = yield* listSessions.handler({ limit: -1 });
+      expect(negative.sessions).toHaveLength(0);
+
+      const fractional = yield* listSessions.handler({ limit: 1.9 });
+      expect(fractional.sessions).toHaveLength(1);
+    }).pipe(Effect.provide(TestDatabaseLayer({ types }))),
+  );
+
   it.effect('filters by state and by session id', () =>
     Effect.gen(function* () {
       yield* reportSession.handler({ sessionId: 'session_a' });

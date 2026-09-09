@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { describe, expect, it } from 'vitest';
+import { describe, test } from '@effect/vitest';
 
 import { Obj, Ref } from '@dxos/echo';
 
@@ -11,7 +11,7 @@ import * as RemoteSession from './RemoteSession';
 import * as Task from './Task';
 
 describe('RemoteSession', () => {
-  it('carries the harness session id as its foreign key', () => {
+  test('carries the harness session id as its foreign key', ({ expect }) => {
     const session = RemoteSession.make({
       sessionId: 'session_016eid',
       title: 'Land the release PR',
@@ -23,7 +23,7 @@ describe('RemoteSession', () => {
     expect(Obj.getTypename(session)).toBe('org.dxos.type.remoteSession');
   });
 
-  it('distinguishes terminal states from a session still working', () => {
+  test('distinguishes terminal states from a session still working', ({ expect }) => {
     const started = new Date().toISOString();
     const running = RemoteSession.make({ sessionId: 'a', state: 'running', started });
     const finished = RemoteSession.make({ sessionId: 'b', state: 'finished', started });
@@ -38,7 +38,7 @@ describe('RemoteSession', () => {
     expect(RemoteSession.isTerminal(unknown)).toBe(false);
   });
 
-  it('is usable as a task assignee through the actor subject ref', () => {
+  test('is usable as a task assignee through the actor subject ref', ({ expect }) => {
     const session = RemoteSession.make({
       sessionId: 'session_worker',
       state: 'running',
