@@ -167,7 +167,7 @@ const label: ComponentFunction<InputMetaStyleProps> = (props, ...etc) =>
   mx('text-sm text-description', props.srOnly ? 'sr-only' : 'flex items-center min-h-(--dx-control)', ...etc);
 
 const helperText: ComponentFunction<InputMetaStyleProps> = (props, ...etc) =>
-  mx('text-description', props.srOnly && 'sr-only', ...etc);
+  mx('text-subdued', props.srOnly && 'sr-only', ...etc);
 
 const errorText: ComponentFunction<InputMetaStyleProps> = (props, ...etc) =>
   mx('text-sm text-description', props.srOnly ? 'sr-only' : textValence(props.validationValence), ...etc);
