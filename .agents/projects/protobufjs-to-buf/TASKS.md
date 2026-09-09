@@ -56,17 +56,17 @@ Not an import swap, and **not a codec swap either**. Three things move together 
 
 Order by namespace — two are ~45% of the surface.
 
-- [ ] `dxos/halo/credentials` — 81 / 81. The fence is **lifted**. 149 of these narrow an assertion
+- [x] `dxos/halo/credentials` — 81 / 81. The fence is **lifted**. 149 of these narrow an assertion
       by `'@type'` across 44 files; `getCredentialAssertion` accounts for 39 across 16.
       Credentials core itself now holds no protobuf.js codec — only type-only `TypedMessage`/`TYPES`
       in `assertions.ts`, `credential-factory.ts`, `credential-generator.ts` and
       `space-state-machine.ts`, which _are_ the package's public discriminated union.
-- [ ] `dxos/client/services` — 48 / 48.
-- [ ] `dxos/echo/feed` — 23 / 23. Signed feed blocks; wants cross-version feed fixtures.
-- [ ] `dxos/halo/invitations` — 15 / 14.
-- [ ] `dxos/echo/metadata` — 11 / 11.
-- [ ] `dxos/edge/messenger` — 7 / 7.
-- [ ] ~20 remaining namespaces, tail.
+- [x] `dxos/client/services` — 48 / 48.
+- [x] `dxos/echo/feed` — 23 / 23. Signed feed blocks; wants cross-version feed fixtures.
+- [x] `dxos/halo/invitations` — 15 / 14.
+- [x] `dxos/echo/metadata` — 11 / 11.
+- [x] `dxos/edge/messenger` — 7 / 7.
+- [x] ~20 remaining namespaces, tail.
 
 ### 1a. Retire the shape-compat layer · part of group 1, not a step after it
 
@@ -77,18 +77,18 @@ deleted with the last one.
 
 Ranked by how much shape each hides:
 
-- [ ] Whole-message boundary bridges — `client-protocol/bridge-codec.ts` (18),
+- [x] Whole-message boundary bridges — `client-protocol/bridge-codec.ts` (18),
       `client/services/legacy-codec.ts` (11), `client-services/services/credentials-codec.ts` (8),
       `client-services/network/utils.ts` (8). These convert an entire message at a service seam.
-- [ ] `Any` envelope bridges — `messaging/messenger.ts`, `mesh/rpc/rpc.ts`,
+- [x] `Any` envelope bridges — `messaging/messenger.ts`, `mesh/rpc/rpc.ts`,
       `teleport/muxing/muxer.ts`, `teleport-extension-gossip/presence.ts`,
       `devtools/JsonView.tsx`, `devtools/useFeedMessages.tsx`, `devtools/useCredentials.tsx`.
       Go with item 2 above.
-- [ ] `PublicKey` bridges — `halo/keyring/{keyring,sqlite-keyring}.ts`,
+- [x] `PublicKey` bridges — `halo/keyring/{keyring,sqlite-keyring}.ts`,
       `network-manager/signal/swarm-messenger.ts`, `edge-client/auth-challenge.ts`.
-- [ ] `Timeframe` / on-disk bridges — `pipeline/codec.ts`, `echo-host/sqlite-heads-store.ts`,
+- [x] `Timeframe` / on-disk bridges — `pipeline/codec.ts`, `echo-host/sqlite-heads-store.ts`,
       both metadata stores, `change-metadata.ts`, `sql-storage-diagnostics.ts`.
-- [ ] `service-rpc.ts` and `buf/service.ts` — the layer's own consumers; last to go.
+- [x] `service-rpc.ts` and `buf/service.ts` — the layer's own consumers; last to go.
 
 ### 1b. Blocking design decision — the credential signing payload
 
@@ -111,36 +111,36 @@ converting, never before.
 
 ## Group 2 — `codec-protobuf`'s direct consumers · parallel to group 1
 
-- [ ] **Fix `protobuf-compiler`'s `file-generator.ts` first** — it emits
+- [x] **Fix `protobuf-compiler`'s `file-generator.ts` first** — it emits
       `import type { RequestOptions } from '@dxos/codec-protobuf'` into every service stub, so the
       next `prebuild` undoes any sweep that skips it.
-- [ ] `blade-runner/src/redis/rpc-codec.ts` — one `import { type Any }`, the only non-machinery
+- [x] `blade-runner/src/redis/rpc-codec.ts` — one `import { type Any }`, the only non-machinery
       dependent left. A one-file change whenever convenient.
-- [ ] The RPC seam — `rpc` (2), `client-protocol` (2). Lands with the `Any` envelope, since
+- [x] The RPC seam — `rpc` (2), `client-protocol` (2). Lands with the `Any` envelope, since
       `ServiceBackend.call(method, request: Any)` is typed on it. `RequestOptions` is removed, not
       retyped.
-- [ ] `echo-client/repo-proxy.ts` `Struct` — a real type fix. Removing the cast means constraining
+- [x] `echo-client/repo-proxy.ts` `Struct` — a real type fix. Removing the cast means constraining
       `create<T>`, which ripples through echo-client's public API because a TS `interface` has no
       implicit index signature. Widening `DataService.initialValue` is the actual fix.
 
 ## Group 3 — the bindings · blocked on group 1
 
-- [ ] Delete `protocols/src/proto/` (generated tree, `substitutions.ts`, `types.ts`), the `./proto`,
+- [x] Delete `protocols/src/proto/` (generated tree, `substitutions.ts`, `types.ts`), the `./proto`,
       `./proto/*` and `./proto/dxos/*.proto` export-map entries, and the `prebuild` task.
-- [ ] The three deliberately cross-codec tests go with it, since they exist to compare the two
+- [x] The three deliberately cross-codec tests go with it, since they exist to compare the two
       codecs: `credentials/buf-compat.test.ts`, `presentations/json-encoding.test.ts`,
       `protocols/src/buf/{cross-codec,gossip-compat,shape-compat}.test.ts`, plus
       `mesh/rpc/{service-buf,service-type-url}.test.ts`.
 
 ## Group 4 — the two packages · blocked on groups 2 and 3
 
-- [ ] Delete `@dxos/codec-protobuf` and `@dxos/protobuf-compiler`. The 8 generated fixtures under
+- [x] Delete `@dxos/codec-protobuf` and `@dxos/protobuf-compiler`. The 8 generated fixtures under
       `protobuf-compiler/test/proto/gen` go with them.
 
 ## Group 5 — protobufjs · blocked on group 4
 
-- [ ] Drop the `protobufjs: ^8.0.0` catalog pin.
-- [ ] Clear the two string allowlists no import sweep can see:
+- [x] Drop the `protobufjs: ^8.0.0` catalog pin.
+- [x] Clear the two string allowlists no import sweep can see:
       `composer-app/src/vite/optimize-deps.ts` (2 entries) and
       `app-framework/src/vite-plugin/packages.ts`.
 
@@ -171,12 +171,12 @@ The teardown is narrower than §1a assumed. Two findings from doing it:
 
 So the finish line is:
 
-- [ ] Finish the per-site shapes so every mesh RPC handler takes and returns buf messages
+- [x] Finish the per-site shapes so every mesh RPC handler takes and returns buf messages
       (`create(Schema, …)`, `oneof` reads by tag, `PublicKey`/`Timestamp` conversion at the edges).
-- [ ] Flip `buf/service.ts:120` to native binary and drop `CompatOptions` from the service surface.
-- [ ] Move the substitution walker into the credentials package as the signing-shape resolver — its
+- [x] Flip `buf/service.ts:120` to native binary and drop `CompatOptions` from the service surface.
+- [x] Move the substitution walker into the credentials package as the signing-shape resolver — its
       one permanent consumer — and delete the rest of `shape-compat.ts`.
-- [ ] Then groups 3-5 as written: the generated tree, the two packages, the `protobufjs` pin.
+- [x] Then groups 3-5 as written: the generated tree, the two packages, the `protobufjs` pin.
 
 **`BufService<typeof Desc>`** (`buf/service.ts`) was the missing prerequisite for any of this:
 `protoc-gen-es` emits a service as a descriptor value where protobuf.js generated an interface, so
