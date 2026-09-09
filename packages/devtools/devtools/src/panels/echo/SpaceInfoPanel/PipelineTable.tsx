@@ -7,7 +7,8 @@ import React, { type FC, useCallback, useMemo } from 'react';
 import { Format } from '@dxos/echo/Format';
 import { PublicKey } from '@dxos/keys';
 import { toPublicKey } from '@dxos/protocols/buf';
-import { type Space as SpaceProto } from '@dxos/protocols/buf/dxos/client/services_pb';
+import { requirePublicKey, toTimeframe } from '@dxos/protocols/buf';
+import { type Space_PipelineState } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { type SubscribeToSpacesResponse_SpaceInfo } from '@dxos/protocols/buf/dxos/devtools/host_pb';
 import { type PublicKey as BufPublicKey } from '@dxos/protocols/buf/dxos/keys_pb';
 import { DynamicTable, type TableFeatures, type TablePropertyDefinition } from '@dxos/react-ui-table';
@@ -30,7 +31,7 @@ export type PipelineTableRow = {
 };
 
 export type PipelineTableProps = {
-  state: SpaceProto.PipelineState;
+  state: Space_PipelineState;
   metadata: SubscribeToSpacesResponse_SpaceInfo | undefined;
   onSelect?: (feed: PipelineTableRow | undefined) => void;
 };
@@ -82,15 +83,18 @@ export const PipelineTable: FC<PipelineTableProps> = ({ state, metadata, onSelec
   };
 
   const rows = useMemo(() => {
+    const currentControl = toTimeframe(state.currentControlTimeframe);
+    const targetControl = toTimeframe(state.targetControlTimeframe);
+    const totalControl = toTimeframe(state.totalControlTimeframe);
+    const currentData = toTimeframe(state.currentDataTimeframe);
+    const targetData = toTimeframe(state.targetDataTimeframe);
+    const totalData = toTimeframe(state.totalDataTimeframe);
+    const startData = toTimeframe(state.startDataTimeframe);
+
     const controlKeys = Array.from(
       new ComplexSet(PublicKey.hash, [
-        ...(state.controlFeeds ?? []),
-        ...Timeframe.merge(
-          state.currentControlTimeframe ?? new Timeframe(),
-          state.targetControlTimeframe ?? new Timeframe(),
-          state.totalControlTimeframe ?? new Timeframe(),
-          state.knownControlTimeframe ?? new Timeframe(),
-        )
+        ...(state.controlFeeds ?? []).map(requirePublicKey),
+        ...Timeframe.merge(currentControl, targetControl, totalControl, toTimeframe(state.knownControlTimeframe))
           .frames()
           .map(([key]) => key),
       ]),
@@ -98,13 +102,8 @@ export const PipelineTable: FC<PipelineTableProps> = ({ state, metadata, onSelec
 
     const dataKeys = Array.from(
       new ComplexSet(PublicKey.hash, [
-        ...(state.dataFeeds ?? []),
-        ...Timeframe.merge(
-          state.currentDataTimeframe ?? new Timeframe(),
-          state.targetDataTimeframe ?? new Timeframe(),
-          state.totalDataTimeframe ?? new Timeframe(),
-          state.knownDataTimeframe ?? new Timeframe(),
-        )
+        ...(state.dataFeeds ?? []).map(requirePublicKey),
+        ...Timeframe.merge(currentData, targetData, totalData, toTimeframe(state.knownDataTimeframe))
           .frames()
           .map(([key]) => key),
       ]),
@@ -113,9 +112,9 @@ export const PipelineTable: FC<PipelineTableProps> = ({ state, metadata, onSelec
     const tableRows: PipelineTableRow[] = [
       ...controlKeys.map((feedKey): PipelineTableRow => {
         const start = 0;
-        const processed = state.currentControlTimeframe?.get(feedKey);
-        const target = state.targetControlTimeframe?.get(feedKey);
-        const total = state.totalControlTimeframe?.get(feedKey);
+        const processed = currentControl.get(feedKey);
+        const target = targetControl.get(feedKey);
+        const total = totalControl.get(feedKey);
 
         const percent = (((processed ?? 0) - start) / ((target ?? 0) - start)) * 100;
         const progress = !isNaN(percent) ? `${Math.min(percent, 100).toFixed(0)}%` : undefined;
@@ -133,10 +132,10 @@ export const PipelineTable: FC<PipelineTableProps> = ({ state, metadata, onSelec
         };
       }),
       ...dataKeys.map((feedKey): PipelineTableRow => {
-        const start = state.startDataTimeframe?.get(feedKey) ?? 0;
-        const processed = state.currentDataTimeframe?.get(feedKey);
-        const target = state.targetDataTimeframe?.get(feedKey);
-        const total = state.totalDataTimeframe?.get(feedKey);
+        const start = startData.get(feedKey) ?? 0;
+        const processed = currentData.get(feedKey);
+        const target = targetData.get(feedKey);
+        const total = totalData.get(feedKey);
 
         const percent = (((processed ?? 0) - start) / ((target ?? 0) - start)) * 100;
         const progress = !isNaN(percent) ? `${Math.min(percent, 100).toFixed(0)}%` : undefined;

@@ -34,7 +34,7 @@ export const CredentialsPanel = (props: { space?: Space }) => {
     () =>
       credentials.map((credential: Credential) => ({
         id: credential.id?.toString() ?? '',
-        issuer: credential.issuer.toString(),
+        issuer: credential.issuer?.toString() ?? '',
         type: assertionTypeName(credential),
         issuanceDate: credential.issuanceDate,
         _original: credential,
