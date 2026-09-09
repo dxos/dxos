@@ -1,7 +1,7 @@
 # ark — Tasks
 
 _Resume: `Main` port step 1 (machine swap, swipe-to-dismiss on both sides, touch edge swipe-to-open)
-implemented 2026-09-09 on this branch; PR open from it. Next: land it, then step 2 (push layout at
+implemented 2026-09-09 on this branch; PR #13024 open from it. Next: land it, then step 2 (push layout at
 `lg`) as its own PR. Uncommitted: none._
 
 ## Phase 1: Tree rebuild on Ark (PR #12873)
