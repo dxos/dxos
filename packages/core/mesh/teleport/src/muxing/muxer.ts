@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { create } from '@bufbuild/protobuf';
+import { create, fromBinary, toBinary } from '@bufbuild/protobuf';
 import { Duplex } from 'node:stream';
 
 import { Event, Trigger, asyncTimeout, scheduleTaskInterval } from '@dxos/async';
@@ -12,15 +12,14 @@ import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
 import { log, logInfo } from '@dxos/log';
 import { TimeoutError } from '@dxos/protocols';
-import { compatCodec } from '@dxos/protocols/buf-shape-compat';
-import { type ConnectionInfo_StreamStats } from '@dxos/protocols/buf/dxos/devtools/swarm_pb';
-import { CommandSchema } from '@dxos/protocols/buf/dxos/mesh/muxer_pb';
+import {
+  type ConnectionInfo_StreamStats,
+  ConnectionInfo_StreamStatsSchema,
+} from '@dxos/protocols/buf/dxos/devtools/swarm_pb';
 import { type Command, CommandSchema } from '@dxos/protocols/buf/dxos/mesh/muxer_pb';
 
 import { Balancer } from './balancer';
 import { type RpcPort } from './rpc-port';
-
-const Command = compatCodec<Command>(CommandSchema);
 
 const DEFAULT_SEND_COMMAND_TIMEOUT = 60_000;
 const DESTROY_COMMAND_SEND_TIMEOUT = 5_000;
@@ -127,7 +126,7 @@ export class Muxer {
   constructor() {
     // Add a channel for control messages.
     this._balancer.incomingData.on(async (msg) => {
-      await this._handleCommand(Command.decode(msg));
+      await this._handleCommand(fromBinary(CommandSchema, msg));
     });
   }
 
@@ -393,7 +392,7 @@ export class Muxer {
     }
     try {
       const trigger = new Trigger<void>();
-      this._balancer.pushData(Command.encode(cmd), trigger, channelId);
+      this._balancer.pushData(toBinary(CommandSchema, cmd), trigger, channelId);
       await trigger.wait({ timeout });
     } catch (err: any) {
       await this.destroy(err);
@@ -498,7 +497,7 @@ export class Muxer {
     this._lastStats = {
       timestamp: now,
       channels: Array.from(this._channelsByTag.values()).map((channel) => {
-        const stats: ConnectionInfo.StreamStats = {
+        const stats: ConnectionInfo_StreamStats = create(ConnectionInfo_StreamStatsSchema, {
           id: channel.id,
           tag: channel.tag,
           contentType: channel.contentType,
@@ -506,7 +505,7 @@ export class Muxer {
           bytesSent: channel.stats.bytesSent,
           bytesReceived: channel.stats.bytesReceived,
           ...calculateThroughput(channel.stats, this._lastChannelStats.get(channel.id)),
-        };
+        });
 
         this._lastChannelStats.set(channel.id, stats);
         return stats;

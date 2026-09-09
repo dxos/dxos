@@ -11,6 +11,8 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { type BufService, getBufService } from '@dxos/protocols/buf-service';
 import {
+  TestRpcRequestSchema,
+  TestRpcResponseSchema,
   TestServiceWithStreams as TestServiceWithStreamsDesc,
   TestStreamRpcRequestSchema,
   TestStreamRpcResponseSchema,
@@ -154,7 +156,7 @@ export class TestExtensionWithStreams implements TeleportExtension {
 
             await this._openStream(streamTag, streamLoadInterval, streamLoadChunkSize);
 
-            return create(TestStreamRpcResponseSchema, { data: streamTag });
+            return create(TestRpcResponseSchema, { data: streamTag });
           },
           closeTestStream: async (request) => {
             const streamTag = request.data;
@@ -216,9 +218,7 @@ export class TestExtensionWithStreams implements TeleportExtension {
   async closeStream(streamTag: string): Promise<TestStreamStats> {
     await this.open.wait({ timeout: 1500 });
     const { data, bytesSent, bytesReceived, sendErrors, receiveErrors, runningTime } =
-      await this._rpc.rpc.TestServiceWithStreams.closeTestStream(
-        create(TestStreamRpcRequestSchema, { data: streamTag }),
-      );
+      await this._rpc.rpc.TestServiceWithStreams.closeTestStream(create(TestRpcRequestSchema, { data: streamTag }));
 
     invariant(data === streamTag);
 
