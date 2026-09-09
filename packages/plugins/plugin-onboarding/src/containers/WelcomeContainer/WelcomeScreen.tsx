@@ -99,8 +99,8 @@ export const WelcomeScreen = ({ hubUrl }: { hubUrl: string }) => {
 
         // Either no Account for this email or the link went out by email.
         // Show the same "check your email" UI in both cases so the response
-        // stays enumeration-safe. When no Account exists hub-service silently
-        // submits the email to the waitlist.
+        // stays enumeration-safe. When no Account exists hub-service mails the
+        // address to say so, rather than answering here.
         setState(WelcomeState.LOGIN_SENT);
       } catch (err) {
         log.catch(err);
