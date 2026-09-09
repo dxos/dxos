@@ -18074,6 +18074,9 @@ importers:
 
   packages/sdk/client-e2e:
     dependencies:
+      '@bufbuild/protobuf':
+        specifier: 'catalog:'
+        version: 2.11.0
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
@@ -18603,6 +18606,9 @@ importers:
 
   packages/sdk/react-client:
     dependencies:
+      '@bufbuild/protobuf':
+        specifier: 'catalog:'
+        version: 2.11.0
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async

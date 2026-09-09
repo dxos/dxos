@@ -2,6 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
+import { create } from '@bufbuild/protobuf';
 import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { Trigger } from '@dxos/async';
@@ -13,10 +14,15 @@ import { Context } from '@dxos/context';
 import { TestSchema } from '@dxos/echo/testing';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { toPublicKey } from '@dxos/protocols/buf';
+import { requirePublicKey, toPublicKey } from '@dxos/protocols/buf';
 import { Invitation_AuthMethod, Invitation_State } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 import { DeviceKind } from '@dxos/protocols/buf/dxos/client/services_pb';
-import { Device, SpaceMember } from '@dxos/protocols/buf/dxos/client/services_pb';
+import {
+  Device_PresenceState,
+  type SpaceMember,
+  SpaceMember_PresenceState,
+} from '@dxos/protocols/buf/dxos/client/services_pb';
+import { ProfileDocumentSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
 // TODO(burdon): Use as set-up for test suite.
 // TODO(burdon): Timeouts and progress callback/events.
@@ -166,12 +172,12 @@ describe('Client services', () => {
       .poll(() => client1.halo.devices.get().find((device) => device?.kind === DeviceKind.TRUSTED)?.presence, {
         timeout: 2000,
       })
-      .toEqual(Device.PresenceState.ONLINE);
+      .toEqual(Device_PresenceState.ONLINE);
     await expect
       .poll(() => client2.halo.devices.get().find((device) => device?.kind === DeviceKind.TRUSTED)?.presence, {
         timeout: 2000,
       })
-      .toEqual(Device.PresenceState.ONLINE);
+      .toEqual(Device_PresenceState.ONLINE);
 
     // Ensure peer2 shows up as offline to peer1.
     await client2.destroy();
@@ -182,7 +188,7 @@ describe('Client services', () => {
       .poll(() => client1.halo.devices.get().find((device) => device?.kind === DeviceKind.TRUSTED)?.presence, {
         timeout: 2000,
       })
-      .toEqual(Device.PresenceState.OFFLINE);
+      .toEqual(Device_PresenceState.OFFLINE);
   });
 
   test('synchronizes data between two spaces after completing invitation', { timeout: 20_000 }, async () => {
@@ -206,8 +212,8 @@ describe('Client services', () => {
       await client1.initialize();
       await client2.initialize();
       await Promise.all([client1, client2].map((c) => c.addTypes([TestSchema.Expando])));
-      await client1.halo.createIdentity({ displayName: 'Peer 1' });
-      await client2.halo.createIdentity({ displayName: 'Peer 2' });
+      await client1.halo.createIdentity(create(ProfileDocumentSchema, { displayName: 'Peer 1' }));
+      await client2.halo.createIdentity(create(ProfileDocumentSchema, { displayName: 'Peer 2' }));
     }
     log('initialized');
 
@@ -256,7 +262,11 @@ describe('Client services', () => {
     for (const space of [hostSpace, guestSpace]) {
       const getMembers = () => {
         const members = space.members.get();
-        members.sort((m1, m2) => (m1.identity.identityKey.equals(client1.halo.identity.get()!.identityKey) ? -1 : 1));
+        members.sort((m1, m2) =>
+          toPublicKey(m1.identity?.identityKey)?.equals(requirePublicKey(client1.halo.identity.get()!.identityKey))
+            ? -1
+            : 1,
+        );
         return members;
       };
 
@@ -272,7 +282,7 @@ describe('Client services', () => {
                 displayName: 'Peer 1',
               },
             },
-            presence: SpaceMember.PresenceState.ONLINE,
+            presence: SpaceMember_PresenceState.ONLINE,
           }),
         );
       await expect
@@ -286,7 +296,7 @@ describe('Client services', () => {
                 displayName: 'Peer 2',
               },
             },
-            presence: SpaceMember.PresenceState.ONLINE,
+            presence: SpaceMember_PresenceState.ONLINE,
           }),
         );
     }

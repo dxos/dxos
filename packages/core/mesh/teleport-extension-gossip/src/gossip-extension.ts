@@ -10,8 +10,8 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { type BufService, getBufService } from '@dxos/protocols/buf-service';
 import {
-  GossipService as GossipServiceDesc,
   type GossipMessage,
+  GossipService as GossipServiceDesc,
 } from '@dxos/protocols/buf/dxos/mesh/teleport/gossip_pb';
 import { type ProtoRpcPeer, createProtoRpcPeer } from '@dxos/rpc';
 import { type ExtensionContext, type TeleportExtension } from '@dxos/teleport';

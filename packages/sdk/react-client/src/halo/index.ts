@@ -6,7 +6,7 @@
 export {
   type Contact,
   type Credential,
-  Device,
+  type Device,
   DeviceKind,
   DeviceType,
   type Halo,
