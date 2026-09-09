@@ -15,12 +15,29 @@ const mark = (name: string) => {
   performance.mark(name);
 };
 
+/**
+ * Span attributes: a literal, or a function of the decorated call's own arguments for a value only
+ * known per call (a run's trigger, a batch's size).
+ */
+export type SpanAttributeSource = Record<string, any> | ((...args: any[]) => Record<string, any>);
+
 export type SpanOptions = {
   showInBrowserTimeline?: boolean;
   /** When false the span is not exported to remote OTLP collectors. Defaults to true. */
   showInRemoteTracing?: boolean;
   op?: string;
-  attributes?: Record<string, any>;
+  attributes?: SpanAttributeSource;
+};
+
+/** Namespaces attribute keys under `ctx.` so they do not collide with OTel semantic conventions. */
+const resolveAttributes = (attributes: SpanAttributeSource | undefined, args: any[]): Record<string, any> => {
+  const resolved = typeof attributes === 'function' ? attributes(...args) : attributes;
+  if (!resolved) {
+    return {};
+  }
+  return Object.fromEntries(
+    Object.entries(resolved).map(([key, value]) => [key.startsWith('ctx.') ? key : `ctx.${key}`, value]),
+  );
 };
 
 /**
@@ -41,12 +58,7 @@ const span =
       const className = sanitizeClassName(target.constructor?.name ?? 'unknown');
       const spanName = `${className}.${propertyKey}`;
 
-      const spanAttributes: Record<string, any> = {};
-      if (attributes) {
-        for (const [key, value] of Object.entries(attributes)) {
-          spanAttributes[key.startsWith('ctx.') ? key : `ctx.${key}`] = value;
-        }
-      }
+      const spanAttributes = resolveAttributes(attributes, args);
 
       const remoteSpan = showInRemoteTracing
         ? TRACE_PROCESSOR.tracingBackend?.startSpan({
@@ -123,12 +135,7 @@ const spanStart = (params: ManualSpanParams): Context | null => {
 
   const parentSpanContext = params.parentCtx?.getAttribute(TRACE_SPAN_ATTRIBUTE);
 
-  const spanAttributes: Record<string, any> = {};
-  if (params.attributes) {
-    for (const [key, value] of Object.entries(params.attributes)) {
-      spanAttributes[key.startsWith('ctx.') ? key : `ctx.${key}`] = value;
-    }
-  }
+  const spanAttributes = resolveAttributes(params.attributes, []);
 
   const remoteSpan = TRACE_PROCESSOR.tracingBackend.startSpan({
     name: spanName,
