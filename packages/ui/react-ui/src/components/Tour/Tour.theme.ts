@@ -29,14 +29,14 @@ const positioner: ComponentFunction<TourStyleProps> = (_props, ...etc) =>
     ...etc,
   );
 
-// The card wears the info scheme, as a callout does: guidance, not a menu.
+// The card is a tinted zone, so the controls on it (a ghost button's hover) derive from the tint.
 const content: ComponentFunction<TourStyleProps> = (_props, ...etc) =>
   mx(
     // Positioned so it is the arrow's containing block, as the popover's backdrop filter makes its
     // content: the arrow then lands one border inside the edge and `positioning.css` shifts it out
     // by `--arrow-inset` to straddle it. Unpositioned, the arrow measures against the positioner and
     // that shift opens a gap.
-    'relative flex flex-col gap-2 w-72 p-3 rounded-sm border-2 bg-primary-surface border-primary-border text-primary-fg dx-focus-ring',
+    'relative flex flex-col gap-2 w-72 p-3 rounded-sm border-2 dx-primary-surface border-primary-border text-primary-fg dx-focus-ring',
     surfaceShadow({ elevation: 'positioned' }),
     ...etc,
   );
