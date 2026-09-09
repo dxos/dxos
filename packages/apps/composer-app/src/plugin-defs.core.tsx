@@ -8,6 +8,7 @@ import { ProcessManagerPlugin } from '@dxos/app-framework';
 import type * as Plugin from '@dxos/app-framework/Plugin';
 import * as NativePasskey from '@dxos/app-toolkit/NativePasskey';
 import { type Client, type ClientServicesProvider, type Config } from '@dxos/client';
+import { showLoginPage } from '@dxos/config';
 import { type IdbLogStore } from '@dxos/log-store-idb';
 import type * as Observability from '@dxos/observability/Observability';
 import * as AtprotoPlugin from '@dxos/plugin-atproto/AtprotoPlugin';
@@ -112,7 +113,7 @@ export const getCorePlugins = ({
       // Inverse of the onboarding gate (`DX_SHOW_LOGIN_PAGE` => welcome screen): where the gate
       // runs it already offers joining a device and recovering an identity on a clean profile, so
       // the storage-wiping variants are only wanted in local testing.
-      identityTestActions: config.values.runtime?.app?.env?.DX_SHOW_LOGIN_PAGE !== 'true',
+      identityTestActions: !showLoginPage(config),
       // The forked init is outside the render tree, so a failure or a stalled handshake reaches
       // the user only if the entry point raises it — React never sees one.
       onClientInitializationError: ({ error }) => Effect.sync(() => onFatalError?.(error)),

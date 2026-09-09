@@ -72,6 +72,9 @@
       "path": "../../sdk/client"
     },
     {
+      "path": "../../sdk/config"
+    },
+    {
       "path": "../../sdk/migrations"
     },
     {

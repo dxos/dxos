@@ -102,14 +102,6 @@ export const accountErrorType = (error: unknown): AccountErrorType | undefined =
 // Account client
 //
 
-/**
- * Whether this deployment arms the account login page — the welcome screen, the account panels,
- * and the sign-up gate. Opt-in so a local build boots straight into a local identity, with no
- * account to redeem against a deployed hub.
- */
-export const showLoginPage = (client: Pick<Client, 'config'>): boolean =>
-  getEnvString(client.config, 'DX_SHOW_LOGIN_PAGE') === 'true';
-
 /** Origin to send a browser to for a passkey prompt. */
 export const getAuthUrl = (client: Pick<Client, 'config'>): string =>
   getEnvString(client.config, 'DX_AUTH_URL') ??

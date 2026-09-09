@@ -64,6 +64,7 @@
     "@dxos/brand": "workspace:*",
     "@dxos/client": "workspace:*",
     "@dxos/compute": "workspace:*",
+    "@dxos/config": "workspace:*",
     "@dxos/context": "workspace:*",
     "@dxos/credentials": "workspace:*",
     "@dxos/echo": "workspace:*",
