@@ -14,6 +14,9 @@ import { InstallHarness, RunHarness } from './definitions';
  */
 const RETIRED_MODEL_IDS = ['deepseek-chat', 'deepseek-reasoner'];
 
+/** Ids the description offers as examples; each must survive, not just the first. */
+const CURRENT_MODEL_IDS = ['deepseek-v4-flash', 'deepseek-v4-pro'];
+
 describe('DeepSeek operation definitions', () => {
   const serialized = [InstallHarness, RunHarness]
     .flatMap((operation) => [JsonSchema.toJsonSchema(operation.input), JsonSchema.toJsonSchema(operation.output)])
@@ -26,8 +29,10 @@ describe('DeepSeek operation definitions', () => {
     }
   });
 
-  test('the model parameter names a current id', () => {
+  test('the model parameter names the current ids', () => {
     const inputSchema = JSON.stringify(JsonSchema.toJsonSchema(RunHarness.input));
-    expect(inputSchema).toContain('deepseek-v4-flash');
+    for (const modelId of CURRENT_MODEL_IDS) {
+      expect(inputSchema).toContain(modelId);
+    }
   });
 });

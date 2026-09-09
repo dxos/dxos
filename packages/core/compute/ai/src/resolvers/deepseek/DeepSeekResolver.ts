@@ -14,15 +14,16 @@ import * as Model from '../../Model';
 import * as Provider from '../../Provider';
 import * as ChatCompletionsAdapter from '../ChatCompletionsAdapter';
 
-/**
- * DeepSeek resolver. DeepSeek speaks the OpenAI-compatible Chat Completions API, so it reuses the
- * chat-completions adapter rather than a DeepSeek-specific binding; the caller supplies the
- * configured {@link ChatCompletionsAdapter.ChatCompletionsClient}, which decides the transport —
- * through EDGE (auth + metering) in the app, or a direct client in tests.
- */
 /** Developer authority of the model ids this resolver serves. */
 const DEEPSEEK_DEVELOPER = 'com.deepseek';
 
+/**
+ * DeepSeek resolver. Serves the edge-provider models whose id belongs to {@link DEEPSEEK_DEVELOPER},
+ * declining anything another resolver owns. DeepSeek speaks the OpenAI-compatible Chat Completions
+ * API, so it reuses the chat-completions adapter rather than a DeepSeek-specific binding; the caller
+ * supplies the configured {@link ChatCompletionsAdapter.ChatCompletionsClient}, which decides the
+ * transport — through EDGE (auth + metering) in the app, or a direct client in tests.
+ */
 export const make = () =>
   AiModelResolver.resolver(
     {
