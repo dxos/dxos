@@ -276,9 +276,7 @@ export class IdentityManager {
         }),
       );
       for (const credential of credentials) {
-        await identity.controlPipeline.writer.write({
-          credential: { credential },
-        });
+        await identity.controlPipeline.writer.write(credentialPayload(credential));
       }
     }
 

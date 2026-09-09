@@ -14,7 +14,7 @@ import { PublicKey, type SpaceId } from '@dxos/keys';
 import { log, logInfo } from '@dxos/log';
 import { EdgeService } from '@dxos/protocols';
 import { buf } from '@dxos/protocols/buf';
-import { EdgeStatus } from '@dxos/protocols/buf/dxos/client/services_pb';
+import { EdgeStatus_ConnectionState } from '@dxos/protocols/buf/dxos/client/services_pb';
 import {
   type Message as RouterMessage,
   MessageSchema as RouterMessageSchema,
@@ -90,7 +90,7 @@ export class EdgeFeedReplicator extends Resource {
 
   private async _handleReconnect(): Promise<void> {
     await this._resetConnection();
-    if (this._messenger.status.state === EdgeStatus.ConnectionState.CONNECTED) {
+    if (this._messenger.status.state === EdgeStatus_ConnectionState.CONNECTED) {
       this._startReplication();
     }
   }

@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as EffectStream from 'effect/Stream';
 
 import { EffectEx } from '@dxos/effect';
-import { fromPublicKey, fromTimeframe } from '@dxos/protocols/buf';
+import { fromPublicKey, requirePublicKey } from '@dxos/protocols/buf';
 import {
   type SubscribeToSpacesResponse,
   type SubscribeToSpacesResponse_SpaceInfo,
@@ -36,14 +36,15 @@ export const subscribeToSpaces = (
       emit.single(
         create(SubscribeToSpacesResponseSchema, {
           spaces: filteredSpaces.map((space): SubscribeToSpacesResponse_SpaceInfo => {
-            const spaceMetadata = context.metadataStore.spaces.find((spaceMetadata: SpaceMetadata) =>
-              spaceMetadata.key.equals(space.key),
+            const spaceMetadata = context.metadataStore.spaces.find(
+              (spaceMetadata: SpaceMetadata) =>
+                spaceMetadata.key && requirePublicKey(spaceMetadata.key).equals(space.key),
             );
 
             return create(SubscribeToSpacesResponse_SpaceInfoSchema, {
               key: fromPublicKey(space.key),
               isOpen: space.isOpen,
-              timeframe: spaceMetadata?.dataTimeframe && fromTimeframe(spaceMetadata.dataTimeframe),
+              timeframe: spaceMetadata?.dataTimeframe,
               genesisFeed: fromPublicKey(space.genesisFeedKey),
               // The write feeds are absent until the space is opened for writing; buf makes that
               // presence explicit where the protobuf.js shape let it pass as a non-null assertion.

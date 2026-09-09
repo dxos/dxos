@@ -10,21 +10,17 @@ import { type EdgeConnection } from '@dxos/edge-client';
 import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { buf, fromPublicKey } from '@dxos/protocols/buf';
-import { encodeCompat } from '@dxos/protocols/buf-shape-compat';
 import {
   type Device,
   Device_PresenceState,
   DeviceKind,
   DeviceSchema,
 } from '@dxos/protocols/buf/dxos/client/services_pb';
-import { EdgeStatus, type Device as LegacyDevice } from '@dxos/protocols/buf/dxos/client/services_pb';
+import { EdgeStatus_ConnectionState } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { type DeviceProfileDocument } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { type DevicesService } from '@dxos/protocols/rpc';
 
 import { type IdentityManager } from '../identity';
-
-/** Reads a device from the identity manager as the buf message the service returns. */
-const toBufDevice = (device: LegacyDevice): Device => buf.fromBinary(DeviceSchema, encodeCompat(DeviceSchema, device));
 
 export class DevicesServiceImpl implements DevicesService.Handlers {
   'constructor'(
@@ -34,7 +30,7 @@ export class DevicesServiceImpl implements DevicesService.Handlers {
 
   ['DevicesService.updateDevice'](request: DeviceProfileDocument): Effect.Effect<Device, Error> {
     return Effect.tryPromise({
-      try: async () => toBufDevice(await this._identityManager.updateDeviceProfile(request)),
+      try: async () => await this._identityManager.updateDeviceProfile(request),
       catch: (error) => error as Error,
     });
   }
@@ -56,7 +52,7 @@ export class DevicesServiceImpl implements DevicesService.Handlers {
                 presence = Device_PresenceState.ONLINE;
               } else if (profile.os?.toUpperCase() === 'EDGE') {
                 presence =
-                  this._edgeConnection?.status.state === EdgeStatus.ConnectionState.CONNECTED
+                  this._edgeConnection?.status.state === EdgeStatus_ConnectionState.CONNECTED
                     ? Device_PresenceState.ONLINE
                     : Device_PresenceState.OFFLINE;
               } else {

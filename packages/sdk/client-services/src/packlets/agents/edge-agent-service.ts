@@ -20,7 +20,6 @@ import {
   type QueryEdgeStatusResponse,
   QueryEdgeStatusResponseSchema,
 } from '@dxos/protocols/buf/dxos/client/services_pb';
-import { EdgeStatus as LegacyEdgeStatus } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { type EdgeAgentService } from '@dxos/protocols/rpc';
 
 import { type EdgeAgentManager } from './edge-agent-manager';
@@ -37,9 +36,7 @@ export class EdgeAgentServiceImpl implements EdgeAgentService.Handlers {
     return EffectEx.streamFromEmitter<QueryEdgeStatusResponse, Error>((emit) => {
       const ctx = Context.default();
       const update = () => {
-        void emit.single(
-          buf.create(QueryEdgeStatusResponseSchema, { status: toBufEdgeStatus(this._edgeConnection?.status) }),
-        );
+        void emit.single(buf.create(QueryEdgeStatusResponseSchema, { status: this._edgeConnection?.status }));
       };
 
       this._edgeConnection?.statusChanged.on(ctx, update);
@@ -73,32 +70,6 @@ export class EdgeAgentServiceImpl implements EdgeAgentService.Handlers {
     });
   }
 }
-
-/**
- * Reads the edge connection's status as the buf message the service now returns.
- * `EdgeConnection` still reports the protobuf.js shape, so the two codecs meet here; remove this
- * when `@dxos/edge-client` moves to buf.
- */
-const toBufEdgeStatus = (status: LegacyEdgeStatus | undefined): EdgeStatus =>
-  buf.create(EdgeStatusSchema, {
-    state: toBufConnectionState(status?.state),
-    rtt: status?.rtt ?? 0,
-    uptime: status?.uptime ?? 0,
-    rateBytesUp: status?.rateBytesUp ?? 0,
-    rateBytesDown: status?.rateBytesDown ?? 0,
-    messagesSent: status?.messagesSent ?? 0,
-    messagesReceived: status?.messagesReceived ?? 0,
-  });
-
-const toBufConnectionState = (state: LegacyEdgeStatus.ConnectionState | undefined): EdgeStatus_ConnectionState => {
-  switch (state) {
-    case LegacyEdgeStatus.ConnectionState.CONNECTED:
-      return EdgeStatus_ConnectionState.CONNECTED;
-    case LegacyEdgeStatus.ConnectionState.NOT_CONNECTED:
-    case undefined:
-      return EdgeStatus_ConnectionState.NOT_CONNECTED;
-  }
-};
 
 const mapStatus = (agentStatus: EdgeAgentStatus | undefined): QueryAgentStatusResponse_AgentStatus => {
   switch (agentStatus) {

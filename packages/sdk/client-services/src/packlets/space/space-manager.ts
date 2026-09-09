@@ -3,6 +3,7 @@
 //
 
 import { type AutomergeUrl, parseAutomergeUrl } from '@automerge/automerge-repo';
+import { create } from '@bufbuild/protobuf';
 import * as EffectContext from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
@@ -15,10 +16,11 @@ import { type FeedStore, FeedStoreService } from '@dxos/feed-store';
 import { PublicKey, SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type SwarmNetworkManager, SwarmNetworkManagerService } from '@dxos/network-manager';
-import { requirePublicKey } from '@dxos/protocols/buf';
+import { fromPublicKey, requirePublicKey } from '@dxos/protocols/buf';
 import type { FeedMessage } from '@dxos/protocols/buf/dxos/echo/feed_pb';
 import { type SpaceMetadata } from '@dxos/protocols/buf/dxos/echo/metadata_pb';
 import type { Credential } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
+import { GetAdmissionCredentialRequestSchema } from '@dxos/protocols/buf/dxos/mesh/teleport/admission-discovery_pb';
 import { type Teleport } from '@dxos/teleport';
 import { ComplexMap } from '@dxos/util';
 
@@ -151,7 +153,10 @@ export class SpaceManager {
         session.addExtension(
           'dxos.mesh.teleport.admission-discovery',
           new CredentialRetrieverExtension(
-            { spaceKey: params.spaceKey, memberKey: params.identityKey },
+            create(GetAdmissionCredentialRequestSchema, {
+              spaceKey: fromPublicKey(params.spaceKey),
+              memberKey: fromPublicKey(params.identityKey),
+            }),
             onCredentialResolved,
           ),
         );
