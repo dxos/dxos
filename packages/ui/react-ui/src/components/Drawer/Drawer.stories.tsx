@@ -3,7 +3,7 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React, { useState } from 'react';
+import React, { type CSSProperties, useState } from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { withLayout, withTheme } from '../../testing';
@@ -21,6 +21,9 @@ type StoryArgs = Pick<DrawerRootProps, 'side' | 'modal' | 'snapPoints'> & {
   /** Lines of filler content below the fold. */
   filler?: number;
 };
+
+/** Extends `CSSProperties` so the custom property satisfies the style prop without a cast. */
+type DrawerSizeStyle = CSSProperties & { '--dx-drawer-size': string };
 
 /** Filler below the fold, so a snap point short of fully open has something to hide. */
 const Filler = ({ lines }: { lines: number }) => (
@@ -80,6 +83,9 @@ const PushStory = () => {
   const [start, setStart] = useState(true);
   const [end, setEnd] = useState(true);
   const [inspectorSize, setInspectorSize] = useState(24);
+  // The drawer fills the pane the seam gives it; its children anchor to that length, not to the pane's
+  // percentage, so a collapsing pane clips them instead of reflowing them.
+  const inspectorStyle: DrawerSizeStyle = { '--dx-drawer-size': `${inspectorSize}rem` };
   return (
     <div className='flex dx-fill'>
       <Drawer.Root open={start} onOpenChange={setStart} side='start' push>
@@ -144,7 +150,7 @@ const PushStory = () => {
         <Splitter.Handle />
         <Splitter.Panel position='end'>
           <Drawer.Root open={end} onOpenChange={setEnd} side='end' push>
-            <Drawer.Content draggable={false} classNames='[--dx-drawer-size:100%]'>
+            <Drawer.Content draggable={false} style={inspectorStyle}>
               <Toolbar.Root>
                 <Drawer.Title classNames='grow px-2'>Inspector</Drawer.Title>
                 <Toolbar.IconButton
@@ -246,9 +252,7 @@ export const TestPush: Story = {
       await expect(middle.right).toBeLessThanOrEqual(end.left + 1);
     });
     // Measure at rest: both panels slide in from zero width on mount.
-    await waitFor(async () => {
-      await expect(dialogs.every((dialog) => dialog.getAnimations().length === 0)).toBe(true);
-    });
+    await settle(dialogs);
     const before = main.getBoundingClientRect().width;
     const navigation = dialogs[0].getBoundingClientRect().width;
 
@@ -257,6 +261,63 @@ export const TestPush: Story = {
       await expect(canvas.queryAllByRole('dialog')).toHaveLength(1);
       await expect(Math.round(main.getBoundingClientRect().width)).toBe(Math.round(before + navigation));
     });
+  },
+};
+
+const settle = async (elements: Element[]) => {
+  await waitFor(async () => {
+    await expect(elements.every((element) => element.getAnimations().length === 0)).toBe(true);
+  });
+};
+
+/** Samples `read` every frame until `until` holds or the budget runs out. */
+const sample = async <T,>(read: () => T, until: () => boolean, budget = 600): Promise<T[]> => {
+  const samples: T[] = [];
+  const started = performance.now();
+  while (!until() && performance.now() - started < budget) {
+    samples.push(read());
+    await new Promise((resolve) => requestAnimationFrame(resolve));
+  }
+  return samples;
+};
+
+/**
+ * Closing one side leaves the other alone: the seam holds the inspector's width frame by frame while
+ * the navigation slides out, and the inspector's children keep their width while its pane collapses.
+ */
+export const TestPushCollapse: Story = {
+  render: () => <PushStory />,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const dialogs = await canvas.findAllByRole('dialog');
+    await settle(dialogs);
+    const panes = [...canvasElement.querySelectorAll<HTMLElement>('[data-scope="splitter"][data-part="panel"]')];
+    const endPane = panes[1];
+    const inspector = dialogs[1];
+    const inspectorWidth = Math.round(endPane.getBoundingClientRect().width);
+
+    // The seam does not jiggle: the end pane's width never moves while the navigation closes.
+    await userEvent.click(canvas.getByRole('button', { name: 'Close navigation' }));
+    const seam = await sample(
+      () => Math.round(endPane.getBoundingClientRect().width),
+      () => !dialogs[0].isConnected,
+    );
+    await expect(seam.length).toBeGreaterThan(3);
+    await expect(seam.every((width) => width === inspectorWidth)).toBe(true);
+
+    // The inspector's children hold their width while the pane collapses around them.
+    const children = [...inspector.children];
+    await userEvent.click(canvas.getByRole('button', { name: 'Close inspector' }));
+    const collapse = await sample(
+      () => ({
+        pane: Math.round(endPane.getBoundingClientRect().width),
+        children: children.map((child) => Math.round(child.getBoundingClientRect().width)),
+      }),
+      () => !inspector.isConnected,
+    );
+    await expect(collapse.length).toBeGreaterThan(3);
+    await expect(collapse.some(({ pane }) => pane > 0 && pane < inspectorWidth)).toBe(true);
+    await expect(collapse.every(({ children }) => children.every((width) => width === inspectorWidth))).toBe(true);
   },
 };
 

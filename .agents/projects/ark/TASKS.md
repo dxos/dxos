@@ -1089,6 +1089,13 @@ verdict over porting in the same PR).
       `--dx-drawer-size: 100%` and `draggable={false}`; the seam owns the width in rem and the
       collapse, the drawer keeps the dialog semantics. Reopening restores the dragged size. A
       `Drawer.Handle` of its own was the alternative and was not taken.
+      Two fixes fell out (2026-09-09): the Splitter sized panes as percent `flex-grow` and the
+      machine re-derived the anchored share a frame after a container resize, so a neighbour
+      animating its width made the seam jiggle — `Splitter.Panel` now carries a fixed rem
+      `flex-basis` (longhands, since Ark merges `style` key by key) while split; and a pushed
+      drawer's `--dx-drawer-size` must be a length, never `100%`, or the children's anchor width
+      shrinks with the box. `TestPushCollapse` samples both frame by frame; the Browser pane's
+      document is `hidden`, which stalls CSS animations, so exit-animation checks belong in vitest.
 - [x] **`Main` on the drawer machine — probe** DONE 2026-09-09. The 2026-09-05 verdict ("fights the
       inset slide") was wrong: the machine's inline `transform` and `main.css`'s `inset-inline-start`
       are independent properties, and a driven touch swipe dismissed the sidebar through

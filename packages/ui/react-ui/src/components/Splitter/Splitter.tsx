@@ -43,6 +43,10 @@ type SplitterContextValue = {
   resizable: boolean;
   /** True only briefly after a `mode` change, so the collapse animates but layout reflows (resize) do not. */
   animating: boolean;
+  /** The pane `anchoredSize` measures. */
+  anchor: Position;
+  /** The anchored pane's extent in rem while split, if known; the panes then size themselves without the machine. */
+  anchoredSize?: number;
 };
 
 const [SplitterProvider, useSplitterContext] = createContext<SplitterContextValue>(SPLITTER_NAME);
@@ -133,6 +137,12 @@ const SplitterRoot = slottable<HTMLDivElement, SplitterRootElementProps>(
     }, [mode, transition]);
 
     const collapsed = mode !== 'split';
+    // The machine sizes panes in percent of the container and re-derives the anchored pane's share
+    // a frame after the container resizes, so a neighbour animating its width made the seam lag and
+    // snap. Tracked in rem here — the controlled prop, else the last drag — so the panes can carry
+    // a fixed basis and let the flex layout absorb a container resize on the same frame.
+    const [draggedSize, setDraggedSize] = useState(defaultSize);
+    const anchoredSize = collapsed ? undefined : (sizeProp ?? draggedSize);
     const panels = useMemo(
       () => [
         {
@@ -166,12 +176,14 @@ const SplitterRoot = slottable<HTMLDivElement, SplitterRootElementProps>(
       ({ size }: { size: number[] }) => {
         // A collapse is the caller's own instruction coming back; reporting it would overwrite the
         // size the panes return to.
-        if (!onSizeChange || collapsed) {
+        if (collapsed) {
           return;
         }
         const percent = size[anchor === 'start' ? 0 : 1];
         if (percent !== undefined) {
-          onSizeChange(toRem(percent, rootRef, orientation));
+          const rem = toRem(percent, rootRef, orientation);
+          setDraggedSize(rem);
+          onSizeChange?.(rem);
         }
       },
       [onSizeChange, collapsed, anchor, orientation],
@@ -180,7 +192,14 @@ const SplitterRoot = slottable<HTMLDivElement, SplitterRootElementProps>(
     const { className, ...rest } = composableProps(props);
 
     return (
-      <SplitterProvider orientation={orientation} transition={transition} resizable={resizable} animating={animating}>
+      <SplitterProvider
+        orientation={orientation}
+        transition={transition}
+        resizable={resizable}
+        animating={animating}
+        anchor={anchor}
+        anchoredSize={anchoredSize}
+      >
         <SplitterPrimitive.Root
           {...rest}
           asChild={asChild}
@@ -219,12 +238,21 @@ type SplitterPanelProps = SlottableProps<{ position: Position }>;
 const SplitterPanel = slottable<HTMLDivElement, { position: Position }>(
   ({ asChild, children, position, ...props }, forwardedRef) => {
     const { tx } = useThemeContext();
-    const { transition, animating } = useSplitterContext(PANEL_NAME);
+    const { transition, animating, anchor, anchoredSize } = useSplitterContext(PANEL_NAME);
     const { className, style, ...rest } = composableProps(props);
 
     // Only animate during the brief post-mode-change window (collapse), never while dragging or on a plain
     // container/window resize — so the panels track layout reflows instantly without jitter.
     const animate = transition > 0 && animating;
+    // While split with a known size, the anchored pane holds its rem and the other flexes, over the
+    // machine's percent shares (see `anchoredSize` in the root). Longhands, because Ark merges style
+    // objects key by key and the machine writes these three; a shorthand would sit beside them.
+    const flex =
+      anchoredSize === undefined
+        ? undefined
+        : position === anchor
+          ? { flexGrow: 0, flexShrink: 0, flexBasis: `${anchoredSize}rem` }
+          : { flexGrow: 1, flexShrink: 1, flexBasis: '0%' };
 
     return (
       <SplitterPrimitive.Panel
@@ -235,6 +263,7 @@ const SplitterPanel = slottable<HTMLDivElement, { position: Position }>(
         className={tx('splitter.panel', {}, className)}
         style={{
           transition: animate ? `flex-grow ${transition}ms ease-out, flex-basis ${transition}ms ease-out` : undefined,
+          ...flex,
           ...style,
         }}
       >
