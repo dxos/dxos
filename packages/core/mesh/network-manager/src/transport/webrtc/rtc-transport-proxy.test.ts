@@ -2,6 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
+import { create } from '@bufbuild/protobuf';
 import { Duplex } from 'stream';
 import { describe, expect, onTestFinished, test } from 'vitest';
 
@@ -9,14 +10,17 @@ import { Event as AsyncEvent, Trigger, sleep } from '@dxos/async';
 import { TestStream } from '@dxos/async/testing';
 import { ErrorStream } from '@dxos/debug';
 import { PublicKey } from '@dxos/keys';
-import { getBufService } from '@dxos/protocols/buf-service';
-import { type BridgeService } from '@dxos/protocols/buf/dxos/mesh/bridge_pb';
+import { type BufService, getBufService } from '@dxos/protocols/buf-service';
+import { BridgeService as BridgeServiceDesc } from '@dxos/protocols/buf/dxos/mesh/bridge_pb';
+import { SignalSchema } from '@dxos/protocols/buf/dxos/mesh/swarm_pb';
 import { type RpcPort, createLinkedPorts, createProtoRpcPeer } from '@dxos/rpc';
 
 import { type Transport, type TransportFactory, type TransportOptions, type TransportStats } from '../transport';
 import { RtcTransportProxy } from './rtc-transport-proxy';
 import { RtcTransportService } from './rtc-transport-service';
 import { handleChannelErrors } from './test-utils';
+
+type BridgeService = BufService<typeof BridgeServiceDesc>;
 
 // Segfault in node-datachannel.
 describe.skip('RtcPeerTransportProxy', () => {
@@ -160,7 +164,7 @@ describe.skip('RtcPeerTransportProxy', () => {
     await peer.proxy.open();
     const errors = handleChannelErrors(peer.proxy);
     await connectAndWaitProxy(peer, mockTransport);
-    await peer.proxy.onSignal({ payload: { data: { type: 'offer' } } });
+    await peer.proxy.onSignal(create(SignalSchema, { payload: { data: { type: 'offer' } } }));
     await failed.wait();
 
     await errors.expectErrorRaised();
@@ -290,9 +294,6 @@ describe.skip('RtcPeerTransportProxy', () => {
       handlers: { BridgeService: rtcTransportService },
       port,
       noHandshake: true,
-      encodingOptions: {
-        preserveAny: true,
-      },
     });
     await service.open();
     onTestFinished(async () => {
@@ -309,9 +310,6 @@ describe.skip('RtcPeerTransportProxy', () => {
       },
       port,
       noHandshake: true,
-      encodingOptions: {
-        preserveAny: true,
-      },
     });
     await rpcClient.open();
     onTestFinished(async () => {

@@ -2,30 +2,42 @@
 // Copyright 2022 DXOS.org
 //
 
+import { create } from '@bufbuild/protobuf';
+import { type Empty, EmptySchema } from '@bufbuild/protobuf/wkt';
 import { Duplex } from 'node:stream';
 
 import { Stream } from '@dxos/async';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { requirePublicKey } from '@dxos/protocols/buf';
+import { type BufService } from '@dxos/protocols/buf-service';
 import {
   type BridgeEvent,
-  type BridgeService,
+  BridgeEventSchema,
+  BridgeEvent_ConnectionEventSchema,
+  BridgeEvent_DataEventSchema,
+  BridgeEvent_SignalEventSchema,
+  BridgeService as BridgeServiceDesc,
   type CloseRequest,
   type ConnectionRequest,
   ConnectionState,
   type DataRequest,
   type DetailsRequest,
   type DetailsResponse,
+  DetailsResponseSchema,
   type SignalRequest,
   type StatsRequest,
   type StatsResponse,
+  StatsResponseSchema,
 } from '@dxos/protocols/buf/dxos/mesh/bridge_pb';
 import { ComplexMap } from '@dxos/util';
 
 import { type IceProvider } from '../../signal';
 import { type Transport, type TransportFactory } from '../transport';
 import { createRtcTransportFactory } from './rtc-transport-factory';
+
+type BridgeService = BufService<typeof BridgeServiceDesc>;
 
 type TransportState = {
   proxyId: PublicKey;
@@ -48,11 +60,12 @@ export class RtcTransportService implements BridgeService {
   }
 
   open(request: ConnectionRequest): Stream<BridgeEvent> {
-    const existingTransport = this._openTransports.get(request.proxyId);
+    const proxyId = requirePublicKey(request.proxyId);
+    const existingTransport = this._openTransports.get(proxyId);
     if (existingTransport) {
       log.error('requesting a new transport bridge for an existing proxy');
       void this._safeCloseTransport(existingTransport);
-      this._openTransports.delete(request.proxyId);
+      this._openTransports.delete(proxyId);
     }
 
     return new Stream<BridgeEvent>(({ ready, next, close }) => {
@@ -65,7 +78,11 @@ export class RtcTransportService implements BridgeService {
           callbacks.forEach((cb) => cb());
         },
         write: function (chunk, _, callback) {
-          next({ data: { payload: chunk } });
+          next(
+            create(BridgeEventSchema, {
+              type: { case: 'data', value: create(BridgeEvent_DataEventSchema, { payload: chunk }) },
+            }),
+          );
           callback();
         },
       });
@@ -77,12 +94,16 @@ export class RtcTransportService implements BridgeService {
         remotePeerKey: request.remotePeerKey,
         stream: transportStream,
         sendSignal: async (signal) => {
-          next({ signal: { payload: signal } });
+          next(
+            create(BridgeEventSchema, {
+              type: { case: 'signal', value: create(BridgeEvent_SignalEventSchema, { payload: signal }) },
+            }),
+          );
         },
       });
 
       const transportState: TransportState = {
-        proxyId: request.proxyId,
+        proxyId,
         transport,
         connectorStream: transportStream,
         writeProcessedCallbacks: [],
@@ -102,7 +123,7 @@ export class RtcTransportService implements BridgeService {
         close();
       });
 
-      this._openTransports.set(request.proxyId, transportState);
+      this._openTransports.set(proxyId, transportState);
 
       transport.open().catch(async (err) => {
         pushNewState(ConnectionState.CLOSED, err);
@@ -118,29 +139,31 @@ export class RtcTransportService implements BridgeService {
     });
   }
 
-  async sendSignal({ proxyId, signal }: SignalRequest): Promise<void> {
-    const transport = this._openTransports.get(proxyId);
+  async sendSignal({ proxyId, signal }: SignalRequest): Promise<Empty> {
+    const transport = this._openTransports.get(requirePublicKey(proxyId));
     invariant(transport);
+    invariant(signal, 'Signal request carries no signal.');
 
     await transport.transport.onSignal(signal);
+    return create(EmptySchema, {});
   }
 
   async getDetails({ proxyId }: DetailsRequest): Promise<DetailsResponse> {
-    const transport = this._openTransports.get(proxyId);
+    const transport = this._openTransports.get(requirePublicKey(proxyId));
     invariant(transport);
 
-    return { details: await transport.transport.getDetails() };
+    return create(DetailsResponseSchema, { details: await transport.transport.getDetails() });
   }
 
   async getStats({ proxyId }: StatsRequest): Promise<StatsResponse> {
-    const transport = this._openTransports.get(proxyId);
+    const transport = this._openTransports.get(requirePublicKey(proxyId));
     invariant(transport);
 
-    return { stats: await transport.transport.getStats() };
+    return create(StatsResponseSchema, { stats: await transport.transport.getStats() });
   }
 
-  async sendData({ proxyId, payload }: DataRequest): Promise<void> {
-    const transport = this._openTransports.get(proxyId);
+  async sendData({ proxyId, payload }: DataRequest): Promise<Empty> {
+    const transport = this._openTransports.get(requirePublicKey(proxyId));
     invariant(transport);
 
     const bufferHasSpace = transport.connectorStream.push(payload);
@@ -149,16 +172,17 @@ export class RtcTransportService implements BridgeService {
         transport.writeProcessedCallbacks.push(resolve);
       });
     }
+    return create(EmptySchema, {});
   }
 
-  async close({ proxyId }: CloseRequest): Promise<void> {
-    const transport = this._openTransports.get(proxyId);
-    if (!transport) {
-      return;
+  async close({ proxyId }: CloseRequest): Promise<Empty> {
+    const key = requirePublicKey(proxyId);
+    const transport = this._openTransports.get(key);
+    if (transport) {
+      this._openTransports.delete(key);
+      await this._safeCloseTransport(transport);
     }
-
-    this._openTransports.delete(proxyId);
-    await this._safeCloseTransport(transport);
+    return create(EmptySchema, {});
   }
 
   private async _safeCloseTransport(transport: TransportState): Promise<void> {
@@ -184,11 +208,13 @@ export class RtcTransportService implements BridgeService {
 
 const createStateUpdater = (next: (event: BridgeEvent) => void) => {
   return (state: ConnectionState, err?: Error) => {
-    next({
-      connection: {
-        state,
-        ...(err ? { error: err.message } : undefined),
-      },
-    });
+    next(
+      create(BridgeEventSchema, {
+        type: {
+          case: 'connection',
+          value: create(BridgeEvent_ConnectionEventSchema, { state, error: err?.message }),
+        },
+      }),
+    );
   };
 };
