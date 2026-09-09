@@ -2,13 +2,14 @@
 // Copyright 2023 DXOS.org
 //
 
+import { create } from '@bufbuild/protobuf';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
 import { IdentityDid, PublicKey } from '@dxos/keys';
 import { fromPublicKey, toPublicKey } from '@dxos/protocols/buf';
-import { SpaceMember_Role } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
-import { HaloSpaceMember, SpaceMember } from '@dxos/react-client/echo';
+import { SpaceMemberSchema, SpaceMember_PresenceState } from '@dxos/protocols/buf/dxos/client/services_pb';
+import { ProfileDocumentSchema, SpaceMember_Role } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { Invitation_State } from '@dxos/react-client/invitations';
 import { withTheme } from '@dxos/react-ui/testing';
 
@@ -184,14 +185,14 @@ export const SpaceManagerWithMember = () => {
                 <SpaceMemberListImpl
                   {...props}
                   members={[
-                    {
+                    create(SpaceMemberSchema, {
                       presence: SpaceMember_PresenceState.ONLINE,
                       role: SpaceMember_Role.ADMIN,
                       identity: {
                         did: IdentityDid.random(),
-                        identityKey: PublicKey.random(),
+                        identityKey: fromPublicKey(PublicKey.random()),
                       },
-                    },
+                    }),
                   ]}
                 />
               )}
@@ -218,17 +219,17 @@ export const SpaceManagerWithMembers = () => {
                 <SpaceMemberListImpl
                   {...props}
                   members={[
-                    {
+                    create(SpaceMemberSchema, {
                       presence: SpaceMember_PresenceState.ONLINE,
                       role: SpaceMember_Role.ADMIN,
                       identity: {
                         did: IdentityDid.random(),
-                        identityKey: PublicKey.random(),
-                        profile: {
+                        identityKey: fromPublicKey(PublicKey.random()),
+                        profile: create(ProfileDocumentSchema, {
                           displayName: 'John Doe',
-                        },
+                        }),
                       },
-                    },
+                    }),
                   ]}
                 />
               )}
@@ -259,39 +260,39 @@ export const SpaceManagerWithMoreMembers = () => {
                 <SpaceMemberListImpl
                   {...props}
                   members={[
-                    {
+                    create(SpaceMemberSchema, {
                       presence: SpaceMember_PresenceState.ONLINE,
                       role: SpaceMember_Role.ADMIN,
                       identity: {
                         did: IdentityDid.random(),
-                        identityKey: PublicKey.random(),
-                        profile: {
+                        identityKey: fromPublicKey(PublicKey.random()),
+                        profile: create(ProfileDocumentSchema, {
                           displayName: 'John Doe',
-                        },
+                        }),
                       },
-                    },
-                    {
+                    }),
+                    create(SpaceMemberSchema, {
                       presence: SpaceMember_PresenceState.OFFLINE,
                       role: SpaceMember_Role.ADMIN,
                       identity: {
                         did: IdentityDid.random(),
-                        identityKey: PublicKey.random(),
-                        profile: {
+                        identityKey: fromPublicKey(PublicKey.random()),
+                        profile: create(ProfileDocumentSchema, {
                           displayName: 'Alice Wong',
-                        },
+                        }),
                       },
-                    },
-                    {
+                    }),
+                    create(SpaceMemberSchema, {
                       presence: SpaceMember_PresenceState.OFFLINE,
                       role: SpaceMember_Role.ADMIN,
                       identity: {
                         did: IdentityDid.random(),
-                        identityKey: PublicKey.random(),
-                        profile: {
+                        identityKey: fromPublicKey(PublicKey.random()),
+                        profile: create(ProfileDocumentSchema, {
                           displayName: 'Steel Nickels',
-                        },
+                        }),
                       },
-                    },
+                    }),
                   ]}
                 />
               )}

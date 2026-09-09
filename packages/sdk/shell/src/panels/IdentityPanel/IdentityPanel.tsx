@@ -2,11 +2,14 @@
 // Copyright 2023 DXOS.org
 //
 
+import { create } from '@bufbuild/protobuf';
 import React, { useEffect, useMemo, useState } from 'react';
 
 import { debounce } from '@dxos/async';
 import { generateName } from '@dxos/display-name';
 import { log } from '@dxos/log';
+import { requirePublicKey, toPublicKey } from '@dxos/protocols/buf';
+import { ProfileDocumentSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { useClient } from '@dxos/react-client';
 import { type Identity, useDevices, useHaloInvitations, useIdentity } from '@dxos/react-client/halo';
 import { useInvitationStatus } from '@dxos/react-client/invitations';
@@ -30,11 +33,21 @@ import { useAgentHandlers } from './useAgentHandlers';
 
 const viewStyles = 'pt-1 pb-3 px-3';
 
+/**
+ * Reads a string out of the profile's `google.protobuf.Struct` metadata.
+ *
+ * The field holds arbitrary JSON, so a caller wanting a string has to check rather than assume.
+ */
+const profileString = (identity: Identity | undefined, key: string): string | undefined => {
+  const value = identity?.profile?.data?.[key];
+  return typeof value === 'string' ? value : undefined;
+};
+
+const identityHex = (identity?: Identity) => toPublicKey(identity?.identityKey)?.toHex() ?? '0';
+
 // TODO(thure): Factor out?
-const getHueValue = (identity?: Identity) =>
-  identity?.profile?.data?.hue || hexToHue(identity?.identityKey.toHex() ?? '0');
-const getEmojiValue = (identity?: Identity) =>
-  identity?.profile?.data?.emoji || hexToEmoji(identity?.identityKey.toHex() ?? '0');
+const getHueValue = (identity?: Identity) => profileString(identity, 'hue') || hexToHue(identityHex(identity));
+const getEmojiValue = (identity?: Identity) => profileString(identity, 'emoji') || hexToEmoji(identityHex(identity));
 
 const IdentityHeading = ({
   titleId,
@@ -46,7 +59,7 @@ const IdentityHeading = ({
   onChangeConnectionState,
   onManageCredentials,
 }: IdentityPanelHeadingProps) => {
-  const fallbackValue = keyToFallback(identity.identityKey);
+  const fallbackValue = keyToFallback(requirePublicKey(identity.identityKey));
   const { t } = useTranslation(translationKey);
   const [displayName, setDisplayNameDirectly] = useState(identity.profile?.displayName ?? '');
   const [emoji, setEmojiDirectly] = useState<string>(getEmojiValue(identity));
@@ -56,10 +69,7 @@ const IdentityHeading = ({
     () =>
       debounce(
         (nextDisplayName: string) =>
-          onUpdateProfile?.({
-            ...identity.profile,
-            displayName: nextDisplayName,
-          }),
+          onUpdateProfile?.(create(ProfileDocumentSchema, { ...identity.profile, displayName: nextDisplayName })),
         3_000,
       ),
     [onUpdateProfile, identity.profile],
@@ -72,18 +82,22 @@ const IdentityHeading = ({
 
   const setEmoji = (nextEmoji: string) => {
     setEmojiDirectly(nextEmoji);
-    void onUpdateProfile?.({
-      ...identity.profile,
-      data: { ...identity.profile?.data, emoji: nextEmoji },
-    });
+    void onUpdateProfile?.(
+      create(ProfileDocumentSchema, {
+        ...identity.profile,
+        data: { ...identity.profile?.data, emoji: nextEmoji },
+      }),
+    );
   };
 
   const setHue = (nextHue: string | undefined) => {
     setHueDirectly(nextHue);
-    void onUpdateProfile?.({
-      ...identity.profile,
-      data: { ...identity.profile?.data, hue: nextHue },
-    });
+    void onUpdateProfile?.(
+      create(ProfileDocumentSchema, {
+        ...identity.profile,
+        data: { ...identity.profile?.data, ...(nextHue !== undefined && { hue: nextHue }) },
+      }),
+    );
   };
 
   const isConnected = connectionState === ConnectionState.ONLINE;
@@ -103,7 +117,7 @@ const IdentityHeading = ({
         </Toolbar.Root>
 
         <Avatar.Label classNames='sr-only' data-testid='identityHeading.displayName'>
-          {identity.profile?.displayName ?? generateName(identity.identityKey.toHex())}
+          {identity.profile?.displayName ?? generateName(requirePublicKey(identity.identityKey).toHex())}
         </Avatar.Label>
 
         <Input.Root>
