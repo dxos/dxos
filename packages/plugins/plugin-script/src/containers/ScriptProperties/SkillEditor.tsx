@@ -11,7 +11,7 @@ import * as Skill from '@dxos/compute/Skill';
 import * as Template from '@dxos/compute/Template';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
-import { Button, Field, Flex, useAsyncEffect, useTranslation } from '@dxos/react-ui';
+import { Button, Field, useAsyncEffect, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 import { kebabize } from '@dxos/util';
 

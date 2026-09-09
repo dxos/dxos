@@ -4,7 +4,7 @@
 
 import React, { useCallback } from 'react';
 
-import { Field, Select, type SelectRootProps } from '@dxos/react-ui';
+import { Select, type SelectRootProps } from '@dxos/react-ui';
 import { Form, type FormFieldRendererProps } from '@dxos/react-ui-form';
 
 import type { FeedbackPluginOption } from './types';
