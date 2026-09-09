@@ -104,9 +104,7 @@ export const accountErrorType = (error: unknown): AccountErrorType | undefined =
 
 /** Origin to send a browser to for a passkey prompt. */
 export const getAuthUrl = (client: Pick<Client, 'config'>): string =>
-  getEnvString(client.config, 'DX_AUTH_URL') ??
-  client.config.values?.runtime?.services?.hub?.authUrl ??
-  DEFAULT_AUTH_URL;
+  getEnvString(client.config, 'DX_AUTH_URL') ?? DEFAULT_AUTH_URL;
 
 /**
  * Client for the account API, which EDGE serves under `/hub`. A `Client` already owns one

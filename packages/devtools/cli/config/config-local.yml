@@ -11,11 +11,13 @@ runtime:
       persistent: true
       dataRoot: /tmp/dx/run
 
+  app:
+    env:
+      # Passkey origin for these profiles: the dev account host, which the WebAuthn relying party
+      # the credential was registered against covers. Read by `Account.getAuthUrl`.
+      DX_AUTH_URL: https://account.dev.composer.space
+
   services:
-    # Only the passkey origin. Account calls go to `<edge>/hub`, so a local edge needs its
-    # `HUB_SERVICE` binding to answer them.
-    hub:
-      authUrl: https://account.dev.composer.space
     edge:
       url: http://localhost:8787/
     # Production even though `edge` is localhost: a local edge has no TURN token to mint with.
