@@ -6,8 +6,8 @@ import * as Effect from 'effect/Effect';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
-import { showLoginPage } from '@dxos/config';
 import { log } from '@dxos/log';
+import * as Account from '@dxos/plugin-client/Account';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 
 import { OnboardingManager } from '../onboarding-manager';
@@ -23,7 +23,7 @@ export default Capability.makeModule(
     const manager = new OnboardingManager({
       invokePromise,
       client,
-      showLoginPage: showLoginPage(client.config),
+      showLoginPage: Account.showLoginPage(client.config),
       token,
       recoverIdentity: searchProps.get('recoverIdentity') === 'true',
       deviceInvitationCode: searchProps.get('deviceInvitationCode') ?? undefined,

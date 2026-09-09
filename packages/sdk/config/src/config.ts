@@ -176,14 +176,6 @@ export const getEnvString = (config: Config | undefined, key: string): string | 
   return typeof value === 'string' ? value : undefined;
 };
 
-/**
- * Whether this deployment arms the account login page — the welcome screen, the account panels,
- * and the sign-up gate. Opt-in so a local build boots straight into a local identity, with no
- * account to redeem against a deployed hub.
- */
-export const showLoginPage = (config: Config | undefined): boolean =>
-  getEnvString(config, 'DX_SHOW_LOGIN_PAGE') === 'true';
-
 /** Validates config data from an untrusted source -- a file, an endpoint, browser storage. */
 export const parseConfig = (data: unknown, source: string): ConfigInit => {
   try {

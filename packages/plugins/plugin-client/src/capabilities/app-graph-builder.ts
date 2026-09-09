@@ -12,7 +12,6 @@ import * as CreateAtom from '@dxos/app-graph/CreateAtom';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { ConnectionState } from '@dxos/client/mesh';
 import * as Operation from '@dxos/compute/Operation';
-import { showLoginPage } from '@dxos/config';
 import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
 import { Identity } from '@dxos/halo';
 
@@ -59,7 +58,7 @@ export default Capability.makeModule(
           const status = get(CreateAtom.fromObservable(client.mesh.networkStatus));
           // Account, invitations, and usage all read the account API; a build that does not arm
           // the login page has no account to read and those panels render empty shells forever.
-          const accounts = showLoginPage(client.config);
+          const accounts = Account.showLoginPage(client.config);
 
           return [
             AppGraphNode.make({
