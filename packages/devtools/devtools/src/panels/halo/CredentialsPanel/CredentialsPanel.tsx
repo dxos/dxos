@@ -13,6 +13,7 @@ import { type TablePropertyDefinition } from '@dxos/react-ui-table';
 import { MasterDetailTable } from '../../../components';
 import { SpaceSelector } from '../../../containers';
 import { useCredentials, useDevtoolsState } from '../../../hooks';
+import { assertionTypeName } from '../../../util';
 
 export const CredentialsPanel = (props: { space?: Space }) => {
   const state = useDevtoolsState();
@@ -34,7 +35,7 @@ export const CredentialsPanel = (props: { space?: Space }) => {
       credentials.map((credential: Credential) => ({
         id: credential.id?.toString() ?? '',
         issuer: credential.issuer.toString(),
-        type: credential.subject.assertion['@type'],
+        type: assertionTypeName(credential),
         issuanceDate: credential.issuanceDate,
         _original: credential,
       })),

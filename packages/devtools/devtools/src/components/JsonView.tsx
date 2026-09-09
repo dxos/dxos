@@ -2,11 +2,11 @@
 // Copyright 2023 DXOS.org
 //
 
+import { fromBinary } from '@bufbuild/protobuf';
 import React, { type FC } from 'react';
 
 import { PublicKey } from '@dxos/keys';
 import { bufRegistry } from '@dxos/protocols/buf-registry';
-import { decodeCompat } from '@dxos/protocols/buf-shape-compat';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { arrayToBuffer } from '@dxos/util';
 
@@ -46,18 +46,13 @@ const replacer =
         return Buffer.from(value.data).toString('hex');
       }
 
-      if (value?.['@type'] === 'google.protobuf.Any') {
+      if (value?.$typeName === 'google.protobuf.Any') {
         try {
           // `typeUrl` may carry a prefix (`type.googleapis.com/example.Message`), which the
           // registry keys do not.
           const desc = bufRegistry.getMessage(value.typeUrl.slice(value.typeUrl.lastIndexOf('/') + 1));
           if (desc) {
-            // Decoded through the compat layer so a substituted field renders as the shape this
-            // viewer formats.
-            return {
-              '@type': value.typeUrl,
-              ...decodeCompat<Record<string, unknown>>(desc, value.value),
-            };
+            return { '@type': value.typeUrl, ...fromBinary(desc, value.value) };
           }
         } catch {}
       }

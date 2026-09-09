@@ -3,3 +3,4 @@
 //
 
 export * from './textBitbar';
+export * from './assertionType';
