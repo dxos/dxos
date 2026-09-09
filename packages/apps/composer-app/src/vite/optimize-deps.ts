@@ -232,7 +232,6 @@ export const optimizeDepsInclude: string[] = [
   '@dxos/plugin-spacetime > @babylonjs/loaders/glTF',
   '@dxos/plugin-spacetime > manifold-3d',
   '@dxos/plugin-support > html-to-image',
-  '@dxos/plugin-support > react-joyride',
   '@dxos/plugin-terra > @babylonjs/core/Cameras/arcRotateCamera',
   '@dxos/plugin-terra > @babylonjs/core/Cameras/targetCamera',
   '@dxos/plugin-terra > @babylonjs/core/Engines/constants',

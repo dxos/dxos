@@ -1,8 +1,8 @@
 # ark — Tasks
 
-_Resume: `Main` port step 1 (machine swap, swipe-to-dismiss on both sides, touch edge swipe-to-open)
-implemented 2026-09-09 on this branch; PR #13024 open from it. Next: land it, then step 2 (push layout at
-`lg`) as its own PR. Uncommitted: none._
+_Resume: PR #13030 OPEN — #13024's CodeRabbit fix (drawer open only while `expanded`, dismissal rests at
+`collapsed`), `Toc`, and `Tour` + `WelcomeTour` off `react-joyride`. #13024 (Main step 1) MERGED
+2026-09-09. Next: land #13030, then `Main` step 2 (push layout at `lg`). Uncommitted: none._
 
 ## Phase 1: Tree rebuild on Ark (PR #12873)
 
@@ -907,16 +907,22 @@ dist/types/src: ENOTEMPTY` — a concurrent writer. A Cursor TypeScript native-p
 - [ ] **Rename `Stepper` → `Steps`** (tracked 2026-09-05): Ark's name for the machine the component
       sits on, and the family convention is Ark's name where the part is Ark's. Own PR with the
       `Input` → `Field` codemod, or folded into it.
-- [ ] **Replace `react-joyride` with Ark's `Tour`** (tracked 2026-09-05): the onboarding walkthrough
-      keeps a second floating stack and its own spotlight/step machine; Ark's tour machine gives the
-      steps, the spotlight and the positioning on the same popper the rest of the library uses.
-      Establish first which `react-joyride` features the walkthrough actually relies on (scrolling
-      to a target, the beacon, controlled step state) and whether Ark's tour covers them.
-- [ ] **Implement Ark's table of contents (`toc`)** (tracked 2026-09-05, DEFERRED 2026-09-09 by the
-      user): the machine tracks which heading is in view and marks the matching link. The installed
-      5.39.1 ships it (`-ui/react/toc`). Decide the consumer first: the machine observes DOM
-      headings with ids, so rendered markdown fits and the CodeMirror editor does not; `react-ui-feed`'s
-      `Outline` is a tick rail over document offsets, a different thing.
+- [x] **Replace `react-joyride` with Ark's `Tour`** DONE 2026-09-09: `react-ui` `Tour` (all Ark
+      parts, theme, play stories) and `plugin-support`'s `WelcomeTour` rebuilt on it; `react-joyride`,
+      `react-floater`, `type-fest` removed from the repo; composer `help.ts` steps on the plugin's own
+      `Tour.Step`. What the walkthrough relied on and how it maps: waiting for a target (the machine's
+      mutation observer), the `before` hook (the step `effect` → `show()`), controlled `running` and
+      the dialog pause (close trigger + remembered step), the target highlight (`data-tour-highlighted`
+      → `--controls-opacity`), the e2e test ids and `data-step` numbering (kept). No beacon was used.
+      See `react-ui/docs/MIGRATION.md` Phase 7c.
+- [x] **Implement Ark's table of contents (`toc`)** DONE 2026-09-09 (user asked the same day, after
+      deferring it): `react-ui` `Toc` — Root/Content/Nav/Title/List/Indicator/Item/Link on Ark's toc
+      machine, Tailwind theme, play stories for scroll-activation and link-click scrolling. See
+      `react-ui/docs/MIGRATION.md` Phase 7b.
+- [ ] **`Toc` consumer**: the machine observes DOM headings with ids, so rendered markdown fits and
+      the CodeMirror editor does not; `react-ui-feed`'s `Outline` is a tick rail over document
+      offsets, a different thing. First candidate: `rehype-slug` on `MarkdownView` and a `Toc.Nav`
+      beside it.
 - [x] **Transcription `Pipeline/Live` story lost its mic** DONE 2026-09-06 (reported). Not the
       toolbar: the story's own graph extension registered at startup, its connector called
       `getDefaultSpace` on a client with no runtime yet and threw before subscribing to anything
@@ -1151,4 +1157,5 @@ verdict over porting in the same PR).
       delete `dx-main-content-padding` / `dx-main-intrinsic-size` / `--main-sidebar-width`; move
       `useMainSize`, `focus.css` `data-sidebar-*-state` and the `DeckViewport` vars onto the clips;
       decide the rail (collapsed = `Drawer.Content size` switching rail↔sidebar).
-- [ ] **`Toc`** — deferred; see Phase 16's toc item for the consumer question.
+- [x] **`Toc`** DONE 2026-09-09; the consumer question stays open in Phase 16's toc item.
+- [x] **`Tour`, `WelcomeTour` off `react-joyride`** DONE 2026-09-09; see Phase 16's tour item.
