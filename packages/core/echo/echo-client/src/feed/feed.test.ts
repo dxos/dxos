@@ -363,6 +363,13 @@ describe('Feed', () => {
 
       await sleep(2_500);
       expect(callCount).toBe(1);
+
+      // The handle can never send again, so a later append must say so rather than resolve over a
+      // write that was dropped.
+      await expect(db.appendToFeed(feed, [Obj.make(TestSchema.Person, { name: 'jane' })])).rejects.toThrow(
+        RpcClosedError,
+      );
+      expect(callCount).toBe(1);
     });
 
     test('disposing the feed handle flushes a same-tick update instead of dropping it', async ({ expect }) => {

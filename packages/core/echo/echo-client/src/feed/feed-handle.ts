@@ -184,7 +184,8 @@ export class FeedHandle {
 
   #appendRetryTimer: NodeJS.Timeout | null = null;
   #appendRetryDelay = APPEND_RETRY_INITIAL_DELAY;
-  #endpointClosed = false;
+  /** The error that closed the RPC endpoint, once one has; this handle can never append again. */
+  #endpointClosed: Error | null = null;
 
   constructor(
     private readonly _service: FeedService.Client,
@@ -254,13 +255,15 @@ export class FeedHandle {
 
     if (this.#endpointClosed) {
       // Revert first: the capture above cleared each core's dirty flag and left a pending-append
-      // token, so returning without it would drop the write AND leave `reconcile` preferring the
+      // token, so leaving without it would drop the write AND leave `reconcile` preferring the
       // never-sent local state over every inbound block for the life of the handle.
       for (const { core, token } of batch) {
         core.revertCapture(token);
       }
       this.updated.emit();
-      return;
+      // The write did not land and this handle can never send it, so resolving would report a
+      // success the caller can act on. The handle is replaced when the feed service is swapped.
+      throw this.#endpointClosed;
     }
 
     const encoded = batch.map(({ json }) => JSON.stringify(json));
@@ -391,6 +394,13 @@ export class FeedHandle {
       );
     }
     this.#appendRetryDelay = APPEND_RETRY_INITIAL_DELAY;
+    if (this.#appendRetryTimer) {
+      clearTimeout(this.#appendRetryTimer);
+      this.#appendRetryTimer = null;
+    }
+    // Cleared only here: `#onAppendFailed` now retries, so a transient failure must not leave the
+    // feed reporting an error once a later append has gone through.
+    this._error = null;
   }
 
   #onAppendFailed(err: unknown, batch: { core: FeedObjectCore; token: string }[]): void {
@@ -409,7 +419,7 @@ export class FeedHandle {
     }
 
     if (endpointClosed) {
-      this.#endpointClosed = true;
+      this.#endpointClosed = err as Error;
       log.verbose('feed append abandoned; rpc endpoint closed', {
         feedId: this._feedId,
         pending: this.#dirtyCores.size,
@@ -438,10 +448,6 @@ export class FeedHandle {
   async #flushDirty(): Promise<void> {
     if (this.#dirtyCores.size === 0 || this.#endpointClosed) {
       return;
-    }
-    if (this.#appendRetryTimer) {
-      clearTimeout(this.#appendRetryTimer);
-      this.#appendRetryTimer = null;
     }
     const batch = [...this.#dirtyCores].map((core) => {
       const { json, token } = core.captureForAppend();
@@ -742,6 +748,16 @@ export class FeedHandle {
     // so clearing `#dirtyCores` first would drop it. Runs while the scheduler and service are still
     // live, and cannot reject — `waitForPendingWrites` is best-effort by contract.
     await this.waitForPendingWrites();
+
+    if (this.#endpointClosed && this.#dirtyCores.size > 0) {
+      // The drain above is a no-op once the endpoint is closed, and nothing carries these writes to
+      // the handle that replaces this one, so say how many were lost rather than losing them quietly.
+      log.warn('feed handle disposed with writes its closed endpoint could not send', {
+        feedId: this._feedId,
+        pending: this.#dirtyCores.size,
+        err: this.#endpointClosed,
+      });
+    }
 
     this._pollingHandlers = 0;
     if (this.#appendRetryTimer) {

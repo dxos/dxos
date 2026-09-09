@@ -150,6 +150,13 @@ const NON_CONVERGENCE_WARN_THRESHOLD = 6;
 const NON_CONVERGENCE_WARN_INTERVAL = 30;
 
 /**
+ * Passes between repeat resync attempts on a non-converging pair. Shorter than the warning
+ * interval — repairing is the point, and one round is not always enough — but not every pass, so a
+ * collection that is merely slow is not re-driven under itself.
+ */
+const NON_CONVERGENCE_RESYNC_INTERVAL = 6;
+
+/**
  * Wall-clock cap for `_repo.shutdown()` during host teardown. Healthy
  * shutdowns finish in single-digit ms; see the comment in
  * {@link AutomergeHost._close} for why the cap is still here.
@@ -1402,6 +1409,13 @@ export class AutomergeHost extends Resource {
     const passes = (this._nonConvergingSyncPasses.get(syncKey) ?? 0) + 1;
     this._nonConvergingSyncPasses.set(syncKey, passes);
     const overThreshold = passes - NON_CONVERGENCE_WARN_THRESHOLD;
+    if (overThreshold >= 0 && overThreshold % NON_CONVERGENCE_RESYNC_INTERVAL === 0) {
+      // Heads this far apart for this long are rounds that settled without delivering, which
+      // neither the heal scheduler nor the share-policy announce below will ever re-ask for.
+      for (const documentId of different) {
+        this.resyncDocument(documentId);
+      }
+    }
     if (overThreshold >= 0 && overThreshold % NON_CONVERGENCE_WARN_INTERVAL === 0) {
       log.warn('collection sync not converging', {
         collectionId,
@@ -1421,12 +1435,6 @@ export class AutomergeHost extends Resource {
           different.map((documentId) => [documentId, getHandleState(this._repo, documentId)]),
         ),
       });
-
-      // Heads this far apart for this long are a round that settled without delivering, which
-      // neither the heal scheduler nor the share-policy announce below will ever re-ask for.
-      for (const documentId of different) {
-        this.resyncDocument(documentId);
-      }
     }
 
     const toReplicate = [...different, ...missingOnRemote, ...missingOnLocal];

@@ -23,7 +23,10 @@ import {
 // Delay (in milliseconds) for data being sent through in-memory connections to simulate network latency.
 const MEMORY_TRANSPORT_DELAY = 1;
 
-/** Sits inside `Connection`'s abort so that deadline, not this one, is what fires. */
+/**
+ * Fires one second inside `Connection`'s abort, so a peer whose remote signal never arrived reports
+ * that cause rather than the generic connect timeout.
+ */
 const REMOTE_SIGNAL_TIMEOUT = TRANSPORT_CONNECTION_TIMEOUT - 1_000;
 
 /**

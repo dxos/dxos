@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { type Mutex, type MutexGuard, Trigger, scheduleTask } from '@dxos/async';
+import { type Mutex, type MutexGuard, Trigger, asyncTimeout, scheduleTask } from '@dxos/async';
 import { Context, cancelWithContext } from '@dxos/context';
 import { randomBytes, verify } from '@dxos/crypto';
 import { InvariantViolation, invariant } from '@dxos/invariant';
@@ -262,15 +262,15 @@ export class InvitationHostExtension
           },
         });
       }
-      // Only if the flow has not already moved on. When `options` and `introduce` are dispatched in
-      // one drain — the overtaking this whole path exists to survive — the `options` handler has set
-      // CONNECTED and `introduce` has since set READY_FOR_AUTHENTICATION. Re-emitting CONNECTED here
-      // would regress that, and the guest's `authenticate` asserts
-      // [AUTHENTICATING, READY_FOR_AUTHENTICATION].
-      if (this._lastSetState !== Invitation_State.READY_FOR_AUTHENTICATION) {
+      // Only while the flow is still where this method left it. When `options` and `introduce` are
+      // dispatched in one drain — the overtaking this whole path exists to survive — the handlers
+      // have already carried the state past CONNECTED, and re-emitting it here would rewind them.
+      if (this._lastSetState === Invitation_State.CONNECTING) {
         this._setState(Invitation_State.CONNECTED);
       }
-      await cancelWithContext(this._ctx, optionsAcknowledged);
+      // Bounded like the trigger above: a guest that never acknowledges must fail the invitation,
+      // not leave it displayed as live with `onOpen` never reached.
+      await cancelWithContext(this._ctx, asyncTimeout(optionsAcknowledged, OPTIONS_TIMEOUT));
       this._callbacks.onOpen(this._ctx, context);
     } catch (err: any) {
       if (this._invitationFlowLock != null) {
