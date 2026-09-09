@@ -15,10 +15,10 @@ const KINDS: Record<DeviceType, ShellDevice['kind']> = {
   [DeviceType.AGENT_MANAGED]: 'agent-managed',
 };
 
-const PRESENCE: Record<Device.PresenceState, ShellDevice['presence']> = {
-  [Device.PresenceState.ONLINE]: 'online',
-  [Device.PresenceState.OFFLINE]: 'offline',
-  [Device.PresenceState.REMOVED]: 'removed',
+const PRESENCE: Record<Device_PresenceState, ShellDevice['presence']> = {
+  [Device_PresenceState.ONLINE]: 'online',
+  [Device_PresenceState.OFFLINE]: 'offline',
+  [Device_PresenceState.REMOVED]: 'removed',
 };
 
 /**

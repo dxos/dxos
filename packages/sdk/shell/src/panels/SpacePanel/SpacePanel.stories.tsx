@@ -7,6 +7,7 @@ import React from 'react';
 
 import { IdentityDid, PublicKey } from '@dxos/keys';
 import { fromPublicKey, toPublicKey } from '@dxos/protocols/buf';
+import { SpaceMember_Role } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { HaloSpaceMember, SpaceMember } from '@dxos/react-client/echo';
 import { Invitation_State } from '@dxos/react-client/invitations';
 import { withTheme } from '@dxos/react-ui/testing';
@@ -184,8 +185,8 @@ export const SpaceManagerWithMember = () => {
                   {...props}
                   members={[
                     {
-                      presence: SpaceMember.PresenceState.ONLINE,
-                      role: HaloSpaceMember.Role.ADMIN,
+                      presence: SpaceMember_PresenceState.ONLINE,
+                      role: SpaceMember_Role.ADMIN,
                       identity: {
                         did: IdentityDid.random(),
                         identityKey: PublicKey.random(),
@@ -218,8 +219,8 @@ export const SpaceManagerWithMembers = () => {
                   {...props}
                   members={[
                     {
-                      presence: SpaceMember.PresenceState.ONLINE,
-                      role: HaloSpaceMember.Role.ADMIN,
+                      presence: SpaceMember_PresenceState.ONLINE,
+                      role: SpaceMember_Role.ADMIN,
                       identity: {
                         did: IdentityDid.random(),
                         identityKey: PublicKey.random(),
@@ -259,8 +260,8 @@ export const SpaceManagerWithMoreMembers = () => {
                   {...props}
                   members={[
                     {
-                      presence: SpaceMember.PresenceState.ONLINE,
-                      role: HaloSpaceMember.Role.ADMIN,
+                      presence: SpaceMember_PresenceState.ONLINE,
+                      role: SpaceMember_Role.ADMIN,
                       identity: {
                         did: IdentityDid.random(),
                         identityKey: PublicKey.random(),
@@ -270,8 +271,8 @@ export const SpaceManagerWithMoreMembers = () => {
                       },
                     },
                     {
-                      presence: SpaceMember.PresenceState.OFFLINE,
-                      role: HaloSpaceMember.Role.ADMIN,
+                      presence: SpaceMember_PresenceState.OFFLINE,
+                      role: SpaceMember_Role.ADMIN,
                       identity: {
                         did: IdentityDid.random(),
                         identityKey: PublicKey.random(),
@@ -281,8 +282,8 @@ export const SpaceManagerWithMoreMembers = () => {
                       },
                     },
                     {
-                      presence: SpaceMember.PresenceState.OFFLINE,
-                      role: HaloSpaceMember.Role.ADMIN,
+                      presence: SpaceMember_PresenceState.OFFLINE,
+                      role: SpaceMember_Role.ADMIN,
                       identity: {
                         did: IdentityDid.random(),
                         identityKey: PublicKey.random(),

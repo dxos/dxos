@@ -2,10 +2,12 @@
 // Copyright 2023 DXOS.org
 //
 
+import { create } from '@bufbuild/protobuf';
 import React, { useEffect, useState } from 'react';
 
 import { type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { AppContextRequestSchema, LayoutRequestSchema } from '@dxos/protocols/buf/dxos/iframe_pb';
 import { useClient } from '@dxos/react-client';
 import {
   type InvitationUrlRequest,
@@ -67,8 +69,8 @@ export const Shell = ({ runtime }: { runtime: ShellRuntime }) => {
   useAsyncEffect(async () => {
     if (layout === ShellLayout.SPACE && !space) {
       log.warn('No space found for shell space invitations.');
-      await runtime.setAppContext({ display: ShellDisplay.NONE });
-      runtime.setLayout({ layout: ShellLayout.DEFAULT });
+      await runtime.setAppContext(create(AppContextRequestSchema, { display: ShellDisplay.NONE }));
+      runtime.setLayout(create(LayoutRequestSchema, { layout: ShellLayout.DEFAULT }));
     }
   }, [runtime, layout, space]);
 
@@ -89,11 +91,11 @@ export const Shell = ({ runtime }: { runtime: ShellRuntime }) => {
                 : 'default'
           }
           initialInvitationCode={invitationCode}
-          onCancelResetStorage={() => runtime.setLayout({ layout: ShellLayout.IDENTITY })}
+          onCancelResetStorage={() => runtime.setLayout(create(LayoutRequestSchema, { layout: ShellLayout.IDENTITY }))}
           onDone={async () => {
             blurActiveElement();
-            await runtime.setAppContext({ display: ShellDisplay.NONE });
-            runtime.setLayout({ layout: ShellLayout.DEFAULT });
+            await runtime.setAppContext(create(AppContextRequestSchema, { display: ShellDisplay.NONE }));
+            runtime.setLayout(create(LayoutRequestSchema, { layout: ShellLayout.DEFAULT }));
           }}
         />
       );
@@ -105,26 +107,26 @@ export const Shell = ({ runtime }: { runtime: ShellRuntime }) => {
         <IdentityDialog
           createInvitationUrl={createDeviceInvitationUrl}
           onResetStorage={async () => {
-            runtime.setLayout({ layout: ShellLayout.STATUS });
+            runtime.setLayout(create(LayoutRequestSchema, { layout: ShellLayout.STATUS }));
             await client.reset();
             return runtime.setAppContext({ display: ShellDisplay.NONE, reset: true });
           }}
           onRecover={async () => {
-            runtime.setLayout({ layout: ShellLayout.STATUS });
+            runtime.setLayout(create(LayoutRequestSchema, { layout: ShellLayout.STATUS }));
             await client.reset();
             // TODO(wittjosiah): Enter join flow without reloading.
             return runtime.setAppContext({ display: ShellDisplay.NONE, reset: true, target: 'recoverIdentity' });
           }}
           onJoinNewIdentity={async () => {
-            runtime.setLayout({ layout: ShellLayout.STATUS });
+            runtime.setLayout(create(LayoutRequestSchema, { layout: ShellLayout.STATUS }));
             await client.reset();
             // TODO(wittjosiah): Enter join flow without reloading.
             return runtime.setAppContext({ display: ShellDisplay.NONE, reset: true, target: 'deviceInvitation' });
           }}
           onDone={async () => {
             blurActiveElement();
-            await runtime.setAppContext({ display: ShellDisplay.NONE });
-            runtime.setLayout({ layout: ShellLayout.DEFAULT });
+            await runtime.setAppContext(create(AppContextRequestSchema, { display: ShellDisplay.NONE }));
+            runtime.setLayout(create(LayoutRequestSchema, { layout: ShellLayout.DEFAULT }));
           }}
           initialDisposition={layout === ShellLayout.SHARE_IDENTITY ? 'manage-device-invitation' : 'default'}
         />
@@ -138,8 +140,8 @@ export const Shell = ({ runtime }: { runtime: ShellRuntime }) => {
           createInvitationUrl={createSpaceInvitationUrl}
           onDone={async () => {
             blurActiveElement();
-            await runtime.setAppContext({ display: ShellDisplay.NONE });
-            runtime.setLayout({ layout: ShellLayout.DEFAULT });
+            await runtime.setAppContext(create(AppContextRequestSchema, { display: ShellDisplay.NONE }));
+            runtime.setLayout(create(LayoutRequestSchema, { layout: ShellLayout.DEFAULT }));
           }}
         />
       ) : null;
@@ -156,12 +158,12 @@ export const Shell = ({ runtime }: { runtime: ShellRuntime }) => {
               spaceKey: result?.spaceKey ?? undefined,
               target,
             });
-            runtime.setLayout({ layout: ShellLayout.DEFAULT });
+            runtime.setLayout(create(LayoutRequestSchema, { layout: ShellLayout.DEFAULT }));
           }}
           onExit={async () => {
             blurActiveElement();
-            await runtime.setAppContext({ display: ShellDisplay.NONE });
-            runtime.setLayout({ layout: ShellLayout.DEFAULT });
+            await runtime.setAppContext(create(AppContextRequestSchema, { display: ShellDisplay.NONE }));
+            runtime.setLayout(create(LayoutRequestSchema, { layout: ShellLayout.DEFAULT }));
           }}
         />
       );

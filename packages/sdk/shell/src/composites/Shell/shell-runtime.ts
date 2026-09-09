@@ -2,14 +2,20 @@
 // Copyright 2023 DXOS.org
 //
 
+import { create } from '@bufbuild/protobuf';
+import { EmptySchema } from '@bufbuild/protobuf/wkt';
+
 import { Event } from '@dxos/async';
 import { type AppServiceBundle, type ShellRuntime, appServiceBundle, shellServiceBundle } from '@dxos/client-protocol';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
+import { toPublicKey } from '@dxos/protocols/buf';
 import {
   type AppContextRequest,
   type InvitationUrlRequest,
+  InvitationUrlRequestSchema,
   type LayoutRequest,
+  LayoutRequestSchema,
   ShellLayout,
 } from '@dxos/protocols/buf/dxos/iframe_pb';
 import { type ProtoRpcPeer, type RpcPort, createProtoRpcPeer } from '@dxos/rpc';
@@ -67,16 +73,18 @@ export class ShellRuntimeImpl implements ShellRuntime {
   setLayout({ layout, invitationCode, spaceKey, spaceId }: LayoutRequest): void {
     this._layout = layout;
     this._invitationCode = invitationCode;
-    this._spaceKey = spaceKey;
+    this._spaceKey = toPublicKey(spaceKey);
     this._spaceId = spaceId;
-    this.layoutUpdate.emit({ layout, invitationCode, spaceKey, spaceId });
+    this.layoutUpdate.emit(create(LayoutRequestSchema, { layout, invitationCode, spaceKey, spaceId }));
   }
 
   setInvitationUrl({ invitationUrl, deviceInvitationParam, spaceInvitationParam }: InvitationUrlRequest): void {
     this._invitationUrl = invitationUrl;
     this._deviceInvitationParam = deviceInvitationParam;
     this._spaceInvitationParam = spaceInvitationParam;
-    this.invitationUrlUpdate.emit({ invitationUrl, deviceInvitationParam, spaceInvitationParam });
+    this.invitationUrlUpdate.emit(
+      create(InvitationUrlRequestSchema, { invitationUrl, deviceInvitationParam, spaceInvitationParam }),
+    );
   }
 
   async setAppContext(context: AppContextRequest): Promise<void> {
@@ -94,15 +102,17 @@ export class ShellRuntimeImpl implements ShellRuntime {
           setLayout: async (request) => {
             this._layout = request.layout;
             this._invitationCode = request.invitationCode;
-            this._spaceKey = request.spaceKey;
+            this._spaceKey = toPublicKey(request.spaceKey);
             this._spaceId = request.spaceId;
             this.layoutUpdate.emit(request);
+            return create(EmptySchema);
           },
           setInvitationUrl: async (request) => {
             this._invitationUrl = request.invitationUrl;
             this._deviceInvitationParam = request.deviceInvitationParam;
             this._spaceInvitationParam = request.spaceInvitationParam;
             this.invitationUrlUpdate.emit(request);
+            return create(EmptySchema);
           },
         },
       },

@@ -2,6 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
+import { create } from '@bufbuild/protobuf';
 import React, {
   type Context,
   type PropsWithChildren,
@@ -13,6 +14,7 @@ import React, {
   useState,
 } from 'react';
 
+import { LayoutRequestSchema } from '@dxos/protocols/buf/dxos/iframe_pb';
 import { type LayoutRequest, type PublicKey, ShellDisplay, ShellLayout, useClient } from '@dxos/react-client';
 import type { Space } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
@@ -117,7 +119,7 @@ export const ShellProvider = ({
 
       const modifier = event.ctrlKey || event.metaKey;
       if (event.key === '>' && event.shiftKey && modifier) {
-        shellRuntime.setLayout({ layout: ShellLayout.SHARE_IDENTITY });
+        shellRuntime.setLayout(create(LayoutRequestSchema, { layout: ShellLayout.SHARE_IDENTITY }));
         setDisplay(ShellDisplay.FULLSCREEN);
       } else if (event.key === '.' && modifier) {
         shellRuntime.setLayout({ layout: ShellLayout.SPACE, spaceKey: space.key });

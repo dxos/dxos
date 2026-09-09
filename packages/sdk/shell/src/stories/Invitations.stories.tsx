@@ -2,10 +2,12 @@
 // Copyright 2023 DXOS.org
 //
 
+import { create } from '@bufbuild/protobuf';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo, useState } from 'react';
 
 import { log } from '@dxos/log';
+import { ProfileDocumentSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { random } from '@dxos/random';
 import { useClient } from '@dxos/react-client';
 import { type Space, type SpaceMember, useSpaces } from '@dxos/react-client/echo';
@@ -143,7 +145,9 @@ const Invitations = () => {
         icon='ph--plus--regular'
         label='Create Identity'
         iconOnly
-        onClick={() => client.halo.createIdentity({ displayName: random.person.firstName() })}
+        onClick={() =>
+          client.halo.createIdentity(create(ProfileDocumentSchema, { displayName: random.person.firstName() }))
+        }
         disabled={Boolean(identity)}
         data-testid='invitations.create-identity'
       />
@@ -201,7 +205,7 @@ const Invitations = () => {
         {identity ? (
           <Listbox.Root>
             <Listbox.Content aria-label='Identity'>
-              <IdentityListItem identity={identity} presence={networkStatus as unknown as SpaceMember.PresenceState} />
+              <IdentityListItem identity={identity} presence={networkStatus as unknown as SpaceMember_PresenceState} />
             </Listbox.Content>
           </Listbox.Root>
         ) : (

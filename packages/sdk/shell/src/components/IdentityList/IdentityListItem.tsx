@@ -35,7 +35,7 @@ export const IdentityListItem = forwardRef<
     >
       <Avatar.Root labelId={labelId}>
         <Avatar.Content
-          status={presence === SpaceMember.PresenceState.ONLINE ? 'active' : 'inactive'}
+          status={presence === SpaceMember_PresenceState.ONLINE ? 'active' : 'inactive'}
           hue={identity.profile?.data?.hue || fallbackValue.hue}
           fallback={identity.profile?.data?.emoji || fallbackValue.emoji}
           classNames='place-self-center'
