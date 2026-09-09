@@ -10,7 +10,8 @@ import { Field } from '@dxos/react-ui';
 
 import { type FormFieldRendererProps } from '#types';
 
-import { FormField } from '../../FormField';
+import { FormStaticValue } from '../../FormField';
+import { presentationFor } from '../../presentation';
 
 /**
  * Stored value shapes:
@@ -50,10 +51,9 @@ export const DateField = ({
   type,
   format,
   readonly,
-  placeholder: _placeholder,
+  presentation,
+  getValue,
   onValueChange,
-  onBlur: _onBlur,
-  ...props
 }: FormFieldRendererProps<string>) => {
   const handleSimpleChange = useCallback((next: string) => onValueChange(type, next), [type, onValueChange]);
 
@@ -65,46 +65,45 @@ export const DateField = ({
     [type, onValueChange],
   );
 
-  return (
-    <FormField<string> {...props} readonly={readonly} format={format}>
-      {({ value }) => {
-        switch (format) {
-          case Format.TypeFormat.Date:
-            return (
-              <div className='grid grid-cols-[minmax(0,1fr)_min-content] gap-1 items-stretch tabular-nums'>
-                <Field.Date
-                  classNames='overflow-hidden'
-                  disabled={readonly}
-                  value={value ?? ''}
-                  onValueChange={handleSimpleChange}
-                />
-                <Field.TriggerIcon />
-              </div>
-            );
-          case Format.TypeFormat.Time:
-            return (
-              <Field.Time
-                classNames='tabular-nums'
-                disabled={!!readonly}
-                value={value ?? ''}
-                onValueChange={handleSimpleChange}
-              />
-            );
-          case Format.TypeFormat.DateTime:
-          default:
-            return (
-              <div className='grid grid-cols-[minmax(0,1fr)_min-content] gap-1 items-stretch tabular-nums'>
-                <Field.DateTime
-                  classNames='overflow-hidden'
-                  disabled={readonly}
-                  value={isoToLocalDateTime(value)}
-                  onValueChange={handleDateTimeChange}
-                />
-                <Field.TriggerIcon />
-              </div>
-            );
-        }
-      }}
-    </FormField>
-  );
+  const value = getValue();
+  if (presentationFor(presentation).isStatic) {
+    return <FormStaticValue value={value} format={format} />;
+  }
+
+  switch (format) {
+    case Format.TypeFormat.Date:
+      return (
+        <div className='grid grid-cols-[minmax(0,1fr)_min-content] gap-1 items-stretch tabular-nums'>
+          <Field.Date
+            classNames='overflow-hidden'
+            disabled={readonly}
+            value={value ?? ''}
+            onValueChange={handleSimpleChange}
+          />
+          <Field.TriggerIcon />
+        </div>
+      );
+    case Format.TypeFormat.Time:
+      return (
+        <Field.Time
+          classNames='tabular-nums'
+          disabled={!!readonly}
+          value={value ?? ''}
+          onValueChange={handleSimpleChange}
+        />
+      );
+    case Format.TypeFormat.DateTime:
+    default:
+      return (
+        <div className='grid grid-cols-[minmax(0,1fr)_min-content] gap-1 items-stretch tabular-nums'>
+          <Field.DateTime
+            classNames='overflow-hidden'
+            disabled={readonly}
+            value={isoToLocalDateTime(value)}
+            onValueChange={handleDateTimeChange}
+          />
+          <Field.TriggerIcon />
+        </div>
+      );
+  }
 };

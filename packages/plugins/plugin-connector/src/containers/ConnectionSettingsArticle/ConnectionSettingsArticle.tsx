@@ -71,14 +71,18 @@ export const ConnectionSettingsArticle = (_props: ConnectionSettingsArticleProps
             <Form.Root variant='settings' schema={ACTIONS_SCHEMA} values={ACTIONS_VALUES}>
               <Form.Viewport>
                 <Form.Content>
-                  <Form.Section title={t('connections.label')} description={t('connections.description')}>
-                    <Form.Field label={t('add-connection.label')} description={t('connect-service.description')}>
+                  <Form.FieldSet label={t('connections.label')} description={t('connections.description')}>
+                    <Form.Field
+                      standalone
+                      label={t('add-connection.label')}
+                      description={t('connect-service.description')}
+                    >
                       <Button onClick={handleAdd}>{t('connect.label')}</Button>
                     </Form.Field>
-                  </Form.Section>
+                  </Form.FieldSet>
 
                   {connections.length > 0 && (
-                    <Form.Section title={t('connections.label')}>
+                    <Form.FieldSet label={t('connections.label')}>
                       <Listbox.Root>
                         <Listbox.Viewport>
                           <Listbox.Content aria-label={t('connections.label')}>
@@ -88,7 +92,7 @@ export const ConnectionSettingsArticle = (_props: ConnectionSettingsArticleProps
                           </Listbox.Content>
                         </Listbox.Viewport>
                       </Listbox.Root>
-                    </Form.Section>
+                    </Form.FieldSet>
                   )}
                 </Form.Content>
               </Form.Viewport>

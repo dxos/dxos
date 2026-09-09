@@ -194,7 +194,7 @@ export const UsageView = ({ state, data, lastUpdated, onRefresh }: UsageViewProp
     ({ fieldProps: { label, description, getValue } }) => {
       const percent = getValue();
       return (
-        <Form.Field label={label} description={description}>
+        <Form.Field standalone label={label} description={description}>
           {typeof percent === 'number' ? (
             <Progress progress={percent / 100} aria-label={t('usage-percent-used.label', { percent })} />
           ) : (
@@ -210,7 +210,7 @@ export const UsageView = ({ state, data, lastUpdated, onRefresh }: UsageViewProp
     <Form.Root variant='settings' layout='static' schema={schema} values={values}>
       <Form.Viewport scroll>
         <Form.Content>
-          <Form.Section title={t('usage-section.title')} description={t('usage-section.description')}>
+          <Form.FieldSet label={t('usage-section.title')} description={t('usage-section.description')}>
             {message ? (
               <Banner.Root valence={message.valence}>
                 <Banner.Content>
@@ -219,13 +219,13 @@ export const UsageView = ({ state, data, lastUpdated, onRefresh }: UsageViewProp
                 </Banner.Content>
               </Banner.Root>
             ) : (
-              <Form.FieldSet fieldProvider={meterFieldProvider} />
+              <Form.Fields fieldProvider={meterFieldProvider} />
             )}
-          </Form.Section>
+          </Form.FieldSet>
 
           {/* {state === 'ready' && data && (
-            <Form.Section>
-              <Form.Field
+            <Form.FieldSet>
+              <Form.Field standalone
                 label={
                   lastUpdated !== undefined
                     ? t('usage-last-updated.label', { time: new Date(lastUpdated).toLocaleTimeString() })
@@ -242,12 +242,12 @@ export const UsageView = ({ state, data, lastUpdated, onRefresh }: UsageViewProp
                   />
                 )}
               </Form.Field>
-            </Form.Section>
+            </Form.FieldSet>
           )} */}
 
           {/* {state === 'ready' && data && (
-            <Form.Section>
-              <Form.Field label={t('usage-raw-json.label')}>
+            <Form.FieldSet>
+              <Form.Field standalone label={t('usage-raw-json.label')}>
                 <ToggleIconButton
                   iconOnly
                   variant='ghost'
@@ -258,7 +258,7 @@ export const UsageView = ({ state, data, lastUpdated, onRefresh }: UsageViewProp
                 />
               </Form.Field>
               {rawExpanded && <JsonHighlighter data={data} testId='usage-raw-json' />}
-            </Form.Section>
+            </Form.FieldSet>
           )} */}
         </Form.Content>
       </Form.Viewport>

@@ -39,7 +39,7 @@ export const MailboxProperties = ({ subject }: MailboxPropertiesProps) => {
   }, [invokePromise, db]);
 
   return (
-    <Form.Section>
+    <Form.FieldSet>
       <Field.Root>
         <Field.Label>{t('mailbox-sync.label')}</Field.Label>
         <Flex align='center'>
@@ -56,7 +56,7 @@ export const MailboxProperties = ({ subject }: MailboxPropertiesProps) => {
           )}
         </Flex>
       </Field.Root>
-    </Form.Section>
+    </Form.FieldSet>
   );
 };
 

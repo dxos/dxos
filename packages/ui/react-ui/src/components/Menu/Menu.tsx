@@ -371,9 +371,14 @@ const ITEM_NAME = 'Menu.Item';
  * machine clicks the highlighted element on Enter. Not the machine's `onSelect`: that reads the
  * highlighted value from React-state-backed context, which a click landing before React commits
  * the pointerdown's highlight (a test does) finds empty. The contract: `onSelect` gets a
- * cancelable event and `preventDefault()` keeps the menu open.
+ * cancelable event and `preventDefault()` keeps the menu open, as does `closeOnSelect={false}`.
  */
-const useSelectableItem = (name: string, valueProp: string | undefined, onSelect: MenuSelectHandler | undefined) => {
+const useSelectableItem = (
+  name: string,
+  valueProp: string | undefined,
+  onSelect: MenuSelectHandler | undefined,
+  closeOnSelect: boolean | undefined,
+) => {
   const { onOpenChange } = useMenuContext(name);
   const generatedValue = useId();
   const value = valueProp ?? generatedValue;
@@ -384,11 +389,11 @@ const useSelectableItem = (name: string, valueProp: string | undefined, onSelect
       }
       const selection = new Event(`${name}.select`, { cancelable: true });
       onSelect?.(selection);
-      if (!selection.defaultPrevented) {
+      if (!selection.defaultPrevented && closeOnSelect !== false) {
         onOpenChange(false);
       }
     },
-    [name, onSelect, onOpenChange],
+    [name, onSelect, onOpenChange, closeOnSelect],
   );
   return { value, select };
 };
@@ -404,7 +409,7 @@ type MenuItemProps = ThemedClassName<Omit<ComponentPropsWithRef<typeof MenuPrimi
 
 const MenuItem = forwardRef<HTMLDivElement, MenuItemProps>(
   ({ classNames, value: valueProp, onSelect, textValue, ...props }, forwardedRef) => {
-    const { value, select } = useSelectableItem(ITEM_NAME, valueProp, onSelect);
+    const { value, select } = useSelectableItem(ITEM_NAME, valueProp, onSelect, props.closeOnSelect);
     const { tx } = useThemeContext();
     return (
       <MenuPrimitive.Item
@@ -439,7 +444,7 @@ type MenuCheckboxItemProps = ThemedClassName<
 
 const MenuCheckboxItem = forwardRef<HTMLDivElement, MenuCheckboxItemProps>(
   ({ classNames, value: valueProp, checked, onCheckedChange, onSelect, textValue, ...props }, forwardedRef) => {
-    const { value, select } = useSelectableItem(CHECKBOX_ITEM_NAME, valueProp, onSelect);
+    const { value, select } = useSelectableItem(CHECKBOX_ITEM_NAME, valueProp, onSelect, props.closeOnSelect);
     const { tx } = useThemeContext();
     return (
       <MenuPrimitive.CheckboxItem
@@ -487,7 +492,7 @@ type MenuRadioItemProps = ThemedClassName<ComponentPropsWithRef<typeof MenuPrimi
 
 const MenuRadioItem = forwardRef<HTMLDivElement, MenuRadioItemProps>(
   ({ classNames, value, onSelect, textValue, ...props }, forwardedRef) => {
-    const { select } = useSelectableItem(RADIO_ITEM_NAME, value, onSelect);
+    const { select } = useSelectableItem(RADIO_ITEM_NAME, value, onSelect, props.closeOnSelect);
     const { tx } = useThemeContext();
     return (
       <MenuPrimitive.RadioItem

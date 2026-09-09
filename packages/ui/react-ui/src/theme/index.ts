@@ -13,6 +13,7 @@ export * from '../components/Button/Button.theme';
 export * from '../components/Button/IconButton.theme';
 export * from '../components/Card/Card.theme';
 export * from '../components/Dialog/Dialog.theme';
+export * from '../components/Drawer/Drawer.theme';
 export * from '../components/Focus/Focus.theme';
 export * from '../components/Icon/Icon.theme';
 export * from '../components/Field/Field.theme';

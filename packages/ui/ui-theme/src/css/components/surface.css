@@ -5,7 +5,8 @@
  * aspects (bar, well, hover, current, selected) derive from the actual surface and stay visible at
  * any elevation, and surface-matching elements (avatars, gradients) can read it directly.
  *
- * Enter a zone with `data-surface="<level>"` — the levels are the ladder in `theme/surfaces.css`.
+ * Enter a zone with `data-surface="<level>"` — the levels are the ladder in `theme/surfaces.css`;
+ * in React, `elevation={0..5}` on Panel, Toolbar, Card, Dialog and Popover sets it.
  * The `dx-*-surface` classes are role-named aliases of the same thing, kept because they read well
  * at call sites (`dx-card-surface` says more than `data-surface="raised"`).
  *
@@ -14,6 +15,25 @@
  */
 
 @layer dx-components {
+  /*
+   * Aspect zones. These do not pick a level — they take a step off whatever hosts them and then
+   * republish that as `--surface-bg`, so a control inside a toolbar or a well derives its own
+   * states from the aspect rather than from the level underneath it. They come first so that an
+   * explicit level (`data-surface="<level>"`, an `elevation` in React) wins on an element that also
+   * carries an aspect class — a toolbar merged into a `Panel.Toolbar` slot — rather than the two
+   * defining `--surface-bg` from each other and both going invalid.
+   */
+  [data-surface='bar'],
+  .dx-toolbar-surface {
+    --surface-bg: var(--color-toolbar-surface);
+  }
+
+  [data-surface='well'],
+  .dx-group-surface,
+  .dx-input-surface {
+    --surface-bg: var(--color-group-surface);
+  }
+
   /* The outer rails sit at the same depth as the deck gaps: they frame the panels rather than
      belonging to them, so L0/R0 read one step behind the L1/R1 sidebars they flank. */
   [data-surface='sunken'],
@@ -59,22 +79,6 @@
     --surface-bg: var(--dx-surface-popup);
   }
 
-  /*
-   * Aspect zones. These do not pick a level — they take a step off whatever hosts them and then
-   * republish that as `--surface-bg`, so a control inside a toolbar or a well derives its own
-   * states from the aspect rather than from the level underneath it.
-   */
-  [data-surface='bar'],
-  .dx-toolbar-surface {
-    --surface-bg: var(--color-toolbar-surface);
-  }
-
-  [data-surface='well'],
-  .dx-group-surface,
-  .dx-input-surface {
-    --surface-bg: var(--color-group-surface);
-  }
-
   /* Every zone paints its published surface and takes the default ink. */
   [data-surface],
   .dx-deck-surface,
@@ -102,6 +106,20 @@
   .dx-modal-surface,
   .dx-popover-surface {
     @apply backdrop-blur-md;
+  }
+
+  /*
+   * An explicit elevation (`elevation={3..5}` in React, which sets `data-surface`) also casts the
+   * level's shadow, as Material's elevation does; the chrome levels below the canvas cast none.
+   */
+  [data-surface='raised'] {
+    @apply shadow-sm;
+  }
+  [data-surface='overlay'] {
+    @apply shadow-md;
+  }
+  [data-surface='popup'] {
+    @apply shadow-lg;
   }
 }
 

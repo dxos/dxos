@@ -83,7 +83,7 @@ export const AgentProperties = ({ agent, onSubscriptionsChanged }: AgentProperti
   }
 
   return (
-    <Form.Section>
+    <Form.FieldSet>
       <Field.Root>
         <Field.Label classNames='mt-form-gap'>{t('subscriptions.label')}</Field.Label>
       </Field.Root>
@@ -99,6 +99,6 @@ export const AgentProperties = ({ agent, onSubscriptionsChanged }: AgentProperti
           {Obj.getLabel(object) ?? object.id}
         </Field.Checkbox>
       ))}
-    </Form.Section>
+    </Form.FieldSet>
   );
 };

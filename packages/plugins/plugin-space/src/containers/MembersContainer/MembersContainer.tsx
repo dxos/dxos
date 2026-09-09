@@ -132,8 +132,8 @@ export const MembersContainer = ({ space, createInvitationUrl }: MembersContaine
       <Form.Root variant='settings'>
         <Form.Viewport scroll>
           <Form.Content>
-            <Form.Section title={t('members-verbose.label')} description={t('members.description')}>
-              <Form.Group>
+            <Form.FieldSet label={t('members-verbose.label')} description={t('members.description')}>
+              <Form.FieldSet>
                 <div role='group' className='min-w-0'>
                   <h3 className='text-lg mb-2'>{t('members.label')}</h3>
                   <SpaceMemberList spaceKey={space.key} includeSelf />
@@ -160,8 +160,8 @@ export const MembersContainer = ({ space, createInvitationUrl }: MembersContaine
                     </>
                   )}
                 </div>
-              </Form.Group>
-            </Form.Section>
+              </Form.FieldSet>
+            </Form.FieldSet>
           </Form.Content>
         </Form.Viewport>
       </Form.Root>

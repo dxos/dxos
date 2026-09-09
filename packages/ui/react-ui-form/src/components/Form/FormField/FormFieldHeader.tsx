@@ -9,42 +9,38 @@ import { CompactIconButton } from './FormFieldDispatch';
 
 export type FormFieldHeaderProps = {
   label: string;
-  /** JSON path forwarded to the label as field metadata. */
-  path?: string;
+  /** An id on the label text, for what names itself by it. */
+  labelId?: string;
   required?: boolean;
   readonly?: boolean;
   classNames?: string;
   /** Trailing inline add affordance; omit to hide it. */
   add?: { icon?: string; label: string; disabled?: boolean; onClick: () => void };
-  /** Extra trailing content placed after the add affordance (e.g. a disclosure caret). */
+  /** Extra trailing content placed after the add affordance (e.g. a disclosure). */
   actions?: ReactNode;
-  /** Render the row as the enclosing `Collapsible`'s trigger; incompatible with `add`, a button inside a button. */
-  trigger?: boolean;
 };
 
 /**
  * Header row for a labelled group or list: a label with optional trailing controls (an inline add
  * affordance and/or arbitrary `actions`). Shared by array/list fields ({@link ArrayField}, the view
- * editor) and {@link FormFieldSetContainer}'s disclosure header, so all group/list headers render identically.
+ * editor) and {@link `Form.FieldSet`'s disclosure header, so all group/list headers render identically.
  */
 export const FormFieldHeader = ({
   label,
-  path,
+  labelId,
   required,
   readonly,
   classNames,
   add,
   actions,
-  trigger,
 }: FormFieldHeaderProps) => (
   <FormFieldLabel
     standalone
     classNames={classNames}
+    id={labelId}
     label={label}
     required={required}
     readonly={readonly}
-    path={path}
-    trigger={trigger}
     button={
       (!readonly && add) || actions ? (
         <>

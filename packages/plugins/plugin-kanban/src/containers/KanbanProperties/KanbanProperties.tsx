@@ -87,16 +87,16 @@ export const KanbanProperties = ({ subject: object }: KanbanPropertiesProps) => 
   const settingsSchema = (isView ? KanbanSchema.KanbanViewSettingsSchema : KanbanSchema.KanbanSettingsSchema) as any;
 
   return (
-    <Form.Section>
+    <Form.FieldSet>
       <Form.Root
         schema={settingsSchema}
         values={initialValues}
         fieldMap={fieldMap}
         onValuesChanged={handleValuesChanged}
       >
-        <Form.FieldSet />
+        <Form.Fields />
       </Form.Root>
-    </Form.Section>
+    </Form.FieldSet>
   );
 };
 
