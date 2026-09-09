@@ -38,10 +38,18 @@ the AI capture policy runs identically without owning a provider.
 **AI content stripping runs in front of every exporter.** `AiContentStrippingSpanProcessor` wraps
 the diagnostics-channel exporter on EDGE exactly as it wraps the OTLP exporter in Composer.
 
-**Relay extension.** `ObservabilityExtension.Relay` implements the `events`, `errors`, `ai` and
-`mcp` kinds by handing a typed envelope to a `publish` function. It imports nothing
-platform-specific; EDGE supplies `channel('dxos:observability').publish` and tail-logger decodes
-the same envelope type.
+**Relay extension, both ends.** `ObservabilityExtension.Relay` implements the `events`, `errors`,
+`ai` and `mcp` kinds by handing a typed envelope to a `publish` function, and `Relay.replay` plays
+an envelope back onto a facade. Producers (edge, other workers, plugins in operation-service)
+publish on `channel('dxos:observability')`; tail-logger runs its own `Observability` with the real
+exporters (the PostHog node transport, which ships a workerd build) and replays every envelope
+onto it. One API on every worker, exporter configuration in one place.
+
+**Attribution is per record.** Distinct ids are identity DIDs. EDGE knows the caller's DID from the
+authenticated router context, so the producer's Relay resolves it per record and the envelope
+carries it; on replay the record's DID is ambient for its facade calls and the PostHog transport's
+resolver reads it. Work no user claims (background jobs) is attributed to the service with PostHog
+person profiles off, so a service never becomes a person.
 
 **The telemetry opt-in lives in the settings space, through the app's settings sync.** dxos#12609
 binds every plugin's settings atom to the `AppSettings` object in the settings space, so the

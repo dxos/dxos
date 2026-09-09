@@ -4,3 +4,4 @@
 
 export * from './envelope';
 export * from './extension';
+export * from './replay';

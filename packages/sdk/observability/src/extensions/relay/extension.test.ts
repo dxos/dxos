@@ -125,6 +125,25 @@ describe('Relay extension', () => {
     expect(() => api('events').captureEvent('op')).not.toThrow();
   });
 
+  test('a resolver is asked per record, with identify as the fallback', async () => {
+    let person: string | undefined = 'did:one';
+    const { published, extension, api } = await setup({ distinctId: () => person });
+    api('events').captureEvent('first');
+    person = 'did:two';
+    api('events').captureEvent('second');
+    person = undefined;
+    api('events').captureEvent('nobody');
+    extension.identify!('did:fallback');
+    api('events').captureEvent('fallback');
+
+    expect(published.filter((envelope) => envelope.kind === 'event').map((envelope) => envelope.distinctId)).toEqual([
+      'did:one',
+      'did:two',
+      undefined,
+      'did:fallback',
+    ]);
+  });
+
   test('a relay whose promise rejects does not surface an unhandled rejection', async () => {
     const { api } = await setup({ publish: () => Promise.reject(new Error('channel closed')) });
     const unhandled = vi.fn();

@@ -19,8 +19,13 @@ export type ExtensionsOptions = {
   release?: string;
   /** Deployment environment, e.g. `production` or `staging`. */
   environment?: string;
-  /** Attribution before `identify`, where a host has no ambient person. */
-  distinctId?: string;
+  /**
+   * Who each record belongs to. A function is asked per record, for a host that serves many
+   * people at once and knows the current one from its request context (EDGE reads the caller's
+   * DID); a string is a single person's host. `identify` sets a fallback for records the
+   * resolver has no answer for.
+   */
+  distinctId?: string | (() => string | undefined);
   /** Capture clock; defaults to `Date.now`. */
   now?: () => number;
 };
@@ -38,7 +43,8 @@ export const extensions = (options: ExtensionsOptions): Effect.Effect<Observabil
       ...(release ? { release } : {}),
       ...(environment ? { environment } : {}),
     };
-    let distinctId = options.distinctId;
+    const resolve = typeof options.distinctId === 'function' ? options.distinctId : () => undefined;
+    let identified = typeof options.distinctId === 'string' ? options.distinctId : undefined;
     let enabled = true;
 
     // A capture call runs on the caller's path (a span end, a request handler), so a relay that
@@ -48,6 +54,7 @@ export const extensions = (options: ExtensionsOptions): Effect.Effect<Observabil
         return;
       }
       try {
+        const distinctId = resolve() ?? identified;
         const result = publish({
           v: VERSION,
           timestamp: now(),
@@ -73,12 +80,12 @@ export const extensions = (options: ExtensionsOptions): Effect.Effect<Observabil
           enabled = false;
         }),
       identify: (id, attributes, setOnceAttributes) => {
-        distinctId = id;
+        identified = id;
         send({ kind: 'identify', properties: attributes, setOnce: setOnceAttributes });
       },
       alias: (id, previousId) => {
-        const previous = previousId ?? distinctId;
-        distinctId = id;
+        const previous = previousId ?? identified;
+        identified = id;
         if (previous) {
           send({ kind: 'alias', previousId: previous });
         }

@@ -17,7 +17,11 @@ pieces EDGE plugs into `otel-cf-workers`.
       AI and MCP records to a host-supplied `publish`.
 - [x] **`@dxos/observability/SpanProcessors` subpath** — `AiContentStrippingSpanProcessor`,
       `FanoutSpanProcessor`/`addSpanProcessor`, `TagInjectorSpanProcessor`.
-- [x] **Tests** — Relay extension, workerd traces variant.
+- [x] **Tests** — Relay extension and replay, workerd traces variant, PostHog per-capture and
+      anonymous attribution.
+- [x] **Relay replay + attribution** — `Relay.replay` for the consuming host, per-record
+      `distinctId` resolvers on Relay and the PostHog node transport, anonymous service attribution
+      with person profiles off, workerd routed to the real PostHog transport.
 
 ## Phase 2: settings-space opt-in (dxos, plugin-observability)
 
@@ -44,6 +48,11 @@ Stacked on dxos#12609, whose generic binder syncs every plugin settings atom thr
       `dxos.ai.input` on SigNoz spans.
 
 ## Phase 4: follow-ups
+
+- [ ] The vitest `workerd` project (Miniflare pool) segfaults on importing `@dxos/log` or
+      `@dxos/async` alone, so nothing above `@dxos/util` can be tested in it. EDGE bundles both with
+      esbuild and runs them daily, so this is the harness, not the packages. Until it is fixed the
+      EDGE bundle is the workerd proof for this package.
 
 - [ ] Per-invocation opt-in on EDGE: resolve the invoking identity's settings space
       (`DataService.getSpaceTags`), read `AppSettings.shared["org.dxos.plugin.observability"]`,
