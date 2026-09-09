@@ -2,8 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type Message, create } from '@bufbuild/protobuf';
-import { type Timestamp, TimestampSchema } from '@bufbuild/protobuf/wkt';
+import { type JsonObject, type Message, create, fromJson, toJson } from '@bufbuild/protobuf';
+import { type Any, StructSchema, type Timestamp, TimestampSchema, anyPack, anyUnpack } from '@bufbuild/protobuf/wkt';
 
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
@@ -56,6 +56,20 @@ export const fromTimeframe = (timeframe: Timeframe): TimeframeVector =>
   create(TimeframeVectorSchema, {
     frames: timeframe.frames().map(([feedKey, seq]) => ({ feedKey: feedKey.asUint8Array(), seq })),
   });
+
+/**
+ * Packs a JSON payload as `google.protobuf.Any` carrying a `Struct`.
+ *
+ * A gossip channel's payload is opaque to the router, so a caller with a plain JSON message
+ * encodes it as the well-known `Struct` rather than declaring a proto for it.
+ */
+export const packJson = (value: JsonObject): Any => anyPack(StructSchema, fromJson(StructSchema, value));
+
+/** Reads a `google.protobuf.Any` packed by {@link packJson}. */
+export const unpackJson = (any: Any | undefined): JsonObject | undefined => {
+  const struct = any && anyUnpack(any, StructSchema);
+  return struct && toJson(StructSchema, struct);
+};
 
 /**
  * Reads `google.protobuf.Timestamp` as a `Date`.

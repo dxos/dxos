@@ -2,7 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
-import { AnySchema } from '@bufbuild/protobuf/wkt';
+import { type JsonObject, create } from '@bufbuild/protobuf';
 import * as EffectContext from 'effect/Context';
 import * as EffectStream from 'effect/Stream';
 import isEqualWith from 'lodash.isequalwith';
@@ -26,7 +26,7 @@ import {
   SpaceProperties,
 } from '@dxos/client-protocol';
 import { Context, cancelWithContext } from '@dxos/context';
-import { type SpecificCredential, checkCredentialType } from '@dxos/credentials/assertions';
+import { type SpecificCredential, credentialsOfType } from '@dxos/credentials/assertions';
 import {
   type CustomInspectable,
   type CustomInspectFunction,
@@ -42,24 +42,23 @@ import { invariant } from '@dxos/invariant';
 import { type PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { decodeError, runServiceCall, subscribeStream } from '@dxos/protocols';
-import { buf, fromPublicKey, toTimeframe } from '@dxos/protocols/buf';
-import { decodeCompat, encodeCompat } from '@dxos/protocols/buf-shape-compat';
-import { Invitation, Invitation_Kind } from '@dxos/protocols/buf/dxos/client/invitation_pb';
+import { buf, fromPublicKey, packJson, requirePublicKey, toTimeframe } from '@dxos/protocols/buf';
+import { Invitation, Invitation_Kind, SpaceState } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 import {
   type Contact,
   type Space as SpaceData,
   type SpaceMember,
-  SpaceState,
+  type Space_PipelineState,
+  Space_PipelineStateSchema,
 } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { EdgeReplicationSetting } from '@dxos/protocols/buf/dxos/echo/metadata_pb';
 import { type SpaceSnapshot } from '@dxos/protocols/buf/dxos/echo/snapshot_pb';
 import {
   type Credential,
   type Epoch,
-  SpaceMember as HaloSpaceMember,
   MembershipPolicy,
+  SpaceMember_Role,
 } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
-import { GossipMessageSchema } from '@dxos/protocols/buf/dxos/mesh/teleport/gossip_pb';
 import { type GossipMessage } from '@dxos/protocols/buf/dxos/mesh/teleport/gossip_pb';
 import { SpacesService } from '@dxos/protocols/rpc';
 import { Timeframe } from '@dxos/timeframe';
@@ -115,7 +114,7 @@ export class SpaceProxy implements Space, CustomInspectable {
   // TODO(dmaretskyi): Make private.
   public readonly _stateUpdate = new Event<SpaceState>();
 
-  private readonly _pipelineUpdate = new Event<SpaceData.PipelineState>();
+  private readonly _pipelineUpdate = new Event<Space_PipelineState>();
 
   // TODO(dmaretskyi): Reconcile initialization states.
 
@@ -143,7 +142,7 @@ export class SpaceProxy implements Space, CustomInspectable {
   private readonly _invitationsProxy: InvitationsProxy;
 
   private readonly _state = MulticastObservable.from(this._stateUpdate, SpaceState.SPACE_CLOSED);
-  private readonly _pipeline = MulticastObservable.from(this._pipelineUpdate, {});
+  private readonly _pipeline = MulticastObservable.from(this._pipelineUpdate, create(Space_PipelineStateSchema, {}));
   private readonly _membersUpdate = new Event<SpaceMember[]>();
   private readonly _members = MulticastObservable.from(this._membersUpdate, []);
 
@@ -204,7 +203,7 @@ export class SpaceProxy implements Space, CustomInspectable {
 
     // Update observables.
     this._stateUpdate.emit(this._currentState);
-    this._pipelineUpdate.emit(_data.pipeline ?? {});
+    this._pipelineUpdate.emit(_data.pipeline ?? create(Space_PipelineStateSchema, {}));
     this._membersUpdate.emit(_data.members ?? []);
   }
 
@@ -221,7 +220,7 @@ export class SpaceProxy implements Space, CustomInspectable {
   }
 
   get key() {
-    return this._data.spaceKey;
+    return requirePublicKey(this._data.spaceKey);
   }
 
   get tags(): string[] {
@@ -401,7 +400,7 @@ export class SpaceProxy implements Space, CustomInspectable {
       this._stateUpdate.emit(this._currentState);
     }
     if (emitPipelineEvent) {
-      this._pipelineUpdate.emit(space.pipeline ?? {});
+      this._pipelineUpdate.emit(space.pipeline ?? create(Space_PipelineStateSchema, {}));
     }
     if (emitMembersEvent) {
       this._membersUpdate.emit(space.members!);
@@ -550,18 +549,13 @@ export class SpaceProxy implements Space, CustomInspectable {
   /**
    * Post a message to the space.
    */
-  async postMessage(channel: string, message: any): Promise<void> {
+  async postMessage(channel: string, message: JsonObject): Promise<void> {
     await runServiceCall(
       this._runtime,
       this._clientServices.rpc['SpacesService.postMessage']({
-        spaceKey: this.key,
+        spaceKey: fromPublicKey(this.key),
         channel,
-        // Packed here rather than by the schema: the payload is the request's whole `Any`, and a
-        // caller's own '@type' wins over the Struct default.
-        message: buf.fromBinary(
-          AnySchema,
-          encodeCompat(AnySchema, { ...message, '@type': message['@type'] || 'google.protobuf.Struct' }),
-        ),
+        message: packJson(message),
       }),
       { timeout: RPC_TIMEOUT, label: 'SpacesService.postMessage' },
     );
@@ -573,12 +567,9 @@ export class SpaceProxy implements Space, CustomInspectable {
   listen(channel: string, callback: (message: GossipMessage) => void): () => Promise<void> {
     const cleanup = subscribeStream(
       this._runtime,
-      this._clientServices.rpc['SpacesService.subscribeMessages']({ spaceKey: this.key, channel }),
+      this._clientServices.rpc['SpacesService.subscribeMessages']({ spaceKey: fromPublicKey(this.key), channel }),
       {
-        // Listeners read the payload by '@type', which is the protobuf.js Any substitution, so the
-        // buf message crosses back as the shared wire bytes.
-        onData: (message) =>
-          callback(decodeCompat<GossipMessage>(GossipMessageSchema, buf.toBinary(GossipMessageSchema, message))),
+        onData: (message) => callback(message),
       },
     );
     return async () => cleanup();
@@ -597,9 +588,9 @@ export class SpaceProxy implements Space, CustomInspectable {
     await runServiceCall(
       this._runtime,
       this._clientServices.rpc['SpacesService.admitContact']({
-        spaceKey: this.key,
-        role: HaloSpaceMember.Role.ADMIN,
-        contact: contact,
+        spaceKey: fromPublicKey(this.key),
+        role: SpaceMember_Role.ADMIN,
+        contact,
       }),
       { label: 'SpacesService.admitContact' },
     );
@@ -613,7 +604,7 @@ export class SpaceProxy implements Space, CustomInspectable {
     return runServiceCall(
       this._runtime,
       this._clientServices.rpc['SpacesService.updateMemberRole']({
-        spaceKey: this.key,
+        spaceKey: fromPublicKey(this.key),
         memberKey: request.memberKey,
         newRole: request.newRole,
       }),
@@ -633,9 +624,9 @@ export class SpaceProxy implements Space, CustomInspectable {
     return runServiceCall(
       this._runtime,
       this._clientServices.rpc['SpacesService.updateMemberRole']({
-        spaceKey: this.key,
-        memberKey,
-        newRole: HaloSpaceMember.Role.REMOVED,
+        spaceKey: fromPublicKey(this.key),
+        memberKey: fromPublicKey(memberKey),
+        newRole: SpaceMember_Role.REMOVED,
       }),
       { label: 'SpacesService.updateMemberRole' },
     );
@@ -677,8 +668,8 @@ export class SpaceProxy implements Space, CustomInspectable {
     if (targetTimeframe) {
       await warnAfterTimeout(5_000, 'Waiting for the created epoch to be applied', () =>
         this._anySpaceUpdate.waitForCondition(() => {
-          const currentTimeframe = this._data.pipeline?.currentControlTimeframe;
-          return (currentTimeframe && Timeframe.dependencies(targetTimeframe, currentTimeframe).isEmpty()) ?? false;
+          const currentTimeframe = toTimeframe(this._data.pipeline?.currentControlTimeframe);
+          return Timeframe.dependencies(targetTimeframe, currentTimeframe).isEmpty();
         }),
       );
     }
@@ -687,16 +678,17 @@ export class SpaceProxy implements Space, CustomInspectable {
   private async _getCredentials(): Promise<Credential[]> {
     const credentials = await runServiceCall(
       this._runtime,
-      this._clientServices.rpc['SpacesService.queryCredentials']({ spaceKey: this.key, noTail: true }).pipe(
-        EffectStream.runCollect,
-      ),
+      this._clientServices.rpc['SpacesService.queryCredentials']({
+        spaceKey: fromPublicKey(this.key),
+        noTail: true,
+      }).pipe(EffectStream.runCollect),
     );
-    return credentials.map(fromBufCredential);
+    return [...credentials];
   }
 
   private async _getEpochs(): Promise<SpecificCredential<Epoch>[]> {
     const credentials = await this._getCredentials();
-    return credentials.filter((credential) => checkCredentialType(credential, 'dxos.halo.credentials.Epoch'));
+    return credentialsOfType<Epoch>('dxos.halo.credentials.Epoch')(credentials);
   }
 
   private async _migrate(): Promise<void> {

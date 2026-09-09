@@ -23,6 +23,7 @@ import { failedInvariant, invariant } from '@dxos/invariant';
 import { PublicKey, SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { ApiError, runServiceCall, subscribeStream } from '@dxos/protocols';
+import { requirePublicKey } from '@dxos/protocols/buf';
 import { Invitation, Invitation_Kind } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 import { SpaceState } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 import { type Space as SerializedSpace } from '@dxos/protocols/buf/dxos/client/services_pb';
@@ -148,7 +149,7 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
       // `querySpaces` always emits a full snapshot, so absence means the space is gone.
       for (let index = newSpaces.length - 1; index >= 0; --index) {
         const spaceProxy = newSpaces[index];
-        if (!incoming.some((space) => space.spaceKey.equals(spaceProxy.key))) {
+        if (!incoming.some((space) => requirePublicKey(space.spaceKey).equals(spaceProxy.key))) {
           newSpaces.splice(index, 1);
           void spaceProxy._destroy();
           emitUpdate = true;
@@ -160,7 +161,9 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
           return;
         }
 
-        let spaceProxy = newSpaces.find(({ key }) => key.equals(space.spaceKey)) as SpaceProxy | undefined;
+        let spaceProxy = newSpaces.find(({ key }) => key.equals(requirePublicKey(space.spaceKey))) as
+          | SpaceProxy
+          | undefined;
         if (!spaceProxy) {
           spaceProxy = new SpaceProxy(this._serviceProvider, space, this._echoClient, this._runtime);
 
@@ -199,7 +202,7 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
 
     this._streamSubscriptions.add(
       subscribeStream(this._runtime, this._serviceProvider.rpc['SpacesService.querySpaces'](undefined), {
-        onData: (data) => onData({ spaces: data.spaces.map(fromBufSpace) }),
+        onData: (data) => onData({ spaces: data.spaces }),
       }),
     );
   }
@@ -275,19 +278,17 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
     options?: { tags?: string[]; membershipPolicy?: MembershipPolicy },
   ): Promise<Space> {
     log('creating space');
-    const space = fromBufSpace(
-      await runServiceCall(
-        this._runtime,
-        this._serviceProvider.rpc['SpacesService.createSpace']({
-          tags: options?.tags ?? [],
-          membershipPolicy: options?.membershipPolicy ?? MembershipPolicy.INVITE,
-        }),
-        { timeout: RPC_TIMEOUT, label: 'SpacesService.createSpace' },
-      ),
+    const space = await runServiceCall(
+      this._runtime,
+      this._serviceProvider.rpc['SpacesService.createSpace']({
+        tags: options?.tags ?? [],
+        membershipPolicy: options?.membershipPolicy ?? MembershipPolicy.INVITE,
+      }),
+      { timeout: RPC_TIMEOUT, label: 'SpacesService.createSpace' },
     );
 
     await this._spaceCreated.waitForCondition(() => {
-      return this.get().some(({ key }) => key.equals(space.spaceKey));
+      return this.get().some(({ key }) => key.equals(requirePublicKey(space.spaceKey)));
     });
     const spaceProxy = this._findProxy(space);
 
@@ -343,7 +344,7 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
     // The proxy appears via the `querySpaces` stream, not the call's own response, so the two race —
     // same wait `createSpace` and `import` do before resolving their proxy.
     await this._spaceCreated.waitForCondition(() => {
-      return this.get().some(({ key }) => key.equals(space.spaceKey));
+      return this.get().some(({ key }) => key.equals(requirePublicKey(space.spaceKey)));
     });
     return this._findProxy(space);
   }
@@ -360,6 +361,8 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
   }
 
   private _findProxy(space: SerializedSpace): SpaceProxy {
-    return (this.get().find(({ key }) => key.equals(space.spaceKey)) as SpaceProxy) ?? failUndefined();
+    return (
+      (this.get().find(({ key }) => key.equals(requirePublicKey(space.spaceKey))) as SpaceProxy) ?? failUndefined()
+    );
   }
 }

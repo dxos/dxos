@@ -2,9 +2,18 @@
 // Copyright 2023 DXOS.org
 //
 
+import { create } from '@bufbuild/protobuf';
+
 import type { MulticastObservable } from '@dxos/async';
 import { type PublicKey } from '@dxos/keys';
-import { type LayoutRequest, ShellDisplay, ShellLayout } from '@dxos/protocols/buf/dxos/iframe_pb';
+import { fromPublicKey, requirePublicKey, toPublicKey } from '@dxos/protocols/buf';
+import {
+  InvitationUrlRequestSchema,
+  type LayoutRequest,
+  LayoutRequestSchema,
+  ShellDisplay,
+  ShellLayout,
+} from '@dxos/protocols/buf/dxos/iframe_pb';
 import { ComplexSet } from '@dxos/util';
 
 import type { Space, SpaceMember } from '../echo';
@@ -61,14 +70,17 @@ export class Shell {
     deviceInvitationParam: string;
     spaceInvitationParam: string;
   }): Promise<void> {
-    await this._shellManager.setInvitationUrl(request);
+    await this._shellManager.setInvitationUrl(create(InvitationUrlRequestSchema, request));
   }
 
   /**
    * Open the shell with the given layout.
    */
-  async open(layout: ShellLayout = ShellLayout.IDENTITY, options: Omit<LayoutRequest, 'layout'> = {}): Promise<void> {
-    await this._shellManager.setLayout({ layout, ...options });
+  async open(
+    layout: ShellLayout = ShellLayout.IDENTITY,
+    options: Partial<Omit<LayoutRequest, 'layout'>> = {},
+  ): Promise<void> {
+    await this._shellManager.setLayout(create(LayoutRequestSchema, { ...options, layout }));
   }
 
   get display() {
@@ -104,9 +116,11 @@ export class Shell {
    * @returns Shell result with the new identity.
    */
   async createIdentity(): Promise<InitializeIdentityResult> {
-    await this._shellManager.setLayout({
-      layout: ShellLayout.INITIALIZE_IDENTITY,
-    });
+    await this._shellManager.setLayout(
+      create(LayoutRequestSchema, {
+        layout: ShellLayout.INITIALIZE_IDENTITY,
+      }),
+    );
     return new Promise((resolve) => {
       this._shellManager.contextUpdate.on((context) => {
         if (context.display === ShellDisplay.NONE) {
@@ -135,10 +149,12 @@ export class Shell {
   }: {
     invitationCode?: string;
   } = {}): Promise<InitializeIdentityResult> {
-    await this._shellManager.setLayout({
-      layout: ShellLayout.INITIALIZE_IDENTITY_FROM_INVITATION,
-      invitationCode,
-    });
+    await this._shellManager.setLayout(
+      create(LayoutRequestSchema, {
+        layout: ShellLayout.INITIALIZE_IDENTITY_FROM_INVITATION,
+        invitationCode,
+      }),
+    );
     return new Promise((resolve) => {
       this._shellManager.contextUpdate.on((context) => {
         if (context.display === ShellDisplay.NONE) {
@@ -167,13 +183,13 @@ export class Shell {
 
     const initialDevices = new ComplexSet<PublicKey>(
       (key) => key.toHex(),
-      this._devices.get().map((device) => device.deviceKey),
+      this._devices.get().map((device) => requirePublicKey(device.deviceKey)),
     );
-    await this._shellManager.setLayout({ layout: ShellLayout.SHARE_IDENTITY });
+    await this._shellManager.setLayout(create(LayoutRequestSchema, { layout: ShellLayout.SHARE_IDENTITY }));
     return new Promise((resolve) => {
       this._shellManager.contextUpdate.on((context) => {
         if (context.display === ShellDisplay.NONE) {
-          const device = this._devices.get().find((device) => !initialDevices.has(device.deviceKey));
+          const device = this._devices.get().find((device) => !initialDevices.has(requirePublicKey(device.deviceKey)));
           resolve({ device, cancelled: !device });
         }
       });
@@ -186,9 +202,11 @@ export class Shell {
    * @returns Shell result with the identity.
    */
   async recoverIdentity(): Promise<InitializeIdentityResult> {
-    await this._shellManager.setLayout({
-      layout: ShellLayout.INITIALIZE_IDENTITY_FROM_RECOVERY,
-    });
+    await this._shellManager.setLayout(
+      create(LayoutRequestSchema, {
+        layout: ShellLayout.INITIALIZE_IDENTITY_FROM_RECOVERY,
+      }),
+    );
     return new Promise((resolve) => {
       this._shellManager.contextUpdate.on((context) => {
         if (context.display === ShellDisplay.NONE) {
@@ -234,18 +252,22 @@ export class Shell {
 
     const initialMembers = new ComplexSet<PublicKey>(
       (key) => key.toHex(),
-      space.members.get().map((member) => member.identity.identityKey),
+      space.members.get().map((member) => requirePublicKey(member.identity?.identityKey)),
     );
-    await this._shellManager.setLayout({
-      layout: ShellLayout.SPACE,
-      spaceKey,
-      spaceId,
-      target,
-    });
+    await this._shellManager.setLayout(
+      create(LayoutRequestSchema, {
+        layout: ShellLayout.SPACE,
+        spaceKey: spaceKey && fromPublicKey(spaceKey),
+        spaceId,
+        target,
+      }),
+    );
     return new Promise((resolve) => {
       this._shellManager.contextUpdate.on((context) => {
         if (context.display === ShellDisplay.NONE) {
-          const members = space.members.get().filter((member) => !initialMembers.has(member.identity.identityKey));
+          const members = space.members
+            .get()
+            .filter((member) => !initialMembers.has(requirePublicKey(member.identity?.identityKey)));
           resolve({ members, cancelled: members.length === 0 });
         }
       });
@@ -270,13 +292,16 @@ export class Shell {
       return { error: new Error('Identity does not exist'), cancelled: false };
     }
 
-    await this._shellManager.setLayout({
-      layout: ShellLayout.JOIN_SPACE,
-      invitationCode,
-    });
+    await this._shellManager.setLayout(
+      create(LayoutRequestSchema, {
+        layout: ShellLayout.JOIN_SPACE,
+        invitationCode,
+      }),
+    );
     return new Promise((resolve) => {
       this._shellManager.contextUpdate.on((context) => {
-        const space = context.spaceKey && this._spaces.get().find((space) => context.spaceKey?.equals(space.key));
+        const contextSpaceKey = toPublicKey(context.spaceKey);
+        const space = contextSpaceKey && this._spaces.get().find((space) => contextSpaceKey.equals(space.key));
         if (space) {
           resolve({ space, target: context.target, cancelled: false });
         }

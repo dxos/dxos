@@ -2,11 +2,14 @@
 // Copyright 2023 DXOS.org
 //
 
+import { create } from '@bufbuild/protobuf';
+
 import { Trigger } from '@dxos/async';
 import { type Space } from '@dxos/client-protocol';
 import type { Config } from '@dxos/config';
 import { type Context } from '@dxos/context';
 import { type PublicKey } from '@dxos/keys';
+import { ProfileDocumentSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { isNode, range } from '@dxos/util';
 
 import { Client } from '../client';
@@ -89,7 +92,7 @@ export const createInitializedClientsWithContext = async (
   const initialized = await Promise.all(
     clients.map(async (client, index) => {
       await client.initialize();
-      await client.halo.createIdentity({ displayName: `Peer ${index}` });
+      await client.halo.createIdentity(create(ProfileDocumentSchema, { displayName: `Peer ${index}` }));
       return client;
     }),
   );
