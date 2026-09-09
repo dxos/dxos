@@ -49,6 +49,10 @@ on:
         type: string
         description: 'Soak: executable commands to plan'
         default: '200'
+      soak_log_filter:
+        type: string
+        description: 'Soak: LOG_FILTER for the replicants, e.g. info,automerge-host:verbose (default: unset)'
+        default: ''
 
 permissions:
   contents: read
@@ -170,6 +174,10 @@ jobs:
           EDGE: ${{ inputs.edge || 'preview' }}
           MINUTES: ${{ inputs.soak_minutes || '60' }}
           COMMANDS: ${{ inputs.soak_commands || '200' }}
+          # Replicants are spawned with `{ ...process.env }` and their stdout is captured into the
+          # uploaded `replicant.out.log`, so this is how a run answers a question the default level
+          # cannot — a stalled peer's own view of subduction is all at verbose.
+          LOG_FILTER: ${{ inputs.soak_log_filter || '' }}
         run: |
           SEED="soak-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
           echo "Seed: $SEED"
