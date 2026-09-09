@@ -46,8 +46,10 @@ describe.skipIf(process.env.CI)('AutomergeRepo with Subduction', () => {
   });
 
   test('a fetch answered before the relay has the document recovers when it arrives', async () => {
-    // Models the deployed shape: `client` reaches the holder only through `relay`, the way a peer
-    // reaches another device only through EDGE.
+    // `client` reaches the holder only through `relay`. The recovery shown here comes from the
+    // relay being an automerge `Repo` that opens its own query: `SubductionSource#save` then
+    // triggers the round that reaches the client. The edge DO runs no `SubductionSource`, so this
+    // does not say what happens when EDGE is the intermediary.
     const { repos, adapters } = await createRepoTopology({
       peers: ['client', 'relay', 'holder'],
       connections: [
@@ -67,14 +69,13 @@ describe.skipIf(process.env.CI)('AutomergeRepo with Subduction', () => {
     const progress = client.findWithProgress<{ text: string }>(url);
     await waitForQueryState(progress, ['unavailable'], { timeout: 10_000 });
 
-    // The relay now reaches the holder and takes the document.
+    // The relay now reaches the holder and takes the document. Its query is what gives the relay a
+    // source entry, which is the precondition for the broadcast below.
     await connectAdapters([adapters[1]]);
-    await findInStates(relay, url, ['ready']);
+    await findInStates(relay, url, ['ready'], { timeout: 10_000 });
 
-    // A settled-empty query is re-driven by the relay's subscriber broadcast: the client asked
-    // nothing further, and the document still reaches it.
+    // The client asked nothing further and the document still reaches it.
     await waitForQueryState(progress, ['ready'], { timeout: 10_000 });
-    expect(progress.peek().state).to.equal('ready');
   });
 
   test('documents missing from local storage go to loading state', async () => {

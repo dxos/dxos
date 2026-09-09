@@ -1597,11 +1597,8 @@ const sedimentreeHexToDocumentId = (sedimentreeIdHex: string): DocumentId => {
   return bs58check.encode(bytes) as DocumentId;
 };
 
-export const documentIdToSedimentreeIdBytes = (documentId: DocumentId): Uint8Array => {
+export const documentIdToSedimentreeIdHex = (documentId: DocumentId): string => {
   const bytes = new Uint8Array(32);
   bytes.set(bs58check.decode(documentId).subarray(0, 16));
-  return bytes;
+  return Array.from(bytes, (byte) => byte.toString(16).padStart(2, '0')).join('');
 };
-
-export const documentIdToSedimentreeIdHex = (documentId: DocumentId): string =>
-  Array.from(documentIdToSedimentreeIdBytes(documentId), (byte) => byte.toString(16).padStart(2, '0')).join('');

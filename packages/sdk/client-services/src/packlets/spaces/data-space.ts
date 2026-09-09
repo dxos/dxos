@@ -489,8 +489,9 @@ export class DataSpace {
    * Loads a space's root document, re-driving until it arrives or the space closes.
    *
    * `loadDoc` waits on the network with no deadline of its own, so a space whose root never
-   * arrives would wait forever. The retry bounds each attempt and clears any heal backoff between
-   * them; what stalls such a fetch in the first place is not yet established.
+   * arrives would wait forever. The retry bounds each attempt; the kick between them only revives
+   * an `all-failed`/`no-peers` entry, which covers a round aborted by a disconnect and nothing
+   * else. What stalls such a fetch in the first place is not yet established.
    */
   async #loadRootDoc(rootUrl: AutomergeUrl): Promise<DocumentLease<DatabaseDirectory> | null> {
     for (let attempt = 0, delay = ROOT_DOC_LOAD_RETRY_INITIAL_DELAY; !this._ctx.disposed; attempt++) {

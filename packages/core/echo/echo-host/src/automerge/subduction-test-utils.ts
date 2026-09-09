@@ -75,10 +75,11 @@ export const findInStates = async <T>(
   repo: Repo,
   url: AutomergeUrl,
   awaitStates: readonly QueryStateName[] = ['ready'],
+  { timeout }: { timeout?: number } = {},
 ): Promise<DocHandle<T>> => {
   const { documentId } = parseAutomergeUrl(url);
   const progress = repo.findWithProgress<T>(url);
-  await waitForQueryState(progress, awaitStates);
+  await waitForQueryState(progress, awaitStates, { timeout });
   return repo.handles[documentId] as DocHandle<T>;
 };
 

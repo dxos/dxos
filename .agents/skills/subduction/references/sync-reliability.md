@@ -134,11 +134,20 @@ waiting for recv-drain before flushing) turns that into a deterministic stall.
   round still `syncInFlight` (that's the §1 timeout's job) and does **not** recover an
   `authorizePut` deny (needs a fresh holder commit — see the policy skill).
 - A fetch for a doc the peer doesn't have yet settles as **success-empty**, and the query goes
-  `unavailable`. It does **not** hang: once the peer obtains the document its subscriber broadcast
-  drives the waiting query to `ready` with nothing re-asking from this side. Pinned by
-  `'a fetch answered before the relay has the document recovers when it arrives'` in
-  `automerge-repo-subduction.test.ts`. An earlier revision of this file claimed the opposite;
-  four client-side "re-ask" fixes were built on that claim and every one measured as no-change.
+  `unavailable`. Whether it later recovers depends on what the peer is:
+  - **A peer that is itself an automerge `Repo`** re-drives it. When that peer obtains the document
+    through its own query, `SubductionSource`'s `#save` triggers a sync round, and the waiting query
+    reaches `ready` with nothing re-asking from this side. Shown by `'a fetch answered before the
+relay has the document recovers when it arrives'` in `automerge-repo-subduction.test.ts` — note
+    that suite is `describe.skipIf(process.env.CI)`, so it is a local characterization, not a
+    CI-enforced pin.
+  - **The edge DO is not such a peer.** It has no `Repo` and no `SubductionSource`, so a document
+    pushed into its store by another device triggers no equivalent broadcast. Do not carry the
+    guarantee above across to EDGE; it has not been shown there.
+
+  Client-side re-ask mitigations for the EDGE case — a plain retry, repo-wide `shareConfigChanged`,
+  targeted `resyncSubduction`, and evicting the handle — were each measured against
+  `composer-app` `halo.spec.ts` at n=80 with `--retries=0`. None reduced the failure rate.
 
 ## 10. Diagnosing a non-converging document from logs
 
