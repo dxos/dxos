@@ -52,9 +52,7 @@ const FeedbackFormRoot = ({ children, onSubmit, hidden, plugins }: FeedbackFormR
   // cannot be double-submitted while it runs.
   const [pending, setPending] = useState(false);
 
-  // A filed report leaves nothing to edit, and the form holds no reset of its own, so the key
-  // remounts it onto fresh defaults. A failed one keeps what the reporter wrote.
-  const [filedCount, setFiledCount] = useState(0);
+  const [formKey, setFormKey] = useState(0);
 
   // Override the `area` field with a richer plugin picker. The closure captures
   // the runtime plugin list so the schema itself stays static — much cleaner
@@ -89,7 +87,7 @@ const FeedbackFormRoot = ({ children, onSubmit, hidden, plugins }: FeedbackFormR
       setPending(true);
       try {
         if (await onSubmit(submitted, formMeta)) {
-          setFiledCount((count) => count + 1);
+          setFormKey((key) => key + 1);
         }
       } finally {
         setPending(false);
@@ -101,7 +99,7 @@ const FeedbackFormRoot = ({ children, onSubmit, hidden, plugins }: FeedbackFormR
   return (
     <FeedbackFormProvider pending={pending}>
       <Form.Root
-        key={filedCount}
+        key={formKey}
         schema={SupportOperation.SupportRequest}
         defaultValues={defaultValues}
         fieldMap={fieldMap}

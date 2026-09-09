@@ -19,11 +19,6 @@ export type ScreenshotAttachment = {
   failed: boolean;
 };
 
-/**
- * Captures and uploads the screen as it stands, form included: hiding the panel first left the
- * reporter watching nothing happen for the seconds the submit takes. Best-effort throughout, so a
- * failure yields `{ failed: true }` instead of throwing — filing the report matters more.
- */
 export const useScreenshotAttachment = () => {
   const config = useConfig();
   // Shared with @dxos/plugin-crm (same Edge service, same multipart contract).

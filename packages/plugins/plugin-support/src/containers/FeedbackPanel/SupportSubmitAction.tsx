@@ -85,7 +85,6 @@ export const useSupportSubmit = (): FeedbackSubmitHandler => {
           duration: Infinity,
           title: 'discord-feedback-toast.label',
           actionLabel: 'open-thread.label',
-          // The Tauri webview ignores `window.open`, so the native build needs the system browser.
           onAction: () => {
             void openExternalUrl(threadUrl);
           },
