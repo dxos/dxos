@@ -194,7 +194,7 @@ test QA-2: Rename, undo and a second space
       assert: |
         const rows = await composer.invoke('org.dxos.operation.space.queryObjects',
           { typename: 'org.dxos.type.document' }, { spaceId: $space.id });
-        const labels = (rows.objects ?? rows).map((o) => o.label ?? o.name);
+        const labels = rows.results.map((o) => o.label);
         return labels.length === 1 && labels[0] === 'QA: Note (renamed)';
       note: |
         The menu's own operation (`space.renameObject`) only opens the rename dialog; `updateObject`
@@ -219,7 +219,7 @@ test QA-2: Rename, undo and a second space
       assert: |
         const rows = await composer.invoke('org.dxos.operation.space.queryObjects',
           { typename: 'org.dxos.type.document' }, { spaceId: $space.id });
-        return $result.undone === true && (rows.objects ?? rows).length === 1 &&
+        return $result.undone === true && rows.results.length === 1 &&
           $snapshot.layout.active.includes(`root/${$space.id}/content/collections/${$note.objectId}`) &&
           $snapshot.errors.length === 0;
       note: |
@@ -241,7 +241,7 @@ test QA-2: Rename, undo and a second space
       invoke: org.dxos.operation.space.queryObjects { typename: "org.dxos.type.document" }
       space: $spaceB.id
       expect: no documents
-      assert: return ($result.objects ?? $result).length === 0
+      assert: return $result.results.length === 0
     - name: Switch back
       do: Pick "QA: Undo $runId" from the space list.
       invoke: org.dxos.operation.appToolkit.switchWorkspace { subject: "root/$space.id" }
@@ -249,7 +249,7 @@ test QA-2: Rename, undo and a second space
       assert: |
         const rows = await composer.invoke('org.dxos.operation.space.queryObjects',
           { typename: 'org.dxos.type.document' }, { spaceId: $space.id });
-        return $snapshot.layout.workspace === `root/${$space.id}` && (rows.objects ?? rows).length === 1;
+        return $snapshot.layout.workspace === `root/${$space.id}` && rows.results.length === 1;
   after:
     - name: Remove the document
       do: Delete the document from its ⋮ menu.

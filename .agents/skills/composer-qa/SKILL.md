@@ -84,9 +84,17 @@ killed. In the cloud sandbox point it at the image's Chromium with
 `PW_CHROMIUM_PATH=/opt/pw-browsers/chromium` (see the `cloud-sandbox` skill). The headless profile
 is fresh every launch, so `given` always starts from a clean default space.
 
-**Wait for the mount, not for the port.** The port answers while the app is still on the boot
-screen, and a call left pending during boot times out and wedges the loop. Once mounted, every
-call goes through the port:
+**Wait for the mount, then for the client.** The port answers while the app is still on the boot
+screen, and a call left pending during boot times out and wedges the loop. `mounted` is not enough
+either: the `dxos` hook is installed at the end of `client.initialize()`, and on a cold profile
+that can be a minute after the mount (the shared-worker leader session times out once and is
+re-elected). Poll a cheap probe until it returns `true`, then establish `given`:
+
+```js
+return typeof dxos !== 'undefined' && dxos.client.spaces.get().some((s) => s.state.get() === 3); // SPACE_READY
+```
+
+Every call goes through the port:
 
 ```bash
 COMPOSER_RECOVERY_TIMEOUT=600000 node .agents/skills/composer-forensics/scripts/composer-recovery.js \

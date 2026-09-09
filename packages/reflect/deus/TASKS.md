@@ -74,11 +74,22 @@ Done:
 
 Later (tracked, not started):
 
-- [ ] **Run `--tag smoke` live** and set the four app tests' `status:`. Blocked in the cloud sandbox
-      that authored this phase: the egress policy answers 403 to `moonrepo.dev` (proto) and the
-      ghcr blob host (moon's toolchain plugin), so no `moon` and no dev-server graph; a standalone
-      `vite build` fails in `DxDeclarations` without built dependency types. Run locally or from a
-      sandbox whose environment ran `.config/claude-code-setup.sh` successfully.
+- [x] **Run `--tag smoke` live** — 2026-09-09, child session in the `DXOS` cloud environment (full
+      network, setup script wrapped so a failure logs to `/tmp/claude-setup.log` instead of killing
+      the session). `app:QA-1` 10/11: `steps` 8/8, `after` 2 fails. Report committed at
+      `testing/reports/2026-09-09-2047-smoke.md`; QA-1 corrected (`queryObjects` returns
+      `{ results: [{ dxn, typename, label }] }`; `after` judged by identity) and set `failing`.
+- [ ] **App defect, `app:QA-1.after.2`: `space.delete` strands a space when EDGE signaling is
+      unreachable.** `DataSpaceManager._tombstoneSpace` appends the tombstone before `space.close()`;
+      the close waits 10 s on `EdgeSignalManager.leave`, throws, and skips `space.delete()` and the
+      live-list removal, so the space stays `SPACE_CLOSED` and a retry is a no-op until reload.
+      Reported, not fixed.
+- [x] Harness: `testing/bin/qa-browser.mjs` launched Chromium without the sandbox proxy flags, so
+      every HTTPS request from the page reset (E-1/E-3 in the report, and the trigger of `after` 2).
+      Fixed: `--proxy-server`, `--proxy-bypass-list`, `--ssl-version-max=tls1.2` under
+      `CLAUDE_CODE_REMOTE`. QA-2 also carried the old `queryObjects` shape; fixed, still unverified.
+- [ ] Re-run `--tag smoke` with the proxy fix to see whether `after` 2 passes once EDGE is reachable,
+      then `--tag nightly` for QA-2, QA-3 and the two markdown tests.
 - [ ] **Register the Routines** (`create_trigger`): nightly QA on `qa` (`source_revision`/
       `outcome_branch: qa`), on-merge smoke, daily spec-sync. Create the `qa` branch from main first.
 - [ ] **Move every `PLUGIN.mdl` to `plugin-xxx/spec/PLUGIN.mdl`**, updating `list-tests.mjs`,
