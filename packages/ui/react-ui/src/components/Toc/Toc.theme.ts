@@ -22,7 +22,7 @@ const list: ComponentFunction<TocStyleProps> = (_props, ...etc) => mx('relative 
 // The machine writes `--top`/`--height` on the root and positions the indicator absolutely.
 const indicator: ComponentFunction<TocStyleProps> = (_props, ...etc) =>
   mx(
-    'left-0 w-0.5 rounded-full bg-accent-bg top-(--top) h-(--height)',
+    'absolute left-0 w-0.5 rounded-full bg-accent-bg top-(--top) h-(--height)',
     'transition-[top,height] duration-150 ease-out',
     ...etc,
   );

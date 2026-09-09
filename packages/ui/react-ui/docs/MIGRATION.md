@@ -685,8 +685,8 @@ clip-and-sheet) is a separate PR. What changed:
 - `aria-label` is on the element rather than the machine, so the `lg` landmark carries it too.
 
 `Main.stories.tsx` pins it in the vitest browser at an 800px viewport: swipe-to-dismiss on both sides
-(mid-drag `data-dragging` and a non-zero `--drawer-translate-x`, `closed` on release), a short drag
-snapping back, and a touch swipe from the swipe area opening the navigation sidebar. The deck and
+(mid-drag `data-dragging` and a non-zero `--drawer-translate-x`, `collapsed` on release), a short drag
+snapping back, and a touch swipe from the swipe area opening the sidebar resting `collapsed`. The deck and
 navtree stories that mount `Main` pass unchanged. Still to do before this reaches users on iOS: the
 WKWebView touch check, and the interaction with the OS back-swipe on the left edge.
 

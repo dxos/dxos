@@ -7,6 +7,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import type * as CapabilityManager from '@dxos/app-framework/CapabilityManager';
 import { usePluginManager } from '@dxos/app-framework/ui';
 import { useLayout } from '@dxos/app-toolkit/ui';
+import { log } from '@dxos/log';
 import {
   Button,
   Icon,
@@ -42,8 +43,12 @@ const toStep = (
   placement: step.placement,
   arrow: true,
   ...(step.before && {
+    // A hook that throws, synchronously or not, still shows the step; the failure is logged.
     effect: ({ show }) => {
-      void Promise.resolve(step.before?.(capabilities)).finally(show);
+      void Promise.resolve()
+        .then(() => step.before?.(capabilities))
+        .catch((error) => log.catch(error))
+        .finally(show);
     },
   }),
 });
