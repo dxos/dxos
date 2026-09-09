@@ -1102,6 +1102,12 @@ verdict over porting in the same PR).
       lands at once; and a drawer open at the root's first render carries `data-instant` (the
       machine's own `data-state` outlives the presence's `skipAnimationOnMount`), which the enter
       keyframes skip.
+      One clock for a drawer in a split pane: push-mode slides run 250ms ease-out, the Splitter's
+      collapse timing; the Splitter flips `animating` during render (an effect-set `transition`
+      arrived a commit after the sizes and animated nothing) and lifts the pane's `minSize` while
+      animating (it snapped from `0%` to `12rem` and held a growing pane at 192px); the child
+      anchor is `!important` because a child's own `min-w-0` (ScrollArea) sits in the utilities
+      layer and beat it.
 - [x] **`Main` on the drawer machine — probe** DONE 2026-09-09. The 2026-09-05 verdict ("fights the
       inset slide") was wrong: the machine's inline `transform` and `main.css`'s `inset-inline-start`
       are independent properties, and a driven touch swipe dismissed the sidebar through

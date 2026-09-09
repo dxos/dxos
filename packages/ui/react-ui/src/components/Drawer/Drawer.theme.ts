@@ -26,10 +26,10 @@ const grabberIndicator: ComponentFunction<DrawerStyleProps> = (_props, ...etc) =
   mx('w-10 h-1 rounded-full bg-separator', ...etc);
 
 const title: ComponentFunction<DrawerStyleProps> = ({ srOnly }, ...etc) =>
-  mx('shrink-0 px-4 text-xl font-medium', srOnly && 'sr-only', ...etc);
+  mx('shrink-0 px-2 text-xl font-medium', srOnly && 'sr-only', ...etc);
 
 const description: ComponentFunction<DrawerStyleProps> = ({ srOnly }, ...etc) =>
-  mx('px-4 text-description', srOnly && 'sr-only', ...etc);
+  mx('px-3 text-description', srOnly && 'sr-only', ...etc);
 
 const swipeArea: ComponentFunction<DrawerStyleProps> = (_props, ...etc) => mx('dx-drawer__swipe-area', ...etc);
 

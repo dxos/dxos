@@ -9,6 +9,7 @@ import { expect, userEvent, waitFor, within } from 'storybook/test';
 import { withLayout, withTheme } from '../../testing';
 import { Button } from '../Button';
 import { Panel } from '../Panel';
+import { ScrollArea } from '../ScrollArea';
 import { Splitter } from '../Splitter';
 import { Toolbar } from '../Toolbar';
 import { Drawer, type DrawerRootProps } from './Drawer';
@@ -27,19 +28,23 @@ type DrawerSizeStyle = CSSProperties & { '--dx-drawer-size': string };
 
 /** Filler below the fold, so a snap point short of fully open has something to hide. */
 const Filler = ({ lines }: { lines: number }) => (
-  <ol className='flex flex-col gap-2 p-4 list-decimal list-inside text-description'>
-    {Array.from({ length: lines }, (_, index) => (
-      <li key={index}>Line {index + 1}</li>
-    ))}
-  </ol>
+  <ScrollArea.Root>
+    <ScrollArea.Viewport>
+      <ol className='flex flex-col gap-2 p-2 list-decimal list-inside text-description'>
+        {Array.from({ length: lines }, (_, index) => (
+          <li key={index}>Line {index + 1}</li>
+        ))}
+      </ol>
+    </ScrollArea.Viewport>
+  </ScrollArea.Root>
 );
 
 const Body = ({ title, description, grabber, filler = 0 }: StoryArgs) => (
   <>
     {grabber && <Drawer.Grabber />}
-    {title && <Drawer.Title classNames='pt-4'>{title}</Drawer.Title>}
+    {title && <Drawer.Title classNames='pt-2'>{title}</Drawer.Title>}
     {description && <Drawer.Description>{description}</Drawer.Description>}
-    <div className='flex flex-col gap-2 p-4'>
+    <div className='flex flex-col gap-2 p-2'>
       <p>Drag the panel toward its edge to dismiss it, press Escape, or use the button.</p>
       <Drawer.Close asChild>
         <Button variant='primary'>Close</Button>
@@ -99,8 +104,8 @@ const PushStory = () => {
               onClick={() => setStart(false)}
             />
           </Toolbar.Root>
-          <Drawer.Description>Pushes the main panel right. Drag toward the left edge to dismiss.</Drawer.Description>
-          <Filler lines={12} />
+          <Drawer.Description>The Navigation Drawer slides in from the left edge of the viewport.</Drawer.Description>
+          <Filler lines={30} />
         </Drawer.Content>
       </Drawer.Root>
       {/* The seam owns the inspector's width and animates its collapse; the drawer fills the pane it is given. */}
@@ -160,10 +165,8 @@ const PushStory = () => {
                   onClick={() => setEnd(false)}
                 />
               </Toolbar.Root>
-              <Drawer.Description>
-                Pushes the main panel left. Drag toward the right edge to dismiss.
-              </Drawer.Description>
-              <Filler lines={12} />
+              <Drawer.Description>The Inspector slides in from the right edge of the viewport. </Drawer.Description>
+              <Filler lines={30} />
             </Drawer.Content>
           </Drawer.Root>
         </Splitter.Panel>
@@ -341,14 +344,23 @@ export const TestPushCollapse: Story = {
       () => ({
         left: Math.round(title.getBoundingClientRect().left),
         width: Math.round(reopened.getBoundingClientRect().width),
+        pane: Math.round(endPane.getBoundingClientRect().width),
       }),
       () => reopened.getAnimations().length === 0 && endPane.getAnimations().length === 0,
     );
+    console.log('[probe] entry', JSON.stringify(entry.slice(0, 6)), endPane.getAttribute('style'));
     await expect(entry.length).toBeGreaterThan(3);
-    await expect(entry.every(({ left }, index) => index === 0 || left <= entry[index - 1].left)).toBe(true);
+    // Monotonic to within a pixel of rounding.
+    await expect(entry.every(({ left }, index) => index === 0 || left <= entry[index - 1].left + 1)).toBe(true);
     await expect(entry.some(({ width }) => width > 0 && width < inspectorWidth)).toBe(true);
+    // The panel and its pane keep one clock: the same width on every frame of the entrance.
+    await expect(entry.every(({ width, pane }) => Math.abs(width - pane) <= 2)).toBe(true);
 
-    // A seam step lands at once: the panel is never a frame behind its pane.
+    // A seam step lands at once: the panel is never a frame behind its pane. Past the splitter's
+    // own collapse window first, which eases everything for a moment after a mode change.
+    await waitFor(async () => {
+      await expect(endPane.style.transition).toBe('');
+    });
     canvasElement.querySelector<HTMLElement>('[data-scope="splitter"][data-part="resize-trigger"]')?.focus();
     await userEvent.keyboard('{ArrowLeft}');
     const step = await sample(
@@ -397,7 +409,10 @@ export const TestNoDescription: Story = {
   play: async ({ canvasElement }) => {
     const body = within(canvasElement.ownerDocument.body);
     const dialog = await body.findByRole('dialog', { name: 'Drawer' });
-    await expect(dialog).not.toHaveAttribute('aria-describedby');
+    // The machine settles the attribute once it has looked for a description element.
+    await waitFor(async () => {
+      await expect(dialog).not.toHaveAttribute('aria-describedby');
+    });
     await expect(dialog).toHaveAttribute('data-swipe-direction', 'left');
   },
 };

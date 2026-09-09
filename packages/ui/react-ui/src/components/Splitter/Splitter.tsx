@@ -123,18 +123,21 @@ const SplitterRoot = slottable<HTMLDivElement, SplitterRootElementProps>(
     // avoids relying on observing/throttling resize events at all.
     const [animating, setAnimating] = useState(false);
     const previousMode = useRef(mode);
-    useEffect(() => {
-      if (previousMode.current === mode) {
-        return;
-      }
+    // Flipped during render, not in an effect: the panes' new sizes commit in this very pass, and a
+    // `transition` that arrives a render later finds nothing left to animate.
+    if (previousMode.current !== mode) {
       previousMode.current = mode;
-      if (transition <= 0) {
+      if (transition > 0 && !animating) {
+        setAnimating(true);
+      }
+    }
+    useEffect(() => {
+      if (!animating) {
         return;
       }
-      setAnimating(true);
       const timer = setTimeout(() => setAnimating(false), transition);
       return () => clearTimeout(timer);
-    }, [mode, transition]);
+    }, [animating, transition]);
 
     const collapsed = mode !== 'split';
     // The machine sizes panes in percent of the container and re-derives the anchored pane's share
@@ -263,6 +266,9 @@ const SplitterPanel = slottable<HTMLDivElement, { position: Position }>(
         className={tx('splitter.panel', {}, className)}
         style={{
           transition: animate ? `flex-grow ${transition}ms ease-out, flex-basis ${transition}ms ease-out` : undefined,
+          // A pane growing from nothing must be allowed to be small on the way: its lower bound
+          // returns at once with the mode, and would hold it at `minSize` until the basis caught up.
+          ...(animate && { minWidth: 0, minHeight: 0 }),
           ...flex,
           ...style,
         }}

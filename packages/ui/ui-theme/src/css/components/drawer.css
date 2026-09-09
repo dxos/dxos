@@ -114,7 +114,8 @@
    * Push mode: the positioner steps aside and the panel is a flex item in the page's own row or
    * column, so what it displaces moves with it. Its extent is `--dx-drawer-size` less the machine's
    * drag offset, so a drag toward the edge narrows the panel and the neighbours follow in step; the
-   * machine's transform is cancelled, since the box itself is what moves.
+   * machine's transform is cancelled, since the box itself is what moves. The slides run 250ms
+   * ease-out, the Splitter's collapse timing, so a drawer in a split pane moves in step with it.
    */
   .dx-drawer__positioner--push {
     display: contents;
@@ -139,7 +140,8 @@
     /*
      * The children keep the panel's full extent and sit against its inner edge, so as the box
      * shrinks they slide out with that edge rather than reflowing into the narrowing space. A
-     * minimum, not a width, so a child's own `w-full` (100% of the shrinking box) cannot undercut it.
+     * minimum, not a width, so a child's own `w-full` (100% of the shrinking box) cannot undercut it;
+     * important, so a child's own `min-w-0` (a scroll area's, from the utilities layer) cannot either.
      */
     /*
      * And the box itself hangs from the page's edge (`justify-self`/`align-self` for a grid host;
@@ -150,14 +152,14 @@
       @apply items-end justify-self-start border-e border-separator;
       inline-size: calc(var(--dx-drawer-size) + var(--drawer-translate-x, 0px));
       & > * {
-        min-inline-size: var(--dx-drawer-size);
+        min-inline-size: var(--dx-drawer-size) !important;
       }
     }
     &[data-swipe-direction='right'] {
       @apply items-start justify-self-end border-s border-separator;
       inline-size: calc(var(--dx-drawer-size) - var(--drawer-translate-x, 0px));
       & > * {
-        min-inline-size: var(--dx-drawer-size);
+        min-inline-size: var(--dx-drawer-size) !important;
       }
     }
     &[data-swipe-direction='up'] {
@@ -172,19 +174,19 @@
     &[data-swipe-direction='left'],
     &[data-swipe-direction='right'] {
       &[data-state='open']:not([data-instant]) {
-        animation: dx-drawer-push-in-inline 300ms cubic-bezier(0.16, 1, 0.3, 1);
+        animation: dx-drawer-push-in-inline 250ms ease-out;
       }
       &[data-state='closed'] {
-        animation: dx-drawer-push-out-inline 200ms ease-in forwards;
+        animation: dx-drawer-push-out-inline 250ms ease-out forwards;
       }
     }
     &[data-swipe-direction='up'],
     &[data-swipe-direction='down'] {
       &[data-state='open']:not([data-instant]) {
-        animation: dx-drawer-push-in-block 300ms cubic-bezier(0.16, 1, 0.3, 1);
+        animation: dx-drawer-push-in-block 250ms ease-out;
       }
       &[data-state='closed'] {
-        animation: dx-drawer-push-out-block 200ms ease-in forwards;
+        animation: dx-drawer-push-out-block 250ms ease-out forwards;
       }
     }
   }
