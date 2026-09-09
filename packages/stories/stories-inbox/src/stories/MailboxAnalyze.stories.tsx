@@ -48,6 +48,7 @@ import * as Booking from '@dxos/plugin-trip/Booking';
 import * as Segment from '@dxos/plugin-trip/Segment';
 import { TripPlugin } from '@dxos/plugin-trip/testing';
 import * as Trip from '@dxos/plugin-trip/Trip';
+import { toPublicKey } from '@dxos/protocols/buf';
 import { useClient } from '@dxos/react-client';
 import { type Space, useQuery } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
@@ -488,7 +489,7 @@ const ProcessModuleContainer = ({ space }: { space: Space }) => {
         <JsonHighlighter
           classNames='text-xs'
           data={{
-            identity: identity?.identityKey.truncate(),
+            identity: toPublicKey(identity?.identityKey)?.truncate(),
             runs,
             mailbox: mailbox ? 1 : 0,
             messages: messages.length,
