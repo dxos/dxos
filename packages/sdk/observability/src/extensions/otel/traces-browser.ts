@@ -157,6 +157,7 @@ export class OtelTraces {
 
         return {
           end: (endTime?: number) => span.end(endTime),
+          setAttributes: (attrs: Record<string, any>) => span.setAttributes(attrs),
           setError: (err: unknown) => {
             if (err instanceof Error) {
               span.recordException(err);

@@ -12,10 +12,11 @@ import { type Client } from '@dxos/client';
 import { type Space as ClientSpace, SpaceState } from '@dxos/client/echo';
 import { Space as HaloSpace, SpaceError } from '@dxos/halo';
 import { IdentityDid, type SpaceId } from '@dxos/keys';
+import { requirePublicKey, toPublicKey } from '@dxos/protocols/buf';
+import { type SpaceMember } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { EdgeReplicationSetting } from '@dxos/protocols/buf/dxos/echo/metadata_pb';
 import { MembershipPolicy } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
-import { type SpaceMember } from '@dxos/protocols/proto/dxos/client/services';
-import { SpaceMember as HaloSpaceMember } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { SpaceMember_Role } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { SpacesService } from '@dxos/protocols/rpc';
 
 import {
@@ -55,7 +56,7 @@ const toMembers = (members: readonly SpaceMember[]): HaloSpace.Member[] =>
     return [
       {
         did: member.identity?.did !== undefined ? IdentityDid.make(member.identity.did) : undefined,
-        identityKey: member.identity?.identityKey?.toHex(),
+        identityKey: toPublicKey(member.identity?.identityKey)?.toHex(),
         displayName: member.identity?.profile?.displayName,
         data: member.identity?.profile?.data,
         role,
@@ -84,14 +85,15 @@ const setMemberRole = async (
   client: Client,
   id: SpaceId,
   subject: IdentityDid,
-  newRole: HaloSpaceMember.Role,
+  newRole: SpaceMember_Role,
 ): Promise<void> => {
   const space = resolveSpace(client, id);
   const member = space.members.get().find((entry) => entry.identity?.did === subject);
-  if (!member) {
+  const memberKey = member?.identity?.identityKey;
+  if (!memberKey) {
     throw new Error(`Member not found: ${subject}`);
   }
-  await space.updateMemberRole({ memberKey: member.identity.identityKey, newRole });
+  await space.updateMemberRole({ memberKey: requirePublicKey(memberKey), newRole });
 };
 
 /**
@@ -170,7 +172,7 @@ export const makeSpaceService = (client: Client): Context.Service.Shape<typeof H
 
   removeMember: (id, subject) =>
     Effect.tryPromise({
-      try: () => setMemberRole(client, id, subject, HaloSpaceMember.Role.REMOVED),
+      try: () => setMemberRole(client, id, subject, SpaceMember_Role.REMOVED),
       catch: (error) => new SpaceError({ context: { error } }),
     }),
 

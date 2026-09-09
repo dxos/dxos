@@ -165,7 +165,7 @@ const views: View<SignalResponse>[] = [
   {
     id: 'ack',
     title: 'Acknowledgement',
-    // The payload stays packed, so the discriminator is its `type_url` rather than a decoded tag.
+    // The payload stays packed, so the discriminator is its `typeUrl` rather than a decoded tag.
     filter: (response: SignalResponse) => messageOf(response)?.payload?.typeUrl === ACKNOWLEDGEMENT,
     properties: [
       {

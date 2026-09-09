@@ -2,6 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
+import { create } from '@bufbuild/protobuf';
 import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { Trigger, asyncTimeout, latch } from '@dxos/async';
@@ -29,6 +30,7 @@ import { DXN, SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { toPublicKey } from '@dxos/protocols/buf';
 import { MembershipPolicy } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
+import { ProfileDocumentSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { range } from '@dxos/util';
 
 describe('Spaces', () => {
@@ -70,7 +72,7 @@ describe('Spaces', () => {
     await client.initialize();
     onTestFinished(() => client.destroy());
 
-    await client.halo.createIdentity({ displayName: 'test-user' });
+    await client.halo.createIdentity(create(ProfileDocumentSchema, { displayName: 'test-user' }));
 
     // TODO(burdon): Extend basic queries.
     const space = await client.spaces.create();
@@ -172,8 +174,8 @@ describe('Spaces', () => {
     onTestFinished(() => client1.destroy());
     await client2.initialize();
     onTestFinished(() => client2.destroy());
-    await client1.halo.createIdentity({ displayName: 'Peer 1' });
-    await client2.halo.createIdentity({ displayName: 'Peer 2' });
+    await client1.halo.createIdentity(create(ProfileDocumentSchema, { displayName: 'Peer 1' }));
+    await client2.halo.createIdentity(create(ProfileDocumentSchema, { displayName: 'Peer 2' }));
     const space1 = await client1.spaces.create();
     await space1.waitUntilReady();
 
@@ -296,7 +298,7 @@ describe('Spaces', () => {
 
     log.info('ready');
 
-    await client1.halo.createIdentity({ displayName: 'test-user' });
+    await client1.halo.createIdentity(create(ProfileDocumentSchema, { displayName: 'test-user' }));
 
     const space1 = await client1.spaces.create();
     const obj = space1.db.add(Obj.make(TestSchema$.Expando, { data: 'test' }));
@@ -337,7 +339,7 @@ describe('Spaces', () => {
     await registerTypes(client2);
     onTestFinished(() => client2.destroy());
 
-    await client1.halo.createIdentity({ displayName: 'test-user' });
+    await client1.halo.createIdentity(create(ProfileDocumentSchema, { displayName: 'test-user' }));
 
     // Client 1 creates a space.
     const space1 = await client1.spaces.create();

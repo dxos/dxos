@@ -180,7 +180,7 @@ Session-logged rules for agents. Append a dated section per session (newest firs
 
 - To sort groups by an aggregate (SQL `ORDER BY max(x)`), ECHO now supports: `.groupBy(GroupKey.property(k)).aggregate({ name: Aggregate.max('prop') }).orderBy(Order.aggregate('name', dir))`. `Aggregate.max/min('prop')` is strongly typed to the group member's keys (infers element type from the `.aggregate()` param context, like `Order.property`); `Order.aggregate(name, dir)` is typed to `keyof` the declared aggregates (via `T extends Group<any,any,infer A>`).
 - Group order = first-occurrence in the pre-group `orderBy` stream UNLESS a post-group `orderBy(Order.aggregate(...))` reorders whole groups by the aggregate. Within-group member order is the pre-group `orderBy` (independent of the group order direction). Mailbox: `orderBy(created desc).groupBy(threadId).aggregate({lastMessageAt: max(created)}).orderBy(Order.aggregate('lastMessageAt', dir))` → threads by most-recent message in `dir`, members always newest-first.
-- Feature spans: `echo-protocol/ast.ts` (group-by `aggregates`, `aggregate` Order kind), `echo/{Aggregate,Order,Query,index}.ts` (+`Group<K,T,A>` third param, `.aggregate()` builder — always returns a `Group` query, never `never`, or it breaks `Query<any>`→`Query<T>` assignability), `echo-host/query/{plan,query-planner,group-by,query-executor}.ts`, `echo-client/query/{working-set-executor,query-result}.ts`, and MIRROR in `echo-query/query-lite.ts` (parallel DSL — `Order2/Query1: typeof X$` force full parity).
+- Feature spans: `echo-protocol/ast.ts` (group-by `aggregates`, `aggregate` Order kind), `echo/{Aggregate,Order,Query,index}.ts` (+`Group<K,T,A>` third param, `.aggregate()` builder — always returns a `Group` query, never `never`, or it breaks `Query<any>`→`Query<T>` assignability), `echo-host/query/{plan,query-planner,group-by,query-executor}.ts`, and `echo-client/query/{working-set-executor,query-result}.ts`. (The `echo-query/query-lite.ts` DSL mirror that also had to be kept in parity has since been deleted.)
 - Group aggregates need NO proto/wire change: executors compute them internally to order/page groups (row order carries the result); `Group.aggregates` is recomputed client-side in `query-result._assembleGroups` from hydrated members via `GroupBy.reduceAggregate` (reflects only hydrated members, like `values`).
 - Planner: `_validateGroupByPlacement` permits `order` wrapping group-by; `_ensureOrderStep` never inserts after a GroupByStep; `_optimizeLimits` treats GroupByStep as a blocker and pushes a group-level limit INTO the post-group OrderStep (which then `takeGroups`). Executors' `_execOrderStep` branch on `isGrouped` → `GroupBy.orderGroups` (reorders whole contiguous blocks by first member, stable) + `takeGroups` for a pushed-down limit.
 
@@ -686,9 +686,9 @@ Session-logged rules for agents. Append a dated section per session (newest firs
 
 ### Forms
 
-- Drive forms from an Effect Schema, not hand-rolled `Input`/`Select`: `<Form.Root schema values onValuesChanged><Form.Content><Form.FieldSet/></Form.Content></Form.Root>`. Reuse the operation-input schema (e.g. `BookingSearch.FlightSearchFields`).
+- Drive forms from an Effect Schema, not hand-rolled `Input`/`Select`: `<Form.Root schema values onValuesChanged><Form.Content><Form.Fields/></Form.Content></Form.Root>`. Reuse the operation-input schema (e.g. `BookingSearch.FlightSearchFields`).
 - Labels come from schema `title`. `Format.DateTime` → datetime picker, stored ISO 8601.
-- For multi-field forms, lay out with `Form.Layout template={…}` (grid DSL: `<grid cols="2"><field name="x" span="2"/></grid>`) instead of `Form.FieldSet` — same approach as `SegmentCard`'s `FLIGHT_LAYOUT`. Template controls which fields render (unreferenced fields are hidden). Define the template as a module-level `trim\`…\`` const (`@dxos/util`).
+- For multi-field forms, lay out with `Form.Layout template={…}` (grid DSL: `<grid cols="2"><field name="x" span="2"/></grid>`) instead of `Form.Fields` — same approach as `SegmentCard`'s `FLIGHT_LAYOUT`. Template controls which fields render (unreferenced fields are hidden). Define the template as a module-level `trim\`…\`` const (`@dxos/util`).
 - Form structure (Radix `ScrollArea`-nominal: Viewport=viewing window outside, Content=viewed body inside). Uniform: `Form.Root > Form.Viewport > Form.Content`.
   - **`Form.Viewport`** owns the gutter `Column` (default `gutter='xs'` = chrome side-padding). Content-height by default; **`scroll`** prop makes it fill its parent + scroll (the gutter then hosts the scrollbar). The scroll/grow lives here, not on Content; there is no `grow` prop.
   - **`Form.Content`** is the pure viewed body (centered, `gap-form-gap`, `role=form`). No Column.
@@ -696,7 +696,7 @@ Session-logged rules for agents. Append a dated section per session (newest firs
   - Gotcha: `Card.Root` is itself a `.dx-column-root` and `Card.Body` is `display:contents`, so `Form.Viewport`'s Column must carry `[.dx-column-root_&]:col-span-full` to span the card instead of landing in the narrow icon track. (Built into `Form.Viewport`.)
   - `Settings.*` (from `@dxos/react-ui-form`) is a separate namespace from `Form.*` — settings panels use `Settings.Viewport`/`FieldSet`, unaffected.
 - Submit via `Form.Submit` (full-width primary, calls the form's `onSave`), not a standalone `Button`. Wire `onSave` on `Form.Root`; pass `Form.Submit` `label`/`icon`/`disabled` as needed (`disabled` defaults to `!canSave`).
-- Form-level error/validation text → `<Form.Error>{msg}</Form.Error>` (`react-ui-form`; wraps `Input.Root validationValence='error'` + `Input.Validation`), not a bare `text-error` div.
+- Form-level error/validation text → `<Form.ErrorText>{msg}</Form.ErrorText>` (`react-ui-form`; wraps `Field.Root validationValence='error'` + `Field.ErrorText`), not a bare `text-error` div.
 
 ### Lists
 

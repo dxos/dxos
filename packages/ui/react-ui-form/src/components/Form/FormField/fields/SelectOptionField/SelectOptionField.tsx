@@ -15,19 +15,13 @@ import { hues } from '@dxos/ui-types';
 import { translationKey } from '#translations';
 import { type FormFieldRendererProps } from '#types';
 
-import { FormFieldLabel } from '../../FormField';
-
 export const SelectOptionField = ({
   type,
   readonly,
-  label,
-  jsonPath,
-  getStatus,
   getValue,
   onValueChange,
 }: FormFieldRendererProps<SelectOption[] | undefined>) => {
   const { t } = useTranslation(translationKey);
-  const { status, error } = getStatus();
   const [selected, setSelectedId] = useState<string | null>(null);
   const [isNewOption, setIsNewOption] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -121,81 +115,81 @@ export const SelectOptionField = ({
   }, [selected, isNewOption]);
 
   return (
-    <Field.Root validationValence={status}>
-      <FormFieldLabel error={error} readonly={readonly} label={label} path={jsonPath} />
-      <div>
-        {options && (
-          <OrderedList.Root<SelectOption>
-            items={options}
-            isItem={(_item) => true}
-            getId={(option) => option.id}
-            onMove={readonly ? undefined : handleMove}
-            readonly={!!readonly}
-          >
-            {({ items }) => (
-              <OrderedList.Content classNames='w-full overflow-auto'>
-                {items?.map((item) => (
-                  <OrderedList.Item
-                    key={item.id}
-                    id={item.id}
-                    item={item}
-                    canDrag={!readonly}
-                    classNames='flex flex-col cursor-pointer rounded-xs dx-hover'
-                  >
-                    <div className='flex items-center'>
-                      <OrderedList.DragHandle />
-                      {/* TODO(ZaymonFC): Move spacer into Tag component. */}
-                      <div className='flex grow items-center truncate px-2' onClick={() => handleClick(item.id)}>
-                        <Tag hue={item.color as ChromaticPalette}>{item.title || '\u200b'}</Tag>
-                      </div>
-                      <ToggleIconButton
-                        iconOnly
-                        variant='ghost'
-                        active={selected === item.id}
-                        icon='ph--caret-right--regular'
-                        label={t(selected === item.id ? 'collapse.label' : 'expand.label', { ns: osTranslations })}
-                        onClick={() => handleClick(item.id)}
-                      />
+    <div>
+      {options && (
+        <OrderedList.Root<SelectOption>
+          items={options}
+          isItem={(_item) => true}
+          getId={(option) => option.id}
+          onMove={readonly ? undefined : handleMove}
+          readonly={!!readonly}
+        >
+          {({ items }) => (
+            <OrderedList.Content classNames='w-full overflow-auto'>
+              {items?.map((item) => (
+                <OrderedList.Item
+                  key={item.id}
+                  id={item.id}
+                  item={item}
+                  canDrag={!readonly}
+                  classNames='flex flex-col cursor-pointer rounded-xs dx-hover'
+                >
+                  <div className='flex items-center'>
+                    <OrderedList.DragHandle />
+                    {/* TODO(ZaymonFC): Move spacer into Tag component. */}
+                    <div className='flex grow items-center truncate px-2' onClick={() => handleClick(item.id)}>
+                      <Tag hue={item.color as ChromaticPalette}>{item.title || '\u200b'}</Tag>
                     </div>
-                    {selected === item.id && (
-                      <div className='flex flex-col p-form-padding gap-form-gap dx-density-md'>
-                        <Field.Label classNames='text-sm'>{t('select-option.label')}</Field.Label>
-                        <div className='grid grid-cols-[1fr_min-content_min-content] gap-form-gap'>
-                          <Field.Input
-                            disabled={!!readonly}
-                            placeholder={t('select-option-label.placeholder')}
-                            ref={selected === item.id ? inputRef : undefined}
-                            value={item.title}
-                            onChange={handleTitleChange(item.id)}
-                            onKeyDown={handleKeyDown}
-                            classNames='flex-1'
-                          />
-                          <HuePicker disabled={!!readonly} value={item.color} onChange={handleColorChange(item.id)} />
-                          <IconButton
-                            disabled={!!readonly}
-                            icon='ph--trash--fill'
-                            iconOnly
-                            label={t('select-option-delete.button')}
-                            onClick={() => handleDelete(item.id)}
-                          />
-                        </div>
+                    <ToggleIconButton
+                      iconOnly
+                      variant='ghost'
+                      active={selected === item.id}
+                      icon='ph--caret-right--regular'
+                      label={t(selected === item.id ? 'collapse.label' : 'expand.label', { ns: osTranslations })}
+                      onClick={() => handleClick(item.id)}
+                    />
+                  </div>
+                  {selected === item.id && (
+                    <div className='flex flex-col p-form-padding gap-form-gap dx-density-md'>
+                      <Field.Label classNames='text-sm'>{t('select-option.label')}</Field.Label>
+                      <div className='grid grid-cols-[1fr_min-content_min-content] gap-form-gap'>
+                        <Field.Input
+                          disabled={!!readonly}
+                          placeholder={t('select-option-label.placeholder')}
+                          ref={selected === item.id ? inputRef : undefined}
+                          value={item.title}
+                          onChange={handleTitleChange(item.id)}
+                          onKeyDown={handleKeyDown}
+                          classNames='flex-1'
+                        />
+                        <HuePicker disabled={!!readonly} value={item.color} onChange={handleColorChange(item.id)} />
+                        <IconButton
+                          disabled={!!readonly}
+                          icon='ph--trash--fill'
+                          iconOnly
+                          label={t('select-option-delete.button')}
+                          onClick={() => handleDelete(item.id)}
+                        />
                       </div>
-                    )}
-                  </OrderedList.Item>
-                ))}
-                <IconButton
-                  classNames='w-full'
-                  variant='ghost'
-                  icon='ph--plus--regular'
-                  label={t('select-option-add.button')}
-                  onClick={handleAdd}
-                  disabled={!!readonly}
-                />
-              </OrderedList.Content>
-            )}
-          </OrderedList.Root>
-        )}
-      </div>
-    </Field.Root>
+                    </div>
+                  )}
+                </OrderedList.Item>
+              ))}
+              <IconButton
+                classNames='w-full'
+                variant='ghost'
+                icon='ph--plus--regular'
+                label={t('select-option-add.button')}
+                onClick={handleAdd}
+                disabled={!!readonly}
+              />
+            </OrderedList.Content>
+          )}
+        </OrderedList.Root>
+      )}
+    </div>
   );
 };
+
+// A list of options is not one control, so the row's label is text.
+SelectOptionField.standalone = true;

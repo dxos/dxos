@@ -9,14 +9,14 @@ import {
   type Contact,
   type Device,
   type Identity,
-  type RecoverIdentityRequest,
-} from '@dxos/protocols/proto/dxos/client/services';
+  type RecoverIdentityRequest_ExternalSignature,
+} from '@dxos/protocols/buf/dxos/client/services_pb';
 import {
   type Credential,
   type DeviceProfileDocument,
   type Presentation,
   type ProfileDocument,
-} from '@dxos/protocols/proto/dxos/halo/credentials';
+} from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
 import { type AuthenticatingInvitation, type CancellableInvitation } from './invitations';
 
@@ -28,7 +28,7 @@ export type RecoverIdentityArgs =
   | { recoveryCode: string }
   | { recoveryProof: string }
   | { token: string }
-  | { external: RecoverIdentityRequest.ExternalSignature };
+  | { external: RecoverIdentityRequest_ExternalSignature };
 
 /**
  * TODO(burdon): Public API (move comments here).

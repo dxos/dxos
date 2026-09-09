@@ -125,7 +125,7 @@ export const CustomTokenDialog = ({
         >
           <Column.Center>
             <Form.Content>
-              <Form.FieldSet />
+              <Form.Fields />
               <Form.Submit disabled={isPending ? true : undefined} />
             </Form.Content>
           </Column.Center>

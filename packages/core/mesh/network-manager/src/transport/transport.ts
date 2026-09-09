@@ -5,7 +5,7 @@
 import { type Event } from '@dxos/async';
 import { type ErrorStream } from '@dxos/debug';
 import { type PublicKey } from '@dxos/keys';
-import { type Signal } from '@dxos/protocols/proto/dxos/mesh/swarm';
+import { type Signal } from '@dxos/protocols/buf/dxos/mesh/swarm_pb';
 
 export enum TransportKind {
   WEB_RTC = 'WEB-RTC',

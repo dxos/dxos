@@ -17,7 +17,7 @@ import type * as Atom from 'effect/unstable/reactivity/Atom';
 import * as Rpc from 'effect/unstable/rpc/Rpc';
 import * as RpcGroup from 'effect/unstable/rpc/RpcGroup';
 
-import { Annotation } from '@dxos/echo';
+import { Annotation, type Type } from '@dxos/echo';
 import { assertArgument } from '@dxos/invariant';
 import { DXN, type SpaceId, URI } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -235,6 +235,9 @@ export interface Process<
   readonly input: Schema.Codec<_Input, any>;
   readonly output: Schema.Codec<_Output, any>;
 
+  /** Schemas to register with the process's database; see {@link MakeProcessOpts.types}. */
+  readonly types?: readonly Type.AnyEntity[];
+
   // Runtime RPC group, stored as `any`. `RpcGroup`/`RpcClient` are invariant in their type
   // argument (and `Callbacks.rpcHandlers` is contravariant in it), so referencing `_Rpcs` in the
   // structural fields would block `Process<…, never>` from being assignable to `Process.Any`.
@@ -279,6 +282,16 @@ export interface MakeProcessOpts {
   readonly output: Schema.Codec<any, any>;
   readonly services: readonly Context.Key<any, any>[];
   readonly rpcs?: RpcGroup.RpcGroup<any>;
+
+  /**
+   * Schemas the process's own data model needs, registered with its database at spawn.
+   *
+   * Declared here beside `services` because a host cannot know them: it resolves a process by key
+   * and has no view of the types that process queries. Unregistered, a TYPED query silently matches
+   * nothing — a queue append succeeds and the read back returns empty, which reads as a lost write
+   * rather than a missing schema.
+   */
+  readonly types?: readonly Type.AnyEntity[];
 }
 
 export const make = <const Opts extends Types.NoExcessProperties<MakeProcessOpts, Opts>>(

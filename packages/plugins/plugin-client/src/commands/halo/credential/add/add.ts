@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+import { fromBinary } from '@bufbuild/protobuf';
 import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
@@ -12,7 +13,7 @@ import * as Prompt from 'effect/unstable/cli/Prompt';
 import { CommandConfig } from '@dxos/cli-util';
 import { ClientService } from '@dxos/client';
 import { invariant } from '@dxos/invariant';
-import { schema } from '@dxos/protocols/proto';
+import { CredentialSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
 export const handler = Effect.fn(function* ({ credential }: { credential: Option.Option<string> }) {
   const { json } = yield* CommandConfig;
@@ -36,19 +37,13 @@ export const handler = Effect.fn(function* ({ credential }: { credential: Option
   }
 
   yield* Effect.gen(function* () {
-    const codec = schema.getCodecForType('dxos.halo.credentials.Credential');
     const credentialBytes = yield* Effect.try({
       try: () => Buffer.from(credentialHex, 'hex'),
       catch: (error) => new Error(`Failed to parse hex string: ${error}`),
     });
 
-    const verifyError = codec.protoType.verify(credentialBytes);
-    if (verifyError) {
-      return yield* Effect.fail(new Error(verifyError));
-    }
-
     const credentialObj = yield* Effect.try({
-      try: () => codec.decode(credentialBytes),
+      try: () => fromBinary(CredentialSchema, credentialBytes),
       catch: (error) => new Error(`Failed to decode credential: ${error}`),
     });
 

@@ -309,13 +309,6 @@ export type Type<Q extends Any> = Q extends Query<infer T> ? T : never;
  */
 export type Projection<V = unknown> = internal.Projection<V>;
 
-/**
- * Brand key for {@link Projection}. Re-exported (like {@link QueryTypeId}) so the sandboxed
- * `query-lite` mirror can declare its own local constant with the same string literal and
- * construct structurally-compatible projections without importing this module's runtime.
- */
-export type ProjectionTypeId = internal.ProjectionTypeId;
-
 class QueryClass implements Any {
   private static 'variance': Any[QueryTypeId] = {} as Any[QueryTypeId];
 

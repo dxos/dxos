@@ -15,8 +15,8 @@ import React, { type ComponentPropsWithRef, type FC, type ReactNode, forwardRef,
 import { useTranslation } from 'react-i18next';
 
 import { useComposedRefs, useControllableState } from '@dxos/react-hooks';
-import { osTranslations } from '@dxos/ui-theme';
-import { type SlottableProps } from '@dxos/ui-types';
+import { elevationAttrs, elevationSurface, osTranslations } from '@dxos/ui-theme';
+import { type ElevationLevel, type SlottableProps } from '@dxos/ui-types';
 
 import { useThemeContext } from '../../hooks';
 import { ElevationProvider } from '../../providers';
@@ -215,6 +215,8 @@ type DialogContentProps = ThemedClassName<ComponentPropsWithRef<typeof DialogPri
   DialogContentHandlers & {
     size?: DialogSize;
     inOverlayLayout?: boolean;
+    /** Material-style elevation, 0–5, onto the surface ladder; a dialog is `overlay` (4) by default. */
+    elevation?: ElevationLevel;
   };
 
 const DialogContent = forwardRef<HTMLDivElement, DialogContentProps>(
@@ -224,6 +226,7 @@ const DialogContent = forwardRef<HTMLDivElement, DialogContentProps>(
       children,
       size = 'sm',
       inOverlayLayout: propsInOverlayLayout,
+      elevation,
       onOpenAutoFocus,
       onCloseAutoFocus,
       onInteractOutside,
@@ -250,7 +253,12 @@ const DialogContent = forwardRef<HTMLDivElement, DialogContentProps>(
     return (
       <DialogPrimitive.Content
         {...props}
-        className={tx('dialog.content', { size, inOverlayLayout: propsInOverlayLayout || inOverlayLayout }, classNames)}
+        {...elevationAttrs(elevation)}
+        className={tx(
+          'dialog.content',
+          { size, inOverlayLayout: propsInOverlayLayout || inOverlayLayout, surface: elevationSurface(elevation) },
+          classNames,
+        )}
         ref={useComposedRefs(forwardedRef, contentRef)}
       >
         <Column.Root classNames='dx-expand' gutter='md'>

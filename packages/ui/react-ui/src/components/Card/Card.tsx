@@ -16,8 +16,8 @@ import React, {
 } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import { iconSize } from '@dxos/ui-theme';
-import { type Density, type SlottableProps } from '@dxos/ui-types';
+import { elevationAttrs, elevationSurface, iconSize } from '@dxos/ui-theme';
+import { type Density, type ElevationLevel, type SlottableProps } from '@dxos/ui-types';
 
 import { translationKey } from '#translations';
 
@@ -41,6 +41,8 @@ type CardRootProps = {
   'id'?: string;
   'border'?: boolean;
   'fullWidth'?: boolean;
+  /** Material-style elevation, 0–5, onto the surface ladder; the card is `raised` (3) by default. */
+  'elevation'?: ElevationLevel;
   /**
    * Adopt the parent grid's columns (via `subgrid`) instead of defining the card's own gutters —
    * used to align a nested card's rows to an outer 3-track grid. See `Column.Root`.
@@ -76,7 +78,7 @@ type CardRootProps = {
  */
 const CardRoot = composable<HTMLDivElement, CardRootProps>(
   (
-    { children, id, role, border = true, fullWidth, subgrid, gutter = 'lg', gap = 'sm', density, ...props },
+    { children, id, role, border = true, fullWidth, subgrid, gutter = 'lg', gap = 'sm', density, elevation, ...props },
     forwardedRef,
   ) => {
     const { className, ...rest } = composableProps(props);
@@ -88,10 +90,10 @@ const CardRoot = composable<HTMLDivElement, CardRootProps>(
         gutter={gutter}
         subgrid={subgrid}
         gap={gap}
-        classNames={tx('card.root', { border, fullWidth }, className)}
+        classNames={tx('card.root', { border, fullWidth, surface: elevationSurface(elevation) }, className)}
         role={role ?? 'group'}
       >
-        <div {...rest} {...(id && { 'data-object-id': id })} ref={forwardedRef}>
+        <div {...rest} {...(id && { 'data-object-id': id })} {...elevationAttrs(elevation)} ref={forwardedRef}>
           {children}
         </div>
       </Column.Root>

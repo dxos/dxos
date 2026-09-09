@@ -6,12 +6,12 @@ import { runInContextAsync, synchronized } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { type TypedMessage } from '@dxos/protocols/proto';
-import { type Credential, MembershipPolicy, SpaceMember } from '@dxos/protocols/proto/dxos/halo/credentials';
-import { type DelegateSpaceInvitation } from '@dxos/protocols/proto/dxos/halo/invitations';
+import { toPublicKey } from '@dxos/protocols/buf';
+import { type Credential, MembershipPolicy, SpaceMember_Role } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
+import { type DelegateSpaceInvitation } from '@dxos/protocols/buf/dxos/halo/invitations_pb';
 import { type AsyncCallback, Callback, ComplexMap, ComplexSet } from '@dxos/util';
 
-import { getCredentialAssertion, verifyCredential } from '../credentials';
+import { type CredentialAssertionType, getCredentialAssertion, verifyCredential } from '../credentials';
 import { type CredentialProcessor } from '../processor/credential-processor';
 import { type FeedInfo, FeedStateMachine } from './feed-state-machine';
 import { InvitationStateMachine } from './invitation-state-machine';
@@ -31,9 +31,9 @@ export interface SpaceState {
   addCredentialProcessor(processor: CredentialProcessor): Promise<void>;
   removeCredentialProcessor(processor: CredentialProcessor): Promise<void>;
 
-  getCredentialsOfType(type: TypedMessage['@type']): Credential[];
+  getCredentialsOfType(type: CredentialAssertionType): Credential[];
 
-  getMemberRole(memberKey: PublicKey): SpaceMember.Role;
+  getMemberRole(memberKey: PublicKey): SpaceMember_Role;
   hasMembershipManagementPermission(memberKey: PublicKey): boolean;
 }
 
@@ -151,8 +151,8 @@ export class SpaceStateMachine implements SpaceState {
     await consumer?.close();
   }
 
-  getCredentialsOfType(type: TypedMessage['@type']): Credential[] {
-    return this.credentials.filter((credential) => getCredentialAssertion(credential)['@type'] === type);
+  getCredentialsOfType(type: CredentialAssertionType): Credential[] {
+    return this.credentials.filter((credential) => getCredentialAssertion(credential).$typeName === type);
   }
 
   /**
@@ -161,11 +161,12 @@ export class SpaceStateMachine implements SpaceState {
    */
   @synchronized
   async process(credential: Credential, { sourceFeed, skipVerification }: ProcessOptions): Promise<boolean> {
-    if (credential.id) {
-      if (this._processedCredentials.has(credential.id)) {
+    const credentialId = toPublicKey(credential.id);
+    if (credentialId) {
+      if (this._processedCredentials.has(credentialId)) {
         return true;
       }
-      this._processedCredentials.add(credential.id);
+      this._processedCredentials.add(credentialId);
     }
 
     if (!skipVerification) {
@@ -176,29 +177,35 @@ export class SpaceStateMachine implements SpaceState {
       }
     }
 
+    const issuer = toPublicKey(credential.issuer);
+    if (!issuer) {
+      log.warn('Credential has no issuer.');
+      return false;
+    }
+
     const assertion = getCredentialAssertion(credential);
-    switch (assertion['@type']) {
+    switch (assertion.$typeName) {
       case 'dxos.halo.credentials.SpaceGenesis': {
         if (this._genesisCredential) {
           log.warn('Space already has a genesis credential.');
           return false;
         }
-        if (!credential.issuer.equals(this._spaceKey)) {
+        if (!issuer.equals(this._spaceKey)) {
           log.warn('Space genesis credential must be issued by space.');
           return false;
         }
-        if (!credential.subject.id.equals(this._spaceKey)) {
+        if (!toPublicKey(credential.subject?.id)?.equals(this._spaceKey)) {
           log.warn('Space genesis credential must be issued to space.');
           return false;
         }
         this._genesisCredential = credential;
-        this._tags = assertion.tags ?? [];
-        this._membershipPolicy = assertion.membershipPolicy ?? MembershipPolicy.INVITE;
+        this._tags = assertion.tags;
+        this._membershipPolicy = assertion.membershipPolicy;
         break;
       }
 
       case 'dxos.halo.credentials.SpaceMember': {
-        if (!assertion.spaceKey.equals(this._spaceKey)) {
+        if (!toPublicKey(assertion.spaceKey)?.equals(this._spaceKey)) {
           break; // Ignore credentials for other spaces.
         }
 
@@ -206,8 +213,8 @@ export class SpaceStateMachine implements SpaceState {
           log.warn('Space must have a genesis credential before adding members.');
           return false;
         }
-        if (!this._canInviteNewMembers(credential.issuer)) {
-          log.warn(`Space member is not authorized to invite new members: ${credential.issuer}`);
+        if (!this._canInviteNewMembers(issuer)) {
+          log.warn(`Space member is not authorized to invite new members: ${issuer}`);
           return false;
         }
 
@@ -245,8 +252,8 @@ export class SpaceStateMachine implements SpaceState {
       }
       case 'dxos.halo.invitations.CancelDelegatedInvitation':
       case 'dxos.halo.invitations.DelegateSpaceInvitation': {
-        if (!this._canInviteNewMembers(credential.issuer)) {
-          log.warn(`Invalid invitation, space member is not authorized to invite new members: ${credential.issuer}`);
+        if (!this._canInviteNewMembers(issuer)) {
+          log.warn(`Invalid invitation, space member is not authorized to invite new members: ${issuer}`);
           return false;
         }
         await this._invitations.process(credential);
@@ -258,8 +265,8 @@ export class SpaceStateMachine implements SpaceState {
     this._credentials.push(newEntry);
 
     // TODO(dmaretskyi): Invariant on every credential having an id?
-    if (credential.id) {
-      this._credentialsById.set(credential.id, newEntry);
+    if (credentialId) {
+      this._credentialsById.set(credentialId, newEntry);
     }
 
     for (const processor of this._credentialProcessors) {
@@ -272,7 +279,7 @@ export class SpaceStateMachine implements SpaceState {
     return true;
   }
 
-  public getMemberRole(memberKey: PublicKey): SpaceMember.Role {
+  public getMemberRole(memberKey: PublicKey): SpaceMember_Role {
     return this._members.getRole(memberKey);
   }
 
@@ -288,8 +295,8 @@ export class SpaceStateMachine implements SpaceState {
     }
     return (
       key.equals(this._spaceKey) ||
-      this._members.getRole(key) === SpaceMember.Role.ADMIN ||
-      this._members.getRole(key) === SpaceMember.Role.OWNER
+      this._members.getRole(key) === SpaceMember_Role.ADMIN ||
+      this._members.getRole(key) === SpaceMember_Role.OWNER
     );
   }
 }

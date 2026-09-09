@@ -5,7 +5,7 @@
 import { useAtomValue } from '@effect/atom-react/Hooks';
 import * as Schema from 'effect/Schema';
 import * as Atom from 'effect/unstable/reactivity/Atom';
-import React, { memo, useCallback, useMemo, useState } from 'react';
+import React, { type ReactNode, memo, useCallback, useMemo, useState } from 'react';
 
 import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
@@ -43,10 +43,10 @@ const HeaderValues = Schema.make<Schema.Codec<HeaderValues, any>>(
 // The Context section edits only the instructions' standing context objects.
 const CONTEXT_FIELDS: readonly string[] = ['objects'];
 
-export type ProjectArticleProps = AppSurface.ObjectArticleProps<Project.Project>;
-
 /** Overview is everything the project owns; Tasks gives the ledger the whole panel. */
 type Tab = 'overview' | 'tasks';
+
+export type ProjectArticleProps = AppSurface.ObjectArticleProps<Project.Project>;
 
 /**
  * Article surface for a {@link Project}: one form-styled body (header fields, the owned instructions
@@ -74,8 +74,25 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
   // The rows the embedded `TaskSetArticle` has checked; the toolbar arms its delegate action on them.
   const { checkedTasks, clearChecked } = useCheckedTasks(taskSet);
 
-  const actions = useToolbarActions({
+  // The tabs are a toolbar item like any other, so the one action graph owns the bar's order:
+  // tabs, separator, then the actions. The tablist only needs the `Tabs.Root` context, which
+  // wraps the whole panel.
+  const tabs = useMemo(
+    () => (
+      <Tabs.Tablist>
+        <Tabs.Button value='overview' data-testid='projectsPlugin.tab.overview'>
+          {t('overview.label')}
+        </Tabs.Button>
+        <Tabs.Button value='tasks' data-testid='projectsPlugin.tab.tasks'>
+          {t('tasks.label')}
+        </Tabs.Button>
+      </Tabs.Tablist>
+    ),
+    [t],
+  );
+  const menuActions = useToolbarActions({
     project: subject,
+    tabs,
     checkedTasks,
     onAddArtifact: () => void handleAddArtifact(),
     onDelegated: clearChecked,
@@ -148,59 +165,51 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
   return (
     <Tabs.Root asChild orientation='horizontal' value={tab} onValueChange={(value) => setTab(value as Tab)}>
       <Panel.Root role={role}>
-        <Panel.Toolbar classNames='flex items-center'>
-          <Tabs.Tablist classNames='w-auto p-0'>
-            <Tabs.Button value='overview' data-testid='projectsPlugin.tab.overview'>
-              {t('overview.label')}
-            </Tabs.Button>
-            <Tabs.Button value='tasks' data-testid='projectsPlugin.tab.tasks'>
-              {t('tasks.label')}
-            </Tabs.Button>
-          </Tabs.Tablist>
-          <ActionToolbar {...actions} attendableId={attendableId} classNames='grow' />
+        <Panel.Toolbar asChild>
+          <ActionToolbar {...menuActions} attendableId={attendableId} />
         </Panel.Toolbar>
-        <Panel.Content classNames='flex flex-col'>
+        <Panel.Content>
           {/* Rendered by hand rather than through `Tabs.Panel`: Radix mounts its content
-                hidden for a frame, and the artifact gallery's masonry measures zero there and
-                never recovers. The tablist still owns the switching. */}
+              hidden for a frame, and the artifact gallery's masonry measures zero there and
+              never recovers. The tablist still owns the switching. */}
           {tab === 'overview' && (
             <Form.Root schema={HeaderValues} defaultValues={defaultValues} onValuesChanged={handleValuesChanged}>
               <Form.Viewport scroll>
                 <Form.Content>
-                  <Form.FieldSet />
+                  <Form.Fields />
 
                   {instructions && <InstructionsEditor db={db} instructions={instructions} />}
 
                   {/* Standing context (inputs bound into every project session) — deliberately a
-                    separate labeled section from Artifacts (outputs the project owns). */}
+                      separate labeled section from Artifacts (outputs the project owns). */}
                   {instructions && (
-                    <Form.Section title={t('context.label')}>
+                    <Form.FieldSet label={t('context.label')}>
                       <InstructionsEditor db={db} instructions={instructions} fields={CONTEXT_FIELDS} />
-                    </Form.Section>
+                    </Form.FieldSet>
                   )}
 
                   {/* Above Tasks: the outline is where work is drafted, the task set where it lands.
                     `taskSet` rides along so promoting an item files it into THIS project's ledger
                     rather than into a set owned by the outline. */}
                   {outline && (
-                    <Form.Section title={t('outline.label')}>
+                    <Form.FieldSet label={t('outline.label')}>
                       <Surface.Surface
                         type={AppSurface.Section}
                         data={{ subject: outline, attendableId, taskSet }}
                         limit={1}
                       />
-                    </Form.Section>
+                    </Form.FieldSet>
                   )}
 
                   {milestoneRefs.length > 0 && (
-                    <Form.Section title={t('milestones.label')}>
+                    <Form.FieldSet label={t('milestones.label')}>
                       <MilestoneList refs={milestoneRefs} />
-                    </Form.Section>
+                    </Form.FieldSet>
                   )}
 
-                  <Form.Section title={t('artifacts.label')}>
+                  <Form.FieldSet label={t('artifacts.label')}>
                     <ObjectGallery refs={project.artifacts} onOpen={handleOpen} onDelete={handleDeleteArtifact} />
-                  </Form.Section>
+                  </Form.FieldSet>
                 </Form.Content>
               </Form.Viewport>
             </Form.Root>
@@ -289,6 +298,8 @@ const useCheckedTasks = (taskSet: TaskSet.TaskSet | undefined) => {
 
 export type ToolbarActionsProps = {
   project: Project.Project;
+  /** The view tabs, rendered as the bar's leading item. */
+  tabs: ReactNode;
   /** The checked rows, which the delegate action hands to one chat, in this order. */
   checkedTasks: readonly Task.Task[];
   onAddArtifact: () => void;
@@ -301,7 +312,7 @@ export type ToolbarActionsProps = {
  * actions are expected to diverge as the toolbar grows, and the graph's create-chat action serves
  * the navtree row.
  */
-const useToolbarActions = ({ project, checkedTasks, onAddArtifact, onDelegated }: ToolbarActionsProps) => {
+const useToolbarActions = ({ project, tabs, checkedTasks, onAddArtifact, onDelegated }: ToolbarActionsProps) => {
   const { invokePromise } = useOperationInvoker();
   // The handler resolves `Database.Service`, which only the space context supplies — without this
   // the invocation fails with ServiceNotAvailable.
@@ -344,6 +355,16 @@ const useToolbarActions = ({ project, checkedTasks, onAddArtifact, onDelegated }
     (): ActionGraphProps =>
       MenuBuilder.make()
         .action(
+          'tabs',
+          {
+            variant: 'custom',
+            label: ['views.label', { ns: meta.profile.key }],
+            render: () => tabs,
+          },
+          () => {},
+        )
+        .separator()
+        .action(
           'create-chat',
           {
             label: ['create-chat.label', { ns: meta.profile.key }],
@@ -383,7 +404,7 @@ const useToolbarActions = ({ project, checkedTasks, onAddArtifact, onDelegated }
           'projectsPlugin.overflow',
         )
         .build(),
-    [project, spaceId, invokePromise, onAddArtifact, createChat, delegateTasks, checkedTasks.length],
+    [project, tabs, spaceId, invokePromise, onAddArtifact, createChat, delegateTasks, checkedTasks.length],
   );
 };
 

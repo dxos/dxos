@@ -302,7 +302,7 @@ export const createReactRenderer = ({
       >
         <Form.Viewport scroll>
           <Form.Content>
-            <Form.FieldSet />
+            <Form.Fields />
             {(node.events?.save || node.events?.cancel) && <Form.Actions />}
           </Form.Content>
         </Form.Viewport>

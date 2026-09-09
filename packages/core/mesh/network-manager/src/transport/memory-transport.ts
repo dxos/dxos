@@ -2,6 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
+import { create } from '@bufbuild/protobuf';
 import { Transform } from 'node:stream';
 
 import { Event, Trigger } from '@dxos/async';
@@ -9,7 +10,7 @@ import { ErrorStream } from '@dxos/debug';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log, logInfo } from '@dxos/log';
-import { type Signal } from '@dxos/protocols/proto/dxos/mesh/swarm';
+import { type Signal, SignalSchema } from '@dxos/protocols/buf/dxos/mesh/swarm_pb';
 import { ComplexMap } from '@dxos/util';
 
 import {
@@ -88,7 +89,7 @@ export class MemoryTransport implements Transport {
     if (this._options.initiator) {
       log('sending signal');
       try {
-        await this._options.sendSignal({ payload: { transportId: this._instanceId.toHex() } });
+        await this._options.sendSignal(create(SignalSchema, { payload: { transportId: this._instanceId.toHex() } }));
       } catch (err) {
         if (!this._closed) {
           this.errors.raise(toError(err));
