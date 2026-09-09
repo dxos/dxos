@@ -1,6 +1,7 @@
 # ark — Tasks
 
-_Resume: #13030 (Toc, Tour + WelcomeTour off react-joyride, Main dismissal rests at `collapsed`) MERGED
+_Resume: PR #13031 OPEN (outline link followed on click/Enter only). #13030 (Toc, Tour + WelcomeTour off
+react-joyride, Main dismissal rests at `collapsed`) MERGED
 2026-09-09; #13024 (Main step 1) MERGED the same day. Next: `Main` step 2 (push layout at `lg`) as its own
 PR; then the `Toc` consumer. Uncommitted: none._
 
