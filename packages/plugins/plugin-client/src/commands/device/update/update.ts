@@ -10,10 +10,7 @@ import * as Options from 'effect/unstable/cli/Flag';
 import { CommandConfig } from '@dxos/cli-util';
 import { print } from '@dxos/cli-util';
 import { ClientService } from '@dxos/client';
-import { buf } from '@dxos/protocols/buf';
-import { decodeCompat, encodeCompat } from '@dxos/protocols/buf-shape-compat';
-import { DeviceSchema } from '@dxos/protocols/buf/dxos/client/services_pb';
-import { type Device } from '@dxos/protocols/buf/dxos/client/services_pb';
+import { buf, requirePublicKey } from '@dxos/protocols/buf';
 import { DeviceProfileDocumentSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
 import { printDevice } from '../util';
@@ -31,10 +28,7 @@ export const handler = Effect.fn(function* ({ label }: { label: string }) {
     return;
   }
 
-  const updatedProfile = {
-    ...device.profile,
-    label,
-  };
+  const updatedProfile = buf.create(DeviceProfileDocumentSchema, { ...device.profile, label });
 
   const devicesService = client.services.services.DevicesService;
   if (!devicesService) {
@@ -46,23 +40,13 @@ export const handler = Effect.fn(function* ({ label }: { label: string }) {
     return;
   }
 
-  const updatedDevice = decodeCompat<Device>(
-    DeviceSchema,
-    buf.toBinary(
-      DeviceSchema,
-      yield* Effect.tryPromise(() =>
-        devicesService.updateDevice(
-          buf.fromBinary(DeviceProfileDocumentSchema, encodeCompat(DeviceProfileDocumentSchema, updatedProfile)),
-        ),
-      ),
-    ),
-  );
+  const updatedDevice = yield* Effect.tryPromise(() => devicesService.updateDevice(updatedProfile));
 
   if (json) {
     yield* Console.log(
       JSON.stringify(
         {
-          deviceKey: updatedDevice.deviceKey.toHex(),
+          deviceKey: requirePublicKey(updatedDevice.deviceKey).toHex(),
           profile: updatedDevice.profile,
         },
         null,

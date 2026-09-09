@@ -22986,6 +22986,9 @@ importers:
       '@automerge/automerge':
         specifier: 3.3.0-fragments.2
         version: 3.3.0-fragments.2
+      '@bufbuild/protobuf':
+        specifier: 'catalog:'
+        version: 2.11.0
       '@codemirror/autocomplete':
         specifier: 'catalog:'
         version: 6.20.3

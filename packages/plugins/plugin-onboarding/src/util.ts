@@ -7,8 +7,6 @@ import { type Credential } from '@dxos/client/halo';
 import { invariant } from '@dxos/invariant';
 import { InvalidRecoveryTokenError } from '@dxos/protocols';
 import { buf } from '@dxos/protocols/buf';
-import { decodeCompat } from '@dxos/protocols/buf-shape-compat';
-import { CredentialSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
 /**
  * Whether a failed recovery was EDGE refusing the token itself — walks the wrapper chain because
@@ -72,8 +70,7 @@ export const queryAllCredentials = (client: Client) => {
     const credentials: Credential[] = [];
     stream.subscribe(
       (credential) => {
-        // Callers index `subject.assertion` by '@type', which is the protobuf.js Any substitution.
-        credentials.push(decodeCompat(CredentialSchema, buf.toBinary(CredentialSchema, credential)));
+        credentials.push(credential);
       },
       (err) => {
         if (err) {
