@@ -137,6 +137,11 @@ feat F-2: Editing constraints
     then: the marker is removed and a blank line separates the list from the caret's line, so what is
           typed next is a paragraph rather than the item's continuation; mid-list this splits the list.
           Backspace on the same item deletes it instead
+
+  req F-2.6:
+    when: the focused caret is on an empty item, or on a blank line outside any item
+    then: the empty item shows an "Enter task" placeholder in its content; the blank line shows an
+          add button where the item's grip would sit, which turns the line into an empty task
 ```
 
 ```mdl

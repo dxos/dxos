@@ -12,6 +12,7 @@ import { CONTENT_WIDTH, blockSelectionField } from '../blocks';
 import { commands } from './commands';
 import { outlinerDnd } from './dnd';
 import { editor } from './editor';
+import { type GhostOptions, ghost } from './ghost';
 import { menu } from './menu';
 import { getRange, outlinerTree, treeFacet } from './tree';
 
@@ -25,6 +26,8 @@ import { getRange, outlinerTree, treeFacet } from './tree';
 // TODO(burdon): Convert to task object and insert link (menu button).
 
 export type OutlinerProps = {
+  /** Copy for the empty-row hints; see {@link GhostOptions}. */
+  ghost?: GhostOptions;
   /**
    * Presentation only: no editing affordances. Drops the drag grips, the floating menu, and the
    * gutters reserved for them — a read-only surface (a card preview) has nothing to grab and no room
@@ -40,7 +43,7 @@ export type OutlinerProps = {
  * - Constrains editor to outline structure.
  * - Supports smart cut-and-paste.
  */
-export const outliner = ({ readonly }: OutlinerProps = {}): Extension => [
+export const outliner = ({ readonly, ghost: ghostOptions }: OutlinerProps = {}): Extension => [
   // Commands.
   Prec.highest(commands()),
 
@@ -66,6 +69,7 @@ export const outliner = ({ readonly }: OutlinerProps = {}): Extension => [
   ...(readonly
     ? []
     : [
+        ghost(ghostOptions),
         menu(),
         EditorView.contentAttributes.of({
           class: CONTENT_WIDTH,
