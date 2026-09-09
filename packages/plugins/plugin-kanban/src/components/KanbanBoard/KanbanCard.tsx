@@ -7,6 +7,7 @@ import React, { forwardRef, useCallback, useMemo, useState } from 'react';
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface, useCardPivot, useObjectMenuItems } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
+import { useObjectValue } from '@dxos/echo-react';
 import { Card, IconButton, useTranslation } from '@dxos/react-ui';
 import { ActionMenu, createMenuAction } from '@dxos/react-ui-menu';
 import { Focus, Mosaic, useBoard } from '@dxos/react-ui-mosaic';
@@ -33,6 +34,9 @@ export const KanbanCard = forwardRef<HTMLDivElement, KanbanCardProps>(
 
     // Card.Root already takes the forwarded ref; walk from the header to resolve the origin plank.
     const [cardRef, pivotId] = useCardPivot();
+    // The label must arrive through a subscription: the card is a memo boundary, so the
+    // container's re-render no longer refreshes it. `data` stays live for identity and actions.
+    const snapshot = useObjectValue(data);
     const objectMenuItems = useObjectMenuItems(data, pivotId);
 
     const menuItems = useMemo(
@@ -64,7 +68,7 @@ export const KanbanCard = forwardRef<HTMLDivElement, KanbanCardProps>(
           <Card.Root ref={forwardedRef} data-testid='board-item'>
             <Card.Header ref={cardRef}>
               <Card.DragHandle ref={dragHandleRef} testId='mosaicBoard.cardDragHandle' />
-              <Card.Title data-testid='mosaicBoard.cardTitle'>{Obj.getLabel(data)}</Card.Title>
+              <Card.Title data-testid='mosaicBoard.cardTitle'>{Obj.getLabel(snapshot ?? data)}</Card.Title>
               {/* TODO(wittjosiah): Reconcile with Card.Menu. */}
               <Card.Block end>
                 <ActionMenu disabled={!menuItems?.length} actions={menuItems}>

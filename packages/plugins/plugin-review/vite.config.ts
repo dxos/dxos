@@ -28,6 +28,7 @@ export default defineConfig({
     types: 'src/types/index.ts',
   },
   jsx: 'react',
+  reactCompiler: true,
   // The first story in a file pays the whole lazy module-load bill — tens of seconds, against a
   // couple for each story after it — which the 15s browser-mode default cannot cover.
   test: { node: true, storybook: { timeout: 60_000 } },

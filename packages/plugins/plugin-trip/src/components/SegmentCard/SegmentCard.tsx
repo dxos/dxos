@@ -6,6 +6,7 @@ import { format } from 'date-fns';
 import React, { type MouseEvent, forwardRef, useCallback } from 'react';
 
 import { Obj } from '@dxos/echo';
+import { useObjectValue } from '@dxos/echo-react';
 import { Card, Icon, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 import { Focus, Mosaic, type MosaicTileProps, useMosaicContainer } from '@dxos/react-ui-mosaic';
@@ -58,7 +59,7 @@ type SegmentTileProps = Pick<MosaicTileProps<SegmentTileData>, 'data' | 'locatio
  * states uniformly across the stack.
  */
 export const SegmentTile = forwardRef<HTMLDivElement, SegmentTileProps>(({ data, location, current }, forwardedRef) => {
-  const { segment, onAction } = data;
+  const { segment, onAction } = useObjectValue(data) ?? data;
   const { setCurrentId, setSelected } = useMosaicContainer('SegmentTile');
   const { t } = useTranslation(meta.profile.key);
 

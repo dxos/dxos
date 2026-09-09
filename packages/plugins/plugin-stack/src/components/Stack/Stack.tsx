@@ -16,6 +16,7 @@ import { Surface } from '@dxos/app-framework/ui';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import { AppSurface, AttentionSigilButton } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
+import { useObjectValue } from '@dxos/echo-react';
 import { Icon, Menu, ScrollArea, ScrollAreaRootProps, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { useAttentionAttributes } from '@dxos/react-ui-attention';
 import { type DndContainerHandler } from '@dxos/react-ui-dnd';
@@ -186,7 +187,7 @@ const DragHandleGlyph = () => (
 );
 
 const StackSection = ({ data, ...tileProps }: StackSectionProps) => {
-  const { id, object } = data;
+  const { id, object } = useObjectValue(data) ?? data;
   const { t } = useTranslation(meta.profile.key);
   const { attendableId: parentAttendableId, collapsed, onAdd, onMoveUp, onMoveDown, onCollapse, onDelete } = useStack();
   const [optionsMenuOpen, setOptionsMenuOpen] = useState(false);

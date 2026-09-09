@@ -5,6 +5,7 @@
 import React from 'react';
 
 import { type AppSurface } from '@dxos/app-toolkit/ui';
+import { useObjectValue } from '@dxos/echo-react';
 import { Card } from '@dxos/react-ui';
 
 import { Book } from '#types';
@@ -15,7 +16,7 @@ import { Book } from '#types';
  * `Card.Title`; this renders the body from the book's catalog metadata and the user's own rating.
  */
 export const BookCard = ({ subject }: AppSurface.ObjectCardProps<Book.Book>) => {
-  const { catalog, stars } = subject;
+  const { catalog, stars } = useObjectValue(subject) ?? subject;
   const cover = catalog?.cover ?? catalog?.thumbnail;
   const authors = catalog?.authors ?? [];
   const meta = [catalog?.publicationYear, stars != null ? `★ ${stars}/10` : undefined].filter(Boolean).join(' · ');

@@ -9,6 +9,7 @@ import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { type Collection, Obj } from '@dxos/echo';
+import { useObjectValue } from '@dxos/echo-react';
 import { ScrollArea, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { Card, Icon } from '@dxos/react-ui';
 import { Mosaic, type MosaicStackTileComponent } from '@dxos/react-ui-mosaic';
@@ -55,9 +56,12 @@ const ObjectTile: MosaicStackTileComponent<ObjectItem> = ({ data: item }) => {
   const { t } = useTranslation(meta.profile.key);
   const { invokePromise } = useOperationInvoker();
 
+  // A tile is a memo boundary and the object proxy keeps its identity when renamed, so the label
+  // has to come from a subscription rather than a bare read.
+  const snapshot = useObjectValue(item.object);
   const typename = Obj.getTypename(item.object) ?? '';
   const label =
-    Obj.getLabel(item.object) ??
+    Obj.getLabel(snapshot ?? item.object) ??
     toLocalizedString(['object-name.placeholder', { ns: typename, defaultValue: item.id }], t);
   const styles = item.iconHue ? getStyles(item.iconHue) : undefined;
 

@@ -25,5 +25,6 @@ export default defineConfig({
     util: 'src/util/index.ts',
   },
   jsx: 'react',
+  reactCompiler: true,
   test: { node: true, storybook: true },
 });

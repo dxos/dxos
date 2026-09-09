@@ -7,6 +7,7 @@ import React, { useCallback } from 'react';
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface, CardIconSlot, useAppGraph } from '@dxos/app-toolkit/ui';
 import { Obj, Type } from '@dxos/echo';
+import { useObjectValue } from '@dxos/echo-react';
 import { useActionRunner } from '@dxos/plugin-graph/hooks';
 import { Card, Field, Flex, Icon, Panel, ScrollArea, useTranslation } from '@dxos/react-ui';
 import { Masonry } from '@dxos/react-ui-masonry';
@@ -31,6 +32,9 @@ export const RecordArticle = ({ role, subject, attendableId }: AppSurface.Object
   const { actions, onAction } = useMenuActions(attendableId);
   // Obj.getType fails for database-registered (dynamic) schemas due to DXN mismatch;
   // fall back to typename query which matches TypeSchema.typename.
+  // The title reads a mutable field, so it needs a subscription; `subject` keeps its identity when
+  // renamed, which no prop comparison up the tree can see.
+  const snapshot = useObjectValue(subject);
   const db = Obj.getDatabase(subject);
   const typename = Obj.getTypename(subject);
   const schema =
@@ -66,7 +70,7 @@ export const RecordArticle = ({ role, subject, attendableId }: AppSurface.Object
                     <Icon icon={icon} />
                   </CardIconSlot>
                 </Card.Block>
-                <Card.Title>{Obj.getLabel(subject, { fallback: 'typename' })}</Card.Title>
+                <Card.Title>{Obj.getLabel(snapshot ?? subject, { fallback: 'typename' })}</Card.Title>
               </Card.Header>
               <Card.Body>
                 <Surface.Surface type={AppSurface.CardContent} data={{ subject }} limit={1} />
