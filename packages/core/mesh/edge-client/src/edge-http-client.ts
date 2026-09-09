@@ -822,6 +822,10 @@ export class EdgeHttpClient extends BaseHttpClient {
   // handled via the regular request → 401 → WWW-Authenticate challenge → retry path.
   //
 
+  /**
+   * Whether an account already exists for the email, so onboarding can route to login rather than
+   * signup. Enumeration-safe callers must not surface the answer to the user directly.
+   */
   public async checkEmailExists(
     ctx: Context,
     body: { email: string },
@@ -830,6 +834,7 @@ export class EdgeHttpClient extends BaseHttpClient {
     return this._call(ctx, new URL('hub/account/email/exists', this.baseUrl), { ...args, body, method: 'POST' });
   }
 
+  /** Checks an account invitation code without consuming it, so a form can reject it before signup. */
   public async validateInvitationCode(
     ctx: Context,
     body: { code: string },
@@ -842,6 +847,7 @@ export class EdgeHttpClient extends BaseHttpClient {
     });
   }
 
+  /** Consumes an account invitation code, creating the account it was issued for. */
   public async redeemInvitationCode(
     ctx: Context,
     body: RedeemInvitationCodeRequest,
@@ -864,6 +870,7 @@ export class EdgeHttpClient extends BaseHttpClient {
     return this._call(ctx, new URL('hub/account/login', this.baseUrl), { ...args, body, method: 'POST' });
   }
 
+  /** Joins the waitlist on a deployment whose signup is gated by invitation. */
   public async requestAccess(
     ctx: Context,
     body: RequestAccessRequest,
@@ -872,22 +879,27 @@ export class EdgeHttpClient extends BaseHttpClient {
     return this._call(ctx, new URL('hub/account/request-access', this.baseUrl), { ...args, body, method: 'POST' });
   }
 
+  /** The account of the authenticated identity. */
   public async getAccount(ctx: Context, args?: EdgeHttpCallArgs): Promise<GetAccountResponse> {
     return this._call(ctx, new URL('hub/account/me', this.baseUrl), { ...args, method: 'GET' });
   }
 
+  /** Deletes the account of the authenticated identity. */
   public async deleteAccount(ctx: Context, args?: EdgeHttpCallArgs): Promise<{ deleted: boolean }> {
     return this._call(ctx, new URL('hub/account/me', this.baseUrl), { ...args, method: 'DELETE' });
   }
 
+  /** The invitations issued by the authenticated account. */
   public async listAccountInvitations(ctx: Context, args?: EdgeHttpCallArgs): Promise<ListAccountInvitationsResponse> {
     return this._call(ctx, new URL('hub/account/invitation', this.baseUrl), { ...args, method: 'GET' });
   }
 
+  /** Mints a new invitation code for the authenticated account. */
   public async issueAccountInvitation(ctx: Context, args?: EdgeHttpCallArgs): Promise<IssueInvitationResponse> {
     return this._call(ctx, new URL('hub/account/invitation/issue', this.baseUrl), { ...args, method: 'POST' });
   }
 
+  /** Re-sends the address-verification email for the authenticated account. */
   public async resendVerificationEmail(
     ctx: Context,
     args?: EdgeHttpCallArgs,
