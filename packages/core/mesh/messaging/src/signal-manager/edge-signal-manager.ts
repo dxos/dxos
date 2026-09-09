@@ -17,14 +17,25 @@ import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { EdgeService } from '@dxos/protocols';
 import { type buf, bufWkt } from '@dxos/protocols/buf';
+import { fromDate, fromPublicKey, requirePublicKey } from '@dxos/protocols/buf';
 import {
   type Message as EdgeMessage,
-  type PeerSchema,
+  PeerSchema,
+  type SwarmResponse,
   SwarmRequest_Action as SwarmRequestAction,
   SwarmRequestSchema,
   SwarmResponseSchema,
 } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
-import { type SwarmResponse } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
+import {
+  type JoinRequest,
+  JoinRequestSchema,
+  type LeaveRequest,
+  MessageSchema,
+  type QueryRequest,
+  SwarmEventSchema,
+  SwarmEvent_PeerAvailableSchema,
+  SwarmEvent_PeerLeftSchema,
+} from '@dxos/protocols/buf/dxos/edge/signal_pb';
 import { ComplexMap, ComplexSet } from '@dxos/util';
 
 import {
@@ -97,7 +108,10 @@ export class EdgeSignalManager extends Resource implements SignalManager {
   /**
    * Warning: PeerInfo is inferred from edgeConnection.
    */
-  async join(ctx: Context, { topic, peer }: { topic: PublicKey; peer: PeerInfo }): Promise<void> {
+  async join(ctx: Context, request: JoinRequest): Promise<void> {
+    const topic = requirePublicKey(request.topic);
+    const peer = request.peer;
+    invariant(peer, 'Join request carries no peer.');
     if (!this._matchSelfPeerInfo(peer)) {
       // NOTE: Could only join swarm with the same peer info as the edge connection.
       log.warn('ignoring peer info on join request', {
@@ -130,7 +144,10 @@ export class EdgeSignalManager extends Resource implements SignalManager {
     }
   }
 
-  async leave(ctx: Context, { topic, peer }: { topic: PublicKey; peer: PeerInfo }): Promise<void> {
+  async leave(ctx: Context, request: LeaveRequest): Promise<void> {
+    const topic = requirePublicKey(request.topic);
+    const peer = request.peer;
+    invariant(peer, 'Leave request carries no peer.');
     this._swarmPeers.delete(topic);
     try {
       await this._edgeConnection.send(
@@ -151,7 +168,8 @@ export class EdgeSignalManager extends Resource implements SignalManager {
     }
   }
 
-  async query(ctx: Context, { topic }: { topic: PublicKey }): Promise<SwarmResponse> {
+  async query(ctx: Context, request: QueryRequest): Promise<SwarmResponse> {
+    const topic = requirePublicKey(request.topic);
     const response = cancelWithContext(
       this._ctx,
       this.swarmState.waitFor((state) => state.swarmKey === topic.toHex()),
@@ -161,10 +179,13 @@ export class EdgeSignalManager extends Resource implements SignalManager {
       ctx,
       protocol.createMessage(SwarmRequestSchema, {
         serviceId: EdgeService.SWARM,
-        source: createMessageSource(topic, {
-          peerKey: this._edgeConnection.peerKey,
-          identityDid: this._edgeConnection.identityDid,
-        }),
+        source: createMessageSource(
+          topic,
+          create(PeerSchema, {
+            peerKey: this._edgeConnection.peerKey,
+            identityDid: this._edgeConnection.identityDid,
+          }),
+        ),
         payload: { action: SwarmRequestAction.INFO, swarmKeys: [topic.toHex()] },
       }),
     );
@@ -178,6 +199,7 @@ export class EdgeSignalManager extends Resource implements SignalManager {
     // carries its target swarm in `author.swarmKey` and is published with no `target`; the edge fans it
     // out to every peer whose subscription tags intersect.
     invariant((recipient == null) !== !tags?.length, 'Exactly one of `recipient` or `tags` must be set');
+    invariant(author, 'Message carries no author.');
 
     if (!this._matchSelfPeerInfo(author)) {
       // NOTE: Could only join swarm with the same peer info as the edge connection.
@@ -194,7 +216,7 @@ export class EdgeSignalManager extends Resource implements SignalManager {
         source: author,
         target: recipient != null ? [recipient] : undefined,
         tags,
-        payload: create(AnySchema, { typeUrl: payload.typeUrl, value: payload.value }),
+        payload: create(AnySchema, { typeUrl: payload?.typeUrl, value: payload?.value }),
       }),
     );
   }
@@ -290,16 +312,22 @@ export class EdgeSignalManager extends Resource implements SignalManager {
     const { joinedPeers: oldPeers } = this._swarmPeers.get(topic)!;
     const timestamp = message.timestamp ? new Date(Date.parse(message.timestamp)) : new Date();
     const newPeers = new ComplexSet<PeerInfo>(PeerInfoHash, payload.peers);
+    const topicKey = fromPublicKey(topic);
 
     // Emit new available peers in the swarm.
     for (const peer of newPeers) {
       if (oldPeers.has(peer)) {
         continue;
       }
-      this.swarmEvent.emit({
-        topic,
-        peerAvailable: { peer, since: timestamp },
-      });
+      this.swarmEvent.emit(
+        create(SwarmEventSchema, {
+          topic: topicKey,
+          event: {
+            case: 'peerAvailable',
+            value: create(SwarmEvent_PeerAvailableSchema, { peer, since: fromDate(timestamp) }),
+          },
+        }),
+      );
     }
 
     // Emit peer that left the swarm.
@@ -307,10 +335,12 @@ export class EdgeSignalManager extends Resource implements SignalManager {
       if (newPeers.has(peer)) {
         continue;
       }
-      this.swarmEvent.emit({
-        topic,
-        peerLeft: { peer },
-      });
+      this.swarmEvent.emit(
+        create(SwarmEventSchema, {
+          topic: topicKey,
+          event: { case: 'peerLeft', value: create(SwarmEvent_PeerLeftSchema, { peer }) },
+        }),
+      );
     }
 
     this._swarmPeers.get(topic)!.joinedPeers = newPeers;
@@ -323,25 +353,26 @@ export class EdgeSignalManager extends Resource implements SignalManager {
 
     // Broadcasts (DX-1125) carry tags and no target; point-to-point messages carry exactly one target.
     if ((message.tags?.length ?? 0) > 0 && (message.target?.length ?? 0) === 0) {
-      this._deliver({
-        author: message.source,
-        tags: message.tags ?? [],
-        payload: create(AnySchema, { typeUrl: payload.typeUrl, value: payload.value }),
-      });
+      this._deliver(
+        create(MessageSchema, {
+          author: message.source,
+          tags: message.tags ?? [],
+          payload: create(AnySchema, { typeUrl: payload.typeUrl, value: payload.value }),
+        }),
+      );
       return;
     }
 
     invariant(message.target, 'target is missing');
     invariant(message.target.length === 1, 'target should have exactly one item');
 
-    this._deliver({
-      author: message.source,
-      recipient: message.target[0],
-      payload: create(AnySchema, {
-        typeUrl: payload.typeUrl,
-        value: payload.value,
+    this._deliver(
+      create(MessageSchema, {
+        author: message.source,
+        recipient: message.target[0],
+        payload: create(AnySchema, { typeUrl: payload.typeUrl, value: payload.value }),
       }),
-    });
+    );
   }
 
   /**
@@ -369,14 +400,17 @@ export class EdgeSignalManager extends Resource implements SignalManager {
   private async _rejoinAllSwarms(): Promise<void> {
     log('rejoin swarms', { swarms: Array.from(this._swarmPeers.keys()) });
     for (const [topic, { lastState }] of this._swarmPeers.entries()) {
-      await this.join(this._ctx, {
-        topic,
-        peer: {
-          peerKey: this._edgeConnection.peerKey,
-          identityDid: this._edgeConnection.identityDid,
-          state: lastState,
-        },
-      });
+      await this.join(
+        this._ctx,
+        create(JoinRequestSchema, {
+          topic: fromPublicKey(topic),
+          peer: create(PeerSchema, {
+            peerKey: this._edgeConnection.peerKey,
+            identityDid: this._edgeConnection.identityDid,
+            state: lastState,
+          }),
+        }),
+      );
     }
     // Re-establish the broadcast subscription across the rejoined swarms (DX-1125).
     if (this._subscribedTags.size > 0) {
@@ -385,9 +419,5 @@ export class EdgeSignalManager extends Resource implements SignalManager {
   }
 }
 
-const createMessageSource = (topic: PublicKey, peerInfo: PeerInfo): buf.MessageInitShape<typeof PeerSchema> => {
-  return {
-    swarmKey: topic.toHex(),
-    ...peerInfo,
-  };
-};
+const createMessageSource = (topic: PublicKey, peerInfo: PeerInfo): PeerInfo =>
+  create(PeerSchema, { ...peerInfo, swarmKey: topic.toHex() });
