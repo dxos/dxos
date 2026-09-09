@@ -7,12 +7,14 @@ import * as Effect from 'effect/Effect';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as Operation from '@dxos/compute/Operation';
 import { invariant } from '@dxos/invariant';
 
 import { DeckCapabilities } from '#types';
 
+import { deckNavigation, navigate } from '../capabilities/navigate';
 import { openableChildren } from '../util';
 import { applyWorkspace } from './apply';
 
@@ -24,29 +26,27 @@ const handler: Operation.WithHandler<typeof LayoutOperation.SwitchWorkspace> = L
         Effect.catch(() => Effect.succeed('desktop' as const)),
       );
 
+      // Applied first so the workspace's remembered deck exists to navigate to. Other workspaces'
+      // planks are the one thing the URL cannot hold, since it only ever names the active one.
       yield* applyWorkspace(input.subject);
 
-      {
-        const state = yield* Capabilities.getAtomValue(DeckCapabilities.State);
-        const deck = state.decks[input.subject];
-        invariant(deck, `Deck not found: ${input.subject}`);
+      const state = yield* Capabilities.getAtomValue(DeckCapabilities.State);
+      const deck = state.decks[input.subject];
+      invariant(deck, `Deck not found: ${input.subject}`);
 
-        const first = deck.active[0];
-        if (first) {
-          yield* Operation.schedule(LayoutOperation.ScrollIntoView, { subject: first });
-        } else if (platform !== 'mobile') {
-          // Mobile lands on the workspace's own list panel; auto-opening the first child would skip it.
-          const [item] = openableChildren(graph, input.subject);
-          if (item) {
-            // Use `invoke` (synchronous) rather than `schedule` (fire-and-forget) so
-            // that the implicit "open first child" finishes BEFORE this handler
-            // returns. Otherwise, a caller that follows `SwitchWorkspace` with its
-            // own `Open` (e.g. WelcomePlugin DefaultContent) has its `active`
-            // clobbered by this scheduled Open when it later races behind the
-            // caller's state writes.
-            yield* Operation.invoke(LayoutOperation.Open, { subject: [item] });
-          }
-        }
+      // Mobile lands on the workspace's own list panel; auto-opening the first child would skip it.
+      const seeded =
+        deck.active.length === 0 && platform !== 'mobile' ? openableChildren(graph, input.subject).slice(0, 1) : [];
+      const active = deck.active.length > 0 ? deck.active : seeded;
+
+      const workspace = GraphPath.getSpaceIdFromPath(input.subject);
+      if (workspace) {
+        yield* navigate(yield* deckNavigation({ workspace, active, companionPlanks: deck.companionPlanks }));
+      }
+
+      const first = active[0];
+      if (first) {
+        yield* Operation.schedule(LayoutOperation.ScrollIntoView, { subject: first });
       }
     }),
   ),

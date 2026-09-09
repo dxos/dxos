@@ -58,7 +58,9 @@ export const projectUrl = Effect.fnUntraced(function* (url?: URL) {
   const attention = yield* Capability.get(AttentionCapabilities.Attention);
   // Contributed once by plugin-graph and stable for the app's lifetime.
   const builder = yield* Capability.get(AppCapabilities.AppGraph);
-  const manager = yield* Plugin.Service;
+  // Optional: the Idle wave only matters for a URL arriving from outside, where the keys may not be
+  // registered yet. An operation-driven navigation formatted its own URL, so its keys already exist.
+  const manager = yield* Effect.serviceOption(Plugin.Service);
 
   /**
    * Dispatch all NavigationHandler contributions with a given URL.
@@ -167,6 +169,11 @@ export const projectUrl = Effect.fnUntraced(function* (url?: URL) {
     }),
   );
 
+  // Unified so the branches share one Effect type; the wave is only pullable with a manager.
+  const pullIdle: Effect.Effect<void, Error> = Option.isSome(manager)
+    ? Effect.asVoid(manager.value.activate(ActivationEvents.Idle))
+    : Effect.void;
+
   const parseUrl = () => UrlPath.parse(pathname, PathResolution.buildUrlKeyTable(builder));
   const parsed = yield* parseUrl().pipe(
     Option.match({
@@ -180,7 +187,7 @@ export const projectUrl = Effect.fnUntraced(function* (url?: URL) {
       // URL handling down with it. Re-parsing then simply misses and falls through to the
       // not-found sentinel below.
       onNone: () =>
-        manager.activate(ActivationEvents.Idle).pipe(
+        pullIdle.pipe(
           Effect.catchCause((cause) =>
             Effect.sync(() => log.warn('idle activation failed during url restore', { error: Cause.pretty(cause) })),
           ),

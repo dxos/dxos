@@ -10,10 +10,13 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as PathResolution from '@dxos/app-graph/PathResolution';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
+import * as UrlPath from '@dxos/app-toolkit/UrlPath';
 import { log } from '@dxos/log';
+import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabilities';
 
-import { DeckCapabilities } from '#types';
+import { CompanionViewState, DeckCapabilities } from '#types';
 
+import { getRenderedPlanks, isCompanionOpen, resolveCompanionAnchor } from '../util';
 import * as Navigation from '../util/navigation';
 import { projectUrl } from './project-url';
 
@@ -70,4 +73,44 @@ export const pairsForNodes = Effect.fnUntraced(function* (nodeIds: readonly stri
     pairs.push(Navigation.fromSegment(segment, workspace));
   }
   return pairs;
+});
+
+/**
+ * The navigation a deck represents: a pair per active plank, with the companion pair inserted after
+ * the plank it is anchored to. The inverse of what the projection applies.
+ */
+export const deckNavigation = Effect.fnUntraced(function* (params: {
+  workspace: string;
+  active: readonly string[];
+  companionPlanks?: readonly string[];
+}) {
+  const { workspace, active, companionPlanks = [] } = params;
+  const builder = yield* Capability.get(AppCapabilities.AppGraph);
+  const attention = yield* Capability.get(AttentionCapabilities.Attention);
+  const viewState = yield* Capability.get(AttentionCapabilities.ViewState);
+  const { flatten } = yield* Capabilities.getAtomValue(DeckCapabilities.Settings);
+
+  const rendered = getRenderedPlanks(active, flatten);
+  const anchorId = resolveCompanionAnchor(rendered, attention.getCurrent());
+  const variant = viewState.get(CompanionViewState.aspect, CompanionViewState.CONTEXT).variant;
+  const companionAnchor =
+    anchorId && variant && isCompanionOpen(companionPlanks, flatten, anchorId) ? anchorId : undefined;
+
+  const pairs: UrlPath.Pair[] = [];
+  for (const nodeId of active) {
+    const segment = Navigation.segmentForNode(builder.graph, nodeId);
+    if (!segment) {
+      log.error('node has no URL binding, so it cannot be opened', {
+        nodeId,
+        extension: builder.getNodeExtensionId(nodeId),
+      });
+      continue;
+    }
+    pairs.push(Navigation.fromSegment(segment, workspace));
+    if (nodeId === companionAnchor) {
+      pairs.push({ key: UrlPath.COMPANION_KEY, id: variant, workspace });
+    }
+  }
+
+  return { workspace, pairs };
 });

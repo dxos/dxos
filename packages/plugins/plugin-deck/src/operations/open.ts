@@ -20,6 +20,7 @@ import * as ObservabilityOperation from '@dxos/plugin-observability/Observabilit
 
 import { DeckCapabilities } from '#types';
 
+import { currentNavigation, deckNavigation, navigate } from '../capabilities/navigate';
 import {
   addSubjectsToActiveDeck,
   pushSubjectsToStack,
@@ -28,6 +29,7 @@ import {
   updatePlankNames,
 } from '../layout';
 import { computeActiveUpdates, openableChildren, openCompanionPlank, resolveDeckSpec } from '../util';
+import { applyWorkspace } from './apply';
 import { updateActiveDeck } from './helpers';
 
 const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperation.Open.pipe(
@@ -45,9 +47,11 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperat
       }
 
       {
+        // Applied rather than navigated: this open's own `navigate` below carries the final
+        // workspace and planks together, so switching here would push a second history entry.
         const state = yield* Capabilities.getAtomValue(DeckCapabilities.State);
         if (input.workspace && state.activeDeck !== input.workspace) {
-          yield* Operation.invoke(LayoutOperation.SwitchWorkspace, { subject: input.workspace });
+          yield* applyWorkspace(input.workspace);
         }
       }
 
@@ -173,9 +177,10 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperat
           levelOpen?.replacedId && input.subject[0] && deck.companionPlanks.includes(levelOpen.replacedId)
             ? openCompanionPlank(deckUpdates.companionPlanks, flatten, input.subject[0])
             : deckUpdates.companionPlanks;
-        yield* Capabilities.updateAtomValue(DeckCapabilities.State, (state) =>
-          updateActiveDeck(state, { ...deckUpdates, companionPlanks, plankNames }),
-        );
+        // Names are a preference and stay on the state path; what is open goes through the URL.
+        yield* Capabilities.updateAtomValue(DeckCapabilities.State, (state) => updateActiveDeck(state, { plankNames }));
+        const { workspace } = yield* currentNavigation();
+        yield* navigate(yield* deckNavigation({ workspace, active: deckUpdates.active, companionPlanks }));
       }
 
       // Schedule side-effects for the newly opened items: scroll into view, expose in
