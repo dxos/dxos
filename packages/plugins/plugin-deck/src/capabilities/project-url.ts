@@ -222,6 +222,20 @@ export const projectUrl = Effect.fnUntraced(function* (url?: URL) {
     return;
   }
 
+  // The planks the URL names, before anything is resolved. The pair is a plank's identity, so the
+  // deck can render them now and let each one find its own node: a plank with no node renders a
+  // loading shell (see `DeckPlank`). Waiting for resolution first would leave the deck empty for as
+  // long as the slowest pair takes.
+  const placeholders = pairs.filter((pair) => pair.key !== UrlPath.COMPANION_KEY);
+  const placeholderIds = placeholders.map(getUnresolvedPlankId);
+  yield* Capabilities.updateAtomValue(DeckCapabilities.EphemeralState, (state) => ({
+    ...state,
+    segments: Object.fromEntries(
+      placeholders.map((pair, index) => [placeholderIds[index], Navigation.toSegment(pair)]),
+    ),
+  }));
+  yield* applyActive(placeholderIds);
+
   // Preload the URL's plank objects so a cold restore materializes their graph nodes before
   // resolution. `resolveUrl` walks the graph, which only surfaces objects ECHO has already loaded;
   // without this the walk races async loading and falls to not-found on reload/deep-link. The
@@ -298,7 +312,7 @@ export const projectUrl = Effect.fnUntraced(function* (url?: URL) {
   // operation that navigates and a projection that applies a navigation would call each other.
   // Recorded before the planks so a plank never renders without the key its width hangs off.
   yield* Capabilities.updateAtomValue(DeckCapabilities.EphemeralState, (state) => ({ ...state, segments }));
-  yield* applyActive(plankIds);
+  yield* applyActive(plankIds, placeholderIds);
 
   // Attention is never serialized; on load it defaults to the last plank in the chain — except when
   // the chain carries a companion, whose position *is* serialized and which only renders beside the

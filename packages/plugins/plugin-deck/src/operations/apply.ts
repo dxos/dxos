@@ -29,19 +29,29 @@ import { updateActiveDeck } from './helpers';
 /**
  * Write the deck's active planks, returning the item to attend if attention moved.
  *
+ * `supersedes` names planks this write replaces rather than closes, which is how the URL projection
+ * swaps its placeholders for the ids they resolved to.
+ *
  * Shared by `LayoutOperation.Set` and by the URL projection, which must not invoke `Set` itself: an
  * operation that navigates and a projection that applies a navigation would otherwise call each other.
  */
-export const applyActive = Effect.fnUntraced(function* (next: string[]) {
+export const applyActive = Effect.fnUntraced(function* (next: string[], supersedes: readonly string[] = []) {
   const deck = yield* DeckCapabilities.getDeck();
   const attention = yield* Capability.get(AttentionCapabilities.Attention);
   const { flatten } = yield* Capabilities.getAtomValue(DeckCapabilities.Settings);
 
   const { deckUpdates, toAttend } = computeActiveUpdates({ next, deck, attention, flatten });
+  // A plank the URL replaced with the id it actually resolved to was never closed, so it must not be
+  // recorded as closed. Only a plank the user dropped belongs in `inactive`.
+  const inactive = deckUpdates.inactive.filter((id) => !supersedes.includes(id));
   const { segments } = yield* Capabilities.getAtomValue(DeckCapabilities.EphemeralState);
   const activeSegments = deckUpdates.active.map((id) => segments?.[id] ?? id);
   yield* Capabilities.updateAtomValue(DeckCapabilities.State, (state) =>
-    updateActiveDeck(state, { ...deckUpdates, plankNames: updatePlankNames(deck.plankNames, activeSegments) }),
+    updateActiveDeck(state, {
+      ...deckUpdates,
+      inactive,
+      plankNames: updatePlankNames(deck.plankNames, activeSegments),
+    }),
   );
 
   return toAttend;
