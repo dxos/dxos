@@ -6,13 +6,19 @@
 
 Add DeepSeek as a model provider served through EDGE.
 
-`Model.all` gains `deepseek-v4-flash` and `deepseek-v4-pro` under the edge provider, and a new
-`service` field distinguishes the upstream behind each edge model so `AnthropicResolver` and the
-new `DeepSeekResolver` each serve only their own entries. DeepSeek speaks the OpenAI-compatible
+`Model.all` gains `deepseek-v4-flash` and `deepseek-v4-pro` under the edge provider. Because the
+edge provider now fronts more than one upstream, each resolver claims its own models by the
+developer authority in the id (`Model.developer`), so `AnthropicResolver` and the new
+`DeepSeekResolver` never serve each other's entries and the catalog entry needs no extra marker. DeepSeek speaks the OpenAI-compatible
 chat-completions dialect, so it reuses `ChatCompletionsAdapter` — which now understands
 `reasoning_content`, can request streamed usage via `stream_options.include_usage`, and accepts
 per-model request-body fields (`RequestOptions.body`) so the resolver can send DeepSeek's
-`thinking` parameter. V4 serves thinking and non-thinking mode from one model name, and thinking is
+`thinking` parameter.
+
+Streamed responses now emit the `finish` part exactly once, after the source drains, carrying the
+last usage reported. Previously an OpenAI-format stream emitted a second, usage-less `finish` for
+the `data: [DONE]` sentinel that follows the `finish_reason` chunk, and usage arriving in a trailing
+`choices: []` chunk (as OpenAI itself reports it) was dropped. V4 serves thinking and non-thinking mode from one model name, and thinking is
 on by default, so an explicit opt-out is sent when `thinking: false` is requested.
 
 `EdgeHttpClient.anthropicAiRequest` is now `aiRequest(service, request)`, routing to

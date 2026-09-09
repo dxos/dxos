@@ -4,21 +4,31 @@
 
 import { describe, expect, test } from 'vitest';
 
+import { DXN } from '@dxos/keys';
+
 import * as Model from './Model';
 import * as Provider from './Provider';
 
 describe('Model catalog', () => {
-  test('every edge model names the service serving it', () => {
-    // The edge provider fronts several upstreams, and each resolver claims models by `service`.
-    // An entry without one would be claimed by no resolver — or, worse, by the wrong one.
-    const unmarked = Model.forProvider(Provider.edge.id).filter((model) => model.service === undefined);
-    expect(unmarked).toEqual([]);
+  test('developer reads the authority off an id', () => {
+    expect(Model.developer(DXN.make('com.deepseek.model.deepseek-v4-flash.default'))).toBe('com.deepseek');
+    expect(Model.developer(DXN.make('com.anthropic.model.claude-opus-5.default'))).toBe('com.anthropic');
+  });
+
+  test('every edge model belongs to a developer a resolver claims', () => {
+    // The edge provider fronts several upstreams and each resolver claims ids by developer, so an
+    // entry under an unclaimed authority would resolve nowhere.
+    const claimed = ['com.anthropic', 'com.deepseek'];
+    const unclaimed = Model.forProvider(Provider.edge.id).filter(
+      (model) => !claimed.includes(Model.developer(model.id)),
+    );
+    expect(unclaimed).toEqual([]);
   });
 
   test('anthropic and deepseek edge models are disjoint and non-empty', () => {
     const edgeModels = Model.forProvider(Provider.edge.id);
-    const anthropic = edgeModels.filter((model) => model.service === 'anthropic');
-    const deepseek = edgeModels.filter((model) => model.service === 'deepseek');
+    const anthropic = edgeModels.filter((model) => Model.developer(model.id) === 'com.anthropic');
+    const deepseek = edgeModels.filter((model) => Model.developer(model.id) === 'com.deepseek');
 
     expect(anthropic.length).toBeGreaterThan(0);
     expect(deepseek.length).toBeGreaterThan(0);
@@ -29,7 +39,7 @@ describe('Model catalog', () => {
     // `deepseek-chat` / `deepseek-reasoner` were discontinued on 2026-07-24; the back-end name is
     // sent verbatim as `model`, so a stale one fails at the provider rather than at build time.
     const backends = Model.forProvider(Provider.edge.id)
-      .filter((model) => model.service === 'deepseek')
+      .filter((model) => Model.developer(model.id) === 'com.deepseek')
       .map((model) => model.backend);
 
     expect(backends).not.toContain('deepseek-chat');

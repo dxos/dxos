@@ -20,6 +20,9 @@ import * as ChatCompletionsAdapter from '../ChatCompletionsAdapter';
  * configured {@link ChatCompletionsAdapter.ChatCompletionsClient}, which decides the transport —
  * through EDGE (auth + metering) in the app, or a direct client in tests.
  */
+/** Developer authority of the model ids this resolver serves. */
+const DEEPSEEK_DEVELOPER = 'com.deepseek';
+
 export const make = () =>
   AiModelResolver.resolver(
     {
@@ -36,10 +39,10 @@ export const make = () =>
         if (options?.provider !== undefined && options.provider !== Provider.edge.id) {
           return Layer.unwrap(Effect.fail(new AiModelNotAvailableError(model)));
         }
-        // The edge provider fronts several upstream services; this resolver serves only the DeepSeek
-        // ones. The catalog supplies the back-end name; V4 serves both modes from one name.
+        // The edge provider fronts several upstreams; this resolver claims the DeepSeek ids. The
+        // catalog supplies the back-end name; V4 serves both modes from one name.
         const info = Model.get(Provider.edge.id, model);
-        if (!info || info.service !== 'deepseek') {
+        if (!info || Model.developer(model) !== DEEPSEEK_DEVELOPER) {
           return Layer.unwrap(Effect.fail(new AiModelNotAvailableError(model)));
         }
         // DeepSeek V4 enables thinking by default, so an explicit opt-out has to be sent; the

@@ -24,12 +24,6 @@ export type Characteristics = {
   readonly thinking?: boolean;
 };
 
-/**
- * Upstream service behind an edge model. It selects the EDGE proxy route (`/ai/generate/<service>`)
- * and the wire API used to talk to it, so a resolver serves only the entries naming its own service.
- */
-export type Service = 'anthropic' | 'deepseek';
-
 /** Options applied when resolving a model: the subset of {@link Characteristics} a caller can toggle. */
 export type Options = Pick<Characteristics, 'thinking'>;
 
@@ -47,8 +41,6 @@ export type Model = {
   readonly backend: string;
   /** Display label for pickers and presets. */
   readonly label: string;
-  /** Upstream service behind an edge model; unset for providers that serve a single API. */
-  readonly service?: Service;
   /** Characteristics, which may vary between providers serving the same model. */
   readonly characteristics?: Characteristics;
 };
@@ -126,21 +118,18 @@ export const all: readonly Model[] = [
   // Edge — Anthropic Claude via the DXOS edge intermediary.
   make('com.anthropic.model.claude-opus-5.default', {
     provider: Provider.edge.id,
-    service: 'anthropic',
     backend: 'claude-opus-5',
     label: 'Claude Opus 5',
     characteristics: { maxTokens: 16_384, thinking: true, tools: true },
   }),
   make('com.anthropic.model.claude-sonnet-5.default', {
     provider: Provider.edge.id,
-    service: 'anthropic',
     backend: 'claude-sonnet-5',
     label: 'Claude Sonnet 5',
     characteristics: { maxTokens: 16_384, thinking: true, tools: true },
   }),
   make('com.anthropic.model.claude-haiku-4-5.default', {
     provider: Provider.edge.id,
-    service: 'anthropic',
     backend: 'claude-haiku-4-5',
     label: 'Claude Haiku',
     characteristics: { maxTokens: 16_384, tools: true },
@@ -151,14 +140,12 @@ export const all: readonly Model[] = [
   // and `deepseek-reasoner` names were discontinued on 2026-07-24.
   make('com.deepseek.model.deepseek-v4-flash.default', {
     provider: Provider.edge.id,
-    service: 'deepseek',
     backend: 'deepseek-v4-flash',
     label: 'DeepSeek V4 Flash',
     characteristics: { thinking: true, tools: true },
   }),
   make('com.deepseek.model.deepseek-v4-pro.default', {
     provider: Provider.edge.id,
-    service: 'deepseek',
     backend: 'deepseek-v4-pro',
     label: 'DeepSeek V4 Pro',
     characteristics: { thinking: true, tools: true },
@@ -179,6 +166,14 @@ export const all: readonly Model[] = [
     label: 'GPT-4o mini',
   }),
 ];
+
+/**
+ * The developer authority an id belongs to: the leading reverse-DNS segments of the NSID
+ * (`com.deepseek.model.deepseek-v4-flash.default` → `com.deepseek`). A provider that fronts several
+ * upstreams — `edge` serves both Anthropic and DeepSeek — has each resolver claim its own models by
+ * this, so the catalog entry needs no separate marker.
+ */
+export const developer = (id: DXN.DXN): string => DXN.getName(id).split('.').slice(0, 2).join('.');
 
 /** Models served by a given provider. */
 export const forProvider = (provider: DXN.DXN): Model[] => all.filter((model) => model.provider === provider);

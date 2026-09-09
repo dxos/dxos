@@ -840,6 +840,16 @@ export const make = (model: string, requestOptions: RequestOptions = {}) =>
             let reasoningStarted = false;
             let reasoningEnded = false;
 
+            // The finish part is emitted once, after the source completes, rather than on the first
+            // chunk reporting `done`. Two shapes force this: OpenAI-format streams end with a
+            // `data: [DONE]` sentinel *after* the `finish_reason` chunk, so emitting per `done` sent
+            // a second, usage-less finish; and a provider may report usage in a trailing chunk whose
+            // `choices` is empty (OpenAI proper does), which arrives after `finish_reason`.
+            let finishSeen = false;
+            let finishReason: Response.FinishReason | undefined;
+            let inputTokens: number | undefined;
+            let outputTokens: number | undefined;
+
             /**
              * Ensure reasoning is closed before emitting non-reasoning parts.
              */
@@ -882,6 +892,11 @@ export const make = (model: string, requestOptions: RequestOptions = {}) =>
                     if (!parsed) {
                       continue;
                     }
+
+                    // Last reported value wins: a trailing usage-only chunk supersedes the counts on
+                    // the chunk that carried `finish_reason`.
+                    inputTokens = parsed.inputTokens ?? inputTokens;
+                    outputTokens = parsed.outputTokens ?? outputTokens;
 
                     if (parsed.reasoning && parsed.reasoning.length > 0) {
                       if (!reasoningStarted) {
@@ -989,19 +1004,8 @@ export const make = (model: string, requestOptions: RequestOptions = {}) =>
                       }
                       openAiCalls.clear();
 
-                      annotateResponse(options.span, {
-                        inputTokens: parsed.inputTokens,
-                        outputTokens: parsed.outputTokens,
-                        finishReason: parsed.finishReason ?? 'stop',
-                      });
-                      parts.push({
-                        type: 'finish',
-                        reason: parsed.finishReason ?? 'stop',
-                        usage: {
-                          inputTokens: { total: parsed.inputTokens },
-                          outputTokens: { total: parsed.outputTokens },
-                        },
-                      });
+                      finishSeen = true;
+                      finishReason = parsed.finishReason ?? finishReason;
                     }
                   }
 
@@ -1015,6 +1019,27 @@ export const make = (model: string, requestOptions: RequestOptions = {}) =>
                 }
                 return Stream.fail(unknownError('streamText', 'request failed', err));
               }),
+              // Suspended so the accumulators are read after the source drains. A stream that ended
+              // without reporting `done` (truncated, or failed above) emits nothing, as before.
+              (stream) =>
+                Stream.concat(
+                  stream,
+                  Stream.suspend((): Stream.Stream<Response.StreamPartEncoded, never, never> => {
+                    if (!finishSeen) {
+                      return Stream.empty;
+                    }
+                    const reason = finishReason ?? 'stop';
+                    annotateResponse(options.span, { inputTokens, outputTokens, finishReason: reason });
+                    return Stream.succeed({
+                      type: 'finish',
+                      reason,
+                      usage: {
+                        inputTokens: { total: inputTokens },
+                        outputTokens: { total: outputTokens },
+                      },
+                    });
+                  }),
+                ),
             );
 
             return parsedStream;

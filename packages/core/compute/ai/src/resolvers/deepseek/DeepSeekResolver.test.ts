@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { describe, it } from '@effect/vitest';
+import { it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Stream from 'effect/Stream';
@@ -10,7 +10,9 @@ import * as LanguageModel from 'effect/unstable/ai/LanguageModel';
 import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
 import * as HttpClient from 'effect/unstable/http/HttpClient';
 import * as HttpClientRequest from 'effect/unstable/http/HttpClientRequest';
+import { describe, test } from 'vitest';
 
+import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 import * as AiModelResolver from '../../AiModelResolver';
@@ -50,10 +52,10 @@ const modelLayer = (options?: { thinking?: boolean }) =>
   );
 
 describe('DeepSeekResolver', () => {
-  it('catalogs the model under the deepseek service', ({ expect }) => {
-    const info = Model.get(Provider.edge.id, Model.all.find((model) => model.backend === 'deepseek-v4-flash')!.id);
-    expect(info?.service).toBe('deepseek');
+  test('catalogs the model under a deepseek id', ({ expect }) => {
+    const info = Model.get(Provider.edge.id, DXN.make(FLASH));
     expect(info?.backend).toBe('deepseek-v4-flash');
+    expect(Model.developer(DXN.make(FLASH))).toBe('com.deepseek');
   });
 
   it.effect(
@@ -83,10 +85,18 @@ describe('DeepSeekResolver', () => {
         }).pipe(Stream.runCollect);
 
         const textDeltas = parts.filter((part) => part.type === 'text-delta');
-        const finish = parts.find((part) => part.type === 'finish');
-        log.info('streamText', { partCount: parts.length, deltaCount: textDeltas.length, finish });
+        const finishParts = parts.filter((part) => part.type === 'finish');
+        const finish = finishParts[0];
+        log.info('streamText', {
+          partCount: parts.length,
+          deltaCount: textDeltas.length,
+          finishCount: finishParts.length,
+          finish,
+        });
 
         expect(textDeltas.length).toBeGreaterThan(0);
+        // A second, usage-less finish part would make a consumer reading the last one see no usage.
+        expect(finishParts.length).toBe(1);
         // Usage only rides the stream when `stream_options.include_usage` was requested, which is
         // what EDGE meters on — a regression here bills every streamed request as usage_missing.
         expect(finish).toBeDefined();
