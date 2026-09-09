@@ -5,7 +5,7 @@
 import * as EffectContext from 'effect/Context';
 import * as Predicate from 'effect/Predicate';
 
-import { DeferredTask, Event, UpdateScheduler } from '@dxos/async';
+import { DeferredTask, Event, UpdateScheduler, scheduleTask } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { Entity, type Feed, Obj, type Ref } from '@dxos/echo';
 import {
@@ -185,7 +185,8 @@ export class FeedHandle {
    */
   #subscriptionGeneration = 0;
 
-  #appendRetryTimer: NodeJS.Timeout | null = null;
+  /** A retry is scheduled. Not a handle: `scheduleTask` cancels itself when the context disposes. */
+  #appendRetryPending = false;
   #appendRetryDelay = APPEND_RETRY_INITIAL_DELAY;
   /** The error that closed the RPC endpoint, once one has; this handle can never append again. */
   #endpointClosed: Error | null = null;
@@ -406,10 +407,9 @@ export class FeedHandle {
       }
     }
     this.#appendRetryDelay = APPEND_RETRY_INITIAL_DELAY;
-    if (this.#appendRetryTimer) {
-      clearTimeout(this.#appendRetryTimer);
-      this.#appendRetryTimer = null;
-    }
+    // A retry still scheduled from an earlier failure is left to fire: it only triggers the
+    // scheduler, which is a no-op once nothing is dirty.
+    this.#appendRetryPending = false;
     // Cleared only here: `#onAppendFailed` now retries, so a transient failure must not leave the
     // feed reporting an error once a later append has gone through.
     this._error = null;
@@ -439,17 +439,20 @@ export class FeedHandle {
       return;
     }
 
-    if (this.#appendRetryTimer || this._ctx.disposed) {
+    if (this.#appendRetryPending || this._ctx.disposed) {
       return;
     }
     const delay = this.#appendRetryDelay;
     this.#appendRetryDelay = Math.min(this.#appendRetryDelay * 2, APPEND_RETRY_MAX_DELAY);
-    this.#appendRetryTimer = setTimeout(() => {
-      this.#appendRetryTimer = null;
-      if (!this._ctx.disposed) {
+    this.#appendRetryPending = true;
+    scheduleTask(
+      this._ctx,
+      () => {
+        this.#appendRetryPending = false;
         this.#appendScheduler.trigger();
-      }
-    }, delay);
+      },
+      delay,
+    );
   }
 
   /**
@@ -779,10 +782,6 @@ export class FeedHandle {
     }
 
     this._pollingHandlers = 0;
-    if (this.#appendRetryTimer) {
-      clearTimeout(this.#appendRetryTimer);
-      this.#appendRetryTimer = null;
-    }
     this.#teardownFeedSubscription();
     for (const core of this.#cores.values()) {
       core.dispose();
