@@ -5794,27 +5794,15 @@ importers:
 
   packages/core/echo/echo-query:
     dependencies:
-      '@dxos/context':
-        specifier: workspace:*
-        version: link:../../../common/context
       '@dxos/echo':
         specifier: workspace:*
         version: link:../echo
-      '@dxos/echo-protocol':
-        specifier: workspace:*
-        version: link:../echo-protocol
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../../common/invariant
       '@dxos/node-std':
         specifier: workspace:*
         version: link:../../../common/node-std
-      '@dxos/util':
-        specifier: workspace:*
-        version: link:../../../common/util
-      '@dxos/vendor-quickjs':
-        specifier: workspace:*
-        version: link:../../../../vendor/quickjs
       '@lezer/common':
         specifier: ^1.5.2
         version: 1.5.2
@@ -5825,9 +5813,6 @@ importers:
       '@lezer/generator':
         specifier: 'catalog:'
         version: 1.8.0
-      tsdown:
-        specifier: 'catalog:'
-        version: 0.22.14(@volar/typescript@2.4.28)(oxc-resolver@11.19.1(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.1))(tsx@4.21.0)
       typescript:
         specifier: 'catalog:'
         version: 7.0.2
