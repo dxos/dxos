@@ -314,7 +314,7 @@ export class AppManager {
   }
 
   async waitForUploadsSettled(timeout = UPLOAD_SETTLE_TIMEOUT): Promise<void> {
-    await expect(this.page.getByTestId('spacePlugin.syncStatus')).toHaveAttribute('data-needs-upload', 'false', {
+    await expect(this.page.getByTestId('spacePlugin.syncStatus')).toHaveAttribute('data-upload-settled', 'true', {
       timeout,
     });
   }
@@ -344,7 +344,7 @@ export class AppManager {
       await space.click();
       await expect(space).toHaveAttribute('aria-selected', 'true', { timeout: 5_000 });
     }).toPass({ timeout });
-    await this.openSpaceSettings();
+    await this.openSpaceSettings(timeout);
     await this.page.getByTestId('spaceSettings.deleteSpace').click({ timeout });
     await this.page.getByTestId('spaceSettings.deleteSpaceConfirm').click();
   }

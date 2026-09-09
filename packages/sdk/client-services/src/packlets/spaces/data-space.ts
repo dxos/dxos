@@ -5,16 +5,7 @@
 import { save } from '@automerge/automerge';
 import { type AutomergeUrl } from '@automerge/automerge-repo';
 
-import {
-  Event,
-  Mutex,
-  asyncTimeout,
-  scheduleTask,
-  sleep,
-  sleepWithContext,
-  synchronized,
-  trackLeaks,
-} from '@dxos/async';
+import { Event, Mutex, scheduleTask, sleep, sleepWithContext, synchronized, trackLeaks } from '@dxos/async';
 import { AUTH_TIMEOUT } from '@dxos/client-protocol';
 import { Context, ContextDisposedError } from '@dxos/context';
 import type { SpecificCredential } from '@dxos/credentials';
@@ -511,10 +502,13 @@ export class DataSpace {
 
       try {
         return await warnAfterTimeout(5_000, 'Automerge root doc load timeout (DataSpace)', () =>
-          asyncTimeout(
-            this._echoHost.loadDoc<DatabaseDirectory>(this._ctx, rootUrl, { fetchFromNetwork: true }),
-            ROOT_DOC_LOAD_ATTEMPT_TIMEOUT,
-          ),
+          this._echoHost.loadDoc<DatabaseDirectory>(this._ctx, rootUrl, {
+            fetchFromNetwork: true,
+            // `loadDoc`'s own deadline, so a timed-out attempt aborts the readiness wait and
+            // disposes its lease. An outer timeout would only reject, leaving the subscription live
+            // and able to hand back an undisposed lease later.
+            timeout: ROOT_DOC_LOAD_ATTEMPT_TIMEOUT,
+          }),
         );
       } catch (err) {
         if (this._ctx.disposed || err instanceof ContextDisposedError) {

@@ -62,14 +62,16 @@ export class ScopedShellManager {
     const rescuer = peer
       .locator(`#${type === 'device' ? 'halo' : 'space'}-invitation-rescuer`)
       .getByTestId('invitation-rescuer-reset');
-    // One wait over either outcome, so there is no losing promise to leave pending. A failed
-    // invitation routes the panel to its rescuer view, and `Viewport.View` marks inactive views
-    // `invisible`, so the auth-code input stays mounted but never shows — waiting on it alone would
-    // spend the whole timeout and then report a stall, which is the wrong diagnosis.
-    await input
-      .or(rescuer)
+    // Matched on `:visible`, not `.or(...).first()`: every step stays mounted (`Viewport.View` marks
+    // inactive ones `invisible`), so `.first()` would resolve by DOM order and wait on that one
+    // element forever rather than on whichever step the shell actually reaches.
+    const settled = peer.locator(
+      `[data-testid='${type === 'device' ? 'halo' : 'space'}-auth-code-input']:visible, ` +
+        `#${type === 'device' ? 'halo' : 'space'}-invitation-rescuer [data-testid='invitation-rescuer-reset']:visible`,
+    );
+    await settled
       .first()
-      .waitFor({ state: 'visible' })
+      .waitFor({ state: 'attached' })
       .catch(async (err) => {
         const showing = await peer
           .locator('[data-testid]')

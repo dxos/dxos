@@ -1,10 +1,6 @@
 ---
-'@dxos/client-services': patch
 '@dxos/echo-client': patch
-'@dxos/echo-host': patch
-'@dxos/network-manager': patch
 '@dxos/plugin-space': patch
-'@dxos/shell': patch
 ---
 
 An invitation no longer fails when the guest's `introduce` overtakes the host's own options reply. The host gated `CONNECTED` on a full request/reply round trip of its own, but the guest sends `introduce` as soon as it has _received_ those options, and the reply travels on the extension's other channel — so it could land after the `introduce` it nominally precedes. `introduce` asserts `CONNECTED`, so the whole invitation errored with no retry, leaving the shell offering to start over.

@@ -59,7 +59,7 @@ export const SyncStatusIndicator = ({
         <StatusBar.Item
           data-testid='spacePlugin.syncStatus'
           data-status={status}
-          data-needs-upload={String(needsToUpload)}
+          data-upload-settled={String(saved && !needsToUpload)}
         >
           {/* The icon and label carry the status; the indicator keeps a single colour in every state. */}
           <IconButton variant='ghost' icon={icon} iconOnly label={t(`${status}.label`)} />

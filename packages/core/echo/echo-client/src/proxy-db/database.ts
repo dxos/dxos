@@ -304,6 +304,11 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
    * EDGE queue addressed by the feed object's URI; this map caches the per-feed client handle.
    */
   readonly #feeds = new Map<EID.EID, FeedHandle>();
+  /**
+   * Disposals of handles retired by a service swap, awaited by {@link flush} so it cannot report
+   * success while a retired handle is still draining.
+   */
+  readonly #retiredFeeds = new Set<Promise<void>>();
 
   constructor(params: EchoDatabaseProps) {
     super();
@@ -736,7 +741,10 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
 
   async flush(opts?: Database.FlushOptions): Promise<void> {
     await this._entityManager.flush(opts);
-    await Promise.all([...this.#feeds.values()].map((handle) => handle.waitForPendingWrites()));
+    await Promise.all([
+      ...[...this.#feeds.values()].map((handle) => handle.waitForPendingWrites()),
+      ...this.#retiredFeeds,
+    ]);
   }
 
   async runMigrations(migrations: Migration.Migration[]): Promise<void> {
@@ -1104,7 +1112,13 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
       const stale = [...this.#feeds.values()];
       this.#feeds.clear();
       for (const handle of stale) {
-        void handle.dispose().catch((err) => log.catch(err));
+        // Tracked until disposal settles: `dispose` drains pending writes, and dropping the handle
+        // from `#feeds` immediately would let `flush()` resolve while that drain is still running.
+        const disposal = handle
+          .dispose()
+          .catch((err) => log.catch(err))
+          .finally(() => this.#retiredFeeds.delete(disposal));
+        this.#retiredFeeds.add(disposal);
       }
       this.#feedService = feedService;
     }
