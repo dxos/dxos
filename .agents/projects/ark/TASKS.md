@@ -561,6 +561,13 @@ is supposed to be decoupled from.
 - [ ] **Follow-up: re-route the promoted link to the Tasks tab through something the host owns.**
       The tab is `ProjectArticle`'s state, so the outline has to reach it through an operation or
       the layout rather than a function handed down as Surface data. Tracked 2026-09-02.
+- [x] **Hovering a promoted link followed it** FIXED 2026-09-10 (reported by the user as the card
+      showing "inline"): `Outline` listened for the chip's `DxAnchorActivate`, which `dx-anchor`
+      dispatches on hover intent and on leave as well as on click, so a hover swapped the outline
+      for the task instead of leaving it to the preview popover. The outline now follows a link on
+      click or Enter/Space only, stopping the chip's own activation so no pinned preview opens
+      against the outline that is leaving; hover reaches the app's preview popover untouched.
+      `Outline.stories.tsx` `TestLinkActivation` pins it. Not a breakpoint issue.
 - [x] `subject`, `attendableId` and `taskSet` stay on the Surface: those identify what is being
       rendered, which is what `data` is for.
 - [x] The tasks section's Surface was already clean — `{ subject: taskSet, attendableId }`, no
