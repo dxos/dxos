@@ -121,20 +121,31 @@
       --dx-drawer-size: 85dvh;
     }
 
+    /*
+     * The children keep the panel's full extent and sit against its inner edge, so as the box
+     * shrinks they slide out with that edge rather than reflowing into the narrowing space. A
+     * minimum, not a width, so a child's own `w-full` (100% of the shrinking box) cannot undercut it.
+     */
     &[data-swipe-direction='left'] {
-      @apply border-e border-separator;
+      @apply items-end border-e border-separator;
       inline-size: calc(var(--dx-drawer-size) + var(--drawer-translate-x, 0px));
+      & > * {
+        min-inline-size: var(--dx-drawer-size);
+      }
     }
     &[data-swipe-direction='right'] {
-      @apply border-s border-separator;
+      @apply items-start border-s border-separator;
       inline-size: calc(var(--dx-drawer-size) - var(--drawer-translate-x, 0px));
+      & > * {
+        min-inline-size: var(--dx-drawer-size);
+      }
     }
     &[data-swipe-direction='up'] {
-      @apply border-b border-separator;
+      @apply justify-end border-b border-separator;
       block-size: calc(var(--dx-drawer-size) + var(--drawer-translate-y, 0px));
     }
     &[data-swipe-direction='down'] {
-      @apply border-t border-separator;
+      @apply justify-start border-t border-separator;
       block-size: calc(var(--dx-drawer-size) - var(--drawer-translate-y, 0px));
     }
 
