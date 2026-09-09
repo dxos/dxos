@@ -17,7 +17,7 @@ import type * as SupportOperation from './SupportOperation';
 
 export const SupportReportResult = Schema.Struct({
   ticketId: Schema.optional(Schema.String),
-  threadUrl: Schema.optional(Schema.String),
+  threadUrl: Schema.String,
 });
 
 export type SupportReportResult = Schema.Schema.Type<typeof SupportReportResult>;
