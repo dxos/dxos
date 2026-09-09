@@ -161,19 +161,6 @@ export interface Handle<_Input, _Output, _Rpcs extends Rpc.Any> {
   runUntilSettled(): Effect.Effect<void>;
 
   /**
-   * Arms the process's alarm, as the process itself does through `ctx.setAlarm`.
-   *
-   * Exposed on the handle for a HOST driving the process from outside its own scheduling: an edge
-   * host mirrors the alarm onto a platform timer, and a test harness needs to run the next handler
-   * without waiting on wall-clock time. Prefer `submitInput` for ordinary work — this schedules a
-   * wake, it does not deliver anything.
-   *
-   * Optional: a handle for a process running in ANOTHER runtime cannot arm that runtime's timer, so
-   * a remote handle does not offer it.
-   */
-  requestAlarm?(timeout?: number): Effect.Effect<void>;
-
-  /**
    * Submits each input in order, then streams outputs until the process reaches {@link Process.State.IDLE}
    * or {@link Process.State.SUCCEEDED}. While {@link Process.State.HYBERNATING}, keeps waiting for outputs
    * or a terminal state. The stream fails with a defect if the process reaches {@link Process.State.FAILED}
@@ -1143,8 +1130,6 @@ class DormantHandle<I, O> implements Handle<I, O, any> {
   runToCompletion = (): Effect.Effect<void> => Effect.die(new Error('Process not hydrated'));
 
   runUntilSettled = (): Effect.Effect<void> => Effect.die(new Error('Process not hydrated'));
-
-  requestAlarm = (): Effect.Effect<void> => Effect.die(new Error('Process not hydrated'));
 
   runAndExit = (): Stream.Stream<O> => Stream.die(new Error('Process not hydrated'));
 }
