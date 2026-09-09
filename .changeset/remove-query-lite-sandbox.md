@@ -1,5 +1,4 @@
 ---
-'@dxos/echo-query': minor
 '@dxos/echo': minor
 ---
 
