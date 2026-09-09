@@ -19,6 +19,7 @@ import {
   ResponseSchema,
   type RpcMessage,
   RpcMessageSchema,
+  StreamCloseSchema,
 } from '@dxos/protocols/buf/dxos/rpc_pb';
 import { type AnyEnvelope, type RequestOptions } from '@dxos/protocols/service-contract';
 import { exponentialBackoffInterval } from '@dxos/util';
@@ -438,10 +439,10 @@ export class RpcPeer {
       throw err;
     }
 
-    if (response.payload) {
-      return response.payload;
-    } else if (response.error) {
-      throw decodeRpcError(response.error, method);
+    if (response.content.case === 'payload') {
+      return response.content.value;
+    } else if (response.content.case === 'error') {
+      throw decodeRpcError(response.content.value, method);
     } else {
       throw new Error('Malformed response.');
     }
@@ -458,17 +459,22 @@ export class RpcPeer {
 
     return new Stream(({ ready, next, close }) => {
       const onResponse = (response: Response) => {
-        if (response.streamReady) {
-          ready();
-        } else if (response.close) {
-          close();
-        } else if (response.error) {
-          // TODO(dmaretskyi): Stack trace might be lost because the stream producer function is called asynchronously.
-          close(decodeRpcError(response.error, method));
-        } else if (response.payload) {
-          next(response.payload);
-        } else {
-          throw new Error('Malformed response.');
+        switch (response.content.case) {
+          case 'streamReady':
+            ready();
+            break;
+          case 'close':
+            close();
+            break;
+          case 'error':
+            // TODO(dmaretskyi): Stack trace might be lost because the stream producer function is called asynchronously.
+            close(decodeRpcError(response.content.value, method));
+            break;
+          case 'payload':
+            next(response.content.value);
+            break;
+          default:
+            throw new Error('Malformed response.');
         }
       };
 
@@ -493,13 +499,14 @@ export class RpcPeer {
 
       try {
         this._sendMessage({
-          request: {
+          case: 'request',
+          value: create(RequestSchema, {
             id,
             method,
             payload: request,
             stream: true,
             ...(traceContext ? { traceContext } : {}),
-          },
+          }),
         }).catch((err) => {
           this._outgoingRequests.delete(id);
           close(err);
@@ -511,7 +518,8 @@ export class RpcPeer {
 
       return () => {
         this._sendMessage({
-          streamClose: { id },
+          case: 'streamClose',
+          value: create(StreamCloseSchema, { id }),
         }).catch((err) => {
           log.catch(err);
         });
@@ -547,15 +555,9 @@ export class RpcPeer {
       invariant(req.method);
 
       const response = await this._params.callHandler(req.method, req.payload, this._getHandlerRpcOptions(req));
-      return {
-        id: req.id,
-        payload: response,
-      };
+      return create(ResponseSchema, { id: req.id, content: { case: 'payload', value: response } });
     } catch (err) {
-      return {
-        id: req.id,
-        error: encodeError(err),
-      };
+      return create(ResponseSchema, { id: req.id, content: { case: 'error', value: encodeError(err) } });
     }
   }
 
@@ -568,40 +570,25 @@ export class RpcPeer {
 
       const responseStream = this._params.streamHandler(req.method, req.payload, this._getHandlerRpcOptions(req));
       responseStream.onReady(() => {
-        callback({
-          id: req.id,
-          streamReady: true,
-        });
+        callback(create(ResponseSchema, { id: req.id, content: { case: 'streamReady', value: true } }));
       });
 
       responseStream.subscribe(
         (msg) => {
-          callback({
-            id: req.id,
-            payload: msg,
-          });
+          callback(create(ResponseSchema, { id: req.id, content: { case: 'payload', value: msg } }));
         },
         (error) => {
           if (error) {
-            callback({
-              id: req.id,
-              error: encodeError(error),
-            });
+            callback(create(ResponseSchema, { id: req.id, content: { case: 'error', value: encodeError(error) } }));
           } else {
-            callback({
-              id: req.id,
-              close: true,
-            });
+            callback(create(ResponseSchema, { id: req.id, content: { case: 'close', value: true } }));
           }
         },
       );
 
       this._localStreams.set(req.id, responseStream);
     } catch (err: any) {
-      callback({
-        id: req.id,
-        error: encodeError(err),
-      });
+      callback(create(ResponseSchema, { id: req.id, content: { case: 'error', value: encodeError(err) } }));
     }
   }
 }

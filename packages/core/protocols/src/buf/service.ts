@@ -2,8 +2,17 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type DescMethod, type DescService, type Message } from '@bufbuild/protobuf';
+import {
+  type DescMessage,
+  type DescMethod,
+  type DescService,
+  type Message,
+  create,
+  fromBinary,
+  toBinary,
+} from '@bufbuild/protobuf';
 import { type GenMessage, type GenService } from '@bufbuild/protobuf/codegenv2';
+import { AnySchema } from '@bufbuild/protobuf/wkt';
 
 import { Stream } from '@dxos/async';
 import { invariant } from '@dxos/invariant';
@@ -16,7 +25,6 @@ import {
   type ServiceProvider,
 } from '../service-contract.ts';
 import { bufRegistry } from './registry';
-import { type CompatCodec, type CompatOptions, compatCodec } from './shape-compat';
 
 // Buf's descriptors replace protobuf.js's `pb.Service` here. The shapes on either side of the codec
 // are unchanged, so `ServiceBundle` consumers and RPC handlers see the same values as before; see
@@ -52,8 +60,8 @@ export type BufService<Service> =
 
 type MethodCodecs = {
   readonly method: DescMethod;
-  readonly request: CompatCodec<unknown>;
-  readonly response: CompatCodec<unknown>;
+  readonly request: DescMessage;
+  readonly response: DescMessage;
 };
 
 /**
@@ -74,12 +82,12 @@ export class BufServiceDescriptor<Service> {
   }
 
   /** Builds a client whose methods encode onto `backend` and decode its responses. */
-  createClient(backend: ServiceBackend, encodingOptions?: CompatOptions): Service {
+  createClient(backend: ServiceBackend): Service {
     const client: Record<string, unknown> = {};
     for (const method of this._service.methods) {
       // `localName` is the camelCase key protobuf.js derived by hand, so handler and client names
       // are unchanged by the switch.
-      client[method.localName] = this.#methodStub(method, backend, encodingOptions);
+      client[method.localName] = this.#methodStub(method, backend);
       Object.defineProperty(client[method.localName], 'name', { value: method.localName });
     }
 
@@ -87,38 +95,33 @@ export class BufServiceDescriptor<Service> {
   }
 
   /** Builds a backend that decodes onto `handlers` and encodes what they return. */
-  createServer(handlers: ServiceProvider<Service>, encodingOptions?: CompatOptions): BufServiceHandler<Service> {
-    return new BufServiceHandler(this._service, this.#methodCodecs(), handlers, encodingOptions);
+  createServer(handlers: ServiceProvider<Service>): BufServiceHandler<Service> {
+    return new BufServiceHandler(this._service, this.#methodCodecs(), handlers);
   }
 
-  #methodStub(method: DescMethod, backend: ServiceBackend, encodingOptions?: CompatOptions) {
+  #methodStub(method: DescMethod, backend: ServiceBackend) {
     const codecs = this.#methodCodecs().get(method.name);
     invariant(codecs, `Method not found: ${method.name}`);
-    const request = (value: unknown): AnyEnvelope => ({
-      value: codecs.request.encode(value, encodingOptions),
-      typeUrl: typeUrlFor(method.input),
-    });
+    const request = (value: unknown): AnyEnvelope =>
+      create(AnySchema, { value: toBinary(codecs.request, value as Message), typeUrl: typeUrlFor(method.input) });
 
     if (method.methodKind === 'server_streaming') {
       return (value: unknown, options?: RequestOptions) =>
         Stream.map(backend.callStream(method.name, request(value), options), (data) =>
-          codecs.response.decode(data.value, encodingOptions),
+          fromBinary(codecs.response, data.value),
         );
     }
 
     invariant(method.methodKind === 'unary', `Unsupported method kind: ${method.methodKind}`);
     return async (value: unknown, options?: RequestOptions) => {
       const response = await backend.call(method.name, request(value), options);
-      return codecs.response.decode(response.value, encodingOptions);
+      return fromBinary(codecs.response, response.value);
     };
   }
 
   #methodCodecs(): Map<string, MethodCodecs> {
     return (this.#methods ??= new Map(
-      this._service.methods.map((method) => [
-        method.name,
-        { method, request: compatCodec<unknown>(method.input), response: compatCodec<unknown>(method.output) },
-      ]),
+      this._service.methods.map((method) => [method.name, { method, request: method.input, response: method.output }]),
     ));
   }
 }
@@ -131,7 +134,6 @@ export class BufServiceHandler<Service> implements ServiceBackend {
     private readonly _service: DescService,
     private readonly _methods: Map<string, MethodCodecs>,
     private readonly _handlers: ServiceProvider<Service>,
-    private readonly _encodingOptions?: CompatOptions,
   ) {}
 
   async call(methodName: string, request: AnyEnvelope, options?: RequestOptions): Promise<AnyEnvelope> {
@@ -139,9 +141,12 @@ export class BufServiceHandler<Service> implements ServiceBackend {
     invariant(method.methodKind === 'unary', `Invalid RPC method call: response streaming mismatch. ${methodName}`);
 
     const handler = await this.#handler(method);
-    const response = await handler(requestCodec.decode(request.value, this._encodingOptions), options);
+    const response = await handler(fromBinary(requestCodec, request.value), options);
 
-    return { value: responseCodec.encode(response, this._encodingOptions), typeUrl: typeUrlFor(method.output) };
+    return create(AnySchema, {
+      value: toBinary(responseCodec, response as Message),
+      typeUrl: typeUrlFor(method.output),
+    });
   }
 
   callStream(methodName: string, request: AnyEnvelope, options?: RequestOptions): Stream<AnyEnvelope> {
@@ -151,15 +156,14 @@ export class BufServiceHandler<Service> implements ServiceBackend {
       `Invalid RPC method call: response streaming mismatch., ${methodName}`,
     );
 
-    const decoded = requestCodec.decode(request.value, this._encodingOptions);
+    const decoded = fromBinary(requestCodec, request.value);
     const responses = Stream.unwrapPromise(
       this.#handler(method).then((handler) => handler(decoded, options) as Stream<unknown>),
     );
 
-    return Stream.map(responses, (data): AnyEnvelope => ({
-      value: responseCodec.encode(data, this._encodingOptions),
-      typeUrl: typeUrlFor(method.output),
-    }));
+    return Stream.map(responses, (data): AnyEnvelope =>
+      create(AnySchema, { value: toBinary(responseCodec, data as Message), typeUrl: typeUrlFor(method.output) }),
+    );
   }
 
   async #handler(method: DescMethod): Promise<(request: unknown, options?: RequestOptions) => unknown> {
