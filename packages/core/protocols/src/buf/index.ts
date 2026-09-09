@@ -5,6 +5,7 @@
 import { type Message, create } from '@bufbuild/protobuf';
 import { type Timestamp, TimestampSchema } from '@bufbuild/protobuf/wkt';
 
+import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { Timeframe } from '@dxos/timeframe';
 
@@ -24,6 +25,17 @@ export { create as createBuf } from '@bufbuild/protobuf';
  * shim — and it is shared so the substitution is spelled one way everywhere.
  */
 export const toPublicKey = (key: BufPublicKey | undefined): PublicKey | undefined => key && PublicKey.from(key.data);
+
+/**
+ * Reads a `dxos.keys.PublicKey` the domain treats as required.
+ *
+ * proto3 makes every message field optional, so a key the schema guarantees still reads as
+ * possibly-undefined; asserting it here keeps call sites free of non-null assertions.
+ */
+export const requirePublicKey = (key: BufPublicKey | undefined): PublicKey => {
+  invariant(key, 'Missing public key.');
+  return PublicKey.from(key.data);
+};
 
 /** Writes the domain key type as `dxos.keys.PublicKey`. */
 export const fromPublicKey = (key: PublicKey): BufPublicKey => create(PublicKeySchema, { data: key.asUint8Array() });
