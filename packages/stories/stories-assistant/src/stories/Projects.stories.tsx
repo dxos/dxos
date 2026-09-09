@@ -8,29 +8,23 @@ import { userEvent, within } from 'storybook/test';
 
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import * as AssistantSkill from '@dxos/plugin-assistant/AssistantSkill';
-import { translations as inboxTranslations } from '@dxos/plugin-inbox/translations';
-import { translations as projectsTranslations } from '@dxos/plugin-projects/translations';
-import { translations as tasksTranslations } from '@dxos/plugin-tasks/translations';
 
 import { SpaceTemplateToolbar, StoryRole } from '../modules';
 import { ModuleContainer, VoyageSpacePlugin, config, createDecorators, storyParameters } from '../testing';
 
 const meta: Meta<typeof ModuleContainer> = {
   title: 'stories/stories-assistant/Projects',
+  // Rows, not a fragment: `ModuleContainer` pins itself to its nearest positioned ancestor, so a
+  // bare sibling of the toolbar would cover it.
   render: (args) => (
-    <SpaceTemplateToolbar>
-      <ModuleContainer {...args} />
-    </SpaceTemplateToolbar>
+    <div className='dx-grow grid grid-rows-[min-content_1fr]'>
+      <SpaceTemplateToolbar />
+      <div className='relative'>
+        <ModuleContainer {...args} />
+      </div>
+    </div>
   ),
-  parameters: {
-    ...storyParameters,
-    translations: [
-      ...storyParameters.translations,
-      ...projectsTranslations,
-      ...inboxTranslations,
-      ...tasksTranslations,
-    ],
-  },
+  parameters: storyParameters,
 };
 
 export default meta;

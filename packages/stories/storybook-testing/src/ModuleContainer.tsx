@@ -4,11 +4,11 @@
 
 import { useAtomValue } from '@effect/atom-react/Hooks';
 import * as Atom from 'effect/unstable/reactivity/Atom';
-import React, { type FC, useEffect, useReducer, useState } from 'react';
+import React, { type FC, useEffect, useState } from 'react';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import type * as Role from '@dxos/app-framework/Role';
-import { Surface, useCapabilities, useCapability } from '@dxos/app-framework/ui';
+import { Surface, useCapabilities, useCapability, useSurfaceManager } from '@dxos/app-framework/ui';
 import * as AppSpace from '@dxos/app-toolkit/AppSpace';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as NotFound from '@dxos/app-toolkit/NotFound';
@@ -123,9 +123,6 @@ export const normalizeCell = (spec: ModuleSpec, spaceId: string, position = ''):
  * during plugin activation after first paint are not misreported. */
 const BINDING_SETTLE_DELAY = 500;
 
-/** How often the binding is re-checked, so a late contribution replaces the debug hint. */
-const BINDING_POLL_INTERVAL = 500;
-
 /** Describes a value compactly without stringifying large/circular objects (e.g. a `Space`). */
 const describeBinding = (value: unknown): string => {
   if (Obj.isObject(value)) {
@@ -163,25 +160,23 @@ const BindingDebug = ({ role, data }: { role: string; data: Record<string, any> 
  * Dispatches a surface for a cell, falling back to {@link BindingDebug} while no registered surface
  * matches the binding (after {@link BINDING_SETTLE_DELAY} to tolerate late surface registration).
  *
- * The check is re-run on a timer rather than once: a role-gated module loads asynchronously, and
- * `useIsAvailable` is what fires the demand that loads it, so the first miss is expected and
- * nothing else would re-render this cell when the contribution lands.
+ * Subscribed to the role's candidates and its pending flag, because `useIsAvailable` reads them
+ * without subscribing and is itself what fires the demand that loads a role-gated module: the first
+ * miss is expected, and without the subscription nothing re-renders this cell when the contribution
+ * lands.
  */
 const SurfaceCell = ({ type, data }: { type: Role.Role<any>; data: Record<string, any> }) => {
   const isAvailable = Surface.useIsAvailable();
+  const surfaceManager = useSurfaceManager();
+  useAtomValue(surfaceManager.candidatesAtom(type.role));
+  const pending = useAtomValue(surfaceManager.pendingAtom(type.role));
   const [settled, setSettled] = useState(false);
-  // The timer only drives the re-render; availability is read below, against the current binding.
-  const [, recheck] = useReducer((count: number) => count + 1, 0);
   useEffect(() => {
     const timer = setTimeout(() => setSettled(true), BINDING_SETTLE_DELAY);
-    const poll = setInterval(recheck, BINDING_POLL_INTERVAL);
-    return () => {
-      clearTimeout(timer);
-      clearInterval(poll);
-    };
+    return () => clearTimeout(timer);
   }, []);
 
-  if (settled && !isAvailable({ type, data })) {
+  if (settled && !pending && !isAvailable({ type, data })) {
     return <BindingDebug role={type.role} data={data} />;
   }
 

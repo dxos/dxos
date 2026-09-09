@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { type PropsWithChildren, useCallback, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useMemo, useRef, useState } from 'react';
 
 import { useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
@@ -31,14 +31,10 @@ import { VOYAGE_SPACE_ID } from '../testing/voyage-space';
  * client instead of one template's content overwriting the last. Reset wipes the profile and
  * reloads, which is the way back to an empty client.
  */
-export const SpaceTemplateToolbar = ({ children }: PropsWithChildren) => (
-  <div className='dx-grow grid grid-rows-[min-content_1fr]'>
-    <Toolbar.Root>
-      <TemplateSelect />
-    </Toolbar.Root>
-    {/* The grid pins itself to its nearest positioned ancestor. */}
-    <div className='relative'>{children}</div>
-  </div>
+export const SpaceTemplateToolbar = () => (
+  <Toolbar.Root>
+    <TemplateSelect />
+  </Toolbar.Root>
 );
 
 const TemplateSelect = () => {
