@@ -108,6 +108,8 @@ export const RegistrySettings = ({
                 <Field.Root>
                   <Field.Switch
                     data-testid='registrySettings.pluginScope'
+                    // The scope is still worth showing without a handler; flipping it is not.
+                    disabled={!onPluginScopeLocalChange}
                     checked={pluginScopeLocal}
                     // Only rejoining asks: it replaces this device's choices with the account's.
                     onCheckedChange={(local) => (local ? onPluginScopeLocalChange?.(true) : setRejoining(true))}
