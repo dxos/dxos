@@ -68,10 +68,13 @@ export const FormFieldSet = composable<HTMLFieldSetElement, FormFieldSetProps>(
       </Fieldset.HelperText>
     );
 
+    // A nested group's body is the bordered box, under the legend; the root's fields sit in the fieldset itself.
     const body = (
       <FormFieldSetDepthContext.Provider value={depth + 1}>
         {canCollapse ? (
           <Collapsible.Content classNames={styles.fieldSetBody()}>{children}</Collapsible.Content>
+        ) : depth > 0 ? (
+          <div className={styles.fieldSetBody()}>{children}</div>
         ) : (
           children
         )}

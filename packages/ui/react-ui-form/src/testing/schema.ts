@@ -27,7 +27,6 @@ export class Person extends Type.makeObject<Person>(DXN.make('org.dxos.type.pers
       Schema.Struct({
         street: Schema.String,
         city: Schema.String,
-        // TODO(burdon): Constrain input control.
         state: Schema.String.pipe(Schema.check(Schema.isMinLength(2)), Schema.check(Schema.isMaxLength(2))).annotate({
           title: 'State',
           description: 'State code',

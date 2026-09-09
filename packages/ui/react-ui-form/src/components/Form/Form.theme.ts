@@ -75,8 +75,9 @@ const formStyles = tv({
         fieldSet: 'py-form-section-gap first:pt-0',
         fieldSetTitle: 'text-lg',
       },
+      // The legend sits above the box, like a field's label above its control; the body is the box.
       nested: {
-        fieldSet: 'border border-subdued-separator rounded-sm px-trim-sm pb-trim-sm',
+        fieldSetBody: 'border border-subdued-separator rounded-sm px-trim-sm py-trim-sm',
       },
     },
   },
@@ -108,7 +109,6 @@ const formStyles = tv({
       depth: 'nested',
       class: {
         // The same gap as the root, or fields inside a group sit flush while their siblings do not.
-        fieldSet: 'gap-trim-md',
         fieldSetBody: 'gap-trim-md',
       },
     },
