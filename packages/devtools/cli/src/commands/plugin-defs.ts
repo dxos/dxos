@@ -6,6 +6,7 @@ import { ProcessManagerPlugin } from '@dxos/app-framework';
 import type * as Plugin from '@dxos/app-framework/Plugin';
 import { type Config } from '@dxos/client';
 import type * as Observability from '@dxos/observability/Observability';
+import * as AssistantPlugin from '@dxos/plugin-assistant/AssistantPlugin';
 import * as ChessPlugin from '@dxos/plugin-chess/ChessPlugin';
 import * as ClientPlugin from '@dxos/plugin-client/ClientPlugin';
 import * as ConnectorPlugin from '@dxos/plugin-connector/ConnectorPlugin';
@@ -64,6 +65,8 @@ export const getDefaults = (): string[] => [
 
 export const getPlugins = ({ config, namespace, observability }: PluginConfig): Plugin.Plugin[] => {
   return [
+    // Declared in Projects' `dependsOn`; the manager refuses to resolve Projects without it.
+    AssistantPlugin.make(),
     ChessPlugin.make(),
     // Commands are imperative and run straight through, so the service must hand them a client
     // that is already initialized rather than one whose `halo` getter still throws.

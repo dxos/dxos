@@ -19,7 +19,7 @@ import { SchemaAST } from '@dxos/effect';
 import * as AssistantOperation from '@dxos/plugin-assistant/AssistantOperation';
 import { InstructionsEditor } from '@dxos/plugin-routine/components';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
-import { Flex, Icon, Panel, Tabs, useTranslation } from '@dxos/react-ui';
+import { Flex, Icon, Panel, Tabs, Toolbar, useTranslation } from '@dxos/react-ui';
 import { useSelection, useSelectionActions } from '@dxos/react-ui-attention';
 import { Form } from '@dxos/react-ui-form';
 import { Masonry } from '@dxos/react-ui-masonry';
@@ -43,10 +43,10 @@ const HeaderValues = Schema.make<Schema.Codec<HeaderValues, any>>(
 // The Context section edits only the instructions' standing context objects.
 const CONTEXT_FIELDS: readonly string[] = ['objects'];
 
-export type ProjectArticleProps = AppSurface.ObjectArticleProps<Project.Project>;
-
 /** Overview is everything the project owns; Tasks gives the ledger the whole panel. */
 type Tab = 'overview' | 'tasks';
+
+export type ProjectArticleProps = AppSurface.ObjectArticleProps<Project.Project>;
 
 /**
  * Article surface for a {@link Project}: one form-styled body (header fields, the owned instructions
@@ -149,8 +149,6 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
     <Tabs.Root asChild orientation='horizontal' value={tab} onValueChange={(value) => setTab(value as Tab)}>
       <Panel.Root role={role}>
         <Panel.Toolbar classNames='flex items-center'>
-          {/* The tablist never yields: the action toolbar's own `w-full` would otherwise squeeze it
-              to zero and its scroll container would clip the tabs. */}
           <Tabs.Tablist classNames='w-auto shrink-0 p-0'>
             <Tabs.Button value='overview' data-testid='projectsPlugin.tab.overview'>
               {t('overview.label')}
@@ -159,6 +157,7 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
               {t('tasks.label')}
             </Tabs.Button>
           </Tabs.Tablist>
+          <Toolbar.Separator variant='line' />
           <ActionToolbar {...actions} attendableId={attendableId} classNames='w-auto min-w-0 grow' />
         </Panel.Toolbar>
         <Panel.Content classNames='flex flex-col'>

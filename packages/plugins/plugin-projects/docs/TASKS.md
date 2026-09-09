@@ -574,6 +574,17 @@ deletion guards (Phase 5) are separate planned follow-ups.**
 
 - [ ] **Knowledge base for memory** — tracked 2026-08-01 (user), scope TBD.
 
+- [ ] **Floating panel statusbar jiggles and grows while dragging** — tracked 2026-09-09 (user), seen
+      on the debug console's floating panel (Console/Logs tabs, statusbar with the clear/copy
+      buttons). Not a plugin-projects defect: lives in the floating-panel primitive or the debug
+      plugin's statusbar; reproduce by dragging the panel and watching the statusbar height.
+- [ ] **ProjectArticle toolbar as ONE `Toolbar.Root`** — tracked 2026-09-09 (user). Today the tablist
+      and `ActionToolbar` are flex siblings inside `Panel.Toolbar` (with a line separator). Folding
+      the tabs into the action toolbar needs `react-ui-menu` to expose its item renderer
+      (`ActionToolbar` renders graph items BEFORE its children, so tabs-first is impossible without
+      it) and accepts the unattended `*:opacity-20` dimming on the tabs. Terra composes it the other
+      way round (tabs trailing, pushed right by a spacer).
+
 - [ ] **Milestone rendering in `TaskSetArticle`** — tracked 2026-08-18 (user). The article renders
       one flat list of every task in the set; milestone sections, the backlog split, derived
       progress and the sub-task tree are all deliberately deferred. The model carries them already
