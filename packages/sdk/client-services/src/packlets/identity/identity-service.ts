@@ -19,8 +19,8 @@ import {
   type RecoverIdentityRequest_ExternalSignature,
   RecoverIdentityRequest_ExternalSignatureSchema,
 } from '@dxos/protocols/buf/dxos/client/services_pb';
-import { type Credential, type Presentation, type ProfileDocument } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { type RecoverIdentityRequest as LegacyRecoverIdentityRequest } from '@dxos/protocols/buf/dxos/client/services_pb';
+import { type Credential, type Presentation, type ProfileDocument } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { type ProfileDocument as LegacyProfileDocument } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { type IdentityService } from '@dxos/protocols/rpc';
 
@@ -165,15 +165,13 @@ export class IdentityServiceImpl extends Resource implements IdentityService.Han
         const { presentation, nonce } = request;
         invariant(this._identityManager.identity, 'Identity not initialized.');
 
-        return 
-          await signPresentation({
-            presentation: presentation,
-            signer: this._keyring,
-            signerKey: this._identityManager.identity.deviceKey,
-            chain: this._identityManager.identity.deviceCredentialChain,
-            nonce,
-          }),
-        ;
+        return await signPresentation({
+          presentation: presentation,
+          signer: this._keyring,
+          signerKey: this._identityManager.identity.deviceKey,
+          chain: this._identityManager.identity.deviceCredentialChain,
+          nonce,
+        });
       },
       catch: (error) => error as Error,
     });
@@ -186,16 +184,14 @@ export class IdentityServiceImpl extends Resource implements IdentityService.Han
 
         invariant(identity, 'Identity not initialized.');
 
-        return 
-          await createCredential({
-            assertion: { '@type': 'dxos.halo.credentials.Auth' },
-            issuer: identity.identityKey,
-            subject: identity.identityKey,
-            chain: identity.deviceCredentialChain,
-            signingKey: identity.deviceKey,
-            signer: this._keyring,
-          }),
-        ;
+        return await createCredential({
+          assertion: { '@type': 'dxos.halo.credentials.Auth' },
+          issuer: identity.identityKey,
+          subject: identity.identityKey,
+          chain: identity.deviceCredentialChain,
+          signingKey: identity.deviceKey,
+          signer: this._keyring,
+        });
       },
       catch: (error) => error as Error,
     });
