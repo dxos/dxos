@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as AppSettings from '@dxos/app-toolkit/AppSettings';
 import { Tag } from '@dxos/echo';
 import { DataTypes } from '@dxos/schema';
 import {
@@ -26,6 +27,7 @@ import {
 export default [
   ...DataTypes,
   AnchoredTo.AnchoredTo,
+  AppSettings.AppSettings,
   Employer.Employer,
   Event.Event,
   HasConnection.HasConnection,

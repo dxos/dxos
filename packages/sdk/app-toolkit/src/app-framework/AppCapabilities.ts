@@ -29,6 +29,7 @@ import type { Position } from '@dxos/util';
 
 // eslint-disable-next-line @dxos/rules/import-as-namespace
 import type * as Translations$ from '../app/Translations';
+import type * as AppSettings from '../types/AppSettings';
 // eslint-disable-next-line @dxos/rules/import-as-namespace
 import type * as ObservabilityMapping$ from './ObservabilityMapping';
 
@@ -184,6 +185,31 @@ export const isSettings = (value: unknown): value is Settings =>
  * @category Capability
  */
 export const Settings = Capability$.make<Settings>()('org.dxos.app-framework.capability.settings');
+
+/**
+ * Control surface over the device-synced settings store, which projects every {@link Settings}
+ * contribution (plus the plugin set) into the settings space so they follow the identity across
+ * devices, with per-key device overrides.
+ *
+ * Contributed once the settings space is open, so consumers must tolerate its absence.
+ */
+export type SettingsSync = {
+  /** Settings prefixes this device writes locally rather than sharing. */
+  readonly unsynced: Atom.Atom<readonly string[]>;
+  /** Turn sharing of a prefix on or off for this device; rejoining keeps the side named by `adopt`. */
+  setSynced(prefix: string, synced: boolean, options?: { adopt?: AppSettings.Adopt }): void;
+  /** Keys that rejoining the account would change. Read on demand rather than reactively. */
+  conflicts(prefix: string): readonly string[];
+  /** Which settings this device keeps to itself, by prefix. */
+  readonly pinned: Atom.Atom<AppSettings.DeviceSettings>;
+  /** Pin one key to this device, or hand it back — the per-key counterpart of {@link setSynced}. */
+  setKeySynced(prefix: string, key: string, synced: boolean): void;
+};
+
+/**
+ * @category Capability
+ */
+export const SettingsSync = Capability$.makeSingleton<SettingsSync>()('org.dxos.app-framework.capability.settingsSync');
 
 export type Schema = ReadonlyArray<Type.AnyEntity>;
 

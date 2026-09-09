@@ -10,6 +10,7 @@ export * from './useObjectMenuItems';
 export * from './usePluginRegistryAvailable';
 export * from './useProgressMonitor';
 export * from './useSchemaFilter';
+export * from './useSettingsScope';
 export * from './useSettingsSpace';
 export * from './useShowItem';
 export * from './useTypeOptions';

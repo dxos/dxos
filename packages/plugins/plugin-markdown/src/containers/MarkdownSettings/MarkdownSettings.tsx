@@ -5,7 +5,7 @@
 import React from 'react';
 
 import { useSettingsState } from '@dxos/app-framework/ui';
-import { type AppSurface } from '@dxos/app-toolkit/ui';
+import { type AppSurface, SettingsScope } from '@dxos/app-toolkit/ui';
 import { Field } from '@dxos/react-ui';
 import { Form, type FormFieldRendererProps } from '@dxos/react-ui-form';
 
@@ -26,7 +26,7 @@ export const MarkdownSettings = ({ subject }: MarkdownSettingsProps) => {
     >
       <Form.Viewport scroll>
         <Form.Content>
-          <Form.FieldSet label={meta.profile.name}>
+          <Form.FieldSet label={meta.profile.name} actions={<SettingsScope prefix={meta.profile.key} />}>
             <Form.Fields
               fieldMap={{ snippets: SnippetsField }}
               filter={(properties) =>

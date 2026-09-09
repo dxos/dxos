@@ -8,7 +8,7 @@ import React, { useEffect } from 'react';
 
 import { useSettingsState } from '@dxos/app-framework/ui';
 import type * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
-import { useActiveSpace, useHomeVisibility } from '@dxos/app-toolkit/ui';
+import { SettingsScope, useActiveSpace, useHomeVisibility } from '@dxos/app-toolkit/ui';
 import { getSpace } from '@dxos/client/echo';
 import * as Instructions from '@dxos/compute/Instructions';
 import { InvocationTraceContainer } from '@dxos/devtools';
@@ -27,7 +27,13 @@ export type AssistantSettingsSurfaceProps = {
 export const AssistantSettingsSurface = ({ subject }: AssistantSettingsSurfaceProps) => {
   const { settings, updateSettings } = useSettingsState<Assistant.Settings>(subject.atom);
 
-  return <AssistantSettings settings={settings} onSettingsChange={updateSettings} />;
+  return (
+    <AssistantSettings
+      settings={settings}
+      onSettingsChange={updateSettings}
+      scope={<SettingsScope prefix={subject.prefix} />}
+    />
+  );
 };
 
 export type SpaceHomeSuggestionsSurfaceProps = {
