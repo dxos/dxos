@@ -183,7 +183,7 @@ const PushStory = () => {
           <Drawer.Root open={end} onOpenChange={setEnd} side='end' push transition={TRANSITION}>
             {/* The sheet is the pane's size, so a seam drag resizes it and a collapse slides it out. */}
             <Drawer.Content draggable={false} size={inspectorSize}>
-              <Panel.Root classNames='border'>
+              <Panel.Root>
                 <Panel.Toolbar asChild>
                   <Toolbar.Root>
                     <Drawer.Title classNames='grow px-2'>Inspector</Drawer.Title>
@@ -304,15 +304,18 @@ export const TestPush: Story = {
     });
     // Measure at rest: both panels slide in from zero width on mount.
     await settle(dialogs);
-    const before = main.getBoundingClientRect().width;
+    const splitter = canvasElement.querySelector<HTMLElement>('[data-scope="splitter"][data-part="root"]');
+    const before = splitter?.getBoundingClientRect().width ?? 0;
     const navigation = dialogs[0].getBoundingClientRect().width;
 
     await userEvent.click(canvas.getByRole('button', { name: 'Close navigation' }));
-    // A closed pushed panel stays mounted under its closed clip, inert and out of the accessibility tree.
+    // A closed pushed panel stays mounted under its closed clip, inert and out of the accessibility
+    // tree; the width it gave up goes to the splitter (the main pane may be at its own minimum).
     await waitFor(async () => {
       await expect(canvas.queryAllByRole('dialog')).toHaveLength(1);
       await expect(Math.round(clipOf(dialogs[0]).getBoundingClientRect().width)).toBe(0);
-      await expect(Math.round(main.getBoundingClientRect().width)).toBe(Math.round(before + navigation));
+      await expect(Math.round(splitter?.getBoundingClientRect().width ?? 0)).toBe(Math.round(before + navigation));
+      await expect(main.getBoundingClientRect().width).toBeGreaterThan(0);
     });
     await expect(dialogs[0]).toHaveAttribute('inert');
   },
