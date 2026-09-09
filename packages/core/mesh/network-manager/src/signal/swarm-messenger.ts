@@ -3,6 +3,7 @@
 //
 
 import { create, fromBinary, toBinary } from '@bufbuild/protobuf';
+import { AnySchema } from '@bufbuild/protobuf/wkt';
 
 import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
@@ -125,14 +126,17 @@ export class SwarmMessenger implements SignalMessenger {
       : create(SwarmMessageSchema, { ...message, messageId: fromPublicKey(PublicKey.random()) });
 
     log('sending', { from: author, to: recipient, msg: networkMessage });
-    await this._sendMessage(ctx, {
-      author,
-      recipient,
-      payload: {
-        typeUrl: 'dxos.mesh.swarm.SwarmMessage',
-        value: toBinary(SwarmMessageSchema, networkMessage),
-      },
-    });
+    await this._sendMessage(
+      ctx,
+      create(MessageSchema, {
+        author,
+        recipient,
+        payload: create(AnySchema, {
+          typeUrl: 'dxos.mesh.swarm.SwarmMessage',
+          value: toBinary(SwarmMessageSchema, networkMessage),
+        }),
+      }),
+    );
   }
 
   private async _resolveAnswers(message: SwarmMessage): Promise<void> {

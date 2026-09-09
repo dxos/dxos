@@ -6,6 +6,9 @@
 // (proto field 2). The dual-read fallback that still gates removing that field lives on the
 // edge side (which relays peers from not-yet-migrated senders); nothing here needs it.
 
+import { create } from '@bufbuild/protobuf';
+import { AnySchema } from '@bufbuild/protobuf/wkt';
+
 import { Event, scheduleMicroTask } from '@dxos/async';
 import { type Context, Resource, cancelWithContext } from '@dxos/context';
 import { type EdgeConnection, EdgeIdentityChangedError, protocol } from '@dxos/edge-client';
@@ -191,7 +194,7 @@ export class EdgeSignalManager extends Resource implements SignalManager {
         source: author,
         target: recipient != null ? [recipient] : undefined,
         tags,
-        payload: { typeUrl: payload.typeUrl, value: payload.value },
+        payload: create(AnySchema, { typeUrl: payload.typeUrl, value: payload.value }),
       }),
     );
   }
@@ -323,7 +326,7 @@ export class EdgeSignalManager extends Resource implements SignalManager {
       this._deliver({
         author: message.source,
         tags: message.tags ?? [],
-        payload: { typeUrl: payload.typeUrl, value: payload.value },
+        payload: create(AnySchema, { typeUrl: payload.typeUrl, value: payload.value }),
       });
       return;
     }
@@ -334,10 +337,10 @@ export class EdgeSignalManager extends Resource implements SignalManager {
     this._deliver({
       author: message.source,
       recipient: message.target[0],
-      payload: {
+      payload: create(AnySchema, {
         typeUrl: payload.typeUrl,
         value: payload.value,
-      },
+      }),
     });
   }
 

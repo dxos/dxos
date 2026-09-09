@@ -2,6 +2,8 @@
 // Copyright 2021 DXOS.org
 //
 
+import { create } from '@bufbuild/protobuf';
+import { AnySchema } from '@bufbuild/protobuf/wkt';
 import { beforeEach, describe, expect, test } from 'vitest';
 
 import { latch, sleep } from '@dxos/async';
@@ -513,10 +515,10 @@ describe('Protobuf service', () => {
               expect(req.payload.typeUrl).toEqual('example.testing.Example');
               expect(req.payload.value).toEqual(encodeMessage('hello'));
               return {
-                payload: {
+                payload: create(AnySchema, {
                   typeUrl: 'example.testing.Example',
                   value: encodeMessage('world'),
-                },
+                }),
               };
             },
           },
@@ -540,10 +542,10 @@ describe('Protobuf service', () => {
       await Promise.all([server.open(), client.open()]);
 
       const response = await client.rpc.TestAnyService.testCall({
-        payload: {
+        payload: create(AnySchema, {
           typeUrl: 'example.testing.Example',
           value: encodeMessage('hello'),
-        },
+        }),
       });
 
       expect(response.payload.typeUrl).toEqual('example.testing.Example');

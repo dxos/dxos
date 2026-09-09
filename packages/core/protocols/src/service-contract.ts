@@ -2,6 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+import { type Any } from '@bufbuild/protobuf/wkt';
+
 import { type Stream } from '@dxos/async';
 import { type Context } from '@dxos/context';
 
@@ -25,13 +27,10 @@ export type RequestOptions = {
 /**
  * The still-packed request/response envelope a backend moves.
  *
- * Structural rather than `google.protobuf.Any` itself, so a backend can move an envelope without
- * constructing a branded message for every call.
+ * `google.protobuf.Any` itself rather than a structural twin of it, so an envelope is the same type
+ * wherever it travels — a generated message field, a signalling payload, or an RPC frame.
  */
-export type AnyEnvelope = {
-  typeUrl: string;
-  value: Uint8Array;
-};
+export type AnyEnvelope = Any;
 
 /** A message tagged with its own type name, as an `Any` field decodes to. */
 export type TaggedType<TYPES extends {}, Name extends keyof TYPES> = TYPES[Name] & { '@type': Name };

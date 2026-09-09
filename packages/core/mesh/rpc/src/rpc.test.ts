@@ -2,6 +2,8 @@
 // Copyright 2021 DXOS.org
 //
 
+import { create } from '@bufbuild/protobuf';
+import { AnySchema } from '@bufbuild/protobuf/wkt';
 import { describe, expect, test } from 'vitest';
 
 import { Trigger, sleep } from '@dxos/async';
@@ -12,10 +14,11 @@ import { type AnyEnvelope } from '@dxos/protocols/service-contract';
 import { RpcPeer } from './rpc';
 import { createLinkedPorts, encodeMessage } from './testing';
 
-const createPayload = (value = ''): AnyEnvelope => ({
-  typeUrl: 'dxos.test',
-  value: encodeMessage(value),
-});
+const createPayload = (value = ''): AnyEnvelope =>
+  create(AnySchema, {
+    typeUrl: 'dxos.test',
+    value: encodeMessage(value),
+  });
 
 // TODO(dmaretskyi): Rename alice and bob to peer1 and peer2.
 

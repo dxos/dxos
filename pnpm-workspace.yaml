@@ -48,7 +48,7 @@ catalog:
   '@babylonjs/loaders': ^7.54.3
   '@bryanguffey/astro-standard-site': ^1.0.3
   '@bufbuild/buf': 1.65.0
-  '@bufbuild/protobuf': 'catalog:'
+  '@bufbuild/protobuf': 2.11.0
   '@bufbuild/protoc-gen-es': 2.11.0
   '@ch-ui/colors': 1.2.1
   '@ch-ui/icons': ^1.0.1

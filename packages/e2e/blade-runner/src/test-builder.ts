@@ -2,6 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
+import { create } from '@bufbuild/protobuf';
+import { AnySchema } from '@bufbuild/protobuf/wkt';
 import { randomBytes } from 'node:crypto';
 
 import { Context } from '@dxos/context';
@@ -173,10 +175,10 @@ export class TestPeer {
     const message: Message = {
       author: this.peerId,
       recipient: to,
-      payload: {
+      payload: create(AnySchema, {
         typeUrl: 'example.Message',
         value: randomBytes(32),
-      },
+      }),
     };
 
     log.trace(

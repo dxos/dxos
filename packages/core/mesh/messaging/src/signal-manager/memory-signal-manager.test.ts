@@ -2,6 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+import { create } from '@bufbuild/protobuf';
+import { AnySchema } from '@bufbuild/protobuf/wkt';
 import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { sleep } from '@dxos/async';
@@ -14,7 +16,7 @@ import { MemorySignalManager, MemorySignalManagerContext } from './memory-signal
 // Exercises the subscription/routing behavior of the in-memory signal manager: point-to-point routing
 // by recipient, broadcast routing by tag intersection (DX-1125), fan-out, and unsubscribe lifecycle.
 
-const payload = (value: number[]) => ({ typeUrl: 'dxos.test.Message', value: new Uint8Array(value) });
+const payload = (value: number[]) => create(AnySchema, { typeUrl: 'dxos.test.Message', value: new Uint8Array(value) });
 
 const randomPeer = (name: string): PeerInfo => ({
   peerKey: PublicKey.random().toHex(),

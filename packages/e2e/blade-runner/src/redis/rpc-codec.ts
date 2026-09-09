@@ -2,6 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
+import { create } from '@bufbuild/protobuf';
+import { AnySchema } from '@bufbuild/protobuf/wkt';
+
 import { type Any } from '@dxos/codec-protobuf';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
@@ -81,9 +84,10 @@ const decodeValue = (value: unknown): unknown => {
  * the wire stays readable when inspecting the Redis queues by hand.
  */
 export const rpcCodec = {
-  encode: (value: any): Any => ({
-    typeUrl: 'google.protobuf.Any',
-    value: Buffer.from(JSON.stringify(encodeValue(value ?? [undefined]))),
-  }),
+  encode: (value: any): Any =>
+    create(AnySchema, {
+      typeUrl: 'google.protobuf.Any',
+      value: Buffer.from(JSON.stringify(encodeValue(value ?? [undefined]))),
+    }),
   decode: (value: Any): any => decodeValue(JSON.parse(Buffer.from(value.value).toString())),
 };

@@ -2,6 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+import { create } from '@bufbuild/protobuf';
+import { AnySchema } from '@bufbuild/protobuf/wkt';
 import { describe, test } from 'vitest';
 
 import { Context } from '@dxos/context';
@@ -15,7 +17,8 @@ import { EdgeSignalManager } from './edge-signal-manager';
 
 const TRACE_TAG = 'type:status.update';
 
-const payload = (value: number[]) => ({ typeUrl: 'dxos.compute.TraceMessage', value: new Uint8Array(value) });
+const payload = (value: number[]) =>
+  create(AnySchema, { typeUrl: 'dxos.compute.TraceMessage', value: new Uint8Array(value) });
 
 /**
  * A capture sink for a single subscription. Delivered messages are classified by shape: a broadcast

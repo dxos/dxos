@@ -68,10 +68,13 @@ export const subscribeToSignal = ({
                       : new Uint8Array(),
                     // Messaging keeps payloads packed and dispatches on `typeUrl`, so this is a
                     // field map — the payload is never resolved here.
-                    payload: create(AnySchema, {
-                      typeUrl: message.payload.typeUrl,
-                      value: message.payload.value,
-                    }),
+                    payload: create(
+                      AnySchema,
+                      create(AnySchema, {
+                        typeUrl: message.payload.typeUrl,
+                        value: message.payload.value,
+                      }),
+                    ),
                   },
                 },
                 receivedAt: timestampFromDate(new Date()),
