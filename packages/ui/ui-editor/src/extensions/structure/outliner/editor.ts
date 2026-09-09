@@ -7,6 +7,7 @@ import { type EditorView, ViewPlugin } from '@codemirror/view';
 
 import { log } from '@dxos/log';
 
+import { exitItemAnnotation } from './commands';
 import { treeFacet } from './tree';
 
 const LIST_ITEM_REGEX = /^\s*- (\[ \]|\[x\])? /;
@@ -61,9 +62,10 @@ export const editor = () => [
     if (!tr.docChanged) {
       const current = tr.state.selection.main.from;
       if (current != null) {
+        // Prose between or around lists has no item; the caret is free there.
         const currentItem = tree.find(current);
         if (!currentItem) {
-          return [];
+          return tr;
         }
 
         // Check if outside of editable range.
@@ -101,6 +103,12 @@ export const editor = () => [
       return tr;
     }
 
+    // Exiting an empty item deletes its marker on purpose; the marker guard below would read the same
+    // change shape as Backspace and join the line away.
+    if (tr.annotation(exitItemAnnotation)) {
+      return tr;
+    }
+
     //
     // Validate changes that don't break the tree.
     //
@@ -117,13 +125,6 @@ export const editor = () => [
         // Check if entire line was deleted (which is ok).
         const deleteLine = fromA === startItem?.lineRange.from && toA === startItem?.lineRange.to + 1;
         if (deleteLine) {
-          return;
-        }
-
-        // Check valid item.
-        const currentItem = tree.find(tr.state.selection.main.from);
-        if (!currentItem?.contentRange) {
-          cancel = true;
           return;
         }
 
@@ -156,6 +157,14 @@ export const editor = () => [
               }
             }
           }
+          return;
+        }
+
+        // Check the caret still lands in an item; a marker deletion (above) is handled before this since
+        // it leaves the caret on a line that belongs to no item until the join removes it.
+        const currentItem = tree.find(tr.state.selection.main.from);
+        if (!currentItem?.contentRange) {
+          cancel = true;
           return;
         }
 

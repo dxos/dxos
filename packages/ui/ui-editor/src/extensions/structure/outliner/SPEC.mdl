@@ -126,6 +126,17 @@ feat F-2: Editing constraints
   req F-2.3:
     when: task-marker atomicity is required (backspace removing a whole marker, continuation indent)
     then: it is enforced by the markdown keymap that shapes the change, not by raw edits
+
+  req F-2.4:
+    when: the document holds prose or headings before, between, or after lists
+    then: each top-level list is its own island in the tree, the prose belongs to no item, the caret
+          may rest in it, and it is indented to the item content
+
+  req F-2.5:
+    when: Enter is pressed on an empty, childless item
+    then: the marker is removed and a blank line separates the list from the caret's line, so what is
+          typed next is a paragraph rather than the item's continuation; mid-list this splits the list.
+          Backspace on the same item deletes it instead
 ```
 
 ```mdl
