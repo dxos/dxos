@@ -78,7 +78,12 @@ const Order2: typeof Order$ = Order1;
 export { Order2 as Order };
 
 // Local filter-match helpers used by FilterClass.toPredicate.
-// Written without a runtime @dxos/echo import so the QuickJS sandbox bundle stays clean.
+//
+// These deliberately do NOT reuse `makeFilterMatcher` from `@dxos/echo/internal` — importing it
+// would pull the `@dxos/echo` runtime graph (and with it `effect/Schema`) into a bundle QuickJS
+// cannot parse. The matcher below is also narrower on purpose: no encoded-reference normalization,
+// no `contains`/`tag`/meta filters, and typename compared by string equality. Anything richer
+// belongs on the executor side, not in the sandbox.
 const _filterMatchValueLocal = (filter: QueryAST.Filter, value: unknown): boolean => {
   switch (filter.type) {
     case 'compare': {
