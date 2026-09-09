@@ -296,7 +296,7 @@ describe('buffering backend', () => {
 });
 
 //
-// Span attributes
+// Span attributes.
 //
 
 describe('span attributes', () => {
