@@ -6,7 +6,7 @@ import { type Client } from '@dxos/client';
 import { type Credential } from '@dxos/client/halo';
 import { invariant } from '@dxos/invariant';
 import { InvalidRecoveryTokenError } from '@dxos/protocols';
-import { buf, toPublicKey } from '@dxos/protocols/buf';
+import { toPublicKey } from '@dxos/protocols/buf';
 
 /**
  * Whether a failed recovery was EDGE refusing the token itself — walks the wrapper chain because
