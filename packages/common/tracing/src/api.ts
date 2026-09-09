@@ -87,7 +87,12 @@ const span =
       try {
         const result = await method.apply(this, callArgs);
         if (resultAttributes) {
-          remoteSpan?.setAttributes?.(resolveAttributes(resultAttributes(result, ...args), args));
+          // Swallowed deliberately: the method already succeeded, so a fault in the caller's
+          // extractor must cost the span its attributes rather than turn completed work into a
+          // failure -- without this, the outer catch would mark the span errored and rethrow.
+          try {
+            remoteSpan?.setAttributes?.(resolveAttributes(resultAttributes(result, ...args), args));
+          } catch {}
         }
         return result;
       } catch (err) {

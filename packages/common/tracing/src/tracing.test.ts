@@ -376,4 +376,25 @@ describe('span attributes', () => {
     expect(span.lateAttributes).toBeUndefined();
     expect(span.ended).toBe(true);
   });
+
+  test('a throwing resultAttributes does not fail the method or error the span', async ({ expect }) => {
+    const { backend, spans } = createMockBackend();
+    TRACE_PROCESSOR.tracingBackend = backend;
+
+    class Svc {
+      @trace.span({
+        resultAttributes: () => {
+          throw new Error('extractor blew up');
+        },
+      })
+      async work(ctx: Context) {
+        return 'done';
+      }
+    }
+
+    await expect(new Svc().work(new Context())).resolves.toBe('done');
+    const span = spans.find((record) => record.options.name === 'Svc.work')!;
+    expect(span.error).toBeUndefined();
+    expect(span.ended).toBe(true);
+  });
 });
