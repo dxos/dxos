@@ -45,11 +45,12 @@ Conventions shared by every test here:
 test QA-1: Spaces and documents
   desc: The smallest journey through the app — a space, three documents, one deletion, and what survives.
   actors: both
-  status: unverified        # 2026-09-08, rewritten from testing/scripts/basics.md chapter 1 (which passed 2026-09-07)
+  status: failing           # 2026-09-09, smoke run
   given:
     - defaultSpace: the space flagged `default` in the snapshot, SPACE_READY
     - no space whose name starts with "QA:" exists — ABORT rather than deleting one this test did not create
     - `$snapshot.errors` is empty
+    - `dxos` is defined on the port — it is mounted at the end of `client.initialize()`, after the page reports mounted
   steps:
     - name: Create a space
       do: In the navtree, open the space list's +, name the space "QA: Basics $runId" and create it.
@@ -89,8 +90,11 @@ test QA-1: Spaces and documents
       assert: |
         const rows = await composer.invoke('org.dxos.operation.space.queryObjects',
           { typename: 'org.dxos.type.document' }, { spaceId: $space.id });
-        const labels = (rows.objects ?? rows).map((o) => o.label ?? o.name).sort();
+        const labels = rows.results.map((o) => o.label).sort();
         return labels.join('|') === 'QA: Doc 1|QA: Doc 2|QA: Doc 3';
+      note: |
+        `queryObjects` returns `{ results: [{ dxn, typename, label }] }` — the rows are under `results`,
+        the name under `label`, and `dxn` is the same `echo://` URI `markdown.create` returned.
     - name: Open Doc 2
       id: open
       do: Click "QA: Doc 2" in the navtree.
@@ -111,7 +115,8 @@ test QA-1: Spaces and documents
         return !!toast && toast.actions.includes('Undo') && !$snapshot.layout.active.includes(path) &&
           $snapshot.errors.length === 0;
       note: |
-        The result's `wasActive` names the plank that was open. This step is where a toast rendered
+        The result is `{ objects, parentCollection, indices, wasActive }`; `wasActive` holds the navigation
+        path of the plank that was open. This step is where a toast rendered
         outside a provider once threw `Tooltip.Trigger must be used within Tooltip` — the `errors`
         check is the point of the step, not a formality.
     - name: The rest survive
@@ -120,24 +125,35 @@ test QA-1: Spaces and documents
       space: $space.id
       expect: exactly "QA: Doc 1" and "QA: Doc 3" remain
       assert: |
-        const labels = ($result.objects ?? $result).map((o) => o.label ?? o.name).sort();
+        const labels = $result.results.map((o) => o.label).sort();
         return labels.join('|') === 'QA: Doc 1|QA: Doc 3';
       note: An agent cannot reload without losing the port, so it judges from the database.
   after:
     - name: Remove the remaining documents
       do: Delete "QA: Doc 1" and "QA: Doc 3" from their ⋮ menus.
       invoke: org.dxos.operation.space.removeObjects { objects: [Obj($doc1.id), Obj($doc3.id)] }
-      expect: the space's collection is empty
+      expect: the space's collection is empty and an "Objects deleted" toast with Undo appears
+      assert: |
+        const rows = await composer.invoke('org.dxos.operation.space.queryObjects',
+          { typename: 'org.dxos.type.document' }, { spaceId: $space.id });
+        return rows.results.length === 0 && $snapshot.toasts.some((t) => t.title === 'Objects deleted');
     - name: Delete the space
       do: Open the space's settings and delete the space.
       invoke: org.dxos.operation.space.delete { space: Space($space.id) }
       expect: the space leaves the space list
+      assert: return !$snapshot.spaces.some((s) => s.id === $space.id)
+      note: |
+        Judge by identity: the snapshot hides the name of a space that is not SPACE_READY, so a name
+        check passes against a space that is merely closed. Where EDGE signaling is unreachable (the
+        cloud sandbox without proxy flags), `space.delete` times out after 10 s leaving the swarm and the
+        space stays listed as SPACE_CLOSED — tombstoned in the metadata store, so a retry is a no-op and
+        only a reload drops it. Report it against this step; do not retry more than once.
     - name: Return to the default space
       do: Pick the default space in the space list.
       invoke: org.dxos.operation.appToolkit.switchWorkspace { subject: "root/$given.defaultSpace.id" }
       expect: no "QA:" space remains, the workspace is the default space, and no error is logged
       assert: |
-        return !$snapshot.spaces.some((s) => s.name?.startsWith('QA:')) &&
+        return !$snapshot.spaces.some((s) => s.id === $space.id || s.name?.startsWith('QA:')) &&
           $snapshot.layout.workspace === `root/${$given.defaultSpace.id}` && $snapshot.errors.length === 0;
 ```
 
