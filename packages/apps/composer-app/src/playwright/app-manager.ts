@@ -40,6 +40,9 @@ const SYNC_ROUND_TIMEOUT = 60_000;
 /** Two rounds plus slack, so one disrupted round does not exhaust the wait by itself. */
 const UPLOAD_SETTLE_TIMEOUT = SYNC_ROUND_TIMEOUT * 2 + 10_000;
 
+/** One try at revealing a settings page, short enough that the enclosing `toPass` gets several. */
+const EXPAND_ATTEMPT_TIMEOUT = 5_000;
+
 /**
  * Budget for `joinNewIdentity()`: spans a storage reset, page reload and app boot, so it is sized well
  * above the 30s `actionTimeout` a single interaction gets.
@@ -192,12 +195,13 @@ export class AppManager {
   }
 
   async #openSpaceSettingsPage(testId: string, timeout: number): Promise<void> {
-    await this.expandSection('spacePlugin.settings', timeout);
     const heading = this.currentWorkspace.getByTestId(testId).first().getByTestId('treeItem.heading').first();
-    await heading.waitFor({ state: 'visible', timeout }).catch(async () => {
-      await this.expandSection('spacePlugin.settings', timeout);
-      await heading.waitFor({ state: 'visible', timeout });
-    });
+    // Expanding is retried, not done once: a navtree re-render under the open section collapses it
+    // again, and only the next expand reveals the page.
+    await expect(async () => {
+      await this.expandSection('spacePlugin.settings', EXPAND_ATTEMPT_TIMEOUT);
+      await heading.waitFor({ state: 'visible', timeout: EXPAND_ATTEMPT_TIMEOUT });
+    }).toPass({ timeout });
     await heading.click({ timeout });
   }
 
@@ -314,19 +318,11 @@ export class AppManager {
   }
 
   /**
-   * Best-effort wait for this peer to have nothing left to push, used before inviting a device to a
-   * just-created space: `createSpace` returns once the space is locally ready, not once it has
-   * reached EDGE.
+   * Waits for this peer to have nothing left to push, before inviting a device to a just-created
+   * space — `createSpace` returns once the space is locally ready, not once it has reached EDGE.
    *
-   * Best-effort, and deliberately so. The attribute is a client-wide summary that reads settled at
-   * rest, so a space whose writes have not yet reached the sync state passes immediately — this
-   * cannot tell "already uploaded" from "not started yet". Its worst case is returning early, which
-   * leaves the caller exactly where it was without this wait.
-   *
-   * Requiring an unsettled reading first would be sound but not safe: an upload that settles before
-   * the first poll would never produce one, turning a no-op into a full-timeout failure. Making it
-   * sound needs a per-space upload signal, which nothing exposes today — `useSpaceSyncState` reaches
-   * only `missingOnLocal`, via a glyph.
+   * Best-effort: the attribute is a client-wide summary that reads settled at rest, so it cannot
+   * distinguish "already uploaded" from "not started yet".
    */
   async waitForUploadsSettled(timeout = UPLOAD_SETTLE_TIMEOUT): Promise<void> {
     await expect(this.page.getByTestId('spacePlugin.syncStatus')).toHaveAttribute('data-upload-settled', 'true', {

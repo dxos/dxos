@@ -59,15 +59,13 @@ export class ScopedShellManager {
     const peer = scope || this.page;
     // TODO(wittjosiah): Update ids.
     const input = peer.getByTestId(`${type === 'device' ? 'halo' : 'space'}-auth-code-input`);
-    // Matched on `:visible`, not `.or(...).first()`: every step stays mounted (`Viewport.View` marks
-    // inactive ones `invisible`), so `.first()` would resolve by DOM order and wait on that one
-    // element forever rather than on whichever step the shell actually reaches.
+    // Every step stays mounted (`Viewport.View` marks inactive ones `invisible`), so the match has
+    // to be on `:visible` — DOM order resolves to a step the shell may never reach.
     const rescuerView = `#${type === 'device' ? 'halo' : 'space'}-invitation-rescuer`;
     const settled = peer.locator(
       `[data-testid='${type === 'device' ? 'halo' : 'space'}-auth-code-input']:visible, ` +
-        // All three of the rescuer's renderings, not just the failed one: it also shows a blank-reset
-        // (no invitation state) and a cancel (connecting), both of which are dead ends the shell can
-        // sit in, and neither carries `invitation-rescuer-reset`.
+        // All three of the rescuer's renderings: blank-reset (no invitation state) and cancel
+        // (connecting) are dead ends too, and neither carries `invitation-rescuer-reset`.
         `${rescuerView} [data-testid='invitation-rescuer-reset']:visible, ` +
         `${rescuerView} [data-testid='invitation-rescuer-blank-reset']:visible, ` +
         `${rescuerView} [data-testid='invitation-rescuer-cancel']:visible`,
