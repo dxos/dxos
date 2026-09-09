@@ -8,8 +8,10 @@ import * as Effect from 'effect/Effect';
 
 import { OPFS_SQLITE_DB_FILENAME, isValidSqliteDatabase } from '@dxos/client-services';
 import { PublicKey } from '@dxos/keys';
+import { toPublicKey } from '@dxos/protocols/buf';
 import { EchoMetadataSchema } from '@dxos/protocols/buf/dxos/echo/metadata_pb';
 import type { EchoMetadata } from '@dxos/protocols/buf/dxos/echo/metadata_pb';
+import { type PublicKey as BufPublicKey } from '@dxos/protocols/buf/dxos/keys_pb';
 import * as OpfsPool from '@dxos/sql-sqlite/OpfsPool';
 import * as SqliteClient from '@dxos/sql-sqlite/SqliteClient';
 
@@ -76,7 +78,7 @@ const decodeMainMetadata = (bytes: Uint8Array | undefined): EchoMetadata | undef
   return fromBinary(EchoMetadataSchema, payload);
 };
 
-const formatPublicKey = (key: PublicKey | undefined): string | undefined => key?.toHex();
+const formatPublicKey = (key: BufPublicKey | undefined): string | undefined => toPublicKey(key)?.toHex();
 
 const truncatePublicKeyHex = (hex: string): string => {
   try {
