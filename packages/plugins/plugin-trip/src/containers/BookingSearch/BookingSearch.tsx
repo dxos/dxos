@@ -222,7 +222,7 @@ const BookingSearchContainer = ({ segment }: BookingSearchProps) => {
               </Select.Root>
             )}
             <Form.Layout template={SEARCH_LAYOUT} />
-            <Form.Error>{error}</Form.Error>
+            <Form.ErrorText>{error}</Form.ErrorText>
             <Form.Submit
               icon='ph--magnifying-glass--regular'
               label={pending ? t('booking.searching.label') : t('booking.search.label')}

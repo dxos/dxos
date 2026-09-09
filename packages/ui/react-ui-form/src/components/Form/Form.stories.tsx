@@ -65,8 +65,9 @@ const DefaultStory = <T extends AnyProperties = AnyProperties>({
         >
           <Form.Viewport scroll>
             <Form.Content>
-              <Form.Section title='Section' description='This is a [section description](https://dxos.org).' />
-              <Form.FieldSet />
+              <Form.FieldSet label='Section' description='This is a [section description](https://dxos.org).'>
+                <Form.Fields />
+              </Form.FieldSet>
               <Form.Actions />
             </Form.Content>
           </Form.Viewport>
@@ -461,7 +462,7 @@ const ReactiveBufferedStory = () => {
           <Form.Root schema={ReactiveSchema} values={source} onValuesChanged={handleValuesChanged}>
             <Form.Viewport>
               <Form.Content>
-                <Form.FieldSet />
+                <Form.Fields />
               </Form.Content>
             </Form.Viewport>
           </Form.Root>

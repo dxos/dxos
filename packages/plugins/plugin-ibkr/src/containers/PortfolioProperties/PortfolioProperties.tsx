@@ -52,12 +52,12 @@ export const PortfolioProperties = ({ subject }: PortfolioPropertiesProps) => {
   }, [db, subject, syncTrigger, operations, setSyncEnabled]);
 
   return (
-    <Form.Section>
+    <Form.FieldSet>
       <Field.Root>
         <Field.Label>{t('daily-sync.label')}</Field.Label>
         <Field.Switch checked={syncEnabled ?? false} disabled={pending} onCheckedChange={handleToggleSync} />
       </Field.Root>
-    </Form.Section>
+    </Form.FieldSet>
   );
 };
 

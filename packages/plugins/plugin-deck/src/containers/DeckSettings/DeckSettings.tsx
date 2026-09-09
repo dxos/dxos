@@ -29,16 +29,16 @@ export const DeckSettings = ({ subject }: DeckSettingsProps) => {
     >
       <Form.Viewport scroll>
         <Form.Content>
-          <Form.Section
-            title={meta.profile.name ?? meta.profile.key}
-            actions={<SettingsScope prefix={subject.prefix} />}
+          <Form.FieldSet
+            label={meta.profile.name ?? meta.profile.key}
+            actions={<SettingsScope prefix={meta.profile.key} />}
           >
-            <Form.FieldSet
+            <Form.Fields
               filter={(properties) =>
                 isSocket ? properties.filter((property) => property.name !== 'enableNativeRedirect') : properties
               }
             />
-          </Form.Section>
+          </Form.FieldSet>
         </Form.Content>
       </Form.Viewport>
     </Form.Root>

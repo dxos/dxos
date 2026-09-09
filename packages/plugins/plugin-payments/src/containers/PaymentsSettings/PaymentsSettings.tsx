@@ -95,11 +95,11 @@ export const PaymentsSettings = ({ subject }: PaymentsSettingsProps) => {
     >
       <Form.Viewport scroll>
         <Form.Content>
-          <Form.Section
-            title={meta.profile.name ?? meta.profile.key}
-            actions={<SettingsScope prefix={subject.prefix} />}
+          <Form.FieldSet
+            label={meta.profile.name ?? meta.profile.key}
+            actions={<SettingsScope prefix={meta.profile.key} />}
           >
-            <Form.FieldSet />
+            <Form.Fields />
             <Flex column gap='sm' classNames='my-2'>
               <Button disabled={pending || !paymentsUrl} onClick={handleBuyPremium}>
                 {pending ? t('pending.label') : t('buy-premium.label')}
@@ -119,7 +119,7 @@ export const PaymentsSettings = ({ subject }: PaymentsSettingsProps) => {
                 </Banner.Root>
               )}
             </Flex>
-          </Form.Section>
+          </Form.FieldSet>
         </Form.Content>
       </Form.Viewport>
     </Form.Root>

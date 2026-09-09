@@ -55,15 +55,15 @@ export const CrxSettings = ({ subject, readonly }: CrxSettingsProps) => {
     >
       <Form.Viewport scroll>
         <Form.Content>
-          <Form.Section
-            title={meta.profile.name ?? meta.profile.key}
+          <Form.FieldSet
+            label={meta.profile.name ?? meta.profile.key}
             description={t('settings.description')}
             actions={readonly ? undefined : <SettingsScope prefix={subject.prefix} />}
           >
-            <Form.FieldSet />
-          </Form.Section>
+            <Form.Fields />
+          </Form.FieldSet>
 
-          <Form.Section title={t('test.title')}>
+          <Form.FieldSet label={t('test.title')}>
             <Flex gap='sm'>
               <IconButton
                 disabled={test.kind === 'pending'}
@@ -90,7 +90,7 @@ export const CrxSettings = ({ subject, readonly }: CrxSettingsProps) => {
                 </span>
               </Flex>
             </Flex>
-          </Form.Section>
+          </Form.FieldSet>
         </Form.Content>
       </Form.Viewport>
     </Form.Root>

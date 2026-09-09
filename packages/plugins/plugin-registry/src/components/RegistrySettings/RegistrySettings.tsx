@@ -21,7 +21,7 @@ export type RegistrySettingsProps = AppSurface.SettingsProps<
     /** Whether this device uses its own plugin set rather than the account's; `undefined` hides the section. */
     pluginScopeLocal?: boolean;
     onPluginScopeLocalChange?: (local: boolean) => void;
-    /** Section-level controls for the panel heading. */
+    /** Controls for the panel's heading row. */
     scope?: ReactNode;
   }
 >;
@@ -103,7 +103,7 @@ export const RegistrySettings = ({
       <Form.Viewport scroll>
         <Form.Content>
           {pluginScopeLocal !== undefined && (
-            <Form.Section title={t('plugin-registry.label')} actions={scope}>
+            <Form.FieldSet label={t('plugin-registry.label')} actions={scope}>
               <Form.Field label={t('plugin-scope.label')} description={t('plugin-scope.description')}>
                 <Field.Root>
                   <Field.Switch
@@ -114,27 +114,29 @@ export const RegistrySettings = ({
                   />
                 </Field.Root>
               </Form.Field>
-            </Form.Section>
+            </Form.FieldSet>
           )}
-          <Form.Section title={t('dev-plugin.section.title')}>
+          <Form.FieldSet label={t('dev-plugin.section.title')}>
             <Banner.Root valence='neutral'>
               <Banner.Content>
                 <Banner.Body>{t('dev-plugin.description')}</Banner.Body>
               </Banner.Content>
             </Banner.Root>
             <Form.Field label={t('dev-plugin.url.label')} description={t('dev-plugin.url.description')}>
-              <Field.Root>
-                <Field.Input
-                  data-testid='registrySettings.devPluginUrl'
-                  disabled={!onSettingsChange || enabled || busy}
-                  value={url}
-                  onChange={(event) =>
-                    onSettingsChange?.((current) => ({ ...current, devPluginUrl: event.target.value }))
-                  }
-                />
-              </Field.Root>
+              <Field.Input
+                data-testid='registrySettings.devPluginUrl'
+                disabled={!onSettingsChange || enabled || busy}
+                value={url}
+                onChange={(event) =>
+                  onSettingsChange?.((current) => ({ ...current, devPluginUrl: event.target.value }))
+                }
+              />
             </Form.Field>
-            <Form.Field label={t('dev-plugin.toggle.label')} description={t('dev-plugin.toggle.description')}>
+            <Form.Field
+              standalone
+              label={t('dev-plugin.toggle.label')}
+              description={t('dev-plugin.toggle.description')}
+            >
               <Button
                 variant={enabled ? undefined : 'primary'}
                 disabled={!onSettingsChange || busy || (!enabled && !trimmedUrl)}
@@ -150,7 +152,7 @@ export const RegistrySettings = ({
                 </Banner.Content>
               </Banner.Root>
             )}
-          </Form.Section>
+          </Form.FieldSet>
         </Form.Content>
       </Form.Viewport>
       <AlertDialog.Root open={rejoining} onOpenChange={setRejoining}>

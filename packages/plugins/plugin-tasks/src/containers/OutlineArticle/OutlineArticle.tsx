@@ -210,7 +210,7 @@ const TaskForm = ({ classNames, task }: ThemedClassName<{ task: Task.Task }>) =>
     <Form.Root schema={schema} values={task} autoSave onSave={handleSave}>
       <Form.Viewport classNames={classNames} scroll>
         <Form.Content>
-          <Form.FieldSet />
+          <Form.Fields />
         </Form.Content>
       </Form.Viewport>
     </Form.Root>

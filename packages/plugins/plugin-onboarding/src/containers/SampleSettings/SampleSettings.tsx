@@ -38,8 +38,9 @@ export const SampleSettings = () => {
     <Form.Root schema={Schema.Struct({})} values={{}} variant='settings'>
       <Form.Viewport scroll>
         <Form.Content>
-          <Form.Section title={t('settings.section.title')} actions={<SettingsScope prefix={meta.profile.key} />}>
+          <Form.FieldSet label={t('settings.section.title')} actions={<SettingsScope prefix={meta.profile.key} />}>
             <Form.Field
+              standalone
               label={t('settings.recreate-sample.label')}
               description={t('settings.recreate-sample.description')}
             >
@@ -51,7 +52,7 @@ export const SampleSettings = () => {
                 onClick={handleRecreate}
               />
             </Form.Field>
-          </Form.Section>
+          </Form.FieldSet>
         </Form.Content>
       </Form.Viewport>
     </Form.Root>

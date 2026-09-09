@@ -70,8 +70,9 @@ export const InvitationsContainer = () => {
       <Form.Root variant='settings'>
         <Form.Viewport scroll>
           <Form.Content>
-            <Form.Section title={t('invitations-section.title')} description={t('invitations-section.description')}>
+            <Form.FieldSet label={t('invitations-section.title')} description={t('invitations-section.description')}>
               <Form.Field
+                standalone
                 label={t('generate-invitation.label')}
                 description={t('generate-invitation.description', { count: remaining })}
               >
@@ -83,10 +84,10 @@ export const InvitationsContainer = () => {
                   disabled={pending || remaining <= 0}
                 />
               </Form.Field>
-            </Form.Section>
+            </Form.FieldSet>
 
             {available.length > 0 ? (
-              <Form.Section title={t('available-invitations.title')}>
+              <Form.FieldSet label={t('available-invitations.title')}>
                 <Listbox.Root>
                   <Listbox.Content classNames='gap-1'>
                     {available.map((row) => (
@@ -94,11 +95,11 @@ export const InvitationsContainer = () => {
                     ))}
                   </Listbox.Content>
                 </Listbox.Root>
-              </Form.Section>
+              </Form.FieldSet>
             ) : null}
 
             {redeemed.length > 0 ? (
-              <Form.Section title={t('redeemed-invitations.title')}>
+              <Form.FieldSet label={t('redeemed-invitations.title')}>
                 <Listbox.Root>
                   <Listbox.Content classNames='gap-1'>
                     {redeemed.map((row) => (
@@ -106,7 +107,7 @@ export const InvitationsContainer = () => {
                     ))}
                   </Listbox.Content>
                 </Listbox.Root>
-              </Form.Section>
+              </Form.FieldSet>
             ) : null}
           </Form.Content>
         </Form.Viewport>

@@ -226,7 +226,7 @@ export const ViewEditor = forwardRef<ProjectionModel | null, ViewEditorProps>(
                   </Banner.Content>
                 </Banner.Root>
               )}
-              <Form.FieldSet />
+              <Form.Fields />
               {type && (
                 <FieldList
                   type={type}
