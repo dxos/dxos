@@ -34,8 +34,8 @@ const formStyles = tv({
     // Height comes from the label cell (`Field.Label` is a control-height row); this only lays the
     // columns out and centres the trailing cells against it.
     fieldLabel: 'grid grid-cols-[1fr_auto_auto_auto] items-center',
-    fieldLabelText: '',
-    fieldDescription: 'text-description',
+    fieldLabelText: 'text-sm text-description',
+    fieldDescription: 'text-sm text-green-500',
     fieldControl: '',
     fieldValidation: '',
     // Action bar (cancel/save), equal-width columns flowing horizontally.

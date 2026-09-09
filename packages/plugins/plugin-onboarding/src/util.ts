@@ -6,9 +6,7 @@ import { type Client } from '@dxos/client';
 import { type Credential } from '@dxos/client/halo';
 import { invariant } from '@dxos/invariant';
 import { InvalidRecoveryTokenError } from '@dxos/protocols';
-import { buf } from '@dxos/protocols/buf';
-import { decodeCompat } from '@dxos/protocols/buf-shape-compat';
-import { CredentialSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
+import { toPublicKey } from '@dxos/protocols/buf';
 
 /**
  * Whether a failed recovery was EDGE refusing the token itself — walks the wrapper chain because
@@ -56,7 +54,7 @@ export const removeQueryParamByValue = (valueToRemove: string) => {
 //   Since it is synchronous, it only returns credentials that are already loaded in the client.
 //   This function ensures that all credentials on disk are loaded into the client before returning.
 export const queryAllCredentials = (client: Client) => {
-  const identitySpace = client.halo.identity.get()?.spaceKey;
+  const identitySpace = toPublicKey(client.halo.identity.get()?.spaceKey);
   if (!identitySpace) {
     return Promise.resolve([] as Credential[]);
   }
@@ -72,8 +70,7 @@ export const queryAllCredentials = (client: Client) => {
     const credentials: Credential[] = [];
     stream.subscribe(
       (credential) => {
-        // Callers index `subject.assertion` by '@type', which is the protobuf.js Any substitution.
-        credentials.push(decodeCompat(CredentialSchema, buf.toBinary(CredentialSchema, credential)));
+        credentials.push(credential);
       },
       (err) => {
         if (err) {

@@ -21,8 +21,8 @@ import { log } from '@dxos/log';
 import { FeedProtocol } from '@dxos/protocols';
 import { EdgeService } from '@dxos/protocols';
 import { createBuf } from '@dxos/protocols/buf';
+import { EdgeStatus_ConnectionState } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { type Message as RouterMessage } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
-import { EdgeStatus } from '@dxos/protocols/proto/dxos/client/services';
 import type { SqlTransaction } from '@dxos/sql-sqlite';
 import { bufferToArray } from '@dxos/util';
 
@@ -208,7 +208,7 @@ export class FeedSyncer extends Resource {
     // Only kick the initial round when the socket is already up. While it is not, each send parks on
     // the ready trigger; the `onReconnected` handler above schedules exactly this same work the
     // moment it connects, so a host that gates its dial until after boot loses nothing here.
-    if (this.#backgroundSync && this.#edgeClient.status.state === EdgeStatus.ConnectionState.CONNECTED) {
+    if (this.#backgroundSync && this.#edgeClient.status.state === EdgeStatus_ConnectionState.CONNECTED) {
       this.#resetSpacesToPoll();
       this.#pollTask.schedule();
       // Flush blocks written before the syncer opened: `onNewBlocks` only fires on append,

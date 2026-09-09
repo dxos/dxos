@@ -2,14 +2,22 @@
 // Copyright 2022 DXOS.org
 //
 
+import { create } from '@bufbuild/protobuf';
 import { describe, expect, test } from 'vitest';
 
 import { randomBytes } from '@dxos/crypto';
 import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
-import { type Chain, SpaceMember } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { fromPublicKey } from '@dxos/protocols/buf';
+import {
+  AuthorizedDeviceSchema,
+  ChainSchema,
+  SpaceMember_Role,
+  SpaceMemberSchema,
+} from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
 import { createCredential } from './credential-factory';
+import { chainCredentialOf, chainOf, proofOf } from './credential-keys';
 import { verifyCredential } from './verifier';
 
 describe('verifier', () => {
@@ -21,12 +29,11 @@ describe('verifier', () => {
       const subject = PublicKey.random();
 
       const credential = await createCredential({
-        assertion: {
-          '@type': 'dxos.halo.credentials.SpaceMember',
-          spaceKey,
-          'role': SpaceMember.Role.ADMIN,
-          'genesisFeedKey': PublicKey.random(),
-        },
+        assertion: create(SpaceMemberSchema, {
+          spaceKey: fromPublicKey(spaceKey),
+          role: SpaceMember_Role.ADMIN,
+          genesisFeedKey: fromPublicKey(PublicKey.random()),
+        }),
         issuer,
         signer: keyring,
         subject,
@@ -42,19 +49,18 @@ describe('verifier', () => {
       const subject = PublicKey.random();
 
       const credential = await createCredential({
-        assertion: {
-          '@type': 'dxos.halo.credentials.SpaceMember',
-          spaceKey,
-          'role': SpaceMember.Role.ADMIN,
-          'genesisFeedKey': PublicKey.random(),
-        },
+        assertion: create(SpaceMemberSchema, {
+          spaceKey: fromPublicKey(spaceKey),
+          role: SpaceMember_Role.ADMIN,
+          genesisFeedKey: fromPublicKey(PublicKey.random()),
+        }),
         issuer,
         signer: keyring,
         subject,
       });
 
       // Tamper with the signature.
-      credential.proof!.value[0]++;
+      proofOf(credential).value[0]++;
 
       expect(await verifyCredential(credential)).toMatchObject({
         kind: 'fail',
@@ -68,19 +74,18 @@ describe('verifier', () => {
       const subject = PublicKey.random();
 
       const credential = await createCredential({
-        assertion: {
-          '@type': 'dxos.halo.credentials.SpaceMember',
-          spaceKey,
-          'role': SpaceMember.Role.ADMIN,
-          'genesisFeedKey': PublicKey.random(),
-        },
+        assertion: create(SpaceMemberSchema, {
+          spaceKey: fromPublicKey(spaceKey),
+          role: SpaceMember_Role.ADMIN,
+          genesisFeedKey: fromPublicKey(PublicKey.random()),
+        }),
         issuer,
         signer: keyring,
         subject,
       });
 
       // Tamper with the credential.
-      credential.issuer = spaceKey;
+      credential.issuer = fromPublicKey(spaceKey);
 
       expect(await verifyCredential(credential)).toMatchObject({
         kind: 'fail',
@@ -94,12 +99,11 @@ describe('verifier', () => {
       const subject = PublicKey.random();
 
       const credential = await createCredential({
-        assertion: {
-          '@type': 'dxos.halo.credentials.SpaceMember',
-          spaceKey,
-          'role': SpaceMember.Role.ADMIN,
-          'genesisFeedKey': PublicKey.random(),
-        },
+        assertion: create(SpaceMemberSchema, {
+          spaceKey: fromPublicKey(spaceKey),
+          role: SpaceMember_Role.ADMIN,
+          genesisFeedKey: fromPublicKey(PublicKey.random()),
+        }),
         issuer,
         signer: keyring,
         subject,
@@ -107,7 +111,7 @@ describe('verifier', () => {
       });
 
       // Remove the nonce.
-      credential.proof!.nonce = undefined;
+      proofOf(credential).nonce = undefined;
 
       expect(await verifyCredential(credential)).toMatchObject({
         kind: 'fail',
@@ -121,19 +125,18 @@ describe('verifier', () => {
       const subject = PublicKey.random();
 
       const credential = await createCredential({
-        assertion: {
-          '@type': 'dxos.halo.credentials.SpaceMember',
-          spaceKey,
-          'role': SpaceMember.Role.ADMIN,
-          'genesisFeedKey': PublicKey.random(),
-        },
+        assertion: create(SpaceMemberSchema, {
+          spaceKey: fromPublicKey(spaceKey),
+          role: SpaceMember_Role.ADMIN,
+          genesisFeedKey: fromPublicKey(PublicKey.random()),
+        }),
         issuer,
         signer: keyring,
         subject,
       });
 
       // Tamper with the credential.
-      credential.proof!.nonce = PublicKey.random().asUint8Array();
+      proofOf(credential).nonce = PublicKey.random().asUint8Array();
 
       expect(await verifyCredential(credential)).toMatchObject({
         kind: 'fail',
@@ -146,21 +149,20 @@ describe('verifier', () => {
     const issuer = await keyring.createKey();
     const credential = await createCredential({
       parentCredentialIds: [PublicKey.random()],
-      assertion: {
-        '@type': 'dxos.halo.credentials.SpaceMember',
-        'spaceKey': PublicKey.random(),
-        'role': SpaceMember.Role.ADMIN,
-        'genesisFeedKey': PublicKey.random(),
-      },
+      assertion: create(SpaceMemberSchema, {
+        spaceKey: fromPublicKey(PublicKey.random()),
+        role: SpaceMember_Role.ADMIN,
+        genesisFeedKey: fromPublicKey(PublicKey.random()),
+      }),
       issuer,
       signer: keyring,
       subject: PublicKey.random(),
     });
-    expect(credential.parentCredentialIds?.length).toEqual(1);
+    expect(credential.parentCredentialIds.length).toEqual(1);
     expect(await verifyCredential(credential)).toMatchObject({ kind: 'pass' });
 
     // Tamper with the credential.
-    credential.parentCredentialIds?.push(PublicKey.random());
+    credential.parentCredentialIds.push(fromPublicKey(PublicKey.random()));
     expect(await verifyCredential(credential)).toMatchObject({
       kind: 'fail',
     });
@@ -174,26 +176,24 @@ describe('verifier', () => {
       const spaceKey = PublicKey.random();
       const subject = PublicKey.random();
 
-      const chain: Chain = {
+      const chain = create(ChainSchema, {
         credential: await createCredential({
-          assertion: {
-            '@type': 'dxos.halo.credentials.AuthorizedDevice',
-            'deviceKey': device,
-            'identityKey': identity,
-          },
+          assertion: create(AuthorizedDeviceSchema, {
+            identityKey: fromPublicKey(identity),
+            deviceKey: fromPublicKey(device),
+          }),
           subject: device,
           issuer: identity,
           signer: keyring,
         }),
-      };
+      });
 
       const credential = await createCredential({
-        assertion: {
-          '@type': 'dxos.halo.credentials.SpaceMember',
-          spaceKey,
-          'role': SpaceMember.Role.ADMIN,
-          'genesisFeedKey': PublicKey.random(),
-        },
+        assertion: create(SpaceMemberSchema, {
+          spaceKey: fromPublicKey(spaceKey),
+          role: SpaceMember_Role.ADMIN,
+          genesisFeedKey: fromPublicKey(PublicKey.random()),
+        }),
         issuer: identity,
         signer: keyring,
         subject,
@@ -211,26 +211,24 @@ describe('verifier', () => {
       const spaceKey = PublicKey.random();
       const subject = PublicKey.random();
 
-      const chain: Chain = {
+      const chain = create(ChainSchema, {
         credential: await createCredential({
-          assertion: {
-            '@type': 'dxos.halo.credentials.AuthorizedDevice',
-            'deviceKey': device,
-            'identityKey': identity,
-          },
+          assertion: create(AuthorizedDeviceSchema, {
+            identityKey: fromPublicKey(identity),
+            deviceKey: fromPublicKey(device),
+          }),
           subject: device,
           issuer: identity,
           signer: keyring,
         }),
-      };
+      });
 
       const credential = await createCredential({
-        assertion: {
-          '@type': 'dxos.halo.credentials.SpaceMember',
-          spaceKey,
-          'role': SpaceMember.Role.ADMIN,
-          'genesisFeedKey': PublicKey.random(),
-        },
+        assertion: create(SpaceMemberSchema, {
+          spaceKey: fromPublicKey(spaceKey),
+          role: SpaceMember_Role.ADMIN,
+          genesisFeedKey: fromPublicKey(PublicKey.random()),
+        }),
         issuer: identity,
         signer: keyring,
         subject,
@@ -238,7 +236,7 @@ describe('verifier', () => {
         chain,
       });
 
-      credential.proof!.chain = undefined;
+      proofOf(credential).chain = undefined;
 
       expect(await verifyCredential(credential)).toMatchObject({
         kind: 'fail',
@@ -253,26 +251,24 @@ describe('verifier', () => {
       const spaceKey = PublicKey.random();
       const subject = PublicKey.random();
 
-      const chain: Chain = {
+      const chain = create(ChainSchema, {
         credential: await createCredential({
-          assertion: {
-            '@type': 'dxos.halo.credentials.AuthorizedDevice',
-            'deviceKey': device,
-            'identityKey': identity,
-          },
+          assertion: create(AuthorizedDeviceSchema, {
+            identityKey: fromPublicKey(identity),
+            deviceKey: fromPublicKey(device),
+          }),
           subject: device,
           issuer: identity,
           signer: keyring,
         }),
-      };
+      });
 
       const credential = await createCredential({
-        assertion: {
-          '@type': 'dxos.halo.credentials.SpaceMember',
-          spaceKey,
-          'role': SpaceMember.Role.ADMIN,
-          'genesisFeedKey': PublicKey.random(),
-        },
+        assertion: create(SpaceMemberSchema, {
+          spaceKey: fromPublicKey(spaceKey),
+          role: SpaceMember_Role.ADMIN,
+          genesisFeedKey: fromPublicKey(PublicKey.random()),
+        }),
         issuer: identity,
         signer: keyring,
         subject,
@@ -280,9 +276,7 @@ describe('verifier', () => {
         chain,
       });
 
-      credential.proof!.chain!.credential.proof!.value = randomBytes(
-        credential.proof!.chain!.credential.proof!.value.length,
-      );
+      proofOf(chainCredentialOf(credential)).value = randomBytes(proofOf(chainCredentialOf(credential)).value.length);
 
       expect(await verifyCredential(credential)).toMatchObject({
         kind: 'fail',
@@ -296,25 +290,23 @@ describe('verifier', () => {
       const spaceKey = PublicKey.random();
       const subject = PublicKey.random();
 
-      const chain: Chain = {
+      const chain = create(ChainSchema, {
         credential: await createCredential({
-          assertion: {
-            '@type': 'dxos.halo.credentials.AuthorizedDevice',
-            'deviceKey': device,
-            'identityKey': identity,
-          },
+          assertion: create(AuthorizedDeviceSchema, {
+            identityKey: fromPublicKey(identity),
+            deviceKey: fromPublicKey(device),
+          }),
           subject: device,
           issuer: identity,
           signer: keyring,
         }),
-      };
+      });
       const credential = await createCredential({
-        assertion: {
-          '@type': 'dxos.halo.credentials.SpaceMember',
-          spaceKey,
-          'role': SpaceMember.Role.ADMIN,
-          'genesisFeedKey': PublicKey.random(),
-        },
+        assertion: create(SpaceMemberSchema, {
+          spaceKey: fromPublicKey(spaceKey),
+          role: SpaceMember_Role.ADMIN,
+          genesisFeedKey: fromPublicKey(PublicKey.random()),
+        }),
         issuer: identity,
         signer: keyring,
         subject,
@@ -322,13 +314,12 @@ describe('verifier', () => {
         chain,
       });
 
-      credential.proof!.chain!.credential = await createCredential({
-        assertion: {
-          '@type': 'dxos.halo.credentials.SpaceMember',
-          spaceKey,
-          'role': SpaceMember.Role.ADMIN,
-          'genesisFeedKey': PublicKey.random(),
-        },
+      chainOf(credential).credential = await createCredential({
+        assertion: create(SpaceMemberSchema, {
+          spaceKey: fromPublicKey(spaceKey),
+          role: SpaceMember_Role.ADMIN,
+          genesisFeedKey: fromPublicKey(PublicKey.random()),
+        }),
         issuer: identity,
         signer: keyring,
         subject,
@@ -346,26 +337,24 @@ describe('verifier', () => {
       const device = await keyring.createKey();
       const spaceKey = PublicKey.random();
       const subject = PublicKey.random();
-      const chain: Chain = {
+      const chain = create(ChainSchema, {
         credential: await createCredential({
-          assertion: {
-            '@type': 'dxos.halo.credentials.AuthorizedDevice',
-            'deviceKey': device,
-            'identityKey': identity,
-          },
+          assertion: create(AuthorizedDeviceSchema, {
+            identityKey: fromPublicKey(identity),
+            deviceKey: fromPublicKey(device),
+          }),
           subject: device,
           issuer: identity,
           signer: keyring,
         }),
-      };
+      });
 
       const credential = await createCredential({
-        assertion: {
-          '@type': 'dxos.halo.credentials.SpaceMember',
-          spaceKey,
-          'role': SpaceMember.Role.ADMIN,
-          'genesisFeedKey': PublicKey.random(),
-        },
+        assertion: create(SpaceMemberSchema, {
+          spaceKey: fromPublicKey(spaceKey),
+          role: SpaceMember_Role.ADMIN,
+          genesisFeedKey: fromPublicKey(PublicKey.random()),
+        }),
         issuer: identity,
         signer: keyring,
         subject,
@@ -373,12 +362,11 @@ describe('verifier', () => {
         chain,
       });
 
-      credential.proof!.chain!.credential = await createCredential({
-        assertion: {
-          '@type': 'dxos.halo.credentials.AuthorizedDevice',
-          'deviceKey': device,
-          'identityKey': identity2,
-        },
+      chainOf(credential).credential = await createCredential({
+        assertion: create(AuthorizedDeviceSchema, {
+          identityKey: fromPublicKey(identity2),
+          deviceKey: fromPublicKey(device),
+        }),
         subject: device,
         issuer: identity2,
         signer: keyring,
@@ -397,39 +385,36 @@ describe('verifier', () => {
       const spaceKey = PublicKey.random();
       const subject = PublicKey.random();
 
-      const chain: Chain = {
+      const chain = create(ChainSchema, {
         credential: await createCredential({
-          assertion: {
-            '@type': 'dxos.halo.credentials.AuthorizedDevice',
-            'deviceKey': device2,
-            'identityKey': identity,
-          },
+          assertion: create(AuthorizedDeviceSchema, {
+            identityKey: fromPublicKey(identity),
+            deviceKey: fromPublicKey(device2),
+          }),
           subject: device2,
           issuer: identity,
           signer: keyring,
           signingKey: device1,
-          chain: {
+          chain: create(ChainSchema, {
             credential: await createCredential({
-              assertion: {
-                '@type': 'dxos.halo.credentials.AuthorizedDevice',
-                'deviceKey': device1,
-                'identityKey': identity,
-              },
+              assertion: create(AuthorizedDeviceSchema, {
+                identityKey: fromPublicKey(identity),
+                deviceKey: fromPublicKey(device1),
+              }),
               subject: device1,
               issuer: identity,
               signer: keyring,
             }),
-          },
+          }),
         }),
-      };
+      });
 
       const credential = await createCredential({
-        assertion: {
-          '@type': 'dxos.halo.credentials.SpaceMember',
-          spaceKey,
-          'role': SpaceMember.Role.ADMIN,
-          'genesisFeedKey': PublicKey.random(),
-        },
+        assertion: create(SpaceMemberSchema, {
+          spaceKey: fromPublicKey(spaceKey),
+          role: SpaceMember_Role.ADMIN,
+          genesisFeedKey: fromPublicKey(PublicKey.random()),
+        }),
         issuer: identity,
         signer: keyring,
         subject,
@@ -448,39 +433,36 @@ describe('verifier', () => {
       const spaceKey = PublicKey.random();
       const subject = PublicKey.random();
 
-      const chain: Chain = {
+      const chain = create(ChainSchema, {
         credential: await createCredential({
-          assertion: {
-            '@type': 'dxos.halo.credentials.AuthorizedDevice',
-            'deviceKey': device2,
-            'identityKey': identity,
-          },
+          assertion: create(AuthorizedDeviceSchema, {
+            identityKey: fromPublicKey(identity),
+            deviceKey: fromPublicKey(device2),
+          }),
           subject: device2,
           issuer: identity,
           signer: keyring,
           signingKey: device1,
-          chain: {
+          chain: create(ChainSchema, {
             credential: await createCredential({
-              assertion: {
-                '@type': 'dxos.halo.credentials.AuthorizedDevice',
-                'deviceKey': device1,
-                'identityKey': identity,
-              },
+              assertion: create(AuthorizedDeviceSchema, {
+                identityKey: fromPublicKey(identity),
+                deviceKey: fromPublicKey(device1),
+              }),
               subject: device1,
               issuer: identity,
               signer: keyring,
             }),
-          },
+          }),
         }),
-      };
+      });
 
       const credential = await createCredential({
-        assertion: {
-          '@type': 'dxos.halo.credentials.SpaceMember',
-          spaceKey,
-          'role': SpaceMember.Role.ADMIN,
-          'genesisFeedKey': PublicKey.random(),
-        },
+        assertion: create(SpaceMemberSchema, {
+          spaceKey: fromPublicKey(spaceKey),
+          role: SpaceMember_Role.ADMIN,
+          genesisFeedKey: fromPublicKey(PublicKey.random()),
+        }),
         issuer: identity,
         signer: keyring,
         subject,
@@ -488,12 +470,11 @@ describe('verifier', () => {
         chain,
       });
 
-      credential.proof!.chain!.credential.proof!.chain!.credential = await createCredential({
-        assertion: {
-          '@type': 'dxos.halo.credentials.AuthorizedDevice',
-          'deviceKey': device1,
-          'identityKey': identity,
-        },
+      chainOf(chainCredentialOf(credential)).credential = await createCredential({
+        assertion: create(AuthorizedDeviceSchema, {
+          identityKey: fromPublicKey(identity),
+          deviceKey: fromPublicKey(device1),
+        }),
         subject: device1,
         issuer: device2,
         signer: keyring,

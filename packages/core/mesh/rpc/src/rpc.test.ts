@@ -2,22 +2,23 @@
 // Copyright 2021 DXOS.org
 //
 
+import { create } from '@bufbuild/protobuf';
+import { AnySchema } from '@bufbuild/protobuf/wkt';
 import { describe, expect, test } from 'vitest';
 
 import { Trigger, sleep } from '@dxos/async';
 import { Stream } from '@dxos/async';
 import { log } from '@dxos/log';
-import { type TYPES } from '@dxos/protocols/proto';
-import { type AnyEnvelope, type TaggedType } from '@dxos/protocols/service-contract';
+import { type AnyEnvelope } from '@dxos/protocols/service-contract';
 
 import { RpcPeer } from './rpc';
 import { createLinkedPorts, encodeMessage } from './testing';
 
-const createPayload = (value = ''): TaggedType<TYPES, 'google.protobuf.Any'> => ({
-  '@type': 'google.protobuf.Any',
-  'type_url': 'dxos.test',
-  'value': encodeMessage(value),
-});
+const createPayload = (value = ''): AnyEnvelope =>
+  create(AnySchema, {
+    typeUrl: 'dxos.test',
+    value: encodeMessage(value),
+  });
 
 // TODO(dmaretskyi): Rename alice and bob to peer1 and peer2.
 
@@ -201,7 +202,7 @@ describe('RpcPeer', () => {
       await Promise.all([alice.open(), bob.open()]);
 
       const response = await bob.call('method', createPayload('request'));
-      expect(response).toEqual(createPayload('response'));
+      expect(response).toMatchObject(createPayload('response'));
 
       await Promise.all([alice.close(), bob.close()]);
     });
@@ -237,8 +238,8 @@ describe('RpcPeer', () => {
       const parallel2 = bob.call('method', createPayload('p2'));
       const error = bob.call('method', createPayload('error'));
 
-      await expect(await parallel1).toEqual(createPayload('p1'));
-      await expect(await parallel2).toEqual(createPayload('p2'));
+      await expect(await parallel1).toMatchObject(createPayload('p1'));
+      await expect(await parallel2).toMatchObject(createPayload('p2'));
       await expect(error).rejects.toBeInstanceOf(Error);
     });
 
@@ -544,7 +545,7 @@ describe('RpcPeer', () => {
       await bob.open();
 
       const response = await bob.call('method', createPayload('request'));
-      expect(response).toEqual(createPayload('response'));
+      expect(response).toMatchObject(createPayload('response'));
 
       await Promise.all([alice.close(), bob.close()]);
     });

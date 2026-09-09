@@ -2,22 +2,36 @@
 // Copyright 2022 DXOS.org
 //
 
+import { create } from '@bufbuild/protobuf';
+
 import { type Signer } from '@dxos/crypto';
 import { type PublicKey } from '@dxos/keys';
-import { type TypedMessage } from '@dxos/protocols/proto';
-import { type FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
+import { fromPublicKey, fromTimeframe } from '@dxos/protocols/buf';
+import { type FeedMessage_Payload } from '@dxos/protocols/buf/dxos/echo/feed_pb';
 import {
-  AdmittedFeed,
+  AdmittedFeed_Designation,
+  AdmittedFeedSchema,
+  AuthorizedDeviceSchema,
   type Credential,
   type DeviceProfileDocument,
+  DeviceProfileSchema,
+  EpochSchema,
+  IdentityProfileSchema,
   MembershipPolicy,
   type ProfileDocument,
-  SpaceMember,
-} from '@dxos/protocols/proto/dxos/halo/credentials';
-import { type DelegateSpaceInvitation } from '@dxos/protocols/proto/dxos/halo/invitations';
+  SpaceGenesisSchema,
+  SpaceMember_Role,
+  SpaceMemberSchema,
+} from '@dxos/protocols/buf/dxos/halo/credentials_pb';
+import {
+  CancelDelegatedInvitationSchema,
+  type DelegateSpaceInvitation,
+  DelegateSpaceInvitationSchema,
+} from '@dxos/protocols/buf/dxos/halo/invitations_pb';
 import { Timeframe } from '@dxos/timeframe';
 
 import { type CredentialSigner, createCredential } from './credential-factory';
+import { credentialPayload } from './feed-payload';
 
 // TODO(burdon): Normalize generate and functions below.
 //  Use throughout stack and in tests.
@@ -46,27 +60,25 @@ export class CredentialGenerator {
         signer: this._signer,
         issuer: spaceKey,
         subject: spaceKey,
-        assertion: {
-          '@type': 'dxos.halo.credentials.SpaceGenesis',
-          spaceKey,
+        assertion: create(SpaceGenesisSchema, {
+          spaceKey: fromPublicKey(spaceKey),
           membershipPolicy,
-        },
+        }),
       }),
 
       await createCredential({
         signer: this._signer,
         issuer: spaceKey,
         subject: this._identityKey,
-        assertion: {
-          '@type': 'dxos.halo.credentials.SpaceMember',
-          spaceKey,
-          'role': SpaceMember.Role.ADMIN,
-          'profile': creatorProfile,
-          'genesisFeedKey': controlKey,
-        },
+        assertion: create(SpaceMemberSchema, {
+          spaceKey: fromPublicKey(spaceKey),
+          role: SpaceMember_Role.ADMIN,
+          profile: creatorProfile,
+          genesisFeedKey: fromPublicKey(controlKey),
+        }),
       }),
 
-      await this.createFeedAdmission(spaceKey, controlKey, AdmittedFeed.Designation.CONTROL),
+      await this.createFeedAdmission(spaceKey, controlKey, AdmittedFeed_Designation.CONTROL),
     ];
   }
 
@@ -88,16 +100,15 @@ export class CredentialGenerator {
         signer: this._signer,
         issuer: this._identityKey,
         subject: identityKey,
-        assertion: {
-          '@type': 'dxos.halo.credentials.SpaceMember',
-          spaceKey,
-          'role': SpaceMember.Role.EDITOR,
-          genesisFeedKey,
-        },
+        assertion: create(SpaceMemberSchema, {
+          spaceKey: fromPublicKey(spaceKey),
+          role: SpaceMember_Role.EDITOR,
+          genesisFeedKey: fromPublicKey(genesisFeedKey),
+        }),
       }),
 
-      await this.createFeedAdmission(spaceKey, controlKey, AdmittedFeed.Designation.CONTROL),
-      await this.createFeedAdmission(spaceKey, dataKey, AdmittedFeed.Designation.DATA),
+      await this.createFeedAdmission(spaceKey, controlKey, AdmittedFeed_Designation.CONTROL),
+      await this.createFeedAdmission(spaceKey, dataKey, AdmittedFeed_Designation.DATA),
     ];
   }
 
@@ -110,11 +121,10 @@ export class CredentialGenerator {
       signer: this._signer,
       issuer: this._identityKey,
       subject: deviceKey,
-      assertion: {
-        '@type': 'dxos.halo.credentials.AuthorizedDevice',
-        'identityKey': this._identityKey,
-        deviceKey,
-      },
+      assertion: create(AuthorizedDeviceSchema, {
+        identityKey: fromPublicKey(this._identityKey),
+        deviceKey: fromPublicKey(deviceKey),
+      }),
     });
   }
 
@@ -126,10 +136,7 @@ export class CredentialGenerator {
       signer: this._signer,
       issuer: this._identityKey,
       subject: this._deviceKey,
-      assertion: {
-        '@type': 'dxos.halo.credentials.DeviceProfile',
-        profile,
-      },
+      assertion: create(DeviceProfileSchema, { profile }),
     });
   }
 
@@ -139,19 +146,18 @@ export class CredentialGenerator {
   async createFeedAdmission(
     spaceKey: PublicKey,
     feedKey: PublicKey,
-    designation: AdmittedFeed.Designation,
+    designation: AdmittedFeed_Designation,
   ): Promise<Credential> {
     return createCredential({
       signer: this._signer,
       issuer: this._identityKey,
       subject: feedKey,
-      assertion: {
-        '@type': 'dxos.halo.credentials.AdmittedFeed',
-        spaceKey,
-        'identityKey': this._identityKey,
-        'deviceKey': this._deviceKey,
+      assertion: create(AdmittedFeedSchema, {
+        spaceKey: fromPublicKey(spaceKey),
+        identityKey: fromPublicKey(this._identityKey),
+        deviceKey: fromPublicKey(this._deviceKey),
         designation,
-      },
+      }),
     });
   }
 
@@ -160,10 +166,7 @@ export class CredentialGenerator {
       signer: this._signer,
       issuer: this._identityKey,
       subject: this._identityKey,
-      assertion: {
-        '@type': 'dxos.halo.credentials.IdentityProfile',
-        profile,
-      },
+      assertion: create(IdentityProfileSchema, { profile }),
     });
   }
 
@@ -172,11 +175,10 @@ export class CredentialGenerator {
       signer: this._signer,
       issuer: this._identityKey,
       subject: spaceKey,
-      assertion: {
-        '@type': 'dxos.halo.credentials.Epoch',
-        'number': 0,
-        'timeframe': new Timeframe(),
-      },
+      assertion: create(EpochSchema, {
+        number: 0,
+        timeframe: fromTimeframe(new Timeframe()),
+      }),
     });
   }
 }
@@ -186,22 +188,18 @@ export const createDeviceAuthorization = async (
   signer: CredentialSigner,
   identityKey: PublicKey,
   deviceKey: PublicKey,
-): Promise<TypedMessage[]> => {
+): Promise<FeedMessage_Payload[]> => {
   const credentials = await Promise.all([
     await signer.createCredential({
       subject: deviceKey,
-      assertion: {
-        '@type': 'dxos.halo.credentials.AuthorizedDevice',
-        identityKey,
-        deviceKey,
-      },
+      assertion: create(AuthorizedDeviceSchema, {
+        identityKey: fromPublicKey(identityKey),
+        deviceKey: fromPublicKey(deviceKey),
+      }),
     }),
   ]);
 
-  return credentials.map((credential) => ({
-    '@type': 'dxos.echo.feed.CredentialsMessage',
-    credential,
-  }));
+  return credentials.map((credential) => credentialPayload(credential));
 };
 
 // TODO(burdon): Reconcile with above (esp. Signer).
@@ -220,7 +218,7 @@ export type CreateAdmissionCredentialsOptions = {
   identityKey: PublicKey;
   spaceKey: PublicKey;
   genesisFeedKey: PublicKey;
-  role?: SpaceMember.Role;
+  role?: SpaceMember_Role;
   membershipChainHeads?: PublicKey[];
   profile?: ProfileDocument;
   invitationCredentialId?: PublicKey;
@@ -234,54 +232,50 @@ export const createAdmissionCredentials = async ({
   identityKey,
   spaceKey,
   genesisFeedKey,
-  role = SpaceMember.Role.ADMIN,
+  role = SpaceMember_Role.ADMIN,
   membershipChainHeads = [],
   profile,
   invitationCredentialId,
   tags,
   spaceRootUrl,
-}: CreateAdmissionCredentialsOptions): Promise<FeedMessage.Payload[]> => {
+}: CreateAdmissionCredentialsOptions): Promise<FeedMessage_Payload[]> => {
   const credentials = await Promise.all([
     await signer.createCredential({
       subject: identityKey,
       parentCredentialIds: membershipChainHeads,
-      assertion: {
-        '@type': 'dxos.halo.credentials.SpaceMember',
-        spaceKey,
+      assertion: create(SpaceMemberSchema, {
+        spaceKey: fromPublicKey(spaceKey),
         role,
         profile,
-        genesisFeedKey,
+        genesisFeedKey: fromPublicKey(genesisFeedKey),
         spaceRootUrl,
-        invitationCredentialId,
-        'tags': tags ?? [],
-      },
+        invitationCredentialId: invitationCredentialId && fromPublicKey(invitationCredentialId),
+        tags: tags ?? [],
+      }),
     }),
   ]);
 
-  return credentials.map((credential) => ({
-    credential: { credential },
-  }));
+  return credentials.map((credential) => credentialPayload(credential));
 };
 
 export const createDelegatedSpaceInvitationCredential = async (
   signer: CredentialSigner,
   subject: PublicKey,
   invitation: DelegateSpaceInvitation,
-): Promise<FeedMessage.Payload> => {
+): Promise<FeedMessage_Payload> => {
   const credential = await signer.createCredential({
     subject,
-    assertion: {
-      '@type': 'dxos.halo.invitations.DelegateSpaceInvitation',
-      'invitationId': invitation.invitationId,
-      'authMethod': invitation.authMethod,
-      'swarmKey': invitation.swarmKey,
-      'role': invitation.role,
-      'guestKey': invitation.guestKey,
-      'expiresOn': invitation.expiresOn,
-      'multiUse': invitation.multiUse,
-    },
+    assertion: create(DelegateSpaceInvitationSchema, {
+      invitationId: invitation.invitationId,
+      authMethod: invitation.authMethod,
+      swarmKey: invitation.swarmKey,
+      role: invitation.role,
+      guestKey: invitation.guestKey,
+      expiresOn: invitation.expiresOn,
+      multiUse: invitation.multiUse,
+    }),
   });
-  return { credential: { credential } };
+  return credentialPayload(credential);
 };
 
 /**
@@ -293,13 +287,12 @@ export const createCancelDelegatedSpaceInvitationCredential = async (
   signer: CredentialSigner,
   subject: PublicKey,
   invitationCredentialId: PublicKey,
-): Promise<FeedMessage.Payload> => {
+): Promise<FeedMessage_Payload> => {
   const credential = await signer.createCredential({
     subject,
-    assertion: {
-      '@type': 'dxos.halo.invitations.CancelDelegatedInvitation',
-      'credentialId': invitationCredentialId,
-    },
+    assertion: create(CancelDelegatedInvitationSchema, {
+      credentialId: fromPublicKey(invitationCredentialId),
+    }),
   });
-  return { credential: { credential } };
+  return credentialPayload(credential);
 };

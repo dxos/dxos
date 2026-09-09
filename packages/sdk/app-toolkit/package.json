@@ -210,6 +210,7 @@
   ],
   "dependencies": {
     "@atlaskit/pragmatic-drag-and-drop-hitbox": "catalog:",
+    "@bufbuild/protobuf": "catalog:",
     "@dxos/ai": "workspace:*",
     "@dxos/app-framework": "workspace:*",
     "@dxos/app-graph": "workspace:*",

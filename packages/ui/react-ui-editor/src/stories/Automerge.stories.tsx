@@ -12,6 +12,7 @@ import { Doc } from '@dxos/echo-doc';
 import { useQuery, useResolveRef } from '@dxos/echo-react';
 import { TestSchema } from '@dxos/echo/testing';
 import { type Messenger } from '@dxos/protocols';
+import { requirePublicKey, toPublicKey } from '@dxos/protocols/buf';
 import { useSpace } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { useClientStory, withMultiClientProvider } from '@dxos/react-client/testing';
@@ -100,13 +101,13 @@ const EchoStory = () => {
   return (
     <div className='dx-fill flex flex-col overflow-hidden'>
       <pre className='p-2 text-xs text-subdued'>
-        {JSON.stringify({ index, identity: identity?.identityKey.truncate(), spaceId, objects }, null, 2)}
+        {JSON.stringify({ index, identity: toPublicKey(identity?.identityKey)?.truncate(), spaceId, objects }, null, 2)}
       </pre>
       {identity && source ? (
         <div className='p-2 flex grow overflow-hidden'>
           <Editor
             identity={{
-              identityKey: identity.identityKey.toHex(),
+              identityKey: requirePublicKey(identity.identityKey).toHex(),
               displayName: identity.profile?.displayName,
               data: identity.profile?.data,
             }}

@@ -135,6 +135,22 @@ export const all: readonly Model[] = [
     characteristics: { maxTokens: 16_384, tools: true },
   }),
 
+  // Edge — DeepSeek via the DXOS edge intermediary (OpenAI-compatible chat completions). Both V4
+  // models serve thinking and non-thinking mode from one back-end name; the legacy `deepseek-chat`
+  // and `deepseek-reasoner` names were discontinued on 2026-07-24.
+  make('com.deepseek.model.deepseek-v4-flash.default', {
+    provider: Provider.edge.id,
+    backend: 'deepseek-v4-flash',
+    label: 'DeepSeek V4 Flash',
+    characteristics: { thinking: true, tools: true },
+  }),
+  make('com.deepseek.model.deepseek-v4-pro.default', {
+    provider: Provider.edge.id,
+    backend: 'deepseek-v4-pro',
+    label: 'DeepSeek V4 Pro',
+    characteristics: { thinking: true, tools: true },
+  }),
+
   // Local models — the same catalog served by the bundled sidecar, an external Ollama server, and
   // LM Studio, each under its own back-end name.
   ...localModelsFor(Provider.builtIn.id, (model) => model.ollama),
@@ -150,6 +166,14 @@ export const all: readonly Model[] = [
     label: 'GPT-4o mini',
   }),
 ];
+
+/**
+ * The developer authority an id belongs to: the leading reverse-DNS segments of the NSID
+ * (`com.deepseek.model.deepseek-v4-flash.default` → `com.deepseek`). A provider that fronts several
+ * upstreams — `edge` serves both Anthropic and DeepSeek — has each resolver claim its own models by
+ * this, so the catalog entry needs no separate marker.
+ */
+export const developer = (id: DXN.DXN): string => DXN.getName(id).split('.').slice(0, 2).join('.');
 
 /** Models served by a given provider. */
 export const forProvider = (provider: DXN.DXN): Model[] => all.filter((model) => model.provider === provider);
