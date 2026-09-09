@@ -2,10 +2,10 @@
 
 Project: `deus` · Design: [docs/DESIGN.md](./docs/DESIGN.md) · Idioms: [docs/IDIOMS.md](./docs/IDIOMS.md)
 
-_Resume: Phase 2 (QA framework unification) landed 2026-09-08 — xUnit naming (`scenario` /
-`test` / `suite`), `composer-qa` skill, `spec/APP.mdl` with four app tests and tagged suites, and
-the two Routine prompts under `agents/routines/`. Next: run `--tag smoke` live and set the app
-tests' `status:`; register the Routines; the spec-sync sweep._
+_Resume: Phase 2 (QA framework unification) is on PR #12986, main merged and review triaged 2026-09-09;
+smoke run 1 gave app:QA-1 10/11 (after.2 = space.delete on unreachable EDGE), run 2 in flight with the
+proxy fix. Next: land the PR, run `--tag nightly`, register the Routines, `sweep 8`. Sessions that run
+the app must be in the `DXOS` cloud environment._
 
 ## Goal
 
