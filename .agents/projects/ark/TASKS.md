@@ -1124,6 +1124,14 @@ verdict over porting in the same PR).
       `--dx-drawer-duration` on the clip) and `Drawer.Content size` (rem) match `Splitter.Root`'s
       `transition`/`size`; the Push story holds both as module constants (500ms, 30rem) and feeds
       the seam and both drawers from them.
+- [x] **Material-style `elevation` (0–5)** DONE 2026-09-09 on Panel (all parts), Toolbar, Card,
+      Dialog.Content, Popover.Content: the prop maps onto the existing ladder in
+      `ui-theme/css/theme/surfaces.css` (0 sunken … 5 popup) by setting `data-surface`, which the
+      CSS already turns into background + ink + re-derived aspects; `surface.css` adds the level's
+      shadow for raised/overlay/popup. Helpers `elevationSurface`/`elevationAttrs` in ui-theme,
+      types `Surface`/`ElevationLevel` in ui-types. A part with an explicit level drops its default
+      surface class (a toolbar paints its own level even inside a Panel slot). Panel's `Elevation`
+      story walks the ladder; `TestElevation` asserts distinct monotonic tones and the shadows.
 - [x] **`Main` on the drawer machine — probe** DONE 2026-09-09. The 2026-09-05 verdict ("fights the
       inset slide") was wrong: the machine's inline `transform` and `main.css`'s `inset-inline-start`
       are independent properties, and a driven touch swipe dismissed the sidebar through

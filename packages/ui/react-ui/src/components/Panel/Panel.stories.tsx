@@ -6,7 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 import { expect, within } from 'storybook/test';
 
-import { Field, ScrollArea, ScrollAreaRootProps, Toolbar } from '../../components';
+import { Card, Field, ScrollArea, ScrollAreaRootProps, Toolbar } from '../../components';
 import { withLayout, withTheme } from '../../testing';
 import { composable, composableProps } from '../../util';
 import { Panel, type PanelRootProps } from './Panel';
@@ -38,10 +38,15 @@ const List = composable<HTMLDivElement, ScrollAreaRootProps>((props, forwardedRe
  *   uses: {@link Panel.Root}, {@link Panel.Toolbar}, {@link Panel.Content}, {@link Panel.Statusbar}
  *   related: org.dxos.react-ui-menu.toolbarMenu
  */
-const DefaultStory = ({ as }: Pick<PanelRootProps, 'as'>) => {
+type StoryArgs = Pick<PanelRootProps, 'as' | 'elevation'> & {
+  /** The toolbar's and status bar's own level, over the panel's. */
+  barElevation?: PanelRootProps['elevation'];
+};
+
+const DefaultStory = ({ as, elevation, barElevation }: StoryArgs) => {
   return (
-    <Panel.Root as={as} classNames='dx-document'>
-      <Panel.Toolbar asChild>
+    <Panel.Root as={as} elevation={elevation} classNames='dx-document'>
+      <Panel.Toolbar asChild elevation={barElevation}>
         <Toolbar.Root>
           <Toolbar.IconButton icon='ph--plus--regular' variant='primary' label='Add' />
           <Field.Root>
@@ -55,7 +60,7 @@ const DefaultStory = ({ as }: Pick<PanelRootProps, 'as'>) => {
         <List />
       </Panel.Content>
 
-      <Panel.Statusbar asChild>
+      <Panel.Statusbar asChild elevation={barElevation}>
         <Toolbar.Root classNames='justify-between'>
           <Toolbar.IconButton variant='ghost' icon='ph--house--regular' iconOnly label='Add' />
           <Toolbar.IconButton variant='ghost' icon='ph--alarm--regular' iconOnly label='Status' />
@@ -70,6 +75,8 @@ const meta = {
   render: DefaultStory,
   argTypes: {
     as: { control: 'select', options: ['div', 'main', 'section', 'article', 'aside', 'nav'] },
+    elevation: { control: 'select', options: [undefined, 0, 1, 2, 3, 4, 5] },
+    barElevation: { control: 'select', options: [undefined, 0, 1, 2, 3, 4, 5] },
   },
   decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
   parameters: {
@@ -82,6 +89,81 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {};
+
+const LEVELS = [0, 1, 2, 3, 4, 5] as const;
+
+/**
+ * The ladder: one panel per elevation, each with a toolbar that inherits the level (a bar aspect
+ * off it) and a card inside that keeps its own `raised` level. Levels 3–5 cast a shadow.
+ */
+const ElevationStory = () => (
+  <div className='grid grid-cols-3 gap-4 p-4 dx-fill dx-deck-surface'>
+    {LEVELS.map((elevation) => (
+      <Panel.Root key={elevation} elevation={elevation} classNames='rounded-md'>
+        <Panel.Toolbar asChild>
+          <Toolbar.Root>
+            <Toolbar.Text>{`elevation={${elevation}}`}</Toolbar.Text>
+            <Toolbar.IconButton icon='ph--dots-three-vertical--regular' iconOnly label='Menu' />
+          </Toolbar.Root>
+        </Panel.Toolbar>
+        <Panel.Content classNames='p-4'>
+          <Card.Root fullWidth>
+            <Card.Header>
+              <Card.Title>Card on the panel</Card.Title>
+            </Card.Header>
+          </Card.Root>
+        </Panel.Content>
+        <Panel.Statusbar asChild>
+          <Toolbar.Root>
+            <Toolbar.Text>Status</Toolbar.Text>
+          </Toolbar.Root>
+        </Panel.Statusbar>
+      </Panel.Root>
+    ))}
+  </div>
+);
+
+export const Elevation: Story = {
+  render: () => <ElevationStory />,
+};
+
+/** Each elevation enters its surface and paints a distinct, monotonic tone; the bars follow their host. */
+export const TestElevation: Story = {
+  render: () => <ElevationStory />,
+  play: async ({ canvasElement }) => {
+    const panels = [...canvasElement.querySelectorAll<HTMLElement>('[data-surface]')].filter((element) =>
+      element.parentElement?.classList.contains('dx-deck-surface'),
+    );
+    await expect(panels).toHaveLength(LEVELS.length);
+    await expect(panels.map((panel) => panel.dataset.surface)).toEqual([
+      'sunken',
+      'chrome',
+      'base',
+      'raised',
+      'overlay',
+      'popup',
+    ]);
+    const lightness = (element: Element) => {
+      const [red, green, blue] =
+        getComputedStyle(element)
+          .backgroundColor.match(/[\d.]+/g)
+          ?.map(Number) ?? [];
+      return red + green + blue;
+    };
+    const tones = panels.map(lightness);
+    await expect(new Set(tones).size).toBe(LEVELS.length);
+    // The ladder is monotonic in one direction, whichever theme the story runs in.
+    const ascending = tones.every((tone, index) => index === 0 || tone > tones[index - 1]);
+    const descending = tones.every((tone, index) => index === 0 || tone < tones[index - 1]);
+    await expect(ascending || descending).toBe(true);
+    // Above the canvas the level casts a shadow; on the chrome levels it does not.
+    const shadowed = panels.map((panel) => getComputedStyle(panel).boxShadow !== 'none');
+    await expect(shadowed).toEqual([false, false, false, true, true, true]);
+    // A toolbar with its own elevation paints it even inside a Panel slot.
+    const bar = panels[2].querySelector<HTMLElement>('[data-slot="toolbar"]');
+    await expect(bar?.dataset.surface).toBeUndefined();
+  },
+};
 
 /** `as='main'` renders the landmark itself, with its own role rather than `none`. */
 export const TestLandmark: Story = {

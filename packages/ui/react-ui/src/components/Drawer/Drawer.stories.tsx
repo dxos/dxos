@@ -25,11 +25,11 @@ type StoryArgs = Pick<DrawerRootProps, 'side' | 'modal' | 'snapPoints'> & {
 
 /** Filler below the fold, so a snap point short of fully open has something to hide. */
 const Filler = ({ lines }: { lines: number }) => (
-  <ScrollArea.Root>
+  <ScrollArea.Root thin>
     <ScrollArea.Viewport>
       <ol className='flex flex-col gap-2 p-3 list-decimal list-inside text-description'>
         {Array.from({ length: lines }, (_, index) => (
-          <li key={index} className='p-2 border border-separator dx-hover'>
+          <li key={index} className='p-2 border border-subdued-separator dx-hover'>
             Line {index + 1}
           </li>
         ))}
@@ -44,7 +44,6 @@ const Body = ({ title, description, grabber, filler = 0 }: StoryArgs) => (
     {title && <Drawer.Title classNames='pt-2'>{title}</Drawer.Title>}
     {description && <Drawer.Description>{description}</Drawer.Description>}
     <div className='flex flex-col gap-2 p-2'>
-      <p>Drag the panel toward its edge to dismiss it, press Escape, or use the button.</p>
       <Drawer.Close asChild>
         <Button variant='primary'>Close</Button>
       </Drawer.Close>
@@ -84,9 +83,9 @@ const DefaultStory = ({ side, modal, snapPoints, ...props }: StoryArgs) => (
  * siblings, and a drag toward either edge narrows that drawer with the main panel following in step.
  */
 /** One number for the seam and both drawers: a drawer in a split pane moves on the pane's clock. */
-const TRANSITION = 500;
+const TRANSITION = undefined;
 /** The inspector's initial width in rem; the seam writes drags back into it. */
-const INSPECTOR_SIZE = 40;
+const INSPECTOR_SIZE = 35;
 
 const PushStory = () => {
   const [start, setStart] = useState(true);
@@ -111,14 +110,11 @@ const PushStory = () => {
             <Panel.Content asChild>
               <Panel.Root>
                 <Panel.Toolbar asChild>
-                  <Toolbar.Root classNames='bg-transparent'>
+                  <Toolbar.Root elevation={1}>
                     <Toolbar.IconButton icon='ph--plus--regular' iconOnly label='Create' />
                   </Toolbar.Root>
                 </Panel.Toolbar>
                 <Panel.Content>
-                  <Drawer.Description>
-                    The Navigation Drawer slides in from the left edge of the viewport.
-                  </Drawer.Description>
                   <Filler lines={50} />
                 </Panel.Content>
               </Panel.Root>
@@ -163,7 +159,7 @@ const PushStory = () => {
             <Panel.Content>
               <Panel.Root>
                 <Panel.Toolbar asChild>
-                  <Toolbar.Root classNames='bg-transparent'>
+                  <Toolbar.Root elevation={3}>
                     <Toolbar.IconButton icon='ph--pen--regular' iconOnly label='Edit' />
                   </Toolbar.Root>
                 </Panel.Toolbar>
@@ -198,15 +194,12 @@ const PushStory = () => {
                 <Panel.Content asChild>
                   <Panel.Root>
                     <Panel.Toolbar asChild>
-                      <Toolbar.Root classNames='bg-transparent'>
+                      <Toolbar.Root elevation={5}>
                         <Toolbar.IconButton icon='ph--plus--regular' iconOnly label='Create' />
                       </Toolbar.Root>
                     </Panel.Toolbar>
                     {/* A column, so the description and the scroll area share the row rather than stacking past it. */}
                     <Panel.Content classNames='flex flex-col'>
-                      <Drawer.Description>
-                        The Inspector slides in from the right edge of the viewport.
-                      </Drawer.Description>
                       <Filler lines={50} />
                     </Panel.Content>
                   </Panel.Root>

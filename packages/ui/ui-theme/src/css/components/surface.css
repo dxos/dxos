@@ -5,7 +5,8 @@
  * aspects (bar, well, hover, current, selected) derive from the actual surface and stay visible at
  * any elevation, and surface-matching elements (avatars, gradients) can read it directly.
  *
- * Enter a zone with `data-surface="<level>"` — the levels are the ladder in `theme/surfaces.css`.
+ * Enter a zone with `data-surface="<level>"` — the levels are the ladder in `theme/surfaces.css`;
+ * in React, `elevation={0..5}` on Panel, Toolbar, Card, Dialog and Popover sets it.
  * The `dx-*-surface` classes are role-named aliases of the same thing, kept because they read well
  * at call sites (`dx-card-surface` says more than `data-surface="raised"`).
  *
@@ -102,6 +103,20 @@
   .dx-modal-surface,
   .dx-popover-surface {
     @apply backdrop-blur-md;
+  }
+
+  /*
+   * An explicit elevation (`elevation={3..5}` in React, which sets `data-surface`) also casts the
+   * level's shadow, as Material's elevation does; the chrome levels below the canvas cast none.
+   */
+  [data-surface='raised'] {
+    @apply shadow-sm;
+  }
+  [data-surface='overlay'] {
+    @apply shadow-md;
+  }
+  [data-surface='popup'] {
+    @apply shadow-lg;
   }
 }
 
