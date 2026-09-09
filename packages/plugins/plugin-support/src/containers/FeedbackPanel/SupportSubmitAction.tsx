@@ -11,6 +11,7 @@ import { log } from '@dxos/log';
 import { useConfig } from '@dxos/react-client';
 import { useTranslation } from '@dxos/react-ui';
 import { osTranslations } from '@dxos/ui-theme';
+import { openExternalUrl } from '@dxos/util';
 
 import { FeedbackForm, type FeedbackSubmitHandler } from '#components';
 import { useDiscordPresence } from '#hooks';
@@ -30,8 +31,8 @@ type Toast = {
 };
 
 /**
- * The thread URL arrives well past the few seconds a browser honours `window.open` after a click,
- * so the app never opens it: the toast's action button does, inside a fresh user gesture.
+ * The thread URL arrives well past the few seconds a browser honours a popup after a click, so the
+ * app never opens it: the toast's action button does, inside a fresh user gesture.
  */
 export const useSupportSubmit = (): FeedbackSubmitHandler => {
   const { invokePromise } = useOperationInvoker();
@@ -57,8 +58,6 @@ export const useSupportSubmit = (): FeedbackSubmitHandler => {
               }
             : {}),
         });
-      const collapse = () => invokePromise(LayoutOperation.UpdateComplementary, { state: 'collapsed' });
-
       const screenshot = await attachScreenshot(values);
 
       const { data: result, error } = await invokePromise(SupportOperation.SubmitReport, {
@@ -75,10 +74,9 @@ export const useSupportSubmit = (): FeedbackSubmitHandler => {
           title: 'feedback-failed-toast.label',
           description: 'feedback-failed-toast.description',
         });
-        return;
+        return false;
       }
 
-      await collapse();
       if (result.threadUrl) {
         const threadUrl = result.threadUrl;
         await showToast({
@@ -87,9 +85,11 @@ export const useSupportSubmit = (): FeedbackSubmitHandler => {
           duration: Infinity,
           title: 'discord-feedback-toast.label',
           actionLabel: 'open-thread.label',
-          onAction: () => window.open(threadUrl, '_blank'),
+          onAction: () => {
+            void openExternalUrl(threadUrl);
+          },
         });
-        return;
+        return true;
       }
       await showToast({
         id: 'feedback-success',
@@ -98,6 +98,7 @@ export const useSupportSubmit = (): FeedbackSubmitHandler => {
         title: 'feedback-toast.label',
         description: screenshot.failed ? 'feedback-toast-no-screenshot.description' : 'feedback-toast.description',
       });
+      return true;
     },
     [invokePromise, identity, attachScreenshot],
   );

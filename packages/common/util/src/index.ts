@@ -20,6 +20,7 @@ export * from './deep';
 export * from './defer-function';
 export * from './defer';
 export * from './download';
+export * from './open-external';
 export * from './entry';
 export * from './equals';
 export * from './error-format';

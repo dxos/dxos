@@ -14,6 +14,7 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { ClientOperation } from '@dxos/plugin-client';
 import * as PasskeyError from '@dxos/plugin-client/PasskeyError';
+import { requirePublicKey } from '@dxos/protocols/buf';
 import { useClient } from '@dxos/react-client';
 import { useIdentity } from '@dxos/react-client/halo';
 import { ThemeProvider, defaultTx } from '@dxos/react-ui';
@@ -80,11 +81,12 @@ export const WelcomeScreen = ({ hubUrl }: { hubUrl: string }) => {
           });
           const newIdentity = client.halo.identity.get();
           invariant(newIdentity, 'identity should exist after create');
+          const newIdentityKey = requirePublicKey(newIdentity.identityKey);
           result = await login({
             hubUrl,
             email,
-            identityDid: await createDidFromIdentityKey(newIdentity.identityKey),
-            identityKey: newIdentity.identityKey.toHex(),
+            identityDid: await createDidFromIdentityKey(newIdentityKey),
+            identityKey: newIdentityKey.toHex(),
           });
         }
 
@@ -272,7 +274,7 @@ export const WelcomeScreen = ({ hubUrl }: { hubUrl: string }) => {
         await joinWaitlist({
           hubUrl,
           email,
-          identityDid: identity ? await createDidFromIdentityKey(identity.identityKey) : undefined,
+          identityDid: identity ? await createDidFromIdentityKey(requirePublicKey(identity.identityKey)) : undefined,
         });
         setState(WelcomeState.WAITLIST_SUBMITTED);
       } catch (err) {

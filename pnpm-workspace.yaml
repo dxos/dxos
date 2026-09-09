@@ -32,12 +32,12 @@ catalog:
   '@atlaskit/pragmatic-drag-and-drop-react-drop-indicator': 3.2.10
   '@atproto/api': ^0.19.5
   '@atproto/lexicon': ^0.7.7
-  '@automerge/automerge': 3.3.0-fragments.2
-  '@automerge/automerge-repo': 2.6.0-subduction.40
-  '@automerge/automerge-repo-network-broadcastchannel': 2.6.0-subduction.40
-  '@automerge/automerge-repo-network-websocket': 2.6.0-subduction.40
-  '@automerge/automerge-repo-storage-indexeddb': 2.6.0-subduction.40
-  '@automerge/automerge-subduction': 0.16.0
+  '@automerge/automerge': 3.3.2
+  '@automerge/automerge-repo': 2.6.0-subduction.48
+  '@automerge/automerge-repo-network-broadcastchannel': 2.6.0-subduction.48
+  '@automerge/automerge-repo-network-websocket': 2.6.0-subduction.48
+  '@automerge/automerge-repo-storage-indexeddb': 2.6.0-subduction.48
+  '@automerge/automerge-subduction': 0.16.1
   '@aws-sdk/client-s3': ^3.995.0
   '@babel/core': ^7.18.13
   '@babel/parser': ^7.29.0
@@ -543,7 +543,6 @@ catalog:
   prosemirror-model: ^1.25.1
   prosemirror-state: ^1.4.3
   prosemirror-view: ^1.40.0
-  protobufjs: ^8.0.0
   pwa-asset-generator: ^6.4.0
   quickjs-emscripten: 0.31.0
   race-as-promised: ^0.0.3
@@ -707,7 +706,6 @@ onlyBuiltDependencies:
   - node-datachannel
   - onnxruntime-node
   - oxc-resolver
-  - protobufjs
   - sharp
   - sodium-native
   - styled-components
@@ -768,8 +766,8 @@ overrides:
   ws: '>=8.17.1'
 
 patchedDependencies:
-  '@automerge/automerge-repo@2.6.0-subduction.40': patches/@automerge__automerge-repo@2.6.0-subduction.40.patch
-  '@automerge/automerge-subduction@0.16.0': patches/@automerge__automerge-subduction@0.16.0.patch
+  '@automerge/automerge-repo@2.6.0-subduction.48': patches/@automerge__automerge-repo@2.6.0-subduction.48.patch
+  '@automerge/automerge-subduction@0.16.1': patches/@automerge__automerge-subduction@0.16.1.patch
   '@vitest/browser@4.1.10': patches/@vitest__browser@4.1.10.patch
   js-clipper@1.0.1: patches/js-clipper@1.0.1.patch
   random-access-idb@1.2.2: patches/random-access-idb@1.2.2.patch

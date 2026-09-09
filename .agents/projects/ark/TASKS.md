@@ -1,8 +1,9 @@
 # ark — Tasks
 
-_Resume: on this branch, unpushed above PR #13024's review fix: `Toc`, and `Tour` + `WelcomeTour` off
-`react-joyride` (2026-09-09). Next: decide how they ship (onto #13024 or their own PR), land, then
-`Main` step 2 (push layout at `lg`). Uncommitted: none._
+_Resume: #13024 (Main step 1) MERGED 2026-09-09. On this branch, going out as the next PR: #13024's
+CodeRabbit fix (drawer open only while `expanded`, dismissal rests at `collapsed`), `Toc`, and `Tour` +
+`WelcomeTour` off `react-joyride`. Next: land it, then `Main` step 2 (push layout at `lg`). Uncommitted:
+none._
 
 ## Phase 1: Tree rebuild on Ark (PR #12873)
 

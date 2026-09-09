@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+import { create } from '@bufbuild/protobuf';
 import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
 import * as Command from 'effect/unstable/cli/Command';
@@ -10,6 +11,7 @@ import * as Options from 'effect/unstable/cli/Flag';
 import { CommandConfig } from '@dxos/cli-util';
 import { print } from '@dxos/cli-util';
 import { ClientService } from '@dxos/client';
+import { ProfileDocumentSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
 import { printIdentity } from '../util';
 
@@ -26,7 +28,9 @@ export const handler = Effect.fn(function* ({ displayName }: { displayName: stri
     return;
   }
 
-  const updatedIdentity = yield* Effect.tryPromise(() => client.halo.updateProfile({ displayName }));
+  const updatedIdentity = yield* Effect.tryPromise(() =>
+    client.halo.updateProfile(create(ProfileDocumentSchema, { displayName })),
+  );
 
   if (json) {
     yield* Console.log(

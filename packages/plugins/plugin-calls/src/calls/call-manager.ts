@@ -13,7 +13,6 @@ import { EdgeServiceName, getEdgeServiceEndpoint } from '@dxos/config';
 import { Resource } from '@dxos/context';
 import { type Identity } from '@dxos/halo';
 import { invariant } from '@dxos/invariant';
-import { type Tracks } from '@dxos/protocols/proto/dxos/edge/calls';
 import { isNonNullable } from '@dxos/util';
 
 import { type CallState, CallSwarmSynchronizer } from './call-swarm-synchronizer';
@@ -110,7 +109,7 @@ export class CallManager extends Resource {
   }
 
   /** Derived atom for tracks. */
-  get tracksAtom(): Atom.Atom<Tracks> {
+  get tracksAtom(): Atom.Atom<NonNullable<UserState['tracks']>> {
     return this._tracksAtom;
   }
 

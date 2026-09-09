@@ -77,7 +77,7 @@ export const FormFieldLabel = ({
   // The control-height row comes from `Field.Label` itself; the read-only/standalone `span` is not
   // one, so it repeats the geometry to keep the row the same height either way.
   const labelClassNames = mx(
-    'flex items-center min-h-(--dx-control) text-sm text-description',
+    'flex items-center min-h-(--dx-control)',
     required && "after:content-['*'] after:ms-0.5 after:text-warning-text",
     styles.fieldLabelText({ class: labelClassName }),
   );

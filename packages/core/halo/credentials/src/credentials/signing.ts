@@ -2,22 +2,62 @@
 // Copyright 2022 DXOS.org
 //
 
+import { toBinary } from '@bufbuild/protobuf';
 import stableStringify from 'json-stable-stringify';
 
 import { PublicKey } from '@dxos/keys';
-import { type Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
+import {
+  type Credential,
+  CredentialSchema,
+  type Proof,
+  ProofSchema,
+} from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { Timeframe } from '@dxos/timeframe';
 import { arrayToBuffer } from '@dxos/util';
+
+import { toSigningShapeFromBinary } from './signing-shape';
+
+/**
+ * The credential shape the signature is computed over.
+ *
+ * A signature covers `canonicalStringify` of the credential's *substituted* shape — `PublicKey`
+ * instances, `Date`s, an inlined assertion — not its wire bytes, so that shape is part of the
+ * signature format and cannot change without invalidating every issued credential. Only the fields
+ * the payload logic below touches are named; the rest pass through the stringifier untyped.
+ */
+type SigningShape = {
+  id?: unknown;
+  parentCredentialIds?: unknown[];
+  proof?: Record<string, unknown>;
+  subject?: { assertion?: Record<string, unknown> } & Record<string, unknown>;
+} & Record<string, unknown>;
+
+/**
+ * Resolves a buf credential into the shape the signature covers.
+ *
+ * Goes via wire bytes so the substitutions are read off the descriptor rather than restated here,
+ * which is what makes it byte-identical to what the protobuf.js codec produced — the golden vector
+ * in `testing/golden-credential.ts` is the guard.
+ */
+export const toSigningShape = (credential: Credential): SigningShape =>
+  toSigningShapeFromBinary<SigningShape>(CredentialSchema, toBinary(CredentialSchema, credential));
+
+/** Resolves a proof into the shape its signature covers, for a presentation's own proofs. */
+export const toProofSigningShape = (proof: Proof): Record<string, unknown> =>
+  toSigningShapeFromBinary<Record<string, unknown>>(ProofSchema, toBinary(ProofSchema, proof));
 
 /**
  * @returns The input message to be signed for a given credential.
  */
 // TODO(nf): rename, this returns not the proof itself, but the payload for verifying against the proof.
 export const getCredentialProofPayload = (credential: Credential): Uint8Array => {
+  // Resolved before the proof is zeroed: proto3 omits an empty bytes field, so zeroing first would
+  // drop `proof.value` from the wire and the payload would lose its `"value":""` entry.
+  const resolved = toSigningShape(credential);
   const copy = {
-    ...credential,
+    ...resolved,
     proof: {
-      ...credential.proof,
+      ...resolved.proof,
       value: new Uint8Array(),
       chain: undefined,
     },

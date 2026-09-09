@@ -7,6 +7,7 @@ import React, { useMemo } from 'react';
 
 import { Format } from '@dxos/echo/Format';
 import { PublicKey } from '@dxos/keys';
+import { requirePublicKey } from '@dxos/protocols/buf';
 import { type DevtoolsHost } from '@dxos/protocols/rpc';
 import { useDevtools, useStream } from '@dxos/react-client/devtools';
 import { type SpaceMember, useMembers, useSpaces } from '@dxos/react-client/echo';
@@ -87,7 +88,7 @@ export const SwarmPanel = () => {
     for (const member of members) {
       // TODO(nf): need to iterate through all the peerstates?
       if (member.peerStates?.length && member.peerStates[0].peerId) {
-        identityMap.set(member.peerStates[0].peerId, member);
+        identityMap.set(requirePublicKey(member.peerStates[0].peerId), member);
       }
     }
   }
@@ -112,7 +113,7 @@ export const SwarmPanel = () => {
           let identityDisplay = '';
           const identity = identityMap.get(connection.remotePeerId)?.identity;
           if (identity) {
-            identityDisplay = identity.identityKey.truncate();
+            identityDisplay = requirePublicKey(identity.identityKey).truncate();
             if (identity.profile?.displayName) {
               identityDisplay = identityDisplay + ' (' + identity.profile?.displayName + ')';
             }

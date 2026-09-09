@@ -2,13 +2,22 @@
 // Copyright 2023 DXOS.org
 //
 
+import { create } from '@bufbuild/protobuf';
+import { EmptySchema } from '@bufbuild/protobuf/wkt';
+
 import { TimeoutError as AsyncTimeoutError, asyncTimeout, scheduleTaskInterval } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { RpcClosedError } from '@dxos/protocols';
-import { getBufService } from '@dxos/protocols/buf-service';
-import { type ControlService } from '@dxos/protocols/proto/dxos/mesh/teleport/control';
+import { fromDate, toDate } from '@dxos/protocols/buf';
+import { type BufService, getBufService } from '@dxos/protocols/buf-service';
+import {
+  ControlHeartbeatRequestSchema,
+  ControlHeartbeatResponseSchema,
+  ControlService as ControlServiceDesc,
+  RegisterExtensionRequestSchema,
+} from '@dxos/protocols/buf/dxos/mesh/teleport/control_pb';
 import { type ProtoRpcPeer, createProtoRpcPeer } from '@dxos/rpc';
 import { Callback } from '@dxos/util';
 
@@ -16,6 +25,8 @@ import { type ExtensionContext, type TeleportExtension } from './teleport';
 
 const HEARTBEAT_RTT_WARN_THRESH = 10_000;
 const DEBUG_PRINT_HEARTBEAT = false; // very noisy
+
+type ControlService = BufService<typeof ControlServiceDesc>;
 
 type ControlRpcBundle = {
   Control: ControlService;
@@ -46,7 +57,7 @@ export class ControlExtension implements TeleportExtension {
   ) {}
 
   async registerExtension(name: string): Promise<void> {
-    await this._rpc.rpc.Control.registerExtension({ name });
+    await this._rpc.rpc.Control.registerExtension(create(RegisterExtensionRequestSchema, { name }));
   }
 
   async onOpen(extensionContext: ExtensionContext): Promise<void> {
@@ -63,6 +74,7 @@ export class ControlExtension implements TeleportExtension {
         Control: {
           registerExtension: async (request) => {
             this.onExtensionRegistered.call(request.name);
+            return create(EmptySchema, {});
           },
           heartbeat: async (request) => {
             if (DEBUG_PRINT_HEARTBEAT) {
@@ -72,9 +84,9 @@ export class ControlExtension implements TeleportExtension {
                 remotePeerId: this.remotePeerId.truncate(),
               });
             }
-            return {
+            return create(ControlHeartbeatResponseSchema, {
               requestTimestamp: request.requestTimestamp,
-            };
+            });
           },
         },
       },
@@ -92,27 +104,30 @@ export class ControlExtension implements TeleportExtension {
         const reqTS = new Date();
         try {
           const resp = await asyncTimeout(
-            this._rpc.rpc.Control.heartbeat({ requestTimestamp: reqTS }),
+            this._rpc.rpc.Control.heartbeat(
+              create(ControlHeartbeatRequestSchema, { requestTimestamp: fromDate(reqTS) }),
+            ),
             this.opts.heartbeatTimeout,
           );
           const now = Date.now();
           // TODO(nf): properly instrument
-          if (resp.requestTimestamp instanceof Date) {
+          const respTimestamp = toDate(resp.requestTimestamp);
+          if (respTimestamp) {
             if (
-              now - resp.requestTimestamp.getTime() >
+              now - respTimestamp.getTime() >
               (HEARTBEAT_RTT_WARN_THRESH < this.opts.heartbeatTimeout
                 ? HEARTBEAT_RTT_WARN_THRESH
                 : this.opts.heartbeatTimeout / 2)
             ) {
               log.warn(`heartbeat RTT for Teleport > ${HEARTBEAT_RTT_WARN_THRESH / 1000}s`, {
-                rtt: now - resp.requestTimestamp.getTime(),
+                rtt: now - respTimestamp.getTime(),
                 localPeerId: this.localPeerId.truncate(),
                 remotePeerId: this.remotePeerId.truncate(),
               });
             } else {
               if (DEBUG_PRINT_HEARTBEAT) {
                 log('heartbeat RTT', {
-                  rtt: now - resp.requestTimestamp.getTime(),
+                  rtt: now - respTimestamp.getTime(),
                   localPeerId: this.localPeerId.truncate(),
                   remotePeerId: this.remotePeerId.truncate(),
                 });

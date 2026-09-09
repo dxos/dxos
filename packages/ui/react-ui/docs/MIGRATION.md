@@ -664,6 +664,7 @@ exactly as before. The public API, the three-state model, the `lg` landmark bran
 geometry and the deck's focus CSS are untouched — step 2 (push layout at `lg`, on `Drawer push`'s
 clip-and-sheet) is a separate PR. What changed:
 
+<<<<<<< HEAD
 - `useSwipeToDismiss` (103 lines, navigation side only, driven off `inset-inline-start` and inline
   `transition-duration`) is deleted; the machine's content drag replaces it on both sidebars.
   `swipeToDismiss` is now on by default and maps to the content's `draggable`.
@@ -683,6 +684,24 @@ clip-and-sheet) is a separate PR. What changed:
   `closed`, which at `lg` is the no-rail state), and the swipe area can open from `collapsed`.
   `onOpenChange` handles `open: true` (the swipe area's release), not only dismissal.
 - `aria-label` is on the element rather than the machine, so the `lg` landmark carries it too.
+||||||| 0c6c18641a
+=======
+- `useSwipeToDismiss` (103 lines, navigation side only, driven off `inset-inline-start` and inline
+  `transition-duration`) is deleted; the machine's content drag replaces it on both sidebars.
+  `swipeToDismiss` is now on by default and maps to the content's `draggable`.
+- `swipeToOpen` (on by default) renders the machine's `SwipeArea` beside the content while the drawer
+  is closed: a touch swipe inward from the edge opens the sidebar through `onOpenChange(true)` →
+  `'expanded'`. The strip is touch-only (`.dx-main-swipe-area`, `@media (pointer: coarse)`), since under
+  a mouse a fixed edge strip takes the clicks aimed at whatever sits at the edge. There is no live
+  preview of the opening swipe: the machine positions the content with its transform from
+  off-screen, but `main.css` holds a closed sidebar at `-100vw`, so the panel slides in on release.
+- The two sidebars are sibling layers in Zag's dismissable stack, which treats the later-opened one as
+  nested and dismisses it when the other leaves; `onRequestDismiss` vetoes a request whose target layer
+  does not contain the sidebar, as `Drawer.Root` does. `TestSwipeToDismiss` opens both on mount and
+  checks the complementary sidebar survives the navigation sidebar's swipe.
+- `onOpenChange` now handles `open: true` (the swipe area's release), not only dismissal.
+- `aria-label` is on the element rather than the machine, so the `lg` landmark carries it too.
+>>>>>>> origin/main
 
 `Main.stories.tsx` pins it in the vitest browser at an 800px viewport: swipe-to-dismiss on both sides
 (mid-drag `data-dragging` and a non-zero `--drawer-translate-x`, `closed` on release), a short drag

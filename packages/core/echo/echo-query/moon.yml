@@ -17,17 +17,6 @@ tasks:
       - src/parser/gen/query.ts
     tags:
       - prebuild
-  prebuild-query-lite:
-    command: pnpm exec tsdown --logLevel error
-    deps:
-      - ^:build
-    inputs:
-      - src/query-lite/*
-      - tsdown.config.ts
-    outputs:
-      - dist/query-lite/*
-    tags:
-      - prebuild
   test:
     deps:
       - ~:#prebuild

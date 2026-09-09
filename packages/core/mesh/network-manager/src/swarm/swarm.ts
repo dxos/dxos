@@ -2,6 +2,8 @@
 // Copyright 2020 DXOS.org
 //
 
+import { create } from '@bufbuild/protobuf';
+
 import { Event, scheduleTask, sleep, synchronized } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { ErrorStream } from '@dxos/debug';
@@ -9,7 +11,8 @@ import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log, logInfo } from '@dxos/log';
 import { type ListeningHandle, type Messenger, type PeerInfo, PeerInfoHash, type SwarmEvent } from '@dxos/messaging';
-import { type Answer } from '@dxos/protocols/proto/dxos/mesh/swarm';
+import { PeerSchema } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
+import { type Answer, AnswerSchema } from '@dxos/protocols/buf/dxos/mesh/swarm_pb';
 import { ComplexMap, isNonNullable } from '@dxos/util';
 
 import { type OfferMessage, type SignalMessage, SwarmMessenger } from '../signal';
@@ -172,25 +175,28 @@ export class Swarm {
       return;
     }
 
-    if (swarmEvent.peerAvailable) {
-      const peerId = swarmEvent.peerAvailable.peer.peerKey;
-      if (peerId !== this._ownPeer.peerKey) {
-        log('new peer', { peerId });
-        const peer = this._getOrCreatePeer(swarmEvent.peerAvailable.peer);
+    if (swarmEvent.event.case === 'peerAvailable') {
+      const available = swarmEvent.event.value.peer;
+      invariant(available, 'Swarm event carries no peer.');
+      if (available.peerKey !== this._ownPeer.peerKey) {
+        log('new peer', { peerId: available.peerKey });
+        const peer = this._getOrCreatePeer(available);
         peer.advertizing = true;
       }
-    } else if (swarmEvent.peerLeft) {
-      const peer = this._peers.get(swarmEvent.peerLeft.peer);
+    } else if (swarmEvent.event.case === 'peerLeft') {
+      const left = swarmEvent.event.value.peer;
+      invariant(left, 'Swarm event carries no peer.');
+      const peer = this._peers.get(left);
       if (peer) {
         peer.advertizing = false;
         // Destroy peer only if there is no p2p-connection established. Otherwise, let peers go through
         // the graceful shutdown protocol.
         if (this._isConnectionEstablishmentInProgress(peer)) {
           log(`destroying peer, state: ${peer.connection?.state}`);
-          void this._destroyPeer(swarmEvent.peerLeft.peer, 'peer left').catch((err) => log.catch(err));
+          void this._destroyPeer(left, 'peer left').catch((err) => log.catch(err));
         }
       } else {
-        log('received peerLeft but no peer found', { peer: swarmEvent.peerLeft.peer.peerKey });
+        log('received peerLeft but no peer found', { peer: left.peerKey });
       }
     }
 
@@ -202,18 +208,18 @@ export class Swarm {
     log('offer', { message });
     if (this._ctx.disposed) {
       log('ignored for disposed swarm');
-      return { accept: false };
+      return create(AnswerSchema, { accept: false });
     }
 
     // Id of the peer offering us the connection.
     invariant(message.author);
     if (message.recipient.peerKey !== this._ownPeer.peerKey) {
       log('rejecting offer with incorrect peerId', { message });
-      return { accept: false };
+      return create(AnswerSchema, { accept: false });
     }
     if (!message.topic?.equals(this._topic)) {
       log('rejecting offer with incorrect topic', { message });
-      return { accept: false };
+      return create(AnswerSchema, { accept: false });
     }
 
     const peer = this._getOfferSenderPeer(message.author);
@@ -350,7 +356,7 @@ export class Swarm {
         // Run in a separate non-blocking task.
         scheduleTask(this._ctx, async () => {
           try {
-            await this._initiateConnection({ peerKey: peer.toHex() });
+            await this._initiateConnection(create(PeerSchema, { peerKey: peer.toHex() }));
           } catch (err: any) {
             log('initiation error', err);
           }
@@ -363,7 +369,7 @@ export class Swarm {
 
         // Run in a separate non-blocking task.
         scheduleTask(this._ctx, async () => {
-          await this._closeConnection({ peerKey: peer.toHex() });
+          await this._closeConnection(create(PeerSchema, { peerKey: peer.toHex() }));
           this._topology.update();
         });
       },
