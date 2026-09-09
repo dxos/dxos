@@ -1,0 +1,180 @@
+/**
+ * Drawer
+ *
+ * The machine keys every part on `data-swipe-direction`, the physical direction a swipe dismisses
+ * in — so `down` is the sheet at the bottom, `left` the panel on the left edge. It moves the panel
+ * during a drag through `--drawer-translate-x/y` on an inline transform; the keyframes here run
+ * over that same transform, so the open slide starts off screen and the close slide starts from
+ * wherever a drag left the panel.
+ */
+
+@layer dx-components {
+  .dx-drawer__overlay {
+    @apply z-40 fixed inset-0 bg-scrim-surface backdrop-blur-xs;
+
+    &[data-state='open'] {
+      @apply animate-fade-in;
+    }
+
+    /* A scrim that is on its way out must not swallow clicks aimed at the page behind it: the
+       presence machine unmounts on `animationend`, which does not always arrive. */
+    &[data-state='closed'] {
+      @apply animate-fade-out pointer-events-none;
+    }
+  }
+
+  .dx-drawer__positioner {
+    @apply z-40 fixed inset-0 flex;
+
+    &[data-swipe-direction='down'] {
+      @apply flex-col justify-end;
+    }
+    &[data-swipe-direction='up'] {
+      @apply flex-col justify-start;
+    }
+    &[data-swipe-direction='left'] {
+      @apply flex-row justify-start;
+    }
+    &[data-swipe-direction='right'] {
+      @apply flex-row justify-end;
+    }
+  }
+
+  .dx-drawer__content {
+    @apply flex flex-col overflow-hidden shadow-md;
+    transition-property: transform;
+    transition-duration: 300ms;
+    transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+
+    &[data-swipe-direction='down'] {
+      @apply w-full max-h-[85dvh] rounded-t-lg border-t border-separator;
+      padding-block-end: env(safe-area-inset-bottom);
+
+      &[data-state='open'] {
+        animation: dx-drawer-in-from-bottom 300ms cubic-bezier(0.16, 1, 0.3, 1);
+      }
+      &[data-state='closed'] {
+        animation: dx-drawer-out-to-bottom 200ms ease-in forwards;
+      }
+    }
+
+    &[data-swipe-direction='up'] {
+      @apply w-full max-h-[85dvh] rounded-b-lg border-b border-separator;
+      padding-block-start: env(safe-area-inset-top);
+
+      &[data-state='open'] {
+        animation: dx-drawer-in-from-top 300ms cubic-bezier(0.16, 1, 0.3, 1);
+      }
+      &[data-state='closed'] {
+        animation: dx-drawer-out-to-top 200ms ease-in forwards;
+      }
+    }
+
+    &[data-swipe-direction='left'] {
+      @apply h-full w-[min(calc(100dvw-3rem),24rem)] border-e border-separator;
+      padding-inline-start: env(safe-area-inset-left);
+
+      &[data-state='open'] {
+        animation: dx-drawer-in-from-left 300ms cubic-bezier(0.16, 1, 0.3, 1);
+      }
+      &[data-state='closed'] {
+        animation: dx-drawer-out-to-left 200ms ease-in forwards;
+      }
+    }
+
+    &[data-swipe-direction='right'] {
+      @apply h-full w-[min(calc(100dvw-3rem),24rem)] border-s border-separator;
+      padding-inline-end: env(safe-area-inset-right);
+
+      &[data-state='open'] {
+        animation: dx-drawer-in-from-right 300ms cubic-bezier(0.16, 1, 0.3, 1);
+      }
+      &[data-state='closed'] {
+        animation: dx-drawer-out-to-right 200ms ease-in forwards;
+      }
+    }
+  }
+
+  /* The edge strip a swipe opens the drawer from; keyed on the direction that swipe travels. */
+  .dx-drawer__swipe-area {
+    @apply z-30 fixed;
+
+    &[data-swipe-direction='up'] {
+      @apply inset-x-0 bottom-0 h-6;
+    }
+    &[data-swipe-direction='down'] {
+      @apply inset-x-0 top-0 h-6;
+    }
+    &[data-swipe-direction='right'] {
+      @apply inset-y-0 left-0 w-4;
+    }
+    &[data-swipe-direction='left'] {
+      @apply inset-y-0 right-0 w-4;
+    }
+  }
+
+  @keyframes dx-drawer-in-from-bottom {
+    from {
+      transform: translate3d(0, 100%, 0);
+    }
+    to {
+      transform: translate3d(0, var(--drawer-translate-y, 0px), 0);
+    }
+  }
+  @keyframes dx-drawer-out-to-bottom {
+    from {
+      transform: translate3d(0, var(--drawer-translate-y, 0px), 0);
+    }
+    to {
+      transform: translate3d(0, 100%, 0);
+    }
+  }
+  @keyframes dx-drawer-in-from-top {
+    from {
+      transform: translate3d(0, -100%, 0);
+    }
+    to {
+      transform: translate3d(0, var(--drawer-translate-y, 0px), 0);
+    }
+  }
+  @keyframes dx-drawer-out-to-top {
+    from {
+      transform: translate3d(0, var(--drawer-translate-y, 0px), 0);
+    }
+    to {
+      transform: translate3d(0, -100%, 0);
+    }
+  }
+  @keyframes dx-drawer-in-from-left {
+    from {
+      transform: translate3d(-100%, 0, 0);
+    }
+    to {
+      transform: translate3d(var(--drawer-translate-x, 0px), 0, 0);
+    }
+  }
+  @keyframes dx-drawer-out-to-left {
+    from {
+      transform: translate3d(var(--drawer-translate-x, 0px), 0, 0);
+    }
+    to {
+      transform: translate3d(-100%, 0, 0);
+    }
+  }
+  @keyframes dx-drawer-in-from-right {
+    from {
+      transform: translate3d(100%, 0, 0);
+    }
+    to {
+      transform: translate3d(var(--drawer-translate-x, 0px), 0, 0);
+    }
+  }
+  @keyframes dx-drawer-out-to-right {
+    from {
+      transform: translate3d(var(--drawer-translate-x, 0px), 0, 0);
+    }
+    to {
+      transform: translate3d(100%, 0, 0);
+    }
+  }
+}

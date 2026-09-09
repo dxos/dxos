@@ -1,12 +1,8 @@
 # ark — Tasks
 
-_Resume: PR [#12873](https://github.com/dxos/dxos/pull/12873) is open — `react-ui-list: rebuild Tree
-on @ark-ui/react TreeView`. Design lives in
-[`packages/ui/react-ui-list/docs/TREE.md`](../../../packages/ui/react-ui-list/docs/TREE.md), not
-here. Bundle impact is measured and accepted (~17 KB brotli on one lazy chunk; the eager boot graph
-moves 1.6 KB and the boot budget is untouched). The open work is the ARIA regression the rebuild
-introduced in navtree, the doc refresh, and a decision on what `Treegrid` is for now that `Tree` no
-longer uses it._
+_Resume: Phase 19 — `Drawer` landed in the tree on this branch; open the PR, then the `Main` port is the
+next ark item (MIGRATION.md Phase 7 has its shape). Uncommitted: none after the Phase 19 commit. Last:
+#13003 (form ontology) merged 2026-09-09._
 
 ## Phase 1: Tree rebuild on Ark (PR #12873)
 
@@ -916,10 +912,11 @@ dist/types/src: ENOTEMPTY` — a concurrent writer. A Cursor TypeScript native-p
       steps, the spotlight and the positioning on the same popper the rest of the library uses.
       Establish first which `react-joyride` features the walkthrough actually relies on (scrolling
       to a target, the beacon, controlled step state) and whether Ark's tour covers them.
-- [ ] **Implement Ark's table of contents (`toc`)** (tracked 2026-09-05): the machine tracks which
-      heading is in view and marks the matching link, which is what a document outline does by
-      hand today. The installed 5.39.1 ships it (`@ark-ui/react/toc`). Decide the consumer —
-      `react-ui-feed`'s `Outline`, the markdown article's heading rail — before writing the component.
+- [ ] **Implement Ark's table of contents (`toc`)** (tracked 2026-09-05, DEFERRED 2026-09-09 by the
+      user): the machine tracks which heading is in view and marks the matching link. The installed
+      5.39.1 ships it (`-ui/react/toc`). Decide the consumer first: the machine observes DOM
+      headings with ids, so rendered markdown fits and the CodeMirror editor does not; `react-ui-feed`'s
+      `Outline` is a tick rail over document offsets, a different thing.
 - [x] **Transcription `Pipeline/Live` story lost its mic** DONE 2026-09-06 (reported). Not the
       toolbar: the story's own graph extension registered at startup, its connector called
       `getDefaultSpace` on a client with no runtime yet and threw before subscribing to anything
@@ -1065,3 +1062,28 @@ against the Radix-era names react-ui kept, Popover first.
       machine's anchor element (scroll-following), both from the dx-anchor popover report.
 - [ ] `plugin-sheet:test-storybook` fails on CI shard 2 with a `Missing file` during teardown while every test passes (seen twice on #12971 and #12987, 2026-09-06 and 2026-09-08); rerun passes. Track the cause or quarantine.
 - [ ] `plugin-illustrator:test` runs ~570s on a CI runner (six diagrams through ELK candidate sweeps in `corpus.test.ts`, 83s locally) and was killed at moon's 600s cap on every run of #12987; main raised the task's timeout to 1800s (#12985) as the same stopgap. Make the corpus compile cheaper or run it outside the sharded job.
+
+## Phase 19: `Drawer` on Ark, and `Main` re-probed (2026-09-09)
+
+Asked for on 2026-09-09: react-ui components for Ark's `drawer` and `toc`, and whether `Drawer` can
+reimplement `Main`. Toc deferred (user, same day); the Main port is a follow-up (user chose probe +
+verdict over porting in the same PR).
+
+- [x] **`Drawer` component** DONE 2026-09-09: `Root` (`side`, `modal`, snap points), `Trigger`,
+      `Portal`, `Overlay`, `Content` (positioner folded in), `Grabber`, `Title`, `Description`,
+      `Close`, `SwipeArea`; theme + `drawer.css` keyed on the machine's `data-swipe-direction`;
+      stories `Default`/`Side`/`BottomSheet`/`NonModal` + two play tests. Verified through the vitest
+      storybook browser and screenshots of all five variants (the 9009 storybook was serving a
+      deleted worktree and could not be replaced from this session). Finding: a fraction snap point
+      is a fraction of the **viewport**, capped by the content's extent — short content shows no snap.
+- [x] **`Main` on the drawer machine — probe** DONE 2026-09-09. The 2026-09-05 verdict ("fights the
+      inset slide") was wrong: the machine's inline `transform` and `main.css`'s `inset-inline-start`
+      are independent properties, and a driven touch swipe dismissed the sidebar through
+      `onOpenChange` with the inset slide finishing the exit. Findings and the port's shape are in
+      `react-ui/docs/MIGRATION.md` Phase 7. The probe story lives in git history one commit and is
+      deleted from the tree.
+- [ ] **Port `Main`'s sidebars to the drawer machine** (follow-up): swap `useDialog` for `useDrawer`
+      in `MainSidebar`, delete `useSwipeToDismiss`, add `Drawer.SwipeArea` for edge-swipe-to-open;
+      then verify on a touch device (WKWebView) before landing — that is the case the probe could
+      not cover.
+- [ ] **`Toc`** — deferred; see Phase 16's toc item for the consumer question.
