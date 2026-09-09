@@ -13,7 +13,7 @@ import {
   Invitation_Kind,
   Invitation_State,
 } from '@dxos/protocols/buf/dxos/client/invitation_pb';
-import { type DeviceProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { type DeviceProfileDocument } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
 import { ClientServicesHost, type ServiceContext } from '../services';
 

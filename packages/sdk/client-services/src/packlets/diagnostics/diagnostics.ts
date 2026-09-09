@@ -6,11 +6,11 @@ import { asyncTimeout } from '@dxos/async';
 import { getFirstStreamValue } from '@dxos/async';
 import { type ClientServices } from '@dxos/client-protocol';
 import { type Config, type ConfigProto } from '@dxos/config';
-import { createDidFromIdentityKey, credentialTypeFilter } from '@dxos/credentials';
+import { createDidFromIdentityKey, credentialsOfType } from '@dxos/credentials';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
 import { STORAGE_VERSION } from '@dxos/protocols';
-import { buf, fromPublicKey } from '@dxos/protocols/buf';
+import { buf, fromPublicKey, fromTimeframe, toDate, toPublicKey } from '@dxos/protocols/buf';
 import {
   type Device,
   type Identity,
@@ -18,14 +18,21 @@ import {
   type NetworkStatus,
   type Platform,
 } from '@dxos/protocols/buf/dxos/client/services_pb';
-import { SpaceMember, type Space as SpaceProto } from '@dxos/protocols/proto/dxos/client/services';
-import { type SwarmInfo } from '@dxos/protocols/proto/dxos/devtools/swarm';
-import { type Epoch } from '@dxos/protocols/proto/dxos/halo/credentials';
+import {
+  type Space_Metrics,
+  type Space_PipelineState,
+  Space_PipelineStateSchema,
+  IdentitySchema as SpaceIdentitySchema,
+  type SpaceMember,
+  SpaceMember_PresenceState,
+  SpaceMemberSchema,
+} from '@dxos/protocols/buf/dxos/client/services_pb';
+import { type SwarmInfo } from '@dxos/protocols/buf/dxos/devtools/swarm_pb';
+import { type Epoch } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { type DevtoolsHost, type LoggingService } from '@dxos/protocols/rpc';
 
 import { DXOS_VERSION } from '../../version';
 import { type ServiceContext } from '../services';
-import { toBufProfileDocument } from '../services/credentials-codec';
 import { getPlatform } from '../services/platform';
 import { type DataSpace } from '../spaces';
 
@@ -65,12 +72,12 @@ export type SpaceStats = {
   db?: {
     objects: number;
   };
-  metrics?: SpaceProto.Metrics & {
+  metrics?: Space_Metrics & {
     startupTime?: number;
   };
-  epochs?: (Epoch & { id?: PublicKey })[];
+  epochs?: { epoch: Epoch; id?: PublicKey }[];
   members?: SpaceMember[];
-  pipeline?: SpaceProto.PipelineState;
+  pipeline?: Space_PipelineState;
 };
 
 /**
@@ -112,7 +119,7 @@ export const createDiagnostics = async (
           did: identity.did,
           identityKey: fromPublicKey(identity.identityKey),
           spaceKey: fromPublicKey(identity.space.key),
-          profile: toBufProfileDocument(identity.profileDocument),
+          profile: identity.profileDocument,
         });
 
         // Devices.
@@ -162,45 +169,43 @@ const getSpaceStats = async (space: DataSpace): Promise<SpaceStats> => {
     key: space.key,
     metrics: space.metrics,
 
-    epochs: space.inner.spaceState.credentials
-      .filter(credentialTypeFilter('dxos.halo.credentials.Epoch'))
-      .map((credential) => ({
-        ...credential.subject.assertion,
-        id: credential.id,
-      })),
-
-    members: await Promise.all(
-      Array.from(space.inner.spaceState.members.values()).map(async (member) => ({
-        role: member.role,
-        identity: {
-          did: await createDidFromIdentityKey(member.key),
-          identityKey: member.key,
-          profile: {
-            displayName: member.assertion.profile?.displayName,
-          },
-        },
-        presence:
-          space.presence.getPeersByIdentityKey(member.key).length > 0
-            ? SpaceMember.PresenceState.ONLINE
-            : SpaceMember.PresenceState.OFFLINE,
-      })),
+    epochs: credentialsOfType<Epoch>('dxos.halo.credentials.Epoch')(space.inner.spaceState.credentials).map(
+      ({ credential, assertion }) => ({ epoch: assertion, id: toPublicKey(credential.id) }),
     ),
 
-    pipeline: {
-      // TODO(burdon): Pick properties from credentials if needed.
-      currentEpoch: space.automergeSpaceState.lastEpoch,
-      appliedEpoch: space.automergeSpaceState.lastEpoch,
+    members: await Promise.all(
+      Array.from(space.inner.spaceState.members.values()).map(async (member) =>
+        buf.create(SpaceMemberSchema, {
+          role: member.role,
+          identity: buf.create(SpaceIdentitySchema, {
+            did: await createDidFromIdentityKey(member.key),
+            identityKey: fromPublicKey(member.key),
+            profile: member.assertion.profile,
+          }),
+          presence:
+            space.presence.getPeersByIdentityKey(member.key).length > 0
+              ? SpaceMember_PresenceState.ONLINE
+              : SpaceMember_PresenceState.OFFLINE,
+        }),
+      ),
+    ),
 
-      controlFeeds: space.inner.controlPipeline.state.feeds.map((feed) => feed.key),
-      currentControlTimeframe: space.inner.controlPipeline.state.timeframe,
-      targetControlTimeframe: space.inner.controlPipeline.state.targetTimeframe,
-      totalControlTimeframe: space.inner.controlPipeline.state.endTimeframe,
-    },
+    pipeline: buf.create(Space_PipelineStateSchema, {
+      // TODO(burdon): Pick properties from credentials if needed.
+      currentEpoch: space.automergeSpaceState.lastEpoch?.credential,
+      appliedEpoch: space.automergeSpaceState.lastEpoch?.credential,
+
+      controlFeeds: space.inner.controlPipeline.state.feeds.map((feed) => fromPublicKey(feed.key)),
+      currentControlTimeframe: fromTimeframe(space.inner.controlPipeline.state.timeframe),
+      targetControlTimeframe: fromTimeframe(space.inner.controlPipeline.state.targetTimeframe),
+      totalControlTimeframe: fromTimeframe(space.inner.controlPipeline.state.endTimeframe),
+    }),
   };
 
   // TODO(burdon): Factor out.
   if (stats.metrics) {
-    const { open, ready } = stats.metrics;
+    const open = toDate(stats.metrics.open);
+    const ready = toDate(stats.metrics.ready);
     stats.metrics.startupTime = open && ready && ready.getTime() - open.getTime();
   }
 

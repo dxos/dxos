@@ -4,10 +4,10 @@
 
 import { type SpaceId, type URI } from '@dxos/keys';
 
+import { type QueryRequest, type QueryResponse } from '../buf/proto/gen/dxos/echo/query_pb.ts';
 import { type CreateDocumentResponse } from '../DataService.ts';
 import type * as FeedProtocol from '../FeedProtocol';
 import type { SerializedError } from '../index';
-import { type QueryRequest, type QueryResponse } from '../proto/gen/dxos/echo/query';
 
 /*
 

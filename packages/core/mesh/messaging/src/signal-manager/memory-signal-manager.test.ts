@@ -2,11 +2,15 @@
 // Copyright 2026 DXOS.org
 //
 
+import { type MessageInitShape, create } from '@bufbuild/protobuf';
+import { AnySchema } from '@bufbuild/protobuf/wkt';
 import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { sleep } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { PublicKey } from '@dxos/keys';
+import { PeerSchema } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
+import { MessageSchema } from '@dxos/protocols/buf/dxos/edge/signal_pb';
 
 import { type Message, type PeerInfo } from '../signal-methods';
 import { MemorySignalManager, MemorySignalManagerContext } from './memory-signal-manager';
@@ -14,12 +18,12 @@ import { MemorySignalManager, MemorySignalManagerContext } from './memory-signal
 // Exercises the subscription/routing behavior of the in-memory signal manager: point-to-point routing
 // by recipient, broadcast routing by tag intersection (DX-1125), fan-out, and unsubscribe lifecycle.
 
-const payload = (value: number[]) => ({ type_url: 'dxos.test.Message', value: new Uint8Array(value) });
+const payload = (value: number[]) => create(AnySchema, { typeUrl: 'dxos.test.Message', value: new Uint8Array(value) });
 
-const randomPeer = (name: string): PeerInfo => ({
-  peerKey: PublicKey.random().toHex(),
-  identityDid: `did:test:${name}`,
-});
+const randomPeer = (name: string): PeerInfo =>
+  create(PeerSchema, { peerKey: PublicKey.random().toHex(), identityDid: `did:test:${name}` });
+
+const message = (init: MessageInitShape<typeof MessageSchema>): Message => create(MessageSchema, init);
 
 /**
  * A capture sink for a single subscription. Delivered messages are classified by shape: a
@@ -55,15 +59,18 @@ describe('MemorySignalManager', () => {
 
     const sink = capture();
     await receiver.subscribeMessages({ peer: receiverPeer, onMessage: sink.onMessage });
-    await sender.sendMessage(Context.default(), {
-      author: senderPeer,
-      recipient: receiverPeer,
-      payload: payload([1, 2, 3]),
-    });
+    await sender.sendMessage(
+      Context.default(),
+      message({
+        author: senderPeer,
+        recipient: receiverPeer,
+        payload: payload([1, 2, 3]),
+      }),
+    );
 
     await expect.poll(() => sink.messages.length).toBe(1);
-    expect(sink.messages[0].author.peerKey).toBe(senderPeer.peerKey);
-    expect([...sink.messages[0].payload.value]).toEqual([1, 2, 3]);
+    expect(sink.messages[0].author?.peerKey).toBe(senderPeer.peerKey);
+    expect([...(sink.messages[0].payload?.value ?? [])]).toEqual([1, 2, 3]);
     expect(sink.broadcasts).toHaveLength(0);
   });
 
@@ -80,14 +87,17 @@ describe('MemorySignalManager', () => {
     await receiverA.subscribeMessages({ peer: peerA, onMessage: sinkA.onMessage });
     await receiverB.subscribeMessages({ peer: peerB, onMessage: sinkB.onMessage });
 
-    await sender.sendMessage(Context.default(), {
-      author: randomPeer('sender'),
-      recipient: peerB,
-      payload: payload([2]),
-    });
+    await sender.sendMessage(
+      Context.default(),
+      message({
+        author: randomPeer('sender'),
+        recipient: peerB,
+        payload: payload([2]),
+      }),
+    );
 
     await expect.poll(() => sinkB.messages.length).toBe(1);
-    expect([...sinkB.messages[0].payload.value]).toEqual([2]);
+    expect([...(sinkB.messages[0].payload?.value ?? [])]).toEqual([2]);
     // The message addressed to peerB is not delivered to peerA's subscription.
     await sleep(20);
     expect(sinkA.messages).toHaveLength(0);
@@ -103,11 +113,14 @@ describe('MemorySignalManager', () => {
     const second = capture();
     await receiver.subscribeMessages({ peer: receiverPeer, onMessage: first.onMessage });
     await receiver.subscribeMessages({ peer: receiverPeer, onMessage: second.onMessage });
-    await sender.sendMessage(Context.default(), {
-      author: randomPeer('sender'),
-      recipient: receiverPeer,
-      payload: payload([7]),
-    });
+    await sender.sendMessage(
+      Context.default(),
+      message({
+        author: randomPeer('sender'),
+        recipient: receiverPeer,
+        payload: payload([7]),
+      }),
+    );
 
     await expect.poll(() => first.messages.length).toBe(1);
     await expect.poll(() => second.messages.length).toBe(1);
@@ -122,11 +135,17 @@ describe('MemorySignalManager', () => {
 
     const sink = capture();
     const unsubscribe = await receiver.subscribeMessages({ peer: receiverPeer, onMessage: sink.onMessage });
-    await sender.sendMessage(Context.default(), { author: senderPeer, recipient: receiverPeer, payload: payload([1]) });
+    await sender.sendMessage(
+      Context.default(),
+      message({ author: senderPeer, recipient: receiverPeer, payload: payload([1]) }),
+    );
     await expect.poll(() => sink.messages.length).toBe(1);
 
     await unsubscribe();
-    await sender.sendMessage(Context.default(), { author: senderPeer, recipient: receiverPeer, payload: payload([2]) });
+    await sender.sendMessage(
+      Context.default(),
+      message({ author: senderPeer, recipient: receiverPeer, payload: payload([2]) }),
+    );
     await sleep(20);
     expect(sink.messages).toHaveLength(1);
   });
@@ -144,11 +163,14 @@ describe('MemorySignalManager', () => {
 
     // Releasing one subscription keeps the shared-context connection alive for the other.
     await unsubscribeFirst();
-    await sender.sendMessage(Context.default(), {
-      author: randomPeer('sender'),
-      recipient: receiverPeer,
-      payload: payload([5]),
-    });
+    await sender.sendMessage(
+      Context.default(),
+      message({
+        author: randomPeer('sender'),
+        recipient: receiverPeer,
+        payload: payload([5]),
+      }),
+    );
 
     await expect.poll(() => second.messages.length).toBe(1);
     expect(first.messages).toHaveLength(0);
@@ -164,15 +186,18 @@ describe('MemorySignalManager', () => {
     await receiver.subscribeMessages({ peer: randomPeer('a'), tags: ['type:a'], onMessage: matching.onMessage });
     await receiver.subscribeMessages({ peer: randomPeer('b'), tags: ['type:b'], onMessage: nonMatching.onMessage });
 
-    await sender.sendMessage(Context.default(), {
-      author: randomPeer('sender'),
-      tags: ['type:a'],
-      payload: payload([4, 2]),
-    });
+    await sender.sendMessage(
+      Context.default(),
+      message({
+        author: randomPeer('sender'),
+        tags: ['type:a'],
+        payload: payload([4, 2]),
+      }),
+    );
 
     await expect.poll(() => matching.broadcasts.length).toBe(1);
     expect(matching.broadcasts[0].tags).toContain('type:a');
-    expect([...matching.broadcasts[0].payload.value]).toEqual([4, 2]);
+    expect([...(matching.broadcasts[0].payload?.value ?? [])]).toEqual([4, 2]);
     // Broadcasts are not point-to-point, and the non-intersecting subscription gets nothing.
     expect(matching.messages).toHaveLength(0);
     await sleep(20);
@@ -185,15 +210,18 @@ describe('MemorySignalManager', () => {
     const author = randomPeer('sender');
 
     // Neither recipient nor tags.
-    await expect(sender.sendMessage(Context.default(), { author, payload: payload([1]) })).rejects.toThrow();
+    await expect(sender.sendMessage(Context.default(), message({ author, payload: payload([1]) }))).rejects.toThrow();
     // Both recipient and tags.
     await expect(
-      sender.sendMessage(Context.default(), {
-        author,
-        recipient: randomPeer('receiver'),
-        tags: ['type:a'],
-        payload: payload([1]),
-      }),
+      sender.sendMessage(
+        Context.default(),
+        message({
+          author,
+          recipient: randomPeer('receiver'),
+          tags: ['type:a'],
+          payload: payload([1]),
+        }),
+      ),
     ).rejects.toThrow();
   });
 });

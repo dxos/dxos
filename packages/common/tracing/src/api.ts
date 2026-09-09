@@ -15,12 +15,35 @@ const mark = (name: string) => {
   performance.mark(name);
 };
 
+/**
+ * Span attributes: a literal, or a function of the decorated call's own arguments for a value only
+ * known per call (a run's trigger, a batch's size).
+ */
+export type SpanAttributeSource = Record<string, any> | ((...args: any[]) => Record<string, any>);
+
 export type SpanOptions = {
   showInBrowserTimeline?: boolean;
   /** When false the span is not exported to remote OTLP collectors. Defaults to true. */
   showInRemoteTracing?: boolean;
   op?: string;
-  attributes?: Record<string, any>;
+  attributes?: SpanAttributeSource;
+  /**
+   * Attributes derived from the method's return value, attached when it resolves. For a value only
+   * known once the work finished -- keeping it on the span rather than in a log line, which on a
+   * hot path would flood the browser console at whatever level the sink needs.
+   */
+  resultAttributes?: (result: any, ...args: any[]) => Record<string, any>;
+};
+
+/** Namespaces attribute keys under `ctx.` so they do not collide with OTel semantic conventions. */
+const resolveAttributes = (attributes: SpanAttributeSource | undefined, args: any[]): Record<string, any> => {
+  const resolved = typeof attributes === 'function' ? attributes(...args) : attributes;
+  if (!resolved) {
+    return {};
+  }
+  return Object.fromEntries(
+    Object.entries(resolved).map(([key, value]) => [key.startsWith('ctx.') ? key : `ctx.${key}`, value]),
+  );
 };
 
 /**
@@ -28,7 +51,7 @@ export type SpanOptions = {
  * Calls the TracingBackend directly; no custom TracingSpan objects.
  */
 const span =
-  ({ showInBrowserTimeline = false, showInRemoteTracing = true, op, attributes }: SpanOptions = {}) =>
+  ({ showInBrowserTimeline = false, showInRemoteTracing = true, op, attributes, resultAttributes }: SpanOptions = {}) =>
   (target: any, propertyKey: string, descriptor: TypedPropertyDescriptor<(...args: any) => any>) => {
     const method = descriptor.value!;
 
@@ -41,12 +64,7 @@ const span =
       const className = sanitizeClassName(target.constructor?.name ?? 'unknown');
       const spanName = `${className}.${propertyKey}`;
 
-      const spanAttributes: Record<string, any> = {};
-      if (attributes) {
-        for (const [key, value] of Object.entries(attributes)) {
-          spanAttributes[key.startsWith('ctx.') ? key : `ctx.${key}`] = value;
-        }
-      }
+      const spanAttributes = resolveAttributes(attributes, args);
 
       const remoteSpan = showInRemoteTracing
         ? TRACE_PROCESSOR.tracingBackend?.startSpan({
@@ -67,7 +85,16 @@ const span =
       }
 
       try {
-        return await method.apply(this, callArgs);
+        const result = await method.apply(this, callArgs);
+        if (resultAttributes) {
+          // Swallowed deliberately: the method already succeeded, so a fault in the caller's
+          // extractor must cost the span its attributes rather than turn completed work into a
+          // failure -- without this, the outer catch would mark the span errored and rethrow.
+          try {
+            remoteSpan?.setAttributes?.(resolveAttributes(resultAttributes(result, ...args), args));
+          } catch {}
+        }
+        return result;
       } catch (err) {
         remoteSpan?.setError?.(err);
         throw err;
@@ -123,12 +150,7 @@ const spanStart = (params: ManualSpanParams): Context | null => {
 
   const parentSpanContext = params.parentCtx?.getAttribute(TRACE_SPAN_ATTRIBUTE);
 
-  const spanAttributes: Record<string, any> = {};
-  if (params.attributes) {
-    for (const [key, value] of Object.entries(params.attributes)) {
-      spanAttributes[key.startsWith('ctx.') ? key : `ctx.${key}`] = value;
-    }
-  }
+  const spanAttributes = resolveAttributes(params.attributes, []);
 
   const remoteSpan = TRACE_PROCESSOR.tracingBackend.startSpan({
     name: spanName,

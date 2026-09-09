@@ -3,6 +3,7 @@
 //
 
 import { cbor } from '@automerge/automerge-repo';
+import { create } from '@bufbuild/protobuf';
 import { getRandomPort } from 'get-port-please';
 import { describe, expect, onTestFinished, test } from 'vitest';
 
@@ -13,7 +14,8 @@ import { createTestEdgeWsServer } from '@dxos/edge-client/testing';
 import { PublicKey, SpaceId } from '@dxos/keys';
 import { EdgeService } from '@dxos/protocols';
 import { createBuf } from '@dxos/protocols/buf';
-import type { Peer } from '@dxos/protocols/proto/dxos/edge/messenger';
+import type { Peer } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
+import { PeerSchema } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
 import { openAndClose } from '@dxos/test-utils';
 import { compositeKey } from '@dxos/util';
 
@@ -68,7 +70,7 @@ describe.skipIf(process.env.CI)('EchoEdgeSubductionReplicator', () => {
     const currentConnectionId = () => (openConnections[openConnections.length - 1] as any)._connectionId as string;
     await server.sendMessage(
       createSubductionErrorMessage(
-        { identityDid: client.identityDid, peerKey: client.peerKey },
+        create(PeerSchema, { identityDid: client.identityDid, peerKey: client.peerKey }),
         spaceId,
         currentConnectionId(),
       ),
@@ -82,7 +84,7 @@ describe.skipIf(process.env.CI)('EchoEdgeSubductionReplicator', () => {
     await connectionOpen.waitForCount(1);
     await server.sendMessage(
       createSubductionErrorMessage(
-        { identityDid: client.identityDid, peerKey: client.peerKey },
+        create(PeerSchema, { identityDid: client.identityDid, peerKey: client.peerKey }),
         spaceId,
         currentConnectionId(),
       ),
