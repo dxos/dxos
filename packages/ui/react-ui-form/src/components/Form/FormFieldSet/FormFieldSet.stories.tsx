@@ -118,3 +118,31 @@ export const Settings: Story = {
   args: { variant: 'settings' },
   play: async ({ canvasElement }) => groupsAreFieldsets(canvasElement),
 };
+
+/** A walk at the form's root, with no field set around it: the nested object is still a nested group. */
+export const RootFields: Story = {
+  render: () => {
+    const [values, setValues] = useState<Partial<Contact>>({
+      name: 'Ada',
+      address: { street: '1 Main St', city: 'Springfield' },
+    });
+    return (
+      <Form.Root schema={ContactSchema} values={values} onValuesChanged={setValues}>
+        <Form.Viewport>
+          <Form.Content>
+            <Form.Fields />
+          </Form.Content>
+        </Form.Viewport>
+      </Form.Root>
+    );
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const address = canvas.getByRole('group', { name: 'Address' });
+    const trigger = within(address).getByRole('button', { name: 'Address' });
+    // Nested chrome: the legend is not a heading, and the body is boxed.
+    await expect(within(address).queryByRole('heading')).toBeNull();
+    const body = document.getElementById(trigger.getAttribute('aria-controls') ?? '');
+    await expect(body?.className).toContain('border');
+  },
+};

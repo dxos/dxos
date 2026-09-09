@@ -16,6 +16,7 @@ import { type FieldContext } from '#types';
 import { useFormContext, useFormValues } from '../../../hooks';
 import { getRootFormProperties, getSchemaAtPath } from '../../../util';
 import { FormFieldDispatch, type FormFieldDispatchProps, FormFieldErrorBoundary } from '../FormField';
+import { FormFieldSetDepthContext, useFormFieldSetDepth } from '../FormFieldSet';
 import { FormLayout } from '../FormLayout';
 
 const FORM_FIELDS_NAME = 'Form.Fields';
@@ -70,6 +71,8 @@ export const FormFields = ({
   ...props
 }: FormFieldsProps<any>) => {
   const { form, variant: _variant, testId: _testId, ...contextProps } = useFormContext(FORM_FIELDS_NAME);
+  // A group the walk produces for a property is nested by definition, whatever encloses the walk.
+  const depth = Math.max(useFormFieldSetDepth(), 1);
   const path = useMemo(() => toPathSegments(pathProp), [typeof pathProp === 'string' ? pathProp : pathProp?.join('.')]);
   const values = useFormValues(FORM_FIELDS_NAME, path);
   const { readonly, layout, projection, ...fieldContext } = { ...contextProps, ...props };
@@ -109,7 +112,7 @@ export const FormFields = ({
   }
 
   return (
-    <>
+    <FormFieldSetDepthContext.Provider value={depth}>
       {properties.map((property) => {
         const name = property.name.toString();
         return (
@@ -127,7 +130,7 @@ export const FormFields = ({
           </FormFieldErrorBoundary>
         );
       })}
-    </>
+    </FormFieldSetDepthContext.Provider>
   );
 };
 
