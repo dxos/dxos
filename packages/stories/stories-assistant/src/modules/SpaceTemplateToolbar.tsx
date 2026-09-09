@@ -14,7 +14,7 @@ import * as SpaceCapabilities from '@dxos/plugin-space/SpaceCapabilities';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { type Client, useClient } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';
-import { IconButton, Select, Toolbar, useAsyncEffect } from '@dxos/react-ui';
+import { Select, Toolbar, useAsyncEffect } from '@dxos/react-ui';
 
 import { VOYAGE_SPACE_ID } from '../testing/voyage-space';
 
@@ -28,8 +28,8 @@ import { VOYAGE_SPACE_ID } from '../testing/voyage-space';
  *
  * Each template gets its own space, named after it. Picking one opens that space when it exists and
  * creates it otherwise, so the story keeps every template's work side by side on a persistent
- * client instead of one template's content overwriting the last. Reset is the way back to a clean
- * space for the current template.
+ * client instead of one template's content overwriting the last. Reset wipes the profile and
+ * reloads, which is the way back to an empty client.
  */
 export const SpaceTemplateToolbar = ({ children }: PropsWithChildren) => (
   <div className='dx-grow grid grid-rows-[min-content_1fr]'>
@@ -115,28 +115,11 @@ const TemplateSelect = () => {
     [client, templates, invokePromise, showSpace, bindChat],
   );
 
-  /** Empties the current template's space and applies the template again, with a new chat. */
+  /** Wipes the profile and reloads, the way the other stories reset a persistent client. */
   const handleReset = useCallback(async () => {
-    const template = templates.find((template) => template.id === templateId);
-    const space = template && findTemplateSpace(client, template.label);
-    if (!template || !space || busy.current) {
-      return;
-    }
-    busy.current = true;
-    try {
-      const objects = await space.db.query(Filter.everything()).run();
-      for (const object of objects) {
-        space.db.remove(object);
-      }
-      await space.db.flush();
-
-      await template.apply({ client, space });
-      await space.db.flush({ indexes: true });
-      await bindChat(space);
-    } finally {
-      busy.current = false;
-    }
-  }, [client, templates, templateId, bindChat]);
+    await client.reset();
+    window.location.reload();
+  }, [client]);
 
   // Open the default template's space, so the story starts on a bound conversation.
   const [opened, setOpened] = useState(false);
@@ -163,12 +146,7 @@ const TemplateSelect = () => {
           </Select.Content>
         </Select.Portal>
       </Select.Root>
-      <IconButton
-        icon='ph--arrow-counter-clockwise--regular'
-        label='Reset'
-        variant='ghost'
-        onClick={() => void handleReset()}
-      />
+      <Toolbar.IconButton icon='ph--trash--regular' label='Reset' onClick={() => void handleReset()} />
     </>
   );
 };
