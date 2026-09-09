@@ -13,8 +13,8 @@ import { type Signal } from '@dxos/protocols/proto/dxos/mesh/swarm';
 import { ComplexMap } from '@dxos/util';
 
 import {
-  TRANSPORT_CONNECTION_TIMEOUT,
   type Transport,
+  TRANSPORT_CONNECTION_TIMEOUT,
   type TransportFactory,
   type TransportOptions,
 } from './transport';

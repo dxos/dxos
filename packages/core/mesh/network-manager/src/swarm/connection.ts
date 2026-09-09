@@ -13,7 +13,7 @@ import { CancelledError, ConnectionResetError, ConnectivityError, ProtocolError,
 import { type Signal } from '@dxos/protocols/proto/dxos/mesh/swarm';
 
 import { type SignalMessage, type SignalMessenger } from '../signal';
-import { TRANSPORT_CONNECTION_TIMEOUT, type Transport, type TransportFactory, type TransportStats } from '../transport';
+import { type Transport, TRANSPORT_CONNECTION_TIMEOUT, type TransportFactory, type TransportStats } from '../transport';
 import { type WireProtocol } from '../wire-protocol';
 
 /**
