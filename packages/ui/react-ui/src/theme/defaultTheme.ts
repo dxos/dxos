@@ -41,6 +41,7 @@ import { toastTheme } from '../components/Toast/Toast.theme';
 import { tocTheme } from '../components/Toc/Toc.theme';
 import { toolbarTheme } from '../components/Toolbar/Toolbar.theme';
 import { tooltipTheme } from '../components/Tooltip/Tooltip.theme';
+import { tourTheme } from '../components/Tour/Tour.theme';
 import { bindTheme } from './bindTheme';
 
 export const defaultTheme: Theme<Record<string, any>> = {
@@ -91,6 +92,7 @@ export const defaultTheme: Theme<Record<string, any>> = {
   toast: toastTheme,
   toc: tocTheme,
   toolbar: toolbarTheme,
+  tour: tourTheme,
   tooltip: tooltipTheme,
 };
 

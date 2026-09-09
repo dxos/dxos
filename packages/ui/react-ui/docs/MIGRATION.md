@@ -706,6 +706,35 @@ CodeMirror editor renders no headings at all; the consumer is still to decide (`
 container to a heading activates its link and moves the indicator onto the active items; clicking a
 link scrolls the container so the heading lands at its top edge.
 
+### Phase 7c — `Tour`, and the welcome tour off `react-joyride` _(2026-09-09)_
+
+`Tour` (`react-ui/src/components/Tour`) wraps Ark's tour machine part for part: `useTour` creates the
+machine from `steps` (`{ id, type, target, title, description, placement, arrow, backdrop, actions,
+effect }`) and `Root` provides it, so the consumer keeps the api (`start`, `next`, `prev`, `setStep`,
+`setSteps`); `Portal` places `Backdrop` (the scrim, with the target cut out by clip-path), `Spotlight`
+(a ring the machine sizes over the target) and `Positioner` (beside the target for a `tooltip` step,
+centred for a `dialog` step) against the document; `Content` is the alert dialog with `Arrow`,
+`Title`, `Description`, `ProgressText`, `Close`, `Control` and the `Actions`/`ActionTrigger` render
+prop over a step's actions. The machine waits up to three seconds for a target (mutation observer),
+scrolls it into view, marks it `data-tour-highlighted` (which `tour.css` turns into
+`--controls-opacity: 1`, so hover-revealed controls show), traps focus between card and target, and
+walks steps on the arrow keys. The parts stack on `--tour-layer` over `--tour-z-index`, set by the
+theme at the tooltip level. `Root` defaults to `lazyMount unmountOnExit`, so the card is in the DOM
+only while a tour runs. `Tour.stories.tsx` walks a dialog step and three tooltip steps in the vitest
+browser: placement side, highlight hand-off, progress text, arrow-key navigation, Escape.
+
+`plugin-support`'s `WelcomeTour` is rebuilt on it, and `react-joyride`, `react-floater` and
+`type-fest` (a TS2742 hack for the floater types) leave the repo. `Tour.Step` is now the plugin's own
+type — `target` (selector or function), `title`, `description`, `placement`, and `before` — and the
+composer's `help.ts` steps drop their joyride fields. `before` becomes the machine step's `effect`:
+the step shows once the hook settles, and the target is resolved after it, so a hook that opens the
+sidebar brings its target into being — the old `waitForTarget` mutation observer is the machine's.
+The dialog pause is kept: while `layout.dialogOpen` the tour leaves through its close trigger (the
+api exposes no dismiss) with the step remembered, and resumes there when the dialog closes; a target
+that never appears ends the tour. The card keeps its test ids and `data-step` numbering (the step ids
+are one-based positions, which the machine stamps as `data-step`), so `first-run.spec.ts` reads
+unchanged. `WelcomeTour.stories.tsx` walks the steps by the card's own buttons.
+
 ## 5. Net effect
 
 Measured on 2026-09-05 from d4b4919f87, the last `main` commit before the Tree rebuild (#12873,

@@ -199,10 +199,7 @@
     "@effect/atom-react": "catalog:",
     "date-fns": "catalog:",
     "effect": "catalog:",
-    "html-to-image": "catalog:",
-    "react-floater": "catalog:",
-    "react-joyride": "catalog:",
-    "type-fest": "catalog:"
+    "html-to-image": "catalog:"
   },
   "devDependencies": {
     "@dxos/observability": "workspace:*",

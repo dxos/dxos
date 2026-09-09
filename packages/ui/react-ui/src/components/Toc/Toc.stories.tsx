@@ -24,12 +24,17 @@ const SECTIONS = 8;
  * with its body text drawn once here, so a re-render never regenerates it.
  */
 const headings: Heading[] = Array.from({ length: SECTIONS }, (_, index) => index + 1).flatMap((section) => [
-  { value: `section-${section}`, depth: 2, label: `Section ${section}`, paragraphs: [] },
-  ...['a', 'b', 'c'].map((sub) => ({
+  {
+    value: `section-${section}`,
+    depth: 2,
+    label: `Section ${section}`,
+    paragraphs: [],
+  },
+  ...['a', 'b', 'c', 'd', 'e'].slice(0, random.number.int({ min: 1, max: 5 })).map((sub) => ({
     value: `section-${section}-${sub}`,
-    depth: random.number.int({ min: 2, max: 5 }),
+    depth: 3,
     label: `Section ${section}.${sub}`,
-    paragraphs: Array.from({ length: 3 }, () => random.lorem.paragraphs(3)),
+    paragraphs: Array.from({ length: random.number.int({ min: 1, max: 3 }) }, () => random.lorem.paragraphs(3)),
   })),
 ]);
 
@@ -78,7 +83,7 @@ const DefaultStory = ({ rootMargin, autoScroll, scrollBehavior }: StoryArgs) => 
           <Document />
         </ScrollArea.Viewport>
       </ScrollArea.Root>
-      <Toc.Nav classNames='dx-fill border p-3'>
+      <Toc.Nav classNames='dx-fill p-3'>
         <ScrollArea.Root>
           <Toc.Title>On this page</Toc.Title>
           <ScrollArea.Viewport>
