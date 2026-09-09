@@ -2,10 +2,10 @@
 
 Project: `deus` · Design: [docs/DESIGN.md](./docs/DESIGN.md) · Idioms: [docs/IDIOMS.md](./docs/IDIOMS.md)
 
-_Resume: Phase 2 (QA framework unification) landed 2026-09-08 — xUnit naming (`scenario` /
-`test` / `suite`), `composer-qa` skill, `spec/APP.mdl` with four app tests and tagged suites, and
-the two Routine prompts under `agents/routines/`. Next: run `--tag smoke` live and set the app
-tests' `status:`; register the Routines; the spec-sync sweep._
+_Resume: Phase 2 (QA framework unification) is on PR #12986, main merged and review triaged 2026-09-09;
+smoke run 1 gave app:QA-1 10/11 (after.2 = space.delete on unreachable EDGE), run 2 in flight with the
+proxy fix. Next: land the PR, run `--tag nightly`, register the Routines, `sweep 8`. Sessions that run
+the app must be in the `DXOS` cloud environment._
 
 ## Goal
 
@@ -98,7 +98,7 @@ Later (tracked, not started):
 - [ ] **Spec-sync sweep** over all plugins in batches of 8 (`sweep 8`), then incremental. Inputs
       from the PR #12986 review (CodeRabbit, 2026-09-08), all pre-existing content the rename only
       exposed: assistant QA-1 `op:CreateChat` lacks its `db` input and asserts `typeof $result ===
-    'undefined' || true`; brain QA-1 dropped the T-5 Enrich-to-Query coverage; chess QA-1 passes SAN
+  'undefined' || true`; brain QA-1 dropped the T-5 Enrich-to-Query coverage; chess QA-1 passes SAN
       strings to `op:submitMove` and reads `$result.pgn`; file T-5 asserts an `<iframe>` against a
       canvas contract; inbox QA-1's `after` uses an unbound `$created`; slack QA-1's `after` passes
       `$discovered` and `$given.space` to `removeObjects`; space's spec declares no

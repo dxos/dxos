@@ -638,18 +638,21 @@ projects:
     tasks: packages/reflect/deus/TASKS.md
     design: packages/reflect/deus/docs/DESIGN.md
     prs: [12986]
-    resume: "Phase 2 (QA framework unification) landed 2026-09-08 on branch claude/composer-qa-framework-50u4gz: xUnit
-      naming across every .mdl (scenario = given/when/then, test QA-n = executable with before/steps/after,
-      suite = container by reference with tags), lang/qa.mdl 1.1 ($snapshot after every step, Obj/Ref/Space
-      input resolvers, space: on a step), .agents/skills/composer-qa replacing qa + running-qa-flows, /dxos:qa
-      with suites / run --suite|--tag / snapshot over scripts/list-tests.mjs, composer-app/spec/APP.mdl with
-      QA-1..4 (from the deleted testing/scripts/basics.md) and suites smoke/basics/assistant/editor, and two
-      Routine prompts under agents/routines/ (composer-qa nightly+on-merge on the qa branch; spec-sync
-      incremental+sweep with .agents/spec-sync.yml). BLOCKED IN THAT SANDBOX: the live smoke run — proto and
-      moon's toolchain plugin are 403 through the egress policy, and a standalone vite build fails in
-      DxDeclarations. NEXT (packages/reflect/deus/TASKS.md Phase 2 'Later'): run --tag smoke locally and set
-      the app tests' status:, register the three Routines, move PLUGIN.mdl files to plugin-xxx/spec/, run the
-      spec-sync sweep in batches of 8, then migrate the 542 scenario blocks per plugin."
+    resume: "HANDOFF 2026-09-09 from the Default-env session to a DXOS-env session (the only kind that can run
+      the app). PR #12986 is OPEN on claude/composer-qa-framework-50u4gz at d14ef3af or later: main merged,
+      CodeRabbit's 19 findings triaged (10 fixed + resolved, 9 left open as pre-existing spec content for the
+      sweep; triage comment on the PR). Smoke run 1 (report testing/reports/2026-09-09-2047-smoke.md): app:QA-1
+      10/11, after.2 space.delete timed out because the headless helper's Chromium had no proxy flags — fixed in
+      testing/bin/qa-browser.mjs. Smoke run 2 was started in session 'qa -- take 2' (DXOS env, toolchain and
+      graph warm); its result is whatever the newest commit/report on the branch says. NEXT, in order: (1) if
+      run 2 is 11/11 set nothing more — QA-1 is passing and the ledger's space.delete entry is downgraded to
+      'when signaling is unreachable'; if after.2 still fails the ordering defect in
+      DataSpaceManager._tombstoneSpace is real and gets its own fix PR; (2) land #12986 — check the Check run
+      and CodeRabbit's re-review, no changeset needed; (3) run --tag nightly (QA-2, QA-3, markdown QA-1/2 are
+      unverified transcriptions and will need corrections like QA-1 did); (4) create the qa branch from main and
+      register the Routines per agents/routines/*.md in the DXOS environment; (5) spec-sync 'sweep 8', which
+      also clears the 8 open review findings; (6) move PLUGIN.mdl files to plugin-xxx/spec/ as its own PR. Full
+      list: packages/reflect/deus/TASKS.md Phase 2 'Later'. Skills to read first: composer-qa, cloud-sandbox."
   - name: agent-composer-introspection
     status: active
     user: burdon
