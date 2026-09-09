@@ -313,6 +313,21 @@ export class AppManager {
     await this.page.waitForTimeout(500);
   }
 
+  /**
+   * Best-effort wait for this peer to have nothing left to push, used before inviting a device to a
+   * just-created space: `createSpace` returns once the space is locally ready, not once it has
+   * reached EDGE.
+   *
+   * Best-effort, and deliberately so. The attribute is a client-wide summary that reads settled at
+   * rest, so a space whose writes have not yet reached the sync state passes immediately — this
+   * cannot tell "already uploaded" from "not started yet". Its worst case is returning early, which
+   * leaves the caller exactly where it was without this wait.
+   *
+   * Requiring an unsettled reading first would be sound but not safe: an upload that settles before
+   * the first poll would never produce one, turning a no-op into a full-timeout failure. Making it
+   * sound needs a per-space upload signal, which nothing exposes today — `useSpaceSyncState` reaches
+   * only `missingOnLocal`, via a glyph.
+   */
   async waitForUploadsSettled(timeout = UPLOAD_SETTLE_TIMEOUT): Promise<void> {
     await expect(this.page.getByTestId('spacePlugin.syncStatus')).toHaveAttribute('data-upload-settled', 'true', {
       timeout,
