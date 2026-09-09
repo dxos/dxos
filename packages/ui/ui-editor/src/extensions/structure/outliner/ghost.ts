@@ -101,8 +101,10 @@ export const ghost = (options: GhostOptions = {}): Extension => {
             container.style.position = 'relative';
           }
 
-          this.button = Domino.of('button')
-            .classNames('dx-button aspect-square cm-outliner-add')
+          // A control-sized box around the button, as the grip is built, so the two gutter controls share
+          // one hit area and centre.
+          const button = Domino.of('button')
+            .classNames('dx-button aspect-square')
             .attributes({
               'type': 'button',
               'data-variant': 'ghost',
@@ -110,9 +112,10 @@ export const ghost = (options: GhostOptions = {}): Extension => {
               'aria-label': add,
               'title': add,
             })
-            .append(Domino.of('div').classNames('cm-outliner-add-icon').append(Domino.svg('ph--plus--regular'))).root;
+            .append(Domino.of('div').classNames('cm-outliner-add-icon').append(Domino.svg('ph--plus--regular')));
+          this.button = Domino.of('div').classNames('cm-outliner-add').append(button).root;
           // `mousedown` rather than `click`: the click would first blur the editor and hide the button.
-          this.button.addEventListener('mousedown', (event) => {
+          button.root.addEventListener('mousedown', (event) => {
             event.preventDefault();
             insertTaskAtLine(this.view);
           });
@@ -167,7 +170,7 @@ export const ghost = (options: GhostOptions = {}): Extension => {
           const { x } = this.view.contentDOM.getBoundingClientRect();
           this.button.style.top = `${(coords.top + coords.bottom) / 2}px`;
           this.button.style.left = `${x - GUTTER_WIDTH / 2}px`;
-          this.button.style.display = '';
+          this.button.style.display = 'grid';
         }
       },
     ),
@@ -178,11 +181,16 @@ export const ghost = (options: GhostOptions = {}): Extension => {
         position: 'fixed',
         zIndex: '5',
         transform: 'translate(-50%, -50%)',
+        display: 'grid',
+        placeItems: 'center',
+        width: 'var(--dx-control)',
+        height: 'var(--dx-control)',
       },
       '.cm-outliner-add-icon': {
         display: 'grid',
         placeContent: 'center',
-        fontSize: '16px',
+        // `size-3`: the glyph is 1em.
+        fontSize: '0.75rem',
         color: 'var(--color-description, currentColor)',
       },
     }),
