@@ -4,7 +4,7 @@
 
 import { useAtomValue } from '@effect/atom-react/Hooks';
 import * as Atom from 'effect/unstable/reactivity/Atom';
-import React, { type FC, useEffect, useRef, useState } from 'react';
+import React, { type FC, useEffect, useReducer, useState } from 'react';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import type * as Role from '@dxos/app-framework/Role';
@@ -170,21 +170,18 @@ const BindingDebug = ({ role, data }: { role: string; data: Record<string, any> 
 const SurfaceCell = ({ type, data }: { type: Role.Role<any>; data: Record<string, any> }) => {
   const isAvailable = Surface.useIsAvailable();
   const [settled, setSettled] = useState(false);
-  // Re-read on every poll: the cell renders `data` fresh each time, so a ref keeps the timer
-  // matching the current binding without restarting it.
-  const binding = useRef({ type, data });
-  binding.current = { type, data };
-  const [available, setAvailable] = useState(true);
+  // The timer only drives the re-render; availability is read below, against the current binding.
+  const [, recheck] = useReducer((count: number) => count + 1, 0);
   useEffect(() => {
     const timer = setTimeout(() => setSettled(true), BINDING_SETTLE_DELAY);
-    const poll = setInterval(() => setAvailable(isAvailable(binding.current)), BINDING_POLL_INTERVAL);
+    const poll = setInterval(recheck, BINDING_POLL_INTERVAL);
     return () => {
       clearTimeout(timer);
       clearInterval(poll);
     };
-  }, [isAvailable]);
+  }, []);
 
-  if (settled && !available) {
+  if (settled && !isAvailable({ type, data })) {
     return <BindingDebug role={type.role} data={data} />;
   }
 
