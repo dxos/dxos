@@ -7,7 +7,7 @@
 '@dxos/shell': patch
 ---
 
-An invitation no longer fails when the guest's `introduce` overtakes the host's own options reply. The host gated `CONNECTED` on a full request/reply round trip of its own, but the guest sends `introduce` as soon as it has *received* those options, and the reply travels on the extension's other channel — so it could land after the `introduce` it nominally precedes. `introduce` asserts `CONNECTED`, so the whole invitation errored with no retry, leaving the shell offering to start over.
+An invitation no longer fails when the guest's `introduce` overtakes the host's own options reply. The host gated `CONNECTED` on a full request/reply round trip of its own, but the guest sends `introduce` as soon as it has _received_ those options, and the reply travels on the extension's other channel — so it could land after the `introduce` it nominally precedes. `introduce` asserts `CONNECTED`, so the whole invitation errored with no retry, leaving the shell offering to start over.
 
 A failed feed append no longer spins. `FeedHandle` re-queued its cores and re-triggered the scheduler with no delay and no check on why the send failed; since the scheduler has no `maxFrequency`, one failure against a closed page↔worker endpoint became thousands of rejections a second and pegged the main thread. A closed endpoint now stops, and other failures back off.
 
