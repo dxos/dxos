@@ -25,9 +25,10 @@ one for one: `Form.Field` is a `Field`, `Form.FieldSet` is a `Fieldset`. Walking
 third part, `Form.Fields`, which renders no element, so no component's behaviour depends on whether
 it was given children. A form built by hand is `Form.FieldSet`s of `Form.Field`s and never mentions
 `Form.Fields`; the walker appears only where the schema should supply the fields, and a mixed form
-uses both inside one field set. Paths are written from the enclosing `Form.Root`; `Form.Fields path`
-walks a sub-object, and `Form.Root path` re-roots paths only to embed a component written against
-a sub-schema.
+uses both inside one field set. `Form.Root` is the only component that scopes descendant context;
+`Form.Field`, `Form.Fields` and `Form.List` take a `path` for their own binding or enumeration, written
+from the enclosing `Form.Root`. `Form.Root path` re-roots that context only to embed a component written
+against a sub-schema.
 
 | Component        | Built from                                                                                  | Role                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
 | ---------------- | ------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -43,9 +44,16 @@ a sub-schema.
 | `Form.ErrorText` | `Fieldset.ErrorText` on the root                                                            | The form-level error.                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
 
 Deliberately absent: `Positioner` and `Arrow` belong to floating surfaces and never appear here (a
-date picker's popover is inside its control); `Form.Section` and `Form.Group` are `Form.FieldSet`; the controls
-(`TextField`, `DateField`, `RefField`, …) are controls the dispatcher places in a `Form.Field`, not
-rows of their own. The dispatcher, `FormFieldDispatch`, maps a schema property to a control through
+date picker's popover is inside its control); `Form.Section` and `Form.Group` are `Form.FieldSet`;
+the built-in renderers (`TextField`, `DateField`, `RefField`, …) are controls the dispatcher places
+in a `Form.Field`, not rows of their own. A renderer the form supplies (`fieldMap`, `fieldProvider`)
+is the one exception: it owns its row, because what it customises is usually the row (a description,
+a `labelEnd` readout, several controls), so it writes `<Form.Field path={jsonPath}>` around its
+control and gets the schema's label and description for free. A control declares its shape rather than
+its chrome: `standalone` (several labelled inputs, so the row's label is text) and `labelPlacement:
+'beside'` (a toggle, so the row lays its label after the control on one line). The theme decides what
+a declaration means per variant: the settings card keeps its grid, so a toggle there still has its
+label and description on the left and the switch on the right. The dispatcher, `FormFieldDispatch`, maps a schema property to a control through
 the pure `resolveFieldRenderer` (annotation first, then format, then type) and renders the row once
 around it.
 
@@ -79,7 +87,7 @@ markdown → `Field.Textarea` / the editor; boolean → `Field.Switch`; date, ti
 
 The first field set holds the walker; the second is hand-written, but the bound
 `Form.Field path='hue'` still takes its label and description from the schema. The simplest form is
-`<Form.Root schema values><Form.Fields /></Form.Root>`, with no field set at all.
+`<Form.Root schema={schema} values={values}><Form.Fields /></Form.Root>`, with no field set at all.
 
 ### An edit dialog with a nested object, a list and actions
 
@@ -173,40 +181,32 @@ still fails validation, and a form that wants a hidden section to be optional sa
 fields to register before the walker renders, which costs a render pass and makes the output depend
 on sibling order.
 
-## Where the code is today
-
-The current tree, and how far each part is from the ontology:
+## As built (2026-09-08)
 
 ```text
-Form.Root                              schema, values, validation, onValuesChanged (context)
+Form.Root                              schema, values, validation, modes (context)
 └─ Form.Viewport
    └─ Form.Content
-      ├─ Form.Section                  Fieldset named by an <h2> legend + description   → Form.FieldSet
-      │  ├─ Form.FieldSet              schema-driven AND the fieldset chrome           → Form.FieldSet around Form.Fields
-      │  │  └─ FormFieldDispatch       one per property; resolveFieldRenderer picks a renderer
-      │  │     ├─ ArrayField           → Form.List
-      │  │     ├─ Form.FieldSet        nested object (recurses)                       → Form.FieldSet + Form.Fields
-      │  │     └─ <renderer>           each renders its own Form.Field with a render-prop child   → a control
-      │  └─ Form.Field                 hand-written row: label + description + any control
-      ├─ Form.Group                    styled div                                       → Form.FieldSet
+      ├─ Form.FieldSet                 Fieldset.Root + Legend (+ HelperText, Collapsible.*); chrome by depth
+      │  ├─ Form.Fields                walks the schema at a path; renders no element
+      │  │  └─ FormFieldDispatch       one per property: resolveFieldRenderer picks a control, then
+      │  │     └─ Form.Field (row)     FormFieldRow = Field.Root + Label + HelperText + control + ErrorText
+      │  │        ├─ <control>         TextField, SelectField, … — controls only; `standalone` for several inputs
+      │  │        ├─ ArrayField        a group with its own header (future Form.List)
+      │  │        └─ Form.FieldSet     a nested object: label from the schema, collapsible, around Form.Fields
+      │  └─ Form.Field                 hand-written: `path` binds it, else label/description/error props
       ├─ Form.Layout
-      └─ Form.Actions › Form.Submit; Form.Error                                         → Form.ErrorText
+      └─ Form.Actions › Form.Submit; Form.ErrorText
 ```
 
-`Form.Field` today has two branches decided by the type of `children`: a render-prop child with the
-dispatcher's `getValue`/`getStatus` renders a `Field.Root` with field parts; element children render
-a `div` with a `span` label, so the hand-written row's control is not labelled by its label. Of the
-83 hand-written rows (38 files, 18 packages), 36 hold only buttons, 26 one control, 17 a readout or
-picker, 3 several controls; 26 wrap their own `Field.Root` inside the row to get a wired control.
-`Form.Section` has 68 sites and `Form.FieldSet` 86.
+`Form.Field` routes: `path` with no children → the dispatcher; `path` with children → a bound row
+whose control reads `useFormField()`; no `path` → an unbound row. A `fieldMap`/`fieldProvider`
+renderer owns its row (`<Form.Field path={jsonPath}>` around its control). Not yet built:
+`Form.List`, `Form.Root path`, and the modes moving off the renderer props onto context.
 
-## Steps, each landable alone
+## Remaining steps
 
-1. `Form.Field` renders `Field.Root` in both branches, with `standalone` for rows without a single
-   control. The 26 one-control rows drop their inner `Field.Root`.
-2. `Form.FieldSet` splits into the fieldset chrome (`label`, `description`, `collapsible`, depth
-   from context) and the walker `Form.Fields`; `Form.Section` and `Form.Group` become
-   `Form.FieldSet`; the section gap applies to direct fields.
-3. The modes move to `Form.Root` context.
-4. `useFormField` and `path` on `Form.Field`, `Form.Fields` and `Form.Root`; renderers become
-   controls; the dispatcher renders the row; `ArrayField` becomes `Form.List`.
+1. The modes (`readonly`, `presentation`, `hideEmpty`) move off the renderer props onto `Form.Root`
+   context.
+2. `Form.Root path`, for embedding a component written against a sub-schema.
+3. `ArrayField` becomes `Form.List` (`Item`, `Add`, `Remove`).
