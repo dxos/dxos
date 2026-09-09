@@ -131,6 +131,9 @@ export class EdgeHttpClientService extends EffectContext.Service<EdgeHttpClientS
  * Hub-service API (accounts, invitations) lives in {@link HubHttpClient} — the two
  * services run at different URLs and are never both available from the same base URL.
  */
+/** Upstream service the EDGE AI proxy forwards to; selects the `/ai/generate/<service>` route. */
+export type EdgeAiService = 'anthropic' | 'deepseek';
+
 export class EdgeHttpClient extends BaseHttpClient {
   constructor(baseUrl: string, options?: EdgeHttpClientOptions) {
     super(baseUrl, options);
@@ -628,19 +631,19 @@ export class EdgeHttpClient extends BaseHttpClient {
   //
 
   /**
-   * Issue an authenticated request to the EDGE AI route (`/ai/generate/anthropic/*`), which
-   * proxies to the AI service. Used as the backend HTTP client for the Anthropic AI provider
-   * (see {@link EdgeAiHttpClient}).
+   * Issue an authenticated request to the EDGE AI route (`/ai/generate/<service>/*`), which proxies
+   * to the AI service. Used as the backend HTTP client for the edge AI providers (see
+   * {@link EdgeAiHttpClient}); `service` selects the upstream the proxy forwards to.
    *
    * Returns the raw `Response` so streaming bodies are forwarded unchanged to `@effect/ai`.
    * Requires an identity to have been set via {@link setIdentity}.
    */
   // TODO(mykola): Merge into `BaseHttpClient._call` once it can return a streaming/raw `Response`;
   // the auth/retry loop below duplicates the one in `_call`.
-  public async anthropicAiRequest(request: Request): Promise<Response> {
+  public async aiRequest(service: EdgeAiService, request: Request): Promise<Response> {
     const incoming = new URL(request.url);
     const base = this.baseUrl.replace(/\/$/, '');
-    const target = new URL(`${base}/ai/generate/anthropic${incoming.pathname}${incoming.search}`);
+    const target = new URL(`${base}/ai/generate/${service}${incoming.pathname}${incoming.search}`);
 
     const method = request.method;
     const body = method === 'GET' || method === 'HEAD' ? undefined : await request.arrayBuffer();

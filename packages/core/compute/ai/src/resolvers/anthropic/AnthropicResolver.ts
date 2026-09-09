@@ -26,10 +26,11 @@ export const make = () =>
         if (options?.provider !== undefined && options.provider !== Provider.edge.id) {
           return Layer.unwrap(Effect.fail(new AiModelNotAvailableError(model)));
         }
-        // Edge models are served by Anthropic; the catalog supplies the back-end name, the output-token
-        // ceiling, and which models use adaptive thinking (Opus).
+        // The edge provider fronts several upstream services; this resolver serves only the Anthropic
+        // ones. The catalog supplies the back-end name, the output-token ceiling, and which models use
+        // adaptive thinking (Opus).
         const info = Model.get(Provider.edge.id, model);
-        if (!info) {
+        if (!info || info.service !== 'anthropic') {
           return Layer.unwrap(Effect.fail(new AiModelNotAvailableError(model)));
         }
         const max_tokens = info.characteristics?.maxTokens;

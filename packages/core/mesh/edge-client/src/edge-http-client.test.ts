@@ -26,7 +26,7 @@ describe.skipIf(process.env.CI)('EdgeHttpClient', () => {
   });
 });
 
-describe('EdgeHttpClient.anthropicAiRequest', () => {
+describe('EdgeHttpClient.aiRequest', () => {
   afterEach(() => {
     vi.unstubAllGlobals();
   });
@@ -43,7 +43,8 @@ describe('EdgeHttpClient.anthropicAiRequest', () => {
     vi.stubGlobal('fetch', fetchMock);
 
     const client = new EdgeHttpClient('https://edge.example.com');
-    const response = await client.anthropicAiRequest(
+    const response = await client.aiRequest(
+      'anthropic',
       new Request('http://edge/v1/messages?beta=true', {
         method: 'POST',
         body: JSON.stringify({ model: 'claude' }),

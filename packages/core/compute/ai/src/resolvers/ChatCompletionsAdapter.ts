@@ -119,6 +119,7 @@ type OpenAiChatRequest = {
   model: string;
   messages: ChatMessage[];
   stream?: boolean;
+  stream_options?: { include_usage: boolean };
   response_format?: { type: 'json_object' };
   temperature?: number;
   tools?: ChatTool[];
@@ -152,6 +153,8 @@ type OpenAiChatResponse = {
     message: {
       role: string;
       content: string | null;
+      /** DeepSeek (and other reasoning models) return chain-of-thought alongside the answer. */
+      reasoning_content?: string | null;
       tool_calls?: ChatToolCall[];
     };
     finish_reason: string;
@@ -194,6 +197,7 @@ type OpenAiStreamChunk = {
     delta: {
       role?: string;
       content?: string | null;
+      reasoning_content?: string | null;
       tool_calls?: Array<{
         index: number;
         id?: string;
@@ -206,6 +210,12 @@ type OpenAiStreamChunk = {
     };
     finish_reason: string | null;
   }>;
+  /** Present only on the final chunk, and only when `stream_options.include_usage` was requested. */
+  usage?: {
+    prompt_tokens: number;
+    completion_tokens: number;
+    total_tokens: number;
+  };
 };
 
 /**
@@ -247,6 +257,11 @@ export type ChatCompletionsClientConfig = {
    * OpenAI, and consumers price on this field. Defaults to the API format.
    */
   readonly provider?: string;
+  /**
+   * Request `stream_options.include_usage` on streamed OpenAI-format calls. Providers that meter on
+   * reported usage (DeepSeek via EDGE) need it; local servers that reject unknown fields do not.
+   */
+  readonly streamUsage?: boolean;
   readonly transformClient?: (client: HttpClient.HttpClient) => HttpClient.HttpClient;
   /**
    * Maximum duration to wait for the HTTP response to start. Applies to both
@@ -460,6 +475,7 @@ const buildRequestBody = (
   jsonFormat: boolean,
   apiFormat: ApiFormat,
   tools: ChatTool[] | undefined,
+  streamUsage = false,
 ): OllamaChatRequest | OpenAiChatRequest => {
   switch (apiFormat) {
     case 'ollama':
@@ -475,6 +491,7 @@ const buildRequestBody = (
         model,
         messages,
         stream,
+        stream_options: stream && streamUsage ? { include_usage: true } : undefined,
         response_format: jsonFormat ? { type: 'json_object' } : undefined,
         tools,
         tool_choice: tools ? 'auto' : undefined,
@@ -554,6 +571,7 @@ const extractResponse = (
       const mappedReason = mapOpenAiFinishReason(choice?.finish_reason);
       return {
         text: choice?.message?.content ?? '',
+        reasoning: choice?.message?.reasoning_content ?? undefined,
         toolCalls,
         inputTokens: r.usage?.prompt_tokens,
         outputTokens: r.usage?.completion_tokens,
@@ -638,7 +656,10 @@ const parseStreamChunk = (line: string, apiFormat: ApiFormat): ParsedStreamChunk
         }));
         return {
           content: choice?.delta?.content ?? undefined,
+          reasoning: choice?.delta?.reasoning_content ?? undefined,
           done: choice?.finish_reason !== null && choice?.finish_reason !== undefined,
+          inputTokens: chunk.usage?.prompt_tokens,
+          outputTokens: chunk.usage?.completion_tokens,
           finishReason: choice?.finish_reason ? mapOpenAiFinishReason(choice.finish_reason) : undefined,
           toolCallDeltas: deltas,
         };
@@ -738,7 +759,15 @@ export const make = (model: string) =>
             const messages = promptToMessages(options.prompt, config.apiFormat);
             const jsonFormat = options.responseFormat.type === 'json';
             const tools = toolsToRequest(options.tools);
-            const requestBody = buildRequestBody(model, messages, true, jsonFormat, config.apiFormat, tools);
+            const requestBody = buildRequestBody(
+              model,
+              messages,
+              true,
+              jsonFormat,
+              config.apiFormat,
+              tools,
+              config.streamUsage,
+            );
             const endpoint = getChatEndpoint(config.baseUrl, config.apiFormat);
             const httpRequest = HttpClientRequest.post(endpoint).pipe(HttpClientRequest.bodyJson(requestBody));
             const response = yield* httpRequest.pipe(
