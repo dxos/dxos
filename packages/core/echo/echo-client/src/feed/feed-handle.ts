@@ -36,6 +36,9 @@ const TRACE_FEED_LOAD = false;
 // https://linear.app/dxos/issue/DX-449/queueappend-fails-when-there-are-too-many-objects-due-to-there-being
 const FEED_APPEND_BATCH_SIZE = 15;
 
+/** One object captured for append: the core it came from, its payload, and its pending-append token. */
+type AppendCapture = { core: FeedObjectCore; json: Record<string, unknown>; token: string };
+
 const RECONNECT_INITIAL_DELAY = 1_000;
 
 /**
@@ -266,8 +269,7 @@ export class FeedHandle {
       throw this.#endpointClosed;
     }
 
-    const encoded = batch.map(({ json }) => JSON.stringify(json));
-    const sendPromise = this.#sendAppendBatches(encoded).catch((err) => this.#onAppendFailed(err, batch));
+    const sendPromise = this.#sendAppendBatches(batch);
     this.#inFlight.add(sendPromise);
     try {
       await sendPromise;
@@ -378,20 +380,30 @@ export class FeedHandle {
   }
 
   /**
-   * Send captured append batches to the feed service, chunked to `FEED_APPEND_BATCH_SIZE` (the
-   * server rejects overly large single inserts).
+   * Send a captured batch to the feed service, chunked to `FEED_APPEND_BATCH_SIZE` (the server
+   * rejects overly large single inserts).
+   *
+   * A failed chunk carries only itself and the chunks after it into the retry. `insertIntoFeed`
+   * assigns a fresh sequence per object, so re-sending a chunk that already committed appends a
+   * second block rather than reconciling with the first.
    */
-  async #sendAppendBatches(encoded: string[]): Promise<void> {
-    for (let i = 0; i < encoded.length; i += FEED_APPEND_BATCH_SIZE) {
-      await runServiceCall(
-        this._runtime,
-        this._service['FeedService.insertIntoFeed']({
-          subspaceTag: this._namespace,
-          spaceId: this._spaceId,
-          feedId: this._feedId,
-          objects: encoded.slice(i, i + FEED_APPEND_BATCH_SIZE),
-        }),
-      );
+  async #sendAppendBatches(batch: AppendCapture[]): Promise<void> {
+    for (let i = 0; i < batch.length; i += FEED_APPEND_BATCH_SIZE) {
+      const chunk = batch.slice(i, i + FEED_APPEND_BATCH_SIZE);
+      try {
+        await runServiceCall(
+          this._runtime,
+          this._service['FeedService.insertIntoFeed']({
+            subspaceTag: this._namespace,
+            spaceId: this._spaceId,
+            feedId: this._feedId,
+            objects: chunk.map(({ json }) => JSON.stringify(json)),
+          }),
+        );
+      } catch (err) {
+        this.#onAppendFailed(err, batch.slice(i));
+        return;
+      }
     }
     this.#appendRetryDelay = APPEND_RETRY_INITIAL_DELAY;
     if (this.#appendRetryTimer) {
@@ -403,7 +415,7 @@ export class FeedHandle {
     this._error = null;
   }
 
-  #onAppendFailed(err: unknown, batch: { core: FeedObjectCore; token: string }[]): void {
+  #onAppendFailed(err: unknown, batch: AppendCapture[]): void {
     const endpointClosed = isEndpointClosedError(err);
     if (!endpointClosed) {
       log.catch(err);
@@ -455,8 +467,7 @@ export class FeedHandle {
     });
     this.#dirtyCores.clear();
 
-    const encoded = batch.map(({ json }) => JSON.stringify(json));
-    const sendPromise = this.#sendAppendBatches(encoded).catch((err) => this.#onAppendFailed(err, batch));
+    const sendPromise = this.#sendAppendBatches(batch);
     this.#inFlight.add(sendPromise);
     try {
       await sendPromise;
