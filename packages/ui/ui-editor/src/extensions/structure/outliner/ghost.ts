@@ -30,6 +30,10 @@ const DEFAULTS: Required<GhostOptions> = { item: 'Enter task', add: 'Add task' }
 
 const TASK_MARKER = '- [ ] ';
 
+// The marker as written, so the placeholder's slot comes from the line text rather than from the tree:
+// the tree can lag the parser by a transaction, and a stale content start would sit under the checkbox.
+const EMPTY_ITEM_REGEX = /^\s*- (?:\[[ x]\] )?$/;
+
 /** Turns the caret's blank line into an empty task and places the caret in it. */
 export const insertTaskAtLine: Command = (view) => {
   const line = view.state.doc.lineAt(view.state.selection.main.head);
@@ -72,13 +76,11 @@ export const ghost = (options: GhostOptions = {}): Extension => {
           if (!view.hasFocus) {
             return Decoration.none;
           }
-          const current = view.state.facet(treeFacet).find(view.state.selection.main.head);
-          if (!current || current.contentRange.from !== current.contentRange.to) {
+          const line = view.state.doc.lineAt(view.state.selection.main.head);
+          if (!EMPTY_ITEM_REGEX.test(line.text) || !view.state.facet(treeFacet).find(line.from)) {
             return Decoration.none;
           }
-          return Decoration.set([
-            Decoration.widget({ widget: new PlaceholderWidget(item), side: 1 }).range(current.contentRange.from),
-          ]);
+          return Decoration.set([Decoration.widget({ widget: new PlaceholderWidget(item), side: 1 }).range(line.to)]);
         }
       },
       { decorations: (plugin) => plugin.decorations },

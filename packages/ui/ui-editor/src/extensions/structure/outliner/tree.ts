@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { syntaxTree } from '@codemirror/language';
+import { ensureSyntaxTree, syntaxTree } from '@codemirror/language';
 import { type EditorState, type Extension, StateField, type Transaction } from '@codemirror/state';
 import { Facet } from '@codemirror/state';
 import { type SyntaxNode } from '@lezer/common';
@@ -196,6 +196,11 @@ export type TreeOptions = {};
  * NOTE: Requires markdown parser to be enabled.
  */
 export const outlinerTree = (_options: TreeOptions = {}): Extension => {
+  // Outlines are small, so the whole document is parsed before the tree is read: a partial parse leaves
+  // the last item with its content start inside the marker, and anything positioned by it lands under
+  // the checkbox.
+  const PARSE_BUDGET_MS = 50;
+
   const buildTree = (state: EditorState): Tree => {
     let tree: Tree | undefined;
     let parent: Item | undefined;
@@ -207,7 +212,7 @@ export const outlinerTree = (_options: TreeOptions = {}): Extension => {
     // Array to track previous siblings at each level.
     const prevSiblings: (Item | undefined)[] = [];
 
-    syntaxTree(state).iterate({
+    (ensureSyntaxTree(state, state.doc.length, PARSE_BUDGET_MS) ?? syntaxTree(state)).iterate({
       enter: (node) => {
         switch (node.name) {
           case 'Document': {
@@ -314,7 +319,8 @@ export const outlinerTree = (_options: TreeOptions = {}): Extension => {
         return buildTree(state);
       },
       update: (value: Tree | undefined, tr: Transaction) => {
-        if (!tr.docChanged) {
+        // The parser also finishes asynchronously in a transaction of its own, with no document change.
+        if (!tr.docChanged && syntaxTree(tr.state) === syntaxTree(tr.startState)) {
           return value;
         }
 
