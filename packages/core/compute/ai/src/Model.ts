@@ -146,21 +146,22 @@ export const all: readonly Model[] = [
     characteristics: { maxTokens: 16_384, tools: true },
   }),
 
-  // Edge — DeepSeek via the DXOS edge intermediary (OpenAI-compatible chat completions).
-  make('com.deepseek.model.deepseek-chat.default', {
+  // Edge — DeepSeek via the DXOS edge intermediary (OpenAI-compatible chat completions). Both V4
+  // models serve thinking and non-thinking mode from one back-end name; the legacy `deepseek-chat`
+  // and `deepseek-reasoner` names were discontinued on 2026-07-24.
+  make('com.deepseek.model.deepseek-v4-flash.default', {
     provider: Provider.edge.id,
     service: 'deepseek',
-    backend: 'deepseek-chat',
-    label: 'DeepSeek Chat',
-    characteristics: { contextWindow: 128_000, maxTokens: 8_192, tools: true },
+    backend: 'deepseek-v4-flash',
+    label: 'DeepSeek V4 Flash',
+    characteristics: { thinking: true, tools: true },
   }),
-  make('com.deepseek.model.deepseek-reasoner.default', {
+  make('com.deepseek.model.deepseek-v4-pro.default', {
     provider: Provider.edge.id,
     service: 'deepseek',
-    backend: 'deepseek-reasoner',
-    label: 'DeepSeek Reasoner',
-    // The reasoner emits chain-of-thought before the answer, so its output ceiling covers both.
-    characteristics: { contextWindow: 128_000, maxTokens: 65_536, thinking: true, tools: true },
+    backend: 'deepseek-v4-pro',
+    label: 'DeepSeek V4 Pro',
+    characteristics: { thinking: true, tools: true },
   }),
 
   // Local models — the same catalog served by the bundled sidecar, an external Ollama server, and

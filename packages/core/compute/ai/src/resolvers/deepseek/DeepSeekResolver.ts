@@ -37,12 +37,17 @@ export const make = () =>
           return Layer.unwrap(Effect.fail(new AiModelNotAvailableError(model)));
         }
         // The edge provider fronts several upstream services; this resolver serves only the DeepSeek
-        // ones. The catalog supplies the back-end name.
+        // ones. The catalog supplies the back-end name; V4 serves both modes from one name.
         const info = Model.get(Provider.edge.id, model);
         if (!info || info.service !== 'deepseek') {
           return Layer.unwrap(Effect.fail(new AiModelNotAvailableError(model)));
         }
-        return ChatCompletionsAdapter.layer(info.backend).pipe(Layer.provide(clientLayer));
+        // DeepSeek V4 enables thinking by default, so an explicit opt-out has to be sent; the
+        // default effort ('high') is left to the provider.
+        const thinking = options?.thinking ?? true;
+        return ChatCompletionsAdapter.layer(info.backend, {
+          body: { thinking: { type: thinking ? 'enabled' : 'disabled' } },
+        }).pipe(Layer.provide(clientLayer));
       };
     }),
   );

@@ -117,6 +117,8 @@ type ChatTool = {
  */
 type OpenAiChatRequest = {
   model: string;
+  /** Provider-specific fields passed through from {@link RequestOptions.body} (e.g. DeepSeek `thinking`). */
+  [key: string]: unknown;
   messages: ChatMessage[];
   stream?: boolean;
   stream_options?: { include_usage: boolean };
@@ -476,6 +478,7 @@ const buildRequestBody = (
   apiFormat: ApiFormat,
   tools: ChatTool[] | undefined,
   streamUsage = false,
+  extraBody: Readonly<Record<string, unknown>> = {},
 ): OllamaChatRequest | OpenAiChatRequest => {
   switch (apiFormat) {
     case 'ollama':
@@ -488,6 +491,7 @@ const buildRequestBody = (
       };
     case 'openai':
       return {
+        ...extraBody,
         model,
         messages,
         stream,
@@ -648,6 +652,9 @@ const parseStreamChunk = (line: string, apiFormat: ApiFormat): ParsedStreamChunk
         }
         const chunk = JSON.parse(data) as OpenAiStreamChunk;
         const choice = chunk.choices?.[0];
+        // The chunk is an unvalidated cast over `JSON.parse`; a non-numeric count would otherwise
+        // reach the finish payload and telemetry as a string.
+        const tokenCount = (value: unknown): number | undefined => (typeof value === 'number' ? value : undefined);
         const deltas = choice?.delta?.tool_calls?.map((tc) => ({
           index: tc.index,
           id: tc.id,
@@ -658,8 +665,8 @@ const parseStreamChunk = (line: string, apiFormat: ApiFormat): ParsedStreamChunk
           content: choice?.delta?.content ?? undefined,
           reasoning: choice?.delta?.reasoning_content ?? undefined,
           done: choice?.finish_reason !== null && choice?.finish_reason !== undefined,
-          inputTokens: chunk.usage?.prompt_tokens,
-          outputTokens: chunk.usage?.completion_tokens,
+          inputTokens: tokenCount(chunk.usage?.prompt_tokens),
+          outputTokens: tokenCount(chunk.usage?.completion_tokens),
           finishReason: choice?.finish_reason ? mapOpenAiFinishReason(choice.finish_reason) : undefined,
           toolCallDeltas: deltas,
         };
@@ -671,9 +678,20 @@ const parseStreamChunk = (line: string, apiFormat: ApiFormat): ParsedStreamChunk
 };
 
 /**
+ * Per-model request options.
+ */
+export type RequestOptions = {
+  /**
+   * Provider-specific request-body fields merged into every OpenAI-format call (DeepSeek's
+   * `thinking` and `reasoning_effort`, say). Ignored for the Ollama dialect.
+   */
+  readonly body?: Readonly<Record<string, unknown>>;
+};
+
+/**
  * Create a chat completions language model service.
  */
-export const make = (model: string) =>
+export const make = (model: string, requestOptions: RequestOptions = {}) =>
   Effect.flatMap(ChatCompletionsClient, ({ config, httpClient }) => {
     const requestTimeout = config.requestTimeout ?? DEFAULT_REQUEST_TIMEOUT;
     const streamIdleTimeout = config.streamIdleTimeout ?? DEFAULT_STREAM_IDLE_TIMEOUT;
@@ -687,7 +705,16 @@ export const make = (model: string) =>
           const messages = promptToMessages(options.prompt, config.apiFormat);
           const jsonFormat = options.responseFormat.type === 'json';
           const tools = toolsToRequest(options.tools);
-          const requestBody = buildRequestBody(model, messages, false, jsonFormat, config.apiFormat, tools);
+          const requestBody = buildRequestBody(
+            model,
+            messages,
+            false,
+            jsonFormat,
+            config.apiFormat,
+            tools,
+            false,
+            requestOptions.body,
+          );
           const endpoint = getChatEndpoint(config.baseUrl, config.apiFormat);
           const httpRequest = HttpClientRequest.post(endpoint).pipe(HttpClientRequest.bodyJson(requestBody));
           const response = yield* httpRequest.pipe(
@@ -767,6 +794,7 @@ export const make = (model: string) =>
               config.apiFormat,
               tools,
               config.streamUsage,
+              requestOptions.body,
             );
             const endpoint = getChatEndpoint(config.baseUrl, config.apiFormat);
             const httpRequest = HttpClientRequest.post(endpoint).pipe(HttpClientRequest.bodyJson(requestBody));
@@ -1033,7 +1061,8 @@ const withIdleTimeout =
 /**
  * Create a chat completions language model layer.
  */
-export const layer = (model: string) => Layer.effect(LanguageModel.LanguageModel, make(model));
+export const layer = (model: string, options?: RequestOptions) =>
+  Layer.effect(LanguageModel.LanguageModel, make(model, options));
 
 /**
  * Create a chat completions client layer.

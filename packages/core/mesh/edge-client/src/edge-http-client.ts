@@ -665,7 +665,10 @@ export class EdgeHttpClient extends BaseHttpClient {
         headers.set(EDGE_CLIENT_TAG_HEADER, this._clientTag);
       }
 
-      const response = await fetch(target, { method, headers, body, signal: request.signal });
+      // `redirect: 'error'` rather than the default 'follow': these headers carry the EDGE auth
+      // credential and, on a BYOK request, the user's own provider key, and custom headers are not
+      // guaranteed to be stripped on a cross-origin redirect.
+      const response = await fetch(target, { method, headers, body, redirect: 'error', signal: request.signal });
       // Only retry edge auth when the 401 came from edge's own auth layer. Edge always sets
       // `WWW-Authenticate` on its own 401s; upstream-forwarded 401s (e.g. invalid BYOK rejected
       // by Anthropic) lack it and must be surfaced verbatim.
