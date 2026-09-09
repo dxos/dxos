@@ -9,6 +9,7 @@ import { expect, userEvent, waitFor, within } from 'storybook/test';
 import { withLayout, withTheme } from '../../testing';
 import { Button } from '../Button';
 import { Panel } from '../Panel';
+import { Splitter } from '../Splitter';
 import { Toolbar } from '../Toolbar';
 import { Drawer, type DrawerRootProps } from './Drawer';
 
@@ -78,6 +79,7 @@ const DefaultStory = ({ side, modal, snapPoints, ...props }: StoryArgs) => (
 const PushStory = () => {
   const [start, setStart] = useState(true);
   const [end, setEnd] = useState(true);
+  const [inspectorSize, setInspectorSize] = useState(24);
   return (
     <div className='flex dx-fill'>
       <Drawer.Root open={start} onOpenChange={setStart} side='start' push>
@@ -95,47 +97,71 @@ const PushStory = () => {
           <Filler lines={12} />
         </Drawer.Content>
       </Drawer.Root>
-      <Panel.Root as='main' classNames='dx-base-surface' data-testid='drawer.main'>
-        <Panel.Toolbar asChild>
-          <Toolbar.Root>
-            {!start && (
-              <Toolbar.IconButton
-                icon='ph--sidebar-simple--regular'
-                iconOnly
-                label='Toggle navigation'
-                onClick={() => setStart((open) => !open)}
-              />
-            )}
-            <Toolbar.Separator />
-            {!end && (
-              <Toolbar.IconButton
-                icon='ph--square-split-horizontal--regular'
-                iconOnly
-                label='Toggle inspector'
-                classNames='[&_svg]:-scale-x-100'
-                onClick={() => setEnd((open) => !open)}
-              />
-            )}
-          </Toolbar.Root>
-        </Panel.Toolbar>
-        <Panel.Content classNames='flex items-center justify-center'>Main</Panel.Content>
-        <Panel.Statusbar asChild>
-          <Toolbar.Root classNames='justify-between'>
-            <span className='px-2 text-description'>Ready</span>
-            <Toolbar.IconButton variant='ghost' icon='ph--info--regular' iconOnly label='Status' />
-          </Toolbar.Root>
-        </Panel.Statusbar>
-      </Panel.Root>
-      <Drawer.Root open={end} onOpenChange={setEnd} side='end' push>
-        <Drawer.Content>
-          <Toolbar.Root>
-            <Toolbar.IconButton icon='ph--x--regular' iconOnly label='Close inspector' onClick={() => setEnd(false)} />
-            <Drawer.Title classNames='grow px-2'>Inspector</Drawer.Title>
-          </Toolbar.Root>
-          <Drawer.Description>Pushes the main panel left. Drag toward the right edge to dismiss.</Drawer.Description>
-          <Filler lines={12} />
-        </Drawer.Content>
-      </Drawer.Root>
+      {/* The seam owns the inspector's width and animates its collapse; the drawer fills the pane it is given. */}
+      <Splitter.Root
+        orientation='horizontal'
+        anchor='end'
+        size={inspectorSize}
+        onSizeChange={setInspectorSize}
+        minSize={12}
+        resizable
+        mode={end ? 'split' : 'start'}
+        classNames='dx-grow'
+      >
+        <Splitter.Panel position='start'>
+          <Panel.Root as='main' classNames='dx-base-surface' data-testid='drawer.main'>
+            <Panel.Toolbar asChild>
+              <Toolbar.Root>
+                {!start && (
+                  <Toolbar.IconButton
+                    icon='ph--sidebar-simple--regular'
+                    iconOnly
+                    label='Toggle navigation'
+                    onClick={() => setStart((open) => !open)}
+                  />
+                )}
+                <Toolbar.Separator />
+                {!end && (
+                  <Toolbar.IconButton
+                    icon='ph--square-split-horizontal--regular'
+                    iconOnly
+                    label='Toggle inspector'
+                    classNames='[&_svg]:-scale-x-100'
+                    onClick={() => setEnd((open) => !open)}
+                  />
+                )}
+              </Toolbar.Root>
+            </Panel.Toolbar>
+            <Panel.Content classNames='flex items-center justify-center'>Main</Panel.Content>
+            <Panel.Statusbar asChild>
+              <Toolbar.Root classNames='justify-between'>
+                <span className='px-2 text-description'>Ready</span>
+                <Toolbar.IconButton variant='ghost' icon='ph--info--regular' iconOnly label='Status' />
+              </Toolbar.Root>
+            </Panel.Statusbar>
+          </Panel.Root>
+        </Splitter.Panel>
+        <Splitter.Handle />
+        <Splitter.Panel position='end'>
+          <Drawer.Root open={end} onOpenChange={setEnd} side='end' push>
+            <Drawer.Content draggable={false} classNames='[--dx-drawer-size:100%]'>
+              <Toolbar.Root>
+                <Drawer.Title classNames='grow px-2'>Inspector</Drawer.Title>
+                <Toolbar.IconButton
+                  icon='ph--x--regular'
+                  iconOnly
+                  label='Close inspector'
+                  onClick={() => setEnd(false)}
+                />
+              </Toolbar.Root>
+              <Drawer.Description>
+                Pushes the main panel left. Drag toward the right edge to dismiss.
+              </Drawer.Description>
+              <Filler lines={12} />
+            </Drawer.Content>
+          </Drawer.Root>
+        </Splitter.Panel>
+      </Splitter.Root>
     </div>
   );
 };

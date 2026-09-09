@@ -1084,6 +1084,11 @@ verdict over porting in the same PR).
       dismissed the sibling drawer when the first closed (later layers count as nested);
       `onRequestDismiss` now vetoes cross-layer dismissal in `Drawer.Root`. This also removes the
       remaining reason `Main` could not sit on the drawer at `lg` — push is the expanded-sidebar case.
+      Sizing a pushed drawer (asked 2026-09-09): nest, do not merge — the `Push` story's inspector sits
+      in a `Splitter` end pane (`anchor='end'`, `mode={open ? 'split' : 'start'}`) with
+      `--dx-drawer-size: 100%` and `draggable={false}`; the seam owns the width in rem and the
+      collapse, the drawer keeps the dialog semantics. Reopening restores the dragged size. A
+      `Drawer.Handle` of its own was the alternative and was not taken.
 - [x] **`Main` on the drawer machine — probe** DONE 2026-09-09. The 2026-09-05 verdict ("fights the
       inset slide") was wrong: the machine's inline `transform` and `main.css`'s `inset-inline-start`
       are independent properties, and a driven touch swipe dismissed the sidebar through
