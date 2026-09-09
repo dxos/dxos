@@ -136,7 +136,7 @@ export class AppManager {
     return anchor === WORKSPACE_KEY ? workspace : undefined;
   }
 
-  async openUserAccount(timeout = 30_000): Promise<void> {
+  async openUserAccount(timeout = 60_000): Promise<void> {
     await this.page.getByTestId('clientPlugin.account').click();
     // The account panel's tree is what the callers below click into, so returning before it is
     // showing hands them a target that is not there yet.
@@ -149,10 +149,13 @@ export class AppManager {
    * second could land while the account panel was still mounting and be swallowed — leaving every
    * `devicesContainer.*` target absent for the caller's whole timeout (DX-1264).
    *
-   * The budget matches the `actionTimeout` these waits stand in front of: this panel is measurably
-   * slow to mount, and a tighter gate here only converts that slowness into an earlier failure.
+   * The budget is deliberately longer than the generic 30s `actionTimeout`: this panel's tree is
+   * built from the app graph once identity resolves, which after a storage reset is measurably slow,
+   * and a soak with retries off still lost runs to it at 30s. The test's own budget is 120s, so
+   * waiting longer here costs nothing on the passing path and stops reporting a slow mount as a
+   * missing element (DX-1264).
    */
-  async openUserDevices(timeout = 30_000): Promise<void> {
+  async openUserDevices(timeout = 60_000): Promise<void> {
     await this.openUserAccount(timeout);
     await this.page.getByTestId('clientPlugin.devices').click();
     await this.page.getByTestId('devicesContainer.logout').waitFor({ state: 'visible', timeout });
