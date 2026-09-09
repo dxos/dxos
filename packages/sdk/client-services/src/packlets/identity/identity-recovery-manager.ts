@@ -9,7 +9,12 @@ import * as Option from 'effect/Option';
 
 import { synchronized } from '@dxos/async';
 import { type Context } from '@dxos/context';
-import { generateSeedPhrase, getCredentialAssertion, keyPairFromSeedPhrase } from '@dxos/credentials';
+import {
+  credentialPayload,
+  generateSeedPhrase,
+  getCredentialAssertion,
+  keyPairFromSeedPhrase,
+} from '@dxos/credentials';
 import { sign } from '@dxos/crypto';
 import { type EdgeHttpClient, EdgeHttpClientService } from '@dxos/edge-client';
 import { invariant } from '@dxos/invariant';
@@ -102,7 +107,7 @@ export class EdgeIdentityRecoveryManager {
       },
     });
 
-    const receipt = await identity.controlPipeline.writer.write({ credential: { credential } });
+    const receipt = await identity.controlPipeline.writer.write(credentialPayload(credential));
     await identity.controlPipeline.state.waitUntilTimeframe(new Timeframe([[receipt.feedKey, receipt.seq]]));
 
     return { recoveryCode };
@@ -146,7 +151,7 @@ export class EdgeIdentityRecoveryManager {
       },
     });
 
-    const receipt = await identity.controlPipeline.writer.write({ credential: { credential } });
+    const receipt = await identity.controlPipeline.writer.write(credentialPayload(credential));
     await identity.controlPipeline.state.waitUntilTimeframe(new Timeframe([[receipt.feedKey, receipt.seq]]));
   }
 

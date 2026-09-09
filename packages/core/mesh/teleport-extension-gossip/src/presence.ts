@@ -2,15 +2,15 @@
 // Copyright 2022 DXOS.org
 //
 
-import { create, fromBinary, toBinary } from '@bufbuild/protobuf';
+import { create } from '@bufbuild/protobuf';
+import { type Any, anyPack, anyUnpack } from '@bufbuild/protobuf/wkt';
 
 import { Event, scheduleTaskInterval } from '@dxos/async';
 import { Resource } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { fromPublicKey, toPublicKey } from '@dxos/protocols/buf';
-import { decodeCompat, encodeCompat } from '@dxos/protocols/buf-shape-compat';
+import { fromPublicKey, requirePublicKey, toDate, toPublicKey } from '@dxos/protocols/buf';
 import { type PeerState, PeerStateSchema } from '@dxos/protocols/buf/dxos/mesh/presence_pb';
 import { type GossipMessage } from '@dxos/protocols/buf/dxos/mesh/teleport/gossip_pb';
 import { ComplexMap } from '@dxos/util';
@@ -37,8 +37,6 @@ export type PresenceProps = {
 };
 
 const PRESENCE_CHANNEL_ID = 'dxos.mesh.presence.Presence';
-
-const PEER_STATE_TYPE_URL = 'dxos.mesh.presence.PeerState';
 
 /** A received announce, decoded once on arrival rather than on every read. */
 type PresenceRecord = {
@@ -139,36 +137,35 @@ export class Presence extends Resource {
     });
   }
 
-  /**
-   * Gossip resolves `Any` payloads generically for every channel, so presence converts at its own
-   * channel edge. Routed through the codec rather than a field map so the substitution table stays
-   * the single definition of the two shapes.
-   */
-  private _toAnnounce(state: PeerState): unknown {
-    return {
-      ...decodeCompat<object>(PeerStateSchema, toBinary(PeerStateSchema, state)),
-      '@type': PEER_STATE_TYPE_URL,
-    };
+  /** Gossip routes `Any` payloads generically, so presence packs its own channel's state. */
+  private _toAnnounce(state: PeerState): Any {
+    return anyPack(PeerStateSchema, state);
   }
 
   private _receiveAnnounces(message: GossipMessage): void {
     invariant(message.channelId === PRESENCE_CHANNEL_ID, `Invalid channel ID: ${message.channelId}`);
-    const previous = this._peerStates.get(message.peerId);
-    if (previous && previous.timestamp.getTime() >= message.timestamp.getTime()) {
+    const peerId = requirePublicKey(message.peerId);
+    const timestamp = toDate(message.timestamp);
+    invariant(timestamp, 'Announce has no timestamp.');
+    const previous = this._peerStates.get(peerId);
+    if (previous && previous.timestamp.getTime() >= timestamp.getTime()) {
       return;
     }
 
+    invariant(message.payload, 'Announce has no payload.');
+    const state = anyUnpack(message.payload, PeerStateSchema);
+    invariant(state, `Announce payload is not a PeerState: ${message.payload.typeUrl}`);
     const record: PresenceRecord = {
-      peerId: message.peerId,
-      timestamp: message.timestamp,
+      peerId,
+      timestamp,
       state: {
-        ...fromBinary(PeerStateSchema, encodeCompat(PeerStateSchema, message.payload)),
+        ...state,
         // The announcing peer omits its own peer id, so it is taken from the envelope.
-        peerId: fromPublicKey(message.peerId),
+        peerId: fromPublicKey(peerId),
       },
     };
 
-    this._peerStates.set(message.peerId, record);
+    this._peerStates.set(peerId, record);
     // A peer that announces a new identity key would otherwise stay indexed under the previous one
     // until its record ages out, and be reported for an identity it no longer claims.
     const previousIdentityKey = previous && toPublicKey(previous.state.identityKey);

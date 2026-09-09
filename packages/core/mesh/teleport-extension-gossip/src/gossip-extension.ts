@@ -2,6 +2,9 @@
 // Copyright 2022 DXOS.org
 //
 
+import { create } from '@bufbuild/protobuf';
+import { EmptySchema } from '@bufbuild/protobuf/wkt';
+
 import { Trigger } from '@dxos/async';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
@@ -51,6 +54,7 @@ export class GossipExtension implements TeleportExtension {
           announce: async (message: GossipMessage) => {
             log('received announce', { localPeerId: context.localPeerId, remotePeerId: context.remotePeerId, message });
             await this._callbacks.onAnnounce?.(message);
+            return create(EmptySchema, {});
           },
         },
       },

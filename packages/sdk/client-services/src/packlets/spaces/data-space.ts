@@ -8,7 +8,7 @@ import { type AutomergeUrl } from '@automerge/automerge-repo';
 import { Event, Mutex, scheduleTask, sleep, synchronized, trackLeaks } from '@dxos/async';
 import { AUTH_TIMEOUT } from '@dxos/client-protocol';
 import { Context, ContextDisposedError } from '@dxos/context';
-import type { SpecificCredential } from '@dxos/credentials';
+import { type SpecificCredential, credentialPayload } from '@dxos/credentials';
 import { timed, warnAfterTimeout } from '@dxos/debug';
 import { type DatabaseRoot, type DocumentLease, type EchoHost } from '@dxos/echo-host';
 import { type DatabaseDirectory, SpaceDocVersion } from '@dxos/echo-protocol';
@@ -556,7 +556,7 @@ export class DataSpace {
         profile,
       },
     });
-    await this.inner.controlPipeline.writer.write({ credential: { credential } });
+    await this.inner.controlPipeline.writer.write(credentialPayload(credential));
   }
 
   async createEpoch(options?: CreateEpochOptions): Promise<CreateEpochResult | null> {

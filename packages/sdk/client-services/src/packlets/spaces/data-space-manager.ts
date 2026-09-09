@@ -18,11 +18,12 @@ import { Event, scheduleTask, synchronized, trackLeaks } from '@dxos/async';
 import { SpaceProperties } from '@dxos/client-protocol';
 import { Context, LifecycleState, Resource, cancelWithContext } from '@dxos/context';
 import {
+  createAdmissionCredentials,
+  credentialPayload,
   type CredentialSigner,
   type DelegateInvitationCredential,
-  type MemberInfo,
-  createAdmissionCredentials,
   getCredentialAssertion,
+  type MemberInfo,
 } from '@dxos/credentials';
 import { Type } from '@dxos/echo';
 import {
@@ -129,7 +130,7 @@ export const createSigningContextProvider =
       deviceKey: identity.deviceKey,
       getProfile: () => identity.profileDocument,
       recordCredential: async (credential) => {
-        await identity.controlPipeline.writer.write({ credential: { credential } });
+        await identity.controlPipeline.writer.write(credentialPayload(credential));
       },
     };
   };

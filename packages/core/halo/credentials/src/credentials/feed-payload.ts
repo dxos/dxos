@@ -2,8 +2,14 @@
 // Copyright 2026 DXOS.org
 //
 
+import { create } from '@bufbuild/protobuf';
+
 import { invariant } from '@dxos/invariant';
-import { type FeedMessage_Payload } from '@dxos/protocols/buf/dxos/echo/feed_pb';
+import {
+  CredentialsMessageSchema,
+  type FeedMessage_Payload,
+  FeedMessage_PayloadSchema,
+} from '@dxos/protocols/buf/dxos/echo/feed_pb';
 import { type Credential } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
 /**
@@ -18,3 +24,9 @@ export const credentialOfPayload = (payload: FeedMessage_Payload): Credential =>
   invariant(credential, 'Credentials message is empty.');
   return credential;
 };
+
+/** Wraps a credential as the control-feed payload that carries it. */
+export const credentialPayload = (credential: Credential): FeedMessage_Payload =>
+  create(FeedMessage_PayloadSchema, {
+    payload: { case: 'credential', value: create(CredentialsMessageSchema, { credential }) },
+  });
