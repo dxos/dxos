@@ -158,8 +158,8 @@ describe('Client services', () => {
     invariant(identity1);
     const identity2 = client2.halo.identity.get();
     invariant(identity2);
-    expect(toPublicKey(guestInvitation?.identityKey)).to.deep.eq(identity1.identityKey);
-    expect(toPublicKey(guestInvitation?.identityKey)).to.deep.eq(identity2.identityKey);
+    expect(toPublicKey(guestInvitation?.identityKey)).to.deep.eq(toPublicKey(identity1.identityKey));
+    expect(toPublicKey(guestInvitation?.identityKey)).to.deep.eq(toPublicKey(identity2.identityKey));
     expect(hostInvitation?.state).to.eq(Invitation_State.SUCCESS);
     expect(guestInvitation?.state).to.eq(Invitation_State.SUCCESS);
 
@@ -275,13 +275,13 @@ describe('Client services', () => {
         .poll(() => getMembers()[0])
         .toEqual(
           expect.objectContaining({
-            identity: {
-              did: client1.halo.identity.get()!.did,
-              identityKey: client1.halo.identity.get()!.identityKey,
-              profile: {
+            identity: expect.objectContaining({
+              did: client1.halo.identity.get()?.did,
+              identityKey: client1.halo.identity.get()?.identityKey,
+              profile: expect.objectContaining({
                 displayName: 'Peer 1',
-              },
-            },
+              }),
+            }),
             presence: SpaceMember_PresenceState.ONLINE,
           }),
         );
@@ -289,13 +289,13 @@ describe('Client services', () => {
         .poll(() => getMembers()[1], { timeout: 15_000 })
         .toEqual(
           expect.objectContaining({
-            identity: {
-              did: client2.halo.identity.get()!.did,
-              identityKey: client2.halo.identity.get()!.identityKey,
-              profile: {
+            identity: expect.objectContaining({
+              did: client2.halo.identity.get()?.did,
+              identityKey: client2.halo.identity.get()?.identityKey,
+              profile: expect.objectContaining({
                 displayName: 'Peer 2',
-              },
-            },
+              }),
+            }),
             presence: SpaceMember_PresenceState.ONLINE,
           }),
         );

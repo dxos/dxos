@@ -17,9 +17,9 @@ import {
   type LeaveRequest,
   LeaveRequestSchema,
   type QueryRequest,
-  SwarmEventSchema,
   SwarmEvent_PeerAvailableSchema,
   SwarmEvent_PeerLeftSchema,
+  SwarmEventSchema,
 } from '@dxos/protocols/buf/dxos/edge/signal_pb';
 import { ReliablePayloadSchema } from '@dxos/protocols/buf/dxos/mesh/messaging_pb';
 import { type AnyEnvelope } from '@dxos/protocols/service-contract';

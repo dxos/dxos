@@ -16,14 +16,14 @@ import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { EdgeService } from '@dxos/protocols';
-import { type buf, bufWkt } from '@dxos/protocols/buf';
+import { bufWkt } from '@dxos/protocols/buf';
 import { fromDate, fromPublicKey, requirePublicKey } from '@dxos/protocols/buf';
 import {
   type Message as EdgeMessage,
   PeerSchema,
-  type SwarmResponse,
   SwarmRequest_Action as SwarmRequestAction,
   SwarmRequestSchema,
+  type SwarmResponse,
   SwarmResponseSchema,
 } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
 import {
@@ -32,9 +32,9 @@ import {
   type LeaveRequest,
   MessageSchema,
   type QueryRequest,
-  SwarmEventSchema,
   SwarmEvent_PeerAvailableSchema,
   SwarmEvent_PeerLeftSchema,
+  SwarmEventSchema,
 } from '@dxos/protocols/buf/dxos/edge/signal_pb';
 import { ComplexMap, ComplexSet } from '@dxos/util';
 
