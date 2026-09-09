@@ -11,8 +11,8 @@ import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { bufWkt, createBuf, fromDate, fromPublicKey } from '@dxos/protocols/buf';
 import {
-  type Credential,
   ClaimSchema,
+  type Credential,
   CredentialSchema,
   ServiceAccessSchema,
 } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
