@@ -5,7 +5,16 @@
 import { save } from '@automerge/automerge';
 import { type AutomergeUrl } from '@automerge/automerge-repo';
 
-import { Event, Mutex, scheduleTask, sleep, synchronized, trackLeaks } from '@dxos/async';
+import {
+  Event,
+  Mutex,
+  asyncTimeout,
+  scheduleTask,
+  sleep,
+  sleepWithContext,
+  synchronized,
+  trackLeaks,
+} from '@dxos/async';
 import { AUTH_TIMEOUT } from '@dxos/client-protocol';
 import { Context, ContextDisposedError } from '@dxos/context';
 import type { SpecificCredential } from '@dxos/credentials';
@@ -87,6 +96,13 @@ export type CreateEpochOptions = {
   migration?: SpacesService.Migration;
   newAutomergeRoot?: string;
 };
+
+/** How long one attempt at loading a space's root document may wait before it is re-driven. */
+const ROOT_DOC_LOAD_ATTEMPT_TIMEOUT = 20_000;
+
+/** Backoff between root-document load attempts, doubling to this ceiling. */
+const ROOT_DOC_LOAD_RETRY_INITIAL_DELAY = 1_000;
+const ROOT_DOC_LOAD_RETRY_MAX_DELAY = 30_000;
 
 @trackLeaks('open', 'close')
 export class DataSpace {
@@ -490,11 +506,40 @@ export class DataSpace {
     // TODO(dmaretskyi): Make this single-threaded (but doc loading should still be parallel to not block epoch processing).
     queueMicrotask(async () => {
       try {
-        await warnAfterTimeout(5_000, 'Automerge root doc load timeout (DataSpace)', async () => {
-          lease = await this._echoHost.loadDoc<DatabaseDirectory>(this._ctx, rootUrl as AutomergeUrl, {
-            fetchFromNetwork: true,
-          });
-        });
+        // Re-driven, not awaited once. `loadDoc({fetchFromNetwork: true})` waits with no deadline of
+        // its own, and simply asking again is not enough: `findWithProgress` re-attaches to the same
+        // parked DocumentQuery rather than re-issuing it, so a stalled root stays stalled and the
+        // space never appears. Each attempt therefore resets the stalled subduction entries first
+        // (DX-1264).
+        let retryDelay = ROOT_DOC_LOAD_RETRY_INITIAL_DELAY;
+        for (let attempt = 0; !this._ctx.disposed && !lease; attempt++) {
+          try {
+            if (attempt > 0) {
+              this._echoHost.automergeHost.kickStalledSync();
+            }
+            lease = await warnAfterTimeout(5_000, 'Automerge root doc load timeout (DataSpace)', async () =>
+              asyncTimeout(
+                this._echoHost.loadDoc<DatabaseDirectory>(this._ctx, rootUrl as AutomergeUrl, {
+                  fetchFromNetwork: true,
+                }),
+                ROOT_DOC_LOAD_ATTEMPT_TIMEOUT,
+              ),
+            );
+          } catch (err) {
+            if (this._ctx.disposed || err instanceof ContextDisposedError) {
+              return;
+            }
+            // An abandoned attempt settles on its own and releases its own lease.
+            log.info('space root doc did not arrive; resetting stalled sync and retrying', {
+              space: this.key,
+              rootUrl,
+              attempt,
+              retryDelay,
+            });
+            await sleepWithContext(this._ctx, retryDelay);
+            retryDelay = Math.min(retryDelay * 2, ROOT_DOC_LOAD_RETRY_MAX_DELAY);
+          }
+        }
         if (this._ctx.disposed) {
           return;
         }
