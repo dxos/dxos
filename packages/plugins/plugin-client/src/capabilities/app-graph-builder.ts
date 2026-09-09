@@ -28,6 +28,9 @@ export default Capability.makeModule(
     const identityServiceAtom = yield* Capability.atom(ClientCapabilities.IdentityService);
     const extensions = yield* AppGraphBuilder.createExtension({
       id: 'root',
+      // The panels are addressable under the account's pinned workspace; without a binding they
+      // could not be planks at all, since the URL is the only record of what is open.
+      url: { key: 'account', kind: 'item', path: [] },
       match: GraphNodeMatcher.whenRoot,
       actions: () =>
         Effect.succeed([
