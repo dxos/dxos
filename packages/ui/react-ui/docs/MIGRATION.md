@@ -111,7 +111,7 @@ Ark components with no counterpart in `react-ui`, for reference:
 | `tabs`            | `react-ui` `Tabs` — on Ark                           | done; folded in from `react-ui-tabs`          |
 | `combobox`        | hand-built in `react-ui-list`                        | candidate, not obligation (+87.9 KB raw)      |
 | `listbox`         | hand-built in `react-ui-list`                        | candidate, not obligation (+22.5 KB raw)      |
-| `drawer`          | none — `Main`'s sidebars are dialogs                 | the missing mobile bottom sheet, Phase 4      |
+| `drawer`          | `react-ui` `Drawer` — on Ark                         | done 2026-09-09 (Phase 7); `Main` port open   |
 | `tree-view`       | `react-ui-list` `Tree` — already on Ark              | the reason Ark is in the app                  |
 | `hover-card`      | none                                                 |                                               |
 | `navigation-menu` | none                                                 |                                               |
@@ -134,7 +134,7 @@ Ark components with no counterpart in `react-ui`, for reference:
 | `marquee`         | none (`TextCrawl` is a different thing)              |                                               |
 | `image-cropper`   | none                                                 |                                               |
 | `json-tree-view`  | none (devtools has its own `ObjectsTree` on `Tree`)  |                                               |
-| `toc`             | none                                                 |                                               |
+| `toc`             | none                                                 | deferred 2026-09-09: no consumer decided      |
 | `angle-slider`    | none                                                 |                                               |
 | `cascade-select`  | none                                                 |                                               |
 
@@ -242,7 +242,7 @@ adapter is needed.
   a machine into `react-ui` spends from that, and the budget will need re-baselining before Phase 3
   regardless of the net figure. Read `check-boot-budget.mjs` before assuming a swap is free.
 - **Touch.** Zag handles `pointerType`/touch in 17 machines; in 6 packages. Under Tauri mobile
-  (WKWebView) that matters, and `drawer` is the component that has no answer at all.
+  (WKWebView) that matters, and `drawer` was the component that had no answer at all (it has one since Phase 7).
 
 ### 2.6 Slots and `asChild`
 
@@ -574,10 +574,9 @@ Outcome: `react-popper`, `-dismissable-layer`, `-focus-scope`, `-focus-guards`, 
   `AlertDialog` is the same implementation with `role="alertdialog"` and outside clicks ignored.
 - The no-description acceptance holds: Zag adds `aria-describedby` only when a `Description` element is
   in the DOM, pinned by a play story.
-- Ark's `drawer` was evaluated for `Main`'s sidebars and not used: it positions and animates its content
-  itself, which fights the inset-driven slide in `main.css`, and at `lg` the sidebar is a plain landmark.
-  The sidebars stay on the dialog machine with `hidden={false}` so they remain mounted for the CSS. A
-  mobile bottom sheet remains a feature of its own.
+- Ark's `drawer` was evaluated for `Main`'s sidebars and not used, on the reading that it positions and
+  animates its content itself and so fights the inset-driven slide in `main.css`. **That reading was
+  wrong — see Phase 7.** The sidebars stay on the dialog machine with `hidden={false}` for now.
 - `Select` keeps the children API by having each option register with the root, which builds the
   `collection`; the trigger shows the selected option's own children as 's `ItemText` did. The
   content therefore stays mounted (hidden) while closed. `Arrow` and the scroll buttons are gone.
@@ -606,6 +605,57 @@ Outcome: `react-popper`, `-dismissable-layer`, `-focus-scope`, `-focus-guards`, 
 The 36 `@-ui/*` catalog entries are gone, with `aria-hidden`, `react-remove-scroll`,
 `tailwindcss-radix` and `react-qr-rounded`; `pnpm knip` is clean. What remains of Radix in the
 lockfile arrives through tldraw, excalidraw and leva.
+
+### Phase 7 — `Drawer`, and `Main` on the drawer machine _(component done 2026-09-09; the port is open)_
+
+`Drawer` (`react-ui/src/components/Drawer`) wraps Ark's drawer: `Root` names the edge as a `side`
+(`start`/`end`/`top`/`bottom`) and maps it to the machine's `swipeDirection`; `Overlay` is the backdrop
+the content nests in, as with `Dialog`; `Content` renders the machine's `Positioner` around its
+`Content`, and the theme keys every part on the `data-swipe-direction` the machine stamps (`down` is the
+sheet at the bottom, `left` the panel on the left edge). Snap points are fractions of the **viewport**,
+each capped by the content's own extent, so a short panel is fully open at every point; the
+`BottomSheet` story carries filler to show one. `Grabber` renders the indicator itself; `SwipeArea` is
+the strip along the edge a swipe opens it from. `drawer.css` runs the slide keyframes over the same
+`transform` the machine drives during a drag, so the close slide starts from wherever a drag left the
+panel. Play stories pin open/Escape/reopen and the no-description `aria-describedby` contract.
+
+**Push mode (2026-09-09, rebuilt the same day).** `Root push` makes the panel part of the page's layout
+instead of a layer over it, on Ark's own anatomy: the positioner is the clip — a flex item whose extent
+is `--dx-drawer-size` scaled by `--dx-drawer-open`, a registered number that eases 0↔1 over 250ms
+(the Splitter's collapse timing), so a size change lands at once while an open or close eases — and
+the content is a fixed-size sheet at the clip's inner edge, so it slides in from beyond the page edge
+as the clip opens and needs no anchoring of its children. The sheet stays mounted while closed,
+`inert` and `aria-hidden`, so the clip can close over it. In a grid host the clip hangs from the page edge (`justify-self`). Two things the sheet must not do: carry the machine's transform (the machine sets its drag offset to the content's size on open and expects CSS to ease it to zero — its own enter slide, which ran against the clip's opening and left the sheet standing still; it is cancelled, so a pushed drag has no live feedback), and be scrollable (`overflow: clip`, not `hidden` — focusing the first tabbable on open scrolled a hidden-overflow clip to the sheet's far end, another way to stand still). The first
+build made the content both clip and sheet and spent a day anchoring children inside a shrinking box
+against a second animated box outside it; that shape is what to avoid. Found on the way: Zag's
+dismissable layer stack takes every later-opened layer for a nested one and dismisses it when a lower
+layer leaves, so closing one drawer closed its sibling — `Drawer.Root` vetoes the cross-layer
+`request-dismiss` in `onRequestDismiss`; a fraction snap point is a fraction of the viewport capped by
+the content's own extent; the Splitter set its `transition` from an effect, a commit after the sizes
+landed, and its `minSize` snapped back with the mode and held a growing pane — both fixed in
+`Splitter`; the Browser pane's document is `hidden`, which freezes CSS animations, so motion checks
+belong in the vitest browser (`TestPushCollapse` samples per frame).
+
+**`Main` re-probed (2026-09-09, `MainDrawerProbe.stories.tsx`, kept in history one commit).** The
+navigation sidebar was mounted on `useDrawer` in place of `useDialog` below `lg`, with `main.css`
+untouched, and a synthetic touch swipe was driven through the machine. Findings:
+
+- The machine's only inline positioning is `transform: translate3d(var(--drawer-translate-x), …)` plus
+  `transition-duration: 0s` while dragging. `main.css` slides on `inset-inline-start`, a different
+  property, so the two coexist: mid-drag the panel followed the pointer (`--drawer-translate-x: -117px`
+  at a third of its width, `data-dragging` set), and on release past `closeThreshold` the machine called
+  `onOpenChange(false)`, the transform reset to 0 and the inset slide took the panel off screen. A short
+  drag snapped back with the transform transitioned to 0. Nothing fought.
+- `hidden={false}` overrides the machine's `hidden` exactly as with the dialog machine; `modal: false`,
+  `trapFocus: false`, `preventScroll: false`, `restoreFocus: false` all exist. At `lg` the sidebar stays a
+  plain landmark; the structure of `MainSidebar` does not change.
+- `preventDragOnScroll` (default on) refuses a drag whose target can scroll along the swipe axis; the
+  sidebar scrolls vertically only, so a horizontal swipe is allowed. The gate reads the pointer's
+  _target element_, which is why a synthetic move dispatched on `document` never starts a drag.
+- The port replaces `useSwipeToDismiss` (103 lines, one side only) with the machine, gives the
+  complementary sidebar swipe-to-dismiss, and `Drawer.SwipeArea` adds edge-swipe-to-open on touch,
+  which nothing provides today. `closeThreshold` becomes a fraction of the sidebar's width rather
+  than 64px. Still unverified: a real touch device (WKWebView), the case that matters.
 
 ## 5. Net effect
 
