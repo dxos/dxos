@@ -107,9 +107,10 @@ const groupsAreFieldsets = async (canvasElement: HTMLElement) => {
   const options = canvas.getByRole('group', { name: 'Options' });
   // Its description is a tooltip on the label, not helper text in the group.
   await expect(options).not.toHaveTextContent('Layout switches.');
-  await userEvent.hover(within(options).getByRole('heading', { name: 'Options' }));
+  const hint = within(options).getByRole('button', { name: 'Layout switches.' });
+  await userEvent.hover(hint);
   await expect(await screen.findByRole('tooltip', undefined, { timeout: 5_000 })).toHaveTextContent('Layout switches.');
-  await userEvent.unhover(within(options).getByRole('heading', { name: 'Options' }));
+  await userEvent.unhover(hint);
   await expect(within(options).getByLabelText('Wireframe')).toHaveAttribute('type', 'checkbox');
   await expect(within(options).getByRole('button', { name: 'Reset' })).toBeVisible();
   await expect(within(options).queryByLabelText('Reset')).toBeNull();

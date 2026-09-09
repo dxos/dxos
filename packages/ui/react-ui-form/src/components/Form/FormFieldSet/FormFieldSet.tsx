@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { Children, type PropsWithChildren, type ReactElement, useId } from 'react';
+import React, { Children, type PropsWithChildren, useId } from 'react';
 
 import {
   Collapsible,
@@ -15,6 +15,7 @@ import {
   composableProps,
 } from '@dxos/react-ui';
 import { MarkdownView } from '@dxos/react-ui-markdown';
+import { mx } from '@dxos/ui-theme';
 
 import { useFormContext } from '../../../hooks';
 import { formTheme } from '../Form.theme';
@@ -52,20 +53,23 @@ export const FormFieldSet = composable<HTMLFieldSetElement, FormFieldSetProps>(
     const canCollapse = !!collapsible && Children.toArray(children).length > 0;
 
     const tooltip = descriptionPlacement === 'tooltip' && !!description;
-    // The tooltip is on the label row rather than under it: the row is the legend, whose hover the
-    // trigger takes over, so the group's chrome stays one line.
-    const withTooltip = (node: ReactElement) =>
-      tooltip ? (
-        <Tooltip.Trigger asChild content={description} side='bottom'>
-          {node}
-        </Tooltip.Trigger>
-      ) : (
-        node
-      );
+    // A question mark after the label carries the description, so the group's chrome stays one line.
+    const hint = tooltip && (
+      <Tooltip.Trigger
+        content={description}
+        side='bottom'
+        aria-label={description}
+        className='grid size-6 place-items-center rounded-xs text-description hover:bg-hover-surface'
+      >
+        <Icon icon='ph--question--regular' size={4} />
+      </Tooltip.Trigger>
+    );
 
     const legend = showLabel && (
       <Fieldset.Legend
-        classNames={styles.fieldSetLegend({ class: description && !tooltip ? undefined : styles.fieldSetHeader() })}
+        classNames={styles.fieldSetLegend({
+          class: mx(description && !tooltip ? undefined : styles.fieldSetHeader(), hint && 'flex items-center gap-1'),
+        })}
       >
         {canCollapse ? (
           // The caret alone is the disclosure, named by the label text beside it, so the focus ring
@@ -73,6 +77,7 @@ export const FormFieldSet = composable<HTMLFieldSetElement, FormFieldSetProps>(
           <FormFieldHeader
             label={label}
             labelId={labelId}
+            labelEnd={hint}
             actions={
               <Field.Block>
                 {/* Not a `Button`: its open-state styling would read the trigger's `data-state`. */}
@@ -91,13 +96,14 @@ export const FormFieldSet = composable<HTMLFieldSetElement, FormFieldSetProps>(
           />
         ) : depth === 0 ? (
           // A heading inside the legend: the group is named by its title, and the title still serves navigation.
-          withTooltip(
+          <>
             <h2 id={labelId} className={styles.fieldSetTitle()}>
               {label}
-            </h2>,
-          )
+            </h2>
+            {hint}
+          </>
         ) : (
-          <FormFieldHeader label={label} labelId={labelId} />
+          <FormFieldHeader label={label} labelId={labelId} labelEnd={hint} />
         )}
       </Fieldset.Legend>
     );
@@ -121,16 +127,13 @@ export const FormFieldSet = composable<HTMLFieldSetElement, FormFieldSetProps>(
       </FormFieldSetDepthContext.Provider>
     );
 
-    // A header row (nested or collapsible) is the label row itself, so it takes the trigger as a whole.
-    const legendNode = legend && tooltip && (canCollapse || depth > 0) ? withTooltip(legend) : legend;
-
     const fieldset = (
       <Fieldset.Root
         {...composableProps(props, { classNames: styles.fieldSet() })}
         aria-labelledby={showLabel ? labelId : undefined}
         ref={forwardedRef}
       >
-        {legendNode}
+        {legend}
         {helper}
         {body}
       </Fieldset.Root>

@@ -104,14 +104,8 @@ export const ghost = (options: GhostOptions = {}): Extension => {
           // A control-sized box around the button, as the grip is built, so the two gutter controls share
           // one hit area and centre.
           const button = Domino.of('button')
-            .classNames('dx-button aspect-square')
-            .attributes({
-              'type': 'button',
-              'data-variant': 'ghost',
-              'data-density': 'xs',
-              'aria-label': add,
-              'title': add,
-            })
+            .classNames('grid size-6 place-items-center rounded-xs hover:bg-hover-surface')
+            .attributes({ 'type': 'button', 'aria-label': add, 'title': add })
             .append(Domino.of('div').classNames('cm-outliner-add-icon').append(Domino.svg('ph--plus--regular')));
           this.button = Domino.of('div').classNames('cm-outliner-add').append(button).root;
           // `mousedown` rather than `click`: the click would first blur the editor and hide the button.

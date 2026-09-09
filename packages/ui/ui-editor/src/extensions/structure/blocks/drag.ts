@@ -187,15 +187,14 @@ const activeBlockIndex = (state: EditorState, getBlocks: BlockDragOptions['getBl
 // Builds a grip element (outer `dx-button` + inner phosphor glyph). Shared by the floating overlay and the
 // drag preview; callers attach behavior and position it.
 // Builds a grip element: a control-sized box (the row's hit area, as `Field.Block` centres a control in a
-// row) around a `dx-button` holding the glyph. Shared by the floating overlay and the drag preview;
+// row) around a 24px button holding the glyph, the shape of a form's disclosure button. Shared by the floating overlay and the drag preview;
 // callers attach behavior and position the box.
 const createGripElement = (): HTMLElement =>
   Domino.of('div')
     .classNames('cm-blockDragHandle')
     .append(
       Domino.of('div')
-        .classNames('dx-button aspect-square')
-        .attributes({ 'data-variant': 'ghost', 'data-density': 'xs' })
+        .classNames('grid size-6 place-items-center rounded-xs hover:bg-hover-surface')
         .append(Domino.of('div').classNames('cm-blockDragHandleIcon').append(Domino.svg(GRIP_ICON))),
     ).root;
 
