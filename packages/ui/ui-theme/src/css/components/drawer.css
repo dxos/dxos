@@ -136,7 +136,7 @@
     @apply relative flex shrink-0 overflow-clip;
     --dx-drawer-size: min(calc(100dvw - 3rem), 24rem);
     --dx-drawer-open: 0;
-    transition: --dx-drawer-open 250ms ease-out;
+    transition: --dx-drawer-open var(--dx-drawer-duration, 250ms) ease-out;
 
     &[data-state='open'] {
       --dx-drawer-open: 1;

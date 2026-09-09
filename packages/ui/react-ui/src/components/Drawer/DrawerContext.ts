@@ -14,6 +14,8 @@ export type DrawerContextValue = {
   push: boolean;
   /** The drawer was open when its root first rendered and has not closed since: it is simply there, no entrance. */
   instant: boolean;
+  /** Pushed: how long an open or close takes, in milliseconds. */
+  transition: number;
 };
 
 export const [DrawerProvider, useDrawerContext] = createContext<DrawerContextValue>(DRAWER_NAME);

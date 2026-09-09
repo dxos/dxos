@@ -1120,6 +1120,10 @@ verdict over porting in the same PR).
       clip's opening — cancelled on the sheet; and an `overflow: hidden` clip is a scroll container,
       which the machine's open-focus scrolled to the sheet's far end — `overflow: clip`.
       `TestPushCollapse` now asserts the sheet rides the clip's inner edge and travels.
+      Knobs (asked 2026-09-09): `Drawer.Root transition` (ms, default 250, sets
+      `--dx-drawer-duration` on the clip) and `Drawer.Content size` (rem) match `Splitter.Root`'s
+      `transition`/`size`; the Push story holds both as module constants (500ms, 30rem) and feeds
+      the seam and both drawers from them.
 - [x] **`Main` on the drawer machine — probe** DONE 2026-09-09. The 2026-09-05 verdict ("fights the
       inset slide") was wrong: the machine's inline `transform` and `main.css`'s `inset-inline-start`
       are independent properties, and a driven touch swipe dismissed the sidebar through

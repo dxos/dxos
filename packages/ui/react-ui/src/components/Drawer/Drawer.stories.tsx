@@ -83,13 +83,18 @@ const DefaultStory = ({ side, modal, snapPoints, ...props }: StoryArgs) => (
  * Two pushed drawers flank the main panel, which yields the room they take: the three are flex
  * siblings, and a drag toward either edge narrows that drawer with the main panel following in step.
  */
+/** One number for the seam and both drawers: a drawer in a split pane moves on the pane's clock. */
+const TRANSITION = 500;
+/** The inspector's initial width in rem; the seam writes drags back into it. */
+const INSPECTOR_SIZE = 30;
+
 const PushStory = () => {
   const [start, setStart] = useState(true);
   const [end, setEnd] = useState(true);
-  const [inspectorSize, setInspectorSize] = useState(24);
+  const [inspectorSize, setInspectorSize] = useState(INSPECTOR_SIZE);
   return (
     <div className='flex dx-fill'>
-      <Drawer.Root open={start} onOpenChange={setStart} side='start' push>
+      <Drawer.Root open={start} onOpenChange={setStart} side='start' push transition={TRANSITION}>
         <Drawer.Content>
           <Panel.Root>
             <Panel.Toolbar asChild>
@@ -103,9 +108,22 @@ const PushStory = () => {
                 />
               </Toolbar.Root>
             </Panel.Toolbar>
+            <Panel.Content asChild>
+              <Panel.Root>
+                <Panel.Toolbar asChild>
+                  <Toolbar.Root classNames='bg-transparent'>
+                    <Toolbar.IconButton icon='ph--plus--regular' iconOnly label='Create' />
+                  </Toolbar.Root>
+                </Panel.Toolbar>
+                <Panel.Content>
+                  <Drawer.Description>
+                    The Navigation Drawer slides in from the left edge of the viewport.
+                  </Drawer.Description>
+                  <Filler lines={50} />
+                </Panel.Content>
+              </Panel.Root>
+            </Panel.Content>
           </Panel.Root>
-          <Drawer.Description>The Navigation Drawer slides in from the left edge of the viewport.</Drawer.Description>
-          <Filler lines={50} />
         </Drawer.Content>
       </Drawer.Root>
       {/* The seam owns the inspector's width and animates its collapse; the drawer fills the pane it is given. */}
@@ -116,6 +134,7 @@ const PushStory = () => {
         onSizeChange={setInspectorSize}
         minSize={12}
         resizable
+        transition={TRANSITION}
         mode={end ? 'split' : 'start'}
         classNames='dx-grow'
       >
@@ -144,7 +163,7 @@ const PushStory = () => {
             <Panel.Content>
               <Panel.Root>
                 <Panel.Toolbar asChild>
-                  <Toolbar.Root />
+                  <Toolbar.Root classNames='bg-transparent' />
                 </Panel.Toolbar>
                 <Panel.Root classNames='flex items-center justify-center'>Main</Panel.Root>
               </Panel.Root>
@@ -159,20 +178,35 @@ const PushStory = () => {
         </Splitter.Panel>
         <Splitter.Handle />
         <Splitter.Panel position='end'>
-          <Drawer.Root open={end} onOpenChange={setEnd} side='end' push>
+          <Drawer.Root open={end} onOpenChange={setEnd} side='end' push transition={TRANSITION}>
             {/* The sheet is the pane's size, so a seam drag resizes it and a collapse slides it out. */}
             <Drawer.Content draggable={false} size={inspectorSize}>
-              <Toolbar.Root>
-                <Drawer.Title classNames='grow px-2'>Inspector</Drawer.Title>
-                <Toolbar.IconButton
-                  icon='ph--x--regular'
-                  iconOnly
-                  label='Close inspector'
-                  onClick={() => setEnd(false)}
-                />
-              </Toolbar.Root>
-              <Drawer.Description>The Inspector slides in from the right edge of the viewport. </Drawer.Description>
-              <Filler lines={50} />
+              <Panel.Root>
+                <Panel.Toolbar asChild>
+                  <Toolbar.Root>
+                    <Drawer.Title classNames='grow px-2'>Inspector</Drawer.Title>
+                    <Toolbar.IconButton
+                      icon='ph--x--regular'
+                      iconOnly
+                      label='Close inspector'
+                      onClick={() => setEnd(false)}
+                    />
+                  </Toolbar.Root>
+                </Panel.Toolbar>
+                <Panel.Content asChild>
+                  <Panel.Root>
+                    <Panel.Toolbar asChild>
+                      <Toolbar.Root classNames='bg-transparent' />
+                    </Panel.Toolbar>
+                  </Panel.Root>
+                  <Panel.Content>
+                    <Drawer.Description>
+                      The Inspector slides in from the right edge of the viewport.
+                    </Drawer.Description>
+                    <Filler lines={50} />
+                  </Panel.Content>
+                </Panel.Content>
+              </Panel.Root>
             </Drawer.Content>
           </Drawer.Root>
         </Splitter.Panel>

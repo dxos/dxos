@@ -64,6 +64,11 @@ type DrawerRootProps = {
    */
   push?: boolean;
   /**
+   * Pushed: how long an open or close takes, in milliseconds. Matches `Splitter.Root`'s prop of the
+   * same name, so a drawer in a split pane is given the pane's number.
+   */
+  transition?: number;
+  /**
    * Where the drawer rests: fractions of the viewport, or lengths (`px`/`rem`), each capped by the
    * content's own extent — a short panel is fully open at every point. The last is fully open.
    */
@@ -87,6 +92,7 @@ const DrawerRoot = ({
   defaultSnapPoint,
   onSnapPointChange,
   push = false,
+  transition = 250,
   closeOnInteractOutside = !push,
   closeOnEscape = true,
 }: DrawerRootProps) => {
@@ -130,7 +136,7 @@ const DrawerRoot = ({
     <ElevationProvider elevation='dialog'>
       {/* Closed content is not in the DOM at all — except pushed, where the clip closes over it. */}
       <DrawerPrimitive.RootProvider value={drawer} lazyMount unmountOnExit={!push}>
-        <DrawerProvider push={push} instant={instant.current}>
+        <DrawerProvider push={push} instant={instant.current} transition={transition}>
           {children}
         </DrawerProvider>
       </DrawerPrimitive.RootProvider>
@@ -201,8 +207,8 @@ type DrawerContentProps = ThemedClassName<ComponentPropsWithRef<typeof DrawerPri
   size?: number;
 };
 
-/** Extends `CSSProperties` so the custom property satisfies the style prop without a cast. */
-type DrawerSizeStyle = CSSProperties & { '--dx-drawer-size'?: string };
+/** Extends `CSSProperties` so the custom properties satisfy the style prop without a cast. */
+type DrawerClipStyle = CSSProperties & { '--dx-drawer-size'?: string; '--dx-drawer-duration'?: string };
 
 /**
  * The panel, inside the machine's positioner. Floating, the positioner is a fixed layer that pins
@@ -213,13 +219,16 @@ type DrawerSizeStyle = CSSProperties & { '--dx-drawer-size'?: string };
  */
 const DrawerContent = forwardRef<HTMLDivElement, DrawerContentProps>(({ classNames, size, ...props }, forwardedRef) => {
   const { tx } = useThemeContext();
-  const { push, instant } = useDrawerContext(DRAWER_CONTENT_NAME);
+  const { push, instant, transition } = useDrawerContext(DRAWER_CONTENT_NAME);
   const { open } = useDrawerApi();
-  const sizeStyle: DrawerSizeStyle | undefined = size === undefined ? undefined : { '--dx-drawer-size': `${size}rem` };
+  const clipStyle: DrawerClipStyle = {
+    ...(size !== undefined && { '--dx-drawer-size': `${size}rem` }),
+    '--dx-drawer-duration': `${transition}ms`,
+  };
   return (
     <DrawerPrimitive.Positioner
       hidden={push ? false : undefined}
-      style={push ? sizeStyle : undefined}
+      style={push ? clipStyle : undefined}
       className={tx('drawer.positioner', { push })}
     >
       <DrawerPrimitive.Content
