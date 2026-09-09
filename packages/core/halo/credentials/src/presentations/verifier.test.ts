@@ -19,7 +19,7 @@ import {
   SpaceMemberSchema,
 } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
-import { createCredential, chainCredentialOf, proofOf } from '../credentials';
+import { chainCredentialOf, createCredential, proofOf } from '../credentials';
 import { signPresentation } from './presentation';
 import { verifyPresentation, verifyPresentationSignature } from './verifier';
 

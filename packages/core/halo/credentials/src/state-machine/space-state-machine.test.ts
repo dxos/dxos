@@ -14,12 +14,12 @@ import {
   AdmittedFeedSchema,
   AuthorizedDeviceSchema,
   ChainSchema,
+  type Credential,
   HaloSpaceSchema,
   MembershipPolicy,
   SpaceGenesisSchema,
   SpaceMember_Role,
   SpaceMemberSchema,
-  type Credential,
 } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
 import { createCredential, getCredentialAssertion, subjectIdOf, verifyCredential } from '../credentials';

@@ -116,7 +116,7 @@ export class MemberStateMachine implements CredentialGraphStateHandler<SpaceMemb
     if (isChangingOwnRole) {
       return false;
     }
-    if (!!toPublicKey(assertion.spaceKey)?.equals(issuer)) {
+    if (toPublicKey(assertion.spaceKey)?.equals(issuer)) {
       return true;
     }
     const issuerRole = this._getRole(scope, issuer);

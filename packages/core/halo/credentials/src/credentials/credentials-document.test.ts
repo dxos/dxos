@@ -10,7 +10,7 @@ import { invariant } from '@dxos/invariant';
 import { PublicKey, SpaceId } from '@dxos/keys';
 import { fromDate, fromPublicKey, requirePublicKey } from '@dxos/protocols/buf';
 import { bufRegistry } from '@dxos/protocols/buf-registry';
-import { type Credential, CredentialSchema, ClaimSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
+import { ClaimSchema, type Credential, CredentialSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
 import {
   CREDENTIALS_DOCUMENT_TYPE,
