@@ -24,8 +24,14 @@ const content: ComponentFunction<SelectStyleProps> = (_props, ...etc) => {
 };
 
 // The input-surface utility outranks Button's component-layer hover, so the hover is a utility too.
+// A placeholder rendered at full strength reads as a chosen value, so it takes the same token an
+// input's placeholder does.
 const triggerButton: ComponentFunction<SelectStyleProps> = (_props, ...etc) =>
-  mx('bg-input-surface enabled:hover:bg-hover-surface grid grid-cols-[1fr_auto] [&>span]:text-left', ...etc);
+  mx(
+    'bg-input-surface enabled:hover:bg-hover-surface grid grid-cols-[1fr_auto] [&>span]:text-left',
+    'data-[placeholder-shown]:text-placeholder',
+    ...etc,
+  );
 
 // The scroll area grows into the content's remaining height and scrolls its list.
 const viewport: ComponentFunction<SelectStyleProps> = (_props, ...etc) => mx(...etc);

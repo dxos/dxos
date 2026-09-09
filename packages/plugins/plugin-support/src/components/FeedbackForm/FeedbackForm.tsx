@@ -6,7 +6,7 @@ import React, { type PropsWithChildren, useCallback, useMemo, useState } from 'r
 
 import { log } from '@dxos/log';
 import { createContext } from '@dxos/react-hooks';
-import { Banner, IconButton, useTranslation } from '@dxos/react-ui';
+import { IconButton, useTranslation } from '@dxos/react-ui';
 import { Form, type FormFieldRenderer, type FormFieldRendererProps, type FormUpdateMeta } from '@dxos/react-ui-form';
 
 import { type DiscordPresence } from '#hooks';
@@ -145,6 +145,9 @@ const FeedbackFormDownloadLogs = ({ onDownloadLogs }: FeedbackFormDownloadLogsPr
 
 FeedbackFormDownloadLogs.displayName = `${FEEDBACK_FORM}.DownloadLogs`;
 
+/** The two notes framing the submit button, which read as one voice only while they share this. */
+const noteClassNames = 'text-xs text-description text-center px-2 py-1';
+
 export type FeedbackFormSubmitProps = {
   disabled?: boolean;
 };
@@ -155,11 +158,7 @@ const FeedbackFormSubmit = ({ disabled }: FeedbackFormSubmitProps) => {
 
   return (
     <>
-      <Banner.Root valence='neutral'>
-        <Banner.Content>
-          <Banner.Body>{t('public-report.description')}</Banner.Body>
-        </Banner.Content>
-      </Banner.Root>
+      <p className={noteClassNames}>{t('public-report.description')}</p>
       <Form.Submit
         classNames={pending ? '[&_svg]:animate-spin' : undefined}
         icon={pending ? 'ph--spinner-gap--regular' : 'ph--paper-plane-tilt--regular'}
@@ -192,7 +191,7 @@ const FeedbackFormDiscordPresence = ({ discordPresence }: FeedbackFormDiscordPre
   }
 
   return (
-    <p className='text-xs text-description text-center px-2 py-1'>
+    <p className={noteClassNames}>
       {t('discord-presence-online.label')}{' '}
       {[
         discordPresence.communityOnline > 0 &&
