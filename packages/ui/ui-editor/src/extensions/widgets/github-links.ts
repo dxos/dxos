@@ -4,8 +4,10 @@
 
 import { type Extension } from '@codemirror/state';
 import { WidgetType } from '@codemirror/view';
+import { createElement } from 'react';
 
-import { type LinkWidgetProps, linkWidgets, matchPattern } from '@dxos/ui-editor';
+import { type LinkWidgetProps, linkWidgets, matchPattern } from './link-widgets';
+import { type WidgetDef } from './widgets';
 
 /** `https://github.com/owner/repo/pull/123` or `/issues/123`, with an optional fragment or query. */
 const GITHUB_LINK = /^https:\/\/github\.com\/([^/\s]+)\/([^/\s]+)\/(pull|issues)\/(\d+)(?:[/?#].*)?$/;
@@ -17,6 +19,9 @@ export type GitHubLink = {
   number: number;
   url: string;
 };
+
+/** A link widget's props, with the URL's parts alongside it. */
+export type GitHubLinkProps<TContext = any> = LinkWidgetProps<TContext> & GitHubLink;
 
 /** The parts of a pull request or issue URL, or undefined for any other URL. */
 export const parseGitHubLink = (url: string): GitHubLink | undefined => {
@@ -60,17 +65,52 @@ export class GitHubLinkWidget extends WidgetType {
   }
 }
 
+export type GitHubLinksOptions = {
+  /** The inline widget for `[label](https://github.com/…/pull/123)`; the plain chip by default. */
+  link?: WidgetDef<GitHubLinkProps>;
+};
+
 /**
- * Renders GitHub pull request and issue links as chips. The worked example of `linkWidgets`: a
- * matcher on the URL's shape rather than its scheme, with a widget that needs no object behind it.
+ * GitHub pull request and issue links as widgets. The worked example of `linkWidgets`: a matcher on
+ * the URL's shape rather than its scheme, whose widget gets the parsed parts and needs no object
+ * behind it — a host wanting a preview card swaps in an anchor chip as the `link`.
  */
-export const githubLinks = (): Extension =>
+export const githubLinks = ({
+  link = {
+    factory: (props) => new GitHubLinkWidget(props),
+  },
+}: GitHubLinksOptions = {}): Extension =>
   linkWidgets({
     match: matchPattern(GITHUB_LINK),
-    link: {
-      factory: ({ url }: LinkWidgetProps) => {
-        const link = parseGitHubLink(url);
-        return link ? new GitHubLinkWidget(link) : null;
-      },
-    },
+    link: withGitHubLink(link),
   });
+
+/** The definition over link props, with the URL parsed into the parts the GitHub-side code reads. */
+const withGitHubLink = (def: WidgetDef<GitHubLinkProps>): WidgetDef<LinkWidgetProps> => {
+  const { factory, Component, estimatedHeight, ...rest } = def;
+  const githubProps = (props: LinkWidgetProps): GitHubLinkProps | undefined => {
+    const link = parseGitHubLink(props.url);
+    return link && { ...props, ...link };
+  };
+  return {
+    ...rest,
+    ...(factory && {
+      factory: (props) => {
+        const parsed = githubProps(props);
+        return parsed ? factory(parsed) : null;
+      },
+    }),
+    ...(Component && {
+      Component: (props) => {
+        const parsed = githubProps(props);
+        return parsed ? createElement(Component, parsed) : null;
+      },
+    }),
+    ...(estimatedHeight && {
+      estimatedHeight: (props) => {
+        const parsed = githubProps(props);
+        return parsed ? estimatedHeight(parsed) : 0;
+      },
+    }),
+  };
+};

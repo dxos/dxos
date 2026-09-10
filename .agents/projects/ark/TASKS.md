@@ -1178,8 +1178,9 @@ verdict over porting in the same PR).
       effects and bookmark navigation; `xmlTags` is the element matcher, `linkWidgets({ match })` the
       markdown link matcher (`matchSchemes`/`matchHosts`/`matchPattern`), `objectLinks()` the dxn/echo
       sugar with the anchor chip as default. `urlSchemes` and `xmlWidgetRegistry` are gone; the core
-      types and effects dropped their `Xml` prefix. plugin-github's `githubLinks()` renders PR/issue
-      URLs as chips as the worked example. Built on the user's consolidation commit.
+      types and effects dropped their `Xml` prefix. `githubLinks({ link })` in ui-editor is the worked
+      example: PR/issue URLs as a plain chip by default, the Widgets story swaps in the anchor chip
+      for a PR card. Built on the user's consolidation commit.
 - [x] **Cards and dialogs one level darker** DONE 2026-09-10 (user): `dx-card-surface` publishes the
       `base` level and `dx-modal-surface` the `raised` level (surfaces.css role tokens and surface.css
       zones together); `overlay` is left to explicit `elevation={4}`. `Select`'s list moves to the popup

@@ -12,7 +12,7 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { annotations, blast, defaultOptions, dropFile, join, snippets } from '@dxos/ui-editor';
 
 import { str } from '../util';
-import { EditorStory, content, longText } from './components';
+import { EditorStory, content, longText } from './testing';
 
 const meta = {
   title: 'ui/react-ui-editor/Experimental',

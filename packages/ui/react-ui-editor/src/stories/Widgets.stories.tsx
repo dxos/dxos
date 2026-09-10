@@ -17,7 +17,8 @@ import { Card, Icon, Popover, useThemeContext } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import {
   AnchorWidget,
-  type LinkWidgetProps,
+  type GitHubLink,
+  GitHubLinkWidget,
   type ObjectLinkProps,
   type ObjectLinksOptions,
   type WidgetDef,
@@ -27,10 +28,10 @@ import {
   createThemeExtensions,
   decorateMarkdown,
   extendedMarkdown,
+  githubLinks,
   image,
-  linkWidgets,
-  matchPattern,
   objectLinks,
+  parseGitHubLink,
   widgetHost,
   xmlTags,
 } from '@dxos/ui-editor';
@@ -119,8 +120,8 @@ const PreviewCard = () => {
  */
 const handlePreviewLookup = async ({ eid, label }: PreviewLinkRef): Promise<PreviewLinkTarget> => {
   random.seed(eid.split('').reduce((acc: number, char: string) => acc + char.charCodeAt(0), 1));
-  const pull = parsePullRequest(eid);
-  if (pull) {
+  const pull = parseGitHubLink(eid);
+  if (pull?.kind === 'pull') {
     const state = random.helpers.arrayElement(['open', 'merged', 'draft'] as const);
     const object: PullRequest = {
       ...pull,
@@ -139,13 +140,7 @@ const handlePreviewLookup = async ({ eid, label }: PreviewLinkRef): Promise<Prev
 // GitHub pull requests
 //
 
-const GITHUB_PULL = /^https:\/\/github\.com\/([^/\s]+)\/([^/\s]+)\/pull\/(\d+)(?:[/?#].*)?$/;
-
-type PullRequest = {
-  owner: string;
-  repo: string;
-  number: number;
-  url: string;
+type PullRequest = GitHubLink & {
   title: string;
   author: string;
   state: 'open' | 'merged' | 'draft';
@@ -153,21 +148,16 @@ type PullRequest = {
   deletions: number;
 };
 
-const parsePullRequest = (url: string): Pick<PullRequest, 'owner' | 'repo' | 'number' | 'url'> | undefined => {
-  const match = GITHUB_PULL.exec(url);
-  return match ? { owner: match[1], repo: match[2], number: Number(match[3]), url } : undefined;
-};
-
 /**
- * GitHub pull-request links as chips whose hover card is the PR: `linkWidgets` matched on the URL's
- * shape, with the same anchor chip object links use — its activation carries the URL to the preview
- * provider, whose lookup answers with the PR rather than an object.
+ * `githubLinks` with the story's own link widget: a pull request gets the anchor chip object links
+ * use, so its activation carries the URL to the preview provider, whose lookup answers with the PR;
+ * an issue keeps the extension's default chip.
  */
 const githubPullRequests = (trigger?: 'hover' | 'click') =>
-  linkWidgets({
-    match: matchPattern(GITHUB_PULL),
+  githubLinks({
     link: {
-      factory: ({ label, url }: LinkWidgetProps) => new AnchorWidget(label, url, trigger),
+      factory: (props) =>
+        props.kind === 'pull' ? new AnchorWidget(props.label, props.url, trigger) : new GitHubLinkWidget(props),
     },
   });
 
@@ -346,7 +336,7 @@ type StoryArgs = Pick<ObjectLinksOptions, 'trigger'> & {
   image?: keyof typeof imageWidgets;
   /** Answer the anchor chips' hover/click with a preview card. */
   preview?: boolean;
-  /** Render GitHub pull-request URLs as chips with a PR card. */
+  /** Render GitHub links as chips, pull requests with a PR card. */
   github?: boolean;
 };
 
@@ -512,12 +502,14 @@ const pullRequestText = trim`
   The drawer landed in [#13007](https://github.com/dxos/dxos/pull/13007), the Main port in
   [#13024](https://github.com/dxos/dxos/pull/13024) and [#13030](https://github.com/dxos/dxos/pull/13030).
 
-  Not a pull request: [the repo](https://github.com/dxos/dxos) and [an issue](https://github.com/dxos/dxos/issues/1).
+  An issue keeps the default chip: [an issue](https://github.com/dxos/dxos/issues/1). Not a pull
+  request or an issue: [the repo](https://github.com/dxos/dxos).
 `;
 
 /**
- * A `linkWidgets` matcher on a URL's shape: GitHub pull-request links become chips, and hovering one
- * opens a card for the PR from the preview provider's lookup. Other GitHub links stay plain.
+ * `githubLinks` with a host-provided link widget: pull-request links become anchor chips, and
+ * hovering one opens a card for the PR from the preview provider's lookup. Issues keep the
+ * extension's default chip; other GitHub links stay plain.
  */
 export const GitHubPullRequests: Story = {
   args: {

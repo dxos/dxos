@@ -180,6 +180,7 @@ export class StubWidget<TProps extends WidgetProps> extends WidgetType {
     if (this.streaming) {
       return false;
     }
+
     // Context too, not just the id: props are captured at build time, so an id-only comparison makes
     // CodeMirror keep the existing widget (and its stale props) when the host publishes the context
     // after the first build — leaving every widget callback bound to `undefined`.
@@ -226,6 +227,7 @@ export class StubWidget<TProps extends WidgetProps> extends WidgetType {
         }
       }
     }
+
     const props = Object.assign({}, this.props, { view }) as TProps;
     this.notifier.mounted({ id: this.id, root: this.#root, props, Component: this.Component });
     this.#trace(cached ? 'toDOM (reuse cached root)' : 'toDOM (create)', {
@@ -255,6 +257,7 @@ export class StubWidget<TProps extends WidgetProps> extends WidgetType {
       this.#trace('destroy (cull, keep-alive)', { scrollTop: Math.round(this.#view?.scrollDOM.scrollTop ?? -1) });
       return;
     }
+
     this.#trace('destroy (cull)', { scrollTop: Math.round(this.#view?.scrollDOM.scrollTop ?? -1) });
     this.notifier.unmounted(this.id, this.#root ?? _dom);
     this.#root = null;
@@ -270,11 +273,13 @@ export class StubWidget<TProps extends WidgetProps> extends WidgetType {
     if (!this.debug || !this.block) {
       return;
     }
+
     const root = this.#root;
     requestAnimationFrame(() => {
       if (!root) {
         return;
       }
+
       const measured = root.getBoundingClientRect().height;
       const reserved = this.blockHeight ?? -1;
       log.info(`stub-widget: measured after ${source}`, {
