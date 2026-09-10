@@ -26,6 +26,7 @@ import {
   type Extension,
   InputModeExtensions,
   type ObjectLinkProps,
+  type WidgetHostOptions,
   createDataExtensions,
   decorateMarkdown,
   documentId,
@@ -33,12 +34,11 @@ import {
   formattingKeymap,
   linkTooltip,
   listener,
+  objectLinks,
   selectionState,
   snippets,
   substitutions,
-  objectLinks,
   widgetHost,
-  WidgetHostOptions,
 } from '@dxos/ui-editor';
 import { type EditorViewMode, type RenderCallback } from '@dxos/ui-editor/types';
 import { isTruthy, safeUrl } from '@dxos/util';
