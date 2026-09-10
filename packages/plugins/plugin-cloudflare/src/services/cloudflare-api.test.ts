@@ -39,9 +39,8 @@ describe('CloudflareApi', () => {
     );
 
     expect(accounts).toEqual([{ id: 'acc-1', name: 'Acme' }]);
-    expect(requests[0].url).toBe('https://dxos.network/cors-proxy/api.cloudflare.com/client/v4/accounts');
-    expect(requests[0].headers['x-cors-proxy-authorization']).toBe('Bearer cf-token');
-    expect(requests[0].headers.authorization).toBeUndefined();
+    expect(requests[0].url).toBe('https://api.cloudflare.com/client/v4/accounts');
+    expect(requests[0].headers.authorization).toBe('Bearer cf-token');
   });
 
   test('fetchUser keeps the email', async ({ expect }) => {

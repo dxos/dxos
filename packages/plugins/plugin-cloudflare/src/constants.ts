@@ -9,12 +9,6 @@ export const CLOUDFLARE_PROVIDER_ID = 'cloudflare';
 export const CLOUDFLARE_API_BASE = 'https://api.cloudflare.com/client/v4';
 
 /**
- * `api.cloudflare.com` returns no `Access-Control-Allow-Origin` and answers the preflight an
- * `Authorization` header forces with a 400, so a browser can only reach it through EDGE's proxy.
- */
-export const CLOUDFLARE_PROXY_BASE = `https://dxos.network/cors-proxy/${CLOUDFLARE_API_BASE.replace('https://', '')}`;
-
-/**
  * Scope ids from Cloudflare's `GET /oauth/scopes`, not the colon-delimited namespace
  * `wrangler login --scopes-list` prints: the create-client API rejects the colon form, and the two
  * namespaces disagree on names (`workers_kv:write` is `workers-kv-storage.write` here).

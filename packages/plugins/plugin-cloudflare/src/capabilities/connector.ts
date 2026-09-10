@@ -14,7 +14,7 @@ import { ConnectionTestError } from '@dxos/plugin-connector';
 import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
 import { OAuthProvider } from '@dxos/protocols';
 
-import { CloudflareApi } from '#services';
+import { CloudflareApi, CloudflareHttpClientLayer } from '#services';
 
 import { CLOUDFLARE_OAUTH_SCOPES, CLOUDFLARE_PROVIDER_ID, CLOUDFLARE_SOURCE } from '../constants';
 
@@ -29,6 +29,7 @@ const onTokenCreated: ConnectorSpec.OnTokenCreated = ({ accessToken }) =>
       Effect.map((user) => user.email ?? user.username ?? undefined),
       Effect.catch(() => Effect.map(CloudflareApi.fetchAccounts(), (accounts) => accounts[0]?.name)),
       Effect.provide(Layer.succeed(CloudflareApi.CloudflareCredentials, { token })),
+      Effect.provide(CloudflareHttpClientLayer),
     );
     if (!label) {
       return;
@@ -43,7 +44,10 @@ const isCredentialRejection = (error: CloudflareApi.CloudflareError): boolean =>
 
 const testConnection: ConnectorSpec.TestConnection = ({ accessToken }) =>
   Effect.flatMap(Credential.getApiKeyValue({ accessTokenId: accessToken.id }), (token) =>
-    CloudflareApi.fetchAccounts().pipe(Effect.provide(Layer.succeed(CloudflareApi.CloudflareCredentials, { token }))),
+    CloudflareApi.fetchAccounts().pipe(
+      Effect.provide(Layer.succeed(CloudflareApi.CloudflareCredentials, { token })),
+      Effect.provide(CloudflareHttpClientLayer),
+    ),
   ).pipe(
     Effect.asVoid,
     Effect.mapError(

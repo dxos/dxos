@@ -15,7 +15,7 @@ import * as HttpClientRequest from 'effect/unstable/http/HttpClientRequest';
 import { Database, type Ref } from '@dxos/echo';
 import { type AccessToken, Connection } from '@dxos/link';
 
-import { CLOUDFLARE_PROXY_BASE } from '../constants';
+import { CLOUDFLARE_API_BASE } from '../constants';
 
 type CloudflareCredentialsValue = {
   token: string;
@@ -86,9 +86,8 @@ const cloudflareRequest = <T>(path: string, result: Schema.Codec<T>): Cloudflare
       HttpClient.transformResponse(Effect.provideService(HttpClient.TracerDisabledWhen, () => true)),
       HttpClient.filterStatusOk,
     );
-    const request = HttpClientRequest.get(`${CLOUDFLARE_PROXY_BASE}${path}`).pipe(
-      // EDGE's CORS proxy consumes a bare `Authorization` as its own.
-      HttpClientRequest.setHeader('X-Cors-Proxy-Authorization', `Bearer ${token}`),
+    const request = HttpClientRequest.get(`${CLOUDFLARE_API_BASE}${path}`).pipe(
+      HttpClientRequest.setHeader('Authorization', `Bearer ${token}`),
       HttpClientRequest.setHeader('Accept', 'application/json'),
     );
     const response = yield* client.execute(request).pipe(

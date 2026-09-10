@@ -3,3 +3,4 @@
 //
 
 export * as CloudflareApi from './cloudflare-api';
+export * from './proxy-http-client';
