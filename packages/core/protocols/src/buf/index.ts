@@ -2,7 +2,15 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type JsonObject, type Message, create, fromJson, toJson } from '@bufbuild/protobuf';
+import {
+  type DescMessage,
+  type JsonObject,
+  type Message,
+  type MessageShape,
+  create,
+  fromJson,
+  toJson,
+} from '@bufbuild/protobuf';
 import { type Any, StructSchema, type Timestamp, TimestampSchema, anyPack, anyUnpack } from '@bufbuild/protobuf/wkt';
 
 import { invariant } from '@dxos/invariant';
@@ -63,6 +71,25 @@ export const fromTimeframe = (timeframe: Timeframe): TimeframeVector =>
  * A gossip channel's payload is opaque to the router, so a caller with a plain JSON message
  * encodes it as the well-known `Struct` rather than declaring a proto for it.
  */
+/**
+ * The bare type name a `type_url` carries. `anyPack` writes `type.googleapis.com/<name>`, the legacy
+ * codec wrote the bare name, and every registry here is keyed by the bare name either way.
+ */
+export const typeNameOf = (typeUrl: string): string => typeUrl.slice(typeUrl.lastIndexOf('/') + 1);
+
+/**
+ * Packs a message into an `Any` whose `type_url` is the bare type name.
+ *
+ * EDGE keys its credential-assertion registry by bare `typeName` and emits that form itself, so the
+ * prefix `anyPack` writes misses its lookup. buf's own `anyUnpack`/`anyIs` normalize either form,
+ * so a bare url still round-trips on this side.
+ */
+export const anyPackBare = <Desc extends DescMessage>(desc: Desc, message: MessageShape<Desc>): Any => {
+  const packed = anyPack(desc, message);
+  packed.typeUrl = typeNameOf(packed.typeUrl);
+  return packed;
+};
+
 export const packJson = (value: JsonObject): Any => anyPack(StructSchema, fromJson(StructSchema, value));
 
 /** Reads a `google.protobuf.Any` packed by {@link packJson}. */

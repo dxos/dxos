@@ -6,11 +6,12 @@
 
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
+import * as Option from 'effect/Option';
 import * as Atom from 'effect/unstable/reactivity/Atom';
 import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 
 import { type Client } from '@dxos/client';
-import { RemoteProcessManager } from '@dxos/compute-runtime';
+import { RemoteProcessManager, RemoteTraceMonitor } from '@dxos/compute-runtime';
 import type * as Process from '@dxos/compute/Process';
 import { Context as DxosContext } from '@dxos/context';
 import { type EdgeHttpClient } from '@dxos/edge-client';
@@ -40,6 +41,7 @@ const makeManager = (
   registry: Registry.AtomRegistry,
   getEdgeClient?: () => EdgeHttpClient,
   control?: RemoteProcessManager.Control,
+  remoteTrace?: RemoteTraceMonitor.Monitor,
 ): RemoteProcessManager.Manager => {
   const processTreeAtom = Atom.make<readonly Process.Info[]>([]);
   registry.mount(processTreeAtom);
@@ -48,7 +50,9 @@ const makeManager = (
     processTreeAtom,
     // The verbs that need a control come as a set, so a manager built without one lacks all of them
     // and a caller that needs to spawn remotely fails where it asks.
-    ...(control ? { control, ...RemoteProcessManager.makeControlVerbs(control, registry, processTreeAtom) } : {}),
+    ...(control
+      ? { control, ...RemoteProcessManager.makeControlVerbs(control, registry, processTreeAtom, remoteTrace) }
+      : {}),
     ...(getEdgeClient
       ? {
           cancel: ({ space, trigger }: RemoteProcessManager.CancelTarget) =>
@@ -81,7 +85,10 @@ const make = (
     RemoteProcessManager.Service,
     Effect.gen(function* () {
       const registry = yield* Registry.AtomRegistry;
-      return makeManager(registry, getEdgeClient, control);
+      // Optional so every construction site keeps its shape: a deployment with no swarm monitor
+      // (local-only, or a test) simply falls back to polling the host's event ring.
+      const remoteTrace = yield* Effect.serviceOption(RemoteTraceMonitor.Service);
+      return makeManager(registry, getEdgeClient, control, Option.getOrUndefined(remoteTrace));
     }),
   );
 
