@@ -7,6 +7,7 @@ import { EmptySchema } from '@bufbuild/protobuf/wkt';
 
 import { TimeoutError as AsyncTimeoutError, asyncTimeout, scheduleTaskInterval } from '@dxos/async';
 import { Context } from '@dxos/context';
+import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { RpcClosedError } from '@dxos/protocols';
@@ -41,14 +42,15 @@ type ControlExtensionOpts = {
 export class ControlExtension implements TeleportExtension {
   private readonly _ctx = new Context({
     onError: (err) => {
-      this._extensionContext.close(err);
+      this._extensionContext?.close(err);
     },
   });
 
   public readonly onExtensionRegistered = new Callback<(extensionName: string) => void>();
 
-  private _extensionContext!: ExtensionContext;
-  private _rpc!: ProtoRpcPeer<{ Control: ControlService }>;
+  // Assigned in `onOpen`; both remain undefined if the extension is aborted or closed before it opens.
+  private _extensionContext?: ExtensionContext;
+  private _rpc?: ProtoRpcPeer<{ Control: ControlService }>;
 
   constructor(
     private readonly opts: ControlExtensionOpts,
@@ -57,13 +59,14 @@ export class ControlExtension implements TeleportExtension {
   ) {}
 
   async registerExtension(name: string): Promise<void> {
+    invariant(this._rpc, 'Control extension not open.');
     await this._rpc.rpc.Control.registerExtension(create(RegisterExtensionRequestSchema, { name }));
   }
 
   async onOpen(extensionContext: ExtensionContext): Promise<void> {
     this._extensionContext = extensionContext;
 
-    this._rpc = createProtoRpcPeer<ControlRpcBundle, ControlRpcBundle>({
+    const rpc = createProtoRpcPeer<ControlRpcBundle, ControlRpcBundle>({
       requested: {
         Control: getBufService<ControlService>('dxos.mesh.teleport.control.ControlService'),
       },
@@ -95,8 +98,9 @@ export class ControlExtension implements TeleportExtension {
       }),
       timeout: this.opts.heartbeatTimeout,
     });
+    this._rpc = rpc;
 
-    await this._rpc.open();
+    await rpc.open();
 
     scheduleTaskInterval(
       this._ctx,
@@ -104,9 +108,7 @@ export class ControlExtension implements TeleportExtension {
         const reqTS = new Date();
         try {
           const resp = await asyncTimeout(
-            this._rpc.rpc.Control.heartbeat(
-              create(ControlHeartbeatRequestSchema, { requestTimestamp: fromDate(reqTS) }),
-            ),
+            rpc.rpc.Control.heartbeat(create(ControlHeartbeatRequestSchema, { requestTimestamp: fromDate(reqTS) })),
             this.opts.heartbeatTimeout,
           );
           const now = Date.now();
@@ -139,7 +141,7 @@ export class ControlExtension implements TeleportExtension {
           if (err instanceof RpcClosedError) {
             // TODO: expose 'closed' event in Rpc peer to close context as soon the the peer gets closed
             log('ignoring RpcClosedError in heartbeat');
-            this._extensionContext.close(err);
+            this._extensionContext?.close(err);
             return;
           }
           if (err instanceof AsyncTimeoutError) {
@@ -157,11 +159,11 @@ export class ControlExtension implements TeleportExtension {
 
   async onClose(err?: Error): Promise<void> {
     await this._ctx.dispose();
-    await this._rpc.close();
+    await this._rpc?.close();
   }
 
   async onAbort(err?: Error | undefined): Promise<void> {
     await this._ctx.dispose();
-    await this._rpc.abort();
+    await this._rpc?.abort();
   }
 }
