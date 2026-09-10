@@ -241,6 +241,10 @@ export const projectUrl = Effect.fnUntraced(function* (url?: URL, options?: { at
   // A plank the deck already holds keeps the id it already has. Only a segment the deck has never
   // seen gets a placeholder, so the common case — a navigation that leaves the other planks alone —
   // does not re-key them and unmount their content on the way to the same ids.
+  if (!current()) {
+    return undefined;
+  }
+
   const known = yield* knownIdsBySegment();
   const initial = pairs
     .filter((pair) => pair.key !== UrlPath.COMPANION_KEY)

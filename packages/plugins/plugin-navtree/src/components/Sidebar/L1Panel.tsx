@@ -57,7 +57,9 @@ const L1PanelInner = ({ open, path, id, item, isCurrent, onBack }: L1PanelProps)
   const title = item ? toLocalizedString(item.properties.label, t) : t('workspace-unavailable.heading');
   const isActivated = useIsActivatedWorkspace(id);
   const shouldRenderContent = isCurrent || isActivated;
-  const presence = useNavigationPresence(graph, id === DeckSchema.DEFAULT_DECK_ID ? undefined : id);
+  // The sentinel deck names no workspace, so there is nothing to claim is missing.
+  const isWorkspace = id !== DeckSchema.DEFAULT_DECK_ID;
+  const presence = useNavigationPresence(graph, isWorkspace ? id : undefined);
 
   return (
     <Tabs.Panel
@@ -85,6 +87,7 @@ const L1PanelInner = ({ open, path, id, item, isCurrent, onBack }: L1PanelProps)
         ) : (
           // Not `absent` alone: a workspace token no loader recognizes stays `unknown` forever, and
           // the sidebar must never be blank. Only a confirmed `exists` withholds the message.
+          isWorkspace &&
           presence !== 'exists' && (
             <Empty
               key={id}

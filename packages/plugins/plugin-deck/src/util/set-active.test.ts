@@ -46,6 +46,18 @@ describe('computeActiveUpdates', () => {
       expect(deckUpdates.inactive).toEqual([]);
     });
 
+    test('reopening a closed plank does not close it again', ({ expect }) => {
+      // The plank was closed, so its segment mapping is gone; the id is all the write has to go on.
+      const deck = makeDeck({ active: [], inactive: ['doc-1'] });
+      const { deckUpdates } = computeActiveUpdates({
+        next: ['doc-1'],
+        deck,
+        segments: { previous: {}, next: { 'doc-1': 'doc/1' } },
+      });
+      expect(deckUpdates.active).toEqual(['doc-1']);
+      expect(deckUpdates.inactive).toEqual([]);
+    });
+
     test('a plank whose segment leaves the URL is closed', ({ expect }) => {
       const deck = makeDeck({ active: ['placeholder'] });
       const { deckUpdates } = computeActiveUpdates({

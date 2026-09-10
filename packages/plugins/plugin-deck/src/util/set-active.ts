@@ -42,8 +42,10 @@ export const computeActiveUpdates = ({
   // first and the id it resolves to second, and those two writes are the same plank. Diffed by id,
   // the refinement would read as a close.
   const segmentOf = (id: string, map?: Record<string, string>) => map?.[id] ?? id;
-  const open = new Set(next.map((id) => segmentOf(id, segments?.next)));
-  const isOpen = (id: string) => open.has(segmentOf(id, segments?.previous));
+  const openSegments = new Set(next.map((id) => segmentOf(id, segments?.next)));
+  // The id itself first: a plank closed earlier lost its segment mapping, so reopening it would
+  // otherwise be read as a close of the very plank this write is opening.
+  const isOpen = (id: string) => next.includes(id) || openSegments.has(segmentOf(id, segments?.previous));
   const closed = Array.from(new Set([...deck.inactive, ...deck.active].filter((id) => !isOpen(id))));
 
   const updates = {

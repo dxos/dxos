@@ -172,13 +172,13 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperat
         // so names whose plank this open closed are dropped rather than left dangling.
         // A level open binds the name the level owns; an ordinary open binds whatever the caller passed.
         const boundName = levelOpen?.name ?? input.name;
-        const nextSegments = next.map((id) => segments?.[id] ?? id);
         // Read from the graph, not from `segments`: a subject this open is opening for the first time
         // has no entry there yet, and binding the name to its raw id would leave the binding pointing
-        // at something the projection's segment-keyed prune drops on the very next write.
-        const boundSegment = input.subject[0]
-          ? (segments?.[input.subject[0]] ?? Navigation.segmentForNode(builder, input.subject[0]))
-          : undefined;
+        // at something the projection's segment-keyed prune drops on the very next write. The list the
+        // binding is checked against is resolved the same way, or the new plank's own name is pruned.
+        const segmentOfId = (id: string) => segments?.[id] ?? Navigation.segmentForNode(builder, id) ?? id;
+        const nextSegments = next.map(segmentOfId);
+        const boundSegment = input.subject[0] ? segmentOfId(input.subject[0]) : undefined;
         const plankNames = updatePlankNames(
           deck.plankNames,
           nextSegments,

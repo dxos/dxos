@@ -51,6 +51,12 @@ export const currentNavigation = Effect.fnUntraced(function* () {
  * knows what it acted on.
  */
 export const navigate = Effect.fnUntraced(function* (next: Navigation.Navigation, method?: 'push' | 'replace') {
+  if (!next.workspace) {
+    // `/w/` names no workspace and does not parse, so pushing it would project the deck to not-found.
+    // Reachable before the URL keys register, where there is no workspace to read.
+    log.warn('navigation has no workspace, so it cannot be pushed', { pairs: next.pairs.length });
+    return undefined;
+  }
   return Navigation.push(next, method) ? yield* projectUrl(undefined, { attend: false }) : undefined;
 });
 

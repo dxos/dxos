@@ -218,6 +218,11 @@ describe('UrlPath', () => {
       expect(Option.isNone(UrlPath.readWorkspace('/doc/abc'))).toBe(true);
       expect(Option.isNone(UrlPath.readWorkspace('/w'))).toBe(true);
     });
+
+    test('rejects a malformed encoding rather than throwing', ({ expect }) => {
+      expect(Option.isNone(UrlPath.readWorkspace('/w/%'))).toBe(true);
+      expect(Option.isNone(UrlPath.parse('/w/%', table))).toBe(true);
+    });
   });
 
   describe('isReservedKey', () => {

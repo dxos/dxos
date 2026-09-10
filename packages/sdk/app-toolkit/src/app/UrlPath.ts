@@ -79,9 +79,26 @@ export const isReservedKey = (key: string): boolean =>
  * workspace segment.
  */
 export const readWorkspace = (pathname: string): Option.Option<string> => {
-  const trimmed = decodeURIComponent(pathname).replace(/^\/+|\/+$/g, '');
+  const trimmed = decode(pathname);
+  if (trimmed === undefined) {
+    return Option.none();
+  }
   const [anchor, workspace] = trimmed.split('/');
   return anchor === WORKSPACE_KEY && workspace ? Option.some(workspace) : Option.none();
+};
+
+/**
+ * A pathname's decoded, slash-trimmed body, or `undefined` when it is not a valid encoding.
+ *
+ * `decodeURIComponent` throws on a stray `%`, and a pathname reaching here came from the address bar
+ * or from history, so a malformed one is an unparseable URL rather than a programming error.
+ */
+const decode = (pathname: string): string | undefined => {
+  try {
+    return decodeURIComponent(pathname).replace(/^\/+|\/+$/g, '');
+  } catch {
+    return undefined;
+  }
 };
 
 /**
@@ -98,7 +115,10 @@ export const readWorkspace = (pathname: string): Option.Option<string> => {
  * following workspace segment. Callers route a `none` to a not-found page.
  */
 export const parse = (pathname: string, table: KeyTable): Option.Option<ParsedUrl> => {
-  const trimmed = decodeURIComponent(pathname).replace(/^\/+|\/+$/g, '');
+  const trimmed = decode(pathname);
+  if (trimmed === undefined) {
+    return Option.none();
+  }
   const segments = trimmed.length > 0 ? trimmed.split('/') : [];
 
   const workspaceKey = segments[0];
