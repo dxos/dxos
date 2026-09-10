@@ -15,16 +15,16 @@ import { Loader } from './Loader';
 import { createLoaderStore } from './store';
 
 /** How the ring's mark reads: released, as a channel recolours it, or absent. */
-const MARKS: Record<string, { svg?: string; filter?: string }> = {
+const MARKS: Record<string, { svg?: string; filter?: string } | undefined> = {
   none: {},
-  released: {
+  production: {
     svg: composerIcon,
   },
-  purple: {
+  preview: {
     svg: composerIcon,
-    filter: 'hue-rotate(82deg)',
+    filter: 'hue-rotate(190deg)',
   },
-  rust: {
+  qa: {
     svg: composerIcon,
     filter: 'hue-rotate(180deg) saturate(0.75)',
   },
@@ -90,22 +90,22 @@ export const Default: Story = {
       onCleanup(() => timers.forEach(clearTimeout));
     });
     onCleanup(() => store.dispose());
-    return <Loader store={store} markSvg={MARKS[args.mark].svg} markFilter={MARKS[args.mark].filter} />;
+    return <Loader store={store} markSvg={MARKS[args.mark]?.svg} markFilter={MARKS[args.mark]?.filter} />;
   },
 };
 
 /** The released mark as a channel recolours it — the same filters composer-app's `bootMarkFilter` produces. */
-export const Purple: Story = {
+export const Preview: Story = {
   ...Default,
   args: {
-    mark: 'green',
+    mark: 'preview',
   },
 };
 
-export const Rust: Story = {
+export const QA: Story = {
   ...Default,
   args: {
-    mark: 'orange',
+    mark: 'qa',
   },
 };
 
@@ -137,7 +137,7 @@ export const PluginActivation: Story = {
       onCleanup(() => timers.forEach(clearTimeout));
     });
     onCleanup(() => store.dispose());
-    return <Loader store={store} markSvg={MARKS[args.mark].svg} markFilter={MARKS[args.mark].filter} />;
+    return <Loader store={store} markSvg={MARKS[args.mark]?.svg} markFilter={MARKS[args.mark]?.filter} />;
   },
 };
 
@@ -164,7 +164,7 @@ export const Stalled: Story = {
       onCleanup(() => timers.forEach(clearTimeout));
     });
     onCleanup(() => store.dispose());
-    return <Loader store={store} markSvg={MARKS[args.mark].svg} markFilter={MARKS[args.mark].filter} />;
+    return <Loader store={store} markSvg={MARKS[args.mark]?.svg} markFilter={MARKS[args.mark]?.filter} />;
   },
 };
 
@@ -181,6 +181,6 @@ export const StalledThenReady: Story = {
       onCleanup(() => timers.forEach(clearTimeout));
     });
     onCleanup(() => store.dispose());
-    return <Loader store={store} markSvg={MARKS[args.mark].svg} markFilter={MARKS[args.mark].filter} />;
+    return <Loader store={store} markSvg={MARKS[args.mark]?.svg} markFilter={MARKS[args.mark]?.filter} />;
   },
 };
