@@ -7,8 +7,7 @@ import React, { memo, useCallback, useMemo } from 'react';
 
 import * as AppGraph from '@dxos/app-graph/AppGraph';
 import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
-import { useAppGraph, useNavigationPresence } from '@dxos/app-toolkit/ui';
-import * as DeckSchema from '@dxos/plugin-deck/DeckSchema';
+import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { useActionRunner, useEdges } from '@dxos/plugin-graph/hooks';
 import { DensityProvider, IconButton, ScrollArea, Tabs, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { Empty, Tree } from '@dxos/react-ui-list';
@@ -39,6 +38,8 @@ export type L1PanelProps = {
   id: string;
   /** Absent when the workspace is not in the graph; the panel then renders the unavailable message. */
   item?: AppGraphNode.Node;
+  /** Whether the workspace this tab names is known to be missing, rather than still on its way. */
+  unavailable?: boolean;
   isCurrent: boolean;
   onBack?: () => void;
 };
@@ -48,14 +49,11 @@ export type L1PanelProps = {
  * longer exists, or persisted deck state pointing at one after a profile switch — the panel body is the
  * unavailable-workspace message, so the sidebar is never blank.
  */
-const L1PanelInner = ({ open, path, id, item, isCurrent, onBack }: L1PanelProps) => {
+const L1PanelInner = ({ open, path, id, item, unavailable, isCurrent, onBack }: L1PanelProps) => {
   const { t } = useTranslation(meta.profile.key);
-  const { graph } = useAppGraph();
   const title = item ? toLocalizedString(item.properties.label, t) : t('workspace-unavailable.heading');
   const isActivated = useIsActivatedWorkspace(id);
   const shouldRenderContent = isCurrent || isActivated;
-  const isWorkspace = id !== DeckSchema.DEFAULT_DECK_ID;
-  const presence = useNavigationPresence(graph, isWorkspace ? id : undefined);
 
   return (
     <Tabs.Panel
@@ -81,9 +79,7 @@ const L1PanelInner = ({ open, path, id, item, isCurrent, onBack }: L1PanelProps)
         (item ? (
           <L1PanelContent open={open} path={path} item={item} onBack={onBack} />
         ) : (
-          // Not `absent` alone: a workspace token no loader recognizes stays `unknown` forever.
-          isWorkspace &&
-          presence !== 'exists' && (
+          unavailable && (
             <Empty
               key={id}
               label={t('workspace-unavailable.description')}

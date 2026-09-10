@@ -19,7 +19,10 @@ import { L0Menu, L1Tabs, type L1TabsProps } from '../Sidebar';
 
 export const NAV_TREE_ITEM = 'NavTreeItem';
 
-export type NavTreeProps = { id: string; root?: AppGraphNode.Node; tab: string } & Pick<L1TabsProps, 'open'>;
+export type NavTreeProps = { id: string; root?: AppGraphNode.Node; tab: string } & Pick<
+  L1TabsProps,
+  'open' | 'unavailable'
+>;
 
 // TODO(wittjosiah): Refactor to Radix-style.
 export const NavTree = forwardRef<HTMLDivElement, NavTreeProps>(({ id, root, tab, ...props }, forwardedRef) => {
