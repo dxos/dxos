@@ -7,7 +7,6 @@
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
-import * as AppGraph from '@dxos/app-graph/AppGraph';
 import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
 import * as PathResolution from '@dxos/app-graph/PathResolution';
 

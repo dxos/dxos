@@ -30,7 +30,7 @@ import {
 } from '../layout';
 import { Navigation, computeActiveUpdates, currentNavigation, navigateDeck } from '../url';
 import { applyWorkspace } from '../url';
-import { openCompanionPlank, openableChildren, resolveDeckSpec } from '../util';
+import { openableChildren, openCompanionPlank, resolveDeckSpec } from '../util';
 import { updateActiveDeck } from './helpers';
 
 const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperation.Open.pipe(

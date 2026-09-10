@@ -12,7 +12,6 @@ import * as GraphNode from '@dxos/graph/GraphNode';
 import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
 import { invariant } from '@dxos/invariant';
 
-import * as Graph from './AppGraph';
 import * as GraphBuilder from './AppGraphBuilder';
 import * as Node from './AppGraphNode';
 import * as PathResolution from './path-resolution';

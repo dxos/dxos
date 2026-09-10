@@ -16,10 +16,10 @@ import { Attention } from '@dxos/react-ui-attention/types';
 import { DeckCapabilities } from '#types';
 import { CompanionViewState, DeckSchema } from '#types';
 
-import { Navigation } from '.';
 import { updatePlankNames } from '../layout';
 import { updateActiveDeck } from '../operations/helpers';
 import { closeCompanionPlank, openCompanionPlank, resolveCompanionAnchor, resolveCompanionPlank } from '../util';
+import * as Navigation from './navigation';
 import { computeActiveUpdates } from './set-active';
 
 /**

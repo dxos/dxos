@@ -20,9 +20,10 @@ import { log } from '@dxos/log';
 
 import { DeckCapabilities, DeckSchema } from '#types';
 
-import { Navigation, getCandidateEntityIds, getUnresolvedPlankId } from '.';
 import { shouldDeferNavigationHandlers } from '../capabilities/check-app-scheme';
 import { applyActive, applyCompanion, applyWorkspace } from './apply';
+import * as Navigation from './navigation';
+import { getCandidateEntityIds, getUnresolvedPlankId } from './navigation-target';
 
 // TODO(wittjosiah): Shorten, or apply the restore per-pair.
 const RESOLVE_TIMEOUT = '10 seconds';

@@ -11,8 +11,6 @@ import * as Translations from '@dxos/app-toolkit/Translations';
 
 import { meta } from '#meta';
 
-import { Navigation } from '../url';
-
 export const PLANK_COMPANION_TYPE = AppNode.PLANK_COMPANION_TYPE;
 export const DECK_COMPANION_TYPE = AppNode.DECK_COMPANION_TYPE;
 
@@ -150,7 +148,7 @@ export const EphemeralDeckState = Schema.Struct({
   /** Whether the deck is showing every plank at once as shrunk-to-fit tiles. Transient. */
   expose: Schema.optional(Schema.Boolean),
   /** Each open plank's URL segment, by plank id. The key per-plank preferences hang off. */
-  /** The URL segment each open plank came from; see `Navigation.PlankSegments`. */
+  /** The URL segment each open plank came from; see `Navigation.PlankSegments` in `url/`. */
   segments: Schema.optional(Schema.Record(Schema.String, Schema.mutableKey(Schema.String))),
   dialogOpen: Schema.Boolean,
   dialogType: Schema.optional(Schema.Literals(['default', 'alert'])),
