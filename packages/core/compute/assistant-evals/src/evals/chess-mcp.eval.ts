@@ -9,7 +9,7 @@ import { evalite } from 'evalite';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import * as SampleSpace from '@dxos/app-toolkit/SampleSpace';
-import { PlanningSkill } from '@dxos/assistant-toolkit';
+import { McpServer, PlanningSkill } from '@dxos/assistant-toolkit';
 import * as Chat from '@dxos/assistant/Chat';
 import { Config } from '@dxos/client';
 import { EDGE_URLS } from '@dxos/config';
@@ -147,6 +147,8 @@ const task = createEvalRunner({
     Sandbox.Sandbox,
     // A sandbox names its credentials by this type; a space query that meets it unregistered fails.
     AccessToken.AccessToken,
+    // Stage four registers one; a session that looks for it early must find the type, not an error.
+    McpServer.McpServer,
   ],
   config: new Config({ runtime: { services: { edge: { url: EDGE_URL } } } }),
   // A design, a toolchain install, two deploys and an engine, each minutes of wall clock; and where a
