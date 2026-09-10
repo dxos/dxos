@@ -152,14 +152,24 @@ export class MeshEchoReplicator implements AutomergeReplicator {
           }
 
           const isAuthorized = authorizedDevices?.has(connection.remoteDeviceKey) ?? false;
-          log('share policy check', {
+          const context = {
             localPeer: this._context.peerId,
             remotePeer: connection.peerId,
             documentId: params.documentId,
             deviceKey: connection.remoteDeviceKey,
             spaceId,
-            isAuthorized,
-          });
+          };
+          if (isAuthorized) {
+            log('share policy check', { ...context, isAuthorized });
+          } else {
+            // Warn: a device absent from the space's authorized set is refused every document in
+            // that space, and the refusal is sticky on the asking peer — so a device admitted a
+            // moment later still never receives them.
+            log.warn('share policy refused an unauthorized device', {
+              ...context,
+              knownAuthorizedDevices: authorizedDevices?.size ?? 0,
+            });
+          }
           return isAuthorized;
         } catch (err) {
           log.catch(err);
