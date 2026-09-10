@@ -6,9 +6,11 @@ import { type Browser, type ConsoleMessage, type Locator, type Page, expect } fr
 import os from 'node:os';
 
 import { Trigger } from '@dxos/async';
+import { DEFAULT_STORE_NAME as LOG_STORE_NAME } from '@dxos/log-store-idb';
 import { ShellManager } from '@dxos/shell/testing';
 import { setupPage } from '@dxos/test-utils/playwright';
 
+import { LOG_STORE_DB_NAME } from '../util';
 import { DeckManager } from './plugins';
 
 // TODO(wittjosiah): Normalize data-testids between snake and camel case.
@@ -107,6 +109,45 @@ export class AppManager {
 
   async close(): Promise<void> {
     await this._close?.();
+  }
+
+  /**
+   * Reads the app's own debug log store, which the observability worker persists to IndexedDB.
+   *
+   * The console carries only what the browser keeps and is lost across a reload; this store holds
+   * every record at DEBUG and above — `log.verbose` included, since VERBOSE outranks DEBUG — and
+   * survives the reload `joinNewIdentity` performs, which is the window most of these failures
+   * occur in. Returns NDJSON, empty when the store has not been created yet.
+   */
+  async readDebugLog(): Promise<string> {
+    return this.page.evaluate(
+      async ({ dbName, storeName }) => {
+        const request = indexedDB.open(dbName);
+        const db = await new Promise<IDBDatabase | undefined>((resolve) => {
+          request.onsuccess = () => resolve(request.result);
+          request.onerror = () => resolve(undefined);
+          // A store the app never created: let it go rather than provoking an upgrade from here.
+          request.onupgradeneeded = () => {
+            request.transaction?.abort();
+            resolve(undefined);
+          };
+        });
+        if (!db || !db.objectStoreNames.contains(storeName)) {
+          return '';
+        }
+        try {
+          const rows = await new Promise<{ lines?: string }[]>((resolve, reject) => {
+            const query = db.transaction(storeName, 'readonly').objectStore(storeName).getAll();
+            query.onsuccess = () => resolve(query.result ?? []);
+            query.onerror = () => reject(query.error);
+          });
+          return rows.map((row) => row.lines ?? '').join('');
+        } finally {
+          db.close();
+        }
+      },
+      { dbName: LOG_STORE_DB_NAME, storeName: LOG_STORE_NAME },
+    );
   }
 
   //

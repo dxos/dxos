@@ -15,7 +15,8 @@ import {
 
 import { byteLengthUtf8, trimJsonlToSize } from './trim';
 
-const DEFAULT_STORE_NAME = 'logs';
+/** Object store the log chunks live in. Exported so a reader outside the app need not duplicate it. */
+export const DEFAULT_STORE_NAME = 'logs';
 const DEFAULT_LOG_FILTER = 'debug';
 const DEFAULT_FLUSH_INTERVAL = 250;
 const DEFAULT_FLUSH_BATCH_SIZE = 500;

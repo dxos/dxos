@@ -6,6 +6,7 @@ import { expect, test } from '@playwright/test';
 import { platform } from 'node:os';
 
 import { AppManager, INITIAL_SPACE_COUNT, INITIAL_URL } from './app-manager';
+import { captureDebugLogs } from './capture-debug-logs';
 
 // TODO(wittjosiah): WebRTC only available in chromium browser for testing currently.
 //   https://github.com/microsoft/playwright/issues/2973
@@ -24,9 +25,10 @@ test.describe('HALO tests', () => {
     await guest.init();
   });
 
-  test.afterEach(async () => {
+  test.afterEach(async ({ browserName: _browserName }, testInfo) => {
     // Playwright runs `afterEach` even when `beforeEach` skipped, so neither manager may exist.
     if (host !== undefined && guest !== undefined) {
+      await captureDebugLogs({ host, guest }, testInfo);
       await Promise.all([host.close(), guest.close()]);
     }
   });
