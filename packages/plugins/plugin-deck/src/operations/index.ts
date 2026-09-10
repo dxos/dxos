@@ -11,6 +11,7 @@ import { DeckOperation } from '#types';
 export const DeckOperationHandlerSet = OperationHandlerSet.lazy([
   LayoutOperation.AddToast.pipe(Operation.lazyHandler(() => import('./add-toast'))),
   DeckOperation.Adjust.pipe(Operation.lazyHandler(() => import('./adjust'))),
+  DeckOperation.HandleExternalUrl.pipe(Operation.lazyHandler(() => import('./handle-external-url'))),
   LayoutOperation.Close.pipe(Operation.lazyHandler(() => import('./close'))),
   LayoutOperation.Open.pipe(Operation.lazyHandler(() => import('./open'))),
   LayoutOperation.RevertWorkspace.pipe(Operation.lazyHandler(() => import('./revert-workspace'))),

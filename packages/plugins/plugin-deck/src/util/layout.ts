@@ -8,6 +8,9 @@ import * as DeckSpec from '@dxos/app-toolkit/DeckSpec';
 
 import { DeckSchema } from '#types';
 
+import { Navigation } from '../url';
+
+/** Where {@link addSubjectsToActiveDeck} puts the subjects it is given. */
 export type AddSubjectsToActiveDeckOptions = {
   /** Insert opened subjects immediately after this plank (in-plank navigation anchors at its origin). */
   pivotId?: string;
@@ -58,19 +61,20 @@ export const addSubjectsToActiveDeck = (
   return next;
 };
 
-/** `names` with entries for planks no longer open removed, and `name` (when given) bound to `plankId`. */
+/** Named planks, pruned to what is open, keyed by URL segment. */
 export const updatePlankNames = (
   names: Record<string, string>,
-  active: readonly string[],
-  binding?: { name: string; plankId: string },
+  activeSegments: readonly string[],
+  binding?: { name: string; segment: string },
 ): Record<string, string> => {
-  const next = Object.fromEntries(Object.entries(names).filter(([, plankId]) => active.includes(plankId)));
-  if (binding && active.includes(binding.plankId)) {
-    next[binding.name] = binding.plankId;
+  const next = Object.fromEntries(Object.entries(names).filter(([, segment]) => activeSegments.includes(segment)));
+  if (binding && activeSegments.includes(binding.segment)) {
+    next[binding.name] = binding.segment;
   }
   return next;
 };
 
+/** The deck without `entryId`, unchanged when it holds no such plank. */
 export const closeEntry = (deck: string[], entryId: string): string[] => {
   return produce(deck, (draft) => {
     const index = draft.findIndex((id) => id === entryId);
@@ -80,6 +84,7 @@ export const closeEntry = (deck: string[], entryId: string): string[] => {
   });
 };
 
+/** The deck with one plank moved a place towards the start or the end. */
 export const incrementPlank = (deck: string[], adjustment: DeckSchema.DeckAction.Adjustment): string[] => {
   return produce(deck, (draft) => {
     const index = draft.findIndex((id) => id === adjustment.id);
@@ -133,6 +138,19 @@ export const resolveSeededPlanks = ({
   return children.slice(0, MAX_SEEDED_PLANKS);
 };
 
+/** The open plank currently holding `name`. */
+export const plankIdForName = (
+  name: string,
+  {
+    active,
+    plankNames,
+    segments,
+  }: { active: readonly string[]; plankNames: Record<string, string>; segments?: Record<string, string> },
+): string | undefined => {
+  const segment = plankNames[name];
+  return segment ? active.find((id) => Navigation.segmentOf(segments, id) === segment) : undefined;
+};
+
 /**
  * The next `active` list for an open at `level` of `root`'s declared chain, plus the plank name that
  * level occupies. `undefined` when the level is not declared, so the caller falls back to an ordinary
@@ -145,6 +163,7 @@ export const resolveSeededPlanks = ({
 export const resolveLevelOpen = ({
   active,
   plankNames,
+  segments,
   spec,
   root,
   level,
@@ -152,6 +171,7 @@ export const resolveLevelOpen = ({
 }: {
   active: readonly string[];
   plankNames: Record<string, string>;
+  segments?: Record<string, string>;
   spec: DeckSpec.DeckSpec | undefined;
   root: string;
   level: string;
@@ -163,10 +183,12 @@ export const resolveLevelOpen = ({
     return undefined;
   }
 
+  const holderOf = (plankName: string) => plankIdForName(plankName, { active, plankNames, segments });
+
   const name = DeckSpec.plankName(root, level);
   const stale = new Set(
     DeckSpec.levelsBelow(spec, level)
-      .map((entry) => plankNames[DeckSpec.plankName(root, entry.key)])
+      .map((entry) => holderOf(DeckSpec.plankName(root, entry.key)))
       .filter((id): id is string => !!id),
   );
   const pruned = active.filter((id) => !stale.has(id));
@@ -174,9 +196,9 @@ export const resolveLevelOpen = ({
   // Anchored to the level above so the chain reads left to right whatever else is open. The topmost
   // level falls back to the root itself, whose plank is opened normally and so carries no level name.
   const parentName = index > 0 ? DeckSpec.plankName(root, levels[index - 1].key) : undefined;
-  const parent = (parentName && plankNames[parentName]) || root;
+  const parent = (parentName && holderOf(parentName)) || root;
 
-  const replacedId = plankNames[name];
+  const replacedId = holderOf(name);
   return {
     next: addSubjectsToActiveDeck(pruned, [subjectId], {
       pivotId: pruned.includes(parent) ? parent : undefined,

@@ -12683,9 +12683,6 @@ importers:
       '@dxos/graph':
         specifier: workspace:*
         version: link:../../common/graph
-      '@dxos/invariant':
-        specifier: workspace:*
-        version: link:../../common/invariant
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
