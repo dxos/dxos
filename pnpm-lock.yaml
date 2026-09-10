@@ -513,9 +513,6 @@ catalogs:
     '@types/geojson':
       specifier: ^7946.0.14
       version: 7946.0.14
-    '@types/globrex':
-      specifier: ^0.1.4
-      version: 0.1.4
     '@types/js-yaml':
       specifier: ^4.0.5
       version: 4.0.9
@@ -969,9 +966,6 @@ catalogs:
     globby:
       specifier: 14.1.0
       version: 14.1.0
-    globrex:
-      specifier: ^0.1.2
-      version: 0.1.2
     glsl-curl-noise2:
       specifier: ^0.0.4
       version: 0.0.4
@@ -1799,9 +1793,6 @@ importers:
       '@testing-library/user-event':
         specifier: 'catalog:'
         version: 14.6.1(@testing-library/dom@10.4.1)
-      '@types/globrex':
-        specifier: 'catalog:'
-        version: 0.1.4
       '@types/json-stringify-safe':
         specifier: 'catalog:'
         version: 5.0.0
@@ -1925,9 +1916,6 @@ importers:
       globby:
         specifier: 'catalog:'
         version: 14.1.0
-      globrex:
-        specifier: 'catalog:'
-        version: 0.1.2
       husky:
         specifier: 'catalog:'
         version: 8.0.1
@@ -31241,9 +31229,6 @@ packages:
   '@types/glob@7.1.4':
     resolution: {integrity: sha512-w+LsMxKyYQm347Otw+IfBXOv9UWVjpHpCDdbBMt8Kz/xbvCYNjP+0qPh91Km3iKfSRLBB0P7fAMf0KHrPu+MyA==}
 
-  '@types/globrex@0.1.4':
-    resolution: {integrity: sha512-qm82zaOxfn8Us/GGjNrQQ1XfCBUDV86DxQgIQq/p1zGHlt0xnbUiabNjN9rZUhMNvvIE2gg8iTW+GMfw0TnnLg==}
-
   '@types/hast@2.3.4':
     resolution: {integrity: sha512-wLEm0QvaoawEDoTRwzTXp4b4jpwiJDvR5KMnFnVodm3scufTlBOWRD6N1OBf9TZMhjlNsSfcO5V+7AF4+Vy+9g==}
 
@@ -52612,8 +52597,6 @@ snapshots:
     dependencies:
       '@types/minimatch': 5.1.2
       '@types/node': 22.10.2
-
-  '@types/globrex@0.1.4': {}
 
   '@types/hast@2.3.4':
     dependencies:
