@@ -12,6 +12,7 @@ import * as SampleSpace from '@dxos/app-toolkit/SampleSpace';
 import { PlanningSkill } from '@dxos/assistant-toolkit';
 import * as Chat from '@dxos/assistant/Chat';
 import { Config } from '@dxos/client';
+import { EDGE_URLS } from '@dxos/config';
 import * as Operation from '@dxos/compute/Operation';
 import * as Project from '@dxos/compute/Project';
 import { Collection, Database, Feed, Obj, Ref } from '@dxos/echo';
@@ -35,6 +36,7 @@ import { trim } from '@dxos/util';
 import { findObject, toolInvocations } from '../assertions';
 import { createEvalRunner } from '../runner';
 import { getDefaultSkills } from '../skills';
+import MCP_PROBE from './chess-mcp/mcp-probe.mjs?raw';
 
 //
 // The chess-MCP template, delegated end to end: a design, an empty Worker deployed with
@@ -66,10 +68,10 @@ const DELEGATED_STAGES = [
 const SEEDED_FEN = 'r1bqk2r/1pppbppp/p1n2n2/4p3/B3P3/5N2/PPPP1PPP/RNBQ1RK1 w kq - 4 6';
 
 /**
- * Where the sandbox service is. The harness client reaches nothing else outside the process, so
- * this is the one endpoint it is given; dev EDGE serves the sandbox without auth.
+ * The EDGE the run reaches: it serves the model for the DeepSeek variant, authenticated as the run's
+ * own identity, and the sandbox for both. Dev serves the sandbox without auth.
  */
-const SANDBOX_URL = process.env.DX_SANDBOX_SERVICE_URL ?? 'https://dev.dxos.network/sandbox';
+const EDGE_URL = process.env.DX_EDGE_BASE_URL ?? EDGE_URLS.dev;
 
 /** A deployed Worker, with whatever path the session put its endpoint on. */
 const WORKER_URL = /https:\/\/[a-z0-9-]+\.[a-z0-9-]+\.workers\.dev(?:\/[\w./-]*)?/gi;
@@ -85,89 +87,6 @@ const OPENING_PROMPT = trim`
 
 /** The eval identity as the delegating reviewer, so a finished task lands in review rather than done. */
 const REVIEWER: Actor.Actor = { role: 'user', name: 'Eval' };
-
-/**
- * The MCP client, as a script the sandbox runs under its own node: Streamable HTTP with the session
- * header the transport may hand back, and either a JSON body or an SSE frame per response. It tries
- * each candidate URL, and on the first that answers `initialize` it lists the tools, then calls the
- * one that names a move with the seeded position and the one that evaluates it. One JSON object on
- * the last line of stdout.
- */
-const MCP_PROBE = trim`
-  const [fen, ...candidates] = process.argv.slice(2);
-  const parse = async (response) => {
-    const text = await response.text();
-    if ((response.headers.get('content-type') ?? '').includes('text/event-stream')) {
-      const frames = text.split('\\n').filter((line) => line.startsWith('data:')).map((line) => line.slice(5).trim());
-      return JSON.parse(frames.filter((frame) => frame.includes('"result"') || frame.includes('"error"')).pop() ?? frames.pop() ?? 'null');
-    }
-    return text ? JSON.parse(text) : null;
-  };
-  const rpc = async (url, session, id, method, params) => {
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: {
-        'content-type': 'application/json',
-        accept: 'application/json, text/event-stream',
-        ...(session ? { 'mcp-session-id': session } : {}),
-      },
-      body: JSON.stringify({ jsonrpc: '2.0', id, method, params }),
-    });
-    return { status: response.status, session: response.headers.get('mcp-session-id') ?? session, body: await parse(response) };
-  };
-  const argFor = (schema, fen) => {
-    const properties = schema?.properties ?? {};
-    const args = {};
-    for (const [key, property] of Object.entries(properties)) {
-      const required = (schema.required ?? []).includes(key);
-      if (/fen|position/i.test(key)) args[key] = fen;
-      else if (required && /depth|ply/i.test(key)) args[key] = 3;
-      else if (required && /node/i.test(key)) args[key] = 20000;
-      else if (required && /ms|time|budget|millis/i.test(key)) args[key] = 1000;
-      else if (required && property.type === 'string') args[key] = fen;
-      else if (required && property.type === 'number') args[key] = 3;
-    }
-    return args;
-  };
-  const text = (result) => (result?.content ?? []).map((part) => part.text ?? JSON.stringify(part)).join('\\n');
-  let report = { endpoint: undefined, tools: [], bestMove: undefined, evaluation: undefined, errors: [] };
-  for (const url of candidates) {
-    try {
-      const init = await rpc(url, undefined, 1, 'initialize', {
-        protocolVersion: '2025-03-26',
-        capabilities: {},
-        clientInfo: { name: 'dxos-eval', version: '0' },
-      });
-      if (init.status >= 400 || !init.body?.result) {
-        report.errors.push(url + ': initialize ' + init.status);
-        continue;
-      }
-      await fetch(url, {
-        method: 'POST',
-        headers: { 'content-type': 'application/json', accept: 'application/json, text/event-stream', ...(init.session ? { 'mcp-session-id': init.session } : {}) },
-        body: JSON.stringify({ jsonrpc: '2.0', method: 'notifications/initialized' }),
-      }).catch(() => undefined);
-      const list = await rpc(url, init.session, 2, 'tools/list', {});
-      const tools = list.body?.result?.tools ?? [];
-      report.endpoint = url;
-      report.tools = tools.map((tool) => tool.name);
-      const mover = tools.find((tool) => /best|move/i.test(tool.name));
-      const evaluator = tools.find((tool) => /eval|score|analy/i.test(tool.name) && tool !== mover);
-      if (mover) {
-        const call = await rpc(url, init.session, 3, 'tools/call', { name: mover.name, arguments: argFor(mover.inputSchema, fen) });
-        report.bestMove = call.body?.result ? text(call.body.result) : JSON.stringify(call.body?.error ?? call.status);
-      }
-      if (evaluator) {
-        const call = await rpc(url, init.session, 4, 'tools/call', { name: evaluator.name, arguments: argFor(evaluator.inputSchema, fen) });
-        report.evaluation = call.body?.result ? text(call.body.result) : JSON.stringify(call.body?.error ?? call.status);
-      }
-      break;
-    } catch (error) {
-      report.errors.push(url + ': ' + String(error));
-    }
-  }
-  console.log(JSON.stringify(report));
-`;
 
 type Probe = {
   endpoint?: string;
@@ -229,9 +148,9 @@ const task = createEvalRunner({
     // A sandbox names its credentials by this type; a space query that meets it unregistered fails.
     AccessToken.AccessToken,
   ],
-  config: new Config({ runtime: { services: { sandbox: { url: SANDBOX_URL } } } }),
+  config: new Config({ runtime: { services: { edge: { url: EDGE_URL } } } }),
   // A design, a toolchain install, two deploys and an engine, each a minute or more of wall clock.
-  timeout: 2_400_000,
+  timeout: 40 * 60 * 1_000,
   seed: ({ spaceId, instructions }) =>
     Effect.gen(function* () {
       const client = yield* Capability.get(ClientCapabilities.Client);
@@ -342,7 +261,7 @@ const task = createEvalRunner({
         const command = `cat > /tmp/mcp-probe.mjs <<'PROBE'\n${MCP_PROBE}\nPROBE\nnode /tmp/mcp-probe.mjs '${SEEDED_FEN}' ${candidates.map((url) => `'${url}'`).join(' ')}`;
         const result = yield* Operation.invoke(
           SandboxOperation.Exec,
-          { sandbox: Ref.make(sandbox), command, timeout: 180_000 },
+          { sandbox: Ref.make(sandbox), command, timeout: 3 * 60 * 1_000 },
           { spaceId },
         ).pipe(Effect.orElseSucceed(() => undefined));
         probe = result ? parseProbe(result.stdout) : undefined;
@@ -389,14 +308,12 @@ const task = createEvalRunner({
 
 /**
  * The models a delegated coding session is measured on. DeepSeek V4 Pro is what the template tells
- * its reader to select; it joins the run when `DEEPSEEK_API_KEY` is set, since the headless preset
- * reaches DeepSeek with that key rather than through EDGE.
+ * its reader to select, and it is served through EDGE with the run's own identity, so it needs no
+ * key; Opus goes to Anthropic directly and needs `DX_ANTHROPIC_API_KEY`.
  */
 const VARIANTS = [
   { name: 'claude-opus-5', input: { model: DXN.make('com.anthropic.model.claude-opus-5.default') } },
-  ...(process.env.DEEPSEEK_API_KEY
-    ? [{ name: 'deepseek-v4-pro', input: { model: DXN.make('com.deepseek.model.deepseek-v4-pro.default') } }]
-    : []),
+  { name: 'deepseek-v4-pro', input: { model: DXN.make('com.deepseek.model.deepseek-v4-pro.default') } },
 ];
 
 evalite.each(VARIANTS)('Chess MCP — a delegated session designs, deploys and serves a chess engine over MCP', {

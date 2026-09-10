@@ -11,8 +11,9 @@ import * as Schema from 'effect/Schema';
 import type { Evalite } from 'evalite';
 
 import { AiService, Model } from '@dxos/ai';
-import { type AiServicePreset, AiServiceTestingPreset } from '@dxos/ai/testing';
-import { type Config } from '@dxos/client';
+import { AiServiceTestingPreset } from '@dxos/ai/testing';
+import { Config } from '@dxos/client';
+import { EDGE_URLS } from '@dxos/config';
 import type * as Capabilities from '@dxos/app-framework/Capabilities';
 import type * as Plugin from '@dxos/app-framework/Plugin';
 import { type TestHarness } from '@dxos/app-framework/testing';
@@ -64,16 +65,19 @@ const SYSTEM_INSTRUCTIONS = trim`
   Do not fall back on your own knowledge, only use the tools provided.
 `;
 
-/**
- * The testing preset that serves a model directly: DeepSeek's own endpoint for its models, the
- * direct (Anthropic) preset otherwise. In the app the edge fronts both; a headless run has no
- * identity for it, so each vendor is reached with its own key.
- */
-const presetFor = (model: DXN.DXN): AiServicePreset => (Model.developer(model) === 'com.deepseek' ? 'deepseek' : 'direct');
+/** The EDGE the harness reaches for a model it serves, and for the sandbox: dev unless overridden. */
+const EDGE_URL = process.env.DX_EDGE_BASE_URL ?? EDGE_URLS.dev;
 
-const makeAiServiceMiddleware = (preset: AiServicePreset): Promise<(_upstream: AiService.Service) => AiService.Service> =>
+/**
+ * Whether a model is served through EDGE with the harness identity, the way the app serves it,
+ * rather than by the direct testing preset with a vendor key. DeepSeek has no key of its own to
+ * give; the edge path needs nothing but the identity the run creates.
+ */
+const servedByEdge = (model: DXN.DXN): boolean => Model.developer(model) === 'com.deepseek';
+
+const makeAiServiceMiddleware = (): Promise<(_upstream: AiService.Service) => AiService.Service> =>
   AiService.tag.pipe(
-    Effect.provide(AiServiceTestingPreset(preset)),
+    Effect.provide(AiServiceTestingPreset('direct')),
     Effect.map((service) => (_upstream: AiService.Service) => service),
     EffectEx.runAndForwardErrors,
   );
@@ -85,7 +89,8 @@ const createDefaultPlugins = async (options: {
   model: DXN.DXN;
 }): Promise<Plugin.Plugin[]> => [
   ClientPlugin.make({
-    config: options.config,
+    // The scenario's config first; the edge URL only fills in where it left one out.
+    config: new Config(options.config?.values ?? {}, { runtime: { services: { edge: { url: EDGE_URL } } } }),
     types: [
       Organization.Organization,
       Person.Person,
@@ -96,7 +101,8 @@ const createDefaultPlugins = async (options: {
     ],
   }),
   AssistantPlugin.make({
-    aiServiceMiddleware: await makeAiServiceMiddleware(presetFor(options.model)),
+    // Absent, the plugin's own resolvers serve the model through EDGE, authenticated as the run.
+    aiServiceMiddleware: servedByEdge(options.model) ? undefined : await makeAiServiceMiddleware(),
   }),
   RoutinePlugin.make(),
   InboxPlugin.make(),
@@ -181,7 +187,7 @@ export interface CreateEvalRunnerOptions<I, O> {
   types?: Type.AnyEntity[];
   /**
    * Client config for the harness, for a scenario whose tools reach a service outside the process
-   * (a sandbox, say). Absent, the client reaches no network at all.
+   * (a sandbox, say). The EDGE URL defaults to dev, or `DX_EDGE_BASE_URL`.
    */
   config?: Config;
   /**
