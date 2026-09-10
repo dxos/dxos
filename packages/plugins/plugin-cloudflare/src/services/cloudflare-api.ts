@@ -78,18 +78,17 @@ export const fromConnection = (connectionRef: Ref.Ref<Connection.Connection>) =>
 // Request pipeline
 //
 
-type CloudflareEffect<T> = Effect.Effect<
-  T,
-  HttpClientError.HttpClientError | Schema.SchemaError | Cause.TimeoutError,
-  HttpClient.HttpClient | CloudflareCredentials
->;
+/** Everything a request can fail with: a transport or status error, a decode failure, or a timeout. */
+export type CloudflareError = HttpClientError.HttpClientError | Schema.SchemaError | Cause.TimeoutError;
+
+type CloudflareEffect<T> = Effect.Effect<T, CloudflareError, HttpClient.HttpClient | CloudflareCredentials>;
 
 /**
  * Transport failures and timeouts are transient, and so are 429 / 5xx. A 4xx other than 429 is the
  * token being rejected — retrying spends the rate-limit budget to get the same answer. A decode
  * failure will not decode on the second attempt either.
  */
-const shouldRetry = (error: HttpClientError.HttpClientError | Schema.SchemaError | Cause.TimeoutError): boolean => {
+const shouldRetry = (error: CloudflareError): boolean => {
   if (error instanceof Schema.SchemaError) {
     return false;
   }
@@ -140,9 +139,9 @@ const cloudflareRequest = <T>(path: string, result: Schema.Codec<T>): Cloudflare
 // Endpoints
 //
 
-/** The authenticated user; needs the `user:read` scope. */
+/** The authenticated user; needs the `user-details.read` scope. */
 export const fetchUser = (): CloudflareEffect<CloudflareUser> => cloudflareRequest('/user', CloudflareUserSchema);
 
-/** The accounts the grant can see; needs the `account:read` scope. */
+/** The accounts the grant can see; needs the `memberships.read` scope. */
 export const fetchAccounts = (): CloudflareEffect<readonly CloudflareAccount[]> =>
   cloudflareRequest('/accounts', Schema.Array(CloudflareAccountSchema));

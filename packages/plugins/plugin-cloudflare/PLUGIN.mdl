@@ -46,9 +46,11 @@ feat CloudflareConnector
     # Vectorize, Hyperdrive and Secrets Store; Workers AI; Containers; zone
     # read and certificates. Scope ids come from
     # Cloudflare's GET /oauth/scopes, NOT from wrangler's colon-delimited
-    # namespace, which a self-managed client rejects. Register everything past
-    # the identity reads and offline_access as optional; a declined scope is
-    # warned about by kms-service and the flow continues.
+    # namespace, which a self-managed client rejects. offline_access is absent:
+    # Cloudflare attaches it from the client's refresh-token grant and rejects
+    # the authorization request when it is named. Register every product scope
+    # past the identity reads as optional; a declined scope is warned about by
+    # kms-service and the flow continues.
   onTokenCreated: >
     GET /user for the email (falling back to username, then to the first
     account name from GET /accounts) and write it to accessToken.account.
@@ -73,14 +75,14 @@ feat CloudflareConnector
 
 ```mdl
 test T-1: Label from the user endpoint
-  given: a connector token whose grant carries user:read
+  given: a connector token whose grant carries user-details.read
   when: onTokenCreated runs against a /user response with an email
   then: accessToken.account is that email
 ```
 
 ```mdl
 test T-2: Label falls back to the account name
-  given: a grant carrying account:read but not user:read
+  given: a grant carrying memberships.read but not user-details.read
   when: onTokenCreated runs and /user answers 403
   then: accessToken.account is the first account's name from /accounts
 ```

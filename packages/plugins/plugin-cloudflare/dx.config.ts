@@ -24,8 +24,9 @@ export default Config2.make({
 
       The grant is a working one, not a read-only peek: Workers, KV, R2, D1,
       Queues, Pipelines, Vectorize, Hyperdrive, Secrets Store, Workers AI and
-      Containers, alongside the account and user reads and the offline_access
-      that lets EDGE refresh it.
+      Containers, alongside the account and user reads. Cloudflare attaches the
+      refresh token from the client's grant, so EDGE can keep the connection
+      alive without the connector asking for a scope to do it.
       The point is that a coding agent can say what it needs and then deploy and
       manage it, rather than walking the user through the dashboard.
 
