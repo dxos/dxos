@@ -396,9 +396,9 @@ body {
 }
 
 /*
- * Place and slide are transforms, entrance is a keyframe animation on the glyph, and nothing else.
- * During boot the main thread is saturated — measured frame gaps of ~280ms — so only what the
- * compositor can carry keeps moving; width, margin and layout cannot be composited at all.
+ * Place and shift are transforms and the arrival is opacity, and nothing else. During boot the main
+ * thread is saturated — measured frame gaps of ~280ms — so only what the compositor can carry keeps
+ * moving; width, margin and layout cannot be composited at all.
  */
 .boot-loader-plugin {
   position: absolute;
@@ -416,28 +416,27 @@ body {
   /* Monotone — the arrival reads from opacity alone, which keeps the row quiet. */
   color: currentColor;
   opacity: 0.2;
-  /*
-   * One transition carries every move: the slide in from the edge and each later shift to make
-   * room. A transition retargets from the icon's current position when the count changes, so an
-   * icon still arriving bends toward its new slot instead of hopping; a keyframe animation would
-   * shift its whole path instead. The arrival is long and eased; once landed, a shift is short.
-   */
-  --boot-loader-plugin-arrival: 1000ms;
   /* Own centre first, then the slot's offset from the row's centre. */
   transform: translateX(calc(-50% + (var(--i) - (var(--n) - 1) / 2) * var(--boot-loader-plugin-slot)));
-  transition: transform var(--boot-loader-plugin-arrival) ease-in-out;
+  /*
+   * The shift to make room is a half slot and short, so it is over before the next arrival; a
+   * transition retargets from the current position if one does land mid-shift. The fade is slower,
+   * so the new icon is still coming up as the row settles around it.
+   */
+  transition:
+    transform 200ms ease-out,
+    opacity 600ms ease-out;
 }
 
-/* Parked beyond the right edge of the screen for its first frame, with no transition to get there.
-   The row is centred in the viewport, so half its width is the distance to that edge. */
+/*
+ * First frame of an arrival: invisible, in the slot just past the row's old end — the row is one
+ * shorter than `--n` says until this frame is over. Removing the attribute fades the icon there
+ * while the whole row, this icon included, shifts half a slot left to re-centre.
+ */
 .boot-loader-plugin[data-arriving] {
-  transform: translateX(50vw);
+  opacity: 0;
+  transform: translateX(calc(-50% + (var(--i) - (var(--n) - 2) / 2) * var(--boot-loader-plugin-slot)));
   transition: none;
-}
-
-/* Landed: the shift to make room is a half slot, over before the next arrival lands. */
-.boot-loader-plugin[data-landed] {
-  transition: transform 200ms ease-out;
 }
 
 /* The glyph itself. Styled apart from its slot so either can change without disturbing the other. */
@@ -445,25 +444,10 @@ body {
   width: 100%;
   height: 100%;
   fill: currentColor;
-  animation: boot-loader-plugin-in 1500ms ease-out both;
-}
-
-@keyframes boot-loader-plugin-in {
-  from {
-    opacity: 0;
-    transform: scale(0.8);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .boot-loader-plugin {
     transition: none;
-  }
-  .boot-loader-plugin-icon {
-    animation: none;
   }
 }
