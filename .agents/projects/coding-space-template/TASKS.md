@@ -78,6 +78,25 @@ All three are now folded back into the template.
       container's egress IP, so the live demo Worker runs on the DXOS org account instead. That is
       an environment artifact, not a template defect.
 
+## Phase 2b: Review round on #13038
+
+Three findings from CodeRabbit, all real defects in what the template instructs rather than style
+notes. Fixed in `5d6a7b18`.
+
+- [x] **The claim URL was being filed as a project artifact.** `wrangler deploy --temporary` prints a
+      Worker URL and a claim URL; the second is a bearer credential for the account. A project
+      artifact replicates in plaintext to everyone in the space, and the skill's own credentials
+      section forbids persisting a secret — so the template contradicted itself. The Worker URL is
+      filed; the claim URL goes to the reader and is logged nowhere.
+- [x] **"Deploy at the end of every stage" was wrong.** Stage one produces a design document with no
+      Worker project in existence; stages four and five change no Worker code. Every stage is still
+      verified; the two that change Worker code are the ones that deploy.
+- [x] **Claiming the account is the reader's step.** It signs the account into theirs and needs a
+      browser, so burying it in an unassigned deploy task misdescribed it. Now a fourth `USER` task,
+      and the template's claim is the accurate one: no Cloudflare login is needed TO DEPLOY.
+- [x] **The archive test asserts four reader-owned steps in order**, which is what makes the shape a
+      regression test rather than a comment.
+
 ## Phase 3: Run it, and record it
 
 The user's ask: a demo video of the template being built, deployed and the MCP server used, with a
