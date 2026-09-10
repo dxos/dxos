@@ -24,7 +24,7 @@ import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { CHANNELS, CHANNEL_COLORS } from '@dxos/brand/channels';
+import { CHANNEL_COLORS, CHANNELS } from '@dxos/brand/channels';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const assets = join(root, 'assets');

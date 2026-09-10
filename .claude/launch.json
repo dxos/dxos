@@ -245,9 +245,9 @@
       "runtimeExecutable": "sh",
       "runtimeArgs": [
         "-c",
-        "export PROTO_HOME=$HOME/.proto && export PATH=$PROTO_HOME/shims:$PROTO_HOME/bin:$PATH && pnpm --filter @dxos/storybook-solid exec storybook dev --port 9009 --no-open --ci"
+        "export PROTO_HOME=$HOME/.proto && export PATH=$PROTO_HOME/shims:$PROTO_HOME/bin:$PATH && pnpm --filter @dxos/storybook-solid exec storybook dev --port 9010 --no-open --ci"
       ],
-      "port": 9009,
+      "port": 9010,
       "autoPort": false
     }
   ]

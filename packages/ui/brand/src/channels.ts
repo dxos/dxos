@@ -11,6 +11,7 @@ export type Channel = 'dev' | 'preview' | 'staging';
 
 export const CHANNELS: readonly Channel[] = ['dev', 'preview', 'staging'];
 
+/** Whether a deploy environment's name is one of the prerelease channels. */
 export const isChannel = (value: string): value is Channel => CHANNELS.some((channel) => channel === value);
 
 /** Hue of the released mark's four-colour ramp (`rgb(1 122 183)` and its steps), in degrees. */

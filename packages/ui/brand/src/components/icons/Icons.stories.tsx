@@ -19,7 +19,10 @@ import { MESH } from './MESH';
 
 const Icon = () => null;
 
-type StoryArgs = {};
+type StoryArgs = {
+  /** A prerelease channel to recolour the mark for; the released mark when unset. */
+  channel?: Channel;
+};
 
 const DefaultStory = (_: StoryArgs) => {
   return (
@@ -42,9 +45,6 @@ const meta = {
   title: 'ui/brand/components/Icons',
   component: Icon,
   render: DefaultStory,
-  argTypes: {
-    channel: { control: 'select', options: [undefined, ...CHANNELS] },
-  },
   decorators: [withTheme()],
   parameters: {
     layout: 'centered',
@@ -76,6 +76,19 @@ export const DXOSLogo: Story = {
       </div>
     );
   },
+};
+
+/** The mark as one channel recolours it, chosen from the control. */
+export const Mark: Story = {
+  args: { channel: undefined },
+  argTypes: {
+    channel: { control: 'select', options: [undefined, ...CHANNELS] },
+  },
+  render: ({ channel }) => (
+    <div style={{ filter: channel && channelMarkFilter(channel) }}>
+      <Composer size={180} weight='regular' />
+    </div>
+  ),
 };
 
 /** The released mark beside every channel's recolouring of it. */
