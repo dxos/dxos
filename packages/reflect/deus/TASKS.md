@@ -3,10 +3,11 @@
 Project: `deus` · Design: [docs/DESIGN.md](./docs/DESIGN.md) · Idioms: [docs/IDIOMS.md](./docs/IDIOMS.md)
 
 _Resume: Phase 2 (QA framework unification) is on PR #12986, main merged and review triaged 2026-09-09.
-Two smoke runs of app:QA-1 (10/11, then 9/11 under tightened asserts) both strand the space in `after` 2:
-the `space.delete` ordering defect is confirmed app-side. Next: land the PR, fix PR for `space.delete`,
-`--tag nightly`, register the Routines, `sweep 8`. Sessions that run the app must be in the `DXOS` cloud
-environment._
+Two smoke runs of app:QA-1 (10/11, then 9/11 under tightened asserts) both stranded the space in
+`after` 2, which identified an ordering defect in `DataSpaceManager._tombstoneSpace` — now FIXED on
+this branch, along with a `$stepErrors` binding for the dialect. Next: re-run `--tag smoke` to confirm
+11/11, land the PR, `--tag nightly`, register the Routines, `sweep 8`. Sessions that run the app must
+be in the `DXOS` cloud environment._
 
 ## Goal
 
@@ -81,11 +82,20 @@ Later (tracked, not started):
       the session). `app:QA-1` 10/11: `steps` 8/8, `after` 2 fails. Report committed at
       `testing/reports/2026-09-09-2047-smoke.md`; QA-1 corrected (`queryObjects` returns
       `{ results: [{ dxn, typename, label }] }`; `after` judged by identity) and set `failing`.
-- [ ] **App defect, `app:QA-1.after.2`: `space.delete` strands a space when EDGE signaling is
-      unreachable.** `DataSpaceManager._tombstoneSpace` appends the tombstone before `space.close()`;
-      the close waits 10 s on `EdgeSignalManager.leave`, throws, and skips `space.delete()` and the
-      live-list removal, so the space stays `SPACE_CLOSED` and a retry is a no-op until reload.
-      Reported, not fixed.
+- [x] **App defect, `app:QA-1.after.2`: `space.delete` stranded a space whenever closing it failed.**
+      `DataSpaceManager._tombstoneSpace` appended the tombstone before `space.close()`; the close
+      waits on `EdgeSignalManager.leave`, threw, and skipped `space.delete()` and the live-list
+      removal, so the space stayed `SPACE_CLOSED` and a retry was a no-op until reload. Two runs with
+      different transports gave the identical end state — a 10 s timeout with EDGE unreachable, a
+      5.6 s `Edge connection closed.` with EDGE reachable — which is what identified the ordering
+      rather than the environment. **Fixed on this branch** at the user's direction rather than in a
+      separate PR: the close is now best-effort and the deletion completes regardless. Of the two
+      candidate fixes, tolerating the failed close is the right one — `markSpaceDeleted` records the
+      SpaceDeleted credential BEFORE `_tombstoneSpace` runs, so the deletion has already replicated
+      and aborting would leave the credential and the local list disagreeing. Covered by
+      `data-space-manager.test.ts` "markSpaceDeleted removes the space even when teardown fails",
+      which reproduces the timeout and fails without the fix (verified by reverting it); changeset
+      added.
 - [x] Harness: `testing/bin/qa-browser.mjs` launched Chromium without the sandbox proxy flags, so
       every HTTPS request from the page reset (E-1/E-3 in the report, and the trigger of `after` 2).
       Fixed: `--proxy-server`, `--proxy-bypass-list`, `--ssl-version-max=tls1.2` under
@@ -96,9 +106,16 @@ Later (tracked, not started):
       after 5.6 s while EDGE dropped the socket on a ~6 s loop — leaving the identical stranded state.
       Two different transport failures, one stranded space: the ordering in
       `DataSpaceManager._tombstoneSpace` is the defect, not the environment.
-- [ ] **Fix PR for `space.delete`**: close the space before appending the tombstone, or tolerate a
-      failed close and still run `space.delete()` and drop the proxy from the live list, so a retry is
-      not a no-op. Verify with `--tag smoke` reaching 11/11.
+- [x] **`$stepErrors` added to the dialect.** CodeRabbit's fifth finding on run 1's report — steps
+      marked pass whose `assert` returned false — was a contract conflict, not a fudged verdict:
+      Execution Rule 11 says a non-empty `errors` fails nothing by itself, while the asserts wrote
+      `$snapshot.errors.length === 0` against a snapshot cumulative from the run's start, so one
+      background error at step 1 falsified every step after it. The runner now also binds
+      `$stepErrors` — only what was logged since the previous step's snapshot — and a pass/fail error
+      clause uses that; `$snapshot.errors` stays cumulative for the report. `qa.mdl` Field rule 5 and
+      Execution Rule 11, `APP.mdl` (13 clauses), the `composer-qa` skill and `DESIGN.md`.
+- [ ] **Re-run `--tag smoke`** to confirm `after` 2 now reaches 11/11 with the fix in the served
+      build (`client-services` ships as `dist` to the browser, so it must be rebuilt first).
 - [ ] `--tag nightly` for QA-2, QA-3 and the two markdown tests.
 - [ ] **Register the Routines** (`create_trigger`): nightly QA on `qa` (`source_revision`/
       `outcome_branch: qa`), on-merge smoke, daily spec-sync. Create the `qa` branch from main first.
