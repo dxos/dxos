@@ -7,6 +7,7 @@
 import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
+import * as Queue from 'effect/Queue';
 import * as Schema from 'effect/Schema';
 import * as Scope from 'effect/Scope';
 import * as Stream from 'effect/Stream';
@@ -204,44 +205,61 @@ export class RemoteProcessHandle<_Input, _Output, _Rpcs extends Rpc.Any> impleme
   subscribeEphemeral(): Stream.Stream<Trace.Message> {
     // From the start of the log, matching the local handle: it replays buffered ephemeral events
     // before streaming new ones, which is what lets a UI attach mid-turn and still render it.
-    if (this.#remoteTrace === undefined) {
+    const remoteTrace = this.#remoteTrace;
+    if (remoteTrace === undefined) {
       return this.#readEvents(0).pipe(
         Stream.filter((event) => event._tag === 'trace'),
         Stream.map((event) => event.message),
       );
     }
 
+    const replay = this.#readRing(0).pipe(
+      Stream.filter((event) => event._tag === 'trace'),
+      Stream.map((event) => event.message),
+    );
+
     // Replay what the host already has, then take the rest as it is PUSHED. Paging the ring for the
     // rest would defeat the point: it is flushed at the end of an invocation, so the turn this
     // reader attached to would arrive whole, after the fact.
     //
-    // A message can appear in both halves — one broadcast between the replay read and the
-    // subscription. That is left to the consumer rather than deduplicated here: a partial block
-    // carries the whole text so far and is applied by message id, so re-applying one is idempotent.
-    return Stream.concat(
-      this.#readEventsOnce(0).pipe(
-        Stream.filter((event) => event._tag === 'trace'),
-        Stream.map((event) => event.message),
-      ),
-      this.#remoteTrace.subscribeToTraceMessages({ pid: this.pid }),
+    // A message can appear in both halves — one broadcast buffered while the replay is still
+    // reading. That is left to the consumer rather than deduplicated here: a partial block carries
+    // the whole text so far and is applied by message id, so re-applying one is idempotent.
+    return Stream.unwrap(
+      Effect.gen({ self: this }, function* () {
+        const queue = yield* Effect.acquireRelease(Queue.unbounded<Trace.Message>(), (queue) => Queue.shutdown(queue));
+        // Subscribed BEFORE the replay read rather than concatenated after it: the live source only
+        // registers when its stream starts, so anything produced during the read would be lost.
+        yield* Effect.forkScoped(
+          Stream.runForEach(remoteTrace.subscribeToTraceMessages({ pid: this.pid }), (message) =>
+            Queue.offer(queue, message),
+          ),
+        );
+        // Lets the forked fiber reach its subscribe before the replay read is issued; a fork alone
+        // is only scheduled, so the window this buffering exists to close would still be open.
+        yield* Effect.yieldNow;
+        return Stream.concat(replay, Stream.fromQueue(queue));
+      }),
     );
   }
 
   /**
-   * One page of the host's event ring, without the poll loop {@link #readEvents} runs.
+   * The whole of the host's retained event ring, without the poll loop {@link #readEvents} runs.
    *
    * The replay half of a pushed subscription: it must END so the live stream can follow it, where
-   * the polled read is deliberately open until the process settles.
+   * the polled read is deliberately open until the process settles. Pages to the ring's end rather
+   * than reading once — a page is bounded, so a single read can leave buffered events in neither
+   * half of the subscription.
    */
-  #readEventsOnce(start: number): Stream.Stream<RemoteProcessManager.Event> {
-    return Stream.unwrap(
+  #readRing(start: number): Stream.Stream<RemoteProcessManager.Event> {
+    return Stream.paginate(start, (cursor: number) =>
       Effect.gen({ self: this }, function* () {
-        const page = yield* this.#control.readEvents({ ...this.#target, cursor: start });
+        const page = yield* this.#control.readEvents({ ...this.#target, cursor });
         yield* this.#setInfo(page.snapshot);
         if (page.truncated) {
-          log.warn('remote process event history truncated', { pid: page.snapshot.pid, cursor: start });
+          log.warn('remote process event history truncated', { pid: page.snapshot.pid, cursor });
         }
-        return Stream.fromIterable(page.events);
+        return [page.events, page.events.length === 0 ? Option.none<number>() : Option.some(page.cursor)] as const;
       }),
     );
   }
