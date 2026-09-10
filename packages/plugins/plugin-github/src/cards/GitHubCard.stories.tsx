@@ -6,39 +6,43 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo } from 'react';
 
 import { Obj } from '@dxos/echo';
-import { Card } from '@dxos/react-ui';
+import { Card, Icon } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { GitHubCard } from '../cards';
-import { createIssue, createPullRequest, createRepo } from './fixtures';
+import { createIssue, createPullRequest, createRepo } from '../testing';
+import { GitHubCard } from './GitHubCard';
 
 const subjects = {
   repo: createRepo,
+  pr: createPullRequest,
   issue: createIssue,
-  pull: createPullRequest,
 };
 
 type StoryArgs = {
   kind: keyof typeof subjects;
 };
 
-/** The card as the popover hosts it: the host's header carries the label, the plugin's card the body. */
+/**
+ * The card as the popover hosts it: the host's header carries the label, the plugin's card the body.
+ * `dx-card-popover` is the deck popover's own sizing, so every kind renders at the same width.
+ */
 const DefaultStory = ({ kind }: StoryArgs) => {
   const subject = useMemo(() => subjects[kind](), [kind]);
   return (
-    <div className='dx-card-popover-width'>
-      <Card.Root>
-        <Card.Header>
-          <Card.Title>{Obj.getLabel(subject)}</Card.Title>
-        </Card.Header>
-        <GitHubCard role='card--content' subject={subject} />
-      </Card.Root>
-    </div>
+    <Card.Root classNames='dx-card-popover'>
+      <Card.Header>
+        <Card.Block>
+          <Icon icon={Obj.getIcon(subject)?.icon ?? 'ph--circle-dashed--regular'} />
+        </Card.Block>
+        <Card.Title>{Obj.getLabel(subject)}</Card.Title>
+      </Card.Header>
+      <GitHubCard role='card--content' subject={subject} />
+    </Card.Root>
   );
 };
 
 const meta = {
-  title: 'plugins/plugin-github/stories/GitHubCard',
+  title: 'plugins/plugin-github/cards/GitHubCard',
   render: DefaultStory,
   argTypes: {
     kind: { control: 'select', options: Object.keys(subjects) },
@@ -57,14 +61,14 @@ export const Repo: Story = {
   },
 };
 
-export const Issue: Story = {
+export const PullRequest: Story = {
   args: {
-    kind: 'issue',
+    kind: 'pr',
   },
 };
 
-export const PullRequest: Story = {
+export const Issue: Story = {
   args: {
-    kind: 'pull',
+    kind: 'issue',
   },
 };

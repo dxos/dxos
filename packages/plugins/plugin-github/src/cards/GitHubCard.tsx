@@ -37,10 +37,11 @@ const stateHue: Record<PullRequest.State, string> = {
 export const GitHubCard = ({ subject }: AppSurface.ObjectCardProps<Subject>) => {
   const { owner, number, state, author, additions, deletions, defaultBranch, description, url }: Fields = subject;
   const name = 'name' in subject ? subject.name : subject.repo;
+
   return (
     <Card.Body>
       <Card.Row>
-        <div className='flex flex-wrap items-center gap-2 text-sm'>
+        <div className='flex justify-between items-center gap-2 text-sm'>
           <span className='text-description'>{[`${owner}/${name}`, number].filter(Boolean).join('#')}</span>
           {state && (
             <span className='dx-tag' data-hue={stateHue[state]}>
@@ -52,11 +53,21 @@ export const GitHubCard = ({ subject }: AppSurface.ObjectCardProps<Subject>) => 
               {defaultBranch}
             </span>
           )}
-          {author && <span className='text-description whitespace-nowrap'>{author}</span>}
-          {additions !== undefined && <span className='text-green-500'>+{additions}</span>}
-          {deletions !== undefined && <span className='text-red-500'>−{deletions}</span>}
         </div>
       </Card.Row>
+      {author && (
+        <Card.Row>
+          <span className='text-sm text-description whitespace-nowrap'>{author}</span>
+        </Card.Row>
+      )}
+      {(additions !== undefined || deletions !== undefined) && (
+        <Card.Row>
+          <div className='flex items-center gap-2 text-sm'>
+            {additions !== undefined && <span className='text-green-500'>+{additions}</span>}
+            {deletions !== undefined && <span className='text-red-500'>−{deletions}</span>}
+          </div>
+        </Card.Row>
+      )}
       {description && (
         <Card.Row>
           <Card.Text classNames='line-clamp-3 text-description'>{description}</Card.Text>

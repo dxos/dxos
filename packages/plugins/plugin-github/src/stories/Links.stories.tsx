@@ -17,7 +17,7 @@ import { DXN } from '@dxos/keys';
 import { PreviewEvents } from '@dxos/plugin-preview';
 import * as PreviewCapabilities from '@dxos/plugin-preview/PreviewCapabilities';
 import { corePlugins } from '@dxos/plugin-testing';
-import { Card, Popover, useThemeContext } from '@dxos/react-ui';
+import { Card, Icon, Popover, useThemeContext } from '@dxos/react-ui';
 import {
   EditorPreviewProvider,
   type EditorPreviewProviderProps,
@@ -37,7 +37,7 @@ import { GitHubPlugin } from '#plugin';
 import { GitHubCapabilities } from '#types';
 
 import { githubLinks } from '../extensions';
-import { fixtureLinkSource } from './fixtures';
+import { fixtureLinkSource } from '../testing';
 
 /** Replaces the plugin's default fetch: the story answers every link from fixtures. */
 const FixtureLinkSourcePlugin = Plugin.define(
@@ -67,9 +67,12 @@ const PreviewCard = () => {
           'data-[state=closed]:animate-popover-out',
         ]}
       >
-        <Popover.Viewport classNames='dx-card-popover-width'>
-          <Card.Root border={false}>
+        <Popover.Viewport>
+          <Card.Root border={false} classNames='dx-card-popover'>
             <Card.Header>
+              <Card.Block>
+                <Icon icon={Obj.getIcon(target.object)?.icon ?? 'ph--circle-dashed--regular'} />
+              </Card.Block>
               <Card.Title>{Obj.getLabel(target.object) ?? target.label}</Card.Title>
               <Popover.Close asChild>
                 <Card.ActionIconButton action='close' />

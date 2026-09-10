@@ -84,8 +84,8 @@ const PreviewCard = () => {
           'data-[state=closed]:animate-popover-out',
         ]}
       >
-        <Popover.Viewport classNames='dx-card-popover-width'>
-          <Card.Root border={false}>
+        <Popover.Viewport>
+          <Card.Root border={false} classNames='dx-card-popover'>
             <Card.Header>
               <Card.Block>
                 <Icon icon='ph--file-text--regular' />
