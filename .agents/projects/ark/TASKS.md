@@ -1,9 +1,8 @@
 # ark — Tasks
 
-_Resume: PR #13031 OPEN (outline link followed on click, Enter or Space only). #13030 (Toc, Tour + WelcomeTour off
-react-joyride, Main dismissal rests at `collapsed`) MERGED
-2026-09-09; #13024 (Main step 1) MERGED the same day. Next: `Main` step 2 (push layout at `lg`) as its own
-PR; then the `Toc` consumer. Uncommitted: none._
+_Resume: PR #13032 OPEN with auto-merge (cards base, dialogs raised). #13031 (outline link on click/Enter/Space,
+task card resolves, popover card fallback) MERGED 2026-09-10. Next: `Main` step 2 (push layout at `lg`);
+then the Phase 15 re-route or the `Toc` consumer. Uncommitted: none._
 
 ## Phase 1: Tree rebuild on Ark (PR #12873)
 
@@ -1174,3 +1173,24 @@ verdict over porting in the same PR).
       decide the rail (collapsed = `Drawer.Content size` switching rail↔sidebar).
 - [x] **`Toc`** DONE 2026-09-09; the consumer question stays open in Phase 16's toc item.
 - [x] **`Tour`, `WelcomeTour` off `react-joyride`** DONE 2026-09-09; see Phase 16's tour item.
+- [x] **Editor widgets split from their matchers** DONE 2026-09-10 (user asked why DXN links lived in
+      `xmlTags`): `extensions/widgets/` owns the decoration field, portal lifecycle (`widgetHost`),
+      effects and bookmark navigation; `xmlTags` is the element matcher, `linkWidgets({ match })` the
+      markdown link matcher (`matchSchemes`/`matchHosts`/`matchPattern`), `objectLinks()` the dxn/echo
+      sugar with the anchor chip as default. `urlSchemes` and `xmlWidgetRegistry` are gone; the core
+      types and effects dropped their `Xml` prefix. Built on the user's consolidation commit.
+- [x] **GitHub link previews as the plugin-extended mechanism** DONE 2026-09-10: three extension
+      points — `MarkdownCapabilities.ExtensionProvider` (existing; plugin-github contributes
+      `githubLinks()`), `PreviewCapabilities.LinkResolver` (new multi capability in plugin-preview;
+      the ECHO resolver is its own module, plugin-github resolves GitHub URLs), and `CardContent`
+      surfaces (existing; `GitHubCard` for `Issue`/`PullRequest`, new host-agnostic types in
+      `@dxos/types` beside `Repo`). Source is configurable via `GitHubCapabilities.LinkSource`,
+      default fetches from the API with the space's connection token. Stories moved to
+      plugin-github (`GitHubCard`, `Links`). Task descriptions take the contributed extensions too
+      (`MarkdownEditable`/`TaskList.Edit` `extensions`, `useMarkdownExtensions` in plugin-tasks).
+      Still plain: the read-only row (`MarkdownView`, a React renderer) — a matcher for it would be
+      a second extension point.
+- [x] **Cards and dialogs one level darker** DONE 2026-09-10 (user): `dx-card-surface` publishes the
+      `base` level and `dx-modal-surface` the `raised` level (surfaces.css role tokens and surface.css
+      zones together); `overlay` is left to explicit `elevation={4}`. `Select`'s list moves to the popup
+      level with menus so it does not follow dialogs down.

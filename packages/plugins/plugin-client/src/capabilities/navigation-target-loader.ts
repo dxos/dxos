@@ -19,12 +19,7 @@ import { ClientCapabilities } from '#types';
 /** Cap on the remote edge existence check so an unreachable edge cannot block navigation. */
 const EDGE_EXISTENCE_TIMEOUT = '3 seconds';
 
-/**
- * Loads a navigation target by `(spaceId, entityId)` on behalf of the layout plugins, so they can
- * restore a URL-addressed plank without depending on the client for object loading. Loads the object
- * into local ECHO (materializing its graph node) when it exists locally, and otherwise checks remote
- * existence via edge. See {@link AppCapabilities.NavigationTargetLoader}.
- */
+/** See {@link AppCapabilities.NavigationTargetLoader}. */
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const client = yield* ClientCapabilities.Client;
@@ -39,18 +34,26 @@ export default Capability.makeModule(
       load: ({ spaceId, entityId }) =>
         Effect.gen(function* () {
           // A synthetic node id is not evidence that anything was deleted.
-          if (!SpaceId.isValid(spaceId) || !EntityId.isValid(entityId)) {
+          if (!SpaceId.isValid(spaceId)) {
             return 'unknown';
           }
           // A URL restore can call this while the forked client initialization is still
           // running; `spaces` is unreadable until it completes, and failing here would
           // fail-fast the plank to not-found.
           yield* Effect.promise(() => client.waitUntilInitialized());
+
+          if (entityId === undefined) {
+            return client.spaces.get(spaceId) ? 'exists' : 'absent';
+          }
+
+          if (!EntityId.isValid(entityId)) {
+            return 'unknown';
+          }
           const eid = EID.make({ spaceId, entityId });
 
           // Local first: loading the object populates the collection/type-section refs that address
-          // it, so the next graph expansion materializes its node. Never `absent` on a miss —
-          // `spaces.get` reads a list `waitUntilInitialized` does not guarantee has arrived.
+          // it, so the next graph expansion materializes its node. Never `absent` on a miss — the
+          // object may exist in a space this peer has not replicated, which the remote probe settles.
           const space = client.spaces.get(spaceId);
           if (space) {
             const loaded = yield* Effect.promise(() => space.waitUntilReady()).pipe(

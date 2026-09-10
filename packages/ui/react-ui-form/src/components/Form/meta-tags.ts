@@ -60,7 +60,7 @@ export const filterTagCandidates = <T>(results: readonly T[]): T[] =>
   results.filter((result) => !isTag(result) || Tag.isUserTag(result));
 
 /**
- * A ref's target entity id, ignoring whether the uri is local (`echo:/<id>`) or qualified
+ * A ref's target entity id, ignoring whether the uri is local (`echo:///<id>`) or qualified
  * (`echo://<space>/<id>`) — `Ref.make` produces the former while `Obj.getURI` produces the latter, so
  * the two forms must compare equal. Same reason as `findRefOption`.
  */

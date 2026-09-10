@@ -55,7 +55,7 @@ const DefaultStory = () => {
       const target = event.target as HTMLElement;
       target.dispatchEvent(
         new DxAnchorActivate({
-          dxn: uri,
+          eid: uri,
           label: Obj.getLabel(obj) ?? uri,
           trigger: target,
           kind: 'card',

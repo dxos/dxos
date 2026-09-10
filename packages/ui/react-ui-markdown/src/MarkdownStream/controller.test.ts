@@ -14,7 +14,7 @@ import {
   type XmlWidgetDef,
   decorationSetToArray,
   extendedMarkdown,
-  xmlTagContextEffect,
+  widgetContextEffect,
   xmlTags,
 } from '@dxos/ui-editor';
 
@@ -103,7 +103,7 @@ const createHarness = () => {
     onReset: async (text) => {
       contentRef.current = text;
       viewRef.current?.dispatch({
-        effects: [xmlTagContextEffect.of(pendingContextRef.current?.value ?? null)],
+        effects: [widgetContextEffect.of(pendingContextRef.current?.value ?? null)],
         changes: [{ from: 0, to: viewRef.current.state.doc.length, insert: text }],
       });
     },

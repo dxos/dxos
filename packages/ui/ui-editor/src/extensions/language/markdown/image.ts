@@ -14,6 +14,7 @@ import {
 import { Decoration, type DecorationSet, EditorView, ViewPlugin, WidgetType } from '@codemirror/view';
 
 import { focusField } from '../../state/focus';
+import { isWidgetLink } from '../../widgets/link-widgets';
 
 export type ImageNodeData = { name: 'Image'; url: string };
 
@@ -101,8 +102,9 @@ const buildDecorations = (state: EditorState, from: number, to: number, options:
             return;
           }
 
-          // Consumer-supplied filter (e.g., disable remote-image rendering by setting).
-          if (options.skip?.({ name: 'Image', url })) {
+          // A registered link widget's image is the widget's to render; otherwise the consumer's
+          // filter (e.g., disable remote-image rendering by setting).
+          if (isWidgetLink(state, url) || options.skip?.({ name: 'Image', url })) {
             return;
           }
 

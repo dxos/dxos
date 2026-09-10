@@ -77,7 +77,7 @@ export interface EchoTypeSchema<
   /**
    * Entity id. Always present — stamped at construction — but NOT the type's
    * identity while in-memory: an unattached type resolves its URI to the typename
-   * DXN, switching to `echo:/<id>` only once attached to a database (see
+   * DXN, switching to `echo:///<id>` only once attached to a database (see
    * `getTypeURIFromSpecifier`, which discriminates by database attachment).
    */
   readonly id: EntityId;

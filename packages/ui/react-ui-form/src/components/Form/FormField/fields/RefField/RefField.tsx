@@ -173,7 +173,7 @@ export const RefField = (props: RefFieldProps) => {
     return !item ? (
       <p className='text-description mb-2'>{t('empty-readonly-ref-field.label')}</p>
     ) : (
-      <DxAnchor key={item.id} dxn={item.id} rootclassname='me-1'>
+      <DxAnchor key={item.id} eid={item.id} rootclassname='me-1'>
         {item.label}
       </DxAnchor>
     );

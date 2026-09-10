@@ -6,6 +6,7 @@ export * from './useAppGraph';
 export * from './useActiveSpace';
 export * from './useHomeVisibility';
 export * from './useLayout';
+export * from './useNavigationPresence';
 export * from './useObjectMenuItems';
 export * from './usePluginRegistryAvailable';
 export * from './useProgressMonitor';

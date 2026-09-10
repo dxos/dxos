@@ -32,7 +32,7 @@ import {
   longText,
   names,
   text,
-} from './components';
+} from './testing';
 
 const meta = {
   title: 'ui/react-ui-editor/TextEditor',

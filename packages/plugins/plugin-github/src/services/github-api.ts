@@ -19,7 +19,7 @@ import { type AccessToken, Connection } from '@dxos/link';
 
 import { GITHUB_API_BASE } from '../constants';
 
-/** Stored as `AccessToken.token`; sent as `Authorization: Bearer <token>`. */
+/** Stored as `AccessToken.token`; sent as `Authorization: Bearer <token>`. Empty means anonymous. */
 type GitHubCredentialsValue = {
   token: string;
 };
@@ -113,6 +113,26 @@ const GitHubIssueSchema = Schema.Struct({
 });
 export type GitHubIssue = Schema.Schema.Type<typeof GitHubIssueSchema>;
 
+/** GET /repos/{owner}/{repo}/pulls/{number} — the pull-request view, which alone carries the diff size and merge state. */
+const GitHubPullSchema = Schema.Struct({
+  id: Schema.Number,
+  number: Schema.Number,
+  title: Schema.String,
+  body: Schema.NullOr(Schema.String).pipe(Schema.optional),
+  state: Schema.String,
+  draft: Schema.Boolean.pipe(Schema.optional),
+  merged: Schema.Boolean.pipe(Schema.optional),
+  merged_at: Schema.NullOr(Schema.String).pipe(Schema.optional),
+  html_url: Schema.NullOr(Schema.String).pipe(Schema.optional),
+  user: Schema.NullOr(GitHubUserSchema).pipe(Schema.optional),
+  labels: Schema.Array(GitHubLabelSchema).pipe(Schema.optional),
+  additions: Schema.Number.pipe(Schema.optional),
+  deletions: Schema.Number.pipe(Schema.optional),
+  base: Schema.Struct({ ref: Schema.String }).pipe(Schema.optional),
+  head: Schema.Struct({ ref: Schema.String }).pipe(Schema.optional),
+});
+export type GitHubPull = Schema.Schema.Type<typeof GitHubPullSchema>;
+
 const GitHubCommentSchema = Schema.Struct({
   id: Schema.Number,
   body: Schema.NullOr(Schema.String).pipe(Schema.optional),
@@ -199,9 +219,10 @@ const shouldRetry = (error: HttpClientError.HttpClientError | Schema.SchemaError
   return status === 429 || (status >= 500 && status <= 599);
 };
 
+/** Anonymous when the token is empty: a bare `Bearer` header is rejected where no header is rate-limited. */
 const withAuth = (req: HttpClientRequest.HttpClientRequest, creds: GitHubCredentialsValue) =>
   req.pipe(
-    HttpClientRequest.setHeader('Authorization', `Bearer ${creds.token}`),
+    (req) => (creds.token ? HttpClientRequest.setHeader(req, 'Authorization', `Bearer ${creds.token}`) : req),
     HttpClientRequest.setHeader('Accept', ACCEPT),
     HttpClientRequest.setHeader('X-GitHub-Api-Version', API_VERSION),
     HttpClientRequest.setHeader('User-Agent', USER_AGENT),
@@ -378,6 +399,33 @@ export const fetchRepoIssues = (
     }
     return req;
   }, GitHubIssueSchema);
+
+/** GET /repos/{owner}/{repo}. */
+export const fetchRepo = (owner: string, repo: string): GitHubEffect<GitHubRepo> =>
+  githubRequest(
+    () => HttpClientRequest.get(`${GITHUB_API_BASE}/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}`),
+    GitHubRepoSchema,
+  );
+
+/** GET /repos/{owner}/{repo}/issues/{number} — an issue, or the issue view of a pull request. */
+export const fetchIssue = (owner: string, repo: string, number: number): GitHubEffect<GitHubIssue> =>
+  githubRequest(
+    () =>
+      HttpClientRequest.get(
+        `${GITHUB_API_BASE}/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/issues/${number}`,
+      ),
+    GitHubIssueSchema,
+  );
+
+/** GET /repos/{owner}/{repo}/pulls/{number}. */
+export const fetchPullRequest = (owner: string, repo: string, number: number): GitHubEffect<GitHubPull> =>
+  githubRequest(
+    () =>
+      HttpClientRequest.get(
+        `${GITHUB_API_BASE}/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/pulls/${number}`,
+      ),
+    GitHubPullSchema,
+  );
 
 /**
  * GET /repos/{owner}/{repo}/milestones — `state=all` so closed milestones stay mirrored (the

@@ -14,3 +14,4 @@ export * from './review';
 export * from './state';
 export * from './streaming';
 export * from './structure';
+export * from './widgets';

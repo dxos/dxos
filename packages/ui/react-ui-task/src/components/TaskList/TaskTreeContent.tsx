@@ -21,7 +21,7 @@ import {
   resolveReparent,
   resolveTaskPlacement,
 } from './hierarchy';
-import { TaskDescription } from './TaskDescription';
+import { TaskDescription, type TaskDescriptionProps } from './TaskDescription';
 import { TaskCheckbox, TaskOrdinal, TaskStatusControl } from './TaskRowCells';
 import { TASK_TREE_ROOT_ID, type TaskNode, buildTaskForest, buildTaskPaths, createTaskTreeModel } from './tree-model';
 
@@ -53,6 +53,8 @@ export type TaskTreeContentProps = {
   translationKey: string;
   /** Render each task's description under its title; rows grow to fit. */
   showDescription?: boolean;
+  /** Renderers for the description beyond the row's own. */
+  descriptionComponents?: TaskDescriptionProps['components'];
   onCollapseToggle: (id: string) => void;
   onTaskCheck?: (task: Task.Task) => void;
   onTaskSelect?: (task: Task.Task | undefined) => void;
@@ -77,6 +79,7 @@ export const TaskTreeContent = ({
   renderTrailing,
   translationKey,
   showDescription = false,
+  descriptionComponents,
   onCollapseToggle,
   onTaskCheck,
   onTaskSelect,
@@ -142,10 +145,19 @@ export const TaskTreeContent = ({
     ({ item }) => (
       <TaskTreeHeading
         node={item}
-        {...{ showGutter, ordinals, checked, translationKey, showDescription, onTaskCheck, onTaskUpdate }}
+        {...{
+          showGutter,
+          ordinals,
+          checked,
+          translationKey,
+          showDescription,
+          descriptionComponents,
+          onTaskCheck,
+          onTaskUpdate,
+        }}
       />
     ),
-    [showGutter, ordinals, checked, translationKey, showDescription, onTaskCheck, onTaskUpdate],
+    [showGutter, ordinals, checked, translationKey, showDescription, descriptionComponents, onTaskCheck, onTaskUpdate],
   );
 
   // Restructuring is keyboard-driven, and the machine ignores modified arrows — so the gesture is
@@ -296,6 +308,7 @@ const TaskTreeHeading = ({
   checked,
   translationKey,
   showDescription,
+  descriptionComponents,
   onTaskCheck,
   onTaskUpdate,
 }: {
@@ -305,6 +318,7 @@ const TaskTreeHeading = ({
   checked?: ReadonlySet<string>;
   translationKey: string;
   showDescription: boolean;
+  descriptionComponents?: TaskDescriptionProps['components'];
   onTaskCheck?: (task: Task.Task) => void;
   onTaskUpdate?: (task: Task.Task, patch: Task.Edit) => void;
 }) => {
@@ -346,7 +360,13 @@ const TaskTreeHeading = ({
       {/* The row's second line, running under the title and its chips only: it has to clear the
           ordinal and the status control, or it reads as belonging to the row above, and it must stop
           short of the trailing controls so it does not run beneath the estimate, priority and menu. */}
-      {description && <TaskDescription content={description} classNames='col-[title/chips-end] row-start-2 pb-1' />}
+      {description && (
+        <TaskDescription
+          content={description}
+          components={descriptionComponents}
+          classNames='col-[title/chips-end] row-start-2 pb-1'
+        />
+      )}
     </>
   );
 };

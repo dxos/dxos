@@ -9,17 +9,19 @@ import * as Operation from '@dxos/compute/Operation';
 
 import { DeckCapabilities, DeckOperation } from '#types';
 
-import { updateActiveDeck } from './helpers';
+import { Navigation } from '../url';
+import { updateActiveDeck } from '../util';
 
 const handler: Operation.WithHandler<typeof DeckOperation.UpdatePlankSizes> = DeckOperation.UpdatePlankSizes.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* (input) {
+      const { segments } = yield* DeckCapabilities.getDeck();
+      const sizes = Object.fromEntries(
+        Object.entries(input.sizes).map(([id, size]) => [Navigation.segmentOf(segments, id), size]),
+      );
       yield* Capabilities.updateAtomValue(DeckCapabilities.State, (state) =>
         updateActiveDeck(state, {
-          plankSizing: {
-            ...state.decks[state.activeDeck]?.plankSizing,
-            ...input.sizes,
-          },
+          plankSizing: { ...state.decks[state.activeDeck]?.plankSizing, ...sizes },
         }),
       );
     }),
