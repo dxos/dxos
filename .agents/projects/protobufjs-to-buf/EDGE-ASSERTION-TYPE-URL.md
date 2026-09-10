@@ -9,7 +9,7 @@ Every Composer client looped reconnecting to EDGE at ~1.2 s, forever, having nev
 The browser `WebSocket` API hides a non-101 upgrade response, so the console showed only an
 ascending connection counter, and `app.log` only this:
 
-```
+```text
 W  edge connection socket error   edge-ws-connection.ts:173  {}
 W  server disconnected            edge-ws-connection.ts:166  { code: 1006, reason: "", classified: "abnormal" }
 W  Restart failed                 persistent-lifecycle.ts:84  Error: Edge connection closed.
@@ -20,7 +20,7 @@ rejection looks like from the client: indistinguishable from a dead network. The
 only ever visible in EDGE's telemetry — 24,149 occurrences in three days, `httpStatus = 500` on
 `/ws/did:halo:<identity>/*`:
 
-```
+```text
 Error: Unexpected schema: type.googleapis.com/dxos.halo.credentials.Auth
   at getSchema → createPlainObjectAssertion → bufToPlainObjectCredential
   → bufToPlainObjectPresentation → tryVerifiablePresentation → dispatch
