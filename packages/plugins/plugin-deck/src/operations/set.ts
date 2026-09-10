@@ -9,7 +9,7 @@ import * as Operation from '@dxos/compute/Operation';
 
 import { DeckCapabilities } from '#types';
 
-import { currentNavigation, navigateDeck } from '../capabilities/navigate';
+import { currentNavigation, navigateDeck } from '../url';
 
 const handler: Operation.WithHandler<typeof LayoutOperation.Set> = LayoutOperation.Set.pipe(
   Operation.withHandler(

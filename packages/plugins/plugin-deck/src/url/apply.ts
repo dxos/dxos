@@ -17,15 +17,15 @@ import { DeckCapabilities } from '#types';
 import { CompanionViewState, DeckSchema } from '#types';
 
 import { updatePlankNames } from '../layout';
-import * as Navigation from '../util/navigation';
+import { updateActiveDeck } from '../operations/helpers';
 import {
+  Navigation,
   closeCompanionPlank,
   computeActiveUpdates,
   openCompanionPlank,
   resolveCompanionAnchor,
   resolveCompanionPlank,
 } from '../util';
-import { updateActiveDeck } from './helpers';
 
 /**
  * Write the deck's active planks and the URL segment each one came from, returning the item to

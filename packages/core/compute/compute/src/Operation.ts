@@ -815,10 +815,6 @@ export class Service extends Context.Service<Service, OperationService>()('@dxos
  * Invoke an operation as an Effect.
  * Yields the Operation.Service internally.
  *
- * A handler's own failure does NOT appear in the error channel: the process runtime dies on it
- * (see `Process.fromOperation`), so `NoHandlerError` is the only typed failure and catching a
- * handler's error means catching a defect.
- *
  * @example
  * ```ts
  * yield* Operation.invoke(MyOperation, { data: 'test' });

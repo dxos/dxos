@@ -27,8 +27,7 @@ export default Capability.makeModule(
     // modules contribute individually, not batched per wave) and re-evaluates when it lands.
     const clientAtom = yield* Capability.atom(ClientCapabilities.Client);
     // Panels backed by hub services render an empty shell without one, so they contribute no node.
-    const hasHub = (clients: readonly Client[]): boolean =>
-      !!clients[0]?.config.values?.runtime?.app?.env?.DX_HUB_URL;
+    const hasHub = (clients: readonly Client[]): boolean => !!clients[0]?.config.values?.runtime?.app?.env?.DX_HUB_URL;
     const identityServiceAtom = yield* Capability.atom(ClientCapabilities.IdentityService);
     const extensions = yield* AppGraphBuilder.createExtension({
       id: 'root',

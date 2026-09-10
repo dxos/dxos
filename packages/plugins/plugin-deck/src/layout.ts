@@ -8,7 +8,7 @@ import * as DeckSpec from '@dxos/app-toolkit/DeckSpec';
 
 import { DeckSchema } from '#types';
 
-import * as Navigation from './util/navigation';
+import { Navigation } from './util';
 
 export type AddSubjectsToActiveDeckOptions = {
   /** Insert opened subjects immediately after this plank (in-plank navigation anchors at its origin). */

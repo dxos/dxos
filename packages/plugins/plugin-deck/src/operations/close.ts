@@ -9,8 +9,8 @@ import * as Operation from '@dxos/compute/Operation';
 
 import { DeckCapabilities } from '#types';
 
-import { currentNavigation, navigateDeck } from '../capabilities/navigate';
 import { closeEntry } from '../layout';
+import { currentNavigation, navigateDeck } from '../url';
 
 const handler: Operation.WithHandler<typeof LayoutOperation.Close> = LayoutOperation.Close.pipe(
   Operation.withHandler(

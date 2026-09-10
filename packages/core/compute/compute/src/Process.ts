@@ -352,10 +352,6 @@ const OperationStartedCell = StorageService.cell(Schema.fromJsonString(Schema.Bo
   StorageService.withDefault(() => false),
 );
 
-/**
- * A process wrapping an operation's handler. The process error channel is `never`, so a handler's
- * own failure is turned into a defect rather than propagated: callers catch causes, not failures.
- */
 export const fromOperation = <const Op extends Operation.Definition.Any>(
   op: Op,
   handler: OperationHandlerSet.OperationHandlerSet,

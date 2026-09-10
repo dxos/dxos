@@ -9,7 +9,7 @@ import * as Operation from '@dxos/compute/Operation';
 
 import { DeckCapabilities, DeckOperation } from '#types';
 
-import * as Navigation from '../util/navigation';
+import { Navigation } from '../util';
 import { updateActiveDeck } from './helpers';
 
 const handler: Operation.WithHandler<typeof DeckOperation.UpdatePlankSizes> = DeckOperation.UpdatePlankSizes.pipe(

@@ -20,10 +20,9 @@ import { log } from '@dxos/log';
 
 import { DeckCapabilities, DeckSchema } from '#types';
 
-import { applyActive, applyCompanion, applyWorkspace } from '../operations/apply';
-import { getCandidateEntityIds, getUnresolvedPlankId } from '../util';
-import * as Navigation from '../util/navigation';
-import { shouldDeferNavigationHandlers } from './check-app-scheme';
+import { shouldDeferNavigationHandlers } from '../capabilities/check-app-scheme';
+import { Navigation, getCandidateEntityIds, getUnresolvedPlankId } from '../util';
+import { applyActive, applyCompanion, applyWorkspace } from './apply';
 
 // TODO(wittjosiah): Shorten, or apply the restore per-pair.
 const RESOLVE_TIMEOUT = '10 seconds';
@@ -143,9 +142,7 @@ export const projectUrl = Effect.fnUntraced(function* (url?: URL, options?: { at
     }),
   );
 
-  const pullIdle: Effect.Effect<void, Error> = Option.isSome(manager)
-    ? Effect.asVoid(manager.value.activate(ActivationEvents.Idle))
-    : Effect.void;
+  const pullIdle = Option.isSome(manager) ? Effect.asVoid(manager.value.activate(ActivationEvents.Idle)) : Effect.void;
 
   const parseUrl = () => UrlPath.parse(pathname, PathResolution.buildUrlKeyTable(builder));
   const parsed = yield* parseUrl().pipe(

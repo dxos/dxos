@@ -12,7 +12,7 @@ import { EffectEx } from '@dxos/effect';
 import { log } from '@dxos/log';
 import { isTauri } from '@dxos/util';
 
-import { handleExternalUrl } from './project-url';
+import { handleExternalUrl } from '../url';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
