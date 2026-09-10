@@ -17,8 +17,7 @@ let _ner: Promise<TokenClassificationPipelineType>;
  * Initializes the pipeline on first call.
  *
  * The transformers runtime pulls onnxruntime-web with it (~740 KB combined), so it is imported
- * here rather than at module scope: this module is reachable from the `extraction` barrel, and a
- * static import put the whole ML stack in the app's resident set.
+ * lazily rather than at module scope to keep the ML stack out of the importer's resident set.
  *
  * @returns The singleton promise that resolves to a token classification pipeline.
  */

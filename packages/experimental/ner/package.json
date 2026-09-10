@@ -1,0 +1,37 @@
+{
+  "name": "@dxos/ner",
+  "version": "0.11.1",
+  "private": true,
+  "description": "Experimental named entity recognition via local transformers models.",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dxos/dxos"
+  },
+  "license": "FSL-1.1-Apache-2.0",
+  "author": "info@dxos.org",
+  "type": "module",
+  "exports": {
+    ".": {
+      "source": "./src/index.ts",
+      "types": "./dist/types/src/index.d.ts",
+      "import": "./dist/lib/index.mjs"
+    }
+  },
+  "types": "dist/types/src/index.d.ts",
+  "files": [
+    "dist",
+    "src"
+  ],
+  "dependencies": {
+    "@dxos/log": "workspace:*",
+    "@xenova/transformers": "catalog:"
+  },
+  "devDependencies": {
+    "@dxos/types": "workspace:*"
+  },
+  "publishConfig": {
+    "access": "restricted"
+  }
+}
