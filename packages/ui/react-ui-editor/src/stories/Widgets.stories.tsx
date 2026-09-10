@@ -3,10 +3,9 @@
 //
 
 /**
- * Stories demonstrating the xmlTags widget-portal mechanism in ui-editor.
- *
- * Both XmlTags and Preview stories use the same underlying pattern: a CodeMirror WidgetType
- * creates a DOM placeholder, and React portals render content into it.
+ * Stories for the editor's widgets: XML tags matched by `xmlTags`, object links matched by
+ * `objectLinks`, both rendered through one `widgetHost` — a CodeMirror widget creates a DOM
+ * placeholder, and React portals render content into it.
  */
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
@@ -18,6 +17,8 @@ import { Card, Icon, Popover, useThemeContext } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import {
   type ObjectLinkProps,
+  type ObjectLinksOptions,
+  type WidgetDef,
   type WidgetState,
   type XmlWidgetRegistry,
   createBasicExtensions,
@@ -34,7 +35,6 @@ import { safeParseInt, trim } from '@dxos/util';
 
 import { EditorPreviewProvider, useEditorPreview } from '../components';
 import { useTextEditor } from '../hooks';
-import { EditorStory } from './components';
 
 random.seed(123);
 
@@ -63,31 +63,6 @@ const xmlRegistry = {
     },
   },
 } satisfies XmlWidgetRegistry;
-
-const XmlTagsStory = ({ text }: { text?: string }) => {
-  const { themeMode } = useThemeContext();
-  const [widgets, setWidgets] = useState<WidgetState[]>([]);
-  const { parentRef } = useTextEditor({
-    initialValue: text,
-    extensions: [
-      createThemeExtensions({ themeMode }),
-      createBasicExtensions({ lineWrapping: true }),
-      decorateMarkdown(),
-      extendedMarkdown({ registry: xmlRegistry }),
-      widgetHost({ setWidgets }),
-      xmlTags({ registry: xmlRegistry }),
-    ],
-  });
-
-  return (
-    <>
-      <div ref={parentRef} className='w-full p-4' />
-      {widgets.map(({ id, root, Component, props }) => (
-        <div key={id}>{createPortal(<Component {...props} />, root)}</div>
-      ))}
-    </>
-  );
-};
 
 //
 // Preview helpers
@@ -225,14 +200,81 @@ const SurfaceLikePreview = ({ label, dxn }: ObjectLinkProps) => {
 };
 
 //
-// Meta
+// Story
 //
+
+/** The block widgets a `![label](echo:…)` image can render as. */
+const imageWidgets: Record<string, WidgetDef<ObjectLinkProps>> = {
+  card: { Component: PreviewBlockCard },
+  fixed: { estimatedHeight: ({ label }) => parseBlockHeight(label), Component: FixedHeightPreview },
+  surface: { estimatedHeight: ({ label }) => parseBlockHeight(label), Component: SurfaceLikePreview },
+};
+
+type StoryArgs = Pick<ObjectLinksOptions, 'trigger'> & {
+  text?: string;
+  /** XML tags rendered as widgets. */
+  registry?: XmlWidgetRegistry;
+  /** The block widget for `![label](echo:…)`; none leaves images as text. */
+  image?: keyof typeof imageWidgets;
+  /** Answer the anchor chips' hover/click with a preview card. */
+  preview?: boolean;
+};
+
+/**
+ * One editor with the widget host and both matchers, portaling the block widgets it reports; the
+ * preview provider answers the chips' `DxAnchorActivate` with a card when `preview` is set.
+ */
+// A stable default: a fresh `{}` per render would rebuild the editor every render.
+const NO_REGISTRY: XmlWidgetRegistry = {};
+
+const DefaultStory = ({ text, registry = NO_REGISTRY, image: imageWidget, trigger, preview }: StoryArgs) => {
+  const { themeMode } = useThemeContext();
+  const [widgets, setWidgets] = useState<WidgetState[]>([]);
+  const extensions = useMemo(
+    () => [
+      createThemeExtensions({ themeMode }),
+      createBasicExtensions({ lineWrapping: true }),
+      decorateMarkdown(),
+      extendedMarkdown({ registry }),
+      image(),
+      widgetHost({ setWidgets }),
+      xmlTags({ registry }),
+      objectLinks({ trigger, image: imageWidget && imageWidgets[imageWidget] }),
+    ],
+    [themeMode, registry, imageWidget, trigger],
+  );
+  const { parentRef } = useTextEditor({ initialValue: text, extensions }, [extensions]);
+
+  const editor = (
+    <>
+      <div ref={parentRef} className='dx-fill p-4 overflow-auto' />
+      {widgets.map(({ id, root, Component, props }) => (
+        <div key={id}>{createPortal(<Component {...props} />, root)}</div>
+      ))}
+    </>
+  );
+
+  return preview ? (
+    <EditorPreviewProvider onLookup={handlePreviewLookup}>
+      {editor}
+      <PreviewCard />
+    </EditorPreviewProvider>
+  ) : (
+    editor
+  );
+};
 
 const meta = {
   title: 'ui/react-ui-editor/Widgets',
+  render: DefaultStory,
+  argTypes: {
+    trigger: { control: 'select', options: [undefined, 'hover', 'click'] },
+    image: { control: 'select', options: [undefined, ...Object.keys(imageWidgets)] },
+    preview: { control: 'boolean' },
+  },
   decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
   parameters: { layout: 'fullscreen' },
-} satisfies Meta;
+} satisfies Meta<typeof DefaultStory>;
 
 export default meta;
 
@@ -255,10 +297,10 @@ const xmlTagsText = trim`
 `;
 
 /**
- * XML tag names in the document trigger React components via xmlTags.
+ * XML tag names in the document trigger React components via `xmlTags`.
  */
 export const XmlTags: Story = {
-  render: () => <XmlTagsStory text={xmlTagsText} />,
+  args: { text: xmlTagsText, registry: xmlRegistry },
 };
 
 const previewText = trim`
@@ -278,37 +320,19 @@ const previewText = trim`
 
 `;
 
-const PreviewStory = ({ trigger }: { trigger?: 'hover' | 'click' }) => {
-  const [widgets, setWidgets] = useState<WidgetState[]>([]);
-  const extensions = useMemo(
-    () => [image(), widgetHost({ setWidgets }), objectLinks({ trigger, image: { Component: PreviewBlockCard } })],
-    [trigger],
-  );
-
-  return (
-    <EditorPreviewProvider onLookup={handlePreviewLookup}>
-      <EditorStory text={previewText} extensions={extensions} />
-      <PreviewCard />
-      {widgets.map(({ id, root, Component, props }) => (
-        <div key={id}>{createPortal(<Component {...props} />, root)}</div>
-      ))}
-    </EditorPreviewProvider>
-  );
-};
-
 /**
- * Markdown image/link URLs (echo:/…) trigger block widgets via xmlTags.
+ * Markdown image/link URLs (echo:/…) become widgets via `objectLinks`.
  * Inline anchors open their preview card on hover (the default) as well as click.
  */
 export const Preview: Story = {
-  render: () => <PreviewStory />,
+  args: { text: previewText, image: 'card', preview: true },
 };
 
 /**
  * Anchors with `trigger='click'` only open the preview card on click.
  */
 export const PreviewClickTrigger: Story = {
-  render: () => <PreviewStory trigger='click' />,
+  args: { ...Preview.args, trigger: 'click' },
 };
 
 const filler = (marker: string) =>
@@ -327,30 +351,7 @@ const previewScrollText = [
  * to reproduce scroll behavior: scroll the block off-screen and back, and past the viewport edges.
  */
 export const PreviewScroll: Story = {
-  render: () => {
-    const [widgets, setWidgets] = useState<WidgetState[]>([]);
-    const extensions = useMemo(
-      () => [
-        widgetHost({ setWidgets }),
-        objectLinks({
-          image: {
-            estimatedHeight: ({ label }: ObjectLinkProps) => parseBlockHeight(label),
-            Component: FixedHeightPreview,
-          },
-        }),
-      ],
-      [],
-    );
-
-    return (
-      <>
-        <EditorStory text={previewScrollText} extensions={extensions} />
-        {widgets.map(({ id, root, Component, props }) => (
-          <div key={id}>{createPortal(<Component {...props} />, root)}</div>
-        ))}
-      </>
-    );
-  },
+  args: { text: previewScrollText, image: 'fixed' },
 };
 
 /**
@@ -359,28 +360,5 @@ export const PreviewScroll: Story = {
  * Surface-backed embeds, and to verify fixes against it.
  */
 export const PreviewScrollSurface: Story = {
-  render: () => {
-    const [widgets, setWidgets] = useState<WidgetState[]>([]);
-    const extensions = useMemo(
-      () => [
-        widgetHost({ setWidgets }),
-        objectLinks({
-          image: {
-            estimatedHeight: ({ label }: ObjectLinkProps) => parseBlockHeight(label),
-            Component: SurfaceLikePreview,
-          },
-        }),
-      ],
-      [],
-    );
-
-    return (
-      <>
-        <EditorStory text={previewScrollText} extensions={extensions} />
-        {widgets.map(({ id, root, Component, props }) => (
-          <div key={id}>{createPortal(<Component {...props} />, root)}</div>
-        ))}
-      </>
-    );
-  },
+  args: { text: previewScrollText, image: 'surface' },
 };
