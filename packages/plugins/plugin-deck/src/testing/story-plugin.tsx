@@ -3,6 +3,7 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as FiberHandle from 'effect/FiberHandle';
 import * as Atom from 'effect/unstable/reactivity/Atom';
 import React, { forwardRef, useMemo } from 'react';
 
@@ -36,8 +37,8 @@ random.seed(1234);
 // TODO(burdon): Show/hide companions.
 // TODO(burdon): Companion width.
 
-const storyDeckSettings = Capability.makeModule(() =>
-  Effect.sync(() => {
+const storyDeckSettings = Capability.makeModule(
+  Effect.fnUntraced(function* () {
     const settingsAtom = Atom.make<Settings.Settings>({
       showHints: false,
       enableNativeRedirect: false,
@@ -47,8 +48,8 @@ const storyDeckSettings = Capability.makeModule(() =>
   }),
 );
 
-const storyDeckState = Capability.makeModule(() =>
-  Effect.sync(() => {
+const storyDeckState = Capability.makeModule(
+  Effect.fnUntraced(function* () {
     const defaultStoredDeckState: DeckSchema.StoredDeckState = {
       sidebarState: 'expanded',
       complementarySidebarState: 'collapsed',
@@ -103,6 +104,7 @@ const storyDeckState = Capability.makeModule(() =>
     return [
       Capability.contribute(DeckCapabilities.State, stateAtom),
       Capability.contribute(DeckCapabilities.EphemeralState, ephemeralAtom),
+      Capability.contribute(DeckCapabilities.Projection, yield* FiberHandle.make<string | undefined, any>()),
       Capability.contribute(AppCapabilities.Layout, layoutAtom),
     ];
   }),
@@ -280,7 +282,12 @@ export const DeckStoryPlugin = Plugin.define(pluginMeta).pipe(
   }),
   Plugin.addModule({
     id: 'story-deck-state',
-    provides: [DeckCapabilities.State, DeckCapabilities.EphemeralState, AppCapabilities.Layout],
+    provides: [
+      DeckCapabilities.State,
+      DeckCapabilities.EphemeralState,
+      DeckCapabilities.Projection,
+      AppCapabilities.Layout,
+    ],
     activate: storyDeckState,
   }),
   Plugin.addModule(OperationHandler),

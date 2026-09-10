@@ -3,6 +3,7 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as FiberHandle from 'effect/FiberHandle';
 import * as Atom from 'effect/unstable/reactivity/Atom';
 
 import * as Capability from '@dxos/app-framework/Capability';
@@ -53,6 +54,10 @@ export default Capability.makeModule(
       defaultValue: () => ({ ...defaultDeckState }),
     });
 
+    // One projection at a time: `FiberHandle.run` interrupts whatever it is holding, and the handle
+    // interrupts its fiber when this module's scope closes.
+    const projection = yield* FiberHandle.make<string | undefined, any>();
+
     // Ephemeral state (not persisted, but kept alive to prevent GC resets).
     const ephemeralAtom = Atom.make<DeckSchema.EphemeralDeckState>({ ...defaultDeckEphemeralState }).pipe(
       Atom.keepAlive,
@@ -80,6 +85,7 @@ export default Capability.makeModule(
     return [
       Capability.contribute(DeckCapabilities.State, stateAtom),
       Capability.contribute(DeckCapabilities.EphemeralState, ephemeralAtom),
+      Capability.contribute(DeckCapabilities.Projection, projection),
       Capability.contribute(AppCapabilities.Layout, layoutAtom),
       Capability.contribute(DeckCapabilities.Platform, platform),
     ];

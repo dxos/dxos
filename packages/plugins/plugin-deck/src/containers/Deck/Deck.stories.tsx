@@ -4,6 +4,7 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
+import * as FiberHandle from 'effect/FiberHandle';
 import * as Option from 'effect/Option';
 import * as Atom from 'effect/unstable/reactivity/Atom';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -157,8 +158,8 @@ const TestLauncher = ({ launcherId }: { launcherId: string }) => {
 };
 
 // In-memory deck settings so stories don't read/write the persisted plugin settings.
-const storyDeckSettings = Capability.makeModule(() =>
-  Effect.sync(() => {
+const storyDeckSettings = Capability.makeModule(
+  Effect.fnUntraced(function* () {
     const settingsAtom = Atom.make<Settings.Settings>({
       showHints: false,
       enableNativeRedirect: false,
@@ -170,8 +171,8 @@ const storyDeckSettings = Capability.makeModule(() =>
 
 // In-memory deck state so each story starts from a clean deck; the real `DeckState()` capability
 // persists to localStorage, which otherwise leaks planks between stories.
-const storyDeckState = Capability.makeModule(() =>
-  Effect.sync(() => {
+const storyDeckState = Capability.makeModule(
+  Effect.fnUntraced(function* () {
     const stateAtom = Atom.make<DeckSchema.StoredDeckState>({
       sidebarState: 'closed',
       complementarySidebarState: 'closed',
@@ -218,6 +219,7 @@ const storyDeckState = Capability.makeModule(() =>
     return [
       Capability.contribute(DeckCapabilities.State, stateAtom),
       Capability.contribute(DeckCapabilities.EphemeralState, ephemeralAtom),
+      Capability.contribute(DeckCapabilities.Projection, yield* FiberHandle.make<string | undefined, any>()),
       Capability.contribute(AppCapabilities.Layout, layoutAtom),
     ];
   }),
@@ -235,7 +237,12 @@ const TestPlugin = Plugin.define(pluginMeta).pipe(
   Plugin.addModule({
     id: 'story-deck-state',
     activatesOn: ActivationEvents.Startup,
-    provides: [DeckCapabilities.State, DeckCapabilities.EphemeralState, AppCapabilities.Layout],
+    provides: [
+      DeckCapabilities.State,
+      DeckCapabilities.EphemeralState,
+      DeckCapabilities.Projection,
+      AppCapabilities.Layout,
+    ],
     activate: storyDeckState,
   }),
   Plugin.addModule(OperationHandler),

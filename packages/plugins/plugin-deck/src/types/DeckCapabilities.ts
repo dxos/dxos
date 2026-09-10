@@ -5,6 +5,7 @@
 // @import-as-namespace
 
 import * as Effect from 'effect/Effect';
+import type * as FiberHandle from 'effect/FiberHandle';
 import type * as Atom from 'effect/unstable/reactivity/Atom';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
@@ -26,6 +27,15 @@ export const State = Capability.makeSingleton<Atom.Writable<StoredDeckState>>()(
 /** Transient/ephemeral state (not persisted). */
 export const EphemeralState = Capability.makeSingleton<Atom.Writable<EphemeralDeckState>>()(
   `${meta.profile.key}.capability.ephemeralState`,
+);
+
+/**
+ * Holds the URL projection in flight, so starting a newer one interrupts it. A projection can wait
+ * out its deadlines, so without this an older one could resume and apply a URL the address bar has
+ * long since moved off (see `url/project.ts`).
+ */
+export const Projection = Capability.makeSingleton<FiberHandle.FiberHandle<string | undefined, any>>()(
+  `${meta.profile.key}.capability.projection`,
 );
 
 /**

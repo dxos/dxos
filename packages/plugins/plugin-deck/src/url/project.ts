@@ -4,6 +4,9 @@
 
 import * as Cause from 'effect/Cause';
 import * as Effect from 'effect/Effect';
+import * as Exit from 'effect/Exit';
+import * as Fiber from 'effect/Fiber';
+import * as FiberHandle from 'effect/FiberHandle';
 import * as Option from 'effect/Option';
 
 import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
@@ -29,22 +32,6 @@ import { getCandidateEntityIds, getUnresolvedPlankId } from './navigation';
 const RESOLVE_TIMEOUT = '10 seconds';
 
 const LOADER_TIMEOUT = '5 seconds';
-
-/**
- * How many projections have started. A projection can wait out both deadlines above, so one that
- * started earlier may still be running when a newer URL arrives.
- */
-let projections = 0;
-
-/**
- * Take the right to write, and report whether it still holds. Latest wins: the answer goes false as
- * soon as a later projection takes it, so a projection that has been overtaken stops writing rather
- * than applying a URL that is no longer in the address bar.
- */
-const claimWrites = (): (() => boolean) => {
-  const claimed = ++projections;
-  return () => claimed === projections;
-};
 
 /** Dispatch navigation handlers for a URL arriving from outside the app, then project it. */
 export const handleExternalUrl = Effect.fnUntraced(function* (url?: URL) {
@@ -74,7 +61,7 @@ export const handleExternalUrl = Effect.fnUntraced(function* (url?: URL) {
  * Project a URL into deck state, returning the plank attention should move to, or `undefined` when
  * it should stay where it is. `attend` attends the end of the chain rather than the displaced plank.
  */
-export const projectUrl = Effect.fnUntraced(function* (url?: URL, options?: { attend?: boolean }) {
+const project = Effect.fnUntraced(function* (url?: URL, options?: { attend?: boolean }) {
   const attendChainEnd = options?.attend ?? true;
   const navigationTargetLoaders = yield* Capability.getAll(AppCapabilities.NavigationTargetLoader);
   const registry = yield* Capability.get(Capabilities.AtomRegistry);
@@ -82,8 +69,6 @@ export const projectUrl = Effect.fnUntraced(function* (url?: URL, options?: { at
   const ephemeralAtom = yield* Capability.get(DeckCapabilities.EphemeralState);
   const builder = yield* Capability.get(AppCapabilities.AppGraph);
   const manager = yield* Effect.serviceOption(Plugin.Service);
-
-  const writable = claimWrites();
 
   const updateState = (fn: (current: DeckSchema.StoredDeckState) => DeckSchema.StoredDeckState) => {
     registry.set(stateAtom, fn(registry.get(stateAtom)));
@@ -164,9 +149,6 @@ export const projectUrl = Effect.fnUntraced(function* (url?: URL, options?: { at
         ),
     }),
   );
-  if (!writable()) {
-    return undefined;
-  }
   if (Option.isNone(parsed)) {
     yield* applyActive([{ id: NotFound.NOT_FOUND_PATH }]);
     return undefined;
@@ -178,10 +160,6 @@ export const projectUrl = Effect.fnUntraced(function* (url?: URL, options?: { at
   yield* switchWorkspace(workspacePath);
 
   if (pairs.length === 0) {
-    return undefined;
-  }
-
-  if (!writable()) {
     return undefined;
   }
 
@@ -247,10 +225,6 @@ export const projectUrl = Effect.fnUntraced(function* (url?: URL, options?: { at
     });
   });
 
-  if (!writable()) {
-    return undefined;
-  }
-
   const displaced = yield* applyActive(planks);
 
   yield* applyCompanion(companionNodeId);
@@ -260,4 +234,19 @@ export const projectUrl = Effect.fnUntraced(function* (url?: URL, options?: { at
   }
 
   return companionAnchorId ?? planks[planks.length - 1]?.id;
+});
+
+/**
+ * Project a URL, as the only projection in flight.
+ *
+ * Starting one interrupts whatever was running, because a projection can wait out its deadlines and
+ * would otherwise resume to apply a URL the address bar has long since moved off. The interrupted
+ * one is the caller that has been overtaken, and it returns no plank to attend rather than failing:
+ * its navigation is moot, not broken.
+ */
+export const projectUrl = Effect.fnUntraced(function* (url?: URL, options?: { attend?: boolean }) {
+  const handle = yield* Capability.get(DeckCapabilities.Projection);
+  const fiber = yield* FiberHandle.run(handle, project(url, options));
+  const outcome = yield* Effect.exit(Fiber.join(fiber));
+  return Exit.hasInterrupts(outcome) ? undefined : yield* outcome;
 });

@@ -224,8 +224,10 @@ That identity change is why per-plank preferences are keyed by URL segment rathe
 segment is stable across the refinement and an id is not. `segments` is the lookup between them, and
 a plank is closed when its segment leaves the URL, never because its id was refined.
 
-A projection can wait out its deadlines, so each one stamps itself on entry and stops writing once a
-newer one has stamped over it. Latest wins.
+A projection can wait out its deadlines, so starting one interrupts whatever was running: the deck
+holds the projection in flight (`DeckCapabilities.Projection`) and `FiberHandle.run` replaces it.
+The interrupted caller returns no plank to attend rather than failing, since a navigation that has
+been overtaken is moot rather than broken.
 
 The URL only records the workspace you are in, so the other workspaces' open planks are remembered
 for the session and no longer. A reload arrives with none, and a workspace you switch to seeds itself
