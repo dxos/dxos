@@ -12,7 +12,7 @@ import * as KeyValueStore from 'effect/unstable/persistence/KeyValueStore';
 import * as AtomRegistry from 'effect/unstable/reactivity/AtomRegistry';
 
 import { AiService, OpaqueToolkit, Provider } from '@dxos/ai';
-import { TestAiService, type AiServicePreset } from '@dxos/ai/testing';
+import { type AiServicePreset, TestAiService } from '@dxos/ai/testing';
 import { Alarm, Harness } from '@dxos/assistant';
 import * as Chat from '@dxos/assistant/Chat';
 import { ServiceNotAvailableError } from '@dxos/compute';
