@@ -841,6 +841,12 @@ export const make = (model: string, requestOptions: RequestOptions = {}) =>
                   ) as Effect.Effect<never, any, never>;
                 }
 
+                // A client that rejects a non-2xx response itself lands here with the body in the
+                // error; the shape of what was sent goes next to it, as below.
+                log.warn('chat completions request failed', {
+                  error: describe('request failed', err),
+                  messages: describeMessages(messages),
+                });
                 return Effect.fail(unknownError('streamText', 'request failed', err)) as Effect.Effect<
                   never,
                   any,
