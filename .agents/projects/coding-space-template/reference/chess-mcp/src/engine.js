@@ -86,6 +86,20 @@ export const search = ({ fen, depth = 2, maxNodes = 5000 }) => {
   const chess = new Chess(fen);
   const budget = { nodes: maxNodes };
 
+  // Checkmate and draw have no legal move, so the loop below would leave `bestScore` at -Infinity —
+  // which `JSON.stringify` writes as `null`. Answer with the terminal evaluation instead.
+  if (chess.isGameOver()) {
+    return {
+      bestMove: null,
+      scoreCentipawns: evaluate(chess),
+      depth,
+      nodesSearched: 0,
+      truncated: false,
+      turn: chess.turn() === 'w' ? 'white' : 'black',
+      legalMoves: 0,
+    };
+  }
+
   let bestMove = null;
   let bestScore = -Infinity;
   for (const move of ordered(chess)) {

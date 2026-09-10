@@ -8,6 +8,7 @@ import * as SampleSpace from '@dxos/app-toolkit/SampleSpace';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Project from '@dxos/compute/Project';
 import { Database, Ref } from '@dxos/echo';
+import { Outline } from '@dxos/types';
 
 import { type DocsResult } from './docs';
 import { type GameResult } from './game';
@@ -33,9 +34,11 @@ Write the code yourself in one sandbox, driving it through the Sandbox skill. Th
 ships a coding agent of its own; do not delegate this project to it — it has none of this space's \
 context, and its output would land on a container filesystem rather than in this project.
 
-Deploy at the end of every stage and verify by fetching the URL. File what you produce — the \
-design, the deploy and claim URLs, the tool responses — as artifacts on this project rather than \
-leaving it in the chat.
+Verify every stage before starting the next, and redeploy in the two that change Worker code — a \
+design or registration stage has nothing to deploy. File what you produce — the design, the Worker \
+URL, the tool responses — as artifacts on this project rather than leaving it in the chat. The \
+claim URL that the first deploy prints is a bearer credential for the account: give it to me \
+directly and file it nowhere.
 
 This project needs no Anthropic key and no Cloudflare login. If a step seems to need either, that \
 is the wrong step.`;
@@ -53,7 +56,9 @@ is the wrong step.`;
  * stage four, and seeding either would name a URL that does not exist.
  */
 export const ProjectPhase: SampleSpace.Phase<ProjectResult, ProjectInput> = SampleSpace.phase('project', {
-  schemas: [Project.Project, Instructions.Instructions],
+  // `Outline.Outline` is not created here directly: `Project.make` builds one for the project's own
+  // outline, and a phase has to declare every type it persists or the space cannot register it.
+  schemas: [Project.Project, Instructions.Instructions, Outline.Outline],
   run: ({ docs, tasks, skill, game }: ProjectInput) =>
     Effect.gen(function* () {
       const instructions = yield* Database.add(

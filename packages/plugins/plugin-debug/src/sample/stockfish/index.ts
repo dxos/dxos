@@ -38,7 +38,9 @@ const phases = {
  */
 export const StockfishSpace = (): SampleSpace.Definition<typeof phases, void> =>
   SampleSpace.make({
-    // A bare `iconValues` name, which is what `spaces.create` stores and the icon picker reads.
+    // Reaches a space only where the definition is applied directly (the generator panel, the
+    // archive test): the create-space dialog takes its icon from `space-templates.ts`, which
+    // overrides every template's by list index. See DESIGN.md §7.
     space: { name: 'Chess MCP on Workers', icon: 'shield-star', hue: 'amber' },
     reference: REFERENCE,
     phases,

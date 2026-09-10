@@ -39,7 +39,19 @@ $ … '{"name":"best_move","arguments":{"fen":"not a fen"}}'
 
 `initialize` answers protocol `2025-06-18`. A bad FEN is a **tool** error (`isError: true`), not a
 JSON-RPC error — it is the model's input to correct, so it has to reach the model rather than the
-transport.
+transport. The JSON-RPC edge cases were checked too, after review found all four of these broken:
+
+```
+null      -> {"jsonrpc":"2.0","id":null,"error":{"code":-32600,"message":"Invalid Request"}}
+[]        -> {"jsonrpc":"2.0","id":null,"error":{"code":-32600,"message":"Invalid Request"}}
+bad json  -> {"jsonrpc":"2.0","id":null,"error":{"code":-32700,"message":"Parse error"}}
+batch     -> [{"jsonrpc":"2.0","id":1,"result":{}}]      # the notification correctly drops out
+checkmate -> {"bestMove":null,"scoreCentipawns":-100000,"legalMoves":0,...}
+```
+
+A terminal position used to leave `bestScore` at `-Infinity`, which `JSON.stringify` writes as
+`null`; it now answers with the terminal evaluation and `bestMove: null`. `null` as the whole body
+is valid JSON, so it reached the handler and threw on destructuring rather than answering `-32600`.
 
 ## Three things this taught the template
 

@@ -16,7 +16,7 @@ const TOOLS = [
   {
     name: 'best_move',
     description:
-      'Search for the best move from a chess position. Returns the move in SAN, a centipawn score from White’s point of view, and how long the search took.',
+      'Search for the best move from a chess position. Returns the move in SAN, a centipawn score from White’s point of view, the depth reached, the number of nodes searched, and whether the node budget truncated the search.',
     inputSchema: {
       type: 'object',
       properties: {
@@ -77,6 +77,10 @@ const callTool = (id, name, args) => {
 };
 
 const handleRpc = (message) => {
+  if (message === null || typeof message !== 'object' || Array.isArray(message)) {
+    return rpcError(null, -32600, 'Invalid Request');
+  }
+
   const { id, method, params } = message;
   switch (method) {
     case 'initialize':
@@ -149,6 +153,11 @@ export default {
 
     // A batch is a JSON array; each member is answered independently and notifications drop out.
     if (Array.isArray(message)) {
+      // An EMPTY batch is itself an invalid request, distinct from a batch of notifications — which
+      // legitimately produces no responses and so answers 202.
+      if (message.length === 0) {
+        return json(rpcError(null, -32600, 'Invalid Request'), 400);
+      }
       const responses = message.map(handleRpc).filter((response) => response !== null);
       return responses.length === 0 ? new Response(null, { status: 202, headers: CORS }) : json(responses);
     }

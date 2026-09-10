@@ -34,16 +34,36 @@ first run stops at whichever one the reader has not got.
 
 The reshape removes the need for each rather than reordering them:
 
-| Old dependency       | Replaced by                                                             |
-| -------------------- | ----------------------------------------------------------------------- |
-| Anthropic key        | DeepSeek V4 Pro through the DXOS edge — the reader's identity is enough |
-| Claude managed agent | the assistant itself, coding in a remote sandbox                        |
-| `wrangler login`     | wrangler's unauthenticated deploy, which mints a temporary account      |
-| GitHub repo + token  | still needed, but moved to stage five — after the thing already works   |
+| Old dependency       | Replaced by                                                                    |
+| -------------------- | ------------------------------------------------------------------------------ |
+| Anthropic key        | DeepSeek V4 Pro through the DXOS edge — the reader's identity is enough        |
+| Claude managed agent | the assistant itself, coding in a remote sandbox                               |
+| `wrangler login`     | `wrangler deploy --temporary` — no login to DEPLOY; the reader claims it after |
+| GitHub repo + token  | still needed, but moved to stage five — after the thing already works          |
 
 What is left is five stages, in this order: design → deploy an empty Worker → implement the server
-→ register it and use it from the chess chat → publish. The reader owns exactly three steps: pick
-the model (a Composer setting a space cannot carry) and the two GitHub consent screens.
+→ register it and use it from the chess chat → publish. The reader owns five steps, and each is one
+an agent cannot do: pick the model and enable the Chess plugin (both Composer settings, which a
+space cannot carry), claim the temporary Cloudflare account, and the two GitHub consent screens.
+
+Three of those were found by review rather than design, and each is worth stating:
+
+- **Claiming is the reader's, and it comes after the LAST redeploy.** It signs the account into
+  theirs and needs a browser. Ordering matters more than it looks: a claimed account is one the
+  unauthenticated agent can no longer update, and `--temporary` refuses when logged in, so a later
+  deploy would mint a second account under a different URL and break the MCP registration. So the
+  claim sits at the end of stage three, and stage four registers the URL as it stands afterwards.
+- **The claim URL is a bearer credential.** Whoever holds it can take ownership of the account, and
+  a project artifact replicates in plaintext to everyone in the space. The Worker URL is filed; the
+  claim URL goes to the reader and is logged nowhere. An earlier draft told the runner to file both,
+  contradicting the skill's own rule against persisting a secret.
+- **The Chess plugin is off by default.** It is available in Composer but enabled in no default
+  list, so without it the seeded `Game` has no board — which would make stage four's definition of
+  done unreachable in a default install.
+
+Deploying is scoped rather than blanket: only stages two and three change Worker code. An earlier
+draft said "deploy at the end of every stage", which would have had a runner deploying in the
+design stage before a Worker project existed.
 
 ### 3.1 The assistant codes; it does not delegate (user, 2026-09-10)
 
@@ -82,3 +102,17 @@ credential prompt rather than as a silent cost.
 `@dxos/plugin-chess` (for `Chess.State`) and `@dxos/plugin-game` (for the `Game` wrapper). Precedent
 is the comment already at the top of `sample-spaces.ts`: sample content lives in plugin-debug rather
 than in the plugins whose types it uses, because every consumer of it is plugin-debug's.
+
+## 7. The icon in the create-space dialog is not this template's
+
+`space-templates.ts` builds each `SpaceTemplate` contribution with an icon and hue taken from fixed
+arrays **by index** (`templateIcons[index % …]`, `hues[index % …]`), ignoring what the definition
+declares. `CreateSpaceDialog` then seeds the form from the contribution, so the space this template
+creates through the dialog gets `users-three` and the indexed hue — not the `shield-star` / `amber`
+in `index.ts`.
+
+That declaration is still live wherever the definition is applied directly (the debug generator
+panel, `buildArchive` in the test), and all four sample spaces declare an icon the same way, so it
+is left alone. Recorded here only so the mismatch in a screenshot reads as the shared capability's
+behaviour rather than a defect in this template. Worth fixing in `space-templates.ts` if anyone
+cares that a template cannot choose its own icon; out of scope here.

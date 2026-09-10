@@ -17,8 +17,8 @@ import * as Game from '@dxos/plugin-game/Game';
 // about. Seeded as a game rather than a bare FEN in the brief because the chess chat opens on a
 // Game — a position the reader has to paste in is a step that will be skipped.
 //
-// A Spanish opening five moves deep: quiet, symmetrical, and with no forced tactic, so a plausible
-// answer produced without calling the tool is not accidentally the right one.
+// A Spanish opening five moves deep: quiet, materially level, and with no forced tactic, so a
+// plausible answer produced without calling the tool is not accidentally the right one.
 //
 
 const OPENING_PGN = '1. e4 e5 2. Nf3 Nc6 3. Bb5 a6 4. Ba4 Nf6 5. O-O Be7 *';
