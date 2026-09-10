@@ -8,6 +8,7 @@ import * as SampleSpace from '@dxos/app-toolkit/SampleSpace';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Project from '@dxos/compute/Project';
 import { Database, Ref } from '@dxos/echo';
+import { Outline } from '@dxos/types';
 
 import { type DocsResult } from './docs';
 import { type GameResult } from './game';
@@ -55,7 +56,9 @@ is the wrong step.`;
  * stage four, and seeding either would name a URL that does not exist.
  */
 export const ProjectPhase: SampleSpace.Phase<ProjectResult, ProjectInput> = SampleSpace.phase('project', {
-  schemas: [Project.Project, Instructions.Instructions],
+  // `Outline.Outline` is not created here directly: `Project.make` builds one for the project's own
+  // outline, and a phase has to declare every type it persists or the space cannot register it.
+  schemas: [Project.Project, Instructions.Instructions, Outline.Outline],
   run: ({ docs, tasks, skill, game }: ProjectInput) =>
     Effect.gen(function* () {
       const instructions = yield* Database.add(
