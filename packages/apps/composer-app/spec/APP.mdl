@@ -45,7 +45,7 @@ Conventions shared by every test here:
 test QA-1: Spaces and documents
   desc: The smallest journey through the app — a space, three documents, one deletion, and what survives.
   actors: both
-  status: failing           # 2026-09-09, smoke run 2
+  status: passing           # 2026-09-10, smoke run 3
   given:
     - defaultSpace: the space flagged `default` in the snapshot, SPACE_READY
     - no space whose name starts with "QA:" exists — ABORT rather than deleting one this test did not create

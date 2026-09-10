@@ -3,10 +3,10 @@
 Project: `deus` · Design: [docs/DESIGN.md](./docs/DESIGN.md) · Idioms: [docs/IDIOMS.md](./docs/IDIOMS.md)
 
 _Resume: Phase 2 (QA framework unification) is on PR #12986, main merged and review triaged 2026-09-09.
-Two smoke runs of app:QA-1 (10/11, then 9/11 under tightened asserts) both stranded the space in
-`after` 2, which identified an ordering defect in `DataSpaceManager._tombstoneSpace` — now FIXED on
-this branch, along with a `$stepErrors` binding for the dialect. Next: re-run `--tag smoke` to confirm
-11/11, land the PR, `--tag nightly`, register the Routines, `sweep 8`. Sessions that run the app must
+Three smoke runs are in and **app:QA-1 is `passing` 11/11** (run 3). Runs 1 and 2 failed `after` 2,
+which identified an ordering defect in `DataSpaceManager._tombstoneSpace`; that is fixed on this
+branch, as is a `$stepErrors` binding for the dialect, and run 3 confirms both against the real app.
+Next: land the PR, `--tag nightly`, register the Routines, `sweep 8`. Sessions that run the app must
 be in the `DXOS` cloud environment._
 
 ## Goal
@@ -114,8 +114,19 @@ Later (tracked, not started):
       `$stepErrors` — only what was logged since the previous step's snapshot — and a pass/fail error
       clause uses that; `$snapshot.errors` stays cumulative for the report. `qa.mdl` Field rule 5 and
       Execution Rule 11, `APP.mdl` (13 clauses), the `composer-qa` skill and `DESIGN.md`.
-- [ ] **Re-run `--tag smoke`** to confirm `after` 2 now reaches 11/11 with the fix in the served
-      build (`client-services` ships as `dist` to the browser, so it must be rebuilt first).
+- [x] **Re-ran `--tag smoke` — 11/11** (run 3, `testing/reports/2026-09-10-0045-smoke.md`). The fix
+      was exercised rather than bypassed: the teardown failed with the same `Edge connection closed.`
+      that stranded run 2 (`space teardown failed; deleting anyway` in the server log) and the
+      deletion completed anyway — 4.6 s, no error, the space gone from both the snapshot and the live
+      client list. `$stepErrors` empty at every step, and the cumulative channel too. QA-1 is
+      `passing`. `client-services` must be rebuilt before serving: the browser loads its `dist`.
+- [ ] **The snapshot's `errors` is narrower than the page console.** `since: 0` reported zero errors
+      for a session whose server log carries several `console.error` lines (`SwarmNetworkManager`,
+      among others); a synthetic `ErrorEvent` IS captured, so the buffer is live and the gap is
+      upstream — those call sites do not go through `log.error`. Consistent across all three runs. A
+      green `$stepErrors` is therefore not proof that nothing went wrong, which is why the runbook
+      still requires reading the server log per test. Either route those errors through the log
+      pipeline or say so in `qa.mdl`.
 - [ ] `--tag nightly` for QA-2, QA-3 and the two markdown tests.
 - [ ] **Register the Routines** (`create_trigger`): nightly QA on `qa` (`source_revision`/
       `outcome_branch: qa`), on-merge smoke, daily spec-sync. Create the `qa` branch from main first.
