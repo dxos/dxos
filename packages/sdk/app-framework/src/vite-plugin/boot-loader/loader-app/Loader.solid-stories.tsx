@@ -7,8 +7,29 @@ import './boot-loader.css';
 import { onCleanup, onMount } from 'solid-js';
 import { type Meta, type StoryObj } from 'storybook-solidjs-vite';
 
+// eslint-disable-next-line import/no-relative-packages
+import purpleMark from '../../../../../../apps/composer-app/assets/boot-mark-purple.svg?raw';
+// eslint-disable-next-line import/no-relative-packages
+import rustMark from '../../../../../../apps/composer-app/assets/boot-mark-rust.svg?raw';
+// The marks a build inlines through `bootLoaderPlugin`: production's from `@dxos/brand`, the channel
+// variants generated into composer-app by `pnpm icons:variants`. Read as source here so the artwork
+// can be reviewed without bundling a channel.
+// eslint-disable-next-line import/no-relative-packages
+import releasedMark from '../../../../../../ui/brand/assets/icons/composer-icon.svg?raw';
 import { Loader } from './Loader';
 import { createLoaderStore } from './store';
+
+/** Which brand mark sits in the ring: the released one, a channel's, or none. */
+const MARKS: Record<string, string | undefined> = {
+  released: releasedMark,
+  purple: purpleMark,
+  rust: rustMark,
+  none: undefined,
+};
+
+type StoryArgs = {
+  mark: keyof typeof MARKS;
+};
 
 /**
  * The boot loader, mounted from the same component the inlined bundle uses, so the two cannot drift.
@@ -16,9 +37,11 @@ import { createLoaderStore } from './store';
  * The backdrop `#boot-loader` is static markup injected into `index.html` by `bootLoaderPlugin`, not
  * rendered by this component — the decorator below stands in for it.
  */
-const meta: Meta = {
+const meta: Meta<StoryArgs> = {
   title: 'sdk/app-framework/BootLoader',
   parameters: { layout: 'fullscreen' },
+  args: { mark: 'released' },
+  argTypes: { mark: { control: 'select', options: Object.keys(MARKS) } },
   decorators: [
     (Story: any) => (
       <div id='boot-loader' style={{ position: 'fixed', inset: '0' }}>
@@ -30,7 +53,7 @@ const meta: Meta = {
 
 export default meta;
 
-type Story = StoryObj;
+type Story = StoryObj<StoryArgs>;
 
 /**
  * A representative slice of the enabled plugin set, taken from real `dx.config.ts` meta so the
@@ -49,7 +72,7 @@ const PLUGINS = [
 
 /** Normal startup: the ring creeps, statuses append, plugin icons light, then the host reports ready. */
 export const Default: Story = {
-  render: () => {
+  render: (args) => {
     const store = createLoaderStore('Starting…');
     onMount(() => {
       const timers = [
@@ -64,7 +87,7 @@ export const Default: Story = {
       onCleanup(() => timers.forEach(clearTimeout));
     });
     onCleanup(() => store.dispose());
-    return <Loader store={store} />;
+    return <Loader store={store} markSvg={MARKS[args.mark]} />;
   },
 };
 
@@ -73,7 +96,7 @@ export const Default: Story = {
  * activates and fades in. Registered-but-never-activated plugins draw nothing.
  */
 export const PluginActivation: Story = {
-  render: () => {
+  render: (args) => {
     const store = createLoaderStore('Activating plugins…');
     onMount(() => {
       store.setPlugins(PLUGINS);
@@ -88,7 +111,7 @@ export const PluginActivation: Story = {
       onCleanup(() => timers.forEach(clearTimeout));
     });
     onCleanup(() => store.dispose());
-    return <Loader store={store} />;
+    return <Loader store={store} markSvg={MARKS[args.mark]} />;
   },
 };
 
@@ -100,7 +123,7 @@ export const PluginActivation: Story = {
  * the wiring is visible without a host attached.
  */
 export const Stalled: Story = {
-  render: () => {
+  render: (args) => {
     const store = createLoaderStore('Starting…');
     onMount(() => {
       const timers = [
@@ -115,13 +138,13 @@ export const Stalled: Story = {
       onCleanup(() => timers.forEach(clearTimeout));
     });
     onCleanup(() => store.dispose());
-    return <Loader store={store} />;
+    return <Loader store={store} markSvg={MARKS[args.mark]} />;
   },
 };
 
 /** The offer is withdrawn if startup completes after all — `ready()` clears it. */
 export const StalledThenReady: Story = {
-  render: () => {
+  render: (args) => {
     const store = createLoaderStore('Starting…');
     onMount(() => {
       const timers = [
@@ -132,6 +155,6 @@ export const StalledThenReady: Story = {
       onCleanup(() => timers.forEach(clearTimeout));
     });
     onCleanup(() => store.dispose());
-    return <Loader store={store} />;
+    return <Loader store={store} markSvg={MARKS[args.mark]} />;
   },
 };
