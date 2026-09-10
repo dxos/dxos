@@ -26,10 +26,6 @@ export const OAUTH_PRESETS: OAuthPreset[] = [
     provider: OAuthProvider.CLOUDFLARE,
     source: 'cloudflare.com',
     label: 'Cloudflare',
-    // Kept in step by hand with `CLOUDFLARE_OAUTH_SCOPES` in plugin-cloudflare, which is canonical
-    // and explains the set. This file cannot import it: providers depend on plugin-connector, so
-    // reading their constants from here would close the cycle. Scope ids come from Cloudflare's
-    // `GET /oauth/scopes`, not from wrangler's colon-delimited namespace.
     scopes: [
       'memberships.read',
       'account-settings.read',

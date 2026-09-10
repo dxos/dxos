@@ -12,7 +12,6 @@ import { CloudflareApi } from '#services';
 
 const credentials = Layer.succeed(CloudflareApi.CloudflareCredentials, { token: 'cf-token' });
 
-/** Captures the outgoing request so a test can assert on it, and answers with `body` at `status`. */
 const stubHttpClient = (body: unknown, status = 200) => {
   const requests: { url: string; headers: Record<string, string> }[] = [];
   const layer = Layer.succeed(
@@ -40,8 +39,6 @@ describe('CloudflareApi', () => {
     );
 
     expect(accounts).toEqual([{ id: 'acc-1', name: 'Acme' }]);
-    // Through the proxy, and with the credential in the header the proxy forwards — a bare
-    // `Authorization` would be read as the proxy's own and never reach Cloudflare.
     expect(requests[0].url).toBe('https://dxos.network/cors-proxy/api.cloudflare.com/client/v4/accounts');
     expect(requests[0].headers['x-cors-proxy-authorization']).toBe('Bearer cf-token');
     expect(requests[0].headers.authorization).toBeUndefined();
@@ -58,8 +55,6 @@ describe('CloudflareApi', () => {
     expect(user.email).toBe('a@example.com');
   });
 
-  // The 403 body has no `result`, so decoding it against the success schema would fail with a
-  // SchemaError and bury the real cause. `filterStatusOk` has to reject it first.
   test('a 403 fails as an HTTP error, not a decode error', async ({ expect }) => {
     const { layer } = stubHttpClient({ success: false, errors: [{ code: 9109, message: 'Unauthorized' }] }, 403);
 

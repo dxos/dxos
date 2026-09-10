@@ -17,14 +17,9 @@ import { type AccessToken, Connection } from '@dxos/link';
 
 import { CLOUDFLARE_PROXY_BASE } from '../constants';
 
-/** Stored as `AccessToken.token`; sent as `Authorization: Bearer <token>`. */
 type CloudflareCredentialsValue = {
   token: string;
 };
-
-//
-// Subset schemas for the responses we care about.
-//
 
 const CloudflareUserSchema = Schema.Struct({
   id: Schema.String,
@@ -39,21 +34,13 @@ const CloudflareAccountSchema = Schema.Struct({
 });
 export type CloudflareAccount = Schema.Schema.Type<typeof CloudflareAccountSchema>;
 
-/**
- * Every v4 response wraps its payload in a `{ success, errors, messages, result }` envelope, so the
- * result schema is applied one level down rather than to the body.
- */
+/** Every v4 response wraps its payload in a `{ success, errors, messages, result }` envelope. */
 const envelope = <T>(result: Schema.Codec<T>) => Schema.Struct({ result });
 
-/**
- * Credentials for the Cloudflare API. Supplied as a layer so callers choose where the token comes
- * from — a loaded `AccessToken`, a `Connection`, or a literal in tests.
- */
 export class CloudflareCredentials extends Context.Service<CloudflareCredentials, CloudflareCredentialsValue>()(
   '@dxos/plugin-cloudflare/CloudflareCredentials',
 ) {}
 
-/** Creates a credentials layer from an AccessToken ref. Loads it and returns its `token`. */
 export const fromAccessToken = (accessTokenRef: Ref.Ref<AccessToken.AccessToken>) =>
   Layer.effect(
     CloudflareCredentials,
@@ -63,7 +50,6 @@ export const fromAccessToken = (accessTokenRef: Ref.Ref<AccessToken.AccessToken>
     }),
   );
 
-/** Creates a credentials layer from a Connection ref. Loads its `accessToken` and returns its `token`. */
 export const fromConnection = (connectionRef: Ref.Ref<Connection.Connection>) =>
   Layer.effect(
     CloudflareCredentials,
@@ -74,20 +60,10 @@ export const fromConnection = (connectionRef: Ref.Ref<Connection.Connection>) =>
     }),
   );
 
-//
-// Request pipeline
-//
-
-/** Everything a request can fail with: a transport or status error, a decode failure, or a timeout. */
 export type CloudflareError = HttpClientError.HttpClientError | Schema.SchemaError | Cause.TimeoutError;
 
 type CloudflareEffect<T> = Effect.Effect<T, CloudflareError, HttpClient.HttpClient | CloudflareCredentials>;
 
-/**
- * Transport failures and timeouts are transient, and so are 429 / 5xx. A 4xx other than 429 is the
- * token being rejected — retrying spends the rate-limit budget to get the same answer. A decode
- * failure will not decode on the second attempt either.
- */
 const shouldRetry = (error: CloudflareError): boolean => {
   if (error instanceof Schema.SchemaError) {
     return false;
@@ -102,15 +78,6 @@ const shouldRetry = (error: CloudflareError): boolean => {
   return status === 429 || (status >= 500 && status <= 599);
 };
 
-/**
- * Fetch and decode one v4 endpoint. `filterStatusOk` runs before decoding so a rejected token
- * surfaces as its status code rather than as a decode failure against the error envelope.
- *
- * Routed through EDGE's CORS proxy rather than called directly: `api.cloudflare.com` returns no
- * `Access-Control-Allow-Origin` on any response and rejects the preflight an `Authorization` header
- * forces, so a browser fetch never reaches it. The proxy reads the credential from
- * `X-Cors-Proxy-Authorization`, since a bare `Authorization` would be consumed as the proxy's own.
- */
 const cloudflareRequest = <T>(path: string, result: Schema.Codec<T>): CloudflareEffect<T> =>
   Effect.gen(function* () {
     const { token } = yield* CloudflareCredentials;
@@ -120,6 +87,7 @@ const cloudflareRequest = <T>(path: string, result: Schema.Codec<T>): Cloudflare
       HttpClient.filterStatusOk,
     );
     const request = HttpClientRequest.get(`${CLOUDFLARE_PROXY_BASE}${path}`).pipe(
+      // EDGE's CORS proxy consumes a bare `Authorization` as its own.
       HttpClientRequest.setHeader('X-Cors-Proxy-Authorization', `Bearer ${token}`),
       HttpClientRequest.setHeader('Accept', 'application/json'),
     );
@@ -134,10 +102,6 @@ const cloudflareRequest = <T>(path: string, result: Schema.Codec<T>): Cloudflare
     );
     return response.result;
   });
-
-//
-// Endpoints
-//
 
 /** The authenticated user; needs the `user-details.read` scope. */
 export const fetchUser = (): CloudflareEffect<CloudflareUser> => cloudflareRequest('/user', CloudflareUserSchema);

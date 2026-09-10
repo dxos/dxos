@@ -26,11 +26,8 @@ export type CreateConnectionPanelProps = SpaceCapabilities.CreateObjectCustomPan
  * Single-dialog connection creation: pick a service, then fill that connector's credential fields
  * without an intervening dialog.
  *
- * Replaces a two-step flow whose first dialog collected only `connectorId` and whose second was
- * opened by the coordinator. A connector with no `credentialForm` has nothing to fill, so picking it
- * starts the OAuth flow immediately rather than parking the user on a button that asks them to
- * confirm the choice they just made. The button still renders behind the popup, as the retry
- * affordance when the flow fails.
+ * A connector with no `credentialForm` starts its OAuth flow on selection; the connect button still
+ * renders behind the popup, as the retry affordance when the flow fails.
  */
 export const CreateConnectionPanel = ({ onCreateObject, connectors: connectorsProp }: CreateConnectionPanelProps) => {
   const { t } = useTranslation(meta.profile.key);
@@ -55,8 +52,7 @@ export const CreateConnectionPanel = ({ onCreateObject, connectors: connectorsPr
   const connector = useMemo(() => connectors.find((entry) => entry.id === connectorId), [connectors, connectorId]);
   const credentialForm = connector?.credentialForm;
 
-  // Takes its connector rather than reading state, so selecting a form-less connector can submit in
-  // the same tick it is chosen — `connectorId` has not been applied yet at that point.
+  // Takes its connector as an argument: `connectorId` is not applied yet in the tick it is chosen.
   const submit = useCallback(
     (target: ConnectorEntry, values?: Record<string, any>) => {
       setError(undefined);
@@ -129,7 +125,6 @@ export const CreateConnectionPanel = ({ onCreateObject, connectors: connectorsPr
           </Form.Content>
         </Form.Root>
       ) : (
-        // No credential form: the flow already started on selection; this is the retry.
         <Button
           variant='primary'
           disabled={pending}
