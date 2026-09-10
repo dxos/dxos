@@ -19,8 +19,6 @@ const RESET = '\x1b[0m';
 /** Sizes a host that has no size of its own; a host with a definite size passes `fit` instead. */
 const FIXED_GRID = { cols: 100, rows: 24 };
 
-// `report` is deliberately absent: it files straight into Linear over a route that cannot yet tell
-// who is calling, so it stays unadvertised until that route is authenticated. `help` still lists it.
 const BANNER = `${BOLD}Debug console${RESET}\n${DIM}snapshot · plugins · enable · disable · ops · invoke · eval · port — "help" for details.${RESET}`;
 
 export type DebugConsoleProps = {

@@ -232,7 +232,10 @@ const makeCommand = (options: DebugCliOptions = {}) => {
         const issue = result as { issueIdentifier?: string; issueUrl?: string } | undefined;
         yield* print(issue?.issueUrl ? `${issue.issueIdentifier} ${issue.issueUrl}` : result);
       }),
-  ).pipe(Command.withDescription('File a Linear issue with the logs attached.'));
+  ).pipe(
+    Command.withDescription('File a Linear issue with the logs attached.'),
+    Command.unlisted,
+  );
 
   const port = Command.make(
     'port',
