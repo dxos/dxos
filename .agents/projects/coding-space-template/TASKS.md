@@ -97,6 +97,38 @@ notes. Fixed in `5d6a7b18`.
 - [x] **The archive test asserts four reader-owned steps in order**, which is what makes the shape a
       regression test rather than a comment.
 
+## Phase 2c: Adversarial review of the diff
+
+A subagent asked to attack the change returned twelve findings. Four were already fixed, one was
+declined, and these are the rest. Fixed in `69b11633` and `072e3136`.
+
+- [x] **Stage four's definition of done was unreachable in a default Composer.** `ChessPlugin` is
+      available but appears in no default-enabled list, so the seeded `Game` has no board — and
+      opening it is how the stage proves the engine answered. Enabling it is now a reader step, which
+      makes five.
+- [x] **The claim task was in the wrong stage — my error, not the reviewer's.** Moved to after the
+      LAST redeploy: a claimed account is one the unauthenticated agent cannot update, and
+      `--temporary` refuses when logged in, so a later deploy would mint a second account under a
+      different URL and break the registration stage four performs.
+- [x] **Two assertions proved nothing.** `countOf` substring-matches, so a zero-count passes just as
+      well when the typename is misspelled. Replaced with one that cannot be wrong about extras:
+      every typename in the archive must be one `definition.schemas` declared.
+- [x] **That assertion then found two real gaps** — which is the point of it. `spaceProperties` is
+      the harness's space root and no phase's to declare (exempted); `Outline` is created inside
+      `Project.make`, and **none of the three sample spaces declared it**. Declared here; the
+      siblings are out of scope but this template cannot regress the same way again.
+- [x] **The changesets double-reported the template** and neither named the breaking removal of
+      `ChatroomSpace` from the public `./sample` entry. Both fixed.
+- [x] **The registry `resume` contradicted this file**, still claiming Phase 3 was blocked on network
+      access that demonstrably works. Rewritten from reality.
+- [x] Smaller: the position is "materially level", not "symmetrical"; a dead `parent !== undefined`
+      clause removed; the `index.ts` icon comment no longer claims something untrue of the app.
+- [x] **`moon run plugin-debug:test -- src/sample/stockfish` — 4 passed (4).**
+
+Declined: the `Text.Text` schema declaration is inconsistent between the docs and skill phases, but
+the sibling sample spaces are inconsistent both ways and the archive proves the current declarations
+sufficient. Not worth the churn.
+
 ## Phase 3: Run it, and record it
 
 The user's ask: a demo video of the template being built, deployed and the MCP server used, with a
