@@ -176,16 +176,17 @@ export const Loader: Component<LoaderProps> = (props) => {
       </div>
       {/* Activation row: one icon per plugin as it activates, appended monochrome and fading in. Icons resolve against the static sprite, which needs no app bundle. */}
       <div id='boot-loader-plugins' aria-hidden='true'>
-        {/* Inner track: the flex row itself, so the outer element keeps its vertical placement
-            transform and clips the growth. */}
-        <div id='boot-loader-plugins-track'>
+        {/* Inner track: a relative box the icons position themselves in, so the outer element keeps
+            its vertical placement transform and clips the row. `--n` is the count every icon centres
+            against; it changes as icons arrive, and each icon slides to its new place. */}
+        <div id='boot-loader-plugins-track' style={{ '--n': props.store.plugins().length }}>
           {/* `Index`, not `For`: `For` keys by item identity, so any row rewrite would re-create the
               element and restart its entrance animation. */}
           <Index each={props.store.plugins()}>
-            {(plugin) => (
-              // Wrapper owns the slot — size, spacing, and the entrance animation — so the glyph
+            {(plugin, index) => (
+              // Wrapper owns the slot — its place in the row and the slide to it — so the glyph
               // inside can be restyled (a chip, a badge, a hover affordance) without touching either.
-              <div class='boot-loader-plugin'>
+              <div class='boot-loader-plugin' style={{ '--i': index }}>
                 <svg class='boot-loader-plugin-icon' viewBox='0 0 256 256'>
                   <use href={`${props.spritePath ?? DEFAULT_SPRITE_PATH}#${plugin().icon}`} />
                 </svg>

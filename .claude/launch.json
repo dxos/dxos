@@ -4,13 +4,23 @@
     {
       "name": "composer-crx",
       "runtimeExecutable": "moon",
-      "runtimeArgs": ["run", "composer-crx:serve"],
+      "runtimeArgs": [
+        "run",
+        "composer-crx:serve"
+      ],
       "port": 5173
     },
     {
       "name": "composer-app",
       "runtimeExecutable": "moon",
-      "runtimeArgs": ["run", "composer-app:serve", "--", "--port", "5180", "--strictPort"],
+      "runtimeArgs": [
+        "run",
+        "composer-app:serve",
+        "--",
+        "--port",
+        "5180",
+        "--strictPort"
+      ],
       "port": 5180,
       "autoPort": true
     },
@@ -87,26 +97,43 @@
     {
       "name": "testbench-app",
       "runtimeExecutable": "moon",
-      "runtimeArgs": ["run", "testbench-app:serve"],
+      "runtimeArgs": [
+        "run",
+        "testbench-app:serve"
+      ],
       "port": 5173
     },
     {
       "name": "tasks-app",
       "runtimeExecutable": "moon",
-      "runtimeArgs": ["run", "tasks:serve"],
+      "runtimeArgs": [
+        "run",
+        "tasks:serve"
+      ],
       "port": 5173
     },
     {
       "name": "todomvc-preview",
       "runtimeExecutable": "pnpm",
-      "runtimeArgs": ["--filter", "@dxos/todomvc", "exec", "vite", "preview", "--port", "4173"],
+      "runtimeArgs": [
+        "--filter",
+        "@dxos/todomvc",
+        "exec",
+        "vite",
+        "preview",
+        "--port",
+        "4173"
+      ],
       "port": 4173,
       "autoPort": true
     },
     {
       "name": "storybook-react",
       "runtimeExecutable": "moon",
-      "runtimeArgs": ["run", "storybook-react:serve"],
+      "runtimeArgs": [
+        "run",
+        "storybook-react:serve"
+      ],
       "port": 9009
     },
     {
@@ -132,32 +159,71 @@
     {
       "name": "plugin-explorer-storybook",
       "runtimeExecutable": "pnpm",
-      "runtimeArgs": ["--filter", "@dxos/plugin-explorer", "exec", "storybook", "dev", "--port", "9010", "--no-open"],
+      "runtimeArgs": [
+        "--filter",
+        "@dxos/plugin-explorer",
+        "exec",
+        "storybook",
+        "dev",
+        "--port",
+        "9010",
+        "--no-open"
+      ],
       "port": 9010
     },
     {
       "name": "plugin-map-storybook",
       "runtimeExecutable": "pnpm",
-      "runtimeArgs": ["--filter", "@dxos/plugin-map", "exec", "storybook", "dev", "--port", "9010", "--no-open"],
+      "runtimeArgs": [
+        "--filter",
+        "@dxos/plugin-map",
+        "exec",
+        "storybook",
+        "dev",
+        "--port",
+        "9010",
+        "--no-open"
+      ],
       "port": 9010
     },
     {
       "name": "plugin-preview-storybook",
       "runtimeExecutable": "pnpm",
-      "runtimeArgs": ["--filter", "@dxos/plugin-preview", "exec", "storybook", "dev", "--port", "9011", "--no-open"],
+      "runtimeArgs": [
+        "--filter",
+        "@dxos/plugin-preview",
+        "exec",
+        "storybook",
+        "dev",
+        "--port",
+        "9011",
+        "--no-open"
+      ],
       "port": 9011,
       "autoPort": true
     },
     {
       "name": "plugin-client-storybook",
       "runtimeExecutable": "pnpm",
-      "runtimeArgs": ["--filter", "@dxos/plugin-client", "exec", "storybook", "dev", "--port", "9009", "--no-open"],
+      "runtimeArgs": [
+        "--filter",
+        "@dxos/plugin-client",
+        "exec",
+        "storybook",
+        "dev",
+        "--port",
+        "9009",
+        "--no-open"
+      ],
       "port": 9009
     },
     {
       "name": "docs",
       "runtimeExecutable": "moon",
-      "runtimeArgs": ["run", "docs:serve"],
+      "runtimeArgs": [
+        "run",
+        "docs:serve"
+      ],
       "port": 4321
     },
     {
@@ -238,6 +304,16 @@
         "export PROTO_HOME=$HOME/.proto && export PATH=$PROTO_HOME/shims:$PROTO_HOME/bin:$PATH && export DX_AGENT_CWD=\"$(git rev-parse --show-toplevel)/packages/stories/stories-assistant/src/testing/fixtures\" && pnpm --filter @dxos/storybook-react exec storybook dev --port 9016 --no-open --ci"
       ],
       "port": 9016,
+      "autoPort": false
+    },
+    {
+      "name": "storybook-solid",
+      "runtimeExecutable": "sh",
+      "runtimeArgs": [
+        "-c",
+        "export PROTO_HOME=$HOME/.proto && export PATH=$PROTO_HOME/shims:$PROTO_HOME/bin:$PATH && pnpm --filter @dxos/storybook-solid exec storybook dev --port 9009 --no-open --ci"
+      ],
+      "port": 9009,
       "autoPort": false
     }
   ]

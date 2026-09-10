@@ -10,16 +10,24 @@ import { type Meta, type StoryObj } from 'storybook-solidjs-vite';
 // The one mark a build inlines through `bootLoaderPlugin`, from `@dxos/brand`; a channel recolours it
 // with a filter (composer-app's `channel-branding.ts` is where the app's live) rather than a copy.
 // eslint-disable-next-line import/no-relative-packages
-import releasedMark from '../../../../../../ui/brand/assets/icons/composer-icon.svg?raw';
+import composerIcon from '../../../../../../ui/brand/assets/icons/composer-icon.svg?raw';
 import { Loader } from './Loader';
 import { createLoaderStore } from './store';
 
 /** How the ring's mark reads: released, as a channel recolours it, or absent. */
 const MARKS: Record<string, { svg?: string; filter?: string }> = {
-  released: { svg: releasedMark },
-  purple: { svg: releasedMark, filter: 'hue-rotate(82deg)' },
-  rust: { svg: releasedMark, filter: 'hue-rotate(180deg) saturate(0.75)' },
   none: {},
+  released: {
+    svg: composerIcon,
+  },
+  purple: {
+    svg: composerIcon,
+    filter: 'hue-rotate(82deg)',
+  },
+  rust: {
+    svg: composerIcon,
+    filter: 'hue-rotate(180deg) saturate(0.75)',
+  },
 };
 
 type StoryArgs = {
@@ -89,18 +97,24 @@ export const Default: Story = {
 /** The released mark as a channel recolours it — the same filters composer-app's `bootMarkFilter` produces. */
 export const Purple: Story = {
   ...Default,
-  args: { mark: 'purple' },
+  args: {
+    mark: 'green',
+  },
 };
 
 export const Rust: Story = {
   ...Default,
-  args: { mark: 'rust' },
+  args: {
+    mark: 'orange',
+  },
 };
 
 /** The ring alone, as a build without a mark renders it. */
 export const NoMark: Story = {
   ...Default,
-  args: { mark: 'none' },
+  args: {
+    mark: 'none',
+  },
 };
 
 /**
