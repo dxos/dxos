@@ -48,6 +48,12 @@ const DEFAULT_EVAL_TIMEOUT_MILLIS = 60_000;
 
 class EvalTimeoutError extends Data.TaggedError('EvalTimeoutError')<{ millis: number }> {}
 
+/** What a graded timeout returns in place of the agent's output. */
+export type AgentTimeout = { readonly timedOut: true; readonly millis: number };
+
+/** Room after the agent's budget for the query to grade what it left, before the run is abandoned. */
+const GRADE_GRACE_MILLIS = 5 * 60 * 1_000;
+
 /**
  * Tags a failure as coming specifically from the agent's own `RunInstructions` invocation —
  * distinct from a harness setup/disposal problem or other infrastructure failure, neither of
@@ -182,6 +188,13 @@ export interface CreateEvalRunnerOptions<I, O> {
    */
   timeout?: number;
   /**
+   * Grade the state a session reached when it runs out of `timeout`, rather than throwing: the
+   * agent's output becomes an {@link AgentTimeout} and `dbQuery` still runs. For a scenario long
+   * enough that where it got to is worth knowing. Requires `dbQuery`; the session itself is not
+   * stopped, so the query reads a space the agent may still be writing to.
+   */
+  gradeOnTimeout?: boolean;
+  /**
    * Additional ECHO types the scenario's seed/dbQuery touch, registered with the harness client.
    */
   types?: Type.AnyEntity[];
@@ -262,12 +275,14 @@ export function createEvalRunner<I, O>(
 export function createEvalRunner<I, O>(options: CreateEvalRunnerOptions<I, O>): Evalite.Task<I, O, VariantConfig>;
 export function createEvalRunner<I, O, D>(
   options: CreateEvalRunnerOptions<I, O> & { dbQuery: DbQuery<I, D> },
-): Evalite.Task<I, { agentOutput: O; dbQuery: D }, VariantConfig>;
+): Evalite.Task<I, { agentOutput: O | AgentTimeout; dbQuery: D }, VariantConfig>;
 export function createEvalRunner<I, O, D>(
   options: CreateEvalRunnerOptions<I, O> & { dbQuery?: DbQuery<I, D> },
-): Evalite.Task<I, O | { agentOutput: O; dbQuery: D } | { failed: boolean }, VariantConfig> {
+): Evalite.Task<I, O | { agentOutput: O | AgentTimeout; dbQuery: D } | { failed: boolean }, VariantConfig> {
   return async (input: I, variant: VariantConfig) => {
     const model = variant?.model ?? options.model ?? DEFAULT_MODEL;
+    const timeoutMillis = options.timeout ?? DEFAULT_EVAL_TIMEOUT_MILLIS;
+    const gradeOnTimeout = options.gradeOnTimeout === true && options.dbQuery !== undefined;
 
     const instructions = Instructions.make({
       text: options.instructions,
@@ -308,16 +323,24 @@ export function createEvalRunner<I, O, D>(
           }
         }
 
-        const agentOutput = yield* Effect.tryPromise({
+        const agentStep = Effect.tryPromise({
           try: () =>
             runInstructions(harness, instructions, model, defaultSpace.id, input, options.sessionChat, seeded.chat),
           catch: (cause) => new AgentRunFailure({ cause }),
         });
-
         const dbQueryFn = options.dbQuery;
         if (!dbQueryFn) {
-          return agentOutput;
+          return yield* agentStep;
         }
+
+        const agentOutput: O | AgentTimeout = gradeOnTimeout
+          ? yield* agentStep.pipe(
+              Effect.timeoutOrElse({
+                duration: timeoutMillis,
+                orElse: () => Effect.succeed<AgentTimeout>({ timedOut: true, millis: timeoutMillis }),
+              }),
+            )
+          : yield* agentStep;
 
         const dbQuery = yield* Effect.promise(() =>
           harness.runPromise(
@@ -333,11 +356,12 @@ export function createEvalRunner<I, O, D>(
       }),
     );
 
-    const timeoutMillis = options.timeout ?? DEFAULT_EVAL_TIMEOUT_MILLIS;
+    // A graded timeout fires inside; the outer net then only has to clear the grading itself.
+    const netMillis = gradeOnTimeout ? timeoutMillis + GRADE_GRACE_MILLIS : timeoutMillis;
     const timedRun = run.pipe(
       Effect.timeoutOrElse({
-        duration: timeoutMillis,
-        orElse: () => new EvalTimeoutError({ millis: timeoutMillis }),
+        duration: netMillis,
+        orElse: () => new EvalTimeoutError({ millis: netMillis }),
       }),
     );
 

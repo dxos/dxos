@@ -28,8 +28,8 @@ export default defineConfig({
     // 60s, overridable via its `timeout` option), so most scenarios time out well before this
     // fires. This is only the outer safety net: `Effect.timeoutFail`'s interrupt blocks until the
     // timed-out fiber's finalizers (harness teardown, any in-flight tool call) actually settle, so
-    // the net must clear the longest per-eval timeout in use (40 minutes, `chess-mcp.eval.ts`) with
+    // the net must clear the longest per-eval timeout in use (60 minutes plus the grading grace, `chess-mcp.eval.ts`) with
     // room for that, not just equal it.
-    testTimeout: 41 * 60 * 1_000,
+    testTimeout: 66 * 60 * 1_000,
   },
 });

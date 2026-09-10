@@ -149,8 +149,10 @@ const task = createEvalRunner({
     AccessToken.AccessToken,
   ],
   config: new Config({ runtime: { services: { edge: { url: EDGE_URL } } } }),
-  // A design, a toolchain install, two deploys and an engine, each a minute or more of wall clock.
-  timeout: 40 * 60 * 1_000,
+  // A design, a toolchain install, two deploys and an engine, each minutes of wall clock; and where a
+  // session got to in that hour is worth grading even when it did not finish.
+  timeout: 60 * 60 * 1_000,
+  gradeOnTimeout: true,
   seed: ({ spaceId, instructions }) =>
     Effect.gen(function* () {
       const client = yield* Capability.get(ClientCapabilities.Client);
