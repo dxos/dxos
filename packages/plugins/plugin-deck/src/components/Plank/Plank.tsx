@@ -25,6 +25,13 @@ import { PlankLoading } from './PlankLoading';
 /** A plank waiting: for the node the URL names, and then for that node's article to load. */
 const PLANK_LOADING = <PlankLoading />;
 
+/**
+ * How long a plank waits before it admits to waiting. A node that resolves inside this never shows a
+ * placeholder icon or a loading title at all, so the common case reads as an instant open.
+ */
+const PENDING_DELAY = '1s';
+const pendingStyle = { animationDelay: PENDING_DELAY, animationFillMode: 'backwards' } as const;
+
 type SurfaceProps = ComponentProps<typeof Surface.Surface>;
 
 /**
@@ -97,7 +104,7 @@ export const Plank = forwardRef<HTMLDivElement, PlankProps>(
     const { t } = useTranslation(meta.profile.key);
     const attentionAttrs = useAttentionAttributes(attendableId);
     const icon = node.properties?.icon ?? 'ph--circle-dashed--regular';
-    const label = toLocalizedString(node.properties?.label ?? '', t);
+    const label = toLocalizedString(node.properties?.label ?? (pending ? 'pending.heading' : ''), t);
     const data = useMemo<AppSurface.ArticleData>(
       () => ({
         attendableId,
@@ -137,7 +144,11 @@ export const Plank = forwardRef<HTMLDivElement, PlankProps>(
                   {sigilFooter}
                 </AttentionSigil>
               ) : (
-                <Pane.Sigil attendableId={attendableId}>
+                <Pane.Sigil
+                  attendableId={attendableId}
+                  classNames={pending && 'animate-fade-in'}
+                  style={pending ? pendingStyle : undefined}
+                >
                   <span className='sr-only'>{label}</span>
                   <Icon icon={icon} />
                 </Pane.Sigil>
@@ -177,7 +188,12 @@ export const Plank = forwardRef<HTMLDivElement, PlankProps>(
                 </Breadcrumb.List>
               </Breadcrumb.Root>
             ) : (
-              <Pane.Title attendableId={attendableId} related={related} classNames={pending && 'text-description'}>
+              <Pane.Title
+                attendableId={attendableId}
+                related={related}
+                classNames={pending && ['text-description', 'animate-fade-in']}
+                style={pending ? pendingStyle : undefined}
+              >
                 {label}
               </Pane.Title>
             )}

@@ -140,6 +140,7 @@ const DeckPlankInner = ({ id, part, fullscreen = false, active, path, classNames
         node={loadingNode}
         attendableId={id}
         related={part === 'complementary'}
+        pending
         controls={controls}
         headless={headless}
         onKeyDown={handleKeyDown}
