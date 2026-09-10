@@ -43,7 +43,12 @@ const toolbar: ComponentFunction<PanelStyleProps> = ({ size = 'md', surface }, .
     ...etc,
   );
 
-const content: ComponentFunction<PanelStyleProps> = (_, ...etc) => mx('[grid-area:content] min-h-0', ...etc);
+// The content is where an article lives, and an article's rows derive their hover and current
+// colours from the surface under them: painting the base level here (unless an elevation names
+// another) is what keeps those states subtle wherever the panel is mounted — a story canvas that
+// paints no surface would otherwise leave them deriving from a level the eye cannot see.
+const content: ComponentFunction<PanelStyleProps> = ({ surface }, ...etc) =>
+  mx('[grid-area:content] min-h-0', !surface && 'dx-base-surface', ...etc);
 
 const statusbar: ComponentFunction<PanelStyleProps> = ({ surface }, ...etc) =>
   mx('[grid-area:statusbar]', 'shrink-0', !surface && 'dx-toolbar-surface', ...etc);
