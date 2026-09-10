@@ -216,7 +216,9 @@ Exactly three functions write anything:
 ### The projection runs twice
 
 `projectUrl` applies the URL by pair first, so every plank the URL names renders its chrome
-immediately; a plank with no node yet renders a loading shell. It then resolves the pairs and applies
+immediately; a plank with no node yet renders a loading shell, and says not found once resolution's
+own deadline passes, since past it no node is still coming. A loader that proves the target absent
+says so sooner; one that could not form a question at all never would. It then resolves the pairs and applies
 them again by node id. A plank the deck already holds keeps the id it has, so only genuinely new
 planks change identity.
 

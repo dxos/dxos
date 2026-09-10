@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { useCallback, useEffect, useMemo } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import * as AppGraph from '@dxos/app-graph/AppGraph';
@@ -17,6 +17,7 @@ import { useBreakpoints, useCompanions, useDeckSettings, useDeckState } from '#h
 import { meta } from '#meta';
 import { DeckOperation, DeckSchema } from '#types';
 
+import { RESOLVE_TIMEOUT_MS } from '../../url';
 import { isCompanionOpen } from '../../util';
 
 /** Sigil-menu dispositions surfaced as plank actions. */
@@ -81,6 +82,15 @@ export const useDeckPlank = ({ id, part, active }: UseDeckPlankOptions): DeckPla
   const companions = useCompanions(id);
   const notFoundNode = useNode(graph, NotFound.NOT_FOUND_PATH);
   const presence = useNavigationPresence(graph, id);
+  // `absent` is proof; `unknown` is only ignorance, and a loader that could not form a question at all
+  // (a malformed space id) stays unknown forever. So the plank also gives up when resolution does:
+  // past that deadline no node is still coming, and a plank that waits for one waits for good.
+  const [waited, setWaited] = useState(false);
+  useEffect(() => {
+    setWaited(false);
+    const timer = setTimeout(() => setWaited(true), RESOLVE_TIMEOUT_MS);
+    return () => clearTimeout(timer);
+  }, [id]);
 
   // Ordering within the active stack drives the increment-start/end affordances.
   const index = active ? active.findIndex((entryId) => entryId === id) : -1;
@@ -171,7 +181,7 @@ export const useDeckPlank = ({ id, part, active }: UseDeckPlankOptions): DeckPla
 
   return {
     node,
-    unresolved: presence === 'absent',
+    unresolved: presence === 'absent' || (waited && presence !== 'exists'),
     notFoundNode,
     capabilities,
     sigilActions,

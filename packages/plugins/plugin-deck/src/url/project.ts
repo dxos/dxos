@@ -28,8 +28,14 @@ import { applyActive, applyCompanion, applyWorkspace } from './apply';
 import * as Navigation from './navigation';
 import { getCandidateEntityIds, getUnresolvedPlankId } from './navigation';
 
+/**
+ * How long resolution waits for a pair's node before it stops trying. Exported because a plank waits
+ * exactly this long too: past it nothing is still coming, so the plank says not found.
+ */
+export const RESOLVE_TIMEOUT_MS = 10_000;
+
 // TODO(wittjosiah): Shorten, or apply the restore per-pair.
-const RESOLVE_TIMEOUT = '10 seconds';
+const RESOLVE_TIMEOUT = `${RESOLVE_TIMEOUT_MS} millis`;
 
 const LOADER_TIMEOUT = '5 seconds';
 
