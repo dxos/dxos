@@ -8,8 +8,9 @@ import * as DeckSpec from '@dxos/app-toolkit/DeckSpec';
 
 import { DeckSchema } from '#types';
 
-import { Navigation } from './url';
+import { Navigation } from '../url';
 
+/** Where {@link addSubjectsToActiveDeck} puts the subjects it is given. */
 export type AddSubjectsToActiveDeckOptions = {
   /** Insert opened subjects immediately after this plank (in-plank navigation anchors at its origin). */
   pivotId?: string;
@@ -73,6 +74,7 @@ export const updatePlankNames = (
   return next;
 };
 
+/** The deck without `entryId`, unchanged when it holds no such plank. */
 export const closeEntry = (deck: string[], entryId: string): string[] => {
   return produce(deck, (draft) => {
     const index = draft.findIndex((id) => id === entryId);
@@ -82,6 +84,7 @@ export const closeEntry = (deck: string[], entryId: string): string[] => {
   });
 };
 
+/** The deck with one plank moved a place towards the start or the end. */
 export const incrementPlank = (deck: string[], adjustment: DeckSchema.DeckAction.Adjustment): string[] => {
   return produce(deck, (draft) => {
     const index = draft.findIndex((id) => id === adjustment.id);

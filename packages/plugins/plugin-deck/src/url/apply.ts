@@ -16,7 +16,7 @@ import { Attention } from '@dxos/react-ui-attention/types';
 import { DeckCapabilities } from '#types';
 import { CompanionViewState, DeckSchema } from '#types';
 
-import { updatePlankNames } from '../layout';
+import { updatePlankNames } from '../util';
 import {
   closeCompanionPlank,
   openCompanionPlank,

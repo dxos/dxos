@@ -18,8 +18,8 @@ import { Position } from '@dxos/util';
 
 import { CompanionViewState, DeckCapabilities, DeckOperation, DeckSchema } from '#types';
 
-import { incrementPlank } from '../layout';
 import { computeActiveUpdates, currentNavigation, navigateDeck } from '../url';
+import { incrementPlank } from '../util';
 import { isCompanionOpen, openCompanionPlank } from '../util';
 
 const handler: Operation.WithHandler<typeof DeckOperation.Adjust> = DeckOperation.Adjust.pipe(

@@ -23,7 +23,7 @@ import { DeckCapabilities, DeckSchema } from '#types';
 import { shouldDeferNavigationHandlers } from '../capabilities/check-app-scheme';
 import { applyActive, applyCompanion, applyWorkspace } from './apply';
 import * as Navigation from './navigation';
-import { getCandidateEntityIds, getUnresolvedPlankId } from './navigation-target';
+import { getCandidateEntityIds, getUnresolvedPlankId } from './navigation';
 
 // TODO(wittjosiah): Shorten, or apply the restore per-pair.
 const RESOLVE_TIMEOUT = '10 seconds';

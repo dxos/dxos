@@ -4,6 +4,7 @@
 
 import { DeckSchema } from '#types';
 
+/** The navigation sidebar's persisted state. */
 export type SidebarState = DeckSchema.StoredDeckState['sidebarState'];
 
 /**

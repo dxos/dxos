@@ -6,6 +6,7 @@ import { invariant } from '@dxos/invariant';
 
 import { DeckSchema } from '#types';
 
+/** The stored state with `deckUpdates` merged into whichever deck is active. */
 export const updateActiveDeck = (
   current: DeckSchema.StoredDeckState,
   deckUpdates: Partial<DeckSchema.DeckState>,

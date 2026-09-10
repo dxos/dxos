@@ -20,6 +20,7 @@ import * as ObservabilityOperation from '@dxos/plugin-observability/Observabilit
 
 import { DeckCapabilities } from '#types';
 
+import { Navigation, applyWorkspace, computeActiveUpdates, currentNavigation, navigateDeck } from '../url';
 import {
   addSubjectsToActiveDeck,
   plankIdForName,
@@ -27,8 +28,7 @@ import {
   resolveLevelOpen,
   resolveSeededPlanks,
   updatePlankNames,
-} from '../layout';
-import { Navigation, applyWorkspace, computeActiveUpdates, currentNavigation, navigateDeck } from '../url';
+} from '../util';
 import { openableChildren, openCompanionPlank, resolveDeckSpec, updateActiveDeck } from '../util';
 
 const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperation.Open.pipe(
