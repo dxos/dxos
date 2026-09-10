@@ -77,7 +77,7 @@ describe('Chess MCP sample space', () => {
   });
 
   test(
-    "only three steps are the reader's, and the two GitHub ones are last",
+    "only four steps are the reader's, and the two GitHub ones are last",
     { timeout: 120_000 },
     async ({ expect }) => {
       const { json } = await EffectEx.runPromise(buildArchive(StockfishSpace()));
@@ -85,11 +85,13 @@ describe('Chess MCP sample space', () => {
         JSON.parse(json).objects;
       const tasks = objects.filter((object) => object['@type']?.includes('type.task:'));
 
-      // The reader owns only what an agent cannot do: a Composer setting and the two consent screens.
-      // Nothing here asks for an Anthropic key or a Cloudflare login — that is the point of the shape.
+      // The reader owns only what an agent cannot do: a Composer setting, and the three steps that
+      // need a browser. Nothing asks for an Anthropic key, and nothing asks for a Cloudflare login to
+      // DEPLOY — claiming the account afterwards is the one Cloudflare step that is theirs.
       const mine = tasks.filter((task) => (task.assignee as { role?: string } | undefined)?.role === 'user');
       expect(mine.map((task) => task.title)).toEqual([
         'Select DeepSeek V4 Pro as the chat model',
+        'Claim the temporary Cloudflare account',
         'Create an empty GitHub repository for the server',
         'Connect the GitHub credential, scoped to that repository',
       ]);

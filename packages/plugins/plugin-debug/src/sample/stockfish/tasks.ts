@@ -44,7 +44,7 @@ const USER: Actor.Actor = { role: 'user', name: 'You' };
 const PLAN: TaskSeed = {
   title: 'Ship a chess engine as an MCP server on Cloudflare Workers',
   description:
-    'From the brief to a tool a chat in this space calls. Each stage below deploys and is verified before the next one starts.',
+    'From the brief to a tool a chat in this space calls. Every stage is verified before the next one starts; the two that change Worker code deploy first.',
   estimate: 'l',
   subTasks: [
     {
@@ -85,9 +85,9 @@ const PLAN: TaskSeed = {
       ],
     },
     {
-      title: 'Deploy an empty Worker with no Cloudflare account',
+      title: 'Deploy an empty Worker with no Cloudflare login',
       description:
-        'Nothing application-shaped in this stage. The point is a URL that answers before any code exists, and an account claimed while it is cheap to lose.',
+        'Nothing application-shaped in this stage. The point is a URL that answers before any code exists, and an account claimed while it is cheap to lose. No login to DEPLOY; claiming it afterwards is the one browser step here.',
       estimate: 'm',
       subTasks: [
         {
@@ -104,13 +104,20 @@ const PLAN: TaskSeed = {
         {
           title: 'Deploy without authenticating to Cloudflare',
           description:
-            '`wrangler deploy --temporary` mints a temporary account and prints a claim URL; plain `wrangler deploy` refuses non-interactively and demands a token, so the flag is not optional. Record both URLs it prints, and claim it before going further — the window is an hour, and every later stage redeploys this Worker.',
+            '`wrangler deploy --temporary` mints a temporary account and prints a Worker URL and a claim URL; plain `wrangler deploy` refuses non-interactively and demands a token, so the flag is not optional. File the WORKER url on the project. The claim URL is a bearer credential — hand it straight to the reader and file it nowhere.',
           estimate: 's',
         },
         {
           title: 'Fetch the deployed URL and confirm the body',
           description: 'Fetch it. A successful deploy command is not evidence that anything is serving.',
           estimate: 'xs',
+        },
+        {
+          title: 'Claim the temporary Cloudflare account',
+          description:
+            'Yours to do: claiming signs the account into yours, which needs a browser the agent does not have. Inside the hour — the account expires with the Worker on it, and every later stage redeploys that Worker.',
+          estimate: 'xs',
+          assignee: USER,
         },
       ],
     },

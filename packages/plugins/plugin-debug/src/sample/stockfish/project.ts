@@ -33,9 +33,11 @@ Write the code yourself in one sandbox, driving it through the Sandbox skill. Th
 ships a coding agent of its own; do not delegate this project to it — it has none of this space's \
 context, and its output would land on a container filesystem rather than in this project.
 
-Deploy at the end of every stage and verify by fetching the URL. File what you produce — the \
-design, the deploy and claim URLs, the tool responses — as artifacts on this project rather than \
-leaving it in the chat.
+Verify every stage before starting the next, and redeploy in the two that change Worker code — a \
+design or registration stage has nothing to deploy. File what you produce — the design, the Worker \
+URL, the tool responses — as artifacts on this project rather than leaving it in the chat. The \
+claim URL that the first deploy prints is a bearer credential for the account: give it to me \
+directly and file it nowhere.
 
 This project needs no Anthropic key and no Cloudflare login. If a step seems to need either, that \
 is the wrong step.`;

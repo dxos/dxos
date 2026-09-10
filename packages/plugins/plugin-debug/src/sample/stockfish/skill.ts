@@ -59,11 +59,15 @@ const INSTRUCTIONS = trim`
     prints a claim URL. The flag is not optional: plain \`wrangler deploy\` refuses in a
     non-interactive shell and demands a token, and an authentication prompt is a dead end for a
     session that cannot open a browser.
-  - **Claim it immediately.** The deploy prints a claim URL alongside the Worker URL. Both go into
-    the project. A temporary account expires, and it takes the Worker and its URL with it, which
+  - **The claim URL is a bearer credential; the Worker URL is not.** Anyone holding the claim URL can
+    take ownership of the account, and a project artifact replicates in plaintext to everyone in the
+    space — so file the Worker URL and hand the claim URL straight to the reader, logging it nowhere.
+    Claiming needs a browser, so it is theirs to do; say that it expires with the Worker on it, which
     invalidates every later stage rather than only the current one.
-  - **Deploy at the end of every stage, and verify by fetching.** A successful \`wrangler deploy\` is
-    not evidence that anything is serving; the response body is.
+  - **Deploy when the Worker changed, and verify every stage regardless.** A design stage has nothing
+    to deploy and a stage that only registers or publishes changes no Worker code — deploying there is
+    a no-op that reads as progress. Where you did deploy, a successful \`wrangler deploy\` is not
+    evidence that anything is serving; the response body is.
   - **Read the deploy output for what it warns about, not only its exit code.** Bundle size and a
     missing binding are warnings on a deploy that succeeds and failures on the request that follows.
   - **Bound work by work, not by wall-clock.** \`Date.now()\` does not advance during synchronous
