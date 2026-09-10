@@ -53,10 +53,10 @@ const storyDeckState = Capability.makeModule(() =>
       sidebarState: 'expanded',
       complementarySidebarState: 'collapsed',
       complementarySidebarPanel: undefined,
-      activeDeck: 'default',
-      previousDeck: 'default',
+      activeDeck: STORY_WORKSPACE_PATH,
+      previousDeck: STORY_WORKSPACE_PATH,
       decks: {
-        default: { ...DeckSchema.defaultDeck },
+        [STORY_WORKSPACE_PATH]: { ...DeckSchema.defaultDeck },
       },
     };
 
@@ -106,6 +106,18 @@ const storyDeckState = Capability.makeModule(() =>
   }),
 );
 
+/**
+ * The workspace the story items live under. Every plank is addressed as `/w/<workspace>/<key>/<id>`, so
+ * a fixture whose nodes hang straight off the root has no URL to be opened by and no plank to render.
+ */
+const STORY_WORKSPACE = 'stories';
+
+/** Graph id of the story workspace, which is also the story deck's id. */
+export const STORY_WORKSPACE_PATH = `${GraphNode.RootId}/${STORY_WORKSPACE}`;
+
+/** The URL key story items are addressed by. */
+const STORY_ITEM_KEY = 'item';
+
 export type StoryItem = { id: string; title: string; children?: StoryItem[] };
 
 /**
@@ -126,7 +138,7 @@ export const STORY_ITEMS = Array.from({ length: 5 }, () => createItem());
  * Graph id of a top-level story item. The graph addresses a node by its path from the root, so the bare
  * {@link STORY_ITEMS} id names no node and opening it yields a plank that never resolves.
  */
-export const storyItemId = (index: number): string => `${GraphNode.RootId}/${STORY_ITEMS[index].id}`;
+export const storyItemId = (index: number): string => `${STORY_WORKSPACE_PATH}/${STORY_ITEMS[index].id}`;
 
 /**
  * Maps a nested {@link StoryItem} tree to graph nodes so `AppGraph.getConnections` / `useConnections` see children.
@@ -215,8 +227,24 @@ const storyGraphBuilder = Capability.inlineModule(
   Effect.fnUntraced(function* () {
     const extensions = yield* Effect.all([
       AppGraphBuilder.createExtension({
-        id: 'storyItems',
+        id: 'storyWorkspace',
         match: GraphNodeMatcher.whenRoot,
+        connector: () =>
+          Effect.succeed([
+            AppGraphNode.make({
+              id: STORY_WORKSPACE,
+              type: 'story-workspace',
+              data: null,
+              properties: { label: 'Stories', icon: 'ph--folder--regular' },
+            }),
+          ]),
+      }),
+      AppGraphBuilder.createExtension({
+        id: 'storyItems',
+        match: GraphNodeMatcher.whenId(STORY_WORKSPACE_PATH),
+        // Without this the deck has no way to name a story plank in the URL, and the URL is the only
+        // record of what is open.
+        url: { key: STORY_ITEM_KEY, kind: 'item', path: [] },
         connector: () => Effect.succeed(STORY_ITEMS.map((item, index) => toStoryItemNode(item, index, 0))),
       }),
       AppGraphBuilder.createExtension({
@@ -274,7 +302,7 @@ const NavContainer = forwardRef<HTMLDivElement, NavContainerProps>((_props, forw
   const layout = useLayout();
   const { invokePromise } = useOperationInvoker();
 
-  const items = useConnections(graph, GraphNode.RootId, 'child');
+  const items = useConnections(graph, STORY_WORKSPACE_PATH, 'child');
   const activeSet = useMemo(() => new Set(layout.active), [layout.active]);
 
   return (
