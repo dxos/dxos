@@ -159,10 +159,6 @@ const project = Effect.fnUntraced(function* (url?: URL, options?: { attend?: boo
     workspace === DeckSchema.DEFAULT_DECK_ID ? DeckSchema.DEFAULT_DECK_ID : GraphPath.getSpacePath(workspace);
   yield* switchWorkspace(workspacePath);
 
-  if (pairs.length === 0) {
-    return undefined;
-  }
-
   const known = yield* knownIdsBySegment();
   const initial = pairs
     .filter((pair) => pair.key !== UrlPath.COMPANION_KEY)
