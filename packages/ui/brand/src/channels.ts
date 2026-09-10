@@ -33,9 +33,21 @@ export type ChannelColor = {
  * error states.
  */
 export const CHANNEL_COLORS: Record<Channel, ChannelColor> = {
-  preview: { hue: 282, saturation: 1, lightness: 1 },
-  dev: { hue: 20, saturation: 0.75, lightness: 1 },
-  staging: { hue: 20, saturation: 0.75, lightness: 1 },
+  dev: {
+    hue: 20,
+    saturation: 0.75,
+    lightness: 1,
+  },
+  preview: {
+    hue: 282,
+    saturation: 1,
+    lightness: 1,
+  },
+  staging: {
+    hue: 20,
+    saturation: 0.75,
+    lightness: 1,
+  },
 };
 
 /**

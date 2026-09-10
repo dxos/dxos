@@ -22,9 +22,36 @@ const Icon = () => null;
 type StoryArgs = {
   /** A prerelease channel's recolouring of the Composer mark; the released mark when absent. */
   channel?: Channel;
+  /** Every channel's recolouring of the Composer mark in one row, instead of the icon set. */
+  channels?: boolean;
 };
 
-const DefaultStory = ({ channel }: StoryArgs) => {
+/** The released mark beside each channel's recolouring of it, so the set reads together. */
+const ChannelsRow = () => {
+  const marks: { label: string; channel?: Channel }[] = [
+    { label: 'production' },
+    ...CHANNELS.map((channel) => ({ label: channel, channel })),
+  ];
+  return (
+    <div className='flex gap-8 p-8'>
+      {marks.map(({ label, channel }) => (
+        <div key={label} className='flex flex-col items-center gap-3'>
+          <div style={{ filter: channel && channelMarkFilter(channel) }}>
+            <Composer size={96} weight='regular' />
+          </div>
+          <span className='text-sm text-description'>{label}</span>
+          <span className='text-xs font-mono text-subdued'>{channel ? channelMarkFilter(channel) : 'as drawn'}</span>
+        </div>
+      ))}
+    </div>
+  );
+};
+
+const DefaultStory = ({ channel, channels }: StoryArgs) => {
+  if (channels) {
+    return <ChannelsRow />;
+  }
+
   const size = 'w-[192px] h-[192px]';
   return (
     <div className='grid grid-cols-3 gap-16'>
@@ -45,13 +72,13 @@ const DefaultStory = ({ channel }: StoryArgs) => {
       </>
       <>
         <div className='flex justify-center'>
-          <DXOS className={mx('w-[40px] h-[40px] fill-sky-700')} />
+          <DXOS className={mx('size-10 fill-sky-700')} />
         </div>
         <div className='flex justify-center'>
-          <DXOS className={mx('w-[24px] h-[24px] fill-sky-700')} />
+          <DXOS className={mx('size-8 fill-sky-700')} />
         </div>
         <div className='flex justify-center'>
-          <DXOS className={mx('w-[16px] h-[16px] fill-sky-700')} />
+          <DXOS className={mx('size-6 fill-sky-700')} />
         </div>
       </>
     </div>
@@ -80,4 +107,9 @@ export const Default: Story = {};
 /** The set as a channel build shows it: the Composer mark recoloured, the rest as drawn. */
 export const Preview: Story = {
   args: { channel: 'preview' },
+};
+
+/** The released mark beside every channel's recolouring of it. */
+export const Channels: Story = {
+  args: { channels: true },
 };
