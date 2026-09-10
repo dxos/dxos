@@ -16,7 +16,6 @@ import { EffectEx } from '@dxos/effect';
 import { DXN } from '@dxos/keys';
 import { PreviewEvents } from '@dxos/plugin-preview';
 import * as PreviewCapabilities from '@dxos/plugin-preview/PreviewCapabilities';
-import { PreviewPlugin } from '@dxos/plugin-preview/testing';
 import { corePlugins } from '@dxos/plugin-testing';
 import { Card, Popover, useThemeContext } from '@dxos/react-ui';
 import {
@@ -26,7 +25,12 @@ import {
   useTextEditor,
 } from '@dxos/react-ui-editor';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
-import { createBasicExtensions, createThemeExtensions, decorateMarkdown } from '@dxos/ui-editor';
+import {
+  createBasicExtensions,
+  createMarkdownExtensions,
+  createThemeExtensions,
+  decorateMarkdown,
+} from '@dxos/ui-editor';
 import { trim } from '@dxos/util';
 
 import { GitHubPlugin } from '#plugin';
@@ -108,6 +112,7 @@ const DefaultStory = ({ text }: StoryArgs) => {
     () => [
       createThemeExtensions({ themeMode }),
       createBasicExtensions({ lineWrapping: true }),
+      createMarkdownExtensions(),
       decorateMarkdown(),
       githubLinks(),
     ],
@@ -129,8 +134,10 @@ const meta = {
   decorators: [
     withTheme(),
     withLayout({ layout: 'fullscreen' }),
+    // No PreviewPlugin: its popover module would answer the anchors too, through the deck's layout
+    // operation, which has no handler here. The start event alone activates this plugin's resolver.
     withPluginManager({
-      plugins: [...corePlugins(), PreviewPlugin.make(), GitHubPlugin(), FixtureLinkSourcePlugin()],
+      plugins: [...corePlugins(), GitHubPlugin(), FixtureLinkSourcePlugin()],
       setupEvents: [PreviewEvents.Start],
     }),
   ],
