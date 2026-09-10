@@ -208,10 +208,30 @@ const task = createEvalRunner({
     Effect.gen(function* () {
       const invocations = yield* toolInvocations();
       const execName = Operation.toolName(SandboxOperation.Exec);
+      // Where the hour went: each call with when it started (seconds into the run), how long the
+      // tool took, and the wait before it (the model's turn). Inputs and results are excerpts.
+      const start = invocations[0]?.calledAt ?? 0;
+      let previousResult = start;
+      const timeline = invocations.map(({ name, input, result, error, calledAt, resultAt }) => {
+        const entry = {
+          at: Math.round(((calledAt ?? previousResult) - start) / 1_000),
+          waitMs: (calledAt ?? previousResult) - previousResult,
+          tookMs: resultAt !== undefined && calledAt !== undefined ? resultAt - calledAt : undefined,
+          name,
+          input: input.slice(0, 200),
+          result: error ?? JSON.stringify(result ?? '').slice(0, 200),
+        };
+        previousResult = resultAt ?? previousResult;
+        return entry;
+      });
+      const sum = (values: (number | undefined)[]) => values.reduce<number>((total, value) => total + (value ?? 0), 0);
       const trace = {
         sandboxCreated: invocations.some(({ name }) => name === Operation.toolName(SandboxOperation.CreateSandbox)),
         execCalls: invocations.filter(({ name }) => name === execName).length,
         erroredTools: invocations.filter(({ error }) => error).map(({ name }) => name),
+        toolSeconds: Math.round(sum(timeline.map(({ tookMs }) => tookMs)) / 1_000),
+        modelSeconds: Math.round(sum(timeline.map(({ waitMs }) => waitMs)) / 1_000),
+        timeline,
       };
       const empty = {
         ...trace,
@@ -220,6 +240,7 @@ const task = createEvalRunner({
         workerUrls: [] as string[],
         claimUrlFiled: false,
         probe: undefined as Probe | undefined,
+        sandboxId: undefined as string | undefined,
         toolsListed: 0,
         bestMoveLegal: false,
         evaluationScored: false,
@@ -257,6 +278,8 @@ const task = createEvalRunner({
       // paths it mentioned and the conventional `/mcp`.
       let probe: Probe | undefined;
       const sandbox = yield* findObject(Sandbox.Sandbox, () => true);
+      // Named in the output so the container, which outlives the run, can be inspected afterwards.
+      const sandboxId = sandbox?.id;
       if (workerUrls.length > 0 && sandbox) {
         const hosts = [...new Set(workerUrls.map((url) => new URL(url).origin))];
         const candidates = [...new Set([...workerUrls, ...hosts.map((host) => `${host}/mcp`), ...hosts])];
@@ -286,6 +309,7 @@ const task = createEvalRunner({
 
       return {
         ...trace,
+        sandboxId,
         designFiled: !!design && design.content.length > 200,
         designDiagrammed: !!design && /```mermaid/.test(design.content),
         workerUrls,
