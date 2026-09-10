@@ -1,0 +1,5 @@
+---
+'@dxos/plugin-debug': minor
+---
+
+The runnable space template now builds a chess engine exposed as an MCP server rather than a chatroom, so the run it describes ends inside Composer — a chat in the same space asking the deployed Worker for a move — instead of at two browser tabs unrelated to the app that created them. The plan is five stages that each deploy and verify before the next starts, and nothing in the middle of it needs an account: the chat runs DeepSeek V4 Pro through the edge rather than an Anthropic key, the assistant writes the code itself in a remote sandbox rather than delegating to a managed agent, the first deploy uses wrangler's unauthenticated mode rather than a Cloudflare login, and creating and publishing to a GitHub repository moved to the last stage — so the three consent screens a first run used to hit before writing any code are now one setting and two steps taken after the thing already works. The space also seeds a chess game five moves into a quiet opening, which is the position the finished server gets pointed at: an answer the model could have produced on its own is then visibly not the engine's.

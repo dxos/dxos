@@ -67,7 +67,7 @@ const storyOptions = {
         // Declared in Projects' `dependsOn`, so the manager refuses to resolve it without Tasks.
         TasksPlugin.make(),
         CrmPlugin.make(),
-        // Contributes the sample spaces (Northwind Sales, Tidepool, Coding Chatroom) as space
+        // Contributes the sample spaces (Northwind Sales, Tidepool, Chess MCP) as space
         // templates — the ones the app's create-space dialog offers.
         DebugPlugin.make(),
         VoyageSpacePlugin,
