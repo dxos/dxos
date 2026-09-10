@@ -3,6 +3,7 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import { expect, waitFor } from 'storybook/test';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { corePlugins } from '@dxos/plugin-testing';
@@ -142,11 +143,16 @@ export const _Pipeline: StoryObj<typeof DefaultStory<Pipeline.Pipeline>> = {
   },
 };
 
+/** The status tag comes from the schema's `singleSelect` meta; a lookup that throws leaves the surface's error fallback instead. */
 export const _Task: StoryObj<typeof DefaultStory<Task.Task>> = {
   args: {
     Component: TaskCard,
     createObject: createTask,
     image: true,
+  },
+  play: async ({ canvasElement }) => {
+    await waitFor(() => expect(canvasElement.querySelector('.dx-tag')).not.toBeNull());
+    await expect(canvasElement.querySelector('[data-testid="error-boundary-fallback"]')).toBeNull();
   },
 };
 
