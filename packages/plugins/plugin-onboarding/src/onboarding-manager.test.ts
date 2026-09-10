@@ -6,7 +6,7 @@ import { describe, onTestFinished, test, vi } from 'vitest';
 
 import type * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import { Client } from '@dxos/client';
+import { Client, Config } from '@dxos/client';
 import { TestBuilder } from '@dxos/client/testing';
 import type * as Operation from '@dxos/compute/Operation';
 import { ClientOperation } from '@dxos/plugin-client';
@@ -23,7 +23,7 @@ class WrappedIdentityError extends Error {
   }
 }
 
-// No hubUrl is passed, so auth is skipped — the local/dev Composer configuration.
+// `showLoginPage` is left off by default, so auth is skipped — the local/dev Composer configuration.
 describe('OnboardingManager', () => {
   test('device invitation opens the join flow without auto-creating an identity', async ({ expect }) => {
     const { manager, getCalls } = await createManager({ deviceInvitationCode: 'test-code' });
@@ -39,7 +39,7 @@ describe('OnboardingManager', () => {
     // Both dialogs would race through the operation layer, and a welcome update landing second
     // hides the join dialog — the device-join flow then stalls with no invitation input.
     const { manager, calls } = await createManager({
-      hubUrl: 'https://hub.example.com',
+      showLoginPage: true,
       deviceInvitationCode: 'test-code',
     });
     await manager.initialize();
@@ -74,7 +74,7 @@ describe('OnboardingManager', () => {
 
   test('url-driven signup with an already-registered email creates no identity', async ({ expect }) => {
     const { manager, getCalls } = await createManager({
-      hubUrl: 'https://hub.example.com',
+      showLoginPage: true,
       email: 'existing@example.com',
       accountInvitationCode: 'XK4F9P2A',
       emailProbe: 'exists',
@@ -86,9 +86,22 @@ describe('OnboardingManager', () => {
     expect(getCalls(ClientOperation.CreateAgent)).toHaveLength(0);
   });
 
+  test('url-driven signup params mint no account when the login page is disarmed', async ({ expect }) => {
+    // A build with no login page has no account to redeem against, so the params fall through to
+    // the local-identity branch. No `emailProbe` stub: reaching the account API at all would throw
+    // on the unstubbed fetch.
+    const { manager, getCalls } = await createManager({
+      email: 'someone@example.com',
+      accountInvitationCode: 'XK4F9P2A',
+    });
+    await manager.initialize();
+
+    expect(getCalls(ClientOperation.CreateIdentity)).toHaveLength(1);
+  });
+
   test('url-driven signup creates no identity when the email probe is rate-limited', async ({ expect }) => {
     const { manager, getCalls } = await createManager({
-      hubUrl: 'https://hub.example.com',
+      showLoginPage: true,
       email: 'unknown@example.com',
       accountInvitationCode: 'XK4F9P2A',
       emailProbe: 'unavailable',
@@ -103,7 +116,7 @@ describe('OnboardingManager', () => {
 
   test('a refused token reports the link as expired', async ({ expect }) => {
     const { manager, toastIds } = await createManager({
-      hubUrl: 'https://hub.example.com',
+      showLoginPage: true,
       token: 'test-token',
       redeemTokenError: new WrappedIdentityError({ error: new InvalidRecoveryTokenError() }),
     });
@@ -114,7 +127,7 @@ describe('OnboardingManager', () => {
 
   test('any other redemption failure reports a failed login, not an expired link', async ({ expect }) => {
     const { manager, toastIds } = await createManager({
-      hubUrl: 'https://hub.example.com',
+      showLoginPage: true,
       token: 'test-token',
       redeemTokenError: new WrappedIdentityError({ error: new Error('Halo space not initialized.') }),
     });
@@ -126,7 +139,11 @@ describe('OnboardingManager', () => {
 
 const createClient = async () => {
   const builder = new TestBuilder();
-  const client = new Client({ services: builder.createLocalClientServices() });
+  // An EDGE URL is what materializes `client.edge`, which the account flows call through.
+  const client = new Client({
+    services: builder.createLocalClientServices(),
+    config: new Config({ runtime: { services: { edge: { url: EDGE_URL } } } }),
+  });
   await client.initialize();
   onTestFinished(async () => {
     await client.destroy();
@@ -157,9 +174,12 @@ const createInvoker = (failures: Map<string, Error> = new Map()) => {
  * pass off the back of a silently-failing fetch. `'unavailable'` simulates the rate-limit
  * response, which must not be read as "this email is free".
  */
+/** The account API is EDGE's, under `/hub`, so the stub answers the prefixed path. */
+const EDGE_URL = 'https://edge.test/';
+
 const stubEmailProbe = (outcome: 'exists' | 'available' | 'unavailable') => {
   vi.stubGlobal('fetch', async (input: unknown) => {
-    if (!(input instanceof URL) || input.pathname !== '/account/email/exists') {
+    if (!(input instanceof URL) || input.pathname !== '/hub/account/email/exists') {
       throw new Error(`Unexpected hub request: ${String(input)}`);
     }
     if (outcome === 'unavailable') {
@@ -180,7 +200,7 @@ const stubEmailProbe = (outcome: 'exists' | 'available' | 'unavailable') => {
 const createManager = async (options: {
   identity?: boolean;
   deviceInvitationCode?: string;
-  hubUrl?: string;
+  showLoginPage?: boolean;
   token?: string;
   email?: string;
   accountInvitationCode?: string;
@@ -203,7 +223,7 @@ const createManager = async (options: {
     invokePromise,
     client,
     deviceInvitationCode: options.deviceInvitationCode,
-    hubUrl: options.hubUrl,
+    showLoginPage: options.showLoginPage,
     token: options.token,
     email: options.email,
     accountInvitationCode: options.accountInvitationCode,

@@ -56,9 +56,9 @@ export default Capability.makeModule(
           const [identityService] = get(identityServiceAtom);
           const identity = identityService ? Option.getOrUndefined(get(Identity.atom(identityService))) : undefined;
           const status = get(CreateAtom.fromObservable(client.mesh.networkStatus));
-          // Account, invitations, and usage are all hub-service reads; without a hub URL there is
-          // no `HubHttpClient` capability and those panels render empty shells forever.
-          const hub = !!client.config.values?.runtime?.app?.env?.DX_HUB_URL;
+          // Account, invitations, and usage all read the account API; a build that does not arm
+          // the login page has no account to read and those panels render empty shells forever.
+          const accounts = Account.showLoginPage(client.config);
 
           return [
             AppGraphNode.make({
@@ -85,7 +85,7 @@ export default Capability.makeModule(
                     icon: 'ph--user--regular',
                   },
                 }),
-                ...(hub
+                ...(accounts
                   ? [
                       AppGraphNode.make({
                         id: Account.Account,
@@ -117,7 +117,7 @@ export default Capability.makeModule(
                     testId: 'clientPlugin.devices',
                   },
                 }),
-                ...(hub
+                ...(accounts
                   ? [
                       AppGraphNode.make({
                         id: Account.Invitations,

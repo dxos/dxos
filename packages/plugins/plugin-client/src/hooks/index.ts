@@ -3,4 +3,4 @@
 //
 
 export * from './useAccountUrl';
-export * from './useHubClient';
+export * from './useEdgeHttpClient';

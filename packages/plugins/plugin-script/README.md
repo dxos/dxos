@@ -41,7 +41,7 @@ await dxos.client.halo.writeCredentials([
 Start composer:
 
 ```bash
-DX_HUB_URL="https://hub-staging.dxos.workers.dev/" DX_ENVIRONMENT=test px serve composer-app
+DX_EDGE_BASE_URL="https://dev.dxos.network/" DX_ENVIRONMENT=test px serve composer-app
 ```
 
 Streaming request:

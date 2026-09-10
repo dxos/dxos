@@ -3,11 +3,12 @@
 //
 
 import * as Effect from 'effect/Effect';
-import React, { useCallback, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useRef, useState } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import * as Account from '@dxos/app-toolkit/Account';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
+import { Context } from '@dxos/context';
 import { createDidFromIdentityKey } from '@dxos/credentials';
 import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
@@ -20,7 +21,6 @@ import { useIdentity } from '@dxos/react-client/halo';
 import { ThemeProvider, defaultTx } from '@dxos/react-ui';
 import { getHostPlatform, isTauri } from '@dxos/util';
 
-import { joinWaitlist, login } from '../../credentials';
 import { useForceDarkTheme } from '../../hooks';
 import { OnboardingOperation } from '../../operations';
 import { translations } from '../../translations';
@@ -47,14 +47,15 @@ const NATIVE_EMAIL_LOGIN_ENABLED: boolean = false;
 
 const emailLoginEnabled = !passkeyOnly && (!isTauri() || NATIVE_EMAIL_LOGIN_ENABLED);
 
-export const WelcomeScreen = ({ hubUrl }: { hubUrl: string }) => {
+export const WelcomeScreen = () => {
   const client = useClient();
   const identity = useIdentity();
   const { invokePromise } = useOperationInvoker();
   const [state, setState] = useState<WelcomeState>(WelcomeState.INIT);
   const [error, setError] = useState<WelcomeError | null>(null);
   const pendingRef = useRef(false);
-  const hub = useMemo(() => Account.createHubClient(hubUrl), [hubUrl]);
+  // EDGE serves the account API under `/hub`, so the client's own EDGE client answers it.
+  const edge = client.edge.http;
 
   // The welcome screen always renders dark, regardless of the system theme.
   useForceDarkTheme();
@@ -71,7 +72,7 @@ export const WelcomeScreen = ({ hubUrl }: { hubUrl: string }) => {
 
       try {
         pendingRef.current = true;
-        let result = await login({ hubUrl, email, redirectUrl: window.location.origin });
+        let result = await edge.login(new Context(), { email, redirectUrl: window.location.origin });
 
         // Server signaled that this email needs a local identity to bind a
         // fresh Account (test-email carve-out): create one and retry.
@@ -82,8 +83,7 @@ export const WelcomeScreen = ({ hubUrl }: { hubUrl: string }) => {
           const newIdentity = client.halo.identity.get();
           invariant(newIdentity, 'identity should exist after create');
           const newIdentityKey = requirePublicKey(newIdentity.identityKey);
-          result = await login({
-            hubUrl,
+          result = await edge.login(new Context(), {
             email,
             identityDid: await createDidFromIdentityKey(newIdentityKey),
             identityKey: newIdentityKey.toHex(),
@@ -101,7 +101,7 @@ export const WelcomeScreen = ({ hubUrl }: { hubUrl: string }) => {
 
         // Either no Account for this email or the link went out by email.
         // Show the same "check your email" UI in both cases so the response
-        // stays enumeration-safe. When no Account exists hub-service silently
+        // stays enumeration-safe. When no Account exists the account API silently
         // submits the email to the waitlist.
         setState(WelcomeState.LOGIN_SENT);
       } catch (err) {
@@ -111,7 +111,7 @@ export const WelcomeScreen = ({ hubUrl }: { hubUrl: string }) => {
         pendingRef.current = false;
       }
     },
-    [hubUrl, client, invokePromise, error],
+    [edge, client, invokePromise, error],
   );
 
   // `invokePromise` resolves with `{ error }` rather than rejecting, so a failed redemption is
@@ -163,8 +163,8 @@ export const WelcomeScreen = ({ hubUrl }: { hubUrl: string }) => {
   );
 
   const handleValidateInvitationCode = useCallback(
-    (code: string) => EffectEx.runPromise(Account.checkAccessCode({ hub, code })),
-    [hub],
+    (code: string) => EffectEx.runPromise(Account.checkAccessCode({ edge, code })),
+    [edge],
   );
 
   const handleCreateAccount = useCallback(
@@ -197,7 +197,7 @@ export const WelcomeScreen = ({ hubUrl }: { hubUrl: string }) => {
         // Errors are mapped to UI states inside the Effect — `runPromise` rejects with a
         // FiberFailure, so the typed errors are not matchable from a catch block.
         const outcome = await EffectEx.runPromise(
-          Account.signUpWithEmail({ hub, email, code, ensureIdentity }).pipe(
+          Account.signUpWithEmail({ edge, email, code, ensureIdentity }).pipe(
             Effect.map(() => 'ok' as const),
             Effect.catchTag('EmailProbeUnavailableError', () => Effect.succeed('email-check-unavailable' as const)),
             Effect.catchTag('EmailAlreadyRegisteredError', () => Effect.succeed('account-exists' as const)),
@@ -226,7 +226,7 @@ export const WelcomeScreen = ({ hubUrl }: { hubUrl: string }) => {
         pendingRef.current = false;
       }
     },
-    [hub, identity, client, invokePromise, error],
+    [edge, identity, client, invokePromise, error],
   );
 
   const handleCreateAccountWithOAuth = useCallback(
@@ -240,16 +240,15 @@ export const WelcomeScreen = ({ hubUrl }: { hubUrl: string }) => {
       pendingRef.current = true;
       try {
         // Opens the provider auth in a new tab (OAuth-first: no local identity yet). Because atproto
-        // nullifies window.opener, the flow can't relay back via postMessage; the invitation code +
-        // hub URL are persisted, then kms-service redirects the tab to /redirect/oauth-recovery. The
-        // welcome OAuthRecoveryRedirect module then creates the identity, completes registration, and
+        // nullifies window.opener, the flow can't relay back via postMessage; the invitation code is
+        // persisted, then kms-service redirects the tab to /redirect/oauth-recovery. The welcome
+        // OAuthRecoveryRedirect module then creates the identity, completes registration, and
         // redeems this invitation code with the provider-verified email. This call returns once the
         // tab is open — completion happens out-of-band.
         const result = await invokePromise(OnboardingOperation.RegisterOAuthRecovery, {
           provider,
           loginHint,
           code,
-          hubUrl,
         });
         if (result.error) {
           throw result.error;
@@ -261,7 +260,7 @@ export const WelcomeScreen = ({ hubUrl }: { hubUrl: string }) => {
         pendingRef.current = false;
       }
     },
-    [hubUrl, invokePromise, error],
+    [invokePromise, error],
   );
 
   const handleJoinWaitlist = useCallback(
@@ -271,8 +270,7 @@ export const WelcomeScreen = ({ hubUrl }: { hubUrl: string }) => {
       }
       pendingRef.current = true;
       try {
-        await joinWaitlist({
-          hubUrl,
+        await edge.requestAccess(new Context(), {
           email,
           identityDid: identity ? await createDidFromIdentityKey(requirePublicKey(identity.identityKey)) : undefined,
         });
@@ -285,7 +283,7 @@ export const WelcomeScreen = ({ hubUrl }: { hubUrl: string }) => {
         pendingRef.current = false;
       }
     },
-    [hubUrl, identity],
+    [edge, identity],
   );
 
   return (

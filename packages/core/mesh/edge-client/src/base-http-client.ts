@@ -32,7 +32,8 @@ export type EdgeHttpCallArgs = {
   /**
    * Force authentication by pre-fetching `/auth` to obtain the challenge before
    * sending the body. Use for requests with large bodies to avoid sending twice.
-   * Not available on HubHttpClient (hub-service has no `/auth` endpoint).
+   * Only for edge's own routes: `/auth` is edge's endpoint, so a proxied hub-service route must
+   * take the 401-challenge path instead.
    */
   auth?: boolean;
 };
@@ -82,7 +83,7 @@ export abstract class BaseHttpClient {
   private _authPrefetch: Promise<void> | undefined;
 
   constructor(baseUrl: string, options?: BaseHttpClientOptions) {
-    // Slash-terminated: `new URL('account/me', '…/hub')` would otherwise drop the `/hub` prefix.
+    // Slash-terminated: `new URL('hub/account/me', '…/edge')` would otherwise drop the `/edge` path.
     const url = getEdgeUrlWithProtocol(baseUrl, 'http');
     this._baseUrl = url.endsWith('/') ? url : `${url}/`;
     this._clientTag = options?.clientTag;

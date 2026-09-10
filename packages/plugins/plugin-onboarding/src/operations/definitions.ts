@@ -74,8 +74,6 @@ export const RegisterOAuthRecovery = Operation.make({
     loginHint: Schema.optional(Schema.String),
     /** Invitation code to redeem (with the provider-verified email) once registration completes. */
     code: Schema.String,
-    /** Hub-service URL the invitation code is redeemed against. */
-    hubUrl: Schema.String,
   }),
   output: Schema.Void,
 });

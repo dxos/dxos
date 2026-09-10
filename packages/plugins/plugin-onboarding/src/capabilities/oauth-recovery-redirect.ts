@@ -252,7 +252,7 @@ const finalizeRedirect = Effect.fnUntraced(function* (
 
     // Redeem the invitation code with the email to mint the hub Account.
     yield* Account.redeemAccessCode({
-      hub: Account.createHubClient(snapshot.hubUrl),
+      edge: client.edge.http,
       identity,
       email,
       code: snapshot.code,

@@ -9,7 +9,7 @@ import { log } from '@dxos/log';
 import { type GetProfileUsageResponse } from '@dxos/protocols';
 import { useAsyncEffect } from '@dxos/react-ui';
 
-import { useHubHttpClient } from '../../hooks';
+import { useEdgeHttpClient } from '../../hooks';
 import { UsageView, type UsageViewState } from './UsageView';
 
 /** State + payload kept together so `ready` always carries data (mirrors the discriminated `UsageViewProps`). */
@@ -23,31 +23,31 @@ type UsageFetchState =
     };
 
 /**
- * Fetches rolling-window profile usage from the hub service and renders it.
+ * Fetches rolling-window profile usage from the account API and renders it.
  * Connected wrapper around the presentational {@link UsageView}.
  */
 export const UsageContainer = () => {
-  const hubHttp = useHubHttpClient();
+  const edgeHttp = useEdgeHttpClient();
   const [fetchState, setFetchState] = useState<UsageFetchState>({ state: 'loading' });
   const [lastUpdated, setLastUpdated] = useState<number | undefined>();
   const [refreshCount, setRefreshCount] = useState(0);
 
   useAsyncEffect(async () => {
-    if (!hubHttp) {
+    if (!edgeHttp) {
       setFetchState({ state: 'unavailable' });
       return;
     }
     // Keep prior data visible while refetching; only show the loading state on first load.
     setFetchState((previous) => (previous.state === 'ready' ? previous : { state: 'loading' }));
     try {
-      const result = await hubHttp.getProfileUsage(new Context());
+      const result = await edgeHttp.getProfileUsage(new Context());
       setFetchState({ state: 'ready', data: result });
       setLastUpdated(Date.now());
     } catch (err) {
       log.catch(err);
       setFetchState({ state: 'error' });
     }
-  }, [hubHttp, refreshCount]);
+  }, [edgeHttp, refreshCount]);
 
   const handleRefresh = useCallback(() => setRefreshCount((count) => count + 1), []);
 

@@ -473,13 +473,6 @@ message Runtime {
 
     message Ai { optional string server = 1; }
 
-    message Hub {
-      optional string url = 1;
-      /// Origin serving the passkey prompt. Must be covered by the WebAuthn relying party the
-      /// credential was registered against; the API host is not.
-      optional string auth_url = 2;
-    }
-
     /// Canonical descriptor for an EDGE (Cloudflare Worker) service.
     /// Entries in `Services.edge_services` consolidate the per-service URL
     /// constants previously hard-coded in consuming plugins.
@@ -523,7 +516,11 @@ message Runtime {
     optional AgentHosting agent_hosting = 13;
     optional Edge edge = 15;
     optional Ai ai = 16;
-    optional Hub hub = 17;
+    /// Field 17 held `hub`: hub-service is reached through EDGE (`<edge>/hub`) and its passkey
+    /// origin is configured as `DX_AUTH_URL`. Both the number and the name are reserved: reusing
+    /// either breaks wire or JSON/text compatibility.
+    reserved 17;
+    reserved "hub";
     optional Sandbox sandbox = 18;
 
     /// EDGE service configurations keyed by `EdgeService.name`. The canonical set

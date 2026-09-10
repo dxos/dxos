@@ -86,14 +86,8 @@ export const resolveSpec = (overrides: Partial<EdgeStressSpec> = {}): EdgeStress
   ...overrides,
 });
 
-/**
- * Both endpoints of one EDGE deployment: the Hub is served under `/hub/` of the same origin, so a
- * spec names its target once and cannot point the two halves at different deployments.
- */
-export const urlsFor = (edge: EdgeTarget): { edgeUrl: string; hubUrl: string } => {
-  const edgeUrl = EDGE_URLS[edge];
-  return { edgeUrl, hubUrl: `${edgeUrl}/hub/` };
-};
+/** The one endpoint of an EDGE deployment: the Hub is served under `/hub/` of the same origin. */
+export const urlFor = (edge: EdgeTarget): string => EDGE_URLS[edge];
 
 /**
  * Randomized stress test of a fleet of real clients replicating through EDGE.
@@ -111,7 +105,7 @@ export class EdgeStress implements TestPlan<EdgeStressSpec, EdgeStressResult> {
     // A spec file and `--spec` both supply only the fields they change, so what arrives here is a
     // partial spec even though the harness types it whole.
     const spec = resolveSpec(params.spec);
-    const { edgeUrl, hubUrl } = urlsFor(spec.edge);
+    const edgeUrl = urlFor(spec.edge);
     assertCanCleanUp(spec.edge, spec.cleanup);
     const limits: Model['limits'] = {
       maxSpaces: spec.maxSpaces,
@@ -142,7 +136,7 @@ export class EdgeStress implements TestPlan<EdgeStressSpec, EdgeStressResult> {
     const spawned: ReplicantBrain<ClientReplicant>[] = [];
     let fleet: Awaited<ReturnType<EdgeStress['_setupFleet']>>;
     try {
-      fleet = await this._setupFleet(env, spec, { edgeUrl, hubUrl }, limits, spawned);
+      fleet = await this._setupFleet(env, spec, edgeUrl, limits, spawned);
     } catch (err) {
       if (spec.cleanup) {
         await this._cleanupPartialFleet(edgeUrl, spawned);
@@ -359,7 +353,7 @@ export class EdgeStress implements TestPlan<EdgeStressSpec, EdgeStressResult> {
   private async _setupFleet(
     env: SchedulerEnvImpl<EdgeStressSpec>,
     spec: EdgeStressSpec,
-    urls: { edgeUrl: string; hubUrl: string },
+    edgeUrl: string,
     limits: Model['limits'],
     /** Filled as each client is spawned, so a caller can clean up a partial fleet; see `run`. */
     spawned: ReplicantBrain<ClientReplicant>[],
@@ -374,7 +368,7 @@ export class EdgeStress implements TestPlan<EdgeStressSpec, EdgeStressResult> {
     const replicants = spawned;
     for (let index = 0; index < model.clients.length; index++) {
       const replicant = await env.spawn(ClientReplicant, { platform: spec.platform });
-      await replicant.brain.init({ edgeUrl: urls.edgeUrl, agents: spec.agents, partitions: spec.partitions });
+      await replicant.brain.init({ edgeUrl, agents: spec.agents, partitions: spec.partitions });
       replicants.push(replicant);
     }
 
@@ -394,7 +388,7 @@ export class EdgeStress implements TestPlan<EdgeStressSpec, EdgeStressResult> {
       // same rows. On preview the hatch is closed and cleanup falls back to the admin key.
       if (isDevLikeTarget(spec.edge)) {
         await replicants[owner].brain.bindTestAccount({
-          hubUrl: urls.hubUrl,
+          edgeUrl,
           email: `test+bladerunner-${identity}@dxos.org`,
         });
       }

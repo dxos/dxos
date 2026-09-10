@@ -17,22 +17,41 @@ import { type EdgeEnvelope } from '@dxos/protocols';
 
 export class HubApiError extends BaseError.extend('HubApiError', 'Hub API error') {}
 
+/** Loopback hosts a `wrangler dev` EDGE answers on, where cleartext never leaves the machine. */
+const LOOPBACK_HOSTNAMES = ['localhost', '127.0.0.1', '[::1]'];
+
+/**
+ * Whether the hub admin API key may be presented to this origin: every request carries it, so
+ * cleartext is only tolerable when it never leaves the machine.
+ */
+export const allowsAdminKey = (baseUrl: URL): boolean =>
+  baseUrl.protocol === 'https:' || LOOPBACK_HOSTNAMES.includes(baseUrl.hostname);
+
+/** EDGE proxies hub-service under `/hub`, so the admin API is addressed off the profile's EDGE URL. */
 const hubBaseUrl = Effect.gen(function* () {
   const config = yield* ConfigService;
-  const url = config.values?.runtime?.services?.hub?.url;
+  const url = config.values?.runtime?.services?.edge?.url;
   if (!url) {
-    // The CLI writes a hub URL into every profile it creates, so an absent one means the profile
+    // The CLI writes an EDGE URL into every profile it creates, so an absent one means the profile
     // was edited — report that rather than silently substituting a DXOS-operated host.
-    return yield* Effect.fail(new HubApiError({ message: 'Hub URL is not configured (runtime.services.hub.url).' }));
+    return yield* Effect.fail(new HubApiError({ message: 'EDGE URL is not configured (runtime.services.edge.url).' }));
   }
-  return url;
+  const baseUrl = new URL('hub/', url.endsWith('/') ? url : `${url}/`);
+  if (!allowsAdminKey(baseUrl)) {
+    return yield* Effect.fail(
+      new HubApiError({
+        message: `Refusing to send the hub admin key over ${baseUrl.protocol} to ${baseUrl.hostname}; configure an https EDGE URL.`,
+      }),
+    );
+  }
+  return baseUrl.toString();
 });
 
 /**
  * Makes an authenticated request to the Hub API and unwraps the response envelope.
  *
  * Uses admin API-key auth (`DX_HUB_API_KEY`) for privileged CLI operations.
- * User-facing hub calls use VP auth via `HubHttpClient` in `@dxos/edge-client`.
+ * User-facing hub calls use VP auth via `EdgeHttpClient` in `@dxos/edge-client`.
  * TODO(wittjosiah): Reconcile with hub client.
  */
 export const hubApiRequest = <T>(

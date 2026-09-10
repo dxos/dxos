@@ -24,15 +24,15 @@ export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app
 // `#commands` resolves per condition: a node host has the OAuth callback server and filesystem the
 // browser command set omits (`account`, `profile`).
 export const Commands = AppCapability.commands(() => import('#commands'));
-export const HubHttpClient = Capability.lazyModule(
-  'HubHttpClient',
+export const EdgeHttpClient = Capability.lazyModule(
+  'EdgeHttpClient',
   {
     requires: [ClientCapabilities.Client],
-    provides: [ClientCapabilities.HubHttpClient],
-    // Reads `client.config` (initialized-only) for the hub URL.
+    provides: [ClientCapabilities.EdgeHttpClient],
+    // Reads `client.edge` (initialized-only).
     activatesOn: ClientEvents.Initialized,
   },
-  () => import('./hub-http-client'),
+  () => import('./edge-http-client'),
 );
 export const Client = Capability.lazyModule(
   'Client',

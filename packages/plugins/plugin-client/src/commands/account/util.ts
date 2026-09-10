@@ -5,13 +5,15 @@
 import * as Effect from 'effect/Effect';
 import * as Options from 'effect/unstable/cli/Flag';
 
-import * as Account from '@dxos/app-toolkit/Account';
 import { ClientService } from '@dxos/client';
 
-/** Client for the configured hub-service (accounts, invitations, email verification). */
-export const hubClient = Effect.gen(function* () {
+/**
+ * Client for the account API (accounts, invitations, email verification). EDGE serves it under
+ * `/hub`, so it is the client's own EDGE client rather than one aimed at a second host.
+ */
+export const accountClient = Effect.gen(function* () {
   const client = yield* ClientService;
-  return Account.createHubClient(client);
+  return client.edge.http;
 });
 
 /** The atproto OAuth method, named for the account users connect with (as Composer labels it). */

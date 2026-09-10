@@ -53,8 +53,6 @@ export type OAuthRecoveryPendingSnapshot = {
   purpose: 'register';
   /** Invitation code to redeem (with the provider-verified email) once registration completes. */
   code: string;
-  /** Hub-service URL the invitation code is redeemed against. */
-  hubUrl: string;
 };
 
 /**

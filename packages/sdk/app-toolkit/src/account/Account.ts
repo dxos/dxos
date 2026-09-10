@@ -9,13 +9,13 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
 import { type Client } from '@dxos/client';
-import { DEFAULT_AUTH_URL, DEFAULT_HUB_URL } from '@dxos/client-protocol';
+import { DEFAULT_AUTH_URL } from '@dxos/client-protocol';
 import { type Identity } from '@dxos/client/halo';
 import { getEnvString } from '@dxos/config';
 import { Context as DxContext } from '@dxos/context';
 import { createDidFromIdentityKey } from '@dxos/credentials';
 import { Ref } from '@dxos/echo';
-import { HubHttpClient } from '@dxos/edge-client';
+import { EdgeHttpClient } from '@dxos/edge-client';
 import { BaseError } from '@dxos/errors';
 import { invariant } from '@dxos/invariant';
 import { AccessToken, Connection } from '@dxos/link';
@@ -63,7 +63,7 @@ export class EmailProbeUnavailableError extends BaseError.extend(
   'Could not check whether the email already has an account.',
 ) {}
 
-/** Hub-service refused to redeem the access code / mint the Account. */
+/** The account API refused to redeem the access code / mint the Account. */
 export class AccountRedemptionError extends BaseError.extend('AccountRedemptionError', 'Account redemption failed.') {}
 
 /** Edge refused to complete OAuth recovery registration. */
@@ -100,36 +100,24 @@ export const accountErrorType = (error: unknown): AccountErrorType | undefined =
 };
 
 //
-// Hub client
+// Account client.
 //
-
-/**
- * Hub-service base URL from the client config. `runtime.app.env.DX_HUB_URL` is set by the bundler
- * config plugin from the build's environment, so surfaces without a bundler (the CLI) fall back to
- * `runtime.services.hub.url` — the key the `dx hub` admin commands already read — and finally to
- * {@link DEFAULT_HUB_URL}, so no surface can be left with no hub to talk to.
- *
- * NOTE: The gates that treat the presence of `DX_HUB_URL` as "this is a gated deployment" read the
- * raw config path rather than this resolver, since a default would silently arm them.
- */
-export const getHubUrl = (client: Pick<Client, 'config'>): string =>
-  getEnvString(client.config, 'DX_HUB_URL') ?? client.config.values?.runtime?.services?.hub?.url ?? DEFAULT_HUB_URL;
 
 /** Origin to send a browser to for a passkey prompt. */
 export const getAuthUrl = (client: Pick<Client, 'config'>): string =>
-  getEnvString(client.config, 'DX_AUTH_URL') ??
-  client.config.values?.runtime?.services?.hub?.authUrl ??
-  DEFAULT_AUTH_URL;
+  getEnvString(client.config, 'DX_AUTH_URL') ?? DEFAULT_AUTH_URL;
 
-/** Client for the configured hub-service (accounts, invitations, email verification). */
-export const createHubClient = (clientOrUrl: Client | string): HubHttpClient =>
-  new HubHttpClient(typeof clientOrUrl === 'string' ? clientOrUrl : getHubUrl(clientOrUrl));
+/**
+ * Client for the account API, which EDGE serves under `/hub`. A `Client` already owns one
+ * (`client.edge.http`); a bare URL is for callers holding an EDGE base URL and no client.
+ */
+export const createAccountClient = (edgeUrl: string): EdgeHttpClient => new EdgeHttpClient(edgeUrl);
 
 //
 // Access codes
 //
 
-/** Hub-service matches the canonical form only ({@link InvitationCodeSchema}): no hyphens, upper case. */
+/** The account API matches the canonical form only ({@link InvitationCodeSchema}): no hyphens, upper case. */
 export const normalizeAccessCode = (code: string): string => code.trim().replace(/-/g, '').toUpperCase();
 
 const isCanonicalAccessCode = Schema.is(InvitationCodeSchema);
@@ -137,10 +125,10 @@ const isCanonicalAccessCode = Schema.is(InvitationCodeSchema);
 /** Whether user input normalizes to a well-formed access code — hyphens and case are forgiven. */
 export const isValidAccessCodeFormat = (code: string): boolean => isCanonicalAccessCode(normalizeAccessCode(code));
 
-/** Validate an access code against hub-service. Resolves false on any failure — never throws. */
-export const checkAccessCode = Effect.fn(function* ({ hub, code }: { hub: HubHttpClient; code: string }) {
+/** Validate an access code against the account API. Resolves false on any failure — never throws. */
+export const checkAccessCode = Effect.fn(function* ({ edge, code }: { edge: EdgeHttpClient; code: string }) {
   return yield* Effect.tryPromise(() =>
-    hub.validateInvitationCode(DxContext.default(), { code: normalizeAccessCode(code) }),
+    edge.validateInvitationCode(DxContext.default(), { code: normalizeAccessCode(code) }),
   ).pipe(
     Effect.map(({ valid }) => valid),
     Effect.catch(() => Effect.succeed(false)),
@@ -157,12 +145,12 @@ export const checkAccessCode = Effect.fn(function* ({ hub, code }: { hub: HubHtt
  */
 export type EmailProbeResult = 'exists' | 'available' | 'unavailable';
 
-/** Bounds the probe so an unresponsive hub cannot leave the signup flow pending. */
+/** Bounds the probe so an unresponsive account API cannot leave the signup flow pending. */
 const EMAIL_PROBE_TIMEOUT_MS = 10_000;
 
 /** Probe whether an address already has an Account. Failures resolve to `unavailable` — never throws. */
-export const probeEmail = Effect.fn(function* ({ hub, email }: { hub: HubHttpClient; email: string }) {
-  return yield* Effect.tryPromise(() => hub.checkEmailExists(DxContext.default(), { email })).pipe(
+export const probeEmail = Effect.fn(function* ({ edge, email }: { edge: EdgeHttpClient; email: string }) {
+  return yield* Effect.tryPromise(() => edge.checkEmailExists(DxContext.default(), { email })).pipe(
     Effect.timeoutOrElse({
       duration: Duration.millis(EMAIL_PROBE_TIMEOUT_MS),
       orElse: () => Effect.fail(new EmailProbeUnavailableError({ message: 'Email probe timed out.' })),
@@ -185,17 +173,17 @@ export type SignUpResult = {
 };
 
 /**
- * Redeem an access code against hub-service to mint the Account, binding it to the local identity.
+ * Redeem an access code against the account API to mint the Account, binding it to the local identity.
  * Codes are anonymous at issue time, so the address is supplied here: user-entered on the email
  * path, provider-verified on the OAuth path.
  */
 export const redeemAccessCode = Effect.fn(function* ({
-  hub,
+  edge,
   identity,
   email,
   code,
 }: {
-  hub: HubHttpClient;
+  edge: EdgeHttpClient;
   identity: Identity;
   email: string;
   /** Access code; omitted only for addresses the hub exempts from its gate. */
@@ -203,7 +191,7 @@ export const redeemAccessCode = Effect.fn(function* ({
 }) {
   const result = yield* Effect.tryPromise({
     try: async () =>
-      hub.redeemInvitationCode(DxContext.default(), {
+      edge.redeemInvitationCode(DxContext.default(), {
         code: code === undefined ? undefined : normalizeAccessCode(code),
         email,
         identityDid: await createDidFromIdentityKey(requirePublicKey(identity.identityKey)),
@@ -227,17 +215,17 @@ export const redeemAccessCode = Effect.fn(function* ({
  * `IdentityCreated`, which provisions the identity's spaces).
  */
 export const signUpWithEmail = Effect.fn(function* <E>({
-  hub,
+  edge,
   email,
   code,
   ensureIdentity,
 }: {
-  hub: HubHttpClient;
+  edge: EdgeHttpClient;
   email: string;
   code?: string;
   ensureIdentity: Effect.Effect<Identity, E>;
 }) {
-  const probe = yield* probeEmail({ hub, email });
+  const probe = yield* probeEmail({ edge, email });
   if (probe === 'exists') {
     return yield* Effect.fail(new EmailAlreadyRegisteredError());
   }
@@ -246,7 +234,7 @@ export const signUpWithEmail = Effect.fn(function* <E>({
   }
 
   const identity = yield* ensureIdentity;
-  return yield* redeemAccessCode({ hub, identity, email, code });
+  return yield* redeemAccessCode({ edge, identity, email, code });
 });
 
 //

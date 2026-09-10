@@ -20,7 +20,7 @@ tasks:
       - $DX_ENVIRONMENT
       - $DX_FEEDBACK_LOGS_ENDPOINT
       - $DX_HOST
-      - $DX_HUB_URL
+      - $DX_SHOW_LOGIN_PAGE
       - $DX_IPDATA_API_KEY
       - $DX_MINIFY
       - $DX_OTEL_ENDPOINT

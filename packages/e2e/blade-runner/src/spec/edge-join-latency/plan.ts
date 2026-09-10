@@ -19,7 +19,7 @@ import {
 } from '../../plan';
 import { ClientReplicant, type SpaceDigest } from '../../replicants/client-replicant';
 import { describeError } from '../../util';
-import { type EdgeTarget, assertCanCleanUp, canonical, isDevLikeTarget, urlsFor } from '../edge-stress';
+import { type EdgeTarget, assertCanCleanUp, canonical, isDevLikeTarget, urlFor } from '../edge-stress';
 
 //
 // Spec.
@@ -186,7 +186,7 @@ export class EdgeJoinLatency implements TestPlan<EdgeJoinLatencySpec, EdgeJoinLa
     params: TestProps<EdgeJoinLatencySpec>,
   ): Promise<EdgeJoinLatencyResult> {
     const spec = resolveSpec(params.spec);
-    const { edgeUrl, hubUrl } = urlsFor(spec.edge);
+    const edgeUrl = urlFor(spec.edge);
     assertCanCleanUp(spec.edge, spec.cleanup);
     const resultPath = path.join(params.outDir, 'join-latency.json');
     log.info('edge-join-latency starting', { edgeUrl, spec });
@@ -221,7 +221,7 @@ export class EdgeJoinLatency implements TestPlan<EdgeJoinLatencySpec, EdgeJoinLa
       // the agent cannot exist.
       if (isDevLikeTarget(spec.edge)) {
         try {
-          await replicant.brain.bindTestAccount({ hubUrl, email: `test+bladerunner-join-${label}@dxos.org` });
+          await replicant.brain.bindTestAccount({ edgeUrl, email: `test+bladerunner-join-${label}@dxos.org` });
         } catch (err) {
           if (spec.agents) {
             agents = 'failed';

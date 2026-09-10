@@ -3,7 +3,7 @@
 Composer deploys to Cloudflare Workers (Static Assets). One Worker per environment, selected at deploy
 time with `wrangler deploy --env <env>` — see [`wrangler.jsonc`](./wrangler.jsonc) for the per-env Worker
 name and bindings, and [`.github/workflows/env/*`](../../../.github/workflows/env) for the build-time
-variables (`DX_EDGE_BASE_URL`, `DX_HUB_URL`, PostHog keys, …).
+variables (`DX_EDGE_BASE_URL`, `DX_SHOW_LOGIN_PAGE`, PostHog keys, …).
 
 | Environment  | Worker             | URL                         | EDGE         | Deployed                            |
 | ------------ | ------------------ | --------------------------- | ------------ | ----------------------------------- |

@@ -16,6 +16,7 @@ import { type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type ProcessProtocol } from '@dxos/protocols';
 import {
+  type CheckEmailExistsResponse,
   type CompleteOAuthRegistrationRequest,
   type CompleteOAuthRegistrationResponse,
   type CreateAgentRequestBody,
@@ -26,20 +27,32 @@ import {
   type FeedProtocol,
   type GetAccessTokenRequest,
   type GetAccessTokenResponseBody,
+  type GetAccountResponse,
   type GetAgentStatusResponseBody,
   type GetNotarizationResponseBody,
   type GetPluginsResponseBody,
+  type GetProfileUsageResponse,
   type InitiateOAuthFlowRequest,
   type InitiateOAuthFlowResponse,
+  type IssueInvitationResponse,
   type JoinSpaceRequest,
   type JoinSpaceResponseBody,
+  type ListAccountInvitationsResponse,
+  type LoginRequest,
+  type LoginResponse,
   type ObjectId,
   type PostNotarizationRequestBody,
   type RecoverIdentityRequest,
   type RecoverIdentityResponseBody,
+  type RedeemInvitationCodeRequest,
+  type RedeemInvitationCodeResponse,
+  type RequestAccessRequest,
+  type RequestAccessResponse,
+  type ResendVerificationEmailResponse,
   type SerializedError,
   type UploadFunctionRequest,
   type UploadFunctionResponseBody,
+  type ValidateInvitationCodeResponse,
 } from '@dxos/protocols';
 import {
   type QueryRequest as QueryRequestProto,
@@ -126,10 +139,11 @@ export class EdgeHttpClientService extends EffectContext.Service<EdgeHttpClientS
 ) {}
 
 /**
- * HTTP client for the edge worker API (spaces, queues, functions, agents, etc.).
+ * HTTP client for the edge worker API (spaces, queues, functions, agents, etc.) plus the
+ * hub-service API (accounts, invitations, email verification), which edge proxies under `/hub`.
  *
- * Hub-service API (accounts, invitations) lives in {@link HubHttpClient} — the two
- * services run at different URLs and are never both available from the same base URL.
+ * Hub routes are therefore addressed relatively (`hub/account/me`), never with a leading slash:
+ * edge's own routes resolve against the worker root, but a hub route has to keep the prefix.
  */
 /** Upstream service the EDGE AI proxy forwards to; selects the `/ai/generate/<service>` route. */
 export type EdgeAiService = 'anthropic' | 'deepseek';
@@ -798,6 +812,117 @@ export class EdgeHttpClient extends BaseHttpClient {
       method: 'GET',
       auth: true,
     });
+  }
+
+  //
+  // Accounts (hub-service, proxied by edge under `/hub`)
+  //
+  // NOTE: Do NOT set `auth: true` on these calls. The `/auth` VP-challenge endpoint belongs to
+  // edge, not to hub-service, so a pre-fetched header is not what hub-service asked for. Auth is
+  // handled via the regular request → 401 → WWW-Authenticate challenge → retry path.
+  //
+
+  /**
+   * Whether an account already exists for the email, so onboarding can route to login rather than
+   * signup. Enumeration-safe callers must not surface the answer to the user directly.
+   */
+  public async checkEmailExists(
+    ctx: Context,
+    body: { email: string },
+    args?: EdgeHttpCallArgs,
+  ): Promise<CheckEmailExistsResponse> {
+    return this._call(ctx, new URL('hub/account/email/exists', this.baseUrl), { ...args, body, method: 'POST' });
+  }
+
+  /** Checks an account invitation code without consuming it, so a form can reject it before signup. */
+  public async validateInvitationCode(
+    ctx: Context,
+    body: { code: string },
+    args?: EdgeHttpCallArgs,
+  ): Promise<ValidateInvitationCodeResponse> {
+    return this._call(ctx, new URL('hub/account/invitation-code/validate', this.baseUrl), {
+      ...args,
+      body,
+      method: 'POST',
+    });
+  }
+
+  /** Consumes an account invitation code, creating the account it was issued for. */
+  public async redeemInvitationCode(
+    ctx: Context,
+    body: RedeemInvitationCodeRequest,
+    args?: EdgeHttpCallArgs,
+  ): Promise<RedeemInvitationCodeResponse> {
+    return this._call(ctx, new URL('hub/account/invitation-code/redeem', this.baseUrl), {
+      ...args,
+      body,
+      method: 'POST',
+    });
+  }
+
+  /**
+   * Existing-account email recovery. The link is delivered out of band — the response never carries
+   * a token. Test emails in dev-like environments short-circuit instead with `needsIdentity` /
+   * `admitted` before any token exists. Enumeration-safe: the response is identical for unknown
+   * emails. Account creation goes through {@link redeemInvitationCode}.
+   */
+  public async login(ctx: Context, body: LoginRequest, args?: EdgeHttpCallArgs): Promise<LoginResponse> {
+    return this._call(ctx, new URL('hub/account/login', this.baseUrl), { ...args, body, method: 'POST' });
+  }
+
+  /** Joins the waitlist on a deployment whose signup is gated by invitation. */
+  public async requestAccess(
+    ctx: Context,
+    body: RequestAccessRequest,
+    args?: EdgeHttpCallArgs,
+  ): Promise<RequestAccessResponse> {
+    return this._call(ctx, new URL('hub/account/request-access', this.baseUrl), { ...args, body, method: 'POST' });
+  }
+
+  /** The account of the authenticated identity. */
+  public async getAccount(ctx: Context, args?: EdgeHttpCallArgs): Promise<GetAccountResponse> {
+    return this._call(ctx, new URL('hub/account/me', this.baseUrl), { ...args, method: 'GET' });
+  }
+
+  /** Deletes the account of the authenticated identity. */
+  public async deleteAccount(ctx: Context, args?: EdgeHttpCallArgs): Promise<{ deleted: boolean }> {
+    return this._call(ctx, new URL('hub/account/me', this.baseUrl), { ...args, method: 'DELETE' });
+  }
+
+  /** The invitations issued by the authenticated account. */
+  public async listAccountInvitations(ctx: Context, args?: EdgeHttpCallArgs): Promise<ListAccountInvitationsResponse> {
+    return this._call(ctx, new URL('hub/account/invitation', this.baseUrl), { ...args, method: 'GET' });
+  }
+
+  /** Mints a new invitation code for the authenticated account. */
+  public async issueAccountInvitation(ctx: Context, args?: EdgeHttpCallArgs): Promise<IssueInvitationResponse> {
+    return this._call(ctx, new URL('hub/account/invitation/issue', this.baseUrl), { ...args, method: 'POST' });
+  }
+
+  /** Re-sends the address-verification email for the authenticated account. */
+  public async resendVerificationEmail(
+    ctx: Context,
+    args?: EdgeHttpCallArgs,
+  ): Promise<ResendVerificationEmailResponse> {
+    return this._call(ctx, new URL('hub/account/email/resend-verification', this.baseUrl), { ...args, method: 'POST' });
+  }
+
+  /**
+   * Rolling-window usage and effective limits for the authenticated identity.
+   * Served from the per-user metering DO; optional `windowSeconds` defaults to the largest limit window.
+   */
+  public async getProfileUsage(
+    ctx: Context,
+    query?: { windowSeconds?: number },
+    args?: EdgeHttpCallArgs,
+  ): Promise<GetProfileUsageResponse> {
+    return this._call(
+      ctx,
+      createUrl(new URL('hub/api/metering/profile/usage', this.baseUrl), {
+        windowSeconds: query?.windowSeconds,
+      }),
+      { ...args, method: 'GET' },
+    );
   }
 }
 

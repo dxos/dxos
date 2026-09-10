@@ -1,5 +1,5 @@
 //
-// Copyright 2026 DXOS.org
+// Copyright 2025 DXOS.org
 //
 
-export { WelcomeContainer as default } from './WelcomeContainer';
+export { WelcomeScreen as default } from './WelcomeScreen';

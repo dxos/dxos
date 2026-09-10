@@ -9,7 +9,7 @@ import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 import { dirname } from 'node:path';
 
-import { DEFAULT_HUB_URL, DX_CONFIG, DX_DATA, getProfileConfigPath, getProfilePath } from '@dxos/client-protocol';
+import { DX_CONFIG, DX_DATA, getProfileConfigPath, getProfilePath } from '@dxos/client-protocol';
 import { invariant } from '@dxos/invariant';
 
 import { Config } from './config';
@@ -36,9 +36,6 @@ export const memoryConfig = new Config({
 export const defaultProfileEndpoints = new Config({
   runtime: {
     services: {
-      hub: {
-        url: DEFAULT_HUB_URL,
-      },
       edge: {
         url: `${EDGE_URLS.production}/`,
       },
@@ -103,7 +100,7 @@ export const fromConfig = (config: Config) => Layer.succeed(ConfigService, confi
 
 /**
  * Both load branches (existing file, first-run write) must layer env, file, and builtins in the same
- * order, or a freshly created profile would come up without storage or the hub.
+ * order, or a freshly created profile would come up without storage or an edge endpoint.
  */
 const withProfileDefaults = (configValues: ConfigInit, profile: string) =>
   ConfigService.of(new Config(processEnvDefaults(), configValues, profileBuiltinDefaults(profile).values));
@@ -111,7 +108,7 @@ const withProfileDefaults = (configValues: ConfigInit, profile: string) =>
 /**
  * `DX_*` process env projected onto `runtime.app.env`, mirroring what the bundler config plugin does
  * for browser builds — without it those keys are unreachable on node, where nothing bundles the app.
- * Takes precedence over the profile config file, so `DX_HUB_URL=… dx …` overrides for one command.
+ * Takes precedence over the profile config file, so `DX_EDGE_BASE_URL=… dx …` overrides for one command.
  */
 const processEnvDefaults = (): ConfigInit => {
   const env: Record<string, string> = {};
@@ -132,13 +129,6 @@ const profileBuiltinDefaults = (profile: string) => {
 
   return new Config({
     runtime: {
-      // Kept as a load-time default, not written per profile: profiles created before the endpoints
-      // moved into the file have no `hub` key, and without this every `dx hub` command breaks on upgrade.
-      services: {
-        hub: {
-          url: DEFAULT_HUB_URL,
-        },
-      },
       client: {
         edgeFeatures: {
           subductionReplicator: true,

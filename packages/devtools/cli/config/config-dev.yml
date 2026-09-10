@@ -11,12 +11,13 @@ runtime:
       persistent: true
       dataRoot: /tmp/dx/run
 
+  app:
+    env:
+      # Passkey origin for these profiles: the dev account host, which the WebAuthn relying party
+      # the credential was registered against covers. Read by `Account.getAuthUrl`.
+      DX_AUTH_URL: https://account.dev.composer.space
+
   services:
-    # Same EDGE host as `edge` below, so this is the hub that EDGE's `HUB_SERVICE` binding resolves
-    # to -- a hub from another environment mints magic links no redemption can resolve.
-    hub:
-      url: https://dev.dxos.network/hub/
-      authUrl: https://account.dev.composer.space
     edge:
       url: https://dev.dxos.network/
     iceProviders:

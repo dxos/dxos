@@ -6,8 +6,8 @@ import * as Effect from 'effect/Effect';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
-import { getEnvString } from '@dxos/config';
 import { log } from '@dxos/log';
+import * as Account from '@dxos/plugin-client/Account';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 
 import { OnboardingManager } from '../onboarding-manager';
@@ -18,13 +18,12 @@ export default Capability.makeModule(
     const { invokePromise } = yield* Capabilities.OperationInvoker;
     const client = yield* ClientCapabilities.Client;
     const searchProps = new URLSearchParams(window.location.search);
-    const hubUrl = getEnvString(client.config, 'DX_HUB_URL');
 
     const token = searchProps.get('token') ?? undefined;
     const manager = new OnboardingManager({
       invokePromise,
       client,
-      hubUrl,
+      showLoginPage: Account.showLoginPage(client.config),
       token,
       recoverIdentity: searchProps.get('recoverIdentity') === 'true',
       deviceInvitationCode: searchProps.get('deviceInvitationCode') ?? undefined,

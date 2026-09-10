@@ -32,7 +32,7 @@ import {
   ATMOSPHERE_METHOD,
   ATMOSPHERE_METHOD_TITLE,
   METHOD_ALIASES,
-  hubClient,
+  accountClient,
   methodOption,
 } from '../util';
 
@@ -221,7 +221,7 @@ const awaitLoginToken = (server: LocalCallbackServer) =>
  */
 const loginWithEmail = (client: Client, email: string, invoke: Capabilities.OperationInvoker['invoke']) =>
   Effect.gen(function* () {
-    const hub = yield* hubClient;
+    const edge = yield* accountClient;
     // The redirect target is named on the call that mints the token, so the server starts before
     // the hub says whether an email is sent at all. A bind failure is swallowed rather than raised
     // here because the `needsIdentity` path below completes without a callback.
@@ -231,7 +231,7 @@ const loginWithEmail = (client: Client, email: string, invoke: Capabilities.Oper
 
     return yield* Effect.gen(function* () {
       const result = yield* Effect.tryPromise(() =>
-        hub.login(DxContext.default(), { email, redirectUrl: server?.origin }),
+        edge.login(DxContext.default(), { email, redirectUrl: server?.origin }),
       );
 
       if (result.needsIdentity) {
@@ -247,7 +247,7 @@ const loginWithEmail = (client: Client, email: string, invoke: Capabilities.Oper
 
         const retry = yield* Effect.tryPromise({
           try: () =>
-            hub.login(DxContext.default(), {
+            edge.login(DxContext.default(), {
               email,
               identityDid: identity.did,
               identityKey: requirePublicKey(identity.identityKey).toHex(),

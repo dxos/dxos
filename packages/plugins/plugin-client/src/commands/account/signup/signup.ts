@@ -19,6 +19,7 @@ import { CommandConfig, FormBuilder, print, syncAllToEdge, withTypes } from '@dx
 import { performRegisterOAuthFlow } from '@dxos/cli-util/oauth';
 import { type Client, ClientService } from '@dxos/client';
 import { type Identity } from '@dxos/client/halo';
+import { type EdgeHttpClient } from '@dxos/edge-client';
 import { invariant } from '@dxos/invariant';
 import { AccessToken, Connection } from '@dxos/link';
 import { ATPROTO_OAUTH_SCOPES, OAuthProvider } from '@dxos/protocols';
@@ -30,7 +31,7 @@ import {
   ATMOSPHERE_METHOD,
   ATMOSPHERE_METHOD_TITLE,
   METHOD_ALIASES,
-  hubClient,
+  accountClient,
   methodOption,
 } from '../util';
 
@@ -75,8 +76,8 @@ export const signup = Command.make(
       );
     }
 
-    const hub = yield* hubClient;
-    if (!(yield* Account.checkAccessCode({ hub, code }))) {
+    const edge = yield* accountClient;
+    if (!(yield* Account.checkAccessCode({ edge, code }))) {
       return yield* Effect.fail(
         new Error(
           `Access code ${code} is not valid — it may be unknown, revoked, already redeemed, ` +
@@ -94,8 +95,8 @@ export const signup = Command.make(
       : yield* Prompt.text({ message: `${INPUT_PROMPT[resolvedMethod]}:` }).pipe(Prompt.run);
 
     const result = yield* Match.value(resolvedMethod).pipe(
-      Match.when('email', () => signUpWithEmail({ client, hub, invoke, code, email: resolvedInput })),
-      Match.when(ATMOSPHERE_METHOD, () => signUpWithAtmosphere({ client, hub, invoke, code, handle: resolvedInput })),
+      Match.when('email', () => signUpWithEmail({ client, edge, invoke, code, email: resolvedInput })),
+      Match.when(ATMOSPHERE_METHOD, () => signUpWithAtmosphere({ client, edge, invoke, code, handle: resolvedInput })),
       Match.exhaustive,
     );
 
@@ -158,7 +159,7 @@ const printAccount = (account: Omit<Account.SignUpResult, 'accountId'> & { ident
 
 type MethodParams = {
   client: Client;
-  hub: ReturnType<typeof Account.createHubClient>;
+  edge: EdgeHttpClient;
   invoke: Capabilities.OperationInvoker['invoke'];
   code: string;
 };
@@ -175,9 +176,9 @@ const RECOVERY =
  * Email sign-up — {@link Account.signUpWithEmail} with the CLI's identity creation injected, and
  * the shared flow's typed errors translated to actionable CLI messages.
  */
-const signUpWithEmail = Effect.fn(function* ({ client, hub, invoke, code, email }: MethodParams & { email: string }) {
+const signUpWithEmail = Effect.fn(function* ({ client, edge, invoke, code, email }: MethodParams & { email: string }) {
   return yield* Account.signUpWithEmail({
-    hub,
+    edge,
     email,
     code,
     ensureIdentity: ensureIdentity(client, invoke, email.split('@')[0]),
@@ -204,7 +205,7 @@ const signUpWithEmail = Effect.fn(function* ({ client, hub, invoke, code, email 
  */
 const signUpWithAtmosphere = Effect.fn(function* ({
   client,
-  hub,
+  edge,
   invoke,
   code,
   handle,
@@ -226,7 +227,7 @@ const signUpWithAtmosphere = Effect.fn(function* ({
   );
 
   // The credential written to the default space rides out with the command's `syncAllToEdge`.
-  return yield* Account.redeemAccessCode({ hub, identity, email, code }).pipe(
+  return yield* Account.redeemAccessCode({ edge, identity, email, code }).pipe(
     Effect.catchTag('AccountRedemptionError', (error) =>
       Effect.fail(new Error(`Could not redeem the access code for ${email} (${error.message}). ${RECOVERY}`)),
     ),
