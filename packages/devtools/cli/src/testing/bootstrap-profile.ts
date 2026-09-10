@@ -31,7 +31,9 @@ const program = Effect.gen(function* () {
 
   const client = new Client({ config });
   yield* Effect.promise(() => client.initialize());
-  yield* Effect.promise(() => client.halo.createIdentity({ displayName: 'e2e' }));
+  // No profile argument: `ProfileDocument` is a protobuf message requiring `$typeName`, and the
+  // display name is not load-bearing for anything the suite asserts.
+  yield* Effect.promise(() => client.halo.createIdentity());
   const space = yield* Effect.promise(() => client.spaces.create());
   yield* Effect.promise(() => space.waitUntilReady());
   yield* Effect.promise(() => space.db.flush());
