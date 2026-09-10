@@ -22640,9 +22640,6 @@ importers:
       '@atlaskit/pragmatic-drag-and-drop-hitbox':
         specifier: 'catalog:'
         version: 1.1.0
-      '@codemirror/state':
-        specifier: 'catalog:'
-        version: 6.7.1
       '@dxos/echo-react':
         specifier: workspace:*
         version: link:../../core/echo/echo-react
