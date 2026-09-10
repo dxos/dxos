@@ -22,6 +22,7 @@ import * as Outline from './Outline';
 import * as Person from './Person';
 import * as Pipeline from './Pipeline';
 import * as Provider from './Provider';
+import * as RemoteSession from './RemoteSession';
 import * as Repo from './Repo';
 import * as Task from './Task';
 import * as TaskSet from './TaskSet';
@@ -66,6 +67,7 @@ export {
   Person,
   Pipeline,
   Provider,
+  RemoteSession,
   Repo,
   Task,
   TaskSet,

@@ -7,6 +7,7 @@ import { StructSchema } from '@bufbuild/protobuf/wkt';
 
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
+import { typeNameOf } from '@dxos/protocols/buf';
 import { bufRegistry } from '@dxos/protocols/buf-registry';
 import { Timeframe } from '@dxos/timeframe';
 
@@ -69,12 +70,6 @@ const packedAny = (typeUrl: string, value: Uint8Array) => ({
   'typeUrl': typeUrl,
   'value': Buffer.from(value),
 });
-
-/**
- * The bare type name a `type_url` carries. `anyPack` writes `type.googleapis.com/<name>` while the
- * legacy codec wrote the bare name, and the registry is keyed by the bare name either way.
- */
-const typeNameOf = (typeUrl: string): string => typeUrl.slice(typeUrl.lastIndexOf('/') + 1);
 
 const anyToSigningShape = (value: unknown): unknown => {
   const packed = asRecord(value);

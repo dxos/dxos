@@ -1,4 +1,4 @@
-// Lints `flow QA-n` blocks for references the flow never binds.
+// Lints `test QA-n` blocks for references the test never binds.
 import { readFileSync } from 'node:fs';
 import { globSync } from 'node:fs';
 
@@ -7,13 +7,13 @@ const report = [];
 
 for (const file of files) {
   const lines = readFileSync(file, 'utf8').split('\n');
-  // Slice each `flow QA-n:` block: starts at the header, ends at the closing fence.
-  const flows = [];
+  // Slice each `test QA-n:` block: starts at the header, ends at the closing fence.
+  const tests = [];
   let cur = null;
   for (let i = 0; i < lines.length; i++) {
-    if (/^flow QA-\d+:/.test(lines[i])) {
-      cur = { name: lines[i].match(/^flow (QA-\d+)/)[1], start: i + 1, body: [] };
-      flows.push(cur);
+    if (/^test QA-\d+:/.test(lines[i])) {
+      cur = { name: lines[i].match(/^test (QA-\d+)/)[1], start: i + 1, body: [] };
+      tests.push(cur);
       continue;
     }
     if (cur) {
@@ -25,13 +25,13 @@ for (const file of files) {
     }
   }
 
-  for (const flow of flows) {
-    const text = flow.body.map((l) => l.text).join('\n');
+  for (const test of tests) {
+    const text = test.body.map((l) => l.text).join('\n');
 
     // Bound names: `given:` entries written `- name: prose`, and every `capture:`.
     const givens = new Set();
     let inGiven = false;
-    for (const { text: l } of flow.body) {
+    for (const { text: l } of test.body) {
       if (/^\s{2}given:/.test(l)) {
         inGiven = true;
         continue;
@@ -46,7 +46,7 @@ for (const file of files) {
 
     // Referenced names.
     const seen = new Map();
-    for (const { n, text: l } of flow.body) {
+    for (const { n, text: l } of test.body) {
       for (const m of l.matchAll(/\$given\.([A-Za-z_][A-Za-z0-9_]*)/g)) {
         if (!givens.has(m[1])) seen.set(`$given.${m[1]}`, n);
       }
@@ -57,20 +57,20 @@ for (const file of files) {
       }
     }
     if (seen.size) {
-      report.push({ file, flow: flow.name, unbound: [...seen.entries()] });
+      report.push({ file, test: test.name, unbound: [...seen.entries()] });
     }
   }
 }
 
 let total = 0;
 for (const r of report) {
-  console.log(`${r.file}  ${r.flow}`);
+  console.log(`${r.file}  ${r.test}`);
   for (const [name, line] of r.unbound) {
     console.log(`    L${line}  ${name}`);
     total++;
   }
 }
-console.log(`\n${report.length} flows with unbound references; ${total} references total`);
+console.log(`\n${report.length} tests with unbound references; ${total} references total`);
 
 // Non-zero exit so CI and hooks fail on a bad manifest without parsing stdout.
 if (total > 0) {

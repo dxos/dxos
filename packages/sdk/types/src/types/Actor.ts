@@ -6,7 +6,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Ref } from '@dxos/echo';
+import { Obj, Ref } from '@dxos/echo';
 
 import * as Person from './Person';
 
@@ -26,6 +26,13 @@ export const Actor = Schema.Struct({
   // TODO(burdon): Generalize to handle/identifier?
   email: Schema.optional(Schema.String),
   name: Schema.optional(Schema.String),
+  /**
+   * The object this actor stands for, when it is not a person — an agent session, a service, a
+   * bot. Deliberately untyped: an actor is a role in someone else's schema (a task's assignee, a
+   * message's author), so naming the concrete types here would make every such schema depend on
+   * them, and the set is open by construction.
+   */
+  subject: Schema.optional(Ref.Ref(Obj.Unknown)),
 });
 
 export type Actor = Schema.Schema.Type<typeof Actor>;

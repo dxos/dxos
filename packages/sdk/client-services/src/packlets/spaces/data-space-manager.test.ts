@@ -712,6 +712,28 @@ describe('DataSpaceManager', () => {
       expect(space.state).to.equal(SpaceState.SPACE_DELETED);
     });
 
+    test('markSpaceDeleted removes the space even when teardown fails', async () => {
+      const builder = new TestBuilder();
+
+      const peer = builder.createPeer();
+      await peer.createIdentity();
+      await openAndClose(peer.echoHost, peer.dataSpaceManager);
+
+      const space = await peer.dataSpaceManager.createSpace(new Context());
+      await space.inner.controlPipeline.state.waitUntilTimeframe(space.inner.controlPipeline.state.endTimeframe);
+      const spaceKey = space.key;
+
+      // What leaving the swarm does when the signaling server is unreachable: the tombstone is
+      // already written, so a rejecting close must not strand the space in the live list.
+      space.close = () => Promise.reject(new Error('Timeout [10,000ms]'));
+
+      await peer.dataSpaceManager.markSpaceDeleted(new Context(), spaceKey);
+
+      expect(peer.dataSpaceManager.spaces.has(spaceKey)).to.be.false;
+      expect(peer.dataSpaceManager.isSpaceDeleted(spaceKey)).to.be.true;
+      expect(space.state).to.equal(SpaceState.SPACE_DELETED);
+    });
+
     test('markSpaceDeleted is idempotent', async () => {
       const builder = new TestBuilder();
 

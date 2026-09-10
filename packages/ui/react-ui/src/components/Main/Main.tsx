@@ -206,9 +206,12 @@ const MainSidebar = forwardRef<HTMLDivElement, MainSidebarProps>(
     const autoFocusVetoed = onOpenAutoFocus
       ? prevents(onOpenAutoFocus)
       : !document.body.hasAttribute(KEYBOARD_MODALITY_ATTR);
+    // Only `expanded` is on screen below `lg`; `collapsed` is the resting state there (the deck's
+    // default, and where the overlay sends a sidebar), so a dismissal returns to it and the swipe
+    // area can open from it.
     const drawer = useDrawer({
-      open: !isLg && state !== 'closed',
-      onOpenChange: ({ open }) => onStateChange?.(open ? 'expanded' : 'closed'),
+      open: !isLg && state === 'expanded',
+      onOpenChange: ({ open }) => onStateChange?.(open ? 'expanded' : 'collapsed'),
       modal: false,
       trapFocus: false,
       preventScroll: false,

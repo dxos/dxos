@@ -24,10 +24,10 @@ The following extension dialects are used in this document.
 |-------------|--------------------------------|
 | `type`      | `org.dxos.mdl.type@1.0`        |
 | `feat`      | `org.dxos.mdl.feat@1.0`        |
-| `test`      | `org.dxos.mdl.test@1.0`        |
+| `scenario`  | `org.dxos.mdl.scenario@1.0`    |
 | `component` | `org.dxos.mdl.component@1.0`   |
 | `op`        | `org.dxos.mdl.op@1.1`          |
-| `flow`      | `org.dxos.mdl.flow@1.0`        |
+| `test`      | `org.dxos.mdl.test@1.0`        |
 | `step`      | `org.dxos.mdl.step@1.0`        |
 | `service`   | `org.dxos.mdl.service@1.0`     |
 
@@ -427,7 +427,7 @@ feat F-7: Future Tagging (schema scaffolding only)
 ## Acceptance
 
 ```mdl
-test T-1: Create Magazine
+scenario T-1: Create Magazine
   given: user is in a space in Composer
   when: user creates a Magazine via the plugin's create menu
   then:
@@ -438,7 +438,7 @@ test T-1: Create Magazine
 ```
 
 ```mdl
-test T-2: Post schema backward compatibility
+scenario T-2: Post schema backward compatibility
   given: a Post created before this revision exists in the space
   when: the new plugin version loads
   then:
@@ -447,7 +447,7 @@ test T-2: Post schema backward compatibility
 ```
 
 ```mdl
-test T-3: Curate button disabled without feeds
+scenario T-3: Curate button disabled without feeds
   given: a Magazine with magazine.feeds.length === 0
   when: MagazineArticle renders
   then:
@@ -456,7 +456,7 @@ test T-3: Curate button disabled without feeds
 ```
 
 ```mdl
-test T-4: Curate flow runs sync then deterministic curation
+scenario T-4: Curate flow runs sync then deterministic curation
   given: a Magazine with two referenced feeds, each with unsynced remote posts
   when: user clicks Curate
   then:
@@ -467,7 +467,7 @@ test T-4: Curate flow runs sync then deterministic curation
 ```
 
 ```mdl
-test T-4a: Agent curation via skill
+scenario T-4a: Agent curation via skill
   given: a chat referencing a Magazine whose MagazineSkill is active
   when: the agent is prompted to curate the magazine
   then:
@@ -480,7 +480,7 @@ test T-4a: Agent curation via skill
 ```
 
 ```mdl
-test T-5: Partial feed sync failure is non-fatal
+scenario T-5: Partial feed sync failure is non-fatal
   given: a Magazine with two feeds; one feed's URL returns 500
   when: user clicks Curate
   then:
@@ -489,14 +489,14 @@ test T-5: Partial feed sync failure is non-fatal
 ```
 
 ```mdl
-test T-6: ListCandidatePosts excludes curated
+scenario T-6: ListCandidatePosts excludes curated
   given: a Magazine whose posts array already contains refs to two Posts from feed A
   when: ListCandidatePosts(magazineId) is called
   then: returned list contains no entries whose postId matches an existing magazine.posts ref
 ```
 
 ```mdl
-test T-7: AddPostToMagazine is idempotent
+scenario T-7: AddPostToMagazine is idempotent
   given: a Magazine already containing a Post ref
   when: AddPostToMagazine invoked with the same postId
   then:
@@ -505,7 +505,7 @@ test T-7: AddPostToMagazine is idempotent
 ```
 
 ```mdl
-test T-8: FetchArticleContent surfaces images
+scenario T-8: FetchArticleContent surfaces images
   given: a Post whose link resolves to an HTML page with og:image and two <img> tags
   when: FetchArticleContent(postId) is called
   then:
@@ -515,7 +515,7 @@ test T-8: FetchArticleContent surfaces images
 ```
 
 ```mdl
-test T-9: Tile dimming on read
+scenario T-9: Tile dimming on read
   given: a Magazine with one Post where readAt is unset
   when: user clicks the tile
   then:
@@ -525,7 +525,7 @@ test T-9: Tile dimming on read
 ```
 
 ```mdl
-test T-10: Tile metadata
+scenario T-10: Tile metadata
   given: a curated Post with title, snippet, imageUrl, author, published, and a feed with name
   when: MagazineTile renders
   then:
@@ -538,13 +538,13 @@ test T-10: Tile metadata
 
 ## QA
 
-Executable flows. Each step carries a human instruction (`do`) and, where the step maps to an
-invocable operation, an agent binding (`invoke`). Report failures by flow and step number.
+Executable tests. Each step carries a human instruction (`do`) and, where the step maps to an
+invocable operation, an agent binding (`invoke`). Report failures by test and step number.
 
 plugin-magazine is dev-only in `getDefaults` (`isDev`), so OFF by default for a normal user.
 
 ```mdl
-flow QA-1: Create a Magazine, add a feed, curate deterministically
+test QA-1: Create a Magazine, add a feed, curate deterministically
   desc: The button-path round-trip — create a Magazine, attach a Feed, sync it, and run the
     deterministic CurateMagazine op the Curate button drives.
   actors: human
@@ -557,10 +557,10 @@ flow QA-1: Create a Magazine, add a feed, curate deterministically
     - plugin-magazine is enabled — it is OFF by default (isDev-only default). Enabling is a UI
       action (Settings -> plugin registry).
     - feed: an existing Feed (RSS or ATproto) in the space, with description-bearing Posts available
-    - no Magazine named "QA Magazine" exists — ABORT rather than deleting one this flow did not create
-    - magazine: the Magazine "QA Magazine" this flow creates — no create op exists (human-only
+    - no Magazine named "QA Magazine" exists — ABORT rather than deleting one this test did not create
+    - magazine: the Magazine "QA Magazine" this test creates — no create op exists (human-only
       step), so the runner binds this once that step completes
-  test:
+  steps:
     - name: Create the Magazine
       do: In the navtree, click + on a collection and choose Magazine. Name it "QA Magazine" and
         add the existing Feed to magazine.feeds.
@@ -588,7 +588,7 @@ flow QA-1: Create a Magazine, add a feed, curate deterministically
 ```
 
 ```mdl
-flow QA-2: Open a curated tile and confirm read state
+test QA-2: Open a curated tile and confirm read state
   desc: The master-detail path — clicking a tile opens PostArticle and marks the post read.
   actors: human
   covers: [F-5.5, F-5.6, F-6.3]
@@ -596,7 +596,7 @@ flow QA-2: Open a curated tile and confirm read state
   given:
     - an identity exists
     - a Magazine with at least one curated Post whose readAt is unset (run QA-1 first)
-  test:
+  steps:
     - name: Click a tile
       do: Click an unread tile in the Masonry grid.
       expect: PostArticle opens (complementary drawer, sibling plank, or companion, depending on

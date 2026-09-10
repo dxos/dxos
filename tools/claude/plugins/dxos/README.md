@@ -2,7 +2,7 @@
 
 The `dxos` plugin packages the DXOS Composer MCP server for Claude Code. Its main
 workflow is durable project tracking through `/dxos:project`. It also includes
-`/dxos:qa` for running QA flows.
+`/dxos:qa` for running QA tests and suites.
 
 The marketplace manifest is
 [`.claude-plugin/marketplace.json`](../../../../.claude-plugin/marketplace.json).
@@ -143,24 +143,29 @@ enabling the plugin does not clear an older disabled choice.
 In a repo with no registry yet, `/dxos:project new <name>` creates one. Read verbs
 report that none exists rather than inventing entries.
 
-## `/dxos:qa` — running QA flows
+## `/dxos:qa` — running QA tests and suites
 
-A second command, over the executable `flow` blocks declared in `.mdl` specs (the
-`Deus.QA` dialect — a `## QA` section in a `PLUGIN.mdl`, or an `APP.mdl` for
+A second command, over the executable `test QA-n` and `suite` blocks declared in `.mdl` specs
+(the `Deus.QA` dialect — a `## QA` section in a `PLUGIN.mdl`, or `spec/APP.mdl` of an app for
 journeys crossing plugins).
 
 | Command                            | What it does                                                            |
 | ---------------------------------- | ----------------------------------------------------------------------- |
-| `/dxos:qa`                         | Numbered table of every flow, with its `status:`                        |
-| `/dxos:qa list [filter]`           | The same table, narrowed by document path, flow id, or title            |
-| `/dxos:qa show <plugin> <flowId>`  | Print one flow verbatim — its `given`, steps and `cleanup`              |
-| `/dxos:qa run <plugin> <flowId>`   | Execute it against a live app and report a per-step pass/fail table     |
-| `/dxos:qa run <plugin> <flowId> --skip-cleanup` | Leave the artifacts in place for inspection                |
+| `/dxos:qa`                         | Numbered table of every test, with its `status:`                        |
+| `/dxos:qa list [filter]`           | The same table, narrowed by document path, test id, or title            |
+| `/dxos:qa suites [filter]`         | Numbered table of every suite, with its tags and test count             |
+| `/dxos:qa show <plugin> <testId>`  | Print one test verbatim — its `given`, `before`, `steps` and `after`    |
+| `/dxos:qa run <plugin> <testId>`   | Execute it against a live app and report a per-step pass/fail table     |
+| `/dxos:qa run <plugin>`            | Every test of that document, as its implicit suite                      |
+| `/dxos:qa run --suite <name>`      | The tests of one suite, one run, one report                             |
+| `/dxos:qa run --tag <tag>`         | The tests of every suite carrying the tag                               |
+| `/dxos:qa run … --stage=after`     | One stage only (`before` / `steps` / `after`); the skip is reported     |
+| `/dxos:qa snapshot`                | Print the running QA page's UI snapshot as JSON                         |
 | `/dxos:qa help`                    | Table of every verb                                                     |
 
 Rows are addressable by number, as with `/dxos:project list`. Enumeration is
-`scripts/list-flows.mjs`; execution is the repo's `running-qa-flows` skill, which
-the command defers to rather than restating.
+`scripts/list-tests.mjs`; execution is the repo's `composer-qa` skill, which the
+command defers to rather than restating.
 
 Unlike `/dxos:project`, there is no `UserPromptSubmit` hook: the store is the
 `.mdl` files themselves, so there is no backend to swap and nothing for a

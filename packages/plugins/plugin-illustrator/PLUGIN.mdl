@@ -19,10 +19,10 @@ Each extension is defined in the Appendix or resolved via its URI.
 |-------------|--------------------------------|
 | `type`      | `org.dxos.mdl.type@1.0`        |
 | `feat`      | `org.dxos.mdl.feat@1.0`        |
-| `test`      | `org.dxos.mdl.test@1.0`        |
+| `scenario`  | `org.dxos.mdl.scenario@1.0`    |
 | `component` | `org.dxos.mdl.component@1.0`   |
 | `op`        | `org.dxos.mdl.op@1.1`          |
-| `flow`      | `org.dxos.mdl.flow@1.0`        |
+| `test`      | `org.dxos.mdl.test@1.0`        |
 
 ## Types
 
@@ -109,15 +109,15 @@ component UmlSkill
 
 ## QA
 
-Executable flows. Each step carries a human instruction (`do`) and, where the step maps to an
-invocable operation, an agent binding (`invoke`). Report failures by flow and step number.
+Executable tests. Each step carries a human instruction (`do`) and, where the step maps to an
+invocable operation, an agent binding (`invoke`). Report failures by test and step number.
 
 ```mdl
-flow QA-1: Create, edit, and read back a drawing
+test QA-1: Create, edit, and read back a drawing
   desc: |
     The scene-DSL round-trip through the SVG variant (owned by this plugin, so no renderer plugin
     dependency is needed). Note: the source's runtime ECHO type is `Drawing`, not the `Sketch`
-    type documented above — this flow uses the real name.
+    type documented above — this test uses the real name.
   actors: agent
   covers: []
   status: unverified
@@ -125,8 +125,8 @@ flow QA-1: Create, edit, and read back a drawing
     - an identity exists
     - space: a space is open
     - collection: a collection in that space, to create into
-    - no drawing named "QA Sketch" exists — ABORT rather than deleting one this flow did not create
-  test:
+    - no drawing named "QA Sketch" exists — ABORT rather than deleting one this test did not create
+  steps:
     - name: Create the drawing
       do: In the navtree, click + on a collection and choose Drawing (or ask the assistant to create one). Name it "QA Sketch".
       invoke: [op:create] { name: "QA Sketch", variant: "svg" }
@@ -156,7 +156,7 @@ flow QA-1: Create, edit, and read back a drawing
 ```
 
 ```mdl
-flow QA-2: Generate a UML class diagram from mermaid source
+test QA-2: Generate a UML class diagram from mermaid source
   desc: The UmlSkill path — replace a drawing's contents with a class diagram compiled from mermaid source, with layout owned by the dialect.
   actors: agent
   covers: []
@@ -165,8 +165,8 @@ flow QA-2: Generate a UML class diagram from mermaid source
     - an identity exists
     - space: a space is open
     - collection: a collection in that space, to create into
-    - no drawing named "QA UML" exists — ABORT rather than deleting one this flow did not create
-  test:
+    - no drawing named "QA UML" exists — ABORT rather than deleting one this test did not create
+  steps:
     - name: Create the drawing
       do: Ask the assistant to create a new drawing named "QA UML".
       invoke: [op:create] { name: "QA UML", variant: "svg" }

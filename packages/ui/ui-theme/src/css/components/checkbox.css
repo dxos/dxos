@@ -47,7 +47,7 @@
     @apply cursor-pointer rounded-full;
 
     &::before {
-      @apply w-3 h-3 mx-[0.1875rem] my-[0.1875rem] absolute block bg-white rounded-full border-separator transition-transform duration-100 will-change-transform;
+      @apply size-3 mx-[0.1875rem] my-[0.1875rem] absolute block bg-white rounded-full border-separator transition-transform duration-100 will-change-transform;
       content: '';
     }
 
