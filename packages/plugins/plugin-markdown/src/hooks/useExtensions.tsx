@@ -204,8 +204,9 @@ const createBaseExtensions = ({
           numberedHeadings: settings?.numberedHeadings ? { from: 2 } : undefined,
           // TODO(wittjosiah): For internal links render the label of the object.
           renderLinkButton: onSelectLink && createRenderLink(onSelectLink),
-          // xmlTags() handles dxn:/echo: links via url-scheme widgets; skip here to avoid double-processing.
-          skip: ({ url }) => url.startsWith('dxn:') || url.startsWith('echo:'),
+          // NOTE: xmlTags() handles dxn:/echo: links via url-scheme widgets; skip here to avoid double-processing.
+          skip: ({ name, url }) =>
+            ['Link', 'Image'].indexOf(name) !== -1 && (url.startsWith('dxn:') || url.startsWith('echo:')),
         }),
         linkTooltip({ render: renderLinkTooltip }),
         xmlTags({
@@ -222,20 +223,20 @@ const createBaseExtensions = ({
             'link-preview': {
               block: false,
               urlSchemes: ['dxn:', 'echo:'],
-              // A bare `#`/`@` label is a name-less link; resolve the object's actual label once
-              // loaded. The resolver is only created when a db exists so `AnchorWidget.eq` sees the
-              // db's arrival as a change and rebuilds the chip.
-              factory: ({ label, dxn }: XmlWidgetProps<{ label: string; dxn: string }>) =>
-                label && dxn
-                  ? new AnchorWidget(
-                      label,
-                      dxn,
-                      undefined,
-                      (label === '#' || label === '@') && space?.db
-                        ? createAnchorLabelResolver(space.db, dxn)
-                        : undefined,
-                    )
-                  : null,
+              factory: ({ label, dxn }: XmlWidgetProps<{ label: string; dxn: string }>) => {
+                if (!label || !dxn) {
+                  return null;
+                }
+
+                // TODO(burdon): Why support both "#" or "@"?
+                // A bare `#`/`@` label is a name-less link; resolve the object's actual label once
+                // loaded. The resolver is only created when a db exists so `AnchorWidget.eq` sees the
+                // db's arrival as a change and rebuilds the chip.
+                const resolver =
+                  ['#', '@'].indexOf(label) !== -1 && space?.db ? createAnchorLabelResolver(space.db, dxn) : undefined;
+
+                return new AnchorWidget(label, dxn, undefined, resolver);
+              },
             },
           },
           setWidgets,

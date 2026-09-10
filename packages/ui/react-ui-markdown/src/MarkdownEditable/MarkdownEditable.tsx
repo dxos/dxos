@@ -150,13 +150,13 @@ export const MarkdownEditable = forwardRef<MarkdownEditableController, MarkdownE
             // get into — right for a document pane, wrong for a field next to a title.
             focusable={false}
             initialValue={draft}
+            extensions={extensions}
+            autoFocus={autoFocus}
+            selectionEnd
             onChange={(text) => {
               discarded.current = false;
               handlers.current.setDraft(text);
             }}
-            extensions={extensions}
-            autoFocus={autoFocus}
-            selectionEnd
           />
         </div>
       );

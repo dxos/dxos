@@ -19,7 +19,7 @@ import { log } from '@dxos/log';
 
 import { type Range } from '../../../types';
 import { decorationSetToArray, escapeRegExpSource } from '../../../util';
-import { crawlerLineEffect } from '../../streaming/scrolling';
+import { crawlerLineEffect } from '../../streaming';
 import { StubWidget, type XmlWidgetNotifier } from './stub';
 import { nodeToJson } from './xml-util';
 
@@ -86,6 +86,14 @@ export type XmlWidgetDef = {
   debug?: boolean;
 
   /**
+   * URL scheme prefixes that trigger this widget on Link/Image markdown nodes.
+   * Example: `[‘dxn:’, ‘echo:’]` matches `[label](dxn:…)` and `![label](echo:…)`.
+   * Block widgets are created for Image nodes; inline widgets for Link nodes.
+   */
+  // TODO(burdon): Special matcher for links.
+  urlSchemes?: string[];
+
+  /**
    * Native widget (rendered inline).
    */
   factory?: XmlWidgetFactory;
@@ -97,13 +105,6 @@ export type XmlWidgetDef = {
    * Streaming tags use `cm-xml-<from>` so the same portal id is kept when the closing tag arrives.
    */
   Component?: FunctionComponent<XmlWidgetProps>;
-
-  /**
-   * URL scheme prefixes that trigger this widget on Link/Image markdown nodes.
-   * Example: `[‘dxn:’, ‘echo:’]` matches `[label](dxn:…)` and `![label](echo:…)`.
-   * Block widgets are created for Image nodes; inline widgets for Link nodes.
-   */
-  urlSchemes?: string[];
 
   /**
    * Reserved block height (px) derived from the widget's props (e.g. parsed from the image label),
@@ -523,7 +524,7 @@ const createWidgetUpdatePlugin = (
  * Must be a StateField because block decorations cannot be provided via ViewPlugin.
  */
 const createWidgetDecorationsField = (registry: XmlWidgetRegistry = {}, notifier: XmlWidgetNotifier) => {
-  // Multiple registry entries may claim the same URL scheme (e.g. one block, one inline).
+  // Multiple registry entries may claim the same URL scheme (e.g., one block, one inline).
   const urlSchemeMap: Map<string, [string, XmlWidgetDef][]> = new Map();
   for (const [tag, def] of Object.entries(registry)) {
     for (const scheme of def.urlSchemes ?? []) {

@@ -42,6 +42,7 @@ import {
   replaceItemWithLink,
   syncLinkLabels,
   xmlTags,
+  xmlWidgetRegistry,
 } from '@dxos/ui-editor';
 
 import { meta } from '#meta';
@@ -51,8 +52,6 @@ export type OutlineLink = {
   label: string;
   url: string;
 };
-
-const OBJECT_URL_SCHEMES = ['dxn:', 'echo:'];
 
 /** Replaces the current item with a link to the object created from its text. */
 const convertItemToTask = async (
@@ -244,16 +243,7 @@ const OutlineContent = composable<HTMLDivElement, OutlineContentProps>((props, f
           }
         }),
         // Renders links to converted objects as anchor chips (which dispatch `DX_ANCHOR_ACTIVATE`).
-        xmlTags({
-          registry: {
-            'link-preview': {
-              block: false,
-              urlSchemes: OBJECT_URL_SCHEMES,
-              factory: ({ label, dxn }: XmlWidgetProps<{ label: string; dxn: string }>) =>
-                label && dxn ? new AnchorWidget(label, dxn) : null,
-            },
-          },
-        }),
+        xmlTags({ registry: xmlWidgetRegistry }),
         hashtag(),
         // Last, so a host's decoration sees the document the outline's own extensions produced.
         extensions ?? [],

@@ -27,6 +27,7 @@ import {
   extendedMarkdown,
   image,
   xmlTags,
+  xmlWidgetRegistry,
 } from '@dxos/ui-editor';
 import { type PreviewLinkRef, type PreviewLinkTarget } from '@dxos/ui-types';
 import { safeParseInt, trim } from '@dxos/util';
@@ -283,16 +284,11 @@ const PreviewStory = ({ trigger }: { trigger?: 'hover' | 'click' }) => {
       image(),
       xmlTags({
         registry: {
+          ...xmlWidgetRegistry,
           'dxn-preview': {
             block: true,
             urlSchemes: ['dxn:', 'echo:'],
             Component: PreviewBlockCard,
-          },
-          'link-preview': {
-            block: false,
-            urlSchemes: ['dxn:', 'echo:'],
-            factory: ({ label, dxn }: XmlWidgetProps<{ label: string; dxn: string }>) =>
-              label && dxn ? new AnchorWidget(label, dxn, trigger) : null,
           },
         },
         setWidgets,

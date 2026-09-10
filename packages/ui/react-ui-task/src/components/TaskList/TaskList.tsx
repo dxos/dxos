@@ -778,6 +778,7 @@ const TaskListEdit = composable<HTMLDivElement, TaskListEditProps>(
     forwardedRef,
   ) => {
     const { t } = useTranslation(translationKey);
+    const descriptionRef = useRef<MarkdownEditableController>(null);
     const { tasks, selected, onTaskCreate, onTaskUpdate, onTaskSelect, gridTemplateColumns } =
       useTaskListContext('TaskList.Edit');
     const { className, ...rest } = composableProps(props);
@@ -786,8 +787,6 @@ const TaskListEdit = composable<HTMLDivElement, TaskListEditProps>(
     // Subscribe to the selected task so the pane follows a rename made anywhere else.
     const [snapshot] = useObject(task);
     const current = snapshot ?? task;
-
-    const descriptionRef = useRef<MarkdownEditableController>(null);
 
     // The create row's description, mirrored out of the field. A ref rather than state because the
     // create reads it in the same tick it commits the field, and `useEditable` calls back
@@ -931,7 +930,6 @@ const TaskListEdit = composable<HTMLDivElement, TaskListEditProps>(
             {/* A description is markdown, so it is edited as markdown. `editing` is held open —
                 the pane IS the editor, so there is nothing to click into — and the key remounts
                 it per task, since a field held open never re-reads its subject.
-
                 Creating, the field is uncontrolled: there is no task to read a value from, so it
                 holds the draft itself until the create collects it. */}
             <MarkdownEditable

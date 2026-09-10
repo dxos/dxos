@@ -32,7 +32,15 @@ const linkMark = (url: string, withButton = false) =>
     },
   });
 
-export type NodeData = { name: 'Link'; url: string } | { name: 'Image'; url: string };
+export type NodeData =
+  | {
+      name: 'Link';
+      url: string;
+    }
+  | {
+      name: 'Image';
+      url: string;
+    };
 
 export interface DecorateOptions {
   /**
