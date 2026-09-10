@@ -167,39 +167,6 @@ export const nodeUrlSegment = (
   return id === '' ? undefined : `/${key}/${id}`; // empty id: container at the path, not addressable
 };
 
-/**
- * A graph node with its computed {@link nodeUrlSegment} attached at `properties.urlSegment` when the node
- * is URL-addressable. The core {@link Node.Node} stays URL-agnostic; this is the typed view for reading
- * the segment — an open properties record with an explicit `urlSegment` field — mirroring how
- * `@dxos/react-ui-menu` wraps `Node` for menu items.
- */
-export type BuilderNode<TData = any> = Node.Node<TData, { urlSegment?: string } & Record<string, any>>;
-
-/**
- * Return a copy of `node` (and its inline descendants) with `properties.urlSegment` stamped. A linked
- * node (id ending in a `~<variant>` segment) is stamped from the `linked` tier key, independent of its
- * producing extension's binding; any other node is stamped from `url` (its producer's binding), if any.
- */
-const stampUrlSegment = (
-  node: Node.NodeArg<any>,
-  url: UrlBinding | undefined,
-  grammar: UrlGrammar,
-): Node.NodeArg<any> => {
-  const lastSegment = node.id.slice(node.id.lastIndexOf(GraphNode.PathSeparator) + 1);
-  const segment = lastSegment.startsWith(grammar.linkedPrefix)
-    ? grammar.linkedKey && `/${grammar.linkedKey}/${lastSegment.slice(grammar.linkedPrefix.length)}`
-    : url && nodeUrlSegment(node.id, url, grammar.tailSeparator);
-  const nodes = node.nodes?.map((child) => stampUrlSegment(child, url, grammar));
-  if (!segment && !nodes) {
-    return node;
-  }
-  return {
-    ...node,
-    ...(segment && { properties: { ...node.properties, urlSegment: segment } }),
-    ...(nodes && { nodes }),
-  };
-};
-
 //
 // Builder
 //
@@ -242,7 +209,7 @@ export class GraphBuilder extends Builder.GraphBuilder<
       relationKey: (relation) => Graph.relationKey(relation ?? 'child'),
       inline,
       unchanged: nodeArgsUnchanged,
-      decorateNode: decorateNode ?? ((node, extension) => stampUrlSegment(node, extension?.meta, grammar)),
+      decorateNode,
       store: (hooks, resolvedRegistry) => makeStore(graphProps, hooks, resolvedRegistry),
     });
     this.urlGrammar = grammar;

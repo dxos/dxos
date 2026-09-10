@@ -68,6 +68,7 @@ export const DeckState = Capability.lazyModule(
       DeckCapabilities.EphemeralState,
       AppCapabilities.Layout,
       DeckCapabilities.Platform,
+      DeckCapabilities.Projection,
     ],
   },
   () => import('./state'),

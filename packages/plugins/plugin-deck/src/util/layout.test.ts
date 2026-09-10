@@ -71,11 +71,11 @@ describe('addSubjectsToActiveDeck', () => {
 
 describe('updatePlankNames', () => {
   test('binds a name to the plank that took it', ({ expect }) => {
-    expect(updatePlankNames({}, ['a'], { name: 'message', plankId: 'a' })).toEqual({ message: 'a' });
+    expect(updatePlankNames({}, ['a'], { name: 'message', segment: 'a' })).toEqual({ message: 'a' });
   });
 
   test('rebinds a name to the plank that replaced its occupant', ({ expect }) => {
-    expect(updatePlankNames({ message: 'a' }, ['b'], { name: 'message', plankId: 'b' })).toEqual({ message: 'b' });
+    expect(updatePlankNames({ message: 'a' }, ['b'], { name: 'message', segment: 'b' })).toEqual({ message: 'b' });
   });
 
   test('drops names whose plank is no longer open', ({ expect }) => {
@@ -83,7 +83,7 @@ describe('updatePlankNames', () => {
   });
 
   test('ignores a binding to a plank that did not end up open', ({ expect }) => {
-    expect(updatePlankNames({}, ['a'], { name: 'message', plankId: 'gone' })).toEqual({});
+    expect(updatePlankNames({}, ['a'], { name: 'message', segment: 'gone' })).toEqual({});
   });
 });
 
@@ -160,6 +160,20 @@ describe('resolveLevelOpen', () => {
   test('anchors to the level above, not the end of the deck', ({ expect }) => {
     const result = open({ active: [root, 'unrelated'], subjectId: 'msg-1' });
     expect(result?.next).toEqual([root, 'msg-1', 'unrelated']);
+  });
+
+  test('finds the level plank by segment when its id is not the segment', ({ expect }) => {
+    const result = open({
+      active: [root, 'root/space/msg-1', 'root/space/att-1'],
+      plankNames: { 'inbox/message': 'message/1', 'inbox/attachment': 'attachment/1' },
+      segments: { 'root/space/msg-1': 'message/1', 'root/space/att-1': 'attachment/1' },
+      subjectId: 'root/space/msg-2',
+    });
+    expect(result).toEqual({
+      next: [root, 'root/space/msg-2'],
+      name: 'inbox/message',
+      replacedId: 'root/space/msg-1',
+    });
   });
 
   test('returns undefined for a level the chain does not declare', ({ expect }) => {

@@ -17,7 +17,7 @@ const handler: Operation.WithHandler<typeof OpenUsage> = OpenUsage.pipe(
     Effect.fnUntraced(function* () {
       yield* Operation.invoke(LayoutOperation.SwitchWorkspace, { subject: GraphPath.getSpacePath(Account.id) });
       yield* Operation.invoke(LayoutOperation.Open, {
-        subject: [GraphPath.getSpacePath(Account.id, Account.Usage)],
+        subject: [Account.path(Account.Usage)],
       });
     }),
   ),

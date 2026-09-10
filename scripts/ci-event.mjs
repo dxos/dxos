@@ -42,6 +42,10 @@ const UUID_NAMESPACE = '6f2b1a54-9c3d-4e77-9a1f-0d5c8b7e4a21';
  * PostHog deduplicates on the tuple (uuid, timestamp, event, distinct_id), so a stable uuid only
  * suppresses a rerun's duplicate if the timestamp is stable too — which is why events default to the
  * COMMIT's date rather than the run's.
+ *
+ * A batch whose entries share a commit would otherwise share a uuid, leaving them separated by
+ * timestamp alone; an entry's optional `dedup` discriminator enters the seed to keep them apart. It
+ * is a sibling of `timestamp` on the entry rather than one of its properties, so it never ships.
  */
 export const uuidV5 = (name) => {
   const namespace = Buffer.from(UUID_NAMESPACE.replaceAll('-', ''), 'hex');
@@ -112,10 +116,13 @@ export const captureCiEvents = async (events, { historical = false } = {}) => {
     return false;
   }
 
-  const batch = events.map(({ event, properties, timestamp }) => ({
+  const batch = events.map(({ event, properties, timestamp, dedup }) => ({
     event,
     timestamp: timestamp ?? new Date().toISOString(),
-    uuid: uuidV5(`${event}|${properties.commitSha ?? timestamp}`),
+    // `dedup` distinguishes several facts emitted from one run, which would otherwise share a commit
+    // and so a uuid, leaving them separated by timestamp alone. Absent, the seed is unchanged, so an
+    // event keyed by its commit still resolves a rerun onto the same row.
+    uuid: uuidV5([event, properties.commitSha ?? timestamp, dedup].filter((part) => part !== undefined).join('|')),
     properties: {
       distinct_id: DISTINCT_ID,
       // Without this every event mints a person, and a person per commit pollutes every
@@ -154,10 +161,16 @@ const main = async () => {
   });
 
   if (values.batch) {
+    // The GitHub context is attached here rather than by the producer, same as the single-event
+    // path: a plan that writes the batch runs inside the job but has no business reading its
+    // environment. An entry's own properties win, so a backfill can carry the context of the run it
+    // is replaying rather than the one replaying it.
+    const context = ciContext();
     const events = readFileSync(values.batch, 'utf8')
       .split('\n')
       .filter((line) => line.trim())
-      .map((line) => JSON.parse(line));
+      .map((line) => JSON.parse(line))
+      .map((entry) => ({ ...entry, properties: { ...context, ...entry.properties } }));
     await captureCiEvents(events, { historical: values.historical });
     return;
   }

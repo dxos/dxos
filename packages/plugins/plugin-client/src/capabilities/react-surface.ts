@@ -36,33 +36,33 @@ export default Capability.makeModule(
     return Capability.contribute(Capabilities.ReactSurface, [
       Surface.create({
         id: Account.Profile,
-        filter: AppSurface.literal(AppSurface.Article, Account.Profile),
+        filter: AppSurface.literal(AppSurface.Article, Account.path(Account.Profile)),
         component: ProfileContainer,
       }),
       Surface.create({
         id: Account.Devices,
-        filter: AppSurface.literal(AppSurface.Article, Account.Devices),
+        filter: AppSurface.literal(AppSurface.Article, Account.path(Account.Devices)),
         component: DevicesContainer,
         props: () => ({ createInvitationUrl, identityTestActions }),
       }),
       Surface.create({
         id: Account.Security,
-        filter: AppSurface.literal(AppSurface.Article, Account.Security),
+        filter: AppSurface.literal(AppSurface.Article, Account.path(Account.Security)),
         component: RecoveryCredentialsContainer,
       }),
       Surface.create({
         id: Account.Account,
-        filter: AppSurface.literal(AppSurface.Article, Account.Account),
+        filter: AppSurface.literal(AppSurface.Article, Account.path(Account.Account)),
         component: AccountContainer,
       }),
       Surface.create({
         id: Account.Invitations,
-        filter: AppSurface.literal(AppSurface.Article, Account.Invitations),
+        filter: AppSurface.literal(AppSurface.Article, Account.path(Account.Invitations)),
         component: InvitationsContainer,
       }),
       Surface.create({
         id: Account.Usage,
-        filter: AppSurface.literal(AppSurface.Article, Account.Usage),
+        filter: AppSurface.literal(AppSurface.Article, Account.path(Account.Usage)),
         component: UsageContainer,
       }),
       Surface.create({
