@@ -918,9 +918,10 @@ dist/types/src: ENOTEMPTY` — a concurrent writer. A Cursor TypeScript native-p
       `aria-labelledby`/`aria-describedby` by detecting the texts. `Form.Section` is the first
       consumer: its `h2` is the legend through `asChild`, so the group is named by its title and the
       heading still serves navigation. Stories assert the naming, the description and the disabling.
-- [ ] **Rename `Stepper` → `Steps`** (tracked 2026-09-05): Ark's name for the machine the component
-      sits on, and the family convention is Ark's name where the part is Ark's. Own PR with the
-      `Input` → `Field` codemod, or folded into it.
+- [x] **Rename `Stepper` → `Steps`** DONE 2026-09-10 (#13050): Ark's name for the machine the
+      component sits on, and the family convention is Ark's name where the part is Ark's. Component,
+      props, theme key (`steps.*`), `stepsTheme`, story title and test ids, `ProgressMeter`'s use, the
+      ontology and README rows; the `Step*` helper types and functions keep their names.
 - [x] **Replace `react-joyride` with Ark's `Tour`** DONE 2026-09-09: `react-ui` `Tour` (all Ark
       parts, theme, play stories) and `plugin-support`'s `WelcomeTour` rebuilt on it; `react-joyride`,
       `react-floater`, `type-fest` removed from the repo; composer `help.ts` steps on the plugin's own

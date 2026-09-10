@@ -11,7 +11,7 @@ import { random } from '@dxos/random';
 import { withLayout, withTheme } from '../../testing';
 import { Panel } from '../Panel';
 import { Toolbar } from '../Toolbar';
-import { Stepper, type StepperProps } from './Stepper';
+import { Steps, type StepsProps } from './Steps';
 
 const TICK_MS = 200;
 /** Items in a counted stage; the line leaving it fills as they are worked through. */
@@ -22,13 +22,13 @@ const ITEMS = 10;
  */
 const step = () => random.number.int({ min: 1, max: 3 });
 
-type StoryArgs = Partial<StepperProps> & {
+type StoryArgs = Partial<StepsProps> & {
   /** How many stages the plan starts with. */
   stages?: number;
 };
 
 /**
- * Drives a fixed plan from the first stage to the last, so the stepper is watched advancing rather
+ * Drives a fixed plan from the first stage to the last, so the plan is watched advancing rather
  * than sampled at rest. The stage count is switched from the toolbar, since the whole point of the
  * flexing lines is that the gaps stay even however many stages there are.
  */
@@ -124,7 +124,7 @@ const DefaultStory = ({ stages: initial = 5, indeterminate, ...props }: StoryArg
       </Panel.Toolbar>
       <Panel.Content classNames='h-6' />
       <Panel.Statusbar>
-        <Stepper
+        <Steps
           steps={stages}
           active={active}
           fraction={fraction}
@@ -140,7 +140,7 @@ const DefaultStory = ({ stages: initial = 5, indeterminate, ...props }: StoryArg
 };
 
 const meta = {
-  title: 'ui/react-ui-core/components/Stepper',
+  title: 'ui/react-ui-core/components/Steps',
   render: DefaultStory,
   decorators: [withTheme(), withLayout({ layout: 'centered', classNames: 'w-[30rem]' })],
   parameters: {
@@ -188,7 +188,7 @@ const HandoverStory = ({ stages = 3 }: StoryArgs) => {
         {/* What a run does at the moment it starts the next stage: it reports the new stage and a
             count of almost nothing, both in the same update. */}
         <Toolbar.Button
-          data-testid='stepper.advance'
+          data-testid='steps.advance'
           onClick={() => {
             setActive((active) => (active ?? 0) + 1);
             setFraction(0.2);
@@ -197,7 +197,7 @@ const HandoverStory = ({ stages = 3 }: StoryArgs) => {
           Advance
         </Toolbar.Button>
         <Toolbar.Button
-          data-testid='stepper.reset'
+          data-testid='steps.reset'
           onClick={() => {
             setActive(undefined);
             setFraction(0);
@@ -206,7 +206,7 @@ const HandoverStory = ({ stages = 3 }: StoryArgs) => {
           Reset
         </Toolbar.Button>
       </Toolbar.Root>
-      <Stepper steps={stages} active={active} fraction={fraction} />
+      <Steps steps={stages} active={active} fraction={fraction} />
     </div>
   );
 };
@@ -228,7 +228,7 @@ const sample = async (read: () => number[], ms: number): Promise<number[][]> => 
 export const TestHandover: Story = {
   render: HandoverStory,
   args: { stages: 3 },
-  // Sampled every frame rather than asserted at an instant: what makes the stepper wrong is a line
+  // Sampled every frame rather than asserted at an instant: what makes the drawing wrong is a line
   // that goes backwards at some point during the window, which a single reading after the click is
   // free to miss entirely.
   play: async ({ canvasElement }) => {
@@ -246,15 +246,15 @@ export const TestHandover: Story = {
 
     // A run reports the next stage the instant it starts it, with a count of almost nothing. The
     // line leaving the stage being left has to stay at its end while it hands over — without that
-    // it snaps back to the new count and the reader sees the stepper run backwards.
-    canvas.getByTestId('stepper.advance').click();
+    // it snaps back to the new count and the reader sees the plan run backwards.
+    canvas.getByTestId('steps.advance').click();
     const advancing = await sample(widths, 800);
     await expect(Math.min(...advancing.map((frame) => frame[0]))).toEqual(100);
     await waitFor(async () => expect(widths()).toEqual([100, 20]));
 
     // A reset has no line in flight to finish, so it lands at once: easing back to nothing would
     // read as progress in reverse.
-    canvas.getByTestId('stepper.reset').click();
+    canvas.getByTestId('steps.reset').click();
     const resetting = await sample(widths, 200);
     await expect(Math.max(...resetting.map((frame) => Math.max(...frame)))).toEqual(0);
   },
@@ -267,11 +267,11 @@ const FailureStory = ({ stages = 4 }: StoryArgs) => {
   return (
     <div className='flex flex-col gap-4 w-full'>
       <Toolbar.Root>
-        <Toolbar.Button data-testid='stepper.fail' onClick={() => setFailed(true)}>
+        <Toolbar.Button data-testid='steps.fail' onClick={() => setFailed(true)}>
           Fail
         </Toolbar.Button>
       </Toolbar.Root>
-      <Stepper steps={stages} active={2} fraction={0.5} error={failed} />
+      <Steps steps={stages} active={2} fraction={0.5} error={failed} />
     </div>
   );
 };
@@ -307,7 +307,7 @@ export const TestFailure: Story = {
     // Stages the run reached are filled in the accent; the one ahead of it is an outline.
     await expect(circles().map((circle) => circle.backgroundColor === accent)).toEqual([true, true, true, false]);
 
-    canvas.getByTestId('stepper.fail').click();
+    canvas.getByTestId('steps.fail').click();
 
     // Every stage the run started now reads as failed, so the progress behind the failure does not
     // read as having gone fine.

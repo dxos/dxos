@@ -2,14 +2,14 @@
 // Copyright 2026 DXOS.org
 //
 
-// `Stepper` — a fixed plan drawn as circles joined by lines, built on `@ark-ui/react`'s Steps
+// `Steps` — a fixed plan drawn as circles joined by lines, built on `@ark-ui/react`'s Steps
 // (zag state machine). The machine owns which stage is complete, in flight or still ahead, and
 // stamps that onto every part as `data-complete` / `data-current` / `data-incomplete` plus the
 // item's `aria-current`. DXOS owns everything the machine has no notion of: how far through the
 // stage in flight the run is, a stage that cannot be counted, a stage that failed, a stage the
 // caller singled out, and the handover that holds an advance back until the line has arrived.
 
-import { Steps, useStepsContext } from '@ark-ui/react/steps';
+import { Steps as StepsPrimitive, useStepsContext } from '@ark-ui/react/steps';
 import React, { useEffect, useState } from 'react';
 
 import { useThemeContext } from '../../hooks';
@@ -37,7 +37,7 @@ export const defaultStepOptions: StepOptions = {
   duration: 500,
 };
 
-export type StepperProps = ThemedClassName<{
+export type StepsProps = ThemedClassName<{
   /**
    * The plan: a count when the stages are anonymous, or the stages themselves when they have
    * identity. Either way the number is fixed and every stage is drawn.
@@ -67,7 +67,7 @@ export type StepperProps = ThemedClassName<{
  * (o)————(o)————(*)- - - ( )- - - ( )
  * ```
  *
- * The lines flex, so the stages spread across whatever width the stepper is given and the gaps stay
+ * The lines flex, so the stages spread across whatever width the component is given and the gaps stay
  * even however many there are.
  *
  * Two readings on one drawing: which stage is in flight says where the run is in its plan, and the
@@ -75,7 +75,7 @@ export type StepperProps = ThemedClassName<{
  * bar. A stage with nothing to count cannot be drawn that way, so it spins instead, which is the
  * honest reading rather than a line resting at a number that means nothing.
  */
-export const Stepper = composable<HTMLDivElement, StepperProps>(
+export const Steps = composable<HTMLDivElement, StepsProps>(
   (
     { steps, active, fraction = 0, indeterminate, error, selected, onSelect, options = defaultStepOptions, ...props },
     forwardedRef,
@@ -85,13 +85,13 @@ export const Stepper = composable<HTMLDivElement, StepperProps>(
     const { shown, handover } = useHandover(active, options.duration);
 
     return (
-      <Steps.Root
-        {...composableProps(props, { classNames: tx('stepper.root', {}), role: 'list' })}
+      <StepsPrimitive.Root
+        {...composableProps(props, { classNames: tx('steps.root', {}), role: 'list' })}
         count={count + PHANTOM}
         step={machineStep(shown, count)}
         ref={forwardedRef}
       >
-        <StepperItems
+        <StepsItems
           steps={steps}
           count={count}
           fraction={indeterminate ? 0 : fraction}
@@ -102,12 +102,12 @@ export const Stepper = composable<HTMLDivElement, StepperProps>(
           onSelect={onSelect}
           options={options}
         />
-      </Steps.Root>
+      </StepsPrimitive.Root>
     );
   },
 );
 
-Stepper.displayName = 'Stepper';
+Steps.displayName = 'Steps';
 
 //
 // Parts
@@ -125,13 +125,13 @@ const PHANTOM = 1;
 const machineStep = (shown: number | undefined, count: number): number =>
   shown === undefined ? 0 : Math.min(Math.max(shown, 0) + PHANTOM, count + PHANTOM);
 
-type StepperItemsProps = Required<Pick<StepperProps, 'steps' | 'fraction' | 'options'>> &
-  Pick<StepperProps, 'indeterminate' | 'error' | 'selected' | 'onSelect'> & {
+type StepsItemsProps = Required<Pick<StepsProps, 'steps' | 'fraction' | 'options'>> &
+  Pick<StepsProps, 'indeterminate' | 'error' | 'selected' | 'onSelect'> & {
     count: number;
     handover: boolean;
   };
 
-const StepperItems = ({
+const StepsItems = ({
   steps,
   count,
   fraction,
@@ -141,7 +141,7 @@ const StepperItems = ({
   selected,
   onSelect,
   options,
-}: StepperItemsProps) => {
+}: StepsItemsProps) => {
   const { tx } = useThemeContext();
   const api = useStepsContext();
 
@@ -155,7 +155,12 @@ const StepperItems = ({
 
         return (
           // The item stretches so its trailing line can flex; the last has no line to give it away.
-          <Steps.Item key={step.id} index={index + PHANTOM} role='listitem' className={tx('stepper.item', { last })}>
+          <StepsPrimitive.Item
+            key={step.id}
+            index={index + PHANTOM}
+            role='listitem'
+            className={tx('steps.item', { last })}
+          >
             <Circle
               index={index}
               step={step}
@@ -169,9 +174,9 @@ const StepperItems = ({
             {!last && (
               // The line leaving a stage carries that stage's progress: full once the run is past
               // it, fractional while it is the one in flight, empty ahead of it.
-              <Steps.Separator className={tx('stepper.connector', {})} style={{ height: options.thickness }}>
+              <StepsPrimitive.Separator className={tx('steps.connector', {})} style={{ height: options.thickness }}>
                 <div
-                  className={tx('stepper.fill', { failed: error })}
+                  className={tx('steps.fill', { failed: error })}
                   style={{
                     width: `${connectorFraction(completed, current, handover, fraction) * 100}%`,
                     // Only the line leaving the stage in flight eases, so an incremental advance
@@ -181,9 +186,9 @@ const StepperItems = ({
                     transition: current ? `width ${options.duration}ms linear` : 'none',
                   }}
                 />
-              </Steps.Separator>
+              </StepsPrimitive.Separator>
             )}
-          </Steps.Item>
+          </StepsPrimitive.Item>
         );
       })}
     </>
@@ -215,19 +220,19 @@ const Circle = ({ index, step, state, failed, selected, indeterminate, options, 
       {onClick ? (
         // A selectable stage is a real button, so it takes focus and answers the keyboard without a
         // key handler of its own; selection toggles, which is what `aria-pressed` describes. Not the
-        // machine's own trigger: that is a `tab` pointing at a panel this stepper never renders.
+        // machine's own trigger: that is a `tab` pointing at a panel this component never renders.
         <button
           type='button'
           aria-label={label}
           aria-pressed={!!selected}
-          className={tx('stepper.step', { state, failed, selected, interactive: true, spinning })}
+          className={tx('steps.step', { state, failed, selected, interactive: true, spinning })}
           onClick={onClick}
         />
       ) : (
         // A bare div maps to `generic`, where ARIA discards the label.
-        <div role='img' aria-label={label} className={tx('stepper.step', { state, failed, selected, spinning })} />
+        <div role='img' aria-label={label} className={tx('steps.step', { state, failed, selected, spinning })} />
       )}
-      {spinning && <Notch className={tx('stepper.notch', { state })} />}
+      {spinning && <Notch className={tx('steps.notch', { state })} />}
     </div>
   );
 };
