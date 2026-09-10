@@ -1,9 +1,8 @@
 # ark — Tasks
 
-_Resume: PR #13031 OPEN (outline link followed on click, Enter or Space only). #13030 (Toc, Tour + WelcomeTour off
-react-joyride, Main dismissal rests at `collapsed`) MERGED
-2026-09-09; #13024 (Main step 1) MERGED the same day. Next: `Main` step 2 (push layout at `lg`) as its own
-PR; then the `Toc` consumer. Uncommitted: none._
+_Resume: PR #13032 OPEN with auto-merge (cards base, dialogs raised). #13031 (outline link on click/Enter/Space,
+task card resolves, popover card fallback) MERGED 2026-09-10. Next: `Main` step 2 (push layout at `lg`);
+then the Phase 15 re-route or the `Toc` consumer. Uncommitted: none._
 
 ## Phase 1: Tree rebuild on Ark (PR #12873)
 
