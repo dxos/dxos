@@ -12,6 +12,8 @@ export type SetActiveOptions = {
   attention?: Attention.AttentionManager;
   /** The `flatten` setting; under it the companion flag is deck-wide rather than per plank. */
   flatten?: boolean;
+  /** URL segment per plank id, before and after this write. */
+  segments?: { previous?: Record<string, string>; next?: Record<string, string> };
 };
 
 export type SetActiveResult = {
@@ -29,9 +31,20 @@ export type SetActiveResult = {
  * Computes the new active state for the deck without mutating.
  * Returns the updates to apply and optionally an item to attend.
  */
-export const computeActiveUpdates = ({ next, deck, attention, flatten }: SetActiveOptions): SetActiveResult => {
-  const removed = deck.active.filter((id) => !next.includes(id));
-  const closed = Array.from(new Set([...deck.inactive.filter((id) => !next.includes(id)), ...removed]));
+export const computeActiveUpdates = ({
+  next,
+  deck,
+  attention,
+  flatten,
+  segments,
+}: SetActiveOptions): SetActiveResult => {
+  // Closing is diffed over URL segments, not plank ids: the URL projection applies a plank's pair
+  // first and the id it resolves to second, and those two writes are the same plank. Diffed by id,
+  // the refinement would read as a close.
+  const segmentOf = (id: string, map?: Record<string, string>) => map?.[id] ?? id;
+  const open = new Set(next.map((id) => segmentOf(id, segments?.next)));
+  const isOpen = (id: string) => open.has(segmentOf(id, segments?.previous));
+  const closed = Array.from(new Set([...deck.inactive, ...deck.active].filter((id) => !isOpen(id))));
 
   const updates = {
     inactive: closed,

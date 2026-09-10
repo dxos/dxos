@@ -35,6 +35,27 @@ describe('computeActiveUpdates', () => {
   });
 
   describe('inactive handling', () => {
+    test('a plank whose id is refined to the node it resolved to is not closed', ({ expect }) => {
+      const deck = makeDeck({ active: ['placeholder'] });
+      const { deckUpdates } = computeActiveUpdates({
+        next: ['resolved'],
+        deck,
+        segments: { previous: { placeholder: 'doc/1' }, next: { resolved: 'doc/1' } },
+      });
+      expect(deckUpdates.active).toEqual(['resolved']);
+      expect(deckUpdates.inactive).toEqual([]);
+    });
+
+    test('a plank whose segment leaves the URL is closed', ({ expect }) => {
+      const deck = makeDeck({ active: ['placeholder'] });
+      const { deckUpdates } = computeActiveUpdates({
+        next: ['resolved'],
+        deck,
+        segments: { previous: { placeholder: 'doc/1' }, next: { resolved: 'doc/2' } },
+      });
+      expect(deckUpdates.inactive).toEqual(['placeholder']);
+    });
+
     test('moves removed items to inactive', ({ expect }) => {
       const deck = makeDeck({ active: ['a', 'b', 'c'] });
       const { deckUpdates } = computeActiveUpdates({ next: ['a', 'c'], deck });

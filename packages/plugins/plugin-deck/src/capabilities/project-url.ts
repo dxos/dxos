@@ -206,7 +206,7 @@ export const projectUrl = Effect.fnUntraced(function* (url?: URL) {
   );
   if (Option.isNone(parsed)) {
     // A path that does not parse names no pair, so there is nothing to key a plank on.
-    yield* applyActive([NotFound.NOT_FOUND_PATH]);
+    yield* applyActive([NotFound.NOT_FOUND_PATH], {});
     return;
   }
 
@@ -228,13 +228,10 @@ export const projectUrl = Effect.fnUntraced(function* (url?: URL) {
   // long as the slowest pair takes.
   const placeholders = pairs.filter((pair) => pair.key !== UrlPath.COMPANION_KEY);
   const placeholderIds = placeholders.map(getUnresolvedPlankId);
-  yield* Capabilities.updateAtomValue(DeckCapabilities.EphemeralState, (state) => ({
-    ...state,
-    segments: Object.fromEntries(
-      placeholders.map((pair, index) => [placeholderIds[index], Navigation.toSegment(pair)]),
-    ),
-  }));
-  yield* applyActive(placeholderIds);
+  yield* applyActive(
+    placeholderIds,
+    Object.fromEntries(placeholders.map((pair, index) => [placeholderIds[index], Navigation.toSegment(pair)])),
+  );
 
   // Preload the URL's plank objects so a cold restore materializes their graph nodes before
   // resolution. `resolveUrl` walks the graph, which only surfaces objects ECHO has already loaded;
@@ -310,9 +307,7 @@ export const projectUrl = Effect.fnUntraced(function* (url?: URL) {
 
   // The projection writes the deck directly rather than invoking `Set`: once `Set` navigates, an
   // operation that navigates and a projection that applies a navigation would call each other.
-  // Recorded before the planks so a plank never renders without the key its width hangs off.
-  yield* Capabilities.updateAtomValue(DeckCapabilities.EphemeralState, (state) => ({ ...state, segments }));
-  yield* applyActive(plankIds, placeholderIds);
+  yield* applyActive(plankIds, segments);
 
   // Attention is never serialized; on load it defaults to the last plank in the chain — except when
   // the chain carries a companion, whose position *is* serialized and which only renders beside the
