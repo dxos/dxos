@@ -56,12 +56,30 @@ export const channelVariant = (
   return environment === 'preview' ? 'purple' : 'rust';
 };
 
+/** Hue of the released mark's four-colour ramp (`rgb(1 122 183)` and its steps), in degrees. */
+const RAMP_HUE = 200;
+
 /**
- * Path to the boot loader's brand mark — the variant's, or undefined to let the caller fall back to the
- * released mark from `@dxos/brand`.
+ * Each variant as `scripts/gen-icon-variants.mjs` defines it for the raster icons: a hue that replaces
+ * the ramp's, and a saturation scale. Kept in step by hand; the numbers are the channel's identity.
  */
-export const bootMarkPath = (appDir: string, variant: ChannelVariant | undefined): string | undefined =>
-  variant && path.join(appDir, 'assets', `boot-mark-${variant}.svg`);
+const MARK_VARIANTS: Record<ChannelVariant, { hue: number; saturation: number }> = {
+  purple: { hue: 282, saturation: 1 },
+  rust: { hue: 20, saturation: 0.75 },
+};
+
+/**
+ * The CSS filter that turns the released boot mark into the channel's, or undefined for the released
+ * app. An SVG needs no generated copy to change colour: the loader applies this over the one mark.
+ */
+export const bootMarkFilter = (variant: ChannelVariant | undefined): string | undefined => {
+  if (!variant) {
+    return undefined;
+  }
+  const { hue, saturation } = MARK_VARIANTS[variant];
+  const rotate = (((hue - RAMP_HUE) % 360) + 360) % 360;
+  return [`hue-rotate(${rotate}deg)`, saturation !== 1 && `saturate(${saturation})`].filter(Boolean).join(' ');
+};
 
 /**
  * Overwrite the favicons already emitted into `outDir` with the channel's own. No-op without a variant,

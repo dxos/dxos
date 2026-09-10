@@ -7,24 +7,19 @@ import './boot-loader.css';
 import { onCleanup, onMount } from 'solid-js';
 import { type Meta, type StoryObj } from 'storybook-solidjs-vite';
 
-// eslint-disable-next-line import/no-relative-packages
-import purpleMark from '../../../../../../apps/composer-app/assets/boot-mark-purple.svg?raw';
-// eslint-disable-next-line import/no-relative-packages
-import rustMark from '../../../../../../apps/composer-app/assets/boot-mark-rust.svg?raw';
-// The marks a build inlines through `bootLoaderPlugin`: production's from `@dxos/brand`, the channel
-// variants generated into composer-app by `pnpm icons:variants`. Read as source here so the artwork
-// can be reviewed without bundling a channel.
+// The one mark a build inlines through `bootLoaderPlugin`, from `@dxos/brand`; a channel recolours it
+// with a filter (composer-app's `channel-branding.ts` is where the app's live) rather than a copy.
 // eslint-disable-next-line import/no-relative-packages
 import releasedMark from '../../../../../../ui/brand/assets/icons/composer-icon.svg?raw';
 import { Loader } from './Loader';
 import { createLoaderStore } from './store';
 
-/** Which brand mark sits in the ring: the released one, a channel's, or none. */
-const MARKS: Record<string, string | undefined> = {
-  released: releasedMark,
-  purple: purpleMark,
-  rust: rustMark,
-  none: undefined,
+/** How the ring's mark reads: released, as a channel recolours it, or absent. */
+const MARKS: Record<string, { svg?: string; filter?: string }> = {
+  released: { svg: releasedMark },
+  purple: { svg: releasedMark, filter: 'hue-rotate(82deg)' },
+  rust: { svg: releasedMark, filter: 'hue-rotate(180deg) saturate(0.75)' },
+  none: {},
 };
 
 type StoryArgs = {
@@ -87,7 +82,7 @@ export const Default: Story = {
       onCleanup(() => timers.forEach(clearTimeout));
     });
     onCleanup(() => store.dispose());
-    return <Loader store={store} markSvg={MARKS[args.mark]} />;
+    return <Loader store={store} markSvg={MARKS[args.mark].svg} markFilter={MARKS[args.mark].filter} />;
   },
 };
 
@@ -111,7 +106,7 @@ export const PluginActivation: Story = {
       onCleanup(() => timers.forEach(clearTimeout));
     });
     onCleanup(() => store.dispose());
-    return <Loader store={store} markSvg={MARKS[args.mark]} />;
+    return <Loader store={store} markSvg={MARKS[args.mark].svg} markFilter={MARKS[args.mark].filter} />;
   },
 };
 
@@ -138,7 +133,7 @@ export const Stalled: Story = {
       onCleanup(() => timers.forEach(clearTimeout));
     });
     onCleanup(() => store.dispose());
-    return <Loader store={store} markSvg={MARKS[args.mark]} />;
+    return <Loader store={store} markSvg={MARKS[args.mark].svg} markFilter={MARKS[args.mark].filter} />;
   },
 };
 
@@ -155,6 +150,6 @@ export const StalledThenReady: Story = {
       onCleanup(() => timers.forEach(clearTimeout));
     });
     onCleanup(() => store.dispose());
-    return <Loader store={store} markSvg={MARKS[args.mark]} />;
+    return <Loader store={store} markSvg={MARKS[args.mark].svg} markFilter={MARKS[args.mark].filter} />;
   },
 };

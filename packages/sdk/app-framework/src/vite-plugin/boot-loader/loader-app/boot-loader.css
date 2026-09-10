@@ -142,7 +142,9 @@ body {
    * The host SVG carries its own brand-palette fills, so we don't apply a
    * `color` cascade here. SVGs that intentionally use `fill="currentColor"`
    * still pick up the loader's text colour via `#boot-loader`'s `color`.
+   * A channel recolours the released mark through this filter rather than shipping its own file.
    */
+  filter: var(--boot-loader-mark-filter, none);
 }
 
 /*
@@ -409,7 +411,7 @@ body {
   /* Monotone — the arrival reads from opacity alone, which keeps the row quiet. */
   color: currentColor;
   opacity: 0.2;
-  animation: boot-loader-plugin-in 200ms ease-out both;
+  animation: boot-loader-plugin-in 500ms ease-out both;
 }
 
 /* The glyph itself. Styled apart from its slot so either can change without disturbing the other. */

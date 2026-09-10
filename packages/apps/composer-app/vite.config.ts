@@ -26,7 +26,7 @@ import { ShutdownPlugin } from '@dxos/vite-plugin-shutdown';
 
 import { createConfig as createTestConfig } from '../../../vitest.base.config.ts';
 import { bootChunking } from './src/vite/boot-chunking.ts';
-import { bootMarkPath, channelFaviconPlugin, channelVariant } from './src/vite/channel-branding.ts';
+import { bootMarkFilter, channelFaviconPlugin, channelVariant } from './src/vite/channel-branding.ts';
 import { debugPortSidecarPlugin, resolveDebugPortSession } from './src/vite/debug-port.ts';
 import { nodeBuiltinStubs } from './src/vite/node-builtin-stubs.ts';
 import { optimizeDepsInclude } from './src/vite/optimize-deps.ts';
@@ -575,11 +575,10 @@ export default defineConfig((env) => ({
     // loses the brand mark — the loader still renders the bar + status
     // without it.
     bootLoaderPlugin({
+      // A prerelease bundle recolours the released mark; production and any dev server show it as is.
+      markFilter: bootMarkFilter(channelVariant(env.command)),
       markSvg: (() => {
-        // A prerelease bundle brands its own; production and any dev server get the released mark.
-        const markPath =
-          bootMarkPath(dirname, channelVariant(env.command)) ??
-          path.join(rootDir, 'packages/ui/brand/assets/icons/composer-icon.svg');
+        const markPath = path.join(rootDir, 'packages/ui/brand/assets/icons/composer-icon.svg');
         try {
           return readFileSync(markPath, 'utf8');
         } catch (error) {

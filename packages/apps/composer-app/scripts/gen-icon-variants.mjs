@@ -10,10 +10,11 @@
 // recolourings rather than redraws: only the hue and saturation of the shared four-colour ramp change, so
 // every variant keeps production's geometry and contrast.
 //
-// Three pieces of artwork carry the mark, all drawn from the same ramp:
+// Two pieces of raster artwork carry the mark, both drawn from the same ramp:
 //   - the desktop app icon        (`assets/icon.svg`, on its near-black tile)
 //   - the favicon set             (`assets/favicon.svg`, transparent)
-//   - the boot loader's mark      (`@dxos/brand`'s `composer-icon.svg`, transparent)
+// The boot loader's mark is an SVG the loader recolours with a CSS filter (`src/vite/channel-branding.ts`),
+// so it needs no generated copy; keep that filter's hue and saturation in step with `VARIANTS` here.
 //
 // Usage: pnpm icons:variants
 
@@ -26,7 +27,6 @@ import { fileURLToPath } from 'node:url';
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const assets = join(root, 'assets');
 const tauri = join(root, 'node_modules', '.bin', 'tauri');
-const brandMark = join(root, '..', '..', 'ui', 'brand', 'assets', 'icons', 'composer-icon.svg');
 
 /**
  * `hue` in degrees replaces the ramp's own hue; `saturation` and `lightness` scale what is there.
@@ -153,7 +153,6 @@ const write = (dir, name, contents) => {
 
 const appSource = readFileSync(join(assets, 'icon.svg'), 'utf8');
 const faviconSource = readFileSync(join(assets, 'favicon.svg'), 'utf8');
-const bootSource = readFileSync(brandMark, 'utf8');
 
 for (const [name, variant] of Object.entries(VARIANTS)) {
   const appSvg = recolour(appSource, 'assets/icon.svg', variant);
@@ -176,7 +175,4 @@ for (const [name, variant] of Object.entries(VARIANTS)) {
     }
   });
   console.log(`assets/favicon.svg -> assets/favicons-${name}`);
-
-  writeFileSync(join(assets, `boot-mark-${name}.svg`), recolour(bootSource, '@dxos/brand composer-icon.svg', variant));
-  console.log(`@dxos/brand composer-icon.svg -> assets/boot-mark-${name}.svg`);
 }

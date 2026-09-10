@@ -7,7 +7,7 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { afterEach, describe, test, vi } from 'vitest';
 
-import { applyChannelFavicons, bootMarkPath, channelVariant } from './channel-branding';
+import { applyChannelFavicons, bootMarkFilter, channelVariant } from './channel-branding';
 
 const FAVICONS = [
   'favicon.svg',
@@ -54,13 +54,14 @@ describe('channelVariant', () => {
   });
 });
 
-describe('bootMarkPath', () => {
-  test('falls back to the released mark when there is no channel', ({ expect }) => {
-    expect(bootMarkPath('/app', undefined)).toBeUndefined();
+describe('bootMarkFilter', () => {
+  test('leaves the released mark alone when there is no channel', ({ expect }) => {
+    expect(bootMarkFilter(undefined)).toBeUndefined();
   });
 
-  test('names the variant the channel brands itself with', ({ expect }) => {
-    expect(bootMarkPath('/app', 'purple')).toEqual(path.join('/app', 'assets', 'boot-mark-purple.svg'));
+  test('rotates the ramp to the variant hue, scaling saturation only when the variant does', ({ expect }) => {
+    expect(bootMarkFilter('purple')).toBe('hue-rotate(82deg)');
+    expect(bootMarkFilter('rust')).toBe('hue-rotate(180deg) saturate(0.75)');
   });
 });
 
@@ -71,10 +72,9 @@ describe('generated artwork', () => {
 
   for (const variant of ['purple', 'rust'] as const) {
     test(`${variant} is committed in full`, ({ expect }) => {
-      const missing = [
-        path.join(appDir, 'assets', `boot-mark-${variant}.svg`),
-        ...FAVICONS.map((favicon) => path.join(appDir, 'assets', `favicons-${variant}`, favicon)),
-      ].filter((file) => !existsSync(file));
+      const missing = FAVICONS.map((favicon) => path.join(appDir, 'assets', `favicons-${variant}`, favicon)).filter(
+        (file) => !existsSync(file),
+      );
       expect(missing).toEqual([]);
     });
   }

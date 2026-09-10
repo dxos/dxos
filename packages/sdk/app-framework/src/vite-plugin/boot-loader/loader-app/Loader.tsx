@@ -48,6 +48,8 @@ export type LoaderProps = {
   store: LoaderStore;
   /** Inline SVG markup for the brand mark rendered inside the ring. */
   markSvg?: string;
+  /** A CSS filter over the mark — how a channel recolours the released artwork without its own file. */
+  markFilter?: string;
   /** URL of the icon sprite the activation row resolves `<use href>` against. */
   spritePath?: string;
 };
@@ -158,7 +160,13 @@ export const Loader: Component<LoaderProps> = (props) => {
             <circle class='boot-loader-ring-marker' cx={arc().headX} cy={arc().headY} r={MARKER_RADIUS} />
           </svg>
         ) : null}
-        {props.markSvg ? <div id='boot-loader-mark' innerHTML={props.markSvg} /> : null}
+        {props.markSvg ? (
+          <div
+            id='boot-loader-mark'
+            style={{ '--boot-loader-mark-filter': props.markFilter }}
+            innerHTML={props.markSvg}
+          />
+        ) : null}
       </div>
       <div id='boot-loader-status'>
         <div id='boot-loader-status-fade' />
