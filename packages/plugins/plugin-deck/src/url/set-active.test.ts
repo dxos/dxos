@@ -10,6 +10,7 @@ import { computeActiveUpdates } from './set-active';
 
 const makeDeck = (overrides: Partial<DeckSchema.DeckState> = {}): DeckSchema.DeckState => ({
   ...DeckSchema.defaultDeck,
+  ...DeckSchema.defaultOpenDeck,
   ...overrides,
 });
 

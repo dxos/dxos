@@ -160,22 +160,31 @@ and which workspace you were last on.
 exposé, dialogs, popovers and toasts.
 
 ```ts
-type DeckState = {
-  active: string[]; // what is open — derived from the URL, never written by hand
-  inactive: string[]; // planks that were closed
+// Per workspace, persisted.
+type StoredDeck = {
   plankSizing: Record<string, number>; // rem widths, by URL segment
   companionPlanks: string[]; // planks showing their companion
   plankNames: Record<string, string>; // name → URL segment
 };
 
+// Per workspace, never persisted.
+type OpenDeck = {
+  active: string[]; // derived from the URL, never written by hand
+  inactive: string[]; // planks that were closed
+};
+
 type EphemeralDeckState = {
+  open: Record<string, OpenDeck>; // what is open, by workspace
+  segments?: Record<string, string>; // plank id → the URL segment it came from
   fullscreen?: string;
   expanded?: string;
   expose?: boolean;
-  segments?: Record<string, string>; // plank id → the URL segment it came from
   // ...dialog / popover / toast fields
 };
 ```
+
+`DeckCapabilities.getDeck` merges the two for the active workspace, so everything downstream reads one
+deck and never has to know which atom a field came from.
 
 ### Two representations of what is open
 
@@ -218,15 +227,15 @@ a plank is closed when its segment leaves the URL, never because its id was refi
 A projection can wait out its deadlines, so each one stamps itself on entry and stops writing once a
 newer one has stamped over it. Latest wins.
 
-### Known debt
+The URL only records the workspace you are in, so the other workspaces' open planks are remembered
+for the session and no longer. A reload arrives with none, and a workspace you switch to seeds itself
+from its first child exactly as it does on a first visit.
 
-`active` and `inactive` sit inside `StoredDeckState`, so what is open is persisted as well as being in
-the URL. That is a second record of the same fact and should be removed.
-
-Persisted state is versioned through `util/migrate-persisted-state.ts`. The policy for unshipped
-fields is **drop, don't migrate**: `Atom.kvs` falls back to `defaultValue` when a blob fails to decode,
-so a removed field costs a fresh local deck and nothing more. The selected companion _variant_ lives in
-`react-ui-attention` view state, not here (`util/companion-view-state.ts`).
+Persisted state needs no migration. What is open comes from the URL, so a stored blob only carries
+preferences: the schema decode drops any field the deck no longer knows, and `Atom.kvs` falls back to
+`defaultValue` when a blob fails to decode entirely, which costs a fresh local deck and nothing more.
+The selected companion _variant_ lives in `react-ui-attention` view state, not here
+(`util/companion-view-state.ts`).
 
 ---
 
@@ -334,8 +343,7 @@ space between the two piles) and the exposé.
 
 ## 11. Testing
 
-- `util/*.test.ts` — pure geometry and state helpers (`companion-anchor`, `layout`,
-  `migrate-persisted-state`).
+- `util/*.test.ts` — pure geometry and state helpers (`companion-anchor`, `layout`).
 - `url/*.test.ts` — the URL vocabulary and the close diff (`navigation`, `set-active`).
 - `Deck.stories.tsx` — one `DefaultStory` plus args; play-tested variants are tagged `test`, and
   numbered manual scripts hang off play-free `*Manual` variants.

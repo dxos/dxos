@@ -13,8 +13,6 @@ import { invariant } from '@dxos/invariant';
 import { meta } from '#meta';
 import { DeckCapabilities, DeckSchema } from '#types';
 
-import { migratePersistedState } from '../util';
-
 const STATE_KEY = `${meta.profile.key}.state`;
 
 /** Default persisted state. */
@@ -43,14 +41,11 @@ const defaultDeckEphemeralState: DeckSchema.EphemeralDeckState = {
   toasts: [],
   currentUndoId: undefined,
   scrollIntoView: undefined,
+  open: {},
 };
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* ({ platform = 'desktop' }: DeckCapabilities.DeckPluginOptions = {}) {
-    // Migrate a legacy (pre single-mode-deck) blob before the KVS atom's schema decode would
-    // otherwise silently strip its removed fields (see migratePersistedState for details).
-    migratePersistedState(STATE_KEY);
-
     // Persisted state using KVS store.
     const stateAtom = createKvsStore({
       key: STATE_KEY,
@@ -69,14 +64,15 @@ export default Capability.makeModule(
       const ephemeral = get(ephemeralAtom);
       const deck = state.decks[state.activeDeck];
       invariant(deck, `Deck not found: ${state.activeDeck}`);
+      const open = ephemeral.open[state.activeDeck] ?? DeckSchema.defaultOpenDeck;
       return {
-        mode: platform === 'mobile' ? 'mobile' : DeckSchema.getMode(deck, !!ephemeral.fullscreen),
+        mode: platform === 'mobile' ? 'mobile' : DeckSchema.getMode(open, !!ephemeral.fullscreen),
         dialogOpen: ephemeral.dialogOpen,
         sidebarOpen: state.sidebarState === 'expanded',
         complementarySidebarOpen: state.complementarySidebarState === 'expanded',
         workspace: state.activeDeck,
-        active: deck.active,
-        inactive: deck.inactive,
+        active: open.active,
+        inactive: open.inactive,
         scrollIntoView: ephemeral.scrollIntoView,
       } satisfies AppCapabilities.Layout;
     }).pipe(Atom.keepAlive);

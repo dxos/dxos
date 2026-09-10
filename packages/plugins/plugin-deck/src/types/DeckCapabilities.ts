@@ -13,7 +13,7 @@ import { invariant } from '@dxos/invariant';
 
 import { meta } from '#meta';
 
-import type * as DeckSchema from './DeckSchema';
+import * as DeckSchema from './DeckSchema';
 import { type DeckState, type EphemeralDeckState, type StoredDeckState } from './DeckSchema';
 
 export const Settings = Capability.makeSingleton<Atom.Writable<import('./Settings').Settings>>()(
@@ -28,13 +28,17 @@ export const EphemeralState = Capability.makeSingleton<Atom.Writable<EphemeralDe
   `${meta.profile.key}.capability.ephemeralState`,
 );
 
-/** Get the current active deck from state. */
+/**
+ * The active workspace's deck: its persisted preferences, plus what the URL says is open. The two
+ * live in different atoms because only one of them is the deck's to remember.
+ */
 export const getDeck = (): Effect.Effect<DeckState, Error, Capability.Service> =>
   Effect.gen(function* () {
     const state = yield* Capabilities.getAtomValue(State);
+    const { open } = yield* Capabilities.getAtomValue(EphemeralState);
     const deck = state.decks[state.activeDeck];
     invariant(deck, `Deck not found: ${state.activeDeck}`);
-    return deck;
+    return { ...deck, ...(open[state.activeDeck] ?? DeckSchema.defaultOpenDeck) };
   });
 
 /** Re-exported alongside the capability so hosts keep reading the platform from one place. */

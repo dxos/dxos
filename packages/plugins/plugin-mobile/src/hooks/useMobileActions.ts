@@ -13,7 +13,6 @@ import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { useAppGraph } from '@dxos/app-toolkit/ui';
 import * as Operation from '@dxos/compute/Operation';
 import * as GraphNode from '@dxos/graph/GraphNode';
-import { invariant } from '@dxos/invariant';
 import * as DeckCapabilities from '@dxos/plugin-deck/DeckCapabilities';
 import * as DeckSchema from '@dxos/plugin-deck/DeckSchema';
 import { type DeckStateHook, useDeckState } from '@dxos/plugin-deck/hooks';
@@ -65,17 +64,17 @@ type CompanionActionsConfig = {
 const createMobileCompanionActions = (
   graph: AppCapabilities.AppGraph['graph'],
   stateAtom: Atom.Atom<DeckSchema.StoredDeckState>,
+  ephemeralAtom: Atom.Atom<DeckSchema.EphemeralDeckState>,
   get: Atom.AtomContext,
   config: CompanionActionsConfig,
 ): Pick<ActionGraphProps, 'nodes' | 'edges'> => {
   const { idPrefix, selectedVariant, updateState } = config;
 
   const state = get(stateAtom);
-  const deck = state.decks[state.activeDeck];
-  invariant(deck, `Deck not found: ${state.activeDeck}`);
+  const open = get(ephemeralAtom).open[state.activeDeck] ?? DeckSchema.defaultOpenDeck;
   // An atom body cannot call `useMobileStack`, so its root-panel fallback is mirrored inline here.
   const activeId =
-    deck.active[deck.active.length - 1] ??
+    open.active[open.active.length - 1] ??
     (state.activeDeck === DeckSchema.DEFAULT_DECK_ID ? GraphNode.RootId : state.activeDeck);
 
   // Keys off the active plank's own child connections rather than `deck.companionPlanks` (the desktop
@@ -169,12 +168,13 @@ export const useMobileNavbarActions = (): MobileNavbarActions => {
   const { graph } = useAppGraph();
   const runAction = useActionRunner();
   const stateAtom = useCapability(DeckCapabilities.State);
+  const ephemeralAtom = useCapability(DeckCapabilities.EphemeralState);
   const { updateState } = useDeckState();
 
   const actionsAtom = useMemo(
     () =>
       Atom.make((get): ActionGraphProps => {
-        const { nodes, edges } = createMobileCompanionActions(graph, stateAtom, get, {
+        const { nodes, edges } = createMobileCompanionActions(graph, stateAtom, ephemeralAtom, get, {
           idPrefix: 'navbar',
           updateState,
         });
@@ -208,7 +208,7 @@ export const useMobileNavbarActions = (): MobileNavbarActions => {
 
         return { nodes, edges };
       }),
-    [graph, stateAtom, updateState, t],
+    [graph, stateAtom, ephemeralAtom, updateState, t],
   );
 
   return { actions: actionsAtom, onAction: runAction };
@@ -220,6 +220,7 @@ export const useMobileNavbarActions = (): MobileNavbarActions => {
 export const useMobileDrawerActions = (consumerName: string): MobileDrawerActions => {
   const { t } = useTranslation(meta.profile.key);
   const stateAtom = useCapability(DeckCapabilities.State);
+  const ephemeralAtom = useCapability(DeckCapabilities.EphemeralState);
   const { graph } = useAppGraph();
   const runAction = useActionRunner();
   const { updateState } = useDeckState();
@@ -230,7 +231,7 @@ export const useMobileDrawerActions = (consumerName: string): MobileDrawerAction
       Atom.make((get): ActionGraphProps => {
         const state = get(stateAtom);
 
-        const { nodes, edges } = createMobileCompanionActions(graph, stateAtom, get, {
+        const { nodes, edges } = createMobileCompanionActions(graph, stateAtom, ephemeralAtom, get, {
           idPrefix: 'drawer',
           selectedVariant: state.complementarySidebarState !== 'closed' ? state.complementarySidebarPanel : undefined,
           updateState,
@@ -285,7 +286,7 @@ export const useMobileDrawerActions = (consumerName: string): MobileDrawerAction
 
         return { nodes, edges };
       }),
-    [graph, stateAtom, updateState, keyboardOpen, t],
+    [graph, stateAtom, ephemeralAtom, updateState, keyboardOpen, t],
   );
 
   return { actions: actionsAtom, onAction: runAction };

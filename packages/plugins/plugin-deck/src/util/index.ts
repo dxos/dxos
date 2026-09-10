@@ -5,7 +5,6 @@
 export * from './companion-anchor';
 export * from './layout';
 export * from './layoutAppliesTopbar';
-export * from './migrate-persisted-state';
 export * from './resolve-sidebar-state';
 export * from './upsert-toast';
 export * from './openable-children';

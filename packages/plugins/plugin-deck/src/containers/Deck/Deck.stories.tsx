@@ -194,6 +194,7 @@ const storyDeckState = Capability.makeModule(() =>
       toasts: [],
       currentUndoId: undefined,
       scrollIntoView: undefined,
+      open: {},
     }).pipe(Atom.keepAlive);
 
     const layoutAtom = Atom.make((get) => {
@@ -201,14 +202,15 @@ const storyDeckState = Capability.makeModule(() =>
       const ephemeral = get(ephemeralAtom);
       const deck = state.decks[state.activeDeck];
       invariant(deck, `Deck not found: ${state.activeDeck}`);
+      const open = ephemeral.open[state.activeDeck] ?? DeckSchema.defaultOpenDeck;
       return {
-        mode: DeckSchema.getMode(deck, !!ephemeral.fullscreen),
+        mode: DeckSchema.getMode(open, !!ephemeral.fullscreen),
         dialogOpen: ephemeral.dialogOpen,
         sidebarOpen: state.sidebarState === 'expanded',
         complementarySidebarOpen: state.complementarySidebarState === 'expanded',
         workspace: state.activeDeck,
-        active: deck.active,
-        inactive: deck.inactive,
+        active: open.active,
+        inactive: open.inactive,
         scrollIntoView: ephemeral.scrollIntoView,
       } satisfies AppCapabilities.Layout;
     }).pipe(Atom.keepAlive);
@@ -402,7 +404,7 @@ const DefaultStory = ({
   }, [settingsOverrides, updateSettings]);
   const pluginManager = usePluginManager();
   const { graph } = useAppGraph();
-  const { state, deck, updateState } = useDeckState();
+  const { state, deck, updateState, updateEphemeral } = useDeckState();
 
   // Subscribe to the root's children so the `whenRoot` connector runs and materializes the story
   // nodes; without this each plank's `useNode` never resolves and the deck stays in the loading state.
@@ -431,10 +433,16 @@ const DefaultStory = ({
       sidebarState,
       decks: {
         ...current.decks,
-        [current.activeDeck]: { ...current.decks[current.activeDeck], active, companionPlanks: open },
+        [current.activeDeck]: { ...current.decks[current.activeDeck], companionPlanks: open },
       },
     }));
-  }, [items, count, sidebarState, companionPlanks, launcher, launcherNode, updateState]);
+    // What is open is the URL's, and there is no URL here, so the story writes it where the projection
+    // would have.
+    updateEphemeral((current) => ({
+      ...current,
+      open: { ...current.open, [state.activeDeck]: { active, inactive: [] } },
+    }));
+  }, [items, count, sidebarState, companionPlanks, launcher, launcherNode, updateState, updateEphemeral]);
 
   return (
     <Deck.Root settings={settings} pluginManager={pluginManager} state={state} deck={deck} updateState={updateState}>

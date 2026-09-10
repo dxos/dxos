@@ -30,10 +30,14 @@ const handler: Operation.WithHandler<typeof LayoutOperation.SwitchWorkspace> = L
       const state = yield* Capabilities.getAtomValue(DeckCapabilities.State);
       const deck = state.decks[input.subject];
       invariant(deck, `Deck not found: ${input.subject}`);
+      // What a workspace had open is remembered for the session but never persisted, so a reload
+      // arrives here with nothing and the workspace seeds itself again.
+      const { open } = yield* Capabilities.getAtomValue(DeckCapabilities.EphemeralState);
+      const remembered = open[input.subject]?.active ?? [];
 
       const seeded =
-        deck.active.length === 0 && platform !== 'mobile' ? openableChildren(graph, input.subject).slice(0, 1) : [];
-      const active = deck.active.length > 0 ? deck.active : seeded;
+        remembered.length === 0 && platform !== 'mobile' ? openableChildren(graph, input.subject).slice(0, 1) : [];
+      const active = remembered.length > 0 ? remembered : seeded;
 
       const workspace = GraphPath.getWorkspaceToken(input.subject);
       if (workspace) {

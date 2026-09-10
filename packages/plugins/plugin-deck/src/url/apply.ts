@@ -54,9 +54,15 @@ export const applyActive = Effect.fnUntraced(function* (planks: readonly Navigat
   });
   const activeSegments = deckUpdates.active.map((id) => Navigation.segmentOf(segments, id));
   const plankNames = updatePlankNames(deck.plankNames, activeSegments);
+  const { active, inactive, companionPlanks } = deckUpdates;
+  const workspace = registry.get(stateAtom).activeDeck;
 
-  registry.set(ephemeralAtom, { ...ephemeral, segments });
-  registry.set(stateAtom, updateActiveDeck(registry.get(stateAtom), { ...deckUpdates, plankNames }));
+  registry.set(ephemeralAtom, {
+    ...ephemeral,
+    segments,
+    open: { ...ephemeral.open, [workspace]: { active, inactive } },
+  });
+  registry.set(stateAtom, updateActiveDeck(registry.get(stateAtom), { companionPlanks, plankNames }));
 
   return toAttend;
 });

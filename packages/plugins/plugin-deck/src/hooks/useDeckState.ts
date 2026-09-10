@@ -33,12 +33,12 @@ export const useDeckState = (): DeckStateHook => {
   const persistedState = useAtomValue(stateAtom);
   const ephemeralState = useAtomValue(ephemeralAtom);
 
-  // Compute deck from decks[activeDeck] to ensure it's always current.
+  // The active workspace's preferences plus what the URL says is open; see `DeckCapabilities.getDeck`.
   const deck = useMemo(() => {
     const deck = persistedState.decks[persistedState.activeDeck];
     invariant(deck, `Deck not found: ${persistedState.activeDeck}`);
-    return deck;
-  }, [persistedState.decks, persistedState.activeDeck]);
+    return { ...deck, ...(ephemeralState.open[persistedState.activeDeck] ?? DeckSchema.defaultOpenDeck) };
+  }, [persistedState.decks, persistedState.activeDeck, ephemeralState.open]);
 
   // Combine persisted and ephemeral state into a unified view.
   const state = useMemo(
