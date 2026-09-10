@@ -21,6 +21,8 @@ import * as HttpClient from 'effect/unstable/http/HttpClient';
 import * as HttpClientError from 'effect/unstable/http/HttpClientError';
 import * as HttpClientRequest from 'effect/unstable/http/HttpClientRequest';
 
+import { log } from '@dxos/log';
+
 /**
  * Effect 4 reshaped the AI errors the way it reshaped `HttpClientError`: one `AiError` wrapper
  * carrying the module and method, with a semantic `reason` as the payload. `HttpRequestError`
@@ -330,6 +332,16 @@ export class ChatCompletionsClient extends Context.Service<
  * never produced any would be sent a field they do not know.
  */
 const replaysReasoning = (config: ChatCompletionsClientConfig): boolean => config.provider === 'deepseek';
+
+/** The messages of a request by role and what each carries, without their content. */
+const describeMessages = (messages: ChatMessage[]) =>
+  messages.map((message) => ({
+    role: message.role,
+    content: typeof message.content === 'string' ? message.content.length : undefined,
+    ...('reasoning_content' in message ? { reasoning: message.reasoning_content?.length } : {}),
+    ...('tool_calls' in message ? { toolCalls: message.tool_calls?.length } : {}),
+    ...('tool_call_id' in message ? { toolCallId: message.tool_call_id } : {}),
+  }));
 
 const promptToMessages = (prompt: Prompt.Prompt, apiFormat: ApiFormat, replayReasoning = false): ChatMessage[] => {
   const messages: ChatMessage[] = [];
@@ -838,6 +850,13 @@ export const make = (model: string, requestOptions: RequestOptions = {}) =>
             );
             if (response.status !== 200) {
               const body = yield* response.text;
+              // A rejection is about the request, so the shape of what was sent goes next to it: a
+              // provider that wants a field on a turn names the turn, not the field it saw.
+              log.warn('chat completions request rejected', {
+                status: response.status,
+                body: body.slice(0, 500),
+                messages: describeMessages(messages),
+              });
               try {
                 const json = JSON.parse(body);
                 const error = json.error;
