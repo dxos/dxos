@@ -569,6 +569,13 @@ is supposed to be decoupled from.
       click or Enter/Space only, stopping the chip's own activation so no pinned preview opens
       against the outline that is leaving; hover reaches the app's preview popover untouched.
       `Outline.stories.tsx` `TestLinkActivation` pins it. Not a breakpoint issue.
+- [x] **The task's hover card threw "Cannot read properties of undefined (reading 'singleSelect')"**
+      FIXED 2026-09-10: `TaskCard` read the status options with the pre-v4 curried `getAnnotation`
+      and `.value` on an `Option` that no longer exists; it now uses `getPropertyMetaAnnotation`,
+      which now looks through an optional property's union (the meta sits on the annotated member,
+      not on the `Schema.optional` wrapper; unit test in echo's `schema.test.ts`). The deck popover's
+      card surface renders a thrown message in the content column (`CardFallback`) instead of the
+      default fallback landing in the icon gutter. `Card.stories.tsx` `_Task` asserts the tag renders.
 - [x] `subject`, `attendableId` and `taskSet` stay on the Surface: those identify what is being
       rendered, which is what `data` is for.
 - [x] The tasks section's Surface was already clean — `{ subject: taskSet, attendableId }`, no
