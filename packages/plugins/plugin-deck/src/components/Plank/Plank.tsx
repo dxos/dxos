@@ -104,7 +104,11 @@ export const Plank = forwardRef<HTMLDivElement, PlankProps>(
     const { t } = useTranslation(meta.profile.key);
     const attentionAttrs = useAttentionAttributes(attendableId);
     const icon = node.properties?.icon ?? 'ph--circle-dashed--regular';
-    const label = toLocalizedString(node.properties?.label ?? (pending ? 'pending.heading' : ''), t);
+    // A bare string is taken verbatim by `toLocalizedString`; only the tuple form is looked up.
+    const label = toLocalizedString(
+      node.properties?.label ?? (pending ? (['pending.heading', { ns: meta.profile.key }] as const) : ''),
+      t,
+    );
     const data = useMemo<AppSurface.ArticleData>(
       () => ({
         attendableId,
