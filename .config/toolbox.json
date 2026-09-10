@@ -27,24 +27,6 @@
   },
   "tsconfig": {
     "fixedKeys": ["extends", "compilerOptions"],
-    "pathMapping": {
-      "roots": ["@dxos/composer-app"],
-      "include": [
-        "packages/common/storybook-utils",
-        "packages/core/compute/assistant-toolkit",
-        "packages/core/compute/assistant",
-        "packages/core/compute/compute",
-        "packages/core/compute/conductor",
-        "packages/core/compute/functions",
-        "packages/devtools/devtools",
-        "packages/plugins/*",
-        "packages/sdk/app-framework",
-        "packages/sdk/app-graph",
-        "packages/sdk/migrations",
-        "packages/sdk/shell",
-        "packages/ui/react-ui*"
-      ]
-    },
     "noProjectReferences": false
   }
 }

@@ -7,7 +7,6 @@ import { execSync } from 'child_process';
 import { Table } from 'console-table-printer';
 import deepEqual from 'deep-equal';
 import fs from 'fs';
-import globrex from 'globrex';
 import defaultsDeep from 'lodash.defaultsdeep';
 import { existsSync } from 'node:fs';
 import { inspect } from 'node:util';
@@ -99,20 +98,6 @@ export type ToolboxConfig = {
   };
   tsconfig?: {
     fixedKeys?: string[];
-    pathMapping?: {
-      /**
-       * Root packages that will use tsconfig paths.
-       * Used to verify dep graph integrity.
-       * Ensures there are no "holes" in the dependency graph where a package
-       * in the middle of the graph is not included while its dependencies are.
-       */
-      roots?: string[];
-
-      /**
-       * Array of globs for package names.
-       */
-      include: string[];
-    };
     noDirectOutDir?: boolean;
     noProjectReferences?: boolean;
   };
@@ -500,83 +485,6 @@ export class Toolbox {
         await saveJson(tsConfigPath, updated, this.options.verbose);
       }
     }
-  }
-
-  async updateTsConfigPaths(): Promise<void> {
-    const regexes = Array.from(this.config.tsconfig?.pathMapping?.include ?? []).map((pattern) =>
-      globrex(pattern, { extended: true, globstar: true }),
-    );
-
-    const includedPackages = this.graph.projects.filter((project) =>
-      regexes.some((re) => {
-        return relative(this.rootDir!, project.path).match(re.regex);
-      }),
-    );
-
-    if (this.config.tsconfig?.pathMapping?.roots) {
-      const roots = this.config.tsconfig.pathMapping.roots;
-      if (!roots.every((root) => this.graph.hasPackage(root))) {
-        throw new Error('Missing packages');
-      }
-
-      const allDepsFromRoot = this.graph.getTransitiveWorkspaceDeps(roots);
-      const missingPackages = this.graph.projects.filter(
-        (project) =>
-          !roots.includes(project.name) &&
-          allDepsFromRoot.includes(project.name) &&
-          !includedPackages.includes(project) &&
-          this.graph
-            .getWorkspaceDependencies(project.name, { devDeps: false })
-            .some((dep) => includedPackages.find((p) => p.name === dep) != null),
-      );
-      if (missingPackages.length > 0) {
-        console.error(
-          `These packages must be included in the path mapping config file because their dependencies are included:\n${missingPackages
-            .map(
-              (p) =>
-                `${relative(this.rootDir, p.path)} because it depends on ${this.graph
-                  .getWorkspaceDependencies(p.name)
-                  .filter((dep) => includedPackages.find((p) => p.name === dep) != null)
-                  .join(', ')}`,
-            )
-            .join('\n')}`,
-        );
-        // TODO(thure): Lit packages which use decorators need to be “missing” by this definition in order to work.
-        // throw new Error('Missing packages');
-      }
-    }
-
-    const tsconfigPaths = await loadJson<TsConfigJson>(join(this.rootDir, 'tsconfig.paths.json'));
-    tsconfigPaths.compilerOptions.paths = Object.fromEntries(
-      (
-        await Promise.all(
-          includedPackages.map(async (project) => {
-            const projectJson = await loadJson<ProjectJson>(join(project.path, 'project.json'));
-            const entryPoints = projectJson?.targets?.compile?.options?.entryPoints;
-            if (!Array.isArray(entryPoints)) {
-              return [];
-            }
-            const entries = entryPoints.map((entryPoint) => {
-              entryPoint = this.resolveProjectOption(project, entryPoint);
-              let entryId = relative(join(project.path, 'src'), entryPoint);
-              if (entryPoint.endsWith('index.ts')) {
-                entryId = dirname(entryId);
-              } else if (JS_EXTENSIONS.some((ext) => entryPoint.endsWith(ext))) {
-                entryId = entryId.slice(0, -JS_EXTENSIONS.find((ext) => entryPoint.endsWith(ext))!.length);
-              }
-
-              return { path: relative(project.path, entryPoint), entryId };
-            });
-            return entries.map(({ path, entryId }) => [
-              join(project.name, entryId),
-              [relative(this.rootDir, join(project.path, path))],
-            ]);
-          }),
-        )
-      ).flat(), // TODO(dmaretskyi): Entrypoints.
-    );
-
-    await saveJson(join(this.rootDir, 'tsconfig.paths.json'), tsconfigPaths, this.options.verbose);
   }
 
   async updateTsConfigAll(): Promise<void> {
