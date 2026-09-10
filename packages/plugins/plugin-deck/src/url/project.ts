@@ -31,17 +31,20 @@ const RESOLVE_TIMEOUT = '10 seconds';
 const LOADER_TIMEOUT = '5 seconds';
 
 /**
- * Latest-wins across concurrent projections. A projection can wait out both deadlines above, so one
- * that started earlier may still be running when a newer URL arrives; `claim` hands it a `writable`
- * that goes false the moment a newer projection claims.
+ * How many projections have started. A projection can wait out both deadlines above, so one that
+ * started earlier may still be running when a newer URL arrives.
  */
-const claim = (() => {
-  let generation = 0;
-  return () => {
-    const stamp = ++generation;
-    return { writable: () => stamp === generation };
-  };
-})();
+let projections = 0;
+
+/**
+ * Take the right to write, and report whether it still holds. Latest wins: the answer goes false as
+ * soon as a later projection takes it, so a projection that has been overtaken stops writing rather
+ * than applying a URL that is no longer in the address bar.
+ */
+const claimWrites = (): (() => boolean) => {
+  const claimed = ++projections;
+  return () => claimed === projections;
+};
 
 /** Dispatch navigation handlers for a URL arriving from outside the app, then project it. */
 export const handleExternalUrl = Effect.fnUntraced(function* (url?: URL) {
@@ -80,7 +83,7 @@ export const projectUrl = Effect.fnUntraced(function* (url?: URL, options?: { at
   const builder = yield* Capability.get(AppCapabilities.AppGraph);
   const manager = yield* Effect.serviceOption(Plugin.Service);
 
-  const { writable } = claim();
+  const writable = claimWrites();
 
   const updateState = (fn: (current: DeckSchema.StoredDeckState) => DeckSchema.StoredDeckState) => {
     registry.set(stateAtom, fn(registry.get(stateAtom)));
