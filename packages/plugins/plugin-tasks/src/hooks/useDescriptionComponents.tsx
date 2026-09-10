@@ -22,7 +22,8 @@ export const useDescriptionComponents = (): MarkdownViewProps['components'] => {
       a: ({ children, href, ...props }) =>
         href && PreviewCapabilities.isPreviewLink(resolvers.flat(), href) ? (
           <DxAnchor eid={href} className='dx-tag--anchor'>
-            {children}
+            {/* A URL written bare autolinks with itself as its text; the resolver's short name reads better in a chip. */}
+            {children === href ? (PreviewCapabilities.linkLabel(resolvers.flat(), href) ?? children) : children}
           </DxAnchor>
         ) : (
           <MarkdownLink href={href} {...props}>

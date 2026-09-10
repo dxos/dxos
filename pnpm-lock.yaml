@@ -13711,6 +13711,9 @@ importers:
       '@dxos/plugin-github':
         specifier: workspace:*
         version: link:../plugin-github
+      '@dxos/plugin-preview':
+        specifier: workspace:*
+        version: link:../plugin-preview
       '@dxos/plugin-testing':
         specifier: workspace:*
         version: link:../plugin-testing

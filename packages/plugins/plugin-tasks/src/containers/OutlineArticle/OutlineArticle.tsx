@@ -71,7 +71,7 @@ export const OutlineArticle = ({
   const handleSelectLink = useCallback((url: string) => setSelected(URI.make(url)), []);
   const handleBack = useCallback(() => setSelected(undefined), []);
 
-  const extensions = useMarkdownExtensions();
+  const extensions = useMarkdownExtensions(outline);
 
   // Reactive: on a cold load (or a story that seeds during client init) the content ref's target
   // is not yet in memory, and a `.target` read would leave the editor permanently unmounted.

@@ -30,6 +30,11 @@ export default Capability.makeModule(
     return Capability.contribute(PreviewCapabilities.LinkResolver, [
       {
         match: (url) => parseGitHubLink(url) !== undefined,
+        // How GitHub itself shortens a bare reference: the number, or the repository's full name.
+        label: (url) => {
+          const link = parseGitHubLink(url);
+          return link && (link.number !== undefined ? `#${link.number}` : `${link.owner}/${link.repo}`);
+        },
         resolve: ({ eid }, context) =>
           Effect.gen(function* () {
             const link = parseGitHubLink(eid);

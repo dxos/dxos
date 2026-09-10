@@ -34,6 +34,11 @@ export type PreviewLinkResolve = (
 export type PreviewLinkResolver = {
   match: PreviewLinkMatch;
   resolve: PreviewLinkResolve;
+  /**
+   * A short name for a URL written bare — `#123` for a pull request — so a renderer can show it
+   * instead of the whole address without knowing the URL's shape.
+   */
+  label?: (url: string) => string | undefined;
 };
 
 /**
@@ -46,3 +51,14 @@ export const LinkResolver = Capability.make<PreviewLinkResolver[]>()(`${meta.pro
 /** Whether any contributed resolver answers for the URL: what a renderer asks before making a link an anchor. */
 export const isPreviewLink = (resolvers: readonly PreviewLinkResolver[], url: string): boolean =>
   resolvers.some(({ match }) => match(url));
+
+/** The first short name a resolver offers for the URL, or undefined when none does. */
+export const linkLabel = (resolvers: readonly PreviewLinkResolver[], url: string): string | undefined => {
+  for (const { match, label } of resolvers) {
+    const name = match(url) ? label?.(url) : undefined;
+    if (name) {
+      return name;
+    }
+  }
+  return undefined;
+};

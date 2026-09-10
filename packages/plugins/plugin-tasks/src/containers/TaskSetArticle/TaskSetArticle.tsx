@@ -88,7 +88,7 @@ export const TaskSetArticle = ({ role, attendableId, subject: taskSet }: TaskSet
     [move],
   );
 
-  const descriptionExtensions = useMarkdownExtensions();
+  const descriptionExtensions = useMarkdownExtensions(taskSet);
   const descriptionComponents = useDescriptionComponents();
 
   const content = (

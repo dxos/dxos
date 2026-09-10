@@ -28,21 +28,23 @@ const REPO_NAME = /^[\w.-]+\/[\w.-]+$/;
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     return Capability.contribute(MarkdownCapabilities.ExtensionProvider, [
-      ({ document: doc, viewMode }) => {
+      ({ document: doc, subject, viewMode }) => {
         // Source view shows the document's own text; a decoration there would hide what it is.
         if (viewMode === 'source') {
           return undefined;
         }
 
-        // A full URL needs no document: a task's description or an outline gets the chip too. A bare
-        // `#123` resolves against the document's repository, so it needs one.
-        const db = doc && Obj.getDatabase(doc);
+        // A full URL needs no object: a task's description or an outline gets the chip too. A bare
+        // `#123` resolves against the repository of the project owning the edited object, so it
+        // needs one — the document, or whatever else the editor edits.
+        const object = doc ?? subject;
+        const db = object && Obj.getDatabase(object);
         return [
           githubLinks(),
-          db
+          object && db
             ? githubReferences({
                 resolve: (number) => {
-                  const repo = resolveRepo(db, doc);
+                  const repo = resolveRepo(db, object);
                   return repo ? referenceUrl(repo, number) : undefined;
                 },
               })
