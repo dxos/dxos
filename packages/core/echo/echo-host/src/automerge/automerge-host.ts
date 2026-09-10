@@ -251,9 +251,6 @@ export class AutomergeHost extends Resource {
    */
   private _nonConvergingSyncPasses = new Map<string, number>();
 
-  /** `<documentId>:<subductionPeerIdHex>` pairs already warned about, so a denial warns once. */
-  private readonly _deniedFetches = new Set<string>();
-
   /**
    * Documents requested by remote peers.
    */
@@ -1001,19 +998,11 @@ export class AutomergeHost extends Resource {
       const allow = await this._shouldShareDocumentWithSubductionPeer(subductionPeerId, sedimentreeId);
       const documentId = sedimentreeIdToDocumentId(sedimentreeId);
       const subductionPeerIdHex = subductionPeerId.toString();
-      if (allow) {
-        this._deniedFetches.delete(`${documentId}:${subductionPeerIdHex}`);
-        log.verbose('subduction authorizeFetch', { documentId, subductionPeerId: subductionPeerIdHex, allow });
-      } else {
-        // Warn once per document and peer: the throw below is the only record of a denial and the
-        // peer's matching WASM warning is suppressed (see `_open`), so an unlogged denial is a
-        // document that silently never arrives. Every `shareConfigChanged` re-drives all failed
-        // entries through here, so warning per call would scale with the retry rate.
-        const key = `${documentId}:${subductionPeerIdHex}`;
-        if (!this._deniedFetches.has(key)) {
-          this._deniedFetches.add(key);
-          log.warn('subduction authorizeFetch denied', { documentId, subductionPeerId: subductionPeerIdHex });
-        }
+      // Verbose in both directions: a soak of passing runs emits ~90 denials each, so a denial is
+      // ordinary traffic — cross-space documents fan out across every space-scoped peer each round
+      // — and carries no signal about a stalled document on its own.
+      log.verbose('subduction authorizeFetch', { documentId, subductionPeerId: subductionPeerIdHex, allow });
+      if (!allow) {
         throw new Error('authorizeFetch denied by client share policy');
       }
     },
@@ -1039,11 +1028,7 @@ export class AutomergeHost extends Resource {
         requested: sedimentreeIds.length,
         allowed: allowed.length,
       };
-      if (denied.length > 0) {
-        log.warn('subduction filterAuthorizedFetch denied', { ...summary, denied: denied.join(',') });
-      } else {
-        log.verbose('subduction filterAuthorizedFetch', summary);
-      }
+      log.verbose('subduction filterAuthorizedFetch', { ...summary, denied: denied.join(',') });
       return allowed;
     },
   };

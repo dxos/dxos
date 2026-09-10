@@ -451,21 +451,14 @@ class EdgeSubductionReplicatorConnection extends Resource implements AutomergeRe
         documentId: params.documentId,
         peerId: this._remotePeerId as PeerId,
       });
-      if (remoteDocumentExists) {
-        log.verbose('document not found locally for share policy check', {
-          documentId: params.documentId,
-          acceptDocument: true,
-          remoteId: this._remotePeerId,
-        });
-      } else {
-        // Warn: this refuses a document the peer does not have and we cannot attribute to a space,
-        // which is the one denial that cannot resolve itself — the peer can never come to hold it.
-        log.warn('share policy refused an unattributable document', {
-          documentId: params.documentId,
-          remoteId: this._remotePeerId,
-          connectionSpaceId: this._spaceId,
-        });
-      }
+      // Verbose even when refused: a soak of passing runs emits ~60 of these each, so an
+      // unattributable document is ordinary traffic rather than a signal that one is stuck.
+      log.verbose('document not found locally for share policy check', {
+        documentId: params.documentId,
+        acceptDocument: remoteDocumentExists,
+        remoteId: this._remotePeerId,
+        connectionSpaceId: this._spaceId,
+      });
       // If a document is not present locally return true only if it already exists on edge.
       return remoteDocumentExists;
     }
