@@ -3,9 +3,9 @@
 //
 
 import { type Extension } from '@codemirror/state';
-import { WidgetType } from '@codemirror/view';
 import { createElement } from 'react';
 
+import { AnchorWidget } from './anchor';
 import { type LinkWidgetProps, linkWidgets, matchPattern } from './link-widgets';
 import { type WidgetDef } from './widgets';
 
@@ -33,51 +33,22 @@ export const parseGitHubLink = (url: string): GitHubLink | undefined => {
   return { owner, repo, kind: kind === 'pull' ? 'pull' : 'issue', number: Number(number), url };
 };
 
-/**
- * A pull request or issue link as a chip: `owner/repo#123` with the kind's icon, opening on GitHub.
- * A native widget so the chip renders synchronously from the URL alone, with no portal.
- */
-export class GitHubLinkWidget extends WidgetType {
-  constructor(readonly link: GitHubLink) {
-    super();
-  }
-
-  override eq(other: this): boolean {
-    return other instanceof GitHubLinkWidget && other.link.url === this.link.url;
-  }
-
-  override toDOM(): HTMLElement {
-    const { owner, repo, kind, number, url } = this.link;
-    const anchor = document.createElement('a');
-    anchor.className = 'dx-tag dx-tag--anchor';
-    anchor.href = url;
-    anchor.target = '_blank';
-    anchor.rel = 'noopener noreferrer';
-    anchor.dataset.github = kind;
-    const icon = document.createElement('dx-icon');
-    icon.setAttribute('icon', kind === 'pull' ? 'ph--git-pull-request--regular' : 'ph--circle-dot--regular');
-    anchor.append(icon, `${owner}/${repo}#${number}`);
-    return anchor;
-  }
-
-  override ignoreEvent(): boolean {
-    return false;
-  }
-}
-
 export type GitHubLinksOptions = {
-  /** The inline widget for `[label](https://github.com/…/pull/123)`; the plain chip by default. */
+  /** Overrides the default chip's preview trigger. */
+  trigger?: 'hover' | 'click';
+  /** The inline widget for `[label](https://github.com/…/pull/123)`; the anchor chip by default. */
   link?: WidgetDef<GitHubLinkProps>;
 };
 
 /**
  * GitHub pull request and issue links as widgets. The worked example of `linkWidgets`: a matcher on
- * the URL's shape rather than its scheme, whose widget gets the parsed parts and needs no object
- * behind it — a host wanting a preview card swaps in an anchor chip as the `link`.
+ * the URL's shape rather than its scheme, whose widget gets the parsed parts. The default anchor
+ * chip carries the URL to the preview provider, whose lookup answers with the PR or issue.
  */
 export const githubLinks = ({
+  trigger,
   link = {
-    factory: (props) => new GitHubLinkWidget(props),
+    factory: ({ label, url }) => new AnchorWidget(label, url, trigger),
   },
 }: GitHubLinksOptions = {}): Extension =>
   linkWidgets({
@@ -92,6 +63,7 @@ const withGitHubLink = (def: WidgetDef<GitHubLinkProps>): WidgetDef<LinkWidgetPr
     const link = parseGitHubLink(props.url);
     return link && { ...props, ...link };
   };
+
   return {
     ...rest,
     ...(factory && {

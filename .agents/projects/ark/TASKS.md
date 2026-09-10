@@ -1179,8 +1179,8 @@ verdict over porting in the same PR).
       markdown link matcher (`matchSchemes`/`matchHosts`/`matchPattern`), `objectLinks()` the dxn/echo
       sugar with the anchor chip as default. `urlSchemes` and `xmlWidgetRegistry` are gone; the core
       types and effects dropped their `Xml` prefix. `githubLinks({ link })` in ui-editor is the worked
-      example: PR/issue URLs as a plain chip by default, the Widgets story swaps in the anchor chip
-      for a PR card. Built on the user's consolidation commit.
+      example: PR/issue URLs as anchor chips, and the Widgets story's lookup answers with a PR/issue
+      card. Built on the user's consolidation commit.
 - [x] **Cards and dialogs one level darker** DONE 2026-09-10 (user): `dx-card-surface` publishes the
       `base` level and `dx-modal-surface` the `raised` level (surfaces.css role tokens and surface.css
       zones together); `overlay` is left to explicit `elevation={4}`. `Select`'s list moves to the popup

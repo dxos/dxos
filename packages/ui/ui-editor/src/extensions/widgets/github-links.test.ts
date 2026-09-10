@@ -9,7 +9,8 @@ import { describe, test } from 'vitest';
 
 import { decorationSetToArray } from '../../util';
 import { createMarkdownExtensions } from '../language/markdown';
-import { type GitHubLinkProps, GitHubLinkWidget, githubLinks, parseGitHubLink } from './github-links';
+import { AnchorWidget } from './anchor';
+import { type GitHubLinkProps, githubLinks, parseGitHubLink } from './github-links';
 import { type WidgetDef } from './widgets';
 
 /** Widget whose props are inspectable so tests can assert what the factory was handed. */
@@ -63,15 +64,13 @@ describe('githubLinks', () => {
     expect(parseGitHubLink('https://example.com/dxos/dxos/pull/1')).toBeUndefined();
   });
 
-  test('a pull request link becomes a chip; other links are left alone', ({ expect }) => {
-    const found = widgets<GitHubLinkWidget>(
+  test('a pull request link becomes an anchor chip; other links are left alone', ({ expect }) => {
+    const found = widgets<AnchorWidget>(
       'See [the fix](https://github.com/dxos/dxos/pull/13031) and [docs](https://example.com).',
     );
-    expect(found.every((widget) => widget instanceof GitHubLinkWidget)).toBe(true);
-    expect(found.map((widget) => widget.link.number)).toEqual([13031]);
-    const chip = found[0].toDOM();
-    expect(chip.textContent).toBe('dxos/dxos#13031');
-    expect(chip.getAttribute('href')).toBe('https://github.com/dxos/dxos/pull/13031');
+    expect(found.every((widget) => widget instanceof AnchorWidget)).toBe(true);
+    expect(found.map((widget) => widget._dxn)).toEqual(['https://github.com/dxos/dxos/pull/13031']);
+    expect(found[0]._label).toBe('the fix');
   });
 
   test('a host-provided link widget receives the parsed parts with the link props', ({ expect }) => {

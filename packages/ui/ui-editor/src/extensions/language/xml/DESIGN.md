@@ -22,8 +22,8 @@ a `WidgetType.toDOM()` creates a DOM placeholder, and React portals render conte
    the `match: (url) => boolean` accepts is replaced by the `link` (inline) or `image` (block)
    widget. `matchSchemes`, `matchHosts` and `matchPattern` build matchers; `objectLinks()` is the
    `dxn:`/`echo:` case with the anchor chip as its default inline widget; `githubLinks({ link })`
-   the pull-request/issue URL case, handing its widget the parsed parts and defaulting to a plain
-   chip.
+   the pull-request/issue URL case, handing its widget the parsed parts and defaulting to the same
+   anchor chip.
 4. A host composes `[widgetHost({ setWidgets }), xmlTags({ registry }), objectLinks(…)]`; every
    matcher extension includes the core, which CodeMirror deduplicates.
 5. On each document change, `buildDecorations` walks the syntax tree, hands each claimed node to
