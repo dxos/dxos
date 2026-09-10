@@ -2196,6 +2196,9 @@ importers:
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
+      '@dxos/brand':
+        specifier: workspace:*
+        version: link:../../ui/brand
       '@dxos/client-services':
         specifier: workspace:*
         version: link:../../sdk/client-services
@@ -17781,6 +17784,9 @@ importers:
         specifier: 'catalog:'
         version: 1.9.11
     devDependencies:
+      '@dxos/brand':
+        specifier: workspace:*
+        version: link:../../ui/brand
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo

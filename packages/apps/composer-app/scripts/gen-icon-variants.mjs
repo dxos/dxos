@@ -24,38 +24,19 @@ import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import { CHANNELS, CHANNEL_COLORS } from '@dxos/brand/channels';
+
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const assets = join(root, 'assets');
 const tauri = join(root, 'node_modules', '.bin', 'tauri');
 
 /**
- * `hue` in degrees replaces the ramp's own hue; `saturation` and `lightness` scale what is there.
- * Lightness is scaled rather than set so the four steps stay proportional to one another.
- * `icons` is the `src-tauri` directory `cn-config` points `bundle.icon` at.
+ * The channels and their colours come from `@dxos/brand` (built, so `moon run brand:build` first);
+ * this script only knows which `src-tauri` directory `cn-config` points `bundle.icon` at for each.
  */
-const VARIANTS = {
-  preview: {
-    icons: 'icons-preview',
-    hue: 282,
-    saturation: 1,
-    lightness: 1,
-  },
-  dev: {
-    icons: 'icons-dev',
-    hue: 20,
-    // Held below the source ramp's near-full saturation: at full it reads as a warning colour rather
-    // than as rust, and competes with the app's own error states.
-    saturation: 0.75,
-    lightness: 1,
-  },
-  // The same rust as dev: telling staging from dev matters less than telling either from production.
-  staging: {
-    icons: 'icons-staging',
-    hue: 20,
-    saturation: 0.75,
-    lightness: 1,
-  },
-};
+const VARIANTS = Object.fromEntries(
+  CHANNELS.map((channel) => [channel, { ...CHANNEL_COLORS[channel], icons: `icons-${channel}` }]),
+);
 /** The ramp shared by all three pieces of artwork, brightest first. */
 const RAMP = [
   [6, 197, 253],

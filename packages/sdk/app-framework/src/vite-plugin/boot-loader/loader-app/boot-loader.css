@@ -389,7 +389,6 @@ body {
   --boot-loader-plugin-slot: calc(var(--boot-loader-plugin-size) + var(--boot-loader-plugin-gap));
   position: relative;
   width: 100%;
-  border: 1px solid red;
   height: var(--boot-loader-plugin-size);
 }
 

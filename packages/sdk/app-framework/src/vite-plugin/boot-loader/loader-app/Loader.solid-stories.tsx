@@ -7,27 +7,22 @@ import './boot-loader.css';
 import { onCleanup, onMount } from 'solid-js';
 import { type Meta, type StoryObj } from 'storybook-solidjs-vite';
 
-// The one mark a build inlines through `bootLoaderPlugin`, from `@dxos/brand`; a channel recolours it
-// with a filter (composer-app's `channel-branding.ts` is where the app's live) rather than a copy.
+import { CHANNELS, channelMarkFilter } from '@dxos/brand/channels';
+
+// The one mark a build inlines through `bootLoaderPlugin`, from `@dxos/brand`, which also owns each
+// channel's colour; a channel recolours the mark with that filter rather than shipping a copy.
 // eslint-disable-next-line import/no-relative-packages
 import composerIcon from '../../../../../../ui/brand/assets/icons/composer-icon.svg?raw';
 import { Loader } from './Loader';
 import { createLoaderStore } from './store';
 
-/** How the ring's mark reads: released, as a channel recolours it, or absent. */
+/** How the ring's mark reads: released, as each channel recolours it, or absent. */
 const MARKS: Record<string, { svg?: string; filter?: string } | undefined> = {
   none: {},
-  production: {
-    svg: composerIcon,
-  },
-  preview: {
-    svg: composerIcon,
-    filter: 'hue-rotate(270deg)',
-  },
-  qa: {
-    svg: composerIcon,
-    filter: 'hue-rotate(180deg) saturate(0.75)',
-  },
+  production: { svg: composerIcon },
+  ...Object.fromEntries(
+    CHANNELS.map((channel) => [channel, { svg: composerIcon, filter: channelMarkFilter(channel) }]),
+  ),
 };
 
 type StoryArgs = {
@@ -43,7 +38,7 @@ type StoryArgs = {
 const meta: Meta<StoryArgs> = {
   title: 'sdk/app-framework/BootLoader',
   parameters: { layout: 'fullscreen' },
-  args: { mark: 'released' },
+  args: { mark: 'production' },
   argTypes: { mark: { control: 'select', options: Object.keys(MARKS) } },
   decorators: [
     (Story: any) => (
