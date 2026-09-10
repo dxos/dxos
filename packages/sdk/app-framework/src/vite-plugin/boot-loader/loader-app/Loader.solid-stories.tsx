@@ -89,15 +89,14 @@ export const Default: Story = {
   },
 };
 
-/** The released mark as each channel recolours it — ring and mark together, the filter the app applies. */
-export const Preview: Story = {
-  ...Default,
-  args: { mark: 'preview' },
-};
-
 export const Dev: Story = {
   ...Default,
   args: { mark: 'dev' },
+};
+
+export const Preview: Story = {
+  ...Default,
+  args: { mark: 'preview' },
 };
 
 export const Staging: Story = {

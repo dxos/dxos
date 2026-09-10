@@ -23521,7 +23521,7 @@ importers:
         version: 1.0.3
 
   tools/storybook-solid:
-    devDependencies:
+    dependencies:
       '@dxos/log':
         specifier: workspace:*
         version: link:../../packages/common/log
@@ -23531,6 +23531,9 @@ importers:
       '@dxos/vite-plugin-icons':
         specifier: workspace:*
         version: link:../vite-plugin-icons
+      '@dxos/vite-plugin-import-source':
+        specifier: workspace:*
+        version: link:../vite-plugin-import-source
       '@dxos/vite-plugin-log':
         specifier: workspace:*
         version: link:../vite-plugin-log
