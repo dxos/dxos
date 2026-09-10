@@ -38,13 +38,14 @@ describe('channelVariant', () => {
     expect(channelVariant('build', undefined)).toBeUndefined();
   });
 
-  test('preview is the one that runs beside production, so it gets its own mark', ({ expect }) => {
-    expect(channelVariant('build', 'preview')).toEqual('purple');
+  test('a prerelease channel is named by its environment', ({ expect }) => {
+    expect(channelVariant('build', 'preview')).toEqual('preview');
+    expect(channelVariant('build', 'dev')).toEqual('dev');
+    expect(channelVariant('build', 'staging')).toEqual('staging');
   });
 
-  test('every other channel shares the rust mark', ({ expect }) => {
-    expect(channelVariant('build', 'dev')).toEqual('rust');
-    expect(channelVariant('build', 'staging')).toEqual('rust');
+  test('an environment with no artwork fails the build rather than shipping the released mark', ({ expect }) => {
+    expect(() => channelVariant('build', 'labs')).toThrow(/unknown environment: labs/);
   });
 
   // Only a deployed bundle is branded, so `DX_ENVIRONMENT` in a shell does not repaint localhost.
@@ -59,9 +60,10 @@ describe('bootMarkFilter', () => {
     expect(bootMarkFilter(undefined)).toBeUndefined();
   });
 
-  test('rotates the ramp to the variant hue, scaling saturation only when the variant does', ({ expect }) => {
-    expect(bootMarkFilter('purple')).toBe('hue-rotate(82deg)');
-    expect(bootMarkFilter('rust')).toBe('hue-rotate(180deg) saturate(0.75)');
+  test('rotates the ramp to the channel hue, scaling saturation only when the channel does', ({ expect }) => {
+    expect(bootMarkFilter('preview')).toBe('hue-rotate(82deg)');
+    expect(bootMarkFilter('dev')).toBe('hue-rotate(180deg) saturate(0.75)');
+    expect(bootMarkFilter('staging')).toBe(bootMarkFilter('dev'));
   });
 });
 
@@ -70,7 +72,7 @@ describe('bootMarkFilter', () => {
 describe('generated artwork', () => {
   const appDir = path.resolve(import.meta.dirname, '..', '..');
 
-  for (const variant of ['purple', 'rust'] as const) {
+  for (const variant of ['dev', 'preview', 'staging'] as const) {
     test(`${variant} is committed in full`, ({ expect }) => {
       const missing = FAVICONS.map((favicon) => path.join(appDir, 'assets', `favicons-${variant}`, favicon)).filter(
         (file) => !existsSync(file),
@@ -82,17 +84,17 @@ describe('generated artwork', () => {
 
 describe('applyChannelFavicons', () => {
   test('replaces every favicon the html references', ({ expect }) => {
-    const { appDir, outDir } = makeApp('rust');
+    const { appDir, outDir } = makeApp('dev');
 
-    applyChannelFavicons(appDir, outDir, 'rust');
+    applyChannelFavicons(appDir, outDir, 'dev');
 
     for (const favicon of FAVICONS) {
-      expect(readFileSync(path.join(outDir, favicon), 'utf8')).toEqual(`rust:${favicon}`);
+      expect(readFileSync(path.join(outDir, favicon), 'utf8')).toEqual(`dev:${favicon}`);
     }
   });
 
   test('leaves the released favicons alone when there is no channel', ({ expect }) => {
-    const { appDir, outDir } = makeApp('rust');
+    const { appDir, outDir } = makeApp('dev');
 
     applyChannelFavicons(appDir, outDir, undefined);
 
@@ -104,10 +106,10 @@ describe('applyChannelFavicons', () => {
   // Shipping production's blue mark on a prerelease is the confusion this exists to prevent, so a variant
   // that was never generated has to fail the build rather than silently fall through to it.
   test('fails the build when the variant artwork is missing', ({ expect }) => {
-    const { appDir, outDir } = makeApp('rust');
-    rmSync(path.join(appDir, 'assets', 'favicons-rust', 'favicon.ico'));
+    const { appDir, outDir } = makeApp('dev');
+    rmSync(path.join(appDir, 'assets', 'favicons-dev', 'favicon.ico'));
 
-    expect(() => applyChannelFavicons(appDir, outDir, 'rust')).toThrow('channel favicon missing');
+    expect(() => applyChannelFavicons(appDir, outDir, 'dev')).toThrow('channel favicon missing');
   });
 });
 

@@ -22,7 +22,7 @@ const MARKS: Record<string, { svg?: string; filter?: string } | undefined> = {
   },
   preview: {
     svg: composerIcon,
-    filter: 'hue-rotate(190deg)',
+    filter: 'hue-rotate(270deg)',
   },
   qa: {
     svg: composerIcon,

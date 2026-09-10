@@ -389,6 +389,7 @@ body {
   --boot-loader-plugin-slot: calc(var(--boot-loader-plugin-size) + var(--boot-loader-plugin-gap));
   position: relative;
   width: 100%;
+  border: 1px solid red;
   height: var(--boot-loader-plugin-size);
 }
 
@@ -418,7 +419,7 @@ body {
   transition: transform 600ms cubic-bezier(0.22, 1, 0.36, 1);
   /* An arrival sets out from the centre to its slot; the keyframe names only where it starts, so
      the end is the slot above, wherever the count has moved it by then. */
-  animation: boot-loader-plugin-slide 600ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation: boot-loader-plugin-slide 1000ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
 @keyframes boot-loader-plugin-slide {

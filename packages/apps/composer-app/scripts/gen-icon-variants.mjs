@@ -34,22 +34,28 @@ const tauri = join(root, 'node_modules', '.bin', 'tauri');
  * `icons` is the `src-tauri` directory `cn-config` points `bundle.icon` at.
  */
 const VARIANTS = {
-  purple: {
+  preview: {
     icons: 'icons-preview',
     hue: 282,
     saturation: 1,
     lightness: 1,
   },
-  rust: {
-    icons: 'icons-rust',
+  dev: {
+    icons: 'icons-dev',
     hue: 20,
     // Held below the source ramp's near-full saturation: at full it reads as a warning colour rather
     // than as rust, and competes with the app's own error states.
     saturation: 0.75,
     lightness: 1,
   },
+  // The same rust as dev: telling staging from dev matters less than telling either from production.
+  staging: {
+    icons: 'icons-staging',
+    hue: 20,
+    saturation: 0.75,
+    lightness: 1,
+  },
 };
-
 /** The ramp shared by all three pieces of artwork, brightest first. */
 const RAMP = [
   [6, 197, 253],
