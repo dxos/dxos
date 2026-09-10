@@ -1178,9 +1178,15 @@ verdict over porting in the same PR).
       effects and bookmark navigation; `xmlTags` is the element matcher, `linkWidgets({ match })` the
       markdown link matcher (`matchSchemes`/`matchHosts`/`matchPattern`), `objectLinks()` the dxn/echo
       sugar with the anchor chip as default. `urlSchemes` and `xmlWidgetRegistry` are gone; the core
-      types and effects dropped their `Xml` prefix. `githubLinks({ link })` in ui-editor is the worked
-      example: PR/issue URLs as anchor chips, and the Widgets story's lookup answers with a PR/issue
-      card. Built on the user's consolidation commit.
+      types and effects dropped their `Xml` prefix. Built on the user's consolidation commit.
+- [x] **GitHub link previews as the plugin-extended mechanism** DONE 2026-09-10: three extension
+      points — `MarkdownCapabilities.ExtensionProvider` (existing; plugin-github contributes
+      `githubLinks()`), `PreviewCapabilities.LinkResolver` (new multi capability in plugin-preview;
+      the ECHO resolver is its own module, plugin-github resolves GitHub URLs), and `CardContent`
+      surfaces (existing; `GitHubCard` for `Issue`/`PullRequest`, new host-agnostic types in
+      `@dxos/types` beside `Repo`). Source is configurable via `GitHubCapabilities.LinkSource`,
+      default fetches from the API with the space's connection token. Stories moved to
+      plugin-github (`GitHubCard`, `Links`).
 - [x] **Cards and dialogs one level darker** DONE 2026-09-10 (user): `dx-card-surface` publishes the
       `base` level and `dx-modal-surface` the `raised` level (surfaces.css role tokens and surface.css
       zones together); `overlay` is left to explicit `elevation={4}`. `Select`'s list moves to the popup

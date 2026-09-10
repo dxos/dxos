@@ -83,6 +83,11 @@
       "source": "./src/extensions/index.ts",
       "types": "./dist/types/src/extensions/index.d.ts",
       "import": "./dist/lib/extensions.mjs"
+    },
+    "./GitHubCapabilities": {
+      "source": "./src/types/GitHubCapabilities.ts",
+      "types": "./dist/types/src/types/GitHubCapabilities.d.ts",
+      "import": "./dist/lib/GitHubCapabilities.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -93,6 +98,9 @@
       ],
       "GitHubOperation": [
         "dist/types/src/types/GitHubOperation.d.ts"
+      ],
+      "GitHubCapabilities": [
+        "dist/types/src/types/GitHubCapabilities.d.ts"
       ]
     }
   },
@@ -116,8 +124,11 @@
     "@dxos/log": "workspace:*",
     "@dxos/plugin-connector": "workspace:*",
     "@dxos/plugin-markdown": "workspace:*",
+    "@dxos/plugin-preview": "workspace:*",
     "@dxos/protocols": "workspace:*",
+    "@dxos/react-ui": "workspace:*",
     "@dxos/types": "workspace:*",
+    "@dxos/ui-editor": "workspace:*",
     "@dxos/util": "workspace:*",
     "effect": "catalog:"
   },
@@ -126,10 +137,19 @@
     "@dxos/effect": "workspace:*",
     "@dxos/plugin-client": "workspace:*",
     "@dxos/plugin-testing": "workspace:*",
-    "@dxos/ui-editor": "workspace:*"
+    "@dxos/random": "workspace:*",
+    "@dxos/react-ui-editor": "workspace:*",
+    "@storybook/react-vite": "catalog:",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:",
+    "vite": "catalog:"
   },
   "peerDependencies": {
-    "effect": "catalog:"
+    "effect": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:"
   },
   "publishConfig": {
     "access": "public"

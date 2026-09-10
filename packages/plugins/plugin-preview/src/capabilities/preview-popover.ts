@@ -11,38 +11,37 @@ import * as AppSpace from '@dxos/app-toolkit/AppSpace';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { addEventListener } from '@dxos/async';
-import { type Space } from '@dxos/client/echo';
 import { Obj } from '@dxos/echo';
-import { EID } from '@dxos/keys';
 import { log } from '@dxos/log';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import { DX_ANCHOR_ACTIVATE, type DxAnchorActivate } from '@dxos/react-ui';
 import { type PreviewLinkRef, type PreviewLinkTarget } from '@dxos/ui-types';
 
+import { PreviewCapabilities } from '#types';
+
 const customEventOptions = { capture: true, passive: false };
 
-// TODO(burdon): Factor out?
-const handlePreviewLookup = async (space: Space, { eid, label }: PreviewLinkRef): Promise<PreviewLinkTarget | null> => {
-  const parsed = EID.tryParse(eid);
-  if (!parsed) {
-    // `dxn:` type URIs and other non-EID refs cannot be resolved to an object.
-    return null;
-  }
-  try {
-    const object = await space.db.makeRef(parsed).load();
-    const resolvedLabel = Obj.getLabel(object as any, { fallback: 'typename' });
-    return { label: resolvedLabel ?? label, object };
-  } catch {
-    return null;
-  }
-};
+/** The first resolver's answer, asked in contribution order; a resolver declines by answering undefined. */
+const resolveLink = (
+  resolvers: PreviewCapabilities.PreviewLinkResolver[],
+  ref: PreviewLinkRef,
+  context: PreviewCapabilities.PreviewLinkContext,
+): Effect.Effect<PreviewLinkTarget | undefined> =>
+  Effect.gen(function* () {
+    for (const resolve of resolvers) {
+      const target = yield* resolve(ref, context);
+      if (target) {
+        return target;
+      }
+    }
+    return undefined;
+  });
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     // Get context for lazy capability access in callbacks.
     const capabilities = yield* Capability.Service;
 
-    // TODO(wittjosiah): Factor out lookup handlers to other plugins to make not ECHO-specific.
     // Monotonic activation token: each invocation captures its own sequence; only the
     // most recent activation is allowed to commit popover state. Prevents a slow
     // open (async lookup) from clobbering a later close that fires while it's in flight.
@@ -82,10 +81,8 @@ export default Capability.makeModule(
       const [layoutAtom] = capabilities.getAll(AppCapabilities.Layout);
       const spaceId = layoutAtom && GraphPath.getSpaceIdFromPath(registry.get(layoutAtom).workspace);
       const space = (spaceId && client.spaces.get(spaceId)) ?? AppSpace.getDefaultSpace(client);
-      if (!space) {
-        return;
-      }
-      const result = await handlePreviewLookup(space, { eid, label });
+      const resolvers = capabilities.getAll(PreviewCapabilities.LinkResolver).flat();
+      const result = await Effect.runPromise(resolveLink(resolvers, { eid, label }, { space }));
       if (!result) {
         return;
       }

@@ -5,9 +5,7 @@
 import { type Extension } from '@codemirror/state';
 import { createElement } from 'react';
 
-import { AnchorWidget } from './anchor';
-import { type LinkWidgetProps, linkWidgets, matchPattern } from './link-widgets';
-import { type WidgetDef } from './widgets';
+import { AnchorWidget, type LinkWidgetProps, type WidgetDef, linkWidgets, matchPattern } from '@dxos/ui-editor';
 
 /** `https://github.com/owner/repo/pull/123` or `/issues/123`, with an optional fragment or query. */
 const GITHUB_LINK = /^https:\/\/github\.com\/([^/\s]+)\/([^/\s]+)\/(pull|issues)\/(\d+)(?:[/?#].*)?$/;
@@ -41,9 +39,10 @@ export type GitHubLinksOptions = {
 };
 
 /**
- * GitHub pull request and issue links as widgets. The worked example of `linkWidgets`: a matcher on
- * the URL's shape rather than its scheme, whose widget gets the parsed parts. The default anchor
- * chip carries the URL to the preview provider, whose lookup answers with the PR or issue.
+ * GitHub pull request and issue links as widgets: a `linkWidgets` matcher on the URL's shape rather
+ * than its scheme, whose widget gets the parsed parts. The default anchor chip carries the URL to
+ * the preview popover, where this plugin's link resolver answers with the pull request or issue.
+ * Contributed through `MarkdownCapabilities.ExtensionProvider` rather than built into the editor.
  */
 export const githubLinks = ({
   trigger,

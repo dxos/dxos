@@ -1,17 +1,16 @@
 //
 // Copyright 2026 DXOS.org
 //
+// @vitest-environment happy-dom
 
 import { forceParsing } from '@codemirror/language';
 import { EditorState } from '@codemirror/state';
 import { EditorView, WidgetType } from '@codemirror/view';
 import { describe, test } from 'vitest';
 
-import { decorationSetToArray } from '../../util';
-import { createMarkdownExtensions } from '../language/markdown';
-import { AnchorWidget } from './anchor';
-import { type GitHubLinkProps, githubLinks, parseGitHubLink } from './github-links';
-import { type WidgetDef } from './widgets';
+import { AnchorWidget, type WidgetDef, createMarkdownExtensions, decorationSetToArray } from '@dxos/ui-editor';
+
+import { type GitHubLinkProps, githubLinks, parseGitHubLink } from './links';
 
 /** Widget whose props are inspectable so tests can assert what the factory was handed. */
 class TestWidget extends WidgetType {

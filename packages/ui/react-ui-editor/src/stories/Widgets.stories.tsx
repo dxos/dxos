@@ -17,7 +17,6 @@ import { Card, Icon, Popover, useThemeContext } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import {
   AnchorWidget,
-  type GitHubLink,
   type ObjectLinkProps,
   type ObjectLinksOptions,
   type WidgetDef,
@@ -27,10 +26,8 @@ import {
   createThemeExtensions,
   decorateMarkdown,
   extendedMarkdown,
-  githubLinks,
   image,
   objectLinks,
-  parseGitHubLink,
   widgetHost,
   xmlTags,
 } from '@dxos/ui-editor';
@@ -88,24 +85,20 @@ const PreviewCard = () => {
         ]}
       >
         <Popover.Viewport classNames='dx-card-popover-width'>
-          {isGitHubTarget(target.object) ? (
-            <GitHubCard target={target.object} />
-          ) : (
-            <Card.Root border={false}>
-              <Card.Header>
-                <Card.Block>
-                  <Icon icon='ph--file-text--regular' />
-                </Card.Block>
-                <Card.Title>{target.label}</Card.Title>
-                <Popover.Close asChild>
-                  <Card.ActionIconButton action='close' />
-                </Popover.Close>
-              </Card.Header>
-              <Card.Row>
-                <Card.Text variant='description'>{target.label}</Card.Text>
-              </Card.Row>
-            </Card.Root>
-          )}
+          <Card.Root border={false}>
+            <Card.Header>
+              <Card.Block>
+                <Icon icon='ph--file-text--regular' />
+              </Card.Block>
+              <Card.Title>{target.label}</Card.Title>
+              <Popover.Close asChild>
+                <Card.ActionIconButton action='close' />
+              </Popover.Close>
+            </Card.Header>
+            <Card.Row>
+              <Card.Text variant='description'>{target.label}</Card.Text>
+            </Card.Row>
+          </Card.Root>
         </Popover.Viewport>
         <Popover.Arrow />
       </Popover.Content>
@@ -113,91 +106,8 @@ const PreviewCard = () => {
   );
 };
 
-/**
- * The story's stand-in for the app's preview lookup: an object link gets its label back; a GitHub
- * pull-request or issue URL gets a fixture describing it, deterministic per URL.
- */
-const handlePreviewLookup = async ({ eid, label }: PreviewLinkRef): Promise<PreviewLinkTarget> => {
-  random.seed(eid.split('').reduce((acc: number, char: string) => acc + char.charCodeAt(0), 1));
-  const link = parseGitHubLink(eid);
-  if (link) {
-    const object: GitHubTarget = {
-      ...link,
-      title: random.lorem.sentence(),
-      author: random.person.fullName(),
-      state: random.helpers.arrayElement(
-        link.kind === 'pull' ? (['open', 'merged', 'draft'] as const) : (['open', 'closed'] as const),
-      ),
-      ...(link.kind === 'pull' && {
-        additions: random.number.int({ min: 5, max: 900 }),
-        deletions: random.number.int({ min: 0, max: 400 }),
-      }),
-    };
-    return { label: `${link.owner}/${link.repo}#${link.number}`, object };
-  }
-  return { label };
-};
-
-//
-// GitHub pull requests
-//
-
-type GitHubTarget = GitHubLink & {
-  title: string;
-  author: string;
-  state: 'open' | 'closed' | 'merged' | 'draft';
-  additions?: number;
-  deletions?: number;
-};
-
-const isGitHubTarget = (object: unknown): object is GitHubTarget =>
-  typeof object === 'object' && object !== null && 'kind' in object && 'number' in object;
-
-const stateHue: Record<GitHubTarget['state'], string> = {
-  open: 'green',
-  closed: 'red',
-  merged: 'purple',
-  draft: 'neutral',
-};
-
-const kindIcon: Record<GitHubTarget['kind'] | 'merged', string> = {
-  pull: 'ph--git-pull-request--regular',
-  issue: 'ph--circle-dot--regular',
-  merged: 'ph--git-merge--regular',
-};
-
-/** The card for a pull request or issue: state, title, author and (for a PR) the diff size, with a link out. */
-const GitHubCard = ({ target }: { target: GitHubTarget }) => (
-  <Card.Root border={false}>
-    <Card.Header>
-      <Card.Block>
-        <Icon icon={kindIcon[target.state === 'merged' ? 'merged' : target.kind]} />
-      </Card.Block>
-      <Card.Title>{`${target.owner}/${target.repo} #${target.number}`}</Card.Title>
-      <Popover.Close asChild>
-        <Card.ActionIconButton action='close' />
-      </Popover.Close>
-    </Card.Header>
-    <Card.Row>
-      <Card.Text>{target.title}</Card.Text>
-    </Card.Row>
-    <Card.Row>
-      <div className='flex items-center gap-2 text-sm'>
-        <span className='dx-tag' data-hue={stateHue[target.state]}>
-          {target.state}
-        </span>
-        <span className='text-description'>{target.author}</span>
-        {target.additions !== undefined && <span className='text-green-500'>+{target.additions}</span>}
-        {target.deletions !== undefined && <span className='text-red-500'>−{target.deletions}</span>}
-      </div>
-    </Card.Row>
-    <Card.Row>
-      <a className='dx-link text-sm' href={target.url} target='_blank' rel='noopener noreferrer'>
-        Open on GitHub
-      </a>
-    </Card.Row>
-  </Card.Root>
-);
+/** The story's stand-in for the app's preview lookup: an object link gets its label back. */
+const handlePreviewLookup = async ({ label }: PreviewLinkRef): Promise<PreviewLinkTarget> => ({ label });
 
 /**
  * Module scope, not inside the story: a component type created per render is a new type each time,
@@ -336,11 +246,9 @@ type StoryArgs = Pick<ObjectLinksOptions, 'trigger'> & {
   image?: keyof typeof imageWidgets;
   /** Answer the anchor chips' hover/click with a preview card. */
   preview?: boolean;
-  /** Render GitHub pull-request and issue links as chips with a card. */
-  github?: boolean;
 };
 
-const DefaultStory = ({ text, registry = NO_REGISTRY, image: imageWidget, trigger, preview, github }: StoryArgs) => {
+const DefaultStory = ({ text, registry = NO_REGISTRY, image: imageWidget, trigger, preview }: StoryArgs) => {
   const { themeMode } = useThemeContext();
   const [widgets, setWidgets] = useState<WidgetState[]>([]);
   const extensions = useMemo(
@@ -353,9 +261,8 @@ const DefaultStory = ({ text, registry = NO_REGISTRY, image: imageWidget, trigge
       widgetHost({ setWidgets }),
       xmlTags({ registry }),
       objectLinks({ trigger, image: imageWidget ? imageWidgets[imageWidget] : undefined }),
-      github ? githubLinks({ trigger }) : [],
     ],
-    [themeMode, registry, imageWidget, trigger, github],
+    [themeMode, registry, imageWidget, trigger],
   );
   const { parentRef } = useTextEditor({ initialValue: text, extensions }, [extensions]);
 
@@ -390,7 +297,6 @@ const meta = {
     trigger: { control: 'select', options: [undefined, 'hover', 'click'] },
     image: { control: 'select', options: [undefined, ...Object.keys(imageWidgets)] },
     preview: { control: 'boolean' },
-    github: { control: 'boolean' },
   },
   decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
   parameters: { layout: 'fullscreen' },
@@ -493,27 +399,5 @@ export const PreviewScrollSurface: Story = {
   args: {
     text: previewScrollText,
     image: 'surface',
-  },
-};
-
-const pullRequestText = trim`
-  # Pull requests
-
-  The drawer landed in [#13007](https://github.com/dxos/dxos/pull/13007), the Main port in
-  [#13024](https://github.com/dxos/dxos/pull/13024) and [#13030](https://github.com/dxos/dxos/pull/13030).
-
-  Issues too: [#1](https://github.com/dxos/dxos/issues/1). Not a pull request or an issue:
-  [the repo](https://github.com/dxos/dxos).
-`;
-
-/**
- * `githubLinks`: pull-request and issue links become anchor chips, and hovering one opens a card
- * from the preview provider's lookup. Other GitHub links stay plain.
- */
-export const GitHubPullRequests: Story = {
-  args: {
-    text: pullRequestText,
-    preview: true,
-    github: true,
   },
 };

@@ -340,6 +340,22 @@ feat F-7: Error Handling and Resilience
     then: LayoutOperation.AddToast fires an error notification with a human-readable message
 ```
 
+```mdl
+feat F-8: Link Previews
+
+  req F-8.1:
+    when: a document contains a pull-request or issue URL
+    then: githubLinks (contributed via MarkdownCapabilities.ExtensionProvider) renders it as an anchor chip
+
+  req F-8.2:
+    when: the chip is activated
+    then: the plugin's PreviewCapabilities.LinkResolver answers with an in-memory PullRequest or Issue (@dxos/types), never stored
+
+  req F-8.3: The object comes from a contributed GitHubCapabilities.LinkSource when a host provides one; otherwise it is fetched from the GitHub API with the space's connection token, or anonymously when the space has none.
+
+  req F-8.4: GitHubCard is the CardContent surface for Issue and PullRequest, so the popover shows reference, state, author, diff size and a link out.
+```
+
 ## Acceptance
 
 ```mdl

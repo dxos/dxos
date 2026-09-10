@@ -11,14 +11,16 @@ import * as MarkdownCapabilities from '@dxos/plugin-markdown/MarkdownCapabilitie
 import { Repo, TaskSet } from '@dxos/types';
 
 import { GITHUB_SOURCE } from '../constants';
-import { githubReferences, referenceUrl } from '../extensions';
+import { githubLinks, githubReferences, referenceUrl } from '../extensions';
 
 /** `owner/repo` — what `sync` writes as the name of the TaskSet mirroring a repository. */
 const REPO_NAME = /^[\w.-]+\/[\w.-]+$/;
 
 /**
  * `#123` in a document resolves against the repository the document's project names: this plugin
- * owns that knowledge, so the decoration is contributed rather than built into the editor.
+ * owns that knowledge, so the decoration is contributed rather than built into the editor. A full
+ * pull-request or issue URL needs no repository and becomes a chip whose popover this plugin's
+ * link resolver answers.
  *
  * Ambiguity is answered by declining. A space with several repositories and no project naming one
  * has no single meaning for a bare number, so the reference is left as text rather than guessed at.
@@ -37,12 +39,15 @@ export default Capability.makeModule(
           return undefined;
         }
 
-        return githubReferences({
-          resolve: (number) => {
-            const repo = resolveRepo(db, doc);
-            return repo ? referenceUrl(repo, number) : undefined;
-          },
-        });
+        return [
+          githubReferences({
+            resolve: (number) => {
+              const repo = resolveRepo(db, doc);
+              return repo ? referenceUrl(repo, number) : undefined;
+            },
+          }),
+          githubLinks(),
+        ];
       },
     ]);
   }),
