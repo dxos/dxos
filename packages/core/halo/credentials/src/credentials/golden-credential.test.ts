@@ -7,7 +7,7 @@ import { describe, expect, test } from 'vitest';
 
 import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
-import { fromPublicKey } from '@dxos/protocols/buf';
+import { fromPublicKey, toPublicKey } from '@dxos/protocols/buf';
 import { AuthorizedDeviceSchema, CredentialSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
 import { getCredentialAssertion } from './assertions';
@@ -77,5 +77,52 @@ describe('a credential signed by this build', () => {
       deviceKey: deviceKey.toHex(),
       identityKey: issuer.toHex(),
     });
+  });
+});
+
+describe('the assertion type_url a credential carries', () => {
+  const makeCredential = async () => {
+    const keyring = new Keyring();
+    const issuer = await keyring.createKey();
+    const deviceKey = PublicKey.random();
+    return {
+      deviceKey,
+      credential: await createCredential({
+        assertion: create(AuthorizedDeviceSchema, {
+          identityKey: fromPublicKey(issuer),
+          deviceKey: fromPublicKey(deviceKey),
+        }),
+        issuer,
+        signer: keyring,
+        subject: deviceKey,
+      }),
+    };
+  };
+
+  test('is the bare type name, which is what EDGE resolves', async () => {
+    // EDGE keys its assertion registry by bare `typeName`; `anyPack`'s `type.googleapis.com/`
+    // prefix misses that lookup and fails the websocket upgrade with a 500.
+    const { credential } = await makeCredential();
+    expect(credential.subject?.assertion?.typeUrl).toEqual('dxos.halo.credentials.AuthorizedDevice');
+  });
+
+  test('does not reach the signature or the id, which cover the prefixed form identically', async () => {
+    // Both are digests of the signing payload, and `canonicalStringify` drops `@type` — so the url
+    // form is outside what is signed, and switching it cannot invalidate an issued credential.
+    const { credential } = await makeCredential();
+    const prefixed = fromBinary(CredentialSchema, toBinary(CredentialSchema, credential));
+    prefixed.subject!.assertion!.typeUrl = `type.googleapis.com/${credential.subject!.assertion!.typeUrl}`;
+
+    expect(Buffer.from(getCredentialProofPayload(prefixed))).toEqual(
+      Buffer.from(getCredentialProofPayload(credential)),
+    );
+    expect(await verifyCredential(prefixed)).toEqual({ kind: 'pass' });
+  });
+
+  test('still resolves through buf, which normalizes either form', async () => {
+    const { deviceKey, credential } = await makeCredential();
+    const assertion = getCredentialAssertion(credential);
+    expect(assertion.$typeName).toEqual('dxos.halo.credentials.AuthorizedDevice');
+    expect(toPublicKey((assertion as any).deviceKey)?.toHex()).toEqual(deviceKey.toHex());
   });
 });
