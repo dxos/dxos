@@ -7,17 +7,22 @@ import './boot-loader.css';
 import { onCleanup, onMount } from 'solid-js';
 import { type Meta, type StoryObj } from 'storybook-solidjs-vite';
 
-// The one mark a build inlines through `bootLoaderPlugin`, from `@dxos/brand`. A channel recolours it
-// with a filter, shown beside the released mark in the brand package's Channels story, not here.
+import { CHANNELS, channelMarkFilter } from '@dxos/brand/channels';
+
+// The one mark a build inlines through `bootLoaderPlugin`, from `@dxos/brand`, which also owns each
+// channel's colour; a channel recolours the mark with that filter rather than shipping a copy.
 // eslint-disable-next-line import/no-relative-packages
 import composerIcon from '../../../../../../ui/brand/assets/icons/composer-icon.svg?raw';
 import { Loader } from './Loader';
 import { createLoaderStore } from './store';
 
-/** Whether the ring holds the mark, as a build with one renders it, or nothing. */
+/** How the ring's mark reads: released, as each channel recolours it, or absent. */
 const MARKS: Record<string, { svg?: string; filter?: string } | undefined> = {
   none: {},
   production: { svg: composerIcon },
+  ...Object.fromEntries(
+    CHANNELS.map((channel) => [channel, { svg: composerIcon, filter: channelMarkFilter(channel) }]),
+  ),
 };
 
 type StoryArgs = {
@@ -82,6 +87,22 @@ export const Default: Story = {
     onCleanup(() => store.dispose());
     return <Loader store={store} markSvg={MARKS[args.mark]?.svg} markFilter={MARKS[args.mark]?.filter} />;
   },
+};
+
+/** The released mark as each channel recolours it — ring and mark together, the filter the app applies. */
+export const Preview: Story = {
+  ...Default,
+  args: { mark: 'preview' },
+};
+
+export const Dev: Story = {
+  ...Default,
+  args: { mark: 'dev' },
+};
+
+export const Staging: Story = {
+  ...Default,
+  args: { mark: 'staging' },
 };
 
 /** The ring alone, as a build without a mark renders it. */
