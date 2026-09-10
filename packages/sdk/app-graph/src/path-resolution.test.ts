@@ -558,6 +558,41 @@ describe('path-resolution', () => {
       expect(Option.getOrThrow(represented)).toEqual({ key: 'companion', id: 'comments', workspace: WORKSPACE_A });
     });
 
+    // The counterpart of `nodeUrlSegment` returning undefined: a node sitting exactly at its binding's
+    // path is the container the items hang off, so it addresses nothing of its own.
+    test("a container at the binding's own path is unmapped", async ({ expect }) => {
+      const registry = Registry.make();
+      const builder = GraphBuilder.make({ registry, urlGrammar: { anchorKey: 'w', linkedKey: 'companion' } });
+      GraphBuilder.addExtension(builder, [
+        Effect.runSync(
+          GraphBuilder.createExtension({
+            id: 'workspaces',
+            match: GraphNodeMatcher.whenNodeType(Node.RootType),
+            connector: () => Effect.succeed([{ id: WORKSPACE_A, type: WORKSPACE_TYPE }]),
+          }),
+        ),
+        Effect.runSync(
+          GraphBuilder.createExtension({
+            id: 'section',
+            // The binding's path IS this node, so there is nothing left to make an id from.
+            url: { key: 'doc', kind: 'item', path: [GROUP_ID] },
+            match: GraphNodeMatcher.whenNodeType(WORKSPACE_TYPE),
+            connector: () => Effect.succeed([{ id: GROUP_ID, type: GROUP_TYPE }]),
+          }),
+        ),
+      ]);
+      // Resolution walks the workspace, which is what builds the container node in the first place.
+      await EffectEx.runPromise(
+        PathResolution.resolveUrl(builder, {
+          workspace: WORKSPACE_A,
+          pairs: [{ key: 'doc', id: 'anything', workspace: WORKSPACE_A }],
+        }),
+      );
+
+      const represented = PathResolution.representNode(builder, `${GraphNode.RootId}/${WORKSPACE_A}/${GROUP_ID}`);
+      expect(Option.isNone(represented)).toBe(true);
+    });
+
     test('encodes a fixed-depth tail back into one `+`-joined id', async ({ expect }) => {
       const builder = buildTestBuilder();
       const id = `${SUBGROUP_ID}${builder.urlGrammar.tailSeparator}nestedDocA`;
