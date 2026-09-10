@@ -3,9 +3,11 @@
 //
 
 /**
- * Pinned (non-space) workspace ID anchoring the registry's graph subtree.
+ * Pinned (non-space) workspace ID anchoring the registry's graph subtree, and the workspace token its
+ * URLs are addressed by. Short because it is a system workspace: those names are claimed, and no space
+ * id can collide with one.
  */
-export const REGISTRY_ID = 'dxos:plugin-registry';
+export const REGISTRY_ID = 'registry';
 
 // A registry category node id is the bare category name (e.g. `bundled`), which doubles as its URL
 // segment (`category/<name>`); the graph builder, the category surfaces and `getCategoryPredicate` all
