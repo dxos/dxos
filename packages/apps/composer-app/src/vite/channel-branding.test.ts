@@ -7,6 +7,8 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { afterEach, describe, test, vi } from 'vitest';
 
+import { CHANNEL_COLORS, CHANNELS, RAMP_HUE } from '@dxos/brand/channels';
+
 import { applyChannelFavicons, bootMarkFilter, channelVariant } from './channel-branding';
 
 const FAVICONS = [
@@ -60,10 +62,15 @@ describe('bootMarkFilter', () => {
     expect(bootMarkFilter(undefined)).toBeUndefined();
   });
 
+  // The colours are the brand's to set, so the test pins the derivation rather than the numbers.
   test('rotates the ramp to the channel hue, scaling saturation only when the channel does', ({ expect }) => {
-    expect(bootMarkFilter('preview')).toBe('hue-rotate(82deg)');
-    expect(bootMarkFilter('dev')).toBe('hue-rotate(180deg) saturate(0.75)');
-    expect(bootMarkFilter('staging')).toBe(bootMarkFilter('dev'));
+    for (const channel of CHANNELS) {
+      const { hue, saturation } = CHANNEL_COLORS[channel];
+      const rotate = (((hue - RAMP_HUE) % 360) + 360) % 360;
+      expect(bootMarkFilter(channel)).toBe(
+        saturation === 1 ? `hue-rotate(${rotate}deg)` : `hue-rotate(${rotate}deg) saturate(${saturation})`,
+      );
+    }
   });
 });
 
