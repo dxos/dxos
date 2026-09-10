@@ -1174,3 +1174,7 @@ verdict over porting in the same PR).
       decide the rail (collapsed = `Drawer.Content size` switching rail↔sidebar).
 - [x] **`Toc`** DONE 2026-09-09; the consumer question stays open in Phase 16's toc item.
 - [x] **`Tour`, `WelcomeTour` off `react-joyride`** DONE 2026-09-09; see Phase 16's tour item.
+- [x] **Cards and dialogs one level darker** DONE 2026-09-10 (user): `dx-card-surface` publishes the
+      `base` level and `dx-modal-surface` the `raised` level (surfaces.css role tokens and surface.css
+      zones together); `overlay` is left to explicit `elevation={4}`. `Select`'s list moves to the popup
+      level with menus so it does not follow dialogs down.

@@ -7,8 +7,9 @@
  *
  * Enter a zone with `data-surface="<level>"` — the levels are the ladder in `theme/surfaces.css`;
  * in React, `elevation={0..5}` on Panel, Toolbar, Card, Dialog and Popover sets it.
- * The `dx-*-surface` classes are role-named aliases of the same thing, kept because they read well
- * at call sites (`dx-card-surface` says more than `data-surface="raised"`).
+ * The `dx-*-surface` classes are role-named zones on the same ladder, kept because they read well
+ * at call sites (`dx-card-surface` says more than `data-surface="base"`); a role may sit a step
+ * below the level its name suggests, as cards and modals do.
  *
  * A bare `bg-*-surface` utility paints the colour but does NOT publish `--surface-bg`, so every
  * aspect inside it collapses onto the base-surface fallback — never use one to enter a zone.
@@ -58,9 +59,11 @@
     --surface-bg: var(--color-l1-surface);
   }
 
+  /* A card sits on the canvas's level; a dialog one above it (see the ladder in theme/surfaces.css). */
   [data-surface='base'],
   .dx-base-surface,
-  .dx-attention-surface {
+  .dx-attention-surface,
+  .dx-card-surface {
     --surface-bg: var(--dx-surface-base);
   }
 
@@ -70,12 +73,11 @@
   }
 
   [data-surface='raised'],
-  .dx-card-surface {
+  .dx-modal-surface {
     --surface-bg: var(--dx-surface-raised);
   }
 
-  [data-surface='overlay'],
-  .dx-modal-surface {
+  [data-surface='overlay'] {
     --surface-bg: var(--dx-surface-overlay);
   }
 
