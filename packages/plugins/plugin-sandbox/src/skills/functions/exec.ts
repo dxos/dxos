@@ -3,6 +3,7 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
 
 import { ClientService } from '@dxos/client';
 import * as Operation from '@dxos/compute/Operation';
@@ -25,11 +26,10 @@ export default SandboxOperation.Exec.pipe(
       const sandboxClient = createSandboxClient(client);
       const mergedEnv = yield* mergeExecEnv(loaded.credentials, env);
 
-      const result = yield* Effect.promise(() =>
-        sandboxClient.exec(spaceId, sandboxId, { command, cwd, env: mergedEnv, timeout }),
-      );
-
-      return result;
-    }),
+      // Yielded directly rather than through `Effect.promise`: that wrapper is uninterruptible, so
+      // terminating the operation left the request running — the tool handler reported "Operation
+      // was terminated" while the fetch underneath it stayed open.
+      return yield* sandboxClient.exec(spaceId, sandboxId, { command, cwd, env: mergedEnv, timeout });
+    }, Effect.provide(FetchHttpClient.layer)),
   ),
 );

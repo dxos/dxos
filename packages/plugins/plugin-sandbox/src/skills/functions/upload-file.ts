@@ -3,6 +3,7 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
 
 import { ClientService } from '@dxos/client';
 import * as Operation from '@dxos/compute/Operation';
@@ -31,9 +32,9 @@ export default SandboxOperation.UploadFile.pipe(
       const spaceId = db.spaceId;
       const sandboxClient = createSandboxClient(client);
 
-      yield* Effect.promise(() => sandboxClient.writeFile(spaceId, sandboxId, path, content));
+      yield* sandboxClient.writeFile(spaceId, sandboxId, path, content);
 
       return { path };
-    }),
+    }, Effect.provide(FetchHttpClient.layer)),
   ),
 );
