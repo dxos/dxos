@@ -28,7 +28,9 @@ import { createConfig as createTestConfig } from '../../../vitest.base.config.ts
 import { bootChunking } from './src/vite/boot-chunking.ts';
 import { bootMarkPath, channelFaviconPlugin, channelVariant } from './src/vite/channel-branding.ts';
 import { debugPortSidecarPlugin, resolveDebugPortSession } from './src/vite/debug-port.ts';
+import { nodeBuiltinStubs } from './src/vite/node-builtin-stubs.ts';
 import { optimizeDepsInclude } from './src/vite/optimize-deps.ts';
+import { reactRefreshPreamble } from './src/vite/react-refresh-preamble.ts';
 import { traceBootLeak } from './src/vite/trace-boot-leak.ts';
 
 const isTrue = (str?: string) => str === 'true' || str === '1';
@@ -44,6 +46,20 @@ const pluginSetFile = PLUGIN_SETS[process.env.DX_PLUGIN_SET ?? ''] ?? 'src/plugi
 // Non-empty only when a dev server is launched with the debug-port flag; see `src/vite/debug-port.ts`.
 const debugPortSession = resolveDebugPortSession();
 const isReducedPluginSet = pluginSetFile !== 'src/plugin-defs.tsx';
+
+// Vite's full-bundle dev mode: a Rolldown dev build serves the client graph instead of the
+// per-module transform pipeline, reusing `build.rolldownOptions` verbatim and running no dep
+// optimizer — so config written for one pipeline or the other has to branch on it.
+//
+// Read from argv rather than a plugin hook, because `ConfigEnv` carries no flag and
+// `build.rolldownOptions` is consumed before any hook could amend it. Only the `dev` command reads
+// the flag (argv[2] is the subcommand, absent when dev is the default), and cac accepts a
+// dash-cased alias and an `=<value>` form for the same option, so all of those spellings match.
+const BUNDLED_DEV_ARG = /^--experimental-?bundle(=(?!false\b|0\b|$).*)?$/i;
+const viteCommand = process.argv[2]?.startsWith('-') ? undefined : process.argv[2];
+const isBundledDev =
+  (viteCommand === undefined || viteCommand === 'dev' || viteCommand === 'serve') &&
+  process.argv.some((arg) => BUNDLED_DEV_ARG.test(arg));
 
 const rootDir = searchForWorkspaceRoot(process.cwd());
 const phosphorIconsCore = path.join(rootDir, '/node_modules/@phosphor-icons/core/assets');
@@ -71,13 +87,14 @@ const SLIM_WASM_PACKAGES = ['@automerge/automerge', '@automerge/automerge-repo',
 const slimWasm = (): PluginOption => {
   // `browser` is deliberately absent; the rest mirrors what vite would apply for the client.
   const resolver = new ResolverFactory({ conditionNames: ['source', 'import', 'module', 'default'] });
-  let isBuild = false;
+  // True wherever Rolldown bundles the graph; see the `automerge-repo` note below.
+  let isBundled = false;
 
   return {
     name: 'dxos-slim-wasm',
     enforce: 'pre',
     configResolved: (config) => {
-      isBuild = config.command === 'build';
+      isBundled = config.command === 'build' || !!config.experimental.bundledDev;
     },
     resolveId: {
       order: 'pre',
@@ -89,11 +106,13 @@ const slimWasm = (): PluginOption => {
         if (!pkg) {
           return null;
         }
-        // automerge-repo is redirected only at build: a serve-time redirect would hand out a raw
-        // `/@fs` path that bypasses its optimizer chunk, and repo's dist imports CJS deps
-        // (`debug`, …) that only the prebundle's ESM interop makes importable. The prebundled
-        // fullfat chunk's automerge/subduction imports are externalized and still land here.
-        if (pkg === '@automerge/automerge-repo' && !isBuild) {
+        // automerge-repo is redirected only where Rolldown bundles the graph: under the
+        // transform-per-module dev server a redirect would hand out a raw `/@fs` path that
+        // bypasses its optimizer chunk, and repo's dist imports CJS deps (`debug`, …) that only
+        // the prebundle's ESM interop makes importable. The prebundled fullfat chunk's
+        // automerge/subduction imports are externalized and still land here. Bundled dev runs no
+        // optimizer at all, so it needs the redirect a build gets.
+        if (pkg === '@automerge/automerge-repo' && !isBundled) {
           return null;
         }
         // Subpaths resolve as requested (`/slim`, `/slim/next`); asset requests (`?url`) fail the
@@ -128,6 +147,16 @@ const reducedPluginEntries = () => {
   return path.resolve(rootDir, `packages/plugins/plugin-{${[...names].sort().join(',')}}/src/index.{ts,tsx}`);
 };
 
+// Node builtins the client graph references from code it never runs, with the names those importers
+// destructure: `net`/`os` arrive via `@dxos/cli-util/callback`'s `get-port-please`, reached from
+// plugin-client's and plugin-connector's CLI command modules. Only bundled dev needs them (see
+// `nodeBuiltinStubs`) — `build` links the same graph without complaint, so the production path is
+// left alone and the shipped bundle is unchanged.
+const NODE_BUILTIN_STUBS = {
+  net: ['createServer'],
+  os: ['networkInterfaces'],
+} as const;
+
 // Shared plugins for worker that are using in prod build.
 // In dev vite uses root plugins for both worker and page.
 const sharedPlugins = (env: ConfigEnv): PluginOption[] => [
@@ -152,6 +181,7 @@ const sharedPlugins = (env: ConfigEnv): PluginOption[] => [
   importSource({
     include: isFastBundle ? ['#*'] : ['@dxos/**', '#*'],
   }),
+  isBundledDev && nodeBuiltinStubs(NODE_BUILTIN_STUBS),
   // WebKit evaluates a module before its dependencies when a graph reached by concurrent dynamic
   // imports contains top-level await, leaving bindings in TDZ.
   slimWasm(),
@@ -258,6 +288,13 @@ export default defineConfig((env) => ({
     minify: !isFalse(process.env.DX_MINIFY),
     target: [...browserTargets],
     rolldownOptions: {
+      // Bundled dev otherwise forces Rolldown's lazy dev engine, which compiles a payload per
+      // dynamic entry on request. Composer activates its plugin modules through ~270 concurrent
+      // dynamic imports, and that path drops factories (`MissingFactoryError`) and evaluates
+      // modules ahead of their dependencies (`undefined` namespace at activation). Building the
+      // graph eagerly costs a slower first build and keeps the semantics `build` already has.
+      // `getRolldownOptions` spreads a `devMode` OBJECT over its own `lazy: true`, so this wins.
+      ...(isBundledDev ? { experimental: { devMode: { lazy: false } } } : null),
       input: {
         internal: path.resolve(dirname, './internal.html'),
         main: path.resolve(dirname, './index.html'),
@@ -277,20 +314,27 @@ export default defineConfig((env) => ({
         // rejected (2026-08): per-package groups welded each package's eager and lazy halves
         // (boot 4.03->10.07MB), and `$initial` tags span all five HTML entries plus their
         // recursive dependencies (boot ->19MB).
-        codeSplitting: {
-          groups: [
-            { name: 'react', test: /node_modules[\\/]react(-dom)?[\\/]/, priority: 10 },
-            // Naive maxSize splitting cuts through module cycles and breaks evaluation
-            // order (rolldown#8803); the fix rolldown offers (strictExecutionOrder) costs
-            // ~+1.8MB of inhibited treeshaking. Instead the manifest carries a cycle-safe
-            // partition (see `boot-chunking.ts`) and each bucket becomes its own chunk.
-            {
-              name: boot.groupName,
-              includeDependenciesRecursively: false,
-              priority: 5,
+        // Production shaping only, though bundled dev would otherwise honour it (it reuses this
+        // whole options object): `boot.plugin`, which drops the memoized partition per build, is
+        // `apply: 'build'`, so under dev the first build's partition would be reapplied to every
+        // rebuild forever. Dev has nothing to gain from it either — chunk count is not what a dev
+        // server optimizes, and computing a whole-graph Tarjan partition is pure rebuild latency.
+        codeSplitting: isBundledDev
+          ? undefined
+          : {
+              groups: [
+                { name: 'react', test: /node_modules[\\/]react(-dom)?[\\/]/, priority: 10 },
+                // Naive maxSize splitting cuts through module cycles and breaks evaluation
+                // order (rolldown#8803); the fix rolldown offers (strictExecutionOrder) costs
+                // ~+1.8MB of inhibited treeshaking. Instead the manifest carries a cycle-safe
+                // partition (see `boot-chunking.ts`) and each bucket becomes its own chunk.
+                {
+                  name: boot.groupName,
+                  includeDependenciesRecursively: false,
+                  priority: 5,
+                },
+              ],
             },
-          ],
-        },
       },
     },
   },
@@ -502,6 +546,8 @@ export default defineConfig((env) => ({
     }),
 
     react(),
+
+    isBundledDev && reactRefreshPreamble(react.preambleCode),
 
     // Emit a `<script type="importmap">` into the production HTML mapping shared
     // bare specifiers (`react`, `effect`, `@dxos/client`, etc.) to dedicated chunk
