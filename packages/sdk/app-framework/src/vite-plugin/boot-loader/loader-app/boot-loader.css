@@ -142,7 +142,10 @@ body {
    * The host SVG carries its own brand-palette fills, so we don't apply a
    * `color` cascade here. SVGs that intentionally use `fill="currentColor"`
    * still pick up the loader's text colour via `#boot-loader`'s `color`.
+   * A channel recolours the released mark through this filter rather than shipping its own file;
+   * the ring below takes the same filter, so the two stay one colour.
    */
+  filter: var(--boot-loader-mark-filter, none);
 }
 
 /*
@@ -156,6 +159,7 @@ body {
   width: var(--boot-loader-disc-size);
   height: var(--boot-loader-disc-size);
   overflow: visible;
+  filter: var(--boot-loader-mark-filter, none);
   /*
    * Fade the arc linearly from the head (the marker, fully opaque) back to the
    * tail (12 o'clock, transparent). A conic-gradient mask does this along the
@@ -190,6 +194,7 @@ body {
   width: var(--boot-loader-disc-size);
   height: var(--boot-loader-disc-size);
   overflow: visible;
+  filter: var(--boot-loader-mark-filter, none);
 }
 
 .boot-loader-ring-progress {
@@ -367,49 +372,56 @@ body {
     0,
     calc(var(--boot-loader-disc-size) / 2 + var(--boot-loader-status-gap) + 4.5em + var(--boot-loader-status-gap))
   );
-  display: flex;
-  justify-content: center;
-  padding: 0 24px;
-  /* Clips the slide-out rather than letting a long row reflow or scroll the page. */
+  height: 48px;
+  /* Clips a long row rather than letting it scroll the page. */
   overflow: hidden;
 }
 
 /*
- * One row, always: wrapping turned the row into a growing block that shoved itself around as icons
- * arrived, and a very long set is clipped by the parent instead. Growth is animated on the icons
- * themselves (width + margin below) rather than by transforming this track: the centred row then
- * expands symmetrically from the middle, with no invert step to land a frame late and read as a
- * jump.
+ * A plain flex row, translated as one group so its centre stays on the row's: the offset is half the
+ * row's width, computed from the eased `--n` the component writes each frame, so an arrival only
+ * moves the target and the row keeps its velocity instead of stopping and starting. A very long set
+ * is clipped by the parent instead of wrapping.
  */
 #boot-loader-plugins-track {
+  --boot-loader-plugin-size: 48px;
+  --boot-loader-plugin-gap: 12px;
+  --boot-loader-plugin-slot: calc(var(--boot-loader-plugin-size) + var(--boot-loader-plugin-gap));
+  position: absolute;
+  top: 0;
+  left: 50%;
   display: flex;
-  flex-wrap: nowrap;
-  align-items: center;
-  gap: 12px;
+  gap: var(--boot-loader-plugin-gap);
+  transform: translateX(calc((var(--n) * var(--boot-loader-plugin-slot) - var(--boot-loader-plugin-gap)) / -2));
 }
 
 /*
- * Entrance is a keyframe animation on opacity + transform, and nothing else. During boot the main
- * thread is saturated — measured frame gaps of ~280ms — so a transition gets no intermediate frames
- * and snaps to its end state; a composited animation keeps running regardless. Width and margin
- * cannot be composited at all, so the row steps out by one slot per icon rather than animating.
+ * An icon is laid out by the row and only fades in, appended one gap past the row's end. During
+ * boot the main thread is saturated — measured frame gaps of ~280ms — so only what the compositor
+ * can carry keeps moving; width, margin and layout cannot be composited.
  */
 .boot-loader-plugin {
-  width: 48px;
-  height: 48px;
   flex: 0 0 auto;
+  width: var(--boot-loader-plugin-size);
+  height: var(--boot-loader-plugin-size);
   display: grid;
   place-items: center;
-  /* Border-box so the border eats into the 40px slot rather than widening the row. */
+  /* Border-box so the border eats into the slot rather than widening the row. */
   box-sizing: border-box;
   background: var(--boot-loader-bg-light, #444444);
-  /* border: 1px solid currentColor; */
   border-radius: 8px;
   padding: 8px;
   /* Monotone — the arrival reads from opacity alone, which keeps the row quiet. */
   color: currentColor;
   opacity: 0.2;
-  animation: boot-loader-plugin-in 200ms ease-out both;
+  /* Slower than the row's shift, so the icon is still coming up as the row settles around it. */
+  animation: boot-loader-plugin-in 600ms ease-out backwards;
+}
+
+@keyframes boot-loader-plugin-in {
+  from {
+    opacity: 0;
+  }
 }
 
 /* The glyph itself. Styled apart from its slot so either can change without disturbing the other. */
@@ -417,17 +429,6 @@ body {
   width: 100%;
   height: 100%;
   fill: currentColor;
-}
-
-@keyframes boot-loader-plugin-in {
-  from {
-    opacity: 0;
-    transform: scale(0.8);
-  }
-  to {
-    opacity: 0.2;
-    transform: scale(1);
-  }
 }
 
 @media (prefers-reduced-motion: reduce) {

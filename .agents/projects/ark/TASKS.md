@@ -1,6 +1,6 @@
 # ark — Tasks
 
-_Resume: PR #13032 OPEN with auto-merge (cards base, dialogs raised). #13031 (outline link on click/Enter/Space,
+_Resume: PR #13050 OPEN with auto-merge (brand channels + boot loader recolour + flex activation row). #13032 MERGED 2026-09-10 (cards base, dialogs raised). #13031 (outline link on click/Enter/Space,
 task card resolves, popover card fallback) MERGED 2026-09-10. Next: `Main` step 2 (push layout at `lg`);
 then the Phase 15 re-route or the `Toc` consumer. Uncommitted: none._
 
@@ -918,9 +918,10 @@ dist/types/src: ENOTEMPTY` — a concurrent writer. A Cursor TypeScript native-p
       `aria-labelledby`/`aria-describedby` by detecting the texts. `Form.Section` is the first
       consumer: its `h2` is the legend through `asChild`, so the group is named by its title and the
       heading still serves navigation. Stories assert the naming, the description and the disabling.
-- [ ] **Rename `Stepper` → `Steps`** (tracked 2026-09-05): Ark's name for the machine the component
-      sits on, and the family convention is Ark's name where the part is Ark's. Own PR with the
-      `Input` → `Field` codemod, or folded into it.
+- [x] **Rename `Stepper` → `Steps`** DONE 2026-09-10 (#13050): Ark's name for the machine the
+      component sits on, and the family convention is Ark's name where the part is Ark's. Component,
+      props, theme key (`steps.*`), `stepsTheme`, story title and test ids, `ProgressMeter`'s use, the
+      ontology and README rows; the `Step*` helper types and functions keep their names.
 - [x] **Replace `react-joyride` with Ark's `Tour`** DONE 2026-09-09: `react-ui` `Tour` (all Ark
       parts, theme, play stories) and `plugin-support`'s `WelcomeTour` rebuilt on it; `react-joyride`,
       `react-floater`, `type-fest` removed from the repo; composer `help.ts` steps on the plugin's own
