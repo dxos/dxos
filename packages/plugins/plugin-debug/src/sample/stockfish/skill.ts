@@ -68,6 +68,10 @@ const INSTRUCTIONS = trim`
     to deploy and a stage that only registers or publishes changes no Worker code — deploying there is
     a no-op that reads as progress. Where you did deploy, a successful \`wrangler deploy\` is not
     evidence that anything is serving; the response body is.
+  - **\`--temporary\` needs wrangler 4.102 or later, and that wrangler needs Node 22.** The sandbox
+    runs Node 20, and a plain \`npm install wrangler\` there resolves to the last version that fits
+    it, which has no \`--temporary\`. Install \`wrangler@latest\` explicitly and run its script under
+    a newer node without touching the image: \`npx --yes node@22 node_modules/wrangler/bin/wrangler.js deploy --temporary\`.
   - **Read the deploy output for what it warns about, not only its exit code.** Bundle size and a
     missing binding are warnings on a deploy that succeeds and failures on the request that follows.
   - **Bound work by work, not by wall-clock.** \`Date.now()\` does not advance during synchronous

@@ -11,6 +11,7 @@ import { Database } from '@dxos/echo';
 
 import { SandboxOperation } from '#types';
 
+import { encodeExecCommand } from '../../services/exec-command';
 import { mergeExecEnv } from '../../services/sandbox-env';
 import { createSandboxClient } from '../../services/sandbox-url';
 
@@ -40,7 +41,9 @@ export default SandboxOperation.Exec.pipe(
       // error channel, so a typed failure escaping here is not part of the operation's contract and
       // reaches the tool runtime as a result missing every declared key ("Missing key at [stdout]").
       // A non-zero exit carrying the reason is also what the model can actually act on.
-      return yield* sandboxClient.exec(spaceId, sandboxId, { command, cwd, env: mergedEnv, timeout }).pipe(
+      return yield* sandboxClient
+        .exec(spaceId, sandboxId, { command: encodeExecCommand(command), cwd, env: mergedEnv, timeout })
+        .pipe(
         Effect.catch((error) =>
           Effect.succeed({
             stdout: '',
