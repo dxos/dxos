@@ -30,23 +30,23 @@ export default Capability.makeModule(
     return Capability.contribute(MarkdownCapabilities.ExtensionProvider, [
       ({ document: doc, viewMode }) => {
         // Source view shows the document's own text; a decoration there would hide what it is.
-        if (viewMode === 'source' || !doc) {
+        if (viewMode === 'source') {
           return undefined;
         }
 
-        const db = Obj.getDatabase(doc);
-        if (!db) {
-          return undefined;
-        }
-
+        // A full URL needs no document: a task's description or an outline gets the chip too. A bare
+        // `#123` resolves against the document's repository, so it needs one.
+        const db = doc && Obj.getDatabase(doc);
         return [
-          githubReferences({
-            resolve: (number) => {
-              const repo = resolveRepo(db, doc);
-              return repo ? referenceUrl(repo, number) : undefined;
-            },
-          }),
           githubLinks(),
+          db
+            ? githubReferences({
+                resolve: (number) => {
+                  const repo = resolveRepo(db, doc);
+                  return repo ? referenceUrl(repo, number) : undefined;
+                },
+              })
+            : [],
         ];
       },
     ]);

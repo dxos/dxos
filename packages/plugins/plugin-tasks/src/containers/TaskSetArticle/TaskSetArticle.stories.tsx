@@ -14,6 +14,8 @@ import { Filter, Obj, Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { DXN } from '@dxos/keys';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
+import { GitHubPlugin } from '@dxos/plugin-github';
+import * as MarkdownEvents from '@dxos/plugin-markdown/MarkdownEvents';
 import { corePlugins } from '@dxos/plugin-testing';
 import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { type Space, useSpaces } from '@dxos/react-client/echo';
@@ -69,6 +71,7 @@ const seedTaskSet = (space: Space) => {
     },
     {
       title: 'Finalize roast curve',
+      description: 'Curve tracked in [#13007](https://github.com/dxos/dxos/pull/13007).',
       status: 'started',
       priority: 'high',
       assignee: { contact: Ref.make(kai) },
@@ -154,7 +157,11 @@ const meta = {
         // without it every invoke (move included) dies with NoHandlerError.
         TasksPlugin.make(),
         StoryTaskActionPlugin(),
+        // Contributes the editor extensions the description field takes: `#123` decoration and
+        // link chips. Its module activates on the markdown start event, fired here at setup.
+        GitHubPlugin.make(),
       ],
+      setupEvents: [MarkdownEvents.Start],
     }),
   ],
   parameters: {
@@ -169,6 +176,23 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {};
+
+/**
+ * A description is edited with the extensions other plugins contribute: selecting the task whose
+ * description links a pull request opens it in the edit pane, where plugin-github's matcher has
+ * turned the URL into an anchor chip carrying it.
+ */
+export const DescriptionLinks: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await userEvent.click(await canvas.findByText('Finalize roast curve', undefined, { timeout: 10_000 }));
+    await waitFor(
+      () =>
+        expect(canvasElement.querySelector('dx-anchor[eid="https://github.com/dxos/dxos/pull/13007"]')).toBeTruthy(),
+      { timeout: 10_000 },
+    );
+  },
+};
 
 /**
  * The gutter's checkbox is selection, not a status write: it marks which rows a contributed action

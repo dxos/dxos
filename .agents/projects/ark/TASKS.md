@@ -1186,7 +1186,10 @@ verdict over porting in the same PR).
       surfaces (existing; `GitHubCard` for `Issue`/`PullRequest`, new host-agnostic types in
       `@dxos/types` beside `Repo`). Source is configurable via `GitHubCapabilities.LinkSource`,
       default fetches from the API with the space's connection token. Stories moved to
-      plugin-github (`GitHubCard`, `Links`).
+      plugin-github (`GitHubCard`, `Links`). Task descriptions take the contributed extensions too
+      (`MarkdownEditable`/`TaskList.Edit` `extensions`, `useMarkdownExtensions` in plugin-tasks).
+      Still plain: the read-only row (`MarkdownView`, a React renderer) — a matcher for it would be
+      a second extension point.
 - [x] **Cards and dialogs one level darker** DONE 2026-09-10 (user): `dx-card-surface` publishes the
       `base` level and `dx-modal-surface` the `raised` level (surfaces.css role tokens and surface.css
       zones together); `overlay` is left to explicit `elevation={4}`. `Select`'s list moves to the popup

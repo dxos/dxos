@@ -30,7 +30,7 @@ import {
   useTranslation,
 } from '@dxos/react-ui';
 import { Listbox, useListDisclosure } from '@dxos/react-ui-list';
-import { MarkdownEditable, type MarkdownEditableController } from '@dxos/react-ui-markdown';
+import { MarkdownEditable, type MarkdownEditableController, type MarkdownEditableProps } from '@dxos/react-ui-markdown';
 import {
   ActionMenu,
   type MenuAction,
@@ -758,6 +758,8 @@ type TaskListEditProps = ComposableProps<{
   showDescription?: boolean;
   /** Placeholder for the description field. */
   descriptionPlaceholder?: string;
+  /** Editor extensions for the description field beyond its own — what the host's plugins contribute. */
+  descriptionExtensions?: MarkdownEditableProps['extensions'];
   /**
    * Lay the pane out on the list's own column template, so the title field starts where the rows'
    * titles do and the icon sits under their status controls. Off by default: a pane used away from
@@ -774,7 +776,14 @@ type TaskListEditProps = ComposableProps<{
  */
 const TaskListEdit = composable<HTMLDivElement, TaskListEditProps>(
   (
-    { placeholder = 'Add task', showDescription = false, descriptionPlaceholder = 'Add a description', grid, ...props },
+    {
+      placeholder = 'Add task',
+      showDescription = false,
+      descriptionPlaceholder = 'Add a description',
+      descriptionExtensions,
+      grid,
+      ...props
+    },
     forwardedRef,
   ) => {
     const { t } = useTranslation(translationKey);
@@ -936,9 +945,14 @@ const TaskListEdit = composable<HTMLDivElement, TaskListEditProps>(
               key={current?.id ?? `create-${createEpoch}`}
               ref={descriptionRef}
               classNames='text-sm'
-              {...(current && { value: current.description ?? '' })}
               editing
               multiline
+              placeholder={descriptionPlaceholder}
+              extensions={descriptionExtensions}
+              // Held open, so it must not pull focus: selecting a row by keyboard would otherwise
+              // land the reader in the description instead of the list.
+              autoFocus={false}
+              {...(current && { value: current.description ?? '' })}
               onValueChange={(description) => {
                 if (task && current) {
                   onTaskUpdate?.(task, { description });
@@ -946,10 +960,6 @@ const TaskListEdit = composable<HTMLDivElement, TaskListEditProps>(
                   draftDescription.current = description;
                 }
               }}
-              placeholder={descriptionPlaceholder}
-              // Held open, so it must not pull focus: selecting a row by keyboard would otherwise
-              // land the reader in the description instead of the list.
-              autoFocus={false}
             />
           </span>
         )}

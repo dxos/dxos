@@ -19,7 +19,7 @@ import { Task, TaskSet } from '@dxos/types';
 import { meta } from '#meta';
 import { TaskOperation, TasksCapabilities } from '#types';
 
-import { useTaskActions } from '../../hooks';
+import { useMarkdownExtensions, useTaskActions } from '../../hooks';
 
 export type TaskSetArticleProps = AppSurface.ObjectArticleProps<TaskSet.TaskSet>;
 
@@ -88,6 +88,8 @@ export const TaskSetArticle = ({ role, attendableId, subject: taskSet }: TaskSet
     [move],
   );
 
+  const descriptionExtensions = useMarkdownExtensions();
+
   const content = (
     <TaskList.Root
       tasks={tasks}
@@ -108,6 +110,7 @@ export const TaskSetArticle = ({ role, attendableId, subject: taskSet }: TaskSet
       <div className='p-2 pt-0'>
         <TaskList.Edit
           showDescription
+          descriptionExtensions={descriptionExtensions}
           classNames='dx-document bg-input-surface border border-separator rounded-md p-2'
           placeholder={t('task-create.placeholder')}
         />

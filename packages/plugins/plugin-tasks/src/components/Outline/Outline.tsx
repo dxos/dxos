@@ -28,8 +28,6 @@ import {
 } from '@dxos/react-ui-editor';
 import { type Text } from '@dxos/schema';
 import {
-  AnchorWidget,
-  type WidgetProps,
   createBasicExtensions,
   createDataExtensions,
   createMarkdownExtensions,
@@ -38,10 +36,10 @@ import {
   getItemText,
   hashtag,
   isItemLink,
+  objectLinks,
   outliner,
   replaceItemWithLink,
   syncLinkLabels,
-  objectLinks,
 } from '@dxos/ui-editor';
 
 import { meta } from '#meta';
