@@ -3,9 +3,10 @@
 //
 
 import { create, createRegistry, fromBinary, fromJson, toBinary, toJson } from '@bufbuild/protobuf';
-import { StructSchema, anyPack } from '@bufbuild/protobuf/wkt';
+import { StructSchema } from '@bufbuild/protobuf/wkt';
 import { describe, expect, test } from 'vitest';
 
+import { anyPackPrefixed } from '@dxos/protocols/buf';
 import { ConfigSchema } from '@dxos/protocols/buf/dxos/config_pb';
 
 import { Config, mapFromKeyValues, mapToKeyValues } from './config';
@@ -61,7 +62,7 @@ test('Runtime and module config', () => {
         modules: [
           {
             name: 'example:app/tasks',
-            record: anyPack(StructSchema, fromJson(StructSchema, { web: { entryPoint: 'main.js' } })),
+            record: anyPackPrefixed(StructSchema, fromJson(StructSchema, { web: { entryPoint: 'main.js' } })),
           },
         ],
       },

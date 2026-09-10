@@ -3,13 +3,14 @@
 //
 
 import { create } from '@bufbuild/protobuf';
-import { anyPack, anyUnpack } from '@bufbuild/protobuf/wkt';
+import { anyUnpack } from '@bufbuild/protobuf/wkt';
 import { AnySchema, EmptySchema } from '@bufbuild/protobuf/wkt';
 import { beforeEach, describe, expect, test } from 'vitest';
 
 import { latch, sleep } from '@dxos/async';
 import { Stream } from '@dxos/async';
 import { Context, TRACE_SPAN_ATTRIBUTE } from '@dxos/context';
+import { anyPackPrefixed } from '@dxos/protocols/buf';
 import { bufRegistry } from '@dxos/protocols/buf-registry';
 import { type BufService, getBufService } from '@dxos/protocols/buf-service';
 import {
@@ -503,7 +504,7 @@ describe('Protobuf service', () => {
               expect(request?.$typeName).toEqual('example.testing.rpc.PingRequest');
               expect((request as PingRequest | undefined)?.nonce).toEqual(5);
               return create(MessageWithAnySchema, {
-                payload: anyPack(PingReponseSchema, create(PingReponseSchema, { nonce: 10 })),
+                payload: anyPackPrefixed(PingReponseSchema, create(PingReponseSchema, { nonce: 10 })),
               });
             },
           },
@@ -522,7 +523,7 @@ describe('Protobuf service', () => {
 
       const response = await client.rpc.TestAnyService.testCall(
         create(MessageWithAnySchema, {
-          payload: anyPack(PingRequestSchema, create(PingRequestSchema, { nonce: 5 })),
+          payload: anyPackPrefixed(PingRequestSchema, create(PingRequestSchema, { nonce: 5 })),
         }),
       );
 

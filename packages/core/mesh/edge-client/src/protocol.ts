@@ -3,7 +3,7 @@
 //
 
 import { invariant } from '@dxos/invariant';
-import { buf, bufWkt } from '@dxos/protocols/buf';
+import { anyPackPrefixed, buf, bufWkt } from '@dxos/protocols/buf';
 import { type Message, MessageSchema, type PeerSchema } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
 import { bufferToArray } from '@dxos/util';
 
@@ -87,7 +87,7 @@ export class Protocol {
       target,
       tags,
       serviceId,
-      payload: payload ? bufWkt.anyPack(type, buf.create(type, payload)) : undefined,
+      payload: payload ? anyPackPrefixed(type, buf.create(type, payload)) : undefined,
     });
   }
 }
