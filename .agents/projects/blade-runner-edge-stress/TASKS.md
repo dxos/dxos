@@ -96,13 +96,20 @@ blade-runner harness. Spec + decisions: [DESIGN.md](./DESIGN.md); what was measu
 
 ## Follow-ups
 
-- [ ] **`POST /identity/agents/create` failing on preview (2026-09-10 nightly, ongoing)** — both
-      jobs died in fleet setup with `AgentProvisioningError` / `createAgent` HTTP 500, before either
-      measurement ran. SigNoz shows an EDGE-preview outage in `dxos/edge`'s `identity-service`,
-      onset ~2026-09-09 22:00–23:00 UTC, still failing near-100% as of the writeup. Not this repo's
-      code — RESULTS.md §7b has the evidence; owned by `dxos/edge`. Re-check the next nightly; if the
-      failure signature has changed, the outage has cleared and whatever failure remains is worth a
-      fresh look.
+- [x] **`POST /identity/agents/create` + `/ws` failing on preview (2026-09-10 nightly)** — RESOLVED.
+      Root cause: `dxos/dxos#12990` (protobuf.js → buf migration, 2026-09-09 15:34 UTC) changed the
+      wire format blade-runner's VP presentations carry; `dxos/edge`'s deployed catalog lagged it,
+      so every `edgeAuth`-gated route (not just `createAgent`) failed to decode incoming
+      presentations. Fixed by `dxos/edge#1044` (catalog bump, deployed 07:21 UTC 2026-09-10);
+      confirmed recovered via live `curl` and SigNoz zero-500s from ~12:00 UTC onward. Full
+      timeline and evidence in RESULTS.md §7b. Nothing to patch in either repo for the outage
+      itself — only the harness's error-logging gap it exposed (see this session's PR).
+- [ ] **Cross-repo wire-format skew is a standing risk, not a one-off** — `dxos/dxos` main can break
+      `dxos/edge`'s pinned deployment on any protocol-level change, for every client built from
+      `dxos/dxos` main, until someone notices and bumps the catalog (as happened here, ~16 hours
+      after the breaking merge). No mechanism catches this automatically today. Out of scope for
+      blade-runner to fix; flagging for whoever owns the release/catalog-bump process to judge
+      whether it's worth a canary or a faster bump cadence.
 - [ ] **Finding 6** — a document is discovered but never delivered; five reproductions, two of them
       in CI, one in the edge repo's own `automerge.node.test.ts`. This is what keeps the nightly soak
       red, and it is a product defect, not a harness one.
