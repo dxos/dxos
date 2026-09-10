@@ -15,11 +15,11 @@ Each extension is defined in the Appendix or resolved via its URI.
 |-------------|--------------------------------|
 | `type`      | `org.dxos.mdl.type@1.0`       |
 | `feat`      | `org.dxos.mdl.feat@1.0`       |
-| `test`      | `org.dxos.mdl.test@1.0`       |
+| `scenario`  | `org.dxos.mdl.scenario@1.0`   |
 | `component` | `org.dxos.mdl.component@1.0`  |
 | `op`        | `org.dxos.mdl.op@1.1`         |
 | `service`   | `org.dxos.mdl.service@1.0`    |
-| `flow`      | `org.dxos.mdl.flow@1.0`       |
+| `test`      | `org.dxos.mdl.test@1.0`       |
 | `step`      | `org.dxos.mdl.step@1.0`       |
 
 ## Types
@@ -389,7 +389,7 @@ feat F-6: Game Persistence
 ## Acceptance
 
 ```mdl
-test T-1: New game starting position
+scenario T-1: New game starting position
   given: a new game is started
   then:
     - Board.turn === white
@@ -398,14 +398,14 @@ test T-1: New game starting position
 ```
 
 ```mdl
-test T-2: Illegal move rejected
+scenario T-2: Illegal move rejected
   given: it is white's turn
   when: white attempts to move a black piece
   then: WrongTurn error; Board unchanged
 ```
 
 ```mdl
-test T-3: Create and join game
+scenario T-3: Create and join game
   given: two players are in the Lobby
   when: player A creates a game, player B joins it
   then:
@@ -416,7 +416,7 @@ test T-3: Create and join game
 ```
 
 ```mdl
-test T-4: Legal move highlight
+scenario T-4: Legal move highlight
   given: Gameboard is shown, it is white's turn
   when: white selects the e2 pawn
   then:
@@ -425,7 +425,7 @@ test T-4: Legal move highlight
 ```
 
 ```mdl
-test T-5: Pawn promotion
+scenario T-5: Pawn promotion
   given: white pawn is on e7, it is white's turn
   when: white moves pawn to e8
   then:
@@ -435,7 +435,7 @@ test T-5: Pawn promotion
 ```
 
 ```mdl
-test T-6: Submit valid move
+scenario T-6: Submit valid move
   given: active game, white's turn, white player logged in
   when: white submits pawn e2→e4
   then:
@@ -446,7 +446,7 @@ test T-6: Submit valid move
 ```
 
 ```mdl
-test T-7: Submit invalid move rejected atomically
+scenario T-7: Submit invalid move rejected atomically
   given: active game, white's turn
   when: white submits an illegal move (e2→e5)
   then:
@@ -456,7 +456,7 @@ test T-7: Submit invalid move rejected atomically
 ```
 
 ```mdl
-test T-8: Legal moves highlighted
+scenario T-8: Legal moves highlighted
   given: new game, white's turn, Gameboard shown
   when: player selects e2
   then:
@@ -467,11 +467,11 @@ test T-8: Legal moves highlighted
 
 ## QA
 
-Executable flows. Each step carries a human instruction (`do`) and, where the step maps to an
-invocable operation, an agent binding (`invoke`). Report failures by flow and step number.
+Executable tests. Each step carries a human instruction (`do`) and, where the step maps to an
+invocable operation, an agent binding (`invoke`). Report failures by test and step number.
 
 ```mdl
-flow QA-1: Start a game and play the opening
+test QA-1: Start a game and play the opening
   desc: The core chess round-trip — create a game, play the first few moves, read the position back.
   actors: human
   covers: [F-1.1, F-2.1]
@@ -483,17 +483,17 @@ flow QA-1: Start a game and play the opening
     - plugin-chess is enabled — it is OFF by default, and no chess operation is registered until
       it is on. Enabling is a UI action (Settings -> plugin registry); `manager.enable()` returns
       without error from the debug port and does not enable it.
-    - no game named "QA Game" exists — ABORT rather than deleting one this flow did not create
+    - no game named "QA Game" exists — ABORT rather than deleting one this test did not create
     - game: the Game object the human creates in step 1 (named "QA Game"), resolved by the runner
       after that step so later steps can reference it — there is no create operation to `capture`
       it from
-  test:
+  steps:
     - name: Create the game
       do: In the navtree, click + on a collection and choose Chess. Name it "QA Game".
       expect: a Game appears under the collection with pieces in their starting positions, white to move
       note: |
         NO `invoke` — [op:startGame] has no runtime counterpart (see its note), so this step is
-        human-only and the flow is `actors: human` until chess gains a create operation. That is
+        human-only and the test is `actors: human` until chess gains a create operation. That is
         the finding, not an omission.
     - name: Play 1. e4
       do: Drag the e2 pawn to e4.
@@ -539,7 +539,7 @@ the core `ext` primitive — the only construct the base language provides.
 
 ```mdl
 ext type
-  uri: dxos.spec/ext/type@1.0
+  uri: org.dxos.mdl.type@1.0
   desc: A named data structure with typed fields and optional literals.
   fields:
     desc?: Prose
@@ -550,7 +550,7 @@ ext type
 
 ```mdl
 ext feat
-  uri: dxos.spec/ext/feat@1.0
+  uri: org.dxos.mdl.feat@1.0
   desc: A named feature grouping one or more requirements.
   fields:
     desc?: Prose
@@ -559,8 +559,8 @@ ext feat
 ```
 
 ```mdl
-ext test
-  uri: dxos.spec/ext/test@1.0
+ext scenario
+  uri: org.dxos.mdl.scenario@1.0
   desc: An acceptance scenario expressed as given / when / then steps.
   fields:
     given?: Step | Step[]

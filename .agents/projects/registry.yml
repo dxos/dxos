@@ -74,8 +74,8 @@ projects:
     summary: 'Adoption of @ark-ui/react (Zag state machines) — Phase 1 rebuilt Tree in @dxos/react-ui-list on ark TreeView (APG keymap, machine-owned focus and ARIA); Phase 7 rebuilt react-ui-task on it; Phase 16 plans the migration of @dxos/react-ui itself from Radix to Ark (packages/ui/react-ui/docs/MIGRATION.md).'
     tasks: .agents/projects/ark/TASKS.md
     design: packages/ui/react-ui-list/docs/TREE.md
-    prs: [12873, 12890, 12902, 12961, 12971, 12987, 12998, 13003, 13007, 13024, 13030]
-    resume: "PR #13030 OPEN (https://github.com/dxos/dxos/pull/13030): #13024's CodeRabbit fix (Main drawer open only while expanded, dismissal rests at collapsed), `Toc` on Ark's toc machine (no consumer yet; rehype-slug on MarkdownView is the first candidate), and `Tour` on Ark's tour machine with plugin-support's WelcomeTour rebuilt on it (react-joyride, react-floater, type-fest removed). #13024 (Main step 1) MERGED 2026-09-09 20:15Z. NEXT: land #13030; the WKWebView touch check for Main is the user's; then Main STEP 2 as its own PR = push layout at lg on Drawer push's clip-and-sheet (delete dx-main-content-padding / dx-main-intrinsic-size / --main-sidebar-width; move useMainSize, focus.css data-sidebar-*-state, DeckViewport vars onto the clips; decide the rail). Boot graph: the drawer machine is in the eager graph via the react-ui barrel (+65 KB, 0.09 MB headroom) — accepted for now. STILL OPEN: Phase 13 checkbox selection + delegate-to-agent; Phase 15 promoted-link re-route; Phase 5 decisions (RAC, Stepper→Steps); Toc consumer."
+    prs: [12873, 12890, 12902, 12961, 12971, 12987, 12998, 13003, 13007, 13024, 13030, 13031]
+    resume: "PR #13031 OPEN (outline: a promoted link is followed on click, Enter or Space, not on hover — the Phase 15 bug the user hit in ProjectArticle). PR #13030 MERGED 2026-09-09T22:04Z (Toc, Tour + WelcomeTour off react-joyride, Main dismissal rests at collapsed, primary tinted zone); #13024 (Main step 1) MERGED 2026-09-09. NEXT, in order of the ledger: Main STEP 2 as its own PR = push layout at lg on Drawer push's clip-and-sheet (delete dx-main-content-padding / dx-main-intrinsic-size / --main-sidebar-width; move useMainSize, focus.css data-sidebar-*-state, DeckViewport vars onto the clips; decide the rail = collapsed as Drawer.Content size switching rail↔sidebar); the WKWebView touch check for Main step 1 is the user's. Then the Toc consumer (rehype-slug on MarkdownView + a Toc.Nav beside it). Local gotcha after merging main across the protobuf→buf change: delete the gitignored packages/core/protocols/src/proto/gen or protocols:build fails and dependents keep stale dist. Boot graph: +35 KB this PR, 0.35 MB headroom — accepted. STILL OPEN: Phase 13 checkbox selection + delegate-to-agent; Phase 15 promoted-link re-route; Phase 5 decisions (RAC, Stepper→Steps)."
   - name: ui-theme-tree
     status: active
     user: burdon
@@ -637,23 +637,23 @@ projects:
     summary: Extend the DEUS pattern-specification language (`.mdl`) — core syntax, the standard dialect, and the DXOS domain dialect — plus the CodeMirror extension that has to follow any syntax change.
     tasks: packages/reflect/deus/TASKS.md
     design: packages/reflect/deus/docs/DESIGN.md
-    prs: []
-    resume: "Phase 1 (Deus.QA) BUILT: lang/qa.mdl defines flow + step with nine execution rules, the
-      DESIGN.md section draws the test/flow boundary, .agents/skills/running-qa-flows is the agent-side
-      contract, /dxos:qa (dxos plugin, scripts/list-flows.mjs) lists and runs them, and the
-      agent-startable debug port works end to end (DX_DEBUG_PORT -> vite define -> main.tsx ->
-      temp/debug-port.json sidecar; started from main.tsx, NOT plugin-debug, which a plain local serve
-      leaves disabled). markdown QA-1 passes 4/4 and has been run three times; markdown QA-2/QA-3 and
-      chess QA-1 are authored but status: unverified. Also landed on this branch: the MenuExtension
-      capability letting plugins contribute slash-menu commands (one group per plugin, entries name an
-      Operation not a callback) with plugin-debug''s InsertLoremIpsum as the first contributor, and two
-      table-insert fixes in ui-editor. KEY FINDINGS, all in TASKS.md: the pass rate never told us
-      anything (QA-1 was 4/4 while two of four asserts were vacuous); requires: cannot predict
-      runnability so the runner always uses the invoker with a spaceId; any part of a flow without a
-      dual face diverges (cleanup was prose and the two actors picked different mechanisms); and the
-      op key gap is everywhere — chess declares six operations of which one has a runtime counterpart
-      and startGame has none. NEXT: run the three unverified flows, then routine part (a) (reconcile a
-      PLUGIN.mdl against Operation.make), then composer-app/APP.mdl."
+    prs: [12986]
+    resume: "HANDOFF 2026-09-09 from the Default-env session to a DXOS-env session (the only kind that can run
+      the app). PR #12986 is OPEN on claude/composer-qa-framework-50u4gz at d14ef3af or later: main merged,
+      CodeRabbit's 19 findings triaged (10 fixed + resolved, 9 left open as pre-existing spec content for the
+      sweep; triage comment on the PR). Smoke run 1 (report testing/reports/2026-09-09-2047-smoke.md): app:QA-1
+      10/11, after.2 space.delete timed out because the headless helper's Chromium had no proxy flags — fixed in
+      testing/bin/qa-browser.mjs. Smoke run 2 (testing/reports/2026-09-09-2315-smoke.md, session 'qa -- take 2'): 9/11 under the
+      tightened asserts — proxy fix held (0 resets, errors empty through steps), after.2 failed again on a
+      dropped EDGE socket with the identical stranded space, so the DataSpaceManager._tombstoneSpace
+      ordering defect is confirmed app-side. NEXT, in order: (1) fix PR for space.delete (close before
+      tombstone, or tolerate a failed close and still delete + drop the proxy), verified by smoke 11/11;
+      (2) land #12986 — check the Check run
+      and CodeRabbit's re-review, no changeset needed; (3) run --tag nightly (QA-2, QA-3, markdown QA-1/2 are
+      unverified transcriptions and will need corrections like QA-1 did); (4) create the qa branch from main and
+      register the Routines per agents/routines/*.md in the DXOS environment; (5) spec-sync 'sweep 8', which
+      also clears the 8 open review findings; (6) move PLUGIN.mdl files to plugin-xxx/spec/ as its own PR. Full
+      list: packages/reflect/deus/TASKS.md Phase 2 'Later'. Skills to read first: composer-qa, cloud-sandbox."
   - name: agent-composer-introspection
     status: active
     user: burdon

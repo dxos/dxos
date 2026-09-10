@@ -112,4 +112,14 @@ describe('dynamic schema', () => {
     );
     expect(getPropertyMetaAnnotation(property, metaNamespace)).to.deep.eq(metaInfo);
   });
+
+  test('property meta is read through an optional property', () => {
+    const metaNamespace = 'dxos.test';
+    const metaInfo = { maxLength: 10 };
+    const schema = Schema.Struct({
+      status: Schema.String.pipe(PropertyMeta(metaNamespace, metaInfo), Schema.optional),
+    });
+    const [property] = SchemaAST.getPropertySignatures(schema.ast);
+    expect(getPropertyMetaAnnotation(property, metaNamespace)).to.deep.eq(metaInfo);
+  });
 });

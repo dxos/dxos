@@ -23,10 +23,10 @@ The following extension dialects are used in this document.
 |-------------|--------------------------------|
 | `type`      | `org.dxos.mdl.type@1.0`        |
 | `feat`      | `org.dxos.mdl.feat@1.0`        |
-| `test`      | `org.dxos.mdl.test@1.0`        |
+| `scenario`  | `org.dxos.mdl.scenario@1.0`    |
 | `component` | `org.dxos.mdl.component@1.0`   |
 | `op`        | `org.dxos.mdl.op@1.1`          |
-| `flow`      | `org.dxos.mdl.flow@1.0`        |
+| `test`      | `org.dxos.mdl.test@1.0`        |
 
 ## Types
 
@@ -238,7 +238,7 @@ feat F-5: Sequence Selection
 ## Acceptance
 
 ```mdl
-test T-1: New Score defaults
+scenario T-1: New Score defaults
   given: a new Score is created
   then:
     - Score.tempo === 120
@@ -247,7 +247,7 @@ test T-1: New Score defaults
 ```
 
 ```mdl
-test T-2: Add and remove note
+scenario T-2: Add and remove note
   given: a Score with one track and one (empty) Sequence
   when: user toggles cell (pitch=60, startTime=0)
   then: Sequence.notes.length === 1 AND Sequence.notes[0].pitch === 60
@@ -256,14 +256,14 @@ test T-2: Add and remove note
 ```
 
 ```mdl
-test T-3: Remove track cascades sequences
+scenario T-3: Remove track cascades sequences
   given: a Score with a track t1 and 2 sequences referencing t1
   when: user removes track t1
   then: Score.tracks does not contain t1 AND no Sequences reference t1
 ```
 
 ```mdl
-test T-4: Playhead loops
+scenario T-4: Playhead loops
   given: a playing Score with active Sequence.length = 4 beats
   when: time advances past 4 beats
   then: playhead position resets to 0 (mod 4)
@@ -271,11 +271,11 @@ test T-4: Playhead loops
 
 ## QA
 
-Executable flows. Each step carries a human instruction (`do`) and, where the step maps to an
-invocable operation, an agent binding (`invoke`). Report failures by flow and step number.
+Executable tests. Each step carries a human instruction (`do`) and, where the step maps to an
+invocable operation, an agent binding (`invoke`). Report failures by test and step number.
 
 ```mdl
-flow QA-1: Read and write a score as lead-sheet text
+test QA-1: Read and write a score as lead-sheet text
   desc: |
     The agent-facing round-trip: read a Score's lead-sheet text, write a modified version back, and
     read again to confirm. `org.dxos.operation.sequencer.read` / `.write` are not declared as `op`
@@ -290,11 +290,11 @@ flow QA-1: Read and write a score as lead-sheet text
     - collection: a collection in that space, to create into
     - plugin-sequencer is enabled — it is registered as experimental and defaults ON only in dev
       builds (`isDev`); it must be enabled via Settings -> plugin registry otherwise
-    - no Score named "QA Score" exists — ABORT rather than reusing one this flow did not create
+    - no Score named "QA Score" exists — ABORT rather than reusing one this test did not create
     - score: the Score object the human creates in step 1 (named "QA Score"), resolved by the
       runner after that step so later steps can reference it — there is no create operation to
       `capture` it from
-  test:
+  steps:
     - name: Create the score
       do: In the navtree, click + on a collection and choose Score. Name it "QA Score".
       expect: a Score named "QA Score" now exists with tempo 120, no tracks, no sequences

@@ -83,6 +83,9 @@
       "path": "../../plugins/plugin-crm"
     },
     {
+      "path": "../../plugins/plugin-debug"
+    },
+    {
       "path": "../../plugins/plugin-explorer"
     },
     {

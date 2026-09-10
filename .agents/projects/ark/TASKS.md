@@ -1,8 +1,9 @@
 # ark — Tasks
 
-_Resume: PR #13030 OPEN — #13024's CodeRabbit fix (drawer open only while `expanded`, dismissal rests at
-`collapsed`), `Toc`, and `Tour` + `WelcomeTour` off `react-joyride`. #13024 (Main step 1) MERGED
-2026-09-09. Next: land #13030, then `Main` step 2 (push layout at `lg`). Uncommitted: none._
+_Resume: PR #13031 OPEN (outline link followed on click, Enter or Space only). #13030 (Toc, Tour + WelcomeTour off
+react-joyride, Main dismissal rests at `collapsed`) MERGED
+2026-09-09; #13024 (Main step 1) MERGED the same day. Next: `Main` step 2 (push layout at `lg`) as its own
+PR; then the `Toc` consumer. Uncommitted: none._
 
 ## Phase 1: Tree rebuild on Ark (PR #12873)
 
@@ -561,6 +562,20 @@ is supposed to be decoupled from.
 - [ ] **Follow-up: re-route the promoted link to the Tasks tab through something the host owns.**
       The tab is `ProjectArticle`'s state, so the outline has to reach it through an operation or
       the layout rather than a function handed down as Surface data. Tracked 2026-09-02.
+- [x] **Hovering a promoted link followed it** FIXED 2026-09-10 (reported by the user as the card
+      showing "inline"): `Outline` listened for the chip's `DxAnchorActivate`, which `dx-anchor`
+      dispatches on hover intent and on leave as well as on click, so a hover swapped the outline
+      for the task instead of leaving it to the preview popover. The outline now follows a link on
+      click or Enter/Space only, stopping the chip's own activation so no pinned preview opens
+      against the outline that is leaving; hover reaches the app's preview popover untouched.
+      `Outline.stories.tsx` `TestLinkActivation` pins it. Not a breakpoint issue.
+- [x] **The task's hover card threw "Cannot read properties of undefined (reading 'singleSelect')"**
+      FIXED 2026-09-10: `TaskCard` read the status options with the pre-v4 curried `getAnnotation`
+      and `.value` on an `Option` that no longer exists; it now uses `getPropertyMetaAnnotation`,
+      which now looks through an optional property's union (the meta sits on the annotated member,
+      not on the `Schema.optional` wrapper; unit test in echo's `schema.test.ts`). The deck popover's
+      card surface renders a thrown message in the content column (`CardFallback`) instead of the
+      default fallback landing in the icon gutter. `Card.stories.tsx` `_Task` asserts the tag renders.
 - [x] `subject`, `attendableId` and `taskSet` stay on the Surface: those identify what is being
       rendered, which is what `data` is for.
 - [x] The tasks section's Surface was already clean — `{ subject: taskSet, attendableId }`, no

@@ -8,7 +8,7 @@ import React, { type FC, useEffect, useState } from 'react';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import type * as Role from '@dxos/app-framework/Role';
-import { Surface, useCapabilities, useCapability } from '@dxos/app-framework/ui';
+import { Surface, useCapabilities, useCapability, useSurfaceManager } from '@dxos/app-framework/ui';
 import * as AppSpace from '@dxos/app-toolkit/AppSpace';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as NotFound from '@dxos/app-toolkit/NotFound';
@@ -157,18 +157,26 @@ const BindingDebug = ({ role, data }: { role: string; data: Record<string, any> 
 );
 
 /**
- * Dispatches a surface for a cell, falling back to {@link BindingDebug} once no registered surface
+ * Dispatches a surface for a cell, falling back to {@link BindingDebug} while no registered surface
  * matches the binding (after {@link BINDING_SETTLE_DELAY} to tolerate late surface registration).
+ *
+ * Subscribed to the role's candidates and its pending flag, because `useIsAvailable` reads them
+ * without subscribing and is itself what fires the demand that loads a role-gated module: the first
+ * miss is expected, and without the subscription nothing re-renders this cell when the contribution
+ * lands.
  */
 const SurfaceCell = ({ type, data }: { type: Role.Role<any>; data: Record<string, any> }) => {
   const isAvailable = Surface.useIsAvailable();
+  const surfaceManager = useSurfaceManager();
+  useAtomValue(surfaceManager.candidatesAtom(type.role));
+  const pending = useAtomValue(surfaceManager.pendingAtom(type.role));
   const [settled, setSettled] = useState(false);
   useEffect(() => {
     const timer = setTimeout(() => setSettled(true), BINDING_SETTLE_DELAY);
     return () => clearTimeout(timer);
   }, []);
 
-  if (settled && !isAvailable({ type, data })) {
+  if (settled && !pending && !isAvailable({ type, data })) {
     return <BindingDebug role={type.role} data={data} />;
   }
 
@@ -192,17 +200,22 @@ export const ModuleContainer = ({ layout, compact = false }: ModuleContainerProp
   const atomRegistry = useCapability(Capabilities.AtomRegistry);
   const layoutState = useCapability(StorybookCapabilities.LayoutState);
   const { graph } = useAppGraph();
-  const [space] = useSpaces();
+  const spaces = useSpaces();
+  const [space] = spaces;
 
   // A harness may contribute a runtime layout (built by `onInit`); prefer it over the static prop.
   const [layoutAtom] = useCapabilities(StoryLayout.Atom);
   const resolvedLayout = useAtomValue(layoutAtom ?? emptyLayoutAtom) ?? layout ?? [];
 
+  // Falls back to the first space only while the workspace names none that exists: a story may own
+  // the workspace itself (a space picker, say), and pinning the first space would undo its choice.
   useEffect(() => {
-    if (space && AppSpace.getActiveSpaceId(atomRegistry.get(layoutState).workspace) !== space.id) {
+    const activeId = AppSpace.getActiveSpaceId(atomRegistry.get(layoutState).workspace);
+    const active = activeId && spaces.find((space) => space.id === activeId);
+    if (!active && space) {
       atomRegistry.set(layoutState, { ...atomRegistry.get(layoutState), workspace: GraphPath.getSpacePath(space.id) });
     }
-  }, [space, layoutState, atomRegistry]);
+  }, [spaces, space, layoutState, atomRegistry]);
 
   // Materialize object-cell app-graph nodes so object-scoped toolbar/graph actions resolve —
   // the work the deck's navtree normally does on navigation.

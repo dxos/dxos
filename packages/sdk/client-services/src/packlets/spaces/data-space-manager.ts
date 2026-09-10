@@ -768,7 +768,12 @@ export class DataSpaceManager extends Resource {
     if (space) {
       // Separate teardown (resource lifecycle) from the terminal state transition.
       if (space.isOpen) {
-        await space.close(ctx);
+        // The tombstone above and the SpaceDeleted credential both already exist, so the deletion is
+        // committed and the local state must reach it whatever the teardown does. Leaving the swarm
+        // waits on the signaling server, which times out when EDGE is unreachable; letting that
+        // reject would skip the two lines below and strand a closed space in the live list that
+        // `isSpaceDeleted` then refuses to remove on a retry.
+        await space.close(ctx).catch((err) => log.warn('space teardown failed; deleting anyway', { spaceKey, err }));
       }
       await space.delete();
       this._spaces.delete(spaceKey);
