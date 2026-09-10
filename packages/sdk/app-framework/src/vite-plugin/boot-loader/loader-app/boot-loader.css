@@ -419,8 +419,9 @@ body {
   /* Own centre first, then the slot's offset from the row's centre. */
   transform: translateX(calc(-50% + (var(--i) - (var(--n) - 1) / 2) * var(--boot-loader-plugin-slot)));
   transition: transform 600ms cubic-bezier(0.22, 1, 0.36, 1);
-  /* An arrival slides in from one slot to the right of its own; the keyframe names only where it
-     starts, so the end is the slot above, wherever the count has moved it by then.
+  /* An arrival slides in from beyond the right edge of the screen; the keyframe names only where it
+     starts, so the end is the slot above, wherever the count has moved it by then. The row is
+     centred in the viewport, so half its width is the distance to that edge.
      `backwards`, not `both`: a filled animation keeps owning `transform` after it ends and snaps to
      a new slot rather than transitioning, so the icon must hand the property back on landing. */
   animation: boot-loader-plugin-slide 1000ms ease-in-out backwards;
@@ -428,7 +429,7 @@ body {
 
 @keyframes boot-loader-plugin-slide {
   from {
-    transform: translateX(calc(-50% + (var(--i) - (var(--n) - 1) / 2 + 1) * var(--boot-loader-plugin-slot)));
+    transform: translateX(50vw);
   }
 }
 
