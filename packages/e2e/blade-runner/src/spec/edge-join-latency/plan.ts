@@ -88,7 +88,16 @@ export type EdgeJoinLatencyResult = {
   medianSpaceReadyMs: number | undefined;
   medianReplicationMs: number | undefined;
   medianSyncedMs: number | undefined;
+  /** Fastest and slowest joiner: the whiskers either side of the mean's spread. */
+  minSyncedMs: number | undefined;
   maxSyncedMs: number | undefined;
+  /**
+   * Mean and sample spread of `syncedMs` across the joiners that finished. Trended nightly rather
+   * than the median, because a band needs a centre and a width and a median has no width: a run
+   * whose mean held while its spread doubled is a regression the medians above cannot show.
+   */
+  meanSyncedMs: number | undefined;
+  stddevSyncedMs: number | undefined;
   /**
    * Whether each successive joiner took longer than the last. Flat is the expected shape; a rising
    * one means joiners are contending — measured against a degraded local stack, never against dev.
@@ -353,6 +362,10 @@ export class EdgeJoinLatency implements TestPlan<EdgeJoinLatencySpec, EdgeJoinLa
       const summary = this._summarize(edgeUrl, spec, seedMs, measurements, agents);
       fs.writeFileSync(resultPath, `${JSON.stringify(summary, null, 2)}\n`);
       fs.writeFileSync(path.join(params.outDir, 'summary.md'), renderSummary(summary));
+      fs.writeFileSync(
+        path.join(params.outDir, 'join-latency.metrics.json'),
+        `${JSON.stringify(renderMetrics(summary), null, 2)}\n`,
+      );
       unregisterCleanup();
       if (spec.cleanup) {
         await this._cleanup(edgeUrl, spawned, spaceId, identityDids);
@@ -378,6 +391,14 @@ export class EdgeJoinLatency implements TestPlan<EdgeJoinLatencySpec, EdgeJoinLa
       return values.length > 0 ? values[Math.floor(values.length / 2)] : undefined;
     };
     const synced = ok.map((measurement) => measurement.syncedMs ?? 0);
+    const meanSyncedMs =
+      synced.length > 0 ? synced.reduce((total, value) => total + value, 0) / synced.length : undefined;
+    // Sample rather than population: five joiners estimate a spread, they do not constitute one.
+    // Undefined below two, where there is nothing to be spread apart.
+    const stddevSyncedMs =
+      meanSyncedMs === undefined || synced.length < 2
+        ? undefined
+        : Math.sqrt(synced.reduce((total, value) => total + (value - meanSyncedMs) ** 2, 0) / (synced.length - 1));
     return {
       ok: measurements.length === spec.joiners && measurements.every((measurement) => measurement.ok),
       edge: edgeUrl,
@@ -389,7 +410,10 @@ export class EdgeJoinLatency implements TestPlan<EdgeJoinLatencySpec, EdgeJoinLa
       medianSpaceReadyMs: median((measurement) => measurement.spaceReadyMs),
       medianReplicationMs: median((measurement) => measurement.replicationMs),
       medianSyncedMs: median((measurement) => measurement.syncedMs),
+      minSyncedMs: synced.length > 0 ? Math.min(...synced) : undefined,
       maxSyncedMs: synced.length > 0 ? Math.max(...synced) : undefined,
+      meanSyncedMs,
+      stddevSyncedMs,
       // Compared in join order, not sorted: the question is whether each joiner paid more than the
       // one before it.
       monotonicGrowth: synced.length > 1 && synced.every((value, index) => index === 0 || value > synced[index - 1]),
@@ -443,6 +467,34 @@ export class EdgeJoinLatency implements TestPlan<EdgeJoinLatencySpec, EdgeJoinLa
 }
 
 /**
+ * The run as a flat record for `scripts/ci-event.mjs`, which flattens one level and namespaces every
+ * key. Separate from `join-latency.json` because that one embeds `measurements`, and an array of
+ * per-joiner objects lands in an event store as one opaque property rather than as a series.
+ *
+ * Undefined fields are dropped by `JSON.stringify`, so a run that produced no number sends no
+ * property rather than a zero the trend would average in.
+ */
+const renderMetrics = (result: EdgeJoinLatencyResult) => ({
+  ok: result.ok,
+  edge: result.edge,
+  objects: result.objects,
+  joiners: result.joiners,
+  joinersOk: result.measurements.filter((measurement) => measurement.ok).length,
+  // Latency is comparable across runs only where this matches; the trend filters on it.
+  agents: result.agents,
+  seedMs: result.seedMs,
+  meanSyncedMs: result.meanSyncedMs,
+  stddevSyncedMs: result.stddevSyncedMs,
+  medianSyncedMs: result.medianSyncedMs,
+  minSyncedMs: result.minSyncedMs,
+  maxSyncedMs: result.maxSyncedMs,
+  medianAdmittedMs: result.medianAdmittedMs,
+  medianReplicationMs: result.medianReplicationMs,
+  medianSpaceReadyMs: result.medianSpaceReadyMs,
+  monotonicGrowth: result.monotonicGrowth,
+});
+
+/**
  * The run as a CI job summary. Written by the plan rather than by a workflow script so the same
  * table appears locally, and so nothing has to re-derive the verdict from the JSON.
  */
@@ -488,7 +540,7 @@ const renderSummary = (result: EdgeJoinLatencyResult): string => {
     `| — of which, space available | ${ms(result.medianSpaceReadyMs)} | |`,
     `| **Accept to fully synced** | **${ms(result.medianSyncedMs)}** | |`,
     '',
-    `Slowest joiner ${ms(result.maxSyncedMs)}.${
+    `Slowest joiner ${ms(result.maxSyncedMs)}, mean ${ms(result.meanSyncedMs)} ± ${ms(result.stddevSyncedMs)}.${
       result.monotonicGrowth
         ? ' ⚠️ Every joiner took longer than the one before it — joiners are contending, or the stack is degrading.'
         : ''
