@@ -1,6 +1,6 @@
 # ark — Tasks
 
-_Resume: PR #13032 OPEN with auto-merge (cards base, dialogs raised). #13031 (outline link on click/Enter/Space,
+_Resume: PR #13050 OPEN with auto-merge (brand channels + boot loader recolour + flex activation row). #13032 MERGED 2026-09-10 (cards base, dialogs raised). #13031 (outline link on click/Enter/Space,
 task card resolves, popover card fallback) MERGED 2026-09-10. Next: `Main` step 2 (push layout at `lg`);
 then the Phase 15 re-route or the `Toc` consumer. Uncommitted: none._
 
