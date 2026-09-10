@@ -1,4 +1,5 @@
 ---
+# multiple-changesets: a schema-decode guard in @dxos/ai, not the chess-template rewrite
 '@dxos/ai': patch
 ---
 

@@ -1,4 +1,5 @@
 ---
+# multiple-changesets: sandbox client interruptibility, not the chess-template rewrite
 '@dxos/plugin-sandbox': patch
 ---
 
