@@ -84,11 +84,10 @@ export const Default: Story = {
   },
 };
 
-export const Dev: Story = {
+/** The ring alone, as a build without a mark renders it. */
+export const NoMark: Story = {
   ...Default,
-  args: {
-    mark: 'dev',
-  },
+  args: { mark: 'none' },
 };
 
 /**
