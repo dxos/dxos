@@ -6,29 +6,19 @@ import * as Effect from 'effect/Effect';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
-import * as Plugin from '@dxos/app-framework/Plugin';
-import * as Operation from '@dxos/compute/Operation';
-import { EffectEx } from '@dxos/effect';
 import { log } from '@dxos/log';
 import { isTauri } from '@dxos/util';
 
-import { handleExternalUrl } from '../url';
+import { DeckOperation } from '#types';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const operationService = yield* Capabilities.OperationInvoker;
-    const capabilityService = yield* Capability.Service;
-    const pluginService = yield* Plugin.Service;
-    const provideServices = <A, E>(
-      effect: Effect.Effect<A, E, Operation.Service | Capability.Service | Plugin.Service>,
-    ) =>
-      effect.pipe(
-        Effect.provideService(Operation.Service, operationService),
-        Effect.provideService(Capability.Service, capabilityService),
-        Effect.provideService(Plugin.Service, pluginService),
-      );
+    // Invoked rather than run here: the operation declares the services its handler needs and the
+    // process runtime supplies them, which a DOM event listener has no Effect context to do.
+    const operations = yield* Capabilities.OperationInvoker;
+    const project = (url?: URL) => operations.invokePromise(DeckOperation.HandleExternalUrl, { url: url?.href });
 
-    const onPopState = () => void EffectEx.runAndForwardErrors(provideServices(handleExternalUrl()));
+    const onPopState = () => void project();
 
     // Install before handleNavigation()/state-sync push entries on top of the sentinel.
     const sentinelKey = installLeaveTrap();
@@ -69,14 +59,14 @@ export default Capability.makeModule(
         if (launchUrls && launchUrls.length > 0) {
           log('app launched with deep links', { urls: launchUrls });
           for (const urlString of launchUrls) {
-            yield* provideServices(handleDeepLink(urlString, handleExternalUrl));
+            yield* Effect.promise(() => handleDeepLink(urlString, project));
           }
         }
 
         unlistenDeepLink = yield* Effect.promise(() =>
           onOpenUrl((urls) => {
             for (const urlString of urls) {
-              void EffectEx.runAndForwardErrors(provideServices(handleDeepLink(urlString, handleExternalUrl)));
+              void handleDeepLink(urlString, project);
             }
           }),
         );
@@ -85,8 +75,9 @@ export default Capability.makeModule(
       );
     }
 
-    // Forked: awaiting the restore here would hold the startup pass, and the boot loader with it.
-    yield* Effect.forkScoped(provideServices(handleExternalUrl()));
+    // Not awaited: this module sits on the startup pass, and the restore can wait for late-arriving
+    // URL keys, which would hold the whole pass and the boot loader with it.
+    void project();
 
     yield* Effect.addFinalizer(() =>
       Effect.sync(() => {
@@ -147,7 +138,7 @@ const installLeaveTrap = (): string | undefined => {
 const isRedirectPath = (pathname: string): boolean => pathname.startsWith('/redirect/');
 
 /** Handle a deep link URL string. Merges query params into window.location and navigates. */
-const handleDeepLink = Effect.fn(function* (urlString: string, navigate: (url?: URL) => Effect.Effect<any, any, any>) {
+const handleDeepLink = async (urlString: string, navigate: (url?: URL) => Promise<unknown>) => {
   log('deep link received', { url: urlString });
 
   const deepLinkUrl = new URL(urlString);
@@ -171,5 +162,5 @@ const handleDeepLink = Effect.fn(function* (urlString: string, navigate: (url?: 
   current.pathname = fullPath;
   history.replaceState(null, '', current.pathname + current.search);
 
-  yield* navigate(current);
-});
+  await navigate(current);
+};
