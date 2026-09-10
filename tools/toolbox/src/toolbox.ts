@@ -10,7 +10,7 @@ import fs from 'fs';
 import defaultsDeep from 'lodash.defaultsdeep';
 import { existsSync } from 'node:fs';
 import { inspect } from 'node:util';
-import { dirname, join, relative } from 'path';
+import { join, relative } from 'path';
 import sortPackageJson from 'sort-package-json';
 import YAML from 'yaml';
 
@@ -23,8 +23,6 @@ const pick = <T extends object>(obj: T, keys: (keyof T)[]): Partial<T> =>
 const raise = (err: Error) => {
   throw err;
 };
-
-const JS_EXTENSIONS = ['.js', '.jsx', '.ts', '.tsx', '.mjs', '.cjs', '.mts', '.cts'];
 
 /**
  * Export subpaths that ship a bundler plugin; consumed from dist in every runtime (see `pkg-lint`'s
@@ -201,21 +199,6 @@ export class Toolbox {
     }
 
     console.log(table.render());
-  }
-
-  /**
-   * Resolves NX substitutions in the project.json file (e.g {projectRoot}).
-   */
-  resolveProjectOption(project: Project, option: string | undefined): string | undefined {
-    if (!option) {
-      return option;
-    }
-
-    if (typeof option !== 'string') {
-      throw new TypeError(`Expected string, got ${typeof option}`);
-    }
-
-    return option.replace(/\{projectRoot\}/g, project.path);
   }
 
   /**
