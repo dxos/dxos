@@ -86,6 +86,23 @@ export const Default: Story = {
   },
 };
 
+/** The released mark as a channel recolours it — the same filters composer-app's `bootMarkFilter` produces. */
+export const Purple: Story = {
+  ...Default,
+  args: { mark: 'purple' },
+};
+
+export const Rust: Story = {
+  ...Default,
+  args: { mark: 'rust' },
+};
+
+/** The ring alone, as a build without a mark renders it. */
+export const NoMark: Story = {
+  ...Default,
+  args: { mark: 'none' },
+};
+
 /**
  * The activation row on its own, filling slowly: each plugin's icon is appended monochrome as it
  * activates and fades in. Registered-but-never-activated plugins draw nothing.

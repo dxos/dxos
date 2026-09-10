@@ -411,7 +411,7 @@ body {
   /* Monotone — the arrival reads from opacity alone, which keeps the row quiet. */
   color: currentColor;
   opacity: 0.2;
-  animation: boot-loader-plugin-in 500ms ease-out both;
+  animation: boot-loader-plugin-in 1500ms ease-out both;
 }
 
 /* The glyph itself. Styled apart from its slot so either can change without disturbing the other. */
