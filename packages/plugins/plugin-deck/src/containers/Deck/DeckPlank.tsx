@@ -5,6 +5,7 @@
 import React, { type KeyboardEvent, memo, useCallback, useEffect, useMemo, useRef } from 'react';
 
 import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
+import type * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as NotFound from '@dxos/app-toolkit/NotFound';
 import { AppSurface } from '@dxos/app-toolkit/ui';
@@ -14,6 +15,7 @@ import { Attention } from '@dxos/react-ui-attention';
 
 import { Plank } from '#components';
 import { useBreadcrumbs, useDeckSettings } from '#hooks';
+import { meta } from '#meta';
 import { DeckSchema } from '#types';
 
 import { CompanionPlank } from './CompanionPlank';
@@ -22,6 +24,9 @@ import { PlankErrorFallback, PlankLoading } from './PlankFallback';
 import { useDeckPlank } from './useDeckPlank';
 
 const PLANK_LOADING = <PlankLoading />;
+
+/** A plank the URL names but nothing has resolved yet; it has chrome but no subject. */
+const PLANK_LOADING_TYPE = 'dxos.org/type/plank-loading';
 
 export type DeckPlankProps = ThemedClassName<{
   id: string;
@@ -119,12 +124,16 @@ const DeckPlankInner = ({ id, part, fullscreen = false, active, path, classNames
     [path, unresolved],
   );
 
-  // Borrowed for its label and icon; the plank is still the one the URL asked for.
-  const shellNode = node ?? (unresolved ? notFoundNode : undefined);
-  if (!shellNode) {
-    // Absent is indefinite until the restore says it gave up, so the loader is the default.
-    return PLANK_LOADING;
-  }
+  // Stands in for the node until one resolves, so the plank the URL named renders its own chrome.
+  const loadingNode = useMemo<AppGraphNode.Node>(
+    () => ({
+      id,
+      type: PLANK_LOADING_TYPE,
+      properties: { label: ['pending.heading', { ns: meta.profile.key }] },
+      data: null,
+    }),
+    [id],
+  );
 
   const controls = (
     <PlankControls
@@ -135,6 +144,30 @@ const DeckPlankInner = ({ id, part, fullscreen = false, active, path, classNames
       onClick={onAdjust}
     />
   );
+
+  // In fullscreen the toolbar is hidden so the content fills the viewport.
+  const headless = fullscreen;
+
+  // Borrowed for its label and icon; the plank is still the one the URL asked for.
+  const shellNode = node ?? (unresolved ? notFoundNode : undefined);
+  if (!shellNode) {
+    // Absent is indefinite until the restore says it gave up, so the plank waits with its chrome up:
+    // the URL is proof the plank is real, and only its subject is still arriving.
+    return (
+      <Plank
+        ref={rootRef}
+        node={loadingNode}
+        attendableId={id}
+        related={part === 'complementary'}
+        pending
+        controls={controls}
+        content={PLANK_LOADING}
+        headless={headless}
+        onKeyDown={handleKeyDown}
+        classNames={classNames}
+      />
+    );
+  }
 
   const navbarEnd =
     part !== 'complementary' ? (
@@ -150,9 +183,6 @@ const DeckPlankInner = ({ id, part, fullscreen = false, active, path, classNames
       data={{ subject: shellNode.data } satisfies AppSurface.MenuFooterData}
     />
   );
-
-  // In fullscreen the toolbar is hidden so the content fills the viewport.
-  const headless = fullscreen;
 
   return (
     <Plank

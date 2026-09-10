@@ -51,6 +51,8 @@ export type PlankProps = ThemedClassName<{
   fallback?: SurfaceProps['fallback'];
   /** Loading placeholder for the content surface. */
   placeholder?: SurfaceProps['placeholder'];
+  /** Rendered in place of the content surface, for a plank with no subject to render yet. */
+  content?: ReactNode;
   /** Render only the content surface, omitting the toolbar (e.g. fullscreen). */
   headless?: boolean;
   // TODO(burdon): Why is this required?
@@ -82,6 +84,7 @@ export const Plank = forwardRef<HTMLDivElement, PlankProps>(
       articleData,
       fallback,
       placeholder,
+      content,
       headless,
       onKeyDown,
     },
@@ -179,14 +182,16 @@ export const Plank = forwardRef<HTMLDivElement, PlankProps>(
           </Pane.Toolbar>
         )}
         <Pane.Content>
-          <Surface.Surface
-            key={node.id}
-            type={AppSurface.Article}
-            data={data}
-            limit={1}
-            fallback={fallback}
-            placeholder={placeholder}
-          />
+          {content ?? (
+            <Surface.Surface
+              key={node.id}
+              type={AppSurface.Article}
+              data={data}
+              limit={1}
+              fallback={fallback}
+              placeholder={placeholder}
+            />
+          )}
         </Pane.Content>
       </Pane.Root>
     );
