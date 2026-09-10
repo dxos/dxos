@@ -7,8 +7,8 @@ import React from 'react';
 
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { type Channel, CHANNELS, channelMarkFilter } from './channels';
-import { Composer } from './components';
+import { type Channel, CHANNELS, channelMarkFilter } from '../../channels';
+import { Composer } from './Composer';
 
 /** The released mark beside each channel's recolouring of it, in one row, so the set reads together. */
 const DefaultStory = () => {
@@ -32,7 +32,7 @@ const DefaultStory = () => {
 };
 
 const meta = {
-  title: 'ui/brand/Channels',
+  title: 'ui/brand/components/icons/Channels',
   render: DefaultStory,
   decorators: [withTheme(), withLayout({ layout: 'centered' })],
   parameters: { layout: 'centered' },

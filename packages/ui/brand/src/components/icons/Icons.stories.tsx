@@ -8,6 +8,7 @@ import React from 'react';
 import { withTheme } from '@dxos/react-ui/testing';
 import { mx } from '@dxos/ui-theme';
 
+import { type Channel, CHANNELS, channelMarkFilter } from '../../channels';
 import { Composer } from './Composer';
 import { DXNS } from './DXNS';
 import { DXOS } from './DXOS';
@@ -18,51 +19,65 @@ import { MESH } from './MESH';
 
 const Icon = () => null;
 
+type StoryArgs = {
+  /** A prerelease channel's recolouring of the Composer mark; the released mark when absent. */
+  channel?: Channel;
+};
+
+const DefaultStory = ({ channel }: StoryArgs) => {
+  const size = 'w-[192px] h-[192px]';
+  return (
+    <div className='grid grid-cols-3 gap-16'>
+      <>
+        <div className='col-span-full flex justify-center' style={{ filter: channel && channelMarkFilter(channel) }}>
+          <Composer className={mx(size)} />
+        </div>
+      </>
+      <>
+        <ECHO className={mx(size, 'fill-sky-700')} />
+        <HALO className={mx(size, 'fill-violet-700')} />
+        <MESH className={mx(size, 'fill-green-700')} />
+      </>
+      <>
+        <DXNS className={mx(size, 'fill-neutral-700')} />
+        <DXOS className={mx(size, 'fill-neutral-700')} />
+        <KUBE className={mx(size, 'fill-neutral-700')} />
+      </>
+      <>
+        <div className='flex justify-center'>
+          <DXOS className={mx('w-[40px] h-[40px] fill-sky-700')} />
+        </div>
+        <div className='flex justify-center'>
+          <DXOS className={mx('w-[24px] h-[24px] fill-sky-700')} />
+        </div>
+        <div className='flex justify-center'>
+          <DXOS className={mx('w-[16px] h-[16px] fill-sky-700')} />
+        </div>
+      </>
+    </div>
+  );
+};
+
 const meta = {
   title: 'ui/brand/components/Icons',
   component: Icon,
+  render: DefaultStory,
+  argTypes: {
+    channel: { control: 'select', options: [undefined, ...CHANNELS] },
+  },
   decorators: [withTheme()],
   parameters: {
     layout: 'centered',
   },
-} satisfies Meta<typeof Icon>;
+} satisfies Meta<typeof DefaultStory>;
 
 export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const Default: Story = {
-  render: () => {
-    const size = 'w-[192px] h-[192px]';
-    return (
-      <div className='grid grid-cols-3 gap-16'>
-        <>
-          <div className='col-span-full flex justify-center'>
-            <Composer className={mx(size)} />
-          </div>
-        </>
-        <>
-          <ECHO className={mx(size, 'fill-sky-700')} />
-          <HALO className={mx(size, 'fill-violet-700')} />
-          <MESH className={mx(size, 'fill-green-700')} />
-        </>
-        <>
-          <DXNS className={mx(size, 'fill-neutral-700')} />
-          <DXOS className={mx(size, 'fill-neutral-700')} />
-          <KUBE className={mx(size, 'fill-neutral-700')} />
-        </>
-        <>
-          <div className='flex justify-center'>
-            <DXOS className={mx('w-[40px] h-[40px] fill-sky-700')} />
-          </div>
-          <div className='flex justify-center'>
-            <DXOS className={mx('w-[24px] h-[24px] fill-sky-700')} />
-          </div>
-          <div className='flex justify-center'>
-            <DXOS className={mx('w-[16px] h-[16px] fill-sky-700')} />
-          </div>
-        </>
-      </div>
-    );
-  },
+export const Default: Story = {};
+
+/** The set as a channel build shows it: the Composer mark recoloured, the rest as drawn. */
+export const Channel: Story = {
+  args: { channel: 'preview' },
 };
