@@ -9,13 +9,15 @@
  */
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { Fragment, type PropsWithChildren, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
 import { random } from '@dxos/random';
 import { Card, Icon, Popover, useThemeContext } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import {
+  AnchorWidget,
+  type LinkWidgetProps,
   type ObjectLinkProps,
   type ObjectLinksOptions,
   type WidgetDef,
@@ -26,6 +28,8 @@ import {
   decorateMarkdown,
   extendedMarkdown,
   image,
+  linkWidgets,
+  matchPattern,
   objectLinks,
   widgetHost,
   xmlTags,
@@ -68,11 +72,6 @@ const xmlRegistry = {
 // Preview helpers
 //
 
-const handlePreviewLookup = async ({ dxn, label }: PreviewLinkRef): Promise<PreviewLinkTarget> => {
-  random.seed(dxn.split('').reduce((acc: number, char: string) => acc + char.charCodeAt(0), 1));
-  return { label };
-};
-
 const PreviewCard = () => {
   const { target } = useEditorPreview('PreviewCard');
   if (!target) {
@@ -89,20 +88,24 @@ const PreviewCard = () => {
         ]}
       >
         <Popover.Viewport classNames='dx-card-popover-width'>
-          <Card.Root border={false}>
-            <Card.Header>
-              <Card.Block>
-                <Icon icon='ph--file-text--regular' />
-              </Card.Block>
-              <Card.Title>{target.label}</Card.Title>
-              <Popover.Close asChild>
-                <Card.ActionIconButton action='close' />
-              </Popover.Close>
-            </Card.Header>
-            <Card.Row>
-              <Card.Text variant='description'>{target.label}</Card.Text>
-            </Card.Row>
-          </Card.Root>
+          {isPullRequest(target.object) ? (
+            <PullRequestCard pull={target.object} />
+          ) : (
+            <Card.Root border={false}>
+              <Card.Header>
+                <Card.Block>
+                  <Icon icon='ph--file-text--regular' />
+                </Card.Block>
+                <Card.Title>{target.label}</Card.Title>
+                <Popover.Close asChild>
+                  <Card.ActionIconButton action='close' />
+                </Popover.Close>
+              </Card.Header>
+              <Card.Row>
+                <Card.Text variant='description'>{target.label}</Card.Text>
+              </Card.Row>
+            </Card.Root>
+          )}
         </Popover.Viewport>
         <Popover.Arrow />
       </Popover.Content>
@@ -110,12 +113,119 @@ const PreviewCard = () => {
   );
 };
 
-const PreviewBlockCard = ({ dxn, label }: ObjectLinkProps) => {
+/**
+ * The story's stand-in for the app's preview lookup: an object link gets its label back; a GitHub
+ * pull-request URL gets a fixture describing the PR, deterministic per URL.
+ */
+const handlePreviewLookup = async ({ eid, label }: PreviewLinkRef): Promise<PreviewLinkTarget> => {
+  random.seed(eid.split('').reduce((acc: number, char: string) => acc + char.charCodeAt(0), 1));
+  const pull = parsePullRequest(eid);
+  if (pull) {
+    const state = random.helpers.arrayElement(['open', 'merged', 'draft'] as const);
+    const object: PullRequest = {
+      ...pull,
+      title: random.lorem.sentence(),
+      author: random.person.fullName(),
+      state,
+      additions: random.number.int({ min: 5, max: 900 }),
+      deletions: random.number.int({ min: 0, max: 400 }),
+    };
+    return { label: `${pull.owner}/${pull.repo}#${pull.number}`, object };
+  }
+  return { label };
+};
+
+//
+// GitHub pull requests
+//
+
+const GITHUB_PULL = /^https:\/\/github\.com\/([^/\s]+)\/([^/\s]+)\/pull\/(\d+)(?:[/?#].*)?$/;
+
+type PullRequest = {
+  owner: string;
+  repo: string;
+  number: number;
+  url: string;
+  title: string;
+  author: string;
+  state: 'open' | 'merged' | 'draft';
+  additions: number;
+  deletions: number;
+};
+
+const parsePullRequest = (url: string): Pick<PullRequest, 'owner' | 'repo' | 'number' | 'url'> | undefined => {
+  const match = GITHUB_PULL.exec(url);
+  return match ? { owner: match[1], repo: match[2], number: Number(match[3]), url } : undefined;
+};
+
+/**
+ * GitHub pull-request links as chips whose hover card is the PR: `linkWidgets` matched on the URL's
+ * shape, with the same anchor chip object links use — its activation carries the URL to the preview
+ * provider, whose lookup answers with the PR rather than an object.
+ */
+const githubPullRequests = (trigger?: 'hover' | 'click') =>
+  linkWidgets({
+    match: matchPattern(GITHUB_PULL),
+    link: {
+      factory: ({ label, url }: LinkWidgetProps) => new AnchorWidget(label, url, trigger),
+    },
+  });
+
+const isPullRequest = (object: unknown): object is PullRequest =>
+  typeof object === 'object' && object !== null && 'number' in object && 'additions' in object;
+
+const stateHue: Record<PullRequest['state'], string> = { open: 'green', merged: 'purple', draft: 'neutral' };
+
+/** The card for a pull request: state, title, author and the diff size, with a link out to GitHub. */
+const PullRequestCard = ({ pull }: { pull: PullRequest }) => (
+  <Card.Root border={false}>
+    <Card.Header>
+      <Card.Block>
+        <Icon icon={pull.state === 'merged' ? 'ph--git-merge--regular' : 'ph--git-pull-request--regular'} />
+      </Card.Block>
+      <Card.Title>{`${pull.owner}/${pull.repo} #${pull.number}`}</Card.Title>
+      <Popover.Close asChild>
+        <Card.ActionIconButton action='close' />
+      </Popover.Close>
+    </Card.Header>
+    <Card.Row>
+      <Card.Text>{pull.title}</Card.Text>
+    </Card.Row>
+    <Card.Row>
+      <div className='flex items-center gap-2 text-sm'>
+        <span className='dx-tag' data-hue={stateHue[pull.state]}>
+          {pull.state}
+        </span>
+        <span className='text-description'>{pull.author}</span>
+        <span className='text-green-500'>+{pull.additions}</span>
+        <span className='text-red-500'>−{pull.deletions}</span>
+      </div>
+    </Card.Row>
+    <Card.Row>
+      <a className='dx-link text-sm' href={pull.url} target='_blank' rel='noopener noreferrer'>
+        Open on GitHub
+      </a>
+    </Card.Row>
+  </Card.Root>
+);
+
+/**
+ * Module scope, not inside the story: a component type created per render is a new type each time,
+ * and React remounts everything under it on every render — the editor and the preview's own state.
+ */
+const PreviewWrapper = ({ children }: PropsWithChildren) => (
+  <EditorPreviewProvider onLookup={handlePreviewLookup}>
+    {children}
+    <PreviewCard />
+  </EditorPreviewProvider>
+);
+
+const PreviewBlockCard = ({ eid, label }: ObjectLinkProps) => {
   const [text, setText] = useState<string | undefined>();
   useEffect(() => {
-    random.seed(dxn.split('').reduce((acc: number, char: string) => acc + char.charCodeAt(0), 1));
+    random.seed(eid.split('').reduce((acc: number, char: string) => acc + char.charCodeAt(0), 1));
     setText(Array.from({ length: 2 }, () => random.lorem.paragraphs()).join('\n\n'));
-  }, [dxn]);
+  }, [eid]);
   return (
     <Card.Root>
       <Card.Header>
@@ -133,7 +243,7 @@ const PreviewBlockCard = ({ dxn, label }: ObjectLinkProps) => {
   );
 };
 
-/** Obsidian-style height suffix in the image label: `![Sketch|400](echo:/…)`. */
+/** Obsidian-style height suffix in the image label: `![Sketch|400](echo:///…)`. */
 const parseBlockHeight = (label = ''): number | undefined => {
   const match = /\|(\d+)$/.exec(label);
   return match ? Number.parseInt(match[1], 10) : undefined;
@@ -144,14 +254,14 @@ const parseBlockHeight = (label = ''): number | undefined => {
  * encoded in the label, so CM's reserved `estimatedHeight` and the measured height match — the setup
  * that exercises the scroll/cull path (jitter, blank, flash, jump) without needing ECHO.
  */
-const FixedHeightPreview = ({ label, dxn }: ObjectLinkProps) => {
+const FixedHeightPreview = ({ label, eid }: ObjectLinkProps) => {
   const height = parseBlockHeight(label) ?? 200;
   return (
     <div
       style={{ height }}
       className='grid place-items-center border border-separator rounded-md bg-base-surface text-description'
     >
-      {label} · {height}px · {dxn}
+      {label} · {height}px · {eid}
     </div>
   );
 };
@@ -166,15 +276,17 @@ const FixedHeightPreview = ({ label, dxn }: ObjectLinkProps) => {
  * Playwright, `FixedHeightPreview` (plain inert div) jumps identically. It is CM's height-estimate
  * re-anchor, not the widget. See `StubWidget` and CM #1727.
  */
-const SurfaceLikePreview = ({ label, dxn }: ObjectLinkProps) => {
+const SurfaceLikePreview = ({ label, eid }: ObjectLinkProps) => {
   const height = parseBlockHeight(label) ?? 200;
   const ref = useRef<HTMLDivElement>(null);
   const [resolved, setResolved] = useState(false);
+
   // Async resolution, like a Surface looking up + mounting its component.
   useEffect(() => {
     const timer = setTimeout(() => setResolved(true), 30);
     return () => clearTimeout(timer);
   }, []);
+
   // Inner ResizeObserver that does layout work on every size change, like the sketch's auto-fit.
   useEffect(() => {
     const element = ref.current;
@@ -188,13 +300,14 @@ const SurfaceLikePreview = ({ label, dxn }: ObjectLinkProps) => {
     observer.observe(element);
     return () => observer.disconnect();
   }, []);
+
   return (
     <div
       ref={ref}
       style={{ height }}
       className='grid place-items-center border border-separator rounded-md bg-base-surface text-description'
     >
-      {resolved ? `Surface ${label} · ${height}px · ${dxn}` : 'resolving…'}
+      {resolved ? `Surface ${label} · ${height}px · ${eid}` : 'resolving…'}
     </div>
   );
 };
@@ -205,19 +318,17 @@ const SurfaceLikePreview = ({ label, dxn }: ObjectLinkProps) => {
 
 /** The block widgets a `![label](echo:…)` image can render as. */
 const imageWidgets: Record<string, WidgetDef<ObjectLinkProps>> = {
-  card: { Component: PreviewBlockCard },
-  fixed: { estimatedHeight: ({ label }) => parseBlockHeight(label), Component: FixedHeightPreview },
-  surface: { estimatedHeight: ({ label }) => parseBlockHeight(label), Component: SurfaceLikePreview },
-};
-
-type StoryArgs = Pick<ObjectLinksOptions, 'trigger'> & {
-  text?: string;
-  /** XML tags rendered as widgets. */
-  registry?: XmlWidgetRegistry;
-  /** The block widget for `![label](echo:…)`; none leaves images as text. */
-  image?: keyof typeof imageWidgets;
-  /** Answer the anchor chips' hover/click with a preview card. */
-  preview?: boolean;
+  card: {
+    Component: PreviewBlockCard,
+  },
+  fixed: {
+    estimatedHeight: ({ label }) => parseBlockHeight(label),
+    Component: FixedHeightPreview,
+  },
+  surface: {
+    estimatedHeight: ({ label }) => parseBlockHeight(label),
+    Component: SurfaceLikePreview,
+  },
 };
 
 /**
@@ -227,7 +338,19 @@ type StoryArgs = Pick<ObjectLinksOptions, 'trigger'> & {
 // A stable default: a fresh `{}` per render would rebuild the editor every render.
 const NO_REGISTRY: XmlWidgetRegistry = {};
 
-const DefaultStory = ({ text, registry = NO_REGISTRY, image: imageWidget, trigger, preview }: StoryArgs) => {
+type StoryArgs = Pick<ObjectLinksOptions, 'trigger'> & {
+  text?: string;
+  /** XML tags rendered as widgets. */
+  registry?: XmlWidgetRegistry;
+  /** The block widget for `![label](echo:…)`; none leaves images as text. */
+  image?: keyof typeof imageWidgets;
+  /** Answer the anchor chips' hover/click with a preview card. */
+  preview?: boolean;
+  /** Render GitHub pull-request URLs as chips with a PR card. */
+  github?: boolean;
+};
+
+const DefaultStory = ({ text, registry = NO_REGISTRY, image: imageWidget, trigger, preview, github }: StoryArgs) => {
   const { themeMode } = useThemeContext();
   const [widgets, setWidgets] = useState<WidgetState[]>([]);
   const extensions = useMemo(
@@ -239,9 +362,10 @@ const DefaultStory = ({ text, registry = NO_REGISTRY, image: imageWidget, trigge
       image(),
       widgetHost({ setWidgets }),
       xmlTags({ registry }),
-      objectLinks({ trigger, image: imageWidget && imageWidgets[imageWidget] }),
+      objectLinks({ trigger, image: imageWidget ? imageWidgets[imageWidget] : undefined }),
+      github ? githubPullRequests(trigger) : [],
     ],
-    [themeMode, registry, imageWidget, trigger],
+    [themeMode, registry, imageWidget, trigger, github],
   );
   const { parentRef } = useTextEditor({ initialValue: text, extensions }, [extensions]);
 
@@ -254,13 +378,18 @@ const DefaultStory = ({ text, registry = NO_REGISTRY, image: imageWidget, trigge
     </>
   );
 
-  return preview ? (
-    <EditorPreviewProvider onLookup={handlePreviewLookup}>
-      {editor}
-      <PreviewCard />
-    </EditorPreviewProvider>
-  ) : (
-    editor
+  const Wrapper = preview ? PreviewWrapper : Fragment;
+  return (
+    <div className='dx-expand grid grid-cols-2'>
+      <div className='dx-expand'>
+        <Wrapper>{editor}</Wrapper>
+      </div>
+      <div className='dx-expand p-1'>
+        <pre className='dx-fill border border-subdued-separator rounded-sm p-3 overflow-auto'>
+          <code className='font-mono text-description text-sm'>{text}</code>
+        </pre>
+      </div>
+    </div>
   );
 };
 
@@ -271,6 +400,7 @@ const meta = {
     trigger: { control: 'select', options: [undefined, 'hover', 'click'] },
     image: { control: 'select', options: [undefined, ...Object.keys(imageWidgets)] },
     preview: { control: 'boolean' },
+    github: { control: 'boolean' },
   },
   decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
   parameters: { layout: 'fullscreen' },
@@ -306,33 +436,40 @@ export const XmlTags: Story = {
 const previewText = trim`
   # Preview
 
-  This project is part of the [DXOS](echo:/123) SDK.
+  This project is part of the [DXOS](echo:///123) SDK.
 
-  ![DXOS](echo:/123)
+  ![DXOS](echo:///123)
 
-  It consists of [ECHO](echo:/echo), [HALO](echo:/halo), and [MESH](echo:/mesh).
+  It consists of [ECHO](echo:///echo), [HALO](echo:///halo), and [MESH](echo:///mesh).
 
   ## Deep dive
 
-  ![ECHO](echo:/echo)
+  ![ECHO](echo:///echo)
 
   Text
 
 `;
 
 /**
- * Markdown image/link URLs (echo:/…) become widgets via `objectLinks`.
+ * Markdown image/link URLs (echo:///…) become widgets via `objectLinks`.
  * Inline anchors open their preview card on hover (the default) as well as click.
  */
 export const Preview: Story = {
-  args: { text: previewText, image: 'card', preview: true },
+  args: {
+    text: previewText,
+    image: 'card',
+    preview: true,
+  },
 };
 
 /**
  * Anchors with `trigger='click'` only open the preview card on click.
  */
 export const PreviewClickTrigger: Story = {
-  args: { ...Preview.args, trigger: 'click' },
+  args: {
+    ...Preview.args,
+    trigger: 'click',
+  },
 };
 
 const filler = (marker: string) =>
@@ -341,7 +478,7 @@ const filler = (marker: string) =>
 const previewScrollText = [
   '# Preview blocks (scroll test)',
   filler('Above'),
-  '![Sketch|400](echo:/sketch)',
+  '![Sketch|400](echo:///sketch)',
   filler('Below'),
 ].join('\n\n');
 
@@ -351,7 +488,10 @@ const previewScrollText = [
  * to reproduce scroll behavior: scroll the block off-screen and back, and past the viewport edges.
  */
 export const PreviewScroll: Story = {
-  args: { text: previewScrollText, image: 'fixed' },
+  args: {
+    text: previewScrollText,
+    image: 'fixed',
+  },
 };
 
 /**
@@ -360,5 +500,29 @@ export const PreviewScroll: Story = {
  * Surface-backed embeds, and to verify fixes against it.
  */
 export const PreviewScrollSurface: Story = {
-  args: { text: previewScrollText, image: 'surface' },
+  args: {
+    text: previewScrollText,
+    image: 'surface',
+  },
+};
+
+const pullRequestText = trim`
+  # Pull requests
+
+  The drawer landed in [#13007](https://github.com/dxos/dxos/pull/13007), the Main port in
+  [#13024](https://github.com/dxos/dxos/pull/13024) and [#13030](https://github.com/dxos/dxos/pull/13030).
+
+  Not a pull request: [the repo](https://github.com/dxos/dxos) and [an issue](https://github.com/dxos/dxos/issues/1).
+`;
+
+/**
+ * A `linkWidgets` matcher on a URL's shape: GitHub pull-request links become chips, and hovering one
+ * opens a card for the PR from the preview provider's lookup. Other GitHub links stay plain.
+ */
+export const GitHubPullRequests: Story = {
+  args: {
+    text: pullRequestText,
+    preview: true,
+    github: true,
+  },
 };

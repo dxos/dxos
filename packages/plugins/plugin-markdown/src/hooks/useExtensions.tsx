@@ -39,6 +39,7 @@ import {
   substitutions,
   objectLinks,
   widgetHost,
+  WidgetHostOptions,
 } from '@dxos/ui-editor';
 import { type EditorViewMode, type RenderCallback } from '@dxos/ui-editor/types';
 import { isTruthy, safeUrl } from '@dxos/util';
@@ -66,7 +67,7 @@ export type ExtensionsOptions = {
    * with no client (awareness only activates when both a space and an identity are present).
    */
   identity?: Identity.Info | null;
-  setWidgets?: (widgets: WidgetState[]) => void;
+  setWidgets?: WidgetHostOptions['setWidgets'];
   /**
    * Callback when an internal link is clicked, with the link's URL pathname — resolving one to a node
    * walks the app graph, which only a container may reach. `modifiers.shift` reflects the originating
@@ -205,30 +206,30 @@ const createBaseExtensions = ({
           numberedHeadings: settings?.numberedHeadings ? { from: 2 } : undefined,
           // TODO(wittjosiah): For internal links render the label of the object.
           renderLinkButton: onSelectLink && createRenderLink(onSelectLink),
-          // NOTE: `objectLinks()` renders dxn:/echo: links; skip here to avoid double-processing.
+          // NOTE: `objectLinks()` renders eid:/echo: links; skip here to avoid double-processing.
           skip: ({ name, url }) =>
-            ['Link', 'Image'].indexOf(name) !== -1 && (url.startsWith('dxn:') || url.startsWith('echo:')),
+            ['Link', 'Image'].indexOf(name) !== -1 && (url.startsWith('eid:') || url.startsWith('echo:')),
         }),
         linkTooltip({ render: renderLinkTooltip }),
         widgetHost({ setWidgets }),
         objectLinks({
-          image: {
-            // Reserve the persisted height (`![label|404](…)`) up front so the block does not collapse
-            // to the placeholder minimum while the embed resolves (prevents scroll jitter / blank).
-            estimatedHeight: ({ label }: ObjectLinkProps) => (label ? parseEmbedLabel(label).height : undefined),
-            Component: (props: Omit<PreviewComponentProps, 'db'>) => <PreviewComponent {...props} db={space?.db} />,
-          },
           link: {
-            factory: ({ label, dxn }: ObjectLinkProps) => {
+            factory: ({ label, eid }: ObjectLinkProps) => {
               // TODO(burdon): Why support both "#" or "@"?
               // A bare `#`/`@` label is a name-less link; resolve the object's actual label once
               // loaded. The resolver is only created when a db exists so `AnchorWidget.eq` sees the
               // db's arrival as a change and rebuilds the chip.
               const resolver =
-                ['#', '@'].indexOf(label) !== -1 && space?.db ? createAnchorLabelResolver(space.db, dxn) : undefined;
+                ['#', '@'].indexOf(label) !== -1 && space?.db ? createAnchorLabelResolver(space.db, eid) : undefined;
 
-              return new AnchorWidget(label, dxn, undefined, resolver);
+              return new AnchorWidget(label, eid, undefined, resolver);
             },
+          },
+          image: {
+            // Reserve the persisted height (`![label|404](…)`) up front so the block does not collapse
+            // to the placeholder minimum while the embed resolves (prevents scroll jitter / blank).
+            estimatedHeight: ({ label }: ObjectLinkProps) => (label ? parseEmbedLabel(label).height : undefined),
+            Component: (props) => <PreviewComponent {...props} db={space?.db} />,
           },
         }),
         substitutions(),
@@ -275,13 +276,13 @@ const selectionChange = (viewState: ViewState.Manager) => {
 };
 
 /** Resolves an anchor's display label from the linked object (for name-less `#`/`@` links). */
-const createAnchorLabelResolver = (db: Space['db'], dxn: string) => async () => {
-  const eid = EID.tryParse(dxn);
-  if (!eid) {
+const createAnchorLabelResolver = (db: Space['db'], eid: string) => async () => {
+  const parsed = EID.tryParse(eid);
+  if (!parsed) {
     return undefined;
   }
   try {
-    const object = await db.makeRef(eid).load();
+    const object = await db.makeRef(parsed).load();
     return Obj.getLabel(object as Obj.Unknown) ?? undefined;
   } catch {
     return undefined;

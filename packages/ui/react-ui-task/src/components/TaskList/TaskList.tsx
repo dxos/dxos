@@ -729,7 +729,7 @@ const ArtifactTag = ({ artifact }: { artifact: Obj.Unknown }) => {
       // The row is an option: without this the click selects the task as well as opening the card.
       event.stopPropagation();
       const trigger = tagRef.current;
-      trigger?.dispatchEvent(new DxAnchorActivate({ trigger, dxn: Obj.getURI(artifact), label, kind: 'card' }));
+      trigger?.dispatchEvent(new DxAnchorActivate({ trigger, eid: Obj.getURI(artifact), label, kind: 'card' }));
     },
     [artifact, label],
   );

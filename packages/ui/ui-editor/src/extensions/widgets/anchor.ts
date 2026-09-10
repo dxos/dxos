@@ -5,7 +5,7 @@
 import { EditorView, WidgetType } from '@codemirror/view';
 
 /**
- * Inline widget for echo/dxn links (e.g., `[Label](echo:/123)`).
+ * Inline widget for echo/eid links (e.g., `[Label](echo:///123)`).
  * The <dx-anchor> tag is a web component that renders a link chip and popover.
  */
 export class AnchorWidget extends WidgetType {
@@ -35,7 +35,7 @@ export class AnchorWidget extends WidgetType {
     const root = document.createElement('dx-anchor');
     root.classList.add('dx-tag--anchor');
     root.textContent = this._label;
-    root.setAttribute('dxn', this._dxn);
+    root.setAttribute('eid', this._dxn);
     if (this._trigger) {
       root.setAttribute('trigger', this._trigger);
     }

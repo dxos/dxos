@@ -334,8 +334,8 @@ const OutlineContent = composable<HTMLDivElement, OutlineContentProps>((props, f
 
     const follow = (event: Event) => {
       const anchor = event.target instanceof Element ? event.target.closest('dx-anchor') : null;
-      const dxn = anchor?.getAttribute('dxn');
-      if (!anchor || !dxn) {
+      const eid = anchor?.getAttribute('eid');
+      if (!anchor || !eid) {
         return;
       }
       if (event instanceof KeyboardEvent && event.key !== 'Enter' && event.key !== ' ') {
@@ -343,7 +343,7 @@ const OutlineContent = composable<HTMLDivElement, OutlineContentProps>((props, f
       }
       event.preventDefault();
       event.stopPropagation();
-      onSelectLink(dxn);
+      onSelectLink(eid);
     };
 
     root.addEventListener('click', follow, { capture: true });

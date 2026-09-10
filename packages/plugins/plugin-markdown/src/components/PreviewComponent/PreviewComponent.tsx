@@ -19,7 +19,7 @@ import { type WidgetProps } from '@dxos/ui-editor';
 
 import { parseEmbedLabel } from './parse-embed-label';
 
-// Persisted height (px) lives in the image alt text after the label, Obsidian-style: `![label|320](dxn)`.
+// Persisted height (px) lives in the image alt text after the label, Obsidian-style: `![label|320](eid)`.
 
 const formatEmbedLabel = (baseLabel: string, height?: number): string =>
   height != null ? `${baseLabel}|${height}` : baseLabel;
@@ -52,11 +52,11 @@ const maybeScrollIntoView = (element: HTMLElement): void => {
 
 export type PreviewComponentProps = WidgetProps<{
   db?: Database.Database;
-  dxn: string;
+  eid: string;
   label: string;
   block?: boolean;
   suggest?: boolean;
-  onOpen?: (dxn: URI.URI) => void;
+  onOpen?: (eid: URI.URI) => void;
   /** Checks whether the linked object has a contributed surface for a role; defaults to `Surface.useIsAvailable()`. */
   isSurfaceAvailable?: ReturnType<typeof Surface.useIsAvailable>;
 }>;
@@ -68,7 +68,7 @@ export type PreviewComponentProps = WidgetProps<{
  */
 export const PreviewComponent = ({
   db,
-  dxn,
+  eid,
   label: labelProp,
   view,
   range,
@@ -88,7 +88,7 @@ export const PreviewComponent = ({
 
   // Resolve relative to the containing document's own database so space-relative embeds
   // (bare `echo:/<id>` URIs, used so links survive being imported into a new space) resolve.
-  const uri = useMemo(() => (dxn ? URI.make(dxn) : undefined), [dxn]);
+  const uri = useMemo(() => (eid ? URI.make(eid) : undefined), [eid]);
   const ref = useMemo(() => (uri && db ? db.makeRef<Obj.Unknown>(uri) : undefined), [uri, db]);
   const object = useResolveRef(ref);
   // Tuple, not the snapshot itself: binding the array as `subject` made every surface filter's
@@ -106,8 +106,8 @@ export const PreviewComponent = ({
   // Tell the surface it is sized by its container (vs. intrinsic) so content (e.g. an image) can fit.
   const extrinsic = size !== 'min-content';
   const data = useMemo(
-    () => (subject ? { subject, attendableId: dxn, extrinsic } : undefined),
-    [subject, dxn, extrinsic],
+    () => (subject ? { subject, attendableId: eid, extrinsic } : undefined),
+    [subject, eid, extrinsic],
   );
   useEffect(() => {
     setSize(height != null ? height / remSize : 'min-content');
@@ -128,7 +128,7 @@ export const PreviewComponent = ({
       const doc = view.state.doc.toString();
       let open = -1;
       let close = -1;
-      const marker = `](${dxn})`;
+      const marker = `](${eid})`;
       for (let at = doc.indexOf(marker); at >= 0; at = doc.indexOf(marker, at + marker.length)) {
         const start = doc.lastIndexOf('![', at);
         if (start >= 0 && (open < 0 || Math.abs(start - range.from) < Math.abs(open - range.from))) {
@@ -141,7 +141,7 @@ export const PreviewComponent = ({
       }
 
       const { baseLabel: currentBaseLabel } = parseEmbedLabel(doc.slice(open + 2, close));
-      const insert = `![${formatEmbedLabel(currentBaseLabel, Math.round(next * remSize))}](${dxn})`;
+      const insert = `![${formatEmbedLabel(currentBaseLabel, Math.round(next * remSize))}](${eid})`;
       view.dispatch({ changes: { from: open, to: close + marker.length, insert } });
       // After the resized box has laid out, bring its top into frame — but only if that top scrolled
       // out of view. Scroll the element itself (not the CM view) so it works whichever ancestor
@@ -152,7 +152,7 @@ export const PreviewComponent = ({
         }
       });
     },
-    [view, range, dxn, remSize],
+    [view, range, eid, remSize],
   );
 
   const handleOpen = useCallback(
@@ -242,7 +242,7 @@ export const PreviewComponent = ({
 
   return (
     <span className='bg-card-surface text-sm border border-separator rounded-sm p-1'>
-      Invalid object: <span className='font-mono'>{dxn}</span>
+      Invalid object: <span className='font-mono'>{eid}</span>
     </span>
   );
 };

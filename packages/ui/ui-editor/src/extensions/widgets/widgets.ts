@@ -99,14 +99,14 @@ export type WidgetDef<TProps extends WidgetProps = WidgetProps> = {
   debug?: boolean;
 
   /**
-   * Native widget (rendered inline).
-   */
-  factory?: WidgetFactory<TProps>;
-
-  /**
    * React/Solid widget (rendered in portals outside of the editor).
    */
   Component?: FunctionComponent<TProps>;
+
+  /**
+   * Native widget (rendered inline).
+   */
+  factory?: WidgetFactory<TProps>;
 
   /**
    * Reserved block height (px) derived from the widget's props (e.g. parsed from the image label),
@@ -345,7 +345,7 @@ const withCurrentWidgetState = (state: WidgetState): WidgetState => {
 /**
  * Manages the collection of widgets.
  */
-const createWidgetMap = (setWidgets?: (widgets: WidgetState[]) => void, debug = false): WidgetNotifier => {
+const createWidgetMap = (setWidgets?: WidgetHostOptions['setWidgets'], debug = false): WidgetNotifier => {
   const widgets = new Map<string, WidgetState>();
 
   // TODO(burdon): Batch updates?

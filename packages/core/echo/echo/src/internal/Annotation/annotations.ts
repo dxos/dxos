@@ -200,7 +200,7 @@ export const setTypename = (obj: any, typename: URI.URI): void => {
  * @returns Object type URI — either a typename {@link DXN} or an `echo:` reference to a stored Schema object.
  * @returns undefined if the object has no registered type URI (e.g. unresolved query result).
  * @example `dxn:com.example.type.person:1.0.0`
- * @example `echo:/01KKKG2FHWCMTR0BY00GJSVT1X` (stored schema)
+ * @example `echo:///01KKKG2FHWCMTR0BY00GJSVT1X` (stored schema)
  *
  * @internal (use Obj.getTypeURI)
  */

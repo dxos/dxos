@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { AnchorWidget, type XmlWidgetRegistry, getXmlInnerText, getXmlTextChild } from '@dxos/ui-editor';
+import { type XmlWidgetRegistry, getXmlInnerText, getXmlTextChild } from '@dxos/ui-editor';
 
 import {
   FallbackWidget,

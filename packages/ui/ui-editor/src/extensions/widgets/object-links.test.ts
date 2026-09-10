@@ -10,7 +10,7 @@ import { describe, test } from 'vitest';
 import { decorationSetToArray } from '../../util';
 import { extendedMarkdown } from '../language/xml';
 import { type ObjectLinkProps, objectLinks } from './object-links';
-import { type WidgetDef, type WidgetState, widgetHost, widgetRebuildEffect } from './widgets';
+import { type WidgetDef, WidgetHostOptions, type WidgetState, widgetHost, widgetRebuildEffect } from './widgets';
 
 /** Widget whose props are inspectable so tests can assert the id the builder assigned. */
 class TestWidget extends WidgetType {
@@ -63,7 +63,7 @@ const flush = () => new Promise<void>((resolve) => queueMicrotask(resolve));
 const createView = (
   doc: string,
   options: Parameters<typeof objectLinks>[0] = { link: recording, image: recording },
-  setWidgets?: (widgets: WidgetState[]) => void,
+  setWidgets?: WidgetHostOptions['setWidgets'],
 ): EditorView => {
   const parent = document.createElement('div');
   return new EditorView({
@@ -85,16 +85,16 @@ const rebuild = async (view: EditorView): Promise<Descriptor[]> => {
 
 describe('objectLinks', () => {
   test('image node with a matching scheme becomes a block widget', async ({ expect }) => {
-    const view = createView('![label](dxn:123)');
+    const view = createView('![label](eid:123)');
     const [decoration] = await rebuild(view);
     expect(decoration.tag).toBe('image');
     expect(decoration.block).toBe(true);
-    expect(decoration.id).toBe('cm-url-dxn:123-0');
+    expect(decoration.id).toBe('cm-url-eid:123-0');
     view.destroy();
   });
 
   test('link node with a matching scheme becomes an inline widget', async ({ expect }) => {
-    const view = createView('[label](dxn:123)');
+    const view = createView('[label](eid:123)');
     const [decoration] = await rebuild(view);
     expect(decoration.tag).toBe('link');
     expect(decoration.block).toBe(false);
@@ -102,9 +102,9 @@ describe('objectLinks', () => {
   });
 
   test('repeated occurrences of the same url get stable incrementing ids', async ({ expect }) => {
-    const view = createView('![a](dxn:x)\n\n![b](dxn:x)');
+    const view = createView('![a](eid:x)\n\n![b](eid:x)');
     const ids = (await rebuild(view)).map((decoration) => decoration.id);
-    expect(ids).toEqual(['cm-url-dxn:x-0', 'cm-url-dxn:x-1']);
+    expect(ids).toEqual(['cm-url-eid:x-0', 'cm-url-eid:x-1']);
     view.destroy();
   });
 
@@ -115,7 +115,7 @@ describe('objectLinks', () => {
   });
 
   test('an image without a block widget is left as it is', async ({ expect }) => {
-    const view = createView('![a](dxn:x) and [b](dxn:y)', { link: recording });
+    const view = createView('![a](eid:x) and [b](eid:y)', { link: recording });
     const tags = (await rebuild(view)).map((decoration) => decoration.tag);
     expect(tags).toEqual(['link']);
     view.destroy();
@@ -124,7 +124,7 @@ describe('objectLinks', () => {
   // The first-document-render path: no rebuild effect, no edit — decorations must appear from
   // `create()` plus the parse-completion listener alone.
   test('block and inline widgets build on first mount without a rebuild effect', async ({ expect }) => {
-    const view = createView('# Title\n\nsee [x](dxn:123)\n\n![label](dxn:456)\n');
+    const view = createView('# Title\n\nsee [x](eid:123)\n\n![label](eid:456)\n');
     // Deterministic: complete the parse synchronously; the parse-completion listener then rebuilds.
     forceParsing(view, view.state.doc.length, 5_000);
     await flush();
@@ -138,14 +138,14 @@ describe('objectLinks', () => {
   test('component-backed block widget builds and mounts on first render', async ({ expect }) => {
     let widgets: WidgetState[] = [];
     const view = createView(
-      '# Title\n\nsee [x](echo:/123)\n\n![label](echo:/456)\n',
+      '# Title\n\nsee [x](echo:///123)\n\n![label](echo:///456)\n',
       { link: recording, image: { Component: () => null } },
       (next) => (widgets = next),
     );
     forceParsing(view, view.state.doc.length, 5_000);
     await flush();
     expect(decorations(view).some((decoration) => decoration.block)).toBe(true);
-    expect(widgets.map((widget) => widget.id)).toContain('cm-url-echo:/456-0');
+    expect(widgets.map((widget) => widget.id)).toContain('cm-url-echo:///456-0');
     // DOM attachment is not asserted: happy-dom lays out no viewport, so CM defers drawing the
     // block host here; the storybook `MarkdownEditor — WithEmbed` story covers the drawn path.
     expect(widgets[0]?.root).toBeInstanceOf(HTMLElement);

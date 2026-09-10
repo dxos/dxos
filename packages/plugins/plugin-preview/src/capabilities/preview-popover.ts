@@ -22,14 +22,14 @@ import { type PreviewLinkRef, type PreviewLinkTarget } from '@dxos/ui-types';
 const customEventOptions = { capture: true, passive: false };
 
 // TODO(burdon): Factor out?
-const handlePreviewLookup = async (space: Space, { dxn, label }: PreviewLinkRef): Promise<PreviewLinkTarget | null> => {
-  const eid = EID.tryParse(dxn);
-  if (!eid) {
-    // dxn: type URIs and other non-EID refs cannot be resolved to an object.
+const handlePreviewLookup = async (space: Space, { eid, label }: PreviewLinkRef): Promise<PreviewLinkTarget | null> => {
+  const parsed = EID.tryParse(eid);
+  if (!parsed) {
+    // `dxn:` type URIs and other non-EID refs cannot be resolved to an object.
     return null;
   }
   try {
-    const object = await space.db.makeRef(eid).load();
+    const object = await space.db.makeRef(parsed).load();
     const resolvedLabel = Obj.getLabel(object as any, { fallback: 'typename' });
     return { label: resolvedLabel ?? label, object };
   } catch {
@@ -48,7 +48,7 @@ export default Capability.makeModule(
     // open (async lookup) from clobbering a later close that fires while it's in flight.
     let activationSequence = 0;
     const handleAnchorActivate = async ({
-      dxn,
+      eid,
       label,
       trigger,
       kind = 'card',
@@ -85,7 +85,7 @@ export default Capability.makeModule(
       if (!space) {
         return;
       }
-      const result = await handlePreviewLookup(space, { dxn, label });
+      const result = await handlePreviewLookup(space, { eid, label });
       if (!result) {
         return;
       }
@@ -104,7 +104,7 @@ export default Capability.makeModule(
       const title = titleProp ?? Obj.getLabel(result.object) ?? fallbackTitle;
 
       const input = {
-        subjectRef: dxn,
+        subjectRef: eid,
         subject: result.object,
         state: true,
         variant: 'virtual',

@@ -18,6 +18,7 @@ import {
   objectLinks,
   widgetHost,
   xmlTags,
+  WidgetHostOptions,
 } from '@dxos/ui-editor';
 
 import { highlights, highlightTheme } from './highlight';
@@ -26,7 +27,7 @@ export type ItemExtensionOptions = {
   registry?: XmlWidgetRegistry;
   editable?: boolean;
   themeMode?: 'light' | 'dark';
-  setWidgets?: (widgets: WidgetState[]) => void;
+  setWidgets?: WidgetHostOptions['setWidgets'];
 };
 
 /**

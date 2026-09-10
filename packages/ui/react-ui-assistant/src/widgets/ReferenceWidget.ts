@@ -9,13 +9,13 @@ import { Domino } from '@dxos/ui';
 export class ReferenceWidget extends WidgetType {
   constructor(
     private text: string,
-    private dxn: string,
+    private eid: string,
   ) {
     super();
   }
 
   override eq(other: this) {
-    return this.dxn === other.dxn;
+    return this.eid === other.eid;
   }
 
   override toDOM() {
@@ -23,6 +23,6 @@ export class ReferenceWidget extends WidgetType {
     // line on both sides — the sentence the reference sits in stops flowing around it.
     return Domino.of('span')
       .classNames('inline-flex align-baseline')
-      .append(Domino.of('dx-anchor').classNames('dx-tag--anchor').attributes({ dxn: this.dxn }).text(this.text)).root;
+      .append(Domino.of('dx-anchor').classNames('dx-tag--anchor').attributes({ eid: this.eid }).text(this.text)).root;
   }
 }
