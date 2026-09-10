@@ -132,28 +132,44 @@ sufficient. Not worth the churn.
 ## Phase 3: Run it, and record it
 
 The user's ask: a demo video of the template being built, deployed and the MCP server used, with a
-second agent reviewing the video before it is submitted.
+second agent reviewing it before submission.
 
-An earlier note here called this "blocked in the cloud sandbox: needs ... an outbound path for
-`wrangler deploy`". **That was wrong** and is struck: `preview.dxos.network` and
-`api.cloudflare.com` both answer from the shell, Chromium reaches external HTTPS with the proxy
-flags the `cloud-sandbox` skill documents, and the deploy in Phase 2a went through. What is
-actually hard here is CPU, not network.
+**Where this landed: everything except the video, and the video is blocked by a measured cause.**
 
-- [x] **Deploy the MCP server the template describes** — done in Phase 2a, live and answering.
-- [ ] **Walk the template through a live Composer** — create the space from the "Chess MCP on
-      Workers" template, register the deployed URL as an `McpServer`, and ask the chess chat for the
-      best move. Dev server is up on **5173**. First attempt starved: the app boots to
-      `/w/<space>/home` but the shared worker times out opening a leader session at load 15 on 4
-      cores. Retry with the box quiet.
-- [ ] **Screenshot the create-space dialog and the seeded space** (project, five-stage task tree,
-      BRIEF.md, board) — Phase 2's last item, folded in here since it needs the same live app.
-- [ ] **Record the run** as a captioned `.webm` (`recording-demos` skill).
-- [ ] **Have a second agent review the recording** before it is attached.
-- [ ] **Publish the recording** to the `agent-artifacts` bucket (`hosting-artifacts` skill) and link
-      it from the PR body rather than committing it.
+- [x] **Deploy the MCP server the template describes** — built, deployed with
+      `wrangler deploy --temporary` on no Cloudflare account, and answering `initialize`,
+      `tools/list` and both tools over the wire. On the seeded position `best_move` returns `Bxc6`
+      in 1.4s. Kept in [reference/chess-mcp](reference/chess-mcp/).
+- [x] **Walk the template through a live Composer** — the create-space dialog lists "Chess MCP on
+      Workers" with its description alongside the other three templates, and creating from it yields
+      a space of 41 objects with the project, the root task and the five stages. Screenshotted.
+- [ ] **Record it as a captioned `.webm`** — NOT achievable in this container. See below.
+- [ ] **Have a second agent review the recording** — moot without one. A subagent did review the
+      diff adversarially (Phase 2c).
+- [ ] **Publish and link from the PR** — moot without a recording.
 
-### Known-unreachable segments, and the attempts that established it
+### The recording is blocked by the act of recording, and here is the measurement
 
-Nothing is listed here yet. An entry earns its place only after two independent routes have been
-tried and logged in `.claude/.autonomous-log.md`.
+Six attempts. Three separate real causes were found and fixed along the way, and the fourth is the
+one that does not yield:
+
+1. **Orphaned chromium.** Scripts I killed mid-flight left 22 chromium processes starving a 4-core
+   box to load 9. Reaped.
+2. **Contention with the build.** Video capture plus a `moon` dependency-graph rebuild on 4 cores
+   times out the app's boot. Serialised; capture also dropped from 1440x900 to 1280x800.
+3. **A stale vite dep pre-bundle.** After the bot merged `main`, the long-running dev server was
+   still serving a pre-bundled `@dxos/protocols` from before #13036, so
+   `dist/src/buf/index.js` "does not provide an export named `anyPackBare`" and every plugin
+   depending on the client failed to activate — Composer's System Error boundary. Fixed by
+   clearing `node_modules/.vite` and restarting; the error is gone.
+4. **The one that does not yield.** With the above fixed, the app fails at
+   `WorkerConnectionError: Worker connection timed out after 15000ms: opening worker leader
+ session`, then `client services failed to open` and the fatal dialog. **That 15s is a fixed
+   deadline**, and ffmpeg capture (~60% of a core, of four) pushes shared-worker leader election
+   past it. With no capture running, the same walkthrough boots in 24s and completes.
+
+So it is the recording itself that breaks the app here, not the app and not the template. A machine
+with more cores — or a capture path that does not compete with the browser — gets the video with the
+script already written
+([scripts/record-tmp.mjs](../../../.agents/projects/coding-space-template/reference/)); nothing about
+the template needs to change for it.
