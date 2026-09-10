@@ -76,7 +76,6 @@
     "@dxos/eslint-plugin-rules": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/node-std": "workspace:*",
-    "@dxos/protobuf-compiler": "workspace:*",
     "@dxos/toolbox": "workspace:*",
     "@dxos/typings": "workspace:*",
     "@dxos/vite-plugin-import-source": "workspace:*",

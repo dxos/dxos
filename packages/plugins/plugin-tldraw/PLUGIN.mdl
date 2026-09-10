@@ -15,10 +15,10 @@ Each extension is defined in the Appendix or resolved via its URI.
 |-------------|--------------------------------|
 | `type`      | `org.dxos.mdl.type@1.0`        |
 | `feat`      | `org.dxos.mdl.feat@1.0`        |
-| `test`      | `org.dxos.mdl.test@1.0`        |
+| `scenario`  | `org.dxos.mdl.scenario@1.0`    |
 | `component` | `org.dxos.mdl.component@1.0`   |
 | `op`        | `org.dxos.mdl.op@1.1`          |
-| `flow`      | `org.dxos.mdl.flow@1.0`        |
+| `test`      | `org.dxos.mdl.test@1.0`        |
 
 ## Types
 
@@ -284,7 +284,7 @@ feat F-8: Scene DSL and Agent Skill
 ## Acceptance
 
 ```mdl
-test T-1: Create and open sketch
+scenario T-1: Create and open sketch
   given: a Composer space is active
   when: op:createSketch runs with name "My Diagram"
   then:
@@ -294,7 +294,7 @@ test T-1: Create and open sketch
 ```
 
 ```mdl
-test T-2: Drawing persists across reload
+scenario T-2: Drawing persists across reload
   given: a Sketch is open and the user draws a freehand stroke
   when: the page is reloaded and the Sketch is reopened
   then:
@@ -303,7 +303,7 @@ test T-2: Drawing persists across reload
 ```
 
 ```mdl
-test T-3: Collaborative edit
+scenario T-3: Collaborative edit
   given: two peers have the same Sketch open
   when: peer A draws a rectangle
   then:
@@ -312,7 +312,7 @@ test T-3: Collaborative edit
 ```
 
 ```mdl
-test T-4: Read-only slide role
+scenario T-4: Read-only slide role
   given: a Sketch is rendered in role slide
   then:
     - tldraw toolbar is not shown
@@ -321,7 +321,7 @@ test T-4: Read-only slide role
 ```
 
 ```mdl
-test T-5: Grid toggle
+scenario T-5: Grid toggle
   given: SketchSettings panel is open
   when: user enables the grid and selects "dotted"
   then:
@@ -331,7 +331,7 @@ test T-5: Grid toggle
 ```
 
 ```mdl
-test T-6: Attention-aware toolbar
+scenario T-6: Attention-aware toolbar
   given: a Sketch is open in article role alongside other articles
   when: user clicks on the sketch to give it attention
   then: tldraw toolbar becomes visible
@@ -340,7 +340,7 @@ test T-6: Attention-aware toolbar
 ```
 
 ```mdl
-test T-7: Scene DSL round-trip
+scenario T-7: Scene DSL round-trip
   given: an empty Sketch
   when: editSketch upserts a "face" object (head/eyes/smile), then upserts a "hat" object and
     replaces only the "smile" element, then removes the "hat"
@@ -352,7 +352,7 @@ test T-7: Scene DSL round-trip
 ```
 
 ```mdl
-test T-8: Conversational drawing (live AI)
+scenario T-8: Conversational drawing (live AI)
   given: the stories-assistant Sketch storybook (config.remote) with the sketch skill bound
   when: the user prompts "Draw a smiley face", then "Add a hat"
   then:
@@ -367,12 +367,12 @@ test T-8: Conversational drawing (live AI)
 
 ## QA
 
-Executable flows. Each step carries a human instruction (`do`) and, where the step maps to an
-invocable operation, an agent binding (`invoke`). Report failures by flow and step number.
+Executable tests. Each step carries a human instruction (`do`) and, where the step maps to an
+invocable operation, an agent binding (`invoke`). Report failures by test and step number.
 Tldraw is enabled by default in every environment (`plugin-defs.tsx` `getDefaults`).
 
 ```mdl
-flow QA-1: Create a tldraw sketch and draw on it
+test QA-1: Create a tldraw sketch and draw on it
   desc: The core whiteboard round-trip — create a Drawing bound to the tldraw variant, draw, reload.
   actors: both
   covers: [F-1.1, F-1.2, F-2.1, F-2.2, T-1, T-2]
@@ -381,8 +381,8 @@ flow QA-1: Create a tldraw sketch and draw on it
     - an identity exists
     - space: a space is open
     - collection: a collection in that space, to create into
-    - no Drawing named "QA Sketch" exists — ABORT rather than deleting one this flow did not create
-  test:
+    - no Drawing named "QA Sketch" exists — ABORT rather than deleting one this test did not create
+  steps:
     - name: Create the sketch
       do: In the navtree, click + on a collection and choose Sketch (tldraw). Name it "QA Sketch".
       invoke: [op:createSketch] { name: "QA Sketch", variant: "tldraw.com/2" }
@@ -408,7 +408,7 @@ flow QA-1: Create a tldraw sketch and draw on it
 ```
 
 ```mdl
-flow QA-2: Scene DSL round-trip — draw a face, then add a hat without redrawing it
+test QA-2: Scene DSL round-trip — draw a face, then add a hat without redrawing it
   desc: |
     The agent-facing DSL path (F-8 / T-7): create, read, and edit a scene addressed by semantic
     object ids, verifying an edit to one world object leaves siblings untouched.
@@ -419,8 +419,8 @@ flow QA-2: Scene DSL round-trip — draw a face, then add a hat without redrawin
     - an identity exists
     - space: a space is open
     - collection: a collection in that space, to create into
-    - no Drawing named "QA Face" exists — ABORT rather than deleting one this flow did not create
-  test:
+    - no Drawing named "QA Face" exists — ABORT rather than deleting one this test did not create
+  steps:
     - name: Create the sketch
       do: (agent-only step — DSL editing has no human equivalent gesture; a human would draw freehand instead)
       invoke: [op:createSketch] { name: "QA Face", variant: "tldraw.com/2" }
@@ -490,8 +490,8 @@ ext feat
 ```
 
 ```mdl
-ext test
-  uri: org.dxos.mdl.test@1.0
+ext scenario
+  uri: org.dxos.mdl.scenario@1.0
   desc: An acceptance scenario expressed as given / when / then steps.
   fields:
     given?: Step | Step[]

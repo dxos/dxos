@@ -18,6 +18,8 @@ export type FormFieldHeaderProps = {
   add?: { icon?: string; label: string; disabled?: boolean; onClick: () => void };
   /** Extra trailing content placed after the add affordance (e.g. a disclosure). */
   actions?: ReactNode;
+  /** Inline content right after the label text (e.g. a hint icon). */
+  labelEnd?: ReactNode;
 };
 
 /**
@@ -33,12 +35,14 @@ export const FormFieldHeader = ({
   classNames,
   add,
   actions,
+  labelEnd,
 }: FormFieldHeaderProps) => (
   <FormFieldLabel
     standalone
     classNames={classNames}
     id={labelId}
     label={label}
+    labelEnd={labelEnd}
     required={required}
     readonly={readonly}
     button={

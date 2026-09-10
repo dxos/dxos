@@ -18,14 +18,7 @@ import React, {
 
 import { Doc } from '@dxos/echo-doc';
 import { composeRefs, createContext } from '@dxos/react-hooks';
-import {
-  DX_ANCHOR_ACTIVATE,
-  DxAnchorActivate,
-  composable,
-  composableProps,
-  useThemeContext,
-  useTranslation,
-} from '@dxos/react-ui';
+import { composable, composableProps, useThemeContext, useTranslation } from '@dxos/react-ui';
 import {
   type EditorMenuGroup,
   EditorMenuProvider,
@@ -339,21 +332,37 @@ const OutlineContent = composable<HTMLDivElement, OutlineContentProps>((props, f
     }
   }, [view, resolveLinkLabel]);
 
-  // `DxAnchorActivate` does not bubble, so listen during capture on the editor's container.
+  // A link is followed on click or keyboard activation only. The chip's own `DxAnchorActivate`
+  // also fires on hover intent (and on leave, with `state: false`), which the host's preview
+  // popover answers; acting on those would follow the link on hover. The chip dispatches its
+  // activate from its own click/keydown handlers, so stopping the event in capture here keeps a
+  // pinned preview from opening against an outline that is about to leave.
   const [root, setRoot] = useState<HTMLDivElement | null>(null);
   useEffect(() => {
     if (!root || !onSelectLink) {
       return;
     }
 
-    const handler = (event: Event) => {
-      if (event instanceof DxAnchorActivate) {
-        onSelectLink(event.dxn);
+    const follow = (event: Event) => {
+      const anchor = event.target instanceof Element ? event.target.closest('dx-anchor') : null;
+      const dxn = anchor?.getAttribute('dxn');
+      if (!anchor || !dxn) {
+        return;
       }
+      if (event instanceof KeyboardEvent && event.key !== 'Enter' && event.key !== ' ') {
+        return;
+      }
+      event.preventDefault();
+      event.stopPropagation();
+      onSelectLink(dxn);
     };
 
-    root.addEventListener(DX_ANCHOR_ACTIVATE, handler, { capture: true });
-    return () => root.removeEventListener(DX_ANCHOR_ACTIVATE, handler, { capture: true });
+    root.addEventListener('click', follow, { capture: true });
+    root.addEventListener('keydown', follow, { capture: true });
+    return () => {
+      root.removeEventListener('click', follow, { capture: true });
+      root.removeEventListener('keydown', follow, { capture: true });
+    };
   }, [root, onSelectLink]);
 
   return (

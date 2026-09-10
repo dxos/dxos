@@ -10,6 +10,7 @@ import { AgentModule } from './AgentModule';
 import { ChatModule } from './ChatModule';
 import { ContextModule } from './ContextModule';
 import { GraphModule } from './GraphModule';
+import { ProjectModule } from './ProjectModule';
 import { ResearchInputModule } from './ResearchInputModule';
 import { ResearchOutputModule } from './ResearchOutputModule';
 import { TasksModule } from './TasksModule';
@@ -28,6 +29,7 @@ export const StoryRole = {
   Chat: Role.make<Record<string, unknown>>('org.dxos.storybook.role.chat'),
   Context: Role.make<Record<string, unknown>>('org.dxos.storybook.role.context'),
   Graph: Role.make<Record<string, unknown>>('org.dxos.storybook.role.graph'),
+  Project: Role.make<Record<string, unknown>>('org.dxos.storybook.role.project'),
   ResearchInput: Role.make<Record<string, unknown>>('org.dxos.storybook.role.researchInput'),
   ResearchOutput: Role.make<Record<string, unknown>>('org.dxos.storybook.role.researchOutput'),
   Tasks: Role.make<Record<string, unknown>>('org.dxos.storybook.role.tasks'),
@@ -62,6 +64,11 @@ export const moduleSurfaces: Surface.Definition[] = [
     component: GraphModule,
   }),
   Surface.create({
+    id: 'role.project',
+    filter: Surface.makeFilter(StoryRole.Project),
+    component: ProjectModule,
+  }),
+  Surface.create({
     id: 'role.researchInput',
     filter: Surface.makeFilter(StoryRole.ResearchInput),
     component: ResearchInputModule,
@@ -79,3 +86,4 @@ export const moduleSurfaces: Surface.Definition[] = [
 ];
 
 export { AgentModule } from './AgentModule';
+export { SpaceTemplateToolbar } from './SpaceTemplateToolbar';

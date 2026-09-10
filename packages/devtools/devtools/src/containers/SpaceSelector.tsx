@@ -24,7 +24,7 @@ export const SpaceSelector = () => {
 
   const handleSelect = (spaceKey?: PublicKey) => {
     setState((state) => {
-      const haloSpaceKey = identity?.spaceKey;
+      const haloSpaceKey = toPublicKey(identity?.spaceKey);
       if (haloSpaceKey && spaceKey?.equals(haloSpaceKey)) {
         return { ...state, haloSpaceKey: spaceKey, space: undefined, spaceInfo: undefined };
       } else {
@@ -51,8 +51,10 @@ export const SpaceSelector = () => {
     }
   }, []);
 
+  const haloSpaceKey = toPublicKey(identity?.spaceKey);
+
   const getLabel = (key: PublicKey) => {
-    if (identity?.spaceKey && key.equals(identity.spaceKey)) {
+    if (haloSpaceKey && key.equals(haloSpaceKey)) {
       return 'HALO';
     }
     const space = spaces.find((space) => space.key.equals(key));
@@ -60,7 +62,7 @@ export const SpaceSelector = () => {
   };
 
   const spaceKeys = spaces.map((space) => space.key);
-  identity?.spaceKey && spaceKeys.push(identity.spaceKey);
+  haloSpaceKey && spaceKeys.push(haloSpaceKey);
   return (
     <PublicKeySelector
       placeholder='Select space'

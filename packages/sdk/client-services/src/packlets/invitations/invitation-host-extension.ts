@@ -2,6 +2,9 @@
 // Copyright 2022 DXOS.org
 //
 
+import { create } from '@bufbuild/protobuf';
+import { EmptySchema } from '@bufbuild/protobuf/wkt';
+
 import { type Mutex, type MutexGuard, Trigger, scheduleTask } from '@dxos/async';
 import { Context, cancelWithContext } from '@dxos/context';
 import { randomBytes, verify } from '@dxos/crypto';
@@ -10,20 +13,26 @@ import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { InvalidInvitationExtensionRoleError } from '@dxos/protocols';
 import { toPublicKey } from '@dxos/protocols/buf';
-import { getBufService } from '@dxos/protocols/buf-service';
+import { type BufService, getBufService } from '@dxos/protocols/buf-service';
 import { Invitation, Invitation_AuthMethod, Invitation_State } from '@dxos/protocols/buf/dxos/client/invitation_pb';
-import { type ProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { type ProfileDocument } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import {
   type AdmissionRequest,
   type AdmissionResponse,
-  AuthenticationResponse,
-  type InvitationHostService,
-  InvitationOptions,
-} from '@dxos/protocols/proto/dxos/halo/invitations';
+  AuthenticationResponse_Status,
+  AuthenticationResponseSchema,
+  IntroductionResponseSchema,
+  InvitationHostService as InvitationHostServiceDesc,
+  type InvitationOptions,
+  InvitationOptions_Role,
+  InvitationOptionsSchema,
+} from '@dxos/protocols/buf/dxos/halo/invitations_pb';
 import { type ExtensionContext, RpcExtension } from '@dxos/teleport';
 
 import type { FlowLockHolder } from './invitation-state';
-import { fromBufAuthMethod, stateToString, tryAcquireBeforeContextDisposed } from './utils';
+
+type InvitationHostService = BufService<typeof InvitationHostServiceDesc>;
+import { stateToString, tryAcquireBeforeContextDisposed } from './utils';
 
 /// Timeout for the options exchange.
 const OPTIONS_TIMEOUT = 10_000;
@@ -107,6 +116,7 @@ export class InvitationHostExtension
           invariant(!this._remoteOptions, 'Remote options already set.');
           this._remoteOptions = options;
           this._remoteOptionsTrigger.wake();
+          return create(EmptySchema, {});
         },
 
         introduce: async (request) => {
@@ -120,9 +130,7 @@ export class InvitationHostExtension
             this._callbacks.onError(new Error('Incorrect invitationId.'));
             scheduleTask(this._ctx, () => this.close());
             // TODO(dmaretskyi): Better error handling.
-            return {
-              authMethod: fromBufAuthMethod(Invitation_AuthMethod.NONE),
-            };
+            return create(IntroductionResponseSchema, { authMethod: Invitation_AuthMethod.NONE });
           }
 
           log.verbose('guest introduced themselves', { guestProfile: profile });
@@ -132,10 +140,10 @@ export class InvitationHostExtension
             invitation.authMethod === Invitation_AuthMethod.KNOWN_PUBLIC_KEY ? randomBytes(32) : undefined;
 
           log('introduced host invitation');
-          return {
-            authMethod: fromBufAuthMethod(invitation.authMethod),
+          return create(IntroductionResponseSchema, {
+            authMethod: invitation.authMethod,
             challenge: this._challenge,
-          };
+          });
         },
 
         authenticate: async ({ authCode: code, signedChallenge }) => {
@@ -143,7 +151,7 @@ export class InvitationHostExtension
 
           const invitation = this._requireActiveInvitation();
           log.verbose('received authentication request', { authCode: code });
-          let status = AuthenticationResponse.Status.OK;
+          let status = AuthenticationResponse_Status.OK;
 
           this._assertInvitationState([Invitation_State.AUTHENTICATING, Invitation_State.READY_FOR_AUTHENTICATION]);
           this._callbacks.onStateUpdate(Invitation_State.AUTHENTICATING);
@@ -151,15 +159,15 @@ export class InvitationHostExtension
           switch (invitation.authMethod) {
             case Invitation_AuthMethod.NONE: {
               log('authentication not required');
-              return { status: AuthenticationResponse.Status.OK };
+              return create(AuthenticationResponseSchema, { status: AuthenticationResponse_Status.OK });
             }
 
             case Invitation_AuthMethod.SHARED_SECRET: {
               if (invitation.authCode) {
                 if (this.authenticationRetry++ > MAX_OTP_ATTEMPTS) {
-                  status = AuthenticationResponse.Status.INVALID_OPT_ATTEMPTS;
+                  status = AuthenticationResponse_Status.INVALID_OPT_ATTEMPTS;
                 } else if (code !== invitation.authCode) {
-                  status = AuthenticationResponse.Status.INVALID_OTP;
+                  status = AuthenticationResponse_Status.INVALID_OTP;
                 } else {
                   this.authenticationPassed = true;
                 }
@@ -170,7 +178,7 @@ export class InvitationHostExtension
             case Invitation_AuthMethod.KNOWN_PUBLIC_KEY: {
               const guestPublicKey = toPublicKey(invitation.guestKeypair?.publicKey);
               if (!guestPublicKey) {
-                status = AuthenticationResponse.Status.INTERNAL_ERROR;
+                status = AuthenticationResponse_Status.INTERNAL_ERROR;
                 break;
               }
               const isSignatureValid =
@@ -179,26 +187,26 @@ export class InvitationHostExtension
               if (isSignatureValid) {
                 this.authenticationPassed = true;
               } else {
-                status = AuthenticationResponse.Status.INVALID_SIGNATURE;
+                status = AuthenticationResponse_Status.INVALID_SIGNATURE;
               }
               break;
             }
 
             default: {
               log.error('invalid authentication method', { authMethod: invitation.authMethod });
-              status = AuthenticationResponse.Status.INTERNAL_ERROR;
+              status = AuthenticationResponse_Status.INTERNAL_ERROR;
               break;
             }
           }
 
-          if (![AuthenticationResponse.Status.OK, AuthenticationResponse.Status.INVALID_OTP].includes(status)) {
+          if (![AuthenticationResponse_Status.OK, AuthenticationResponse_Status.INVALID_OTP].includes(status)) {
             this._callbacks.onError(new Error(`Authentication failed, with status=${status}`));
             scheduleTask(this._ctx, () => this.close());
-            return { status };
+            return create(AuthenticationResponseSchema, { status });
           }
 
           log('authenticated host invitation', { status });
-          return { status };
+          return create(AuthenticationResponseSchema, { status });
         },
 
         admit: async (request) => {
@@ -235,14 +243,16 @@ export class InvitationHostExtension
       this._invitationFlowLock = await tryAcquireBeforeContextDisposed(this._ctx, this._invitationFlowMutex);
       log.verbose('host lock acquired');
       this._callbacks.onStateUpdate(Invitation_State.CONNECTING);
-      await this.rpc.InvitationHostService.options({ role: InvitationOptions.Role.HOST });
+      await this.rpc.InvitationHostService.options(
+        create(InvitationOptionsSchema, { role: InvitationOptions_Role.HOST }),
+      );
       log.verbose('options sent');
       await cancelWithContext(this._ctx, this._remoteOptionsTrigger.wait({ timeout: OPTIONS_TIMEOUT }));
       log.verbose('options received');
-      if (this._remoteOptions?.role !== InvitationOptions.Role.GUEST) {
+      if (this._remoteOptions?.role !== InvitationOptions_Role.GUEST) {
         throw new InvalidInvitationExtensionRoleError({
           context: {
-            expected: InvitationOptions.Role.GUEST,
+            expected: InvitationOptions_Role.GUEST,
             remoteOptions: this._remoteOptions,
             remotePeerId: context.remotePeerId,
           },

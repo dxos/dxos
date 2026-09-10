@@ -104,17 +104,19 @@ export const ResetDialog = ({
   const handleSaveFeedback = useCallback(
     async (values: SupportOperation.SupportRequest) => {
       if (!onSubmitReport) {
-        return;
+        return false;
       }
 
       setFeedbackOpen(false);
       try {
         await onSubmitReport(values);
         setFeedbackSent(true);
+        return true;
       } catch (err) {
         // The dialog is already showing a fatal error; a second one helps nobody, so the only
         // signal is that the sent confirmation never appears.
         log.warn('crash report not filed', { err });
+        return false;
       }
     },
     [onSubmitReport],

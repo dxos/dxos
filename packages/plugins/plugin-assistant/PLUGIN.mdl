@@ -16,10 +16,10 @@ Each extension is defined in the Appendix or resolved via its URI.
 |-------------|-------------------------------|
 | `type`      | `org.dxos.mdl.type@1.0`      |
 | `feat`      | `org.dxos.mdl.feat@1.0`      |
-| `test`      | `org.dxos.mdl.test@1.0`      |
+| `scenario`  | `org.dxos.mdl.scenario@1.0`  |
 | `component` | `org.dxos.mdl.component@1.0` |
 | `op`        | `org.dxos.mdl.op@1.1`        |
-| `flow`      | `org.dxos.mdl.flow@1.0`      |
+| `test`      | `org.dxos.mdl.test@1.0`      |
 
 ## Types
 
@@ -291,7 +291,7 @@ feat F-7: Execution Trace
 ## Acceptance
 
 ```mdl
-test T-1: Create chat and send message
+scenario T-1: Create chat and send message
   given: a space is open and the assistant plugin is active
   when: user creates a new Chat and sends "Hello"
   then:
@@ -301,7 +301,7 @@ test T-1: Create chat and send message
 ```
 
 ```mdl
-test T-2: Companion chat provisioning
+scenario T-2: Companion chat provisioning
   given: user opens a document with no companion chat
   when: companion panel initializes
   then:
@@ -310,7 +310,7 @@ test T-2: Companion chat provisioning
 ```
 
 ```mdl
-test T-3: Skill binding
+scenario T-3: Skill binding
   given: a chat exists
   when: user binds the "WebSearch" skill key
   then:
@@ -319,7 +319,7 @@ test T-3: Skill binding
 ```
 
 ```mdl
-test T-4: Model provider switch
+scenario T-4: Model provider switch
   given: assistant settings are open
   when: user switches provider from edge to ollama
   then:
@@ -328,7 +328,7 @@ test T-4: Model provider switch
 ```
 
 ```mdl
-test T-5: Run prompt in background
+scenario T-5: Run prompt in background
   given: a database and a prompt string are available
   when: op:RunPromptInNewChat is called with background: true
   then:
@@ -337,7 +337,7 @@ test T-5: Run prompt in background
 ```
 
 ```mdl
-test T-7: Trace panel debug toggle
+scenario T-7: Trace panel debug toggle
   given: trace panel is showing commit-graph view
   when: op:ToggleTracePanelDebug is invoked with no argument
   then:
@@ -347,11 +347,11 @@ test T-7: Trace panel debug toggle
 
 ## QA
 
-Executable flows. Each step carries a human instruction (`do`) and, where the step maps to an
-invocable operation, an agent binding (`invoke`). Report failures by flow and step number.
+Executable tests. Each step carries a human instruction (`do`) and, where the step maps to an
+invocable operation, an agent binding (`invoke`). Report failures by test and step number.
 
 ```mdl
-flow QA-1: Create a chat and send a message
+test QA-1: Create a chat and send a message
   desc: The core assistant round-trip — create a Chat, send a prompt, get a streamed AI response.
   actors: both
   covers: [F-1.1, F-1.2, F-1.3, F-1.4, T-1]
@@ -359,8 +359,8 @@ flow QA-1: Create a chat and send a message
   given:
     - an identity exists
     - space: a space is open
-    - no Chat named "QA Chat" exists — ABORT rather than deleting one this flow did not create
-  test:
+    - no Chat named "QA Chat" exists — ABORT rather than deleting one this test did not create
+  steps:
     - name: Create the chat
       do: Open the assistant panel and click "New chat".
       invoke: [op:CreateChat] { name: "QA Chat" }
@@ -395,7 +395,7 @@ flow QA-1: Create a chat and send a message
 ```
 
 ```mdl
-flow QA-2: Companion chat is provisioned and bound
+test QA-2: Companion chat is provisioned and bound
   desc: op:EnsureCompanionChat + op:BindChatContext — the chat a companioned object gets automatically.
   actors: both
   covers: [F-2.1, F-2.2, F-2.3, T-2]
@@ -404,7 +404,7 @@ flow QA-2: Companion chat is provisioned and bound
     - an identity exists
     - space: a space is open
     - subject: a Document in the space that has no companion chat yet
-  test:
+  steps:
     - name: Ensure the companion chat
       do: Open the document; the companion chat panel initializes automatically.
       invoke: [op:EnsureCompanionChat] { companionTo: $given.subject }
@@ -453,8 +453,8 @@ ext feat
 ```
 
 ```mdl
-ext test
-  uri: org.dxos.mdl.test@1.0
+ext scenario
+  uri: org.dxos.mdl.scenario@1.0
   desc: An acceptance scenario expressed as given / when / then steps.
   fields:
     given?: Step | Step[]

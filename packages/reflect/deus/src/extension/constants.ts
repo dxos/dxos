@@ -11,10 +11,11 @@ export const BLOCK_TYPES = [
   'type',
   'op',
   'feat',
+  'scenario',
   'test',
   'component',
   'service',
   'db',
   'module',
-  'flow',
+  'suite',
 ] as const;

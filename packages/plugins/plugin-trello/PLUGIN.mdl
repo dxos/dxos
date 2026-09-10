@@ -34,10 +34,10 @@ Each extension is defined in the Appendix or resolved via its URI.
 |-------------|--------------------------------|
 | `type`      | `org.dxos.mdl.type@1.0`       |
 | `feat`      | `org.dxos.mdl.feat@1.0`       |
-| `test`      | `org.dxos.mdl.test@1.0`       |
+| `scenario`  | `org.dxos.mdl.scenario@1.0`   |
 | `component` | `org.dxos.mdl.component@1.0`  |
 | `op`        | `org.dxos.mdl.op@1.1`         |
-| `flow`      | `org.dxos.mdl.flow@1.0`       |
+| `test`      | `org.dxos.mdl.test@1.0`       |
 
 ## Types
 
@@ -236,7 +236,7 @@ feat F-6: Resilience
 ## Acceptance
 
 ```mdl
-test T-1: Discover boards — no local side effects
+scenario T-1: Discover boards — no local side effects
   given: a valid Integration with a Trello token
   when: op:GetTrelloBoards is invoked
   then:
@@ -245,7 +245,7 @@ test T-1: Discover boards — no local side effects
 ```
 
 ```mdl
-test T-2: First sync materializes Kanban
+scenario T-2: First sync materializes Kanban
   given: a target with remoteId set, no local Kanban yet
   when: op:SyncTrelloBoard runs
   then:
@@ -255,7 +255,7 @@ test T-2: First sync materializes Kanban
 ```
 
 ```mdl
-test T-3: Pull creates new card
+scenario T-3: Pull creates new card
   given: a remote card with no matching local Expando
   when: pull phase runs
   then:
@@ -265,7 +265,7 @@ test T-3: Pull creates new card
 ```
 
 ```mdl
-test T-4: Pull applies three-way merge
+scenario T-4: Pull applies three-way merge
   given: local name edited by user, remote desc changed since last pull
   when: pull phase runs
   then:
@@ -275,7 +275,7 @@ test T-4: Pull applies three-way merge
 ```
 
 ```mdl
-test T-5: Pull soft-deletes removed card
+scenario T-5: Pull soft-deletes removed card
   given: local Expando exists with a Trello foreign key
   when: that card id is absent from the remote response
   then:
@@ -284,7 +284,7 @@ test T-5: Pull soft-deletes removed card
 ```
 
 ```mdl
-test T-6: Push creates locally-created card
+scenario T-6: Push creates locally-created card
   given: local Expando with no foreign key, listName set to an existing Trello list
   when: push phase runs
   then:
@@ -294,7 +294,7 @@ test T-6: Push creates locally-created card
 ```
 
 ```mdl
-test T-7: Push updates diverged fields
+scenario T-7: Push updates diverged fields
   given: local Expando with foreign key; name diverged from snapshot; desc unchanged
   when: push phase runs
   then:
@@ -303,7 +303,7 @@ test T-7: Push updates diverged fields
 ```
 
 ```mdl
-test T-8: Invalid token fails fast
+scenario T-8: Invalid token fails fast
   given: Integration AccessToken with a malformed token string (no colon)
   when: any Trello API call is attempted
   then: InvalidTrelloAccessTokenError raised; no HTTP request made
@@ -313,11 +313,11 @@ test T-8: Invalid token fails fast
 
 ## QA
 
-Executable flows. Each step carries a human instruction (`do`) and, where the step maps to an
-invocable operation, an agent binding (`invoke`). Report failures by flow and step number.
+Executable tests. Each step carries a human instruction (`do`) and, where the step maps to an
+invocable operation, an agent binding (`invoke`). Report failures by test and step number.
 
 ```mdl
-flow QA-1: Connect Trello, materialize a board, and sync it
+test QA-1: Connect Trello, materialize a board, and sync it
   desc: |
     The core Trello round-trip — discover boards, materialize one as a local Kanban, then
     reconcile cards. Confirming the operations against source surfaced a doc/implementation
@@ -325,7 +325,7 @@ flow QA-1: Connect Trello, materialize a board, and sync it
     `integration: Ref<Integration>`, but the actual `Operation.make` calls
     (`src/types/TrelloOperation.ts`) take `connection: Ref<Connection>`/`SyncInput` from
     `plugin-connector`'s `ConnectorSpec` — the "Integration" model described here has been
-    superseded by the connection/binding model. The flow below follows the real, current schema.
+    superseded by the connection/binding model. The test below follows the real, current schema.
   actors: human
   covers: [F-1.1, F-2.1, T-1, T-2]
   status: blocked
@@ -335,13 +335,13 @@ flow QA-1: Connect Trello, materialize a board, and sync it
     - plugin-trello is enabled — it ships only in the experimental set; it is OFF by default
     - a real Trello API key + user token, obtained from https://trello.com/app-key
     - no Kanban materialized from a Trello board exists yet in the space
-  test:
+  steps:
     - name: Submit Trello credentials
       do: Open Settings -> Connections, choose Trello, and enter the API key and user token.
       expect: a Connection (source Trello) now exists, holding an AccessToken of the form `<apiKey>:<userToken>`
       blocked: |
         No automated run in this environment holds a live Trello API key + user token to submit.
-        Every later step depends on the Connection this step creates, so the flow cannot proceed
+        Every later step depends on the Connection this step creates, so the test cannot proceed
         past here unattended.
       capture: connection
     - name: Discover boards
@@ -399,8 +399,8 @@ ext feat
 ```
 
 ```mdl
-ext test
-  uri: org.dxos.mdl.test@1.0
+ext scenario
+  uri: org.dxos.mdl.scenario@1.0
   desc: An acceptance scenario expressed as given / when / then steps.
   fields:
     given?: Step | Step[]

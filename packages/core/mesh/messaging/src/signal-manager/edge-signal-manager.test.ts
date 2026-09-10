@@ -2,10 +2,15 @@
 // Copyright 2026 DXOS.org
 //
 
+import { create } from '@bufbuild/protobuf';
+import { AnySchema } from '@bufbuild/protobuf/wkt';
 import { describe, test } from 'vitest';
 
 import { Context } from '@dxos/context';
 import { PublicKey } from '@dxos/keys';
+import { fromPublicKey } from '@dxos/protocols/buf';
+import { PeerSchema } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
+import { JoinRequestSchema, MessageSchema } from '@dxos/protocols/buf/dxos/edge/signal_pb';
 
 import { type Message, type PeerInfo } from '../signal-methods';
 import { TestEdgeMesh } from '../testing';
@@ -15,7 +20,8 @@ import { EdgeSignalManager } from './edge-signal-manager';
 
 const TRACE_TAG = 'type:status.update';
 
-const payload = (value: number[]) => ({ type_url: 'dxos.compute.TraceMessage', value: new Uint8Array(value) });
+const payload = (value: number[]) =>
+  create(AnySchema, { typeUrl: 'dxos.compute.TraceMessage', value: new Uint8Array(value) });
 
 /**
  * A capture sink for a single subscription. Delivered messages are classified by shape: a broadcast
@@ -39,20 +45,21 @@ const capture = () => {
  * info; subscriptions (with their capture sinks) are created per-test.
  */
 const setupPeer = async (mesh: TestEdgeMesh, topic: PublicKey, name: string) => {
-  const peer: PeerInfo = { peerKey: PublicKey.random().toHex(), identityDid: `did:test:${name}` };
+  const peer: PeerInfo = create(PeerSchema, { peerKey: PublicKey.random().toHex(), identityDid: `did:test:${name}` });
   const connection = mesh.createConnection({ peerKey: peer.peerKey!, identityDid: peer.identityDid! });
   const manager = new EdgeSignalManager({ edgeConnection: connection as any });
   await manager.open();
-  await manager.join(Context.default(), { topic, peer });
+  await manager.join(Context.default(), create(JoinRequestSchema, { topic: fromPublicKey(topic), peer }));
   return { manager, peer };
 };
 
 // A broadcast addresses its target swarm via `author.swarmKey` (DX-1125).
-const broadcast = (peer: PeerInfo, topic: PublicKey, tags: string[], value: number[]) => ({
-  author: { ...peer, swarmKey: topic.toHex() },
-  tags,
-  payload: payload(value),
-});
+const broadcast = (peer: PeerInfo, topic: PublicKey, tags: string[], value: number[]): Message =>
+  create(MessageSchema, {
+    author: create(PeerSchema, { ...peer, swarmKey: topic.toHex() }),
+    tags,
+    payload: payload(value),
+  });
 
 describe('EdgeSignalManager broadcast (DX-1125)', () => {
   test('delivers a tag broadcast to a subscriber whose tags intersect', async ({ expect }) => {
@@ -67,8 +74,8 @@ describe('EdgeSignalManager broadcast (DX-1125)', () => {
 
     expect(sink.broadcasts).toHaveLength(1);
     expect(sink.broadcasts[0].tags).toContain(TRACE_TAG);
-    expect(sink.broadcasts[0].author.peerKey).toBe(publisher.peer.peerKey);
-    expect([...sink.broadcasts[0].payload.value]).toEqual([1, 2, 3]);
+    expect(sink.broadcasts[0].author?.peerKey).toBe(publisher.peer.peerKey);
+    expect([...(sink.broadcasts[0].payload?.value ?? [])]).toEqual([1, 2, 3]);
     // Broadcasts are not point-to-point messages.
     expect(sink.messages).toHaveLength(0);
   });
@@ -147,7 +154,7 @@ describe('EdgeSignalManager broadcast (DX-1125)', () => {
 
     // The first consumer's registration of TRACE_TAG survives; the released space tag does not.
     expect(first.broadcasts).toHaveLength(1);
-    expect([...first.broadcasts[0].payload.value]).toEqual([5]);
+    expect([...(first.broadcasts[0].payload?.value ?? [])]).toEqual([5]);
 
     await publisher.manager.sendMessage(Context.default(), broadcast(publisher.peer, topic, ['space:test-space'], [6]));
     expect(first.broadcasts).toHaveLength(1);
@@ -180,14 +187,17 @@ describe('EdgeSignalManager broadcast (DX-1125)', () => {
 
     const sink = capture();
     await recipient.manager.subscribeMessages({ peer: recipient.peer, onMessage: sink.onMessage });
-    await sender.manager.sendMessage(Context.default(), {
-      author: sender.peer,
-      recipient: recipient.peer,
-      payload: payload([4, 2]),
-    });
+    await sender.manager.sendMessage(
+      Context.default(),
+      create(MessageSchema, {
+        author: sender.peer,
+        recipient: recipient.peer,
+        payload: payload([4, 2]),
+      }),
+    );
 
     expect(sink.messages).toHaveLength(1);
-    expect(sink.messages[0].author.peerKey).toBe(sender.peer.peerKey);
+    expect(sink.messages[0].author?.peerKey).toBe(sender.peer.peerKey);
     expect(sink.broadcasts).toHaveLength(0);
   });
 });

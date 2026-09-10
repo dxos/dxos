@@ -32,10 +32,11 @@ export const DeviceList = ({
         <Listbox.Root>
           <Listbox.Content aria-label={t('device-list.heading')}>
             {devices.map((device: Device) => {
+              const shellDevice = toShellDevice(device);
               return (
                 <DeviceListItem
-                  key={device.deviceKey.toHex()}
-                  device={toShellDevice(device)}
+                  key={shellDevice.key}
+                  device={shellDevice}
                   onClickEdit={() => onClickEdit?.(device)}
                   {...{ onClickReset, onClickRecover, onClickJoinExisting, connectionState, onAgentDestroy }}
                 />

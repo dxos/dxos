@@ -3,7 +3,7 @@
 //
 
 import { getIndentUnit } from '@codemirror/language';
-import { type ChangeSpec, EditorSelection, type EditorState, type Extension } from '@codemirror/state';
+import { Annotation, type ChangeSpec, EditorSelection, type EditorState, type Extension } from '@codemirror/state';
 import { type Command, type EditorView, keymap } from '@codemirror/view';
 
 import { escapeLinkLabel } from '../../language/markdown';
@@ -26,6 +26,36 @@ export const getActionScope = (state: EditorState): Item[] => {
   const found =
     anchors.length > 0 ? anchors.map((anchor) => tree.find(anchor)) : [tree.find(state.selection.main.from)];
   return found.filter((item): item is Item => item != null);
+};
+
+//
+// Exit.
+//
+
+/** Marks the transaction that turns an empty item into a blank line, so the edit filter admits it. */
+export const exitItemAnnotation = Annotation.define<boolean>();
+
+/**
+ * Enter on an empty, childless item ends the list there: the marker goes, a blank line separates the
+ * list from what follows, and the caret lands on the line below it. The separator is what makes the
+ * next text a paragraph of its own rather than the item's lazy continuation. Mid-list this splits the
+ * list in two. Anything else is left to the markdown continuation.
+ */
+export const exitEmptyItem: Command = (view: EditorView) => {
+  const pos = view.state.selection.main.from;
+  const tree = view.state.facet(treeFacet);
+  const item = tree.find(pos);
+  if (!item || item.children.length > 0 || item.contentRange.from !== item.contentRange.to) {
+    return false;
+  }
+
+  const line = view.state.doc.lineAt(item.contentRange.from);
+  view.dispatch({
+    changes: { from: line.from, to: line.to, insert: '\n' },
+    selection: EditorSelection.cursor(line.from + 1),
+    annotations: exitItemAnnotation.of(true),
+  });
+  return true;
 };
 
 //
@@ -277,6 +307,7 @@ export const commands = (): Extension =>
     //
     {
       key: 'Enter',
+      run: exitEmptyItem,
       shift: (view) => {
         const pos = view.state.selection.main.from;
         const insert = '\n  '; // TODO(burdon): Fix parsing.

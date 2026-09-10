@@ -2,16 +2,24 @@
 // Copyright 2022 DXOS.org
 //
 
+import { create } from '@bufbuild/protobuf';
+import { EmptySchema } from '@bufbuild/protobuf/wkt';
 import { Transform, pipeline } from 'node:stream';
 import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { asyncTimeout, latch } from '@dxos/async';
-import { getBufService } from '@dxos/protocols/buf-service';
-import { type TestService } from '@dxos/protocols/proto/example/testing/rpc';
+import { type BufService, getBufService } from '@dxos/protocols/buf-service';
+import {
+  TestRpcRequestSchema,
+  TestRpcResponseSchema,
+  TestService as TestServiceDesc,
+} from '@dxos/protocols/buf/example/testing/rpc_pb';
 import { createProtoRpcPeer } from '@dxos/rpc';
 
 import { Muxer } from './muxer';
 import { type RpcPort } from './rpc-port';
+
+type TestService = BufService<typeof TestServiceDesc>;
 
 const setupPeers = () => {
   const peer1 = new Muxer();
@@ -47,7 +55,7 @@ const createRpc = (port: RpcPort, handler: TestService['testCall']) =>
     handlers: {
       TestService: {
         testCall: handler,
-        voidCall: async () => {},
+        voidCall: async () => create(EmptySchema, {}),
       },
     },
     port,
@@ -66,7 +74,7 @@ describe('Muxer', () => {
           await peer.createPort('example.extension/rpc', {
             contentType: 'application/x-protobuf; messageType="dxos.rpc.Message"',
           }),
-          async ({ data }) => ({ data }),
+          async ({ data }) => create(TestRpcResponseSchema, { data }),
         ),
       );
     }
@@ -74,7 +82,9 @@ describe('Muxer', () => {
     await Promise.all(
       clients.map(async (client) => {
         await client.open();
-        expect(await client.rpc.TestService.testCall({ data: 'test' })).to.deep.eq({ data: 'test' });
+        expect(await client.rpc.TestService.testCall(create(TestRpcRequestSchema, { data: 'test' }))).to.deep.include({
+          data: 'test',
+        });
         inc();
       }),
     );
@@ -102,7 +112,7 @@ describe('Muxer', () => {
           await peer.createPort('example.extension/rpc1', {
             contentType: 'application/x-protobuf; messageType="dxos.rpc.Message"',
           }),
-          async ({ data }) => ({ data: data + '-rpc1' }),
+          async ({ data }) => create(TestRpcResponseSchema, { data: data + '-rpc1' }),
         ),
         expected: 'test-rpc1',
       });
@@ -111,7 +121,7 @@ describe('Muxer', () => {
           await peer.createPort('example.extension/rpc2', {
             contentType: 'application/x-protobuf; messageType="dxos.rpc.Message"',
           }),
-          async ({ data }) => ({ data: data + '-rpc2' }),
+          async ({ data }) => create(TestRpcResponseSchema, { data: data + '-rpc2' }),
         ),
         expected: 'test-rpc2',
       });
@@ -120,7 +130,9 @@ describe('Muxer', () => {
     await Promise.all(
       clients.map(async ({ client, expected }) => {
         await client.open();
-        expect(await client.rpc.TestService.testCall({ data: 'test' })).to.deep.eq({ data: expected });
+        expect(await client.rpc.TestService.testCall(create(TestRpcRequestSchema, { data: 'test' }))).to.deep.include({
+          data: expected,
+        });
         inc();
       }),
     );
