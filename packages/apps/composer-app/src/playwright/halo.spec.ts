@@ -25,6 +25,8 @@ test.describe('HALO tests', () => {
     await guest.init();
   });
 
+  // Playwright requires the first parameter to be a destructuring pattern and `no-empty-pattern`
+  // forbids an empty one, so a fixture is named and discarded. `browserName` is a plain value.
   test.afterEach(async ({ browserName: _browserName }, testInfo) => {
     // Playwright runs `afterEach` even when `beforeEach` skipped, so neither manager may exist.
     if (host !== undefined && guest !== undefined) {

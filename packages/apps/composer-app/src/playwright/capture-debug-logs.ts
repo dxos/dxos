@@ -7,43 +7,53 @@ import { writeFile } from 'node:fs/promises';
 
 import { type AppManager } from './app-manager';
 
+/** Values of `DX_E2E_CAPTURE_LOGS` that enable capture; `all` also captures passing tests. */
+const ENABLED = new Set(['1', 'true', 'all']);
+
+/** Bounds the read so a wedged page fails the capture rather than the hook's whole timeout. */
+const READ_TIMEOUT = 30_000;
+
 /**
- * Attaches each app's own debug log to the test result.
+ * Writes each app's debug log beside the test's other output.
  *
- * Off unless `DX_E2E_CAPTURE_LOGS` is set; set it to `all` to capture passing tests too, which is
- * what gives a signal found in a failure something to be compared against. The store is written by
- * the observability worker on a
- * timer, so a record emitted moments before the assertion failed may not have been flushed; what
- * this is for is the long window before that, which the console cannot reach because it does not
- * survive the page reload `joinNewIdentity` performs.
+ * Off unless `DX_E2E_CAPTURE_LOGS` is `1`, `true` or `all`; only `all` captures a passing test,
+ * which is what a signal found in a failure can be compared against.
  *
- * Reading it must never turn a passing test red, so a failure to read is attached as text rather
- * than thrown.
+ * The store is flushed by a worker on a timer, so the last moments before an assertion fails may
+ * be missing; what this reaches is the long window before that, including everything before the
+ * page reload, which no console log survives.
+ *
+ * Capture never fails a test: every path is caught, and the reason is written to the file instead.
  */
-export const captureDebugLogs = async (
-  apps: Record<string, AppManager>,
-  testInfo: TestInfo,
-  { onlyOnFailure = true }: { onlyOnFailure?: boolean } = {},
-): Promise<void> => {
-  if (!process.env.DX_E2E_CAPTURE_LOGS) {
+export const captureDebugLogs = async (apps: Record<string, AppManager>, testInfo: TestInfo): Promise<void> => {
+  const mode = process.env.DX_E2E_CAPTURE_LOGS;
+  if (!mode || !ENABLED.has(mode)) {
     return;
   }
-  if (onlyOnFailure && process.env.DX_E2E_CAPTURE_LOGS !== 'all' && testInfo.status === testInfo.expectedStatus) {
+  if (mode !== 'all' && testInfo.status === testInfo.expectedStatus) {
     return;
   }
 
   for (const [name, app] of Object.entries(apps)) {
-    // Written to `outputPath` and attached by path, not as a `body`: a body-only attachment lives
-    // in the report, and the `line` reporter these soaks use never materializes one.
-    const file = testInfo.outputPath(`${name}.log.ndjson`);
     try {
-      const ndjson = await app.readDebugLog();
-      // Written even when empty, because an absent file cannot distinguish "capture never ran"
-      // from "the store had nothing", and that difference costs a whole soak to rediscover.
-      await writeFile(file, ndjson.length > 0 ? ndjson : '{"note":"debug log store was empty"}\n', 'utf8');
+      const ndjson = await Promise.race([
+        app.readDebugLog(),
+        new Promise<string>((_resolve, reject) =>
+          setTimeout(() => reject(new Error(`readDebugLog timed out after ${READ_TIMEOUT}ms`)), READ_TIMEOUT),
+        ),
+      ]);
+      // Written even when empty: an absent file cannot say whether capture ran at all.
+      await writeFile(
+        testInfo.outputPath(`${name}.log.ndjson`),
+        ndjson.length > 0 ? ndjson : '{"note":"debug log store was empty"}\n',
+        'utf8',
+      );
     } catch (err) {
-      await writeFile(file, `{"error":${JSON.stringify(String(err))}}\n`, 'utf8');
+      await writeFile(
+        testInfo.outputPath(`${name}.log.ndjson`),
+        `{"error":${JSON.stringify(String(err))}}\n`,
+        'utf8',
+      ).catch(() => {});
     }
-    await testInfo.attach(`${name}.log.ndjson`, { path: file, contentType: 'application/x-ndjson' });
   }
 };

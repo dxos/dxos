@@ -6,11 +6,9 @@ import { type Browser, type ConsoleMessage, type Locator, type Page, expect } fr
 import os from 'node:os';
 
 import { Trigger } from '@dxos/async';
-import { DEFAULT_STORE_NAME as LOG_STORE_NAME } from '@dxos/log-store-idb';
 import { ShellManager } from '@dxos/shell/testing';
 import { setupPage } from '@dxos/test-utils/playwright';
 
-import { LOG_STORE_DB_NAME } from '../util';
 import { DeckManager } from './plugins';
 
 // TODO(wittjosiah): Normalize data-testids between snake and camel case.
@@ -36,6 +34,14 @@ const workspaceUrl = (workspace: string) => `${INITIAL_URL.replace(/\/$/, '')}/$
 // Only the default space is seeded on every new identity. The exemplar space is skipped on
 // localhost (see OnboardingPlugin `generateSampleSpace`), which is where e2e tests run.
 export const INITIAL_SPACE_COUNT = 1;
+// `LOG_STORE_DB_NAME` and the store name, restated for the reason given above rather than imported
+// through `src/util`, whose barrel drags the client and observability graphs into every worker.
+const LOG_STORE_DB_NAME = 'composer-logs';
+const LOG_STORE_NAME = 'logs';
+
+/** Caps one read well under the store's own retention, which allows tens of megabytes. */
+const LOG_READ_MAX_BYTES = 32 * 1024 * 1024;
+
 /** A subduction sync round is fire-and-wait with this deadline and no per-round re-ask. */
 const SYNC_ROUND_TIMEOUT = 60_000;
 
@@ -112,41 +118,67 @@ export class AppManager {
   }
 
   /**
-   * Reads the app's own debug log store, which the observability worker persists to IndexedDB.
+   * Reads the app's own debug log store as NDJSON.
    *
-   * The console carries only what the browser keeps and is lost across a reload; this store holds
-   * every record at DEBUG and above — `log.verbose` included, since VERBOSE outranks DEBUG — and
-   * survives the reload `joinNewIdentity` performs, which is the window most of these failures
-   * occur in. Returns NDJSON, empty when the store has not been created yet.
+   * The console keeps a fraction of what is logged and none of it across a reload, which is where
+   * the HALO failures live. This store holds every record at DEBUG and above — `log.verbose`
+   * included, since VERBOSE outranks DEBUG — and survives the reload.
+   *
+   * Returns the most recent `maxBytes`, newest chunks first-served, prefixed with a marker when
+   * older records were dropped. Local diagnostics only: nothing uploads `test-results`.
    */
-  async readDebugLog(): Promise<string> {
+  async readDebugLog({ maxBytes = LOG_READ_MAX_BYTES }: { maxBytes?: number } = {}): Promise<string> {
     return this.page.evaluate(
-      async ({ dbName, storeName }) => {
+      async ({ dbName, storeName, maxBytes }) => {
         const request = indexedDB.open(dbName);
         const db = await new Promise<IDBDatabase | undefined>((resolve) => {
           request.onsuccess = () => resolve(request.result);
           request.onerror = () => resolve(undefined);
-          // A store the app never created: let it go rather than provoking an upgrade from here.
+          // Fires only when the database does not exist: abort rather than create one from here.
           request.onupgradeneeded = () => {
             request.transaction?.abort();
             resolve(undefined);
           };
         });
-        if (!db || !db.objectStoreNames.contains(storeName)) {
+        if (!db) {
           return '';
         }
         try {
+          if (!db.objectStoreNames.contains(storeName)) {
+            // Named explicitly: reporting this as "empty" would be a confident wrong answer if the
+            // app ever passes a different `storeName`.
+            return `{"error":"no object store ${storeName}; found ${JSON.stringify([...db.objectStoreNames])}"}`;
+          }
           const rows = await new Promise<{ lines?: string }[]>((resolve, reject) => {
             const query = db.transaction(storeName, 'readonly').objectStore(storeName).getAll();
             query.onsuccess = () => resolve(query.result ?? []);
             query.onerror = () => reject(query.error);
           });
-          return rows.map((row) => row.lines ?? '').join('');
+          // Accumulated newest-first and capped rather than joined outright: retention allows tens
+          // of megabytes, and one string that size can exceed the engine's maximum string length.
+          const kept: string[] = [];
+          let bytes = 0;
+          let dropped = 0;
+          for (let index = rows.length - 1; index >= 0; index--) {
+            const chunk = rows[index]?.lines ?? '';
+            if (bytes + chunk.length > maxBytes) {
+              dropped = index + 1;
+              break;
+            }
+            kept.push(chunk);
+            bytes += chunk.length + 1;
+          }
+          kept.reverse();
+          // Chunks are stored as `batch.join('\n')` with no trailing newline, so they must be
+          // rejoined with one: concatenating them glues a record onto its neighbour, and every
+          // reader of this format skips unparseable lines silently.
+          const ndjson = kept.join('\n');
+          return dropped > 0 ? `{"note":"dropped ${dropped} older chunks over ${maxBytes} bytes"}\n${ndjson}` : ndjson;
         } finally {
           db.close();
         }
       },
-      { dbName: LOG_STORE_DB_NAME, storeName: LOG_STORE_NAME },
+      { dbName: LOG_STORE_DB_NAME, storeName: LOG_STORE_NAME, maxBytes },
     );
   }
 
