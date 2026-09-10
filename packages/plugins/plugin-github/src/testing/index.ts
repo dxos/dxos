@@ -3,3 +3,4 @@
 //
 
 export * from './fixtures';
+export * from './plugin';

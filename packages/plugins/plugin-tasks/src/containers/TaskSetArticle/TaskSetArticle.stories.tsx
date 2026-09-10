@@ -14,8 +14,11 @@ import { Filter, Obj, Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { DXN } from '@dxos/keys';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
-import { GitHubPlugin } from '@dxos/plugin-github';
+import * as GitHubPlugin from '@dxos/plugin-github/GitHubPlugin';
+import { FixtureLinkSourcePlugin } from '@dxos/plugin-github/testing';
 import * as MarkdownEvents from '@dxos/plugin-markdown/MarkdownEvents';
+import { PreviewEvents } from '@dxos/plugin-preview';
+import { PreviewPlugin } from '@dxos/plugin-preview/testing';
 import { corePlugins } from '@dxos/plugin-testing';
 import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { type Space, useSpaces } from '@dxos/react-client/echo';
@@ -157,11 +160,15 @@ const meta = {
         // without it every invoke (move included) dies with NoHandlerError.
         TasksPlugin.make(),
         StoryTaskActionPlugin(),
-        // Contributes the editor extensions the description field takes: `#123` decoration and
-        // link chips. Its module activates on the markdown start event, fired here at setup.
+        // Contributes the editor extensions the description field takes (`#123` decoration and
+        // link chips) and the resolver behind a chip's hover card; PreviewPlugin owns the popover
+        // and the storybook layout renders it. Both activate on start events fired here at setup;
+        // the fixture source answers the resolver without the network.
         GitHubPlugin.make(),
+        PreviewPlugin.make(),
+        FixtureLinkSourcePlugin(),
       ],
-      setupEvents: [MarkdownEvents.Start],
+      setupEvents: [MarkdownEvents.Start, PreviewEvents.Start],
     }),
   ],
   parameters: {
@@ -180,17 +187,30 @@ export const Default: Story = {};
 /**
  * A description is edited with the extensions other plugins contribute: selecting the task whose
  * description links a pull request opens it in the edit pane, where plugin-github's matcher has
- * turned the URL into an anchor chip carrying it.
+ * turned the URL into an anchor chip, and the row shows the same chip through the contributed
+ * resolver's match. Hovering a chip resolves it through the plugin's link resolver, and the popover
+ * shows the pull request's card.
  */
 export const DescriptionLinks: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await userEvent.click(await canvas.findByText('Finalize roast curve', undefined, { timeout: 10_000 }));
-    await waitFor(
-      () =>
-        expect(canvasElement.querySelector('dx-anchor[eid="https://github.com/dxos/dxos/pull/13007"]')).toBeTruthy(),
-      { timeout: 10_000 },
-    );
+    // Two chips carrying the URL: the row's (a React markdown renderer, which sets `eid` as a
+    // property) and the edit pane's (CodeMirror, which sets it as an attribute).
+    const url = 'https://github.com/dxos/dxos/pull/13007';
+    const chips = () =>
+      Array.from(canvasElement.querySelectorAll<HTMLElement>('dx-anchor')).filter(
+        (anchor) => anchor.getAttribute('eid') === url || ('eid' in anchor && anchor.eid === url),
+      );
+    await waitFor(() => expect(chips()).toHaveLength(2), { timeout: 10_000 });
+
+    await userEvent.hover(chips()[0]);
+    await waitFor(() => expect(document.querySelector('[data-id="pullRequestCard"]')).toBeTruthy(), {
+      timeout: 10_000,
+    });
+    await expect(
+      within(document.body).findByText('Open on GitHub', undefined, { timeout: 10_000 }),
+    ).resolves.toBeTruthy();
   },
 };
 

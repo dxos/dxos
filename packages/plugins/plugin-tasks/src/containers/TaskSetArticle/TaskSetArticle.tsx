@@ -19,7 +19,7 @@ import { Task, TaskSet } from '@dxos/types';
 import { meta } from '#meta';
 import { TaskOperation, TasksCapabilities } from '#types';
 
-import { useMarkdownExtensions, useTaskActions } from '../../hooks';
+import { useDescriptionComponents, useMarkdownExtensions, useTaskActions } from '../../hooks';
 
 export type TaskSetArticleProps = AppSurface.ObjectArticleProps<TaskSet.TaskSet>;
 
@@ -89,6 +89,7 @@ export const TaskSetArticle = ({ role, attendableId, subject: taskSet }: TaskSet
   );
 
   const descriptionExtensions = useMarkdownExtensions();
+  const descriptionComponents = useDescriptionComponents();
 
   const content = (
     <TaskList.Root
@@ -96,6 +97,7 @@ export const TaskSetArticle = ({ role, attendableId, subject: taskSet }: TaskSet
       hierarchical
       selectable
       showDescription
+      descriptionComponents={descriptionComponents}
       showEstimates
       checked={checked}
       getTaskActions={getTaskActions}

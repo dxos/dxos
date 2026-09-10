@@ -47,6 +47,7 @@ import { translationKey } from '#translations';
 
 import { type TaskPlacement, subtreeIds } from './hierarchy';
 import { STATUS_ORDER, UNSET_ICON, estimateTextStyle, priorityIcon, priorityTextStyle } from './status-icons';
+import { type TaskDescriptionProps } from './TaskDescription';
 import { TaskTreeContent } from './TaskTreeContent';
 import { type TaskNode, buildTaskForest, flattenVisibleTasks } from './tree-model';
 
@@ -64,6 +65,8 @@ type TaskListContextValue = {
   showGroupLabels: boolean;
   showOrdinals: boolean;
   showDescription: boolean;
+  /** Renderers for a row's description beyond its own — a host's link anchor, say. */
+  descriptionComponents?: TaskDescriptionProps['components'];
   /** Render each task's estimate beside the priority control. */
   showEstimates: boolean;
   hierarchical: boolean;
@@ -169,6 +172,8 @@ type TaskListRootProps = PropsWithChildren<{
    * single-line list (e.g. the chat strip) keeps one row per task.
    */
   showDescription?: boolean;
+  /** Renderers for a row's description beyond its own — a host's link anchor, say. */
+  descriptionComponents?: TaskDescriptionProps['components'];
 
   //
   // Callbacks. Wiring one is what enables the affordance that calls it — the list never writes.
@@ -217,6 +222,7 @@ const TaskListRoot = ({
   showGroupLabels = true,
   showOrdinals = false,
   showDescription = false,
+  descriptionComponents,
   showEstimates = false,
   hierarchical = false,
   collapsed,
@@ -294,6 +300,7 @@ const TaskListRoot = ({
       showGroupLabels={showGroupLabels}
       showOrdinals={showOrdinals}
       showDescription={showDescription}
+      descriptionComponents={descriptionComponents}
       showEstimates={showEstimates}
       hierarchical={hierarchical}
       debug={debug}
@@ -410,6 +417,7 @@ const TaskListContent = composable<HTMLUListElement>((props, forwardedRef) => {
     showGroupLabels,
     showOrdinals,
     showDescription,
+    descriptionComponents,
     showGutter,
     gridTemplateColumns,
     isCollapsed,
@@ -445,6 +453,7 @@ const TaskListContent = composable<HTMLUListElement>((props, forwardedRef) => {
   // group is a `group` node the machine splices out of its own topology.
   return (
     <TaskTreeContent
+      descriptionComponents={descriptionComponents}
       debug={debug}
       hierarchical={hierarchical}
       groupByStatus={grouping}

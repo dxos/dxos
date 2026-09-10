@@ -314,7 +314,6 @@ const useMarkdownStreamTextEditor = (
                 (node.name === 'Link' || node.name === 'Image') &&
                 (node.url.startsWith('dxn:') || node.url.startsWith('echo:')),
             }),
-            // TODO(burdon): Make optional; Removes need for '\n\n'.
             lineSpacing(),
             xmlBlockDecoration({
               tag: 'prompt',
@@ -327,7 +326,6 @@ const useMarkdownStreamTextEditor = (
             widgetHost({ setWidgets, bookmarks: ['prompt'] }),
             xmlTags({ registry }),
             objectLinks(),
-            // TODO(burdon): Folding gets progressively off due to some widgets?
             turnFolding({ source: turnSource }),
             scroller({ overScroll: 80, autoScroll: options?.autoScroll }),
             options?.typewriter &&

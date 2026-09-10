@@ -29,7 +29,10 @@ const resolveLink = (
   context: PreviewCapabilities.PreviewLinkContext,
 ): Effect.Effect<PreviewLinkTarget | undefined> =>
   Effect.gen(function* () {
-    for (const resolve of resolvers) {
+    for (const { match, resolve } of resolvers) {
+      if (!match(ref.eid)) {
+        continue;
+      }
       const target = yield* resolve(ref, context);
       if (target) {
         return target;

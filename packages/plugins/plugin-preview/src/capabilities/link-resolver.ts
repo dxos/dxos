@@ -17,21 +17,24 @@ import { PreviewCapabilities } from '#types';
 export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contribute(PreviewCapabilities.LinkResolver, [
-      ({ eid, label }, { space }) =>
-        Effect.gen(function* () {
-          const parsed = EID.tryParse(eid);
-          if (!parsed || !space) {
-            return undefined;
-          }
-          const entity = yield* Effect.tryPromise(() => space.db.makeRef(parsed).load()).pipe(
-            Effect.catch(() => Effect.succeed(undefined)),
-          );
-          // A relation has no card; only an object is previewed.
-          if (!Obj.isObject(entity)) {
-            return undefined;
-          }
-          return { label: Obj.getLabel(entity, { fallback: 'typename' }) ?? label, object: entity };
-        }),
+      {
+        match: (url) => EID.tryParse(url) !== undefined,
+        resolve: ({ eid, label }, { space }) =>
+          Effect.gen(function* () {
+            const parsed = EID.tryParse(eid);
+            if (!parsed || !space) {
+              return undefined;
+            }
+            const entity = yield* Effect.tryPromise(() => space.db.makeRef(parsed).load()).pipe(
+              Effect.catch(() => Effect.succeed(undefined)),
+            );
+            // A relation has no card; only an object is previewed.
+            if (!Obj.isObject(entity)) {
+              return undefined;
+            }
+            return { label: Obj.getLabel(entity, { fallback: 'typename' }) ?? label, object: entity };
+          }),
+      },
     ]),
   ),
 );

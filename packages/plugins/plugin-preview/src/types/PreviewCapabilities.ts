@@ -17,15 +17,24 @@ export type PreviewLinkContext = {
   space?: Space;
 };
 
-/**
- * Answers an anchor activation with the object its link names, or undefined when the link is not
- * this resolver's. A resolver owns one kind of link — an ECHO entity URI, a GitHub URL — and
- * declines the rest, so the order resolvers are asked in does not matter.
- */
-export type PreviewLinkResolver = (
+/** Decides, synchronously, whether a URL is one this resolver answers — so a renderer can make it an anchor before anyone hovers. */
+export type PreviewLinkMatch = (url: string) => boolean;
+
+/** Answers an anchor activation with the object its link names, or undefined. */
+export type PreviewLinkResolve = (
   ref: PreviewLinkRef,
   context: PreviewLinkContext,
 ) => Effect.Effect<PreviewLinkTarget | undefined>;
+
+/**
+ * One kind of link — an ECHO entity URI, a GitHub URL — with the test that recognises it and the
+ * lookup that answers it. A resolver owns its kind and declines the rest, so the order resolvers
+ * are asked in does not matter.
+ */
+export type PreviewLinkResolver = {
+  match: PreviewLinkMatch;
+  resolve: PreviewLinkResolve;
+};
 
 /**
  * Multi capability: each contributing plugin provides one batch of resolvers. The popover asks
@@ -33,3 +42,7 @@ export type PreviewLinkResolver = (
  * only this and a `CardContent` surface for the object's type.
  */
 export const LinkResolver = Capability.make<PreviewLinkResolver[]>()(`${meta.profile.key}.capability.linkResolver`);
+
+/** Whether any contributed resolver answers for the URL: what a renderer asks before making a link an anchor. */
+export const isPreviewLink = (resolvers: readonly PreviewLinkResolver[], url: string): boolean =>
+  resolvers.some(({ match }) => match(url));

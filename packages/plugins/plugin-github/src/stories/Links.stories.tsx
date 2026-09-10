@@ -3,17 +3,13 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import * as Effect from 'effect/Effect';
 import React, { useCallback, useMemo } from 'react';
 
-import * as Capability from '@dxos/app-framework/Capability';
-import * as Plugin from '@dxos/app-framework/Plugin';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Surface, useCapabilities } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
-import { DXN } from '@dxos/keys';
 import { PreviewEvents } from '@dxos/plugin-preview';
 import * as PreviewCapabilities from '@dxos/plugin-preview/PreviewCapabilities';
 import { corePlugins } from '@dxos/plugin-testing';
@@ -34,22 +30,9 @@ import {
 import { trim } from '@dxos/util';
 
 import { GitHubPlugin } from '#plugin';
-import { GitHubCapabilities } from '#types';
 
 import { githubLinks } from '../extensions';
-import { fixtureLinkSource } from '../testing';
-
-/** Replaces the plugin's default fetch: the story answers every link from fixtures. */
-const FixtureLinkSourcePlugin = Plugin.define(
-  Plugin.makeMeta({ key: DXN.make('org.dxos.plugin.github.story.linkSource'), name: 'Story link source' }),
-).pipe(
-  Plugin.addModule({
-    id: 'linkSource',
-    provides: [GitHubCapabilities.LinkSource],
-    activate: () => Effect.succeed([Capability.contribute(GitHubCapabilities.LinkSource, fixtureLinkSource)]),
-  }),
-  Plugin.make,
-);
+import { FixtureLinkSourcePlugin } from '../testing';
 
 /** The popover's card is whatever `CardContent` surface the resolved object's type has — this plugin's, for a PR or issue. */
 const PreviewCard = () => {
@@ -101,7 +84,10 @@ const DefaultStory = ({ text }: StoryArgs) => {
   const resolvers = useCapabilities(PreviewCapabilities.LinkResolver);
   const handleLookup = useCallback<NonNullable<EditorPreviewProviderProps['onLookup']>>(
     async (ref) => {
-      for (const resolve of resolvers.flat()) {
+      for (const { match, resolve } of resolvers.flat()) {
+        if (!match(ref.eid)) {
+          continue;
+        }
         const target = await EffectEx.runPromise(resolve(ref, {}));
         if (target) {
           return target;

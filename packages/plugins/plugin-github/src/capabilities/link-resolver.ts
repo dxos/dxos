@@ -28,16 +28,21 @@ export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const capabilities = yield* Capability.Service;
     return Capability.contribute(PreviewCapabilities.LinkResolver, [
-      ({ eid }, context) =>
-        Effect.gen(function* () {
-          const link = parseGitHubLink(eid);
-          if (!link) {
-            return undefined;
-          }
-          const [source = fetchFromGitHub] = capabilities.getAll(GitHubCapabilities.LinkSource);
-          const object = yield* source(link, context);
-          return object && { label: Repo.instanceOf(object) ? Repo.fullName(object) : Issue.reference(object), object };
-        }),
+      {
+        match: (url) => parseGitHubLink(url) !== undefined,
+        resolve: ({ eid }, context) =>
+          Effect.gen(function* () {
+            const link = parseGitHubLink(eid);
+            if (!link) {
+              return undefined;
+            }
+            const [source = fetchFromGitHub] = capabilities.getAll(GitHubCapabilities.LinkSource);
+            const object = yield* source(link, context);
+            return (
+              object && { label: Repo.instanceOf(object) ? Repo.fullName(object) : Issue.reference(object), object }
+            );
+          }),
+      },
     ]);
   }),
 );
