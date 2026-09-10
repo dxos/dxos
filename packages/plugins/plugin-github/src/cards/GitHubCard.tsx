@@ -40,7 +40,7 @@ export const GitHubCard = ({ subject }: AppSurface.ObjectCardProps<Subject>) => 
   return (
     <Card.Body>
       <Card.Row>
-        <div className='flex items-center gap-2 text-sm'>
+        <div className='flex flex-wrap items-center gap-2 text-sm'>
           <span className='text-description'>{[`${owner}/${name}`, number].filter(Boolean).join('#')}</span>
           {state && (
             <span className='dx-tag' data-hue={stateHue[state]}>
@@ -52,7 +52,7 @@ export const GitHubCard = ({ subject }: AppSurface.ObjectCardProps<Subject>) => 
               {defaultBranch}
             </span>
           )}
-          {author && <span className='text-description'>{author}</span>}
+          {author && <span className='text-description whitespace-nowrap'>{author}</span>}
           {additions !== undefined && <span className='text-green-500'>+{additions}</span>}
           {deletions !== undefined && <span className='text-red-500'>−{deletions}</span>}
         </div>
