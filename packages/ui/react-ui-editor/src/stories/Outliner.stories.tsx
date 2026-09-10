@@ -123,6 +123,28 @@ export const Nested: Story = {
   },
 };
 
+/** Prose and headings around and between lists: islands the outline parses as separate lists. */
+export const Mixed: Story = {
+  args: {
+    debug: 'raw+tree',
+    text: join(
+      //
+      '- [ ] Draft the plan',
+      '- [ ] Review it',
+      '',
+      '## Notes',
+      '',
+      'Plain markdown between the lists: **bold**, a [link](https://dxos.org), and `code`.',
+      '',
+      '- [ ] Ship',
+      '  - [ ] Tag the release',
+      '',
+      'Trailing paragraph.',
+      '',
+    ),
+  },
+};
+
 export const Continuation: Story = {
   args: {
     text: join(

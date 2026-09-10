@@ -6,7 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Schema from 'effect/Schema';
 import * as Struct from 'effect/Struct';
 import React, { useState } from 'react';
-import { expect, userEvent, waitFor, within } from 'storybook/test';
+import { expect, screen, userEvent, waitFor, within } from 'storybook/test';
 
 import { Button, Field } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
@@ -48,7 +48,7 @@ const DefaultStory = ({ variant }: StoryArgs) => {
           <Form.FieldSet label='Contact' description='Where to reach them.'>
             <Form.Fields />
           </Form.FieldSet>
-          <Form.FieldSet label='Options'>
+          <Form.FieldSet label='Options' description='Layout switches.' descriptionPlacement='tooltip'>
             <Form.Field label='Wireframe' description='Outline every surface.'>
               <Field.Switch checked={wireframe} onCheckedChange={setWireframe} />
             </Form.Field>
@@ -105,6 +105,12 @@ const groupsAreFieldsets = async (canvasElement: HTMLElement) => {
 
   // A hand-written field set holds the same rows: the switch is labelled by its row, the button row is not a label.
   const options = canvas.getByRole('group', { name: 'Options' });
+  // Its description is a tooltip on the label, not helper text in the group.
+  await expect(options).not.toHaveTextContent('Layout switches.');
+  const hint = within(options).getByRole('button', { name: 'Layout switches.' });
+  await userEvent.hover(hint);
+  await expect(await screen.findByRole('tooltip', undefined, { timeout: 5_000 })).toHaveTextContent('Layout switches.');
+  await userEvent.unhover(hint);
   await expect(within(options).getByLabelText('Wireframe')).toHaveAttribute('type', 'checkbox');
   await expect(within(options).getByRole('button', { name: 'Reset' })).toBeVisible();
   await expect(within(options).queryByLabelText('Reset')).toBeNull();

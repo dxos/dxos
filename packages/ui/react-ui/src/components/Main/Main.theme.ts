@@ -31,8 +31,12 @@ const sidebar: ComponentFunction<MainStyleProps> = (_, ...etc) =>
 
 const overlay: ComponentFunction<MainStyleProps> = (_, ...etc) => mx('dx-main-overlay', ...etc);
 
+const swipeArea: ComponentFunction<MainStyleProps> = (_, ...etc) =>
+  mx('dx-drawer__swipe-area', 'dx-main-swipe-area', ...etc);
+
 export const mainTheme = {
   content,
   sidebar,
   overlay,
+  swipeArea,
 };
