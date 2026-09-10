@@ -603,9 +603,11 @@ const buildDecorations = (view: EditorView, options: DecorateOptions, focus: boo
           break;
         }
 
+        // Not gated on a link widget's claim: widgets replace `[label](url)` and image nodes, never a
+        // bare URL, which would otherwise render as neither a link nor a chip.
         const text = state.sliceDoc(node.from, node.to);
         const url = normalizeUrl(text);
-        if (!url || isWidgetLink(state, url) || options.skip?.({ name: 'Link', url })) {
+        if (!url || options.skip?.({ name: 'Link', url })) {
           break;
         }
 
