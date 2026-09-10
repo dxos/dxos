@@ -61,21 +61,10 @@ export const inboxMarkdown = ({ loadRemoteImages = false }: InboxMarkdownOptions
 
 const decorateInboxMarkdown = (loadRemoteImages: boolean): Extension =>
   decorateMarkdown({
-    skip: (node) => {
-      // Skip dxn: links and images entirely (handled by preview()).
-      if ((node.name === 'Link' || node.name === 'Image') && node.url.startsWith('dxn:')) {
-        return true;
-      }
-
-      // When image loading is disabled, suppress every remaining image — not just http(s), or a
-      // `cid:`/protocol-relative target renders as a broken image. Local `dxn:` refs already returned
-      // above. `hideImages` omits the raw markdown source to match.
-      if (node.name === 'Image' && !loadRemoteImages) {
-        return true;
-      }
-
-      return false;
-    },
+    // When image loading is disabled, suppress every image — not just http(s), or a `cid:`/
+    // protocol-relative target renders as a broken image. `hideImages` omits the raw markdown
+    // source to match. Object links and images are a widget's and skipped by the decorator itself.
+    skip: (node) => node.name === 'Image' && !loadRemoteImages,
   });
 
 const openLinksInNewTab = EditorView.domEventHandlers({

@@ -86,7 +86,7 @@ export const WithReferences: Story = {
 };
 
 const LINK_LABEL = 'Draft the plan';
-const LINK_DXN = 'dxn:echo:@:01JXAMPLE0000000000000000';
+const LINK_DXN = 'eid:echo:@:01JXAMPLE0000000000000000';
 
 /**
  * A promoted item's link is followed on click or Enter, never on hover: hovering the chip is the
@@ -102,7 +102,7 @@ export const TestLinkActivation: Story = {
     const { page } = await import('@vitest/browser/context');
     const canvas = within(canvasElement);
     const anchor = await waitFor(() => {
-      const element = canvasElement.querySelector<HTMLElement>(`dx-anchor[dxn="${LINK_DXN}"]`);
+      const element = canvasElement.querySelector<HTMLElement>(`dx-anchor[eid="${LINK_DXN}"]`);
       if (!element) {
         throw new Error('No anchor chip');
       }

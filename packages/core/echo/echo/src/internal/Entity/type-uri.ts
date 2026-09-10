@@ -17,7 +17,7 @@ import { getUri as getUriFromEntity } from './api';
  * @return type identifier URI — see {@link getSchemaURI}. A URI is returned verbatim. For a
  * `Type.Type` entity, the URI of the schema it declares, symmetric with what
  * `Obj.make(typeEntity, ...)` stamps on `system.type`: a static declaration resolves to its
- * typename DXN, a persisted entity to its local `echo:/<objectId>`.
+ * typename DXN, a persisted entity to its local `echo:///<objectId>`.
  */
 export const getTypeURIFromSpecifier = (input: Schema.Top | AnyEntity | URI.URI): URI.URI => {
   if (Schema.isSchema(input)) {
@@ -30,7 +30,7 @@ export const getTypeURIFromSpecifier = (input: Schema.Top | AnyEntity | URI.URI)
     // they declare via `StaticTypeSchemaSlot`, whose URI is exactly what
     // `Obj.make` stamps on `system.type` — a static declaration carries
     // `TypeAnnotation` (→ typename DXN), a persisted entity's rebuilt schema
-    // carries `TypeIdentifierAnnotation` (→ local `echo:/<objectId>`).
+    // carries `TypeIdentifierAnnotation` (→ local `echo:///<objectId>`).
     const schema = getStaticTypeSchema(input);
     if (schema != null) {
       // Static types carry TypeAnnotation → DXN; persisted db types carry

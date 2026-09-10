@@ -52,7 +52,7 @@ const CardPreviewHost = ({ children }: PropsWithChildren) => {
   // Typed as the popover's trigger element, which is only ever measured; `EditorPreviewProvider`
   // carries the same shape.
   const triggerRef = useRef<HTMLElement | null>(null);
-  const [link, setLink] = useState<{ dxn: string; label: string; title?: string }>();
+  const [link, setLink] = useState<{ eid: string; label: string; title?: string }>();
   const [open, setOpen] = useState(false);
 
   const handleActivate = useCallback((event: Event) => {
@@ -61,7 +61,7 @@ const CardPreviewHost = ({ children }: PropsWithChildren) => {
     }
 
     triggerRef.current = event.trigger;
-    setLink({ dxn: event.dxn, label: event.label, title: event.title });
+    setLink({ eid: event.eid, label: event.label, title: event.title });
     setOpen(true);
   }, []);
 
@@ -86,7 +86,7 @@ const CardPreviewHost = ({ children }: PropsWithChildren) => {
                   <Card.Title>{link.title ?? link.label}</Card.Title>
                 </Card.Header>
                 <Card.Row>
-                  <Card.Text variant='description'>{link.dxn}</Card.Text>
+                  <Card.Text variant='description'>{link.eid}</Card.Text>
                 </Card.Row>
               </Card.Root>
             </Popover.Viewport>

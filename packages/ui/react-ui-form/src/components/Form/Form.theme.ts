@@ -87,7 +87,7 @@ const formStyles = tv({
       variant: 'default',
       labelPlacement: 'beside',
       class: {
-        field: 'grid grid-cols-[auto_1fr] items-center gap-x-2',
+        field: 'grid grid-cols-[auto_1fr] items-center gap-x-2 mt-2',
         fieldDescription: 'col-span-2',
         fieldValidation: 'col-span-2',
       },

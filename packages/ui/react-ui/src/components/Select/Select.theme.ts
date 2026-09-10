@@ -16,7 +16,8 @@ const positioner: ComponentFunction<SelectStyleProps> = ({ elevation }, ...etc) 
 // `--reference-width` and `--available-height` are set by the machine on the positioner.
 const content: ComponentFunction<SelectStyleProps> = ({ elevation }, ...etc) => {
   return mx(
-    'dx-modal-surface rounded-sm border border-separator flex flex-col overflow-hidden',
+    // A popup, like a menu; not a dialog.
+    'dx-popover-surface rounded-sm border border-separator flex flex-col overflow-hidden',
     'min-w-(--reference-width) max-h-(--available-height)',
     // On first placement the machine copies this element's computed `z-index` onto the positioner as
     // `--z-index`, overwriting the class above; without one here it copies `auto` and the open menu

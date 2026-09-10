@@ -103,8 +103,8 @@ export const EditorMenuProvider = ({
       root,
       DX_ANCHOR_ACTIVATE as any,
       (event: DxAnchorActivate) => {
-        const { trigger, dxn } = event;
-        if (!dxn) {
+        const { trigger, eid } = event;
+        if (!eid) {
           triggerRef.current = trigger as HTMLButtonElement;
           if (onActivate) {
             const view = getViewRef.current?.();

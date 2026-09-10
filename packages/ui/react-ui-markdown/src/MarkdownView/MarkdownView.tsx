@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { type ComponentPropsWithRef } from 'react';
+import React, { type ComponentProps, type ComponentPropsWithRef } from 'react';
 import ReactMarkdown, { type Options as ReactMarkdownOptions } from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 
@@ -45,6 +45,19 @@ export const MarkdownView = ({
   );
 };
 
+/** The default link renderer, for a host that overrides `a` for some links and wants the rest as they were. */
+export const MarkdownLink = ({ children, href, ...props }: ComponentProps<'a'>) => (
+  <a
+    href={href}
+    className='text-primary-500 hover:text-primary-500' // TODO(burdon): Use link token.
+    target='_blank'
+    rel='noopener noreferrer'
+    {...props}
+  >
+    {children}
+  </a>
+);
+
 const defaultComponents: ReactMarkdownOptions['components'] = {
   h1: ({ children }) => {
     return <h1 className='pt-1 pb-1 text-accent-text text-xl'>{children}</h1>;
@@ -66,17 +79,7 @@ const defaultComponents: ReactMarkdownOptions['components'] = {
   p: ({ children }) => {
     return <div className='pt-1 pb-1'>{children}</div>;
   },
-  a: ({ children, href, ...props }) => (
-    <a
-      href={href}
-      className='text-primary-500 hover:text-primary-500' // TODO(burdon): Use link token.
-      target='_blank'
-      rel='noopener noreferrer'
-      {...props}
-    >
-      {children}
-    </a>
-  ),
+  a: (props) => <MarkdownLink {...props} />,
   // Hide broken images: many markdown sources reference remote URLs that
   // 404 or are blocked. Drop the element on load failure rather than
   // leaving the browser's broken-image placeholder.

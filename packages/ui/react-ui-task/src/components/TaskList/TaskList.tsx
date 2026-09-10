@@ -30,7 +30,7 @@ import {
   useTranslation,
 } from '@dxos/react-ui';
 import { Listbox, useListDisclosure } from '@dxos/react-ui-list';
-import { MarkdownEditable, type MarkdownEditableController } from '@dxos/react-ui-markdown';
+import { MarkdownEditable, type MarkdownEditableController, type MarkdownEditableProps } from '@dxos/react-ui-markdown';
 import {
   ActionMenu,
   type MenuAction,
@@ -47,6 +47,7 @@ import { translationKey } from '#translations';
 
 import { type TaskPlacement, subtreeIds } from './hierarchy';
 import { STATUS_ORDER, UNSET_ICON, estimateTextStyle, priorityIcon, priorityTextStyle } from './status-icons';
+import { type TaskDescriptionProps } from './TaskDescription';
 import { TaskTreeContent } from './TaskTreeContent';
 import { type TaskNode, buildTaskForest, flattenVisibleTasks } from './tree-model';
 
@@ -64,6 +65,8 @@ type TaskListContextValue = {
   showGroupLabels: boolean;
   showOrdinals: boolean;
   showDescription: boolean;
+  /** Renderers for a row's description beyond its own — a host's link anchor, say. */
+  descriptionComponents?: TaskDescriptionProps['components'];
   /** Render each task's estimate beside the priority control. */
   showEstimates: boolean;
   hierarchical: boolean;
@@ -169,6 +172,8 @@ type TaskListRootProps = PropsWithChildren<{
    * single-line list (e.g. the chat strip) keeps one row per task.
    */
   showDescription?: boolean;
+  /** Renderers for a row's description beyond its own — a host's link anchor, say. */
+  descriptionComponents?: TaskDescriptionProps['components'];
 
   //
   // Callbacks. Wiring one is what enables the affordance that calls it — the list never writes.
@@ -217,6 +222,7 @@ const TaskListRoot = ({
   showGroupLabels = true,
   showOrdinals = false,
   showDescription = false,
+  descriptionComponents,
   showEstimates = false,
   hierarchical = false,
   collapsed,
@@ -294,6 +300,7 @@ const TaskListRoot = ({
       showGroupLabels={showGroupLabels}
       showOrdinals={showOrdinals}
       showDescription={showDescription}
+      descriptionComponents={descriptionComponents}
       showEstimates={showEstimates}
       hierarchical={hierarchical}
       debug={debug}
@@ -410,6 +417,7 @@ const TaskListContent = composable<HTMLUListElement>((props, forwardedRef) => {
     showGroupLabels,
     showOrdinals,
     showDescription,
+    descriptionComponents,
     showGutter,
     gridTemplateColumns,
     isCollapsed,
@@ -445,6 +453,7 @@ const TaskListContent = composable<HTMLUListElement>((props, forwardedRef) => {
   // group is a `group` node the machine splices out of its own topology.
   return (
     <TaskTreeContent
+      descriptionComponents={descriptionComponents}
       debug={debug}
       hierarchical={hierarchical}
       groupByStatus={grouping}
@@ -729,7 +738,7 @@ const ArtifactTag = ({ artifact }: { artifact: Obj.Unknown }) => {
       // The row is an option: without this the click selects the task as well as opening the card.
       event.stopPropagation();
       const trigger = tagRef.current;
-      trigger?.dispatchEvent(new DxAnchorActivate({ trigger, dxn: Obj.getURI(artifact), label, kind: 'card' }));
+      trigger?.dispatchEvent(new DxAnchorActivate({ trigger, eid: Obj.getURI(artifact), label, kind: 'card' }));
     },
     [artifact, label],
   );
@@ -758,6 +767,8 @@ type TaskListEditProps = ComposableProps<{
   showDescription?: boolean;
   /** Placeholder for the description field. */
   descriptionPlaceholder?: string;
+  /** Editor extensions for the description field beyond its own — what the host's plugins contribute. */
+  descriptionExtensions?: MarkdownEditableProps['extensions'];
   /**
    * Lay the pane out on the list's own column template, so the title field starts where the rows'
    * titles do and the icon sits under their status controls. Off by default: a pane used away from
@@ -774,10 +785,18 @@ type TaskListEditProps = ComposableProps<{
  */
 const TaskListEdit = composable<HTMLDivElement, TaskListEditProps>(
   (
-    { placeholder = 'Add task', showDescription = false, descriptionPlaceholder = 'Add a description', grid, ...props },
+    {
+      placeholder = 'Add task',
+      showDescription = false,
+      descriptionPlaceholder = 'Add a description',
+      descriptionExtensions,
+      grid,
+      ...props
+    },
     forwardedRef,
   ) => {
     const { t } = useTranslation(translationKey);
+    const descriptionRef = useRef<MarkdownEditableController>(null);
     const { tasks, selected, onTaskCreate, onTaskUpdate, onTaskSelect, gridTemplateColumns } =
       useTaskListContext('TaskList.Edit');
     const { className, ...rest } = composableProps(props);
@@ -786,8 +805,6 @@ const TaskListEdit = composable<HTMLDivElement, TaskListEditProps>(
     // Subscribe to the selected task so the pane follows a rename made anywhere else.
     const [snapshot] = useObject(task);
     const current = snapshot ?? task;
-
-    const descriptionRef = useRef<MarkdownEditableController>(null);
 
     // The create row's description, mirrored out of the field. A ref rather than state because the
     // create reads it in the same tick it commits the field, and `useEditable` calls back
@@ -931,16 +948,20 @@ const TaskListEdit = composable<HTMLDivElement, TaskListEditProps>(
             {/* A description is markdown, so it is edited as markdown. `editing` is held open —
                 the pane IS the editor, so there is nothing to click into — and the key remounts
                 it per task, since a field held open never re-reads its subject.
-
                 Creating, the field is uncontrolled: there is no task to read a value from, so it
                 holds the draft itself until the create collects it. */}
             <MarkdownEditable
               key={current?.id ?? `create-${createEpoch}`}
               ref={descriptionRef}
               classNames='text-sm'
-              {...(current && { value: current.description ?? '' })}
               editing
               multiline
+              placeholder={descriptionPlaceholder}
+              extensions={descriptionExtensions}
+              // Held open, so it must not pull focus: selecting a row by keyboard would otherwise
+              // land the reader in the description instead of the list.
+              autoFocus={false}
+              {...(current && { value: current.description ?? '' })}
               onValueChange={(description) => {
                 if (task && current) {
                   onTaskUpdate?.(task, { description });
@@ -948,10 +969,6 @@ const TaskListEdit = composable<HTMLDivElement, TaskListEditProps>(
                   draftDescription.current = description;
                 }
               }}
-              placeholder={descriptionPlaceholder}
-              // Held open, so it must not pull focus: selecting a row by keyboard would otherwise
-              // land the reader in the description instead of the list.
-              autoFocus={false}
             />
           </span>
         )}

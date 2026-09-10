@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+import { type Extension } from '@codemirror/state';
 import React, { forwardRef, useCallback, useImperativeHandle, useMemo, useRef, useState } from 'react';
 
 import { type ThemedClassName, type UseEditableOptions, useEditable, useThemeContext } from '@dxos/react-ui';
@@ -47,6 +48,11 @@ export type MarkdownEditableProps = ThemedClassName<
      * whatever the reader is actually driving.
      */
     autoFocus?: boolean;
+    /**
+     * Editor extensions beyond the field's own — what a host's plugins contribute, such as link
+     * chips. Appended after the markdown set, so they see a parsed document.
+     */
+    extensions?: Extension[];
   }
 >;
 
@@ -67,7 +73,16 @@ export type MarkdownEditableController = {
  */
 export const MarkdownEditable = forwardRef<MarkdownEditableController, MarkdownEditableProps>(
   (
-    { classNames, placeholder, components, readonly, multiline, autoFocus = true, ...options }: MarkdownEditableProps,
+    {
+      classNames,
+      placeholder,
+      components,
+      readonly,
+      multiline,
+      autoFocus = true,
+      extensions: hostExtensions,
+      ...options
+    }: MarkdownEditableProps,
     forwardedRef,
   ) => {
     const { value, draft, editing, setDraft, commit, revert, previewProps } = useEditable({
@@ -115,6 +130,7 @@ export const MarkdownEditable = forwardRef<MarkdownEditableController, MarkdownE
         // its content, not a pane filling a height.
         createThemeExtensions({ themeMode, syntaxHighlighting: true, slots: fullWidth }),
         decorateMarkdown(),
+        hostExtensions ?? [],
         inlineEdit({
           // The text comes with the event: committing the draft instead would write whatever the
           // previous render captured.
@@ -128,7 +144,7 @@ export const MarkdownEditable = forwardRef<MarkdownEditableController, MarkdownE
           submitOnEnter: !multiline,
         }),
       ],
-      [commitOnBlur, multiline, placeholder, themeMode, revertAll],
+      [commitOnBlur, multiline, placeholder, themeMode, revertAll, hostExtensions],
     );
 
     if (editing) {
@@ -150,13 +166,13 @@ export const MarkdownEditable = forwardRef<MarkdownEditableController, MarkdownE
             // get into — right for a document pane, wrong for a field next to a title.
             focusable={false}
             initialValue={draft}
+            extensions={extensions}
+            autoFocus={autoFocus}
+            selectionEnd
             onChange={(text) => {
               discarded.current = false;
               handlers.current.setDraft(text);
             }}
-            extensions={extensions}
-            autoFocus={autoFocus}
-            selectionEnd
           />
         </div>
       );
