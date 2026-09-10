@@ -149,7 +149,25 @@ relay has the document recovers when it arrives'` in `automerge-repo-subduction.
   targeted `resyncSubduction`, and evicting the handle — were each measured against
   `composer-app` `halo.spec.ts` at n=80 with `--retries=0`. None reduced the failure rate.
 
-## 10. Diagnosing a non-converging document from logs
+## 10. Share-policy denials are the background, not the signal
+
+Measured on composer's `halo.spec.ts`, twenty passing runs with `--trace on`: **every** run emits
+54–94 `document not found locally for share policy check` refusals and roughly ninety
+`authorizeFetch` denials. Failing runs show the same magnitude. Cross-space documents fan out
+across every space-scoped peer each sync round, so a denial is what healthy replication looks like.
+
+Two consequences, both learned the expensive way:
+
+- **A denial correlated with a failure proves nothing** without a passing-run control. Traces are
+  kept only for failures by default, which makes the correlation look damning; `--trace on` is what
+  produces the control. An investigation ended here after naming the unattributable-document
+  refusal as the mechanism, on two failing traces, before the control showed it in 20/20 passes.
+- **Do not promote these to `warn`.** At ~60 per ninety-second run they leave DEBUG (which the
+  default `INFO` filter drops), enter the OTLP export, promote their enclosing trace past tail
+  sampling (`DEFAULT_RATIO = 0.3`), and evict the 2,000-entry feedback log buffer that user
+  submission triage reads.
+
+## 11. Diagnosing a non-converging document from logs
 
 Symptom: a `(collection, peer)` pair diffs forever. `collection-synchronizer.ts` re-queries every
 ~10 s, the diff reports the same `different` document each pass, and nothing else changes. Observed
