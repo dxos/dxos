@@ -16,16 +16,11 @@ import { Attention } from '@dxos/react-ui-attention/types';
 import { DeckCapabilities } from '#types';
 import { CompanionViewState, DeckSchema } from '#types';
 
+import { Navigation } from '.';
 import { updatePlankNames } from '../layout';
 import { updateActiveDeck } from '../operations/helpers';
-import {
-  Navigation,
-  closeCompanionPlank,
-  computeActiveUpdates,
-  openCompanionPlank,
-  resolveCompanionAnchor,
-  resolveCompanionPlank,
-} from '../util';
+import { closeCompanionPlank, openCompanionPlank, resolveCompanionAnchor, resolveCompanionPlank } from '../util';
+import { computeActiveUpdates } from './set-active';
 
 /**
  * Write the deck's active planks and the URL segment each one came from, returning the item to

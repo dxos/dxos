@@ -52,7 +52,8 @@ import {
 import { meta } from '#meta';
 import { DeckOperation, DeckRole } from '#types';
 
-import { Navigation, findAttendedPlank, getRenderedPlanks, isCompanionOpen, layoutAppliesTopbar } from '../../util';
+import { Navigation } from '../../url';
+import { findAttendedPlank, getRenderedPlanks, isCompanionOpen, layoutAppliesTopbar } from '../../util';
 import {
   ToggleComplementarySidebarButton as NaturalToggleComplementarySidebarButton,
   ToggleSidebarButton as NaturalToggleSidebarButton,

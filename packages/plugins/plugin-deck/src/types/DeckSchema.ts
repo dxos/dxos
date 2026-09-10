@@ -11,7 +11,7 @@ import * as Translations from '@dxos/app-toolkit/Translations';
 
 import { meta } from '#meta';
 
-import { Navigation } from '../util';
+import { Navigation } from '../url';
 
 export const PLANK_COMPANION_TYPE = AppNode.PLANK_COMPANION_TYPE;
 export const DECK_COMPANION_TYPE = AppNode.DECK_COMPANION_TYPE;

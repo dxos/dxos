@@ -20,8 +20,8 @@ import { log } from '@dxos/log';
 
 import { DeckCapabilities, DeckSchema } from '#types';
 
+import { Navigation, getCandidateEntityIds, getUnresolvedPlankId } from '.';
 import { shouldDeferNavigationHandlers } from '../capabilities/check-app-scheme';
-import { Navigation, getCandidateEntityIds, getUnresolvedPlankId } from '../util';
 import { applyActive, applyCompanion, applyWorkspace } from './apply';
 
 // TODO(wittjosiah): Shorten, or apply the restore per-pair.

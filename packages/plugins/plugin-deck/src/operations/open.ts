@@ -28,9 +28,9 @@ import {
   resolveSeededPlanks,
   updatePlankNames,
 } from '../layout';
-import { currentNavigation, navigateDeck } from '../url';
+import { Navigation, computeActiveUpdates, currentNavigation, navigateDeck } from '../url';
 import { applyWorkspace } from '../url';
-import { Navigation, computeActiveUpdates, openCompanionPlank, openableChildren, resolveDeckSpec } from '../util';
+import { openCompanionPlank, openableChildren, resolveDeckSpec } from '../util';
 import { updateActiveDeck } from './helpers';
 
 const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperation.Open.pipe(

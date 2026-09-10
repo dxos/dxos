@@ -16,7 +16,8 @@ import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabili
 
 import { CompanionViewState, DeckCapabilities } from '#types';
 
-import { Navigation, getRenderedPlanks, isCompanionOpen, resolveCompanionAnchor } from '../util';
+import { Navigation } from '.';
+import { getRenderedPlanks, isCompanionOpen, resolveCompanionAnchor } from '../util';
 import { projectUrl } from './project';
 
 /** What the URL currently says is open. */
