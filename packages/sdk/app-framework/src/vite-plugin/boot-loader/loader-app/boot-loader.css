@@ -418,7 +418,9 @@ body {
   opacity: 0.2;
   /* Own centre first, then the slot's offset from the row's centre. */
   transform: translateX(calc(-50% + (var(--i) - (var(--n) - 1) / 2) * var(--boot-loader-plugin-slot)));
-  transition: transform 600ms cubic-bezier(0.22, 1, 0.36, 1);
+  /* The shift to make room is short and quick: it is a half slot, and it should be over before the
+     arrival lands so the row reads as settling once, not twice. */
+  transition: transform 200ms ease-out;
   /* An arrival slides in from beyond the right edge of the screen; the keyframe names only where it
      starts, so the end is the slot above, wherever the count has moved it by then. The row is
      centred in the viewport, so half its width is the distance to that edge.
