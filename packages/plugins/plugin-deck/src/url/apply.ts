@@ -17,8 +17,13 @@ import { DeckCapabilities } from '#types';
 import { CompanionViewState, DeckSchema } from '#types';
 
 import { updatePlankNames } from '../layout';
-import { updateActiveDeck } from '../operations/helpers';
-import { closeCompanionPlank, openCompanionPlank, resolveCompanionAnchor, resolveCompanionPlank } from '../util';
+import {
+  closeCompanionPlank,
+  openCompanionPlank,
+  resolveCompanionAnchor,
+  resolveCompanionPlank,
+  updateActiveDeck,
+} from '../util';
 import * as Navigation from './navigation';
 import { computeActiveUpdates } from './set-active';
 

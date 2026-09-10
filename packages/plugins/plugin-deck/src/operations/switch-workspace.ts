@@ -14,8 +14,7 @@ import { invariant } from '@dxos/invariant';
 
 import { DeckCapabilities } from '#types';
 
-import { navigateDeck } from '../url';
-import { applyWorkspace } from '../url';
+import { applyWorkspace, navigateDeck } from '../url';
 import { openableChildren } from '../util';
 
 const handler: Operation.WithHandler<typeof LayoutOperation.SwitchWorkspace> = LayoutOperation.SwitchWorkspace.pipe(

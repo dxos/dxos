@@ -9,3 +9,4 @@ export * from './resolve-sidebar-state';
 export * from './upsert-toast';
 export * from './openable-children';
 export * from './resolve-deck-spec';
+export * from './update-active-deck';
