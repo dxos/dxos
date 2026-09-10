@@ -327,8 +327,6 @@ const resolveMaxTileSize = (maxPlankWidthPx: number, hasCompanion: boolean): num
  * is the content the cap exists to keep reachable, so squeezing the side panel is what a narrowing
  * viewport should do.
  */
-/** The key a plank's stored width hangs off: its URL segment, or its id when it has no segment. */
-export const sizingKeyFor = Navigation.segmentOf;
 
 const resolveTileSizes = (
   plankSizing: Record<string, number>,
@@ -452,7 +450,7 @@ const DeckPlankTile: MosaicStackTileComponent<string> = (props) => {
   const maxSize = resolveMaxTileSize(maxPlankWidthPx, !!companion);
   const { companionSize, tileSize: storedSize } = resolveTileSizes(
     deck.plankSizing,
-    sizingKeyFor(state.segments, id),
+    Navigation.segmentOf(state.segments, id),
     !!companion,
     maxSize,
   );
@@ -1706,7 +1704,7 @@ export const DeckPlanks = () => {
     const paired = !!lastPlankCompanionId;
     const { tileSize } = resolveTileSizes(
       deck.plankSizing,
-      sizingKeyFor(state.segments, lastPlankId),
+      Navigation.segmentOf(state.segments, lastPlankId),
       paired,
       resolveMaxTileSize(maxPlankWidthPx, paired),
     );
