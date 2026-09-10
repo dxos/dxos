@@ -78,20 +78,6 @@ export const DXOSLogo: Story = {
   },
 };
 
-/** The mark as one channel recolours it, chosen from the control. */
-export const Mark: Story = {
-  args: { channel: undefined },
-  argTypes: {
-    channel: { control: 'select', options: [undefined, ...CHANNELS] },
-  },
-  render: ({ channel }) => (
-    <div style={{ filter: channel && channelMarkFilter(channel) }}>
-      <Composer size={180} weight='regular' />
-    </div>
-  ),
-};
-
-/** The released mark beside every channel's recolouring of it. */
 export const Channels: Story = {
   render: () => {
     const marks: { label: string; channel?: Channel }[] = [
