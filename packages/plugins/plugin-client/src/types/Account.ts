@@ -4,7 +4,12 @@
 
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 
-export const id = 'account';
+/**
+ * Pinned (non-space) workspace ID anchoring the account's graph subtree, and the workspace token its
+ * URLs are addressed by. Namespaced, as a plugin's own workspace should be: no space id can collide
+ * with one of these, so the namespace is what keeps two plugins from claiming the same name.
+ */
+export const id = 'dxos:account';
 
 /**
  * Panel ids, relative to the account workspace they hang off. Each is also its own singleton URL

@@ -4,6 +4,11 @@
 
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 
+/**
+ * Pinned (non-space) workspace ID anchoring the settings graph subtree, and the workspace token its
+ * URLs are addressed by. Namespaced, as a plugin's own workspace should be: no space id can collide
+ * with one of these, so the namespace is what keeps two plugins from claiming the same name.
+ */
 export const SETTINGS_ID = 'dxos:settings';
 export const SETTINGS_KEY = 'settings';
 

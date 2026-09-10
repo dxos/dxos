@@ -4,10 +4,10 @@
 
 /**
  * Pinned (non-space) workspace ID anchoring the registry's graph subtree, and the workspace token its
- * URLs are addressed by. Short because it is a system workspace: those names are claimed, and no space
- * id can collide with one.
+ * URLs are addressed by. Namespaced, as a plugin's own workspace should be: no space id can collide
+ * with one of these, so the namespace is what keeps two plugins from claiming the same name.
  */
-export const REGISTRY_ID = 'registry';
+export const REGISTRY_ID = 'dxos:registry';
 
 // A registry category node id is the bare category name (e.g. `bundled`), which doubles as its URL
 // segment (`category/<name>`); the graph builder, the category surfaces and `getCategoryPredicate` all
