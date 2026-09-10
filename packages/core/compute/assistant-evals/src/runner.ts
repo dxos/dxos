@@ -12,6 +12,7 @@ import type { Evalite } from 'evalite';
 
 import { AiService } from '@dxos/ai';
 import { AiServiceTestingPreset } from '@dxos/ai/testing';
+import type * as Capabilities from '@dxos/app-framework/Capabilities';
 import type * as Plugin from '@dxos/app-framework/Plugin';
 import { type TestHarness } from '@dxos/app-framework/testing';
 import { RunInstructions } from '@dxos/assistant-toolkit';
@@ -169,7 +170,8 @@ export interface CreateEvalRunnerOptions<I, O> {
   types?: Type.AnyEntity[];
   /**
    * Seeds the space before the run (e.g. a Project the scenario operates on). Runs inside the
-   * harness with `Database.Service` provided; receives the run's `Instructions` object so seeded
+   * harness with `Database.Service` and the runtime's capability services provided (so a seed can
+   * reach the client for the space itself); receives the run's `Instructions` object so seeded
    * entities can reference it (it is added to the DB after seeding). Returned `objects` are bound
    * into the session context alongside the instructions' own; a returned `chat` is used as the
    * session chat (taking precedence over `sessionChat`).
@@ -177,7 +179,7 @@ export interface CreateEvalRunnerOptions<I, O> {
   seed?: (context: {
     spaceId: SpaceId;
     instructions: Instructions.Instructions;
-  }) => Effect.Effect<SeedResult, unknown, Database.Service>;
+  }) => Effect.Effect<SeedResult, unknown, Database.Service | Capabilities.ProcessManagerRuntimeServices>;
 }
 
 /** Entities a {@link CreateEvalRunnerOptions.seed} hook contributes to the run. */

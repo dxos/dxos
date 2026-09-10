@@ -4269,6 +4269,9 @@ importers:
       '@dxos/plugin-crm':
         specifier: workspace:*
         version: link:../../../plugins/plugin-crm
+      '@dxos/plugin-debug':
+        specifier: workspace:*
+        version: link:../../../plugins/plugin-debug
       '@dxos/plugin-illustrator':
         specifier: workspace:*
         version: link:../../../plugins/plugin-illustrator
