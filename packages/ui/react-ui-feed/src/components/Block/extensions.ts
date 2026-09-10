@@ -6,19 +6,18 @@ import { type Extension } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
 
 import {
+  WidgetHostOptions,
   type XmlWidgetRegistry,
-  type WidgetState,
   createBasicExtensions,
   createMarkdownExtensions,
   createThemeExtensions,
   decorateMarkdown,
   extendedMarkdown,
-  xmlBlockDecoration,
-  xmlFormatting,
   objectLinks,
   widgetHost,
+  xmlBlockDecoration,
+  xmlFormatting,
   xmlTags,
-  WidgetHostOptions,
 } from '@dxos/ui-editor';
 
 import { highlights, highlightTheme } from './highlight';

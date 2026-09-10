@@ -8,7 +8,7 @@ import React, { memo, useEffect, useLayoutEffect, useMemo, useRef, useState } fr
 import { createPortal } from 'react-dom';
 
 import { type ThemedClassName, useThemeContext } from '@dxos/react-ui';
-import { type XmlWidgetRegistry, type WidgetState } from '@dxos/ui-editor';
+import { type WidgetState, type XmlWidgetRegistry } from '@dxos/ui-editor';
 import { mx } from '@dxos/ui-theme';
 
 import { createBlockExtensions } from './extensions';
