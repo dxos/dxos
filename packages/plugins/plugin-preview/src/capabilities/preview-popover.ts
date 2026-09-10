@@ -12,6 +12,7 @@ import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { addEventListener } from '@dxos/async';
 import { Obj } from '@dxos/echo';
+import { EffectEx } from '@dxos/effect';
 import { log } from '@dxos/log';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import { DX_ANCHOR_ACTIVATE, type DxAnchorActivate } from '@dxos/react-ui';
@@ -82,7 +83,7 @@ export default Capability.makeModule(
       const spaceId = layoutAtom && GraphPath.getSpaceIdFromPath(registry.get(layoutAtom).workspace);
       const space = (spaceId && client.spaces.get(spaceId)) ?? AppSpace.getDefaultSpace(client);
       const resolvers = capabilities.getAll(PreviewCapabilities.LinkResolver).flat();
-      const result = await Effect.runPromise(resolveLink(resolvers, { eid, label }, { space }));
+      const result = await EffectEx.runPromise(resolveLink(resolvers, { eid, label }, { space }));
       if (!result) {
         return;
       }

@@ -12,6 +12,7 @@ import { withPluginManager } from '@dxos/app-framework/testing';
 import { Surface, useCapabilities } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
+import { EffectEx } from '@dxos/effect';
 import { DXN } from '@dxos/keys';
 import { PreviewEvents } from '@dxos/plugin-preview';
 import * as PreviewCapabilities from '@dxos/plugin-preview/PreviewCapabilities';
@@ -94,7 +95,7 @@ const DefaultStory = ({ text }: StoryArgs) => {
   const handleLookup = useCallback<NonNullable<EditorPreviewProviderProps['onLookup']>>(
     async (ref) => {
       for (const resolve of resolvers.flat()) {
-        const target = await Effect.runPromise(resolve(ref, {}));
+        const target = await EffectEx.runPromise(resolve(ref, {}));
         if (target) {
           return target;
         }
