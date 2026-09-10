@@ -169,9 +169,23 @@ it to appear in `composer.operations()`.
    **never from the invocation's return value** — a successful invoke routinely did less than the
    step intended (a `create` is a factory and places nothing). Record the observed value with the
    verdict.
+   Also bind **`$stepErrors`**, the entries of `$snapshot.errors` newer than the previous step's
+   snapshot — carry the previous snapshot's high-water timestamp forward and filter on it:
+
+   ```js
+   const snapshot = await composer.snapshot({ since: QA.start });
+   const stepErrors = snapshot.errors.filter((e) => e.timestamp >= (QA.errorMark ?? QA.start));
+   QA.errorMark = Date.now();
+   ```
+
+   That is what an `assert` judges errors by. `$snapshot.errors` stays cumulative for the report and
+   must never appear in a pass/fail clause: one background error early in the run would then falsify
+   every later step (`qa.mdl` Field rule 5).
+
 7. **Errors are always a finding.** A non-empty `errors` in any snapshot goes in the report against
-   the step where it first appeared, even when that step's own check passed. Once per test also
-   read the server log and the browser helper's `[page]` lines.
+   the step where it first appeared, even when that step's own check passed — and a step whose
+   `$stepErrors` is non-empty fails on its own assert. Once per test also read the server log and
+   the browser helper's `[page]` lines.
 8. **Coalesce adjacent steps that thread a live object.** The port serializes between snippets, so
    an ECHO object captured in one step cannot reach the next; run both in one snippet and say so in
    the report. Captures that are strings (a URI, an id, a path) need no coalescing — prefer them,
@@ -245,7 +259,8 @@ names. Leave a server you did not start alone.
 - [ ] runId and start timestamp noted; debug plugin active
 - [ ] `given` verified from a snapshot; `QA:` artifacts confirmed absent; aborted if unmet
 - [ ] Each step one operation through the invoker with a spaceId, key matched exactly
-- [ ] Snapshot after every step; each `expect` judged from it or a query, never a return value
+- [ ] Snapshot after every step; `$stepErrors` bound from it; each `expect` judged from the
+      snapshot or a query, never a return value
 - [ ] Errors drained per step; server log and `[page]` lines read once per test
 - [ ] Steps threading a live object coalesced and noted
 - [ ] `after` run through operations, or its skip stated with what remains

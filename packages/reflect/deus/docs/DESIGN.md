@@ -402,6 +402,13 @@ a test judges the app by its state — planks, spaces, toasts, errors since the 
 an invocation's return value. A test that needs something the snapshot does not report extends the
 snapshot operation rather than scripting the page.
 
+Errors come in two bindings because the two uses pull opposite ways. `$snapshot.errors` is
+cumulative from the run's start, which is what the report wants: an error is recorded against the
+step where it first appeared. A pass/fail clause needs the opposite, so the runner also binds
+`$stepErrors` — only what was logged since the previous step's snapshot. An `assert` written against
+the cumulative array fails every step after the first background error, for something none of them
+did.
+
 A test runs in three stages — `before` (fixture), `steps` (the test), `after` (teardown) — so a
 partial run is meaningful and a failure is legible: a `before` failure is a broken fixture, a
 `steps` failure is a defect. Because each test owns its fixture and teardown, suites are

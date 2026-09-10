@@ -72,7 +72,7 @@ test QA-1: Spaces and documents
       space: $space.id
       capture: doc1
       expect: "QA: Doc 1" appears under the space's collection in the navtree
-      assert: return typeof $doc1.id === 'string' && $doc1.id.startsWith('echo://') && $snapshot.errors.length === 0
+      assert: return typeof $doc1.id === 'string' && $doc1.id.startsWith('echo://') && $stepErrors.length === 0
       note: The result's `id` is a URI, `echo://<spaceId>/<objectId>`; later steps name the object through it.
     - name: Create Doc 2
       do: Repeat for "QA: Doc 2".
@@ -80,7 +80,7 @@ test QA-1: Spaces and documents
       space: $space.id
       capture: doc2
       expect: "QA: Doc 2" appears below "QA: Doc 1"
-      assert: return typeof $doc2.id === 'string' && $snapshot.errors.length === 0
+      assert: return typeof $doc2.id === 'string' && $stepErrors.length === 0
     - name: Create Doc 3
       do: Repeat for "QA: Doc 3".
       invoke: org.dxos.operation.markdown.create { name: "QA: Doc 3", content: "# QA: Doc 3\n\nCreated by the basics suite, run $runId.\n" }
@@ -113,7 +113,7 @@ test QA-1: Spaces and documents
         const path = `root/${$space.id}/content/collections/${$doc2.objectId}`;
         const toast = $snapshot.toasts.find((t) => t.title === 'Document deleted');
         return !!toast && toast.actions.includes('Undo') && !$snapshot.layout.active.includes(path) &&
-          $snapshot.errors.length === 0;
+          $stepErrors.length === 0;
       note: |
         The result is `{ objects, parentCollection, indices, wasActive }`; `wasActive` holds the navigation
         path of the plank that was open. This step is where a toast rendered
@@ -144,18 +144,18 @@ test QA-1: Spaces and documents
       assert: return !$snapshot.spaces.some((s) => s.id === $space.id)
       note: |
         Judge by identity: the snapshot hides the name of a space that is not SPACE_READY, so a name
-        check passes against a space that is merely closed. Any failure while closing the space strands
-        it: the tombstone is written before `space.close()`, so a timeout leaving the swarm (EDGE
-        unreachable) or a dropped socket mid-call (EDGE reachable but disconnecting) both leave it
-        listed as SPACE_CLOSED, and the tombstone makes the retry a no-op — only a reload drops it.
-        Report it against this step; do not retry more than once.
+        check passes against a space that is merely closed. This step found the defect that two smoke
+        runs then confirmed — the tombstone was written before `space.close()`, so any failure leaving
+        the swarm stranded the space as SPACE_CLOSED with the retry a no-op — fixed in
+        `DataSpaceManager._tombstoneSpace`, which now completes the deletion whatever the teardown
+        does. A space still listed here is that regression, not the environment.
     - name: Return to the default space
       do: Pick the default space in the space list.
       invoke: org.dxos.operation.appToolkit.switchWorkspace { subject: "root/$given.defaultSpace.id" }
       expect: no "QA:" space remains, the workspace is the default space, and no error is logged
       assert: |
         return !$snapshot.spaces.some((s) => s.id === $space.id || s.name?.startsWith('QA:')) &&
-          $snapshot.layout.workspace === `root/${$given.defaultSpace.id}` && $snapshot.errors.length === 0;
+          $snapshot.layout.workspace === `root/${$given.defaultSpace.id}` && $stepErrors.length === 0;
 ```
 
 ```mdl
@@ -222,7 +222,7 @@ test QA-2: Rename, undo and a second space
           { typename: 'org.dxos.type.document' }, { spaceId: $space.id });
         return $result.undone === true && rows.results.length === 1 &&
           $snapshot.layout.active.includes(`root/${$space.id}/content/collections/${$note.objectId}`) &&
-          $snapshot.errors.length === 0;
+          $stepErrors.length === 0;
       note: |
         Clicking Undo also dismisses the toast; the operation bypasses the toast, so for the agent
         it stays until it times out. The restore reopens what was open.
@@ -270,7 +270,7 @@ test QA-2: Rename, undo and a second space
       expect: no "QA:" space remains, the workspace is the default space, no error is logged
       assert: |
         return !$snapshot.spaces.some((s) => s.name?.startsWith('QA:')) &&
-          $snapshot.layout.workspace === `root/${$given.defaultSpace.id}` && $snapshot.errors.length === 0;
+          $snapshot.layout.workspace === `root/${$given.defaultSpace.id}` && $stepErrors.length === 0;
 ```
 
 ```mdl
@@ -316,7 +316,7 @@ test QA-3: Comments
         const t = plank?.comments?.[0];
         return plank.comments.length === 1 && t.status === 'active' && t.messages.length === 1 &&
           t.messages[0].text === 'First comment' && t.messages[0].sender === 'QA' && !!t.anchor &&
-          $snapshot.errors.length === 0;
+          $stepErrors.length === 0;
       note: |
         `range` is the selection's character offsets, which the operation turns into the editor's
         cursor anchor; a first `text` submits the thread, as the send button does. The result
@@ -345,7 +345,7 @@ test QA-3: Comments
       expect: the thread has one message again, "First comment"; a "Comment deleted" toast may show; no error
       assert: |
         const t = $snapshot.planks.find((p) => p.label === 'QA: Draft')?.comments?.[0];
-        return t?.messages.length === 1 && t.messages[0].text === 'First comment' && $snapshot.errors.length === 0;
+        return t?.messages.length === 1 && t.messages[0].text === 'First comment' && $stepErrors.length === 0;
       note: |
         `addMessage` does not return the message, so its id is read from the Reply step's snapshot
         (`$reply.snapshot`, the state after that step) — the thread's second message.
@@ -355,7 +355,7 @@ test QA-3: Comments
       expect: the plank has no comments and no error is logged
       assert: |
         const plank = $snapshot.planks.find((p) => p.label === 'QA: Draft');
-        return (plank?.comments?.length ?? 0) === 0 && $snapshot.errors.length === 0;
+        return (plank?.comments?.length ?? 0) === 0 && $stepErrors.length === 0;
   after:
     - name: Remove the draft
       do: Delete "QA: Draft" from its ⋮ menu.
@@ -371,7 +371,7 @@ test QA-3: Comments
       expect: no "QA:" space remains, the workspace is the default space, no error is logged
       assert: |
         return !$snapshot.spaces.some((s) => s.name?.startsWith('QA:')) &&
-          $snapshot.layout.workspace === `root/${$given.defaultSpace.id}` && $snapshot.errors.length === 0;
+          $snapshot.layout.workspace === `root/${$given.defaultSpace.id}` && $stepErrors.length === 0;
 ```
 
 ```mdl
@@ -413,7 +413,7 @@ test QA-4: The assistant edits the document
       space: $space.id
       capture: chat
       expect: a companion chat exists for the document (`persisted: false` until its first message); no error
-      assert: return !!$result && $snapshot.errors.length === 0
+      assert: return !!$result && $stepErrors.length === 0
     - name: Translate the second paragraph in place
       id: translate
       do: |
@@ -426,7 +426,7 @@ test QA-4: The assistant edits the document
         const text = $snapshot.planks.find((p) => p.label === 'QA: Essay')?.subject?.text ?? '';
         return text.includes('The first paragraph stays in English.') &&
           text.includes('The third paragraph also stays in English.') &&
-          /soleil|ciel/i.test(text) && !text.includes('sunny') && $snapshot.errors.length === 0;
+          /soleil|ciel/i.test(text) && !text.includes('sunny') && $stepErrors.length === 0;
       note: |
         `companionTo` names the document's own chat, which is not in the database until its first
         message, so an id cannot name it. The reply is asynchronous: keep taking snapshots until the
@@ -447,7 +447,7 @@ test QA-4: The assistant edits the document
       expect: no "QA:" space remains, the workspace is the default space, no error is logged
       assert: |
         return !$snapshot.spaces.some((s) => s.name?.startsWith('QA:')) &&
-          $snapshot.layout.workspace === `root/${$given.defaultSpace.id}` && $snapshot.errors.length === 0;
+          $snapshot.layout.workspace === `root/${$given.defaultSpace.id}` && $stepErrors.length === 0;
 ```
 
 ## Suites
