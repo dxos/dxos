@@ -996,14 +996,16 @@ export class AutomergeHost extends Resource {
     },
     authorizeFetch: async (subductionPeerId, sedimentreeId) => {
       const allow = await this._shouldShareDocumentWithSubductionPeer(subductionPeerId, sedimentreeId);
-      // The throw below is the only record of a denial, and the peer's matching WASM warning is
-      // suppressed (see `_open`), so a refused document is otherwise invisible on both sides.
-      log.verbose('subduction authorizeFetch', {
-        documentId: sedimentreeIdToDocumentId(sedimentreeId),
-        subductionPeerId: subductionPeerId.toString(),
-        allow,
-      });
-      if (!allow) {
+      const documentId = sedimentreeIdToDocumentId(sedimentreeId);
+      const subductionPeerIdHex = subductionPeerId.toString();
+      if (allow) {
+        log.verbose('subduction authorizeFetch', { documentId, subductionPeerId: subductionPeerIdHex, allow });
+      } else {
+        // Warn, not verbose: the throw below is the only record of a denial, the peer's matching
+        // WASM warning is suppressed (see `_open`), and the fetcher is left with a failed entry
+        // that only its own `shareConfigChanged` revives. A denial that goes unlogged is a
+        // document that silently never arrives.
+        log.warn('subduction authorizeFetch denied', { documentId, subductionPeerId: subductionPeerIdHex });
         throw new Error('authorizeFetch denied by client share policy');
       }
     },
@@ -1022,13 +1024,14 @@ export class AutomergeHost extends Resource {
           denied.push(sedimentreeIdToDocumentId(sid));
         }
       }
-      // Silently dropping ids from the response would otherwise leave no trace of the omission.
-      log.verbose('subduction filterAuthorizedFetch', {
-        subductionPeerId: subductionPeerId.toString(),
-        requested: sedimentreeIds.length,
-        allowed: allowed.length,
-        denied,
-      });
+      // Silently dropping ids from the response would otherwise leave no trace of the omission,
+      // so a broadcast the peer never receives is only visible here.
+      const summary = { subductionPeerId: subductionPeerId.toString(), requested: sedimentreeIds.length };
+      if (denied.length > 0) {
+        log.warn('subduction filterAuthorizedFetch denied', { ...summary, denied: denied.join(',') });
+      } else {
+        log.verbose('subduction filterAuthorizedFetch', { ...summary, allowed: allowed.length });
+      }
       return allowed;
     },
   };
@@ -1395,19 +1398,21 @@ export class AutomergeHost extends Resource {
         collectionId,
         peerId,
         passes,
-        missingOnLocal,
-        missingOnRemote,
-        different,
-        localHeads: Object.fromEntries(different.map((documentId) => [documentId, localState.documents[documentId]])),
-        remoteHeads: Object.fromEntries(different.map((documentId) => [documentId, remoteState.documents[documentId]])),
-        // Subduction addresses documents by sedimentree id, so without this a log bundle cannot be
-        // searched for the diverged document's storage or policy activity.
-        sedimentreeIds: Object.fromEntries(
-          different.map((documentId) => [documentId, documentIdToSedimentreeIdHex(documentId)]),
-        ),
-        handleStates: Object.fromEntries(
-          different.map((documentId) => [documentId, getHandleState(this._repo, documentId)]),
-        ),
+        // Flattened to strings, and ordered before the counts: a browser console preview renders a
+        // nested array as `Array(n)` and truncates after a few keys, so this is what reaches a
+        // captured Playwright trace. Subduction addresses documents by sedimentree id, so the hex
+        // is what a log bundle is searched by.
+        different: different
+          .map(
+            (documentId) =>
+              `${documentId}[${documentIdToSedimentreeIdHex(documentId)}] ` +
+              `state=${getHandleState(this._repo, documentId)} ` +
+              `local=${(localState.documents[documentId] ?? []).join('|')} ` +
+              `remote=${(remoteState.documents[documentId] ?? []).join('|')}`,
+          )
+          .join(' ;; '),
+        missingOnLocal: missingOnLocal.join(','),
+        missingOnRemote: missingOnRemote.join(','),
       });
     }
 
