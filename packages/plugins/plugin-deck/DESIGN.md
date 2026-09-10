@@ -231,9 +231,6 @@ The URL only records the workspace you are in, so the other workspaces' open pla
 for the session and no longer. A reload arrives with none, and a workspace you switch to seeds itself
 from its first child exactly as it does on a first visit.
 
-Persisted state needs no migration. What is open comes from the URL, so a stored blob only carries
-preferences: the schema decode drops any field the deck no longer knows, and `Atom.kvs` falls back to
-`defaultValue` when a blob fails to decode entirely, which costs a fresh local deck and nothing more.
 The selected companion _variant_ lives in `react-ui-attention` view state, not here
 (`util/companion-view-state.ts`).
 
