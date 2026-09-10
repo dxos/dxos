@@ -78,6 +78,6 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {};
 
 /** The set as a channel build shows it: the Composer mark recoloured, the rest as drawn. */
-export const Channel: Story = {
+export const Preview: Story = {
   args: { channel: 'preview' },
 };
