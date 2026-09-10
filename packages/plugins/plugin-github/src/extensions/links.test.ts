@@ -50,7 +50,7 @@ const widgets = <T extends WidgetType>(doc: string, link?: WidgetDef<GitHubLinkP
 };
 
 describe('githubLinks', () => {
-  test('parses pull request and issue URLs', ({ expect }) => {
+  test('parses repository, pull request and issue URLs', ({ expect }) => {
     expect(parseGitHubLink('https://github.com/dxos/dxos/pull/13031')).toEqual({
       owner: 'dxos',
       repo: 'dxos',
@@ -59,7 +59,15 @@ describe('githubLinks', () => {
       url: 'https://github.com/dxos/dxos/pull/13031',
     });
     expect(parseGitHubLink('https://github.com/dxos/dxos/issues/12?x=1#top')?.kind).toBe('issue');
-    expect(parseGitHubLink('https://github.com/dxos/dxos')).toBeUndefined();
+    expect(parseGitHubLink('https://github.com/dxos/dxos')).toEqual({
+      owner: 'dxos',
+      repo: 'dxos',
+      kind: 'repo',
+      url: 'https://github.com/dxos/dxos',
+    });
+    expect(parseGitHubLink('https://github.com/dxos/dxos/#readme')?.kind).toBe('repo');
+    expect(parseGitHubLink('https://github.com/dxos/dxos/blob/main/README.md')).toBeUndefined();
+    expect(parseGitHubLink('https://github.com/dxos')).toBeUndefined();
     expect(parseGitHubLink('https://example.com/dxos/dxos/pull/1')).toBeUndefined();
   });
 

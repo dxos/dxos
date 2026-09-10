@@ -7,14 +7,19 @@ import { createElement } from 'react';
 
 import { AnchorWidget, type LinkWidgetProps, type WidgetDef, linkWidgets, matchPattern } from '@dxos/ui-editor';
 
-/** `https://github.com/owner/repo/pull/123` or `/issues/123`, with an optional fragment or query. */
-const GITHUB_LINK = /^https:\/\/github\.com\/([^/\s]+)\/([^/\s]+)\/(pull|issues)\/(\d+)(?:[/?#].*)?$/;
+/**
+ * `https://github.com/owner/repo`, `/pull/123` or `/issues/123`, with an optional trailing slash,
+ * fragment or query. A path below the repository (`/blob/…`, `/actions`) is a page, not an object.
+ */
+const GITHUB_LINK =
+  /^https:\/\/github\.com\/([^/\s?#]+)\/([^/\s?#]+)(?:\/(pull|issues)\/(\d+)(?:[/?#]\S*)?|\/?(?:[?#]\S*)?)$/;
 
 export type GitHubLink = {
   owner: string;
   repo: string;
-  kind: 'pull' | 'issue';
-  number: number;
+  kind: 'repo' | 'pull' | 'issue';
+  /** Absent for a repository. */
+  number?: number;
   url: string;
 };
 
@@ -28,6 +33,9 @@ export const parseGitHubLink = (url: string): GitHubLink | undefined => {
     return undefined;
   }
   const [, owner, repo, kind, number] = match;
+  if (!kind) {
+    return { owner, repo, kind: 'repo', url };
+  }
   return { owner, repo, kind: kind === 'pull' ? 'pull' : 'issue', number: Number(number), url };
 };
 

@@ -10,9 +10,13 @@ import { Card } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { GitHubCard } from '../cards';
-import { createIssue, createPullRequest } from './fixtures';
+import { createIssue, createPullRequest, createRepo } from './fixtures';
 
-const subjects = { issue: createIssue, pull: createPullRequest };
+const subjects = {
+  repo: createRepo,
+  issue: createIssue,
+  pull: createPullRequest,
+};
 
 type StoryArgs = {
   kind: keyof typeof subjects;
@@ -34,7 +38,7 @@ const DefaultStory = ({ kind }: StoryArgs) => {
 };
 
 const meta = {
-  title: 'plugins/plugin-github/cards/GitHubCard',
+  title: 'plugins/plugin-github/stories/GitHubCard',
   render: DefaultStory,
   argTypes: {
     kind: { control: 'select', options: Object.keys(subjects) },
@@ -47,10 +51,20 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
+export const Repo: Story = {
+  args: {
+    kind: 'repo',
+  },
+};
+
 export const Issue: Story = {
-  args: { kind: 'issue' },
+  args: {
+    kind: 'issue',
+  },
 };
 
 export const PullRequest: Story = {
-  args: { kind: 'pull' },
+  args: {
+    kind: 'pull',
+  },
 };

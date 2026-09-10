@@ -129,7 +129,7 @@ const DefaultStory = ({ text }: StoryArgs) => {
 };
 
 const meta = {
-  title: 'plugins/plugin-github/Links',
+  title: 'plugins/plugin-github/stories/Links',
   render: DefaultStory,
   decorators: [
     withTheme(),
@@ -151,13 +151,13 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {
   args: {
     text: trim`
-      # Pull requests and issues
+      # Repositories, pull requests and issues
 
       The drawer landed in [#13007](https://github.com/dxos/dxos/pull/13007), the Main port in
       [#13024](https://github.com/dxos/dxos/pull/13024) and [#13030](https://github.com/dxos/dxos/pull/13030).
 
-      Issues too: [#1](https://github.com/dxos/dxos/issues/1). Not a pull request or an issue:
-      [the repo](https://github.com/dxos/dxos).
+      Issues too: [#1](https://github.com/dxos/dxos/issues/1), and [the repository](https://github.com/dxos/dxos)
+      itself. A page below the repository is not an object: [the readme](https://github.com/dxos/dxos/blob/main/README.md).
     `,
   },
 };

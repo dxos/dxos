@@ -6,9 +6,9 @@ import React from 'react';
 
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Card } from '@dxos/react-ui';
-import { Issue, PullRequest } from '@dxos/types';
+import { Issue, PullRequest, Repo } from '@dxos/types';
 
-type Subject = Issue.Issue | PullRequest.PullRequest;
+type Subject = Repo.Repo | Issue.Issue | PullRequest.PullRequest;
 
 const stateHue: Record<PullRequest.State, string> = {
   open: 'green',
@@ -17,8 +17,40 @@ const stateHue: Record<PullRequest.State, string> = {
   draft: 'neutral',
 };
 
-/** Card content for a pull request or issue: reference, state, author, the diff size for a pull request, and the link out. */
+/**
+ * Card content for a repository, pull request or issue: the reference line (state, author and the
+ * diff size for a pull request; default branch for a repository), the description, and the link out.
+ */
 export const GitHubCard = ({ subject }: AppSurface.ObjectCardProps<Subject>) => {
+  if (Repo.instanceOf(subject)) {
+    return (
+      <Card.Body>
+        <Card.Row>
+          <div className='border flex justify-between items-center gap-2 text-sm'>
+            <span className='text-description'>{Repo.fullName(subject)}</span>
+            {subject.defaultBranch && (
+              <span className='dx-tag' data-hue='neutral'>
+                {subject.defaultBranch}
+              </span>
+            )}
+          </div>
+        </Card.Row>
+        {subject.description && (
+          <Card.Row>
+            <Card.Text classNames='line-clamp-3 text-description'>{subject.description}</Card.Text>
+          </Card.Row>
+        )}
+        {subject.url && (
+          <Card.Row>
+            <a className='dx-link text-sm' href={subject.url} target='_blank' rel='noopener noreferrer'>
+              Open on GitHub
+            </a>
+          </Card.Row>
+        )}
+      </Card.Body>
+    );
+  }
+
   const pull = PullRequest.instanceOf(subject) ? subject : undefined;
   return (
     <Card.Body>
@@ -28,6 +60,18 @@ export const GitHubCard = ({ subject }: AppSurface.ObjectCardProps<Subject>) => 
           <span className='dx-tag' data-hue={stateHue[subject.state]}>
             {subject.state}
           </span>
+        </div>
+      </Card.Row>
+      <Card.Row>
+        {/* <div className='flex items-center gap-2 text-sm'> */}
+        <span className='text-description'>{Issue.reference(subject)}</span>
+        <span className='dx-tag' data-hue={stateHue[subject.state]}>
+          {subject.state}
+        </span>
+        {/* </div> */}
+      </Card.Row>
+      <Card.Row>
+        <div className='flex items-center gap-2 text-sm'>
           {subject.author && <span className='text-description'>{subject.author}</span>}
           {pull?.additions !== undefined && <span className='text-green-500'>+{pull.additions}</span>}
           {pull?.deletions !== undefined && <span className='text-red-500'>−{pull.deletions}</span>}

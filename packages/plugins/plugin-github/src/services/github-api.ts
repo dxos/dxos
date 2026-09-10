@@ -400,6 +400,13 @@ export const fetchRepoIssues = (
     return req;
   }, GitHubIssueSchema);
 
+/** GET /repos/{owner}/{repo}. */
+export const fetchRepo = (owner: string, repo: string): GitHubEffect<GitHubRepo> =>
+  githubRequest(
+    () => HttpClientRequest.get(`${GITHUB_API_BASE}/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}`),
+    GitHubRepoSchema,
+  );
+
 /** GET /repos/{owner}/{repo}/issues/{number} — an issue, or the issue view of a pull request. */
 export const fetchIssue = (owner: string, repo: string, number: number): GitHubEffect<GitHubIssue> =>
   githubRequest(

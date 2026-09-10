@@ -11,7 +11,7 @@ import { Database, Filter } from '@dxos/echo';
 import { Connection } from '@dxos/link';
 import { log } from '@dxos/log';
 import * as PreviewCapabilities from '@dxos/plugin-preview/PreviewCapabilities';
-import { Issue, PullRequest } from '@dxos/types';
+import { Issue, PullRequest, Repo } from '@dxos/types';
 
 import { GitHubCapabilities } from '#types';
 
@@ -20,8 +20,8 @@ import { type GitHubLink, parseGitHubLink } from '../extensions';
 import { GitHubApi } from '../services';
 
 /**
- * Resolves a GitHub pull-request or issue URL to an in-memory `PullRequest` or `Issue` for the
- * preview popover. The object comes from the contributed `LinkSource` when a host provides one and
+ * Resolves a GitHub repository, pull-request or issue URL to an in-memory `Repo`, `PullRequest` or
+ * `Issue` for the preview popover. The object comes from the contributed `LinkSource` when a host provides one and
  * from the GitHub API otherwise; either way it is built, not stored — a preview is not a sync.
  */
 export default Capability.makeModule(
@@ -36,7 +36,7 @@ export default Capability.makeModule(
           }
           const [source = fetchFromGitHub] = capabilities.getAll(GitHubCapabilities.LinkSource);
           const object = yield* source(link, context);
-          return object && { label: Issue.reference(object), object };
+          return object && { label: Repo.instanceOf(object) ? Repo.fullName(object) : Issue.reference(object), object };
         }),
     ]);
   }),
@@ -67,18 +67,31 @@ const connectionToken = (space: NonNullable<PreviewCapabilities.PreviewLinkConte
 
 const fetchLink = (link: GitHubLink) =>
   Effect.gen(function* () {
-    if (link.kind === 'pull') {
-      return toPullRequest(link, yield* GitHubApi.fetchPullRequest(link.owner, link.repo, link.number));
+    const { owner, repo, number } = link;
+    if (link.kind === 'repo' || number === undefined) {
+      return toRepo(link, yield* GitHubApi.fetchRepo(owner, repo));
     }
-    const issue = yield* GitHubApi.fetchIssue(link.owner, link.repo, link.number);
+    if (link.kind === 'pull') {
+      return toPullRequest(link, yield* GitHubApi.fetchPullRequest(owner, repo, number));
+    }
+    const issue = yield* GitHubApi.fetchIssue(owner, repo, number);
     // The issue endpoint answers for a pull request's number too; only the pull endpoint has its diff.
     if (issue.pull_request) {
-      return toPullRequest(link, yield* GitHubApi.fetchPullRequest(link.owner, link.repo, link.number));
+      return toPullRequest(link, yield* GitHubApi.fetchPullRequest(owner, repo, number));
     }
     return toIssue(link, issue);
   });
 
-const toIssue = ({ owner, repo, number, url }: GitHubLink, issue: GitHubApi.GitHubIssue): Issue.Issue =>
+const toRepo = ({ owner, url }: GitHubLink, repo: GitHubApi.GitHubRepo): Repo.Repo =>
+  Repo.make({
+    owner,
+    name: repo.name,
+    url: repo.html_url ?? url,
+    description: repo.description ?? undefined,
+    defaultBranch: repo.default_branch ?? undefined,
+  });
+
+const toIssue = ({ owner, repo, number = 0, url }: GitHubLink, issue: GitHubApi.GitHubIssue): Issue.Issue =>
   Issue.make({
     owner,
     repo,
@@ -91,7 +104,10 @@ const toIssue = ({ owner, repo, number, url }: GitHubLink, issue: GitHubApi.GitH
     labels: issue.labels?.map((label) => label.name),
   });
 
-const toPullRequest = ({ owner, repo, number, url }: GitHubLink, pull: GitHubApi.GitHubPull): PullRequest.PullRequest =>
+const toPullRequest = (
+  { owner, repo, number = 0, url }: GitHubLink,
+  pull: GitHubApi.GitHubPull,
+): PullRequest.PullRequest =>
   PullRequest.make({
     owner,
     repo,

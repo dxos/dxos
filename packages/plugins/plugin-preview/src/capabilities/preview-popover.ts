@@ -47,6 +47,9 @@ export default Capability.makeModule(
     // most recent activation is allowed to commit popover state. Prevents a slow
     // open (async lookup) from clobbering a later close that fires while it's in flight.
     let activationSequence = 0;
+    // The anchor whose card is showing: a close arrives after the anchor's grace period, by which
+    // time the pointer may have opened another anchor, and only the shown anchor may close it.
+    let activeTrigger: HTMLElement | undefined;
     const handleAnchorActivate = async ({
       eid,
       label,
@@ -64,6 +67,10 @@ export default Capability.makeModule(
       // the popover. Operation schema requires anchor + kind, so use placeholders;
       // they're overwritten in ephemeral state but only `state` is read by the UI.
       if (state === false) {
+        if (trigger !== activeTrigger) {
+          return;
+        }
+        activeTrigger = undefined;
         await invokePromise(LayoutOperation.UpdatePopover, {
           variant: 'virtual',
           anchor: trigger,
@@ -101,6 +108,7 @@ export default Capability.makeModule(
       ];
       const title = titleProp ?? Obj.getLabel(result.object) ?? fallbackTitle;
 
+      activeTrigger = trigger;
       const input = {
         subjectRef: eid,
         subject: result.object,

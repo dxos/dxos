@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import { random } from '@dxos/random';
-import { Issue, PullRequest } from '@dxos/types';
+import { Issue, PullRequest, Repo } from '@dxos/types';
 
 import { type GitHubCapabilities } from '#types';
 
@@ -17,6 +17,19 @@ import { type GitHubLink } from '../extensions';
 /** Deterministic per link, so a re-hover shows the same fixture. */
 const seedFor = (link: GitHubLink) =>
   random.seed(link.url.split('').reduce((acc: number, char: string) => acc + char.charCodeAt(0), 1));
+
+export const createRepo = (
+  link: GitHubLink = { owner: 'dxos', repo: 'dxos', kind: 'repo', url: 'https://github.com/dxos/dxos' },
+): Repo.Repo => {
+  seedFor(link);
+  return Repo.make({
+    owner: link.owner,
+    name: link.repo,
+    url: link.url,
+    description: random.lorem.sentence(),
+    defaultBranch: 'main',
+  });
+};
 
 export const createIssue = (
   link: GitHubLink = {
@@ -31,7 +44,7 @@ export const createIssue = (
   return Issue.make({
     owner: link.owner,
     repo: link.repo,
-    number: link.number,
+    number: link.number ?? 0,
     url: link.url,
     title: random.lorem.sentence(),
     state: random.helpers.arrayElement(['open', 'closed'] as const),
@@ -54,7 +67,7 @@ export const createPullRequest = (
   return PullRequest.make({
     owner: link.owner,
     repo: link.repo,
-    number: link.number,
+    number: link.number ?? 0,
     url: link.url,
     title: random.lorem.sentence(),
     state: random.helpers.arrayElement(['open', 'merged', 'draft', 'closed'] as const),
@@ -69,4 +82,6 @@ export const createPullRequest = (
 
 /** A `LinkSource` answering from fixtures, so a story exercises the resolver without the network. */
 export const fixtureLinkSource: GitHubCapabilities.GitHubLinkSource = (link) =>
-  Effect.succeed(link.kind === 'pull' ? createPullRequest(link) : createIssue(link));
+  Effect.succeed(
+    link.kind === 'repo' ? createRepo(link) : link.kind === 'pull' ? createPullRequest(link) : createIssue(link),
+  );
