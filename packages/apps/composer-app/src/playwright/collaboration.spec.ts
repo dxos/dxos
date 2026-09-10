@@ -5,6 +5,7 @@
 import { expect, test } from '@playwright/test';
 
 import { AppManager } from './app-manager';
+import { captureDebugLogs } from './capture-debug-logs';
 import { Markdown } from './plugins';
 
 const perfomInvitation = async (host: AppManager, guest: AppManager) => {
@@ -44,10 +45,13 @@ test.describe('Collaboration tests', () => {
     await guest.init();
   });
 
-  test.afterEach(async () => {
+  // Playwright requires the first parameter to be a destructuring pattern and `no-empty-pattern`
+  // forbids an empty one, so a fixture is named and discarded. `browserName` is a plain value.
+  test.afterEach(async ({ browserName: _browserName }, testInfo) => {
     // NOTE: `afterEach` even if the test is skipped in the beforeEach!
     // Guard against uninitialized app managers.
     if (host !== undefined && guest !== undefined) {
+      await captureDebugLogs({ host, guest }, testInfo);
       await Promise.all([host.close(), guest.close()]);
     }
   });
