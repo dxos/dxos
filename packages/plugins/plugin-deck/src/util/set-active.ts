@@ -6,13 +6,15 @@ import { Attention } from '@dxos/react-ui-attention/types';
 
 import { DeckSchema } from '#types';
 
+import * as Navigation from './navigation';
+
 export type SetActiveOptions = {
   next: string[];
   deck: DeckSchema.DeckState;
   attention?: Attention.AttentionManager;
   /** The `flatten` setting; under it the companion flag is deck-wide rather than per plank. */
   flatten?: boolean;
-  segments?: { previous?: Record<string, string>; next?: Record<string, string> };
+  segments?: { previous?: Navigation.PlankSegments; next?: Navigation.PlankSegments };
 };
 
 export type SetActiveResult = {
@@ -37,9 +39,11 @@ export const computeActiveUpdates = ({
   flatten,
   segments,
 }: SetActiveOptions): SetActiveResult => {
-  const segmentOf = (id: string, map?: Record<string, string>) => map?.[id] ?? id;
-  const openSegments = new Set(next.map((id) => segmentOf(id, segments?.next)));
-  const isOpen = (id: string) => next.includes(id) || openSegments.has(segmentOf(id, segments?.previous));
+  // A plank is closed when this write does not carry it, and a write carries a plank under either
+  // name: its id, or the URL segment it came from. The projection replaces a placeholder id with the
+  // id it resolved to, which is the same plank under a new id but the same segment.
+  const carried = new Set<string>(next.flatMap((id) => [id, Navigation.segmentOf(segments?.next, id)]));
+  const isOpen = (id: string) => carried.has(id) || carried.has(Navigation.segmentOf(segments?.previous, id));
   const closed = Array.from(new Set([...deck.inactive, ...deck.active].filter((id) => !isOpen(id))));
 
   const updates = {

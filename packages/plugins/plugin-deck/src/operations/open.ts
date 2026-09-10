@@ -170,7 +170,8 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperat
         // so names whose plank this open closed are dropped rather than left dangling.
         // A level open binds the name the level owns; an ordinary open binds whatever the caller passed.
         const boundName = levelOpen?.name ?? input.name;
-        const segmentOfId = (id: string) => segments?.[id] ?? Navigation.segmentForNode(builder, id) ?? id;
+        const segmentOfId = (id: string) =>
+          segments?.[id] ?? Navigation.segmentForNode(builder, id) ?? Navigation.segmentOf(undefined, id);
         const nextSegments = next.map(segmentOfId);
         const boundSegment = input.subject[0] ? segmentOfId(input.subject[0]) : undefined;
         const plankNames = updatePlankNames(

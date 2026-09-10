@@ -30,7 +30,18 @@ const RESOLVE_TIMEOUT = '10 seconds';
 
 const LOADER_TIMEOUT = '5 seconds';
 
-let generation = 0;
+/**
+ * Latest-wins across concurrent projections. A projection can wait out both deadlines above, so one
+ * that started earlier may still be running when a newer URL arrives; `claim` hands it a `writable`
+ * that goes false the moment a newer projection claims.
+ */
+const claim = (() => {
+  let generation = 0;
+  return () => {
+    const stamp = ++generation;
+    return { writable: () => stamp === generation };
+  };
+})();
 
 /** Dispatch navigation handlers for a URL arriving from outside the app, then project it. */
 export const handleExternalUrl = Effect.fnUntraced(function* (url?: URL) {
@@ -69,8 +80,7 @@ export const projectUrl = Effect.fnUntraced(function* (url?: URL, options?: { at
   const builder = yield* Capability.get(AppCapabilities.AppGraph);
   const manager = yield* Effect.serviceOption(Plugin.Service);
 
-  const stamp = ++generation;
-  const current = () => stamp === generation;
+  const { writable } = claim();
 
   const updateState = (fn: (current: DeckSchema.StoredDeckState) => DeckSchema.StoredDeckState) => {
     registry.set(stateAtom, fn(registry.get(stateAtom)));
@@ -80,10 +90,15 @@ export const projectUrl = Effect.fnUntraced(function* (url?: URL, options?: { at
     const state = registry.get(stateAtom);
     const { segments } = registry.get(ephemeralAtom);
     const active = state.decks[state.activeDeck]?.active ?? [];
-    return new Map(active.map((id) => [segments?.[id] ?? id, id]));
+    return new Map(active.map((id) => [Navigation.segmentOf(segments, id), id]));
   });
 
-  /** Re-runs `parse` as builders register their keys, settling as soon as it succeeds. */
+  /**
+   * Re-runs `parse` as builders register their keys, settling as soon as it succeeds. Keyed off the
+   * builder's own extensions, not the `AppGraphBuilder` capability: two subscribers to that
+   * capability have no relative ordering, so waking on it can re-parse against extensions the
+   * builder has not taken yet.
+   */
   const parseWhenKeysArrive = <A>(parse: () => Option.Option<A>) =>
     Effect.callback<Option.Option<A>>((resume) => {
       const cancel = registry.subscribe(builder.extensions, () => {
@@ -148,7 +163,7 @@ export const projectUrl = Effect.fnUntraced(function* (url?: URL, options?: { at
         ),
     }),
   );
-  if (!current()) {
+  if (!writable()) {
     return undefined;
   }
   if (Option.isNone(parsed)) {
@@ -165,7 +180,7 @@ export const projectUrl = Effect.fnUntraced(function* (url?: URL, options?: { at
     return undefined;
   }
 
-  if (!current()) {
+  if (!writable()) {
     return undefined;
   }
 
@@ -217,7 +232,7 @@ export const projectUrl = Effect.fnUntraced(function* (url?: URL, options?: { at
   );
 
   const plankIds: string[] = [];
-  const segments: Record<string, string> = {};
+  const segments: Navigation.PlankSegments = {};
   let companionNodeId: string | null = null;
   let companionAnchorId: string | undefined;
   pairs.forEach((pair, index) => {
@@ -234,7 +249,7 @@ export const projectUrl = Effect.fnUntraced(function* (url?: URL, options?: { at
     segments[plankId] = Navigation.toSegment(pair);
   });
 
-  if (!current()) {
+  if (!writable()) {
     return undefined;
   }
 

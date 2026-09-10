@@ -8,6 +8,8 @@ import * as DeckSpec from '@dxos/app-toolkit/DeckSpec';
 
 import { DeckSchema } from '#types';
 
+import * as Navigation from './util/navigation';
+
 export type AddSubjectsToActiveDeckOptions = {
   /** Insert opened subjects immediately after this plank (in-plank navigation anchors at its origin). */
   pivotId?: string;
@@ -143,7 +145,7 @@ export const plankIdForName = (
   }: { active: readonly string[]; plankNames: Record<string, string>; segments?: Record<string, string> },
 ): string | undefined => {
   const segment = plankNames[name];
-  return segment ? active.find((id) => (segments?.[id] ?? id) === segment) : undefined;
+  return segment ? active.find((id) => Navigation.segmentOf(segments, id) === segment) : undefined;
 };
 
 /**

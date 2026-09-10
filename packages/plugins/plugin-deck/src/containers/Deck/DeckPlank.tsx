@@ -5,7 +5,6 @@
 import React, { type KeyboardEvent, memo, useCallback, useEffect, useMemo, useRef } from 'react';
 
 import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
-import type * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as NotFound from '@dxos/app-toolkit/NotFound';
 import { AppSurface } from '@dxos/app-toolkit/ui';
@@ -122,15 +121,8 @@ const DeckPlankInner = ({ id, part, fullscreen = false, active, path, classNames
     [path, unresolved],
   );
 
-  const loadingNode = useMemo<AppGraphNode.Node>(
-    () => ({
-      id,
-      type: PLANK_LOADING_TYPE,
-      properties: {},
-      data: null,
-    }),
-    [id],
-  );
+  // The plank the URL names, before anything has resolved: an id and nothing else.
+  const loadingNode = useMemo(() => ({ id }), [id]);
 
   const controls = (
     <PlankControls

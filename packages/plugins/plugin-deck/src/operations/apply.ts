@@ -17,6 +17,7 @@ import { DeckCapabilities } from '#types';
 import { CompanionViewState, DeckSchema } from '#types';
 
 import { updatePlankNames } from '../layout';
+import * as Navigation from '../util/navigation';
 import {
   closeCompanionPlank,
   computeActiveUpdates,
@@ -30,13 +31,19 @@ import { updateActiveDeck } from './helpers';
  * Write the deck's active planks and the URL segment each one came from, returning the item to
  * attend if attention moved.
  */
-export const applyActive = Effect.fnUntraced(function* (next: string[], nextSegments?: Record<string, string>) {
+export const applyActive = Effect.fnUntraced(function* (next: string[], nextSegments?: Navigation.PlankSegments) {
   const deck = yield* DeckCapabilities.getDeck();
   const attention = yield* Capability.get(AttentionCapabilities.Attention);
   const { flatten } = yield* Capabilities.getAtomValue(DeckCapabilities.Settings);
-  const { segments: previous } = yield* Capabilities.getAtomValue(DeckCapabilities.EphemeralState);
-  const segments = nextSegments ?? previous;
+  // Both atoms up front: a plank's width and name hang off its segment, so the two writes below have
+  // to land in one render or a plank renders for a frame with no segment to key them by.
+  const registry = yield* Capability.get(Capabilities.AtomRegistry);
+  const stateAtom = yield* Capability.get(DeckCapabilities.State);
+  const ephemeralAtom = yield* Capability.get(DeckCapabilities.EphemeralState);
 
+  const ephemeral = registry.get(ephemeralAtom);
+  const previous = ephemeral.segments;
+  const segments = nextSegments ?? previous;
   const { deckUpdates, toAttend } = computeActiveUpdates({
     next,
     deck,
@@ -44,11 +51,11 @@ export const applyActive = Effect.fnUntraced(function* (next: string[], nextSegm
     flatten,
     segments: { previous, next: segments },
   });
-  yield* Capabilities.updateAtomValue(DeckCapabilities.EphemeralState, (state) => ({ ...state, segments }));
-  const activeSegments = deckUpdates.active.map((id) => segments?.[id] ?? id);
-  yield* Capabilities.updateAtomValue(DeckCapabilities.State, (state) =>
-    updateActiveDeck(state, { ...deckUpdates, plankNames: updatePlankNames(deck.plankNames, activeSegments) }),
-  );
+  const activeSegments = deckUpdates.active.map((id) => Navigation.segmentOf(segments, id));
+  const plankNames = updatePlankNames(deck.plankNames, activeSegments);
+
+  registry.set(ephemeralAtom, { ...ephemeral, segments });
+  registry.set(stateAtom, updateActiveDeck(registry.get(stateAtom), { ...deckUpdates, plankNames }));
 
   return toAttend;
 });

@@ -518,34 +518,30 @@ describe('path-resolution', () => {
     });
   });
 
-  describe('urlSegment stamping', () => {
-    test('stamps `/<key>/<id>` on a materialized item node', async ({ expect }) => {
+  describe('representNode', () => {
+    const representAfterResolve = async (pairs: any[], nodeId: string) => {
       const builder = buildTestBuilder();
-      await EffectEx.runPromise(
-        PathResolution.resolveUrl(builder, {
-          workspace: WORKSPACE_A,
-          pairs: [{ key: 'doc', id: 'docA', workspace: WORKSPACE_A }],
-        }),
+      await EffectEx.runPromise(PathResolution.resolveUrl(builder, { workspace: WORKSPACE_A, pairs }));
+      return { builder, represented: PathResolution.representNode(builder, nodeId) };
+    };
+
+    test('maps a materialized item node back to its pair', async ({ expect }) => {
+      const { represented } = await representAfterResolve(
+        [{ key: 'doc', id: 'docA', workspace: WORKSPACE_A }],
+        `${GraphNode.RootId}/${WORKSPACE_A}/docA`,
       );
-      const node = Option.getOrThrow(Graph.getNode(builder.graph, `${GraphNode.RootId}/${WORKSPACE_A}/docA`));
-      expect(node.properties.urlSegment).toBe('/doc/docA');
+      expect(Option.getOrThrow(represented)).toEqual({ key: 'doc', id: 'docA', workspace: WORKSPACE_A });
     });
 
-    test('stamps `/<key>` on a materialized singleton node', async ({ expect }) => {
-      const builder = buildTestBuilder();
-      await EffectEx.runPromise(
-        PathResolution.resolveUrl(builder, {
-          workspace: WORKSPACE_A,
-          pairs: [{ key: 'home', workspace: WORKSPACE_A }],
-        }),
+    test('maps a materialized singleton node back to its keyless pair', async ({ expect }) => {
+      const { represented } = await representAfterResolve(
+        [{ key: 'home', workspace: WORKSPACE_A }],
+        `${GraphNode.RootId}/${WORKSPACE_A}/${HOME_SEGMENT}`,
       );
-      const node = Option.getOrThrow(
-        Graph.getNode(builder.graph, `${GraphNode.RootId}/${WORKSPACE_A}/${HOME_SEGMENT}`),
-      );
-      expect(node.properties.urlSegment).toBe('/home');
+      expect(Option.getOrThrow(represented)).toEqual({ key: 'home', workspace: WORKSPACE_A });
     });
 
-    test('stamps `/companion/<variant>` on a materialized linked node', async ({ expect }) => {
+    test('maps a linked node by the grammar rather than by its producing extension', async ({ expect }) => {
       const builder = buildTestBuilder();
       await EffectEx.runPromise(
         PathResolution.resolveUrl(builder, {
@@ -556,33 +552,27 @@ describe('path-resolution', () => {
           ],
         }),
       );
-      const node = Option.getOrThrow(
-        Graph.getNode(
-          builder.graph,
-          `${GraphNode.RootId}/${WORKSPACE_A}/docA/${builder.urlGrammar.linkedPrefix}comments`,
-        ),
+      const represented = PathResolution.representNode(
+        builder,
+        `${GraphNode.RootId}/${WORKSPACE_A}/docA/${builder.urlGrammar.linkedPrefix}comments`,
       );
-      expect(node.properties.urlSegment).toBe('/companion/comments');
+      expect(Option.getOrThrow(represented)).toEqual({ key: 'companion', id: 'comments', workspace: WORKSPACE_A });
     });
 
-    test('encodes a fixed-depth tail into `/<key>/<seg>+<id>`', async ({ expect }) => {
+    test('encodes a fixed-depth tail back into one `+`-joined id', async ({ expect }) => {
       const builder = buildTestBuilder();
+      const id = `${SUBGROUP_ID}${builder.urlGrammar.tailSeparator}nestedDocA`;
       await EffectEx.runPromise(
         PathResolution.resolveUrl(builder, {
           workspace: WORKSPACE_A,
-          pairs: [
-            {
-              key: 'nested',
-              id: `${SUBGROUP_ID}${builder.urlGrammar.tailSeparator}nestedDocA`,
-              workspace: WORKSPACE_A,
-            },
-          ],
+          pairs: [{ key: 'nested', id, workspace: WORKSPACE_A }],
         }),
       );
-      const node = Option.getOrThrow(
-        Graph.getNode(builder.graph, `${GraphNode.RootId}/${WORKSPACE_A}/${GROUP_ID}/${SUBGROUP_ID}/nestedDocA`),
+      const represented = PathResolution.representNode(
+        builder,
+        `${GraphNode.RootId}/${WORKSPACE_A}/${GROUP_ID}/${SUBGROUP_ID}/nestedDocA`,
       );
-      expect(node.properties.urlSegment).toBe(`/nested/${SUBGROUP_ID}${builder.urlGrammar.tailSeparator}nestedDocA`);
+      expect(Option.getOrThrow(represented)).toEqual({ key: 'nested', id, workspace: WORKSPACE_A });
     });
   });
 });

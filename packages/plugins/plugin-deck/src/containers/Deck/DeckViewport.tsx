@@ -52,6 +52,8 @@ import {
 import { meta } from '#meta';
 import { DeckOperation, DeckRole } from '#types';
 
+import * as Navigation from '../../util/navigation';
+
 import { findAttendedPlank, getRenderedPlanks, isCompanionOpen, layoutAppliesTopbar } from '../../util';
 import {
   ToggleComplementarySidebarButton as NaturalToggleComplementarySidebarButton,
@@ -327,7 +329,7 @@ const resolveMaxTileSize = (maxPlankWidthPx: number, hasCompanion: boolean): num
  * viewport should do.
  */
 /** The key a plank's stored width hangs off: its URL segment, or its id when it has no segment. */
-export const sizingKeyFor = (segments: Record<string, string> | undefined, id: string): string => segments?.[id] ?? id;
+export const sizingKeyFor = Navigation.segmentOf;
 
 const resolveTileSizes = (
   plankSizing: Record<string, number>,

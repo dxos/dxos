@@ -47,14 +47,7 @@ export const resolveInternalLink = (
  * outbound counterpart to {@link resolveInternalLink}. Returns `Option.none()` for a node with no
  * key-declaring producer (unmapped — see `PathResolution.representNode`).
  */
-export const getShareableLinkPath = (builder: AppGraphBuilder.GraphBuilder, nodeId: string): Option.Option<string> => {
-  // Composed from the node's own stamped `urlSegment` (`/<key>[/<id>]`) plus the workspace prefix — the
-  // segment is the single source; `representNode` remains the multi-pair (deck) machinery.
-  const urlSegment: string | undefined = Option.getOrUndefined(AppGraph.getNode(builder.graph, nodeId))?.properties
-    ?.urlSegment;
-  const workspace = nodeId.split('/')[1];
-  if (!urlSegment || !workspace) {
-    return Option.none();
-  }
-  return Option.some(`/${UrlPath.WORKSPACE_KEY}/${workspace}${urlSegment}`);
-};
+export const getShareableLinkPath = (builder: AppGraphBuilder.GraphBuilder, nodeId: string): Option.Option<string> =>
+  Option.map(PathResolution.representNode(builder, nodeId), (pair) =>
+    UrlPath.format({ workspace: pair.workspace, workspaceKey: UrlPath.WORKSPACE_KEY, pairs: [pair] }),
+  );

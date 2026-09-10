@@ -14,15 +14,33 @@ export type Navigation = {
   pairs: readonly UrlPath.Pair[];
 };
 
-/** A pair as it appears in a plank list, in its URL segment form (`doc/<id>`, `home`). */
-export type PlankSegment = string;
+/**
+ * A pair as it appears in a plank list, in its URL segment form (`doc/<id>`, `home`). Branded so a
+ * plank id cannot be passed where a segment belongs: the two are the same shape and are routinely
+ * held side by side.
+ */
+export type PlankSegment = string & { readonly [PlankSegmentBrand]: true };
+declare const PlankSegmentBrand: unique symbol;
+
+/**
+ * The URL segment each open plank came from, keyed by plank id. Stored unbranded, since it is
+ * persisted state; {@link segmentOf} is the way to read it.
+ */
+export type PlankSegments = Record<string, string>;
+
+/**
+ * The segment a plank occupies. Falls back to the id for a deck whose segments were never recorded,
+ * which is every write that did not come from the URL projection.
+ */
+export const segmentOf = (segments: PlankSegments | undefined, id: string): PlankSegment =>
+  (segments?.[id] ?? id) as PlankSegment;
 
 /** The segment a pair occupies. */
 export const toSegment = (pair: UrlPath.Pair): PlankSegment =>
-  pair.id === undefined ? pair.key : `${pair.key}/${pair.id}`;
+  (pair.id === undefined ? pair.key : `${pair.key}/${pair.id}`) as PlankSegment;
 
 /** Reverse of {@link toSegment}, against a workspace the caller already knows. */
-export const fromSegment = (segment: PlankSegment, workspace: string): UrlPath.Pair => {
+export const fromSegment = (segment: string, workspace: string): UrlPath.Pair => {
   const separator = segment.indexOf('/');
   return separator === -1
     ? { key: segment, workspace }

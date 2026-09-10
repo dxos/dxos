@@ -23,8 +23,14 @@ import { Pane } from '../Pane';
 
 type SurfaceProps = ComponentProps<typeof Surface.Surface>;
 
+/**
+ * What a plank renders: its identity plus whatever chrome it can offer. A plank the URL names but
+ * nothing has resolved yet has only an id, which is why this is not a graph node.
+ */
+export type PlankSubject = Pick<AppGraphNode.Node, 'id'> & Partial<Pick<AppGraphNode.Node, 'properties' | 'data'>>;
+
 export type PlankProps = ThemedClassName<{
-  node: AppGraphNode.Node;
+  node: PlankSubject;
   /** Attendable id; defaults to the node id. */
   attendableId?: string;
   /** Grouped sigil menu actions; when present the sigil opens a menu, otherwise it is a plain button. */
