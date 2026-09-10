@@ -191,7 +191,7 @@ catalog:
   '@swc/types': ^0.1.28
   '@tailwindcss/forms': ^0.5.9
   '@tailwindcss/oxide': ^4.3.0
-  '@tailwindcss/postcss': ^4.3.0
+  '@tailwindcss/postcss': ^4.3.3
   '@tailwindcss/vite': ^4.3.3
   '@tanstack/react-virtual': ^3.14.9
   '@tanstack/virtual-core': ^3.17.7
@@ -234,7 +234,6 @@ catalog:
   '@types/dom-speech-recognition': ^0.0.6
   '@types/flubber': ^0.4.0
   '@types/geojson': ^7946.0.14
-  '@types/globrex': ^0.1.4
   '@types/js-yaml': ^4.0.5
   '@types/jsdom': ^28.0.3
   '@types/json-stringify-safe': 5.0.0
@@ -424,7 +423,6 @@ catalog:
   get-port-please: ^3.1.1
   glob: ^13.0.3
   globby: 14.1.0
-  globrex: ^0.1.2
   glsl-curl-noise2: ^0.0.4
   glsl-noise: ^0.0.0
   glslify: ^7.1.1
@@ -584,7 +582,7 @@ catalog:
   resize-observer-polyfill: ^1.5.1
   reveal.js: ^5.1.0
   rmdir: ~1.2.0
-  rolldown: 1.1.5
+  rolldown: ~1.2.4
   rollup: ^3.29.5
   rollup-plugin-sourcemaps: ^0.6.3
   rollup-plugin-visualizer: ^5.12.0

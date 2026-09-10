@@ -307,6 +307,9 @@
       "path": "packages/sdk/migrations/tsconfig.json"
     },
     {
+      "path": "packages/experimental/ner/tsconfig.json"
+    },
+    {
       "path": "packages/core/mesh/network-manager/tsconfig.json"
     },
     {
@@ -377,6 +380,9 @@
     },
     {
       "path": "packages/plugins/plugin-client/tsconfig.json"
+    },
+    {
+      "path": "packages/plugins/plugin-cloudflare/tsconfig.json"
     },
     {
       "path": "packages/plugins/plugin-code/tsconfig.json"

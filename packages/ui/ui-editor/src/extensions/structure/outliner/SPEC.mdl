@@ -25,7 +25,7 @@ The following extension dialects are used in this document.
 | -------- | ------------------------- |
 | `module` | `org.dxos.mdl.module@1.0` |
 | `feat`   | `org.dxos.mdl.feat@1.0`   |
-| `test`   | `org.dxos.mdl.test@1.0`   |
+| `scenario` | `org.dxos.mdl.scenario@1.0` |
 
 ## Modules
 
@@ -221,7 +221,7 @@ feat F-6: Menu / action scope
 ## Acceptance
 
 ```mdl
-test T-indent-subtree
+scenario T-indent-subtree
   given: |
     - [ ] A
       - [ ] B
@@ -237,7 +237,7 @@ test T-indent-subtree
 ```
 
 ```mdl
-test T-drop-stays-in-branch
+scenario T-drop-stays-in-branch
   given: |
     - A
       - B
@@ -253,7 +253,7 @@ test T-drop-stays-in-branch
 ```
 
 ```mdl
-test T-drop-outdents-over-target
+scenario T-drop-outdents-over-target
   given: |
     - A
       - B
@@ -269,7 +269,7 @@ test T-drop-outdents-over-target
 ```
 
 ```mdl
-test T-delete-subtree
+scenario T-delete-subtree
   given: |
     - [ ] 1
     - [ ] 2
@@ -310,8 +310,8 @@ ext feat
 ```
 
 ```mdl
-ext test
-  uri: org.dxos.mdl.test@1.0
+ext scenario
+  uri: org.dxos.mdl.scenario@1.0
   desc: An acceptance scenario expressed as given / when / then steps.
   fields:
     given?: Step | Step[]

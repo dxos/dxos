@@ -36,6 +36,16 @@ projects:
     design: .agents/projects/agent-process-edge/DESIGN.md
     prs: [12765, 971, 12995, 1030]
     resume: "Phases 1-9 DONE; Phase 10 is the live one. A hosted agent now ANSWERS PROMPTS AND KEEPS CONTEXT ACROSS TURNS on EDGE — the edge suite went 1/5 to 3/5. Getting there took six runtime fixes, all pushed on claude/dxos-resume-agent-process-edge-tzmiei (dxos#12995, edge#1030), each found by driving the real hosted agent rather than by reading: (1) a handled queue entry was never retired, because the ack is a feed append read back through the eventually-consistent index, so the same turn re-ran forever — durable AckedEntriesCell; (2) a tool result reported inside its turn kept pendingWork true with nothing left to arm a wake, hanging waitForCompletion on any tool-using agent; (3) unseenWrites was a count, so a resumed process dequeuing an older entry zeroed the budget while its own prompt was unread — held by id now; (4) a second prompt on one session was dropped ('input dropped (already finished)'), and the first fix for it was insufficient because the handle's status is a client-side snapshot — liveness now asks the MANAGER; (5) spending the retry budget fell through to COMPLETION, discarding a prompt the index had not caught up to — stays resident instead; (6) assorted tests this branch broke (Chat field list, delegate-task-to-chat and the ProjectArticle stories missing RoutinePlugin, the queue-scripted hang). Model fixtures for assistant-toolkit regenerated and replay-verified (85 passed); hosted-turn fixtures committed in edge (3 entries, where the looping agent used to produce ~95). THE ONE THING STILL NOT WORKING is the point of the whole tool path: a hosted agent gets toolkit: [] and NO OPERATION HAS EVER DISPATCHED. That chain is now fully mapped in TASKS.md Phase 10 — the binding reaches EDGE and the skill RESOLVES (skills: 1, org.dxos.skill.database) after edge a277eab seeds it through EDGE's queue route instead of a client Feed.append (a client append left the feed EMPTY on the host; the test now carries that control permanently). What remains is the tool INDEX: makeToolResolverFromOperations builds from Operation.PersistentOperation records in the SPACE registry, and the hosted run logs zero of them, because DatabaseSkill's operations live in operation-service's plugin registry instead. Decide which side moves. DEAD ENDS, do not repeat: declaring AiContext.Binding/Skill in the process types (f14e477a — its commit message overstates, it did NOT fix the toolkit), and registering AiContext.Binding on the test peer (edge 3631bad). EDGE CI IS RED for a cross-repo reason, not a defect: compute-service:build cannot see requestAlarm/Process.types, which exist only in unlanded dxos#12995 — the fix is a catalog bump to a pkg.pr.new build of that branch (dispatched; see the standing comment on edge#1030). Sandbox notes: DX_ANTHROPIC_API_KEY is set so recording needs only ALLOW_LLM_GENERATION=1; dxos push needs apt-get install -y git-lfs; CI is DEPOT not GitHub Actions, so use the depot-ci skill (the GitHub API returns empty logs); the link-packages file: overrides in edge package.json/pnpm-lock.yaml must be reverted before landing. DEBUGGING: read the JSONL agent log first (DX_TEST_FILE) — toolkit/sync-complete/onAlarm lines answered in one look what source-reading got wrong repeatedly."
+  - name: coding-space-template
+    status: active
+    user: dmytro
+    host: cloud-sandbox
+    created: 2026-09-10
+    summary: "Rework plugin-debug's one RUNNABLE sample space — the space a reader executes rather than reads. Subject moves from a chatroom on Workers (whose definition of done is two browser tabs, unrelated to Composer) to a chess engine exposed as an MCP server on one Worker, so the run ends inside Composer with a chat calling the deployed service. Reshaped so nothing mid-run needs an account: DeepSeek V4 Pro through the DXOS edge instead of an Anthropic key, the assistant coding directly in a remote sandbox instead of a Claude managed agent, wrangler's unauthenticated deploy instead of a Cloudflare login, and GitHub moved to the last stage."
+    tasks: .agents/projects/coding-space-template/TASKS.md
+    design: .agents/projects/coding-space-template/DESIGN.md
+    prs: [13038]
+    resume: 'PR #13038 OPEN (https://github.com/dxos/dxos/pull/13038). The template is rewritten and the plan was EXECUTED: the chess MCP Worker is built, deployed with wrangler deploy --temporary on no Cloudflare account, and answering initialize/tools/list/both tools over the wire (best_move returns Bxc6 in 1.4s on the seeded position) - kept in reference/chess-mcp/. Running it corrected three template claims (TASKS.md 2a); two review rounds corrected six more (2b/2c), the notable ones being the claim URL being filed as a project artifact though it is a bearer credential, claiming needing to come AFTER the last redeploy since a claimed account is one the unauthenticated agent cannot update, stage four being unreachable in a default Composer because ChessPlugin is enabled nowhere by default, and two vacuous test assertions replaced with one derived from definition.schemas - which then caught that Project.make builds an Outline none of the three sample spaces declared. Test 4/4, oxfmt clean, CodeRabbit returned no actionable comments on the last two pushes. Live Composer VERIFIED by screenshot: the create-space dialog lists the template and the created space has 41 objects with the project and five stages (published at https://pub-39066a86073446d7b77b1c157b660bb5.r2.dev/demos/2026-09-10-chess-mcp-template/). THE ONE THING NOT DONE is the demo VIDEO, and the cause is measured rather than guessed: Composer shared-worker leader election has a fixed 15s deadline and ffmpeg capture (~60% of a core, of four) pushes it past that, so the app shows its fatal dialog; with no capture the same walkthrough boots in 24s and completes. Six attempts found and fixed three other real causes on the way - orphaned chromium starving the box, contention with a moon build, and a stale vite dep pre-bundle serving a pre-#13036 @dxos/protocols. The recorder and that write-up are kept in reference/demo/. A box with more cores gets the video with no change to the template.'
   - name: sample-spaces
     status: active
     user: burdon
@@ -637,23 +647,23 @@ projects:
     summary: Extend the DEUS pattern-specification language (`.mdl`) — core syntax, the standard dialect, and the DXOS domain dialect — plus the CodeMirror extension that has to follow any syntax change.
     tasks: packages/reflect/deus/TASKS.md
     design: packages/reflect/deus/docs/DESIGN.md
-    prs: []
-    resume: "Phase 1 (Deus.QA) BUILT: lang/qa.mdl defines flow + step with nine execution rules, the
-      DESIGN.md section draws the test/flow boundary, .agents/skills/running-qa-flows is the agent-side
-      contract, /dxos:qa (dxos plugin, scripts/list-flows.mjs) lists and runs them, and the
-      agent-startable debug port works end to end (DX_DEBUG_PORT -> vite define -> main.tsx ->
-      temp/debug-port.json sidecar; started from main.tsx, NOT plugin-debug, which a plain local serve
-      leaves disabled). markdown QA-1 passes 4/4 and has been run three times; markdown QA-2/QA-3 and
-      chess QA-1 are authored but status: unverified. Also landed on this branch: the MenuExtension
-      capability letting plugins contribute slash-menu commands (one group per plugin, entries name an
-      Operation not a callback) with plugin-debug''s InsertLoremIpsum as the first contributor, and two
-      table-insert fixes in ui-editor. KEY FINDINGS, all in TASKS.md: the pass rate never told us
-      anything (QA-1 was 4/4 while two of four asserts were vacuous); requires: cannot predict
-      runnability so the runner always uses the invoker with a spaceId; any part of a flow without a
-      dual face diverges (cleanup was prose and the two actors picked different mechanisms); and the
-      op key gap is everywhere — chess declares six operations of which one has a runtime counterpart
-      and startGame has none. NEXT: run the three unverified flows, then routine part (a) (reconcile a
-      PLUGIN.mdl against Operation.make), then composer-app/APP.mdl."
+    prs: [12986]
+    resume: "HANDOFF 2026-09-09 from the Default-env session to a DXOS-env session (the only kind that can run
+      the app). PR #12986 is OPEN on claude/composer-qa-framework-50u4gz at d14ef3af or later: main merged,
+      CodeRabbit's 19 findings triaged (10 fixed + resolved, 9 left open as pre-existing spec content for the
+      sweep; triage comment on the PR). Smoke run 1 (report testing/reports/2026-09-09-2047-smoke.md): app:QA-1
+      10/11, after.2 space.delete timed out because the headless helper's Chromium had no proxy flags — fixed in
+      testing/bin/qa-browser.mjs. Smoke run 2 (testing/reports/2026-09-09-2315-smoke.md, session 'qa -- take 2'): 9/11 under the
+      tightened asserts — proxy fix held (0 resets, errors empty through steps), after.2 failed again on a
+      dropped EDGE socket with the identical stranded space, so the DataSpaceManager._tombstoneSpace
+      ordering defect is confirmed app-side. NEXT, in order: (1) fix PR for space.delete (close before
+      tombstone, or tolerate a failed close and still delete + drop the proxy), verified by smoke 11/11;
+      (2) land #12986 — check the Check run
+      and CodeRabbit's re-review, no changeset needed; (3) run --tag nightly (QA-2, QA-3, markdown QA-1/2 are
+      unverified transcriptions and will need corrections like QA-1 did); (4) create the qa branch from main and
+      register the Routines per agents/routines/*.md in the DXOS environment; (5) spec-sync 'sweep 8', which
+      also clears the 8 open review findings; (6) move PLUGIN.mdl files to plugin-xxx/spec/ as its own PR. Full
+      list: packages/reflect/deus/TASKS.md Phase 2 'Later'. Skills to read first: composer-qa, cloud-sandbox."
   - name: agent-composer-introspection
     status: active
     user: burdon
@@ -712,5 +722,6 @@ ended:
     summary: 'Replace protobuf.js (@dxos/codec-protobuf, @dxos/protobuf-compiler) with buf (@bufbuild/protobuf, protoc-gen-es) and delete both packages, by converting each consumer to buf types rather than re-homing the protobuf.js type surface.'
     tasks: .agents/projects/protobufjs-to-buf/TASKS.md
     design: .agents/projects/protobufjs-to-buf/DESIGN.md
-    prs: [12833, 12857]
+    notes: .agents/projects/protobufjs-to-buf/EDGE-ASSERTION-TYPE-URL.md
+    prs: [12833, 12857, 12990]
     resume: 'DIRECTION SET BY dmaretskyi 2026-08-31: change the consumers, do not re-home the types — codec-protobuf dies with protobuf.js so nothing it exports needs a new address. This SUPERSEDES PR #12857 (closed, not merged), which extracted the transport vocabulary into a new @dxos/codec package and added a Compat<T> type deriving the protobuf.js shape from buf types; both preserved the compat shapes and the unconverted consumers, and the new package needed publishing before anything could land (the packaging trap: private fails check-public-dependencies, public fails check-packages-published). #12833 IS MERGED (b4ceea28) and completed thread #8, the last milestone-sized thread; its two Buffer-view fixes are the reason the DESIGN.md Buffer rule exists. Teardown is now sliced by consumer, see the audit table: A value codecs (DONE this PR — Codec/EncodingOptions out of hypercore/feed-store/client-services, createCodecEncoding takes a structural ValueCodec<T>, packages declaring the dependency 11 -> 8); B the Any envelope (messaging 4, rpc 3, blade-runner 2, gossip 1 — legacy {type_url,value} to buf {$typeName,typeUrl,value}); C the RPC seam (RequestOptions/ServiceBackend/ServiceProvider/ServiceDescriptorLike — MUST fix protobuf-compiler file-generator.ts first or the next prebuild re-adds the import, and lands with B since ServiceBackend.call is typed on Any); D the generated barrel (deleted, not migrated). Two items are real type fixes not import swaps: echo-client repo-proxy.ts initialValue-as-Struct hides an unconstrained create<T> and constraining it ripples through the public API (interfaces are not assignable to Record<string,unknown>), and pipeline/codec.ts is the signed feed-block replication path wanting cross-version fixtures. CI HAZARD carried from #12857: Check/test shard=3 failed on three consecutive heads including a freshly merged base while shards 0-2 were green; Depot exposes no log (empty check output, no Actions run id, get_job_logs 404) and no re-run, and the four storybook suites reproduced locally (plugin-search/inbox/terra/file) all pass in isolation, so it was never root-caused. Also unresolved: the DXOS MCP server is unauthorized in this session, so the space-side project record was never reconciled.'

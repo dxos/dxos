@@ -37,7 +37,7 @@ import { TaskList } from '@dxos/react-ui-task';
 import { Message, Task } from '@dxos/types';
 import { keyToFallback } from '@dxos/util';
 
-import { useChatToolbarActions, useDebug } from '#hooks';
+import { type ChatSwitcher, useChatToolbarActions, useDebug } from '#hooks';
 import { meta } from '#meta';
 
 import { TaskSlashCommands } from '../../commands';
@@ -344,12 +344,14 @@ const CHAT_TOOLBAR_NAME = 'Chat.Toolbar';
 type ChatToolbarProps = Pick<ActionToolbarProps, 'attendableId' | 'alwaysActive'> &
   PropsWithChildren<{
     companionTo?: Obj.Unknown;
+    /** Scopes the chat switcher; defaults to the companion chats of `companionTo`. */
+    switcher?: ChatSwitcher;
   }>;
 
 const ChatToolbar = composable<HTMLDivElement, ChatToolbarProps>(
-  ({ children, attendableId, alwaysActive, companionTo, ...props }, forwardedRef) => {
+  ({ children, attendableId, alwaysActive, companionTo, switcher, ...props }, forwardedRef) => {
     const { chat } = useChatContext(CHAT_TOOLBAR_NAME);
-    const menuActions = useChatToolbarActions({ chat, companionTo });
+    const menuActions = useChatToolbarActions({ chat, companionTo, switcher });
 
     return (
       <ActionToolbar
