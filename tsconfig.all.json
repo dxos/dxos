@@ -307,6 +307,9 @@
       "path": "packages/sdk/migrations/tsconfig.json"
     },
     {
+      "path": "packages/experimental/ner/tsconfig.json"
+    },
+    {
       "path": "packages/core/mesh/network-manager/tsconfig.json"
     },
     {
