@@ -58,12 +58,7 @@ export const addSubjectsToActiveDeck = (
   return next;
 };
 
-/** `names` with entries for planks no longer open removed, and `name` (when given) bound to `plankId`. */
-/**
- * Named planks, pruned to what is open. Keyed by URL segment rather than plank id: a name outlives
- * the id its plank resolves to, and a name pointing at a stale id would open a duplicate rather than
- * reusing the plank it names.
- */
+/** Named planks, pruned to what is open, keyed by URL segment. */
 export const updatePlankNames = (
   names: Record<string, string>,
   activeSegments: readonly string[],
@@ -138,12 +133,7 @@ export const resolveSeededPlanks = ({
   return children.slice(0, MAX_SEEDED_PLANKS);
 };
 
-/**
- * The open plank currently holding `name`.
- *
- * A name is bound to a URL segment, not to a plank id, so that it survives the id a plank is given
- * changing under it — which the URL projection does every time a placeholder resolves.
- */
+/** The open plank currently holding `name`. */
 export const plankIdForName = (
   name: string,
   {
@@ -176,7 +166,6 @@ export const resolveLevelOpen = ({
 }: {
   active: readonly string[];
   plankNames: Record<string, string>;
-  /** URL segment per open plank id, since a name is bound to a segment rather than to an id. */
   segments?: Record<string, string>;
   spec: DeckSpec.DeckSpec | undefined;
   root: string;

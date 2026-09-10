@@ -47,7 +47,6 @@ describe('computeActiveUpdates', () => {
     });
 
     test('reopening a closed plank does not close it again', ({ expect }) => {
-      // The plank was closed, so its segment mapping is gone; the id is all the write has to go on.
       const deck = makeDeck({ active: [], inactive: ['doc-1'] });
       const { deckUpdates } = computeActiveUpdates({
         next: ['doc-1'],

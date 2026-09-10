@@ -24,7 +24,6 @@ import { useDeckPlank } from './useDeckPlank';
 
 const PLANK_LOADING = <PlankLoading />;
 
-/** A plank the URL names but nothing has resolved yet; it has chrome but no subject. */
 const PLANK_LOADING_TYPE = 'dxos.org/type/plank-loading';
 
 export type DeckPlankProps = ThemedClassName<{
@@ -123,7 +122,6 @@ const DeckPlankInner = ({ id, part, fullscreen = false, active, path, classNames
     [path, unresolved],
   );
 
-  // Stands in for the node until one resolves, so the plank the URL named renders its own chrome.
   const loadingNode = useMemo<AppGraphNode.Node>(
     () => ({
       id,
@@ -144,14 +142,10 @@ const DeckPlankInner = ({ id, part, fullscreen = false, active, path, classNames
     />
   );
 
-  // In fullscreen the toolbar is hidden so the content fills the viewport.
   const headless = fullscreen;
 
-  // Borrowed for its label and icon; the plank is still the one the URL asked for.
   const shellNode = node ?? (unresolved ? notFoundNode : undefined);
   if (!shellNode) {
-    // Absent is indefinite until the restore says it gave up, so the plank waits with its chrome up:
-    // the URL is proof the plank is real, and only its subject is still arriving.
     return (
       <Plank
         ref={rootRef}

@@ -44,7 +44,7 @@ export type UseDeckPlankOptions = {
 
 export type DeckPlank = {
   node: AppGraphNode.Node | undefined;
-  /** Whether the plank's target was confirmed missing; an unconfirmed one still reads as loading. */
+  /** Whether the plank's target was confirmed missing. */
   unresolved: boolean;
   /** The not-found sentinel's node, so an unresolved plank can borrow its label and icon. */
   notFoundNode: AppGraphNode.Node | undefined;

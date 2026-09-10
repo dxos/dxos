@@ -26,22 +26,16 @@ const handler: Operation.WithHandler<typeof LayoutOperation.SwitchWorkspace> = L
         Effect.catch(() => Effect.succeed('desktop' as const)),
       );
 
-      // Applied first so the workspace's remembered deck exists to navigate to. Other workspaces'
-      // planks are the one thing the URL cannot hold, since it only ever names the active one.
       yield* applyWorkspace(input.subject);
 
       const state = yield* Capabilities.getAtomValue(DeckCapabilities.State);
       const deck = state.decks[input.subject];
       invariant(deck, `Deck not found: ${input.subject}`);
 
-      // Mobile lands on the workspace's own list panel; auto-opening the first child would skip it.
       const seeded =
         deck.active.length === 0 && platform !== 'mobile' ? openableChildren(graph, input.subject).slice(0, 1) : [];
       const active = deck.active.length > 0 ? deck.active : seeded;
 
-      // The workspace token, not its space id: a pinned workspace (settings, the registry, the
-      // account) has no space, and gating the push on one would leave the URL on the workspace we
-      // left. Only the sentinel deck, which names no workspace at all, has nothing to push.
       const workspace = GraphPath.getWorkspaceToken(input.subject);
       if (workspace) {
         yield* navigateDeck({ workspace, active, companionPlanks: deck.companionPlanks });

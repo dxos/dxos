@@ -41,8 +41,6 @@ export default Capability.makeModule(
           yield* Effect.promise(() => client.waitUntilInitialized());
 
           if (entityId === undefined) {
-            // `initialize` awaits the space list's first snapshot, so the list read here is the
-            // published one and a miss is real.
             return client.spaces.get(spaceId) ? 'exists' : 'absent';
           }
 

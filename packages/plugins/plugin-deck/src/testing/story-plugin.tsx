@@ -106,16 +106,12 @@ const storyDeckState = Capability.makeModule(() =>
   }),
 );
 
-/**
- * The workspace the story items live under. Every plank is addressed as `/w/<workspace>/<key>/<id>`, so
- * a fixture whose nodes hang straight off the root has no URL to be opened by and no plank to render.
- */
+/** The workspace the story items live under. */
 const STORY_WORKSPACE = 'stories';
 
 /** Graph id of the story workspace, which is also the story deck's id. */
 export const STORY_WORKSPACE_PATH = `${GraphNode.RootId}/${STORY_WORKSPACE}`;
 
-/** The URL key story items are addressed by. */
 const STORY_ITEM_KEY = 'item';
 
 export type StoryItem = { id: string; title: string; children?: StoryItem[] };
@@ -242,8 +238,6 @@ const storyGraphBuilder = Capability.inlineModule(
       AppGraphBuilder.createExtension({
         id: 'storyItems',
         match: GraphNodeMatcher.whenId(STORY_WORKSPACE_PATH),
-        // Without this the deck has no way to name a story plank in the URL, and the URL is the only
-        // record of what is open.
         url: { key: STORY_ITEM_KEY, kind: 'item', path: [] },
         connector: () => Effect.succeed(STORY_ITEMS.map((item, index) => toStoryItemNode(item, index, 0))),
       }),

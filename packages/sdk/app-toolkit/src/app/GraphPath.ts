@@ -68,9 +68,7 @@ export const getSpaceHomePath = (spaceId: string): string => getSpacePath(spaceI
 
 /**
  * The workspace token a qualified graph path sits under: the second segment of `root/<workspace>/…`.
- *
- * Unlike {@link getSpaceIdFromPath} this does not require the workspace to be a space, so it also
- * names the pinned workspaces (settings, the plugin registry, the account) the URL addresses.
+ * Unlike {@link getSpaceIdFromPath} this does not require the workspace to be a space.
  */
 export const getWorkspaceToken = (qualifiedPath: string): string | undefined =>
   qualifiedPath.split('/')[1] || undefined;

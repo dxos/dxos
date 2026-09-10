@@ -29,9 +29,6 @@ import { updateActiveDeck } from './helpers';
 /**
  * Write the deck's active planks and the URL segment each one came from, returning the item to
  * attend if attention moved.
- *
- * Shared by `LayoutOperation.Set` and by the URL projection, which must not invoke `Set` itself: an
- * operation that navigates and a projection that applies a navigation would otherwise call each other.
  */
 export const applyActive = Effect.fnUntraced(function* (next: string[], nextSegments?: Record<string, string>) {
   const deck = yield* DeckCapabilities.getDeck();
@@ -47,7 +44,6 @@ export const applyActive = Effect.fnUntraced(function* (next: string[], nextSegm
     flatten,
     segments: { previous, next: segments },
   });
-  // Written before the planks so a plank never renders without the segment its width and name hang off.
   yield* Capabilities.updateAtomValue(DeckCapabilities.EphemeralState, (state) => ({ ...state, segments }));
   const activeSegments = deckUpdates.active.map((id) => segments?.[id] ?? id);
   yield* Capabilities.updateAtomValue(DeckCapabilities.State, (state) =>
@@ -61,9 +57,6 @@ export const applyActive = Effect.fnUntraced(function* (next: string[], nextSegm
 export const applyWorkspace = Effect.fnUntraced(function* (workspace: string) {
   const state = yield* Capabilities.getAtomValue(DeckCapabilities.State);
   const { graph } = yield* Capability.get(AppCapabilities.AppGraph);
-  // A pinned workspace is somewhere you visit and come back from, so it must not become the deck you
-  // come back TO. A workspace missing from the graph is treated as unpinned, which only means it is
-  // recorded as previous.
   const shouldUpdatePrevious = Option.match(AppGraph.getNode(graph, state.activeDeck), {
     onNone: () => true,
     onSome: (node) => !AppGraphNode.isPinnedWorkspace(node),
@@ -74,7 +67,6 @@ export const applyWorkspace = Effect.fnUntraced(function* (workspace: string) {
     activeDeck: workspace,
     decks: current.decks[workspace] ? current.decks : { ...current.decks, [workspace]: { ...DeckSchema.defaultDeck } },
   }));
-  // Fullscreen is transient and scoped to the workspace it was entered in.
   yield* Capabilities.updateAtomValue(DeckCapabilities.EphemeralState, (current) => ({
     ...current,
     fullscreen: undefined,
@@ -100,7 +92,6 @@ export const applyCompanion = Effect.fnUntraced(function* (subject: string | nul
     return;
   }
 
-  // The selected variant is global view state (shared with the split point), not deck state.
   const viewState = yield* Capability.get(AttentionCapabilities.ViewState);
   const variant = Attention.getLinkedVariant(subject);
   viewState.update(CompanionViewState.aspect, CompanionViewState.CONTEXT, (prev) => ({ ...prev, variant }));

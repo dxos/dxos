@@ -35,9 +35,9 @@ const toTarget = (graph: AppGraph.ExpandableGraph, id: string): { spaceId: strin
 };
 
 /**
- * Whether the thing `id` addresses is there, as a three-valued answer: the graph node's presence when
- * it has one, otherwise what the {@link AppCapabilities.NavigationTargetLoader}s could determine.
- * Callers render `unknown` as loading and `absent` as not found.
+ * Whether the thing `id` addresses is there: the graph node's presence when it has one, otherwise
+ * what the {@link AppCapabilities.NavigationTargetLoader}s could determine. Callers render `unknown`
+ * as loading and `absent` as not found.
  */
 export const useNavigationPresence = (
   graph: AppGraph.ExpandableGraph,

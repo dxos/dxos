@@ -36,8 +36,6 @@ describe('segments', () => {
 });
 
 describe('the round trip', () => {
-  // The invariant the design rests on: the URL is the only durable record of what is open, so a
-  // lossy round trip loses the deck.
   const cases = [
     { name: 'workspace only', pairs: [] },
     { name: 'one plank', pairs: [{ key: 'object', id: '01JXYZ', workspace: WORKSPACE }] },

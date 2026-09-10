@@ -85,9 +85,7 @@ export default Capability.makeModule(
       );
     }
 
-    // Forked because this module sits on the startup pass: the restore can wait for late-arriving
-    // URL keys, and awaiting that here would hold the whole pass — and the boot loader with it —
-    // until the client is up.
+    // Forked: awaiting the restore here would hold the startup pass, and the boot loader with it.
     yield* Effect.forkScoped(provideServices(handleExternalUrl()));
 
     yield* Effect.addFinalizer(() =>

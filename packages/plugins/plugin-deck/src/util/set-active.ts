@@ -12,7 +12,6 @@ export type SetActiveOptions = {
   attention?: Attention.AttentionManager;
   /** The `flatten` setting; under it the companion flag is deck-wide rather than per plank. */
   flatten?: boolean;
-  /** URL segment per plank id, before and after this write. */
   segments?: { previous?: Record<string, string>; next?: Record<string, string> };
 };
 
@@ -38,13 +37,8 @@ export const computeActiveUpdates = ({
   flatten,
   segments,
 }: SetActiveOptions): SetActiveResult => {
-  // Closing is diffed over URL segments, not plank ids: the URL projection applies a plank's pair
-  // first and the id it resolves to second, and those two writes are the same plank. Diffed by id,
-  // the refinement would read as a close.
   const segmentOf = (id: string, map?: Record<string, string>) => map?.[id] ?? id;
   const openSegments = new Set(next.map((id) => segmentOf(id, segments?.next)));
-  // The id itself first: a plank closed earlier lost its segment mapping, so reopening it would
-  // otherwise be read as a close of the very plank this write is opening.
   const isOpen = (id: string) => next.includes(id) || openSegments.has(segmentOf(id, segments?.previous));
   const closed = Array.from(new Set([...deck.inactive, ...deck.active].filter((id) => !isOpen(id))));
 

@@ -51,7 +51,7 @@ export type PlankProps = ThemedClassName<{
   fallback?: SurfaceProps['fallback'];
   /** Loading placeholder for the content surface. */
   placeholder?: SurfaceProps['placeholder'];
-  /** Rendered in place of the content surface, for a plank with no subject to render yet. */
+  /** Rendered in place of the content surface. */
   content?: ReactNode;
   /** Render only the content surface, omitting the toolbar (e.g. fullscreen). */
   headless?: boolean;

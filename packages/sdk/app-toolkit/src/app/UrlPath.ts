@@ -73,10 +73,8 @@ export const isReservedKey = (key: string): boolean =>
   RESERVED_KEYS.has(key) || Key.SpaceId.isValid(key) || Key.EntityId.isValid(key);
 
 /**
- * Read the leading `/<anchor>/<workspace>` workspace token, without a key table.
- *
- * Returns `Option.none()` for any pathname that does not open with the anchor key followed by a
- * workspace segment.
+ * Read the leading `/<anchor>/<workspace>` workspace token, without a key table. `Option.none()` for
+ * a pathname that does not open with the anchor key followed by a workspace segment.
  */
 export const readWorkspace = (pathname: string): Option.Option<string> => {
   const trimmed = decode(pathname);
@@ -89,9 +87,8 @@ export const readWorkspace = (pathname: string): Option.Option<string> => {
 
 /**
  * A pathname's decoded, slash-trimmed body, or `undefined` when it is not a valid encoding.
- *
- * `decodeURIComponent` throws on a stray `%`, and a pathname reaching here came from the address bar
- * or from history, so a malformed one is an unparseable URL rather than a programming error.
+ * `decodeURIComponent` throws on a stray `%`, which a pathname from the address bar or history can
+ * carry.
  */
 const decode = (pathname: string): string | undefined => {
   try {

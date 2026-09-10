@@ -10,6 +10,7 @@ import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
 import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as CreateAtom from '@dxos/app-graph/CreateAtom';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import { type Client } from '@dxos/client';
 import { ConnectionState } from '@dxos/client/mesh';
 import * as Operation from '@dxos/compute/Operation';
 import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
@@ -25,6 +26,9 @@ export default Capability.makeModule(
     // the connector may evaluate before the client module finishes activating (dependency
     // modules contribute individually, not batched per wave) and re-evaluates when it lands.
     const clientAtom = yield* Capability.atom(ClientCapabilities.Client);
+    // Panels backed by hub services render an empty shell without one, so they contribute no node.
+    const hasHub = (clients: readonly Client[]): boolean =>
+      !!clients[0]?.config.values?.runtime?.app?.env?.DX_HUB_URL;
     const identityServiceAtom = yield* Capability.atom(ClientCapabilities.IdentityService);
     const extensions = yield* AppGraphBuilder.createExtension({
       id: 'root',
@@ -56,9 +60,7 @@ export default Capability.makeModule(
           const [identityService] = get(identityServiceAtom);
           const identity = identityService ? Option.getOrUndefined(get(Identity.atom(identityService))) : undefined;
           const status = get(CreateAtom.fromObservable(client.mesh.networkStatus));
-          // Account, invitations, and usage are all hub-service reads; without a hub URL there is
-          // no `HubHttpClient` capability and those panels render empty shells forever.
-          const hub = !!client.config.values?.runtime?.app?.env?.DX_HUB_URL;
+          const hub = hasHub([client]);
 
           return [
             AppGraphNode.make({
@@ -106,9 +108,7 @@ export default Capability.makeModule(
       match: GraphNodeMatcher.whenId(Account.workspacePath),
       connector: (_node, get) =>
         Effect.gen(function* () {
-          const [client] = get(clientAtom);
-          // Hub-service reads; without a hub URL the panel renders an empty shell forever.
-          if (!client?.config.values?.runtime?.app?.env?.DX_HUB_URL) {
+          if (!hasHub(get(clientAtom))) {
             return [];
           }
           return [
@@ -172,9 +172,7 @@ export default Capability.makeModule(
       match: GraphNodeMatcher.whenId(Account.workspacePath),
       connector: (_node, get) =>
         Effect.gen(function* () {
-          const [client] = get(clientAtom);
-          // Hub-service reads; without a hub URL the panel renders an empty shell forever.
-          if (!client?.config.values?.runtime?.app?.env?.DX_HUB_URL) {
+          if (!hasHub(get(clientAtom))) {
             return [];
           }
           return [
@@ -197,9 +195,7 @@ export default Capability.makeModule(
       match: GraphNodeMatcher.whenId(Account.workspacePath),
       connector: (_node, get) =>
         Effect.gen(function* () {
-          const [client] = get(clientAtom);
-          // Hub-service reads; without a hub URL the panel renders an empty shell forever.
-          if (!client?.config.values?.runtime?.app?.env?.DX_HUB_URL) {
+          if (!hasHub(get(clientAtom))) {
             return [];
           }
           return [

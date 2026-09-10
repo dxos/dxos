@@ -26,17 +26,12 @@ const handler: Operation.WithHandler<typeof LayoutOperation.UpdateCompanion> = L
 
       const subject = input.subject;
       if (subject === null) {
-        // Closing targets the named plank: while the deck slides companions are per-plank, so the
-        // close control says which plank it belongs to. Flat mode closes the deck's companion
-        // outright. The selected variant is left intact so reopening restores the last tab.
         const plankId = input.anchor ?? resolveCompanionAnchor(deck.active, attention.getCurrent());
         const companionPlanks = closeCompanionPlank(deck.companionPlanks, flatten, plankId);
         yield* navigateDeck({ workspace, active: deck.active, companionPlanks });
         return;
       }
 
-      // Resolve the plank first: a bare variant on an empty deck names none, and recording a selected
-      // variant for a companion that never opened would surface it on the next unrelated open.
       const plankId = resolveCompanionPlank({
         subject,
         anchor: input.anchor,
@@ -47,8 +42,6 @@ const handler: Operation.WithHandler<typeof LayoutOperation.UpdateCompanion> = L
         return;
       }
 
-      // The selected variant is global view state (shared with the split point), not deck state, and
-      // is set before navigating so the chain this builds carries the variant the caller asked for.
       const viewState = yield* Capability.get(AttentionCapabilities.ViewState);
       viewState.update(CompanionViewState.aspect, CompanionViewState.CONTEXT, (prev) => ({
         ...prev,

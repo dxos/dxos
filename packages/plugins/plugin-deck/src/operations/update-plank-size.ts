@@ -14,8 +14,6 @@ import { updateActiveDeck } from './helpers';
 const handler: Operation.WithHandler<typeof DeckOperation.UpdatePlankSize> = DeckOperation.UpdatePlankSize.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* (input) {
-      // Stored against the plank's URL segment, which survives the id changing under it once the
-      // graph catches up.
       const { segments } = yield* Capabilities.getAtomValue(DeckCapabilities.EphemeralState);
       const key = segments?.[input.id] ?? input.id;
       yield* Capabilities.updateAtomValue(DeckCapabilities.State, (state) =>

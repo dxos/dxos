@@ -50,8 +50,6 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperat
       }
 
       {
-        // Applied rather than navigated: this open's own `navigate` below carries the final
-        // workspace and planks together, so switching here would push a second history entry.
         const state = yield* Capabilities.getAtomValue(DeckCapabilities.State);
         if (input.workspace && state.activeDeck !== input.workspace) {
           yield* applyWorkspace(input.workspace);
@@ -172,10 +170,6 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperat
         // so names whose plank this open closed are dropped rather than left dangling.
         // A level open binds the name the level owns; an ordinary open binds whatever the caller passed.
         const boundName = levelOpen?.name ?? input.name;
-        // Read from the graph, not from `segments`: a subject this open is opening for the first time
-        // has no entry there yet, and binding the name to its raw id would leave the binding pointing
-        // at something the projection's segment-keyed prune drops on the very next write. The list the
-        // binding is checked against is resolved the same way, or the new plank's own name is pruned.
         const segmentOfId = (id: string) => segments?.[id] ?? Navigation.segmentForNode(builder, id) ?? id;
         const nextSegments = next.map(segmentOfId);
         const boundSegment = input.subject[0] ? segmentOfId(input.subject[0]) : undefined;
@@ -191,11 +185,7 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperat
           levelOpen?.replacedId && input.subject[0] && deck.companionPlanks.includes(levelOpen.replacedId)
             ? openCompanionPlank(deckUpdates.companionPlanks, flatten, input.subject[0])
             : deckUpdates.companionPlanks;
-        // Names are a preference and stay on the state path; what is open goes through the URL.
         yield* Capabilities.updateAtomValue(DeckCapabilities.State, (state) => updateActiveDeck(state, { plankNames }));
-        // The workspace this open targets, not the one the URL still names: applying it above does
-        // not move the URL, so reading the URL here would leave the leading workspace stale and
-        // `format` would emit a mid-chain rebase rather than a switch.
         const current = yield* currentNavigation();
         const workspace = (input.workspace && GraphPath.getWorkspaceToken(input.workspace)) || current.workspace;
         yield* navigateDeck({ workspace, active: deckUpdates.active, companionPlanks });

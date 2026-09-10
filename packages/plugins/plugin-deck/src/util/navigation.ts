@@ -8,10 +8,7 @@ import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
 import * as PathResolution from '@dxos/app-graph/PathResolution';
 import * as UrlPath from '@dxos/app-toolkit/UrlPath';
 
-/**
- * What is open, as the URL says it: a workspace and an ordered chain of pairs. The deck's source of
- * truth. Node ids are derived from this, never the other way around.
- */
+/** What is open, as the URL says it: a workspace and an ordered chain of pairs. */
 export type Navigation = {
   workspace: string;
   pairs: readonly UrlPath.Pair[];
@@ -20,7 +17,7 @@ export type Navigation = {
 /** A pair as it appears in a plank list, in its URL segment form (`doc/<id>`, `home`). */
 export type PlankSegment = string;
 
-/** The segment a pair occupies, which is also how a plank is identified. */
+/** The segment a pair occupies. */
 export const toSegment = (pair: UrlPath.Pair): PlankSegment =>
   pair.id === undefined ? pair.key : `${pair.key}/${pair.id}`;
 
@@ -32,22 +29,20 @@ export const fromSegment = (segment: PlankSegment, workspace: string): UrlPath.P
     : { key: segment.slice(0, separator), id: segment.slice(separator + 1), workspace };
 };
 
-/** Serialize to a pathname. Total: every navigation has a URL. */
+/** Serialize to a pathname. */
 export const format = ({ workspace, pairs }: Navigation): string =>
   UrlPath.format({ workspace, workspaceKey: UrlPath.WORKSPACE_KEY, pairs: [...pairs] });
 
 /**
  * Parse a pathname, which needs the key table to know which keys carry an id. `Option.none()` for a
- * pathname the table cannot yet tokenize, which is a keys-not-registered-yet answer rather than a
- * malformed-URL one; callers retry as builders register.
+ * pathname the table cannot yet tokenize; callers retry as builders register.
  */
 export const parse = (pathname: string, table: UrlPath.KeyTable): Option.Option<Navigation> =>
   UrlPath.parse(pathname, table).pipe(Option.map(({ workspace, pairs }) => ({ workspace, pairs })));
 
 /**
- * Write a navigation to the address bar, and report whether it changed. Pushing is all this does:
- * the caller is responsible for projecting the new URL into deck state, so that a push and a
- * traversal reach that projection by the same function rather than by two paths.
+ * Write a navigation to the address bar, and report whether it changed. The caller is responsible
+ * for projecting the new URL into deck state.
  */
 export const push = (next: Navigation, method: 'push' | 'replace' = 'push'): boolean => {
   const url = `${format(next)}${window.location.search}`;
@@ -62,12 +57,6 @@ export const push = (next: Navigation, method: 'push' | 'replace' = 'push'): boo
   return true;
 };
 
-/**
- * The URL segment a node occupies, or `undefined` when it has none.
- *
- * Read through the node's provenance, the same way the URL itself is written, so a segment from here
- * and the segment the deck ends up holding for that plank are the same string. A node with no segment
- * is not addressable and therefore cannot be a plank.
- */
+/** The URL segment a node occupies, or `undefined` when it has none and so cannot be a plank. */
 export const segmentForNode = (builder: AppGraphBuilder.GraphBuilder, nodeId: string): PlankSegment | undefined =>
   Option.match(PathResolution.representNode(builder, nodeId), { onNone: () => undefined, onSome: toSegment });

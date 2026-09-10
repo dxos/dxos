@@ -147,11 +147,7 @@ export const EphemeralDeckState = Schema.Struct({
   expanded: Schema.optional(Schema.String),
   /** Whether the deck is showing every plank at once as shrunk-to-fit tiles. Transient. */
   expose: Schema.optional(Schema.Boolean),
-  /**
-   * Each open plank's URL segment, by plank id. Derived from the URL the projection applied, and the
-   * key preferences hang off: a segment is stable across resolution, while the plank id it resolves
-   * to is not.
-   */
+  /** Each open plank's URL segment, by plank id. The key per-plank preferences hang off. */
   segments: Schema.optional(Schema.Record(Schema.String, Schema.mutableKey(Schema.String))),
   dialogOpen: Schema.Boolean,
   dialogType: Schema.optional(Schema.Literals(['default', 'alert'])),

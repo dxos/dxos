@@ -20,40 +20,24 @@ import { getRenderedPlanks, isCompanionOpen, resolveCompanionAnchor } from '../u
 import * as Navigation from '../util/navigation';
 import { projectUrl } from './project-url';
 
-/**
- * What the URL currently says is open.
- *
- * Read from the address bar rather than from deck state, because the address bar is the source of
- * truth: a plank the URL names but the graph has not resolved yet is in the URL and not in the deck,
- * and an operation must not drop it.
- */
+/** What the URL currently says is open. */
 export const currentNavigation = Effect.fnUntraced(function* () {
   const builder = yield* Capability.get(AppCapabilities.AppGraph);
   const registry = yield* Capability.get(Capabilities.AtomRegistry);
   const stateAtom = yield* Capability.get(DeckCapabilities.State);
   const parsed = Navigation.parse(window.location.pathname, PathResolution.buildUrlKeyTable(builder));
   return Option.getOrElse(parsed, () => ({
-    // Before the URL keys register there is nothing to read, so fall back to the workspace the deck
-    // is on and an empty chain. The operation's own subject is added by the caller.
     workspace: GraphPath.getWorkspaceToken(registry.get(stateAtom).activeDeck) ?? '',
     pairs: [],
   }));
 });
 
 /**
- * Change what is open: push the URL, then project it.
- *
- * The deck's only mutation path. A history traversal reaches the same projection through the
- * `popstate` listener, so a click and a Back press are the same operation.
- *
- * Returns the plank attention has to move to because the one holding it is no longer open. The
- * projection does not choose a plank of its own here: this navigation came from an operation, which
- * knows what it acted on.
+ * Change what is open: push the URL, then project it. Returns the plank attention has to move to
+ * because the one holding it is no longer open.
  */
 export const navigate = Effect.fnUntraced(function* (next: Navigation.Navigation, method?: 'push' | 'replace') {
   if (!next.workspace) {
-    // `/w/` names no workspace and does not parse, so pushing it would project the deck to not-found.
-    // Reachable before the URL keys register, where there is no workspace to read.
     log.warn('navigation has no workspace, so it cannot be pushed', { pairs: next.pairs.length });
     return undefined;
   }
@@ -62,7 +46,7 @@ export const navigate = Effect.fnUntraced(function* (next: Navigation.Navigation
 
 /**
  * The navigation a deck represents: a pair per active plank, with the companion pair inserted after
- * the plank it is anchored to. The inverse of what the projection applies.
+ * the plank it is anchored to.
  */
 export const deckNavigation = Effect.fnUntraced(function* (params: {
   workspace: string;
@@ -83,11 +67,8 @@ export const deckNavigation = Effect.fnUntraced(function* (params: {
 
   const pairs: UrlPath.Pair[] = [];
   for (const nodeId of active) {
-    // `representNode`, not the node's stamped `urlSegment`: the stamp needs a live node, and a plank
-    // whose subtree is momentarily out of the graph still has provenance to represent it.
     const represented = PathResolution.representNode(builder, nodeId);
     if (Option.isNone(represented)) {
-      // The URL is the only record of what is open, so a node with no binding cannot be a plank.
       log.error('node has no URL binding, so it cannot be opened', {
         nodeId,
         extension: builder.getNodeExtensionId(nodeId),

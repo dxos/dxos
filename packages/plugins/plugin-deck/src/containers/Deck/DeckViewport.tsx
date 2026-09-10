@@ -326,11 +326,7 @@ const resolveMaxTileSize = (maxPlankWidthPx: number, hasCompanion: boolean): num
  * is the content the cap exists to keep reachable, so squeezing the side panel is what a narrowing
  * viewport should do.
  */
-/**
- * A plank's width hangs off its URL segment, not its id: the id a pair resolves to can change once
- * the graph catches up, and the width must not change with it. Falls back to the id for a plank the
- * projection has no segment for.
- */
+/** The key a plank's stored width hangs off: its URL segment, or its id when it has no segment. */
 export const sizingKeyFor = (segments: Record<string, string> | undefined, id: string): string => segments?.[id] ?? id;
 
 const resolveTileSizes = (

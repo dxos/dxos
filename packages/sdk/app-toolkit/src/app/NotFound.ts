@@ -65,9 +65,8 @@ export const createEdgeExistenceProbe = (
 };
 
 /**
- * Fold the verdicts gathered for one target (across its candidate ids and every loader).
- *
- * `absent` requires unanimity over a non-empty set: silence is not disconfirmation.
+ * Fold the verdicts gathered for one target (across its candidate ids and every loader). `absent`
+ * requires unanimity over a non-empty set.
  */
 export const combineVerdicts = (
   verdicts: readonly AppCapabilities.NavigationTargetVerdict[],

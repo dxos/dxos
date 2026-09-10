@@ -39,7 +39,6 @@ const handler: Operation.WithHandler<typeof DeckOperation.Adjust> = DeckOperatio
           active: deckUpdates.active,
           companionPlanks: deckUpdates.companionPlanks,
         });
-        // The plank that moved, not the chain's end: a reorder keeps the user on what they moved.
         yield* Operation.schedule(LayoutOperation.ScrollIntoView, { subject: input.id });
       }
 
