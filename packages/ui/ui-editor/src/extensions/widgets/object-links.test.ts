@@ -8,7 +8,7 @@ import { EditorView, WidgetType } from '@codemirror/view';
 import { describe, test } from 'vitest';
 
 import { decorationSetToArray } from '../../util';
-import { extendedMarkdown } from '../language/xml';
+import { extendedMarkdown, xmlTags } from '../language/xml';
 import { type ObjectLinkProps, objectLinks } from './object-links';
 import { type WidgetDef, WidgetHostOptions, type WidgetState, widgetHost, widgetRebuildEffect } from './widgets';
 
@@ -149,6 +149,29 @@ describe('objectLinks', () => {
     // DOM attachment is not asserted: happy-dom lays out no viewport, so CM defers drawing the
     // block host here; the storybook `MarkdownEditor — WithEmbed` story covers the drawn path.
     expect(widgets[0]?.root).toBeInstanceOf(HTMLElement);
+    view.destroy();
+  });
+});
+
+describe('objectLinks with a streaming tail', () => {
+  test('a tail that starts before a matched link builds in order and claims the link', async ({ expect }) => {
+    // The tail starts in the first paragraph; the walk has already matched the link in the second.
+    const doc = '<reasoning>still arriving\n\nSee [DXOS](echo:///123) later.';
+    const parent = document.createElement('div');
+    const view = new EditorView({
+      state: EditorState.create({
+        doc,
+        extensions: [
+          extendedMarkdown({ registry: {} }),
+          widgetHost({}),
+          xmlTags({ registry: { reasoning: { streaming: true, factory: () => null } } }),
+          objectLinks({ link: recording }),
+        ],
+      }),
+      parent,
+    });
+    const found = await rebuild(view);
+    expect(found.map(({ tag, from }) => ({ tag, from }))).toEqual([{ tag: 'reasoning', from: 0 }]);
     view.destroy();
   });
 });

@@ -47,27 +47,42 @@ export default Capability.makeModule(
   }),
 );
 
-/** The default source: the space's GitHub connection token when it has one, anonymous otherwise. */
+/**
+ * The default source: each of the space's GitHub connection tokens in turn — a space can hold
+ * several, and only some may reach a private repository — then anonymous, which reaches a public one.
+ */
 const fetchFromGitHub: GitHubCapabilities.GitHubLinkSource = (link, { space }) =>
   Effect.gen(function* () {
-    const token = space ? yield* connectionToken(space) : '';
-    return yield* fetchLink(link).pipe(Effect.provide(Layer.succeed(GitHubApi.GitHubCredentials, { token })));
+    const tokens = space ? yield* connectionTokens(space) : [];
+    for (const token of [...tokens, '']) {
+      const object = yield* fetchLink(link).pipe(
+        Effect.provide(Layer.succeed(GitHubApi.GitHubCredentials, { token })),
+        Effect.tapError((error) => Effect.sync(() => log.warn('github link preview failed', { url: link.url, error }))),
+        Effect.catch(() => Effect.succeed(undefined)),
+      );
+      if (object) {
+        return object;
+      }
+    }
+    return undefined;
   }).pipe(
     Effect.provide(FetchHttpClient.layer),
-    Effect.tapError((error) => Effect.sync(() => log.warn('github link preview failed', { url: link.url, error }))),
     Effect.catch(() => Effect.succeed(undefined)),
   );
 
-/** The token of the space's first GitHub connection, or empty when it has none. */
-const connectionToken = (space: NonNullable<PreviewCapabilities.PreviewLinkContext['space']>) =>
+/** The tokens of the space's GitHub connections, in query order. */
+const connectionTokens = (space: NonNullable<PreviewCapabilities.PreviewLinkContext['space']>) =>
   Effect.gen(function* () {
     const connections = yield* Database.query(Filter.type(Connection.Connection)).run;
-    const connection = connections.find((connection) => connection.connectorId === GITHUB_PROVIDER_ID);
-    if (!connection) {
-      return '';
+    const tokens: string[] = [];
+    for (const connection of connections) {
+      if (connection.connectorId !== GITHUB_PROVIDER_ID) {
+        continue;
+      }
+      const accessToken = yield* Database.load(connection.accessToken);
+      tokens.push(accessToken.token);
     }
-    const accessToken = yield* Database.load(connection.accessToken);
-    return accessToken.token;
+    return tokens;
   }).pipe(Effect.provide(Database.layer(space.db)));
 
 const fetchLink = (link: GitHubLink) =>

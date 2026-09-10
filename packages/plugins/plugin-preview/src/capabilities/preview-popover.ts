@@ -63,17 +63,18 @@ export default Capability.makeModule(
       props,
       state,
     }: DxAnchorActivate) => {
-      const sequence = ++activationSequence;
       const { invokePromise } = capabilities.get(Capabilities.OperationInvoker);
 
       // Explicit close: callers pass `state: false` on pointer-leave to dismiss
       // the popover. Operation schema requires anchor + kind, so use placeholders;
       // they're overwritten in ephemeral state but only `state` is read by the UI.
+      // A close from another anchor is dropped before it can invalidate this one's lookup.
       if (state === false) {
         if (trigger !== activeTrigger) {
           return;
         }
         activeTrigger = undefined;
+        activationSequence++;
         await invokePromise(LayoutOperation.UpdatePopover, {
           variant: 'virtual',
           anchor: trigger,
@@ -83,6 +84,10 @@ export default Capability.makeModule(
         return;
       }
 
+      // Tracked before the lookup, so leaving the anchor while it is in flight is an accepted close
+      // that invalidates the pending result rather than a stranger's close that is dropped.
+      const sequence = ++activationSequence;
+      activeTrigger = trigger;
       const client = capabilities.get(ClientCapabilities.Client);
       const registry = capabilities.get(Capabilities.AtomRegistry);
       // Layout is optional: in standalone harnesses (Storybook, tests) no plugin contributes
@@ -111,7 +116,6 @@ export default Capability.makeModule(
       ];
       const title = titleProp ?? Obj.getLabel(result.object) ?? fallbackTitle;
 
-      activeTrigger = trigger;
       const input = {
         subjectRef: eid,
         subject: result.object,

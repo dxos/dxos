@@ -111,7 +111,7 @@ export const CreateSpaceDialog = () => {
                     description={t('create-space-dialog.templates.description')}
                   >
                     <Listbox.Root value={template} onValueChange={setTemplate}>
-                      <Listbox.Content classNames='my-2' aria-labelledby='create-space-templates'>
+                      <Listbox.Content classNames='my-2' aria-label={t('create-space-dialog.templates.label')}>
                         {templates.map(({ id, label, description, icon }) => (
                           <Listbox.Item key={id} id={id}>
                             <Listbox.ItemContent

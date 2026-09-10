@@ -442,6 +442,9 @@ const buildDecorations = (
   let last = range.from;
   let streamingFrom: number | undefined;
   const ctx: WidgetMatchContext = { state, context, widgetStateMap, notifier, counters: new Map() };
+  // Collected, then added sorted: the builder requires ascending ranges, and the streaming tail
+  // can start before a link the tree walk already matched in a later paragraph.
+  const matches: WidgetMatch[] = [];
 
   tree.iterate({
     from: range.from,
@@ -456,7 +459,7 @@ const buildDecorations = (
         try {
           const match = matcher.match(node, ctx);
           if (match) {
-            builder.add(match.from, match.to, match.decoration);
+            matches.push(match);
             // Track last widget (NOTE: range is inclusive).
             last = match.to - 1;
             break;
@@ -474,12 +477,19 @@ const buildDecorations = (
   for (const matcher of matchers) {
     const match = matcher.tail?.({ state, range, context, widgetStateMap, notifier });
     if (match) {
-      builder.add(match.from, match.to, match.decoration);
+      // The tail claims everything after it: a match the walk made inside that range would overlap.
+      const kept = matches.filter((candidate) => candidate.to <= match.from);
+      matches.length = 0;
+      matches.push(...kept, match);
       streamingFrom = match.streamingFrom;
       last = match.from;
       // Only one streaming range at a time.
       break;
     }
+  }
+
+  for (const match of matches.sort((a, b) => a.from - b.from || a.to - b.to)) {
+    builder.add(match.from, match.to, match.decoration);
   }
 
   return { from: last, streamingFrom, decorations: builder.finish() };

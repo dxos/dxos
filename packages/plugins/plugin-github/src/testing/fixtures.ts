@@ -18,6 +18,7 @@ import { type GitHubLink } from '../extensions';
 const seedFor = (link: GitHubLink) =>
   random.seed(link.url.split('').reduce((acc: number, char: string) => acc + char.charCodeAt(0), 1));
 
+/** A repository fixture for a link, deterministic per URL. */
 export const createRepo = (
   link: GitHubLink = { owner: 'dxos', repo: 'dxos', kind: 'repo', url: 'https://github.com/dxos/dxos' },
 ): Repo.Repo => {
@@ -31,6 +32,7 @@ export const createRepo = (
   });
 };
 
+/** An issue fixture for a link, deterministic per URL. */
 export const createIssue = (
   link: GitHubLink = {
     owner: 'dxos',
@@ -54,6 +56,7 @@ export const createIssue = (
   });
 };
 
+/** A pull-request fixture for a link, deterministic per URL. */
 export const createPullRequest = (
   link: GitHubLink = {
     owner: 'dxos',

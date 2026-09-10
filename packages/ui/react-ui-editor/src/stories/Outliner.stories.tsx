@@ -11,7 +11,7 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { deleteItem, hashtag, join, listItemToString, outliner, treeFacet } from '@dxos/ui-editor';
 
 import { type EditorController, type EditorMenuGroup, EditorMenuProvider } from '../components';
-import { EditorStory, EditorStoryArgs, generateList } from './testing';
+import { EditorStory, type EditorStoryArgs, generateList } from './testing';
 
 type StoryArgs = EditorStoryArgs;
 

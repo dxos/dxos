@@ -225,7 +225,7 @@ export const translations = [
         'create-space-dialog.create.label': 'Create',
         'create-space-dialog.error.message': 'Failed to create space. Please try again.',
         'create-space-dialog.templates.label': 'Templates',
-        'create-space-dialog.templates.description': 'Select a pre-built templates to get started quickly.',
+        'create-space-dialog.templates.description': 'Select a pre-built template to get started quickly.',
         'create-object-dialog.title': 'Create {{object}}',
         'object-form-confirm.label': 'OK',
         'object-form-cancel.label': 'Cancel',

@@ -39,20 +39,28 @@ export const matchSchemes =
 export const matchHosts =
   (hosts: string[]): LinkMatch =>
   (url) => {
-    let hostname: string;
+    let parsed: URL;
     try {
-      hostname = new URL(url).hostname;
+      parsed = new URL(url);
     } catch {
       return false;
     }
+    // A host names a web resource: `ftp://github.com/…` is not the widget's.
+    if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
+      return false;
+    }
+    const { hostname } = parsed;
     return hosts.some((host) => hostname === host || hostname.endsWith(`.${host}`));
   };
 
 /** Matches URLs against a pattern: `matchPattern(/github\.com\/[^/]+\/[^/]+\/pull\/\d+/)`. */
 export const matchPattern =
   (pattern: RegExp): LinkMatch =>
-  (url) =>
-    pattern.test(url);
+  (url) => {
+    // A sticky or global pattern carries `lastIndex` between calls, alternating its answer.
+    pattern.lastIndex = 0;
+    return pattern.test(url);
+  };
 
 /** Props of a widget standing in for `[label](url)` or `![label](url)`. */
 export type LinkWidgetProps<TContext = any> = WidgetProps<
