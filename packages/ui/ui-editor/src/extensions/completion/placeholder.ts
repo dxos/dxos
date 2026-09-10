@@ -107,6 +107,9 @@ export class PlaceholderWidget extends WidgetType {
     const wrap = document.createElement('span');
     wrap.className = 'cm-placeholder';
     wrap.style.pointerEvents = 'none';
+    // An inline-block starts a line box of its own, which would inherit the host line's hanging
+    // indent (a list item's negative `text-indent`) and paint the text under the marker.
+    wrap.style.textIndent = '0';
     wrap.setAttribute('aria-hidden', 'true');
     wrap.appendChild(
       typeof this.content === 'string'

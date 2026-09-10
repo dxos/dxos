@@ -4,6 +4,7 @@
 
 import React, { useMemo } from 'react';
 
+import { toPublicKey } from '@dxos/protocols/buf';
 import { type PublicKey, useClient } from '@dxos/react-client';
 import type { SpaceMember } from '@dxos/react-client/echo';
 import { useMembers } from '@dxos/react-client/echo';
@@ -26,26 +27,30 @@ export interface SpaceMemberListProps extends Partial<SpaceMemberListImplProps> 
   includeSelf?: boolean;
 }
 
+/** A member whose identity is present, which proto3 optionality does not guarantee. */
+type IdentifiedMember = SpaceMember & { identity: NonNullable<SpaceMember['identity']> };
+
+const isIdentified = (member: SpaceMember): member is IdentifiedMember => !!member.identity;
+
 export const SpaceMemberList = ({ spaceKey, includeSelf, onSelect }: SpaceMemberListProps) => {
   const client = useClient();
   const allUnsortedMembers = useMembers(spaceKey);
-  const members = useMemo(
-    () =>
-      includeSelf
-        ? allUnsortedMembers.sort((member) =>
-            member.identity.identityKey.equals(client.halo.identity.get()!.identityKey) ? -1 : 1,
-          )
-        : allUnsortedMembers.filter(
-            (member) => !member.identity.identityKey.equals(client.halo.identity.get()!.identityKey),
-          ),
-    [allUnsortedMembers],
-  );
+  const members = useMemo(() => {
+    const self = toPublicKey(client.halo.identity.get()?.identityKey);
+    const isSelf = (member: SpaceMember) => {
+      const identityKey = toPublicKey(member.identity?.identityKey);
+      return !!self && !!identityKey && identityKey.equals(self);
+    };
+    return includeSelf
+      ? allUnsortedMembers.sort((member) => (isSelf(member) ? -1 : 1))
+      : allUnsortedMembers.filter((member) => !isSelf(member));
+  }, [allUnsortedMembers, includeSelf, client]);
   return <SpaceMemberListImpl members={members} onSelect={onSelect} />;
 };
 
 export const SpaceMemberListImpl = ({ members, onSelect }: SpaceMemberListImplProps) => {
   const { t } = useTranslation(translationKey);
-  const visibleMembers = members.filter((member) => member.identity);
+  const visibleMembers = members.filter(isIdentified);
   return visibleMembers.length > 0 ? (
     <Listbox.Root>
       <Listbox.Content
@@ -56,7 +61,7 @@ export const SpaceMemberListImpl = ({ members, onSelect }: SpaceMemberListImplPr
         {visibleMembers.map((member) => {
           return (
             <IdentityListItem
-              key={member.identity.identityKey.toHex()}
+              key={toPublicKey(member.identity.identityKey)?.toHex()}
               identity={member.identity}
               presence={member.presence}
               onClick={onSelect && (() => onSelect(member))}

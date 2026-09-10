@@ -203,6 +203,17 @@
     }
   }
 
+  /*
+   * The edge strip a swipe opens a sidebar from. Touch only: under a mouse a strip along the edge
+   * takes the clicks aimed at whatever sits there, and an edge swipe is a touch gesture.
+   */
+  .dx-main-swipe-area {
+    @apply hidden;
+    @media (pointer: coarse) {
+      @apply block;
+    }
+  }
+
   /**
    * Main content padding.
    */

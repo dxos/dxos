@@ -47,9 +47,9 @@ import {
   QueryInvitationsResponse_Type,
   QueryInvitationsResponseSchema,
 } from '@dxos/protocols/buf/dxos/client/services_pb';
+import { SystemStatus } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { ConfigSchema } from '@dxos/protocols/buf/dxos/config_pb';
 import { MembershipPolicy } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
-import { SystemStatus } from '@dxos/protocols/proto/dxos/client/services';
 import { InvitationsService, SpacesService, SystemService } from '@dxos/protocols/rpc';
 
 import { remainingLifetimeSeconds } from '../spaces/data-space-manager';

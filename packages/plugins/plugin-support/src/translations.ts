@@ -35,6 +35,11 @@ export const translations = [
         'reopen.button': 'Reopen',
         // Help companion (plank-companion--help surface, shows owning plugin's meta.description).
         'help-companion.label': 'Help',
+        // Welcome tour card.
+        'tour-next.label': 'Next',
+        'tour-back.label': 'Back',
+        'tour-close.label': 'Close tour',
+        'tour-done.label': 'Done',
         // Feedback (deck-companion--help surface).
         'help.label': 'Feedback & Support',
         // Discord (deck-companion--discord surface).
@@ -50,7 +55,7 @@ export const translations = [
         'send-feedback.label': 'Submit report to Discord',
         'sending-feedback.label': 'Sending…',
         'public-report.description':
-          'Posted publicly to our Discord help channel, screenshot included. Logs go to the Composer team only.',
+          'NOTE: This form posts to our public Discord help channel (including screenshot). Logs are internal only.',
         'discord-presence-team.label': '{{count}} team',
         'discord-presence-members.label': '{{count}} members',
         'discord-presence-online.label': 'Online:',

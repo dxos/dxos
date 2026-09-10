@@ -5,7 +5,6 @@
 import { describe, expect, it } from 'tstyche';
 
 import { type SignalResponse } from '@dxos/protocols/buf/dxos/devtools/host_pb';
-import { type SignalResponse as LegacySignalResponse } from '@dxos/protocols/proto/dxos/devtools/host';
 
 import { useSignal } from './useSignal';
 
@@ -34,14 +33,10 @@ describe('SignalResponse', () => {
   });
 
   it('leaves the message payload packed', () => {
-    // Resolving a `type_url` on the consumer is what the panel must not do; the payload stays an
+    // Resolving a `typeUrl` on the consumer is what the panel must not do; the payload stays an
     // `Any` and the views dispatch on `typeUrl`.
     const message = response.data.case === 'message' ? response.data.value : undefined;
     expect(message?.payload?.typeUrl).type.toBe<string | undefined>();
     expect(message?.payload?.value).type.toBe<Uint8Array | undefined>();
-  });
-
-  it('is no longer the protobuf.js type', () => {
-    expect<LegacySignalResponse>().type.not.toBeAssignableTo<SignalResponse>();
   });
 });

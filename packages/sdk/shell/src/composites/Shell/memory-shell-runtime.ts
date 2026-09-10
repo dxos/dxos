@@ -3,6 +3,7 @@
 //
 
 import { Event } from '@dxos/async';
+import { toPublicKey } from '@dxos/protocols/buf';
 import {
   type AppContextRequest,
   type InvitationUrlRequest,
@@ -34,7 +35,7 @@ export class MemoryShellRuntime implements ShellRuntime {
   }: Partial<LayoutRequest> & Partial<AppContextRequest> & Partial<InvitationUrlRequest> = {}) {
     this._layout = layout ?? ShellLayout.DEFAULT;
     this._invitationCode = invitationCode;
-    this._spaceKey = spaceKey;
+    this._spaceKey = toPublicKey(spaceKey);
     this._invitationUrl = invitationUrl ?? window.location.origin;
     this._deviceInvitationParam = deviceInvitationParam ?? 'deviceInvitationCode';
     this._spaceInvitationParam = spaceInvitationParam ?? 'spaceInvitationCode';
@@ -67,7 +68,7 @@ export class MemoryShellRuntime implements ShellRuntime {
   setLayout(request: LayoutRequest): void {
     this._layout = request.layout;
     this._invitationCode = request.invitationCode;
-    this._spaceKey = request.spaceKey;
+    this._spaceKey = toPublicKey(request.spaceKey);
     this.layoutUpdate.emit(request);
   }
 

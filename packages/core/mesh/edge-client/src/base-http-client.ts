@@ -221,7 +221,7 @@ export abstract class BaseHttpClient {
    * non-ok, non-retryable statuses throw `EdgeCallFailedError`, mirroring `_call`.
    *
    * NOTE: Duplicates `_call`'s auth/retry loop rather than sharing it, to avoid touching `_call`'s
-   * broadly-depended-on JSON-envelope behavior. `EdgeHttpClient.anthropicAiRequest`'s separate
+   * broadly-depended-on JSON-envelope behavior. `EdgeHttpClient.aiRequest`'s separate
    * duplicate loop is a follow-up candidate for consolidating onto this method.
    */
   protected async _callRaw(ctx: Context, url: URL, args: RawHttpRequestArgs): Promise<Response> {

@@ -2,6 +2,8 @@
 // Copyright 2022 DXOS.org
 //
 
+import { create } from '@bufbuild/protobuf';
+import { EmptySchema } from '@bufbuild/protobuf/wkt';
 import type { ProtocolStream } from 'hypercore-protocol';
 import { type Duplex } from 'node:stream';
 
@@ -13,11 +15,42 @@ import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log, logInfo } from '@dxos/log';
 import { RpcClosedError, TimeoutError } from '@dxos/protocols';
-import { getBufService } from '@dxos/protocols/buf-service';
-import { type FeedInfo, type ReplicatorService } from '@dxos/protocols/proto/dxos/mesh/teleport/replicator';
+import { fromPublicKey, requirePublicKey } from '@dxos/protocols/buf';
+import { type BufService, getBufService } from '@dxos/protocols/buf-service';
+import {
+  type FeedInfo,
+  FeedInfoSchema,
+  ReplicatorService as ReplicatorServiceDesc,
+  StartReplicationRequestSchema,
+  StartReplicationResponseSchema,
+  UpdateFeedsRequestSchema,
+} from '@dxos/protocols/buf/dxos/mesh/teleport/replicator_pb';
 import { type ProtoRpcPeer, createProtoRpcPeer } from '@dxos/rpc';
 import { type ExtensionContext, type TeleportExtension } from '@dxos/teleport';
 import { ComplexMap } from '@dxos/util';
+
+type ReplicatorService = BufService<typeof ReplicatorServiceDesc>;
+
+/**
+ * A feed's replication settings as this extension holds them.
+ *
+ * proto3 makes `FeedInfo.feed_key` optional and carries it as raw bytes, so the wire shape is
+ * converted at the RPC boundary and the maps below stay keyed by `PublicKey`.
+ */
+type FeedReplication = {
+  feedKey: PublicKey;
+  download: boolean;
+  upload: boolean;
+};
+
+const toFeedReplication = (info: FeedInfo | undefined): FeedReplication => ({
+  feedKey: requirePublicKey(info?.feedKey),
+  download: info?.download ?? false,
+  upload: info?.upload ?? false,
+});
+
+const fromFeedReplication = (info: FeedReplication): FeedInfo =>
+  create(FeedInfoSchema, { ...info, feedKey: fromPublicKey(info.feedKey) });
 
 export type ReplicationOptions = {
   upload: boolean;
@@ -46,13 +79,13 @@ export class ReplicatorExtension implements TeleportExtension {
   private readonly _updateTask = new DeferredTask(this._ctx, async () => {
     try {
       if (this._extensionContext!.initiator === false) {
-        await this._rpc!.rpc.ReplicatorService.updateFeeds({
-          feeds: Array.from(this._feeds.values()).map((feed) => ({
-            feedKey: feed.key,
-            download: true,
-            upload: this._options.upload,
-          })),
-        });
+        await this._rpc!.rpc.ReplicatorService.updateFeeds(
+          create(UpdateFeedsRequestSchema, {
+            feeds: Array.from(this._feeds.values()).map((feed) =>
+              fromFeedReplication({ feedKey: feed.key, download: true, upload: this._options.upload }),
+            ),
+          }),
+        );
       } else if (this._extensionContext!.initiator === true) {
         await this._reevaluateFeeds();
       }
@@ -108,22 +141,22 @@ export class ReplicatorExtension implements TeleportExtension {
             log('received feed info', { feeds });
             invariant(this._extensionContext!.initiator === true, 'Invalid call');
             this._updateTask.schedule();
+            return create(EmptySchema);
           },
           startReplication: async ({ info }) => {
             log('starting replication...', { info });
             invariant(this._extensionContext!.initiator === false, 'Invalid call');
 
-            const streamTag = await this._acceptReplication(info);
-            return {
-              streamTag,
-            };
+            const streamTag = await this._acceptReplication(toFeedReplication(info));
+            return create(StartReplicationResponseSchema, { streamTag });
           },
           stopReplication: async ({ info }) => {
             log('stopping replication...', { info });
             // TODO(dmaretskyi): Make sure any peer can stop replication.
             invariant(this._extensionContext!.initiator === false, 'Invalid call');
 
-            await this._stopReplication(info.feedKey);
+            await this._stopReplication(requirePublicKey(info?.feedKey));
+            return create(EmptySchema);
           },
         },
       },
@@ -187,11 +220,13 @@ export class ReplicatorExtension implements TeleportExtension {
   /**
    * Try to initiate feed replication.
    */
-  private async _initiateReplication(feedInfo: FeedInfo): Promise<void> {
+  private async _initiateReplication(feedInfo: FeedReplication): Promise<void> {
     log('initiating replication', { feedInfo });
     invariant(this._extensionContext!.initiator === true, 'Invalid call');
     invariant(!this._streams.has(feedInfo.feedKey), `Replication already in progress for feed: ${feedInfo.feedKey}`);
-    const { streamTag } = await this._rpc!.rpc.ReplicatorService.startReplication({ info: feedInfo });
+    const { streamTag } = await this._rpc!.rpc.ReplicatorService.startReplication(
+      create(StartReplicationRequestSchema, { info: fromFeedReplication(feedInfo) }),
+    );
     if (!streamTag) {
       return;
     }
@@ -204,7 +239,7 @@ export class ReplicatorExtension implements TeleportExtension {
    * @returns A stream tag for the replication stream or `undefined` if we don't want to replicate.
    */
   @synchronized
-  private async _acceptReplication(feedInfo: FeedInfo): Promise<string | undefined> {
+  private async _acceptReplication(feedInfo: FeedReplication): Promise<string | undefined> {
     invariant(this._extensionContext!.initiator === false, 'Invalid call');
 
     if (!this._feeds.has(feedInfo.feedKey) || this._streams.has(feedInfo.feedKey)) {
@@ -216,7 +251,7 @@ export class ReplicatorExtension implements TeleportExtension {
     return tag;
   }
 
-  private async _replicateFeed(info: FeedInfo, streamTag: string): Promise<void> {
+  private async _replicateFeed(info: FeedReplication, streamTag: string): Promise<void> {
     log('replicate', { info, streamTag });
     invariant(!this._streams.has(info.feedKey), `Replication already in progress for feed: ${info.feedKey}`);
 
@@ -304,5 +339,5 @@ type ActiveStream = {
   streamTag: string;
   networkStream: Duplex;
   replicationStream: ProtocolStream;
-  info: FeedInfo;
+  info: FeedReplication;
 };

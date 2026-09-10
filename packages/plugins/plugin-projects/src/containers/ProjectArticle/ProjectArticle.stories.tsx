@@ -254,6 +254,17 @@ export const Default: Story = {
   },
 };
 
+/** The article opened on its Tasks tab: the seeded set, its two tasks, and the delegate toolbar. */
+export const Tasks: Story = {
+  ...Default,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await seedContent();
+    await showTab(canvas, 'tasks');
+    await expect(canvas.findByText(TASK_TITLE, undefined, { timeout: 10_000 })).resolves.toBeTruthy();
+  },
+};
+
 /**
  * Each section is asserted by its content rather than its heading, since an invalid surface id is
  * dropped silently and leaves the heading rendering over an empty section.
@@ -274,6 +285,12 @@ export const Sections: Story = {
     // Artifacts: the section heading renders, and the seeded artifact's label resolves.
     await expect(canvas.findByText('Artifacts', undefined, { timeout: 10_000 })).resolves.toBeTruthy();
     await findPainted(canvas, ARTIFACT_TITLE);
+
+    // The tabs are painted, not just present: a `w-full` sibling toolbar once squeezed the tablist
+    // to zero width, and its scroll container clipped both buttons while every query still found them.
+    const tablist = (await canvas.findByRole('tablist', undefined, { timeout: 10_000 })) as HTMLElement;
+    await waitFor(() => expect(tablist.clientWidth).toBeGreaterThanOrEqual(tablist.scrollWidth), { timeout: 10_000 });
+    await expect(tablist.getBoundingClientRect().width).toBeGreaterThan(0);
 
     // Tasks: behind its own toolbar tab, so switch to it. The task title is the load-bearing
     // assertion — an invalid surface id is dropped silently, leaving an empty panel.

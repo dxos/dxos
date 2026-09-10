@@ -47,6 +47,7 @@
 @import './css/components/tag.css';
 @import './css/components/text.css';
 @import './css/components/toast.css';
+@import './css/components/tour.css';
 
 /* @layer dx-components (layout) */
 @import './css/layout/main.css';

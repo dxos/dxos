@@ -18,8 +18,9 @@ import { invariant } from '@dxos/invariant';
 import { type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { dataGenerator } from '@dxos/plugin-script/templates';
+import { toPublicKey } from '@dxos/protocols/buf';
 import { type Runtime_Client_StorageSchema } from '@dxos/protocols/buf/dxos/config_pb';
-import { type IndexConfig } from '@dxos/protocols/proto/dxos/echo/indexing';
+import { type IndexConfig } from '@dxos/protocols/buf/dxos/echo/indexing_pb';
 import { trace } from '@dxos/tracing';
 
 import { type ReplicantEnv, ReplicantRegistry } from '../env';
@@ -96,7 +97,7 @@ export class EdgeReplicant {
     const agentDevice = this._client.halo.devices
       .get()
       .find((device) => device.profile?.type === DeviceType.AGENT_MANAGED);
-    return agentDevice?.deviceKey.toHex();
+    return toPublicKey(agentDevice?.deviceKey)?.toHex();
   }
 
   @trace.span()
@@ -106,7 +107,7 @@ export class EdgeReplicant {
     const agentDevice = this._client.halo.devices
       .get()
       .find((device) => device.profile?.type === DeviceType.AGENT_MANAGED);
-    const agentKey = agentDevice?.deviceKey.toHex();
+    const agentKey = toPublicKey(agentDevice?.deviceKey)?.toHex();
     invariant(agentKey, 'no agent key');
 
     const response = await this._client!.edge.createSpace({ agentKey });

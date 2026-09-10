@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { mx, positionerUnplaced, surfaceShadow, surfaceZIndexVar } from '@dxos/ui-theme';
+import { mx, positionerUnplaced, surfaceShadow, surfaceZIndex, surfaceZIndexVar } from '@dxos/ui-theme';
 import { type ComponentFunction, type Elevation, type Theme } from '@dxos/ui-types';
 
 export type SelectStyleProps = Partial<{
@@ -14,10 +14,14 @@ const positioner: ComponentFunction<SelectStyleProps> = ({ elevation }, ...etc) 
   mx(positionerUnplaced, surfaceZIndexVar({ elevation, level: 'menu' }), ...etc);
 
 // `--reference-width` and `--available-height` are set by the machine on the positioner.
-const content: ComponentFunction<SelectStyleProps> = (_props, ...etc) => {
+const content: ComponentFunction<SelectStyleProps> = ({ elevation }, ...etc) => {
   return mx(
     'dx-modal-surface rounded-sm border border-separator flex flex-col overflow-hidden',
     'min-w-(--reference-width) max-h-(--available-height)',
+    // On first placement the machine copies this element's computed `z-index` onto the positioner as
+    // `--z-index`, overwriting the class above; without one here it copies `auto` and the open menu
+    // paints behind its surroundings.
+    surfaceZIndex({ elevation, level: 'menu' }),
     surfaceShadow({ elevation: 'positioned' }),
     ...etc,
   );

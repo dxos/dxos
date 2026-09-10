@@ -75,7 +75,7 @@ not what a migration replaces.
 | Image           |  257 | none                                                                                         | —                                                                  |            | keep                                                                                                                                                                                                |
 | Input           | 1247 | `react-checkbox` + RAC segmented fields                                                      | `checkbox`, `field`, `number-input`, `password-input`, `pin-input` |            | checkbox done (Phase 2); field done 2026-09-05 — `Root`/`Label`/`Description`/`Validation`/`TextInput`/`TextArea` on `field`, `@dxos/react-input` removed; date/time fields follow the RAC decision |
 | Link            |   53 | scaffolding                                                                                  | —                                                                  |            | keep                                                                                                                                                                                                |
-| Main            |  615 | `react-dialog` (sidebars)                                                                    | `dialog` / `drawer`                                                |            | done with Dialog (Phase 4a)                                                                                                                                                                         |
+| Main            |  615 | `react-dialog` (sidebars)                                                                    | `dialog` / `drawer`                                                |            | done with Dialog (Phase 4a); on `drawer` since Phase 7 step 1                                                                                                                                       |
 | MediaPlayer     |  196 | none                                                                                         | —                                                                  |            | keep                                                                                                                                                                                                |
 | Menu            |  896 | **fork** of `react-menu`, `dropdown-menu`, `context-menu`                                    | `menu` (one machine; `contextTrigger` part)                        |        29² | done (Phase 3); graph rendering moved to `react-ui-menu`'s builders                                                                                                                                 |
 | MenuButton      |  109 | `Menu`                                                                                       | —                                                                  |            | done with Menu                                                                                                                                                                                      |
@@ -111,7 +111,7 @@ Ark components with no counterpart in `react-ui`, for reference:
 | `tabs`            | `react-ui` `Tabs` — on Ark                           | done; folded in from `react-ui-tabs`          |
 | `combobox`        | hand-built in `react-ui-list`                        | candidate, not obligation (+87.9 KB raw)      |
 | `listbox`         | hand-built in `react-ui-list`                        | candidate, not obligation (+22.5 KB raw)      |
-| `drawer`          | `react-ui` `Drawer` — on Ark                         | done 2026-09-09 (Phase 7); `Main` port open   |
+| `drawer`          | `react-ui` `Drawer` — on Ark                         | done 2026-09-09 (Phase 7); `Main` step 1 done |
 | `tree-view`       | `react-ui-list` `Tree` — already on Ark              | the reason Ark is in the app                  |
 | `hover-card`      | none                                                 |                                               |
 | `navigation-menu` | none                                                 |                                               |
@@ -134,7 +134,7 @@ Ark components with no counterpart in `react-ui`, for reference:
 | `marquee`         | none (`TextCrawl` is a different thing)              |                                               |
 | `image-cropper`   | none                                                 |                                               |
 | `json-tree-view`  | none (devtools has its own `ObjectsTree` on `Tree`)  |                                               |
-| `toc`             | none                                                 | deferred 2026-09-09: no consumer decided      |
+| `toc`             | `react-ui` `Toc` — on Ark                            | done 2026-09-09 (Phase 7); consumer open      |
 | `angle-slider`    | none                                                 |                                               |
 | `cascade-select`  | none                                                 |                                               |
 
@@ -606,7 +606,7 @@ The 36 `@-ui/*` catalog entries are gone, with `aria-hidden`, `react-remove-scro
 `tailwindcss-radix` and `react-qr-rounded`; `pnpm knip` is clean. What remains of Radix in the
 lockfile arrives through tldraw, excalidraw and leva.
 
-### Phase 7 — `Drawer`, and `Main` on the drawer machine _(component done 2026-09-09; the port is open)_
+### Phase 7 — `Drawer`, and `Main` on the drawer machine _(component done 2026-09-09; port step 1 done the same day)_
 
 `Drawer` (`react-ui/src/components/Drawer`) wraps Ark's drawer: `Root` names the edge as a `side`
 (`start`/`end`/`top`/`bottom`) and maps it to the machine's `swipeDirection`; `Overlay` is the backdrop
@@ -656,6 +656,84 @@ untouched, and a synthetic touch swipe was driven through the machine. Findings:
   complementary sidebar swipe-to-dismiss, and `Drawer.SwipeArea` adds edge-swipe-to-open on touch,
   which nothing provides today. `closeThreshold` becomes a fraction of the sidebar's width rather
   than 64px. Still unverified: a real touch device (WKWebView), the case that matters.
+
+**`Main` port, step 1 (2026-09-09).** `MainSidebar` below `lg` is `useDrawer` in place of `useDialog`,
+with the same non-modal settings (`modal`, `trapFocus`, `preventScroll`, `restoreFocus` all off) and
+`swipeDirection` from the side; `hidden={false}` keeps the content mounted for `main.css`'s inset slide
+exactly as before. The public API, the three-state model, the `lg` landmark branch, `main.css`'s
+geometry and the deck's focus CSS are untouched — step 2 (push layout at `lg`, on `Drawer push`'s
+clip-and-sheet) is a separate PR. What changed:
+
+- `useSwipeToDismiss` (103 lines, navigation side only, driven off `inset-inline-start` and inline
+  `transition-duration`) is deleted; the machine's content drag replaces it on both sidebars.
+  `swipeToDismiss` is now on by default and maps to the content's `draggable`.
+- `swipeToOpen` (on by default) renders the machine's `SwipeArea` beside the content while the drawer
+  is closed: a touch swipe inward from the edge opens the sidebar through `onOpenChange(true)` →
+  `'expanded'`. The strip is touch-only (`.dx-main-swipe-area`, `@media (pointer: coarse)`), since under
+  a mouse a fixed edge strip takes the clicks aimed at whatever sits at the edge. There is no live
+  preview of the opening swipe: the machine positions the content with its transform from
+  off-screen, but `main.css` holds a closed sidebar at `-100vw`, so the panel slides in on release.
+- The two sidebars are sibling layers in Zag's dismissable stack, which treats the later-opened one as
+  nested and dismisses it when the other leaves; `onRequestDismiss` vetoes a request whose target layer
+  does not contain the sidebar, as `Drawer.Root` does. `TestSwipeToDismiss` opens both on mount and
+  checks the complementary sidebar survives the navigation sidebar's swipe.
+- The machine is open only while the sidebar is `expanded`: below `lg` that is the one state on
+  screen, and `collapsed` is the resting state there (the deck's default, where the overlay sends a
+  sidebar). A dismissal therefore returns to `collapsed`, not `closed` (the dialog port went to
+  `closed`, which at `lg` is the no-rail state), and the swipe area can open from `collapsed`.
+  `onOpenChange` handles `open: true` (the swipe area's release), not only dismissal.
+- `aria-label` is on the element rather than the machine, so the `lg` landmark carries it too.
+
+`Main.stories.tsx` pins it in the vitest browser at an 800px viewport: swipe-to-dismiss on both sides
+(mid-drag `data-dragging` and a non-zero `--drawer-translate-x`, `collapsed` on release), a short drag
+snapping back, and a touch swipe from the swipe area opening the sidebar resting `collapsed`. The deck and
+navtree stories that mount `Main` pass unchanged. Still to do before this reaches users on iOS: the
+WKWebView touch check, and the interaction with the OS back-swipe on the left edge.
+
+### Phase 7b — `Toc` _(2026-09-09)_
+
+`Toc` (`react-ui/src/components/Toc`) wraps Ark's toc machine part for part: `Root` owns the machine
+(`items` as `{ value, depth }`, an optional `scrollEl`, controlled/uncontrolled `activeIds`,
+`rootMargin`/`threshold` for the `IntersectionObserver`, `autoScroll`, `scrollBehavior`) and publishes
+the indicator's rect as `--top`/`--height`; `Content` is the document (an `article`); `Nav` the
+landmark, labelled by `Title`; `List` the positioned ancestor the machine measures item offsets
+against; `Indicator` a bar spanning the active items; `Item` indents by `--depth`; `Link` is the
+anchor, which with a `scrollEl` scrolls the heading into view and pushes the hash instead of letting
+the browser jump. The machine resolves an item by `getElementById(value)`, so it fits rendered
+documents whose headings carry ids — `MarkdownView` does not give its headings ids today, and the
+CodeMirror editor renders no headings at all; the consumer is still to decide (`rehype-slug` on
+`MarkdownView` is the obvious first). `Toc.stories.tsx` pins it in the vitest browser: scrolling the
+container to a heading activates its link and moves the indicator onto the active items; clicking a
+link scrolls the container so the heading lands at its top edge.
+
+### Phase 7c — `Tour`, and the welcome tour off `react-joyride` _(2026-09-09)_
+
+`Tour` (`react-ui/src/components/Tour`) wraps Ark's tour machine part for part: `useTour` creates the
+machine from `steps` (`{ id, type, target, title, description, placement, arrow, backdrop, actions,
+effect }`) and `Root` provides it, so the consumer keeps the api (`start`, `next`, `prev`, `setStep`,
+`setSteps`); `Portal` places `Backdrop` (the scrim, with the target cut out by clip-path), `Spotlight`
+(a ring the machine sizes over the target) and `Positioner` (beside the target for a `tooltip` step,
+centred for a `dialog` step) against the document; `Content` is the alert dialog with `Arrow`,
+`Title`, `Description`, `ProgressText`, `Close`, `Control` and the `Actions`/`ActionTrigger` render
+prop over a step's actions. The machine waits up to three seconds for a target (mutation observer),
+scrolls it into view, marks it `data-tour-highlighted` (which `tour.css` turns into
+`--controls-opacity: 1`, so hover-revealed controls show), traps focus between card and target, and
+walks steps on the arrow keys. The parts stack on `--tour-layer` over `--tour-z-index`, set by the
+theme at the tooltip level. `Root` defaults to `lazyMount unmountOnExit`, so the card is in the DOM
+only while a tour runs. `Tour.stories.tsx` walks a dialog step and three tooltip steps in the vitest
+browser: placement side, highlight hand-off, progress text, arrow-key navigation, Escape.
+
+`plugin-support`'s `WelcomeTour` is rebuilt on it, and `react-joyride`, `react-floater` and
+`type-fest` (a TS2742 hack for the floater types) leave the repo. `Tour.Step` is now the plugin's own
+type — `target` (selector or function), `title`, `description`, `placement`, and `before` — and the
+composer's `help.ts` steps drop their joyride fields. `before` becomes the machine step's `effect`:
+the step shows once the hook settles, and the target is resolved after it, so a hook that opens the
+sidebar brings its target into being — the old `waitForTarget` mutation observer is the machine's.
+The dialog pause is kept: while `layout.dialogOpen` the tour leaves through its close trigger (the
+api exposes no dismiss) with the step remembered, and resumes there when the dialog closes; a target
+that never appears ends the tour. The card keeps its test ids and `data-step` numbering (the step ids
+are one-based positions, which the machine stamps as `data-step`), so `first-run.spec.ts` reads
+unchanged. `WelcomeTour.stories.tsx` walks the steps by the card's own buttons.
 
 ## 5. Net effect
 

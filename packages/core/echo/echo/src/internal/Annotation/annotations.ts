@@ -252,8 +252,20 @@ export const PropertyMeta = (name: string, value: PropertyMetaValue) => {
   };
 };
 
-export const getPropertyMetaAnnotation = <T>(prop: SchemaAST.PropertySignature, name: string): T | undefined =>
-  SchemaAST.getAnnotation<PropertyMetaAnnotation>(prop.type, PropertyMetaAnnotationId)?.[name] as T | undefined;
+/**
+ * Reads one property-meta entry off a property. An optional property's type is a union of the
+ * annotated schema and `undefined`, whose own annotations are empty, so the members are read too.
+ */
+export const getPropertyMetaAnnotation = <T>(prop: SchemaAST.PropertySignature, name: string): T | undefined => {
+  const candidates = SchemaAST.isUnion(prop.type) ? [prop.type, ...prop.type.types] : [prop.type];
+  for (const ast of candidates) {
+    const value = SchemaAST.getAnnotation<PropertyMetaAnnotation>(ast, PropertyMetaAnnotationId)?.[name];
+    if (value !== undefined) {
+      return value as T;
+    }
+  }
+  return undefined;
+};
 
 //
 // Reference
@@ -275,6 +287,8 @@ export type SchemaMeta = TypeMeta & { id: string };
 /**
  * Identifies a schema as hidden from user-facing surfaces (like dotfiles — visible only via an advanced setting).
  */
+// TODO(wittjosiah): Invert the default? Hide every type unless it opts in, so a new type is
+//   invisible until someone marks it as user-facing rather than visible until someone hides it.
 export const HiddenAnnotationId = '@dxos/schema/annotation/Hidden';
 export const HiddenAnnotation = createAnnotationHelper<boolean>(HiddenAnnotationId);
 

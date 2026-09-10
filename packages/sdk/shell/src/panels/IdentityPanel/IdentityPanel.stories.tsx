@@ -2,11 +2,13 @@
 // Copyright 2023 DXOS.org
 //
 
+import { create } from '@bufbuild/protobuf';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
 import { IdentityDid } from '@dxos/keys';
-import { ConnectionState } from '@dxos/protocols/buf/dxos/client/services_pb';
+import { fromPublicKey } from '@dxos/protocols/buf';
+import { ConnectionState, IdentitySchema } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { random } from '@dxos/random';
 import { PublicKey } from '@dxos/react-client';
 import { Invitation_State } from '@dxos/react-client/invitations';
@@ -26,13 +28,13 @@ const noOpProps: IdentityPanelImplProps = {
   send: () => {},
   activeView: 'identity-action-chooser',
   createInvitationUrl: (code) => code,
-  identity: {
+  identity: create(IdentitySchema, {
     did: IdentityDid.random(),
-    identityKey: PublicKey.random(),
+    identityKey: fromPublicKey(PublicKey.random()),
     profile: {
       displayName: random.person.firstName(),
     },
-  },
+  }),
   devices: [],
   connectionState: ConnectionState.ONLINE,
   onManageCredentials: async () => console.log('manage credentials'),
