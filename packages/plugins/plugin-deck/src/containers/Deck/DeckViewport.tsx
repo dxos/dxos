@@ -450,7 +450,7 @@ const DeckPlankTile: MosaicStackTileComponent<string> = (props) => {
   const maxSize = resolveMaxTileSize(maxPlankWidthPx, !!companion);
   const { companionSize, tileSize: storedSize } = resolveTileSizes(
     deck.plankSizing,
-    Navigation.segmentOf(state.segments, id),
+    Navigation.segmentOf(deck.segments, id),
     !!companion,
     maxSize,
   );
@@ -1704,7 +1704,7 @@ export const DeckPlanks = () => {
     const paired = !!lastPlankCompanionId;
     const { tileSize } = resolveTileSizes(
       deck.plankSizing,
-      Navigation.segmentOf(state.segments, lastPlankId),
+      Navigation.segmentOf(deck.segments, lastPlankId),
       paired,
       resolveMaxTileSize(maxPlankWidthPx, paired),
     );
@@ -1726,7 +1726,7 @@ export const DeckPlanks = () => {
     lastPlankCompanionId,
     lastTileWidthPx,
     deck.plankSizing,
-    state.segments,
+    deck.segments,
     maxPlankWidthPx,
     viewportWidthPx,
   ]);

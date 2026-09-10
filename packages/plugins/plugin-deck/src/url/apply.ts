@@ -42,7 +42,8 @@ export const applyActive = Effect.fnUntraced(function* (planks: readonly Navigat
   const ephemeralAtom = yield* Capability.get(DeckCapabilities.EphemeralState);
 
   const ephemeral = registry.get(ephemeralAtom);
-  const previous = ephemeral.segments;
+  const workspace = registry.get(stateAtom).activeDeck;
+  const open = ephemeral.open[workspace];
   const next = planks.map(({ id }) => id);
   const segments = Object.fromEntries(planks.flatMap(({ id, segment }) => (segment ? [[id, segment] as const] : [])));
   const { deckUpdates, toAttend } = computeActiveUpdates({
@@ -50,22 +51,41 @@ export const applyActive = Effect.fnUntraced(function* (planks: readonly Navigat
     deck,
     attention,
     flatten,
-    segments: { previous, next: segments },
+    segments: { previous: open?.segments, next: segments },
   });
   const activeSegments = deckUpdates.active.map((id) => Navigation.segmentOf(segments, id));
   const plankNames = updatePlankNames(deck.plankNames, activeSegments);
   const { active, inactive, companionPlanks } = deckUpdates;
-  const workspace = registry.get(stateAtom).activeDeck;
 
-  registry.set(ephemeralAtom, {
-    ...ephemeral,
-    segments,
-    open: { ...ephemeral.open, [workspace]: { active, inactive } },
-  });
-  registry.set(stateAtom, updateActiveDeck(registry.get(stateAtom), { companionPlanks, plankNames }));
+  // The projection applies the same URL twice and re-applies it on any navigation, so writing
+  // unconditionally would hand every reader new arrays each time and re-render every plank for a
+  // deck that did not change.
+  if (!sameList(open?.active, active) || !sameList(open?.inactive, inactive) || !sameMap(open?.segments, segments)) {
+    registry.set(ephemeralAtom, {
+      ...ephemeral,
+      open: { ...ephemeral.open, [workspace]: { active, inactive, segments } },
+    });
+  }
+  const stored = registry.get(stateAtom).decks[workspace];
+  if (!sameList(stored?.companionPlanks, companionPlanks) || !sameMap(stored?.plankNames, plankNames)) {
+    registry.set(stateAtom, updateActiveDeck(registry.get(stateAtom), { companionPlanks, plankNames }));
+  }
 
   return toAttend;
 });
+
+/** Whether two plank lists hold the same ids in the same order. */
+const sameList = (a: readonly string[] | undefined, b: readonly string[]): boolean =>
+  !!a && a.length === b.length && a.every((id, index) => id === b[index]);
+
+/** Whether two lookups hold the same keys and values. */
+const sameMap = (a: Record<string, string> | undefined, b: Record<string, string>): boolean => {
+  if (!a) {
+    return Object.keys(b).length === 0;
+  }
+  const keys = Object.keys(a);
+  return keys.length === Object.keys(b).length && keys.every((key) => a[key] === b[key]);
+};
 
 /** Move the deck onto `workspace`, creating its deck on first visit. */
 export const applyWorkspace = Effect.fnUntraced(function* (workspace: string) {

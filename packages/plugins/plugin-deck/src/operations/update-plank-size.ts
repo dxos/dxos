@@ -15,7 +15,7 @@ import { updateActiveDeck } from '../util';
 const handler: Operation.WithHandler<typeof DeckOperation.UpdatePlankSize> = DeckOperation.UpdatePlankSize.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* (input) {
-      const { segments } = yield* Capabilities.getAtomValue(DeckCapabilities.EphemeralState);
+      const { segments } = yield* DeckCapabilities.getDeck();
       const key = Navigation.segmentOf(segments, input.id);
       yield* Capabilities.updateAtomValue(DeckCapabilities.State, (state) =>
         updateActiveDeck(state, {

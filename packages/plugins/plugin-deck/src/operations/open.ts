@@ -102,7 +102,8 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperat
       const navigateSolo = (active: readonly string[]): string[] =>
         input.subject.every((id) => active.includes(id)) ? [...active] : [...input.subject];
 
-      const { segments } = yield* Capabilities.getAtomValue(DeckCapabilities.EphemeralState);
+      const { segments } = yield* DeckCapabilities.getDeck();
+
       let previouslyOpenIds: Set<string>;
       {
         const deck = yield* DeckCapabilities.getDeck();

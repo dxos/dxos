@@ -76,9 +76,9 @@ const project = Effect.fnUntraced(function* (url?: URL, options?: { attend?: boo
 
   const knownIdsBySegment = Effect.fnUntraced(function* () {
     const state = registry.get(stateAtom);
-    const { segments, open } = registry.get(ephemeralAtom);
-    const active = open[state.activeDeck]?.active ?? [];
-    return new Map(active.map((id: string) => [Navigation.segmentOf(segments, id), id]));
+    const workspace = registry.get(ephemeralAtom).open[state.activeDeck];
+    const active = workspace?.active ?? [];
+    return new Map(active.map((id: string) => [Navigation.segmentOf(workspace?.segments, id), id]));
   });
 
   /**

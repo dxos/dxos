@@ -29,6 +29,8 @@ export const OpenDeck = Schema.Struct({
   active: Schema.mutable(Schema.Array(Schema.String)),
   /** Item IDs of planks that have been closed; broadcast so peers clear this identity's presence. */
   inactive: Schema.mutable(Schema.Array(Schema.String)),
+  /** Each open plank's URL segment, by plank id; the key its per-plank preferences hang off. */
+  segments: Schema.optional(Schema.Record(Schema.String, Schema.mutableKey(Schema.String))),
 });
 export type OpenDeck = Schema.Schema.Type<typeof OpenDeck>;
 
@@ -159,8 +161,6 @@ export const EphemeralDeckState = Schema.Struct({
   expanded: Schema.optional(Schema.String),
   /** Whether the deck is showing every plank at once as shrunk-to-fit tiles. Transient. */
   expose: Schema.optional(Schema.Boolean),
-  /** Each open plank's URL segment, by plank id; the key its per-plank preferences hang off. */
-  segments: Schema.optional(Schema.Record(Schema.String, Schema.mutableKey(Schema.String))),
   /**
    * What is open, by workspace. The URL only records the workspace you are in, so the others are
    * remembered for as long as the session lasts and no longer.

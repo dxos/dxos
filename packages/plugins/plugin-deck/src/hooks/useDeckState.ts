@@ -34,11 +34,14 @@ export const useDeckState = (): DeckStateHook => {
   const ephemeralState = useAtomValue(ephemeralAtom);
 
   // The active workspace's preferences plus what the URL says is open; see `DeckCapabilities.getDeck`.
+  // Keyed on this workspace's own entry, not the whole `open` map: another workspace's planks
+  // changing must not hand every reader here a new deck.
+  const stored = persistedState.decks[persistedState.activeDeck];
+  const open = ephemeralState.open[persistedState.activeDeck] ?? DeckSchema.defaultOpenDeck;
   const deck = useMemo(() => {
-    const deck = persistedState.decks[persistedState.activeDeck];
-    invariant(deck, `Deck not found: ${persistedState.activeDeck}`);
-    return { ...deck, ...(ephemeralState.open[persistedState.activeDeck] ?? DeckSchema.defaultOpenDeck) };
-  }, [persistedState.decks, persistedState.activeDeck, ephemeralState.open]);
+    invariant(stored, `Deck not found: ${persistedState.activeDeck}`);
+    return { ...stored, ...open };
+  }, [stored, open, persistedState.activeDeck]);
 
   // Combine persisted and ephemeral state into a unified view.
   const state = useMemo(
