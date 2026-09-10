@@ -101,9 +101,9 @@ blade-runner harness. Spec + decisions: [DESIGN.md](./DESIGN.md); what was measu
       wire format blade-runner's VP presentations carry; `dxos/edge`'s deployed catalog lagged it,
       so every `edgeAuth`-gated route (not just `createAgent`) failed to decode incoming
       presentations. Fixed by `dxos/edge#1044` (catalog bump, deployed 07:21 UTC 2026-09-10);
-      confirmed recovered via live `curl` and SigNoz zero-500s from ~12:00 UTC onward. Full
-      timeline and evidence in RESULTS.md §7b. Nothing to patch in either repo for the outage
-      itself — only the harness's error-logging gap it exposed (see this session's PR).
+      confirmed recovered via live `curl` and SigNoz zero-500s from ~12:00 UTC onward. Nothing to
+      patch in either repo for the outage itself — only the harness's error-logging gap it exposed
+      (`describeError` now wraps `runPlanner`'s top-level catch).
 - [ ] **Cross-repo wire-format skew is a standing risk, not a one-off** — `dxos/dxos` main can break
       `dxos/edge`'s pinned deployment on any protocol-level change, for every client built from
       `dxos/dxos` main, until someone notices and bumps the catalog (as happened here, ~16 hours
