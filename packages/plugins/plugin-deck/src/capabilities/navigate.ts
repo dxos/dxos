@@ -35,7 +35,7 @@ export const currentNavigation = Effect.fnUntraced(function* () {
   return Option.getOrElse(parsed, () => ({
     // Before the URL keys register there is nothing to read, so fall back to the workspace the deck
     // is on and an empty chain. The operation's own subject is added by the caller.
-    workspace: GraphPath.getSpaceIdFromPath(registry.get(stateAtom).activeDeck) ?? '',
+    workspace: GraphPath.getWorkspaceToken(registry.get(stateAtom).activeDeck) ?? '',
     pairs: [],
   }));
 });

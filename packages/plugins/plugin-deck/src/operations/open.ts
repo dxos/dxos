@@ -190,7 +190,7 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperat
         // not move the URL, so reading the URL here would leave the leading workspace stale and
         // `format` would emit a mid-chain rebase rather than a switch.
         const current = yield* currentNavigation();
-        const workspace = (input.workspace && GraphPath.getSpaceIdFromPath(input.workspace)) || current.workspace;
+        const workspace = (input.workspace && GraphPath.getWorkspaceToken(input.workspace)) || current.workspace;
         yield* navigateDeck({ workspace, active: deckUpdates.active, companionPlanks });
       }
 

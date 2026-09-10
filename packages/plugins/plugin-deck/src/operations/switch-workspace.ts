@@ -39,7 +39,10 @@ const handler: Operation.WithHandler<typeof LayoutOperation.SwitchWorkspace> = L
         deck.active.length === 0 && platform !== 'mobile' ? openableChildren(graph, input.subject).slice(0, 1) : [];
       const active = deck.active.length > 0 ? deck.active : seeded;
 
-      const workspace = GraphPath.getSpaceIdFromPath(input.subject);
+      // The workspace token, not its space id: a pinned workspace (settings, the registry, the
+      // account) has no space, and gating the push on one would leave the URL on the workspace we
+      // left. Only the sentinel deck, which names no workspace at all, has nothing to push.
+      const workspace = GraphPath.getWorkspaceToken(input.subject);
       if (workspace) {
         yield* navigateDeck({ workspace, active, companionPlanks: deck.companionPlanks });
       }

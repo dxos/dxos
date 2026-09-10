@@ -30,6 +30,22 @@ describe('GraphPath', () => {
     });
   });
 
+  describe('getWorkspaceToken', () => {
+    test('reads the space id', ({ expect }) => {
+      expect(GraphPath.getWorkspaceToken('root/myspace/types/doc/obj1')).toBe('myspace');
+    });
+
+    test('reads a pinned workspace, which has no space id', ({ expect }) => {
+      expect(GraphPath.getWorkspaceToken('root/dxos:settings')).toBe('dxos:settings');
+      expect(GraphPath.getWorkspaceToken('root/account/profile')).toBe('account');
+    });
+
+    test('a path naming no workspace has no token', ({ expect }) => {
+      expect(GraphPath.getWorkspaceToken('root')).toBeUndefined();
+      expect(GraphPath.getWorkspaceToken('default')).toBeUndefined();
+    });
+  });
+
   describe('tryGetEid', () => {
     const spaceId = Key.SpaceId.random();
     const objectId = Key.EntityId.random();
