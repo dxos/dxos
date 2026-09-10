@@ -3,7 +3,6 @@
 //
 
 import { type Extension } from '@codemirror/state';
-import { createElement } from 'react';
 
 import { AnchorWidget } from './anchor';
 import { type LinkWidgetProps, linkWidgets, matchSchemes } from './link-widgets';
@@ -38,20 +37,10 @@ export const objectLinks = ({
   },
   image,
 }: ObjectLinksOptions = {}): Extension =>
-  linkWidgets({
+  linkWidgets<ObjectLinkProps>({
     match: matchSchemes(schemes),
-    link: withDxn(link),
-    image: image && withDxn(image),
+    link,
+    image,
+    // The URL under the name the object-side code reads.
+    props: (props) => ({ ...props, eid: props.url }),
   });
-
-/** The definition over link props, with `eid` set from the URL for the object-side code it calls. */
-const withDxn = (def: WidgetDef<ObjectLinkProps>): WidgetDef<LinkWidgetProps> => {
-  const { factory, Component, estimatedHeight, ...rest } = def;
-  const objectProps = (props: LinkWidgetProps): ObjectLinkProps => ({ ...props, eid: props.url });
-  return {
-    ...rest,
-    ...(factory && { factory: (props) => factory(objectProps(props)) }),
-    ...(Component && { Component: (props) => createElement(Component, objectProps(props)) }),
-    ...(estimatedHeight && { estimatedHeight: (props) => estimatedHeight(objectProps(props)) }),
-  };
-};

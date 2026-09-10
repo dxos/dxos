@@ -74,13 +74,18 @@ export type LinkWidgetProps<TContext = any> = WidgetProps<
   TContext
 >;
 
-export type LinkWidgetsOptions = {
+export type LinkWidgetsOptions<TProps extends LinkWidgetProps = LinkWidgetProps> = {
   /** Which URLs are this matcher's. */
   match: LinkMatch;
   /** The inline widget for `[label](url)`. */
-  link?: WidgetDef<LinkWidgetProps>;
+  link?: WidgetDef<TProps>;
   /** The block widget for `![label](url)`. */
-  image?: WidgetDef<LinkWidgetProps>;
+  image?: WidgetDef<TProps>;
+  /**
+   * The widget's props from the link's — how a matcher names what it parsed out of the URL for the
+   * widget it hands them to (`eid` for an object link). Identity when absent.
+   */
+  props?: (props: LinkWidgetProps) => TProps;
 };
 
 /**
@@ -88,7 +93,11 @@ export type LinkWidgetsOptions = {
  * an image by the block one. Several `linkWidgets` may be registered; the first to accept a URL
  * renders it.
  */
-export const linkWidgets = ({ match, link, image }: LinkWidgetsOptions): Extension => {
+export function linkWidgets(options: LinkWidgetsOptions): Extension;
+export function linkWidgets<TProps extends LinkWidgetProps>(
+  options: LinkWidgetsOptions<TProps> & { props: (props: LinkWidgetProps) => TProps },
+): Extension;
+export function linkWidgets({ match, link, image, props: toProps }: LinkWidgetsOptions): Extension {
   const matcher: WidgetMatcher = {
     nodes: ['Link', 'Image'],
     debug: link?.debug || image?.debug,
@@ -119,7 +128,7 @@ export const linkWidgets = ({ match, link, image }: LinkWidgetsOptions): Extensi
       const occurrence = counters.get(url) ?? 0;
       counters.set(url, occurrence + 1);
       const id = `cm-url-${url}-${occurrence}`;
-      const props: LinkWidgetProps = {
+      const linkProps: LinkWidgetProps = {
         id,
         _tag: isBlock ? 'image' : 'link',
         range,
@@ -130,6 +139,7 @@ export const linkWidgets = ({ match, link, image }: LinkWidgetsOptions): Extensi
         suggest: isBlock,
         ...widgetStateMap[id],
       };
+      const props = toProps ? toProps(linkProps) : linkProps;
       const widget = createWidget({
         def: { ...def, block: isBlock },
         id,
@@ -148,4 +158,4 @@ export const linkWidgets = ({ match, link, image }: LinkWidgetsOptions): Extensi
   };
 
   return [widgetsCore, widgetMatchersFacet.of(matcher), linkMatchFacet.of(match)];
-};
+}
