@@ -29,6 +29,12 @@ declare const PlankSegmentBrand: unique symbol;
 export type PlankSegments = Record<string, string>;
 
 /**
+ * An open plank: the id it is rendered and attended by, and the URL segment it came from. The
+ * segment is absent only for a plank the URL did not name, which is the not-found sentinel.
+ */
+export type Plank = { id: string; segment?: PlankSegment };
+
+/**
  * The segment a plank occupies. Falls back to the id for a deck whose segments were never recorded,
  * which is every write that did not come from the URL projection.
  */

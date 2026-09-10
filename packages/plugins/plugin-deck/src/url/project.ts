@@ -165,7 +165,7 @@ export const projectUrl = Effect.fnUntraced(function* (url?: URL, options?: { at
     return undefined;
   }
   if (Option.isNone(parsed)) {
-    yield* applyActive([NotFound.NOT_FOUND_PATH], {});
+    yield* applyActive([{ id: NotFound.NOT_FOUND_PATH }]);
     return undefined;
   }
 
@@ -189,10 +189,7 @@ export const projectUrl = Effect.fnUntraced(function* (url?: URL, options?: { at
       const segment = Navigation.toSegment(pair);
       return { segment, id: known.get(segment) ?? getUnresolvedPlankId(pair) };
     });
-  yield* applyActive(
-    initial.map(({ id }) => id),
-    Object.fromEntries(initial.map(({ id, segment }) => [id, segment])),
-  );
+  yield* applyActive(initial);
 
   const loaders = navigationTargetLoaders;
   const verdicts: AppCapabilities.NavigationTargetVerdict[] = pairs.map(() => 'unknown');
@@ -229,8 +226,7 @@ export const projectUrl = Effect.fnUntraced(function* (url?: URL, options?: { at
     { wait: (index) => (verdicts[index] === 'absent' ? undefined : RESOLVE_TIMEOUT) },
   );
 
-  const plankIds: string[] = [];
-  const segments: Navigation.PlankSegments = {};
+  const planks: Navigation.Plank[] = [];
   let companionNodeId: string | null = null;
   let companionAnchorId: string | undefined;
   pairs.forEach((pair, index) => {
@@ -238,20 +234,21 @@ export const projectUrl = Effect.fnUntraced(function* (url?: URL, options?: { at
     if (pair.key === UrlPath.COMPANION_KEY) {
       if (nodeId) {
         companionNodeId = nodeId;
-        companionAnchorId = plankIds[plankIds.length - 1];
+        companionAnchorId = planks[planks.length - 1]?.id;
       }
       return;
     }
-    const plankId = nodeId ?? resolved[index]?.candidateId ?? getUnresolvedPlankId(pair);
-    plankIds.push(plankId);
-    segments[plankId] = Navigation.toSegment(pair);
+    planks.push({
+      id: nodeId ?? resolved[index]?.candidateId ?? getUnresolvedPlankId(pair),
+      segment: Navigation.toSegment(pair),
+    });
   });
 
   if (!writable()) {
     return undefined;
   }
 
-  const displaced = yield* applyActive(plankIds, segments);
+  const displaced = yield* applyActive(planks);
 
   yield* applyCompanion(companionNodeId);
 
@@ -259,5 +256,5 @@ export const projectUrl = Effect.fnUntraced(function* (url?: URL, options?: { at
     return displaced;
   }
 
-  return companionAnchorId ?? plankIds[plankIds.length - 1];
+  return companionAnchorId ?? planks[planks.length - 1]?.id;
 });

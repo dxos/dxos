@@ -26,7 +26,7 @@ import { computeActiveUpdates } from './set-active';
  * Write the deck's active planks and the URL segment each one came from, returning the item to
  * attend if attention moved.
  */
-export const applyActive = Effect.fnUntraced(function* (next: string[], nextSegments?: Navigation.PlankSegments) {
+export const applyActive = Effect.fnUntraced(function* (planks: readonly Navigation.Plank[]) {
   const deck = yield* DeckCapabilities.getDeck();
   const attention = yield* Capability.get(AttentionCapabilities.Attention);
   const { flatten } = yield* Capabilities.getAtomValue(DeckCapabilities.Settings);
@@ -38,7 +38,8 @@ export const applyActive = Effect.fnUntraced(function* (next: string[], nextSegm
 
   const ephemeral = registry.get(ephemeralAtom);
   const previous = ephemeral.segments;
-  const segments = nextSegments ?? previous;
+  const next = planks.map(({ id }) => id);
+  const segments = Object.fromEntries(planks.flatMap(({ id, segment }) => (segment ? [[id, segment] as const] : [])));
   const { deckUpdates, toAttend } = computeActiveUpdates({
     next,
     deck,
