@@ -4220,6 +4220,9 @@ importers:
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../../common/keys
+      '@dxos/link':
+        specifier: workspace:*
+        version: link:../link
     devDependencies:
       '@dxos/ai':
         specifier: workspace:*
@@ -4272,6 +4275,9 @@ importers:
       '@dxos/plugin-routine':
         specifier: workspace:*
         version: link:../../../plugins/plugin-routine
+      '@dxos/plugin-sandbox':
+        specifier: workspace:*
+        version: link:../../../plugins/plugin-sandbox
       '@dxos/plugin-space':
         specifier: workspace:*
         version: link:../../../plugins/plugin-space
@@ -4299,6 +4305,9 @@ importers:
       autoevals:
         specifier: ^0.0.132
         version: 0.0.132(ws@8.18.3)
+      chess.js:
+        specifier: 'catalog:'
+        version: 1.4.0
       effect:
         specifier: 4.0.0-rc.108
         version: 4.0.0-rc.108

@@ -25,7 +25,8 @@
   ],
   "dependencies": {
     "@dxos/app-toolkit": "workspace:*",
-    "@dxos/keys": "workspace:*"
+    "@dxos/keys": "workspace:*",
+    "@dxos/link": "workspace:*"
   },
   "devDependencies": {
     "@dxos/ai": "workspace:*",
@@ -45,6 +46,7 @@
     "@dxos/plugin-markdown": "workspace:*",
     "@dxos/plugin-projects": "workspace:*",
     "@dxos/plugin-routine": "workspace:*",
+    "@dxos/plugin-sandbox": "workspace:*",
     "@dxos/plugin-space": "workspace:*",
     "@dxos/plugin-table": "workspace:*",
     "@dxos/plugin-tasks": "workspace:*",
@@ -54,6 +56,7 @@
     "@dxos/util": "workspace:*",
     "@dxos/vite-plugin-import-source": "workspace:*",
     "autoevals": "^0.0.132",
+    "chess.js": "catalog:",
     "effect": "catalog:",
     "evalite": "^0.19.0",
     "vitest": "catalog:"

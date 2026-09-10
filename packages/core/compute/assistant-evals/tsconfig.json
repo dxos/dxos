@@ -45,6 +45,9 @@
       "path": "../../../plugins/plugin-routine"
     },
     {
+      "path": "../../../plugins/plugin-sandbox"
+    },
+    {
       "path": "../../../plugins/plugin-space"
     },
     {
@@ -85,6 +88,9 @@
     },
     {
       "path": "../compute-runtime"
+    },
+    {
+      "path": "../link"
     }
   ]
 }

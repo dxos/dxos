@@ -14,9 +14,15 @@ import { SandboxOperation } from '#types';
 import { mergeExecEnv } from '../../services/sandbox-env';
 import { createSandboxClient } from '../../services/sandbox-url';
 
+/**
+ * How long a command may run when the caller sets no limit. The service's own default is two
+ * minutes, which an install or a deploy overruns; five fits those and bounds a hung command.
+ */
+const DEFAULT_EXEC_TIMEOUT = 300_000;
+
 export default SandboxOperation.Exec.pipe(
   Operation.withHandler(
-    Effect.fn(function* ({ sandbox, command, cwd, env, timeout }) {
+    Effect.fn(function* ({ sandbox, command, cwd, env, timeout = DEFAULT_EXEC_TIMEOUT }) {
       const { db } = yield* Database.Service;
       const client = yield* ClientService;
 

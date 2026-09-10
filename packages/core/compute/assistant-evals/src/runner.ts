@@ -10,8 +10,9 @@ import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 import type { Evalite } from 'evalite';
 
-import { AiService } from '@dxos/ai';
-import { AiServiceTestingPreset } from '@dxos/ai/testing';
+import { AiService, Model } from '@dxos/ai';
+import { type AiServicePreset, AiServiceTestingPreset } from '@dxos/ai/testing';
+import { type Config } from '@dxos/client';
 import type * as Capabilities from '@dxos/app-framework/Capabilities';
 import type * as Plugin from '@dxos/app-framework/Plugin';
 import { type TestHarness } from '@dxos/app-framework/testing';
@@ -63,9 +64,16 @@ const SYSTEM_INSTRUCTIONS = trim`
   Do not fall back on your own knowledge, only use the tools provided.
 `;
 
-const makeAiServiceMiddleware = (): Promise<(_upstream: AiService.Service) => AiService.Service> =>
+/**
+ * The testing preset that serves a model directly: DeepSeek's own endpoint for its models, the
+ * direct (Anthropic) preset otherwise. In the app the edge fronts both; a headless run has no
+ * identity for it, so each vendor is reached with its own key.
+ */
+const presetFor = (model: DXN.DXN): AiServicePreset => (Model.developer(model) === 'com.deepseek' ? 'deepseek' : 'direct');
+
+const makeAiServiceMiddleware = (preset: AiServicePreset): Promise<(_upstream: AiService.Service) => AiService.Service> =>
   AiService.tag.pipe(
-    Effect.provide(AiServiceTestingPreset('direct')),
+    Effect.provide(AiServiceTestingPreset(preset)),
     Effect.map((service) => (_upstream: AiService.Service) => service),
     EffectEx.runAndForwardErrors,
   );
@@ -73,8 +81,11 @@ const makeAiServiceMiddleware = (): Promise<(_upstream: AiService.Service) => Ai
 const createDefaultPlugins = async (options: {
   plugins?: Plugin.Plugin[];
   types?: Type.AnyEntity[];
+  config?: Config;
+  model: DXN.DXN;
 }): Promise<Plugin.Plugin[]> => [
   ClientPlugin.make({
+    config: options.config,
     types: [
       Organization.Organization,
       Person.Person,
@@ -85,7 +96,7 @@ const createDefaultPlugins = async (options: {
     ],
   }),
   AssistantPlugin.make({
-    aiServiceMiddleware: await makeAiServiceMiddleware(),
+    aiServiceMiddleware: await makeAiServiceMiddleware(presetFor(options.model)),
   }),
   RoutinePlugin.make(),
   InboxPlugin.make(),
@@ -169,6 +180,11 @@ export interface CreateEvalRunnerOptions<I, O> {
    */
   types?: Type.AnyEntity[];
   /**
+   * Client config for the harness, for a scenario whose tools reach a service outside the process
+   * (a sandbox, say). Absent, the client reaches no network at all.
+   */
+  config?: Config;
+  /**
    * Seeds the space before the run (e.g. a Project the scenario operates on). Runs inside the
    * harness with `Database.Service` and the runtime's capability services provided (so a seed can
    * reach the client for the space itself); receives the run's `Instructions` object so seeded
@@ -188,11 +204,19 @@ export type SeedResult = {
   chat?: Ref.Ref<Chat.Chat>;
 };
 
-/** A deterministic DB-state assertion run after the agent completes, before the harness is disposed. */
+/**
+ * A deterministic DB-state assertion run after the agent completes, before the harness is disposed.
+ * Runs with the runtime's capability services as the seed does, so a query can invoke an operation
+ * of its own — fetching through the sandbox the agent built in, say.
+ */
 export type DbQuery<I, D> = (
   input: I,
   spaceId: SpaceId,
-) => Effect.Effect<D, unknown, Database.Service | FeedTraceSink.FeedTraceSink>;
+) => Effect.Effect<
+  D,
+  unknown,
+  Database.Service | FeedTraceSink.FeedTraceSink | Capabilities.ProcessManagerRuntimeServices
+>;
 
 export type VariantConfig =
   | undefined
@@ -249,7 +273,7 @@ export function createEvalRunner<I, O, D>(
         const harness = yield* Effect.acquireRelease(
           Effect.promise(async () =>
             createComposerTestApp({
-              plugins: await createDefaultPlugins(options),
+              plugins: await createDefaultPlugins({ ...options, model }),
             }),
           ),
           (testHarness) => Effect.promise(() => testHarness.dispose()),
