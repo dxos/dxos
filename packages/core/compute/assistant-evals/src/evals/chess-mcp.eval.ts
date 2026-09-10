@@ -69,9 +69,9 @@ const SEEDED_FEN = 'r1bqk2r/1pppbppp/p1n2n2/4p3/B3P3/5N2/PPPP1PPP/RNBQ1RK1 w kq 
 
 /**
  * The EDGE the run reaches: it serves the model for the DeepSeek variant, authenticated as the run's
- * own identity, and the sandbox for both. Dev serves the sandbox without auth.
+ * own identity, and the sandbox for both. Preview, as the runner defaults: dev has no DeepSeek route.
  */
-const EDGE_URL = process.env.DX_EDGE_BASE_URL ?? EDGE_URLS.dev;
+const EDGE_URL = process.env.DX_EDGE_BASE_URL ?? EDGE_URLS.preview;
 
 /** A deployed Worker, with whatever path the session put its endpoint on. */
 const WORKER_URL = /https:\/\/[a-z0-9-]+\.[a-z0-9-]+\.workers\.dev(?:\/[\w./-]*)?/gi;
@@ -313,10 +313,17 @@ const task = createEvalRunner({
  * its reader to select, and it is served through EDGE with the run's own identity, so it needs no
  * key; Opus goes to Anthropic directly and needs `DX_ANTHROPIC_API_KEY`.
  */
-const VARIANTS = [
+const MODELS = [
   { name: 'claude-opus-5', input: { model: DXN.make('com.anthropic.model.claude-opus-5.default') } },
   { name: 'deepseek-v4-pro', input: { model: DXN.make('com.deepseek.model.deepseek-v4-pro.default') } },
 ];
+
+/**
+ * `DX_EVAL_MODELS` names the variants to run, comma-separated, for a run that wants one model's
+ * hour rather than every model's at once. Unset runs them all.
+ */
+const selected = process.env.DX_EVAL_MODELS?.split(',').map((name) => name.trim());
+const VARIANTS = selected ? MODELS.filter(({ name }) => selected.includes(name)) : MODELS;
 
 evalite.each(VARIANTS)('Chess MCP — a delegated session designs, deploys and serves a chess engine over MCP', {
   data: [{ input: null }],

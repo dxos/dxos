@@ -71,8 +71,11 @@ const SYSTEM_INSTRUCTIONS = trim`
   Do not fall back on your own knowledge, only use the tools provided.
 `;
 
-/** The EDGE the harness reaches for a model it serves, and for the sandbox: dev unless overridden. */
-const EDGE_URL = process.env.DX_EDGE_BASE_URL ?? EDGE_URLS.dev;
+/**
+ * The EDGE the harness reaches for a model it serves, and for the sandbox. Preview unless
+ * overridden: it is what clients in the field reach, and dev does not serve every model route.
+ */
+const EDGE_URL = process.env.DX_EDGE_BASE_URL ?? EDGE_URLS.preview;
 
 /**
  * Whether a model is served through EDGE with the harness identity, the way the app serves it,
@@ -205,7 +208,7 @@ export interface CreateEvalRunnerOptions<I, O> {
   types?: Type.AnyEntity[];
   /**
    * Client config for the harness, for a scenario whose tools reach a service outside the process
-   * (a sandbox, say). The EDGE URL defaults to dev, or `DX_EDGE_BASE_URL`.
+   * (a sandbox, say). The EDGE URL defaults to preview, or `DX_EDGE_BASE_URL`.
    */
   config?: Config;
   /**
