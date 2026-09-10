@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type Extension } from '@codemirror/state';
+import { type EditorState, type Extension, Facet } from '@codemirror/state';
 import { Decoration } from '@codemirror/view';
 
 import {
@@ -16,6 +16,18 @@ import {
 
 /** Decides whether a link's URL is one of this matcher's. */
 export type LinkMatch = (url: string) => boolean;
+
+/**
+ * Every registered link matcher, so the rest of the editor can tell a link a widget will replace
+ * from one it should render itself: `decorateMarkdown` leaves the former alone.
+ */
+export const linkMatchFacet = Facet.define<LinkMatch, readonly LinkMatch[]>({
+  combine: (matchers) => matchers,
+});
+
+/** Whether some registered link widget claims the URL. */
+export const isWidgetLink = (state: EditorState, url: string): boolean =>
+  state.facet(linkMatchFacet).some((match) => match(url));
 
 /** Matches URLs by scheme prefix: `matchSchemes(['dxn:', 'echo:'])`. */
 export const matchSchemes =
@@ -127,5 +139,5 @@ export const linkWidgets = ({ match, link, image }: LinkWidgetsOptions): Extensi
     },
   };
 
-  return [widgetsCore, widgetMatchersFacet.of(matcher)];
+  return [widgetsCore, widgetMatchersFacet.of(matcher), linkMatchFacet.of(match)];
 };

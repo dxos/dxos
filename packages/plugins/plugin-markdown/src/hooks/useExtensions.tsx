@@ -26,7 +26,6 @@ import {
   type Extension,
   InputModeExtensions,
   type ObjectLinkProps,
-  type WidgetState,
   createDataExtensions,
   decorateMarkdown,
   documentId,
@@ -47,7 +46,7 @@ import { isTruthy, safeUrl } from '@dxos/util';
 import { Markdown } from '#types';
 
 import { parseEmbedLabel } from '../components/PreviewComponent/parse-embed-label';
-import { PreviewComponent, type PreviewComponentProps } from '../components/PreviewComponent/PreviewComponent';
+import { PreviewComponent } from '../components/PreviewComponent/PreviewComponent';
 import { setFallbackName } from '../util';
 
 export type DocumentType = Markdown.Document | Text.Text | { id: string; text: string };
@@ -206,9 +205,6 @@ const createBaseExtensions = ({
           numberedHeadings: settings?.numberedHeadings ? { from: 2 } : undefined,
           // TODO(wittjosiah): For internal links render the label of the object.
           renderLinkButton: onSelectLink && createRenderLink(onSelectLink),
-          // NOTE: `objectLinks()` renders eid:/echo: links; skip here to avoid double-processing.
-          skip: ({ name, url }) =>
-            ['Link', 'Image'].indexOf(name) !== -1 && (url.startsWith('eid:') || url.startsWith('echo:')),
         }),
         linkTooltip({ render: renderLinkTooltip }),
         widgetHost({ setWidgets }),

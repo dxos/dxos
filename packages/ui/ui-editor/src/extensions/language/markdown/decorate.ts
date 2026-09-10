@@ -12,6 +12,7 @@ import { invariant } from '@dxos/invariant';
 import { type HeadingLevel, markdownTheme } from '../../../styles';
 import { type RenderCallback } from '../../../types';
 import { wrapWithCatch } from '../../../util';
+import { isWidgetLink } from '../../widgets/link-widgets';
 import { adjustChanges } from './changes';
 import { image } from './image';
 import { bulletListIndentationWidth, formattingStyles, orderedListIndentationWidth } from './styles';
@@ -50,7 +51,10 @@ export interface DecorateOptions {
   numberedHeadings?: { from: number; to?: number };
   // TODO(burdon): Additional padding for each line.
   listPaddingLeft?: number;
-  // TODO(burdon): Use consistently.
+  /**
+   * Leaves a link or image undecorated. A link some registered link widget claims (`objectLinks`,
+   * a plugin's matcher) is always left to the widget, without being named here.
+   */
   skip?: (node: NodeData) => boolean;
   // TODO(burdon): Remove.
   renderLinkButton?: RenderCallback<{ url: string }>;
@@ -559,7 +563,7 @@ const buildDecorations = (view: EditorView, options: DecorateOptions, focus: boo
         const editing = editingRange(state, node, focus);
         if (urlNode && marks.length >= 2) {
           const url = state.sliceDoc(urlNode.from, urlNode.to);
-          if (options.skip?.({ name: 'Link', url })) {
+          if (isWidgetLink(state, url) || options.skip?.({ name: 'Link', url })) {
             break;
           }
           if (!editing) {
@@ -601,7 +605,7 @@ const buildDecorations = (view: EditorView, options: DecorateOptions, focus: boo
 
         const text = state.sliceDoc(node.from, node.to);
         const url = normalizeUrl(text);
-        if (!url || options.skip?.({ name: 'Link', url })) {
+        if (!url || isWidgetLink(state, url) || options.skip?.({ name: 'Link', url })) {
           break;
         }
 

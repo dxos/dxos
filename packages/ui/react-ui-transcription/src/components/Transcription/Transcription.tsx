@@ -35,8 +35,7 @@ export const Transcription = composable<HTMLDivElement, TranscriptionProps>(
           createBasicExtensions({ readOnly: true, lineWrapping: true, search: true }),
           createThemeExtensions({ themeMode, slots: documentSlots }),
           createMarkdownExtensions(),
-          // `objectLinks()` renders dxn:/echo: links; skip here to avoid double-processing.
-          decorateMarkdown({ skip: ({ url }) => url.startsWith('dxn:') || url.startsWith('echo:') }),
+          decorateMarkdown(),
           objectLinks(),
           transcription({ model, started: object?.started ? new Date(object.started) : undefined }),
           scroller(),

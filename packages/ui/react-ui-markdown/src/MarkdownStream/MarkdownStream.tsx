@@ -308,12 +308,7 @@ const useMarkdownStreamTextEditor = (
         !debug &&
           [
             extendedMarkdown({ registry }),
-            decorateMarkdown({
-              // xmlTags extension will handle `dxn:`/`echo:` links/images.
-              skip: (node) =>
-                (node.name === 'Link' || node.name === 'Image') &&
-                (node.url.startsWith('dxn:') || node.url.startsWith('echo:')),
-            }),
+            decorateMarkdown(),
             lineSpacing(),
             xmlBlockDecoration({
               tag: 'prompt',
