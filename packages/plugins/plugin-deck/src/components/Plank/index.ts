@@ -3,4 +3,3 @@
 //
 
 export * from './Plank';
-export * from './PlankLoading';
