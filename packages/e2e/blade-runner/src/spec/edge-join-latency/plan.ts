@@ -357,18 +357,24 @@ export class EdgeJoinLatency implements TestPlan<EdgeJoinLatencySpec, EdgeJoinLa
       );
       return result;
     } finally {
-      // In `finally` so the artifacts exist however the run ended: a green/red verdict with no
-      // numbers behind it is the one output a CI job must never produce.
-      const summary = this._summarize(edgeUrl, spec, seedMs, measurements, agents);
-      fs.writeFileSync(resultPath, `${JSON.stringify(summary, null, 2)}\n`);
-      fs.writeFileSync(path.join(params.outDir, 'summary.md'), renderSummary(summary));
-      fs.writeFileSync(
-        path.join(params.outDir, 'join-latency.metrics.json'),
-        `${JSON.stringify(renderMetrics(summary), null, 2)}\n`,
-      );
-      unregisterCleanup();
-      if (spec.cleanup) {
-        await this._cleanup(edgeUrl, spawned, spaceId, identityDids);
+      // Nested so no artifact can cost the cleanup: these run against a shared deployment, and a
+      // write that threw here — a full disk, a missing `outDir` — would strand this run's identities
+      // and its space on it. Losing the numbers is recoverable; leaking the state is not.
+      try {
+        // In `finally` so the artifacts exist however the run ended: a green/red verdict with no
+        // numbers behind it is the one output a CI job must never produce.
+        const summary = this._summarize(edgeUrl, spec, seedMs, measurements, agents);
+        fs.writeFileSync(resultPath, `${JSON.stringify(summary, null, 2)}\n`);
+        fs.writeFileSync(path.join(params.outDir, 'summary.md'), renderSummary(summary));
+        fs.writeFileSync(
+          path.join(params.outDir, 'join-latency.metrics.json'),
+          `${JSON.stringify(renderMetrics(summary), null, 2)}\n`,
+        );
+      } finally {
+        unregisterCleanup();
+        if (spec.cleanup) {
+          await this._cleanup(edgeUrl, spawned, spaceId, identityDids);
+        }
       }
     }
   }
