@@ -268,7 +268,7 @@ export type VariantConfig =
  * propagated to the caller via `EffectEx.runAndForwardErrors`.
  *
  * Pass `dbQuery` to additionally run a deterministic DB-state assertion (TESTING.md dimension G)
- * while the space is still open; the task then returns `{ agentOutput, dbQuery }` instead of the
+ * while the space is still open; the task then returns `{ agentOutput, dbQuery, durationMillis }` instead of the
  * bare agent output, so a Scorer can grade the real effect rather than the model's own
  * self-reported completion.
  *
@@ -289,10 +289,14 @@ export function createEvalRunner<I, O>(
 export function createEvalRunner<I, O>(options: CreateEvalRunnerOptions<I, O>): Evalite.Task<I, O, VariantConfig>;
 export function createEvalRunner<I, O, D>(
   options: CreateEvalRunnerOptions<I, O> & { dbQuery: DbQuery<I, D> },
-): Evalite.Task<I, { agentOutput: O | AgentIncomplete; dbQuery: D }, VariantConfig>;
+): Evalite.Task<I, { agentOutput: O | AgentIncomplete; dbQuery: D; durationMillis: number }, VariantConfig>;
 export function createEvalRunner<I, O, D>(
   options: CreateEvalRunnerOptions<I, O> & { dbQuery?: DbQuery<I, D> },
-): Evalite.Task<I, O | { agentOutput: O | AgentIncomplete; dbQuery: D } | { failed: boolean }, VariantConfig> {
+): Evalite.Task<
+  I,
+  O | { agentOutput: O | AgentIncomplete; dbQuery: D; durationMillis: number } | { failed: boolean },
+  VariantConfig
+> {
   return async (input: I, variant: VariantConfig) => {
     const model = variant?.model ?? options.model ?? DEFAULT_MODEL;
     const timeoutMillis = options.timeout ?? DEFAULT_EVAL_TIMEOUT_MILLIS;
@@ -347,6 +351,8 @@ export function createEvalRunner<I, O, D>(
           return yield* agentStep;
         }
 
+        // The session's wall clock, for a scorer that wants the work done soon as well as done.
+        const startedAt = Date.now();
         const agentOutput: O | AgentIncomplete = gradeIncomplete
           ? yield* agentStep.pipe(
               Effect.timeoutOrElse({
@@ -358,6 +364,7 @@ export function createEvalRunner<I, O, D>(
               ),
             )
           : yield* agentStep;
+        const durationMillis = Date.now() - startedAt;
 
         const dbQuery = yield* Effect.promise(() =>
           harness.runPromise(
@@ -369,7 +376,7 @@ export function createEvalRunner<I, O, D>(
           ),
         );
 
-        return { agentOutput, dbQuery };
+        return { agentOutput, dbQuery, durationMillis };
       }),
     );
 

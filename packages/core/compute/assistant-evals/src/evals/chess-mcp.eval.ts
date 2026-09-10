@@ -64,6 +64,15 @@ const DELEGATED_STAGES = [
   'Implement the MCP server and the engine',
 ];
 
+/**
+ * How long the three stages should take. A design, an empty deploy and a small MCP server over an
+ * engine is not a large piece of work; a session that serves the engine within this scores full
+ * marks for speed, and the score falls to nothing at the hour the run is given. Both are guesses to
+ * tune against runs.
+ */
+const TARGET_MINUTES = 15;
+const BUDGET_MINUTES = 60;
+
 /** The seeded game, five moves into a Spanish opening, as the position the engine is asked about. */
 const SEEDED_FEN = 'r1bqk2r/1pppbppp/p1n2n2/4p3/B3P3/5N2/PPPP1PPP/RNBQ1RK1 w kq - 4 6';
 
@@ -402,6 +411,17 @@ evalite.each(VARIANTS)('Chess MCP — a delegated session designs, deploys and s
       name: 'no-tool-errors',
       description: 'No tool call errored during the session.',
       scorer: ({ output }) => (output.dbQuery.erroredTools.length === 0 ? 1 : 0),
+    },
+    {
+      name: 'served-the-engine-fast',
+      description: `Full marks for a working best-move tool within ${TARGET_MINUTES} minutes, falling to none at ${BUDGET_MINUTES}; nothing for a server that does not answer.`,
+      scorer: ({ output }) => {
+        if (!output.dbQuery.bestMoveLegal) {
+          return 0;
+        }
+        const minutes = output.durationMillis / 60_000;
+        return Math.max(0, Math.min(1, (BUDGET_MINUTES - minutes) / (BUDGET_MINUTES - TARGET_MINUTES)));
+      },
     },
   ],
 });
