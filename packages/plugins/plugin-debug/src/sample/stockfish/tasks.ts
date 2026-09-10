@@ -67,7 +67,8 @@ const PLAN: TaskSeed = {
         },
         {
           title: 'Diagram the request path',
-          description: 'Chat → MCP client → Worker → engine, as a mermaid flowchart. Name what is bundled and what is fetched.',
+          description:
+            'Chat → MCP client → Worker → engine, as a mermaid flowchart. Name what is bundled and what is fetched.',
           estimate: 'xs',
         },
         {

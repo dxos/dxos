@@ -34,12 +34,12 @@ first run stops at whichever one the reader has not got.
 
 The reshape removes the need for each rather than reordering them:
 
-| Old dependency         | Replaced by                                                              |
-| ---------------------- | ------------------------------------------------------------------------ |
-| Anthropic key          | DeepSeek V4 Pro through the DXOS edge — the reader's identity is enough   |
-| Claude managed agent   | the assistant itself, coding in a remote sandbox                          |
-| `wrangler login`       | wrangler's unauthenticated deploy, which mints a temporary account        |
-| GitHub repo + token    | still needed, but moved to stage five — after the thing already works     |
+| Old dependency       | Replaced by                                                             |
+| -------------------- | ----------------------------------------------------------------------- |
+| Anthropic key        | DeepSeek V4 Pro through the DXOS edge — the reader's identity is enough |
+| Claude managed agent | the assistant itself, coding in a remote sandbox                        |
+| `wrangler login`     | wrangler's unauthenticated deploy, which mints a temporary account      |
+| GitHub repo + token  | still needed, but moved to stage five — after the thing already works   |
 
 What is left is five stages, in this order: design → deploy an empty Worker → implement the server
 → register it and use it from the chess chat → publish. The reader owns exactly three steps: pick

@@ -14,30 +14,32 @@ import { StockfishSpace } from './index';
  * place of a fixture: if a schema it seeds changes incompatibly, the build fails here.
  */
 describe('Chess MCP sample space', () => {
-  test('builds an archive with the project, its plan, its skill and the test position', { timeout: 120_000 }, async ({
-    expect,
-  }) => {
-    const { json, objectCount } = await EffectEx.runPromise(buildArchive(StockfishSpace()));
-    const counts = histogram(json);
-    const countOf = (typename: string) =>
-      Object.entries(counts)
-        .filter(([type]) => type.includes(typename))
-        .reduce((total, [, count]) => total + count, 0);
+  test(
+    'builds an archive with the project, its plan, its skill and the test position',
+    { timeout: 120_000 },
+    async ({ expect }) => {
+      const { json, objectCount } = await EffectEx.runPromise(buildArchive(StockfishSpace()));
+      const counts = histogram(json);
+      const countOf = (typename: string) =>
+        Object.entries(counts)
+          .filter(([type]) => type.includes(typename))
+          .reduce((total, [, count]) => total + count, 0);
 
-    expect(objectCount).toBeGreaterThan(0);
-    expect(countOf('type.project')).toBe(1);
-    expect(countOf('type.instructions')).toBe(1);
-    expect(countOf('type.skill')).toBe(1);
-    expect(countOf('type.taskSet')).toBe(1);
-    expect(countOf('type.document')).toBe(1);
-    // The position the finished server is pointed at: a Game wrapping a chess state.
-    expect(countOf('type.game:')).toBe(1);
-    expect(countOf('type.chess.state')).toBe(1);
-    // Neither is seeded: stage four creates the server record and stage five the repository, so
-    // seeding either would name a URL that does not exist.
-    expect(countOf('type.assistant.mcpServer')).toBe(0);
-    expect(countOf('type.repo')).toBe(0);
-  });
+      expect(objectCount).toBeGreaterThan(0);
+      expect(countOf('type.project')).toBe(1);
+      expect(countOf('type.instructions')).toBe(1);
+      expect(countOf('type.skill')).toBe(1);
+      expect(countOf('type.taskSet')).toBe(1);
+      expect(countOf('type.document')).toBe(1);
+      // The position the finished server is pointed at: a Game wrapping a chess state.
+      expect(countOf('type.game:')).toBe(1);
+      expect(countOf('type.chess.state')).toBe(1);
+      // Neither is seeded: stage four creates the server record and stage five the repository, so
+      // seeding either would name a URL that does not exist.
+      expect(countOf('type.assistant.mcpServer')).toBe(0);
+      expect(countOf('type.repo')).toBe(0);
+    },
+  );
 
   test('the plan is one root, five stages, and their steps', { timeout: 120_000 }, async ({ expect }) => {
     const { json } = await EffectEx.runPromise(buildArchive(StockfishSpace()));
@@ -74,23 +76,25 @@ describe('Chess MCP sample space', () => {
     expect(tasks.filter((task) => Array.isArray(task.dependsOn) && task.dependsOn.length > 0)).toHaveLength(4);
   });
 
-  test('only three steps are the reader\'s, and the two GitHub ones are last', { timeout: 120_000 }, async ({
-    expect,
-  }) => {
-    const { json } = await EffectEx.runPromise(buildArchive(StockfishSpace()));
-    const objects: Array<{ '@type'?: string; 'id': string; 'title'?: string; 'assignee'?: unknown }> =
-      JSON.parse(json).objects;
-    const tasks = objects.filter((object) => object['@type']?.includes('type.task:'));
+  test(
+    "only three steps are the reader's, and the two GitHub ones are last",
+    { timeout: 120_000 },
+    async ({ expect }) => {
+      const { json } = await EffectEx.runPromise(buildArchive(StockfishSpace()));
+      const objects: Array<{ '@type'?: string; 'id': string; 'title'?: string; 'assignee'?: unknown }> =
+        JSON.parse(json).objects;
+      const tasks = objects.filter((object) => object['@type']?.includes('type.task:'));
 
-    // The reader owns only what an agent cannot do: a Composer setting and the two consent screens.
-    // Nothing here asks for an Anthropic key or a Cloudflare login — that is the point of the shape.
-    const mine = tasks.filter((task) => (task.assignee as { role?: string } | undefined)?.role === 'user');
-    expect(mine.map((task) => task.title)).toEqual([
-      'Select DeepSeek V4 Pro as the chat model',
-      'Create an empty GitHub repository for the server',
-      'Connect the GitHub credential, scoped to that repository',
-    ]);
-  });
+      // The reader owns only what an agent cannot do: a Composer setting and the two consent screens.
+      // Nothing here asks for an Anthropic key or a Cloudflare login — that is the point of the shape.
+      const mine = tasks.filter((task) => (task.assignee as { role?: string } | undefined)?.role === 'user');
+      expect(mine.map((task) => task.title)).toEqual([
+        'Select DeepSeek V4 Pro as the chat model',
+        'Create an empty GitHub repository for the server',
+        'Connect the GitHub credential, scoped to that repository',
+      ]);
+    },
+  );
 
   test('the project binds the skill through its instructions', { timeout: 120_000 }, async ({ expect }) => {
     const { json } = await EffectEx.runPromise(buildArchive(StockfishSpace()));

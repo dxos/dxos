@@ -9450,12 +9450,18 @@ importers:
       '@dxos/plugin-attention':
         specifier: workspace:*
         version: link:../plugin-attention
+      '@dxos/plugin-chess':
+        specifier: workspace:*
+        version: link:../plugin-chess
       '@dxos/plugin-client':
         specifier: workspace:*
         version: link:../plugin-client
       '@dxos/plugin-connector':
         specifier: workspace:*
         version: link:../plugin-connector
+      '@dxos/plugin-game':
+        specifier: workspace:*
+        version: link:../plugin-game
       '@dxos/plugin-google':
         specifier: workspace:*
         version: link:../plugin-google

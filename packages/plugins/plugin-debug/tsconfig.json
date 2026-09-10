@@ -149,10 +149,16 @@
       "path": "../plugin-attention"
     },
     {
+      "path": "../plugin-chess"
+    },
+    {
       "path": "../plugin-client"
     },
     {
       "path": "../plugin-connector"
+    },
+    {
+      "path": "../plugin-game"
     },
     {
       "path": "../plugin-google"
