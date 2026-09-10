@@ -89,7 +89,6 @@ export const Default: Story = {
   },
 };
 
-/** The released mark as a channel recolours it — the same filters composer-app's `bootMarkFilter` produces. */
 export const Preview: Story = {
   ...Default,
   args: {
@@ -97,18 +96,10 @@ export const Preview: Story = {
   },
 };
 
-export const QA: Story = {
+export const Dev: Story = {
   ...Default,
   args: {
-    mark: 'qa',
-  },
-};
-
-/** The ring alone, as a build without a mark renders it. */
-export const NoMark: Story = {
-  ...Default,
-  args: {
-    mark: 'none',
+    mark: 'dev',
   },
 };
 

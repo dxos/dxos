@@ -144,7 +144,13 @@ export const Loader: Component<LoaderProps> = (props) => {
 
   return (
     <>
-      <div id='boot-loader-disc' data-host-driven={isHostDriven() ? '' : undefined}>
+      {/* The channel filter sits on the disc so the ring, its head and the mark recolour together:
+          the ring's accent is a step of the same ramp the mark is drawn in. */}
+      <div
+        id='boot-loader-disc'
+        data-host-driven={isHostDriven() ? '' : undefined}
+        style={{ '--boot-loader-mark-filter': props.markFilter }}
+      >
         <svg
           id='boot-loader-ring'
           viewBox='0 0 100 100'
@@ -160,13 +166,7 @@ export const Loader: Component<LoaderProps> = (props) => {
             <circle class='boot-loader-ring-marker' cx={arc().headX} cy={arc().headY} r={MARKER_RADIUS} />
           </svg>
         ) : null}
-        {props.markSvg ? (
-          <div
-            id='boot-loader-mark'
-            style={{ '--boot-loader-mark-filter': props.markFilter }}
-            innerHTML={props.markSvg}
-          />
-        ) : null}
+        {props.markSvg ? <div id='boot-loader-mark' innerHTML={props.markSvg} /> : null}
       </div>
       <div id='boot-loader-status'>
         <div id='boot-loader-status-fade' />

@@ -142,7 +142,8 @@ body {
    * The host SVG carries its own brand-palette fills, so we don't apply a
    * `color` cascade here. SVGs that intentionally use `fill="currentColor"`
    * still pick up the loader's text colour via `#boot-loader`'s `color`.
-   * A channel recolours the released mark through this filter rather than shipping its own file.
+   * A channel recolours the released mark through this filter rather than shipping its own file;
+   * the ring below takes the same filter, so the two stay one colour.
    */
   filter: var(--boot-loader-mark-filter, none);
 }
@@ -158,6 +159,7 @@ body {
   width: var(--boot-loader-disc-size);
   height: var(--boot-loader-disc-size);
   overflow: visible;
+  filter: var(--boot-loader-mark-filter, none);
   /*
    * Fade the arc linearly from the head (the marker, fully opaque) back to the
    * tail (12 o'clock, transparent). A conic-gradient mask does this along the
@@ -192,6 +194,7 @@ body {
   width: var(--boot-loader-disc-size);
   height: var(--boot-loader-disc-size);
   overflow: visible;
+  filter: var(--boot-loader-mark-filter, none);
 }
 
 .boot-loader-ring-progress {
