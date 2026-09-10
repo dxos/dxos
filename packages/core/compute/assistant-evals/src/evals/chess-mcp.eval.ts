@@ -15,7 +15,7 @@ import { Config } from '@dxos/client';
 import { EDGE_URLS } from '@dxos/config';
 import * as Operation from '@dxos/compute/Operation';
 import * as Project from '@dxos/compute/Project';
-import { Collection, Database, Feed, Obj, Ref } from '@dxos/echo';
+import { Blob, Collection, Database, Feed, Obj, Ref } from '@dxos/echo';
 import { DXN, type SpaceId } from '@dxos/keys';
 import { AccessToken } from '@dxos/link';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
@@ -30,7 +30,7 @@ import * as Sandbox from '@dxos/plugin-sandbox/Sandbox';
 import * as SandboxOperation from '@dxos/plugin-sandbox/SandboxOperation';
 import * as SandboxPlugin from '@dxos/plugin-sandbox/SandboxPlugin';
 import * as TasksPlugin from '@dxos/plugin-tasks/TasksPlugin';
-import { type Actor, Task } from '@dxos/types';
+import { type Actor, File, Task } from '@dxos/types';
 import { trim } from '@dxos/util';
 
 import { findObject, toolInvocations } from '../assertions';
@@ -158,6 +158,10 @@ const task = createEvalRunner({
     AccessToken.AccessToken,
     // Stage four registers one; a session that looks for it early must find the type, not an error.
     McpServer.McpServer,
+    // What the sandbox's download tool persists: a session that pulls its source into the space
+    // must land it, not an unregistered-schema error.
+    File.File,
+    Blob.Blob,
   ],
   config: new Config({ runtime: { services: { edge: { url: EDGE_URL } } } }),
   // A design, a toolchain install, two deploys and an engine, each minutes of wall clock; and where a
@@ -337,8 +341,10 @@ const task = createEvalRunner({
         delegatedTotal: delegated.filter(Boolean).length,
         // The model choice, the claim and the GitHub steps are the reader's, and cannot be done here.
         readerStepsUntouched: readerSteps.length > 0 && readerSteps.every((step) => step?.status === 'todo'),
-        // The steps of stages four and five, and the stages themselves, were not delegated.
-        laterStagesUntouched: later.length > 0 && later.every((step) => step?.status === 'todo'),
+        // The steps of stages four and five, and the stages themselves, were not delegated. Marking
+        // one blocked on the reader is the Development skill's own instruction, not work on it.
+        laterStagesUntouched:
+          later.length > 0 && later.every((step) => step?.status === 'todo' || step?.status === 'blocked'),
       };
     }),
 });
@@ -403,7 +409,7 @@ evalite.each(VARIANTS)('Chess MCP — a delegated session designs, deploys and s
     },
     {
       name: 'reader-and-later-work-left-alone',
-      description: "The reader's steps and the two undelegated stages are still to do.",
+      description: "The reader's steps and the two undelegated stages are still to do, or marked blocked on the reader.",
       scorer: ({ output }) =>
         [output.dbQuery.readerStepsUntouched, output.dbQuery.laterStagesUntouched].filter(Boolean).length / 2,
     },
