@@ -165,7 +165,12 @@ export interface CreateEvalRunnerOptions<I, O> {
   instructions: string;
   input: Schema.Schema<I>;
   output: Schema.Schema<O>;
-  skills?: Ref.Ref<Skill.Skill>[];
+  /**
+   * The skills bound to the run. A function is called per run: variants of one eval run
+   * concurrently in one process, and a skill object added to one run's database cannot be added to
+   * another's.
+   */
+  skills?: Ref.Ref<Skill.Skill>[] | (() => Ref.Ref<Skill.Skill>[]);
   model?: DXN.DXN;
   plugins?: Plugin.Plugin[];
   /**
@@ -286,7 +291,7 @@ export function createEvalRunner<I, O, D>(
 
     const instructions = Instructions.make({
       text: options.instructions,
-      skills: options.skills ?? getDefaultSkills(),
+      skills: (typeof options.skills === 'function' ? options.skills() : options.skills) ?? getDefaultSkills(),
     });
 
     const run = Effect.scoped(

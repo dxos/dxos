@@ -133,7 +133,7 @@ const task = createEvalRunner({
   input: Schema.Unknown,
   output: Schema.Unknown,
   // What `bindDelegationContext` binds, plus the defaults every chat has.
-  skills: [
+  skills: () => [
     ...getDefaultSkills(),
     Ref.make(PlanningSkill.make()),
     Ref.make(MarkdownSkill.make()),
