@@ -15,10 +15,10 @@ Each extension is defined in the Appendix or resolved via its URI.
 |-------------|--------------------------------|
 | `type`      | `org.dxos.mdl.type@1.0`        |
 | `feat`      | `org.dxos.mdl.feat@1.0`        |
-| `test`      | `org.dxos.mdl.test@1.0`        |
+| `scenario`  | `org.dxos.mdl.scenario@1.0`    |
 | `component` | `org.dxos.mdl.component@1.0`   |
 | `op`        | `org.dxos.mdl.op@1.0`          |
-| `flow`      | `org.dxos.mdl.flow@1.0`        |
+| `test`      | `org.dxos.mdl.test@1.0`        |
 
 ## Types
 
@@ -263,7 +263,7 @@ feat F-8: Global Dev Utilities
 ## Acceptance
 
 ```mdl
-test T-1: Devtools node appears in nav graph
+scenario T-1: Devtools node appears in nav graph
   given: Composer loaded with DebugPlugin enabled
   when: user opens the navigation tree
   then:
@@ -272,7 +272,7 @@ test T-1: Devtools node appears in nav graph
 ```
 
 ```mdl
-test T-2: Debug companion on ECHO object
+scenario T-2: Debug companion on ECHO object
   given: a Document is open in the deck
   when: user clicks the "Debug" companion tab
   then:
@@ -280,7 +280,7 @@ test T-2: Debug companion on ECHO object
 ```
 
 ```mdl
-test T-3: Wireframe overlay toggle
+scenario T-3: Wireframe overlay toggle
   given: DebugPlugin settings panel is open
   when: user enables the wireframe toggle
   then:
@@ -291,7 +291,7 @@ test T-3: Wireframe overlay toggle
 ```
 
 ```mdl
-test T-4: Space object generation
+scenario T-4: Space object generation
   given: a space with an empty collection is active
   when: user opens the debug space node and generates 10 objects
   then:
@@ -300,7 +300,7 @@ test T-4: Space object generation
 ```
 
 ```mdl
-test T-5: Log download
+scenario T-5: Log download
   given: logStore is configured and some log entries have been captured
   when: user clicks "Download Logs" in DebugSettings
   then:
@@ -311,15 +311,15 @@ test T-5: Log download
 
 ## QA
 
-Executable flows. Each step carries a human instruction (`do`) and, where the step maps to an
-invocable operation, an agent binding (`invoke`). Report failures by flow and step number.
+Executable tests. Each step carries a human instruction (`do`) and, where the step maps to an
+invocable operation, an agent binding (`invoke`). Report failures by test and step number.
 
 plugin-devtools defines no first-party operations (see "Operations" above), so most of its
 journeys are navigation and settings toggles with no `invoke`. It is a dev-only default: on in
 `isDev` builds, off otherwise (see `packages/apps/composer-app/src/plugin-defs.tsx`).
 
 ```mdl
-flow QA-1: Open the Devtools node and inspect an object
+test QA-1: Open the Devtools node and inspect an object
   desc: The core devtools round-trip — navigate to the Devtools tree and open the Debug companion on an object.
   actors: both
   covers: [F-1.1, F-1.2, F-2.1, F-2.2, T-1, T-2]
@@ -329,7 +329,7 @@ flow QA-1: Open the Devtools node and inspect an object
     - space: a space is open
     - plugin-devtools is enabled (dev-only default; see above)
     - doc1: a Document already exists in the space
-  test:
+  steps:
     - name: Open the Devtools node
       do: In the navtree, click the "Devtools" node pinned at the end of the root.
       invoke: org.dxos.operation.appToolkit.open { subject: ["root/devtools"] }
@@ -347,7 +347,7 @@ flow QA-1: Open the Devtools node and inspect an object
 ```
 
 ```mdl
-flow QA-2: Generate synthetic objects into a collection
+test QA-2: Generate synthetic objects into a collection
   desc: |
     The write path behind the Space Data Generator — the agent binding invokes the shared
     space.addObject operation directly rather than driving the SpaceGenerator surface, so this
@@ -360,9 +360,9 @@ flow QA-2: Generate synthetic objects into a collection
     - space: a space is open
     - collection: a collection in that space, empty of synthetic objects
     - plugin-devtools is enabled (dev-only default; see above)
-    - no Person named "QA Devtools Object" exists — ABORT rather than reusing one this flow did
+    - no Person named "QA Devtools Object" exists — ABORT rather than reusing one this test did
       not create
-  test:
+  steps:
     - name: Generate one object
       do: (agent-only — invokes space.addObject directly, bypassing the SpaceGenerator surface)
       invoke: org.dxos.operation.space.addObject { object: { "@type": "org.dxos.type.person", fullName: "QA Devtools Object" }, target: $given.collection }
@@ -402,8 +402,8 @@ ext feat
 ```
 
 ```mdl
-ext test
-  uri: org.dxos.mdl.test@1.0
+ext scenario
+  uri: org.dxos.mdl.scenario@1.0
   desc: An acceptance scenario expressed as given / when / then steps.
   fields:
     given?: Step | Step[]

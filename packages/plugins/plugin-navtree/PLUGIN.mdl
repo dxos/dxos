@@ -15,10 +15,10 @@ Each extension is defined in the Appendix or resolved via its URI.
 |-------------|--------------------------------|
 | `type`      | `org.dxos.mdl.type@1.0`       |
 | `feat`      | `org.dxos.mdl.feat@1.0`       |
-| `test`      | `org.dxos.mdl.test@1.0`       |
+| `scenario`  | `org.dxos.mdl.scenario@1.0`   |
 | `component` | `org.dxos.mdl.component@1.0`  |
 | `op`        | `org.dxos.mdl.op@1.1`         |
-| `flow`      | `org.dxos.mdl.flow@1.0`       |
+| `test`      | `org.dxos.mdl.test@1.0`       |
 | `step`      | `org.dxos.mdl.step@1.0`       |
 
 ## Types
@@ -260,7 +260,7 @@ feat F-6: State Persistence
 ## Acceptance
 
 ```mdl
-test T-1: Workspace tab switch
+scenario T-1: Workspace tab switch
   given: two workspace tabs exist in the graph
   when: user clicks the second workspace tab
   then:
@@ -270,7 +270,7 @@ test T-1: Workspace tab switch
 ```
 
 ```mdl
-test T-2: Tree node expand persists
+scenario T-2: Tree node expand persists
   given: NavTree is rendered with a collapsed folder node
   when: user expands the folder
   then:
@@ -280,7 +280,7 @@ test T-2: Tree node expand persists
 ```
 
 ```mdl
-test T-3: Expose navigates to nested item
+scenario T-3: Expose navigates to nested item
   given: a deeply nested object id is active in the layout
   when: op:expose is called with that object id
   then:
@@ -289,7 +289,7 @@ test T-3: Expose navigates to nested item
 ```
 
 ```mdl
-test T-4: Select item
+scenario T-4: Select item
   given: item not currently active
   when: user selects a tree item
   then: LayoutOperation.Open is invoked with the item id, disposition 'solo' and the shift modifier
@@ -297,7 +297,7 @@ test T-4: Select item
 ```
 
 ```mdl
-test T-5: Command palette opens on keyboard shortcut
+scenario T-5: Command palette opens on keyboard shortcut
   given: NavTree is active
   when: user presses ⇧⌘K (macOS) or Ctrl+Shift+K (Windows)
   then:
@@ -306,7 +306,7 @@ test T-5: Command palette opens on keyboard shortcut
 ```
 
 ```mdl
-test T-6: Drag-and-drop rearrange
+scenario T-6: Drag-and-drop rearrange
   given: two sibling items in the same folder
   when: user drags the first item below the second
   then:
@@ -318,11 +318,11 @@ test T-6: Drag-and-drop rearrange
 
 ## QA
 
-Executable flows. Each step carries a human instruction (`do`) and, where the step maps to an
-invocable operation, an agent binding (`invoke`). Report failures by flow and step number.
+Executable tests. Each step carries a human instruction (`do`) and, where the step maps to an
+invocable operation, an agent binding (`invoke`). Report failures by test and step number.
 
 ```mdl
-flow QA-1: Expose a nested document and select it
+test QA-1: Expose a nested document and select it
   desc: |
     NavTree itself is system-tagged and force-enabled (never a user-facing toggle — see
     `getCorePlugins` in `plugin-defs.core.tsx`). Its own `expose` op resolves to
@@ -339,8 +339,8 @@ flow QA-1: Expose a nested document and select it
     - collection: a top-level collection in that space
     - subcollection: a second collection nested inside `collection`
     - the navtree is fully collapsed — no descendant of `collection` is currently open
-    - no document named "QA Exposed" exists — ABORT rather than deleting one this flow did not create
-  test:
+    - no document named "QA Exposed" exists — ABORT rather than deleting one this test did not create
+  steps:
     - name: Create a nested document
       do: In the navtree, click + on the nested subcollection and choose Markdown. Name it "QA Exposed".
       invoke: org.dxos.operation.markdown.createDraft { name: "QA Exposed", content: "# QA Exposed\n" }
@@ -405,8 +405,8 @@ ext feat
 ```
 
 ```mdl
-ext test
-  uri: org.dxos.mdl.test@1.0
+ext scenario
+  uri: org.dxos.mdl.scenario@1.0
   desc: An acceptance scenario expressed as given / when / then steps.
   fields:
     given?: Step | Step[]

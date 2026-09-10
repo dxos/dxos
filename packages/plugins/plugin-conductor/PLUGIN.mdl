@@ -15,10 +15,10 @@ Each extension is defined in the Appendix or resolved via its URI.
 |-------------|--------------------------------|
 | `type`      | `org.dxos.mdl.type@1.0`        |
 | `feat`      | `org.dxos.mdl.feat@1.0`        |
-| `test`      | `org.dxos.mdl.test@1.0`        |
+| `scenario`  | `org.dxos.mdl.scenario@1.0`    |
 | `component` | `org.dxos.mdl.component@1.0`   |
 | `op`        | `org.dxos.mdl.op@1.0`          |
-| `flow`      | `org.dxos.mdl.flow@1.0`        |
+| `test`      | `org.dxos.mdl.test@1.0`        |
 
 ## Types
 
@@ -315,7 +315,7 @@ feat F-7: Persistence and Collaboration
 ## Acceptance
 
 ```mdl
-test T-1: Create empty graph
+scenario T-1: Create empty graph
   given: user opens the Create Object menu
   when: user selects "Compute Graph"
   then:
@@ -324,7 +324,7 @@ test T-1: Create empty graph
 ```
 
 ```mdl
-test T-2: Add constant node and read value
+scenario T-2: Add constant node and read value
   given: an empty canvas
   when: user adds a constant node, sets value "hello", connects it to a text node
   then:
@@ -333,7 +333,7 @@ test T-2: Add constant node and read value
 ```
 
 ```mdl
-test T-3: Boolean AND gate
+scenario T-3: Boolean AND gate
   given: two switch nodes with values true and false connected to an AND node
   when: graph executes
   then:
@@ -342,7 +342,7 @@ test T-3: Boolean AND gate
 ```
 
 ```mdl
-test T-4: JSONPath transform
+scenario T-4: JSONPath transform
   given: a constant node with value { "a": { "b": 42 } } connected to a json-transform node
   when: expression "$.a.b" is set on the transform node
   then:
@@ -350,7 +350,7 @@ test T-4: JSONPath transform
 ```
 
 ```mdl
-test T-5: GPT node invocation
+scenario T-5: GPT node invocation
   given: a thread node connected to a GPT node with a system prompt
   when: graph executes with AiService available
   then:
@@ -360,7 +360,7 @@ test T-5: GPT node invocation
 ```
 
 ```mdl
-test T-6: Append to queue
+scenario T-6: Append to queue
   given: a make-queue node connected to an append node; constant node provides input items
   when: graph executes
   then:
@@ -369,7 +369,7 @@ test T-6: Append to queue
 ```
 
 ```mdl
-test T-7: Collaborative edit
+scenario T-7: Collaborative edit
   given: two peers have the same CanvasBoard open
   when: peer A moves a node on the canvas
   then:
@@ -378,7 +378,7 @@ test T-7: Collaborative edit
 ```
 
 ```mdl
-test T-8: NotExecuted propagation
+scenario T-8: NotExecuted propagation
   given: an if node whose condition is false, connected to a text node on the true port
   when: graph executes
   then:
@@ -388,16 +388,16 @@ test T-8: NotExecuted propagation
 
 ## QA
 
-Executable flows. Each step carries a human instruction (`do`) and, where the step maps to an
-invocable operation, an agent binding (`invoke`). Report failures by flow and step number.
+Executable tests. Each step carries a human instruction (`do`) and, where the step maps to an
+invocable operation, an agent binding (`invoke`). Report failures by test and step number.
 
 ```mdl
-flow QA-1: Build and run a small compute graph
+test QA-1: Build and run a small compute graph
   desc: |
     The core canvas round-trip — create a graph, wire a constant into a JSON transform, and read
     the reactive result. None of the node kernels (`evalConstant`, `jsonTransform`, ...) are
     registered operations: they run inside the graph's own reactive controller when the canvas
-    triggers evaluation, not through the operation invoker, so this flow is entirely human — the
+    triggers evaluation, not through the operation invoker, so this test is entirely human — the
     same gap plugin-chess documents for move-less game creation.
   actors: human
   covers: [F-1.1, F-1.2, F-1.3, F-2.1, F-2.2, F-3.1, F-3.2, T-1, T-2]
@@ -406,9 +406,9 @@ flow QA-1: Build and run a small compute graph
     - an identity exists
     - space: a space is open
     - collection: a collection in that space, to create into
-    - no CanvasBoard named "QA Graph" exists — ABORT rather than deleting one this flow did not
+    - no CanvasBoard named "QA Graph" exists — ABORT rather than deleting one this test did not
       create
-  test:
+  steps:
     - name: Create the graph
       do: In the navtree, click + on a collection and choose Compute Graph. Name it "QA Graph".
       expect: an empty CanvasBoard/ComputeGraph opens on the canvas
@@ -473,8 +473,8 @@ ext feat
 ```
 
 ```mdl
-ext test
-  uri: org.dxos.mdl.test@1.0
+ext scenario
+  uri: org.dxos.mdl.scenario@1.0
   desc: An acceptance scenario expressed as given / when / then steps.
   fields:
     given?: Step | Step[]
