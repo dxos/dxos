@@ -325,8 +325,9 @@ export class ChatCompletionsClient extends Context.Service<
  */
 /**
  * Whether a provider wants an assistant turn's reasoning sent back with it. DeepSeek's thinking mode
- * refuses a request whose earlier tool-calling turns come back without their `reasoning_content`;
- * OpenAI-format servers that never produced any would be sent a field they do not know.
+ * refuses a request whose earlier tool-calling turns come back without their `reasoning_content`,
+ * an empty one included, so a tool-calling turn always carries the field; OpenAI-format servers that
+ * never produced any would be sent a field they do not know.
  */
 const replaysReasoning = (config: ChatCompletionsClientConfig): boolean => config.provider === 'deepseek';
 
@@ -378,7 +379,7 @@ const promptToMessages = (prompt: Prompt.Prompt, apiFormat: ApiFormat, replayRea
         messages.push({
           role: 'assistant',
           content: text,
-          ...(replayReasoning && reasoning.length > 0 ? { reasoning_content: reasoning } : {}),
+          ...(replayReasoning && (reasoning.length > 0 || toolCalls.length > 0) ? { reasoning_content: reasoning } : {}),
           ...(toolCalls.length > 0 ? { tool_calls: toolCalls } : {}),
         });
       }

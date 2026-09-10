@@ -17,8 +17,11 @@ import { expect } from 'vitest';
 
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
+import { Obj } from '@dxos/echo';
+import { type ContentBlock, Message } from '@dxos/types';
 
 import * as AiParser from '../AiParser';
+import * as AiPreprocessor from '../AiPreprocessor';
 import * as ChatCompletionsAdapter from './ChatCompletionsAdapter';
 
 type ProviderConfig = {
@@ -202,6 +205,57 @@ describe('tool call encoding', () => {
       expect(assistantOf(deepseek).reasoning_content).toBe('The id looks like an EID.');
       expect(assistantOf(deepseek).tool_calls).toHaveLength(1);
       expect(assistantOf(openai)).not.toHaveProperty('reasoning_content');
+    }),
+  );
+
+  // A tool-calling turn the model did not think about still has to carry the field: DeepSeek
+  // checks for its presence, not its content.
+  it.effect(
+    'DeepSeek receives an empty reasoning_content on a tool-calling turn without reasoning',
+    Effect.fn(function* (_) {
+      let body: any;
+      yield* LanguageModel.generateText({ prompt: promptWithToolCall }).pipe(
+        Effect.provide(captureRequestBody('openai', (captured) => (body = captured), 'deepseek')),
+      );
+
+      const assistant = body.messages.find((message: any) => message.role === 'assistant');
+      expect(assistant.reasoning_content).toBe('');
+      expect(assistant.tool_calls).toHaveLength(1);
+    }),
+  );
+
+  // The history a session replays holds one block per message; the preprocessor merges the run of
+  // assistant messages, so the reasoning and the calls it led to reach the wire as one turn.
+  it.effect(
+    'a reasoned parallel tool call from message history reaches DeepSeek as one turn with its reasoning',
+    Effect.fn(function* (_) {
+      const message = (role: 'user' | 'assistant' | 'tool', blocks: ContentBlock.Any[]) =>
+        Obj.make(Message.Message, { created: new Date().toISOString(), sender: { role }, blocks });
+      const history = [
+        message('user', [{ _tag: 'text', text: 'read the plan' }]),
+        message('assistant', [{ _tag: 'reasoning', reasoningText: 'Two reads, then decide.' }]),
+        message('assistant', [
+          { _tag: 'toolCall', toolCallId: 'c1', name: 'projects-get', input: '{}', providerExecuted: false },
+        ]),
+        message('assistant', [
+          { _tag: 'toolCall', toolCallId: 'c2', name: 'tasks-list', input: '{}', providerExecuted: false },
+        ]),
+        message('tool', [
+          { _tag: 'toolResult', toolCallId: 'c1', name: 'projects-get', result: '"p"', providerExecuted: false },
+          { _tag: 'toolResult', toolCallId: 'c2', name: 'tasks-list', result: '"t"', providerExecuted: false },
+        ]),
+      ];
+      const prompt = yield* AiPreprocessor.preprocessPrompt(history);
+
+      let body: any;
+      yield* LanguageModel.generateText({ prompt }).pipe(
+        Effect.provide(captureRequestBody('openai', (captured) => (body = captured), 'deepseek')),
+      );
+
+      const assistants = body.messages.filter((message: any) => message.role === 'assistant');
+      expect(assistants).toHaveLength(1);
+      expect(assistants[0].reasoning_content).toBe('Two reads, then decide.');
+      expect(assistants[0].tool_calls.map((call: any) => call.id)).toEqual(['c1', 'c2']);
     }),
   );
 
