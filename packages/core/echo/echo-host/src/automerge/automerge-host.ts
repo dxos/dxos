@@ -251,6 +251,9 @@ export class AutomergeHost extends Resource {
    */
   private _nonConvergingSyncPasses = new Map<string, number>();
 
+  /** `<documentId>:<subductionPeerIdHex>` pairs already warned about, so a denial warns once. */
+  private readonly _deniedFetches = new Set<string>();
+
   /**
    * Documents requested by remote peers.
    */
@@ -999,13 +1002,18 @@ export class AutomergeHost extends Resource {
       const documentId = sedimentreeIdToDocumentId(sedimentreeId);
       const subductionPeerIdHex = subductionPeerId.toString();
       if (allow) {
+        this._deniedFetches.delete(`${documentId}:${subductionPeerIdHex}`);
         log.verbose('subduction authorizeFetch', { documentId, subductionPeerId: subductionPeerIdHex, allow });
       } else {
-        // Warn, not verbose: the throw below is the only record of a denial, the peer's matching
-        // WASM warning is suppressed (see `_open`), and the fetcher is left with a failed entry
-        // that only its own `shareConfigChanged` revives. A denial that goes unlogged is a
-        // document that silently never arrives.
-        log.warn('subduction authorizeFetch denied', { documentId, subductionPeerId: subductionPeerIdHex });
+        // Warn once per document and peer: the throw below is the only record of a denial and the
+        // peer's matching WASM warning is suppressed (see `_open`), so an unlogged denial is a
+        // document that silently never arrives. Every `shareConfigChanged` re-drives all failed
+        // entries through here, so warning per call would scale with the retry rate.
+        const key = `${documentId}:${subductionPeerIdHex}`;
+        if (!this._deniedFetches.has(key)) {
+          this._deniedFetches.add(key);
+          log.warn('subduction authorizeFetch denied', { documentId, subductionPeerId: subductionPeerIdHex });
+        }
         throw new Error('authorizeFetch denied by client share policy');
       }
     },
@@ -1026,11 +1034,15 @@ export class AutomergeHost extends Resource {
       }
       // Silently dropping ids from the response would otherwise leave no trace of the omission,
       // so a broadcast the peer never receives is only visible here.
-      const summary = { subductionPeerId: subductionPeerId.toString(), requested: sedimentreeIds.length };
+      const summary = {
+        subductionPeerId: subductionPeerId.toString(),
+        requested: sedimentreeIds.length,
+        allowed: allowed.length,
+      };
       if (denied.length > 0) {
         log.warn('subduction filterAuthorizedFetch denied', { ...summary, denied: denied.join(',') });
       } else {
-        log.verbose('subduction filterAuthorizedFetch', { ...summary, allowed: allowed.length });
+        log.verbose('subduction filterAuthorizedFetch', summary);
       }
       return allowed;
     },

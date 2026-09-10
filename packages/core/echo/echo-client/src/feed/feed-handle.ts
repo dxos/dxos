@@ -407,9 +407,11 @@ export class FeedHandle {
       }
     }
     this.#appendRetryDelay = APPEND_RETRY_INITIAL_DELAY;
-    // A retry still scheduled from an earlier failure is left to fire: it only triggers the
-    // scheduler, which is a no-op once nothing is dirty.
-    this.#appendRetryPending = false;
+    // `#appendRetryPending` is cleared by the scheduled task alone, so at most one retry is ever
+    // outstanding. Clearing it here would let the next failure schedule a second while the first
+    // is still armed, and a flapping endpoint would accumulate both timers and their dispose
+    // callbacks. An already-armed retry firing after a success only triggers the scheduler, which
+    // does nothing once no core is dirty.
     // Cleared only here: `#onAppendFailed` now retries, so a transient failure must not leave the
     // feed reporting an error once a later append has gone through.
     this._error = null;

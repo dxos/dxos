@@ -166,9 +166,7 @@ export class EchoNetworkAdapter extends NetworkAdapter {
     const connection = this._connections.get(peerId);
     if (!connection) {
       // Denies every document for the peer, so a stale peerId reads as a share-policy refusal.
-      // Warn: this is indistinguishable downstream from a deliberate refusal, and it denies the
-      // whole peer rather than one document.
-      log.warn('share policy probe: no connection for peer', { peerId, documentId: params.documentId });
+      log.verbose('share policy probe: no connection for peer', { peerId, documentId: params.documentId });
       return false;
     }
 
