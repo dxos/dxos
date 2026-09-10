@@ -100,6 +100,21 @@ describe('RemoteProcessHandle ephemeral trace', () => {
     expect(reads).toBe(2);
   });
 
+  test('ends when the live source completes', async ({ expect }) => {
+    // A monitor may hand back a finite stream — `RemoteTraceMonitor.layerNoop` is exactly that —
+    // and the subscription has to end with it rather than sit on the drained bridge queue.
+    const collected = await EffectEx.runPromise(
+      Effect.gen(function* () {
+        const handle = yield* makeHandle(makeControl([traceMessage('buffered')]), {
+          subscribeToTraceMessages: () => Stream.fromIterable([traceMessage('live')]),
+        });
+        return yield* Stream.runCollect(handle.subscribeEphemeral());
+      }).pipe(Effect.provide(registryLayer()), Effect.timeout('5 seconds')),
+    );
+
+    expect(textsOf([...collected])).toEqual(['buffered', 'live']);
+  });
+
   test('falls back to polling the ring with no live source', async ({ expect }) => {
     // Unchanged behaviour where no swarm monitor is provided (local-only deployments, tests): the
     // subscription pages the ring, so it still delivers — just not until the host has flushed.

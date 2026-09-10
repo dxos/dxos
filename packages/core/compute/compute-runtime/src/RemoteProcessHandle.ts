@@ -4,6 +4,7 @@
 
 // @import-as-namespace
 
+import type * as Cause from 'effect/Cause';
 import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
@@ -227,12 +228,19 @@ export class RemoteProcessHandle<_Input, _Output, _Rpcs extends Rpc.Any> impleme
     // the whole text so far and is applied by message id, so re-applying one is idempotent.
     return Stream.unwrap(
       Effect.gen({ self: this }, function* () {
-        const queue = yield* Effect.acquireRelease(Queue.unbounded<Trace.Message>(), (queue) => Queue.shutdown(queue));
+        const queue = yield* Effect.acquireRelease(Queue.unbounded<Trace.Message, Cause.Done>(), (queue) =>
+          Queue.shutdown(queue),
+        );
         // Subscribed BEFORE the replay read rather than concatenated after it: the live source only
         // registers when its stream starts, so anything produced during the read would be lost.
         yield* Effect.forkScoped(
           Stream.runForEach(remoteTrace.subscribeToTraceMessages({ pid: this.pid }), (message) =>
             Queue.offer(queue, message),
+          ).pipe(
+            // A finite live source (`layerNoop`'s empty stream, a transport that closes) must end
+            // this subscription too; waiting for the scope would leave the reader on an idle queue.
+            // `end` rather than `shutdown`: what is already buffered still has to be delivered.
+            Effect.ensuring(Queue.end(queue)),
           ),
         );
         // Lets the forked fiber reach its subscribe before the replay read is issued; a fork alone
