@@ -4,14 +4,10 @@
 
 import { describe, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
-import * as Layer from 'effect/Layer';
-import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
-import * as HttpClient from 'effect/unstable/http/HttpClient';
-import * as HttpClientRequest from 'effect/unstable/http/HttpClientRequest';
 
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
-import { AiModelResolver, Provider } from '@dxos/ai';
-import { ChatCompletionsAdapter, DeepSeekResolver } from '@dxos/ai/resolvers';
+import { Provider } from '@dxos/ai';
+import { LanguageModelFixture } from '@dxos/ai/testing';
 import * as SampleSpace from '@dxos/app-toolkit/SampleSpace';
 import { AiContext } from '@dxos/assistant';
 import {
@@ -29,7 +25,7 @@ import { Database, Feed, Obj, Query, Ref } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { TestHelpers } from '@dxos/effect/testing';
 import { invariant } from '@dxos/invariant';
-import { DXN } from '@dxos/keys';
+import { DXN, EntityId } from '@dxos/keys';
 import * as ProjectOperationHandlerSet from '@dxos/plugin-projects/ProjectOperationHandlerSet';
 import * as ProjectSkill from '@dxos/plugin-projects/ProjectSkill';
 import { SandboxSkill } from '@dxos/plugin-sandbox';
@@ -54,41 +50,18 @@ import { StockfishSpace } from './index';
  * stages need is unreliable enough that a scheduled run would fail on it rather than on this.
  * Which is also why it stops here: picking up the root task needs no container.
  *
- * Prereq: `DEEPSEEK_API_KEY`. Run with:
+ * Run with, and re-record the conversation with, respectively:
  *   DX_RUN_MANUAL_TESTS=1 moon run plugin-debug:test -- src/sample/stockfish/run.test.ts
+ *   DX_UPDATE_MODEL_FIXTURES=1 DX_RUN_MANUAL_TESTS=1 DEEPSEEK_API_KEY=... moon run \
+ *     plugin-debug:test -- src/sample/stockfish/run.test.ts
  */
+
+// Stable entity ids, so the memoized conversation matches across runs: the space's own content is
+// already dated against the template's fixed reference.
+EntityId.dangerouslyDisableRandomness();
 
 /** The model the template's own first step tells the reader to select. */
 const MODEL = DXN.make('com.deepseek.model.deepseek-v4-pro.default');
-
-const DEEPSEEK_ENDPOINT = 'https://api.deepseek.com';
-
-/**
- * DeepSeek straight from the vendor rather than through EDGE. The app routes this model through the
- * edge proxy for auth and metering, which needs a HALO identity and an `EdgeHttpClient` that a
- * headless test stack has neither of; the resolver and the adapter under test are the same either
- * way. `AssistantTestLayer`'s presets register no DeepSeek resolver at all, hence the explicit
- * service rather than an `aiServicePreset`.
- */
-const DeepSeekAiService = AiModelResolver.buildAiService.pipe(
-  Layer.provide(
-    DeepSeekResolver.make().pipe(
-      Layer.provide(
-        ChatCompletionsAdapter.clientLayer({
-          baseUrl: DEEPSEEK_ENDPOINT,
-          apiFormat: 'openai',
-          provider: 'deepseek',
-          streamUsage: true,
-          transformClient: (client) =>
-            HttpClient.mapRequest(
-              client,
-              HttpClientRequest.setHeader('Authorization', `Bearer ${process.env.DEEPSEEK_API_KEY ?? ''}`),
-            ),
-        }).pipe(Layer.provide(FetchHttpClient.layer)),
-      ),
-    ),
-  ),
-);
 
 /**
  * The skills a chat working this template is expected to carry, beyond the Development skill the
@@ -106,7 +79,10 @@ const EXPECTED_SKILLS = [SkillManagerSkill.make(), ChatContextSkill.make(), Proj
 const template = StockfishSpace();
 
 const TestLayer = AssistantTestLayer({
-  aiService: DeepSeekAiService,
+  // Direct to the vendor rather than through EDGE, which the app routes this model over for auth
+  // and metering: that path needs a HALO identity and an `EdgeHttpClient`, and a headless test
+  // stack has neither. Memoized like any other preset, so a recorded run replays without a key.
+  aiServicePreset: 'deepseek',
   model: MODEL,
   provider: Provider.edge.id,
   // Every verb the bound skills declare, so no tool the model reaches for fails to resolve.
@@ -182,8 +158,6 @@ describe('Chess MCP template, run live', { tags: ['manual'] }, () => {
     'a DeepSeek chat over the instantiated template picks up the root task',
     Effect.fnUntraced(
       function* ({ expect }) {
-        // Said here rather than left to the provider's auth error, which names a header format.
-        invariant(process.env.DEEPSEEK_API_KEY, 'DEEPSEEK_API_KEY is required to run this test.');
         const { instructions, chat } = yield* instantiateTemplate();
 
         // Preconditions, so a failure below is the model's and not the seeding's: the Development
@@ -217,7 +191,7 @@ describe('Chess MCP template, run live', { tags: ['manual'] }, () => {
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,
     ),
-    // A live model with a task tree to read takes several tool round-trips.
-    { timeout: 300_000 },
+    // A live model with a task tree to read takes several tool round-trips; a replay does not.
+    { timeout: LanguageModelFixture.isUpdateEnabled() ? 300_000 : 60_000 },
   );
 });
