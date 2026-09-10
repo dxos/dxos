@@ -109,6 +109,7 @@
       "@dxos/merkle-search-tree",
       "@dxos/messaging",
       "@dxos/migrations",
+      "@dxos/ner",
       "@dxos/network-manager",
       "@dxos/nlp",
       "@dxos/node-std",

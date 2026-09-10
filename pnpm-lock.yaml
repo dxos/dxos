@@ -4134,9 +4134,6 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../../common/util
-      '@xenova/transformers':
-        specifier: 'catalog:'
-        version: 2.17.2
       lodash.defaultsdeep:
         specifier: 'catalog:'
         version: 4.6.1
@@ -7330,6 +7327,19 @@ importers:
       react-dom:
         specifier: ~19.2.7
         version: 19.2.7(react@19.2.7)
+
+  packages/experimental/ner:
+    dependencies:
+      '@dxos/log':
+        specifier: workspace:*
+        version: link:../../common/log
+      '@xenova/transformers':
+        specifier: 'catalog:'
+        version: 2.17.2
+    devDependencies:
+      '@dxos/types':
+        specifier: workspace:*
+        version: link:../../sdk/types
 
   packages/plugins/plugin-assistant:
     dependencies:

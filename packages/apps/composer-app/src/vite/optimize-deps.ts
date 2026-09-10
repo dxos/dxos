@@ -116,7 +116,6 @@ export const optimizeDepsInclude: string[] = [
   '@dxos/observability > posthog-js',
   '@dxos/plugin-assistant > @ark-ui/react/collapsible',
   '@dxos/plugin-assistant > @dxos/assistant > @dxos/mcp-client > @modelcontextprotocol/sdk/client/sse.js',
-  '@dxos/plugin-assistant > @dxos/assistant > @xenova/transformers',
   '@dxos/plugin-assistant > @dxos/react-ui-search > command-score',
   '@dxos/plugin-assistant > @dxos/react-ui-transcription > date-fns/intervalToDuration',
   '@dxos/plugin-assistant > @dxos/ui-editor > @codemirror/lang-xml',
