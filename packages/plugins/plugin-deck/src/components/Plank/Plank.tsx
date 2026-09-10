@@ -20,6 +20,7 @@ import { useAttentionAttributes } from '@dxos/react-ui-attention';
 import { meta } from '#meta';
 
 import { Pane } from '../Pane';
+import { PlankLoading } from './PlankLoading';
 
 type SurfaceProps = ComponentProps<typeof Surface.Surface>;
 
@@ -57,8 +58,6 @@ export type PlankProps = ThemedClassName<{
   fallback?: SurfaceProps['fallback'];
   /** Loading placeholder for the content surface. */
   placeholder?: SurfaceProps['placeholder'];
-  /** Rendered in place of the content surface. */
-  content?: ReactNode;
   /** Render only the content surface, omitting the toolbar (e.g. fullscreen). */
   headless?: boolean;
   // TODO(burdon): Why is this required?
@@ -90,7 +89,6 @@ export const Plank = forwardRef<HTMLDivElement, PlankProps>(
       articleData,
       fallback,
       placeholder,
-      content,
       headless,
       onKeyDown,
     },
@@ -188,7 +186,11 @@ export const Plank = forwardRef<HTMLDivElement, PlankProps>(
           </Pane.Toolbar>
         )}
         <Pane.Content>
-          {content ?? (
+          {node.data === undefined ? (
+            // A plank with no subject: the URL named it and nothing has resolved it yet, so there is
+            // no Article to ask for.
+            <PlankLoading />
+          ) : (
             <Surface.Surface
               key={node.id}
               type={AppSurface.Article}

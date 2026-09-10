@@ -18,12 +18,8 @@ import { DeckSchema } from '#types';
 
 import { CompanionPlank } from './CompanionPlank';
 import { PlankControls } from './PlankControls';
-import { PlankErrorFallback, PlankLoading } from './PlankFallback';
+import { PlankErrorFallback } from './PlankFallback';
 import { useDeckPlank } from './useDeckPlank';
-
-const PLANK_LOADING = <PlankLoading />;
-
-const PLANK_LOADING_TYPE = 'dxos.org/type/plank-loading';
 
 export type DeckPlankProps = ThemedClassName<{
   id: string;
@@ -145,7 +141,6 @@ const DeckPlankInner = ({ id, part, fullscreen = false, active, path, classNames
         attendableId={id}
         related={part === 'complementary'}
         controls={controls}
-        content={PLANK_LOADING}
         headless={headless}
         onKeyDown={handleKeyDown}
         classNames={classNames}
@@ -184,7 +179,6 @@ const DeckPlankInner = ({ id, part, fullscreen = false, active, path, classNames
       navbarEnd={navbarEnd}
       sigilFooter={sigilFooter}
       fallback={PlankErrorFallback}
-      placeholder={PLANK_LOADING}
       headless={headless}
       onKeyDown={handleKeyDown}
       classNames={classNames}
