@@ -7,7 +7,7 @@
 import * as Schema from 'effect/Schema';
 
 import { Annotation, DXN, Format, Obj, Type } from '@dxos/echo';
-import { GeneratorAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
+import { GeneratorAnnotation, HiddenAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
 
 /**
  * An ordered span of work within a {@link TaskSet}, mirroring a Linear/GitHub milestone (sync
@@ -26,6 +26,7 @@ export class Milestone extends Type.makeObject<Milestone>(DXN.make('org.dxos.typ
   }).pipe(
     Schema.annotate({ title: 'Milestone' }),
     LabelAnnotation.set(['name']),
+    HiddenAnnotation.set(true),
     Annotation.IconAnnotation.set({ icon: 'ph--flag-banner--regular', hue: 'amber' }),
   ),
 ) {}

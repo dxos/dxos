@@ -64,6 +64,11 @@
     --surface-bg: var(--dx-surface-base);
   }
 
+  /* Not a level: a tinted zone (a tour card, a callout) whose controls derive their states from the tint. */
+  .dx-primary-surface {
+    --surface-bg: var(--color-primary-surface);
+  }
+
   [data-surface='raised'],
   .dx-card-surface {
     --surface-bg: var(--dx-surface-raised);
@@ -90,6 +95,7 @@
   .dx-r1-surface,
   .dx-base-surface,
   .dx-attention-surface,
+  .dx-primary-surface,
   .dx-card-surface,
   .dx-modal-surface,
   .dx-popover-surface,
@@ -143,6 +149,7 @@
   .dx-r1-surface,
   .dx-base-surface,
   .dx-attention-surface,
+  .dx-primary-surface,
   .dx-card-surface,
   .dx-modal-surface,
   .dx-popover-surface,
@@ -217,6 +224,7 @@
   .dx-r1-surface,
   .dx-base-surface,
   .dx-attention-surface,
+  .dx-primary-surface,
   .dx-card-surface,
   .dx-modal-surface,
   .dx-popover-surface,
