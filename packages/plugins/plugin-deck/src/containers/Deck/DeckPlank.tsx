@@ -15,7 +15,6 @@ import { Attention } from '@dxos/react-ui-attention';
 
 import { Plank } from '#components';
 import { useBreadcrumbs, useDeckSettings } from '#hooks';
-import { meta } from '#meta';
 import { DeckSchema } from '#types';
 
 import { CompanionPlank } from './CompanionPlank';
@@ -129,7 +128,7 @@ const DeckPlankInner = ({ id, part, fullscreen = false, active, path, classNames
     () => ({
       id,
       type: PLANK_LOADING_TYPE,
-      properties: { label: ['pending.heading', { ns: meta.profile.key }] },
+      properties: {},
       data: null,
     }),
     [id],
@@ -159,7 +158,6 @@ const DeckPlankInner = ({ id, part, fullscreen = false, active, path, classNames
         node={loadingNode}
         attendableId={id}
         related={part === 'complementary'}
-        pending
         controls={controls}
         content={PLANK_LOADING}
         headless={headless}
