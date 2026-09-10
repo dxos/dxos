@@ -29,8 +29,8 @@ import {
   PROMPT_ELEMENT,
   ThemeExtensionsOptions,
   type XmlTagsOptions,
-  type XmlWidgetState,
-  type XmlWidgetStateManager,
+  type WidgetState,
+  type WidgetStateManager,
   createBasicExtensions,
   createThemeExtensions,
   createTurnSource,
@@ -45,8 +45,10 @@ import {
   typewriterBypass,
   xmlBlockDecoration,
   xmlFormatting,
-  xmlTagContextEffect,
-  xmlTagResetEffect,
+  widgetContextEffect,
+  widgetResetEffect,
+  objectLinks,
+  widgetHost,
   xmlTags,
 } from '@dxos/ui-editor';
 import { mx } from '@dxos/ui-theme';
@@ -59,7 +61,7 @@ import { type StreamerOptions, createStreamer } from './stream';
 /** Document offset range (CodeMirror positions). */
 export type DocumentRange = { from: number; to: number };
 
-export interface MarkdownStreamController extends XmlWidgetStateManager {
+export interface MarkdownStreamController extends WidgetStateManager {
   get length(): number | undefined;
   focus: () => void;
   scrollToBottom: (behavior?: ScrollBehavior) => void;
@@ -185,7 +187,7 @@ export const MarkdownStream = forwardRef<MarkdownStreamController | null, Markdo
         // belongs to the host, not the document, so nulling it here would strand every widget in the
         // replacement document with `context: undefined`.
         viewRef.current.dispatch({
-          effects: [xmlTagContextEffect.of(pendingContextRef.current?.value ?? null), xmlTagResetEffect.of(null)],
+          effects: [widgetContextEffect.of(pendingContextRef.current?.value ?? null), widgetResetEffect.of(null)],
           changes: [{ from: 0, to: viewRef.current.state.doc.length, insert: text }],
           annotations: typewriterBypass.of(true),
           selection: EditorSelection.cursor(text.length),
@@ -209,7 +211,7 @@ export const MarkdownStream = forwardRef<MarkdownStreamController | null, Markdo
     useEffect(() => {
       const pending = pendingContextRef.current;
       if (view && pending) {
-        view.dispatch({ effects: xmlTagContextEffect.of(pending.value) });
+        view.dispatch({ effects: widgetContextEffect.of(pending.value) });
       }
     }, [view]);
 
@@ -271,7 +273,7 @@ type MarkdownStreamTextEditorParams = Pick<MarkdownStreamProps, 'debug' | 'regis
 
 type MarkdownStreamTextEditorResult = UseTextEditor & {
   viewRef: RefObject<EditorView | null>;
-  widgets: XmlWidgetState[];
+  widgets: WidgetState[];
 };
 
 /**
@@ -291,7 +293,7 @@ const useMarkdownStreamTextEditor = (
   const { themeMode } = useThemeContext();
 
   // Active widgets.
-  const [widgets, setWidgets] = useState<XmlWidgetState[]>([]);
+  const [widgets, setWidgets] = useState<WidgetState[]>([]);
 
   // Editor.
   const { view, parentRef } = useTextEditor(() => {
@@ -322,7 +324,9 @@ const useMarkdownStreamTextEditor = (
               lastLineClass: 'pb-1.5 rounded-b-sm',
               hideTags: true,
             }),
-            xmlTags({ registry, setWidgets, bookmarks: ['prompt'] }),
+            widgetHost({ setWidgets, bookmarks: ['prompt'] }),
+            xmlTags({ registry }),
+            objectLinks(),
             // TODO(burdon): Folding gets progressively off due to some widgets?
             turnFolding({ source: turnSource }),
             scroller({ overScroll: 80, autoScroll: options?.autoScroll }),

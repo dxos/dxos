@@ -13,9 +13,8 @@ import {
   createThemeExtensions,
   decorateMarkdown,
   documentSlots,
+  objectLinks,
   scroller,
-  xmlTags,
-  xmlWidgetRegistry,
 } from '@dxos/ui-editor';
 
 import { type TranscriptModel } from '../../model';
@@ -36,9 +35,9 @@ export const Transcription = composable<HTMLDivElement, TranscriptionProps>(
           createBasicExtensions({ readOnly: true, lineWrapping: true, search: true }),
           createThemeExtensions({ themeMode, slots: documentSlots }),
           createMarkdownExtensions(),
-          // xmlTags() handles dxn:/echo: links via url-scheme widgets; skip here to avoid double-processing.
+          // `objectLinks()` renders dxn:/echo: links; skip here to avoid double-processing.
           decorateMarkdown({ skip: ({ url }) => url.startsWith('dxn:') || url.startsWith('echo:') }),
-          xmlTags({ registry: xmlWidgetRegistry }),
+          objectLinks(),
           transcription({ model, started: object?.started ? new Date(object.started) : undefined }),
           scroller(),
         ],

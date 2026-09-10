@@ -12,8 +12,7 @@ import {
   createBasicExtensions,
   createMarkdownExtensions,
   createThemeExtensions,
-  xmlTags,
-  xmlWidgetRegistry,
+  objectLinks,
 } from '@dxos/ui-editor';
 import { mx } from '@dxos/ui-theme';
 import { isTruthy } from '@dxos/util';
@@ -56,12 +55,7 @@ export const MarkdownViewer = ({
       [
         createBasicExtensions({ readOnly: true, lineWrapping: true, search: true }),
         createThemeExtensions({ themeMode, slots }),
-        markdown &&
-          [
-            createMarkdownExtensions(),
-            xmlTags({ registry: xmlWidgetRegistry }),
-            inboxMarkdown({ loadRemoteImages }),
-          ].filter(isTruthy),
+        markdown && [createMarkdownExtensions(), objectLinks(), inboxMarkdown({ loadRemoteImages })].filter(isTruthy),
         extensionsProp,
       ].filter(isTruthy),
     [themeMode, markdown, slots, loadRemoteImages, extensionsProp],

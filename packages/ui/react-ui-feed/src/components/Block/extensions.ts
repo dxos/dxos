@@ -7,7 +7,7 @@ import { EditorView } from '@codemirror/view';
 
 import {
   type XmlWidgetRegistry,
-  type XmlWidgetState,
+  type WidgetState,
   createBasicExtensions,
   createMarkdownExtensions,
   createThemeExtensions,
@@ -15,6 +15,8 @@ import {
   extendedMarkdown,
   xmlBlockDecoration,
   xmlFormatting,
+  objectLinks,
+  widgetHost,
   xmlTags,
 } from '@dxos/ui-editor';
 
@@ -24,7 +26,7 @@ export type ItemExtensionOptions = {
   registry?: XmlWidgetRegistry;
   editable?: boolean;
   themeMode?: 'light' | 'dark';
-  setWidgets?: (widgets: XmlWidgetState[]) => void;
+  setWidgets?: (widgets: WidgetState[]) => void;
 };
 
 /**
@@ -48,7 +50,7 @@ export const createBlockExtensions = ({
 }: ItemExtensionOptions = {}): Extension[] => [
   ...sharedExtensions(registry, editable, themeMode),
   // The one part that cannot be shared: the callback that hands this item's widgets back to it.
-  ...(registry ? [xmlTags({ registry, setWidgets: setWidgets ?? (() => {}), bookmarks: ['prompt'] })] : []),
+  ...(registry ? [widgetHost({ setWidgets, bookmarks: ['prompt'] }), xmlTags({ registry }), objectLinks()] : []),
 ];
 
 /** Registries are compared by identity, so a feed's single registry is a single cache scope. */

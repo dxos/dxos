@@ -15,7 +15,7 @@ import { URI } from '@dxos/keys';
 import { Card, Icon, IconButton } from '@dxos/react-ui';
 import { Attention } from '@dxos/react-ui-attention';
 import { ResizeHandle, type Size, resizeAttributes, sizeStyle } from '@dxos/react-ui-dnd';
-import { type XmlWidgetProps } from '@dxos/ui-editor';
+import { type WidgetProps } from '@dxos/ui-editor';
 
 import { parseEmbedLabel } from './parse-embed-label';
 
@@ -50,7 +50,7 @@ const maybeScrollIntoView = (element: HTMLElement): void => {
   }
 };
 
-export type PreviewComponentProps = XmlWidgetProps<{
+export type PreviewComponentProps = WidgetProps<{
   db?: Database.Database;
   dxn: string;
   label: string;
@@ -64,7 +64,7 @@ export type PreviewComponentProps = XmlWidgetProps<{
 /**
  * Registry-backed block widget for URL-scheme preview slots.
  * Replaces the addBlockContainer callback pattern.
- * Used as the Component entry in a urlSchemes XmlWidgetDef.
+ * Used as the `image` widget of `objectLinks()`.
  */
 export const PreviewComponent = ({
   db,

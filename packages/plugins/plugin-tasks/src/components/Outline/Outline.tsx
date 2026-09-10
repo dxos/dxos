@@ -29,7 +29,7 @@ import {
 import { type Text } from '@dxos/schema';
 import {
   AnchorWidget,
-  type XmlWidgetProps,
+  type WidgetProps,
   createBasicExtensions,
   createDataExtensions,
   createMarkdownExtensions,
@@ -41,8 +41,7 @@ import {
   outliner,
   replaceItemWithLink,
   syncLinkLabels,
-  xmlTags,
-  xmlWidgetRegistry,
+  objectLinks,
 } from '@dxos/ui-editor';
 
 import { meta } from '#meta';
@@ -243,7 +242,7 @@ const OutlineContent = composable<HTMLDivElement, OutlineContentProps>((props, f
           }
         }),
         // Renders links to converted objects as anchor chips (which dispatch `DX_ANCHOR_ACTIVATE`).
-        xmlTags({ registry: xmlWidgetRegistry }),
+        objectLinks(),
         hashtag(),
         // Last, so a host's decoration sees the document the outline's own extensions produced.
         extensions ?? [],

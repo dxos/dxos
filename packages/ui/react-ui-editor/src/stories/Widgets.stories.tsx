@@ -17,17 +17,17 @@ import { random } from '@dxos/random';
 import { Card, Icon, Popover, useThemeContext } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import {
-  AnchorWidget,
-  type XmlWidgetProps,
+  type ObjectLinkProps,
+  type WidgetState,
   type XmlWidgetRegistry,
-  type XmlWidgetState,
   createBasicExtensions,
   createThemeExtensions,
   decorateMarkdown,
   extendedMarkdown,
   image,
+  objectLinks,
+  widgetHost,
   xmlTags,
-  xmlWidgetRegistry,
 } from '@dxos/ui-editor';
 import { type PreviewLinkRef, type PreviewLinkTarget } from '@dxos/ui-types';
 import { safeParseInt, trim } from '@dxos/util';
@@ -66,7 +66,7 @@ const xmlRegistry = {
 
 const XmlTagsStory = ({ text }: { text?: string }) => {
   const { themeMode } = useThemeContext();
-  const [widgets, setWidgets] = useState<XmlWidgetState[]>([]);
+  const [widgets, setWidgets] = useState<WidgetState[]>([]);
   const { parentRef } = useTextEditor({
     initialValue: text,
     extensions: [
@@ -74,7 +74,8 @@ const XmlTagsStory = ({ text }: { text?: string }) => {
       createBasicExtensions({ lineWrapping: true }),
       decorateMarkdown(),
       extendedMarkdown({ registry: xmlRegistry }),
-      xmlTags({ registry: xmlRegistry, setWidgets }),
+      widgetHost({ setWidgets }),
+      xmlTags({ registry: xmlRegistry }),
     ],
   });
 
@@ -134,7 +135,7 @@ const PreviewCard = () => {
   );
 };
 
-const PreviewBlockCard = ({ dxn, label }: XmlWidgetProps<{ dxn: string; label: string }>) => {
+const PreviewBlockCard = ({ dxn, label }: ObjectLinkProps) => {
   const [text, setText] = useState<string | undefined>();
   useEffect(() => {
     random.seed(dxn.split('').reduce((acc: number, char: string) => acc + char.charCodeAt(0), 1));
@@ -168,7 +169,7 @@ const parseBlockHeight = (label = ''): number | undefined => {
  * encoded in the label, so CM's reserved `estimatedHeight` and the measured height match — the setup
  * that exercises the scroll/cull path (jitter, blank, flash, jump) without needing ECHO.
  */
-const FixedHeightPreview = ({ label, dxn }: XmlWidgetProps<{ label: string; dxn: string }>) => {
+const FixedHeightPreview = ({ label, dxn }: ObjectLinkProps) => {
   const height = parseBlockHeight(label) ?? 200;
   return (
     <div
@@ -190,7 +191,7 @@ const FixedHeightPreview = ({ label, dxn }: XmlWidgetProps<{ label: string; dxn:
  * Playwright, `FixedHeightPreview` (plain inert div) jumps identically. It is CM's height-estimate
  * re-anchor, not the widget. See `StubWidget` and CM #1727.
  */
-const SurfaceLikePreview = ({ label, dxn }: XmlWidgetProps<{ label: string; dxn: string }>) => {
+const SurfaceLikePreview = ({ label, dxn }: ObjectLinkProps) => {
   const height = parseBlockHeight(label) ?? 200;
   const ref = useRef<HTMLDivElement>(null);
   const [resolved, setResolved] = useState(false);
@@ -278,22 +279,9 @@ const previewText = trim`
 `;
 
 const PreviewStory = ({ trigger }: { trigger?: 'hover' | 'click' }) => {
-  const [widgets, setWidgets] = useState<XmlWidgetState[]>([]);
+  const [widgets, setWidgets] = useState<WidgetState[]>([]);
   const extensions = useMemo(
-    () => [
-      image(),
-      xmlTags({
-        registry: {
-          ...xmlWidgetRegistry,
-          'dxn-preview': {
-            block: true,
-            urlSchemes: ['dxn:', 'echo:'],
-            Component: PreviewBlockCard,
-          },
-        },
-        setWidgets,
-      }),
-    ],
+    () => [image(), widgetHost({ setWidgets }), objectLinks({ trigger, image: { Component: PreviewBlockCard } })],
     [trigger],
   );
 
@@ -340,19 +328,15 @@ const previewScrollText = [
  */
 export const PreviewScroll: Story = {
   render: () => {
-    const [widgets, setWidgets] = useState<XmlWidgetState[]>([]);
+    const [widgets, setWidgets] = useState<WidgetState[]>([]);
     const extensions = useMemo(
       () => [
-        xmlTags({
-          registry: {
-            'dxn-preview': {
-              block: true,
-              urlSchemes: ['dxn:', 'echo:'],
-              estimatedHeight: ({ label }: XmlWidgetProps<{ label?: string }>) => parseBlockHeight(label),
-              Component: FixedHeightPreview,
-            },
+        widgetHost({ setWidgets }),
+        objectLinks({
+          image: {
+            estimatedHeight: ({ label }: ObjectLinkProps) => parseBlockHeight(label),
+            Component: FixedHeightPreview,
           },
-          setWidgets,
         }),
       ],
       [],
@@ -376,19 +360,15 @@ export const PreviewScroll: Story = {
  */
 export const PreviewScrollSurface: Story = {
   render: () => {
-    const [widgets, setWidgets] = useState<XmlWidgetState[]>([]);
+    const [widgets, setWidgets] = useState<WidgetState[]>([]);
     const extensions = useMemo(
       () => [
-        xmlTags({
-          registry: {
-            'dxn-preview': {
-              block: true,
-              urlSchemes: ['dxn:', 'echo:'],
-              estimatedHeight: ({ label }: XmlWidgetProps<{ label?: string }>) => parseBlockHeight(label),
-              Component: SurfaceLikePreview,
-            },
+        widgetHost({ setWidgets }),
+        objectLinks({
+          image: {
+            estimatedHeight: ({ label }: ObjectLinkProps) => parseBlockHeight(label),
+            Component: SurfaceLikePreview,
           },
-          setWidgets,
         }),
       ],
       [],

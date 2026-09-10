@@ -9,10 +9,10 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { Domino } from '@dxos/ui';
 
-import { type XmlWidgetProps, type XmlWidgetState } from './xml-tags';
+import { type WidgetProps, type WidgetState } from './widgets';
 
-export interface XmlWidgetNotifier {
-  mounted(widget: XmlWidgetState): void;
+export interface WidgetNotifier {
+  mounted(widget: WidgetState): void;
   /**
    * `root` identifies the destroyed instance: when CodeMirror replaces a widget (same id, `eq`
    * false — e.g. a context rebuild), it draws the NEW widget before destroying the OLD one, so an
@@ -54,7 +54,7 @@ export type StubWidgetOptions<TProps> = {
   id: string;
   Component: FunctionComponent<TProps>;
   props: TProps;
-  notifier: XmlWidgetNotifier;
+  notifier: WidgetNotifier;
   /**
    * The source text the props were built from, verbatim. `eq` consults it because a widget id is not
    * always content-derived: a streaming tag is keyed on its opening position alone (its end moves every
@@ -83,7 +83,7 @@ export type StubWidgetOptions<TProps> = {
   debug?: boolean;
 };
 
-export class StubWidget<TProps extends XmlWidgetProps> extends WidgetType {
+export class StubWidget<TProps extends WidgetProps> extends WidgetType {
   #root: HTMLElement | null = null;
   #view: EditorView | undefined;
   // Throttle the (hot) coordsAt trace to at most once per frame.
@@ -92,7 +92,7 @@ export class StubWidget<TProps extends XmlWidgetProps> extends WidgetType {
   readonly id: string;
   readonly Component: FunctionComponent<TProps>;
   readonly props: TProps;
-  readonly notifier: XmlWidgetNotifier;
+  readonly notifier: WidgetNotifier;
   readonly signature?: string;
   readonly streaming?: boolean;
   readonly block?: boolean;
@@ -140,7 +140,7 @@ export class StubWidget<TProps extends XmlWidgetProps> extends WidgetType {
       return null;
     }
     const rect = dom.getBoundingClientRect();
-    const range = (this.props as XmlWidgetProps).range;
+    const range = (this.props as WidgetProps).range;
     const length = range ? range.to - range.from : 0;
     const fraction = length > 0 ? Math.min(1, Math.max(0, pos / length)) : side > 0 ? 1 : 0;
     const y = rect.top + rect.height * fraction;
@@ -186,7 +186,7 @@ export class StubWidget<TProps extends XmlWidgetProps> extends WidgetType {
     // The signature too: an id that does not encode the tag's content (a streaming tag is keyed on
     // its opening position) would otherwise pin the widget to the props of the first chunk, so a run
     // that keeps appending to the same tag never re-renders until the document is rebuilt.
-    const context = (props: TProps) => (props as XmlWidgetProps).context;
+    const context = (props: TProps) => (props as WidgetProps).context;
     return this.id === other.id && this.signature === other.signature && context(this.props) === context(other.props);
   }
 

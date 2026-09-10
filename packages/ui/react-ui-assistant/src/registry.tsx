@@ -2,13 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import {
-  AnchorWidget,
-  type XmlWidgetRegistry,
-  getXmlInnerText,
-  getXmlTextChild,
-  xmlWidgetRegistry,
-} from '@dxos/ui-editor';
+import { AnchorWidget, type XmlWidgetRegistry, getXmlInnerText, getXmlTextChild } from '@dxos/ui-editor';
 
 import {
   FallbackWidget,
@@ -39,8 +33,6 @@ const COLLAPSED_HEIGHT = 42;
  * collapsed-height floor so the row's first measurement is honest.
  */
 export const assistantRegistry: XmlWidgetRegistry = {
-  ...xmlWidgetRegistry,
-
   // No widget: the reader's own words stay in the document, where they can be selected and
   // searched. Registered so the markdown parser keeps the tag as one block, and framed by the
   // chrome, not here.

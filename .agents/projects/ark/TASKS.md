@@ -1173,6 +1173,13 @@ verdict over porting in the same PR).
       decide the rail (collapsed = `Drawer.Content size` switching rail↔sidebar).
 - [x] **`Toc`** DONE 2026-09-09; the consumer question stays open in Phase 16's toc item.
 - [x] **`Tour`, `WelcomeTour` off `react-joyride`** DONE 2026-09-09; see Phase 16's tour item.
+- [x] **Editor widgets split from their matchers** DONE 2026-09-10 (user asked why DXN links lived in
+      `xmlTags`): `extensions/widgets/` owns the decoration field, portal lifecycle (`widgetHost`),
+      effects and bookmark navigation; `xmlTags` is the element matcher, `linkWidgets({ match })` the
+      markdown link matcher (`matchSchemes`/`matchHosts`/`matchPattern`), `objectLinks()` the dxn/echo
+      sugar with the anchor chip as default. `urlSchemes` and `xmlWidgetRegistry` are gone; the core
+      types and effects dropped their `Xml` prefix. plugin-github's `githubLinks()` renders PR/issue
+      URLs as chips as the worked example. Built on the user's consolidation commit.
 - [x] **Cards and dialogs one level darker** DONE 2026-09-10 (user): `dx-card-surface` publishes the
       `base` level and `dx-modal-surface` the `raised` level (surfaces.css role tokens and surface.css
       zones together); `overlay` is left to explicit `elevation={4}`. `Select`'s list moves to the popup
