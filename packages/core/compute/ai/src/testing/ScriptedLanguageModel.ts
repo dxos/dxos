@@ -50,7 +50,19 @@ export type ScriptedPart =
  * provider error (exercises the loop's error propagation).
  */
 export type ScriptedTurn =
-  | { readonly parts: readonly ScriptedPart[]; readonly finishReason?: Response.FinishReason }
+  | {
+      readonly parts: readonly ScriptedPart[];
+      readonly finishReason?: Response.FinishReason;
+      /**
+       * Emit every `tool-params-end` at the end of the turn instead of after the call it closes,
+       * so a second call opens while the first is still open. The OpenAI dialect (DeepSeek, LM
+       * Studio) carries no per-call terminator on the wire — an adapter has to synthesize one, and
+       * one that synthesizes them all at `finish_reason` produces exactly this. Scripts it so a
+       * consumer tracking a single open tool call is tested against the shape rather than only
+       * against well-nested Anthropic output.
+       */
+      readonly deferToolEnds?: boolean;
+    }
   | { readonly fail: AiError.AiError };
 
 /** Scripts a text fragment. */
@@ -149,8 +161,10 @@ const encodeStreamTurn = (
   parts: readonly ScriptedPart[],
   turnIndex: number,
   reason: Response.FinishReason,
+  { deferToolEnds = false }: { deferToolEnds?: boolean } = {},
 ): Response.StreamPartEncoded[] => {
   const out: Response.StreamPartEncoded[] = [responseMetadata(turnIndex)];
+  const deferred: Response.StreamPartEncoded[] = [];
   parts.forEach((part, partIndex) => {
     if (part._tag === 'text') {
       const id = `text_${turnIndex}_${partIndex}`;
@@ -161,9 +175,10 @@ const encodeStreamTurn = (
       const id = toolCallId(part, turnIndex, partIndex);
       out.push({ type: 'tool-params-start', id, name: part.name });
       out.push({ type: 'tool-params-delta', id, delta: JSON.stringify(part.input) });
-      out.push({ type: 'tool-params-end', id });
+      (deferToolEnds ? deferred : out).push({ type: 'tool-params-end', id });
     }
   });
+  out.push(...deferred);
   out.push(finishPart(reason));
   return out;
 };
@@ -266,7 +281,9 @@ export const makeScriptedLanguageModel = (script: Script): Effect.Effect<Languag
               return Stream.fail(turn.fail);
             }
             return Stream.fromIterable(
-              encodeStreamTurn(turn.parts, index, turn.finishReason ?? finishReasonFor(turn.parts)),
+              encodeStreamTurn(turn.parts, index, turn.finishReason ?? finishReasonFor(turn.parts), {
+                deferToolEnds: turn.deferToolEnds,
+              }),
             );
           }),
         ),

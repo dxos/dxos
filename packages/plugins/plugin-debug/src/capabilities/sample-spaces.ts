@@ -5,7 +5,7 @@
 import type * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as SampleSpace from '@dxos/app-toolkit/SampleSpace';
 
-import { ChatroomSpace, IncidentSpace, PipelineSpace, TidepoolSpace } from '../sample';
+import { IncidentSpace, PipelineSpace, StockfishSpace, TidepoolSpace } from '../sample';
 
 /**
  * The sample spaces this plugin offers. Loaded only once something asks for the list — the content
@@ -28,11 +28,11 @@ export default [
     definition: TidepoolSpace(),
   }),
   SampleSpace.preset({
-    id: 'org.dxos.plugin-debug.sample.chatroom',
-    label: 'Coding Chatroom App',
+    id: 'org.dxos.plugin-debug.sample.stockfish',
+    label: 'Chess MCP on Workers',
     description:
-      'A brief, a five-stage plan as a task tree, and the skill for building it on Workers and Claude agents.',
-    definition: ChatroomSpace(),
+      'A brief, a five-stage plan as a task tree, a position to test against, and the skill for building it in a sandbox.',
+    definition: StockfishSpace(),
   }),
   SampleSpace.preset({
     id: 'org.dxos.plugin-debug.sample.incident',

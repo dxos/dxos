@@ -867,8 +867,33 @@ export const make = (model: string, requestOptions: RequestOptions = {}) =>
               args: string;
               emittedId?: string;
               started: boolean;
+              flushed: boolean;
             };
             const openAiCalls = new Map<number, OpenAiCallState>();
+
+            /**
+             * Emits the terminating `tool-params-end` / `tool-call` pair for every started call whose
+             * index is below `before`. Consumers track a single open tool call, so a parallel call's
+             * `tool-params-start` must not arrive while the previous one is still open.
+             */
+            const flushOpenAiCalls = (parts: Response.StreamPartEncoded[], before: number) =>
+              Effect.gen(function* () {
+                for (const [index, call] of openAiCalls) {
+                  if (index >= before || call.flushed || !call.started || !call.name || !call.emittedId) {
+                    continue;
+                  }
+                  call.flushed = true;
+                  parts.push({ type: 'tool-params-end', id: call.emittedId });
+                  const params = yield* parseToolArguments(call.args, call.name, 'streamText');
+                  parts.push({
+                    type: 'tool-call',
+                    id: call.emittedId,
+                    name: call.name,
+                    params,
+                    providerExecuted: false,
+                  });
+                }
+              });
 
             // Buffer lines across chunk boundaries — newline-delimited frames and UTF-8
             // characters can be split across network chunks.
@@ -949,6 +974,7 @@ export const make = (model: string, requestOptions: RequestOptions = {}) =>
                         const existing: OpenAiCallState = openAiCalls.get(delta.index) ?? {
                           args: '',
                           started: false,
+                          flushed: false,
                         };
                         if (delta.id) {
                           existing.id = delta.id;
@@ -957,6 +983,9 @@ export const make = (model: string, requestOptions: RequestOptions = {}) =>
                           existing.name = delta.name;
                         }
                         if (!existing.started && existing.name) {
+                          // Calls stream one index at a time, so a new index means every earlier call
+                          // is complete.
+                          yield* flushOpenAiCalls(parts, delta.index);
                           existing.started = true;
                           existing.emittedId = existing.id ?? (yield* idGen.generateId());
                           parts.push({
@@ -987,21 +1016,8 @@ export const make = (model: string, requestOptions: RequestOptions = {}) =>
                       }
                       closeReasoningIfOpen(parts);
 
-                      // Flush accumulated OpenAI tool calls.
-                      for (const [, call] of openAiCalls) {
-                        if (!call.started || !call.name || !call.emittedId) {
-                          continue;
-                        }
-                        parts.push({ type: 'tool-params-end', id: call.emittedId });
-                        const params = yield* parseToolArguments(call.args, call.name, 'streamText');
-                        parts.push({
-                          type: 'tool-call',
-                          id: call.emittedId,
-                          name: call.name,
-                          params,
-                          providerExecuted: false,
-                        });
-                      }
+                      // Flush whichever OpenAI tool call is still open.
+                      yield* flushOpenAiCalls(parts, Number.POSITIVE_INFINITY);
                       openAiCalls.clear();
 
                       finishSeen = true;
