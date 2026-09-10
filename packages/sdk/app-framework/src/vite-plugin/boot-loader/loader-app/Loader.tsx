@@ -17,6 +17,9 @@ const MARKER_RADIUS = 1; // viewBox units → ~3.8px on the 384px disc
 /** Sprite the activation row's icons resolve against when the host configures none. */
 const DEFAULT_SPRITE_PATH = '/icons.svg';
 
+/** How long an activation icon's slide in from the edge takes; mirrors `--boot-loader-plugin-arrival` in the CSS. */
+const ARRIVAL_MS = 1000;
+
 /**
  * Read an element's *current animated* translateY (px) from its live transform
  * matrix — the interpolated value mid-transition, not the last-written property.
@@ -142,6 +145,15 @@ export const Loader: Component<LoaderProps> = (props) => {
   // Once host-driven, the brand mark eases grayscale → colour and stays there.
   const isHostDriven = () => props.store.phase() !== 'creep';
 
+  // An icon's whole motion is one transform transition, so a count change mid-flight retargets it
+  // from wherever it is rather than restarting it. `data-arriving` parks it off the right edge for
+  // its first frame, and removing it starts the slide in; `data-landed` shortens later shifts.
+  const arrive = (el: HTMLDivElement) => {
+    el.dataset.arriving = '';
+    requestAnimationFrame(() => requestAnimationFrame(() => delete el.dataset.arriving));
+    setTimeout(() => (el.dataset.landed = ''), ARRIVAL_MS);
+  };
+
   return (
     <>
       {/* The channel filter sits on the disc so the ring, its head and the mark recolour together:
@@ -186,7 +198,7 @@ export const Loader: Component<LoaderProps> = (props) => {
             {(plugin, index) => (
               // Wrapper owns the slot — its place in the row and the slide to it — so the glyph
               // inside can be restyled (a chip, a badge, a hover affordance) without touching either.
-              <div class='boot-loader-plugin' style={{ '--i': index }}>
+              <div class='boot-loader-plugin' style={{ '--i': index }} ref={arrive}>
                 <svg class='boot-loader-plugin-icon' viewBox='0 0 256 256'>
                   <use href={`${props.spritePath ?? DEFAULT_SPRITE_PATH}#${plugin().icon}`} />
                 </svg>

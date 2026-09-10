@@ -416,23 +416,28 @@ body {
   /* Monotone — the arrival reads from opacity alone, which keeps the row quiet. */
   color: currentColor;
   opacity: 0.2;
+  /*
+   * One transition carries every move: the slide in from the edge and each later shift to make
+   * room. A transition retargets from the icon's current position when the count changes, so an
+   * icon still arriving bends toward its new slot instead of hopping; a keyframe animation would
+   * shift its whole path instead. The arrival is long and eased; once landed, a shift is short.
+   */
+  --boot-loader-plugin-arrival: 1000ms;
   /* Own centre first, then the slot's offset from the row's centre. */
   transform: translateX(calc(-50% + (var(--i) - (var(--n) - 1) / 2) * var(--boot-loader-plugin-slot)));
-  /* The shift to make room is short and quick: it is a half slot, and it should be over before the
-     arrival lands so the row reads as settling once, not twice. */
-  transition: transform 200ms ease-out;
-  /* An arrival slides in from beyond the right edge of the screen; the keyframe names only where it
-     starts, so the end is the slot above, wherever the count has moved it by then. The row is
-     centred in the viewport, so half its width is the distance to that edge.
-     `backwards`, not `both`: a filled animation keeps owning `transform` after it ends and snaps to
-     a new slot rather than transitioning, so the icon must hand the property back on landing. */
-  animation: boot-loader-plugin-slide 1000ms ease-in-out backwards;
+  transition: transform var(--boot-loader-plugin-arrival) ease-in-out;
 }
 
-@keyframes boot-loader-plugin-slide {
-  from {
-    transform: translateX(50vw);
-  }
+/* Parked beyond the right edge of the screen for its first frame, with no transition to get there.
+   The row is centred in the viewport, so half its width is the distance to that edge. */
+.boot-loader-plugin[data-arriving] {
+  transform: translateX(50vw);
+  transition: none;
+}
+
+/* Landed: the shift to make room is a half slot, over before the next arrival lands. */
+.boot-loader-plugin[data-landed] {
+  transition: transform 200ms ease-out;
 }
 
 /* The glyph itself. Styled apart from its slot so either can change without disturbing the other. */
@@ -457,7 +462,6 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .boot-loader-plugin {
     transition: none;
-    animation: none;
   }
   .boot-loader-plugin-icon {
     animation: none;
