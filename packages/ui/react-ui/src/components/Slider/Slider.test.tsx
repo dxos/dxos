@@ -29,10 +29,11 @@ describe('Slider', () => {
     // `getBoundingClientRect`/`getComputedStyle` size assertion cannot fail meaningfully here (it
     // would pass or fail independent of the actual applied CSS) — asserting the class list carries
     // real (non-logical) sizing utilities, and never the invalid `is-*`/`bs-*` ones, is the
-    // strongest check available in this environment. Matches any size value, not a specific one.
+    // strongest check available in this environment. Matches any size value, not a specific one, and
+    // either the shorthand (`size-N`) or the pair (`h-N w-N`).
     for (const thumb of thumbs) {
-      expect(thumb.className).toMatch(/\bh-\d+\b/);
-      expect(thumb.className).toMatch(/\bw-\d+\b/);
+      expect(thumb.className).toMatch(/\b(?:size|h)-\d+\b/);
+      expect(thumb.className).toMatch(/\b(?:size|w)-\d+\b/);
       expect(thumb.className).not.toMatch(/\bis-\d+\b/);
       expect(thumb.className).not.toMatch(/\bbs-\d+\b/);
     }
@@ -44,8 +45,8 @@ describe('Slider', () => {
     // Disabled state is expressed via the root's `opacity-50` (visually muted), not by unmounting
     // the thumb — assert it is still present with its sizing classes intact.
     const thumb = screen.getByRole('slider');
-    expect(thumb.className).toMatch(/\bh-\d+\b/);
-    expect(thumb.className).toMatch(/\bw-\d+\b/);
+    expect(thumb.className).toMatch(/\b(?:size|h)-\d+\b/);
+    expect(thumb.className).toMatch(/\b(?:size|w)-\d+\b/);
   });
 
   test('gives each thumb an accessible name via thumbLabels', ({ expect }) => {

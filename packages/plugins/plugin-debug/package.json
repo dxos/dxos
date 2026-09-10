@@ -107,6 +107,11 @@
       "source": "./src/types/Settings.ts",
       "types": "./dist/types/src/types/Settings.d.ts",
       "import": "./dist/lib/Settings.mjs"
+    },
+    "./sample": {
+      "source": "./src/sample/index.ts",
+      "types": "./dist/types/src/sample/index.d.ts",
+      "import": "./dist/lib/sample.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",

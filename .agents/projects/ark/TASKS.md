@@ -1,8 +1,9 @@
 # ark — Tasks
 
-_Resume: Phase 19 — `Drawer` landed in the tree on this branch; open the PR, then the `Main` port is the
-next ark item (MIGRATION.md Phase 7 has its shape). Uncommitted: none after the Phase 19 commit. Last:
-#13003 (form ontology) merged 2026-09-09._
+_Resume: PR #13031 OPEN (outline link followed on click, Enter or Space only). #13030 (Toc, Tour + WelcomeTour off
+react-joyride, Main dismissal rests at `collapsed`) MERGED
+2026-09-09; #13024 (Main step 1) MERGED the same day. Next: `Main` step 2 (push layout at `lg`) as its own
+PR; then the `Toc` consumer. Uncommitted: none._
 
 ## Phase 1: Tree rebuild on Ark (PR #12873)
 
@@ -561,6 +562,20 @@ is supposed to be decoupled from.
 - [ ] **Follow-up: re-route the promoted link to the Tasks tab through something the host owns.**
       The tab is `ProjectArticle`'s state, so the outline has to reach it through an operation or
       the layout rather than a function handed down as Surface data. Tracked 2026-09-02.
+- [x] **Hovering a promoted link followed it** FIXED 2026-09-10 (reported by the user as the card
+      showing "inline"): `Outline` listened for the chip's `DxAnchorActivate`, which `dx-anchor`
+      dispatches on hover intent and on leave as well as on click, so a hover swapped the outline
+      for the task instead of leaving it to the preview popover. The outline now follows a link on
+      click or Enter/Space only, stopping the chip's own activation so no pinned preview opens
+      against the outline that is leaving; hover reaches the app's preview popover untouched.
+      `Outline.stories.tsx` `TestLinkActivation` pins it. Not a breakpoint issue.
+- [x] **The task's hover card threw "Cannot read properties of undefined (reading 'singleSelect')"**
+      FIXED 2026-09-10: `TaskCard` read the status options with the pre-v4 curried `getAnnotation`
+      and `.value` on an `Option` that no longer exists; it now uses `getPropertyMetaAnnotation`,
+      which now looks through an optional property's union (the meta sits on the annotated member,
+      not on the `Schema.optional` wrapper; unit test in echo's `schema.test.ts`). The deck popover's
+      card surface renders a thrown message in the content column (`CardFallback`) instead of the
+      default fallback landing in the icon gutter. `Card.stories.tsx` `_Task` asserts the tag renders.
 - [x] `subject`, `attendableId` and `taskSet` stay on the Surface: those identify what is being
       rendered, which is what `data` is for.
 - [x] The tasks section's Surface was already clean — `{ subject: taskSet, attendableId }`, no
@@ -907,16 +922,22 @@ dist/types/src: ENOTEMPTY` — a concurrent writer. A Cursor TypeScript native-p
 - [ ] **Rename `Stepper` → `Steps`** (tracked 2026-09-05): Ark's name for the machine the component
       sits on, and the family convention is Ark's name where the part is Ark's. Own PR with the
       `Input` → `Field` codemod, or folded into it.
-- [ ] **Replace `react-joyride` with Ark's `Tour`** (tracked 2026-09-05): the onboarding walkthrough
-      keeps a second floating stack and its own spotlight/step machine; Ark's tour machine gives the
-      steps, the spotlight and the positioning on the same popper the rest of the library uses.
-      Establish first which `react-joyride` features the walkthrough actually relies on (scrolling
-      to a target, the beacon, controlled step state) and whether Ark's tour covers them.
-- [ ] **Implement Ark's table of contents (`toc`)** (tracked 2026-09-05, DEFERRED 2026-09-09 by the
-      user): the machine tracks which heading is in view and marks the matching link. The installed
-      5.39.1 ships it (`-ui/react/toc`). Decide the consumer first: the machine observes DOM
-      headings with ids, so rendered markdown fits and the CodeMirror editor does not; `react-ui-feed`'s
-      `Outline` is a tick rail over document offsets, a different thing.
+- [x] **Replace `react-joyride` with Ark's `Tour`** DONE 2026-09-09: `react-ui` `Tour` (all Ark
+      parts, theme, play stories) and `plugin-support`'s `WelcomeTour` rebuilt on it; `react-joyride`,
+      `react-floater`, `type-fest` removed from the repo; composer `help.ts` steps on the plugin's own
+      `Tour.Step`. What the walkthrough relied on and how it maps: waiting for a target (the machine's
+      mutation observer), the `before` hook (the step `effect` → `show()`), controlled `running` and
+      the dialog pause (close trigger + remembered step), the target highlight (`data-tour-highlighted`
+      → `--controls-opacity`), the e2e test ids and `data-step` numbering (kept). No beacon was used.
+      See `react-ui/docs/MIGRATION.md` Phase 7c.
+- [x] **Implement Ark's table of contents (`toc`)** DONE 2026-09-09 (user asked the same day, after
+      deferring it): `react-ui` `Toc` — Root/Content/Nav/Title/List/Indicator/Item/Link on Ark's toc
+      machine, Tailwind theme, play stories for scroll-activation and link-click scrolling. See
+      `react-ui/docs/MIGRATION.md` Phase 7b.
+- [ ] **`Toc` consumer**: the machine observes DOM headings with ids, so rendered markdown fits and
+      the CodeMirror editor does not; `react-ui-feed`'s `Outline` is a tick rail over document
+      offsets, a different thing. First candidate: `rehype-slug` on `MarkdownView` and a `Toc.Nav`
+      beside it.
 - [x] **Transcription `Pipeline/Live` story lost its mic** DONE 2026-09-06 (reported). Not the
       toolbar: the story's own graph extension registered at startup, its connector called
       `getDefaultSpace` on a client with no runtime yet and threw before subscribing to anything
@@ -1138,8 +1159,18 @@ verdict over porting in the same PR).
       `onOpenChange` with the inset slide finishing the exit. Findings and the port's shape are in
       `react-ui/docs/MIGRATION.md` Phase 7. The probe story lives in git history one commit and is
       deleted from the tree.
-- [ ] **Port `Main`'s sidebars to the drawer machine** (follow-up): swap `useDialog` for `useDrawer`
-      in `MainSidebar`, delete `useSwipeToDismiss`, add `Drawer.SwipeArea` for edge-swipe-to-open;
-      then verify on a touch device (WKWebView) before landing — that is the case the probe could
-      not cover.
-- [ ] **`Toc`** — deferred; see Phase 16's toc item for the consumer question.
+- [x] **Port `Main`'s sidebars to the drawer machine — step 1, machine swap** DONE 2026-09-09.
+      `useDialog` → `useDrawer` below `lg`; `useSwipeToDismiss` deleted, both sidebars swipe to dismiss
+      (`swipeToDismiss`, on by default, → content `draggable`); `swipeToOpen` (on by default) renders the
+      machine's swipe area, touch-only; the sibling-layer dismiss is vetoed as in `Drawer.Root`. API,
+      three-state model, `main.css` geometry and deck CSS untouched. Pinned by `Main.stories.tsx`
+      (dismiss both sides, snap back, swipe to open); deck + navtree stories pass. Details in
+      `react-ui/docs/MIGRATION.md` Phase 7.
+- [ ] **`Main` step 1 — touch check on a device (WKWebView)**: swipe-to-dismiss, edge swipe-to-open
+      and its interaction with the OS back-swipe on the left edge. Cannot be done by the agent.
+- [ ] **`Main` step 2 — push layout at `lg`** (own PR): a flex row of clip-and-sheet on `Drawer push`;
+      delete `dx-main-content-padding` / `dx-main-intrinsic-size` / `--main-sidebar-width`; move
+      `useMainSize`, `focus.css` `data-sidebar-*-state` and the `DeckViewport` vars onto the clips;
+      decide the rail (collapsed = `Drawer.Content size` switching rail↔sidebar).
+- [x] **`Toc`** DONE 2026-09-09; the consumer question stays open in Phase 16's toc item.
+- [x] **`Tour`, `WelcomeTour` off `react-joyride`** DONE 2026-09-09; see Phase 16's tour item.

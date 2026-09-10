@@ -63,7 +63,7 @@ describe('submitSupportReport', () => {
   test('skips the logs entirely when the reporter opted out', async () => {
     vi.stubGlobal(
       'fetch',
-      vi.fn(async () => new Response(JSON.stringify({ ticketId: 'ticket-2' }))),
+      vi.fn(async () => new Response(JSON.stringify({ ticketId: 'ticket-2', threadUrl: 'https://discord.test/t' }))),
     );
     const uploadLogs = vi.fn(async () => 'never');
     const flushLogs = vi.fn(async () => {});
@@ -78,6 +78,26 @@ describe('submitSupportReport', () => {
     expect(error).toBeUndefined();
     expect(uploadLogs).not.toHaveBeenCalled();
     expect(flushLogs).not.toHaveBeenCalled();
+  });
+
+  test('refuses a success that names no public thread, since nobody would see the report', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => new Response(JSON.stringify({ ticketId: 'ticket-3' }))),
+    );
+    const { error } = await run(
+      SupportService.submitSupportReport({
+        endpoint: 'https://edge.test/discord',
+        observability: observabilityWith({
+          uploadLogs: async () => undefined,
+          sessionContext: () => undefined,
+          flushLogs: async () => {},
+        }),
+        report: { title: 'Broken', body: 'It broke.' },
+      }),
+    );
+
+    expect(error?.name).toBe('SupportSubmitError');
   });
 
   test('fails with a tagged error when the service rejects the report', async () => {

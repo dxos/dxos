@@ -6,7 +6,7 @@ import React, { type PropsWithChildren, useCallback, useMemo, useState } from 'r
 
 import { log } from '@dxos/log';
 import { createContext } from '@dxos/react-hooks';
-import { Banner, IconButton, useTranslation } from '@dxos/react-ui';
+import { IconButton, useTranslation } from '@dxos/react-ui';
 import { Form, type FormFieldRenderer, type FormFieldRendererProps, type FormUpdateMeta } from '@dxos/react-ui-form';
 
 import { type DiscordPresence } from '#hooks';
@@ -18,10 +18,11 @@ import type { FeedbackPluginOption } from './types';
 
 const FEEDBACK_FORM = 'FeedbackForm';
 
+/** Resolves to whether the report was filed; the form clears only when it was. */
 export type FeedbackSubmitHandler = (
   values: SupportOperation.SupportRequest,
   meta: FormUpdateMeta<SupportOperation.SupportRequest>,
-) => void | Promise<void>;
+) => boolean | Promise<boolean>;
 
 type FeedbackFormContextValue = {
   pending: boolean;
@@ -50,6 +51,8 @@ const FeedbackFormRoot = ({ children, onSubmit, hidden, plugins }: FeedbackFormR
   // Submission is async (screenshot capture, PostHog/Discord round-trip); surface it so the form
   // cannot be double-submitted while it runs.
   const [pending, setPending] = useState(false);
+
+  const [formKey, setFormKey] = useState(0);
 
   // Override the `area` field with a richer plugin picker. The closure captures
   // the runtime plugin list so the schema itself stays static — much cleaner
@@ -83,7 +86,9 @@ const FeedbackFormRoot = ({ children, onSubmit, hidden, plugins }: FeedbackFormR
       };
       setPending(true);
       try {
-        await onSubmit(submitted, formMeta);
+        if (await onSubmit(submitted, formMeta)) {
+          setFormKey((key) => key + 1);
+        }
       } finally {
         setPending(false);
       }
@@ -94,6 +99,7 @@ const FeedbackFormRoot = ({ children, onSubmit, hidden, plugins }: FeedbackFormR
   return (
     <FeedbackFormProvider pending={pending}>
       <Form.Root
+        key={formKey}
         schema={SupportOperation.SupportRequest}
         defaultValues={defaultValues}
         fieldMap={fieldMap}
@@ -145,6 +151,8 @@ const FeedbackFormDownloadLogs = ({ onDownloadLogs }: FeedbackFormDownloadLogsPr
 
 FeedbackFormDownloadLogs.displayName = `${FEEDBACK_FORM}.DownloadLogs`;
 
+const noteClassNames = 'text-xs text-description text-center px-2 py-1';
+
 export type FeedbackFormSubmitProps = {
   disabled?: boolean;
 };
@@ -155,11 +163,7 @@ const FeedbackFormSubmit = ({ disabled }: FeedbackFormSubmitProps) => {
 
   return (
     <>
-      <Banner.Root valence='neutral'>
-        <Banner.Content>
-          <Banner.Body>{t('public-report.description')}</Banner.Body>
-        </Banner.Content>
-      </Banner.Root>
+      <p className={noteClassNames}>{t('public-report.description')}</p>
       <Form.Submit
         classNames={pending ? '[&_svg]:animate-spin' : undefined}
         icon={pending ? 'ph--spinner-gap--regular' : 'ph--paper-plane-tilt--regular'}
@@ -192,7 +196,7 @@ const FeedbackFormDiscordPresence = ({ discordPresence }: FeedbackFormDiscordPre
   }
 
   return (
-    <p className='text-xs text-description text-center px-2 py-1'>
+    <p className={noteClassNames}>
       {t('discord-presence-online.label')}{' '}
       {[
         discordPresence.communityOnline > 0 &&

@@ -4,8 +4,18 @@
 
 import React, { Children, type PropsWithChildren, useId } from 'react';
 
-import { Collapsible, Field, Fieldset, Icon, type ThemedClassName, composable, composableProps } from '@dxos/react-ui';
+import {
+  Collapsible,
+  Field,
+  Fieldset,
+  Icon,
+  type ThemedClassName,
+  Tooltip,
+  composable,
+  composableProps,
+} from '@dxos/react-ui';
 import { MarkdownView } from '@dxos/react-ui-markdown';
+import { mx } from '@dxos/ui-theme';
 
 import { useFormContext } from '../../../hooks';
 import { formTheme } from '../Form.theme';
@@ -17,8 +27,10 @@ const FORM_FIELDSET_NAME = 'Form.FieldSet';
 export type FormFieldSetProps = ThemedClassName<
   PropsWithChildren<{
     label?: string;
-    /** Markdown, rendered under the legend. */
+    /** Markdown, rendered under the legend, or as a tooltip on the label. */
     description?: string;
+    /** Where the description shows: as helper text below the legend (default), or on hover of the label. */
+    descriptionPlacement?: 'below' | 'tooltip';
     /** The legend is a disclosure that folds the body; nested objects fold by default. */
     collapsible?: boolean;
   }>
@@ -31,7 +43,7 @@ export type FormFieldSetProps = ThemedClassName<
  * section, a nested one an indented, bordered group, so the same element serves both.
  */
 export const FormFieldSet = composable<HTMLFieldSetElement, FormFieldSetProps>(
-  ({ children, label, description, collapsible, ...props }, forwardedRef) => {
+  ({ children, label, description, descriptionPlacement = 'below', collapsible, ...props }, forwardedRef) => {
     const { variant = 'default', layout } = useFormContext(FORM_FIELDSET_NAME);
     const depth = useFormFieldSetDepth();
     const labelId = useId();
@@ -40,14 +52,32 @@ export const FormFieldSet = composable<HTMLFieldSetElement, FormFieldSetProps>(
     // An empty group has nothing to fold, so a disclosure on its legend would be a control that does nothing.
     const canCollapse = !!collapsible && Children.toArray(children).length > 0;
 
+    const tooltip = descriptionPlacement === 'tooltip' && !!description;
+    // A question mark after the label carries the description, so the group's chrome stays one line.
+    const hint = tooltip && (
+      <Tooltip.Trigger
+        content={description}
+        side='bottom'
+        aria-label={description}
+        className='grid size-6 place-items-center rounded-xs text-description hover:bg-hover-surface'
+      >
+        <Icon icon='ph--question--regular' size={4} />
+      </Tooltip.Trigger>
+    );
+
     const legend = showLabel && (
-      <Fieldset.Legend classNames={styles.fieldSetLegend({ class: description ? undefined : styles.fieldSetHeader() })}>
+      <Fieldset.Legend
+        classNames={styles.fieldSetLegend({
+          class: mx(description && !tooltip ? undefined : styles.fieldSetHeader(), hint && 'flex items-center gap-1'),
+        })}
+      >
         {canCollapse ? (
           // The caret alone is the disclosure, named by the label text beside it, so the focus ring
           // frames a button and not the whole row.
           <FormFieldHeader
             label={label}
             labelId={labelId}
+            labelEnd={hint}
             actions={
               <Field.Block>
                 {/* Not a `Button`: its open-state styling would read the trigger's `data-state`. */}
@@ -66,16 +96,19 @@ export const FormFieldSet = composable<HTMLFieldSetElement, FormFieldSetProps>(
           />
         ) : depth === 0 ? (
           // A heading inside the legend: the group is named by its title, and the title still serves navigation.
-          <h2 id={labelId} className={styles.fieldSetTitle()}>
-            {label}
-          </h2>
+          <>
+            <h2 id={labelId} className={styles.fieldSetTitle()}>
+              {label}
+            </h2>
+            {hint}
+          </>
         ) : (
-          <FormFieldHeader label={label} labelId={labelId} />
+          <FormFieldHeader label={label} labelId={labelId} labelEnd={hint} />
         )}
       </Fieldset.Legend>
     );
 
-    const helper = description && (
+    const helper = description && !tooltip && (
       <Fieldset.HelperText asChild classNames={styles.fieldSetHeader({ class: styles.fieldSetDescription() })}>
         <MarkdownView content={description} />
       </Fieldset.HelperText>

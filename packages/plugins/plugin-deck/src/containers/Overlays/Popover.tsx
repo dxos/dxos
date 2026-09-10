@@ -27,6 +27,17 @@ import { meta } from '#meta';
 
 const DEBOUNCE_DELAY = 40;
 
+/** A card surface that threw still fills the card's rows; the default fallback lands in the icon column. */
+const CardFallback = ({ error }: { error: Error }) => (
+  <Card.Body>
+    <Card.Row>
+      <Card.Text variant='description' role='alert' data-testid='error-boundary-fallback'>
+        {error.message}
+      </Card.Text>
+    </Card.Row>
+  </Card.Body>
+);
+
 type DeckPopoverContextValue = {
   setOpen: (open: boolean) => void;
 };
@@ -194,7 +205,7 @@ export const PopoverContent = () => {
 
               {content && 'subject' in content ? (
                 /** CardContent must render the Card.Body. */
-                <Surface.Surface type={AppSurface.CardContent} data={content} limit={1} />
+                <Surface.Surface type={AppSurface.CardContent} data={content} limit={1} fallback={CardFallback} />
               ) : (
                 <Card.Body classNames='min-h-8'>
                   <Card.Row>
