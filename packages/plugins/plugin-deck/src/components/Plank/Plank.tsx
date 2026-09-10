@@ -22,6 +22,8 @@ import { meta } from '#meta';
 import { Pane } from '../Pane';
 import { PlankLoading } from './PlankLoading';
 
+const PLANK_LOADING = <PlankLoading />;
+
 type SurfaceProps = ComponentProps<typeof Surface.Surface>;
 
 /**
@@ -56,8 +58,6 @@ export type PlankProps = ThemedClassName<{
   articleData?: Partial<AppSurface.ArticleData>;
   /** Error fallback for the content surface. */
   fallback?: SurfaceProps['fallback'];
-  /** Loading placeholder for the content surface. */
-  placeholder?: SurfaceProps['placeholder'];
   /** Render only the content surface, omitting the toolbar (e.g. fullscreen). */
   headless?: boolean;
   // TODO(burdon): Why is this required?
@@ -88,7 +88,6 @@ export const Plank = forwardRef<HTMLDivElement, PlankProps>(
       popoverAnchorId,
       articleData,
       fallback,
-      placeholder,
       headless,
       onKeyDown,
     },
@@ -188,8 +187,9 @@ export const Plank = forwardRef<HTMLDivElement, PlankProps>(
         <Pane.Content>
           {node.data === undefined ? (
             // A plank with no subject: the URL named it and nothing has resolved it yet, so there is
-            // no Article to ask for.
-            <PlankLoading />
+            // no Article to ask for. The same shell stands in until the Article's own module lands,
+            // so the plank does not change under the reader on the way there.
+            PLANK_LOADING
           ) : (
             <Surface.Surface
               key={node.id}
@@ -197,7 +197,7 @@ export const Plank = forwardRef<HTMLDivElement, PlankProps>(
               data={data}
               limit={1}
               fallback={fallback}
-              placeholder={placeholder}
+              placeholder={PLANK_LOADING}
             />
           )}
         </Pane.Content>
