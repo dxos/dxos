@@ -48,8 +48,14 @@ const DEFAULT_EVAL_TIMEOUT_MILLIS = 60_000;
 
 class EvalTimeoutError extends Data.TaggedError('EvalTimeoutError')<{ millis: number }> {}
 
-/** What a graded timeout returns in place of the agent's output. */
-export type AgentTimeout = { readonly timedOut: true; readonly millis: number };
+/** What a graded incomplete session returns in place of the agent's output. */
+export type AgentIncomplete =
+  | { readonly timedOut: true; readonly millis: number }
+  | { readonly failed: true; readonly error: string };
+
+/** The failure a graded session ended in, as one line the scorers and a reader can use. */
+const describeCause = (cause: unknown): string =>
+  cause instanceof Error ? `${cause.name}: ${cause.message}` : String(cause);
 
 /** Room after the agent's budget for the query to grade what it left, before the run is abandoned. */
 const GRADE_GRACE_MILLIS = 5 * 60 * 1_000;
@@ -196,12 +202,12 @@ export interface CreateEvalRunnerOptions<I, O> {
    */
   timeout?: number;
   /**
-   * Grade the state a session reached when it runs out of `timeout`, rather than throwing: the
-   * agent's output becomes an {@link AgentTimeout} and `dbQuery` still runs. For a scenario long
-   * enough that where it got to is worth knowing. Requires `dbQuery`; the session itself is not
-   * stopped, so the query reads a space the agent may still be writing to.
+   * Grade the state a session reached when it runs out of `timeout` or fails, rather than throwing:
+   * the agent's output becomes an {@link AgentIncomplete} and `dbQuery` still runs. For a scenario
+   * long enough that where it got to is worth knowing. Requires `dbQuery`; a timed-out session is
+   * not stopped, so the query then reads a space the agent may still be writing to.
    */
-  gradeOnTimeout?: boolean;
+  gradeIncomplete?: boolean;
   /**
    * Additional ECHO types the scenario's seed/dbQuery touch, registered with the harness client.
    */
@@ -283,14 +289,14 @@ export function createEvalRunner<I, O>(
 export function createEvalRunner<I, O>(options: CreateEvalRunnerOptions<I, O>): Evalite.Task<I, O, VariantConfig>;
 export function createEvalRunner<I, O, D>(
   options: CreateEvalRunnerOptions<I, O> & { dbQuery: DbQuery<I, D> },
-): Evalite.Task<I, { agentOutput: O | AgentTimeout; dbQuery: D }, VariantConfig>;
+): Evalite.Task<I, { agentOutput: O | AgentIncomplete; dbQuery: D }, VariantConfig>;
 export function createEvalRunner<I, O, D>(
   options: CreateEvalRunnerOptions<I, O> & { dbQuery?: DbQuery<I, D> },
-): Evalite.Task<I, O | { agentOutput: O | AgentTimeout; dbQuery: D } | { failed: boolean }, VariantConfig> {
+): Evalite.Task<I, O | { agentOutput: O | AgentIncomplete; dbQuery: D } | { failed: boolean }, VariantConfig> {
   return async (input: I, variant: VariantConfig) => {
     const model = variant?.model ?? options.model ?? DEFAULT_MODEL;
     const timeoutMillis = options.timeout ?? DEFAULT_EVAL_TIMEOUT_MILLIS;
-    const gradeOnTimeout = options.gradeOnTimeout === true && options.dbQuery !== undefined;
+    const gradeIncomplete = options.gradeIncomplete === true && options.dbQuery !== undefined;
 
     const instructions = Instructions.make({
       text: options.instructions,
@@ -341,12 +347,15 @@ export function createEvalRunner<I, O, D>(
           return yield* agentStep;
         }
 
-        const agentOutput: O | AgentTimeout = gradeOnTimeout
+        const agentOutput: O | AgentIncomplete = gradeIncomplete
           ? yield* agentStep.pipe(
               Effect.timeoutOrElse({
                 duration: timeoutMillis,
-                orElse: () => Effect.succeed<AgentTimeout>({ timedOut: true, millis: timeoutMillis }),
+                orElse: () => Effect.succeed<AgentIncomplete>({ timedOut: true, millis: timeoutMillis }),
               }),
+              Effect.catch((failure) =>
+                Effect.succeed<AgentIncomplete>({ failed: true, error: describeCause(failure.cause) }),
+              ),
             )
           : yield* agentStep;
 
@@ -365,7 +374,7 @@ export function createEvalRunner<I, O, D>(
     );
 
     // A graded timeout fires inside; the outer net then only has to clear the grading itself.
-    const netMillis = gradeOnTimeout ? timeoutMillis + GRADE_GRACE_MILLIS : timeoutMillis;
+    const netMillis = gradeIncomplete ? timeoutMillis + GRADE_GRACE_MILLIS : timeoutMillis;
     const timedRun = run.pipe(
       Effect.timeoutOrElse({
         duration: netMillis,

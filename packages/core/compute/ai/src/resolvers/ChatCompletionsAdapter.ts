@@ -91,6 +91,8 @@ type ChatMessage =
   | {
       role: 'assistant';
       content: string;
+      /** Sent back to a provider that asks for it; see {@link replaysReasoning}. */
+      reasoning_content?: string;
       tool_calls?: ChatToolCall[];
     }
   | {
@@ -321,7 +323,14 @@ export class ChatCompletionsClient extends Context.Service<
  * result messages are mapped to the OpenAI function-calling convention which
  * Ollama also accepts.
  */
-const promptToMessages = (prompt: Prompt.Prompt, apiFormat: ApiFormat): ChatMessage[] => {
+/**
+ * Whether a provider wants an assistant turn's reasoning sent back with it. DeepSeek's thinking mode
+ * refuses a request whose earlier tool-calling turns come back without their `reasoning_content`;
+ * OpenAI-format servers that never produced any would be sent a field they do not know.
+ */
+const replaysReasoning = (config: ChatCompletionsClientConfig): boolean => config.provider === 'deepseek';
+
+const promptToMessages = (prompt: Prompt.Prompt, apiFormat: ApiFormat, replayReasoning = false): ChatMessage[] => {
   const messages: ChatMessage[] = [];
 
   for (const message of prompt.content) {
@@ -345,10 +354,13 @@ const promptToMessages = (prompt: Prompt.Prompt, apiFormat: ApiFormat): ChatMess
     } else if (message.role === 'assistant') {
       const assistantMsg = message as Prompt.AssistantMessage;
       const textParts: string[] = [];
+      const reasoningParts: string[] = [];
       const toolCalls: ChatToolCall[] = [];
       for (const part of assistantMsg.content) {
         if (part.type === 'text') {
           textParts.push(part.text);
+        } else if (part.type === 'reasoning') {
+          reasoningParts.push(part.text);
         } else if (part.type === 'tool-call') {
           toolCalls.push({
             id: part.id,
@@ -361,10 +373,12 @@ const promptToMessages = (prompt: Prompt.Prompt, apiFormat: ApiFormat): ChatMess
         }
       }
       const text = textParts.join('\n');
+      const reasoning = reasoningParts.join('\n');
       if (toolCalls.length > 0 || text.length > 0) {
         messages.push({
           role: 'assistant',
           content: text,
+          ...(replayReasoning && reasoning.length > 0 ? { reasoning_content: reasoning } : {}),
           ...(toolCalls.length > 0 ? { tool_calls: toolCalls } : {}),
         });
       }
@@ -702,7 +716,7 @@ export const make = (model: string, requestOptions: RequestOptions = {}) =>
           const idGen = yield* IdGenerator.IdGenerator;
           annotateRequest(options.span, model, config);
 
-          const messages = promptToMessages(options.prompt, config.apiFormat);
+          const messages = promptToMessages(options.prompt, config.apiFormat, replaysReasoning(config));
           const jsonFormat = options.responseFormat.type === 'json';
           const tools = toolsToRequest(options.tools);
           const requestBody = buildRequestBody(
@@ -783,7 +797,7 @@ export const make = (model: string, requestOptions: RequestOptions = {}) =>
             const idGen = yield* IdGenerator.IdGenerator;
             annotateRequest(options.span, model, config);
 
-            const messages = promptToMessages(options.prompt, config.apiFormat);
+            const messages = promptToMessages(options.prompt, config.apiFormat, replaysReasoning(config));
             const jsonFormat = options.responseFormat.type === 'json';
             const tools = toolsToRequest(options.tools);
             const requestBody = buildRequestBody(

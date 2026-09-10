@@ -102,7 +102,11 @@ describe('ChatCompletionsLanguageModel', () => {
  * Captures the request body the adapter sends, so the wire shape can be asserted without a live
  * server (the suites above are `manual` and need one).
  */
-const captureRequestBody = (apiFormat: ChatCompletionsAdapter.ApiFormat, capture: (body: any) => void) => {
+const captureRequestBody = (
+  apiFormat: ChatCompletionsAdapter.ApiFormat,
+  capture: (body: any) => void,
+  provider?: string,
+) => {
   const stub = HttpClient.make((request) =>
     Effect.gen(function* () {
       // The adapter encodes its JSON body to bytes; every other variant means the request was not
@@ -127,11 +131,27 @@ const captureRequestBody = (apiFormat: ChatCompletionsAdapter.ApiFormat, capture
     }),
   );
 
-  const clientLayer = ChatCompletionsAdapter.clientLayer({ baseUrl: 'http://test', apiFormat }).pipe(
+  const clientLayer = ChatCompletionsAdapter.clientLayer({ baseUrl: 'http://test', apiFormat, provider }).pipe(
     Layer.provide(Layer.succeed(HttpClient.HttpClient, stub)),
   );
   return ChatCompletionsAdapter.layer('test-model').pipe(Layer.provide(clientLayer));
 };
+
+/** A turn whose tool call the model reasoned about first, as a thinking model produces it. */
+const promptWithReasonedToolCall = [
+  { role: 'user' as const, content: [{ type: 'text' as const, text: 'look it up' }] },
+  {
+    role: 'assistant' as const,
+    content: [
+      { type: 'reasoning' as const, text: 'The id looks like an EID.' },
+      { type: 'tool-call' as const, id: 'call_1', name: 'lookup', params: { eid: 'abc' } },
+    ],
+  },
+  {
+    role: 'tool' as const,
+    content: [{ type: 'tool-result' as const, id: 'call_1', name: 'lookup', isFailure: false, result: 'found' }],
+  },
+];
 
 /** A turn that already carries a tool call, so the request includes an assistant `tool_calls` entry. */
 const promptWithToolCall = [
@@ -160,6 +180,28 @@ describe('tool call encoding', () => {
 
       const args = body.messages.find((message: any) => message.role === 'assistant').tool_calls[0].function.arguments;
       expect(args).toEqual({ eid: 'abc' });
+    }),
+  );
+
+  // DeepSeek's thinking mode rejects a request whose tool-calling turns come back without the
+  // reasoning they were produced with ("The `reasoning_content` in the thinking mode must be
+  // passed back to the API"); an OpenAI-format server that never produced any is not sent one.
+  it.effect(
+    'DeepSeek receives an assistant turn with its reasoning_content; other servers do not',
+    Effect.fn(function* (_) {
+      let deepseek: any;
+      yield* LanguageModel.generateText({ prompt: promptWithReasonedToolCall }).pipe(
+        Effect.provide(captureRequestBody('openai', (captured) => (deepseek = captured), 'deepseek')),
+      );
+      let openai: any;
+      yield* LanguageModel.generateText({ prompt: promptWithReasonedToolCall }).pipe(
+        Effect.provide(captureRequestBody('openai', (captured) => (openai = captured))),
+      );
+
+      const assistantOf = (body: any) => body.messages.find((message: any) => message.role === 'assistant');
+      expect(assistantOf(deepseek).reasoning_content).toBe('The id looks like an EID.');
+      expect(assistantOf(deepseek).tool_calls).toHaveLength(1);
+      expect(assistantOf(openai)).not.toHaveProperty('reasoning_content');
     }),
   );
 

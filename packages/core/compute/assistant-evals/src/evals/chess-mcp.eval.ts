@@ -152,7 +152,7 @@ const task = createEvalRunner({
   // A design, a toolchain install, two deploys and an engine, each minutes of wall clock; and where a
   // session got to in that hour is worth grading even when it did not finish.
   timeout: 60 * 60 * 1_000,
-  gradeOnTimeout: true,
+  gradeIncomplete: true,
   seed: ({ spaceId, instructions }) =>
     Effect.gen(function* () {
       const client = yield* Capability.get(ClientCapabilities.Client);
