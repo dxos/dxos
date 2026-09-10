@@ -2,12 +2,15 @@
 // Copyright 2024 DXOS.org
 //
 
+import { type JsonObject, type JsonValue } from '@bufbuild/protobuf';
+
 import { DeferredTask, Event, sleep } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { type Messenger } from '@dxos/protocols';
-import { type GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
+import { unpackJson } from '@dxos/protocols/buf';
+import { type GossipMessage } from '@dxos/protocols/buf/dxos/mesh/teleport/gossip_pb';
 
 import { type AwarenessInfo, type AwarenessPosition, type AwarenessProvider, type AwarenessState } from './awareness';
 
@@ -19,6 +22,59 @@ type ProtocolMessage =
       kind: 'post';
       state: AwarenessState;
     };
+
+/**
+ * The channel's protocol on the wire, where the envelope carries an opaque `Struct`.
+ *
+ * Written and read field by field: the payload is JSON of unknown provenance, so its shape is
+ * established here rather than assumed of it.
+ */
+const toJson = (message: ProtocolMessage): JsonObject =>
+  message.kind === 'query'
+    ? { kind: 'query' }
+    : {
+        kind: 'post',
+        state: {
+          peerId: message.state.peerId,
+          info: { ...message.state.info },
+          ...(message.state.position ? { position: { ...message.state.position } } : {}),
+        },
+      };
+
+const fromJson = (payload: JsonObject | undefined): ProtocolMessage | undefined => {
+  if (payload?.kind === 'query') {
+    return { kind: 'query' };
+  }
+  if (payload?.kind !== 'post') {
+    return undefined;
+  }
+
+  const state = readObject(payload.state);
+  const info = readObject(state?.info);
+  const position = readObject(state?.position);
+  if (typeof state?.peerId !== 'string' || !info) {
+    return undefined;
+  }
+
+  return {
+    kind: 'post',
+    state: {
+      peerId: state.peerId,
+      info: {
+        displayName: String(info.displayName ?? ''),
+        darkColor: String(info.darkColor ?? ''),
+        lightColor: String(info.lightColor ?? ''),
+      },
+      position: position && {
+        anchor: typeof position.anchor === 'string' ? position.anchor : undefined,
+        head: typeof position.head === 'string' ? position.head : undefined,
+      },
+    },
+  };
+};
+
+const readObject = (value: JsonValue | undefined): JsonObject | undefined =>
+  typeof value === 'object' && value !== null && !Array.isArray(value) ? value : undefined;
 
 const DEBOUNCE_INTERVAL = 100; // ms
 
@@ -57,10 +113,7 @@ export class SpaceAwarenessProvider implements AwarenessProvider {
     this._ctx = new Context();
     this._postTask = new DeferredTask(this._ctx, async () => {
       if (this._localState) {
-        await this._messenger.postMessage(this._channel, {
-          kind: 'post',
-          state: this._localState,
-        } satisfies ProtocolMessage);
+        await this._messenger.postMessage(this._channel, toJson({ kind: 'post', state: this._localState }));
 
         // TODO(burdon): Replace with throttle.
         // TODO(burdon): Send heads?
@@ -70,26 +123,23 @@ export class SpaceAwarenessProvider implements AwarenessProvider {
 
     this._ctx.onDispose(
       this._messenger.listen(this._channel, (message: GossipMessage) => {
-        switch (message.payload.kind) {
+        const payload = fromJson(unpackJson(message.payload));
+        switch (payload?.kind) {
           case 'query': {
             this._handleQueryMessage();
             break;
           }
           case 'post': {
-            this._handlePostMessage(message.payload);
+            this._handlePostMessage(payload);
             break;
           }
         }
       }),
     );
 
-    void this._messenger
-      .postMessage(this._channel, {
-        kind: 'query',
-      } satisfies ProtocolMessage)
-      .catch((err) => {
-        log.debug('failed to query awareness', { err });
-      });
+    void this._messenger.postMessage(this._channel, toJson({ kind: 'query' })).catch((err) => {
+      log.debug('failed to query awareness', { err });
+    });
   }
 
   close(): void {

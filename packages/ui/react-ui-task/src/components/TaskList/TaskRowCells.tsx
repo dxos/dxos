@@ -10,7 +10,7 @@ import { Task } from '@dxos/types';
 
 import { translationKey } from '#translations';
 
-import { STATUS_ICONS, statusTextStyle } from './status-icons';
+import { statusIcon, statusTextStyle } from './status-icons';
 
 /**
  * Cells shared by the flat row and the tree row.
@@ -44,7 +44,7 @@ export const TaskStatusControl = ({ task, onTaskUpdate, active, classNames }: Ta
   const working = active ?? Task.isAgentWorking(task);
   const { icon, classNames: iconClassNames } = working
     ? { icon: 'ph--spinner--regular', classNames: 'text-info-text animate-spin' }
-    : { icon: STATUS_ICONS[status].icon, classNames: statusTextStyle(status) };
+    : { icon: statusIcon(status), classNames: statusTextStyle(status) };
 
   if (!onTaskUpdate) {
     // `IconBlock square` rather than a bare span: the glyph must hold the same square an
@@ -70,7 +70,7 @@ export const TaskStatusControl = ({ task, onTaskUpdate, active, classNames }: Ta
           actions={Task.StatusOptions.map(({ id }) =>
             createMenuAction(`status-${id}`, () => onTaskUpdate(task, { status: id }), {
               label: t(`status-${id}.label`),
-              icon: STATUS_ICONS[id].icon,
+              icon: statusIcon(id),
               iconClassNames: statusTextStyle(id),
               checked: status === id,
             }),

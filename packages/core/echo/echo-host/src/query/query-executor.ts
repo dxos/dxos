@@ -30,7 +30,8 @@ import {
 import { invariant } from '@dxos/invariant';
 import { EID, EntityId, SpaceId, type URI } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { type QueryReactivity, type QueryResult } from '@dxos/protocols/proto/dxos/echo/query';
+import { type QueryReactivity } from '@dxos/protocols/buf/dxos/echo/query_pb';
+import { type QueryService } from '@dxos/protocols/rpc';
 import { compositeKey, getDeep, isNonNullable } from '@dxos/util';
 
 import type { AutomergeHost } from '../automerge';
@@ -594,7 +595,7 @@ export class QueryExecutor extends Resource {
     return this._trace;
   }
 
-  getResults(): QueryResult[] {
+  getResults(): QueryService.QueryResult[] {
     // Computed over the final (post-filter) result set so counts always match shipped records.
     const groupCounts = new Map<string, number>();
     for (const item of this._lastResultSet) {
@@ -605,7 +606,7 @@ export class QueryExecutor extends Resource {
       groupCounts.set(serialized, (groupCounts.get(serialized) ?? 0) + 1);
     }
 
-    return this._lastResultSet.map((item): QueryResult => {
+    return this._lastResultSet.map((item): QueryService.QueryResult => {
       const serializedGroupKey = item.groupKey !== undefined ? GroupBy.serializeGroupKey(item.groupKey) : undefined;
       return {
         id: item.objectId,

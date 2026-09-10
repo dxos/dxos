@@ -16,10 +16,10 @@ Each extension is defined in the Appendix or resolved via its URI.
 |-------------|--------------------------------|
 | `type`      | `org.dxos.mdl.type@1.0`       |
 | `feat`      | `org.dxos.mdl.feat@1.0`       |
-| `test`      | `org.dxos.mdl.test@1.0`       |
+| `scenario`  | `org.dxos.mdl.scenario@1.0`   |
 | `component` | `org.dxos.mdl.component@1.0`  |
 | `op`        | `org.dxos.mdl.op@1.0`         |
-| `flow`      | `org.dxos.mdl.flow@1.0`       |
+| `test`      | `org.dxos.mdl.test@1.0`       |
 
 ## Types
 
@@ -214,7 +214,7 @@ feat F-6: Attention and Focus
 ## Acceptance
 
 ```mdl
-test T-1: New board is empty
+scenario T-1: New board is empty
   given: a new Board has been created
   then:
     - board.items is empty
@@ -222,7 +222,7 @@ test T-1: New board is empty
 ```
 
 ```mdl
-test T-2: Add item via grid backdrop
+scenario T-2: Add item via grid backdrop
   given: an empty board is displayed
   when: user clicks the "+" hotspot at position (100, 200)
   then:
@@ -232,7 +232,7 @@ test T-2: Add item via grid backdrop
 ```
 
 ```mdl
-test T-3: Add existing object via picker
+scenario T-3: Add existing object via picker
   given: the space contains a Document with label "Meeting notes"
   when: user opens the ObjectPicker from the toolbar and selects "Meeting notes"
   then:
@@ -242,7 +242,7 @@ test T-3: Add existing object via picker
 ```
 
 ```mdl
-test T-4: Remove item
+scenario T-4: Remove item
   given: board has one item
   when: user deletes the cell
   then:
@@ -252,7 +252,7 @@ test T-4: Remove item
 ```
 
 ```mdl
-test T-5: Move item
+scenario T-5: Move item
   given: board has one item at position { x: 0, y: 0 }
   when: user drags it to { x: 300, y: 150 }
   then:
@@ -261,7 +261,7 @@ test T-5: Move item
 ```
 
 ```mdl
-test T-6: Toolbar gated by attention
+scenario T-6: Toolbar gated by attention
   given: board is rendered without focus
   then: Board.Toolbar is disabled
   when: board gains focus
@@ -270,16 +270,16 @@ test T-6: Toolbar gated by attention
 
 ## QA
 
-Executable flows. Each step carries a human instruction (`do`) and, where the step maps to an
-invocable operation, an agent binding (`invoke`). Report failures by flow and step number.
+Executable tests. Each step carries a human instruction (`do`) and, where the step maps to an
+invocable operation, an agent binding (`invoke`). Report failures by test and step number.
 
 None of the four `op` blocks above have a runtime counterpart: `createBoard` is `Board.makeBoard`
 (a local factory, not an `Operation.make`) placed via the generic `space.addObject`, and
 `addItem` / `removeItem` / `moveItem` are component actions that call `Obj.update` directly —
-there is nothing to `invoke` for any of them. Every flow below is `actors: human` for that reason.
+there is nothing to `invoke` for any of them. Every test below is `actors: human` for that reason.
 
 ```mdl
-flow QA-1: Create a board, add and move an item, remove it
+test QA-1: Create a board, add and move an item, remove it
   desc: The core board round-trip — create, add an existing object to the canvas, drag it, remove it.
   actors: human
   covers: [F-1.1, F-1.2, F-1.3, F-2.2, F-2.3, F-3.1, F-3.2, F-4.1, F-4.2]
@@ -289,8 +289,8 @@ flow QA-1: Create a board, add and move an item, remove it
     - space: a space is open
     - collection: a collection in that space, to create into
     - a Document named "Meeting notes" exists in the space, for the ObjectPicker step
-    - no Board named "QA Board" exists — ABORT rather than deleting one this flow did not create
-  test:
+    - no Board named "QA Board" exists — ABORT rather than deleting one this test did not create
+  steps:
     - name: Create the board
       do: In the navtree, click + on a collection and choose Board. Name it "QA Board".
       expect: a Board appears under the collection, with an empty canvas
@@ -312,7 +312,7 @@ flow QA-1: Create a board, add and move an item, remove it
       note: |
         NO `invoke` — the board is created by a UI gesture in step 1, which has no operation to
         `capture` it from, so there is no bound value for `space.removeObjects` to name; deletion
-        stays human-only like the rest of this flow. `space.removeObjects` deletes the Board object
+        stays human-only like the rest of this test. `space.removeObjects` deletes the Board object
         itself; "Meeting notes" is unaffected — the board only referenced it.
 ```
 
@@ -345,8 +345,8 @@ ext feat
 ```
 
 ```mdl
-ext test
-  uri: org.dxos.mdl.test@1.0
+ext scenario
+  uri: org.dxos.mdl.scenario@1.0
   desc: An acceptance scenario expressed as given / when / then steps.
   fields:
     given?: Step | Step[]

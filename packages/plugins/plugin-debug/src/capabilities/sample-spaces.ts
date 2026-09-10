@@ -5,7 +5,7 @@
 import type * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as SampleSpace from '@dxos/app-toolkit/SampleSpace';
 
-import { ChatroomSpace, PipelineSpace, TidepoolSpace } from '../sample';
+import { ChatroomSpace, IncidentSpace, PipelineSpace, TidepoolSpace } from '../sample';
 
 /**
  * The sample spaces this plugin offers. Loaded only once something asks for the list — the content
@@ -33,5 +33,11 @@ export default [
     description:
       'A brief, a five-stage plan as a task tree, and the skill for building it on Workers and Claude agents.',
     definition: ChatroomSpace(),
+  }),
+  SampleSpace.preset({
+    id: 'org.dxos.plugin-debug.sample.incident',
+    label: 'Incident 0516 retrospective',
+    description: "A status log, four people's notes, and the four tasks that turn them into a filed retro.",
+    definition: IncidentSpace(),
   }),
 ] satisfies ReadonlyArray<AppCapabilities.SampleSpace>;

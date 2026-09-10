@@ -24,10 +24,10 @@ Each extension is defined in the Appendix or resolved via its URI.
 |-------------|--------------------------------|
 | `type`      | `org.dxos.mdl.type@1.0`       |
 | `feat`      | `org.dxos.mdl.feat@1.0`       |
-| `test`      | `org.dxos.mdl.test@1.0`       |
+| `scenario`  | `org.dxos.mdl.scenario@1.0`   |
 | `component` | `org.dxos.mdl.component@1.0`  |
 | `op`        | `org.dxos.mdl.op@1.0`         |
-| `flow`      | `org.dxos.mdl.flow@1.0`       |
+| `test`      | `org.dxos.mdl.test@1.0`       |
 
 ## Types
 
@@ -288,7 +288,7 @@ feat F-4: Space-Scoped Private File System
 ## Acceptance
 
 ```mdl
-test T-1: Upload creates a wnfs:// blob
+scenario T-1: Upload creates a wnfs:// blob
   given: an active space and this plugin's BlobBackend registered on the ECHO Hypergraph
   when: Blob.fromBytes is called with storage: 'wnfs'
   then:
@@ -298,7 +298,7 @@ test T-1: Upload creates a wnfs:// blob
 ```
 
 ```mdl
-test T-2: Resolve uploaded blob via getUrl
+scenario T-2: Resolve uploaded blob via getUrl
   given: a blob was previously uploaded and its data.uri (a wnfs:// URI) is known
   when: BlobBackend.getUrl(spaceId, uri, contentType) is called
   then:
@@ -307,14 +307,14 @@ test T-2: Resolve uploaded blob via getUrl
 ```
 
 ```mdl
-test T-3: get/has/getUrl return undefined/false when the space is not open
+scenario T-3: get/has/getUrl return undefined/false when the space is not open
   given: a wnfs:// URI whose space is not currently open
   when: BlobBackend.get, .has, or .getUrl is called
   then: undefined (or false for .has) is returned; no error is thrown
 ```
 
 ```mdl
-test T-4: Blockstore offline queuing
+scenario T-4: Blockstore offline queuing
   given: the browser is offline
   when: a block is written to the blockstore
   then:
@@ -324,7 +324,7 @@ test T-4: Blockstore offline queuing
 ```
 
 ```mdl
-test T-5: Blockstore queue flushes on reconnect
+scenario T-5: Blockstore queue flushes on reconnect
   given: blocks are queued while offline
   when: the browser comes back online
   then:
@@ -333,7 +333,7 @@ test T-5: Blockstore queue flushes on reconnect
 ```
 
 ```mdl
-test T-6: New space initializes WNFS directory
+scenario T-6: New space initializes WNFS directory
   given: a space with no WNFS properties
   when: loadWnfs is called for that space
   then:
@@ -342,7 +342,7 @@ test T-6: New space initializes WNFS directory
 ```
 
 ```mdl
-test T-7: WnfsInstance cache hit
+scenario T-7: WnfsInstance cache hit
   given: a WnfsInstance is cached for the current forest CID
   when: loadWnfs is called again for the same space
   then: the cached instance is returned; no blockstore reads occur
@@ -352,18 +352,18 @@ test T-7: WnfsInstance cache hit
 
 ## QA
 
-Executable flows. Each step carries a human instruction (`do`) and, where the step maps to an
-invocable operation, an agent binding (`invoke`). Report failures by flow and step number.
+Executable tests. Each step carries a human instruction (`do`) and, where the step maps to an
+invocable operation, an agent binding (`invoke`). Report failures by test and step number.
 
 ```mdl
-flow QA-1: Upload a file and resolve it back through the wnfs:// scheme
+test QA-1: Upload a file and resolve it back through the wnfs:// scheme
   desc: |
     plugin-wnfs has no ECHO type or navtree surface of its own — it is a `BlobBackend`
     (`schemes: ['wnfs']`) that `plugin-file` dispatches to transparently through
     `Blob.fromBytes`/`Blob.read`/`Blob.url`. None of its operations (`wnfsBlobPut`,
     `wnfsBlobGet`, `wnfsBlobHas`, `wnfsBlobGetUrl`, `uploadFile`) is an `Operation.make` with a
     `key:` — they are internal backend methods dispatched by core Blob.ts, not entries an
-    invoker can look up — so this flow is human-only end to end.
+    invoker can look up — so this test is human-only end to end.
   actors: human
   covers: [F-1.1, F-1.2, F-1.3, F-2.1, F-2.3]
   status: unverified
@@ -375,8 +375,8 @@ flow QA-1: Upload a file and resolve it back through the wnfs:// scheme
     - the space's file storage backend is set to WNFS (Settings -> Space -> Storage, or the
       space's default when plugin-wnfs is the only storage backend enabled)
     - no file named "qa-upload.png" exists in the space — ABORT rather than deleting one this
-      flow did not create
-  test:
+      test did not create
+  steps:
     - name: Upload a file
       do: Drag "qa-upload.png" onto the space (or a collection) in the navtree.
       expect: a File object named "qa-upload.png" appears in the navtree
@@ -426,8 +426,8 @@ ext feat
 ```
 
 ```mdl
-ext test
-  uri: org.dxos.mdl.test@1.0
+ext scenario
+  uri: org.dxos.mdl.scenario@1.0
   desc: An acceptance scenario expressed as given / when / then steps.
   fields:
     given?: Step | Step[]

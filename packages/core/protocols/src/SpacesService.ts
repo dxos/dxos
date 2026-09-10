@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+import { AnySchema } from '@bufbuild/protobuf/wkt';
 import * as Context from 'effect/Context';
 import * as Schema from 'effect/Schema';
 import * as Rpc from 'effect/unstable/rpc/Rpc';
@@ -16,7 +17,8 @@ import {
   SpaceSchema,
 } from './buf/proto/gen/dxos/client/services_pb.ts';
 import { CredentialSchema } from './buf/proto/gen/dxos/halo/credentials_pb.ts';
-import { bufMessage, protoMessage, serviceError } from './service-rpc.ts';
+import { GossipMessageSchema } from './buf/proto/gen/dxos/mesh/teleport/gossip_pb.ts';
+import { bufMessage, serviceError } from './service-rpc.ts';
 import { mutableArray, publicKey } from './service-schemas.ts';
 
 //
@@ -68,9 +70,9 @@ export interface UpdateSpaceRequest extends Schema.Schema.Type<typeof UpdateSpac
 export const PostMessageRequest = Schema.Struct({
   spaceKey: publicKey,
   channel: Schema.String,
-  // Callers post arbitrary payloads keyed by '@type', which is the protobuf.js Any substitution;
-  // buf's Any carries typeUrl + bytes and would change what a caller passes.
-  message: protoMessage('google.protobuf.Any'),
+  // Callers post arbitrary payloads keyed by '@type'; the proxy packs them, since the legacy codec
+  // silently wrote an empty Any here (see `buf/shape-compat.test.ts`).
+  message: bufMessage(AnySchema),
 });
 export interface PostMessageRequest extends Schema.Schema.Type<typeof PostMessageRequest> {}
 
@@ -242,8 +244,7 @@ export class Rpcs extends RpcGroup.make(
    */
   Rpc.make('subscribeMessages', {
     payload: SubscribeMessagesRequest,
-    // The gossip payload is an arbitrary `Any` a caller keys by '@type', same as `postMessage`.
-    success: protoMessage('dxos.mesh.teleport.gossip.GossipMessage'),
+    success: bufMessage(GossipMessageSchema),
     error: serviceError,
     stream: true,
   }),

@@ -3,6 +3,7 @@
 //
 
 import { next as A } from '@automerge/automerge';
+import { create } from '@bufbuild/protobuf';
 import * as Schema from 'effect/Schema';
 import net from 'node:net';
 
@@ -20,6 +21,7 @@ import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { createRtcTransportFactory } from '@dxos/network-manager';
+import { requirePublicKey } from '@dxos/protocols/buf';
 import {
   type Invitation,
   Invitation_AuthMethod,
@@ -28,6 +30,7 @@ import {
 } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 import { Runtime_Client_Storage_SqliteMode } from '@dxos/protocols/buf/dxos/config_pb';
 import { EdgeReplicationSetting } from '@dxos/protocols/buf/dxos/echo/metadata_pb';
+import { ProfileDocumentSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { trace } from '@dxos/tracing';
 
 import { type ReplicantEnv, ReplicantRegistry } from '../env';
@@ -227,7 +230,7 @@ export class ClientReplicant {
 
   @trace.span()
   async createIdentity({ displayName }: { displayName: string }): Promise<{ identityDid: string }> {
-    const identity = await this.#getClient().halo.createIdentity({ displayName });
+    const identity = await this.#getClient().halo.createIdentity(create(ProfileDocumentSchema, { displayName }));
     return { identityDid: identity.did };
   }
 
@@ -248,7 +251,7 @@ export class ClientReplicant {
     const response = await hub.redeemInvitationCode(new Context(), {
       email,
       identityDid: identity.did,
-      identityKey: identity.identityKey.toHex(),
+      identityKey: requirePublicKey(identity.identityKey).toHex(),
     });
     invariant('accountId' in response, `account binding refused: ${JSON.stringify(response)}`);
     log.info('test account bound', { email, accountId: response.accountId });

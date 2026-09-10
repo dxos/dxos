@@ -2,14 +2,18 @@
 // Copyright 2022 DXOS.org
 //
 
+import { fromBinary, toBinary } from '@bufbuild/protobuf';
+
 import { type ValueCodec, createCodecEncoding } from '@dxos/hypercore';
-import { schema } from '@dxos/protocols/proto';
-import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
+import { type FeedMessage, FeedMessageSchema } from '@dxos/protocols/buf/dxos/echo/feed_pb';
 
 /**
  * Codec for feed messages.
  */
-export const codec: ValueCodec<FeedMessage> = schema.getCodecForType('dxos.echo.feed.FeedMessage');
+export const codec: ValueCodec<FeedMessage> = {
+  encode: (value) => toBinary(FeedMessageSchema, value),
+  decode: (buffer) => fromBinary(FeedMessageSchema, buffer),
+};
 
 /**
  * Value encoding used by feed store.

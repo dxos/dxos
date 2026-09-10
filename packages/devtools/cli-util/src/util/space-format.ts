@@ -2,10 +2,13 @@
 // Copyright 2025 DXOS.org
 //
 
+import { anyUnpack } from '@bufbuild/protobuf/wkt';
 import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 
 import { type Space, SpaceState, type SpaceSyncState } from '@dxos/client/echo';
+import { toDate } from '@dxos/protocols/buf';
+import { EpochSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
 import * as FormBuilder from './form-builder';
 
@@ -73,16 +76,16 @@ export const formatSpace = Effect.fn(function* (space: Space, options: FormatSpa
 
   // TODO(burdon): Factor out.
   // TODO(burdon): Agent needs to restart before `ready` is available.
-  const metrics = tryWithFallbackSync(
-    () => space.internal.data.metrics,
-    undefined as { open?: Date; ready?: Date } | undefined,
-  );
-  const startup = metrics?.open && metrics?.ready ? metrics.ready.getTime() - metrics.open.getTime() : undefined;
+  const metrics = tryWithFallbackSync(() => space.internal.data.metrics, undefined);
+  const openedAt = toDate(metrics?.open);
+  const readyAt = toDate(metrics?.ready);
+  const startup = openedAt && readyAt ? readyAt.getTime() - openedAt.getTime() : undefined;
 
   // TODO(burdon): Get feeds from client-services if verbose (factor out from devtools/diagnostics).
   // const host = client.services.services.DevtoolsHost!;
   const pipeline = tryWithFallbackSync(() => space.internal.data.pipeline, undefined);
-  const epoch = pipeline?.currentEpoch?.subject.assertion.number;
+  const epochAssertion = pipeline?.currentEpoch?.subject?.assertion;
+  const epoch = epochAssertion && anyUnpack(epochAssertion, EpochSchema)?.number;
 
   // The sync-state read does IO; cap it so a stuck space can't hang the
   // command. Falls back to a "no peers" placeholder.
