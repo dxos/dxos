@@ -26,7 +26,7 @@ export const createRepo = (
     owner: link.owner,
     name: link.repo,
     url: link.url,
-    description: random.lorem.sentence(),
+    description: random.lorem.paragraph(),
     defaultBranch: 'main',
   });
 };
