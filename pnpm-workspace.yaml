@@ -191,7 +191,7 @@ catalog:
   '@swc/types': ^0.1.28
   '@tailwindcss/forms': ^0.5.9
   '@tailwindcss/oxide': ^4.3.0
-  '@tailwindcss/postcss': ^4.3.0
+  '@tailwindcss/postcss': ^4.3.3
   '@tailwindcss/vite': ^4.3.3
   '@tanstack/react-virtual': ^3.14.9
   '@tanstack/virtual-core': ^3.17.7
@@ -582,7 +582,7 @@ catalog:
   resize-observer-polyfill: ^1.5.1
   reveal.js: ^5.1.0
   rmdir: ~1.2.0
-  rolldown: 1.1.5
+  rolldown: ~1.2.4
   rollup: ^3.29.5
   rollup-plugin-sourcemaps: ^0.6.3
   rollup-plugin-visualizer: ^5.12.0
