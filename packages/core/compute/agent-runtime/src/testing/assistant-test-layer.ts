@@ -12,7 +12,7 @@ import * as KeyValueStore from 'effect/unstable/persistence/KeyValueStore';
 import * as AtomRegistry from 'effect/unstable/reactivity/AtomRegistry';
 
 import { AiService, OpaqueToolkit, Provider } from '@dxos/ai';
-import { TestAiService } from '@dxos/ai/testing';
+import { TestAiService, type AiServicePreset } from '@dxos/ai/testing';
 import { Alarm, Harness } from '@dxos/assistant';
 import * as Chat from '@dxos/assistant/Chat';
 import { ServiceNotAvailableError } from '@dxos/compute';
@@ -46,7 +46,7 @@ import { AgentService as AgentServiceRuntime } from '../agent-service';
 import { traceSinkPrettyLayer } from './trace-pretty-print';
 
 interface TestLayerOptions {
-  aiServicePreset?: 'direct' | 'edge-local' | 'edge-remote' | 'ollama';
+  aiServicePreset?: AiServicePreset;
 
   /**
    * Overrides the AI service entirely (e.g. a scripted model for deterministic e2e tests).
