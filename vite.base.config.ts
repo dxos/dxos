@@ -83,6 +83,34 @@ const TEST_INSTRUMENT_EXEC_ARGV = [
   ...(CPU_PROFILE_DIR ? ['--cpu-prof', `--cpu-prof-dir=${CPU_PROFILE_DIR}`] : []),
   ...(DEBUG_LEAKS ? ['--expose-gc'] : []),
 ];
+
+// React Compiler (oxc). Auto-memoizes component bodies and hook results, which is the mechanical
+// way to raise the floor in deep component trees where hand-written `memo` does not reach. The
+// oxc backend is a Rust port of `babel-plugin-react-compiler` (>10x faster) but is still
+// EXPERIMENTAL and incomplete — it carries dozens of code paths that emit Todo diagnostics — so
+// this is opt-in per package (`reactCompiler` in `defineConfig`) rather than on by default.
+//   DX_REACT_COMPILER=1 — force it on everywhere, to measure a repo-wide rollout before committing
+//                         to one. Never set in CI. An env var is not a moon task input, so a
+//                         package already built without it needs `--force` to pick it up.
+// A component that violates the Rules of React is normally skipped by the compiler, but one that
+// lies about its reads (a bare property read on a live ECHO object during render — anti-pattern #3
+// in the `reactivity` skill) can have that lie memoized into a permanently stale subtree. Audit a
+// package against that catalog before enabling it here.
+// Allowlist rather than truthiness: `DX_REACT_COMPILER=0` and `=false` are how someone turns a
+// flag OFF, and a bare `!!` would read both as ON and silently compile everything. Matches the
+// `DX_RUN_MANUAL_TESTS` check below.
+const REACT_COMPILER_ALL = ['1', 'true'].includes(process.env.DX_REACT_COMPILER ?? '');
+
+/**
+ * The React plugin, with the compiler enabled when the package opts in (or `DX_REACT_COMPILER` is set).
+ */
+const reactPlugin = (options: { jsxRuntime?: 'automatic' | 'classic'; compiler?: boolean } = {}) => {
+  const { jsxRuntime, compiler } = options;
+  return react({
+    ...(jsxRuntime ? { jsxRuntime } : {}),
+    ...(compiler || REACT_COMPILER_ALL ? { compiler: true } : {}),
+  });
+};
 const VITEST_LEAK_SETUP = new URL('./tools/vitest/leak-setup.ts', import.meta.url).pathname;
 
 // Node-only Vitest NDJSON file sink (@dxos/vite-plugin-log/vitest). Relative paths avoid a moon dep cycle.
@@ -506,6 +534,8 @@ export type NodeOptions = {
   plugins?: Plugin[];
   /** Which JSX runtime to wire into the vitest node project. Defaults to `'react'`. */
   jsx?: 'react' | 'solid';
+  /** Run the node project's components through the React Compiler; set from `reactCompiler`. */
+  compiler?: boolean;
 };
 
 export type BrowserOptions = {
@@ -753,6 +783,7 @@ const createNodeProject = ({
   setupFiles = [],
   plugins = [],
   jsx = 'react',
+  compiler = false,
 }: NodeOptions = {}) =>
   defineProject({
     esbuild: {
@@ -809,7 +840,7 @@ const createNodeProject = ({
       process.env.VITE_INSPECT ? Inspect() : undefined,
       // Log-meta injection only — no dev file sink (vitest is a test runner, not a dev server).
       DxosLogPlugin({ logToFile: false }),
-      jsx === 'solid' ? solid({ include: `${process.cwd()}/src/**/*.{tsx,jsx}` }) : react(),
+      jsx === 'solid' ? solid({ include: `${process.cwd()}/src/**/*.{tsx,jsx}` }) : reactPlugin({ compiler }),
     ],
   });
 
@@ -1005,6 +1036,15 @@ export interface DxConfigOptions {
    */
   jsxRuntime?: 'automatic' | 'classic';
   /**
+   * Run the package's components through the React Compiler (oxc backend). Opt-in per package
+   * while the backend is experimental; `DX_REACT_COMPILER=1` forces it on everywhere for
+   * measurement. Only meaningful when `jsx === 'react'`.
+   *
+   * Propagates into the package's own vitest node project, so its tests exercise the same output
+   * the build emits.
+   */
+  reactCompiler?: boolean;
+  /**
    * Emit raw-asset imports (`?url` / `?raw` / `?inline`) as separate files instead of
    * base64-inlining them into the JS bundle. Matches esbuild's `file` loader. Required
    * for packages that import large binary assets (e.g. plugin-zen's `.m4a` soundscapes).
@@ -1043,13 +1083,18 @@ const buildTestConfig = (
   dirname: string,
   options: TestOptions,
   outerJsx?: 'react' | 'solid',
+  outerCompiler?: boolean,
 ): ViteUserConfig['test'] => {
   const { node, browser, storybook, workerd } = options;
-  // Outer `defineConfig({ jsx })` propagates into the node test project so a Solid
-  // package's tests get the Solid client transform without each per-package
-  // vite.config.ts having to wire `test.node.jsx` itself.
+  // Outer `defineConfig({ jsx })` / `{ reactCompiler }` propagate into the node test project so a
+  // Solid package's tests get the Solid client transform, and a compiler-enabled package's tests
+  // exercise the compiled output, without each per-package vite.config.ts having to wire them.
   const nodeOptions =
-    typeof node === 'boolean' ? (outerJsx ? { jsx: outerJsx } : undefined) : { jsx: outerJsx, ...node };
+    typeof node === 'boolean'
+      ? outerJsx || outerCompiler
+        ? { jsx: outerJsx, compiler: outerCompiler }
+        : undefined
+      : { jsx: outerJsx, compiler: outerCompiler, ...node };
   const nodeProject = node ? createNodeProject(nodeOptions) : undefined;
   const storybookProject = storybook
     ? createStorybookProject(dirname, typeof storybook === 'boolean' ? undefined : storybook)
@@ -1131,6 +1176,7 @@ export const defineConfig = (options: DxConfigOptions = {}): UserConfig => {
     declarations = true,
     jsx,
     jsxRuntime,
+    reactCompiler = false,
     assetsAsFiles = false,
     bundle = [],
     alias,
@@ -1147,7 +1193,7 @@ export const defineConfig = (options: DxConfigOptions = {}): UserConfig => {
   // Solid: ssr-aware client transform.
   const jsxPlugin: Plugin[] =
     jsx === 'react'
-      ? [react(jsxRuntime ? { jsxRuntime } : undefined)]
+      ? [reactPlugin({ jsxRuntime, compiler: reactCompiler })]
       : jsx === 'solid'
         ? [solid({ include: `${process.cwd()}/src/**/*.{tsx,jsx}` })]
         : [];
@@ -1243,6 +1289,6 @@ export const defineConfig = (options: DxConfigOptions = {}): UserConfig => {
       ...(bundle.length > 0 ? [DxHoistRequirePlugin()] : []),
       ...(declarations ? [DxDeclarationsPlugin()] : []),
     ],
-    ...(test ? { test: buildTestConfig(process.cwd(), test, jsx) } : {}),
+    ...(test ? { test: buildTestConfig(process.cwd(), test, jsx, reactCompiler) } : {}),
   });
 };
