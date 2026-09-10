@@ -49,7 +49,7 @@
     color-scheme: dark;
     --dx-lift: 1;
     /* Dark is the reference: every family runs at full strength. */
-    --dx-attenuate-state: 0.7;
+    --dx-attenuate-state: 1;
     --dx-attenuate-well: 1;
     --dx-attenuate-separator: 1;
     --dx-attenuate-separator-line: 1;
