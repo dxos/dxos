@@ -29,6 +29,12 @@ import { NavTreeItemColumns } from '../NavTreeItem/NavTreeItemColumns';
  */
 const ITEM_END_SIZE = '1.25rem';
 
+/**
+ * Delay before the unavailable-workspace message appears, so a workspace whose node is still being
+ * built is not called missing on the way there.
+ */
+const RENDER_DELAY = '1s';
+
 export type L1PanelProps = {
   open?: boolean;
   path: string[];
@@ -77,12 +83,16 @@ const L1PanelInner = ({ open, path, id, item, isCurrent, onBack }: L1PanelProps)
         (item ? (
           <L1PanelContent open={open} path={path} item={item} onBack={onBack} />
         ) : (
-          presence === 'absent' && (
+          // Not `absent` alone: a workspace token no loader recognizes stays `unknown` forever, and
+          // the sidebar must never be blank. Only a confirmed `exists` withholds the message.
+          presence !== 'exists' && (
             <Empty
+              key={id}
               label={t('workspace-unavailable.description')}
               // Second grid row, so the message clears the rail exactly as the tree does, and
               // hugging its top rather than stretching to the row's full height.
-              classNames='row-start-2 self-start'
+              classNames='row-start-2 self-start animate-fade-in'
+              style={{ animationDelay: RENDER_DELAY, animationFillMode: 'backwards' }}
             />
           )
         ))}
