@@ -38,6 +38,7 @@ const prevents = (handler: ((event: Event) => void) | undefined) => {
   if (!handler) {
     return false;
   }
+
   const event = new Event('autofocus', { cancelable: true });
   handler(event);
   return event.defaultPrevented;
