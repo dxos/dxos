@@ -73,6 +73,12 @@ export type JoinMeasurement = {
   msPerObject: number | undefined;
   ok: boolean;
   error?: string;
+  /**
+   * When this joiner finished, not when the run did. Joiners are measured one after another, so
+   * these differ by seconds — which is what keeps their events apart in a store that deduplicates
+   * on (uuid, timestamp), the uuid being shared by everything from one commit.
+   */
+  at: string;
 };
 
 export type EdgeJoinLatencyResult = {
@@ -88,8 +94,6 @@ export type EdgeJoinLatencyResult = {
   medianSpaceReadyMs: number | undefined;
   medianReplicationMs: number | undefined;
   medianSyncedMs: number | undefined;
-  /** Fastest and slowest joiner: the whiskers either side of the mean's spread. */
-  minSyncedMs: number | undefined;
   maxSyncedMs: number | undefined;
   /**
    * Mean and sample spread of `syncedMs` across the joiners that finished. Trended nightly rather
@@ -322,6 +326,7 @@ export class EdgeJoinLatency implements TestPlan<EdgeJoinLatencySpec, EdgeJoinLa
             msPerObject: replicationMs !== undefined && spec.objects > 0 ? replicationMs / spec.objects : undefined,
             ok: settled.ok,
             error: settled.ok ? undefined : `digest still differed after ${spec.joinTimeoutMs}ms`,
+            at: new Date().toISOString(),
           });
         } catch (err) {
           // The fallback is for a joiner that failed to sync — one bad row, the rest still measured.
@@ -342,6 +347,7 @@ export class EdgeJoinLatency implements TestPlan<EdgeJoinLatencySpec, EdgeJoinLa
             // threw nor the cause under it, and the replicant never logged it because the error
             // crossed the RPC boundary. The artifact has to carry what a local repro would show.
             error: describeError(err),
+            at: new Date().toISOString(),
           });
         }
         log.info('joiner measured', { ...measurements[measurements.length - 1] });
@@ -367,8 +373,10 @@ export class EdgeJoinLatency implements TestPlan<EdgeJoinLatencySpec, EdgeJoinLa
         fs.writeFileSync(resultPath, `${JSON.stringify(summary, null, 2)}\n`);
         fs.writeFileSync(path.join(params.outDir, 'summary.md'), renderSummary(summary));
         fs.writeFileSync(
-          path.join(params.outDir, 'join-latency.metrics.json'),
-          `${JSON.stringify(renderMetrics(summary), null, 2)}\n`,
+          path.join(params.outDir, 'join-latency.events.ndjson'),
+          renderEvents(summary, new Date().toISOString())
+            .map((event) => `${JSON.stringify(event)}\n`)
+            .join(''),
         );
       } finally {
         unregisterCleanup();
@@ -416,7 +424,6 @@ export class EdgeJoinLatency implements TestPlan<EdgeJoinLatencySpec, EdgeJoinLa
       medianSpaceReadyMs: median((measurement) => measurement.spaceReadyMs),
       medianReplicationMs: median((measurement) => measurement.replicationMs),
       medianSyncedMs: median((measurement) => measurement.syncedMs),
-      minSyncedMs: synced.length > 0 ? Math.min(...synced) : undefined,
       maxSyncedMs: synced.length > 0 ? Math.max(...synced) : undefined,
       meanSyncedMs,
       stddevSyncedMs,
@@ -473,32 +480,57 @@ export class EdgeJoinLatency implements TestPlan<EdgeJoinLatencySpec, EdgeJoinLa
 }
 
 /**
- * The run as a flat record for `scripts/ci-event.mjs`, which flattens one level and namespaces every
- * key. Separate from `join-latency.json` because that one embeds `measurements`, and an array of
- * per-joiner objects lands in an event store as one opaque property rather than as a series.
+ * The run as the events `scripts/ci-event.mjs --batch` posts: one fact per joiner, and one for the
+ * run itself.
  *
- * Undefined fields are dropped by `JSON.stringify`, so a run that produced no number sends no
- * property rather than a zero the trend would average in.
+ * Per joiner rather than a precomputed mean and spread, so the statistics are derived where they are
+ * read. An event store computes `avg`, `stddevSamp` and `quantile` over rows, which means a night
+ * that ran twice aggregates as one population of joiners instead of as an average of averages, and a
+ * question nobody asked yet does not need a new field shipped and backfilled before it can be.
+ *
+ * The run event is not redundant with them: `seedMs` and `agents` describe the run, not any joiner,
+ * and a run whose joiners all failed emits no joiner events at all — without it that night would be
+ * invisible rather than red.
+ *
+ * Undefined fields are dropped by `JSON.stringify`, so a joiner that produced no number sends no
+ * property rather than a zero an average would quietly absorb.
  */
-const renderMetrics = (result: EdgeJoinLatencyResult) => ({
-  ok: result.ok,
-  edge: result.edge,
-  objects: result.objects,
-  joiners: result.joiners,
-  joinersOk: result.measurements.filter((measurement) => measurement.ok).length,
-  // Latency is comparable across runs only where this matches; the trend filters on it.
-  agents: result.agents,
-  seedMs: result.seedMs,
-  meanSyncedMs: result.meanSyncedMs,
-  stddevSyncedMs: result.stddevSyncedMs,
-  medianSyncedMs: result.medianSyncedMs,
-  minSyncedMs: result.minSyncedMs,
-  maxSyncedMs: result.maxSyncedMs,
-  medianAdmittedMs: result.medianAdmittedMs,
-  medianReplicationMs: result.medianReplicationMs,
-  medianSpaceReadyMs: result.medianSpaceReadyMs,
-  monotonicGrowth: result.monotonicGrowth,
-});
+const renderEvents = (result: EdgeJoinLatencyResult, at: string) => [
+  {
+    event: 'ci.edge-join-latency',
+    timestamp: at,
+    properties: {
+      ok: result.ok,
+      edge: result.edge,
+      objects: result.objects,
+      joiners: result.joiners,
+      joinersOk: result.measurements.filter((measurement) => measurement.ok).length,
+      agents: result.agents,
+      seedMs: result.seedMs,
+    },
+  },
+  ...result.measurements.map((measurement) => ({
+    event: 'ci.edge-join-latency.joiner',
+    timestamp: measurement.at,
+    // Five joiners share the run's commit, and so would share a dedup uuid without this.
+    dedup: `joiner-${measurement.joiner}`,
+    properties: {
+      joiner: measurement.joiner,
+      ok: measurement.ok,
+      admittedMs: measurement.admittedMs,
+      spaceReadyMs: measurement.spaceReadyMs,
+      replicationMs: measurement.replicationMs,
+      syncedMs: measurement.syncedMs,
+      msPerObject: measurement.msPerObject,
+      error: measurement.error,
+      // Carried from the run so a query over joiners can filter on comparability without joining
+      // back to it: latency is only comparable where the deployment, the size and `agents` match.
+      edge: result.edge,
+      objects: result.objects,
+      agents: result.agents,
+    },
+  })),
+];
 
 /**
  * The run as a CI job summary. Written by the plan rather than by a workflow script so the same

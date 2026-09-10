@@ -122,7 +122,7 @@ jobs:
         working-directory: packages/e2e/blade-runner
         run: cat "$(ls -td out/results/*/ | head -1)summary.md" >> "$GITHUB_STEP_SUMMARY" || true
 
-      # Whole output tree: `join-latency.json`, `summary.md`, `join-latency.metrics.json`, and one
+      # Whole output tree: `join-latency.json`, `summary.md`, `join-latency.events.ndjson`, and one
       # `replicant.out.log` per peer — what an agent needs to explain a red run without reproducing it.
       - name: Upload results
         if: always()
@@ -137,11 +137,14 @@ jobs:
       # recreated. `continue-on-error` because telemetry must never redden a build, and `always()`
       # because the run that crossed a threshold is the one the series most needs.
       #
-      # `--timestamp now` departs from `ci.boot-budget`, which dates each event by the commit it
-      # measured. That is right for a per-push measurement and wrong here: the schedule fires against
-      # whatever main happens to be, so two nights with no merge between them would share a commit,
-      # and with it both the default timestamp and the dedup uuid — collapsing onto one point. What
-      # this measures is deployed EDGE at 02:00 UTC, whose date is the run's, not the commit's.
+      # The plan writes one event per joiner plus one for the run, each already carrying its own
+      # timestamp, so the statistics are computed where they are read rather than shipped precomputed.
+      #
+      # Those timestamps are the run's, departing from `ci.boot-budget`, which dates each event by the
+      # commit it measured. That is right for a per-push measurement and wrong here: the schedule
+      # fires against whatever main happens to be, so two nights with no merge between them would
+      # share a commit, and with it the default timestamp — collapsing onto one point. What this
+      # measures is deployed EDGE at 02:00 UTC, whose date is the run's, not the commit's.
       - name: Trend the join latency
         if: always()
         continue-on-error: true
@@ -150,9 +153,7 @@ jobs:
           DX_POSTHOG_API_KEY: ${{ secrets.COMPOSER_APP_PROD_POSTHOG_API_KEY }}
         run: |
           node scripts/ci-event.mjs \
-            --event ci.edge-join-latency \
-            --timestamp now \
-            --properties "$(ls -td packages/e2e/blade-runner/out/results/*/ | head -1)join-latency.metrics.json"
+            --batch "$(ls -td packages/e2e/blade-runner/out/results/*/ | head -1)join-latency.events.ndjson"
 
   # An hour of randomized commands against a fleet of real peers, asserted against an in-memory
   # model. Independent of `join-latency`: a red soak should not withhold a latency number.
