@@ -50,12 +50,23 @@ describe.skipIf(process.env.CI)('AutomergeRepo with Subduction', () => {
     // relay being an automerge `Repo` that opens its own query: `SubductionSource#save` then
     // triggers the round that reaches the client. The edge DO runs no `SubductionSource`, so this
     // does not say what happens when EDGE is the intermediary.
+    // Counts subduction traffic on client↔relay, so the assertion below can tell a fetch the relay
+    // answered from a query that settled because the handshake had not finished — those settle the
+    // same way and recover differently.
+    let clientRelayMessages = 0;
     const { repos, adapters } = await createRepoTopology({
       peers: ['client', 'relay', 'holder'],
       connections: [
         ['client', 'relay'],
         ['relay', 'holder'],
       ],
+      onMessageByConnection: {
+        0: (message) => {
+          if (message.type === SUBDUCTION_MESSAGE_TYPE) {
+            clientRelayMessages++;
+          }
+        },
+      },
     });
     const [client, relay, holder] = repos;
     await connectAdapters([adapters[0]]);
@@ -68,6 +79,9 @@ describe.skipIf(process.env.CI)('AutomergeRepo with Subduction', () => {
     // The relay has nothing to give, and the query settles on that rather than staying in flight.
     const progress = client.findWithProgress<{ text: string }>(url);
     await waitForQueryState(progress, ['unavailable'], { timeout: 10_000 });
+    // The premise: the relay was reachable and answered. Without this the test would also pass
+    // when the client simply had no peer to ask.
+    expect(clientRelayMessages).to.be.greaterThan(0);
 
     // The relay now reaches the holder and takes the document. Its query is what gives the relay a
     // source entry, which is the precondition for the broadcast below.
