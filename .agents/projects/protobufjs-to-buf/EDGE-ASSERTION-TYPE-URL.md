@@ -81,6 +81,45 @@ invalidate an issued credential, and ids stay stable — only the `Any.type_url`
 and nothing derives identity from it. `golden-credential.test.ts` pins this by re-prefixing a signed
 credential and asserting the payload is byte-identical and still verifies.
 
+## The boundary has three `Any` conventions, not one
+
+Audited after the fix, because "does this break every `Any`?" is the right question. It does not —
+but the credential class reached further than the upgrade.
+
+| Path                                                                    | dxos emits                | EDGE expects                                 | Status                    |
+| ----------------------------------------------------------------------- | ------------------------- | -------------------------------------------- | ------------------------- |
+| Credential assertions                                                   | was prefixed, now bare    | bare (registry keyed by `typeName`)          | fixed here                |
+| EDGE service messages (`edge-client/protocol.ts`)                       | prefixed (`anyPack`)      | prefixed (`router.ts` reads `split('/')[1]`) | always correct, untouched |
+| Peer signalling relayed via EDGE (`messenger.ts`, `swarm-messenger.ts`) | bare (hand-built literal) | `getPayloadType` yields `undefined`          | pre-existing, log-only    |
+
+Beyond the 500, the prefixed url silently changed behaviour in `db-service` — no error, just the
+wrong branch, in every case because the consumer compares against a bare name:
+
+- `feed/feed-writer.ts` — `ADMISSION_DEPENDENT_CREDENTIALS.includes(...)` against a bare list, so
+  admission-ordering was skipped for `SpaceMember`, `AdmittedFeed`, `DelegateSpaceInvitation` and
+  `CancelDelegatedInvitation`; and a `!== 'dxos.halo.credentials.SpaceMember'` branch inverted.
+- `feed/dot-export.ts` — `SpaceGenesis` detection always false.
+- `credential-codec/assertion.ts` — the `Epoch`, `DeviceProfile` and `SpaceMember` normalizations.
+
+One has lasting consequence. `space/space-state-machine-store.ts` derives a storage key from the
+type, and its `sanitizeAssertionType` only does `replaceAll(':', '_')` — it does not strip the
+prefix:
+
+```ts
+const type = sanitizeAssertionType(getAssertionType(credential));
+return `${StorageKey.CREDENTIAL}:${type}:${publicKeyToHex(credential.id!)}`;
+```
+
+so a prefixed url writes `credential:type.googleapis.com/dxos.halo.credentials.SpaceMember:<id>`
+while `credentialTypePrefix` queries `credential:dxos.halo.credentials.SpaceMember`. Divergent keys
+in persisted state, which no client-side fix repairs after the fact. The upgrade failure probably
+shielded this — clients that could not connect wrote nothing — but that is unverified. The check is
+a scan of db-service storage for keys containing `type.googleapis.com`; anything found needs
+rewriting under the bare key.
+
+None of these would have been caught by a test in this repo. That is the argument for the contract
+test below, and for EDGE normalizing on read whatever this client sends.
+
 ## Still open
 
 - **EDGE should normalize on read** — `typeNameOf` in its `getAssertionType`. Until it does, EDGE
