@@ -6,11 +6,13 @@ import { describe, it, vi } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
 import * as Stream from 'effect/Stream';
+import * as LanguageModel from 'effect/unstable/ai/LanguageModel';
 import * as Response from 'effect/unstable/ai/Response';
 
 import { type ContentBlock } from '@dxos/types';
 
 import * as AiParser from './AiParser';
+import * as ScriptedLanguageModel from './testing/ScriptedLanguageModel';
 
 describe('parser', () => {
   describe('accumulation', () => {
@@ -523,6 +525,75 @@ describe('parser', () => {
         });
         expect(result[1]).toMatchObject({ _tag: 'stats', toolCalls: 1 });
       }),
+    );
+
+    it.effect(
+      'a tool call opened while another is still open closes the previous one',
+      Effect.fn(function* ({ expect }) {
+        // Providers streaming parallel tool calls (the OpenAI dialect) end each call only after
+        // the last one has started; aborting there lost the whole turn.
+        const result = yield* makeInputStream([
+          Response.makePart('tool-params-start', { id: 'call_a', name: 'alpha', providerExecuted: false }),
+          Response.makePart('tool-params-delta', { id: 'call_a', delta: '{"x":1}' }),
+          Response.makePart('tool-params-start', { id: 'call_b', name: 'beta', providerExecuted: false }),
+          Response.makePart('tool-params-delta', { id: 'call_b', delta: '{"y":2}' }),
+          Response.makePart('tool-params-end', { id: 'call_b' }),
+        ])
+          .pipe(AiParser.parseResponse())
+          .pipe(Stream.runCollect);
+
+        expect(result).toEqual([
+          { _tag: 'toolCall', toolCallId: 'call_a', name: 'alpha', input: '{"x":1}', providerExecuted: false },
+          { _tag: 'toolCall', toolCallId: 'call_b', name: 'beta', input: '{"y":2}', providerExecuted: false },
+        ]);
+      }),
+    );
+
+    it.effect(
+      'reasoning opened while a tool call is still open closes the tool call',
+      Effect.fn(function* ({ expect }) {
+        const result = yield* makeInputStream([
+          Response.makePart('tool-params-start', { id: 'call_a', name: 'alpha', providerExecuted: false }),
+          Response.makePart('tool-params-delta', { id: 'call_a', delta: '{"x":1}' }),
+          Response.makePart('reasoning-start', { id: 'r1' }),
+          Response.makePart('reasoning-delta', { id: 'r1', delta: 'hmm' }),
+          Response.makePart('reasoning-end', { id: 'r1' }),
+        ])
+          .pipe(AiParser.parseResponse())
+          .pipe(Stream.runCollect);
+
+        expect(result.map((block) => block._tag)).toEqual(['toolCall', 'reasoning']);
+      }),
+    );
+
+    it.effect(
+      'a provider that defers every tool-params-end still yields one block per call',
+      Effect.fnUntraced(
+        function* ({ expect }) {
+          // Driven through the scripted model rather than hand-built parts, so the whole
+          // LanguageModel path is exercised: this is the shape the OpenAI dialect produces and the
+          // one that aborted the agent turn with `invariant violation [!block]`.
+          const result = yield* LanguageModel.streamText({ prompt: 'ignored' })
+            .pipe(AiParser.parseResponse())
+            .pipe(Stream.runCollect);
+
+          expect(result.filter((block) => block._tag === 'toolCall')).toEqual([
+            { _tag: 'toolCall', toolCallId: 'toolu_0_0', name: 'alpha', input: '{"x":1}', providerExecuted: false },
+            { _tag: 'toolCall', toolCallId: 'toolu_0_1', name: 'beta', input: '{"y":2}', providerExecuted: false },
+          ]);
+        },
+        Effect.provide(
+          ScriptedLanguageModel.scriptedLanguageModelLayer([
+            {
+              parts: [
+                ScriptedLanguageModel.toolCall('alpha', { x: 1 }),
+                ScriptedLanguageModel.toolCall('beta', { y: 2 }),
+              ],
+              deferToolEnds: true,
+            },
+          ]),
+        ),
+      ),
     );
 
     it.effect(

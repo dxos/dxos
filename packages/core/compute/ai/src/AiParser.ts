@@ -194,14 +194,15 @@ export const parseResponse =
         });
 
         /**
-         * Finalizes a block left open when the stream ends mid-block, which would otherwise stay
-         * pending forever and invisible to the tool runner.
+         * Finalizes a block left open when the stream ends mid-block, or when the provider opens the
+         * next block without closing this one; it would otherwise stay pending forever and invisible
+         * to the tool runner.
          */
         const flushBlock = Effect.fnUntraced(function* (out: ContentBlock.Any[]) {
           if (!block) {
             return;
           }
-          log.warn('stream ended with an unterminated block', { type: block._tag });
+          log.warn('flushing unterminated block', { type: block._tag });
           block.pending = false;
           yield* emitFullBlock(block, out);
           if (block._tag === 'toolCall') {
@@ -309,7 +310,9 @@ export const parseResponse =
             }
 
             case 'tool-params-start': {
-              invariant(!block);
+              // Providers streaming parallel tool calls (the OpenAI dialect) may open the next call
+              // before closing the previous one; aborting the turn there loses the whole response.
+              yield* flushBlock(out);
               block = {
                 _tag: 'toolCall',
                 toolCallId: part.id,
@@ -330,7 +333,17 @@ export const parseResponse =
             }
 
             case 'tool-params-end': {
-              invariant(block?._tag === 'toolCall');
+              // A provider that batches its terminators (the OpenAI dialect, where the wire format
+              // has none per call) sends the end for a call already flushed when the next one
+              // opened. That block is complete, so the late terminator is redundant — closing the
+              // block that happens to be open instead would emit it under the wrong call's end.
+              if (block?._tag !== 'toolCall' || block.toolCallId !== part.id) {
+                log.warn('tool call terminator does not match the open block', {
+                  id: part.id,
+                  open: block?._tag === 'toolCall' ? block.toolCallId : block?._tag,
+                });
+                break;
+              }
               block.pending = false;
               yield* emitFullBlock(block, out);
               toolCalls++;
@@ -359,7 +372,7 @@ export const parseResponse =
             }
 
             case 'reasoning-start': {
-              invariant(!block);
+              yield* flushBlock(out);
               block = {
                 _tag: 'reasoning',
                 reasoningText: '',
