@@ -58,6 +58,10 @@ export class ControlExtension implements TeleportExtension {
     private readonly remotePeerId: PublicKey,
   ) {}
 
+  /**
+   * Announces a local extension to the remote peer.
+   * @throws If called before `onOpen` has initialized the control RPC.
+   */
   async registerExtension(name: string): Promise<void> {
     invariant(this._rpc, 'Control extension not open.');
     await this._rpc.rpc.Control.registerExtension(create(RegisterExtensionRequestSchema, { name }));

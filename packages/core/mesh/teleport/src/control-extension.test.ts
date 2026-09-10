@@ -8,13 +8,6 @@ import { PublicKey } from '@dxos/keys';
 
 import { ControlExtension } from './control-extension';
 
-const createExtension = () =>
-  new ControlExtension(
-    { heartbeatInterval: 10_000, heartbeatTimeout: 60_000, onTimeout: () => {} },
-    PublicKey.random(),
-    PublicKey.random(),
-  );
-
 describe('ControlExtension', () => {
   // Teleport aborts every registered extension, including one whose `onOpen` has not completed.
   test('onAbort before onOpen does not throw', async () => {
@@ -29,3 +22,10 @@ describe('ControlExtension', () => {
     await expect(createExtension().registerExtension('test')).rejects.toThrow(/not open/);
   });
 });
+
+const createExtension = () =>
+  new ControlExtension(
+    { heartbeatInterval: 10_000, heartbeatTimeout: 60_000, onTimeout: () => {} },
+    PublicKey.random(),
+    PublicKey.random(),
+  );
