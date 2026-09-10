@@ -5,6 +5,7 @@
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
+import * as Schema from 'effect/Schema';
 import * as Stream from 'effect/Stream';
 import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 import { describe, test } from 'vitest';
@@ -27,7 +28,7 @@ import type * as RemoteTraceMonitor from './RemoteTraceMonitor';
  * the handle replays what the host already has and then takes the rest as it is pushed.
  */
 describe('RemoteProcessHandle ephemeral trace', () => {
-  const TEST_PID = 'test-pid';
+  const TEST_PID = Schema.decodeUnknownSync(Process.ID)('test-pid');
   const SPACE_ID = SpaceId.random();
 
   const snapshot = (state: Process.State): RemoteProcessManager.Snapshot => ({
