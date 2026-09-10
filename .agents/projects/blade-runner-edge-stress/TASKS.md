@@ -96,6 +96,13 @@ blade-runner harness. Spec + decisions: [DESIGN.md](./DESIGN.md); what was measu
 
 ## Follow-ups
 
+- [ ] **`POST /identity/agents/create` failing on preview (2026-09-10 nightly, ongoing)** — both
+      jobs died in fleet setup with `AgentProvisioningError` / `createAgent` HTTP 500, before either
+      measurement ran. SigNoz shows an EDGE-preview outage in `dxos/edge`'s `identity-service`,
+      onset ~2026-09-09 22:00–23:00 UTC, still failing near-100% as of the writeup. Not this repo's
+      code — RESULTS.md §7b has the evidence; owned by `dxos/edge`. Re-check the next nightly; if the
+      failure signature has changed, the outage has cleared and whatever failure remains is worth a
+      fresh look.
 - [ ] **Finding 6** — a document is discovered but never delivered; five reproductions, two of them
       in CI, one in the edge repo's own `automerge.node.test.ts`. This is what keeps the nightly soak
       red, and it is a product defect, not a harness one.

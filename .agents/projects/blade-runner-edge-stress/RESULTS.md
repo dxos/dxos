@@ -554,6 +554,66 @@ reason the invitation/replication boundary had to be defined precisely (below).
 Replication quantizes near 60s (`60.7, 120.1, 60.7, 7.3, 1.0`), a shape that looks like a retry
 interval rather than a transfer cost.
 
+### Nightly runs since merge — a log, so a repeat signature costs a line not a re-investigation
+
+| Date (02:00 UTC run) | join-latency | soak | Signature |
+| --- | --- | --- | --- |
+| 2026-09-08 | green | red | Known: finding 6 (convergence) reached via a checkpoint disagreement, plus the pre-#1031 "identity not associated with an account" agent refusal (best-effort, non-fatal there). No new investigation. |
+| 2026-09-09 | red (infra) | cancelled | join-latency: GitHub infra flake — `moon.sh 2.5.2` installer got `curl` HTTP 500 fetching the release archive from GitHub, unrelated to this repo or EDGE. soak: cancelled, cause not established (not a `failed` verdict, no diagnosis to reproduce); several manual `workflow_dispatch` runs landed the same day while #12817 was in review, a plausible but unconfirmed explanation. Not chased further — no evidence trail to follow. |
+| 2026-09-10 | **red (new)** | **red (new)** | See §7b — both jobs died in fleet setup, before either measurement/soak logic ran. |
+
+### 7b. 2026-09-10 — `POST /identity/agents/create` failing on preview, not a product regression in this repo
+
+Both nightly jobs failed identically today, and for the first time neither reached its own logic:
+join-latency's seeder threw `AgentProvisioningError: EDGE agent could not be provisioned for seeder`
+(`edge-join-latency/plan.ts:245`) and soak's fleet setup threw `Error: HTTP code 500: Internal Server
+Error` out of `EdgeAgentManager.createAgent` (`edge-stress/plan.ts:407`). Both are the same call —
+`POST /identity/agents/create` against `https://preview.dxos.network` — and both are the *fatal*
+`createAgent` path (RESULTS.md's earlier "best-effort" framing describes `bindTestAccount`/agent
+refusal handling that predates the current join-latency code, which now treats a failed `createAgent`
+as fatal by design: see the comment at `edge-join-latency/plan.ts` above `spawn`).
+
+This is not finding 6, not the account-binding issue #1031 fixed, and not something blade-runner's own
+code did — it is an EDGE-preview outage in `dxos/edge`, evidenced from SigNoz (`service.name=edge`,
+`service.name=identity-service-preview`), not guessed from the CI log alone:
+
+- **Onset ~2026-09-09 22:00–23:00 UTC**, hours before the nightly's 02:00 UTC run, and **still ongoing**
+  as of this writeup (checked 2026-09-10 ~07:10 UTC). Hourly `edge` access-log counts for
+  `POST /identity/agents/create`: 22:00 UTC 2 success / 2 fail, 23:00 UTC 36 success / 90 fail, 00:00
+  UTC 32 success / **673 fail**, 04:00 UTC **0 success / 173 fail**. Not a blip — a ramp to near-total
+  failure that has not recovered.
+- **Every failure returns in 3–14ms.** A successful call on the same endpoint takes 1–5s (agent DO
+  provisioning). Sub-15ms is too fast to be a real attempt at the work — the request is dying before
+  any of the endpoint's actual logic runs.
+- **`identity-service-preview` (the worker that owns this route) logs *nothing* for any of these
+  requests** — not `log.error`, not even a request line — across the entire onset window and into the
+  present. Every other call this worker makes (`registerIdentityRecovery`, etc.) does log normally in
+  the same window. So the failure is not an application-level error this worker's own code is
+  throwing and catching (e.g. the already-known "not associated with an account" 403, or the DX-1242
+  Prisma/wasm-memory exhaustion `RuntimeError: memory access out of bounds` that hit this exact service
+  on 2026-09-04 and was fixed same day by #1020) — neither signature appears anywhere in this window.
+  It is failing before it reaches this worker's own instrumented code path.
+- Ruled out: the one `dxos/edge` push in the onset window (`3d33173c7`, 21:12 UTC, "revert(hub-service):
+  keep enrolling an unknown address on login" #1040) touches only the `/account/login` unknown-email
+  path, not account lookup — its own full-fleet redeploy finished all 20 matrix jobs (including
+  identity-service) successfully. `hub-preview` (what `accountLookupViaHubService` calls) is up and
+  serving other traffic through the window; it shows no errors and no logged calls from identity-service
+  during the failure window either way, so account lookup specifically reaching-or-not-reaching hub is
+  inconclusive from logs alone.
+
+**Not filed as a patch.** No test in this repo reduces to this — it is a preview-environment failure
+in `dxos/edge`'s deployed `identity-service`/`edge` routing, with no application-level diagnostic to
+point a fix at from here. Writing it up rather than guessing: `dxos/edge`'s own CLAUDE.md notes that
+`AGENTS_SERVICE`/`HUB_SERVICE` binding and D1 config only get checked by `pnpm check:bindings` and a
+real deploy, and that a Cloudflare-side isolate/binding fault of this shape (fast, silent, total) is
+exactly the signature a broken service binding or exhausted isolate produces — but confirming which
+needs `wrangler tail` / the deploy itself, not something reachable from this session's tooling.
+
+**Effect on the nightly:** both jobs will keep failing in fleet setup — before exercising join latency
+or the convergence soak at all — until this preview outage is resolved on the `dxos/edge` side. The
+next run whose failure differs from `AgentProvisioningError` / `createAgent` 500 is the one worth a
+fresh look.
+
 ### What the invitation number means
 
 The invitation is the credential exchange: it is finished once the guest's credentials are
