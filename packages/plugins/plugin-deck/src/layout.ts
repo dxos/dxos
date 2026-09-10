@@ -139,6 +139,24 @@ export const resolveSeededPlanks = ({
 };
 
 /**
+ * The open plank currently holding `name`.
+ *
+ * A name is bound to a URL segment, not to a plank id, so that it survives the id a plank is given
+ * changing under it — which the URL projection does every time a placeholder resolves.
+ */
+export const plankIdForName = (
+  name: string,
+  {
+    active,
+    plankNames,
+    segments,
+  }: { active: readonly string[]; plankNames: Record<string, string>; segments?: Record<string, string> },
+): string | undefined => {
+  const segment = plankNames[name];
+  return segment ? active.find((id) => (segments?.[id] ?? id) === segment) : undefined;
+};
+
+/**
  * The next `active` list for an open at `level` of `root`'s declared chain, plus the plank name that
  * level occupies. `undefined` when the level is not declared, so the caller falls back to an ordinary
  * open rather than inventing a chain.
@@ -150,6 +168,7 @@ export const resolveSeededPlanks = ({
 export const resolveLevelOpen = ({
   active,
   plankNames,
+  segments,
   spec,
   root,
   level,
@@ -157,6 +176,8 @@ export const resolveLevelOpen = ({
 }: {
   active: readonly string[];
   plankNames: Record<string, string>;
+  /** URL segment per open plank id, since a name is bound to a segment rather than to an id. */
+  segments?: Record<string, string>;
   spec: DeckSpec.DeckSpec | undefined;
   root: string;
   level: string;
@@ -168,10 +189,12 @@ export const resolveLevelOpen = ({
     return undefined;
   }
 
+  const holderOf = (plankName: string) => plankIdForName(plankName, { active, plankNames, segments });
+
   const name = DeckSpec.plankName(root, level);
   const stale = new Set(
     DeckSpec.levelsBelow(spec, level)
-      .map((entry) => plankNames[DeckSpec.plankName(root, entry.key)])
+      .map((entry) => holderOf(DeckSpec.plankName(root, entry.key)))
       .filter((id): id is string => !!id),
   );
   const pruned = active.filter((id) => !stale.has(id));
@@ -179,9 +202,9 @@ export const resolveLevelOpen = ({
   // Anchored to the level above so the chain reads left to right whatever else is open. The topmost
   // level falls back to the root itself, whose plank is opened normally and so carries no level name.
   const parentName = index > 0 ? DeckSpec.plankName(root, levels[index - 1].key) : undefined;
-  const parent = (parentName && plankNames[parentName]) || root;
+  const parent = (parentName && holderOf(parentName)) || root;
 
-  const replacedId = plankNames[name];
+  const replacedId = holderOf(name);
   return {
     next: addSubjectsToActiveDeck(pruned, [subjectId], {
       pivotId: pruned.includes(parent) ? parent : undefined,

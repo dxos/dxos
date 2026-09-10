@@ -4,7 +4,8 @@
 
 import * as Option from 'effect/Option';
 
-import * as AppGraph from '@dxos/app-graph/AppGraph';
+import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
+import * as PathResolution from '@dxos/app-graph/PathResolution';
 import * as UrlPath from '@dxos/app-toolkit/UrlPath';
 
 /**
@@ -64,15 +65,9 @@ export const push = (next: Navigation, method: 'push' | 'replace' = 'push'): boo
 /**
  * The URL segment a node occupies, or `undefined` when it has none.
  *
- * Stamped onto every node at graph-build time by the extension that produced it, so this is a
- * property read rather than a lookup: a node cannot exist without its producing extension having
- * registered. A node with no segment is not addressable and therefore cannot be a plank.
+ * Read through the node's provenance, the same way the URL itself is written, so a segment from here
+ * and the segment the deck ends up holding for that plank are the same string. A node with no segment
+ * is not addressable and therefore cannot be a plank.
  */
-export const segmentForNode = (graph: AppGraph.ExpandableGraph, nodeId: string): PlankSegment | undefined =>
-  Option.match(AppGraph.getNode(graph, nodeId), {
-    onNone: () => undefined,
-    onSome: (node) => {
-      const segment = node.properties.urlSegment;
-      return typeof segment === 'string' ? segment.replace(/^\//, '') : undefined;
-    },
-  });
+export const segmentForNode = (builder: AppGraphBuilder.GraphBuilder, nodeId: string): PlankSegment | undefined =>
+  Option.match(PathResolution.representNode(builder, nodeId), { onNone: () => undefined, onSome: toSegment });

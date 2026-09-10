@@ -12,7 +12,7 @@ import { EffectEx } from '@dxos/effect';
 import { log } from '@dxos/log';
 import { isTauri } from '@dxos/util';
 
-import { projectUrl } from './project-url';
+import { handleExternalUrl } from './project-url';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
@@ -28,7 +28,7 @@ export default Capability.makeModule(
         Effect.provideService(Plugin.Service, pluginService),
       );
 
-    const onPopState = () => void EffectEx.runAndForwardErrors(provideServices(projectUrl()));
+    const onPopState = () => void EffectEx.runAndForwardErrors(provideServices(handleExternalUrl()));
 
     // Install before handleNavigation()/state-sync push entries on top of the sentinel.
     const sentinelKey = installLeaveTrap();
@@ -69,14 +69,14 @@ export default Capability.makeModule(
         if (launchUrls && launchUrls.length > 0) {
           log('app launched with deep links', { urls: launchUrls });
           for (const urlString of launchUrls) {
-            yield* provideServices(handleDeepLink(urlString, projectUrl));
+            yield* provideServices(handleDeepLink(urlString, handleExternalUrl));
           }
         }
 
         unlistenDeepLink = yield* Effect.promise(() =>
           onOpenUrl((urls) => {
             for (const urlString of urls) {
-              void EffectEx.runAndForwardErrors(provideServices(handleDeepLink(urlString, projectUrl)));
+              void EffectEx.runAndForwardErrors(provideServices(handleDeepLink(urlString, handleExternalUrl)));
             }
           }),
         );
@@ -85,10 +85,10 @@ export default Capability.makeModule(
       );
     }
 
-    // Forked because this module sits on the startup pass: the restore can now wait for
-    // late-arriving URL keys (see `awaitUrlKeys`), and awaiting that here would hold the whole
-    // pass — and the boot loader with it — until the client is up.
-    yield* Effect.forkScoped(provideServices(projectUrl()));
+    // Forked because this module sits on the startup pass: the restore can wait for late-arriving
+    // URL keys, and awaiting that here would hold the whole pass — and the boot loader with it —
+    // until the client is up.
+    yield* Effect.forkScoped(provideServices(handleExternalUrl()));
 
     yield* Effect.addFinalizer(() =>
       Effect.sync(() => {
@@ -149,7 +149,7 @@ const installLeaveTrap = (): string | undefined => {
 const isRedirectPath = (pathname: string): boolean => pathname.startsWith('/redirect/');
 
 /** Handle a deep link URL string. Merges query params into window.location and navigates. */
-const handleDeepLink = Effect.fn(function* (urlString: string, navigate: (url?: URL) => Effect.Effect<void, any, any>) {
+const handleDeepLink = Effect.fn(function* (urlString: string, navigate: (url?: URL) => Effect.Effect<any, any, any>) {
   log('deep link received', { url: urlString });
 
   const deepLinkUrl = new URL(urlString);

@@ -23,12 +23,14 @@ import { DeckCapabilities } from '#types';
 import { currentNavigation, navigateDeck } from '../capabilities/navigate';
 import {
   addSubjectsToActiveDeck,
+  plankIdForName,
   pushSubjectsToStack,
   resolveLevelOpen,
   resolveSeededPlanks,
   updatePlankNames,
 } from '../layout';
 import { computeActiveUpdates, openableChildren, openCompanionPlank, resolveDeckSpec } from '../util';
+import * as Navigation from '../util/navigation';
 import { applyWorkspace } from './apply';
 import { updateActiveDeck } from './helpers';
 
@@ -36,7 +38,8 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperat
   Operation.withHandler(
     Effect.fnUntraced(function* (input) {
       log('LayoutOperation.Open handler start');
-      const { graph } = yield* Capability.get(AppCapabilities.AppGraph);
+      const builder = yield* Capability.get(AppCapabilities.AppGraph);
+      const { graph } = builder;
       const attention = yield* Capability.get(AttentionCapabilities.Attention);
       const platform = yield* Capability.get(DeckCapabilities.Platform).pipe(
         Effect.catch(() => Effect.succeed('desktop' as const)),
@@ -134,6 +137,7 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperat
             ? resolveLevelOpen({
                 active: deck.active,
                 plankNames: deck.plankNames,
+                segments,
                 spec: resolveDeckSpec(Option.getOrUndefined(AppGraph.getNode(graph, input.root))),
                 root: input.root,
                 level: input.level,
@@ -154,10 +158,8 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperat
           const [attendedId] = anchorToOrigin ? attention.getCurrent() : [];
           const pivotId = input.pivotId ?? (attendedId && deck.active.includes(attendedId) ? attendedId : undefined);
           // A named open reuses the plank already holding that name, the way a browser tab is reused.
-          // Names are held by segment, so the plank is whichever open one currently carries it.
-          const namedSegment = input.name ? deck.plankNames[input.name] : undefined;
-          const replaceId = namedSegment
-            ? deck.active.find((id) => (segments?.[id] ?? id) === namedSegment)
+          const replaceId = input.name
+            ? plankIdForName(input.name, { active: deck.active, plankNames: deck.plankNames, segments })
             : undefined;
           next = addSubjectsToActiveDeck(deck.active, input.subject, { pivotId, replaceId });
         } else {
@@ -171,7 +173,12 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperat
         // A level open binds the name the level owns; an ordinary open binds whatever the caller passed.
         const boundName = levelOpen?.name ?? input.name;
         const nextSegments = next.map((id) => segments?.[id] ?? id);
-        const boundSegment = input.subject[0] ? (segments?.[input.subject[0]] ?? input.subject[0]) : undefined;
+        // Read from the graph, not from `segments`: a subject this open is opening for the first time
+        // has no entry there yet, and binding the name to its raw id would leave the binding pointing
+        // at something the projection's segment-keyed prune drops on the very next write.
+        const boundSegment = input.subject[0]
+          ? (segments?.[input.subject[0]] ?? Navigation.segmentForNode(builder, input.subject[0]))
+          : undefined;
         const plankNames = updatePlankNames(
           deck.plankNames,
           nextSegments,

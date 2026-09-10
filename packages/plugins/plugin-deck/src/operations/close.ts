@@ -19,7 +19,11 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Close> = LayoutOpera
       const { workspace } = yield* currentNavigation();
 
       const active = input.subject.reduce((acc, id) => closeEntry(acc, id), deck.active);
-      yield* navigateDeck({ workspace, active, companionPlanks: deck.companionPlanks });
+      const displaced = yield* navigateDeck({ workspace, active, companionPlanks: deck.companionPlanks });
+      // Closing the plank that held attention moves it to the neighbour that took its place.
+      if (displaced) {
+        yield* Operation.schedule(LayoutOperation.ScrollIntoView, { subject: displaced });
+      }
     }),
   ),
 );

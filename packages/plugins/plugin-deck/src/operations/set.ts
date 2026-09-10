@@ -16,11 +16,14 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Set> = LayoutOperati
     Effect.fnUntraced(function* (input) {
       const deck = yield* DeckCapabilities.getDeck();
       const { workspace } = yield* currentNavigation();
-      yield* navigateDeck({
+      const displaced = yield* navigateDeck({
         workspace,
         active: input.subject as string[],
         companionPlanks: deck.companionPlanks,
       });
+      if (displaced) {
+        yield* Operation.schedule(LayoutOperation.ScrollIntoView, { subject: displaced });
+      }
     }),
   ),
 );

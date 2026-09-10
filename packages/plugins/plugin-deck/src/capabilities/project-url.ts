@@ -13,14 +13,10 @@ import * as Plugin from '@dxos/app-framework/Plugin';
 import * as PathResolution from '@dxos/app-graph/PathResolution';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
-import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as NotFound from '@dxos/app-toolkit/NotFound';
 import * as UrlPath from '@dxos/app-toolkit/UrlPath';
-import * as Operation from '@dxos/compute/Operation';
 import { Key } from '@dxos/echo';
-import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabilities';
 
 import { DeckCapabilities, DeckSchema } from '#types';
 
@@ -42,40 +38,37 @@ const RESOLVE_TIMEOUT = '10 seconds';
 const LOADER_TIMEOUT = '5 seconds';
 
 /**
- * Project a URL into deck state. The deck's only writer.
- *
- * Every way the URL can change reaches this: a history traversal, a deep link, boot, and an
- * operation that has just pushed. There is deliberately no path back, so nothing here has to tell
- * a URL-driven write apart from any other kind.
+ * The projection that is allowed to write. A projection can wait out both deadlines above, so one
+ * that started earlier may still be running when a newer URL arrives; it stamps itself on entry and
+ * stops at the next write once a newer one has stamped over it. Latest wins, always.
  */
-export const projectUrl = Effect.fnUntraced(function* (url?: URL) {
-  const operationService = yield* Capability.get(Capabilities.OperationInvoker);
-  const navigationHandlers = yield* Capability.getAll(AppCapabilities.NavigationHandler);
-  const navigationTargetLoaders = yield* Capability.getAll(AppCapabilities.NavigationTargetLoader);
-  const registry = yield* Capability.get(Capabilities.AtomRegistry);
-  const stateAtom = yield* Capability.get(DeckCapabilities.State);
-  const settingsAtom = yield* Capability.get(DeckCapabilities.Settings);
-  const viewState = yield* Capability.get(AttentionCapabilities.ViewState);
-  const attention = yield* Capability.get(AttentionCapabilities.Attention);
-  // Contributed once by plugin-graph and stable for the app's lifetime.
-  const builder = yield* Capability.get(AppCapabilities.AppGraph);
-  // Optional: the Idle wave only matters for a URL arriving from outside, where the keys may not be
-  // registered yet. An operation-driven navigation formatted its own URL, so its keys already exist.
-  const manager = yield* Effect.serviceOption(Plugin.Service);
+let generation = 0;
 
-  /**
-   * Dispatch all NavigationHandler contributions with a given URL.
-   *
-   * `catchAllCause`, not `catchAll`: a handler that invokes an operation fails as a DEFECT
-   * (`Process.fromOperation` uses `Effect.orDie`), which the Fail channel does not carry. On the
-   * `?token&type=login` boot the redeem races the forked client init, so the defect is the COMMON
-   * path — and left to escape it fails this module's activation, taking the popstate listener,
-   * the URL<->state sync and the leave-trap down for the whole session.
-   */
-  const dispatchNavigationHandlers = (url: URL) =>
-    Effect.all(
+/**
+ * A URL that arrived from outside the app: boot, a history traversal, or a deep link.
+ *
+ * Handlers redeem tokens and join invitations, so they must see a URL the user actually arrived at
+ * and no other. An operation-driven navigation formats its own URL and goes straight to
+ * {@link projectUrl}, which is why the two are separate entry points.
+ */
+export const handleExternalUrl = Effect.fnUntraced(function* (url?: URL) {
+  const navigationHandlers = yield* Capability.getAll(AppCapabilities.NavigationHandler);
+  const registry = yield* Capability.get(Capabilities.AtomRegistry);
+  const settingsAtom = yield* Capability.get(DeckCapabilities.Settings);
+
+  const resolvedUrl = url ?? new URL(window.location.href);
+  // When native redirect is active, check-app-scheme owns the initial dispatch
+  // to prevent one-time tokens from being consumed before the native app can use them.
+  const settings = registry.get(settingsAtom);
+  if (!(settings?.enableNativeRedirect && shouldDeferNavigationHandlers())) {
+    // `catchAllCause`, not `catchAll`: a handler that invokes an operation fails as a DEFECT
+    // (`Process.fromOperation` uses `Effect.orDie`), which the Fail channel does not carry. On the
+    // `?token&type=login` boot the redeem races the forked client init, so the defect is the COMMON
+    // path — and left to escape it fails this module's activation, taking the popstate listener,
+    // the URL projection and the leave-trap down for the whole session.
+    yield* Effect.all(
       navigationHandlers.map((handler) =>
-        handler(url).pipe(
+        handler(resolvedUrl).pipe(
           Effect.catchCause((cause) =>
             Effect.sync(() => log.warn('navigation handler failed', { error: Cause.pretty(cause) })),
           ),
@@ -83,26 +76,50 @@ export const projectUrl = Effect.fnUntraced(function* (url?: URL) {
       ),
       { concurrency: 'unbounded' },
     );
+  }
 
-  const capabilityService = yield* Capability.Service;
-  const provideServices = <A, E>(effect: Effect.Effect<A, E, Operation.Service | Capability.Service>) =>
-    effect.pipe(
-      Effect.provideService(Operation.Service, operationService),
-      Effect.provideService(Capability.Service, capabilityService),
-    );
+  return yield* projectUrl(resolvedUrl);
+});
 
-  // Helper to get computed deck from state.
-  const getDeck = () => {
-    const state = registry.get(stateAtom);
-    const deck = state.decks[state.activeDeck];
-    invariant(deck, `Deck not found: ${state.activeDeck}`);
-    return deck;
-  };
+/**
+ * Project a URL into deck state. The deck's only writer.
+ *
+ * Every way the URL can change reaches this: a history traversal, a deep link, boot, and an
+ * operation that has just pushed. There is deliberately no path back, so nothing here has to tell
+ * a URL-driven write apart from any other kind.
+ *
+ * Returns the plank attention should move to, or `undefined` when it should stay where it is.
+ * `attend` says which rule applies: an external URL carries no attention of its own, so it lands on
+ * the plank the chain ends with, while an operation knows which plank it acted on.
+ */
+export const projectUrl = Effect.fnUntraced(function* (url?: URL, options?: { attend?: boolean }) {
+  const attendChainEnd = options?.attend ?? true;
+  const navigationTargetLoaders = yield* Capability.getAll(AppCapabilities.NavigationTargetLoader);
+  const registry = yield* Capability.get(Capabilities.AtomRegistry);
+  const stateAtom = yield* Capability.get(DeckCapabilities.State);
+  const ephemeralAtom = yield* Capability.get(DeckCapabilities.EphemeralState);
+  // Contributed once by plugin-graph and stable for the app's lifetime.
+  const builder = yield* Capability.get(AppCapabilities.AppGraph);
+  // Optional: the Idle wave only matters for a URL arriving from outside, where the keys may not be
+  // registered yet. An operation-driven navigation formatted its own URL, so its keys already exist.
+  const manager = yield* Effect.serviceOption(Plugin.Service);
+
+  const stamp = ++generation;
+  /** Whether this projection is still the current one; see {@link generation}. */
+  const current = () => stamp === generation;
 
   // Helper to update state.
   const updateState = (fn: (current: DeckSchema.StoredDeckState) => DeckSchema.StoredDeckState) => {
     registry.set(stateAtom, fn(registry.get(stateAtom)));
   };
+
+  /** The plank id the deck currently holds for each URL segment it has open. */
+  const knownIdsBySegment = Effect.fnUntraced(function* () {
+    const state = registry.get(stateAtom);
+    const { segments } = registry.get(ephemeralAtom);
+    const active = state.decks[state.activeDeck]?.active ?? [];
+    return new Map(active.map((id) => [segments?.[id] ?? id, id]));
+  });
 
   /**
    * Re-runs `parse` as builders register their keys, settling as soon as it succeeds — the deadline
@@ -133,16 +150,7 @@ export const projectUrl = Effect.fnUntraced(function* (url?: URL) {
   const switchWorkspace = (workspacePath: string) =>
     workspacePath === registry.get(stateAtom).activeDeck ? Effect.void : applyWorkspace(workspacePath);
 
-  const resolvedUrl = url ?? new URL(window.location.href);
-  // When native redirect is active, check-app-scheme owns the initial dispatch
-  // to prevent one-time tokens from being consumed before the native app can use them.
-  const settings = registry.get(settingsAtom);
-  const deferHandlers = settings?.enableNativeRedirect && shouldDeferNavigationHandlers();
-  if (!deferHandlers) {
-    yield* dispatchNavigationHandlers(resolvedUrl);
-  }
-
-  const pathname = resolvedUrl.pathname;
+  const pathname = (url ?? new URL(window.location.href)).pathname;
   if (pathname === '/reset') {
     updateState((s) => ({
       ...s,
@@ -204,10 +212,13 @@ export const projectUrl = Effect.fnUntraced(function* (url?: URL) {
         ),
     }),
   );
+  if (!current()) {
+    return undefined;
+  }
   if (Option.isNone(parsed)) {
     // A path that does not parse names no pair, so there is nothing to key a plank on.
     yield* applyActive([NotFound.NOT_FOUND_PATH], {});
-    return;
+    return undefined;
   }
 
   const { workspace, pairs } = parsed.value;
@@ -219,18 +230,27 @@ export const projectUrl = Effect.fnUntraced(function* (url?: URL) {
 
   if (pairs.length === 0) {
     // Workspace-only URL: SwitchWorkspace above already restored the workspace's persisted deck.
-    return;
+    return undefined;
   }
 
   // The planks the URL names, before anything is resolved. The pair is a plank's identity, so the
   // deck can render them now and let each one find its own node: a plank with no node renders a
   // loading shell (see `DeckPlank`). Waiting for resolution first would leave the deck empty for as
   // long as the slowest pair takes.
-  const placeholders = pairs.filter((pair) => pair.key !== UrlPath.COMPANION_KEY);
-  const placeholderIds = placeholders.map(getUnresolvedPlankId);
+  //
+  // A plank the deck already holds keeps the id it already has. Only a segment the deck has never
+  // seen gets a placeholder, so the common case — a navigation that leaves the other planks alone —
+  // does not re-key them and unmount their content on the way to the same ids.
+  const known = yield* knownIdsBySegment();
+  const initial = pairs
+    .filter((pair) => pair.key !== UrlPath.COMPANION_KEY)
+    .map((pair) => {
+      const segment = Navigation.toSegment(pair);
+      return { segment, id: known.get(segment) ?? getUnresolvedPlankId(pair) };
+    });
   yield* applyActive(
-    placeholderIds,
-    Object.fromEntries(placeholders.map((pair, index) => [placeholderIds[index], Navigation.toSegment(pair)])),
+    initial.map(({ id }) => id),
+    Object.fromEntries(initial.map(({ id, segment }) => [id, segment])),
   );
 
   // Preload the URL's plank objects so a cold restore materializes their graph nodes before
@@ -305,19 +325,26 @@ export const projectUrl = Effect.fnUntraced(function* (url?: URL) {
     segments[plankId] = Navigation.toSegment(pair);
   });
 
+  if (!current()) {
+    return undefined;
+  }
+
   // The projection writes the deck directly rather than invoking `Set`: once `Set` navigates, an
   // operation that navigates and a projection that applies a navigation would call each other.
-  yield* applyActive(plankIds, segments);
-
-  // Attention is never serialized; on load it defaults to the last plank in the chain — except when
-  // the chain carries a companion, whose position *is* serialized and which only renders beside the
-  // plank it is anchored to, so attention has to land there for the URL to restore faithfully.
-  const attendId = companionAnchorId ?? plankIds[plankIds.length - 1];
-  if (attendId) {
-    yield* Operation.schedule(LayoutOperation.ScrollIntoView, { subject: attendId });
-  }
+  const displaced = yield* applyActive(plankIds, segments);
 
   // The companion is part of the URL-derived deck state too: explicitly close it when the chain
   // carries no companion pair, rather than leaving a stale companion open from before navigation.
   yield* applyCompanion(companionNodeId);
+
+  if (!attendChainEnd) {
+    // The operation that pushed this URL knows which plank it acted on; `displaced` only names one
+    // when the plank holding attention is no longer open.
+    return displaced;
+  }
+
+  // Attention is never serialized; on an external URL it lands on the last plank in the chain —
+  // except when the chain carries a companion, whose position *is* serialized and which only renders
+  // beside the plank it is anchored to, so attention has to land there for the URL to restore faithfully.
+  return companionAnchorId ?? plankIds[plankIds.length - 1];
 });

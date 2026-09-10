@@ -45,34 +45,13 @@ export const currentNavigation = Effect.fnUntraced(function* () {
  *
  * The deck's only mutation path. A history traversal reaches the same projection through the
  * `popstate` listener, so a click and a Back press are the same operation.
+ *
+ * Returns the plank attention has to move to because the one holding it is no longer open. The
+ * projection does not choose a plank of its own here: this navigation came from an operation, which
+ * knows what it acted on.
  */
 export const navigate = Effect.fnUntraced(function* (next: Navigation.Navigation, method?: 'push' | 'replace') {
-  if (Navigation.push(next, method)) {
-    yield* projectUrl();
-  }
-});
-
-/**
- * The pairs for `nodeIds`, dropping any node that is not addressable.
- *
- * A node with no URL segment cannot be a plank, since the URL is the only record of what is open.
- * Logged with the producing extension so the missing binding can be found.
- */
-export const pairsForNodes = Effect.fnUntraced(function* (nodeIds: readonly string[], workspace: string) {
-  const builder = yield* Capability.get(AppCapabilities.AppGraph);
-  const pairs = [];
-  for (const nodeId of nodeIds) {
-    const segment = Navigation.segmentForNode(builder.graph, nodeId);
-    if (!segment) {
-      log.error('node has no URL binding, so it cannot be opened', {
-        nodeId,
-        extension: builder.getNodeExtensionId(nodeId),
-      });
-      continue;
-    }
-    pairs.push(Navigation.fromSegment(segment, workspace));
-  }
-  return pairs;
+  return Navigation.push(next, method) ? yield* projectUrl(undefined, { attend: false }) : undefined;
 });
 
 /**
@@ -118,11 +97,11 @@ export const deckNavigation = Effect.fnUntraced(function* (params: {
   return { workspace, pairs };
 });
 
-/** Navigate to the deck `params` describes. */
+/** Navigate to the deck `params` describes, returning the plank attention has to move to. */
 export const navigateDeck = Effect.fnUntraced(function* (params: {
   workspace: string;
   active: readonly string[];
   companionPlanks?: readonly string[];
 }) {
-  yield* navigate(yield* deckNavigation(params));
+  return yield* navigate(yield* deckNavigation(params));
 });

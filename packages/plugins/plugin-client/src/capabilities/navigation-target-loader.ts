@@ -27,15 +27,6 @@ export default Capability.makeModule(
       client.edge.http.execQuery(new Context(), spaceId, body),
     );
 
-    let spacesPublished: Promise<void> | undefined;
-    const awaitSpacesPublished = () =>
-      (spacesPublished ??= new Promise<void>((resolve) => {
-        const subscription = client.spaces.subscribe(() => {
-          resolve();
-          subscription.unsubscribe();
-        });
-      }));
-
     const loader: AppCapabilities.NavigationTargetLoader = {
       id: meta.profile.key,
       load: ({ spaceId, entityId }) =>
@@ -50,7 +41,8 @@ export default Capability.makeModule(
           yield* Effect.promise(() => client.waitUntilInitialized());
 
           if (entityId === undefined) {
-            yield* Effect.promise(awaitSpacesPublished);
+            // `initialize` awaits the space list's first snapshot, so the list read here is the
+            // published one and a miss is real.
             return client.spaces.get(spaceId) ? 'exists' : 'absent';
           }
 
@@ -60,8 +52,8 @@ export default Capability.makeModule(
           const eid = EID.make({ spaceId, entityId });
 
           // Local first: loading the object populates the collection/type-section refs that address
-          // it, so the next graph expansion materializes its node. Never `absent` on a miss —
-          // `spaces.get` reads a list `waitUntilInitialized` does not guarantee has arrived.
+          // it, so the next graph expansion materializes its node. Never `absent` on a miss — the
+          // object may exist in a space this peer has not replicated, which the remote probe settles.
           const space = client.spaces.get(spaceId);
           if (space) {
             const loaded = yield* Effect.promise(() => space.waitUntilReady()).pipe(

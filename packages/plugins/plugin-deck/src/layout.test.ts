@@ -162,6 +162,21 @@ describe('resolveLevelOpen', () => {
     expect(result?.next).toEqual([root, 'msg-1', 'unrelated']);
   });
 
+  // Names are bound to URL segments, and a plank's id changes under it when a placeholder resolves.
+  test('finds the level plank by segment when its id is not the segment', ({ expect }) => {
+    const result = open({
+      active: [root, 'root/space/msg-1', 'root/space/att-1'],
+      plankNames: { 'inbox/message': 'message/1', 'inbox/attachment': 'attachment/1' },
+      segments: { 'root/space/msg-1': 'message/1', 'root/space/att-1': 'attachment/1' },
+      subjectId: 'root/space/msg-2',
+    });
+    expect(result).toEqual({
+      next: [root, 'root/space/msg-2'],
+      name: 'inbox/message',
+      replacedId: 'root/space/msg-1',
+    });
+  });
+
   test('returns undefined for a level the chain does not declare', ({ expect }) => {
     expect(open({ level: 'draft' })).toBeUndefined();
     expect(open({ spec: undefined })).toBeUndefined();
