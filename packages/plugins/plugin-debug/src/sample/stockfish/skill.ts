@@ -55,9 +55,10 @@ const INSTRUCTIONS = trim`
     end.
 
   ## Deploying to Cloudflare
-  - **No account, first deploy.** Wrangler can deploy with nobody logged in by minting a temporary
-    account. Take that path — an authentication prompt is a dead end for a session that cannot open
-    a browser.
+  - **No account, first deploy.** \`wrangler deploy --temporary\` mints a temporary account and
+    prints a claim URL. The flag is not optional: plain \`wrangler deploy\` refuses in a
+    non-interactive shell and demands a token, and an authentication prompt is a dead end for a
+    session that cannot open a browser.
   - **Claim it immediately.** The deploy prints a claim URL alongside the Worker URL. Both go into
     the project. A temporary account expires, and it takes the Worker and its URL with it, which
     invalidates every later stage rather than only the current one.
@@ -65,6 +66,9 @@ const INSTRUCTIONS = trim`
     not evidence that anything is serving; the response body is.
   - **Read the deploy output for what it warns about, not only its exit code.** Bundle size and a
     missing binding are warnings on a deploy that succeeds and failures on the request that follows.
+  - **Bound work by work, not by wall-clock.** \`Date.now()\` does not advance during synchronous
+    compute in a Worker, so a time deadline never fires and every timing you report reads as zero.
+    Count iterations, nodes or bytes instead.
 
   ## Models and credentials
   - The chat runs DeepSeek V4 Pro through the DXOS edge. No Anthropic key is involved in this

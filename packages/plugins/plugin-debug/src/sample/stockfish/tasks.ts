@@ -104,7 +104,7 @@ const PLAN: TaskSeed = {
         {
           title: 'Deploy without authenticating to Cloudflare',
           description:
-            'Wrangler deploys with no account by minting a temporary one. Record both URLs it prints — the Worker URL, and the claim URL — and claim it before going further: the temporary account expires, and every later stage redeploys this Worker.',
+            '`wrangler deploy --temporary` mints a temporary account and prints a claim URL; plain `wrangler deploy` refuses non-interactively and demands a token, so the flag is not optional. Record both URLs it prints, and claim it before going further — the window is an hour, and every later stage redeploys this Worker.',
           estimate: 's',
         },
         {
@@ -127,7 +127,8 @@ const PLAN: TaskSeed = {
         },
         {
           title: 'Bundle the engine and run one search',
-          description: 'Prove a search returns inside the budget the design set, from a Worker rather than from node.',
+          description:
+            'Prove a search returns inside the budget the design set, from a Worker rather than from node. Bound it by work done, not by wall-clock: `Date.now()` does not advance during synchronous compute in a Worker, so a time deadline never fires there and the call reports zero elapsed.',
           estimate: 'm',
         },
         {
