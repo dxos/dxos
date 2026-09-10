@@ -597,6 +597,33 @@ describe('parser', () => {
     );
 
     it.effect(
+      'a tool result with no value still carries a serialized result',
+      Effect.fn(function* ({ expect }) {
+        // `JSON.stringify(undefined)` is `undefined`, so this used to persist a block with no
+        // `result` key at all, and every later request over that conversation died decoding it.
+        const result = yield* makeInputStream([
+          Response.makePart('tool-result', {
+            id: '123',
+            name: 'foo',
+            result: undefined,
+            encodedResult: undefined,
+            isFailure: false,
+            providerExecuted: false,
+          } as any),
+        ])
+          .pipe(AiParser.parseResponse())
+          .pipe(Stream.runCollect);
+
+        expect(result).toHaveLength(1);
+        const block = result[0] as Extract<ContentBlock.Any, { _tag: 'toolResult' }>;
+        expect(block._tag).toEqual('toolResult');
+        expect(typeof block.result).toEqual('string');
+        // Survives the round trip a conversation actually makes it through.
+        expect(JSON.parse(JSON.stringify({ ...block }))).toHaveProperty('result');
+      }),
+    );
+
+    it.effect(
       'tool call truncated by malformed parameters is still emitted',
       Effect.fn(function* ({ expect }) {
         const result = yield* makeInputStream([

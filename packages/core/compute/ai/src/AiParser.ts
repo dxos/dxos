@@ -363,7 +363,12 @@ export const parseResponse =
                   _tag: 'toolResult',
                   toolCallId: part.id,
                   name: part.name,
-                  result: JSON.stringify(part.result),
+                  // `JSON.stringify(undefined)` is `undefined`, not a string. A tool that answers
+                  // with nothing — which is what a handler whose result failed its own schema
+                  // produces — then persists a block with no `result`, and every later request over
+                  // that conversation dies decoding it (`Missing key at [n]["result"]`). One bad
+                  // block must not brick the whole thread.
+                  result: part.result === undefined ? 'null' : JSON.stringify(part.result),
                   providerExecuted: part.providerExecuted,
                 } satisfies ContentBlock.ToolResult,
                 out,

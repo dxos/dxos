@@ -26,7 +26,7 @@ export default SandboxOperation.CreateSandbox.pipe(
       const spaceId = db.spaceId;
       const sandboxClient = createSandboxClient(client);
 
-      const record = yield* sandboxClient.createSandbox(spaceId, sandboxId, { name, baseImage });
+      const record = yield* sandboxClient.createSandbox(spaceId, sandboxId, { name, baseImage }).pipe(Effect.orDie);
 
       Obj.update(sandbox, (sandbox) => {
         sandbox.createdAt = record.createdAt;

@@ -26,7 +26,7 @@ export default SandboxOperation.DownloadFile.pipe(
       const spaceId = db.spaceId;
       const sandboxClient = createSandboxClient(client);
 
-      const content = yield* sandboxClient.readFile(spaceId, sandboxId, path);
+      const content = yield* sandboxClient.readFile(spaceId, sandboxId, path).pipe(Effect.orDie);
 
       const bytes = new TextEncoder().encode(content);
       const fileName = path.split('/').at(-1) ?? path;

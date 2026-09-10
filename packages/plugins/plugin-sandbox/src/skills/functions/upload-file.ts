@@ -32,7 +32,7 @@ export default SandboxOperation.UploadFile.pipe(
       const spaceId = db.spaceId;
       const sandboxClient = createSandboxClient(client);
 
-      yield* sandboxClient.writeFile(spaceId, sandboxId, path, content);
+      yield* sandboxClient.writeFile(spaceId, sandboxId, path, content).pipe(Effect.orDie);
 
       return { path };
     }, Effect.provide(FetchHttpClient.layer)),
