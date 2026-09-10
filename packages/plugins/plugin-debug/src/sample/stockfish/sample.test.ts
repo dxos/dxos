@@ -40,7 +40,9 @@ describe('Chess MCP sample space', () => {
       // so asserting a typename is absent passes just as well when the typename is misspelled.
       const declared = new Set(StockfishSpace().schemas.map((schema) => Type.getTypename(schema)));
       for (const type of Object.keys(counts)) {
-        const typename = type.match(/org\.dxos\.type\.[\w.]+/)?.[0];
+        // Not namespace-limited: `Project.make` persists `com.example.type.project`, so matching only
+        // `org.dxos.*` would let the project's own types go unchecked.
+        const typename = type.match(/(?:[\w-]+\.)+type\.[\w.]+/)?.[0];
         // `spaceProperties` is the space root the harness creates, not a phase's content, so it is
         // in every archive and in no definition's schema list.
         if (typename && typename !== 'org.dxos.type.spaceProperties') {
