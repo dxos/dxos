@@ -1,4 +1,5 @@
 ---
+# multiple-changesets: a telemetry guard in @dxos/ai found while running the incident eval; a reader chasing the logged error would not look under a sample space
 '@dxos/ai': patch
 ---
 
