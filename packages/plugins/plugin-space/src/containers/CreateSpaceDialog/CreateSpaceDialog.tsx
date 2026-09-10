@@ -12,7 +12,7 @@ import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { EffectEx } from '@dxos/effect';
 import { log } from '@dxos/log';
-import { Dialog, Field, ScrollArea, useTranslation } from '@dxos/react-ui';
+import { Dialog, ScrollArea, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 import { Listbox } from '@dxos/react-ui-list';
 
