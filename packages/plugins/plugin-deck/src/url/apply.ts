@@ -8,8 +8,8 @@ import * as Option from 'effect/Option';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppGraph from '@dxos/app-graph/AppGraph';
-import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabilities';
 import { Attention } from '@dxos/react-ui-attention/types';
 
@@ -67,7 +67,7 @@ export const applyWorkspace = Effect.fnUntraced(function* (workspace: string) {
   const { graph } = yield* Capability.get(AppCapabilities.AppGraph);
   const shouldUpdatePrevious = Option.match(AppGraph.getNode(graph, state.activeDeck), {
     onNone: () => true,
-    onSome: (node) => !AppGraphNode.isPinnedWorkspace(node),
+    onSome: (node) => !AppNode.isPinnedWorkspace(node),
   });
   yield* Capabilities.updateAtomValue(DeckCapabilities.State, (current) => ({
     ...current,

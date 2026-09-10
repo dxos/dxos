@@ -166,10 +166,6 @@ export const hasDisposition = (node: Pick<Node, 'properties'>, key: string | str
   return dispositions.some((candidate) => keys.includes(candidate));
 };
 
-/** Whether a workspace sits in the rail's pinned region rather than among the space tabs. */
-export const isPinnedWorkspace = (node: Pick<Node, 'properties'>): boolean =>
-  hasDisposition(node, ['pin-end', 'pin-start', 'user-account']);
-
 //
 // Node Factories
 //
