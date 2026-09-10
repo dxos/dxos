@@ -372,38 +372,36 @@ body {
     0,
     calc(var(--boot-loader-disc-size) / 2 + var(--boot-loader-status-gap) + 4.5em + var(--boot-loader-status-gap))
   );
-  display: flex;
-  justify-content: center;
-  padding: 0 24px;
-  /* Clips the slide-out rather than letting a long row reflow or scroll the page. */
+  height: 48px;
+  /* Clips a long row rather than letting it scroll the page. */
   overflow: hidden;
 }
 
 /*
- * One row, always, and every icon absolutely placed in it: each computes its own offset from the
- * centre out of its index and the count (`--i`, `--n`), so when an icon arrives the ones already
- * there slide half a slot outward to make room, rather than being reflowed into new places by a
- * flex row — a reflow lands in one frame and reads as a jump. A very long set is clipped by the
- * parent instead of wrapping.
+ * A plain flex row, translated as one group so its centre stays on the row's: the offset is half the
+ * row's width, computed from the eased `--n` the component writes each frame, so an arrival only
+ * moves the target and the row keeps its velocity instead of stopping and starting. A very long set
+ * is clipped by the parent instead of wrapping.
  */
 #boot-loader-plugins-track {
   --boot-loader-plugin-size: 48px;
   --boot-loader-plugin-gap: 12px;
   --boot-loader-plugin-slot: calc(var(--boot-loader-plugin-size) + var(--boot-loader-plugin-gap));
-  position: relative;
-  width: 100%;
-  height: var(--boot-loader-plugin-size);
-}
-
-/*
- * Place and shift are transforms and the arrival is opacity, and nothing else. During boot the main
- * thread is saturated — measured frame gaps of ~280ms — so only what the compositor can carry keeps
- * moving; width, margin and layout cannot be composited at all.
- */
-.boot-loader-plugin {
   position: absolute;
   top: 0;
   left: 50%;
+  display: flex;
+  gap: var(--boot-loader-plugin-gap);
+  transform: translateX(calc((var(--n) * var(--boot-loader-plugin-slot) - var(--boot-loader-plugin-gap)) / -2));
+}
+
+/*
+ * An icon is laid out by the row and only fades in, appended one gap past the row's end. During
+ * boot the main thread is saturated — measured frame gaps of ~280ms — so only what the compositor
+ * can carry keeps moving; width, margin and layout cannot be composited.
+ */
+.boot-loader-plugin {
+  flex: 0 0 auto;
   width: var(--boot-loader-plugin-size);
   height: var(--boot-loader-plugin-size);
   display: grid;
@@ -416,27 +414,14 @@ body {
   /* Monotone — the arrival reads from opacity alone, which keeps the row quiet. */
   color: currentColor;
   opacity: 0.2;
-  /* Own centre first, then the slot's offset from the row's centre. */
-  transform: translateX(calc(-50% + (var(--i) - (var(--n) - 1) / 2) * var(--boot-loader-plugin-slot)));
-  /*
-   * The shift to make room is a half slot and short, so it is over before the next arrival; a
-   * transition retargets from the current position if one does land mid-shift. The fade is slower,
-   * so the new icon is still coming up as the row settles around it.
-   */
-  transition:
-    transform 200ms ease-out,
-    opacity 600ms ease-out;
+  /* Slower than the row's shift, so the icon is still coming up as the row settles around it. */
+  animation: boot-loader-plugin-in 600ms ease-out backwards;
 }
 
-/*
- * First frame of an arrival: invisible, in the slot just past the row's old end — the row is one
- * shorter than `--n` says until this frame is over. Removing the attribute fades the icon there
- * while the whole row, this icon included, shifts half a slot left to re-centre.
- */
-.boot-loader-plugin[data-arriving] {
-  opacity: 0;
-  transform: translateX(calc(-50% + (var(--i) - (var(--n) - 2) / 2) * var(--boot-loader-plugin-slot)));
-  transition: none;
+@keyframes boot-loader-plugin-in {
+  from {
+    opacity: 0;
+  }
 }
 
 /* The glyph itself. Styled apart from its slot so either can change without disturbing the other. */
@@ -448,6 +433,6 @@ body {
 
 @media (prefers-reduced-motion: reduce) {
   .boot-loader-plugin {
-    transition: none;
+    animation: none;
   }
 }

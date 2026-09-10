@@ -96,6 +96,10 @@ export const Loader: Component<LoaderProps> = (props) => {
   // the old `transition: stroke-dashoffset` gave, while keeping the path +
   // `marker-end` (the marker rides the arc's recomputed end automatically).
   const [shown, setShown] = createSignal(props.store.progress());
+  // The activation row centres on an eased count rather than the real one, driven by the same loop:
+  // a new arrival only moves the target, so the row keeps its velocity instead of easing to a stop
+  // and starting again, which is what a per-arrival transition does.
+  const [shownCount, setShownCount] = createSignal(props.store.plugins().length);
   let raf: number | undefined;
   const animate = () => {
     const target = props.store.progress();
@@ -104,6 +108,13 @@ export const Loader: Component<LoaderProps> = (props) => {
     const next = Math.abs(target - current) < 0.05 ? target : current + (target - current) * 0.18;
     if (next !== current) {
       setShown(next);
+    }
+    const targetCount = props.store.plugins().length;
+    const currentCount = shownCount();
+    const nextCount =
+      Math.abs(targetCount - currentCount) < 0.005 ? targetCount : currentCount + (targetCount - currentCount) * 0.18;
+    if (nextCount !== currentCount) {
+      setShownCount(nextCount);
     }
     raf = requestAnimationFrame(animate);
   };
@@ -142,14 +153,6 @@ export const Loader: Component<LoaderProps> = (props) => {
   // Once host-driven, the brand mark eases grayscale → colour and stays there.
   const isHostDriven = () => props.store.phase() !== 'creep';
 
-  // `data-arriving` holds the icon invisible in the slot past the row's old end for its first frame,
-  // and removing it starts the fade there while the whole row, this icon included, shifts half a
-  // slot left to stay centred.
-  const arrive = (el: HTMLDivElement) => {
-    el.dataset.arriving = '';
-    requestAnimationFrame(() => requestAnimationFrame(() => delete el.dataset.arriving));
-  };
-
   return (
     <>
       {/* The channel filter sits on the disc so the ring, its head and the mark recolour together:
@@ -184,17 +187,18 @@ export const Loader: Component<LoaderProps> = (props) => {
       </div>
       {/* Activation row: one icon per plugin as it activates, appended monochrome and fading in. Icons resolve against the static sprite, which needs no app bundle. */}
       <div id='boot-loader-plugins' aria-hidden='true'>
-        {/* Inner track: a relative box the icons position themselves in, so the outer element keeps
-            its vertical placement transform and clips the row. `--n` is the count every icon centres
-            against; it changes as icons arrive, and each icon slides to its new place. */}
-        <div id='boot-loader-plugins-track' style={{ '--n': props.store.plugins().length }}>
+        {/* Inner track: the flex row, translated as one group to keep its centre on the row's; the
+            outer element keeps its vertical placement transform and clips. `--n` is the eased count
+            the offset is computed from: a new icon lands one gap past the row's end and the row
+            slides half a slot left as `--n` catches up. */}
+        <div id='boot-loader-plugins-track' style={{ '--n': shownCount() }}>
           {/* `Index`, not `For`: `For` keys by item identity, so any row rewrite would re-create the
               element and restart its entrance animation. */}
           <Index each={props.store.plugins()}>
-            {(plugin, index) => (
-              // Wrapper owns the slot — its place in the row and the slide to it — so the glyph
-              // inside can be restyled (a chip, a badge, a hover affordance) without touching either.
-              <div class='boot-loader-plugin' style={{ '--i': index }} ref={arrive}>
+            {(plugin) => (
+              // Wrapper owns the slot and the fade, so the glyph inside can be restyled (a chip, a
+              // badge, a hover affordance) without touching either.
+              <div class='boot-loader-plugin'>
                 <svg class='boot-loader-plugin-icon' viewBox='0 0 256 256'>
                   <use href={`${props.spritePath ?? DEFAULT_SPRITE_PATH}#${plugin().icon}`} />
                 </svg>
