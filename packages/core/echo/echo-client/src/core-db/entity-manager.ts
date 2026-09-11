@@ -66,7 +66,7 @@ import { getInlineAndLinkChanges, getRemovedObjectIds } from './util.ts';
 
 const TRACE_LOADING = false;
 
-/** Ceiling on db update emissions per second while changes keep arriving. */
+/** Ceiling on db update emissions per second while a bulk delivery keeps arriving. */
 const DB_UPDATE_MAX_FREQ = 10;
 
 /**
@@ -256,9 +256,9 @@ export class EntityManager implements IDatabaseBinding {
    */
   async open(ctx: Context): Promise<void> {
     this._ctx = ctx;
-    // A quiet database still emits on the next microtask; the rate only coalesces bursts, where every
-    // emission re-runs each live query and re-hydrates index results over the whole space. `flush`
-    // bypasses it through `runBlocking`.
+    // The rate only coalesces a bulk delivery from the host, where every emission re-runs each live
+    // query and re-hydrates index results over the whole space; every other trigger skips the delay,
+    // so a query reflects a local write, or a peer's single edit, at once.
     this._updateScheduler = new UpdateScheduler(ctx, async () => this._emitDbUpdateEvents(ctx), {
       maxFrequency: DB_UPDATE_MAX_FREQ,
     });
@@ -366,7 +366,7 @@ export class EntityManager implements IDatabaseBinding {
       const spaceRootDocHandle = this.getSpaceRootDocHandle();
       await this._handleSpaceRootDocumentChange(spaceRootDocHandle, objectIdsToLoad);
       spaceRootDocHandle.on('change', this._onDocumentUpdate);
-      this._updateScheduler.trigger(); // Flush notifications from the swap window.
+      this._updateScheduler.forceTrigger(); // Flush notifications from the swap window.
     } catch (err) {
       if (err instanceof ContextDisposedError) {
         return;
@@ -708,7 +708,7 @@ export class EntityManager implements IDatabaseBinding {
       this._objects.delete(id);
       this._releaseObject(id, { releaseDocument: true });
     }
-    this._updateScheduler.trigger();
+    this._updateScheduler.forceTrigger();
 
     return dropped;
   }
@@ -1794,7 +1794,9 @@ export class EntityManager implements IDatabaseBinding {
     this._onObjectLinksUpdated(documentChanges.linkedDocuments);
     this._createInlineObjects(event.handle, documentChanges.createdObjectIds);
     this._emitObjectUpdateEvent(documentChanges.updatedObjectIds);
-    this._scheduleThrottledDbUpdate(documentChanges.updatedObjectIds);
+    this._scheduleThrottledDbUpdate(documentChanges.updatedObjectIds, {
+      coalesce: event.patchInfo.source === 'bulk',
+    });
   };
 
   /**
@@ -1821,7 +1823,7 @@ export class EntityManager implements IDatabaseBinding {
       this._releaseObject(objectId, { releaseDocument: true });
     }
     log('evicted objects removed from the space directory', { count: removed.length });
-    this._updateScheduler.trigger();
+    this._updateScheduler.forceTrigger();
   }
 
   /**
@@ -2083,14 +2085,19 @@ export class EntityManager implements IDatabaseBinding {
     for (const id of objectId) {
       this._objectsForNextUpdate.add(id);
     }
-    this._updateScheduler.trigger();
+    this._updateScheduler.forceTrigger();
   }
 
-  private _scheduleThrottledDbUpdate(objectId: string[]): void {
+  /** `coalesce` lets the emission wait out the rate; otherwise it runs at once. */
+  private _scheduleThrottledDbUpdate(objectId: string[], { coalesce = false }: { coalesce?: boolean } = {}): void {
     for (const id of objectId) {
       this._objectsForNextDbUpdate.add(id);
     }
-    this._updateScheduler.trigger();
+    if (coalesce) {
+      this._updateScheduler.trigger();
+    } else {
+      this._updateScheduler.forceTrigger();
+    }
   }
 }
 

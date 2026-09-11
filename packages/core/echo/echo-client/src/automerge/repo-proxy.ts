@@ -28,6 +28,13 @@ const RPC_TIMEOUT = 30_000;
 const INTEGRATE_SLICE_MS = 8;
 
 /**
+ * Batch size from which its documents are integrated as a bulk delivery, whose downstream fan-out
+ * (query re-evaluation, index hydration) is coalesced rather than run per slice. Smaller batches are
+ * the steady state — a peer's edit, the echo of a local write — and stay immediate.
+ */
+const BULK_BATCH_DOCUMENTS = 32;
+
+/**
  * Passes {@link RepoProxy.flush} makes before reporting a batch as unsendable. A failed
  * `_sendUpdates` re-queues its batch, so each pass is a fresh attempt at the same work.
  */
@@ -119,7 +126,7 @@ export class RepoProxy extends Resource {
   private _resubscribeDelay = 0;
 
   /** Host updates not yet integrated, in arrival order; drained in {@link INTEGRATE_SLICE_MS} slices. */
-  #inbox: DataService.DocumentUpdate[] = [];
+  #inbox: { update: DataService.DocumentUpdate; bulk: boolean }[] = [];
   #inboxHead = 0;
   #draining = false;
 
@@ -507,8 +514,9 @@ export class RepoProxy extends Resource {
       return;
     }
 
+    const bulk = updates.length >= BULK_BATCH_DOCUMENTS;
     for (const update of updates) {
-      this.#inbox.push(update);
+      this.#inbox.push({ update, bulk });
     }
     void this.#drainInbox();
   }
@@ -526,7 +534,8 @@ export class RepoProxy extends Resource {
       while (this.#inboxHead < this.#inbox.length && !this._ctx.disposed) {
         const started = performance.now();
         do {
-          this.#integrate(this.#inbox[this.#inboxHead++]);
+          const { update, bulk } = this.#inbox[this.#inboxHead++];
+          this.#integrate(update, bulk);
         } while (this.#inboxHead < this.#inbox.length && performance.now() - started < INTEGRATE_SLICE_MS);
         if (this.#inboxHead < this.#inbox.length) {
           await yieldToEventLoop();
@@ -539,7 +548,7 @@ export class RepoProxy extends Resource {
     }
   }
 
-  #integrate({ documentId, mutation, requesting }: DataService.DocumentUpdate): void {
+  #integrate({ documentId, mutation, requesting }: DataService.DocumentUpdate, bulk: boolean): void {
     const handle = this._handles[documentId];
     if (!handle) {
       log.warn('Received update for unknown document', { documentId });
@@ -556,7 +565,7 @@ export class RepoProxy extends Resource {
 
     if (mutation) {
       try {
-        handle._integrateHostUpdate(mutation);
+        handle._integrateHostUpdate(mutation, { bulk });
       } catch (err) {
         // One bad document must not strand every update queued behind it.
         log.catch(err, { documentId });

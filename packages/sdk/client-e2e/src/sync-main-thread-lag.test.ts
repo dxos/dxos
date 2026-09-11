@@ -20,6 +20,7 @@ import { performInvitation } from '@dxos/client-services/testing';
 import { TestBuilder, waitForSpace } from '@dxos/client/testing';
 import { Filter, Obj, Query } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
+import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { ProfileDocumentSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { range } from '@dxos/util';
@@ -95,7 +96,7 @@ describe('sync main-thread lag', { timeout: 300_000, tags: ['manual'] }, () => {
     await host.addTypes([TestSchema.Expando]);
 
     const seedStart = performance.now();
-    const spaceKeys = [];
+    const spaceKeys: PublicKey[] = [];
     for (const spaceIndex of range(SPACES)) {
       const space = await host.spaces.create({ name: `space-${spaceIndex}` });
       for (const objectIndex of range(OBJECTS_PER_SPACE)) {
@@ -165,7 +166,7 @@ describe('sync main-thread lag', { timeout: 300_000, tags: ['manual'] }, () => {
     await seeder.initialize();
     await seeder.halo.createIdentity(create(ProfileDocumentSchema, { displayName: 'seeder' }));
     await seeder.addTypes([TestSchema.Expando]);
-    const spaceKeys = [];
+    const spaceKeys: PublicKey[] = [];
     for (const spaceIndex of range(SPACES)) {
       const space = await seeder.spaces.create({ name: `space-${spaceIndex}` });
       for (const objectIndex of range(OBJECTS_PER_SPACE)) {

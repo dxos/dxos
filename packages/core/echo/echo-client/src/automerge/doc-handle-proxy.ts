@@ -16,7 +16,11 @@ export type ChangeEvent<T> = {
   handle: DocHandleProxy<T>;
   doc: A.Doc<T>;
   patches: A.Patch[];
-  patchInfo: { before: A.Doc<T>; after: A.Doc<T>; source: 'change' };
+  /**
+   * `change` is a change made on this thread; `host` is bytes the worker delivered on their own;
+   * `bulk` is bytes the worker delivered as part of a large batch, such as a first sync.
+   */
+  patchInfo: { before: A.Doc<T>; after: A.Doc<T>; source: 'change' | 'host' | 'bulk' };
 };
 
 export type ClientDocHandleEvents<T> = {
@@ -291,7 +295,7 @@ export class DocHandleProxy<T> extends EventEmitter<ClientDocHandleEvents<T>> im
    * Update the doc with a foreign mutation from worker.
    * @internal
    */
-  _integrateHostUpdate(mutation: Uint8Array | undefined): void {
+  _integrateHostUpdate(mutation: Uint8Array | undefined, { bulk = false }: { bulk?: boolean } = {}): void {
     if (!mutation) {
       return;
     }
@@ -320,7 +324,7 @@ export class DocHandleProxy<T> extends EventEmitter<ClientDocHandleEvents<T>> im
       handle: this,
       doc: this._doc,
       patches,
-      patchInfo: { before, after: this._doc, source: 'change' },
+      patchInfo: { before, after: this._doc, source: bulk ? 'bulk' : 'host' },
     });
   }
 }
