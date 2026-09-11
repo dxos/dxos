@@ -391,7 +391,9 @@ const promptToMessages = (prompt: Prompt.Prompt, apiFormat: ApiFormat, replayRea
         messages.push({
           role: 'assistant',
           content: text,
-          ...(replayReasoning && (reasoning.length > 0 || toolCalls.length > 0) ? { reasoning_content: reasoning } : {}),
+          ...(replayReasoning && (reasoning.length > 0 || toolCalls.length > 0)
+            ? { reasoning_content: reasoning }
+            : {}),
           ...(toolCalls.length > 0 ? { tool_calls: toolCalls } : {}),
         });
       }

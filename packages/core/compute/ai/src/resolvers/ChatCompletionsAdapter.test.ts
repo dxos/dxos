@@ -15,9 +15,9 @@ import * as HttpClient from 'effect/unstable/http/HttpClient';
 import * as HttpClientResponse from 'effect/unstable/http/HttpClientResponse';
 import { expect } from 'vitest';
 
+import { Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { Obj } from '@dxos/echo';
 import { type ContentBlock, Message } from '@dxos/types';
 
 import * as AiParser from '../AiParser';

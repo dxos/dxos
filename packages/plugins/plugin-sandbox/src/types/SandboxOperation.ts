@@ -63,8 +63,7 @@ export const Exec = Operation.make({
     }),
     // A model that quotes the number gets the number, not a schema rejection and a lost turn.
     timeout: Schema.optional(Schema.Union([Schema.Number, Schema.NumberFromString])).annotate({
-      description:
-        'Timeout in milliseconds. Defaults to five minutes.',
+      description: 'Timeout in milliseconds. Defaults to five minutes.',
     }),
   }),
   output: Schema.Struct({

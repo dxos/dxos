@@ -12,18 +12,18 @@ import type { Evalite } from 'evalite';
 
 import { AiService, Model } from '@dxos/ai';
 import { AiServiceTestingPreset } from '@dxos/ai/testing';
-import { Config } from '@dxos/client';
-import { EDGE_URLS } from '@dxos/config';
 import type * as Capabilities from '@dxos/app-framework/Capabilities';
 import type * as Plugin from '@dxos/app-framework/Plugin';
 import { type TestHarness } from '@dxos/app-framework/testing';
 import { RunInstructions } from '@dxos/assistant-toolkit';
 import * as Chat from '@dxos/assistant/Chat';
+import { Config } from '@dxos/client';
 import { FeedTraceSink } from '@dxos/compute-runtime';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Operation from '@dxos/compute/Operation';
 import * as ServiceResolver from '@dxos/compute/ServiceResolver';
 import type * as Skill from '@dxos/compute/Skill';
+import { EDGE_URLS } from '@dxos/config';
 import { Database, Feed, Obj, Ref, Tag, type Type } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { DXN, type SpaceId } from '@dxos/keys';
@@ -39,6 +39,7 @@ import { createComposerTestApp } from '@dxos/plugin-testing/harness';
 import { Employer, Organization, Person } from '@dxos/types';
 import { trim } from '@dxos/util';
 
+import * as Scorer from './Scorer';
 import { getDefaultSkills } from './skills';
 
 const DEFAULT_MODEL: DXN.DXN = DXN.make('com.anthropic.model.claude-opus-5.default');
@@ -218,6 +219,12 @@ export interface CreateEvalRunnerOptions<I, O> {
    */
   config?: Config;
   /**
+   * Graded dimensions, each running its own query against the space while it is still open (see
+   * {@link Scorer}). The task then reports `scores`, and `Scorer.toEvalite` turns the same list
+   * into the evalite scorers that read them.
+   */
+  scorers?: readonly Scorer.Any[];
+  /**
    * Seeds the space before the run (e.g. a Project the scenario operates on). Runs inside the
    * harness with `Database.Service` and the runtime's capability services provided (so a seed can
    * reach the client for the space itself); receives the run's `Instructions` object so seeded
@@ -286,6 +293,9 @@ export type VariantConfig =
 export function createEvalRunner<I, O>(
   options: CreateEvalRunnerOptions<I, O> & { expect: 'failure' },
 ): Evalite.Task<I, { failed: boolean }, VariantConfig>;
+export function createEvalRunner<I, O>(
+  options: CreateEvalRunnerOptions<I, O> & { scorers: readonly Scorer.Any[] },
+): Evalite.Task<I, { agentOutput: O | AgentIncomplete; scores: Scorer.Scores; durationMillis: number }, VariantConfig>;
 export function createEvalRunner<I, O>(options: CreateEvalRunnerOptions<I, O>): Evalite.Task<I, O, VariantConfig>;
 export function createEvalRunner<I, O, D>(
   options: CreateEvalRunnerOptions<I, O> & { dbQuery: DbQuery<I, D> },
@@ -294,13 +304,17 @@ export function createEvalRunner<I, O, D>(
   options: CreateEvalRunnerOptions<I, O> & { dbQuery?: DbQuery<I, D> },
 ): Evalite.Task<
   I,
-  O | { agentOutput: O | AgentIncomplete; dbQuery: D; durationMillis: number } | { failed: boolean },
+  | O
+  | { agentOutput: O | AgentIncomplete; dbQuery: D; durationMillis: number }
+  | { agentOutput: O | AgentIncomplete; scores: Scorer.Scores; durationMillis: number }
+  | { failed: boolean },
   VariantConfig
 > {
   return async (input: I, variant: VariantConfig) => {
     const model = variant?.model ?? options.model ?? DEFAULT_MODEL;
     const timeoutMillis = options.timeout ?? DEFAULT_EVAL_TIMEOUT_MILLIS;
-    const gradeIncomplete = options.gradeIncomplete === true && options.dbQuery !== undefined;
+    const gradeIncomplete =
+      options.gradeIncomplete === true && (options.dbQuery !== undefined || (options.scorers?.length ?? 0) > 0);
 
     const instructions = Instructions.make({
       text: options.instructions,
@@ -347,7 +361,8 @@ export function createEvalRunner<I, O, D>(
           catch: (cause) => new AgentRunFailure({ cause }),
         });
         const dbQueryFn = options.dbQuery;
-        if (!dbQueryFn) {
+        const scorers = options.scorers;
+        if (!dbQueryFn && !scorers?.length) {
           return yield* agentStep;
         }
 
@@ -366,17 +381,25 @@ export function createEvalRunner<I, O, D>(
           : yield* agentStep;
         const durationMillis = Date.now() - startedAt;
 
-        const dbQuery = yield* Effect.promise(() =>
-          harness.runPromise(
-            dbQueryFn(input, defaultSpace.id).pipe(
-              Effect.provide(
-                ServiceResolver.provide({ space: defaultSpace.id }, Database.Service, FeedTraceSink.FeedTraceSink),
-              ),
-            ),
-          ),
+        // Both read the space while it is still open, before the harness is disposed below.
+        const services = ServiceResolver.provide(
+          { space: defaultSpace.id },
+          Database.Service,
+          FeedTraceSink.FeedTraceSink,
         );
 
-        return { agentOutput, dbQuery, durationMillis };
+        if (dbQueryFn) {
+          const dbQuery = yield* Effect.promise(() =>
+            harness.runPromise(dbQueryFn(input, defaultSpace.id).pipe(Effect.provide(services))),
+          );
+          return { agentOutput, dbQuery, durationMillis };
+        }
+
+        const scores = yield* Effect.promise(() =>
+          harness.runPromise(Scorer.runAll(scorers ?? [], { durationMillis }).pipe(Effect.provide(services))),
+        );
+
+        return { agentOutput, scores, durationMillis };
       }),
     );
 

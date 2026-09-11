@@ -44,15 +44,15 @@ export default SandboxOperation.Exec.pipe(
       return yield* sandboxClient
         .exec(spaceId, sandboxId, { command: encodeExecCommand(command), cwd, env: mergedEnv, timeout })
         .pipe(
-        Effect.catch((error) =>
-          Effect.succeed({
-            stdout: '',
-            stderr: `sandbox exec failed: ${describeError(error)}`,
-            exitCode: -1,
-            success: false,
-          }),
-        ),
-      );
+          Effect.catch((error) =>
+            Effect.succeed({
+              stdout: '',
+              stderr: `sandbox exec failed: ${describeError(error)}`,
+              exitCode: -1,
+              success: false,
+            }),
+          ),
+        );
     }, Effect.provide(FetchHttpClient.layer)),
   ),
 );

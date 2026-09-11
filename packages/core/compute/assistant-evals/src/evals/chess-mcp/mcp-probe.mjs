@@ -30,15 +30,20 @@ const parse = async (response) => {
 
 const headers = (session) => ({
   'content-type': 'application/json',
-  accept: 'application/json, text/event-stream',
+  'accept': 'application/json, text/event-stream',
   ...(session ? { 'mcp-session-id': session } : {}),
 });
+
+// A candidate that accepts the connection and then says nothing must not consume the whole probe:
+// without this the loop never reaches the next URL and the exec times out with no report.
+const CALL_TIMEOUT_MILLIS = 20_000;
 
 const rpc = async (url, session, id, method, params) => {
   const response = await fetch(url, {
     method: 'POST',
     headers: headers(session),
     body: JSON.stringify({ jsonrpc: '2.0', id, method, params }),
+    signal: AbortSignal.timeout(CALL_TIMEOUT_MILLIS),
   });
   return {
     status: response.status,
@@ -96,6 +101,7 @@ for (const url of candidates) {
       method: 'POST',
       headers: headers(init.session),
       body: JSON.stringify({ jsonrpc: '2.0', method: 'notifications/initialized' }),
+      signal: AbortSignal.timeout(CALL_TIMEOUT_MILLIS),
     }).catch(() => undefined);
 
     const list = await rpc(url, init.session, 2, 'tools/list', {});
