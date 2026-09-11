@@ -32,6 +32,8 @@ export class RtcTransportChannel extends Resource implements Transport {
 
   private _channel: RTCDataChannel | undefined;
   private _stream: Duplex | undefined;
+  /** Frames delivered before {@link _stream} exists; nothing retransmits them. */
+  private _bufferedMessages: Buffer[] = [];
   private _streamDataFlushedCallback: PendingStreamFlushedCallback | null = null;
   private _isChannelCreationInProgress = false;
 
@@ -93,6 +95,10 @@ export class RtcTransportChannel extends Resource implements Transport {
   }
 
   private _initChannel(channel: RTCDataChannel): void {
+    // Frames are available synchronously as bytes; `blob`, the default, would make `onmessage` async
+    // and let two frames complete out of arrival order.
+    channel.binaryType = 'arraybuffer';
+
     Object.assign<RTCDataChannel, Partial<RTCDataChannel>>(channel, {
       onopen: () => {
         if (!this.isOpen) {
@@ -110,6 +116,11 @@ export class RtcTransportChannel extends Resource implements Transport {
         });
         duplex.pipe(this._options.stream).pipe(duplex);
         this._stream = duplex;
+        // The peer's first frames can be delivered before this handler runs, and nothing retransmits
+        // them, so they are held rather than dropped.
+        const buffered = this._bufferedMessages;
+        this._bufferedMessages = [];
+        buffered.forEach((message) => duplex.push(message));
         this.connected.emit();
       },
 
@@ -118,19 +129,15 @@ export class RtcTransportChannel extends Resource implements Transport {
         await this.close();
       },
 
-      onmessage: async (event: MessageEvent) => {
-        if (!this._stream) {
+      onmessage: (event: MessageEvent) => {
+        const data: Buffer = event.data instanceof ArrayBuffer ? Buffer.from(event.data) : event.data;
+        if (this._stream) {
+          this._stream.push(data);
+        } else if (this.isOpen) {
+          this._bufferedMessages.push(data);
+        } else {
           log.warn('ignoring message on a closed channel');
-          return;
         }
-
-        let data = event.data;
-        if (data instanceof ArrayBuffer) {
-          data = Buffer.from(data);
-        } else if (data instanceof Blob) {
-          data = Buffer.from(await data.arrayBuffer());
-        }
-        this._stream.push(data);
       },
 
       onerror: (event: Event & any) => {
