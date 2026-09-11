@@ -120,12 +120,20 @@ export const CHATS_SECTION_TYPE = 'org.dxos.plugin.projects.chats-section';
 export const CHATS_SEGMENT = 'chats';
 
 /**
- * The static URL path every node under a project shares: the ai group and the Project type section,
- * which is as far as the shape is fixed. The project, the branch and the object below it vary, so
- * they ride in the pair's id `+`-joined (`<project>+chats+<chat>`) and the chain reconstructs with no
- * lookup. Both branches and both sets of children resolve against it.
+ * One URL binding for everything a project contains, shared with the type section that addresses the
+ * project itself — so `project/<id>` is the project, `project/<id>+chats` its Sessions branch, and
+ * `project/<id>+chats+<chat>` a session. The path is fixed only as far as the Project section; what
+ * varies below it rides in the pair's id, `+`-joined, and the chain reconstructs with no lookup.
+ *
+ * Sharing a key is safe only because every extension under it declares this same path, so a node's
+ * address never depends on which connector reached it. Two paths under one key is what made the
+ * borrowed `chat` key wrong.
  */
-const PROJECT_URL_PATH = [GraphPath.GroupSegments.ai, Type.getTypename(Project.Project)];
+const PROJECT_URL: AppGraphBuilder.UrlBinding = {
+  key: 'project',
+  kind: 'item',
+  path: [GraphPath.GroupSegments.ai, Type.getTypename(Project.Project)],
+};
 
 /**
  * Data carried by the Chats branch node. Wrapped so no Project-matching extension claims it, and
@@ -153,7 +161,7 @@ export const createProjectChatsExtension = () =>
     id: 'projectChats',
     // The branch row is selectable (it opens its chats as cards), so it needs an address of its own:
     // without one, clicking Sessions logs "node has no URL binding" and does nothing.
-    url: { key: 'project-session', kind: 'item', path: PROJECT_URL_PATH },
+    url: PROJECT_URL,
     match: (node) =>
       Obj.instanceOf(Project.Project, node.data)
         ? Option.some({ project: node.data, space: node.properties.space })
@@ -186,19 +194,15 @@ export const createProjectChatsExtension = () =>
  * same edge every companion chat uses — so what is project-specific is only the DISPLAY: project
  * chats surface in the navtree, other companions stay in their subject's companion panel.
  *
- * `project-session` is this connector's own url key, not plugin-assistant's `chat`: the two address
- * different nodes (a parentless chat in the Chats section, a chat on a project's Sessions branch), so
- * one key spanning both would make a chat's address depend on which connector reached it first.
- * Declaring one is not optional — without a binding the deck cannot put an open project chat into the
- * URL and refuses to open it.
- *
- * Shares the branch's key: the branch and the chats under it are the same kind of address, told apart
- * by whether the pair's id ends at the branch (see {@link PROJECT_URL_PATH}).
+ * Addressed as the project's (see {@link PROJECT_URL}), not under plugin-assistant's `chat` key: that
+ * key reaches a parentless chat by a different path, and one key with two paths would make a chat's
+ * address depend on which connector got there first. Declaring a binding is not optional — without one
+ * the deck cannot put an open project chat into the URL and refuses to open it.
  */
 export const createProjectChatsChildrenExtension = () =>
   AppGraphBuilder.createExtension({
     id: 'projectChatsChildren',
-    url: { key: 'project-session', kind: 'item', path: PROJECT_URL_PATH },
+    url: PROJECT_URL,
     match: (node) =>
       node.type === CHATS_SECTION_TYPE && isChatsBranch(node.data) ? Option.some(node.data.project) : Option.none(),
     connector: (project, get) => {
@@ -283,7 +287,7 @@ export const createProjectArtifactsExtension = () =>
   AppGraphBuilder.createExtension({
     id: 'projectArtifacts',
     // Addressable for the same reason the Sessions branch is: the row opens its artifacts as cards.
-    url: { key: 'project-artifact', kind: 'item', path: PROJECT_URL_PATH },
+    url: PROJECT_URL,
     match: (node) =>
       Obj.instanceOf(Project.Project, node.data)
         ? Option.some({ project: node.data, space: node.properties.space })
@@ -322,15 +326,14 @@ export const createProjectArtifactsExtension = () =>
  * The dialog places the object in the space; the ref array is what makes it the project's, so the
  * link is written here rather than left to the dialog's own placement.
  *
- * `project-artifact` addresses an object AS the project's. That is a different node from the same
- * object under its own type section (`object/<id>`), so it takes its own key: an artifact opened from
- * a project comes back to the project. Shaped like the `project-session` binding above; see
- * {@link PROJECT_URL_PATH}.
+ * Addressed as the project's (see {@link PROJECT_URL}). That is a different node from the same object
+ * under its own type section (`object/<id>`), and the distinction is the point: an artifact opened
+ * from a project comes back to the project.
  */
 export const createProjectArtifactsActionExtension = () =>
   AppGraphBuilder.createExtension({
     id: 'projectArtifactsActions',
-    url: { key: 'project-artifact', kind: 'item', path: PROJECT_URL_PATH },
+    url: PROJECT_URL,
     match: (node) =>
       node.type === ARTIFACTS_SECTION_TYPE && isArtifactsBranch(node.data)
         ? Option.some({ project: node.data.project, nodeId: node.id })

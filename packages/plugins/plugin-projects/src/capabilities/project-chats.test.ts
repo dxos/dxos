@@ -70,6 +70,9 @@ describe('project chats graph extension', () => {
     const sectionExtensions = await EffectEx.runPromise(
       AppGraphBuilder.createExtension({
         id: 'testSection',
+        // Stands in for the real type section, which addresses the project itself under the same key
+        // and the same path the branches use — the sharing this suite exists to pin down.
+        url: { key: 'project', kind: 'item', path: sectionPath },
         match: GraphNodeMatcher.whenNodeType('test-section'),
         connector: () => Effect.succeed([{ id: project.id, type: 'test', data: project }]),
       }),
@@ -172,7 +175,7 @@ describe('project chats graph extension', () => {
     expect(getChildIds()).toEqual([GraphNode.qualifyId(chatsNodeId, chat.id)]);
   });
 
-  test('a project chat is addressable by URL: `project-session/<id>` resolves to the node and back', async ({
+  test('a project chat is addressable by URL: `project/<project>+chats+<id>` resolves to the node and back', async ({
     expect,
   }) => {
     const { db, project, builder, addChat, chatsNodeId } = await setupTestContext();
@@ -185,16 +188,43 @@ describe('project chats graph extension', () => {
     // Reverse: the deck serializes the open plank into the URL, which is what fails with "node has
     // no URL binding" when the connector declares none.
     const represented = PathResolution.representNode(builder, chatNodeId);
-    expect(Option.getOrUndefined(represented)).toEqual({ key: 'project-session', id: pairId, workspace: db.spaceId });
+    expect(Option.getOrUndefined(represented)).toEqual({ key: 'project', id: pairId, workspace: db.spaceId });
 
     // Forward: a fresh graph resolves the pair back to the same node.
     const [resolved] = await EffectEx.runPromise(
       PathResolution.resolveUrl(builder, {
         workspace: db.spaceId,
-        pairs: [{ key: 'project-session', id: pairId, workspace: db.spaceId }],
+        pairs: [{ key: 'project', id: pairId, workspace: db.spaceId }],
       }),
     );
     expect(resolved?.nodeId).toEqual(chatNodeId);
+  });
+
+  test('one key addresses the project and everything under it', async ({ expect }) => {
+    const { db, project, builder, addChat, projectNodeId, chatsNodeId } = await setupTestContext();
+    const chat = await addChat('Chat');
+
+    // The project stops at the section path; its contents extend the same id. Four extensions share
+    // the key, so what tells these apart is only how far the pair's id reaches.
+    const cases = [
+      [projectNodeId, project.id],
+      [chatsNodeId, [project.id, CHATS_SEGMENT].join('+')],
+      [GraphNode.qualifyId(chatsNodeId, chat.id), [project.id, CHATS_SEGMENT, chat.id].join('+')],
+    ] as const;
+    for (const [nodeId, id] of cases) {
+      expect(Option.getOrUndefined(PathResolution.representNode(builder, nodeId))).toEqual({
+        key: 'project',
+        id,
+        workspace: db.spaceId,
+      });
+      const [resolved] = await EffectEx.runPromise(
+        PathResolution.resolveUrl(builder, {
+          workspace: db.spaceId,
+          pairs: [{ key: 'project', id, workspace: db.spaceId }],
+        }),
+      );
+      expect(resolved?.nodeId).toEqual(nodeId);
+    }
   });
 
   test('the branch rows are addressable too, at the id their children extend', async ({ expect }) => {
@@ -202,13 +232,13 @@ describe('project chats graph extension', () => {
 
     // Both rows are selectable (they open their contents as cards), so both need an address; without
     // one, clicking Sessions logs "node has no URL binding" and does nothing.
-    for (const [nodeId, key, segment] of [
-      [chatsNodeId, 'project-session', CHATS_SEGMENT],
-      [artifactsNodeId, 'project-artifact', ARTIFACTS_SEGMENT],
+    for (const [nodeId, segment] of [
+      [chatsNodeId, CHATS_SEGMENT],
+      [artifactsNodeId, ARTIFACTS_SEGMENT],
     ] as const) {
       const pairId = [project.id, segment].join('+');
       expect(Option.getOrUndefined(PathResolution.representNode(builder, nodeId))).toEqual({
-        key,
+        key: 'project',
         id: pairId,
         workspace: db.spaceId,
       });
@@ -216,26 +246,26 @@ describe('project chats graph extension', () => {
       const [resolved] = await EffectEx.runPromise(
         PathResolution.resolveUrl(builder, {
           workspace: db.spaceId,
-          pairs: [{ key, id: pairId, workspace: db.spaceId }],
+          pairs: [{ key: 'project', id: pairId, workspace: db.spaceId }],
         }),
       );
       expect(resolved?.nodeId).toEqual(nodeId);
     }
   });
 
-  test('a project artifact is addressable by URL under its own key', async ({ expect }) => {
+  test('a project artifact is addressable by URL under the project key', async ({ expect }) => {
     const { db, project, builder, addArtifact, artifactsNodeId } = await setupTestContext();
     const artifact = await addArtifact();
     const artifactNodeId = GraphNode.qualifyId(artifactsNodeId, artifact.id);
     const pairId = [project.id, ARTIFACTS_SEGMENT, artifact.id].join('+');
 
     const represented = PathResolution.representNode(builder, artifactNodeId);
-    expect(Option.getOrUndefined(represented)).toEqual({ key: 'project-artifact', id: pairId, workspace: db.spaceId });
+    expect(Option.getOrUndefined(represented)).toEqual({ key: 'project', id: pairId, workspace: db.spaceId });
 
     const [resolved] = await EffectEx.runPromise(
       PathResolution.resolveUrl(builder, {
         workspace: db.spaceId,
-        pairs: [{ key: 'project-artifact', id: pairId, workspace: db.spaceId }],
+        pairs: [{ key: 'project', id: pairId, workspace: db.spaceId }],
       }),
     );
     expect(resolved?.nodeId).toEqual(artifactNodeId);
