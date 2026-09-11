@@ -4,6 +4,7 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
+import { expect, within } from 'storybook/test';
 
 import { Card } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
@@ -63,7 +64,12 @@ export const Expanded: Story = {
     },
   },
   play: async ({ canvasElement }) => {
-    const toggle = canvasElement.querySelector<HTMLButtonElement>('button');
-    toggle?.click();
+    const canvas = within(canvasElement);
+    // `getBy*`, not a `querySelector` the story can shrug off: a card that has lost its disclosure
+    // control renders no dump at all, which is the failure this story exists to catch.
+    const toggle = canvas.getByRole('button', { name: 'Toggle JSON' });
+    toggle.click();
+    // The dump itself, not merely the toggle's state: the payload has to reach the viewport.
+    await expect(canvas.findByText(/Priya Nair/)).resolves.toBeTruthy();
   },
 };

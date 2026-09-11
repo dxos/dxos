@@ -1,0 +1,396 @@
+//
+// Copyright 2023 DXOS.org
+//
+
+import { type ViewUpdate } from '@codemirror/view';
+import React, { useMemo } from 'react';
+
+import { debounceAndThrottle } from '@dxos/async';
+import { type Space } from '@dxos/client/echo';
+import { Obj } from '@dxos/echo';
+import { Doc } from '@dxos/echo-doc';
+import { useObject } from '@dxos/echo-react';
+import { type Identity } from '@dxos/halo';
+import { EID } from '@dxos/keys';
+import { getSpace } from '@dxos/react-client/echo';
+import { useThemeContext } from '@dxos/react-ui';
+import { Selection, ViewState } from '@dxos/react-ui-attention/types';
+import { Text } from '@dxos/schema';
+import { Domino } from '@dxos/ui';
+import {
+  AnchorWidget,
+  Cursor,
+  EditorState,
+  type EditorStateStore,
+  EditorView,
+  type Extension,
+  InputModeExtensions,
+  type ObjectLinkProps,
+  type WidgetHostOptions,
+  createDataExtensions,
+  decorateMarkdown,
+  documentId,
+  folding,
+  formattingKeymap,
+  linkTooltip,
+  listener,
+  objectLinks,
+  selectionState,
+  snippets,
+  substitutions,
+  widgetHost,
+} from '@dxos/ui-editor';
+import { type EditorViewMode, type RenderCallback } from '@dxos/ui-editor/types';
+import { isTruthy, safeUrl } from '@dxos/util';
+
+import { Markdown } from '#types';
+
+import { parseEmbedLabel } from '../components/PreviewComponent/parse-embed-label';
+import { PreviewComponent } from '../components/PreviewComponent/PreviewComponent';
+import { setFallbackName } from '../util';
+
+export type DocumentType = Markdown.Document | Text.Text | { id: string; text: string };
+
+export type ExtensionsOptions = {
+  id: string;
+  object?: DocumentType;
+  settings?: Markdown.Settings;
+  compact?: boolean;
+  viewMode?: EditorViewMode;
+  editable?: boolean;
+  platform?: 'mobile' | 'desktop';
+  viewState?: ViewState.Manager;
+  editorStateStore?: EditorStateStore;
+  /**
+   * Local identity for collaboration awareness. Optional so the editor can bind to a raw ECHO object
+   * with no client (awareness only activates when both a space and an identity are present).
+   */
+  identity?: Identity.Info | null;
+  setWidgets?: WidgetHostOptions['setWidgets'];
+  /**
+   * Callback when an internal link is clicked, with the link's URL pathname — resolving one to a node
+   * walks the app graph, which only a container may reach. `modifiers.shift` reflects the originating
+   * click/keydown event, so callers can invert the deck's navigation disposition.
+   */
+  onSelectLink?: (pathname: string, modifiers?: { shift: boolean }) => void;
+};
+
+// TODO(burdon): Merge with createBaseExtensions below.
+export const useExtensions = ({
+  id,
+  object,
+  settings,
+  compact,
+  viewMode,
+  viewState,
+  editorStateStore,
+  identity,
+  setWidgets,
+  onSelectLink,
+}: ExtensionsOptions): Extension[] => {
+  const { platform } = useThemeContext();
+  const space = getSpace(object);
+
+  // Get the content reference from Document objects.
+  const contentRef = Obj.instanceOf(Markdown.Document, object) ? (object as Markdown.Document).content : undefined;
+  // Use useObject to trigger re-render when the reference loads (returns snapshot for reactivity).
+  useObject(contentRef);
+  // Get the actual live object target via .target (needed for Doc.createAccessor).
+  const target = contentRef?.target ?? (Obj.instanceOf(Text.Text, object) ? object : undefined);
+
+  // TODO(wittjosiah): Autocomplete is not working and this query is causing performance issues.
+  // TODO(burdon): Unsubscribe.
+  // const query = space?.db.query(Filter.type(DocumentType));
+  // query?.subscribe();
+
+  const baseExtensions = useMemo(
+    () =>
+      createBaseExtensions({
+        id,
+        object,
+        space,
+        settings,
+        compact,
+        viewMode,
+        viewState,
+        platform,
+        setWidgets,
+        onSelectLink,
+      }),
+    [
+      id,
+      object,
+      space,
+      compact,
+      viewMode,
+      viewState,
+      platform,
+      setWidgets,
+      settings,
+      settings?.debug,
+      settings?.editorInputMode,
+      settings?.folding,
+      settings?.numberedHeadings,
+      onSelectLink,
+    ],
+  );
+
+  // The content ref exists but its target has not loaded: the editor has no persistence binding yet.
+  const contentPending = !!contentRef && !target;
+
+  return useMemo<Extension[]>(
+    () =>
+      [
+        // TODO(burdon): Pass this in?
+        // NOTE: Data extensions must be first so that automerge is updated before other extensions compute their state.
+        target &&
+          createDataExtensions({
+            id,
+            text: Doc.createAccessor(target, ['content']),
+            messenger: space,
+            identity,
+          }),
+
+        // Never editable before the binding: input typed into an unbound editor lives only in
+        // CodeMirror state, which the automerge extension's attach-reconcile then replaces wholesale
+        // with the loaded value. `editable(false)` as well as the advisory `readOnly`, so the DOM is
+        // not contenteditable and a caller's editability wait holds.
+        contentPending && [EditorState.readOnly.of(true), EditorView.editable.of(false)],
+
+        // TODO(burdon): Reconcile with effect in parent.
+        Obj.instanceOf(Markdown.Document, object) &&
+          listener({
+            onChange: ({ text }) => {
+              setFallbackName(object as Markdown.Document, text);
+            },
+          }),
+
+        baseExtensions,
+        selectionState(editorStateStore),
+      ].filter(isTruthy),
+    [identity, space, id, object, target, contentPending, baseExtensions],
+  );
+};
+
+/**
+ * Create extension instances for editor.
+ */
+const createBaseExtensions = ({
+  id,
+  object,
+  space,
+  onSelectLink,
+  settings,
+  compact,
+  viewMode,
+  viewState,
+  setWidgets,
+  platform,
+}: ExtensionsOptions & { space?: Space }): Extension[] => {
+  const extensions: Extension[] = [
+    viewState && selectionChange(viewState),
+    settings?.editorInputMode && InputModeExtensions[settings.editorInputMode],
+    settings?.folding && !compact && platform !== 'mobile' && folding(),
+  ].filter(isTruthy);
+
+  //
+  // Markdown
+  //
+  if (viewMode !== 'source') {
+    extensions.push(
+      ...[
+        formattingKeymap(),
+        decorateMarkdown({
+          selectionChangeDelay: 100,
+          numberedHeadings: settings?.numberedHeadings ? { from: 2 } : undefined,
+          // TODO(wittjosiah): For internal links render the label of the object.
+          renderLinkButton: onSelectLink && createRenderLink(onSelectLink),
+        }),
+        linkTooltip({ render: renderLinkTooltip }),
+<<<<<<< 3ace04d467466b5571e3ceb2e6f8e8c7c77c03d3
+        widgetHost({ setWidgets }),
+        objectLinks({
+          link: {
+            factory: ({ label, eid }: ObjectLinkProps) => {
+              // TODO(burdon): Why support both "#" or "@"?
+              // A bare `#`/`@` label is a name-less link; resolve the object's actual label once
+              // loaded. The resolver is only created when a db exists so `AnchorWidget.eq` sees the
+              // db's arrival as a change and rebuilds the chip.
+              const resolver =
+                ['#', '@'].indexOf(label) !== -1 && space?.db ? createAnchorLabelResolver(space.db, eid) : undefined;
+
+              return new AnchorWidget(label, eid, undefined, resolver);
+||||||| ad4edf085a
+        xmlTags({
+          registry: {
+            'dxn-preview': {
+              block: true,
+              urlSchemes: ['dxn:', 'echo:'],
+              // Reserve the persisted height (`![label|404](…)`) up front so the block does not collapse
+              // to the placeholder minimum while the embed resolves (prevents scroll jitter / blank).
+              estimatedHeight: ({ label }: XmlWidgetProps<{ label?: string }>) =>
+                label ? parseEmbedLabel(label).height : undefined,
+              Component: (props: Omit<PreviewComponentProps, 'db'>) => <PreviewComponent {...props} db={space?.db} />,
+            },
+            'link-preview': {
+              block: false,
+              urlSchemes: ['dxn:', 'echo:'],
+              factory: ({ label, dxn }: XmlWidgetProps<{ label: string; dxn: string }>) =>
+                label && dxn ? new AnchorWidget(label, dxn) : null,
+=======
+        xmlTags({
+          registry: {
+            'dxn-preview': {
+              block: true,
+              urlSchemes: ['dxn:', 'echo:'],
+              // Reserve the persisted height (`![label|404](…)`) up front so the block does not collapse
+              // to the placeholder minimum while the embed resolves (prevents scroll jitter / blank).
+              estimatedHeight: ({ label }: XmlWidgetProps<{ label?: string }>) =>
+                label ? parseEmbedLabel(label).height : undefined,
+              Component: (props: Omit<PreviewComponentProps, 'db'>) => <PreviewComponent {...props} db={space?.db} />,
+            },
+            'link-preview': {
+              block: false,
+              urlSchemes: ['dxn:', 'echo:'],
+              // A bare `#`/`@` label is a name-less link; resolve the object's actual label once
+              // loaded. The resolver is only created when a db exists so `AnchorWidget.eq` sees the
+              // db's arrival as a change and rebuilds the chip.
+              factory: ({ label, dxn }: XmlWidgetProps<{ label: string; dxn: string }>) =>
+                label && dxn
+                  ? new AnchorWidget(
+                      label,
+                      dxn,
+                      undefined,
+                      (label === '#' || label === '@') && space?.db
+                        ? createAnchorLabelResolver(space.db, dxn)
+                        : undefined,
+                    )
+                  : null,
+>>>>>>> 173b13502ad3a5b9a08bf8be01295fa19a21930b
+            },
+          },
+          image: {
+            // Reserve the persisted height (`![label|404](…)`) up front so the block does not collapse
+            // to the placeholder minimum while the embed resolves (prevents scroll jitter / blank).
+            estimatedHeight: ({ label }: ObjectLinkProps) => (label ? parseEmbedLabel(label).height : undefined),
+            Component: (props) => <PreviewComponent {...props} db={space?.db} />,
+          },
+        }),
+        substitutions(),
+      ],
+    );
+  }
+
+  if (settings?.debug) {
+    const items = settings.snippets?.split(/[,\n]/) ?? '';
+    if (items) {
+      extensions.push(snippets({ items }));
+    }
+  }
+
+  return extensions;
+};
+
+const selectionChange = (viewState: ViewState.Manager) => {
+  const debouncedHandler = debounceAndThrottle((update: ViewUpdate) => {
+    const id = update.state.facet(documentId);
+    const cursorConverter = update.state.facet(Cursor.converter);
+    const selection = update.state.selection;
+    // NOTE: Filter on numeric offsets BEFORE converting to cursor strings.
+    // Cursors are opaque (Automerge-encoded), so a lexicographic `to > from`
+    // comparison is nondeterministic — it would let some cursor-placements
+    // (where from === to numerically) through and reject genuine selections
+    // depending on encoding, which made the comment button's enabled state
+    // appear random across different lines.
+    const ranges = selection.ranges
+      .filter((range) => range.to > range.from)
+      .map((range) => ({
+        from: cursorConverter.toCursor(range.from),
+        to: cursorConverter.toCursor(range.to),
+      }));
+
+    viewState.set(Selection.aspect, id, { mode: 'multi-range', ranges });
+  }, 100);
+
+  return EditorView.updateListener.of((update: ViewUpdate) => {
+    if (update.selectionSet) {
+      debouncedHandler(update);
+    }
+  });
+};
+
+<<<<<<< 3ace04d467466b5571e3ceb2e6f8e8c7c77c03d3
+/** Resolves an anchor's display label from the linked object (for name-less `#`/`@` links). */
+const createAnchorLabelResolver = (db: Space['db'], eid: string) => async () => {
+  const parsed = EID.tryParse(eid);
+  if (!parsed) {
+    return undefined;
+  }
+  try {
+    const object = await db.makeRef(parsed).load();
+    return Obj.getLabel(object as Obj.Unknown) ?? undefined;
+  } catch {
+    return undefined;
+  }
+};
+||||||| ad4edf085a
+=======
+/** Resolves an anchor's display label from the linked object (for name-less `#`/`@` links). */
+const createAnchorLabelResolver = (db: Space['db'], dxn: string) => async () => {
+  const eid = EID.tryParse(dxn);
+  if (!eid) {
+    return undefined;
+  }
+  try {
+    const object = await db.makeRef(eid).load();
+    return Obj.getLabel(object as Obj.Unknown) ?? undefined;
+  } catch {
+    return undefined;
+  }
+};
+>>>>>>> 173b13502ad3a5b9a08bf8be01295fa19a21930b
+
+const createRenderLink =
+  (onSelectLink: (pathname: string, modifiers?: { shift: boolean }) => void): RenderCallback<{ url: string }> =>
+  (el, { url }) => {
+    // TODO(burdon): Formalize/document internal link format.
+    const isInternal = url.startsWith('/') || url.startsWith(window.location.origin);
+    const icon = Domino.of('span')
+      .classNames('dx-link ms-1 inline-block align-[-0.125em]')
+      .append(Domino.svg(isInternal ? 'ph--arrow-square-down--regular' : 'ph--arrow-square-out--regular'));
+
+    if (isInternal) {
+      const pathname = new URL(url, window.location.origin).pathname;
+
+      icon
+        .attributes({ role: 'button', tabindex: '0' })
+        .on('click', (event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          onSelectLink(pathname, { shift: event.shiftKey });
+        })
+        .on('keydown', (event) => {
+          if (event.key !== 'Enter' && event.key !== ' ') {
+            return;
+          }
+
+          event.preventDefault();
+          event.stopPropagation();
+          onSelectLink(pathname, { shift: event.shiftKey });
+        });
+    }
+
+    el.appendChild(icon.root);
+  };
+
+const renderLinkTooltip: RenderCallback<{ url: string }> = (el, { url }) => {
+  el.appendChild(
+    Domino.of('a')
+      .attributes({ href: url, target: '_blank', rel: 'noreferrer' })
+      // Not `dx-link`: the tooltip sits on the inverse surface, where the accent link color has no
+      // contrast — inherit the tooltip's own `text-inverse-fg` instead.
+      .classNames('flex items-center gap-2 cursor-pointer underline underline-offset-2')
+      .text(safeUrl(url)?.toString() ?? url)
+      .append(Domino.svg('ph--arrow-square-out--regular')).root,
+  );
+};

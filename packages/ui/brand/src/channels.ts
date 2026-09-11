@@ -35,12 +35,12 @@ export type ChannelColor = {
  */
 export const CHANNEL_COLORS: Record<Channel, ChannelColor> = {
   dev: {
-    hue: 140,
+    hue: 270,
     saturation: 1,
     lightness: 1,
   },
   preview: {
-    hue: 270,
+    hue: 140,
     saturation: 1,
     lightness: 1,
   },
