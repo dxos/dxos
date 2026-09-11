@@ -48,19 +48,21 @@ export type GanttProps = ThemedClassName<{
 const ROW_HEIGHT = 28;
 const HEADER_HEIGHT = 20;
 const PAD_X = 12;
-const BOX_INSET = 6;
 const NODE_RADIUS = 3;
 /** Upper bound on axis ticks; the count shrinks with the width so `HH:mm:ss` labels never overlap. */
 const MAX_TICKS = 5;
 const TICK_MIN_WIDTH = 72;
 
-const STATUS_COLOR: Record<GanttLaneStatus, { stroke: string; fill: string; text: string }> = {
-  pending: { stroke: 'stroke-neutral-400', fill: 'fill-neutral-400', text: 'text-neutral-400' },
-  blocked: { stroke: 'stroke-orange-500', fill: 'fill-orange-500', text: 'text-orange-500' },
-  running: { stroke: 'stroke-sky-500', fill: 'fill-sky-500', text: 'text-sky-500' },
-  review: { stroke: 'stroke-cyan-500', fill: 'fill-cyan-500', text: 'text-cyan-500' },
-  done: { stroke: 'stroke-green-500', fill: 'fill-green-500', text: 'text-green-500' },
-  failed: { stroke: 'stroke-red-500', fill: 'fill-red-500', text: 'text-red-500' },
+/** Bar heights: a session is the row's block, a task a slimmer one nested under it. */
+const BAR_HEIGHT: Record<GanttLaneKind, number> = { session: 16, task: 10 };
+
+const STATUS_COLOR: Record<GanttLaneStatus, { fill: string; text: string }> = {
+  pending: { fill: 'fill-neutral-500/40', text: 'text-neutral-400' },
+  blocked: { fill: 'fill-orange-500/40', text: 'text-orange-500' },
+  running: { fill: 'fill-sky-500/40', text: 'text-sky-500' },
+  review: { fill: 'fill-cyan-500/40', text: 'text-cyan-500' },
+  done: { fill: 'fill-green-500/40', text: 'text-green-500' },
+  failed: { fill: 'fill-red-500/40', text: 'text-red-500' },
 };
 
 const MARKER_FILL: Record<GanttMarkerKind, string> = {
@@ -96,9 +98,9 @@ const formatTokens = (tokens: NonNullable<GanttLane['tokens']>): string =>
   tokens.total >= 1_000 ? Unit.Thousand(tokens.total).toString() : String(tokens.total);
 
 /**
- * Gantt view of sessions and tasks on a shared time axis: sessions are boxes with their markers as
- * nodes, tasks are thin lines grouped under their session, and connectors draw task dependencies and
- * delegations.
+ * Gantt view of sessions and tasks on a shared time axis: every lane is a rounded bar with its markers
+ * threaded through it as nodes, tasks are grouped under their session, and connectors draw task
+ * dependencies and delegations.
  */
 export const Gantt = composable<HTMLDivElement, GanttProps>(
   ({ lanes, markers = [], range: rangeProp, now, onLaneSelect, onMarkerSelect, ...props }, forwardedRef) => {
@@ -203,32 +205,35 @@ export const Gantt = composable<HTMLDivElement, GanttProps>(
             if (lane.start === undefined || end === undefined) {
               return null;
             }
-            const y = rowY(index);
-            const color = STATUS_COLOR[lane.status];
-            const running = lane.status === 'running';
-            return lane.kind === 'session' ? (
+            const barHeight = BAR_HEIGHT[lane.kind];
+            return (
               <rect
                 key={lane.id}
                 x={x(lane.start)}
-                y={y - ROW_HEIGHT / 2 + BOX_INSET}
-                width={Math.max(x(end) - x(lane.start), 2)}
-                height={ROW_HEIGHT - 2 * BOX_INSET}
-                rx={3}
-                className={mx('fill-base-surface cursor-pointer', color.stroke, running && 'animate-pulse')}
-                strokeDasharray={running ? '4 2' : undefined}
+                y={rowY(index) - barHeight / 2}
+                width={Math.max(x(end) - x(lane.start), barHeight)}
+                height={barHeight}
+                rx={barHeight / 2}
+                className={mx('cursor-pointer', STATUS_COLOR[lane.status].fill)}
                 onClick={() => onLaneSelect?.(lane)}
               />
-            ) : (
+            );
+          })}
+
+          {/* The thread through a lane's nodes, so a row reads as a sequence rather than scattered dots. */}
+          {rows.map(({ lane, index }) => {
+            const times = markers.filter((marker) => marker.laneId === lane.id).map((marker) => marker.timestamp);
+            if (times.length < 2) {
+              return null;
+            }
+            return (
               <line
-                key={lane.id}
-                x1={x(lane.start)}
-                x2={x(end)}
-                y1={y}
-                y2={y}
-                strokeWidth={2}
-                strokeDasharray={running ? '4 2' : undefined}
-                className={mx('cursor-pointer', color.stroke, running && 'animate-pulse')}
-                onClick={() => onLaneSelect?.(lane)}
+                key={`thread:${lane.id}`}
+                x1={x(Math.min(...times))}
+                x2={x(Math.max(...times))}
+                y1={rowY(index)}
+                y2={rowY(index)}
+                className='stroke-neutral-400'
               />
             );
           })}

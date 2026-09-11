@@ -3,9 +3,10 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React, { useEffect, useState } from 'react';
+import React, { type ReactNode, useEffect, useState } from 'react';
 
 import { random } from '@dxos/random';
+import { Syntax } from '@dxos/react-ui-syntax-highlighter';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { Gantt, type GanttLane, type GanttMarker, type GanttProps } from './Gantt.tsx';
@@ -97,7 +98,26 @@ const markers: GanttMarker[] = [
   { id: 'm:s2-tool', laneId: 'session:2', kind: 'tool', timestamp: T0 + 6 * MINUTE, label: 'search' },
 ];
 
-const DefaultStory = (props: GanttProps) => <Gantt {...props} classNames='m-4' />;
+/** The chart over the data it was drawn from, so a reader can match a bar to its lane. */
+const Layout = ({ chart, data }: { chart: ReactNode; data: unknown }) => (
+  <div className='flex flex-col w-full h-full overflow-hidden'>
+    {chart}
+    <Syntax.Root data={data}>
+      <Syntax.Content classNames='min-h-0 flex-1 border-t border-separator'>
+        <Syntax.Viewport>
+          <Syntax.Code classNames='text-xs' />
+        </Syntax.Viewport>
+      </Syntax.Content>
+    </Syntax.Root>
+  </div>
+);
+
+const DefaultStory = (props: GanttProps) => (
+  <Layout
+    chart={<Gantt {...props} classNames='p-4' />}
+    data={{ lanes: props.lanes, markers: props.markers, range: props.range, now: props.now }}
+  />
+);
 
 /** Appends a tool marker to the running sub-agent every tick, so its box grows with `now`. */
 const LiveStory = (props: GanttProps) => {
@@ -122,7 +142,13 @@ const LiveStory = (props: GanttProps) => {
     }, 1_000);
     return () => clearInterval(interval);
   }, []);
-  return <Gantt {...props} markers={live} now={now} range={{ start: T0, end: now + MINUTE }} classNames='m-4' />;
+  const range = { start: T0, end: now + MINUTE };
+  return (
+    <Layout
+      chart={<Gantt {...props} markers={live} now={now} range={range} classNames='p-4' />}
+      data={{ lanes: props.lanes, markers: live, range, now }}
+    />
+  );
 };
 
 const meta = {
