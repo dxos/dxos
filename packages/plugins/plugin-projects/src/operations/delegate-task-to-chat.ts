@@ -25,7 +25,6 @@ import { concat } from '@dxos/util';
 import { ProjectOperation } from '#types';
 
 import { getProjectChatPath } from '../paths.ts';
-
 import { findProject } from './find-project.ts';
 
 /**

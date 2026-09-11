@@ -79,7 +79,8 @@ export const CopyTaskPrompt = Operation.make({
   meta: {
     key: DXN.make('org.dxos.operation.projects.copyTaskPrompt'),
     name: 'Copy Task Prompt',
-    description: 'Builds an agent prompt for a task (content, addresses, project context) and copies it to the clipboard.',
+    description:
+      'Builds an agent prompt for a task (content, addresses, project context) and copies it to the clipboard.',
     icon: 'ph--clipboard-text--regular',
   },
   services: [Database.Service],
