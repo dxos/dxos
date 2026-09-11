@@ -16,17 +16,15 @@ import { ProjectOperation } from '#types';
 import { findProject } from './find-project.ts';
 
 /**
- * The verbs the prompt tells the agent to call, named by operation key rather than by a host's tool
+ * The verb the prompt tells the agent to call, named by operation key rather than by a host's tool
  * name: the same operation is surfaced under different tool names by different hosts (MCP, the
  * in-app invoker), and the key is what every one of them resolves.
  *
- * Self-assignment is a two-step handshake, as the project skill spells out: an agent's actor is the
- * object it IS — its session — so it finds that object and passes a ref to it. A bare
- * `{ role: 'assistant' }` records that AN assistant owns the task, not which run, and the session
- * report (`recordSession`) matches `assignee.subject` to list a session's open tasks back to it —
- * so an assignment without the ref is invisible to that check-in.
+ * `remoteSession` makes claiming the task one call: an agent's actor is the object it IS, so the
+ * operation resolves (or creates) the session record for that harness id and assigns the task to
+ * it. A bare `{ role: 'assistant' }` would record that AN assistant owns the task, not which run,
+ * and a session's own check-in lists its open tasks by that ref.
  */
-const LIST_SESSIONS_KEY = 'org.dxos.operation.tasks.listSessions';
 const UPDATE_TASK_KEY = 'org.dxos.operation.tasks.update';
 
 const handler: Operation.WithHandler<typeof ProjectOperation.CopyTaskPrompt> = ProjectOperation.CopyTaskPrompt.pipe(
@@ -119,19 +117,14 @@ const renderPrompt = ({ task, project, context }: PromptInput): string => {
     '',
     '## Instructions',
     '',
-    'Assign yourself to this task before you start:',
-    '',
-    `1. Find your own session object: \`${LIST_SESSIONS_KEY}\` with \`sessionId\` set to your harness ` +
-      'session id. Your actor is the object you *are*, not a name you make up; if no session object ' +
-      'exists for this run, say so rather than inventing one.',
-    `2. Claim the task: \`${UPDATE_TASK_KEY}\` with the task URI above, \`status: "started"\` and ` +
-      '`assignee: { "role": "assistant", "subject": { "/": "<your session URI>" } }`' +
+    `Claim this task before you start — one call to \`${UPDATE_TASK_KEY}\` with the task URI above, ` +
+      '`status: "started"` and `remoteSession: { "sessionId": "<your harness session id>" }`' +
       (spaceId ? `, in space \`${spaceId}\`.` : '.'),
     '',
     concat`
-      The \`subject\` ref is what ties the work to this run: a bare \`{ "role": "assistant" }\` says an
-      assistant owns the task but not which one, and your session's check-in finds its open tasks by
-      that ref.
+      That records the work against this run rather than against "an assistant", and creates the
+      session in the space if it is not there yet. Add \`title\`, \`repo\`, \`branch\` and
+      \`worktree\` to that object when you have them, so the session says where it is working.
     `,
     '',
     concat`

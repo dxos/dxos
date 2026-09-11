@@ -59,11 +59,10 @@ describe('ProjectOperation.CopyTaskPrompt', () => {
     expect(prompt).toContain('org.dxos.operation.tasks.update');
     expect(prompt).toContain('"started"');
 
-    // Self-assignment is the two-step handshake the project skill documents: find the session
-    // object, then reference it as the assignee's subject. A bare role would not tie the work to
-    // this run, and the session's own check-in finds its tasks by that ref.
-    expect(prompt).toContain('org.dxos.operation.tasks.listSessions');
-    expect(prompt).toContain('"subject"');
+    // One call: `remoteSession` resolves or creates the run's session record and assigns the task
+    // to it, so the work is recorded against this run rather than against "an assistant".
+    expect(prompt).toContain('remoteSession');
+    expect(prompt).toContain('sessionId');
   });
 
   test('renders a task outside any project', async ({ expect }) => {
