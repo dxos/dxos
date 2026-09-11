@@ -26,6 +26,8 @@ import { ProjectOperation } from '#types';
 
 import { getProjectChatPath } from '../paths.ts';
 
+import { findProject } from './find-project.ts';
+
 /**
  * Skills the delegated session needs beyond a chat's defaults: the checklist it works from, the
  * ability to write a document, the project verbs that file what it wrote, and a shell for a task
@@ -213,18 +215,5 @@ const bindDelegationContext = Effect.fnUntraced(function* (chat: Chat.Chat, proj
   const objects = project ? [Ref.make(project)] : [];
   yield* Effect.promise(() => binder.use((binder: AiContext.Binder) => binder.bind({ skills, objects })));
 });
-
-/** The task's project, walked up the ECHO parents (task → task set → project). */
-const findProject = (task: Obj.Any): Project.Project | undefined => {
-  let cursor: Obj.Any | undefined = Obj.getParent(task);
-  // Bounded: a malformed parent chain must not spin, and nothing legitimate is this deep.
-  for (let depth = 0; cursor && depth < 8; depth++) {
-    if (Obj.instanceOf(Project.Project, cursor)) {
-      return cursor;
-    }
-    cursor = Obj.getParent(cursor);
-  }
-  return undefined;
-};
 
 export default handler;
