@@ -32,6 +32,10 @@ describe('channelVariant', () => {
     expect(channelVariant('build', 'production')).toBeUndefined();
   });
 
+  test('a CI bundle ships the released mark, since nothing deploys it', ({ expect }) => {
+    expect(channelVariant('build', 'ci')).toBeUndefined();
+  });
+
   test('an unset environment is a local build, not a channel', ({ expect }) => {
     // `environment` defaults to `process.env.DX_ENVIRONMENT`, so passing `undefined` reads the
     // ambient value — a developer who exports one (a machine name, say) fails this otherwise.
