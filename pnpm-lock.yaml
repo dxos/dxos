@@ -4248,9 +4248,18 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../echo/echo
+      '@dxos/echo-client':
+        specifier: workspace:*
+        version: link:../../echo/echo-client
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../../common/effect
+      '@dxos/mcp-client':
+        specifier: workspace:*
+        version: link:../mcp-client
+      '@dxos/mcp-server':
+        specifier: workspace:*
+        version: link:../mcp-server
       '@dxos/plugin-assistant':
         specifier: workspace:*
         version: link:../../../plugins/plugin-assistant
@@ -4302,6 +4311,9 @@ importers:
       '@dxos/vite-plugin-import-source':
         specifier: workspace:*
         version: link:../../../../tools/vite-plugin-import-source
+      '@modelcontextprotocol/sdk':
+        specifier: '>=1.26.0'
+        version: 1.27.1(@cfworker/json-schema@4.1.1)
       autoevals:
         specifier: ^0.0.132
         version: 0.0.132(ws@8.18.3)

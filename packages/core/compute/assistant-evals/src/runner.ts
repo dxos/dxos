@@ -3,6 +3,7 @@
 //
 
 import * as Cause from 'effect/Cause';
+import * as Context from 'effect/Context';
 import * as Data from 'effect/Data';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
@@ -21,8 +22,9 @@ import { FeedTraceSink } from '@dxos/compute-runtime';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Operation from '@dxos/compute/Operation';
 import * as ServiceResolver from '@dxos/compute/ServiceResolver';
-import type * as Skill from '@dxos/compute/Skill';
-import { Database, Feed, Obj, Ref, Tag, type Type } from '@dxos/echo';
+import * as Skill from '@dxos/compute/Skill';
+import * as Template from '@dxos/compute/Template';
+import { Database, Feed, Obj, Ref, type Registry, Tag, type Type } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { DXN, type SpaceId } from '@dxos/keys';
 import * as AssistantPlugin from '@dxos/plugin-assistant/AssistantPlugin';
@@ -37,6 +39,7 @@ import { createComposerTestApp } from '@dxos/plugin-testing/harness';
 import { Employer, Organization, Person } from '@dxos/types';
 import { trim } from '@dxos/util';
 
+import { startMcpHost } from './mcp-host.ts';
 import { getDefaultSkills } from './skills.ts';
 
 const DEFAULT_MODEL: DXN.DXN = DXN.make('com.anthropic.model.claude-opus-5.default');
@@ -103,6 +106,69 @@ const seedInstructions = (instructions: Instructions.Instructions) =>
     yield* Database.flush();
   });
 
+/** What the generated skill tells the model; overridable per scenario. */
+const MCP_SKILL_INSTRUCTIONS = trim`
+  The tools of this space are hosted on an MCP server rather than bound natively.
+  Call queryOperations to find the verb you need, loadSkill to read the workflow behind it, and
+  invokeOperation to run it — naming the space the prompt gives you on every call.
+`;
+
+const MCP_SKILL_KEY = 'org.dxos.skill.evalMcp';
+
+/** See {@link CreateEvalRunnerOptions.mcpServer}. */
+export type McpServerOptions = {
+  /** Skill definitions to serve. Each must carry the `operations` behind its tool ids. */
+  skills: readonly Skill.Definition[];
+  /** Text of the generated skill, telling the model what the server is for. */
+  instructions?: string;
+};
+
+/**
+ * Starts the in-process MCP server and builds the skill that points the agent at it.
+ *
+ * Both the runtime services and the registry are passed as thunks, read per call: the server binds
+ * to whatever the harness has once it exists, which is what makes the agent's writes land in the
+ * space the scenario's `dbQuery` reads back.
+ */
+const hostMcpServer = (
+  config: McpServerOptions,
+  context: () => Context.Context<Operation.Service>,
+  registry: () => Registry.Registry,
+) =>
+  Effect.gen(function* () {
+    const { url } = yield* startMcpHost({ skills: config.skills, context, registry });
+    return { url };
+  });
+
+/**
+ * Registers the served skills and their operations in the harness's own registry, the way
+ * `dx mcp serve`'s local host does — and only what is missing, so nothing the plugins already
+ * contributed is re-registered under a second definition.
+ */
+const registerServedSkills = (registry: Registry.Registry, config: McpServerOptions): void => {
+  const registered = (key: string) => registry.getByURI(`dxn:${key.replace(/^dxn:/, '')}`) != null;
+  registry.add([
+    ...Operation.serializable(
+      config.skills
+        .flatMap((definition) => definition.operations ?? [])
+        .filter((operation) => !registered(String(operation.meta.key))),
+    ),
+    ...config.skills.filter((definition) => !registered(String(definition.key))).map((definition) => definition.make()),
+  ]);
+};
+
+/** The skill that points the agent at the running server; built once the space it names exists. */
+const mcpSkill = (url: string, spaceId: SpaceId, config: McpServerOptions): Skill.Skill =>
+  Skill.make({
+    key: MCP_SKILL_KEY,
+    name: 'Eval MCP',
+    description: 'Operations served over MCP by the eval harness.',
+    instructions: Template.make({
+      source: `${config.instructions ?? MCP_SKILL_INSTRUCTIONS}\n\nThe space to name on every call is ${spaceId}.`,
+    }),
+    mcpServers: [{ url, protocol: 'http' }],
+  });
+
 const runInstructions = <I>(
   harness: TestHarness,
   instructions: Instructions.Instructions,
@@ -164,6 +230,18 @@ export interface CreateEvalRunnerOptions<I, O> {
    * @default 60_000
    */
   timeout?: number;
+  /**
+   * Serves the given skill definitions to the agent over a real MCP server hosted in this process,
+   * instead of binding their operations as native tools.
+   *
+   * The server is the same projected surface a real host serves (`queryOperations` /
+   * `invokeOperation` / `loadSkill`, via `McpServer.fromSkills`), reached over Streamable HTTP on
+   * the loopback interface — so the scenario grades what an MCP client actually gets, not what the
+   * in-process toolkit exposes. The agent reaches it through a generated skill naming the server's
+   * URL, appended to `skills`; pass `skills: []` for a scenario where MCP must be the only surface
+   * the model can use.
+   */
+  mcpServer?: McpServerOptions;
   /**
    * Additional ECHO types the scenario's seed/dbQuery touch, registered with the harness client.
    */
@@ -239,13 +317,24 @@ export function createEvalRunner<I, O, D>(
   return async (input: I, variant: VariantConfig) => {
     const model = variant?.model ?? options.model ?? DEFAULT_MODEL;
 
-    const instructions = Instructions.make({
-      text: options.instructions,
-      skills: options.skills ?? getDefaultSkills(),
-    });
-
     const run = Effect.scoped(
       Effect.gen(function* () {
+        // Filled once the harness exists; the server reads it per request (see `hostMcpServer`).
+        let runtimeContext: Context.Context<Operation.Service> | undefined;
+        const mcpServer = options.mcpServer;
+        const mcpHost = mcpServer
+          ? yield* hostMcpServer(
+              mcpServer,
+              () => {
+                if (!runtimeContext) {
+                  throw new Error('MCP tool called before the harness was ready.');
+                }
+                return runtimeContext;
+              },
+              () => harness.get(ClientCapabilities.Client).graph.registry,
+            )
+          : undefined;
+
         const harness = yield* Effect.acquireRelease(
           Effect.promise(async () =>
             createComposerTestApp({
@@ -258,6 +347,19 @@ export function createEvalRunner<I, O, D>(
         const { defaultSpace } = yield* Effect.promise(() =>
           EffectEx.runAndForwardErrors(initializeIdentity(harness.get(ClientCapabilities.Client))),
         );
+
+        if (mcpHost && mcpServer) {
+          runtimeContext = yield* Effect.promise(() =>
+            harness.runPromise(Effect.context<Capabilities.ProcessManagerRuntimeServices>()),
+          );
+          registerServedSkills(harness.get(ClientCapabilities.Client).graph.registry, mcpServer);
+        }
+        const mcpSkills = mcpHost && mcpServer ? [Ref.make(mcpSkill(mcpHost.url, defaultSpace.id, mcpServer))] : [];
+
+        const instructions = Instructions.make({
+          text: options.instructions,
+          skills: [...(options.skills ?? getDefaultSkills()), ...mcpSkills],
+        });
 
         let seeded: SeedResult = {};
         const seedFn = options.seed;

@@ -2,6 +2,7 @@ layer: automation
 language: typescript
 tags:
   - evalite
+  - ts-test
   - typecheck
 tasks:
   evals:
