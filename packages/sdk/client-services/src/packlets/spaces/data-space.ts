@@ -3,7 +3,7 @@
 //
 
 import { save } from '@automerge/automerge';
-import { type AutomergeUrl } from '@automerge/automerge-repo';
+import { type AutomergeUrl, parseAutomergeUrl } from '@automerge/automerge-repo';
 import { create } from '@bufbuild/protobuf';
 
 import { Event, Mutex, scheduleTask, sleep, sleepWithContext, synchronized, trackLeaks } from '@dxos/async';
@@ -489,15 +489,17 @@ export class DataSpace {
    * Loads a space's root document, re-driving until it arrives or the space closes.
    *
    * `loadDoc` waits on the network with no deadline of its own, so a space whose root never
-   * arrives would wait forever. The retry bounds each attempt; the kick between them only revives
-   * an `all-failed`/`no-peers` entry, which covers a round aborted by a disconnect and nothing
-   * else. What stalls such a fetch in the first place is not yet established.
+   * arrives would wait forever. The retry bounds each attempt and re-drives the document between
+   * them: the repo-wide kick only revives `all-failed`/`no-peers` entries, and a root that stalls
+   * after its first bytes land leaves a settled entry that neither the kick nor a fresh
+   * `findWithProgress` re-issues.
    */
   async #loadRootDoc(rootUrl: AutomergeUrl): Promise<DocumentLease<DatabaseDirectory> | null> {
     for (let attempt = 0, delay = ROOT_DOC_LOAD_RETRY_INITIAL_DELAY; !this._ctx.disposed; attempt++) {
       try {
         if (attempt > 0) {
           this._echoHost.automergeHost.kickStalledSync();
+          this._echoHost.automergeHost.resyncDocument(parseAutomergeUrl(rootUrl).documentId);
         }
 
         return await warnAfterTimeout(5_000, 'Automerge root doc load timeout (DataSpace)', () =>

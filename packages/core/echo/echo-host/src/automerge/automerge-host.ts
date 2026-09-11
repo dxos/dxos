@@ -150,6 +150,12 @@ const NON_CONVERGENCE_WARN_THRESHOLD = 6;
 const NON_CONVERGENCE_WARN_INTERVAL = 30;
 
 /**
+ * Passes between Subduction re-drives of a document whose heads stay diverged, at a ~10s poll —
+ * ~1min, matching the threshold that declares the pair non-converging in the first place.
+ */
+const SUBDUCTION_RESYNC_INTERVAL = 6;
+
+/**
  * Wall-clock cap for `_repo.shutdown()` during host teardown. Healthy
  * shutdowns finish in single-digit ms; see the comment in
  * {@link AutomergeHost._close} for why the cap is still here.
@@ -578,6 +584,17 @@ export class AutomergeHost extends Resource {
    */
   kickStalledSync(): void {
     this._repo.shareConfigChanged();
+  }
+
+  /**
+   * Re-drives one document's Subduction sync round, re-arming its heal loop.
+   *
+   * {@link kickStalledSync} only revives `all-failed`/`no-peers` entries, so it cannot move a
+   * sedimentree Subduction already considers settled — which is the state a document sits in when
+   * its heads stay behind the sync server with no round in flight.
+   */
+  resyncDocument(documentId: DocumentId): void {
+    this._repo.resyncSubduction(documentId);
   }
 
   /**
@@ -1440,6 +1457,19 @@ export class AutomergeHost extends Resource {
       this._leaseUntilSettled(documentId as DocumentId);
     }
     this._sharePolicyChangedTask!.schedule();
+
+    // Everything above is pull-side: it registers a query and clears `all-failed` entries, which
+    // recovers a document this peer is missing bytes for. A document whose heads diverge because
+    // the remote never received one of OUR commits has no such entry — Subduction pushes local
+    // commits on the `addCommit` broadcast and never re-sends, so nothing above re-drives it and
+    // the diff repeats unchanged forever. `resyncSubduction` is the documented escape hatch for
+    // exactly that state; it re-arms the heal loop for the sedimentree.
+    if (different.length > 0 && passes >= NON_CONVERGENCE_WARN_THRESHOLD && passes % SUBDUCTION_RESYNC_INTERVAL === 0) {
+      log('re-driving subduction for diverged documents', { collectionId, peerId, passes, documents: different });
+      for (const documentId of different) {
+        this._repo.resyncSubduction(documentId as DocumentId);
+      }
+    }
   }
 
   /**
