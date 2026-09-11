@@ -16,8 +16,8 @@ import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 
 import { AssistantCapabilities, AssistantEvents, AssistantOperation } from '#types';
 
-import { ChatNotSpecifiedError } from '../errors';
-import { defaultPreset } from '../processor';
+import { ChatNotSpecifiedError } from '../errors.ts';
+import { defaultPreset } from '../processor/index.ts';
 
 const handler: Operation.WithHandler<typeof AssistantOperation.RunPromptInChat> =
   AssistantOperation.RunPromptInChat.pipe(

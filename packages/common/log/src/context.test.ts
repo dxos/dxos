@@ -4,8 +4,8 @@
 
 import { describe, test } from 'vitest';
 
-import { LogLevel } from './config';
-import { LogEntry, getContextFromEntry } from './context';
+import { LogLevel } from './config.ts';
+import { LogEntry, getContextFromEntry } from './context.ts';
 
 const meta = { F: 'test.ts', L: 1, S: undefined };
 

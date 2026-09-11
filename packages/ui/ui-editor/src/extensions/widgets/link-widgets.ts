@@ -12,7 +12,7 @@ import {
   createWidget,
   widgetMatchersFacet,
   widgetsCore,
-} from './widgets';
+} from './widgets.ts';
 
 /** Decides whether a link's URL is one of this matcher's. */
 export type LinkMatch = (url: string) => boolean;

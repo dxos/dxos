@@ -31,8 +31,8 @@ import { trim } from '@dxos/util';
 
 import { GitHubPlugin } from '#plugin';
 
-import { githubLinks } from '../extensions';
-import { FixtureLinkSourcePlugin } from '../testing';
+import { githubLinks } from '../extensions/index.ts';
+import { FixtureLinkSourcePlugin } from '../testing/index.ts';
 
 /** The popover's card is whatever `CardContent` surface the resolved object's type has — this plugin's, for a PR or issue. */
 const PreviewCard = () => {

@@ -6,7 +6,7 @@ import { type ActionGroupBuilderFn, type ToolbarMenuActionGroupProperties } from
 
 import { meta } from '#meta';
 
-import { type SelectionMode } from '../../tools';
+import { type SelectionMode } from '../../tools/index.ts';
 
 export type { SelectionMode };
 

@@ -10,9 +10,9 @@ import type * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 import { EffectEx } from '@dxos/effect';
 import { log } from '@dxos/log';
 
-import type * as Capability from './capability';
-import { ContributionTypeId } from './capability';
-import { CapabilityNotFoundError } from './errors';
+import type * as Capability from './capability.ts';
+import { ContributionTypeId } from './capability.ts';
+import { CapabilityNotFoundError } from './errors.ts';
 
 type CapabilityEntry<T> = {
   moduleId: string;

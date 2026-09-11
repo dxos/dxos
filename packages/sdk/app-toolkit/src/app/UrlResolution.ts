@@ -10,7 +10,7 @@ import * as Option from 'effect/Option';
 import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
 import * as PathResolution from '@dxos/app-graph/PathResolution';
 
-import * as UrlPath from './UrlPath';
+import * as UrlPath from './UrlPath.ts';
 
 /**
  * Resolve a browser pathname under the pair-chain URL grammar (`UrlPath`) to a graph node id, for

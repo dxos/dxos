@@ -28,8 +28,8 @@ import {
 } from '@dxos/protocols/buf/example/testing/rpc_pb';
 import { type RequestOptions } from '@dxos/protocols/service-contract';
 
-import { type ProtoRpcPeer, createProtoRpcPeer, createServiceBundle } from './service';
-import { createLinkedPorts, encodeMessage } from './testing';
+import { type ProtoRpcPeer, createProtoRpcPeer, createServiceBundle } from './service.ts';
+import { createLinkedPorts, encodeMessage } from './testing.ts';
 
 type TestService = BufService<typeof TestServiceDesc>;
 type TestStreamService = BufService<typeof TestStreamServiceDesc>;

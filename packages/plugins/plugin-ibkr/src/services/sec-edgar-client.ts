@@ -6,9 +6,9 @@ import { proxyFetchLegacy } from '@dxos/edge-client';
 
 import { Ibkr } from '#types';
 
-import { SEC_COMPANY_FACTS_URL, SEC_COMPANY_TICKERS_URL, SEC_EDGAR_USER_AGENT } from '../constants';
-import { EdgarFetchError, EdgarTickerNotFoundError } from '../errors';
-import { type GaapFacts, extractFundamentalsFromEdgar } from './extract-edgar-fundamentals';
+import { SEC_COMPANY_FACTS_URL, SEC_COMPANY_TICKERS_URL, SEC_EDGAR_USER_AGENT } from '../constants.ts';
+import { EdgarFetchError, EdgarTickerNotFoundError } from '../errors.ts';
+import { type GaapFacts, extractFundamentalsFromEdgar } from './extract-edgar-fundamentals.ts';
 
 type FetchImpl = (url: string, init?: RequestInit) => Promise<Response>;
 

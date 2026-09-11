@@ -11,9 +11,9 @@ import { EffectEx } from '@dxos/effect';
 import { AccessToken, Connection, Cursor } from '@dxos/link';
 import { Milestone, Organization, Person, Task, TaskSet } from '@dxos/types';
 
-import { GITHUB_SOURCE } from '../constants';
-import { GitHubApi } from '../services';
-import { pushRepoUpdates, setTaskContainer, upsertMilestone, upsertTask } from './sync';
+import { GITHUB_SOURCE } from '../constants.ts';
+import { GitHubApi } from '../services/index.ts';
+import { pushRepoUpdates, setTaskContainer, upsertMilestone, upsertTask } from './sync.ts';
 
 const repo = (overrides: Partial<GitHubApi.GitHubRepo> = {}): GitHubApi.GitHubRepo => ({
   id: 1234,

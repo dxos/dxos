@@ -18,8 +18,8 @@ import { createRoot } from 'react-dom/client';
 import { addEventListener, combine } from '@dxos/async';
 import { mx } from '@dxos/ui-theme';
 
-import { type SurfaceContext } from './context';
-import { type SurfaceMetric, surfaceMetricKey, surfaceMetrics } from './SurfaceMetrics';
+import { type SurfaceContext } from './context.ts';
+import { type SurfaceMetric, surfaceMetricKey, surfaceMetrics } from './SurfaceMetrics.ts';
 
 declare global {
   interface Window {

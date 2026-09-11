@@ -22,7 +22,7 @@ import { Organization, Person } from '@dxos/types';
 import { translations } from '#translations';
 import { Board } from '#types';
 
-import { BoardArticle } from './BoardArticle';
+import { BoardArticle } from './BoardArticle.tsx';
 
 random.seed(0);
 

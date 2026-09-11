@@ -28,6 +28,8 @@ const make = () =>
         You can create sandboxes, run shell commands inside them, upload files from ECHO into a sandbox,
         and download files from a sandbox back into ECHO.
         The sandbox service is lazily initialized: the container starts on first use.
+        A command is cut off after five minutes unless you pass a longer \`timeout\` (milliseconds).
+        A command that is cut off has not finished.
       `,
     }),
   });

@@ -5,7 +5,7 @@
 import { join } from 'node:path';
 import { describe, expect, test } from 'vitest';
 
-import { WorkspaceProcessor } from './workspace-processor';
+import { WorkspaceProcessor } from './workspace-processor.ts';
 
 describe.skip('code analysis', () => {
   test('process workspace', () => {

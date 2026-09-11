@@ -10,9 +10,9 @@ import { Database, Filter, Obj, Query, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { EntityId } from '@dxos/keys';
 
-import { OperationTestLayer } from '../../../testing';
-import { Memory } from '../../../types/Memory';
-import { DeleteMemory } from './definitions';
+import { OperationTestLayer } from '../../../testing/index.ts';
+import { Memory } from '../../../types/Memory.ts';
+import { DeleteMemory } from './definitions.ts';
 
 EntityId.dangerouslyDisableRandomness();
 

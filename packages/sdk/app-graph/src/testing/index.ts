@@ -2,4 +2,4 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './setup-graph-builder';
+export * from './setup-graph-builder.ts';

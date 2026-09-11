@@ -11,7 +11,7 @@ import * as Schema from 'effect/Schema';
 import { describe, test } from 'vitest';
 import { z } from 'zod';
 
-import { effectFieldsToZod } from './effect-to-zod';
+import { effectFieldsToZod } from './effect-to-zod.ts';
 
 describe('effectFieldsToZod', () => {
   test('Schema.String required → z.string()', ({ expect }) => {

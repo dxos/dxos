@@ -4,8 +4,8 @@
 
 import { describe, test } from 'vitest';
 
-import { WorkerError } from '../errors';
-import { workerErrorFromEvent } from './worker-errors';
+import { WorkerError } from '../errors.ts';
+import { workerErrorFromEvent } from './worker-errors.ts';
 
 describe('workerErrorFromEvent', () => {
   test('passes a real error through unchanged', ({ expect }) => {

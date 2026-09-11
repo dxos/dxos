@@ -2,6 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-export * from './chess';
+export * from './chess.ts';
 
-export * from './Chessboard';
+export * from './Chessboard.tsx';

@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-export * from './JoinPanel';
-export * from './JoinHeading';
+export * from './JoinPanel.tsx';
+export * from './JoinHeading.tsx';
 
-export type * from './JoinPanelProps';
+export type * from './JoinPanelProps.ts';

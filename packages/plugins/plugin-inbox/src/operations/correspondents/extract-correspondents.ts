@@ -18,7 +18,7 @@ import { Message } from '@dxos/types';
 
 import { InboxOperation } from '#types';
 
-import { deriveCorrespondents } from './correspondence';
+import { deriveCorrespondents } from './correspondence.ts';
 
 /**
  * Materializes the user's correspondents as Person objects: derives "anyone I have sent or replied

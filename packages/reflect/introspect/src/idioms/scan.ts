@@ -8,7 +8,7 @@ import { relative } from 'node:path';
 
 import { isWellFormedId } from '@dxos/util';
 
-import type { Idiom, IdiomHost } from './types';
+import type { Idiom, IdiomHost } from './types.ts';
 
 export type ScanIdiomsOptions = {
   /** Repo root to scan. */

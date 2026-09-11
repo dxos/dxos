@@ -6,7 +6,7 @@ import { describe, expect, test } from 'vitest';
 
 import { JsonSchema } from '@dxos/echo';
 
-import { InstallHarness, RunHarness } from './definitions';
+import { InstallHarness, RunHarness } from './definitions.ts';
 
 /**
  * Model ids DeepSeek discontinued on 2026-07-24. They survive only as text an agent reads out of a

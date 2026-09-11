@@ -6,8 +6,8 @@ import { describe, expect, test } from 'vitest';
 
 import { DXN } from '@dxos/keys';
 
-import * as Model from './Model';
-import * as Provider from './Provider';
+import * as Model from './Model.ts';
+import * as Provider from './Provider.ts';
 
 describe('Model catalog', () => {
   test('developer reads the authority off an id', () => {

@@ -10,8 +10,8 @@ import { Filter, Obj } from '@dxos/echo';
 
 import { meta } from '#meta';
 
-import { getReadySpaces } from '../helpers';
-import { type DiagnosticIssue, type DiagnosticProvider } from '../types';
+import { getReadySpaces } from '../helpers.ts';
+import { type DiagnosticIssue, type DiagnosticProvider } from '../types.ts';
 
 /**
  * Scan saved skills and flag any that reference tools that cannot be resolved

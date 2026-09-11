@@ -9,11 +9,11 @@ import { useResizeDetector } from 'react-resize-detector';
 import type { ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
-import { Ruler, TrackHeader } from './headers';
-import { type PointerHandlers, attachPointerHandlers, attachWheelHandlers } from './input';
-import { type OverlayStyle, type RenderCell, type StaticLayerStyle, drawCells, drawOverlay } from './render';
-import type { CellGridAtoms } from './state/atoms';
-import type { Cell, Headers, Row } from './state/types';
+import { Ruler, TrackHeader } from './headers/index.ts';
+import { type PointerHandlers, attachPointerHandlers, attachWheelHandlers } from './input/index.ts';
+import { type OverlayStyle, type RenderCell, type StaticLayerStyle, drawCells, drawOverlay } from './render/index.ts';
+import type { CellGridAtoms } from './state/atoms.ts';
+import type { Cell, Headers, Row } from './state/types.ts';
 
 export type CellGridProps<T = unknown> = ThemedClassName<
   PointerHandlers & {

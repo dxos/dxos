@@ -5,7 +5,7 @@
 import { next as A } from '@automerge/automerge';
 import { describe, test } from 'vitest';
 
-import * as AddOnlySet from './AddOnlySet';
+import * as AddOnlySet from './AddOnlySet.ts';
 
 type TestDoc = { credentials: AddOnlySet.Entries };
 

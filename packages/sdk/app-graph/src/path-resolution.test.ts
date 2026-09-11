@@ -12,9 +12,9 @@ import * as GraphNode from '@dxos/graph/GraphNode';
 import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
 import { invariant } from '@dxos/invariant';
 
-import * as GraphBuilder from './AppGraphBuilder';
-import * as Node from './AppGraphNode';
-import * as PathResolution from './path-resolution';
+import * as GraphBuilder from './AppGraphBuilder.ts';
+import * as Node from './AppGraphNode.ts';
+import * as PathResolution from './path-resolution.ts';
 
 const WORKSPACE_TYPE = 'test.workspace';
 const DOC_TYPE = 'test.document';

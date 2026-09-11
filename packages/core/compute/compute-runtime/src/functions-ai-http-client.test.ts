@@ -13,7 +13,7 @@ import { FunctionsAiMemoizationMissError, FunctionsAiUpstreamError } from '@dxos
 import { EffectEx } from '@dxos/effect';
 import { type EdgeFunctionEnv } from '@dxos/protocols';
 
-import { FunctionsAiHttpClient } from './functions-ai-http-client';
+import { FunctionsAiHttpClient } from './functions-ai-http-client.ts';
 
 const makeStubService = (response: Response): EdgeFunctionEnv.FunctionsAiService => ({
   fetch: async () => response as any,

@@ -11,9 +11,9 @@ import { random } from '@dxos/random';
 import { StorageType, createStorage } from '@dxos/random-access-storage';
 import { range } from '@dxos/util';
 
-import { HypercoreFactory } from './hypercore-factory';
-import { createReadable } from './iterator';
-import { type TestDataItem, batch, createDataItem } from './testing';
+import { HypercoreFactory } from './hypercore-factory.ts';
+import { createReadable } from './iterator.ts';
+import { type TestDataItem, batch, createDataItem } from './testing.ts';
 
 const noop = () => {};
 

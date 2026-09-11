@@ -2,9 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
-import { batchEvents } from './event-batch';
-import { getMutableProxy } from './proxy-utils';
-import { ChangeKeyId, EventId } from './symbols';
+import { batchEvents } from './event-batch.ts';
+import { getMutableProxy } from './proxy-utils.ts';
+import { ChangeKeyId, EventId } from './symbols.ts';
 
 /**
  * Generic change context tracking.

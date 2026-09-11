@@ -14,23 +14,23 @@ import { SpanAttributes } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { type SpaceId, type URI } from '@dxos/keys';
 
-import type * as Blob from './Blob';
-import type * as Entity from './Entity';
-import * as Error from './Error';
-import type * as Feed from './Feed';
-import type * as Filter from './Filter';
-import type * as Hypergraph from './Hypergraph';
-import { type AnyProperties, EntityKind, KindId } from './internal/common/types';
+import type * as Blob from './Blob.ts';
+import type * as Entity from './Entity.ts';
+import * as Error from './Error.ts';
+import type * as Feed from './Feed.ts';
+import type * as Filter from './Filter.ts';
+import type * as Hypergraph from './Hypergraph.ts';
+import { type AnyProperties, EntityKind, KindId } from './internal/common/types/index.ts';
 // Deep import (not the `./internal/Entity` barrel) to avoid a cycle:
 // Database → internal/Entity → entity → JsonSchema → Ref → Database.
-import { isInstanceOf } from './internal/Entity/type-uri';
-import * as queryInternal from './internal/Query';
-import type { Ref } from './internal/Ref/ref';
-import type * as Obj from './Obj';
-import type * as Query from './Query';
-import type * as QueryResult from './QueryResult';
-import type * as Registry from './Registry';
-import type * as Type from './Type';
+import { isInstanceOf } from './internal/Entity/type-uri.ts';
+import * as queryInternal from './internal/Query/index.ts';
+import type { Ref } from './internal/Ref/ref.ts';
+import type * as Obj from './Obj.ts';
+import type * as Query from './Query.ts';
+import type * as QueryResult from './QueryResult.ts';
+import type * as Registry from './Registry.ts';
+import type * as Type from './Type.ts';
 
 /**
  * `query` API function declaration.

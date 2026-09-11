@@ -11,7 +11,7 @@ import { Database, Filter, Obj, Query } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 import { EffectEx } from '@dxos/effect';
 
-import { TestDatabaseLayer } from '../testing';
+import { TestDatabaseLayer } from '../testing/index.ts';
 
 const TestLayer = TestDatabaseLayer({ types: [TestSchema.Person] });
 

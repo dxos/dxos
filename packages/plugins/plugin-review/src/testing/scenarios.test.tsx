@@ -20,8 +20,8 @@ import { type Space } from '@dxos/react-client/echo';
 import { ViewStateProvider } from '@dxos/react-ui-attention';
 import { Text } from '@dxos/schema';
 
-import { runScenarioHeadless } from './scenario-executor';
-import { reviewScenarios } from './scenarios';
+import { runScenarioHeadless } from './scenario-executor.tsx';
+import { reviewScenarios } from './scenarios.ts';
 
 /**
  * Runs every {@link reviewScenarios} definition through the headless executor. The SAME definitions

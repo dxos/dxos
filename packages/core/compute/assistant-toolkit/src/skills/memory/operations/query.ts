@@ -7,8 +7,8 @@ import * as Effect from 'effect/Effect';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Entity, Filter, Query } from '@dxos/echo';
 
-import { Memory } from '../../../types/Memory';
-import { QueryMemories } from './definitions';
+import { Memory } from '../../../types/Memory.ts';
+import { QueryMemories } from './definitions.ts';
 
 export default QueryMemories.pipe(
   Operation.withHandler(

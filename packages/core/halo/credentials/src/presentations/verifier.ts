@@ -6,8 +6,13 @@ import { verifySignature } from '@dxos/crypto';
 import { toPublicKey } from '@dxos/protocols/buf';
 import { type Presentation, type Proof } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
-import { SIGNATURE_TYPE_ED25519, type VerificationResult, verifyChain, verifyCredential } from '../credentials';
-import { getPresentationProofPayload } from './signing';
+import {
+  SIGNATURE_TYPE_ED25519,
+  type VerificationResult,
+  verifyChain,
+  verifyCredential,
+} from '../credentials/index.ts';
+import { getPresentationProofPayload } from './signing.ts';
 
 export const verifyPresentation = async (presentation: Presentation): Promise<VerificationResult> => {
   const errors: string[] = [];

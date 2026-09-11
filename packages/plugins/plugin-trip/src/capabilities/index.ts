@@ -21,9 +21,9 @@ import { translations } from '#translations';
 
 // eslint-disable-next-line import/no-relative-packages
 import pluginSpec from '../../PLUGIN.mdl?raw';
-import skillDefinition from './skill-definition';
+import skillDefinition from './skill-definition.ts';
 
-export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'), {
+export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder.ts'), {
   requires: [AttentionCapabilities.ViewState],
 });
 export const PluginAsset = AppCapability.pluginAsset({
@@ -32,27 +32,27 @@ export const PluginAsset = AppCapability.pluginAsset({
   content: pluginSpec,
   mimeType: 'application/x-mdl',
 });
-export const Schema = AppCapability.schema(() => import('./schema'));
+export const Schema = AppCapability.schema(() => import('./schema.ts'));
 export const SkillDefinition = Capability.inlineModule(
   'SkillDefinition',
   { provides: [AppCapabilities.SkillDefinition] },
   skillDefinition,
 );
-export const CreateObject = SpaceCapability.createObject(() => import('./create-object'));
+export const CreateObject = SpaceCapability.createObject(() => import('./create-object.ts'));
 // Browser-only: a `MarkerProvider` contributes a `useMarkers` React hook, and this one calls
 // `useMemo`/`useObject`/`useObjects` in its own body.
 export const MarkerProvider = Capability.lazyModule(
   'MarkerProvider',
   { provides: [MapCapabilities.MarkerProvider], activatesOn: MapEvents.Start, environments: [] },
-  () => import('./marker-provider'),
+  () => import('./marker-provider.tsx'),
 );
-export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'), {
+export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler.ts'), {
   activatesOn: ActivationEvents.Idle,
 });
-export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
+export const ReactSurface = AppCapability.surface(() => import('./react-surface.ts'), {
   roles: ['org.dxos.role.article', 'org.dxos.role.section'],
 });
-export const Settings = AppCapability.settings(() => import('./settings'), {
+export const Settings = AppCapability.settings(() => import('./settings.ts'), {
   activatesOn: ActivationEvents.Idle,
   requires: [Capabilities.AtomRegistry],
 });

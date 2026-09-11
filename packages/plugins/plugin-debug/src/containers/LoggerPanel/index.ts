@@ -2,4 +2,4 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './LoggerPanel';
+export * from './LoggerPanel.tsx';

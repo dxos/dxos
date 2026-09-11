@@ -8,7 +8,7 @@ import * as Command from 'effect/unstable/cli/Command';
 
 import { CommandConfig } from '@dxos/cli-util';
 
-import { formatHubError, hubApiRequest } from '../../util';
+import { formatHubError, hubApiRequest } from '../../util.ts';
 
 export const list = Command.make(
   'list',

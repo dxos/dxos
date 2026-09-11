@@ -7,7 +7,7 @@ import { describe, test } from 'vitest';
 import { Obj } from '@dxos/echo';
 import { Expando } from '@dxos/schema';
 
-import { getSelectionContext } from './useSelectionContext';
+import { getSelectionContext } from './useSelectionContext.ts';
 
 describe('getSelectionContext', () => {
   const object = Obj.make(Expando.Expando, { content: 'hello brave world' });

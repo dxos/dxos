@@ -4,8 +4,8 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 
-import { withTheme } from '../../testing';
-import { Link } from './Link';
+import { withTheme } from '../../testing/index.ts';
+import { Link } from './Link.tsx';
 
 const meta = {
   title: 'ui/react-ui-core/components/Link',

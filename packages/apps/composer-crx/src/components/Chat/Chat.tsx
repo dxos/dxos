@@ -15,8 +15,8 @@ import { MarkdownStream, type MarkdownStreamController, type MarkdownStreamProps
 import { compactSlots } from '@dxos/ui-editor';
 import { mx } from '@dxos/ui-theme';
 
-import { SpaceId as SpaceIdConfig, SpaceMode } from '../../core';
-import { translationKey } from '../../translations';
+import { SpaceId as SpaceIdConfig, SpaceMode } from '../../core/index.ts';
+import { translationKey } from '../../translations.ts';
 
 // Minimal registry: only the block-level `prompt` tag (user turns render as bubbles). No widgets,
 // so none of plugin-assistant's app-framework-coupled renderers are pulled in.

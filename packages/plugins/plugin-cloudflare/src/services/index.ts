@@ -2,5 +2,5 @@
 // Copyright 2026 DXOS.org
 //
 
-export * as CloudflareApi from './cloudflare-api';
-export * from './proxy-http-client';
+export * as CloudflareApi from './cloudflare-api.ts';
+export * from './proxy-http-client.ts';

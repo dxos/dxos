@@ -8,8 +8,8 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { withTheme } from '@dxos/react-ui/testing';
 import { range } from '@dxos/util';
 
-import { Button } from '../Button';
-import { AttentionGlyph, type AttentionGlyphProps } from './AttentionGlyph';
+import { Button } from '../Button/index.ts';
+import { AttentionGlyph, type AttentionGlyphProps } from './AttentionGlyph.tsx';
 
 const DefaultStory = (props: AttentionGlyphProps) => {
   return (

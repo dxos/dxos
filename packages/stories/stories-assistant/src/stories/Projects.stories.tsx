@@ -10,8 +10,8 @@ import { AppSurface } from '@dxos/app-toolkit/ui';
 import * as AssistantSkill from '@dxos/plugin-assistant/AssistantSkill';
 import * as Sandbox from '@dxos/plugin-sandbox/Sandbox';
 
-import { SpaceTemplateToolbar, StoryRole } from '../modules';
-import { ModuleContainer, VoyageSpacePlugin, config, createDecorators, storyParameters } from '../testing';
+import { SpaceTemplateToolbar, StoryRole } from '../modules/index.ts';
+import { ModuleContainer, VoyageSpacePlugin, config, createDecorators, storyParameters } from '../testing/index.ts';
 
 const meta: Meta<typeof ModuleContainer> = {
   title: 'stories/stories-assistant/Projects',

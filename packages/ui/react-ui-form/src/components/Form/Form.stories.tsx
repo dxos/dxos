@@ -21,10 +21,16 @@ import { hues } from '@dxos/ui-types';
 
 import { translations } from '#translations';
 
-import { AutofillAnnotation, HueAnnotation, OptionsLookupAnnotation, autofill, optionsLookup } from '../../annotations';
-import { Organization, Person, TestLayout } from '../../testing';
-import { type ExcludeId, omitId } from '../../util';
-import { Form, type FormRootProps } from './Form';
+import {
+  AutofillAnnotation,
+  HueAnnotation,
+  OptionsLookupAnnotation,
+  autofill,
+  optionsLookup,
+} from '../../annotations.ts';
+import { Organization, Person, TestLayout } from '../../testing/index.ts';
+import { type ExcludeId, omitId } from '../../util/index.ts';
+import { Form, type FormRootProps } from './Form.tsx';
 
 type StoryArgs<T extends AnyProperties> = FormRootProps<T> & { json?: boolean };
 

@@ -18,11 +18,11 @@ import { arrayMove } from '@dxos/util';
 import { translationKey } from '#translations';
 import { type FormFieldStateProps } from '#types';
 
-import { useFormValues } from '../../../../../hooks';
-import { getFormProperties } from '../../../../../util';
-import { CompactIconButton, FormFieldDispatch, type FormFieldDispatchProps } from '../../FormFieldDispatch';
-import { FormFieldHeader } from '../../FormFieldHeader';
-import { getDefaultValue } from './default-value';
+import { useFormValues } from '../../../../../hooks/index.ts';
+import { getFormProperties } from '../../../../../util/index.ts';
+import { CompactIconButton, FormFieldDispatch, type FormFieldDispatchProps } from '../../FormFieldDispatch.tsx';
+import { FormFieldHeader } from '../../FormFieldHeader.tsx';
+import { getDefaultValue } from './default-value.ts';
 
 // Synthetic id assigned to each row when rendering an ordered list. Plain form
 // values have no stable identity, so drag-and-drop (which requires a stable key

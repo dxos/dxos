@@ -19,7 +19,7 @@ import {
   type DialogRootProps,
   type DialogTitleProps,
   type DialogTriggerProps,
-} from './Dialog';
+} from './Dialog.tsx';
 
 //
 // Root

@@ -8,9 +8,9 @@ import { type AiService } from '@dxos/ai';
 import { Obj, type Relation } from '@dxos/echo';
 import { log } from '@dxos/log';
 
-import { ExtractorRegistry } from './ExtractorRegistry';
-import { type ExtractError, type ExtractInput, type ExtractResult, type ObjectExtractor } from './ObjectExtractor';
-import { type Resolver } from './Resolver';
+import { ExtractorRegistry } from './ExtractorRegistry.ts';
+import { type ExtractError, type ExtractInput, type ExtractResult, type ObjectExtractor } from './ObjectExtractor.ts';
+import { type Resolver } from './Resolver.ts';
 
 export class NoMatchingExtractorError extends Error {
   readonly _tag = 'NoMatchingExtractorError';

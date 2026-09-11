@@ -2,9 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type SchedulerEnvImpl } from '../env';
-import { type Platform, type ReplicantsSummary, type TestPlan, type TestProps } from '../plan';
-import { type RunResults, StorageReplicant } from '../replicants/storage-replicant';
+import { type SchedulerEnvImpl } from '../env/index.ts';
+import { type Platform, type ReplicantsSummary, type TestPlan, type TestProps } from '../plan/index.ts';
+import { type RunResults, StorageReplicant } from '../replicants/storage-replicant.ts';
 
 /**
  * Test specification for Storage benchmark.

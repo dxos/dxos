@@ -6,7 +6,7 @@ import subductionWasmUrl from '@automerge/automerge-subduction/wasm?url';
 import automergeWasmUrl from '@automerge/automerge/automerge.wasm?url';
 import { initializeWasm } from '@automerge/automerge/slim';
 
-import initSubductionWasm from './subduction-wasm';
+import initSubductionWasm from './subduction-wasm.js';
 
 let initialized: Promise<void> | undefined;
 

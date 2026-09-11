@@ -16,10 +16,10 @@ import {
   type FormSubmitProps,
   FormViewport,
   type FormViewportProps,
-} from './FormControls';
-import { FormField, FormFieldLabel, type FormFieldProps } from './FormField';
-import { FormFields, type FormFieldsProps } from './FormFields';
-import { FormFieldSet, type FormFieldSetProps } from './FormFieldSet';
+} from './FormControls.tsx';
+import { FormField, FormFieldLabel, type FormFieldProps } from './FormField/index.ts';
+import { FormFields, type FormFieldsProps } from './FormFields/index.ts';
+import { FormFieldSet, type FormFieldSetProps } from './FormFieldSet/index.ts';
 
 export const Form = {
   Root: FormRoot,

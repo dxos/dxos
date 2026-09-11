@@ -11,7 +11,7 @@ import { describe, test } from 'vitest';
 import { AiService } from '@dxos/ai';
 import { EffectEx } from '@dxos/effect';
 
-import { correctWithLanguageModel } from './correction-llm';
+import { correctWithLanguageModel } from './correction-llm.ts';
 
 /** Minimal `AiService` whose `generateObject` returns a fixed payload (no network). */
 const mockAiService = (object: unknown): Layer.Layer<AiService.AiService> =>

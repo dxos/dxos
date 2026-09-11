@@ -26,7 +26,7 @@ import { fileURLToPath } from 'node:url';
 import { buildArchive } from '@dxos/app-toolkit/testing';
 import { EffectEx } from '@dxos/effect';
 
-import { BrambleSpace } from './sample';
+import { BrambleSpace } from './sample/index.ts';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 

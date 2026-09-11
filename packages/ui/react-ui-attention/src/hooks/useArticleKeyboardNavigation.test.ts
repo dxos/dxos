@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { advance } from './useArticleKeyboardNavigation';
+import { advance } from './useArticleKeyboardNavigation.ts';
 
 describe('advance', () => {
   const ids = ['a', 'b', 'c', 'd'];

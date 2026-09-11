@@ -9,8 +9,8 @@ import { Obj } from '@dxos/echo';
 import { Card, Icon } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { createIssue, createPullRequest, createRepo } from '../testing';
-import { GitHubCard } from './GitHubCard';
+import { createIssue, createPullRequest, createRepo } from '../testing/index.ts';
+import { GitHubCard } from './GitHubCard.tsx';
 
 const subjects = {
   repo: createRepo,

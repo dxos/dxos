@@ -19,7 +19,7 @@ import {
   type Point,
   RecordBuilder,
   type ShapeProps,
-} from './RecordBuilder';
+} from './RecordBuilder.ts';
 
 export const DEFAULT_SCALE = 1;
 

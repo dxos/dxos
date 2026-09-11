@@ -30,17 +30,17 @@ export const AgentIdentityModule = Capability.inlineModule(
 export const AgentRunner = Capability.lazyModule(
   'AgentRunner',
   { provides: [CommentCapabilities.AgentRunner], activatesOn: ReviewEvents.Start },
-  () => import('./agent-runner'),
+  () => import('./agent-runner.ts'),
 );
-export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'), {
+export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder.ts'), {
   environments: ['node'],
 });
-export const HistoryGraph = AppCapability.appGraphBuilder(() => import('./history-graph'), {
+export const HistoryGraph = AppCapability.appGraphBuilder(() => import('./history-graph.ts'), {
   name: 'HistoryGraph',
   environments: ['node'],
 });
-export const Schema = AppCapability.schema(() => import('./schema'));
-export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition'), {
+export const Schema = AppCapability.schema(() => import('./schema.ts'));
+export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition.ts'), {
   environments: ['node'],
 });
 export const Markdown = Capability.lazyModule(
@@ -53,7 +53,7 @@ export const Markdown = Capability.lazyModule(
     provides: [MarkdownCapabilities.ExtensionProvider, MarkdownCapabilities.ViewModeExtension],
     activatesOn: MarkdownEvents.Start,
   },
-  () => import('./markdown-extension'),
+  () => import('./markdown-extension.ts'),
 );
 // Markdown owns the editor-binding socket; this plugin owns the version-aware behaviour, and gates
 // the history companion for markdown documents. Browser-only: the binding it contributes is
@@ -65,19 +65,19 @@ export const MarkdownBinding = Capability.lazyModule(
     activatesOn: MarkdownEvents.Start,
     environments: [],
   },
-  () => import('./markdown-binding'),
+  () => import('./markdown-binding.ts'),
 );
-export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'), {
+export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler.ts'), {
   activatesOn: ActivationEvents.Idle,
 });
-export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
+export const ReactSurface = AppCapability.surface(() => import('./react-surface.ts'), {
   roles: ['org.dxos.role.article'],
 });
-export const HistorySurface = AppCapability.surface(() => import('./history-surface'), {
+export const HistorySurface = AppCapability.surface(() => import('./history-surface.tsx'), {
   roles: ['org.dxos.role.article', 'org.dxos.role.objectProperties'],
   name: 'HistorySurface',
 });
-export const CommentsSettings = AppCapability.settings(() => import('./settings'), {
+export const CommentsSettings = AppCapability.settings(() => import('./settings.ts'), {
   activatesOn: ActivationEvents.Idle,
   provides: [CommentCapabilities.Settings],
 });
@@ -87,7 +87,7 @@ export const CommentState = Capability.lazyModule(
   // this on the review UI's start is wrong. Ungated (hence idle) it is also pullable by the
   // consumers that need it earlier, which a start-gated provider is not.
   { provides: [CommentCapabilities.State] },
-  () => import('./state'),
+  () => import('./state.ts'),
 );
 export const ReviewState = Capability.lazyModule(
   'ReviewState',
@@ -96,9 +96,9 @@ export const ReviewState = Capability.lazyModule(
     activatesOn: ReviewEvents.Start,
     environments: ['node'],
   },
-  () => import('./review-state'),
+  () => import('./review-state.ts'),
 );
-export const UndoMappings = AppCapability.undoMappings(() => import('./undo-mappings'), {
+export const UndoMappings = AppCapability.undoMappings(() => import('./undo-mappings.ts'), {
   activatesOn: ReviewEvents.Start,
   environments: ['node'],
 });

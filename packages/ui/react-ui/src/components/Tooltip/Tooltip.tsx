@@ -32,7 +32,7 @@ import React, {
 
 import { useControllableState } from '@dxos/react-hooks';
 
-import { useElevationContext, useThemeContext } from '../../hooks';
+import { useElevationContext, useThemeContext } from '../../hooks/index.ts';
 import {
   DEFAULT_DELAY_DURATION,
   TOOLTIP_NAME,
@@ -41,7 +41,7 @@ import {
   type TooltipSide,
   type TooltipStateAttribute,
   useTooltipContext,
-} from './TooltipContext';
+} from './TooltipContext.ts';
 
 //
 // Provider

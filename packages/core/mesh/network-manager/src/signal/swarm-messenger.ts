@@ -22,7 +22,7 @@ import {
 } from '@dxos/protocols/buf/dxos/mesh/swarm_pb';
 import { ComplexMap } from '@dxos/util';
 
-import { type OfferMessage, type SignalMessage, type SignalMessenger } from './signal-messenger';
+import { type OfferMessage, type SignalMessage, type SignalMessenger } from './signal-messenger.ts';
 
 interface OfferRecord {
   resolve: (answer: Answer) => void;

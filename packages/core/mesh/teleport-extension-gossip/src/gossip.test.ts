@@ -10,7 +10,7 @@ import { latch } from '@dxos/async';
 import { toPublicKey } from '@dxos/protocols/buf';
 import { TestBuilder } from '@dxos/teleport/testing';
 
-import { TestAgent } from './testing';
+import { TestAgent } from './testing.ts';
 
 describe('Gossip', () => {
   test('Two peers exchange messages', async () => {

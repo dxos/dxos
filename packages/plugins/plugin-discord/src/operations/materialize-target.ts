@@ -12,8 +12,8 @@ import { Channel } from '@dxos/types';
 
 import { DiscordOperation } from '#types';
 
-import { DISCORD_SOURCE } from '../constants';
-import { findChannelForDiscordChannel } from './sync';
+import { DISCORD_SOURCE } from '../constants.ts';
+import { findChannelForDiscordChannel } from './sync.ts';
 
 /**
  * Find-or-create the empty local root for a Discord channel: a feed-backed

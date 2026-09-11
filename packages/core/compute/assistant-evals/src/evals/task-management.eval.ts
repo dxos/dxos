@@ -15,9 +15,9 @@ import * as TasksPlugin from '@dxos/plugin-tasks/TasksPlugin';
 import { Milestone, Outline, Task, TaskSet } from '@dxos/types';
 import { trim } from '@dxos/util';
 
-import { findObject, toolInvocations } from '../assertions';
-import { createEvalRunner } from '../runner';
-import { getDefaultSkills } from '../skills';
+import { findObject, toolInvocations } from '../assertions.ts';
+import { createEvalRunner } from '../runner.ts';
+import { getDefaultSkills } from '../skills.ts';
 
 const PROJECT_NAME = 'Beacon';
 const MILESTONE_NAME = 'Preview';

@@ -2,8 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
-export { Compiler, type Diagnostic, type DiagnosticSeverity } from './compiler';
-export { getCompiler, resetCompiler } from './singleton';
+export { Compiler, type Diagnostic, type DiagnosticSeverity } from './compiler.ts';
+export { getCompiler, resetCompiler } from './singleton.ts';
 export {
   type BuildResult,
   ENTRY_CANDIDATES,
@@ -11,5 +11,5 @@ export {
   type RunResult,
   compileEntry,
   executeScript,
-} from './build';
-export { type BundleResult, bundleEntry, ensureEsbuild, needsBundling } from './bundle';
+} from './build.ts';
+export { type BundleResult, bundleEntry, ensureEsbuild, needsBundling } from './bundle.ts';

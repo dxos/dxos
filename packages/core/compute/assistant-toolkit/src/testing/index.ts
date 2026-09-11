@@ -2,6 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-export * from '../skills/testing';
-export * from './operations';
-export * from './plugins';
+export * from '../skills/testing.ts';
+export * from './operations.ts';
+export * from './plugins.tsx';

@@ -12,7 +12,7 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
 
-import { DebugPanel, type DebugPanelRootProps } from './DebugPanel';
+import { DebugPanel, type DebugPanelRootProps } from './DebugPanel.tsx';
 
 /**
  * The parts in a plain panel, sized by the story: the tab strip in the toolbar and the panels in

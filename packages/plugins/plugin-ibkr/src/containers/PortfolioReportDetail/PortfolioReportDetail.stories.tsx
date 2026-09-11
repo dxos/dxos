@@ -12,7 +12,7 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { translations } from '#translations';
 import { Ibkr } from '#types';
 
-import { PortfolioReportDetail } from './PortfolioReportDetail';
+import { PortfolioReportDetail } from './PortfolioReportDetail.tsx';
 
 // Mirrors live Flex output: no levelOfDetail attribute — the aggregate row per instrument has an
 // empty openDateTime, and each tax-lot row carries its own. Symbols/amounts are fictional.

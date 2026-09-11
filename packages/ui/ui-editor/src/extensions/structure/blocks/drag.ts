@@ -7,8 +7,8 @@ import { Decoration, type DecorationSet, EditorView, ViewPlugin, type ViewUpdate
 
 import { Domino } from '@dxos/ui';
 
-import { blockSelectionField, getSelectedBlocks, setBlockSelection, toggleBlockSelection } from './selection';
-import { type Block, type BlockExtent } from './types';
+import { blockSelectionField, getSelectedBlocks, setBlockSelection, toggleBlockSelection } from './selection.ts';
+import { type Block, type BlockExtent } from './types.ts';
 
 export type BlockDragOptions = {
   /**

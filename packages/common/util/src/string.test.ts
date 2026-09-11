@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { concat, inline, trim } from './string';
+import { concat, inline, trim } from './string.ts';
 
 describe('string', () => {
   test('concat', async ({ expect }) => {

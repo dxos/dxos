@@ -12,8 +12,8 @@ import { type PublicKey } from '@dxos/keys';
 import { ProfileDocumentSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { isNode, range } from '@dxos/util';
 
-import { Client } from '../client';
-import { TestBuilder } from './test-builder';
+import { Client } from '../client/index.ts';
+import { TestBuilder } from './test-builder.ts';
 
 type Options = {
   timeout?: number;

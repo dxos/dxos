@@ -8,7 +8,7 @@ import { buildArchive, histogram } from '@dxos/app-toolkit/testing';
 import { Type } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 
-import { WorkerSpace } from './index';
+import { WorkerSpace } from './index.ts';
 
 /** A task as the archive serializes it: refs become `{ '/': 'echo:///<id>' }`. */
 type ArchivedTask = {
@@ -72,7 +72,7 @@ describe('Worker sample space', () => {
     const tasks = await taskArchive(WorkerSpace());
 
     expect(tasks.map((task) => task.title)).toEqual([
-      'Create a sandbox and install the toolchain',
+      'Create a sandbox and install wrangler',
       'Write the Worker',
       'Deploy it with no Cloudflare login',
       'Fetch the deployed URL and check the response',

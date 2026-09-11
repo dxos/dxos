@@ -34,7 +34,7 @@ import * as TasksOperationHandlerSet from '@dxos/plugin-tasks/TasksOperationHand
 import { Text } from '@dxos/schema';
 import { Message, Task } from '@dxos/types';
 
-import { StockfishSpace } from './index';
+import { StockfishSpace } from './index.ts';
 
 /**
  * The first turn of the chess-MCP template, driven live.

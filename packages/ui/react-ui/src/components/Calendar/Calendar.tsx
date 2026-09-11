@@ -21,8 +21,8 @@ import {
 
 import { type ClassNameValue } from '@dxos/ui-types';
 
-import { useThemeContext } from '../../hooks';
-import { Icon } from '../Icon';
+import { useThemeContext } from '../../hooks/index.ts';
+import { Icon } from '../Icon/index.ts';
 
 //
 // Date <-> CalendarDate conversion.

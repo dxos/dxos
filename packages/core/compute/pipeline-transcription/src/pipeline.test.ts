@@ -11,10 +11,10 @@ import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
 import { type ContentBlock, Organization, Person } from '@dxos/types';
 
-import { TranscriptionPipeline } from './pipeline';
-import { type CommitFn } from './runtime';
-import { makeDatabaseLookup } from './types/lookup';
-import { TranscriptEvent } from './types/transcript-event';
+import { TranscriptionPipeline } from './pipeline.ts';
+import { type CommitFn } from './runtime/index.ts';
+import { makeDatabaseLookup } from './types/lookup.ts';
+import { TranscriptEvent } from './types/transcript-event.ts';
 
 // Reproduces the Pipeline testbench path: correction + extraction through the runtime, asserting that
 // recognized entities are linked in the final corrected text (regardless of stage commit ordering).

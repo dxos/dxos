@@ -8,8 +8,8 @@ import * as LanguageModel from 'effect/unstable/ai/LanguageModel';
 
 import { AiService } from '@dxos/ai';
 
-import { assembleDocument } from './align';
-import { type Document, Upos } from './Document';
+import { assembleDocument } from './align.ts';
+import { type Document, Upos } from './Document.ts';
 
 const PARSE_MODEL = 'com.anthropic.model.claude-haiku-4-5.default';
 

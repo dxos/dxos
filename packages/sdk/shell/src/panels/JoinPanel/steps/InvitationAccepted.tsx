@@ -6,9 +6,9 @@ import React, { cloneElement } from 'react';
 
 import { useTranslation } from '@dxos/react-ui';
 
-import { Action, ActionBar } from '../../../components';
-import { translationKey } from '../../../translations';
-import { type JoinStepProps } from '../JoinPanelProps';
+import { Action, ActionBar } from '../../../components/index.ts';
+import { translationKey } from '../../../translations.ts';
+import { type JoinStepProps } from '../JoinPanelProps.ts';
 
 export interface InvitationAcceptedProps extends JoinStepProps {
   Kind: 'Space' | 'Halo';

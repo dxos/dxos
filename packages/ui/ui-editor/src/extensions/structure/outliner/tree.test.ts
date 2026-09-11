@@ -6,9 +6,9 @@ import { markdown, markdownLanguage } from '@codemirror/lang-markdown';
 import { EditorState } from '@codemirror/state';
 import { beforeEach, describe, test } from 'vitest';
 
-import { type Range } from '../../../types';
-import { join } from '../../../util';
-import { type Item, listItemToString, outlinerTree, treeFacet } from './tree';
+import { type Range } from '../../../types/index.ts';
+import { join } from '../../../util/index.ts';
+import { type Item, listItemToString, outlinerTree, treeFacet } from './tree.ts';
 
 const lines = [
   '- [ ] 1',

@@ -2,4 +2,4 @@
 // Copyright 2026 DXOS.org
 //
 
-export * as RegistrySkill from './RegistrySkill';
+export * as RegistrySkill from './RegistrySkill.ts';

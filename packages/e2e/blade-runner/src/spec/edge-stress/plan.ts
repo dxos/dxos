@@ -11,18 +11,18 @@ import { EDGE_URLS } from '@dxos/config';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
-import { type SchedulerEnvImpl } from '../../env';
+import { type SchedulerEnvImpl } from '../../env/index.ts';
 import {
   type ReplicantBrain,
   type ReplicantsSummary,
   type TestPlan,
   type TestProps,
   onCleanupSignal,
-} from '../../plan';
-import { ClientReplicant } from '../../replicants/client-replicant';
-import { describeError } from '../../util';
-import { Command, canRun, describe, execute, makeCommandArbitrary, mutatesData, simulate } from './commands';
-import { type ClientIndex, type Model, makeFleetModel } from './model';
+} from '../../plan/index.ts';
+import { ClientReplicant } from '../../replicants/client-replicant.ts';
+import { describeError } from '../../util.ts';
+import { Command, canRun, describe, execute, makeCommandArbitrary, mutatesData, simulate } from './commands.ts';
+import { type ClientIndex, type Model, makeFleetModel } from './model.ts';
 import {
   BudgetExhausted,
   type EdgeStressResult,
@@ -33,7 +33,7 @@ import {
   assertFullyReplicated,
   cleanupRun,
   isDevLikeTarget,
-} from './system';
+} from './system.ts';
 
 /**
  * How many commands to draw per executable one.

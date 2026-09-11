@@ -24,7 +24,7 @@ import { InboxPlugin } from '#plugin';
 import { initializeMailbox, seedSummaries } from '#testing';
 import { Mailbox } from '#types';
 
-import { MessageArticle } from './MessageArticle';
+import { MessageArticle } from './MessageArticle.tsx';
 
 const ATTENDABLE_ID = 'story';
 

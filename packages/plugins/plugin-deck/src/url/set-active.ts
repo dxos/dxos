@@ -6,7 +6,7 @@ import { Attention } from '@dxos/react-ui-attention/types';
 
 import { DeckSchema } from '#types';
 
-import * as Navigation from './navigation';
+import * as Navigation from './navigation.ts';
 
 export type SetActiveOptions = {
   next: string[];

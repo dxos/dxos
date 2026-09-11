@@ -9,7 +9,7 @@ import { EntityId, SpaceId } from '@dxos/keys';
 import { FeedProtocol } from '@dxos/protocols';
 import { range } from '@dxos/util';
 
-import { TestBuilder, type TestPeer } from './testing';
+import { TestBuilder, type TestPeer } from './testing/index.ts';
 
 const WellKnownNamespaces = FeedProtocol.WellKnownNamespaces;
 

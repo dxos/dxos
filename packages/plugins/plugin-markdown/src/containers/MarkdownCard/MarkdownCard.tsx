@@ -16,8 +16,8 @@ import { MarkdownEditor, MarkdownEditorProvider } from '#components';
 import { meta } from '#meta';
 import { Markdown } from '#types';
 
-import { getContentSnippet } from '../../util';
-import { snippet as snippetExtension } from './snippet';
+import { getContentSnippet } from '../../util.tsx';
+import { snippet as snippetExtension } from './snippet.ts';
 
 /** Cap for the snippet preview: slightly taller than the card is wide, so a long document clips
  * under the fade instead of growing an unbounded card. Relative to the card's inline size. */

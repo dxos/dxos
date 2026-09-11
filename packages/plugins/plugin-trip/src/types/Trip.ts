@@ -10,8 +10,8 @@ import * as Skill from '@dxos/compute/Skill';
 import { Annotation, DXN, Format, Obj, Ref, Type } from '@dxos/echo';
 import { LabelAnnotation } from '@dxos/echo/Annotation';
 
-import { TRIP_SKILL_KEY } from '../skills/keys';
-import * as Segment from './Segment';
+import { TRIP_SKILL_KEY } from '../skills/keys.ts';
+import * as Segment from './Segment.ts';
 
 /**
  * Itinerary container — ordered list of segment Refs. Each Segment is a

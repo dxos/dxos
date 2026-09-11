@@ -5,8 +5,8 @@
 import * as Result from 'effect/Result';
 import * as Schema from 'effect/Schema';
 
-import { type Channel } from './channel';
-import * as Message from './Message';
+import { type Channel } from './channel.ts';
+import * as Message from './Message.ts';
 
 const decode = Schema.decodeUnknownResult(Message.Union);
 

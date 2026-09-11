@@ -23,8 +23,8 @@ import { type Client } from '@dxos/client';
 import { Database, Obj, type Ref } from '@dxos/echo';
 import { type AccessToken, Connection } from '@dxos/link';
 
-import { BSKY_PUBLIC_API, DEFAULT_FEED_LIMIT } from '../constants';
-import { MissingBlueskyHandleError, PdsResolutionFailedError } from '../errors';
+import { BSKY_PUBLIC_API, DEFAULT_FEED_LIMIT } from '../constants.ts';
+import { MissingBlueskyHandleError, PdsResolutionFailedError } from '../errors.ts';
 
 //
 // Schemas

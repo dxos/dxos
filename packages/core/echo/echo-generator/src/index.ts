@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-export * from './data';
-export * from './generator';
-export type * from './types';
-export * from './util';
+export * from './data.ts';
+export * from './generator.ts';
+export type * from './types.ts';
+export * from './util.ts';

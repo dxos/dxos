@@ -29,7 +29,7 @@ export default Capability.makeModule(
     // Lazy-load the operation definitions (and their `@dxos/ai` dependency) only at click time, so the
     // AI stack stays out of early boot. Each action references its concrete operation (the three ops
     // have distinct output types, so a name-indexed helper would not typecheck).
-    const loadOps = () => Effect.promise(() => import('../types/VideoOperation'));
+    const loadOps = () => Effect.promise(() => import('../types/VideoOperation.ts'));
     const scope = (video: Video.Video) => ({ spaceId: Obj.getDatabase(video)?.spaceId });
 
     const extension = yield* AppGraphBuilder.createExtension({

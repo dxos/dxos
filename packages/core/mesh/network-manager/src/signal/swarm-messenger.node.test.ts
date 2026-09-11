@@ -13,8 +13,8 @@ import { PeerSchema } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
 import { JoinRequestSchema } from '@dxos/protocols/buf/dxos/edge/signal_pb';
 import { type Answer, AnswerSchema, OfferSchema, SignalSchema } from '@dxos/protocols/buf/dxos/mesh/swarm_pb';
 
-import { type OfferMessage, type SignalMessage } from './signal-messenger';
-import { SwarmMessenger } from './swarm-messenger';
+import { type OfferMessage, type SignalMessage } from './signal-messenger.ts';
+import { SwarmMessenger } from './swarm-messenger.ts';
 
 describe('SwarmMessenger', { timeout: 7000 }, () => {
   let topic: PublicKey;

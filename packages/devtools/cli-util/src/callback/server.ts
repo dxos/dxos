@@ -16,7 +16,7 @@ import { getPort } from 'get-port-please';
 
 import { openBrowser } from '#platform';
 
-import { CommandConfig } from '../services';
+import { CommandConfig } from '../services/index.ts';
 
 /** Default timeout for a full browser round-trip. */
 export const CALLBACK_TIMEOUT_MS = 5 * 60 * 1000;

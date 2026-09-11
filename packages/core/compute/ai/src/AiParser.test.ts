@@ -11,8 +11,8 @@ import * as Response from 'effect/unstable/ai/Response';
 
 import { type ContentBlock } from '@dxos/types';
 
-import * as AiParser from './AiParser';
-import * as ScriptedLanguageModel from './testing/ScriptedLanguageModel';
+import * as AiParser from './AiParser.ts';
+import * as ScriptedLanguageModel from './testing/ScriptedLanguageModel.ts';
 
 describe('parser', () => {
   describe('accumulation', () => {

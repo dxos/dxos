@@ -4,7 +4,7 @@
 
 import { type Context, ContextDisposedError } from '@dxos/context';
 
-import { TimeoutError } from './errors';
+import { TimeoutError } from './errors.ts';
 
 /**
  * Times out after delay.

@@ -14,12 +14,12 @@ import {
   CredentialSchema,
 } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
-import { getCredentialAssertion } from './assertions';
-import { createCredential } from './credential-factory';
-import { issuerOf } from './credential-keys';
-import { getCredentialProofPayload } from './signing';
-import { GOLDEN_CREDENTIAL_BYTES_B64, GOLDEN_CREDENTIAL_PROOF_PAYLOAD } from './testing/golden-credential';
-import { verifyCredential } from './verifier';
+import { getCredentialAssertion } from './assertions.ts';
+import { createCredential } from './credential-factory.ts';
+import { issuerOf } from './credential-keys.ts';
+import { getCredentialProofPayload } from './signing.ts';
+import { GOLDEN_CREDENTIAL_BYTES_B64, GOLDEN_CREDENTIAL_PROOF_PAYLOAD } from './testing/golden-credential.ts';
+import { verifyCredential } from './verifier.ts';
 
 // The guard a self-consistency test cannot be: a test that signs a credential with the current tree
 // moves with the tree, so a shape change keeps agreeing with itself. These bytes were signed by a

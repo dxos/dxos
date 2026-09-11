@@ -24,7 +24,7 @@ export const BlobBackend = Capability.lazyModule(
     provides: [FileCapabilities.Backend],
     activatesOn: FileEvents.Start,
   },
-  () => import('./blob-backend'),
+  () => import('./blob-backend.ts'),
 );
 
 export const Dependencies = Capability.lazyModule(
@@ -36,7 +36,7 @@ export const Dependencies = Capability.lazyModule(
     provides: [WnfsCapabilities.Blockstore, WnfsCapabilities.Instances],
     activatesOn: FileEvents.Start,
   },
-  () => import('./dependencies'),
+  () => import('./dependencies.ts'),
 );
 
 export const Translations = AppCapability.translations(translations);

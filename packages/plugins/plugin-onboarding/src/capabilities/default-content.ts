@@ -20,8 +20,8 @@ import * as SpaceEvents from '@dxos/plugin-space/SpaceEvents';
 
 // Raw import keeps the welcome copy in a standalone Markdown file that renders in editors and diffs cleanly.
 import README_CONTENT from '../content/README.md?raw';
-import { OnboardingOperation } from '../operations';
-import { type OnboardingOptions } from './capabilities';
+import { OnboardingOperation } from '../operations/index.ts';
+import { type OnboardingOptions } from './capabilities.ts';
 
 const DEFAULT_SPACE_ICON = 'house-line';
 const DEFAULT_SPACE_ICON_HUE = 'violet';

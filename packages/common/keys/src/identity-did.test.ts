@@ -6,7 +6,7 @@ import * as Schema from 'effect/Schema';
 import * as SchemaRepresentation from 'effect/SchemaRepresentation';
 import { test } from 'vitest';
 
-import { IdentityDid } from './identity-did';
+import { IdentityDid } from './identity-did.ts';
 
 test('identity-did', ({ expect }) => {
   const id = IdentityDid.random();

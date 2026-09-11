@@ -8,11 +8,11 @@ import { sleep } from '@dxos/async';
 import { TestStream } from '@dxos/async/testing';
 import { PublicKey } from '@dxos/keys';
 
-import { type TransportOptions } from '../transport';
-import { getRtcConnectionFactory } from './rtc-connection-factory';
-import { RtcPeerConnection } from './rtc-peer-connection';
-import { type RtcTransportChannel } from './rtc-transport-channel';
-import { chooseInitiatorPeer } from './utils';
+import { type TransportOptions } from '../transport.ts';
+import { getRtcConnectionFactory } from './rtc-connection-factory.ts';
+import { RtcPeerConnection } from './rtc-peer-connection.ts';
+import { type RtcTransportChannel } from './rtc-transport-channel.ts';
+import { chooseInitiatorPeer } from './utils.ts';
 
 const connectionFactory = getRtcConnectionFactory();
 

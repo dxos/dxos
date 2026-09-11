@@ -11,8 +11,8 @@ import { AlertDialog } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
 
 import hero from '../../../assets/hero.webp?url';
-import { translations } from '../../translations';
-import { AuthorizingDeviceDialog } from './AuthorizingDeviceDialog';
+import { translations } from '../../translations.ts';
+import { AuthorizingDeviceDialog } from './AuthorizingDeviceDialog.tsx';
 
 const DefaultStory = () => (
   <AlertDialog.Root defaultOpen>

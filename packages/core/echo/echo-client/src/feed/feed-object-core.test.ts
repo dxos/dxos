@@ -7,7 +7,7 @@ import { describe, test } from 'vitest';
 import { Entity, Obj } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 
-import { FeedObjectCore } from './feed-object-core';
+import { FeedObjectCore } from './feed-object-core.ts';
 
 describe('FeedObjectCore', () => {
   // Large enough that retaining the canonical JSON per object would dominate the object itself —

@@ -20,7 +20,7 @@ import { useStream } from '@dxos/react-client/devtools';
 import { Panel, Toolbar, useFileDownload } from '@dxos/react-ui';
 import { type TablePropertyDefinition } from '@dxos/react-ui-table';
 
-import { MasterDetailTable, Searchbar, Select } from '../../../components';
+import { MasterDetailTable, Searchbar, Select } from '../../../components/index.ts';
 
 const MAX_LOGS = 2_000;
 

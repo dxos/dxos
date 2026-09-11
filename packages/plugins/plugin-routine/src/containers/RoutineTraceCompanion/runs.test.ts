@@ -9,7 +9,7 @@ import * as Trace from '@dxos/compute/Trace';
 import { Obj, Ref } from '@dxos/echo';
 import { EID, type EntityId } from '@dxos/keys';
 
-import { groupIntoRuns } from './runs';
+import { groupIntoRuns } from './runs.ts';
 
 const TRIGGER_ID = 'aaaaaaaa-0000-0000-0000-000000000001' as EntityId;
 const OTHER_TRIGGER_ID = 'bbbbbbbb-0000-0000-0000-000000000002' as EntityId;

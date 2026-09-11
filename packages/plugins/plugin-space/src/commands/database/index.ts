@@ -4,10 +4,10 @@
 
 import * as Command from 'effect/unstable/cli/Command';
 
-import { add } from './add';
-import { query } from './query';
-import { remove } from './remove';
-import { stats } from './stats';
+import { add } from './add.ts';
+import { query } from './query/index.ts';
+import { remove } from './remove.ts';
+import { stats } from './stats.ts';
 
 // TODO(wittjosiah): Alias to `db`.
 export const database: Command.Command<any, any, any, any, any> = Command.make('database').pipe(

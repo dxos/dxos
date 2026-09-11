@@ -12,7 +12,7 @@ import { FeedMessageSchema } from '@dxos/protocols/buf/dxos/echo/feed_pb';
 import { createStorage } from '@dxos/random-access-storage';
 import { Timeframe } from '@dxos/timeframe';
 
-import { TestAgentBuilder, TestFeedBuilder } from './testing';
+import { TestAgentBuilder, TestFeedBuilder } from './testing/index.ts';
 
 describe('space/space-protocol', () => {
   // TODO(dmaretskyi): Fails with the vscode test-runner for some reason.

@@ -11,7 +11,7 @@ import { Database, Ref } from '@dxos/echo';
 import { Text } from '@dxos/schema';
 import { Outline } from '@dxos/types';
 
-import { type TasksResult } from './tasks';
+import { type TasksResult } from './tasks.ts';
 
 export type ProjectInput = { tasks: TasksResult };
 

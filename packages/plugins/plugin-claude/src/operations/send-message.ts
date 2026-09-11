@@ -10,8 +10,8 @@ import { Database } from '@dxos/echo';
 import { sendUserMessage } from '#api';
 import { ClaudeAgentOperation, ClaudeAgentSession } from '#types';
 
-import { getApiKey } from '../credentials';
-import { SessionNotLinkedError } from '../errors';
+import { getApiKey } from '../credentials.ts';
+import { SessionNotLinkedError } from '../errors.ts';
 
 const handler: Operation.WithHandler<typeof ClaudeAgentOperation.SendMessage> = ClaudeAgentOperation.SendMessage.pipe(
   Operation.withHandler(

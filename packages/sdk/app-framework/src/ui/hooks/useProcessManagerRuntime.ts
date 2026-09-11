@@ -13,8 +13,8 @@ import * as ServiceResolver from '@dxos/compute/ServiceResolver';
 import { EffectEx } from '@dxos/effect';
 import type { SpaceId } from '@dxos/keys';
 
-import { Capabilities } from '../../common';
-import { useCapability } from './useCapabilities';
+import { Capabilities } from '../../common/index.ts';
+import { useCapability } from './useCapabilities.ts';
 
 /**
  * Resolve the shared {@link Capabilities.ProcessManagerRuntime} from the plugin context.

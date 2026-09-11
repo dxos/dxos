@@ -16,8 +16,8 @@ import { getDeep, isTruthy, setDeep } from '@dxos/util';
 
 import { translationKey } from '#translations';
 
-import { type ModalController, type TableModel, type TableRow } from '../../model';
-import { narrowSchema } from '../../util';
+import { type ModalController, type TableModel, type TableRow } from '../../model/index.ts';
+import { narrowSchema } from '../../util/index.ts';
 
 const createOptionLabel: Label = ['create-new-object.label', { ns: translationKey }];
 

@@ -20,7 +20,7 @@ import { Position } from '@dxos/util';
 
 import { meta } from '#meta';
 
-import { getChannelsPath } from '../paths';
+import { getChannelsPath } from '../paths.ts';
 
 const channelTypename = Type.getTypename(Channel.Channel);
 

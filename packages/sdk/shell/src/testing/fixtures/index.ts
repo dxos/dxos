@@ -2,5 +2,5 @@
 // Copyright 2023 DXOS.org
 //
 
-export * from './identities';
-export * from './invitations';
+export * from './identities.ts';
+export * from './invitations.ts';

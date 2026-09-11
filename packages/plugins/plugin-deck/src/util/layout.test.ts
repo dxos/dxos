@@ -11,7 +11,7 @@ import {
   resolveLevelOpen,
   resolveSeededPlanks,
   updatePlankNames,
-} from './layout';
+} from './layout.ts';
 
 describe('addSubjectsToActiveDeck', () => {
   test('appends to the end without a pivot', ({ expect }) => {

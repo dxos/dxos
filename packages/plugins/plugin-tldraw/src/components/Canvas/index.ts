@@ -2,8 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
-import { CanvasComponent } from './Canvas';
+import { CanvasComponent } from './Canvas.tsx';
 
-export * from './Canvas';
+export * from './Canvas.tsx';
 
 export default CanvasComponent;

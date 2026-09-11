@@ -4,8 +4,8 @@
 
 import { describe, test } from 'vitest';
 
-import { type TerraConfigValues } from './generate-planet';
-import { PlanetCache, planetKey } from './planet-cache';
+import { type TerraConfigValues } from './generate-planet.ts';
+import { PlanetCache, planetKey } from './planet-cache.ts';
 
 const config: TerraConfigValues = {
   seed: 'terra-1',
