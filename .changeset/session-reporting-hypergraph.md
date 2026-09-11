@@ -1,7 +1,5 @@
 ---
-'@dxos/echo-client': patch
 '@dxos/echo': minor
-'@dxos/types': minor
 '@dxos/plugin-tasks': minor
 ---
 
