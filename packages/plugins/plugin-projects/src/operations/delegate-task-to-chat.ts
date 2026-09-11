@@ -28,10 +28,17 @@ import { getProjectChatPath } from '../paths.ts';
 
 /**
  * Skills the delegated session needs beyond a chat's defaults: the checklist it works from, the
- * ability to write a document, and the project verbs that file what it wrote. The project's own
- * skill arrives with the subject binding — a `Project` carries it as an annotation.
+ * ability to write a document, the project verbs that file what it wrote, and a shell for a task
+ * that builds or runs something. The project's own skill arrives with the subject binding — a
+ * `Project` carries it as an annotation. A key with no plugin behind it binds nothing: the binder
+ * drops a ref it cannot resolve.
  */
-const DELEGATION_SKILL_KEYS = ['org.dxos.skill.planning', 'org.dxos.skill.markdown', 'org.dxos.skill.project'];
+const DELEGATION_SKILL_KEYS = [
+  'org.dxos.skill.planning',
+  'org.dxos.skill.markdown',
+  'org.dxos.skill.project',
+  'org.dxos.skill.sandbox',
+];
 
 const handler: Operation.WithHandler<typeof ProjectOperation.DelegateTaskToChat> =
   ProjectOperation.DelegateTaskToChat.pipe(

@@ -4245,6 +4245,9 @@ importers:
       '@dxos/compute-runtime':
         specifier: workspace:*
         version: link:../compute-runtime
+      '@dxos/config':
+        specifier: workspace:*
+        version: link:../../../sdk/config
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../echo/echo
@@ -4254,6 +4257,9 @@ importers:
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../../common/effect
+      '@dxos/link':
+        specifier: workspace:*
+        version: link:../link
       '@dxos/mcp-client':
         specifier: workspace:*
         version: link:../mcp-client
@@ -4287,6 +4293,9 @@ importers:
       '@dxos/plugin-routine':
         specifier: workspace:*
         version: link:../../../plugins/plugin-routine
+      '@dxos/plugin-sandbox':
+        specifier: workspace:*
+        version: link:../../../plugins/plugin-sandbox
       '@dxos/plugin-space':
         specifier: workspace:*
         version: link:../../../plugins/plugin-space
@@ -4317,12 +4326,18 @@ importers:
       autoevals:
         specifier: ^0.0.132
         version: 0.0.132(ws@8.18.3)
+      chess.js:
+        specifier: 'catalog:'
+        version: 1.4.0
       effect:
         specifier: 4.0.0-rc.108
         version: 4.0.0-rc.108
       evalite:
         specifier: ^0.19.0
         version: 0.19.0
+      vite:
+        specifier: '>=8.2.1'
+        version: 8.2.1(@types/node@22.10.2)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.0)
       vitest:
         specifier: 'catalog:'
         version: 4.1.10(patch_hash=cd5269e90ad2a4447bb2266e101250c008959a6c1168a57c132f6b50281f651b)(@opentelemetry/api@1.9.1)(@types/node@22.10.2)(@vitest/browser-playwright@4.1.10)(@vitest/coverage-v8@4.1.10)(@vitest/ui@4.1.10)(esbuild@0.28.1)(happy-dom@20.7.0)(jiti@2.7.0)(jsdom@29.1.1(@noble/hashes@1.8.0)(canvas@3.2.0))(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.0)
