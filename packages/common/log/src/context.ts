@@ -261,6 +261,10 @@ const stringifyOneLevel = (value: unknown): unknown => {
   if (type === 'bigint') {
     return (value as bigint).toString();
   }
+  // `JSON.stringify` renders an Error as `{}`, so the stack has to be read off it directly.
+  if (value instanceof Error) {
+    return value.stack ?? String(value);
+  }
   try {
     return JSON.stringify(value);
   } catch {
@@ -276,7 +280,10 @@ const computeContext = (entry: LogEntry, rawContext: unknown): Record<string, un
       return;
     }
     for (const [key, value] of Object.entries(source)) {
-      if (RESERVED_ERROR_KEYS.has(key)) {
+      // An `error`/`err` key is redundant only when the entry already carries the error, which is
+      // what reaches the record's own stack field. A caller that passes one in the context alone
+      // otherwise loses it entirely from every serialized output.
+      if (RESERVED_ERROR_KEYS.has(key) && entry.error) {
         continue;
       }
       result[key] = stringifyOneLevel(value);
