@@ -111,7 +111,6 @@ export const getDefaults = ({ isDev, isLocal, isMobile }: PluginConfig): string[
     KanbanPlugin.meta.profile.key,
     MarkdownPlugin.meta.profile.key,
     ProjectsPlugin.meta.profile.key,
-    // Projects declares Tasks as a dependency.
     TasksPlugin.meta.profile.key,
     SheetPlugin.meta.profile.key,
     IllustratorPlugin.meta.profile.key,
