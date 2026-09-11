@@ -36,28 +36,39 @@ export const addFormatting =
       (group) => {
         for (const [type, icon] of Object.entries(formats)) {
           const checked = !!formatting[type as keyof Formatting];
-          group.action(type, { label: [`formatting.${type}.label`, { ns: translationKey }], checked, icon }, () => {
-            const view = getView();
-            if (!view) {
-              return;
-            }
+          group.action(
+            type,
+            {
+              label: [`formatting.${type}.label`, { ns: translationKey }],
+              // On the action, not the group: a toggle group renders one control per action and no
+              // element of its own, so a testId on the group never reaches the DOM.
+              testId: `editor.toolbar.${type}`,
+              checked,
+              icon,
+            },
+            () => {
+              const view = getView();
+              if (!view) {
+                return;
+              }
 
-            if (type === 'link') {
-              checked ? removeLink(view) : addLink()(view);
-              return;
-            }
+              if (type === 'link') {
+                checked ? removeLink(view) : addLink()(view);
+                return;
+              }
 
-            setStyle(
-              type === 'strong'
-                ? Inline.Strong
-                : type === 'emphasis'
-                  ? Inline.Emphasis
-                  : type === 'strikethrough'
-                    ? Inline.Strikethrough
-                    : Inline.Code,
-              !checked,
-            )(view);
-          });
+              setStyle(
+                type === 'strong'
+                  ? Inline.Strong
+                  : type === 'emphasis'
+                    ? Inline.Emphasis
+                    : type === 'strikethrough'
+                      ? Inline.Strikethrough
+                      : Inline.Code,
+                !checked,
+              )(view);
+            },
+          );
         }
       },
     );

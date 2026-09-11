@@ -31,7 +31,11 @@ const handler: Operation.WithHandler<typeof LayoutOperation.UpdateCompanion> = L
         const attention = yield* Capability.get(AttentionCapabilities.Attention);
         const plankId = input.anchor ?? resolveCompanionAnchor(deck.active, attention.getCurrent());
         yield* Capabilities.updateAtomValue(DeckCapabilities.State, (state) =>
-          updateActiveDeck(state, { companionPlanks: closeCompanionPlank(deck.companionPlanks, flatten, plankId) }),
+          updateActiveDeck(state, {
+            companionPlanks: closeCompanionPlank(deck.companionPlanks, flatten, plankId),
+            // Recorded so the pane's default does not undo the close on the next object opened.
+            companionDismissed: true,
+          }),
         );
       } else {
         // Resolve the plank first: a bare variant on an empty deck names none, and recording a selected
@@ -57,6 +61,7 @@ const handler: Operation.WithHandler<typeof LayoutOperation.UpdateCompanion> = L
         yield* Capabilities.updateAtomValue(DeckCapabilities.State, (state) =>
           updateActiveDeck(state, {
             companionPlanks: openCompanionPlank(state.decks[state.activeDeck]?.companionPlanks ?? [], flatten, plankId),
+            companionDismissed: false,
           }),
         );
       }

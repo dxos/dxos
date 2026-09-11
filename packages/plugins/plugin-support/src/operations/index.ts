@@ -16,4 +16,5 @@ export const SupportOperationHandlerSet = OperationHandlerSet.lazy([
   SupportOperation.ResolveTicket.pipe(Operation.lazyHandler(() => import('./resolve-ticket'))),
   SupportOperation.SearchDocs.pipe(Operation.lazyHandler(() => import('./search-docs'))),
   HelpOperation.Start.pipe(Operation.lazyHandler(() => import('./start'))),
+  HelpOperation.StartTour.pipe(Operation.lazyHandler(() => import('./start-tour'))),
 ]);

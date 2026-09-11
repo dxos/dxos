@@ -8,11 +8,64 @@ import * as Struct from 'effect/Struct';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as Translations from '@dxos/app-toolkit/Translations';
+import { Attention } from '@dxos/react-ui-attention/types';
 
 import { meta } from '#meta';
 
+import { isCompanionOpen } from '../util/companion-anchor';
+
 export const PLANK_COMPANION_TYPE = AppNode.PLANK_COMPANION_TYPE;
 export const DECK_COMPANION_TYPE = AppNode.DECK_COMPANION_TYPE;
+
+/**
+ * Companion tab shown when the user has expressed no preference. Help is a companion of every ECHO
+ * article, so the pane opens on something that explains whatever it is sitting beside.
+ */
+export const DEFAULT_COMPANION_VARIANT = 'help';
+
+/**
+ * The companion a plank actually renders, from its tabs in display order: the user's persisted tab
+ * when the plank offers it, else help, else the first tab.
+ */
+/**
+ * Whether opening `plankId` should bring its companion up with it: the pane is the default for a new
+ * plank, but only where there is a help companion to land on. With no companions the pane would be
+ * empty, and with companions but no help the default would land on something else — the assistant
+ * chat provisions a chat object as soon as it becomes the effective variant, so opening it unasked
+ * would create one per object opened.
+ */
+export const shouldOpenCompanionByDefault = ({
+  companions,
+  companionPlanks,
+  companionDismissed,
+  flatten,
+  plankId,
+}: {
+  companions: readonly { id: string }[];
+  companionPlanks: readonly string[];
+  companionDismissed?: boolean;
+  flatten?: boolean;
+  plankId: string;
+}): boolean => {
+  if (companionDismissed || isCompanionOpen(companionPlanks, flatten, plankId)) {
+    return false;
+  }
+
+  return companions.some((companion) => Attention.getLinkedVariant(companion.id) === DEFAULT_COMPANION_VARIANT);
+};
+
+export const selectCompanion = <T extends { id: string }>(
+  companions: readonly T[],
+  preferredVariant?: string,
+): T | undefined => {
+  const byVariant = (variant: string) =>
+    companions.find((companion) => Attention.getLinkedVariant(companion.id) === variant);
+  return (
+    (preferredVariant ? byVariant(preferredVariant) : undefined) ??
+    byVariant(DEFAULT_COMPANION_VARIANT) ??
+    companions[0]
+  );
+};
 
 export type Part = 'main' | 'complementary';
 export type ResolvedPart = Part;
@@ -38,6 +91,16 @@ export const DeckState = Schema.Struct({
    * state you left it in as you move between articles.
    */
   companionPlanks: Schema.mutable(Schema.Array(Schema.String)),
+  /**
+   * Whether the user has closed the companion in this deck. A plank opened while this is unset brings
+   * its help companion up with it, which is what makes help the pane's default rather than merely its
+   * default TAB. Closing the pane once turns it off, so the default never overrides a decision — and
+   * without it, closing would be futile: the next object opened would put the pane straight back.
+   *
+   * Optional because decks persisted before it existed have no such key, and a required one would fail
+   * the whole blob's decode and reset every deck.
+   */
+  companionDismissed: Schema.optional(Schema.Boolean),
   /**
    * Named planks, as name → the plank id currently occupying that name. A name makes a plank behave
    * like a browser tab: opening under a name that is already taken replaces its occupant in place.

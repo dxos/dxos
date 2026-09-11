@@ -3,6 +3,7 @@
 //
 
 import * as Plugin from '@dxos/app-framework/Plugin';
+import type * as Tour from '@dxos/app-toolkit/Tour';
 
 import {
   AppGraphBuilder,
@@ -16,9 +17,9 @@ import {
   SkillDefinition,
   SupportSettings,
   Translations,
+  WelcomeTour,
 } from '#capabilities';
 import { meta } from '#meta';
-import { Tour } from '#types';
 
 /**
  * `helpSteps` is a loader rather than an array so the tour's step definitions — and the operations
@@ -38,6 +39,7 @@ export const SupportPlugin = Plugin.define<SupportPluginOptions>(meta).pipe(
   Plugin.addModule(SkillDefinition),
   Plugin.addModule(SupportSettings),
   Plugin.addModule(Translations),
+  Plugin.addModule(WelcomeTour),
   Plugin.make,
 );
 

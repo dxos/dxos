@@ -78,7 +78,7 @@ export const Companion = ({
   );
 
   return (
-    <Pane.Root classNames={classNames}>
+    <Pane.Root classNames={classNames} data-testid='deck.companion'>
       <Pane.Toolbar>
         <Pane.Tabs tabs={tabs} value={selected} onValueChange={onValueChange} attendableId={attendableId} related />
         {controls}

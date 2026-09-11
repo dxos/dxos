@@ -6,6 +6,7 @@ import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
+import * as Tour from '@dxos/app-toolkit/Tour';
 import * as MarkdownCapabilities from '@dxos/plugin-markdown/MarkdownCapabilities';
 import * as MarkdownEvents from '@dxos/plugin-markdown/MarkdownEvents';
 
@@ -70,6 +71,13 @@ export const Transcriber = Capability.lazyModule(
 );
 export const TranscriptionSettings = AppCapability.settings(() => import('./settings'), {
   provides: [TranscriptionCapabilities.Settings],
+});
+// Typenames rather than schemas: a registration lives in the plugin definition's static closure, and
+// naming the schemas here would drag their barrels onto the boot path. Kept in step with
+// `whenDictatable` in the graph builder, which decides where the control itself appears.
+export const TourFragment = AppCapability.tourFragment({
+  matches: Tour.whenTypenames(['org.dxos.type.document', 'org.dxos.type.assistant.chat']),
+  steps: () => import('../tours').then(({ steps }) => steps),
 });
 export const Translations = AppCapability.translations(translations);
 export const PluginAsset = AppCapability.pluginAsset({

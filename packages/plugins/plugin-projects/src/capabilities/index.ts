@@ -5,12 +5,14 @@
 import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
+import * as Tour from '@dxos/app-toolkit/Tour';
 import * as AssistantCapabilities from '@dxos/plugin-assistant/AssistantCapabilities';
 import * as AssistantEvents from '@dxos/plugin-assistant/AssistantEvents';
 import * as SpaceCapability from '@dxos/plugin-space/SpaceCapability';
 import * as TasksCapabilities from '@dxos/plugin-tasks/TasksCapabilities';
 import * as TasksEvents from '@dxos/plugin-tasks/TasksEvents';
 
+import { meta } from '#meta';
 import { translations } from '#translations';
 import { ProjectCapabilities, ProjectsEvents } from '#types';
 
@@ -52,5 +54,13 @@ export const Templates = Capability.lazyModule(
   },
   () => import('./templates'),
 );
+
+export const ProjectTour = AppCapability.tour({
+  id: 'org.dxos.plugin.projects.tour.project',
+  matches: Tour.whenTypename('org.dxos.type.project'),
+  label: ['project-tour.label', { ns: meta.profile.key }],
+  auto: true,
+  steps: () => import('../tours').then(({ steps }) => steps),
+});
 
 export const Translations = AppCapability.translations(translations);

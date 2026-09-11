@@ -31,6 +31,8 @@ import type { Position } from '@dxos/util';
 import type * as Translations$ from '../app/Translations';
 // eslint-disable-next-line @dxos/rules/import-as-namespace
 import type * as ObservabilityMapping$ from './ObservabilityMapping';
+// eslint-disable-next-line @dxos/rules/import-as-namespace
+import type * as Tour$ from './Tour';
 
 export const LAYOUT_CAPABILITY_ID = 'org.dxos.app-framework.capability.layout';
 
@@ -438,3 +440,22 @@ export type ObservabilityMapping = ObservabilityMapping$.ObservabilityMapping;
 export const ObservabilityMapping = Capability$.make<ObservabilityMapping[]>()(
   'org.dxos.app-toolkit.capability.observabilityMapping',
 );
+
+export type Tour = Tour$.Definition;
+
+/**
+ * A guided tour, contributed by whichever plugin owns what it walks through. Which tours apply is a
+ * predicate over the rendered node's data, so the set is never enumerated here.
+ * @category Capability
+ */
+export const Tour = Capability$.make<Tour>()('org.dxos.app-toolkit.capability.tour');
+
+export type TourFragment = Tour$.Fragment;
+
+/**
+ * Steps contributed into whichever tour is running, by the plugin that owns the feature they explain.
+ * Separate from {@link Tour} so a plugin can add to a tour it does not own, and so a tour is offered
+ * on its own steps whether or not anything has contributed.
+ * @category Capability
+ */
+export const TourFragment = Capability$.make<TourFragment>()('org.dxos.app-toolkit.capability.tourFragment');

@@ -8,6 +8,7 @@ import {
   AppGraphBuilder,
   CreateObject,
   OperationHandler,
+  ProjectTour,
   ReactSurface,
   Schema,
   SkillDefinition,
@@ -29,6 +30,7 @@ export const ProjectsPlugin = Plugin.define(meta).pipe(
   // Injects `Assign to agent` into plugin-tasks' task rows.
   Plugin.addModule(TaskAction),
   Plugin.addModule(Templates),
+  Plugin.addModule(ProjectTour),
   Plugin.addModule(Translations),
   Plugin.make,
 );

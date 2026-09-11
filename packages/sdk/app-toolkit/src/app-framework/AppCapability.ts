@@ -265,6 +265,40 @@ export const schema = (
   );
 };
 
+/**
+ * Module contributing guided tours for the plugin's object types. Registration is inline — the
+ * definitions are metadata (id, typename, label) plus a loader — so the help companion can list a
+ * type's tours without activating the plugin that owns the steps.
+ */
+export const tour = (
+  tours: AppCapabilities.Tour | ReadonlyArray<AppCapabilities.Tour>,
+  options?: { name?: string; environments?: readonly Capability$.Environment[] },
+) => {
+  const values: ReadonlyArray<AppCapabilities.Tour> = Array.isArray(tours) ? tours : [tours];
+  return Capability$.inlineModule(
+    options?.name ?? 'tour',
+    { provides: [AppCapabilities.Tour], environments: options?.environments ?? [] },
+    () => Effect.succeed([Capability$.contributeAll(AppCapabilities.Tour, values)]),
+  );
+};
+
+/**
+ * Module contributing steps into other plugins' tours. Inline for the same reason as {@link tour}:
+ * a fragment is a matcher plus a loader, so which tours gain steps is answerable without activating
+ * the plugin that wrote them.
+ */
+export const tourFragment = (
+  fragments: AppCapabilities.TourFragment | ReadonlyArray<AppCapabilities.TourFragment>,
+  options?: { name?: string; environments?: readonly Capability$.Environment[] },
+) => {
+  const values: ReadonlyArray<AppCapabilities.TourFragment> = Array.isArray(fragments) ? fragments : [fragments];
+  return Capability$.inlineModule(
+    options?.name ?? 'tour-fragment',
+    { provides: [AppCapabilities.TourFragment], environments: options?.environments ?? [] },
+    () => Effect.succeed([Capability$.contributeAll(AppCapabilities.TourFragment, values)]),
+  );
+};
+
 /** Module contributing static plugin assets (typically the bundled `PLUGIN.mdl` spec). */
 export const pluginAsset = (
   asset: AppCapabilities.PluginAsset | ReadonlyArray<AppCapabilities.PluginAsset>,

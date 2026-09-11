@@ -13,7 +13,7 @@ import { type AttentionSigilAction } from '@dxos/app-toolkit/ui';
 import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { useActionRunner, useActions, useNode } from '@dxos/plugin-graph/hooks';
 
-import { useBreakpoints, useCompanions, useDeckSettings, useDeckState } from '#hooks';
+import { useBreakpoints, useCompanionDefault, useCompanions, useDeckSettings, useDeckState } from '#hooks';
 import { meta } from '#meta';
 import { DeckOperation, DeckSchema } from '#types';
 
@@ -79,6 +79,14 @@ export const useDeckPlank = ({ id, part, active }: UseDeckPlankOptions): DeckPla
   // leave a freshly-created plank's sigil menu empty until an unrelated re-render.
   const actions = useActions(graph, node?.id);
   const companions = useCompanions(id);
+  // The pane's default for a newly opened plank; a no-op once the user has closed it in this deck.
+  useCompanionDefault({
+    id,
+    companions,
+    companionPlanks: deck.companionPlanks,
+    companionDismissed: deck.companionDismissed,
+    flatten,
+  });
   const notFoundNode = useNode(graph, NotFound.NOT_FOUND_PATH);
   // Keyed by id, not a boolean: call sites render planks unkeyed, so a swapped id reuses this
   // instance and a plain latch would carry the previous plank's verdict onto the new one.

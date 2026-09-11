@@ -31,7 +31,7 @@ describe('getCompanionSelection', () => {
     });
   });
 
-  test('desktop leaves the variant absent so the pane falls back to the first companion', ({ expect }) => {
+  test('desktop leaves the variant absent so the pane falls back to its default companion', ({ expect }) => {
     const state = makeState({ decks: { deck: { ...DeckSchema.defaultDeck, companionPlanks: ['plank'] } } });
     expect(DeckSchema.getCompanionSelection('desktop', state, undefined)).toEqual({ open: true, variant: undefined });
   });
@@ -54,5 +54,89 @@ describe('getCompanionSelection', () => {
   test('mobile reports closed when no tab is selected', ({ expect }) => {
     const state = makeState({ complementarySidebarState: 'expanded', complementarySidebarPanel: undefined });
     expect(DeckSchema.getCompanionSelection('mobile', state, undefined)).toEqual({ open: false, variant: undefined });
+  });
+});
+
+describe('selectCompanion', () => {
+  const companions = [{ id: 'plank/~comments' }, { id: 'plank/~assistant-chat' }, { id: 'plank/~help' }];
+
+  test('honours a preference the plank offers', ({ expect }) => {
+    expect(DeckSchema.selectCompanion(companions, 'assistant-chat')).toEqual({ id: 'plank/~assistant-chat' });
+  });
+
+  test('falls back to help when there is no preference', ({ expect }) => {
+    expect(DeckSchema.selectCompanion(companions)).toEqual({ id: 'plank/~help' });
+  });
+
+  test('falls back to help when the preferred tab is not on this plank', ({ expect }) => {
+    expect(DeckSchema.selectCompanion(companions, 'transcript')).toEqual({ id: 'plank/~help' });
+  });
+
+  test('falls back to the first tab when the plank has no help companion', ({ expect }) => {
+    expect(DeckSchema.selectCompanion([{ id: 'plank/~comments' }], 'transcript')).toEqual({ id: 'plank/~comments' });
+  });
+
+  test('returns nothing when the plank has no companions', ({ expect }) => {
+    expect(DeckSchema.selectCompanion([])).toBeUndefined();
+  });
+});
+
+describe('shouldOpenCompanionByDefault', () => {
+  const withHelp = [{ id: 'plank/~comments' }, { id: 'plank/~help' }];
+
+  test('opens on a plank that has help and a pane the user has not closed', ({ expect }) => {
+    expect(
+      DeckSchema.shouldOpenCompanionByDefault({
+        companions: withHelp,
+        companionPlanks: [],
+        flatten: true,
+        plankId: 'plank',
+      }),
+    ).toBe(true);
+  });
+
+  test('stays shut once the user has closed the pane', ({ expect }) => {
+    expect(
+      DeckSchema.shouldOpenCompanionByDefault({
+        companions: withHelp,
+        companionPlanks: [],
+        companionDismissed: true,
+        flatten: true,
+        plankId: 'plank',
+      }),
+    ).toBe(false);
+  });
+
+  test('does nothing when the pane is already open', ({ expect }) => {
+    expect(
+      DeckSchema.shouldOpenCompanionByDefault({
+        companions: withHelp,
+        companionPlanks: ['plank'],
+        flatten: true,
+        plankId: 'plank',
+      }),
+    ).toBe(false);
+  });
+
+  test('leaves a plank whose companions do not include help alone', ({ expect }) => {
+    expect(
+      DeckSchema.shouldOpenCompanionByDefault({
+        companions: [{ id: 'plank/~assistant-chat' }],
+        companionPlanks: [],
+        flatten: true,
+        plankId: 'plank',
+      }),
+    ).toBe(false);
+  });
+
+  test('leaves a plank with no companions alone', ({ expect }) => {
+    expect(
+      DeckSchema.shouldOpenCompanionByDefault({
+        companions: [],
+        companionPlanks: [],
+        flatten: true,
+        plankId: 'plank',
+      }),
+    ).toBe(false);
   });
 });

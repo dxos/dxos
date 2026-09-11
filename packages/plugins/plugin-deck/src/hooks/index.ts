@@ -12,5 +12,6 @@ export * from './useDeckState';
 export * from './useDismissToast';
 export * from './useMainSize';
 export * from './useNodeActionExpander';
+export * from './useCompanionDefault';
 export * from './useSelectedCompanion';
 export * from './useSelectedCompanionVariant';

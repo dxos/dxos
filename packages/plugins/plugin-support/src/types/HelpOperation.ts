@@ -22,6 +22,21 @@ export const Start = Operation.make({
 });
 
 /**
+ * Runs a tour registered via `AppCapabilities.Tour`, by id. Invoked from the help companion's tour
+ * list and from the first-open auto-start; the id is recorded as seen so an `auto` tour fires once.
+ */
+export const StartTour = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.operation.support.startTour'),
+    name: 'Start tour',
+    icon: 'ph--path--regular',
+  },
+  services: [Capability.Service],
+  input: Schema.Struct({ tourId: Schema.String }),
+  output: Schema.Void,
+});
+
+/**
  * Persists the "welcome dismissed" annotation on the settings space so the Welcome carousel stays
  * hidden on the default space's Home page. Invoked from the Home article toolbar's "Hide Welcome"
  * action.

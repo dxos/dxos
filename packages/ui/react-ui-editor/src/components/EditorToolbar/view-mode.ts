@@ -51,6 +51,7 @@ export const addViewMode =
       'viewMode',
       {
         label: ['view-mode.label', { ns: translationKey }],
+        testId: 'editor.toolbar.viewMode',
         icon: 'ph--eye--regular',
         iconOnly: true,
         variant: 'dropdownMenu',

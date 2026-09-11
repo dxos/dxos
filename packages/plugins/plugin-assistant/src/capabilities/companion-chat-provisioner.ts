@@ -185,16 +185,6 @@ const resolveEffectiveVariant = (
     .filter((node) => node.type === DeckSchema.PLANK_COMPANION_TYPE)
     .toSorted((a, b) => Position.compare(a.properties, b.properties));
 
-  if (companions.length === 0) {
-    return undefined;
-  }
-
-  if (preferredVariant) {
-    const preferred = companions.find((companion) => Attention.getLinkedVariant(companion.id) === preferredVariant);
-    if (preferred) {
-      return Attention.getLinkedVariant(preferred.id);
-    }
-  }
-
-  return Attention.getLinkedVariant(companions[0].id);
+  const selected = DeckSchema.selectCompanion(companions, preferredVariant);
+  return selected && Attention.getLinkedVariant(selected.id);
 };

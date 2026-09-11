@@ -6,6 +6,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 
 import type * as CapabilityManager from '@dxos/app-framework/CapabilityManager';
 import { usePluginManager } from '@dxos/app-framework/ui';
+import type * as Tour from '@dxos/app-toolkit/Tour';
 import { useLayout } from '@dxos/app-toolkit/ui';
 import { log } from '@dxos/log';
 import {
@@ -19,7 +20,6 @@ import {
 } from '@dxos/react-ui';
 
 import { meta } from '#meta';
-import { type Tour } from '#types';
 
 import { TourContext } from './TourContext';
 
@@ -68,7 +68,14 @@ export const WelcomeTour = ({ steps: initialSteps, running: runningProp, onRunni
   const manager = usePluginManager();
   const layout = useLayout();
   const paused = layout.dialogOpen;
-  const [steps, setSteps] = useState(initialSteps);
+  // Derived during render, never mirrored into state by an effect. A tour's steps arrive after this
+  // component has mounted, and `running` flips in the same render they land in; state written from an
+  // effect is a commit behind, so the start effect below would open the machine on the PREVIOUS
+  // tour's steps, or on none at all. The override is what `TourContext` consumers set, and it dies
+  // with the prop identity it was made against, so it cannot leak into the next tour.
+  const [override, setOverride] = useState<{ base: Tour.Step[]; steps: Tour.Step[] }>();
+  const steps = override?.base === initialSteps ? override.steps : initialSteps;
+  const setSteps = (next: Tour.Step[]) => setOverride({ base: initialSteps, steps: next });
   const tourSteps = useMemo(
     () => steps.map((step, index) => toStep(step, index, manager.capabilities)),
     [steps, manager],
@@ -87,11 +94,13 @@ export const WelcomeTour = ({ steps: initialSteps, running: runningProp, onRunni
   // Where a paused tour resumes; cleared when the tour ends for real.
   const resumeAt = useRef<string | undefined>(undefined);
   const pausing = useRef(false);
+  const lastStepId = useRef<string | undefined>(undefined);
   const tour = useTour({
     steps: tourSteps,
     closeOnInteractOutside: false,
     onStepChange: ({ stepId }) => {
       resumeAt.current = stepId ?? undefined;
+      lastStepId.current = stepId ?? undefined;
     },
     onStatusChange: ({ status }) => {
       if (status === 'started') {
@@ -101,10 +110,30 @@ export const WelcomeTour = ({ steps: initialSteps, running: runningProp, onRunni
         pausing.current = false;
         return;
       }
+
+      // A step whose target never appears ends the tour rather than failing, which reads as the
+      // tour stopping for no reason. Nothing else reports it, so name the step. The test is the
+      // target itself rather than how the tour ended: a reader closing the card does so on a step
+      // that IS on screen, while the silent end leaves behind a selector that resolves to nothing.
+      const ended = steps.find((step, index) => (step.id ?? String(index + 1)) === lastStepId.current);
+      if (ended && !resolveTarget(ended.target)()) {
+        log.warn('tour ended on a step whose target never appeared', {
+          stepId: lastStepId.current,
+          target: typeof ended.target === 'string' ? ended.target : '(resolver)',
+        });
+      }
+
       resumeAt.current = undefined;
       setRunning(false);
     },
   });
+
+  // The machine takes its steps once, at creation, and this component is mounted long before any
+  // tour has steps to give it, so a set that arrives later has to be pushed in through the api.
+  // Declared ahead of the start effect below so the machine is loaded before it is told to open.
+  useEffect(() => {
+    tour.setSteps(tourSteps);
+  }, [tourSteps]);
 
   // The machine exposes no dismiss beyond its close trigger, so a pause presses it.
   const closeRef = useRef<HTMLButtonElement>(null);
@@ -147,7 +176,10 @@ export const WelcomeTour = ({ steps: initialSteps, running: runningProp, onRunni
             >
               <TourComponent.Arrow classNames='[--arrow-background:var(--color-accent-bg)] [&>[data-part=arrow-tip]]:border-accent-bg' />
               <div className='flex items-start'>
-                <TourComponent.Title classNames='grow px-2 py-1 text-accent-fg' />
+                <TourComponent.Title
+                  classNames='grow px-2 py-1 text-accent-fg'
+                  data-testid='helpPlugin.tooltip.title'
+                />
                 <TourComponent.Close asChild ref={closeRef}>
                   <IconButton
                     density='md'

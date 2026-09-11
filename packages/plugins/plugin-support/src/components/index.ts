@@ -4,4 +4,5 @@
 
 export * from './FeedbackForm';
 export * from './Shortcuts';
+export * from './TourAutoStart';
 export * from './WelcomeTour';

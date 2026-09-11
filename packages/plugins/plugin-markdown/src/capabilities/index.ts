@@ -5,10 +5,12 @@
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
+import * as Tour from '@dxos/app-toolkit/Tour';
 import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabilities';
 import * as SpaceCapability from '@dxos/plugin-space/SpaceCapability';
 import { translations as editorTranslations } from '@dxos/react-ui-editor/translations';
 
+import { meta } from '#meta';
 import { translations } from '#translations';
 import { MarkdownCapabilities } from '#types';
 
@@ -49,4 +51,11 @@ export const MarkdownState = Capability.lazyModule(
   () => import('./state'),
 );
 export const Translations = AppCapability.translations([...translations, ...editorTranslations]);
+export const DocumentTour = AppCapability.tour({
+  id: 'org.dxos.plugin.markdown.tour.document',
+  matches: Tour.whenTypename('org.dxos.type.document'),
+  label: ['document-tour.label', { ns: meta.profile.key }],
+  auto: true,
+  steps: () => import('../tours').then(({ steps }) => steps),
+});
 export const UndoMappings = AppCapability.undoMappings(() => import('./undo-mappings'));
