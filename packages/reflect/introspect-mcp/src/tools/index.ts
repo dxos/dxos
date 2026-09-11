@@ -11,7 +11,7 @@
 //
 // Importable as `@dxos/introspect-mcp/tools` (see package.json `exports`).
 
-export { type ToolDefinition, createToolDefinitions } from './tools';
+export { type ToolDefinition, createToolDefinitions } from './tools.ts';
 export {
   type ToolResult,
   shapeFindSymbol,
@@ -24,5 +24,5 @@ export {
   shapeListSchemas,
   shapeListSurfaces,
   shapePluginDetail,
-} from './shaping';
-export { type ToolLogEntry, type ToolLogger, fileLogger, noopLogger, registerLogger } from './logger';
+} from './shaping.ts';
+export { type ToolLogEntry, type ToolLogger, fileLogger, noopLogger, registerLogger } from './logger.ts';

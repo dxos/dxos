@@ -10,8 +10,8 @@ import { FactViewer } from '@dxos/react-ui-rdf';
 
 import { BrainCapabilities } from '#types';
 
-import { type FactStoreRegistry } from '../../capabilities/fact-store';
-import { useFacts } from './use-facts';
+import { type FactStoreRegistry } from '../../capabilities/fact-store.ts';
+import { useFacts } from './use-facts.ts';
 
 /**
  * Companion surface rendering the semantic facts extracted for the active space. Reads the shared

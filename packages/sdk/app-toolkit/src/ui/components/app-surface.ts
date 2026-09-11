@@ -12,7 +12,7 @@ import { log } from '@dxos/log';
 import { type Space } from '@dxos/react-client/echo';
 import { type ProjectionModel } from '@dxos/schema';
 
-import { AppCapabilities } from '../../app-framework';
+import { AppCapabilities } from '../../app-framework/index.ts';
 
 //
 // Internal type helpers

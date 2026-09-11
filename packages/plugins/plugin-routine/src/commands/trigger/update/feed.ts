@@ -17,8 +17,8 @@ import * as Trigger from '@dxos/compute/Trigger';
 import { Database, Filter, JsonSchema, Obj, Ref, Feed as Feed$ } from '@dxos/echo';
 import { EID, type EntityId } from '@dxos/keys';
 
-import { Enabled, Feed, Input, TriggerId } from '../options';
-import { printTrigger, promptForSchemaInput, selectFeed, selectFunction, selectTrigger } from '../util';
+import { Enabled, Feed, Input, TriggerId } from '../options.ts';
+import { printTrigger, promptForSchemaInput, selectFeed, selectFunction, selectTrigger } from '../util.ts';
 
 export const feed = Command.make(
   'feed',

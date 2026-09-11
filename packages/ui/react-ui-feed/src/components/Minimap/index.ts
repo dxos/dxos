@@ -2,4 +2,4 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './Minimap';
+export * from './Minimap.tsx';

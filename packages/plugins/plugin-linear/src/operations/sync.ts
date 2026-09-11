@@ -20,9 +20,9 @@ import { Milestone, Task, TaskSet } from '@dxos/types';
 import { meta } from '#meta';
 import { LinearOperation } from '#types';
 
-import { LINEAR_SOURCE } from '../constants';
-import { LinearTeamUnresolvedError, formatLinearSyncFailure } from '../errors';
-import { LinearApi } from '../services';
+import { LINEAR_SOURCE } from '../constants.ts';
+import { LinearTeamUnresolvedError, formatLinearSyncFailure } from '../errors.ts';
+import { LinearApi } from '../services/index.ts';
 
 //
 // Direction: bidirectional (pull-then-push) for projects and tasks.

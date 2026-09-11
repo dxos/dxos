@@ -4,7 +4,7 @@
 
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
-import { SESSION_TTL, getDebugPortController } from './debug-port-controller';
+import { SESSION_TTL, getDebugPortController } from './debug-port-controller.ts';
 
 const STORAGE_KEY = 'dxos:debug-port-session';
 

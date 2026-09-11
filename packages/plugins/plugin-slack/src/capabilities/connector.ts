@@ -14,8 +14,8 @@ import { OAuthProvider } from '@dxos/protocols';
 
 import { SlackOperation } from '#types';
 
-import { SLACK_SCOPES, SLACK_SOURCE } from '../constants';
-import { SlackApi } from '../services';
+import { SLACK_SCOPES, SLACK_SOURCE } from '../constants.ts';
+import { SlackApi } from '../services/index.ts';
 
 /**
  * Service-specific token-created hook for Slack.

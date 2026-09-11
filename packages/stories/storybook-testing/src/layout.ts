@@ -6,7 +6,7 @@ import type * as Atom from 'effect/unstable/reactivity/Atom';
 
 import * as Capability from '@dxos/app-framework/Capability';
 
-import { type ModuleLayout } from './ModuleContainer';
+import { type ModuleLayout } from './ModuleContainer.tsx';
 
 /**
  * Writable atom holding a story layout produced at runtime — e.g. by a harness `onInit` that binds

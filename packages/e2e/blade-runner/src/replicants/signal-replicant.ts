@@ -13,10 +13,10 @@ import { Runtime_Services_SignalSchema } from '@dxos/protocols/buf/dxos/config_p
 import { trace } from '@dxos/tracing';
 import { range } from '@dxos/util';
 
-import { type TraceEvent } from '../analysys';
-import { type ReplicantEnv, ReplicantRegistry } from '../env';
-import { TestBuilder, type TestPeer } from '../test-builder';
-import { randomArraySlice } from '../util';
+import { type TraceEvent } from '../analysys/index.ts';
+import { type ReplicantEnv, ReplicantRegistry } from '../env/index.ts';
+import { TestBuilder, type TestPeer } from '../test-builder.ts';
+import { randomArraySlice } from '../util.ts';
 
 export type ReplicantRunProps = {
   replicants: number;

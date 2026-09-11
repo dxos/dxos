@@ -13,7 +13,7 @@ import { meta as pluginMeta } from '#meta';
 import { translations } from '#translations';
 import { Settings } from '#types';
 
-import { ExcalidrawSettings } from './ExcalidrawSettings';
+import { ExcalidrawSettings } from './ExcalidrawSettings.tsx';
 
 type StoryArgs = {
   settings: Settings.Settings;

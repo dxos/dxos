@@ -4,8 +4,8 @@
 
 // Deep import (not the `./core` barrel) so this module — reachable from lean contexts — does not
 // pull background-only weight (e.g. the edge-client-backed `image` action).
-import { DeveloperMode } from './core/state';
-import { debugLog } from './debug-log';
+import { DeveloperMode } from './core/state/index.ts';
+import { debugLog } from './debug-log.ts';
 
 export const HOME_URL = 'https://labs.composer.space';
 

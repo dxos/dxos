@@ -1,8 +1,8 @@
 # ark — Tasks
 
-_Resume: `Main` port step 1 (machine swap, swipe-to-dismiss on both sides, touch edge swipe-to-open)
-implemented 2026-09-09 on this branch; PR #13024 open from it. Next: land it, then step 2 (push layout at
-`lg`) as its own PR. Uncommitted: none._
+_Resume: PR #13053 OPEN with auto-merge (combobox dismissal + JSON card + markdown plugin in stories). #13052 MERGED 2026-09-11 (Hello Worker sample space). #13051 MERGED 2026-09-11 (stories-assistant project attention + trace panel scroll). #13050 MERGED 2026-09-10 (brand channels + boot loader recolour + flex activation row + Stepper→Steps). #13032 MERGED 2026-09-10 (cards base, dialogs raised). #13031 (outline link on click/Enter/Space,
+task card resolves, popover card fallback) MERGED 2026-09-10. Next: `Main` step 2 (push layout at `lg`);
+then the Phase 15 re-route or the `Toc` consumer. Uncommitted: none._
 
 ## Phase 1: Tree rebuild on Ark (PR #12873)
 
@@ -561,6 +561,20 @@ is supposed to be decoupled from.
 - [ ] **Follow-up: re-route the promoted link to the Tasks tab through something the host owns.**
       The tab is `ProjectArticle`'s state, so the outline has to reach it through an operation or
       the layout rather than a function handed down as Surface data. Tracked 2026-09-02.
+- [x] **Hovering a promoted link followed it** FIXED 2026-09-10 (reported by the user as the card
+      showing "inline"): `Outline` listened for the chip's `DxAnchorActivate`, which `dx-anchor`
+      dispatches on hover intent and on leave as well as on click, so a hover swapped the outline
+      for the task instead of leaving it to the preview popover. The outline now follows a link on
+      click or Enter/Space only, stopping the chip's own activation so no pinned preview opens
+      against the outline that is leaving; hover reaches the app's preview popover untouched.
+      `Outline.stories.tsx` `TestLinkActivation` pins it. Not a breakpoint issue.
+- [x] **The task's hover card threw "Cannot read properties of undefined (reading 'singleSelect')"**
+      FIXED 2026-09-10: `TaskCard` read the status options with the pre-v4 curried `getAnnotation`
+      and `.value` on an `Option` that no longer exists; it now uses `getPropertyMetaAnnotation`,
+      which now looks through an optional property's union (the meta sits on the annotated member,
+      not on the `Schema.optional` wrapper; unit test in echo's `schema.test.ts`). The deck popover's
+      card surface renders a thrown message in the content column (`CardFallback`) instead of the
+      default fallback landing in the icon gutter. `Card.stories.tsx` `_Task` asserts the tag renders.
 - [x] `subject`, `attendableId` and `taskSet` stay on the Surface: those identify what is being
       rendered, which is what `data` is for.
 - [x] The tasks section's Surface was already clean — `{ subject: taskSet, attendableId }`, no
@@ -904,19 +918,26 @@ dist/types/src: ENOTEMPTY` — a concurrent writer. A Cursor TypeScript native-p
       `aria-labelledby`/`aria-describedby` by detecting the texts. `Form.Section` is the first
       consumer: its `h2` is the legend through `asChild`, so the group is named by its title and the
       heading still serves navigation. Stories assert the naming, the description and the disabling.
-- [ ] **Rename `Stepper` → `Steps`** (tracked 2026-09-05): Ark's name for the machine the component
-      sits on, and the family convention is Ark's name where the part is Ark's. Own PR with the
-      `Input` → `Field` codemod, or folded into it.
-- [ ] **Replace `react-joyride` with Ark's `Tour`** (tracked 2026-09-05): the onboarding walkthrough
-      keeps a second floating stack and its own spotlight/step machine; Ark's tour machine gives the
-      steps, the spotlight and the positioning on the same popper the rest of the library uses.
-      Establish first which `react-joyride` features the walkthrough actually relies on (scrolling
-      to a target, the beacon, controlled step state) and whether Ark's tour covers them.
-- [ ] **Implement Ark's table of contents (`toc`)** (tracked 2026-09-05, DEFERRED 2026-09-09 by the
-      user): the machine tracks which heading is in view and marks the matching link. The installed
-      5.39.1 ships it (`-ui/react/toc`). Decide the consumer first: the machine observes DOM
-      headings with ids, so rendered markdown fits and the CodeMirror editor does not; `react-ui-feed`'s
-      `Outline` is a tick rail over document offsets, a different thing.
+- [x] **Rename `Stepper` → `Steps`** DONE 2026-09-10 (#13050): Ark's name for the machine the
+      component sits on, and the family convention is Ark's name where the part is Ark's. Component,
+      props, theme key (`steps.*`), `stepsTheme`, story title and test ids, `ProgressMeter`'s use, the
+      ontology and README rows; the `Step*` helper types and functions keep their names.
+- [x] **Replace `react-joyride` with Ark's `Tour`** DONE 2026-09-09: `react-ui` `Tour` (all Ark
+      parts, theme, play stories) and `plugin-support`'s `WelcomeTour` rebuilt on it; `react-joyride`,
+      `react-floater`, `type-fest` removed from the repo; composer `help.ts` steps on the plugin's own
+      `Tour.Step`. What the walkthrough relied on and how it maps: waiting for a target (the machine's
+      mutation observer), the `before` hook (the step `effect` → `show()`), controlled `running` and
+      the dialog pause (close trigger + remembered step), the target highlight (`data-tour-highlighted`
+      → `--controls-opacity`), the e2e test ids and `data-step` numbering (kept). No beacon was used.
+      See `react-ui/docs/MIGRATION.md` Phase 7c.
+- [x] **Implement Ark's table of contents (`toc`)** DONE 2026-09-09 (user asked the same day, after
+      deferring it): `react-ui` `Toc` — Root/Content/Nav/Title/List/Indicator/Item/Link on Ark's toc
+      machine, Tailwind theme, play stories for scroll-activation and link-click scrolling. See
+      `react-ui/docs/MIGRATION.md` Phase 7b.
+- [ ] **`Toc` consumer**: the machine observes DOM headings with ids, so rendered markdown fits and
+      the CodeMirror editor does not; `react-ui-feed`'s `Outline` is a tick rail over document
+      offsets, a different thing. First candidate: `rehype-slug` on `MarkdownView` and a `Toc.Nav`
+      beside it.
 - [x] **Transcription `Pipeline/Live` story lost its mic** DONE 2026-09-06 (reported). Not the
       toolbar: the story's own graph extension registered at startup, its connector called
       `getDefaultSpace` on a client with no runtime yet and threw before subscribing to anything
@@ -1151,4 +1172,26 @@ verdict over porting in the same PR).
       delete `dx-main-content-padding` / `dx-main-intrinsic-size` / `--main-sidebar-width`; move
       `useMainSize`, `focus.css` `data-sidebar-*-state` and the `DeckViewport` vars onto the clips;
       decide the rail (collapsed = `Drawer.Content size` switching rail↔sidebar).
-- [ ] **`Toc`** — deferred; see Phase 16's toc item for the consumer question.
+- [x] **`Toc`** DONE 2026-09-09; the consumer question stays open in Phase 16's toc item.
+- [x] **`Tour`, `WelcomeTour` off `react-joyride`** DONE 2026-09-09; see Phase 16's tour item.
+- [x] **Editor widgets split from their matchers** DONE 2026-09-10 (user asked why DXN links lived in
+      `xmlTags`): `extensions/widgets/` owns the decoration field, portal lifecycle (`widgetHost`),
+      effects and bookmark navigation; `xmlTags` is the element matcher, `linkWidgets({ match })` the
+      markdown link matcher (`matchSchemes`/`matchHosts`/`matchPattern`), `objectLinks()` the dxn/echo
+      sugar with the anchor chip as default. `urlSchemes` and `xmlWidgetRegistry` are gone; the core
+      types and effects dropped their `Xml` prefix. Built on the user's consolidation commit.
+- [x] **GitHub link previews as the plugin-extended mechanism** DONE 2026-09-10: three extension
+      points — `MarkdownCapabilities.ExtensionProvider` (existing; plugin-github contributes
+      `githubLinks()`), `PreviewCapabilities.LinkResolver` (new multi capability in plugin-preview;
+      the ECHO resolver is its own module, plugin-github resolves GitHub URLs), and `CardContent`
+      surfaces (existing; `GitHubCard` for `Issue`/`PullRequest`, new host-agnostic types in
+      `@dxos/types` beside `Repo`). Source is configurable via `GitHubCapabilities.LinkSource`,
+      default fetches from the API with the space's connection token. Stories moved to
+      plugin-github (`GitHubCard`, `Links`). Task descriptions take the contributed extensions too
+      (`MarkdownEditable`/`TaskList.Edit` `extensions`, `useMarkdownExtensions` in plugin-tasks).
+      Still plain: the read-only row (`MarkdownView`, a React renderer) — a matcher for it would be
+      a second extension point.
+- [x] **Cards and dialogs one level darker** DONE 2026-09-10 (user): `dx-card-surface` publishes the
+      `base` level and `dx-modal-surface` the `raised` level (surfaces.css role tokens and surface.css
+      zones together); `overlay` is left to explicit `elevation={4}`. `Select`'s list moves to the popup
+      level with menus so it does not follow dialogs down.

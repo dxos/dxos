@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { DOWNLOAD_URL, downloadUrl, prereleaseChannel } from './download';
+import { DOWNLOAD_URL, downloadUrl, prereleaseChannel } from './download.ts';
 
 describe('prereleaseChannel', () => {
   test('production has no prerelease channel — the dashboard link is correct there', ({ expect }) => {

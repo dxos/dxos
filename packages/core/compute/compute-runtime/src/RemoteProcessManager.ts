@@ -24,8 +24,9 @@ import { log } from '@dxos/log';
 // same error shape as the domain type they extend.
 import type { SerializedError } from '@dxos/protocols';
 
-import type * as ProcessManager from './ProcessManager';
-import * as RemoteProcessHandle from './RemoteProcessHandle';
+import type * as ProcessManager from './ProcessManager.ts';
+import * as RemoteProcessHandle from './RemoteProcessHandle.ts';
+import type * as RemoteTraceMonitor from './RemoteTraceMonitor.ts';
 
 /**
  * Cancel target for a remote (EDGE) run — the {@link Manager.cancel} argument. Addressed by `trigger`
@@ -243,6 +244,8 @@ export const makeControlVerbs = (
   control: Control,
   registry: Registry.AtomRegistry,
   processTreeAtom: Atom.Writable<readonly Process.Info[]>,
+  /** Live trace source handed to every handle, so `subscribeEphemeral` is pushed rather than polled. */
+  remoteTrace?: RemoteTraceMonitor.Monitor,
 ): Required<Pick<Manager, 'spawn' | 'list' | 'attach' | 'refreshProcessTree'>> => {
   const refreshProcessTree = (spaceId: SpaceId): Effect.Effect<readonly Process.Info[]> =>
     control.list({ spaceId }).pipe(
@@ -262,6 +265,7 @@ export const makeControlVerbs = (
       spaceId,
       ...(definition !== undefined ? { definition } : {}),
       registry,
+      ...(remoteTrace !== undefined ? { remoteTrace } : {}),
       onLifecycleChange: refreshProcessTree(spaceId).pipe(Effect.ignore, Effect.asVoid),
     });
 

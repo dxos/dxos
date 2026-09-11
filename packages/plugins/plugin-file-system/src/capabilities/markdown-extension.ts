@@ -13,7 +13,7 @@ import { listener } from '@dxos/ui-editor';
 
 import { FileSystemCapabilities } from '#types';
 
-import { findFileById, updateFileInWorkspace, writeFileContent } from '../util';
+import { findFileById, updateFileInWorkspace, writeFileContent } from '../util.ts';
 
 const AUTO_SAVE_DELAY_MS = 1000;
 

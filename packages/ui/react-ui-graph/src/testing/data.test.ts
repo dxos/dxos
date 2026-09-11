@@ -4,7 +4,7 @@
 
 import { expect, test } from 'vitest';
 
-import { convertTreeToGraph, createTree } from './data';
+import { convertTreeToGraph, createTree } from './data.ts';
 
 test('createTree', () => {
   const data = convertTreeToGraph(createTree());

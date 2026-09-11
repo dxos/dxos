@@ -12,7 +12,7 @@ import { Form } from '@dxos/react-ui-form';
 import { meta } from '#meta';
 import { Settings } from '#types';
 
-import { pingExtension } from '../../util';
+import { pingExtension } from '../../util/index.ts';
 
 type TestState =
   | { kind: 'idle' }

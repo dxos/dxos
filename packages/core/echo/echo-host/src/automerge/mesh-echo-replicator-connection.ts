@@ -14,7 +14,11 @@ import type { AutomergeProtocolMessage } from '@dxos/protocols';
 import { SyncMessageSchema } from '@dxos/protocols/buf/dxos/mesh/teleport/automerge_pb';
 import { AutomergeReplicator, type AutomergeReplicatorFactory } from '@dxos/teleport-extension-automerge-replicator';
 
-import type { AutomergeReplicatorConnection, ShouldAdvertiseProps, ShouldSyncCollectionProps } from './echo-replicator';
+import type {
+  AutomergeReplicatorConnection,
+  ShouldAdvertiseProps,
+  ShouldSyncCollectionProps,
+} from './echo-replicator.ts';
 
 const DEFAULT_FACTORY: AutomergeReplicatorFactory = (params) => new AutomergeReplicator(...params);
 

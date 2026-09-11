@@ -2,4 +2,4 @@
 // Copyright 2025 DXOS.org
 //
 
-export { ZenArticle as default } from './ZenArticle';
+export { ZenArticle as default } from './ZenArticle.tsx';

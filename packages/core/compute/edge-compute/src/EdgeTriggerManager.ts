@@ -22,7 +22,7 @@ import { type EdgeTriggerStatus } from '@dxos/edge-client';
 import { EID, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 
-import { createEdgeClient } from './edge-client';
+import { createEdgeClient } from './edge-client.ts';
 
 type EdgeClient = ReturnType<typeof createEdgeClient>;
 

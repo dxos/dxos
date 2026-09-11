@@ -88,9 +88,9 @@ import { type Timeframe } from '@dxos/timeframe';
 import { trace } from '@dxos/tracing';
 import { ComplexMap, deferFunction, forEachAsync } from '@dxos/util';
 
-import { type Identity, IdentityProviderService, createAuthProvider } from '../identity';
-import { type InvitationsManager, InvitationsManagerService } from '../invitations';
-import { type IMetadataStore, IMetadataStoreService } from '../metadata';
+import { type Identity, IdentityProviderService, createAuthProvider } from '../identity/index.ts';
+import { type InvitationsManager, InvitationsManagerService } from '../invitations/index.ts';
+import { type IMetadataStore, IMetadataStoreService } from '../metadata/index.ts';
 import {
   AuthStatus,
   CredentialServerExtension,
@@ -99,10 +99,10 @@ import {
   SpaceManagerService,
   type SpaceProtocol,
   type SpaceProtocolSession,
-} from '../space';
-import { openCredentialsDocument } from './credentials-document-store';
-import { DataSpace } from './data-space';
-import { spaceGenesis } from './genesis';
+} from '../space/index.ts';
+import { openCredentialsDocument } from './credentials-document-store.ts';
+import { DataSpace } from './data-space.ts';
+import { spaceGenesis } from './genesis.ts';
 
 const PRESENCE_ANNOUNCE_INTERVAL = 10_000;
 const PRESENCE_OFFLINE_TIMEOUT = 20_000;
@@ -768,7 +768,12 @@ export class DataSpaceManager extends Resource {
     if (space) {
       // Separate teardown (resource lifecycle) from the terminal state transition.
       if (space.isOpen) {
-        await space.close(ctx);
+        // The tombstone above and the SpaceDeleted credential both already exist, so the deletion is
+        // committed and the local state must reach it whatever the teardown does. Leaving the swarm
+        // waits on the signaling server, which times out when EDGE is unreachable; letting that
+        // reject would skip the two lines below and strand a closed space in the live list that
+        // `isSpaceDeleted` then refuses to remove on a retry.
+        await space.close(ctx).catch((err) => log.warn('space teardown failed; deleting anyway', { spaceKey, err }));
       }
       await space.delete();
       this._spaces.delete(spaceKey);

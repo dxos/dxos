@@ -16,10 +16,10 @@ import { createKvsStore } from '@dxos/effect';
 import { log } from '@dxos/log';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 
-import { resolveSettingsSpace } from '../../util';
-import { installedPlugins, pluginSet, pluginSettings } from './binding';
-import { type Store } from './reconciler';
-import { Sync } from './sync';
+import { resolveSettingsSpace } from '../../util/index.ts';
+import { installedPlugins, pluginSet, pluginSettings } from './binding.ts';
+import { type Store } from './reconciler.ts';
+import { Sync } from './sync.ts';
 
 /**
  * The space's {@link AppSettings.AppSettings} singleton, created on first use. Two devices racing

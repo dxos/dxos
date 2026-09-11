@@ -2,10 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
-export * from './deploy';
-export * from './format';
-export * from './template';
+export * from './deploy.ts';
+export * from './format.ts';
+export * from './template.ts';
 
-export * from './useCreateAndDeployScriptTemplates';
-export * from './useToolbarState';
-export * from './useCompiler';
+export * from './useCreateAndDeployScriptTemplates.ts';
+export * from './useToolbarState.ts';
+export * from './useCompiler.ts';

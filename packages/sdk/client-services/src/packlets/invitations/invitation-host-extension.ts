@@ -29,10 +29,10 @@ import {
 } from '@dxos/protocols/buf/dxos/halo/invitations_pb';
 import { type ExtensionContext, RpcExtension } from '@dxos/teleport';
 
-import type { FlowLockHolder } from './invitation-state';
+import type { FlowLockHolder } from './invitation-state.ts';
 
 type InvitationHostService = BufService<typeof InvitationHostServiceDesc>;
-import { stateToString, tryAcquireBeforeContextDisposed } from './utils';
+import { stateToString, tryAcquireBeforeContextDisposed } from './utils.ts';
 
 /// Timeout for the options exchange.
 const OPTIONS_TIMEOUT = 10_000;

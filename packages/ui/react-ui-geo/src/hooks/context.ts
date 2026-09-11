@@ -7,7 +7,7 @@ import { type Dispatch, type SetStateAction, createContext, useContext } from 'r
 
 import { raise } from '@dxos/debug';
 
-import { type LatLngLiteral } from '../types';
+import { type LatLngLiteral } from '../types.ts';
 
 // TODO(burdon): Factor out common geometry types.
 export type Size = { width: number; height: number };

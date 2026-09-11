@@ -8,8 +8,8 @@ import { LogLevel } from '@dxos/log';
 import { createContext } from '@dxos/react-ui';
 import { ViewState } from '@dxos/react-ui-attention';
 
-import { type LogRow } from './log-buffer';
-import { type LevelName, LEVELS } from './recorder';
+import { type LogRow } from './log-buffer.ts';
+import { type LevelName, LEVELS } from './recorder.ts';
 
 // Kept out of `Logger.tsx`: react-refresh only fast-refreshes a module whose exports are all
 // components, so the context and helpers exported beside them forced a full page reload of the app

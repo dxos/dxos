@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import * as AppSettings from './AppSettings';
+import * as AppSettings from './AppSettings.ts';
 
 const NS = 'org.dxos.plugin.markdown';
 

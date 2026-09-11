@@ -15,8 +15,8 @@ import {
   ProofSchema,
 } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
-import { SIGNATURE_TYPE_ED25519 } from '../credentials';
-import { getPresentationProofPayload } from './signing';
+import { SIGNATURE_TYPE_ED25519 } from '../credentials/index.ts';
+import { getPresentationProofPayload } from './signing.ts';
 
 // TODO(burdon): Rename createPresentation?
 export const signPresentation = async ({

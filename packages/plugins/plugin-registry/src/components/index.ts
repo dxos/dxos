@@ -2,9 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
-export * from './DisableDependentsAlert';
-export * from './PluginDetail';
-export * from './PluginFailureBadge';
-export * from './PluginList';
-export * from './PluginScope';
-export * from './RegistrySettings';
+export * from './DisableDependentsAlert/index.ts';
+export * from './PluginDetail/index.ts';
+export * from './PluginFailureBadge/index.ts';
+export * from './PluginList/index.ts';
+export * from './PluginScope/index.ts';
+export * from './RegistrySettings/index.ts';

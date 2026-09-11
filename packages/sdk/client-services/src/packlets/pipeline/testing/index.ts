@@ -2,4 +2,4 @@
 // Copyright 2022 DXOS.org
 //
 
-export * from './test-feed-builder';
+export * from './test-feed-builder.ts';

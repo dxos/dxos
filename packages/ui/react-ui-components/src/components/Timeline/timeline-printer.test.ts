@@ -4,8 +4,8 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { type Commit } from './Timeline';
-import { renderTimelineAscii } from './timeline-printer';
+import { renderTimelineAscii } from './timeline-printer.ts';
+import { type Commit } from './Timeline.tsx';
 
 describe('renderTimelineAscii', () => {
   test('linear single branch', () => {

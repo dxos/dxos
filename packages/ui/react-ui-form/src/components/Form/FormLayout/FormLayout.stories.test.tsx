@@ -6,7 +6,7 @@ import { composeStories } from '@storybook/react-vite';
 import { act, cleanup, screen, within } from '@testing-library/react';
 import { afterEach, describe, expect, test } from 'vitest';
 
-import * as stories from './FormLayout.stories';
+import * as stories from './FormLayout.stories.tsx';
 
 const { NestedLabel, NestedLabelStatic } = composeStories(stories);
 

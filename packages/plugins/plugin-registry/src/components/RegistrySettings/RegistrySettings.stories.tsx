@@ -9,7 +9,7 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
 
-import { RegistrySettings } from './RegistrySettings';
+import { RegistrySettings } from './RegistrySettings.tsx';
 
 const meta = {
   title: 'plugins/plugin-registry/components/RegistrySettings',

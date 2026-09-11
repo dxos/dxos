@@ -2,4 +2,4 @@
 // Copyright 2020 DXOS.org
 //
 
-export { MetadataPanel as default } from './MetadataPanel';
+export { MetadataPanel as default } from './MetadataPanel.tsx';

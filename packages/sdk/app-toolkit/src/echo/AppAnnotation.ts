@@ -10,7 +10,7 @@ import { Annotation, Collection, Obj, Ref } from '@dxos/echo';
 
 // The module, not the barrel: the barrel pulls in `AppNode`, which imports this file back, and the
 // annotation below reads the schema at module-init time.
-import * as DeckSpec from '../app-graph/DeckSpec';
+import * as DeckSpec from '../app-graph/DeckSpec.ts';
 /** Root navigation collection for a space. */
 export const RootCollectionAnnotation = Annotation.make({
   id: 'org.dxos.space.rootCollection',

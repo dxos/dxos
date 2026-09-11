@@ -105,12 +105,13 @@ export const CreateSpaceDialog = () => {
                 <Form.Fields />
                 <Form.ErrorText>{error}</Form.ErrorText>
                 {templates.length > 0 && (
-                  <div role='group' aria-labelledby='create-space-templates'>
-                    <h3 id='create-space-templates' className='my-1 text-sm text-subdued'>
-                      {t('create-space-dialog.templates.label')}
-                    </h3>
+                  <Form.FieldSet
+                    aria-labelledby='create-space-templates'
+                    label={t('create-space-dialog.templates.label')}
+                    description={t('create-space-dialog.templates.description')}
+                  >
                     <Listbox.Root value={template} onValueChange={setTemplate}>
-                      <Listbox.Content aria-labelledby='create-space-templates'>
+                      <Listbox.Content classNames='my-2' aria-label={t('create-space-dialog.templates.label')}>
                         {templates.map(({ id, label, description, icon }) => (
                           <Listbox.Item key={id} id={id}>
                             <Listbox.ItemContent
@@ -123,7 +124,7 @@ export const CreateSpaceDialog = () => {
                         ))}
                       </Listbox.Content>
                     </Listbox.Root>
-                  </div>
+                  </Form.FieldSet>
                 )}
               </Form.Content>
             </ScrollArea.Viewport>

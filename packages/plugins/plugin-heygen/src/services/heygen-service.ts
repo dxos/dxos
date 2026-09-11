@@ -7,9 +7,9 @@ import * as Redacted from 'effect/Redacted';
 import { proxyFetchLegacy } from '@dxos/edge-client';
 import type * as GenerationService from '@dxos/plugin-studio/GenerationService';
 
-import { HEYGEN_CONNECTOR_ID, HEYGEN_ID, HEYGEN_SOURCE } from '../constants';
-import { HeyGenProvider } from './heygen-provider';
-import { HeyGenRequestConfig, decodeHeyGenConfig } from './heygen-request';
+import { HEYGEN_CONNECTOR_ID, HEYGEN_ID, HEYGEN_SOURCE } from '../constants.ts';
+import { HeyGenProvider } from './heygen-provider.ts';
+import { HeyGenRequestConfig, decodeHeyGenConfig } from './heygen-request.ts';
 
 // api.heygen.com does not permit browser CORS, so route through the DXOS edge CORS proxy; the
 // `X-Api-Key` header passes through unchanged (the proxy only special-cases `Authorization`).

@@ -19,7 +19,7 @@ import {
   PresentationSchema,
 } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
-import type { EdgeIdentity } from './edge-identity';
+import type { EdgeIdentity } from './edge-identity.ts';
 
 /**
  * Edge identity backed by a device key without a credential chain.

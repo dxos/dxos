@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-export * from './defs';
-export * from './fragments';
+export * from './defs.ts';
+export * from './fragments/index.ts';
 
-export * from './util';
+export * from './util/index.ts';

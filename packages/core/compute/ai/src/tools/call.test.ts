@@ -10,7 +10,7 @@ import * as Toolkit from 'effect/unstable/ai/Toolkit';
 
 import { type ContentBlock } from '@dxos/types';
 
-import { callTool } from './call';
+import { callTool } from './call.ts';
 
 const EchoToolkit = Toolkit.make(
   Tool.make('echo', {

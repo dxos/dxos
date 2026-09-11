@@ -3,7 +3,7 @@
 //
 
 import { type JsonObject, create } from '@bufbuild/protobuf';
-import { anyPack, anyUnpack } from '@bufbuild/protobuf/wkt';
+import { anyUnpack } from '@bufbuild/protobuf/wkt';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
@@ -17,7 +17,7 @@ import { InvitationEncoder } from '@dxos/client/invitations';
 import { createIdFromSpaceKey } from '@dxos/echo-protocol';
 import { Identity as HaloIdentity, IdentityError } from '@dxos/halo';
 import { IdentityDid, PublicKey } from '@dxos/keys';
-import { fromDate, fromPublicKey, requirePublicKey, toDate, toPublicKey } from '@dxos/protocols/buf';
+import { anyPackBare, fromDate, fromPublicKey, requirePublicKey, toDate, toPublicKey } from '@dxos/protocols/buf';
 import {
   type Device as ClientDevice,
   type Identity as ClientIdentity,
@@ -38,7 +38,7 @@ import {
 } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { ComplexSet } from '@dxos/util';
 
-import { makeFlow, streamFromClientObservable, toShareOptions } from './util';
+import { makeFlow, streamFromClientObservable, toShareOptions } from './util.ts';
 
 /**
  * Narrows arbitrary profile metadata to what a `google.protobuf.Struct` can carry.
@@ -324,7 +324,7 @@ export const makeIdentityService = (client: Client): Context.Service.Shape<typeo
             issuanceDate: fromDate(new Date()),
             subject: {
               id: identityKey,
-              assertion: anyPack(
+              assertion: anyPackBare(
                 ServiceAccessSchema,
                 create(ServiceAccessSchema, {
                   serverName: options.serverName,

@@ -15,7 +15,7 @@ import { trim } from '@dxos/util';
 
 import { translations } from '#translations';
 
-import { OutlineCard } from './OutlineCard';
+import { OutlineCard } from './OutlineCard.tsx';
 
 const CONTENT = trim`
   - [ ] Draft the launch announcement

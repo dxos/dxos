@@ -11,10 +11,10 @@ import { assertArgument, invariant } from '@dxos/invariant';
 import { DXN, URI } from '@dxos/keys';
 import { type Primitive } from '@dxos/util';
 
-import type * as Annotation from '../../Annotation';
-import { type Mutable } from '../common/proxy';
-import { type AnyProperties, EntityKind, TypeId, getSchema } from '../common/types';
-import { createAnnotationHelper } from './util';
+import type * as Annotation from '../../Annotation.ts';
+import { type Mutable } from '../common/proxy/index.ts';
+import { type AnyProperties, EntityKind, TypeId, getSchema } from '../common/types/index.ts';
+import { createAnnotationHelper } from './util.ts';
 
 const ANNOTATION_TYPE_ID: Annotation.TypeId = '~@dxos/echo/Annotation' as const;
 
@@ -200,7 +200,7 @@ export const setTypename = (obj: any, typename: URI.URI): void => {
  * @returns Object type URI — either a typename {@link DXN} or an `echo:` reference to a stored Schema object.
  * @returns undefined if the object has no registered type URI (e.g. unresolved query result).
  * @example `dxn:com.example.type.person:1.0.0`
- * @example `echo:/01KKKG2FHWCMTR0BY00GJSVT1X` (stored schema)
+ * @example Stored schema: `echo:///01KKKG2FHWCMTR0BY00GJSVT1X`.
  *
  * @internal (use Obj.getTypeURI)
  */
@@ -252,8 +252,20 @@ export const PropertyMeta = (name: string, value: PropertyMetaValue) => {
   };
 };
 
-export const getPropertyMetaAnnotation = <T>(prop: SchemaAST.PropertySignature, name: string): T | undefined =>
-  SchemaAST.getAnnotation<PropertyMetaAnnotation>(prop.type, PropertyMetaAnnotationId)?.[name] as T | undefined;
+/**
+ * Reads one property-meta entry off a property. An optional property's type is a union of the
+ * annotated schema and `undefined`, whose own annotations are empty, so the members are read too.
+ */
+export const getPropertyMetaAnnotation = <T>(prop: SchemaAST.PropertySignature, name: string): T | undefined => {
+  const candidates = SchemaAST.isUnion(prop.type) ? [prop.type, ...prop.type.types] : [prop.type];
+  for (const ast of candidates) {
+    const value = SchemaAST.getAnnotation<PropertyMetaAnnotation>(ast, PropertyMetaAnnotationId)?.[name];
+    if (value !== undefined) {
+      return value as T;
+    }
+  }
+  return undefined;
+};
 
 //
 // Reference
@@ -681,7 +693,7 @@ export const setDescription = (entity: Mutable<AnyProperties>, description: stri
   }
 };
 
-export { Dictionary, Key, getDictionary, setDictionary } from './dictionary';
+export { Dictionary, Key, getDictionary, setDictionary } from './dictionary.ts';
 
 export const getFromAst = <T>(ast: SchemaAST.AST, annotation: Annotation.Annotation<T>): Option.Option<T> => {
   const meta = SchemaAST.getAnnotation<PropertyMetaAnnotation>(ast, PropertyMetaAnnotationId);

@@ -10,10 +10,10 @@ import * as LanguageModel from 'effect/unstable/ai/LanguageModel';
 import { AiService } from '@dxos/ai';
 import { FactStore, FactStoreLive } from '@dxos/pipeline-rdf';
 
-import * as AgentRegistry from '../AgentRegistry';
-import { type Page, Source, type SourceApi, type ThreadRef } from '../Source';
-import * as StateStore from '../StateStore';
-import type * as Type from '../types';
+import * as AgentRegistry from '../AgentRegistry.ts';
+import { type Page, Source, type SourceApi, type ThreadRef } from '../Source.ts';
+import * as StateStore from '../StateStore.ts';
+import type * as Type from '../types.ts';
 
 // --- Fixture shape (a lean subset of plugin-discord's DiscordChannelFixture) -----------------------
 

@@ -6,7 +6,7 @@ import { describe, test } from 'vitest';
 
 import { type Message, type Thread } from '@dxos/types';
 
-import { shouldTriggerAgent } from './should-trigger-agent';
+import { shouldTriggerAgent } from './should-trigger-agent.ts';
 
 // `shouldTriggerAgent` is a pure predicate over the schema shapes — these tests
 // build plain object literals shaped like Message/Thread to avoid the ECHO proxy's

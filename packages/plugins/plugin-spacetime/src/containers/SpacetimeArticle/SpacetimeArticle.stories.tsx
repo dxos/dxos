@@ -19,7 +19,7 @@ import { Loading, withLayout } from '@dxos/react-ui/testing';
 import { translations } from '#translations';
 import { Model, Scene } from '#types';
 
-import { SpacetimeArticle } from './SpacetimeArticle';
+import { SpacetimeArticle } from './SpacetimeArticle.tsx';
 
 const DefaultStory = () => {
   const spaces = useSpaces();

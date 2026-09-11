@@ -7,7 +7,7 @@ import { create } from '@bufbuild/protobuf';
 import { Event } from '@dxos/async';
 import { type MessageTrace, MessageTrace_Direction, MessageTraceSchema } from '@dxos/protocols/buf/dxos/rpc_pb';
 
-import { type RpcPort } from './rpc';
+import { type RpcPort } from './rpc.ts';
 
 export class PortTracer {
   readonly message = new Event<MessageTrace>();

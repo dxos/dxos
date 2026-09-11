@@ -2,12 +2,12 @@
 // Copyright 2024 DXOS.org
 //
 
-export * from './Accordion';
-export * from './Combobox';
-export * from './DropIndicator';
-export * from './Empty';
-export * from './Listbox';
-export * from './MasterDetail';
-export * from './OrderedList';
-export * from './Picker';
-export * from './Tree';
+export * from './Accordion/index.ts';
+export * from './Combobox/index.ts';
+export * from './DropIndicator/index.ts';
+export * from './Empty/index.ts';
+export * from './Listbox/index.ts';
+export * from './MasterDetail/index.ts';
+export * from './OrderedList/index.ts';
+export * from './Picker/index.ts';
+export * from './Tree/index.ts';

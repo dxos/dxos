@@ -2,9 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
-import { JsonlFileLogStore } from './jsonl-file-log-store';
-import { installNodeLogProcessor } from './node-log-processor';
-import { isTestLogFileEnabled, resolveTestLogFilePath } from './paths';
+import { JsonlFileLogStore } from './jsonl-file-log-store.ts';
+import { installNodeLogProcessor } from './node-log-processor.ts';
+import { isTestLogFileEnabled, resolveTestLogFilePath } from './paths.ts';
 
 let sharedStore: JsonlFileLogStore | undefined;
 let removeProcessor: (() => void) | undefined;

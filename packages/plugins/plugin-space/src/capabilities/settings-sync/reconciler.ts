@@ -4,7 +4,7 @@
 
 import * as AppSettings from '@dxos/app-toolkit/AppSettings';
 
-import { type Binding } from './binding';
+import { type Binding } from './binding.ts';
 
 /** Read and write access to the settings store's two layers. */
 export type Store = {

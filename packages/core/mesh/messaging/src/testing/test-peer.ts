@@ -11,11 +11,11 @@ import { type IdentityDid, PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { buf } from '@dxos/protocols/buf';
 
-import { Messenger } from '../messenger';
-import { type SignalManager } from '../signal-manager';
-import { type Message, type PeerInfo } from '../signal-methods';
-import { type TestBuilder } from './test-builder';
-import { expectPeerAvailable, expectPeerLeft, expectReceivedMessage } from './utils';
+import { Messenger } from '../messenger.ts';
+import { type SignalManager } from '../signal-manager/index.ts';
+import { type Message, type PeerInfo } from '../signal-methods.ts';
+import { type TestBuilder } from './test-builder.ts';
+import { expectPeerAvailable, expectPeerLeft, expectReceivedMessage } from './utils.ts';
 
 export class TestPeer extends Resource {
   /**

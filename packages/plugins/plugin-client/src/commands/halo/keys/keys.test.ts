@@ -10,7 +10,7 @@ import { ClientService } from '@dxos/client';
 import { EffectEx } from '@dxos/effect';
 import { toPublicKey } from '@dxos/protocols/buf';
 
-import { handler } from './keys';
+import { handler } from './keys.ts';
 
 describe('halo keys', () => {
   it('should show HALO keys', () =>

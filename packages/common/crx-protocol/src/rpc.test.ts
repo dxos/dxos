@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { Message, createLoopback, request, serve } from './index';
+import { Message, createLoopback, request, serve } from './index.ts';
 
 describe('request/serve', () => {
   test('correlates a reply to its request by id', async ({ expect }) => {

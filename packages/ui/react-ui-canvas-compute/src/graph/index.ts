@@ -2,5 +2,5 @@
 // Copyright 2024 DXOS.org
 //
 
-export * from './controller';
-export * from './node-defs';
+export * from './controller.ts';
+export * from './node-defs.ts';

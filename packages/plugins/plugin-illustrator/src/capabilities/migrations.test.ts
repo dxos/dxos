@@ -10,7 +10,7 @@ import { invariant } from '@dxos/invariant';
 
 import { Drawing, LegacySketch } from '#types';
 
-import { sketchToDrawing } from './migrations';
+import { sketchToDrawing } from './migrations.ts';
 
 let builder: EchoTestBuilder;
 

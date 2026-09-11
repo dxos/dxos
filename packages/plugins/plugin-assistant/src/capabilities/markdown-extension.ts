@@ -10,7 +10,7 @@ import { Obj } from '@dxos/echo';
 import * as MarkdownCapabilities from '@dxos/plugin-markdown/MarkdownCapabilities';
 import * as RoutineOperation from '@dxos/plugin-routine/RoutineOperation';
 
-import { promptRunExtension } from '../extensions';
+import { promptRunExtension } from '../extensions/index.ts';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {

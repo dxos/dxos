@@ -15,7 +15,7 @@ import { EdgeAiHttpClient, EdgeHttpClient } from '@dxos/edge-client';
 import { invariant } from '@dxos/invariant';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 
-import { ANTHROPIC_SOURCE, DEEPSEEK_SOURCE } from '../constants';
+import { ANTHROPIC_SOURCE, DEEPSEEK_SOURCE } from '../constants.ts';
 
 /** Host stripped by {@link EdgeAiHttpClient}; only the request path reaches EDGE. */
 const EDGE_SENTINEL_URL = 'http://edge.internal';

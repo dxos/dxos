@@ -23,7 +23,7 @@ const HOVER_CLOSE_DELAY = 300;
 @customElement('dx-anchor')
 export class DxAnchor extends LitElement {
   @property({ type: String })
-  dxn: string = '';
+  eid: string = '';
 
   @property({ type: String })
   rootclassname: string | undefined = undefined;
@@ -68,13 +68,13 @@ export class DxAnchor extends LitElement {
   }
 
   #dispatchActivate(): void {
-    this.dispatchEvent(new DxAnchorActivate({ dxn: this.dxn, label: this.textContent ?? '', trigger: this }));
+    this.dispatchEvent(new DxAnchorActivate({ eid: this.eid, label: this.textContent ?? '', trigger: this }));
   }
 
   #dispatchClose(): void {
     this.#reset();
     this.dispatchEvent(
-      new DxAnchorActivate({ dxn: this.dxn, label: this.textContent ?? '', trigger: this, state: false }),
+      new DxAnchorActivate({ eid: this.eid, label: this.textContent ?? '', trigger: this, state: false }),
     );
   }
 

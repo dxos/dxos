@@ -12,7 +12,7 @@ import { useSearchListResults } from '@dxos/react-ui-search';
 import { translationKey } from '#translations';
 import { type CreateOptions, type RefOption } from '#types';
 
-import { Form } from '../Form';
+import { Form } from '../Form/index.ts';
 
 export type ObjectPickerContentProps = ThemedClassName<
   CreateOptions & {
@@ -113,7 +113,6 @@ const ObjectPickerContent = composable<HTMLDivElement, ObjectPickerContentProps>
               </Form.Viewport>
             </Form.Root>
           </Popover.Viewport>
-          <Combobox.Arrow />
         </Combobox.Content>
       );
     }
@@ -150,7 +149,6 @@ const ObjectPickerContent = composable<HTMLDivElement, ObjectPickerContentProps>
             />
           )}
         </Combobox.List>
-        <Combobox.Arrow />
       </Combobox.Content>
     );
   },

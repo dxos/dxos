@@ -12,10 +12,10 @@ import { EffectEx } from '@dxos/effect';
 import { SqlMigrations, SqlTransaction } from '@dxos/sql-sqlite';
 import { layerMemory } from '@dxos/sql-sqlite/platform';
 
-import { MIGRATIONS as HYPERCORE, MIGRATIONS_TABLE as HYPERCORE_TABLE } from './hypercore';
 import hypercoreInit from './hypercore/0001_init.sql?raw';
-import { MIGRATIONS as METADATA, MIGRATIONS_TABLE as METADATA_TABLE } from './metadata';
+import { MIGRATIONS as HYPERCORE, MIGRATIONS_TABLE as HYPERCORE_TABLE } from './hypercore/index.ts';
 import metadataInit from './metadata/0001_init.sql?raw';
+import { MIGRATIONS as METADATA, MIGRATIONS_TABLE as METADATA_TABLE } from './metadata/index.ts';
 
 const STORES = [
   { name: 'hypercore', init: hypercoreInit, manifest: HYPERCORE, table: HYPERCORE_TABLE },

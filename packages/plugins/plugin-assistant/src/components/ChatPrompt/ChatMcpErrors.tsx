@@ -9,7 +9,7 @@ import { Banner, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';
 
-import { type AiChatProcessor } from '../../processor';
+import { type AiChatProcessor } from '../../processor/index.ts';
 
 export type ChatMcpErrorsProps = ThemedClassName<{
   processor: AiChatProcessor;

@@ -2,64 +2,56 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { useState } from 'react';
-import Joyride, { ACTIONS, EVENTS } from 'react-joyride';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 
+import type * as CapabilityManager from '@dxos/app-framework/CapabilityManager';
 import { usePluginManager } from '@dxos/app-framework/ui';
 import { useLayout } from '@dxos/app-toolkit/ui';
-import { useAsyncEffect } from '@dxos/react-ui';
+import { log } from '@dxos/log';
+import {
+  Button,
+  Icon,
+  IconButton,
+  Tour as TourComponent,
+  type TourStepDetails,
+  useTour,
+  useTranslation,
+} from '@dxos/react-ui';
 
-import { Tour } from '#types';
+import { meta } from '#meta';
+import { type Tour } from '#types';
 
-import { Tooltip, floaterProps } from '../Tooltip';
-import { TourContext } from './TourContext';
+import { TourContext } from './TourContext.ts';
 
-const addStepClass = (target: string | HTMLElement) => {
-  const element = typeof target === 'string' ? document.querySelector(target) : target;
-  if (element) {
-    element.classList.add('joyride-target');
-  }
-};
-
-const removeTargetClass = (target: string | HTMLElement) => {
-  const element = typeof target === 'string' ? document.querySelector(target) : target;
-  if (element) {
-    element.classList.remove('joyride-target');
-  }
-};
-
-const getTarget = (step: Tour.Step) => {
-  return typeof step.target === 'string' ? document.querySelector(step.target) : step.target;
-};
+const resolveTarget = (target: Tour.Step['target']) =>
+  typeof target === 'string' ? () => document.querySelector<HTMLElement>(target) : target;
 
 /**
- * Wait for the target element to be in the document.
+ * The machine's step. `before` becomes the step's effect: the step shows once the hook settles,
+ * and the target is resolved after it, so a hook that opens a sidebar brings its target into being.
  */
-const waitForTarget = async (step: Tour.Step) => {
-  if (typeof step.target === 'string') {
-    const target = step.target;
-    const element = document.querySelector(target);
-    if (element) {
-      return;
-    }
-
-    await new Promise<void>((resolve) => {
-      const observer = new MutationObserver((mutations) => {
-        mutations.forEach((mutation) => {
-          if (mutation.addedNodes.length > 0) {
-            const element = document.querySelector(target);
-            if (element) {
-              observer.disconnect();
-              resolve();
-            }
-          }
-        });
-      });
-
-      observer.observe(document.body, { childList: true, subtree: true });
-    });
-  }
-};
+const toStep = (
+  step: Tour.Step,
+  index: number,
+  capabilities: CapabilityManager.CapabilityManager,
+): TourStepDetails => ({
+  id: step.id ?? String(index + 1),
+  type: 'tooltip',
+  target: resolveTarget(step.target),
+  title: step.title,
+  description: step.description,
+  placement: step.placement,
+  arrow: true,
+  ...(step.before && {
+    // A hook that throws, synchronously or not, still shows the step; the failure is logged.
+    effect: ({ show }) => {
+      void Promise.resolve()
+        .then(() => step.before?.(capabilities))
+        .catch((error) => log.catch(error))
+        .finally(show);
+    },
+  }),
+});
 
 export type WelcomeTourProps = {
   steps: Tour.Step[];
@@ -67,105 +59,150 @@ export type WelcomeTourProps = {
   onRunningChanged?: (state: boolean) => any;
 };
 
+/**
+ * The onboarding walkthrough on `Tour`. It pauses while a dialog is open — the tour leaves and
+ * comes back at the same step when the dialog closes — and ends when a target never appears.
+ */
 export const WelcomeTour = ({ steps: initialSteps, running: runningProp, onRunningChanged }: WelcomeTourProps) => {
+  const { t } = useTranslation(meta.profile.key);
   const manager = usePluginManager();
   const layout = useLayout();
-  const [running, setRunning] = useState(!!runningProp && !!getTarget(initialSteps[0]));
-  const [stepIndex, _setStepIndex] = useState(0);
-  const [steps, setSteps] = useState(initialSteps);
-
   const paused = layout.dialogOpen;
+  const [steps, setSteps] = useState(initialSteps);
+  const tourSteps = useMemo(
+    () => steps.map((step, index) => toStep(step, index, manager.capabilities)),
+    [steps, manager],
+  );
 
-  const setStepIndex = (index: number) => {
-    if (runningProp) {
-      const step = steps[index];
-      step?.before?.(manager.capabilities);
-    }
-    _setStepIndex(index);
-  };
-
-  const setRunningChanged = (state: boolean) => {
+  const [runningState, setRunningState] = useState(false);
+  const running = runningProp ?? runningState;
+  const setRunning = (state: boolean) => {
     if (typeof runningProp !== 'undefined') {
       onRunningChanged?.(state);
     } else {
-      if (state) {
-        setStepIndex(0);
-        setRunning(true);
-      } else {
-        setRunning(false);
+      setRunningState(state);
+    }
+  };
+
+  // Where a paused tour resumes; cleared when the tour ends for real.
+  const resumeAt = useRef<string | undefined>(undefined);
+  const pausing = useRef(false);
+  const tour = useTour({
+    steps: tourSteps,
+    closeOnInteractOutside: false,
+    onStepChange: ({ stepId }) => {
+      resumeAt.current = stepId ?? undefined;
+    },
+    onStatusChange: ({ status }) => {
+      if (status === 'started') {
+        return;
       }
-    }
-  };
-
-  useAsyncEffect(async () => {
-    if (runningProp) {
-      // This handles the case when the target is not yet in the document.
-      // If the target is not in the document, when the joyride is turned on, it will not show the tooltip.
-      await waitForTarget(steps[stepIndex]);
-      setStepIndex(0);
-      setRunning(true);
-    } else if (typeof runningProp !== 'undefined') {
+      if (pausing.current) {
+        pausing.current = false;
+        return;
+      }
+      resumeAt.current = undefined;
       setRunning(false);
-    }
-  }, [runningProp]);
+    },
+  });
 
-  // https://docs.react-joyride.com/callback
-  const callback: Joyride['callback'] = async (options) => {
-    const { type, action, index, size } = options;
-    switch (type) {
-      case EVENTS.STEP_BEFORE:
-        addStepClass(options.step.target);
-        break;
-      case EVENTS.TOUR_END:
-        break;
-      case EVENTS.STEP_AFTER:
-        removeTargetClass(options.step.target);
-        switch (action) {
-          case ACTIONS.NEXT:
-            if (index < size - 1) {
-              setStepIndex(index + 1);
-            }
-            break;
-          case ACTIONS.PREV:
-            if (index > 0) {
-              setStepIndex(index - 1);
-            }
-            break;
-          case ACTIONS.CLOSE:
-            setRunningChanged(false);
-            setStepIndex(0);
-            break;
-        }
-        break;
+  // The machine exposes no dismiss beyond its close trigger, so a pause presses it.
+  const closeRef = useRef<HTMLButtonElement>(null);
+  const shouldRun = running && !paused;
+  useEffect(() => {
+    if (shouldRun && !tour.open) {
+      tour.start(resumeAt.current);
+    } else if (!shouldRun && tour.open) {
+      pausing.current = paused;
+      closeRef.current?.click();
     }
-  };
+  }, [shouldRun, tour.open]);
+
+  const stepIndex = tour.stepIndex;
+  const last = tour.lastStep;
 
   return (
     <TourContext.Provider
       value={{
-        running: running && !paused,
+        running: shouldRun,
         steps,
         setSteps,
-        setIndex: setStepIndex,
-        start: () => setRunningChanged(true),
-        stop: () => setRunningChanged(false),
+        setIndex: (index) => {
+          const step = tourSteps[index];
+          if (step) {
+            tour.setStep(step.id);
+          }
+        },
+        start: () => setRunning(true),
+        stop: () => setRunning(false),
       }}
     >
-      <style>
-        {`.joyride-target {
-          --controls-opacity: 1;
-        }`}
-      </style>
-      <Joyride
-        continuous={true}
-        steps={steps}
-        stepIndex={stepIndex}
-        run={running && !paused}
-        callback={callback}
-        floaterProps={floaterProps}
-        tooltipComponent={Tooltip}
-        spotlightPadding={0}
-      />
+      <TourComponent.Root tour={tour}>
+        <TourComponent.Portal>
+          <TourComponent.Spotlight />
+          <TourComponent.Positioner>
+            <TourComponent.Content
+              classNames='w-60 min-h-40 gap-0 p-2 border-accent-bg bg-accent-bg text-accent-fg'
+              data-testid='helpPlugin.tooltip'
+            >
+              <TourComponent.Arrow classNames='[--arrow-background:var(--color-accent-bg)] [&>[data-part=arrow-tip]]:border-accent-bg' />
+              <div className='flex items-start'>
+                <TourComponent.Title classNames='grow px-2 py-1 text-accent-fg' />
+                <TourComponent.Close asChild ref={closeRef}>
+                  <IconButton
+                    density='md'
+                    icon='ph--x--bold'
+                    iconOnly
+                    label={t('tour-close.label')}
+                    size={4}
+                    variant='primary'
+                    data-testid='helpPlugin.tooltip.close'
+                  />
+                </TourComponent.Close>
+              </div>
+              <TourComponent.Description classNames='grow px-4 my-2 text-accent-fg' />
+              <TourComponent.Control>
+                <IconButton
+                  classNames={[!tour.hasPrevStep && 'invisible']}
+                  icon='ph--caret-left--regular'
+                  iconOnly
+                  label={t('tour-back.label')}
+                  onClick={() => tour.prev()}
+                  variant='primary'
+                  data-testid='helpPlugin.tooltip.back'
+                />
+                <div className='flex grow justify-center'>
+                  {Array.from({ length: tour.totalSteps }).map((_, index) => (
+                    <Icon
+                      key={index}
+                      icon={stepIndex === index ? 'ph--circle--fill' : 'ph--circle--regular'}
+                      size={2}
+                      classNames='mx-1'
+                    />
+                  ))}
+                </div>
+                {last ? (
+                  <TourComponent.Close asChild>
+                    <Button variant='primary' data-testid='helpPlugin.tooltip.finish'>
+                      {t('tour-done.label')}
+                    </Button>
+                  </TourComponent.Close>
+                ) : (
+                  <IconButton
+                    icon='ph--caret-right--regular'
+                    iconOnly
+                    label={t('tour-next.label')}
+                    onClick={() => tour.next()}
+                    size={6}
+                    variant='primary'
+                    data-testid='helpPlugin.tooltip.next'
+                  />
+                )}
+              </TourComponent.Control>
+            </TourComponent.Content>
+          </TourComponent.Positioner>
+        </TourComponent.Portal>
+      </TourComponent.Root>
     </TourContext.Provider>
   );
 };

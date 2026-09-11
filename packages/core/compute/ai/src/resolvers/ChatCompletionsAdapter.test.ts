@@ -5,8 +5,11 @@
 import { describe, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
+import * as Schema from 'effect/Schema';
 import * as Stream from 'effect/Stream';
 import * as LanguageModel from 'effect/unstable/ai/LanguageModel';
+import * as Tool from 'effect/unstable/ai/Tool';
+import * as Toolkit from 'effect/unstable/ai/Toolkit';
 import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
 import * as HttpClient from 'effect/unstable/http/HttpClient';
 import * as HttpClientResponse from 'effect/unstable/http/HttpClientResponse';
@@ -15,7 +18,8 @@ import { expect } from 'vitest';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
-import * as ChatCompletionsAdapter from './ChatCompletionsAdapter';
+import * as AiParser from '../AiParser.ts';
+import * as ChatCompletionsAdapter from './ChatCompletionsAdapter.ts';
 
 type ProviderConfig = {
   name: string;
@@ -268,6 +272,209 @@ describe('streamed finish part', () => {
       );
 
       expect(parts.filter((part) => part.type === 'finish')).toHaveLength(0);
+    }),
+  );
+});
+
+const toolCallDelta = (
+  index: number,
+  fields: { id?: string; name?: string; arguments?: string },
+  finishReason: string | null = null,
+) =>
+  chunk({
+    choices: [
+      {
+        index: 0,
+        delta: {
+          tool_calls: [
+            { index, id: fields.id, type: 'function', function: { name: fields.name, arguments: fields.arguments } },
+          ],
+        },
+        finish_reason: finishReason,
+      },
+    ],
+  });
+
+const ParallelToolkit = Toolkit.make(
+  Tool.make('alpha', { description: 'alpha', parameters: Schema.Struct({ x: Schema.Number }), success: Schema.String }),
+  Tool.make('beta', { description: 'beta', parameters: Schema.Struct({ y: Schema.Number }), success: Schema.String }),
+);
+
+const ParallelToolkitLayer = ParallelToolkit.toLayer({
+  alpha: Effect.fn(function* () {
+    return 'alpha';
+  }),
+  beta: Effect.fn(function* () {
+    return 'beta';
+  }),
+});
+
+describe('streamed parallel tool calls', () => {
+  // Recorded from a model emitting two tool calls in one turn. Ending each call only at
+  // `finish_reason` left the first open while the second started, which the parser rejects.
+  it.effect(
+    'each call is closed before the next one starts',
+    Effect.fn(function* (_) {
+      const parts = yield* LanguageModel.streamText({ prompt: 'hi', toolkit: ParallelToolkit }).pipe(
+        Stream.runCollect,
+        Effect.provide(ParallelToolkitLayer),
+        Effect.provide(
+          serveSseStream([
+            toolCallDelta(0, { id: 'call_a', name: 'alpha', arguments: '' }),
+            '',
+            toolCallDelta(0, { arguments: '{"x":1}' }),
+            '',
+            toolCallDelta(1, { id: 'call_b', name: 'beta', arguments: '' }),
+            '',
+            toolCallDelta(1, { arguments: '{"y":2}' }),
+            '',
+            chunk({ choices: [{ index: 0, delta: {}, finish_reason: 'tool_calls' }] }),
+            '',
+            'data: [DONE]',
+            '',
+          ]),
+        ),
+      );
+
+      const paramParts = parts.filter((part) => part.type.startsWith('tool-params-'));
+      expect(paramParts.map((part) => [part.type, (part as any).id])).toEqual([
+        ['tool-params-start', 'call_a'],
+        ['tool-params-delta', 'call_a'],
+        ['tool-params-end', 'call_a'],
+        ['tool-params-start', 'call_b'],
+        ['tool-params-delta', 'call_b'],
+        ['tool-params-end', 'call_b'],
+      ]);
+
+      const calls = parts.filter((part) => part.type === 'tool-call');
+      expect(calls.map((part) => [part.id, part.name, part.params])).toEqual([
+        ['call_a', 'alpha', { x: 1 }],
+        ['call_b', 'beta', { y: 2 }],
+      ]);
+    }),
+  );
+  // Two calls can share one network chunk, so the flush has to happen inside the per-chunk loop
+  // rather than between chunks.
+  it.effect(
+    'closes the previous call when both arrive in one chunk',
+    Effect.fn(function* (_) {
+      const parts = yield* LanguageModel.streamText({ prompt: 'hi', toolkit: ParallelToolkit }).pipe(
+        Stream.runCollect,
+        Effect.provide(ParallelToolkitLayer),
+        Effect.provide(
+          serveSseStream([
+            chunk({
+              choices: [
+                {
+                  index: 0,
+                  delta: {
+                    tool_calls: [
+                      { index: 0, id: 'call_a', type: 'function', function: { name: 'alpha', arguments: '{"x":1}' } },
+                      { index: 1, id: 'call_b', type: 'function', function: { name: 'beta', arguments: '{"y":2}' } },
+                    ],
+                  },
+                  finish_reason: null,
+                },
+              ],
+            }),
+            '',
+            chunk({ choices: [{ index: 0, delta: {}, finish_reason: 'tool_calls' }] }),
+            '',
+            'data: [DONE]',
+            '',
+          ]),
+        ),
+      );
+
+      expect(parts.filter((part) => part.type.startsWith('tool-params-')).map((part) => part.type)).toEqual([
+        'tool-params-start',
+        'tool-params-delta',
+        'tool-params-end',
+        'tool-params-start',
+        'tool-params-delta',
+        'tool-params-end',
+      ]);
+    }),
+  );
+
+  // DeepSeek's thinking mode streams `reasoning_content` before the calls; the recorded crash came
+  // from exactly this shape, so the reasoning block must close and both calls stay well-formed.
+  it.effect(
+    'survives reasoning deltas preceding the calls (DeepSeek thinking mode)',
+    Effect.fn(function* (_) {
+      const parts = yield* LanguageModel.streamText({ prompt: 'hi', toolkit: ParallelToolkit }).pipe(
+        Stream.runCollect,
+        Effect.provide(ParallelToolkitLayer),
+        Effect.provide(
+          serveSseStream([
+            chunk({ choices: [{ index: 0, delta: { reasoning_content: 'I need both' }, finish_reason: null }] }),
+            '',
+            chunk({ choices: [{ index: 0, delta: { reasoning_content: ' values.' }, finish_reason: null }] }),
+            '',
+            toolCallDelta(0, { id: 'call_a', name: 'alpha', arguments: '' }),
+            '',
+            toolCallDelta(0, { arguments: '{"x":1}' }),
+            '',
+            toolCallDelta(1, { id: 'call_b', name: 'beta', arguments: '' }),
+            '',
+            toolCallDelta(1, { arguments: '{"y":2}' }),
+            '',
+            chunk({ choices: [{ index: 0, delta: {}, finish_reason: 'tool_calls' }] }),
+            '',
+            'data: [DONE]',
+            '',
+          ]),
+        ),
+      );
+
+      expect(parts.map((part) => part.type)).toEqual([
+        'reasoning-start',
+        'reasoning-delta',
+        'reasoning-delta',
+        'reasoning-end',
+        'tool-params-start',
+        'tool-params-delta',
+        'tool-params-end',
+        'tool-call',
+        'tool-params-start',
+        'tool-params-delta',
+        'tool-params-end',
+        'tool-call',
+        // The toolkit's handlers run inside `streamText`, so each call is followed by its result.
+        'tool-result',
+        'tool-result',
+        'finish',
+      ]);
+    }),
+  );
+
+  // The end-to-end shape the app saw: adapter parts straight into the parser, which used to abort
+  // the whole turn with `invariant violation [!block]`.
+  it.effect(
+    'the parser turns the stream into one block per tool call',
+    Effect.fn(function* (_) {
+      const blocks = yield* LanguageModel.streamText({ prompt: 'hi', toolkit: ParallelToolkit }).pipe(
+        AiParser.parseResponse(),
+        Stream.runCollect,
+        Effect.provide(ParallelToolkitLayer),
+        Effect.provide(
+          serveSseStream([
+            toolCallDelta(0, { id: 'call_a', name: 'alpha', arguments: '{"x":1}' }),
+            '',
+            toolCallDelta(1, { id: 'call_b', name: 'beta', arguments: '{"y":2}' }),
+            '',
+            chunk({ choices: [{ index: 0, delta: {}, finish_reason: 'tool_calls' }] }),
+            '',
+            'data: [DONE]',
+            '',
+          ]),
+        ),
+      );
+
+      expect(blocks.filter((block) => block._tag === 'toolCall')).toEqual([
+        { _tag: 'toolCall', toolCallId: 'call_a', name: 'alpha', input: '{"x":1}', providerExecuted: false },
+        { _tag: 'toolCall', toolCallId: 'call_b', name: 'beta', input: '{"y":2}', providerExecuted: false },
+      ]);
     }),
   );
 });

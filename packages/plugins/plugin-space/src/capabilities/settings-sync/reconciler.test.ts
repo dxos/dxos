@@ -6,7 +6,7 @@ import { describe, test } from 'vitest';
 
 import * as AppSettings from '@dxos/app-toolkit/AppSettings';
 
-import { Reconciler, type Store } from './reconciler';
+import { Reconciler, type Store } from './reconciler.ts';
 
 const NS = 'org.dxos.plugin.markdown';
 

@@ -15,7 +15,7 @@ import { mx } from '@dxos/ui-theme';
 
 import { AssistantService } from '#types';
 
-import { type AiChatProcessor } from '../../processor';
+import { type AiChatProcessor } from '../../processor/index.ts';
 
 export type ToolboxProps = {
   services?: { service: AssistantService.ServiceType }[];

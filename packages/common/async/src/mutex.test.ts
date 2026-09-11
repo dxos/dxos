@@ -6,8 +6,8 @@ import { describe, expect, test } from 'vitest';
 
 import { expectToThrow } from '@dxos/debug';
 
-import { Mutex, synchronized } from './mutex';
-import { sleep } from './timeout';
+import { Mutex, synchronized } from './mutex.ts';
+import { sleep } from './timeout.ts';
 
 describe('Mutex', () => {
   test('single execution', async () => {

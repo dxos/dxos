@@ -7,7 +7,7 @@ import { describe, test } from 'vitest';
 import { PublicKey } from '@dxos/keys';
 import { isNonNullable, numericalValues, range } from '@dxos/util';
 
-import { Timeframe } from './timeframe';
+import { Timeframe } from './timeframe.ts';
 
 type RandomTimeframeOpts = {
   keys: PublicKey[];

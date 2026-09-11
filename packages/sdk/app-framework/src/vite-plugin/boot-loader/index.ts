@@ -2,4 +2,4 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './loader';
+export * from './loader.ts';

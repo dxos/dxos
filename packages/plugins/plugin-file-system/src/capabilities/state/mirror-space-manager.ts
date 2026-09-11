@@ -13,7 +13,7 @@ import { MembershipPolicy } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
 import { FileSystemCapabilities } from '#types';
 
-import { readComposerConfig, writeComposerConfig } from '../../util';
+import { readComposerConfig, writeComposerConfig } from '../../util.ts';
 
 const FILE_SYSTEM_MIRROR_TAG = 'org.dxos.space.fileSystemMirror';
 

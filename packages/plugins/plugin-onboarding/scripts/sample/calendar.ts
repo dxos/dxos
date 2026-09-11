@@ -9,9 +9,9 @@ import { Database, Feed } from '@dxos/echo';
 import * as Calendar from '@dxos/plugin-inbox/Calendar';
 import { type Actor, Event, type Organization, type Person } from '@dxos/types';
 
-import { type OrgKey, type OrgMap } from './organizations';
-import { type PersonKey, type PersonMap, personActor } from './people';
-import { actor, daysFromNow } from './util';
+import { type OrgKey, type OrgMap } from './organizations.ts';
+import { type PersonKey, type PersonMap, personActor } from './people.ts';
+import { actor, daysFromNow } from './util.ts';
 
 //
 // Calendar.

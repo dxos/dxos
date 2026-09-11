@@ -3,6 +3,7 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
 
 import { ClientService } from '@dxos/client';
 import * as Operation from '@dxos/compute/Operation';
@@ -10,8 +11,8 @@ import { Database } from '@dxos/echo';
 
 import { SandboxOperation } from '#types';
 
-import { mergeExecEnv } from '../../services/sandbox-env';
-import { createSandboxClient } from '../../services/sandbox-url';
+import { mergeExecEnv } from '../../services/sandbox-env.ts';
+import { createSandboxClient } from '../../services/sandbox-url.ts';
 
 export default SandboxOperation.Exec.pipe(
   Operation.withHandler(
@@ -25,11 +26,28 @@ export default SandboxOperation.Exec.pipe(
       const sandboxClient = createSandboxClient(client);
       const mergedEnv = yield* mergeExecEnv(loaded.credentials, env);
 
-      const result = yield* Effect.promise(() =>
-        sandboxClient.exec(spaceId, sandboxId, { command, cwd, env: mergedEnv, timeout }),
+      // Yielded directly rather than through `Effect.promise`: that wrapper is uninterruptible, so
+      // terminating the operation left the request running — the tool handler reported "Operation
+      // was terminated" while the fetch underneath it stayed open.
+      //
+      // A request failure is reported as a failed command rather than raised. `Operation.make` has no
+      // error channel, so a typed failure escaping here is not part of the operation's contract and
+      // reaches the tool runtime as a result missing every declared key ("Missing key at [stdout]").
+      // A non-zero exit carrying the reason is also what the model can actually act on.
+      return yield* sandboxClient.exec(spaceId, sandboxId, { command, cwd, env: mergedEnv, timeout }).pipe(
+        Effect.catch((error) =>
+          Effect.succeed({
+            stdout: '',
+            stderr: `sandbox exec failed: ${describeError(error)}`,
+            exitCode: -1,
+            success: false,
+          }),
+        ),
       );
-
-      return result;
-    }),
+    }, Effect.provide(FetchHttpClient.layer)),
   ),
 );
+
+/** Message for a failed request, kept short enough to be useful in a tool result. */
+const describeError = (error: unknown): string =>
+  error instanceof Error ? `${error.name}: ${error.message}` : String(error);

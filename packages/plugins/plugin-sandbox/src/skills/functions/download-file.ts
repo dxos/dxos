@@ -3,6 +3,7 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
 
 import * as CollectionModel from '@dxos/app-toolkit/CollectionModel';
 import { ClientService } from '@dxos/client';
@@ -12,7 +13,7 @@ import { File } from '@dxos/types';
 
 import { SandboxOperation } from '#types';
 
-import { createSandboxClient } from '../../services/sandbox-url';
+import { createSandboxClient } from '../../services/sandbox-url.ts';
 
 export default SandboxOperation.DownloadFile.pipe(
   Operation.withHandler(
@@ -25,7 +26,7 @@ export default SandboxOperation.DownloadFile.pipe(
       const spaceId = db.spaceId;
       const sandboxClient = createSandboxClient(client);
 
-      const content = yield* Effect.promise(() => sandboxClient.readFile(spaceId, sandboxId, path));
+      const content = yield* sandboxClient.readFile(spaceId, sandboxId, path).pipe(Effect.orDie);
 
       const bytes = new TextEncoder().encode(content);
       const fileName = path.split('/').at(-1) ?? path;
@@ -47,6 +48,6 @@ export default SandboxOperation.DownloadFile.pipe(
       yield* CollectionModel.add({ object: fileObj });
 
       return { objectId: Obj.getURI(fileObj) };
-    }),
+    }, Effect.provide(FetchHttpClient.layer)),
   ),
 );

@@ -16,14 +16,14 @@ import { EffectEx } from '@dxos/effect';
 
 import { Ibkr, IbkrOperation } from '#types';
 
-import { CUSIP_SOURCE, IBKR_SOURCE, TRADINGVIEW_SOURCE, tickerSource } from '../constants';
-import GetInstrumentFundamentalsHandler from './get-instrument-fundamentals';
-import GetPortfolioHandler from './get-portfolio';
-import GetTradesHandler from './get-trades';
-import ImportPortfolioReportHandler from './import-portfolio';
-import MaterializeInstrumentHandler from './materialize-instrument';
-import SyncLotsHandler from './sync-lots';
-import SyncPortfolioReportHandler from './sync-portfolio';
+import { CUSIP_SOURCE, IBKR_SOURCE, TRADINGVIEW_SOURCE, tickerSource } from '../constants.ts';
+import GetInstrumentFundamentalsHandler from './get-instrument-fundamentals.ts';
+import GetPortfolioHandler from './get-portfolio.ts';
+import GetTradesHandler from './get-trades.ts';
+import ImportPortfolioReportHandler from './import-portfolio.ts';
+import MaterializeInstrumentHandler from './materialize-instrument.ts';
+import SyncLotsHandler from './sync-lots.ts';
+import SyncPortfolioReportHandler from './sync-portfolio.ts';
 
 const xml = readFileSync(fileURLToPath(new URL('../services/__fixtures__/flex-report.xml', import.meta.url)), 'utf8');
 const tickersFixture = readFileSync(

@@ -15,7 +15,7 @@ import { type PublicKey as BufPublicKey } from '@dxos/protocols/buf/dxos/keys_pb
 import * as OpfsPool from '@dxos/sql-sqlite/OpfsPool';
 import * as SqliteClient from '@dxos/sql-sqlite/SqliteClient';
 
-import { exportOpfsSqlite } from './opfs-export';
+import { exportOpfsSqlite } from './opfs-export.ts';
 
 const HALO_FEED_PARTS = ['key', 'secret_key', 'data', 'tree', 'bitfield', 'signatures'] as const;
 

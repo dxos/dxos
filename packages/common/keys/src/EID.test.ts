@@ -4,9 +4,9 @@
 
 import { describe, test } from 'vitest';
 
-import * as EID from './EID';
-import { EntityId } from './entity-id';
-import { SpaceId } from './space-id';
+import * as EID from './EID.ts';
+import { EntityId } from './entity-id.ts';
+import { SpaceId } from './space-id.ts';
 
 const SPACE = SpaceId.random();
 const OBJECT = EntityId.random();

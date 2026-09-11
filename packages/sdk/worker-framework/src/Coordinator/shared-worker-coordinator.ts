@@ -5,8 +5,8 @@
 import { Event } from '@dxos/async';
 import { log } from '@dxos/log';
 
-import { workerErrorFromEvent } from '../internal/worker-errors';
-import * as WorkerProtocol from '../WorkerProtocol';
+import { workerErrorFromEvent } from '../internal/worker-errors.ts';
+import * as WorkerProtocol from '../WorkerProtocol.ts';
 
 // The DOM `SharedWorker` global, referenced through `globalThis` because the exported class below
 // shadows the bare `SharedWorker` name within this module.

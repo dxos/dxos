@@ -21,7 +21,7 @@ import { Loading, withLayout } from '@dxos/react-ui/testing';
 import { InboxPlugin } from '#plugin';
 import { Calendar } from '#types';
 
-import { InitializeCalendar } from './InitializeCalendar';
+import { InitializeCalendar } from './InitializeCalendar.tsx';
 
 type StoryArgs = {
   withToken?: boolean;

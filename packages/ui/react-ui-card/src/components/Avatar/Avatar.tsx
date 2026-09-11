@@ -7,8 +7,8 @@ import React from 'react';
 import { DxAvatar, type DxAvatarProps } from '@dxos/lit-ui/react';
 import { type Actor } from '@dxos/types';
 
-import { avatarName } from './avatar-name';
-import { nameToHue } from './avatar-name';
+import { avatarName } from './avatar-name.ts';
+import { nameToHue } from './avatar-name.ts';
 
 export type AvatarProps = Pick<DxAvatarProps, 'variant' | 'size' | 'onClick'> & {
   /** Sender/participant; supplies the display name and the hue. */

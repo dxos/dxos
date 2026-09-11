@@ -5,7 +5,7 @@
 import { mx } from '@dxos/ui-theme';
 import { type ComponentFunction } from '@dxos/ui-types';
 
-import { mainPaddingTransitions } from './constants';
+import { mainPaddingTransitions } from './constants.ts';
 
 const padding = 'dx-main-content-padding';
 

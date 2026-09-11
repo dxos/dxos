@@ -16,12 +16,12 @@ import { ConnectionState } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { JoinRequestSchema, LeaveRequestSchema } from '@dxos/protocols/buf/dxos/edge/signal_pb';
 import { ComplexMap } from '@dxos/util';
 
-import { ConnectionLog } from './connection-log';
-import { type SignalConnection } from './signal';
-import { ConnectionLimiter, Swarm, SwarmMapper } from './swarm';
-import { type Topology } from './topology';
-import { type TransportFactory } from './transport';
-import { type WireProtocolProvider } from './wire-protocol';
+import { ConnectionLog } from './connection-log.ts';
+import { type SignalConnection } from './signal/index.ts';
+import { ConnectionLimiter, Swarm, SwarmMapper } from './swarm/index.ts';
+import { type Topology } from './topology/index.ts';
+import { type TransportFactory } from './transport/index.ts';
+import { type WireProtocolProvider } from './wire-protocol.ts';
 /**
  * Represents a single connection to a remote peer.
  */

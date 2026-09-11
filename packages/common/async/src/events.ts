@@ -5,7 +5,7 @@
 import { Context } from '@dxos/context';
 import { type MaybePromise } from '@dxos/util';
 
-import { type CleanupFn } from './cleanup';
+import { type CleanupFn } from './cleanup.ts';
 
 export type Effect = () => CleanupFn | undefined;
 

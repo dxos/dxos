@@ -3,18 +3,17 @@
 //
 
 import { create } from '@bufbuild/protobuf';
-import { anyPack } from '@bufbuild/protobuf/wkt';
 
 import { type Signer, subtleCrypto } from '@dxos/crypto';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
-import { fromDate, fromPublicKey, toPublicKey } from '@dxos/protocols/buf';
+import { anyPackBare, fromDate, fromPublicKey, toPublicKey } from '@dxos/protocols/buf';
 import { bufRegistry } from '@dxos/protocols/buf-registry';
 import { type Chain, type Credential, CredentialSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
-import { type CredentialAssertion } from './assertions';
-import { getCredentialProofPayload } from './signing';
-import { SIGNATURE_TYPE_ED25519, verifyChain } from './verifier';
+import { type CredentialAssertion } from './assertions.ts';
+import { getCredentialProofPayload } from './signing.ts';
+import { SIGNATURE_TYPE_ED25519, verifyChain } from './verifier.ts';
 
 export type CreateCredentialSignerProps = {
   subject: PublicKey;
@@ -43,7 +42,7 @@ export type CreateCredentialProps = {
 const packAssertion = (assertion: CredentialAssertion) => {
   const desc = bufRegistry.getMessage(assertion.$typeName);
   invariant(desc, `Assertion type is missing from the registry: ${assertion.$typeName}`);
-  return anyPack(desc, assertion);
+  return anyPackBare(desc, assertion);
 };
 
 /**

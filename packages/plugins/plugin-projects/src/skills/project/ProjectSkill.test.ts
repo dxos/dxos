@@ -8,7 +8,7 @@ import { projectFunctionToTool } from '@dxos/assistant';
 import * as Operation from '@dxos/compute/Operation';
 
 import instructions from './project-skill.md?raw';
-import * as ProjectSkill from './ProjectSkill';
+import * as ProjectSkill from './ProjectSkill.ts';
 
 const NAMED_TOOL = /`(projects-[a-z-]+|tasks-[a-z-]+|space-[a-z-]+)\b/g;
 

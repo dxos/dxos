@@ -35,12 +35,14 @@ import { separatorTheme } from '../components/Separator/Separator.theme';
 import { skeletonTheme } from '../components/Skeleton/Skeleton.theme';
 import { sliderTheme } from '../components/Slider/Slider.theme';
 import { splitterTheme } from '../components/Splitter/Splitter.theme';
-import { stepperTheme } from '../components/Stepper/Stepper.theme';
+import { stepsTheme } from '../components/Steps/Steps.theme';
 import { tagTheme } from '../components/Tag/Tag.theme';
 import { toastTheme } from '../components/Toast/Toast.theme';
+import { tocTheme } from '../components/Toc/Toc.theme';
 import { toolbarTheme } from '../components/Toolbar/Toolbar.theme';
 import { tooltipTheme } from '../components/Tooltip/Tooltip.theme';
-import { bindTheme } from './bindTheme';
+import { tourTheme } from '../components/Tour/Tour.theme';
+import { bindTheme } from './bindTheme.ts';
 
 export const defaultTheme: Theme<Record<string, any>> = {
   themeName: () => 'default',
@@ -85,10 +87,12 @@ export const defaultTheme: Theme<Record<string, any>> = {
   skeleton: skeletonTheme,
   slider: sliderTheme,
   splitter: splitterTheme,
-  stepper: stepperTheme,
+  steps: stepsTheme,
   tag: tagTheme,
   toast: toastTheme,
+  toc: tocTheme,
   toolbar: toolbarTheme,
+  tour: tourTheme,
   tooltip: tooltipTheme,
 };
 

@@ -25,7 +25,7 @@ import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { meta } from '#meta';
 import { ProjectOperation } from '#types';
 
-import { inboxResearch } from '../templates';
+import { inboxResearch } from '../templates/index.ts';
 
 /**
  * Surfaces all `Project` objects in a space as a sidebar section nested under the assistant (AI) group —

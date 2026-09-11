@@ -19,7 +19,7 @@ import { setDeep } from '@dxos/util';
 import { meta } from '#meta';
 import { Settings } from '#types';
 
-import { DebugPortSettings } from '../DebugPortSettings';
+import { DebugPortSettings } from '../DebugPortSettings/index.ts';
 
 type Toast = {
   title: string;

@@ -222,7 +222,6 @@ export const OllamaModelsSection = ({ manager }: { manager: Ollama.Manager }) =>
                   <Combobox.Item key={pick} value={pick} label={pick} onSelect={() => handlePull(pick)} />
                 ))}
               </Combobox.List>
-              <Combobox.Arrow />
             </Combobox.Content>
           </Combobox.Portal>
         </Combobox.Root>

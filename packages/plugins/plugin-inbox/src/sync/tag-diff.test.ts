@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { type TagsByMessage, diffTags } from './tag-diff';
+import { type TagsByMessage, diffTags } from './tag-diff.ts';
 
 const STARRED = 'echo://tag/starred';
 const INBOX = 'echo://tag/inbox';

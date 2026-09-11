@@ -2,4 +2,4 @@
 // Copyright 2026 DXOS.org
 //
 
-export { UsageContainer as default } from './UsageContainer';
+export { UsageContainer as default } from './UsageContainer.tsx';

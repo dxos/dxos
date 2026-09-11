@@ -22,7 +22,7 @@ import { Selection } from '@dxos/react-ui-attention/types';
 import { meta } from '#meta';
 import { FeedOperation, Magazine, Subscription } from '#types';
 
-import { getMagazinesPath } from '../paths';
+import { getMagazinesPath } from '../paths.ts';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {

@@ -9,7 +9,7 @@ import { Database, Obj } from '@dxos/echo';
 
 import { Voxel, VoxelOperation } from '#types';
 
-import { generateModel } from '../models';
+import { generateModel } from '../models/index.ts';
 
 const handler: Operation.WithHandler<typeof VoxelOperation.GenerateShape> = VoxelOperation.GenerateShape.pipe(
   Operation.withHandler(

@@ -18,6 +18,6 @@ export {
   InvitationSchema,
 } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 
-export { hostInvitation } from './host';
+export { hostInvitation } from './host.ts';
 
-export { InvitationsProxy } from './invitations-proxy';
+export { InvitationsProxy } from './invitations-proxy.ts';

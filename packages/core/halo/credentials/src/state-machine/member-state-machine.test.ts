@@ -14,8 +14,8 @@ import {
   createCredentialSignerWithKey,
   credentialIdOf,
   credentialOfPayload,
-} from '../credentials';
-import { MemberStateMachine } from './member-state-machine';
+} from '../credentials/index.ts';
+import { MemberStateMachine } from './member-state-machine.ts';
 
 const keyring = new Keyring();
 

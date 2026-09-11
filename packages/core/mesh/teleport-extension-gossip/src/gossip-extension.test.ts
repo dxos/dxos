@@ -13,7 +13,7 @@ import { PeerStateSchema } from '@dxos/protocols/buf/dxos/mesh/presence_pb';
 import { type GossipMessage, GossipMessageSchema } from '@dxos/protocols/buf/dxos/mesh/teleport/gossip_pb';
 import { TestBuilder, TestPeer } from '@dxos/teleport/testing';
 
-import { GossipExtension } from './gossip-extension';
+import { GossipExtension } from './gossip-extension.ts';
 
 describe('GossipExtension', () => {
   test('Two peers discover each other', async () => {

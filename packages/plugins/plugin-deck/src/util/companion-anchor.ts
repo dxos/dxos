@@ -83,6 +83,7 @@ export const findAttendedPlank = (planks: readonly string[], attended: readonly 
 export const resolveCompanionAnchor = (planks: readonly string[], attended: readonly string[]): string | undefined =>
   findAttendedPlank(planks, attended) ?? planks[planks.length - 1];
 
+/** What {@link resolveCompanionPlank} needs to decide which plank a companion belongs to. */
 export type ResolveCompanionPlankOptions = {
   /** Qualified companion id (`<plank>/~<variant>`) or a bare `~<variant>`. */
   subject: string;

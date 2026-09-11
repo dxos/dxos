@@ -11,9 +11,9 @@ import { EffectEx } from '@dxos/effect';
 import { type IndexCursor } from '@dxos/index-core';
 import { DXN, PublicKey, SpaceId } from '@dxos/keys';
 
-import { AutomergeHost } from '../automerge';
-import { createTestSqliteRuntime } from '../testing';
-import { AutomergeDataSource, headsCodec } from './automerge-data-source';
+import { AutomergeHost } from '../automerge/index.ts';
+import { createTestSqliteRuntime } from '../testing/index.ts';
+import { AutomergeDataSource, headsCodec } from './automerge-data-source.ts';
 
 const TEST_TYPE = DXN.make('com.example.type.test', '0.1.0');
 const OTHER_TYPE = DXN.make('com.example.type.other', '0.1.0');

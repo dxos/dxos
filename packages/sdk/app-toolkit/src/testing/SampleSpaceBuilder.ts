@@ -12,7 +12,7 @@ import { type Type } from '@dxos/echo';
 import { ProfileDocumentSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { SpacesService } from '@dxos/protocols/rpc';
 
-import * as SampleSpace from '../sample/SampleSpace';
+import * as SampleSpace from '../sample/SampleSpace.ts';
 
 /**
  * Ephemeral in-process client, torn down when the enclosing scope closes.

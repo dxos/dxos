@@ -11,7 +11,7 @@ import { createKvsStore } from '@dxos/effect';
 import { meta } from '#meta';
 import { MapCapabilities } from '#types';
 
-import { Settings } from '../types/Settings';
+import { Settings } from '../types/Settings.ts';
 
 /**
  * Registers the plugin Settings (surfaced as a form via `AppCapabilities.Settings`) and exposes the

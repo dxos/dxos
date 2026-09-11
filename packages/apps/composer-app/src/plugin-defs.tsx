@@ -13,6 +13,7 @@ import * as CallsPlugin from '@dxos/plugin-calls/CallsPlugin';
 import * as ChessComPlugin from '@dxos/plugin-chess-com/ChessComPlugin';
 import * as ChessPlugin from '@dxos/plugin-chess/ChessPlugin';
 import * as ClaudePlugin from '@dxos/plugin-claude/ClaudePlugin';
+import * as CloudflarePlugin from '@dxos/plugin-cloudflare/CloudflarePlugin';
 import * as CodePlugin from '@dxos/plugin-code/CodePlugin';
 import * as CommercePlugin from '@dxos/plugin-commerce/CommercePlugin';
 import * as ComputerPlugin from '@dxos/plugin-computer/ComputerPlugin';
@@ -85,9 +86,9 @@ import * as WnfsPlugin from '@dxos/plugin-wnfs/WnfsPlugin';
 import * as ZenPlugin from '@dxos/plugin-zen/ZenPlugin';
 import { isTruthy } from '@dxos/util';
 
-import { type PluginConfig, getCorePlugins } from './plugin-defs.core';
+import { type PluginConfig, getCorePlugins } from './plugin-defs.core.tsx';
 
-export type { PluginConfig, State } from './plugin-defs.core';
+export type { PluginConfig, State } from './plugin-defs.core.tsx';
 
 /**
  * Plugin keys enabled by default for new users, per environment (dev/local).
@@ -187,6 +188,7 @@ export const getPlugins = (config: PluginConfig): Plugin.Plugin[] => {
     ChessPlugin.make(),
     ChessComPlugin.make(),
     ClaudePlugin.make(),
+    CloudflarePlugin.make(),
     CodePlugin.make(),
     CommercePlugin.make(),
     // Dev-only coding harness, gated on `isDev` for availability (not just defaults, unlike

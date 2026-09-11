@@ -6,7 +6,7 @@ import React from 'react';
 
 import { mx } from '@dxos/ui-theme';
 
-import type { Headers, Row, Viewport } from '../state/types';
+import type { Headers, Row, Viewport } from '../state/types.ts';
 
 export type TrackHeaderProps = {
   viewport: Viewport;

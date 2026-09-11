@@ -10,7 +10,7 @@ import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 
 import { ScriptOperationHandlerSet } from '#operations';
 
-import { ScriptHandlers } from '../skills/functions';
+import { ScriptHandlers } from '../skills/functions/index.ts';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {

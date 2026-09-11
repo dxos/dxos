@@ -15,8 +15,8 @@ import { EntityId, SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Position } from '@dxos/util';
 
-import * as Graph from './AppGraph';
-import * as GraphBuilder from './AppGraphBuilder';
+import * as Graph from './AppGraph.ts';
+import * as GraphBuilder from './AppGraphBuilder.ts';
 
 /**
  * A single `(prefix, id?)` pair as parsed by `@dxos/app-toolkit`'s `UrlPath.parse`. Kept as a
@@ -416,8 +416,12 @@ export const representNode = (builder: GraphBuilder.GraphBuilder, nodeId: string
     return Option.none();
   }
 
-  // The (key, id?) representation is derived from the node id + binding (a singleton has no id; a
-  // resolver-backed key keeps just the object id; a static path `+`-joins the segments after the path) —
-  // the same derivation the builder uses to stamp `urlSegment`.
-  return Option.some({ ...GraphBuilder.urlRepresentation(nodeId, url, builder.urlGrammar.tailSeparator), workspace });
+  // The (key, id?) representation is derived from the node id + binding: a singleton has no id, a
+  // resolver-backed key keeps just the object id, and a static path `+`-joins the segments after the path.
+  const represented = GraphBuilder.urlRepresentation(nodeId, url, builder.urlGrammar.tailSeparator);
+  if (represented.id === '') {
+    // Nothing after the binding's path: this is the container the items hang off, not an item.
+    return Option.none();
+  }
+  return Option.some({ ...represented, workspace });
 };

@@ -13,7 +13,7 @@ import { CodeArticle, CodeSettings, SpecArticle } from '#containers';
 import { meta } from '#meta';
 import { CodeProject, Spec } from '#types';
 
-import { isPluginSpecSubject } from '../plugin-spec';
+import { isPluginSpecSubject } from '../plugin-spec.ts';
 
 export default Capability.makeModule(() =>
   Effect.succeed(

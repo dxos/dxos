@@ -12,7 +12,7 @@ import * as Trigger from '@dxos/compute/Trigger';
 import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { getFeedRef } from '@dxos/schema';
 
-import { Relay, SyncAutomation } from './definitions';
+import { Relay, SyncAutomation } from './definitions.ts';
 
 export default SyncAutomation.pipe(
   Operation.withHandler(

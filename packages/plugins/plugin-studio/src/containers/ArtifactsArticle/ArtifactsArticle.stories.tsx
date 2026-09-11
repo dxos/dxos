@@ -21,7 +21,7 @@ import { StudioPlugin } from '#plugin';
 import { translations } from '#translations';
 import { Artifact, Variant } from '#types';
 
-import { ArtifactsArticle } from './ArtifactsArticle';
+import { ArtifactsArticle } from './ArtifactsArticle.tsx';
 
 const DefaultStory = () => {
   const spaces = useSpaces();

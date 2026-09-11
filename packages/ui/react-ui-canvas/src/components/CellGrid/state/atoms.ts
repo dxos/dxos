@@ -4,7 +4,7 @@
 
 import * as Atom from 'effect/unstable/reactivity/Atom';
 
-import type { Cell, Selection, Tool, Viewport } from './types';
+import type { Cell, Selection, Tool, Viewport } from './types.ts';
 
 export type CellGridAtoms<T = unknown> = {
   cells: Atom.Writable<ReadonlyMap<string, Cell<T>>>;

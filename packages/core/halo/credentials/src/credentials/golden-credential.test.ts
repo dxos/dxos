@@ -7,15 +7,19 @@ import { describe, expect, test } from 'vitest';
 
 import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
-import { fromPublicKey } from '@dxos/protocols/buf';
-import { AuthorizedDeviceSchema, CredentialSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
+import { fromPublicKey, toPublicKey } from '@dxos/protocols/buf';
+import {
+  AuthorizedDeviceSchema,
+  type Credential,
+  CredentialSchema,
+} from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
-import { getCredentialAssertion } from './assertions';
-import { createCredential } from './credential-factory';
-import { issuerOf } from './credential-keys';
-import { getCredentialProofPayload } from './signing';
-import { GOLDEN_CREDENTIAL_BYTES_B64, GOLDEN_CREDENTIAL_PROOF_PAYLOAD } from './testing/golden-credential';
-import { verifyCredential } from './verifier';
+import { getCredentialAssertion } from './assertions.ts';
+import { createCredential } from './credential-factory.ts';
+import { issuerOf } from './credential-keys.ts';
+import { getCredentialProofPayload } from './signing.ts';
+import { GOLDEN_CREDENTIAL_BYTES_B64, GOLDEN_CREDENTIAL_PROOF_PAYLOAD } from './testing/golden-credential.ts';
+import { verifyCredential } from './verifier.ts';
 
 // The guard a self-consistency test cannot be: a test that signs a credential with the current tree
 // moves with the tree, so a shape change keeps agreeing with itself. These bytes were signed by a
@@ -79,3 +83,58 @@ describe('a credential signed by this build', () => {
     });
   });
 });
+
+describe('the assertion type_url a credential carries', () => {
+  test('is the bare type name, which is what EDGE resolves', async ({ expect }) => {
+    // EDGE keys its assertion registry by bare `typeName`; `anyPack`'s `type.googleapis.com/`
+    // prefix misses that lookup and fails the websocket upgrade with a 500.
+    const { credential } = await makeCredential();
+    expect(credential.subject?.assertion?.typeUrl).toEqual('dxos.halo.credentials.AuthorizedDevice');
+  });
+
+  test('does not reach the signature or the id, which cover the prefixed form identically', async ({ expect }) => {
+    // Both are digests of the signing payload, and `canonicalStringify` drops `@type` — so the url
+    // form is outside what is signed, and switching it cannot invalidate an issued credential.
+    const { credential } = await makeCredential();
+    const prefixed = withPrefixedAssertionUrl(credential);
+
+    expect(Buffer.from(getCredentialProofPayload(prefixed))).toEqual(
+      Buffer.from(getCredentialProofPayload(credential)),
+    );
+    expect(await verifyCredential(prefixed)).toEqual({ kind: 'pass' });
+  });
+
+  test('still resolves through buf, which normalizes either form', async ({ expect }) => {
+    const { deviceKey, credential } = await makeCredential();
+    for (const candidate of [credential, withPrefixedAssertionUrl(credential)]) {
+      const assertion = getCredentialAssertion(candidate);
+      expect(assertion.$typeName).toEqual('dxos.halo.credentials.AuthorizedDevice');
+      expect(toPublicKey((assertion as any).deviceKey)?.toHex()).toEqual(deviceKey.toHex());
+    }
+  });
+});
+
+const makeCredential = async () => {
+  const keyring = new Keyring();
+  const issuer = await keyring.createKey();
+  const deviceKey = PublicKey.random();
+  return {
+    deviceKey,
+    credential: await createCredential({
+      assertion: create(AuthorizedDeviceSchema, {
+        identityKey: fromPublicKey(issuer),
+        deviceKey: fromPublicKey(deviceKey),
+      }),
+      issuer,
+      signer: keyring,
+      subject: deviceKey,
+    }),
+  };
+};
+
+/** A clone of the credential carrying the spec-form `type.googleapis.com/` prefix `anyPack` writes. */
+const withPrefixedAssertionUrl = (credential: Credential): Credential => {
+  const clone = fromBinary(CredentialSchema, toBinary(CredentialSchema, credential));
+  clone.subject!.assertion!.typeUrl = `type.googleapis.com/${clone.subject!.assertion!.typeUrl}`;
+  return clone;
+};

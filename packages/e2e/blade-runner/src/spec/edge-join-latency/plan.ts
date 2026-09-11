@@ -8,7 +8,7 @@ import path from 'node:path';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
-import { type SchedulerEnvImpl } from '../../env';
+import { type SchedulerEnvImpl } from '../../env/index.ts';
 import {
   type Platform,
   type ReplicantBrain,
@@ -16,10 +16,10 @@ import {
   type TestPlan,
   type TestProps,
   onCleanupSignal,
-} from '../../plan';
-import { ClientReplicant, type SpaceDigest } from '../../replicants/client-replicant';
-import { describeError } from '../../util';
-import { type EdgeTarget, assertCanCleanUp, canonical, isDevLikeTarget, urlsFor } from '../edge-stress';
+} from '../../plan/index.ts';
+import { ClientReplicant, type SpaceDigest } from '../../replicants/client-replicant.ts';
+import { describeError } from '../../util.ts';
+import { type EdgeTarget, assertCanCleanUp, canonical, isDevLikeTarget, urlsFor } from '../edge-stress/index.ts';
 
 //
 // Spec.
@@ -73,6 +73,12 @@ export type JoinMeasurement = {
   msPerObject: number | undefined;
   ok: boolean;
   error?: string;
+  /**
+   * When this joiner finished, not when the run did. Joiners are measured one after another, so
+   * these differ by seconds — which is what keeps their events apart in a store that deduplicates
+   * on (uuid, timestamp), the uuid being shared by everything from one commit.
+   */
+  at: string;
 };
 
 export type EdgeJoinLatencyResult = {
@@ -89,6 +95,13 @@ export type EdgeJoinLatencyResult = {
   medianReplicationMs: number | undefined;
   medianSyncedMs: number | undefined;
   maxSyncedMs: number | undefined;
+  /**
+   * Mean and sample spread of `syncedMs` across the joiners that finished. Trended nightly rather
+   * than the median, because a band needs a centre and a width and a median has no width: a run
+   * whose mean held while its spread doubled is a regression the medians above cannot show.
+   */
+  meanSyncedMs: number | undefined;
+  stddevSyncedMs: number | undefined;
   /**
    * Whether each successive joiner took longer than the last. Flat is the expected shape; a rising
    * one means joiners are contending — measured against a degraded local stack, never against dev.
@@ -313,6 +326,7 @@ export class EdgeJoinLatency implements TestPlan<EdgeJoinLatencySpec, EdgeJoinLa
             msPerObject: replicationMs !== undefined && spec.objects > 0 ? replicationMs / spec.objects : undefined,
             ok: settled.ok,
             error: settled.ok ? undefined : `digest still differed after ${spec.joinTimeoutMs}ms`,
+            at: new Date().toISOString(),
           });
         } catch (err) {
           // The fallback is for a joiner that failed to sync — one bad row, the rest still measured.
@@ -333,6 +347,7 @@ export class EdgeJoinLatency implements TestPlan<EdgeJoinLatencySpec, EdgeJoinLa
             // threw nor the cause under it, and the replicant never logged it because the error
             // crossed the RPC boundary. The artifact has to carry what a local repro would show.
             error: describeError(err),
+            at: new Date().toISOString(),
           });
         }
         log.info('joiner measured', { ...measurements[measurements.length - 1] });
@@ -348,14 +363,26 @@ export class EdgeJoinLatency implements TestPlan<EdgeJoinLatencySpec, EdgeJoinLa
       );
       return result;
     } finally {
-      // In `finally` so the artifacts exist however the run ended: a green/red verdict with no
-      // numbers behind it is the one output a CI job must never produce.
-      const summary = this._summarize(edgeUrl, spec, seedMs, measurements, agents);
-      fs.writeFileSync(resultPath, `${JSON.stringify(summary, null, 2)}\n`);
-      fs.writeFileSync(path.join(params.outDir, 'summary.md'), renderSummary(summary));
-      unregisterCleanup();
-      if (spec.cleanup) {
-        await this._cleanup(edgeUrl, spawned, spaceId, identityDids);
+      // Nested so no artifact can cost the cleanup: these run against a shared deployment, and a
+      // write that threw here — a full disk, a missing `outDir` — would strand this run's identities
+      // and its space on it. Losing the numbers is recoverable; leaking the state is not.
+      try {
+        // In `finally` so the artifacts exist however the run ended: a green/red verdict with no
+        // numbers behind it is the one output a CI job must never produce.
+        const summary = this._summarize(edgeUrl, spec, seedMs, measurements, agents);
+        fs.writeFileSync(resultPath, `${JSON.stringify(summary, null, 2)}\n`);
+        fs.writeFileSync(path.join(params.outDir, 'summary.md'), renderSummary(summary));
+        fs.writeFileSync(
+          path.join(params.outDir, 'join-latency.events.ndjson'),
+          renderEvents(summary, new Date().toISOString())
+            .map((event) => `${JSON.stringify(event)}\n`)
+            .join(''),
+        );
+      } finally {
+        unregisterCleanup();
+        if (spec.cleanup) {
+          await this._cleanup(edgeUrl, spawned, spaceId, identityDids);
+        }
       }
     }
   }
@@ -378,6 +405,14 @@ export class EdgeJoinLatency implements TestPlan<EdgeJoinLatencySpec, EdgeJoinLa
       return values.length > 0 ? values[Math.floor(values.length / 2)] : undefined;
     };
     const synced = ok.map((measurement) => measurement.syncedMs ?? 0);
+    const meanSyncedMs =
+      synced.length > 0 ? synced.reduce((total, value) => total + value, 0) / synced.length : undefined;
+    // Sample rather than population: five joiners estimate a spread, they do not constitute one.
+    // Undefined below two, where there is nothing to be spread apart.
+    const stddevSyncedMs =
+      meanSyncedMs === undefined || synced.length < 2
+        ? undefined
+        : Math.sqrt(synced.reduce((total, value) => total + (value - meanSyncedMs) ** 2, 0) / (synced.length - 1));
     return {
       ok: measurements.length === spec.joiners && measurements.every((measurement) => measurement.ok),
       edge: edgeUrl,
@@ -390,6 +425,8 @@ export class EdgeJoinLatency implements TestPlan<EdgeJoinLatencySpec, EdgeJoinLa
       medianReplicationMs: median((measurement) => measurement.replicationMs),
       medianSyncedMs: median((measurement) => measurement.syncedMs),
       maxSyncedMs: synced.length > 0 ? Math.max(...synced) : undefined,
+      meanSyncedMs,
+      stddevSyncedMs,
       // Compared in join order, not sorted: the question is whether each joiner paid more than the
       // one before it.
       monotonicGrowth: synced.length > 1 && synced.every((value, index) => index === 0 || value > synced[index - 1]),
@@ -443,6 +480,59 @@ export class EdgeJoinLatency implements TestPlan<EdgeJoinLatencySpec, EdgeJoinLa
 }
 
 /**
+ * The run as the events `scripts/ci-event.mjs --batch` posts: one fact per joiner, and one for the
+ * run itself.
+ *
+ * Per joiner rather than a precomputed mean and spread, so the statistics are derived where they are
+ * read. An event store computes `avg`, `stddevSamp` and `quantile` over rows, which means a night
+ * that ran twice aggregates as one population of joiners instead of as an average of averages, and a
+ * question nobody asked yet does not need a new field shipped and backfilled before it can be.
+ *
+ * The run event is not redundant with them: `seedMs` and `agents` describe the run, not any joiner,
+ * and a run whose joiners all failed emits no joiner events at all — without it that night would be
+ * invisible rather than red.
+ *
+ * Undefined fields are dropped by `JSON.stringify`, so a joiner that produced no number sends no
+ * property rather than a zero an average would quietly absorb.
+ */
+const renderEvents = (result: EdgeJoinLatencyResult, at: string) => [
+  {
+    event: 'ci.edge-join-latency',
+    timestamp: at,
+    properties: {
+      ok: result.ok,
+      edge: result.edge,
+      objects: result.objects,
+      joiners: result.joiners,
+      joinersOk: result.measurements.filter((measurement) => measurement.ok).length,
+      agents: result.agents,
+      seedMs: result.seedMs,
+    },
+  },
+  ...result.measurements.map((measurement) => ({
+    event: 'ci.edge-join-latency.joiner',
+    timestamp: measurement.at,
+    // Five joiners share the run's commit, and so would share a dedup uuid without this.
+    dedup: `joiner-${measurement.joiner}`,
+    properties: {
+      joiner: measurement.joiner,
+      ok: measurement.ok,
+      admittedMs: measurement.admittedMs,
+      spaceReadyMs: measurement.spaceReadyMs,
+      replicationMs: measurement.replicationMs,
+      syncedMs: measurement.syncedMs,
+      msPerObject: measurement.msPerObject,
+      error: measurement.error,
+      // Carried from the run so a query over joiners can filter on comparability without joining
+      // back to it: latency is only comparable where the deployment, the size and `agents` match.
+      edge: result.edge,
+      objects: result.objects,
+      agents: result.agents,
+    },
+  })),
+];
+
+/**
  * The run as a CI job summary. Written by the plan rather than by a workflow script so the same
  * table appears locally, and so nothing has to re-derive the verdict from the JSON.
  */
@@ -488,7 +578,7 @@ const renderSummary = (result: EdgeJoinLatencyResult): string => {
     `| — of which, space available | ${ms(result.medianSpaceReadyMs)} | |`,
     `| **Accept to fully synced** | **${ms(result.medianSyncedMs)}** | |`,
     '',
-    `Slowest joiner ${ms(result.maxSyncedMs)}.${
+    `Slowest joiner ${ms(result.maxSyncedMs)}, mean ${ms(result.meanSyncedMs)} ± ${ms(result.stddevSyncedMs)}.${
       result.monotonicGrowth
         ? ' ⚠️ Every joiner took longer than the one before it — joiners are contending, or the stack is degrading.'
         : ''

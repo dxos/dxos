@@ -17,8 +17,8 @@ import {
 import { type MuxerStats } from '@dxos/teleport';
 import { ComplexMap } from '@dxos/util';
 
-import { ConnectionState, type Swarm } from './swarm';
-import { type WireProtocol } from './wire-protocol';
+import { ConnectionState, type Swarm } from './swarm/index.ts';
+import { type WireProtocol } from './wire-protocol.ts';
 
 const CONNECTION_GC_THRESHOLD = 1000 * 60 * 15;
 

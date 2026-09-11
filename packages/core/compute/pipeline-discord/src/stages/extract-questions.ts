@@ -10,9 +10,9 @@ import { log } from '@dxos/log';
 import { type Stage } from '@dxos/pipeline';
 import { Person } from '@dxos/types';
 
-import { DISCORD_SOURCE } from '../constants';
-import { StoreError } from '../errors';
-import { ExtractedQuestionStore } from '../stores';
+import { DISCORD_SOURCE } from '../constants.ts';
+import { StoreError } from '../errors.ts';
+import { ExtractedQuestionStore } from '../stores/index.ts';
 
 export type ExtractQuestionsOptions = {
   /** ECHO database: when provided, each asker is find-or-created as a `Person` (by foreign key). */

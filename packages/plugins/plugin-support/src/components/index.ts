@@ -2,7 +2,6 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './FeedbackForm';
-export * from './Shortcuts';
-export * from './Tooltip';
-export * from './WelcomeTour';
+export * from './FeedbackForm/index.ts';
+export * from './Shortcuts/index.ts';
+export * from './WelcomeTour/index.ts';

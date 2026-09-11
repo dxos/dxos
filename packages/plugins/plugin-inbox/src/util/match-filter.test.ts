@@ -8,7 +8,7 @@ import { Obj, Tag } from '@dxos/echo';
 import { QueryBuilder } from '@dxos/echo-query';
 import { Message } from '@dxos/types';
 
-import { matchesFilter } from './match-filter';
+import { matchesFilter } from './match-filter.ts';
 
 const tagFoo = Tag.make({ label: 'foo' });
 const tagBar = Tag.make({ label: 'bar' });

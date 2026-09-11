@@ -11,10 +11,10 @@ import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
 import { seedMailboxBinding } from '@dxos/plugin-inbox/testing/sync';
 
-import { GMAIL_CONNECTOR_ID, GMAIL_SOURCE } from '../../../constants';
-import { generateGmailDataset } from '../../../testing/gmail-fixtures';
-import { OtelHarness } from '../../../testing/otel-harness';
-import { googleSyncTestServices, runGoogleSync } from '../../../testing/sync-fixture';
+import { GMAIL_CONNECTOR_ID, GMAIL_SOURCE } from '../../../constants.ts';
+import { generateGmailDataset } from '../../../testing/gmail-fixtures.ts';
+import { OtelHarness } from '../../../testing/otel-harness.ts';
+import { googleSyncTestServices, runGoogleSync } from '../../../testing/sync-fixture.ts';
 
 /** {@link seedMailboxBinding} with this provider's identity — the shared fixture defaults to neither. */
 const seedGmailBinding = (

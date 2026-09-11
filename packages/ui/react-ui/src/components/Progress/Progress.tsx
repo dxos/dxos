@@ -4,9 +4,9 @@
 
 import React, { type ComponentPropsWithRef, forwardRef, useEffect, useRef } from 'react';
 
-import { useThemeContext } from '../../hooks';
-import { type ProgressStyleProps } from '../../theme';
-import { type ThemedClassName } from '../../util';
+import { useThemeContext } from '../../hooks/index.ts';
+import { type ProgressStyleProps } from '../../theme/index.ts';
+import { type ThemedClassName } from '../../util/index.ts';
 
 export type ProgressProps = ThemedClassName<
   ComponentPropsWithRef<'span'> &
@@ -22,7 +22,7 @@ export type ProgressProps = ThemedClassName<
 
 /**
  * A fill bar: a fraction of a track, or an indeterminate sweep, for a host that supplies its own
- * chrome. {@link Stepper} draws a plan instead, and `ProgressMeter` is the readout built from both.
+ * chrome. {@link Steps} draws a plan instead, and `ProgressMeter` is the readout built from both.
  */
 export const Progress = forwardRef<HTMLSpanElement, ProgressProps>(
   ({ classNames, children, progress = 0, indeterminate, countdown, paused, error, ...props }, forwardedRef) => {

@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type Projection } from '../types';
+import { type Projection } from '../types/index.ts';
 
 /**
  * A hand-written projection with no DSL behind it — the fixture that proves the renderer depends on

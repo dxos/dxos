@@ -15,12 +15,12 @@ import { fileURLToPath } from 'node:url';
 import React from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 
-import { SceneSvg } from '../src/components/SceneSvg';
-import * as Diagnostics from '../src/model/diagnostics';
-import * as Mermaid from '../src/model/mermaid';
-import * as MermaidEngine from '../src/model/mermaid-engine';
-import type * as Scene from '../src/model/scene';
-import { GRID } from '../src/model/uml-grid';
+import { SceneSvg } from '../src/components/SceneSvg.tsx';
+import * as Diagnostics from '../src/model/diagnostics.ts';
+import * as MermaidEngine from '../src/model/mermaid-engine.ts';
+import * as Mermaid from '../src/model/mermaid.ts';
+import type * as Scene from '../src/model/scene.ts';
+import { GRID } from '../src/model/uml-grid.ts';
 
 const DIAGRAMS = join(dirname(fileURLToPath(import.meta.url)), '../docs/diagrams');
 

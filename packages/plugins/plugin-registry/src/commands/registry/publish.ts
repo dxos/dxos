@@ -22,7 +22,7 @@ import { Context } from '@dxos/context';
 import { EdgeHttpClient } from '@dxos/edge-client';
 import { Config2, EdgeCallFailedError } from '@dxos/protocols';
 
-import { AUTH_OPTION_DESCRIPTIONS, NSID, putRecord, resolveSession } from './util';
+import { AUTH_OPTION_DESCRIPTIONS, NSID, putRecord, resolveSession } from './util.ts';
 
 /** Manifest emitted by the build (subset consumed here). Extends `Config2.Plugin` with build-time fields. */
 const ManifestSchema = Schema.Struct({

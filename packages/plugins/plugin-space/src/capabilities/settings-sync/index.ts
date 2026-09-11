@@ -16,5 +16,5 @@ export const SettingsSync = Capability.lazyModule(
     // Runtime event: the settings space this projects into arrives with the space list, not at startup.
     activatesOn: ClientEvents.SpacesReady,
   },
-  () => import('./settings-sync'),
+  () => import('./settings-sync.ts'),
 );

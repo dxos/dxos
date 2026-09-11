@@ -5,7 +5,7 @@
 import type { Manifold, ManifoldToplevel } from 'manifold-3d';
 import { afterAll, beforeAll, describe, test } from 'vitest';
 
-import { joinSolids, subtractSolids } from './boolean-ops';
+import { joinSolids, subtractSolids } from './boolean-ops.ts';
 
 describe('boolean-ops', () => {
   let wasm: ManifoldToplevel;

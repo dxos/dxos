@@ -2,8 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type InputHandler, type TerminalBridge } from './bridge';
-import { decodeInput } from './input';
+import { type InputHandler, type TerminalBridge } from './bridge.ts';
+import { decodeInput } from './input.ts';
 
 /**
  * A bridge that records writes and lets a test push keystrokes, standing in for xterm.

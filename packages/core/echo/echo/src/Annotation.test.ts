@@ -10,10 +10,10 @@ import { describe, test } from 'vitest';
 import { SchemaAST } from '@dxos/effect';
 import { DXN } from '@dxos/keys';
 
-import * as Annotation from './Annotation';
-import * as Obj from './Obj';
-import * as Ref from './Ref';
-import * as Type from './Type';
+import * as Annotation from './Annotation.ts';
+import * as Obj from './Obj.ts';
+import * as Ref from './Ref.ts';
+import * as Type from './Type.ts';
 
 describe('Annotation', () => {
   describe('make', () => {

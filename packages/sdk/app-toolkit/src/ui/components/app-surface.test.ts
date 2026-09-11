@@ -9,7 +9,7 @@ import { describe, test } from 'vitest';
 import { Surface as SurfaceInternals } from '@dxos/app-framework/ui';
 import { DXN, Obj, Type } from '@dxos/echo';
 
-import * as AppSurface from './app-surface';
+import * as AppSurface from './app-surface.ts';
 
 const TypeA = Type.makeObject(DXN.make('com.example.test.TypeA', '0.1.0'))(Schema.Struct({ name: Schema.String }));
 

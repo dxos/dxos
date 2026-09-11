@@ -8,7 +8,7 @@ import { assertArgument, invariant } from '@dxos/invariant';
 import { EID, EntityId } from '@dxos/keys';
 import { assumeType } from '@dxos/util';
 
-import { type InternalObjectProps, SelfURIId } from './model';
+import { type InternalObjectProps, SelfURIId } from './model.ts';
 
 /**
  * Returns the EID of an object.

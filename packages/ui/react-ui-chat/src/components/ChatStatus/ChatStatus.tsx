@@ -7,8 +7,8 @@ import React, { type PropsWithChildren, type Ref, forwardRef, useEffect, useImpe
 import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
-import { ChatStatusProvider, useChatStatusContext } from './ChatStatusContext';
-import { formatElapsed } from './format';
+import { ChatStatusProvider, useChatStatusContext } from './ChatStatusContext.ts';
+import { formatElapsed } from './format.ts';
 
 const TICK_MS = 1_000;
 
@@ -98,10 +98,11 @@ const Icon = ({ classNames, children }: IconProps) => {
   if (children !== undefined) {
     return <>{children}</>;
   }
+
   return (
     <span
       aria-hidden='true'
-      className={mx('inline-block size-2 rounded-full bg-current animate-halo-pulse', classNames)}
+      className={mx('inline-block size-2 rounded-full bg-current text-info-text animate-pulse', classNames)}
     />
   );
 };

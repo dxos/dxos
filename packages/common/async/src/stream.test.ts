@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { Stream, getFirstStreamValue } from './stream';
+import { Stream, getFirstStreamValue } from './stream.ts';
 
 describe('Stream', () => {
   test('can consume a stream that immediately closes', async ({ expect }) => {

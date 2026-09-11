@@ -5,8 +5,8 @@
 import { Domino } from '@dxos/ui';
 import { type RenderCallback } from '@dxos/ui-editor/types';
 
-import { type VocabularyLookup, normalizeToken } from './deck-segments';
-import { type SegmentTooltipProps } from './segments';
+import { type VocabularyLookup, normalizeToken } from './deck-segments.ts';
+import { type SegmentTooltipProps } from './segments.ts';
 
 export type TooltipHandlers = {
   t: (key: string, options?: Record<string, unknown>) => string;

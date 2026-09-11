@@ -4,8 +4,8 @@
 
 import type * as AppSettings from '@dxos/app-toolkit/AppSettings';
 
-import { type Binding } from './binding';
-import { Reconciler, type Store } from './reconciler';
+import { type Binding } from './binding.ts';
+import { Reconciler, type Store } from './reconciler.ts';
 
 /**
  * Every namespace being reconciled against one store.

@@ -9,9 +9,9 @@ import { Combobox } from '@dxos/react-ui-list';
 
 import { type FormFieldRendererProps } from '#types';
 
-import { type OptionsLookup, type OptionsLookupEntry } from '../../../../../annotations';
-import { pickValues, useAsyncFieldEffect, useFormValues } from '../../../../../hooks';
-import { presentationFor } from '../../presentation';
+import { type OptionsLookup, type OptionsLookupEntry } from '../../../../../annotations.ts';
+import { pickValues, useAsyncFieldEffect, useFormValues } from '../../../../../hooks/index.ts';
+import { presentationFor } from '../../presentation.tsx';
 
 export type ComboboxFieldProps = FormFieldRendererProps<string> & {
   /** Loads suggestions from the lookup's declared dependency fields (typically the field's own value). */
@@ -111,7 +111,6 @@ export const ComboboxField = ({
             {/* The literal typed text as a fallback option at the bottom, unless a suggestion already is it. */}
             {normalized.length > 0 && !hasExact && <Combobox.Item value={trimmed} label={trimmed} />}
           </Combobox.List>
-          <Combobox.Arrow />
         </Combobox.Content>
       </Combobox.Portal>
     </Combobox.Root>

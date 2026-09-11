@@ -15,9 +15,9 @@ import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import { TestHelpers } from '@dxos/effect/testing';
 import { DXN, EntityId } from '@dxos/keys';
 
-import { AssistantTestLayer } from '../testing';
-import * as AgentService from './AgentService';
-import { type DelegationStrategy } from './delegation-strategy';
+import { AssistantTestLayer } from '../testing/index.ts';
+import * as AgentService from './AgentService.ts';
+import { type DelegationStrategy } from './delegation-strategy.ts';
 
 const { text, scriptedAiService } = ScriptedLanguageModel;
 

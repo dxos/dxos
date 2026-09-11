@@ -16,7 +16,7 @@ import { SpacesService } from '@dxos/protocols/rpc';
 
 // `Module` suffix because the client's `SpaceSchema` (the Space entity schema) already holds the
 // bare name in this file.
-import * as SpaceSchemaModule from './SpaceSchema';
+import * as SpaceSchemaModule from './SpaceSchema.ts';
 
 /**
  * Operations for the Space plugin.

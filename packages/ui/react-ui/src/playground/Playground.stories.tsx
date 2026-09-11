@@ -41,7 +41,7 @@ import {
   Skeleton,
   Slider,
   Splitter,
-  Stepper,
+  Steps,
   Tabs,
   Tag,
   Toast,
@@ -50,9 +50,9 @@ import {
   ToggleGroupItem,
   Toolbar,
   Tooltip,
-} from '../components';
-import { DensityProvider } from '../providers';
-import { withTheme } from '../testing';
+} from '../components/index.ts';
+import { DensityProvider } from '../providers/index.ts';
+import { withTheme } from '../testing/index.ts';
 
 //
 // Frame
@@ -322,7 +322,7 @@ const ProgressSection = () => (
       <Progress indeterminate />
     </div>
     <div className='w-64'>
-      <Stepper
+      <Steps
         steps={['Plan', 'Build', 'Verify', 'Ship'].map((label) => ({ id: label.toLowerCase(), label }))}
         active={1}
         fraction={0.5}

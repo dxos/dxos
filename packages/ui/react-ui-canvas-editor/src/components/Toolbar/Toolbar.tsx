@@ -6,8 +6,8 @@ import React, { useState } from 'react';
 
 import { Icon, Toolbar as NaturalToolbar, Select, type ThemedClassName } from '@dxos/react-ui';
 
-import { type ActionHandler } from '../../actions';
-import { type LayoutKind, LAYOUTS } from '../../layout';
+import { type ActionHandler } from '../../actions/index.ts';
+import { type LayoutKind, LAYOUTS } from '../../layout/index.ts';
 
 export type ToolbarProps = ThemedClassName<{
   onAction?: ActionHandler;

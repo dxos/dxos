@@ -10,7 +10,7 @@ import * as Layer from 'effect/Layer';
 import { layerMemory } from '@dxos/config';
 import { EffectEx } from '@dxos/effect';
 
-import { ClientService, layer } from './client-service';
+import { ClientService, layer } from './client-service.ts';
 
 const TestLayer = Function.pipe(layer, Layer.provideMerge(layerMemory));
 

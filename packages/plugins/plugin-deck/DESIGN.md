@@ -148,28 +148,95 @@ name stays open as an ordinary plank.
 
 ## 6. State
 
+Three kinds of state, told apart by who owns them.
+
+**What is open** is owned by the URL. The workspace, the ordered planks, and the open companion are
+the pathname, and the deck stores no copy of them. The browser is the store.
+
+**How it looks** is owned by the deck and persisted: plank widths, plank names, the sidebar states,
+and which workspace you were last on.
+
+**What is happening right now** is owned by the deck and not persisted: fullscreen, expanded, the
+exposé, dialogs, popovers and toasts.
+
 ```ts
-type DeckState = {
-  active: string[]; // presentation derives from length + breakpoint
-  inactive: string[];
-  plankSizing: Record<string, number>; // rem widths by plank id, plus the companion's own key
+// Per workspace, persisted.
+type StoredDeck = {
+  plankSizing: Record<string, number>; // rem widths, by URL segment
   companionPlanks: string[]; // planks showing their companion
-  plankNames: Record<string, string>; // name → plank id
+  plankNames: Record<string, string>; // name → URL segment
+};
+
+// Per workspace, never persisted.
+type OpenDeck = {
+  active: string[]; // derived from the URL, never written by hand
+  inactive: string[]; // planks that were closed
 };
 
 type EphemeralDeckState = {
-  fullscreen?: string; // plank rendered headless over the deck
-  expanded?: string; // plank filling the space between the two piles
-  expose?: boolean; // every plank at once, shrunk to fit
-  scrollIntoView?: string;
+  open: Record<string, OpenDeck>; // what is open, by workspace
+  segments?: Record<string, string>; // plank id → the URL segment it came from
+  fullscreen?: string;
+  expanded?: string;
+  expose?: boolean;
   // ...dialog / popover / toast fields
 };
 ```
 
-Persisted state is versioned through `util/migrate-persisted-state.ts`. The policy for unshipped
-fields is **drop, don't migrate**: `Atom.kvs` falls back to `defaultValue` when a blob fails to decode,
-so a removed field costs a fresh local deck and nothing more. The selected companion _variant_ lives in
-`react-ui-attention` view state, not here (`util/companion-view-state.ts`).
+`DeckCapabilities.getDeck` merges the two for the active workspace, so everything downstream reads one
+deck and never has to know which atom a field came from.
+
+### Two representations of what is open
+
+**Layer 1 is the pair chain**, `/w/<workspace>/<key>/<id>/…`. It is synchronous, always readable, and
+cannot go stale, because reading it means parsing `window.location.pathname` rather than a copy of it.
+A cached parse would be wrong the first time the user presses Back.
+
+**Layer 2 is `deck.active`**, the graph node ids those pairs resolved to. Resolution is asynchronous,
+so layer 2 always trails layer 1.
+
+### One direction
+
+```
+operation ─┐
+           ├─→ address bar ─→ projection ─→ deck state ─→ plank
+external ──┘     (layer 1)                   (layer 2)
+```
+
+An operation reads layer 1, computes the chain it wants, and pushes it. Boot, a history traversal and
+a deep link arrive at the same place, so a click and a Back press are the same event. Nothing writes
+layer 2 except the projection, and nothing flows back up, so there is no reconciliation to get wrong.
+
+Exactly three functions write anything:
+
+- `Navigation.push` — the only write to layer 1.
+- `applyActive` — the only write to layer 2.
+- The operations that write a preference, which is not a claim about what is open.
+
+### The projection runs twice
+
+`projectUrl` applies the URL by pair first, so every plank the URL names renders its chrome
+immediately; a plank with no node yet renders a loading shell, and says not found once resolution's
+own deadline passes, since past it no node is still coming. A loader that proves the target absent
+says so sooner; one that could not form a question at all never would. It then resolves the pairs and applies
+them again by node id. A plank the deck already holds keeps the id it has, so only genuinely new
+planks change identity.
+
+That identity change is why per-plank preferences are keyed by URL segment rather than plank id: a
+segment is stable across the refinement and an id is not. `segments` is the lookup between them, and
+a plank is closed when its segment leaves the URL, never because its id was refined.
+
+A projection can wait out its deadlines, so starting one interrupts whatever was running: the deck
+holds the projection in flight (`DeckCapabilities.Projection`) and `FiberHandle.run` replaces it.
+The interrupted caller returns no plank to attend rather than failing, since a navigation that has
+been overtaken is moot rather than broken.
+
+The URL only records the workspace you are in, so the other workspaces' open planks are remembered
+for the session and no longer. A reload arrives with none, and a workspace you switch to seeds itself
+from its first child exactly as it does on a first visit.
+
+The selected companion _variant_ lives in `react-ui-attention` view state, not here
+(`util/companion-view-state.ts`).
 
 ---
 
@@ -230,12 +297,11 @@ just was, and releasing that transform is what the eye follows. Two constraints 
 spine's click, an exposé tile, and the arrow keys. It scrolls **and** attends, because the plank
 focuses itself off the same one-shot flag.
 
-### URL sync
+### Navigation
 
-`capabilities/url-handler.ts` parses the pathname's pair chain (`/w/<workspace>/<key>/<id>/...`) and
-reverse-serializes `deck.active` plus the open companion back into it on every change
-(`util/serialize-deck-url.ts`). Attention is never serialized and never triggers a sync; on load it
-defaults to the last plank in the chain.
+Every navigation operation computes the chain it wants and calls `navigateDeck`, which pushes the URL
+and projects it (§6). None of them writes `active`. Attention is never in the URL; an external URL
+lands it on the last plank in the chain, while an operation attends whatever it acted on.
 
 ---
 
@@ -278,8 +344,8 @@ space between the two piles) and the exposé.
 
 ## 11. Testing
 
-- `util/*.test.ts` — pure geometry and state helpers (`companion-anchor`, `layout`, `set-active`,
-  `serialize-deck-url`, `migrate-persisted-state`).
+- `util/*.test.ts` — pure geometry and state helpers (`companion-anchor`, `layout`).
+- `url/*.test.ts` — the URL vocabulary and the close diff (`navigation`, `set-active`).
 - `Deck.stories.tsx` — one `DefaultStory` plus args; play-tested variants are tagged `test`, and
   numbered manual scripts hang off play-free `*Manual` variants.
 

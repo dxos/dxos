@@ -30,8 +30,8 @@ import {
 } from '@dxos/protocols/buf/dxos/halo/invitations_pb';
 import { Timeframe } from '@dxos/timeframe';
 
-import { type CredentialSigner, createCredential } from './credential-factory';
-import { credentialPayload } from './feed-payload';
+import { type CredentialSigner, createCredential } from './credential-factory.ts';
+import { credentialPayload } from './feed-payload.ts';
 
 // TODO(burdon): Normalize generate and functions below.
 //  Use throughout stack and in tests.

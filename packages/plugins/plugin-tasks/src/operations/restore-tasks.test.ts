@@ -9,9 +9,9 @@ import { Database, Obj, Ref } from '@dxos/echo';
 import { TestDatabaseLayer } from '@dxos/echo-client/testing';
 import { Milestone, Task, TaskSet } from '@dxos/types';
 
-import createTask from './create-task';
-import deleteTask from './delete-task';
-import restoreTasks from './restore-tasks';
+import createTask from './create-task.ts';
+import deleteTask from './delete-task.ts';
+import restoreTasks from './restore-tasks.ts';
 
 describe('restore-tasks', () => {
   it.effect('puts the subtree back at the positions it held', () =>

@@ -8,8 +8,8 @@ import { useCallback, useMemo } from 'react';
 
 import { useOptionalCapability } from '@dxos/app-framework/ui';
 
-import * as AppCapabilities from '../../app-framework/AppCapabilities';
-import * as AppSettings from '../../types/AppSettings';
+import * as AppCapabilities from '../../app-framework/AppCapabilities.ts';
+import * as AppSettings from '../../types/AppSettings.ts';
 
 /** Stable fallback so the atom hook keeps a constant identity while the sync is unavailable. */
 const emptyUnsynced = Atom.make<readonly string[]>([]);

@@ -20,7 +20,7 @@ import {
 import { type SpaceGraphEdge, type SpaceGraphModel, type SpaceGraphNode } from '@dxos/schema';
 import { type SlottableProps } from '@dxos/ui-types';
 
-import { type VisualizationVariant, type VisualizationVariantId, getVariant } from './variants';
+import { type VisualizationVariant, type VisualizationVariantId, getVariant } from './variants.ts';
 
 //
 // Context

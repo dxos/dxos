@@ -4,6 +4,6 @@
 
 import { lazy } from 'react';
 
-export * from './types';
+export * from './types.ts';
 
-export const Welcome = lazy(() => import('./Welcome'));
+export const Welcome = lazy(() => import('./Welcome.tsx'));

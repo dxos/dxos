@@ -6,7 +6,7 @@ import { type Virtualizer } from '@tanstack/react-virtual';
 import { act, renderHook } from '@testing-library/react';
 import { describe, expect, test, vi } from 'vitest';
 
-import { type VirtualizerPaginationController, useVirtualizerPagination } from './useVirtualizerPagination';
+import { type VirtualizerPaginationController, useVirtualizerPagination } from './useVirtualizerPagination.ts';
 
 type Item = { id: string };
 

@@ -20,11 +20,11 @@ import { FOCUS_GROUP_ATTR, KEYBOARD_MODALITY_ATTR } from '@dxos/react-focus';
 import { useComposedRefs, useControllableState, useMediaQuery } from '@dxos/react-hooks';
 import { osTranslations } from '@dxos/ui-theme';
 
-import { useThemeContext } from '../../hooks';
-import { type Label, toLocalizedString, useTranslation } from '../../providers';
-import { type MainStyleProps } from '../../theme';
-import { type ThemedClassName } from '../../util';
-import { MAIN_NAME, MainProvider, type SidebarState, useLandmarkMover, useMainContext } from './MainContext';
+import { useThemeContext } from '../../hooks/index.ts';
+import { type Label, toLocalizedString, useTranslation } from '../../providers/index.ts';
+import { type MainStyleProps } from '../../theme/index.ts';
+import { type ThemedClassName } from '../../util/index.ts';
+import { MAIN_NAME, MainProvider, type SidebarState, useLandmarkMover, useMainContext } from './MainContext.ts';
 
 const MAIN_ROOT_NAME = 'Main.Root';
 const MAIN_OVERLAY_NAME = 'Main.Overlay';
@@ -206,9 +206,12 @@ const MainSidebar = forwardRef<HTMLDivElement, MainSidebarProps>(
     const autoFocusVetoed = onOpenAutoFocus
       ? prevents(onOpenAutoFocus)
       : !document.body.hasAttribute(KEYBOARD_MODALITY_ATTR);
+    // Only `expanded` is on screen below `lg`; `collapsed` is the resting state there (the deck's
+    // default, and where the overlay sends a sidebar), so a dismissal returns to it and the swipe
+    // area can open from it.
     const drawer = useDrawer({
-      open: !isLg && state !== 'closed',
-      onOpenChange: ({ open }) => onStateChange?.(open ? 'expanded' : 'closed'),
+      open: !isLg && state === 'expanded',
+      onOpenChange: ({ open }) => onStateChange?.(open ? 'expanded' : 'collapsed'),
       modal: false,
       trapFocus: false,
       preventScroll: false,

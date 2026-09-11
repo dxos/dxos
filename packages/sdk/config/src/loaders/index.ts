@@ -9,8 +9,8 @@ import { parse } from 'yaml';
 import { log } from '@dxos/log';
 import { InvalidConfigError } from '@dxos/protocols';
 
-import { mapFromKeyValues, parseConfig } from '../config';
-import { type ConfigInit, FILE_DEFAULTS, FILE_ENVS } from '../types';
+import { mapFromKeyValues, parseConfig } from '../config.ts';
+import { type ConfigInit, FILE_DEFAULTS, FILE_ENVS } from '../types.ts';
 
 // TODO(burdon): Move code out of index file.
 

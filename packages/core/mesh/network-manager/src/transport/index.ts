@@ -2,6 +2,6 @@
 // Copyright 2020 DXOS.org
 //
 
-export * from './memory-transport';
-export * from './transport';
-export * from './webrtc';
+export * from './memory-transport.ts';
+export * from './transport.ts';
+export * from './webrtc/index.ts';

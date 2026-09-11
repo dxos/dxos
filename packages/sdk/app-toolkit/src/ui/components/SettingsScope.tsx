@@ -7,7 +7,7 @@ import React, { useCallback, useState } from 'react';
 import { AlertDialog, Button, ToggleGroup, ToggleGroupIconItem, useTranslation } from '@dxos/react-ui';
 import { osTranslations } from '@dxos/ui-theme';
 
-import { useSettingsScope } from '../hooks';
+import { useSettingsScope } from '../hooks/index.ts';
 
 export type SettingsScopeProps = {
   /** Settings prefix the control scopes — a plugin key, or one of the app-level namespaces. */

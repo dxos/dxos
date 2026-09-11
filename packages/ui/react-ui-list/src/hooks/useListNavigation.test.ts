@@ -7,7 +7,7 @@ import { describe, test } from 'vitest';
 
 import { FOCUS_MOVER_ATTR } from '@dxos/react-focus';
 
-import { useListNavigation } from './useListNavigation';
+import { useListNavigation } from './useListNavigation.ts';
 
 describe('useListNavigation', () => {
   test('list mode emits role=list / listitem with vertical orientation', ({ expect }) => {

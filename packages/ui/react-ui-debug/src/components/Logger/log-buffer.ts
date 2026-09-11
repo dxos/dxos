@@ -4,7 +4,7 @@
 
 import { type LogEntry } from '@dxos/log';
 
-import { type LevelName, type LogRecorder, composeFilter, startLogRecording } from './recorder';
+import { type LevelName, type LogRecorder, composeFilter, startLogRecording } from './recorder.ts';
 
 export const DEFAULT_MAX_LINES = 1_000;
 

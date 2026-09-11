@@ -19,8 +19,8 @@ import { composable, composableProps } from '@dxos/react-ui';
 import { PluginList, type PluginListProps } from '#components';
 import { meta } from '#meta';
 
-import { useDisableConfirmation } from '../../hooks';
-import { getPluginPath } from '../../paths';
+import { useDisableConfirmation } from '../../hooks/index.ts';
+import { getPluginPath } from '../../paths.ts';
 
 const matchesFilter = (plugin: Plugin.Plugin, query: string) => {
   const haystack = `${plugin.meta.profile.name ?? ''} ${plugin.meta.profile.key}`.toLowerCase();

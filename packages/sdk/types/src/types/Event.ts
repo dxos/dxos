@@ -10,8 +10,8 @@ import { Annotation, DXN, Obj, Type } from '@dxos/echo';
 import { DescriptionAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
 import { type MakeOptional } from '@dxos/util';
 
-import * as Actor from './Actor';
-import * as Geo from './Geo';
+import * as Actor from './Actor.ts';
+import * as Geo from './Geo.ts';
 
 /**
  * https://schema.org/Event

@@ -5,7 +5,7 @@
 import { renderHook } from '@testing-library/react';
 import { describe, test } from 'vitest';
 
-import { useListGrid } from './useListGrid';
+import { useListGrid } from './useListGrid.ts';
 
 describe('useListGrid', () => {
   test('emits handle + title only by default', ({ expect }) => {

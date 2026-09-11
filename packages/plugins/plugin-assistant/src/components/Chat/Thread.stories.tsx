@@ -103,7 +103,7 @@ const DefaultStory = ({ generator = [], delay = 0, wait, remountable, viewType }
   }
 
   return (
-    <EditorPreviewProvider onLookup={async ({ dxn, label }) => ({ label, text: dxn })}>
+    <EditorPreviewProvider onLookup={async ({ eid, label }) => ({ label, text: eid })}>
       {remountable ? (
         <RemountableThread messages={messages} viewType={viewType} />
       ) : (

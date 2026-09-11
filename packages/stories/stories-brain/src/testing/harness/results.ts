@@ -7,7 +7,7 @@ import { dirname } from 'node:path';
 
 import { log } from '@dxos/log';
 
-import { LIMIT, PACKAGE_ROOT, RESULTS_DIR, RESULTS_OUT } from './config';
+import { LIMIT, PACKAGE_ROOT, RESULTS_DIR, RESULTS_OUT } from './config.ts';
 
 // Capped (LIMIT-ed) iteration runs write to a `partial/` subdir so they never clobber the canonical
 // full-feed results.
