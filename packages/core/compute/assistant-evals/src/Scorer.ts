@@ -39,7 +39,7 @@ export type Result = number | boolean;
 export type Scorer<A> = {
   readonly name: string;
   readonly description?: string;
-  readonly query: Effect.Effect<A, unknown, Services | Memo>;
+  readonly query: Effect.Effect<A, unknown, Services>;
   readonly score: (value: A, run: Run) => Result;
 };
 
@@ -55,39 +55,42 @@ export type Score = {
 export type Scores = Record<string, Score>;
 
 /**
- * Per-run memo for work several scorers share, keyed by name. Variants of one eval run concurrently
- * in one process, so the cache is the run's and never the module's.
+ * Per-run memo for the queries several scorers share, keyed by the query effect itself. Variants of
+ * one eval run concurrently in one process, so the cache is the run's and never the module's.
  */
-export class Memo extends Context.Service<Memo, { readonly cache: Map<string, Exit.Exit<any, any>> }>()(
+class Memo extends Context.Service<Memo, { readonly cache: Map<unknown, Exit.Exit<any, any>> }>()(
   '@dxos/assistant-evals/Scorer/Memo',
 ) {}
 
 /**
- * Runs `effect` once per run and hands every later caller the same value. For a query that costs
- * something to answer — a handshake with a deployed server, a feed read — and that more than one
- * scorer needs.
+ * The base case: a scorer that reads nothing of the space, only what the run itself reports. Given
+ * a `query`, the query's value is what the verdict reads instead.
  */
-export const once = <A, E, R>(key: string, effect: Effect.Effect<A, E, R>): Effect.Effect<A, E, R | Memo> =>
-  Effect.gen(function* () {
-    const { cache } = yield* Memo;
-    const cached = cache.get(key);
-    if (cached !== undefined) {
-      return yield* cached;
-    }
-    // The exit, not the value: a shared query that failed has still been asked, and re-asking it
-    // per scorer would run the probe again and report a different answer to each.
-    const exit = yield* Effect.exit(effect);
-    cache.set(key, exit);
-    return yield* exit;
-  });
-
-/** A scorer over any query of the live space; the query's value is what the verdict reads. */
-export const make = <A, E, R extends Services | Memo>(options: {
-  name: string;
-  description?: string;
-  query: Effect.Effect<A, E, R>;
-  score: (value: A, run: Run) => Result;
-}): Scorer<A> => options;
+export const make: {
+  <A, E, R extends Services>(options: {
+    name: string;
+    description?: string;
+    query: Effect.Effect<A, E, R>;
+    score: (value: A, run: Run) => Result;
+  }): Scorer<A>;
+  (options: { name: string; description?: string; score: (run: Run) => Result }): Scorer<void>;
+} = (
+  options:
+    | {
+        name: string;
+        description?: string;
+        query: Effect.Effect<unknown, unknown, Services>;
+        // Method syntax: the verdict is written against the query's own value, so the two halves
+        // are checked bivariantly here rather than against this erased shape.
+        score(value: unknown, run: Run): Result;
+      }
+    | { name: string; description?: string; score(run: Run): Result },
+): Any => {
+  const { name, description } = options;
+  return 'query' in options
+    ? { name, description, query: options.query, score: (value, run) => options.score(value, run) }
+    : { name, description, query: Effect.void, score: (_value, run) => options.score(run) };
+};
 
 /**
  * A scorer over an ECHO query: the query runs against the session's space and its results are the
@@ -98,55 +101,60 @@ export const database = <Q extends Query.Any>(options: {
   description?: string;
   query: Q;
   score: (results: readonly Query.Type<Q>[], run: Run) => Result;
-}): Scorer<readonly Query.Type<Q>[]> => ({
-  name: options.name,
-  description: options.description,
-  query: Database.query(options.query).run,
-  score: options.score,
-});
+}): Scorer<readonly Query.Type<Q>[]> => {
+  const query: Effect.Effect<readonly Query.Type<Q>[], unknown, Services> = Database.query(options.query).run;
+  return make({
+    name: options.name,
+    description: options.description,
+    query,
+    score: options.score,
+  });
+};
 
-/** The tool calls the session made, paired with their results, in order; read once per run. */
-export const invocations: Effect.Effect<readonly ToolInvocation[], unknown, Services | Memo> = once(
-  'toolInvocations',
-  toolInvocations(),
-);
+/**
+ * The tool calls the session made, paired with their results, in order. One effect value shared by
+ * every scorer that reads it, so the feed is read once per run.
+ */
+export const invocations: Effect.Effect<readonly ToolInvocation[], unknown, Services> = toolInvocations();
 
 /** A scorer over the tool calls the session made. */
 export const toolCalls = (options: {
   name: string;
   description?: string;
   score: (invocations: readonly ToolInvocation[], run: Run) => Result;
-}): Scorer<readonly ToolInvocation[]> => ({
-  name: options.name,
-  description: options.description,
-  query: invocations,
-  score: options.score,
-});
+}): Scorer<readonly ToolInvocation[]> =>
+  make({
+    name: options.name,
+    description: options.description,
+    query: invocations,
+    score: options.score,
+  });
 
 /**
  * A scorer over the session's wall clock: full marks up to `targetMinutes`, falling linearly to
  * nothing at `budgetMinutes`. `when` gates it, so a run that never produced the thing being timed
  * scores nothing rather than being rewarded for stopping early.
  */
-export const duration = <A, E, R extends Services | Memo>(options: {
+export const duration = <A, E, R extends Services>(options: {
   name: string;
   description?: string;
   targetMinutes: number;
   budgetMinutes: number;
   when: Effect.Effect<A, E, R>;
   delivered: (value: A) => boolean;
-}): Scorer<A> => ({
-  name: options.name,
-  description: options.description,
-  query: options.when,
-  score: (value, { durationMillis }) => {
-    if (!options.delivered(value)) {
-      return 0;
-    }
-    const minutes = durationMillis / 60_000;
-    return (options.budgetMinutes - minutes) / (options.budgetMinutes - options.targetMinutes);
-  },
-});
+}): Scorer<A> =>
+  make({
+    name: options.name,
+    description: options.description,
+    query: options.when,
+    score: (value, { durationMillis }) => {
+      if (!options.delivered(value)) {
+        return 0;
+      }
+      const minutes = durationMillis / 60_000;
+      return (options.budgetMinutes - minutes) / (options.budgetMinutes - options.targetMinutes);
+    },
+  });
 
 /** Booleans are a mark or none; fractions are clamped, so a scorer cannot spend more than its one. */
 const normalize = (result: Result): number =>
@@ -155,9 +163,27 @@ const normalize = (result: Result): number =>
 const describe = (cause: Cause.Cause<unknown>): string => Cause.pretty(cause);
 
 /**
- * Scores every dimension against the open space, in order, sharing whatever {@link once} memoizes.
- * A query that fails scores nothing and reports why, rather than failing the run: a scorer reading
- * state a timed-out session never reached is a result, not an error.
+ * Runs each distinct query at most once per run, keyed by the effect itself: scorers that read the
+ * same value share one answer, and an expensive probe is not paid for by each of them. The exit,
+ * not the value: a shared query that failed has still been asked, and re-asking it would run the
+ * probe again and report a different answer to each scorer.
+ */
+const memoized = <A>(query: Effect.Effect<A, unknown, Services>): Effect.Effect<A, unknown, Services | Memo> =>
+  Effect.gen(function* () {
+    const { cache } = yield* Memo;
+    const cached = cache.get(query);
+    if (cached !== undefined) {
+      return yield* cached;
+    }
+    const exit = yield* Effect.exit(query);
+    cache.set(query, exit);
+    return yield* exit;
+  });
+
+/**
+ * Scores every dimension against the open space, in order, sharing the answer to any query more
+ * than one of them names. A query that fails scores nothing and reports why, rather than failing
+ * the run: a scorer reading state a timed-out session never reached is a result, not an error.
  */
 export const runAll = (scorers: readonly Any[], run: Run): Effect.Effect<Scores, never, Services> =>
   Effect.gen(function* () {
@@ -166,7 +192,7 @@ export const runAll = (scorers: readonly Any[], run: Run): Effect.Effect<Scores,
       // The verdict runs inside the same boundary as the query: a scorer that throws on an
       // unexpected shape scores nothing and says so, rather than taking the other nine with it.
       const exit = yield* Effect.exit(
-        scorer.query.pipe(
+        memoized(scorer.query).pipe(
           Effect.flatMap((value) =>
             Effect.try(() => normalize(scorer.score(value, run))).pipe(Effect.map((score) => ({ score, value }))),
           ),
@@ -175,7 +201,7 @@ export const runAll = (scorers: readonly Any[], run: Run): Effect.Effect<Scores,
       scores[scorer.name] = Exit.isSuccess(exit) ? exit.value : { score: 0, error: describe(exit.cause) };
     }
     return scores;
-  }).pipe(Effect.provideService(Memo, { cache: new Map<string, Exit.Exit<any, any>>() }));
+  }).pipe(Effect.provideService(Memo, { cache: new Map<unknown, Exit.Exit<any, any>>() }));
 
 /** The evalite side of the same list: each dimension reads the mark the run already recorded. */
 export const toEvalite = (scorers: readonly Any[]) =>

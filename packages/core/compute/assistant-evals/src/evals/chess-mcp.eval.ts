@@ -148,105 +148,96 @@ const namesAScore = (answer: string | undefined): boolean =>
   !/error/i.test(answer.slice(0, 40));
 
 //
-// What the session left, read once and shared: the scorers below each ask their own question of
-// the space, and `Scorer.once` keeps the expensive answers — the artifact text, the handshake with
-// the deployed Worker — from being paid for again by every scorer that needs them.
+// What the session left, read once and shared: each query below is one effect value, and a run
+// answers a given query once however many scorers name it — so the expensive ones, the handshake
+// with the deployed Worker above all, are not paid for again by each scorer that reads them.
 //
 
 /** Everything the session filed on the project, as text, with what a reader looks for in it. */
-const filedArtifacts = Scorer.once(
-  'artifacts',
-  Effect.gen(function* () {
-    const project = yield* findObject(Project.Project, (candidate) => candidate.name === PROJECT_NAME);
-    if (!project) {
-      return { filed: '', design: undefined, workerUrls: [] as string[] };
-    }
-    const artifacts = yield* Effect.forEach(project.artifacts, (ref) =>
-      Database.load(ref).pipe(Effect.orElseSucceed(() => undefined)),
-    );
-    const documents = artifacts.filter((candidate): candidate is Markdown.Document =>
-      Obj.instanceOf(Markdown.Document, candidate),
-    );
-    const texts = yield* Effect.forEach(documents, (document) =>
-      Database.load(document.content).pipe(
-        Effect.map((text) => ({ name: document.name ?? '', content: text.content })),
-        Effect.orElseSucceed(() => ({ name: document.name ?? '', content: '' })),
-      ),
-    );
-    const filed = texts.map(({ content }) => content).join('\n');
-    return {
-      filed,
-      design: texts.find(({ name, content }) => /design/i.test(name) || /^#.*design/im.test(content)),
-      workerUrls: [...new Set((filed.match(WORKER_URL) ?? []).map((url) => url.replace(/[.,)]+$/, '')))],
-    };
-  }),
-);
+const filedArtifacts = Effect.gen(function* () {
+  const project = yield* findObject(Project.Project, (candidate) => candidate.name === PROJECT_NAME);
+  if (!project) {
+    return { filed: '', design: undefined, workerUrls: [] as string[] };
+  }
+  const artifacts = yield* Effect.forEach(project.artifacts, (ref) =>
+    Database.load(ref).pipe(Effect.orElseSucceed(() => undefined)),
+  );
+  const documents = artifacts.filter((candidate): candidate is Markdown.Document =>
+    Obj.instanceOf(Markdown.Document, candidate),
+  );
+  const texts = yield* Effect.forEach(documents, (document) =>
+    Database.load(document.content).pipe(
+      Effect.map((text) => ({ name: document.name ?? '', content: text.content })),
+      Effect.orElseSucceed(() => ({ name: document.name ?? '', content: '' })),
+    ),
+  );
+  const filed = texts.map(({ content }) => content).join('\n');
+  return {
+    filed,
+    design: texts.find(({ name, content }) => /design/i.test(name) || /^#.*design/im.test(content)),
+    workerUrls: [...new Set((filed.match(WORKER_URL) ?? []).map((url) => url.replace(/[.,)]+$/, '')))],
+  };
+});
 
 /**
  * The handshake, from the sandbox the session built in: a temporary deployment challenges clients
  * it takes for bots and the eval process is one. Candidates are every Worker URL it filed, bare
  * host first, then with the paths it mentioned and the conventional `/mcp`.
  */
-const engine = Scorer.once(
-  'engine',
-  Effect.gen(function* () {
-    const { workerUrls } = yield* filedArtifacts;
-    const sandbox = yield* findObject(Sandbox.Sandbox, () => true);
-    // Named in the value so the container, which outlives the run, can be inspected afterwards.
-    const sandboxId = sandbox?.id;
-    if (workerUrls.length === 0 || !sandbox) {
-      return { sandboxId, probe: undefined as Probe | undefined };
-    }
-    const spaceId = yield* Database.spaceId;
-    const hosts = [...new Set(workerUrls.map((url) => new URL(url).origin))];
-    const candidates = [...new Set([...workerUrls, ...hosts.map((host) => `${host}/mcp`), ...hosts])];
-    const command = `cat > /tmp/mcp-probe.mjs <<'PROBE'\n${MCP_PROBE}\nPROBE\nnode /tmp/mcp-probe.mjs '${SEEDED_FEN}' ${candidates.map((url) => `'${url}'`).join(' ')}`;
-    const result = yield* Operation.invoke(
-      SandboxOperation.Exec,
-      { sandbox: Ref.make(sandbox), command, timeout: 3 * 60 * 1_000 },
-      { spaceId },
-    ).pipe(Effect.orElseSucceed(() => undefined));
-    return { sandboxId, probe: result ? parseProbe(result.stdout) : undefined };
-  }),
-);
+const engine = Effect.gen(function* () {
+  const { workerUrls } = yield* filedArtifacts;
+  const sandbox = yield* findObject(Sandbox.Sandbox, () => true);
+  // Named in the value so the container, which outlives the run, can be inspected afterwards.
+  const sandboxId = sandbox?.id;
+  if (workerUrls.length === 0 || !sandbox) {
+    return { sandboxId, probe: undefined as Probe | undefined };
+  }
+  const spaceId = yield* Database.spaceId;
+  const hosts = [...new Set(workerUrls.map((url) => new URL(url).origin))];
+  const candidates = [...new Set([...workerUrls, ...hosts.map((host) => `${host}/mcp`), ...hosts])];
+  const command = `cat > /tmp/mcp-probe.mjs <<'PROBE'\n${MCP_PROBE}\nPROBE\nnode /tmp/mcp-probe.mjs '${SEEDED_FEN}' ${candidates.map((url) => `'${url}'`).join(' ')}`;
+  const result = yield* Operation.invoke(
+    SandboxOperation.Exec,
+    { sandbox: Ref.make(sandbox), command, timeout: 3 * 60 * 1_000 },
+    { spaceId },
+  ).pipe(Effect.orElseSucceed(() => undefined));
+  return { sandboxId, probe: result ? parseProbe(result.stdout) : undefined };
+});
 
 /** The checklist as the session left it: the three stages it was given, and the work that was not. */
-const checklist = Scorer.once(
-  'checklist',
-  Effect.gen(function* () {
-    const empty = {
-      delegated: [] as (Task.Task | undefined)[],
-      readerSteps: [] as (Task.Task | undefined)[],
-      later: [] as (Task.Task | undefined)[],
-    };
-    const project = yield* findObject(Project.Project, (candidate) => candidate.name === PROJECT_NAME);
-    if (!project?.taskSet) {
-      return empty;
-    }
-    const taskSet = yield* Database.load(project.taskSet).pipe(Effect.orElseSucceed(() => undefined));
-    if (!taskSet) {
-      return empty;
-    }
-    const tasks = yield* Effect.forEach(taskSet.tasks, (ref) =>
-      Database.load(ref).pipe(Effect.orElseSucceed(() => undefined)),
-    );
-    const delegated = DELEGATED_STAGES.map((title) => tasks.find((candidate) => candidate?.title === title));
-    return {
-      delegated,
-      readerSteps: tasks.filter((candidate) => candidate?.assignee?.role === 'user'),
-      later: tasks.filter((candidate) => {
-        const parentTask = candidate?.parentTask;
-        return (
-          parentTask !== undefined &&
-          candidate?.assignee?.role !== 'assistant' &&
-          candidate?.assignee?.role !== 'user' &&
-          !DELEGATED_STAGES.includes(candidate?.title ?? '') &&
-          !delegated.some((stage) => stage && Task.refEntityId(parentTask) === stage.id)
-        );
-      }),
-    };
-  }),
-);
+const checklist = Effect.gen(function* () {
+  const empty = {
+    delegated: [] as (Task.Task | undefined)[],
+    readerSteps: [] as (Task.Task | undefined)[],
+    later: [] as (Task.Task | undefined)[],
+  };
+  const project = yield* findObject(Project.Project, (candidate) => candidate.name === PROJECT_NAME);
+  if (!project?.taskSet) {
+    return empty;
+  }
+  const taskSet = yield* Database.load(project.taskSet).pipe(Effect.orElseSucceed(() => undefined));
+  if (!taskSet) {
+    return empty;
+  }
+  const tasks = yield* Effect.forEach(taskSet.tasks, (ref) =>
+    Database.load(ref).pipe(Effect.orElseSucceed(() => undefined)),
+  );
+  const delegated = DELEGATED_STAGES.map((title) => tasks.find((candidate) => candidate?.title === title));
+  return {
+    delegated,
+    readerSteps: tasks.filter((candidate) => candidate?.assignee?.role === 'user'),
+    later: tasks.filter((candidate) => {
+      const parentTask = candidate?.parentTask;
+      return (
+        parentTask !== undefined &&
+        candidate?.assignee?.role !== 'assistant' &&
+        candidate?.assignee?.role !== 'user' &&
+        !DELEGATED_STAGES.includes(candidate?.title ?? '') &&
+        !delegated.some((stage) => stage && Task.refEntityId(parentTask) === stage.id)
+      );
+    }),
+  };
+});
 
 /**
  * Where the hour went: each call with when it started (seconds into the run), how long the tool
