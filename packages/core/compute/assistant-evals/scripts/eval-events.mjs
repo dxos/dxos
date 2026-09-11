@@ -32,6 +32,9 @@ import { PostHog } from 'posthog-node';
 
 const DISTINCT_ID = 'assistant-evals';
 
+/** The Composer project lives in PostHog's EU region. */
+const HOST = 'https://eu.i.posthog.com';
+
 /** Where evalite discovers scenarios; file names are reported relative to it. */
 const EVALS_DIR = path.resolve(import.meta.dirname, '../src/evals');
 
@@ -274,7 +277,7 @@ const main = async () => {
       ? { id: process.env.DX_EVAL_RUN_ID, name: `assistant-evals/${process.env.DX_EVAL_RUN_NAME ?? 'local'}` }
       : undefined;
     const events = toEvents(report, experiment);
-    const client = new PostHog(apiKey, { host: process.env.DX_EVALS_POSTHOG_HOST ?? 'https://eu.i.posthog.com' });
+    const client = new PostHog(apiKey, { host: HOST });
     for (const event of events) {
       client.capture({ distinctId: DISTINCT_ID, ...event });
     }

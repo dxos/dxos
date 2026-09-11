@@ -20,6 +20,9 @@ import type * as Usage from './Usage.ts';
 
 const DISTINCT_ID = 'assistant-evals';
 
+/** The Composer project lives in PostHog's EU region. */
+const HOST = 'https://eu.i.posthog.com';
+
 /** `ai_product` on every event, so eval traffic is separable from the app's in one project. */
 const PRODUCT = 'evals';
 
@@ -46,9 +49,7 @@ let client: PostHog | undefined | null;
 const posthog = (): PostHog | undefined => {
   if (client === undefined) {
     const apiKey = process.env.DX_EVALS_POSTHOG_API_KEY;
-    client = apiKey
-      ? new PostHog(apiKey, { host: process.env.DX_EVALS_POSTHOG_HOST ?? 'https://eu.i.posthog.com' })
-      : null;
+    client = apiKey ? new PostHog(apiKey, { host: HOST }) : null;
   }
   return client ?? undefined;
 };

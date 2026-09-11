@@ -1664,9 +1664,6 @@ patchedDependencies:
   '@vitest/browser@4.1.10':
     hash: a986f87598d00b4753574afb9fcad1a84d9b0145eaf80189a0b49d32b7af569a
     path: patches/@vitest__browser@4.1.10.patch
-  evalite@0.19.0:
-    hash: 2dcc45e22afb51b272fe927094a5191e0e7e45f0f07ec9cef84a2169a77c3b76
-    path: patches/evalite@0.19.0.patch
   js-clipper@1.0.1:
     hash: 6e8fe7b88ba3126ee7a494d4017254238f1096e1b213e331bb151f1bac54bf3f
     path: patches/js-clipper@1.0.1.patch
@@ -4340,7 +4337,7 @@ importers:
         version: 4.0.0-rc.108
       evalite:
         specifier: ^0.19.0
-        version: 0.19.0(patch_hash=2dcc45e22afb51b272fe927094a5191e0e7e45f0f07ec9cef84a2169a77c3b76)
+        version: 0.19.0
       posthog-node:
         specifier: 'catalog:'
         version: 5.51.6(rxjs@7.8.2)
@@ -57227,7 +57224,7 @@ snapshots:
 
   etag@1.8.1: {}
 
-  evalite@0.19.0(patch_hash=2dcc45e22afb51b272fe927094a5191e0e7e45f0f07ec9cef84a2169a77c3b76):
+  evalite@0.19.0:
     dependencies:
       '@ai-sdk/provider': 2.0.3
       '@fastify/static': 8.3.0

@@ -54,15 +54,8 @@ jobs:
           filter: blob:none
           persist-credentials: false
 
-      - name: Setup
-        uses: ./.depot/actions/setup
-
-      - name: Install Claude Code
-        run: |
-          npm install --prefix "$RUNNER_TEMP/claude" @anthropic-ai/claude-code@2.1.259
-          echo "$RUNNER_TEMP/claude/node_modules/.bin" >> "$GITHUB_PATH"
-
-      # `depot ci run` patches the caller's uncommitted changes in after checkout.
+      # `depot ci run` patches the caller's uncommitted changes in after checkout; nothing from the
+      # tree runs before this, so a patched Setup cannot pass it.
       - name: Refuse a patched checkout
         env:
           EXPECTED_SHA: ${{ github.sha }}
@@ -76,6 +69,14 @@ jobs:
             echo "::error::HEAD $(git rev-parse HEAD) is not the event's commit $EXPECTED_SHA."
             exit 1
           fi
+
+      - name: Setup
+        uses: ./.depot/actions/setup
+
+      - name: Install Claude Code
+        run: |
+          npm install --prefix "$RUNNER_TEMP/claude" @anthropic-ai/claude-code@2.1.259
+          echo "$RUNNER_TEMP/claude/node_modules/.bin" >> "$GITHUB_PATH"
 
       - name: Run evals
         id: evals
@@ -95,7 +96,7 @@ jobs:
 
       - name: Summarize
         id: summary
-        if: always()
+        if: always() && steps.evals.outcome != 'skipped'
         env:
           DX_EVAL_RUN_ID: ${{ github.run_id }}-${{ github.run_attempt }}
           DX_EVAL_RUN_NAME: ${{ github.ref_name }}
