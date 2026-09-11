@@ -357,6 +357,10 @@ export class SpaceProxy implements Space, CustomInspectable {
     const isReopening =
       this._data.state !== SpaceState.SPACE_READY && space.state === SpaceState.SPACE_READY && !this._databaseOpen;
     const shouldReset = this._databaseOpen && space.state === SpaceState.SPACE_REQUIRES_MIGRATION;
+    // A space that errors before ever reaching READY (its automerge root stalled, say) would
+    // otherwise leave every `waitUntilReady()` caller blocked forever: `_initializationComplete`
+    // is only ever woken from `isFirstTimeInitializing`, which this state never reaches.
+    const isErroredBeforeReady = space.state === SpaceState.SPACE_ERROR && !this._initialized;
 
     log('update', {
       key: space.spaceKey,
@@ -379,6 +383,12 @@ export class SpaceProxy implements Space, CustomInspectable {
       await this._initializeDb(ctx);
     } else if (shouldReset) {
       await this._reset();
+    } else if (isErroredBeforeReady) {
+      const err = space.error ? decodeError(space.error) : new Error('space entered SPACE_ERROR');
+      // Reset right after rejecting: `wake()` is a no-op once the trigger has settled, so without
+      // this a space that recovers and later reaches READY could never unblock a fresh
+      // `waitUntilReady()` call — every one of them would replay this same stale rejection.
+      this._initializationComplete.throw(err).reset();
     }
 
     if (space.error) {

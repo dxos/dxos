@@ -6,7 +6,7 @@ import { save } from '@automerge/automerge';
 import { type AutomergeUrl } from '@automerge/automerge-repo';
 import { create } from '@bufbuild/protobuf';
 
-import { Event, Mutex, scheduleTask, sleep, synchronized, trackLeaks } from '@dxos/async';
+import { Event, Mutex, scheduleTask, sleep, synchronized, trackLeaks, unrefTimeout } from '@dxos/async';
 import { AUTH_TIMEOUT } from '@dxos/client-protocol';
 import { Context, ContextDisposedError } from '@dxos/context';
 import { credentialPayload } from '@dxos/credentials';
@@ -92,6 +92,12 @@ export type CreateEpochOptions = {
   migration?: SpacesService.Migration;
   newAutomergeRoot?: string;
 };
+
+/**
+ * Ceiling on `_onNewAutomergeRoot`'s load before the space reports `SPACE_ERROR` instead of
+ * hanging every waiter forever — see the comment at its one use site.
+ */
+const AUTOMERGE_ROOT_LOAD_TIMEOUT = 30_000;
 
 @trackLeaks('open', 'close')
 export class DataSpace {
@@ -485,6 +491,24 @@ export class DataSpace {
 
     let lease: DocumentLease<DatabaseDirectory> | null = null;
 
+    // `warnAfterTimeout` below only logs — it never rejects the load it is timing, so a peer whose
+    // network fetch stalls (observed against preview: a device that received a space via HALO
+    // around a WebSocket reconnect never got its root doc) leaves every waiter on `waitUntilReady`
+    // blocked forever with nothing but a console warning to explain why. This timer runs alongside
+    // the load, not instead of it: on expiry it reports the space errored so callers unblock, but
+    // does not cancel `loadDoc` — a load that eventually does arrive still finishes normally below
+    // and moves the space out of the error state.
+    const stallTimer = setTimeout(() => {
+      if (this._state === SpaceState.SPACE_READY || this._state === SpaceState.SPACE_REQUIRES_MIGRATION) {
+        return;
+      }
+      log.error('automerge root doc load stalled; marking space errored', { space: this.key, rootUrl });
+      this._state = SpaceState.SPACE_ERROR;
+      this.error = new Error(`automerge root doc did not load within ${AUTOMERGE_ROOT_LOAD_TIMEOUT}ms: ${rootUrl}`);
+      this.stateUpdate.emit();
+    }, AUTOMERGE_ROOT_LOAD_TIMEOUT);
+    unrefTimeout(stallTimer);
+
     // TODO(dmaretskyi): Make this single-threaded (but doc loading should still be parallel to not block epoch processing).
     queueMicrotask(async () => {
       try {
@@ -539,6 +563,7 @@ export class DataSpace {
         }
         log.warn('error loading automerge root doc', { space: this.key, rootUrl, err });
       } finally {
+        clearTimeout(stallTimer);
         // Released on every path that did not hand it to `updateSpaceRoot`.
         lease?.[Symbol.dispose]();
       }
