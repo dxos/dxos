@@ -7,7 +7,7 @@ import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
-import { Database, Hypergraph, type Entity, Feed, Type, View } from '@dxos/echo';
+import { Database, type Entity, Feed, Hypergraph, Type, View } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';

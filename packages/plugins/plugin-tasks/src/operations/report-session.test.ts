@@ -231,8 +231,8 @@ describe('report-session', () => {
       const open = yield* Database.add(Task.make({ title: 'Ship the thing', status: 'started', assignee }));
       const closed = yield* Database.add(Task.make({ title: 'Already done', status: 'done', assignee }));
       const project = yield* Database.add(Project.make({ name: 'Voyage', taskSet: Ref.make(taskSet) }));
-      Obj.update(taskSet, (set) => {
-        set.tasks = [Ref.make(open), Ref.make(closed)];
+      Obj.update(taskSet, (taskSet) => {
+        taskSet.tasks = [Ref.make(open), Ref.make(closed)];
       });
       yield* Database.flush();
 
