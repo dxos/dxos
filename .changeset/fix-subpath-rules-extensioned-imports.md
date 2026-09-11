@@ -1,5 +1,5 @@
 ---
-# multiple-changesets: unrelated protobuf-compiler fix rides along, found by the same migration
+# multiple-changesets: an unrelated app-framework fix (dx-plugin-gen-extensioned-reexports.md) rides along, found by the same migration
 '@dxos/eslint-plugin-rules': patch
 ---
 
