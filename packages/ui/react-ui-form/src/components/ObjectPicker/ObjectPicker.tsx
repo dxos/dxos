@@ -113,7 +113,6 @@ const ObjectPickerContent = composable<HTMLDivElement, ObjectPickerContentProps>
               </Form.Viewport>
             </Form.Root>
           </Popover.Viewport>
-          <Combobox.Arrow />
         </Combobox.Content>
       );
     }
@@ -150,7 +149,6 @@ const ObjectPickerContent = composable<HTMLDivElement, ObjectPickerContentProps>
             />
           )}
         </Combobox.List>
-        <Combobox.Arrow />
       </Combobox.Content>
     );
   },
