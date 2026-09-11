@@ -11,7 +11,7 @@
 // module back to its plugin via `manager.getPlugins()`.
 
 import { useAtomValue } from '@effect/atom-react/Hooks';
-import React, { useMemo } from 'react';
+import React, { useEffect, useMemo } from 'react';
 
 import { usePluginManager } from '@dxos/app-framework/ui';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
@@ -68,9 +68,9 @@ export const SupportCompanion = ({ companionTo }: SupportCompanionProps) => {
       <Panel.Toolbar asChild>
         <Toolbar.Root />
       </Panel.Toolbar>
-      <Panel.Content asChild>
+      <Panel.Content>
         <ScrollArea.Root orientation='vertical'>
-          <ScrollArea.Viewport classNames='p-4 flex flex-col items-center gap-4'>
+          <ScrollArea.Viewport classNames='flex flex-col items-center p-3 gap-3'>
             {screenshots.length > 0 && (
               <Carousel.Root count={screenshots.length}>
                 <Carousel.Content classNames='w-full'>
