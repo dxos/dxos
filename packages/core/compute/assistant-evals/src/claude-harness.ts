@@ -92,6 +92,13 @@ export type ClaudeHarness = {
   readonly score: (scorers: readonly Scorer.Any[]) => Promise<Scorer.Scores>;
 };
 
+const aiServiceMiddleware = (): Promise<(_upstream: AiService.Service) => AiService.Service> =>
+  AiService.tag.pipe(
+    Effect.provide(AiServiceTestingPreset('direct')),
+    Effect.map((service) => (_upstream: AiService.Service) => service),
+    EffectEx.runAndForwardErrors,
+  );
+
 /**
  * Runs a scenario against a real Claude Code subprocess talking to this repo's MCP surface, hosted
  * in this process against a Composer test harness.
@@ -107,13 +114,6 @@ export type ClaudeHarness = {
  * would get from it, and no in-process toolkit is in the picture to answer a prompt the server
  * could not.
  */
-const aiServiceMiddleware = (): Promise<(_upstream: AiService.Service) => AiService.Service> =>
-  AiService.tag.pipe(
-    Effect.provide(AiServiceTestingPreset('direct')),
-    Effect.map((service) => (_upstream: AiService.Service) => service),
-    EffectEx.runAndForwardErrors,
-  );
-
 export const runClaudeEval = async <T>(
   options: ClaudeHarnessOptions,
   body: (harness: ClaudeHarness) => Promise<T>,
@@ -170,18 +170,19 @@ export const runClaudeEval = async <T>(
     );
 
     // Scoped to this function rather than to a fiber: the listener has to outlive every turn and go
-    // when the scenario does, and the agent below dials it by URL.
+    // when the scenario does, and the agent below dials it by URL. Opened inside the `try`, because
+    // a host that dies after binding the listener has still registered its finalizer on the scope.
     const scope = await EffectEx.runPromise(Scope.make());
-    const { url } = await EffectEx.runPromise(
-      startMcpHost({
-        skills: options.skills,
-        spaceIds: [spaceId],
-        context: () => context,
-        registry: () => registry,
-      }).pipe(Scope.provide(scope)),
-    );
-
     try {
+      const { url } = await EffectEx.runPromise(
+        startMcpHost({
+          skills: options.skills,
+          spaceIds: [spaceId],
+          context: () => context,
+          registry: () => registry,
+        }).pipe(Scope.provide(scope)),
+      );
+
       if (options.seed) {
         await query(options.seed({ spaceId }));
         await query(Database.flush());
