@@ -113,6 +113,38 @@ rule declare-optional-services-with-noop-layers: An optional service is a declar
   severity: warn
 ```
 
+```mdl
+rule import-as-namespace-is-all-or-nothing: A namespace module's directive, filename, re-export and import sites must agree
+  The namespace-export style is four things that have to say the same name, and
+  a module that satisfies only some of them is worse than one that satisfies
+  none — a reader cannot tell from a call site which kind of module they are
+  in. (1) The module carries `// @import-as-namespace` directly under the
+  copyright header. (2) Its filename IS the namespace: capital-case `Foo.ts`,
+  not `foo.ts` or `foo-bar.ts`. (3) The package barrel re-exports it under that
+  same name — `export * as Foo from './Foo'`, never a renamed alias. (4) Every
+  consumer imports the whole namespace, `import * as Foo from '@dxos/pkg/Foo'`
+  or `import { Foo } from '@dxos/pkg'`, and reaches members through it
+  (`Foo.make`); a named import of a member (`import { make, type Options } from
+  '.../Foo'`) pulls the member out of the namespace that gives it its meaning.
+  Inside such a module, members are not prefixed with the namespace's own name
+  (`Options`, not `FooOptions` — callers write `Foo.Options` either way) and
+  there is no default export. Flag any of the four disagreeing: a directive with
+  a lowercase or hyphenated filename, an `export * as X from './Y'` where `X`
+  and `Y` differ, a module the barrel exports as a namespace but that carries no
+  directive, a member import from a module that does, and a namespace-prefixed
+  member inside one. Not violations: the lowercase `*Internal` alias convention
+  for internal barrels (`import * as objInternal from './internal/Obj'`), the
+  directly-exported `errors.ts` and `testing/` entrypoints, and a module that is
+  not a namespace module at all — this rule is about half-applied style, not
+  about converting every file.
+  scope: repo
+  files:
+    - packages/**/*.ts
+    - packages/**/*.tsx
+  grep: @import-as-namespace|export \* as|import \* as
+  severity: warn
+```
+
 ## Appendix
 
 ```mdl

@@ -11,12 +11,19 @@ import { Database } from '@dxos/echo';
 
 import { SandboxOperation } from '#types';
 
+import { encodeExecCommand } from '../../services/exec-command.ts';
 import { mergeExecEnv } from '../../services/sandbox-env.ts';
 import { createSandboxClient } from '../../services/sandbox-url.ts';
 
+/**
+ * How long a command may run when the caller sets no limit. The service's own default is two
+ * minutes, which an install or a deploy overruns; five fits those and bounds a hung command.
+ */
+const DEFAULT_EXEC_TIMEOUT = 5 * 60 * 1_000;
+
 export default SandboxOperation.Exec.pipe(
   Operation.withHandler(
-    Effect.fn(function* ({ sandbox, command, cwd, env, timeout }) {
+    Effect.fn(function* ({ sandbox, command, cwd, env, timeout = DEFAULT_EXEC_TIMEOUT }) {
       const { db } = yield* Database.Service;
       const client = yield* ClientService;
 
@@ -34,16 +41,18 @@ export default SandboxOperation.Exec.pipe(
       // error channel, so a typed failure escaping here is not part of the operation's contract and
       // reaches the tool runtime as a result missing every declared key ("Missing key at [stdout]").
       // A non-zero exit carrying the reason is also what the model can actually act on.
-      return yield* sandboxClient.exec(spaceId, sandboxId, { command, cwd, env: mergedEnv, timeout }).pipe(
-        Effect.catch((error) =>
-          Effect.succeed({
-            stdout: '',
-            stderr: `sandbox exec failed: ${describeError(error)}`,
-            exitCode: -1,
-            success: false,
-          }),
-        ),
-      );
+      return yield* sandboxClient
+        .exec(spaceId, sandboxId, { command: encodeExecCommand(command), cwd, env: mergedEnv, timeout })
+        .pipe(
+          Effect.catch((error) =>
+            Effect.succeed({
+              stdout: '',
+              stderr: `sandbox exec failed: ${describeError(error)}`,
+              exitCode: -1,
+              success: false,
+            }),
+          ),
+        );
     }, Effect.provide(FetchHttpClient.layer)),
   ),
 );

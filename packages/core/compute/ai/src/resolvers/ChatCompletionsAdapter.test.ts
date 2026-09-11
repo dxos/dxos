@@ -15,10 +15,13 @@ import * as HttpClient from 'effect/unstable/http/HttpClient';
 import * as HttpClientResponse from 'effect/unstable/http/HttpClientResponse';
 import { expect } from 'vitest';
 
+import { Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
+import { type ContentBlock, Message } from '@dxos/types';
 
 import * as AiParser from '../AiParser.ts';
+import * as AiPreprocessor from '../AiPreprocessor.ts';
 import * as ChatCompletionsAdapter from './ChatCompletionsAdapter.ts';
 
 type ProviderConfig = {
@@ -102,7 +105,11 @@ describe('ChatCompletionsLanguageModel', () => {
  * Captures the request body the adapter sends, so the wire shape can be asserted without a live
  * server (the suites above are `manual` and need one).
  */
-const captureRequestBody = (apiFormat: ChatCompletionsAdapter.ApiFormat, capture: (body: any) => void) => {
+const captureRequestBody = (
+  apiFormat: ChatCompletionsAdapter.ApiFormat,
+  capture: (body: any) => void,
+  provider?: string,
+) => {
   const stub = HttpClient.make((request) =>
     Effect.gen(function* () {
       // The adapter encodes its JSON body to bytes; every other variant means the request was not
@@ -127,11 +134,27 @@ const captureRequestBody = (apiFormat: ChatCompletionsAdapter.ApiFormat, capture
     }),
   );
 
-  const clientLayer = ChatCompletionsAdapter.clientLayer({ baseUrl: 'http://test', apiFormat }).pipe(
+  const clientLayer = ChatCompletionsAdapter.clientLayer({ baseUrl: 'http://test', apiFormat, provider }).pipe(
     Layer.provide(Layer.succeed(HttpClient.HttpClient, stub)),
   );
   return ChatCompletionsAdapter.layer('test-model').pipe(Layer.provide(clientLayer));
 };
+
+/** A turn whose tool call the model reasoned about first, as a thinking model produces it. */
+const promptWithReasonedToolCall = [
+  { role: 'user' as const, content: [{ type: 'text' as const, text: 'look it up' }] },
+  {
+    role: 'assistant' as const,
+    content: [
+      { type: 'reasoning' as const, text: 'The id looks like an EID.' },
+      { type: 'tool-call' as const, id: 'call_1', name: 'lookup', params: { eid: 'abc' } },
+    ],
+  },
+  {
+    role: 'tool' as const,
+    content: [{ type: 'tool-result' as const, id: 'call_1', name: 'lookup', isFailure: false, result: 'found' }],
+  },
+];
 
 /** A turn that already carries a tool call, so the request includes an assistant `tool_calls` entry. */
 const promptWithToolCall = [
@@ -160,6 +183,79 @@ describe('tool call encoding', () => {
 
       const args = body.messages.find((message: any) => message.role === 'assistant').tool_calls[0].function.arguments;
       expect(args).toEqual({ eid: 'abc' });
+    }),
+  );
+
+  // DeepSeek's thinking mode rejects a request whose tool-calling turns come back without the
+  // reasoning they were produced with ("The `reasoning_content` in the thinking mode must be
+  // passed back to the API"); an OpenAI-format server that never produced any is not sent one.
+  it.effect(
+    'DeepSeek receives an assistant turn with its reasoning_content; other servers do not',
+    Effect.fn(function* (_) {
+      let deepseek: any;
+      yield* LanguageModel.generateText({ prompt: promptWithReasonedToolCall }).pipe(
+        Effect.provide(captureRequestBody('openai', (captured) => (deepseek = captured), 'deepseek')),
+      );
+      let openai: any;
+      yield* LanguageModel.generateText({ prompt: promptWithReasonedToolCall }).pipe(
+        Effect.provide(captureRequestBody('openai', (captured) => (openai = captured))),
+      );
+
+      const assistantOf = (body: any) => body.messages.find((message: any) => message.role === 'assistant');
+      expect(assistantOf(deepseek).reasoning_content).toBe('The id looks like an EID.');
+      expect(assistantOf(deepseek).tool_calls).toHaveLength(1);
+      expect(assistantOf(openai)).not.toHaveProperty('reasoning_content');
+    }),
+  );
+
+  // A tool-calling turn the model did not think about still has to carry the field: DeepSeek
+  // checks for its presence, not its content.
+  it.effect(
+    'DeepSeek receives an empty reasoning_content on a tool-calling turn without reasoning',
+    Effect.fn(function* (_) {
+      let body: any;
+      yield* LanguageModel.generateText({ prompt: promptWithToolCall }).pipe(
+        Effect.provide(captureRequestBody('openai', (captured) => (body = captured), 'deepseek')),
+      );
+
+      const assistant = body.messages.find((message: any) => message.role === 'assistant');
+      expect(assistant.reasoning_content).toBe('');
+      expect(assistant.tool_calls).toHaveLength(1);
+    }),
+  );
+
+  // The history a session replays holds one block per message; the preprocessor merges the run of
+  // assistant messages, so the reasoning and the calls it led to reach the wire as one turn.
+  it.effect(
+    'a reasoned parallel tool call from message history reaches DeepSeek as one turn with its reasoning',
+    Effect.fn(function* (_) {
+      const message = (role: 'user' | 'assistant' | 'tool', blocks: ContentBlock.Any[]) =>
+        Obj.make(Message.Message, { created: new Date().toISOString(), sender: { role }, blocks });
+      const history = [
+        message('user', [{ _tag: 'text', text: 'read the plan' }]),
+        message('assistant', [{ _tag: 'reasoning', reasoningText: 'Two reads, then decide.' }]),
+        message('assistant', [
+          { _tag: 'toolCall', toolCallId: 'c1', name: 'projects-get', input: '{}', providerExecuted: false },
+        ]),
+        message('assistant', [
+          { _tag: 'toolCall', toolCallId: 'c2', name: 'tasks-list', input: '{}', providerExecuted: false },
+        ]),
+        message('tool', [
+          { _tag: 'toolResult', toolCallId: 'c1', name: 'projects-get', result: '"p"', providerExecuted: false },
+          { _tag: 'toolResult', toolCallId: 'c2', name: 'tasks-list', result: '"t"', providerExecuted: false },
+        ]),
+      ];
+      const prompt = yield* AiPreprocessor.preprocessPrompt(history);
+
+      let body: any;
+      yield* LanguageModel.generateText({ prompt }).pipe(
+        Effect.provide(captureRequestBody('openai', (captured) => (body = captured), 'deepseek')),
+      );
+
+      const assistants = body.messages.filter((message: any) => message.role === 'assistant');
+      expect(assistants).toHaveLength(1);
+      expect(assistants[0].reasoning_content).toBe('Two reads, then decide.');
+      expect(assistants[0].tool_calls.map((call: any) => call.id)).toEqual(['c1', 'c2']);
     }),
   );
 
