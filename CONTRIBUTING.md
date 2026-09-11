@@ -10,7 +10,7 @@ We love your input. Please submit an issue for any of these reasons:
 - Discussing the current state of the code
 - Proposing new features, ideas, or process
 
-Some of these other needs are not best handled by github issues:
+Some of these other needs are not best handled by GitHub issues:
 
 - Asking a question about something not working -> [Discord](https://dxos.org/discord)
 - A security vulnerability or incident -> email `security@braneframe.com` directly. Do NOT post anywhere else please.
@@ -33,4 +33,4 @@ We welcome your pull requests:
 ## Contribution Licensing
 
 **Any contributions you make will be under the Functional Source License (FSL-1.1-Apache-2.0)**
-When you submit issues, code changes, your submissions are understood to be under the same [FSL-1.1-Apache-2.0 License](https://github.com/dxos/dxos/tree/main/LICENSE) that covers the project.
+When you submit issues or code changes, your submissions are understood to be under the same [FSL-1.1-Apache-2.0 License](https://github.com/dxos/dxos/tree/main/LICENSE) that covers the project.
