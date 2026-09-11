@@ -20,7 +20,9 @@ export default Capability.makeModule(() =>
       id: meta.profile.key,
       root: () => {
         const [state, updateState] = useAtomCapabilityState(HelpCapabilities.State);
-        const steps = useTourSteps(state.tourId);
+        // Only while running: `tourId` is persisted and outlives a run, so asking for steps by id alone
+        // composes at boot, against nothing attended, and the machine opens on that stale composition.
+        const steps = useTourSteps(state.running ? state.tourId : undefined);
         return (
           <>
             <TourAutoStart />

@@ -23,6 +23,16 @@ export const Support = {
     await page.getByTestId('supportPlugin.startTour').click();
   },
 
+  /**
+   * Waits for the controls the contributed steps point at. A fragment's steps are only in the tour once
+   * its plugin has activated, so starting before the editor toolbar has both controls composes a
+   * shorter tour than the one under test.
+   */
+  awaitFragments: async (page: Page) => {
+    await page.getByTestId('comments.comment.add').first().waitFor({ state: 'visible' });
+    await page.getByTestId('transcription.record').first().waitFor({ state: 'visible' });
+  },
+
   startFromCompanion: async (page: Page) => {
     await page.getByTestId('supportPlugin.startCompanionTour').first().click();
   },

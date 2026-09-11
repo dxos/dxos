@@ -21,8 +21,8 @@ export const useTours = (data?: unknown): readonly Tour.Definition[] => {
 
 /**
  * Steps for the running tour: its own plus every fragment matching what is on screen, in position
- * order. Composed in the render that starts the tour, so the machine never opens on another tour's
- * steps.
+ * order. Pass the id only while the tour is running, so composition happens in the render that starts
+ * it rather than at boot, where nothing is attended yet.
  */
 export const useTourSteps = (tourId: string | undefined): readonly Tour.Step[] => {
   const tours = useCapabilities(AppCapabilities.Tour);

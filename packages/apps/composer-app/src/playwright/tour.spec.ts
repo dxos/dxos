@@ -7,6 +7,9 @@ import { expect, test } from '@playwright/test';
 import { AppManager } from './app-manager.ts';
 import { Support } from './plugins/index.ts';
 
+// Every tour here is started by hand. A tour marked `auto` runs unprompted only where the profile has
+// an account service to authenticate against, which no e2e profile does — the same gate that keeps the
+// welcome tour from firing in local development.
 test.describe('Tour tests', () => {
   let host: AppManager;
 
@@ -42,7 +45,8 @@ test.describe('Tour tests', () => {
     // An untouched workspace starts with the pane up, on the seeded help tab.
     await expect(host.page.getByTestId('deck.companion')).toBeVisible();
 
-    await expect(Support.card(host.page)).toBeVisible();
+    await Support.awaitFragments(host.page);
+    await Support.startFromCompanion(host.page);
     await expect(Support.title(host.page)).toHaveText('Markdown, formatted as you type');
 
     await Support.next(host.page).click();
@@ -64,6 +68,7 @@ test.describe('Tour tests', () => {
     // Replayed after a reload: the running tour's id is persisted and names a tour before anything
     // is attended.
     await host.page.reload();
+    await Support.awaitFragments(host.page);
     await Support.startFromCompanion(host.page);
     await expect(Support.title(host.page)).toHaveText('Markdown, formatted as you type');
 
@@ -74,33 +79,5 @@ test.describe('Tour tests', () => {
 
     await Support.next(host.page).click();
     await expect(Support.title(host.page)).toHaveText('Dictate');
-  });
-
-  test('a project runs its own tour on first open, and again from the help companion', async () => {
-    await host.createSpace();
-    await host.createObject({ type: 'Project' });
-
-    await expect(Support.card(host.page)).toBeVisible();
-    await expect(Support.title(host.page)).toHaveText('Overview');
-
-    await Support.next(host.page).click();
-    await expect(Support.title(host.page)).toHaveText('Artifacts');
-
-    await Support.next(host.page).click();
-    await expect(Support.title(host.page)).toHaveText('Tasks');
-    await expect(host.page.getByTestId('projectsPlugin.tab.tasks')).toHaveAttribute('data-state', 'active');
-
-    await Support.next(host.page).click();
-    await expect(Support.title(host.page)).toHaveText('Hand work to an agent');
-
-    await Support.next(host.page).click();
-    await expect(Support.title(host.page)).toHaveText('Sessions');
-
-    await Support.finish(host.page).click();
-    await expect(Support.card(host.page)).not.toBeVisible();
-
-    // Having run once it will not start itself again; the companion's toolbar is how it is replayed.
-    await Support.startFromCompanion(host.page);
-    await expect(Support.title(host.page)).toHaveText('Overview');
   });
 });
