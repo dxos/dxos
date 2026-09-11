@@ -72,9 +72,9 @@ const ChatModuleContainer = ({ space }: { space: Space }) => {
         <Panel.Content asChild>
           <Chat.Content>
             <Chat.Thread viewType={view} />
-            <Chat.Activity />
-            <Chat.Queue />
-            <div className='p-1'>
+            <div className='flex flex-col gap-1 p-1'>
+              <Chat.Queue />
+              <Chat.Activity />
               <Chat.Prompt {...chatProps} outline preset={preset?.id} />
             </div>
           </Chat.Content>

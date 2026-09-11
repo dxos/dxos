@@ -31,7 +31,7 @@ const DefaultStory = ({ prompts = [], cancelable = true }: StoryArgs) => {
     setQueued((current) => current.filter((entry) => entry.id !== message.id));
   }, []);
 
-  return <ChatQueue queued={queued} onCancel={cancelable ? handleCancel : undefined} classNames='items-end' />;
+  return <ChatQueue messages={queued} onCancel={cancelable ? handleCancel : undefined} classNames='items-end' />;
 };
 
 const meta = {
