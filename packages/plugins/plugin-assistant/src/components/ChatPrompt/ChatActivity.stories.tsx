@@ -41,6 +41,48 @@ export const Connecting: Story = {
   },
 };
 
+/** The tool's name is part of the sentence, not a separate field. */
+export const CallingTool: Story = {
+  args: {
+    activity: {
+      phase: 'calling-tool',
+      detail: 'search',
+    },
+  },
+  play: async ({ canvasElement }) => {
+    await expect(within(canvasElement).getByTestId('assistant.chat-activity')).toHaveTextContent('Calling tool search');
+  },
+};
+
+/**
+ * A settled turn with an alarm pending: the wait until the agent wakes itself is still activity.
+ *
+ * The wake time is resolved at render rather than in `args`, which are evaluated once at module load
+ * and would have drifted by seconds before the story mounts.
+ */
+export const Waking: StoryObj<typeof meta> = {
+  render: () => {
+    const [wakeAt] = useState(() => Date.now() + 25_000);
+    return <ChatActivity wakeAt={wakeAt} />;
+  },
+  play: async ({ canvasElement }) => {
+    await expect(within(canvasElement).getByTestId('assistant.chat-activity')).toHaveTextContent(
+      /Waking up in \d+ seconds/,
+    );
+  },
+};
+
+/** A running turn supersedes a pending alarm: the turn is the more immediate answer. */
+export const RunningWithAlarm: Story = {
+  args: {
+    activity: { phase: 'generating' },
+    wakeAt: Date.now() + 25_000,
+  },
+  play: async ({ canvasElement }) => {
+    await expect(within(canvasElement).getByTestId('assistant.chat-activity')).toHaveTextContent('Generating');
+  },
+};
+
 export const Preparing: Story = {
   args: {
     activity: {
@@ -102,20 +144,24 @@ const STEPS: Step[] = [
   { activity: { phase: 'contacting-provider', attempt: 1 }, hold: 1200 },
   { activity: { phase: 'contacting-provider', attempt: 2 }, hold: 1400 },
   { activity: { phase: 'contacting-provider', attempt: 3 }, hold: 1400 },
-  // The first streamed block clears the line: from here the reply is the progress report.
-  { hold: 500, reply: 'The' },
-  { hold: 400, reply: 'The retry' },
-  { hold: 400, reply: 'The retry is now' },
-  { hold: 400, reply: 'The retry is now visible' },
+  // The reply streams under a line that keeps reporting: the generation, then each tool call.
+  { activity: { phase: 'generating' }, hold: 500, reply: 'The' },
+  { activity: { phase: 'generating' }, hold: 400, reply: 'The retry' },
+  { activity: { phase: 'generating' }, hold: 400, reply: 'The retry is now visible' },
+  { activity: { phase: 'calling-tool', detail: 'search' }, hold: 1400, reply: 'The retry is now visible' },
+  { activity: { phase: 'calling-tool', detail: 'read_file' }, hold: 1400, reply: 'The retry is now visible' },
+  { activity: { phase: 'generating' }, hold: 900, reply: 'The retry is now visible instead of a dead pause.' },
+  // Only the settled turn clears it — unless an alarm is pending, which the wake line reports.
   { hold: 2000, reply: 'The retry is now visible instead of a dead pause.' },
 ];
 
 /**
- * The wait as the reader experiences it: phases advancing in the order a turn enters them, the
- * provider request re-issued twice, then the line vanishing as the first token arrives.
+ * The turn as the reader experiences it: setup phases advancing in the order a turn enters them, the
+ * provider request re-issued twice, the generation, the tool calls that dominate an agentic turn,
+ * and the line finally vanishing when the turn settles.
  *
  * A story rather than a set of args because the sequence is the behaviour under test — the phases
- * are only meaningful in order, and the clear-on-stream is the half a static render cannot show.
+ * are only meaningful in order, and the clear-on-settle is the half a static render cannot show.
  */
 export const Sequence: StoryObj<typeof meta> = {
   render: () => {

@@ -244,7 +244,7 @@ describe('AiChatProcessor streaming', () => {
   );
 
   it.effect(
-    'reports each setup phase while the reader waits, then clears once content streams in',
+    'reports each phase while the turn runs, then clears once the request settles',
     Effect.fn(
       function* ({ expect }) {
         const feed = yield* Database.add(Feed.make());
@@ -301,7 +301,10 @@ describe('AiChatProcessor streaming', () => {
         expect(snapshots.indexOf('connecting-mcp')).toBeLessThan(snapshots.indexOf('contacting-provider'));
         expect(attempts[snapshots.indexOf('contacting-provider')]).toBe(3);
 
-        // The streamed block supersedes the phase line, and the settled request leaves nothing behind.
+        // A streamed block no longer supersedes the phase line — an agentic turn streams a little and
+        // then works for a long time, so only the settled request clears it: the two empty snapshots
+        // are the subscription's immediate read and the settle.
+        expect(snapshots.filter((phase) => phase === undefined)).toHaveLength(2);
         expect(snapshots.at(-1)).toBeUndefined();
         expect(observableRegistry.get(processor.activity)).toBeUndefined();
       },

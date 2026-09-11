@@ -61,11 +61,13 @@ export const McpServerError = Trace.EventType('assistant.mcpServerError', {
 });
 
 /**
- * Stage of a request's setup, in the order a turn passes through them.
+ * Stage a request has reached, in the order a turn passes through them.
  *
- * The reader waits through all of these before the first token arrives, and the wait is dominated by
- * whichever one is slow for their setup (a cold MCP server, a summarization pass over a long feed),
- * so each is named rather than folded into a single "working" state.
+ * The reader waits through the setup stages before the first token arrives, and that wait is
+ * dominated by whichever one is slow for their setup (a cold MCP server, a summarization pass over a
+ * long feed), so each is named rather than folded into a single "working" state. The stages past
+ * setup (`generating`, `calling-tool`) keep the line alive for the rest of the turn: an agentic turn
+ * spends most of its time in tool calls, where a cleared line reads as a finished request.
  */
 export const RequestPhaseName = Schema.Literals([
   /** Client-side: the agent process is being spawned or attached. Never emitted by the agent itself. */
@@ -78,6 +80,10 @@ export const RequestPhaseName = Schema.Literals([
   'building-toolkit',
   'encoding-prompt',
   'contacting-provider',
+  /** The model is streaming its reply; the first block of a generation enters this. */
+  'generating',
+  /** A tool the model called is executing; `detail` carries the tool's name. */
+  'calling-tool',
 ]);
 export type RequestPhaseName = Schema.Schema.Type<typeof RequestPhaseName>;
 
@@ -85,8 +91,7 @@ export type RequestPhaseName = Schema.Schema.Type<typeof RequestPhaseName>;
  * Setup stage a request has reached, emitted as the agent enters it.
  *
  * Ephemeral: this is progress for a wait that is over by the time anyone could read it back, and the
- * feed already records the turn's outcome. The UI shows the latest phase until the first streamed
- * block replaces it.
+ * feed already records the turn's outcome. The UI shows the latest phase until the turn settles.
  */
 export const RequestPhase = Trace.EventType('assistant.requestPhase', {
   schema: Schema.Struct({
