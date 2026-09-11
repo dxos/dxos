@@ -124,22 +124,29 @@ type PlankContextValue = RenderedPlanks & {
 };
 
 /**
- * The companion plank id to render beside `id`, or undefined when its companion is closed. Whether it is
- * open comes from `DeckState.companionPlanks` (deck-wide under `flatten`, per plank while the deck
- * slides — see {@link isCompanionOpen}) and never from attention. Attention used to pick a single anchor
+ * Whether `id` shows its companion, and the companion plank id to render there once resolved. The two
+ * are separate because they arrive at different times: `open` is deck state, known on the tile's first
+ * render, while the id waits on the plank's companion nodes (a commit later, see `useCompanions`). The
+ * seam is laid out from `open`, so a tile never mounts collapsed and animates open a frame later.
+ *
+ * Whether it is open comes from `DeckState.companionPlanks` (deck-wide under `flatten`, per plank while
+ * the deck slides — see {@link isCompanionOpen}) and never from attention. Attention used to pick a single anchor
  * here, which meant attention traffic re-anchored the companion between planks: tiles widened and
  * narrowed with no user gesture, the engine answered a sticky tile's width change by silently shifting
  * `scrollLeft` by the delta (zero scroll commands — writer instrumentation finds nothing), and a
  * companion could be "open" in state yet render beside no visible plank. The variant (which tab) stays
  * global view state, shared across planks.
  */
-const useDeckCompanion = (id: string | undefined): string | undefined => {
+const useDeckCompanion = (id: string | undefined): { open: boolean; companionId: string | undefined } => {
   const { deck } = useDeckContext('useDeckCompanion');
   const { flatten } = useDeckSettings();
   const companions = useCompanions(id);
   const selectedVariant = useSelectedCompanionVariant();
-  const { companionId } = useSelectedCompanion(companions, selectedVariant);
-  return isCompanionOpen(deck.companionPlanks, flatten, id) ? companionId : undefined;
+  const { companionId } = useSelectedCompanion(companions ?? [], selectedVariant);
+  // A plank with no companions of its own (once they have been read) shows no seam either.
+  const open =
+    isCompanionOpen(deck.companionPlanks, flatten, id) && (companions === undefined || companionId !== undefined);
+  return { open, companionId: open ? companionId : undefined };
 };
 
 /**
@@ -364,6 +371,7 @@ const resolveTileSizes = (
  */
 const PlankSplit = ({
   id,
+  companion,
   companionId,
   active,
   companionSize,
@@ -371,6 +379,8 @@ const PlankSplit = ({
   classNames,
 }: ThemedClassName<{
   id: string;
+  /** Whether the seam is open; the pane it opens is empty until `companionId` resolves. */
+  companion: boolean;
   companionId?: string;
   active: string[];
   companionSize: number;
@@ -389,8 +399,8 @@ const PlankSplit = ({
     <Splitter.Root
       orientation='horizontal'
       anchor='end'
-      mode={companionId ? 'split' : 'start'}
-      resizable={!!companionId}
+      mode={companion ? 'split' : 'start'}
+      resizable={companion}
       size={liveSize}
       minSize={MIN_COMPANION_SIZE}
       onSizeChange={onSizeChange}
@@ -434,7 +444,7 @@ const DeckPlankTile: MosaicStackTileComponent<string> = (props) => {
   const node = useNode(graph, id);
   const breakpoint = useBreakpoints();
   const { planks: rendered, maxPlankWidthPx, captureExposeGeometry, markExposeSelect } = usePlankContext();
-  const companion = useDeckCompanion(id);
+  const { open: companion, companionId } = useDeckCompanion(id);
   const presentation = useDeckPresentation(rendered.length);
   const isMobile = breakpoint === 'mobile';
   const exposed = !!state.expose;
@@ -453,11 +463,11 @@ const DeckPlankTile: MosaicStackTileComponent<string> = (props) => {
   const spineIcon = typeof node?.properties.icon === 'string' ? node.properties.icon : 'ph--circle-dashed--regular';
   // Clamp the tile to the viewport-derived cap so its trailing controls stay clear of the piled spines;
   // the cap only ever shrinks the stored width, so widths are restored when the viewport grows.
-  const maxSize = resolveMaxTileSize(maxPlankWidthPx, !!companion);
+  const maxSize = resolveMaxTileSize(maxPlankWidthPx, companion);
   const { companionSize, tileSize: storedSize } = resolveTileSizes(
     deck.plankSizing,
     Navigation.segmentOf(deck.segments, id),
-    !!companion,
+    companion,
     maxSize,
   );
   // Expanded takes the whole cap, which is by construction the viewport less a spine for every other
@@ -503,7 +513,8 @@ const DeckPlankTile: MosaicStackTileComponent<string> = (props) => {
       <Mosaic.Tile {...props} classNames='relative dx-fill'>
         <PlankSplit
           id={id}
-          companionId={companion}
+          companion={companion}
+          companionId={companionId}
           active={deck.active}
           companionSize={soloCompanionSize}
           classNames={mx('dx-fullscreen', mainPaddingTransitions)}
@@ -558,7 +569,8 @@ const DeckPlankTile: MosaicStackTileComponent<string> = (props) => {
           view. The `dx-fold-content` hook lets stories retime/restyle the transition. */}
       <PlankSplit
         id={id}
-        companionId={companion}
+        companion={companion}
+        companionId={companionId}
         active={deck.active}
         companionSize={companionSize}
         total={tileSize}
@@ -1349,7 +1361,7 @@ export const DeckPlanks = () => {
   // The last plank's companion feeds both the fullbleed pair (a singleton deck's only plank *is* the
   // last) and the overscroll runway, which is sized to the last tile.
   const lastPlankId = planks[planks.length - 1];
-  const lastPlankCompanionId = useDeckCompanion(lastPlankId);
+  const { open: lastPlankCompanion } = useDeckCompanion(lastPlankId);
   const breakpoint = useBreakpoints();
   const presentation = useDeckPresentation(planks.length);
   const fullscreenId = state.fullscreen;
@@ -1694,7 +1706,7 @@ export const DeckPlanks = () => {
     if (!overscroll || !isSliding || expose || !lastPlankId || !viewportWidthPx) {
       return 0;
     }
-    const paired = !!lastPlankCompanionId;
+    const paired = lastPlankCompanion;
     const { tileSize } = resolveTileSizes(
       deck.plankSizing,
       Navigation.segmentOf(deck.segments, lastPlankId),
@@ -1716,7 +1728,7 @@ export const DeckPlanks = () => {
     expose,
     planks,
     lastPlankId,
-    lastPlankCompanionId,
+    lastPlankCompanion,
     lastTileWidthPx,
     deck.plankSizing,
     deck.segments,

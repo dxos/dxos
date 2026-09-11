@@ -32,7 +32,7 @@ export const CompanionPlank = ({ id, classNames }: CompanionPlankProps) => {
 
   const contextId = id.slice(0, id.lastIndexOf('/'));
   const contextNode = useNode(graph, contextId);
-  const companions = useCompanions(contextId);
+  const companions = useCompanions(contextId) ?? [];
 
   const onValueChange = useCallback(
     (companion: string) => invokePromise(LayoutOperation.UpdateCompanion, { subject: companion }),
