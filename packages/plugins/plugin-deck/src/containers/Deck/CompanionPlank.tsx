@@ -9,6 +9,7 @@ import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { useNode } from '@dxos/plugin-graph/hooks';
 import { type ThemedClassName } from '@dxos/react-ui';
+import { Attention } from '@dxos/react-ui-attention';
 
 import { Companion } from '#components';
 import { useCompanions } from '#hooks';
@@ -16,10 +17,11 @@ import { useCompanions } from '#hooks';
 import { PlankCompanionControls } from './PlankControls.tsx';
 
 export type CompanionPlankProps = ThemedClassName<{
-  /** The plank the pane belongs to, whose companions populate the variant switcher. */
-  contextId: string;
-  /** The companion node id (`<contextId>/~<variant>`) to show, absent when the plank has none. */
-  id?: string;
+  /**
+   * The companion to show (`<plank>/~<variant>`), or the plank itself when it has no companions — the
+   * pane belongs to the plank either way, and a linked segment names its plank as its parent.
+   */
+  id: string;
 }>;
 
 /**
@@ -27,14 +29,15 @@ export type CompanionPlankProps = ThemedClassName<{
  * trailing companion plank; the close control turns the deck companion off. Attention is shared with
  * the context plank via `attendableId`.
  *
- * Addressed by its context rather than by the companion it shows, so a plank with no companions still
- * has a pane: the reader opened it and only the reader closes it, so the tab strip is empty and
- * {@link Companion} says so rather than the pane collapsing.
+ * A plank with no companions still has a pane: the reader opened it and only the reader closes it, so
+ * the tab strip is empty and {@link Companion} says so rather than the pane collapsing.
  */
-export const CompanionPlank = ({ contextId, id, classNames }: CompanionPlankProps) => {
+export const CompanionPlank = ({ id, classNames }: CompanionPlankProps) => {
   const { graph } = useAppGraph();
   const { invokePromise } = useOperationInvoker();
 
+  const companion = Attention.isLinkedSegment(id);
+  const contextId = (companion ? Attention.getParentId(id) : undefined) ?? id;
   const contextNode = useNode(graph, contextId);
   const companions = useCompanions(contextId) ?? [];
 
@@ -49,7 +52,7 @@ export const CompanionPlank = ({ contextId, id, classNames }: CompanionPlankProp
     <Companion
       classNames={classNames}
       companions={companions}
-      value={id}
+      value={companion ? id : undefined}
       onValueChange={onValueChange}
       attendableId={contextId}
       companionTo={contextNode?.data}

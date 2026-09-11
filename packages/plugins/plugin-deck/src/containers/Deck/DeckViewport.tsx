@@ -427,7 +427,7 @@ const PlankSplit = ({
         {companionId ? (
           <DeckPlank id={companionId} part='main' active={active} classNames='size-full' />
         ) : (
-          empty && <CompanionPlank contextId={id} classNames='size-full' />
+          empty && <CompanionPlank id={id} classNames='size-full' />
         )}
       </Splitter.Panel>
     </Splitter.Root>
