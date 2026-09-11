@@ -132,6 +132,15 @@ you hold is a bare object id, and then write the full URI: `{"/": "echo:///" + i
   Task `status` is `todo`|`in-progress`|`done`|`failed`|`cancelled`. Every project owns a task set
   from creation, so `projects-get` showing none means something is wrong — say so rather than
   recording tasks somewhere else, and do **not** claim a task was recorded.
+- **Assignee** — a task's `assignee` is an actor, not a label. For a person, name them
+  (`contact` ref, `identityDid`, `email`); for a non-person — an agent session, a service, a bot —
+  set `subject` to a ref to the object that actor _is_. Assigning work to **yourself** means
+  `{"role": "assistant", "subject": {"/": "echo:///<session-object-id>"}}`, where the id is the `id`
+  of the session OBJECT, not the harness session id it is filed under: find your own session with
+  `tasks-list-sessions { sessionId: "<the harness session id>" }` and use the object it returns.
+  A bare `{"role": "assistant"}` with a name string is wrong — it records that _an_ assistant owns
+  the task, not _which_ run, so nobody can tell later who was actually working it. When no session
+  object exists for this run, say so rather than inventing a name.
 - **Outline** — the free-text scratch surface (`tasks-get-outline`/`tasks-update-outline`). Keep a line
   starting `Resume:` holding the single next action, and a `Design: {"/": "echo:///<doc-id>"}` line
   pointing at the design document.

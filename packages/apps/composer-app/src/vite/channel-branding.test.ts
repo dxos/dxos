@@ -32,7 +32,7 @@ describe('channelVariant', () => {
     expect(channelVariant('build', 'production')).toBeUndefined();
   });
 
-  test('a CI bundle ships the released mark, since nothing deploys it', ({ expect }) => {
+  test('the e2e bundle is not a deploy, so it ships the released mark', ({ expect }) => {
     expect(channelVariant('build', 'ci')).toBeUndefined();
   });
 

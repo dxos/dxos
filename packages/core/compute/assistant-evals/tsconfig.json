@@ -15,6 +15,9 @@
       "path": "../../../common/keys"
     },
     {
+      "path": "../../../common/test-utils"
+    },
+    {
       "path": "../../../common/util"
     },
     {
@@ -45,6 +48,9 @@
       "path": "../../../plugins/plugin-routine"
     },
     {
+      "path": "../../../plugins/plugin-sandbox"
+    },
+    {
       "path": "../../../plugins/plugin-space"
     },
     {
@@ -63,6 +69,9 @@
       "path": "../../../sdk/app-toolkit"
     },
     {
+      "path": "../../../sdk/config"
+    },
+    {
       "path": "../../../sdk/types"
     },
     {
@@ -70,6 +79,9 @@
     },
     {
       "path": "../../echo/echo"
+    },
+    {
+      "path": "../../echo/echo-client"
     },
     {
       "path": "../ai"
@@ -85,6 +97,15 @@
     },
     {
       "path": "../compute-runtime"
+    },
+    {
+      "path": "../link"
+    },
+    {
+      "path": "../mcp-client"
+    },
+    {
+      "path": "../mcp-server"
     }
   ]
 }

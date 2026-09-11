@@ -75,6 +75,12 @@ export class ClaudeAgent {
     onFail?.(this.#exited);
   }
 
+  /**
+   * Spawns the agent and returns immediately; the process is live from here until {@link close}.
+   *
+   * Nothing is sent yet — the CLI sits waiting on stdin — so a caller can scaffold whatever the
+   * first turn will act on before spending a token on it.
+   */
   static start({
     cwd,
     mcpServers,
@@ -140,17 +146,25 @@ export class ClaudeAgent {
     return new ClaudeAgent(child, timeout);
   }
 
-  /** Sends one user message and resolves when that turn's `result` event arrives. */
+  /**
+   * Sends one user message and resolves when that turn's `result` event arrives.
+   *
+   * One turn at a time: the conversation is a single stream, so a second call while a turn is in
+   * flight would take over the first one's callbacks and hand it the other's result. A turn that
+   * times out ends the agent rather than only rejecting, because the CLI is still working and its
+   * late `result` would otherwise land on whatever turn came next.
+   */
   send(prompt: string): Promise<Turn> {
     if (this.#exited) {
       return Promise.reject(this.#exited);
     }
+    if (this.#onEvent || this.#onFail) {
+      return Promise.reject(new Error('a turn is already in flight; await it before sending the next one'));
+    }
     const start = this.#events.length;
     return new Promise<Turn>((resolve, reject) => {
       const timer = setTimeout(() => {
-        this.#onEvent = undefined;
-        this.#onFail = undefined;
-        reject(new Error(`turn timed out after ${this.#timeout}ms; last events: ${this.#tail(start)}`));
+        this.#fail(`turn timed out after ${this.#timeout}ms; last events: ${this.#tail(start)}`);
       }, this.#timeout);
 
       this.#onFail = (error) => {
@@ -185,6 +199,12 @@ export class ClaudeAgent {
     });
   }
 
+  /**
+   * Ends the agent and waits for the process to go.
+   *
+   * The whole process group, because `claude` spawns its stdio MCP servers as children: killing
+   * only the parent orphans them against whatever data directory the caller is about to delete.
+   */
   async close(): Promise<void> {
     // A process that never spawned emits no `exit`, so awaiting one here would hang cleanup.
     if (this.#child.pid === undefined || this.#child.exitCode !== null || this.#child.signalCode !== null) {
