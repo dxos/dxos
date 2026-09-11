@@ -77,6 +77,7 @@ export const readLatestRun = async (storePath = STORE) => {
             input: result.input,
             output: result.output,
             status: result.status,
+            trialIndex: result.trial_index ?? undefined,
             createdAt: result.created_at,
             averageScore: meanOf(ownScores),
             scores: ownScores.map((score) => ({
@@ -104,12 +105,15 @@ const sum = (items, pick) => items.reduce((total, item) => total + (pick(item) ?
 const mean = (values) => (values.length === 0 ? undefined : sum(values, (value) => value) / values.length);
 
 /**
- * A test case's identity across runs: what it asks, not where it sits. `index` shifts when a case
- * is inserted above it, and evalite's ids restart every run, so neither can key a case's trend.
+ * A test case's identity across runs: what it asks, not where it sits, and which trial of it, so
+ * PostHog's per-item view, which keeps the latest event per item, shows every trial. evalite's ids
+ * restart every run, so they cannot key a case's trend.
  */
 const itemId = (file, evaluation, result) =>
   createHash('sha1')
-    .update(JSON.stringify([file, evaluation.name, evaluation.variantName ?? null, result.input]))
+    .update(
+      JSON.stringify([file, evaluation.name, evaluation.variantName ?? null, result.input, result.trialIndex ?? null]),
+    )
     .digest('hex')
     .slice(0, 16);
 
@@ -158,6 +162,7 @@ export const toEvents = (report, experiment) =>
         $ai_experiment_item_name: evaluation.name,
         evalFile: file,
         evalVariant: evaluation.variantName ?? undefined,
+        evalTrial: result.trialIndex,
       };
       // The generations carry their own start times; the root is dated at the first one, and the
       // result's storage time stands in when nothing was generated.

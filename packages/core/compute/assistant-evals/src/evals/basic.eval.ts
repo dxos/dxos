@@ -48,6 +48,7 @@ evalite.each<VariantConfig>([
       expected: 'Berlin',
     },
   ],
+  trialCount: 3,
   task,
   scorers: [Levenshtein],
 });
