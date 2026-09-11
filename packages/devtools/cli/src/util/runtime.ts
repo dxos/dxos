@@ -26,6 +26,7 @@ export type AiChatServices =
   | AiService.AiService
   | Credential.CredentialsService
   | Database.Service
+  | Hypergraph.Service
   | Operation.Service
   | Registry.Service
   | Trace.TraceService;

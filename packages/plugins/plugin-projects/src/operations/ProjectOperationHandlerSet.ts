@@ -20,6 +20,7 @@ export const handlers = OperationHandlerSet.lazy([
   ),
   ProjectMailboxOperation.UpdateTravelLog.pipe(Operation.lazyHandler(() => import('./mailbox/update-travel-log.ts'))),
   ProjectOperation.DelegateTaskToChat.pipe(Operation.lazyHandler(() => import('./delegate-task-to-chat.ts'))),
+  ProjectOperation.CopyTaskPrompt.pipe(Operation.lazyHandler(() => import('./copy-task-prompt.ts'))),
   ProjectOperation.GetProject.pipe(Operation.lazyHandler(() => import('./get-project.ts'))),
   ProjectOperation.ArtifactAdd.pipe(Operation.lazyHandler(() => import('./artifact-add.ts'))),
   ProjectOperation.ArtifactList.pipe(Operation.lazyHandler(() => import('./artifact-list.ts'))),
