@@ -83,6 +83,11 @@ export const Companion = ({
         <Pane.Tabs tabs={tabs} value={selected} onValueChange={onValueChange} attendableId={attendableId} related />
         {controls}
       </Pane.Toolbar>
+      {companions.length === 0 && (
+        <Pane.Content classNames='grid place-items-center'>
+          <p className='text-sm text-description'>{t('no-companions.message')}</p>
+        </Pane.Content>
+      )}
       {/* Panels stay mounted; the inactive ones are hidden so switching companions preserves their state.
           Keyed by variant rather than node id, so a companion that is the same surface beside every plank
           (support, assistant) keeps its state when the plank it is beside changes. */}

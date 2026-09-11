@@ -113,6 +113,19 @@ describe('computeActiveUpdates', () => {
       expect(deckUpdates.companionPlanks).toEqual(['a']);
     });
 
+    // The reader never closed it, so replacing the plank it hung off must not shut it.
+    test('carries an open companion to the newest plank when its own plank closes', ({ expect }) => {
+      const deck = makeDeck({ active: ['a', 'b'], companionPlanks: ['b'] });
+      const { deckUpdates } = computeActiveUpdates({ next: ['c'], deck });
+      expect(deckUpdates.companionPlanks).toEqual(['c']);
+    });
+
+    test('leaves a closed companion closed when planks are replaced', ({ expect }) => {
+      const deck = makeDeck({ active: ['a', 'b'], companionPlanks: [] });
+      const { deckUpdates } = computeActiveUpdates({ next: ['c'], deck });
+      expect(deckUpdates.companionPlanks).toEqual([]);
+    });
+
     test('leaves the deck-wide flag closed under flatten', ({ expect }) => {
       const deck = makeDeck({ active: ['a', 'b'], companionPlanks: [] });
       const { deckUpdates } = computeActiveUpdates({ next: ['a'], deck, flatten: true });
