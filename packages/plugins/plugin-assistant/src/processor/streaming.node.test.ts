@@ -295,7 +295,7 @@ describe('AiChatProcessor streaming', () => {
         // `starting` is set locally before the process resolves, so it precedes anything the agent
         // itself can report; the agent's own phases follow in the order it entered them.
         expect(snapshots).toEqual(
-          expect.arrayContaining(['starting', 'preparing', 'connecting-mcp', 'contacting-provider']),
+          expect.arrayContaining(['starting', 'preparing', 'connecting-mcp', 'contacting-provider', 'generating']),
         );
         expect(snapshots.indexOf('starting')).toBeLessThan(snapshots.indexOf('preparing'));
         expect(snapshots.indexOf('connecting-mcp')).toBeLessThan(snapshots.indexOf('contacting-provider'));
