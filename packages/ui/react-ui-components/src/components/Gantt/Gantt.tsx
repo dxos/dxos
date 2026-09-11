@@ -59,6 +59,8 @@ const BAR_HEIGHT = 15;
  * as far from the bar's end as it is from its top and bottom.
  */
 const BAR_OVERHANG = BAR_HEIGHT / 2;
+/** Radius of the delegation connector's bend from the drop into the child bar. */
+const BEND_RADIUS = BAR_HEIGHT / 2;
 
 const STATUS_COLOR: Record<GanttLaneStatus, { fill: string; text: string }> = {
   pending: { fill: 'fill-neutral-500/40', text: 'text-neutral-400' },
@@ -138,6 +140,19 @@ export const Gantt = composable<HTMLDivElement, GanttProps>(
     const x = (time: number): number => PAD_X + ((time - range.start) / span) * (width - 2 * PAD_X);
     const rowY = (index: number): number => HEADER_HEIGHT + index * ROW_HEIGHT + ROW_HEIGHT / 2;
     const laneEnd = (lane: GanttLane): number | undefined => lane.end ?? now;
+    const delegationSource = (lane: GanttLane): GanttMarker | undefined =>
+      lane.delegatedFrom && markerById.get(lane.delegatedFrom.markerId);
+    // A delegated lane's bar begins where the connector's bend lands, never under the drop from the
+    // parent node: the drop is at the spawn instant and the child starts at or after it.
+    const barStart = (lane: GanttLane, start: number): number => {
+      const source = delegationSource(lane);
+      const edge = x(start) - BAR_OVERHANG;
+      return source ? Math.max(edge, x(source.timestamp) + BEND_RADIUS) : edge;
+    };
+    // A node never sits outside its bar: a delegated lane's first event is the spawn instant itself,
+    // which is where the connector drops, so that node is nudged in past the bar's edge.
+    const nodeX = (lane: GanttLane, time: number): number =>
+      lane.start === undefined ? x(time) : Math.max(x(time), barStart(lane, lane.start) + BAR_OVERHANG);
     const height = HEADER_HEIGHT + rows.length * ROW_HEIGHT;
     const tickCount = Math.max(2, Math.min(MAX_TICKS, Math.floor((width - 2 * PAD_X) / TICK_MIN_WIDTH)));
     const ticks = Array.from({ length: tickCount }, (_, index) => range.start + (span * index) / (tickCount - 1));
@@ -212,9 +227,9 @@ export const Gantt = composable<HTMLDivElement, GanttProps>(
             return (
               <rect
                 key={lane.id}
-                x={x(lane.start) - BAR_OVERHANG}
+                x={barStart(lane, lane.start)}
                 y={rowY(index) - BAR_HEIGHT / 2}
-                width={Math.max(x(end) - x(lane.start), 0) + 2 * BAR_OVERHANG}
+                width={Math.max(x(end) + BAR_OVERHANG - barStart(lane, lane.start), BAR_HEIGHT)}
                 height={BAR_HEIGHT}
                 rx={BAR_HEIGHT / 2}
                 className={mx('cursor-pointer', STATUS_COLOR[lane.status].fill)}
@@ -232,8 +247,8 @@ export const Gantt = composable<HTMLDivElement, GanttProps>(
             return (
               <line
                 key={`thread:${lane.id}`}
-                x1={x(Math.min(...times))}
-                x2={x(Math.max(...times))}
+                x1={nodeX(lane, Math.min(...times))}
+                x2={nodeX(lane, Math.max(...times))}
                 y1={rowY(index)}
                 y2={rowY(index)}
                 className='stroke-neutral-400'
@@ -246,7 +261,7 @@ export const Gantt = composable<HTMLDivElement, GanttProps>(
             return row ? (
               <circle
                 key={marker.id}
-                cx={x(marker.timestamp)}
+                cx={nodeX(row.lane, marker.timestamp)}
                 cy={rowY(row.index)}
                 r={NODE_RADIUS}
                 className={mx('cursor-pointer stroke-base-surface', markerFill(marker))}
@@ -277,17 +292,19 @@ export const Gantt = composable<HTMLDivElement, GanttProps>(
             }),
           )}
 
+          {/* Down from the parent node, a quarter bend, then right into the child bar's left edge. */}
           {rows.flatMap(({ lane, index }) => {
-            const source = lane.delegatedFrom && markerById.get(lane.delegatedFrom.markerId);
+            const source = delegationSource(lane);
             const sourceRow = lane.delegatedFrom && rowById.get(lane.delegatedFrom.laneId);
             if (!source || !sourceRow || lane.start === undefined) {
               return [];
             }
+            const sourceX = x(source.timestamp);
             const y = rowY(index);
             return [
               <path
                 key={`delegation:${lane.id}`}
-                d={`M ${x(source.timestamp)} ${rowY(sourceRow.index)} V ${y} H ${x(lane.start)}`}
+                d={`M ${sourceX} ${rowY(sourceRow.index)} V ${y - BEND_RADIUS} Q ${sourceX} ${y} ${sourceX + BEND_RADIUS} ${y} H ${barStart(lane, lane.start)}`}
                 fill='none'
                 className='stroke-fuchsia-500'
               />,
