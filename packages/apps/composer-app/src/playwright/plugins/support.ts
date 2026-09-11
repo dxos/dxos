@@ -4,7 +4,7 @@
 
 import { type Page } from '@playwright/test';
 
-/** The guided-tour card, and the two controls that start a tour: Home's toolbar and the help companion's. */
+/** The guided-tour card, and the two controls that start a tour: Home's help companion and an object's. */
 export const Support = {
   card: (page: Page) => page.getByTestId('helpPlugin.tooltip'),
   title: (page: Page) => page.getByTestId('helpPlugin.tooltip.title'),

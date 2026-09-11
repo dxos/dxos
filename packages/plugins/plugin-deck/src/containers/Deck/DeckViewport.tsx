@@ -144,9 +144,7 @@ const useDeckCompanion = (id: string | undefined): { open: boolean; companionId:
   const companions = useCompanions(id);
   const selectedVariant = useSelectedCompanionVariant();
   const { companionId } = useSelectedCompanion(companions ?? [], selectedVariant);
-  // A node with no companions has nothing to put in the pane, so it is not open however the deck's
-  // own bookkeeping reads — which is what lets an undecided companion default to open safely.
-  const open = isCompanionOpen(deck.companionPlanks, flatten, id) && !!companionId;
+  const open = isCompanionOpen(deck.companionPlanks, flatten, id);
   return { open, companionId: open ? companionId : undefined };
 };
 

@@ -19,7 +19,7 @@ test.describe('Tour tests', () => {
     await host.close();
   });
 
-  test('the global tour runs from the Home toolbar and advances', async () => {
+  test('the global tour runs from the Home help companion and advances', async () => {
     await Support.startGlobal(host.page);
 
     await expect(Support.card(host.page)).toBeVisible();

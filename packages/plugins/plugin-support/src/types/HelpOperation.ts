@@ -32,19 +32,3 @@ export const StartTour = Operation.make({
   input: Schema.Struct({ tourId: Schema.String }),
   output: Schema.Void,
 });
-
-/**
- * Persists the "welcome dismissed" annotation on the settings space so the Welcome carousel stays
- * hidden on the default space's Home page. Invoked from the Home article toolbar's "Hide Welcome"
- * action.
- */
-export const HideWelcome = Operation.make({
-  meta: {
-    key: DXN.make('org.dxos.operation.support.hideWelcome'),
-    name: 'Hide Welcome',
-    icon: 'ph--eye-slash--regular',
-  },
-  services: [Capability.Service],
-  input: Schema.Void,
-  output: Schema.Void,
-});

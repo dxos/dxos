@@ -16,7 +16,7 @@ export default Capability.makeModule(() =>
     const settingsAtom = createKvsStore({
       key: meta.profile.key,
       schema: Settings.Settings,
-      defaultValue: () => ({}),
+      defaultValue: () => ({ showHelpCompanions: true }),
     });
 
     return [
