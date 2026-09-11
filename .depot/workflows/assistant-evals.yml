@@ -73,6 +73,7 @@ jobs:
       - name: Setup
         uses: ./.depot/actions/setup
 
+      # The MCP server eval drives the `claude` CLI as its client.
       - name: Install Claude Code
         run: |
           npm install --prefix "$RUNNER_TEMP/claude" @anthropic-ai/claude-code@2.1.259
