@@ -619,7 +619,7 @@ const TaskTreeTrailing = ({ item }: { item: TaskNode }) => {
           a column; every control after it is one rail-item square and needs no wrapper. */}
       {/* Right-aligned by the first chip's auto margin, not `justify-end`: a scroll container can only
           reach overflow on its end side, and `justify-end` spills the excess off the start. */}
-      <div className='col-[chips] flex h-(--dx-control) min-w-0 items-center gap-1 overflow-x-auto scrollbar-none *:shrink-0 [&>*:first-child]:ms-auto'>
+      <div className='col-[chips] flex h-(--dx-control) items-center gap-1 overflow-x-auto scrollbar-none *:shrink-0 [&>*:first-child]:ms-auto'>
         <TaskListItemArtifacts task={task} />
         {current.assignee && <TaskListAssignee assignee={current.assignee} />}
       </div>
