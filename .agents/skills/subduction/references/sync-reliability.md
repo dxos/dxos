@@ -149,6 +149,16 @@ relay has the document recovers when it arrives'` in `automerge-repo-subduction.
   targeted `resyncSubduction`, and evicting the handle — were each measured against
   `composer-app` `halo.spec.ts` at n=80 with `--retries=0`. None reduced the failure rate.
 
+  The cause is [inkandswitch/subduction#286](https://github.com/inkandswitch/subduction/issues/286):
+  the edge advertises `getAllHeads()` while the host advertises materialized automerge heads, and on
+  subduction <= 0.16.1 `heads_assuming_minimal` extends the head set with each fragment's boundary
+  rather than its head, so a boundary-less fragment carrying the newest change makes the edge
+  advertise a stale ancestor with no head in common. Both peers hold identical bytes, so re-asking
+  cannot converge the advertised sets — which is why all four mitigations measured flat. The fix is
+  [subduction#290](https://github.com/inkandswitch/subduction/pull/290), unreleased as of 0.16.1.
+  Add no client-side measure until that release lands; this row of null results is what the
+  alternatives cost.
+
 ## 10. Share-policy denials are the background, not the signal
 
 Measured on composer's `halo.spec.ts`, twenty passing runs with `--trace on`: **every** run emits
