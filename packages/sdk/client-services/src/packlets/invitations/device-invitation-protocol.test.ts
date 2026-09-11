@@ -7,10 +7,10 @@ import { describe, expect, onTestFinished, test } from 'vitest';
 import { chain, waitForCondition } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { AlreadyJoinedError } from '@dxos/protocols';
-import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
+import { Invitation_Kind } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 
-import { type ServiceContext } from '../services';
-import { createPeers, createServiceContext, performInvitation } from '../testing';
+import { type ServiceContext } from '../services/index.ts';
+import { createPeers, createServiceContext, performInvitation } from '../testing/index.ts';
 
 const closeAfterTest = async (peer: ServiceContext) => {
   onTestFinished(async () => {
@@ -37,7 +37,7 @@ describe('services/device', () => {
     const identity1 = await host.createIdentity();
     expect(host.identityManager.identity).to.eq(identity1);
 
-    await Promise.all(performInvitation({ host, guest, options: { kind: Invitation.Kind.DEVICE } }));
+    await Promise.all(performInvitation({ host, guest, options: { kind: Invitation_Kind.DEVICE } }));
     expect(guest.identityManager.identity?.identityKey).to.deep.eq(identity1.identityKey);
   });
 
@@ -51,7 +51,8 @@ describe('services/device', () => {
     const hostRefs = host.echoHost.getSpaceRootRefs(spaceId);
     expect(hostRefs?.spaceRootDocUrl).to.exist;
 
-    await Promise.all(performInvitation({ host, guest, options: { kind: Invitation.Kind.DEVICE } }));
+    await Promise.all(performInvitation({ host, guest, options: { kind: Invitation_Kind.DEVICE } }));
+
     expect(guest.identityManager.identity?.haloSpaceId).to.equal(spaceId);
 
     // The root replicates over the device swarm rather than arriving with the invitation, so the
@@ -68,10 +69,10 @@ describe('services/device', () => {
     const identity1 = await host.createIdentity();
     expect(host.identityManager.identity).to.eq(identity1);
 
-    await Promise.all(performInvitation({ host, guest, options: { kind: Invitation.Kind.DEVICE } }));
+    await Promise.all(performInvitation({ host, guest, options: { kind: Invitation_Kind.DEVICE } }));
     expect(guest.identityManager.identity?.identityKey).to.deep.eq(identity1.identityKey);
 
-    const [_, result] = performInvitation({ host, guest, options: { kind: Invitation.Kind.DEVICE } });
+    const [_, result] = performInvitation({ host, guest, options: { kind: Invitation_Kind.DEVICE } });
     expect((await result).error).to.be.instanceOf(AlreadyJoinedError);
   });
 });

@@ -2,9 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type Component, For, createEffect, createSignal, onCleanup, onMount } from 'solid-js';
+import { type Component, For, Index, createEffect, createSignal, onCleanup, onMount } from 'solid-js';
 
-import { type LoaderStore } from './store';
+import { type LoaderStore } from './store.ts';
 
 // Ring geometry in the SVG's `0 0 100 100` viewBox. The radius leaves a couple
 // of units of padding so the stroke, its round cap, and the end marker aren't
@@ -13,6 +13,9 @@ const RING_RADIUS = 48;
 const RING_CENTER = 50;
 // Leading-edge marker: a small dot drawn at the arc's head in an unmasked layer.
 const MARKER_RADIUS = 1; // viewBox units → ~3.8px on the 384px disc
+
+/** Sprite the activation row's icons resolve against when the host configures none. */
+const DEFAULT_SPRITE_PATH = '/icons.svg';
 
 /**
  * Read an element's *current animated* translateY (px) from its live transform
@@ -45,6 +48,10 @@ export type LoaderProps = {
   store: LoaderStore;
   /** Inline SVG markup for the brand mark rendered inside the ring. */
   markSvg?: string;
+  /** A CSS filter over the mark — how a channel recolours the released artwork without its own file. */
+  markFilter?: string;
+  /** URL of the icon sprite the activation row resolves `<use href>` against. */
+  spritePath?: string;
 };
 
 /**
@@ -89,6 +96,10 @@ export const Loader: Component<LoaderProps> = (props) => {
   // the old `transition: stroke-dashoffset` gave, while keeping the path +
   // `marker-end` (the marker rides the arc's recomputed end automatically).
   const [shown, setShown] = createSignal(props.store.progress());
+  // The activation row centres on an eased count rather than the real one, driven by the same loop:
+  // a new arrival only moves the target, so the row keeps its velocity instead of easing to a stop
+  // and starting again, which is what a per-arrival transition does.
+  const [shownCount, setShownCount] = createSignal(props.store.plugins().length);
   let raf: number | undefined;
   const animate = () => {
     const target = props.store.progress();
@@ -97,6 +108,13 @@ export const Loader: Component<LoaderProps> = (props) => {
     const next = Math.abs(target - current) < 0.05 ? target : current + (target - current) * 0.18;
     if (next !== current) {
       setShown(next);
+    }
+    const targetCount = props.store.plugins().length;
+    const currentCount = shownCount();
+    const nextCount =
+      Math.abs(targetCount - currentCount) < 0.005 ? targetCount : currentCount + (targetCount - currentCount) * 0.18;
+    if (nextCount !== currentCount) {
+      setShownCount(nextCount);
     }
     raf = requestAnimationFrame(animate);
   };
@@ -137,7 +155,13 @@ export const Loader: Component<LoaderProps> = (props) => {
 
   return (
     <>
-      <div id='boot-loader-disc' data-host-driven={isHostDriven() ? '' : undefined}>
+      {/* The channel filter sits on the disc so the ring, its head and the mark recolour together:
+          the ring's accent is a step of the same ramp the mark is drawn in. */}
+      <div
+        id='boot-loader-disc'
+        data-host-driven={isHostDriven() ? '' : undefined}
+        style={{ '--boot-loader-mark-filter': props.markFilter }}
+      >
         <svg
           id='boot-loader-ring'
           viewBox='0 0 100 100'
@@ -159,6 +183,28 @@ export const Loader: Component<LoaderProps> = (props) => {
         <div id='boot-loader-status-fade' />
         <div id='boot-loader-status-track' ref={trackRef}>
           <For each={props.store.lines()}>{(line) => <div class='boot-loader-status-line'>{line.text}</div>}</For>
+        </div>
+      </div>
+      {/* Activation row: one icon per plugin as it activates, appended monochrome and fading in. Icons resolve against the static sprite, which needs no app bundle. */}
+      <div id='boot-loader-plugins' aria-hidden='true'>
+        {/* Inner track: the flex row, translated as one group to keep its centre on the row's; the
+            outer element keeps its vertical placement transform and clips. `--n` is the eased count
+            the offset is computed from: a new icon lands one gap past the row's end and the row
+            slides half a slot left as `--n` catches up. */}
+        <div id='boot-loader-plugins-track' style={{ '--n': shownCount() }}>
+          {/* `Index`, not `For`: `For` keys by item identity, so any row rewrite would re-create the
+              element and restart its entrance animation. */}
+          <Index each={props.store.plugins()}>
+            {(plugin) => (
+              // Wrapper owns the slot and the fade, so the glyph inside can be restyled (a chip, a
+              // badge, a hover affordance) without touching either.
+              <div class='boot-loader-plugin'>
+                <svg class='boot-loader-plugin-icon' viewBox='0 0 256 256'>
+                  <use href={`${props.spritePath ?? DEFAULT_SPRITE_PATH}#${plugin().icon}`} />
+                </svg>
+              </div>
+            )}
+          </Index>
         </div>
       </div>
       {/* Shown only once the host reports the deadline passed, and only in dev — startup keeps

@@ -27,9 +27,9 @@ import { isNonNullable } from '@dxos/util';
 import { meta } from '#meta';
 import { Notebook } from '#types';
 
-import { type ComputeGraph } from '../../notebook';
-import { TypescriptEditor, type TypescriptEditorProps } from '../TypescriptEditor';
-import { type NotebookMenuProps } from './NotebookMenu';
+import { type ComputeGraph } from '../../notebook/index.ts';
+import { TypescriptEditor, type TypescriptEditorProps } from '../TypescriptEditor/index.ts';
+import { type NotebookMenuProps } from './NotebookMenu.tsx';
 
 const editorStyles = 'p-2 ps-3';
 const valueStyles = 'p-1 ps-3';

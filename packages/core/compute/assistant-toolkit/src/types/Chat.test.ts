@@ -7,6 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
+import * as Chat from '@dxos/assistant/Chat';
 import * as Instructions from '@dxos/compute/Instructions';
 import { Annotation, Database, Feed, Filter, Obj, Ref, Type } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
@@ -14,8 +15,6 @@ import { EntityId } from '@dxos/keys';
 import { FeedProtocol } from '@dxos/protocols';
 import { Text } from '@dxos/schema';
 import { Message, Outline, Task, TaskSet } from '@dxos/types';
-
-import { Chat } from '../types';
 
 EntityId.dangerouslyDisableRandomness();
 
@@ -54,7 +53,14 @@ describe('Chat', () => {
         // Asserted on the schema, not the instance: `in` reports false for any declared-but-unset
         // optional field. The agent a chat runs as is reached through the ECHO parent edge, never a
         // field — a field was the edge that made Agent and Chat mutually dependent.
-        expect(Object.keys(Chat.fields).sort()).toEqual(['feed', 'instructions', 'name', 'tasks', 'viewType']);
+        expect(Object.keys(Chat.fields).sort()).toEqual([
+          'feed',
+          'instructions',
+          'name',
+          'remote',
+          'tasks',
+          'viewType',
+        ]);
       },
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,
@@ -128,7 +134,7 @@ describe('Chat', () => {
           owner.tasks = [Ref.make(delegated)];
         });
         Obj.update(chat, (chat) => {
-          chat.tasks = [...chat.tasks, Ref.make(delegated)];
+          chat.tasks.push(Ref.make(delegated));
         });
         yield* Database.flush();
 

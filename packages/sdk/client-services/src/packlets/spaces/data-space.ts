@@ -4,11 +4,12 @@
 
 import { save } from '@automerge/automerge';
 import { type AutomergeUrl } from '@automerge/automerge-repo';
+import { create } from '@bufbuild/protobuf';
 
 import { Event, Mutex, scheduleTask, sleep, synchronized, trackLeaks } from '@dxos/async';
 import { AUTH_TIMEOUT } from '@dxos/client-protocol';
 import { Context, ContextDisposedError } from '@dxos/context';
-import type { SpecificCredential } from '@dxos/credentials';
+import { credentialPayload } from '@dxos/credentials';
 import { timed, warnAfterTimeout } from '@dxos/debug';
 import { type DatabaseRoot, type DocumentLease, type EchoHost } from '@dxos/echo-host';
 import { type DatabaseDirectory, SpaceDocVersion } from '@dxos/echo-protocol';
@@ -19,33 +20,38 @@ import { type KeyringApi } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { CancelledError, type FeedProtocol, SystemError } from '@dxos/protocols';
+import { fromDate, fromPublicKey, fromTimeframe } from '@dxos/protocols/buf';
+import { SpaceState } from '@dxos/protocols/buf/dxos/client/invitation_pb';
+import { type Space_Metrics, Space_MetricsSchema } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { type Runtime_Client_EdgeFeatures } from '@dxos/protocols/buf/dxos/config_pb';
-import { type Space as SpaceProto, SpaceState } from '@dxos/protocols/proto/dxos/client/services';
-import { type FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
+import { type FeedMessage, type FeedMessage_Payload } from '@dxos/protocols/buf/dxos/echo/feed_pb';
 import {
-  AdmittedFeed,
+  AdmittedFeed_Designation,
+  AdmittedFeedSchema,
   type Credential,
   type Epoch,
+  EpochSchema,
+  MemberProfileSchema,
   MembershipPolicy,
   type ProfileDocument,
-  SpaceMember,
-} from '@dxos/protocols/proto/dxos/halo/credentials';
-import { type GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
+  SpaceMember_Role,
+} from '@dxos/protocols/buf/dxos/halo/credentials_pb';
+import { type GossipMessage } from '@dxos/protocols/buf/dxos/mesh/teleport/gossip_pb';
 import { type SpacesService } from '@dxos/protocols/rpc';
 import { type Gossip, type Presence } from '@dxos/teleport-extension-gossip';
 import { Timeframe } from '@dxos/timeframe';
 import { trace } from '@dxos/tracing';
 import { type AsyncCallback, CallbackCollection, ComplexSet } from '@dxos/util';
 
-import { TrustedKeySetAuthVerifier } from '../identity';
-import { type IMetadataStore } from '../metadata';
-import { createMappedFeedWriter } from '../pipeline';
-import { type Space } from '../space';
-import { AutomergeSpaceState } from './automerge-space-state';
-import { type SigningContext } from './data-space-manager';
-import { EdgeFeedReplicator } from './edge-feed-replicator';
-import { runEpochMigration } from './epoch-migrations';
-import { NotarizationPlugin } from './notarization-plugin';
+import { TrustedKeySetAuthVerifier } from '../identity/index.ts';
+import { type IMetadataStore } from '../metadata/index.ts';
+import { createMappedFeedWriter } from '../pipeline/index.ts';
+import { type Space } from '../space/index.ts';
+import { AutomergeSpaceState } from './automerge-space-state.ts';
+import { type SigningContext } from './data-space-manager.ts';
+import { EdgeFeedReplicator } from './edge-feed-replicator.ts';
+import { runEpochMigration } from './epoch-migrations.ts';
+import { NotarizationPlugin } from './notarization-plugin.ts';
 
 export type DataSpaceCallbacks = {
   /**
@@ -126,7 +132,7 @@ export class DataSpace {
   public readonly postOpen = new CallbackCollection<AsyncCallback<void>>();
   public readonly preClose = new CallbackCollection<AsyncCallback<void>>();
 
-  public metrics: SpaceProto.Metrics = {};
+  public metrics: Space_Metrics = create(Space_MetricsSchema, {});
 
   constructor(params: DataSpaceProps) {
     this._inner = params.inner;
@@ -152,7 +158,7 @@ export class DataSpace {
         new ComplexSet(
           PublicKey.hash,
           Array.from(this._inner.spaceState.members.values())
-            .filter((member) => member.role !== SpaceMember.Role.REMOVED)
+            .filter((member) => member.role !== SpaceMember_Role.REMOVED)
             .map((member) => member.key),
         ),
       update: this._inner.stateUpdate,
@@ -246,8 +252,8 @@ export class DataSpace {
     this._state = SpaceState.SPACE_CONTROL_ONLY;
     log('new state', { state: SpaceState[this._state] });
     this.stateUpdate.emit();
-    this.metrics = {};
-    this.metrics.open = new Date();
+    this.metrics = create(Space_MetricsSchema, {});
+    this.metrics.open = fromDate(new Date());
 
     await this.postOpen.callSerial();
   }
@@ -302,7 +308,7 @@ export class DataSpace {
     const traceCtx = callerCtx ?? this._ctx;
     scheduleTask(this._ctx, async () => {
       try {
-        this.metrics.pipelineInitBegin = new Date();
+        this.metrics.pipelineInitBegin = fromDate(new Date());
         await this.initializeDataPipeline(traceCtx);
       } catch (err) {
         if (err instanceof CancelledError || err instanceof ContextDisposedError) {
@@ -316,7 +322,7 @@ export class DataSpace {
         this.error = err as Error;
         this.stateUpdate.emit();
       } finally {
-        this.metrics.ready = new Date();
+        this.metrics.ready = fromDate(new Date());
       }
     });
   }
@@ -402,7 +408,7 @@ export class DataSpace {
       breakOnStall: false,
     });
 
-    this.metrics.controlPipelineReady = new Date();
+    this.metrics.controlPipelineReady = fromDate(new Date());
 
     await this._createWritableFeeds();
     log('writable feeds created');
@@ -410,12 +416,7 @@ export class DataSpace {
 
     if (!this.notarizationPlugin.hasWriter) {
       this.notarizationPlugin.setWriter(
-        createMappedFeedWriter<Credential, FeedMessage.Payload>(
-          (credential) => ({
-            credential: { credential },
-          }),
-          this._inner.controlPipeline.writer,
-        ),
+        createMappedFeedWriter<Credential, FeedMessage_Payload>(credentialPayload, this._inner.controlPipeline.writer),
       );
     }
   }
@@ -430,13 +431,12 @@ export class DataSpace {
       credentials.push(
         await this._signingContext.credentialSigner.createCredential({
           subject: controlFeed.key,
-          assertion: {
-            '@type': 'dxos.halo.credentials.AdmittedFeed',
-            'spaceKey': this.key,
-            'deviceKey': this._signingContext.deviceKey,
-            'identityKey': this._signingContext.identityKey,
-            'designation': AdmittedFeed.Designation.CONTROL,
-          },
+          assertion: create(AdmittedFeedSchema, {
+            spaceKey: fromPublicKey(this.key),
+            deviceKey: fromPublicKey(this._signingContext.deviceKey),
+            identityKey: fromPublicKey(this._signingContext.identityKey),
+            designation: AdmittedFeed_Designation.CONTROL,
+          }),
         }),
       );
     }
@@ -450,13 +450,12 @@ export class DataSpace {
       credentials.push(
         await this._signingContext.credentialSigner.createCredential({
           subject: dataFeed.key,
-          assertion: {
-            '@type': 'dxos.halo.credentials.AdmittedFeed',
-            'spaceKey': this.key,
-            'deviceKey': this._signingContext.deviceKey,
-            'identityKey': this._signingContext.identityKey,
-            'designation': AdmittedFeed.Designation.DATA,
-          },
+          assertion: create(AdmittedFeedSchema, {
+            spaceKey: fromPublicKey(this.key),
+            deviceKey: fromPublicKey(this._signingContext.deviceKey),
+            identityKey: fromPublicKey(this._signingContext.identityKey),
+            designation: AdmittedFeed_Designation.DATA,
+          }),
         }),
       );
     }
@@ -550,12 +549,9 @@ export class DataSpace {
   async updateOwnProfile(profile: ProfileDocument): Promise<void> {
     const credential = await this._signingContext.credentialSigner.createCredential({
       subject: this._signingContext.identityKey,
-      assertion: {
-        '@type': 'dxos.halo.credentials.MemberProfile',
-        profile,
-      },
+      assertion: create(MemberProfileSchema, { profile }),
     });
-    await this.inner.controlPipeline.writer.write({ credential: { credential } });
+    await this.inner.controlPipeline.writer.write(credentialPayload(credential));
   }
 
   async createEpoch(options?: CreateEpochOptions): Promise<CreateEpochResult | null> {
@@ -575,24 +571,20 @@ export class DataSpace {
       newAutomergeRoot: options.newAutomergeRoot,
     });
 
-    const epoch: Epoch = {
-      previousId: this._automergeSpaceState.lastEpoch?.id,
-      number: (this._automergeSpaceState.lastEpoch?.subject.assertion.number ?? -1) + 1,
-      timeframe: this._automergeSpaceState.lastEpoch?.subject.assertion.timeframe ?? new Timeframe(),
+    const lastEpoch = this._automergeSpaceState.lastEpoch;
+    const epoch: Epoch = create(EpochSchema, {
+      previousId: lastEpoch?.credential.id,
+      number: (lastEpoch?.assertion.number ?? -1) + 1,
+      timeframe: lastEpoch?.assertion.timeframe ?? fromTimeframe(new Timeframe()),
       automergeRoot: newRoot ?? this._automergeSpaceState.rootUrl,
-    };
-
-    const credential = (await this._signingContext.credentialSigner.createCredential({
-      subject: this.key,
-      assertion: {
-        '@type': 'dxos.halo.credentials.Epoch',
-        ...epoch,
-      },
-    })) as SpecificCredential<Epoch>;
-
-    const receipt = await this.inner.controlPipeline.writer.write({
-      credential: { credential },
     });
+
+    const credential = await this._signingContext.credentialSigner.createCredential({
+      subject: this.key,
+      assertion: epoch,
+    });
+
+    const receipt = await this.inner.controlPipeline.writer.write(credentialPayload(credential));
 
     const timeframe = new Timeframe([[receipt.feedKey, receipt.seq]]);
     await this.inner.controlPipeline.state.waitUntilTimeframe(timeframe);
@@ -654,6 +646,6 @@ export class DataSpace {
 }
 
 type CreateEpochResult = {
-  credential: SpecificCredential<Epoch>;
+  credential: Credential;
   timeframe: Timeframe;
 };

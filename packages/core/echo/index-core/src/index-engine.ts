@@ -8,10 +8,11 @@ import type * as SqlError from 'effect/unstable/sql/SqlError';
 
 import { type Context } from '@dxos/context';
 import { ATTR_TYPE } from '@dxos/echo/internal';
+import { SpanAttributes } from '@dxos/effect';
 import type { EntityId, SpaceId } from '@dxos/keys';
 import * as SqlTransaction from '@dxos/sql-sqlite/SqlTransaction';
 
-import { type IndexCursor, IndexTracker } from './index-tracker';
+import { type IndexCursor, IndexTracker } from './index-tracker.ts';
 import {
   type EntityMeta,
   EntityMetaIndex,
@@ -20,10 +21,11 @@ import {
   type FtsQueryResult,
   type Index,
   type IndexerObject,
+  type QueueRef,
   type QueueWindow,
   ReverseRefIndex,
   type ReverseRefQuery,
-} from './indexes';
+} from './indexes/index.ts';
 
 /**
  * Result of a single indexing pass over a data source.
@@ -160,7 +162,7 @@ export class IndexEngine {
   queryAll(query: {
     spaceIds: readonly SpaceId[];
     includeAllQueues?: boolean;
-    queueIds?: readonly string[] | null;
+    queues?: readonly QueueRef[] | null;
     window?: QueueWindow;
   }): Effect.Effect<readonly EntityMeta[], SqlError.SqlError, SqlClient.SqlClient> {
     return this.#objectMetaIndex.queryAll(query);
@@ -195,7 +197,7 @@ export class IndexEngine {
     typeDxns: readonly EntityMeta['typeDXN'][];
     inverted?: boolean;
     includeAllQueues?: boolean;
-    queueIds?: readonly string[] | null;
+    queues?: readonly QueueRef[] | null;
     window?: QueueWindow;
   }): Effect.Effect<readonly EntityMeta[], SqlError.SqlError, SqlClient.SqlClient> {
     return this.#objectMetaIndex.queryTypes(query);
@@ -207,7 +209,7 @@ export class IndexEngine {
     createdAfter?: number;
     createdBefore?: number;
     includeAllQueues?: boolean;
-    queueIds?: readonly string[] | null;
+    queues?: readonly QueueRef[] | null;
   }): Effect.Effect<readonly EntityMeta[], SqlError.SqlError, SqlClient.SqlClient> {
     return this.#objectMetaIndex.queryByTimeRange(query);
   }
@@ -270,7 +272,7 @@ export class IndexEngine {
           return recordIds.length;
         }),
       );
-    }).pipe(Effect.withSpan('IndexEngine.deleteObjects'));
+    }).pipe(Effect.withSpan('IndexEngine.deleteObjects'), SpanAttributes.annotateSpace(opts.spaceId));
   }
 
   update(
@@ -324,6 +326,7 @@ export class IndexEngine {
       // stale heads and silently skip documents changed in between.
       Effect.ensuring(Effect.sync(() => dataSource.endPass?.())),
       Effect.withSpan('IndexEngine.update'),
+      SpanAttributes.annotateSpace(opts.spaceId),
     );
   }
 
@@ -383,6 +386,6 @@ export class IndexEngine {
           return { updated: objects.length, done: false, objects };
         }),
       );
-    }).pipe(Effect.withSpan('IndexEngine.#update'));
+    }).pipe(Effect.withSpan('IndexEngine.#update'), SpanAttributes.annotateSpace(opts.spaceId));
   }
 }

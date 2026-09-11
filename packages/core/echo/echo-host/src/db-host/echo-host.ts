@@ -26,7 +26,7 @@ import {
   createIdFromSpaceKey,
   isSpaceRoot,
 } from '@dxos/echo-protocol';
-import { RuntimeProvider } from '@dxos/effect';
+import { EffectEx, RuntimeProvider } from '@dxos/effect';
 import { FeedStore } from '@dxos/feed';
 import { IndexEngine, type IndexingResult } from '@dxos/index-core';
 import { invariant } from '@dxos/invariant';
@@ -48,16 +48,16 @@ import {
   type PeerIdProvider,
   type RootDocumentSpaceKeyProvider,
   deriveCollectionIdFromSpaceId,
-} from '../automerge';
-import { AutomergeDataSource } from './automerge-data-source';
-import { DataServiceImpl } from './data-service';
-import { type DatabaseRoot } from './database-root';
-import { DeletionResolver } from './deletion';
-import { FeedDataSource } from './feed-data-source';
-import { hintFromIndexingResult } from './invalidation-hint';
-import { LocalFeedServiceImpl } from './local-feed-service';
-import { QueryServiceImpl } from './query-service';
-import { type SpaceDocumentListUpdatedEvent, type SpaceRootRefs, SpaceStateManager } from './space-state-manager';
+} from '../automerge/index.ts';
+import { AutomergeDataSource } from './automerge-data-source.ts';
+import { DataServiceImpl } from './data-service.ts';
+import { type DatabaseRoot } from './database-root.ts';
+import { DeletionResolver } from './deletion.ts';
+import { FeedDataSource } from './feed-data-source.ts';
+import { hintFromIndexingResult } from './invalidation-hint.ts';
+import { LocalFeedServiceImpl } from './local-feed-service.ts';
+import { QueryServiceImpl } from './query-service.ts';
+import { type SpaceDocumentListUpdatedEvent, type SpaceRootRefs, SpaceStateManager } from './space-state-manager.ts';
 
 /**
  * Documents walked between event-loop yields during a reachability traversal. Bounds how long one
@@ -1112,7 +1112,49 @@ export class EchoHost extends Resource {
       return;
     }
 
-    const reasons = this.#takeIndexRunReasons();
+    // Derived and disposed per pass: `@trace.span` derives a child of whatever ctx it is handed,
+    // and a child stays on its parent's dispose list until disposed -- at three passes a second,
+    // parenting those on `this._ctx` is an unbounded leak.
+    const passCtx = this._ctx.derive();
+    try {
+      // Drained here rather than inside the pass so the span can report what triggered it.
+      await this._runIndexPass(passCtx, this.#takeIndexRunReasons());
+    } finally {
+      await passCtx.dispose();
+    }
+  };
+
+  /**
+   * One indexing pass over both data sources.
+   *
+   * Spanned so that a pass is a single trace naming the requests that caused it, instead of one
+   * parentless `IndexEngine.update` root per data source with nothing to attribute it to. The
+   * `ctx` the decorator hands back carries the pass span, and `EffectEx.withContext` is what
+   * carries it across into the Effect world.
+   */
+  @trace.span({
+    op: 'indexer',
+    // Flattened to strings/numbers: OTel attribute values are primitives, so a histogram object
+    // would be dropped by the exporter rather than reaching SigNoz.
+    attributes: (_ctx: Context, reasons: Record<string, number>) => ({
+      reasons: Object.entries(reasons)
+        .map(([reason, count]) => `${reason}:${count}`)
+        .join(','),
+    }),
+    // The outcome rides on the span rather than a log line: the only level the OTLP log sink
+    // exports (INFO) is also one the browser console shows, and at three passes a second that
+    // buries the console it is meant to help.
+    resultAttributes: (outcome: IndexPassOutcome | undefined) => ({
+      updated: outcome?.updated ?? 0,
+      done: outcome?.done ?? false,
+      // A pass that indexed nothing yet still invalidates queries is the signature of a
+      // self-sustaining invalidation loop, so record whether this run re-armed its own trigger.
+      invalidates: outcome?.invalidates ?? false,
+      spaces: outcome?.spaces ?? 0,
+      documents: outcome?.documents ?? 0,
+    }),
+  })
+  private async _runIndexPass(ctx: Context, reasons: Record<string, number>): Promise<IndexPassOutcome | undefined> {
     const startedAt = performance.now();
 
     try {
@@ -1121,8 +1163,8 @@ export class EchoHost extends Resource {
       {
         performance.mark('indexEngine.update.automerge:start');
         const result = await this._indexEngine
-          .update(this._ctx, this._automergeDataSource, { spaceId: null, limit: 50 })
-          .pipe(RuntimeProvider.runPromise(this._runtime));
+          .update(ctx, this._automergeDataSource, { spaceId: null, limit: 50 })
+          .pipe(EffectEx.withContext(ctx), RuntimeProvider.runPromise(this._runtime));
         _mergeInto(combinedResult, result);
         performance.measure('Index Automerge', {
           start: 'indexEngine.update.automerge:start',
@@ -1145,8 +1187,8 @@ export class EchoHost extends Resource {
       {
         performance.mark('indexEngine.update.queue:start');
         const result = await this._indexEngine
-          .update(this._ctx, this._feedDataSource, { spaceId: null, limit: 50 })
-          .pipe(RuntimeProvider.runPromise(this._runtime));
+          .update(ctx, this._feedDataSource, { spaceId: null, limit: 50 })
+          .pipe(EffectEx.withContext(ctx), RuntimeProvider.runPromise(this._runtime));
         _mergeInto(combinedResult, result);
         performance.measure('Index Queues', {
           start: 'indexEngine.update.queue:start',
@@ -1188,6 +1230,14 @@ export class EchoHost extends Resource {
       if (hint) {
         this._queryService.invalidateQueries(hint);
       }
+
+      return {
+        updated: combinedResult.updated,
+        done: combinedResult.done,
+        invalidates: !!hint,
+        spaces: combinedResult.spaces.size,
+        documents: combinedResult.documents.size,
+      };
     } catch (err) {
       if (this._ctx.disposed || !this.isOpen) {
         this._indexesUpToDate = true;
@@ -1198,10 +1248,19 @@ export class EchoHost extends Resource {
       this._queryService.invalidateQueries();
       throw err;
     }
-  };
+  }
 }
 
 export type { EchoDataStats };
+
+/** What one indexing pass did, as the span reports it. */
+type IndexPassOutcome = {
+  updated: number;
+  done: boolean;
+  invalidates: boolean;
+  spaces: number;
+  documents: number;
+};
 
 type MutableIndexingAccumulator = {
   updated: number;

@@ -10,12 +10,13 @@ import { Context } from '@dxos/context';
 import { EffectEx } from '@dxos/effect';
 import { PublicKey } from '@dxos/keys';
 import { subscribeStream } from '@dxos/protocols';
-import { type Space } from '@dxos/protocols/proto/dxos/client/services';
-import { MembershipPolicy } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { toPublicKey } from '@dxos/protocols/buf';
+import { type Space } from '@dxos/protocols/buf/dxos/client/services_pb';
+import { MembershipPolicy } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
-import { type ServiceContext } from '../services';
-import { createServiceContext } from '../testing';
-import { SpacesServiceImpl } from './spaces-service';
+import { type ServiceContext } from '../services/index.ts';
+import { createServiceContext } from '../testing/index.ts';
+import { SpacesServiceImpl } from './spaces-service.ts';
 
 describe('SpacesService', () => {
   let serviceContext: ServiceContext;
@@ -52,7 +53,7 @@ describe('SpacesService', () => {
         spacesService['SpacesService.createSpace']({ membershipPolicy: MembershipPolicy.INVITE }),
       );
       expect(space).to.exist;
-      expect(space.spaceKey).to.be.instanceof(PublicKey);
+      expect(toPublicKey(space.spaceKey)).to.be.instanceof(PublicKey);
     });
   });
 
@@ -111,7 +112,7 @@ describe('SpacesService', () => {
       );
       const spaces = await result.wait();
       expect(spaces).to.be.length(1);
-      expect(spaces?.[0].spaceKey.equals(space.spaceKey)).to.be.true;
+      expect(toPublicKey(spaces?.[0].spaceKey)?.toHex()).to.equal(toPublicKey(space.spaceKey)?.toHex());
     });
 
     test.skip('updates when space is updated', async () => {});

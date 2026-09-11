@@ -12,7 +12,7 @@ import { RuntimeProvider } from '@dxos/effect';
 import { SqlTransaction } from '@dxos/sql-sqlite';
 import { type MaybePromise } from '@dxos/util';
 
-import { MIGRATIONS, MIGRATIONS_TABLE } from '../migrations/chunks';
+import { MIGRATIONS, MIGRATIONS_TABLE } from '../migrations/chunks/index.ts';
 
 // SqlTransaction.SqlTransaction is the Tag class exported from the SqlTransaction namespace.
 type SqlTransactionTag = SqlTransaction.SqlTransaction;

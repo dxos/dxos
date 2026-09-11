@@ -12,8 +12,8 @@ import { Format } from '@dxos/echo/Format';
 import { PropertyMeta } from '@dxos/echo/internal';
 import { CardAnnotation } from '@dxos/schema';
 
-import * as Geo from './Geo';
-import * as Organization from './Organization';
+import * as Geo from './Geo.ts';
+import * as Organization from './Organization.ts';
 
 // TODO(burdon): Materialize link for Role (Organization => [Role] => Contact).
 // TODO(burdon): Address sub type with geo location.

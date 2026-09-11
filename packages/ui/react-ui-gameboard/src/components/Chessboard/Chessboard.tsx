@@ -21,8 +21,8 @@ import {
   getRelativeBounds,
   locationToString,
   useGameboardContext,
-} from '../Gameboard';
-import { type ChessModel, type ChessPiece, ChessPieces, boardStyles, getSquareColor, locationToPos } from './chess';
+} from '../Gameboard/index.ts';
+import { type ChessModel, type ChessPiece, ChessPieces, boardStyles, getSquareColor, locationToPos } from './chess.ts';
 
 /** Fallback atom for when model is undefined. */
 const EMPTY_PIECES_ATOM = Atom.make<PieceMap<ChessPiece>>({});
@@ -105,7 +105,7 @@ const ChessboardComponent = forwardRef<HTMLDivElement, ChessboardProps>(
     }, [grid, pieces, promoting]);
 
     return (
-      <div ref={targetRef} tabIndex={0} className={mx('dx-expander relative outline-hidden', classNames)}>
+      <div ref={targetRef} tabIndex={0} className={mx('dx-expand overflow-hidden relative outline-hidden', classNames)}>
         {/* DOM Layout. */}
         <div ref={gridRef} className='grid grid-rows-8 grid-cols-8 aspect-square select-none'>
           {layout}

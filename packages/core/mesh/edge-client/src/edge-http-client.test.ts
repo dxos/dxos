@@ -2,14 +2,15 @@
 // Copyright 2025 DXOS.org
 //
 
+import { create } from '@bufbuild/protobuf';
 import { afterEach, describe, it, test, vi } from 'vitest';
 
 import { Context } from '@dxos/context';
-import { type Presentation } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { type Presentation, PresentationSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
-import { createEphemeralEdgeIdentity } from './auth';
-import { EdgeHttpClient } from './edge-http-client';
-import { type EdgeIdentity } from './edge-identity';
+import { createEphemeralEdgeIdentity } from './auth.ts';
+import { EdgeHttpClient } from './edge-http-client.ts';
+import { type EdgeIdentity } from './edge-identity.ts';
 
 // TODO(burdon): Factor out config.
 const DEV_SERVER = 'https://dev.dxos.network';
@@ -26,7 +27,7 @@ describe.skipIf(process.env.CI)('EdgeHttpClient', () => {
   });
 });
 
-describe('EdgeHttpClient.anthropicAiRequest', () => {
+describe('EdgeHttpClient.aiRequest', () => {
   afterEach(() => {
     vi.unstubAllGlobals();
   });
@@ -43,7 +44,8 @@ describe('EdgeHttpClient.anthropicAiRequest', () => {
     vi.stubGlobal('fetch', fetchMock);
 
     const client = new EdgeHttpClient('https://edge.example.com');
-    const response = await client.anthropicAiRequest(
+    const response = await client.aiRequest(
+      'anthropic',
       new Request('http://edge/v1/messages?beta=true', {
         method: 'POST',
         body: JSON.stringify({ model: 'claude' }),
@@ -68,7 +70,7 @@ describe('EdgeHttpClient auth refresh', () => {
   const identity = {
     peerKey: 'peer-key',
     identityDid: 'did:halo:test',
-    presentCredentials: async (): Promise<Presentation> => ({}),
+    presentCredentials: async (): Promise<Presentation> => create(PresentationSchema, {}),
   };
 
   const makeFetchMock = (authData: Record<string, unknown>) =>
@@ -323,7 +325,7 @@ describe('EdgeHttpClient blobs', () => {
     client.setIdentity({
       peerKey: 'peer-key',
       identityDid: 'did:halo:test',
-      presentCredentials: async (): Promise<Presentation> => ({}),
+      presentCredentials: async (): Promise<Presentation> => create(PresentationSchema, {}),
     });
     const bytes = new Uint8Array([1, 2, 3]);
     await client.putBlob(Context.default(), 'abc123', bytes, { contentType: 'application/octet-stream' });
@@ -343,7 +345,7 @@ describe('EdgeHttpClient blobs', () => {
     const identity: EdgeIdentity = {
       peerKey: 'peer-key',
       identityDid: 'did:halo:test',
-      presentCredentials: async (): Promise<Presentation> => ({}),
+      presentCredentials: async (): Promise<Presentation> => create(PresentationSchema, {}),
     };
 
     const fetchMock = vi.fn(async (input: any, init?: RequestInit) => {
@@ -383,7 +385,7 @@ describe('EdgeHttpClient blobs', () => {
       const identity: EdgeIdentity = {
         peerKey: 'peer-key',
         identityDid: 'did:halo:test',
-        presentCredentials: async (): Promise<Presentation> => ({}),
+        presentCredentials: async (): Promise<Presentation> => create(PresentationSchema, {}),
       };
 
       const fetchMock = vi.fn(async (input: RequestInfo | URL) => {

@@ -7,8 +7,8 @@ import * as Struct from 'effect/Struct';
 
 import { type ShapeDef, createAnchorMap } from '@dxos/react-ui-canvas-editor';
 
-import { ComputeShape, type CreateShapeProps, createAnchorId, createShape } from './defs';
-import { RandomComponent } from './RNG';
+import { ComputeShape, type CreateShapeProps, createAnchorId, createShape } from './defs.ts';
+import { RandomComponent } from './RNG.tsx';
 
 // Kept out of `RNG.tsx`: react-refresh only fast-refreshes a module whose
 // exports are all components, so values exported beside them force a full page reload on every edit.

@@ -13,8 +13,8 @@ import {
   keymap,
 } from '@codemirror/view';
 
-import { type CompletionContext } from './match';
-import { PlaceholderWidget } from './placeholder';
+import { type CompletionContext } from './match.ts';
+import { PlaceholderWidget } from './placeholder.ts';
 
 // TODO(burdon): Option to complete only at end of line.
 export type TypeaheadOptions = {

@@ -48,6 +48,9 @@
       "path": "../../sdk/schema"
     },
     {
+      "path": "../react-primitives/react-focus"
+    },
+    {
       "path": "../react-ui"
     },
     {

@@ -14,7 +14,7 @@ import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as TypeSection from '@dxos/app-toolkit/TypeSection';
-import { Chat } from '@dxos/assistant-toolkit';
+import * as Chat from '@dxos/assistant/Chat';
 import * as Operation from '@dxos/compute/Operation';
 import * as Project from '@dxos/compute/Project';
 import { EID, Filter, Obj, Query, Type } from '@dxos/echo';
@@ -25,7 +25,7 @@ import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { meta } from '#meta';
 import { ProjectOperation } from '#types';
 
-import { inboxResearch } from '../templates';
+import { inboxResearch } from '../templates/index.ts';
 
 /**
  * Surfaces all `Project` objects in a space as a sidebar section nested under the assistant (AI) group —
@@ -358,11 +358,11 @@ export const createProjectArtifactsActionExtension = () =>
               }
 
               Obj.update(project, (project) => {
-                project.artifacts = [...project.artifacts, ref];
+                project.artifacts.push(ref);
               });
             }),
           properties: {
-            label: ['add-artifact.label', { ns: meta.profile.key }],
+            label: ['create-artifact.label', { ns: meta.profile.key }],
             icon: 'ph--plus--regular',
             disposition: 'list-item-primary',
             testId: 'projectsPlugin.addArtifact',

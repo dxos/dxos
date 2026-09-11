@@ -6,7 +6,7 @@ import { describe, test } from 'vitest';
 
 import { LogEntry, LogLevel } from '@dxos/log';
 
-import { formatLogEntry } from './format';
+import { formatLogEntry } from './format.ts';
 
 describe('formatLogEntry', () => {
   test('extracts level letter, file path, message and context', ({ expect }) => {

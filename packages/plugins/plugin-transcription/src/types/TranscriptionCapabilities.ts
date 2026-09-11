@@ -14,7 +14,7 @@ import { type Message } from '@dxos/types';
 
 import { meta } from '#meta';
 
-import * as SettingsModule from './Settings';
+import * as SettingsModule from './Settings.ts';
 
 /**
  * Enriches a transcript message before it is written to the feed (e.g. entity linking).

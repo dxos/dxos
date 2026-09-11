@@ -15,8 +15,8 @@ import { withAuthorization } from '@dxos/compute-runtime';
 import * as Credential from '@dxos/compute/Credential';
 import { log } from '@dxos/log';
 
-import { GoogleApiError } from '../errors';
-import { GoogleCredentials } from '../services/google-credentials';
+import { GoogleApiError } from '../errors.ts';
+import { GoogleCredentials } from '../services/google-credentials.ts';
 
 /**
  * Shared utilities for Google API integration (Gmail, Calendar, etc.)

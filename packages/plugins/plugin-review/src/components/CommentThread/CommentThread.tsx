@@ -4,7 +4,7 @@
 
 import React, { type MouseEvent as ReactMouseEvent, useCallback, useMemo } from 'react';
 
-import { Obj, Relation } from '@dxos/echo';
+import { Obj, Ref, Relation } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { IconButton, Tag, Tooltip, useTranslation } from '@dxos/react-ui';
 import {
@@ -49,7 +49,7 @@ export type CommentThreadProps = Pick<ThreadStatusProps, 'activity'> & {
   onActivate?: (anchor: AnchoredTo.AnchoredTo) => void;
   onComment?: (anchor: AnchoredTo.AnchoredTo, message: string) => void;
   onResolve?: (anchor: AnchoredTo.AnchoredTo) => void;
-  onMessageDelete?: (anchor: AnchoredTo.AnchoredTo, messageId: string) => void;
+  onMessageDelete?: (anchor: AnchoredTo.AnchoredTo, message: Ref.Ref<Message.Message>) => void;
   onThreadDelete?: (anchor: AnchoredTo.AnchoredTo) => void;
   onAcceptProposal?: (anchor: AnchoredTo.AnchoredTo, messageId: string) => void;
   /** Apply the change this (branch-review) thread is anchored to and resolve it; shown while diffing. */
@@ -106,8 +106,15 @@ export const CommentThread = ({
   );
   const handleResolve = useCallback(() => onResolve?.(anchor), [onResolve, anchor]);
   const handleMessageDelete = useCallback(
-    (messageId: string) => onMessageDelete?.(anchor, messageId),
-    [onMessageDelete, anchor],
+    (messageId: string) => {
+      // `Thread.Root` (react-ui-thread) hands back the bare entity id it renders each tile under;
+      // resolve it against the thread's own refs so the operation receives a typed ref, not an id.
+      const ref = messages?.find(Ref.hasEntityId(messageId));
+      if (ref) {
+        onMessageDelete?.(anchor, ref);
+      }
+    },
+    [onMessageDelete, anchor, messages],
   );
   const handleThreadDelete = useCallback(() => onThreadDelete?.(anchor), [onThreadDelete, anchor]);
   const handleAcceptChange = useCallback(() => onAcceptChange?.(anchor), [onAcceptChange, anchor]);

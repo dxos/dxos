@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { getDeckPresentation } from './useDeckPresentation';
+import { getDeckPresentation } from './useDeckPresentation.ts';
 
 describe('getDeckPresentation', () => {
   test('a singleton deck renders fullbleed off mobile', ({ expect }) => {

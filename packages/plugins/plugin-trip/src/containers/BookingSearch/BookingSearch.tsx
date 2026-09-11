@@ -16,7 +16,7 @@ import { OfferStack } from '#components';
 import { meta } from '#meta';
 import { Booking, BookingOperation, BookingSearch, Segment, TripCapabilities } from '#types';
 
-import { offerToBookingProps, offerToFlightDetails } from './offer-to-segment';
+import { offerToBookingProps, offerToFlightDetails } from './offer-to-segment.ts';
 
 /** 2-column form layout for the flight query (parallels SegmentCard's FLIGHT_LAYOUT). */
 const SEARCH_LAYOUT = trim`
@@ -194,7 +194,7 @@ const BookingSearchContainer = ({ segment }: BookingSearchProps) => {
   const flightOffers = offers?.filter((offer): offer is BookingSearch.FlightOffer => offer._tag === 'flight');
 
   return (
-    <Flex column classNames='dx-container'>
+    <Flex column classNames='dx-expand'>
       {/* Query form: content-height (Viewport without `scroll`) — does not expand; offers fill the rest. */}
       <Form.Root
         schema={BookingSearch.FlightSearchFields}
@@ -222,7 +222,7 @@ const BookingSearchContainer = ({ segment }: BookingSearchProps) => {
               </Select.Root>
             )}
             <Form.Layout template={SEARCH_LAYOUT} />
-            <Form.Error>{error}</Form.Error>
+            <Form.ErrorText>{error}</Form.ErrorText>
             <Form.Submit
               icon='ph--magnifying-glass--regular'
               label={pending ? t('booking.searching.label') : t('booking.search.label')}

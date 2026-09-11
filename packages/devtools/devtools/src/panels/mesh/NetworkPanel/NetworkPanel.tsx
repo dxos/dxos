@@ -4,14 +4,15 @@
 
 import React, { useMemo, useRef } from 'react';
 
-import { type PeerState } from '@dxos/protocols/proto/dxos/mesh/presence';
+import { requirePublicKey, toPublicKey } from '@dxos/protocols/buf';
+import { type PeerState } from '@dxos/protocols/buf/dxos/mesh/presence_pb';
 import { type Space, type SpaceMember, useMembers } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { Panel, Toolbar } from '@dxos/react-ui';
 import { GraphForceProjector, type GraphLayoutNode, SVG, type SVGContext } from '@dxos/react-ui-graph';
 
-import { DataSpaceSelector } from '../../../containers';
-import { useDevtoolsState } from '../../../hooks';
+import { DataSpaceSelector } from '../../../containers/index.ts';
+import { useDevtoolsState } from '../../../hooks/index.ts';
 
 export type NetworkGraphNode = {
   id: string;
@@ -40,7 +41,7 @@ export const NetworkPanel = (props: { space?: Space }) => {
   const identity = useIdentity();
 
   const isMe = (node: NetworkGraphNode | undefined) =>
-    identity ? node?.member?.identity.identityKey.equals(identity.identityKey) : false;
+    identity ? toPublicKey(node?.member?.identity?.identityKey)?.equals(requirePublicKey(identity.identityKey)) : false;
 
   const members = useMembers(space?.key);
 
@@ -91,11 +92,11 @@ export const NetworkPanel = (props: { space?: Space }) => {
             projector={projector}
             labels={{
               text: (node: GraphLayoutNode<NetworkGraphNode>, highlight) => {
+                const member = node.data?.member;
                 const identity =
-                  node.data!.member?.identity.profile?.displayName ??
-                  node.data!.member?.identity.identityKey.truncate();
+                  member?.identity?.profile?.displayName ?? toPublicKey(member?.identity?.identityKey)?.truncate();
 
-                const peer = node.data!.peer?.peerId?.truncate();
+                const peer = toPublicKey(node.data!.peer?.peerId)?.truncate();
                 return `${peer} [${identity}]`;
               },
             }}

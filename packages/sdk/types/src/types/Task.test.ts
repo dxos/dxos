@@ -8,8 +8,8 @@ import * as Effect from 'effect/Effect';
 import { Database, Obj, Ref } from '@dxos/echo';
 import { TestDatabaseLayer } from '@dxos/echo-client/testing';
 
-import * as Milestone from './Milestone';
-import * as Task from './Task';
+import * as Milestone from './Milestone.ts';
+import * as Task from './Task.ts';
 
 /**
  * The derived views are the whole point of the flat-array model — hierarchy, milestone grouping,
@@ -297,7 +297,7 @@ describe('mutations', () => {
   it.effect('clears an optional field with null and says so', () =>
     Effect.gen(function* () {
       const task = yield* Database.add(
-        Task.make({ title: 'Draft launch email', status: 'todo', assignee: { name: 'Scout' }, estimate: 3 }),
+        Task.make({ title: 'Draft launch email', status: 'todo', assignee: { name: 'Scout' }, estimate: 'm' }),
       );
       yield* Database.flush();
 
@@ -342,15 +342,13 @@ describe('history', () => {
       // Append-only by convention: an entry records something that happened, so the write adds
       // rather than rewrites.
       Obj.update(task, (task) => {
-        task.history = [
-          ...(task.history ?? []),
-          {
-            date: '2026-08-02T10:30:00.000Z',
-            actor: { name: 'Scout', role: 'assistant' },
-            event: 'updated',
-            description: 'Status changed from todo to done.',
-          },
-        ];
+        task.history ??= [];
+        task.history.push({
+          date: '2026-08-02T10:30:00.000Z',
+          actor: { name: 'Scout', role: 'assistant' },
+          event: 'updated',
+          description: 'Status changed from todo to done.',
+        });
       });
       yield* Database.flush();
 

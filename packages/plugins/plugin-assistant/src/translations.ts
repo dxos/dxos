@@ -2,7 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Agent, Chat, McpServer } from '@dxos/assistant-toolkit';
+import { McpServer } from '@dxos/assistant-toolkit';
+import * as Agent from '@dxos/assistant/Agent';
+import * as Chat from '@dxos/assistant/Chat';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Skill from '@dxos/compute/Skill';
 import { Sequence } from '@dxos/conductor';
@@ -85,6 +87,7 @@ export const translations: Resource[] = [
       },
       // TODO(burdon): Reconcile with react-ui-chat.
       [meta.profile.key]: {
+        'delete-task.label': 'Delete task',
         'templates.label': 'Templates',
         'open-ambient-chat.label': 'Open Assistant',
         'assistant-chat.label': 'Assistant',
@@ -116,6 +119,25 @@ export const translations: Resource[] = [
         'trace-environment-space.label': 'Space',
         'trace-environment-conversation.label': 'Conversation',
 
+        'activity.starting.label': 'Starting agent',
+        'activity.preparing.label': 'Preparing request',
+        'activity.loading-history.label': 'Loading conversation',
+        'activity.summarizing.label': 'Summarizing conversation',
+        'activity.connecting-mcp.label': 'Connecting to MCP servers',
+        'activity.building-toolkit.label': 'Assembling tools',
+        'activity.encoding-prompt.label': 'Encoding prompt',
+        'activity.contacting-provider.label': 'Contacting inference provider',
+        'activity.generating.label': 'Generating',
+        'activity.calling-tool.label': 'Calling tool {{detail}}',
+        'activity.waking.seconds.label_one': 'Waking up in {{count}} second',
+        'activity.waking.seconds.label_other': 'Waking up in {{count}} seconds',
+        'activity.waking.minutes.label_one': 'Waking up in {{count}} minute',
+        'activity.waking.minutes.label_other': 'Waking up in {{count}} minutes',
+        'activity.waking.hours.label_one': 'Waking up in {{count}} hour',
+        'activity.waking.hours.label_other': 'Waking up in {{count}} hours',
+        'activity.sleeping.label': 'Waiting to wake',
+        'activity.attempt': 'attempt {{attempt}}',
+
         'assistant-dialog.title': 'Assistant',
         'open-assistant.label': 'Open assistant',
         'import-compute-operations.label': 'Import compute operations',
@@ -124,6 +146,7 @@ export const translations: Resource[] = [
         'no-results.message': 'No results',
 
         'cancel.button': 'Cancel',
+        'cancel-queued.button': 'Remove from queue',
         'save.button': 'Save',
         'new-thread.button': 'New Chat',
         'rename-thread.button': 'Rename Chat',
@@ -162,6 +185,7 @@ export const translations: Resource[] = [
         'options.skills.title': 'Skills',
         'options.mcp.title': 'MCP',
         'options.chat-model.title': 'Models',
+        'options.environment.title': 'Environment',
         'remove-object.label': 'Remove object',
 
         'chat-view.title': 'View',
@@ -169,6 +193,8 @@ export const translations: Resource[] = [
         'chat-view.summary.label': 'Summary',
         'chat-view.thinking.label': 'Thinking',
         'chat-view.debug.label': 'Debug',
+        'chat-environment.local.label': 'Local',
+        'chat-environment.remote.label': 'Remote (EDGE)',
         'mcp-server-add.label': 'Add MCP server',
         'mcp-server-remove.label': 'Remove MCP server',
         'mcp-server-name.label': 'Server name',

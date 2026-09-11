@@ -14,13 +14,19 @@ import { Icon } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { getSize } from '@dxos/ui-theme';
 
-import { PxIcons } from './index';
+import { PxIcons } from './index.ts';
 
 // The sizes an icon actually has to survive: a toolbar button down to inline text.
 const sizes = [16, 12, 8, 6, 5, 4] as const;
 
 /** Phosphor glyphs shown beside the set, to catch weight or inset drift by eye. */
-const reference = ['ph--circle--regular', 'ph--github-logo--regular', 'ph--google-logo--regular'];
+const reference = [
+  // Reference
+  'ph--circle--regular',
+  // Logos
+  'ph--github-logo--regular',
+  'ph--google-logo--regular',
+];
 
 /**
  * One row per symbol, each size wrapped in a box that hugs the icon so the dashes show that size's

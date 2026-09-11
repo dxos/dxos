@@ -2,8 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-export { createSpaceExtensions } from './spaces';
-export { createDatabaseExtensions } from './database';
-export { createCollectionExtensions } from './collections';
-export { createCompanionExtensions } from './companions';
-export { createSettingsExtensions } from './settings';
+export { createSpaceExtensions } from './spaces.ts';
+export { createDatabaseExtensions } from './database.ts';
+export { createCollectionExtensions } from './collections.ts';
+export { createCompanionExtensions } from './companions.ts';
+export { createSettingsExtensions } from './settings.ts';

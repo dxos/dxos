@@ -8,11 +8,11 @@ import { EncodedReference, type QueryAST, isEncodedReference } from '@dxos/echo-
 import { DXN, EID } from '@dxos/keys';
 import { assumeType } from '@dxos/util';
 
-import { getTypeURI } from '../Annotation/annotations';
-import { getMetaChecked } from '../common/api/meta';
-import { type AnyEntity, ParentId } from '../common/types';
-import { type InternalObjectProps } from '../Entity/model';
-import { objectToJSON } from '../Obj/json-serializer';
+import { getTypeURI } from '../Annotation/annotations.ts';
+import { getMetaChecked } from '../common/api/meta.ts';
+import { type AnyEntity, ParentId } from '../common/types/index.ts';
+import { type InternalObjectProps } from '../Entity/model.ts';
+import { objectToJSON } from '../Obj/json-serializer.ts';
 
 /**
  * Matches a tag filter against an object's stored tags. Tags may be stored as encoded references or
@@ -221,106 +221,181 @@ export const filterMatchValue = (filter: QueryAST.Filter, value: unknown): boole
 };
 
 /**
+ * Meta as the filter walker needs it, flattened out of whichever representation supplies it.
+ */
+export type FilterRecordMeta = {
+  keys?: readonly { source?: string; id?: string }[];
+  key?: string;
+  version?: string;
+  /** Encoded references or bare URI strings — {@link matchesTag} normalizes both. */
+  tags?: readonly unknown[];
+};
+
+/**
+ * Reads the fields a filter needs out of one representation of an entity.
+ *
+ * The representations an executor matches against — a live proxy, a raw Automerge document, the
+ * `ObjectJSON` form — walk the filter AST identically and differ only in where each field lives, so
+ * one walker over an accessor replaces a copy of the walk per representation.
+ */
+export interface FilterRecordAccessor<T> {
+  getId(record: T): string;
+  getTypeURI(record: T): string | undefined;
+
+  /** Filterable data properties by name, or `undefined` when the record cannot be read at all. */
+  getProps(record: T): Record<string, unknown> | undefined;
+  getMeta(record: T): FilterRecordMeta;
+  hasParent(record: T): boolean;
+
+  /**
+   * In-memory full-text match. Only representations backed by no index implement it; the rest
+   * return `false` and leave text search to the index.
+   */
+  matchTextSearch(filter: QueryAST.Filter & { type: 'text-search' }, record: T): boolean;
+}
+
+/**
+ * Builds a filter matcher over one record representation.
+ * The leaf predicates ({@link filterMatchValue}, {@link compareTypenameStrings}, {@link matchesTag},
+ * {@link matchMetaKey}) are shared regardless — this shares the tree walk around them.
+ */
+export const makeFilterMatcher = <T>(
+  accessor: FilterRecordAccessor<T>,
+): ((filter: QueryAST.Filter, record: T) => boolean) => {
+  const match = (filter: QueryAST.Filter, record: T): boolean => {
+    switch (filter.type) {
+      case 'object': {
+        if (filter.typename !== null) {
+          const typeURI = accessor.getTypeURI(record);
+          if (!typeURI || !compareTypenameStrings(filter.typename, typeURI)) {
+            return false;
+          }
+        }
+
+        if (filter.id && filter.id.length > 0 && !filter.id.includes(accessor.getId(record))) {
+          return false;
+        }
+
+        if (filter.props) {
+          const props = accessor.getProps(record);
+          if (props === undefined) {
+            return false;
+          }
+          for (const [key, valueFilter] of Object.entries(filter.props)) {
+            // `@`-prefixed keys address annotations (`@type`, `@meta`), never data.
+            if (key.startsWith('@')) {
+              continue;
+            }
+            if (!filterMatchValue(valueFilter, props[key])) {
+              return false;
+            }
+          }
+        }
+
+        // Meta is read lazily: on a live proxy it costs a sub-proxy walk that most filters never need.
+        const foreignKeys =
+          filter.foreignKeys != null && filter.foreignKeys.length > 0 ? filter.foreignKeys : undefined;
+        if (foreignKeys !== undefined || filter.metaKey !== undefined) {
+          const meta = accessor.getMeta(record);
+          if (
+            foreignKeys !== undefined &&
+            !foreignKeys.some((fk) => meta.keys?.some((key) => key.source === fk.source && key.id === fk.id))
+          ) {
+            return false;
+          }
+          if (
+            filter.metaKey !== undefined &&
+            !matchMetaKey(filter.metaKey, filter.metaVersion, meta.key, meta.version)
+          ) {
+            return false;
+          }
+        }
+
+        return true;
+      }
+
+      case 'tag': {
+        return matchesTag(accessor.getMeta(record).tags ?? [], filter.tag);
+      }
+
+      case 'text-search': {
+        return accessor.matchTextSearch(filter, record);
+      }
+
+      case 'timestamp': {
+        throw new Error('Timestamp filters must be handled at the index level, not in-memory matching.');
+      }
+
+      case 'child-of': {
+        throw new Error('child-of filters must be handled at the executor level, not in-memory matching.');
+      }
+
+      case 'has-parent': {
+        return accessor.hasParent(record) === filter.value;
+      }
+
+      case 'in-query': {
+        throw new Error('in-query filters must be resolved to a literal `in` by the query executor before matching.');
+      }
+
+      case 'not': {
+        return !match(filter.filter, record);
+      }
+
+      case 'and': {
+        return filter.filters.every((f) => match(f, record));
+      }
+
+      case 'or': {
+        return filter.filters.some((f) => match(f, record));
+      }
+
+      default:
+        return false;
+    }
+  };
+
+  return match;
+};
+
+const entityAccessor: FilterRecordAccessor<AnyEntity> = {
+  getId: (entity) => entity.id,
+  getTypeURI: (entity) => getTypeURI(entity),
+  getProps: (entity) => {
+    try {
+      return objectToJSON(entity);
+    } catch {
+      // Serialization of complex static-type entities may throw.
+      return undefined;
+    }
+  },
+  getMeta: (entity) => {
+    const meta = getMetaChecked(entity);
+    return {
+      keys: meta.keys,
+      key: meta.key,
+      version: meta.version,
+      // Lazy: meta tags surface as `Ref`s on a live proxy and only the `tag` arm needs them encoded.
+      get tags() {
+        return meta.tags.map((tag: any) => (typeof tag?.encode === 'function' ? tag.encode() : tag));
+      },
+    };
+  },
+  hasParent: (entity) => {
+    assumeType<InternalObjectProps>(entity);
+    return entity[ParentId] !== undefined;
+  },
+  matchTextSearch: (filter, entity) => matchesTextSearch(filter, entity),
+};
+
+/**
  * Matches a filter against an entity proxy without full JSON serialization when possible.
  *
  * Text filters evaluate in memory here because this matcher serves executors with no index behind
  * them (the registry, `Filter.toPredicate`); index-backed paths use `filterMatchDoc` instead.
  */
-export const filterMatchEntity = (filter: QueryAST.Filter, entity: AnyEntity): boolean => {
-  switch (filter.type) {
-    case 'object': {
-      if (filter.typename !== null) {
-        const typeURI = getTypeURI(entity);
-        if (!typeURI || !compareTypenameStrings(filter.typename, typeURI)) {
-          return false;
-        }
-      }
-
-      if (filter.id && filter.id.length > 0 && !filter.id.includes(entity.id)) {
-        return false;
-      }
-
-      if (filter.props) {
-        let json: ReturnType<typeof objectToJSON> | null = null;
-        try {
-          json = objectToJSON(entity);
-        } catch {
-          // Serialization of complex static-type entities may throw.
-        }
-        if (json === null) {
-          return false;
-        }
-        for (const [key, valueFilter] of Object.entries(filter.props)) {
-          if (key.startsWith('@')) {
-            continue;
-          }
-          if (!filterMatchValue(valueFilter, (json as any)[key])) {
-            return false;
-          }
-        }
-      }
-
-      const meta = getMetaChecked(entity);
-
-      if (filter.foreignKeys && filter.foreignKeys.length > 0) {
-        const hasKey = filter.foreignKeys.some((fk) => meta.keys.some((k) => k.source === fk.source && k.id === fk.id));
-        if (!hasKey) {
-          return false;
-        }
-      }
-
-      if (filter.metaKey !== undefined) {
-        if (!matchMetaKey(filter.metaKey, filter.metaVersion, meta.key, meta.version)) {
-          return false;
-        }
-      }
-
-      return true;
-    }
-
-    case 'tag': {
-      const rawTags = getMetaChecked(entity).tags;
-      const tags = rawTags.map((tag: any) => (typeof tag?.encode === 'function' ? tag.encode() : tag));
-      return matchesTag(tags, filter.tag);
-    }
-
-    case 'text-search': {
-      return matchesTextSearch(filter, entity);
-    }
-
-    case 'timestamp': {
-      throw new Error('Timestamp filters must be handled at the index level, not in-memory matching.');
-    }
-
-    case 'child-of': {
-      throw new Error('child-of filters must be handled at the executor level, not in-memory matching.');
-    }
-
-    case 'has-parent': {
-      assumeType<InternalObjectProps>(entity);
-      return (entity[ParentId] !== undefined) === filter.value;
-    }
-
-    case 'in-query': {
-      throw new Error('in-query filters must be resolved to a literal `in` by the query executor before matching.');
-    }
-
-    case 'not': {
-      return !filterMatchEntity(filter.filter, entity);
-    }
-
-    case 'and': {
-      return filter.filters.every((f) => filterMatchEntity(f, entity));
-    }
-
-    case 'or': {
-      return filter.filters.some((f) => filterMatchEntity(f, entity));
-    }
-
-    default:
-      return false;
-  }
-};
+export const filterMatchEntity: (filter: QueryAST.Filter, entity: AnyEntity) => boolean =
+  makeFilterMatcher(entityAccessor);
 
 /**
  * In-memory full-text match: every term must appear (case-insensitive) in the entity's serialized

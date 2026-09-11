@@ -6,7 +6,7 @@ import { afterEach, beforeEach, describe, test } from 'vitest';
 
 import { type LogConfig, type LogEntry, LogLevel } from '@dxos/log';
 
-import { IdbLogStore } from './idb-log-store';
+import { IdbLogStore } from './idb-log-store.ts';
 
 const fakeConfig = {} as LogConfig;
 
@@ -160,6 +160,36 @@ describe('IdbLogStore', () => {
     await store.flush();
     const jsonl = await store.export();
     expect(jsonl.split('\n')).toHaveLength(3);
+  });
+
+  test('flush triggered while a write is in flight still persists new lines', async ({ expect }) => {
+    store = new IdbLogStore({ dbName, flushInterval: 60_000 });
+    store.processor(fakeConfig, makeEntry(LogLevel.INFO, 'first'));
+    const first = store.flush();
+    // Queued while the first write is still in flight; the second flush must swap the
+    // queue immediately instead of short-circuiting to the in-flight write.
+    store.processor(fakeConfig, makeEntry(LogLevel.INFO, 'second'));
+    const second = store.flush();
+    await Promise.all([first, second]);
+
+    const messages = (await store.export())
+      .split('\n')
+      .filter(Boolean)
+      .map((line) => JSON.parse(line).m);
+    expect(messages).toEqual(['first', 'second']);
+  });
+
+  test('caps the in-memory queue, dropping oldest lines first', async ({ expect }) => {
+    store = new IdbLogStore({ dbName, flushInterval: 60_000, flushBatchSize: 1_000, maxQueueLines: 5 });
+    for (let i = 0; i < 12; i++) {
+      store.processor(fakeConfig, makeEntry(LogLevel.INFO, `msg-${i}`));
+    }
+    await store.flush();
+    const messages = (await store.export())
+      .split('\n')
+      .filter(Boolean)
+      .map((line) => JSON.parse(line).m);
+    expect(messages).toEqual(['msg-7', 'msg-8', 'msg-9', 'msg-10', 'msg-11']);
   });
 
   test('clear removes all entries', async ({ expect }) => {

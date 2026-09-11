@@ -22,7 +22,8 @@ import {
   useDefaultValue,
   useTranslation,
 } from '@dxos/react-ui';
-import { AttentionGlyph, type AttentionGlyphProps, useAttention } from '@dxos/react-ui-attention';
+import { AttentionGlyph, type AttentionGlyphProps } from '@dxos/react-ui';
+import { useAttention } from '@dxos/react-ui-attention';
 import { Listbox } from '@dxos/react-ui-list';
 import { ComplexMap, hexToFallback } from '@dxos/util';
 

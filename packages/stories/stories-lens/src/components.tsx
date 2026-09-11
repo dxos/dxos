@@ -13,7 +13,7 @@ import { Form, type FormUpdateMeta, omitId } from '@dxos/react-ui-form';
 import { Syntax } from '@dxos/react-ui-syntax-highlighter';
 import { Task } from '@dxos/types';
 
-import { GTD_LENS_ID, GtdLens, GtdTask } from './gtd';
+import { GTD_LENS_ID, GtdLens, GtdTask } from './gtd.ts';
 
 //
 // Two interfaces over one object, plus an inspector showing where the data actually lands.
@@ -99,11 +99,12 @@ export const CanonicalTaskPanel = ({ task }: { task: Task.Task }) => {
       <Form.Root schema={TaskForm} values={snapshot} onValuesChanged={handleChange}>
         <Form.Viewport>
           <Form.Content>
-            <Form.Section
-              title='Task'
+            <Form.FieldSet
+              label='Task'
               description='The object as it is stored. This form is written against Task and nothing else.'
-            />
-            <Form.Layout template={CANONICAL_LAYOUT} />
+            >
+              <Form.Layout template={CANONICAL_LAYOUT} />
+            </Form.FieldSet>
           </Form.Content>
         </Form.Viewport>
       </Form.Root>
@@ -151,11 +152,12 @@ export const LensedGtdPanel = ({ task }: { task: Obj.Unknown }) => {
       <Form.Root schema={GtdForm} values={view} onValuesChanged={handleChange}>
         <Form.Viewport>
           <Form.Content>
-            <Form.Section
-              title='GTD task'
+            <Form.FieldSet
+              label='GTD task'
               description='The same object, a different shape. This form has never heard of Task.'
-            />
-            <Form.Layout template={LENSED_LAYOUT} />
+            >
+              <Form.Layout template={LENSED_LAYOUT} />
+            </Form.FieldSet>
           </Form.Content>
         </Form.Viewport>
       </Form.Root>

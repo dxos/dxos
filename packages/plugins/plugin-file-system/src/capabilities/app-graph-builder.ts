@@ -26,8 +26,8 @@ import { Position, isNonNullable } from '@dxos/util';
 import { meta } from '#meta';
 import { FileSystemCapabilities, FileSystemOperation } from '#types';
 
-import { findDirectoryById } from '../util';
-import type { FileSystemManager } from './state';
+import { findDirectoryById } from '../util.ts';
+import type { FileSystemManager } from './state/index.ts';
 
 const FILESYSTEM_TYPE = `${meta.profile.key}.workspace`;
 const GENERAL_TYPE = `${meta.profile.key}.general`;

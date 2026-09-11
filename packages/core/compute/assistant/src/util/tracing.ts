@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
 import * as Trace from '@dxos/compute/Trace';
@@ -58,3 +59,70 @@ export const McpServerError = Trace.EventType('assistant.mcpServerError', {
   }),
   isEphemeral: true,
 });
+
+/**
+ * Stage a request has reached, in the order a turn passes through them.
+ *
+ * The reader waits through the setup stages before the first token arrives, and that wait is
+ * dominated by whichever one is slow for their setup (a cold MCP server, a summarization pass over a
+ * long feed), so each is named rather than folded into a single "working" state. The stages past
+ * setup (`generating`, `calling-tool`) keep the line alive for the rest of the turn: an agentic turn
+ * spends most of its time in tool calls, where a cleared line reads as a finished request.
+ */
+export const RequestPhaseName = Schema.Literals([
+  /** Client-side: the agent process is being spawned or attached. Never emitted by the agent itself. */
+  'starting',
+  /** The turn fiber has begun; nothing has been loaded yet. */
+  'preparing',
+  'loading-history',
+  'summarizing',
+  'connecting-mcp',
+  'building-toolkit',
+  'encoding-prompt',
+  'contacting-provider',
+  /**
+   * The model is streaming its reply. Derived client-side from the arriving blocks rather than
+   * emitted by the agent: a write from inside the streaming pipeline adds a yield between parsing a
+   * block and submitting it, which is observable in what the tools of that turn then see.
+   */
+  'generating',
+  /** A tool the model called is executing; `detail` carries the tool's name. */
+  'calling-tool',
+  /**
+   * The turn is over and the process is resident only to fire a pending alarm. Reported so the line
+   * stops naming the stage the last turn ended in, which reads as a request that is still working.
+   */
+  'sleeping',
+]);
+export type RequestPhaseName = Schema.Schema.Type<typeof RequestPhaseName>;
+
+/**
+ * Setup stage a request has reached, emitted as the agent enters it.
+ *
+ * Ephemeral: this is progress for a wait that is over by the time anyone could read it back, and the
+ * feed already records the turn's outcome. The UI shows the latest phase until the turn settles.
+ */
+export const RequestPhase = Trace.EventType('assistant.requestPhase', {
+  schema: Schema.Struct({
+    phase: RequestPhaseName,
+
+    /**
+     * 1-based attempt at the phase. Only `contacting-provider` re-attempts (a request the provider
+     * rejected for permissions that have not propagated yet), and only there does a value above 1
+     * mean anything to the reader.
+     */
+    attempt: Schema.optional(Schema.Number),
+
+    /** Phase-specific label, e.g. the number of MCP servers being contacted. */
+    detail: Schema.optional(Schema.String),
+  }),
+  isEphemeral: true,
+});
+
+/**
+ * Emit the setup stage the request has reached.
+ */
+export const emitRequestPhase = (
+  phase: RequestPhaseName,
+  opts: { attempt?: number; detail?: string } = {},
+): Effect.Effect<void, never, Trace.TraceService> => Trace.write(RequestPhase, { phase, ...opts });

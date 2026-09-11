@@ -15,8 +15,8 @@ import { Form, type FormFieldMap, createSelectField } from '@dxos/react-ui-form'
 import { meta } from '#meta';
 import { Assistant, AssistantCapabilities, Ollama } from '#types';
 
-import { presetsForProvider, resolveProvider } from '../../processor';
-import { OllamaModels } from './OllamaModels';
+import { presetsForProvider, resolveProvider } from '../../processor/index.ts';
+import { OllamaModels } from './OllamaModels.tsx';
 
 export type AssistantSettingsProps = AppSurface.SettingsProps<Assistant.Settings>;
 
@@ -79,9 +79,9 @@ export const AssistantSettings = ({ settings, onSettingsChange }: AssistantSetti
     >
       <Form.Viewport scroll>
         <Form.Content>
-          <Form.Section title={meta.profile.name ?? meta.profile.key}>
-            <Form.FieldSet fieldMap={fieldMap} />
-          </Form.Section>
+          <Form.FieldSet label={meta.profile.name ?? meta.profile.key}>
+            <Form.Fields fieldMap={fieldMap} />
+          </Form.FieldSet>
           <OllamaModels />
         </Form.Content>
       </Form.Viewport>

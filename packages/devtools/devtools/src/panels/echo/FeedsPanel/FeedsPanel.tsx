@@ -7,8 +7,9 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { generateName } from '@dxos/display-name';
 import { Format } from '@dxos/echo/Format';
 import { type PublicKey } from '@dxos/keys';
-import { type Contact } from '@dxos/protocols/proto/dxos/client/services';
-import { type SubscribeToFeedBlocksResponse } from '@dxos/protocols/proto/dxos/devtools/host';
+import { requirePublicKey, toPublicKey } from '@dxos/protocols/buf';
+import { type Contact } from '@dxos/protocols/buf/dxos/client/services_pb';
+import { type SubscribeToFeedBlocksResponse_Block } from '@dxos/protocols/buf/dxos/devtools/host_pb';
 import { type DevtoolsHost } from '@dxos/protocols/rpc';
 import { type Client, useClient } from '@dxos/react-client';
 import { useDevtools, useStream } from '@dxos/react-client/devtools';
@@ -17,11 +18,12 @@ import { useContacts } from '@dxos/react-client/halo';
 import { IconButton, Panel, Toolbar } from '@dxos/react-ui';
 import { type TablePropertyDefinition } from '@dxos/react-ui-table';
 
-import { Bitbar, MasterDetailTable, PublicKeySelector } from '../../../components';
-import { DataSpaceSelector } from '../../../containers';
-import { useDevtoolsDispatch, useDevtoolsState, useFeedMessages } from '../../../hooks';
+import { Bitbar, MasterDetailTable, PublicKeySelector } from '../../../components/index.ts';
+import { DataSpaceSelector } from '../../../containers/index.ts';
+import { useDevtoolsDispatch, useDevtoolsState, useFeedMessages } from '../../../hooks/index.ts';
+import { assertionTypeName } from '../../../util/index.ts';
 
-type FeedTableRow = SubscribeToFeedBlocksResponse.Block & {
+type FeedTableRow = SubscribeToFeedBlocksResponse_Block & {
   type: string;
   issuer: string;
 };
@@ -40,7 +42,7 @@ export const FeedsPanel = (props: { space?: Space }) => {
   const feedKeys = [
     ...(space?.internal.data.pipeline?.controlFeeds ?? []),
     ...(space?.internal.data.pipeline?.dataFeeds ?? []),
-  ];
+  ].map(requirePublicKey);
   const { feeds } = useStream(() => devtoolsHost.subscribeToFeeds({ feedKeys }), {}, [refreshCount]);
   const feed = feeds?.find((feed) => feedKey && feed.feedKey.equals(feedKey));
   const tableRows = mapToRows(client, space?.key, contacts, feedMessages);
@@ -92,7 +94,7 @@ export const FeedsPanel = (props: { space?: Space }) => {
 
   const tableData = useMemo(() => {
     return tableRows.map((row) => ({
-      id: `${row.feedKey.toHex()}-${row.seq}`,
+      id: `${requirePublicKey(row.feedKey).toHex()}-${row.seq}`,
       ...row,
     }));
   }, [tableRows]);
@@ -127,12 +129,17 @@ const mapToRows = (
   client: Client,
   spaceKey: PublicKey | undefined,
   contacts: Contact[],
-  blocks: SubscribeToFeedBlocksResponse.Block[],
+  blocks: SubscribeToFeedBlocksResponse_Block[],
 ): FeedTableRow[] => {
   return blocks.map((block) => {
-    const credential = block.data.payload.credential?.credential;
-    const type = (credential?.subject?.assertion?.['@type'] as string) ?? 'unknown_type';
-    const issuerKeys = credential ? { identity: credential.issuer, device: credential.proof!.signer } : undefined;
+    // `FeedMessage.Payload` is a oneof, so the credential arrives as a tagged case rather than a
+    // field that is simply absent.
+    const payload = block.data?.payload?.payload;
+    const credential = payload?.case === 'credential' ? payload.value.credential : undefined;
+    const type = assertionTypeName(credential);
+    const issuer = toPublicKey(credential?.issuer);
+    const signer = toPublicKey(credential?.proof?.signer);
+    const issuerKeys = issuer && signer ? { identity: issuer, device: signer } : undefined;
     return {
       type,
       issuer: issuerKeys ? formatIdentity(client, contacts, issuerKeys) : 'unknown',
@@ -150,10 +157,13 @@ const formatIdentity = (
     return 'unknown';
   }
   let identityName;
-  if (client.halo.identity.get()?.identityKey?.equals(identityInfo.identity)) {
-    identityName = client.halo.device?.deviceKey.equals(identityInfo.device) ? 'this device' : 'my device';
+  if (toPublicKey(client.halo.identity.get()?.identityKey)?.equals(identityInfo.identity)) {
+    identityName = toPublicKey(client.halo.device?.deviceKey)?.equals(identityInfo.device)
+      ? 'this device'
+      : 'my device';
   } else {
-    const ownerContact = identityInfo && contacts.find((contact) => contact.identityKey.equals(identityInfo.identity));
+    const ownerContact =
+      identityInfo && contacts.find((contact) => toPublicKey(contact.identityKey)?.equals(identityInfo.identity));
     identityName = ownerContact?.profile?.displayName ?? generateName(identityInfo.identity.toHex());
   }
   return `${identityName} (${identityInfo.device.truncate()})`;

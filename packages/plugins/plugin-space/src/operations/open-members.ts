@@ -12,7 +12,9 @@ const handler: Operation.WithHandler<typeof SpaceOperation.OpenMembers> = SpaceO
   Operation.withHandler(
     Effect.fnUntraced(function* (input) {
       yield* Operation.invoke(LayoutOperation.Open, {
-        subject: [GraphPath.getSpacePath(input.space.id, 'settings')],
+        // The members panel node segment is `members`, nested under the space settings section
+        // (`settings`). Opening the section alone addresses a node with nothing to render.
+        subject: [GraphPath.getSpacePath(input.space.id, 'settings', 'members')],
         workspace: GraphPath.getSpacePath(input.space.id),
       });
     }),

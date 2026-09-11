@@ -8,13 +8,13 @@ import React, { type MouseEvent, type RefObject, useCallback, useRef, useState }
 import { defaultRowSize } from '@dxos/lit-grid';
 import { type DxGridPlaneCells } from '@dxos/lit-grid';
 import { random } from '@dxos/random';
-import { DropdownMenu } from '@dxos/react-ui';
+import { Menu } from '@dxos/react-ui';
 import { toPlaneCellIndex } from '@dxos/react-ui-grid';
 import { Combobox, type ComboboxRootProps } from '@dxos/react-ui-list';
 import { useSearchListResults } from '@dxos/react-ui-search';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { Grid, type GridContentProps, type GridEditing, type GridRootProps } from './Grid';
+import { Grid, type GridContentProps, type GridEditing, type GridRootProps } from './Grid.tsx';
 
 const storybookItems = random.helpers.uniqueArray(random.commerce.productName, 16);
 
@@ -72,13 +72,13 @@ const GridStory = ({ initialCells, ...props }: GridStoryArgs) => {
       </Grid.Root>
 
       {/* Menu */}
-      <DropdownMenu.Root open={menuOpen} onOpenChange={setMenuOpen}>
-        <DropdownMenu.VirtualTrigger virtualRef={triggerRef} />
-        <DropdownMenu.Content>
-          <DropdownMenu.Item onClick={() => console.log('[Click on dropdown menu item]')}>Hello</DropdownMenu.Item>
-          <DropdownMenu.Arrow />
-        </DropdownMenu.Content>
-      </DropdownMenu.Root>
+      <Menu.Root open={menuOpen} onOpenChange={setMenuOpen}>
+        <Menu.VirtualTrigger virtualRef={triggerRef} />
+        <Menu.Content>
+          <Menu.Item onClick={() => console.log('[Click on dropdown menu item]')}>Hello</Menu.Item>
+          <Menu.Arrow />
+        </Menu.Content>
+      </Menu.Root>
 
       {/* Multiselect */}
       <Combobox.Root
@@ -107,7 +107,6 @@ const ComboboxContentWithFiltering = () => {
           <Combobox.Item key={value} value={value} label={value} />
         ))}
       </Combobox.List>
-      <Combobox.Arrow />
     </Combobox.Content>
   );
 };
@@ -223,7 +222,7 @@ export const Calendar: Story = {
             // TODO(burdon): Formatting changes when cell is selected.
             cells[toPlaneCellIndex({ col, row })] = {
               readonly: true,
-              accessoryHtml: '<div class="flex h-full w-full justify-center items-center overflow-hidden">0</div>',
+              accessoryHtml: '<div class="flex dx-fill justify-center items-center overflow-hidden">0</div>',
               className: '',
             };
           }

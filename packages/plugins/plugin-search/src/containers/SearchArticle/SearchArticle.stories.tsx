@@ -22,7 +22,7 @@ import { Organization, Person } from '@dxos/types';
 import { SearchContextProvider } from '#hooks';
 import { translations } from '#translations';
 
-import { SearchArticle } from './SearchArticle';
+import { SearchArticle } from './SearchArticle.tsx';
 
 random.seed(0);
 

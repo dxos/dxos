@@ -7,7 +7,7 @@ import { describe, expect, test } from 'vitest';
 import { EncodedReference, type EntityStructure } from '@dxos/echo-protocol';
 import { EID, EntityId, SpaceId } from '@dxos/keys';
 
-import { DeletionResolver } from './deletion';
+import { DeletionResolver } from './deletion.ts';
 
 describe('DeletionResolver', () => {
   test('a chain past the depth bound does not poison verdicts within it', () => {

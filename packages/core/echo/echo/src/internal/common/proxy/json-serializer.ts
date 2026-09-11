@@ -6,7 +6,7 @@ import { invariant } from '@dxos/invariant';
 import { EID } from '@dxos/keys';
 import { deepMapValues, encodeUint8ArrayToJson } from '@dxos/util';
 
-import { Ref } from '../../Ref';
+import { Ref } from '../../Ref/index.ts';
 import {
   ATTR_RELATION_SOURCE,
   ATTR_RELATION_TARGET,
@@ -16,9 +16,9 @@ import {
   RelationTargetDXNId,
   SelfURIId,
   TypeId,
-} from '../types';
-import { ATTR_META, type EntityMeta } from '../types/meta';
-import { MetaId } from '../types/model-symbols';
+} from '../types/index.ts';
+import { ATTR_META, type EntityMeta } from '../types/meta.ts';
+import { ATTR_DELETED, MetaId, ObjectDeletedId } from '../types/model-symbols.ts';
 
 /**
  * Attaches a toJSON method to the object for typed serialization.
@@ -56,6 +56,12 @@ export const typedJsonSerializer = function (this: any) {
 
   if (this[SelfURIId]) {
     result[ATTR_SELF_URI] = this[SelfURIId];
+  }
+
+  // Emitted only when set, mirroring `objectFromJSON`'s `=== true` read: without it a tombstone
+  // snapshot round-tripped through JSON came back as a live object.
+  if (this[ObjectDeletedId]) {
+    result[ATTR_DELETED] = true;
   }
 
   if (this[RelationSourceDXNId]) {

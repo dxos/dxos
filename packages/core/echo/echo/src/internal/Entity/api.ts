@@ -6,10 +6,10 @@ import { invariant } from '@dxos/invariant';
 import { DXN, EID, type SpaceId, URI } from '@dxos/keys';
 import { assumeType } from '@dxos/util';
 
-import type { AnyEntity } from '../common/types';
-import { MetaId } from '../common/types/model-symbols';
-import { type InternalObjectProps, ObjectBranchId, ObjectDatabaseId } from './model';
-import { getObjectEchoUri } from './util';
+import type { AnyEntity } from '../common/types/index.ts';
+import { MetaId } from '../common/types/model-symbols.ts';
+import { type InternalObjectProps, ObjectBranchId, ObjectDatabaseId } from './model.ts';
+import { getObjectEchoUri } from './util.ts';
 
 /**
  * Controls the URI form returned by `getUri` and the public `*.getURI` helpers.

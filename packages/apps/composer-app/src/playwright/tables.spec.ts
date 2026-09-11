@@ -6,8 +6,8 @@ import { expect, test } from '@playwright/test';
 
 import { random } from '@dxos/random';
 
-import { AppManager } from './app-manager';
-import { Table } from './plugins';
+import { AppManager } from './app-manager.ts';
+import { Table } from './plugins/index.ts';
 
 random.seed(0);
 
@@ -22,7 +22,7 @@ test.describe.skip('Table tests', () => {
   });
 
   test.afterEach(async () => {
-    await host.closePage();
+    await host.close();
   });
 
   test('create', async () => {

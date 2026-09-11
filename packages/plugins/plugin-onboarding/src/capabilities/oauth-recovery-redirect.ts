@@ -16,13 +16,15 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import { ClientOperation } from '@dxos/plugin-client/ClientOperation';
+import { buf } from '@dxos/protocols/buf';
+import { RecoverIdentityRequestSchema } from '@dxos/protocols/buf/dxos/client/services_pb';
 
-import { OnboardingOperation } from '../operations';
+import { OnboardingOperation } from '../operations/index.ts';
 import {
   OAUTH_RECOVERY_REDIRECT_PATH,
   type OAuthRecoveryPendingSnapshot,
   oauthRecoveryPendingKey,
-} from '../operations/shared';
+} from '../operations/shared.ts';
 
 const RECOVER_IDENTITY_RPC_TIMEOUT = 30_000;
 
@@ -265,7 +267,10 @@ const finalizeRedirect = Effect.fnUntraced(function* (
     invariant(identityService, 'IdentityService not available');
     const recoveryProof = params.recoveryProof;
     yield* Effect.tryPromise(() =>
-      identityService.recoverIdentity({ recoveryProof }, { timeout: RECOVER_IDENTITY_RPC_TIMEOUT }),
+      identityService.recoverIdentity(
+        buf.create(RecoverIdentityRequestSchema, { request: { case: 'recoveryProof', value: recoveryProof } }),
+        { timeout: RECOVER_IDENTITY_RPC_TIMEOUT },
+      ),
     );
     yield* invoker.schedule(ClientOperation.CreateAgent);
     yield* closeDialog;

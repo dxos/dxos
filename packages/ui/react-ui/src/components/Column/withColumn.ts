@@ -31,7 +31,7 @@
  *   grid-cols-subgrid`). It reaches grandchildren too, so a wrapper element (a link, a button)
  *   doesn't strand its content in column 1.
  * - **`propagate()`** is the only one that lets a *descendant* address the gutters: it spans the
- *   element across all tracks and re-exposes them via subgrid, with `.dx-container` exempted so a
+ *   element across all tracks and re-exposes them via subgrid, with `dx-scroll-boundary` exempted so a
  *   ScrollArea can span full width and keep its scrollbar in the gutter. `Dialog.Body` depends on
  *   this — replacing it with `center()` confines the body's ScrollArea to the content track and
  *   pulls the scrollbar 32px inboard.
@@ -52,10 +52,11 @@ export const withColumn = {
 
   /**
    * Propagates the Column grid to children via subgrid. No-op outside Column.
-   * Direct children default to center column unless they are a dx-container (ScrollArea).
+   * Direct children default to center column unless they are marked `dx-scroll-boundary`
+   * (ScrollArea.Root), which spans the full width so its scrollbar sits in the gutter.
    */
   propagate: () =>
-    '[.dx-column-root_&]:col-span-full [.dx-column-root_&]:grid [.dx-column-root_&]:grid-cols-subgrid [.dx-column-root_&]:[&>*:not(.dx-container)]:[grid-column:var(--dx-col,auto)]',
+    '[.dx-column-root_&]:col-span-full [.dx-column-root_&]:grid [.dx-column-root_&]:grid-cols-subgrid [.dx-column-root_&]:[&>*:not(.dx-scroll-boundary)]:[grid-column:var(--dx-col,auto)]',
 
   /**
    * Resets --dx-col after consuming --gutter. Applied by ScrollArea.Viewport.

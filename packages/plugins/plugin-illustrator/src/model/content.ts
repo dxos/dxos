@@ -11,7 +11,7 @@
 
 import { invariant } from '@dxos/invariant';
 
-import type * as Scene from './scene';
+import type * as Scene from './scene.ts';
 
 /** Opaque map of record id → renderer record. */
 export type ContentMap = Record<string, any>;

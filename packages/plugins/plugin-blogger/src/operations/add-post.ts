@@ -11,7 +11,7 @@ import { invariant } from '@dxos/invariant';
 
 import { Blog } from '#types';
 
-import { AddPost } from './definitions';
+import { AddPost } from './definitions.ts';
 
 const handler: Operation.WithHandler<typeof AddPost> = AddPost.pipe(
   Operation.withHandler(
@@ -29,7 +29,8 @@ const handler: Operation.WithHandler<typeof AddPost> = AddPost.pipe(
       }).pipe(Effect.provide(Database.layer(db)));
 
       Obj.update(publication, (publication) => {
-        publication.posts = [...(publication.posts ?? []), Ref.make(post)];
+        publication.posts ??= [];
+        publication.posts.push(Ref.make(post));
       });
 
       return Ref.make(post);

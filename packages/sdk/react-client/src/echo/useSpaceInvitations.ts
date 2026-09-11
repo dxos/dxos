@@ -9,8 +9,8 @@ import { type PublicKey } from '@dxos/client';
 import { type SpaceId } from '@dxos/keys';
 import { useMulticastObservable } from '@dxos/react-hooks';
 
-import { type CancellableInvitationObservable, useInvitationStatus } from '../invitations';
-import { useSpace } from './useSpaces';
+import { type CancellableInvitationObservable, useInvitationStatus } from '../invitations/index.ts';
+import { useSpace } from './useSpaces.ts';
 
 // TODO(wittjosiah): Currently unable to remove `PublicKey` from this api.
 //  When initially joining a space that is all that is returned.

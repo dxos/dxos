@@ -2,6 +2,8 @@
 // Copyright 2020 DXOS.org
 //
 
+import { type MessageInitShape, create } from '@bufbuild/protobuf';
+import { AnySchema, timestampFromDate } from '@bufbuild/protobuf/wkt';
 import * as Effect from 'effect/Effect';
 import * as EffectStream from 'effect/Stream';
 
@@ -9,9 +11,12 @@ import { Context } from '@dxos/context';
 import { EffectEx } from '@dxos/effect';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { type SignalManager, type UnsubscribeCallback } from '@dxos/messaging';
+import { type PeerInfo, type SignalManager, type UnsubscribeCallback } from '@dxos/messaging';
 import { type SwarmNetworkManager } from '@dxos/network-manager';
-import { type SignalResponse } from '@dxos/protocols/proto/dxos/devtools/host';
+import { requirePublicKey, toDate } from '@dxos/protocols/buf';
+import { type SignalResponse, SignalResponseSchema } from '@dxos/protocols/buf/dxos/devtools/host_pb';
+import { type ConnectionInfo, type SwarmInfo } from '@dxos/protocols/buf/dxos/devtools/swarm_pb';
+import { SwarmEventSchema } from '@dxos/protocols/buf/dxos/mesh/signal_pb';
 import { type DevtoolsHost } from '@dxos/protocols/rpc';
 
 export const subscribeToNetworkStatus = ({
@@ -54,16 +59,24 @@ export const subscribeToSignal = ({
         .subscribeMessages({
           peer,
           onMessage: (message) => {
-            emit.single({
-              message: {
-                author: PublicKey.from(message.author.peerKey).asUint8Array(),
-                recipient: message.recipient
-                  ? PublicKey.from(message.recipient.peerKey).asUint8Array()
-                  : new Uint8Array(),
-                payload: message.payload,
-              },
-              receivedAt: new Date(),
-            });
+            emit.single(
+              create(SignalResponseSchema, {
+                data: {
+                  case: 'message',
+                  value: {
+                    author: peerKeyBytes(message.author),
+                    recipient: peerKeyBytes(message.recipient),
+                    // Messaging keeps payloads packed and dispatches on `typeUrl`, so this is a
+                    // field map — the payload is never resolved here.
+                    payload: create(AnySchema, {
+                      typeUrl: message.payload?.typeUrl,
+                      value: message.payload?.value,
+                    }),
+                  },
+                },
+                receivedAt: timestampFromDate(new Date()),
+              }),
+            );
           },
         })
         .then((unsub) => {
@@ -77,18 +90,26 @@ export const subscribeToSignal = ({
     }
 
     signalManager.swarmEvent.on(ctx, (swarmEvent) => {
-      emit.single({
-        swarmEvent: swarmEvent.peerAvailable
+      const event: MessageInitShape<typeof SwarmEventSchema>['event'] =
+        swarmEvent.event.case === 'peerAvailable'
           ? {
-              peerAvailable: {
-                peer: PublicKey.from(swarmEvent.peerAvailable.peer.peerKey).asUint8Array(),
-                since: swarmEvent.peerAvailable.since,
+              case: 'peerAvailable',
+              value: {
+                peer: peerKeyBytes(swarmEvent.event.value.peer),
+                since: swarmEvent.event.value.since,
               },
             }
-          : { peerLeft: { peer: PublicKey.from(swarmEvent.peerLeft!.peer.peerKey).asUint8Array() } },
-        topic: swarmEvent.topic.asUint8Array(),
-        receivedAt: new Date(),
-      });
+          : swarmEvent.event.case === 'peerLeft'
+            ? { case: 'peerLeft', value: { peer: peerKeyBytes(swarmEvent.event.value.peer) } }
+            : { case: undefined };
+
+      emit.single(
+        create(SignalResponseSchema, {
+          data: { case: 'swarmEvent', value: create(SwarmEventSchema, { event }) },
+          topic: swarmEvent.topic?.data,
+          receivedAt: timestampFromDate(new Date()),
+        }),
+      );
     });
 
     return Effect.promise(async () => {
@@ -131,7 +152,7 @@ export const subscribeToSwarmInfo = ({
     const update = () => {
       const info = networkManager.connectionLog?.swarms;
       if (info) {
-        emit.single({ data: info });
+        emit.single({ data: info.map(toSwarmInfo) });
       }
     };
     const unsubscribe = networkManager.connectionLog?.update.on(update);
@@ -156,3 +177,41 @@ export const getNetworkPeers = (
     })),
   };
 };
+
+/** The peer's key as the raw bytes the devtools swarm event carries. */
+const peerKeyBytes = (peer: PeerInfo | undefined): Uint8Array =>
+  peer ? PublicKey.from(peer.peerKey).asUint8Array() : new Uint8Array();
+
+/**
+ * Reads the connection log's message as the devtools RPC shape.
+ *
+ * The log holds the generated message; the devtools panels are keyed by the domain `PublicKey`, so
+ * the keys and timestamps convert at this one boundary.
+ */
+const toSwarmInfo = (swarm: SwarmInfo): DevtoolsHost.SwarmInfo => ({
+  id: requirePublicKey(swarm.id),
+  topic: requirePublicKey(swarm.topic),
+  label: swarm.label,
+  isActive: swarm.isActive,
+  connections: swarm.connections.map(toConnectionInfo),
+});
+
+const toConnectionInfo = (connection: ConnectionInfo): DevtoolsHost.ConnectionInfo => ({
+  state: connection.state,
+  sessionId: requirePublicKey(connection.sessionId),
+  remotePeerId: requirePublicKey(connection.remotePeerId),
+  transport: connection.transport,
+  protocolExtensions: connection.protocolExtensions,
+  events: connection.events.map((event) => ({ type: event.type, newState: event.newState, error: event.error })),
+  streams: connection.streams,
+  closeReason: connection.closeReason,
+  identity: connection.identity,
+  readBufferSize: connection.readBufferSize,
+  writeBufferSize: connection.writeBufferSize,
+  lastUpdate: toDate(connection.lastUpdate),
+  transportDetails: connection.transportDetails,
+  transportBytesSent: connection.transportBytesSent,
+  transportBytesReceived: connection.transportBytesReceived,
+  transportPacketsSent: connection.transportPacketsSent,
+  transportPacketsReceived: connection.transportPacketsReceived,
+});

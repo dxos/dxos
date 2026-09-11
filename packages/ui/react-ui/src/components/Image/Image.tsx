@@ -94,7 +94,7 @@ export const Image = ({
 
       {/* Background gradient overlay for smooth transition. */}
       <div
-        className='absolute inset-0 pointer-events-none'
+        className='dx-fullscreen pointer-events-none'
         style={{
           background: dominantColor
             ? `radial-gradient(circle at center, transparent 30%, ${dominantColor} 100%)`
@@ -112,7 +112,7 @@ export const Image = ({
         onLoad={handleImageLoad}
         className={mx(
           'z-10 transition-opacity duration-500',
-          fit === 'cover' ? 'w-full h-full object-cover' : 'object-contain',
+          fit === 'cover' ? 'dx-fill object-cover' : 'object-contain',
         )}
         style={{
           opacity: imageLoaded ? 1 : 0,

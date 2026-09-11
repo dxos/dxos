@@ -18,7 +18,7 @@ import { EffectEx } from '@dxos/effect';
 
 import { Artifact, GenerationService, StudioCapabilities, Variant } from '#types';
 
-import generateHandler from './generate';
+import generateHandler from './generate.ts';
 
 const IDEOGRAM_SOURCE = 'ideogram.ai';
 
@@ -212,8 +212,7 @@ describe('generate', () => {
   test('async provider: resumes a pending variant (awaitResult only, no re-enqueue)', async ({ expect }) => {
     const artifact = addArtifact('video');
     // Simulate an in-flight pending variant owned by the artifact.
-    const pending = db.add(Variant.make({ jobId: 'job-123', config: {} }));
-    Obj.setParent(pending, artifact);
+    const pending = db.add(Variant.make({ [Obj.Parent]: artifact, jobId: 'job-123', config: {} }));
     Obj.update(artifact, (artifact) => {
       artifact.variants = [Ref.make(pending)];
     });

@@ -6,11 +6,11 @@ import React from 'react';
 
 import { mx, osTranslations } from '@dxos/ui-theme';
 
-import { useTranslation } from '../../primitives';
-import { Button, type ButtonProps, IconButton } from '../Button';
-import { Icon, type IconProps } from '../Icon';
-import { type TooltipScopedProps, useTooltipContext } from '../Tooltip';
-import { useClipboard } from './ClipboardContext';
+import { useTranslation } from '../../providers/index.ts';
+import { Button, type ButtonProps, IconButton } from '../Button/index.ts';
+import { Icon, type IconProps } from '../Icon/index.ts';
+import { useTooltipContext } from '../Tooltip/index.ts';
+import { useClipboard } from './ClipboardContext.ts';
 
 export type CopyButtonProps = ButtonProps &
   Pick<IconProps, 'size'> & {
@@ -46,19 +46,12 @@ type CopyButtonIconOnlyProps = CopyButtonProps & {
   label?: string;
 };
 
-export const CopyButtonIconOnly = ({
-  __scopeTooltip,
-  value,
-  classNames,
-  size,
-  variant,
-  ...props
-}: TooltipScopedProps<CopyButtonIconOnlyProps>) => {
+export const CopyButtonIconOnly = ({ value, classNames, size, variant, ...props }: CopyButtonIconOnlyProps) => {
   const { t } = useTranslation(osTranslations);
   const { textValue, setTextValue } = useClipboard();
   const isCopied = textValue === value;
   const label = isCopied ? t('copy-success.label') : (props.label ?? t('copy.label'));
-  const { onOpen } = useTooltipContext('CopyButton', __scopeTooltip);
+  const { onOpen } = useTooltipContext('CopyButton');
   return (
     <IconButton
       iconOnly

@@ -10,8 +10,8 @@ import { withAttention } from '@dxos/react-ui-attention/testing';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { deleteItem, hashtag, join, listItemToString, outliner, treeFacet } from '@dxos/ui-editor';
 
-import { type EditorController, type EditorMenuGroup, EditorMenuProvider } from '../components';
-import { EditorStory, EditorStoryArgs, generateList } from './components';
+import { type EditorController, type EditorMenuGroup, EditorMenuProvider } from '../components/index.ts';
+import { EditorStory, type EditorStoryArgs, generateList } from './testing/index.ts';
 
 type StoryArgs = EditorStoryArgs;
 
@@ -119,6 +119,28 @@ export const Nested: Story = {
       '    - [ ] E',
       '    - [ ] F',
       '- [ ] G',
+    ),
+  },
+};
+
+/** Prose and headings around and between lists: islands the outline parses as separate lists. */
+export const Mixed: Story = {
+  args: {
+    debug: 'raw+tree',
+    text: join(
+      //
+      '- [ ] Draft the plan',
+      '- [ ] Review it',
+      '',
+      '## Notes',
+      '',
+      'Plain markdown between the lists: **bold**, a [link](https://dxos.org), and `code`.',
+      '',
+      '- [ ] Ship',
+      '  - [ ] Tag the release',
+      '',
+      'Trailing paragraph.',
+      '',
     ),
   },
 };

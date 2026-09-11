@@ -7,9 +7,17 @@ import * as Rpc from 'effect/unstable/rpc/Rpc';
 import type * as RpcClient from 'effect/unstable/rpc/RpcClient';
 import * as RpcGroup from 'effect/unstable/rpc/RpcGroup';
 
+import {
+  GetSpaceSnapshotResponseSchema,
+  SaveSpaceSnapshotResponseSchema,
+  SignalResponseSchema,
+  SubscribeToFeedBlocksResponseSchema,
+  SubscribeToMetadataResponseSchema,
+  SubscribeToSpacesResponseSchema,
+} from './buf/proto/gen/dxos/devtools/host_pb.ts';
 import { SignedMessageSchema } from './buf/proto/gen/dxos/halo/signed_pb.ts';
-import { SignalState } from './proto/gen/dxos/mesh/signal.ts';
-import { bufMessage, protoMessage, serviceError } from './service-rpc.ts';
+import { SignalState } from './buf/proto/gen/dxos/mesh/signal_pb.ts';
+import { bufMessage, serviceError } from './service-rpc.ts';
 import { mutableArray, protoTimestamp, publicKey } from './service-schemas.ts';
 
 //
@@ -147,10 +155,6 @@ export const GetSpaceSnapshotRequest = Schema.Struct({
   spaceKey: publicKey,
 });
 export interface GetSpaceSnapshotRequest extends Schema.Schema.Type<typeof GetSpaceSnapshotRequest> {}
-
-// The space snapshot subgraph (`SpaceSnapshot` / `EchoSnapshot` / `EchoObject` / …) embeds the
-// `Timeframe` proto substitution (a class with a `frames()` accessor). That class cannot be modeled
-// as an inline Effect struct, so the snapshot responses stay protobuf-encoded (`protoMessage`).
 
 export const SaveSpaceSnapshotRequest = Schema.Struct({
   spaceKey: publicKey,
@@ -336,7 +340,7 @@ export class Rpcs extends RpcGroup.make(
   }),
   Rpc.make('subscribeToSpaces', {
     payload: SubscribeToSpacesRequest,
-    success: protoMessage('dxos.devtools.host.SubscribeToSpacesResponse'),
+    success: bufMessage(SubscribeToSpacesResponseSchema),
     error: serviceError,
     stream: true,
   }),
@@ -354,23 +358,23 @@ export class Rpcs extends RpcGroup.make(
   }),
   Rpc.make('subscribeToFeedBlocks', {
     payload: SubscribeToFeedBlocksRequest,
-    success: protoMessage('dxos.devtools.host.SubscribeToFeedBlocksResponse'),
+    success: bufMessage(SubscribeToFeedBlocksResponseSchema),
     error: serviceError,
     stream: true,
   }),
   Rpc.make('subscribeToMetadata', {
-    success: protoMessage('dxos.devtools.host.SubscribeToMetadataResponse'),
+    success: bufMessage(SubscribeToMetadataResponseSchema),
     error: serviceError,
     stream: true,
   }),
   Rpc.make('getSpaceSnapshot', {
     payload: GetSpaceSnapshotRequest,
-    success: protoMessage('dxos.devtools.host.GetSpaceSnapshotResponse'),
+    success: bufMessage(GetSpaceSnapshotResponseSchema),
     error: serviceError,
   }),
   Rpc.make('saveSpaceSnapshot', {
     payload: SaveSpaceSnapshotRequest,
-    success: protoMessage('dxos.devtools.host.SaveSpaceSnapshotResponse'),
+    success: bufMessage(SaveSpaceSnapshotResponseSchema),
     error: serviceError,
   }),
   Rpc.make('clearSnapshots', {
@@ -393,7 +397,7 @@ export class Rpcs extends RpcGroup.make(
     stream: true,
   }),
   Rpc.make('subscribeToSignal', {
-    success: protoMessage('dxos.devtools.host.SignalResponse'),
+    success: bufMessage(SignalResponseSchema),
     error: serviceError,
     stream: true,
   }),

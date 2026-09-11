@@ -8,7 +8,7 @@ import React from 'react';
 import { useConfig } from '@dxos/react-client';
 import { Button, Dialog, Link, Trans, useTranslation } from '@dxos/react-ui';
 
-import { meta } from '../../meta';
+import { meta } from '../../meta.ts';
 
 // Keyed by edge host, including legacy names still present in stored configs and installed builds.
 const ENV_LABELS: Record<string, string> = {

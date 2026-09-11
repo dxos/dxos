@@ -6,7 +6,8 @@ import React, { useCallback, useRef } from 'react';
 
 import { useSpaceCallback } from '@dxos/app-framework/ui';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
-import { Agent, AgentSkillOperations } from '@dxos/assistant-toolkit';
+import { AgentSkillOperations } from '@dxos/assistant-toolkit';
+import * as Agent from '@dxos/assistant/Agent';
 import * as Operation from '@dxos/compute/Operation';
 import { Obj, Ref } from '@dxos/echo';
 import { log } from '@dxos/log';

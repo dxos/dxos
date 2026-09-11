@@ -2,11 +2,11 @@
 // Copyright 2026 DXOS.org
 //
 
-export * as Instructions from './Instructions';
-export * as Project from './Project';
-export * as Routine from './Routine';
-export * as Script from './Script';
-export * as Skill from './Skill';
-export * as Template from './Template';
-export * as Trigger from './Trigger';
-export * as TriggerEvent from './TriggerEvent';
+export * as Instructions from './Instructions.ts';
+export * as Project from './Project.ts';
+export * as Routine from './Routine.ts';
+export * as Script from './Script.ts';
+export * as Skill from './Skill.ts';
+export * as Template from './Template.ts';
+export * as Trigger from './Trigger.ts';
+export * as TriggerEvent from './TriggerEvent.ts';

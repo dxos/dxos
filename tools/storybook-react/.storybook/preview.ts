@@ -19,13 +19,12 @@ import './cubes.css';
 import { withThemeByClassName } from '@storybook/addon-themes';
 import { type Preview } from '@storybook/react-vite';
 
-import { setStoryErrorFallback } from '@dxos/app-framework/testing';
 import { StorybookErrorFallback } from '@dxos/storybook-addon-logger/StorybookErrorFallback';
 
 import { docsTheme } from './theme';
 
 // Restores the "Download logs" action on a crashed story.
-setStoryErrorFallback(StorybookErrorFallback);
+globalThis.__STORY_ERROR_FALLBACK__ = StorybookErrorFallback;
 
 /**
  * Configure Storybook rendering.

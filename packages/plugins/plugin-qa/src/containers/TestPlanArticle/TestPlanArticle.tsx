@@ -84,7 +84,7 @@ export const TestPlanArticle = ({ role, subject }: TestPlanArticleProps) => {
 
   return (
     <Panel.Root role={role}>
-      <Panel.Content classNames='dx-container flex flex-col gap-4 p-4' data-testid='qa.plan'>
+      <Panel.Content classNames='flex flex-col gap-4 p-4' data-testid='qa.plan'>
         <header className='flex items-center gap-2'>
           <Icon icon='ph--check-square-offset--regular' size={5} />
           <h1 className='grow text-lg'>{plan.name}</h1>

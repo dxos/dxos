@@ -10,7 +10,7 @@ import { Context } from '@dxos/context';
 import { Obj } from '@dxos/echo';
 import { FunctionsServiceClient } from '@dxos/edge-compute';
 
-import { QueryDeployedFunctions } from './definitions';
+import { QueryDeployedFunctions } from './definitions.ts';
 
 export default QueryDeployedFunctions.pipe(
   Operation.withHandler(

@@ -21,6 +21,6 @@
 //
 // Cards-of-search-results: see `SearchStack` in `@dxos/react-ui-mosaic`.
 
-export * from './components';
-export * from './types';
-export * from './util';
+export * from './components/index.ts';
+export * from './types/index.ts';
+export * from './util/index.ts';

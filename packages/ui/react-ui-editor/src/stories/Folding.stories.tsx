@@ -30,7 +30,7 @@ import {
   xmlFormatting,
 } from '@dxos/ui-editor';
 
-import { useTextEditor } from '../hooks';
+import { useTextEditor } from '../hooks/index.ts';
 
 const source = createTurnSource(PROMPT_ELEMENT);
 
@@ -99,7 +99,7 @@ const DefaultStory = ({ text }: StoryArgs) => {
         </Toolbar.Root>
       </Panel.Toolbar>
       <Panel.Content classNames='grid overflow-hidden'>
-        <div ref={parentRef} className='dx-expander' />
+        <div ref={parentRef} className='dx-expand' />
       </Panel.Content>
     </Panel.Root>
   );

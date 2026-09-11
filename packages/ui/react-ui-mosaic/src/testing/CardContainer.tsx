@@ -2,9 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
-import { useControllableState } from '@radix-ui/react-use-controllable-state';
 import React, { type PropsWithChildren } from 'react';
 
+import { useControllableState } from '@dxos/react-hooks';
 import { Card, Icon, Popover } from '@dxos/react-ui';
 import { ResizeHandle, type Size, resizeAttributes, sizeStyle } from '@dxos/react-ui-dnd';
 
@@ -102,7 +102,7 @@ export const IntrinsicCardContainer = ({
       style={sizeStyle(size, 'horizontal')}
       {...resizeAttributes}
     >
-      <div className='dx-container flex flex-col'>{children}</div>
+      <div className='dx-expand flex flex-col'>{children}</div>
       <ResizeHandle
         side='inline-end'
         fallbackSize={DEFAULT_BLOCK_SIZE}

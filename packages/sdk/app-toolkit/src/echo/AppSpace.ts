@@ -4,6 +4,7 @@
 
 // @import-as-namespace
 
+import { anyUnpack } from '@bufbuild/protobuf/wkt';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
@@ -12,12 +13,12 @@ import type * as CapabilityManager from '@dxos/app-framework/CapabilityManager';
 import { type Client } from '@dxos/client';
 import { type Space, SpaceState } from '@dxos/client/echo';
 import { Annotation, Obj } from '@dxos/echo';
-import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
-import { MembershipPolicy } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { EdgeReplicationSetting } from '@dxos/protocols/buf/dxos/echo/metadata_pb';
+import { type Credential, DefaultSpaceSchema, MembershipPolicy } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
-import { GraphPath } from '../app';
-import { AppCapabilities } from '../app-framework';
-import * as AppAnnotation from './AppAnnotation';
+import { AppCapabilities } from '../app-framework/index.ts';
+import { GraphPath } from '../app/index.ts';
+import * as AppAnnotation from './AppAnnotation.ts';
 
 //
 // Space tags.
@@ -29,8 +30,15 @@ import * as AppAnnotation from './AppAnnotation';
  */
 export const SETTINGS_SPACE_TAG = 'org.dxos.space.settings';
 
-/** Space tag for the bundled exemplar/sample space. */
-export const EXEMPLAR_SPACE_TAG = 'org.dxos.space.exemplar';
+/**
+ * Space tag for the bundled sample space.
+ *
+ * The value still reads `exemplar` because it is already persisted in the space metadata of every
+ * profile that has onboarded: changing it would make the import's idempotency check miss the
+ * existing space (importing a second copy) and flip `isVisibleSpace` for those spaces. Renaming it
+ * needs a tag migration, not an edit here.
+ */
+export const SAMPLE_SPACE_TAG = 'org.dxos.space.exemplar';
 
 /** Name given to the first space created for a profile. The user is free to rename it. */
 export const DEFAULT_SPACE_NAME = 'My Space';
@@ -41,8 +49,8 @@ type SpaceResolver = { spaces: { get(): Space[]; get(id: string): Space | undefi
 /** Check if a space has a specific tag. */
 export const hasTag = (space: Space, tag: string): boolean => space.tags.includes(tag);
 
-/** Check if a space is the exemplar/sample space. */
-export const isExemplarSpace = (space: Space): boolean => hasTag(space, EXEMPLAR_SPACE_TAG);
+/** Check if a space is the bundled sample space. */
+export const isSampleSpace = (space: Space): boolean => hasTag(space, SAMPLE_SPACE_TAG);
 
 /** Check if a space is the settings space. */
 export const isSettingsSpace = (space: Space): boolean => hasTag(space, SETTINGS_SPACE_TAG);
@@ -80,11 +88,11 @@ export const getSettingsSpace = (client: { spaces: { get(): Space[] } }): Space 
  * Whether a space belongs in the user-facing space lists (navtree, settings, create-object target).
  *
  * Tags mark spaces the app manages on the user's behalf — the settings space, filesystem mirrors —
- * so anything tagged is internal, except the exemplar space and the legacy personal-space tag that
+ * so anything tagged is internal, except the sample space and the legacy personal-space tag that
  * pre-migration profiles still carry.
  */
 export const isVisibleSpace = (space: Space): boolean =>
-  space.tags.length === 0 || isExemplarSpace(space) || isLegacyDefaultSpace(space);
+  space.tags.length === 0 || isSampleSpace(space) || isLegacyDefaultSpace(space);
 
 //
 // Default space designation.
@@ -179,9 +187,6 @@ export const PERSONAL_SPACE_TAG = 'org.dxos.space.personal';
 // TODO(wittjosiah): Remove once all profiles have migrated to the settings space.
 const DEFAULT_SPACE_KEY = '__DEFAULT__';
 
-/** The slice of a HALO credential the legacy `DefaultSpace` lookup reads. */
-type LegacyCredential = { subject?: { assertion?: { spaceId?: unknown } } };
-
 /**
  * Check if a space is the default space of a profile created before the settings space existed.
  * Reads the immutable tag, or the `__DEFAULT__` property older clients wrote before tags existed.
@@ -207,7 +212,7 @@ export const isLegacyDefaultSpace = (space: Space): boolean => {
  * @deprecated
  */
 export const resolveLegacyDefaultSpace = (
-  client: SpaceResolver & { halo: { queryCredentials(options: { type: string }): LegacyCredential[] } },
+  client: SpaceResolver & { halo: { queryCredentials(options: { type: string }): Credential[] } },
 ): Space | undefined => {
   const found = client.spaces.get().find((space) => isLegacyDefaultSpace(space));
   if (found) {
@@ -215,8 +220,9 @@ export const resolveLegacyDefaultSpace = (
   }
 
   const credential = client.halo.queryCredentials({ type: 'dxos.halo.credentials.DefaultSpace' })[0];
-  const spaceId: unknown = credential?.subject?.assertion?.spaceId;
-  return typeof spaceId === 'string' ? client.spaces.get(spaceId) : undefined;
+  const assertion = credential?.subject?.assertion;
+  const spaceId = assertion && anyUnpack(assertion, DefaultSpaceSchema)?.spaceId;
+  return spaceId ? client.spaces.get(spaceId) : undefined;
 };
 
 //

@@ -5,19 +5,19 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { random } from '@dxos/random';
-import { IconButton, Input, Panel, ThemedClassName, Toolbar } from '@dxos/react-ui';
+import { Field, IconButton, Panel, ThemedClassName, Toolbar } from '@dxos/react-ui';
 import { Message } from '@dxos/types';
 import { mx } from '@dxos/ui-theme';
 
-import { Outline, type OutlineMarker } from '../components';
-import { type MessageChromeProps, MessageList, useMessageList } from '../components';
-import { type Decoration, DecorationsProvider, ItemSelectionProvider } from '../hooks';
-import { SearchHit, defaultRenderer, isPrompt, searchFeed, sliceFeed, useFeedModel } from '../model';
-import { FeedStats, useFeedDebug } from './debug';
-import { createMessages } from './generator';
-import { type FeedScenario, createScenario } from './scenarios';
-import { createAnswer, textStream } from './stream';
-import { streamTurn } from './turn';
+import { Outline, type OutlineMarker } from '../components/index.ts';
+import { type MessageChromeProps, MessageList, useMessageList } from '../components/index.ts';
+import { type Decoration, DecorationsProvider, ItemSelectionProvider } from '../hooks/index.ts';
+import { SearchHit, defaultRenderer, isPrompt, searchFeed, sliceFeed, useFeedModel } from '../model/index.ts';
+import { FeedStats, useFeedDebug } from './debug/index.ts';
+import { createMessages } from './generator.ts';
+import { type FeedScenario, createScenario } from './scenarios.tsx';
+import { createAnswer, textStream } from './stream.ts';
+import { streamTurn } from './turn.ts';
 
 /** Pause between one answer finishing and the next question arriving. */
 const TURN_DELAY = 800;
@@ -62,13 +62,13 @@ const TestChrome = ({ message, index, selected, onSelect, children }: MessageChr
       data-testid='feed.message'
     >
       <div className='flex flex-col items-center gap-1'>
-        <Input.Root>
-          <Input.Checkbox
+        <Field.Root>
+          <Field.Checkbox
             checked={selected}
             onCheckedChange={() => onSelect(message.id, true)}
             data-testid='feed.message.select'
           />
-        </Input.Root>
+        </Field.Root>
       </div>
 
       {/*
@@ -291,14 +291,14 @@ export const FeedStory = ({
                   onClick={toggleDebug}
                 />
                 <Toolbar.Separator />
-                <Input.Root>
-                  <Input.TextInput
+                <Field.Root>
+                  <Field.Input
                     placeholder='Search…'
                     value={query}
                     onChange={(event) => setQuery(event.target.value)}
                     data-testid='feed.search'
                   />
-                </Input.Root>
+                </Field.Root>
                 <FindButton hits={hits} />
                 <IconButton icon='ph--copy--regular' iconOnly label='Copy range' onClick={handleCopy} />
                 <IconButton
@@ -313,11 +313,11 @@ export const FeedStory = ({
               </Toolbar.Root>
             </Panel.Toolbar>
 
-            <Panel.Content classNames='relative dx-container'>
+            <Panel.Content classNames='relative'>
               <div className='z-10 absolute left-0 top-0 bottom-0 grid grid-rows-[1fr_4fr_1fr] justify-center'>
                 <FeedOutline classNames='row-start-2' messages={messages} />
               </div>
-              <MessageList.Viewport classNames='absolute inset-0' padding ref={viewportRef} />
+              <MessageList.Viewport classNames='dx-fullscreen' padding ref={viewportRef} />
             </Panel.Content>
           </Panel.Root>
           <FeedStats meter={meter} streaming={streaming} selected={selectedIds.size} hits={hits.length} />

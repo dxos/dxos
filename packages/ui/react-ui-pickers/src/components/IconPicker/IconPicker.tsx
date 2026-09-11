@@ -8,7 +8,7 @@ import { type ButtonProps, Icon, type IconProps, type ThemedClassName, useTransl
 import { osTranslations } from '@dxos/ui-theme';
 import { iconValues } from '@dxos/ui-types';
 
-import { PickerButton, type PickerButtonProps } from '../PickerButton';
+import { PickerButton, type PickerButtonProps } from '../PickerButton/index.ts';
 
 export type IconPickerProps = {
   disabled?: boolean;

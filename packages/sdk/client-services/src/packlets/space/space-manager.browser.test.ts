@@ -6,7 +6,7 @@ import { describe, onTestFinished, test } from 'vitest';
 
 import { createStorage } from '@dxos/random-access-storage';
 
-import { TestAgentBuilder } from './testing';
+import { TestAgentBuilder } from './testing/index.ts';
 
 describe('space-manager', () => {
   test.skip('invitations', async () => {

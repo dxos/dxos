@@ -13,7 +13,7 @@ import { mx } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
 
-import { Pane, type PaneTab } from '../Pane';
+import { Pane, type PaneTab } from '../Pane/index.ts';
 
 //
 // Companion
@@ -66,6 +66,9 @@ export const Companion = ({
     () =>
       companions.map((node) => ({
         attendableId,
+        // Its own node, where its contributed actions are filed; `attendableId` above is the host
+        // plank's, which is deliberately shared and is not this surface's identity.
+        nodeId: node.id,
         subject: node.data,
         companionTo,
         variant: Attention.getLinkedVariant(node.id),

@@ -12,7 +12,7 @@ import { Panproto } from '@dxos/echo-panproto';
 import { EffectEx } from '@dxos/effect';
 import { AccessToken, Connection } from '@dxos/link';
 import { type Space, useQuery } from '@dxos/react-client/echo';
-import { Button, Card, Flex, Icon, Input, Panel, ScrollArea, Toolbar, useTranslation } from '@dxos/react-ui';
+import { Button, Card, Field, Flex, Icon, Panel, ScrollArea, Toolbar, useTranslation } from '@dxos/react-ui';
 import { MasterDetail, type MasterDetailAdornment, type MasterDetailIcon } from '@dxos/react-ui-list';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { getStyles } from '@dxos/ui-theme';
@@ -20,11 +20,11 @@ import { getStyles } from '@dxos/ui-theme';
 import { meta } from '#meta';
 import { AtprotoCapabilities } from '#types';
 
-import { ATPROTO_SOURCES, isAtprotoConnection } from '../../connection';
-import { getAtprotoUris } from '../../foreign-key';
-import { importRecord } from '../../publish';
-import { getMappedCollections } from '../../schema-map';
-import * as AtprotoRepo from '../../services/AtprotoRepo';
+import { ATPROTO_SOURCES, isAtprotoConnection } from '../../connection.ts';
+import { getAtprotoUris } from '../../foreign-key.ts';
+import { importRecord } from '../../publish.ts';
+import { getMappedCollections } from '../../schema-map.ts';
+import * as AtprotoRepo from '../../services/AtprotoRepo.ts';
 
 export type PdsBrowserProps = {
   role?: string;
@@ -198,7 +198,7 @@ export const PdsBrowser = ({ role, space }: PdsBrowserProps) => {
     : undefined;
 
   const recordDetail = record ? (
-    <ScrollArea.Root orientation='vertical' classNames='flex-1 min-h-0 overflow-hidden'>
+    <ScrollArea.Root orientation='vertical' classNames='dx-grow overflow-hidden'>
       <ScrollArea.Viewport classNames='p-2'>
         <Flex column gap='sm'>
           <span className='font-mono text-xs text-description truncate'>{record.uri}</span>
@@ -239,8 +239,8 @@ export const PdsBrowser = ({ role, space }: PdsBrowserProps) => {
       <Panel.Toolbar asChild>
         <Toolbar.Root classNames='px-2'>
           <Icon icon='ph--at--regular' size={4} classNames='text-description' />
-          <Input.Root>
-            <Input.TextInput
+          <Field.Root>
+            <Field.Input
               classNames='grow'
               placeholder={t('handle.placeholder')}
               value={handleInput}
@@ -251,15 +251,15 @@ export const PdsBrowser = ({ role, space }: PdsBrowserProps) => {
                 }
               }}
             />
-          </Input.Root>
+          </Field.Root>
           <Button onClick={() => setActiveHandle(handleInput.trim() || undefined)}>{t('browse.label')}</Button>
         </Toolbar.Root>
       </Panel.Toolbar>
-      <Panel.Content classNames='flex flex-col min-h-0 py-2'>
+      <Panel.Content classNames='flex flex-col dx-grow py-2'>
         {error && <div className='px-2 pb-2 text-sm text-error-text'>{error}</div>}
         <MasterDetail<CollectionItem>
           orientation='horizontal'
-          classNames='flex-1 min-h-0'
+          classNames='dx-grow'
           items={collectionItems}
           selectedId={collection}
           onSelect={setCollection}
@@ -271,7 +271,7 @@ export const PdsBrowser = ({ role, space }: PdsBrowserProps) => {
             collection ? (
               <MasterDetail<RecordItem>
                 orientation='horizontal'
-                classNames='flex-1 min-h-0'
+                classNames='dx-grow'
                 items={recordItems}
                 selectedId={recordUri}
                 onSelect={setRecordUri}

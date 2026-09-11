@@ -1,0 +1,217 @@
+name: EDGE nightly
+
+# Two long-running checks against the deployed dev EDGE, neither of which belongs in `Check`:
+# one measures how long a peer takes to join an existing space and hold all of it, the other
+# soaks a randomized command sequence for an hour. Both run real `@dxos/client` peers as separate
+# processes through the blade-runner harness.
+#
+# Against `preview`, not a local `wrangler dev` stack: a local stack 500s on `/db/spaces/:id/join`
+# under six peers and a hundred objects (`blockConcurrencyWhile() ... waited too long`), and with
+# its tail-logger unconnected each successive joiner measured slower than the last — a local run
+# measures wrangler, not EDGE.
+#
+# Cleanup is self-serve only: each identity signs a verifiable presentation and deletes exactly the
+# data it created, with no shared admin secret in CI. That requires the identity to be bound to a
+# Hub account, which the `test+*@dxos.org` hatch provides -- on preview since dxos/edge#1026, which
+# moved the hatch onto its own `isTestAccountEnvironment` rather than widening
+# `isDevLikeEnvironment`. Verified against preview with `DX_HUB_API_KEY` unset: `cleanup done
+# { accepted: 4, refused: [] }`.
+#
+# `assertCanCleanUp` refuses any target without that hatch rather than leak, so pointing this at
+# staging or production fails before it creates anything. Cleanup runs in the plan's own `finally`
+# and on SIGTERM.
+
+on:
+  schedule:
+    # 02:00 UTC, before the `Check` nightly at 04:00 so a shared-environment problem is visible first.
+    - cron: '0 2 * * *'
+
+  workflow_dispatch:
+    inputs:
+      edge:
+        type: choice
+        description: 'Which EDGE to run against'
+        options: [preview, dev, local]
+        default: preview
+      objects:
+        type: string
+        description: 'Join latency: objects in the space under test'
+        default: '100'
+      joiners:
+        type: string
+        description: 'Join latency: peers that accept an invitation'
+        default: '5'
+      soak_minutes:
+        type: string
+        description: 'Soak: wall-clock budget in minutes'
+        default: '60'
+      # Sized so the run keeps issuing commands for at least half an hour: a healthy command costs
+      # ~3s against preview, and overshooting is free because `maxRuntimeMs` stops the run early.
+      soak_commands:
+        type: string
+        description: 'Soak: executable commands to plan'
+        default: '800'
+
+permissions:
+  contents: read
+  packages: read
+
+env:
+  # Bound once here rather than at every setup call site: a composite action cannot read the
+  # `secrets` context, but it does inherit the process environment.
+  MOON_CACHE_CA_PEM: ${{ secrets.MOON_CACHE_CA_PEM }}
+  MOON_CACHE_CLIENT_PEM: ${{ secrets.MOON_CACHE_CLIENT_PEM }}
+  MOON_CACHE_CLIENT_KEY: ${{ secrets.MOON_CACHE_CLIENT_KEY }}
+
+# Never `cancel-in-progress`: these runs create real state in a shared environment and clean it up
+# at the end, so cancelling one mid-flight is exactly how dev accumulates orphans.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  # How long a peer takes to accept an invitation to an existing, already-replicated space and hold
+  # every object in it. Each joiner is timed separately and sequentially — in parallel they would
+  # contend for the same connection budget and measure each other.
+  join-latency:
+    runs-on: depot-ubuntu-24.04-8
+    container:
+      image: ghcr.io/dxos/gh-actions:24.11.1
+      credentials:
+        username: dxos-bot
+        password: ${{ secrets.GITHUB_TOKEN }}
+    timeout-minutes: 40
+    services:
+      # The orchestrator talks to its replicants over Redis. A service container is reachable by
+      # service name, not on loopback, hence `DX_REDIS_HOST`.
+      redis:
+        image: redis:7
+        options: >-
+          --health-cmd "redis-cli ping" --health-interval 5s --health-timeout 3s --health-retries 10
+    env:
+      DX_REDIS_HOST: redis
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+          filter: blob:none
+
+      - name: Setup
+        uses: ./.depot/actions/setup
+
+      # `blade-runner:build` is a no-op that exists for its `^:build` dependency edge: it builds the
+      # SDK packages a plan imports. Plans themselves are run from TypeScript via `node --import tsx`.
+      - name: Build
+        run: moon run blade-runner:build
+
+      - name: Measure join latency
+        working-directory: packages/e2e/blade-runner
+        env:
+          EDGE: ${{ inputs.edge || 'preview' }}
+          OBJECTS: ${{ inputs.objects || '100' }}
+          JOINERS: ${{ inputs.joiners || '5' }}
+        run: |
+          GRAVITY_OUT_BASE="$PWD" node --import tsx src/main.ts edgeJoinLatency --no-browser \
+            --spec "{\"edge\":\"$EDGE\",\"objects\":$OBJECTS,\"joiners\":$JOINERS}"
+
+      # `always()`: the summary is most wanted precisely when the step above failed. The plan writes
+      # it in its own `finally`, so it exists either way.
+      - name: Report
+        if: always()
+        working-directory: packages/e2e/blade-runner
+        run: cat "$(ls -td out/results/*/ | head -1)summary.md" >> "$GITHUB_STEP_SUMMARY" || true
+
+      # Whole output tree: `join-latency.json`, `summary.md`, `join-latency.events.ndjson`, and one
+      # `replicant.out.log` per peer — what an agent needs to explain a red run without reproducing it.
+      - name: Upload results
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: edge-join-latency
+          path: packages/e2e/blade-runner/out
+          retention-days: 14
+
+      # Last, and bounded: `captureCiEvents` posts without a request deadline, so a hung capture
+      # ahead of the upload would cost the artifacts — the half of a red run's output that cannot be
+      # recreated. `continue-on-error` because telemetry must never redden a build, and `always()`
+      # because the run that crossed a threshold is the one the series most needs.
+      #
+      # The plan writes one event per joiner plus one for the run, each already carrying its own
+      # timestamp, so the statistics are computed where they are read rather than shipped precomputed.
+      #
+      # Those timestamps are the run's, departing from `ci.boot-budget`, which dates each event by the
+      # commit it measured. That is right for a per-push measurement and wrong here: the schedule
+      # fires against whatever main happens to be, so two nights with no merge between them would
+      # share a commit, and with it the default timestamp — collapsing onto one point. What this
+      # measures is deployed EDGE at 02:00 UTC, whose date is the run's, not the commit's.
+      - name: Trend the join latency
+        if: always()
+        continue-on-error: true
+        timeout-minutes: 2
+        env:
+          DX_POSTHOG_API_KEY: ${{ secrets.COMPOSER_APP_PROD_POSTHOG_API_KEY }}
+        run: |
+          node scripts/ci-event.mjs \
+            --batch "$(ls -td packages/e2e/blade-runner/out/results/*/ | head -1)join-latency.events.ndjson"
+
+  # An hour of randomized commands against a fleet of real peers, asserted against an in-memory
+  # model. Independent of `join-latency`: a red soak should not withhold a latency number.
+  soak:
+    runs-on: depot-ubuntu-24.04-8
+    container:
+      image: ghcr.io/dxos/gh-actions:24.11.1
+      credentials:
+        username: dxos-bot
+        password: ${{ secrets.GITHUB_TOKEN }}
+    # Headroom over the run's own `maxRuntimeMs`, which stops issuing commands and proceeds to the
+    # final assertion; hitting the job timeout instead cancels mid-flight and proves nothing.
+    timeout-minutes: 90
+    services:
+      redis:
+        image: redis:7
+        options: >-
+          --health-cmd "redis-cli ping" --health-interval 5s --health-timeout 3s --health-retries 10
+    env:
+      DX_REDIS_HOST: redis
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+          filter: blob:none
+
+      - name: Setup
+        uses: ./.depot/actions/setup
+
+      - name: Build
+        run: moon run blade-runner:build
+
+      # A fresh seed each night, printed into the summary: the sequence is a pure function of it, so
+      # a failure is replayable from the seed alone, and from the trace even if the generator changes.
+      - name: Soak
+        working-directory: packages/e2e/blade-runner
+        env:
+          EDGE: ${{ inputs.edge || 'preview' }}
+          MINUTES: ${{ inputs.soak_minutes || '60' }}
+          COMMANDS: ${{ inputs.soak_commands || '800' }}
+        run: |
+          SEED="soak-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          echo "Seed: $SEED"
+          GRAVITY_OUT_BASE="$PWD" node --import tsx src/main.ts edgeStress --no-browser --seed "$SEED" \
+            --spec "{\"edge\":\"$EDGE\",\"maxRuntimeMs\":$((MINUTES * 60000)),\"maxCommands\":$COMMANDS}"
+
+      - name: Report
+        if: always()
+        working-directory: packages/e2e/blade-runner
+        run: cat "$(ls -td out/results/*/ | head -1)summary.md" >> "$GITHUB_STEP_SUMMARY" || true
+
+      # `command-trace.jsonl` is the replay input as well as the record: its last `plan` entry feeds
+      # `--spec '{"plan":"<path>"}'` to re-run the exact sequence that failed.
+      - name: Upload traces and logs
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: edge-soak
+          path: packages/e2e/blade-runner/out
+          retention-days: 14

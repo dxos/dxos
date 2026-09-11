@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type ReplicantEnv, type RpcHandle, type SchedulerEnv } from '../env';
+import { type ReplicantEnv, type RpcHandle, type SchedulerEnv } from '../env/index.ts';
 
 export const AGENT_LOG_FILE = 'agent.log';
 
@@ -36,6 +36,8 @@ export type TestProps<S> = {
   testId: string;
   outDir: string;
   spec: S;
+  /** Seed for this run, so a plan can make its own generation reproducible. */
+  randomSeed?: string;
 };
 
 /**

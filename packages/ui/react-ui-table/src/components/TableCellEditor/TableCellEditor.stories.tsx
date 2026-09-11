@@ -15,9 +15,9 @@ import { Task } from '@dxos/types';
 
 import { translations } from '#translations';
 
-import { useTestTableModel } from '../../testing';
-import { Table } from '../../types';
-import { TableCellEditor } from './TableCellEditor';
+import { useTestTableModel } from '../../testing/index.ts';
+import { Table } from '../../types/index.ts';
+import { TableCellEditor } from './TableCellEditor.tsx';
 
 type StoryArgs = {
   editing: GridEditing;

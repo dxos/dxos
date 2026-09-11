@@ -24,26 +24,29 @@ import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { EdgeFunctionEnv, ErrorCodec, type FunctionProtocol, type TraceProtocol } from '@dxos/protocols';
 
-import { FunctionsAiHttpClient } from './functions-ai-http-client';
+import { FunctionsAiHttpClient } from './functions-ai-http-client.ts';
 import {
   accessTokenResolverFromService,
   configuredCredentialsLayer,
   createS3Host,
   credentialsLayerFromDatabase,
-} from './services';
+} from './services/index.ts';
 
 /**
  * Services provided to invoked function handlers in the EDGE runtime.
  * Handlers reach other operations via `Operation.Service` (backed by the EDGE
  * `FunctionsService`); remote dispatch is keyed by the operation's `deployedId`.
  */
-type EdgeFunctionServices =
+export type EdgeFunctionServices =
   | AiService.AiService
   | Credential.CredentialsService
   | Database.Service
   | Trace.TraceService
   | Operation.Service
-  | Registry.Service;
+  | Registry.Service
+  // Provided by `FunctionContext.createLayer`, so a consumer that requires it (e.g. `AgentProcess`)
+  // is satisfied by the same layer rather than having to merge its own provider.
+  | OpaqueToolkit.OpaqueToolkitProvider;
 
 export interface FunctionWrappingOptions {
   /**
@@ -93,6 +96,9 @@ export const wrapFunctionHandler = (
       try {
         await using funcContext = await new FunctionContext(context, opts).open();
 
+        // `opts.types` are already registered by `_open`; this adds the FUNCTION's own, which the
+        // context never sees. Re-adding the former is harmless (the registry de-duplicates) and
+        // keeps the two sources in one call.
         const types = [...(opts.types ?? []), ...(func.types ?? [])];
         if (types.length > 0) {
           invariant(funcContext.db, 'Database is required for functions with types');
@@ -162,8 +168,12 @@ export const wrapFunctionHandler = (
 
 /**
  * Container for services and context for a function.
+ *
+ * Exported because a hosted `Process` needs the same set: the EDGE process host assembles this
+ * against its own bindings rather than rebuilding the layer stack, which is how the two runtimes stay
+ * in step when a service is added.
  */
-class FunctionContext extends Resource {
+export class FunctionContext extends Resource {
   readonly context: FunctionProtocol.Context;
   readonly client: EchoClient | undefined;
   db: DatabaseImpl | undefined;
@@ -198,6 +208,14 @@ class FunctionContext extends Resource {
 
     await this.db?.setSpaceRoot(this.context.spaceRootUrl ?? failedInvariant('spaceRootUrl missing in context'));
     await this.db?.open();
+
+    // Registered here rather than only in `wrapHandler` below: a hosted process builds its context
+    // directly and never passes through that path, so its declared schemas went unregistered and
+    // every TYPED query it made matched nothing — an agent appended a prompt to its conversation and
+    // read the queue back empty, which reads as a lost write rather than a missing schema.
+    if (this.opts.types?.length && this.db) {
+      this.db.graph.registry.add(this.opts.types);
+    }
 
     // Register the S3 backend so a handler running here can write to a bucket the space is
     // connected to. Without it this host has inline storage only (4 MiB), and an upload would land

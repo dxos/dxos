@@ -7,8 +7,8 @@ import * as Effect from 'effect/Effect';
 import { proxyFetchLegacy } from '@dxos/edge-client';
 import { log } from '@dxos/log';
 
-import { type HttpRequest } from './bindRequest';
-import { isCrxRenderAvailable, renderViaCrx } from './renderViaCrx';
+import { type HttpRequest } from './bindRequest.ts';
+import { isCrxRenderAvailable, renderViaCrx } from './renderViaCrx.ts';
 
 export class FetchError extends Error {}
 

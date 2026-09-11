@@ -9,11 +9,11 @@ import { useResizeDetector } from 'react-resize-detector';
 import type { ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
-import { Ruler, TrackHeader } from './headers';
-import { type PointerHandlers, attachPointerHandlers, attachWheelHandlers } from './input';
-import { type OverlayStyle, type RenderCell, type StaticLayerStyle, drawCells, drawOverlay } from './render';
-import type { CellGridAtoms } from './state/atoms';
-import type { Cell, Headers, Row } from './state/types';
+import { Ruler, TrackHeader } from './headers/index.ts';
+import { type PointerHandlers, attachPointerHandlers, attachWheelHandlers } from './input/index.ts';
+import { type OverlayStyle, type RenderCell, type StaticLayerStyle, drawCells, drawOverlay } from './render/index.ts';
+import type { CellGridAtoms } from './state/atoms.ts';
+import type { Cell, Headers, Row } from './state/types.ts';
 
 export type CellGridProps<T = unknown> = ThemedClassName<
   PointerHandlers & {
@@ -240,7 +240,7 @@ export const CellGrid = <T,>({
   }, [registry, atoms, headers]);
 
   return (
-    <div ref={containerRef} className={mx('relative w-full h-full overflow-hidden dx-base-surface', classNames)}>
+    <div ref={containerRef} className={mx('relative dx-fill overflow-hidden dx-base-surface', classNames)}>
       {/*
         Canvases are nudged up + left 1 CSS pixel so the gridlines (drawn at the TOP
         and LEFT edges of each cell) sit on top of the frozen header dividers — the
@@ -248,11 +248,11 @@ export const CellGrid = <T,>({
         inside the box. Without this offset the canvas gridlines land 1px down/right
         of the header dividers and the columns read as misaligned.
       */}
-      <canvas ref={staticCanvasRef} className='absolute inset-0 pointer-events-none' style={{ top: -1, left: -1 }} />
-      <canvas ref={overlayCanvasRef} className='absolute inset-0 pointer-events-none' style={{ top: -1, left: -1 }} />
+      <canvas ref={staticCanvasRef} className='dx-fullscreen pointer-events-none' style={{ top: -1, left: -1 }} />
+      <canvas ref={overlayCanvasRef} className='dx-fullscreen pointer-events-none' style={{ top: -1, left: -1 }} />
       <div
         ref={overlayInputRef}
-        className='absolute inset-0 touch-none'
+        className='dx-fullscreen touch-none'
         style={{ paddingLeft: headers.left, paddingTop: headers.top }}
       />
       {headers.top > 0 && <Ruler viewport={viewportState} headers={headers} width={width} />}

@@ -2,7 +2,6 @@
 // Copyright 2026 DXOS.org
 //
 
-import { createContext } from '@radix-ui/react-context';
 import React, {
   type ComponentPropsWithoutRef,
   type PropsWithChildren,
@@ -13,7 +12,7 @@ import React, {
   useState,
 } from 'react';
 
-import { IconButton, useTranslation } from '@dxos/react-ui';
+import { IconButton, createContext, useTranslation } from '@dxos/react-ui';
 import {
   type FeedModel,
   MessageList,
@@ -23,11 +22,11 @@ import {
 } from '@dxos/react-ui-feed';
 import { type XmlWidgetRegistry } from '@dxos/ui-editor';
 
-import { assistantRegistry } from '../../registry';
-import { type CreateRendererOptions, createRenderer, estimateRow } from '../../renderer';
-import { translationKey } from '../../translations';
-import { type ChatThreadEvent, type ChatView } from '../../types';
-import { MessageChrome, MessageChromeProvider } from '../MessageChrome';
+import { assistantRegistry } from '../../registry.tsx';
+import { type CreateRendererOptions, createRenderer, estimateRow } from '../../renderer.ts';
+import { translationKey } from '../../translations.ts';
+import { type ChatThreadEvent, type ChatView } from '../../types.ts';
+import { MessageChrome, MessageChromeProvider } from '../MessageChrome/index.ts';
 
 //
 // Context
@@ -175,7 +174,7 @@ const ChatThreadViewport = ({ children, classNames, overlay, ...props }: ChatThr
           default, and a caller's classNames extend or override it. */}
       <MessageList.Viewport
         {...props}
-        classNames={['grow min-h-0', classNames]}
+        classNames={['dx-grow', classNames]}
         overlay={
           <>
             <ScrollToBottom />

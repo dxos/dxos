@@ -12,7 +12,7 @@ import { mx } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
 
-import { useQuerySpaceTypes } from './use-query-space-types';
+import { useQuerySpaceTypes } from './use-query-space-types.ts';
 
 export const SchemaContainer = ({ space }: AppSurface.SpaceArticleProps) => {
   const { t } = useTranslation(meta.profile.key);
@@ -22,7 +22,7 @@ export const SchemaContainer = ({ space }: AppSurface.SpaceArticleProps) => {
     <Form.Root variant='settings'>
       <Form.Viewport scroll>
         <Form.Content>
-          <Form.Section title={t('schema-verbose.label')} description={t('schema.description')}>
+          <Form.FieldSet label={t('schema-verbose.label')} description={t('schema.description')}>
             <div
               className={mx([
                 'grid md:col-span-2 grid-cols-subgrid gap-trim-sm items-center',
@@ -35,7 +35,7 @@ export const SchemaContainer = ({ space }: AppSurface.SpaceArticleProps) => {
                 <div key={type.id}>{Type.getTypename(type)}</div>
               ))}
             </div>
-          </Form.Section>
+          </Form.FieldSet>
         </Form.Content>
       </Form.Viewport>
     </Form.Root>

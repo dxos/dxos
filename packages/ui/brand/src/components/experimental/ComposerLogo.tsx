@@ -7,7 +7,7 @@ import React from 'react';
 import { ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
-import { brandColors } from './brand-colors';
+import { brandColors } from './brand-colors.ts';
 
 export const ComposerLogo = ({ classNames, size = 512 }: ThemedClassName<{ size?: number }>) => {
   const n = brandColors.length;

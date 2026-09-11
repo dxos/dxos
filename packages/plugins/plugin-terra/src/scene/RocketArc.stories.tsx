@@ -10,18 +10,18 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useEffect, useRef } from 'react';
 
 import { Panel } from '@dxos/react-ui';
-import { Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
+import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
 import { Terra, TerraObject } from '#types';
 
-import { PlanetCache, SceneManager, cross, normalize, seaRadius } from '../engine';
-import { BALLISTIC_APEX, EXPLOSION_SECONDS, SimEngine, angleBetween, slerp, toUnit } from '../sim';
-import { STORY_ATTENDABLE_ID, withAttention } from '../testing';
-import { ExplosionLayer } from './explosion-layer';
-import { ObjectLayer } from './object-layer';
-import { TrailLayer } from './trail-layer';
+import { PlanetCache, SceneManager, cross, normalize, seaRadius } from '../engine/index.ts';
+import { BALLISTIC_APEX, EXPLOSION_SECONDS, SimEngine, angleBetween, slerp, toUnit } from '../sim/index.ts';
+import { STORY_ATTENDABLE_ID, withAttention } from '../testing/index.ts';
+import { ExplosionLayer } from './explosion-layer.ts';
+import { ObjectLayer } from './object-layer.ts';
+import { TrailLayer } from './trail-layer.ts';
 
 /** Both ends of the flight, close enough together that the whole arc fits in one view. */
 const SOURCE = { lat: 0, lng: -18, height: 0 };
@@ -128,25 +128,17 @@ const RocketArcScene = () => {
   );
 
   return (
-    <Menu.Root {...menuActions} attendableId={STORY_ATTENDABLE_ID}>
-      <Panel.Root role='article'>
-        <Panel.Toolbar asChild classNames='dx-container'>
-          <Menu.Toolbar>
-            <Menu.Items />
-          </Menu.Toolbar>
-        </Panel.Toolbar>
-        <Panel.Content asChild>
-          <div className='relative grow'>
-            {/* `dx-container` (w-full h-full) is load-bearing — see `ObjectGallery.stories.tsx`. */}
-            <canvas
-              ref={canvasRef}
-              className='dx-container absolute inset-0 outline-none'
-              style={{ touchAction: 'none' }}
-            />
-          </div>
-        </Panel.Content>
-      </Panel.Root>
-    </Menu.Root>
+    <Panel.Root role='article'>
+      <Panel.Toolbar asChild classNames='dx-expand'>
+        <ActionToolbar {...menuActions} attendableId={STORY_ATTENDABLE_ID} />
+      </Panel.Toolbar>
+      <Panel.Content asChild>
+        <div className='relative grow'>
+          {/* `dx-fill` is load-bearing — see `ObjectGallery.stories.tsx`. */}
+          <canvas ref={canvasRef} className='dx-fill dx-fullscreen outline-none' style={{ touchAction: 'none' }} />
+        </div>
+      </Panel.Content>
+    </Panel.Root>
   );
 };
 

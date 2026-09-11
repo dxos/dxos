@@ -21,22 +21,34 @@ spin it off into a separate untracked thread.
 
 ## Space binding — read this before any other call
 
-The repo pins the space its projects live in in a committed config file,
+The repo pins the spaces its projects may live in in a committed config file,
 `.agents/projects/space.yml`:
 
 ```yaml
-spaceId: <id>
+default: <id>
+spaces:
+  - <id>
+  - <another id>
 ```
 
-1. Read the file. If it is missing, or `spaceId` is null/empty, **stop and offer setup** (below)
-   — do not guess a space, and do not fall back to the session's default space (omitting
-   `spaceId` targets whatever the session defaults to, which is not the same thing and must not
-   be used as a silent substitute).
-2. Call `whoami {}` and confirm the pinned `spaceId` appears in the session's spaces. If it does
-   not, **stop and say so** — this session isn't scoped to the repo's project space.
-3. Only then proceed, passing that `spaceId` on every call below.
+`spaces` is every space this repo's projects are allowed in; `default` is the one to use when the
+user has not named another, and it is always one of the entries in `spaces`. A file carrying only
+the older `spaceId: <id>` key is that same binding with one entry — read it as `default` plus a
+single-entry list, and rewrite it in the new shape the next time you touch it.
 
-This is a hard gate, not a suggestion: no partial writes, no fallback space. A project system
+1. Read the file. If it is missing, `spaces` is empty, or `default` is null/empty, **stop and
+   offer setup** (below) — do not guess a space, and do not fall back to the session's default
+   space (omitting `spaceId` targets whatever the session defaults to, which is not the same
+   thing and must not be used as a silent substitute).
+2. Pick the space: `default`, unless the user named one of the other entries in `spaces` for this
+   piece of work. A space absent from `spaces` is not a candidate, however it was named — stop
+   and offer to add it through setup.
+3. Call `whoami {}` and confirm the picked `spaceId` appears in the session's spaces. If it does
+   not, **stop and say so** — this session isn't scoped to that space.
+4. Only then proceed, passing that `spaceId` on every call below. One space per piece of work:
+   never split a project's objects across two entries.
+
+This is a hard gate, not a suggestion: no partial writes, no unlisted space. A project system
 split across spaces is worse than an agent that refuses and asks the user to fix the binding.
 
 ### `/project setup` — binding this repo to a space
@@ -47,13 +59,13 @@ so it is always a question — never an inference.
 
 1. Call `whoami {}`. Its `spaces` array is every space this session can operate on, each with its
    `spaceId` and `name`; that is where a space id comes from.
-2. Present them as a **numbered list, by name**, and ask which number this repo's projects belong
-   in:
+2. Present them as a **numbered list, by name**, marking any already in the file, and ask which
+   number this repo's projects belong in:
 
    ```
    Which space should this repo's projects live in?
      1. Acme Product  (3 members)
-     2. My Space
+     2. My Space  (bound, default)
      3. Scratch
    ```
 
@@ -65,12 +77,20 @@ so it is always a question — never an inference.
 4. Write `.agents/projects/space.yml`, creating `.agents/projects/` if needed:
 
    ```yaml
-   # The ECHO space this repo's projects live in.
-   spaceId: <the id of the chosen space>
+   # The ECHO spaces this repo's projects can live in.
+   # `default` is the one used unless the user names another; it must appear in `spaces`.
+   default: <the id of the chosen space>
+   spaces:
+     - <the id of the chosen space>
    ```
 
-5. Confirm what happened: name the space, say the file is a repo file that wants committing, and
-   that it binds every future session in this repo.
+   On a repo that is already bound, the pick is **added** to `spaces` rather than replacing it,
+   and it becomes `default` — leave the other entries alone. Ask before dropping an entry: an id
+   removed here is a space no future session in this repo can write projects to.
+
+5. Confirm what happened: name the space, say whether it is now the default and which others stay
+   listed, say the file is a repo file that wants committing, and that it binds every future
+   session in this repo.
 
 Two things setup does **not** do. It never creates a space — bind an existing one, and if the user
 wants a new one they create it in Composer and re-run setup. And it never writes into the space; a
@@ -112,6 +132,15 @@ you hold is a bare object id, and then write the full URI: `{"/": "echo:///" + i
   Task `status` is `todo`|`in-progress`|`done`|`failed`|`cancelled`. Every project owns a task set
   from creation, so `projects-get` showing none means something is wrong — say so rather than
   recording tasks somewhere else, and do **not** claim a task was recorded.
+- **Assignee** — a task's `assignee` is an actor, not a label. For a person, name them
+  (`contact` ref, `identityDid`, `email`); for a non-person — an agent session, a service, a bot —
+  set `subject` to a ref to the object that actor _is_. Assigning work to **yourself** means
+  `{"role": "assistant", "subject": {"/": "echo:///<session-object-id>"}}`, where the id is the `id`
+  of the session OBJECT, not the harness session id it is filed under: find your own session with
+  `tasks-list-sessions { sessionId: "<the harness session id>" }` and use the object it returns.
+  A bare `{"role": "assistant"}` with a name string is wrong — it records that _an_ assistant owns
+  the task, not _which_ run, so nobody can tell later who was actually working it. When no session
+  object exists for this run, say so rather than inventing a name.
 - **Outline** — the free-text scratch surface (`tasks-get-outline`/`tasks-update-outline`). Keep a line
   starting `Resume:` holding the single next action, and a `Design: {"/": "echo:///<doc-id>"}` line
   pointing at the design document.
@@ -234,7 +263,8 @@ spaceId }`. Report the new project id.
 | Mistake                                                            | Fix                                                                                          |
 | ------------------------------------------------------------------ | -------------------------------------------------------------------------------------------- |
 | Calling a tool without checking `space.yml` / `whoami` first       | Read the binding and confirm it's in the session's spaces before any project/task call.      |
-| Falling back to the session's default space when the binding fails | Stop and report the failure; never substitute an unpinned space.                             |
+| Falling back to the session's default space when the binding fails | Stop and report the failure; never substitute a space the file does not list.                |
+| Writing to a space that is not in `spaces`                         | Only the listed spaces are candidates; offer setup to add one rather than writing to it.     |
 | Binding a space the user did not name (even the only one listed)   | Offer setup, list spaces by name, and bind only on an explicit answer.                       |
 | Passing a bare id, or `echo://<id>`, where a ref is expected       | Refs wrap an `echo:` URI: `{"/": "echo:///<id>"}`. Two slashes means a space, not an object. |
 | Recording project state in local files                             | The space is the only store; files don't survive across repos, sessions, or collaborators.   |

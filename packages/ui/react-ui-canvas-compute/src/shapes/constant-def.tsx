@@ -9,8 +9,8 @@ import React from 'react';
 import { type ShapeDef } from '@dxos/react-ui-canvas-editor';
 import { createAnchorMap } from '@dxos/react-ui-canvas-editor';
 
-import { ConstantComponent } from './Constant';
-import { ComputeShape, type CreateShapeProps, createAnchorId, createShape } from './defs';
+import { ConstantComponent } from './Constant.tsx';
+import { ComputeShape, type CreateShapeProps, createAnchorId, createShape } from './defs.ts';
 
 // Kept out of `Constant.tsx`: react-refresh only fast-refreshes a module whose
 // exports are all components, so values exported beside them force a full page reload on every edit.

@@ -2,20 +2,29 @@
 // Copyright 2021 DXOS.org
 //
 
+import { create, fromBinary, toBinary } from '@bufbuild/protobuf';
+
 import { Trigger, asyncTimeout, synchronized } from '@dxos/async';
 import { Stream } from '@dxos/async';
-import { type Any, type RequestOptions } from '@dxos/codec-protobuf';
 import { type Context, ContextRpcCodec } from '@dxos/context';
 import { StackTrace } from '@dxos/debug';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { RpcClosedError, RpcNotOpenError, encodeError } from '@dxos/protocols';
-import { type CompatCodec, compatCodec } from '@dxos/protocols/buf-shape-compat';
-import { RpcMessageSchema } from '@dxos/protocols/buf/dxos/rpc_pb';
-import { type Request, type Response, type RpcMessage } from '@dxos/protocols/proto/dxos/rpc';
+import {
+  ByeSchema,
+  type Request,
+  RequestSchema,
+  type Response,
+  ResponseSchema,
+  type RpcMessage,
+  RpcMessageSchema,
+  StreamCloseSchema,
+} from '@dxos/protocols/buf/dxos/rpc_pb';
+import { type AnyEnvelope, type RequestOptions } from '@dxos/protocols/service-contract';
 import { exponentialBackoffInterval } from '@dxos/util';
 
-import { decodeRpcError } from './errors';
+import { decodeRpcError } from './errors.ts';
 
 const DEFAULT_TIMEOUT = 30_000;
 const BYE_SEND_TIMEOUT = 2_000;
@@ -32,8 +41,8 @@ export interface RpcPeerOptions {
    */
   timeout?: number;
 
-  callHandler: (method: string, request: Any, options?: RequestOptions) => MaybePromise<Any>;
-  streamHandler?: (method: string, request: Any, options?: RequestOptions) => Stream<Any>;
+  callHandler: (method: string, request: AnyEnvelope, options?: RequestOptions) => MaybePromise<AnyEnvelope>;
+  streamHandler?: (method: string, request: AnyEnvelope, options?: RequestOptions) => Stream<AnyEnvelope>;
 
   /**
    * Do not require or send handshake messages.
@@ -72,8 +81,6 @@ class PendingRpcRequest {
 }
 
 // NOTE: Lazy so that code that doesn't use indexing doesn't need to load the codec (breaks in workerd).
-let RpcMessageCodec!: CompatCodec<RpcMessage>;
-const getRpcMessageCodec = () => (RpcMessageCodec ??= compatCodec<RpcMessage>(RpcMessageSchema));
 
 enum RpcState {
   INITIAL = 'INITIAL',
@@ -169,7 +176,7 @@ export class RpcPeer {
     }
 
     log('sending open message', { state: this._state });
-    await this._sendMessage({ open: true });
+    await this._sendMessage({ case: 'open', value: true });
 
     if (this._state !== RpcState.OPENING) {
       return;
@@ -177,7 +184,7 @@ export class RpcPeer {
 
     // Retry sending.
     this._clearOpenInterval = exponentialBackoffInterval(() => {
-      void this._sendMessage({ open: true }).catch((err) => log.warn(err));
+      void this._sendMessage({ case: 'open', value: true }).catch((err) => log.warn(err));
     }, 50);
 
     await Promise.race([this._remoteOpenTrigger.wait(), this._closingTrigger.wait()]);
@@ -192,7 +199,7 @@ export class RpcPeer {
     // TODO(burdon): This seems error prone.
     // Send an "open" message in case the other peer has missed our first "open" message and is still waiting.
     log('resending open message', { state: this._state });
-    await this._sendMessage({ openAck: true });
+    await this._sendMessage({ case: 'openAck', value: true });
   }
 
   /**
@@ -211,7 +218,7 @@ export class RpcPeer {
     if (this._state === RpcState.OPENED && !this._params.noHandshake) {
       try {
         this._state = RpcState.CLOSING;
-        await this._sendMessage({ bye: {} }, BYE_SEND_TIMEOUT);
+        await this._sendMessage({ case: 'bye', value: create(ByeSchema, {}) }, BYE_SEND_TIMEOUT);
       } catch (err: any) {
         log('error closing peer, sending bye', { err });
       }
@@ -262,33 +269,35 @@ export class RpcPeer {
    * Handle incoming message. Should be called as the result of other peer's `send` callback.
    */
   private async _receive(msg: Uint8Array): Promise<void> {
-    const decoded = getRpcMessageCodec().decode(msg, { preserveAny: true });
-    DEBUG_CALLS && log.trace('received message', { type: Object.keys(decoded)[0] });
+    const decoded = fromBinary(RpcMessageSchema, msg);
+    DEBUG_CALLS && log.trace('received message', { type: decoded.content.case });
 
-    if (decoded.request) {
+    if (decoded.content.case === 'request') {
+      const request = decoded.content.value;
       if (this._state !== RpcState.OPENED && this._state !== RpcState.OPENING) {
         log('received request while closed');
         await this._sendMessage({
-          response: {
-            id: decoded.request.id,
-            error: encodeError(new RpcClosedError()),
-          },
+          case: 'response',
+          value: create(ResponseSchema, {
+            id: request.id,
+            content: { case: 'error', value: encodeError(new RpcClosedError()) },
+          }),
         });
         return;
       }
 
-      const req = decoded.request;
+      const req = request;
       if (req.stream) {
         log('stream request', { method: req.method });
         this._callStreamHandler(req, (response) => {
           log.trace('sending stream response', {
             method: req.method,
-            response: response.payload?.type_url,
-            error: response.error,
-            close: response.close,
+            response: response.content.case === 'payload' ? response.content.value.typeUrl : undefined,
+            error: response.content.case === 'error' ? response.content.value : undefined,
+            close: response.content.case === 'close',
           });
 
-          void this._sendMessage({ response }).catch((err) => {
+          void this._sendMessage({ case: 'response', value: response }).catch((err) => {
             log.warn('failed during close', err);
           });
         });
@@ -298,18 +307,19 @@ export class RpcPeer {
         DEBUG_CALLS &&
           log.trace('sending response', {
             method: req.method,
-            response: response.payload?.type_url,
-            error: response.error,
+            response: response.content.case === 'payload' ? response.content.value.typeUrl : undefined,
+            error: response.content.case === 'error' ? response.content.value : undefined,
           });
-        await this._sendMessage({ response });
+        await this._sendMessage({ case: 'response', value: response });
       }
-    } else if (decoded.response) {
+    } else if (decoded.content.case === 'response') {
       if (this._state !== RpcState.OPENED) {
         log('received response while closed');
         return; // Ignore when not open.
       }
 
-      const responseId = decoded.response.id;
+      const decodedResponse = decoded.content.value;
+      const responseId = decodedResponse.id;
       invariant(typeof responseId === 'number');
       if (!this._outgoingRequests.has(responseId)) {
         log.trace('received response with invalid id', { responseId });
@@ -322,16 +332,19 @@ export class RpcPeer {
         this._outgoingRequests.delete(responseId);
       }
 
-      DEBUG_CALLS && log.trace('response', { type_url: decoded.response.payload?.type_url });
-      item.resolve(decoded.response);
-    } else if (decoded.open) {
+      DEBUG_CALLS &&
+        log.trace('response', {
+          typeUrl: decodedResponse.content.case === 'payload' ? decodedResponse.content.value.typeUrl : undefined,
+        });
+      item.resolve(decodedResponse);
+    } else if (decoded.content.case === 'open') {
       log('received open message', { state: this._state });
       if (this._params.noHandshake) {
         return;
       }
 
-      await this._sendMessage({ openAck: true });
-    } else if (decoded.openAck) {
+      await this._sendMessage({ case: 'openAck', value: true });
+    } else if (decoded.content.case === 'openAck') {
       log('received openAck message', { state: this._state });
       if (this._params.noHandshake) {
         return;
@@ -339,29 +352,29 @@ export class RpcPeer {
 
       this._state = RpcState.OPENED;
       this._remoteOpenTrigger.wake();
-    } else if (decoded.streamClose) {
+    } else if (decoded.content.case === 'streamClose') {
       if (this._state !== RpcState.OPENED) {
         log('received stream close while closed');
         return; // Ignore when not open.
       }
 
-      log('received stream close', { id: decoded.streamClose.id });
-      invariant(typeof decoded.streamClose.id === 'number');
-      const stream = this._localStreams.get(decoded.streamClose.id);
+      const streamId = decoded.content.value.id;
+      log('received stream close', { id: streamId });
+      const stream = this._localStreams.get(streamId);
       if (!stream) {
-        log('no local stream', { id: decoded.streamClose.id });
+        log('no local stream', { id: streamId });
         return; // Ignore requests with incorrect id.
       }
 
-      this._localStreams.delete(decoded.streamClose.id);
+      this._localStreams.delete(streamId);
       await stream.close();
-    } else if (decoded.bye) {
+    } else if (decoded.content.case === 'bye') {
       this._byeTrigger.wake();
       // If we haven't already started closing, close now.
       if (this._state !== RpcState.CLOSING && this._state !== RpcState.CLOSED) {
         log('replying to bye');
         this._state = RpcState.CLOSING;
-        await this._sendMessage({ bye: {} });
+        await this._sendMessage({ case: 'bye', value: create(ByeSchema, {}) });
 
         this._abortRequests();
         this._disposeAndClose();
@@ -376,7 +389,7 @@ export class RpcPeer {
    * Make RPC call. Will trigger a handler on the other side.
    * Peer should be open before making this call.
    */
-  async call(method: string, request: Any, options?: RequestOptions): Promise<Any> {
+  async call(method: string, request: AnyEnvelope, options?: RequestOptions): Promise<AnyEnvelope> {
     DEBUG_CALLS && log.trace('calling...', { method });
     throwIfNotOpen(this._state);
 
@@ -397,13 +410,14 @@ export class RpcPeer {
 
       // Send request call.
       const sending = this._sendMessage({
-        request: {
+        case: 'request',
+        value: create(RequestSchema, {
           id,
           method,
           payload: request,
           stream: false,
           ...(traceContext ? { traceContext } : {}),
-        },
+        }),
       });
 
       // Wait until send completes or throws an error (or response throws a timeout), the resume waiting.
@@ -425,10 +439,10 @@ export class RpcPeer {
       throw err;
     }
 
-    if (response.payload) {
-      return response.payload;
-    } else if (response.error) {
-      throw decodeRpcError(response.error, method);
+    if (response.content.case === 'payload') {
+      return response.content.value;
+    } else if (response.content.case === 'error') {
+      throw decodeRpcError(response.content.value, method);
     } else {
       throw new Error('Malformed response.');
     }
@@ -439,23 +453,28 @@ export class RpcPeer {
    * Will trigger a handler on the other side.
    * Peer should be open before making this call.
    */
-  callStream(method: string, request: Any, options?: RequestOptions): Stream<Any> {
+  callStream(method: string, request: AnyEnvelope, options?: RequestOptions): Stream<AnyEnvelope> {
     throwIfNotOpen(this._state);
     const id = this._nextId++;
 
     return new Stream(({ ready, next, close }) => {
       const onResponse = (response: Response) => {
-        if (response.streamReady) {
-          ready();
-        } else if (response.close) {
-          close();
-        } else if (response.error) {
-          // TODO(dmaretskyi): Stack trace might be lost because the stream producer function is called asynchronously.
-          close(decodeRpcError(response.error, method));
-        } else if (response.payload) {
-          next(response.payload);
-        } else {
-          throw new Error('Malformed response.');
+        switch (response.content.case) {
+          case 'streamReady':
+            ready();
+            break;
+          case 'close':
+            close();
+            break;
+          case 'error':
+            // TODO(dmaretskyi): Stack trace might be lost because the stream producer function is called asynchronously.
+            close(decodeRpcError(response.content.value, method));
+            break;
+          case 'payload':
+            next(response.content.value);
+            break;
+          default:
+            throw new Error('Malformed response.');
         }
       };
 
@@ -480,13 +499,14 @@ export class RpcPeer {
 
       try {
         this._sendMessage({
-          request: {
+          case: 'request',
+          value: create(RequestSchema, {
             id,
             method,
             payload: request,
             stream: true,
             ...(traceContext ? { traceContext } : {}),
-          },
+          }),
         }).catch((err) => {
           this._outgoingRequests.delete(id);
           close(err);
@@ -498,7 +518,8 @@ export class RpcPeer {
 
       return () => {
         this._sendMessage({
-          streamClose: { id },
+          case: 'streamClose',
+          value: create(StreamCloseSchema, { id }),
         }).catch((err) => {
           log.catch(err);
         });
@@ -507,9 +528,9 @@ export class RpcPeer {
     });
   }
 
-  private async _sendMessage(message: RpcMessage, timeout?: number): Promise<void> {
-    DEBUG_CALLS && log.trace('sending message', { type: Object.keys(message)[0] });
-    await this._params.port.send(getRpcMessageCodec().encode(message, { preserveAny: true }), timeout);
+  private async _sendMessage(content: RpcMessage['content'], timeout?: number): Promise<void> {
+    DEBUG_CALLS && log.trace('sending message', { type: content.case });
+    await this._params.port.send(toBinary(RpcMessageSchema, create(RpcMessageSchema, { content })), timeout);
   }
 
   private _getHandlerRpcOptions(req: Request): RequestOptions | undefined {
@@ -534,15 +555,9 @@ export class RpcPeer {
       invariant(req.method);
 
       const response = await this._params.callHandler(req.method, req.payload, this._getHandlerRpcOptions(req));
-      return {
-        id: req.id,
-        payload: response,
-      };
+      return create(ResponseSchema, { id: req.id, content: { case: 'payload', value: response } });
     } catch (err) {
-      return {
-        id: req.id,
-        error: encodeError(err),
-      };
+      return create(ResponseSchema, { id: req.id, content: { case: 'error', value: encodeError(err) } });
     }
   }
 
@@ -555,40 +570,25 @@ export class RpcPeer {
 
       const responseStream = this._params.streamHandler(req.method, req.payload, this._getHandlerRpcOptions(req));
       responseStream.onReady(() => {
-        callback({
-          id: req.id,
-          streamReady: true,
-        });
+        callback(create(ResponseSchema, { id: req.id, content: { case: 'streamReady', value: true } }));
       });
 
       responseStream.subscribe(
         (msg) => {
-          callback({
-            id: req.id,
-            payload: msg,
-          });
+          callback(create(ResponseSchema, { id: req.id, content: { case: 'payload', value: msg } }));
         },
         (error) => {
           if (error) {
-            callback({
-              id: req.id,
-              error: encodeError(error),
-            });
+            callback(create(ResponseSchema, { id: req.id, content: { case: 'error', value: encodeError(error) } }));
           } else {
-            callback({
-              id: req.id,
-              close: true,
-            });
+            callback(create(ResponseSchema, { id: req.id, content: { case: 'close', value: true } }));
           }
         },
       );
 
       this._localStreams.set(req.id, responseStream);
     } catch (err: any) {
-      callback({
-        id: req.id,
-        error: encodeError(err),
-      });
+      callback(create(ResponseSchema, { id: req.id, content: { case: 'error', value: encodeError(err) } }));
     }
   }
 }

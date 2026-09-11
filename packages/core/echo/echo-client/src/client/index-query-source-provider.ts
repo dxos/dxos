@@ -14,24 +14,20 @@ import { invariant } from '@dxos/invariant';
 import { EID, EntityId, SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { RpcClosedError, subscribeStream } from '@dxos/protocols';
-import {
-  QueryReactivity,
-  type QueryResponse,
-  type QueryResult as RemoteQueryResult,
-} from '@dxos/protocols/proto/dxos/echo/query';
-import { type QueryService } from '@dxos/protocols/rpc';
+import { QueryReactivity } from '@dxos/protocols/buf/dxos/echo/query_pb';
+import { QueryService } from '@dxos/protocols/rpc';
 import { isNonNullable } from '@dxos/util';
 
-import { type FeedHandle } from '../feed/feed-handle';
-import { type QuerySourceProvider, recordObjectDiagnostic } from '../hypergraph';
-import { DatabaseImpl } from '../proxy-db';
+import { type FeedHandle } from '../feed/feed-handle.ts';
+import { type QuerySourceProvider, recordObjectDiagnostic } from '../hypergraph.ts';
+import { DatabaseImpl } from '../proxy-db/index.ts';
 import {
   type QuerySource,
   type SourceEntry,
   getQueryDeletedOption,
   getTargetSpacesForQuery,
   queryTargetsSpacesOrFeeds,
-} from '../query';
+} from '../query/index.ts';
 
 export type LoadObjectProps = {
   spaceId: SpaceId;
@@ -106,9 +102,20 @@ export class IndexQuerySource implements QuerySource {
 
   /**
    * Raw records from the host's last reactive response. Retained so we can re-hydrate when the
-   * objects they reference finish loading locally (see {@link _onObjectsUpdated}).
+   * objects they reference finish loading locally (see {@link _onObjectsUpdated}). Each record's
+   * `documentJson` is dropped once it has been hydrated into a feed handle, since later passes
+   * re-resolve the same live object by id from the handle's identity map — retaining it would keep
+   * a full copy of every result's document (hundreds of KB per mail message) for the subscription's
+   * lifetime.
    */
-  private _lastRemoteResults?: readonly RemoteQueryResult[] = undefined;
+  private _lastRemoteResults?: readonly QueryService.QueryResult[] = undefined;
+
+  /**
+   * Ids of {@link _lastRemoteResults} records whose `documentJson` we released. Tracked explicitly
+   * rather than inferred from its absence: a record that never carried JSON is not re-resolvable
+   * from a feed handle and must still go through the generic object loader.
+   */
+  private _releasedDocumentJsonIds = new Set<string>();
 
   /** queryId of the active reactive stream, kept for log correlation on update-driven re-hydration. */
   private _reactiveQueryId?: number = undefined;
@@ -136,6 +143,7 @@ export class IndexQuerySource implements QuerySource {
     this._open = false;
     this._results = undefined;
     this._lastRemoteResults = undefined;
+    this._releasedDocumentJsonIds.clear();
     this._reactiveQueryId = undefined;
     this._updateSubscription?.();
     this._updateSubscription = undefined;
@@ -172,6 +180,7 @@ export class IndexQuerySource implements QuerySource {
 
     this._closeStream();
     this._lastRemoteResults = undefined;
+    this._releasedDocumentJsonIds.clear();
     this._reactiveQueryId = undefined;
     // Drop any in-flight hydration pass so it doesn't apply results for the previous query.
     void this._hydrationCtx?.dispose().catch(() => {});
@@ -273,6 +282,7 @@ export class IndexQuerySource implements QuerySource {
             this._assertResultSpaces(query, response);
             // Remember the raw host records so a later local object load can re-hydrate them.
             this._lastRemoteResults = response.results ?? [];
+            this._releasedDocumentJsonIds.clear();
             this._scheduleHydrate();
           } catch (err: any) {
             log.catch(err);
@@ -365,7 +375,7 @@ export class IndexQuerySource implements QuerySource {
     queryId: number,
     query: QueryAST.Query,
     start: number,
-    records: readonly RemoteQueryResult[],
+    records: readonly QueryService.QueryResult[],
   ): Promise<SourceEntry[]> {
     log('queryIndex raw results', {
       queryId,
@@ -373,8 +383,22 @@ export class IndexQuerySource implements QuerySource {
       length: records.length,
     });
 
-    const processedResults = await Promise.all(records.map((result) => this._filterMapResult(ctx, start, result)));
+    const hydratedIntoFeedHandle = new Set<string>();
+    const processedResults = await Promise.all(
+      records.map((result) => this._filterMapResult(ctx, start, result, hydratedIntoFeedHandle)),
+    );
     const results = processedResults.filter(isNonNullable);
+
+    // Only rewrite the set we just hydrated — a newer host response may have replaced it meanwhile.
+    if (hydratedIntoFeedHandle.size > 0 && this._lastRemoteResults === records) {
+      this._lastRemoteResults = records.map((record) => {
+        if (record.documentJson === undefined || !hydratedIntoFeedHandle.has(record.id)) {
+          return record;
+        }
+        this._releasedDocumentJsonIds.add(record.id);
+        return { ...record, documentJson: undefined };
+      });
+    }
 
     const resultsWithNoSchema = results.filter((_) => _.result && !Entity.getType(_.result));
     if (resultsWithNoSchema.length > 0) {
@@ -394,7 +418,7 @@ export class IndexQuerySource implements QuerySource {
     return results;
   }
 
-  private _assertResultSpaces(query: QueryAST.Query, response: QueryResponse): void {
+  private _assertResultSpaces(query: QueryAST.Query, response: QueryService.QueryResponse): void {
     const targetSpaces = getTargetSpacesForQuery(query);
     if (targetSpaces.length > 0) {
       invariant(
@@ -404,10 +428,16 @@ export class IndexQuerySource implements QuerySource {
     }
   }
 
+  /**
+   * Hydrate one host record into a query entry, or null if it fails to load or validate. Ids
+   * hydrated through a feed handle are added to `hydratedIntoFeedHandle` so the caller can release
+   * their retained `documentJson`.
+   */
   private async _filterMapResult(
     ctx: Context,
     queryStartTimestamp: number,
-    result: RemoteQueryResult,
+    result: QueryService.QueryResult,
+    hydratedIntoFeedHandle?: Set<string>,
   ): Promise<SourceEntry | null> {
     recordObjectDiagnostic(result.id, () => ({
       objectId: result.id,
@@ -420,9 +450,9 @@ export class IndexQuerySource implements QuerySource {
     invariant(EntityId.isValid(result.id), 'Invalid id');
 
     // For queue items, hydrate using Obj.fromJSON with ref resolver.
-    if (result.queueId && result.documentJson) {
+    const documentJsonReleased = result.documentJson === undefined && this._releasedDocumentJsonIds.has(result.id);
+    if (result.queueId && (result.documentJson !== undefined || documentJsonReleased)) {
       invariant(EntityId.isValid(result.queueId), 'Invalid queueId');
-      const json = JSON.parse(result.documentJson);
       const queueEchoUri = EID.make({ spaceId: result.spaceId, entityId: result.queueId });
       const refResolver = this._params.graph.createRefResolver({
         context: { space: result.spaceId, feed: queueEchoUri },
@@ -447,6 +477,24 @@ export class IndexQuerySource implements QuerySource {
           feedHandle = database._tryGetFeedHandle(queueEchoUri);
         }
       }
+      // A record whose JSON we already released on an earlier pass: the feed handle holds the live
+      // object under the same id, so re-resolving from its identity map is the whole re-hydration.
+      if (documentJsonReleased) {
+        const cached = feedHandle?.getCachedObjectById(EntityId.make(result.id));
+        if (!cached) {
+          return null;
+        }
+        return {
+          id: result.id,
+          result: cached,
+          match: { rank: result.rank },
+          resolution: { source: 'index', time: Date.now() - queryStartTimestamp },
+          group: _groupFromRemoteResult(result),
+        };
+      }
+
+      invariant(result.documentJson !== undefined);
+      const json = JSON.parse(result.documentJson);
       let object;
       try {
         object = feedHandle
@@ -469,6 +517,9 @@ export class IndexQuerySource implements QuerySource {
       }
       if (!object) {
         return null;
+      }
+      if (feedHandle) {
+        hydratedIntoFeedHandle?.add(result.id);
       }
       const queryResult: SourceEntry = {
         id: result.id,
@@ -523,7 +574,7 @@ export class IndexQuerySource implements QuerySource {
    * Hydrate an index hit via disk-only load; skip objects whose strong deps
    * are permanently unavailable.
    */
-  private async _resolveIndexedObject(result: RemoteQueryResult): Promise<Entity.Unknown | undefined> {
+  private async _resolveIndexedObject(result: QueryService.QueryResult): Promise<Entity.Unknown | undefined> {
     const spaceId = SpaceId.make(result.spaceId);
 
     try {
@@ -565,5 +616,5 @@ const emittedSchemaValidationWarnings = new Set<string>();
  * The host always sends `groupCount` alongside `groupKey`; the `?? 1` floor (a present record
  * implies at least one member) is defensive and matches the working-set source's fallback.
  */
-const _groupFromRemoteResult = (result: RemoteQueryResult): SourceEntry['group'] =>
+const _groupFromRemoteResult = (result: QueryService.QueryResult): SourceEntry['group'] =>
   result.groupKey !== undefined ? { key: JSON.parse(result.groupKey), count: result.groupCount ?? 1 } : undefined;

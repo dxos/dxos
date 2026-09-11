@@ -39,11 +39,11 @@ import type { DataService, QueryService } from '@dxos/protocols/rpc';
 import { trace } from '@dxos/tracing';
 import { ComplexSet, chunkArray, deepMapValues } from '@dxos/util';
 
-import { type ChangeEvent, type DocHandleProxy, RepoProxy, type SaveStateChangedEvent } from '../automerge';
-import { type HypergraphImpl } from '../hypergraph';
-import { type BranchStore, forkDump, referencedObjectIds } from './branching';
-import { type IDatabaseBinding, ObjectCore } from './object-core';
-import { ObjectCoreRegistry } from './object-core-registry';
+import { type ChangeEvent, type DocHandleProxy, RepoProxy, type SaveStateChangedEvent } from '../automerge/index.ts';
+import { type HypergraphImpl } from '../hypergraph.ts';
+import { type BranchStore, forkDump, referencedObjectIds } from './branching.ts';
+import { ObjectCoreRegistry } from './object-core-registry.ts';
+import { type IDatabaseBinding, ObjectCore } from './object-core.ts';
 import {
   type AddCoreOptions,
   type AtomicReplaceObjectProps,
@@ -54,10 +54,8 @@ import {
   type LoadObjectOptions,
   type ReleaseObjectOptions,
   type SpaceDocumentHeads,
-} from './types';
-import { getInlineAndLinkChanges, getRemovedObjectIds } from './util';
-
-const THROTTLED_UPDATE_FREQUENCY = 10;
+} from './types.ts';
+import { getInlineAndLinkChanges, getRemovedObjectIds } from './util.ts';
 
 const TRACE_LOADING = false;
 
@@ -238,13 +236,9 @@ export class EntityManager implements IDatabaseBinding {
    */
   async open(ctx: Context): Promise<void> {
     this._ctx = ctx;
-    this._updateScheduler = new UpdateScheduler(
-      ctx,
-      async () => this._emitDbUpdateEvents(ctx),
-      // Throttling is disabled by bypassing it at every call site; configuring a rate and then always
-      // overriding it just made the two disagree.
-      DISABLE_THROTTLING ? {} : { maxFrequency: THROTTLED_UPDATE_FREQUENCY },
-    );
+    // Unthrottled: every call site already bypassed the rate, so configuring one only made the two
+    // disagree.
+    this._updateScheduler = new UpdateScheduler(ctx, async () => this._emitDbUpdateEvents(ctx), {});
 
     await this._repoProxy.open();
     ctx.onDispose(() => this._unsubscribeFromHandles());
@@ -2041,5 +2035,3 @@ export class EntityManager implements IDatabaseBinding {
 }
 
 const RPC_TIMEOUT = 20_000;
-
-const DISABLE_THROTTLING = true;

@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+import { create } from '@bufbuild/protobuf';
 import * as Effect from 'effect/Effect';
 
 import * as Capability from '@dxos/app-framework/Capability';
@@ -10,6 +11,7 @@ import * as NotFound from '@dxos/app-toolkit/NotFound';
 import { Context } from '@dxos/context';
 import { Database, EID } from '@dxos/echo';
 import { EntityId, SpaceId } from '@dxos/keys';
+import { QueryRequestSchema } from '@dxos/protocols/buf/dxos/echo/query_pb';
 
 import { meta } from '#meta';
 import { ClientCapabilities } from '#types';
@@ -17,19 +19,14 @@ import { ClientCapabilities } from '#types';
 /** Cap on the remote edge existence check so an unreachable edge cannot block navigation. */
 const EDGE_EXISTENCE_TIMEOUT = '3 seconds';
 
-/**
- * Loads a navigation target by `(spaceId, entityId)` on behalf of the layout plugins, so they can
- * restore a URL-addressed plank without depending on the client for object loading. Loads the object
- * into local ECHO (materializing its graph node) when it exists locally, and otherwise checks remote
- * existence via edge. See {@link AppCapabilities.NavigationTargetLoader}.
- */
+/** See {@link AppCapabilities.NavigationTargetLoader}. */
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const client = yield* ClientCapabilities.Client;
 
     // The fallible probe, not the checker: a failed query must stay distinguishable from an empty one.
     const checkRemote = NotFound.createEdgeExistenceProbe((spaceId, body) =>
-      client.edge.http.execQuery(new Context(), spaceId, body),
+      client.edge.http.execQuery(new Context(), spaceId, create(QueryRequestSchema, body)),
     );
 
     const loader: AppCapabilities.NavigationTargetLoader = {
@@ -37,18 +34,26 @@ export default Capability.makeModule(
       load: ({ spaceId, entityId }) =>
         Effect.gen(function* () {
           // A synthetic node id is not evidence that anything was deleted.
-          if (!SpaceId.isValid(spaceId) || !EntityId.isValid(entityId)) {
+          if (!SpaceId.isValid(spaceId)) {
             return 'unknown';
           }
           // A URL restore can call this while the forked client initialization is still
           // running; `spaces` is unreadable until it completes, and failing here would
           // fail-fast the plank to not-found.
           yield* Effect.promise(() => client.waitUntilInitialized());
+
+          if (entityId === undefined) {
+            return client.spaces.get(spaceId) ? 'exists' : 'absent';
+          }
+
+          if (!EntityId.isValid(entityId)) {
+            return 'unknown';
+          }
           const eid = EID.make({ spaceId, entityId });
 
           // Local first: loading the object populates the collection/type-section refs that address
-          // it, so the next graph expansion materializes its node. Never `absent` on a miss —
-          // `spaces.get` reads a list `waitUntilInitialized` does not guarantee has arrived.
+          // it, so the next graph expansion materializes its node. Never `absent` on a miss — the
+          // object may exist in a space this peer has not replicated, which the remote probe settles.
           const space = client.spaces.get(spaceId);
           if (space) {
             const loaded = yield* Effect.promise(() => space.waitUntilReady()).pipe(

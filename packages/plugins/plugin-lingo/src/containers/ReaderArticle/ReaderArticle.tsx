@@ -11,7 +11,7 @@ import { Filter, Obj, Ref, Relation } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { sourceHash } from '@dxos/nlp';
 import { Panel, useTranslation } from '@dxos/react-ui';
-import { Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
+import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 import { HasSubject } from '@dxos/types';
 
 import { ReaderPane } from '#components';
@@ -27,7 +27,7 @@ import {
 import { meta } from '#meta';
 import { Analysis, Language, LingoCapabilities, LingoOperation, Vocabulary, Word } from '#types';
 
-import { useSourceText } from './useSourceText';
+import { useSourceText } from './useSourceText.ts';
 
 export type ReaderArticleProps = AppSurface.ObjectArticleProps<Obj.Unknown>;
 
@@ -41,7 +41,7 @@ export const ReaderArticle = ({ role, subject, attendableId }: ReaderArticleProp
   const { t } = useTranslation(meta.profile.key);
   const { invokePromise } = useOperationInvoker();
   // Attention sits on the article this companion accompanies, not on the companion itself, so the
-  // subject's URI is what `Menu.Toolbar`'s `useAttention` has to match — otherwise the toolbar is
+  // subject's URI is what `ActionToolbar`'s `useAttention` has to match — otherwise the toolbar is
   // permanently disabled.
   const attentionId = (subject && Obj.getURI(subject)) ?? attendableId;
   const settings = useAtomValue(useCapability(LingoCapabilities.Settings));
@@ -461,27 +461,23 @@ export const ReaderArticle = ({ role, subject, attendableId }: ReaderArticleProp
   };
 
   return (
-    <Menu.Root {...menuActions} attendableId={attentionId} alwaysActive>
-      <Panel.Root role={role}>
-        <Panel.Toolbar asChild classNames='dx-container'>
-          <Menu.Toolbar>
-            <Menu.Items />
-          </Menu.Toolbar>
-        </Panel.Toolbar>
-        {/* The editor scrolls itself, so the panel must not: it only supplies the box to fill. */}
-        <Panel.Content classNames='dx-container flex flex-col min-h-0 overflow-hidden'>
-          {text === undefined ? (
-            <div className='p-8 text-description'>{t('no-text.message')}</div>
-          ) : passageText === undefined ? (
-            // Never stand in the source: the document itself is already on screen beside this
-            // companion, so a duplicate reads as a broken pane rather than a useful fallback.
-            <div className='p-8 text-description'>{t('not-translated.message')}</div>
-          ) : (
-            <ReaderPane {...paneProps} side='target' content={passageText} images={false} />
-          )}
-        </Panel.Content>
-      </Panel.Root>
-    </Menu.Root>
+    <Panel.Root role={role}>
+      <Panel.Toolbar asChild classNames='dx-expand'>
+        <ActionToolbar {...menuActions} attendableId={attentionId} alwaysActive />
+      </Panel.Toolbar>
+      {/* The editor scrolls itself, so the panel must not: it only supplies the box to fill. */}
+      <Panel.Content classNames='flex flex-col'>
+        {text === undefined ? (
+          <div className='p-8 text-description'>{t('no-text.message')}</div>
+        ) : passageText === undefined ? (
+          // Never stand in the source: the document itself is already on screen beside this
+          // companion, so a duplicate reads as a broken pane rather than a useful fallback.
+          <div className='p-8 text-description'>{t('not-translated.message')}</div>
+        ) : (
+          <ReaderPane {...paneProps} side='target' content={passageText} images={false} />
+        )}
+      </Panel.Content>
+    </Panel.Root>
   );
 };
 

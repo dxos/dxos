@@ -6,7 +6,7 @@ import { useEffect, useMemo } from 'react';
 
 import { type Transcriber } from '@dxos/pipeline-transcription';
 
-import { type CreateTranscriberOptions, createTranscriber } from '../capture';
+import { type CreateTranscriberOptions, createTranscriber } from '../capture/index.ts';
 
 /**
  * Records audio while the user is speaking and transcribes it after they pause. Builds a

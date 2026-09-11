@@ -11,8 +11,8 @@ import { Annotation, DXN, Obj, Ref, Type } from '@dxos/echo';
 import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
 import * as ConnectorAnnotations from '@dxos/plugin-connector/ConnectorAnnotations';
 
-import * as StudioCapabilities from './StudioCapabilities';
-import * as Variant from './Variant';
+import * as StudioCapabilities from './StudioCapabilities.ts';
+import * as Variant from './Variant.ts';
 
 /**
  * Resolve the connector(s) whose credential this artifact's provider needs, from the artifact's
@@ -68,6 +68,11 @@ export class Artifact extends Type.makeObject<Artifact>(DXN.make('org.dxos.type.
   ),
 ) {}
 
-/** Creates an Artifact. `kind` defaults to `'image'`. */
-export const make = ({ name, kind = 'image' }: { name?: string; kind?: string } = {}): Artifact =>
-  Obj.make(Artifact, { name, kind, variants: [] });
+/**
+ * Creates an Artifact.
+ * @param props.name Optional display name.
+ * @param props.kind Media kind (`'image' | 'video' | …`); defaults to `'image'`.
+ * @param props[Obj.Parent] Optional parent object to set at construction time.
+ */
+export const make = (props: { name?: string; kind?: string; [Obj.Parent]?: Obj.Unknown } = {}): Artifact =>
+  Obj.make(Artifact, { name: props.name, kind: props.kind ?? 'image', variants: [], [Obj.Parent]: props[Obj.Parent] });

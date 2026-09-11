@@ -5,7 +5,7 @@
 import { expect, test } from '@playwright/test';
 import { platform } from 'node:os';
 
-import { AppManager, INITIAL_SPACE_COUNT, INITIAL_URL } from './app-manager';
+import { AppManager, INITIAL_SPACE_COUNT, INITIAL_URL } from './app-manager.ts';
 
 // TODO(wittjosiah): WebRTC only available in chromium browser for testing currently.
 //   https://github.com/microsoft/playwright/issues/2973
@@ -31,11 +31,9 @@ test.describe('HALO tests', () => {
   });
 
   test.afterEach(async () => {
-    // NOTE: `afterEach` even if the test is skipped in the beforeEach!
-    // Guard against uninitialized app managers.
-    if (host !== undefined || guest !== undefined) {
-      await host.closePage();
-      await guest.closePage();
+    // Playwright runs `afterEach` even when `beforeEach` skipped, so neither manager may exist.
+    if (host !== undefined && guest !== undefined) {
+      await Promise.all([host.close(), guest.close()]);
     }
   });
 

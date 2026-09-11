@@ -30,6 +30,7 @@
     "src"
   ],
   "dependencies": {
+    "@dxos/assistant": "workspace:*",
     "@dxos/assistant-toolkit": "workspace:*",
     "@dxos/async": "workspace:*",
     "@dxos/client": "workspace:*",

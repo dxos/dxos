@@ -15,20 +15,12 @@ import * as GraphModel from '@dxos/graph/GraphModel';
 import * as GraphNode from '@dxos/graph/GraphNode';
 import { failedInvariant, invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { type MakeOptional } from '@dxos/util';
+import { type MakeOptional, shallowEqual } from '@dxos/util';
 
 import { scheduleTask } from '#scheduler';
 
-import * as Node from './AppGraphNode';
-import {
-  normalizeRelation,
-  primaryKey,
-  primaryParts,
-  secondaryKey,
-  secondaryParts,
-  shallowEqual,
-  withLabel,
-} from './util';
+import * as Node from './AppGraphNode.ts';
+import { normalizeRelation, primaryKey, primaryParts, secondaryKey, secondaryParts, withLabel } from './util.ts';
 
 //
 // The app graph: the vocabulary, the store that holds it, and the operations over it. One module

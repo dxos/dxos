@@ -5,12 +5,12 @@
 import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 
-import { Database, Obj, Ref } from '@dxos/echo';
+import { Database, Filter, Obj, Ref } from '@dxos/echo';
 import { TestDatabaseLayer } from '@dxos/echo-client/testing';
-import { Milestone, Task, TaskSet } from '@dxos/types';
+import { Milestone, RemoteSession, Task, TaskSet } from '@dxos/types';
 
-import createTask from './create-task';
-import updateTask from './update-task';
+import createTask from './create-task.ts';
+import updateTask from './update-task.ts';
 
 describe('update-task', () => {
   it.effect('patches only the provided fields', () =>
@@ -23,13 +23,74 @@ describe('update-task', () => {
         priority: 'low',
       });
 
-      yield* updateTask.handler({ task: Ref.make(task), status: 'started', estimate: 3 });
+      yield* updateTask.handler({ task: Ref.make(task), status: 'started', estimate: 'm' });
 
       expect(task.title).toBe('Draft');
       expect(task.priority).toBe('low');
       expect(task.status).toBe('started');
-      expect(task.estimate).toBe(3);
+      expect(task.estimate).toBe('m');
     }).pipe(Effect.provide(TestDatabaseLayer({ types: [Milestone.Milestone, Task.Task, TaskSet.TaskSet] }))),
+  );
+
+  it.effect('assigns a coding-agent session by its harness id, creating the session record', () =>
+    Effect.gen(function* () {
+      const taskSet = yield* Database.add(TaskSet.make({}));
+      yield* Database.flush();
+      const { task } = yield* createTask.handler({ taskSet: Ref.make(taskSet), title: 'Draft' });
+
+      yield* updateTask.handler({
+        task: Ref.make(task),
+        status: 'started',
+        remoteSession: { sessionId: 'session_abc', title: 'Draft the thing', branch: 'claude/draft' },
+      });
+
+      // The space did not hold this session, so claiming the work created it — an agent can assign
+      // itself on its first call rather than registering separately first.
+      const sessions = yield* Database.query(Filter.type(RemoteSession.RemoteSession)).run;
+      expect(sessions).toHaveLength(1);
+      expect(RemoteSession.getSessionId(sessions[0])).toBe('session_abc');
+      expect(sessions[0].branch).toBe('claude/draft');
+
+      // The actor is the session object itself, not a bare role: a check-in finds its open tasks by
+      // this ref, and a role alone would not say which run holds the task.
+      expect(task.assignee?.role).toBe('assistant');
+      expect(Task.refEntityId(task.assignee!.subject!)).toBe(sessions[0].id);
+    }).pipe(
+      Effect.provide(
+        TestDatabaseLayer({
+          types: [Milestone.Milestone, RemoteSession.RemoteSession, Task.Task, TaskSet.TaskSet],
+        }),
+      ),
+    ),
+  );
+
+  it.effect('reuses the session already recorded for that harness id', () =>
+    Effect.gen(function* () {
+      const taskSet = yield* Database.add(TaskSet.make({}));
+      const existing = yield* Database.add(
+        RemoteSession.make({ sessionId: 'session_abc', state: 'running', started: new Date().toISOString() }),
+      );
+      yield* Database.flush();
+      const { task } = yield* createTask.handler({ taskSet: Ref.make(taskSet), title: 'Draft' });
+
+      yield* updateTask.handler({
+        task: Ref.make(task),
+        remoteSession: { sessionId: 'session_abc', title: 'Draft the thing' },
+      });
+
+      const sessions = yield* Database.query(Filter.type(RemoteSession.RemoteSession)).run;
+      expect(sessions).toHaveLength(1);
+      expect(Task.refEntityId(task.assignee!.subject!)).toBe(existing.id);
+      // A session missing a title takes the one the caller named; a session that has one keeps it,
+      // since the session reports its own state and this call is not that report.
+      expect(existing.title).toBe('Draft the thing');
+    }).pipe(
+      Effect.provide(
+        TestDatabaseLayer({
+          types: [Milestone.Milestone, RemoteSession.RemoteSession, Task.Task, TaskSet.TaskSet],
+        }),
+      ),
+    ),
   );
 
   it.effect('records what the patch changed, and nothing when it changed nothing', () =>
@@ -101,11 +162,10 @@ describe('update-task', () => {
     Effect.gen(function* () {
       // A task outside a task set has no parent to fall back to, so the edge must be cleared outright.
       const parent = yield* Database.add(Task.make({ title: 'Parent', status: 'todo' }));
-      const child = yield* Database.add(Task.make({ title: 'Child', status: 'todo' }));
+      const child = yield* Database.add(Task.make({ [Obj.Parent]: parent, title: 'Child', status: 'todo' }));
       Obj.update(child, (child) => {
         child.parentTask = Ref.make(parent);
       });
-      Obj.setParent(child, parent);
       yield* Database.flush();
 
       yield* updateTask.handler({ task: Ref.make(child), parentTask: null });

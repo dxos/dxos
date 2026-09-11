@@ -6,9 +6,9 @@ import { type Page, expect, test } from '@playwright/test';
 
 import { setupPage, storybookUrl } from '@dxos/test-utils/playwright';
 
-import { DxGridManager } from '../testing';
-import { type DxGridCellsSelect } from '../types';
-import { toPlaneCellIndex } from '../util';
+import { DxGridManager } from '../testing/index.ts';
+import { type DxGridCellsSelect } from '../types.ts';
+import { toPlaneCellIndex } from '../util.ts';
 
 const gridPlaneCellSize = 31;
 const gap = 1;
@@ -19,6 +19,7 @@ const nRows = 8;
 test.describe('dx-grid', () => {
   let page: Page;
   let grid: DxGridManager;
+  let close: () => Promise<void>;
 
   test.beforeEach(async ({ browser }) => {
     const setup = await setupPage(browser, {
@@ -29,12 +30,13 @@ test.describe('dx-grid', () => {
       }, // 336 x 272
     });
     page = setup.page;
+    close = setup.close;
     grid = new DxGridManager(page);
     await grid.ready();
   });
 
   test.afterEach(async () => {
-    await page.close();
+    await close();
   });
 
   test('virtualization & panning', async () => {

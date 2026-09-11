@@ -10,7 +10,7 @@ import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
 import { Message, Organization, Person } from '@dxos/types';
 
-import { extractContact } from './contact-extractor';
+import { extractContact } from './contact-extractor.ts';
 
 describe('extractContact', () => {
   let builder: EchoTestBuilder;

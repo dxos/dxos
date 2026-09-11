@@ -22,9 +22,9 @@ import * as HelpOperation from '@dxos/plugin-support/HelpOperation';
 import { osTranslations } from '@dxos/ui-theme';
 
 import hero from '../assets/hero.webp?url';
-import { AUTHORIZING_DEVICE_DIALOG, WELCOME_SCREEN } from './constants';
-import { meta } from './meta';
-import { isInvalidRecoveryToken, queryAllCredentials, removeQueryParamByValue } from './util';
+import { AUTHORIZING_DEVICE_DIALOG, WELCOME_SCREEN } from './constants.ts';
+import { meta } from './meta.ts';
+import { isInvalidRecoveryToken, queryAllCredentials, removeQueryParamByValue } from './util.ts';
 
 export type OnboardingManagerProps = {
   invokePromise: Capabilities.OperationInvoker['invokePromise'];
@@ -234,8 +234,8 @@ export class OnboardingManager {
 
   private async _queryRecoveryCredentials(): Promise<Credential[]> {
     const credentials = await queryAllCredentials(this._client);
-    return credentials.filter(
-      (credential) => credential.subject.assertion['@type'] === 'dxos.halo.credentials.IdentityRecovery',
+    return credentials.filter((credential) =>
+      credential.subject?.assertion?.typeUrl.endsWith('dxos.halo.credentials.IdentityRecovery'),
     );
   }
 

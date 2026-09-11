@@ -6,12 +6,12 @@ import React, { type ComponentPropsWithoutRef, forwardRef } from 'react';
 
 import { generateName } from '@dxos/display-name';
 import { ConnectionState } from '@dxos/react-client/mesh';
-import { Avatar, Button, DropdownMenu, Icon, Tag, type ThemedClassName, useId, useTranslation } from '@dxos/react-ui';
+import { Avatar, Button, Icon, Menu, Tag, type ThemedClassName, useId, useTranslation } from '@dxos/react-ui';
 import { Listbox } from '@dxos/react-ui-list';
 import { hexToFallback } from '@dxos/util';
 
-import { translationKey } from '../../translations';
-import { type AgentFormProps, type DeviceListItemProps, type ShellDevice } from './DeviceListProps';
+import { translationKey } from '../../translations.ts';
+import { type AgentFormProps, type DeviceListItemProps, type ShellDevice } from './DeviceListProps.ts';
 
 /** Icon per device kind; an unreported kind falls back to the key-derived emoji. */
 const KIND_ICONS: Record<NonNullable<ShellDevice['kind']>, string> = {
@@ -99,8 +99,8 @@ export const DeviceListItem = forwardRef<
             </Tooltip.Root>
           )} */}
           {isCurrent && (onClickJoinExisting || onClickRecover || onClickReset) && (
-            <DropdownMenu.Root>
-              <DropdownMenu.Trigger asChild>
+            <Menu.Root>
+              <Menu.Trigger asChild>
                 <Button
                   variant='ghost'
                   classNames='px-0 w-(--dx-rail-action) h-(--dx-rail-action)'
@@ -109,37 +109,34 @@ export const DeviceListItem = forwardRef<
                   <span className='sr-only'>{t('more-options.label')}</span>
                   <Icon icon='ph--dots-three--regular' />
                 </Button>
-              </DropdownMenu.Trigger>
-              <DropdownMenu.Content>
-                <DropdownMenu.Viewport>
-                  {/* <DropdownMenu.Item disabled onClick={onClickEdit}> */}
+              </Menu.Trigger>
+              <Menu.Content>
+                <Menu.Viewport>
+                  {/* <Menu.Item disabled onClick={onClickEdit}> */}
                   {/*  <PencilSimpleLine className={getSize(5)} /> */}
                   {/*  {t('edit-device.label')} */}
-                  {/* </DropdownMenu.Item> */}
+                  {/* </Menu.Item> */}
                   {onClickJoinExisting && (
-                    <DropdownMenu.Item
-                      data-testid='device-list-item-current.join-existing'
-                      onClick={onClickJoinExisting}
-                    >
+                    <Menu.Item data-testid='device-list-item-current.join-existing' onClick={onClickJoinExisting}>
                       <Icon icon='ph--share-fat--regular' />
                       {t('choose-join-new-identity.label')}
-                    </DropdownMenu.Item>
+                    </Menu.Item>
                   )}
                   {onClickRecover && (
-                    <DropdownMenu.Item data-testid='device-list-item-current.recover' onClick={onClickRecover}>
+                    <Menu.Item data-testid='device-list-item-current.recover' onClick={onClickRecover}>
                       <Icon icon='ph--first-aid-kit--regular' />
                       {t('choose-recover-identity.label')}
-                    </DropdownMenu.Item>
+                    </Menu.Item>
                   )}
                   {onClickReset && (
-                    <DropdownMenu.Item data-testid='device-list-item-current.reset' onClick={onClickReset}>
+                    <Menu.Item data-testid='device-list-item-current.reset' onClick={onClickReset}>
                       <Icon icon='ph--power--regular' />
                       {t('reset-device.label')}
-                    </DropdownMenu.Item>
+                    </Menu.Item>
                   )}
-                </DropdownMenu.Viewport>
-              </DropdownMenu.Content>
-            </DropdownMenu.Root>
+                </Menu.Viewport>
+              </Menu.Content>
+            </Menu.Root>
           )}
         </Avatar.Root>
       </Listbox.Item>

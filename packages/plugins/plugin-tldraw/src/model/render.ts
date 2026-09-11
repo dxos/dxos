@@ -19,7 +19,7 @@ import {
   type Point,
   RecordBuilder,
   type ShapeProps,
-} from './RecordBuilder';
+} from './RecordBuilder.ts';
 
 export const DEFAULT_SCALE = 1;
 
@@ -163,6 +163,8 @@ export const renderObject = (object: Scene.WorldObject, options: RenderOptions):
           start: element.start ? point(element.start) : undefined,
           end: element.end ? point(element.end) : undefined,
           text: element.text,
+          head: element.head,
+          tail: element.tail,
           ...style(element),
         };
         builder.arrow(props);

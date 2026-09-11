@@ -2,7 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import { useControllableState } from '@radix-ui/react-use-controllable-state';
 import React, {
   type ComponentPropsWithoutRef,
   type Dispatch,
@@ -11,18 +10,11 @@ import React, {
   forwardRef,
 } from 'react';
 
-import {
-  Button,
-  type ButtonProps,
-  DropdownMenu,
-  Icon,
-  IconButton,
-  type ThemedClassName,
-  useTranslation,
-} from '@dxos/react-ui';
+import { useControllableState } from '@dxos/react-hooks';
+import { Button, type ButtonProps, Icon, IconButton, Menu, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
-import { translationKey } from '../../translations';
+import { translationKey } from '../../translations.ts';
 
 // TODO(burdon): Move to react-ui.
 
@@ -96,8 +88,8 @@ export const BifurcatedAction = forwardRef<HTMLButtonElement, BifurcatedActionPr
         {activeAction.icon && <Icon icon={activeAction.icon} />}
         <span>{activeAction.label}</span>
       </Button>
-      <DropdownMenu.Root>
-        <DropdownMenu.Trigger asChild>
+      <Menu.Root>
+        <Menu.Trigger asChild>
           <IconButton
             size={4}
             label={t('invite-options.label')}
@@ -107,14 +99,14 @@ export const BifurcatedAction = forwardRef<HTMLButtonElement, BifurcatedActionPr
             classNames={['h-11 flex-none rounded-w-none', classNames]}
             data-testid={dropdownTestId}
           />
-        </DropdownMenu.Trigger>
-        {/* TODO(thure): Putting `DropdownMenu.Portal` here breaks highlighting and focus. Why? */}
-        <DropdownMenu.Portal>
-          <DropdownMenu.Content>
-            <DropdownMenu.Viewport>
+        </Menu.Trigger>
+        {/* TODO(thure): Putting `Menu.Portal` here breaks highlighting and focus. Why? */}
+        <Menu.Portal>
+          <Menu.Content>
+            <Menu.Viewport>
               {Object.entries(actions).map(([id, action]) => {
                 return (
-                  <DropdownMenu.CheckboxItem
+                  <Menu.CheckboxItem
                     key={id}
                     aria-labelledby={`${id}__label`}
                     aria-describedby={`${id}__description`}
@@ -132,17 +124,17 @@ export const BifurcatedAction = forwardRef<HTMLButtonElement, BifurcatedActionPr
                         </p>
                       )}
                     </div>
-                    <DropdownMenu.ItemIndicator asChild>
+                    <Menu.ItemIndicator asChild>
                       <Icon icon='ph--check--regular' size={4} />
-                    </DropdownMenu.ItemIndicator>
-                  </DropdownMenu.CheckboxItem>
+                    </Menu.ItemIndicator>
+                  </Menu.CheckboxItem>
                 );
               })}
-            </DropdownMenu.Viewport>
-            <DropdownMenu.Arrow />
-          </DropdownMenu.Content>
-        </DropdownMenu.Portal>
-      </DropdownMenu.Root>
+            </Menu.Viewport>
+            <Menu.Arrow />
+          </Menu.Content>
+        </Menu.Portal>
+      </Menu.Root>
     </div>
   );
 });

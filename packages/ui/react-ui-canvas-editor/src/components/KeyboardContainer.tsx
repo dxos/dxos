@@ -2,36 +2,19 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { type PropsWithChildren, useEffect } from 'react';
-import { HotkeysProvider, useHotkeysContext } from 'react-hotkeys-hook';
+import React, { type PropsWithChildren } from 'react';
 
+import { useHotkeyScope } from '@dxos/react-focus';
 import { useAttention } from '@dxos/react-ui-attention';
 
 export const GLOBAL_SCOPE = 'global';
 
 /**
- * Wraps the keyboard scope.
- * NOTE: Works with [hotkeys-js](https://www.npmjs.com/package/hotkeys-js) for headless processing.
+ * Activates the editor's hotkey scope while it has attention, so `useShortcuts`' commands are
+ * live for the editor the user is in and silent for every other one on screen.
  */
-// TODO(burdon): Factor out and replace @dxos/keyboard.
 export const KeyboardContainer = ({ id, children }: PropsWithChildren<{ id: string }>) => {
-  return (
-    <HotkeysProvider initiallyActiveScopes={[GLOBAL_SCOPE]}>
-      <KeyboardContainerImpl id={id}>{children}</KeyboardContainerImpl>
-    </HotkeysProvider>
-  );
-};
-
-const KeyboardContainerImpl = ({ id, children }: PropsWithChildren<{ id: string }>) => {
   const { hasAttention } = useAttention(id);
-  const { enableScope, disableScope } = useHotkeysContext();
-  useEffect(() => {
-    if (hasAttention) {
-      enableScope(id);
-    } else {
-      disableScope(id);
-    }
-  }, [id, hasAttention]);
-
+  useHotkeyScope(id, hasAttention);
   return <>{children}</>;
 };

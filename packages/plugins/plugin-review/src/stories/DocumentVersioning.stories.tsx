@@ -62,8 +62,8 @@ import {
   suggestingScenario,
   tableCellEditScenario,
   tableSuggestScenario,
-} from '../testing';
-import { runScenarioStorybook, selectViewMode } from '../testing/scenario-executor-storybook';
+} from '../testing/index.ts';
+import { runScenarioStorybook, selectViewMode } from '../testing/scenario-executor-storybook.ts';
 
 const concat = (...lines: string[]) => lines.join('\n');
 
@@ -184,7 +184,7 @@ const getDoc = (): Markdown.Document => {
 const setRootContent = (content: string) => {
   const root = getDoc().content.target;
   invariant(root, 'root text not loaded');
-  Obj.update(root, () => {
+  Obj.update(root, (root) => {
     EchoText.update(root, 'content', content);
   });
 };
@@ -194,8 +194,8 @@ const setBranchContent = async (branchName: string, content: string) => {
   const branch = doc.history?.branches.find((branch) => branch.name === branchName);
   invariant(branch, 'branch not found');
   const binding = await Branch.bind(doc, branch);
-  Obj.update(binding.object, () => {
-    EchoText.update(binding.object, 'content', content);
+  Obj.update(binding.object, (object) => {
+    EchoText.update(object, 'content', content);
   });
   binding.dispose();
 };
@@ -218,8 +218,8 @@ const seedSuggestion = async (creator: string, content: string) => {
   invariant(parent, 'root text not loaded');
   const branch = await Branch.suggestion(doc, parent, creator);
   const binding = await Branch.bind(doc, branch);
-  Obj.update(binding.object, () => {
-    EchoText.update(binding.object, 'content', content);
+  Obj.update(binding.object, (object) => {
+    EchoText.update(object, 'content', content);
   });
   binding.dispose();
 };

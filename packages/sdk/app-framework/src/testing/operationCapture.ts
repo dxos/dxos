@@ -6,8 +6,8 @@ import * as Effect from 'effect/Effect';
 
 import type * as Operation from '@dxos/compute/Operation';
 
-import { Capabilities } from '../common';
-import { Capability } from '../core';
+import { Capabilities } from '../common/index.ts';
+import { Capability } from '../core/index.ts';
 
 export type CapturedCall<I = unknown> = {
   /** The DXN key string of the invoked operation. */

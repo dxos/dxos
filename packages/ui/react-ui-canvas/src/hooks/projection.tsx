@@ -13,7 +13,7 @@ import {
   translate as translateMatrix,
 } from 'transformation-matrix';
 
-import { type Dimension, type Point } from '../types';
+import { type Dimension, type Point } from '../types.ts';
 
 export const defaultOrigin: Point = { x: 0, y: 0 };
 

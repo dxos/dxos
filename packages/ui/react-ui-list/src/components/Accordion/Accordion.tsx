@@ -2,12 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
-import { AccordionItem, AccordionItemBody, AccordionItemHeader } from './AccordionItem';
-import { AccordionRoot } from './AccordionRoot';
+import { AccordionItem, AccordionItemBody, AccordionItemHeader } from './AccordionItem.tsx';
+import { AccordionRoot } from './AccordionRoot.tsx';
 
-// TODO(burdon): Next iteration should be based on Radix UI Accordion:
-//  https://www.radix-ui.com/primitives/docs/components/accordion
-// TODO(burdon): Support key navigation.
+// Built on `@ark-ui/react`'s Accordion (zag state machine), which carries the APG keymap for key
+// navigation.
 
 export const Accordion = {
   Root: AccordionRoot,

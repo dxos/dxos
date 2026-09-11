@@ -8,7 +8,7 @@ import { log } from '@dxos/log';
 import { htmlToMarkdown } from '@dxos/markdown';
 import { Message } from '@dxos/types';
 
-import { fixtureExists, loadFixtureMessages, round, trackProgress, writeResults } from '../testing/harness';
+import { fixtureExists, loadFixtureMessages, round, trackProgress, writeResults } from '../testing/harness/index.ts';
 
 /**
  * Measures throughput of `@dxos/markdown`'s `htmlToMarkdown` (linkedom + turndown) over the mailbox

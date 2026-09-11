@@ -24,8 +24,8 @@ import { Message, Organization, Person, Pipeline, Task } from '@dxos/types';
 
 import { translations } from '#translations';
 
-import PipelineProperties from '../PipelineProperties';
-import { PipelineArticle } from './PipelineArticle';
+import PipelineProperties from '../PipelineProperties/index.ts';
+import { PipelineArticle } from './PipelineArticle.tsx';
 
 random.seed(0);
 
@@ -39,7 +39,7 @@ const DefaultStory = () => {
   }
 
   return (
-    <div className='grow grid grid-cols-[1fr_350px] overflow-hidden h-full w-full'>
+    <div className='grow grid grid-cols-[1fr_350px] overflow-hidden dx-fill'>
       <PipelineArticle role='article' subject={pipeline} attendableId='test' />
       <div className='overflow-y-auto border-is border-separator'>
         <PipelineProperties subject={pipeline} />

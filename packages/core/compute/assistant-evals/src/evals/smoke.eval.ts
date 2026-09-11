@@ -7,7 +7,7 @@ import { evalite } from 'evalite';
 
 import { trim } from '@dxos/util';
 
-import { createEvalRunner } from '../runner';
+import { createEvalRunner } from '../runner.ts';
 
 // Ported from the gated `Smoke` scenario (../testing/smoke.test.ts).
 const succeedsRunner = createEvalRunner({

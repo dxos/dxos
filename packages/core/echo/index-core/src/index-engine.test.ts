@@ -14,9 +14,9 @@ import { invariant } from '@dxos/invariant';
 import { DXN, EntityId, SpaceId } from '@dxos/keys';
 import * as SqlTransaction from '@dxos/sql-sqlite/SqlTransaction';
 
-import { type DataSourceCursor, type IndexDataSource, IndexEngine, type IndexingResult } from './index-engine';
-import { type IndexCursor, IndexTracker } from './index-tracker';
-import { EntityMetaIndex, FtsIndex, type IndexerObject, ReverseRefIndex } from './indexes';
+import { type DataSourceCursor, type IndexDataSource, IndexEngine, type IndexingResult } from './index-engine.ts';
+import { type IndexCursor, IndexTracker } from './index-tracker.ts';
+import { EntityMetaIndex, FtsIndex, type IndexerObject, ReverseRefIndex } from './indexes/index.ts';
 
 const TYPE_DEFAULT = DXN.make('com.example.type.Type', '0.1.0');
 const TYPE_A = DXN.make('com.example.type.TypeA', '0.1.0');
@@ -148,7 +148,7 @@ describe('IndexEngine', () => {
         query: 'Hello',
         spaceId: null,
         includeAllQueues: false,
-        queueIds: null,
+        queues: null,
       });
       expect(ftsResults1.length).toBeGreaterThan(0);
       expect(ftsResults1.some((row) => row.objectId === obj1.data.id)).toBe(true);
@@ -180,7 +180,7 @@ describe('IndexEngine', () => {
         query: 'World',
         spaceId: null,
         includeAllQueues: false,
-        queueIds: null,
+        queues: null,
       });
       expect(ftsResults2.length).toBeGreaterThan(0);
     }, Effect.provide(TestLayer)),
@@ -254,7 +254,7 @@ describe('IndexEngine', () => {
         query: 'TypeA',
         spaceId: null,
         includeAllQueues: false,
-        queueIds: null,
+        queues: null,
       });
       expect(ftsResults).toHaveLength(2);
     }, Effect.provide(TestLayer)),

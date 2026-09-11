@@ -9,21 +9,21 @@ import { describe, test } from 'vitest';
 
 import { trim } from '@dxos/util';
 
-import { decorationSetToArray } from '../../../util';
-import { extendedMarkdown } from './extended-markdown';
-import { StubWidget } from './stub';
+import { decorationSetToArray } from '../../../util/index.ts';
 import {
-  type XmlWidgetDef,
-  type XmlWidgetProps,
-  type XmlWidgetState,
+  StubWidget,
+  type WidgetProps,
+  type WidgetState,
   navigateNextEffect,
   navigatePreviousEffect,
-  xmlTagContextEffect,
-  xmlTagRebuildEffect,
-  xmlTagResetEffect,
-  xmlTags,
-  xmlTagUpdateEffect,
-} from './xml-tags';
+  widgetContextEffect,
+  widgetHost,
+  widgetRebuildEffect,
+  widgetResetEffect,
+  widgetUpdateEffect,
+} from '../../widgets/index.ts';
+import { extendedMarkdown } from './extended-markdown.ts';
+import { type XmlWidgetDef, getXmlTextChild, xmlTags } from './xml-tags.ts';
 
 //
 // Harness.
@@ -37,7 +37,7 @@ import {
 
 /** Widget whose props are inspectable so tests can assert the id the builder assigned. */
 class TestWidget extends WidgetType {
-  constructor(readonly props: XmlWidgetProps) {
+  constructor(readonly props: WidgetProps) {
     super();
   }
 
@@ -108,7 +108,7 @@ const xmlDecorations = (view: EditorView): Descriptor[] => {
 const flush = () => new Promise<void>((resolve) => queueMicrotask(resolve));
 
 /** The live StubWidget for an id, as CodeMirror would render it. */
-const stubWidget = (view: EditorView, id: string): StubWidget<XmlWidgetProps> => {
+const stubWidget = (view: EditorView, id: string): StubWidget<WidgetProps> => {
   for (const source of view.state.facet(EditorView.decorations)) {
     const set = typeof source === 'function' ? source(view) : source;
     if (!set) {
@@ -125,17 +125,16 @@ const stubWidget = (view: EditorView, id: string): StubWidget<XmlWidgetProps> =>
   throw new Error(`no widget: ${id}`);
 };
 
-const widgetProps = (view: EditorView, id: string): XmlWidgetProps => stubWidget(view, id).props;
+const widgetProps = (view: EditorView, id: string): WidgetProps => stubWidget(view, id).props;
 
-const createView = (
-  doc: string,
-  { registry = {}, bookmarks, setWidgets }: Parameters<typeof xmlTags>[0] = {},
-): EditorView => {
+type CreateViewOptions = NonNullable<Parameters<typeof xmlTags>[0]> & Parameters<typeof widgetHost>[0];
+
+const createView = (doc: string, { registry = {}, bookmarks, setWidgets }: CreateViewOptions = {}): EditorView => {
   const parent = document.createElement('div');
   return new EditorView({
     state: EditorState.create({
       doc,
-      extensions: [extendedMarkdown({ registry }), xmlTags({ registry, bookmarks, setWidgets })],
+      extensions: [extendedMarkdown({ registry }), widgetHost({ bookmarks, setWidgets }), xmlTags({ registry })],
     }),
     parent,
   });
@@ -144,7 +143,7 @@ const createView = (
 /** Force a complete parse + full decoration rebuild, then read — the ground-truth builder output. */
 const rebuild = async (view: EditorView): Promise<Descriptor[]> => {
   forceParsing(view, view.state.doc.length, 5_000);
-  view.dispatch({ effects: xmlTagRebuildEffect.of(null) });
+  view.dispatch({ effects: widgetRebuildEffect.of(null) });
   await flush();
   return xmlDecorations(view);
 };
@@ -282,6 +281,32 @@ describe('xmlTags decorations', () => {
       view.destroy();
     });
 
+    // The frame before the opening tag is even complete. A chunk boundary can land mid-tag, so the
+    // tail is `<reasoni` with no `>` yet; the scan matches on a complete opening tag, so that text
+    // was left undecorated and rendered as literal markup until the `>` arrived — the same flash as
+    // the declining-factory case above, one tick earlier.
+    test('a partially received opening tag is hidden', async ({ expect }) => {
+      const doc = 'intro\n\n<thin';
+      const view = createView(doc, { registry: withFactory({ think: { streaming: true } }) });
+      const decorations = await rebuild(view);
+      expect(decorations).toHaveLength(1);
+      const [decoration] = decorations;
+      expect(decoration.streaming).toBe(true);
+      expect(decoration.from).toBe(doc.indexOf('<thin'));
+      expect(decoration.to).toBe(doc.length);
+      view.destroy();
+    });
+
+    // A partial tag is only hidden while it can still become one of the registered tags: `<thinking`
+    // shares no prefix with `think` past `<thin`, but prose like `a < b` must never be swallowed.
+    test('a partial tag that cannot become a registered tag is left alone', async ({ expect }) => {
+      const doc = 'intro\n\n5 < 6 and 7 <';
+      const view = createView(doc, { registry: withFactory({ think: { streaming: true } }) });
+      const decorations = await rebuild(view);
+      expect(decorations).toHaveLength(0);
+      view.destroy();
+    });
+
     test('only the first unclosed streaming tag is decorated', async ({ expect }) => {
       const doc = '<think>one</think>\n\n<think>two unclosed';
       const view = createView(doc, { registry: withFactory({ think: { streaming: true } }) });
@@ -293,93 +318,11 @@ describe('xmlTags decorations', () => {
     });
   });
 
-  describe('url-scheme widgets', () => {
-    const registry = withFactory({
-      embed: { block: true, urlSchemes: ['dxn:'] },
-      chip: { block: false, urlSchemes: ['dxn:'] },
-    });
-
-    test('image node with a matching scheme becomes a block widget', async ({ expect }) => {
-      const doc = '![label](dxn:123)';
-      const view = createView(doc, { registry });
-      const [decoration] = await rebuild(view);
-      expect(decoration.tag).toBe('embed');
-      expect(decoration.block).toBe(true);
-      expect(decoration.id).toBe('cm-url-dxn:123-0');
-      view.destroy();
-    });
-
-    test('link node with a matching scheme becomes an inline widget', async ({ expect }) => {
-      const doc = '[label](dxn:123)';
-      const view = createView(doc, { registry });
-      const [decoration] = await rebuild(view);
-      expect(decoration.tag).toBe('chip');
-      expect(decoration.block).toBe(false);
-      view.destroy();
-    });
-
-    test('repeated occurrences of the same url get stable incrementing ids', async ({ expect }) => {
-      const doc = '![a](dxn:x)\n\n![b](dxn:x)';
-      const view = createView(doc, { registry });
-      const ids = (await rebuild(view)).map((decoration) => decoration.id);
-      expect(ids).toEqual(['cm-url-dxn:x-0', 'cm-url-dxn:x-1']);
-      view.destroy();
-    });
-
-    test('non-matching schemes are ignored', async ({ expect }) => {
-      const view = createView('![a](https://example.com/x.png)', { registry });
-      expect(await rebuild(view)).toEqual([]);
-      view.destroy();
-    });
-
-    // The first-document-render path: no rebuild effect, no edit — decorations must appear from
-    // `create()` plus the parse-completion listener alone.
-    test('block and inline widgets build on first mount without a rebuild effect', async ({ expect }) => {
-      const doc = '# Title\n\nsee [x](dxn:123)\n\n![label](dxn:456)\n';
-      const view = createView(doc, { registry });
-      // Deterministic: complete the parse synchronously; the parse-completion listener then rebuilds.
-      forceParsing(view, view.state.doc.length, 5_000);
-      await flush();
-      const decorations = xmlDecorations(view);
-      expect(decorations.some((decoration) => !decoration.block)).toBe(true);
-      expect(decorations.some((decoration) => decoration.block)).toBe(true);
-      view.destroy();
-    });
-
-    // The Component (StubWidget) branch the app registry uses — asserts the portal host mounts too.
-    test('component-backed block widget builds and mounts on first render', async ({ expect }) => {
-      const doc = '# Title\n\nsee [x](echo:/123)\n\n![label](echo:/456)\n';
-      let widgets: XmlWidgetState[] = [];
-      const componentRegistry: NonNullable<Parameters<typeof xmlTags>[0]>['registry'] = {
-        'dxn-preview': {
-          block: true,
-          urlSchemes: ['dxn:', 'echo:'],
-          Component: () => null,
-        },
-        'link-preview': {
-          block: false,
-          urlSchemes: ['dxn:', 'echo:'],
-          factory: ({ label, dxn }: any) => (label && dxn ? new TestWidget({ id: `${label}`, label, dxn }) : null),
-        },
-      };
-      const view = createView(doc, { registry: componentRegistry, setWidgets: (next) => (widgets = next) });
-      forceParsing(view, view.state.doc.length, 5_000);
-      await flush();
-      const decorations = xmlDecorations(view);
-      expect(decorations.some((decoration) => decoration.block)).toBe(true);
-      expect(widgets.map((widget) => widget.id)).toContain('cm-url-echo:/456-0');
-      // DOM attachment is not asserted: happy-dom lays out no viewport, so CM defers drawing the
-      // block host here; the storybook `MarkdownEditor — WithEmbed` story covers the drawn path.
-      expect(widgets[0]?.root).toBeInstanceOf(HTMLElement);
-      view.destroy();
-    });
-  });
-
   describe('effects', () => {
     test('reset effect clears decorations when the document is unchanged', async ({ expect }) => {
       const view = createView('<prompt>x</prompt>', { registry: withFactory({ prompt: { block: true } }) });
       expect(await rebuild(view)).toHaveLength(1);
-      view.dispatch({ effects: xmlTagResetEffect.of(null) });
+      view.dispatch({ effects: widgetResetEffect.of(null) });
       await flush();
       expect(xmlDecorations(view)).toEqual([]);
       view.destroy();
@@ -508,11 +451,11 @@ describe('xmlTags widget state', () => {
     await rebuild(view);
     view.dispatch({
       effects: [
-        xmlTagUpdateEffect.of({ id: 'a', value: { blocks: ['A'] } }),
-        xmlTagUpdateEffect.of({ id: 'b', value: { blocks: ['B'] } }),
+        widgetUpdateEffect.of({ id: 'a', value: { blocks: ['A'] } }),
+        widgetUpdateEffect.of({ id: 'b', value: { blocks: ['B'] } }),
       ],
     });
-    view.dispatch({ effects: xmlTagRebuildEffect.of(null) });
+    view.dispatch({ effects: widgetRebuildEffect.of(null) });
     await flush();
     expect(widgetProps(view, 'a').blocks).toEqual(['A']);
     expect(widgetProps(view, 'b').blocks).toEqual(['B']);
@@ -526,17 +469,17 @@ describe('xmlTags widget state', () => {
     // What `setContent` dispatches on remount: replace the document and clear accumulated state.
     view.dispatch({
       changes: { from: 0, to: view.state.doc.length, insert: doc },
-      effects: xmlTagResetEffect.of(null),
+      effects: widgetResetEffect.of(null),
     });
-    view.dispatch({ effects: xmlTagUpdateEffect.of({ id: 'a', value: { blocks: ['A'] } }) });
-    view.dispatch({ effects: xmlTagRebuildEffect.of(null) });
+    view.dispatch({ effects: widgetUpdateEffect.of({ id: 'a', value: { blocks: ['A'] } }) });
+    view.dispatch({ effects: widgetRebuildEffect.of(null) });
     await flush();
     expect(widgetProps(view, 'a').blocks).toEqual(['A']);
     view.destroy();
   });
 
   test('state reaches a mounted widget after a rebuild replaced its decoration instance', async ({ expect }) => {
-    let mounted: XmlWidgetState[] = [];
+    let mounted: WidgetState[] = [];
     const view = createView(doc, { registry: stateRegistry, setWidgets: (widgets) => (mounted = widgets) });
     await rebuild(view);
     stubWidget(view, 'a').toDOM(view);
@@ -546,23 +489,23 @@ describe('xmlTags widget state', () => {
     // an update routed through the decoration set would find nothing to re-render.
     view.dispatch({
       changes: { from: 0, to: view.state.doc.length, insert: doc },
-      effects: xmlTagResetEffect.of(null),
+      effects: widgetResetEffect.of(null),
     });
     expect(stubWidget(view, 'a').root).toBeNull();
 
-    view.dispatch({ effects: xmlTagUpdateEffect.of({ id: 'a', value: { blocks: ['A'] } }) });
+    view.dispatch({ effects: widgetUpdateEffect.of({ id: 'a', value: { blocks: ['A'] } }) });
     expect(mounted.find((state) => state.id === 'a')?.props.blocks).toEqual(['A']);
     view.destroy();
   });
 
   test('a widget mounting after its state arrives receives that state', async ({ expect }) => {
-    let mounted: XmlWidgetState[] = [];
+    let mounted: WidgetState[] = [];
     const view = createView(doc, { registry: stateRegistry, setWidgets: (widgets) => (mounted = widgets) });
 
     // The one-shot parse-completion rebuild lands first and is never re-armed without a document
     // change, so the state arriving afterwards cannot be picked up by another rebuild.
     await rebuild(view);
-    view.dispatch({ effects: xmlTagUpdateEffect.of({ id: 'a', value: { blocks: ['A'] } }) });
+    view.dispatch({ effects: widgetUpdateEffect.of({ id: 'a', value: { blocks: ['A'] } }) });
 
     // The widget mounts now — scrolled into CodeMirror's viewport, or portaled after the initial render.
     const widget = stubWidget(view, 'a');
@@ -595,7 +538,7 @@ describe('xmlTags widget context', () => {
     expect(widgetProps(view, 'a').context).toBeUndefined();
 
     const context = { rewind: () => {} };
-    view.dispatch({ effects: xmlTagContextEffect.of(context) });
+    view.dispatch({ effects: widgetContextEffect.of(context) });
     await flush();
 
     expect(widgetProps(view, 'a').context).toBe(context);
@@ -606,7 +549,7 @@ describe('xmlTags widget context', () => {
   // destroying the old instance; the old instance's destroy must not wipe the replacement's
   // registration — that orphaned the live placeholder with no portal until a view-mode toggle.
   test('a context rebuild does not unregister the replacement widget', async ({ expect }) => {
-    let published: XmlWidgetState[] = [];
+    let published: WidgetState[] = [];
     const view = createView(doc, { registry: contextRegistry, setWidgets: (widgets) => (published = widgets) });
     await rebuild(view);
 
@@ -616,7 +559,7 @@ describe('xmlTags widget context', () => {
     before.toDOM(view);
     expect(published.map((state) => state.id)).toContain('a');
 
-    view.dispatch({ effects: xmlTagContextEffect.of({ rewind: () => {} }) });
+    view.dispatch({ effects: widgetContextEffect.of({ rewind: () => {} }) });
     await flush();
     const after = stubWidget(view, 'a');
     const dom = after.toDOM(view);
@@ -631,24 +574,24 @@ describe('xmlTags widget context', () => {
     await rebuild(view);
 
     const first = { rewind: () => {} };
-    view.dispatch({ effects: xmlTagContextEffect.of(first) });
+    view.dispatch({ effects: widgetContextEffect.of(first) });
     await flush();
     expect(widgetProps(view, 'a').context).toBe(first);
 
     const second = { rewind: () => {} };
-    view.dispatch({ effects: xmlTagContextEffect.of(second) });
+    view.dispatch({ effects: widgetContextEffect.of(second) });
     await flush();
     expect(widgetProps(view, 'a').context).toBe(second);
     view.destroy();
   });
 
   test('the mounted widget state carries the context', async ({ expect }) => {
-    let mounted: XmlWidgetState[] = [];
+    let mounted: WidgetState[] = [];
     const view = createView(doc, { registry: contextRegistry, setWidgets: (widgets) => (mounted = widgets) });
     await rebuild(view);
 
     const context = { rewind: () => {} };
-    view.dispatch({ effects: xmlTagContextEffect.of(context) });
+    view.dispatch({ effects: widgetContextEffect.of(context) });
     await flush();
 
     // Mount the way the portal host does, then read what the notifier published.
@@ -662,11 +605,11 @@ describe('xmlTags widget context', () => {
     await rebuild(view);
 
     const context = { rewind: () => {} };
-    view.dispatch({ effects: xmlTagContextEffect.of(context) });
+    view.dispatch({ effects: widgetContextEffect.of(context) });
     await flush();
     const widget = stubWidget(view, 'a');
 
-    view.dispatch({ effects: xmlTagContextEffect.of(context) });
+    view.dispatch({ effects: widgetContextEffect.of(context) });
     await flush();
 
     // Same context: the widget is interchangeable, so CodeMirror should keep the mounted instance.
@@ -674,3 +617,70 @@ describe('xmlTags widget context', () => {
     view.destroy();
   });
 });
+
+//
+// Widget content.
+//
+// A streaming tag's widget id is keyed on its opening position alone — its end moves on every chunk —
+// so the id cannot tell CodeMirror that the tag's content changed. Once the tag closes, the run keeps
+// growing in place (the assistant re-renders a whole message as one `<toolkit>` payload per turn), and
+// an id-only `eq` left the reader looking at the widget built from the first chunk until the view was
+// rebuilt from scratch — the "reload the chat and everything is there" symptom.
+//
+
+describe('xmlTags widget content', () => {
+  const registry: Record<string, XmlWidgetDef> = {
+    toolkit: { block: true, streaming: true, Component: () => null },
+  };
+
+  test('a closed streaming tag whose content grows in place replaces its widget', async ({ expect }) => {
+    const view = createView(toolkit('one'), { registry });
+    await rebuild(view);
+
+    const before = stubWidget(view, 'cm-xml-0');
+    expect(getXmlTextChild(before.props.children ?? [])).toBe('one');
+
+    view.dispatch({ changes: { from: 0, to: view.state.doc.length, insert: toolkit('one two') } });
+    forceParsing(view, view.state.doc.length, 5_000);
+    view.dispatch({ effects: widgetRebuildEffect.of(null) });
+    await flush();
+
+    const after = stubWidget(view, 'cm-xml-0');
+    expect(getXmlTextChild(after.props.children ?? [])).toBe('one two');
+    // The id is unchanged, so only the signature can tell CodeMirror to adopt the rebuilt props.
+    expect(after.eq(before)).toBe(false);
+    view.destroy();
+  });
+
+  test('an unchanged tag keeps its widget so the portal is not remounted', async ({ expect }) => {
+    const view = createView(`${toolkit('one')}\n\ntail`, { registry });
+    await rebuild(view);
+
+    const before = stubWidget(view, 'cm-xml-0');
+    view.dispatch({ changes: { from: view.state.doc.length, insert: ' more' } });
+    forceParsing(view, view.state.doc.length, 5_000);
+    view.dispatch({ effects: widgetRebuildEffect.of(null) });
+    await flush();
+
+    expect(stubWidget(view, 'cm-xml-0').eq(before)).toBe(true);
+    view.destroy();
+  });
+
+  // `ab` and `bA` are the shortest djb2 collision: the +1 on the first character is worth +33 after the
+  // shift, which the -33 on the second cancels. A hashed signature would call these two documents equal.
+  test('content that collides under a 32-bit hash still replaces the widget', async ({ expect }) => {
+    const view = createView(toolkit('ab'), { registry });
+    await rebuild(view);
+
+    const before = stubWidget(view, 'cm-xml-0');
+    view.dispatch({ changes: { from: 0, to: view.state.doc.length, insert: toolkit('bA') } });
+    forceParsing(view, view.state.doc.length, 5_000);
+    view.dispatch({ effects: widgetRebuildEffect.of(null) });
+    await flush();
+
+    expect(stubWidget(view, 'cm-xml-0').eq(before)).toBe(false);
+    view.destroy();
+  });
+});
+
+const toolkit = (payload: string) => `<toolkit>${payload}</toolkit>`;

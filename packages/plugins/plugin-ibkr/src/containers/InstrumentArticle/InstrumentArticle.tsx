@@ -13,8 +13,8 @@ import { Card, Flex, Panel, ScrollArea, useTranslation } from '@dxos/react-ui';
 import { FundamentalsPanel, TradingViewChart } from '#components';
 import { Ibkr, IbkrOperation } from '#types';
 
-import { meta } from '../../meta';
-import { resolveTradingViewSymbol } from '../../services';
+import { meta } from '../../meta.ts';
+import { resolveTradingViewSymbol } from '../../services/index.ts';
 
 export type InstrumentArticleProps = AppSurface.ObjectArticleProps<Ibkr.Instrument>;
 

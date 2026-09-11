@@ -7,11 +7,11 @@ import * as Atom from 'effect/unstable/reactivity/Atom';
 import React, { type ReactNode, useMemo } from 'react';
 
 import { Column, Icon, IconBlock, IconButton, Panel, ScrollArea, type ThemedClassName, Tooltip } from '@dxos/react-ui';
-import { type ActionGraphProps, Menu, useMenuBuilder } from '@dxos/react-ui-menu';
+import { type ActionGraphProps, ActionMenu, useMenuBuilder } from '@dxos/react-ui-menu';
 import { getStyles, mx } from '@dxos/ui-theme';
 
-import { Empty } from '../Empty';
-import { OrderedList } from '../OrderedList';
+import { Empty } from '../Empty/index.ts';
+import { OrderedList } from '../OrderedList/index.ts';
 
 // Presentation-only master-detail layout: a selectable list (master) above a single detail pane, with
 // an optional empty state. The parent owns the detail content (the selected item's form/preview) and
@@ -102,9 +102,9 @@ export const MasterDetail = <T extends MasterDetailRecord>({
     // nested `MasterDetail`, or content that scrolls itself) — so nesting does not stack scroll regions.
     // `overflow-hidden` is required: a flex item only shrinks below its content's height (letting the
     // inner scroll areas engage) when its overflow is not `visible`. The caller makes this row fill its
-    // parent (`flex-1 min-h-0`).
+    // parent (`dx-grow`).
     return (
-      <div className={mx('flex gap-2 min-h-0 overflow-hidden', classNames)}>
+      <div className={mx('flex dx-grow gap-2 overflow-hidden', classNames)}>
         <Panel.Root classNames='shrink-0 w-max max-w-xs'>
           <Panel.Content asChild>
             <ScrollArea.Root orientation='vertical'>
@@ -113,7 +113,7 @@ export const MasterDetail = <T extends MasterDetailRecord>({
           </Panel.Content>
         </Panel.Root>
         <Panel.Root classNames='flex-1 min-w-0'>
-          <Panel.Content classNames='flex flex-col min-h-0'>{detail}</Panel.Content>
+          <Panel.Content classNames='flex flex-col dx-grow'>{detail}</Panel.Content>
         </Panel.Root>
       </div>
     );
@@ -180,19 +180,16 @@ const MasterDetailRow = <T extends MasterDetailRecord>({
         </Tooltip.Provider>
       )}
       {getMenu && (
-        <Menu.Root {...menu}>
-          <Menu.Trigger asChild>
-            <IconButton
-              iconOnly
-              variant='ghost'
-              density='sm'
-              icon='ph--dots-three-vertical--regular'
-              label='Actions'
-              onClick={(event) => event.stopPropagation()}
-            />
-          </Menu.Trigger>
-          <Menu.Content />
-        </Menu.Root>
+        <ActionMenu {...menu}>
+          <IconButton
+            iconOnly
+            variant='ghost'
+            density='sm'
+            icon='ph--dots-three-vertical--regular'
+            label='Actions'
+            onClick={(event) => event.stopPropagation()}
+          />
+        </ActionMenu>
       )}
     </OrderedList.Item>
   );

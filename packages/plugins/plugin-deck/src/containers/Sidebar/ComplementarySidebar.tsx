@@ -7,17 +7,17 @@ import React, { type MouseEvent, useCallback, useEffect, useMemo, useState } fro
 import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { AppSurface } from '@dxos/app-toolkit/ui';
-import { IconButton, type Label, Main, Panel, Toolbar, toLocalizedString, useTranslation } from '@dxos/react-ui';
+import { IconButton, type Label, Main, Panel, Tabs, Toolbar, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { Attention } from '@dxos/react-ui-attention';
-import { Tabs } from '@dxos/react-ui-tabs';
 import { iconSize, mx } from '@dxos/ui-theme';
 
+import { PlankLoading } from '#components';
 import { type DeckCompanion, useBreakpoints, useDeckCompanions, useDeckState } from '#hooks';
 import { meta } from '#meta';
 
-import { layoutAppliesTopbar } from '../../util';
-import { PlankErrorFallback, PlankLoading } from '../Deck/PlankFallback';
-import { ToggleComplementarySidebarButton } from './SidebarButton';
+import { layoutAppliesTopbar } from '../../util/index.ts';
+import { PlankErrorFallback } from '../Deck/PlankFallback.tsx';
+import { ToggleComplementarySidebarButton } from './SidebarButton.tsx';
 
 const label = ['complementary-sidebar.title', { ns: meta.profile.key }] satisfies Label;
 

@@ -9,7 +9,7 @@ import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { Panel } from '@dxos/react-ui';
-import { Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
+import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 import { type Message } from '@dxos/types';
 import { AI_ACTION_ICON } from '@dxos/ui-types';
 
@@ -18,7 +18,7 @@ import { useEmailComposerExtensions, useSendEmail } from '#hooks';
 import { meta } from '#meta';
 import { InboxCapabilities, Mailbox } from '#types';
 
-import { REPLY_REGEXP } from '../../util';
+import { REPLY_REGEXP } from '../../util/index.ts';
 
 export type EditMessageArticleProps = AppSurface.ObjectArticleProps<Message.Message>;
 
@@ -92,12 +92,8 @@ export const EditMessageArticle = ({ role, subject, attendableId }: EditMessageA
 
   return (
     <Panel.Root role={role} classNames='dx-document'>
-      <Panel.Toolbar>
-        <Menu.Root {...menuActions} attendableId={attendableId} alwaysActive>
-          <Menu.Toolbar>
-            <Menu.Items />
-          </Menu.Toolbar>
-        </Menu.Root>
+      <Panel.Toolbar asChild>
+        <ActionToolbar {...menuActions} attendableId={attendableId} alwaysActive />
       </Panel.Toolbar>
       <Panel.Content asChild>
         <EditMessage key={generation} message={subject} extensions={extensions} onSend={onSend} />

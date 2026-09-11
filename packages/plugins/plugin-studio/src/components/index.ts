@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './ArtifactCard';
-export * from './GalleryImage';
-export * from './VariantGallery';
-export * from './VariantRenderer';
+export * from './ArtifactCard/index.ts';
+export * from './GalleryImage/index.ts';
+export * from './VariantGallery/index.ts';
+export * from './VariantRenderer/index.ts';

@@ -12,8 +12,8 @@ import { PublicKey } from '@dxos/keys';
 import { SqlTransaction } from '@dxos/sql-sqlite';
 import { bufferToArray } from '@dxos/util';
 
-import { SqliteHeadsStore } from './sqlite-heads-store';
-import { SqliteStorageAdapter, decodeKey, encodeKey } from './sqlite-storage-adapter';
+import { SqliteHeadsStore } from './sqlite-heads-store.ts';
+import { SqliteStorageAdapter, decodeKey, encodeKey } from './sqlite-storage-adapter.ts';
 
 const makeTestLayer = () => {
   const baseLayer = SqliteClient.layer({ filename: ':memory:' });

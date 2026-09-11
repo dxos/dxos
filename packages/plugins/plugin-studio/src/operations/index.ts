@@ -8,5 +8,5 @@ import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import { StudioOperation } from '#types';
 
 export const StudioOperationHandlerSet = OperationHandlerSet.lazy([
-  StudioOperation.Generate.pipe(Operation.lazyHandler(() => import('./generate'))),
+  StudioOperation.Generate.pipe(Operation.lazyHandler(() => import('./generate.ts'))),
 ]);

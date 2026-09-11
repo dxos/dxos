@@ -2,7 +2,15 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Effect from 'effect/Effect';
+
+import { scheduleTaskInterval } from '@dxos/async';
+import { Context } from '@dxos/context';
 import { log } from '@dxos/log';
+
+import type * as Observability from '../Observability.ts';
+
+const SECONDS = { unit: 's' } as const;
 
 /** How often the loop is probed. Short enough to catch a stall inside one export window. */
 export const LAG_SAMPLE_INTERVAL_MS = 500;
@@ -82,3 +90,40 @@ export class EventLoopLagTracker {
     this.#maxInWindowMs = 0;
   }
 }
+/**
+ * Publishes how long this realm's event loop was blocked.
+ *
+ * Reports peak lag per export window, tagged only by the `dxos.process.type` resource attribute —
+ * so the same provider distinguishes the tab from the shared and dedicated workers without any
+ * per-realm wiring.
+ */
+export const eventLoopLagProvider = (): Observability.DataProvider =>
+  Effect.fn(function* (observability) {
+    const ctx = new Context();
+    const lag = new EventLoopLagTracker(LAG_SAMPLE_INTERVAL_MS);
+
+    scheduleTaskInterval(ctx, async () => lag.sample(Date.now()), LAG_SAMPLE_INTERVAL_MS);
+
+    // Belt to the tracker's braces. The clamp inside `sample` is what actually guarantees a frozen
+    // tab is not reported as lag — checking visibility when the probe fires cannot, since a frozen
+    // timer does not fire until the tab is visible again. This listener additionally drops the
+    // reference timestamp the moment visibility changes, so a gap under the clamp is discarded too.
+    const doc = (globalThis as { document?: EventTarget & { visibilityState?: string } }).document;
+    if (doc) {
+      const onVisibilityChange = () => lag.suspend();
+      doc.addEventListener('visibilitychange', onVisibilityChange);
+      ctx.onDispose(() => doc.removeEventListener('visibilitychange', onVisibilityChange));
+    }
+
+    // Window rotation is driven here rather than by the read, so the gauge callback stays a plain
+    // idempotent getter — see EventLoopLagTracker.
+    scheduleTaskInterval(ctx, async () => lag.rotate(), LAG_WINDOW_MS);
+
+    ctx.onDispose(
+      observability.metrics.observe('dxos.client.runtime.eventLoop.lag', () => lag.peakMs / 1_000, undefined, SECONDS),
+    );
+
+    return async () => {
+      await ctx.dispose();
+    };
+  });

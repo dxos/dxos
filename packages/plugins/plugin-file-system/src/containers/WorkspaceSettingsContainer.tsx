@@ -21,7 +21,7 @@ import { useActiveFileSystemWorkspace } from '#hooks';
 import { meta } from '#meta';
 import { FileSystemCapabilities, FileSystemOperation } from '#types';
 
-import { writeComposerConfig } from '../util';
+import { writeComposerConfig } from '../util.ts';
 
 const WorkspaceSettingsSchema = Schema.Struct({
   icon: Schema.optional(Schema.String).annotate({ title: 'Icon' }),
@@ -104,23 +104,23 @@ export const WorkspaceSettingsContainer = () => {
         const handleChange = useCallback((icon: string) => onValueChange(type, icon), [onValueChange, type]);
         const handleReset = useCallback(() => onValueChange(type, undefined), [onValueChange, type]);
         return (
-          <Form.Row label={label} description={t('icon.description')}>
+          <Form.Field standalone label={label} description={t('icon.description')}>
             <IconPicker
               value={getValue()}
               onChange={handleChange}
               onReset={handleReset}
               classNames='justify-self-end'
             />
-          </Form.Row>
+          </Form.Field>
         );
       },
       hue: ({ type, label, getValue, onValueChange }) => {
         const handleChange = useCallback((nextHue: string) => onValueChange(type, nextHue), [onValueChange, type]);
         const handleReset = useCallback(() => onValueChange(type, undefined), [onValueChange, type]);
         return (
-          <Form.Row label={label} description={t('hue.description')}>
+          <Form.Field standalone label={label} description={t('hue.description')}>
             <HuePicker value={getValue()} onChange={handleChange} onReset={handleReset} classNames='justify-self-end' />
-          </Form.Row>
+          </Form.Field>
         );
       },
     }),
@@ -141,16 +141,16 @@ export const WorkspaceSettingsContainer = () => {
     >
       <Form.Viewport scroll>
         <Form.Content>
-          <Form.Section title={t('folder-properties.title')}>
-            <Form.FieldSet />
-          </Form.Section>
-          <Form.Section title={t('remove-folder.label')}>
-            <Form.Row label={t('remove-folder.label')} description={t('remove-folder.description')}>
+          <Form.FieldSet label={t('folder-properties.title')}>
+            <Form.Fields />
+          </Form.FieldSet>
+          <Form.FieldSet label={t('remove-folder.label')}>
+            <Form.Field standalone label={t('remove-folder.label')} description={t('remove-folder.description')}>
               <Button variant='destructive' onClick={handleRemove}>
                 {t('remove-folder.label')}
               </Button>
-            </Form.Row>
-          </Form.Section>
+            </Form.Field>
+          </Form.FieldSet>
         </Form.Content>
       </Form.Viewport>
     </Form.Root>

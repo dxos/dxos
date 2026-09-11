@@ -6,7 +6,7 @@ import React, { type PropsWithChildren, createContext, forwardRef, useCallback, 
 
 import { invariant } from '@dxos/invariant';
 import {
-  Input,
+  Field,
   ThemedClassName,
   ToggleGroup,
   ToggleGroupItem,
@@ -18,9 +18,9 @@ import { mx } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
 
-import { MAX_MIN_INTERVAL_SECONDS, clampSchedule, fromCron, scheduleIntervalSeconds, scheduleToCron } from './cron';
-import { type Day, Days } from './days';
-import { describeSchedule } from './describe-schedule';
+import { MAX_MIN_INTERVAL_SECONDS, clampSchedule, fromCron, scheduleIntervalSeconds, scheduleToCron } from './cron.ts';
+import { type Day, Days } from './days.ts';
+import { describeSchedule } from './describe-schedule.ts';
 
 //
 // Value model.
@@ -313,7 +313,7 @@ export const Schedule = {
 // Per-kind editors.
 //
 
-const Field = ({ label, children, classNames }: ThemedClassName<PropsWithChildren<{ label: string }>>) => (
+const LabelledRow = ({ label, children, classNames }: ThemedClassName<PropsWithChildren<{ label: string }>>) => (
   <label className={mx('flex items-center gap-2 shrink-0', classNames)}>
     <span className='text-sm'>{label}</span>
     {children}
@@ -324,29 +324,29 @@ const ScheduleEditor = ({ value, onChange }: { value: ScheduleValue; onChange: (
   const { t } = useTranslation(meta.profile.key);
   switch (value.kind) {
     // case 'once':
-    // `Input.Root` renders no DOM, so the trigger (column 1) and the field (center) become direct children
+    // `Field.Root` renders no DOM, so the trigger (column 1) and the field (center) become direct children
     // of `Schedule.Body`'s row while still sharing the input context that wires the picker to the field.
     // return (
-    //   <Input.Root>
+    //   <Field.Root>
     //     <div>
-    //       <Field label={t('schedule.at.label')}>
-    //         <Input.DateTime
-    //           classNames='min-w-0 overflow-hidden'
+    //       <LabelledRow label={t('schedule.at.label')}>
+    //         <Field.DateTime
+    //           classNames='overflow-hidden'
     //           hourCycle={12}
     //           value={value.date ?? ''}
     //           onValueChange={(date) => onChange({ kind: 'once', date: date || undefined })}
     //         />
-    //         <Input.TriggerIcon />
-    //       </Field>
+    //         <Field.TriggerIcon />
+    //       </LabelledRow>
     //     </div>
-    //   </Input.Root>
+    //   </Field.Root>
     // );
 
     case 'hourly':
       return (
-        <Field label={t('schedule.minute.label')}>
-          <Input.Root>
-            <Input.TextInput
+        <LabelledRow label={t('schedule.minute.label')}>
+          <Field.Root>
+            <Field.Input
               type='number'
               min={0}
               max={59}
@@ -358,27 +358,27 @@ const ScheduleEditor = ({ value, onChange }: { value: ScheduleValue; onChange: (
                 onChange({ kind: 'hourly', minute });
               }}
             />
-          </Input.Root>
-        </Field>
+          </Field.Root>
+        </LabelledRow>
       );
 
     case 'daily':
       return (
-        <Field label={t('schedule.at.label')}>
-          <Input.Root>
-            <Input.Time hourCycle={12} value={value.time} onValueChange={(time) => onChange({ kind: 'daily', time })} />
-          </Input.Root>
-        </Field>
+        <LabelledRow label={t('schedule.at.label')}>
+          <Field.Root>
+            <Field.Time hourCycle={12} value={value.time} onValueChange={(time) => onChange({ kind: 'daily', time })} />
+          </Field.Root>
+        </LabelledRow>
       );
 
     case 'weekly':
       return (
-        <div className='@container dx-container-type-inline-size min-w-0 flex justify-between items-center gap-2 overflow-x-auto scrollbar-none'>
-          <Field label={t('schedule.at.label')}>
-            <Input.Root>
-              <Input.Time hourCycle={12} value={value.time} onValueChange={(time) => onChange({ ...value, time })} />
-            </Input.Root>
-          </Field>
+        <div className='@container dx-container-type-inline-size flex justify-between items-center gap-2 overflow-x-auto scrollbar-none'>
+          <LabelledRow label={t('schedule.at.label')}>
+            <Field.Root>
+              <Field.Time hourCycle={12} value={value.time} onValueChange={(time) => onChange({ ...value, time })} />
+            </Field.Root>
+          </LabelledRow>
           <div className='flex shrink-0 items-center gap-2'>
             <span className='shrink-0 text-sm'>{t('schedule.on.label')}</span>
             <div className='grid w-max shrink-0 grid-cols-7 gap-x-2'>
@@ -386,8 +386,8 @@ const ScheduleEditor = ({ value, onChange }: { value: ScheduleValue; onChange: (
                 const checked = value.days.includes(day);
                 return (
                   <div key={day} className='flex shrink-0 items-center gap-1'>
-                    <Input.Root>
-                      <Input.Checkbox
+                    <Field.Root>
+                      <Field.Checkbox
                         checked={checked}
                         onCheckedChange={(next) => {
                           // Preserve the canonical `Days` order so the summary reads naturally.
@@ -399,9 +399,9 @@ const ScheduleEditor = ({ value, onChange }: { value: ScheduleValue; onChange: (
                           onChange({ ...value, days: nextDays.length > 0 ? nextDays : value.days });
                         }}
                       />
-                      <Input.Label classNames='hidden @min-[32rem]:inline-block text-xs uppercase'>{label}</Input.Label>
-                      <Input.Label classNames='inline-block @min-[32rem]:hidden text-xs'>{label.charAt(0)}</Input.Label>
-                    </Input.Root>
+                      <Field.Label classNames='hidden @min-[32rem]:inline-block text-xs uppercase'>{label}</Field.Label>
+                      <Field.Label classNames='inline-block @min-[32rem]:hidden text-xs'>{label.charAt(0)}</Field.Label>
+                    </Field.Root>
                   </div>
                 );
               })}
@@ -413,9 +413,9 @@ const ScheduleEditor = ({ value, onChange }: { value: ScheduleValue; onChange: (
     case 'monthly':
       return (
         <div className='flex items-center gap-3'>
-          <Field label={t('schedule.day.label')}>
-            <Input.Root>
-              <Input.TextInput
+          <LabelledRow label={t('schedule.day.label')}>
+            <Field.Root>
+              <Field.Input
                 type='number'
                 min={1}
                 max={31}
@@ -427,28 +427,28 @@ const ScheduleEditor = ({ value, onChange }: { value: ScheduleValue; onChange: (
                   onChange({ ...value, day });
                 }}
               />
-            </Input.Root>
-          </Field>
-          <Field label={t('schedule.at.label')}>
-            <Input.Root>
-              <Input.Time hourCycle={12} value={value.time} onValueChange={(time) => onChange({ ...value, time })} />
-            </Input.Root>
-          </Field>
+            </Field.Root>
+          </LabelledRow>
+          <LabelledRow label={t('schedule.at.label')}>
+            <Field.Root>
+              <Field.Time hourCycle={12} value={value.time} onValueChange={(time) => onChange({ ...value, time })} />
+            </Field.Root>
+          </LabelledRow>
         </div>
       );
 
     case 'custom':
       return (
-        <Field label={t('schedule.cron.label')}>
-          <Input.Root>
-            <Input.TextInput
+        <LabelledRow label={t('schedule.cron.label')}>
+          <Field.Root>
+            <Field.Input
               classNames='w-50 tabular-nums'
               placeholder='0 9 * * MON-FRI'
               value={value.cron}
               onChange={(event) => onChange({ kind: 'custom', cron: event.target.value })}
             />
-          </Input.Root>
-        </Field>
+          </Field.Root>
+        </LabelledRow>
       );
   }
 };

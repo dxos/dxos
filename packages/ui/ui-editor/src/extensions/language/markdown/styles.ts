@@ -4,7 +4,7 @@
 
 import { EditorView } from '@codemirror/view';
 
-import { fontBody, fontMono } from '../../../styles';
+import { fontBody, fontMono } from '../../../styles/index.ts';
 
 export const bulletListIndentationWidth = 24;
 export const orderedListIndentationWidth = 36; // TODO(burdon): Make variable length based on number of digits.

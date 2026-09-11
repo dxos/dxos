@@ -13,14 +13,14 @@ import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
 import { AiModelNotAvailableError } from '@dxos/ai';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import { AiSession } from '@dxos/assistant';
-import { Chat } from '@dxos/assistant-toolkit';
+import * as Chat from '@dxos/assistant/Chat';
 import { Database, Feed } from '@dxos/echo';
 import { UsageQuotaExceededError } from '@dxos/edge-client';
 import { EffectEx } from '@dxos/effect';
 import { TestHelpers } from '@dxos/effect/testing';
 import { DXN } from '@dxos/keys';
 
-import { AiChatProcessor, AiUsageQuotaError, parseError } from './processor';
+import { AiChatProcessor, AiUsageQuotaError, parseError } from './processor.ts';
 
 const TestLayer = AssistantTestLayer({ tracing: 'noop', types: [Chat.Chat, Feed.Feed] });
 

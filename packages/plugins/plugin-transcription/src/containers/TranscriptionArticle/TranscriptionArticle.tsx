@@ -9,14 +9,14 @@ import { Filter, Obj, Query } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { useMembers } from '@dxos/halo-react';
 import { Panel } from '@dxos/react-ui';
-import { Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
+import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 import { Transcription, useFeedModelAdapter } from '@dxos/react-ui-transcription';
 import { Message, type Transcript } from '@dxos/types';
 
 import { useTranscriptionRecording } from '#hooks';
 import { meta } from '#meta';
 
-import { renderByline } from '../../util';
+import { renderByline } from '../../util/index.ts';
 
 export type TranscriptionArticleProps = AppSurface.ObjectArticleProps<Transcript.Transcript>;
 
@@ -51,13 +51,10 @@ export const TranscriptionArticle = ({ role, subject: transcript, attendableId }
 
   return (
     <Panel.Root role={role}>
-      <Menu.Root {...menuActions} attendableId={attendableId}>
-        <Panel.Toolbar asChild>
-          <Menu.Toolbar>
-            <Menu.Items />
-          </Menu.Toolbar>
-        </Panel.Toolbar>
-      </Menu.Root>
+      <Panel.Toolbar asChild>
+        <ActionToolbar {...menuActions} attendableId={attendableId} />
+      </Panel.Toolbar>
+
       <Panel.Content asChild>
         <Transcription model={model} transcript={transcript} />
       </Panel.Content>

@@ -8,7 +8,7 @@ import * as Schema from 'effect/Schema';
 
 import { Format } from '@dxos/echo';
 
-import * as Segment from './Segment';
+import * as Segment from './Segment.ts';
 
 /**
  * Transient search/offer types shared by plugin-trip and booking-service

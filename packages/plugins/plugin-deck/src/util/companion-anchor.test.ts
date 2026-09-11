@@ -12,7 +12,7 @@ import {
   openCompanionPlank,
   resolveCompanionAnchor,
   resolveCompanionPlank,
-} from './companion-anchor';
+} from './companion-anchor.ts';
 
 describe('getRenderedPlanks', () => {
   test('lays out every active plank by default', ({ expect }) => {

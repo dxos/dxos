@@ -5,7 +5,7 @@
 // TODO(wittjosiah): Consider using playwright locator expects elsewhere for more robust tests.
 import { expect, test } from '@playwright/test';
 
-import { AppManager } from './app-manager';
+import { AppManager } from './app-manager.ts';
 
 // TODO(wittjosiah): These are skipped because trigger for joyride is currently part of beta auth flow.
 test.describe.skip('First-run tests', () => {
@@ -17,7 +17,7 @@ test.describe.skip('First-run tests', () => {
   });
 
   test.afterEach(async () => {
-    await host.closePage();
+    await host.close();
   });
 
   test('help plugin tooltip displays (eventually) on first run and increments correctly', async () => {

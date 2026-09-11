@@ -6,7 +6,7 @@ import React from 'react';
 
 import { ErrorFallback, type FallbackProps } from '@dxos/react-error-boundary';
 
-import { downloadLogs } from './download';
+import { downloadLogs } from './download.ts';
 
 /**
  * Default `ErrorBoundary` fallback for storybook-hosted apps (`withPluginManager`/`useApp`). Adds

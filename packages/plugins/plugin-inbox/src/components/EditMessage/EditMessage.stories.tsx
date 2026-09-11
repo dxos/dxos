@@ -15,7 +15,7 @@ import { Message, Person } from '@dxos/types';
 
 import { translations } from '#translations';
 
-import { EditMessage, type EditMessageProps } from './EditMessage';
+import { EditMessage, type EditMessageProps } from './EditMessage.tsx';
 
 const generator: ValueGenerator = random as any;
 random.seed(7);
@@ -53,7 +53,7 @@ const DefaultStory = (args: StoryArgs) => {
     [space],
   );
 
-  return <>{message && <EditMessage classNames='dx-expander' message={message} onSend={args.onSend} />}</>;
+  return <>{message && <EditMessage classNames='dx-expand' message={message} onSend={args.onSend} />}</>;
 };
 
 const meta = {

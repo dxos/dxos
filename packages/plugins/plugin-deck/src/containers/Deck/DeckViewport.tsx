@@ -52,13 +52,14 @@ import {
 import { meta } from '#meta';
 import { DeckOperation, DeckRole } from '#types';
 
-import { findAttendedPlank, getRenderedPlanks, isCompanionOpen, layoutAppliesTopbar } from '../../util';
+import { Navigation } from '../../url/index.ts';
+import { findAttendedPlank, getRenderedPlanks, isCompanionOpen, layoutAppliesTopbar } from '../../util/index.ts';
 import {
   ToggleComplementarySidebarButton as NaturalToggleComplementarySidebarButton,
   ToggleSidebarButton as NaturalToggleSidebarButton,
-} from '../Sidebar';
-import { DeckPlank } from './DeckPlank';
-import { useDeckContext } from './DeckRoot';
+} from '../Sidebar/index.ts';
+import { DeckPlank } from './DeckPlank.tsx';
+import { useDeckContext } from './DeckRoot.tsx';
 
 const DECK_VIEWPORT_NAME = 'DeckViewport';
 
@@ -326,13 +327,14 @@ const resolveMaxTileSize = (maxPlankWidthPx: number, hasCompanion: boolean): num
  * is the content the cap exists to keep reachable, so squeezing the side panel is what a narrowing
  * viewport should do.
  */
+
 const resolveTileSizes = (
   plankSizing: Record<string, number>,
-  id: string,
+  sizingKey: string,
   hasCompanion: boolean,
   maxSize: number,
 ): { companionSize: number; tileSize: number } => {
-  const stored = plankSizing[id] ?? DEFAULT_PLANK_SIZE;
+  const stored = plankSizing[sizingKey] ?? DEFAULT_PLANK_SIZE;
   if (!hasCompanion) {
     return { companionSize: 0, tileSize: Math.min(stored, maxSize) };
   }
@@ -446,7 +448,12 @@ const DeckPlankTile: MosaicStackTileComponent<string> = (props) => {
   // Clamp the tile to the viewport-derived cap so its trailing controls stay clear of the piled spines;
   // the cap only ever shrinks the stored width, so widths are restored when the viewport grows.
   const maxSize = resolveMaxTileSize(maxPlankWidthPx, !!companion);
-  const { companionSize, tileSize: storedSize } = resolveTileSizes(deck.plankSizing, id, !!companion, maxSize);
+  const { companionSize, tileSize: storedSize } = resolveTileSizes(
+    deck.plankSizing,
+    Navigation.segmentOf(deck.segments, id),
+    !!companion,
+    maxSize,
+  );
   // Expanded takes the whole cap, which is by construction the viewport less a spine for every other
   // plank — exactly the space between the two piles.
   const tileSize = state.expanded === id ? maxSize : storedSize;
@@ -487,17 +494,17 @@ const DeckPlankTile: MosaicStackTileComponent<string> = (props) => {
     // type across a presentation change — the reconciliation that keeps a plank's DOM (and therefore
     // its content state and scroll) alive when the deck crosses 1↔2 planks.
     return (
-      <Mosaic.Tile {...props} classNames='relative h-full w-full'>
+      <Mosaic.Tile {...props} classNames='relative dx-fill'>
         {companion ? (
           <CompanionSplit
             id={id}
             companionId={companion}
             active={deck.active}
             companionSize={soloCompanionSize}
-            classNames={mx('absolute inset-0', mainPaddingTransitions)}
+            classNames={mx('dx-fullscreen', mainPaddingTransitions)}
           />
         ) : (
-          <DeckPlank id={id} part='main' active={deck.active} classNames={mx('absolute inset-0', mainIntrinsicSize)} />
+          <DeckPlank id={id} part='main' active={deck.active} classNames={mx('dx-fullscreen', mainIntrinsicSize)} />
         )}
       </Mosaic.Tile>
     );
@@ -506,7 +513,7 @@ const DeckPlankTile: MosaicStackTileComponent<string> = (props) => {
   // Mobile planks are fixed full-viewport-width scroll-snap points, not user-resizable.
   if (isMobile) {
     return (
-      <Mosaic.Tile {...props} classNames='relative h-full w-full snap-start'>
+      <Mosaic.Tile {...props} classNames='relative dx-fill snap-start'>
         <DeckPlank id={id} part='main' active={deck.active} classNames='size-full' />
       </Mosaic.Tile>
     );
@@ -1697,7 +1704,7 @@ export const DeckPlanks = () => {
     const paired = !!lastPlankCompanionId;
     const { tileSize } = resolveTileSizes(
       deck.plankSizing,
-      lastPlankId,
+      Navigation.segmentOf(deck.segments, lastPlankId),
       paired,
       resolveMaxTileSize(maxPlankWidthPx, paired),
     );
@@ -1719,6 +1726,7 @@ export const DeckPlanks = () => {
     lastPlankCompanionId,
     lastTileWidthPx,
     deck.plankSizing,
+    deck.segments,
     maxPlankWidthPx,
     viewportWidthPx,
   ]);
@@ -1747,12 +1755,7 @@ export const DeckPlanks = () => {
         {fullscreen && fullscreenId ? (
           <>
             <ExitFullscreenButton onExit={toggleFullscreen} />
-            <DeckPlank
-              id={fullscreenId}
-              part='main'
-              fullscreen
-              classNames={mx('absolute inset-0', mainIntrinsicSize)}
-            />
+            <DeckPlank id={fullscreenId} part='main' fullscreen classNames={mx('dx-fullscreen', mainIntrinsicSize)} />
           </>
         ) : (
           // Every non-fullscreen presentation renders through this one pipeline — fullbleed included
@@ -1761,7 +1764,7 @@ export const DeckPlanks = () => {
           // fullbleed branch here remounted the surviving plank on every message open/close (the
           // mailbox-list flash). The stack is `w-full` when not sliding so the lone tile's `w-full`
           // resolves against the viewport instead of a shrink-wrapped flex row.
-          <Mosaic.Container orientation='horizontal' classNames={['absolute inset-0', mainPaddingTransitions]}>
+          <Mosaic.Container orientation='horizontal' classNames={['dx-fullscreen', mainPaddingTransitions]}>
             <ScrollArea.Root orientation='horizontal' classNames='size-full'>
               <ScrollArea.Viewport
                 ref={viewportRef}
@@ -1780,7 +1783,7 @@ export const DeckPlanks = () => {
                   // sliding deck; it is a gap only, so the deck runs flush to both ends of the viewport.
                   classNames={
                     breakpoint === 'mobile'
-                      ? 'h-full w-full'
+                      ? 'dx-fill'
                       : isSliding
                         ? mx(
                             'h-full gap-(--main-spacing)',
@@ -1791,7 +1794,7 @@ export const DeckPlanks = () => {
                             // along with the row.
                             expose && 'origin-left translate-x-(--deck-expose-inset) scale-(--deck-expose-scale)',
                           )
-                        : 'h-full w-full'
+                        : 'dx-fill'
                   }
                   getId={getPlankId}
                   items={planks}

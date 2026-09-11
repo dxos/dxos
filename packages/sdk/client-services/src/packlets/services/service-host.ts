@@ -2,6 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
+import { create } from '@bufbuild/protobuf';
 import * as EffectContext from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
@@ -61,8 +62,11 @@ import {
   createRtcTransportFactory,
 } from '@dxos/network-manager';
 import { InvalidStorageVersionError, STORAGE_VERSION } from '@dxos/protocols';
-import { Invitation, SystemStatus } from '@dxos/protocols/proto/dxos/client/services';
-import { type Credential, type ProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { toPublicKey } from '@dxos/protocols/buf';
+import { Invitation, Invitation_Kind } from '@dxos/protocols/buf/dxos/client/invitation_pb';
+import { SystemStatus } from '@dxos/protocols/buf/dxos/client/services_pb';
+import { PeerSchema } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
+import { ChainSchema, type Credential, type ProfileDocument } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import {
   ContactsService,
   DataService,
@@ -80,24 +84,24 @@ import type * as SqlTransaction from '@dxos/sql-sqlite/SqlTransaction';
 import { trace as Trace } from '@dxos/tracing';
 import { WebsocketRpcClient } from '@dxos/websocket-rpc';
 
-import { type EdgeAgentManager, EdgeAgentManagerService } from '../agents';
-import { DevtoolsHostEvents, DevtoolsServiceImpl } from '../devtools';
+import { type EdgeAgentManager, EdgeAgentManagerService } from '../agents/index.ts';
+import { DevtoolsHostEvents, DevtoolsServiceImpl } from '../devtools/index.ts';
 import {
   type CollectDiagnosticsBroadcastHandler,
   createCollectDiagnosticsBroadcastHandler,
   createDiagnostics,
-} from '../diagnostics';
+} from '../diagnostics/index.ts';
+import {
+  type EdgeIdentityRecoveryManager,
+  EdgeIdentityRecoveryManagerService,
+} from '../identity/identity-recovery-manager.ts';
 import {
   type CreateIdentityOptions,
   type Identity,
   type IdentityManager,
   IdentityManagerService,
   type JoinIdentityProps,
-} from '../identity';
-import {
-  type EdgeIdentityRecoveryManager,
-  EdgeIdentityRecoveryManagerService,
-} from '../identity/identity-recovery-manager';
+} from '../identity/index.ts';
 import {
   DeviceInvitationProtocol,
   type InvitationProtocol,
@@ -106,30 +110,30 @@ import {
   type InvitationsManager,
   InvitationsManagerService,
   SpaceInvitationProtocol,
-} from '../invitations';
-import { Lock, type ResourceLock } from '../locks';
-import { LoggingServiceImpl } from '../logging';
-import { type IMetadataStore, IMetadataStoreService } from '../metadata';
-import { type SpaceManager, SpaceManagerService } from '../space';
+} from '../invitations/index.ts';
+import { Lock, type ResourceLock } from '../locks/index.ts';
+import { LoggingServiceImpl } from '../logging/index.ts';
+import { type IMetadataStore, IMetadataStoreService } from '../metadata/index.ts';
+import { type SpaceManager, SpaceManagerService } from '../space/index.ts';
 import {
   type DataSpaceManager,
   DataSpaceManagerService,
   type SigningContextProvider,
   SigningContextProviderService,
-} from '../spaces';
-import { SystemServiceImpl } from '../system';
-import { type ClientServicesRpcContext, ClientServicesRpcLayer } from './client-services-layer';
+} from '../spaces/index.ts';
+import { SystemServiceImpl } from '../system/index.ts';
+import { type ClientServicesRpcContext, ClientServicesRpcLayer } from './client-services-layer.ts';
 import {
   type CrossDeviceSpaceSynchronizer,
   CrossDeviceSpaceSynchronizerService,
-} from './cross-device-space-synchronizer';
-import { type FeedSyncer, FeedSyncerService } from './feed-syncer';
+} from './cross-device-space-synchronizer.ts';
+import { type FeedSyncer, FeedSyncerService } from './feed-syncer.ts';
 import {
   ServiceContextLayer,
   type ServiceContextRuntimeProps,
   type ServiceContextStackContext,
   StorageMigrationService,
-} from './service-context';
+} from './service-context.ts';
 
 export type ClientServicesHostProps = {
   /**
@@ -238,7 +242,7 @@ export class ClientServicesHost {
   // Orchestration state (formerly on `ServiceContext`).
   readonly #initialized = new Trigger();
   readonly #edgeIdentityUpdateMutex = new Mutex();
-  readonly #handlerFactories = new Map<Invitation.Kind, (invitation: Partial<Invitation>) => InvitationProtocol>();
+  readonly #handlerFactories = new Map<Invitation_Kind, (invitation: Partial<Invitation>) => InvitationProtocol>();
 
   constructor({
     config,
@@ -469,12 +473,12 @@ export class ClientServicesHost {
       enableDevtoolsLogging: connectionLog,
       transportFactory,
       signalManager,
-      peerInfo: this.#edgeConnection
-        ? {
-            identityDid: this.#edgeConnection.identityDid,
-            peerKey: this.#edgeConnection.peerKey,
-          }
-        : undefined,
+      peerInfo:
+        this.#edgeConnection &&
+        create(PeerSchema, {
+          identityDid: this.#edgeConnection.identityDid,
+          peerKey: this.#edgeConnection.peerKey,
+        }),
     });
 
     log('initialized');
@@ -576,7 +580,7 @@ export class ClientServicesHost {
 
     // Wire the setters for components that point "up the stack".
     this.#handlerFactories.set(
-      Invitation.Kind.DEVICE,
+      Invitation_Kind.DEVICE,
       () =>
         new DeviceInvitationProtocol(
           this.#keyring!,
@@ -739,7 +743,7 @@ export class ClientServicesHost {
   }
 
   getInvitationHandler(invitation: Partial<Invitation> & Pick<Invitation, 'kind'>): InvitationProtocol {
-    if (this.identityManager.identity == null && invitation.kind === Invitation.Kind.SPACE) {
+    if (this.identityManager.identity == null && invitation.kind === Invitation_Kind.SPACE) {
       throw new Error('Identity must be created before joining a space.');
     }
     const factory = this.#handlerFactories.get(invitation.kind);
@@ -805,13 +809,13 @@ export class ClientServicesHost {
     log('_initialize: EdgeAgentManager opened');
 
     this.#handlerFactories.set(
-      Invitation.Kind.SPACE,
+      Invitation_Kind.SPACE,
       (invitation) =>
         new SpaceInvitationProtocol(
           this.#dataSpaceManager!,
           this.#signingContextProvider!(),
           this.#keyring!,
-          invitation.spaceKey,
+          toPublicKey(invitation.spaceKey),
         ),
     );
     this.#initialized.wake();
@@ -833,7 +837,7 @@ export class ClientServicesHost {
           identity.signer,
           identity.identityKey,
           identity.deviceKey,
-          { credential: params.deviceCredential },
+          create(ChainSchema, { credential: params.deviceCredential }),
           [], // TODO(dmaretskyi): Service access credentials.
         );
       } else {
@@ -858,10 +862,9 @@ export class ClientServicesHost {
 
     this.#edgeConnection?.setIdentity(edgeIdentity);
     this.#edgeHttpClient?.setIdentity(edgeIdentity);
-    this.networkManager.setPeerInfo({
-      identityDid: edgeIdentity.identityDid,
-      peerKey: edgeIdentity.peerKey,
-    });
+    this.networkManager.setPeerInfo(
+      create(PeerSchema, { identityDid: edgeIdentity.identityDid, peerKey: edgeIdentity.peerKey }),
+    );
     log('_setNetworkIdentity: done');
   }
 

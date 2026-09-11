@@ -18,9 +18,9 @@ import { Position } from '@dxos/util';
 
 import { CompanionViewState, DeckCapabilities, DeckOperation, DeckSchema } from '#types';
 
-import { incrementPlank } from '../layout';
-import { computeActiveUpdates, isCompanionOpen, openCompanionPlank } from '../util';
-import { updateActiveDeck } from './helpers';
+import { computeActiveUpdates, currentNavigation, navigateDeck } from '../url/index.ts';
+import { incrementPlank } from '../util/index.ts';
+import { isCompanionOpen, openCompanionPlank } from '../util/index.ts';
 
 const handler: Operation.WithHandler<typeof DeckOperation.Adjust> = DeckOperation.Adjust.pipe(
   Operation.withHandler(
@@ -33,7 +33,13 @@ const handler: Operation.WithHandler<typeof DeckOperation.Adjust> = DeckOperatio
         const { flatten } = yield* Capabilities.getAtomValue(DeckCapabilities.Settings);
         const next = incrementPlank(deck.active, input);
         const { deckUpdates } = computeActiveUpdates({ next, deck, attention, flatten });
-        yield* Capabilities.updateAtomValue(DeckCapabilities.State, (state) => updateActiveDeck(state, deckUpdates));
+        const { workspace } = yield* currentNavigation();
+        yield* navigateDeck({
+          workspace,
+          active: deckUpdates.active,
+          companionPlanks: deckUpdates.companionPlanks,
+        });
+        yield* Operation.schedule(LayoutOperation.ScrollIntoView, { subject: input.id });
       }
 
       if (input.type === 'expand') {
@@ -93,15 +99,12 @@ const handler: Operation.WithHandler<typeof DeckOperation.Adjust> = DeckOperatio
                 variant: Attention.getLinkedVariant(companion.id),
               }));
             }
-            yield* Capabilities.updateAtomValue(DeckCapabilities.State, (state) =>
-              updateActiveDeck(state, {
-                companionPlanks: openCompanionPlank(
-                  state.decks[state.activeDeck]?.companionPlanks ?? [],
-                  flatten,
-                  input.id,
-                ),
-              }),
-            );
+            const { workspace } = yield* currentNavigation();
+            yield* navigateDeck({
+              workspace,
+              active: deck.active,
+              companionPlanks: openCompanionPlank(deck.companionPlanks, flatten, input.id),
+            });
           }
         }
       }

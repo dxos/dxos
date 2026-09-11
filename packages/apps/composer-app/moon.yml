@@ -142,7 +142,6 @@ tasks:
       - ~:#prebuild
       - '#dist-runtime:build'
       - '#vite-plugin:build'
-      - echo-query:prebuild-query-lite
   # Diagnose a hung `serve`: samples the busiest `vite dev` (writing the call graph to
   # temp/) and, with `-- --kill`, force-kills it. Not cacheable — it inspects live process state.
   diagnose-serve:
@@ -184,6 +183,13 @@ tasks:
       mergeArgs: replace
     deps:
       - ~:#prebuild
+      # Generated sources behind an INDIRECT dependency, named explicitly for the same reason
+      # `echo-query:prebuild-query-lite` is below: `~:#prebuild`'s own `^:#prebuild` stops at the
+      # first hop, and an all-projects task-tag scope (`:#prebuild`) is not a legal task dep. Both
+      # are reached through plugins, so transform-on-request only fails once the plugin that needs
+      # them is opened, while bundled dev fails the whole build up front.
+      - react-ui-gameboard:prebuild
+      - react-ui-experimental:prebuild
       # dist consumed at runtime.
       - '#dist-runtime:build'
       # dist consumed at config-load time: `vite.config.ts` runs in Node, before importSource is
@@ -194,12 +200,6 @@ tasks:
       # — not merely anything the config imports. A non-plugin import like `@dxos/util` stays
       # untagged: the plugin packages depend on it, so their own `^:build` builds it first.
       - '#vite-plugin:build'
-      # A build artifact, not runtime dist: plugin-script imports `@dxos/echo-query/api.d.ts?raw`
-      # for in-editor type hints, and vite's dependency scan aborts wholesale — pre-bundling
-      # nothing at all — if a single import in the crawl fails to resolve. Named explicitly because
-      # `prebuild`'s `^:#prebuild` stops at the first hop: echo-query is reached through
-      # plugin-script, which has no `prebuild`-tagged task of its own to continue the chain.
-      - echo-query:prebuild-query-lite
       # Dist consumed by the dev server itself: the `dx-agent-claude` plugin imports the middleware
       # in `configureServer`. Named explicitly rather than tagged — it exports no vite plugin, and
       # nothing in the browser graph reaches it.
@@ -219,6 +219,14 @@ tasks:
     extends: serve
     env:
       DX_PLUGIN_SET: production
+  # The same inner loop under Vite 8's full-bundle dev mode: Rolldown builds the whole client graph
+  # up front (lazily per entry) and serves it from memory, instead of transforming each module on
+  # request. Still experimental upstream, so it is its own task rather than the default `serve` —
+  # `vite.config.ts` branches on the flag (see `isBundledDev` there) because bundled dev reuses
+  # `build.rolldownOptions` and runs no dep optimizer.
+  serve-bundle:
+    extends: serve
+    command: pnpm exec vite dev --configLoader native --experimentalBundle
   # Dev server with the agent debug port already open, for QA flows an agent drives end to end
   # (`packages/reflect/deus` — the `## QA` section of a PLUGIN.mdl). The session id is minted per
   # server start and published to `temp/debug-port.json`; set `DX_DEBUG_PORT_SESSION` to choose it

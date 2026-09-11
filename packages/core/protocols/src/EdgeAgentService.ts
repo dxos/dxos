@@ -7,7 +7,11 @@ import * as Rpc from 'effect/unstable/rpc/Rpc';
 import type * as RpcClient from 'effect/unstable/rpc/RpcClient';
 import * as RpcGroup from 'effect/unstable/rpc/RpcGroup';
 
-import { protoMessage, serviceError } from './service-rpc.ts';
+import {
+  QueryAgentStatusResponseSchema,
+  QueryEdgeStatusResponseSchema,
+} from './buf/proto/gen/dxos/client/services_pb.ts';
+import { bufMessage, serviceError } from './service-rpc.ts';
 
 /**
  * Effect RPC definitions for the EDGE agent service (formerly `dxos.client.services.EdgeAgentService`).
@@ -16,7 +20,7 @@ import { protoMessage, serviceError } from './service-rpc.ts';
  */
 export class Rpcs extends RpcGroup.make(
   Rpc.make('queryEdgeStatus', {
-    success: protoMessage('dxos.client.services.QueryEdgeStatusResponse'),
+    success: bufMessage(QueryEdgeStatusResponseSchema),
     error: serviceError,
     stream: true,
   }),
@@ -24,7 +28,7 @@ export class Rpcs extends RpcGroup.make(
     error: serviceError,
   }),
   Rpc.make('queryAgentStatus', {
-    success: protoMessage('dxos.client.services.QueryAgentStatusResponse'),
+    success: bufMessage(QueryAgentStatusResponseSchema),
     error: serviceError,
     stream: true,
   }),

@@ -5,7 +5,7 @@
 import { Key, Obj } from '@dxos/echo';
 import { range } from '@dxos/util';
 
-import { Tree, type TreeNodeType } from '../components/Tree/types';
+import { Tree, type TreeNodeType } from '../components/Tree/types/index.ts';
 
 type NumberOrNumberArray = number | number[];
 
@@ -16,8 +16,8 @@ const random = (min: number, max: number) => Math.floor(Math.random() * (max - m
  */
 export const createTree = (spec: NumberOrNumberArray[] = [], createText?: () => string): Tree => {
   const tree = new Tree();
-  Obj.update(tree.tree, () => {
-    tree.root.data = { text: 'root' };
+  Obj.update(tree.tree, (treeObject) => {
+    treeObject.nodes[treeObject.root].data = { text: 'root' };
   });
 
   const createNodes = (parent: TreeNodeType, spec: NumberOrNumberArray = 0): TreeNodeType[] => {

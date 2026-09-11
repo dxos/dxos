@@ -13,7 +13,7 @@ import { withClientProvider } from '@dxos/react-client/testing';
 import { useAsyncEffect } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
 
-import { SyncStatus } from './SyncStatus';
+import { SyncStatus } from './SyncStatus.tsx';
 
 const randomInt = ({ min, max }: { min: number; max: number }) => min + Math.floor(Math.random() * (max - min));
 

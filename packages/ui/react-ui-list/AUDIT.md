@@ -129,13 +129,13 @@ Path: `packages/ui/react-ui/src/components/List/` — **removed** (Phase 5b). Th
 directory (`List`, `Tree`, `ListDropIndicator`, `TreeDropIndicator`, stories) was
 deleted once every consumer migrated.
 
-| Export (former)        | Role                                                              | Outcome                                                                                |
-| ---------------------- | ----------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
-| `List`, `ListItem.*`   | Themed wrapper over `react-list` (density, endcap, open-trigger). | **Deleted.** All 15 call sites migrated to `react-ui-list` `Listbox` (§4.2).           |
-| `Tree.*`, `TreeItem.*` | Themed tree wrapper (`role=tree`/`treeitem`).                     | **Deleted.** Sole app consumer (devtools `StoragePanel`) → local `role=tree` render.   |
-| `Treegrid.*`           | `role=treegrid` grid layout + tabster row nav.                    | **Moved up** into `react-ui-list` (§4.1). Used by it + navtree + devtools.             |
-| `ListDropIndicator`    | Tailwind port of atlaskit box drop-indicator.                     | **Deleted** (was consumer-free; `react-ui-list` has its own CSS-free `DropIndicator`). |
-| `TreeDropIndicator`    | Tailwind port of atlaskit tree-item instruction indicator.        | **Deleted** (ported into `react-ui-list` `Tree`).                                      |
+| Export (former)        | Role                                                              | Outcome                                                                                                                                                                                                                              |
+| ---------------------- | ----------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `List`, `ListItem.*`   | Themed wrapper over `react-list` (density, endcap, open-trigger). | **Deleted.** All 15 call sites migrated to `react-ui-list` `Listbox` (§4.2).                                                                                                                                                         |
+| `Tree.*`, `TreeItem.*` | Themed tree wrapper (`role=tree`/`treeitem`).                     | **Deleted.** Sole app consumer (devtools `StoragePanel`) → local `role=tree` render.                                                                                                                                                 |
+| `Treegrid.*`           | `role=treegrid` grid layout + tabster row nav.                    | **Deleted.** Moved up into `react-ui-list` (§4.1), then removed once the Ark rebuild decoupled `Tree` and its last three consumers migrated — `ObjectsTree`/`ProcessTree` onto `Tree`, `AtprotoCompanion` onto a plain `role=table`. |
+| `ListDropIndicator`    | Tailwind port of atlaskit box drop-indicator.                     | **Deleted** (was consumer-free; `react-ui-list` has its own CSS-free `DropIndicator`).                                                                                                                                               |
+| `TreeDropIndicator`    | Tailwind port of atlaskit tree-item instruction indicator.        | **Deleted** (ported into `react-ui-list` `Tree`).                                                                                                                                                                                    |
 
 ### 3.3 `@dxos/react-ui-list` (high-level + aspects) — TARGET LAYER
 

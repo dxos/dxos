@@ -16,7 +16,7 @@ import { toFrames } from '#render';
 import { type LaMetricTransport, discoverWidgetId, selectTransport, tauriFetch } from '#transport';
 import { LaMetricCapabilities } from '#types';
 
-import { Pusher } from './pusher';
+import { Pusher } from './pusher.ts';
 
 /** Matches the settings default; used when the stored value predates the field. */
 const DEFAULT_MIN_INTERVAL_MS = 5_000;

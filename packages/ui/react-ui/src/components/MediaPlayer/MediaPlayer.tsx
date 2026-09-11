@@ -6,8 +6,8 @@ import React, { useState } from 'react';
 
 import { mx } from '@dxos/ui-theme';
 
-import { type ThemedClassName } from '../../util';
-import { type MediaKind, detectMediaKind, isEmbedUrl } from './media-kind';
+import { type ThemedClassName } from '../../util/index.ts';
+import { type MediaKind, detectMediaKind, isEmbedUrl } from './media-kind.ts';
 
 export type MediaFit = 'cover' | 'contain' | 'fill' | 'none' | 'scale-down';
 
@@ -135,10 +135,7 @@ const IframePlayer = ({ src, alt, classNames }: IframePlayerProps) => {
         src={src}
         title={alt ?? 'Embedded media'}
         loading='lazy'
-        className={mx(
-          'border-none w-full h-full transition-opacity duration-150',
-          loaded ? 'opacity-100' : 'opacity-0',
-        )}
+        className={mx('border-none dx-fill transition-opacity duration-150', loaded ? 'opacity-100' : 'opacity-0')}
         style={{ colorScheme: 'dark' }}
         sandbox={DEFAULT_IFRAME_SANDBOX}
         referrerPolicy='no-referrer'

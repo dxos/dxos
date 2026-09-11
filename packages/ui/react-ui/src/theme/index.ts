@@ -2,8 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './bindTheme';
-export * from './defaultTheme';
+export * from './bindTheme.ts';
+export * from './defaultTheme.ts';
 
 // Re-export every co-located theme file so consumers can pull style-prop types,
 // theme tables, and constants from a single peer (@dxos/react-ui).
@@ -13,9 +13,10 @@ export * from '../components/Button/Button.theme';
 export * from '../components/Button/IconButton.theme';
 export * from '../components/Card/Card.theme';
 export * from '../components/Dialog/Dialog.theme';
+export * from '../components/Drawer/Drawer.theme';
 export * from '../components/Focus/Focus.theme';
 export * from '../components/Icon/Icon.theme';
-export * from '../components/Input/Input.theme';
+export * from '../components/Field/Field.theme';
 export * from '../components/Link/Link.theme';
 export * from '../components/Main/Main.theme';
 export * from '../components/Menu/Menu.theme';
@@ -28,7 +29,7 @@ export * from '../components/Separator/Separator.theme';
 export * from '../components/Skeleton/Skeleton.theme';
 export * from '../components/Slider/Slider.theme';
 export * from '../components/Splitter/Splitter.theme';
-export * from '../components/Stepper/Stepper.theme';
+export * from '../components/Steps/Steps.theme';
 export * from '../components/Tag/Tag.theme';
 export * from '../components/Toast/Toast.theme';
 export * from '../components/Toolbar/Toolbar.theme';

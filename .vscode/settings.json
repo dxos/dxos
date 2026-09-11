@@ -403,7 +403,10 @@
   "storyExplorer.server.internal.enabled": false,
   "storyExplorer.storiesGlobs": "**/src/**/*.stories.tsx",
   "storyExplorer.storybookConfigDir": "tools/storybook-react/.storybook",
-  "tailwindCSS.experimental.configFile": "packages/ui/ui-theme/src/config/tailwind.ts",
+  // Tailwind v4 is configured from CSS, not a JS/TS config. Pointing this at the old v3
+  // `config/tailwind.ts` (deleted in #10611) left the extension unable to resolve the project, so
+  // it did not recognise `@theme` and reported spurious `{ expected` errors in the theme partials.
+  "tailwindCSS.experimental.configFile": "packages/ui/ui-theme/src/main.css",
   "typescript.preferences.autoImportSpecifierExcludeRegexes": [
     "^.*/src/.*$",
     "node:console",

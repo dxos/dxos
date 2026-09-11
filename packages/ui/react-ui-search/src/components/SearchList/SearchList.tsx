@@ -17,7 +17,6 @@
 // select-first, scroll-into-view) comes from `Picker`. This file is a
 // thin search-domain wrapper; the heavy lifting is in `../Picker`.
 
-import { useControllableState } from '@radix-ui/react-use-controllable-state';
 import React, {
   type ChangeEvent,
   type ComponentPropsWithRef,
@@ -36,6 +35,7 @@ import {
   ScrollArea,
   type ScrollAreaRootProps,
   type ThemedClassName,
+  useControllableState,
   useTranslation,
 } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
@@ -44,7 +44,7 @@ import { mx } from '@dxos/ui-theme';
 
 import { translationKey } from '#translations';
 
-import { SearchListInputContextProvider, SearchListItemContextProvider, useSearchListInputContext } from './context';
+import { SearchListInputContextProvider, SearchListItemContextProvider, useSearchListInputContext } from './context.ts';
 
 //
 // Root — wraps `Picker.Root` and adds query state + debounced onSearch.
@@ -152,14 +152,14 @@ type SearchListContentProps = {};
 
 /**
  * Optional styling wrapper that groups `SearchList.Input` and `SearchList.Viewport` into a single
- * `dx-expander` container. Layout-neutral: it does NOT participate in any column/grid placement.
+ * `dx-expand` container. Layout-neutral: it does NOT participate in any column/grid placement.
  *
  * When hosting `SearchList` inside a `Column.Root` (e.g. `Dialog.Body`), the parent propagator
  * handles column placement for SearchList's children automatically.
  */
 const SearchListContent = composable<HTMLDivElement>(({ children, ...props }, forwardedRef) => {
   return (
-    <div {...composableProps(props, { role: 'none', classNames: 'dx-expander' })} ref={forwardedRef}>
+    <div {...composableProps(props, { role: 'none', classNames: 'dx-expand' })} ref={forwardedRef}>
       {children}
     </div>
   );

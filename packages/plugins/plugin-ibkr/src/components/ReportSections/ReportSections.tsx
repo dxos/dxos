@@ -10,7 +10,7 @@ import { DynamicTable, type TablePropertyDefinition } from '@dxos/react-ui-table
 
 import { Ibkr } from '#types';
 
-import { meta } from '../../meta';
+import { meta } from '../../meta.ts';
 
 export type ReportSectionsProps = {
   positions: readonly Ibkr.Position[];

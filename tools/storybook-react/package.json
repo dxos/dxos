@@ -21,7 +21,6 @@
   },
   "devDependencies": {
     "@dxos/agent-claude": "workspace:*",
-    "@dxos/app-framework": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/storybook-addon-logger": "workspace:*",
     "@dxos/ui-theme": "workspace:*",

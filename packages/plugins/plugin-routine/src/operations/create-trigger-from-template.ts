@@ -14,7 +14,7 @@ import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 
 import { RoutineOperation } from '#types';
 
-import { getRoutinesSettingsPath } from '../paths';
+import { getRoutinesSettingsPath } from '../paths.ts';
 
 const handler: Operation.WithHandler<typeof RoutineOperation.CreateTriggerFromTemplate> =
   RoutineOperation.CreateTriggerFromTemplate.pipe(

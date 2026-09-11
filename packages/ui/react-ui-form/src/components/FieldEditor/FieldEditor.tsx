@@ -19,8 +19,8 @@ import {
 import { translationKey } from '#translations';
 import { type FormFieldMap } from '#types';
 
-import { getFormProperties } from '../../util';
-import { Form, type FormRootProps, SelectField, SelectOptionField } from '../Form';
+import { getFormProperties } from '../../util/index.ts';
+import { Form, type FormRootProps, SelectField, SelectOptionField } from '../Form/index.ts';
 
 export type FieldEditorProps = Pick<FormRootProps<any>, 'readonly'> & {
   projection: ProjectionModel;
@@ -71,38 +71,48 @@ export const FieldEditor = ({ readonly, projection, field, registry, view, onSav
   const fieldMap = useMemo<FormFieldMap>(
     () => ({
       ['format' satisfies keyof PropertyType]: (props) => (
-        <SelectField
-          {...props}
-          options={FormatEnums.filter((value) => value !== Format.TypeFormat.None).map((value) => ({
-            value,
-            label: t(`format.${value}.label`),
-          }))}
-        />
+        <Form.Field path={props.jsonPath}>
+          <SelectField
+            {...props}
+            options={FormatEnums.filter((value) => value !== Format.TypeFormat.None).map((value) => ({
+              value,
+              label: t(`format.${value}.label`),
+            }))}
+          />
+        </Form.Field>
       ),
       ['referenceSchema' satisfies keyof PropertyType]: (props) => (
-        <SelectField
-          {...props}
-          options={schemas
-            .map((schema) => Type.getTypename(schema))
-            .filter((typename): typename is string => typename != null)
-            .map((typename) => ({
-              value: typename,
-            }))}
-        />
+        <Form.Field path={props.jsonPath}>
+          <SelectField
+            {...props}
+            options={schemas
+              .map((schema) => Type.getTypename(schema))
+              .filter((typename): typename is string => typename != null)
+              .map((typename) => ({
+                value: typename,
+              }))}
+          />
+        </Form.Field>
       ),
       ['referencePath' satisfies keyof PropertyType]: (props) => (
-        <SelectField
-          {...props}
-          options={
-            referenceSchema
-              ? getFormProperties(Type.getSchema(referenceSchema).ast)
-                  .sort((a, b) => a.name.toString().localeCompare(b.name.toString()))
-                  .map((p) => ({ value: p.name.toString() }))
-              : []
-          }
-        />
+        <Form.Field path={props.jsonPath}>
+          <SelectField
+            {...props}
+            options={
+              referenceSchema
+                ? getFormProperties(Type.getSchema(referenceSchema).ast)
+                    .sort((a, b) => a.name.toString().localeCompare(b.name.toString()))
+                    .map((p) => ({ value: p.name.toString() }))
+                : []
+            }
+          />
+        </Form.Field>
       ),
-      ['options' satisfies keyof PropertyType]: (props) => <SelectOptionField {...props} />,
+      ['options' satisfies keyof PropertyType]: (props) => (
+        <Form.Field path={props.jsonPath} standalone>
+          <SelectOptionField {...props} />
+        </Form.Field>
+      ),
     }),
     [t, schemas, referenceSchema],
   );
@@ -164,7 +174,7 @@ export const FieldEditor = ({ readonly, projection, field, registry, view, onSav
   const handleSave = useCallback<NonNullable<FormRootProps<PropertyType>['onSave']>>(
     (props) => {
       if (view) {
-        Obj.update(view, () => {
+        Obj.update(view, (view) => {
           projection.setFieldProjection({ field, props });
         });
       } else {
@@ -202,7 +212,7 @@ export const FieldEditor = ({ readonly, projection, field, registry, view, onSav
       onCancel={handleCancel}
     >
       <Form.Content>
-        <Form.FieldSet />
+        <Form.Fields />
         <Form.Actions />
       </Form.Content>
     </Form.Root>

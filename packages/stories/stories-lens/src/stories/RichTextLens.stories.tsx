@@ -13,10 +13,10 @@ import { useClientStory, withClientProvider, withMultiClientProvider } from '@dx
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
 
-import { DemoPanel } from '../components';
-import { MarkdownEditor } from '../MarkdownEditor';
-import { DEMO_MARKDOWN, makeDemoText } from '../rich-text';
-import { BlockList, RichTextEditor } from '../RichTextEditor';
+import { DemoPanel } from '../components.tsx';
+import { MarkdownEditor } from '../MarkdownEditor.tsx';
+import { DEMO_MARKDOWN, makeDemoText } from '../rich-text.ts';
+import { BlockList, RichTextEditor } from '../RichTextEditor.tsx';
 
 //
 // One `Text` object, two editors: the core markdown editor on the stored string, and a basic
@@ -64,7 +64,7 @@ const SideBySideStory = () => {
   }
 
   return (
-    <div className='absolute inset-0 grid grid-cols-3 gap-3 p-3 overflow-hidden'>
+    <div className='dx-fullscreen grid grid-cols-3 gap-3 p-3 overflow-hidden'>
       <DemoPanel label='Markdown — the string as stored' testId='markdown-panel'>
         <MarkdownEditor text={text} />
       </DemoPanel>

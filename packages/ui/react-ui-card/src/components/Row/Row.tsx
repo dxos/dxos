@@ -22,8 +22,8 @@ import { mx, toHue } from '@dxos/ui-theme';
 
 import { translationKey } from '#translations';
 
-import { useActorContact } from '../../hooks';
-import { Avatar, type AvatarProps, avatarName } from '../Avatar';
+import { useActorContact } from '../../hooks/index.ts';
+import { Avatar, type AvatarProps, avatarName } from '../Avatar/index.ts';
 
 /**
  * Shared Card-row primitives rendered inside a `Card.Body`. These are the single source for the
@@ -42,16 +42,16 @@ import { Avatar, type AvatarProps, avatarName } from '../Avatar';
  */
 const activateCard = ({
   trigger,
-  dxn,
+  eid,
   label,
   title,
 }: {
   trigger: HTMLElement | null;
-  dxn: URI.URI;
+  eid: URI.URI;
   label: string;
   title?: string;
 }) => {
-  trigger?.dispatchEvent(new DxAnchorActivate({ trigger, dxn: dxn.toString(), label, kind: 'card', title }));
+  trigger?.dispatchEvent(new DxAnchorActivate({ trigger, eid: eid.toString(), label, kind: 'card', title }));
 };
 
 /**
@@ -137,7 +137,7 @@ const AnchorIconButton = ({
 
   const openCard = useCallback(() => {
     if (value) {
-      activateCard({ trigger: buttonRef.current, dxn: value, label, title });
+      activateCard({ trigger: buttonRef.current, eid: value, label, title });
     }
   }, [value, label, title]);
   const { start: startHover, cancel: cancelHover } = useCardHover(openCard, !!hover && !!value);
@@ -317,7 +317,7 @@ export const ContactAvatar = ({
     if (contactDXN) {
       activateCard({
         trigger: anchorRef.current,
-        dxn: contactDXN,
+        eid: contactDXN,
         label: t('show-contact.label'),
         title: role ? `${role}: ${actor.name ?? actor.email}` : (actor.name ?? actor.email),
       });
@@ -358,7 +358,7 @@ export const ContactAvatar = ({
           // as a heavier stand-in for the face.
           size={Number(size) >= 8 ? 5 : 4}
           label={t('create-contact.label')}
-          classNames='absolute inset-0 opacity-0 group-hover/contact:opacity-100 focus-visible:opacity-100'
+          classNames='dx-fullscreen opacity-0 group-hover/contact:opacity-100 focus-visible:opacity-100'
           onClick={handleContactCreate}
         />
       )}

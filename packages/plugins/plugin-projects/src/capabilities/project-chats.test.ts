@@ -7,7 +7,7 @@ import { afterEach, beforeEach, describe, test } from 'vitest';
 
 import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
 import { setupGraphBuilder } from '@dxos/app-graph/testing';
-import { Chat } from '@dxos/assistant-toolkit';
+import * as Chat from '@dxos/assistant/Chat';
 import * as Project from '@dxos/compute/Project';
 import { Feed, Obj, Ref } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
@@ -15,7 +15,11 @@ import { EffectEx } from '@dxos/effect';
 import * as GraphNode from '@dxos/graph/GraphNode';
 import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
 
-import { CHATS_SEGMENT, createProjectChatsChildrenExtension, createProjectChatsExtension } from './app-graph-builder';
+import {
+  CHATS_SEGMENT,
+  createProjectChatsChildrenExtension,
+  createProjectChatsExtension,
+} from './app-graph-builder.ts';
 
 const PROJECT_ID = 'project';
 
@@ -101,8 +105,7 @@ describe('project chats graph extension', () => {
     const chat = await addChat('Chat');
 
     // Owned Instructions/task sets are parented to a project too; only chats are navtree children.
-    const other = db.add(Feed.make());
-    Obj.setParent(other, project);
+    const other = db.add(Feed.make({ [Obj.Parent]: project }));
     await db.flush();
     await flush();
 

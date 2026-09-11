@@ -11,8 +11,8 @@ import { log } from '@dxos/log';
 
 // Imported from the defining module, not the directory barrel: `'../client'` is this file's own
 // barrel, and that cycle made every downstream edit a full page reload.
-import { AgentHostingContext } from './context';
-import { useClient } from './useClient';
+import { AgentHostingContext } from './context.ts';
+import { useClient } from './useClient.ts';
 
 export type AgentHostingProviderProps = { config: Config; halo: Halo };
 

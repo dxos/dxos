@@ -2,17 +2,27 @@
 // Copyright 2020 DXOS.org
 //
 
+import { create, fromBinary } from '@bufbuild/protobuf';
+
 import { Event, Trigger } from '@dxos/async';
-import { type Any } from '@dxos/codec-protobuf';
 import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { decodeCompat } from '@dxos/protocols/buf-shape-compat';
+import { fromDate, fromPublicKey, requirePublicKey } from '@dxos/protocols/buf';
+import { type SwarmResponse } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
+import {
+  type JoinRequest,
+  JoinRequestSchema,
+  type LeaveRequest,
+  LeaveRequestSchema,
+  type QueryRequest,
+  SwarmEvent_PeerAvailableSchema,
+  SwarmEvent_PeerLeftSchema,
+  SwarmEventSchema,
+} from '@dxos/protocols/buf/dxos/edge/signal_pb';
 import { ReliablePayloadSchema } from '@dxos/protocols/buf/dxos/mesh/messaging_pb';
-import { type SwarmResponse } from '@dxos/protocols/proto/dxos/edge/messenger';
-import { type QueryRequest } from '@dxos/protocols/proto/dxos/edge/signal';
-import { type ReliablePayload } from '@dxos/protocols/proto/dxos/mesh/messaging';
+import { type AnyEnvelope } from '@dxos/protocols/service-contract';
 import { ComplexMap, ComplexSet } from '@dxos/util';
 
 import {
@@ -23,8 +33,8 @@ import {
   type SubscribeMessagesParams,
   type SwarmEvent,
   type UnsubscribeCallback,
-} from '../signal-methods';
-import { type SignalManager } from './signal-manager';
+} from '../signal-methods.ts';
+import { type SignalManager } from './signal-manager.ts';
 
 /**
  * A single message subscription registered on a {@link MemorySignalManager} (DX-1125). Point-to-point
@@ -86,7 +96,7 @@ export class MemorySignalManager implements SignalManager {
     this._ctx = new Context();
     this._ctx.onDispose(this._context.swarmEvent.on((data) => this.swarmEvent.emit(data)));
 
-    await Promise.all([...this._joinedSwarms.values()].map((value) => this.join(this._ctx, value)));
+    await Promise.all([...this._joinedSwarms.values()].map((value) => this.join(this._ctx, joinRequest(value))));
   }
 
   async close(): Promise<void> {
@@ -99,7 +109,7 @@ export class MemorySignalManager implements SignalManager {
       [...this._joinedSwarms.values()],
     );
 
-    await Promise.all([...this._joinedSwarms.values()].map((value) => this.leave(this._ctx, value)));
+    await Promise.all([...this._joinedSwarms.values()].map((value) => this.leave(this._ctx, leaveRequest(value))));
 
     // assign joined swarms back because .leave() deletes it.
     this._joinedSwarms = joinedSwarmsCopy;
@@ -111,8 +121,11 @@ export class MemorySignalManager implements SignalManager {
     return [];
   }
 
-  async join(_ctx: Context, { topic, peer }: { topic: PublicKey; peer: PeerInfo }): Promise<void> {
+  async join(_ctx: Context, request: JoinRequest): Promise<void> {
     invariant(!this._ctx.disposed, 'Closed');
+    const topic = requirePublicKey(request.topic);
+    const peer = request.peer;
+    invariant(peer, 'Join request carries no peer.');
 
     this._joinedSwarms.add({ topic, peer });
 
@@ -121,30 +134,21 @@ export class MemorySignalManager implements SignalManager {
     }
 
     this._context.swarms.get(topic)!.add(peer);
-    this._context.swarmEvent.emit({
-      topic,
-      peerAvailable: {
-        peer,
-        since: new Date(),
-      },
-    });
+    this._context.swarmEvent.emit(peerAvailable(topic, peer));
 
     // Emitting swarm events for each peer.
-    for (const [topic, peers] of this._context.swarms) {
-      Array.from(peers).forEach((peer) => {
-        this.swarmEvent.emit({
-          topic,
-          peerAvailable: {
-            peer,
-            since: new Date(),
-          },
-        });
+    for (const [swarmTopic, peers] of this._context.swarms) {
+      Array.from(peers).forEach((swarmPeer) => {
+        this.swarmEvent.emit(peerAvailable(swarmTopic, swarmPeer));
       });
     }
   }
 
-  async leave(_ctx: Context, { topic, peer }: { topic: PublicKey; peer: PeerInfo }): Promise<void> {
+  async leave(_ctx: Context, request: LeaveRequest): Promise<void> {
     invariant(!this._ctx.disposed, 'Closed');
+    const topic = requirePublicKey(request.topic);
+    const peer = request.peer;
+    invariant(peer, 'Leave request carries no peer.');
 
     this._joinedSwarms.delete({ topic, peer });
 
@@ -154,14 +158,12 @@ export class MemorySignalManager implements SignalManager {
 
     this._context.swarms.get(topic)!.delete(peer);
 
-    const swarmEvent: SwarmEvent = {
-      topic,
-      peerLeft: {
-        peer,
-      },
-    };
-
-    this._context.swarmEvent.emit(swarmEvent);
+    this._context.swarmEvent.emit(
+      create(SwarmEventSchema, {
+        topic: fromPublicKey(topic),
+        event: { case: 'peerLeft', value: create(SwarmEvent_PeerLeftSchema, { peer }) },
+      }),
+    );
   }
 
   async query(_ctx: Context, request: QueryRequest): Promise<SwarmResponse> {
@@ -251,16 +253,27 @@ export class MemorySignalManager implements SignalManager {
       });
   }
 }
-const dec = (payload: Any) => {
-  if (!payload.type_url.endsWith('ReliablePayload')) {
+const joinRequest = ({ topic, peer }: { topic: PublicKey; peer: PeerInfo }): JoinRequest =>
+  create(JoinRequestSchema, { topic: fromPublicKey(topic), peer });
+
+const leaveRequest = ({ topic, peer }: { topic: PublicKey; peer: PeerInfo }): LeaveRequest =>
+  create(LeaveRequestSchema, { topic: fromPublicKey(topic), peer });
+
+const peerAvailable = (topic: PublicKey, peer: PeerInfo): SwarmEvent =>
+  create(SwarmEventSchema, {
+    topic: fromPublicKey(topic),
+    event: {
+      case: 'peerAvailable',
+      value: create(SwarmEvent_PeerAvailableSchema, { peer, since: fromDate(new Date()) }),
+    },
+  });
+
+/** Names the wrapped payload for logging, where the envelope carries a reliable payload. */
+const dec = (payload: AnyEnvelope | undefined) => {
+  if (!payload?.typeUrl.endsWith('ReliablePayload')) {
     return {};
   }
 
-  const relPayload = decodeCompat<ReliablePayload>(ReliablePayloadSchema, payload.value);
-
-  if (typeof relPayload?.payload?.data === 'object') {
-    return { payload: Object.keys(relPayload?.payload?.data)[0], sessionId: relPayload?.payload?.sessionId };
-  }
-
-  return {};
+  const { payload: inner } = fromBinary(ReliablePayloadSchema, payload.value);
+  return { payload: inner?.typeUrl };
 };

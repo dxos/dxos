@@ -9,11 +9,12 @@ import { ProcessManagerPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { ClientPlugin } from '@dxos/plugin-client/testing';
 import { Dialog } from '@dxos/react-ui';
+import { translations as formTranslations } from '@dxos/react-ui-form/translations';
 import { withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
 
-import { CreateSpaceDialog } from './CreateSpaceDialog';
+import { CreateSpaceDialog } from './CreateSpaceDialog.tsx';
 
 const DefaultStory = () => (
   <Dialog.Root defaultOpen>
@@ -35,7 +36,8 @@ const meta = {
   ],
   parameters: {
     layout: 'fullscreen',
-    translations,
+    // The dialog's action row is `Form.Actions`, whose labels live in the form package's bundle.
+    translations: [...translations, ...formTranslations],
   },
 } satisfies Meta<typeof CreateSpaceDialog>;
 

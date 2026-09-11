@@ -9,7 +9,7 @@ import { setHeading } from '@dxos/ui-editor';
 
 import { translationKey } from '#translations';
 
-import { type EditorToolbarState } from './types';
+import { type EditorToolbarState } from './types.ts';
 
 const headingIcons: Record<string, string> = {
   0: 'ph--paragraph--regular',

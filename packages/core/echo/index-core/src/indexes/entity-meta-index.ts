@@ -13,10 +13,10 @@ import { ATTR_DELETED, ATTR_PARENT, ATTR_RELATION_SOURCE, ATTR_RELATION_TARGET, 
 import { DXN, EID, EntityId, SpaceId, URI } from '@dxos/keys';
 import { SqlTransaction } from '@dxos/sql-sqlite';
 
-import { MIGRATIONS, MIGRATIONS_TABLE } from '../migrations/entity-meta';
-import { SQL_CHUNK_SIZE, chunkArray } from '../utils';
-import type { IndexerObject } from './interface';
-import type { Index } from './interface';
+import { MIGRATIONS, MIGRATIONS_TABLE } from '../migrations/entity-meta/index.ts';
+import { SQL_CHUNK_SIZE, chunkArray } from '../utils.ts';
+import type { IndexerObject } from './interface.ts';
+import type { Index } from './interface.ts';
 
 /**
  * Normalizes an echo: EID to the local (unqualified) form so SQL comparisons are consistent.
@@ -110,14 +110,25 @@ export const EntityMeta = Schema.Struct({
 export interface EntityMeta extends Schema.Schema.Type<typeof EntityMeta> {}
 
 /**
+ * A queue to select from, scoped by the space that owns it.
+ *
+ * `spaceId` is absent only for an unqualified feed URI (`echo:///<id>`), which names no space to
+ * scope to; such a queue matches on its id alone, as every queue read did before scoping existed.
+ */
+export interface QueueRef {
+  readonly queueId: string;
+  readonly spaceId?: string;
+}
+
+/**
  * Builds a SQL condition for filtering by space and queue source.
- * When `includeAllQueues` is false and no `queueIds`, only non-queue objects are returned.
+ * When `includeAllQueues` is false and no `queues`, only non-queue objects are returned.
  */
 const buildSourceCondition = (
   sql: SqlClient.SqlClient,
   spaceIds: readonly string[],
   includeAllQueues: boolean,
-  queueIds: readonly string[] | null,
+  queues: readonly QueueRef[] | null,
 ): Statement.Fragment => {
   const conditions: Statement.Fragment[] = [];
 
@@ -129,8 +140,18 @@ const buildSourceCondition = (
     }
   }
 
-  if (queueIds && queueIds.length > 0) {
-    conditions.push(sql`${sql.in('queueId', queueIds)}`);
+  if (queues && queues.length > 0) {
+    // Each queue carries its own space: a queue id is unique only within one, so matching on the id
+    // alone would admit another space's rows for a colliding id.
+    conditions.push(
+      sql.or(
+        queues.map((queue) =>
+          queue.spaceId !== undefined
+            ? sql`(spaceId = ${queue.spaceId} AND queueId = ${queue.queueId})`
+            : sql`queueId = ${queue.queueId}`,
+        ),
+      ),
+    );
   }
 
   if (conditions.length === 0) {
@@ -141,27 +162,62 @@ const buildSourceCondition = (
 };
 
 /**
- * Window over a feed's positioned blocks: resume after a cursor position and cap the page.
- * Only meaningful for a queue-scoped query — `queuePosition` is null for automerge objects, so a
- * caller must not apply this to a query that also selects from a space's documents.
+ * Window over a queue-scoped read: which rows, in what order, and how many.
+ *
+ * Only meaningful for a queue-scoped query — `queuePosition` is null for automerge objects and the
+ * caller-visible orderings differ, so a caller must not apply this to a query that also selects
+ * from a space's documents.
  */
-export interface QueueWindow {
+export type QueueWindow = CursorQueueWindow | NaturalQueueWindow;
+
+/**
+ * Resume a feed after a cursor position: positioned blocks only, in position order.
+ */
+export interface CursorQueueWindow {
+  readonly kind: 'cursor';
   /** Exclusive lower bound: only blocks positioned strictly after this are returned. */
-  after: number;
+  readonly after: number;
   /** Exclusive upper bound: only blocks positioned strictly before this are returned. */
-  before?: number;
-  /** Maximum rows to return, applied after ordering by position. */
-  limit?: number;
+  readonly before?: number;
+  /** Maximum rows to return, applied after ordering. */
+  readonly limit?: number;
 }
 
 /**
- * Trailing `... AND queuePosition > ? ORDER BY queuePosition LIMIT ?` for a windowed queue read.
- * Empty when the window is empty, so the unwindowed query keeps its previous shape (and its
+ * Read the first `limit` rows of a feed in natural order, so a bounded query costs what it asks
+ * for rather than the whole feed. Ordered by `objectId` because that is the key the query
+ * executor's natural comparator uses: the capped page is then exactly the page a full scan
+ * followed by an in-memory sort would have produced.
+ */
+export interface NaturalQueueWindow {
+  readonly kind: 'natural';
+  readonly direction: 'asc' | 'desc';
+  /** Maximum rows to return, applied after ordering. */
+  readonly limit: number;
+  /**
+   * Restrict to rows with this deleted state. Folded in here rather than left to the caller so the
+   * cap counts only rows the caller keeps — a limit applied before the deleted filter would return
+   * short of what the caller asked for.
+   */
+  readonly deleted?: boolean;
+}
+
+/**
+ * Trailing `... AND <bounds> ORDER BY <key> LIMIT ?` for a windowed queue read.
+ * Empty when there is no window, so the unwindowed query keeps its previous shape (and its
  * unspecified row order).
  */
 const buildQueueWindow = (sql: SqlClient.SqlClient, window: QueueWindow | undefined): Statement.Fragment => {
   if (window === undefined) {
     return sql``;
+  }
+
+  if (window.kind === 'natural') {
+    const deleted = window.deleted !== undefined ? sql` AND deleted = ${window.deleted ? 1 : 0}` : sql``;
+    // Unpositioned blocks are in scope here, unlike a cursor read: a natural read is over the feed
+    // as the caller sees it, and a locally appended block is part of that before it is positioned.
+    const order = window.direction === 'desc' ? sql` ORDER BY objectId DESC` : sql` ORDER BY objectId ASC`;
+    return sql`${deleted}${order} LIMIT ${window.limit}`;
   }
 
   // A cursor read is over positioned blocks only — `queuePosition > ?` excludes the nulls, and
@@ -208,11 +264,11 @@ export class EntityMetaIndex implements Index {
     (query: {
       spaceIds: readonly EntityMeta['spaceId'][];
       includeAllQueues?: boolean;
-      queueIds?: readonly string[] | null;
+      queues?: readonly QueueRef[] | null;
       window?: QueueWindow;
     }): Effect.Effect<readonly EntityMeta[], SqlError.SqlError, SqlClient.SqlClient> =>
       Effect.gen(function* () {
-        if (query.spaceIds.length === 0 && (!query.queueIds || query.queueIds.length === 0)) {
+        if (query.spaceIds.length === 0 && (!query.queues || query.queues.length === 0)) {
           return [];
         }
 
@@ -221,7 +277,7 @@ export class EntityMetaIndex implements Index {
           sql,
           query.spaceIds,
           query.includeAllQueues ?? false,
-          query.queueIds ?? null,
+          query.queues ?? null,
         );
         const window = buildQueueWindow(sql, query.window);
         const rows = yield* sql<EntityMeta>`SELECT * FROM objectMeta WHERE ${sourceCondition}${window}`;
@@ -238,18 +294,18 @@ export class EntityMetaIndex implements Index {
       typeDxns,
       inverted = false,
       includeAllQueues = false,
-      queueIds = null,
+      queues = null,
       window,
     }: {
       spaceIds: readonly EntityMeta['spaceId'][];
       typeDxns: readonly EntityMeta['typeDXN'][];
       inverted?: boolean;
       includeAllQueues?: boolean;
-      queueIds?: readonly string[] | null;
+      queues?: readonly QueueRef[] | null;
       window?: QueueWindow;
     }): Effect.Effect<readonly EntityMeta[], SqlError.SqlError, SqlClient.SqlClient> =>
       Effect.gen(function* () {
-        if (spaceIds.length === 0 && (!queueIds || queueIds.length === 0)) {
+        if (spaceIds.length === 0 && (!queues || queues.length === 0)) {
           return [];
         }
 
@@ -259,7 +315,7 @@ export class EntityMetaIndex implements Index {
           }
 
           const sql = yield* SqlClient.SqlClient;
-          const sourceCondition = buildSourceCondition(sql, spaceIds, includeAllQueues, queueIds);
+          const sourceCondition = buildSourceCondition(sql, spaceIds, includeAllQueues, queues);
           const rows =
             yield* sql<EntityMeta>`SELECT * FROM objectMeta WHERE ${sourceCondition}${buildQueueWindow(sql, window)}`;
           return rows.map((row) => ({
@@ -268,7 +324,7 @@ export class EntityMetaIndex implements Index {
           }));
         }
         const sql = yield* SqlClient.SqlClient;
-        const sourceCondition = buildSourceCondition(sql, spaceIds, includeAllQueues, queueIds);
+        const sourceCondition = buildSourceCondition(sql, spaceIds, includeAllQueues, queues);
         const typeWhere = buildTypeDxnCondition(sql, typeDxns);
         const queueWindow = buildQueueWindow(sql, window);
         const rows = inverted
@@ -594,10 +650,10 @@ export class EntityMetaIndex implements Index {
       createdAfter?: number;
       createdBefore?: number;
       includeAllQueues?: boolean;
-      queueIds?: readonly string[] | null;
+      queues?: readonly QueueRef[] | null;
     }): Effect.Effect<readonly EntityMeta[], SqlError.SqlError, SqlClient.SqlClient> =>
       Effect.gen(function* () {
-        if (query.spaceIds.length === 0 && (!query.queueIds || query.queueIds.length === 0)) {
+        if (query.spaceIds.length === 0 && (!query.queues || query.queues.length === 0)) {
           return [];
         }
 
@@ -606,7 +662,7 @@ export class EntityMetaIndex implements Index {
           sql,
           query.spaceIds,
           query.includeAllQueues ?? false,
-          query.queueIds ?? null,
+          query.queues ?? null,
         );
 
         const timeConditions: Statement.Fragment[] = [];

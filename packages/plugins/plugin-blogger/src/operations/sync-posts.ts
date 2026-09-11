@@ -14,8 +14,8 @@ import { isNonNullable } from '@dxos/util';
 import { meta } from '#meta';
 import { Blog, BloggerCapabilities, Publisher } from '#types';
 
-import { SyncPosts } from './definitions';
-import { linkedId, postText, resolvePublisherService, tryPublisher } from './sync-support';
+import { SyncPosts } from './definitions.ts';
+import { linkedId, postText, resolvePublisherService, tryPublisher } from './sync-support.ts';
 
 /** Reports sync progress; `total` is an upper bound (posts to reconcile + remote drafts). */
 export type SyncProgress = (current: number, total: number) => void;
@@ -86,7 +86,8 @@ export const runSyncPosts = (
       // `publication` is already attached (only ever created via AddPublication), so pushing
       // `Ref.make(post)` onto `posts` attaches `post` too — no separate `Database.add` needed.
       Obj.update(publication, (publication) => {
-        publication.posts = [...(publication.posts ?? []), Ref.make(post)];
+        publication.posts ??= [];
+        publication.posts.push(Ref.make(post));
       });
       onProgress?.(++done, total);
     }

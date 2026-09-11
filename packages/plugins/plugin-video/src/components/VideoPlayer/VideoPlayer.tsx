@@ -8,7 +8,7 @@ import { Icon, composable, composableProps, useTranslation } from '@dxos/react-u
 
 import { meta } from '#meta';
 
-import { toEmbedUrl } from './embed-url-parsers';
+import { toEmbedUrl } from './embed-url-parsers.ts';
 
 export type VideoPlayerProps = {
   url?: string;
@@ -45,7 +45,7 @@ export const VideoPlayer = composable<HTMLDivElement, VideoPlayerProps>(
         <iframe
           // Reload the player when the start offset changes (bare iframe has no seek API).
           key={startTime}
-          className='w-full h-full'
+          className='dx-fill'
           src={embedUrl}
           title={url}
           allow='accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture'

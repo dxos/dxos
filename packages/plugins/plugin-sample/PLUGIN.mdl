@@ -17,10 +17,10 @@ Each extension is defined in the Appendix or resolved via its URI.
 |-------------|--------------------------------|
 | `type`      | `org.dxos.mdl.type@1.0`       |
 | `feat`      | `org.dxos.mdl.feat@1.0`       |
-| `test`      | `org.dxos.mdl.test@1.0`       |
+| `scenario`  | `org.dxos.mdl.scenario@1.0`   |
 | `component` | `org.dxos.mdl.component@1.0`  |
 | `op`        | `org.dxos.mdl.op@1.1`         |
-| `flow`      | `org.dxos.mdl.flow@1.0`       |
+| `test`      | `org.dxos.mdl.test@1.0`       |
 
 ## Types
 
@@ -265,7 +265,7 @@ feat F-5: Settings
 ## Acceptance
 
 ```mdl
-test T-1: Create item from global action
+scenario T-1: Create item from global action
   given: composer is open with an active space
   when: user invokes "Create Sample Item"
   then:
@@ -274,7 +274,7 @@ test T-1: Create item from global action
 ```
 
 ```mdl
-test T-2: Edit item inline
+scenario T-2: Edit item inline
   given: SampleArticle is open for an existing SampleItem
   when: user changes the name field
   then:
@@ -283,7 +283,7 @@ test T-2: Edit item inline
 ```
 
 ```mdl
-test T-3: Randomize action in toolbar
+scenario T-3: Randomize action in toolbar
   given: SampleArticle is open, it is the active object
   when: user clicks Randomize in the toolbar
   then:
@@ -292,7 +292,7 @@ test T-3: Randomize action in toolbar
 ```
 
 ```mdl
-test T-4: Archive from context menu
+scenario T-4: Archive from context menu
   given: a SampleItem node is shown in the nav tree
   when: user right-clicks and selects Archive
   then:
@@ -301,7 +301,7 @@ test T-4: Archive from context menu
 ```
 
 ```mdl
-test T-5: Companion shows related items
+scenario T-5: Companion shows related items
   given: a space contains three SampleItems, item A is open
   when: the companion panel is shown
   then:
@@ -310,21 +310,21 @@ test T-5: Companion shows related items
 ```
 
 ```mdl
-test T-6: Navigate from companion
+scenario T-6: Navigate from companion
   given: companion panel is showing related items
   when: user clicks item B in the list
   then: LayoutOperation.Open is invoked with item B's path
 ```
 
 ```mdl
-test T-7: Status indicator toggle
+scenario T-7: Status indicator toggle
   given: SampleSettings showStatusIndicator is true
   when: user sets showStatusIndicator to false in settings
   then: SampleStatusIndicator is no longer rendered in the status bar
 ```
 
 ```mdl
-test T-8: Settings persisted across restart
+scenario T-8: Settings persisted across restart
   given: user has set showStatusIndicator to false
   when: app reloads
   then: showStatusIndicator is still false (loaded from KVS)
@@ -334,11 +334,11 @@ test T-8: Settings persisted across restart
 
 ## QA
 
-Executable flows. Each step carries a human instruction (`do`) and, where the step maps to an
-invocable operation, an agent binding (`invoke`). Report failures by flow and step number.
+Executable tests. Each step carries a human instruction (`do`) and, where the step maps to an
+invocable operation, an agent binding (`invoke`). Report failures by test and step number.
 
 ```mdl
-flow QA-1: Create, randomize and archive a SampleItem
+test QA-1: Create, randomize and archive a SampleItem
   desc: The core SampleItem round-trip — create, randomize its fields, archive it.
   actors: agent
   covers: [F-1.1, F-1.3, F-2.2, T-1, T-3, T-4]
@@ -348,8 +348,8 @@ flow QA-1: Create, randomize and archive a SampleItem
     - space: a space is open
     - plugin-sample is enabled — it defaults ON only in local dev builds (`isLocal`); elsewhere it
       must be enabled via Settings -> plugin registry before "Create Sample Item" appears
-    - no SampleItem named "QA Sample" exists — ABORT rather than reusing one this flow did not create
-  test:
+    - no SampleItem named "QA Sample" exists — ABORT rather than reusing one this test did not create
+  steps:
     - name: Create the item
       do: From the global action menu, choose "Create Sample Item" and name it "QA Sample".
       invoke: [op:createSampleItem] { name: "QA Sample" }
@@ -405,8 +405,8 @@ ext feat
 ```
 
 ```mdl
-ext test
-  uri: org.dxos.mdl.test@1.0
+ext scenario
+  uri: org.dxos.mdl.scenario@1.0
   desc: An acceptance scenario expressed as given / when / then steps.
   fields:
     given?: Step | Step[]

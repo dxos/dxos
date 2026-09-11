@@ -12,8 +12,8 @@ as a **video** generation provider for `plugin-studio`. No React/UI surfaces.
 | Term   | URI                     |
 | ------ | ----------------------- |
 | `feat` | `org.dxos.mdl.feat@1.0` |
+| `scenario` | `org.dxos.mdl.scenario@1.0` |
 | `test` | `org.dxos.mdl.test@1.0` |
-| `flow` | `org.dxos.mdl.flow@1.0` |
 
 ## Connector
 
@@ -86,11 +86,11 @@ feat HeyGenGenerateForm
 
 ## QA
 
-Executable flows. Each step carries a human instruction (`do`) and, where the step maps to an
-invocable operation, an agent binding (`invoke`). Report failures by flow and step number.
+Executable tests. Each step carries a human instruction (`do`) and, where the step maps to an
+invocable operation, an agent binding (`invoke`). Report failures by test and step number.
 
 ```mdl
-flow QA-1: Connect a HeyGen key and generate a video
+test QA-1: Connect a HeyGen key and generate a video
   desc: |
     HeyGen is headless — it contributes a Connector credential form and a GenerationService, but
     owns no UI and no operation of its own. Generation runs entirely through plugin-studio's
@@ -104,8 +104,8 @@ flow QA-1: Connect a HeyGen key and generate a video
     - space: a space is open
     - collection: a collection in that space, to create into
     - a valid HeyGen API key
-    - no Artifact named "QA Avatar Clip" exists — ABORT rather than reusing one this flow did not create
-  test:
+    - no Artifact named "QA Avatar Clip" exists — ABORT rather than reusing one this test did not create
+  steps:
     - name: Connect HeyGen
       do: Open Settings -> Connectors -> HeyGen, paste the API key, and submit.
       expect: a Connection + AccessToken pair for source "heygen.com" now exists

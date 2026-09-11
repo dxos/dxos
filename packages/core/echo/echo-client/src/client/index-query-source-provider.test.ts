@@ -16,16 +16,11 @@ import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { DXN, EntityId, type SpaceId, SpaceId as SpaceId$ } from '@dxos/keys';
 import { makeInProcessClient } from '@dxos/protocols';
-import {
-  QueryReactivity,
-  type QueryRequest,
-  type QueryResponse,
-  type QueryResult,
-} from '@dxos/protocols/proto/dxos/echo/query';
+import { QueryReactivity } from '@dxos/protocols/buf/dxos/echo/query_pb';
 import { QueryService } from '@dxos/protocols/rpc';
 
-import { type ObjectUpdate } from './index-query-source-provider';
-import { IndexQuerySource } from './index-query-source-provider';
+import { type ObjectUpdate } from './index-query-source-provider.ts';
+import { IndexQuerySource } from './index-query-source-provider.ts';
 
 // Mock graph - only used for queue items which are not tested here.
 const mockGraph = {} as Hypergraph.Hypergraph;
@@ -54,13 +49,13 @@ const makeQuery = (spaceId: SpaceId = SpaceId$.random()): QueryAST.Query =>
 
 describe('IndexQuerySource', () => {
   test('does not start a REACTIVE remote query until open() is called', async () => {
-    const calls: QueryRequest[] = [];
+    const calls: QueryService.QueryRequest[] = [];
 
     const service = await makeQueryClient({
       'QueryService.setConfig': () => Effect.void,
       'QueryService.execQuery': (request) => {
         calls.push(request);
-        return EffectEx.streamFromEmitter<QueryResponse>((emit) => {
+        return EffectEx.streamFromEmitter<QueryService.QueryResponse>((emit) => {
           queueMicrotask(() => void emit.single({ queryId: request.queryId, results: [] }));
         });
       },
@@ -94,13 +89,13 @@ describe('IndexQuerySource', () => {
   });
 
   test('update() then run() issues only a ONE_SHOT remote query when not open', async () => {
-    const calls: QueryRequest[] = [];
+    const calls: QueryService.QueryRequest[] = [];
 
     const service = await makeQueryClient({
       'QueryService.setConfig': () => Effect.void,
       'QueryService.execQuery': (request) => {
         calls.push(request);
-        return EffectEx.streamFromEmitter<QueryResponse>((emit) => {
+        return EffectEx.streamFromEmitter<QueryService.QueryResponse>((emit) => {
           queueMicrotask(() => void emit.single({ queryId: request.queryId, results: [] }));
         });
       },
@@ -136,13 +131,13 @@ describe('IndexQuerySource', () => {
   // `RegistryQuerySource`'s results. Surfaced by `projectCreate` over MCP (`SpaceOperation.
   // AddObject`'s type lookup is registry-scoped); dxos/edge mcp-operations project, DESIGN §6.
   test('registry-only queries never reach the remote service', async () => {
-    const calls: QueryRequest[] = [];
+    const calls: QueryService.QueryRequest[] = [];
 
     const service = await makeQueryClient({
       'QueryService.setConfig': () => Effect.void,
       'QueryService.execQuery': (request) => {
         calls.push(request);
-        return EffectEx.streamFromEmitter<QueryResponse>((emit) => {
+        return EffectEx.streamFromEmitter<QueryService.QueryResponse>((emit) => {
           queueMicrotask(() => void emit.single({ queryId: request.queryId, results: [] }));
         });
       },
@@ -192,11 +187,11 @@ describe('IndexQuerySource', () => {
     // Fake entity at the loader boundary — only `id` is read by the source under test.
     let loaded: Entity.Unknown | undefined;
 
-    let emit: ((results: QueryResult[]) => void) | undefined;
+    let emit: ((results: QueryService.QueryResult[]) => void) | undefined;
     const service = await makeQueryClient({
       'QueryService.setConfig': () => Effect.void,
       'QueryService.execQuery': (request) =>
-        EffectEx.streamFromEmitter<QueryResponse>((streamEmit) => {
+        EffectEx.streamFromEmitter<QueryService.QueryResponse>((streamEmit) => {
           emit = (results) => void streamEmit.single({ queryId: request.queryId, results });
         }),
       'QueryService.reindex': () => Effect.void,

@@ -3,18 +3,28 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Option from 'effect/Option';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
-import { Chat } from '@dxos/assistant-toolkit';
+import * as Plugin from '@dxos/app-framework/Plugin';
+import * as Chat from '@dxos/assistant/Chat';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Filter, Obj, Query } from '@dxos/echo';
 
-import { AssistantCapabilities, AssistantOperation } from '#types';
+import { AssistantCapabilities, AssistantEvents, AssistantOperation } from '#types';
 
 const handler: Operation.WithHandler<typeof AssistantOperation.EnsureCompanionChat> =
   AssistantOperation.EnsureCompanionChat.pipe(
     Operation.withHandler(
       Effect.fnUntraced(function* ({ companionTo }) {
+        // Activation first: the state and session providers this reads come from lazy modules that
+        // otherwise activate only once the assistant UI has been opened, so a caller arriving through
+        // an operation alone (an agent) would find them missing.
+        const pluginManager = yield* Effect.serviceOption(Plugin.Service);
+        yield* Option.match(pluginManager, {
+          onNone: () => Effect.void,
+          onSome: (manager) => manager.activate(AssistantEvents.Start),
+        });
         const { db } = yield* Database.Service;
         const companionUri = Obj.getURI(companionTo);
 

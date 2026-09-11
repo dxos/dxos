@@ -4,10 +4,10 @@
 
 import * as Command from 'effect/unstable/cli/Command';
 
-import { del } from './delete';
-import { exportSpace } from './export';
-import { inspect } from './inspect';
-import { list } from './list';
+import { del } from './delete.ts';
+import { exportSpace } from './export.ts';
+import { inspect } from './inspect.ts';
+import { list } from './list.ts';
 
 export const space: Command.Command<any, any, any, any, any> = Command.make('space').pipe(
   Command.withDescription('Manage Edge spaces.'),

@@ -10,11 +10,13 @@ import { Context } from '@dxos/context';
 import { EffectEx } from '@dxos/effect';
 import { log } from '@dxos/log';
 import { subscribeStream } from '@dxos/protocols';
-import { type Device } from '@dxos/protocols/proto/dxos/client/services';
+import { buf } from '@dxos/protocols/buf';
+import { type Device } from '@dxos/protocols/buf/dxos/client/services_pb';
+import { DeviceProfileDocumentSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
-import { type ServiceContext } from '../services';
-import { createServiceContext } from '../testing';
-import { DevicesServiceImpl } from './devices-service';
+import { type ServiceContext } from '../services/index.ts';
+import { createServiceContext } from '../testing/index.ts';
+import { DevicesServiceImpl } from './devices-service.ts';
 
 describe('DevicesService', () => {
   let serviceContext: ServiceContext;
@@ -33,7 +35,11 @@ describe('DevicesService', () => {
   describe('updateDevice', () => {
     test.skip('updates device profile', async () => {
       const stream = devicesService['DevicesService.queryDevices']();
-      const device = await EffectEx.runPromise(devicesService['DevicesService.updateDevice']({ label: 'test-device' }));
+      const device = await EffectEx.runPromise(
+        devicesService['DevicesService.updateDevice'](
+          buf.create(DeviceProfileDocumentSchema, { label: 'test-device' }),
+        ),
+      );
       const result = new Trigger<Device[] | undefined>();
       const cleanup = subscribeStream(EffectContext.empty(), stream, {
         onData: ({ devices }) => result.wake(devices),

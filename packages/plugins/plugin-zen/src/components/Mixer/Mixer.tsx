@@ -13,8 +13,8 @@ import { useCountdown } from '#hooks';
 import { meta } from '#meta';
 import { Dream, Sequence } from '#types';
 
-import { MixerEngine } from '../../generator';
-import { Sound } from '../Sound';
+import { MixerEngine } from '../../generator/index.ts';
+import { Sound } from '../Sound/index.ts';
 
 //
 // Mixer
@@ -91,7 +91,8 @@ export const Mixer = ({ classNames, dream, engine }: MixerProps) => {
   const handleAdd = useCallback(() => {
     const sequence = Sequence.makeSequence();
     Obj.update(dream, (dream) => {
-      dream.sequences = [...(dream.sequences ?? []), sequence];
+      dream.sequences ??= [];
+      dream.sequences.push(sequence);
     });
     setSelected(sequence.id);
   }, [dream]);

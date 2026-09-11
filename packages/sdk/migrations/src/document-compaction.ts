@@ -5,7 +5,7 @@
 import { type Space, SpaceState } from '@dxos/client/echo';
 import { invariant } from '@dxos/invariant';
 
-import { MigrationBuilder } from './migration-builder';
+import { MigrationBuilder } from './migration-builder.ts';
 
 export type CompactDocumentsOptions = {
   /**
@@ -37,7 +37,7 @@ export const compactDocumentsEpochMigration = async (
 
   const epochs = await space.internal.getEpochs();
   const lastEpoch = epochs[epochs.length - 1];
-  const epochNumber = lastEpoch?.subject.assertion.number ?? 0;
+  const epochNumber = lastEpoch?.assertion.number ?? 0;
 
   return { compacted, skipped, epochNumber };
 };

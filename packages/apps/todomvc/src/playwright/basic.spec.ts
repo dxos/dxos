@@ -4,8 +4,8 @@
 
 import { expect, test } from '@playwright/test';
 
-import { FILTER } from '../constants';
-import { AppManager } from './app-manager';
+import { FILTER } from '../constants.ts';
+import { AppManager } from './app-manager.ts';
 
 enum Groceries {
   Eggs = 'eggs',
@@ -45,8 +45,7 @@ test.describe('Basic test', () => {
   });
 
   test.afterEach(async () => {
-    await host.page.close();
-    await guest.page.close();
+    await Promise.all([host.close(), guest.close()]);
   });
 
   test.describe('Default space', () => {

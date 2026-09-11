@@ -4,7 +4,7 @@
 
 import { lazy } from 'react';
 
-export const CredentialsPanel = lazy(() => import('./CredentialsPanel'));
-export const DeviceListPanel = lazy(() => import('./DeviceListPanel'));
-export const IdentityPanel = lazy(() => import('./IdentityPanel'));
-export const KeyringPanel = lazy(() => import('./KeyringPanel'));
+export const CredentialsPanel = lazy(() => import('./CredentialsPanel/index.ts'));
+export const DeviceListPanel = lazy(() => import('./DeviceListPanel/index.ts'));
+export const IdentityPanel = lazy(() => import('./IdentityPanel/index.ts'));
+export const KeyringPanel = lazy(() => import('./KeyringPanel/index.ts'));

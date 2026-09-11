@@ -2,8 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './topics';
-export * from './ledger';
-export * from './rollups';
-export * from './digest';
-export * from './prompts';
+export * from './topics.ts';
+export * from './ledger.ts';
+export * from './rollups.ts';
+export * from './digest.ts';
+export * from './prompts.ts';

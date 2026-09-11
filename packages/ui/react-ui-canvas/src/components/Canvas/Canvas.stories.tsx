@@ -7,11 +7,11 @@ import React from 'react';
 
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { useCanvasContext, useDrag, useWheel } from '../../hooks';
-import { type Point } from '../../types';
-import { testId } from '../../util';
-import { Grid, type GridProps } from '../Grid';
-import { Canvas } from './Canvas';
+import { useCanvasContext, useDrag, useWheel } from '../../hooks/index.ts';
+import { type Point } from '../../types.ts';
+import { testId } from '../../util/index.ts';
+import { Grid, type GridProps } from '../Grid/index.ts';
+import { Canvas } from './Canvas.tsx';
 
 const size = 128;
 
@@ -31,7 +31,7 @@ const DefaultStory = (props: GridProps) => {
 
 const TwoCanvases = (props: GridProps) => {
   return (
-    <div className='grid grid-cols-2 gap-2 h-full w-full'>
+    <div className='grid grid-cols-2 gap-2 dx-fill'>
       <div className='h-full relative'>
         <Canvas>
           <Grid {...props} />

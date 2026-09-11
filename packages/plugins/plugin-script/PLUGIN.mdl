@@ -20,10 +20,10 @@ Each extension is defined in the Appendix or resolved via its URI.
 |-------------|--------------------------------|
 | `type`      | `org.dxos.mdl.type@1.0`       |
 | `feat`      | `org.dxos.mdl.feat@1.0`       |
-| `test`      | `org.dxos.mdl.test@1.0`       |
+| `scenario`  | `org.dxos.mdl.scenario@1.0`   |
 | `component` | `org.dxos.mdl.component@1.0`  |
 | `op`        | `org.dxos.mdl.op@1.1`         |
-| `flow`      | `org.dxos.mdl.flow@1.0`       |
+| `test`      | `org.dxos.mdl.test@1.0`       |
 
 ## Types
 
@@ -371,7 +371,7 @@ feat F-7: Plugin Settings
 ## Acceptance
 
 ```mdl
-test T-1: Create script from default template
+scenario T-1: Create script from default template
   given: a space is open and plugin-script is loaded
   when: user creates a new Script without template selection
   then:
@@ -381,7 +381,7 @@ test T-1: Create script from default template
 ```
 
 ```mdl
-test T-2: Create script from Gist
+scenario T-2: Create script from Gist
   given: a public GitHub Gist URL is known
   when: user creates a Script with the Gist URL
   then:
@@ -390,7 +390,7 @@ test T-2: Create script from Gist
 ```
 
 ```mdl
-test T-3: Edit and persist source
+scenario T-3: Edit and persist source
   given: a Script is open in ScriptArticle
   when: user edits the source
   then:
@@ -399,7 +399,7 @@ test T-3: Edit and persist source
 ```
 
 ```mdl
-test T-4: Deploy script
+scenario T-4: Deploy script
   given: a Script with valid source following the Operation pattern
   when: user opens DeploymentDialog and confirms
   then:
@@ -408,7 +408,7 @@ test T-4: Deploy script
 ```
 
 ```mdl
-test T-5: Invoke deployed function
+scenario T-5: Invoke deployed function
   given: a Script is deployed
   when: user opens the Execute companion and submits a payload
   then:
@@ -417,7 +417,7 @@ test T-5: Invoke deployed function
 ```
 
 ```mdl
-test T-6: Inspect invocations
+scenario T-6: Inspect invocations
   given: a Script has been invoked at least once
   when: user opens the Logs companion
   then:
@@ -426,7 +426,7 @@ test T-6: Inspect invocations
 ```
 
 ```mdl
-test T-7: Skill tools resolve
+scenario T-7: Skill tools resolve
   given: composer-app with plugin-script loaded
   when: AppCapabilities.SkillDefinition is queried for `org.dxos.skill.script`
   then:
@@ -436,7 +436,7 @@ test T-7: Skill tools resolve
 ```
 
 ```mdl
-test T-8: Agent creates and deploys script
+scenario T-8: Agent creates and deploys script
   given: a Script assistant session is active
   when: agent calls op:create with a name and source
   then: a Script object is created in the space
@@ -447,7 +447,7 @@ test T-8: Agent creates and deploys script
 ```
 
 ```mdl
-test T-9: QueryDeployedFunctions and install
+scenario T-9: QueryDeployedFunctions and install
   given: at least one function is deployed to the EDGE runtime
   when: op:queryDeployedFunctions is called
   then:
@@ -462,14 +462,14 @@ test T-9: QueryDeployedFunctions and install
 
 ## QA
 
-Executable flows. Each step carries a human instruction (`do`) and, where the step maps to an
-invocable operation, an agent binding (`invoke`). Report failures by flow and step number.
+Executable tests. Each step carries a human instruction (`do`) and, where the step maps to an
+invocable operation, an agent binding (`invoke`). Report failures by test and step number.
 
 ```mdl
-flow QA-1: Create, edit, deploy and invoke a script
+test QA-1: Create, edit, deploy and invoke a script
   desc: The core script round-trip through the running app — the UI creates via [op:createScript];
     the skill's own create/read/update path is a SEPARATE operation ([op:create], key
-    `org.dxos.operation.script.createFunction`) that this flow does not exercise.
+    `org.dxos.operation.script.createFunction`) that this test does not exercise.
   actors: both
   covers: [F-1.2, F-2.3, F-3.2, F-4.3, T-1, T-3, T-4, T-5]
   status: unverified
@@ -479,8 +479,8 @@ flow QA-1: Create, edit, deploy and invoke a script
     - collection: a collection in that space, to create into
     - plugin-script is enabled — it is OFF by default (not in `getDefaults`); it must be enabled
       via Settings -> plugin registry before "Script" appears in the create menu
-    - no Script named "QA Script" exists — ABORT rather than reusing one this flow did not create
-  test:
+    - no Script named "QA Script" exists — ABORT rather than reusing one this test did not create
+  steps:
     - name: Create the script
       do: In the navtree, click + on a collection and choose Script. Name it "QA Script".
       invoke: [op:createScript] { name: "QA Script", db: $given.space.db }
@@ -550,8 +550,8 @@ ext feat
 ```
 
 ```mdl
-ext test
-  uri: org.dxos.mdl.test@1.0
+ext scenario
+  uri: org.dxos.mdl.scenario@1.0
   desc: An acceptance scenario expressed as given / when / then steps.
   fields:
     given?: Step | Step[]

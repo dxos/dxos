@@ -10,10 +10,10 @@ import { TestDatabaseLayer, testStoragePath } from '@dxos/echo-client/testing';
 import { PublicKey, URI } from '@dxos/keys';
 import { Milestone, Task, TaskSet } from '@dxos/types';
 
-import createMilestone from './create-milestone';
-import createTask from './create-task';
-import listTasks from './list-tasks';
-import updateTask from './update-task';
+import createMilestone from './create-milestone.ts';
+import createTask from './create-task.ts';
+import listTasks from './list-tasks.ts';
+import updateTask from './update-task.ts';
 
 describe('list-tasks', () => {
   it.effect('filters by status and assignee, and excludes sub-tasks by default', () =>
@@ -82,7 +82,7 @@ describe('list-tasks', () => {
 
         const { db } = yield* Database.Service;
         Obj.update(taskSet, (taskSet) => {
-          taskSet.tasks = [...taskSet.tasks, db.makeRef(URI.make('echo:///01M122P4GNVZ1P982K1K0QG8AY'))];
+          taskSet.tasks.push(db.makeRef(URI.make('echo:///01M122P4GNVZ1P982K1K0QG8AY')));
         });
         yield* Database.flush();
       }).pipe(

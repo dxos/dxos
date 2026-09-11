@@ -18,7 +18,7 @@ import { OAuthProvider } from '@dxos/protocols';
 
 import { ConnectorSpec } from '#types';
 
-import * as ConnectorAuth from './ConnectorAuth';
+import * as ConnectorAuth from './ConnectorAuth.ts';
 
 // A connector is "offered" (gets a Connect entry) when it has an auth flow; oauth is the simplest.
 const authFlow: Partial<ConnectorSpec.ConnectorEntry> = { oauth: { provider: OAuthProvider.GOOGLE, scopes: [] } };

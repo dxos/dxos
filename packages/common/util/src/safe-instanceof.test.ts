@@ -4,7 +4,7 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { safeInstanceof } from './safe-instanceof';
+import { safeInstanceof } from './safe-instanceof.ts';
 
 describe('safeInstanceOf', () => {
   test('different classes with the same tag are compatible', () => {

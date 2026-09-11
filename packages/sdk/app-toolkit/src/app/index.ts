@@ -2,11 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
-export * as NativeOAuth from './NativeOAuth';
-export * as NativePasskey from './NativePasskey';
-export * as NavigationResolver from './NavigationResolver';
-export * as NotFound from './NotFound';
-export * as GraphPath from './GraphPath';
-export * as Translations from './Translations';
-export * as UrlPath from './UrlPath';
-export * as UrlResolution from './UrlResolution';
+export * as NativeOAuth from './NativeOAuth.ts';
+export * as NativePasskey from './NativePasskey.ts';
+export * as NavigationResolver from './NavigationResolver.ts';
+export * as NotFound from './NotFound.ts';
+export * as GraphPath from './GraphPath.ts';
+export * as Translations from './Translations.ts';
+export * as UrlPath from './UrlPath.ts';
+export * as UrlResolution from './UrlResolution.ts';

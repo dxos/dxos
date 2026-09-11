@@ -20,7 +20,7 @@ import { FeedProtocol, makeInProcessClient } from '@dxos/protocols';
 import { FeedService, SpacesService } from '@dxos/protocols/rpc';
 import { createFilename } from '@dxos/util';
 
-import { type DataSpace } from '../spaces/data-space';
+import { type DataSpace } from '../spaces/data-space.ts';
 
 const SERIALIZED_SPACE_VERSION = 1;
 
@@ -95,7 +95,7 @@ export const writeSerializedSpaceArchive = async (
 ): Promise<SpacesService.SpaceArchive> => {
   const { space, echoHost, exportedBy } = options;
 
-  const rootUrl = space.automergeSpaceState.lastEpoch?.subject.assertion.automergeRoot;
+  const rootUrl = space.automergeSpaceState.lastEpoch?.assertion.automergeRoot;
   assertState(rootUrl, 'Space does not have a root URL');
   const databaseRoot = space.databaseRoot;
   assertState(databaseRoot, 'Space database root is not ready');

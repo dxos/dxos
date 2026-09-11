@@ -9,7 +9,7 @@ import type * as Plugin from '@dxos/app-framework/Plugin';
 import * as NativePasskey from '@dxos/app-toolkit/NativePasskey';
 import { type Client, type ClientServicesProvider, type Config } from '@dxos/client';
 import { type IdbLogStore } from '@dxos/log-store-idb';
-import { type Observability } from '@dxos/observability';
+import type * as Observability from '@dxos/observability/Observability';
 import * as AtprotoPlugin from '@dxos/plugin-atproto/AtprotoPlugin';
 import * as AttentionPlugin from '@dxos/plugin-attention/AttentionPlugin';
 import * as ClientPlugin from '@dxos/plugin-client/ClientPlugin';
@@ -35,7 +35,7 @@ import * as SupportPlugin from '@dxos/plugin-support/SupportPlugin';
 import * as ThemePlugin from '@dxos/plugin-theme/ThemePlugin';
 import { isTruthy } from '@dxos/util';
 
-import { downloadLogs } from './util';
+import { downloadLogs } from './util/index.ts';
 
 const APP_LINK_ORIGIN = new URL('https://' + NativePasskey.APP_DOMAIN).origin;
 
@@ -147,7 +147,7 @@ export const getCorePlugins = ({
       observability: () => observability,
       downloadLogs: () => downloadLogs(logStore),
     }),
-    OnboardingPlugin.make({ generateExemplarSpace: !isLocal }),
+    OnboardingPlugin.make({ generateSampleSpace: !isLocal }),
     isTauri && !isMobile && !isPopover && NativePlugin.make(),
     PreviewPlugin.make(),
     ProcessManagerPlugin(),
@@ -164,7 +164,7 @@ export const getCorePlugins = ({
       invitationUrlHandler: false,
     }),
     StatusBarPlugin.make(),
-    SupportPlugin.make({ helpSteps: () => import('./util/help').then(({ steps }) => steps) }),
+    SupportPlugin.make({ helpSteps: () => import('./util/help.ts').then(({ steps }) => steps) }),
     ThemePlugin.make({
       appName: 'Composer',
       platform: isMobile ? 'mobile' : 'desktop',

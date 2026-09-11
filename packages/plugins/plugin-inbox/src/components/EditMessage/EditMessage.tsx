@@ -9,9 +9,9 @@ import { type Database, Obj } from '@dxos/echo';
 import {
   Button,
   Column,
+  Field,
   Icon,
   IconButton,
-  Input,
   ScrollArea,
   composable,
   composableProps,
@@ -24,7 +24,7 @@ import { type Extension, keymap } from '@dxos/ui-editor';
 
 import { meta } from '#meta';
 
-import { Editor } from '../Editor';
+import { Editor } from '../Editor/index.ts';
 
 type MessageField = 'to' | 'cc' | 'bcc' | 'subject';
 
@@ -209,7 +209,7 @@ export const EditMessage = composable<HTMLDivElement, EditMessageProps>(
     const labelStyles = 'shrink-0 ps-2 pe-2 text-description text-sm';
 
     return (
-      <ScrollArea.Root classNames='dx-container'>
+      <ScrollArea.Root>
         <ScrollArea.Viewport>
           <Column.Root
             {...composableProps(props, {
@@ -297,9 +297,9 @@ export const EditMessage = composable<HTMLDivElement, EditMessageProps>(
                 </>
               )}
 
-              <Input.Root>
-                <Input.Label srOnly>{t('draft-subject.label')}</Input.Label>
-                <Input.TextInput
+              <Field.Root>
+                <Field.Label srOnly>{t('draft-subject.label')}</Field.Label>
+                <Field.Input
                   ref={subjectRef}
                   classNames='col-span-3'
                   placeholder={t('draft-subject.placeholder')}
@@ -313,13 +313,13 @@ export const EditMessage = composable<HTMLDivElement, EditMessageProps>(
                     }
                   }}
                 />
-              </Input.Root>
+              </Field.Root>
             </Column.Center>
 
-            <Column.Center classNames='flex flex-col py-3 min-h-0'>
+            <Column.Center classNames='flex flex-col dx-grow py-3'>
               <Editor
                 compact
-                classNames='dx-input dx-expander'
+                classNames='dx-input dx-expand'
                 placeholder={t('message-body.placeholder')}
                 extensions={extensions}
                 value={message.blocks?.find((block) => block._tag === 'text')?.text ?? ''}

@@ -18,14 +18,15 @@ import { CommandConfig, openBrowser, print } from '@dxos/cli-util';
 import { type LocalCallbackServer, startLocalCallbackServer } from '@dxos/cli-util/callback';
 import { performRecoveryOAuthFlow } from '@dxos/cli-util/oauth';
 import { type Client, ClientService } from '@dxos/client';
-import { Invitation, InvitationEncoder } from '@dxos/client/invitations';
+import { Invitation_State, InvitationEncoder } from '@dxos/client/invitations';
 import { Context as DxContext } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { ATPROTO_OAUTH_SCOPES, OAuthProvider } from '@dxos/protocols';
+import { requirePublicKey } from '@dxos/protocols/buf';
 
 import { ClientOperation } from '#operations';
 
-import { printIdentity, waitForState } from '../../halo/util';
+import { printIdentity, waitForState } from '../../halo/util.ts';
 import {
   ATMOSPHERE_INPUT_PROMPT,
   ATMOSPHERE_METHOD,
@@ -33,7 +34,7 @@ import {
   METHOD_ALIASES,
   hubClient,
   methodOption,
-} from '../util';
+} from '../util.ts';
 
 type LoginMethod = 'email' | 'passkey' | typeof ATMOSPHERE_METHOD | 'device-invitation' | 'recovery-code';
 
@@ -249,7 +250,7 @@ const loginWithEmail = (client: Client, email: string, invoke: Capabilities.Oper
             hub.login(DxContext.default(), {
               email,
               identityDid: identity.did,
-              identityKey: identity.identityKey.toHex(),
+              identityKey: requirePublicKey(identity.identityKey).toHex(),
             }),
           catch: (cause) =>
             new Error(
@@ -298,10 +299,10 @@ const loginWithDeviceInvitation = (client: Client, encoded: string) =>
       code = new URL(code).searchParams.get('deviceInvitationCode') ?? code;
     }
     const invitation = client.halo.join(InvitationEncoder.decode(code));
-    yield* waitForState(invitation, Invitation.State.READY_FOR_AUTHENTICATION);
+    yield* waitForState(invitation, Invitation_State.READY_FOR_AUTHENTICATION);
     const authCode = yield* Prompt.text({ message: 'Enter the authentication code' }).pipe(Prompt.run);
     yield* Effect.tryPromise(() => invitation.authenticate(authCode));
-    yield* waitForState(invitation, Invitation.State.SUCCESS);
+    yield* waitForState(invitation, Invitation_State.SUCCESS);
     const identity = client.halo.identity.get();
     invariant(identity, 'Device invitation completed but no identity is present.');
     return identity;

@@ -2,5 +2,5 @@
 // Copyright 2025 DXOS.org
 //
 
-export * from './useAudioStream';
-export * from './usePipeline';
+export * from './useAudioStream.ts';
+export * from './usePipeline.ts';

@@ -8,8 +8,8 @@ import { DEFAULT_INPUT, isTruthy } from '@dxos/conductor';
 import { Icon } from '@dxos/react-ui';
 import { type ShapeComponentProps } from '@dxos/react-ui-canvas-editor';
 
-import { useComputeNodeState } from '../hooks';
-import { type BeaconShape } from './beacon-def';
+import { useComputeNodeState } from '../hooks/index.ts';
+import { type BeaconShape } from './beacon-def.ts';
 
 export const BeaconComponent = ({ shape }: ShapeComponentProps<BeaconShape>) => {
   const { runtime } = useComputeNodeState(shape);

@@ -8,25 +8,37 @@ import { RegistryContext } from '@effect/atom-react/RegistryContext';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Atom from 'effect/unstable/reactivity/Atom';
 import React, { useCallback, useContext, useEffect, useMemo, useRef } from 'react';
+import { expect, userEvent, within } from 'storybook/test';
 
 import { random } from '@dxos/random';
 import { Icon } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
 import { withRegistry } from '@dxos/storybook-utils';
 
-import { Path } from '../../util';
-import { type TestItem, createTree, updateState } from './testing';
-import { Tree } from './Tree';
-import { type TreeData } from './tree-data';
-import { type TreeModel } from './TreeContext';
+import { Path } from '../../util/index.ts';
+import { type TestItem, createTree, updateState } from './testing.ts';
+import { type TreeData } from './tree-data.ts';
+import { Tree } from './Tree.tsx';
+import { type TreeModel } from './TreeContext.ts';
 
 random.seed(1234);
 
 const tree = createTree();
 const groupsTree = createTree(4, 4, { groups: true });
+// Three childless nodes the story still presents as branches (a folder with nothing in it).
+const emptyTree = createTree(3, 1);
 
-const DefaultStory = ({ draggable, groups }: { draggable?: boolean; groups?: boolean }) => {
-  const rootTree = groups ? groupsTree : tree;
+const DefaultStory = ({
+  draggable,
+  groups,
+  emptyBranches,
+}: {
+  draggable?: boolean;
+  groups?: boolean;
+  /** Present childless nodes as branches, as a model does for an empty folder. */
+  emptyBranches?: boolean;
+}) => {
+  const rootTree = emptyBranches ? emptyTree : groups ? groupsTree : tree;
   const registry = useContext(RegistryContext);
   const stateAtomsRef = useRef(new Map<string, Atom.Writable<{ open: boolean; current: boolean }>>());
 
@@ -97,7 +109,7 @@ const DefaultStory = ({ draggable, groups }: { draggable?: boolean; groups?: boo
             label: parent.name,
             icon: parent.icon,
             disposition: parent.disposition,
-            ...((parent.items?.length ?? 0) > 0 && {
+            ...(((parent.items?.length ?? 0) > 0 || emptyBranches) && {
               parentOf: parent.items!.map(({ id }) => id),
               count: parent.items!.length,
               // Demonstrate the rose "new/modified" badge on a subset of branches (replaces the neutral count).
@@ -106,7 +118,7 @@ const DefaultStory = ({ draggable, groups }: { draggable?: boolean; groups?: boo
           };
         }).pipe(Atom.keepAlive);
       }),
-    [itemMap],
+    [itemMap, emptyBranches],
   );
 
   const itemOpenFamily = useMemo(
@@ -234,4 +246,30 @@ export const Draggable: Story = {
 
 export const WithGroups: Story = {
   args: { groups: true },
+};
+
+/**
+ * A childless branch has nothing to disclose: its chevron is disabled, and a click neither opens it
+ * nor changes the tree's height (its content, were it shown, used to draw the tree's row gap around
+ * a zero-height row).
+ */
+export const EmptyBranch: Story = {
+  args: { emptyBranches: true },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const tree = await canvas.findByRole('tree');
+    const toggle = (await canvas.findAllByTestId('treeItem.toggle'))[0];
+    const branch = toggle.closest('[data-part="branch"]');
+    if (!branch) {
+      throw new Error('Expected toggle to have a "branch" ancestor.');
+    }
+    const height = tree.getBoundingClientRect().height;
+
+    await expect(toggle).toBeDisabled();
+    await userEvent.click(toggle);
+    // Past the disclose animation, which interpolates the content's block size.
+    await new Promise((resolve) => setTimeout(resolve, 300));
+    await expect(branch).toHaveAttribute('data-state', 'closed');
+    await expect(tree.getBoundingClientRect().height).toBe(height);
+  },
 };

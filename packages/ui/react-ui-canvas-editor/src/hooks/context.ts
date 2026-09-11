@@ -7,10 +7,10 @@ import { type Dispatch, type RefObject, type SetStateAction, createContext } fro
 import { type SelectionModel } from '@dxos/graph';
 import { type Dimension } from '@dxos/react-ui-canvas';
 
-import { type ActionHandler } from '../actions';
-import { type ShapeLayout, type ShapeRegistry } from '../components';
-import { type CanvasBoard, type CanvasGraphModel } from '../types';
-import { type DragMonitor } from './useDragMonitor';
+import { type ActionHandler } from '../actions/index.ts';
+import { type ShapeLayout, type ShapeRegistry } from '../components/index.ts';
+import { type CanvasBoard, type CanvasGraphModel } from '../types/index.ts';
+import { type DragMonitor } from './useDragMonitor.ts';
 
 export type EditingState<S extends CanvasBoard.Shape> = {
   shape: S;
@@ -70,5 +70,5 @@ export type EditorContextType<S extends CanvasBoard.Shape = CanvasBoard.Shape> =
 /**
  * @internal
  */
-// TODO(burdon): Use Radix.
+// TODO(burdon): Use `createContext` from `@dxos/react-hooks`.
 export const EditorContext = createContext<EditorContextType | undefined>(undefined);

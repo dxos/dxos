@@ -23,8 +23,8 @@ import { mx } from '@dxos/ui-theme';
 
 import { Note, Sequence, Track } from '#types';
 
-import { hueFor, hueToHex } from '../../util/hue';
-import { LoopMarkers } from '../LoopMarkers';
+import { hueFor, hueToHex } from '../../util/hue.ts';
+import { LoopMarkers } from '../LoopMarkers/index.ts';
 
 export type SequenceGridProps = {
   sequence: Sequence.Sequence;
@@ -561,7 +561,7 @@ export const SequenceGrid = ({
   const loopMaxBeats = Math.max(sequence.length, 256);
 
   return (
-    <div ref={paneRef} className={mx('relative w-full h-full', classNames)}>
+    <div ref={paneRef} className={mx('relative dx-fill', classNames)}>
       <CellGrid
         atoms={atoms as any}
         rows={rows}

@@ -21,9 +21,9 @@ import { Database, Obj } from '@dxos/echo';
 import { FunctionsServiceClient } from '@dxos/edge-compute';
 import { FunctionRuntimeKind } from '@dxos/protocols';
 
-import { bundle } from './bundle';
-import { DATA_TYPES, upsertComposerScript } from './echo';
-import { parseOptions } from './options';
+import { bundle } from './bundle.ts';
+import { DATA_TYPES, upsertComposerScript } from './echo.ts';
+import { parseOptions } from './options.ts';
 
 export const deploy = Command.make(
   'deploy',

@@ -8,7 +8,7 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 
-import { ServiceRegistry } from './service-registry';
+import { ServiceRegistry } from './service-registry.ts';
 
 class MyTag extends Context.Service<MyTag, { value: string }>()('MyTag') {}
 

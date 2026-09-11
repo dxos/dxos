@@ -5,18 +5,18 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { Input, ScrollArea } from '../../components';
-import { withLayout, withTheme } from '../../testing';
-import { Column } from './Column';
+import { Field, ScrollArea } from '../../components/index.ts';
+import { withLayout, withTheme } from '../../testing/index.ts';
+import { Column } from './Column.tsx';
 
 const List = () => {
   return (
     <ScrollArea.Root centered>
       <ScrollArea.Viewport>
         {Array.from({ length: 100 }).map((_, i) => (
-          <Input.Root key={i}>
-            <Input.TextInput value={`Item ${i}`} readOnly />
-          </Input.Root>
+          <Field.Root key={i}>
+            <Field.Input value={`Item ${i}`} readOnly />
+          </Field.Root>
         ))}
       </ScrollArea.Viewport>
     </ScrollArea.Root>
@@ -38,9 +38,9 @@ const DefaultStory = () => {
 
       <Column.Center asChild>
         <div>
-          <Input.Root>
-            <Input.TextInput placeholder='Search' />
-          </Input.Root>
+          <Field.Root>
+            <Field.Input placeholder='Search' />
+          </Field.Root>
         </div>
       </Column.Center>
 
@@ -48,9 +48,9 @@ const DefaultStory = () => {
         <ScrollArea.Viewport>
           <div className='flex flex-col gap-2'>
             {Array.from({ length: 100 }).map((_, i) => (
-              <Input.Root key={i}>
-                <Input.TextInput value={`Item ${i}`} readOnly />
-              </Input.Root>
+              <Field.Root key={i}>
+                <Field.Input value={`Item ${i}`} readOnly />
+              </Field.Root>
             ))}
           </div>
         </ScrollArea.Viewport>
@@ -88,9 +88,9 @@ export const Default: Story = {};
 const InputList = ({ items = 50 }: { items?: number }) => (
   <div className='flex flex-col gap-2'>
     {Array.from({ length: items }).map((_, index) => (
-      <Input.Root key={index}>
-        <Input.TextInput value={`Item ${index + 1}`} readOnly />
-      </Input.Root>
+      <Field.Root key={index}>
+        <Field.Input value={`Item ${index + 1}`} readOnly />
+      </Field.Root>
     ))}
   </div>
 );
@@ -128,10 +128,10 @@ export const WithCenter: Story = {
       </Column.Center>
       <Column.Center classNames='flex flex-col'>
         <p>This text is inside Column.Center. It sits in the central column between the gutters.</p>
-        <Input.Root>
-          <Input.Label>Name</Input.Label>
-          <Input.TextInput placeholder='Enter name' />
-        </Input.Root>
+        <Field.Root>
+          <Field.Label>Name</Field.Label>
+          <Field.Input placeholder='Enter name' />
+        </Field.Root>
       </Column.Center>
       <Column.Center>
         <h2>Footer (Column.Center)</h2>

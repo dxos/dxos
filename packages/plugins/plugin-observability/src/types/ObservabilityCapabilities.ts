@@ -11,13 +11,13 @@ import type * as Atom from 'effect/unstable/reactivity/Atom';
 import * as ActivationEvent from '@dxos/app-framework/ActivationEvent';
 import * as Capability from '@dxos/app-framework/Capability';
 import { type Client } from '@dxos/client';
-import { type Observability as ObservabilityNs } from '@dxos/observability';
+import type * as ObservabilityNs from '@dxos/observability/Observability';
 
 import { meta } from '#meta';
 
 export const Namespace = Capability.makeSingleton<string>()(`${meta.profile.key}.capability.namespace`);
 
-export const Settings = Capability.makeSingleton<Atom.Writable<import('./Settings').Settings>>()(
+export const Settings = Capability.makeSingleton<Atom.Writable<import('./Settings.ts').Settings>>()(
   `${meta.profile.key}.capability.settings`,
 );
 

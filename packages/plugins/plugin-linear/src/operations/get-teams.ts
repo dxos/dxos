@@ -10,7 +10,7 @@ import { Database, Obj } from '@dxos/echo';
 
 import { LinearOperation } from '#types';
 
-import { LinearApi } from '../services';
+import { LinearApi } from '../services/index.ts';
 
 /**
  * Discovery only — list Linear teams reachable from the connection's token.

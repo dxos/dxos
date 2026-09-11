@@ -19,14 +19,14 @@ import { trim } from '@dxos/util';
 
 import { translations } from '#translations';
 
-import { TestLayout, TestPanel } from '../../../testing';
-import { omitId } from '../../../util';
-import { Form, type FormRootProps } from '../Form';
-import { parseLayout } from './parser';
+import { TestLayout, TestPanel } from '../../../testing/index.ts';
+import { omitId } from '../../../util/index.ts';
+import { Form, type FormRootProps } from '../Form.tsx';
+import { parseLayout } from './parser.ts';
 
 /**
  * Sample schema: a Flight booking carries airline, flight number, route, dates,
- * cabin class. Without an annotation `<Form.FieldSet/>` renders one field per
+ * cabin class. Without an annotation `<Form.Fields/>` renders one field per
  * row (see the `Linear` story). The `FormLayoutAnnotation` on this schema
  * arranges the same fields in a 2-column grid with selective spans.
  */
@@ -79,7 +79,7 @@ const FLIGHT_LAYOUT_COMPACT = trim`
 
 /**
  * Same schema annotated with two named layouts. `Form.Layout name="…"`
- * (or `Form.FieldSet layoutName="…"`) picks the variant; without a name
+ * (or `Form.Fields layoutName="…"`) picks the variant; without a name
  * the `'default'` entry is used.
  */
 const AnnotatedFlight = Type.getSchema(Flight)
@@ -143,7 +143,7 @@ const DefaultStory = ({ schema, template }: StoryArgs) => {
         <Form.Root schema={schema} defaultValues={values} onSave={handleSave} autoSave>
           <Form.Viewport>
             <Form.Content>
-              {template !== undefined ? <Form.Layout schema={schema} template={template} /> : <Form.FieldSet />}
+              {template !== undefined ? <Form.Layout schema={schema} template={template} /> : <Form.Fields />}
             </Form.Content>
           </Form.Viewport>
         </Form.Root>
@@ -170,7 +170,7 @@ export default meta;
 
 type Story = StoryObj<StoryArgs>;
 
-/** Baseline: no annotation, no override — `Form.FieldSet` renders linearly (one field per row). */
+/** Baseline: no annotation, no override — `Form.Fields` renders linearly (one field per row). */
 export const Linear: Story = {
   args: {
     schema: omitId(Type.getSchema(Flight)),
@@ -185,7 +185,7 @@ export const TemplateProp: Story = {
   },
 };
 
-/** Schema carries `FormLayoutAnnotation`; `Form.FieldSet` auto-detects and delegates. */
+/** Schema carries `FormLayoutAnnotation`; `Form.Fields` auto-detects and delegates. */
 export const SchemaAnnotation: Story = {
   args: {
     schema: omitId(AnnotatedFlight),
@@ -220,7 +220,7 @@ const NamedAnnotationStory = () => {
           <Form.Root schema={schema} defaultValues={values} onSave={handleSave} autoSave>
             <Form.Viewport>
               <Form.Content>
-                <Form.FieldSet layoutName={layoutName} />
+                <Form.Fields layoutName={layoutName} />
               </Form.Content>
             </Form.Viewport>
           </Form.Root>
@@ -342,7 +342,7 @@ const PlaygroundStory = ({ card = false }: PlaygroundStoryArgs) => {
     <Tooltip.Provider>
       <div
         className={mx(
-          'dx-container grid grid-rows-1 p-4 gap-4 overflow-hidden',
+          'dx-expand grid grid-rows-1 p-4 gap-4',
           card ? 'grid-cols-[var(--spacing-card-min-width)_var(--spacing-card-min-width)_1fr]' : 'grid-cols-2',
         )}
       >

@@ -10,12 +10,14 @@ import { Context } from '@dxos/context';
 import { EffectEx } from '@dxos/effect';
 import { PublicKey } from '@dxos/keys';
 import { subscribeStream } from '@dxos/protocols';
-import { type Identity } from '@dxos/protocols/proto/dxos/client/services';
-import { IdentityRecovery } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { buf, toPublicKey } from '@dxos/protocols/buf';
+import { type Identity } from '@dxos/protocols/buf/dxos/client/services_pb';
+import { ProfileDocumentSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
+import { IdentityRecovery_Kind } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
-import { type ServiceContext } from '../services';
-import { createServiceContext } from '../testing';
-import { IdentityServiceImpl } from './identity-service';
+import { type ServiceContext } from '../services/index.ts';
+import { createServiceContext } from '../testing/index.ts';
+import { IdentityServiceImpl } from './identity-service.ts';
 
 describe('IdentityService', () => {
   let serviceContext: ServiceContext;
@@ -35,17 +37,19 @@ describe('IdentityService', () => {
     test('creates a new identity', async () => {
       const identity = await EffectEx.runPromise(identityService['IdentityService.createIdentity']({}));
 
-      expect(identity.identityKey).to.be.instanceof(PublicKey);
-      expect(identity.spaceKey).to.be.instanceof(PublicKey);
+      expect(toPublicKey(identity.identityKey)).to.be.instanceof(PublicKey);
+      expect(toPublicKey(identity.spaceKey)).to.be.instanceof(PublicKey);
     });
 
     test('creates a new identity with a display name', async () => {
       const identity = await EffectEx.runPromise(
-        identityService['IdentityService.createIdentity']({ profile: { displayName: 'Example' } }),
+        identityService['IdentityService.createIdentity']({
+          profile: buf.create(ProfileDocumentSchema, { displayName: 'Example' }),
+        }),
       );
 
-      expect(identity.identityKey).to.be.instanceof(PublicKey);
-      expect(identity.spaceKey).to.be.instanceof(PublicKey);
+      expect(toPublicKey(identity.identityKey)).to.be.instanceof(PublicKey);
+      expect(toPublicKey(identity.spaceKey)).to.be.instanceof(PublicKey);
       expect(identity.profile?.displayName).to.equal('Example');
     });
 
@@ -72,7 +76,7 @@ describe('IdentityService', () => {
 
       const [{ assertion }] = serviceContext.recoveryManager.listActiveRecoveryCredentials();
       expect(assertion.label).to.equal('Test passkey');
-      expect(assertion.kind).to.equal(IdentityRecovery.Kind.PASSKEY);
+      expect(assertion.kind).to.equal(IdentityRecovery_Kind.PASSKEY);
     });
 
     test('revoking removes the credential from the active list', async () => {
@@ -84,7 +88,7 @@ describe('IdentityService', () => {
 
       const active = serviceContext.recoveryManager.listActiveRecoveryCredentials();
       expect(active).to.have.length(1);
-      expect(active[0].assertion.lookupKey?.equals(second)).to.be.true;
+      expect(toPublicKey(active[0].assertion.lookupKey)?.equals(second)).to.be.true;
     });
 
     test('refuses to revoke the only remaining credential', async () => {
@@ -114,7 +118,7 @@ describe('IdentityService', () => {
       expect(identity.profile?.displayName).to.be.undefined;
 
       const updatedIdentity = await EffectEx.runPromise(
-        identityService['IdentityService.updateProfile']({ displayName: 'Example' }),
+        identityService['IdentityService.updateProfile'](buf.create(ProfileDocumentSchema, { displayName: 'Example' })),
       );
       expect(updatedIdentity.profile?.displayName).to.equal('Example');
     });
@@ -157,7 +161,7 @@ const createCredential = async (identityService: IdentityServiceImpl) => {
         lookupKey,
         algorithm: 'ED25519',
         label: 'Test passkey',
-        kind: IdentityRecovery.Kind.PASSKEY,
+        kind: IdentityRecovery_Kind.PASSKEY,
       },
     }),
   );

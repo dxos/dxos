@@ -9,7 +9,7 @@ import { type Event } from '@dxos/types';
 
 import { Segment, Trip } from '#types';
 
-import { type Place } from '../types/Place';
+import { type Place } from '../types/Place.ts';
 
 /**
  * Maps a calendar Event's postal address onto the generic {@link Place} shape used by Segments.

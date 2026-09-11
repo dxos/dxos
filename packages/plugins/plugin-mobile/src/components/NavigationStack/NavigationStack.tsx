@@ -358,7 +358,7 @@ export const NavigationStack = ({ classNames, items, index, onIndexChange, rende
             inert={offset !== 0 || undefined}
             // Opaque per layer: the outgoing panel only travels a third of the width, so the rest of it
             // stays underneath the incoming one and shows straight through a transparent panel.
-            className={mx('absolute inset-0 dx-base-surface', nearby ? 'will-change-transform' : 'invisible')}
+            className={mx('dx-fullscreen dx-base-surface', nearby ? 'will-change-transform' : 'invisible')}
             style={{
               zIndex: itemIndex,
               // Each panel composites independently; without containment a heavy subtree re-laying out
@@ -375,7 +375,7 @@ export const NavigationStack = ({ classNames, items, index, onIndexChange, rende
                 dimRefs.current[itemIndex] = element;
               }}
               aria-hidden
-              className='absolute inset-0 bg-black pointer-events-none'
+              className='dx-fullscreen bg-black pointer-events-none'
               style={{ opacity: 0 }}
             />
           </div>

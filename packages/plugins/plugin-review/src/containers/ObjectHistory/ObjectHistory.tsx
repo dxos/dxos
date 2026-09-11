@@ -17,7 +17,7 @@ import { Branch, type History, Version } from '@dxos/versioning';
 import { meta } from '#meta';
 import { ReviewCapabilities } from '#types';
 
-import { MAIN_BRANCH, commitToSelection, createTimelineModel } from './timeline';
+import { MAIN_BRANCH, commitToSelection, createTimelineModel } from './timeline.ts';
 
 export type ObjectHistoryProps = AppSurface.ObjectArticleProps<History.VersionedObject>;
 
@@ -220,7 +220,7 @@ export const ObjectHistory = forwardRef<HTMLElement, ObjectHistoryProps>(({ role
       <Panel.Content asChild>
         <ScrollArea.Root orientation='vertical'>
           <ScrollArea.Viewport>
-            <Timeline commits={commits} branches={branches} currentBranch={currentBranch} onSelect={handleSelect} />
+            <Timeline branches={branches} branch={currentBranch} commits={commits} onSelect={handleSelect} />
           </ScrollArea.Viewport>
         </ScrollArea.Root>
       </Panel.Content>

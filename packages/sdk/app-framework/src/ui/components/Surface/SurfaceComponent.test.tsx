@@ -10,15 +10,15 @@ import { describe, test, vi } from 'vitest';
 import { DXN } from '@dxos/keys';
 import { Position } from '@dxos/util';
 
-import { ActivationEvents, Capabilities } from '../../../common';
-import * as Role from '../../../common/Role';
-import { Capability, Plugin } from '../../../core';
-import { createTestApp } from '../../../testing/harness';
-import { render } from '../../../testing/react';
-import { SurfaceComponent, useIsSurfaceAvailable, useSurfaces } from './SurfaceComponent';
-import { setSurfaceDebug } from './SurfaceDebug';
-import { surfaceMetrics } from './SurfaceMetrics';
-import { type Definition, create, makeFilter } from './types';
+import { ActivationEvents, Capabilities } from '../../../common/index.ts';
+import * as Role from '../../../common/Role.ts';
+import { Capability, Plugin } from '../../../core/index.ts';
+import { createTestApp } from '../../../testing/harness.ts';
+import { render } from '../../../testing/react.tsx';
+import { SurfaceComponent, useIsSurfaceAvailable, useSurfaces } from './SurfaceComponent.tsx';
+import { setSurfaceDebug } from './SurfaceDebug.tsx';
+import { surfaceMetrics } from './SurfaceMetrics.ts';
+import { type Definition, create, makeFilter } from './types.ts';
 
 // Flush the metrics store's rAF-batched notification (the actual signal it uses), not a fixed delay.
 const flushMetrics = () =>
@@ -518,6 +518,78 @@ describe('SurfaceComponent quantified comparison (per-role vs global subscriptio
     // (plus a small fleet-independent commit-phase constant) — NOT the fleet size.
     expect(nextPerContribution).toBeLessThanOrEqual(3 * SURFACES_PER_ROLE);
     expect(next.reRenders).toBeLessThan(legacy.reRenders / 2);
+  });
+});
+
+const RoleStable = Role.make<{ subject: { id: string } }>('org.dxos.test.role.stable');
+
+const stableMeta = Plugin.makeMeta({
+  key: DXN.make('org.dxos.plugin.test.surfaceStable'),
+  name: 'SurfaceStableTest',
+});
+
+const StablePlugin = (counts: { value: number }) =>
+  Plugin.define(stableMeta).pipe(
+    Plugin.addModule({
+      id: 'surfaces',
+      provides: [Capabilities.ReactSurface],
+      activate: () =>
+        Effect.succeed([
+          Capability.contributeAll(Capabilities.ReactSurface, [
+            create({
+              id: 'stable',
+              filter: makeFilter(RoleStable),
+              component: ({ data: { subject } }) => {
+                counts.value++;
+                return <span data-testid='stable'>{subject.id}</span>;
+              },
+            }),
+          ]),
+        ]),
+    }),
+    Plugin.make,
+  )();
+
+/** Mounts a host that passes `data` as an object literal, and hands back the two ways to move it. */
+const mountStableHost = async (harness: Awaited<ReturnType<typeof createTestApp>>, initial: { id: string }) => {
+  const controls = { rerender: () => {}, setSubject: (_: { id: string }) => {} };
+  const Host = () => {
+    const [, setNonce] = useState(0);
+    const [subject, setSubject] = useState(initial);
+    controls.rerender = () => setNonce((nonce) => nonce + 1);
+    controls.setSubject = setSubject;
+    return <SurfaceComponent type={RoleStable} data={{ subject }} />;
+  };
+
+  const view = render(harness, <Host />);
+  await view.findByTestId('stable');
+  return { view, ...controls };
+};
+
+describe('SurfaceComponent data stability', () => {
+  test('an inline `data` literal does not re-render the subtree when an ancestor renders', async ({ expect }) => {
+    const counts = { value: 0 };
+    await using harness = await createTestApp({ plugins: [StablePlugin(counts)] });
+    const { rerender } = await mountStableHost(harness, { id: 'x' });
+    const baseline = counts.value;
+
+    for (let i = 0; i < 5; i++) {
+      act(() => rerender());
+    }
+
+    expect(counts.value).toBe(baseline);
+  });
+
+  test('a genuine `data` change still re-renders the subtree', async ({ expect }) => {
+    const counts = { value: 0 };
+    await using harness = await createTestApp({ plugins: [StablePlugin(counts)] });
+    const { view, setSubject } = await mountStableHost(harness, { id: 'first' });
+    const baseline = counts.value;
+
+    act(() => setSubject({ id: 'second' }));
+
+    expect(counts.value).toBeGreaterThan(baseline);
+    expect((await view.findByTestId('stable')).textContent).toBe('second');
   });
 });
 

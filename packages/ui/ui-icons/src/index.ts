@@ -17,9 +17,16 @@
  * painting and not).
  */
 export const PxIcons = {
-  circle: 'px--circle--regular', // Reference icon
-  anthropic: 'px--anthropic--regular',
-  deepseek: 'px--deepseek--regular',
+  'circle': 'px--circle--regular', // Reference icon
+
+  // Logos
+  'anthropic': 'px--anthropic--regular',
+  'deepseek': 'px--deepseek--regular',
+
+  // Icons
+  'bar-high': 'px--bar-high--regular',
+  'bar-low': 'px--bar-low--regular',
+  'bar-medium': 'px--bar-medium--regular',
 } as const;
 
 export type PxIconName = keyof typeof PxIcons;

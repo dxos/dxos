@@ -2,4 +2,4 @@
 // Copyright 2026 DXOS.org
 //
 
-export { VoxelArticle as default } from './VoxelArticle';
+export { VoxelArticle as default } from './VoxelArticle.tsx';

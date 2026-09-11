@@ -38,10 +38,10 @@ import { hoverableControlItem, hoverableControls, hoverableFocusedWithinControls
 
 import { translationKey } from '#translations';
 
-import { command } from '../command';
-import { ThreadContextProvider, useThreadContext } from '../context';
-import { Message } from '../Message';
-import { type MessageMetadata, type ThreadContextValue } from '../types';
+import { command } from '../command.ts';
+import { ThreadContextProvider, useThreadContext } from '../context.ts';
+import { Message } from '../Message/index.ts';
+import { type MessageMetadata, type ThreadContextValue } from '../types.ts';
 
 //
 // Root
@@ -391,7 +391,7 @@ const ThreadMessages = ({
       currentId={currentId}
       eventHandler={eventHandler}
     >
-      <ScrollArea.Root classNames={mx('col-span-2 flex-1 min-h-0', classNames)} orientation='vertical'>
+      <ScrollArea.Root classNames={mx('col-span-2 dx-grow', classNames)} orientation='vertical'>
         <ScrollArea.Viewport ref={setViewport}>
           <Mosaic.VirtualStack
             Tile={ThreadItemAdapter}

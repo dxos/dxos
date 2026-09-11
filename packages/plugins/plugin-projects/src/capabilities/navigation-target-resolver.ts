@@ -6,13 +6,13 @@ import * as Effect from 'effect/Effect';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
-import { Chat } from '@dxos/assistant-toolkit';
+import * as Chat from '@dxos/assistant/Chat';
 import * as Project from '@dxos/compute/Project';
 import { Database, Entity, Obj } from '@dxos/echo';
 import { DXN, EID } from '@dxos/keys';
 import { Position } from '@dxos/util';
 
-import { getProjectChatPath } from '../paths';
+import { getProjectChatPath } from '../paths.ts';
 
 /**
  * Places a project's chats on that project's Chats branch. Without this a project chat resolves

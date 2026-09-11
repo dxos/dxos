@@ -70,9 +70,6 @@
       "path": "packages/sdk/client-services/tsconfig.json"
     },
     {
-      "path": "packages/common/codec-protobuf/tsconfig.json"
-    },
-    {
       "path": "tools/codemorph/tsconfig.json"
     },
     {
@@ -134,12 +131,6 @@
     },
     {
       "path": "packages/common/display-name/tsconfig.json"
-    },
-    {
-      "path": "tools/dx-build/tsconfig.json"
-    },
-    {
-      "path": "tools/dx-compile/tsconfig.json"
     },
     {
       "path": "tools/dx-tools/tsconfig.json"
@@ -271,9 +262,6 @@
       "path": "packages/common/invariant/tsconfig.json"
     },
     {
-      "path": "packages/common/keyboard/tsconfig.json"
-    },
-    {
       "path": "packages/core/halo/keyring/tsconfig.json"
     },
     {
@@ -317,6 +305,9 @@
     },
     {
       "path": "packages/sdk/migrations/tsconfig.json"
+    },
+    {
+      "path": "packages/experimental/ner/tsconfig.json"
     },
     {
       "path": "packages/core/mesh/network-manager/tsconfig.json"
@@ -389,6 +380,9 @@
     },
     {
       "path": "packages/plugins/plugin-client/tsconfig.json"
+    },
+    {
+      "path": "packages/plugins/plugin-cloudflare/tsconfig.json"
     },
     {
       "path": "packages/plugins/plugin-code/tsconfig.json"
@@ -679,9 +673,6 @@
       "path": "packages/e2e/proto-guard/tsconfig.json"
     },
     {
-      "path": "packages/common/protobuf-compiler/tsconfig.json"
-    },
-    {
       "path": "tools/protobuf-test/tsconfig.json"
     },
     {
@@ -703,10 +694,10 @@
       "path": "packages/ui/react-primitives/react-error-boundary/tsconfig.json"
     },
     {
-      "path": "packages/ui/react-primitives/react-hooks/tsconfig.json"
+      "path": "packages/ui/react-primitives/react-focus/tsconfig.json"
     },
     {
-      "path": "packages/ui/react-primitives/react-input/tsconfig.json"
+      "path": "packages/ui/react-primitives/react-hooks/tsconfig.json"
     },
     {
       "path": "packages/ui/react-primitives/react-list/tsconfig.json"
@@ -818,9 +809,6 @@
     },
     {
       "path": "packages/ui/react-ui-table/tsconfig.json"
-    },
-    {
-      "path": "packages/ui/react-ui-tabs/tsconfig.json"
     },
     {
       "path": "packages/ui/react-ui-task/tsconfig.json"

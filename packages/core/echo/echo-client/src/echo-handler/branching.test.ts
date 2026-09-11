@@ -10,10 +10,12 @@ import { TestReplicationNetwork } from '@dxos/echo-host/testing';
 import { TestSchema } from '@dxos/echo/testing';
 import { PublicKey } from '@dxos/keys';
 
-import { EchoTestBuilder } from '../testing';
-import { createBranch, deleteBranch, getBranches, getCurrentBranch, mergeBranch, switchBranch } from './branching';
-import { getEditHistoryWithDiffs } from './edit-history';
-import { getVersion } from './version';
+import { EchoTestBuilder } from '../testing/index.ts';
+import { createBranch, deleteBranch, getBranches, getCurrentBranch, mergeBranch, switchBranch } from './branching.ts';
+import { getEditHistoryWithDiffs } from './edit-history.ts';
+
+/** Automerge frontier of an object, as the branching API's `fromHeads` wants it. */
+const heads = (obj: Obj.Unknown): string[] => [...(Obj.version(obj).automergeHeads ?? [])];
 
 describe('branching', () => {
   let builder: EchoTestBuilder;
@@ -133,7 +135,7 @@ describe('branching', () => {
       root.title = 'root-v1';
     });
     await db.flush();
-    const headsV1 = getVersion(root).heads;
+    const headsV1 = heads(root);
     Obj.update(root, (root: any) => {
       root.title = 'root-v2';
     });
@@ -150,8 +152,8 @@ describe('branching', () => {
 
   test('createBranch with per-member fromHeads forks the whole subtree at a scrubbed position', async () => {
     const { db, root, child } = await setup();
-    const rootHeadsV0 = getVersion(root).heads;
-    const childHeadsV0 = getVersion(child).heads;
+    const rootHeadsV0 = heads(root);
+    const childHeadsV0 = heads(child);
     // Advance both members past the captured frontier.
     Obj.update(root, (root: any) => {
       root.title = 'root-v1';
@@ -241,11 +243,11 @@ describe('branching', () => {
     // Create a concurrent edit in the root's history: edit the tip, then edit again from the
     // pre-edit frontier. Linear replay of all changes interleaves the siblings and can never
     // reproduce the single-head frontier — the fork must use the ancestor closure.
-    const baseHeads = getVersion(root).heads;
+    const baseHeads = heads(root);
     Obj.update(root, (root: any) => {
       root.title = 'root-live';
     });
-    const liveHeads = getVersion(root).heads;
+    const liveHeads = heads(root);
     const core = db._entityManager.getObjectCoreById(root.id);
     core!.changeAt(baseHeads, (doc: any) => {
       doc.objects[root.id].data.subtitle = 'concurrent';
@@ -254,8 +256,8 @@ describe('branching', () => {
     // History is now non-linear (the live edit and the concurrent sibling are both frontier heads).
     // The exact count is environment-dependent (automerge change batching), so assert only that the
     // frontier branched — the point is that a linear replay could not reproduce `liveHeads`.
-    expect(getVersion(root).heads.length).toBeGreaterThan(1);
-    expect(getVersion(root).heads).not.toEqual(liveHeads);
+    expect(heads(root).length).toBeGreaterThan(1);
+    expect(heads(root)).not.toEqual(liveHeads);
 
     await createBranch(root, 'from-live', { fromHeads: liveHeads });
     await switchBranch(root, 'from-live');

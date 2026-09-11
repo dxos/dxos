@@ -8,15 +8,9 @@ import * as Schema from 'effect/Schema';
 import { type InspectOptionsStylized } from 'node:util';
 
 import { Event } from '@dxos/async';
-import { devtoolsFormatter, inspectCustom } from '@dxos/debug';
+import { inspectCustom } from '@dxos/debug';
 import { Entity, Obj, Type } from '@dxos/echo';
-import {
-  DATA_NAMESPACE,
-  EncodedReference,
-  type EntityStructure,
-  PROPERTY_ID,
-  isEncodedReference,
-} from '@dxos/echo-protocol';
+import { DATA_NAMESPACE, EncodedReference, PROPERTY_ID, isEncodedReference } from '@dxos/echo-protocol';
 import {
   type AnyProperties,
   EntityKind,
@@ -28,16 +22,16 @@ import {
   Ref,
   RelationSourceId,
   RelationTargetId,
-  SchemaId,
   SchemaValidator,
   SelfURIId,
-  TypeEntityId,
+  assertMutable,
   assertObjectModel,
+  createArrayMethodError,
   createProxy,
+  createTextMethodError,
   defineHiddenProperty,
   getEntityKind,
   getProxyHandler,
-  getProxySlot,
   getProxyTarget,
   getRefSavedTarget,
   getSchemaURI,
@@ -47,47 +41,42 @@ import {
   isReactiveRecord,
   normalizeSpliceRange,
   queueNotification,
-  symbolIsProxy,
+  setProxyHandler,
 } from '@dxos/echo/internal';
 import { assertArgument, invariant } from '@dxos/invariant';
 import { EID, EntityId, type URI } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { deepMapValues, defaultMap, getDeep, setDeep } from '@dxos/util';
 
-import * as Doc from '../automerge/Doc';
-import { type DecodedAutomergePrimaryValue, META_NAMESPACE, ObjectCore } from '../core-db';
-import { type EchoDatabase } from '../proxy-db';
-import { EchoArray } from './echo-array';
-import { getObjectCore, isEchoObject, isRootDataObject } from './echo-object-utils';
+import * as Doc from '../automerge/Doc.ts';
+import {
+  type DecodedAutomergePrimaryValue,
+  META_NAMESPACE,
+  ObjectCore,
+  type TargetRefreshScope,
+} from '../core-db/index.ts';
+import { type EchoDatabase } from '../proxy-db/index.ts';
+import { EchoArray } from './echo-array.ts';
+import { isEchoObject, isRootDataObject } from './echo-object-utils.ts';
 import {
   adoptInstanceState,
   createInstanceState,
   createRecordTarget,
-  getDecodedValueAtPath,
-  getDevtoolsFormatter,
   getReified,
   getSchema,
-  getTypeEntity,
   getTypename,
   handleStoredSchema,
   lookupRef,
   stripShadowingProperties,
-} from './echo-prototypes';
+} from './echo-prototypes.ts';
 import {
   type ProxyTarget,
   TargetKey,
   getEchoDatabase,
-  symbolHandler,
   symbolInternals,
   symbolNamespace,
   symbolPath,
-} from './echo-proxy-target';
-import {
-  createArrayMethodError,
-  createPropertyDeleteError,
-  createPropertySetError,
-  createTextMethodError,
-} from './errors';
+} from './echo-proxy-target.ts';
 
 /**
  * Shared for all targets within one ECHO object.
@@ -96,11 +85,19 @@ import {
 export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
   public static readonly instance = new EchoReactiveHandler();
 
-  _proxyMap = new WeakMap<object, any>();
+  /**
+   * The document record each target was last filled from, with the document it came from. Automerge
+   * shares untouched subtrees structurally, so a record the change did not reach is the identical object
+   * and needs no work at all, and within a changed record an untouched key holds the identical value —
+   * which is what lets a materialized `Ref`, array or nested proxy keep its identity across a refresh
+   * instead of being minted again. Held weakly, and only ever compared by identity: a stale entry costs
+   * a refresh that was already the unconditional behaviour.
+   */
+  _rawRecords = new WeakMap<object, { docHandle: object | undefined; raw: object | undefined }>();
 
   init(target: ProxyTarget): void {
     invariant(target[symbolInternals]);
-    invariant(!(target as any)[symbolIsProxy]);
+    invariant(!isProxy(target));
     invariant(Array.isArray(target[symbolPath]));
 
     // Clear extra keys from objects
@@ -112,8 +109,6 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       }
     }
 
-    defineHiddenProperty(target, symbolHandler, this);
-
     if (!(EventId in target)) {
       defineHiddenProperty(target, EventId, new Event());
     }
@@ -124,95 +119,240 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       configurable: true,
       value: this._inspect.bind(target),
     });
+
+    const core = target[symbolInternals];
+    if (target instanceof EchoArray) {
+      if (this._canMaterialize(core)) {
+        this._refreshArray(target);
+      }
+    } else {
+      this._defineId(target, core);
+      if (isRootDataObject(target)) {
+        core.refreshTargets = (scope) => this._refreshAll(core, target, scope);
+      }
+      if (this._canMaterialize(core)) {
+        this._refreshRecord(target);
+      }
+    }
   }
 
-  ownKeys(target: ProxyTarget): ArrayLike<string | symbol> {
-    const { value } = getDecodedValueAtPath(target);
-    const keys = typeof value === 'object' ? Reflect.ownKeys(value) : [];
-    if (isRootDataObject(target)) {
-      keys.push(PROPERTY_ID);
-    }
-
-    return keys;
-  }
-
-  getOwnPropertyDescriptor(target: ProxyTarget, p: string | symbol): PropertyDescriptor | undefined {
-    const { value } = getDecodedValueAtPath(target);
-    if (isRootDataObject(target) && p === PROPERTY_ID) {
-      return { enumerable: true, configurable: true, writable: false };
-    }
-
-    return typeof value === 'object' ? Reflect.getOwnPropertyDescriptor(value, p) : undefined;
+  /**
+   * A target is filled as soon as its core has a document to fill it from. It needs no database: a ref
+   * materialized here resolves through its core rather than through whatever the core held at the time
+   * (see `CoreRefResolver`), so one built before `db.add` still works afterwards.
+   */
+  private _canMaterialize(core: ObjectCore): boolean {
+    return core.hasDoc;
   }
 
   defineProperty(target: ProxyTarget, property: string | symbol, attributes: PropertyDescriptor): boolean {
     return this.set(target, property, attributes.value, target);
   }
 
-  has(target: ProxyTarget, p: string | symbol): boolean {
-    if (target instanceof EchoArray) {
-      return this._arrayHas(target, p);
+  /**
+   * Re-fills the core's record targets from the document: the root, the nested records and the meta root
+   * already handed out (all in `targetsMap`). Arrays hold no data and are skipped. A `scope` narrows this
+   * to the single key a write is touching.
+   */
+  private _refreshAll(core: ObjectCore, root: ProxyTarget, scope?: TargetRefreshScope): void {
+    if (scope && this._writeThrough(scope.target as ProxyTarget, scope.key)) {
+      return;
     }
-
-    // The ECHO system surface (id, type, meta, relation refs, ...) is carried on
-    // the prototype chain, so `Reflect.has` answers for it structurally — root
-    // objects report it, nested/meta records do not.
-    if (Reflect.has(target, p)) {
-      return true;
+    this._refreshRecord(root);
+    for (const nested of core.targetsMap.values()) {
+      if (nested instanceof EchoArray) {
+        this._refreshArray(nested);
+      } else {
+        this._refreshRecord(nested as ProxyTarget);
+      }
     }
-
-    const { value } = getDecodedValueAtPath(target);
-    return typeof value === 'object' ? Reflect.has(value, p) : false;
   }
 
-  get(target: ProxyTarget, prop: string | symbol, receiver: any): any {
-    invariant(Array.isArray(target[symbolPath]));
-
-    // Cross-cutting internal accessors that apply to records and arrays alike.
-    switch (prop) {
-      case symbolInternals:
-        return target[symbolInternals];
-      case SchemaId:
-        return getSchema(target);
-      case TypeEntityId:
-        return getTypeEntity(target);
-      case devtoolsFormatter:
-        return getDevtoolsFormatter(target);
+  /**
+   * Makes an array target's elements mirror the document: one own indexed property per stored element,
+   * holding what a read returns, and a `length` that drops whatever the document no longer has. The
+   * element values come from the same path-keyed wrapping records use, so a nested record or array keeps
+   * the proxy already handed out for it.
+   */
+  private _refreshArray(target: EchoArray<any>): void {
+    const core = target[symbolInternals];
+    if (!this._canMaterialize(core)) {
+      return;
     }
+    const raw: unknown = core.getRaw([target[symbolNamespace], ...target[symbolPath]]);
+    const previousRaw = this._previousRaw(target, core);
+    if (previousRaw !== undefined && previousRaw === raw) {
+      return;
+    }
+    this._rawRecords.set(target, {
+      docHandle: core.docHandle,
+      raw: typeof raw === 'object' ? (raw ?? undefined) : undefined,
+    });
 
+    // Elements come from the stored form, which is decoded under the meta namespace; the memo above still
+    // keys on the raw record, since the decode is derived from it and is a fresh object every read.
+    const stored = this._storedRecord(target);
+    const elements = Array.isArray(stored) ? stored : [];
+    // Staged before anything is applied, so an element that throws leaves the array as it was rather
+    // than half of two states — reads are forwarded straight at it and would not recover.
+    const materialized = elements.map((element, index) => this._materializeValue(target, String(index), element));
+    for (const [index, value] of materialized.entries()) {
+      if (target[index] !== value) {
+        target[index] = value;
+      }
+    }
+    target.length = materialized.length;
+  }
+
+  /**
+   * Makes a record target's own properties mirror its record in the document: one own data property per
+   * document key, holding what a read returns (primitives decoded, records and arrays as their proxies,
+   * refs resolved), and nothing else. Keys the prototype chain answers — the system accessors and
+   * `Object.prototype` — are left to it, as the decode path did.
+   */
+  private _refreshRecord(target: ProxyTarget): void {
+    const core = target[symbolInternals];
+    if (!this._canMaterialize(core)) {
+      return;
+    }
+    const stored: unknown = core.getRaw([target[symbolNamespace], ...target[symbolPath]]);
+    const raw = typeof stored === 'object' && stored !== null ? stored : undefined;
+    const previousRaw = this._previousRaw(target, core);
+    if (previousRaw !== undefined && previousRaw === raw) {
+      return;
+    }
+    this._rawRecords.set(target, { docHandle: core.docHandle, raw });
+    // Both sides of the per-key comparison below, or nothing: with no record to compare against, every
+    // key is materialized afresh as it was before.
+    const comparable =
+      previousRaw !== undefined && raw !== undefined ? { previous: previousRaw, current: raw } : undefined;
+
+    const record = this._storedRecord(target);
+    const present = typeof record === 'object' && record !== null && !Array.isArray(record);
+    // Materialized in full before anything is applied, so a value that throws leaves the target as it
+    // was rather than half of two records — reads are forwarded straight at it and would not recover.
+    const materialized: [string, unknown][] = [];
+    if (present) {
+      const prototype = Object.getPrototypeOf(target);
+      for (const [key, value] of Object.entries(record)) {
+        if (!Reflect.has(prototype, key)) {
+          const unchanged =
+            comparable !== undefined &&
+            Object.hasOwn(target, key) &&
+            Reflect.get(comparable.previous, key) === Reflect.get(comparable.current, key);
+          materialized.push([key, unchanged ? Reflect.get(target, key) : this._materializeValue(target, key, value)]);
+        }
+      }
+    }
+    for (const [key, value] of materialized) {
+      if (!Object.hasOwn(target, key) || (target as any)[key] !== value) {
+        Object.defineProperty(target, key, { value, writable: true, enumerable: true, configurable: true });
+      }
+    }
+    for (const key of Object.keys(target)) {
+      if (key !== PROPERTY_ID && (!present || !Object.hasOwn(record, key))) {
+        delete (target as any)[key];
+      }
+    }
+    this._defineId(target, core);
+  }
+
+  /**
+   * `id` is part of a root object's key set but is not in its record — it belongs to the core. Carried as
+   * a real own property so the target's own shape is the whole answer and no `ownKeys` trap is needed to
+   * synthesize it. Non-writable, like the accessor it shadows, which had no setter.
+   */
+  private _defineId(target: ProxyTarget, core: ObjectCore): void {
+    if (isRootDataObject(target) && !Object.hasOwn(target, PROPERTY_ID) && core.id != null) {
+      Object.defineProperty(target, PROPERTY_ID, {
+        value: core.id,
+        writable: false,
+        enumerable: true,
+        configurable: true,
+      });
+    }
+  }
+
+  /**
+   * The record this target was last filled from, or undefined when there is none to compare against.
+   * Discarded when the core has since been bound to a different document — `switchBranch` and
+   * `_rebindMemberToBranch` re-point a live core, and values from the old document's tree are not
+   * comparable with the new one's.
+   */
+  private _previousRaw(target: ProxyTarget, core: ObjectCore): object | undefined {
+    const cached = this._rawRecords.get(target);
+    return cached !== undefined && cached.docHandle === core.docHandle ? cached.raw : undefined;
+  }
+
+  /**
+   * A target's record as the document holds it. The meta root is read decoded, so `upgradeMeta` supplies
+   * the defaults an older document omits; everything else is read raw, since a decode copies the whole
+   * subtree where only the top level is wanted.
+   */
+  private _storedRecord(target: ProxyTarget): unknown {
+    const core = target[symbolInternals];
+    const namespace = target[symbolNamespace];
+    const path = target[symbolPath];
+    // The whole meta namespace is read decoded, so `upgradeMeta` supplies the defaults an older document
+    // omits and upgrades a legacy bare tag id into a ref; a nested meta target is reached by walking that
+    // decoded record rather than by a raw read, which would see the un-upgraded value. Everything else is
+    // read raw, since a decode copies the whole subtree where only the top level is wanted.
+    return namespace === META_NAMESPACE
+      ? getDeep(core.getDecoded([namespace]), path)
+      : core.getRaw([namespace, ...path]);
+  }
+
+  /**
+   * What a read of `key` returns, from the stored form: containers and refs are wrapped by path, so the
+   * stored value is only inspected for its kind and never copied; everything else is decoded.
+   */
+  private _materializeValue(target: ProxyTarget, key: string, stored: unknown): unknown {
+    const core = target[symbolInternals];
+    const container =
+      typeof stored === 'object' &&
+      stored !== null &&
+      !(stored instanceof Uint8Array) &&
+      !(stored instanceof A.RawString);
+    return this._wrapInProxyIfRequired(target, {
+      namespace: target[symbolNamespace],
+      value: container ? stored : core.decode(stored),
+      dataPath: [...target[symbolPath], key],
+    });
+  }
+
+  /**
+   * Mirrors one written key onto the target, for a refresh narrowed by a
+   * {@link ObjectCore.changeTargetKey} scope, so a single-property write costs one key rather than the
+   * object's width. Returns false when the key is not the whole of the change — a container on either
+   * side of the write owns a target, and everything already materialized under it, that no longer
+   * matches the document — and the caller falls back to refreshing the record.
+   */
+  private _writeThrough(target: ProxyTarget, key: string): boolean {
+    if (!this._canMaterialize(target[symbolInternals])) {
+      return true;
+    }
+    // An array holds no data of its own, so the write is entirely in the targets below it.
     if (target instanceof EchoArray) {
-      if (typeof prop === 'symbol') {
-        return Reflect.get(target, prop);
-      }
-      return this._arrayGet(target, prop);
+      return false;
     }
-
-    // The ECHO system surface (id, [Type], [Meta], [Parent], toJSON, ...) is defined as
-    // accessors/methods on the prototype chain (instanceState → EchoRoot/EchoRecord.prototype →
-    // Object.prototype); root objects expose the full set, nested/meta records the empty base.
-    // `Reflect.has` reports that surface (plus Object.prototype members, which resolve normally,
-    // as on a plain object); everything else is absent here and is virtual user data backed by
-    // the document. See the layering diagram in echo-prototypes.ts.
-    if (Reflect.has(target, prop)) {
-      return Reflect.get(target, prop, receiver);
+    if (Reflect.has(Object.getPrototypeOf(target), key)) {
+      return true;
     }
-    if (typeof prop === 'symbol') {
-      return undefined;
+    // This path fills the key from the document without going through `_refreshRecord`, so the memo it
+    // keeps would describe neither the record before the write nor the one after. Left in place it is
+    // worse than absent: a later refresh comparing against it would find the key equal to a value the
+    // target no longer holds, and keep what this write put there.
+    this._rawRecords.delete(target);
+    const previous = (target as any)[key];
+    const record = this._storedRecord(target);
+    const stored = typeof record === 'object' && record !== null ? (record as any)[key] : undefined;
+    if (stored === undefined) {
+      delete (target as any)[key];
+      return !isProxy(previous);
     }
-
-    // Virtual read-only properties on the root meta proxy — sourced from the system
-    // section and the automerge change graph, not from the stored meta section.
-    if (target[symbolNamespace] === META_NAMESPACE && target[symbolPath].length === 0) {
-      if (prop === 'createdAt') {
-        return target[symbolInternals].getCreatedAt();
-      }
-      if (prop === 'updatedAt') {
-        return target[symbolInternals].getUpdatedAt();
-      }
-    }
-
-    const decodedValueAtPath = getDecodedValueAtPath(target, prop);
-    return this._wrapInProxyIfRequired(target, decodedValueAtPath);
+    const value = this._materializeValue(target, key, stored);
+    Object.defineProperty(target, key, { value, writable: true, enumerable: true, configurable: true });
+    return !isProxy(previous) && !isProxy(value);
   }
 
   set(target: ProxyTarget, prop: string | symbol, value: any, receiver: any): boolean {
@@ -230,12 +370,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       throw new TypeError(`'${prop}' is a read-only system property.`);
     }
 
-    // Check readonly enforcement for ECHO objects.
     const core = target[symbolInternals];
-    if (!isInChangeContext(core)) {
-      throw createPropertySetError(prop);
-    }
-
     if (target instanceof EchoArray && prop === 'length') {
       this._arraySetLength(target, target[symbolPath], value);
       return true;
@@ -243,12 +378,15 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
 
     const fullPath = [getNamespace(target), ...target[symbolPath], prop];
     const validatedValue = this._validateValue(target, [...target[symbolPath], prop], value);
-    if (validatedValue === undefined) {
-      target[symbolInternals].delete(fullPath);
-    } else {
-      const withLinks = this._handleLinksAssignment(target, validatedValue);
-      target[symbolInternals].setDecoded(fullPath, withLinks);
-    }
+    // The refresh runs inside the write, narrowed to this key, so a subscriber notified by it already
+    // sees the new value.
+    core.changeTargetKey(target, prop, () => {
+      if (validatedValue === undefined) {
+        core.delete(fullPath);
+      } else {
+        core.setDecoded(fullPath, this._handleLinksAssignment(target, validatedValue));
+      }
+    });
 
     // Note: EventId.emit() is called centrally in core.updates.on() to handle both local and remote changes.
     return true;
@@ -259,10 +397,6 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
    * `Object.getPrototypeOf(obj)` and `instanceof Object`/`Array` behave as for a
    * plain object/array.
    */
-  getPrototypeOf(target: ProxyTarget): object | null {
-    return target instanceof EchoArray ? Array.prototype : Object.prototype;
-  }
-
   /**
    * Takes a decoded value from the document, and wraps it in a proxy if required.
    * We use it to wrap records and arrays to provide deep mutability.
@@ -273,10 +407,15 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     if (decoded == null) {
       return decoded;
     }
+    // A primitive is none of the cases below; settling that first also spares the proxy
+    // probe from boxing it and walking its wrapper prototype on every primitive read.
+    if (typeof decoded !== 'object') {
+      return decoded;
+    }
     if (decoded instanceof Uint8Array) {
       return decoded;
     }
-    if (decoded[symbolIsProxy]) {
+    if (isProxy(decoded)) {
       return handleStoredSchema(target, decoded);
     }
     if (isEncodedReference(decoded)) {
@@ -286,10 +425,12 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       const targetKey = TargetKey.new(dataPath, namespace, 'array');
       const newTarget = defaultMap(target[symbolInternals].targetsMap, targetKey, (): ProxyTarget => {
         const array = new EchoArray();
-        array[symbolInternals] = target[symbolInternals];
-        array[symbolPath] = dataPath;
-        array[symbolNamespace] = namespace;
-        array[symbolHandler] = this;
+        // Hidden rather than assigned: an assignment to a declared class field leaves it enumerable, and
+        // with no `ownKeys` trap to filter them these would show up in `Reflect.ownKeys`, in a spread and
+        // in a deep-equality comparison.
+        defineHiddenProperty(array, symbolInternals, target[symbolInternals]);
+        defineHiddenProperty(array, symbolPath, dataPath);
+        defineHiddenProperty(array, symbolNamespace, namespace);
         defineHiddenProperty(array, EventId, target[EventId]);
         return array as any as ProxyTarget;
       });
@@ -319,33 +460,6 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     return decoded;
   }
 
-  private _arrayGet(target: ProxyTarget, prop: string) {
-    invariant(target instanceof EchoArray);
-    if (prop === 'constructor') {
-      return Array.prototype.constructor;
-    }
-    if (prop !== 'length' && isNaN(parseInt(prop))) {
-      return Reflect.get(target, prop);
-    }
-
-    const decodedValueAtPath = getDecodedValueAtPath(target, prop);
-    return this._wrapInProxyIfRequired(target, decodedValueAtPath);
-  }
-
-  private _arrayHas(target: ProxyTarget, prop: string | symbol): boolean {
-    invariant(target instanceof EchoArray);
-    if (typeof prop === 'string') {
-      const parsedIndex = parseInt(prop);
-      const { value: length } = getDecodedValueAtPath(target, 'length');
-      invariant(typeof length === 'number');
-      if (!isNaN(parsedIndex)) {
-        return parsedIndex < length;
-      }
-    }
-
-    return Reflect.has(target, prop);
-  }
-
   private _validateValue(target: ProxyTarget, path: Doc.KeyPath, value: any): any {
     invariant(path.length > 0);
     if (typeof path.at(-1) === 'symbol') {
@@ -357,12 +471,10 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     throwIfCustomClass(path[path.length - 1], value);
     const rootObjectSchema = getSchema(target);
     if (rootObjectSchema == null) {
-      const typeRef = target[symbolInternals].getType();
-      if (typeRef) {
-        // The object has schema, but we can't access it to validate the value being set.
-        throw new Error(`Schema not found in schema registry: ${EncodedReference.toURI(typeRef)}`);
-      }
-
+      // An untyped object, or a typed one whose schema does not resolve in this runtime (written
+      // before a type's version bump, or replicated from a peer that has a type this one lacks):
+      // writes pass through unvalidated, since refusing them would make the object unusable
+      // wherever its schema happens to be absent.
       return value;
     }
 
@@ -401,12 +513,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
   }
 
   deleteProperty(target: ProxyTarget, property: string | symbol): boolean {
-    // Check readonly enforcement for ECHO objects.
     const core = target[symbolInternals];
-    if (!isInChangeContext(core)) {
-      throw createPropertyDeleteError(property);
-    }
-
     if (target instanceof EchoArray) {
       // Note: Automerge support delete array[index] but its behavior is not consistent with JS arrays.
       //       It works as splice but JS arrays substitute `undefined` for deleted elements.
@@ -421,14 +528,14 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       return false;
     } else if (typeof property === 'string') {
       const fullPath = [getNamespace(target), ...target[symbolPath], property];
-      target[symbolInternals].delete(fullPath);
+      core.changeTargetKey(target, property, () => core.delete(fullPath));
       return true;
     }
     return false;
   }
 
   arrayPush(target: ProxyTarget, path: Doc.KeyPath, ...items: any[]): number {
-    this._checkArrayMutationAllowed(target, 'push');
+    assertMutable(target, 'push', createArrayMethodError);
     const validatedItems = this._validateForArray(target, path, items, target.length);
 
     const encodedItems = this._encodeForArray(target, validatedItems);
@@ -437,7 +544,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
   }
 
   arrayPop(target: ProxyTarget, path: Doc.KeyPath): any {
-    this._checkArrayMutationAllowed(target, 'pop');
+    assertMutable(target, 'pop', createArrayMethodError);
     const fullPath = this._getPropertyMountPath(target, path);
 
     let returnValue: any | undefined;
@@ -451,7 +558,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
   }
 
   arrayShift(target: ProxyTarget, path: Doc.KeyPath): any {
-    this._checkArrayMutationAllowed(target, 'shift');
+    assertMutable(target, 'shift', createArrayMethodError);
     const fullPath = this._getPropertyMountPath(target, path);
 
     let returnValue: any | undefined;
@@ -465,7 +572,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
   }
 
   arrayUnshift(target: ProxyTarget, path: Doc.KeyPath, ...items: any[]): number {
-    this._checkArrayMutationAllowed(target, 'unshift');
+    assertMutable(target, 'unshift', createArrayMethodError);
     const validatedItems = this._validateForArray(target, path, items, 0);
     const fullPath = this._getPropertyMountPath(target, path);
     const encodedItems = this._encodeForArray(target, validatedItems);
@@ -482,7 +589,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
   }
 
   arraySplice(target: ProxyTarget, path: Doc.KeyPath, start: number, deleteCount?: number, ...items: any[]): any[] {
-    this._checkArrayMutationAllowed(target, 'splice');
+    assertMutable(target, 'splice', createArrayMethodError);
     const validatedItems = this._validateForArray(target, path, items, start);
 
     const fullPath = this._getPropertyMountPath(target, path);
@@ -504,7 +611,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
   }
 
   arraySort(target: ProxyTarget, path: Doc.KeyPath, compareFn?: (v1: any, v2: any) => number): any[] {
-    this._checkArrayMutationAllowed(target, 'sort');
+    assertMutable(target, 'sort', createArrayMethodError);
     const fullPath = this._getPropertyMountPath(target, path);
 
     target[symbolInternals].change((doc: any) => {
@@ -518,7 +625,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
   }
 
   arrayReverse(target: ProxyTarget, path: Doc.KeyPath): any[] {
-    this._checkArrayMutationAllowed(target, 'reverse');
+    assertMutable(target, 'reverse', createArrayMethodError);
     const fullPath = this._getPropertyMountPath(target, path);
 
     target[symbolInternals].change((doc: any) => {
@@ -532,7 +639,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
   }
 
   textUpdate(target: ProxyTarget, path: Doc.KeyPath, newText: string): void {
-    this._checkTextMutationAllowed(target, 'update');
+    assertMutable(target, 'update', createTextMethodError);
     const fullPath = this._getPropertyMountPath(target, path);
     target[symbolInternals].change((doc: any) => {
       // `A.updateText` computes a minimal diff so cursors/anchors survive and concurrent edits merge.
@@ -542,7 +649,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
   }
 
   textSplice(target: ProxyTarget, path: Doc.KeyPath, start: number, deleteCount: number, insert: string): string {
-    this._checkTextMutationAllowed(target, 'splice');
+    assertMutable(target, 'splice', createTextMethodError);
     const fullPath = this._getPropertyMountPath(target, path);
 
     let removed = '';
@@ -555,26 +662,6 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     });
 
     return removed;
-  }
-
-  /**
-   * Check if array mutation is allowed (inside a change context).
-   */
-  private _checkArrayMutationAllowed(target: ProxyTarget, method: string): void {
-    const core = target[symbolInternals];
-    if (!isInChangeContext(core)) {
-      throw createArrayMethodError(method);
-    }
-  }
-
-  /**
-   * Check if text mutation is allowed (inside a change context).
-   */
-  private _checkTextMutationAllowed(target: ProxyTarget, method: string): void {
-    const core = target[symbolInternals];
-    if (!isInChangeContext(core)) {
-      throw createTextMethodError(method);
-    }
   }
 
   setDatabase(target: ProxyTarget, database: EchoDatabase): void {
@@ -744,15 +831,6 @@ export const throwIfCustomClass = (prop: Doc.KeyPath[number], value: any) => {
 };
 
 /**
- * @returns Automerge document (or a part of it) that backs the object.
- * Mostly used for debugging.
- */
-export const getObjectDocument = (obj: Obj.Any): A.Doc<EntityStructure> => {
-  const core = getObjectCore(obj);
-  return getDeep(core.getDoc(), core.mountPath)!;
-};
-
-/**
  * @returns True if `value` is part of another EchoObjectSchema but not the root data object.
  */
 const isEchoObjectField = (value: any) => {
@@ -838,11 +916,11 @@ export const createObject = <T extends AnyProperties>(obj: T): CreateObjectRetur
     // Already an echo-schema reactive object.
     const meta = getProxyTarget<EntityMeta>(Entity.getMeta(obj as unknown as Entity.Unknown));
 
-    // TODO(burdon): Requires comment.
-    const slot = getProxySlot(obj);
-    slot.setHandler(EchoReactiveHandler.instance);
+    // The proxy is kept and re-pointed at this handler, so the object's identity survives the
+    // conversion from an in-memory typed object into a database-backed one.
+    setProxyHandler(obj, EchoReactiveHandler.instance);
 
-    const target = slot.target as ProxyTarget;
+    const target = getProxyTarget<ProxyTarget>(obj);
     core.rootSchema = type;
     // Preserve the object's existing Event so reactive subscriptions established while it was an
     // in-memory typed object keep firing once it becomes database-backed.
@@ -861,28 +939,14 @@ export const createObject = <T extends AnyProperties>(obj: T): CreateObjectRetur
       }
     }
     adoptInstanceState(target, createInstanceState(core, DATA_NAMESPACE, [], { event: existingEvent }));
-    slot.handler._proxyMap.set(target, obj);
 
-    core.subscriptions.push(
-      core.updates.on(() => {
-        // Invalidate the lazily-rebuilt `[StaticTypeSchemaSlot]` cache so it
-        // gets recomputed from the (possibly new) `jsonSchema` on next read.
-        target[symbolInternals].cachedStaticSlot = undefined;
-        if (isInChangeContext(core)) {
-          // Defer notification until the change context exits.
-          queueNotification(core);
-        } else {
-          // Immediate notification for external changes (sync from peers).
-          target[EventId]?.emit();
-        }
-      }),
-    );
+    subscribeCoreUpdates(core, target);
 
     // NOTE: This call is recursively linking all nested objects
     //  which can cause recursive loops of `createObject` if `EchoReactiveHandler` is not set prior to this call.
     //  Do not change order.
     initCore(core, target);
-    slot.handler.init(target);
+    EchoReactiveHandler.instance.init(target);
 
     setSchemaPropertiesOnObjectCore(core, schema);
     setRelationSourceAndTarget(target, core, schema);
@@ -902,20 +966,7 @@ export const createObject = <T extends AnyProperties>(obj: T): CreateObjectRetur
     // only so `initCore` can migrate them into the document (then `init` clears them).
     const target = createRecordTarget(createInstanceState(core, DATA_NAMESPACE, []), obj as any);
     core.rootSchema = type;
-    core.subscriptions.push(
-      core.updates.on(() => {
-        // Invalidate the lazily-rebuilt `[StaticTypeSchemaSlot]` cache so it
-        // gets recomputed from the (possibly new) `jsonSchema` on next read.
-        target[symbolInternals].cachedStaticSlot = undefined;
-        if (isInChangeContext(core)) {
-          // Defer notification until the change context exits.
-          queueNotification(core);
-        } else {
-          // Immediate notification for external changes (sync from peers).
-          target[EventId]?.emit();
-        }
-      }),
-    );
+    subscribeCoreUpdates(core, target);
 
     initCore(core, target);
     const proxy = createProxy<ProxyTarget>(target, EchoReactiveHandler.instance);
@@ -952,6 +1003,24 @@ export const destroyObject = <T extends Obj.Unknown>(proxy: T) => {
   for (const unsubscribe of core.subscriptions) {
     unsubscribe();
   }
+};
+
+/**
+ * Route the core's document updates to the target: drop the lazily-rebuilt schema-slot cache, then
+ * notify — deferred to the change context's exit when one is open, so a batch of writes emits once,
+ * and immediately otherwise (a sync from a peer).
+ */
+const subscribeCoreUpdates = (core: ObjectCore, target: ProxyTarget): void => {
+  core.subscriptions.push(
+    core.updates.on(() => {
+      target[symbolInternals].cachedStaticSlot = undefined;
+      if (isInChangeContext(core)) {
+        queueNotification(core);
+      } else {
+        target[EventId]?.emit();
+      }
+    }),
+  );
 };
 
 const initCore = (core: ObjectCore, target: ProxyTarget) => {
@@ -1068,7 +1137,9 @@ const validateInitialProps = (target: any, seen: Set<object> = new Set()) => {
         // Pass binary buffers as is; Automerge stores them natively.
       } else {
         throwIfCustomClass(key, value);
-        validateInitialProps(target[key], seen);
+        // Recurse on the raw record: a typed target stores its nested records as sub-proxies, and the
+        // `delete` above would be a mutation outside `Obj.update` on one of those.
+        validateInitialProps(isProxy(value) ? getProxyTarget(value) : value, seen);
       }
     }
   }

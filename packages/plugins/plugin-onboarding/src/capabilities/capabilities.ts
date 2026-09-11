@@ -4,11 +4,11 @@
 
 import * as Capability from '@dxos/app-framework/Capability';
 
-import { meta } from '../meta';
-import { type OnboardingManager } from '../onboarding-manager';
+import { meta } from '../meta.ts';
+import { type OnboardingManager } from '../onboarding-manager.ts';
 
 export type OnboardingOptions = {
-  generateExemplarSpace: boolean;
+  generateSampleSpace: boolean;
 };
 
 export namespace OnboardingCapabilities {

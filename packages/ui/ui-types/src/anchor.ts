@@ -12,7 +12,7 @@ export const DX_ANCHOR_ACTIVATE = 'dx-anchor-activate';
 export const DX_POPOVER_CONTENT_ATTR = 'data-dx-popover-content';
 
 export type DxAnchorActivateProps = {
-  dxn: string;
+  eid: string;
   label: string;
   trigger: HTMLElement;
   kind?: 'base' | 'card';
@@ -21,17 +21,17 @@ export type DxAnchorActivateProps = {
   props?: Record<string, unknown>;
   /**
    * Set to `false` to close any open popover. When omitted (or `true`), the event opens a
-   * popover anchored to `trigger`. `dxn` / `label` / `trigger` may be placeholders when
+   * popover anchored to `trigger`. `eid` / `label` / `trigger` may be placeholders when
    * `state` is `false` — the close path ignores them.
    */
   state?: boolean;
 };
 
 /**
- * Input to an anchor-preview lookup: the dxn and display label from the clicked anchor.
+ * Input to an anchor-preview lookup: the eid and display label from the clicked anchor.
  */
 export type PreviewLinkRef = {
-  dxn: string;
+  eid: string;
   label: string;
   block?: boolean;
 };
@@ -48,7 +48,7 @@ export type PreviewLinkTarget = {
  * Global event to trigger a popover.
  */
 export class DxAnchorActivate extends Event {
-  public readonly dxn: string;
+  public readonly eid: string;
   public readonly label: string;
   public readonly trigger: HTMLElement;
   public readonly kind?: 'base' | 'card';
@@ -59,7 +59,7 @@ export class DxAnchorActivate extends Event {
 
   constructor(props: DxAnchorActivateProps) {
     super(DX_ANCHOR_ACTIVATE);
-    this.dxn = props.dxn;
+    this.eid = props.eid;
     this.label = props.label;
     this.trigger = props.trigger;
     this.kind = props.kind;

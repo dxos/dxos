@@ -12,14 +12,14 @@ import type * as Atom from 'effect/unstable/reactivity/Atom';
 import type { MakeTurnProducer } from '@dxos/agent-runtime';
 import * as Capability from '@dxos/app-framework/Capability';
 import type { AiContext } from '@dxos/assistant';
-import type { Chat } from '@dxos/assistant-toolkit';
+import type * as Chat from '@dxos/assistant/Chat';
 import type * as Instructions from '@dxos/compute/Instructions';
 import { type Database, type Obj, type Ref, type Registry } from '@dxos/echo';
 
 import { meta } from '#meta';
 
-import * as Assistant from './Assistant';
-import * as Ollama from './Ollama';
+import * as Assistant from './Assistant.ts';
+import * as Ollama from './Ollama.ts';
 
 export const Settings = Capability.makeSingleton<Atom.Writable<Assistant.Settings>>()(
   `${meta.profile.key}.capability.settings`,

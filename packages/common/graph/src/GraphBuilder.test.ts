@@ -7,8 +7,8 @@ import * as Atom from 'effect/unstable/reactivity/Atom';
 import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 import { describe, expect, test } from 'vitest';
 
-import * as GraphBuilder from './GraphBuilder';
-import * as GraphNode from './GraphNode';
+import * as GraphBuilder from './GraphBuilder.ts';
+import * as GraphNode from './GraphNode.ts';
 
 const setup = (props: GraphBuilder.ModelProps<string> = {}) => {
   // The caller's registry when one is supplied — reads must go through the registry the builder

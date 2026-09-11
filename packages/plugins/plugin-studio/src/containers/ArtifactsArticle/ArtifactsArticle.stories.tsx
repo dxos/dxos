@@ -21,7 +21,7 @@ import { StudioPlugin } from '#plugin';
 import { translations } from '#translations';
 import { Artifact, Variant } from '#types';
 
-import { ArtifactsArticle } from './ArtifactsArticle';
+import { ArtifactsArticle } from './ArtifactsArticle.tsx';
 
 const DefaultStory = () => {
   const spaces = useSpaces();
@@ -53,11 +53,11 @@ const meta = {
                 const artifact = space.db.add(Artifact.make({ name: `Artifact ${index + 1}`, kind }));
                 const variant = space.db.add(
                   Variant.make({
+                    [Obj.Parent]: artifact,
                     contentType: kind === 'video' ? 'video/mp4' : 'image/png',
                     url: `https://picsum.photos/seed/hub-${index}/512/512`,
                   }),
                 );
-                Obj.setParent(variant, artifact);
                 Obj.update(artifact, (artifact) => {
                   artifact.variants = [Ref.make(variant)];
                   artifact.cover = Ref.make(variant);

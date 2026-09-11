@@ -23,7 +23,7 @@ import { type SpaceId } from '@dxos/keys';
 
 import { SpaceCapabilities, SpaceEvents } from '#types';
 
-import { printObject } from './util';
+import { printObject } from './util.ts';
 
 // NOTE: Explicit annotation required: d.ts emit cannot portably name the inferred @dxos/compute types (TS2883).
 export const add: Command.Command<

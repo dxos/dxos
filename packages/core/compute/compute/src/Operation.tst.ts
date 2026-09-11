@@ -12,7 +12,7 @@ import { describe, expect, it } from 'tstyche';
 
 import { DXN } from '@dxos/keys';
 
-import * as Operation from './Operation';
+import * as Operation from './Operation.ts';
 
 class DeclaredService extends Context.Service<DeclaredService, { declared: () => void }>()('@test/DeclaredService') {}
 class UndeclaredService extends Context.Service<UndeclaredService, { undeclared: () => void }>()(

@@ -9,7 +9,7 @@ import { Obj } from '@dxos/echo';
 import { type TreeNode, useContainerSize } from '@dxos/react-ui-graph';
 import { type SpaceGraphNode } from '@dxos/schema';
 
-import { getNodeFillForObject } from '../../util/node-color';
+import { getNodeFillForObject } from '../../util/node-color.ts';
 
 const TRANSITION_MS = 350;
 
@@ -76,7 +76,7 @@ export const Lattice = ({ nodes, padding = 16, onNodeHover }: LatticeProps) => {
   }, [cells, width, height, padding]);
 
   return (
-    <div ref={setRef} className='dx-expander relative'>
+    <div ref={setRef} className='dx-expand relative'>
       {width > 0 && height > 0 && (
         <svg
           ref={svgRef}

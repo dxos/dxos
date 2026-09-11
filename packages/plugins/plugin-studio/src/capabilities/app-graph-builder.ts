@@ -25,7 +25,7 @@ import {
   STUDIO_SECTION_TYPE,
   STUDIO_SEGMENT,
   getKindIcon,
-} from '../constants';
+} from '../constants.ts';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {

@@ -5,9 +5,9 @@
 import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { Context } from '@dxos/context';
-import { CredentialGenerator } from '@dxos/credentials';
+import { CredentialGenerator, credentialPayload } from '@dxos/credentials';
 
-import { TestAgentBuilder } from './testing';
+import { TestAgentBuilder } from './testing/index.ts';
 
 // TODO(burdon): Factor out?
 const run = <T>(cb: () => Promise<T>): Promise<T> => cb();
@@ -96,9 +96,7 @@ describe('space/space', () => {
       );
 
       for (const credential of credentials) {
-        await space1.controlPipeline.writer.write({
-          credential: { credential },
-        });
+        await space1.controlPipeline.writer.write(credentialPayload(credential));
       }
     }
 

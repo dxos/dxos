@@ -12,7 +12,7 @@ import type * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 
 import { AiService, OpaqueToolkit } from '@dxos/ai';
 import { AiRequest, AiSession, ToolExecutionServices } from '@dxos/assistant';
-import { Chat } from '@dxos/assistant-toolkit';
+import * as Chat from '@dxos/assistant/Chat';
 import { type Space } from '@dxos/client/echo';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import * as Skill from '@dxos/compute/Skill';
@@ -23,7 +23,7 @@ import { log } from '@dxos/log';
 import { type Message } from '@dxos/types';
 import { isTruthy } from '@dxos/util';
 
-import { type AiChatServices, skillRegistry } from '../../util';
+import { type AiChatServices, skillRegistry } from '../../util/index.ts';
 
 export type ChatProcessorOptions = {
   runtime: Context.Context<AiChatServices>;

@@ -7,14 +7,14 @@ import { createEffect, createMemo, createResource, createSignal } from 'solid-js
 import { type Meta, type StoryObj } from 'storybook-solidjs-vite';
 import { type Topology } from 'topojson-specification';
 
-import { type Vector, useDrag, useGlobeZoomHandler, useSpinner, useTour } from '../../hooks';
-import { type LatLngLiteral } from '../../types';
-import { type StyleSet, closestPoint } from '../../util';
-import { type ControlProps } from '../Toolbar';
-import { Globe, type GlobeCanvasProps, type GlobeController, type GlobeRootProps } from './Globe';
+import { type Vector, useDrag, useGlobeZoomHandler, useSpinner, useTour } from '../../hooks/index.ts';
+import { type LatLngLiteral } from '../../types.ts';
+import { type StyleSet, closestPoint } from '../../util/index.ts';
+import { type ControlProps } from '../Toolbar/index.ts';
+import { Globe, type GlobeCanvasProps, type GlobeController, type GlobeRootProps } from './Globe.tsx';
 
 // TODO(burdon): Load from JSON at runtime?
-const loadTopology = async () => (await import('../../../data/countries-110m')).default;
+const loadTopology = async () => (await import('../../../data/countries-110m.ts')).default;
 
 const defaultStyles: StyleSet = {
   water: {
@@ -143,7 +143,7 @@ const DefaultStory = ({
   const [controller, setController] = createSignal<GlobeController | null>(null);
 
   const [dots] = createResource(async () => {
-    const points = (await import('../../../data/countries-dots-3')).default;
+    const points = (await import('../../../data/countries-dots-3.ts')).default;
     return {
       type: 'Topology',
       objects: { dots: points },
@@ -151,7 +151,7 @@ const DefaultStory = ({
   });
 
   const [topology] = createResource(loadTopology);
-  const [airports] = createResource(async () => (await import('../../../data/airports')).default);
+  const [airports] = createResource(async () => (await import('../../../data/airports.ts')).default);
 
   const features = createMemo(() => {
     return airports()

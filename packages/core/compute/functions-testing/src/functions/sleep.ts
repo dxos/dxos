@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import * as Operation from '@dxos/compute/Operation';
 
-import { Sleep } from './definitions';
+import { Sleep } from './definitions.ts';
 
 export default Sleep.pipe(
   Operation.withHandler(

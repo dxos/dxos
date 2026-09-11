@@ -5,21 +5,21 @@
 import React, { type ChangeEvent, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { GeoLocation, type GeoPoint } from '@dxos/echo/Format';
-import { Input, useTranslation } from '@dxos/react-ui';
+import { Field, useTranslation } from '@dxos/react-ui';
 import { safeParseFloat } from '@dxos/util';
 
 import { translationKey } from '#translations';
 import { type FormFieldRendererProps } from '#types';
 
-import { FormRow } from '../../FormRow';
+import { presentationFor } from '../../presentation.tsx';
 
 export const GeoPointField = ({
   type,
   readonly,
+  presentation,
   getValue,
   onValueChange,
   onBlur,
-  ...props
 }: FormFieldRendererProps<GeoPoint>) => {
   const { t } = useTranslation(translationKey);
   const geoPoint = useMemo<GeoPoint>(() => getValue() ?? [0, 0], [getValue]);
@@ -51,57 +51,54 @@ export const GeoPointField = ({
     [type, getValue, onValueChange],
   );
 
+  const resolved = presentationFor(presentation);
+  if (resolved.isStatic) {
+    // A zero coordinate pair is no location.
+    return !value.latitude && !value.longitude ? null : <LatLng {...value} />;
+  }
+
   return (
-    <FormRow<GeoPoint>
-      readonly={readonly}
-      getValue={getValue}
-      standalone
-      renderStatic={(point) => {
-        const location = GeoLocation.fromGeoPoint(point ?? [0, 0]);
-        // Treat a zero coordinate pair as empty (no meaningful location to display).
-        return !location.latitude && !location.longitude ? null : <LatLng {...location} />;
-      }}
-      {...props}
-    >
-      {({ presentation }) => (
-        <div className='grid grid-cols-2 gap-form-gap'>
-          <div>
-            <Input.Root>
-              {presentation.showLabel && <Input.Label>{t('latitude.label')}</Input.Label>}
-              <Input.TextInput
-                type='number'
-                step='0.00001'
-                min='-90'
-                max='90'
-                disabled={!!readonly}
-                placeholder={t('latitude.placeholder')}
-                value={latitudeText ?? ''}
-                onChange={handleChange('latitude', setLatitudeText)}
-                onBlur={onBlur}
-              />
-            </Input.Root>
-          </div>
-          <div>
-            <Input.Root>
-              {presentation.showLabel && <Input.Label>{t('longitude.label')}</Input.Label>}
-              <Input.TextInput
-                type='number'
-                step='0.00001'
-                min='-180'
-                max='180'
-                disabled={!!readonly}
-                placeholder={t('longitude.placeholder')}
-                value={longitudeText ?? ''}
-                onChange={handleChange('longitude', setLongitudeText)}
-                onBlur={onBlur}
-              />
-            </Input.Root>
-          </div>
-        </div>
-      )}
-    </FormRow>
+    // Each coordinate in its own cell: `Field.Root` lays out as `contents`, so without the cell its
+    // label and input would land in the grid as two items of their own.
+    <div className='grid grid-cols-2 gap-form-gap'>
+      <div>
+        <Field.Root>
+          {resolved.showLabel && <Field.Label>{t('latitude.label')}</Field.Label>}
+          <Field.Input
+            type='number'
+            step='0.00001'
+            min='-90'
+            max='90'
+            disabled={!!readonly}
+            placeholder={t('latitude.placeholder')}
+            value={latitudeText ?? ''}
+            onChange={handleChange('latitude', setLatitudeText)}
+            onBlur={onBlur}
+          />
+        </Field.Root>
+      </div>
+      <div>
+        <Field.Root>
+          {resolved.showLabel && <Field.Label>{t('longitude.label')}</Field.Label>}
+          <Field.Input
+            type='number'
+            step='0.00001'
+            min='-180'
+            max='180'
+            disabled={!!readonly}
+            placeholder={t('longitude.placeholder')}
+            value={longitudeText ?? ''}
+            onChange={handleChange('longitude', setLongitudeText)}
+            onBlur={onBlur}
+          />
+        </Field.Root>
+      </div>
+    </div>
   );
 };
+
+// Two labelled inputs: the row's label names neither.
+GeoPointField.standalone = true;
 
 const LatLng = ({ latitude = 0, longitude = 0 }: GeoLocation) => {
   const latHem = latitude >= 0 ? 'N' : 'S';

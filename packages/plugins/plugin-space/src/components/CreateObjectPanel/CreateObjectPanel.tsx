@@ -19,7 +19,7 @@ import { useInputSurfaceLookup } from '#hooks';
 import { meta } from '#meta';
 import { SpaceCapabilities } from '#types';
 
-import { getSpaceDisplayName } from '../../util';
+import { getSpaceDisplayName } from '../../util/index.ts';
 
 /** Display-ready option for the create object search list. */
 export type CreateObjectOption = {
@@ -165,7 +165,7 @@ export const CreateObjectPanel = ({
       >
         <Form.Viewport>
           <Form.Content>
-            <Form.FieldSet />
+            <Form.Fields />
             <Form.Submit />
           </Form.Content>
         </Form.Viewport>
@@ -252,6 +252,7 @@ const SelectSpace = ({ spaces, onChange }: SelectSpaceProps) => {
     extract: (space) => toLocalizedString(getSpaceDisplayName(space), t),
   });
 
+  // TODO(burdon): Change to Masonry.
   return (
     <SearchList.Root onSearch={handleSearch}>
       <SearchList.Input
@@ -261,16 +262,14 @@ const SelectSpace = ({ spaces, onChange }: SelectSpaceProps) => {
         placeholder={t('space-input.placeholder')}
       />
       <SearchList.Viewport>
-        {results.map((space) => {
-          return (
-            <SearchList.Item
-              key={space.id}
-              value={space.id}
-              label={toLocalizedString(getSpaceDisplayName(space), t)}
-              onSelect={() => onChange?.(space.db)}
-            />
-          );
-        })}
+        {results.map((space) => (
+          <SearchList.Item
+            key={space.id}
+            value={space.id}
+            label={toLocalizedString(getSpaceDisplayName(space), t)}
+            onSelect={() => onChange?.(space.db)}
+          />
+        ))}
       </SearchList.Viewport>
     </SearchList.Root>
   );

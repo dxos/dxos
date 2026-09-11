@@ -11,7 +11,7 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import * as Protocol from '#protocol';
 import { useFrame } from '#render';
 
-import { VirtualStreamDeck } from './VirtualStreamDeck';
+import { VirtualStreamDeck } from './VirtualStreamDeck.tsx';
 
 const device = Protocol.streamDeckPlus;
 

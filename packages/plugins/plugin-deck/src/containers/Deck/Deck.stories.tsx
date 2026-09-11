@@ -4,6 +4,7 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
+import * as FiberHandle from 'effect/FiberHandle';
 import * as Option from 'effect/Option';
 import * as Atom from 'effect/unstable/reactivity/Atom';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -45,7 +46,7 @@ import { meta as pluginMeta } from '#meta';
 import { translations } from '#translations';
 import { DeckCapabilities, DeckSchema, Settings } from '#types';
 
-import { Deck } from './Deck';
+import { Deck } from './Deck.tsx';
 
 type StoryItem = { id: string; title: string; icon: string };
 
@@ -100,7 +101,7 @@ const TestArticle = ({ title, content }: { title: string; content: string }) => 
   return (
     <Editor.Root>
       <div className='contents' data-testid='story.article' data-title={title}>
-        <Editor.View value={content} extensions={extensions} classNames='dx-container' />
+        <Editor.View value={content} extensions={extensions} classNames='dx-expand' />
       </div>
     </Editor.Root>
   );
@@ -157,8 +158,8 @@ const TestLauncher = ({ launcherId }: { launcherId: string }) => {
 };
 
 // In-memory deck settings so stories don't read/write the persisted plugin settings.
-const storyDeckSettings = Capability.makeModule(() =>
-  Effect.sync(() => {
+const storyDeckSettings = Capability.makeModule(
+  Effect.fnUntraced(function* () {
     const settingsAtom = Atom.make<Settings.Settings>({
       showHints: false,
       enableNativeRedirect: false,
@@ -170,8 +171,8 @@ const storyDeckSettings = Capability.makeModule(() =>
 
 // In-memory deck state so each story starts from a clean deck; the real `DeckState()` capability
 // persists to localStorage, which otherwise leaks planks between stories.
-const storyDeckState = Capability.makeModule(() =>
-  Effect.sync(() => {
+const storyDeckState = Capability.makeModule(
+  Effect.fnUntraced(function* () {
     const stateAtom = Atom.make<DeckSchema.StoredDeckState>({
       sidebarState: 'closed',
       complementarySidebarState: 'closed',
@@ -194,6 +195,7 @@ const storyDeckState = Capability.makeModule(() =>
       toasts: [],
       currentUndoId: undefined,
       scrollIntoView: undefined,
+      open: {},
     }).pipe(Atom.keepAlive);
 
     const layoutAtom = Atom.make((get) => {
@@ -201,14 +203,15 @@ const storyDeckState = Capability.makeModule(() =>
       const ephemeral = get(ephemeralAtom);
       const deck = state.decks[state.activeDeck];
       invariant(deck, `Deck not found: ${state.activeDeck}`);
+      const open = ephemeral.open[state.activeDeck] ?? DeckSchema.defaultOpenDeck;
       return {
-        mode: DeckSchema.getMode(deck, !!ephemeral.fullscreen),
+        mode: DeckSchema.getMode(open, !!ephemeral.fullscreen),
         dialogOpen: ephemeral.dialogOpen,
         sidebarOpen: state.sidebarState === 'expanded',
         complementarySidebarOpen: state.complementarySidebarState === 'expanded',
         workspace: state.activeDeck,
-        active: deck.active,
-        inactive: deck.inactive,
+        active: open.active,
+        inactive: open.inactive,
         scrollIntoView: ephemeral.scrollIntoView,
       } satisfies AppCapabilities.Layout;
     }).pipe(Atom.keepAlive);
@@ -216,6 +219,7 @@ const storyDeckState = Capability.makeModule(() =>
     return [
       Capability.contribute(DeckCapabilities.State, stateAtom),
       Capability.contribute(DeckCapabilities.EphemeralState, ephemeralAtom),
+      Capability.contribute(DeckCapabilities.Projection, yield* FiberHandle.make<string | undefined, any>()),
       Capability.contribute(AppCapabilities.Layout, layoutAtom),
     ];
   }),
@@ -233,7 +237,12 @@ const TestPlugin = Plugin.define(pluginMeta).pipe(
   Plugin.addModule({
     id: 'story-deck-state',
     activatesOn: ActivationEvents.Startup,
-    provides: [DeckCapabilities.State, DeckCapabilities.EphemeralState, AppCapabilities.Layout],
+    provides: [
+      DeckCapabilities.State,
+      DeckCapabilities.EphemeralState,
+      DeckCapabilities.Projection,
+      AppCapabilities.Layout,
+    ],
     activate: storyDeckState,
   }),
   Plugin.addModule(OperationHandler),
@@ -402,7 +411,7 @@ const DefaultStory = ({
   }, [settingsOverrides, updateSettings]);
   const pluginManager = usePluginManager();
   const { graph } = useAppGraph();
-  const { state, deck, updateState } = useDeckState();
+  const { state, deck, updateState, updateEphemeral } = useDeckState();
 
   // Subscribe to the root's children so the `whenRoot` connector runs and materializes the story
   // nodes; without this each plank's `useNode` never resolves and the deck stays in the loading state.
@@ -431,10 +440,16 @@ const DefaultStory = ({
       sidebarState,
       decks: {
         ...current.decks,
-        [current.activeDeck]: { ...current.decks[current.activeDeck], active, companionPlanks: open },
+        [current.activeDeck]: { ...current.decks[current.activeDeck], companionPlanks: open },
       },
     }));
-  }, [items, count, sidebarState, companionPlanks, launcher, launcherNode, updateState]);
+    // What is open is the URL's, and there is no URL here, so the story writes it where the projection
+    // would have.
+    updateEphemeral((current) => ({
+      ...current,
+      open: { ...current.open, [state.activeDeck]: { active, inactive: [] } },
+    }));
+  }, [items, count, sidebarState, companionPlanks, launcher, launcherNode, updateState, updateEphemeral]);
 
   return (
     <Deck.Root settings={settings} pluginManager={pluginManager} state={state} deck={deck} updateState={updateState}>

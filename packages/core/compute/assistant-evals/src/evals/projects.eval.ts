@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 import { evalite } from 'evalite';
 
-import { Chat } from '@dxos/assistant-toolkit';
+import * as Chat from '@dxos/assistant/Chat';
 import * as Project from '@dxos/compute/Project';
 import { Database, Feed, Obj, Ref } from '@dxos/echo';
 import { EID } from '@dxos/keys';
@@ -18,9 +18,9 @@ import * as TasksPlugin from '@dxos/plugin-tasks/TasksPlugin';
 import { Milestone, Outline, Task, TaskSet } from '@dxos/types';
 import { trim } from '@dxos/util';
 
-import { findObject, toolInvocations } from '../assertions';
-import { createEvalRunner } from '../runner';
-import { getDefaultSkills } from '../skills';
+import { findObject, toolInvocations } from '../assertions.ts';
+import { createEvalRunner } from '../runner.ts';
+import { getDefaultSkills } from '../skills.ts';
 
 const PROJECT_NAME = 'Harbor';
 

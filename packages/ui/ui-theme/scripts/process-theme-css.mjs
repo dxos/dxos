@@ -14,7 +14,7 @@ import postcssNesting from 'postcss-nesting';
 const processor = postcss([postcssImport(), postcssNesting()]);
 
 const inputFile = 'src/main.css';
-const outputFiles = ['dist/plugin/node-esm/theme.css', 'dist/plugin/node-cjs/theme.css'];
+const outputFiles = ['dist/plugin/theme.css'];
 
 async function processCSS() {
   console.log(`Reading ${inputFile}...`);

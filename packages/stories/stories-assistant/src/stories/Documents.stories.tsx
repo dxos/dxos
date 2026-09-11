@@ -11,6 +11,7 @@ import * as Skill from '@dxos/compute/Skill';
 import * as Template from '@dxos/compute/Template';
 import { Filter, Query, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
+import { PublicKey } from '@dxos/keys';
 import * as AssistantSkill from '@dxos/plugin-assistant/AssistantSkill';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import * as MarkdownSkill from '@dxos/plugin-markdown/MarkdownSkill';
@@ -19,8 +20,8 @@ import { Text } from '@dxos/schema';
 import { Cell } from '@dxos/storybook-testing';
 import { trim } from '@dxos/util';
 
-import { StoryRole } from '../modules';
-import { ModuleContainer, addToRootCollection, createDecorators, storyParameters } from '../testing';
+import { StoryRole } from '../modules/index.ts';
+import { ModuleContainer, addToRootCollection, createDecorators, storyParameters } from '../testing/index.ts';
 
 const meta: Meta<typeof ModuleContainer> = {
   title: 'stories/stories-assistant/Documents',
@@ -192,8 +193,9 @@ export const WithScript: Story = {
         import('@dxos/plugin-script'),
         import('@dxos/plugin-script/templates'),
       ]);
-      const { identityKey } = client.halo.identity.get()!;
-      await client.halo.writeCredentials([getAccessCredential(identityKey)]);
+      const identityKey = client.halo.identity.get()?.identityKey;
+      invariant(identityKey, 'Identity key not found');
+      await client.halo.writeCredentials([getAccessCredential(PublicKey.from(identityKey.data))]);
 
       const template = templates.find((template) => template.id === 'com.example.operation.script.forex-effect');
       invariant(template, 'Template not found');

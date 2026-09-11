@@ -2,10 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
-import { createContext } from '@radix-ui/react-context';
 import React from 'react';
 
-import { type ItemProps, type PipelineContextValue } from './PipelineComponent';
+import { createContext } from '@dxos/react-hooks';
+
+import { type ItemProps, type PipelineContextValue } from './PipelineComponent.tsx';
 
 // Kept out of `PipelineComponent.tsx`: react-refresh only fast-refreshes a module whose exports are all
 // components, so a context and its hook exported beside them force a full page reload on every edit.

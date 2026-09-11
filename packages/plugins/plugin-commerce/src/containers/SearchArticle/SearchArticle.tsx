@@ -13,13 +13,13 @@ import { Panel, useTranslation } from '@dxos/react-ui';
 import { useSelection } from '@dxos/react-ui-attention';
 import { Empty } from '@dxos/react-ui-list';
 import { Masonry } from '@dxos/react-ui-masonry';
-import { Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
+import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 
 import { meta } from '#meta';
 import { Result, Search } from '#types';
 
-import { ResultDetail } from './ResultDetail';
-import { ResultTile } from './ResultTile';
+import { ResultDetail } from './ResultDetail.tsx';
+import { ResultTile } from './ResultTile.tsx';
 
 export type SearchArticleProps = AppSurface.ObjectArticleProps<Search.Search>;
 
@@ -142,13 +142,10 @@ export const SearchArticle = ({ role, subject, attendableId }: SearchArticleProp
 
   return (
     <Panel.Root role={role}>
-      <Menu.Root {...menuActions} attendableId={id}>
-        <Panel.Toolbar asChild>
-          <Menu.Toolbar>
-            <Menu.Items />
-          </Menu.Toolbar>
-        </Panel.Toolbar>
-      </Menu.Root>
+      <Panel.Toolbar asChild>
+        <ActionToolbar {...menuActions} attendableId={id} />
+      </Panel.Toolbar>
+
       <Panel.Content>
         {(selectedResult && (
           <ResultDetail

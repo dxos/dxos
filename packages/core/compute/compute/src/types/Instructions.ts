@@ -9,7 +9,7 @@ import * as Schema from 'effect/Schema';
 import { Annotation, DXN, Format, JsonSchema, Obj, Ref, Type } from '@dxos/echo';
 import { Text } from '@dxos/schema';
 
-import * as Skill from './Skill';
+import * as Skill from './Skill.ts';
 
 /** A sentinel command the model recognizes in chat (e.g. `$track <text>`). */
 export const Command = Schema.Struct({

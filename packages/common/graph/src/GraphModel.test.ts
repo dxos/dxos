@@ -10,8 +10,8 @@ import { describe, test } from 'vitest';
 
 import { Trigger } from '@dxos/async';
 
-import * as GraphModel from './GraphModel';
-import * as GraphNode from './GraphNode';
+import * as GraphModel from './GraphModel.ts';
+import * as GraphNode from './GraphNode.ts';
 
 const TestNode = GraphNode.GraphNode.mapFields(Struct.assign({ value: Schema.String }));
 
@@ -359,7 +359,7 @@ describe('Graph', () => {
       graph: source,
       change: (fn) => {
         transactions++;
-        fn();
+        fn(source);
       },
     });
 
@@ -377,7 +377,7 @@ describe('Graph', () => {
 
   test('sync reloads only when the source diverges', ({ expect }) => {
     const source: GraphModel.AnyData = { nodes: [{ id: 'node-1' }], edges: [] };
-    const graph = new GraphModel.GraphModel({ graph: source, change: (fn) => fn() });
+    const graph = new GraphModel.GraphModel({ graph: source, change: (fn) => fn(source) });
     expect(graph.nodes).to.have.length(1);
 
     // A field edit reaches the model through the node object it already holds.

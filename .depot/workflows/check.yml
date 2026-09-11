@@ -217,6 +217,17 @@ jobs:
         continue-on-error: true
         run: moon run composer-app:check-boot-budget
 
+      - name: Trend the boot graph
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        continue-on-error: true
+        env:
+          DX_POSTHOG_API_KEY: ${{ secrets.COMPOSER_APP_PROD_POSTHOG_API_KEY }}
+        run: |
+          node scripts/ci-event.mjs \
+            --event ci.boot-budget \
+            --properties packages/apps/composer-app/out/boot-budget.json \
+            --property app=composer
+
       - name: Record this PR's measurement
         id: head
         if: env.COMPARE == 'true'
@@ -364,7 +375,7 @@ jobs:
   # (`:test-storybook`) and the Cloudflare Workers runtime (`:test-workerd`). They used to be three
   # jobs split by flavour, which fixed each shard's size to its flavour's total — storybook alone ran
   # far longer than workerd, and no amount of runners helped. `moon exec --job N --job-total` partitions
-  # the whole target set instead, so the four cells are sized by work rather than by kind and a new
+  # the whole target set instead, so the six cells are sized by work rather than by kind and a new
   # suite lands wherever there is room. File parallelism stays disabled — overloaded runners flake — so
   # the win is concurrency across machines, not within one. `--on-failure continue` because moon's
   # default bail drops a failing cell's remaining targets, hiding what they cost.
@@ -373,9 +384,9 @@ jobs:
       fail-fast: false
       matrix:
         node-version: ['24.11.1']
-        # 0-based: `--job` is an index. Four cells against the ~13m the three flavour jobs' critical
+        # 0-based: `--job` is an index. Six cells against the ~13m the three flavour jobs' critical
         # path took, over ~160s of fixed per-cell setup.
-        shard: [0, 1, 2, 3]
+        shard: [0, 1, 2, 3, 4, 5]
     runs-on: depot-ubuntu-24.04-8
     container:
       image: ghcr.io/dxos/gh-actions:${{ matrix.node-version }}
@@ -433,13 +444,13 @@ jobs:
           quarantine: true
           run: >-
             moon exec --on-failure continue :test :test-browser :test-storybook :test-workerd
-            --job ${{ matrix.shard }} --job-total 4 -- --no-file-parallelism
+            --job ${{ matrix.shard }} --job-total 6 -- --no-file-parallelism
 
       - name: Test (no analytics)
         if: ${{ env.TRUNK_TOKEN == '' }}
         run: >-
           moon exec --on-failure continue :test :test-browser :test-storybook :test-workerd
-          --job ${{ matrix.shard }} --job-total 4 -- --no-file-parallelism
+          --job ${{ matrix.shard }} --job-total 6 -- --no-file-parallelism
 
       - name: Upload Test Results
         if: always()

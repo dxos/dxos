@@ -18,7 +18,7 @@ import { GalleryImage } from '#components';
 import { meta } from '#meta';
 import { Artifact } from '#types';
 
-import { useArtifactCoverSource } from '../../hooks';
+import { useArtifactCoverSource } from '../../hooks/index.ts';
 
 const isArtifact = Obj.instanceOf(Artifact.Artifact);
 
@@ -72,11 +72,11 @@ export const GalleryArticle = ({ role, subject: collection }: GalleryArticleProp
     if (!db) {
       return;
     }
-    const artifact = Artifact.make();
-    Obj.setParent(artifact, collection);
+    const artifact = Artifact.make({ [Obj.Parent]: collection });
     db.add(artifact);
     Obj.update(collection, (collection) => {
-      collection.objects = [...(collection.objects ?? []), Ref.make(artifact)];
+      collection.objects ??= [];
+      collection.objects.push(Ref.make(artifact));
     });
     await invokePromise(LayoutOperation.Open, { subject: [GraphPath.getObjectPathFromObject(artifact)] });
   }, [db, collection, invokePromise]);

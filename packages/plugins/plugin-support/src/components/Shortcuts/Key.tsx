@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { keySymbols } from '@dxos/keyboard';
+import { keySymbols } from '@dxos/react-focus';
 
 export const Key = ({ binding }: { binding: string }) => {
   return (

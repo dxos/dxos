@@ -8,7 +8,7 @@ import { Database, EID, Filter, Query } from '@dxos/echo';
 
 import { Magazine, Subscription } from '#types';
 
-import { publishedTimestamp } from '../util/date';
+import { publishedTimestamp } from '../util/date.ts';
 
 /**
  * Resolves the Magazine's referenced feeds and the Posts in each feed's backing

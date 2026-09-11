@@ -2,8 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type LoaderStore } from './store';
-import { type BootLoaderApi } from './types';
+import { type LoaderStore } from './store.ts';
+import { type BootLoaderApi } from './types.ts';
 
 /**
  * Wrap a reactive {@link LoaderStore} as the imperative `window.__bootLoader`
@@ -14,6 +14,8 @@ import { type BootLoaderApi } from './types';
  */
 export const createBridge = (store: LoaderStore, dismissNow: () => void): BootLoaderApi => ({
   status: (payload) => store.pushStatus(payload),
+  plugins: (entries) => store.setPlugins(entries),
+  activated: (id) => store.activatePlugin(id),
   progress: (fraction) => store.setProgress(fraction),
   stalled: (onAbort) => store.stalled(onAbort),
   ready: () => store.ready(),

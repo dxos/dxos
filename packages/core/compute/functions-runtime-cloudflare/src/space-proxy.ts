@@ -8,8 +8,8 @@ import { type DatabaseImpl, type EchoClient } from '@dxos/echo-client';
 import { invariant } from '@dxos/invariant';
 import { PublicKey, type SpaceId } from '@dxos/keys';
 
-import type { ServiceContainer } from './internal';
-import { type QueuesAPI, QueuesAPIImpl } from './queues-api';
+import type { ServiceContainer } from './internal/index.ts';
+import { type QueuesAPI, QueuesAPIImpl } from './queues-api.ts';
 
 /**
  * @deprecated

@@ -14,8 +14,8 @@ import { AutofillAnnotation, OptionsLookupAnnotation, autofill, optionsLookup } 
 
 import { Book } from '#types';
 
-import { lookupHiveBook, searchBooks } from '../operations/bookhive';
-import { browserCorsProxy } from '../operations/cors';
+import { lookupHiveBook, searchBooks } from '../operations/bookhive.ts';
+import { browserCorsProxy } from '../operations/cors.ts';
 
 type CreateBookValues = {
   hiveId?: string;

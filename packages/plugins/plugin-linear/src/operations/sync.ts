@@ -20,9 +20,9 @@ import { Milestone, Task, TaskSet } from '@dxos/types';
 import { meta } from '#meta';
 import { LinearOperation } from '#types';
 
-import { LINEAR_SOURCE } from '../constants';
-import { LinearTeamUnresolvedError, formatLinearSyncFailure } from '../errors';
-import { LinearApi } from '../services';
+import { LINEAR_SOURCE } from '../constants.ts';
+import { LinearTeamUnresolvedError, formatLinearSyncFailure } from '../errors.ts';
+import { LinearApi } from '../services/index.ts';
 
 //
 // Direction: bidirectional (pull-then-push) for projects and tasks.
@@ -85,7 +85,9 @@ type TaskSnapshot = {
   description: string;
   status: 'todo' | 'started' | 'done';
   priority: 'low' | 'medium' | 'high' | 'urgent' | undefined;
-  estimate: number | undefined;
+  // The size, not Linear's points: the snapshot is what a later sync compares the local field
+  // against, and comparing a size to a point count would report every task as diverged.
+  estimate: Task.Estimate | undefined;
 };
 
 // Per-field three-way merge primitives are shared with other integration plugins (Trello, GitHub)
@@ -138,7 +140,7 @@ const setTaskContainer = Effect.fn('setTaskContainer')(function* (task: Task.Tas
     });
   }
   Obj.update(container, (container) => {
-    container.tasks = [...container.tasks, Ref.make(task)];
+    container.tasks.push(Ref.make(task));
   });
   Obj.setParent(task, container);
 });
@@ -231,7 +233,7 @@ export const upsertMilestone = Effect.fn('upsertMilestone')(function* (
   // Sequence is the `milestones` array; the parent edge only carries deletion cascade.
   if (!taskSet.milestones.some(Ref.hasEntityId(milestone.id))) {
     Obj.update(taskSet, (taskSet) => {
-      taskSet.milestones = [...taskSet.milestones, Ref.make(milestone)];
+      taskSet.milestones.push(Ref.make(milestone));
     });
     Obj.setParent(milestone, taskSet);
   }
@@ -264,7 +266,7 @@ export const upsertTask = Effect.fn('upsertTask')(function* (
     description: issue.description ?? '',
     status,
     priority,
-    estimate: issue.estimate ?? undefined,
+    estimate: LinearApi.estimatePointsToTaskEstimate(issue.estimate ?? undefined),
   };
 
   const existing = yield* findByForeignId<Task.Task>(Task.Task, issue.id);
@@ -286,15 +288,16 @@ export const upsertTask = Effect.fn('upsertTask')(function* (
       remoteFields.status,
       snapshotField(snapshot, 'status'),
     );
-    // Linear's reverse mapper drops `0` (no priority) → undefined, so the
-    // remote/snapshot side never holds 'none'. Widen to the full Task priority
-    // union so a locally-set 'none' typechecks too.
-    const priorityResult = mergeField<'none' | 'low' | 'medium' | 'high' | 'urgent' | undefined>(
+    // Linear's reverse mapper drops `0` (no priority) → undefined, and an unset local priority is the
+    // absent property, so both sides speak `Task.Priority | undefined`.
+    const priorityResult = mergeField<Task.Priority | undefined>(
       existing.priority,
       remoteFields.priority,
       snapshotField(snapshot, 'priority'),
     );
-    const estimateResult = mergeField<number | undefined>(
+    // Compared as sizes: the snapshot and remote sides are mapped on the way in, so all three
+    // arms of the merge speak the same vocabulary.
+    const estimateResult = mergeField<Task.Estimate | undefined>(
       existing.estimate,
       remoteFields.estimate,
       snapshotField(snapshot, 'estimate'),
@@ -343,7 +346,7 @@ export const upsertTask = Effect.fn('upsertTask')(function* (
     description: issue.description ?? '',
     status,
     priority,
-    estimate: issue.estimate ?? undefined,
+    estimate: LinearApi.estimatePointsToTaskEstimate(issue.estimate ?? undefined),
     milestone: milestone ? Ref.make(milestone) : undefined,
   });
   const persisted = yield* Database.add(created);
@@ -494,7 +497,7 @@ export const pushTeamUpdates: <E, R>(
         // Send `null` when the user cleared the estimate locally; Linear
         // treats explicit `null` as a clear (undefined would leave it
         // unchanged on the remote).
-        input.estimate = localEstimate ?? null;
+        input.estimate = LinearApi.taskEstimateToEstimatePoints(localEstimate) ?? null;
         diverged = true;
       }
       if (!diverged) {

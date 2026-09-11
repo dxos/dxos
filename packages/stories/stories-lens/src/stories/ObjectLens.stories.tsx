@@ -13,9 +13,9 @@ import { useClientStory, withClientProvider, withMultiClientProvider } from '@dx
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Task } from '@dxos/types';
 
-import { CanonicalTaskPanel, LensedGtdPanel, RawInspector } from '../components';
-import { makeDemoTask } from '../gtd';
-import { control, selectOption, selectValue, typeInto } from '../testing';
+import { CanonicalTaskPanel, LensedGtdPanel, RawInspector } from '../components.tsx';
+import { makeDemoTask } from '../gtd.ts';
+import { control, selectOption, selectValue, typeInto } from '../testing.ts';
 
 //
 // One object, viewed through two interfaces.
@@ -40,7 +40,7 @@ const SideBySideStory = () => {
   }
 
   return (
-    <div className='absolute inset-0 grid grid-cols-3 gap-3 p-3 overflow-hidden'>
+    <div className='dx-fullscreen grid grid-cols-3 gap-3 p-3 overflow-hidden'>
       <CanonicalTaskPanel task={task} />
       <LensedGtdPanel task={task} />
       <RawInspector task={task} />

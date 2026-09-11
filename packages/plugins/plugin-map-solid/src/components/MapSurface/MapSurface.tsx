@@ -13,8 +13,8 @@ import { getTypeURIFromQuery } from '@dxos/schema';
 import { type GeoMarker } from '@dxos/solid-ui-geo';
 import { getDeep } from '@dxos/util';
 
-import { GlobeControl } from '../Globe';
-import { MapControl } from '../Map';
+import { GlobeControl } from '../Globe/index.ts';
+import { MapControl } from '../Map/index.ts';
 
 type MapSurfaceProps = {
   data?: { subject: Map.Map };
@@ -72,7 +72,7 @@ const MapSurface = (props: MapSurfaceProps) => {
   });
 
   return (
-    <div class='flex h-full w-full min-h-0'>
+    <div class='flex dx-expand'>
       <Show when={type() === 'map'}>
         <MapControl markers={markers} onToggle={() => setType('globe')} />
       </Show>

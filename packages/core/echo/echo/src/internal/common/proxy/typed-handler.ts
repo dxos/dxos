@@ -11,17 +11,18 @@ import { Event } from '@dxos/async';
 import { inspectCustom } from '@dxos/debug';
 import { SchemaAST } from '@dxos/effect';
 import { assertArgument, invariant } from '@dxos/invariant';
-import { getDeep, setDeep } from '@dxos/util';
+import { getDeep } from '@dxos/util';
 
-import { getSchemaURI } from '../../Annotation/annotations';
-import { isEntity } from '../../Entity/guard';
-import { toEffectSchema } from '../../JsonSchema/json-schema';
-import { ObjectDeletedId, ParentId, SchemaId, StaticTypeSchemaSlot, TypeEntityId, TypeId } from '../types';
-import { executeChange, isInChangeContext, queueNotification } from './change-context';
-import { defineHiddenProperty } from './define-hidden-property';
-import { createPropertyDeleteError } from './errors';
-import { batchEvents } from './event-batch';
+import { getSchemaURI } from '../../Annotation/annotations.ts';
+import { isEntity } from '../../Entity/guard.ts';
+import { toEffectSchema } from '../../JsonSchema/json-schema.ts';
+import { ObjectDeletedId, ParentId, SchemaId, StaticTypeSchemaSlot, TypeEntityId, TypeId } from '../types/index.ts';
+import { assertMutable, executeChange, queueNotification } from './change-context.ts';
+import { defineHiddenProperty } from './define-hidden-property.ts';
+import { createTextMethodError } from './errors.ts';
+import { batchEvents } from './event-batch.ts';
 import {
+  changeKeyOf,
   getEchoRoot,
   getOwner,
   getRawTarget,
@@ -29,23 +30,22 @@ import {
   notifyOwnerChain,
   setOwnerRecursive,
   wouldCreateCycle,
-} from './ownership';
-import { type ReactiveHandler, objectData } from './proxy-types';
+} from './ownership.ts';
+import { type ReactiveHandler } from './proxy-types.ts';
 import {
   createProxy,
   isProxy,
   isReactiveRecord,
   isValidProxyTarget,
   normalizeSpliceRange,
-  symbolIsProxy,
   symbolReactivePrototype,
-} from './proxy-utils';
-import { ReactiveArray } from './reactive-array';
-import { SchemaValidator, assertsWithDetail } from './schema-validator';
-import { ChangeId, EventId } from './symbols';
+} from './proxy-utils.ts';
+import { ReactiveArray } from './reactive-array.ts';
+import { SchemaValidator, assertsWithDetail } from './schema-validator.ts';
+import { ChangeId, ChangeKeyId, EventId } from './symbols.ts';
 
 // Re-export for external consumers.
-export { getEchoRoot, setMetaOwner } from './ownership';
+export { getEchoRoot, setMetaOwner } from './ownership.ts';
 
 type ProxyTarget = {
   /**
@@ -132,6 +132,19 @@ const deepCopy = <T>(value: T, visited = new Map<object, object>()): T => {
 };
 
 /**
+ * Write `value` at `path`, unwrapping each hop to its raw target. A nested record is stored as its
+ * sub-proxy, and writing through one would re-impose the per-delta validation the text path exists to
+ * skip.
+ */
+const setDeepOnRawTargets = (target: object, path: readonly (string | number)[], value: unknown): void => {
+  let parent: any = getRawTarget(target);
+  for (const key of path.slice(0, -1)) {
+    parent = getRawTarget(parent[key]);
+  }
+  parent[path[path.length - 1]] = value;
+};
+
+/**
  * Copy hidden properties (SchemaId, TypeId) from source to target.
  */
 const copyHiddenProperties = (source: any, target: any): void => {
@@ -150,8 +163,8 @@ const copyHiddenProperties = (source: any, target: any): void => {
 // real OWN properties on the target — there is no document behind it. Only the per-object metadata
 // is relocated onto a prototype, so swapping handlers doesn't disturb the data shape:
 //
-//   proxy ──Proxy(target, ProxyHandlerSlot → TypedReactiveHandler)
-//     │         get/set/has/... traps run here
+//   proxy ──Proxy(target, REACTIVE_PROXY_HANDLER → TypedReactiveHandler)
+//     │         set/has/... traps run here; there is no `get` trap, so reads land on the target
 //     ▼
 //   target            the user's object. OWN enumerable props = user data ({ name, age, ... });
 //     │ [[Prototype]] OWN symbol props are removed by `compactMetadataToInstanceState` after init.
@@ -163,8 +176,8 @@ const copyHiddenProperties = (source: any, target: any): void => {
 //     ▼
 //   TypedObjectPrototype     shared behaviour. Carries [symbolReactivePrototype]=true (so the
 //     │ [[Prototype]] "plain object" gates still treat the record as data) plus the system
-//     │               accessors [objectData], [ChangeId], [StaticTypeSchemaSlot]; the get trap
-//     │               delegates to these via `isBehaviourAccessor` instead of switching.
+//     │               accessors [ChangeId], [ChangeKeyId], [StaticTypeSchemaSlot]. There is no get
+//     │               trap: a read of any of them resolves off this chain by ordinary lookup.
 //     ▼
 //   Object.prototype ──▶ null     a `getPrototypeOf` trap reports `Object.prototype` so consumers
 //                     see a plain object; the real instanceState prototype stays hidden.
@@ -192,10 +205,9 @@ defineHiddenProperty(TypedObjectPrototype, symbolReactivePrototype, true);
 // branches in the `get` trap. `this` is the proxy receiver (or the raw target when read directly);
 // `getRawTarget` resolves either to the underlying target.
 Object.defineProperties(TypedObjectPrototype, {
-  // TODO(burdon): Remove?
-  [objectData]: {
+  [ChangeKeyId]: {
     get(this: ProxyTarget) {
-      return toJSON(getRawTarget(this));
+      return changeKeyOf(this);
     },
   },
   [ChangeId]: {
@@ -245,35 +257,11 @@ Object.defineProperties(TypedObjectPrototype, {
   },
 });
 
-/** True if `prop` resolves to an accessor on the behaviour-prototype chain (not an own property). */
-const isBehaviourAccessor = (target: object, prop: symbol): boolean => {
-  let proto = Object.getPrototypeOf(target);
-  while (proto != null && proto !== Object.prototype) {
-    const descriptor = Object.getOwnPropertyDescriptor(proto, prop);
-    if (descriptor != null) {
-      return descriptor.get != null;
-    }
-    proto = Object.getPrototypeOf(proto);
-  }
-  return false;
-};
-
 /**
- * Enforce that user-data mutations only happen inside `Obj.update()`. A root object owns an
- * `EventId` once initialized; before that (and for non-root records or symbol-keyed system
- * properties) mutations pass through. Returns whether the root is initialized so callers can gate
- * change notifications.
+ * True once the root owns an `[EventId]`, i.e. is past construction and notifies on change. The
+ * read-only gate itself lives in the shared proxy handler (`assertMutable`), keyed by `[ChangeKeyId]`.
  */
-const assertMutableWithinChange = (echoRoot: object, prop: string | symbol): boolean => {
-  const isInitialized = EventId in echoRoot;
-  if (isInitialized && typeof prop !== 'symbol' && !isInChangeContext(echoRoot)) {
-    throw new Error(
-      `Cannot modify object property "${String(prop)}" outside of Obj.update(). ` +
-        'Use Obj.update(obj, (mutableObj) => { mutableObj.property = value; }) instead.',
-    );
-  }
-  return isInitialized;
-};
+const isInitialized = (echoRoot: object): boolean => EventId in echoRoot;
 
 /**
  * Move a record's per-object metadata (symbol-keyed hidden properties) onto a fresh instance-state
@@ -308,7 +296,6 @@ const compactMetadataToInstanceState = (target: ProxyTarget): void => {
 export class TypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
   public static readonly instance: ReactiveHandler<any> = new TypedReactiveHandler();
 
-  readonly _proxyMap = new WeakMap<object, any>();
   private _inSet = false;
 
   private constructor() {}
@@ -338,7 +325,7 @@ export class TypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
       // Set owner on all nested objects to this root ECHO object.
       // All nested records point directly to this root for centralized reactivity.
       for (const key in target) {
-        if ((target as any)[symbolIsProxy]) {
+        if (isProxy(target)) {
           continue;
         }
         let value = (target as any)[key];
@@ -365,47 +352,34 @@ export class TypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
     // Relocate per-object metadata onto an instance-state prototype, leaving only user data as own
     // properties on the target. Done last so all metadata set above (and by `prepareTypedTarget`) moves.
     compactMetadataToInstanceState(target);
+
+    // After compaction and ownership, so each child is stamped and owned before it gets a proxy of its
+    // own. Recursive: wrapping a child runs its `init`, which wraps that child's children.
+    this._wrapNestedValues(target);
   }
 
   /**
-   * Hide the internal instance-state prototype so consumers see a plain object; arrays keep their
-   * real (ReactiveArray) prototype.
+   * Replaces every raw nested record and array on the target with the sub-proxy a read returns, so a
+   * forwarded read hands out the same reactive view the `get` trap used to build. Class instances,
+   * `Ref`s and primitives are not proxy targets and stay as they are.
    */
-  getPrototypeOf(target: ProxyTarget): object | null {
-    return Array.isArray(target) ? Reflect.getPrototypeOf(target) : Object.prototype;
-  }
-
-  get(target: ProxyTarget, prop: string | symbol, receiver: any): any {
-    // The ECHO system surface (objectData, ChangeId, StaticTypeSchemaSlot, ...) lives as accessors
-    // on the behaviour prototype; resolve them via Reflect.get and return as-is — these are not user
-    // data and must never be proxy-wrapped.
-    if (typeof prop === 'symbol' && isBehaviourAccessor(target, prop)) {
-      return Reflect.get(target, prop, receiver);
+  private _wrapNestedValues(target: ProxyTarget): void {
+    for (const key of Object.keys(target)) {
+      // The descriptor first: reading an own getter here would invoke it, and a type entity's
+      // `jsonSchema` getter can reach a schema still inside its own `const` initializer.
+      if (Object.getOwnPropertyDescriptor(target, key)?.get) {
+        continue;
+      }
+      const value = (target as any)[key];
+      if (isValidProxyTarget(value)) {
+        (target as any)[key] = createProxy(value, this);
+      }
     }
-
-    // The back-reference to the type entity is own metadata — return the raw value so we don't
-    // re-wrap an already-reactive `Type.Type` entity in another proxy (which would fail the
-    // SchemaId-in-target invariant).
-    if (prop === TypeEntityId) {
-      return Reflect.get(target, prop, receiver);
-    }
-
-    // Own getter properties (e.g. the `SchemaId` slot installed by `setSchemaProperties`).
-    if (Object.getOwnPropertyDescriptor(target, prop)?.get) {
-      return Reflect.get(target, prop, receiver);
-    }
-
-    const value = Reflect.get(target, prop, receiver);
-    if (isValidProxyTarget(value)) {
-      return createProxy(value, this);
-    }
-
-    return value;
   }
 
   set(target: ProxyTarget, prop: string | symbol, value: any, receiver: any): boolean {
     const echoRoot = getEchoRoot(target);
-    const isInitialized = assertMutableWithinChange(echoRoot, prop);
+    const initialized = isInitialized(echoRoot);
 
     let result: boolean = false;
     this._inSet = true;
@@ -419,7 +393,7 @@ export class TypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
           Reflect.deleteProperty(target, StaticTypeSchemaSlot);
         }
         // Queue notification instead of emitting immediately (batched).
-        if (isInitialized) {
+        if (initialized) {
           queueNotification(echoRoot);
           // Also notify the owner chain so parent objects are updated when nested objects change.
           notifyOwnerChain(target);
@@ -431,23 +405,12 @@ export class TypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
     return result;
   }
 
-  ownKeys(target: ProxyTarget): ArrayLike<string | symbol> {
-    return Reflect.ownKeys(target);
-  }
-
   deleteProperty(target: ProxyTarget, property: string | symbol): boolean {
     const echoRoot = getEchoRoot(target);
 
-    // Check readonly enforcement - mutations only allowed within Obj.update().
-    // Skip for symbol properties (internal infrastructure, not user data).
-    const isInitialized = EventId in echoRoot;
-    const isSymbolProp = typeof property === 'symbol';
-    if (isInitialized && !isSymbolProp && !isInChangeContext(echoRoot)) {
-      throw createPropertyDeleteError(property);
-    }
-
+    const initialized = isInitialized(echoRoot);
     const result = Reflect.deleteProperty(target, property);
-    if (isInitialized) {
+    if (initialized) {
       queueNotification(echoRoot);
     }
     return result;
@@ -455,14 +418,14 @@ export class TypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
 
   defineProperty(target: ProxyTarget, property: string | symbol, attributes: PropertyDescriptor): boolean {
     const echoRoot = getEchoRoot(target);
-    const isInitialized = assertMutableWithinChange(echoRoot, property);
+    const initialized = isInitialized(echoRoot);
 
     const { echoRoot: _, preparedValue } = this._prepareValueForAssignment(target, property, attributes.value);
     const result = Reflect.defineProperty(target, property, {
       ...attributes,
       value: preparedValue,
     });
-    if (!this._inSet && isInitialized) {
+    if (!this._inSet && initialized) {
       // Queue notification instead of emitting immediately (batched).
       queueNotification(echoRoot);
     }
@@ -470,7 +433,7 @@ export class TypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
   }
 
   textUpdate(target: ProxyTarget, path: readonly (string | number)[], newText: string): void {
-    this._applyTextMutation(target, path, () => newText);
+    this._applyTextMutation(target, 'update', path, () => newText);
   }
 
   textSplice(
@@ -481,7 +444,7 @@ export class TypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
     insert: string,
   ): string {
     let removed = '';
-    this._applyTextMutation(target, path, (current) => {
+    this._applyTextMutation(target, 'splice', path, (current) => {
       const range = normalizeSpliceRange(current.length, start, deleteCount);
       removed = current.slice(range.start, range.start + range.deleteCount);
       return current.slice(0, range.start) + insert + current.slice(range.start + range.deleteCount);
@@ -490,27 +453,24 @@ export class TypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
   }
 
   /**
-   * Shared read-modify-write for the in-memory string CRDT path. Mirrors the `set` trap: enforce the
-   * change context, then mutate and notify through the same batched notification path so reactivity fires.
+   * Shared read-modify-write for the in-memory string CRDT path. A method call is invisible to the proxy,
+   * so it runs the same `assertMutable` gate the traps run, then mutates and notifies through the same
+   * batched notification path so reactivity fires.
    *
-   * Writes via `setDeep` on the raw target, intentionally bypassing `_prepareValueForAssignment` /
+   * Writes on the raw targets, intentionally bypassing `_prepareValueForAssignment` /
    * `_validateValue`: a string CRDT delta produces a string, and per-delta schema checks (pattern,
    * maxLength) would reject valid intermediate states during incremental edits. Such constraints are
    * enforced at the initial assignment or as application-level invariants, mirroring the Automerge path.
    */
   private _applyTextMutation(
     target: ProxyTarget,
+    method: string,
     path: readonly (string | number)[],
     compute: (current: string) => string,
   ): void {
-    const echoRoot = getEchoRoot(target);
-    if (!isInChangeContext(echoRoot)) {
-      throw new Error(
-        `Cannot modify text at "${path.join('.')}" outside of Obj.update(). ` +
-          'Use Obj.update(obj, () => { Text.splice(obj, path, ...); }) instead.',
-      );
-    }
+    assertMutable(target, method, createTextMethodError);
 
+    const echoRoot = getEchoRoot(target);
     const keyPath = [...path];
     invariant(keyPath.length > 0, 'Text path must be non-empty');
     const current = getDeep(target, keyPath);
@@ -522,7 +482,7 @@ export class TypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
     batchEvents(() => {
       // Write directly on the raw target (not the proxy) and notify through the same batched path
       // the `set` trap uses, so subscribers fire once per `Obj.update`.
-      setDeep(target, keyPath, next);
+      setDeepOnRawTargets(target, keyPath, next);
       queueNotification(echoRoot);
       notifyOwnerChain(target);
     });
@@ -570,9 +530,14 @@ export class TypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
       }
     }
 
-    // Convert arrays to reactive arrays.
+    // Convert arrays to reactive arrays — the whole subtree, as construction does, not just the top
+    // level: an array reached through an assigned record is proxied like any other and must be gated
+    // and reactive too.
     if (Array.isArray(value) && !(value instanceof ReactiveArray)) {
       value = ReactiveArray.from(value);
+    }
+    if (value != null && typeof value === 'object' && !isProxy(value)) {
+      makeArraysReactive(value);
     }
 
     const validatedValue = this._validateValue(target, prop, value);
@@ -582,7 +547,11 @@ export class TypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
       setOwnerRecursive(validatedValue, echoRoot);
     }
 
-    return { echoRoot, preparedValue: validatedValue };
+    // Stored wrapped, for the same reason `init` wraps: the target is what a forwarded read sees.
+    return {
+      echoRoot,
+      preparedValue: isValidProxyTarget(validatedValue) ? createProxy(validatedValue, this) : validatedValue,
+    };
   }
 
   private _validateValue(target: any, prop: string | symbol, value: any) {
@@ -617,14 +586,6 @@ export class TypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
     return `Typed ${inspected}`;
   }
 }
-
-/**
- * @deprecated Use `Obj.toJSON` instead.
- */
-// TODO(burdon): Remove?
-const toJSON = (target: ProxyTarget): any => {
-  return { '@type': 'TypedReactiveObject', ...target };
-};
 
 /**
  * Pointer to a `Type.Type` entity, stamped as the back-reference (`TypeEntityId`)
@@ -735,16 +696,23 @@ export const prepareDecodedTypedTarget = <T>(target: T, schema: Schema.Schema<T>
   setSchemaProperties(target, schema, undefined, true);
 };
 
+/**
+ * Convert every plain array in a subtree to a {@link ReactiveArray}, in place. A plain array has
+ * neither the batched mutating methods nor the `[ChangeKeyId]` the read-only gate reads off its
+ * prototype, so one left in the tree would mutate silently and notify nobody.
+ *
+ * An already-proxied child is skipped: it belongs to the graph already and writing through its proxy
+ * would run the whole assignment path again.
+ */
 const makeArraysReactive = (target: any) => {
   for (const key in target) {
-    if (target[symbolIsProxy]) {
+    const value = target[key];
+    if (value == null || typeof value !== 'object' || isProxy(value)) {
       continue;
     }
-    if (Array.isArray(target[key])) {
-      target[key] = ReactiveArray.from(target[key]);
+    if (Array.isArray(value) && !(value instanceof ReactiveArray)) {
+      target[key] = ReactiveArray.from(value);
     }
-    if (typeof target[key] === 'object') {
-      makeArraysReactive(target[key]);
-    }
+    makeArraysReactive(target[key]);
   }
 };

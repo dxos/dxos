@@ -14,7 +14,7 @@ import { log } from '@dxos/log';
 import { trace } from '@dxos/tracing';
 import { defaultMap } from '@dxos/util';
 
-import { PeerNotFoundError } from './errors';
+import { PeerNotFoundError } from './errors.ts';
 
 const MIN_QUERY_INTERVAL = 5_000;
 

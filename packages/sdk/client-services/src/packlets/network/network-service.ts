@@ -10,14 +10,15 @@ import { type EdgeConnection } from '@dxos/edge-client';
 import { EffectEx } from '@dxos/effect';
 import { type SignalManager, type UnsubscribeCallback } from '@dxos/messaging';
 import { type SwarmNetworkManager } from '@dxos/network-manager';
-import { type NetworkStatus } from '@dxos/protocols/proto/dxos/client/services';
-import { type SwarmResponse } from '@dxos/protocols/proto/dxos/edge/messenger';
+import { buf } from '@dxos/protocols/buf';
+import { type NetworkStatus, NetworkStatusSchema } from '@dxos/protocols/buf/dxos/client/services_pb';
+import { type SwarmResponse } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
 import {
   type JoinRequest,
   type LeaveRequest,
   type Message,
   type QueryRequest,
-} from '@dxos/protocols/proto/dxos/edge/signal';
+} from '@dxos/protocols/buf/dxos/edge/signal_pb';
 import { type NetworkService } from '@dxos/protocols/rpc';
 
 export class NetworkServiceImpl implements NetworkService.Handlers {
@@ -31,11 +32,13 @@ export class NetworkServiceImpl implements NetworkService.Handlers {
     return EffectEx.streamFromEmitter<NetworkStatus, Error>((emit) => {
       const ctx = Context.default();
       const update = () => {
-        void emit.single({
-          swarm: this.networkManager.connectionState,
-          connectionInfo: this.networkManager.connectionLog?.swarms,
-          signaling: this.signalManager.getStatus?.().map(({ host, state }) => ({ server: host, state })),
-        });
+        void emit.single(
+          buf.create(NetworkStatusSchema, {
+            swarm: this.networkManager.connectionState,
+            connectionInfo: this.networkManager.connectionLog?.swarms ?? [],
+            signaling: this.signalManager.getStatus?.().map(({ host, state }) => ({ server: host, state })),
+          }),
+        );
       };
 
       this.networkManager.connectionStateChanged.on(ctx, () => update());
@@ -88,7 +91,7 @@ export class NetworkServiceImpl implements NetworkService.Handlers {
     return EffectEx.streamFromEmitter<SwarmResponse, Error>((emit) => {
       const ctx = Context.default();
       this.signalManager.swarmState?.on(ctx, (state) => {
-        if (request.topic.equals(state.swarmKey)) {
+        if (request.topic.toHex() === state.swarmKey) {
           void emit.single(state);
         }
       });
@@ -113,15 +116,6 @@ export class NetworkServiceImpl implements NetworkService.Handlers {
     return EffectEx.streamFromEmitter<Message, Error>((emit) => {
       const ctx = Context.default();
 
-      // This stream crosses the client-services RPC (protobufjs codec, e.g. dedicated worker → main
-      // thread). Its `Message.payload` is a `google.protobuf.Any` without `preserve_any`, and the
-      // codec refuses to encode an Any lacking '@type' — stamping the opaque form
-      // ('@type': 'google.protobuf.Any' + type_url/value) makes it pass through verbatim.
-      const encodableAny = (payload: Message['payload']): Message['payload'] => ({
-        ...payload,
-        '@type': 'google.protobuf.Any',
-      });
-
       // The subscription encapsulates routing (DX-1125): point-to-point messages addressed to `peer`,
       // plus — when `tags` are set — swarm broadcasts whose tags intersect. The returned callback owns
       // teardown, refcounted so it releases only this stream's tag registration.
@@ -131,7 +125,7 @@ export class NetworkServiceImpl implements NetworkService.Handlers {
           peer,
           tags,
           onMessage: (message) => {
-            void emit.single({ ...message, payload: encodableAny(message.payload) });
+            void emit.single(message);
           },
         })
         .then((unsub) => {

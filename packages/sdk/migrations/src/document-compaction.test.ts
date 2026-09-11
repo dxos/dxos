@@ -12,7 +12,7 @@ import { type DatabaseDirectory } from '@dxos/echo-protocol';
 import { TestSchema } from '@dxos/echo/testing';
 import { invariant } from '@dxos/invariant';
 
-import { compactDocumentsEpochMigration } from './document-compaction';
+import { compactDocumentsEpochMigration } from './document-compaction.ts';
 
 describe('document compaction', () => {
   test('compacts linked documents and creates a new epoch', async () => {
@@ -47,7 +47,7 @@ describe('document compaction', () => {
       // Epoch credentials and root links store automerge URLs as plain strings, so the
       // branded AnyDocumentId casts below are the only way to hand them back to the repo.
       const repo = space.internal.db._repo;
-      const rootUrl = String(epochsAfter[epochsAfter.length - 1]?.subject.assertion.automergeRoot);
+      const rootUrl = String(epochsAfter[epochsAfter.length - 1]?.assertion.automergeRoot);
       const rootHandle = repo.find<DatabaseDirectory>(rootUrl as AnyDocumentId);
       await rootHandle.whenReady();
       expect(rootHandle.doc()?.access?.spaceId).toBe(space.id);

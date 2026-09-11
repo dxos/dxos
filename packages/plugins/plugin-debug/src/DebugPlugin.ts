@@ -14,4 +14,4 @@ export const meta = pluginMeta;
 /** Constructs the plugin; the body loads on first enable. */
 export const make = Plugin.lazy(meta, () => import('#plugin'));
 
-export type { DebugPluginOptions } from './types/Debug';
+export type { DebugPluginOptions } from './types/Debug.ts';

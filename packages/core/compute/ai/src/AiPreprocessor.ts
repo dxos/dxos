@@ -20,9 +20,9 @@ import * as TokenX from 'tokenx';
 
 import { log } from '@dxos/log';
 import { ContentBlock, type Message } from '@dxos/types';
-import { bufferToArray } from '@dxos/util';
+import { bufferToArray, safeParseJson } from '@dxos/util';
 
-import { PromptPreprocessingError as PromptPreprocesorError } from './errors';
+import { PromptPreprocessingError as PromptPreprocesorError } from './errors.ts';
 
 export type CacheControl = 'no-cache' | 'ephemeral';
 
@@ -252,6 +252,22 @@ const convertUserMessagePart: (
   },
 );
 
+/**
+ * Tool-call params for the prompt, falling back to the literal unparsed string when the model
+ * emitted input that is not valid JSON. Degrades rather than fails: the block is already in the
+ * durable history, so raising here would make every subsequent request over the conversation
+ * unrecoverable. The raw text is kept so the model sees what it actually wrote.
+ */
+const parseToolInputOrRaw = (raw: string, toolCallId: string): unknown => {
+  const parsed = safeParseJson<Record<string, unknown>>(raw);
+  if (parsed === undefined) {
+    // Failed to parse as JSON; send the raw string so the model sees what it actually wrote.
+    // Anthropic API requires JSON, so we send a placeholder object with the raw string.
+    return { raw };
+  }
+  return parsed;
+};
+
 const parseToolJson = (
   raw: string,
   context: { field: 'result' | 'input'; toolCallId: string },
@@ -345,7 +361,10 @@ const makeToolResultPart = (
   Prompt.makePart('tool-result', {
     id: block.toolCallId,
     name: block.name,
-    result,
+    // `undefined` drops the key on serialization, and the part schema requires it — a single such
+    // part fails the decode of the entire prompt, permanently, for a conversation that already
+    // holds one. Normalized here so a history written before the parser guard still replays.
+    result: result === undefined ? null : result,
     isFailure,
     providerExecuted: false,
   });
@@ -452,8 +471,11 @@ const convertAssistantMessagePart: (
       }
 
       case 'toolCall': {
-        const params =
-          block.input === '' ? {} : yield* parseToolJson(block.input, { field: 'input', toolCallId: block.toolCallId });
+        // Tool-call input is authored by the model and can be malformed. Failing here would fail
+        // every future request over this conversation, since the bad block stays in the history;
+        // the raw text plus the paired tool-result error (see `callTool`) is what the model needs
+        // to see its own mistake and retry.
+        const params = block.input === '' ? {} : parseToolInputOrRaw(block.input, block.toolCallId);
         return Prompt.makePart('tool-call', {
           id: block.toolCallId,
           name: block.name,

@@ -485,7 +485,7 @@ deletion guards (Phase 5) are separate planned follow-ups.**
       endpoint). Tracked as a follow-up.
 - [x] **Re-confirm NO MIGRATIONS** — carried forward from M5; no migrations written. Versions
       bumped: taskSet `0.3.0`, task `0.3.0`, milestone `0.1.0`, project `0.4.0`. The onboarding
-      exemplar fixture was regenerated (`pnpm run build-exemplar`) so it carries the new versions
+      exemplar fixture was regenerated (`pnpm run build-sample`) so it carries the new versions
       plus two milestones. **Re-confirm with the user before this lands if anything has deployed.**
 
 ### Phase 2 — project slimming
@@ -573,6 +573,17 @@ deletion guards (Phase 5) are separate planned follow-ups.**
 ## Follow-ups / deferred (design reviews)
 
 - [ ] **Knowledge base for memory** — tracked 2026-08-01 (user), scope TBD.
+
+- [ ] **Floating panel statusbar jiggles and grows while dragging** — tracked 2026-09-09 (user), seen
+      on the debug console's floating panel (Console/Logs tabs, statusbar with the clear/copy
+      buttons). Not a plugin-projects defect: lives in the floating-panel primitive or the debug
+      plugin's statusbar; reproduce by dragging the panel and watching the statusbar height.
+- [ ] **ProjectArticle toolbar as ONE `Toolbar.Root`** — tracked 2026-09-09 (user). Today the tablist
+      and `ActionToolbar` are flex siblings inside `Panel.Toolbar` (with a line separator). Folding
+      the tabs into the action toolbar needs `react-ui-menu` to expose its item renderer
+      (`ActionToolbar` renders graph items BEFORE its children, so tabs-first is impossible without
+      it) and accepts the unattended `*:opacity-20` dimming on the tabs. Terra composes it the other
+      way round (tabs trailing, pushed right by a spacer).
 
 - [ ] **Milestone rendering in `TaskSetArticle`** — tracked 2026-08-18 (user). The article renders
       one flat list of every task in the set; milestone sections, the backlog split, derived
@@ -662,7 +673,7 @@ function` when a tool-call `doc` ref decodes without a resolver; the five doc-re
 - [x] **Rename `packages/core/echo/echo/src/Err.ts` → `Error.ts`** — DONE 2026-08-20: subpath is
       `@dxos/echo/Error`, barrel namespace is `Error`; modules that also use the global alias as
       `EchoError` locally.
-- [ ] **Derive tool names from DXN keys** (approved 2026-08-19; chip spawned) — replace `makeToolName(meta.name)` with key-derived names (`markdown-create`), unify with `Skill.toolDefinitions`, add `Skill.toolName()` helper + bind-time uniqueness invariant, sweep hardcoded names, regenerate fixtures + the tool AUDIT. Decision record: `packages/core/compute/assistant/src/tool-runtime/AUDIT.md`.
+- [x] **Derive tool names from DXN keys** — MERGED as #12677 (2026-08-24). Was: replace `makeToolName(meta.name)` with key-derived names (`markdown-create`), unify with `Skill.toolDefinitions`, add `Skill.toolName()` helper + bind-time uniqueness invariant, sweep hardcoded names, regenerate fixtures + the tool AUDIT. Decision record: `packages/core/compute/assistant/src/tool-runtime/AUDIT.md`.
 - [ ] **Record the live-model fixture for the Project conversation test** — `packages/core/compute/assistant-toolkit/src/skills/project/conversation.test.ts` gates its live flavor with `.skip`; run `DX_UPDATE_MODEL_FIXTURES=1 moon run assistant-toolkit:test -- src/skills/project/conversation.test.ts` with 1p credentials, commit `.store/conversations/**`, drop the `.skip`.
 - [x] **Normalize Chat ownership onto the ECHO parent edge** — DONE on this branch: `Filter.hasParent`
       landed in `@dxos/echo`; all `CompanionTo` write/read sites migrated to `Obj.setParent` /

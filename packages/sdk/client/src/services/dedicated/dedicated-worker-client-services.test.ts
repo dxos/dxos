@@ -2,16 +2,18 @@
 // Copyright 2026 DXOS.org
 //
 
+import { create } from '@bufbuild/protobuf';
 import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { Trigger, asyncTimeout } from '@dxos/async';
 import { Filter, Obj } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 import { log } from '@dxos/log';
+import { ProfileDocumentSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
-import { Client } from '../../client';
-import { TestBuilder } from '../../testing';
-import { LEADER_LOCK_KEY } from './dedicated-worker-client-services';
+import { Client } from '../../client/index.ts';
+import { TestBuilder } from '../../testing/index.ts';
+import { LEADER_LOCK_KEY } from './dedicated-worker-client-services.ts';
 
 describe('DedicatedWorkerClientServices', { timeout: 1_000, retry: 0 }, () => {
   // First connect pays the one-time dynamic load of the RTC stack (lazy so it stays out of
@@ -142,7 +144,7 @@ describe('DedicatedWorkerClientServices', { timeout: 1_000, retry: 0 }, () => {
 
     await using services1 = await testBuilder.createDedicatedWorkerClientServices().open();
     await using client1 = await new Client({ services: services1 }).initialize();
-    await client1.halo.createIdentity({ displayName: 'initial-name' });
+    await client1.halo.createIdentity(create(ProfileDocumentSchema, { displayName: 'initial-name' }));
 
     await using services2 = await testBuilder.createDedicatedWorkerClientServices().open();
     await using client2 = await new Client({ services: services2 }).initialize();
@@ -167,7 +169,7 @@ describe('DedicatedWorkerClientServices', { timeout: 1_000, retry: 0 }, () => {
     await asyncTimeout(reconnected.wait(), 1000);
 
     // Update display name after leader change.
-    await client2.halo.updateProfile({ displayName: updatedDisplayName });
+    await client2.halo.updateProfile(create(ProfileDocumentSchema, { displayName: updatedDisplayName }));
 
     // Subscription should still receive the update.
     await asyncTimeout(trigger.wait(), 500);

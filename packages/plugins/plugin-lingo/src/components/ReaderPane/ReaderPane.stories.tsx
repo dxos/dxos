@@ -19,8 +19,8 @@ import {
 import { meta as pluginMeta } from '#meta';
 import { translations } from '#translations';
 
-import { PAIRED_ANALYSIS, TEST_PASSAGE, TEST_PASSAGE_TRANSLATION, makeTestDeck } from '../../testing';
-import { ReaderPane } from './ReaderPane';
+import { PAIRED_ANALYSIS, TEST_PASSAGE, TEST_PASSAGE_TRANSLATION, makeTestDeck } from '../../testing.ts';
+import { ReaderPane } from './ReaderPane.tsx';
 
 /** The split view in miniature: two panes over one analysis, sharing a selection. */
 const ReaderPaneStory = ({ paired = false }: { paired?: boolean }) => {
@@ -64,14 +64,14 @@ const ReaderPaneStory = ({ paired = false }: { paired?: boolean }) => {
   // `documentSlots` sizes the editor from its container, so a bare pane collapses to zero width.
   if (!paired) {
     return (
-      <div className='dx-container px-2'>
+      <div className='dx-expand px-2'>
         <ReaderPane {...paneProps} content={TEST_PASSAGE} classNames='h-full' />
       </div>
     );
   }
 
   return (
-    <div className='dx-container grid grid-cols-2 gap-2 px-2'>
+    <div className='dx-expand grid grid-cols-2 gap-2 px-2'>
       <ReaderPane {...paneProps} side='source' content={TEST_PASSAGE} classNames='h-full' />
       <ReaderPane {...paneProps} side='target' content={TEST_PASSAGE_TRANSLATION} classNames='h-full' />
     </div>

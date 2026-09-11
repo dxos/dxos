@@ -2,16 +2,18 @@
 // Copyright 2021 DXOS.org
 //
 
+import { create } from '@bufbuild/protobuf';
 import { expect, onTestFinished, test } from 'vitest';
 
 import { asyncTimeout } from '@dxos/async';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { PeerSchema } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
 import { range } from '@dxos/util';
 
-import { type TestBuilder } from '../testing';
-import { FullyConnectedTopology, StarTopology } from '../topology';
-import { exchangeMessages, joinSwarm, leaveSwarm, openAndCloseAfterTest } from './utils';
+import { type TestBuilder } from '../testing/index.ts';
+import { FullyConnectedTopology, StarTopology } from '../topology/index.ts';
+import { exchangeMessages, joinSwarm, leaveSwarm, openAndCloseAfterTest } from './utils.ts';
 
 // TODO(burdon): Use PublicKey throughout (remove conversion to strings, from buffers, etc.)
 
@@ -152,7 +154,7 @@ export const basicTestSuite = (testBuilder: TestBuilder, runTests = true) => {
       ?.disconnected.waitFor(({ peerKey }) => peer1.peerId.equals(peerKey!));
 
     const peerLeft = peer2._signalManager.swarmEvent.waitFor(
-      (event) => !!event.peerLeft && peer1.peerId.equals(event.peerLeft.peer.peerKey),
+      (event) => event.event.case === 'peerLeft' && peer1.peerId.toHex() === event.event.value.peer?.peerKey,
     );
 
     await peer1.goOffline();
@@ -161,22 +163,37 @@ export const basicTestSuite = (testBuilder: TestBuilder, runTests = true) => {
 
     // Wait for peer to be removed from the swarm.
     await expect
-      .poll(() => !!peer2._networkManager.getSwarm(topic)!._peers.get({ peerKey: peer1.peerId.toHex() })?.advertizing, {
-        timeout: 1_000,
-      })
+      .poll(
+        () =>
+          !!peer2._networkManager.getSwarm(topic)!._peers.get(create(PeerSchema, { peerKey: peer1.peerId.toHex() }))
+            ?.advertizing,
+        {
+          timeout: 1_000,
+        },
+      )
       .toBe(false);
 
     await peer1.goOnline();
 
     await expect
-      .poll(() => peer1._networkManager.getSwarm(topic)?._peers.get({ peerKey: peer2.peerId.toHex() })?.advertizing, {
-        timeout: 2_000,
-      })
+      .poll(
+        () =>
+          peer1._networkManager.getSwarm(topic)?._peers.get(create(PeerSchema, { peerKey: peer2.peerId.toHex() }))
+            ?.advertizing,
+        {
+          timeout: 2_000,
+        },
+      )
       .toBe(true);
     await expect
-      .poll(() => peer2._networkManager.getSwarm(topic)?._peers.get({ peerKey: peer1.peerId.toHex() })?.advertizing, {
-        timeout: 2_000,
-      })
+      .poll(
+        () =>
+          peer2._networkManager.getSwarm(topic)?._peers.get(create(PeerSchema, { peerKey: peer1.peerId.toHex() }))
+            ?.advertizing,
+        {
+          timeout: 2_000,
+        },
+      )
       .toBe(true);
 
     await exchangeMessages(swarm1, swarm2);

@@ -2,9 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
+import { ark } from '@ark-ui/react/factory';
 import { RegistryContext } from '@effect/atom-react/RegistryContext';
-import { Primitive } from '@radix-ui/react-primitive';
-import { Slot } from '@radix-ui/react-slot';
 import React, {
   type ComponentPropsWithRef,
   type FocusEvent,
@@ -16,11 +15,11 @@ import React, {
 
 import { log } from '@dxos/log';
 import { useDefaultValue } from '@dxos/react-hooks';
-import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
+import { type ThemedClassName } from '@dxos/ui-types';
 
-import { ATTENDABLE_SELECTOR, AttentionManager, getAttendables } from '../../types/Attention';
-import { AttentionContextProvider, useAttentionAttributes } from './attention-context';
+import { ATTENDABLE_SELECTOR, AttentionManager, getAttendables } from '../../types/Attention.ts';
+import { AttentionContextProvider, useAttentionAttributes } from './attention-context.ts';
 
 type RootAttentionProviderProps = PropsWithChildren<{
   attention?: AttentionManager;
@@ -77,16 +76,16 @@ export type AttendableContainerProps = ThemedClassName<
 const AttendableContainer = forwardRef<HTMLDivElement, AttendableContainerProps>(
   ({ id, classNames, children, asChild, ...props }, forwardedRef) => {
     const attentionAttrs = useAttentionAttributes(id);
-    const Comp = asChild ? Slot : Primitive.div;
     return (
-      <Comp
+      <ark.div
+        asChild={asChild}
         {...props}
         {...attentionAttrs}
         className={mx('dx-attention-surface', props.tabIndex === 0 && 'dx-focus-ring-inset-over-all', classNames)}
         ref={forwardedRef}
       >
         {children}
-      </Comp>
+      </ark.div>
     );
   },
 );

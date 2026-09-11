@@ -14,6 +14,7 @@ export default defineConfig({
     containers: 'src/containers/index.ts',
     meta: 'src/meta.ts',
     operations: 'src/operations/index.ts',
+    sample: 'src/sample/index.ts',
     translations: 'src/translations.ts',
     Debug: 'src/types/Debug.ts',
     DebugEvents: 'src/types/DebugEvents.ts',
@@ -24,5 +25,11 @@ export default defineConfig({
     types: 'src/types/index.ts',
   },
   jsx: 'react',
-  test: { node: true, storybook: true },
+  test: {
+    node: true,
+    // The sample-space stories boot the plugin stack, a client, an identity and a space, then write
+    // a whole themed world into it — past the 15s storybook default, which caps the story's own
+    // `waitFor` budgets and fails the test before they can resolve.
+    storybook: { timeout: 120_000 },
+  },
 });

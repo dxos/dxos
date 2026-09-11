@@ -4,10 +4,10 @@
 
 import { type Extension } from '@codemirror/state';
 import { type EditorView } from '@codemirror/view';
-import { createContext } from '@radix-ui/react-context';
 import type * as Atom from 'effect/unstable/reactivity/Atom';
 import React, { type ReactNode, useCallback, useMemo, useState } from 'react';
 
+import { createContext } from '@dxos/react-hooks';
 import { type ThemedClassName } from '@dxos/react-ui';
 import {
   type EditorRootProps,
@@ -15,7 +15,7 @@ import {
   createEditorController,
   useEditorContext,
 } from '@dxos/react-ui-editor';
-import { type XmlWidgetState } from '@dxos/ui-editor';
+import { type WidgetState } from '@dxos/ui-editor';
 import { Merge, isNonNullable } from '@dxos/util';
 
 import {
@@ -29,11 +29,11 @@ import {
 import {
   MarkdownEditorContent as NaturalMarkdownEditorContent,
   type MarkdownEditorContentProps as NaturalMarkdownEditorContentProps,
-} from './MarkdownEditorContent';
+} from './MarkdownEditorContent.tsx';
 import {
   MarkdownEditorToolbar as NaturalMarkdownToolbar,
   type MarkdownEditorToolbarProps as NaturalMarkdownToolbarProps,
-} from './MarkdownEditorToolbar';
+} from './MarkdownEditorToolbar.tsx';
 
 //
 // Context
@@ -94,7 +94,7 @@ export const MarkdownEditorProvider = ({
   onViewModeChange,
 }: MarkdownEditorProviderProps) => {
   // Widget portals driven by xmlTags.
-  const [widgets, setWidgets] = useState<XmlWidgetState[]>([]);
+  const [widgets, setWidgets] = useState<WidgetState[]>([]);
 
   // Context menu options (Editor.Root calls useEditorMenu with these props).
   const menuOptions = useEditorMenuOptions({ slashCommandGroups, onLinkQuery });

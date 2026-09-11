@@ -15,7 +15,7 @@ import {
   SyntaxKind,
 } from 'ts-morph';
 
-import type { Capability, Operation, Plugin, PluginId, Schema, SourceLocation, Surface } from '../types';
+import type { Capability, Operation, Plugin, PluginId, Schema, SourceLocation, Surface } from '../types.ts';
 
 // stderr-only — stdout is reserved for the MCP JSON-RPC stream.
 const warn = (msg: string, err?: unknown): void => {

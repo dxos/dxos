@@ -28,9 +28,9 @@ import { type CleanupFn, debounce } from '@dxos/async';
 import { log } from '@dxos/log';
 import { isNonNullable } from '@dxos/util';
 
-import { type Comment, type Range } from '../../types';
-import { Cursor, singleValueFacet, wrapWithCatch } from '../../util';
-import { documentId } from '../state/selection';
+import { type Comment, type Range } from '../../types/index.ts';
+import { Cursor, singleValueFacet, wrapWithCatch } from '../../util/index.ts';
+import { documentId } from '../state/selection.ts';
 
 //
 // Options

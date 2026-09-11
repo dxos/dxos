@@ -100,3 +100,57 @@ jobs:
           header: composer-preview
           message: |
             ${{ steps.deploy.outputs.url }}
+
+      # The footer keeps the preview URL visible at the top of the PR, where reviewers look, rather than
+      # buried in a comment thread. Delimited by HTML markers so each redeploy replaces the previous
+      # footer in place instead of appending a duplicate.
+      - name: Update preview footer in PR body
+        uses: actions/github-script@v7
+        env:
+          # Passed as env rather than interpolated into the script body so untrusted artifact-derived
+          # values can never be expanded as code.
+          PREVIEW_URL: ${{ steps.deploy.outputs.url }}
+          PR_NUMBER: ${{ steps.meta.outputs.pr_number }}
+        with:
+          script: |
+            const BEGIN = '<!-- composer-preview:begin -->';
+            const END = '<!-- composer-preview:end -->';
+            const url = process.env.PREVIEW_URL;
+            const prNumber = Number(process.env.PR_NUMBER);
+
+            // The PR number comes from the artifact, which untrusted PR code produced — a PR could build
+            // an artifact naming someone else's PR and redirect this trusted write. Only the commit that
+            // triggered this run is trustworthy, so require the PR to actually be associated with it.
+            const { data: associated } = await github.rest.repos.listPullRequestsAssociatedWithCommit({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              commit_sha: context.payload.workflow_run.head_sha,
+            });
+            if (!associated.some((pr) => pr.number === prNumber)) {
+              core.setFailed(`PR #${prNumber} is not associated with ${context.payload.workflow_run.head_sha}.`);
+              return;
+            }
+
+            const { data: pr } = await github.rest.pulls.get({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: prNumber,
+            });
+            const body = pr.body ?? '';
+            const footer = [BEGIN, '---', `🚀 Composer preview: ${url}`, END].join('\n');
+            // Strip every marked block, including duplicates left by an earlier malformed body, then
+            // re-append one — the strip-and-append is idempotent where an in-place splice would not be.
+            const stripped = body
+              .replaceAll(new RegExp(`${BEGIN}[\\s\\S]*?${END}`, 'g'), '')
+              .trimEnd();
+            const next = (stripped ? `${stripped}\n\n` : '') + footer + '\n';
+            if (next === body) {
+              core.info('Preview footer already up to date.');
+              return;
+            }
+            await github.rest.pulls.update({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: prNumber,
+              body: next,
+            });

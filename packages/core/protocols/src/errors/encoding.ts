@@ -2,25 +2,23 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type Error as SerializedErrorProto } from '../proto/gen/dxos/error.ts';
+import { create } from '@bufbuild/protobuf';
+
+import { ErrorSchema, type Error as SerializedErrorProto } from '../buf/proto/gen/dxos/error_pb.ts';
 import { reconstructError } from './helpers.ts';
 
 export const encodeError = (err: any): SerializedErrorProto => {
   if (typeof err === 'object' && err?.message) {
-    return {
+    return create(ErrorSchema, {
       name: err.name,
       message: err.message,
       context: err.context,
       stack: err.stack,
-    };
+    });
   } else if (typeof err === 'string') {
-    return {
-      message: err,
-    };
+    return create(ErrorSchema, { message: err });
   } else {
-    return {
-      message: JSON.stringify(err),
-    };
+    return create(ErrorSchema, { message: JSON.stringify(err) });
   }
 };
 

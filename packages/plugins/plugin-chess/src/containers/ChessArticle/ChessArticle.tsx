@@ -86,7 +86,7 @@ export const ChessArticle = ({ role, variant }: ChessArticleProps) => {
         <Panel.Content>
           <div
             className={mx(
-              'grid h-full w-full',
+              'grid dx-fill',
               showInfo && '@4xl:grid-cols-[1fr_320px] gap-8',
               role === AppSurface.Article.role && 'p-4',
               role === AppSurface.Section.role && 'aspect-square',

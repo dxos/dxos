@@ -200,7 +200,7 @@ export const BoardArticle = ({ role, subject: board, attendableId }: BoardArticl
             </Toolbar.Root>
           </Panel.Toolbar>
           <Panel.Content asChild>
-            <BoardComponent.Container classNames='absolute inset-0'>
+            <BoardComponent.Container classNames='dx-fullscreen'>
               <BoardComponent.Viewport>
                 <BoardComponent.Backdrop />
                 <BoardComponent.Content>

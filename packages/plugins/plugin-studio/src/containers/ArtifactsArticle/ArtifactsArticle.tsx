@@ -10,14 +10,14 @@ import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { Filter, type Obj } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { isSpace } from '@dxos/react-client/echo';
-import { DropdownMenu, Flex, Icon, IconButton, Panel, Toolbar, useTranslation } from '@dxos/react-ui';
+import { Flex, Icon, IconButton, Menu, Panel, Toolbar, useTranslation } from '@dxos/react-ui';
 import { Masonry } from '@dxos/react-ui-masonry';
 
 import { ArtifactCard } from '#components';
 import { meta } from '#meta';
 import { Artifact } from '#types';
 
-import { getKindIcon } from '../../constants';
+import { getKindIcon } from '../../constants.ts';
 
 type Kind = 'image' | 'video';
 
@@ -84,26 +84,26 @@ export const ArtifactsArticle = ({ role, properties }: ArtifactsArticleProps) =>
       <Panel.Toolbar asChild>
         <Toolbar.Root>
           {/* The Create button opens a menu to pick the kind; selecting one creates that Artifact. */}
-          <DropdownMenu.Root>
-            <DropdownMenu.Trigger asChild>
+          <Menu.Root>
+            <Menu.Trigger asChild>
               <IconButton icon='ph--plus--regular' label={t('create.label')} disabled={!space?.db} />
-            </DropdownMenu.Trigger>
-            <DropdownMenu.Portal>
-              <DropdownMenu.Content align='start'>
-                <DropdownMenu.Viewport>
-                  <DropdownMenu.Item onClick={() => void handleCreate('image')}>
+            </Menu.Trigger>
+            <Menu.Portal>
+              <Menu.Content align='start'>
+                <Menu.Viewport>
+                  <Menu.Item onClick={() => void handleCreate('image')}>
                     <Icon icon={getKindIcon('image')} size={4} />
                     <span className='grow'>{t('kind.image.label')}</span>
-                  </DropdownMenu.Item>
-                  <DropdownMenu.Item onClick={() => void handleCreate('video')}>
+                  </Menu.Item>
+                  <Menu.Item onClick={() => void handleCreate('video')}>
                     <Icon icon={getKindIcon('video')} size={4} />
                     <span className='grow'>{t('kind.video.label')}</span>
-                  </DropdownMenu.Item>
-                </DropdownMenu.Viewport>
-                <DropdownMenu.Arrow />
-              </DropdownMenu.Content>
-            </DropdownMenu.Portal>
-          </DropdownMenu.Root>
+                  </Menu.Item>
+                </Menu.Viewport>
+                <Menu.Arrow />
+              </Menu.Content>
+            </Menu.Portal>
+          </Menu.Root>
         </Toolbar.Root>
       </Panel.Toolbar>
       <Panel.Content>

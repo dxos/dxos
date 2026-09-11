@@ -9,7 +9,7 @@ import * as Schema from 'effect/Schema';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, DXN } from '@dxos/echo';
 
-import * as PageAction from './PageAction';
+import * as PageAction from './PageAction.ts';
 
 const input = Schema.Struct({
   snapshot: PageAction.Snapshot,
