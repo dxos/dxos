@@ -29,6 +29,7 @@ import {
   toLocalizedString,
   useTranslation,
 } from '@dxos/react-ui';
+import { useCardHover } from '@dxos/react-ui-card';
 import { Listbox, useListDisclosure } from '@dxos/react-ui-list';
 import { MarkdownEditable, type MarkdownEditableController, type MarkdownEditableProps } from '@dxos/react-ui-markdown';
 import {
@@ -39,7 +40,7 @@ import {
   executeMenuAction,
   fallbackIcon,
 } from '@dxos/react-ui-menu';
-import { type Actor, Task } from '@dxos/types';
+import { type Actor, RemoteSession, Task } from '@dxos/types';
 import { hoverableControlItem, mx } from '@dxos/ui-theme';
 import { type ComposableProps } from '@dxos/ui-types';
 
@@ -1021,20 +1022,60 @@ TaskListEdit.displayName = 'TaskList.Edit';
 type TaskListAssigneeProps = { assignee: Actor.Actor };
 
 const TaskListAssignee = composable<HTMLSpanElement, TaskListAssigneeProps>(({ assignee }, _forwardedRef) => {
+  const tagRef = useRef<HTMLSpanElement>(null);
   const [contact] = useObject(assignee.contact);
+  // An agent's actor stands for its session rather than a person, so the pill names the harness the
+  // session belongs to — `agent` alone says an assistant owns the task, never which run did.
+  const [session] = useObject(assignee.subject);
+  const harness = session && Obj.instanceOf(RemoteSession.RemoteSession, session) ? session : undefined;
+  const sessionLabel = harness && RemoteSession.harnessName(harness);
+  // The harness's own mark when it has one, so a Claude Code session is recognisable at a glance;
+  // the sparkle stays the generic "an assistant owns this" fallback.
+  const icon = (harness && RemoteSession.harnessIcon(harness)) ?? 'ph--sparkle--regular';
   const label =
     contact?.fullName ??
+    sessionLabel ??
     assignee.name ??
     assignee.email ??
     (assignee.identityDid ? shortDid(assignee.identityDid) : undefined);
   const agent = assignee.role === 'assistant';
+
+  // Hover, not click, because the session is context for the row rather than a place to navigate to:
+  // the reader wants to know which run owns the task while their eye is already on it. The grace
+  // period is what keeps that from firing as the pointer crosses the row on its way elsewhere —
+  // the objection recorded on `ArtifactTag`, which opens a destination and so stays on click.
+  const openCard = useCallback(() => {
+    const trigger = tagRef.current;
+    if (!trigger || !session) {
+      return;
+    }
+    trigger.dispatchEvent(
+      new DxAnchorActivate({
+        trigger,
+        eid: Obj.getURI(session).toString(),
+        label: label ?? '',
+        kind: 'card',
+        // Without this the popover falls back to the type's placeholder ("New item"), since a
+        // session's label prop is its title and the harness reports none.
+        title: harness?.title ?? label,
+      }),
+    );
+  }, [session, harness, label]);
+  const { start: startHover, cancel: cancelHover } = useCardHover(openCard, !!session);
+
   if (!label && !agent) {
     return null;
   }
 
   return (
-    <Tag hue={agent ? 'purple' : 'indigo'}>
-      {agent && <Icon icon='ph--sparkle--regular' size={3} classNames='inline-block me-1' />}
+    <Tag
+      ref={tagRef}
+      hue={agent ? 'purple' : 'indigo'}
+      onPointerEnter={startHover}
+      onPointerLeave={cancelHover}
+      classNames={session && 'cursor-help'}
+    >
+      {agent && <Icon icon={icon} size={3} classNames='inline-block me-1' />}
       {label ?? 'agent'}
     </Tag>
   );

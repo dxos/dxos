@@ -22697,6 +22697,9 @@ importers:
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../react-ui
+      '@dxos/react-ui-card':
+        specifier: workspace:*
+        version: link:../react-ui-card
       '@dxos/react-ui-list':
         specifier: workspace:*
         version: link:../react-ui-list
