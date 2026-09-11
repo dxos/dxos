@@ -65,11 +65,11 @@ export class ScopedShellManager {
     // never renders it, so the two cannot be told apart by selector, and only one is ever active.
     const settled = peer.locator(
       `[data-testid='${type === 'device' ? 'halo' : 'space'}-auth-code-input']:visible, ` +
-        // All three of the rescuer's renderings: blank-reset (no invitation state) and cancel
-        // (connecting) are dead ends too, and neither carries `invitation-rescuer-reset`.
+        // The rescuer's two dead ends. Its third rendering, the connecting branch that carries
+        // `invitation-rescuer-cancel`, is not one: every invitation passes through it on the way to
+        // the auth code, so matching it here would end the wait before the invitation had a chance.
         `[data-testid='invitation-rescuer-reset']:visible, ` +
-        `[data-testid='invitation-rescuer-blank-reset']:visible, ` +
-        `[data-testid='invitation-rescuer-cancel']:visible`,
+        `[data-testid='invitation-rescuer-blank-reset']:visible`,
     );
     await settled
       .first()
@@ -85,7 +85,9 @@ export class ScopedShellManager {
           cause: err,
         });
       });
-    const rescuer = peer.locator("[data-testid^='invitation-rescuer']:visible");
+    const rescuer = peer.locator(
+      "[data-testid='invitation-rescuer-reset']:visible, [data-testid='invitation-rescuer-blank-reset']:visible",
+    );
     if (await rescuer.first().isVisible()) {
       const state = await rescuer
         .evaluateAll((elements) => elements.map((element) => element.dataset.testid).join(', '))
