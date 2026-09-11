@@ -51,7 +51,7 @@ export const make = (): AppSettings => Obj.make(AppSettings, { shared: {} });
 export const makeDeviceSettings = (): DeviceSettings => ({});
 
 /** Mutable field values for one namespace. */
-export type Values = Record<string, any>;
+export type Values = Record<string, unknown>;
 
 /** Values for every namespace, keyed by namespace id. Mutable counterpart of {@link Namespaces}. */
 export type Namespaces = Record<string, Values>;
@@ -70,6 +70,10 @@ export const INSTALLED_NAMESPACE = 'org.dxos.app-framework.plugins.installed';
 
 /** Value shape stored under {@link INSTALLED_NAMESPACE}. */
 export type InstalledPlugin = { id: string; url: string; version?: string };
+
+/** Whether a stored value is an install the loader can act on. */
+export const isInstalledPlugin = (value: unknown): value is InstalledPlugin =>
+  typeof value === 'object' && value !== null && 'url' in value && typeof value.url === 'string';
 
 /** Shape the resolution helpers read: the replicated layer paired with this device's pins. */
 export type Snapshot = {
@@ -145,42 +149,42 @@ export const setValue = (draft: Draft, namespace: string, key: string, value: un
 /** Stop sharing `key`, and drop any pin, so it falls back to the namespace's own store. */
 export const clearValue = (draft: Draft, namespace: string, key: string): void => {
   delete draft.shared[namespace]?.[key];
-  unpin(draft, namespace, key);
+  unpinKey(draft, namespace, key);
 };
 
 /** Which side wins for the keys that {@link conflictingKeys} reports, when rejoining the account. */
 export type Adopt = 'shared' | 'local';
 
-export type SetSyncedOptions = {
-  /** Pin every key in `local` when leaving. Omit to diverge from the next write on. */
-  freeze?: boolean;
-  /** Which side wins when rejoining, for the keys {@link conflictingKeys} reports. */
-  adopt?: Adopt;
+/**
+ * Take a namespace off the account for this device.
+ *
+ * Lossless, and no other device is touched. `freeze` pins every key in `local` so the switch is a
+ * visible no-op; without it the namespace diverges from the next write on, which is what lets a
+ * plugin enabled on another device still arrive here.
+ *
+ * `local` is the namespace's own store, which holds the values in effect.
+ */
+export const takeLocal = (draft: Draft, namespace: string, local: Values, { freeze = false } = {}): void => {
+  draft.local[namespace] = {
+    local: true,
+    keys: freeze ? Object.keys(local) : getPinnedKeys(draft, namespace).slice(),
+  };
 };
 
 /**
- * Turn sharing of a namespace on or off for this device.
+ * Hand a namespace back to the account.
  *
- * `local` is the namespace's own store, which holds the values either direction acts on.
+ * The one direction that can discard a value, and only for a key both sides hold and disagree on:
+ * {@link conflictingKeys} names exactly those, and `adopt` picks the side that survives them. A
+ * pinned key the account does not hold is published either way, since there is no competing opinion
+ * to lose.
  */
-export const setSynced = (
+export const rejoinAccount = (
   draft: Draft,
   namespace: string,
-  synced: boolean,
   local: Values,
-  { freeze, adopt = 'shared' }: SetSyncedOptions = {},
+  { adopt = 'shared' }: { adopt?: Adopt } = {},
 ): void => {
-  if (!synced) {
-    draft.local[namespace] = {
-      local: true,
-      keys: freeze ? Object.keys(local) : getPinnedKeys(draft, namespace).slice(),
-    };
-    return;
-  }
-
-  // A pinned key the account does not hold is adopted whichever side wins: the account has no
-  // competing opinion, so nothing is lost by keeping it. `adopt` decides only the rest, which is
-  // what {@link conflictingKeys} reports and what the reader was asked about.
   const shared = namespaceOf(draft.shared, namespace);
   for (const key of getPinnedKeys(draft, namespace)) {
     if (key in local && (adopt === 'local' || !(key in shared))) {
@@ -192,24 +196,24 @@ export const setSynced = (
 };
 
 /**
- * Pin one key to this device, or hand it back to the account.
+ * Keep one key on this device — the per-key counterpart of {@link takeLocal}.
  *
- * Nothing is copied either way: pinning records the key, and the value it pins is the one already in
- * the namespace's own store.
+ * Nothing is copied: the value it pins is the one already in the namespace's own store, so this
+ * changes nothing anyone can see until the two sides drift apart.
  */
-export const setKeySynced = (draft: Draft, namespace: string, key: string, synced: boolean): void => {
-  if (synced) {
-    unpin(draft, namespace, key);
-    return;
-  }
-
+export const pinKey = (draft: Draft, namespace: string, key: string): void => {
   const pin = pinOf(draft, namespace);
   if (!pin.keys.includes(key)) {
     pin.keys.push(key);
   }
 };
 
-const unpin = (draft: Draft, namespace: string, key: string): void => {
+/**
+ * Hand one key back to the account — the per-key counterpart of {@link rejoinAccount}.
+ *
+ * Drops this device's claim on the key, so the account's value takes over wherever the two disagree.
+ */
+export const unpinKey = (draft: Draft, namespace: string, key: string): void => {
   const pin = draft.local[namespace];
   if (!pin) {
     return;

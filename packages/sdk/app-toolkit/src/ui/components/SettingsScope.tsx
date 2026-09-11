@@ -20,31 +20,31 @@ export type SettingsScopeProps = {
  */
 export const SettingsScope = ({ prefix }: SettingsScopeProps) => {
   const { t } = useTranslation(osTranslations);
-  const { available, synced, setSynced, getConflicts } = useSettingsScope(prefix);
+  const { available, synced, takeLocal, rejoinAccount, getConflicts } = useSettingsScope(prefix);
   const [conflicts, setConflicts] = useState<readonly string[]>([]);
 
   const handleValueChange = useCallback(
     (value: string) => {
       if (value === 'local' && synced) {
-        setSynced(false);
+        takeLocal();
       } else if (value === 'synced' && !synced) {
         const conflicting = getConflicts();
         if (conflicting.length === 0) {
-          setSynced(true);
+          rejoinAccount();
         } else {
           setConflicts(conflicting);
         }
       }
     },
-    [getConflicts, setSynced, synced],
+    [getConflicts, rejoinAccount, synced, takeLocal],
   );
 
   const handleResolve = useCallback(
     (adopt: 'shared' | 'local') => {
-      setSynced(true, { adopt });
+      rejoinAccount({ adopt });
       setConflicts([]);
     },
-    [setSynced],
+    [rejoinAccount],
   );
 
   if (!available) {

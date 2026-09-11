@@ -89,8 +89,6 @@ export const installedPlugins = (): Binding => ({
   namespace: AppSettings.INSTALLED_NAMESPACE,
   read: () => Object.fromEntries(UrlLoader.getRemoteEntries().map((entry) => [entry.id, entry])),
   write: (entries) => {
-    UrlLoader.setRemoteEntries(
-      Object.values(entries).filter((entry): entry is AppSettings.InstalledPlugin => !!entry?.url),
-    );
+    UrlLoader.setRemoteEntries(Object.values(entries).filter(AppSettings.isInstalledPlugin));
   },
 });

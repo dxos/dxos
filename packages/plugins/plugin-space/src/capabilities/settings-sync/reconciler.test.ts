@@ -112,7 +112,7 @@ describe('Reconciler', () => {
     const view = store.device();
     const reconciler = bindTo(store, view, local);
 
-    view.store.update((draft) => AppSettings.setSynced(draft, NS, false, reconciler.local(), { freeze: true }));
+    view.store.update((draft) => AppSettings.takeLocal(draft, NS, reconciler.local(), { freeze: true }));
     local.set({ toolbar: false });
 
     expect(store.shared[NS]).toEqual({ toolbar: true });
@@ -136,7 +136,7 @@ describe('Reconciler', () => {
     const view = store.device();
     const reconciler = bindTo(store, view, local);
 
-    view.store.update((draft) => AppSettings.setSynced(draft, NS, false, reconciler.local(), { freeze: true }));
+    view.store.update((draft) => AppSettings.takeLocal(draft, NS, reconciler.local(), { freeze: true }));
     store.device().store.update((draft) => AppSettings.setValue(draft, NS, 'toolbar', false));
 
     expect(local.get()).toEqual({ toolbar: true });
@@ -148,9 +148,9 @@ describe('Reconciler', () => {
     const view = store.device();
     const reconciler = bindTo(store, view, local);
 
-    view.store.update((draft) => AppSettings.setSynced(draft, NS, false, reconciler.local(), { freeze: true }));
+    view.store.update((draft) => AppSettings.takeLocal(draft, NS, reconciler.local(), { freeze: true }));
     local.set({ toolbar: false });
-    view.store.update((draft) => AppSettings.setSynced(draft, NS, true, reconciler.local()));
+    view.store.update((draft) => AppSettings.rejoinAccount(draft, NS, reconciler.local()));
 
     expect(local.get()).toEqual({ toolbar: true });
   });
@@ -209,7 +209,7 @@ describe('Reconciler', () => {
     bindTo(store, store.device(), there);
 
     // Soft fork: no freeze, so only what this device changes afterwards diverges.
-    view.store.update((draft) => AppSettings.setSynced(draft, AppSettings.PLUGINS_NAMESPACE, false, here.get()));
+    view.store.update((draft) => AppSettings.takeLocal(draft, AppSettings.PLUGINS_NAMESPACE, here.get()));
     here.set({ [markdown]: true, [chess]: false });
     there.set({ [markdown]: true, [chess]: true, [sketch]: true });
 

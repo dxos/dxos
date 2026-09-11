@@ -129,20 +129,21 @@ export default Capability.makeModule(
     return Capability.contribute(AppCapabilities.SettingsSync, {
       unsynced,
       pinned,
-      setSynced: (namespace, synced, options) => {
-        // Leaving the plugin set deliberately pins nothing, so plugins enabled on another device
-        // later still arrive here.
+      takeLocal: (namespace) => {
+        // The plugin set deliberately pins nothing, so plugins enabled on another device later
+        // still arrive here.
         const freeze = namespace !== AppSettings.PLUGINS_NAMESPACE;
-        store.update((draft) =>
-          AppSettings.setSynced(draft, namespace, synced, sync.local(namespace), {
-            freeze,
-            adopt: options?.adopt,
-          }),
-        );
+        store.update((draft) => AppSettings.takeLocal(draft, namespace, sync.local(namespace), { freeze }));
+      },
+      rejoinAccount: (namespace, options) => {
+        store.update((draft) => AppSettings.rejoinAccount(draft, namespace, sync.local(namespace), options));
       },
       conflicts: (namespace) => AppSettings.conflictingKeys(store.read(), namespace, sync.local(namespace)),
-      setKeySynced: (namespace, key, synced) => {
-        store.update((draft) => AppSettings.setKeySynced(draft, namespace, key, synced));
+      pinKey: (namespace, key) => {
+        store.update((draft) => AppSettings.pinKey(draft, namespace, key));
+      },
+      unpinKey: (namespace, key) => {
+        store.update((draft) => AppSettings.unpinKey(draft, namespace, key));
       },
     });
   }),

@@ -47,21 +47,21 @@ describe('resolve', () => {
       shared: { [NS]: { toolbar: false, folding: true } },
       local: { toolbar: true, folding: false, debug: false },
     });
-    AppSettings.setKeySynced(target.settings, NS, 'folding', false);
+    AppSettings.pinKey(target.settings, NS, 'folding');
 
     expect(resolve(target)).toEqual({ toolbar: false, folding: false, debug: false });
   });
 
   test('another device is unaffected by a pin', ({ expect }) => {
     const target = device({ shared: { [NS]: { toolbar: false } }, local: { toolbar: true } });
-    AppSettings.setKeySynced(target.settings, NS, 'toolbar', false);
+    AppSettings.pinKey(target.settings, NS, 'toolbar');
 
     expect(resolve(otherDevice(target))).toEqual({ toolbar: false });
   });
 
   test('a pin whose value agrees survives a change made elsewhere', ({ expect }) => {
     const target = device({ shared: { [NS]: { toolbar: true } }, local: { toolbar: true } });
-    AppSettings.setKeySynced(target.settings, NS, 'toolbar', false);
+    AppSettings.pinKey(target.settings, NS, 'toolbar');
 
     target.settings.shared[NS].toolbar = false;
 
@@ -81,7 +81,7 @@ describe('setValue', () => {
 
   test('records a pin instead of writing, once the namespace is local', ({ expect }) => {
     const target = device({ shared: { [NS]: { toolbar: true } }, local: { toolbar: true } });
-    AppSettings.setSynced(target.settings, NS, false, target.local);
+    AppSettings.takeLocal(target.settings, NS, target.local);
 
     write(target, 'toolbar', false);
 
@@ -90,13 +90,13 @@ describe('setValue', () => {
   });
 });
 
-describe('setSynced', () => {
+describe('takeLocal and rejoinAccount', () => {
   test('leaving with a freeze changes nothing here and nothing elsewhere', ({ expect }) => {
     const target = device({ shared: { [NS]: { toolbar: false } }, local: { toolbar: true, folding: true } });
     settle(target);
     const before = resolve(target);
 
-    AppSettings.setSynced(target.settings, NS, false, target.local, { freeze: true });
+    AppSettings.takeLocal(target.settings, NS, target.local, { freeze: true });
 
     expect(resolve(target)).toEqual(before);
     expect(resolve(otherDevice(target, before))).toEqual(before);
@@ -104,7 +104,7 @@ describe('setSynced', () => {
 
   test('once frozen, a change made elsewhere no longer lands here', ({ expect }) => {
     const target = device({ shared: { [NS]: { toolbar: true } }, local: { toolbar: true } });
-    AppSettings.setSynced(target.settings, NS, false, target.local, { freeze: true });
+    AppSettings.takeLocal(target.settings, NS, target.local, { freeze: true });
 
     write(otherDevice(target), 'toolbar', false);
 
@@ -113,7 +113,7 @@ describe('setSynced', () => {
 
   test('a key the account gains after the freeze still arrives', ({ expect }) => {
     const target = device({ shared: { [NS]: { toolbar: true } }, local: { toolbar: true } });
-    AppSettings.setSynced(target.settings, NS, false, target.local, { freeze: true });
+    AppSettings.takeLocal(target.settings, NS, target.local, { freeze: true });
 
     // A plugin update adds a field, set on the other device. It did not exist to be frozen.
     write(otherDevice(target), 'folding', true);
@@ -123,11 +123,11 @@ describe('setSynced', () => {
 
   test('rejoining keeps the account’s value where the two disagree', ({ expect }) => {
     const target = device({ shared: { [NS]: { toolbar: true } }, local: { toolbar: true } });
-    AppSettings.setSynced(target.settings, NS, false, target.local, { freeze: true });
+    AppSettings.takeLocal(target.settings, NS, target.local, { freeze: true });
     write(target, 'toolbar', false);
     expect(resolve(target)).toEqual({ toolbar: false });
 
-    AppSettings.setSynced(target.settings, NS, true, target.local);
+    AppSettings.rejoinAccount(target.settings, NS, target.local);
 
     expect(resolve(target)).toEqual({ toolbar: true });
     expect(AppSettings.isSynced(target.settings, NS)).toBe(true);
@@ -139,10 +139,10 @@ describe('setSynced', () => {
       shared: { [NS]: { toolbar: true, folding: true } },
       local: { toolbar: true, folding: true },
     });
-    AppSettings.setSynced(target.settings, NS, false, target.local, { freeze: true });
+    AppSettings.takeLocal(target.settings, NS, target.local, { freeze: true });
     write(target, 'toolbar', false);
 
-    AppSettings.setSynced(target.settings, NS, true, target.local, { adopt: 'local' });
+    AppSettings.rejoinAccount(target.settings, NS, target.local, { adopt: 'local' });
 
     expect(resolve(target)).toEqual({ toolbar: false, folding: true });
     expect(resolve(otherDevice(target))).toEqual({ toolbar: false, folding: true });
@@ -151,12 +151,12 @@ describe('setSynced', () => {
 
   test('adopt local leaves keys the account has but this device never pinned', ({ expect }) => {
     const target = device({ shared: { [NS]: { toolbar: true } }, local: { toolbar: true } });
-    AppSettings.setSynced(target.settings, NS, false, target.local);
+    AppSettings.takeLocal(target.settings, NS, target.local);
     write(target, 'folding', true);
     // Meanwhile the account changes a key this device holds no opinion on.
     write(otherDevice(target), 'toolbar', false);
 
-    AppSettings.setSynced(target.settings, NS, true, target.local, { adopt: 'local' });
+    AppSettings.rejoinAccount(target.settings, NS, target.local, { adopt: 'local' });
 
     expect(target.settings.shared[NS]).toEqual({ toolbar: false, folding: true });
   });
@@ -164,7 +164,7 @@ describe('setSynced', () => {
   test('taking one namespace local leaves the others shared', ({ expect }) => {
     const other = 'org.dxos.plugin.chess';
     const target = device();
-    AppSettings.setSynced(target.settings, NS, false, target.local);
+    AppSettings.takeLocal(target.settings, NS, target.local);
 
     write(target, 'toolbar', true);
     write(target, 'hints', true, other);
@@ -181,7 +181,7 @@ describe('applyResolved', () => {
       shared: { [NS]: { toolbar: true, folding: true } },
       local: { toolbar: true, folding: true },
     });
-    AppSettings.setSynced(target.settings, NS, false, target.local);
+    AppSettings.takeLocal(target.settings, NS, target.local);
 
     AppSettings.applyResolved(target.settings, NS, { toolbar: true, folding: true }, { toolbar: false, folding: true });
 
@@ -199,7 +199,7 @@ describe('applyResolved', () => {
 
   test('dropping a key this device keeps leaves the account alone', ({ expect }) => {
     const target = device({ shared: { [NS]: { toolbar: true } }, local: { toolbar: false } });
-    AppSettings.setKeySynced(target.settings, NS, 'toolbar', false);
+    AppSettings.pinKey(target.settings, NS, 'toolbar');
 
     AppSettings.applyResolved(target.settings, NS, { toolbar: false }, {});
 
@@ -255,7 +255,7 @@ describe('plugins', () => {
     record(target, [MARKDOWN, CHESS], [MARKDOWN, CHESS]);
 
     // Soft fork: no freeze, so untouched plugins keep following the account.
-    AppSettings.setSynced(target.settings, PLUGINS, false, target.local);
+    AppSettings.takeLocal(target.settings, PLUGINS, target.local);
     record(target, [MARKDOWN], [MARKDOWN, CHESS]);
 
     expect(enabledOn(target)).toEqual([MARKDOWN]);
@@ -267,7 +267,7 @@ describe('plugins', () => {
   test('a plugin enabled elsewhere still arrives on a device with its own plugin set', ({ expect }) => {
     const target = pluginDevice();
     record(target, [MARKDOWN, CHESS], [MARKDOWN, CHESS]);
-    AppSettings.setSynced(target.settings, PLUGINS, false, target.local);
+    AppSettings.takeLocal(target.settings, PLUGINS, target.local);
     record(target, [MARKDOWN], [MARKDOWN, CHESS]);
 
     record(otherDevice(target), [MARKDOWN, CHESS, SKETCH], [MARKDOWN, CHESS, SKETCH]);
@@ -278,10 +278,10 @@ describe('plugins', () => {
   test('rejoining the account restores the shared plugin set', ({ expect }) => {
     const target = pluginDevice();
     record(target, [MARKDOWN, CHESS], [MARKDOWN, CHESS]);
-    AppSettings.setSynced(target.settings, PLUGINS, false, target.local);
+    AppSettings.takeLocal(target.settings, PLUGINS, target.local);
     record(target, [MARKDOWN], [MARKDOWN, CHESS]);
 
-    AppSettings.setSynced(target.settings, PLUGINS, true, target.local);
+    AppSettings.rejoinAccount(target.settings, PLUGINS, target.local);
 
     expect(enabledOn(target)).toEqual([CHESS, MARKDOWN]);
   });
@@ -309,14 +309,14 @@ describe('conflictingKeys', () => {
 
   test('nothing to decide when the device has pinned nothing', ({ expect }) => {
     const target = device({ shared: { [NS]: { toolbar: true } }, local: { toolbar: true } });
-    AppSettings.setSynced(target.settings, NS, false, target.local);
+    AppSettings.takeLocal(target.settings, NS, target.local);
 
     expect(conflicts(target)).toEqual([]);
   });
 
   test('a pin whose value agrees is not a conflict', ({ expect }) => {
     const target = device({ shared: { [NS]: { toolbar: true } }, local: { toolbar: true } });
-    AppSettings.setSynced(target.settings, NS, false, target.local, { freeze: true });
+    AppSettings.takeLocal(target.settings, NS, target.local, { freeze: true });
 
     expect(target.settings.local[NS].keys).toEqual(['toolbar']);
     expect(conflicts(target)).toEqual([]);
@@ -324,7 +324,7 @@ describe('conflictingKeys', () => {
 
   test('a differing pin conflicts', ({ expect }) => {
     const target = device({ shared: { [NS]: { toolbar: true } }, local: { toolbar: true } });
-    AppSettings.setSynced(target.settings, NS, false, target.local);
+    AppSettings.takeLocal(target.settings, NS, target.local);
     write(target, 'toolbar', false);
 
     expect(conflicts(target)).toEqual(['toolbar']);
@@ -332,18 +332,18 @@ describe('conflictingKeys', () => {
 
   test('a key only this device holds is not a conflict — rejoining adopts it', ({ expect }) => {
     const target = device();
-    AppSettings.setSynced(target.settings, NS, false, target.local);
+    AppSettings.takeLocal(target.settings, NS, target.local);
     write(target, 'folding', true);
 
     expect(conflicts(target)).toEqual([]);
 
-    AppSettings.setSynced(target.settings, NS, true, target.local);
+    AppSettings.rejoinAccount(target.settings, NS, target.local);
     expect(target.settings.shared[NS]).toEqual({ folding: true });
   });
 
   test('a key only the account holds does not conflict', ({ expect }) => {
     const target = device({ shared: { [NS]: { toolbar: true } }, local: { toolbar: true } });
-    AppSettings.setSynced(target.settings, NS, false, target.local);
+    AppSettings.takeLocal(target.settings, NS, target.local);
     write(target, 'folding', true);
     write(otherDevice(target), 'toolbar', false);
 
@@ -352,19 +352,19 @@ describe('conflictingKeys', () => {
 
   test('compares by value, so an equal object is not a conflict', ({ expect }) => {
     const target = device({ shared: { [NS]: { layout: { columns: 2 } } } });
-    AppSettings.setSynced(target.settings, NS, false, target.local);
+    AppSettings.takeLocal(target.settings, NS, target.local);
     write(target, 'layout', { columns: 2 });
 
     expect(conflicts(target)).toEqual([]);
   });
 });
 
-describe('per-key pins', () => {
+describe('pinKey and unpinKey', () => {
   test('pinning changes nothing visible, here or elsewhere', ({ expect }) => {
     const target = device({ shared: { [NS]: { toolbar: true } }, local: { toolbar: true } });
     const before = resolve(target);
 
-    AppSettings.setKeySynced(target.settings, NS, 'toolbar', false);
+    AppSettings.pinKey(target.settings, NS, 'toolbar');
 
     expect(resolve(target)).toEqual(before);
     expect(resolve(otherDevice(target))).toEqual(before);
@@ -376,7 +376,7 @@ describe('per-key pins', () => {
       shared: { [NS]: { toolbar: true, folding: true } },
       local: { toolbar: true, folding: true },
     });
-    AppSettings.setKeySynced(target.settings, NS, 'toolbar', false);
+    AppSettings.pinKey(target.settings, NS, 'toolbar');
 
     write(target, 'toolbar', false);
     write(target, 'folding', false);
@@ -388,7 +388,7 @@ describe('per-key pins', () => {
 
   test('a pinned key ignores the account changing it', ({ expect }) => {
     const target = device({ shared: { [NS]: { toolbar: true } }, local: { toolbar: true } });
-    AppSettings.setKeySynced(target.settings, NS, 'toolbar', false);
+    AppSettings.pinKey(target.settings, NS, 'toolbar');
 
     write(otherDevice(target), 'toolbar', false);
 
@@ -397,10 +397,10 @@ describe('per-key pins', () => {
 
   test('unpinning hands the key back to the account', ({ expect }) => {
     const target = device({ shared: { [NS]: { toolbar: true } }, local: { toolbar: true } });
-    AppSettings.setKeySynced(target.settings, NS, 'toolbar', false);
+    AppSettings.pinKey(target.settings, NS, 'toolbar');
     write(target, 'toolbar', false);
 
-    AppSettings.setKeySynced(target.settings, NS, 'toolbar', true);
+    AppSettings.unpinKey(target.settings, NS, 'toolbar');
 
     expect(resolve(target)).toEqual({ toolbar: true });
     expect(AppSettings.isKeySynced(target.settings, NS, 'toolbar')).toBe(true);
@@ -410,7 +410,7 @@ describe('per-key pins', () => {
   test('pinning a key still on its schema default holds the default', ({ expect }) => {
     // Nobody has written `toolbar`, so the account has no entry for it.
     const target = device({ local: { toolbar: true } });
-    AppSettings.setKeySynced(target.settings, NS, 'toolbar', false);
+    AppSettings.pinKey(target.settings, NS, 'toolbar');
 
     write(otherDevice(target), 'toolbar', false);
 
@@ -426,7 +426,7 @@ describe('per-key pins', () => {
       local: { [chess]: true, [stack]: true },
     });
 
-    AppSettings.setKeySynced(target.settings, PLUGINS, chess, false);
+    AppSettings.pinKey(target.settings, PLUGINS, chess);
     write(target, chess, false, PLUGINS);
 
     expect(AppSettings.getEnabledPlugins(resolve(target, PLUGINS)).sort()).toEqual([stack]);

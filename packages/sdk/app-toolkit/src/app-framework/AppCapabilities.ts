@@ -196,14 +196,21 @@ export const Settings = Capability$.make<Settings>()('org.dxos.app-framework.cap
 export type SettingsSync = {
   /** Settings prefixes this device writes locally rather than sharing. */
   readonly unsynced: Atom.Atom<readonly string[]>;
-  /** Turn sharing of a prefix on or off for this device; rejoining keeps the side named by `adopt`. */
-  setSynced(prefix: string, synced: boolean, options?: { adopt?: AppSettings.Adopt }): void;
+  /** Take a prefix off the account for this device. Lossless, and no other device is touched. */
+  takeLocal(prefix: string): void;
+  /**
+   * Hand a prefix back to the account, keeping the side named by `adopt` wherever
+   * {@link conflicts} reports a disagreement. The only direction that discards anything.
+   */
+  rejoinAccount(prefix: string, options?: { adopt?: AppSettings.Adopt }): void;
   /** Keys that rejoining the account would change. Read on demand rather than reactively. */
   conflicts(prefix: string): readonly string[];
   /** Which settings this device keeps to itself, by prefix. */
   readonly pinned: Atom.Atom<AppSettings.DeviceSettings>;
-  /** Pin one key to this device, or hand it back — the per-key counterpart of {@link setSynced}. */
-  setKeySynced(prefix: string, key: string, synced: boolean): void;
+  /** Keep one key on this device — the per-key counterpart of {@link takeLocal}. */
+  pinKey(prefix: string, key: string): void;
+  /** Hand one key back to the account — the per-key counterpart of {@link rejoinAccount}. */
+  unpinKey(prefix: string, key: string): void;
 };
 
 /**
