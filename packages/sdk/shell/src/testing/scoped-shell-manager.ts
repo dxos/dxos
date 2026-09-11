@@ -60,15 +60,16 @@ export class ScopedShellManager {
     // TODO(wittjosiah): Update ids.
     const input = peer.getByTestId(`${type === 'device' ? 'halo' : 'space'}-auth-code-input`);
     // Every step stays mounted (`Viewport.View` marks inactive ones `invisible`), so the match has
-    // to be on `:visible` — DOM order resolves to a step the shell may never reach.
-    const rescuerView = `#${type === 'device' ? 'halo' : 'space'}-invitation-rescuer`;
+    // to be on `:visible` — DOM order resolves to a step the shell may never reach. `:visible` also
+    // tells the device rescuer from the space one: `Viewport.View` takes `id` as its view key and
+    // never renders it, so the two cannot be told apart by selector, and only one is ever active.
     const settled = peer.locator(
       `[data-testid='${type === 'device' ? 'halo' : 'space'}-auth-code-input']:visible, ` +
         // All three of the rescuer's renderings: blank-reset (no invitation state) and cancel
         // (connecting) are dead ends too, and neither carries `invitation-rescuer-reset`.
-        `${rescuerView} [data-testid='invitation-rescuer-reset']:visible, ` +
-        `${rescuerView} [data-testid='invitation-rescuer-blank-reset']:visible, ` +
-        `${rescuerView} [data-testid='invitation-rescuer-cancel']:visible`,
+        `[data-testid='invitation-rescuer-reset']:visible, ` +
+        `[data-testid='invitation-rescuer-blank-reset']:visible, ` +
+        `[data-testid='invitation-rescuer-cancel']:visible`,
     );
     await settled
       .first()
@@ -84,8 +85,12 @@ export class ScopedShellManager {
           cause: err,
         });
       });
-    if (await peer.locator(`${rescuerView} [data-testid]:visible`).first().isVisible()) {
-      throw new Error(`${type} invitation stopped at the rescuer screen rather than the auth-code step`);
+    const rescuer = peer.locator("[data-testid^='invitation-rescuer']:visible");
+    if (await rescuer.first().isVisible()) {
+      const state = await rescuer
+        .evaluateAll((elements) => elements.map((element) => element.dataset.testid).join(', '))
+        .catch(() => '(unavailable)');
+      throw new Error(`${type} invitation stopped at the rescuer screen rather than the auth-code step: ${state}`);
     }
     await input.fill(authCode);
     await peer.getByTestId(`${type === 'device' ? 'halo' : 'space'}-invitation-authenticator-next`).click();
