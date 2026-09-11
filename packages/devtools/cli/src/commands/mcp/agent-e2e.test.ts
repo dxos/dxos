@@ -7,7 +7,9 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 
-import { ClaudeAgent, McpSession, bootstrapProfile, dxBin, runDx } from '../../testing/index.ts';
+import { ClaudeAgent } from '@dxos/assistant-evals';
+
+import { McpSession, bootstrapProfile, dxBin, runDx } from '../../testing/index.ts';
 
 /**
  * End-to-end: a real Claude Code subprocess, talking to a real `dx mcp serve`, against a real

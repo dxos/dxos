@@ -50,6 +50,9 @@
       "path": "../../core/compute/assistant"
     },
     {
+      "path": "../../core/compute/assistant-evals"
+    },
+    {
       "path": "../../core/compute/assistant-toolkit"
     },
     {

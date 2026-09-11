@@ -11,7 +11,7 @@ import * as Layer from 'effect/Layer';
 import * as Scope from 'effect/Scope';
 import { type IncomingMessage, type ServerResponse, createServer } from 'node:http';
 
-import type * as Operation from '@dxos/compute/Operation';
+import * as Operation from '@dxos/compute/Operation';
 import type * as Skill from '@dxos/compute/Skill';
 import { type Registry } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
@@ -129,6 +129,23 @@ export const startMcpHost = ({
     // listener bound to the IPv4 loopback answers.
     return { url: `http://127.0.0.1:${port}${PATH}` };
   });
+
+/**
+ * Registers the served skills and the operations behind them in the host's registry, the way
+ * `dx mcp serve`'s local host does — and only what is missing, so nothing a plugin already
+ * contributed is re-registered under a second definition.
+ */
+export const registerSkills = (registry: Registry.Registry, skills: readonly Skill.Definition[]): void => {
+  const registered = (key: string) => registry.getByURI(`dxn:${key.replace(/^dxn:/, '')}`) != null;
+  registry.add([
+    ...Operation.serializable(
+      skills
+        .flatMap((definition) => definition.operations ?? [])
+        .filter((operation) => !registered(String(operation.meta.key))),
+    ),
+    ...skills.filter((definition) => !registered(String(definition.key))).map((definition) => definition.make()),
+  ]);
+};
 
 /**
  * The surface as the client sees it.

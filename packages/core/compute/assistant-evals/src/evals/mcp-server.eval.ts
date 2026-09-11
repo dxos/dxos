@@ -3,7 +3,6 @@
 //
 
 import * as Effect from 'effect/Effect';
-import * as Schema from 'effect/Schema';
 import { evalite } from 'evalite';
 
 import * as Project from '@dxos/compute/Project';
@@ -14,32 +13,22 @@ import * as TasksPlugin from '@dxos/plugin-tasks/TasksPlugin';
 import { Milestone, Outline, Task, TaskSet } from '@dxos/types';
 import { trim } from '@dxos/util';
 
-import { findObject, toolInvocations } from '../assertions.ts';
-import { createEvalRunner } from '../runner.ts';
+import { findObject } from '../assertions.ts';
+import { SERVER, runClaudeEval, tool } from '../claude-harness.ts';
 
-/**
- * The MCP surface, graded by what reached the database.
- *
- * The CLI's own end-to-end test (`packages/devtools/cli/src/commands/mcp/agent-e2e.test.ts`) proves
- * the same surface against a real Claude Code subprocess talking to `dx mcp serve`. This is its
- * eval counterpart: the server runs inside the eval process (see `src/mcp-host.ts`), so there is no
- * CLI binary, no bootstrapped profile and no second database — the agent's writes land in the same
- * space the assertions below read, which is what lets a scorer grade the effect rather than the
- * model's own account of it.
- *
- * `skills: []` is load-bearing. With no native tools bound, the three MCP verbs are the only way to
- * reach the space at all, so a pass cannot come from the in-process toolkit the other evals use.
- *
- * KNOWN FAILURE, and not this scenario's: the run dies immediately after the session logs
- * "Connected to MCP server", with `runInstructions` failing inside effect's `Schema`
- * ("Cannot read properties of undefined (reading 'encoding')", from `ProcessHandle`'s input
- * encode). It is the act of connecting that breaks it — the same run passes when the server
- * answers nothing, fails with zero skills served, and failed identically under effect's own MCP
- * HTTP transport — which points at `McpToolkit.make` building each tool parameter from the shared
- * `Schema.Unknown` rather than at anything this eval hosts. Any assistant session that connects an
- * MCP server hits it, the `browser` skill included. `src/mcp-host.test.ts` is the part that can be
- * verified today: it drives this same server with the same client, deterministically.
- */
+//
+// This repo's MCP surface, driven by a real Claude Code subprocess and graded by what reached the
+// database.
+//
+// The CLI's own end-to-end test (`packages/devtools/cli/src/commands/mcp/agent-e2e.test.ts`) runs
+// the same agent against `dx mcp serve`. This is its eval counterpart, and it differs in one place:
+// the server runs inside the eval process against the harness's own client (see `src/mcp-host.ts`),
+// so there is no CLI binary to build, no profile to bootstrap, and one database — which is what
+// lets a scorer grade the write rather than the model's account of it.
+//
+// Only the server's tools are allowed. No Bash, no file tools: an agent that can shell out could
+// satisfy a prompt without ever reaching the surface, and the run would prove nothing about it.
+//
 
 const PROJECT_NAME = 'Lighthouse';
 
@@ -49,103 +38,144 @@ const BACKFILL = 'Backfill the sync telemetry dashboard';
 
 const DESCRIPTION = 'picked up by the eval agent';
 
-/** The projected surface's verbs, as the MCP client names them to the model. */
-const QUERY_OPERATIONS = 'queryOperations';
-const INVOKE_OPERATION = 'invokeOperation';
+type TaskRow = { title?: string; status?: string; description?: string };
 
-const task = createEvalRunner({
-  instructions: trim`
-    A project called "${PROJECT_NAME}" exists in this space, with a task ledger. Using the MCP
-    server's tools and nothing else:
-    1. Mark the task titled "${ROTATE}" as done.
-    2. Set the other task to the "started" status and give it the description "${DESCRIPTION}".
-    Update the existing tasks; do not create new ones. Then reply with the title of each task and
-    its status.
-  `,
-  input: Schema.Unknown,
-  output: Schema.Unknown,
-  // No native tools: every write below has to travel over the MCP transport.
-  skills: [],
-  mcpServer: {
-    skills: [{ key: ProjectSkill.key, make: ProjectSkill.make, operations: ProjectSkill.operations }],
-  },
-  plugins: [ProjectsPlugin.make(), TasksPlugin.make()],
-  types: [Project.Project, Milestone.Milestone, Outline.Outline, Task.Task, TaskSet.TaskSet],
-  // Two writes, each preceded by discovery over three MCP round trips of its own; the package
-  // default (60s) times out before the second one lands.
-  timeout: 240_000,
-  seed: () =>
-    Effect.gen(function* () {
-      const tasks = yield* Effect.forEach([ROTATE, BACKFILL], (title) =>
-        Database.add(Task.make({ title, status: 'todo' })),
-      );
-      const taskSet = yield* Database.add(
-        TaskSet.make({ name: `${PROJECT_NAME} ledger`, tasks: tasks.map((entry) => Ref.make(entry)), milestones: [] }),
-      );
-      yield* Database.add(Project.make({ name: PROJECT_NAME, taskSet: Ref.make(taskSet) }));
-      yield* Database.flush();
-      return {};
-    }),
-  dbQuery: () =>
-    Effect.gen(function* () {
-      const invocations = yield* toolInvocations();
-      const called = new Set(invocations.map((invocation) => invocation.name));
-      const trace = {
-        // Absent `operationKey` is the signature of a tool that is not Operation-backed — which is
-        // exactly what an MCP tool is, so it is also how this scorer tells the two surfaces apart.
-        reachedOverMcp: invocations.some(
-          (invocation) => invocation.name === INVOKE_OPERATION && invocation.operationKey === undefined,
-        ),
-        discovered: called.has(QUERY_OPERATIONS),
-        erroredTools: invocations.filter((invocation) => invocation.error).map((invocation) => invocation.name),
-      };
-      const empty = { ...trace, completed: false, started: false, described: false, taskCount: 0 };
-
-      const project = yield* findObject(Project.Project, (candidate) => candidate.name === PROJECT_NAME);
-      const taskSet = project?.taskSet ? yield* Database.load(project.taskSet) : undefined;
-      if (!taskSet) {
-        return empty;
-      }
-
-      const tasks = yield* Effect.forEach(taskSet.tasks, (ref) => Database.load(ref));
-      const byTitle = (title: string) => tasks.find((candidate) => candidate.title === title);
-
-      return {
-        ...trace,
-        completed: byTitle(ROTATE)?.status === 'done',
-        started: byTitle(BACKFILL)?.status === 'started',
-        described: byTitle(BACKFILL)?.description?.includes(DESCRIPTION) ?? false,
-        // The ledger's own length, not a filter: an agent that cannot find a task tends to create a
-        // new one and report success, which every title-keyed check above would happily pass.
-        taskCount: tasks.length,
-      };
-    }),
+/** Every task in the ledger, read outside the agent. */
+const readTasks = Effect.gen(function* () {
+  const project = yield* findObject(Project.Project, (candidate) => candidate.name === PROJECT_NAME);
+  const taskSet = project?.taskSet ? yield* Database.load(project.taskSet) : undefined;
+  if (!taskSet) {
+    return [] as TaskRow[];
+  }
+  return yield* Effect.forEach(taskSet.tasks, (ref) => Database.load(ref));
 });
 
-evalite('MCP server — the projected surface drives the space over a real transport', {
+const find = (tasks: readonly TaskRow[], title: string): TaskRow | undefined =>
+  tasks.find((candidate) => candidate.title === title);
+
+const task = () =>
+  runClaudeEval(
+    {
+      skills: [{ key: ProjectSkill.key, make: ProjectSkill.make, operations: ProjectSkill.operations }],
+      plugins: [ProjectsPlugin.make(), TasksPlugin.make()],
+      types: [Project.Project, Milestone.Milestone, Outline.Outline, Task.Task, TaskSet.TaskSet],
+      seed: () =>
+        Effect.gen(function* () {
+          const tasks = yield* Effect.forEach([ROTATE, BACKFILL], (title) =>
+            Database.add(Task.make({ title, status: 'todo' })),
+          );
+          const taskSet = yield* Database.add(
+            TaskSet.make({
+              name: `${PROJECT_NAME} ledger`,
+              tasks: tasks.map((entry) => Ref.make(entry)),
+              milestones: [],
+            }),
+          );
+          yield* Database.add(Project.make({ name: PROJECT_NAME, taskSet: Ref.make(taskSet) }));
+        }),
+    },
+    async ({ spaceId, send, query }) => {
+      // Stage 1 — the starting state, proven before a single token is spent. Without it, a later
+      // "the task is done" score cannot distinguish the agent's work from a bad fixture.
+      const seeded = await query(readTasks);
+      const scaffolded =
+        seeded.length === 2 && find(seeded, ROTATE)?.status === 'todo' && find(seeded, BACKFILL)?.status === 'todo';
+
+      // Stage 2 — a read-only turn. It must NOT change the database: an agent that writes while
+      // answering a question is a defect the write stages below would happily absorb.
+      const read = await send(
+        `Using only the ${SERVER} MCP server, list the tasks of the project "${PROJECT_NAME}" in space ` +
+          `${spaceId}. Reply with their exact titles, one per line, and change nothing.`,
+      );
+      const afterRead = await query(readTasks);
+      const listed =
+        !read.isError &&
+        read.toolCalls.some((name) => name.startsWith(`mcp__${SERVER}__`)) &&
+        (read.result ?? '').includes(ROTATE) &&
+        (read.result ?? '').includes(BACKFILL);
+      const readOnly =
+        afterRead.length === 2 &&
+        find(afterRead, ROTATE)?.status === 'todo' &&
+        find(afterRead, BACKFILL)?.status === 'todo';
+
+      // Stage 3 — one write, read back between turns, so a regression here cannot be excused as
+      // "it happened later".
+      const complete = await send(
+        `In space ${spaceId}, mark the task titled "${ROTATE}" as done. Update the existing task; do not ` +
+          'create a new one. Leave every other task alone.',
+      );
+      const afterComplete = await query(readTasks);
+      const completed =
+        !complete.isError &&
+        complete.toolCalls.includes(tool('invokeOperation')) &&
+        find(afterComplete, ROTATE)?.status === 'done' &&
+        // The untouched task is the control: it proves the write was targeted, not a blanket update.
+        find(afterComplete, BACKFILL)?.status === 'todo';
+
+      // Stage 4 — a second write on the same conversation. `started`, not "in progress", because
+      // `Task.status` is a closed literal set and a value outside it would have the agent either
+      // fail or invent one.
+      const start = await send(
+        `Now set the remaining todo task in space ${spaceId} to the "started" status and give it the ` +
+          `description "${DESCRIPTION}". Update the existing task; do not create a new one.`,
+      );
+      const afterStart = await query(readTasks);
+      const backfill = find(afterStart, BACKFILL);
+      const started =
+        !start.isError &&
+        start.toolCalls.includes(tool('invokeOperation')) &&
+        backfill?.status === 'started' &&
+        (backfill?.description ?? '').includes(DESCRIPTION) &&
+        // Still done: a later turn must not roll back what an earlier one committed.
+        find(afterStart, ROTATE)?.status === 'done';
+
+      return {
+        scaffolded,
+        listed,
+        readOnly,
+        completed,
+        started,
+        // The ledger's own length, not a filter: the natural failure of an agent that cannot find a
+        // task is to create a new one and report success, which every title-keyed check would pass.
+        taskCount: afterStart.length,
+        turns: [read, complete, start].map(({ isError, toolCalls, result }) => ({ isError, toolCalls, result })),
+      };
+    },
+  );
+
+evalite('MCP server — Claude Code drives the projected surface, graded from the database', {
   data: [{ input: null }],
   task,
   scorers: [
     {
-      name: 'task-completed',
-      description: 'The first task is done in the database, not merely reported done.',
-      scorer: ({ output }) => (output.dbQuery.completed ? 1 : 0),
+      name: 'scaffold-visible',
+      description: 'The seeded ledger is readable outside the agent before the run starts.',
+      scorer: ({ output }) => (output.scaffolded ? 1 : 0),
     },
     {
-      name: 'task-started-and-described',
-      description: 'The second task carries both the status and the description from one prompt.',
-      scorer: ({ output }) => (output.dbQuery.started && output.dbQuery.described ? 1 : 0),
+      name: 'tasks-listed',
+      description: 'The agent read both tasks through the server rather than answering from the prompt.',
+      scorer: ({ output }) => (output.listed ? 1 : 0),
+    },
+    {
+      name: 'read-turn-changed-nothing',
+      description: 'The read-only turn left every task as it found it.',
+      scorer: ({ output }) => (output.readOnly ? 1 : 0),
+    },
+    {
+      name: 'task-completed',
+      description: 'The named task is done in the database, and only that task moved.',
+      scorer: ({ output }) => (output.completed ? 1 : 0),
+    },
+    {
+      name: 'follow-up-turn-wrote',
+      description: 'A second turn set the other task started with its description, without rolling the first back.',
+      scorer: ({ output }) => (output.started ? 1 : 0),
     },
     {
       name: 'ledger-intact',
       description: 'Still exactly two tasks — the agent updated the ledger rather than adding to it.',
-      scorer: ({ output }) => (output.dbQuery.taskCount === 2 ? 1 : 0),
-    },
-    {
-      name: 'went-through-mcp',
-      description: 'Discovery and the writes went over the MCP verbs, and none of them errored.',
-      scorer: ({ output }) =>
-        output.dbQuery.reachedOverMcp && output.dbQuery.discovered && output.dbQuery.erroredTools.length === 0 ? 1 : 0,
+      scorer: ({ output }) => (output.taskCount === 2 ? 1 : 0),
     },
   ],
 });

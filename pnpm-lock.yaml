@@ -6684,6 +6684,9 @@ importers:
         specifier: 'catalog:'
         version: 2.8.2
     devDependencies:
+      '@dxos/assistant-evals':
+        specifier: workspace:*
+        version: link:../../core/compute/assistant-evals
       '@opentui/core-darwin-arm64':
         specifier: 'catalog:'
         version: 0.1.61

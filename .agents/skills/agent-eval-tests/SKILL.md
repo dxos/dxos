@@ -77,18 +77,25 @@ passed — runs a deterministic assertion **while the space is still open**, ret
   `testTimeout` is just the outer safety net). Raise it only for scenarios with more tool
   round-trips than a typical eval — e.g. `crm-mailbox.eval.ts`/`planning.eval.ts` use `150_000`.
 - `dbQuery: (input, spaceId) => Effect<D, unknown, Database.Service>` — see Assertions below.
-- `mcpServer: { skills, instructions? }` — serves those `Skill.Definition`s to the agent over a real
-  MCP server hosted inside the eval process (`src/mcp-host.ts`: `McpServer.fromSkills` behind
-  effect's Streamable HTTP transport, on a loopback port), instead of binding their operations as
-  native tools. The runner appends a generated skill naming the server's URL, so the model sees only
-  `queryOperations` / `invokeOperation` / `loadSkill`. Pair it with `skills: []` when MCP must be the
-  only surface the model can reach — that is what makes a pass evidence about the transport rather
-  than about the in-process toolkit. In a `dbQuery`, an MCP tool is the invocation whose
-  `operationKey` is `undefined` (it is not Operation-backed). See `src/evals/mcp-server.eval.ts`; its
-  subprocess counterpart is the CLI's `mcp/agent-e2e.test.ts`, which drives the same surface through
-  a real Claude Code against `dx mcp serve`. NOTE: that eval does not pass yet — connecting any MCP
-  server to an assistant session currently kills the run inside effect's `Schema`; the eval file's
-  header documents the evidence, and `src/mcp-host.test.ts` verifies the server itself.
+
+### Driving a real Claude Code subprocess (`../claude-harness.ts`)
+
+For a scenario about this repo's **MCP surface** rather than about the in-process assistant:
+`runClaudeEval({ skills, plugins, types, seed }, async ({ send, query, spaceId }) => …)` boots a
+Composer harness, serves those `Skill.Definition`s over a real MCP Streamable HTTP server inside the
+eval process (`../mcp-host.ts`), and spawns a real `claude` subprocess wired to it with only that
+server's tools allowed — no Bash, no file tools, so a prompt the surface cannot satisfy fails.
+
+- `send(prompt)` runs one agent turn and resolves with `{ result, isError, toolCalls }`.
+- `query(effect)` runs a query in the harness's own runtime, outside the agent: that separation is
+  the point, and running it _between_ turns is what proves a write landed at the stage the eval
+  claims rather than at the end.
+- Needs `DX_ANTHROPIC_API_KEY` and a `claude` binary on PATH; `DX_EVAL_CLAUDE_MODEL` overrides the
+  model (default `sonnet`).
+- The scored fields are plain booleans the task returns, so the evalite scorers stay one-liners —
+  see `src/evals/mcp-server.eval.ts`, whose subprocess-server counterpart is the CLI's
+  `mcp/agent-e2e.test.ts` (a real Claude Code against `dx mcp serve`).
+- `src/mcp-host.test.ts` covers the server itself deterministically and offline, with no model.
 
 ### Assertions (`../assertions.ts`)
 
