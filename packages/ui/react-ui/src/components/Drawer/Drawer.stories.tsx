@@ -6,13 +6,13 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
-import { withLayout, withTheme } from '../../testing';
-import { Button } from '../Button';
-import { Panel } from '../Panel';
-import { ScrollArea } from '../ScrollArea';
-import { Splitter } from '../Splitter';
-import { Toolbar } from '../Toolbar';
-import { Drawer, type DrawerRootProps } from './Drawer';
+import { withLayout, withTheme } from '../../testing/index.ts';
+import { Button } from '../Button/index.ts';
+import { Panel } from '../Panel/index.ts';
+import { ScrollArea } from '../ScrollArea/index.ts';
+import { Splitter } from '../Splitter/index.ts';
+import { Toolbar } from '../Toolbar/index.ts';
+import { Drawer, type DrawerRootProps } from './Drawer.tsx';
 
 type StoryArgs = Pick<DrawerRootProps, 'side' | 'modal' | 'snapPoints'> & {
   title?: string;

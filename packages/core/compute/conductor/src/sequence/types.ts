@@ -4,7 +4,7 @@
 
 import { type ContentBlock, type Message } from '@dxos/types';
 
-import type * as Sequence from './Sequence';
+import type * as Sequence from './Sequence.ts';
 
 export type SequenceEvent =
   | { type: 'begin'; invocationId: string }

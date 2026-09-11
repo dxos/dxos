@@ -28,12 +28,12 @@ import { Message, Person } from '@dxos/types';
 import { type GmailDataset, GoogleMailApi } from '#services';
 import { GoogleOperation } from '#types';
 
-import { GMAIL_CONNECTOR_ID, GMAIL_SOURCE } from '../../../constants';
-import { GoogleApiError } from '../../../errors';
-import { generateGmailDataset } from '../../../testing/gmail-fixtures';
-import { googleSyncTestServices, runGoogleSync } from '../../../testing/sync-fixture';
-import { GMAIL_TAG_SOURCE } from '../tags';
-import { GMAIL_SYSTEM_TAGS } from './system-tags';
+import { GMAIL_CONNECTOR_ID, GMAIL_SOURCE } from '../../../constants.ts';
+import { GoogleApiError } from '../../../errors.ts';
+import { generateGmailDataset } from '../../../testing/gmail-fixtures.ts';
+import { googleSyncTestServices, runGoogleSync } from '../../../testing/sync-fixture.ts';
+import { GMAIL_TAG_SOURCE } from '../tags.ts';
+import { GMAIL_SYSTEM_TAGS } from './system-tags.ts';
 
 /** {@link seedMailboxBinding} with this provider's identity — the shared fixture defaults to neither. */
 const seedGmailBinding = (

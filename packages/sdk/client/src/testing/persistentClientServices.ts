@@ -6,7 +6,7 @@ import { type ClientServicesProvider } from '@dxos/client-protocol';
 import { Config } from '@dxos/config';
 import { Runtime_Client_ServicesMode } from '@dxos/protocols/buf/dxos/config_pb';
 
-import { createClientServices } from '../services';
+import { createClientServices } from '../services/index.ts';
 
 export type PersistentClientServices = {
   config: Config;

@@ -13,7 +13,7 @@ import * as InboxResolver from '@dxos/extractor-lib';
 import { Jmap, JmapMail } from '#apis';
 import { JmapCredentials } from '#services';
 
-import { mapEmail } from '../mapper';
+import { mapEmail } from '../mapper.ts';
 
 /**
  * Live JMAP test against a real server (Fastmail by default). Gated on `JMAP_TOKEN`, mirroring the

@@ -13,8 +13,8 @@ import { CHANNELS, channelMarkFilter } from '@dxos/brand/channels';
 // channel's colour; a channel recolours the mark with that filter rather than shipping a copy.
 // eslint-disable-next-line import/no-relative-packages
 import composerIcon from '../../../../../../ui/brand/assets/icons/composer-icon.svg?raw';
-import { Loader } from './Loader';
-import { createLoaderStore } from './store';
+import { Loader } from './Loader.tsx';
+import { createLoaderStore } from './store.ts';
 
 /** How the ring's mark reads: released, as each channel recolours it, or absent. */
 const MARKS: Record<string, { svg?: string; filter?: string } | undefined> = {

@@ -8,10 +8,10 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { EDGE_CLIENT_TAG_HEADER, EdgeAuthChallengeError, EdgeCallFailedError, type EdgeFailure } from '@dxos/protocols';
 
-import { authenticateViaChallengeEndpoint, handleAuthChallenge, parseChallengeHeader } from './auth-challenge';
-import { type EdgeIdentity } from './edge-identity';
-import { encodeAuthHeader } from './http-client';
-import { getEdgeUrlWithProtocol } from './utils';
+import { authenticateViaChallengeEndpoint, handleAuthChallenge, parseChallengeHeader } from './auth-challenge.ts';
+import { type EdgeIdentity } from './edge-identity.ts';
+import { encodeAuthHeader } from './http-client.ts';
+import { getEdgeUrlWithProtocol } from './utils.ts';
 
 const DEFAULT_RETRY_TIMEOUT = 1500;
 const DEFAULT_RETRY_JITTER = 500;

@@ -17,8 +17,8 @@ import { PeerSchema } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
 import { JoinRequestSchema, LeaveRequestSchema, MessageSchema } from '@dxos/protocols/buf/dxos/edge/signal_pb';
 import { ComplexMap } from '@dxos/util';
 
-import { type TraceEvent } from './analysys';
-import { type SignalServerRunner, runSignal } from './run-test-signal';
+import { type TraceEvent } from './analysys/index.ts';
+import { type SignalServerRunner, runSignal } from './run-test-signal.ts';
 
 export class TestBuilder {
   private readonly _peers = new ComplexMap<PublicKey, TestPeer>(PublicKey.hash);

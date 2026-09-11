@@ -2,4 +2,4 @@
 // Copyright 2026 DXOS.org
 //
 
-export { InvitationsContainer as default } from './InvitationsContainer';
+export { InvitationsContainer as default } from './InvitationsContainer.tsx';

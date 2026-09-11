@@ -19,7 +19,7 @@ import { Position } from '@dxos/util';
 import { meta } from '#meta';
 import { Provider, Search, SearchOperation } from '#types';
 
-import { getProvidersSectionId } from '../paths';
+import { getProvidersSectionId } from '../paths.ts';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {

@@ -13,11 +13,11 @@ import { type Merge } from '@dxos/util';
 
 import { type FieldContext } from '#types';
 
-import { useFormContext, useFormValues } from '../../../hooks';
-import { getRootFormProperties, getSchemaAtPath } from '../../../util';
-import { FormFieldDispatch, type FormFieldDispatchProps, FormFieldErrorBoundary } from '../FormField';
-import { FormFieldSetDepthContext, useFormFieldSetDepth } from '../FormFieldSet';
-import { FormLayout } from '../FormLayout';
+import { useFormContext, useFormValues } from '../../../hooks/index.ts';
+import { getRootFormProperties, getSchemaAtPath } from '../../../util/index.ts';
+import { FormFieldDispatch, type FormFieldDispatchProps, FormFieldErrorBoundary } from '../FormField/index.ts';
+import { FormFieldSetDepthContext, useFormFieldSetDepth } from '../FormFieldSet/index.ts';
+import { FormLayout } from '../FormLayout/index.ts';
 
 const FORM_FIELDS_NAME = 'Form.Fields';
 

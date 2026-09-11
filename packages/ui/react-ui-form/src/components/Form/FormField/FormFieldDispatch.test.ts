@@ -9,9 +9,9 @@ import { Format } from '@dxos/echo';
 
 import { type FormFieldRendererProps } from '#types';
 
-import { HueAnnotation } from '../../../annotations';
-import { BooleanField, NumberField, PasswordField, TextField } from './fields';
-import { resolveFieldRenderer } from './FormFieldDispatch';
+import { HueAnnotation } from '../../../annotations.ts';
+import { BooleanField, NumberField, PasswordField, TextField } from './fields/index.ts';
+import { resolveFieldRenderer } from './FormFieldDispatch.tsx';
 
 describe('resolveFieldRenderer', () => {
   // Only `type` and `format` reach the decision; the rest is the renderer's business.

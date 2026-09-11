@@ -5,7 +5,7 @@
 import { type Key } from '@dxos/echo';
 import { log } from '@dxos/log';
 
-import { pendingConnectionStorageKey } from '../../constants';
+import { pendingConnectionStorageKey } from '../../constants.ts';
 
 /** Snapshot of an in-flight OAuth flow persisted in `localStorage` for redirect-flow connectors. */
 export type PendingSnapshot = {

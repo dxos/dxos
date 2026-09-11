@@ -14,7 +14,7 @@ import { fromDate, fromPublicKey, requirePublicKey } from '@dxos/protocols/buf';
 import { type GossipMessage, GossipMessageSchema } from '@dxos/protocols/buf/dxos/mesh/teleport/gossip_pb';
 import { ComplexMap, ComplexSet } from '@dxos/util';
 
-import { GossipExtension } from './gossip-extension';
+import { GossipExtension } from './gossip-extension.ts';
 
 export type GossipProps = {
   localPeerId: PublicKey;

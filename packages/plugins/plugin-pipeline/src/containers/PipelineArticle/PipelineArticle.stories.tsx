@@ -24,8 +24,8 @@ import { Message, Organization, Person, Pipeline, Task } from '@dxos/types';
 
 import { translations } from '#translations';
 
-import PipelineProperties from '../PipelineProperties';
-import { PipelineArticle } from './PipelineArticle';
+import PipelineProperties from '../PipelineProperties/index.ts';
+import { PipelineArticle } from './PipelineArticle.tsx';
 
 random.seed(0);
 

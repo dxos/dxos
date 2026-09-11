@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-export * from './scheduler-env';
-export * from './replicant-env';
-export type * from './interface';
-export * from './replicant-registry';
+export * from './scheduler-env.ts';
+export * from './replicant-env.ts';
+export type * from './interface.ts';
+export * from './replicant-registry.ts';

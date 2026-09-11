@@ -6,7 +6,7 @@ import { existsSync, readFileSync } from 'node:fs';
 
 import { waitForCondition } from '@dxos/async';
 
-import { WATCHDOG_CHECK_INTERVAL, WATCHDOG_START_TIMEOUT, WATCHDOG_STOP_TIMEOUT } from './defs';
+import { WATCHDOG_CHECK_INTERVAL, WATCHDOG_START_TIMEOUT, WATCHDOG_STOP_TIMEOUT } from './defs.ts';
 
 export const waitForPidCreation = async (pidFile: string) =>
   waitForCondition({

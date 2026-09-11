@@ -14,9 +14,9 @@ import { toPublicKey } from '@dxos/protocols/buf';
 import { type Space } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { MembershipPolicy } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
-import { type ServiceContext } from '../services';
-import { createServiceContext } from '../testing';
-import { SpacesServiceImpl } from './spaces-service';
+import { type ServiceContext } from '../services/index.ts';
+import { createServiceContext } from '../testing/index.ts';
+import { SpacesServiceImpl } from './spaces-service.ts';
 
 describe('SpacesService', () => {
   let serviceContext: ServiceContext;

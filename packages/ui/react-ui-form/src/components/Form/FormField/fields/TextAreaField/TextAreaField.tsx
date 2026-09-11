@@ -8,8 +8,8 @@ import { Field, type TextareaProps } from '@dxos/react-ui';
 
 import { type FormFieldRendererProps } from '#types';
 
-import { FormStaticValue } from '../../FormField';
-import { presentationFor } from '../../presentation';
+import { FormStaticValue } from '../../FormField.tsx';
+import { presentationFor } from '../../presentation.tsx';
 
 export const TextAreaField = ({
   type,

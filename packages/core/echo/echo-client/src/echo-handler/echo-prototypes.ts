@@ -112,10 +112,10 @@ import { invariant } from '@dxos/invariant';
 import { EID, EntityId, type URI } from '@dxos/keys';
 import { deepMapValues, defaultMap } from '@dxos/util';
 
-import * as Doc from '../automerge/Doc';
-import { type ObjectCore } from '../core-db';
-import { type EchoDatabase } from '../proxy-db';
-import { getBody, getHeader } from './devtools-formatter';
+import * as Doc from '../automerge/Doc.ts';
+import { type ObjectCore } from '../core-db/index.ts';
+import { type EchoDatabase } from '../proxy-db/index.ts';
+import { getBody, getHeader } from './devtools-formatter.ts';
 import {
   type ProxyTarget,
   TargetKey,
@@ -123,7 +123,7 @@ import {
   symbolInternals,
   symbolNamespace,
   symbolPath,
-} from './echo-proxy-target';
+} from './echo-proxy-target.ts';
 
 const META_NAMESPACE = 'meta';
 

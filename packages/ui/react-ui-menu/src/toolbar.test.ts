@@ -7,7 +7,7 @@ import { describe, test } from 'vitest';
 
 import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 
-import { isPromptAction, isToolbarAction } from './toolbar';
+import { isPromptAction, isToolbarAction } from './toolbar.ts';
 
 const action = (disposition?: string | string[]): AppGraphNode.ActionLike => ({
   id: 'action',

@@ -15,9 +15,9 @@ import { Issue, PullRequest, Repo } from '@dxos/types';
 
 import { GitHubCapabilities } from '#types';
 
-import { GITHUB_PROVIDER_ID } from '../constants';
-import { type GitHubLink, parseGitHubLink } from '../extensions';
-import { GitHubApi } from '../services';
+import { GITHUB_PROVIDER_ID } from '../constants.ts';
+import { type GitHubLink, parseGitHubLink } from '../extensions/index.ts';
+import { GitHubApi } from '../services/index.ts';
 
 /**
  * Resolves a GitHub repository, pull-request or issue URL to an in-memory `Repo`, `PullRequest` or

@@ -13,7 +13,7 @@ import { Message } from '@dxos/types';
 
 import { GoogleMail } from '#apis';
 
-import { decodeBody, mapMessage } from '../mapper';
+import { decodeBody, mapMessage } from '../mapper.ts';
 
 const makeGmailMessage = (overrides?: Partial<GoogleMail.Message>): GoogleMail.Message => ({
   id: 'msg-001',

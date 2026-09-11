@@ -20,7 +20,7 @@ import { AttendableContainer } from '@dxos/react-ui-attention';
 import { Loading } from '@dxos/react-ui/testing';
 import { mx } from '@dxos/ui-theme';
 
-import { StoryLayout } from './layout';
+import { StoryLayout } from './layout.ts';
 
 /** Props a resolved object cell's override component receives. */
 export type ResolvedCellProps = {

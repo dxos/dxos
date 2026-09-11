@@ -7,9 +7,9 @@ import React, { forwardRef, useId, useMemo } from 'react';
 import { type ThemedClassName, useForwardedRef } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
-import { useCanvasContext } from '../../hooks';
-import { type Point } from '../../types';
-import { GridPattern, testId } from '../../util';
+import { useCanvasContext } from '../../hooks/index.ts';
+import { type Point } from '../../types.ts';
+import { GridPattern, testId } from '../../util/index.ts';
 
 const gridRatios = [1 / 4, 1, 4, 16];
 

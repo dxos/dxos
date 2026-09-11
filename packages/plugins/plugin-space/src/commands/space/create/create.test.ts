@@ -10,7 +10,7 @@ import { TestConsole, TestLayer } from '@dxos/cli-util/testing';
 import { ClientService } from '@dxos/client';
 import { EffectEx } from '@dxos/effect';
 
-import { handler } from './create';
+import { handler } from './create.ts';
 
 describe('space create', () => {
   it('should create a space without a name', () =>

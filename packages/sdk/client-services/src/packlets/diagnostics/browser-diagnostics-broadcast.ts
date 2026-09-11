@@ -9,7 +9,7 @@ import { log } from '@dxos/log';
 import {
   type CollectDiagnosticsBroadcastHandler,
   type CollectDiagnosticsBroadcastSender,
-} from './diagnostics-collector';
+} from './diagnostics-collector.ts';
 
 const CHANNEL_NAME = 'dxos.diagnostics.broadcast';
 

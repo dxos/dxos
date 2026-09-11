@@ -8,7 +8,7 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { PresentationSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
-import { type EdgeIdentity } from './edge-identity';
+import { type EdgeIdentity } from './edge-identity.ts';
 
 /**
  * The VerifiablePresentation challenge/response handshake, shared by the HTTP and WebSocket

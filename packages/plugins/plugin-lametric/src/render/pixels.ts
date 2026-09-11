@@ -4,7 +4,7 @@
 
 import * as LaMetric from '#protocol';
 
-import { GLYPH_HEIGHT, GLYPH_PITCH, GLYPH_WIDTH, glyphPixel } from './font';
+import { GLYPH_HEIGHT, GLYPH_PITCH, GLYPH_WIDTH, glyphPixel } from './font.ts';
 
 /** The device's white matrix. The 8x8 colour block to its left is not modelled. */
 export const WIDTH = 37;

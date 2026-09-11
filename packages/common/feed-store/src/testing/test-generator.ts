@@ -7,7 +7,7 @@ import { type ValueCodec, createCodecEncoding } from '@dxos/hypercore';
 import { random } from '@dxos/random';
 import type { AbstractValueEncoding } from '@dxos/vendor-hypercore/hypercore';
 
-import { type FeedWriter } from '../feed-writer';
+import { type FeedWriter } from '../feed-writer.ts';
 
 export type TestItem = {
   id: string;

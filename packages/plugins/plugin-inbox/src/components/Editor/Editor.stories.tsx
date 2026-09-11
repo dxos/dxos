@@ -7,7 +7,7 @@ import React, { useState } from 'react';
 
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { Editor, type EditorProps } from './Editor';
+import { Editor, type EditorProps } from './Editor.tsx';
 
 const MARKDOWN = [
   '# Weekly sync',

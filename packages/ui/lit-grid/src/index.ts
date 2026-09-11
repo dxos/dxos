@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-export * from './defs';
-export * from './dx-grid';
-export * from './dx-grid-multiselect-cell';
-export * from './types';
+export * from './defs.ts';
+export * from './dx-grid.ts';
+export * from './dx-grid-multiselect-cell.ts';
+export * from './types.ts';

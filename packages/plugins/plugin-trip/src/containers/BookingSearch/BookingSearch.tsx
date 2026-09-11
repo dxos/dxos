@@ -16,7 +16,7 @@ import { OfferStack } from '#components';
 import { meta } from '#meta';
 import { Booking, BookingOperation, BookingSearch, Segment, TripCapabilities } from '#types';
 
-import { offerToBookingProps, offerToFlightDetails } from './offer-to-segment';
+import { offerToBookingProps, offerToFlightDetails } from './offer-to-segment.ts';
 
 /** 2-column form layout for the flight query (parallels SegmentCard's FLIGHT_LAYOUT). */
 const SEARCH_LAYOUT = trim`

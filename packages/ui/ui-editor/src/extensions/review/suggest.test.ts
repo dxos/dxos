@@ -6,9 +6,9 @@ import { EditorState } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
 import { describe, test } from 'vitest';
 
-import { decorationSetToArray } from '../../util';
-import { diffHunks } from './diff';
-import { suggestChanges, suggestionKey, suggestions } from './suggest';
+import { decorationSetToArray } from '../../util/index.ts';
+import { diffHunks } from './diff.ts';
+import { suggestChanges, suggestionKey, suggestions } from './suggest.ts';
 
 const ORIGINAL = 'The quick brown fox jumps over the lazy dog.';
 const PROPOSAL = 'The fast brown fox leaps over the sleepy dog.';

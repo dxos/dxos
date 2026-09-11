@@ -14,7 +14,7 @@ import { type Organization, type Person, type Pipeline, type Task } from '@dxos/
 
 import { translations } from '#translations';
 
-import { ExpandoCard, FormCard, OrganizationCard, PersonCard, ProjectCard, TaskCard } from '../cards';
+import { ExpandoCard, FormCard, OrganizationCard, PersonCard, ProjectCard, TaskCard } from '../cards/index.ts';
 import {
   createExpando,
   createOrganization,
@@ -24,8 +24,8 @@ import {
   createTableEmpty,
   createTask,
   createUnknown,
-} from './fixtures';
-import { DefaultStory } from './testing';
+} from './fixtures.ts';
+import { DefaultStory } from './testing.tsx';
 
 random.seed(999);
 

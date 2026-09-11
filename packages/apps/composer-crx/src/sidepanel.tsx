@@ -9,7 +9,7 @@ import { type Root as ReactRoot, createRoot } from 'react-dom/client';
 
 import { log } from '@dxos/log';
 
-import { Sidepanel } from './components';
+import { Sidepanel } from './components/index.ts';
 
 declare global {
   // Survives dev-mode HMR re-execution of this entry module: React warns (and

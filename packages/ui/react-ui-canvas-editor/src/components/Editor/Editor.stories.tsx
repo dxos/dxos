@@ -17,10 +17,10 @@ import { createGraph } from '@dxos/schema';
 import { TestSchema, type TypeSpec, type ValueGenerator, createObjectFactory } from '@dxos/schema/testing';
 import { withRegistry } from '@dxos/storybook-utils';
 
-import { doLayout } from '../../layout';
-import { Container, DragTest, useSelection } from '../../testing';
-import { type CanvasGraphModel, Polygon, isPolygon } from '../../types';
-import { Editor, type EditorController, type EditorRootProps } from './Editor';
+import { doLayout } from '../../layout/index.ts';
+import { Container, DragTest, useSelection } from '../../testing/index.ts';
+import { type CanvasGraphModel, Polygon, isPolygon } from '../../types/index.ts';
+import { Editor, type EditorController, type EditorRootProps } from './Editor.tsx';
 
 const generator: ValueGenerator = random as any;
 

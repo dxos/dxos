@@ -23,8 +23,8 @@ import { mx } from '@dxos/ui-theme';
 
 import { Note, Sequence, Track } from '#types';
 
-import { hueFor, hueToHex } from '../../util/hue';
-import { LoopMarkers } from '../LoopMarkers';
+import { hueFor, hueToHex } from '../../util/hue.ts';
+import { LoopMarkers } from '../LoopMarkers/index.ts';
 
 export type SequenceGridProps = {
   sequence: Sequence.Sequence;

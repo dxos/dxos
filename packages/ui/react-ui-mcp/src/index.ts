@@ -13,5 +13,5 @@ export {
   type ToolListItemTitleProps,
   ToolListRoot,
   type ToolListRootProps,
-} from './ToolList';
-export { ToolForm, type ToolFormProps } from './ToolForm';
+} from './ToolList.tsx';
+export { ToolForm, type ToolFormProps } from './ToolForm.tsx';

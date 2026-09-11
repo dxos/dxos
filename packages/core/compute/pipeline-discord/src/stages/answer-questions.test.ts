@@ -12,8 +12,8 @@ import { expect } from 'vitest';
 import { AiService } from '@dxos/ai';
 import { FactStore, FactStoreLive, type RDF } from '@dxos/pipeline-rdf';
 
-import { QuestionStore } from '../stores';
-import { answerOpenQuestions } from './answer-questions';
+import { QuestionStore } from '../stores/index.ts';
+import { answerOpenQuestions } from './answer-questions.ts';
 
 const TestLayer = (answer?: string) =>
   Layer.mergeAll(QuestionStore.layerMemory, FactStoreLive.layerMemory, fakeAi(answer));

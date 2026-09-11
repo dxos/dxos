@@ -16,9 +16,9 @@ import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabili
 
 import { CompanionViewState, DeckCapabilities } from '#types';
 
-import { getRenderedPlanks, isCompanionOpen, resolveCompanionAnchor } from '../util';
-import * as Navigation from './navigation';
-import { projectUrl } from './project';
+import { getRenderedPlanks, isCompanionOpen, resolveCompanionAnchor } from '../util/index.ts';
+import * as Navigation from './navigation.ts';
+import { projectUrl } from './project.ts';
 
 /** What the URL currently says is open. */
 export const currentNavigation = Effect.fnUntraced(function* () {

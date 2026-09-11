@@ -12,9 +12,9 @@ import { mx } from '@dxos/ui-theme';
 import { meta } from '#meta';
 import { CallsCapabilities } from '#types';
 
-import { Toolbar, type ToolbarProps } from '../Call';
-import { VideoObject } from '../Media';
-import { ResponsivePanel } from '../ResponsiveGrid';
+import { Toolbar, type ToolbarProps } from '../Call/index.ts';
+import { VideoObject } from '../Media/index.ts';
+import { ResponsivePanel } from '../ResponsiveGrid/index.ts';
 
 // TODO(wittjosiah): Repurpose lobby for preview.
 

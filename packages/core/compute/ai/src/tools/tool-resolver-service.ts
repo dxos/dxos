@@ -11,8 +11,8 @@ import * as Toolkit from 'effect/unstable/ai/Toolkit';
 
 import { log } from '@dxos/log';
 
-import { AiToolNotFoundError } from '../errors';
-import { type ToolId } from './tool';
+import { AiToolNotFoundError } from '../errors.ts';
+import { type ToolId } from './tool.ts';
 
 /**
  * Resolves tool definitions.

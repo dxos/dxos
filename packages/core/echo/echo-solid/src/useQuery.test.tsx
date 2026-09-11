@@ -10,7 +10,7 @@ import { Filter, Obj, Query } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { TestSchema } from '@dxos/echo/testing';
 
-import { useQuery } from './useQuery';
+import { useQuery } from './useQuery.ts';
 
 describe('useQuery', () => {
   let testBuilder: EchoTestBuilder;

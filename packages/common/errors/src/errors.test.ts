@@ -4,8 +4,8 @@
 
 import { describe, test } from 'vitest';
 
-import { BaseError, type BaseErrorOptions } from './base';
-import { SystemError } from './errors';
+import { BaseError, type BaseErrorOptions } from './base.ts';
+import { SystemError } from './errors.ts';
 
 describe('errors', () => {
   test('error code and message, cause', ({ expect }) => {

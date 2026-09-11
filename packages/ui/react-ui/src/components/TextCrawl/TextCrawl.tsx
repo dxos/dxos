@@ -17,7 +17,7 @@ import React, {
 import { mx } from '@dxos/ui-theme';
 import { type ClassNameValue, type ThemedClassName } from '@dxos/ui-types';
 
-import { type TextCrawlSize } from './sizes';
+import { type TextCrawlSize } from './sizes.ts';
 
 const emptyLines: string[] = [];
 

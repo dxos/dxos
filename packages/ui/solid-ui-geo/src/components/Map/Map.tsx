@@ -18,8 +18,8 @@ import {
   useContext,
 } from 'solid-js';
 
-import { type GeoMarker } from '../../types';
-import { ActionControls, type ControlProps, ZoomControls, controlPositions } from '../Toolbar';
+import { type GeoMarker } from '../../types.ts';
+import { ActionControls, type ControlProps, ZoomControls, controlPositions } from '../Toolbar/index.ts';
 
 // TODO(burdon): Guess initial location.
 

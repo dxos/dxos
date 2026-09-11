@@ -5,10 +5,10 @@
 import { ark } from '@ark-ui/react/factory';
 import React, { type ComponentPropsWithoutRef, type ComponentPropsWithRef, forwardRef } from 'react';
 
-import { useThemeContext } from '../../hooks';
-import { type ThemedClassName } from '../../util';
-import { Icon } from '../Icon';
-import { Link, type LinkProps } from '../Link';
+import { useThemeContext } from '../../hooks/index.ts';
+import { type ThemedClassName } from '../../util/index.ts';
+import { Icon } from '../Icon/index.ts';
+import { Link, type LinkProps } from '../Link/index.ts';
 
 type BreadcrumbRootProps = ThemedClassName<ComponentPropsWithRef<typeof ark.div>> & {
   'aria-label': string;

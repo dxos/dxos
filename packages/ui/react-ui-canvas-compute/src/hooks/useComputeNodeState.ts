@@ -8,9 +8,9 @@ import { useCallback, useEffect, useState } from 'react';
 import type { ComputeNode, ComputeNodeMeta } from '@dxos/conductor';
 import { invariant } from '@dxos/invariant';
 
-import { type ComputeEvent, type RuntimeValue } from '../graph';
-import { type ComputeShape } from '../shapes';
-import { useComputeContext } from './compute-context';
+import { type ComputeEvent, type RuntimeValue } from '../graph/index.ts';
+import { type ComputeShape } from '../shapes/index.ts';
+import { useComputeContext } from './compute-context.ts';
 
 export type ComputeNodeState = {
   node: ComputeNode;

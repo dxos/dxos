@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import * as Operation from '@dxos/compute/Operation';
 
-import { QueryDisabledPlugins } from './definitions';
+import { QueryDisabledPlugins } from './definitions.ts';
 
 const handler: Operation.WithHandler<typeof QueryDisabledPlugins> = QueryDisabledPlugins.pipe(
   Operation.withHandler(

@@ -4,8 +4,8 @@
 
 import { EID } from '@dxos/keys';
 
-import * as Database from './Database';
-import * as Obj from './Obj';
+import * as Database from './Database.ts';
+import * as Obj from './Obj.ts';
 
 /**
  * `JSON.stringify` replacer signature.

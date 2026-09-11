@@ -27,7 +27,7 @@ import { getStyles, mx } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
 
-import { PluginFailureBadge } from '../PluginFailureBadge';
+import { PluginFailureBadge } from '../PluginFailureBadge/index.ts';
 
 export type PluginDetailProps = {
   plugin: Plugin.Plugin;

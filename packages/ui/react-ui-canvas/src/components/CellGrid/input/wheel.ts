@@ -4,9 +4,9 @@
 
 import type * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 
-import type { CellGridAtoms } from '../state/atoms';
-import type { Headers } from '../state/types';
-import { cellWidth } from '../state/viewport';
+import type { CellGridAtoms } from '../state/atoms.ts';
+import type { Headers } from '../state/types.ts';
+import { cellWidth } from '../state/viewport.ts';
 
 const MIN_ZOOM = 0.25;
 const MAX_ZOOM = 8;

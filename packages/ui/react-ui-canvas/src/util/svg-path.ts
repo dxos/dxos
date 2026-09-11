@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type Point } from '../types';
+import { type Point } from '../types.ts';
 
 // Kept out of `svg.tsx`: react-refresh only fast-refreshes a module whose exports are all components,
 // so a helper exported beside them forces a full page reload on every edit.

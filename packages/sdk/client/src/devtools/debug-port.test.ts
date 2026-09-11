@@ -4,7 +4,7 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { assertLoopbackOrigin, resolveDebugPortOrigin } from './debug-port';
+import { assertLoopbackOrigin, resolveDebugPortOrigin } from './debug-port.ts';
 
 describe('assertLoopbackOrigin', () => {
   // The port evaluates whatever the server sends, so this check is the boundary that keeps a

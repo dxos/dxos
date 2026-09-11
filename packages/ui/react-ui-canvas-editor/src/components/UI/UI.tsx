@@ -10,10 +10,10 @@ import { FPS, testId } from '@dxos/react-ui-canvas';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { mx } from '@dxos/ui-theme';
 
-import { useEditorContext } from '../../hooks';
-import { type TestId } from '../defs';
-import { eventsAuto, eventsNone } from '../styles';
-import { Toolbar, Tools } from '../Toolbar';
+import { useEditorContext } from '../../hooks/index.ts';
+import { type TestId } from '../defs.ts';
+import { eventsAuto, eventsNone } from '../styles.tsx';
+import { Toolbar, Tools } from '../Toolbar/index.ts';
 
 export type UIProps = ThemedClassName<{
   showTools?: boolean;

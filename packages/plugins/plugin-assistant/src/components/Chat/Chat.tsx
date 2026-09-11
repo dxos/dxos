@@ -40,26 +40,26 @@ import { keyToFallback } from '@dxos/util';
 import { type ChatSwitcher, useChatToolbarActions, useDebug } from '#hooks';
 import { meta } from '#meta';
 
-import { TaskSlashCommands } from '../../commands';
-import { AiUsageQuotaError, type ProcessorRequestContext } from '../../processor';
+import { TaskSlashCommands } from '../../commands/index.ts';
+import { AiUsageQuotaError, type ProcessorRequestContext } from '../../processor/index.ts';
 import {
   ChatStatus,
   ChatStatusStack,
   ChatActivity as NaturalChatActivity,
   ChatPrompt as NaturalChatPrompt,
   type ChatPromptProps as NaturalChatPromptProps,
-} from '../ChatPrompt';
-import { ChatQueue as NaturalChatQueue, type ChatQueueProps as NaturalChatQueueProps } from '../ChatQueue';
+} from '../ChatPrompt/index.ts';
+import { ChatQueue as NaturalChatQueue, type ChatQueueProps as NaturalChatQueueProps } from '../ChatQueue/index.ts';
 import {
   ChatContextProvider,
   type ChatContextValue,
   ChatReportContextProvider,
   type ChatRequestTiming,
   useChatContext,
-} from './context';
-import { type ChatEvent } from './events';
-import { SurfaceWidget } from './SurfaceWidget';
-import { projectAlarms, projectThread, resolveRewind } from './thread';
+} from './context.ts';
+import { type ChatEvent } from './events.ts';
+import { SurfaceWidget } from './SurfaceWidget.tsx';
+import { projectAlarms, projectThread, resolveRewind } from './thread.ts';
 
 //
 // Root
@@ -821,15 +821,17 @@ ChatQueue.displayName = CHAT_QUEUE_NAME;
 const CHAT_ACTIVITY_NAME = 'Chat.Activity';
 
 /**
- * The activity line bound to the chat's processor: what the request is doing while the reader waits
- * for the first token. The line itself takes a resolved phase, so it lives beside the prompt with
- * the rest of the presentational parts and only the binding is here.
+ * The activity line bound to the chat's processor and the chat's pending alarms: what the agent is
+ * doing, for as long as it is doing anything. The line itself takes resolved values, so it lives
+ * beside the prompt with the rest of the presentational parts and only the binding is here.
  */
 const ChatActivity = ({ classNames }: ThemedClassName) => {
-  const { processor } = useChatContext(CHAT_ACTIVITY_NAME);
+  const { processor, alarms } = useChatContext(CHAT_ACTIVITY_NAME);
   const activity = useAtomValue(processor.activity);
 
-  return <NaturalChatActivity classNames={classNames} activity={activity} />;
+  // Earliest pending alarm: the agent wakes at the first one, so a later one says nothing about the
+  // wait in front of the reader.
+  return <NaturalChatActivity classNames={classNames} activity={activity} wakeAt={alarms[0]?.wakeAt} />;
 };
 
 ChatActivity.displayName = CHAT_ACTIVITY_NAME;

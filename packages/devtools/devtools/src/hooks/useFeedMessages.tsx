@@ -10,7 +10,7 @@ import { SubscribeToFeedBlocksResponseSchema } from '@dxos/protocols/buf/dxos/de
 import { type SubscribeToFeedBlocksResponse_Block } from '@dxos/protocols/buf/dxos/devtools/host_pb';
 import { useDevtools, useStream } from '@dxos/react-client/devtools';
 
-import { useDevtoolsState } from './useDevtoolsContext';
+import { useDevtoolsState } from './useDevtoolsContext.tsx';
 
 export const useFeedMessages = ({ feedKey, maxBlocks = 100 }: { feedKey?: PublicKey; maxBlocks?: number }) => {
   const devtoolsHost = useDevtools();

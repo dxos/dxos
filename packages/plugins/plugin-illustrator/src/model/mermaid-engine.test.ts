@@ -6,12 +6,12 @@ import { describe, test } from 'vitest';
 
 import { trim } from '@dxos/util';
 
-import { analyze, errors } from './diagnostics';
-import { toStandard } from './mermaid';
-import { compile, layout } from './mermaid-engine';
-import type * as Scene from './scene';
-import { BASIC } from './testing';
-import { GRID } from './uml-grid';
+import { analyze, errors } from './diagnostics.ts';
+import { compile, layout } from './mermaid-engine.ts';
+import { toStandard } from './mermaid.ts';
+import type * as Scene from './scene.ts';
+import { BASIC } from './testing.ts';
+import { GRID } from './uml-grid.ts';
 
 const objectsOf = (commands: readonly Scene.Command[]) =>
   commands.flatMap((command) => (command.op === 'upsert-object' ? [command.object] : []));

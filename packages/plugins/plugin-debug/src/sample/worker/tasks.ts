@@ -8,7 +8,7 @@ import * as SampleSpace from '@dxos/app-toolkit/SampleSpace';
 import { Database, Obj, Ref } from '@dxos/echo';
 import { Actor, Task, TaskSet } from '@dxos/types';
 
-import { daysAgo } from './util';
+import { daysAgo } from './util.ts';
 
 //
 // Five steps, flat and in order.
@@ -37,7 +37,7 @@ const STEPS: ReadonlyArray<TaskSeed> = [
   {
     title: 'Create a sandbox and install wrangler',
     description:
-      'One sandbox for the whole run — it keeps its filesystem between commands, so a second one pays for node and wrangler again. Creating one and running commands in it belong to the Sandbox skill.',
+      'One sandbox for the whole run — it keeps its filesystem between commands, so a second one pays for node and wrangler again. `--temporary` needs wrangler 4.102 or later and that wrangler needs Node 22, while the sandbox runs Node 20: install `wrangler@latest` explicitly and run its script under a newer node — `npx --yes node@22 node_modules/wrangler/bin/wrangler.js` — since a plain install resolves to the last version that fits Node 20 and has no flag. Creating one and running commands in it belong to the Sandbox skill.',
     estimate: 's',
   },
   {

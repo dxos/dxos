@@ -24,8 +24,8 @@ import { type MembershipPolicy } from '@dxos/protocols/buf/dxos/halo/credentials
 import { type Credential, type Epoch } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { type SpacesService } from '@dxos/protocols/rpc';
 
-import { type CancellableInvitation } from './invitations';
-import { type SpaceProperties } from './types';
+import { type CancellableInvitation } from './invitations/index.ts';
+import { type SpaceProperties } from './types/index.ts';
 
 export type CreateEpochOptions = {
   migration?: SpacesService.Migration;

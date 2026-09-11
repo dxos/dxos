@@ -9,7 +9,7 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
 
-import { ChatStatusStackView } from './ChatStatusStack';
+import { ChatStatusStackView } from './ChatStatusStack.tsx';
 
 const STARTED_AT = new Date('2026-06-04T14:00:00.000Z').getTime();
 

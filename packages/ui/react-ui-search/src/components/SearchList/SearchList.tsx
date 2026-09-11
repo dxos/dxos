@@ -44,7 +44,7 @@ import { mx } from '@dxos/ui-theme';
 
 import { translationKey } from '#translations';
 
-import { SearchListInputContextProvider, SearchListItemContextProvider, useSearchListInputContext } from './context';
+import { SearchListInputContextProvider, SearchListItemContextProvider, useSearchListInputContext } from './context.ts';
 
 //
 // Root — wraps `Picker.Root` and adds query state + debounced onSearch.

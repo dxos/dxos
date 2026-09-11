@@ -11,9 +11,9 @@ import * as SqlClient from 'effect/unstable/sql/SqlClient';
 
 import { type SqlTransaction } from '@dxos/sql-sqlite';
 
-import { StateError } from './errors';
-import { makeSql, migrate } from './internal/agent-registry-sql';
-import type * as Type from './types';
+import { StateError } from './errors.ts';
+import { makeSql, migrate } from './internal/agent-registry-sql.ts';
+import type * as Type from './types.ts';
 
 /** A single identifier for an agent, in some namespace (e.g. discord-user:1234567890). */
 export type Identifier = {

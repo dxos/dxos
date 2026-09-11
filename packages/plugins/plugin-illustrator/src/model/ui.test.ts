@@ -7,7 +7,7 @@ import { describe, test } from 'vitest';
 
 import { invariant } from '@dxos/invariant';
 
-import * as Ui from './ui';
+import * as Ui from './ui.ts';
 
 const Address = Schema.Struct({
   street: Schema.String,

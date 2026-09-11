@@ -8,7 +8,7 @@ import { buildArchive, histogram } from '@dxos/app-toolkit/testing';
 import { Type } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 
-import { StockfishSpace } from './index';
+import { StockfishSpace } from './index.ts';
 
 /**
  * The chess-MCP sample space is built on demand rather than committed, so this asserts its shape in

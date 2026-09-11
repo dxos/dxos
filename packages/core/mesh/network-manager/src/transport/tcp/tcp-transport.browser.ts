@@ -5,7 +5,7 @@
 import { Event } from '@dxos/async';
 import { ErrorStream } from '@dxos/debug';
 
-import { type Transport, type TransportFactory, type TransportStats } from '../transport';
+import { type Transport, type TransportFactory, type TransportStats } from '../transport.ts';
 
 export const TcpTransportFactory: TransportFactory = {
   createTransport: () => new TcpTransport(),

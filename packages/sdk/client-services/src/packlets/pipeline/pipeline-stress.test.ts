@@ -20,8 +20,8 @@ import {
 import { Timeframe } from '@dxos/timeframe';
 import { range } from '@dxos/util';
 
-import { Pipeline } from './pipeline';
-import { TestFeedBuilder } from './testing';
+import { Pipeline } from './pipeline.ts';
+import { TestFeedBuilder } from './testing/index.ts';
 
 const NUM_AGENTS = 2;
 const NUM_MESSAGES = 10;

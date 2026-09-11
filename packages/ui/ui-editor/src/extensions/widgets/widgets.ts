@@ -32,10 +32,10 @@ import { type FunctionComponent } from 'react';
 
 import { log } from '@dxos/log';
 
-import { type Range } from '../../types';
-import { decorationSetToArray } from '../../util';
-import { crawlerLineEffect } from '../streaming';
-import { StubWidget, type WidgetNotifier } from './stub';
+import { type Range } from '../../types/index.ts';
+import { decorationSetToArray } from '../../util/index.ts';
+import { crawlerLineEffect } from '../streaming/index.ts';
+import { StubWidget, type WidgetNotifier } from './stub.ts';
 
 //
 // Types

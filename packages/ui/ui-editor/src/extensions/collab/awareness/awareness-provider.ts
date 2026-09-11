@@ -12,7 +12,12 @@ import { type Messenger } from '@dxos/protocols';
 import { unpackJson } from '@dxos/protocols/buf';
 import { type GossipMessage } from '@dxos/protocols/buf/dxos/mesh/teleport/gossip_pb';
 
-import { type AwarenessInfo, type AwarenessPosition, type AwarenessProvider, type AwarenessState } from './awareness';
+import {
+  type AwarenessInfo,
+  type AwarenessPosition,
+  type AwarenessProvider,
+  type AwarenessState,
+} from './awareness.ts';
 
 type ProtocolMessage =
   | {

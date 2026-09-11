@@ -11,7 +11,7 @@ import { Icon } from '@dxos/react-ui';
 
 import { QaOperation, type TestCase, TestRun } from '#types';
 
-import { StatusBadge } from '../StatusBadge';
+import { StatusBadge } from '../StatusBadge/index.ts';
 
 export type RunResultsProps = { run: TestRun.TestRun };
 

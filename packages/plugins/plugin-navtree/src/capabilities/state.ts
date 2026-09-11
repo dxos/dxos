@@ -15,7 +15,7 @@ import { Path } from '@dxos/react-ui-list/util';
 
 import { NavTreeCapabilities } from '#types';
 
-import { navTreeOpenAspect } from './nav-tree-view-state';
+import { navTreeOpenAspect } from './nav-tree-view-state.ts';
 
 /** Default `open` value for new entries; `current` is derived from the layout when the entry is created. */
 const defaultOpen = false;

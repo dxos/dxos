@@ -10,11 +10,11 @@ import { EffectEx } from '@dxos/effect';
 import { log } from '@dxos/log';
 import { OperationInvoker } from '@dxos/operation';
 
-import { type Label } from '../../common';
-import { EmptyHistoryError } from './errors';
-import type { HistoryEntry } from './types';
-import { resolveMessage } from './undo-mapping';
-import type { UndoRegistry } from './undo-registry';
+import { type Label } from '../../common/index.ts';
+import { EmptyHistoryError } from './errors.ts';
+import type { HistoryEntry } from './types.ts';
+import { resolveMessage } from './undo-mapping.ts';
+import type { UndoRegistry } from './undo-registry.ts';
 
 const HISTORY_LIMIT = 100;
 

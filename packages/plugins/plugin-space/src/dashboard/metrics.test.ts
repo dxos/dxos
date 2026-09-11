@@ -6,8 +6,8 @@ import { describe, test } from 'vitest';
 
 import { type Progress } from '@dxos/progress';
 
-import { toMetrics } from './metrics';
-import { type SpaceStats } from './types';
+import { toMetrics } from './metrics.ts';
+import { type SpaceStats } from './types.ts';
 
 const stats: SpaceStats = { objects: 128, feeds: 3, types: 9, plugins: 21 };
 

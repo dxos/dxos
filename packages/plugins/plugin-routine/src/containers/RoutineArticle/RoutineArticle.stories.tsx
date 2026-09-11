@@ -24,7 +24,7 @@ import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
 
-import { RoutineArticle } from './RoutineArticle';
+import { RoutineArticle } from './RoutineArticle.tsx';
 
 const types = [Routine.Routine, Trigger.Trigger, Instructions.Instructions, Feed.Feed, Skill.Skill];
 

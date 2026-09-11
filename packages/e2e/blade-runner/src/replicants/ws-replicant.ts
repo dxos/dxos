@@ -19,7 +19,7 @@ import { log } from '@dxos/log';
 import { EdgeService } from '@dxos/protocols';
 import { trace } from '@dxos/tracing';
 
-import { type ReplicantEnv, ReplicantRegistry } from '../env';
+import { type ReplicantEnv, ReplicantRegistry } from '../env/index.ts';
 
 export class Text extends Type.makeObject<Text>(DXN.make('org.dxos.type.bladeRunner.text', '0.1.0'))(
   Schema.Struct({

@@ -4,7 +4,7 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { Path } from './path';
+import { Path } from './path.ts';
 
 describe('paths', () => {
   test('create', () => {

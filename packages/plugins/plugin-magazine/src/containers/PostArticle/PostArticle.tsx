@@ -19,7 +19,7 @@ import { PostContent } from '#components';
 import { meta } from '#meta';
 import { FeedOperation, Subscription } from '#types';
 
-import { PostToolbar } from './PostToolbar';
+import { PostToolbar } from './PostToolbar.tsx';
 
 export type PostArticleProps = AppSurface.ObjectArticleProps<Subscription.Post>;
 

@@ -6,7 +6,7 @@ import { describe, test } from 'vitest';
 
 import { type RefOption } from '#types';
 
-import { findRefOption } from './find-ref-option';
+import { findRefOption } from './find-ref-option.ts';
 
 // Sample qualified self URIs as produced by an in-space object (Entity.getURI / `echo://<space>/<id>`).
 const SPACE_ID = 'BA25QRC2FEWCSAMRP4RZL65LWJ7352CKE';

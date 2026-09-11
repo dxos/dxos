@@ -14,7 +14,7 @@ import { EpochSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { useMulticastObservable } from '@dxos/react-hooks';
 import { Timeframe } from '@dxos/timeframe';
 
-import { PropertiesTable, PropertySchemaFormat } from '../../../components';
+import { PropertiesTable, PropertySchemaFormat } from '../../../components/index.ts';
 
 export const SpaceProperties: FC<{ space: Space; metadata: SubscribeToSpacesResponse_SpaceInfo }> = ({
   space,

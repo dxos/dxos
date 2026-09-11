@@ -9,7 +9,7 @@ import * as ManagedRuntime from 'effect/ManagedRuntime';
 import * as Option from 'effect/Option';
 import type * as Tracer from 'effect/Tracer';
 
-import * as GlobalValue from './GlobalValue';
+import * as GlobalValue from './GlobalValue.ts';
 
 const spanSymbol = Symbol.for('effect/SpanAnnotation');
 const spanToTrace = GlobalValue.globalValue('effect/Tracer/spanToTrace', () => new WeakMap());

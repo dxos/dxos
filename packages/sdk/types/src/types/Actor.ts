@@ -8,7 +8,7 @@ import * as Schema from 'effect/Schema';
 
 import { Obj, Ref } from '@dxos/echo';
 
-import * as Person from './Person';
+import * as Person from './Person.ts';
 
 // TOOD(burdon): This is very specific to AI.
 export const Role = Schema.Literals(['user', 'assistant', 'tool']);
@@ -32,7 +32,11 @@ export const Actor = Schema.Struct({
    * message's author), so naming the concrete types here would make every such schema depend on
    * them, and the set is open by construction.
    */
-  subject: Schema.optional(Ref.Ref(Obj.Unknown)),
+  subject: Schema.optional(Ref.Ref(Obj.Unknown)).annotate({
+    description:
+      'The object this actor stands for when it is not a person — an agent session, a service, a bot. ' +
+      'An agent assigning work to itself sets this to a ref to its own session object, not just `role`.',
+  }),
 });
 
 export type Actor = Schema.Schema.Type<typeof Actor>;

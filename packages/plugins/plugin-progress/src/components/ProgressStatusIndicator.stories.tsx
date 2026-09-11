@@ -13,7 +13,7 @@ import { withTheme } from '@dxos/react-ui/testing';
 import { ProgressPlugin } from '#plugin';
 import { translations } from '#translations';
 
-import { ProgressStatusIndicator } from './ProgressStatusIndicator';
+import { ProgressStatusIndicator } from './ProgressStatusIndicator.tsx';
 
 /** Seeds the shared {@link AppCapabilities.ProgressRegistry} with two active providers on mount. */
 const DefaultStory = () => {

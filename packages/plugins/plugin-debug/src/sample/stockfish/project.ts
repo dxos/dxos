@@ -10,10 +10,10 @@ import * as Project from '@dxos/compute/Project';
 import { Database, Ref } from '@dxos/echo';
 import { Outline } from '@dxos/types';
 
-import { type DocsResult } from './docs';
-import { type GameResult } from './game';
-import { type SkillResult } from './skill';
-import { type TasksResult } from './tasks';
+import { type DocsResult } from './docs.ts';
+import { type GameResult } from './game.ts';
+import { type SkillResult } from './skill.ts';
+import { type TasksResult } from './tasks.ts';
 
 //
 // The project that ties the plan, the brief, the test position and the skill together.

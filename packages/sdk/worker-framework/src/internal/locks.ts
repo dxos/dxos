@@ -4,7 +4,7 @@
 
 import { asyncTimeout } from '@dxos/async';
 
-import { WorkerConnectionError } from '../errors';
+import { WorkerConnectionError } from '../errors.ts';
 
 /** Max time to wait for a coordinator/worker RPC reply during worker connect. */
 export const LOCK_OR_RPC_WAIT_TIMEOUT = 15_000;

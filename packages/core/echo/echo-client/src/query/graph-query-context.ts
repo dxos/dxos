@@ -11,11 +11,16 @@ import { QueryAST } from '@dxos/echo-protocol';
 import { type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 
-import { type ItemsUpdatedEvent, type ObjectCore } from '../core-db';
-import { type DatabaseImpl } from '../proxy-db';
-import { type QueryContext, type SourceEntry } from './query-context';
-import { getTargetSpacesForQuery, isSimpleSelectionQuery, queryHasWindowing, queryTargetsSpacesOrFeeds } from './util';
-import { type WorkingSetDataProvider, type WorkingSetItem, WorkingSetQueryExecutor } from './working-set-executor';
+import { type ItemsUpdatedEvent, type ObjectCore } from '../core-db/index.ts';
+import { type DatabaseImpl } from '../proxy-db/index.ts';
+import { type QueryContext, type SourceEntry } from './query-context.ts';
+import {
+  getTargetSpacesForQuery,
+  isSimpleSelectionQuery,
+  queryHasWindowing,
+  queryTargetsSpacesOrFeeds,
+} from './util.ts';
+import { type WorkingSetDataProvider, type WorkingSetItem, WorkingSetQueryExecutor } from './working-set-executor.ts';
 
 export type GraphQueryContextProps = {
   // TODO(dmaretskyi): Make async.

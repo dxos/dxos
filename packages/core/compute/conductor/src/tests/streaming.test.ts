@@ -18,10 +18,10 @@ import { registryLayerNoop } from '@dxos/echo/testing';
 import { TestHelpers } from '@dxos/effect/testing';
 import { URI } from '@dxos/keys';
 
-import { NODE_INPUT, NODE_OUTPUT } from '../nodes';
-import { TestRuntime } from '../testing';
-import { ComputeGraphModel, ValueBag, defineComputeNode, synchronizedComputeFunction } from '../types';
-import { StreamSchema } from '../util';
+import { NODE_INPUT, NODE_OUTPUT } from '../nodes/index.ts';
+import { TestRuntime } from '../testing/index.ts';
+import { ComputeGraphModel, ValueBag, defineComputeNode, synchronizedComputeFunction } from '../types/index.ts';
+import { StreamSchema } from '../util/index.ts';
 
 const TestLayer = Layer.empty.pipe(
   Layer.provideMerge(

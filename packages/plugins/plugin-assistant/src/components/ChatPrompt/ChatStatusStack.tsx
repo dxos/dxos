@@ -9,9 +9,9 @@ import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 // From the context module rather than the `../Chat` barrel, which imports this file.
-import { useChatContext } from '../Chat/context';
-import { ChatActivity, type ChatActivityProps } from './ChatActivity';
-import { ChatStatus, ChatStatusView, type ChatStatusViewProps } from './ChatStatus';
+import { useChatContext } from '../Chat/context.ts';
+import { ChatActivity, type ChatActivityProps } from './ChatActivity.tsx';
+import { ChatStatus, ChatStatusView, type ChatStatusViewProps } from './ChatStatus.tsx';
 
 const CHAT_STATUS_STACK_NAME = 'Chat.StatusStack';
 
@@ -31,13 +31,14 @@ export type ChatStatusStackProps = ThemedClassName<{
  * order is asserted and screenshotted in one story ({@link ChatStatusStackView}).
  */
 export const ChatStatusStack = ({ classNames, rowClassNames, pillClassNames }: ChatStatusStackProps) => {
-  const { processor } = useChatContext(CHAT_STATUS_STACK_NAME);
+  const { processor, alarms } = useChatContext(CHAT_STATUS_STACK_NAME);
   const activity = useAtomValue(processor.activity);
 
   return (
     <div className={mx('flex flex-col', classNames)}>
       <div className={rowClassNames}>
-        <ChatActivity activity={activity} />
+        {/* Earliest pending alarm: the agent wakes at the first one. */}
+        <ChatActivity activity={activity} wakeAt={alarms[0]?.wakeAt} />
       </div>
       <div className={rowClassNames}>
         <ChatStatus classNames={pillClassNames} />
@@ -48,7 +49,9 @@ export const ChatStatusStack = ({ classNames, rowClassNames, pillClassNames }: C
 
 ChatStatusStack.displayName = CHAT_STATUS_STACK_NAME;
 
-export type ChatStatusStackViewProps = ChatStatusStackProps & ChatStatusViewProps & Pick<ChatActivityProps, 'activity'>;
+export type ChatStatusStackViewProps = ChatStatusStackProps &
+  ChatStatusViewProps &
+  Pick<ChatActivityProps, 'activity' | 'wakeAt'>;
 
 /**
  * The stack given resolved values. Split from {@link ChatStatusStack} so both rows can be mounted
@@ -59,11 +62,12 @@ export const ChatStatusStackView = ({
   rowClassNames,
   pillClassNames,
   activity,
+  wakeAt,
   ...statusProps
 }: ChatStatusStackViewProps) => (
   <div className={mx('flex flex-col', classNames)}>
     <div className={rowClassNames}>
-      <ChatActivity activity={activity} />
+      <ChatActivity activity={activity} wakeAt={wakeAt} />
     </div>
     <div className={rowClassNames}>
       <ChatStatusView {...statusProps} classNames={pillClassNames} />

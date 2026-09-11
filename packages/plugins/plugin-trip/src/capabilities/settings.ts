@@ -16,8 +16,8 @@ import {
   DEFAULT_TRIP_GAP_DAYS,
   setPlanningWindowDays,
   setTripGapDays,
-} from '../operations/extractor/config';
-import { Settings } from '../types/Settings';
+} from '../operations/extractor/config.ts';
+import { Settings } from '../types/Settings.ts';
 
 /**
  * Registers the plugin Settings (surfaced as a form via `AppCapabilities.Settings`) and bridges the

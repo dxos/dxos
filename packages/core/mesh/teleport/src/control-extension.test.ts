@@ -6,7 +6,7 @@ import { describe, expect, test } from 'vitest';
 
 import { PublicKey } from '@dxos/keys';
 
-import { ControlExtension } from './control-extension';
+import { ControlExtension } from './control-extension.ts';
 
 describe('ControlExtension', () => {
   // Teleport aborts every registered extension, including one whose `onOpen` has not completed.

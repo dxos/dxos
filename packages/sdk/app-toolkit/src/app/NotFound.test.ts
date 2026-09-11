@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import * as NotFound from './NotFound';
+import * as NotFound from './NotFound.ts';
 
 describe('combineVerdicts', () => {
   test('one store saying yes settles it', ({ expect }) => {

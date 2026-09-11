@@ -6,7 +6,7 @@ import * as Schema from 'effect/Schema';
 
 import { SchemaAST } from '@dxos/effect';
 
-import * as ThreadCapabilities from './ThreadCapabilities';
+import * as ThreadCapabilities from './ThreadCapabilities.ts';
 
 /** Finds the provider matching a `Channel.backend.kind`. */
 export const resolveProvider = (

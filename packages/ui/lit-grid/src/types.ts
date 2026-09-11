@@ -2,8 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type DxGrid } from './dx-grid';
-import { toPlaneCellIndex } from './util';
+import { type DxGrid } from './dx-grid.ts';
+import { toPlaneCellIndex } from './util.ts';
 
 export const separator = ',' as const;
 

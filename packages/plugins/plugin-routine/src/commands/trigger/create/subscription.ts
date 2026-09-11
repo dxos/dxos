@@ -17,8 +17,8 @@ import * as Trigger from '@dxos/compute/Trigger';
 import { Database, Filter, JsonSchema, Query, Ref } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 
-import { Deep, Delay, Enabled, Input, Typename } from '../options';
-import { printTrigger, promptForSchemaInput, selectFunction } from '../util';
+import { Deep, Delay, Enabled, Input, Typename } from '../options.ts';
+import { printTrigger, promptForSchemaInput, selectFunction } from '../util.ts';
 
 export const subscription = Command.make(
   'subscription',

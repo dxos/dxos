@@ -4,8 +4,8 @@
 
 import * as GraphEdge from '@dxos/graph/GraphEdge';
 
-import { type LayoutKind } from '../layout';
-import { type CanvasBoard } from '../types';
+import { type LayoutKind } from '../layout/index.ts';
+import { type CanvasBoard } from '../types/index.ts';
 
 export type Action =
   | { type: 'debug' }

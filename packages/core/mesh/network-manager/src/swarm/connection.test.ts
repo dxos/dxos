@@ -10,10 +10,10 @@ import { PublicKey } from '@dxos/keys';
 import { PeerSchema } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
 import { AnswerSchema } from '@dxos/protocols/buf/dxos/mesh/swarm_pb';
 
-import { TestWireProtocol } from '../testing/test-wire-protocol';
-import { createRtcTransportFactory } from '../transport';
-import { chooseInitiatorPeer } from '../transport/webrtc/utils';
-import { Connection } from './connection';
+import { TestWireProtocol } from '../testing/test-wire-protocol.ts';
+import { createRtcTransportFactory } from '../transport/index.ts';
+import { chooseInitiatorPeer } from '../transport/webrtc/utils.ts';
+import { Connection } from './connection.ts';
 
 // Segfault in node-datachannel.
 describe.skip('Connection', () => {

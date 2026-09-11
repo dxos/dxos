@@ -4,4 +4,4 @@
 
 export * from '@ngneat/falso';
 
-export { random } from './random';
+export { random } from './random.ts';

@@ -48,11 +48,16 @@ import { EID, EntityId, type URI } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { deepMapValues, defaultMap, getDeep, setDeep } from '@dxos/util';
 
-import * as Doc from '../automerge/Doc';
-import { type DecodedAutomergePrimaryValue, META_NAMESPACE, ObjectCore, type TargetRefreshScope } from '../core-db';
-import { type EchoDatabase } from '../proxy-db';
-import { EchoArray } from './echo-array';
-import { isEchoObject, isRootDataObject } from './echo-object-utils';
+import * as Doc from '../automerge/Doc.ts';
+import {
+  type DecodedAutomergePrimaryValue,
+  META_NAMESPACE,
+  ObjectCore,
+  type TargetRefreshScope,
+} from '../core-db/index.ts';
+import { type EchoDatabase } from '../proxy-db/index.ts';
+import { EchoArray } from './echo-array.ts';
+import { isEchoObject, isRootDataObject } from './echo-object-utils.ts';
 import {
   adoptInstanceState,
   createInstanceState,
@@ -63,7 +68,7 @@ import {
   handleStoredSchema,
   lookupRef,
   stripShadowingProperties,
-} from './echo-prototypes';
+} from './echo-prototypes.ts';
 import {
   type ProxyTarget,
   TargetKey,
@@ -71,7 +76,7 @@ import {
   symbolInternals,
   symbolNamespace,
   symbolPath,
-} from './echo-proxy-target';
+} from './echo-proxy-target.ts';
 
 /**
  * Shared for all targets within one ECHO object.

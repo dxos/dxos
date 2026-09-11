@@ -19,7 +19,7 @@ import { type SwarmResponse } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
 import { JoinRequestSchema, LeaveRequestSchema, QueryRequestSchema } from '@dxos/protocols/buf/dxos/edge/signal_pb';
 import { isNonNullable } from '@dxos/util';
 
-import { type ActivityState, type UserState, codec } from './types';
+import { type ActivityState, type UserState, codec } from './types.ts';
 
 export type CallState = {
   /**

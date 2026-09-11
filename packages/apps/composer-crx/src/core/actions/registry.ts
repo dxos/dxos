@@ -6,9 +6,9 @@ import browser from 'webextension-polyfill';
 
 import { log } from '@dxos/log';
 
-import { findComposerTab } from '../bridge/sender';
-import { defineState } from '../state';
-import { matchesUrlPatterns } from './match-pattern';
+import { findComposerTab } from '../bridge/sender.ts';
+import { defineState } from '../state/index.ts';
+import { matchesUrlPatterns } from './match-pattern.ts';
 import {
   PAGE_ACTIONS_LIST_MESSAGE_TYPE,
   PAGE_ACTIONS_STORAGE_KEY,
@@ -17,8 +17,8 @@ import {
   type PageActionsRegistry,
   decodeListAck,
   decodeRegistry,
-} from './types';
-import { nextId, sleep } from './util';
+} from './types.ts';
+import { nextId, sleep } from './util.ts';
 
 const REFRESH_RETRY_INTERVAL_MS = 5_000;
 const REFRESH_RETRY_ATTEMPTS = 3;

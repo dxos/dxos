@@ -10,8 +10,8 @@ import { expect } from 'vitest';
 
 import { SqlTransaction } from '@dxos/sql-sqlite';
 
-import * as StateStore from './StateStore';
-import type * as Type from './types';
+import * as StateStore from './StateStore.ts';
+import type * as Type from './types.ts';
 
 const target = (id: string, over: Partial<Type.Target> = {}): Type.Target => ({
   id,

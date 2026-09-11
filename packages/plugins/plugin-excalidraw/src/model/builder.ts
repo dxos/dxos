@@ -20,8 +20,8 @@ import {
 
 import { Excalidraw } from '#types';
 
-import { readScene } from './read';
-import { rebind, renderObject } from './render';
+import { readScene } from './read.ts';
+import { rebind, renderObject } from './render.ts';
 
 const handler: ContentHandler = {
   identify: (record) => {

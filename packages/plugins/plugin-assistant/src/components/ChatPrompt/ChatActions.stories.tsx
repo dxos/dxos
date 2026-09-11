@@ -15,8 +15,8 @@ import { withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
 
-import { type ChatEvent } from '../Chat';
-import { ChatActions, type ChatActionsProps } from './ChatActions';
+import { type ChatEvent } from '../Chat/index.ts';
+import { ChatActions, type ChatActionsProps } from './ChatActions.tsx';
 
 type StoryArgs = Pick<ChatActionsProps, 'processing' | 'canSend' | 'tasksVisible' | 'debug' | 'customActions'>;
 

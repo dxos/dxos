@@ -14,11 +14,11 @@ import { IconButton, useTranslation } from '@dxos/react-ui';
 
 import { translationKey } from '#translations';
 
-import { omitId } from '../../../../../util';
-import { FormContent, FormRoot } from '../../../FormControls';
-import { FormFields } from '../../../FormFields';
-import { FormFieldSet } from '../../../FormFieldSet';
-import { type RefFieldProps } from './RefField';
+import { omitId } from '../../../../../util/index.ts';
+import { FormContent, FormRoot } from '../../../FormControls.tsx';
+import { FormFields } from '../../../FormFields/index.ts';
+import { FormFieldSet } from '../../../FormFieldSet/index.ts';
+import { type RefFieldProps } from './RefField.tsx';
 
 /**
  * Renders a referenced object's own fields inline (a nested form bound to the

@@ -16,7 +16,7 @@ import {
   initialPlanks,
   parse,
   toSegment,
-} from './navigation';
+} from './navigation.ts';
 
 const table: UrlPath.KeyTable = new Map<string, UrlPath.KeyTableEntry>([
   ['w', { key: 'w', hasId: true, anchor: true }],

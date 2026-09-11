@@ -10,7 +10,7 @@ import { type DxGridElement, type GridContentProps } from '@dxos/react-ui-grid';
 
 import { meta } from '#meta';
 
-import * as Sheet from './Sheet';
+import * as Sheet from './Sheet.ts';
 
 export type GridEntry = { grid: DxGridElement; setActiveRefs: (refs: GridContentProps['activeRefs']) => void };
 

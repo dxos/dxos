@@ -12,7 +12,7 @@ import { mx } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
 
-import { useQuerySpaceTypes } from './use-query-space-types';
+import { useQuerySpaceTypes } from './use-query-space-types.ts';
 
 export const SchemaContainer = ({ space }: AppSurface.SpaceArticleProps) => {
   const { t } = useTranslation(meta.profile.key);

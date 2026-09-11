@@ -10,8 +10,8 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as Operation from '@dxos/compute/Operation';
 import { Annotation, Database, DXN, Format, Ref, Type } from '@dxos/echo';
 
-import * as Support from './Support';
-import { SupportIssueResult, SupportReportResult } from './SupportService';
+import * as Support from './Support.ts';
+import { SupportIssueResult, SupportReportResult } from './SupportService.ts';
 
 // Schema annotations consumed by `react-ui-form`. Strings duplicated in translations.ts
 // — kept inline here to avoid an import cycle (translations -> #types -> SupportOperation).

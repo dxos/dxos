@@ -2,5 +2,5 @@
 // Copyright 2025 DXOS.org
 //
 
-export * from './factories';
-export * from './modes';
+export * from './factories.ts';
+export * from './modes.ts';

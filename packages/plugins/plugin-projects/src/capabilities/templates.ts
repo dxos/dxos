@@ -8,7 +8,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 
 import { ProjectCapabilities } from '#types';
 
-import { defaultTemplates } from '../templates';
+import { defaultTemplates } from '../templates/index.ts';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {

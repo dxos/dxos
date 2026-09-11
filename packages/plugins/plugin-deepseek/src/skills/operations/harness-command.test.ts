@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { buildInstallCommand, buildRunCommand, shellQuote } from './harness-command';
+import { buildInstallCommand, buildRunCommand, shellQuote } from './harness-command.ts';
 
 describe('harness command', () => {
   test('quotes a prompt so shell metacharacters are not executed', ({ expect }) => {

@@ -2,13 +2,13 @@
 // Copyright 2020 DXOS.org
 //
 
-export * from './AgentHostingProvider';
-export * from './ClientProvider';
-export * from './context';
+export * from './AgentHostingProvider.tsx';
+export * from './ClientProvider.tsx';
+export * from './context.ts';
 
-export * from './useClient';
-export * from './useClientStatus';
-export * from './useConfig';
-export * from './useEdgeServiceEndpoint';
-export * from './useShell';
-export * from './useStatus';
+export * from './useClient.ts';
+export * from './useClientStatus.ts';
+export * from './useConfig.ts';
+export * from './useEdgeServiceEndpoint.ts';
+export * from './useShell.ts';
+export * from './useStatus.ts';

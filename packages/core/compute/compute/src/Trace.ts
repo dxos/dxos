@@ -13,7 +13,7 @@ import { Annotation, DXN, Obj, Ref, Type } from '@dxos/echo';
 import { EID } from '@dxos/keys';
 import { log } from '@dxos/log';
 
-import * as Trigger from './types/Trigger';
+import * as Trigger from './types/Trigger.ts';
 
 /**
  * Writes ephemeral or persistent events to the trace.

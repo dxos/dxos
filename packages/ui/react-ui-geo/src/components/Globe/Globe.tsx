@@ -48,7 +48,7 @@ import {
   type Size,
   type Vector,
   useGlobeContext,
-} from '../../hooks';
+} from '../../hooks/index.ts';
 import {
   type Features,
   type StyleSet,
@@ -59,8 +59,8 @@ import {
   positionToRotation,
   renderLayers,
   timer,
-} from '../../util';
-import { ActionControls, type ControlProps, ZoomControls, controlPositions } from '../Toolbar';
+} from '../../util/index.ts';
+import { ActionControls, type ControlProps, ZoomControls, controlPositions } from '../Toolbar/index.ts';
 
 /**
  * https://developer.mozilla.org/en-US/docs/Web/SVG/Attribute

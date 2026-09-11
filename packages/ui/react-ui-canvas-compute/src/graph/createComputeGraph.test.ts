@@ -6,7 +6,7 @@ import { describe, test } from 'vitest';
 
 import { DEFAULT_INPUT } from '@dxos/conductor';
 
-import { createComputeGraph } from '../hooks';
+import { createComputeGraph } from '../hooks/index.ts';
 import {
   createArtifactCircuit,
   createAudioCircuit,
@@ -17,7 +17,7 @@ import {
   createLogicCircuit,
   createTemplateCircuit,
   createTransformCircuit,
-} from '../testing';
+} from '../testing/index.ts';
 
 // Each canvas shape is mapped to a compute node and added to a single ECHO-backed `ComputeGraphModel`.
 // Nodes carry nested records (e.g. a template's `inputSchema`); these must be owned independently per node,

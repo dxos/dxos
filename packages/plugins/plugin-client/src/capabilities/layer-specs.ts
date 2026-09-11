@@ -11,7 +11,7 @@ import { ClientService, fromClient } from '@dxos/client';
 import { accessTokenResolverFromEdge, credentialsLayerFromDatabase } from '@dxos/compute-runtime';
 import * as Credential from '@dxos/compute/Credential';
 import * as LayerSpec from '@dxos/compute/LayerSpec';
-import { Database } from '@dxos/echo';
+import { Database, Hypergraph } from '@dxos/echo';
 import { Identity, Space } from '@dxos/halo';
 import { layerIdentity, layerSpace } from '@dxos/halo-adapter-client';
 import { invariant } from '@dxos/invariant';
@@ -79,6 +79,27 @@ const DatabaseLayerSpec = LayerSpec.make(
         invariant(space, `space not found on client: ${context.space}`);
         yield* Effect.promise(() => space.waitUntilReady());
         return Database.layer(space.db);
+      }),
+    ),
+);
+
+/**
+ * The cross-space graph, application-scoped because it is not about any one space: it is the handle
+ * for work that must find which space holds something before it can act on it — the case a
+ * space-affinity {@link Database.Service} cannot serve, since asking for it already presumes an
+ * answer.
+ */
+const HypergraphLayerSpec = LayerSpec.make(
+  {
+    affinity: 'application',
+    requires: [ClientService],
+    provides: [Hypergraph.Service],
+  },
+  () =>
+    Layer.unwrap(
+      Effect.gen(function* () {
+        const client = yield* ClientService;
+        return Hypergraph.layer(client.graph);
       }),
     ),
 );
@@ -154,6 +175,7 @@ export default Capability.makeModule(() =>
     Capability.contributeAll(Capabilities.LayerSpec, [
       ClientLayerSpec,
       DatabaseLayerSpec,
+      HypergraphLayerSpec,
       AccessTokenResolverLayerSpec,
       CredentialsLayerSpec,
       IdentityLayerSpec,

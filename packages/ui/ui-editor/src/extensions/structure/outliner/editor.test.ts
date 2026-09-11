@@ -7,9 +7,9 @@ import { type ChangeSpec, EditorSelection, EditorState, Prec } from '@codemirror
 import { EditorView } from '@codemirror/view';
 import { describe, test } from 'vitest';
 
-import { commands, exitEmptyItem } from './commands';
-import { editor } from './editor';
-import { outlinerTree, treeFacet } from './tree';
+import { commands, exitEmptyItem } from './commands.ts';
+import { editor } from './editor.ts';
+import { outlinerTree, treeFacet } from './tree.ts';
 
 const extensions = [markdown({ base: markdownLanguage }), outlinerTree(), editor()];
 

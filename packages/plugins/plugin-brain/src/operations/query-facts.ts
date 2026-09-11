@@ -9,7 +9,7 @@ import { FactStore, type SemanticIndexError } from '@dxos/pipeline-rdf';
 
 import { BrainOperation } from '#types';
 
-import { toCompactFact } from './facts';
+import { toCompactFact } from './facts.ts';
 
 export default BrainOperation.QueryFacts.pipe(
   Operation.withHandler(

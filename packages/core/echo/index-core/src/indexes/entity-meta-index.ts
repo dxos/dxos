@@ -13,10 +13,10 @@ import { ATTR_DELETED, ATTR_PARENT, ATTR_RELATION_SOURCE, ATTR_RELATION_TARGET, 
 import { DXN, EID, EntityId, SpaceId, URI } from '@dxos/keys';
 import { SqlTransaction } from '@dxos/sql-sqlite';
 
-import { MIGRATIONS, MIGRATIONS_TABLE } from '../migrations/entity-meta';
-import { SQL_CHUNK_SIZE, chunkArray } from '../utils';
-import type { IndexerObject } from './interface';
-import type { Index } from './interface';
+import { MIGRATIONS, MIGRATIONS_TABLE } from '../migrations/entity-meta/index.ts';
+import { SQL_CHUNK_SIZE, chunkArray } from '../utils.ts';
+import type { IndexerObject } from './interface.ts';
+import type { Index } from './interface.ts';
 
 /**
  * Normalizes an echo: EID to the local (unqualified) form so SQL comparisons are consistent.

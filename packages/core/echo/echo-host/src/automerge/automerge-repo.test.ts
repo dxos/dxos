@@ -38,10 +38,10 @@ import { PublicKey } from '@dxos/keys';
 import { TestBuilder as TeleportBuilder, TestPeer as TeleportPeer } from '@dxos/teleport/testing';
 import { isNonNullable, range } from '@dxos/util';
 
-import { TestAdapter, type TestConnectionStateProvider, createTestSqliteStorageAdapter } from '../testing';
-import { EchoNetworkAdapter } from './echo-network-adapter';
-import { type HandleQueryState } from './handle-state';
-import { MeshEchoReplicator } from './mesh-echo-replicator';
+import { TestAdapter, type TestConnectionStateProvider, createTestSqliteStorageAdapter } from '../testing/index.ts';
+import { EchoNetworkAdapter } from './echo-network-adapter.ts';
+import { type HandleQueryState } from './handle-state.ts';
+import { MeshEchoReplicator } from './mesh-echo-replicator.ts';
 
 const HOST_AND_CLIENT: [string, string] = ['host', 'client'];
 

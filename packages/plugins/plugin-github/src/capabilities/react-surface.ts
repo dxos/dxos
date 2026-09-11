@@ -11,7 +11,7 @@ import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Issue, PullRequest, Repo } from '@dxos/types';
 import { Position } from '@dxos/util';
 
-import { GitHubCard } from '../cards';
+import { GitHubCard } from '../cards/index.ts';
 
 export default Capability.makeModule(() =>
   Effect.succeed(

@@ -21,23 +21,23 @@ import pluginSpec from '../../PLUGIN.mdl?raw';
 export const Connector = Capability.lazyModule(
   'GitHubConnector',
   { provides: [ConnectorSpec.Connector], activatesOn: ConnectorEvents.Start },
-  () => import('./connector'),
+  () => import('./connector.ts'),
 );
 // Browser-only: the editor it decorates and the popover it answers render nowhere else.
 export const MarkdownExtension = Capability.lazyModule(
   'MarkdownExtension',
   { provides: [MarkdownCapabilities.ExtensionProvider], activatesOn: MarkdownEvents.Start, environments: [] },
-  () => import('./markdown-extension'),
+  () => import('./markdown-extension.ts'),
 );
 export const LinkResolver = Capability.lazyModule(
   'LinkResolver',
   { provides: [PreviewCapabilities.LinkResolver], activatesOn: PreviewEvents.Start, environments: [] },
-  () => import('./link-resolver'),
+  () => import('./link-resolver.ts'),
 );
-export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'), {
+export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler.ts'), {
   activatesOn: ActivationEvents.Idle,
 });
-export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
+export const ReactSurface = AppCapability.surface(() => import('./react-surface.ts'), {
   roles: ['org.dxos.role.cardContent'],
 });
 export const PluginAsset = AppCapability.pluginAsset({

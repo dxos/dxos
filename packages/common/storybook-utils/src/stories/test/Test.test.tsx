@@ -8,7 +8,7 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { ThemeProvider } from '@dxos/react-ui';
 
-import { Test } from './Test';
+import { Test } from './Test.tsx';
 
 /**
  * Vitest sanity test (should be visible in the storybook).

@@ -6,7 +6,7 @@ import { describe, expect, it } from 'tstyche';
 
 import { type PeerState } from '@dxos/protocols/buf/dxos/mesh/presence_pb';
 
-import { type NetworkGraphNode } from './NetworkPanel';
+import { type NetworkGraphNode } from './NetworkPanel.tsx';
 
 // A green build only proves the annotation compiles. These pin that the annotated type is the buf
 // message — `$typeName` is the discriminator a structurally similar protobuf.js value cannot carry

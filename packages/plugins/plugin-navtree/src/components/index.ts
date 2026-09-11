@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-export * from './NavTree';
-export * from './NavTreeContext';
+export * from './NavTree/index.ts';
+export * from './NavTreeContext/index.ts';
 
-export type * from './types';
+export type * from './types.ts';

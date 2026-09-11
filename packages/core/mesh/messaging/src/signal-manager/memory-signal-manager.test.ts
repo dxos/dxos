@@ -12,8 +12,8 @@ import { PublicKey } from '@dxos/keys';
 import { PeerSchema } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
 import { MessageSchema } from '@dxos/protocols/buf/dxos/edge/signal_pb';
 
-import { type Message, type PeerInfo } from '../signal-methods';
-import { MemorySignalManager, MemorySignalManagerContext } from './memory-signal-manager';
+import { type Message, type PeerInfo } from '../signal-methods.ts';
+import { MemorySignalManager, MemorySignalManagerContext } from './memory-signal-manager.ts';
 
 // Exercises the subscription/routing behavior of the in-memory signal manager: point-to-point routing
 // by recipient, broadcast routing by tag intersection (DX-1125), fan-out, and unsubscribe lifecycle.

@@ -6,9 +6,9 @@ import { afterEach, beforeEach, describe, test } from 'vitest';
 
 import { Context, TRACE_SPAN_ATTRIBUTE, type TraceContextData } from '@dxos/context';
 
-import { trace } from './api';
-import { TRACE_PROCESSOR } from './trace-processor';
-import type { RemoteSpan, StartSpanOptions, TracingBackend } from './tracing-types';
+import { trace } from './api.ts';
+import { TRACE_PROCESSOR } from './trace-processor.ts';
+import type { RemoteSpan, StartSpanOptions, TracingBackend } from './tracing-types.ts';
 
 type SpanRecord = {
   options: StartSpanOptions;

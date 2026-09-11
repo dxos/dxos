@@ -10,9 +10,9 @@ import { DXN, Filter, JsonSchema, Query, Type } from '@dxos/echo';
 import { createEchoSchema } from '@dxos/echo/testing';
 import { ProjectionModel, ViewModel, createDirectChangeCallback } from '@dxos/schema';
 
-import { Table } from '../types';
-import { TableModel, type TableModelProps } from './table-model';
-import { TablePresentation } from './table-presentation';
+import { Table } from '../types/index.ts';
+import { TableModel, type TableModelProps } from './table-model.ts';
+import { TablePresentation } from './table-presentation.ts';
 
 describe('TablePresentation', () => {
   describe('getCells', () => {

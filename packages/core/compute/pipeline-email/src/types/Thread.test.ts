@@ -6,7 +6,7 @@ import { describe, test } from 'vitest';
 
 import { Obj } from '@dxos/echo';
 
-import { Thread } from './Thread';
+import { Thread } from './Thread.ts';
 
 describe('Thread', () => {
   test('constructs a Thread object with expected fields', ({ expect }) => {

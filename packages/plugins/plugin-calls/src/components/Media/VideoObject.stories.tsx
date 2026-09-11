@@ -10,9 +10,9 @@ import { Context } from '@dxos/context';
 import { log } from '@dxos/log';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { getUserMediaTrack } from '../../calls';
-import { ResponsivePanel } from '../ResponsiveGrid';
-import { VideoObject, type VideoObjectProps } from './VideoObject';
+import { getUserMediaTrack } from '../../calls/index.ts';
+import { ResponsivePanel } from '../ResponsiveGrid/index.ts';
+import { VideoObject, type VideoObjectProps } from './VideoObject.tsx';
 
 const DefaultStory = (props: VideoObjectProps) => {
   log.info('render');

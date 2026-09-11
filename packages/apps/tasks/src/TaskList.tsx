@@ -6,8 +6,8 @@ import React, { useState } from 'react';
 
 import { isNonNullable } from '@dxos/util';
 
-import { TaskItem } from './TaskItem';
-import { type Task } from './types';
+import { TaskItem } from './TaskItem.tsx';
+import { type Task } from './types.ts';
 
 export type TaskListProps = {
   tasks?: Task[];

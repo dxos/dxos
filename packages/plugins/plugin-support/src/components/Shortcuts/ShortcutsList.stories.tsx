@@ -12,7 +12,7 @@ import { withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
 
-import { ShortcutsList } from './ShortcutsList';
+import { ShortcutsList } from './ShortcutsList.tsx';
 
 const DefaultStory = () => {
   useHotkeys({

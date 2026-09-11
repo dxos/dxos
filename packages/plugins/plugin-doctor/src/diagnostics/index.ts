@@ -2,6 +2,6 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './types';
-export * from './runner';
-export * from './providers';
+export * from './types.ts';
+export * from './runner.ts';
+export * from './providers/index.ts';

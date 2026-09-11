@@ -52,14 +52,14 @@ import {
 import { meta } from '#meta';
 import { DeckOperation, DeckRole } from '#types';
 
-import { Navigation } from '../../url';
-import { findAttendedPlank, getRenderedPlanks, isCompanionOpen, layoutAppliesTopbar } from '../../util';
+import { Navigation } from '../../url/index.ts';
+import { findAttendedPlank, getRenderedPlanks, isCompanionOpen, layoutAppliesTopbar } from '../../util/index.ts';
 import {
   ToggleComplementarySidebarButton as NaturalToggleComplementarySidebarButton,
   ToggleSidebarButton as NaturalToggleSidebarButton,
-} from '../Sidebar';
-import { DeckPlank } from './DeckPlank';
-import { useDeckContext } from './DeckRoot';
+} from '../Sidebar/index.ts';
+import { DeckPlank } from './DeckPlank.tsx';
+import { useDeckContext } from './DeckRoot.tsx';
 
 const DECK_VIEWPORT_NAME = 'DeckViewport';
 

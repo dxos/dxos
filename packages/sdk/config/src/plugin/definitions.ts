@@ -12,8 +12,8 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { setDeep } from '@dxos/util';
 
-import { mapFromKeyValues } from '../config';
-import { type ConfigPluginOpts } from './types';
+import { mapFromKeyValues } from '../config.ts';
+import { type ConfigPluginOpts } from './types.ts';
 
 const CWD = process.cwd();
 

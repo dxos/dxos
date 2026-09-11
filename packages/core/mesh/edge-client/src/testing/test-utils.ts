@@ -10,9 +10,9 @@ import { EdgeWebsocketProtocol } from '@dxos/protocols';
 import { buf } from '@dxos/protocols/buf';
 import { type Message, MessageSchema, TextMessageSchema } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
 
-import { protocol } from '../defs';
-import { WebSocketMuxer } from '../edge-ws-muxer';
-import { toUint8Array } from '../protocol';
+import { protocol } from '../defs.ts';
+import { WebSocketMuxer } from '../edge-ws-muxer.ts';
+import { toUint8Array } from '../protocol.ts';
 
 export const DEFAULT_PORT = 8080;
 

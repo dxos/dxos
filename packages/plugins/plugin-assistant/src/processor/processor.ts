@@ -42,8 +42,8 @@ import { type ContentBlock, Message } from '@dxos/types';
 
 import { AssistantOperation } from '#types';
 
-import { findInCause } from '../util/error-cause';
-import { type ProcessorRequestContext, createPromptContent } from './prompt';
+import { findInCause } from '../util/error-cause.ts';
+import { type ProcessorRequestContext, createPromptContent } from './prompt.ts';
 
 /**
  * Space-scoped services materialised by the layer passed into
@@ -235,10 +235,11 @@ export class AiChatProcessor {
   public readonly mcpErrors = Atom.make<readonly Trace.PayloadType<typeof McpServerError>[]>([]);
 
   /**
-   * Setup stage the in-flight request has reached, or `undefined` when there is nothing to report.
+   * Stage the in-flight request has reached, or `undefined` when there is nothing to report.
    *
-   * Only meaningful while the reader is still waiting: the first streamed block clears it, since the
-   * reply itself is a better progress report than any phase label.
+   * Tracks the whole turn rather than only the wait before the first token: an agentic turn streams
+   * a little, then calls tools for a long time, so a line cleared at the first block reads as a
+   * request that has finished. Cleared when the turn settles or is cancelled.
    */
   public readonly activity = Atom.make<Trace.PayloadType<typeof RequestPhase> | undefined>(undefined);
 
@@ -603,9 +604,10 @@ export class AiChatProcessor {
    * ephemeral delivery and feed replication.
    */
   #handleEphemeralMessage(event: Trace.PayloadType<typeof PartialBlock>) {
-    // The reply supersedes the phase line: once content is arriving the reader no longer needs to be
-    // told what the request is doing.
-    this.#registry.set(this.activity, undefined);
+    // Content arriving is what "generating" means, and deriving it here keeps it out of the agent's
+    // streaming pipeline, where the extra yield a trace write costs is observable to the turn's
+    // tools. A tool call the agent reports supersedes it for as long as the tool runs.
+    this.#registry.set(this.activity, { phase: 'generating' });
 
     const isPending = event.block.pending;
     const message = Obj.make(Message.Message, {

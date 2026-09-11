@@ -19,7 +19,7 @@ import { MagazineOperationHandlerSet } from '#operations';
 import { MagazineSkill } from '#skills';
 import { FeedOperation, Magazine, Subscription } from '#types';
 
-import { applyKeep, resolveSelected } from './curate-magazine';
+import { applyKeep, resolveSelected } from './curate-magazine.ts';
 
 /**
  * Whether the model picks the right articles is a judgement question, graded out-of-band; scripting

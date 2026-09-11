@@ -15,7 +15,7 @@ import {
 } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 import { type DeviceProfileDocument } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
-import { ClientServicesHost, type ServiceContext } from '../services';
+import { ClientServicesHost, type ServiceContext } from '../services/index.ts';
 
 /**
  * Strip secrets from invitation before giving it to the peer.

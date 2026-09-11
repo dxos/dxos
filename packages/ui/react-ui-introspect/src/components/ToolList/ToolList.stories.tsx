@@ -10,7 +10,7 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
 
-import { ToolList } from './ToolList';
+import { ToolList } from './ToolList.tsx';
 
 const DefaultStory = () => {
   const [selected, setSelected] = useState<string>('list_plugins');

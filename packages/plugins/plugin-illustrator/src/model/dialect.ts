@@ -14,7 +14,7 @@ import * as Schema from 'effect/Schema';
 
 import { invariant } from '@dxos/invariant';
 
-import * as Scene from './scene';
+import * as Scene from './scene.ts';
 
 export type Dialect<Input = any> = {
   id: string;

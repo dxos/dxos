@@ -16,10 +16,10 @@ import { Plank } from '#components';
 import { useBreadcrumbs, useDeckSettings } from '#hooks';
 import { DeckSchema } from '#types';
 
-import { CompanionPlank } from './CompanionPlank';
-import { PlankControls } from './PlankControls';
-import { PlankErrorFallback } from './PlankFallback';
-import { useDeckPlank } from './useDeckPlank';
+import { CompanionPlank } from './CompanionPlank.tsx';
+import { PlankControls } from './PlankControls.tsx';
+import { PlankErrorFallback } from './PlankFallback.tsx';
+import { useDeckPlank } from './useDeckPlank.ts';
 
 export type DeckPlankProps = ThemedClassName<{
   id: string;

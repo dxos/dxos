@@ -4,7 +4,7 @@
 
 import * as esbuild from 'esbuild-wasm';
 
-import { type Diagnostic } from './compiler';
+import { type Diagnostic } from './compiler.ts';
 
 /** Structurally identical to {@link build.LoadedFile}; locally scoped to avoid a cyclic re-export. */
 type LoadedFile = { path: string; content: string };

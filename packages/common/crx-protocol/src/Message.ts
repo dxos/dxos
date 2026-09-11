@@ -6,7 +6,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import * as PageAction from './PageAction';
+import * as PageAction from './PageAction.ts';
 
 const base = { version: Schema.Literal(1), id: Schema.String };
 

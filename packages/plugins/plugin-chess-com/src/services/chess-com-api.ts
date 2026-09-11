@@ -10,7 +10,7 @@ import * as HttpClientResponse from 'effect/unstable/http/HttpClientResponse';
 
 import { ChessComAccount } from '#types';
 
-import { ChessComNotFoundError, ChessComRequestError } from '../errors';
+import { ChessComNotFoundError, ChessComRequestError } from '../errors.ts';
 
 /** Base URL for the Chess.com Published (JSON) API. */
 const CHESS_COM_API_BASE = 'https://api.chess.com/pub';

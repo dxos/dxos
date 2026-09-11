@@ -4,7 +4,7 @@
 
 import { describe, test } from '@effect/vitest';
 
-import { runDx, withIsolatedHome } from '../../testing';
+import { runDx, withIsolatedHome } from '../../testing/index.ts';
 
 /**
  * Smoke tests for `dx chat --prompt` non-interactive mode.

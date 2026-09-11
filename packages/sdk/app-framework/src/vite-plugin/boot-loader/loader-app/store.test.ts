@@ -13,7 +13,7 @@ import {
   createLoaderStore,
   displayText,
   easeToward,
-} from './store';
+} from './store.ts';
 
 describe('easeToward', () => {
   test('eases toward the ceiling without overshooting', ({ expect }) => {

@@ -5,8 +5,8 @@
 import * as Effect from 'effect/Effect';
 import { describe, test } from 'vitest';
 
-import * as Node from './AppGraphNode';
-import { nodeArgsUnchanged } from './util';
+import * as Node from './AppGraphNode.ts';
+import { nodeArgsUnchanged } from './util.ts';
 
 const node = (overrides: Partial<Node.NodeArg<unknown>> = {}): Node.NodeArg<unknown> => ({
   id: 'node',

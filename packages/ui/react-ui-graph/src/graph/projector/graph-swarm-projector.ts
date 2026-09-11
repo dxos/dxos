@@ -7,8 +7,8 @@ import { type Timer, timer } from 'd3';
 import * as GraphModel from '@dxos/graph/GraphModel';
 import { log } from '@dxos/log';
 
-import { type GraphLayoutNode } from '../types';
-import { GraphProjector, type GraphProjectorOptions } from './graph-projector';
+import { type GraphLayoutNode } from '../types.ts';
+import { GraphProjector, type GraphProjectorOptions } from './graph-projector.ts';
 
 // Boids swarming simulation rendered through the react-ui-graph SVG renderer.
 // Mirrors the canvas Swarm component's tick (alignment / cohesion / separation)

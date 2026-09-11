@@ -4,4 +4,4 @@
 
 import { type ComponentType, lazy } from 'react';
 
-export const StreamDeckDashboard: ComponentType<any> = lazy(() => import('./StreamDeckDashboard'));
+export const StreamDeckDashboard: ComponentType<any> = lazy(() => import('./StreamDeckDashboard/index.ts'));

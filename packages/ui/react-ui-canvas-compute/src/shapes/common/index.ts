@@ -2,9 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
-export * from './box-defs';
-export * from './function-anchors';
+export * from './box-defs.ts';
+export * from './function-anchors.ts';
 
-export * from './Box';
-export * from './FunctionBody';
-export * from './TypeSelect';
+export * from './Box.tsx';
+export * from './FunctionBody.tsx';
+export * from './TypeSelect.tsx';

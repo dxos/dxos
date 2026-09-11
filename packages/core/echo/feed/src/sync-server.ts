@@ -10,7 +10,7 @@ import { log } from '@dxos/log';
 import { type FeedProtocol } from '@dxos/protocols';
 import type { SqlTransaction } from '@dxos/sql-sqlite';
 
-import type { FeedStore } from './feed-store';
+import type { FeedStore } from './feed-store.ts';
 
 type AppendRequest = FeedProtocol.AppendRequest;
 type ProtocolMessage = FeedProtocol.ProtocolMessage;

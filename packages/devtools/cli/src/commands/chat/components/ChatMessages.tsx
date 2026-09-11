@@ -4,9 +4,9 @@
 
 import { For, Match, Switch } from 'solid-js';
 
-import { theme } from '../../../theme';
-import { type Message } from '../types';
-import { Markdown } from './Markdown';
+import { theme } from '../../../theme.ts';
+import { type Message } from '../types.ts';
+import { Markdown } from './Markdown.tsx';
 
 export type ChatMessagesProps = {
   messages: Message[];

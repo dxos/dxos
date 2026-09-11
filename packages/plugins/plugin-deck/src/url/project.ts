@@ -23,10 +23,10 @@ import { log } from '@dxos/log';
 
 import { DeckCapabilities, DeckSchema } from '#types';
 
-import { shouldDeferNavigationHandlers } from '../capabilities/check-app-scheme';
-import { applyActive, applyCompanion, applyWorkspace } from './apply';
-import * as Navigation from './navigation';
-import { getCandidateEntityIds, getUnresolvedPlankId, initialPlanks } from './navigation';
+import { shouldDeferNavigationHandlers } from '../capabilities/check-app-scheme.ts';
+import { applyActive, applyCompanion, applyWorkspace } from './apply.ts';
+import * as Navigation from './navigation.ts';
+import { getCandidateEntityIds, getUnresolvedPlankId, initialPlanks } from './navigation.ts';
 
 /**
  * How long resolution waits for a pair's node before it stops trying. Exported because a plank waits
