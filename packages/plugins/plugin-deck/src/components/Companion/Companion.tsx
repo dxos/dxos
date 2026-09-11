@@ -25,7 +25,8 @@ import { Pane, type PaneTab } from '../Pane/index.ts';
 //
 
 export type CompanionProps = ThemedClassName<{
-  companions: AppGraphNode.Node[];
+  /** The plank's companions, or undefined until they have been read — an empty array is a plank with none. */
+  companions?: AppGraphNode.Node[];
   /** Selected companion id. */
   value?: string;
   onValueChange?: (id: string) => void;
@@ -39,7 +40,7 @@ export type CompanionProps = ThemedClassName<{
 
 export const Companion = ({
   classNames,
-  companions,
+  companions: companionsProp,
   value,
   onValueChange,
   attendableId,
@@ -47,6 +48,7 @@ export const Companion = ({
   controls,
 }: CompanionProps) => {
   const { t } = useTranslation(meta.profile.key);
+  const companions = companionsProp ?? [];
 
   // Fall back to the first companion when uncontrolled so a panel is always visible.
   const selected = value ?? companions[0]?.id;
@@ -83,9 +85,16 @@ export const Companion = ({
         <Pane.Tabs tabs={tabs} value={selected} onValueChange={onValueChange} attendableId={attendableId} related />
         {controls}
       </Pane.Toolbar>
-      {/* Panels stay mounted; the inactive ones are hidden so switching companions preserves their state. */}
+      {companionsProp?.length === 0 && (
+        <Pane.Content classNames='grid place-items-center'>
+          <p className='text-sm text-description'>{t('no-companions.message')}</p>
+        </Pane.Content>
+      )}
+      {/* Panels stay mounted; the inactive ones are hidden so switching companions preserves their state.
+          Keyed by variant rather than node id, so a companion that is the same surface beside every plank
+          (support, assistant) keeps its state when the plank it is beside changes. */}
       {companions.map((node, index) => (
-        <Pane.Content key={node.id} classNames={mx(node.id !== selected && 'hidden')}>
+        <Pane.Content key={Attention.getLinkedVariant(node.id)} classNames={mx(node.id !== selected && 'hidden')}>
           <Surface.Surface type={AppSurface.Article} data={companionDataList[index]} limit={1} />
         </Pane.Content>
       ))}

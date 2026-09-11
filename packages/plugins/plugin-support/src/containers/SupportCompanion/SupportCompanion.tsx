@@ -86,9 +86,9 @@ export const SupportCompanion = ({ companionTo }: SupportCompanionProps) => {
           ))}
         </Toolbar.Root>
       </Panel.Toolbar>
-      <Panel.Content asChild>
+      <Panel.Content>
         <ScrollArea.Root orientation='vertical'>
-          <ScrollArea.Viewport classNames='p-4 flex flex-col items-center gap-4'>
+          <ScrollArea.Viewport classNames='flex flex-col items-center p-3 gap-3'>
             {screenshots.length > 0 && (
               <Carousel.Root count={screenshots.length}>
                 <Carousel.Content classNames='w-full'>
