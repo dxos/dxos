@@ -12,15 +12,14 @@ import { ChatStatus as NaturalChatStatus } from '@dxos/react-ui-chat';
 
 import { meta } from '#meta';
 
+// From the context module rather than the `../Chat` barrel: `Chat.tsx` imports this component, so
+// the barrel would close a cycle and leave `ChatActivity` uninitialized at module evaluation.
 import { useChatContext } from '../Chat/context';
 
 const CHAT_ACTIVITY_NAME = 'Chat.Activity';
+const CHAT_ACTIVITY_VIEW_NAME = 'Chat.ActivityView';
 
 const activityLabelKey = (phase: RequestPhaseName): string => `activity.${phase}.label`;
-
-export type ChatActivityViewProps = ThemedClassName<{
-  activity?: Trace.PayloadType<typeof RequestPhase>;
-}>;
 
 /**
  * What the request is doing while the reader waits for the first token.
@@ -33,14 +32,20 @@ export type ChatActivityViewProps = ThemedClassName<{
 export const ChatActivity = ({ classNames }: ThemedClassName) => {
   const { processor } = useChatContext(CHAT_ACTIVITY_NAME);
   const activity = useAtomValue(processor.activity);
+
   return <ChatActivityView classNames={classNames} activity={activity} />;
 };
 
 ChatActivity.displayName = CHAT_ACTIVITY_NAME;
 
+export type ChatActivityViewProps = ThemedClassName<{
+  activity?: Trace.PayloadType<typeof RequestPhase>;
+}>;
+
 /**
  * The line itself, given a resolved phase. Split from {@link ChatActivity} so each phase can be
- * mounted in a story without a live agent process.
+ * mounted in a story without a live agent process — the same live/resolved split `ChatStatus` and
+ * `ChatStatusView` make for the counters pill this line sits above.
  */
 export const ChatActivityView = ({ classNames, activity }: ChatActivityViewProps) => {
   const { t } = useTranslation(meta.profile.key);
@@ -76,3 +81,5 @@ export const ChatActivityView = ({ classNames, activity }: ChatActivityViewProps
     </NaturalChatStatus.Root>
   );
 };
+
+ChatActivityView.displayName = CHAT_ACTIVITY_VIEW_NAME;

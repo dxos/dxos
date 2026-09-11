@@ -37,7 +37,11 @@ export const Empty: Story = {
 };
 
 export const Preparing: Story = {
-  args: { activity: { phase: 'preparing' } },
+  args: {
+    activity: {
+      phase: 'preparing',
+    },
+  },
   play: async ({ canvasElement }) => {
     await expect(within(canvasElement).getByTestId('assistant.chat-activity')).toHaveTextContent('Preparing request');
   },
@@ -45,12 +49,22 @@ export const Preparing: Story = {
 
 /** `detail` carries the server count, as `connectMcpServers` emits it. */
 export const ConnectingMcp: Story = {
-  args: { activity: { phase: 'connecting-mcp', detail: '3' } },
+  args: {
+    activity: {
+      phase: 'connecting-mcp',
+      detail: '3',
+    },
+  },
 };
 
 /** The first attempt is just the request, so no attempt count is shown. */
 export const ContactingProvider: Story = {
-  args: { activity: { phase: 'contacting-provider', attempt: 1 } },
+  args: {
+    activity: {
+      phase: 'contacting-provider',
+      attempt: 1,
+    },
+  },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await expect(canvas.getByTestId('assistant.chat-activity')).toHaveTextContent('Contacting inference provider');
@@ -60,7 +74,12 @@ export const ContactingProvider: Story = {
 
 /** A re-issued request: the reader is told the wait is a retry rather than a stall. */
 export const Retrying: Story = {
-  args: { activity: { phase: 'contacting-provider', attempt: 3 } },
+  args: {
+    activity: {
+      phase: 'contacting-provider',
+      attempt: 3,
+    },
+  },
   play: async ({ canvasElement }) => {
     await expect(within(canvasElement).getByTestId('assistant.chat-activity.attempt')).toHaveTextContent('attempt 3');
   },
