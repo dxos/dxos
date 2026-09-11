@@ -34,7 +34,7 @@ import {
 import { ComplexMap } from '@dxos/util';
 
 import { type IceProvider } from '../../signal/index.ts';
-import { type Transport, type TransportFactory } from '../transport.ts';
+import { type Transport, TRANSPORT_CONNECTION_TIMEOUT, type TransportFactory } from '../transport.ts';
 import { createRtcTransportFactory } from './rtc-transport-factory.ts';
 
 type BridgeService = BufService<typeof BridgeServiceDesc>;
@@ -49,12 +49,8 @@ type TransportState = {
 /** Bounds {@link RtcTransportService._closedTransports}; a proxy stops writing long before this. */
 const CLOSED_TRANSPORT_HISTORY = 128;
 
-/**
- * How long a call for an unregistered transport waits for its `open` to register one. The proxy is
- * told its stream is ready before this service's handler runs, so its first writes routinely arrive
- * in that gap; they carry the session handshake, so they have to wait rather than be dropped.
- */
-const OPEN_REGISTRATION_TIMEOUT = 10_000;
+/** Must expire before the deadline the proxy puts on the call that is waiting. */
+const OPEN_REGISTRATION_TIMEOUT = TRANSPORT_CONNECTION_TIMEOUT - 1_000;
 
 export class RtcTransportService implements BridgeService {
   private readonly _openTransports = new ComplexMap<PublicKey, TransportState>(PublicKey.hash);
@@ -82,76 +78,90 @@ export class RtcTransportService implements BridgeService {
       this._openTransports.delete(proxyId);
     }
 
-    return new Stream<BridgeEvent>(({ ready, next, close }) => {
-      const pushNewState = createStateUpdater(next);
-
-      const transportStream: Duplex = new Duplex({
-        read: () => {
-          const callbacks = [...transportState.writeProcessedCallbacks];
-          transportState.writeProcessedCallbacks.length = 0;
-          callbacks.forEach((cb) => cb());
-        },
-        write: function (chunk, _, callback) {
-          next(
-            create(BridgeEventSchema, {
-              type: { case: 'data', value: create(BridgeEvent_DataEventSchema, { payload: chunk }) },
-            }),
-          );
-          callback();
-        },
-      });
-
-      const transport = this._transportFactory.createTransport({
-        initiator: request.initiator,
-        topic: request.topic,
-        ownPeerKey: request.ownPeerKey,
-        remotePeerKey: request.remotePeerKey,
-        stream: transportStream,
-        sendSignal: async (signal) => {
-          next(
-            create(BridgeEventSchema, {
-              type: { case: 'signal', value: create(BridgeEvent_SignalEventSchema, { payload: signal }) },
-            }),
-          );
-        },
-      });
-
-      const transportState: TransportState = {
-        proxyId,
-        transport,
-        connectorStream: transportStream,
-        writeProcessedCallbacks: [],
-      };
-
-      transport.connected.on(() => pushNewState(ConnectionState.CONNECTED));
-
-      transport.errors.handle(async (err) => {
-        pushNewState(ConnectionState.CLOSED, err);
-        void this._safeCloseTransport(transportState);
-        close(err);
-      });
-
-      transport.closed.on(async () => {
-        pushNewState(ConnectionState.CLOSED);
-        void this._safeCloseTransport(transportState);
-        close();
-      });
-
-      this._openTransports.set(proxyId, transportState);
-      this._registration(proxyId).wake();
-
-      transport.open().catch(async (err) => {
-        pushNewState(ConnectionState.CLOSED, err);
-        void this._safeCloseTransport(transportState);
-        close(err);
-      });
-
-      ready();
-
-      log('stream ready');
-
-      pushNewState(ConnectionState.CONNECTING);
+    return new Stream<BridgeEvent>((producer) => {
+      try {
+        return this._produceTransport(proxyId, request, producer);
+      } catch (err) {
+        // Nothing will ever register, so callers waiting on it must be released.
+        this._rememberClosed(proxyId);
+        throw err;
+      }
     });
+  }
+
+  private _produceTransport(
+    proxyId: PublicKey,
+    request: ConnectionRequest,
+    { ready, next, close }: { ready: () => void; next: (value: BridgeEvent) => void; close: (err?: Error) => void },
+  ): void {
+    const pushNewState = createStateUpdater(next);
+
+    const transportStream: Duplex = new Duplex({
+      read: () => {
+        const callbacks = [...transportState.writeProcessedCallbacks];
+        transportState.writeProcessedCallbacks.length = 0;
+        callbacks.forEach((cb) => cb());
+      },
+      write: function (chunk, _, callback) {
+        next(
+          create(BridgeEventSchema, {
+            type: { case: 'data', value: create(BridgeEvent_DataEventSchema, { payload: chunk }) },
+          }),
+        );
+        callback();
+      },
+    });
+
+    const transport = this._transportFactory.createTransport({
+      initiator: request.initiator,
+      topic: request.topic,
+      ownPeerKey: request.ownPeerKey,
+      remotePeerKey: request.remotePeerKey,
+      stream: transportStream,
+      sendSignal: async (signal) => {
+        next(
+          create(BridgeEventSchema, {
+            type: { case: 'signal', value: create(BridgeEvent_SignalEventSchema, { payload: signal }) },
+          }),
+        );
+      },
+    });
+
+    const transportState: TransportState = {
+      proxyId,
+      transport,
+      connectorStream: transportStream,
+      writeProcessedCallbacks: [],
+    };
+
+    transport.connected.on(() => pushNewState(ConnectionState.CONNECTED));
+
+    transport.errors.handle(async (err) => {
+      pushNewState(ConnectionState.CLOSED, err);
+      void this._safeCloseTransport(transportState);
+      close(err);
+    });
+
+    transport.closed.on(async () => {
+      pushNewState(ConnectionState.CLOSED);
+      void this._safeCloseTransport(transportState);
+      close();
+    });
+
+    this._openTransports.set(proxyId, transportState);
+    this._registration(proxyId).wake();
+
+    transport.open().catch(async (err) => {
+      pushNewState(ConnectionState.CLOSED, err);
+      void this._safeCloseTransport(transportState);
+      close(err);
+    });
+
+    ready();
+
+    log('stream ready');
+
+    pushNewState(ConnectionState.CONNECTING);
   }
 
   async sendSignal({ proxyId, signal }: SignalRequest): Promise<Empty> {
@@ -159,7 +169,7 @@ export class RtcTransportService implements BridgeService {
     const key = requirePublicKey(proxyId);
     const transport = await this._resolveTransport(key);
     if (!transport) {
-      log.info('signal dropped for a transport this bridge closed', { proxyId: key });
+      log('signal dropped for a transport this bridge closed', { proxyId: key });
       return create(EmptySchema, {});
     }
 
@@ -168,17 +178,18 @@ export class RtcTransportService implements BridgeService {
   }
 
   async getDetails({ proxyId }: DetailsRequest): Promise<DetailsResponse> {
-    const transport = await this._resolveTransport(requirePublicKey(proxyId));
+    const transport = await this._resolveTransport(requirePublicKey(proxyId), { wait: false });
 
     return create(DetailsResponseSchema, { details: (await transport?.transport.getDetails()) ?? 'transport closed' });
   }
 
   async getStats({ proxyId }: StatsRequest): Promise<StatsResponse> {
-    // `Connection` samples these on an interval for the life of the connection, so a sample racing a
-    // close is routine.
-    const transport = await this._resolveTransport(requirePublicKey(proxyId));
+    // Sampled on an interval for the life of the connection, so it must never wait on one.
+    const transport = await this._resolveTransport(requirePublicKey(proxyId), { wait: false });
     if (!transport) {
-      return create(StatsResponseSchema, {});
+      return create(StatsResponseSchema, {
+        stats: { bytesSent: 0, bytesReceived: 0, packetsSent: 0, packetsReceived: 0, rawStats: 'transport closed' },
+      });
     }
 
     return create(StatsResponseSchema, { stats: await transport.transport.getStats() });
@@ -188,7 +199,7 @@ export class RtcTransportService implements BridgeService {
     const key = requirePublicKey(proxyId);
     const transport = await this._resolveTransport(key);
     if (!transport) {
-      log.info('data dropped for a transport this bridge closed', { proxyId: key, bytes: payload.length });
+      log('data dropped for a transport this bridge closed', { proxyId: key, bytes: payload.length });
       return create(EmptySchema, {});
     }
 
@@ -220,16 +231,26 @@ export class RtcTransportService implements BridgeService {
    * transport error, and the swarm answers that by tearing down whatever connection it holds to the
    * peer — including a replacement one the call knows nothing about.
    */
-  private async _resolveTransport(proxyId: PublicKey): Promise<TransportState | undefined> {
+  private async _resolveTransport(
+    proxyId: PublicKey,
+    { wait = true }: { wait?: boolean } = {},
+  ): Promise<TransportState | undefined> {
     const transport = this._openTransports.get(proxyId);
     if (transport) {
       return transport;
     }
-    if (this._wasClosedHere(proxyId)) {
+    if (!wait || this._wasClosedHere(proxyId)) {
       return undefined;
     }
 
-    await this._registration(proxyId).wait({ timeout: OPEN_REGISTRATION_TIMEOUT });
+    const trigger = this._registration(proxyId);
+    try {
+      await trigger.wait({ timeout: OPEN_REGISTRATION_TIMEOUT });
+    } finally {
+      if (this._registrations.get(proxyId) === trigger && !this._openTransports.has(proxyId)) {
+        this._registrations.delete(proxyId);
+      }
+    }
     return this._openTransports.get(proxyId);
   }
 
@@ -243,8 +264,9 @@ export class RtcTransportService implements BridgeService {
   }
 
   private _rememberClosed(proxyId: PublicKey): void {
+    this._registrations.get(proxyId)?.wake();
     this._registrations.delete(proxyId);
-    if (this._closedTransports.some((id) => id.equals(proxyId))) {
+    if (this._wasClosedHere(proxyId)) {
       return;
     }
     this._closedTransports.push(proxyId);
