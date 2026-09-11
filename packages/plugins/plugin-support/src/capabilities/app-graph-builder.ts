@@ -56,7 +56,7 @@ export default Capability.makeModule(
     /** Whether the reader keeps the help panels; they are on until the setting turns them off. */
     const showHelpCompanions = (get: Atom.AtomContext): boolean => {
       const [settingsAtom] = get(settingsCapabilityAtom);
-      return !settingsAtom || get(settingsAtom).showHelpCompanions !== false;
+      return !settingsAtom || !get(settingsAtom).hideHelpCompanions;
     };
 
     const extensions = yield* Effect.all([
