@@ -1,0 +1,27 @@
+diff --git a/dist/reporter.js b/dist/reporter.js
+index 8b88ae54ec48557d6f31cb02c69f80f28a28a098..658b11fd5ede53dc0095698a7f33e100639fe30e 100644
+--- a/dist/reporter.js
++++ b/dist/reporter.js
+@@ -131,10 +131,18 @@ export default class EvaliteReporter {
+         // Wait for all queued events to complete
+         await this.runner.waitForCompletion();
+         // Print errors first (mimicking DefaultReporter's reportSummary -> printErrorsSummary flow)
+-        renderErrorsSummary(this.ctx.logger, {
+-            testModules: testModules,
+-            errors: unhandledErrors,
+-        });
++        // PATCH(dxos): vitest's printError reads project settings off the task it is handed, and
++        // evalite hands it the reported test object, which has none; a failed eval then crashes the
++        // reporter here, before the JSON export below is written. Printing is not worth the export.
++        try {
++            renderErrorsSummary(this.ctx.logger, {
++                testModules: testModules,
++                errors: unhandledErrors,
++            });
++        }
++        catch (error) {
++            this.ctx.logger.error(`Could not render the failure details: ${error instanceof Error ? error.message : String(error)}`);
++        }
+         // Then print test summary
+         this.customTestSummary(testModules);
+     };

@@ -3,12 +3,17 @@
 //
 
 /**
- * Reads an evalite JSON export and sends each result to PostHog as an `$ai_trace` root over the
- * generations the runner already sent, plus one `$ai_evaluation` per scorer, and writes a markdown
- * summary for the job.
+ * Reads the latest run from evalite's store and sends each result to PostHog as an `$ai_trace`
+ * root over the generations the runner already sent, plus one `$ai_evaluation` per scorer, and
+ * writes a markdown summary for the job.
  *
- *   evalite run src/evals --outputPath out/evals.json
- *   node scripts/eval-events.mjs out/evals.json --summary out/summary.md --posthog
+ *   evalite run src/evals
+ *   node scripts/eval-events.mjs --summary out/summary.md --posthog
+ *
+ * The store rather than evalite's `--outputPath` JSON: that export is written by the reporter
+ * after it prints the failures, and a failed scenario's stack trace can crash the print
+ * (`vitest`'s `printError` on evalite's task objects), losing the night's data with it. The rows
+ * are already in SQLite by then.
  *
  * The runner (`src/Observe.ts`) left the trace and experiment ids on each result's evalite traces.
  * The root and the scores are sent from here rather than in-process because evalite names and
@@ -18,8 +23,9 @@
  * view reads.
  */
 
+import { createSqliteStorage } from 'evalite/sqlite-storage';
 import { createHash } from 'node:crypto';
-import { readFileSync, writeFileSync } from 'node:fs';
+import { writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { parseArgs } from 'node:util';
 import { PostHog } from 'posthog-node';
@@ -28,6 +34,70 @@ const DISTINCT_ID = 'assistant-evals';
 
 /** Where evalite discovers scenarios; file names are reported relative to it. */
 const EVALS_DIR = path.resolve(import.meta.dirname, '../src/evals');
+
+/** evalite's own location for its store, relative to the package it ran in. */
+const STORE = path.resolve(import.meta.dirname, '../node_modules/.evalite/cache.sqlite');
+
+/**
+ * The latest full run, in the shape of evalite's JSON export: evals with their results, each
+ * result with its scores and traces.
+ */
+export const readLatestRun = async (storePath = STORE) => {
+  const storage = await createSqliteStorage(storePath);
+  const [run] = await storage.runs.getMany({
+    runType: 'full',
+    orderBy: 'created_at',
+    orderDirection: 'desc',
+    limit: 1,
+  });
+  if (!run) {
+    throw new Error(`No completed run in ${storePath}.`);
+  }
+  const evals = await storage.evals.getMany({ runIds: [run.id], statuses: ['fail', 'success'] });
+  const results = await storage.results.getMany({ evalIds: evals.map((evaluation) => evaluation.id) });
+  const resultIds = results.map((result) => result.id);
+  const scores = await storage.scores.getMany({ resultIds });
+  const traces = await storage.traces.getMany({ resultIds });
+  const meanOf = (rows) => (rows.length === 0 ? 0 : sum(rows, (row) => row.score) / rows.length);
+  return {
+    run: { id: run.id, createdAt: run.created_at },
+    evals: evals.map((evaluation) => {
+      const own = results.filter((result) => result.eval_id === evaluation.id);
+      return {
+        name: evaluation.name,
+        filepath: evaluation.filepath,
+        status: evaluation.status,
+        variantName: evaluation.variant_name,
+        averageScore: meanOf(scores.filter((score) => own.some((result) => result.id === score.result_id))),
+        results: own.map((result) => {
+          const ownScores = scores.filter((score) => score.result_id === result.id);
+          return {
+            id: result.id,
+            duration: result.duration,
+            input: result.input,
+            output: result.output,
+            status: result.status,
+            createdAt: result.created_at,
+            averageScore: meanOf(ownScores),
+            scores: ownScores.map((score) => ({
+              name: score.name,
+              score: score.score,
+              description: score.description,
+            })),
+            traces: traces
+              .filter((trace) => trace.result_id === result.id)
+              .map((trace) => ({
+                output: trace.output,
+                startTime: trace.start_time,
+                inputTokens: trace.input_tokens,
+                outputTokens: trace.output_tokens,
+              })),
+          };
+        }),
+      };
+    }),
+  };
+};
 
 const sum = (items, pick) => items.reduce((total, item) => total + (pick(item) ?? 0), 0);
 
@@ -173,18 +243,14 @@ export const toSummary = (report) => {
 };
 
 const main = async () => {
-  const { positionals, values } = parseArgs({
-    allowPositionals: true,
+  const { values } = parseArgs({
     options: {
+      store: { type: 'string', default: STORE },
       summary: { type: 'string' },
       posthog: { type: 'boolean', default: false },
     },
   });
-  const [input] = positionals;
-  if (!input) {
-    throw new Error('usage: eval-events.mjs <evalite-export.json> [--summary <file.md>] [--posthog]');
-  }
-  const report = JSON.parse(readFileSync(input, 'utf8'));
+  const report = await readLatestRun(values.store);
 
   if (values.summary) {
     writeFileSync(values.summary, toSummary(report));

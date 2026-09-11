@@ -3,7 +3,7 @@ $schema: https://moonrepo.dev/schemas/tasks.json
 tasks:
   evals:
     # evalite takes one positional, so a passthrough file replaces the directory rather than joining it.
-    command: bash -c 'pnpm exec dx-killorphans evalite run --outputPath out/evals.json "${1:-src/evals}"' --
+    command: bash -c 'pnpm exec dx-killorphans evalite run "${1:-src/evals}"' --
     deps:
       - esbuild-plugins:build
       - node-std:build
@@ -14,6 +14,13 @@ tasks:
       cache: false
       outputStyle: stream
       timeout: 5400
+  # The latest run from evalite's store, as a job summary and as PostHog events. A task so it runs
+  # on the toolchain's node: the store is SQLite through a native module built for that version.
+  evals-report:
+    command: node scripts/eval-events.mjs --summary out/summary.md --posthog
+    options:
+      cache: false
+      outputStyle: stream
   evals-watch:
     command: pnpm exec dx-killorphans evalite watch src/evals
     deps:
