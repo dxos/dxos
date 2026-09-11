@@ -10,8 +10,8 @@ import * as Result from 'effect/Result';
 import { Harness } from '@dxos/assistant';
 import * as Operation from '@dxos/compute/Operation';
 
-import { SetAlarm } from './definitions';
-import { resolveWakeAt } from './resolve-wake-at';
+import { SetAlarm } from './definitions.ts';
+import { resolveWakeAt } from './resolve-wake-at.ts';
 
 /**
  * Schedules a self-wake on the owning host via {@link Harness.setAlarm}. The host delivers the

@@ -13,7 +13,7 @@ import { print } from '@dxos/cli-util';
 import { ClientService } from '@dxos/client';
 import { ProfileDocumentSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
-import { printIdentity } from '../util';
+import { printIdentity } from '../util.ts';
 
 export const handler = Effect.fn(function* ({ displayName }: { displayName: string }) {
   const { json } = yield* CommandConfig;

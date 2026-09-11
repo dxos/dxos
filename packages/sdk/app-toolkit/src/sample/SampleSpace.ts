@@ -14,7 +14,7 @@ import { EffectEx } from '@dxos/effect';
 import { BaseError } from '@dxos/errors';
 import { Tagging } from '@dxos/schema';
 
-import * as AppAnnotation from '../echo/AppAnnotation';
+import * as AppAnnotation from '../echo/AppAnnotation.ts';
 
 /**
  * Raised when a sample space cannot be built — a missing space root, an unresolvable tag, or a

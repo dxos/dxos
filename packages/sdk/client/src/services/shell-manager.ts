@@ -24,8 +24,8 @@ import { AppContextRequestSchema } from '@dxos/protocols/buf/dxos/iframe_pb';
 import { type ProtoRpcPeer, createProtoRpcPeer } from '@dxos/rpc';
 import { createIFramePort } from '@dxos/rpc-tunnel';
 
-import { RPC_TIMEOUT } from '../common';
-import { type IFrameManager } from './iframe-manager';
+import { RPC_TIMEOUT } from '../common.ts';
+import { type IFrameManager } from './iframe-manager.ts';
 
 const shellStyles = Object.entries({
   'display': 'none',

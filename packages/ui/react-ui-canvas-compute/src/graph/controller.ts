@@ -38,9 +38,9 @@ import { log } from '@dxos/log';
 import { type CanvasGraphModel } from '@dxos/react-ui-canvas-editor';
 import { type ContentBlock } from '@dxos/types';
 
-import { createComputeGraph } from '../hooks';
-import { type ComputeShape } from '../shapes';
-import { resolveComputeNode } from './node-defs';
+import { createComputeGraph } from '../hooks/index.ts';
+import { type ComputeShape } from '../shapes/index.ts';
+import { resolveComputeNode } from './node-defs.ts';
 
 // TODO(burdon): API package for conductor.
 export const InvalidStateError = Error;

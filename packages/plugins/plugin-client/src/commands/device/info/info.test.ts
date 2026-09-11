@@ -10,7 +10,7 @@ import { ClientService } from '@dxos/client';
 import { EffectEx } from '@dxos/effect';
 import { toPublicKey } from '@dxos/protocols/buf';
 
-import { handler } from './info';
+import { handler } from './info.ts';
 
 describe('device info', () => {
   it('should show device info', () =>

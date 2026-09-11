@@ -22,9 +22,9 @@ import { Expando } from '@dxos/schema';
 import { meta } from '#meta';
 import { TrelloOperation } from '#types';
 
-import { TRELLO_PIVOT_FIELD, TRELLO_SOURCE } from '../constants';
-import { formatTrelloSyncFailure } from '../errors';
-import { TrelloApi } from '../services';
+import { TRELLO_PIVOT_FIELD, TRELLO_SOURCE } from '../constants.ts';
+import { formatTrelloSyncFailure } from '../errors.ts';
+import { TrelloApi } from '../services/index.ts';
 
 type TrelloBoard = TrelloApi.TrelloBoard;
 type TrelloCard = TrelloApi.TrelloCard;

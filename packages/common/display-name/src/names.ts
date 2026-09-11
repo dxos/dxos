@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { data } from './data';
+import { data } from './data.ts';
 
 const capitalize = (input: string): string => input.charAt(0).toUpperCase() + input.slice(1);
 

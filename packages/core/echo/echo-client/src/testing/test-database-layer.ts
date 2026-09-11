@@ -12,8 +12,8 @@ import { EffectEx } from '@dxos/effect';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 
-import type { DatabaseImpl } from '../proxy-db';
-import { EchoTestBuilder } from './echo-test-builder';
+import type { DatabaseImpl } from '../proxy-db/index.ts';
+import { EchoTestBuilder } from './echo-test-builder.ts';
 
 const testBuilder = EffectEx.acquireReleaseResource(() => new EchoTestBuilder());
 

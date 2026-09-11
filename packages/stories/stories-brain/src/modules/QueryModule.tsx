@@ -14,8 +14,8 @@ import { buildSparql, generateQuery, parseSparqlToQuery } from '@dxos/pipeline-r
 import * as BrainCapabilities from '@dxos/plugin-brain/BrainCapabilities';
 import { type Space } from '@dxos/react-client/echo';
 
-import { DEFAULT_SPARQL, QueryPanel } from '../components';
-import { useFactsStory } from './context';
+import { DEFAULT_SPARQL, QueryPanel } from '../components/index.ts';
+import { useFactsStory } from './context.ts';
 
 /** LEFT (middle): natural-language → SPARQL over Brain's per-space `FactStore`; results are the view. */
 export const QueryModule = () => {

@@ -10,10 +10,10 @@ import { EditorView, ViewPlugin } from '@codemirror/view';
 
 import { Doc } from '@dxos/echo-doc';
 
-import { Cursor } from '../../../util';
-import { cursorConverter } from './cursor';
-import { type State, initialSync, isReconcile, reconcileAnnotation, updateHeadsEffect } from './defs';
-import { Syncer } from './sync';
+import { Cursor } from '../../../util/index.ts';
+import { cursorConverter } from './cursor.ts';
+import { type State, initialSync, isReconcile, reconcileAnnotation, updateHeadsEffect } from './defs.ts';
+import { Syncer } from './sync.ts';
 
 /**
  * CodeMirror extension that two-way syncs the editor with the string the {@link Doc.Accessor} points

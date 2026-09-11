@@ -25,7 +25,7 @@ import { withLayout } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
 
-import { NavBranch } from './NavBranch';
+import { NavBranch } from './NavBranch.tsx';
 
 // The graph composes a child's id from its parent's path, so an extension matching a contributed node
 // has to name the full path, not the id the connector declared.

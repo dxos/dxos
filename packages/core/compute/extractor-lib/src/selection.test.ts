@@ -7,8 +7,8 @@ import { describe, test } from 'vitest';
 import { makeIdentityIndex } from '@dxos/extractor';
 import { Organization } from '@dxos/types';
 
-import { identitySpecs } from './identity';
-import { isAutomatedSender, shouldExtractContact } from './selection';
+import { identitySpecs } from './identity.ts';
+import { isAutomatedSender, shouldExtractContact } from './selection.ts';
 
 const indexWith = (...organizations: Organization.Organization[]) => {
   const index = makeIdentityIndex(identitySpecs);

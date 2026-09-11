@@ -8,8 +8,8 @@ import { describe, test } from 'vitest';
 
 import { Feed } from '@dxos/echo';
 
-import { buildChannelFormSchema, resolveProvider } from './ChannelBackend';
-import * as ThreadCapabilities from './ThreadCapabilities';
+import { buildChannelFormSchema, resolveProvider } from './ChannelBackend.ts';
+import * as ThreadCapabilities from './ThreadCapabilities.ts';
 
 describe('channel-backend helpers', () => {
   test('resolveProvider finds by kind', ({ expect }) => {

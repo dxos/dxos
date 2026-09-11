@@ -7,7 +7,7 @@ import { describe, test } from 'vitest';
 import { type ItemContent } from '@dxos/react-ui-feed';
 import { ContentBlock, Message } from '@dxos/types';
 
-import { createRenderer } from './renderer';
+import { createRenderer } from './renderer.ts';
 
 describe('createRenderer', () => {
   test('a run of tool calls is one panel', ({ expect }) => {

@@ -12,7 +12,7 @@ import * as Stream from 'effect/Stream';
 import { EffectEx } from '@dxos/effect';
 import type * as ObservabilityExtension from '@dxos/observability/ObservabilityExtension';
 
-import { analyticsStdio, makeCorrelator } from './analytics';
+import { analyticsStdio, makeCorrelator } from './analytics.ts';
 
 describe('MCP analytics', () => {
   test('captures initialize with the client name and version', ({ expect }) => {

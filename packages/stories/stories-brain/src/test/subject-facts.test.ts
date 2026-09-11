@@ -22,8 +22,8 @@ import {
   startResponseLog,
   toRelative,
   writeResults,
-} from '../testing/harness';
-import { DEFAULT_SUBJECT, SUBJECT as SUBJECT_OVERRIDE } from './defs';
+} from '../testing/harness/index.ts';
+import { DEFAULT_SUBJECT, SUBJECT as SUBJECT_OVERRIDE } from './defs.ts';
 
 // The subject to index. Defaults to Nicole Gudmand; override with `SUBJECT`.
 const SUBJECT = SUBJECT_OVERRIDE ?? DEFAULT_SUBJECT;

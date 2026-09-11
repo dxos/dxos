@@ -11,8 +11,8 @@ import { Form } from '@dxos/react-ui-form';
 
 import { FeedbackForm, type FeedbackPluginOption } from '#components';
 
-import { DownloadLogsAction } from './DownloadLogsAction';
-import { SupportSubmitAction, useSupportSubmit } from './SupportSubmitAction';
+import { DownloadLogsAction } from './DownloadLogsAction.tsx';
+import { SupportSubmitAction, useSupportSubmit } from './SupportSubmitAction.tsx';
 
 export const FeedbackPanel = () => {
   const config = useConfig();

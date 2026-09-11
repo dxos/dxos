@@ -9,7 +9,7 @@ import { describe, test } from 'vitest';
 import * as GraphEdge from '@dxos/graph/GraphEdge';
 import * as GraphNode from '@dxos/graph/GraphNode';
 
-import { createGptCircuit } from './testing';
+import { createGptCircuit } from './testing/index.ts';
 
 export const Shape = GraphNode.GraphNode.mapFields(
   Struct.assign({

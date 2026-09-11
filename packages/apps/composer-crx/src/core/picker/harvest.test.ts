@@ -8,7 +8,7 @@
 
 import { describe, test } from 'vitest';
 
-import { harvestFavicon, harvestHints, harvestSelection } from './harvest';
+import { harvestFavicon, harvestHints, harvestSelection } from './harvest.ts';
 
 describe('harvest', () => {
   test('harvestHints picks up OG + JSON-LD + first image + h1', ({ expect }) => {

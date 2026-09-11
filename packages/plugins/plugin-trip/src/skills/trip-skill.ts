@@ -9,7 +9,7 @@ import { trim } from '@dxos/util';
 
 import { BookingOperation, RoutingOperation, TripOperation } from '#types';
 
-import { TRIP_SKILL_KEY } from './keys';
+import { TRIP_SKILL_KEY } from './keys.ts';
 
 const operations = [TripOperation.AddSegment, RoutingOperation.PlanRoute, BookingOperation.SearchBookings];
 

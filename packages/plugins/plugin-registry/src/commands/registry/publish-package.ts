@@ -13,7 +13,7 @@ import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
 import { ClientService } from '@dxos/client';
 import { type PluginProfile, type PluginRelease } from '@dxos/protocols';
 
-import { AUTH_OPTION_DESCRIPTIONS, NSID, putRecord, resolveSession } from './util';
+import { AUTH_OPTION_DESCRIPTIONS, NSID, putRecord, resolveSession } from './util.ts';
 
 /**
  * `dx registry publish-package` — publishes both the mutable

@@ -14,7 +14,7 @@ import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import { SpacesService } from '@dxos/protocols/rpc';
 
 import SAMPLE_SPACE_JSON from '../content/sample/space.dx.json?raw';
-import { ImportSampleSpace } from './definitions';
+import { ImportSampleSpace } from './definitions.ts';
 
 const SAMPLE_SPACE_ARCHIVE_FILENAME = 'sample-space.dx.json';
 

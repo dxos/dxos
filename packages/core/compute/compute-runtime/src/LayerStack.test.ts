@@ -16,7 +16,7 @@ import { EffectEx } from '@dxos/effect';
 import { makeRecordingTracer } from '@dxos/effect/testing';
 import { SpaceId } from '@dxos/keys';
 
-import * as LayerStack from './LayerStack';
+import * as LayerStack from './LayerStack.ts';
 
 //
 // Test service tags.

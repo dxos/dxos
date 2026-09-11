@@ -2,9 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
-export { useInColumn } from './ColumnContext';
+export { useInColumn } from './ColumnContext.ts';
 
-export * from './Column';
+export * from './Column.tsx';
 export { type ColumnGap } from './Column.theme';
-export { ColumnContext } from './ColumnContext';
-export * from './withColumn';
+export { ColumnContext } from './ColumnContext.ts';
+export * from './withColumn.ts';

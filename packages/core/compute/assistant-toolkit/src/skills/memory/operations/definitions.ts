@@ -8,7 +8,7 @@ import * as Operation from '@dxos/compute/Operation';
 import { Database, Ref } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 
-import { Memory } from '../../../types/Memory';
+import { Memory } from '../../../types/Memory.ts';
 
 export const QueryMemories = Operation.make({
   meta: {

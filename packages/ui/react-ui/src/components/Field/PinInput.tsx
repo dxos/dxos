@@ -17,7 +17,7 @@ import React, {
 
 import { useForwardedRef, useIsFocused } from '@dxos/react-hooks';
 
-import { FIELD_NAME, useFieldValence } from './FieldContext';
+import { FIELD_NAME, useFieldValence } from './FieldContext.ts';
 
 type PinInputProps = Omit<ComponentPropsWithRef<'input'>, 'type' | 'maxLength'> & {
   /** Class name applied to each segment div. */

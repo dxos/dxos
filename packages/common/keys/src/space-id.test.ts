@@ -4,7 +4,7 @@
 
 import { expect, test } from 'vitest';
 
-import { SpaceId } from './space-id';
+import { SpaceId } from './space-id.ts';
 
 test('space-id', () => {
   const id = SpaceId.random();

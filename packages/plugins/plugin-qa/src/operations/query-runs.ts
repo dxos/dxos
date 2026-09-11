@@ -9,7 +9,7 @@ import { Database, Ref } from '@dxos/echo';
 
 import { QaOperation } from '#types';
 
-import { loadRuns } from './util';
+import { loadRuns } from './util.ts';
 
 const handler: Operation.WithHandler<typeof QaOperation.QueryRuns> = QaOperation.QueryRuns.pipe(
   Operation.withHandler(

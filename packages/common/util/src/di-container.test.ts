@@ -4,8 +4,8 @@
 
 import { test } from 'vitest';
 
-import { DiContainer } from './di-container';
-import { DiKey } from './di-key';
+import { DiContainer } from './di-container.ts';
+import { DiKey } from './di-key.ts';
 
 test('DiContainer', ({ expect }) => {
   const A = DiKey.define<string>('A');

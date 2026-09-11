@@ -8,7 +8,7 @@ import { I18nextProvider } from 'react-i18next';
 
 import { type Resource, addResources, i18n } from '@dxos/i18n';
 
-import { TranslationsContext, initialDtLocale, initialNs } from './TranslationsContext';
+import { TranslationsContext, initialDtLocale, initialNs } from './TranslationsContext.ts';
 
 export interface TranslationsProviderProps {
   children?: ReactNode;

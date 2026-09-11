@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { isTauri } from './platform';
+import { isTauri } from './platform.ts';
 
 /**
  * Open a URL outside the app: a new tab on the web, the system browser under Tauri, whose webview

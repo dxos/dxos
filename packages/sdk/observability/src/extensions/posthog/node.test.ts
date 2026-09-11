@@ -7,9 +7,9 @@ import { describe, expect, test, vi } from 'vitest';
 import { Config } from '@dxos/config';
 import { EffectEx } from '@dxos/effect';
 
-import * as ObservabilityExtension from '../../ObservabilityExtension';
-import { DXOS_VERSION } from '../../version';
-import { extensions } from './node';
+import * as ObservabilityExtension from '../../ObservabilityExtension.ts';
+import { DXOS_VERSION } from '../../version.ts';
+import { extensions } from './node.ts';
 
 const DID = 'did:key:z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK';
 const INSTALLATION_ID = '8a1d1d1e-8d4c-4c2a-9a4a-3a6e0b6f1f2b';

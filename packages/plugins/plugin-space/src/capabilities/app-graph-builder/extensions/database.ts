@@ -31,14 +31,14 @@ import { createFilename, downloadBlob, isNonNullable } from '@dxos/util';
 import { meta } from '#meta';
 import { SpaceCapabilities, SpaceEvents, SpaceOperation } from '#types';
 
-import { makeCreateObjectEntryForDatabaseType } from '../../../util';
+import { makeCreateObjectEntryForDatabaseType } from '../../../util/index.ts';
 import {
   ADD_VIEW_TO_SCHEMA_LABEL,
   DATABASE_SECTION_TYPE,
   SCHEMA_NODE_TYPE,
   SNAPSHOT_BY_SCHEMA_LABEL,
   buildViewIndex,
-} from './shared';
+} from './shared.ts';
 
 //
 // Extension Factory

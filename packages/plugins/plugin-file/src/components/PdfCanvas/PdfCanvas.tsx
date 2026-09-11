@@ -16,7 +16,7 @@ import { composable, composableProps, composeRefs, useTranslation } from '@dxos/
 
 import { meta } from '#meta';
 
-import { type PdfMatch, type PdfPageText, findMatches, markSpan } from './pdf-search';
+import { type PdfMatch, type PdfPageText, findMatches, markSpan } from './pdf-search.ts';
 
 /**
  * pdf.js, loaded on first use rather than on import.

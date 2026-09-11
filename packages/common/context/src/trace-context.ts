@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Context } from './context';
+import { Context } from './context.ts';
 
 /**
  * Context attribute key for trace context data.

@@ -8,8 +8,8 @@ import * as SampleSpace from '@dxos/app-toolkit/SampleSpace';
 import { Database, Obj, Ref } from '@dxos/echo';
 import { Milestone, Task, TaskSet } from '@dxos/types';
 
-import { type PersonKey, type PersonMap } from './team';
-import { daysAgo } from './util';
+import { type PersonKey, type PersonMap } from './team.ts';
+import { daysAgo } from './util.ts';
 
 //
 // The task set, authored as a tree.

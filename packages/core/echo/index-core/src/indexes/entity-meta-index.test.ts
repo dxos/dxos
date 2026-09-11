@@ -13,8 +13,8 @@ import { ATTR_DELETED, ATTR_RELATION_SOURCE, ATTR_RELATION_TARGET, ATTR_TYPE } f
 import { DXN, EID, EntityId, SpaceId } from '@dxos/keys';
 import { SqlTransaction } from '@dxos/sql-sqlite';
 
-import { EntityMetaIndex } from './entity-meta-index';
-import type { IndexerObject } from './interface';
+import { EntityMetaIndex } from './entity-meta-index.ts';
+import type { IndexerObject } from './interface.ts';
 
 const TYPE_PERSON = DXN.make('com.example.type.person', '0.1.0');
 const TYPE_PERSON_VERSIONLESS = DXN.make('com.example.type.person');

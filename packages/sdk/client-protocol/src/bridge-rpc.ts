@@ -25,8 +25,8 @@ import {
 } from '@dxos/protocols/buf/dxos/mesh/bridge_pb';
 import { BridgeService } from '@dxos/protocols/rpc';
 
-import * as Rpc from './Rpc';
-import { pbStreamToStream, streamToPbStream } from './service-rpc';
+import * as Rpc from './Rpc.ts';
+import { pbStreamToStream, streamToPbStream } from './service-rpc.ts';
 
 type BridgeServiceRpc = BufService<typeof BridgeServiceDesc>;
 

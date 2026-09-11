@@ -16,8 +16,8 @@ import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 import { type Specialize } from '@dxos/util';
 
-import { DofPointsMaterial, type ShaderOptions, SimulationMaterial } from '../../shaders';
-import { defaultShaderOptions } from './shader-presets';
+import { DofPointsMaterial, type ShaderOptions, SimulationMaterial } from '../../shaders/index.ts';
+import { defaultShaderOptions } from './shader-presets.ts';
 
 export type ChaosProps = ThemedClassName<{
   active?: boolean;

@@ -7,7 +7,7 @@ import { describe, test } from 'vitest';
 import type * as Place from '@dxos/plugin-trip/Place';
 import * as Routing from '@dxos/plugin-trip/Routing';
 
-import { makeOsrmRoutingService } from './OsrmRoutingService';
+import { makeOsrmRoutingService } from './OsrmRoutingService.ts';
 
 const GEO: Record<string, [number, number]> = {
   London: [-0.1276, 51.5074],

@@ -15,7 +15,7 @@ import { makeRegistry } from '@dxos/echo-client';
 import { EffectEx } from '@dxos/effect';
 import { DXN, SpaceId } from '@dxos/keys';
 
-import * as McpServer from './McpServer';
+import * as McpServer from './McpServer.ts';
 
 const SPACE = SpaceId.random();
 const SPACE_A = SpaceId.random();

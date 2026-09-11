@@ -4,7 +4,7 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { ATMOSPHERE_METHOD, METHOD_ALIASES } from './util';
+import { ATMOSPHERE_METHOD, METHOD_ALIASES } from './util.ts';
 
 describe('method aliases', () => {
   test('atproto resolves to the canonical Atmosphere method', () => {

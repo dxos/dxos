@@ -8,7 +8,7 @@ import * as SchemaIssue from 'effect/SchemaIssue';
 import { SchemaAST, SchemaEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 
-import { SchemaId } from '../types';
+import { SchemaId } from '../types/index.ts';
 
 // TODO(burdon): Reconcile with @dxos/effect visit().
 

@@ -14,8 +14,8 @@ import * as SyncOptions from '@dxos/plugin-inbox/SyncOptions';
 
 import { JmapOperation } from '#types';
 
-import { JMAP_DEFAULT_HOST, JMAP_MAIL_CONNECTOR_ID } from '../constants';
-import { jmapCredentialForm } from './credential-form';
+import { JMAP_DEFAULT_HOST, JMAP_MAIL_CONNECTOR_ID } from '../constants.ts';
+import { jmapCredentialForm } from './credential-form.ts';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {

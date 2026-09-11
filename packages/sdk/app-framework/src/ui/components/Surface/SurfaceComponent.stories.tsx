@@ -11,13 +11,13 @@ import { Listbox } from '@dxos/react-ui-list';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { type ColorStyles, getHashStyles, mx } from '@dxos/ui-theme';
 
-import { Capabilities } from '../../../common';
-import * as Role from '../../../common/Role';
-import { withPluginManager } from '../../../testing';
-import { usePluginManager } from '../PluginManager';
-import { SurfaceComponent, useSurfaces } from './SurfaceComponent';
-import { isSurfaceDebugEnabled, setSurfaceDebug } from './SurfaceDebug';
-import { create, makeFilter } from './types';
+import { Capabilities } from '../../../common/index.ts';
+import * as Role from '../../../common/Role.ts';
+import { withPluginManager } from '../../../testing/index.ts';
+import { usePluginManager } from '../PluginManager/index.ts';
+import { SurfaceComponent, useSurfaces } from './SurfaceComponent.tsx';
+import { isSurfaceDebugEnabled, setSurfaceDebug } from './SurfaceDebug.tsx';
+import { create, makeFilter } from './types.ts';
 
 const ItemRole = Role.make<{ id: string }>('org.dxos.test.role.item');
 

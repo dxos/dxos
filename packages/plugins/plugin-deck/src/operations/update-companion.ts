@@ -13,8 +13,13 @@ import { Attention } from '@dxos/react-ui-attention/types';
 
 import { CompanionViewState, DeckCapabilities } from '#types';
 
-import { currentNavigation, navigateDeck } from '../url';
-import { closeCompanionPlank, openCompanionPlank, resolveCompanionAnchor, resolveCompanionPlank } from '../util';
+import { currentNavigation, navigateDeck } from '../url/index.ts';
+import {
+  closeCompanionPlank,
+  openCompanionPlank,
+  resolveCompanionAnchor,
+  resolveCompanionPlank,
+} from '../util/index.ts';
 
 const handler: Operation.WithHandler<typeof LayoutOperation.UpdateCompanion> = LayoutOperation.UpdateCompanion.pipe(
   Operation.withHandler(

@@ -6,7 +6,7 @@ import { describe, test } from 'vitest';
 
 import { trim } from '@dxos/util';
 
-import { xmlElementLength } from './typewriter';
+import { xmlElementLength } from './typewriter.ts';
 
 describe('typewriter', () => {
   test('xmlElementLength handles hyphenated custom element names', ({ expect }) => {

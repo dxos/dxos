@@ -2,8 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
-export { type Introspector, type IntrospectorOptions, createIntrospector } from './introspector';
-export { cacheFilePath, pluginsFilePath } from './indexer';
+export { type Introspector, type IntrospectorOptions, createIntrospector } from './introspector/index.ts';
+export { cacheFilePath, pluginsFilePath } from './indexer/index.ts';
 export {
   type CapabilityRefParts,
   type OperationRefParts,
@@ -20,7 +20,7 @@ export {
   formatSymbolRef,
   isSymbolRef,
   parseRef,
-} from './refs';
+} from './refs.ts';
 export type {
   Capability,
   Idiom,
@@ -42,4 +42,4 @@ export type {
   SymbolInclude,
   SymbolKind,
   SymbolMatch,
-} from './types';
+} from './types.ts';

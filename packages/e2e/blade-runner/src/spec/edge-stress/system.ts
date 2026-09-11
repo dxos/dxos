@@ -6,8 +6,8 @@ import { asyncTimeout, sleep } from '@dxos/async';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
-import { type Platform, type ReplicantBrain } from '../../plan';
-import { type ClientReplicant, type SpaceDigest } from '../../replicants/client-replicant';
+import { type Platform, type ReplicantBrain } from '../../plan/index.ts';
+import { type ClientReplicant, type SpaceDigest } from '../../replicants/client-replicant.ts';
 import {
   type ClientIndex,
   type IdentityIndex,
@@ -17,7 +17,7 @@ import {
   identityOf,
   onlineMemberDevices,
   resolvablePendingSpaces,
-} from './model';
+} from './model.ts';
 
 //
 // Spec.

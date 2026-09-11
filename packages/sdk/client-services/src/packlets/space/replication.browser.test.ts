@@ -10,7 +10,7 @@ import type { FeedMessage } from '@dxos/protocols/buf/dxos/echo/feed_pb';
 import { createStorage } from '@dxos/random-access-storage';
 import { Timeframe } from '@dxos/timeframe';
 
-import { valueEncoding } from '../pipeline';
+import { valueEncoding } from '../pipeline/index.ts';
 
 describe('replication', () => {
   test('replicates a feed through a direct stream', async () => {

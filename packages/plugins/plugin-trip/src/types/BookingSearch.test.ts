@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 import { describe, test } from 'vitest';
 
-import * as BookingSearch from './BookingSearch';
+import * as BookingSearch from './BookingSearch.ts';
 
 describe('BookingSearch', () => {
   test('decodes a flight query', ({ expect }) => {

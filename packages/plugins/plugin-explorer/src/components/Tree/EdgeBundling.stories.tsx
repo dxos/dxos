@@ -17,8 +17,8 @@ import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { type ValueGenerator } from '@dxos/schema/testing';
 import { HasConnection, Organization, Person } from '@dxos/types';
 
-import { buildOrgHierarchy, connectionsToEdges, generateConnectedOrgs } from '../../testing';
-import { getNodeFillForObject } from '../../util';
+import { buildOrgHierarchy, connectionsToEdges, generateConnectedOrgs } from '../../testing/index.ts';
+import { getNodeFillForObject } from '../../util/index.ts';
 
 const generator = random as any as ValueGenerator;
 

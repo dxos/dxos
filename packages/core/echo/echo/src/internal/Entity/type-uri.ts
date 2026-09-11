@@ -8,9 +8,9 @@ import { raise } from '@dxos/debug';
 import { assertArgument } from '@dxos/invariant';
 import { DXN, EID, URI } from '@dxos/keys';
 
-import { getSchemaURI, getTypename } from '../Annotation/annotations';
-import { type AnyEntity, InstancePhantomId, KindId, TypeId, getStaticTypeSchema } from '../common/types';
-import { getUri as getUriFromEntity } from './api';
+import { getSchemaURI, getTypename } from '../Annotation/annotations.ts';
+import { type AnyEntity, InstancePhantomId, KindId, TypeId, getStaticTypeSchema } from '../common/types/index.ts';
+import { getUri as getUriFromEntity } from './api.ts';
 
 /**
  * @param input schema, `Type.Type` entity, or a type URI (an `echo:` EID or a `dxn:` DXN).

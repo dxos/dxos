@@ -7,9 +7,9 @@ import { afterEach, describe, test } from 'vitest';
 
 import * as GenerationService from '@dxos/plugin-studio/GenerationService';
 
-import { IDEOGRAM_GENERATE_URL } from '../constants';
-import { generateWithIdeogram } from './ideogram-client';
-import { mapIdeogramResponse } from './ideogram-mapping';
+import { IDEOGRAM_GENERATE_URL } from '../constants.ts';
+import { generateWithIdeogram } from './ideogram-client.ts';
+import { mapIdeogramResponse } from './ideogram-mapping.ts';
 
 describe('ideogram mapping', () => {
   test('maps data entries to variants and drops url-less ones', ({ expect }) => {

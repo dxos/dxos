@@ -10,7 +10,7 @@ import { type DevtoolsHost } from '@dxos/protocols/rpc';
 import { useDevtools, useStream } from '@dxos/react-client/devtools';
 import { type TablePropertyDefinition } from '@dxos/react-ui-table';
 
-import { MasterDetailTable } from '../../../components';
+import { MasterDetailTable } from '../../../components/index.ts';
 
 export const KeyringPanel = () => {
   const devtoolsHost = useDevtools();

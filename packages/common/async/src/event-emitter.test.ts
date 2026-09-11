@@ -5,9 +5,9 @@
 import { EventEmitter } from 'node:events';
 import { describe, expect, test } from 'vitest';
 
-import { onEvent, waitForEvent } from './event-emitter';
-import { asyncTimeout } from './timeout';
-import { latch } from './trigger';
+import { onEvent, waitForEvent } from './event-emitter.ts';
+import { asyncTimeout } from './timeout.ts';
+import { latch } from './trigger.ts';
 
 describe('event-emitter', () => {
   test('onEvent', async () => {

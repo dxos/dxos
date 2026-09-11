@@ -16,7 +16,7 @@ import { log } from '@dxos/log';
 import { Directory, type File, type Storage, StorageType, wrapFile } from '@dxos/random-access-storage';
 import { SqlTransaction } from '@dxos/sql-sqlite';
 
-import { MIGRATIONS, MIGRATIONS_TABLE } from '../migrations/hypercore';
+import { MIGRATIONS, MIGRATIONS_TABLE } from '../migrations/hypercore/index.ts';
 
 // SqlTransaction.SqlTransaction is the Tag class exported from the SqlTransaction namespace.
 type SqlTransactionTag = SqlTransaction.SqlTransaction;

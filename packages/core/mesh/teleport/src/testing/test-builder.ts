@@ -9,7 +9,7 @@ import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 
-import { Teleport } from '../teleport';
+import { Teleport } from '../teleport.ts';
 
 type CreatePeerOpts<T extends TestPeer> = {
   factory: () => T;

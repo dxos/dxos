@@ -24,7 +24,7 @@ import { trim } from '@dxos/util';
 
 import { translations } from '#translations';
 
-import { Editor, type EditorViewProps } from '../components';
+import { Editor, type EditorViewProps } from '../components/index.ts';
 
 // TODO(burdon): Factor out.
 const useTestGenerate = () => {

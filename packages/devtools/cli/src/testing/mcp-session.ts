@@ -4,7 +4,7 @@
 
 import { type ChildProcessWithoutNullStreams, spawn } from 'node:child_process';
 
-import { dxBin } from './run-dx';
+import { dxBin } from './run-dx.ts';
 
 /**
  * A live `dx mcp serve` stdio session the caller keeps open across several calls.

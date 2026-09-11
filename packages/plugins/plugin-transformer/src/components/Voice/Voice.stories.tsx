@@ -6,7 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 
 import { withTheme } from '@dxos/react-ui/testing';
 
-import { Voice } from './Voice';
+import { Voice } from './Voice.tsx';
 
 const meta = {
   title: 'plugins/plugin-transformer/components/Voice',

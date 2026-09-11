@@ -24,7 +24,7 @@ import {
   type ServiceBackend,
   type ServiceProvider,
 } from '../service-contract.ts';
-import { bufRegistry } from './registry';
+import { bufRegistry } from './registry.ts';
 
 // Buf's descriptors replace protobuf.js's `pb.Service` here. The shapes on either side of the codec
 // are unchanged, so `ServiceBundle` consumers and RPC handlers see the same values as before; see

@@ -6,7 +6,7 @@ import { describe, test } from 'vitest';
 
 import { type Message } from '@dxos/types';
 
-import { latestPerConversation, messageDigest } from './RelatedMessages';
+import { latestPerConversation, messageDigest } from './RelatedMessages.tsx';
 
 const message = (id: string, created: string, threadId?: string): Message.Message =>
   ({ id, created, threadId }) as Message.Message;

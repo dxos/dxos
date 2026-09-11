@@ -20,10 +20,10 @@ import { EntityId } from '@dxos/keys';
 import { Text } from '@dxos/schema';
 import { Message, Outline, Task } from '@dxos/types';
 
-import { AgentHandlers } from '../operations';
-import { DelegationSkill, DelegationSkillHandlers } from '../skills';
-import { DelegateTask } from '../skills/delegation/operations/definitions';
-import { makeDelegationStrategy } from './delegation-strategy';
+import { AgentHandlers } from '../operations/index.ts';
+import { DelegateTask } from '../skills/delegation/operations/definitions.ts';
+import { DelegationSkill, DelegationSkillHandlers } from '../skills/index.ts';
+import { makeDelegationStrategy } from './delegation-strategy.ts';
 
 const { text, toolCall, promptIncludes, scriptedAiService } = ScriptedLanguageModel;
 

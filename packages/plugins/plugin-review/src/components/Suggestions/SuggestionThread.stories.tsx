@@ -13,7 +13,7 @@ import { type SuggestionSource } from '@dxos/ui-editor';
 import { type SuggestionGroup, buildSuggestionSources, suggestionGroupKey } from '#hooks';
 import { translations } from '#translations';
 
-import { SuggestionThread } from './SuggestionThread';
+import { SuggestionThread } from './SuggestionThread.tsx';
 
 // A base document and two reviewers' proposals over it. Alice and Bob both rewrite "quick"
 // (an overlap); each has one further, non-overlapping change.

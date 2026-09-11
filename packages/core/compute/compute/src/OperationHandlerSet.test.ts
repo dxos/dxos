@@ -11,8 +11,8 @@ import { describe, test } from 'vitest';
 import { EffectEx } from '@dxos/effect';
 import { DXN } from '@dxos/keys';
 
-import * as Operation from './Operation';
-import * as OperationHandlerSet from './OperationHandlerSet';
+import * as Operation from './Operation.ts';
+import * as OperationHandlerSet from './OperationHandlerSet.ts';
 
 const KEY_A = DXN.make('com.example.test.a');
 const KEY_B = DXN.make('com.example.test.b');

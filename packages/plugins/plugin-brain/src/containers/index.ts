@@ -5,4 +5,4 @@
 import { type ComponentType } from 'react';
 import { lazy } from 'react';
 
-export const FactsCompanion: ComponentType<any> = lazy(() => import('./FactsCompanion'));
+export const FactsCompanion: ComponentType<any> = lazy(() => import('./FactsCompanion/index.ts'));

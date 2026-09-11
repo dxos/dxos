@@ -35,9 +35,9 @@ import {
 } from '@dxos/protocols/buf/dxos/halo/invitations_pb';
 import { trace } from '@dxos/tracing';
 
-import { type InvitationProtocol } from './invitation-protocol';
-import { type FlowLockHolder, type GuardedInvitationState } from './invitation-state';
-import { tryAcquireBeforeContextDisposed } from './utils';
+import { type InvitationProtocol } from './invitation-protocol.ts';
+import { type FlowLockHolder, type GuardedInvitationState } from './invitation-state.ts';
+import { tryAcquireBeforeContextDisposed } from './utils.ts';
 
 export interface EdgeInvitationHandlerCallbacks {
   onInvitationSuccess(ctx: Context, response: AdmissionResponse, request: AdmissionRequest): Promise<void>;

@@ -6,9 +6,9 @@ import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { log } from '@dxos/log';
 
-import { PersistentLifecycle } from './persistent-lifecycle';
-import { sleep } from './timeout';
-import { Trigger } from './trigger';
+import { PersistentLifecycle } from './persistent-lifecycle.ts';
+import { sleep } from './timeout.ts';
+import { Trigger } from './trigger.ts';
 
 describe('ConnectionState', () => {
   test('first reconnect fires immediately', async () => {

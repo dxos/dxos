@@ -4,7 +4,7 @@
 
 import React, { useEffect, useRef } from 'react';
 
-import { type KnotHandle, type Options, render } from './three';
+import { type KnotHandle, type Options, render } from './three.ts';
 
 export type KnotProps = {
   options?: Partial<Options>;

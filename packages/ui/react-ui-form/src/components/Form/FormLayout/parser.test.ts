@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { LayoutParseError, parseLayout } from './parser';
+import { LayoutParseError, parseLayout } from './parser.ts';
 
 describe('parseLayout', () => {
   test('grid with two fields', ({ expect }) => {

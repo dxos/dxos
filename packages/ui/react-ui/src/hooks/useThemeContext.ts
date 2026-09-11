@@ -6,9 +6,9 @@ import { useContext } from 'react';
 
 import { log } from '@dxos/log';
 
-import { ThemeContext, type ThemeContextValue } from '../providers';
-import { defaultTx } from '../theme';
-import { initialSafeArea } from './useSafeArea';
+import { ThemeContext, type ThemeContextValue } from '../providers/index.ts';
+import { defaultTx } from '../theme/index.ts';
+import { initialSafeArea } from './useSafeArea.ts';
 
 // Failing soft (rather than throwing) keeps error-reporting surfaces renderable:
 // the fatal dialog itself consumes this hook, and a missing provider — including

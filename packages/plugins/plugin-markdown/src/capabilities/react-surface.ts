@@ -16,7 +16,7 @@ import { EditableMarkdownCard, MarkdownCard, MarkdownSettings } from '#container
 import { meta } from '#meta';
 import { Markdown } from '#types';
 
-import { MarkdownContainer } from './MarkdownContainer';
+import { MarkdownContainer } from './MarkdownContainer.tsx';
 
 export default Capability.makeModule(() =>
   Effect.succeed(

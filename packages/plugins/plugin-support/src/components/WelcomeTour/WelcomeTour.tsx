@@ -21,7 +21,7 @@ import {
 import { meta } from '#meta';
 import { type Tour } from '#types';
 
-import { TourContext } from './TourContext';
+import { TourContext } from './TourContext.ts';
 
 const resolveTarget = (target: Tour.Step['target']) =>
   typeof target === 'string' ? () => document.querySelector<HTMLElement>(target) : target;

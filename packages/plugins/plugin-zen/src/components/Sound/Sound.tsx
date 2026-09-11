@@ -9,7 +9,7 @@ import { Form, type FormFieldMap, SelectField, omitId } from '@dxos/react-ui-for
 
 import { Sequence } from '#types';
 
-import { BRAINWAVE_PRESETS, SAMPLE_URLS } from '../../generator';
+import { BRAINWAVE_PRESETS, SAMPLE_URLS } from '../../generator/index.ts';
 
 export type SoundProps = {
   sequence: Sequence.Sequence;

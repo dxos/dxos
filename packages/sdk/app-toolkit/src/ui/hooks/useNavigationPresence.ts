@@ -12,9 +12,9 @@ import { EffectEx } from '@dxos/effect';
 import * as GraphNode from '@dxos/graph/GraphNode';
 import { EID } from '@dxos/keys';
 
-import { AppCapabilities } from '../../app-framework';
-import * as GraphPath from '../../app/GraphPath';
-import * as NotFound from '../../app/NotFound';
+import { AppCapabilities } from '../../app-framework/index.ts';
+import * as GraphPath from '../../app/GraphPath.ts';
+import * as NotFound from '../../app/NotFound.ts';
 
 const toTarget = (graph: AppGraph.ExpandableGraph, id: string): { spaceId: string; entityId?: string } | undefined => {
   const segments = id.split(GraphNode.PathSeparator);

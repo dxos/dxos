@@ -6,7 +6,7 @@ import { describe, test } from 'vitest';
 
 import { type LaMetricTransport } from '#transport';
 
-import { Pusher } from './pusher';
+import { Pusher } from './pusher.ts';
 
 const makeTransport = () => {
   const sent: string[] = [];

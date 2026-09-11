@@ -8,8 +8,8 @@ import * as Exit from 'effect/Exit';
 import * as Function from 'effect/Function';
 import { expect, vi } from 'vitest';
 
-import * as Observability from './Observability';
-import * as ObservabilityExtension from './ObservabilityExtension';
+import * as Observability from './Observability.ts';
+import * as ObservabilityExtension from './ObservabilityExtension.ts';
 
 const createMockExtension = (
   overrides?: Partial<ObservabilityExtension.Extension> & { apis?: ObservabilityExtension.ExtensionApi[] },

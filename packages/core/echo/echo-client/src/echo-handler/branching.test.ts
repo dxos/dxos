@@ -10,9 +10,9 @@ import { TestReplicationNetwork } from '@dxos/echo-host/testing';
 import { TestSchema } from '@dxos/echo/testing';
 import { PublicKey } from '@dxos/keys';
 
-import { EchoTestBuilder } from '../testing';
-import { createBranch, deleteBranch, getBranches, getCurrentBranch, mergeBranch, switchBranch } from './branching';
-import { getEditHistoryWithDiffs } from './edit-history';
+import { EchoTestBuilder } from '../testing/index.ts';
+import { createBranch, deleteBranch, getBranches, getCurrentBranch, mergeBranch, switchBranch } from './branching.ts';
+import { getEditHistoryWithDiffs } from './edit-history.ts';
 
 /** Automerge frontier of an object, as the branching API's `fromHeads` wants it. */
 const heads = (obj: Obj.Unknown): string[] => [...(Obj.version(obj).automergeHeads ?? [])];

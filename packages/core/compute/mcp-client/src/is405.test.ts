@@ -5,7 +5,7 @@
 import * as Cause from 'effect/Cause';
 import { describe, test } from 'vitest';
 
-import * as McpToolkit from './McpToolkit';
+import * as McpToolkit from './McpToolkit.ts';
 
 describe('is405', () => {
   test('matches raw Error with 405 in message', ({ expect }) => {

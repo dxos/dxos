@@ -4,7 +4,7 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { type StatusInput, getStatus } from './status';
+import { type StatusInput, getStatus } from './status.ts';
 
 describe('getStatus', () => {
   test('unsaved work takes precedence', () => {

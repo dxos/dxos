@@ -26,7 +26,7 @@ import {
   SurfaceSchema,
   SymbolDetailSchema,
   SymbolMatchSchema,
-} from './output-schemas';
+} from './output-schemas.ts';
 import {
   FindSymbolInput,
   GetPackageInput,
@@ -39,7 +39,7 @@ import {
   ListSchemasInput,
   ListSurfacesInput,
   ListSymbolsInput,
-} from './schemas';
+} from './schemas.ts';
 
 /**
  * Pure metadata for a single MCP tool — what an MCP client needs to know

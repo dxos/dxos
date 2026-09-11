@@ -2,4 +2,4 @@
 // Copyright 2025 DXOS.org
 //
 
-export * as ScriptOperationHandlerSet from './ScriptOperationHandlerSet';
+export * as ScriptOperationHandlerSet from './ScriptOperationHandlerSet.ts';

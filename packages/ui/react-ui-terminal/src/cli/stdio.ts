@@ -8,7 +8,7 @@ import * as Sink from 'effect/Sink';
 import * as Stdio from 'effect/Stdio';
 import * as Stream from 'effect/Stream';
 
-import type { TerminalBridge } from './bridge';
+import type { TerminalBridge } from './bridge.ts';
 
 const decoder = new TextDecoder();
 

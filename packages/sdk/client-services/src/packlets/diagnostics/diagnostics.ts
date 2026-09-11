@@ -31,10 +31,10 @@ import { type SwarmInfo } from '@dxos/protocols/buf/dxos/devtools/swarm_pb';
 import { type Epoch } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { type DevtoolsHost, type LoggingService } from '@dxos/protocols/rpc';
 
-import { DXOS_VERSION } from '../../version';
-import { type ServiceContext } from '../services';
-import { getPlatform } from '../services/platform';
-import { type DataSpace } from '../spaces';
+import { DXOS_VERSION } from '../../version.ts';
+import { type ServiceContext } from '../services/index.ts';
+import { getPlatform } from '../services/platform.ts';
+import { type DataSpace } from '../spaces/index.ts';
 
 const DEFAULT_TIMEOUT = 1_000;
 

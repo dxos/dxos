@@ -9,7 +9,7 @@ import { createRoot } from 'react-dom/client';
 
 import { Config, Defaults, Remote, Storage } from '@dxos/react-client';
 
-import { DevtoolsApp as App } from './app';
+import { DevtoolsApp as App } from './app/index.ts';
 
 const main = async () => {
   // TODO(wittjosiah): Restore observability for devtools.

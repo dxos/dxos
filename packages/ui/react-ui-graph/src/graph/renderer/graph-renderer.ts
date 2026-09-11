@@ -7,10 +7,10 @@ import * as Clipper from 'js-clipper';
 
 import { log } from '@dxos/log';
 
-import { type D3Callable, type D3Selection, type Point, getCircumferencePoints } from '../../util';
-import { type GraphLayout, type GraphLayoutEdge, type GraphLayoutNode } from '../types';
-import { createBullets } from './bullets';
-import { Renderer, type RendererOptions } from './renderer';
+import { type D3Callable, type D3Selection, type Point, getCircumferencePoints } from '../../util/index.ts';
+import { type GraphLayout, type GraphLayoutEdge, type GraphLayoutNode } from '../types.ts';
+import { createBullets } from './bullets.ts';
+import { Renderer, type RendererOptions } from './renderer.ts';
 
 /**
  * Replace the default `<circle>` with a custom node shape. Invoked once per

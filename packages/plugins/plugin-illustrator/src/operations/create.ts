@@ -9,7 +9,7 @@ import * as Operation from '@dxos/compute/Operation';
 
 import { Drawing, DrawingOperation, IllustratorCapabilities } from '#types';
 
-import { UnknownDrawingVariantError } from '../util/load-drawing';
+import { UnknownDrawingVariantError } from '../util/load-drawing.ts';
 
 const handler: Operation.WithHandler<typeof DrawingOperation.Create> = DrawingOperation.Create.pipe(
   Operation.withHandler(

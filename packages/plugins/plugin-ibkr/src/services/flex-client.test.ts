@@ -6,7 +6,14 @@ import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { describe, test } from 'vitest';
 
-import { fetchFlexReport, parseCash, parseClosedLots, parseOpenLots, parsePositions, parseTrades } from './flex-client';
+import {
+  fetchFlexReport,
+  parseCash,
+  parseClosedLots,
+  parseOpenLots,
+  parsePositions,
+  parseTrades,
+} from './flex-client.ts';
 
 const xml = readFileSync(fileURLToPath(new URL('./__fixtures__/flex-report.xml', import.meta.url)), 'utf8');
 

@@ -8,8 +8,8 @@ import { TestStreamService as TestStreamServiceDesc } from '@dxos/protocols/buf/
 import { createProtoRpcPeer } from '@dxos/rpc';
 import { PortMuxer } from '@dxos/rpc-tunnel';
 
-import { Channels } from './channels';
-import { TestClient } from './test-client';
+import { Channels } from './channels.ts';
+import { TestClient } from './test-client.ts';
 
 type TestStreamService = BufService<typeof TestStreamServiceDesc>;
 

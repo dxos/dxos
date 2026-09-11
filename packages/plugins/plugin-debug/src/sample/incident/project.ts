@@ -9,8 +9,8 @@ import * as Instructions from '@dxos/compute/Instructions';
 import * as Project from '@dxos/compute/Project';
 import { Database, Ref } from '@dxos/echo';
 
-import { type DocsResult } from './docs';
-import { type TasksResult } from './tasks';
+import { type DocsResult } from './docs.ts';
+import { type TasksResult } from './tasks.ts';
 
 export type ProjectInput = { docs: DocsResult; tasks: TasksResult };
 

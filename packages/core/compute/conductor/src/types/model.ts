@@ -8,8 +8,8 @@ import * as GraphModel from '@dxos/graph/GraphModel';
 import { EntityId } from '@dxos/keys';
 import { type MakeOptional } from '@dxos/util';
 
-import { type ComputeEdge, ComputeGraph, type ComputeNode, isComputeGraph } from './graph';
-import { DEFAULT_INPUT, DEFAULT_OUTPUT } from './schema';
+import { type ComputeEdge, ComputeGraph, type ComputeNode, isComputeGraph } from './graph.ts';
+import { DEFAULT_INPUT, DEFAULT_OUTPUT } from './schema.ts';
 
 export class ComputeGraphModel extends GraphModel.AbstractGraphModel<ComputeNode, ComputeEdge, ComputeGraphModel> {
   static create(graph?: Partial<GraphModel.Data<ComputeNode, ComputeEdge>>): ComputeGraphModel {

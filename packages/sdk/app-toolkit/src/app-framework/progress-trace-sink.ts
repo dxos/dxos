@@ -5,7 +5,7 @@
 import * as Trace from '@dxos/compute/Trace';
 import { EID } from '@dxos/keys';
 
-import type * as AppCapabilities from './AppCapabilities';
+import type * as AppCapabilities from './AppCapabilities.ts';
 
 /** Terminal status message — reducer calls `done()` then `remove()` on the keyed monitor. */
 export const PROGRESS_STATUS_COMPLETE = 'progress.complete';

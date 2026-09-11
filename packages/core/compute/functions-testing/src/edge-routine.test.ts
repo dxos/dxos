@@ -24,7 +24,7 @@ import { EdgeReplicationSetting } from '@dxos/protocols/buf/dxos/echo/metadata_p
 import { Text } from '@dxos/schema';
 import { trim } from '@dxos/util';
 
-import { sync } from './testing';
+import { sync } from './testing/index.ts';
 
 /**
  * Cron trigger on EDGE runs {@link RunInstructions} for a {@link Routine} that uses the Database

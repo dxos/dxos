@@ -12,7 +12,7 @@ import type { ReadableSpan, Span, SpanProcessor } from '@opentelemetry/sdk-trace
 import { SpanAttributes } from '@dxos/effect';
 import { log } from '@dxos/log';
 
-import type * as ObservabilityExtension from '../ObservabilityExtension';
+import type * as ObservabilityExtension from '../ObservabilityExtension.ts';
 
 /**
  * AI telemetry capture — data policy.

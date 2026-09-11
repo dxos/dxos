@@ -4,7 +4,7 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { Placement } from './placement';
+import { Placement } from './placement.ts';
 
 /**
  * The placement module, with nothing rendered.

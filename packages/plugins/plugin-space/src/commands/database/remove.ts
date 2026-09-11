@@ -12,7 +12,7 @@ import { CommandConfig, Common, print, spaceLayer } from '@dxos/cli-util';
 import { Database, Filter, Query } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 
-import { printObjectRemoved } from './util';
+import { printObjectRemoved } from './util.ts';
 
 export const remove = Command.make(
   'remove',

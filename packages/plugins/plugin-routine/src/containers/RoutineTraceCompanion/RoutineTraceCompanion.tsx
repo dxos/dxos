@@ -12,8 +12,8 @@ import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 
 import { meta } from '#meta';
 
-import { type RoutineRun, type RunStatus } from './runs';
-import { useRoutineRuns } from './useRoutineRuns';
+import { type RoutineRun, type RunStatus } from './runs.ts';
+import { useRoutineRuns } from './useRoutineRuns.ts';
 
 const STATUS_ICONS: Record<RunStatus, string> = {
   success: 'ph--check-circle--regular',

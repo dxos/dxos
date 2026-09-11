@@ -7,7 +7,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import { random } from '@dxos/random';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { JsonHighlighter } from './JsonHighlighter';
+import { JsonHighlighter } from './JsonHighlighter.tsx';
 
 random.seed(0);
 

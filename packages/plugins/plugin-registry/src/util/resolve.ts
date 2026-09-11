@@ -12,8 +12,8 @@ import * as HttpClientRequest from 'effect/unstable/http/HttpClientRequest';
 
 import { Config2, PLUGIN_ENTRY_FILENAME, PluginManifestSchema } from '@dxos/protocols';
 
-import { type PluginRecord } from '../storage';
-import { PluginInstallError } from './errors';
+import { type PluginRecord } from '../storage.ts';
+import { PluginInstallError } from './errors.ts';
 
 /** Filename of the manifest a published plugin bundle ships beside its entry. */
 export const MANIFEST_FILENAME = 'manifest.json';

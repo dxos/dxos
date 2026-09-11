@@ -13,8 +13,8 @@ import { PeerSchema } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
 import { JoinRequestSchema } from '@dxos/protocols/buf/dxos/edge/signal_pb';
 import { AnswerSchema, OfferSchema, SignalSchema } from '@dxos/protocols/buf/dxos/mesh/swarm_pb';
 
-import { type SignalMessage } from './signal-messenger';
-import { SwarmMessenger } from './swarm-messenger';
+import { type SignalMessage } from './signal-messenger.ts';
+import { SwarmMessenger } from './swarm-messenger.ts';
 
 describe('Signal Integration Test', () => {
   // In-memory signaling context connecting the peers in each test (replaces the KUBE server).

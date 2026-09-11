@@ -8,7 +8,7 @@ import { beforeEach, describe, test } from 'vitest';
 
 import { Annotation, DXN, Obj, Type } from '@dxos/echo';
 
-import * as Lens from './Lens';
+import * as Lens from './Lens.ts';
 
 //
 // Source and target are both declared types, mirroring the real case (a `DataType.Task` and a

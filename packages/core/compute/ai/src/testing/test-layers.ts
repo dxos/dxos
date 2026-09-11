@@ -12,17 +12,17 @@ import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
 import * as HttpClient from 'effect/unstable/http/HttpClient';
 import * as HttpClientRequest from 'effect/unstable/http/HttpClientRequest';
 
-import * as AiModelResolver from '../AiModelResolver';
-import type * as AiService from '../AiService';
+import * as AiModelResolver from '../AiModelResolver.ts';
+import type * as AiService from '../AiService.ts';
 import {
   AnthropicResolver,
   ChatCompletionsAdapter,
   DeepSeekResolver,
   LMStudioResolver,
   OllamaResolver,
-} from '../resolvers';
-import { LanguageModelFixture } from './model-fixture';
-import { tapHttpErrors } from './tap';
+} from '../resolvers/index.ts';
+import { LanguageModelFixture } from './model-fixture/index.ts';
+import { tapHttpErrors } from './tap.ts';
 
 export type AiServiceLayer = Layer.Layer<AiService.AiService, ConfigError.ConfigError, never>;
 
@@ -44,7 +44,10 @@ export const DirectAiServiceLayer: AiServiceLayer = TestRouter.pipe(
       // `DX_ANTHROPIC_API_KEY` (not `ANTHROPIC_API_KEY`, which breaks Claude Code) — see the
       // `regenerate-model-fixture` skill.
       apiKey: Config.redacted('DX_ANTHROPIC_API_KEY').pipe(Config.withDefault(Redacted.make('not-a-real-key'))),
-      transformClient: tapHttpErrors,
+      // A provider 5xx or a 429 twenty minutes into a long scenario is the provider's, not the
+      // scenario's; the app's own client retries these too.
+      transformClient: (client) =>
+        tapHttpErrors(client).pipe(HttpClient.retryTransient({ retryOn: 'response-only', times: 3 })),
     }),
   ),
   Layer.provide(FetchHttpClient.layer),

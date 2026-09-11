@@ -17,7 +17,7 @@ import { useViewState, useViewStateActions } from '@dxos/react-ui-attention';
 
 import { meta } from '#meta';
 
-import { DEBUG_PANEL_CONTEXT, DebugPanel, debugPanelAspect } from '../DebugPanel';
+import { DEBUG_PANEL_CONTEXT, DebugPanel, debugPanelAspect } from '../DebugPanel/index.ts';
 
 /** Room for the log table to breathe; the console fits itself to whatever it is given. */
 const DEFAULT_SIZE: FloatingPanelSize = { width: 1024, height: 384 };

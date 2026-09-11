@@ -16,7 +16,7 @@ import { Format } from '@dxos/echo/Format';
 import { invariant } from '@dxos/invariant';
 import { Stage } from '@dxos/pipeline';
 
-import * as AccessToken from './AccessToken';
+import * as AccessToken from './AccessToken.ts';
 
 //
 // Spec.

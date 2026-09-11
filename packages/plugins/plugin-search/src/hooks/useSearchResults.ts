@@ -9,7 +9,7 @@ import { type Entity, Obj } from '@dxos/echo';
 import { Text } from '@dxos/schema';
 
 // TODO(thure): Deprecate search-sync, move still-relevant utilities elsewhere (here, probably).
-import { mapObjectToTextFields, queryStringToMatch } from './sync';
+import { mapObjectToTextFields, queryStringToMatch } from './sync.ts';
 
 export const filterObjects = async <T extends Entity.Unknown>(
   objects: T[],

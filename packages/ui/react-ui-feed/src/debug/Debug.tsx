@@ -7,9 +7,9 @@ import React, { useEffect, useMemo, useReducer, useRef, useState } from 'react';
 import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
-import { type DebugProbe } from './debug-model';
-import { type Stat, Stats } from './Stats';
-import { useDebugModel } from './useDebug';
+import { type DebugProbe } from './debug-model.ts';
+import { type Stat, Stats } from './Stats.tsx';
+import { useDebugModel } from './useDebug.tsx';
 
 export type DebugProps = ThemedClassName<{
   /** Readouts side by side. @default 1 */

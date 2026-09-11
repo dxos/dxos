@@ -2,6 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-export { useAvatarContext } from './AvatarContext';
+export { useAvatarContext } from './AvatarContext.ts';
 
-export * from './Avatar';
+export * from './Avatar.tsx';

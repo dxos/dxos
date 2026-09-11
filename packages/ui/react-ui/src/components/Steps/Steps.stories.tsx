@@ -8,10 +8,10 @@ import { expect, waitFor, within } from 'storybook/test';
 
 import { random } from '@dxos/random';
 
-import { withLayout, withTheme } from '../../testing';
-import { Panel } from '../Panel';
-import { Toolbar } from '../Toolbar';
-import { Steps, type StepsProps } from './Steps';
+import { withLayout, withTheme } from '../../testing/index.ts';
+import { Panel } from '../Panel/index.ts';
+import { Toolbar } from '../Toolbar/index.ts';
+import { Steps, type StepsProps } from './Steps.tsx';
 
 const TICK_MS = 200;
 /** Items in a counted stage; the line leaving it fills as they are worked through. */

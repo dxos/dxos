@@ -7,7 +7,7 @@ import { type SystemService } from '@dxos/protocols/rpc';
 import {
   type CollectDiagnosticsBroadcastHandler,
   type CollectDiagnosticsBroadcastSender,
-} from './diagnostics-collector';
+} from './diagnostics-collector.ts';
 
 export const createCollectDiagnosticsBroadcastSender = (): CollectDiagnosticsBroadcastSender => {
   return { broadcastDiagnosticsRequest: async () => undefined };

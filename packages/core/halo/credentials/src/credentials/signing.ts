@@ -15,7 +15,7 @@ import {
 import { Timeframe } from '@dxos/timeframe';
 import { arrayToBuffer } from '@dxos/util';
 
-import { toSigningShapeFromBinary } from './signing-shape';
+import { toSigningShapeFromBinary } from './signing-shape.ts';
 
 /**
  * The credential shape the signature is computed over.

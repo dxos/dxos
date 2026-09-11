@@ -10,7 +10,7 @@ import { EffectEx } from '@dxos/effect';
 import { type JmapMail } from '#apis';
 import { JmapMailApi } from '#services';
 
-import { generateJmapDataset } from './jmap-fixtures';
+import { generateJmapDataset } from './jmap-fixtures.ts';
 
 const MAIL_ACCOUNT_CAPABILITY = 'urn:ietf:params:jmap:mail';
 const INBOX_ID = 'mb-inbox';

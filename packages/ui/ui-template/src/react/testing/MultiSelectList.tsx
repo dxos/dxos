@@ -13,7 +13,7 @@ import React, { useMemo } from 'react';
 
 import { Listbox } from '@dxos/react-ui-list';
 
-import { type MultiSelectSchema, connect, multiSelectMachine } from '../../testing';
+import { type MultiSelectSchema, connect, multiSelectMachine } from '../../testing/index.ts';
 
 export type MultiSelectItem = {
   id: string;

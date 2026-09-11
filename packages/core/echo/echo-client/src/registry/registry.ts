@@ -13,7 +13,7 @@ import { type QueryAST } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
 import { DXN, EID, EntityId, PublicKey, URI } from '@dxos/keys';
 
-import { QueryResultCache } from '../query';
+import { QueryResultCache } from '../query/index.ts';
 
 /**
  * Concrete implementation of the {@link Registry.Registry} interface.

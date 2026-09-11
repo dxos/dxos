@@ -9,7 +9,7 @@ import * as Schema from 'effect/Schema';
 import { DXN, Obj, Ref, Type } from '@dxos/echo';
 import { HiddenAnnotation } from '@dxos/echo/Annotation';
 
-import * as Message from './Message';
+import * as Message from './Message.ts';
 
 export const ThreadStatus = Schema.Union([
   Schema.Literal('staged'),

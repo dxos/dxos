@@ -14,7 +14,7 @@ import * as DeckOperation from '@dxos/plugin-deck/DeckOperation';
 
 import { PresenterOperation } from '#types';
 
-import { getPresentationPath } from '../paths';
+import { getPresentationPath } from '../paths.ts';
 
 /**
  * Enters or exits presentation for the given object. Entering fullscreens the presenter companion;

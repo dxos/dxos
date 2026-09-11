@@ -20,8 +20,8 @@ import {
 } from '@dxos/protocols/buf/dxos/halo/invitations_pb';
 import { type ExtensionContext, RpcExtension } from '@dxos/teleport';
 
-import { type FlowLockHolder } from './invitation-state';
-import { tryAcquireBeforeContextDisposed } from './utils';
+import { type FlowLockHolder } from './invitation-state.ts';
+import { tryAcquireBeforeContextDisposed } from './utils.ts';
 
 type InvitationHostService = BufService<typeof InvitationHostServiceDesc>;
 

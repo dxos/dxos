@@ -10,7 +10,7 @@ import * as Tracer from 'effect/Tracer';
 
 import { Context, TRACE_SPAN_ATTRIBUTE } from '@dxos/context';
 
-import { withContext } from './internal/context';
+import { withContext } from './internal/context.ts';
 
 const TRACE_ID = 'bbbb0000bbbb0000bbbb0000bbbb0000';
 const SPAN_ID = 'cccc0000cccc0000';

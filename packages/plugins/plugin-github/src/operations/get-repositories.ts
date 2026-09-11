@@ -10,7 +10,7 @@ import { Database, Obj } from '@dxos/echo';
 
 import { GitHubOperation } from '#types';
 
-import { GitHubApi } from '../services';
+import { GitHubApi } from '../services/index.ts';
 
 /**
  * Discovery only — list GitHub repositories reachable from the connection's

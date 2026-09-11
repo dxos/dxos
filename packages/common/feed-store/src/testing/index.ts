@@ -2,6 +2,6 @@
 // Copyright 2019 DXOS.org
 //
 
-export * from './mocks';
-export * from './test-builder';
-export * from './test-generator';
+export * from './mocks.ts';
+export * from './test-builder.ts';
+export * from './test-generator.ts';

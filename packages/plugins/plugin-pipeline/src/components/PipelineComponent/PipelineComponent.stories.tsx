@@ -21,7 +21,7 @@ import { Person, Pipeline } from '@dxos/types';
 import { usePipelineBoardModel } from '#hooks';
 import { translations } from '#translations';
 
-import { type ItemProps, PipelineComponent } from './PipelineComponent';
+import { type ItemProps, PipelineComponent } from './PipelineComponent.tsx';
 
 const StorybookProjectItem = ({ item, projectionModel }: ItemProps) => {
   const personSchema = useMemo(() => omitId(Type.getSchema(Person.Person)), []);

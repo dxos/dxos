@@ -14,7 +14,7 @@ import { Listbox } from '@dxos/react-ui-list';
 import { meta } from '#meta';
 import { AccountCache, ClientCapabilities } from '#types';
 
-import { useHubHttpClient } from '../../hooks';
+import { useHubHttpClient } from '../../hooks/index.ts';
 
 export const InvitationsContainer = () => {
   const { t } = useTranslation(meta.profile.key);

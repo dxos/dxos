@@ -2,4 +2,4 @@
 // Copyright 2024 DXOS.org
 //
 
-export * as ChessOperationHandlerSet from './ChessOperationHandlerSet';
+export * as ChessOperationHandlerSet from './ChessOperationHandlerSet.ts';

@@ -18,8 +18,8 @@ import {
 } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { ComplexMap } from '@dxos/util';
 
-import { getCredentialAssertion, isValidAuthorizedDeviceCredential, subjectIdOf } from '../credentials';
-import { type CredentialProcessor } from './credential-processor';
+import { getCredentialAssertion, isValidAuthorizedDeviceCredential, subjectIdOf } from '../credentials/index.ts';
+import { type CredentialProcessor } from './credential-processor.ts';
 
 export type DeviceStateMachineProps = {
   identityKey: PublicKey;

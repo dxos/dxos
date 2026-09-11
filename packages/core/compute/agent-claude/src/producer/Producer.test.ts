@@ -7,7 +7,7 @@ import { describe, expect, test } from 'vitest';
 import { Feed } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 
-import * as Producer from './Producer';
+import * as Producer from './Producer.ts';
 
 describe('Producer', () => {
   test('exposes the turn-producer shape the agent process drives', async () => {

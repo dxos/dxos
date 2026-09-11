@@ -9,7 +9,7 @@ import type * as SqlError from 'effect/unstable/sql/SqlError';
 
 import { SqlTransaction } from '@dxos/sql-sqlite';
 
-import { MIGRATIONS, MIGRATIONS_TABLE } from '../../migrations';
+import { MIGRATIONS, MIGRATIONS_TABLE } from '../../migrations/index.ts';
 
 /**
  * Applies any migrations this database has not recorded yet.

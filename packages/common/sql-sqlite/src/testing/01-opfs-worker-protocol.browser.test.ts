@@ -4,14 +4,14 @@
 
 import { describe, expect, test } from 'vitest';
 
-import * as OpfsPool from '../OpfsPool';
+import * as OpfsPool from '../OpfsPool.ts';
 import {
   createSerializedDatabase,
   runSqlOnWorker,
   shutdownWorker,
   spawnOpfsWorker,
   waitForWorkerMessage,
-} from './opfs-test-helpers';
+} from './opfs-test-helpers.ts';
 
 describe('opfs-worker protocol browser test', { timeout: 60_000, sequential: true }, () => {
   test('imports serialized database via worker import message', async () => {

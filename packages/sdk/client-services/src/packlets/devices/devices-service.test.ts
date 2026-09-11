@@ -14,9 +14,9 @@ import { buf } from '@dxos/protocols/buf';
 import { type Device } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { DeviceProfileDocumentSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
-import { type ServiceContext } from '../services';
-import { createServiceContext } from '../testing';
-import { DevicesServiceImpl } from './devices-service';
+import { type ServiceContext } from '../services/index.ts';
+import { createServiceContext } from '../testing/index.ts';
+import { DevicesServiceImpl } from './devices-service.ts';
 
 describe('DevicesService', () => {
   let serviceContext: ServiceContext;

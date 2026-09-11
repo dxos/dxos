@@ -4,9 +4,9 @@
 
 import { describe } from 'vitest';
 
-import { StorageType } from '../common';
-import { storageBenchmark } from '../testing/benchmark.blueprint-test';
-import { createStorage } from './storage';
+import { StorageType } from '../common/index.ts';
+import { storageBenchmark } from '../testing/benchmark.blueprint-test.ts';
+import { createStorage } from './storage.ts';
 
 const ROOT_DIRECTORY = 'testing';
 

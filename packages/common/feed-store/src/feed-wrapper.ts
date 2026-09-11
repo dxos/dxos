@@ -16,7 +16,7 @@ import { type Directory } from '@dxos/random-access-storage';
 import { arrayToBuffer, rangeFromTo } from '@dxos/util';
 import type { GetOptions, Proof } from '@dxos/vendor-hypercore/hypercore';
 
-import { type FeedWriter, type WriteReceipt } from './feed-writer';
+import { type FeedWriter, type WriteReceipt } from './feed-writer.ts';
 
 /**
  * Async feed wrapper.

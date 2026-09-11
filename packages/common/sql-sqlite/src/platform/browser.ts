@@ -9,7 +9,7 @@ import * as Layer from 'effect/Layer';
 import type * as SqlClient from 'effect/unstable/sql/SqlClient';
 import type * as SqlError from 'effect/unstable/sql/SqlError';
 
-import * as SqlExport from '../SqlExport';
+import * as SqlExport from '../SqlExport.ts';
 
 export const sqlExportLayer: Layer.Layer<SqlExport.SqlExport, SqlError.SqlError, SqliteClient.SqliteClient> =
   Layer.effect(
