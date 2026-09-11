@@ -38,37 +38,10 @@ export type Turn = {
   toolCalls: string[];
   /** Every event of the turn, for diagnosing a failure without re-running the model. */
   events: any[];
-  /** Tokens per model this turn, from the `result` event's `modelUsage`; empty on an old CLI. */
-  usage: TurnUsage[];
   /** Epoch milliseconds of the send and of the `result` event. */
   start: number;
   end: number;
 };
-
-export type TurnUsage = {
-  model: string;
-  inputTokens: number;
-  outputTokens: number;
-  cacheReadTokens: number;
-  cacheWriteTokens: number;
-  /** What the CLI priced this model's share of the turn at. */
-  costUsd?: number;
-};
-
-const count = (value: unknown): number => (typeof value === 'number' ? value : 0);
-
-/** `modelUsage` keys are model ids; each value carries the CLI's snake_case token counts. */
-const turnUsage = (modelUsage: unknown): TurnUsage[] =>
-  modelUsage !== null && typeof modelUsage === 'object'
-    ? Object.entries(modelUsage).map(([model, usage]) => ({
-        model,
-        inputTokens: count(usage?.inputTokens),
-        outputTokens: count(usage?.outputTokens),
-        cacheReadTokens: count(usage?.cacheReadInputTokens),
-        cacheWriteTokens: count(usage?.cacheCreationInputTokens),
-        ...(typeof usage?.costUSD === 'number' ? { costUsd: usage.costUSD } : {}),
-      }))
-    : [];
 
 const DEFAULT_TIMEOUT = 300_000;
 
@@ -217,7 +190,6 @@ export class ClaudeAgent {
           isError: event.is_error === true,
           toolCalls: toolCallNames(events),
           events,
-          usage: turnUsage(event.modelUsage),
           start: startedAt,
           end: Date.now(),
         });

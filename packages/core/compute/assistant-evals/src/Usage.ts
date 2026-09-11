@@ -21,6 +21,14 @@ import type { DXN } from '@dxos/keys';
  */
 export type Call = {
   readonly model: string;
+  readonly provider?: string;
+  readonly spanName?: string;
+  readonly parameters?: Record<string, unknown>;
+  /** The prompt, the response and the tool catalog, as the telemetry serialized them. */
+  readonly input?: unknown;
+  readonly output?: unknown;
+  readonly tools?: unknown;
+  /** Prompt tokens the provider actually processed: the cache-read and cache-write counts are separate. */
   readonly inputTokens: number;
   readonly outputTokens: number;
   readonly cacheReadTokens: number;
@@ -28,8 +36,6 @@ export type Call = {
   /** Epoch milliseconds. */
   readonly start: number;
   readonly end: number;
-  /** What the caller itself reported, when it prices its own calls (the Claude Code CLI does). */
-  readonly costUsd?: number;
 };
 
 /** The provider's name for a model, as it would appear on an invoice. */
@@ -37,6 +43,20 @@ export const backendName = (model: DXN.DXN): string =>
   Model.all.find((entry) => entry.id.toString() === model.toString())?.backend ?? model.toString();
 
 const millis = (nanos: bigint): number => Number(nanos / 1_000_000n);
+
+const string = (value: unknown): string | undefined => (typeof value === 'string' ? value : undefined);
+
+/** The telemetry stamps content as JSON text; a value cut to fit no longer parses and stays text. */
+const json = (value: unknown): unknown => {
+  if (typeof value !== 'string') {
+    return undefined;
+  }
+  try {
+    return JSON.parse(value);
+  } catch {
+    return value;
+  }
+};
 
 const fromResponse = (
   model: DXN.DXN,
@@ -50,9 +70,25 @@ const fromResponse = (
   const now = Date.now();
   const started = span.status.startTime;
   const ended = span.status._tag === 'Ended' ? span.status.endTime : undefined;
+  const attribute = (key: string): unknown => span.attributes.get(key);
+  const parameters = Object.fromEntries(
+    ['temperature', 'max_tokens', 'top_p', 'top_k']
+      .map((key) => [key, attribute(`gen_ai.request.${key}`)] as const)
+      .filter(([, value]) => value !== undefined),
+  );
   return {
     model: backendName(model),
-    inputTokens: finish.usage.inputTokens.total ?? 0,
+    provider: string(attribute('gen_ai.system')),
+    spanName: span.name,
+    parameters: Object.keys(parameters).length > 0 ? parameters : undefined,
+    input: json(attribute('dxos.ai.input')),
+    output: json(attribute('dxos.ai.output')),
+    tools: json(attribute('dxos.ai.tools')),
+    inputTokens:
+      finish.usage.inputTokens.uncached ??
+      (finish.usage.inputTokens.total ?? 0) -
+        (finish.usage.inputTokens.cacheRead ?? 0) -
+        (finish.usage.inputTokens.cacheWrite ?? 0),
     outputTokens: finish.usage.outputTokens.total ?? 0,
     cacheReadTokens: finish.usage.inputTokens.cacheRead ?? 0,
     cacheWriteTokens: finish.usage.inputTokens.cacheWrite ?? 0,
@@ -86,11 +122,18 @@ export const instrument = (service: AiService.Service, record: (call: Call) => v
     ),
 });
 
+/** Where the run's events went, so the export step can attach the scores to the same trace. */
+export type Link = {
+  readonly traceId: string;
+  readonly experimentId: string;
+  readonly experimentName: string;
+};
+
 /**
  * Hands the calls to evalite as traces, one per call, so the export carries them next to the
  * scores. A no-op outside an eval, where there is nothing to report to.
  */
-export const report = (calls: readonly Call[]): void => {
+export const report = (calls: readonly Call[], link: Link): void => {
   if (!shouldReportTrace()) {
     return;
   }
@@ -98,10 +141,10 @@ export const report = (calls: readonly Call[]): void => {
     reportTrace({
       input: { model: call.model },
       output: {
+        ...link,
         model: call.model,
         cacheReadTokens: call.cacheReadTokens,
         cacheWriteTokens: call.cacheWriteTokens,
-        ...(call.costUsd === undefined ? {} : { costUsd: call.costUsd }),
       },
       usage: {
         inputTokens: call.inputTokens,

@@ -19,7 +19,14 @@ moon run assistant-evals:evals-watch                             # re-run on cha
 ```
 
 The tasks come from the `evalite` moon tag (`.moon/tasks/tag-evalite.yml`). `evals` writes
-`out/evals.json`, and the nightly `.depot/workflows/assistant-evals.yml` runs that same task, then
-`scripts/eval-events.mjs` turns the export into the events the "Assistant evals" PostHog dashboard
-trends, one per run, per test case and per scorer. The run's artifact carries the export, the events
-as sent, and evalite's static UI.
+`out/evals.json`, and the nightly `.depot/workflows/assistant-evals.yml` runs that same task.
+
+## PostHog
+
+With `DX_EVALS_POSTHOG_API_KEY` set (the Composer project's token; the nightly sets it), every run
+is an AI observability trace in PostHog: the runner sends each model call as `$ai_generation`
+(`src/Observe.ts`), and `scripts/eval-events.mjs out/evals.json --posthog` sends the `$ai_trace`
+root and one `$ai_evaluation` per scorer once evalite has scored the export. Events carry
+`ai_product: evals` and an experiment id (`DX_EVAL_RUN_ID`, the CI run by default; a local run is
+its own experiment), which is what PostHog's offline-evals view groups by. PostHog prices the calls
+from the model and the token counts.

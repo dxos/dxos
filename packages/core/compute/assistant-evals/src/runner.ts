@@ -39,6 +39,7 @@ import { createComposerTestApp } from '@dxos/plugin-testing/harness';
 import { Employer, Organization, Person } from '@dxos/types';
 import { trim } from '@dxos/util';
 
+import * as Observe from './Observe.ts';
 import * as Scorer from './Scorer.ts';
 import { getDefaultSkills } from './skills.ts';
 import * as Usage from './Usage.ts';
@@ -443,10 +444,17 @@ export function createEvalRunner<I, O, D>(
 
   return async (input: I, variant: VariantConfig) => {
     const calls: Usage.Call[] = [];
+    const experiment = Observe.experiment();
+    const run = Observe.start(experiment);
+    const record = (call: Usage.Call) => {
+      calls.push(call);
+      run.generation(call);
+    };
     try {
-      return await execute(input, variant, (call) => calls.push(call));
+      return await execute(input, variant, record);
     } finally {
-      Usage.report(calls);
+      Usage.report(calls, { traceId: run.traceId, experimentId: experiment.id, experimentName: experiment.name });
+      await run.finish();
     }
   };
 }
