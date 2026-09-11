@@ -622,6 +622,10 @@ jobs:
           # reports green without executing a test. Unlike MOON_CACHE=off, this leaves the cached
           # bundle/build dependencies alone.
           DX_E2E_RUN_ID: ${{ (inputs.e2e || github.event_name == 'schedule') && format('{0}-{1}', github.run_id, github.run_attempt) || '' }}
+          # A failing spec writes each app's `@dxos/log` NDJSON beside its trace, which the upload below
+          # collects. The browser console carries only the tab; the client runs in a worker, so this is
+          # the only route to what the failing peer was doing.
+          DX_E2E_CAPTURE_LOGS: '1'
         with:
           junit-paths: 'test-results/playwright/report/*.xml'
           org-slug: dxos
