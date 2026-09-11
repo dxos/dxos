@@ -227,43 +227,7 @@ export const Gantt = composable<HTMLDivElement, GanttProps>(
             <line x1={x(now)} x2={x(now)} y1={0} y2={height} strokeDasharray='3 3' className='stroke-red-500' />
           )}
 
-          {rows.map(({ lane, index }) => {
-            const end = laneEnd(lane);
-            if (lane.start === undefined || end === undefined) {
-              return null;
-            }
-            return (
-              <rect
-                key={lane.id}
-                x={barStart(lane, lane.start)}
-                y={rowY(index) - BAR_HEIGHT / 2}
-                width={Math.max(x(end) + BAR_OVERHANG - barStart(lane, lane.start), BAR_HEIGHT)}
-                height={BAR_HEIGHT}
-                rx={BAR_HEIGHT / 2}
-                className={mx('cursor-pointer', STATUS_COLOR[lane.status].fill)}
-                onClick={() => onLaneSelect?.(lane)}
-              />
-            );
-          })}
-
-          {/* The thread through a lane's nodes, so a row reads as a sequence rather than scattered dots. */}
-          {rows.map(({ lane, index }) => {
-            const times = laneTimes(lane);
-            if (times.length < 2) {
-              return null;
-            }
-            return (
-              <line
-                key={`thread:${lane.id}`}
-                x1={nodeX(lane, Math.min(...times))}
-                x2={nodeX(lane, Math.max(...times))}
-                y1={rowY(index)}
-                y2={rowY(index)}
-                className={STATUS_COLOR[lane.status].thread}
-              />
-            );
-          })}
-
+          {/* Connectors first, so the drop to a child passes beneath any bar it crosses. */}
           {rows.flatMap(({ lane, index }) =>
             (lane.blockedOn ?? []).flatMap((depId) => {
               const dep = rowById.get(depId);
@@ -305,6 +269,46 @@ export const Gantt = composable<HTMLDivElement, GanttProps>(
                 className='stroke-fuchsia-500'
               />,
             ];
+          })}
+
+          {rows.map(({ lane, index }) => {
+            const end = laneEnd(lane);
+            if (lane.start === undefined || end === undefined) {
+              return null;
+            }
+            const bar = {
+              x: barStart(lane, lane.start),
+              y: rowY(index) - BAR_HEIGHT / 2,
+              width: Math.max(x(end) + BAR_OVERHANG - barStart(lane, lane.start), BAR_HEIGHT),
+              height: BAR_HEIGHT,
+              rx: BAR_HEIGHT / 2,
+            };
+            // An opaque backing under the translucent tint: the connectors pass beneath the bars, and
+            // without it they would show through.
+            return (
+              <g key={lane.id} className='cursor-pointer' onClick={() => onLaneSelect?.(lane)}>
+                <rect {...bar} className='fill-base-surface' />
+                <rect {...bar} className={STATUS_COLOR[lane.status].fill} />
+              </g>
+            );
+          })}
+
+          {/* The thread through a lane's nodes, so a row reads as a sequence rather than scattered dots. */}
+          {rows.map(({ lane, index }) => {
+            const times = laneTimes(lane);
+            if (times.length < 2) {
+              return null;
+            }
+            return (
+              <line
+                key={`thread:${lane.id}`}
+                x1={nodeX(lane, Math.min(...times))}
+                x2={nodeX(lane, Math.max(...times))}
+                y1={rowY(index)}
+                y2={rowY(index)}
+                className={STATUS_COLOR[lane.status].thread}
+              />
+            );
           })}
 
           {/* Nodes last, over the bars and every line, so a line reads as ending at a node's centre. */}
