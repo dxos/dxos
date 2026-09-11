@@ -18,9 +18,8 @@ const meta = {
   title: 'plugins/plugin-assistant/components/ChatActivity',
   component: ChatActivity,
   decorators: [withTheme(), withLayout({ layout: 'centered', classNames: 'w-[30rem]' })],
-  parameters: { translations },
-  args: {
-    classNames: 'px-3 rounded-sm bg-group-surface',
+  parameters: {
+    translations,
   },
 } satisfies Meta<typeof ChatActivity>;
 
