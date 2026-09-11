@@ -351,9 +351,13 @@ const resolveTileSizes = (
  * A plank and the place its companion sits — the one splitter geometry every tile uses, whether it fills
  * the viewport (a lone plank) or slides within the deck: anchored to the companion and sized by the
  * deck-wide {@link COMPANION_SIZE_KEY} width, so the seam sits in the same place whichever plank the
- * companion is attached to. The seam is here even with no companion to put in it (collapsed to the
- * plank), so that a plank's place in the tree never depends on whether one is attached — companions
- * arrive a commit late, and a tile that changed shape around one re-parented the plank beneath it.
+ * companion is attached to.
+ *
+ * The seam is here even with no companion to put in it (collapsed to the plank), and this is one
+ * component rather than a solo variant beside a paired one, so that a plank's place in the tree never
+ * depends on whether a companion is attached. React reconciles by element type and position, and a
+ * companion resolves a commit after its plank mounts, so either split would unmount the plank and
+ * everything it holds on the commit after it appeared.
  *
  * `total` is the tile's fixed overall width, present only for a sliding tile. The seam trades width
  * between the panes inside it, so committing writes both — the plank's new width alongside the
