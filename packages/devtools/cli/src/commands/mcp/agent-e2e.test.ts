@@ -108,6 +108,12 @@ describe.skipIf(!API_KEY)('claude code against dx mcp serve', { tags: ['manual']
     return JSON.parse(stdout);
   };
 
+  /**
+   * `dx database query` answers with bare object ids, while a ref envelope carries a URI —
+   * passing an id straight through fails resolution as `Unsupported URI kind`.
+   */
+  const uri = (id: string): string => `echo://${spaceId}/${id}`;
+
   const findTask = (tasks: TaskRow[], title: string): TaskRow => {
     const task = tasks.find((row) => row.title === title);
     if (!task) {
@@ -328,8 +334,8 @@ describe.skipIf(!API_KEY)('claude code against dx mcp serve', { tags: ['manual']
         await spaceless.invoke(
           'org.dxos.operation.tasks.update',
           {
-            task: { '/': findTask(tasks, BACKFILL).id },
-            assignee: { role: 'assistant', subject: { '/': session!.id } },
+            task: { '/': uri(findTask(tasks, BACKFILL).id) },
+            assignee: { role: 'assistant', subject: { '/': uri(session!.id) } },
           },
           spaceId,
         );
@@ -342,7 +348,7 @@ describe.skipIf(!API_KEY)('claude code against dx mcp serve', { tags: ['manual']
         expect(beat.created).toBe(false);
         expect(beat.session, 'the session is found without a space').toBeDefined();
         expect(beat.tasks?.map((task: { title?: string }) => task.title)).toEqual([BACKFILL]);
-        expect(beat.tasks?.[0]?.dxn).toBe(findTask(tasks, BACKFILL).id);
+        expect(beat.tasks?.[0]?.dxn).toBe(uri(findTask(tasks, BACKFILL).id));
       } finally {
         await spaceless.close();
       }

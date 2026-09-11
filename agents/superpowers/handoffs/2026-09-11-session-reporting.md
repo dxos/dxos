@@ -2,30 +2,21 @@
 
 **Branch:** `dm/claude-code-mcp` · **Date:** 2026-09-11
 
-## For the agent landing this PR — read this first
+## Status: the known defect is resolved
 
-**There is one known, unfinished defect on this branch. Do not land without resolving it.**
+The `Service not found: @dxos/echo/Hypergraph/Service` failure is gone — the `Hypergraph.layer`
+provided from `packages/devtools/cli/src/util/runtime.ts` is the fix, now proven by the e2e suite
+rather than only typechecked. The `claude stdin: write EPIPE` on stages 2–4 was environmental; the
+same code passes those stages wherever the `claude` binary can reach the API.
 
-`dx mcp serve` cannot run `RecordSession`:
+Two further defects the suite caught, both fixed here:
 
-```
-operation org.dxos.operation.tasks.recordSession failed:
-  Service not found: @dxos/echo/Hypergraph/Service
-```
-
-`RecordSession` now declares `Hypergraph.Service` (see "Why the graph" below). The app path
-provides it — `HypergraphLayerSpec` in `packages/plugins/plugin-client/src/capabilities/layer-specs.ts`
-— and so does `TestDatabaseLayer`, which is why every unit test passes. **The CLI's own invoke seam
-did not**, and unit tests cannot see that gap.
-
-A candidate fix is already in the working tree, in `packages/devtools/cli/src/util/runtime.ts`:
-
-```ts
-Layer.provideMerge(Layer.unwrap(Effect.map(ClientService, (client) => Hypergraph.layer(client.graph)))),
-```
-
-It is **typechecked only — never run, and never proven to fix the failure.** Treat it as a lead,
-not a solution. The thing that proves it is the e2e suite below.
+- **A cross-space query saw only the warm working set.** `from('all-accessible-spaces')` emits a
+  scope clause naming nothing, and the index host answers a space-less query with nothing — so
+  `RecordSession`'s lookup found a session only when some earlier space-scoped read had already
+  pulled it in. `Hypergraph` now binds that empty clause to every registered space.
+- **`dx database query` answers with bare object ids**, while a ref envelope carries a URI; the
+  stage-6 fixture built its refs from ids and failed as `Unsupported URI kind`.
 
 ## Run the e2e suite; it is the only thing that has caught these
 
@@ -34,24 +25,14 @@ DX_RUN_MANUAL_TESTS=1 DX_ANTHROPIC_API_KEY=<key> \
   moon run cli:test -- src/commands/mcp/agent-e2e.test.ts
 ```
 
-Last run: **1 passed, 5 failed.** Two distinct causes, both real:
-
-1. **`Service not found: @dxos/echo/Hypergraph/Service`** — stages 5 and 6, described above.
-2. **`Error: claude stdin: write EPIPE`** — stages 2–4 failed in ~0 ms, meaning the `claude`
-   subprocess died on startup rather than failing a turn. Unattributed: it may be the credential
-   (the key used was taken from `ANTHROPIC_API_KEY`, which this suite deliberately does not read —
-   see `agent-e2e.test.ts` on why), or the binary, or the sandbox. **Stages 2–4 pass on `main`'s
-   code, so this is most likely environmental, but nobody has confirmed that.** Read the captured
-   stderr before concluding anything.
-
-Stage 1 passes, so the fixture and `dx database query` read-back path are sound.
+Last run: **6 passed.**
 
 ## What the branch does
 
 Three commits, each self-contained:
 
 - `d4b7409970` **tasks:** a task assigned to an agent names the session that owns it. The
-  `TaskList` pill dereferences `Actor.subject`, so an agent's task says *which run* owns it
+  `TaskList` pill dereferences `Actor.subject`, so an agent's task says _which run_ owns it
   ("Claude Code", Anthropic mark) instead of a hardcoded `'agent'`. Hovering opens a
   `RemoteSessionCard`.
 - `40c9f07f9d` **echo:** a Hypergraph service. `Hypergraph.Service` (cross-space) plus
@@ -61,7 +42,7 @@ Three commits, each self-contained:
 
 ## Why the graph, and not the database
 
-This is the decision most likely to be questioned, so: declaring `Database.Service` is *exactly*
+This is the decision most likely to be questioned, so: declaring `Database.Service` is _exactly_
 what marks an operation as requiring a space (`viewInternal.requiresSpace`, keyed off that service).
 `RecordSession` is fired by a harness hook whose payload is fixed and cannot carry a space id, so
 every hook call was refused before the handler ran — which is why no session had ever been recorded.
