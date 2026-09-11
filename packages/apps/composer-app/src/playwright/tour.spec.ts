@@ -61,7 +61,7 @@ test.describe('Tour tests', () => {
     // Replayed after a reload: the running tour's id is persisted and names a tour before anything
     // is attended.
     await host.page.reload();
-    await expect(host.page.getByTestId('deck.companion')).toBeVisible();
+    await host.deck.plank().openCompanion();
     await Support.startFromCompanion(host.page);
     await expect(Support.title(host.page)).toHaveText('Markdown, formatted as you type');
 
@@ -77,8 +77,6 @@ test.describe('Tour tests', () => {
   test('a project runs its own tour on first open, and again from the help companion', async () => {
     await host.createSpace();
     await host.createObject({ type: 'Project' });
-
-    await expect(host.page.getByTestId('deck.companion')).toBeVisible();
 
     await expect(Support.card(host.page)).toBeVisible();
     await expect(Support.title(host.page)).toHaveText('Overview');
@@ -99,6 +97,8 @@ test.describe('Tour tests', () => {
     await Support.finish(host.page).click();
     await expect(Support.card(host.page)).not.toBeVisible();
 
+    // Having run once it will not start itself again; the companion's toolbar is how it is replayed.
+    await host.deck.plank().openCompanion();
     await Support.startFromCompanion(host.page);
     await expect(Support.title(host.page)).toHaveText('Overview');
   });

@@ -13,7 +13,7 @@ import { type AttentionSigilAction } from '@dxos/app-toolkit/ui';
 import { useAppGraph, useNavigationPresence } from '@dxos/app-toolkit/ui';
 import { useActionRunner, useActions, useNode } from '@dxos/plugin-graph/hooks';
 
-import { useBreakpoints, useCompanionDefault, useCompanions, useDeckSettings, useDeckState } from '#hooks';
+import { useBreakpoints, useCompanions, useDeckSettings, useDeckState } from '#hooks';
 import { meta } from '#meta';
 import { DeckOperation, DeckSchema } from '#types';
 
@@ -80,12 +80,6 @@ export const useDeckPlank = ({ id, part, active }: UseDeckPlankOptions): DeckPla
   // leave a freshly-created plank's sigil menu empty until an unrelated re-render.
   const actions = useActions(graph, node?.id);
   const companions = useCompanions(id) ?? [];
-  useCompanionDefault({
-    id,
-    companions,
-    companionPlanks: deck.companionPlanks,
-    flatten,
-  });
   const notFoundNode = useNode(graph, NotFound.NOT_FOUND_PATH);
   const presence = useNavigationPresence(graph, id);
   // `absent` is proof; `unknown` is only ignorance, and a loader that could not form a question at all

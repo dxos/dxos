@@ -4,7 +4,6 @@
 
 export * from './useBreadcrumbs.ts';
 export * from './useBreakpoints.ts';
-export * from './useCompanionDefault.ts';
 export * from './useCompanions.ts';
 export * from './useDeckCompanions.ts';
 export * from './useDeckPresentation.ts';

@@ -12,45 +12,16 @@ import { Attention } from '@dxos/react-ui-attention/types';
 
 import { meta } from '#meta';
 
-import { isCompanionOpen } from '../util/companion-anchor.ts';
-
 export const PLANK_COMPANION_TYPE = AppNode.PLANK_COMPANION_TYPE;
 export const DECK_COMPANION_TYPE = AppNode.DECK_COMPANION_TYPE;
-
-/** Companion tab shown when the user has expressed no preference. */
-export const DEFAULT_COMPANION_VARIANT = 'help';
-
-/** Whether opening `plankId` should bring its companion up with it. */
-export const shouldOpenCompanionByDefault = ({
-  companions,
-  companionPlanks,
-  flatten,
-  plankId,
-}: {
-  companions: readonly { id: string }[];
-  companionPlanks: readonly string[];
-  flatten?: boolean;
-  plankId: string;
-}): boolean => {
-  if (isCompanionOpen(companionPlanks, flatten, plankId)) {
-    return false;
-  }
-
-  return companions.some((companion) => Attention.getLinkedVariant(companion.id) === DEFAULT_COMPANION_VARIANT);
-};
 
 export const selectCompanion = <T extends { id: string }>(
   companions: readonly T[],
   preferredVariant?: string,
-): T | undefined => {
-  const byVariant = (variant: string) =>
-    companions.find((companion) => Attention.getLinkedVariant(companion.id) === variant);
-  return (
-    (preferredVariant ? byVariant(preferredVariant) : undefined) ??
-    byVariant(DEFAULT_COMPANION_VARIANT) ??
-    companions[0]
-  );
-};
+): T | undefined =>
+  (preferredVariant
+    ? companions.find((companion) => Attention.getLinkedVariant(companion.id) === preferredVariant)
+    : undefined) ?? companions[0];
 
 export type Part = 'main' | 'complementary';
 export type ResolvedPart = Part;

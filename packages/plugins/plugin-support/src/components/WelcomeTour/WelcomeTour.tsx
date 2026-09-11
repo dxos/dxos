@@ -100,7 +100,7 @@ export const WelcomeTour = ({ steps: initialSteps, running: runningProp, onRunni
 
       const ended = steps.find((step, index) => (step.id ?? String(index + 1)) === lastStepId.current);
       if (ended && !resolveTarget(ended.target)()) {
-        log.warn('tour ended on a step whose target never appeared', {
+        log.error('tour ended on a step whose target never appeared', {
           stepId: lastStepId.current,
           target: typeof ended.target === 'string' ? ended.target : '(resolver)',
         });
