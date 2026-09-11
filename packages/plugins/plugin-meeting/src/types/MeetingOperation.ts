@@ -12,7 +12,7 @@ import { Ref, Type } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 import { Channel, Event } from '@dxos/types';
 
-import * as Meeting from './Meeting';
+import * as Meeting from './Meeting.ts';
 
 export const Create = Operation.make({
   meta: {

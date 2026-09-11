@@ -8,7 +8,7 @@ import { buildArchive, histogram } from '@dxos/app-toolkit/testing';
 import { Type } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 
-import { WorkerSpace } from './index';
+import { WorkerSpace } from './index.ts';
 
 /** A task as the archive serializes it: refs become `{ '/': 'echo:///<id>' }`. */
 type ArchivedTask = {

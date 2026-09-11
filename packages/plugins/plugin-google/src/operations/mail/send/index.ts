@@ -2,4 +2,4 @@
 // Copyright 2024 DXOS.org
 //
 
-export { default } from './handler';
+export { default } from './handler.ts';

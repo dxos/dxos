@@ -11,7 +11,7 @@ import { type Topology } from 'topojson-specification';
 import { useAsyncState } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { loadTopology } from '../../data';
+import { loadTopology } from '../../data.ts';
 import {
   type GlobeController,
   type Level,
@@ -23,11 +23,11 @@ import {
   useTopology,
   useTour,
   useWheel,
-} from '../../hooks';
-import { type LatLngLiteral } from '../../types';
-import { type StyleSet, closestPoint } from '../../util';
-import { type ControlProps } from '../Toolbar';
-import { Globe, type GlobeCanvasProps, type GlobeRootProps } from './Globe';
+} from '../../hooks/index.ts';
+import { type LatLngLiteral } from '../../types.ts';
+import { type StyleSet, closestPoint } from '../../util/index.ts';
+import { type ControlProps } from '../Toolbar/index.ts';
+import { Globe, type GlobeCanvasProps, type GlobeRootProps } from './Globe.tsx';
 
 const defaultStyles: StyleSet = {
   water: {

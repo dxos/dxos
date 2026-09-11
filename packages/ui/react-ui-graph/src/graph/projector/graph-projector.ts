@@ -5,9 +5,9 @@
 import { type SelectionModel } from '@dxos/graph';
 import * as GraphModel from '@dxos/graph/GraphModel';
 
-import { type SVGContext } from '../../hooks';
-import { type GraphLayout, type GraphLayoutNode, emptyGraph } from '../types';
-import { Projector, type ProjectorOptions } from './projector';
+import { type SVGContext } from '../../hooks/index.ts';
+import { type GraphLayout, type GraphLayoutNode, emptyGraph } from '../types.ts';
+import { Projector, type ProjectorOptions } from './projector.ts';
 
 export type GraphProjectorOptions = ProjectorOptions & {};
 

@@ -9,7 +9,7 @@ import { addEventListener, combine, debounceAndThrottle, throttle } from '@dxos/
 import { Domino } from '@dxos/ui';
 import { getSize } from '@dxos/ui-theme';
 
-import { crawlerActiveEffect, crawlerLineEffect } from './crawler';
+import { crawlerActiveEffect, crawlerLineEffect } from './crawler.ts';
 
 /** Enable or disable autoscroll. */
 export const autoScrollEffect = StateEffect.define<boolean>();

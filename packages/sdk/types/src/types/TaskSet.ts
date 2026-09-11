@@ -13,8 +13,8 @@ import { Format } from '@dxos/echo/Format';
 import { type EntityId } from '@dxos/echo/Key';
 import { BaseError } from '@dxos/errors';
 
-import * as Milestone from './Milestone';
-import * as Task from './Task';
+import * as Milestone from './Milestone.ts';
+import * as Task from './Task.ts';
 
 /**
  * Lightweight collection of tasks, native or mirrored from a remote service (e.g. GitHub repos,

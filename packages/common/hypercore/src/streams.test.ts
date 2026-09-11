@@ -10,7 +10,7 @@ import { latch } from '@dxos/async';
 import { createKeyPair } from '@dxos/crypto';
 import { log } from '@dxos/log';
 
-import { HypercoreFactory } from './hypercore-factory';
+import { HypercoreFactory } from './hypercore-factory.ts';
 
 describe('Streams', () => {
   test('reads from stream', async () => {

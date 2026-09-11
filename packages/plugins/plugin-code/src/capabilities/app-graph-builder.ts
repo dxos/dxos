@@ -25,9 +25,9 @@ import {
   CODE_PROJECT_SPEC_TYPE,
   CODE_PROJECTS_SECTION_TYPE,
   PLUGIN_SPEC_TYPE,
-} from '../constants';
-import { getCodeProjectBuildId, getCodeProjectSpecId, getCodeProjectsSectionId } from '../paths';
-import { makePluginSpecSubject } from '../plugin-spec';
+} from '../constants.ts';
+import { getCodeProjectBuildId, getCodeProjectSpecId, getCodeProjectsSectionId } from '../paths.ts';
+import { makePluginSpecSubject } from '../plugin-spec.ts';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {

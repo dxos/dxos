@@ -11,7 +11,7 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
 
-import { ProfileContainer } from './ProfileContainer';
+import { ProfileContainer } from './ProfileContainer.tsx';
 
 const meta = {
   title: 'plugins/plugin-client/containers/ProfileContainer',

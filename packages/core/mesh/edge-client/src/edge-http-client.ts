@@ -47,11 +47,11 @@ import {
 } from '@dxos/protocols/buf/dxos/echo/query_pb';
 import { createUrl } from '@dxos/util';
 
-import { BaseHttpClient, type BaseHttpClientOptions, type EdgeHttpCallArgs } from './base-http-client';
-import { proxyFetchLegacy } from './cors-proxy';
-import { HttpConfig, withLogging, withRetryConfig } from './http-client';
+import { BaseHttpClient, type BaseHttpClientOptions, type EdgeHttpCallArgs } from './base-http-client.ts';
+import { proxyFetchLegacy } from './cors-proxy.ts';
+import { HttpConfig, withLogging, withRetryConfig } from './http-client.ts';
 
-export type { EdgeHttpCallArgs, RetryConfig } from './base-http-client';
+export type { EdgeHttpCallArgs, RetryConfig } from './base-http-client.ts';
 
 /**
  * HTTP wire shape returned by `/queue/.../query`.

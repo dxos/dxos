@@ -7,9 +7,9 @@ import React, { type ForwardedRef, cloneElement, forwardRef } from 'react';
 import { Button, Icon, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
-import { Heading } from '../../components';
-import { translationKey } from '../../translations';
-import { type JoinPanelMode } from './JoinPanelProps';
+import { Heading } from '../../components/index.ts';
+import { translationKey } from '../../translations.ts';
+import { type JoinPanelMode } from './JoinPanelProps.ts';
 
 export type JoinSpaceHeadingProps = {
   mode?: JoinPanelMode;

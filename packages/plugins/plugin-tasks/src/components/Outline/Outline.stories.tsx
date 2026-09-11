@@ -15,7 +15,7 @@ import { Outline } from '@dxos/types';
 
 import { translations } from '#translations';
 
-import { Outline as OutlineComponent } from './Outline';
+import { Outline as OutlineComponent } from './Outline.tsx';
 
 const OutlineStory = ({ content = '- [x] Initial content', references, onSelectLink }: StoryArgs) => {
   const [space] = useSpaces();

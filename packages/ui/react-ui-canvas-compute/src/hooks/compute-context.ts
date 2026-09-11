@@ -6,7 +6,7 @@ import { createContext, useContext } from 'react';
 
 import { raise } from '@dxos/debug';
 
-import type { ComputeGraphController } from '../graph';
+import type { ComputeGraphController } from '../graph/index.ts';
 
 export type ComputeContextType = {
   controller: ComputeGraphController;

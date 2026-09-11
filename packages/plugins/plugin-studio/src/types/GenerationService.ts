@@ -10,7 +10,7 @@ import * as Schema from 'effect/Schema';
 import { BaseError } from '@dxos/errors';
 import { type FormFieldMap } from '@dxos/react-ui-form';
 
-import * as Generation from './Generation';
+import * as Generation from './Generation.ts';
 
 /**
  * Provider-agnostic, per-`kind` generation contract shared by plugin-studio and provider

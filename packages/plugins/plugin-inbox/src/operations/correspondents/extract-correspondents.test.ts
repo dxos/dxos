@@ -17,7 +17,7 @@ import { Message, Organization, Person } from '@dxos/types';
 import { InboxOperationHandlerSet } from '#operations';
 import { InboxOperation, Mailbox } from '#types';
 
-import { deriveCorrespondents, parseAddressList } from './correspondence';
+import { deriveCorrespondents, parseAddressList } from './correspondence.ts';
 
 const TestLayer = AssistantTestLayer({
   operationHandlers: InboxOperationHandlerSet.handlers,

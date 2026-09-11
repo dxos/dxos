@@ -18,7 +18,7 @@ import { AnchoredTo, Thread } from '@dxos/types';
 
 import { CommentCapabilities, CommentOperation } from '#types';
 
-import { CommentNotPersistedError, InvalidCommentRangeError, RangeAnchorSubjectError } from '../errors';
+import { CommentNotPersistedError, InvalidCommentRangeError, RangeAnchorSubjectError } from '../errors.ts';
 
 const handler: Operation.WithHandler<typeof CommentOperation.Create> = CommentOperation.Create.pipe(
   Operation.withHandler(

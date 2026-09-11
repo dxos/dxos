@@ -21,7 +21,7 @@ import { HasRelationship, HasSubject, Message, Organization, Person, Task } from
 
 import { translations } from '#translations';
 
-import { RelatedArticle } from './RelatedArticle';
+import { RelatedArticle } from './RelatedArticle.tsx';
 
 const SUBJECT_NAME = 'Alice Ashe';
 

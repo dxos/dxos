@@ -4,8 +4,8 @@
 
 import { describe, test } from 'vitest';
 
-import * as Identity from './identity';
-import * as Wire from './wire';
+import * as Identity from './identity.ts';
+import * as Wire from './wire.ts';
 
 const toolsList = <T>(tools: T[]) => ({ jsonrpc: '2.0', id: 1, result: { tools } });
 

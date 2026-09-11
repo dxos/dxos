@@ -24,7 +24,7 @@ import {
 import { type AnyEnvelope, type RequestOptions } from '@dxos/protocols/service-contract';
 import { exponentialBackoffInterval } from '@dxos/util';
 
-import { decodeRpcError } from './errors';
+import { decodeRpcError } from './errors.ts';
 
 const DEFAULT_TIMEOUT = 30_000;
 const BYE_SEND_TIMEOUT = 2_000;

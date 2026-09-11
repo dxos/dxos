@@ -11,7 +11,7 @@ import { useAsyncEffect } from '@dxos/react-ui';
 
 import { Tldraw } from '#types';
 
-import { TLDrawStoreAdapter } from './adapter';
+import { TLDrawStoreAdapter } from './adapter.ts';
 
 /**
  * Hook that manages the TLDraw store adapter lifecycle for a canvas object.

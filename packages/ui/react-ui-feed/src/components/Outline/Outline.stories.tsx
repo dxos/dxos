@@ -8,7 +8,7 @@ import { expect } from 'storybook/test';
 
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { Outline, type OutlineMarker, type OutlineProps } from './Outline';
+import { Outline, type OutlineMarker, type OutlineProps } from './Outline.tsx';
 
 const DOC_LENGTH = 2000;
 const WINDOW = 320;

@@ -12,7 +12,7 @@ import { type Database, Filter, Obj } from '@dxos/echo';
 import { type URI } from '@dxos/keys';
 import { useQuery } from '@dxos/react-client/echo';
 
-import { getUuidFromDXN } from './utils';
+import { getUuidFromDXN } from './utils.ts';
 
 /**
  * Maps invocation target identifiers to readable script names.

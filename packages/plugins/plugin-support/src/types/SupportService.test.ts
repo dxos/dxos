@@ -8,7 +8,7 @@ import { afterEach, describe, expect, test, vi } from 'vitest';
 import { EffectEx } from '@dxos/effect';
 import type * as Observability from '@dxos/observability/Observability';
 
-import * as SupportService from './SupportService';
+import * as SupportService from './SupportService.ts';
 
 const observabilityWith = (support: Observability.Observability['support']): Observability.Observability =>
   ({ support }) as unknown as Observability.Observability;

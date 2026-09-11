@@ -19,8 +19,8 @@ import { useAttentionAttributes } from '@dxos/react-ui-attention';
 
 import { meta } from '#meta';
 
-import { Pane } from '../Pane';
-import { PlankLoading } from './PlankLoading';
+import { Pane } from '../Pane/index.ts';
+import { PlankLoading } from './PlankLoading.tsx';
 
 /** A plank waiting: for the node the URL names, and then for that node's article to load. */
 const PLANK_LOADING = <PlankLoading />;

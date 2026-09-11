@@ -5,7 +5,7 @@
 import { type PopoverRootProps } from '@ark-ui/react/popover';
 import { type RefObject, useCallback, useMemo, useState } from 'react';
 
-import { type CollisionPadding, useSafeCollisionPadding } from './useSafeCollisionPadding';
+import { type CollisionPadding, useSafeCollisionPadding } from './useSafeCollisionPadding.ts';
 
 export type PositionSide = 'top' | 'right' | 'bottom' | 'left';
 export type PositionAlign = 'start' | 'center' | 'end';

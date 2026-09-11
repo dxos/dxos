@@ -17,7 +17,7 @@ import {
 } from '@dxos/ui-editor';
 import { isTruthy } from '@dxos/util';
 
-import { type ChatEditorProps } from './ChatEditor';
+import { type ChatEditorProps } from './ChatEditor.tsx';
 
 // Kept out of `ChatEditor.tsx`: react-refresh only fast-refreshes a module whose
 // exports are all components, so values exported beside them force a full page reload on

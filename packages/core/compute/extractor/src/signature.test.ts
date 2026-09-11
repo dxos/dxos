@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { type SignatureData, parseSignature } from './signature';
+import { type SignatureData, parseSignature } from './signature.ts';
 import sigData from './testing/sig.json';
 
 describe('sig parser', () => {

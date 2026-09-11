@@ -6,10 +6,10 @@ import * as Option from 'effect/Option';
 
 import { SchemaAST, SchemaEx } from '@dxos/effect';
 
-import { SetParentAnnotation, getFromAst } from '../Annotation';
-import { KindId, ParentId, getSchema } from '../common/types';
-import { EntityKind } from '../common/types/entity';
-import { Ref } from '../Ref/ref';
+import { SetParentAnnotation, getFromAst } from '../Annotation/index.ts';
+import { EntityKind } from '../common/types/entity.ts';
+import { KindId, ParentId, getSchema } from '../common/types/index.ts';
+import { Ref } from '../Ref/ref.ts';
 
 /** Path to an owning field, relative to the holder (nested inside plain structs, e.g. `backend.config`). */
 type Path = readonly string[];

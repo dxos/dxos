@@ -50,9 +50,9 @@ import {
   ToggleGroupItem,
   Toolbar,
   Tooltip,
-} from '../components';
-import { DensityProvider } from '../providers';
-import { withTheme } from '../testing';
+} from '../components/index.ts';
+import { DensityProvider } from '../providers/index.ts';
+import { withTheme } from '../testing/index.ts';
 
 //
 // Frame

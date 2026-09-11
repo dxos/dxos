@@ -6,7 +6,7 @@ import { type Page, expect, test } from '@playwright/test';
 
 import { setupPage, storybookUrl } from '@dxos/test-utils/playwright';
 
-import { BoardManager } from './board-manager';
+import { BoardManager } from './board-manager.ts';
 
 const PORT = 9011;
 const STORY_URL = storybookUrl('plugins-plugin-kanban-containers-kanban--mutable-schema', PORT);

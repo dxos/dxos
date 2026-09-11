@@ -8,7 +8,7 @@ import { Obj } from '@dxos/echo';
 import { Lens } from '@dxos/echo-panproto';
 import { Text } from '@dxos/schema';
 
-import { DEMO_MARKDOWN, RichTextLens, blockText, diffBlocks, parseBlocks, plain } from './rich-text';
+import { DEMO_MARKDOWN, RichTextLens, blockText, diffBlocks, parseBlocks, plain } from './rich-text.ts';
 
 //
 // The lens's own logic, without a browser. The property that matters is that editing one block

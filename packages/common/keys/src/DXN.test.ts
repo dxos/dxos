@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 import { describe, expectTypeOf, test } from 'vitest';
 
-import * as DXN from './DXN';
+import * as DXN from './DXN.ts';
 
 describe('DXN.isDXN', () => {
   test('accepts new-format DXNs', ({ expect }) => {

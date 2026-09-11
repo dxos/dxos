@@ -40,26 +40,26 @@ import { keyToFallback } from '@dxos/util';
 import { type ChatSwitcher, useChatToolbarActions, useDebug } from '#hooks';
 import { meta } from '#meta';
 
-import { TaskSlashCommands } from '../../commands';
-import { AiUsageQuotaError, type ProcessorRequestContext } from '../../processor';
+import { TaskSlashCommands } from '../../commands/index.ts';
+import { AiUsageQuotaError, type ProcessorRequestContext } from '../../processor/index.ts';
 import {
   ChatStatus,
   ChatStatusStack,
   ChatActivity as NaturalChatActivity,
   ChatPrompt as NaturalChatPrompt,
   type ChatPromptProps as NaturalChatPromptProps,
-} from '../ChatPrompt';
-import { ChatQueue as NaturalChatQueue, type ChatQueueProps as NaturalChatQueueProps } from '../ChatQueue';
+} from '../ChatPrompt/index.ts';
+import { ChatQueue as NaturalChatQueue, type ChatQueueProps as NaturalChatQueueProps } from '../ChatQueue/index.ts';
 import {
   ChatContextProvider,
   type ChatContextValue,
   ChatReportContextProvider,
   type ChatRequestTiming,
   useChatContext,
-} from './context';
-import { type ChatEvent } from './events';
-import { SurfaceWidget } from './SurfaceWidget';
-import { projectAlarms, projectThread, resolveRewind } from './thread';
+} from './context.ts';
+import { type ChatEvent } from './events.ts';
+import { SurfaceWidget } from './SurfaceWidget.tsx';
+import { projectAlarms, projectThread, resolveRewind } from './thread.ts';
 
 //
 // Root

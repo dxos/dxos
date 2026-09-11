@@ -4,7 +4,7 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { isClosedConnectionError } from './sqlite-storage';
+import { isClosedConnectionError } from './sqlite-storage.ts';
 
 // `SqliteRandomAccessFile._loadFromDb` swallows a read that races client teardown only when the
 // error signals a closed connection. Getting this predicate wrong reintroduces the flake where a

@@ -17,8 +17,8 @@ import { trim } from '@dxos/util';
 
 import { ProjectMailboxOperation } from '#types';
 
-import { scaffoldProject } from '../../templates';
-import { syncProjectTasks } from './update-project-tasks';
+import { scaffoldProject } from '../../templates/index.ts';
+import { syncProjectTasks } from './update-project-tasks.ts';
 
 const INSTRUCTIONS = (label: string, senders: readonly string[]) => trim`
   This project tracks requests from ${label} (${senders.join(', ')}).

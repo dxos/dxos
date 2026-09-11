@@ -19,7 +19,7 @@ import {
 } from '@dxos/protocols/buf/example/testing/rpc_pb';
 import { type ProtoRpcPeer, createProtoRpcPeer } from '@dxos/rpc';
 
-import { type ExtensionContext, type TeleportExtension } from '../teleport';
+import { type ExtensionContext, type TeleportExtension } from '../teleport.ts';
 
 type TestServiceWithStreams = BufService<typeof TestServiceWithStreamsDesc>;
 

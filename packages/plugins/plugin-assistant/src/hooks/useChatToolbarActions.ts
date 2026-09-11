@@ -14,7 +14,7 @@ import { MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 import { meta } from '#meta';
 import { AssistantOperation } from '#types';
 
-import { useChatContext } from '../components/Chat/context';
+import { useChatContext } from '../components/Chat/context.ts';
 
 /**
  * Scopes the toolbar's chat switcher: which chats it lists, and what picking one does.

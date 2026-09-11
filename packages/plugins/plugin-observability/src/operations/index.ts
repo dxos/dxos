@@ -8,6 +8,6 @@ import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import { ObservabilityOperation } from '#types';
 
 export const ObservabilityOperationHandlerSet = OperationHandlerSet.lazy([
-  ObservabilityOperation.SendEvent.pipe(Operation.lazyHandler(() => import('./send-event'))),
-  ObservabilityOperation.SetEnabled.pipe(Operation.lazyHandler(() => import('./set-enabled'))),
+  ObservabilityOperation.SendEvent.pipe(Operation.lazyHandler(() => import('./send-event.ts'))),
+  ObservabilityOperation.SetEnabled.pipe(Operation.lazyHandler(() => import('./set-enabled.ts'))),
 ]);

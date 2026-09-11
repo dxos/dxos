@@ -9,7 +9,7 @@ import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 
 import { CrxOperation } from '#types';
 
-import { toPerson } from '../mapping';
+import { toPerson } from '../mapping.ts';
 
 const handler: Operation.WithHandler<typeof CrxOperation.AddPersonFromSnapshot> =
   CrxOperation.AddPersonFromSnapshot.pipe(

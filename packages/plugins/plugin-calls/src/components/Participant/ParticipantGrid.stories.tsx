@@ -7,8 +7,8 @@ import React, { useMemo } from 'react';
 
 import { withLayout } from '@dxos/react-ui/testing';
 
-import { makeCallState, makeUser, useSeedCallManager, withCallManager } from '../../testing';
-import { ParticipantGrid } from './ParticipantGrid';
+import { makeCallState, makeUser, useSeedCallManager, withCallManager } from '../../testing/index.ts';
+import { ParticipantGrid } from './ParticipantGrid.tsx';
 
 const self = makeUser('self', 'Alice');
 const everyone = [

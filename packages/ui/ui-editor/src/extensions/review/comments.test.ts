@@ -5,7 +5,7 @@
 import { EditorView } from '@codemirror/view';
 import { describe, test } from 'vitest';
 
-import { comments, createComment } from './comments';
+import { comments, createComment } from './comments.ts';
 
 describe('createComment', () => {
   test('collapses the selection to its start after creating a comment', ({ expect }) => {

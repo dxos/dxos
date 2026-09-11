@@ -11,7 +11,7 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
 
-import { JsonCard } from './JsonCard';
+import { JsonCard } from './JsonCard.tsx';
 
 // The card is a row slot, so it is mounted in the `Card.Root` its surface host supplies — on its own
 // it has no grid to place itself in and the toggle's column cannot be seen.

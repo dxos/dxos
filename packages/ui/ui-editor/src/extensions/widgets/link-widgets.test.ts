@@ -5,8 +5,8 @@
 import { EditorState } from '@codemirror/state';
 import { describe, test } from 'vitest';
 
-import { createMarkdownExtensions } from '../language/markdown';
-import { isWidgetLink, linkWidgets, matchHosts, matchSchemes } from './link-widgets';
+import { createMarkdownExtensions } from '../language/markdown/index.ts';
+import { isWidgetLink, linkWidgets, matchHosts, matchSchemes } from './link-widgets.ts';
 
 describe('linkWidgets', () => {
   test('registers what it matches, so the decorator can leave those links to the widget', ({ expect }) => {

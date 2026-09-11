@@ -4,8 +4,8 @@
 
 import { describe, expect, test, vi } from 'vitest';
 
-import { resolveDrop } from './resolve-drop';
-import { type DndContainerHandler, type DndTileData } from './types';
+import { resolveDrop } from './resolve-drop.ts';
+import { type DndContainerHandler, type DndTileData } from './types.ts';
 
 const source: DndTileData = { type: 'tile', containerId: 'c1', id: 'a', data: { id: 'a' }, location: 0 };
 const target: DndTileData = { type: 'tile', containerId: 'c1', id: 'b', data: { id: 'b' }, location: 1 };

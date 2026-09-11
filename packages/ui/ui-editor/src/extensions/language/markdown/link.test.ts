@@ -6,8 +6,8 @@ import { EditorState } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
 import { describe, test } from 'vitest';
 
-import { createMarkdownExtensions } from './bundle';
-import { syncLinkLabels } from './link';
+import { createMarkdownExtensions } from './bundle.ts';
+import { syncLinkLabels } from './link.ts';
 
 describe('syncLinkLabels', () => {
   test('rewrites a label that has drifted from its target', ({ expect }) => {

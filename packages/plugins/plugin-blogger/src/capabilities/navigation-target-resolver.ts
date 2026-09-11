@@ -10,7 +10,7 @@ import * as NavigationResolver from '@dxos/app-toolkit/NavigationResolver';
 
 import { Blog } from '#types';
 
-import { getPublicationsPath } from '../paths';
+import { getPublicationsPath } from '../paths.ts';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {

@@ -12,7 +12,7 @@ import { COMMANDS_DIALOG } from '@dxos/plugin-navtree/meta';
 import { Dialog, ErrorFallback, useAsyncEffect } from '@dxos/react-ui';
 import { isTauri } from '@dxos/util';
 
-import { useSpotlightState } from './useSpotlightState';
+import { useSpotlightState } from './useSpotlightState.ts';
 
 /**
  * Spotlight layout renders the commands dialog directly as the main content.

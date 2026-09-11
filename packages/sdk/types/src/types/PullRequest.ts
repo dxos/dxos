@@ -9,7 +9,7 @@ import * as Schema from 'effect/Schema';
 import { Annotation, DXN, Format, Obj, Type } from '@dxos/echo';
 import { GeneratorAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
 
-import * as Issue from './Issue';
+import * as Issue from './Issue.ts';
 
 export const State = Schema.Literals(['open', 'closed', 'merged', 'draft']);
 export type State = Schema.Schema.Type<typeof State>;

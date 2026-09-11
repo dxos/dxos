@@ -8,7 +8,7 @@ import * as DeckSpec from '@dxos/app-toolkit/DeckSpec';
 
 import { DeckSchema } from '#types';
 
-import { Navigation } from '../url';
+import { Navigation } from '../url/index.ts';
 
 /** Where {@link addSubjectsToActiveDeck} puts the subjects it is given. */
 export type AddSubjectsToActiveDeckOptions = {

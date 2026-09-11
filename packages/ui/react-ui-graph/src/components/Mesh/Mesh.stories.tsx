@@ -7,8 +7,8 @@ import React, { useEffect, useState } from 'react';
 
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { SVG, type SVGRootProps } from '../SVG';
-import { Mesh } from './Mesh';
+import { SVG, type SVGRootProps } from '../SVG/index.ts';
+import { Mesh } from './Mesh.tsx';
 
 // TODO(burdon): Create waves/game of life.
 const DefaultStory = (props: SVGRootProps) => {

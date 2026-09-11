@@ -6,7 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 
 import { withTheme } from '@dxos/react-ui/testing';
 
-import { Loading } from './Loading';
+import { Loading } from './Loading.tsx';
 
 const meta = {
   title: 'plugins/plugin-mobile/components/Loading',

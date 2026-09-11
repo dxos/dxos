@@ -15,7 +15,7 @@ import { IconButton, Toolbar } from '@dxos/react-ui';
 import { Accordion } from '@dxos/react-ui-list';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 
-import { type CustomPanelProps, Panel } from '../Panel';
+import { type CustomPanelProps, Panel } from '../Panel.tsx';
 
 /** Cap on retained broadcasts so a long-lived session does not grow the list unbounded. */
 const MAX_MESSAGES = 200;

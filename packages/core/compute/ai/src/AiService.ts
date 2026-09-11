@@ -11,8 +11,8 @@ import type * as LanguageModel from 'effect/unstable/ai/LanguageModel';
 
 import { DXN } from '@dxos/keys';
 
-import { AiModelNotAvailableError } from './errors';
-import * as Model from './Model';
+import { AiModelNotAvailableError } from './errors.ts';
+import * as Model from './Model.ts';
 
 export type ServiceMetadata = {
   name: string;

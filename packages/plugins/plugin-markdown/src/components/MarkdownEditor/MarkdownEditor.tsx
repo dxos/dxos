@@ -29,11 +29,11 @@ import {
 import {
   MarkdownEditorContent as NaturalMarkdownEditorContent,
   type MarkdownEditorContentProps as NaturalMarkdownEditorContentProps,
-} from './MarkdownEditorContent';
+} from './MarkdownEditorContent.tsx';
 import {
   MarkdownEditorToolbar as NaturalMarkdownToolbar,
   type MarkdownEditorToolbarProps as NaturalMarkdownToolbarProps,
-} from './MarkdownEditorToolbar';
+} from './MarkdownEditorToolbar.tsx';
 
 //
 // Context

@@ -11,9 +11,9 @@ import { Database } from '@dxos/echo';
 
 import { SandboxOperation } from '#types';
 
-import { encodeExecCommand } from '../../services/exec-command';
-import { mergeExecEnv } from '../../services/sandbox-env';
-import { createSandboxClient } from '../../services/sandbox-url';
+import { encodeExecCommand } from '../../services/exec-command.ts';
+import { mergeExecEnv } from '../../services/sandbox-env.ts';
+import { createSandboxClient } from '../../services/sandbox-url.ts';
 
 /**
  * How long a command may run when the caller sets no limit. The service's own default is two

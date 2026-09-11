@@ -9,7 +9,7 @@ import { afterEach, describe, test, vi } from 'vitest';
 
 import { CHANNEL_COLORS, CHANNELS, RAMP_HUE } from '@dxos/brand/channels';
 
-import { applyChannelFavicons, bootMarkFilter, channelVariant } from './channel-branding';
+import { applyChannelFavicons, bootMarkFilter, channelVariant } from './channel-branding.ts';
 
 const FAVICONS = [
   'favicon.svg',

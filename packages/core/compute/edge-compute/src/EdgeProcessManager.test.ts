@@ -13,7 +13,7 @@ import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { SpaceId } from '@dxos/keys';
 
-import * as EdgeProcessManager from './EdgeProcessManager';
+import * as EdgeProcessManager from './EdgeProcessManager.ts';
 
 describe('EdgeProcessManager', () => {
   test('cancel force-cancels the trigger run on the edge client', async () => {

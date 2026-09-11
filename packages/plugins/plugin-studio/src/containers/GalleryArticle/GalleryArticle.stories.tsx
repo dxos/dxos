@@ -22,7 +22,7 @@ import { StudioPlugin } from '#plugin';
 import { translations } from '#translations';
 import { Artifact, Variant } from '#types';
 
-import { GalleryArticle } from './GalleryArticle';
+import { GalleryArticle } from './GalleryArticle.tsx';
 
 const DefaultStory = () => {
   const spaces = useSpaces();

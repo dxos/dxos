@@ -5,17 +5,17 @@
 import * as Role from '@dxos/app-framework/Role';
 import { Surface } from '@dxos/app-framework/ui';
 
-import { ArchiveModule } from './ArchiveModule';
-import { ConnectorModule } from './ConnectorModule';
-import { FactsModule } from './FactsModule';
-import { MailboxModule } from './MailboxModule';
-import { MessageModule } from './MessageModule';
-import { StatsModule } from './StatsModule';
-import { SwarmTraceModule } from './SwarmTraceModule';
-import { SyncStateModule } from './SyncStateModule';
-import { TopicsModule } from './TopicsModule';
-import { TraceModule } from './TraceModule';
-import { TriggersModule } from './TriggersModule';
+import { ArchiveModule } from './ArchiveModule.tsx';
+import { ConnectorModule } from './ConnectorModule.tsx';
+import { FactsModule } from './FactsModule.tsx';
+import { MailboxModule } from './MailboxModule.tsx';
+import { MessageModule } from './MessageModule.tsx';
+import { StatsModule } from './StatsModule.tsx';
+import { SwarmTraceModule } from './SwarmTraceModule.tsx';
+import { SyncStateModule } from './SyncStateModule.tsx';
+import { TopicsModule } from './TopicsModule.tsx';
+import { TraceModule } from './TraceModule.tsx';
+import { TriggersModule } from './TriggersModule.tsx';
 
 /**
  * Role tokens for the MailboxSync story columns. Each module is contributed as a dedicated surface

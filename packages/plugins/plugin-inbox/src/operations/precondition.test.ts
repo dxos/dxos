@@ -5,7 +5,7 @@
 import * as Cause from 'effect/Cause';
 import { describe, expect, it } from 'vitest';
 
-import { unmetPrecondition } from './precondition';
+import { unmetPrecondition } from './precondition.ts';
 
 describe('unmetPrecondition', () => {
   it('names the service from the structured context', () => {

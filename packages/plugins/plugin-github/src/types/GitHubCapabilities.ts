@@ -12,7 +12,7 @@ import { type Issue, type PullRequest, type Repo } from '@dxos/types';
 
 import { meta } from '#meta';
 
-import { type GitHubLink } from '../extensions';
+import { type GitHubLink } from '../extensions/index.ts';
 
 /**
  * Where a previewed link's repository, pull request or issue comes from. The plugin's default fetches it from

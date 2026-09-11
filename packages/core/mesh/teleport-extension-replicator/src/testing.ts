@@ -13,7 +13,7 @@ import { StorageType, createStorage } from '@dxos/random-access-storage';
 import { Teleport } from '@dxos/teleport';
 import { range } from '@dxos/util';
 
-import { ReplicatorExtension } from './replicator-extension';
+import { ReplicatorExtension } from './replicator-extension.ts';
 
 export class TestBuilder {
   createAgent(): TestAgent {

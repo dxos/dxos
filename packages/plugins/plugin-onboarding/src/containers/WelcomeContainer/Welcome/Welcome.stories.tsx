@@ -13,9 +13,9 @@ import { AlertDialog } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
 
 import hero from '../../../../assets/hero.webp?url';
-import { translations } from '../../../translations';
-import { type WelcomeScreenProps, WelcomeState } from './types';
-import { Welcome } from './Welcome';
+import { translations } from '../../../translations.ts';
+import { type WelcomeScreenProps, WelcomeState } from './types.ts';
+import { Welcome } from './Welcome.tsx';
 
 const DefaultStory = ({ state: initialState = WelcomeState.INIT, ...props }: Partial<WelcomeScreenProps>) => {
   const identity = useIdentity();

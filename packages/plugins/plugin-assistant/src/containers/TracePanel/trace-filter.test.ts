@@ -17,7 +17,7 @@ import {
   parseProcessEnvironments,
   processEnvironment,
   toggleProcessEnvironment,
-} from './trace-filter';
+} from './trace-filter.ts';
 
 const SPACE_ID = SpaceId.random();
 const CONVERSATION = URI.make('eid:BA25QRC2FWNUGWENQZ26MK5W6C64ZQPTC:01J00000000000000000000000');

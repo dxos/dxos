@@ -17,7 +17,7 @@ import { FormBuilder } from '@dxos/cli-util';
 import { ClientService } from '@dxos/client';
 import { toPublicKey } from '@dxos/protocols/buf';
 
-import { acceptInvitation } from './util';
+import { acceptInvitation } from './util.ts';
 
 export const handler = Effect.fn(function* ({
   invitationCode,

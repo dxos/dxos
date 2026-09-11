@@ -20,9 +20,9 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { type ContentBlock, Message } from '@dxos/types';
 
-import * as AiParser from '../AiParser';
-import * as AiPreprocessor from '../AiPreprocessor';
-import * as ChatCompletionsAdapter from './ChatCompletionsAdapter';
+import * as AiParser from '../AiParser.ts';
+import * as AiPreprocessor from '../AiPreprocessor.ts';
+import * as ChatCompletionsAdapter from './ChatCompletionsAdapter.ts';
 
 type ProviderConfig = {
   name: string;

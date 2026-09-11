@@ -16,8 +16,8 @@ import {
 } from '@dxos/ui-editor';
 import { mx } from '@dxos/ui-theme';
 
-import { type GridEditBox } from '../Grid';
-import { type EditorBlurHandler } from './editor-keys';
+import { type GridEditBox } from '../Grid/index.ts';
+import { type EditorBlurHandler } from './editor-keys.ts';
 
 export type CellEditorProps = {
   value?: string;

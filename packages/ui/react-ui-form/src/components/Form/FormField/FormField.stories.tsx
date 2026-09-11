@@ -13,9 +13,9 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { type FormPresentation } from '#types';
 
-import { Form } from '../Form';
 import { type FormVariant } from '../Form.theme';
-import { useFormField } from './FormFieldContext';
+import { Form } from '../Form.tsx';
+import { useFormField } from './FormFieldContext.ts';
 
 const ProfileSchema = Schema.Struct({
   name: Schema.String.annotate({ title: 'Name', description: 'How you are known.' }),

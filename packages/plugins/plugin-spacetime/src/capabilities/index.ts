@@ -13,18 +13,18 @@ import { SpacetimeCapabilities } from '#types';
 // eslint-disable-next-line import/no-relative-packages
 import pluginSpec from '../../PLUGIN.mdl?raw';
 
-export const CreateObject = SpaceCapability.createObject(() => import('./create-object'));
+export const CreateObject = SpaceCapability.createObject(() => import('./create-object.ts'));
 export const PluginAsset = AppCapability.pluginAsset({
   pluginId: meta.profile.key,
   path: 'PLUGIN.mdl',
   content: pluginSpec,
   mimeType: 'application/x-mdl',
 });
-export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
+export const ReactSurface = AppCapability.surface(() => import('./react-surface.ts'), {
   roles: ['org.dxos.role.article', 'org.dxos.role.section'],
 });
-export const Schema = AppCapability.schema(() => import('./schema'));
-export const SpacetimeSettings = AppCapability.settings(() => import('./settings'), {
+export const Schema = AppCapability.schema(() => import('./schema.ts'));
+export const SpacetimeSettings = AppCapability.settings(() => import('./settings.ts'), {
   activatesOn: ActivationEvents.Idle,
   provides: [SpacetimeCapabilities.Settings],
 });

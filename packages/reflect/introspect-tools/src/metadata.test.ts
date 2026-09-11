@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { TOOL_METADATA } from './metadata';
+import { TOOL_METADATA } from './metadata.ts';
 
 // Top-level field key each tool's outputSchema must expose. MCP requires
 // `structuredContent` to be a JSON object, so every tool wraps its

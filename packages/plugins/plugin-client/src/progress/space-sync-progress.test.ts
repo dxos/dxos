@@ -6,7 +6,7 @@ import { describe, expect, test } from 'vitest';
 
 import { type Database } from '@dxos/echo';
 
-import { toSpaceUpdate } from './space-sync-progress';
+import { toSpaceUpdate } from './space-sync-progress.ts';
 
 describe('toSpaceUpdate', () => {
   test('caught up on both backlogs yields no monitor', () => {

@@ -17,10 +17,10 @@ export const PluginAsset = AppCapability.pluginAsset({
   content: pluginSpec,
   mimeType: 'application/x-mdl',
 });
-export const Schema = AppCapability.schema(() => import('./schema'));
-export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition'));
-export const CreateObject = SpaceCapability.createObject(() => import('./create-object'));
-export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
+export const Schema = AppCapability.schema(() => import('./schema.ts'));
+export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition.ts'));
+export const CreateObject = SpaceCapability.createObject(() => import('./create-object.ts'));
+export const ReactSurface = AppCapability.surface(() => import('./react-surface.ts'), {
   roles: ['org.dxos.role.article', 'org.dxos.role.cardContent', 'org.dxos.role.section'],
 });
 export const Translations = AppCapability.translations(translations);

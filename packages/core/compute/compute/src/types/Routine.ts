@@ -9,10 +9,10 @@ import * as Schema from 'effect/Schema';
 import { Annotation, DXN, Obj, Ref, Type } from '@dxos/echo';
 import { LabelAnnotation } from '@dxos/echo/internal';
 
-import type * as Operation from '../Operation';
-import * as Runnable from '../Runnable';
-import * as Instructions from './Instructions';
-import * as Trigger from './Trigger';
+import type * as Operation from '../Operation.ts';
+import * as Runnable from '../Runnable.ts';
+import * as Instructions from './Instructions.ts';
+import * as Trigger from './Trigger.ts';
 
 const Kinds = ['runnable', 'instructions'] as const;
 export const Kind = Schema.Literals(Kinds);

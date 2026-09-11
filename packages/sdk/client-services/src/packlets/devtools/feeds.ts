@@ -21,7 +21,7 @@ import { type FeedMessage } from '@dxos/protocols/buf/dxos/echo/feed_pb';
 import { type DevtoolsHost } from '@dxos/protocols/rpc';
 import { ComplexMap } from '@dxos/util';
 
-import { type SpaceManager } from '../space';
+import { type SpaceManager } from '../space/index.ts';
 
 /** Feed blocks come off the iterator in the protobuf.js shape, which crosses as the shared wire bytes. */
 /** The feed's blocks as the devtools RPC message; the iterator yields the domain block shape. */

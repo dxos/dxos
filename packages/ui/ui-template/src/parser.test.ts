@@ -12,8 +12,8 @@ import {
   fromState,
   resolve,
   select,
-} from './index';
-import { parse } from './parser';
+} from './index.ts';
+import { parse } from './parser.ts';
 
 describe('parse', () => {
   test('reads the three attribute families', ({ expect }) => {

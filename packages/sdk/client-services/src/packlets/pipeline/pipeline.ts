@@ -17,9 +17,9 @@ import { type FeedMessage, type FeedMessage_Payload, FeedMessageSchema } from '@
 import { Timeframe } from '@dxos/timeframe';
 import { ComplexMap } from '@dxos/util';
 
-import { createMappedFeedWriter } from './feeds';
-import { createMessageSelector } from './message-selector';
-import { TimeframeClock, mapFeedIndexesToTimeframe, startAfter } from './timeframe-clock';
+import { createMappedFeedWriter } from './feeds.ts';
+import { createMessageSelector } from './message-selector.ts';
+import { TimeframeClock, mapFeedIndexesToTimeframe, startAfter } from './timeframe-clock.ts';
 
 export type WaitUntilReachedTargetProps = {
   /**

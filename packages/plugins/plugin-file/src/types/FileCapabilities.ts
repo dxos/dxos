@@ -9,8 +9,8 @@ import * as Capability from '@dxos/app-framework/Capability';
 
 import { meta } from '#meta';
 
-import { ACCEPTED_MIME } from './FileLimits';
-import * as Settings from './Settings';
+import { ACCEPTED_MIME } from './FileLimits.ts';
+import * as Settings from './Settings.ts';
 
 /**
  * Descriptor for a registered `BlobBackend` storage option, surfaced in the file plugin's

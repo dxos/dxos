@@ -12,9 +12,9 @@ import { fromPublicKey } from '@dxos/protocols/buf';
 import { PeerSchema } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
 import { JoinRequestSchema, MessageSchema } from '@dxos/protocols/buf/dxos/edge/signal_pb';
 
-import { type Message, type PeerInfo } from '../signal-methods';
-import { TestEdgeMesh } from '../testing';
-import { EdgeSignalManager } from './edge-signal-manager';
+import { type Message, type PeerInfo } from '../signal-methods.ts';
+import { TestEdgeMesh } from '../testing/index.ts';
+import { EdgeSignalManager } from './edge-signal-manager.ts';
 
 // DX-1125: exercise the broadcast pub/sub paths of EdgeSignalManager against an in-memory edge.
 

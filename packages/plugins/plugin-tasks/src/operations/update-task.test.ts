@@ -9,8 +9,8 @@ import { Database, Obj, Ref } from '@dxos/echo';
 import { TestDatabaseLayer } from '@dxos/echo-client/testing';
 import { Milestone, Task, TaskSet } from '@dxos/types';
 
-import createTask from './create-task';
-import updateTask from './update-task';
+import createTask from './create-task.ts';
+import updateTask from './update-task.ts';
 
 describe('update-task', () => {
   it.effect('patches only the provided fields', () =>

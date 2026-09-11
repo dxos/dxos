@@ -13,7 +13,7 @@ import { EffectEx } from '@dxos/effect';
 import { DXN } from '@dxos/keys';
 import { type EdgeFunctionEnv } from '@dxos/protocols';
 
-import { makeOperationServiceLayer, wrapFunctionHandler } from './protocol';
+import { makeOperationServiceLayer, wrapFunctionHandler } from './protocol.ts';
 
 describe('wrapFunctionHandler', () => {
   test('wraps reply function and executes handler', async ({ expect }) => {

@@ -6,8 +6,8 @@ import * as Skill from '@dxos/compute/Skill';
 import * as Template from '@dxos/compute/Template';
 import { trim } from '@dxos/util';
 
-import { DEEPSEEK_API_KEY_ENV, DEEPSEEK_SKILL_KEY, DEEPSEEK_SOURCE } from '../constants';
-import { InstallHarness, RunHarness } from './operations';
+import { DEEPSEEK_API_KEY_ENV, DEEPSEEK_SKILL_KEY, DEEPSEEK_SOURCE } from '../constants.ts';
+import { InstallHarness, RunHarness } from './operations/index.ts';
 
 const make = () =>
   Skill.make({

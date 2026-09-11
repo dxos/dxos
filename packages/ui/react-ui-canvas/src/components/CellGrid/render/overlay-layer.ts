@@ -2,8 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
-import type { Headers, Selection, Viewport } from '../state/types';
-import { cellWidth, worldToScreen } from '../state/viewport';
+import type { Headers, Selection, Viewport } from '../state/types.ts';
+import { cellWidth, worldToScreen } from '../state/viewport.ts';
 
 export type OverlayStyle = {
   playhead: string;

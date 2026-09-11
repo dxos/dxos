@@ -6,7 +6,7 @@ import { log } from '@dxos/log';
 import { EchoMetadataSchema } from '@dxos/protocols/buf/dxos/echo/metadata_pb';
 import type { Storage } from '@dxos/random-access-storage';
 
-import { MetadataStore } from '../../metadata';
+import { MetadataStore } from '../../metadata/index.ts';
 
 /**
  * This function will change the storage version in the metadata.

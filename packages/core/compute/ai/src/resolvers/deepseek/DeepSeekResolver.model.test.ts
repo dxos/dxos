@@ -13,9 +13,9 @@ import * as Toolkit from 'effect/unstable/ai/Toolkit';
 
 import { TestHelpers } from '@dxos/effect/testing';
 
-import * as AiParser from '../../AiParser';
-import * as AiService from '../../AiService';
-import { TestAiService } from '../../testing/test-layers';
+import * as AiParser from '../../AiParser.ts';
+import * as AiService from '../../AiService.ts';
+import { TestAiService } from '../../testing/test-layers.ts';
 
 const FLASH = 'com.deepseek.model.deepseek-v4-flash.default';
 

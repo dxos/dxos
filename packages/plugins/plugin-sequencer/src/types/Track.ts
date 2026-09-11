@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 import * as Struct from 'effect/Struct';
 
-import { Patch } from './Patch';
+import { Patch } from './Patch.ts';
 
 /**
  * Track metadata. Owns the instrument / patch assignment and visual identity;

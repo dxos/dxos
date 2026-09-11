@@ -33,10 +33,10 @@ import * as TasksPlugin from '@dxos/plugin-tasks/TasksPlugin';
 import { type Actor, File, Task } from '@dxos/types';
 import { trim } from '@dxos/util';
 
-import { type ToolInvocation, findObject } from '../assertions';
-import { createEvalRunner } from '../runner';
-import * as Scorer from '../Scorer';
-import { getDefaultSkills } from '../skills';
+import { type ToolInvocation, findObject } from '../assertions.ts';
+import { createEvalRunner } from '../runner.ts';
+import * as Scorer from '../Scorer.ts';
+import { getDefaultSkills } from '../skills.ts';
 import MCP_PROBE from './chess-mcp/mcp-probe.mjs?raw';
 
 //

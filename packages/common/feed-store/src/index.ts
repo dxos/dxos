@@ -2,11 +2,11 @@
 // Copyright 2019 DXOS.org
 //
 
-export * from './feed-factory';
-export * from './feed-iterator';
-export * from './feed-set-iterator';
-export * from './feed-queue';
-export * from './feed-store';
-export * from './feed-wrapper';
-export * from './feed-writer';
-export type * from './types';
+export * from './feed-factory.ts';
+export * from './feed-iterator.ts';
+export * from './feed-set-iterator.ts';
+export * from './feed-queue.ts';
+export * from './feed-store.ts';
+export * from './feed-wrapper.ts';
+export * from './feed-writer.ts';
+export type * from './types.ts';

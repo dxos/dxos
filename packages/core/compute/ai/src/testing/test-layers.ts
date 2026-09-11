@@ -12,17 +12,17 @@ import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
 import * as HttpClient from 'effect/unstable/http/HttpClient';
 import * as HttpClientRequest from 'effect/unstable/http/HttpClientRequest';
 
-import * as AiModelResolver from '../AiModelResolver';
-import type * as AiService from '../AiService';
+import * as AiModelResolver from '../AiModelResolver.ts';
+import type * as AiService from '../AiService.ts';
 import {
   AnthropicResolver,
   ChatCompletionsAdapter,
   DeepSeekResolver,
   LMStudioResolver,
   OllamaResolver,
-} from '../resolvers';
-import { LanguageModelFixture } from './model-fixture';
-import { tapHttpErrors } from './tap';
+} from '../resolvers/index.ts';
+import { LanguageModelFixture } from './model-fixture/index.ts';
+import { tapHttpErrors } from './tap.ts';
 
 export type AiServiceLayer = Layer.Layer<AiService.AiService, ConfigError.ConfigError, never>;
 

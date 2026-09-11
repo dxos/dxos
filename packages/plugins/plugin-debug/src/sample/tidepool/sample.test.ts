@@ -7,7 +7,7 @@ import { describe, test } from 'vitest';
 import { buildArchive, histogram } from '@dxos/app-toolkit/testing';
 import { EffectEx } from '@dxos/effect';
 
-import { TidepoolSpace } from './index';
+import { TidepoolSpace } from './index.ts';
 
 /**
  * The Tidepool sample space is built on demand rather than committed, so this asserts its shape in

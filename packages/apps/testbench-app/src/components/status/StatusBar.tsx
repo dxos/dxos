@@ -6,8 +6,8 @@ import React from 'react';
 
 import { Button, IconButton } from '@dxos/react-ui';
 
-import { ErrorIndicator } from './ErrorIndicator';
-import { NetworkIndicator } from './NetworkIndicator';
+import { ErrorIndicator } from './ErrorIndicator.tsx';
+import { NetworkIndicator } from './NetworkIndicator.tsx';
 
 /**
  * @startuml

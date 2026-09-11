@@ -13,7 +13,7 @@ import type * as Capabilities from '@dxos/app-framework/Capabilities';
 import { FeedTraceSink } from '@dxos/compute-runtime';
 import { Database, type Query } from '@dxos/echo';
 
-import { type ToolInvocation, toolInvocations } from './assertions';
+import { type ToolInvocation, toolInvocations } from './assertions.ts';
 
 /**
  * What a scorer's query may reach: the space the session worked in, the trace feed its tools were

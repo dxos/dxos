@@ -6,8 +6,8 @@ import { markdown, markdownLanguage } from '@codemirror/lang-markdown';
 import { EditorState } from '@codemirror/state';
 import { describe, test } from 'vitest';
 
-import { findBlocks } from './blocks';
-import { blockSelectionField, getSelectedBlocks, setBlockSelection, toggleBlockSelection } from './selection';
+import { findBlocks } from './blocks.ts';
+import { blockSelectionField, getSelectedBlocks, setBlockSelection, toggleBlockSelection } from './selection.ts';
 
 const extensions = [markdown({ base: markdownLanguage }), blockSelectionField];
 const create = (doc: string) => EditorState.create({ doc, extensions });

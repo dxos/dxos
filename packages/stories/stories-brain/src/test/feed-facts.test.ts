@@ -17,8 +17,8 @@ import { FactStore, FactStoreLive, type RDF, extractDocFacts } from '@dxos/pipel
 import { Expando } from '@dxos/schema';
 import { Message } from '@dxos/types';
 
-import { fixtureExists, loadFixtureMessages, seedFeed } from '../testing/harness';
-import { OLLAMA_MODEL } from './defs';
+import { fixtureExists, loadFixtureMessages, seedFeed } from '../testing/harness/index.ts';
+import { OLLAMA_MODEL } from './defs.ts';
 
 // Local model served by Ollama; requires a running Ollama (`OLLAMA_ORIGINS="*" ollama serve`).
 const MODEL = OLLAMA_MODEL;

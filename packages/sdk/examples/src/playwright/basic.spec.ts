@@ -6,7 +6,7 @@ import { expect, test } from '@playwright/test';
 
 import { sleep } from '@dxos/async';
 
-import { AppManager } from './app-manager';
+import { AppManager } from './app-manager.ts';
 
 test.describe('Demo', () => {
   let app: AppManager;

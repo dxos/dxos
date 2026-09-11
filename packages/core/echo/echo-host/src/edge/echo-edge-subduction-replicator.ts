@@ -50,7 +50,7 @@ import {
   type ShouldAdvertiseProps,
   type ShouldSyncCollectionProps,
   getSpaceIdFromCollectionId,
-} from '../automerge';
+} from '../automerge/index.ts';
 
 /**
  * Delay before restarting the connection after the edge requests it.

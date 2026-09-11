@@ -8,9 +8,9 @@ import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { random } from '@dxos/random';
 
-import { withLayout, withTheme } from '../../testing';
-import { ScrollArea } from '../ScrollArea';
-import { Toc, type TocItemData, type TocRootProps } from './Toc';
+import { withLayout, withTheme } from '../../testing/index.ts';
+import { ScrollArea } from '../ScrollArea/index.ts';
+import { Toc, type TocItemData, type TocRootProps } from './Toc.tsx';
 
 random.seed(1234567890);
 

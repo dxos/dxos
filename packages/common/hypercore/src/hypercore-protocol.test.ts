@@ -11,7 +11,7 @@ import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { random } from '@dxos/random';
 
-import { HypercoreFactory } from './hypercore-factory';
+import { HypercoreFactory } from './hypercore-factory.ts';
 
 // TODO(burdon): Test encoding.
 // TODO(burdon): Simulate multiple peers and broadcast.

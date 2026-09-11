@@ -2,6 +2,6 @@
 // Copyright 2022 DXOS.org
 //
 
-export type * from './message';
-export * from './ports';
-export * from './port-muxer';
+export type * from './message.ts';
+export * from './ports/index.ts';
+export * from './port-muxer.ts';

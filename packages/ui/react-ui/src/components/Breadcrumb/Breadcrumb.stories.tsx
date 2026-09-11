@@ -5,9 +5,9 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { withLayout, withTheme } from '../../testing';
-import { Button } from '../Button';
-import { Breadcrumb, type BreadcrumbRootProps } from './Breadcrumb';
+import { withLayout, withTheme } from '../../testing/index.ts';
+import { Button } from '../Button/index.ts';
+import { Breadcrumb, type BreadcrumbRootProps } from './Breadcrumb.tsx';
 
 const DefaultStory = (props: BreadcrumbRootProps) => {
   return (

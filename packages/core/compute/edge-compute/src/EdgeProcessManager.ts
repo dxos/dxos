@@ -18,8 +18,8 @@ import { type EdgeHttpClient } from '@dxos/edge-client';
 import { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 
-import { createEdgeClient } from './edge-client';
-import * as EdgeProcessControl from './EdgeProcessControl';
+import { createEdgeClient } from './edge-client.ts';
+import * as EdgeProcessControl from './EdgeProcessControl.ts';
 
 /**
  * EDGE implementation of {@link RemoteProcessManager.Service} — the client's view of processes

@@ -7,8 +7,8 @@ import * as Stream from 'effect/Stream';
 
 import { type StateError, StateStore, type Type } from '@dxos/crawler';
 
-import { type StoreError } from './errors';
-import { MessageStore } from './stores';
+import { type StoreError } from './errors.ts';
+import { MessageStore } from './stores/index.ts';
 
 export type ReplayOptions = {
   /** Restrict the replay to these target (channel/thread) ids. */

@@ -12,7 +12,7 @@ import * as Project from '@dxos/compute/Project';
 
 import { ProjectArticle, ProjectArtifactsArticle, ProjectChatsArticle } from '#containers';
 
-import { isArtifactsBranch, isChatsBranch } from '../capabilities/app-graph-builder';
+import { isArtifactsBranch, isChatsBranch } from '../capabilities/app-graph-builder.ts';
 
 /** React surfaces contributed by plugin-projects — the Project detail article. */
 export default Capability.makeModule(() =>

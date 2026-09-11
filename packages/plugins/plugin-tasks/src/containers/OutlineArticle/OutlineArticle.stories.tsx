@@ -27,7 +27,7 @@ import { trim } from '@dxos/util';
 
 import { translations } from '#translations';
 
-import { OutlineArticle } from './OutlineArticle';
+import { OutlineArticle } from './OutlineArticle.tsx';
 
 const ITEM = 'Review pricing page';
 const RENAMED = 'Revise pricing tiers';

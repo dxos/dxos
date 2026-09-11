@@ -9,7 +9,7 @@ import { describe, expect, test } from 'vitest';
 
 import { Trigger, sleep } from '@dxos/async';
 
-import { Balancer, decodeChunk, encodeChunk } from './balancer';
+import { Balancer, decodeChunk, encodeChunk } from './balancer.ts';
 
 class StuckableStream extends Duplex {
   public unstuck: Function | undefined;

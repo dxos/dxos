@@ -13,8 +13,8 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
-import { cacheFilePath } from './indexer';
-import { createIntrospector } from './introspector';
+import { cacheFilePath } from './indexer/index.ts';
+import { createIntrospector } from './introspector/index.ts';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const FIXTURE_SRC = join(__dirname, '__fixtures__');

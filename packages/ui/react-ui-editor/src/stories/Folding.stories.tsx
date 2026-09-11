@@ -30,7 +30,7 @@ import {
   xmlFormatting,
 } from '@dxos/ui-editor';
 
-import { useTextEditor } from '../hooks';
+import { useTextEditor } from '../hooks/index.ts';
 
 const source = createTurnSource(PROMPT_ELEMENT);
 

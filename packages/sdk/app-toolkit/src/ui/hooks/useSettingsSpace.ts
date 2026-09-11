@@ -12,7 +12,7 @@ import {
   useSpaces,
 } from '@dxos/react-client/echo';
 
-import * as AppSpace from '../../echo/AppSpace';
+import * as AppSpace from '../../echo/AppSpace.ts';
 
 /**
  * Reactive lookup of the settings space, where app-wide configuration lives.

@@ -4,5 +4,5 @@
 
 import { lazy } from 'react';
 
-export const Devtools = lazy(() => import('./Devtools'));
-export const DevtoolsApp = lazy(() => import('./App'));
+export const Devtools = lazy(() => import('./Devtools.tsx'));
+export const DevtoolsApp = lazy(() => import('./App.tsx'));

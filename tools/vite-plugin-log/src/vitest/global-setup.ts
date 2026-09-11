@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { isTestLogFileEnabled, resolveTestLogFilePath, truncateTestLogFile } from './paths';
+import { isTestLogFileEnabled, resolveTestLogFilePath, truncateTestLogFile } from './paths.ts';
 
 /**
  * Vitest `globalSetup` hook — truncates the test log file once in the parent process

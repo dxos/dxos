@@ -18,7 +18,7 @@ import {
 import { AuthorizedDeviceSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { Timeframe } from '@dxos/timeframe';
 
-import { codec } from './codec';
+import { codec } from './codec.ts';
 
 // Feed blocks are the one on-disk format carrying a signed `Credential`, so the envelope's codec has
 // to leave the signature intact.

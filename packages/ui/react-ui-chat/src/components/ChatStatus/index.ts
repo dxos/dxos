@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-export { useChatStatusContext } from './ChatStatusContext';
+export { useChatStatusContext } from './ChatStatusContext.ts';
 
-export * from './ChatStatus';
-export * from './format';
+export * from './ChatStatus.tsx';
+export * from './format.ts';

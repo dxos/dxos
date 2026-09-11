@@ -2,9 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type Vec3 } from '../engine';
-import { type Domain, type NavCell, type NavGrid, isPassable } from './nav-grid';
-import { planRoute } from './route';
+import { type Vec3 } from '../engine/index.ts';
+import { type Domain, type NavCell, type NavGrid, isPassable } from './nav-grid.ts';
+import { planRoute } from './route.ts';
 
 /**
  * Cells of `domain`, grouped into connected components via BFS over nav-grid neighbors, largest

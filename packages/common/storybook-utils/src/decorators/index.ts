@@ -2,5 +2,5 @@
 // Copyright 2023 DXOS.org
 //
 
-export * from './withLayout';
-export * from './withRegistry';
+export * from './withLayout.tsx';
+export * from './withRegistry.tsx';

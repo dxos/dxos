@@ -8,7 +8,7 @@ import React from 'react';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import CitiesData from '../../../data/cities.js';
-import { Chart } from './Chart';
+import { Chart } from './Chart.tsx';
 
 const items = CitiesData.features.map((feature: any) => ({
   x: feature.geometry.coordinates[0],

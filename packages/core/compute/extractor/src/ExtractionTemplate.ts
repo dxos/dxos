@@ -18,8 +18,8 @@ import {
   type ExtractResult,
   type MatchResult,
   type ObjectExtractor,
-} from './ObjectExtractor';
-import { type Resolver } from './Resolver';
+} from './ObjectExtractor.ts';
+import { type Resolver } from './Resolver.ts';
 
 /** How to find an existing instance of a target type for create-or-update merge. */
 export const TargetIdentity = Schema.Struct({

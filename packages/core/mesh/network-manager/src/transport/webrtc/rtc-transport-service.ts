@@ -33,9 +33,9 @@ import {
 } from '@dxos/protocols/buf/dxos/mesh/bridge_pb';
 import { ComplexMap } from '@dxos/util';
 
-import { type IceProvider } from '../../signal';
-import { type Transport, type TransportFactory } from '../transport';
-import { createRtcTransportFactory } from './rtc-transport-factory';
+import { type IceProvider } from '../../signal/index.ts';
+import { type Transport, type TransportFactory } from '../transport.ts';
+import { createRtcTransportFactory } from './rtc-transport-factory.ts';
 
 type BridgeService = BufService<typeof BridgeServiceDesc>;
 

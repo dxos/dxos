@@ -10,8 +10,8 @@ import * as Operation from '@dxos/compute/Operation';
 import { SchemaAST } from '@dxos/effect';
 import { DXN } from '@dxos/keys';
 
-import * as Capabilities from './common/capabilities';
-import { type PluginManager } from './core';
+import * as Capabilities from './common/capabilities.ts';
+import { type PluginManager } from './core/index.ts';
 
 /** Summary of one registered plugin. */
 export type PluginInfo = {

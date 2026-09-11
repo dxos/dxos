@@ -32,7 +32,7 @@ import {
 import { type Signal } from '@dxos/protocols/buf/dxos/mesh/swarm_pb';
 import { arrayToBuffer } from '@dxos/util';
 
-import { type Transport, type TransportFactory, type TransportOptions, type TransportStats } from '../transport';
+import { type Transport, type TransportFactory, type TransportOptions, type TransportStats } from '../transport.ts';
 
 type BridgeService = BufService<typeof BridgeServiceDesc>;
 

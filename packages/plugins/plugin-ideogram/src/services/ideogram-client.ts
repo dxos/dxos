@@ -7,9 +7,9 @@ import * as Redacted from 'effect/Redacted';
 import { proxyFetchLegacy } from '@dxos/edge-client';
 import * as GenerationService from '@dxos/plugin-studio/GenerationService';
 
-import { IDEOGRAM_GENERATE_URL, IDEOGRAM_SOURCE, IDEOGRAM_TIMEOUT_MS } from '../constants';
-import { type IdeogramGenerateResponse, mapIdeogramResponse } from './ideogram-mapping';
-import { decodeIdeogramConfig } from './ideogram-request';
+import { IDEOGRAM_GENERATE_URL, IDEOGRAM_SOURCE, IDEOGRAM_TIMEOUT_MS } from '../constants.ts';
+import { type IdeogramGenerateResponse, mapIdeogramResponse } from './ideogram-mapping.ts';
+import { decodeIdeogramConfig } from './ideogram-request.ts';
 
 /** Builds the Ideogram `/generate` request body (fields nested under `image_request`). */
 const toRequestBody = (request: GenerationService.GenerationRequest) => {

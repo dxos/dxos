@@ -26,7 +26,7 @@ import { generateCuratedPost, generateFeed, generateMagazine } from '#testing';
 import { translations } from '#translations';
 import { Magazine, Subscription } from '#types';
 
-import { MagazineArticle } from './MagazineArticle';
+import { MagazineArticle } from './MagazineArticle.tsx';
 
 const DefaultStory = () => {
   const spaces = useSpaces();

@@ -7,8 +7,8 @@ import { Resource } from '@dxos/context';
 import { type ExportedCellChange, type Listeners } from '@dxos/vendor-hyperformula';
 import { DetailedCellError } from '@dxos/vendor-hyperformula';
 
-import { type ComputeGraph } from './compute-graph';
-import { type CellAddress, type CellScalarValue, isFormula } from './types';
+import { type ComputeGraph } from './compute-graph.ts';
+import { type CellAddress, type CellScalarValue, isFormula } from './types/index.ts';
 
 export type ComputeNodeEvent = {
   type: keyof Listeners;

@@ -8,7 +8,7 @@ import { type HotkeyCommand, useActiveHotkeys } from '@dxos/react-focus';
 import { IconButton, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { osTranslations } from '@dxos/ui-theme';
 
-import { Key } from './Key';
+import { Key } from './Key.tsx';
 
 const Shortcut = ({ binding }: { binding: HotkeyCommand }) => {
   const { t } = useTranslation(osTranslations);

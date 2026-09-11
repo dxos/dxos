@@ -6,7 +6,7 @@ import { useEffect, useMemo } from 'react';
 
 import { type Message } from '@dxos/types';
 
-import { FeedModel, type FeedModelOptions } from './feed';
+import { FeedModel, type FeedModelOptions } from './feed.ts';
 
 /**
  * A feed model over a message array the host re-creates per render — the React-prop case.

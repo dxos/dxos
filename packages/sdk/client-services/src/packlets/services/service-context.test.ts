@@ -10,7 +10,7 @@ import { fromPublicKey } from '@dxos/protocols/buf';
 import { Invitation_Kind } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 import { openAndClose } from '@dxos/test-utils';
 
-import { createServiceContext, performInvitation } from '../testing';
+import { createServiceContext, performInvitation } from '../testing/index.ts';
 
 describe('services/ServiceContext', () => {
   test('new space is synchronized on device invitations', async () => {

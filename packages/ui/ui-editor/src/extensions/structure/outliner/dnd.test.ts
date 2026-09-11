@@ -6,9 +6,9 @@ import { EditorSelection, EditorState } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
 import { describe, test } from 'vitest';
 
-import { join } from '../../../util';
-import { createMarkdownExtensions } from '../../language/markdown';
-import { blockSelectionField } from '../blocks';
+import { join } from '../../../util/index.ts';
+import { createMarkdownExtensions } from '../../language/markdown/index.ts';
+import { blockSelectionField } from '../blocks/index.ts';
 import {
   canDragItem,
   getDropIndent,
@@ -18,8 +18,8 @@ import {
   selectAllItems,
   selectDown,
   selectUp,
-} from './dnd';
-import { outlinerTree, treeFacet } from './tree';
+} from './dnd.ts';
+import { outlinerTree, treeFacet } from './tree.ts';
 
 const LINES = ['- [ ] 1', '- [ ] 2', '  - [ ] 2.1', '  - [ ] 2.2', '    - 2.2.1', '  - [ ] 2.3', '- [ ] 3'];
 const DOC = join(...LINES);

@@ -29,7 +29,7 @@ import {
 } from '@dxos/protocols';
 import { requirePublicKey } from '@dxos/protocols/buf';
 
-import * as AppSpace from '../echo/AppSpace';
+import * as AppSpace from '../echo/AppSpace.ts';
 
 /**
  * Account sign-up and hub-Account flows, shared by every surface that creates accounts —

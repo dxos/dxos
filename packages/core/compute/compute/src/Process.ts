@@ -23,10 +23,10 @@ import { DXN, type SpaceId, URI } from '@dxos/keys';
 import { log } from '@dxos/log';
 import type { SerializedError } from '@dxos/protocols';
 
-import * as Operation from './Operation';
-import * as OperationHandlerSet from './OperationHandlerSet';
-import * as StorageService from './StorageService';
-import * as Trace from './Trace';
+import * as Operation from './Operation.ts';
+import * as OperationHandlerSet from './OperationHandlerSet.ts';
+import * as StorageService from './StorageService.ts';
+import * as Trace from './Trace.ts';
 
 //
 // Process.

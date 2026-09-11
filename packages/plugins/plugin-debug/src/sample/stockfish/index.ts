@@ -7,12 +7,12 @@ import * as Effect from 'effect/Effect';
 import * as SampleSpace from '@dxos/app-toolkit/SampleSpace';
 import { Ref } from '@dxos/echo';
 
-import { Docs } from './docs';
-import { ChessGame } from './game';
-import { ProjectPhase } from './project';
-import { DevelopmentSkill } from './skill';
-import { Tasks } from './tasks';
-import { REFERENCE } from './util';
+import { Docs } from './docs.ts';
+import { ChessGame } from './game.ts';
+import { ProjectPhase } from './project.ts';
+import { DevelopmentSkill } from './skill.ts';
+import { Tasks } from './tasks.ts';
+import { REFERENCE } from './util.ts';
 
 const phases = {
   skill: DevelopmentSkill,
