@@ -83,9 +83,11 @@ export const Companion = ({
         <Pane.Tabs tabs={tabs} value={selected} onValueChange={onValueChange} attendableId={attendableId} related />
         {controls}
       </Pane.Toolbar>
-      {/* Panels stay mounted; the inactive ones are hidden so switching companions preserves their state. */}
+      {/* Panels stay mounted; the inactive ones are hidden so switching companions preserves their state.
+          Keyed by variant rather than node id, so a companion that is the same surface beside every plank
+          (support, assistant) keeps its state when the plank it is beside changes. */}
       {companions.map((node, index) => (
-        <Pane.Content key={node.id} classNames={mx(node.id !== selected && 'hidden')}>
+        <Pane.Content key={Attention.getLinkedVariant(node.id)} classNames={mx(node.id !== selected && 'hidden')}>
           <Surface.Surface type={AppSurface.Article} data={companionDataList[index]} limit={1} />
         </Pane.Content>
       ))}

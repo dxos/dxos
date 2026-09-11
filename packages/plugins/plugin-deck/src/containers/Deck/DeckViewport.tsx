@@ -241,6 +241,14 @@ export const DeckContentEmpty = () => {
 
 const getPlankId = (id: string) => id;
 
+/**
+ * Under `flatten` the stack has one tile, the slot the current plank shows in: keyed by that role rather
+ * than by the plank, so switching planks re-renders the slot — its companion included — instead of
+ * rebuilding it. The tile's `id` (and so `data-object-id`) stays the plank's.
+ */
+const CURRENT_PLANK_KEY = 'current';
+const getCurrentPlankKey = () => CURRENT_PLANK_KEY;
+
 type RenderedPlanks = {
   /** The real planks the deck lays out (`flatten` collapses these to the current plank). */
   planks: string[];
@@ -1355,7 +1363,7 @@ const isPlankLevelFocus = (): boolean => {
 
 export const DeckPlanks = () => {
   const { state, deck } = useDeckContext('DeckPlanks');
-  const { overscroll } = useDeckSettings();
+  const { overscroll, flatten } = useDeckSettings();
   const rendered = useRenderedPlanks();
   const { planks, attendedPlankId } = rendered;
   // The last plank's companion feeds both the fullbleed pair (a singleton deck's only plank *is* the
@@ -1765,9 +1773,9 @@ export const DeckPlanks = () => {
         ) : (
           // Every non-fullscreen presentation renders through this one pipeline — fullbleed included
           // (its tile spans the viewport; see DeckPlankTile's fullbleed return). One tree, keyed by
-          // plank id, is what keeps a plank's DOM mounted across 1↔2 plank transitions; a separate
-          // fullbleed branch here remounted the surviving plank on every message open/close (the
-          // mailbox-list flash). The stack is `w-full` when not sliding so the lone tile's `w-full`
+          // plank id (by the one slot under `flatten`, see CURRENT_PLANK_KEY), is what keeps a plank's
+          // DOM mounted across 1↔2 plank transitions; a separate fullbleed branch here remounted the
+          // surviving plank on every message open/close (the mailbox-list flash). The stack is `w-full` when not sliding so the lone tile's `w-full`
           // resolves against the viewport instead of a shrink-wrapped flex row.
           <Mosaic.Container orientation='horizontal' classNames={['dx-fullscreen', mainPaddingTransitions]}>
             <ScrollArea.Root orientation='horizontal' classNames='size-full'>
@@ -1802,6 +1810,7 @@ export const DeckPlanks = () => {
                         : 'dx-fill'
                   }
                   getId={getPlankId}
+                  getKey={flatten ? getCurrentPlankKey : getPlankId}
                   items={planks}
                   Tile={DeckPlankTile}
                   draggable={false}

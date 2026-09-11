@@ -57,6 +57,11 @@ type MosaicStackProps<TData = any> = ThemedClassName<
     role?: string;
     orientation?: Axis;
     getId: GetId<TData>;
+    /**
+     * The React key of an item's tile, when a tile should outlive the item it shows (a slot that shows
+     * whichever item is current keeps its DOM as the item changes). Defaults to `getId`.
+     */
+    getKey?: GetId<TData>;
     items?: readonly TData[];
     scrollIntoView?: boolean;
     Tile: MosaicStackTileComponent<TData>;
@@ -72,6 +77,7 @@ const MosaicStackInner = composable<HTMLDivElement, MosaicStackProps>(
     {
       orientation: orientationProp = 'vertical',
       getId,
+      getKey = getId,
       items,
       scrollIntoView = true,
       Tile,
@@ -144,7 +150,7 @@ const MosaicStackInner = composable<HTMLDivElement, MosaicStackProps>(
       >
         {draggable && <InternalPlaceholder orientation={orientation} location={0.5} />}
         {visibleItems?.map((item, index) => (
-          <Fragment key={getId(item)}>
+          <Fragment key={getKey(item)}>
             <Tile
               id={getId(item)}
               data={item}
