@@ -85,6 +85,8 @@ export class DocHandleProxy<T> extends EventEmitter<ClientDocHandleEvents<T>> im
    * Undefined if document is new and still is being created.
    */
   private _documentId?: DocumentId;
+  /** {@link url} for {@link _documentId}; the base58check encode behind it hashes twice per call. */
+  #url?: { documentId: DocumentId; url: AutomergeUrl } = undefined;
   private readonly _onDelete: () => void;
 
   constructor({ documentId, initialValue, onDelete }: DocHandleProxyOptions<T>) {
@@ -108,7 +110,13 @@ export class DocHandleProxy<T> extends EventEmitter<ClientDocHandleEvents<T>> im
    * For loaded documents, this is always defined.
    */
   get url(): AutomergeUrl | undefined {
-    return this._documentId ? stringifyAutomergeUrl(this._documentId) : undefined;
+    if (!this._documentId) {
+      return undefined;
+    }
+    if (this.#url?.documentId !== this._documentId) {
+      this.#url = { documentId: this._documentId, url: stringifyAutomergeUrl(this._documentId) };
+    }
+    return this.#url.url;
   }
 
   /**

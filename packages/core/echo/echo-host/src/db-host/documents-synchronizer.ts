@@ -17,9 +17,20 @@ import { type AutomergeHost, type DocumentLease } from '../automerge/index.ts';
 
 const MAX_UPDATE_FREQ = 10; // [updates/sec]
 
+/**
+ * Ceilings on one batch. A first sync can make thousands of documents pending inside one tick, and
+ * the client decodes and integrates a batch as one message, so the remainder waits for the next tick.
+ */
+const MAX_BATCH_BYTES = 1024 * 1024;
+const MAX_BATCH_DOCUMENTS = 500;
+
 export type DocumentsSynchronizerProps = {
   automergeHost: AutomergeHost;
   sendUpdates: (updates: DataService.BatchedDocumentUpdates) => void;
+  /** Override of {@link MAX_BATCH_BYTES}. */
+  maxBatchBytes?: number;
+  /** Override of {@link MAX_BATCH_DOCUMENTS}. */
+  maxBatchDocuments?: number;
 };
 
 interface DocSyncState {
@@ -225,18 +236,27 @@ export class DocumentsSynchronizer extends Resource {
       return;
     }
     const updates: DataService.DocumentUpdate[] = [];
+    const maxBytes = this._params.maxBatchBytes ?? MAX_BATCH_BYTES;
+    const maxDocuments = this._params.maxBatchDocuments ?? MAX_BATCH_DOCUMENTS;
+    let bytes = 0;
 
-    const docsWithPendingUpdates = Array.from(this._pendingUpdates);
-    this._pendingUpdates.clear();
-
-    for (const documentId of docsWithPendingUpdates) {
+    // Consumed one at a time so whatever does not fit stays pending for the next tick.
+    for (const documentId of this._pendingUpdates) {
+      if (updates.length >= maxDocuments || bytes >= maxBytes) {
+        break;
+      }
+      this._pendingUpdates.delete(documentId);
       const update = this._getPendingChanges(documentId);
       if (update) {
         updates.push({
           documentId,
           mutation: update,
         });
+        bytes += update.byteLength;
       }
+    }
+    if (this._pendingUpdates.size > 0) {
+      this._sendUpdatesJob!.trigger();
     }
 
     // Mutation-less transition updates: tell the client `requesting: true`
