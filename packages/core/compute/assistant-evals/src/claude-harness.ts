@@ -31,6 +31,7 @@ import { ClaudeAgent, type Turn } from '@dxos/test-utils/claude-agent';
 
 import { registerSkills, startMcpHost } from './mcp-host.ts';
 import * as Scorer from './Scorer.ts';
+import * as Usage from './Usage.ts';
 
 /** How the server is named to the agent, and therefore the prefix of every tool it exposes. */
 export const SERVER = 'dx-dev';
@@ -206,9 +207,9 @@ export const runClaudeEval = async <T>(
         query,
         score,
         send: async (prompt) => {
-          const started = Date.now();
           const turn = await claudeAgent.send(prompt);
-          durationMillis += Date.now() - started;
+          durationMillis += turn.end - turn.start;
+          Usage.report(turn.usage.map((usage) => ({ ...usage, start: turn.start, end: turn.end })));
           return turn;
         },
       });

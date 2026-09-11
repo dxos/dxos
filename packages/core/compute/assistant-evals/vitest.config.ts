@@ -31,10 +31,6 @@ export default defineConfig({
     // the net must clear the longest per-eval timeout in use (60 minutes plus the grading grace, `chess-mcp.eval.ts`) with
     // room for that, not just equal it.
     testTimeout: 66 * 60 * 1_000,
-    // Each file boots a Composer harness and holds a live model session, and two spawn a Claude
-    // Code CLI with an MCP server besides; vitest's default of one worker per core would start
-    // most of the suite at once on an 8-core runner and turn contention and rate limits into
-    // scores. The hour-long scenario occupies one worker for its whole run either way.
     maxWorkers: 4,
   },
 });

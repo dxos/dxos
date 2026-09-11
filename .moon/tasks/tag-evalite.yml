@@ -1,11 +1,8 @@
 $schema: https://moonrepo.dev/schemas/tasks.json
 
-# evalite-scored scenarios against the live model. One shape for a developer and for the nightly:
-# the whole directory or one file, once, exported as JSON for `scripts/eval-events.mjs`.
 tasks:
   evals:
-    # `"${1:-src/evals}"`: evalite takes one positional, so a passthrough file replaces the directory
-    # rather than joining it (`moon run <pkg>:evals -- src/evals/foo.eval.ts`).
+    # evalite takes one positional, so a passthrough file replaces the directory rather than joining it.
     command: bash -c 'pnpm exec dx-killorphans evalite run --outputPath out/evals.json "${1:-src/evals}"' --
     deps:
       - esbuild-plugins:build
@@ -14,11 +11,8 @@ tasks:
       - ^:build
       - '^:#prebuild'
     options:
-      # Every run is a fresh sample of a non-deterministic agent; replaying one is never wanted.
       cache: false
       outputStyle: stream
-      # The `Assistant evals` job's budget, so the task never outlives the job that runs it: the
-      # longest scenario holds a session for an hour and then grades what it left.
       timeout: 5400
   evals-watch:
     command: pnpm exec dx-killorphans evalite watch src/evals

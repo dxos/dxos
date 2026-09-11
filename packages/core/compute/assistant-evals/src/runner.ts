@@ -41,6 +41,7 @@ import { trim } from '@dxos/util';
 
 import * as Scorer from './Scorer.ts';
 import { getDefaultSkills } from './skills.ts';
+import * as Usage from './Usage.ts';
 
 const DEFAULT_MODEL: DXN.DXN = DXN.make('com.anthropic.model.claude-opus-5.default');
 
@@ -91,18 +92,15 @@ const EDGE_URL = process.env.DX_EDGE_BASE_URL ?? EDGE_URLS.preview;
  */
 const servedByEdge = (model: DXN.DXN): boolean => Model.developer(model) === 'com.deepseek';
 
-const makeAiServiceMiddleware = (): Promise<(_upstream: AiService.Service) => AiService.Service> =>
-  AiService.tag.pipe(
-    Effect.provide(AiServiceTestingPreset('direct')),
-    Effect.map((service) => (_upstream: AiService.Service) => service),
-    EffectEx.runAndForwardErrors,
-  );
+const directAiService = (): Promise<AiService.Service> =>
+  AiService.tag.pipe(Effect.provide(AiServiceTestingPreset('direct')), EffectEx.runAndForwardErrors);
 
 const createDefaultPlugins = async (options: {
   plugins?: Plugin.Plugin[];
   types?: Type.AnyEntity[];
   config?: Config;
   model: DXN.DXN;
+  record: (call: Usage.Call) => void;
 }): Promise<Plugin.Plugin[]> => [
   ClientPlugin.make({
     // The scenario's config first; the edge URL only fills in where it left one out.
@@ -117,8 +115,10 @@ const createDefaultPlugins = async (options: {
     ],
   }),
   AssistantPlugin.make({
-    // Absent, the plugin's own resolvers serve the model through EDGE, authenticated as the run.
-    aiServiceMiddleware: servedByEdge(options.model) ? undefined : await makeAiServiceMiddleware(),
+    // The plugin's own resolvers serve an EDGE model through EDGE, authenticated as the run.
+    aiServiceMiddleware: servedByEdge(options.model)
+      ? (upstream) => Usage.instrument(upstream, options.record)
+      : await directAiService().then((direct) => () => Usage.instrument(direct, options.record)),
   }),
   RoutinePlugin.make(),
   InboxPlugin.make(),
@@ -310,7 +310,7 @@ export function createEvalRunner<I, O, D>(
   | { failed: boolean },
   VariantConfig
 > {
-  return async (input: I, variant: VariantConfig) => {
+  const execute = async (input: I, variant: VariantConfig, record: (call: Usage.Call) => void) => {
     // One grading path per scenario: with both, the result's shape would not be the one the
     // overload promised the caller.
     if (options.dbQuery && options.scorers?.length) {
@@ -332,7 +332,7 @@ export function createEvalRunner<I, O, D>(
         const harness = yield* Effect.acquireRelease(
           Effect.promise(async () =>
             createComposerTestApp({
-              plugins: await createDefaultPlugins({ ...options, model }),
+              plugins: await createDefaultPlugins({ ...options, model, record }),
             }),
           ),
           (testHarness) => Effect.promise(() => testHarness.dispose()),
@@ -439,5 +439,14 @@ export function createEvalRunner<I, O, D>(
       return { failed: true };
     }
     return EffectEx.unwrapExit(exit);
+  };
+
+  return async (input: I, variant: VariantConfig) => {
+    const calls: Usage.Call[] = [];
+    try {
+      return await execute(input, variant, (call) => calls.push(call));
+    } finally {
+      Usage.report(calls);
+    }
   };
 }

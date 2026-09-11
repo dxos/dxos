@@ -12,8 +12,6 @@
  *
  * Three events, at three grains, so the dashboard aggregates raw rows rather than shipped averages:
  * `ci.eval.run` once, `ci.eval.result` per test case, `ci.eval.score` per scorer of a test case.
- * Every event carries the run's timestamp, not the commit's: the schedule fires against whatever
- * main is, and two nights on one commit are two samples of a non-deterministic system, not one.
  */
 
 import { createHash } from 'node:crypto';
@@ -21,7 +19,6 @@ import { readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { parseArgs } from 'node:util';
 
-/** Where evalite discovers scenarios; file names are reported relative to it. */
 const EVALS_DIR = path.resolve(import.meta.dirname, '../src/evals');
 
 /**
@@ -40,9 +37,26 @@ const sum = (items, pick) => items.reduce((total, item) => total + (pick(item) ?
 const mean = (values) => (values.length === 0 ? undefined : sum(values, (value) => value) / values.length);
 
 /**
- * A test case's identity across runs: what it asks, not where it sits. `index` shifts when a case
- * is inserted above it, and evalite's ids restart every run, so neither can key a case's trend.
+ * The model calls behind a result, as the runner reported them (`src/Usage.ts`): one trace per call,
+ * tokens on the trace and the model on its output. Summed here, priced where the events are read.
  */
+const usage = (traces) => {
+  const models = [...new Set(traces.map((trace) => trace.output?.model).filter(Boolean))].sort();
+  const priced = traces.filter((trace) => typeof trace.output?.costUsd === 'number');
+  return defined({
+    models: models.join(','),
+    llmCalls: traces.length,
+    inputTokens: sum(traces, (trace) => trace.inputTokens),
+    outputTokens: sum(traces, (trace) => trace.outputTokens),
+    cacheReadTokens: sum(traces, (trace) => trace.output?.cacheReadTokens),
+    cacheWriteTokens: sum(traces, (trace) => trace.output?.cacheWriteTokens),
+    // Only where every call carried the caller's own price; a partial sum would read as the whole.
+    costUsd:
+      traces.length > 0 && priced.length === traces.length ? sum(priced, (trace) => trace.output.costUsd) : undefined,
+  });
+};
+
+/** evalite's ids restart every run, so a case is keyed by what it asks. */
 const itemId = (file, evaluation, result) =>
   createHash('sha1')
     .update(JSON.stringify([file, evaluation.name, evaluation.variantName ?? null, result.input]))
@@ -52,9 +66,6 @@ const itemId = (file, evaluation, result) =>
 /** The events one export yields, in the shape `scripts/ci-event.mjs --batch` reads. */
 export const toEvents = (report, { run: runId } = {}) => {
   const timestamp = toIso(report.run.createdAt);
-  // Fresh storage per CI run means evalite's own ids restart at 1, and the export's clock has
-  // second precision, so the caller's run id is what keeps two runs' rows apart; the time stands
-  // in for it outside CI.
   const runKey = runId ?? report.run.createdAt;
 
   const results = [];
@@ -74,6 +85,7 @@ export const toEvents = (report, { run: runId } = {}) => {
           status: result.status,
           score: result.averageScore,
           durationMs: result.duration,
+          ...usage(result.traces),
         },
       });
       for (const score of result.scores) {
@@ -102,11 +114,10 @@ export const toEvents = (report, { run: runId } = {}) => {
       evals: report.evals.length,
       results: results.length,
       failedResults: results.filter((entry) => entry.properties.status !== 'success').length,
-      // Over every scorer of every result, which is the number evalite prints as the run's score.
       meanScore: mean(scores.map((entry) => entry.properties.score)),
-      // Summed agent time, not wall clock: scenarios run concurrently, and the export's per-eval
-      // duration is always zero.
+      // evalite's export hardcodes each eval's `duration` to 0.
       durationMs: sum(results, (entry) => entry.properties.durationMs),
+      ...usage(report.evals.flatMap((evaluation) => evaluation.results.flatMap((result) => result.traces))),
     }),
   };
 
@@ -116,6 +127,8 @@ export const toEvents = (report, { run: runId } = {}) => {
 const percent = (score) => (score === undefined ? '–' : `${Math.round(score * 100)}%`);
 
 const seconds = (millis) => `${(millis / 1000).toFixed(1)}s`;
+
+const tokens = (count = 0) => (count >= 10_000 ? `${Math.round(count / 1000)}k` : String(count));
 
 /** One row per eval, for the job summary; a failed scorer is named so the row explains itself. */
 export const toSummary = (report) => {
@@ -127,7 +140,8 @@ export const toSummary = (report) => {
     const status = evaluation.status === 'success' ? '✅' : '❌';
     // evalite already suffixes a variant's name with `[variant]`.
     const duration = sum(evaluation.results, (result) => result.duration);
-    return `| ${status} | ${evaluation.name} | \`${file}\` | ${percent(evaluation.averageScore)} | ${seconds(duration)} | ${failed.join(', ')} |`;
+    const { models = '', inputTokens, outputTokens } = usage(evaluation.results.flatMap((result) => result.traces));
+    return `| ${status} | ${evaluation.name} | \`${file}\` | ${percent(evaluation.averageScore)} | ${seconds(duration)} | ${models} | ${tokens(inputTokens)} / ${tokens(outputTokens)} | ${failed.join(', ')} |`;
   });
   const allScores = report.evals.flatMap((evaluation) =>
     evaluation.results.flatMap((result) => result.scores.map((score) => score.score)),
@@ -137,8 +151,8 @@ export const toSummary = (report) => {
     '',
     `${report.evals.length} evals, mean score ${percent(mean(allScores))}, ${report.evals.filter((evaluation) => evaluation.status !== 'success').length} failed.`,
     '',
-    '| | Eval | File | Score | Duration | Scorers below 100% |',
-    '| :-: | :-- | :-- | --: | --: | :-- |',
+    '| | Eval | File | Score | Duration | Models | Tokens in / out | Scorers below 100% |',
+    '| :-: | :-- | :-- | --: | --: | :-- | --: | :-- |',
     ...rows,
     '',
   ].join('\n');

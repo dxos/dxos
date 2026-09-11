@@ -1,43 +1,13 @@
 name: Assistant evals
 
-# Runs every `@dxos/assistant-evals` scenario against the live model once a night and trends the
-# scores in PostHog, so a prompt or skill change that quietly degrades an agent shows up as a line
-# bending rather than as a complaint weeks later. Not part of `Check`: a scenario is a real agent
-# session against a real model, minutes long and non-deterministic, and its score is a sample to
-# plot, not a gate on a PR.
-#
-# Events go through `scripts/ci-event.mjs` as plain product-analytics events (`ci.eval.run`,
-# `ci.eval.result`, `ci.eval.score`), the same pipeline as `ci.boot-budget` and the EDGE nightly.
-# PostHog's LLM-analytics evaluations were considered and rejected for this: they grade live
-# `$ai_generation` traffic inside PostHog, and its offline-evaluation upload is an undocumented
-# endpoint that needs a personal API key rather than a project token. Dashboard: "Assistant evals"
-# in the Composer project.
-#
-# Secrets. The Anthropic key spends real money and the scenarios run whatever code the checkout
-# holds, so the job is shaped to keep the key away from anything a non-member can influence:
-#
-# - Triggers are `schedule` and `workflow_dispatch` only. No `pull_request`, so a PR never runs
-#   here, from a fork or otherwise; only someone with write access can dispatch, and what they
-#   dispatch is a branch they could already push to.
-# - The key is a dedicated Anthropic console key (`ASSISTANT_EVALS_ANTHROPIC_API_KEY`) with its own
-#   spend limit, not the org-wide `ANTHROPIC_API_KEY`, so a leak is bounded and revocable without
-#   touching anything else. In Depot's secret settings it is limited to this workflow file and the
-#   `main` branch, so a dispatch of any other branch runs without it and stops at the guard below
-#   rather than leaking it to code that has not been reviewed onto main. Depot hydrates a secret
-#   into a step only where the YAML names it, and it is named on exactly one step.
-# - The PostHog key is the Composer project's ingestion token, which the app already ships to
-#   every browser; it is step-scoped anyway, and can only write events.
-# - `GITHUB_TOKEN` is `contents: read`, and the checkout does not persist it.
-# - `depot ci run` can patch uncommitted changes into a run; a guard step fails a dirty or
-#   off-commit checkout before the key is named, so only committed code on the event's ref runs.
-#
-# What this does not defend against is a malicious change merged to main, which is the review
-# boundary, not this file's.
+# `ASSISTANT_EVALS_ANTHROPIC_API_KEY` is a dedicated key with its own spend limit, restricted in
+# Depot's secret settings to this workflow file on `main`.
 
+# TODO(wittjosiah): Once a few weeks of nightly baseline exist, add an advisory `pull_request` job
+# that runs the cheap, deterministically graded scenarios (smoke, basic, database, markdown) on
+# changes under the assistant packages, skills and prompts.
 on:
   schedule:
-    # 03:00 UTC: after the EDGE nightly at 02:00 (the sandbox scenario reaches preview EDGE) and
-    # before the `Check` nightly at 04:00.
     - cron: '0 3 * * *'
 
   workflow_dispatch:
@@ -58,10 +28,6 @@ env:
   MOON_CACHE_CLIENT_PEM: ${{ secrets.MOON_CACHE_CLIENT_PEM }}
   MOON_CACHE_CLIENT_KEY: ${{ secrets.MOON_CACHE_CLIENT_KEY }}
 
-# Never `cancel-in-progress`: a run in flight is a night's sample, and losing it leaves a gap in the
-# series. A dispatch keys on its run id so two dispatches of one ref sample it twice. A re-run of a
-# red attempt is a second sample the same way: the events are keyed by run id and attempt, so the
-# dashboard's daily aggregates then average both attempts.
 concurrency:
   group: >-
     ${{ github.workflow }}-${{ github.event_name }}-${{ github.ref
@@ -76,10 +42,6 @@ jobs:
       credentials:
         username: dxos-bot
         password: ${{ secrets.GITHUB_TOKEN }}
-    # The `evals` task's own 90-minute timeout (`.moon/tasks/tag-evalite.yml`) plus room for checkout,
-    # install and the dependency builds, so the task's clock is the one that fires on a hung
-    # scenario. Either timeout kills evalite before it writes its export, so a night that hits one
-    # trends nothing; the task's is at least attributed to the scenario.
     timeout-minutes: 120
     defaults:
       run:
@@ -95,18 +57,12 @@ jobs:
       - name: Setup
         uses: ./.depot/actions/setup
 
-      # Two scenarios drive the projected MCP server through the Claude Code CLI (`claude-harness.ts`).
-      # Pinned because the CLI runs with the Anthropic key: an unversioned install would hand that
-      # key to whatever npm published last night. Bump deliberately. Into a temp prefix rather than
-      # `-g`: the image's global prefix is root-owned and `npm install -g` fails with EACCES there.
       - name: Install Claude Code
         run: |
           npm install --prefix "$RUNNER_TEMP/claude" @anthropic-ai/claude-code@2.1.259
           echo "$RUNNER_TEMP/claude/node_modules/.bin" >> "$GITHUB_PATH"
 
-      # `depot ci run` submits a workflow with the caller's uncommitted changes patched in after
-      # checkout, which would run unreviewed code with the key below. A patched tree is dirty, and a
-      # ref other than the event's has a different HEAD; refuse both before any secret is named.
+      # `depot ci run` patches the caller's uncommitted changes in after checkout.
       - name: Refuse a patched checkout
         env:
           EXPECTED_SHA: ${{ github.sha }}
@@ -121,9 +77,6 @@ jobs:
             exit 1
           fi
 
-      # The only step that sees the Anthropic key. `continue-on-error` so the summary, artifact and
-      # trend below run for a red night too, which is the night they are most needed; the last step
-      # turns the outcome back into the job's status.
       - name: Run evals
         id: evals
         continue-on-error: true
@@ -137,8 +90,6 @@ jobs:
           fi
           moon run assistant-evals:evals
 
-      # The export exists whenever evalite reached its summary, including a run with failed
-      # scenarios; only a crash before that leaves nothing, and then there is nothing to trend.
       - name: Summarize
         id: summary
         if: always()
@@ -152,13 +103,9 @@ jobs:
             --run "${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" \
             --events out/evals.events.ndjson --summary out/summary.md
           cat out/summary.md >> "$GITHUB_STEP_SUMMARY"
-          # The static UI is a convenience; a night whose scores were captured is not red for it.
           pnpm exec evalite export --output out/ui || echo "::warning::evalite's static UI export failed."
           echo "exported=true" >> "$GITHUB_OUTPUT"
 
-      # The JSON export, the events as sent, the summary, and evalite's static UI for reading a
-      # scenario's traces without re-running it. Public on a public repo, like every artifact here:
-      # it holds the agents' inputs and outputs, and the sandbox scenario's preview URLs, never a key.
       - name: Upload results
         if: always() && steps.summary.outputs.exported == 'true'
         uses: actions/upload-artifact@v7
@@ -167,9 +114,6 @@ jobs:
           path: packages/core/compute/assistant-evals/out
           retention-days: 30
 
-      # Last, and bounded: `captureCiEvents` posts without a request deadline, so a hung capture
-      # ahead of the upload would cost the artifact. `continue-on-error` because telemetry must
-      # never redden a build.
       - name: Trend the scores
         if: always() && steps.summary.outputs.exported == 'true'
         continue-on-error: true
