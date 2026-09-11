@@ -93,8 +93,12 @@ export const ChatActions = ({
         <IconButton
           disabled={!showStop && !canSend}
           variant='ghost'
-          classNames={mx(TOUCH_TARGET, showStop ? 'text-error-text' : canSend && 'text-accent-text')}
-          icon={showStop ? 'ph--square--duotone' : 'ph--paper-plane-right--regular'}
+          classNames={mx(
+            TOUCH_TARGET,
+            'transition duration-300 ease-in-out',
+            showStop ? 'text-error-text' : canSend && 'text-accent-text rotate-90',
+          )}
+          icon={showStop ? 'ph--square--duotone' : 'ph--paper-plane--regular'}
           iconOnly
           label={t(showStop ? 'cancel-processing.button' : 'send.label')}
           // One stable handle for the prompt's primary action; its mode is the accessible label,
