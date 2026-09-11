@@ -72,7 +72,7 @@ describe('Worker sample space', () => {
     const tasks = await taskArchive(WorkerSpace());
 
     expect(tasks.map((task) => task.title)).toEqual([
-      'Create a sandbox and install wrangler',
+      'Create a sandbox and install the toolchain',
       'Write the Worker',
       'Deploy it with no Cloudflare login',
       'Fetch the deployed URL and check the response',

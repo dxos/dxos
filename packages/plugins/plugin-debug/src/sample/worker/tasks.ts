@@ -35,9 +35,9 @@ const USER: Actor.Actor = { role: 'user', name: 'You' };
 
 const STEPS: ReadonlyArray<TaskSeed> = [
   {
-    title: 'Create a sandbox and install wrangler',
+    title: 'Create a sandbox and install the toolchain',
     description:
-      'One sandbox for the whole run — it keeps its filesystem between commands, so a second one pays for node and wrangler again. Creating one and running commands in it belong to the Sandbox skill.',
+      'One sandbox for the whole run — it keeps its filesystem between commands, so a second one pays for the toolchain again. The image ships Node 20 and every wrangler carrying `--temporary` needs Node 22, so unpack Node 22 into `/opt/node22`, then symlink `node` and (after `npm i -g wrangler`) `wrangler` into `/usr/local/bin` — npm puts its global prefix beside whichever node it runs under, so without the symlinks neither is on PATH in the next command. Creating the sandbox and running commands in it belong to the Sandbox skill.',
     estimate: 's',
   },
   {
