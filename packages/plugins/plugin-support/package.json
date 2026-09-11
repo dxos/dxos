@@ -1,7 +1,9 @@
 {
   "name": "@dxos/plugin-support",
   "version": "0.11.1",
-  "private": true,
+  "publishConfig": {
+    "access": "public"
+  },
   "description": "In-app support assistant plugin for Composer.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
