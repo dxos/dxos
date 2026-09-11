@@ -11,7 +11,6 @@ import * as ProjectSkill from '@dxos/plugin-projects/ProjectSkill';
 import * as ProjectsPlugin from '@dxos/plugin-projects/ProjectsPlugin';
 import * as TasksPlugin from '@dxos/plugin-tasks/TasksPlugin';
 import { Milestone, Outline, Task, TaskSet } from '@dxos/types';
-import { trim } from '@dxos/util';
 
 import { findObject } from '../assertions.ts';
 import { SERVER, runClaudeEval, tool } from '../claude-harness.ts';

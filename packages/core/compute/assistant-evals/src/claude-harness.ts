@@ -171,8 +171,8 @@ export const runClaudeEval = async <T>(
 
     // Scoped to this function rather than to a fiber: the listener has to outlive every turn and go
     // when the scenario does, and the agent below dials it by URL.
-    const scope = await Effect.runPromise(Scope.make());
-    const { url } = await Effect.runPromise(
+    const scope = await EffectEx.runPromise(Scope.make());
+    const { url } = await EffectEx.runPromise(
       startMcpHost({
         skills: options.skills,
         spaceIds: [spaceId],
@@ -212,7 +212,7 @@ export const runClaudeEval = async <T>(
       });
       return result;
     } finally {
-      await Effect.runPromise(Scope.close(scope, Exit.void));
+      await EffectEx.runPromise(Scope.close(scope, Exit.void));
     }
   } finally {
     await agent?.close();
