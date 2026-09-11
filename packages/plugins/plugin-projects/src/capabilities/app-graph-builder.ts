@@ -117,7 +117,20 @@ export const createMailboxProjectExtension = () =>
 export const CHATS_SECTION_TYPE = 'org.dxos.plugin.projects.chats-section';
 
 /** Path segment of the Chats branch. */
-export const CHATS_SEGMENT = 'chats';
+export const SESSIONS_SEGMENT = 'sessions';
+
+/**
+ * One URL binding for everything a project contains, shared with the type section that addresses the
+ * project itself — so `project/<id>` is the project, `project/<id>+sessions` its Sessions branch, and
+ * `project/<id>+sessions+<session>` a session. The path is fixed only as far as the Project section;
+ * what varies below it rides in the pair's id, `+`-joined, and the chain reconstructs with no lookup.
+ * Every extension under the key must share this one path, or a node's address forks by connector.
+ */
+const PROJECT_URL: AppGraphBuilder.UrlBinding = {
+  key: 'project',
+  kind: 'item',
+  path: [GraphPath.GroupSegments.ai, Type.getTypename(Project.Project)],
+};
 
 /**
  * Data carried by the Chats branch node. Wrapped so no Project-matching extension claims it, and
@@ -143,6 +156,8 @@ export const isChatsBranch = (data: unknown): data is ChatsBranch =>
 export const createProjectChatsExtension = () =>
   AppGraphBuilder.createExtension({
     id: 'projectChats',
+    // Selectable, so addressable: the row opens its chats as cards.
+    url: PROJECT_URL,
     match: (node) =>
       Obj.instanceOf(Project.Project, node.data)
         ? Option.some({ project: node.data, space: node.properties.space })
@@ -150,7 +165,7 @@ export const createProjectChatsExtension = () =>
     connector: ({ project, space }) =>
       Effect.succeed([
         AppGraphNode.make({
-          id: CHATS_SEGMENT,
+          id: SESSIONS_SEGMENT,
           type: CHATS_SECTION_TYPE,
           data: { branch: 'chats', project } satisfies ChatsBranch,
           properties: {
@@ -175,13 +190,13 @@ export const createProjectChatsExtension = () =>
  * same edge every companion chat uses — so what is project-specific is only the DISPLAY: project
  * chats surface in the navtree, other companions stay in their subject's companion panel.
  *
- * The `chat` url key is shared with plugin-assistant's Chats section on purpose — one key spanning
- * several connectors is how plugin-space addresses objects wherever they sit — so the path resolves
- * through whichever project currently parents the chat.
+ * Addressed as the project's (see {@link PROJECT_URL}), not under plugin-assistant's `chat` key,
+ * which reaches a parentless chat by a different path.
  */
 export const createProjectChatsChildrenExtension = () =>
   AppGraphBuilder.createExtension({
     id: 'projectChatsChildren',
+    url: PROJECT_URL,
     match: (node) =>
       node.type === CHATS_SECTION_TYPE && isChatsBranch(node.data) ? Option.some(node.data.project) : Option.none(),
     connector: (project, get) => {
@@ -265,6 +280,8 @@ export const isArtifactsBranch = (data: unknown): data is ArtifactsBranch =>
 export const createProjectArtifactsExtension = () =>
   AppGraphBuilder.createExtension({
     id: 'projectArtifacts',
+    // Selectable, so addressable: the row opens its artifacts as cards.
+    url: PROJECT_URL,
     match: (node) =>
       Obj.instanceOf(Project.Project, node.data)
         ? Option.some({ project: node.data, space: node.properties.space })
@@ -302,10 +319,14 @@ export const createProjectArtifactsExtension = () =>
  *
  * The dialog places the object in the space; the ref array is what makes it the project's, so the
  * link is written here rather than left to the dialog's own placement.
+ *
+ * Addressed as the project's (see {@link PROJECT_URL}), which is a different node from the same object
+ * under its own type section, so an artifact opened from a project comes back to the project.
  */
 export const createProjectArtifactsActionExtension = () =>
   AppGraphBuilder.createExtension({
     id: 'projectArtifactsActions',
+    url: PROJECT_URL,
     match: (node) =>
       node.type === ARTIFACTS_SECTION_TYPE && isArtifactsBranch(node.data)
         ? Option.some({ project: node.data.project, nodeId: node.id })

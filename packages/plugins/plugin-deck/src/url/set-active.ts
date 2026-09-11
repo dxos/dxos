@@ -29,6 +29,29 @@ export type SetActiveResult = {
 };
 
 /**
+ * `companionPlanks` after a write that changes which planks are open.
+ *
+ * A companion closes only when the reader closes it, so an open one follows the deck rather than being
+ * pruned with the plank it hung off. The flag is deck-wide under `flatten`. While the deck slides,
+ * planks that stay open keep their own flag, and a companion whose plank left lands on the newest.
+ */
+const carryCompanions = (
+  companionPlanks: readonly string[],
+  next: readonly string[],
+  flatten: boolean | undefined,
+): string[] => {
+  if (companionPlanks.length === 0 || next.length === 0) {
+    return [];
+  }
+  if (flatten) {
+    return [next[next.length - 1]];
+  }
+
+  const kept = Array.from(new Set(companionPlanks)).filter((id) => next.includes(id));
+  return kept.length > 0 ? kept : [next[next.length - 1]];
+};
+
+/**
  * Computes the new active state for the deck without mutating.
  * Returns the updates to apply and optionally an item to attend.
  */
@@ -50,14 +73,12 @@ export const computeActiveUpdates = ({
     inactive: closed,
     active: next,
     // Deduped and pruned to open planks: entries survived every close, so a long-lived deck accreted
-    // one per plank ever opened (a live profile measured fourteen, with duplicates). Under `flatten`
-    // the flag is deck-wide, so closing the plank that happens to carry it re-points it at whichever
-    // plank is now current — pruning it away would shut a companion the user never closed.
-    companionPlanks: flatten
-      ? deck.companionPlanks.length > 0 && next.length > 0
-        ? [next[next.length - 1]]
-        : []
-      : Array.from(new Set(deck.companionPlanks)).filter((id) => next.includes(id)),
+    // one per plank ever opened (a live profile measured fourteen, with duplicates). Only an explicit
+    // close empties this, so a companion open on a plank that navigation replaces carries to whatever
+    // replaced it — under `flatten` the flag is deck-wide and re-points at the plank now current, and
+    // while the deck slides it moves to the newest plank rather than being pruned away with the one
+    // it was attached to.
+    companionPlanks: carryCompanions(deck.companionPlanks, next, flatten),
   };
 
   let toAttend: string | undefined;

@@ -11,7 +11,6 @@ import * as AppGraph from '@dxos/app-graph/AppGraph';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabilities';
-import { Attention } from '@dxos/react-ui-attention/types';
 
 import { DeckCapabilities } from '#types';
 import { CompanionViewState, DeckSchema } from '#types';
@@ -107,28 +106,48 @@ export const applyWorkspace = Effect.fnUntraced(function* (workspace: string) {
   }));
 });
 
-/** Open or close the companion, `null` closing whichever the anchor names. */
-export const applyCompanion = Effect.fnUntraced(function* (subject: string | null, anchor?: string) {
+/**
+ * The companion a URL names, or undefined when it names none.
+ *
+ * `subject` is absent when the plank has no companion of that variant. That is not the same as naming
+ * none: the companion stays open and the plank falls back to a variant it does have, so moving to an
+ * item without the selected tab does not close a pane the reader never closed.
+ */
+export type CompanionTarget = {
+  /** The plank the companion pair follows. */
+  anchor: string;
+  /** The variant the pair names, which is the reader's preference whether or not this plank has it. */
+  variant: string;
+  /** The companion node, when this plank has that variant. */
+  subject?: string;
+};
+
+/** Open or close the companion; `undefined` (no pair in the URL) is the only thing that closes one. */
+export const applyCompanion = Effect.fnUntraced(function* (target: CompanionTarget | undefined) {
   const { flatten } = yield* Capabilities.getAtomValue(DeckCapabilities.Settings);
   const deck = yield* DeckCapabilities.getDeck();
   const attention = yield* Capability.get(AttentionCapabilities.Attention);
 
-  if (subject === null) {
-    const plankId = anchor ?? resolveCompanionAnchor(deck.active, attention.getCurrent());
+  if (!target) {
+    const plankId = resolveCompanionAnchor(deck.active, attention.getCurrent());
     yield* Capabilities.updateAtomValue(DeckCapabilities.State, (state) =>
       updateActiveDeck(state, { companionPlanks: closeCompanionPlank(deck.companionPlanks, flatten, plankId) }),
     );
     return;
   }
 
-  const plankId = resolveCompanionPlank({ subject, anchor, planks: deck.active, attended: attention.getCurrent() });
+  const plankId = target.subject
+    ? resolveCompanionPlank({ subject: target.subject, planks: deck.active, attended: attention.getCurrent() })
+    : target.anchor;
   if (!plankId) {
     return;
   }
 
   const viewState = yield* Capability.get(AttentionCapabilities.ViewState);
-  const variant = Attention.getLinkedVariant(subject);
-  viewState.update(CompanionViewState.aspect, CompanionViewState.CONTEXT, (prev) => ({ ...prev, variant }));
+  viewState.update(CompanionViewState.aspect, CompanionViewState.CONTEXT, (prev) => ({
+    ...prev,
+    variant: target.variant,
+  }));
 
   yield* Capabilities.updateAtomValue(DeckCapabilities.State, (state) =>
     updateActiveDeck(state, {
