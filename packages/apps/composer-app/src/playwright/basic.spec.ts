@@ -30,10 +30,11 @@ test.describe('Basic tests', () => {
 
   test('create identity, space is created by default', async () => {
     await expect(host.page.getByTestId('spacePlugin.space')).toHaveCount(1);
-    // First run lands on Home, and onboarding seeds the README, so it appears under Recent.
+    // First run lands on Home, and onboarding seeds the README, so it appears under Recent. Seeding
+    // runs after the account appears, which is all `init` waits for, so this is sized to it.
     const plank = host.deck.plank();
-    await expect(plank.locator.getByRole('heading', { name: 'Recent' })).toBeVisible();
-    await expect(plank.locator.getByText('README')).toBeVisible();
+    await expect(plank.locator.getByRole('heading', { name: 'Recent' })).toBeVisible({ timeout: 30_000 });
+    await expect(plank.locator.getByText('README')).toBeVisible({ timeout: 30_000 });
   });
 
   test('create space, which is displayed in tree', async () => {

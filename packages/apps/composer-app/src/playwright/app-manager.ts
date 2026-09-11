@@ -331,7 +331,7 @@ export class AppManager {
     // mid-click, and the overlay that replaces it swallows the pointer. Reopening a menu whose dialog
     // is already up is a no-op, so the block is safe to repeat.
     await expect(async () => {
-      await this.page.getByTestId('spacePlugin.addSpace').click();
+      await this.page.getByTestId('spacePlugin.addSpace').click({ timeout: 5_000 });
       await this.page.getByTestId('spacePlugin.createSpace').click({ timeout: 5_000 });
       await expect(dialog).toBeVisible({ timeout: 5_000 });
     }).toPass({ timeout: 30_000 });
