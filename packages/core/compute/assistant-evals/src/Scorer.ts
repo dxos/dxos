@@ -58,7 +58,7 @@ export type Scores = Record<string, Score>;
  * Per-run memo for work several scorers share, keyed by name. Variants of one eval run concurrently
  * in one process, so the cache is the run's and never the module's.
  */
-export class Memo extends Context.Service<Memo, { readonly cache: Map<string, unknown> }>()(
+export class Memo extends Context.Service<Memo, { readonly cache: Map<string, Exit.Exit<any, any>> }>()(
   '@dxos/assistant-evals/Scorer/Memo',
 ) {}
 
@@ -70,12 +70,15 @@ export class Memo extends Context.Service<Memo, { readonly cache: Map<string, un
 export const once = <A, E, R>(key: string, effect: Effect.Effect<A, E, R>): Effect.Effect<A, E, R | Memo> =>
   Effect.gen(function* () {
     const { cache } = yield* Memo;
-    if (cache.has(key)) {
-      return cache.get(key) as A;
+    const cached = cache.get(key);
+    if (cached !== undefined) {
+      return yield* cached;
     }
-    const value = yield* effect;
-    cache.set(key, value);
-    return value;
+    // The exit, not the value: a shared query that failed has still been asked, and re-asking it
+    // per scorer would run the probe again and report a different answer to each.
+    const exit = yield* Effect.exit(effect);
+    cache.set(key, exit);
+    return yield* exit;
   });
 
 /** A scorer over any query of the live space; the query's value is what the verdict reads. */
@@ -160,16 +163,19 @@ export const runAll = (scorers: readonly Any[], run: Run): Effect.Effect<Scores,
   Effect.gen(function* () {
     const scores: Record<string, Score> = {};
     for (const scorer of scorers) {
-      const exit = yield* Effect.exit(scorer.query);
-      if (Exit.isSuccess(exit)) {
-        const value = exit.value;
-        scores[scorer.name] = { score: normalize(scorer.score(value, run)), value };
-      } else {
-        scores[scorer.name] = { score: 0, error: describe(exit.cause) };
-      }
+      // The verdict runs inside the same boundary as the query: a scorer that throws on an
+      // unexpected shape scores nothing and says so, rather than taking the other nine with it.
+      const exit = yield* Effect.exit(
+        scorer.query.pipe(
+          Effect.flatMap((value) =>
+            Effect.try(() => normalize(scorer.score(value, run))).pipe(Effect.map((score) => ({ score, value }))),
+          ),
+        ),
+      );
+      scores[scorer.name] = Exit.isSuccess(exit) ? exit.value : { score: 0, error: describe(exit.cause) };
     }
     return scores;
-  }).pipe(Effect.provideService(Memo, { cache: new Map<string, unknown>() }));
+  }).pipe(Effect.provideService(Memo, { cache: new Map<string, Exit.Exit<any, any>>() }));
 
 /** The evalite side of the same list: each dimension reads the mark the run already recorded. */
 export const toEvalite = (scorers: readonly Any[]) =>

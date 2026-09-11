@@ -311,6 +311,12 @@ export function createEvalRunner<I, O, D>(
   VariantConfig
 > {
   return async (input: I, variant: VariantConfig) => {
+    // One grading path per scenario: with both, the result's shape would not be the one the
+    // overload promised the caller.
+    if (options.dbQuery && options.scorers?.length) {
+      throw new Error('createEvalRunner: pass either `dbQuery` or `scorers`, not both.');
+    }
+
     const model = variant?.model ?? options.model ?? DEFAULT_MODEL;
     const timeoutMillis = options.timeout ?? DEFAULT_EVAL_TIMEOUT_MILLIS;
     const gradeIncomplete =
@@ -388,6 +394,14 @@ export function createEvalRunner<I, O, D>(
           FeedTraceSink.FeedTraceSink,
         );
 
+        // `scorers` first, so the branch taken matches the overload the options selected.
+        if (scorers?.length) {
+          const scores = yield* Effect.promise(() =>
+            harness.runPromise(Scorer.runAll(scorers, { durationMillis }).pipe(Effect.provide(services))),
+          );
+          return { agentOutput, scores, durationMillis };
+        }
+
         if (dbQueryFn) {
           const dbQuery = yield* Effect.promise(() =>
             harness.runPromise(dbQueryFn(input, defaultSpace.id).pipe(Effect.provide(services))),
@@ -395,11 +409,7 @@ export function createEvalRunner<I, O, D>(
           return { agentOutput, dbQuery, durationMillis };
         }
 
-        const scores = yield* Effect.promise(() =>
-          harness.runPromise(Scorer.runAll(scorers ?? [], { durationMillis }).pipe(Effect.provide(services))),
-        );
-
-        return { agentOutput, scores, durationMillis };
+        return yield* Effect.fail(new Error('Unreachable: neither dbQuery nor scorers.'));
       }),
     );
 
