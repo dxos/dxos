@@ -7,7 +7,7 @@
  * summary for the job.
  *
  *   evalite run src/evals --outputPath out/evals.json
- *   node scripts/eval-events.mjs out/evals.json --events out/evals.events.ndjson --summary out/summary.md
+ *   node scripts/eval-events.mjs out/evals.json --run <run-id> --events out/evals.events.ndjson --summary out/summary.md
  *   node ../../../../scripts/ci-event.mjs --batch out/evals.events.ndjson
  *
  * Three events, at three grains, so the dashboard aggregates raw rows rather than shipped averages:
@@ -16,6 +16,7 @@
  * main is, and two nights on one commit are two samples of a non-deterministic system, not one.
  */
 
+import { createHash } from 'node:crypto';
 import { readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { parseArgs } from 'node:util';
@@ -38,12 +39,23 @@ const sum = (items, pick) => items.reduce((total, item) => total + (pick(item) ?
 
 const mean = (values) => (values.length === 0 ? undefined : sum(values, (value) => value) / values.length);
 
+/**
+ * A test case's identity across runs: what it asks, not where it sits. `index` shifts when a case
+ * is inserted above it, and evalite's ids restart every run, so neither can key a case's trend.
+ */
+const itemId = (file, evaluation, result) =>
+  createHash('sha1')
+    .update(JSON.stringify([file, evaluation.name, evaluation.variantName ?? null, result.input]))
+    .digest('hex')
+    .slice(0, 16);
+
 /** The events one export yields, in the shape `scripts/ci-event.mjs --batch` reads. */
-export const toEvents = (report) => {
+export const toEvents = (report, { run: runId } = {}) => {
   const timestamp = toIso(report.run.createdAt);
-  // Fresh storage per CI run means evalite's own ids restart at 1, so the run's time is what keeps
-  // one night's rows apart from the next night's on the same commit.
-  const runKey = report.run.createdAt;
+  // Fresh storage per CI run means evalite's own ids restart at 1, and the export's clock has
+  // second precision, so the caller's run id is what keeps two runs' rows apart; the time stands
+  // in for it outside CI.
+  const runKey = runId ?? report.run.createdAt;
 
   const results = [];
   const scores = [];
@@ -57,6 +69,7 @@ export const toEvents = (report) => {
         dedup: `${runKey}:${evaluation.id}:${result.id}`,
         properties: {
           ...context,
+          itemId: itemId(file, evaluation, result),
           index,
           status: result.status,
           score: result.averageScore,
@@ -70,6 +83,7 @@ export const toEvents = (report) => {
           dedup: `${runKey}:${evaluation.id}:${result.id}:${score.name}`,
           properties: {
             ...context,
+            itemId: itemId(file, evaluation, result),
             index,
             status: result.status,
             scorer: score.name,
@@ -111,9 +125,9 @@ export const toSummary = (report) => {
       .flatMap((result) => result.scores.filter((score) => score.score < 1).map((score) => score.name))
       .filter((name, index, names) => names.indexOf(name) === index);
     const status = evaluation.status === 'success' ? '✅' : '❌';
-    const name = evaluation.variantName ? `${evaluation.name} (${evaluation.variantName})` : evaluation.name;
+    // evalite already suffixes a variant's name with `[variant]`.
     const duration = sum(evaluation.results, (result) => result.duration);
-    return `| ${status} | ${name} | \`${file}\` | ${percent(evaluation.averageScore)} | ${seconds(duration)} | ${failed.join(', ')} |`;
+    return `| ${status} | ${evaluation.name} | \`${file}\` | ${percent(evaluation.averageScore)} | ${seconds(duration)} | ${failed.join(', ')} |`;
   });
   const allScores = report.evals.flatMap((evaluation) =>
     evaluation.results.flatMap((result) => result.scores.map((score) => score.score)),
@@ -134,18 +148,21 @@ const main = () => {
   const { positionals, values } = parseArgs({
     allowPositionals: true,
     options: {
+      run: { type: 'string' },
       events: { type: 'string' },
       summary: { type: 'string' },
     },
   });
   const [input] = positionals;
   if (!input) {
-    throw new Error('usage: eval-events.mjs <evalite-export.json> [--events <file.ndjson>] [--summary <file.md>]');
+    throw new Error(
+      'usage: eval-events.mjs <evalite-export.json> [--run <id>] [--events <file.ndjson>] [--summary <file.md>]',
+    );
   }
   const report = JSON.parse(readFileSync(input, 'utf8'));
 
   if (values.events) {
-    const events = toEvents(report);
+    const events = toEvents(report, { run: values.run });
     writeFileSync(values.events, events.map((event) => JSON.stringify(event)).join('\n') + '\n');
     console.log(`wrote ${events.length} event(s) to ${values.events}`);
   }

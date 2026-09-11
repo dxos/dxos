@@ -28,6 +28,8 @@ name: Assistant evals
 # - The PostHog key is the Composer project's ingestion token, which the app already ships to
 #   every browser; it is step-scoped anyway, and can only write events.
 # - `GITHUB_TOKEN` is `contents: read`, and the checkout does not persist it.
+# - `depot ci run` can patch uncommitted changes into a run; a guard step fails a dirty or
+#   off-commit checkout before the key is named, so only committed code on the event's ref runs.
 #
 # What this does not defend against is a malicious change merged to main, which is the review
 # boundary, not this file's.
@@ -57,7 +59,9 @@ env:
   MOON_CACHE_CLIENT_KEY: ${{ secrets.MOON_CACHE_CLIENT_KEY }}
 
 # Never `cancel-in-progress`: a run in flight is a night's sample, and losing it leaves a gap in the
-# series. A dispatch keys on its run id so two dispatches of one ref sample it twice.
+# series. A dispatch keys on its run id so two dispatches of one ref sample it twice. A re-run of a
+# red attempt is a second sample the same way: the events are keyed by run id and attempt, so the
+# dashboard's daily aggregates then average both attempts.
 concurrency:
   group: >-
     ${{ github.workflow }}-${{ github.event_name }}-${{ github.ref
@@ -72,9 +76,11 @@ jobs:
       credentials:
         username: dxos-bot
         password: ${{ secrets.GITHUB_TOKEN }}
-    # Matches the `evals` task's own timeout (`.moon/tasks/tag-evalite.yml`): the longest scenario
-    # budgets an hour for the agent plus five minutes to grade what it left.
-    timeout-minutes: 90
+    # The `evals` task's own 90-minute timeout (`.moon/tasks/tag-evalite.yml`) plus room for checkout,
+    # install and the dependency builds, so the task's clock is the one that fires on a hung
+    # scenario. Either timeout kills evalite before it writes its export, so a night that hits one
+    # trends nothing; the task's is at least attributed to the scenario.
+    timeout-minutes: 120
     defaults:
       run:
         working-directory: packages/core/compute/assistant-evals
@@ -90,10 +96,30 @@ jobs:
         uses: ./.depot/actions/setup
 
       # Two scenarios drive the projected MCP server through the Claude Code CLI (`claude-harness.ts`).
-      # Unpinned on purpose, as the model alias is: the scenario scores the agent's effects through
-      # this repo's server, not a CLI version.
+      # Pinned because the CLI runs with the Anthropic key: an unversioned install would hand that
+      # key to whatever npm published last night. Bump deliberately. Into a temp prefix rather than
+      # `-g`: the image's global prefix is root-owned and `npm install -g` fails with EACCES there.
       - name: Install Claude Code
-        run: npm install -g @anthropic-ai/claude-code
+        run: |
+          npm install --prefix "$RUNNER_TEMP/claude" @anthropic-ai/claude-code@2.1.259
+          echo "$RUNNER_TEMP/claude/node_modules/.bin" >> "$GITHUB_PATH"
+
+      # `depot ci run` submits a workflow with the caller's uncommitted changes patched in after
+      # checkout, which would run unreviewed code with the key below. A patched tree is dirty, and a
+      # ref other than the event's has a different HEAD; refuse both before any secret is named.
+      - name: Refuse a patched checkout
+        env:
+          EXPECTED_SHA: ${{ github.sha }}
+        run: |
+          if [ -n "$(git status --porcelain)" ]; then
+            echo "::error::The checkout has uncommitted changes; this workflow only runs committed code."
+            git status --short
+            exit 1
+          fi
+          if [ "$(git rev-parse HEAD)" != "$EXPECTED_SHA" ]; then
+            echo "::error::HEAD $(git rev-parse HEAD) is not the event's commit $EXPECTED_SHA."
+            exit 1
+          fi
 
       # The only step that sees the Anthropic key. `continue-on-error` so the summary, artifact and
       # trend below run for a red night too, which is the night they are most needed; the last step
@@ -122,13 +148,17 @@ jobs:
             echo "exported=false" >> "$GITHUB_OUTPUT"
             exit 0
           fi
-          echo "exported=true" >> "$GITHUB_OUTPUT"
-          node scripts/eval-events.mjs out/evals.json --events out/evals.events.ndjson --summary out/summary.md
+          node scripts/eval-events.mjs out/evals.json \
+            --run "${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" \
+            --events out/evals.events.ndjson --summary out/summary.md
           cat out/summary.md >> "$GITHUB_STEP_SUMMARY"
-          pnpm exec evalite export --output out/ui
+          # The static UI is a convenience; a night whose scores were captured is not red for it.
+          pnpm exec evalite export --output out/ui || echo "::warning::evalite's static UI export failed."
+          echo "exported=true" >> "$GITHUB_OUTPUT"
 
       # The JSON export, the events as sent, the summary, and evalite's static UI for reading a
-      # scenario's traces without re-running it.
+      # scenario's traces without re-running it. Public on a public repo, like every artifact here:
+      # it holds the agents' inputs and outputs, and the sandbox scenario's preview URLs, never a key.
       - name: Upload results
         if: always() && steps.summary.outputs.exported == 'true'
         uses: actions/upload-artifact@v7
