@@ -26,7 +26,7 @@ import { DeckCapabilities, DeckSchema } from '#types';
 import { shouldDeferNavigationHandlers } from '../capabilities/check-app-scheme';
 import { applyActive, applyCompanion, applyWorkspace } from './apply';
 import * as Navigation from './navigation';
-import { getCandidateEntityIds, getUnresolvedPlankId } from './navigation';
+import { getCandidateEntityIds, getUnresolvedPlankId, initialPlanks } from './navigation';
 
 /**
  * How long resolution waits for a pair's node before it stops trying. Exported because a plank waits
@@ -63,11 +63,18 @@ export const handleExternalUrl = Effect.fnUntraced(function* (url?: URL) {
   return yield* projectUrl(resolvedUrl);
 });
 
+export type ProjectOptions = {
+  /** Attend the end of the chain rather than the displaced plank. */
+  attend?: boolean;
+  /** Node ids the caller already holds, by segment; see `Navigation.known`. */
+  known?: ReadonlyMap<Navigation.PlankSegment, string>;
+};
+
 /**
  * Project a URL into deck state, returning the plank attention should move to, or `undefined` when
- * it should stay where it is. `attend` attends the end of the chain rather than the displaced plank.
+ * it should stay where it is.
  */
-const project = Effect.fnUntraced(function* (url?: URL, options?: { attend?: boolean }) {
+const project = Effect.fnUntraced(function* (url?: URL, options?: ProjectOptions) {
   const attendChainEnd = options?.attend ?? true;
   const navigationTargetLoaders = yield* Capability.getAll(AppCapabilities.NavigationTargetLoader);
   const registry = yield* Capability.get(Capabilities.AtomRegistry);
@@ -80,11 +87,15 @@ const project = Effect.fnUntraced(function* (url?: URL, options?: { attend?: boo
     registry.set(stateAtom, fn(registry.get(stateAtom)));
   };
 
+  // A plank already open keeps its id; past that, the id the caller navigated with.
   const knownIdsBySegment = Effect.fnUntraced(function* () {
     const state = registry.get(stateAtom);
     const workspace = registry.get(ephemeralAtom).open[state.activeDeck];
     const active = workspace?.active ?? [];
-    return new Map(active.map((id: string) => [Navigation.segmentOf(workspace?.segments, id), id]));
+    return new Map<Navigation.PlankSegment, string>([
+      ...(options?.known ?? []),
+      ...active.map((id: string) => [Navigation.segmentOf(workspace?.segments, id), id] as const),
+    ]);
   });
 
   /**
@@ -165,14 +176,7 @@ const project = Effect.fnUntraced(function* (url?: URL, options?: { attend?: boo
     workspace === DeckSchema.DEFAULT_DECK_ID ? DeckSchema.DEFAULT_DECK_ID : GraphPath.getSpacePath(workspace);
   yield* switchWorkspace(workspacePath);
 
-  const known = yield* knownIdsBySegment();
-  const initial = pairs
-    .filter((pair) => pair.key !== UrlPath.COMPANION_KEY)
-    .map((pair) => {
-      const segment = Navigation.toSegment(pair);
-      return { segment, id: known.get(segment) ?? getUnresolvedPlankId(pair) };
-    });
-  yield* applyActive(initial);
+  yield* applyActive(initialPlanks(pairs, yield* knownIdsBySegment()));
 
   const loaders = navigationTargetLoaders;
   const verdicts: AppCapabilities.NavigationTargetVerdict[] = pairs.map(() => 'unknown');
@@ -246,7 +250,7 @@ const project = Effect.fnUntraced(function* (url?: URL, options?: { attend?: boo
  * one is the caller that has been overtaken, and it returns no plank to attend rather than failing:
  * its navigation is moot, not broken.
  */
-export const projectUrl = Effect.fnUntraced(function* (url?: URL, options?: { attend?: boolean }) {
+export const projectUrl = Effect.fnUntraced(function* (url?: URL, options?: ProjectOptions) {
   const handle = yield* Capability.get(DeckCapabilities.Projection);
   const fiber = yield* FiberHandle.run(handle, project(url, options));
   const outcome = yield* Effect.exit(Fiber.join(fiber));

@@ -10,10 +10,16 @@ import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as UrlPath from '@dxos/app-toolkit/UrlPath';
 import { EntityId } from '@dxos/keys';
 
-/** What is open, as the URL says it: a workspace and an ordered chain of pairs. */
+/**
+ * What is open, as the URL says it: a workspace and an ordered chain of pairs. `known` carries the node
+ * id an in-app navigation already holds for a pair's segment, so the projection can open the plank
+ * under it at once rather than under a placeholder it later swaps for the resolved id — a swap that
+ * re-keys the plank and remounts everything in it, its companion included.
+ */
 export type Navigation = {
   workspace: string;
   pairs: readonly UrlPath.Pair[];
+  known?: ReadonlyMap<PlankSegment, string>;
 };
 
 /**
@@ -101,3 +107,15 @@ export const getCandidateEntityIds = (pairId: string, tailSeparator: string): st
 /** The plank id for a pair no extension could resolve. */
 export const getUnresolvedPlankId = (pair: UrlPath.Pair): string =>
   [GraphPath.getSpacePath(pair.workspace), pair.key, pair.id].filter((segment) => segment !== undefined).join('/');
+
+/**
+ * The planks a chain opens before it resolves: each pair under the id `known` holds for its segment,
+ * else under a placeholder the resolved id replaces. Companion pairs open nothing of their own.
+ */
+export const initialPlanks = (pairs: readonly UrlPath.Pair[], known: ReadonlyMap<PlankSegment, string>): Plank[] =>
+  pairs
+    .filter((pair) => pair.key !== UrlPath.COMPANION_KEY)
+    .map((pair) => {
+      const segment = toSegment(pair);
+      return { segment, id: known.get(segment) ?? getUnresolvedPlankId(pair) };
+    });

@@ -41,7 +41,7 @@ export const navigate = Effect.fnUntraced(function* (next: Navigation.Navigation
     log.warn('navigation has no workspace, so it cannot be pushed', { pairs: next.pairs.length });
     return undefined;
   }
-  return Navigation.push(next, method) ? yield* projectUrl(undefined, { attend: false }) : undefined;
+  return Navigation.push(next, method) ? yield* projectUrl(undefined, { attend: false, known: next.known }) : undefined;
 });
 
 /**
@@ -66,6 +66,7 @@ export const deckNavigation = Effect.fnUntraced(function* (params: {
     anchorId && variant && isCompanionOpen(companionPlanks, flatten, anchorId) ? anchorId : undefined;
 
   const pairs: UrlPath.Pair[] = [];
+  const known = new Map<Navigation.PlankSegment, string>();
   for (const nodeId of active) {
     const represented = PathResolution.representNode(builder, nodeId);
     if (Option.isNone(represented)) {
@@ -76,12 +77,13 @@ export const deckNavigation = Effect.fnUntraced(function* (params: {
       continue;
     }
     pairs.push(represented.value);
+    known.set(Navigation.toSegment(represented.value), nodeId);
     if (nodeId === companionAnchor) {
       pairs.push({ key: UrlPath.COMPANION_KEY, id: variant, workspace });
     }
   }
 
-  return { workspace, pairs };
+  return { workspace, pairs, known };
 });
 
 /** Navigate to the deck `params` describes, returning the plank attention has to move to. */
