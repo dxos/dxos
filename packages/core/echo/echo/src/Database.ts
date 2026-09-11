@@ -484,6 +484,15 @@ export const load: <T>(ref: Ref<T>) => Effect.Effect<T, Error.EntityNotFoundErro
 export const peek = <T>(ref: Ref<T>): T | undefined => ref.peek();
 
 /**
+ * Makes a reference to an object addressed by URI, resolvable against this database.
+ * @see {@link Database.makeRef}
+ */
+export const makeRef = <T extends Entity.Unknown = Entity.Unknown>(
+  uri: URI.URI,
+): Effect.Effect<Ref<T>, never, Service> =>
+  Service.pipe(Effect.map(({ db }) => db.makeRef<T>(uri))).pipe(Effect.withSpan('Database.makeRef'), withSpaceId);
+
+/**
  * Adds an object or relation to the database.
  * @see {@link Database.add}
  */

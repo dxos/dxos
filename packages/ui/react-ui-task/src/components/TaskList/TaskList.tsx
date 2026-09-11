@@ -1071,8 +1071,13 @@ const TaskListAssignee = composable<HTMLSpanElement, TaskListAssigneeProps>(({ a
     <Tag
       ref={tagRef}
       hue={agent ? 'purple' : 'indigo'}
+      // Focus as well as hover: the card is the only place the row says which run owns the task, so
+      // a pointer-only trigger puts that out of reach of a keyboard or a touch device.
+      tabIndex={session ? 0 : undefined}
       onPointerEnter={startHover}
       onPointerLeave={cancelHover}
+      onFocus={startHover}
+      onBlur={cancelHover}
       classNames={session && 'cursor-help'}
     >
       {agent && <Icon icon={icon} size={3} classNames='inline-block me-1' />}

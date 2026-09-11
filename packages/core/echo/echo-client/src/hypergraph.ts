@@ -894,20 +894,15 @@ const isAllSpacesScope = (ast: QueryAST.Query): boolean => {
   return found;
 };
 
-/** Replaces every empty scope clause with one naming the given spaces. */
-const bindAllSpacesScope = (ast: QueryAST.Query, scopes: QueryAST.SpaceScope[]): QueryAST.Query => {
-  const transform = (value: unknown): unknown => {
-    if (Array.isArray(value)) {
-      return value.map(transform);
-    }
-    if (value !== null && typeof value === 'object') {
-      const record = value as Record<string, unknown>;
-      if (record._tag === 'scope' && Array.isArray(record.scopes) && record.scopes.length === 0) {
-        return { ...record, scopes };
-      }
-      return Object.fromEntries(Object.entries(record).map(([key, child]) => [key, transform(child)]));
-    }
-    return value;
-  };
-  return transform(ast) as QueryAST.Query;
-};
+/**
+ * Replaces every empty scope clause with one naming the given spaces.
+ *
+ * `QueryAST.map` rather than a walk over every value: a filter literal can itself be an object
+ * carrying `_tag` and `scopes`, and rewriting one would silently change what the query matches.
+ */
+const bindAllSpacesScope = (ast: QueryAST.Query, scopes: QueryAST.SpaceScope[]): QueryAST.Query =>
+  QueryAST.map(ast, (node) =>
+    node.type === 'from' && node.from._tag === 'scope' && node.from.scopes.length === 0
+      ? { ...node, from: { ...node.from, scopes } }
+      : node,
+  );
