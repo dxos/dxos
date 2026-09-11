@@ -140,9 +140,12 @@ export class RtcTransportService implements BridgeService {
   }
 
   async sendSignal({ proxyId, signal }: SignalRequest): Promise<Empty> {
-    const transport = this._openTransports.get(requirePublicKey(proxyId));
-    invariant(transport);
     invariant(signal, 'Signal request carries no signal.');
+    const transport = this._openTransports.get(requirePublicKey(proxyId));
+    if (!transport) {
+      log.verbose('signal dropped for a closed transport', { proxyId: requirePublicKey(proxyId) });
+      return create(EmptySchema, {});
+    }
 
     await transport.transport.onSignal(signal);
     return create(EmptySchema, {});
@@ -162,9 +165,19 @@ export class RtcTransportService implements BridgeService {
     return create(StatsResponseSchema, { stats: await transport.transport.getStats() });
   }
 
+  /**
+   * A proxy's writes and the bridge's own close race: the close is announced on the event stream,
+   * which the proxy may not have processed yet. Failing here would be reported as a transport error,
+   * and `Connection` escalates any transport error into tearing the peer connection down — costing a
+   * full transport-connect timeout on the next attempt. The close is already on its way over the
+   * stream, so dropping the bytes says everything the caller needs to know.
+   */
   async sendData({ proxyId, payload }: DataRequest): Promise<Empty> {
     const transport = this._openTransports.get(requirePublicKey(proxyId));
-    invariant(transport);
+    if (!transport) {
+      log.verbose('data dropped for a closed transport', { proxyId: requirePublicKey(proxyId) });
+      return create(EmptySchema, {});
+    }
 
     const bufferHasSpace = transport.connectorStream.push(payload);
     if (!bufferHasSpace) {
