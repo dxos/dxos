@@ -13,9 +13,13 @@ Call the live LLM via `DX_ANTHROPIC_API_KEY` — no conversation cache. Shared r
 ```bash
 export DX_ANTHROPIC_API_KEY=...          # or: eval "$(pnpm -ws 1p-credentials)"
 
-moon run assistant-evals:evals                                  # every scenario
-moon run assistant-evals:eval -- src/evals/database.eval.ts     # one scenario
+moon run assistant-evals:evals                                   # every scenario
+moon run assistant-evals:evals -- src/evals/database.eval.ts     # one scenario
+moon run assistant-evals:evals-watch                             # re-run on change, with the UI
 ```
 
-`evals` hardcodes `args: [src/evals]`, so appending a file to it gives evalite two positionals and
-it exits on "Too many arguments" — `eval` is the single-file task.
+The tasks come from the `evalite` moon tag (`.moon/tasks/tag-evalite.yml`). `evals` writes
+`out/evals.json`, and the nightly `.depot/workflows/assistant-evals.yml` runs that same task, then
+`scripts/eval-events.mjs` turns the export into the events the "Assistant evals" PostHog dashboard
+trends, one per run, per test case and per scorer. The run's artifact carries the export, the events
+as sent, and evalite's static UI.

@@ -71,6 +71,10 @@ We removed retries because they hid flakes behind a 3x time cost and made shard 
 
 The other tags (`sync`, `sync-e2e`, `functions-e2e`, `manual`) are declared in [`vitest.tags.ts`](../vitest.tags.ts), and you opt in by overriding `VITEST_TAGS_FILTER` or passing `--tagsFilter=<expr>` directly. They are not tied to Trunk.
 
+## Assistant evals nightly
+
+[`assistant-evals.yml`](./workflows/assistant-evals.yml) runs every `@dxos/assistant-evals` scenario against the live model at 03:00 UTC and sends the scores to PostHog through `scripts/ci-event.mjs`, the same path `ci.boot-budget` and the EDGE nightly use. The events are `ci.eval.run`, `ci.eval.result` and `ci.eval.score`, and the "Assistant evals" dashboard in the Composer project reads them. The workflow's header comment explains the secret handling: the Anthropic key is a dedicated key, limited in Depot's secret settings to that workflow file on `main`, and the workflow has no `pull_request` trigger.
+
 ## Resources
 
 - https://depot.dev/docs/ci/overview
