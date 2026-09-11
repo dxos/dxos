@@ -124,7 +124,17 @@ export type Draft = {
   local: DeviceSettings;
 };
 
-const namespaceOf = (container: Namespaces, namespace: string): Values => (container[namespace] ??= {});
+/**
+ * The namespace's record, created empty if absent.
+ *
+ * Read back rather than returned from the assignment: `??=` yields the plain object it assigned, and
+ * `container` is an ECHO proxy in a live draft, so writing through that would land on a detached
+ * object and lose the first key in every new namespace.
+ */
+const namespaceOf = (container: Namespaces, namespace: string): Values => {
+  container[namespace] ??= {};
+  return container[namespace];
+};
 
 const pinOf = (draft: Draft, namespace: string): Pin => (draft.local[namespace] ??= { local: false, keys: [] });
 
@@ -249,6 +259,24 @@ export const applyResolved = (draft: Draft, namespace: string, before: Values, a
       setValue(draft, namespace, key, after[key]);
     } else if (isSynced(draft, namespace) && !isPinned(draft, namespace, key)) {
       clearValue(draft, namespace, key);
+    }
+  }
+};
+
+/**
+ * Fold a losing settings object's values into the canonical one, on {@link applyResolved}'s rule: a
+ * key only the loser holds is adopted, and a key both hold keeps the winner's.
+ *
+ * Two devices that both create an `AppSettings` before replication each write real settings into
+ * their own; whichever the account ends up naming, the other's values are not the user's to lose.
+ */
+export const mergeShared = (winner: Namespaces, loser: Namespaces): void => {
+  for (const [namespace, values] of Object.entries(loser)) {
+    const target = namespaceOf(winner, namespace);
+    for (const [key, value] of Object.entries(values)) {
+      if (!(key in target)) {
+        target[key] = value;
+      }
     }
   }
 };

@@ -359,6 +359,34 @@ describe('conflictingKeys', () => {
   });
 });
 
+describe('mergeShared', () => {
+  test('adopts what only the loser holds and keeps the winner where both do', ({ expect }) => {
+    const winner: AppSettings.Namespaces = { [NS]: { toolbar: true } };
+    const loser: AppSettings.Namespaces = { [NS]: { toolbar: false, folding: true } };
+
+    AppSettings.mergeShared(winner, loser);
+
+    expect(winner).toEqual({ [NS]: { toolbar: true, folding: true } });
+  });
+
+  test('adopts a namespace the winner has never heard of', ({ expect }) => {
+    const other = 'org.dxos.plugin.chess';
+    const winner: AppSettings.Namespaces = { [NS]: { toolbar: true } };
+
+    AppSettings.mergeShared(winner, { [other]: { hints: true } });
+
+    expect(winner).toEqual({ [NS]: { toolbar: true }, [other]: { hints: true } });
+  });
+
+  test('leaves the loser alone', ({ expect }) => {
+    const loser: AppSettings.Namespaces = { [NS]: { toolbar: false } };
+
+    AppSettings.mergeShared({ [NS]: { toolbar: true } }, loser);
+
+    expect(loser).toEqual({ [NS]: { toolbar: false } });
+  });
+});
+
 describe('pinKey and unpinKey', () => {
   test('pinning changes nothing visible, here or elsewhere', ({ expect }) => {
     const target = device({ shared: { [NS]: { toolbar: true } }, local: { toolbar: true } });
