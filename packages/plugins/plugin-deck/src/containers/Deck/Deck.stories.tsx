@@ -586,6 +586,14 @@ export const CompanionPerPlank: Story = {
     await attendPlank(canvasElement, 1);
     await new Promise((resolve) => setTimeout(resolve, 100));
     await expect(showingCompanionsFor(canvasElement)).toEqual(['Overview', 'Notes']);
+
+    // Every plank sits in a splitter panel, companion or not: a companion resolves a commit after its
+    // plank mounts, so a shape that varied with it would unmount the plank and everything it holds.
+    const planks = canvasElement.querySelectorAll<HTMLElement>('[data-testid="deck.plank"]');
+    await expect(planks).toHaveLength(3);
+    for (const plank of planks) {
+      await expect(plank.closest('[data-scope="splitter"][data-part="panel"]')).not.toBeNull();
+    }
   },
 };
 

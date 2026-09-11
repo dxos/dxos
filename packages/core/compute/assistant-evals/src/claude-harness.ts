@@ -30,7 +30,9 @@ import { createComposerTestApp } from '@dxos/plugin-testing/harness';
 import { ClaudeAgent, type Turn } from '@dxos/test-utils/claude-agent';
 
 import { registerSkills, startMcpHost } from './mcp-host.ts';
+import * as Observe from './Observe.ts';
 import * as Scorer from './Scorer.ts';
+import * as Usage from './Usage.ts';
 
 /** How the server is named to the agent, and therefore the prefix of every tool it exposes. */
 export const SERVER = 'dx-dev';
@@ -92,6 +94,39 @@ export type ClaudeHarness = {
   readonly score: (scorers: readonly Scorer.Any[]) => Promise<Scorer.Scores>;
 };
 
+const count = (value: unknown): number => (typeof value === 'number' ? value : 0);
+
+/**
+ * The turn's model calls: one per `assistant` event, each fed the transcript before it. The CLI
+ * reports no per-message timing, so every call spans the turn.
+ */
+const turnCalls = (prompt: string, turn: Turn): Usage.Call[] => {
+  const transcript: unknown[] = [{ role: 'user', content: prompt }];
+  const calls: Usage.Call[] = [];
+  for (const event of turn.events) {
+    const message = event?.message;
+    if (event?.type === 'assistant' && message) {
+      calls.push({
+        model: typeof message.model === 'string' ? message.model : 'claude',
+        provider: 'anthropic',
+        spanName: 'claude-code',
+        input: [...transcript],
+        output: message.content,
+        inputTokens: count(message.usage?.input_tokens),
+        outputTokens: count(message.usage?.output_tokens),
+        cacheReadTokens: count(message.usage?.cache_read_input_tokens),
+        cacheWriteTokens: count(message.usage?.cache_creation_input_tokens),
+        start: turn.start,
+        end: turn.end,
+      });
+      transcript.push({ role: 'assistant', content: message.content });
+    } else if (event?.type === 'user' && message) {
+      transcript.push({ role: 'user', content: message.content });
+    }
+  }
+  return calls;
+};
+
 const aiServiceMiddleware = (): Promise<(_upstream: AiService.Service) => AiService.Service> =>
   AiService.tag.pipe(
     Effect.provide(AiServiceTestingPreset('direct')),
@@ -139,6 +174,9 @@ export const runClaudeEval = async <T>(
   });
 
   let agent: ClaudeAgent | undefined;
+  const experiment = Observe.experiment();
+  const run = Observe.start(experiment);
+  const link: Usage.Link = { traceId: run.traceId, experimentId: experiment.id, experimentName: experiment.name };
   try {
     const { defaultSpace } = await EffectEx.runAndForwardErrors(initializeIdentity(app.get(ClientCapabilities.Client)));
     const spaceId = defaultSpace.id;
@@ -206,9 +244,11 @@ export const runClaudeEval = async <T>(
         query,
         score,
         send: async (prompt) => {
-          const started = Date.now();
           const turn = await claudeAgent.send(prompt);
-          durationMillis += Date.now() - started;
+          durationMillis += turn.end - turn.start;
+          const calls = turnCalls(prompt, turn);
+          calls.forEach(run.generation);
+          Usage.report(calls, link);
           return turn;
         },
       });
@@ -219,5 +259,6 @@ export const runClaudeEval = async <T>(
     await agent?.close();
     await app.dispose();
     fs.rmSync(workdir, { recursive: true, force: true });
+    await run.finish();
   }
 };

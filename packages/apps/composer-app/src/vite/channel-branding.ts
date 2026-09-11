@@ -41,6 +41,13 @@ const FAVICONS = [
 ];
 
 /**
+ * Environments whose bundle is the released app: production itself, and CI's e2e bundle, which is
+ * built under `DX_ENVIRONMENT=ci` (a moon hash input, see `.depot/workflows/check.yml`) and never
+ * deployed.
+ */
+const UNBRANDED_ENVIRONMENTS = new Set(['production', 'ci']);
+
+/**
  * The channel a deploy environment brands itself as, or undefined for the released app.
  * Only a bundle is branded — the variant marks a deployed channel, so a dev server showing one would
  * claim this build came from somewhere it did not. An environment this module does not know fails the
@@ -50,7 +57,7 @@ export const channelVariant = (
   command: ConfigEnv['command'],
   environment = process.env.DX_ENVIRONMENT,
 ): ChannelVariant | undefined => {
-  if (command !== 'build' || !environment || environment === 'production') {
+  if (command !== 'build' || !environment || UNBRANDED_ENVIRONMENTS.has(environment)) {
     return undefined;
   }
   if (!isChannel(environment)) {

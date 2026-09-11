@@ -26,6 +26,7 @@ const succeeds = async (input: unknown, variant: Parameters<typeof succeedsRunne
 
 evalite('Smoke — succeeds', {
   data: [{ input: null }],
+  trialCount: 3,
   task: succeeds,
   scorers: [
     {
@@ -48,6 +49,7 @@ const fails = createEvalRunner({
 
 evalite('Smoke — fails', {
   data: [{ input: null }],
+  trialCount: 3,
   task: fails,
   scorers: [
     {
