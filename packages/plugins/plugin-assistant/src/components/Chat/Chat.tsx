@@ -805,11 +805,11 @@ ChatTaskList.displayName = CHAT_TASK_LIST_NAME;
 
 const CHAT_QUEUE_NAME = 'Chat.Queue';
 
-type ChatQueueProps = Omit<NaturalChatQueueProps, 'queued' | 'onCancel'>;
+type ChatQueueProps = Omit<NaturalChatQueueProps, 'messages' | 'onCancel'>;
 
 const ChatQueue = (props: ChatQueueProps) => {
   const { queued, onCancel } = useChatContext(CHAT_QUEUE_NAME);
-  return <NaturalChatQueue {...props} queued={queued} onCancel={onCancel} />;
+  return <NaturalChatQueue {...props} messages={queued} onCancel={onCancel} />;
 };
 
 ChatQueue.displayName = CHAT_QUEUE_NAME;

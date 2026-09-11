@@ -140,7 +140,7 @@ export const ChatArticle = forwardRef<HTMLDivElement, ChatArticleProps>(
                     line keeps its in-flow slot above the composer. */}
                 {(mobile || viewType === 'summary') && <ChatComponent.Activity classNames='shrink-0' />}
                 {/* Queued prompts the agent has not taken up yet, stacked right above the composer. */}
-                <ChatComponent.Queue classNames='shrink-0 items-end pb-1 border h-8' />
+                <ChatComponent.Queue classNames='shrink-0 items-end pb-1' />
                 {/* Composer and checklist in one: `Chat.Prompt` owns the disclosure between them. */}
                 <ChatComponent.Prompt
                   {...chatProps}

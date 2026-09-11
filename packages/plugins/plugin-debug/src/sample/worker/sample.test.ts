@@ -10,6 +10,23 @@ import { EffectEx } from '@dxos/effect';
 
 import { WorkerSpace } from './index';
 
+/** A task as the archive serializes it: refs become `{ '/': 'echo:///<id>' }`. */
+type ArchivedTask = {
+  '@type'?: string;
+  'id': string;
+  'title'?: string;
+  'status'?: string;
+  'dependsOn'?: Array<{ '/': string }>;
+  'assignee'?: { role?: string; name?: string };
+};
+
+/** The archive's tasks, in the order they were written. */
+const taskArchive = async (definition: ReturnType<typeof WorkerSpace>): Promise<ArchivedTask[]> => {
+  const { json } = await EffectEx.runPromise(buildArchive(definition));
+  const objects: ArchivedTask[] = JSON.parse(json).objects;
+  return objects.filter((object) => object['@type']?.includes('type.task:'));
+};
+
 /**
  * Built on demand rather than committed, so this asserts the shape in place of a fixture: if a
  * schema it seeds changes incompatibly, the build fails here.
@@ -52,10 +69,7 @@ describe('Worker sample space', () => {
   });
 
   test('every step is todo and each depends on the one before it', { timeout: 120_000 }, async ({ expect }) => {
-    const { json } = await EffectEx.runPromise(buildArchive(WorkerSpace()));
-    const objects: Array<{ '@type'?: string; 'title'?: string; 'status'?: string; 'dependsOn'?: unknown }> =
-      JSON.parse(json).objects;
-    const tasks = objects.filter((object) => object['@type']?.includes('type.task:'));
+    const tasks = await taskArchive(WorkerSpace());
 
     expect(tasks.map((task) => task.title)).toEqual([
       'Create a sandbox and install wrangler',
@@ -65,19 +79,24 @@ describe('Worker sample space', () => {
       'Claim the temporary Cloudflare account',
     ]);
     expect(tasks.every((task) => task.status === 'todo')).toBe(true);
-    expect(tasks.filter((task) => Array.isArray(task.dependsOn) && task.dependsOn.length > 0)).toHaveLength(4);
+
+    // The identity each dependency names, not merely how many there are: a chain wired to the wrong
+    // predecessor has the same shape as the right one and would otherwise pass.
+    expect(tasks.map((task) => task.dependsOn?.map((ref) => ref['/']))).toEqual([
+      undefined,
+      ...tasks.slice(0, -1).map((task) => [`echo:///${task.id}`]),
+    ]);
   });
 
   // The one browser step is the reader's, and it is last: an agent with no login cannot update a
   // claimed account, so claiming before the deploy would strand the run.
   test('only the claim is assigned to the reader, and it is last', { timeout: 120_000 }, async ({ expect }) => {
-    const { json } = await EffectEx.runPromise(buildArchive(WorkerSpace()));
-    const objects: Array<{ '@type'?: string; 'title'?: string; 'assignee'?: { role?: string } }> =
-      JSON.parse(json).objects;
-    const tasks = objects.filter((object) => object['@type']?.includes('type.task:'));
+    const tasks = await taskArchive(WorkerSpace());
     const assigned = tasks.filter((task) => task.assignee !== undefined);
 
     expect(assigned.map((task) => task.title)).toEqual(['Claim the temporary Cloudflare account']);
+    // The role is what the row reads as "not the agent's"; a name alone would not say that.
+    expect(assigned.map((task) => task.assignee?.role)).toEqual(['user']);
     expect(tasks.at(-1)?.title).toEqual('Claim the temporary Cloudflare account');
   });
 });
