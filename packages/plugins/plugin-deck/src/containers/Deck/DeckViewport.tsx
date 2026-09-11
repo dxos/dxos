@@ -58,7 +58,7 @@ import {
   ToggleComplementarySidebarButton as NaturalToggleComplementarySidebarButton,
   ToggleSidebarButton as NaturalToggleSidebarButton,
 } from '../Sidebar/index.ts';
-import { CompanionEmptyPlank } from './CompanionPlank.tsx';
+import { CompanionPlank } from './CompanionPlank.tsx';
 import { DeckPlank } from './DeckPlank.tsx';
 import { useDeckContext } from './DeckRoot.tsx';
 
@@ -427,7 +427,7 @@ const PlankSplit = ({
         {companionId ? (
           <DeckPlank id={companionId} part='main' active={active} classNames='size-full' />
         ) : (
-          empty && <CompanionEmptyPlank contextId={id} classNames='size-full' />
+          empty && <CompanionPlank contextId={id} classNames='size-full' />
         )}
       </Splitter.Panel>
     </Splitter.Root>

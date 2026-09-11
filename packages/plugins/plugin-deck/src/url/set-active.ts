@@ -29,14 +29,11 @@ export type SetActiveResult = {
 };
 
 /**
- * Computes the new active state for the deck without mutating.
- * Returns the updates to apply and optionally an item to attend.
- */
-/**
- * `companionPlanks` after a write that changes which planks are open. A companion closes only when the
- * reader closes it, so an open one follows the deck rather than being pruned with the plank it hung
- * off. Deck-wide under `flatten`; while the deck slides, planks that stay open keep their own flag and
- * an open companion whose plank left lands on the newest plank.
+ * `companionPlanks` after a write that changes which planks are open.
+ *
+ * A companion closes only when the reader closes it, so an open one follows the deck rather than being
+ * pruned with the plank it hung off. The flag is deck-wide under `flatten`. While the deck slides,
+ * planks that stay open keep their own flag, and a companion whose plank left lands on the newest.
  */
 const carryCompanions = (
   companionPlanks: readonly string[],
@@ -54,6 +51,10 @@ const carryCompanions = (
   return kept.length > 0 ? kept : [next[next.length - 1]];
 };
 
+/**
+ * Computes the new active state for the deck without mutating.
+ * Returns the updates to apply and optionally an item to attend.
+ */
 export const computeActiveUpdates = ({
   next,
   deck,

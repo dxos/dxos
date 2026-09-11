@@ -39,7 +39,7 @@ export type DeckPlankProps = ThemedClassName<{
  */
 export const DeckPlank = memo(({ id, part, fullscreen = false, active, path, classNames }: DeckPlankProps) => {
   if (Attention.isLinkedSegment(id)) {
-    return <CompanionPlank id={id} classNames={classNames} />;
+    return <CompanionPlank contextId={Attention.getParentId(id) ?? id} id={id} classNames={classNames} />;
   }
 
   return (
