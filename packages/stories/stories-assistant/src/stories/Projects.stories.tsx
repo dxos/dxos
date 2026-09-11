@@ -8,6 +8,7 @@ import { userEvent, within } from 'storybook/test';
 
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import * as AssistantSkill from '@dxos/plugin-assistant/AssistantSkill';
+import * as Sandbox from '@dxos/plugin-sandbox/Sandbox';
 
 import { SpaceTemplateToolbar, StoryRole } from '../modules';
 import { ModuleContainer, VoyageSpacePlugin, config, createDecorators, storyParameters } from '../testing';
@@ -32,7 +33,7 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 const storyOptions = {
-  skills: [AssistantSkill.key],
+  skills: [AssistantSkill.key, Sandbox.SKILL_KEY],
   lazyPlugins: async () => {
     const [
       { Instructions, Project, Routine },
@@ -45,6 +46,7 @@ const storyOptions = {
       TasksPlugin,
       CrmPlugin,
       DebugPlugin,
+      SandboxPlugin,
     ] = await Promise.all([
       import('@dxos/compute'),
       import('@dxos/echo'),
@@ -56,6 +58,7 @@ const storyOptions = {
       import('@dxos/plugin-tasks/TasksPlugin'),
       import('@dxos/plugin-crm/CrmPlugin'),
       import('@dxos/plugin-debug/DebugPlugin'),
+      import('@dxos/plugin-sandbox/SandboxPlugin'),
     ]);
     return {
       plugins: [
@@ -70,6 +73,9 @@ const storyOptions = {
         // Contributes the sample spaces (Northwind Sales, Tidepool, Chess MCP) as space
         // templates — the ones the app's create-space dialog offers.
         DebugPlugin.make(),
+        // Contributes the Sandbox skill and its operations: without it the agent has no
+        // command-execution tool and answers every shell task as blocked.
+        SandboxPlugin.make(),
         VoyageSpacePlugin,
       ],
       types: [
@@ -83,6 +89,7 @@ const storyOptions = {
         // come up empty.
         Feed.Feed,
         TagIndex.TagIndex,
+        Sandbox.Sandbox,
       ],
     };
   },
