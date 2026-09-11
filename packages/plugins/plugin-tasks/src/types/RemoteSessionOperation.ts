@@ -7,7 +7,7 @@
 import * as Schema from 'effect/Schema';
 
 import * as Operation from '@dxos/compute/Operation';
-import { Database, Type } from '@dxos/echo';
+import { Database, Hypergraph, Type } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 import { RemoteSession } from '@dxos/types';
 
@@ -35,10 +35,19 @@ export const RecordSession = Operation.make({
       'Create or update a coding-agent session by its harness session id. Stamps the check-in time; pass a terminal state to close it.',
     icon: 'ph--robot--regular',
   },
-  services: [Database.Service],
+  // The graph, not `Database.Service`: declaring the database is what marks an operation as
+  // requiring a space, and this one is invoked by a hook whose payload is fixed and cannot carry a
+  // space id. The graph spans spaces, so the handler finds the session's own.
+  services: [Hypergraph.Service],
   input: Schema.Struct({
     sessionId: Schema.String.annotate({
       description: "The harness session id, filed as the object's foreign key rather than a property.",
+    }),
+    spaceId: Schema.optional(Schema.String).annotate({
+      description:
+        'Space to record the session in. Omit it and the session is looked up across every space ' +
+        'by its id: an already-registered session is updated where it lives, while an unregistered ' +
+        'one cannot be placed and the call returns instructions to retry with this argument.',
     }),
     title: Schema.optional(Schema.String),
     state: Schema.optional(RemoteSession.State).annotate({
@@ -51,11 +60,18 @@ export const RecordSession = Operation.make({
     worktree: Schema.optional(Schema.String),
   }),
   output: Schema.Struct({
-    session: Type.getSchema(RemoteSession.RemoteSession),
+    /** Absent when no space could be resolved; `instructions` then says what to do about it. */
+    session: Schema.optional(Type.getSchema(RemoteSession.RemoteSession)),
     /** Echoed back because the id is a foreign key, not a field of the object. */
     sessionId: Schema.String,
     /** True when this call created the object, so a caller can tell a first report from a check-in. */
     created: Schema.Boolean,
+    /**
+     * What to do when nothing was written. A hook fires a fixed payload and cannot choose a space,
+     * so an unregistered session is not an error — it is a call that needs one argument more, and
+     * the model reading this result is the one that can supply it.
+     */
+    instructions: Schema.optional(Schema.String),
   }),
 }).pipe(Operation.mutation('write'));
 

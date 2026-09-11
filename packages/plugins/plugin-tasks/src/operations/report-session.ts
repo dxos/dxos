@@ -5,29 +5,70 @@
 import * as Effect from 'effect/Effect';
 
 import * as Operation from '@dxos/compute/Operation';
-import { Database, Filter, Obj, Query } from '@dxos/echo';
+import { Database, Filter, Hypergraph, Obj, Query } from '@dxos/echo';
+import { SpaceId } from '@dxos/keys';
 import { RemoteSession } from '@dxos/types';
 
 import { RemoteSessionOperation } from '#types';
 
+/**
+ * What a caller is told when the session is not registered anywhere and named no space.
+ *
+ * Not an error: the hook's payload is fixed, so a first report legitimately cannot say where the
+ * session belongs. The model reading this result is the one that can, and it is the only party in
+ * the loop that knows which space the work is being tracked in.
+ */
+const NEEDS_SPACE = (sessionId: string) =>
+  `This session (${sessionId}) is not recorded in any space, and no spaceId was given, so nothing ` +
+  'was written. Re-run this operation with the `spaceId` of the space this work is tracked in — ' +
+  'the project skill resolves it from the repo binding, and `whoami` lists the spaces available. ' +
+  'Once recorded, later reports find the session on their own and need no spaceId.';
+
+/**
+ * Every row for this session, across every space the graph spans.
+ *
+ * Sorted by id so a tie converges: nothing constrains uniqueness, so two hooks firing their first
+ * report at once both see no row and both create one. Oldest id wins and the rest are folded in
+ * and removed below.
+ */
+const findAll = (graph: Hypergraph.Hypergraph, sessionId: string) =>
+  Effect.promise(() =>
+    graph
+      .query(
+        Query.select(Filter.foreignKeys(RemoteSession.RemoteSession, [RemoteSession.key(sessionId)])).from(
+          'all-accessible-spaces',
+        ),
+      )
+      .run(),
+  ).pipe(Effect.map((result) => [...result].sort((left, right) => left.id.localeCompare(right.id))));
+
 const handler: Operation.WithHandler<typeof RemoteSessionOperation.RecordSession> =
   RemoteSessionOperation.RecordSession.pipe(
     Operation.withHandler(
-      Effect.fnUntraced(function* ({ sessionId, title, state, lastMessage, repo, branch, worktree }) {
+      Effect.fnUntraced(function* ({ sessionId, spaceId, title, state, lastMessage, repo, branch, worktree }) {
+        const { graph } = yield* Hypergraph.Service;
         const now = new Date().toISOString();
-        // Matched on the foreign key, which is where the harness session id lives — there is no
-        // `sessionId` property to filter on. Oldest id wins and the rest are removed below:
-        // nothing constrains uniqueness, so two hooks firing their first report at once both see
-        // no row and both create one, and converging deterministically keeps later writers on one.
-        const matches = [
-          ...(yield* Database.query(
-            Query.select(Filter.foreignKeys(RemoteSession.RemoteSession, [RemoteSession.key(sessionId)])),
-          ).run),
-        ].sort((left, right) => left.id.localeCompare(right.id));
+
+        // The graph spans every space, so the session is found wherever it was first registered —
+        // which is the whole point: a hook cannot name a space, but it can be told where the
+        // session already lives.
+        const matches = yield* findAll(graph, sessionId);
         const [existing, ...duplicates] = matches;
 
         if (!existing) {
-          const session = yield* Database.add(
+          // Nothing to update. Without a space there is nowhere to put it either, so report back
+          // rather than guessing one — the outcome worse than not recording the session at all.
+          if (!spaceId) {
+            return { sessionId, created: false, instructions: NEEDS_SPACE(sessionId) };
+          }
+          if (!SpaceId.isValid(spaceId)) {
+            return { sessionId, created: false, instructions: `Not a valid spaceId: ${spaceId}.` };
+          }
+          const db = graph.getDatabase(spaceId);
+          if (!db) {
+            return { sessionId, created: false, instructions: `No such space: ${spaceId}.` };
+          }
+          const session = db.add(
             RemoteSession.make({
               sessionId,
               title,
@@ -41,9 +82,13 @@ const handler: Operation.WithHandler<typeof RemoteSessionOperation.RecordSession
               worktree,
             }),
           );
-          yield* Database.flush();
+          yield* Effect.promise(() => db.flush());
           return { session, sessionId, created: true };
         }
+
+        // Written back through the database that actually holds the survivor, which is not
+        // necessarily the one the caller named.
+        const db: Database.Database | undefined = Obj.getDatabase(existing);
 
         // Duplicates carry history, not noise: each was found by some writer and took its own
         // updates, so one can hold the end of the session while the survivor still reads running.
@@ -108,9 +153,9 @@ const handler: Operation.WithHandler<typeof RemoteSessionOperation.RecordSession
         // The duplicates this operation could not prevent do not survive the write that finds
         // them: leaving them would report one session twice and split its later updates.
         for (const duplicate of duplicates) {
-          yield* Database.remove(duplicate);
+          db?.remove(duplicate);
         }
-        yield* Database.flush();
+        yield* Effect.promise(async () => db?.flush());
         return { session: existing, sessionId, created: false };
       }),
     ),
