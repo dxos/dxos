@@ -5,8 +5,8 @@
 import type { MulticastObservable } from '@dxos/async';
 import type { Database } from '@dxos/echo';
 import type { PublicKey, SpaceId } from '@dxos/keys';
-import type { Invitation } from '@dxos/protocols/proto/dxos/client/services';
-import type { MembershipPolicy } from '@dxos/protocols/proto/dxos/halo/credentials';
+import type { Invitation } from '@dxos/protocols/buf/dxos/client/invitation_pb';
+import type { MembershipPolicy } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import type { SpacesService } from '@dxos/protocols/rpc';
 
 import type { AuthenticatingInvitation } from './invitations/index.ts';

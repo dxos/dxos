@@ -32,8 +32,8 @@ const SECOND_DOC_CONTENT = 'Zephyr proposes an entirely different rewrite of the
 const seedSingleSuggestion = async (doc: Markdown.Document, parent: Text.Text, did: string, content: string) => {
   const branch = await Branch.suggestion(doc, parent, did);
   const binding = await Branch.bind(doc, branch);
-  Obj.update(binding.object, () => {
-    EchoText.update(binding.object, 'content', content);
+  Obj.update(binding.object, (object) => {
+    EchoText.update(object, 'content', content);
   });
   binding.dispose();
 };

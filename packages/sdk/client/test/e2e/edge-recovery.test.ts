@@ -13,7 +13,7 @@ import { TestSchema } from '@dxos/echo/testing';
 import { log } from '@dxos/log';
 import { MemorySignalManager, MemorySignalManagerContext } from '@dxos/messaging';
 import { MemoryTransportFactory } from '@dxos/network-manager';
-import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
+import { EdgeReplicationSetting } from '@dxos/protocols/buf/dxos/echo/metadata_pb';
 
 import { LocalClientServices } from '../../src/services/local.ts';
 

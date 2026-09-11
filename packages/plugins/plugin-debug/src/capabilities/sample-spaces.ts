@@ -5,7 +5,7 @@
 import type * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as SampleSpace from '@dxos/app-toolkit/SampleSpace';
 
-import { PipelineSpace, TidepoolSpace } from '../sample/index.ts';
+import { IncidentSpace, PipelineSpace, StockfishSpace, TidepoolSpace, WorkerSpace } from '../sample/index.ts';
 
 /**
  * The sample spaces this plugin offers. Loaded only once something asks for the list — the content
@@ -26,5 +26,24 @@ export default [
     label: 'Tidepool — Offline sync v2',
     description: 'A work-stream with a two-level task tree, a .mdl spec, an architecture note and a decision log.',
     definition: TidepoolSpace(),
+  }),
+  SampleSpace.preset({
+    id: 'org.dxos.plugin-debug.sample.stockfish',
+    label: 'Chess MCP on Workers',
+    description:
+      'A brief, a five-stage plan as a task tree, a position to test against, and the skill for building it in a sandbox.',
+    definition: StockfishSpace(),
+  }),
+  SampleSpace.preset({
+    id: 'org.dxos.plugin-debug.sample.worker',
+    label: 'Hello Worker',
+    description: 'Five tasks from an empty sandbox to a Cloudflare Worker that answers, with no account to start.',
+    definition: WorkerSpace(),
+  }),
+  SampleSpace.preset({
+    id: 'org.dxos.plugin-debug.sample.incident',
+    label: 'Incident 0516 retrospective',
+    description: "A status log, four people's notes, and the four tasks that turn them into a filed retro.",
+    definition: IncidentSpace(),
   }),
 ] satisfies ReadonlyArray<AppCapabilities.SampleSpace>;

@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 
-import { AnthropicResolver } from '@dxos/ai/resolvers';
+import { AnthropicResolver, ChatCompletionsAdapter, DeepSeekResolver } from '@dxos/ai/resolvers';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as Header from '@dxos/compute/Header';
@@ -15,7 +15,10 @@ import { EdgeAiHttpClient, EdgeHttpClient } from '@dxos/edge-client';
 import { invariant } from '@dxos/invariant';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 
-import { ANTHROPIC_SOURCE } from '../constants.ts';
+import { ANTHROPIC_SOURCE, DEEPSEEK_SOURCE } from '../constants.ts';
+
+/** Host stripped by {@link EdgeAiHttpClient}; only the request path reaches EDGE. */
+const EDGE_SENTINEL_URL = 'http://edge.internal';
 
 const edgeModelResolver = Capability.makeModule(
   Effect.fnUntraced(function* () {
@@ -50,15 +53,31 @@ const edgeModelResolver = Capability.makeModule(
       return edgeClient;
     };
 
-    // `apiUrl` is a sentinel; `EdgeAiHttpClient` rewrites the request onto the EDGE
-    // `/ai/generate/anthropic` route. `Header.byokLayer` wraps that client to inject `X-BYOK`.
-    const httpClient = Header.byokLayer(ANTHROPIC_SOURCE).pipe(Layer.provide(EdgeAiHttpClient.layer(getEdgeClient)));
-    const anthropicClient = AnthropicClient.layer({ apiUrl: 'http://edge.internal' }).pipe(Layer.provide(httpClient));
+    // `apiUrl`/`baseUrl` are sentinels; `EdgeAiHttpClient` rewrites the request onto the EDGE
+    // `/ai/generate/<service>` route. `Header.byokLayer` wraps that client to inject `X-BYOK`.
+    const anthropicHttpClient = Header.byokLayer(ANTHROPIC_SOURCE).pipe(
+      Layer.provide(EdgeAiHttpClient.layer(getEdgeClient, { service: 'anthropic' })),
+    );
+    const anthropicClient = AnthropicClient.layer({ apiUrl: EDGE_SENTINEL_URL }).pipe(
+      Layer.provide(anthropicHttpClient),
+    );
     const anthropicResolverLayer = AnthropicResolver.make().pipe(Layer.provide(anthropicClient));
 
-    // A module providing exactly one capability may return the contribution directly.
+    const deepSeekHttpClient = Header.byokLayer(DEEPSEEK_SOURCE).pipe(
+      Layer.provide(EdgeAiHttpClient.layer(getEdgeClient, { service: 'deepseek' })),
+    );
+    const deepSeekClient = ChatCompletionsAdapter.clientLayer({
+      baseUrl: EDGE_SENTINEL_URL,
+      apiFormat: 'openai',
+      provider: 'deepseek',
+      // DeepSeek reports token usage on a streamed response only when asked; without it every
+      // streamed request reaches the EDGE proxy's metering with no usage to commit.
+      streamUsage: true,
+    }).pipe(Layer.provide(deepSeekHttpClient));
+    const deepSeekResolverLayer = DeepSeekResolver.make().pipe(Layer.provide(deepSeekClient));
+
     yield* Effect.addFinalizer(() => Effect.sync(() => identitySubscription?.unsubscribe()));
-    return Capability.contribute(AppCapabilities.AiModelResolver, anthropicResolverLayer);
+    return Capability.contributeAll(AppCapabilities.AiModelResolver, [anthropicResolverLayer, deepSeekResolverLayer]);
   }),
 );
 

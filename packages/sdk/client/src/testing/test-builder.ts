@@ -27,8 +27,8 @@ import {
   createRtcTransportFactory,
 } from '@dxos/network-manager';
 import { TcpTransportFactory } from '@dxos/network-manager/transport/tcp';
+import { Invitation, Invitation_AuthMethod, Invitation_State } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 import { Runtime_Client_Storage_SqliteMode } from '@dxos/protocols/buf/dxos/config_pb';
-import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { layerMemory as sqliteLayerMemory } from '@dxos/sql-sqlite/platform';
 import * as SqlTransaction from '@dxos/sql-sqlite/SqlTransaction';
 import * as Coordinator from '@dxos/worker-framework/Coordinator';
@@ -256,19 +256,19 @@ export const joinCommonSpace = async ([initialPeer, ...peers]: Client[], spaceKe
       const hostDone = new Trigger<Invitation>();
       const guestDone = new Trigger<Invitation>();
 
-      const hostObservable = rootSpace.share({ authMethod: Invitation.AuthMethod.NONE });
+      const hostObservable = rootSpace.share({ authMethod: Invitation_AuthMethod.NONE });
       log('invitation created');
       hostObservable.subscribe(
         (hostInvitation) => {
           switch (hostInvitation.state) {
-            case Invitation.State.CONNECTING: {
+            case Invitation_State.CONNECTING: {
               const guestObservable = peer.spaces.join(hostInvitation);
               log('invitation accepted');
 
               guestObservable.subscribe(
                 (guestInvitation) => {
                   switch (guestInvitation.state) {
-                    case Invitation.State.SUCCESS: {
+                    case Invitation_State.SUCCESS: {
                       guestDone.wake(guestInvitation);
                       log('invitation guestDone');
                       break;
@@ -280,7 +280,7 @@ export const joinCommonSpace = async ([initialPeer, ...peers]: Client[], spaceKe
               break;
             }
 
-            case Invitation.State.SUCCESS: {
+            case Invitation_State.SUCCESS: {
               hostDone.wake(hostInvitation);
               log('invitation hostDone');
             }

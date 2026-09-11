@@ -15,6 +15,7 @@ import * as Geo from './Geo.ts';
 import * as HasConnection from './HasConnection.ts';
 import * as HasRelationship from './HasRelationship.ts';
 import * as HasSubject from './HasSubject.ts';
+import * as Issue from './Issue.ts';
 import * as Message from './Message.ts';
 import * as Milestone from './Milestone.ts';
 import * as Organization from './Organization.ts';
@@ -22,6 +23,8 @@ import * as Outline from './Outline.ts';
 import * as Person from './Person.ts';
 import * as Pipeline from './Pipeline.ts';
 import * as Provider from './Provider.ts';
+import * as PullRequest from './PullRequest.ts';
+import * as RemoteSession from './RemoteSession.ts';
 import * as Repo from './Repo.ts';
 import * as Task from './Task.ts';
 import * as TaskSet from './TaskSet.ts';
@@ -59,6 +62,7 @@ export {
   HasConnection,
   HasRelationship,
   HasSubject,
+  Issue,
   Message,
   Milestone,
   Organization,
@@ -66,6 +70,8 @@ export {
   Person,
   Pipeline,
   Provider,
+  PullRequest,
+  RemoteSession,
   Repo,
   Task,
   TaskSet,

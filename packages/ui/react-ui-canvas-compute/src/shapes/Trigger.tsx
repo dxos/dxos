@@ -65,7 +65,6 @@ const TriggerKindSelect = ({ value, onValueChange }: Pick<SelectRootProps, 'valu
       <Select.TriggerButton variant='ghost' classNames='w-full px-0!' />
       <Select.Portal>
         <Select.Content>
-          <Select.ScrollUpButton />
           <Select.Viewport>
             {Trigger.Kinds.map((kind) => (
               <Select.Option key={kind} value={kind}>
@@ -73,8 +72,6 @@ const TriggerKindSelect = ({ value, onValueChange }: Pick<SelectRootProps, 'valu
               </Select.Option>
             ))}
           </Select.Viewport>
-          <Select.ScrollDownButton />
-          <Select.Arrow />
         </Select.Content>
       </Select.Portal>
     </Select.Root>

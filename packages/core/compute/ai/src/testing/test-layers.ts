@@ -5,13 +5,22 @@
 import * as AnthropicClient from '@effect/ai-anthropic/AnthropicClient';
 import * as Config from 'effect/Config';
 import type * as ConfigError from 'effect/Config';
+import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Redacted from 'effect/Redacted';
 import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
+import * as HttpClient from 'effect/unstable/http/HttpClient';
+import * as HttpClientRequest from 'effect/unstable/http/HttpClientRequest';
 
 import * as AiModelResolver from '../AiModelResolver.ts';
 import type * as AiService from '../AiService.ts';
-import { AnthropicResolver, LMStudioResolver, OllamaResolver } from '../resolvers/index.ts';
+import {
+  AnthropicResolver,
+  ChatCompletionsAdapter,
+  DeepSeekResolver,
+  LMStudioResolver,
+  OllamaResolver,
+} from '../resolvers/index.ts';
 import { LanguageModelFixture } from './model-fixture/index.ts';
 import { tapHttpErrors } from './tap.ts';
 
@@ -78,7 +87,39 @@ export const OllamaAiServiceLayer: AiServiceLayer = AiModelResolver.buildAiServi
   Layer.provide(FetchHttpClient.layer),
 );
 
-export type AiServicePreset = 'direct' | 'edge-local' | 'edge-remote' | 'ollama';
+/**
+ * Talks to DeepSeek directly over its OpenAI-compatible chat-completions API, bypassing EDGE, so the
+ * resolver and the chat-completions adapter are exercised without an EDGE deployment or a HALO
+ * identity. Keyed on `DEEPSEEK_API_KEY`; replaying a recorded fixture never reaches the client, so
+ * the key is only needed to regenerate one.
+ */
+export const DeepSeekAiServiceLayer: AiServiceLayer = AiModelResolver.buildAiService.pipe(
+  Layer.provide(DeepSeekResolver.make()),
+  Layer.provide(
+    Layer.unwrap(
+      Effect.map(
+        Config.redacted('DEEPSEEK_API_KEY').pipe(Config.withDefault(Redacted.make('not-a-real-key'))),
+        (apiKey) =>
+          ChatCompletionsAdapter.clientLayer({
+            baseUrl: 'https://api.deepseek.com',
+            apiFormat: 'openai',
+            provider: 'deepseek',
+            streamUsage: true,
+            transformClient: (client) =>
+              tapHttpErrors(
+                HttpClient.mapRequest(
+                  client,
+                  HttpClientRequest.setHeader('Authorization', `Bearer ${Redacted.value(apiKey)}`),
+                ),
+              ),
+          }),
+      ),
+    ),
+  ),
+  Layer.provide(FetchHttpClient.layer),
+);
+
+export type AiServicePreset = 'direct' | 'deepseek' | 'edge-local' | 'edge-remote' | 'ollama';
 
 /**
  * Create an appropriate testing layer based on the preset.
@@ -91,6 +132,8 @@ export const AiServiceTestingPreset = (preset: AiServicePreset): AiServiceLayer 
       return RemoteEdgeAiServiceLayer;
     case 'ollama':
       return OllamaAiServiceLayer;
+    case 'deepseek':
+      return DeepSeekAiServiceLayer;
     case 'direct':
     default:
       return DirectAiServiceLayer;

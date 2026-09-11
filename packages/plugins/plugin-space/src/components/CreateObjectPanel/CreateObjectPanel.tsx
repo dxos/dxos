@@ -165,7 +165,7 @@ export const CreateObjectPanel = ({
       >
         <Form.Viewport>
           <Form.Content>
-            <Form.FieldSet />
+            <Form.Fields />
             <Form.Submit />
           </Form.Content>
         </Form.Viewport>

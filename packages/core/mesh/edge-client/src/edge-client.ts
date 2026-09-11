@@ -2,6 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
+import { create } from '@bufbuild/protobuf';
 import * as EffectContext from 'effect/Context';
 
 import {
@@ -17,8 +18,12 @@ import { Context, TRACE_SPAN_ATTRIBUTE, type TraceContextData } from '@dxos/cont
 import { type Lifecycle, Resource } from '@dxos/context';
 import { log, logInfo } from '@dxos/log';
 import { EdgeCredentialsHeaderCodec } from '@dxos/protocols';
+import {
+  type EdgeStatus,
+  EdgeStatus_ConnectionState,
+  EdgeStatusSchema,
+} from '@dxos/protocols/buf/dxos/client/services_pb';
 import { type Message } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
-import { EdgeStatus } from '@dxos/protocols/proto/dxos/client/services';
 import { trace } from '@dxos/tracing';
 
 import {
@@ -136,18 +141,18 @@ export class EdgeClient extends Resource implements EdgeConnection {
   }
 
   get status(): EdgeStatus {
-    return {
+    return create(EdgeStatusSchema, {
       state:
         Boolean(this._currentConnection) && this._ready.state === TriggerState.RESOLVED
-          ? EdgeStatus.ConnectionState.CONNECTED
-          : EdgeStatus.ConnectionState.NOT_CONNECTED,
+          ? EdgeStatus_ConnectionState.CONNECTED
+          : EdgeStatus_ConnectionState.NOT_CONNECTED,
       uptime: this._currentConnection?.uptime ?? 0,
       rtt: this._currentConnection?.rtt ?? 0,
       rateBytesUp: this._currentConnection?.uploadRate ?? 0,
       rateBytesDown: this._currentConnection?.downloadRate ?? 0,
       messagesSent: this._currentConnection?.messagesSent ?? 0,
       messagesReceived: this._currentConnection?.messagesReceived ?? 0,
-    };
+    });
   }
 
   get identityDid() {

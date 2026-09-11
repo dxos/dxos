@@ -6,10 +6,15 @@ import { beforeEach, describe, expect, test } from 'vitest';
 
 import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
-import { SpaceMember } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { SpaceMember_Role } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { range } from '@dxos/util';
 
-import { createAdmissionCredentials, createCredentialSignerWithKey } from '../credentials/index.ts';
+import {
+  createAdmissionCredentials,
+  createCredentialSignerWithKey,
+  credentialIdOf,
+  credentialOfPayload,
+} from '../credentials/index.ts';
 import { MemberStateMachine } from './member-state-machine.ts';
 
 const keyring = new Keyring();
@@ -31,16 +36,16 @@ describe('MemberStateMachine', () => {
     await admit(stateMachine, D, E, []);
     expectOwnerAndAdmins(stateMachine, [A, B, C]);
     expectRoles(stateMachine, [
-      [D, SpaceMember.Role.REMOVED],
-      [E, SpaceMember.Role.REMOVED],
+      [D, SpaceMember_Role.REMOVED],
+      [E, SpaceMember_Role.REMOVED],
     ]);
   });
 
   test('first member is the owner if no explicit credential', async () => {
     const stateMachine = new MemberStateMachine(spaceKey);
     const [A, B] = await createPeers(2);
-    await admit(stateMachine, spaceKey, A, [], SpaceMember.Role.ADMIN);
-    await admit(stateMachine, spaceKey, B, [], SpaceMember.Role.ADMIN);
+    await admit(stateMachine, spaceKey, A, [], SpaceMember_Role.ADMIN);
+    await admit(stateMachine, spaceKey, B, [], SpaceMember_Role.ADMIN);
     expectOwnerAndAdmins(stateMachine, [A, B]);
   });
 
@@ -56,8 +61,8 @@ describe('MemberStateMachine', () => {
   test('implicit owner removal forbidden', async () => {
     const stateMachine = new MemberStateMachine(spaceKey);
     const [A, B] = await createPeers(2);
-    await admit(stateMachine, spaceKey, A, [], SpaceMember.Role.ADMIN);
-    const admitB = await admit(stateMachine, spaceKey, B, [], SpaceMember.Role.ADMIN);
+    await admit(stateMachine, spaceKey, A, [], SpaceMember_Role.ADMIN);
+    const admitB = await admit(stateMachine, spaceKey, B, [], SpaceMember_Role.ADMIN);
     await remove(stateMachine, B, A, [admitB]);
     expectOwnerAndAdmins(stateMachine, [A, B]);
   });
@@ -68,9 +73,9 @@ describe('MemberStateMachine', () => {
     const spaceCreated = await createSpace(stateMachine, A);
     await admit(stateMachine, B, C, [spaceCreated]);
     expectRoles(stateMachine, [
-      [A, SpaceMember.Role.OWNER],
-      [B, SpaceMember.Role.REMOVED],
-      [C, SpaceMember.Role.REMOVED],
+      [A, SpaceMember_Role.OWNER],
+      [B, SpaceMember_Role.REMOVED],
+      [C, SpaceMember_Role.REMOVED],
     ]);
   });
 
@@ -78,12 +83,12 @@ describe('MemberStateMachine', () => {
     const stateMachine = new MemberStateMachine(spaceKey);
     const [A, B, C] = await createPeers(3);
     const spaceCreated = await createSpace(stateMachine, A);
-    const aAdmitB = await admit(stateMachine, A, B, [spaceCreated], SpaceMember.Role.EDITOR);
+    const aAdmitB = await admit(stateMachine, A, B, [spaceCreated], SpaceMember_Role.EDITOR);
     await admit(stateMachine, B, C, [aAdmitB]);
     expectRoles(stateMachine, [
-      [A, SpaceMember.Role.OWNER],
-      [B, SpaceMember.Role.EDITOR],
-      [C, SpaceMember.Role.REMOVED],
+      [A, SpaceMember_Role.OWNER],
+      [B, SpaceMember_Role.EDITOR],
+      [C, SpaceMember_Role.REMOVED],
     ]);
   });
 
@@ -91,11 +96,11 @@ describe('MemberStateMachine', () => {
     const stateMachine = new MemberStateMachine(spaceKey);
     const [A, B] = await createPeers(2);
     const spaceCreated = await createSpace(stateMachine, A);
-    const aAdmitB = await admit(stateMachine, A, B, [spaceCreated], SpaceMember.Role.ADMIN);
-    await updateRole(stateMachine, B, B, SpaceMember.Role.EDITOR, [aAdmitB]);
+    const aAdmitB = await admit(stateMachine, A, B, [spaceCreated], SpaceMember_Role.ADMIN);
+    await updateRole(stateMachine, B, B, SpaceMember_Role.EDITOR, [aAdmitB]);
     expectRoles(stateMachine, [
-      [A, SpaceMember.Role.OWNER],
-      [B, SpaceMember.Role.ADMIN],
+      [A, SpaceMember_Role.OWNER],
+      [B, SpaceMember_Role.ADMIN],
     ]);
   });
 
@@ -168,10 +173,10 @@ describe('MemberStateMachine', () => {
     await admit(stateMachine, C, D, [bAdmitC]);
     await remove(stateMachine, B, C, [cAdmitE]);
     expectRoles(stateMachine, [
-      [B, SpaceMember.Role.ADMIN],
-      [E, SpaceMember.Role.ADMIN],
-      [C, SpaceMember.Role.REMOVED],
-      [D, SpaceMember.Role.REMOVED],
+      [B, SpaceMember_Role.ADMIN],
+      [E, SpaceMember_Role.ADMIN],
+      [C, SpaceMember_Role.REMOVED],
+      [D, SpaceMember_Role.REMOVED],
     ]);
   });
 
@@ -203,11 +208,11 @@ describe('MemberStateMachine', () => {
     await admit(stateMachine, A, E, [aAdmitC]);
     await admit(stateMachine, C, E, [aAdmitC]);
     expectRoles(stateMachine, [
-      [A, SpaceMember.Role.OWNER],
-      [B, SpaceMember.Role.ADMIN],
-      [D, SpaceMember.Role.ADMIN],
-      [E, SpaceMember.Role.ADMIN],
-      [C, SpaceMember.Role.REMOVED],
+      [A, SpaceMember_Role.OWNER],
+      [B, SpaceMember_Role.ADMIN],
+      [D, SpaceMember_Role.ADMIN],
+      [E, SpaceMember_Role.ADMIN],
+      [C, SpaceMember_Role.REMOVED],
     ]);
   });
 
@@ -239,11 +244,11 @@ describe('MemberStateMachine', () => {
     await remove(stateMachine, B, C, [cAdmitE]);
     await admit(stateMachine, A, F, [cAdmitD]);
     expectRoles(stateMachine, [
-      [B, SpaceMember.Role.ADMIN],
-      [E, SpaceMember.Role.ADMIN],
-      [F, SpaceMember.Role.ADMIN],
-      [C, SpaceMember.Role.REMOVED],
-      [D, SpaceMember.Role.REMOVED],
+      [B, SpaceMember_Role.ADMIN],
+      [E, SpaceMember_Role.ADMIN],
+      [F, SpaceMember_Role.ADMIN],
+      [C, SpaceMember_Role.REMOVED],
+      [D, SpaceMember_Role.REMOVED],
     ]);
   });
 
@@ -277,12 +282,12 @@ describe('MemberStateMachine', () => {
     const bAdmitG = await admit(stateMachine, B, G, [aRemoveC]);
     await admit(stateMachine, G, H, [bAdmitG]);
     expectRoles(stateMachine, [
-      [A, SpaceMember.Role.OWNER],
-      [B, SpaceMember.Role.ADMIN],
-      [C, SpaceMember.Role.REMOVED],
-      [D, SpaceMember.Role.REMOVED],
-      [F, SpaceMember.Role.ADMIN],
-      [E, SpaceMember.Role.REMOVED],
+      [A, SpaceMember_Role.OWNER],
+      [B, SpaceMember_Role.ADMIN],
+      [C, SpaceMember_Role.REMOVED],
+      [D, SpaceMember_Role.REMOVED],
+      [F, SpaceMember_Role.ADMIN],
+      [E, SpaceMember_Role.REMOVED],
     ]);
   });
 
@@ -320,22 +325,22 @@ describe('MemberStateMachine', () => {
     const eRemoveF = await remove(stateMachine, E, F, [cAdmitE]);
     await admit(stateMachine, E, H, [eRemoveF, bAdmitF]);
     expectRoles(stateMachine, [
-      [A, SpaceMember.Role.OWNER],
-      [B, SpaceMember.Role.ADMIN],
-      [C, SpaceMember.Role.ADMIN],
-      [E, SpaceMember.Role.ADMIN],
-      [F, SpaceMember.Role.REMOVED],
+      [A, SpaceMember_Role.OWNER],
+      [B, SpaceMember_Role.ADMIN],
+      [C, SpaceMember_Role.ADMIN],
+      [E, SpaceMember_Role.ADMIN],
+      [F, SpaceMember_Role.REMOVED],
     ]);
     const bRemoveC = await remove(stateMachine, B, C, [aAdmitC]);
     const aAdmitD = await admit(stateMachine, A, D, [bRemoveC]);
     const dAdmitG = await admit(stateMachine, D, G, [aAdmitD]);
     await admit(stateMachine, G, I, [dAdmitG]);
     expectRoles(stateMachine, [
-      [A, SpaceMember.Role.OWNER],
-      [B, SpaceMember.Role.ADMIN],
-      [F, SpaceMember.Role.ADMIN],
-      [E, SpaceMember.Role.REMOVED],
-      [C, SpaceMember.Role.REMOVED],
+      [A, SpaceMember_Role.OWNER],
+      [B, SpaceMember_Role.ADMIN],
+      [F, SpaceMember_Role.ADMIN],
+      [E, SpaceMember_Role.REMOVED],
+      [C, SpaceMember_Role.REMOVED],
     ]);
   });
 
@@ -376,11 +381,11 @@ describe('MemberStateMachine', () => {
     const dAdmitG = await admit(stateMachine, D, G, [aAdmitD]);
     await admit(stateMachine, G, H, [dAdmitG]);
     expectRoles(stateMachine, [
-      [A, SpaceMember.Role.OWNER],
-      [B, SpaceMember.Role.ADMIN],
-      [F, SpaceMember.Role.ADMIN],
-      [E, SpaceMember.Role.REMOVED],
-      [C, SpaceMember.Role.REMOVED],
+      [A, SpaceMember_Role.OWNER],
+      [B, SpaceMember_Role.ADMIN],
+      [F, SpaceMember_Role.ADMIN],
+      [E, SpaceMember_Role.REMOVED],
+      [C, SpaceMember_Role.REMOVED],
     ]);
   });
 
@@ -410,11 +415,11 @@ describe('MemberStateMachine', () => {
     await admit(stateMachine, C, D, [aAdmitC]);
     await remove(stateMachine, E, C, [bAdmitE, aAdmitC]);
     expectRoles(stateMachine, [
-      [A, SpaceMember.Role.OWNER],
-      [B, SpaceMember.Role.ADMIN],
-      [E, SpaceMember.Role.ADMIN],
-      [C, SpaceMember.Role.REMOVED],
-      [D, SpaceMember.Role.REMOVED],
+      [A, SpaceMember_Role.OWNER],
+      [B, SpaceMember_Role.ADMIN],
+      [E, SpaceMember_Role.ADMIN],
+      [C, SpaceMember_Role.REMOVED],
+      [D, SpaceMember_Role.REMOVED],
     ]);
   });
 
@@ -441,10 +446,10 @@ describe('MemberStateMachine', () => {
     await admit(stateMachine, C, D, [aAdmitB, aAdmitC]);
     await remove(stateMachine, B, C, [aAdmitB, aAdmitC]);
     expectRoles(stateMachine, [
-      [A, SpaceMember.Role.OWNER],
-      [B, SpaceMember.Role.ADMIN],
-      [C, SpaceMember.Role.REMOVED],
-      [D, SpaceMember.Role.REMOVED],
+      [A, SpaceMember_Role.OWNER],
+      [B, SpaceMember_Role.ADMIN],
+      [C, SpaceMember_Role.REMOVED],
+      [D, SpaceMember_Role.REMOVED],
     ]);
   });
 
@@ -497,23 +502,23 @@ describe('MemberStateMachine', () => {
       await remove(stateMachine, J, K, [connectorParent1, connectorParent2]);
       expectOwnerAndAdmins(stateMachine, [A, B, C, E, G, H, I, J]);
       expectRoles(stateMachine, [
-        [L, SpaceMember.Role.REMOVED],
-        [K, SpaceMember.Role.REMOVED],
-        [D, SpaceMember.Role.REMOVED],
-        [F, SpaceMember.Role.REMOVED],
+        [L, SpaceMember_Role.REMOVED],
+        [K, SpaceMember_Role.REMOVED],
+        [D, SpaceMember_Role.REMOVED],
+        [F, SpaceMember_Role.REMOVED],
       ]);
     }
   });
 
   const createSpace = async (stateMachine: MemberStateMachine, creator: PublicKey): Promise<PublicKey> => {
-    return admit(stateMachine, spaceKey, creator, [], SpaceMember.Role.OWNER);
+    return admit(stateMachine, spaceKey, creator, [], SpaceMember_Role.OWNER);
   };
 
   const updateRole = (
     stateMachine: MemberStateMachine,
     host: PublicKey,
     guest: PublicKey,
-    role?: SpaceMember.Role,
+    role?: SpaceMember_Role,
     parents?: PublicKey[],
   ) => {
     return admit(stateMachine, host, guest, parents, role);
@@ -524,7 +529,7 @@ describe('MemberStateMachine', () => {
     host: PublicKey,
     guest: PublicKey,
     parents?: PublicKey[],
-    role?: SpaceMember.Role,
+    role?: SpaceMember_Role,
   ): Promise<PublicKey> => {
     const signer = createCredentialSignerWithKey(keyring, host);
     const feedMessage = await createAdmissionCredentials({
@@ -532,12 +537,12 @@ describe('MemberStateMachine', () => {
       identityKey: guest,
       spaceKey,
       genesisFeedKey,
-      role: role ?? SpaceMember.Role.ADMIN,
+      role: role ?? SpaceMember_Role.ADMIN,
       membershipChainHeads: parents,
     });
-    const credential = feedMessage[0].credential!.credential;
+    const credential = credentialOfPayload(feedMessage[0]);
     await stateMachine.process(credential);
-    return feedMessage[0].credential!.credential.id!;
+    return credentialIdOf(credential);
   };
 
   const remove = async (
@@ -552,24 +557,24 @@ describe('MemberStateMachine', () => {
       identityKey: removed,
       spaceKey,
       genesisFeedKey,
-      role: SpaceMember.Role.REMOVED,
+      role: SpaceMember_Role.REMOVED,
       membershipChainHeads: parents,
     });
-    const credential = feedMessage[0].credential!.credential;
+    const credential = credentialOfPayload(feedMessage[0]);
     await stateMachine.process(credential);
-    return feedMessage[0].credential!.credential.id!;
+    return credentialIdOf(credential);
   };
 
   const createPeers = (count: number) => Promise.all(range(count).map(() => keyring.createKey()));
 
   const expectOwnerAndAdmins = (stateMachine: MemberStateMachine, ownerAndAdmins: PublicKey[]) => {
     expectRoles(stateMachine, [
-      [ownerAndAdmins[0], SpaceMember.Role.OWNER],
-      ...ownerAndAdmins.slice(1).map((key) => [key, SpaceMember.Role.ADMIN] as [PublicKey, SpaceMember.Role]),
+      [ownerAndAdmins[0], SpaceMember_Role.OWNER],
+      ...ownerAndAdmins.slice(1).map((key) => [key, SpaceMember_Role.ADMIN] as [PublicKey, SpaceMember_Role]),
     ]);
   };
 
-  const expectRoles = (stateMachine: MemberStateMachine, expectation: Array<[PublicKey, SpaceMember.Role]>) => {
+  const expectRoles = (stateMachine: MemberStateMachine, expectation: Array<[PublicKey, SpaceMember_Role]>) => {
     for (let i = 0; i < expectation.length; i++) {
       const expected = expectation[i];
       expect(stateMachine.getRole(expected[0]), `failed at index ${i}`).to.eq(expected[1]);

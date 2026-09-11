@@ -11,7 +11,7 @@ import { ANY_OBJECT_TYPENAME, ReferenceAnnotationId, type ReferenceAnnotationVal
 import { SchemaEx } from '@dxos/effect';
 import { DXN, URI } from '@dxos/keys';
 import { DxAnchor } from '@dxos/lit-ui/react';
-import { Button, Icon, Input, useTranslation } from '@dxos/react-ui';
+import { Button, Field, Icon, useTranslation } from '@dxos/react-ui';
 import { ParentLabelAnnotationId } from '@dxos/schema';
 
 import { translationKey } from '#translations';
@@ -20,7 +20,6 @@ import { type CreateOptions, type FormFieldRendererProps, type RefFieldDataProps
 import { omitHiddenFormFields, omitId } from '../../../../../util/index.ts';
 import { ObjectPicker } from '../../../../ObjectPicker/index.ts';
 import { filterTagCandidates } from '../../../meta-tags.ts';
-import { FormFieldLabel } from '../../FormRow.tsx';
 import { presentationFor } from '../../presentation.tsx';
 import { findRefOption } from './find-ref-option.ts';
 
@@ -72,11 +71,8 @@ export const RefField = (props: RefFieldProps) => {
     type,
     readonly,
     label,
-    jsonPath,
     placeholder,
     presentation,
-    required,
-    getStatus,
     getValue,
     createOptionLabel,
     createOptionIcon,
@@ -91,7 +87,6 @@ export const RefField = (props: RefFieldProps) => {
     onValueChange,
   } = props;
   const { t } = useTranslation(translationKey);
-  const { status, error } = getStatus();
   const resolved = presentationFor(presentation);
 
   const typename = useMemo(
@@ -174,70 +169,59 @@ export const RefField = (props: RefFieldProps) => {
     return null;
   }
 
+  if (readonly || resolved.isStatic) {
+    return !item ? (
+      <p className='text-description mb-2'>{t('empty-readonly-ref-field.label')}</p>
+    ) : (
+      <DxAnchor key={item.id} eid={item.id} rootclassname='me-1'>
+        {item.label}
+      </DxAnchor>
+    );
+  }
+
   return (
-    <Input.Root validationValence={status}>
-      {resolved.showLabel && (
-        <FormFieldLabel error={error} readonly={readonly} required={required} label={label} path={jsonPath} />
-      )}
-      <div>
-        {readonly ? (
-          !item ? (
-            <p className='text-description mb-2'>{t('empty-readonly-ref-field.label')}</p>
-          ) : (
-            <DxAnchor key={item.id} dxn={item.id} rootclassname='me-1'>
-              {item.label}
-            </DxAnchor>
-          )
+    <ObjectPicker.Root open={open} onOpenChange={setOpen}>
+      <ObjectPicker.Trigger asChild classNames='p-0'>
+        {item ? (
+          // No layout of its own: the trigger it stands in for (`asChild`) is already a grid,
+          // and a `flex` here only competes with it.
+          <div className='w-full'>
+            <Field.Root key={item.id}>
+              <Field.Input value={item.label} readOnly classNames='w-full' />
+            </Field.Root>
+          </div>
         ) : (
-          <ObjectPicker.Root open={open} onOpenChange={setOpen}>
-            <ObjectPicker.Trigger asChild classNames='p-0'>
-              {item ? (
-                // No layout of its own: the trigger it stands in for (`asChild`) is already a grid,
-                // and a `flex` here only competes with it.
-                <div className='w-full'>
-                  <Input.Root key={item.id}>
-                    <Input.TextInput value={item.label} readOnly classNames='w-full' />
-                  </Input.Root>
-                </div>
-              ) : (
-                <Button classNames='w-full text-start gap-form-gap'>
-                  <div className='grow overflow-hidden'>
-                    <span className='truncate text-description'>
-                      {placeholder || label || t('ref-field.placeholder')}
-                    </span>
-                  </div>
-                  <Icon size={3} icon='ph--caret-down--bold' />
-                </Button>
-              )}
-            </ObjectPicker.Trigger>
-            <ObjectPicker.Portal>
-              <ObjectPicker.Content
-                classNames='dx-card-popover-width'
-                options={options}
-                selectedIds={selectedIds}
-                // Prefer the plugin-registered inputSchema; fall back to stripping hidden fields
-                // (`FormInputAnnotation.set(false)`) from the raw ECHO type schema so the form's
-                // validator doesn't reject required-but-hidden fields such as backing-object refs
-                // supplied by a `FactoryAnnotation`.
-                createSchema={
-                  createEntry?.inputSchema ??
-                  (createSchema && omitHiddenFormFields(omitId(Type.getSchema(createSchema))))
-                }
-                createOptionLabel={createOptionLabel}
-                createOptionIcon={createOptionIcon}
-                createInitialValuePath={createInitialValuePath}
-                createFieldMap={createFieldMap}
-                // Offer inline create when the caller wired a handler OR a plugin-registered
-                // createObject override is available. A resolvable `createSchema` alone is not
-                // enough (e.g. operation refs, whose objects can't be created ad hoc).
-                onCreate={onCreate || createEntry?.createObject ? handleCreate : undefined}
-                onSelect={handleSelect}
-              />
-            </ObjectPicker.Portal>
-          </ObjectPicker.Root>
+          <Button classNames='w-full text-start gap-form-gap'>
+            <div className='grow overflow-hidden'>
+              <span className='truncate text-description'>{placeholder || label || t('ref-field.placeholder')}</span>
+            </div>
+            <Icon icon='ph--caret-down--bold' size={3} classNames='mx-0.5' />
+          </Button>
         )}
-      </div>
-      {resolved.showError && <Input.DescriptionAndValidation>{error}</Input.DescriptionAndValidation>}
-    </Input.Root>
+      </ObjectPicker.Trigger>
+      <ObjectPicker.Portal>
+        <ObjectPicker.Content
+          classNames='dx-card-popover-width'
+          options={options}
+          selectedIds={selectedIds}
+          // Prefer the plugin-registered inputSchema; fall back to stripping hidden fields
+          // (`FormInputAnnotation.set(false)`) from the raw ECHO type schema so the form's
+          // validator doesn't reject required-but-hidden fields such as backing-object refs
+          // supplied by a `FactoryAnnotation`.
+          createSchema={
+            createEntry?.inputSchema ?? (createSchema && omitHiddenFormFields(omitId(Type.getSchema(createSchema))))
+          }
+          createOptionLabel={createOptionLabel}
+          createOptionIcon={createOptionIcon}
+          createInitialValuePath={createInitialValuePath}
+          createFieldMap={createFieldMap}
+          // Offer inline create when the caller wired a handler OR a plugin-registered
+          // createObject override is available. A resolvable `createSchema` alone is not
+          // enough (e.g. operation refs, whose objects can't be created ad hoc).
+          onCreate={onCreate || createEntry?.createObject ? handleCreate : undefined}
+          onSelect={handleSelect}
+        />
+      </ObjectPicker.Portal>
+    </ObjectPicker.Root>
   );
 };

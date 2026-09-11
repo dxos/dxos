@@ -8,7 +8,6 @@ import { useCallback, useMemo } from 'react';
 import { useCapability } from '@dxos/app-framework/ui';
 import { useAppGraph } from '@dxos/app-toolkit/ui';
 import * as GraphNode from '@dxos/graph/GraphNode';
-import { invariant } from '@dxos/invariant';
 import * as DeckCapabilities from '@dxos/plugin-deck/DeckCapabilities';
 import * as DeckSchema from '@dxos/plugin-deck/DeckSchema';
 import { useDeckState } from '@dxos/plugin-deck/hooks';
@@ -46,6 +45,7 @@ export const useMobileAppBar = (): MobileAppBar => {
   const { t } = useTranslation(meta.profile.key);
   const { state } = useDeckState();
   const stateAtom = useCapability(DeckCapabilities.State);
+  const ephemeralAtom = useCapability(DeckCapabilities.EphemeralState);
   const { graph } = useAppGraph();
   const { stack, topId, rootId, pop } = useMobileStack();
   const runAction = useActionRunner();
@@ -60,10 +60,9 @@ export const useMobileAppBar = (): MobileAppBar => {
     () =>
       Atom.make((get): ActionGraphProps => {
         const state = get(stateAtom);
-        const deck = state.decks[state.activeDeck];
-        invariant(deck, `Deck not found: ${state.activeDeck}`);
+        const open = get(ephemeralAtom).open[state.activeDeck] ?? DeckSchema.defaultOpenDeck;
         const activeId =
-          deck.active[deck.active.length - 1] ??
+          open.active[open.active.length - 1] ??
           (state.activeDeck === DeckSchema.DEFAULT_DECK_ID ? GraphNode.RootId : state.activeDeck);
         // `graphActions` returns typed `ActionGraphProps` directly, so no cast is needed to bridge
         // `@dxos/app-graph`'s `AppGraphNode.ActionLike[]` into `@dxos/react-ui-menu`'s node/edge shape.

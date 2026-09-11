@@ -11,3 +11,4 @@ export * from './objects.ts';
 export * from './prompt.ts';
 export * from './schema.ts';
 export * from './agent-claude-plugin.ts';
+export * from './voyage-space.ts';

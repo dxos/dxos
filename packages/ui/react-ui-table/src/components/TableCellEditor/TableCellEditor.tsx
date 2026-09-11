@@ -18,7 +18,6 @@ import {
   GridCellEditor,
   type GridCellEditorProps,
   type GridEditing,
-  type GridScopedProps,
   editorKeys,
   parseCellIndex,
   useGridContext,
@@ -70,15 +69,14 @@ const resolveFieldProjection = (
 };
 
 export const TableValueEditor = <T extends Type.AnyEntity = Type.AnyEntity>({
-  __gridScope,
   schema,
   model,
   modals,
   onFocus,
   onSave,
   onCreate,
-}: GridScopedProps<TableCellEditorProps<T>>) => {
-  const { editing } = useGridContext('TableValueEditor', __gridScope);
+}: TableCellEditorProps<T>) => {
+  const { editing } = useGridContext('TableValueEditor');
 
   const fieldProjection = useMemo(() => resolveFieldProjection(model, editing), [model, editing]);
 
@@ -90,7 +88,6 @@ export const TableValueEditor = <T extends Type.AnyEntity = Type.AnyEntity>({
   ) {
     return (
       <FormCellEditor<T>
-        __gridScope={__gridScope}
         schema={schema}
         model={model}
         fieldProjection={fieldProjection}
@@ -102,7 +99,7 @@ export const TableValueEditor = <T extends Type.AnyEntity = Type.AnyEntity>({
   }
 
   // For all other types, use the existing cell editor.
-  return <TableCellEditor model={model} modals={modals} onFocus={onFocus} onSave={onSave} __gridScope={__gridScope} />;
+  return <TableCellEditor model={model} modals={modals} onFocus={onFocus} onSave={onSave} />;
 };
 
 const cellEditorSlots: GridCellEditorProps['slots'] = {
@@ -111,14 +108,8 @@ const cellEditorSlots: GridCellEditorProps['slots'] = {
   },
 };
 
-export const TableCellEditor = ({
-  __gridScope,
-  model,
-  modals,
-  onFocus,
-  onSave,
-}: GridScopedProps<TableCellEditorProps>) => {
-  const { editing, setEditing } = useGridContext('TableCellEditor', __gridScope);
+export const TableCellEditor = ({ model, modals, onFocus, onSave }: TableCellEditorProps) => {
+  const { editing, setEditing } = useGridContext('TableCellEditor');
   const suppressNextBlur = useRef(false);
   const [validationError, setValidationError] = useState<string | null>(null);
   const [validationVariant, setValidationVariant] = useState<'error' | 'warning'>('error');
@@ -253,7 +244,7 @@ export const TableCellEditor = ({
 
   return (
     <>
-      <CellValidationMessage validationError={validationError} variant={validationVariant} __gridScope={__gridScope} />
+      <CellValidationMessage validationError={validationError} variant={validationVariant} />
       <GridCellEditor
         extensions={extensions}
         slots={cellEditorSlots}

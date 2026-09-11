@@ -2,12 +2,16 @@
 // Copyright 2022 DXOS.org
 //
 
+import { create } from '@bufbuild/protobuf';
 import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { Context } from '@dxos/context';
 import { PublicKey } from '@dxos/keys';
 import { MemorySignalManager, MemorySignalManagerContext } from '@dxos/messaging';
 import { MemoryTransportFactory, SwarmNetworkManager } from '@dxos/network-manager';
+import { createBuf, fromTimeframe } from '@dxos/protocols/buf';
+import { FeedMessageSchema } from '@dxos/protocols/buf/dxos/echo/feed_pb';
+import { PeerSchema } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
 import { Timeframe } from '@dxos/timeframe';
 
 import { AuthStatus, MOCK_AUTH_PROVIDER, MOCK_AUTH_VERIFIER, SpaceProtocol } from './space-protocol.ts';
@@ -41,12 +45,12 @@ describe('space/space-protocol', () => {
     onTestFinished(() => protocol2.stop(Context.default()));
 
     await expect
-      .poll(() => presence1.getPeersOnline().some(({ identityKey }) => identityKey.equals(peer2.identityKey)), {
+      .poll(() => presence1.getPeersByIdentityKey(peer2.identityKey).length > 0, {
         timeout: 1_000,
       })
       .toBeTruthy();
     await expect
-      .poll(() => presence2.getPeersOnline().some(({ identityKey }) => identityKey.equals(peer1.identityKey)), {
+      .poll(() => presence2.getPeersByIdentityKey(peer1.identityKey).length > 0, {
         timeout: 1_000,
       })
       .toBeTruthy();
@@ -67,10 +71,10 @@ describe('space/space-protocol', () => {
       networkManager: new SwarmNetworkManager({
         signalManager: new MemorySignalManager(signalContext),
         transportFactory: MemoryTransportFactory,
-        peerInfo: {
+        peerInfo: create(PeerSchema, {
           peerKey: peerId1.toHex(),
           identityKey: peerId1.toHex(),
-        },
+        }),
       }),
     });
 
@@ -85,10 +89,10 @@ describe('space/space-protocol', () => {
       networkManager: new SwarmNetworkManager({
         signalManager: new MemorySignalManager(signalContext),
         transportFactory: MemoryTransportFactory,
-        peerInfo: {
+        peerInfo: create(PeerSchema, {
           peerKey: peerId2.toHex(),
           identityKey: peerId2.toHex(),
-        },
+        }),
       }),
     });
 
@@ -142,12 +146,12 @@ describe('space/space-protocol', () => {
     //
 
     // TODO(burdon): Append batch of messages.
-    await feed1.append({ timeframe: new Timeframe() });
+    await feed1.append(createBuf(FeedMessageSchema, { timeframe: fromTimeframe(new Timeframe()) }));
     // Received message appended before replication.
     await expect.poll(() => feed2.properties.length).toEqual(1);
 
     // TODO(burdon): Append batch of messages.
-    await feed1.append({ timeframe: new Timeframe() });
+    await feed1.append(createBuf(FeedMessageSchema, { timeframe: fromTimeframe(new Timeframe()) }));
     // Received message appended after replication.
     await expect.poll(() => feed2.properties.length).toEqual(2);
   });

@@ -12,7 +12,7 @@ import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as GraphNode from '@dxos/graph/GraphNode';
 import { random } from '@dxos/random';
 
-import { type ActionGraphProps } from '../hooks/useMenuActions.ts';
+import { type ActionGraphProps, makeMenuActions } from '../hooks/useMenuActions.ts';
 import { type MenuItem, type MenuItemGroup, type MenuItemsAccessor } from '../types.ts';
 
 export type CreateActionsProps = Partial<{
@@ -93,7 +93,7 @@ export const createNestedActionsResolver = (props?: {
   });
   const items: MenuItemsAccessor = (group?: MenuItemGroup) =>
     graph.connections(group?.id ?? GraphNode.RootId, 'child') as Atom.Atom<MenuItem[] | null>;
-  return { items };
+  return makeMenuActions({ items });
 };
 
 /**

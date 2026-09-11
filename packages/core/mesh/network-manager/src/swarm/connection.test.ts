@@ -2,10 +2,13 @@
 // Copyright 2023 DXOS.org
 //
 
+import { create } from '@bufbuild/protobuf';
 import { describe, test } from 'vitest';
 
 import { sleep } from '@dxos/async';
 import { PublicKey } from '@dxos/keys';
+import { PeerSchema } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
+import { AnswerSchema } from '@dxos/protocols/buf/dxos/mesh/swarm_pb';
 
 import { TestWireProtocol } from '../testing/test-wire-protocol.ts';
 import { createRtcTransportFactory } from '../transport/index.ts';
@@ -32,8 +35,8 @@ describe.skip('Connection', () => {
 
   const connectionTest = async (setup: { fastConnectionKey: PublicKey; slowConnectionKey: PublicKey }) => {
     const [topic, sessionId] = PublicKey.randomSequence();
-    const slowPeer = { peerKey: setup.slowConnectionKey.toHex() };
-    const fastPeer = { peerKey: setup.fastConnectionKey.toHex() };
+    const slowPeer = create(PeerSchema, { peerKey: setup.slowConnectionKey.toHex() });
+    const fastPeer = create(PeerSchema, { peerKey: setup.fastConnectionKey.toHex() });
 
     const slowPeerProtocol = new TestWireProtocol();
     const slowConnection = new Connection(
@@ -43,7 +46,7 @@ describe.skip('Connection', () => {
       sessionId,
       true,
       {
-        offer: async (_ctx, _msg) => ({ accept: true }),
+        offer: async (_ctx, _msg) => create(AnswerSchema, { accept: true }),
         signal: async (ctx, msg) => {
           await fastConnection.signal(ctx, msg);
         },
@@ -65,7 +68,7 @@ describe.skip('Connection', () => {
       sessionId,
       false,
       {
-        offer: async (_ctx, _msg) => ({ accept: true }),
+        offer: async (_ctx, _msg) => create(AnswerSchema, { accept: true }),
         signal: async (ctx, msg) => {
           await slowConnection.signal(ctx, msg);
         },

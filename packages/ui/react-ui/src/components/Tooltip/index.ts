@@ -3,7 +3,7 @@
 //
 
 export * from './TextTooltip.tsx';
-export { type TooltipScopedProps, createTooltipScope, useTooltipContext } from './TooltipContext.ts';
+export { useTooltipContext } from './TooltipContext.ts';
 
 export * from './Tooltip.tsx';
 export * from './tooltipContent.ts';

@@ -8,7 +8,7 @@ import { HemisphericLight } from '@babylonjs/core/Lights/hemisphericLight';
 import { Color3, Color4, Vector3 } from '@babylonjs/core/Maths/math';
 import { type Mesh } from '@babylonjs/core/Meshes/mesh';
 import { Scene } from '@babylonjs/core/scene';
-import { AdvancedDynamicTexture } from '@babylonjs/gui/2D/advancedDynamicTexture';
+import { type AdvancedDynamicTexture } from '@babylonjs/gui/2D/advancedDynamicTexture';
 import { TextBlock } from '@babylonjs/gui/2D/controls/textBlock';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useEffect, useRef } from 'react';
@@ -18,6 +18,7 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { translations } from '#translations';
 import { TerraObject } from '#types';
 
+import { createFullscreenUi } from '../engine/index.ts';
 import { createGizmo } from './gizmo-layer.ts';
 import { createObjectForm } from './object-forms.ts';
 
@@ -114,7 +115,7 @@ const ObjectGalleryScene = () => {
     const fill = new HemisphericLight('fill', new Vector3(-0.6, -0.3, -0.7), scene);
     fill.intensity = 0.25;
 
-    const adt = AdvancedDynamicTexture.CreateFullscreenUI('object-gallery', true, scene);
+    const adt = createFullscreenUi('object-gallery', scene);
     const nodes = buildGallery(scene, adt);
 
     const handleResize = (): void => engine.resize();

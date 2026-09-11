@@ -8,7 +8,8 @@ import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import { HelpOperation, SupportOperation } from '#types';
 
 export const SupportOperationHandlerSet = OperationHandlerSet.lazy([
-  SupportOperation.CaptureUserFeedback.pipe(Operation.lazyHandler(() => import('./capture-feedback.ts'))),
+  SupportOperation.SubmitReport.pipe(Operation.lazyHandler(() => import('./submit-report.ts'))),
+  SupportOperation.SubmitIssue.pipe(Operation.lazyHandler(() => import('./submit-issue.ts'))),
   SupportOperation.CreateTicket.pipe(Operation.lazyHandler(() => import('./create-ticket.ts'))),
   HelpOperation.HideWelcome.pipe(Operation.lazyHandler(() => import('./hide-welcome.ts'))),
   SupportOperation.MarkInProgress.pipe(Operation.lazyHandler(() => import('./mark-in-progress.ts'))),

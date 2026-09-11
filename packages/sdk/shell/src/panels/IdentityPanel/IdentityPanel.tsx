@@ -2,23 +2,27 @@
 // Copyright 2023 DXOS.org
 //
 
+import { create } from '@bufbuild/protobuf';
 import React, { useEffect, useMemo, useState } from 'react';
 
 import { debounce } from '@dxos/async';
 import { generateName } from '@dxos/display-name';
 import { log } from '@dxos/log';
+import { requirePublicKey, toPublicKey } from '@dxos/protocols/buf';
+import { ProfileDocumentSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { useClient } from '@dxos/react-client';
 import { type Identity, useDevices, useHaloInvitations, useIdentity } from '@dxos/react-client/halo';
 import { useInvitationStatus } from '@dxos/react-client/invitations';
 import { type CancellableInvitationObservable } from '@dxos/react-client/invitations';
 import { ConnectionState, useNetworkStatus } from '@dxos/react-client/mesh';
-import { Avatar, Clipboard, Input, Toolbar, useId, useTranslation } from '@dxos/react-ui';
+import { Avatar, Clipboard, Field, Toolbar, useId, useTranslation } from '@dxos/react-ui';
 import { EmojiPickerToolbarButton, HuePicker } from '@dxos/react-ui-pickers';
 import { hexToEmoji, hexToHue, keyToFallback } from '@dxos/util';
 
 import { CloseButton, Heading, Viewport } from '../../components/index.ts';
 import { ConfirmReset, InvitationManager } from '../../steps/index.ts';
 import { translationKey } from '../../translations.ts';
+import { profileString } from '../../util/index.ts';
 import { useIdentityMachine } from './identityMachine.ts';
 import {
   type IdentityPanelHeadingProps,
@@ -30,11 +34,11 @@ import { useAgentHandlers } from './useAgentHandlers.ts';
 
 const viewStyles = 'pt-1 pb-3 px-3';
 
+const identityHex = (identity?: Identity) => toPublicKey(identity?.identityKey)?.toHex() ?? '0';
+
 // TODO(thure): Factor out?
-const getHueValue = (identity?: Identity) =>
-  identity?.profile?.data?.hue || hexToHue(identity?.identityKey.toHex() ?? '0');
-const getEmojiValue = (identity?: Identity) =>
-  identity?.profile?.data?.emoji || hexToEmoji(identity?.identityKey.toHex() ?? '0');
+const getHueValue = (identity?: Identity) => profileString(identity, 'hue') || hexToHue(identityHex(identity));
+const getEmojiValue = (identity?: Identity) => profileString(identity, 'emoji') || hexToEmoji(identityHex(identity));
 
 const IdentityHeading = ({
   titleId,
@@ -46,7 +50,7 @@ const IdentityHeading = ({
   onChangeConnectionState,
   onManageCredentials,
 }: IdentityPanelHeadingProps) => {
-  const fallbackValue = keyToFallback(identity.identityKey);
+  const fallbackValue = keyToFallback(requirePublicKey(identity.identityKey));
   const { t } = useTranslation(translationKey);
   const [displayName, setDisplayNameDirectly] = useState(identity.profile?.displayName ?? '');
   const [emoji, setEmojiDirectly] = useState<string>(getEmojiValue(identity));
@@ -56,10 +60,7 @@ const IdentityHeading = ({
     () =>
       debounce(
         (nextDisplayName: string) =>
-          onUpdateProfile?.({
-            ...identity.profile,
-            displayName: nextDisplayName,
-          }),
+          onUpdateProfile?.(create(ProfileDocumentSchema, { ...identity.profile, displayName: nextDisplayName })),
         3_000,
       ),
     [onUpdateProfile, identity.profile],
@@ -72,18 +73,25 @@ const IdentityHeading = ({
 
   const setEmoji = (nextEmoji: string) => {
     setEmojiDirectly(nextEmoji);
-    void onUpdateProfile?.({
-      ...identity.profile,
-      data: { ...identity.profile?.data, emoji: nextEmoji },
-    });
+    void onUpdateProfile?.(
+      create(ProfileDocumentSchema, {
+        ...identity.profile,
+        data: { ...identity.profile?.data, emoji: nextEmoji },
+      }),
+    );
   };
 
   const setHue = (nextHue: string | undefined) => {
     setHueDirectly(nextHue);
-    void onUpdateProfile?.({
-      ...identity.profile,
-      data: { ...identity.profile?.data, hue: nextHue },
-    });
+    // `data` is a `Struct`, which has no `undefined`, so a reset clears the hue by omitting the key
+    // from the replacement rather than assigning it.
+    const { hue: _hue, ...data } = identity.profile?.data ?? {};
+    void onUpdateProfile?.(
+      create(ProfileDocumentSchema, {
+        ...identity.profile,
+        data: nextHue === undefined ? data : { ...data, hue: nextHue },
+      }),
+    );
   };
 
   const isConnected = connectionState === ConnectionState.ONLINE;
@@ -103,12 +111,12 @@ const IdentityHeading = ({
         </Toolbar.Root>
 
         <Avatar.Label classNames='sr-only' data-testid='identityHeading.displayName'>
-          {identity.profile?.displayName ?? generateName(identity.identityKey.toHex())}
+          {identity.profile?.displayName ?? generateName(requirePublicKey(identity.identityKey).toHex())}
         </Avatar.Label>
 
-        <Input.Root>
-          <Input.Label srOnly>{t('display-name-input.label')}</Input.Label>
-          <Input.TextInput
+        <Field.Root>
+          <Field.Label srOnly>{t('display-name-input.label')}</Field.Label>
+          <Field.Input
             variant='subdued'
             data-testid='display-name-input'
             placeholder={t('display-name-input.placeholder')}
@@ -116,7 +124,7 @@ const IdentityHeading = ({
             value={displayName}
             onChange={({ target: { value } }) => setDisplayName(value)}
           />
-        </Input.Root>
+        </Field.Root>
 
         <Toolbar.Root classNames='justify-center pt-3'>
           <EmojiPickerToolbarButton emoji={emoji} onChangeEmoji={setEmoji} classNames='h-(--dx-rail-action)' />

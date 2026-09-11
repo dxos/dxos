@@ -79,12 +79,26 @@ const toPersistedChildEvent = (event: Process.ChildEvent<unknown>) =>
  * process, so a typed error thrown in a nested invoke arrives as a defect, not a `Fail` — check both
  * channels for the failing value.
  */
-const serializeFailure = (cause: Cause.Cause<unknown>): NonNullable<Process.Info['error']> => {
-  const message = Cause.pretty(cause);
-  const value = Cause.findErrorOption(cause).pipe(
+const failingValue = (cause: Cause.Cause<unknown>): unknown =>
+  Cause.findErrorOption(cause).pipe(
     Option.orElse(() => Option.fromNullishOr(cause.reasons.find(Cause.isDieReason)?.defect)),
     Option.getOrNull,
   );
+
+/**
+ * Report a crashed process at `error`, from the single point every FAILED transition passes through.
+ *
+ * The failing value is passed as `error` rather than only as pretty-printed text because the log
+ * pipeline walks its `cause` chain, while `Cause.pretty` flattens to the outermost reason — the same
+ * loss that makes a failed agent turn surface to the user as "An unexpected error occurred."
+ */
+const logFailure = (pid: Process.ID, key: string, cause: Cause.Cause<unknown>): void => {
+  log.error('lifecycle: failed', { pid, key, error: failingValue(cause), cause: Cause.pretty(cause) });
+};
+
+const serializeFailure = (cause: Cause.Cause<unknown>): NonNullable<Process.Info['error']> => {
+  const message = Cause.pretty(cause);
+  const value = failingValue(cause);
   if (!Predicate.isObject(value)) {
     return { message };
   }
@@ -541,6 +555,17 @@ export class ProcessHandleImpl<I, O, R> implements ProcessManager.Handle<I, O, a
       yield* Deferred.await(deferred);
     }).pipe(Effect.scoped);
   }
+  /**
+   * Absolute due-time (epoch ms) of the process's pending alarm, or `null` when none is scheduled.
+   *
+   * Exposed for hosts that mirror the process's alarm onto their own scheduler — a Durable Object
+   * whose isolate is reclaimed between turns cannot rely on the in-memory timer, so it needs the
+   * due-time to re-arm a platform alarm.
+   */
+  get alarmDueAt(): number | null {
+    return this.#alarmDueAt;
+  }
+
   get status(): ProcessManager.Status {
     return this.#currentStatus;
   }
@@ -741,6 +766,7 @@ export class ProcessHandleImpl<I, O, R> implements ProcessManager.Handle<I, O, a
       if (this.#failError !== null && this.#activeHandlers === 0) {
         this.#finished = true;
         const error = this.#failError;
+        logFailure(this.pid, this.key, Cause.die(error));
         yield* this.#cleanup().pipe(
           Effect.tap(() => Effect.sync(() => this.#setStatus(Process.State.FAILED, Exit.die(error)))),
           Effect.tap(() => this.#onFinished?.(Process.State.FAILED, Cause.die(error)) ?? Effect.void),
@@ -772,7 +798,7 @@ export class ProcessHandleImpl<I, O, R> implements ProcessManager.Handle<I, O, a
     if (this.#finished) {
       return Effect.void;
     }
-    log('lifecycle: failed', { cause: Cause.pretty(cause) });
+    logFailure(this.pid, this.key, cause);
     this.#finished = true;
     return Effect.gen({ self: this }, function* () {
       this.#setStatus(Process.State.FAILED, Exit.failCause(cause));
@@ -785,6 +811,10 @@ export class ProcessHandleImpl<I, O, R> implements ProcessManager.Handle<I, O, a
     return Effect.gen({ self: this }, function* () {
       log('lifecycle: cleanup');
       yield* this.#clearAlarm();
+      // Terminal: no further turn can run, so the due-time must not be mirrored onto a host
+      // scheduler. `#clearAlarm` deliberately keeps it — `suspend` needs it to survive so `hydrate`
+      // can re-arm — which is why this is cleared here rather than there.
+      this.#alarmDueAt = null;
       Queue.offerUnsafe(this.#outputQueue, Option.none());
       for (const queue of this.#ephemeralSubscribers) {
         Queue.offerUnsafe(queue, Option.none());

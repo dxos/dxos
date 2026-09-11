@@ -87,7 +87,7 @@ const DefaultStory = ({ schema, values: initial }: { schema: Schema.Codec<any, a
       >
         <Form.Viewport scroll>
           <Form.Content>
-            <Form.FieldSet />
+            <Form.Fields />
           </Form.Content>
         </Form.Viewport>
       </Form.Root>

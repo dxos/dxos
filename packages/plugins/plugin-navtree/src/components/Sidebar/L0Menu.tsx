@@ -31,6 +31,7 @@ import {
   Icon,
   IconButton,
   ScrollArea,
+  Tabs,
   type ThemedClassName,
   Tooltip,
   toLocalizedString,
@@ -38,8 +39,7 @@ import {
   useTranslation,
 } from '@dxos/react-ui';
 import { DropIndicator } from '@dxos/react-ui-list';
-import { Menu, type MenuItem } from '@dxos/react-ui-menu';
-import { Tabs } from '@dxos/react-ui-tabs';
+import { ActionMenu, type MenuItem } from '@dxos/react-ui-menu';
 import { mx } from '@dxos/ui-theme';
 import { arrayMove } from '@dxos/util';
 
@@ -337,22 +337,20 @@ export const L0Menu = ({
       ]}
     >
       {/* TODO(wittjosiah): Use L0Item trigger. */}
-      <Menu.Root onAction={handleAction}>
-        <Menu.Trigger asChild data-testid='spacePlugin.addSpace'>
-          <div className='grid place-items-center'>
-            <IconButton
-              density='lg'
-              variant='ghost'
-              size={5}
-              icon='ph--list--regular'
-              iconOnly
-              square
-              label={t('app-menu.label')}
-            />
-          </div>
-        </Menu.Trigger>
-        <Menu.Content group={parent} items={menuActions} />
-      </Menu.Root>
+      <ActionMenu onAction={handleAction} group={parent} actions={menuActions}>
+        {/* The trigger clones this child, so the testid belongs here rather than on `ActionMenu`. */}
+        <div className='grid place-items-center' data-testid='spacePlugin.addSpace'>
+          <IconButton
+            density='lg'
+            variant='ghost'
+            size={5}
+            icon='ph--list--regular'
+            iconOnly
+            square
+            label={t('app-menu.label')}
+          />
+        </div>
+      </ActionMenu>
 
       {/* Space list. */}
       <ScrollArea.Root centered thin orientation='vertical'>

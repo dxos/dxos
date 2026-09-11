@@ -37,8 +37,9 @@ export const SampleSettings = () => {
     <Form.Root schema={Schema.Struct({})} values={{}} variant='settings'>
       <Form.Viewport scroll>
         <Form.Content>
-          <Form.Section title={t('settings.section.title')}>
-            <Form.Row
+          <Form.FieldSet label={t('settings.section.title')}>
+            <Form.Field
+              standalone
               label={t('settings.recreate-sample.label')}
               description={t('settings.recreate-sample.description')}
             >
@@ -49,8 +50,8 @@ export const SampleSettings = () => {
                 disabled={busy}
                 onClick={handleRecreate}
               />
-            </Form.Row>
-          </Form.Section>
+            </Form.Field>
+          </Form.FieldSet>
         </Form.Content>
       </Form.Viewport>
     </Form.Root>

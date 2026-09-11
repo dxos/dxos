@@ -5,6 +5,7 @@
 import React, { cloneElement } from 'react';
 
 import { generateName } from '@dxos/display-name';
+import { toPublicKey } from '@dxos/protocols/buf';
 import type { Identity } from '@dxos/react-client/halo';
 import { Avatar, useId, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
@@ -12,6 +13,7 @@ import { hexToFallback } from '@dxos/util';
 
 import { Action, ActionBar, InputLabel } from '../../../components/index.ts';
 import { translationKey } from '../../../translations.ts';
+import { profileString } from '../../../util/index.ts';
 import { type JoinPanelMode, type JoinStepProps } from '../JoinPanelProps.ts';
 
 export interface IdentityAddedProps extends JoinStepProps {
@@ -24,7 +26,7 @@ export const IdentityAdded = (props: IdentityAddedProps) => {
   const disabled = !active;
   const { t } = useTranslation(translationKey);
 
-  const addedIdentityHex = addedIdentity?.identityKey.toHex() ?? '0';
+  const addedIdentityHex = toPublicKey(addedIdentity?.identityKey)?.toHex() ?? '0';
   const fallbackValue = hexToFallback(addedIdentityHex);
   const labelId = useId('identityListItem__label');
   const displayName = addedIdentity?.profile?.displayName ?? (addedIdentity && generateName(addedIdentityHex));
@@ -47,8 +49,8 @@ export const IdentityAdded = (props: IdentityAddedProps) => {
         <Avatar.Root labelId={labelId}>
           <Avatar.Content
             status='active'
-            hue={addedIdentity?.profile?.data?.hue || fallbackValue.hue}
-            fallback={addedIdentity?.profile?.data?.emoji || fallbackValue.emoji}
+            hue={profileString(addedIdentity, 'hue') || fallbackValue.hue}
+            fallback={profileString(addedIdentity, 'emoji') || fallbackValue.emoji}
           />
           <Avatar.Label classNames={mx('text-lg truncate', !addedIdentity?.profile?.displayName && 'font-mono')}>
             {displayName}

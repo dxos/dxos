@@ -3,10 +3,11 @@
 //
 
 import { type Message, type PeerId } from '@automerge/automerge-repo';
+import { create } from '@bufbuild/protobuf';
+import { type Any, AnySchema } from '@bufbuild/protobuf/wkt';
 import { Redis, type RedisOptions } from 'ioredis';
 import { describe, expect, onTestFinished, test } from 'vitest';
 
-import { type TaggedType } from '@dxos/codec-protobuf';
 import { Context } from '@dxos/context';
 import {
   EchoTestBuilder,
@@ -15,7 +16,6 @@ import {
   createDataAssertion,
 } from '@dxos/echo-client/testing';
 import { PublicKey } from '@dxos/keys';
-import { type TYPES } from '@dxos/protocols';
 import { RpcPeer } from '@dxos/rpc';
 import { openAndClose } from '@dxos/test-utils';
 
@@ -196,8 +196,4 @@ const setupRedisClient = async () => {
   return redis;
 };
 
-const createPayload = (value = ''): TaggedType<TYPES, 'google.protobuf.Any'> => ({
-  '@type': 'google.protobuf.Any',
-  'type_url': 'dxos.test',
-  'value': Buffer.from(value),
-});
+const createPayload = (value = ''): Any => create(AnySchema, { typeUrl: 'dxos.test', value: Buffer.from(value) });

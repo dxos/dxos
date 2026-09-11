@@ -2,12 +2,14 @@
 // Copyright 2025 DXOS.org
 //
 
+import { create } from '@bufbuild/protobuf';
 import { describe, test } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 
 import { TestConsole, TestLayer } from '@dxos/cli-util/testing';
 import { ClientService } from '@dxos/client';
 import { EffectEx } from '@dxos/effect';
+import { ProfileDocumentSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
 import { handler } from './identity.ts';
 
@@ -26,7 +28,9 @@ describe('halo identity', () => {
   test('should print identity if initialized', ({ expect }) =>
     Effect.gen(function* () {
       const client = yield* ClientService;
-      yield* Effect.tryPromise(() => client.halo.createIdentity({ displayName: 'Test' }));
+      yield* Effect.tryPromise(() =>
+        client.halo.createIdentity(create(ProfileDocumentSchema, { displayName: 'Test' })),
+      );
       yield* handler();
       const logger = yield* TestConsole.TestConsole;
       const logs = logger.logs;

@@ -2,6 +2,11 @@
 // Copyright 2023 DXOS.org
 //
 
-export { createPopoverScope } from './PopoverContext.ts';
-
 export * from './Popover.tsx';
+export {
+  type PopoverAlign,
+  type PopoverContentHandlers,
+  type PopoverPlacementOptions,
+  type PopoverSide,
+  usePopoverContext,
+} from './PopoverContext.ts';

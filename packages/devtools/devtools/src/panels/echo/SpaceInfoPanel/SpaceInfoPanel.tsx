@@ -2,10 +2,13 @@
 // Copyright 2020 DXOS.org
 //
 
+import { create } from '@bufbuild/protobuf';
 import React, { type FC, useMemo, useState } from 'react';
 
 import { MulticastObservable } from '@dxos/async';
+import { toPublicKey } from '@dxos/protocols/buf';
 import { SpaceState } from '@dxos/protocols/buf/dxos/client/invitation_pb';
+import { Space_PipelineStateSchema } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { EdgeReplicationSetting } from '@dxos/protocols/buf/dxos/echo/metadata_pb';
 import { type Space } from '@dxos/react-client/echo';
 import { useMulticastObservable } from '@dxos/react-hooks';
@@ -32,7 +35,7 @@ export const SpaceInfoPanel: FC<SpaceInfoPanelProps> = (props) => {
 
   // TODO(dmaretskyi): We don't need SpaceInfo anymore?
   const spacesInfo = useSpacesInfo();
-  const metadata = space?.key && spacesInfo.find((info) => info.key.equals(space?.key));
+  const metadata = space?.key && spacesInfo.find((info) => toPublicKey(info.key)?.equals(space?.key));
   const pipelineState = useMulticastObservable(space?.pipeline ?? MulticastObservable.empty());
 
   const toggleActive = async () => {
@@ -85,7 +88,11 @@ export const SpaceInfoPanel: FC<SpaceInfoPanelProps> = (props) => {
           <div>
             <SpaceProperties space={space} metadata={metadata} />
             <div className='h-24'>
-              <PipelineTable state={pipelineState ?? {}} metadata={metadata} onSelect={props.onSelectPipeline} />
+              <PipelineTable
+                state={pipelineState ?? create(Space_PipelineStateSchema)}
+                metadata={metadata}
+                onSelect={props.onSelectPipeline}
+              />
             </div>
             <div className='h-48'>
               <FeedTable onSelect={props.onSelectFeed} />

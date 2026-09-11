@@ -13,7 +13,7 @@ import { Filter, Obj, Query } from '@dxos/echo';
 import * as Binding from '@dxos/plugin-connector/Binding';
 import { useTriggerRuntimeControls } from '@dxos/plugin-routine/hooks';
 import { type Space, useQuery } from '@dxos/react-client/echo';
-import { Button, Input, Panel, Toolbar } from '@dxos/react-ui';
+import { Button, Field, Panel, Toolbar } from '@dxos/react-ui';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 
 /**
@@ -101,19 +101,16 @@ const TriggersModuleContainer = ({ space }: { space: Space }) => {
                 <li key={trigger.id} className='flex flex-col gap-1 rounded border border-separator p-2'>
                   <div className='font-mono text-xs truncate'>{trigger.id}</div>
                   <div className='text-description'>{formatTriggerSpec(trigger)}</div>
-                  <Input.Root>
-                    <div className='flex items-center gap-2'>
-                      <Input.Switch
-                        checked={trigger.remote === true}
-                        onCheckedChange={(checked) => {
-                          Obj.update(trigger, (trigger) => {
-                            trigger.remote = checked;
-                          });
-                        }}
-                      />
-                      <Input.Label>{trigger.remote ? 'Remote (edge)' : 'Local'}</Input.Label>
-                    </div>
-                  </Input.Root>
+                  <Field.Switch
+                    checked={trigger.remote === true}
+                    onCheckedChange={(checked) => {
+                      Obj.update(trigger, (trigger) => {
+                        trigger.remote = checked;
+                      });
+                    }}
+                  >
+                    {trigger.remote ? 'Remote (edge)' : 'Local'}
+                  </Field.Switch>
                   {lastInvocation && (
                     <div className='text-xs'>
                       Last run: {formatInvocationResult(lastInvocation.result)}

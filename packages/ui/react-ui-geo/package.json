@@ -51,7 +51,7 @@
     "@dxos/debug": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/node-std": "workspace:*",
-    "@radix-ui/react-context": "catalog:",
+    "@dxos/react-hooks": "workspace:*",
     "@types/topojson-specification": "catalog:",
     "d3": "catalog:",
     "geojson": "catalog:",

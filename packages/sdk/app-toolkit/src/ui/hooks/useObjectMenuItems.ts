@@ -118,7 +118,7 @@ export const useObjectNavigate = (subject: unknown): ((event: MouseEvent<HTMLEle
 /**
  * Returns object-scoped menu items (e.g. Open/Navigate) for the given subject.
  * Only includes items when subject is an Echo object and its schema does not have the system annotation.
- * Use with useMenu(CONTRIBUTOR_NAME).addMenuItems from a component inside Card.Root to register with the card menu.
+ * Register them with the card's menu through `useMenuContribution(menu, …)`, where `menu` is the `MenuActions` the card owner hands down.
  * A card lives inside a plank, so opening its object always adds a plank beside that plank (`add`), never
  * replacing it. The menu renders in a portal, so it cannot resolve the plank from its own DOM: the caller
  * supplies the plank's attendable id as `pivot` — via {@link useCardPivot} when the card knows only its
@@ -147,7 +147,7 @@ export const useObjectMenuItems = (subject: unknown, pivot?: string): MenuItem[]
   }, [subject, invoke, t, pivot]);
 };
 
-/** ID for object-actions (Open/Navigate). Use with useMenu(CONTRIBUTOR_NAME).addMenuItems. */
+/** ID for object-actions (Open/Navigate). Use with `useMenuContribution`. */
 export const OBJECT_ACTIONS_CONTRIBUTION_ID = 'object-actions';
 
 /**

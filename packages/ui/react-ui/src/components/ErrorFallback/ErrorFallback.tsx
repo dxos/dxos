@@ -9,7 +9,7 @@ import { safeStringify } from '@dxos/util';
 
 import { translationKey } from '#translations';
 
-import { useTranslation } from '../../primitives/index.ts';
+import { useTranslation } from '../../providers/index.ts';
 import { IconButton } from '../Button/index.ts';
 import { ErrorStack } from './ErrorStack.tsx';
 

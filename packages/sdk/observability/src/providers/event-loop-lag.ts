@@ -115,63 +115,6 @@ export const eventLoopLagProvider = (): Observability.DataProvider =>
       ctx.onDispose(() => doc.removeEventListener('visibilitychange', onVisibilityChange));
     }
 
-    // #region DEBUG
-    // [DEBUG H-suspend] Dual-clock suspension probe, shipped temporarily to confirm the
-    // native-app freeze diagnosis in the wild — WKWebView's WebContent process suspended while
-    // the window sits hidden — before the fix lands. Remove together with the Rust host
-    // heartbeat in composer-app's src-tauri/lib.rs. Runs in every realm (tab + workers); logs
-    // only on a wake after a ≥15s execution gap and on visibility transitions, so steady state
-    // is silent. Reading a gap line in a downloaded bundle:
-    //   - wallDeltaMs ≈ monoDeltaMs → the realm did not run while both clocks did ⇒ process
-    //     suspension (a 2026-08-29 dev soak showed multi-hour WebContent freezes this way,
-    //     with the Rust host heartbeat clean throughout).
-    //   - wallDeltaMs >> monoDeltaMs → the machine slept; not an app fault.
-    const DEBUG_PROBE_INTERVAL_MS = 5_000;
-    const DEBUG_GAP_MS = 15_000;
-    let debugLastWall = Date.now();
-    let debugLastMono = performance.now();
-    scheduleTaskInterval(
-      ctx,
-      async () => {
-        const wall = Date.now();
-        const mono = performance.now();
-        const wallDeltaMs = Math.round(wall - debugLastWall);
-        const monoDeltaMs = Math.round(mono - debugLastMono);
-        debugLastWall = wall;
-        debugLastMono = mono;
-        if (wallDeltaMs > DEBUG_GAP_MS || monoDeltaMs > DEBUG_GAP_MS) {
-          log.info('[DEBUG H-suspend] js wake after gap', {
-            wallDeltaMs,
-            monoDeltaMs,
-            // Portion of the gap the monotonic clock did not tick — the asleep share.
-            sleptMs: wallDeltaMs - monoDeltaMs,
-            visibility: doc?.visibilityState ?? 'no-document',
-            hasFocus: (doc as { hasFocus?: () => boolean } | undefined)?.hasFocus?.() ?? null,
-          });
-        }
-      },
-      DEBUG_PROBE_INTERVAL_MS,
-    );
-    if (doc) {
-      // The production listener above only drops the lag reference; this one records the
-      // transition itself, so the bundle shows whether WebKit ever marked the page hidden.
-      const onDebugVisibility = () =>
-        log.info('[DEBUG H-suspend] visibilitychange', { visibility: doc.visibilityState });
-      doc.addEventListener('visibilitychange', onDebugVisibility);
-      ctx.onDispose(() => doc.removeEventListener('visibilitychange', onDebugVisibility));
-      // Page lifecycle freeze/resume — Chromium-only events today, registered anyway so a WebKit
-      // release that adds them shows up rather than silently discriminating nothing.
-      const onDebugFreeze = () => log.info('[DEBUG H-suspend] page freeze');
-      const onDebugResume = () => log.info('[DEBUG H-suspend] page resume');
-      doc.addEventListener('freeze', onDebugFreeze);
-      doc.addEventListener('resume', onDebugResume);
-      ctx.onDispose(() => {
-        doc.removeEventListener('freeze', onDebugFreeze);
-        doc.removeEventListener('resume', onDebugResume);
-      });
-    }
-    // #endregion DEBUG
-
     // Window rotation is driven here rather than by the read, so the gauge callback stays a plain
     // idempotent getter — see EventLoopLagTracker.
     scheduleTaskInterval(ctx, async () => lag.rotate(), LAG_WINDOW_MS);

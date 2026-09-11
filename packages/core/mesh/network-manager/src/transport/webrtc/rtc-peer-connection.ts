@@ -2,11 +2,13 @@
 // Copyright 2024 DXOS.org
 //
 
+import { create } from '@bufbuild/protobuf';
+
 import { Mutex, Trigger, synchronized } from '@dxos/async';
 import { invariant } from '@dxos/invariant';
 import { log, logInfo } from '@dxos/log';
 import { ConnectivityError } from '@dxos/protocols';
-import { type Signal } from '@dxos/protocols/proto/dxos/mesh/swarm';
+import { type Signal, SignalSchema } from '@dxos/protocols/buf/dxos/mesh/swarm_pb';
 
 import type { IceProvider } from '../../signal/index.ts';
 import { type TransportOptions } from '../transport.ts';
@@ -269,17 +271,22 @@ export class RtcPeerConnection {
 
   @synchronized
   public async onSignal(signal: Signal): Promise<void> {
+    const data = readSignal(signal);
     const connection = this._connection;
     if (!connection) {
-      log.warn('a signal ignored because the connection was closed', { type: signal.payload.data.type });
+      log.warn('a signal ignored because the connection was closed', { type: data?.type });
+      return;
+    }
+    if (!data) {
+      this._abortConnection(connection, new Error('Unrecognized signal payload.'));
       return;
     }
 
-    const data = signal.payload.data;
     switch (data.type) {
       case 'offer': {
+        const { type, sdp } = data;
         await this._offerProcessingMutex.executeSynchronized(async () => {
-          if (isRemoteDescriptionSet(connection, data)) {
+          if (isRemoteDescriptionSet(connection, { type, sdp })) {
             return;
           }
           if (connection.connectionState !== 'new') {
@@ -288,7 +295,7 @@ export class RtcPeerConnection {
           }
 
           try {
-            await connection.setRemoteDescription({ type: data.type, sdp: data.sdp });
+            await connection.setRemoteDescription({ type, sdp });
             const answer = await connection.createAnswer();
             await connection.setLocalDescription(answer);
             await this._sendDescription(connection, answer);
@@ -300,10 +307,11 @@ export class RtcPeerConnection {
         break;
       }
 
-      case 'answer':
+      case 'answer': {
+        const { type, sdp } = data;
         await this._offerProcessingMutex.executeSynchronized(async () => {
           try {
-            if (isRemoteDescriptionSet(connection, data)) {
+            if (isRemoteDescriptionSet(connection, { type, sdp })) {
               return;
             }
             if (connection.signalingState !== 'have-local-offer') {
@@ -313,27 +321,24 @@ export class RtcPeerConnection {
               );
               return;
             }
-            await connection.setRemoteDescription({ type: data.type, sdp: data.sdp });
+            await connection.setRemoteDescription({ type, sdp });
             this._onSessionNegotiated(connection);
           } catch (err) {
             this._abortConnection(connection, new Error('Error handling a remote answer.', { cause: err }));
           }
         });
         break;
+      }
 
       case 'candidate':
         void this._processIceCandidate(connection, data.candidate);
-        break;
-
-      default:
-        this._abortConnection(connection, new Error(`Unknown signal type ${data.type}.`));
         break;
     }
 
     log('signal processed', { type: data.type });
   }
 
-  private async _processIceCandidate(connection: RTCPeerConnection, candidate: RTCIceCandidate): Promise<void> {
+  private async _processIceCandidate(connection: RTCPeerConnection, candidate: RTCIceCandidateInit): Promise<void> {
     try {
       // ICE candidates are associated with a session, so we need to wait for the remote description to be set.
       await this._readyForCandidates.wait();
@@ -397,19 +402,21 @@ export class RtcPeerConnection {
 
   private async _sendIceCandidate(candidate: RTCIceCandidate): Promise<void> {
     try {
-      await this._options.sendSignal({
-        payload: {
-          data: {
-            type: 'candidate',
-            candidate: {
-              candidate: candidate.candidate,
-              // These fields never seem to be not null, but connecting to Chrome doesn't work if they are.
-              sdpMLineIndex: candidate.sdpMLineIndex ?? '0',
-              sdpMid: candidate.sdpMid ?? '0',
+      await this._options.sendSignal(
+        create(SignalSchema, {
+          payload: {
+            data: {
+              type: 'candidate',
+              candidate: {
+                candidate: candidate.candidate,
+                // These fields never seem to be not null, but connecting to Chrome doesn't work if they are.
+                sdpMLineIndex: candidate.sdpMLineIndex ?? '0',
+                sdpMid: candidate.sdpMid ?? '0',
+              },
             },
           },
-        },
-      });
+        }),
+      );
     } catch (err) {
       log.warn('signaling error', { err });
     }
@@ -420,9 +427,11 @@ export class RtcPeerConnection {
       // Connection was closed while description was being created.
       return;
     }
+    invariant(description.sdp, 'Local description has no SDP.');
     // Type is 'offer' | 'answer'.
-    const data = { type: description.type, sdp: description.sdp };
-    await this._options.sendSignal({ payload: { data } });
+    await this._options.sendSignal(
+      create(SignalSchema, { payload: { data: { type: description.type, sdp: description.sdp } } }),
+    );
   }
 
   protected get _connectionInfo() {
@@ -453,6 +462,37 @@ export class RtcPeerConnection {
     };
   }
 }
+
+/**
+ * The WebRTC signalling message a `dxos.mesh.swarm.Signal` carries.
+ *
+ * The proto declares the payload as `google.protobuf.Struct`, so the shape lives here and is read
+ * back by parsing rather than by assertion.
+ */
+type SignalData = { type: 'offer' | 'answer'; sdp: string } | { type: 'candidate'; candidate: RTCIceCandidateInit };
+
+const readSignal = (signal: Signal): SignalData | undefined => {
+  const data = signal.payload?.data;
+  if (typeof data !== 'object' || data === null || Array.isArray(data)) {
+    return undefined;
+  }
+
+  const { type, sdp, candidate } = data;
+  if ((type === 'offer' || type === 'answer') && typeof sdp === 'string') {
+    return { type, sdp };
+  }
+  if (type === 'candidate' && typeof candidate === 'object' && candidate !== null && !Array.isArray(candidate)) {
+    return {
+      type,
+      candidate: {
+        candidate: typeof candidate.candidate === 'string' ? candidate.candidate : undefined,
+        sdpMLineIndex: Number(candidate.sdpMLineIndex),
+        sdpMid: String(candidate.sdpMid),
+      },
+    };
+  }
+  return undefined;
+};
 
 const isRemoteDescriptionSet = (connection: RTCPeerConnection, data: { type: string; sdp: string }) => {
   if (!connection.remoteDescription?.type || connection.remoteDescription?.type !== data.type) {

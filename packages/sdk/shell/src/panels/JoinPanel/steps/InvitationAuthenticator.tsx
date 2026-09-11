@@ -4,8 +4,8 @@
 
 import React, { type ChangeEvent, useState } from 'react';
 
-import { Invitation } from '@dxos/react-client/invitations';
-import { Input, useTranslation } from '@dxos/react-ui';
+import { Invitation_AuthMethod } from '@dxos/react-client/invitations';
+import { Field, useTranslation } from '@dxos/react-ui';
 import { hexToEmoji } from '@dxos/util';
 
 import { Action, ActionBar, Emoji, InputLabel, Label } from '../../../components/index.ts';
@@ -16,7 +16,7 @@ const pinLength = 6;
 
 export interface InvitationAuthenticatorProps extends JoinStepProps {
   Kind: 'Space' | 'Halo';
-  authMethod?: Invitation.AuthMethod;
+  authMethod?: Invitation_AuthMethod;
   failed?: boolean;
   pending?: boolean;
   invitationId?: string;
@@ -49,25 +49,25 @@ export const InvitationAuthenticator = ({
   return (
     <>
       <div className='grow flex flex-col justify-center gap-4'>
-        <Input.Root
+        <Field.Root
           {...(failed && {
             validationValence: 'error',
           })}
         >
-          {authMethod === Invitation.AuthMethod.SHARED_SECRET ? (
-            <Input.Label asChild>
+          {authMethod === Invitation_AuthMethod.SHARED_SECRET ? (
+            <Field.Label asChild>
               <InputLabel>{t('auth-code-input.label')}</InputLabel>
-            </Input.Label>
+            </Field.Label>
           ) : (
             <>
-              <Input.Label>
+              <Field.Label>
                 <InputLabel classNames='text-description'>{t('authenticating.label')}</InputLabel>
-              </Input.Label>
+              </Field.Label>
               <div className='grow' />
             </>
           )}
-          {authMethod === Invitation.AuthMethod.SHARED_SECRET && (
-            <Input.PinInput
+          {authMethod === Invitation_AuthMethod.SHARED_SECRET && (
+            <Field.PinInput
               {...{
                 disabled,
                 'density': 'lg',
@@ -83,14 +83,10 @@ export const InvitationAuthenticator = ({
               }}
             />
           )}
-          {failed && (
-            <Input.DescriptionAndValidation classNames='text-center'>
-              <Input.Validation>{t('failed-to-authenticate.message')}</Input.Validation>
-            </Input.DescriptionAndValidation>
-          )}
-        </Input.Root>
+          {failed && <Field.ErrorText classNames='text-center'>{t('failed-to-authenticate.message')}</Field.ErrorText>}
+        </Field.Root>
 
-        {invitationId && authMethod === Invitation.AuthMethod.SHARED_SECRET && (
+        {invitationId && authMethod === Invitation_AuthMethod.SHARED_SECRET && (
           <>
             <Label>{t('auth-other-device-emoji.message')}</Label>
             <div className='flex justify-center'>

@@ -4,6 +4,7 @@
 
 export * as SupportPlugin from './SupportPlugin.ts';
 export * from './constants.ts';
+export * from './errors.ts';
 export * from '#meta';
 export * from '#skills';
 export * from '#types';

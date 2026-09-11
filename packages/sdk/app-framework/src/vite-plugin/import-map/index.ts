@@ -199,6 +199,9 @@ const walkDirectoryForExtension = (baseDir: string, extension: string): string[]
   return results;
 };
 
+/** Module extensions a wildcard export may expand to. */
+const MODULE_SUFFIX = /\.(m|c)?js$/;
+
 /** Resolves an `exports` value to a single target path for pattern expansion. */
 const pickPatternTarget = (value: unknown): string | undefined => {
   if (typeof value === 'string') {
@@ -234,9 +237,14 @@ const expandWildcardExport = (
   }
   const keyPrefix = exportKey.slice(2, keyStarIndex); // drop leading './'
   const targetPrefix = target.slice(2, targetStarIndex); // drop leading './'
-  const targetSuffix = target.slice(targetStarIndex + 1);
+  const targetSuffix = target.slice(targetStarIndex + 1) || '.js';
+  // The import map maps ES modules, so a pattern targeting raw assets (`@dxos/protocols`
+  // exports its `.proto` sources) would yield extension-stripped specifiers that fail to resolve.
+  if (!MODULE_SUFFIX.test(targetSuffix)) {
+    return [];
+  }
   const baseDir = path.resolve(packageJsonDir, targetPrefix);
-  const files = walkDirectoryForExtension(baseDir, targetSuffix || '.js');
+  const files = walkDirectoryForExtension(baseDir, targetSuffix);
   return files.map((relativeNoExt) => `${packageName}/${keyPrefix}${relativeNoExt}`);
 };
 
@@ -295,10 +303,9 @@ export const getPackageEntrypoints = (packageName: string, packageJsonPath: stri
       return [];
     }
 
-    // Skip `.d.ts` subpath exports — these are meant to be imported as raw text
-    // (e.g. `@dxos/echo-query/api.d.ts?raw` for in-editor type hints), not as
-    // ES modules. Enumerating them here would have vite try to bundle the
-    // declaration file's imports (protobufjs, effect, etc.), which breaks.
+    // Skip `.d.ts` subpath exports — these are meant to be imported as raw text (e.g. for
+    // in-editor type hints), not as ES modules. Enumerating them here would have vite try to
+    // bundle the declaration file's imports (protobufjs, effect, etc.), which breaks.
     if (key.endsWith('.d.ts')) {
       return [];
     }
@@ -449,7 +456,7 @@ export const importMapPlugin = (options?: { packages?: string[] }): Plugin[] => 
           // instead of the published `dist/` — bails out when `importer` is undefined, so an
           // importer-less `this.resolve(specifier)` falls through to the `default`/dist export.
           // That made wrapper chunks evaluate `dist/` while the host app evaluated `src/`,
-          // duplicating module-local identity (the private `ProxyHandlerSlot` class, `Ref`
+          // duplicating module-local identity (`Ref`
           // brand symbols, React contexts) and breaking `instanceof` across the host↔plugin
           // boundary. Passing a host-rooted importer makes `importSource` resolve these
           // wrappers to the exact same source module the host app uses.
@@ -510,8 +517,8 @@ export const importMapPlugin = (options?: { packages?: string[] }): Plugin[] => 
         // Re-export from the resolved absolute path, not the bare specifier. A bare re-export
         // would let Rolldown resolve `@dxos/echo` a second way (the host app reaches it via the
         // `source` export, this virtual module via the published `dist/`), evaluating the same
-        // source twice and duplicating module-local identity — the private `ProxyHandlerSlot`
-        // class, `Ref` brand symbols, React contexts — which breaks `instanceof` and context
+        // source twice and duplicating module-local identity — `Ref` brand symbols, the reactive
+        // handler singletons, React contexts — which breaks `instanceof` and context
         // lookups across the host↔remote-plugin boundary. The resolved id (see the importer
         // passed to `this.resolve` above) already points at the host's module.
         const filePath = trimQueryString(resolvedId);

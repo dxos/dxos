@@ -18,10 +18,10 @@ Each extension is defined in the Appendix or resolved via its URI.
 |-------------|--------------------------------|
 | `type`      | `org.dxos.mdl.type@1.0`       |
 | `feat`      | `org.dxos.mdl.feat@1.0`       |
-| `test`      | `org.dxos.mdl.test@1.0`       |
+| `scenario`  | `org.dxos.mdl.scenario@1.0`   |
 | `component` | `org.dxos.mdl.component@1.0`  |
 | `op`        | `org.dxos.mdl.op@1.0`         |
-| `flow`      | `org.dxos.mdl.flow@1.0`       |
+| `test`      | `org.dxos.mdl.test@1.0`       |
 
 ## Types
 
@@ -207,7 +207,7 @@ feat F-3: Game Article / Card Rendering
 ## Acceptance
 
 ```mdl
-test T-1: Variant picker shows all contributions
+scenario T-1: Variant picker shows all contributions
   given: two variant plugins have contributed GameVariants
   when: the user opens the create-game panel
   then:
@@ -216,7 +216,7 @@ test T-1: Variant picker shows all contributions
 ```
 
 ```mdl
-test T-2: Create game without form
+scenario T-2: Create game without form
   given: a variant with no inputSchema is selected
   when: user clicks the variant item
   then:
@@ -225,7 +225,7 @@ test T-2: Create game without form
 ```
 
 ```mdl
-test T-3: Create game with form
+scenario T-3: Create game with form
   given: a variant with an inputSchema is selected
   when: user fills and submits the form
   then:
@@ -233,7 +233,7 @@ test T-3: Create game with form
 ```
 
 ```mdl
-test T-4: Atomic game creation
+scenario T-4: Atomic game creation
   given: a valid variantId and target space
   when: op:createGame is invoked
   then:
@@ -243,7 +243,7 @@ test T-4: Atomic game creation
 ```
 
 ```mdl
-test T-5: Rollback on second write failure
+scenario T-5: Rollback on second write failure
   given: variant state is successfully written
   when: the second write (Game object) fails
   then:
@@ -252,14 +252,14 @@ test T-5: Rollback on second write failure
 ```
 
 ```mdl
-test T-6: Unknown variant rejected
+scenario T-6: Unknown variant rejected
   given: op:createGame is invoked with an unregistered variantId
   when: the handler runs
   then: UnknownVariant error is returned; no ECHO writes occur
 ```
 
 ```mdl
-test T-7: Unsupported variant fallback
+scenario T-7: Unsupported variant fallback
   given: a Game whose variant typename has no registered GameVariant
   when: GameArticle renders
   then: "Unsupported game variant" message is shown instead of crashing
@@ -269,15 +269,15 @@ test T-7: Unsupported variant fallback
 
 ## QA
 
-Executable flows. Each step carries a human instruction (`do`) and, where the step maps to an
-invocable operation, an agent binding (`invoke`). Report failures by flow and step number.
+Executable tests. Each step carries a human instruction (`do`) and, where the step maps to an
+invocable operation, an agent binding (`invoke`). Report failures by test and step number.
 
 ```mdl
-flow QA-1: Create a game through the variant picker and render it
+test QA-1: Create a game through the variant picker and render it
   desc: |
     The generic host round-trip — pick a registered variant, create the Game wrapper plus its
     hidden variant state, and confirm dispatch renders the variant's article. Uses
-    plugin-chess's variant since it is the only one shipped and enabled by default; the flow
+    plugin-chess's variant since it is the only one shipped and enabled by default; the test
     tests plugin-game's dispatch, not chess's own gameplay (see plugin-chess's QA for that).
   actors: human
   covers: [F-1.2, F-2.1, F-2.4, F-3.1, T-2, T-4]
@@ -287,9 +287,9 @@ flow QA-1: Create a game through the variant picker and render it
     - space: a space is open
     - collection: a collection in that space, to create into
     - plugin-chess (or another GameVariant contributor) is enabled, so the picker lists at least one variant
-    - no game named "QA Game" exists — ABORT rather than deleting one this flow did not create
+    - no game named "QA Game" exists — ABORT rather than deleting one this test did not create
     - game: (bound during the run, not beforehand) the Game object the "Select the Chess variant" step creates — recorded by the tester, since no invoke captures it
-  test:
+  steps:
     - name: Open the create-game panel
       do: In the navtree, click + on a collection and choose Game.
       expect: CreateGamePanel opens showing a searchable list including a "Chess" row
@@ -345,8 +345,8 @@ ext feat
 ```
 
 ```mdl
-ext test
-  uri: org.dxos.mdl.test@1.0
+ext scenario
+  uri: org.dxos.mdl.scenario@1.0
   desc: An acceptance scenario expressed as given / when / then steps.
   fields:
     given?: Step | Step[]

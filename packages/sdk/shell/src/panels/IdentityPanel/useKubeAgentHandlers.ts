@@ -7,9 +7,16 @@ import { useCallback, useEffect, useState } from 'react';
 import { type CancellableInvitation } from '@dxos/client-protocol';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
+import { requirePublicKey, toPublicKey } from '@dxos/protocols/buf';
 import { useAgentHostingClient, useClient } from '@dxos/react-client';
 import { type Identity } from '@dxos/react-client/halo';
-import { Invitation, InvitationEncoder } from '@dxos/react-client/invitations';
+import {
+  type Invitation,
+  Invitation_AuthMethod,
+  Invitation_State,
+  Invitation_Type,
+  InvitationEncoder,
+} from '@dxos/react-client/invitations';
 
 import { type AgentFormProps } from '../../components/index.ts';
 
@@ -30,7 +37,9 @@ export const useKubeAgentHandlers = ({
     if (agentHostingProviderClient) {
       setAgentStatus('getting');
       try {
-        const agentId = await agentHostingProviderClient?.getAgent(identity?.identityKey.truncate() ?? 'never');
+        const agentId = await agentHostingProviderClient?.getAgent(
+          toPublicKey(identity?.identityKey)?.truncate() ?? 'never',
+        );
         if (agentId) {
           setAgentStatus('created');
         } else {
@@ -52,7 +61,10 @@ export const useKubeAgentHandlers = ({
       setAgentStatus('creating');
       setValidationMessage('');
       try {
-        const agentId = await agentHostingProviderClient?.createAgent(invitationCode, identity.identityKey.truncate());
+        const agentId = await agentHostingProviderClient?.createAgent(
+          invitationCode,
+          requirePublicKey(identity.identityKey).truncate(),
+        );
         if (agentId) {
           setAgentStatus('created');
         } else {
@@ -75,7 +87,7 @@ export const useKubeAgentHandlers = ({
       setAgentStatus('destroying');
       setValidationMessage('');
       try {
-        await agentHostingProviderClient?.destroyAgent(identity.identityKey.truncate());
+        await agentHostingProviderClient?.destroyAgent(requirePublicKey(identity.identityKey).truncate());
         setAgentStatus('creatable');
       } catch (err: any) {
         setValidationMessage(`Error destroying agent: ${err.message}`);
@@ -93,7 +105,7 @@ export const useKubeAgentHandlers = ({
 
   const handleAgentCreate = useCallback(async (invitation: Invitation) => {
     const invitationCode = InvitationEncoder.encode(invitation);
-    if (invitation.state === Invitation.State.CONNECTING) {
+    if (invitation.state === Invitation_State.CONNECTING) {
       log.info(JSON.stringify({ invitationCode, authCode: invitation.authCode }));
       return createAgent(invitationCode);
     }
@@ -104,8 +116,8 @@ export const useKubeAgentHandlers = ({
 
     // TODO(nf): do this work in the hosting provider client?
     const invitation = client.halo.share({
-      type: Invitation.Type.INTERACTIVE,
-      authMethod: Invitation.AuthMethod.NONE,
+      type: Invitation_Type.INTERACTIVE,
+      authMethod: Invitation_AuthMethod.NONE,
       multiUse: true,
     });
 

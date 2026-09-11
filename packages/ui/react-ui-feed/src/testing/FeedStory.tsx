@@ -5,7 +5,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { random } from '@dxos/random';
-import { IconButton, Input, Panel, ThemedClassName, Toolbar } from '@dxos/react-ui';
+import { Field, IconButton, Panel, ThemedClassName, Toolbar } from '@dxos/react-ui';
 import { Message } from '@dxos/types';
 import { mx } from '@dxos/ui-theme';
 
@@ -62,13 +62,13 @@ const TestChrome = ({ message, index, selected, onSelect, children }: MessageChr
       data-testid='feed.message'
     >
       <div className='flex flex-col items-center gap-1'>
-        <Input.Root>
-          <Input.Checkbox
+        <Field.Root>
+          <Field.Checkbox
             checked={selected}
             onCheckedChange={() => onSelect(message.id, true)}
             data-testid='feed.message.select'
           />
-        </Input.Root>
+        </Field.Root>
       </div>
 
       {/*
@@ -291,14 +291,14 @@ export const FeedStory = ({
                   onClick={toggleDebug}
                 />
                 <Toolbar.Separator />
-                <Input.Root>
-                  <Input.TextInput
+                <Field.Root>
+                  <Field.Input
                     placeholder='Search…'
                     value={query}
                     onChange={(event) => setQuery(event.target.value)}
                     data-testid='feed.search'
                   />
-                </Input.Root>
+                </Field.Root>
                 <FindButton hits={hits} />
                 <IconButton icon='ph--copy--regular' iconOnly label='Copy range' onClick={handleCopy} />
                 <IconButton

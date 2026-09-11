@@ -7,7 +7,9 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { afterEach, describe, test, vi } from 'vitest';
 
-import { applyChannelFavicons, bootMarkPath, channelVariant } from './channel-branding.ts';
+import { CHANNEL_COLORS, CHANNELS, RAMP_HUE } from '@dxos/brand/channels';
+
+import { applyChannelFavicons, bootMarkFilter, channelVariant } from './channel-branding.ts';
 
 const FAVICONS = [
   'favicon.svg',
@@ -38,13 +40,14 @@ describe('channelVariant', () => {
     expect(channelVariant('build', undefined)).toBeUndefined();
   });
 
-  test('preview is the one that runs beside production, so it gets its own mark', ({ expect }) => {
-    expect(channelVariant('build', 'preview')).toEqual('purple');
+  test('a prerelease channel is named by its environment', ({ expect }) => {
+    expect(channelVariant('build', 'preview')).toEqual('preview');
+    expect(channelVariant('build', 'dev')).toEqual('dev');
+    expect(channelVariant('build', 'staging')).toEqual('staging');
   });
 
-  test('every other channel shares the rust mark', ({ expect }) => {
-    expect(channelVariant('build', 'dev')).toEqual('rust');
-    expect(channelVariant('build', 'staging')).toEqual('rust');
+  test('an environment with no artwork fails the build rather than shipping the released mark', ({ expect }) => {
+    expect(() => channelVariant('build', 'labs')).toThrow(/unknown environment: labs/);
   });
 
   // Only a deployed bundle is branded, so `DX_ENVIRONMENT` in a shell does not repaint localhost.
@@ -54,13 +57,20 @@ describe('channelVariant', () => {
   });
 });
 
-describe('bootMarkPath', () => {
-  test('falls back to the released mark when there is no channel', ({ expect }) => {
-    expect(bootMarkPath('/app', undefined)).toBeUndefined();
+describe('bootMarkFilter', () => {
+  test('leaves the released mark alone when there is no channel', ({ expect }) => {
+    expect(bootMarkFilter(undefined)).toBeUndefined();
   });
 
-  test('names the variant the channel brands itself with', ({ expect }) => {
-    expect(bootMarkPath('/app', 'purple')).toEqual(path.join('/app', 'assets', 'boot-mark-purple.svg'));
+  // The colours are the brand's to set, so the test pins the derivation rather than the numbers.
+  test('rotates the ramp to the channel hue, scaling saturation only when the channel does', ({ expect }) => {
+    for (const channel of CHANNELS) {
+      const { hue, saturation } = CHANNEL_COLORS[channel];
+      const rotate = (((hue - RAMP_HUE) % 360) + 360) % 360;
+      expect(bootMarkFilter(channel)).toBe(
+        saturation === 1 ? `hue-rotate(${rotate}deg)` : `hue-rotate(${rotate}deg) saturate(${saturation})`,
+      );
+    }
   });
 });
 
@@ -69,12 +79,11 @@ describe('bootMarkPath', () => {
 describe('generated artwork', () => {
   const appDir = path.resolve(import.meta.dirname, '..', '..');
 
-  for (const variant of ['purple', 'rust'] as const) {
+  for (const variant of ['dev', 'preview', 'staging'] as const) {
     test(`${variant} is committed in full`, ({ expect }) => {
-      const missing = [
-        path.join(appDir, 'assets', `boot-mark-${variant}.svg`),
-        ...FAVICONS.map((favicon) => path.join(appDir, 'assets', `favicons-${variant}`, favicon)),
-      ].filter((file) => !existsSync(file));
+      const missing = FAVICONS.map((favicon) => path.join(appDir, 'assets', `favicons-${variant}`, favicon)).filter(
+        (file) => !existsSync(file),
+      );
       expect(missing).toEqual([]);
     });
   }
@@ -82,17 +91,17 @@ describe('generated artwork', () => {
 
 describe('applyChannelFavicons', () => {
   test('replaces every favicon the html references', ({ expect }) => {
-    const { appDir, outDir } = makeApp('rust');
+    const { appDir, outDir } = makeApp('dev');
 
-    applyChannelFavicons(appDir, outDir, 'rust');
+    applyChannelFavicons(appDir, outDir, 'dev');
 
     for (const favicon of FAVICONS) {
-      expect(readFileSync(path.join(outDir, favicon), 'utf8')).toEqual(`rust:${favicon}`);
+      expect(readFileSync(path.join(outDir, favicon), 'utf8')).toEqual(`dev:${favicon}`);
     }
   });
 
   test('leaves the released favicons alone when there is no channel', ({ expect }) => {
-    const { appDir, outDir } = makeApp('rust');
+    const { appDir, outDir } = makeApp('dev');
 
     applyChannelFavicons(appDir, outDir, undefined);
 
@@ -104,10 +113,10 @@ describe('applyChannelFavicons', () => {
   // Shipping production's blue mark on a prerelease is the confusion this exists to prevent, so a variant
   // that was never generated has to fail the build rather than silently fall through to it.
   test('fails the build when the variant artwork is missing', ({ expect }) => {
-    const { appDir, outDir } = makeApp('rust');
-    rmSync(path.join(appDir, 'assets', 'favicons-rust', 'favicon.ico'));
+    const { appDir, outDir } = makeApp('dev');
+    rmSync(path.join(appDir, 'assets', 'favicons-dev', 'favicon.ico'));
 
-    expect(() => applyChannelFavicons(appDir, outDir, 'rust')).toThrow('channel favicon missing');
+    expect(() => applyChannelFavicons(appDir, outDir, 'dev')).toThrow('channel favicon missing');
   });
 });
 

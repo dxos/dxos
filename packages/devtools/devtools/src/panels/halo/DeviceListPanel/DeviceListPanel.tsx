@@ -5,7 +5,8 @@
 import React, { useMemo } from 'react';
 
 import { Format } from '@dxos/echo/Format';
-import { Device, DeviceKind, DeviceType, useDevices } from '@dxos/react-client/halo';
+import { toPublicKey } from '@dxos/protocols/buf';
+import { Device_PresenceState, DeviceKind, DeviceType, useDevices } from '@dxos/react-client/halo';
 import { Panel } from '@dxos/react-ui';
 import { type TablePropertyDefinition } from '@dxos/react-ui-table';
 
@@ -47,9 +48,9 @@ export const DeviceListPanel = () => {
   const data = useMemo(
     () =>
       devices.map((device) => ({
-        id: device.deviceKey.toString(),
-        key: device.deviceKey.toString(),
-        state: device.kind === DeviceKind.CURRENT ? 'THIS DEVICE' : Device.PresenceState[device.presence],
+        id: toPublicKey(device.deviceKey)?.toString() ?? '',
+        key: toPublicKey(device.deviceKey)?.toString() ?? '',
+        state: device.kind === DeviceKind.CURRENT ? 'THIS DEVICE' : Device_PresenceState[device.presence],
         type: DeviceType[device.profile?.type || DeviceType.UNKNOWN],
         label: device.profile?.label,
         _original: device,

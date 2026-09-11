@@ -14,6 +14,7 @@ import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { type ProcessProtocol } from '@dxos/protocols';
 import {
   type CompleteOAuthRegistrationRequest,
   type CompleteOAuthRegistrationResponse,
@@ -43,7 +44,7 @@ import {
 import {
   type QueryRequest as QueryRequestProto,
   type QueryResponse as QueryResponseProto,
-} from '@dxos/protocols/proto/dxos/echo/query';
+} from '@dxos/protocols/buf/dxos/echo/query_pb';
 import { createUrl } from '@dxos/util';
 
 import { BaseHttpClient, type BaseHttpClientOptions, type EdgeHttpCallArgs } from './base-http-client.ts';
@@ -130,6 +131,9 @@ export class EdgeHttpClientService extends EffectContext.Service<EdgeHttpClientS
  * Hub-service API (accounts, invitations) lives in {@link HubHttpClient} — the two
  * services run at different URLs and are never both available from the same base URL.
  */
+/** Upstream service the EDGE AI proxy forwards to; selects the `/ai/generate/<service>` route. */
+export type EdgeAiService = 'anthropic' | 'deepseek';
+
 export class EdgeHttpClient extends BaseHttpClient {
   constructor(baseUrl: string, options?: EdgeHttpClientOptions) {
     super(baseUrl, options);
@@ -627,19 +631,19 @@ export class EdgeHttpClient extends BaseHttpClient {
   //
 
   /**
-   * Issue an authenticated request to the EDGE AI route (`/ai/generate/anthropic/*`), which
-   * proxies to the AI service. Used as the backend HTTP client for the Anthropic AI provider
-   * (see {@link EdgeAiHttpClient}).
+   * Issue an authenticated request to the EDGE AI route (`/ai/generate/<service>/*`), which proxies
+   * to the AI service. Used as the backend HTTP client for the edge AI providers (see
+   * {@link EdgeAiHttpClient}); `service` selects the upstream the proxy forwards to.
    *
    * Returns the raw `Response` so streaming bodies are forwarded unchanged to `@effect/ai`.
    * Requires an identity to have been set via {@link setIdentity}.
    */
   // TODO(mykola): Merge into `BaseHttpClient._call` once it can return a streaming/raw `Response`;
   // the auth/retry loop below duplicates the one in `_call`.
-  public async anthropicAiRequest(request: Request): Promise<Response> {
+  public async aiRequest(service: EdgeAiService, request: Request): Promise<Response> {
     const incoming = new URL(request.url);
     const base = this.baseUrl.replace(/\/$/, '');
-    const target = new URL(`${base}/ai/generate/anthropic${incoming.pathname}${incoming.search}`);
+    const target = new URL(`${base}/ai/generate/${service}${incoming.pathname}${incoming.search}`);
 
     const method = request.method;
     const body = method === 'GET' || method === 'HEAD' ? undefined : await request.arrayBuffer();
@@ -661,7 +665,10 @@ export class EdgeHttpClient extends BaseHttpClient {
         headers.set(EDGE_CLIENT_TAG_HEADER, this._clientTag);
       }
 
-      const response = await fetch(target, { method, headers, body, signal: request.signal });
+      // `redirect: 'error'` rather than the default 'follow': these headers carry the EDGE auth
+      // credential and, on a BYOK request, the user's own provider key, and custom headers are not
+      // guaranteed to be stripped on a cross-origin redirect.
+      const response = await fetch(target, { method, headers, body, redirect: 'error', signal: request.signal });
       // Only retry edge auth when the 401 came from edge's own auth layer. Edge always sets
       // `WWW-Authenticate` on its own 401s; upstream-forwarded 401s (e.g. invalid BYOK rejected
       // by Anthropic) lack it and must be surfaced verbatim.
@@ -689,6 +696,108 @@ export class EdgeHttpClient extends BaseHttpClient {
       Effect.withSpan('EdgeHttpClient'),
       EffectEx.runAndForwardErrors,
     ) as T;
+  }
+
+  //
+  // Process control (see `ProcessProtocol`). The EDGE host runs `Process` instances — agents
+  // first — that outlive the client; these are the routes that drive one.
+  //
+
+  /**
+   * Spawns one of the EDGE host's built-in processes in `spaceId`. A process definition cannot cross
+   * the wire, so the request names the process by its `Process.key`.
+   */
+  public async spawnProcess(
+    ctx: Context,
+    spaceId: SpaceId,
+    body: ProcessProtocol.SpawnProcessRequest,
+  ): Promise<ProcessProtocol.SpawnProcessResponse> {
+    return this._call<ProcessProtocol.SpawnProcessResponse>(
+      ctx,
+      new URL(`/compute/processes/${spaceId}`, this.baseUrl),
+      {
+        body,
+        method: 'POST',
+        auth: true,
+      },
+    );
+  }
+
+  public async listProcesses(
+    ctx: Context,
+    spaceId: SpaceId,
+    query?: ProcessProtocol.ListProcessesQuery,
+  ): Promise<ProcessProtocol.ListProcessesResponse> {
+    const url = new URL(`/compute/processes/${spaceId}`, this.baseUrl);
+    for (const [key, value] of Object.entries(query ?? {})) {
+      if (value !== undefined) {
+        url.searchParams.set(key, String(value));
+      }
+    }
+    return this._call<ProcessProtocol.ListProcessesResponse>(ctx, url, {
+      method: 'GET',
+      auth: true,
+    });
+  }
+
+  public async getProcess(ctx: Context, spaceId: SpaceId, pid: string): Promise<ProcessProtocol.ProcessInfo> {
+    return this._call<ProcessProtocol.ProcessInfo>(
+      ctx,
+      new URL(`/compute/processes/${spaceId}/${encodeURIComponent(pid)}`, this.baseUrl),
+      {
+        method: 'GET',
+        auth: true,
+      },
+    );
+  }
+
+  /** Terminates the process and clears its durable storage on the host. */
+  public async terminateProcess(ctx: Context, spaceId: SpaceId, pid: string): Promise<void> {
+    await this._call(ctx, new URL(`/compute/processes/${spaceId}/${encodeURIComponent(pid)}`, this.baseUrl), {
+      method: 'DELETE',
+      auth: true,
+    });
+  }
+
+  /** Submits an input already encoded via the process definition's input schema. */
+  public async submitProcessInput(
+    ctx: Context,
+    spaceId: SpaceId,
+    pid: string,
+    body: ProcessProtocol.SubmitInputRequest,
+  ): Promise<void> {
+    await this._call(ctx, new URL(`/compute/processes/${spaceId}/${encodeURIComponent(pid)}/input`, this.baseUrl), {
+      body,
+      method: 'POST',
+      auth: true,
+    });
+  }
+
+  /**
+   * URL of the process's RPC endpoint. The surface is served as effect-rpc-over-HTTP, so callers
+   * drive it with an `RpcClient` over this URL rather than through this client's JSON envelope;
+   * {@link getAuthHeader} supplies the credential for those requests.
+   */
+  public processRpcUrl(spaceId: SpaceId, pid: string): URL {
+    return new URL(`/compute/processes/${spaceId}/${encodeURIComponent(pid)}/rpc`, this.baseUrl);
+  }
+
+  /**
+   * Reads the process's outputs and ephemeral trace at or after `cursor`, plus its state at read
+   * time. Cursor-based so a client that reloads resumes an in-flight remote process where it left off.
+   */
+  public async readProcessEvents(
+    ctx: Context,
+    spaceId: SpaceId,
+    pid: string,
+    cursor: number,
+  ): Promise<ProcessProtocol.ProcessEventsResponse> {
+    const url = new URL(`/compute/processes/${spaceId}/${encodeURIComponent(pid)}/events`, this.baseUrl);
+    url.searchParams.set('cursor', String(cursor));
+    return this._call<ProcessProtocol.ProcessEventsResponse>(ctx, url, {
+      method: 'GET',
+      auth: true,
+    });
   }
 }
 

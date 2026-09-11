@@ -142,7 +142,7 @@ export const WithForm = () => (
   >
     <Form.Viewport>
       <Form.Content>
-        <Form.FieldSet />
+        <Form.Fields />
         <Form.Actions />
       </Form.Content>
     </Form.Viewport>
@@ -153,7 +153,7 @@ export const WithReadOnlyForm = () => (
   <Form.Root schema={ConfigSchema} defaultValues={value} readonly={true}>
     <Form.Viewport>
       <Form.Content>
-        <Form.FieldSet />
+        <Form.Fields />
         <Form.Actions />
       </Form.Content>
     </Form.Viewport>

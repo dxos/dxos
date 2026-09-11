@@ -33,9 +33,10 @@ export const ShortcutsList = () => {
   );
 };
 
+// TODO(burdon): Use https://ark-ui.com/docs/utilities/hotkeys
 export const Key = ({ binding }: { binding: string }) => {
   return (
-    <span role='term' className='inline-flex gap-1' aria-label={binding} id={binding}>
+    <kbd role='term' className='inline-flex gap-1' aria-label={binding} id={binding}>
       {keySymbols(binding).map((c, i) => (
         <span
           key={i}
@@ -44,6 +45,6 @@ export const Key = ({ binding }: { binding: string }) => {
           {c}
         </span>
       ))}
-    </span>
+    </kbd>
   );
 };

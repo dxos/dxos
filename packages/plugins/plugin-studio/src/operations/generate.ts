@@ -105,7 +105,8 @@ const handler: Operation.WithHandler<typeof StudioOperation.Generate> = StudioOp
           });
           yield* Database.add(created);
           Obj.update(artifactObj, (artifactObj) => {
-            artifactObj.variants = [...(artifactObj.variants ?? []), Ref.make(created)];
+            artifactObj.variants ??= [];
+            artifactObj.variants.push(Ref.make(created));
             if (!artifactObj.cover) {
               artifactObj.cover = Ref.make(created);
             }
@@ -127,7 +128,8 @@ const handler: Operation.WithHandler<typeof StudioOperation.Generate> = StudioOp
             const created = Variant.make({ name, config, jobId });
             yield* Database.add(created);
             Obj.update(artifactObj, (artifactObj) => {
-              artifactObj.variants = [...(artifactObj.variants ?? []), Ref.make(created)];
+              artifactObj.variants ??= [];
+              artifactObj.variants.push(Ref.make(created));
             });
             pending = created;
           }

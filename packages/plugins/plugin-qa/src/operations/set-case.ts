@@ -37,7 +37,7 @@ const handler: Operation.WithHandler<typeof QaOperation.SetCase> = QaOperation.S
       const created = yield* Database.add(TestCase.make({ key, title, description, steps: steps ? [...steps] : [] }));
       applyTags(created, tags);
       Obj.update(plan, (plan) => {
-        plan.cases = [...plan.cases, Ref.make(created)];
+        plan.cases.push(Ref.make(created));
       });
 
       return { case: Ref.make(created), created: true };

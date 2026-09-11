@@ -7,6 +7,8 @@ import { describe, expect, onTestFinished, test } from 'vitest';
 import { Context } from '@dxos/context';
 import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
+import { createBuf, fromTimeframe } from '@dxos/protocols/buf';
+import { FeedMessageSchema } from '@dxos/protocols/buf/dxos/echo/feed_pb';
 import { createStorage } from '@dxos/random-access-storage';
 import { Timeframe } from '@dxos/timeframe';
 
@@ -37,12 +39,8 @@ describe('space/space-protocol', () => {
     onTestFinished(() => protocol1.stop(Context.default()));
     onTestFinished(() => protocol2.stop(Context.default()));
 
-    await expect
-      .poll(() => presence1.getPeersOnline().some(({ identityKey }) => identityKey.equals(peer2.identityKey)))
-      .toBeTruthy();
-    await expect
-      .poll(() => presence2.getPeersOnline().some(({ identityKey }) => identityKey.equals(peer1.identityKey)))
-      .toBeTruthy();
+    await expect.poll(() => presence1.getPeersByIdentityKey(peer2.identityKey).length > 0).toBeTruthy();
+    await expect.poll(() => presence2.getPeersByIdentityKey(peer1.identityKey).length > 0).toBeTruthy();
   });
 
   test('replicates a feed', async () => {
@@ -77,10 +75,10 @@ describe('space/space-protocol', () => {
     await protocol1.addFeed(feed1);
     await protocol2.addFeed(feed2);
 
-    await feed1.append({ timeframe: new Timeframe() });
+    await feed1.append(createBuf(FeedMessageSchema, { timeframe: fromTimeframe(new Timeframe()) }));
     await expect.poll(() => feed2.properties.length).toEqual(1);
 
-    await feed1.append({ timeframe: new Timeframe() });
+    await feed1.append(createBuf(FeedMessageSchema, { timeframe: fromTimeframe(new Timeframe()) }));
     await expect.poll(() => feed2.properties.length).toEqual(2);
 
     await builder.close();
@@ -118,10 +116,10 @@ describe('space/space-protocol', () => {
     await protocol1.addFeed(feed1);
     await protocol2.addFeed(feed2);
 
-    await feed1.append({ timeframe: new Timeframe() });
+    await feed1.append(createBuf(FeedMessageSchema, { timeframe: fromTimeframe(new Timeframe()) }));
     await expect.poll(() => feed2.properties.length).toEqual(1);
 
-    await feed1.append({ timeframe: new Timeframe() });
+    await feed1.append(createBuf(FeedMessageSchema, { timeframe: fromTimeframe(new Timeframe()) }));
     await expect.poll(() => feed2.properties.length).toEqual(2);
 
     await builder.close();

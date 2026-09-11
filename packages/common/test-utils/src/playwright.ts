@@ -141,50 +141,70 @@ export type SetupOptions = {
   viewportSize?: Parameters<Page['setViewportSize']>[0];
 };
 
+/**
+ * Opens a page, creating a context for it unless handed one to borrow.
+ * `close()` disposes whatever this created: the context when it made one, otherwise just the page.
+ */
 export const setupPage = async (browser: Browser | BrowserContext, options: SetupOptions = {}) => {
   const { url, bridgeLogs, viewportSize } = options;
 
   const context = 'newContext' in browser ? await browser.newContext() : browser;
-  const page = await context.newPage();
+  const ownsContext = context !== browser;
+  let page: Page | undefined;
 
-  if (viewportSize) {
-    await page.setViewportSize(viewportSize);
-  }
+  // Playwright opens a trace chunk on every live context at test start, so a context left behind by a
+  // closed page is re-serialized into every later trace in that worker.
+  const close = async (): Promise<void> => {
+    await (ownsContext ? context.close() : page?.close());
+  };
 
-  // TODO(wittjosiah): Remove?
-  if (bridgeLogs) {
-    const lock = new Lock();
+  try {
+    page = await context.newPage();
 
-    page.on('pageerror', async (error) => {
-      await lock.executeSynchronized(async () => {
-        // eslint-disable-next-line no-console
-        console.log(error);
-      });
-    });
+    if (viewportSize) {
+      await page.setViewportSize(viewportSize);
+    }
 
-    page.on('console', async (msg) => {
-      try {
-        const argsPromise = Promise.all(msg.args().map((x) => x.jsonValue()));
+    // TODO(wittjosiah): Remove?
+    if (bridgeLogs) {
+      const lock = new Lock();
+
+      page.on('pageerror', async (error) => {
         await lock.executeSynchronized(async () => {
-          const args = await argsPromise;
-
-          if (args.length > 0) {
-            console.log(...args);
-          } else {
-            console.log(msg);
-          }
+          // eslint-disable-next-line no-console
+          console.log(error);
         });
-      } catch (err) {
-        console.error('Failed to parse message', err);
-      }
-    });
-  }
+      });
 
-  if (url) {
-    await page.goto(url);
-  }
+      page.on('console', async (msg) => {
+        try {
+          const argsPromise = Promise.all(msg.args().map((x) => x.jsonValue()));
+          await lock.executeSynchronized(async () => {
+            const args = await argsPromise;
 
-  return { context, page };
+            if (args.length > 0) {
+              console.log(...args);
+            } else {
+              console.log(msg);
+            }
+          });
+        } catch (err) {
+          console.error('Failed to parse message', err);
+        }
+      });
+    }
+
+    if (url) {
+      await page.goto(url);
+    }
+
+    return { context, page, close };
+  } catch (err) {
+    // The caller never received `close`, so this is the only chance to dispose what got created. The
+    // setup error is the one worth reporting, so a failure to clean up does not displace it.
+    await close().catch(() => {});
+    throw err;
+  }
 };
 
 export const storybookUrl = (storyId: string, port = 9009) =>

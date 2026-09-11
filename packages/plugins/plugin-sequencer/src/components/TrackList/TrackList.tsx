@@ -55,7 +55,7 @@ export const TrackList = ({
                 classNames='gap-2 px-2 py-1 rounded-sm text-sm dx-current'
               >
                 <span
-                  className='inline-block w-3 h-3 rounded-sm shrink-0 border border-black/20'
+                  className='inline-block size-3 rounded-sm shrink-0 border border-black/20'
                   style={{ backgroundColor: hueToHex(hueFor(track)) }}
                   aria-hidden
                 />

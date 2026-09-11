@@ -1,176 +1,154 @@
 //
-// Copyright 2025 DXOS.org
+// Copyright 2026 DXOS.org
 //
 
-import * as Option from 'effect/Option';
-import React, { useMemo } from 'react';
+import React, { Children, type PropsWithChildren, useId } from 'react';
 
-import { DEFAULT_LAYOUT_NAME, FormLayoutAnnotation } from '@dxos/echo/Annotation';
-import { type AnyProperties } from '@dxos/echo/internal';
-import { SchemaEx } from '@dxos/effect';
-import { type Merge } from '@dxos/util';
+import {
+  Collapsible,
+  Field,
+  Fieldset,
+  Icon,
+  type ThemedClassName,
+  Tooltip,
+  composable,
+  composableProps,
+} from '@dxos/react-ui';
+import { MarkdownView } from '@dxos/react-ui-markdown';
+import { mx } from '@dxos/ui-theme';
 
-import { type FieldContext } from '#types';
-
-import { type FormHandlerProps, useFormValues } from '../../../hooks/index.ts';
-import { getRootFormProperties } from '../../../util/index.ts';
-import { FormField, FormFieldErrorBoundary, type FormFieldProps, presentationFor } from '../FormField/index.ts';
-import { FormLayout } from '../FormLayout/index.ts';
-import { FormFieldSetContainer } from './FormFieldSetContainer.tsx';
+import { useFormContext } from '../../../hooks/index.ts';
+import { formTheme } from '../Form.theme';
+import { FormFieldHeader } from '../FormField/index.ts';
+import { FormFieldSetDepthContext, useFormFieldSetDepth } from './FormFieldSetContext.ts';
 
 const FORM_FIELDSET_NAME = 'Form.FieldSet';
 
-export type FormFieldSetProps<T extends AnyProperties> = Merge<
-  {
-    /** Applied to the field set's container (the bordered box when collapsible). */
-    classNames?: string;
+export type FormFieldSetProps = ThemedClassName<
+  PropsWithChildren<{
     label?: string;
-    sort?: string[];
-    /**
-     * When set, renders a toggle button at the end of the label row that
-     * shows/hides the field set body. Used for nested objects.
-     */
+    /** Markdown, rendered under the legend, or as a tooltip on the label. */
+    description?: string;
+    /** Where the description shows: as helper text below the legend (default), or on hover of the label. */
+    descriptionPlacement?: 'below' | 'tooltip';
+    /** The legend is a disclosure that folds the body; nested objects fold by default. */
     collapsible?: boolean;
-    filter?: (props: SchemaEx.SchemaProperty[]) => SchemaEx.SchemaProperty[];
-    /**
-     * Picks a named layout out of `FormLayoutAnnotation` when present.
-     * Falls back to `'default'`. Ignored when the schema has no annotation
-     * (linear rendering then takes over).
-     */
-    layoutName?: string;
-  },
-  Pick<FormHandlerProps<T>, 'schema'>,
-  Pick<FormFieldProps, 'path' | 'autoFocus'>,
-  FieldContext
+  }>
 >;
 
 /**
- * Renders a set of form fields derived from a schema object.
+ * The one grouping element: a `<fieldset>` named by its legend, with an optional description and
+ * disclosure. It binds nothing and walks nothing — a hand-written form nests `Form.Field`s in it, a
+ * schema-driven one a `Form.Fields`. Its chrome follows its depth: a top-level field set is a titled
+ * section, a nested one an indented, bordered group, so the same element serves both.
  */
-export const FormFieldSet = ({
-  classNames,
-  label,
-  schema,
-  readonly,
-  path,
-  sort,
-  collapsible,
-  filter,
-  projection,
-  layout,
-  layoutName = DEFAULT_LAYOUT_NAME,
-  ...props
-}: FormFieldSetProps<any>) => {
-  const values = useFormValues(FORM_FIELDSET_NAME, path);
-  const properties = useFormFieldSetProperties({ schema, values, filter, sort, projection });
-  if ((readonly || layout === 'static') && values == null) {
-    return null;
-  }
+export const FormFieldSet = composable<HTMLFieldSetElement, FormFieldSetProps>(
+  ({ children, label, description, descriptionPlacement = 'below', collapsible, ...props }, forwardedRef) => {
+    const { variant = 'default', layout } = useFormContext(FORM_FIELDSET_NAME);
+    const depth = useFormFieldSetDepth();
+    const labelId = useId();
+    const styles = formTheme.styles({ variant, depth: depth === 0 ? 'root' : 'nested' });
+    const showLabel = layout !== 'inline' && !!label;
+    // An empty group has nothing to fold, so a disclosure on its legend would be a control that does nothing.
+    const canCollapse = !!collapsible && Children.toArray(children).length > 0;
 
-  // If the schema carries a layout template, hand off to <Form.Layout/> which renders the DSL.
-  // Linear rendering still runs when no annotation is present, so existing call sites are unchanged.
-  const layouts = schema ? Option.getOrUndefined(FormLayoutAnnotation.get(schema)) : undefined;
-  const body =
-    layouts?.[layoutName] !== undefined && schema ? (
-      <FormLayout
-        schema={schema}
-        name={layoutName}
-        path={path}
-        readonly={readonly}
-        layout={layout}
-        projection={projection}
-        {...props}
-      />
-    ) : (
-      properties.map((property) => {
-        const name = property.name.toString();
-        return (
-          <FormFieldErrorBoundary key={name} path={[...(path ?? []), name]}>
-            <FormField
-              type={property.type}
-              name={name}
-              path={[...(path ?? []), name]}
-              required={!property.isOptional}
-              readonly={readonly}
-              layout={layout}
-              projection={projection}
-              {...props}
-            />
-          </FormFieldErrorBoundary>
-        );
-      })
+    const tooltip = descriptionPlacement === 'tooltip' && !!description;
+    // A question mark after the label carries the description, so the group's chrome stays one line.
+    const hint = tooltip && (
+      <Tooltip.Trigger
+        content={description}
+        side='bottom'
+        aria-label={description}
+        className='grid size-6 place-items-center rounded-xs text-description hover:bg-hover-surface'
+      >
+        <Icon icon='ph--question--regular' size={4} />
+      </Tooltip.Trigger>
     );
 
-  return (
-    <FormFieldSetContainer
-      classNames={classNames}
-      label={label}
-      path={SchemaEx.createJsonPath(path ?? [])}
-      readonly={readonly}
-      presentation={presentationFor(layout)}
-      collapsible={collapsible}
-    >
-      {body}
-    </FormFieldSetContainer>
-  );
-};
+    const legend = showLabel && (
+      <Fieldset.Legend
+        classNames={styles.fieldSetLegend({
+          class: mx(description && !tooltip ? undefined : styles.fieldSetHeader(), hint && 'flex items-center gap-1'),
+        })}
+      >
+        {canCollapse ? (
+          // The caret alone is the disclosure, named by the label text beside it, so the focus ring
+          // frames a button and not the whole row.
+          <FormFieldHeader
+            label={label}
+            labelId={labelId}
+            labelEnd={hint}
+            actions={
+              <Field.Block>
+                {/* Not a `Button`: its open-state styling would read the trigger's `data-state`. */}
+                <Collapsible.Trigger
+                  aria-labelledby={labelId}
+                  classNames='group grid size-6 place-items-center rounded-xs hover:bg-hover-surface'
+                >
+                  <Icon
+                    icon='ph--caret-right--regular'
+                    size={3}
+                    classNames='transition-transform group-data-[state=open]:rotate-90'
+                  />
+                </Collapsible.Trigger>
+              </Field.Block>
+            }
+          />
+        ) : depth === 0 ? (
+          // A heading inside the legend: the group is named by its title, and the title still serves navigation.
+          <>
+            <h2 id={labelId} className={styles.fieldSetTitle()}>
+              {label}
+            </h2>
+            {hint}
+          </>
+        ) : (
+          <FormFieldHeader label={label} labelId={labelId} labelEnd={hint} />
+        )}
+      </Fieldset.Legend>
+    );
+
+    const helper = description && !tooltip && (
+      <Fieldset.HelperText asChild classNames={styles.fieldSetHeader({ class: styles.fieldSetDescription() })}>
+        <MarkdownView content={description} />
+      </Fieldset.HelperText>
+    );
+
+    // A nested group's body is the bordered box, under the legend; the root's fields sit in the fieldset itself.
+    const body = (
+      <FormFieldSetDepthContext.Provider value={depth + 1}>
+        {canCollapse ? (
+          <Collapsible.Content classNames={styles.fieldSetBody()}>{children}</Collapsible.Content>
+        ) : depth > 0 ? (
+          <div className={styles.fieldSetBody()}>{children}</div>
+        ) : (
+          children
+        )}
+      </FormFieldSetDepthContext.Provider>
+    );
+
+    const fieldset = (
+      <Fieldset.Root
+        {...composableProps(props, { classNames: styles.fieldSet() })}
+        aria-labelledby={showLabel ? labelId : undefined}
+        ref={forwardedRef}
+      >
+        {legend}
+        {helper}
+        {body}
+      </Fieldset.Root>
+    );
+
+    // The box is the fieldset and the `Collapsible` at once, so the group's name, border and
+    // disclosure state sit on one element.
+    return canCollapse ? (
+      <Collapsible.Root defaultOpen asChild>
+        {fieldset}
+      </Collapsible.Root>
+    ) : (
+      fieldset
+    );
+  },
+);
 
 FormFieldSet.displayName = FORM_FIELDSET_NAME;
-
-type UseFormFieldSetPropertiesParams = Pick<FormFieldSetProps<any>, 'schema' | 'filter' | 'projection' | 'sort'> & {
-  values: AnyProperties | undefined;
-  sort?: string[];
-};
-
-/**
- * Resolves ordered schema properties for a field set (projection order, filter, or sort).
- */
-const useFormFieldSetProperties = ({
-  schema,
-  filter,
-  projection,
-  values,
-  sort,
-}: UseFormFieldSetPropertiesParams): SchemaEx.SchemaProperty[] => {
-  // TODO(burdon): Updates on every value change.
-  //  Remove values dep if can remove from getSchemaProperties.
-  return useMemo(() => {
-    if (!schema) {
-      return [];
-    }
-
-    // TODO(wittjosiah): Reconcile FormInputAnnotation with projection hidden properties & filter function.
-    const schemaProps = getRootFormProperties(schema.ast, values);
-    const filteredProps = filter ? filter(schemaProps) : schemaProps;
-
-    // Use projection-based field management when view and projection are available.
-    if (projection) {
-      const fieldProjections = projection.getFieldProjections();
-      const hiddenProperties = new Set(projection.getHiddenProperties());
-
-      // Filter properties to only include visible ones and order by projection.
-      const visibleProps = filteredProps.filter((prop) => !hiddenProperties.has(prop.name.toString()));
-      const orderedProps: SchemaEx.SchemaProperty[] = [];
-
-      // Add properties in projection field order.
-      for (const fieldProjection of fieldProjections) {
-        const fieldPath = String(fieldProjection.field.path);
-        const prop = visibleProps.find((prop) => prop.name === fieldPath);
-        if (prop) {
-          orderedProps.push(prop);
-        }
-      }
-
-      // Add any remaining properties not in projection.
-      const projectionPaths = new Set(fieldProjections.map((projection) => String(projection.field.path)));
-      const remainingProps = visibleProps.filter((prop) => !projectionPaths.has(prop.name.toString()));
-      orderedProps.push(...remainingProps);
-      return orderedProps;
-    }
-
-    // Fallback to legacy filter/sort behavior.
-    return sort
-      ? [...filteredProps].sort(({ name: a }, { name: b }) => sort.indexOf(a.toString()) - sort.indexOf(b.toString()))
-      : filteredProps;
-  }, [schema, values, filter, sort, projection]);
-};

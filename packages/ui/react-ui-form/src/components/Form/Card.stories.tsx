@@ -64,7 +64,7 @@ const FormCard = () => (
       <Form.Root schema={Contact} values={values}>
         <Form.Viewport>
           <Form.Content>
-            <Form.FieldSet />
+            <Form.Fields />
           </Form.Content>
         </Form.Viewport>
       </Form.Root>

@@ -806,8 +806,8 @@ describe('ProjectionModel', () => {
     expect(projectionModel.getHiddenFields()[0].path).to.equal('title');
 
     // Modify the schema - add a field.
-    Type.update(mutable, (draft) => {
-      draft.jsonSchema.properties!.status = { type: 'string' };
+    Type.update(mutable, (mutable) => {
+      mutable.jsonSchema.properties!.status = { type: 'string' };
     });
     projectionModel.normalizeView();
 

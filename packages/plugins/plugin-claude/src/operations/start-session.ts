@@ -67,6 +67,9 @@ const handler: Operation.WithHandler<typeof ClaudeAgentOperation.StartSession> =
           environmentId: environment,
           vaultId: vault.id,
           status: response.status,
+          // Recorded so a later refresh can re-read these refs: the vault holds only the value, and
+          // an OAuth token that rotates in the space leaves that copy stale.
+          credentials: [...(credentials ?? [])],
         }),
       );
 

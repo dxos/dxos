@@ -4,3 +4,4 @@
 
 export * as RpcTiming from './RpcTiming.ts';
 export * as WorkerProtocol from './WorkerProtocol.ts';
+export * from './errors.ts';

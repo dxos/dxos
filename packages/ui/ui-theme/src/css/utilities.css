@@ -128,7 +128,7 @@
 
 /**
  * Visual warning to indicate incorrect usage of `slottable` — an `asChild` whose child is not
- * composable, so Radix `Slot` silently drops the injected className and ref.
+ * composable, so the `asChild` factory silently drops the injected className and ref.
  *
  * An outline rather than a border: it is applied to the part's own element (not a wrapper), so it
  * must not consume layout space or fight a border the part already has. Dev builds only.

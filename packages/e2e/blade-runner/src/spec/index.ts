@@ -3,6 +3,7 @@
 //
 
 export * from './automerge.ts';
+export * from './edge-stress/index.ts';
 export * from './edge-sync.ts';
 export * from './edge-ws.ts';
 export * from './empty.ts';

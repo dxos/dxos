@@ -13,6 +13,7 @@ import { log } from '@dxos/log';
 
 import { type ResourceUsageStats, analyzeResourceUsage } from '../analysys/resource-usage.ts';
 import { SchedulerEnvImpl } from '../env/index.ts';
+import { describeError } from '../util.ts';
 import { buildBrowserBundle } from './browser/browser-bundle.ts';
 import { type GlobalOptions, type ReplicantsSummary, type TestPlan, type TestProps } from './spec.ts';
 
@@ -84,6 +85,7 @@ const runPlanner = async <S>({ plan, spec, options }: RunPlanProps<S>) => {
     testId,
     outDir,
     spec,
+    randomSeed: options.randomSeed,
   };
 
   if (options.shouldBuildBrowser) {
@@ -107,7 +109,9 @@ const runPlanner = async <S>({ plan, spec, options }: RunPlanProps<S>) => {
   try {
     result = await plan.run(schedulerEnv, testProps);
   } catch (err) {
-    log.error('error running plan', err);
+    // `err` alone prints only its own stack, dropping the cause chain that names what actually
+    // failed (e.g. the HTTP status behind an `AgentProvisioningError`) — `describeError` keeps it.
+    log.error('error running plan', { error: describeError(err) });
     await schedulerEnv.close();
     process.exit(1);
   }

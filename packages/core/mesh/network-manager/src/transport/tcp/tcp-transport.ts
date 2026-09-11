@@ -2,12 +2,14 @@
 // Copyright 2020 DXOS.org
 //
 
+import { create } from '@bufbuild/protobuf';
 import { type AddressInfo, type Server, Socket } from 'node:net';
 
 import { Event } from '@dxos/async';
 import { ErrorStream } from '@dxos/debug';
+import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { type Signal } from '@dxos/protocols/proto/dxos/mesh/swarm';
+import { type Signal, SignalSchema } from '@dxos/protocols/buf/dxos/mesh/swarm_pb';
 
 import { type Transport, type TransportFactory, type TransportOptions, type TransportStats } from '../transport.ts';
 
@@ -54,15 +56,11 @@ export class TcpTransport implements Transport {
         this._server.on('listening', () => {
           const { port } = this._server!.address() as AddressInfo;
           log('listening', { port });
-          void this.options
-            .sendSignal({
-              payload: { port },
-            })
-            .catch((err) => {
-              if (!this._closed) {
-                this.errors.raise(err);
-              }
-            });
+          void this.options.sendSignal(create(SignalSchema, { payload: { port } })).catch((err) => {
+            if (!this._closed) {
+              this.errors.raise(err);
+            }
+          });
         });
 
         this._server.on('error', (err) => {
@@ -89,9 +87,11 @@ export class TcpTransport implements Transport {
       return;
     }
 
+    const port = payload?.port;
+    invariant(typeof port === 'number', 'Signal carries no listening port.');
     const socket = new Socket();
     this._handleSocket(socket);
-    socket.connect({ port: payload.port, host: 'localhost' });
+    socket.connect({ port, host: 'localhost' });
   }
 
   async getDetails(): Promise<string> {

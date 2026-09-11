@@ -14,10 +14,10 @@ import { fileURLToPath } from 'node:url';
 import { type Plugin } from 'vite';
 
 import css from './loader-app/boot-loader.css?raw';
-// The loader-app Solid sources are inlined as raw text (never parsed by
-// dx-compile — app-framework is a React package, so its build can't compile
-// Solid JSX). They are compiled to a self-contained browser IIFE at the
-// consuming app's build time by {@link compileLoaderBundle} below.
+// The loader-app Solid sources are inlined as raw text: app-framework is a React
+// package, so its own build cannot compile Solid JSX. They are compiled to a
+// self-contained browser IIFE at the consuming app's build time by
+// {@link compileLoaderBundle} below.
 import bridgeSrc from './loader-app/bridge.ts?raw';
 import entrySrc from './loader-app/entry.tsx?raw';
 import loaderSrc from './loader-app/Loader.tsx?raw';
@@ -43,6 +43,18 @@ export type BootLoaderOptions = {
    * text colour. Leave empty/undefined to render only the ring.
    */
   markSvg?: string;
+
+  /**
+   * A CSS filter applied to the mark — `hue-rotate(82deg)` turns the released blue mark purple —
+   * so a channel recolours the one piece of artwork instead of shipping a generated copy.
+   */
+  markFilter?: string;
+
+  /**
+   * URL of the icon sprite the plugin activation row resolves its `<use href>` against; defaults
+   * to `/icons.svg`. A static asset, so the row draws before any app bundle loads.
+   */
+  spritePath?: string;
 
   /**
    * HTML entry filenames to inject the loader into. Defaults to `index.html` only
@@ -73,8 +85,8 @@ const resolveDir = dirname(fileURLToPath(import.meta.url));
 /**
  * Compile the loader-app from its inlined raw sources into a single
  * self-contained IIFE (Solid runtime bundled in) suitable for inlining into
- * `index.html`. Mirrors dx-compile's Solid pipeline: `@babel/preset-typescript`
- * strips types, then `babel-preset-solid` compiles JSX into reactive primitives.
+ * `index.html`. `@babel/preset-typescript` strips types, then `babel-preset-solid`
+ * compiles JSX into reactive primitives.
  */
 const compileLoaderBundle = async (): Promise<string> => {
   const virtualSolid = (): EsbuildPlugin => ({
@@ -157,7 +169,13 @@ const getLoaderBundle = (): Promise<string> => (bundlePromise ??= compileLoaderB
  * etc.) in `boot-loader.css`, so consumers can override them at the document
  * level without re-parameterizing this plugin.
  */
-export const bootLoaderPlugin = ({ status, markSvg, include = ['index.html'] }: BootLoaderOptions = {}): Plugin => {
+export const bootLoaderPlugin = ({
+  status,
+  markSvg,
+  markFilter,
+  spritePath,
+  include = ['index.html'],
+}: BootLoaderOptions = {}): Plugin => {
   return {
     name: 'app-framework:boot-loader',
     async transformIndexHtml(_html, ctx) {
@@ -191,7 +209,7 @@ export const bootLoaderPlugin = ({ status, markSvg, include = ['index.html'] }: 
         {
           tag: 'script',
           injectTo: 'body-prepend',
-          children: `window.__BOOT_LOADER_CONFIG__=${JSON.stringify({ rootId, markSvg, status })};`,
+          children: `window.__BOOT_LOADER_CONFIG__=${JSON.stringify({ rootId, markSvg, markFilter, status, spritePath })};`,
         },
         {
           tag: 'script',

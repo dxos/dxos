@@ -11,6 +11,7 @@ import { type ReactNode } from 'react';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import type * as Operation from '@dxos/compute/Operation';
+import { type Obj } from '@dxos/echo';
 import { type Label } from '@dxos/react-ui';
 import { type ViewModeItem } from '@dxos/react-ui-editor';
 import { type Text } from '@dxos/schema';
@@ -111,6 +112,11 @@ export type ReviewMode = 'editing' | 'suggesting' | 'viewing';
 
 export type MarkdownExtensionProvider = (props: {
   document?: Markdown.Document;
+  /**
+   * The object whose text the editor edits when it is not a markdown document — an outline, a task
+   * set — so a contribution that resolves against the object's project (a `#123` reference) can.
+   */
+  subject?: Obj.Unknown;
   viewMode?: EditorViewMode;
   /** The core branch the editor is currently showing (the branch under review); undefined = main. */
   reviewBranch?: string;

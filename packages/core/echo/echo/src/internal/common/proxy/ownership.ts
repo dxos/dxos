@@ -237,6 +237,19 @@ export const getEchoRoot = (target: object, depth = 0): object => {
 };
 
 /**
+ * The in-memory variant's read-only gate key (see `assertMutable`): the root target that a change
+ * context is opened against, or `undefined` while the root does not yet own an `[EventId]` — an object
+ * under construction is not gated, which is what lets `init` fill it before any context exists.
+ *
+ * Every target of one object answers the same key, so a nested record and an array are gated by the
+ * context their root opens.
+ */
+export const changeKeyOf = (target: object): object | undefined => {
+  const root = getEchoRoot(getRawTarget(target));
+  return EventId in root ? root : undefined;
+};
+
+/**
  * Notify all owners in the ownership chain.
  * When a nested object changes, its parent should also be notified.
  * This handles the case where a root ECHO object is nested inside another object.

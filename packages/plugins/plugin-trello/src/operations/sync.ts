@@ -212,7 +212,7 @@ export const reconcileBoardCards: (
     if (newRefs.length > 0) {
       Obj.update(kanban, (kanban) => {
         if (kanban.spec.kind === 'items') {
-          kanban.spec.items = [...(kanban.spec.items as ReadonlyArray<Ref.Ref<Obj.Unknown>>), ...newRefs];
+          kanban.spec.items.push(...newRefs);
         }
       });
     }

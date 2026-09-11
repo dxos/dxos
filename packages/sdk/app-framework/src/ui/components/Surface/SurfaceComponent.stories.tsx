@@ -6,7 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useEffect, useState } from 'react';
 
 import { random } from '@dxos/random';
-import { Input, Panel, Toolbar } from '@dxos/react-ui';
+import { Field, Panel, Toolbar } from '@dxos/react-ui';
 import { Listbox } from '@dxos/react-ui-list';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { type ColorStyles, getHashStyles, mx } from '@dxos/ui-theme';
@@ -124,10 +124,10 @@ const DefaultStory = ({ debug: debugProp }: StoryArgs) => {
           <Toolbar.Button onClick={handleSelect}>Pick</Toolbar.Button>
           <Toolbar.Button onClick={handleError}>Error</Toolbar.Button>
           <Toolbar.Separator />
-          <Input.Root>
-            <Input.Label classNames='pr-1'>Debug</Input.Label>
-            <Input.Switch checked={debug} onCheckedChange={handleToggleDebug} />
-          </Input.Root>
+          <Field.Root>
+            <Field.Label classNames='pr-1'>Debug</Field.Label>
+            <Field.Switch checked={debug} onCheckedChange={handleToggleDebug} />
+          </Field.Root>
         </Toolbar.Root>
       </Panel.Toolbar>
       <Panel.Content classNames='grid grid-cols-2 h-full gap-4 overflow-hidden'>

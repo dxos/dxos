@@ -15,29 +15,18 @@ import { FeedbackForm, type FeedbackSubmitHandler } from './FeedbackForm.tsx';
 
 type FeedbackFormStoryArgs = {
   hidden?: { version?: string };
-  onSave?: FeedbackSubmitHandler;
+  onSubmit?: FeedbackSubmitHandler;
   onDownloadLogs?: () => void;
-  onDiscord?: FeedbackSubmitHandler;
-  onGitHub?: FeedbackSubmitHandler;
   discordPresence?: DiscordPresence;
 };
 
-const FeedbackFormStory = ({
-  hidden,
-  onSave,
-  onDownloadLogs,
-  onDiscord,
-  onGitHub,
-  discordPresence,
-}: FeedbackFormStoryArgs) => (
-  <FeedbackForm.Root hidden={hidden}>
+const FeedbackFormStory = ({ hidden, onSubmit, onDownloadLogs, discordPresence }: FeedbackFormStoryArgs) => (
+  <FeedbackForm.Root hidden={hidden} onSubmit={onSubmit ?? (() => true)}>
     <Form.Viewport>
       <Form.Content>
-        <Form.FieldSet />
+        <Form.Fields />
         <FeedbackForm.DownloadLogs onDownloadLogs={onDownloadLogs} />
-        <FeedbackForm.SubmitPosthog onSubmit={onSave ?? (() => {})} />
-        <FeedbackForm.SubmitGitHub onSubmit={onGitHub} />
-        <FeedbackForm.SubmitDiscord onSubmit={onDiscord} />
+        <FeedbackForm.Submit />
         <FeedbackForm.DiscordPresence discordPresence={discordPresence} />
       </Form.Content>
     </Form.Viewport>
@@ -60,16 +49,18 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   args: {
-    onSave: (values) => {
+    onSubmit: (values) => {
       console.log(values);
+      return true;
     },
   },
 };
 
 export const WithDownloadLogs: Story = {
   args: {
-    onSave: (values) => {
+    onSubmit: (values) => {
       console.log(values);
+      return true;
     },
     onDownloadLogs: () => {
       console.log('download logs clicked');
@@ -77,24 +68,11 @@ export const WithDownloadLogs: Story = {
   },
 };
 
-export const WithDiscord: Story = {
+export const WithPresence: Story = {
   args: {
-    onSave: (values) => {
-      console.log('posthog', values);
-    },
-    onDiscord: (values) => {
-      console.log('discord', values);
-    },
-  },
-};
-
-export const WithDiscordAndPresence: Story = {
-  args: {
-    onSave: (values) => {
-      console.log('posthog', values);
-    },
-    onDiscord: (values) => {
-      console.log('discord', values);
+    onSubmit: (values) => {
+      console.log(values);
+      return true;
     },
     discordPresence: {
       teamOnline: 2,

@@ -62,19 +62,22 @@ const meta = {
               // Seed a few Artifacts, each with one generated (url) cover variant, as members.
               Obj.update(collection, (collection) => {
                 collection.objects = Array.from({ length: 6 }, (_, index) => {
-                  const artifact = Artifact.make({ name: `Artifact ${index + 1}`, kind: 'image' });
+                  const artifact = Artifact.make({
+                    [Obj.Parent]: collection,
+                    name: `Artifact ${index + 1}`,
+                    kind: 'image',
+                  });
                   const variant = space.db.add(
                     Variant.make({
+                      [Obj.Parent]: artifact,
                       contentType: 'image/png',
                       url: `https://picsum.photos/seed/dxos-${index}/512/512`,
                     }),
                   );
-                  Obj.setParent(variant, artifact);
                   Obj.update(artifact, (artifact) => {
                     artifact.variants = [Ref.make(variant)];
                     artifact.cover = Ref.make(variant);
                   });
-                  Obj.setParent(artifact, collection);
                   return Ref.make(space.db.add(artifact));
                 });
               });

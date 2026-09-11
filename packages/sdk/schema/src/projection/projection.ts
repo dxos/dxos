@@ -59,7 +59,7 @@ export const createEchoChangeCallback = (view: View.View, schema?: Type.AnyEntit
       ? () => {
           throw new Error('Schema is not mutable');
         }
-      : (mutate) => Type.update(schema, (draft) => mutate(draft.jsonSchema)),
+      : (mutate) => Type.update(schema, (schema) => mutate(schema.jsonSchema)),
 });
 
 /**

@@ -6,6 +6,7 @@ import { EditorState } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
 import { describe, test } from 'vitest';
 
+import { linkWidgets, matchHosts } from '../../widgets/link-widgets.ts';
 import { createMarkdownExtensions } from './bundle.ts';
 import { decorateMarkdown } from './decorate.ts';
 
@@ -52,6 +53,27 @@ describe('autolinks', () => {
       'https://a.example.com',
       'https://b.example.com',
       'https://c.example.com',
+    ]);
+    view.destroy();
+  });
+
+  test('a link widget claims bracketed links, not the same URL written bare', ({ expect }) => {
+    const parent = document.createElement('div');
+    const view = new EditorView({
+      state: EditorState.create({
+        doc: 'See https://github.com/dxos/dxos/pull/1 and [the PR](https://github.com/dxos/dxos/pull/1).',
+        extensions: [
+          createMarkdownExtensions(),
+          decorateMarkdown(),
+          linkWidgets({ match: matchHosts(['github.com']), link: { factory: () => null } }),
+          EditorView.editable.of(false),
+        ],
+      }),
+      parent,
+    });
+    // The bare URL is still a link; the bracketed one is the widget's and is left undecorated.
+    expect(anchors(view)).toEqual([
+      { text: 'https://github.com/dxos/dxos/pull/1', href: 'https://github.com/dxos/dxos/pull/1' },
     ]);
     view.destroy();
   });

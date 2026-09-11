@@ -25,6 +25,11 @@ export type OtelLogOptions = OtelOptions & {
   logLevel: LogLevel;
   exporter?: LogRecordExporter;
   /**
+   * Batch processor sizing. The defaults (queue 2048, batches of 512) suit a live stream; a
+   * one-shot dump of a whole log buffer must raise them or the processor drops records.
+   */
+  batch?: { maxQueueSize?: number; maxExportBatchSize?: number };
+  /**
    * Called with the trace id of every entry at warning or above emitted inside a span, before the
    * export level is applied, so the tail sampler can keep that trace.
    */
@@ -53,6 +58,7 @@ export class OtelLogs {
                 headers: destination.headers,
                 concurrencyLimit: 10,
               }),
+            ...options.batch,
           }),
       ),
     });

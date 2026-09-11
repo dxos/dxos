@@ -20,7 +20,7 @@ import { DXN } from '@dxos/keys';
 import { dbg, log } from '@dxos/log';
 import * as DatabaseSkill from '@dxos/plugin-space/DatabaseSkill';
 import { ErrorCodec } from '@dxos/protocols';
-import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
+import { EdgeReplicationSetting } from '@dxos/protocols/buf/dxos/echo/metadata_pb';
 import { Text } from '@dxos/schema';
 import { trim } from '@dxos/util';
 

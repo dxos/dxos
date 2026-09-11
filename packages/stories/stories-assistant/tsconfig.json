@@ -83,6 +83,9 @@
       "path": "../../plugins/plugin-crm"
     },
     {
+      "path": "../../plugins/plugin-debug"
+    },
+    {
       "path": "../../plugins/plugin-explorer"
     },
     {
@@ -156,6 +159,9 @@
     },
     {
       "path": "../../ui/react-ui"
+    },
+    {
+      "path": "../../ui/react-ui-attention"
     },
     {
       "path": "../../ui/react-ui-chat"

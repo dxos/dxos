@@ -12,7 +12,7 @@ import { findRefOption } from './find-ref-option.ts';
 const SPACE_ID = 'BA25QRC2FEWCSAMRP4RZL65LWJ7352CKE';
 const ENTITY_ID = '01J00J9B45YHYSGZQTQMSKMGJ6';
 const QUALIFIED = `echo://${SPACE_ID}/${ENTITY_ID}`;
-const LOCAL = `echo:/${ENTITY_ID}`;
+const LOCAL = `echo:///${ENTITY_ID}`;
 
 const options: RefOption[] = [
   { id: QUALIFIED, label: 'Target' },
@@ -43,7 +43,7 @@ describe('findRefOption', () => {
   });
 
   test('returns undefined when no option matches', ({ expect }) => {
-    expect(findRefOption({ '/': 'echo:/01J00MISSING0000000000000000' }, options)).toBeUndefined();
+    expect(findRefOption({ '/': 'echo:///01J00MISSING0000000000000000' }, options)).toBeUndefined();
   });
 
   test('does not match a qualified ref against a same-entity-id option from a different space', ({ expect }) => {

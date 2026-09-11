@@ -95,7 +95,7 @@ export const writeSerializedSpaceArchive = async (
 ): Promise<SpacesService.SpaceArchive> => {
   const { space, echoHost, exportedBy } = options;
 
-  const rootUrl = space.automergeSpaceState.lastEpoch?.subject.assertion.automergeRoot;
+  const rootUrl = space.automergeSpaceState.lastEpoch?.assertion.automergeRoot;
   assertState(rootUrl, 'Space does not have a root URL');
   const databaseRoot = space.databaseRoot;
   assertState(databaseRoot, 'Space database root is not ready');

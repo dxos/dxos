@@ -14,6 +14,7 @@ const STORY_URL = storybookUrl('plugins-plugin-kanban-containers-kanban--mutable
 test.describe('Kanban MutableSchema', () => {
   let page: Page;
   let board: BoardManager;
+  let close: (() => Promise<void>) | undefined;
 
   test.beforeEach(async ({ browser, browserName }) => {
     // TODO(wittjosiah): Deferred on webkit — the story intermittently never paints a column within the
@@ -24,15 +25,14 @@ test.describe('Kanban MutableSchema', () => {
     test.skip(browserName === 'webkit');
 
     // Larger viewport to avoid triggering scroll-assist behaviour on simple drag operations.
-    ({ page } = await setupPage(browser, { url: STORY_URL, viewportSize: { width: 1920, height: 1080 } }));
+    ({ page, close } = await setupPage(browser, { url: STORY_URL, viewportSize: { width: 1920, height: 1080 } }));
     board = new BoardManager(page.locator('body'));
     await board.waitUntilReady();
   });
 
   test.afterEach(async () => {
-    // `afterEach` runs even when `beforeEach` skipped, so `page` may never have been assigned —
-    // closing it unconditionally turned every skipped webkit test into a teardown failure.
-    await page?.close();
+    // Playwright runs `afterEach` even when `beforeEach` skipped, so the context may not exist.
+    await close?.();
   });
 
   test('rearrange columns', async () => {

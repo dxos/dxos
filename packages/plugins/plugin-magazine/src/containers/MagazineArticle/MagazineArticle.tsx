@@ -15,7 +15,7 @@ import { Flex, Panel, useTranslation } from '@dxos/react-ui';
 import { Attention, useSelection } from '@dxos/react-ui-attention';
 import { ProgressMeter } from '@dxos/react-ui-components';
 import { Masonry } from '@dxos/react-ui-masonry';
-import { Menu } from '@dxos/react-ui-menu';
+import { ActionToolbar } from '@dxos/react-ui-menu';
 
 import { useVisibleMagazinePosts } from '#atoms';
 import { meta } from '#meta';
@@ -91,13 +91,10 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
 
   return (
     <Panel.Root role={role}>
-      <Menu.Root {...menu} attendableId={attendableId}>
-        <Panel.Toolbar asChild>
-          <Menu.Toolbar>
-            <Menu.Items />
-          </Menu.Toolbar>
-        </Panel.Toolbar>
-      </Menu.Root>
+      <Panel.Toolbar asChild>
+        <ActionToolbar {...menu} attendableId={attendableId} />
+      </Panel.Toolbar>
+
       <Panel.Content>
         {noPosts ? (
           // TODO(burdon): Factor out common EmptyState component; of push into Masonry, List, etc.

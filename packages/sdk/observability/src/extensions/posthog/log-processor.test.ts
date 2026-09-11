@@ -141,6 +141,34 @@ describe('logProcessor', () => {
     );
   });
 
+  test('forwards nested context values rather than dropping them', () => {
+    const entry = createEntry({
+      error: new Error('err'),
+      meta: { F: 'test.ts', L: 1, S: undefined },
+      context: { fatal_dialog: true, diagnostics: { phase: 'awaiting-lock', attempts: 2 } },
+    });
+    logProcessor(baseConfig, entry);
+    expect(posthog.captureException).toHaveBeenCalledWith(
+      expect.any(Error),
+      expect.objectContaining({
+        fatal_dialog: true,
+        diagnostics: { phase: 'awaiting-lock', attempts: 2 },
+      }),
+    );
+  });
+
+  test('does not forward the error itself as a property', () => {
+    const contextError = new Error('context err');
+    const entry = createEntry({
+      meta: { F: 'test.ts', L: 1, S: undefined },
+      context: { error: contextError, tag: 'x' },
+    });
+    logProcessor(baseConfig, entry);
+    const [, properties] = vi.mocked(posthog.captureException).mock.calls[0];
+    expect(properties).not.toHaveProperty('error');
+    expect(properties).toMatchObject({ tag: 'x' });
+  });
+
   test('does not set invariant_violation for normal errors', () => {
     const error = new Error('normal error');
     const entry = createEntry({

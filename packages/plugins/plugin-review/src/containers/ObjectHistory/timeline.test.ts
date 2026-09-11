@@ -37,8 +37,8 @@ describe('timeline model', () => {
         const v1 = Version.create(doc, { name: 'v1', target: root });
         const branch = yield* Effect.promise(() => Branch.create(doc, { name: 'draft', parent: root }));
         const binding = yield* Effect.promise(() => Branch.bind(doc, branch));
-        Obj.update(binding.object, () => {
-          EchoText.update(binding.object, 'content', 'alpha\nbravo\n');
+        Obj.update(binding.object, (object) => {
+          EchoText.update(object, 'content', 'alpha\nbravo\n');
         });
         yield* Effect.promise(() => Branch.merge(doc, branch));
         binding.dispose();
@@ -101,8 +101,8 @@ describe('timeline model', () => {
 
         const branch = yield* Effect.promise(() => Branch.create(doc, { name: 'draft', parent: root }));
         const binding = yield* Effect.promise(() => Branch.bind(doc, branch));
-        Obj.update(binding.object, () => {
-          EchoText.update(binding.object, 'content', 'alpha\nbravo\n');
+        Obj.update(binding.object, (object) => {
+          EchoText.update(object, 'content', 'alpha\nbravo\n');
         });
         binding.dispose();
 
@@ -133,8 +133,8 @@ describe('timeline model', () => {
 
         const branch = yield* Effect.promise(() => Branch.create(doc, { name: 'draft', parent: root }));
         const binding = yield* Effect.promise(() => Branch.bind(doc, branch));
-        Obj.update(binding.object, () => {
-          EchoText.update(binding.object, 'content', 'alpha\nbravo\n');
+        Obj.update(binding.object, (object) => {
+          EchoText.update(object, 'content', 'alpha\nbravo\n');
         });
         const branchCheckpoint = Version.create(doc, { name: 'draft-r1', target: binding.object, branch: branch.key });
         binding.dispose();
@@ -171,8 +171,8 @@ describe('timeline model', () => {
         Version.create(doc, { name: 'on-main', target: root });
         const branch = yield* Effect.promise(() => Branch.create(doc, { name: 'draft', parent: root }));
         const binding = yield* Effect.promise(() => Branch.bind(doc, branch));
-        Obj.update(binding.object, () => {
-          EchoText.update(binding.object, 'content', 'alpha\nbravo\n');
+        Obj.update(binding.object, (object) => {
+          EchoText.update(object, 'content', 'alpha\nbravo\n');
         });
         // Checkpoint the branch-bound Text, tagged with the branch key (what ObjectHistory does).
         const branchCheckpoint = Version.create(doc, {
@@ -213,9 +213,9 @@ describe('timeline model', () => {
 
         // Three checkpoints on main, then a branch forked from the SECOND (v2), not the tip.
         Version.create(doc, { name: 'v1', target: root });
-        Obj.update(root, () => EchoText.update(root, 'content', '1 2'));
+        Obj.update(root, (root) => EchoText.update(root, 'content', '1 2'));
         const v2 = Version.create(doc, { name: 'v2', target: root });
-        Obj.update(root, () => EchoText.update(root, 'content', '1 2 3'));
+        Obj.update(root, (root) => EchoText.update(root, 'content', '1 2 3'));
         const v3 = Version.create(doc, { name: 'v3', target: root });
 
         const branch = yield* Effect.promise(() => Branch.create(doc, { name: 'b', parent: root, heads: v2.heads }));

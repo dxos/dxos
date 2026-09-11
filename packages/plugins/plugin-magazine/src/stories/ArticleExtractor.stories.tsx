@@ -5,7 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useMemo, useState } from 'react';
 
-import { IconButton, Input, Panel, ScrollArea, Select, Toolbar } from '@dxos/react-ui';
+import { Field, IconButton, Panel, ScrollArea, Select, Toolbar } from '@dxos/react-ui';
 import { composable } from '@dxos/react-ui';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
@@ -60,8 +60,8 @@ const DefaultStory = () => {
     <Panel.Root>
       <Panel.Toolbar asChild>
         <Toolbar.Root>
-          <Input.Root>
-            <Input.TextInput
+          <Field.Root>
+            <Field.Input
               placeholder='Article URL'
               value={url}
               onChange={(event) => setUrl(event.target.value)}
@@ -72,7 +72,7 @@ const DefaultStory = () => {
               }}
               classNames='w-full min-w-[24rem]'
             />
-          </Input.Root>
+          </Field.Root>
           <Select.Root
             value={url}
             onValueChange={(sample) => {
@@ -92,7 +92,6 @@ const DefaultStory = () => {
                     </Select.Option>
                   ))}
                 </Select.Viewport>
-                <Select.Arrow />
               </Select.Content>
             </Select.Portal>
           </Select.Root>

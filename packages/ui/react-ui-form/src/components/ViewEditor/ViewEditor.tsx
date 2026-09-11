@@ -27,7 +27,7 @@ import {
 import { useObject, useQuery } from '@dxos/echo-react';
 import { SchemaEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
-import { Banner, Input, type ThemedClassName, ToggleIconButton, useTranslation } from '@dxos/react-ui';
+import { Banner, Field, type ThemedClassName, ToggleIconButton, useTranslation } from '@dxos/react-ui';
 import { QueryForm, type QueryFormProps } from '@dxos/react-ui-components';
 import { OrderedList } from '@dxos/react-ui-list';
 import {
@@ -226,7 +226,7 @@ export const ViewEditor = forwardRef<ProjectionModel | null, ViewEditorProps>(
                   </Banner.Content>
                 </Banner.Root>
               )}
-              <Form.FieldSet />
+              <Form.Fields />
               {type && (
                 <FieldList
                   type={type}
@@ -253,10 +253,10 @@ const customFields = ({ types, tags }: Pick<ViewEditorProps, 'types' | 'tags'>):
     );
 
     return (
-      <Input.Root>
+      <Field.Root>
         <FormFieldLabel readonly={readonly} label={label} />
         <QueryForm initialQuery={getValue()} types={types} tags={tags} onChange={handleChange} />
-      </Input.Root>
+      </Field.Root>
     );
   },
 });

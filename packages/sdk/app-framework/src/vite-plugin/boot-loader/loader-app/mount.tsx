@@ -60,7 +60,9 @@ export const mountLoader = (el: HTMLElement, config: BootLoaderConfig = {}): (()
         setTimeout(remove, OUTRO_FALLBACK_MS);
       }
     });
-    return <Loader store={store} markSvg={config.markSvg} />;
+    return (
+      <Loader store={store} markSvg={config.markSvg} markFilter={config.markFilter} spritePath={config.spritePath} />
+    );
   }, el);
 
   const api = createBridge(store, remove);

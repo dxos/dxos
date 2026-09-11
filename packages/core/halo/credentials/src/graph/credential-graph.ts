@@ -5,8 +5,10 @@
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { type Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { type Credential } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { type AsyncCallback, Callback, ComplexMap, ComplexSet } from '@dxos/util';
+
+import { credentialIdOf, issuanceDateOf, issuerOf, subjectIdOf } from '../credentials/credential-keys.ts';
 
 export class CredentialGraph<A, State> {
   /**
@@ -45,7 +47,7 @@ export class CredentialGraph<A, State> {
   }
 
   public getLeafIds(): PublicKey[] {
-    return this._sentinel.parents.map((v) => v.credential!.id!);
+    return this._sentinel.parents.map((vertex) => credentialIdOf(vertexCredential(vertex)));
   }
 
   public getGlobalStateScope(): StateScope<A> {
@@ -60,8 +62,8 @@ export class CredentialGraph<A, State> {
       parents: [],
       children: [],
     };
-    this._vertexByCredentialId.set(credential.id!, newVertex);
-    const parentIds = credential.parentCredentialIds ?? [];
+    this._vertexByCredentialId.set(credentialIdOf(credential), newVertex);
+    const parentIds = credential.parentCredentialIds.map((parent) => PublicKey.from(parent.data));
     if (parentIds.length === 0) {
       this._root.children.push(newVertex);
       newVertex.parents.push(this._root);
@@ -98,7 +100,7 @@ export class CredentialGraph<A, State> {
     let changedSubjects: State[] = [];
     const isUpdateAppliedOnTopOfThePreviousState = this._sentinel.parents.length === 1;
     if (isUpdateAppliedOnTopOfThePreviousState) {
-      const subjectId = credential.subject.id;
+      const subjectId = subjectIdOf(credential);
       if (this._stateHandler.isUpdateAllowed(this.getGlobalStateScope(), credential, assertion)) {
         const newSubjectState = this._stateHandler.createState(credential, newVertex.assertion);
         const prevSubjectState = this._subjectToState.get(subjectId);
@@ -208,8 +210,8 @@ export class CredentialGraph<A, State> {
     if (headCredential == null) {
       return;
     }
-    const updatedSubject = headCredential.subject.id;
-    path.credentials.add(headCredential.id!);
+    const updatedSubject = subjectIdOf(headCredential);
+    path.credentials.add(credentialIdOf(headCredential));
     let isUpdateAllowed = this._stateHandler.isUpdateAllowed(path, headCredential, path.head.assertion);
     // Compatibility with old credentials where parent references were not specified.
     if (!isUpdateAllowed && path.head.parents[0]?.id === this._root.id) {
@@ -218,7 +220,7 @@ export class CredentialGraph<A, State> {
     }
     if (isUpdateAllowed) {
       path.forkChangedSubjects.add(updatedSubject);
-      path.forkIssuers.add(headCredential.issuer);
+      path.forkIssuers.add(issuerOf(headCredential));
       path.state.set(updatedSubject, path.head);
       log('path state updated', () => ({
         subject: updatedSubject,
@@ -255,7 +257,7 @@ export class CredentialGraph<A, State> {
     const newStateMap = new ComplexMap<PublicKey, State>(PublicKey.hash);
     const newVertexMap = new ComplexMap<PublicKey, ChainVertex<A>>(PublicKey.hash);
     for (const [subjectKey, subjectVertex] of path.state.entries()) {
-      const newState = this._stateHandler.createState(subjectVertex.credential!, subjectVertex.assertion);
+      const newState = this._stateHandler.createState(vertexCredential(subjectVertex), subjectVertex.assertion);
       const prevState = this._subjectToState.get(subjectKey);
       newStateMap.set(subjectKey, newState);
       newVertexMap.set(subjectKey, subjectVertex);
@@ -287,7 +289,7 @@ export class CredentialGraph<A, State> {
     for (const [id, state] of uniqueForkPoints.entries()) {
       const headCredential = state.head.credential;
       if (headCredential != null) {
-        const isPointInEveryPath = paths.every((p) => p.credentials.has(headCredential.id!));
+        const isPointInEveryPath = paths.every((p) => p.credentials.has(credentialIdOf(headCredential)));
         if (isPointInEveryPath && id > maxId) {
           maxId = id;
           maxState = state;
@@ -408,15 +410,18 @@ export class CredentialGraph<A, State> {
       log('merge point chosen to break the tie', { mergePointId: existing.head.id });
       return mergePointId === candidateVertex.id;
     }
-    const candidateCredential = candidateVertex.credential!;
-    const currentCredential = currentVertex.credential!;
+    const candidateCredential = vertexCredential(candidateVertex);
+    const currentCredential = vertexCredential(currentVertex);
     // A credential is contained in a branch where another credential for this subject was issued.
-    if (existing.credentials.has(candidateCredential.id!) !== candidate.credentials.has(currentCredential.id!)) {
+    if (
+      existing.credentials.has(credentialIdOf(candidateCredential)) !==
+      candidate.credentials.has(credentialIdOf(currentCredential))
+    ) {
       log('one of the credentials was overridden in another branch', {
         current: currentVertex.id,
         candidate: candidateVertex.id,
       });
-      return candidate.credentials.has(currentCredential.id!);
+      return candidate.credentials.has(credentialIdOf(currentCredential));
     }
     // Give a chance to state-specific conflict resolution logic.
     const winningCredential = this._stateHandler.tryPickWinningUpdate(
@@ -435,7 +440,7 @@ export class CredentialGraph<A, State> {
       return candidate.forkIssuers.size > existing.forkIssuers.size;
     }
     log('issuance date used to break the tie');
-    return candidateCredential.issuanceDate.getTime() > currentCredential.issuanceDate.getTime();
+    return issuanceDateOf(candidateCredential).getTime() > issuanceDateOf(currentCredential).getTime();
   }
 
   private _createRootPath(): PathState<A> {
@@ -554,4 +559,14 @@ interface ReplayRequiredMergeResult<A> {
 
 const toChosenPath = <A>(path: PathState<A>) => {
   return Object.fromEntries(Object.entries(path.chosenPath!).map(([k, vs]) => [k, vs.map((v) => v.id)]));
+};
+
+/**
+ * The credential a vertex was inserted from.
+ *
+ * The root and sentinel vertices bracket the graph and carry none; every other vertex has one.
+ */
+export const vertexCredential = <A>(vertex: ChainVertex<A>): Credential => {
+  invariant(vertex.credential, 'Graph vertex has no credential.');
+  return vertex.credential;
 };

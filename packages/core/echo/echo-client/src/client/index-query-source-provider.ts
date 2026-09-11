@@ -14,12 +14,8 @@ import { invariant } from '@dxos/invariant';
 import { EID, EntityId, SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { RpcClosedError, subscribeStream } from '@dxos/protocols';
-import {
-  QueryReactivity,
-  type QueryResponse,
-  type QueryResult as RemoteQueryResult,
-} from '@dxos/protocols/proto/dxos/echo/query';
-import { type QueryService } from '@dxos/protocols/rpc';
+import { QueryReactivity } from '@dxos/protocols/buf/dxos/echo/query_pb';
+import { QueryService } from '@dxos/protocols/rpc';
 import { isNonNullable } from '@dxos/util';
 
 import { type FeedHandle } from '../feed/feed-handle.ts';
@@ -112,7 +108,7 @@ export class IndexQuerySource implements QuerySource {
    * a full copy of every result's document (hundreds of KB per mail message) for the subscription's
    * lifetime.
    */
-  private _lastRemoteResults?: readonly RemoteQueryResult[] = undefined;
+  private _lastRemoteResults?: readonly QueryService.QueryResult[] = undefined;
 
   /**
    * Ids of {@link _lastRemoteResults} records whose `documentJson` we released. Tracked explicitly
@@ -379,7 +375,7 @@ export class IndexQuerySource implements QuerySource {
     queryId: number,
     query: QueryAST.Query,
     start: number,
-    records: readonly RemoteQueryResult[],
+    records: readonly QueryService.QueryResult[],
   ): Promise<SourceEntry[]> {
     log('queryIndex raw results', {
       queryId,
@@ -422,7 +418,7 @@ export class IndexQuerySource implements QuerySource {
     return results;
   }
 
-  private _assertResultSpaces(query: QueryAST.Query, response: QueryResponse): void {
+  private _assertResultSpaces(query: QueryAST.Query, response: QueryService.QueryResponse): void {
     const targetSpaces = getTargetSpacesForQuery(query);
     if (targetSpaces.length > 0) {
       invariant(
@@ -440,7 +436,7 @@ export class IndexQuerySource implements QuerySource {
   private async _filterMapResult(
     ctx: Context,
     queryStartTimestamp: number,
-    result: RemoteQueryResult,
+    result: QueryService.QueryResult,
     hydratedIntoFeedHandle?: Set<string>,
   ): Promise<SourceEntry | null> {
     recordObjectDiagnostic(result.id, () => ({
@@ -578,7 +574,7 @@ export class IndexQuerySource implements QuerySource {
    * Hydrate an index hit via disk-only load; skip objects whose strong deps
    * are permanently unavailable.
    */
-  private async _resolveIndexedObject(result: RemoteQueryResult): Promise<Entity.Unknown | undefined> {
+  private async _resolveIndexedObject(result: QueryService.QueryResult): Promise<Entity.Unknown | undefined> {
     const spaceId = SpaceId.make(result.spaceId);
 
     try {
@@ -620,5 +616,5 @@ const emittedSchemaValidationWarnings = new Set<string>();
  * The host always sends `groupCount` alongside `groupKey`; the `?? 1` floor (a present record
  * implies at least one member) is defensive and matches the working-set source's fallback.
  */
-const _groupFromRemoteResult = (result: RemoteQueryResult): SourceEntry['group'] =>
+const _groupFromRemoteResult = (result: QueryService.QueryResult): SourceEntry['group'] =>
   result.groupKey !== undefined ? { key: JSON.parse(result.groupKey), count: result.groupCount ?? 1 } : undefined;

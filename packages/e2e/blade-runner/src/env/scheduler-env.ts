@@ -23,7 +23,13 @@ import {
   runBrowser,
   runNode,
 } from '../plan/index.ts';
-import { REDIS_PORT, WebSocketRedisProxy, createRedisReadableStream, createRedisRpcPort } from '../redis/index.ts';
+import {
+  REDIS_HOST,
+  REDIS_PORT,
+  WebSocketRedisProxy,
+  createRedisReadableStream,
+  createRedisRpcPort,
+} from '../redis/index.ts';
 import { writeEventStreamToAFile } from '../tracing/index.ts';
 import { ReadableMuxer } from '../tracing/readable-muxer.ts';
 import { type RpcHandle, type SchedulerEnv } from './interface.ts';
@@ -68,7 +74,10 @@ export class SchedulerEnvImpl<S> extends Resource implements SchedulerEnv {
   constructor(
     private readonly _options: GlobalOptions,
     public params: TestProps<S>,
-    private readonly _redisOptions: RedisOptions = { port: REDIS_PORT },
+    // `host` explicitly, not just the port: ioredis defaults to loopback, so in CI the orchestrator
+    // could not reach a Redis service container even with `DX_REDIS_HOST` set — the replicants,
+    // which build their options from `DEFAULT_REDIS_OPTIONS`, could.
+    private readonly _redisOptions: RedisOptions = { host: REDIS_HOST, port: REDIS_PORT },
   ) {
     super();
     this._redis = new Redis(this._redisOptions);
@@ -231,9 +240,22 @@ export class SchedulerEnvImpl<S> extends Resource implements SchedulerEnv {
       });
     }
 
+    let killed = false;
+    // RPC to a replicant has no timeout, so a peer that crashes mid-call leaves the orchestrator
+    // waiting forever and the whole run hangs on one dead process. Aborting the peer rejects the
+    // in-flight call, so the plan fails where the crash happened.
+    void processHandle.exited.then(async ({ exitCode, signal }) => {
+      if (killed) {
+        return;
+      }
+      log.error('replicant exited unexpectedly', { replicantId, exitCode, signal });
+      await rpcHandle[close]().catch((err) => log.catch(err));
+    });
+
     const replicantHandle = {
       brain: rpcHandle as RpcHandle<T>,
       kill: (signal?: NodeJS.Signals | number) => {
+        killed = true;
         rpcRequests.disconnect();
         rpcResponses.disconnect();
         processHandle.kill(signal);

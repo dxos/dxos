@@ -14,8 +14,6 @@
 //
 // https://www.w3.org/WAI/ARIA/apg/patterns/combobox
 
-import { createContext } from '@radix-ui/react-context';
-import { useControllableState } from '@radix-ui/react-use-controllable-state';
 import React, {
   type ComponentPropsWithoutRef,
   type ComponentPropsWithRef,
@@ -30,14 +28,14 @@ import {
   Icon,
   type IconProps,
   Popover,
-  type PopoverArrowProps,
   type PopoverContentProps,
   type PopoverVirtualTriggerProps,
   ScrollArea,
   type ThemedClassName,
   composable,
   composableProps,
-  useId,
+  createContext,
+  useControllableState,
   useThemeContext,
 } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
@@ -57,7 +55,6 @@ const COMBOBOX_TRIGGER_NAME = 'ComboboxTrigger';
 //
 
 type ComboboxContextValue = {
-  modalId: string;
   isCombobox: true;
   placeholder?: string;
   open: boolean;
@@ -88,7 +85,6 @@ type ComboboxRootProps = PropsWithChildren<
 const ComboboxRoot = ({
   children,
   modal,
-  modalId: modalIdProp,
   open: openProp,
   defaultOpen,
   onOpenChange: propsOnOpenChange,
@@ -98,7 +94,6 @@ const ComboboxRoot = ({
   onValueChange: propsOnValueChange,
   placeholder,
 }: ComboboxRootProps) => {
-  const modalId = useId(COMBOBOX_NAME, modalIdProp);
   const [open = false, onOpenChange] = useControllableState({
     prop: openProp,
     defaultProp: defaultOpen,
@@ -114,7 +109,6 @@ const ComboboxRoot = ({
     <Popover.Root open={open} onOpenChange={onOpenChange} modal={modal}>
       <ComboboxProvider
         isCombobox
-        modalId={modalId}
         placeholder={placeholder}
         open={open}
         onOpenChange={onOpenChange}
@@ -141,28 +135,28 @@ type ComboboxContentProps = PopoverContentProps & {
 
 const ComboboxContent = composable<HTMLDivElement, ComboboxContentProps>(
   ({ children, classNames, resetSelectionOnChange, collisionPadding = 0, ...props }, forwardedRef) => {
-    const { modalId } = useComboboxContext(COMBOBOX_CONTENT_NAME);
-
     return (
       <Popover.Content
         {...props}
         // Zero, not the Popover default of 8: the content is exactly trigger-width, so a trigger
         // flush with a viewport edge would otherwise be shifted sideways out of alignment.
         collisionPadding={collisionPadding}
-        id={modalId}
+        // NOTE: no `id` of its own. The popover machine finds its content element by the id it
+        // assigned, and an override leaves it with no layer to test an interaction against — so an
+        // outside click is never recognised and the popover cannot be dismissed.
         // `classNames`, never `composableProps`: `Popover.Content` computes its own `className`
         // and silently drops an incoming one. Width sits on the CONTENT so the border stays
         // inside the trigger's footprint; the chrome matches `Select.Content` (1px separator
         // border, overlay surface) since the two controls sit side by side in forms.
-        classNames={[
-          'w-(--radix-popover-trigger-width) box-border border border-separator bg-(--dx-surface-overlay)',
-          classNames,
-        ]}
+        classNames={['w-(--reference-width) box-border border border-separator bg-(--dx-surface-overlay)', classNames]}
         ref={forwardedRef}
       >
         <Popover.Viewport classNames='w-full min-w-0'>
           <Picker.Root resetSelectionOnChange={resetSelectionOnChange}>{children}</Picker.Root>
         </Popover.Viewport>
+        {/* Beside the viewport, never inside it: the arrow is positioned against the content, so
+            nested in the scrolling viewport it lands over the first row instead of beyond the edge. */}
+        <Popover.Arrow />
       </Popover.Content>
     );
   },
@@ -179,17 +173,10 @@ type ComboboxTriggerProps = ButtonProps;
 const ComboboxTrigger = composable<HTMLButtonElement, ComboboxTriggerProps>(
   ({ children, classNames, onClick, ...props }, forwardedRef) => {
     const { tx } = useThemeContext();
-    const { modalId, open, onOpenChange, placeholder, value, displayValue } = useComboboxContext(COMBOBOX_TRIGGER_NAME);
+    const { open, placeholder, value, displayValue } = useComboboxContext(COMBOBOX_TRIGGER_NAME);
     // Nullish, matching the `??` that picks the children below: `false`/`0`/`''` suppress the
     // fallback caret without being a caret of their own, so the column has to collapse for them too.
     const custom = children !== null && children !== undefined;
-    const handleClick = useCallback(
-      (event: Parameters<Exclude<ButtonProps['onClick'], undefined>>[0]) => {
-        onClick?.(event);
-        onOpenChange?.(true);
-      },
-      [onClick, onOpenChange],
-    );
 
     return (
       <Popover.Trigger asChild>
@@ -200,11 +187,11 @@ const ComboboxTrigger = composable<HTMLButtonElement, ComboboxTriggerProps>(
           // below, so a caller supplying its own children collapses it — otherwise the column sits
           // empty and its gap paints a strip of trigger surface beside the content.
           classNames={tx('select.triggerButton', {}, [custom && 'grid-cols-[1fr] gap-0', classNames])}
+          // Only the role: `aria-expanded`, `aria-controls` and `aria-haspopup` come from
+          // `Popover.Trigger`, which names the content the machine actually rendered, and its own
+          // click handler toggles — forcing the popover open here would make a second click a no-op.
           role='combobox'
-          aria-expanded={open}
-          aria-controls={modalId}
-          aria-haspopup='dialog'
-          onClick={handleClick}
+          onClick={onClick}
           ref={forwardedRef}
         >
           {children ?? (
@@ -214,7 +201,7 @@ const ComboboxTrigger = composable<HTMLButtonElement, ComboboxTriggerProps>(
               <span className={styles.comboboxTriggerText({ class: !value && 'text-placeholder' })}>
                 {displayValue || value || placeholder}
               </span>
-              <Icon icon='ph--caret-down--bold' size={3} />
+              <Icon icon='ph--caret-down--bold' size={3} classNames='mx-0.5' />
             </>
           )}
         </Button>
@@ -364,14 +351,6 @@ const ComboboxItem = forwardRef<HTMLDivElement, ComboboxItemProps>(
 ComboboxItem.displayName = COMBOBOX_ITEM_NAME;
 
 //
-// Arrow
-//
-
-type ComboboxArrowProps = PopoverArrowProps;
-
-const ComboboxArrow = Popover.Arrow;
-
-//
 // Empty — passthrough placeholder. No translation; caller supplies copy.
 //
 
@@ -408,12 +387,10 @@ export const Combobox = {
   Input: ComboboxInput,
   List: ComboboxList,
   Item: ComboboxItem,
-  Arrow: ComboboxArrow,
   Empty: ComboboxEmpty,
 };
 
 export type {
-  ComboboxArrowProps,
   ComboboxContentProps,
   ComboboxEmptyProps,
   ComboboxInputProps,

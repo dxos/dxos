@@ -40,7 +40,7 @@ const DefaultStory = () => {
       >
         <Form.Viewport>
           <Form.Content>
-            <Form.FieldSet />
+            <Form.Fields />
             <Form.Actions />
           </Form.Content>
         </Form.Viewport>

@@ -6,7 +6,7 @@ import type * as Atom from 'effect/unstable/reactivity/Atom';
 import React, { type PropsWithChildren } from 'react';
 
 import { IconButton, type ThemedClassName, useTranslation } from '@dxos/react-ui';
-import { type ActionGraphProps, Menu, useMenuActions } from '@dxos/react-ui-menu';
+import { type ActionGraphProps, ActionToolbar, useMenuActions } from '@dxos/react-ui-menu';
 import { mx } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
@@ -93,14 +93,14 @@ export const ChatActions = ({
         <IconButton
           disabled={!showStop && !canSend}
           variant='ghost'
-          classNames={mx(TOUCH_TARGET, showStop ? 'text-error-text' : canSend && 'text-accent-text')}
-          icon={showStop ? 'ph--square--duotone' : 'ph--paper-plane-right--regular'}
+          classNames={mx(TOUCH_TARGET, 'transition duration-300 ease-in-out', canSend && 'text-accent-text rotate-90')}
+          icon={showStop ? 'ph--stop-circle--duotone' : 'ph--paper-plane--regular'}
           iconOnly
           label={t(showStop ? 'cancel-processing.button' : 'send.label')}
+          onClick={() => (showStop ? onEvent?.({ type: 'cancel' }) : onSend())}
           // One stable handle for the prompt's primary action; its mode is the accessible label,
           // which is also how a reader tells the two apart.
           data-testid='assistant.send'
-          onClick={() => (showStop ? onEvent?.({ type: 'cancel' }) : onSend())}
         />
       )}
     </div>
@@ -123,13 +123,7 @@ const ContributedActions = ({
   attendableId?: string;
 }) => {
   const menuActions = useMenuActions(actions);
-  return (
-    <Menu.Root {...menuActions} attendableId={attendableId} alwaysActive>
-      {/* Plain (non-`custom`) items render `Toolbar.*` primitives, which throw without the roving-focus
-          context `Menu.Toolbar` provides; `contents` keeps the items in the prompt's own row. */}
-      <Menu.Toolbar classNames='contents'>
-        <Menu.Items />
-      </Menu.Toolbar>
-    </Menu.Root>
-  );
+  // Plain (non-`custom`) items render `Toolbar.*` primitives, which throw without the roving-focus
+  // context `ActionToolbar` provides; `contents` keeps the items in the prompt's own row.
+  return <ActionToolbar {...menuActions} attendableId={attendableId} alwaysActive classNames='contents' />;
 };

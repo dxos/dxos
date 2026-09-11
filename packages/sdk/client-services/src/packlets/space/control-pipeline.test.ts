@@ -2,18 +2,20 @@
 // Copyright 2022 DXOS.org
 //
 
+import { create } from '@bufbuild/protobuf';
 import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { Context } from '@dxos/context';
-import { CredentialGenerator, createCredential } from '@dxos/credentials';
+import { CredentialGenerator, createCredential, credentialPayload } from '@dxos/credentials';
 import { FeedFactory, FeedStore } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';
 import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
-import { AdmittedFeed } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { fromPublicKey, fromTimeframe } from '@dxos/protocols/buf';
+import { type FeedMessage, FeedMessageSchema } from '@dxos/protocols/buf/dxos/echo/feed_pb';
+import { SpaceMetadataSchema } from '@dxos/protocols/buf/dxos/echo/metadata_pb';
+import { AdmittedFeed_Designation, AdmittedFeedSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { StorageType, createStorage } from '@dxos/random-access-storage';
-import { Timeframe } from '@dxos/timeframe';
 
 import { MetadataStore } from '../metadata/index.ts';
 import { valueEncoding } from '../pipeline/index.ts';
@@ -44,7 +46,13 @@ describe('space/control-pipeline', () => {
     // TODO(dmaretskyi): Separate test for cold start after genesis.
     const genesisFeed = await createFeed();
     const metadata = new MetadataStore(createStorage({ type: StorageType.RAM }).createDirectory());
-    await metadata.addSpace({ key: spaceKey, genesisFeedKey: genesisFeed.key, controlFeedKey: genesisFeed.key });
+    await metadata.addSpace(
+      create(SpaceMetadataSchema, {
+        key: fromPublicKey(spaceKey),
+        genesisFeedKey: fromPublicKey(genesisFeed.key),
+        controlFeedKey: fromPublicKey(genesisFeed.key),
+      }),
+    );
     const controlPipeline = new ControlPipeline({
       spaceKey,
       genesisFeed,
@@ -73,11 +81,7 @@ describe('space/control-pipeline', () => {
       expect(credentials).toHaveLength(3);
 
       for (const credential of credentials) {
-        await controlPipeline.pipeline.writer?.write({
-          credential: {
-            credential,
-          },
-        });
+        await controlPipeline.pipeline.writer?.write(credentialPayload(credential));
       }
 
       await controlPipeline.pipeline.state.waitUntilTimeframe(controlPipeline.pipeline.state.endTimeframe);
@@ -87,22 +91,21 @@ describe('space/control-pipeline', () => {
     // New control feed.
     const controlFeed2 = await createFeed();
     {
-      await controlPipeline.pipeline.writer!.write({
-        credential: {
-          credential: await createCredential({
+      await controlPipeline.pipeline.writer!.write(
+        credentialPayload(
+          await createCredential({
             signer: keyring,
             issuer: identityKey,
             subject: controlFeed2.key,
-            assertion: {
-              '@type': 'dxos.halo.credentials.AdmittedFeed',
-              spaceKey,
-              identityKey,
-              deviceKey,
-              'designation': AdmittedFeed.Designation.CONTROL,
-            },
+            assertion: create(AdmittedFeedSchema, {
+              spaceKey: fromPublicKey(spaceKey),
+              identityKey: fromPublicKey(identityKey),
+              deviceKey: fromPublicKey(deviceKey),
+              designation: AdmittedFeed_Designation.CONTROL,
+            }),
           }),
-        },
-      });
+        ),
+      );
 
       await controlPipeline.pipeline.state.waitUntilTimeframe(controlPipeline.pipeline.state.endTimeframe);
       expect(admittedFeeds).toEqual([genesisFeed.key, controlFeed2.key]);
@@ -111,22 +114,21 @@ describe('space/control-pipeline', () => {
     // New data feed.
     const dataFeed1 = await createFeed();
     {
-      await controlPipeline.pipeline.writer!.write({
-        credential: {
-          credential: await createCredential({
+      await controlPipeline.pipeline.writer!.write(
+        credentialPayload(
+          await createCredential({
             signer: keyring,
             issuer: identityKey,
             subject: dataFeed1.key,
-            assertion: {
-              '@type': 'dxos.halo.credentials.AdmittedFeed',
-              spaceKey,
-              identityKey,
-              deviceKey,
-              'designation': AdmittedFeed.Designation.DATA,
-            },
+            assertion: create(AdmittedFeedSchema, {
+              spaceKey: fromPublicKey(spaceKey),
+              identityKey: fromPublicKey(identityKey),
+              deviceKey: fromPublicKey(deviceKey),
+              designation: AdmittedFeed_Designation.DATA,
+            }),
           }),
-        },
-      });
+        ),
+      );
 
       const end = controlPipeline.pipeline.state.endTimeframe;
       await controlPipeline.pipeline.state.waitUntilTimeframe(end);
@@ -136,27 +138,24 @@ describe('space/control-pipeline', () => {
     // TODO(dmaretskyi): Move to other test (data feed cannot admit feeds).
     const dataFeed2 = await createFeed();
     {
-      await dataFeed1.append({
-        payload: {
-          '@type': 'dxos.echo.feed.FeedMessage',
-          'timeframe': controlPipeline.pipeline.state.timeframe,
-          'credential': {
-            credential: await createCredential({
+      await dataFeed1.append(
+        create(FeedMessageSchema, {
+          timeframe: fromTimeframe(controlPipeline.pipeline.state.timeframe),
+          payload: credentialPayload(
+            await createCredential({
               signer: keyring,
               issuer: identityKey,
               subject: dataFeed2.key,
-              assertion: {
-                '@type': 'dxos.halo.credentials.AdmittedFeed',
-                spaceKey,
-                identityKey,
-                deviceKey,
-                'designation': AdmittedFeed.Designation.DATA,
-              },
+              assertion: create(AdmittedFeedSchema, {
+                spaceKey: fromPublicKey(spaceKey),
+                identityKey: fromPublicKey(identityKey),
+                deviceKey: fromPublicKey(deviceKey),
+                designation: AdmittedFeed_Designation.DATA,
+              }),
             }),
-          },
-        },
-        timeframe: new Timeframe(),
-      });
+          ),
+        }),
+      );
 
       await controlPipeline.pipeline.state.waitUntilTimeframe(controlPipeline.pipeline.state.endTimeframe);
       expect(admittedFeeds).toEqual([genesisFeed.key, controlFeed2.key, dataFeed1.key]);

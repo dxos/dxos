@@ -13,58 +13,48 @@ import { Attention } from '@dxos/react-ui-attention/types';
 
 import { CompanionViewState, DeckCapabilities } from '#types';
 
+import { currentNavigation, navigateDeck } from '../url/index.ts';
 import {
   closeCompanionPlank,
   openCompanionPlank,
   resolveCompanionAnchor,
   resolveCompanionPlank,
 } from '../util/index.ts';
-import { updateActiveDeck } from './helpers.ts';
 
 const handler: Operation.WithHandler<typeof LayoutOperation.UpdateCompanion> = LayoutOperation.UpdateCompanion.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* (input) {
       const { flatten } = yield* Capabilities.getAtomValue(DeckCapabilities.Settings);
+      const deck = yield* DeckCapabilities.getDeck();
+      const attention = yield* Capability.get(AttentionCapabilities.Attention);
+      const { workspace } = yield* currentNavigation();
 
-      if (input.subject === null) {
-        // Closing targets the named plank: while the deck slides companions are per-plank, so the close
-        // control says which plank it belongs to. Callers that cannot know (the URL handler pruning a
-        // companion the URL no longer carries) fall back to the attended plank. Flat mode ignores the
-        // plank and closes the deck's companion outright. The selected variant is left intact so
-        // reopening restores the last tab.
-        const deck = yield* DeckCapabilities.getDeck();
-        const attention = yield* Capability.get(AttentionCapabilities.Attention);
+      const subject = input.subject;
+      if (subject === null) {
         const plankId = input.anchor ?? resolveCompanionAnchor(deck.active, attention.getCurrent());
-        yield* Capabilities.updateAtomValue(DeckCapabilities.State, (state) =>
-          updateActiveDeck(state, { companionPlanks: closeCompanionPlank(deck.companionPlanks, flatten, plankId) }),
-        );
-      } else {
-        // Resolve the plank first: a bare variant on an empty deck names none, and recording a selected
-        // variant for a companion that never opened would surface it on the next unrelated open.
-        const deck = yield* DeckCapabilities.getDeck();
-        const attention = yield* Capability.get(AttentionCapabilities.Attention);
-        const plankId = resolveCompanionPlank({
-          subject: input.subject,
-          anchor: input.anchor,
-          planks: deck.active,
-          attended: attention.getCurrent(),
-        });
-        if (!plankId) {
-          return;
-        }
-
-        // The selected variant is global view state (shared with the split point), not deck state.
-        // Merge so a variant change preserves the persisted split sizes.
-        const viewState = yield* Capability.get(AttentionCapabilities.ViewState);
-        const variant = Attention.getLinkedVariant(input.subject);
-        viewState.update(CompanionViewState.aspect, CompanionViewState.CONTEXT, (prev) => ({ ...prev, variant }));
-
-        yield* Capabilities.updateAtomValue(DeckCapabilities.State, (state) =>
-          updateActiveDeck(state, {
-            companionPlanks: openCompanionPlank(state.decks[state.activeDeck]?.companionPlanks ?? [], flatten, plankId),
-          }),
-        );
+        const companionPlanks = closeCompanionPlank(deck.companionPlanks, flatten, plankId);
+        yield* navigateDeck({ workspace, active: deck.active, companionPlanks });
+        return;
       }
+
+      const plankId = resolveCompanionPlank({
+        subject,
+        anchor: input.anchor,
+        planks: deck.active,
+        attended: attention.getCurrent(),
+      });
+      if (!plankId) {
+        return;
+      }
+
+      const viewState = yield* Capability.get(AttentionCapabilities.ViewState);
+      viewState.update(CompanionViewState.aspect, CompanionViewState.CONTEXT, (prev) => ({
+        ...prev,
+        variant: Attention.getLinkedVariant(subject),
+      }));
+
+      const companionPlanks = openCompanionPlank(deck.companionPlanks, flatten, plankId);
+      yield* navigateDeck({ workspace, active: deck.active, companionPlanks });
     }),
   ),
 );

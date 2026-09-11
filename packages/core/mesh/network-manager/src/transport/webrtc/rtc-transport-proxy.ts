@@ -2,6 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
+import { create } from '@bufbuild/protobuf';
 import { Writable } from 'node:stream';
 
 import { Event, scheduleTask } from '@dxos/async';
@@ -12,11 +13,28 @@ import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { ConnectionResetError, ConnectivityError, TimeoutError } from '@dxos/protocols';
-import { type BridgeEvent, type BridgeService, ConnectionState } from '@dxos/protocols/proto/dxos/mesh/bridge';
-import { type Signal } from '@dxos/protocols/proto/dxos/mesh/swarm';
+import { fromPublicKey } from '@dxos/protocols/buf';
+import { type BufService } from '@dxos/protocols/buf-service';
+import {
+  type BridgeEvent,
+  BridgeEvent_ConnectionEvent,
+  BridgeEvent_DataEvent,
+  BridgeEvent_SignalEvent,
+  BridgeService as BridgeServiceDesc,
+  CloseRequestSchema,
+  ConnectionRequestSchema,
+  ConnectionState,
+  DataRequestSchema,
+  DetailsRequestSchema,
+  SignalRequestSchema,
+  StatsRequestSchema,
+} from '@dxos/protocols/buf/dxos/mesh/bridge_pb';
+import { type Signal } from '@dxos/protocols/buf/dxos/mesh/swarm_pb';
 import { arrayToBuffer } from '@dxos/util';
 
 import { type Transport, type TransportFactory, type TransportOptions, type TransportStats } from '../transport.ts';
+
+type BridgeService = BufService<typeof BridgeServiceDesc>;
 
 const RPC_TIMEOUT = 10_000;
 const CLOSE_RPC_TIMEOUT = 3000;
@@ -43,13 +61,13 @@ export class RtcTransportProxy extends Resource implements Transport {
     let stream: Stream<BridgeEvent>;
     try {
       stream = this._options.bridgeService.open(
-        {
-          proxyId: this._proxyId,
+        create(ConnectionRequestSchema, {
+          proxyId: fromPublicKey(this._proxyId),
           remotePeerKey: this._options.remotePeerKey,
           ownPeerKey: this._options.ownPeerKey,
           topic: this._options.topic,
           initiator: this._options.initiator ?? false,
-        },
+        }),
         { timeout: RPC_TIMEOUT },
       );
     } catch (error: any) {
@@ -64,12 +82,16 @@ export class RtcTransportProxy extends Resource implements Transport {
         stream.subscribe(
           async (event: BridgeEvent) => {
             log('rtc transport proxy event', event);
-            if (event.connection) {
-              await this._handleConnection(event.connection);
-            } else if (event.data) {
-              this._handleData(event.data);
-            } else if (event.signal) {
-              await this._handleSignal(event.signal);
+            switch (event.type.case) {
+              case 'connection':
+                await this._handleConnection(event.type.value);
+                break;
+              case 'data':
+                this._handleData(event.type.value);
+                break;
+              case 'signal':
+                await this._handleSignal(event.type.value);
+                break;
             }
           },
           (err) => {
@@ -86,7 +108,9 @@ export class RtcTransportProxy extends Resource implements Transport {
           write: (chunk, _, callback) => {
             const sendStartMs = Date.now();
             this._options.bridgeService
-              .sendData({ proxyId: this._proxyId, payload: chunk }, { timeout: RPC_TIMEOUT })
+              .sendData(create(DataRequestSchema, { proxyId: fromPublicKey(this._proxyId), payload: chunk }), {
+                timeout: RPC_TIMEOUT,
+              })
               .then(
                 () => {
                   if (Date.now() - sendStartMs > RESP_MIN_THRESHOLD) {
@@ -129,7 +153,9 @@ export class RtcTransportProxy extends Resource implements Transport {
     }
 
     try {
-      await this._options.bridgeService.close({ proxyId: this._proxyId }, { timeout: CLOSE_RPC_TIMEOUT });
+      await this._options.bridgeService.close(create(CloseRequestSchema, { proxyId: fromPublicKey(this._proxyId) }), {
+        timeout: CLOSE_RPC_TIMEOUT,
+      });
     } catch (err: any) {
       log.catch(err);
     }
@@ -139,11 +165,13 @@ export class RtcTransportProxy extends Resource implements Transport {
 
   async onSignal(signal: Signal): Promise<void> {
     this._options.bridgeService
-      .sendSignal({ proxyId: this._proxyId, signal }, { timeout: RPC_TIMEOUT })
+      .sendSignal(create(SignalRequestSchema, { proxyId: fromPublicKey(this._proxyId), signal }), {
+        timeout: RPC_TIMEOUT,
+      })
       .catch((err) => this._raiseIfOpen(decodeError(err)));
   }
 
-  private async _handleConnection(connectionEvent: BridgeEvent.ConnectionEvent): Promise<void> {
+  private async _handleConnection(connectionEvent: BridgeEvent_ConnectionEvent): Promise<void> {
     if (connectionEvent.error) {
       this.errors.raise(decodeError(connectionEvent.error));
       return;
@@ -161,7 +189,7 @@ export class RtcTransportProxy extends Resource implements Transport {
     }
   }
 
-  private _handleData(dataEvent: BridgeEvent.DataEvent): void {
+  private _handleData(dataEvent: BridgeEvent_DataEvent): void {
     try {
       // NOTE: This must be a Buffer otherwise hypercore-protocol breaks.
       this._options.stream.write(arrayToBuffer(dataEvent.payload));
@@ -170,11 +198,13 @@ export class RtcTransportProxy extends Resource implements Transport {
     }
   }
 
-  private async _handleSignal(signalEvent: BridgeEvent.SignalEvent): Promise<void> {
+  private async _handleSignal(signalEvent: BridgeEvent_SignalEvent): Promise<void> {
+    const payload = signalEvent.payload;
+    invariant(payload, 'Signal event carries no payload.');
     try {
-      await this._options.sendSignal(signalEvent.payload);
+      await this._options.sendSignal(payload);
     } catch (error) {
-      const type = signalEvent.payload.payload.data?.type;
+      const type = signalType(payload);
       if (type === 'offer' || type === 'answer') {
         this._raiseIfOpen(
           new ConnectivityError({ message: `Session establishment failed: ${type} couldn't be sent.` }),
@@ -186,7 +216,7 @@ export class RtcTransportProxy extends Resource implements Transport {
   async getDetails(): Promise<string> {
     try {
       const response = await this._options.bridgeService.getDetails(
-        { proxyId: this._proxyId },
+        create(DetailsRequestSchema, { proxyId: fromPublicKey(this._proxyId) }),
         { timeout: RPC_TIMEOUT },
       );
       return response.details;
@@ -197,7 +227,12 @@ export class RtcTransportProxy extends Resource implements Transport {
 
   async getStats(): Promise<TransportStats> {
     try {
-      const response = await this._options.bridgeService.getStats({ proxyId: this._proxyId }, { timeout: RPC_TIMEOUT });
+      const response = await this._options.bridgeService.getStats(
+        create(StatsRequestSchema, { proxyId: fromPublicKey(this._proxyId) }),
+        {
+          timeout: RPC_TIMEOUT,
+        },
+      );
       return response.stats as TransportStats;
     } catch (err) {
       return {
@@ -253,6 +288,12 @@ export class RtcTransportProxyFactory implements TransportFactory {
     return transport;
   }
 }
+
+/** The SDP type inside a signal's opaque `Struct` payload, where it names one. */
+const signalType = (signal: Signal): unknown => {
+  const data = signal.payload?.data;
+  return typeof data === 'object' && data !== null && !Array.isArray(data) ? data.type : undefined;
+};
 
 const decodeError = (err: Error | string) => {
   const message = typeof err === 'string' ? err : err.message;

@@ -2,6 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
+import { create } from '@bufbuild/protobuf';
 import * as Effect from 'effect/Effect';
 import * as EffectStream from 'effect/Stream';
 
@@ -10,11 +11,18 @@ import { createCredential, signPresentation } from '@dxos/credentials';
 import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { type KeyringApi } from '@dxos/keyring';
+import { buf, fromPublicKey } from '@dxos/protocols/buf';
 import {
   type Identity as IdentityProto,
+  IdentitySchema,
   type RecoverIdentityRequest,
-} from '@dxos/protocols/proto/dxos/client/services';
-import { type Credential, type Presentation, type ProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
+} from '@dxos/protocols/buf/dxos/client/services_pb';
+import {
+  AuthSchema,
+  type Credential,
+  type Presentation,
+  type ProfileDocument,
+} from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { type IdentityService } from '@dxos/protocols/rpc';
 
 import { type CreateIdentityOptions, type IdentityManager } from './identity-manager.ts';
@@ -38,7 +46,13 @@ export class IdentityServiceImpl extends Resource implements IdentityService.Han
     return Effect.tryPromise({
       try: async () => {
         const ctx = Context.default();
-        await this._createIdentity({ profile: request.profile, deviceProfile: request.deviceProfile }, ctx);
+        await this._createIdentity(
+          {
+            profile: request.profile,
+            deviceProfile: request.deviceProfile,
+          },
+          ctx,
+        );
         return this._getIdentity()!;
       },
       catch: (error) => error as Error,
@@ -104,16 +118,22 @@ export class IdentityServiceImpl extends Resource implements IdentityService.Han
     return Effect.tryPromise({
       try: async () => {
         const ctx = Context.default();
-        if (request.recoveryCode) {
-          await this._recoveryManager.recoverIdentity(ctx, { recoveryCode: request.recoveryCode });
-        } else if (request.external) {
-          await this._recoveryManager.recoverIdentityWithExternalSignature(ctx, request.external);
-        } else if (request.token) {
-          await this._recoveryManager.recoverIdentityWithToken(ctx, { token: request.token });
-        } else if (request.recoveryProof) {
-          await this._recoveryManager.recoverIdentityWithToken(ctx, { recoveryProof: request.recoveryProof });
-        } else {
-          throw new Error('Invalid request.');
+        // buf models the `request` oneof as a tagged union, so the cases are exhaustive here.
+        switch (request.request.case) {
+          case 'recoveryCode':
+            await this._recoveryManager.recoverIdentity(ctx, { recoveryCode: request.request.value });
+            break;
+          case 'external':
+            await this._recoveryManager.recoverIdentityWithExternalSignature(ctx, request.request.value);
+            break;
+          case 'token':
+            await this._recoveryManager.recoverIdentityWithToken(ctx, { token: request.request.value });
+            break;
+          case 'recoveryProof':
+            await this._recoveryManager.recoverIdentityWithToken(ctx, { recoveryProof: request.request.value });
+            break;
+          case undefined:
+            throw new Error('Invalid request.');
         }
 
         return this._getIdentity()!;
@@ -132,7 +152,7 @@ export class IdentityServiceImpl extends Resource implements IdentityService.Han
         invariant(this._identityManager.identity, 'Identity not initialized.');
 
         return await signPresentation({
-          presentation,
+          presentation: presentation,
           signer: this._keyring,
           signerKey: this._identityManager.identity.deviceKey,
           chain: this._identityManager.identity.deviceCredentialChain,
@@ -151,7 +171,7 @@ export class IdentityServiceImpl extends Resource implements IdentityService.Han
         invariant(identity, 'Identity not initialized.');
 
         return await createCredential({
-          assertion: { '@type': 'dxos.halo.credentials.Auth' },
+          assertion: create(AuthSchema, {}),
           issuer: identity.identityKey,
           subject: identity.identityKey,
           chain: identity.deviceCredentialChain,
@@ -168,11 +188,11 @@ export class IdentityServiceImpl extends Resource implements IdentityService.Han
       return undefined;
     }
 
-    return {
+    return buf.create(IdentitySchema, {
       did: this._identityManager.identity.did,
-      identityKey: this._identityManager.identity.identityKey,
-      spaceKey: this._identityManager.identity.space.key,
+      identityKey: fromPublicKey(this._identityManager.identity.identityKey),
+      spaceKey: fromPublicKey(this._identityManager.identity.space.key),
       profile: this._identityManager.identity.profileDocument,
-    };
+    });
   }
 }

@@ -107,11 +107,11 @@ describe('versioning model', () => {
     const binding = await Branch.bind(doc, branch);
     // Splice-based edits (what the editor produces) merge character-level across branches;
     // whole-string assignment would be a scalar PUT that merges last-writer-wins.
-    Obj.update(binding.object, () => {
-      EchoText.update(binding.object, 'content', 'alpha\nbravo\ncharlie\n');
+    Obj.update(binding.object, (object) => {
+      EchoText.update(object, 'content', 'alpha\nbravo\ncharlie\n');
     });
     // Concurrent parent edit after the fork.
-    Obj.update(root, () => {
+    Obj.update(root, (root) => {
       EchoText.update(root, 'content', 'alpha edited\nbravo\n');
     });
     await db.flush();
@@ -131,10 +131,10 @@ describe('versioning model', () => {
 
     const branch = await Branch.create(doc, { name: 'draft', parent: root });
     const binding = await Branch.bind(doc, branch);
-    Obj.update(binding.object, () => {
-      EchoText.update(binding.object, 'content', 'alpha theirs\nbravo\n');
+    Obj.update(binding.object, (object) => {
+      EchoText.update(object, 'content', 'alpha theirs\nbravo\n');
     });
-    Obj.update(root, () => {
+    Obj.update(root, (root) => {
       EchoText.update(root, 'content', 'alpha ours\nbravo\n');
     });
     await db.flush();
@@ -163,8 +163,8 @@ describe('versioning model', () => {
       anchor,
     });
     const history = History.ensure(doc);
-    Obj.update(doc, () => {
-      history.branches.push(legacy);
+    Obj.update(doc, (doc) => {
+      History.ensure(doc).branches.push(legacy);
     });
     const stored = history.branches.find(({ id }) => id === legacy.id);
     invariant(stored, 'legacy branch not stored');

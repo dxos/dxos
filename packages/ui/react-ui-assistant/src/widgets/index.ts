@@ -10,4 +10,5 @@ export * from './StatsWidget.ts';
 export * from './StatusWidget.ts';
 export * from './SuggestionWidget.ts';
 export * from './SummaryWidget.tsx';
+export * from './SyntheticWidget.ts';
 export * from './ToolWidget.tsx';

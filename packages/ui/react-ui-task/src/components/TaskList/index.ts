@@ -3,6 +3,6 @@
 //
 
 export * from './hierarchy.ts';
-export { STATUS_ICONS, STATUS_ORDER } from './status-icons.ts';
+export { statusIcon } from './status-icons.ts';
 export * from './TaskList.tsx';
 export { type TaskNode, buildTaskForest, flattenVisibleTasks } from './tree-model.ts';

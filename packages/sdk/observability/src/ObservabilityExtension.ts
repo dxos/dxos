@@ -16,13 +16,14 @@ export * from './extensions/index.ts';
  *
  * - errors: Error tracking (e.g., PostHog)
  * - events: Product usage event tracking (e.g., PostHog)
- * - feedback: User feedback submission (e.g., PostHog)
+ * - support: Support tickets anchoring user reports and telemetry (e.g., PostHog)
  * - ai: Model inferences, tool calls, and turns (e.g., PostHog LLM analytics, OTel gen_ai)
  * - logs: Structured logging (e.g., OTEL)
+ * - mcp: MCP server sessions and tool calls (e.g., PostHog)
  * - metrics: Metric data (e.g., OTEL)
  * - traces: Distributed tracing (e.g., OTEL)
  */
-export type Kind = 'ai' | 'errors' | 'events' | 'feedback' | 'logs' | 'metrics' | 'traces';
+export type Kind = 'ai' | 'errors' | 'events' | 'support' | 'logs' | 'mcp' | 'metrics' | 'traces';
 
 /**
  * Base for every extension API variant. All kinds implement availability the same way.
@@ -157,47 +158,80 @@ export type Ai = {
   captureToolCall(toolCall: ToolCall): void;
 };
 
+/** What every event in one MCP session carries; learned at `initialize` and stamped on the calls that follow. */
+export type McpSession = {
+  /** Groups the session's events; one server process is one session over a stdio transport. */
+  sessionId: string;
+  clientName?: string;
+  clientVersion?: string;
+  protocolVersion?: string;
+};
+
+/** MCP extension API (kind-specific methods only). */
+export type Mcp = {
+  captureInitialize(session: McpSession): void;
+  captureToolCall(
+    call: McpSession & { toolName: string; parameters?: unknown; durationMs: number; isError: boolean },
+  ): void;
+};
+
 /**
- * Feedback extension API (kind-specific methods only).
+ * Support extension API (kind-specific methods only).
  */
-export type Feedback = {
-  captureUserFeedback(form: FeedbackForm): Promise<string | undefined>;
+export type SupportLogTags = { ticketId: string } | { reportId: string };
+
+export type Support = {
+  uploadLogs(): Promise<string | undefined>;
+  sessionContext(): SupportSessionContext | undefined;
+  flushLogs(attributes: SupportLogTags): Promise<void>;
 };
 
 export type ExtensionApi =
   | (ExtensionApiBase<'errors'> & Errors)
   | (ExtensionApiBase<'events'> & Events)
-  | (ExtensionApiBase<'feedback'> & Feedback)
+  | (ExtensionApiBase<'support'> & Support)
   | (ExtensionApiBase<'ai'> & Ai)
   // TODO(wittjosiah): Direct logs api?
+  | (ExtensionApiBase<'mcp'> & Mcp)
   | ExtensionApiBase<'logs'>
   | (ExtensionApiBase<'metrics'> & Metrics)
   // TODO(wittjosiah): Direct traces api?
   | ExtensionApiBase<'traces'>;
 
 /**
- * Feedback form to be captured by the feedback extension.
+ * What a browser knows about its own telemetry session. Shaped after what posthog-js's own widget
+ * sends.
  */
-// TODO(wittjosiah): Support more form fields (e.g., PostHog custom surveys).
-export type FeedbackForm = { message: string; includeLogs?: boolean };
+export type SupportSessionContext = {
+  distinctId: string;
+  /** Browser-minted id the widget API uses for access control on anonymous tickets. */
+  widgetSessionId: string;
+  sessionId?: string;
+  replayUrl?: string;
+  currentUrl?: string;
+};
 
 /**
  * Attributes to be attached to observability events.
  */
 export type Attributes = Record<string, string | number | boolean | undefined>;
 
+export type ExtensionContext = {
+  setTags(tags: Attributes, kind?: Kind): void;
+};
+
 /**
  * Implementation of an observability extension API.
  */
 export type Extension = {
-  initialize?(): Effect.Effect<void, Error>;
+  initialize?(context: ExtensionContext): Effect.Effect<void, Error>;
   close?(): Effect.Effect<void>;
   enable?(): Effect.Effect<void>;
   disable?(): Effect.Effect<void>;
   flush?(): Effect.Effect<void>;
   identify?(distinctId: string, attributes?: Attributes, setOnceAttributes?: Attributes): void;
   alias?(distinctId: string, previousId?: string): void;
-  setTags?(tags: Record<string, string>): void;
+  setTags?(tags: Record<string, string>, kind?: Kind): void;
   enabled: boolean;
   apis: ExtensionApi[];
 };

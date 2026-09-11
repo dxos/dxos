@@ -6,6 +6,7 @@ export * from './useAppGraph.ts';
 export * from './useActiveSpace.ts';
 export * from './useHomeVisibility.ts';
 export * from './useLayout.ts';
+export * from './useNavigationPresence.ts';
 export * from './useObjectMenuItems.ts';
 export * from './usePluginRegistryAvailable.ts';
 export * from './useProgressMonitor.ts';

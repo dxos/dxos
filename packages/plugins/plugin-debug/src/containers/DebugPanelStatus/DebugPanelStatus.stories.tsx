@@ -4,11 +4,13 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 
+import { withPluginManager } from '@dxos/app-framework/testing';
 import {
   type DebugPortController,
   type DebugPortStartOptions,
   type DebugPortStatus as DebugPortStatusType,
 } from '@dxos/react-client/devtools';
+import { withAttention } from '@dxos/react-ui-attention/testing';
 import { withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
@@ -17,8 +19,7 @@ import { DebugPanelStatus } from './DebugPanelStatus.tsx';
 
 /**
  * Stand-in for the page-wide controller: the real one long-polls a loopback server and evaluates
- * whatever it returns, which a story must never do. The popover panel needs an app context, so
- * the story exercises only the indicator.
+ * whatever it returns, which a story must never do.
  */
 const createFakeController = (initial: Partial<DebugPortStatusType> = {}): DebugPortController => {
   const listeners = new Set<() => void>();
@@ -48,7 +49,8 @@ const createFakeController = (initial: Partial<DebugPortStatusType> = {}): Debug
 const meta = {
   title: 'plugins/plugin-debug/containers/DebugPanelStatus',
   component: DebugPanelStatus,
-  decorators: [withTheme()],
+  // The window's console needs the plugin manager, and its tab and placement the view state.
+  decorators: [withPluginManager(), withAttention(), withTheme()],
   parameters: { translations },
 } satisfies Meta<typeof DebugPanelStatus>;
 

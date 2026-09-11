@@ -3,7 +3,7 @@
 //
 
 import { composeStories } from '@storybook/react-vite';
-import { act, cleanup, fireEvent, screen } from '@testing-library/react';
+import { act, cleanup, fireEvent, screen, waitFor } from '@testing-library/react';
 import { afterEach, describe, expect, test } from 'vitest';
 
 import { ProjectionModel } from '@dxos/schema';
@@ -26,16 +26,16 @@ describe('FieldEditor', () => {
     await Default.run();
 
     expect(screen.getByText('Type format')).toBeInTheDocument();
-    expect(screen.getByText('String')).toBeInTheDocument();
+    expect(screen.getByRole('combobox')).toHaveTextContent('String');
 
     // Verify the initial field shows as String type.
-    expect(screen.getByText('String')).toBeInTheDocument();
+    expect(screen.getByRole('combobox')).toHaveTextContent('String');
 
     fireEvent.click(screen.getByRole('combobox'));
-    const options = screen.getAllByRole('option');
+    const options = await screen.findAllByRole('option');
     const option = options.find((option) => option.textContent === 'Number');
     fireEvent.click(option!);
-    expect(screen.getByText('Number')).toBeInTheDocument();
+    await waitFor(() => expect(screen.getByRole('combobox')).toHaveTextContent('Number'));
 
     await act(async () => {
       fireEvent.click(screen.getByTestId('save-button'));

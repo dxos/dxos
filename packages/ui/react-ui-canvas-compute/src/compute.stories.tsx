@@ -161,7 +161,6 @@ const DefaultStory = ({
                       </Select.Item>
                     ))}
                   </Select.Viewport>
-                  <Select.Arrow />
                 </Select.Content>
               </Select.Portal>
             </Select.Root>
@@ -173,7 +172,7 @@ const DefaultStory = ({
               <Form.Root<ComputeNode> values={getComputeNode(selected.id) ?? {}}>
                 <Form.Viewport>
                   <Form.Content>
-                    <Form.FieldSet />
+                    <Form.Fields />
                     <Form.Actions />
                   </Form.Content>
                 </Form.Viewport>

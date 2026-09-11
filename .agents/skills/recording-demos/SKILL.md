@@ -1,11 +1,11 @@
 ---
 name: recording-demos
 description: >-
-  Record a demo of the running app that the agent drives itself — a `.mdl` QA flow or an ad-hoc
+  Record a demo of the running app that the agent drives itself — a `.mdl` QA test or an ad-hoc
   walkthrough — as a captioned `.webm` (or a screenshot), trimmed of dead air and ready to attach.
   Use when asked to demo a feature, show a flow working in the real app, produce a video or
   screenshots of the UI, or execute a flow whose steps have no operation behind them. For a
-  pass/fail report rather than something to watch, use `running-qa-flows`; for a repeatable
+  pass/fail report rather than something to watch, use `composer-qa`; for a repeatable
   regression test, write a Playwright spec instead.
 ---
 
@@ -132,7 +132,7 @@ un-stopped leaves nothing behind.
 C '{"op":"caption","value":"Step 2 — Play 1. e4: drag the e2 pawn to e4","subtitle":"from plugin-chess/PLUGIN.mdl"}'
 ```
 
-When running a `.mdl` flow, the caption is the step's `do:` text verbatim and the subtitle is where it
+When running a `.mdl` test, the caption is the step's `do:` text verbatim and the subtitle is where it
 came from. A viewer then sees the spec and the app agreeing, which is the whole point of the artifact.
 
 ## 4. Trim the dead air
@@ -294,13 +294,13 @@ Play it back, or step the frames, before attaching. Two different classes of pro
   something you built earlier in this session, fix it now** — do not ship a video that documents your
   own bug and say nothing. Re-record after the fix; the recording is cheap and the credibility is not.
 
-## Running a `.mdl` flow this way
+## Running a `.mdl` test this way
 
-Read the flow first (`running-qa-flows` §1 applies unchanged: `given`, `before`/`test`/`after`, and
+Read the test first (`composer-qa` §1 applies unchanged: `given`, `before`/`steps`/`after`, and
 every `note` is a constraint, not commentary). Then, per step, perform the `do:` rather than the
 `invoke:`, and judge `expect:` from the screen.
 
-Consent is the same as `running-qa-flows`: a flow mutates by definition, so name the flow and what it
+Consent is the same as `composer-qa`: a test mutates by definition, so name the test and what it
 will change before starting, and run it against a dev server you started, never the user's profile.
 
 Verify state by reading the DOM, not by trusting the gesture:

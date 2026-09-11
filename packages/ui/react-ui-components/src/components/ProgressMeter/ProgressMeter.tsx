@@ -8,7 +8,7 @@ import { Progress as ProgressModel } from '@dxos/progress';
 import {
   IconButton,
   Progress,
-  Stepper,
+  Steps,
   TextCrawl,
   type ThemedClassName,
   composable,
@@ -128,7 +128,7 @@ type InnerProgressMeterProps = ProgressMeterProps & { state: ProgressModel.TaskP
  * and how to stop it.
  *
  * One component with one geometry, whatever the monitor reports. The parts are chosen from the
- * state — a {@link Stepper} where the run declared a plan, a {@link Progress} fraction where the
+ * state — a {@link Steps} where the run declared a plan, a {@link Progress} fraction where the
  * phase counts and a sweep where it cannot, a crawl of the phases it has named — but the three rows
  * are always drawn, so a phase that stops being countable never changes the readout's height and
  * never moves the layout around it.
@@ -200,7 +200,7 @@ export const InnerProgressMeter = composable<HTMLDivElement, InnerProgressMeterP
         {/* A declared plan is drawn as its stages, which carry the fraction on the line leaving the
             one in flight; with no plan there is only the fraction, so a bare bar says it. */}
         {stages > 0 ? (
-          <Stepper
+          <Steps
             classNames='self-center'
             steps={state.phases ?? 0}
             active={state.phase}

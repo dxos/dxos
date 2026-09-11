@@ -9,6 +9,7 @@ export * from './BooleanField/index.ts';
 export * from './ComboboxField/index.ts';
 export * from './DateField/index.ts';
 export * from './GeoPointField/index.ts';
+export * from './HueField/index.ts';
 export * from './MarkdownField/index.ts';
 export * from './NumberField/index.ts';
 export * from './PasswordField/index.ts';

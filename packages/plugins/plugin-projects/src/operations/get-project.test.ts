@@ -23,10 +23,8 @@ describe('get-project', () => {
   it.effect('reports task counts, outline, and artifacts', () =>
     Effect.gen(function* () {
       const taskSet = yield* Database.add(TaskSet.make({ name: 'Sprint' }));
-      const open = yield* Database.add(Task.make({ title: 'Open', status: 'todo' }));
-      const done = yield* Database.add(Task.make({ title: 'Done', status: 'done' }));
-      Obj.setParent(open, taskSet);
-      Obj.setParent(done, taskSet);
+      const open = yield* Database.add(Task.make({ [Obj.Parent]: taskSet, title: 'Open', status: 'todo' }));
+      const done = yield* Database.add(Task.make({ [Obj.Parent]: taskSet, title: 'Done', status: 'done' }));
       Obj.update(taskSet, (taskSet) => {
         taskSet.tasks = [Ref.make(open), Ref.make(done)];
       });

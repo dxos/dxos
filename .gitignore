@@ -11,6 +11,16 @@
 # Transitional: pre-rename state file, deleted on first mode.sh run.
 .claude/.response-mode
 
+# Autonomous-mode run state: the pinned task, its definition of done, and the
+# block budget the Stop hook spends. Per-worktree runtime, like the mode.
+.claude/.autonomous
+.claude/.autonomous-dod
+.claude/.autonomous-reminders
+# Its two logs. Both are session evidence, not source: the user log is a verbatim
+# transcript of what the user typed, the decision log is what the agent chose.
+.claude/.autonomous-user.md
+.claude/.autonomous-log.md
+
 # Logs
 logs/
 npm-debug.log*
@@ -264,3 +274,7 @@ tools/vscode/vscode-mdl/dist
 # Stryker mutation testing (evaluation).
 .stryker-tmp/
 reports/mutation/
+
+# Bun writes its cache under `$HOME/Library` on macOS, which lands in the package directory when a
+# command runs with HOME unset — as an MCP server spawned by a client can.
+**/Library/Caches/

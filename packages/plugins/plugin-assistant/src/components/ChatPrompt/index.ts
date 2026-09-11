@@ -10,3 +10,4 @@ export * from './ChatPresets.tsx';
 export * from './ChatPrompt.tsx';
 export * from './ChatReferences.tsx';
 export * from './ChatStatus.tsx';
+export * from './ChatStatusStack.tsx';

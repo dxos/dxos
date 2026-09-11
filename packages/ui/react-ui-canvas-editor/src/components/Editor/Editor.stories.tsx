@@ -87,7 +87,7 @@ const DefaultStory = ({ id = 'test', init, sidebar, children, ...props }: Render
               >
                 <Form.Viewport>
                   <Form.Content>
-                    <Form.FieldSet />
+                    <Form.Fields />
                     <Form.Actions />
                   </Form.Content>
                 </Form.Viewport>

@@ -27,6 +27,12 @@
       "path": "../../../plugins/plugin-crm"
     },
     {
+      "path": "../../../plugins/plugin-debug"
+    },
+    {
+      "path": "../../../plugins/plugin-illustrator"
+    },
+    {
       "path": "../../../plugins/plugin-inbox"
     },
     {

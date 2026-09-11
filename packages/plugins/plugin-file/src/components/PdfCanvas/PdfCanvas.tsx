@@ -4,7 +4,6 @@
 
 import './text-layer.css';
 
-import { composeRefs } from '@radix-ui/react-compose-refs';
 // The `legacy` build, not the default one: the default calls `Map.prototype.getOrInsertComputed`,
 // which is new enough that the Chromium the storybook tests run in throws on it. Legacy targets a
 // wider baseline and is the variant pdf.js publishes for exactly this.
@@ -13,7 +12,7 @@ import workerUrl from 'pdfjs-dist/legacy/build/pdf.worker.min.mjs?url';
 import React, { useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react';
 
 import { log } from '@dxos/log';
-import { composable, composableProps, useTranslation } from '@dxos/react-ui';
+import { composable, composableProps, composeRefs, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';
 

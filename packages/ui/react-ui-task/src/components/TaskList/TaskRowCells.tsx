@@ -4,13 +4,13 @@
 
 import React from 'react';
 
-import { Icon, IconBlock, IconButton, Input, Tag, useTranslation } from '@dxos/react-ui';
-import { Menu, createMenuAction } from '@dxos/react-ui-menu';
+import { Field, Icon, IconBlock, IconButton, Tag, useTranslation } from '@dxos/react-ui';
+import { ActionMenu, createMenuAction } from '@dxos/react-ui-menu';
 import { Task } from '@dxos/types';
 
 import { translationKey } from '#translations';
 
-import { STATUS_ICONS, statusTextStyle } from './status-icons.ts';
+import { statusIcon, statusTextStyle } from './status-icons.ts';
 
 /**
  * Cells shared by the flat row and the tree row.
@@ -44,7 +44,7 @@ export const TaskStatusControl = ({ task, onTaskUpdate, active, classNames }: Ta
   const working = active ?? Task.isAgentWorking(task);
   const { icon, classNames: iconClassNames } = working
     ? { icon: 'ph--spinner--regular', classNames: 'text-info-text animate-spin' }
-    : { icon: STATUS_ICONS[status].icon, classNames: statusTextStyle(status) };
+    : { icon: statusIcon(status), classNames: statusTextStyle(status) };
 
   if (!onTaskUpdate) {
     // `IconBlock square` rather than a bare span: the glyph must hold the same square an
@@ -59,11 +59,23 @@ export const TaskStatusControl = ({ task, onTaskUpdate, active, classNames }: Ta
   }
 
   return (
-    <Menu.Root>
-      <Menu.Trigger asChild>
-        {/* The block, not the button, is the trigger: the same `IconBlock > IconButton` shape as
-            the priority cell, so every control in the row is one rail-item square. */}
-        <IconBlock square classNames={classNames}>
+    <>
+      {/* Sourced from the schema's own option table, so the picker offers exactly what the field
+          accepts and carries the same hue the form's select paints it with. */}
+      <IconBlock square classNames={classNames}>
+        {/* The button is the trigger, not the block: the button stops the click so the row is not selected
+            too, and a trigger above it would never receive it. The block still gives every control in
+            the row one rail-item square. */}
+        <ActionMenu
+          actions={Task.StatusOptions.map(({ id }) =>
+            createMenuAction(`status-${id}`, () => onTaskUpdate(task, { status: id }), {
+              label: t(`status-${id}.label`),
+              icon: statusIcon(id),
+              iconClassNames: statusTextStyle(id),
+              checked: status === id,
+            }),
+          )}
+        >
           <IconButton
             data-testid='taskList.item.status'
             // The hue goes on the icon, not the button: the row dims icons through `--icons-color`,
@@ -77,21 +89,9 @@ export const TaskStatusControl = ({ task, onTaskUpdate, active, classNames }: Ta
             // The row is the selection target; opening the menu must not also select it.
             onClick={(event) => event.stopPropagation()}
           />
-        </IconBlock>
-      </Menu.Trigger>
-      {/* Sourced from the schema's own option table, so the picker offers exactly what the field
-          accepts and carries the same hue the form's select paints it with. */}
-      <Menu.Content
-        items={Task.StatusOptions.map(({ id }) =>
-          createMenuAction(`status-${id}`, () => onTaskUpdate(task, { status: id }), {
-            label: t(`status-${id}.label`),
-            icon: STATUS_ICONS[id].icon,
-            iconClassNames: statusTextStyle(id),
-            checked: status === id,
-          }),
-        )}
-      />
-    </Menu.Root>
+        </ActionMenu>
+      </IconBlock>
+    </>
   );
 };
 
@@ -138,8 +138,8 @@ export const TaskCheckbox = ({ task, checked, onCheckedChange, classNames }: Tas
     // `IconBlock square` so the box is centred in the same square an `IconButton iconOnly` occupies;
     // bare, the 1rem box hugged the start of a 2rem track beside 2rem controls.
     <IconBlock square aria-hidden={false} classNames={classNames}>
-      <Input.Root>
-        <Input.Checkbox
+      <Field.Root>
+        <Field.Checkbox
           checked={checked}
           data-testid='taskList.item.checkbox'
           aria-label={t('task-check.label')}
@@ -147,7 +147,7 @@ export const TaskCheckbox = ({ task, checked, onCheckedChange, classNames }: Tas
           // The row is the selection target; checking it must not also make it the current row.
           onClick={(event) => event.stopPropagation()}
         />
-      </Input.Root>
+      </Field.Root>
     </IconBlock>
   );
 };

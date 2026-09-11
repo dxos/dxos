@@ -3,13 +3,29 @@
 //
 
 import { markdown, markdownLanguage } from '@codemirror/lang-markdown';
-import { type ChangeSpec, EditorSelection, EditorState } from '@codemirror/state';
+import { type ChangeSpec, EditorSelection, EditorState, Prec } from '@codemirror/state';
+import { EditorView } from '@codemirror/view';
 import { describe, test } from 'vitest';
 
+import { commands, exitEmptyItem } from './commands.ts';
 import { editor } from './editor.ts';
 import { outlinerTree, treeFacet } from './tree.ts';
 
 const extensions = [markdown({ base: markdownLanguage }), outlinerTree(), editor()];
+
+// Runs `command` through a view with the caret at `cursor`, so the keymap's transaction passes the filter.
+const runCommand = (doc: string, cursor: number, command: (view: EditorView) => boolean): string => {
+  const view = new EditorView({
+    state: EditorState.create({ doc, extensions: [...extensions, Prec.highest(commands())] }),
+  });
+  try {
+    view.dispatch({ selection: EditorSelection.cursor(cursor) });
+    command(view);
+    return view.state.doc.toString();
+  } finally {
+    view.destroy();
+  }
+};
 
 // Two items: item 1 content [6,7]='A'; line 2 starts at 8, item 2 marker [8,14), content [14,15]='B'.
 const DOC = '- [ ] A\n- [ ] B';
@@ -61,6 +77,42 @@ describe('editor', () => {
 
     test('moving left across the marker goes to the previous line end', ({ expect }) => {
       expect(snapFrom(DOC, 14, 13)).to.eq(7);
+    });
+  });
+
+  describe('prose', () => {
+    test('the caret may rest where there is no item', ({ expect }) => {
+      const doc = '# Heading\n\n- [ ] A';
+      expect(snap(doc, 3)).to.eq(3);
+      expect(snapFrom(doc, 17, 3)).to.eq(3);
+    });
+
+    // The blank line between the item and the caret's line keeps the next text a paragraph of its own
+    // rather than the item's lazy continuation.
+    test('Enter on an empty item removes the marker and leaves a blank line before the caret', ({ expect }) => {
+      expect(runCommand('- [ ] A\n- [ ] ', 14, exitEmptyItem)).to.eq('- [ ] A\n\n');
+    });
+
+    test('Enter on an empty item mid-list splits the list', ({ expect }) => {
+      expect(runCommand('- [ ] A\n- [ ] \n- [ ] C', 14, exitEmptyItem)).to.eq('- [ ] A\n\n\n- [ ] C');
+    });
+
+    test('Enter on a non-empty item is left to the markdown continuation', ({ expect }) => {
+      const view = new EditorView({
+        state: EditorState.create({ doc: '- [ ] A', extensions: [...extensions, Prec.highest(commands())] }),
+      });
+      try {
+        view.dispatch({ selection: EditorSelection.cursor(7) });
+        expect(exitEmptyItem(view)).to.eq(false);
+      } finally {
+        view.destroy();
+      }
+    });
+
+    // The markdown keymap's Backspace on an empty item deletes the marker to the line end; the filter
+    // still turns that into removing the item, distinct from Enter which leaves the blank line.
+    test('Backspace on an empty item still deletes it and joins', ({ expect }) => {
+      expect(applyChange('- [ ] A\n- [ ] ', 14, { from: 8, to: 14 })).to.eq('- [ ] A');
     });
   });
 

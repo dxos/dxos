@@ -22,11 +22,11 @@ const handler: Operation.WithHandler<typeof SpaceOperation.AddType> = SpaceOpera
       const { db } = yield* Database.Service;
 
       const type = yield* Effect.promise(() => db.addType(input.type ?? describedType(input)));
-      Type.update(type, (draft) => {
+      Type.update(type, (type) => {
         if (input.name) {
-          draft.name = input.name;
+          type.name = input.name;
         }
-        const meta = Type.getMeta(draft);
+        const meta = Type.getMeta(type);
         if (input.typename) {
           meta.key = input.typename;
         }

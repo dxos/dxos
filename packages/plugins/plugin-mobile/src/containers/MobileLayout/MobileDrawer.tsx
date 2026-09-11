@@ -10,7 +10,7 @@ import { useCompanions, useDeckState, useSelectedCompanion } from '@dxos/plugin-
 import { useNode } from '@dxos/plugin-graph/hooks';
 import { ErrorFallback, Panel, useTranslation } from '@dxos/react-ui';
 import { Empty } from '@dxos/react-ui-list';
-import { Menu, useMenuActions } from '@dxos/react-ui-menu';
+import { ActionToolbar, useMenuActions } from '@dxos/react-ui-menu';
 
 import { Loading } from '#components';
 import { useMobileDrawerActions, useMobileStack } from '#hooks';
@@ -55,12 +55,8 @@ export const MobileDrawer = () => {
 
   return (
     <Panel.Root>
-      <Panel.Toolbar>
-        <Menu.Root {...menuActions} alwaysActive onAction={onAction}>
-          <Menu.Toolbar>
-            <Menu.Items />
-          </Menu.Toolbar>
-        </Menu.Root>
+      <Panel.Toolbar asChild>
+        <ActionToolbar {...menuActions} alwaysActive onAction={onAction} />
       </Panel.Toolbar>
       <Panel.Content>
         {/* A drawer opened on a plank that contributes no companion would otherwise read as broken. */}

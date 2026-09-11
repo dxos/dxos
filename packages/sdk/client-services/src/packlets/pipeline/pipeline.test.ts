@@ -2,20 +2,22 @@
 // Copyright 2022 DXOS.org
 //
 
+import { create } from '@bufbuild/protobuf';
 import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { Event, sleep } from '@dxos/async';
-import { type FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
+import { fromTimeframe } from '@dxos/protocols/buf';
+import { type FeedMessage, FeedMessage_PayloadSchema, FeedMessageSchema } from '@dxos/protocols/buf/dxos/echo/feed_pb';
 import { Timeframe } from '@dxos/timeframe';
 import { range } from '@dxos/util';
 
 import { Pipeline } from './pipeline.ts';
 import { TestFeedBuilder } from './testing/index.ts';
 
-const TEST_MESSAGE: FeedMessage = {
-  timeframe: new Timeframe(),
-  payload: {},
-};
+const TEST_MESSAGE: FeedMessage = create(FeedMessageSchema, {
+  timeframe: fromTimeframe(new Timeframe()),
+  payload: create(FeedMessage_PayloadSchema, {}),
+});
 
 describe('pipeline/Pipeline', () => {
   test('asynchronous reader & writer without ordering', async () => {
@@ -46,7 +48,7 @@ describe('pipeline/Pipeline', () => {
     pipeline.setWriteFeed(feed);
 
     for (const _ in range(messagesPerFeed)) {
-      await pipeline.writer!.write({});
+      await pipeline.writer!.write(create(FeedMessage_PayloadSchema, {}));
     }
 
     await pipeline.start();
@@ -154,7 +156,7 @@ describe('pipeline/Pipeline', () => {
 
     const messageCount = 3;
     for (const _ of range(messageCount)) {
-      await pipeline.writer.write({});
+      await pipeline.writer.write(create(FeedMessage_PayloadSchema, {}));
     }
 
     // Launch start() but do not await: its iterator is assigned early while `open()` (which marks

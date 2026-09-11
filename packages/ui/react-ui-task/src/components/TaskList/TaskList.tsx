@@ -2,7 +2,6 @@
 // Copyright 2026 DXOS.org
 //
 
-import { createContext } from '@radix-ui/react-context';
 import React, {
   type KeyboardEvent,
   type MouseEvent,
@@ -18,21 +17,22 @@ import { useObject, useQuery } from '@dxos/echo-react';
 import {
   Button,
   DxAnchorActivate,
+  Field,
   Icon,
   IconBlock,
   IconButton,
-  Input,
   Tag,
   Toolbar,
   composable,
   composableProps,
+  createContext,
   toLocalizedString,
   useTranslation,
 } from '@dxos/react-ui';
 import { Listbox, useListDisclosure } from '@dxos/react-ui-list';
-import { MarkdownEditable, type MarkdownEditableController } from '@dxos/react-ui-markdown';
+import { MarkdownEditable, type MarkdownEditableController, type MarkdownEditableProps } from '@dxos/react-ui-markdown';
 import {
-  Menu,
+  ActionMenu,
   type MenuAction,
   type MenuItem,
   createMenuAction,
@@ -47,13 +47,14 @@ import { translationKey } from '#translations';
 
 import { type TaskPlacement, subtreeIds } from './hierarchy.ts';
 import { STATUS_ORDER, UNSET_ICON, estimateTextStyle, priorityIcon, priorityTextStyle } from './status-icons.ts';
+import { type TaskDescriptionProps } from './TaskDescription.tsx';
 import { TaskTreeContent } from './TaskTreeContent.tsx';
 import { type TaskNode, buildTaskForest, flattenVisibleTasks } from './tree-model.ts';
 
 const shortDid = (did: string): string => `${did.slice(0, 12)}…`;
 
 //
-// Context — plain Radix context (un-scoped); nesting task lists has no meaning today.
+// Context — a plain `createContext` context from `@dxos/react-hooks` (un-scoped); nesting task lists has no meaning today.
 //
 
 const TASK_LIST_NAME = 'TaskList.Root';
@@ -64,6 +65,8 @@ type TaskListContextValue = {
   showGroupLabels: boolean;
   showOrdinals: boolean;
   showDescription: boolean;
+  /** Renderers for a row's description beyond its own — a host's link anchor, say. */
+  descriptionComponents?: TaskDescriptionProps['components'];
   /** Render each task's estimate beside the priority control. */
   showEstimates: boolean;
   hierarchical: boolean;
@@ -169,6 +172,8 @@ type TaskListRootProps = PropsWithChildren<{
    * single-line list (e.g. the chat strip) keeps one row per task.
    */
   showDescription?: boolean;
+  /** Renderers for a row's description beyond its own — a host's link anchor, say. */
+  descriptionComponents?: TaskDescriptionProps['components'];
 
   //
   // Callbacks. Wiring one is what enables the affordance that calls it — the list never writes.
@@ -217,6 +222,7 @@ const TaskListRoot = ({
   showGroupLabels = true,
   showOrdinals = false,
   showDescription = false,
+  descriptionComponents,
   showEstimates = false,
   hierarchical = false,
   collapsed,
@@ -294,6 +300,7 @@ const TaskListRoot = ({
       showGroupLabels={showGroupLabels}
       showOrdinals={showOrdinals}
       showDescription={showDescription}
+      descriptionComponents={descriptionComponents}
       showEstimates={showEstimates}
       hierarchical={hierarchical}
       debug={debug}
@@ -356,7 +363,7 @@ const MAX_ORDINAL = 99;
  * there and no track is held empty. Cells flow into the tracks in DOM order; the names are for the
  * pane and the description, which place themselves.
  */
-type GridTrack = readonly [name: string | undefined, size: string];
+type GridTrack = readonly [name: string | undefined, size: string, endName?: string];
 
 const buildGridTemplate = ({
   toggle,
@@ -375,7 +382,7 @@ const buildGridTemplate = ({
     showGutter && ['gutter', 'var(--dx-control)'],
     ['status', 'var(--dx-control)'],
     ['title', 'minmax(0, 1fr)'],
-    ['chips', 'min-content'],
+    ['chips', 'min-content', 'chips-end'],
     showEstimates && ['estimate', 'var(--dx-control)'],
     ['priority', 'var(--dx-control)'],
     hasActions && ['actions', 'var(--dx-control)'],
@@ -386,10 +393,12 @@ const buildGridTemplate = ({
   // toggle track is omitted — so the first track's name joins the row's own.
   return tracks
     .map(([name, size], index) => {
-      const names = [index === 0 && 'tree-row-start', name].filter(Boolean).join(' ');
+      // A track's `endName` belongs to the line that follows it, which is the same line the next
+      // track's own name sits on — so it is emitted here rather than by the track that declares it.
+      const names = [index === 0 && 'tree-row-start', tracks[index - 1]?.[2], name].filter(Boolean).join(' ');
       return `${names ? `[${names}] ` : ''}${size}`;
     })
-    .concat('[tree-row-end]')
+    .concat(`[${['tree-row-end', tracks.at(-1)?.[2]].filter(Boolean).join(' ')}]`)
     .join(' ');
 };
 
@@ -408,6 +417,7 @@ const TaskListContent = composable<HTMLUListElement>((props, forwardedRef) => {
     showGroupLabels,
     showOrdinals,
     showDescription,
+    descriptionComponents,
     showGutter,
     gridTemplateColumns,
     isCollapsed,
@@ -443,6 +453,7 @@ const TaskListContent = composable<HTMLUListElement>((props, forwardedRef) => {
   // group is a `group` node the machine splices out of its own topology.
   return (
     <TaskTreeContent
+      descriptionComponents={descriptionComponents}
       debug={debug}
       hierarchical={hierarchical}
       groupByStatus={grouping}
@@ -496,50 +507,36 @@ TaskListGroupLabel.displayName = 'TaskList.GroupLabel';
  * reads as two empty controls rather than a dash beside a dot.
  */
 const TaskEstimateControl = ({ task }: { task: Task.Task }) => {
-  const { t } = useTranslation(translationKey);
   const { onTaskUpdate } = useTaskListContext('TaskList.EstimateControl');
   const estimate = task.estimate;
-  const label = estimate?.toUpperCase() ?? <Icon icon={UNSET_ICON} classNames='shrink-0' />;
+  const label = estimate?.toUpperCase() ?? <Icon icon={UNSET_ICON} classNames='text-neutral-500' />;
 
   if (!onTaskUpdate) {
     return <IconBlock classNames={estimateTextStyle(estimate)}>{label}</IconBlock>;
   }
 
   return (
-    <Menu.Root>
-      <Menu.Trigger asChild>
-        <IconBlock>
+    <>
+      <IconBlock>
+        <ActionMenu
+          actions={[Task.NullOption, ...Task.EstimateOptions].map(({ id, title }) =>
+            createMenuAction(`estimate-${id}`, () => onTaskUpdate(task, { estimate: id === 'none' ? null : id }), {
+              label: title,
+              checked: (estimate ?? 'none') === id,
+            }),
+          )}
+        >
           <Button
             variant='ghost'
             data-testid='taskList.item.estimate'
-            // `w-8` fills the block: the label's hit target is the same square as the icon
-            // controls on either side of it.
             classNames={mx('w-8 px-0 text-xs tabular-nums', estimateTextStyle(estimate))}
-            // The row is the selection target; opening the menu must not also select it.
             onClick={(event: MouseEvent) => event.stopPropagation()}
           >
             {label}
           </Button>
-        </IconBlock>
-      </Menu.Trigger>
-      {/* Sourced from the schema's own option table, so the picker offers exactly what the field
-          accepts and carries the same hue the form's select paints it with. Clearing is offered
-          first; the table has no `none` row because the field is simply absent when unset. */}
-      <Menu.Content
-        items={Task.EstimateOptions.map(({ id, title }) =>
-          createMenuAction(
-            `estimate-${id}`,
-            // `none` is not an `Estimate`: an unset estimate is the absent property.
-            () => onTaskUpdate(task, { estimate: id === 'none' ? null : id }),
-            {
-              label: title,
-              classNames: estimateTextStyle(id),
-              checked: (estimate ?? 'none') === id,
-            },
-          ),
-        )}
-      />
-    </Menu.Root>
+        </ActionMenu>
+      </IconBlock>
+    </>
   );
 };
 
@@ -557,51 +554,43 @@ TaskEstimateControl.displayName = 'TaskList.EstimateControl';
 const TaskPriorityIcon = ({ task }: { task: Task.Task }) => {
   const { t } = useTranslation(translationKey);
   const { onTaskUpdate } = useTaskListContext('TaskList.PriorityIcon');
-  const priority = task.priority ?? 'none';
+  const priority = task.priority ?? undefined;
   const icon = priorityIcon(priority);
-  const tint = priorityTextStyle(priority);
+  const styles = priorityTextStyle(priority);
 
   if (!onTaskUpdate) {
     // Falls back to the dot rather than rendering nothing: a readonly row still says "no priority"
     // in the same column its neighbours use, so the list reads as one column and not a ragged one.
     return (
       <IconBlock square>
-        <Icon icon={icon} classNames={mx('shrink-0', tint)} />
+        <Icon icon={icon} classNames={mx('shrink-0', styles)} />
       </IconBlock>
     );
   }
 
   return (
-    <Menu.Root>
-      <Menu.Trigger asChild>
-        <IconBlock>
-          <IconButton
-            variant='ghost'
-            icon={icon}
-            iconOnly
-            label={t('task-priority.label')}
-            data-testid='taskList.item.priority'
-            // The hue goes on the icon, not the button: the row dims icons through `--icons-color`,
-            // which the `Icon` root reads, so a colour set on the button is overridden at rest.
-            iconClassNames={tint}
-            // The row is the selection target; opening the menu must not also select it.
-            onClick={(event) => event.stopPropagation()}
-          />
-        </IconBlock>
-      </Menu.Trigger>
-      {/* Sourced from the schema's own option table, so the picker offers exactly what the field
-          accepts and carries the same hue the form's select paints it with. */}
-      <Menu.Content
-        items={Task.PriorityOptions.map(({ id, icon: optionIcon }) =>
-          createMenuAction(`priority-${id}`, () => onTaskUpdate(task, { priority: id }), {
+    <IconBlock>
+      <ActionMenu
+        actions={[Task.NullOption, ...Task.PriorityOptions].map(({ id, icon: optionIcon }) =>
+          createMenuAction(`priority-${id}`, () => onTaskUpdate(task, { priority: id === 'none' ? null : id }), {
             label: t(`priority-${id}.label`),
             icon: optionIcon,
             iconClassNames: priorityTextStyle(id),
             checked: priority === id,
           }),
         )}
-      />
-    </Menu.Root>
+      >
+        <IconButton
+          variant='ghost'
+          icon={icon}
+          iconOnly
+          label={t('task-priority.label')}
+          data-testid='taskList.item.priority'
+          iconClassNames={styles}
+          onClick={(event) => event.stopPropagation()}
+        />
+      </ActionMenu>
+    </IconBlock>
   );
 };
 
@@ -682,22 +671,22 @@ const TaskListItemActions = ({ task }: { task: Task.Task }) => {
   }
 
   return (
-    <Menu.Root>
-      <Menu.Trigger asChild>
-        <IconBlock>
-          <IconButton
-            variant='ghost'
-            iconOnly
-            icon='ph--dots-three-vertical--regular'
-            label={t('task-actions.label')}
-            data-testid='taskList.item.actions'
-            classNames={ROW_ACTION_CLASSNAMES}
-            onClick={(event) => event.stopPropagation()}
-          />
-        </IconBlock>
-      </Menu.Trigger>
-      <Menu.Content items={actions} />
-    </Menu.Root>
+    <IconBlock>
+      {/* The button is the trigger, not the block: the button stops the click so the row is not selected
+            too, and a trigger above it would never receive it. The block still gives every control in
+            the row one rail-item square. */}
+      <ActionMenu actions={actions}>
+        <IconButton
+          variant='ghost'
+          iconOnly
+          icon='ph--dots-three-vertical--regular'
+          label={t('task-actions.label')}
+          data-testid='taskList.item.actions'
+          classNames={ROW_ACTION_CLASSNAMES}
+          onClick={(event) => event.stopPropagation()}
+        />
+      </ActionMenu>
+    </IconBlock>
   );
 };
 
@@ -749,7 +738,7 @@ const ArtifactTag = ({ artifact }: { artifact: Obj.Unknown }) => {
       // The row is an option: without this the click selects the task as well as opening the card.
       event.stopPropagation();
       const trigger = tagRef.current;
-      trigger?.dispatchEvent(new DxAnchorActivate({ trigger, dxn: Obj.getURI(artifact), label, kind: 'card' }));
+      trigger?.dispatchEvent(new DxAnchorActivate({ trigger, eid: Obj.getURI(artifact), label, kind: 'card' }));
     },
     [artifact, label],
   );
@@ -778,6 +767,8 @@ type TaskListEditProps = ComposableProps<{
   showDescription?: boolean;
   /** Placeholder for the description field. */
   descriptionPlaceholder?: string;
+  /** Editor extensions for the description field beyond its own — what the host's plugins contribute. */
+  descriptionExtensions?: MarkdownEditableProps['extensions'];
   /**
    * Lay the pane out on the list's own column template, so the title field starts where the rows'
    * titles do and the icon sits under their status controls. Off by default: a pane used away from
@@ -794,10 +785,18 @@ type TaskListEditProps = ComposableProps<{
  */
 const TaskListEdit = composable<HTMLDivElement, TaskListEditProps>(
   (
-    { placeholder = 'Add task', showDescription = false, descriptionPlaceholder = 'Add a description', grid, ...props },
+    {
+      placeholder = 'Add task',
+      showDescription = false,
+      descriptionPlaceholder = 'Add a description',
+      descriptionExtensions,
+      grid,
+      ...props
+    },
     forwardedRef,
   ) => {
     const { t } = useTranslation(translationKey);
+    const descriptionRef = useRef<MarkdownEditableController>(null);
     const { tasks, selected, onTaskCreate, onTaskUpdate, onTaskSelect, gridTemplateColumns } =
       useTaskListContext('TaskList.Edit');
     const { className, ...rest } = composableProps(props);
@@ -806,8 +805,6 @@ const TaskListEdit = composable<HTMLDivElement, TaskListEditProps>(
     // Subscribe to the selected task so the pane follows a rename made anywhere else.
     const [snapshot] = useObject(task);
     const current = snapshot ?? task;
-
-    const descriptionRef = useRef<MarkdownEditableController>(null);
 
     // The create row's description, mirrored out of the field. A ref rather than state because the
     // create reads it in the same tick it commits the field, and `useEditable` calls back
@@ -928,8 +925,8 @@ const TaskListEdit = composable<HTMLDivElement, TaskListEditProps>(
         >
           <Icon icon={current ? 'ph--pencil-simple--regular' : 'ph--plus--regular'} classNames='text-subdued' />
         </span>
-        <Input.Root>
-          <Input.TextInput
+        <Field.Root>
+          <Field.Input
             variant='subdued'
             classNames={mx('px-0', grid && 'col-start-[title] -col-end-2')}
             data-testid='taskList.edit.title'
@@ -939,7 +936,7 @@ const TaskListEdit = composable<HTMLDivElement, TaskListEditProps>(
             onKeyDown={handleTitleKeyDown}
             onBlur={handleTitleBlur}
           />
-        </Input.Root>
+        </Field.Root>
         {showDescription && (current ? onTaskUpdate : onTaskCreate) && (
           <span
             data-testid='taskList.edit.description'
@@ -951,16 +948,20 @@ const TaskListEdit = composable<HTMLDivElement, TaskListEditProps>(
             {/* A description is markdown, so it is edited as markdown. `editing` is held open —
                 the pane IS the editor, so there is nothing to click into — and the key remounts
                 it per task, since a field held open never re-reads its subject.
-
                 Creating, the field is uncontrolled: there is no task to read a value from, so it
                 holds the draft itself until the create collects it. */}
             <MarkdownEditable
               key={current?.id ?? `create-${createEpoch}`}
               ref={descriptionRef}
               classNames='text-sm'
-              {...(current && { value: current.description ?? '' })}
               editing
               multiline
+              placeholder={descriptionPlaceholder}
+              extensions={descriptionExtensions}
+              // Held open, so it must not pull focus: selecting a row by keyboard would otherwise
+              // land the reader in the description instead of the list.
+              autoFocus={false}
+              {...(current && { value: current.description ?? '' })}
               onValueChange={(description) => {
                 if (task && current) {
                   onTaskUpdate?.(task, { description });
@@ -968,10 +969,6 @@ const TaskListEdit = composable<HTMLDivElement, TaskListEditProps>(
                   draftDescription.current = description;
                 }
               }}
-              placeholder={descriptionPlaceholder}
-              // Held open, so it must not pull focus: selecting a row by keyboard would otherwise
-              // land the reader in the description instead of the list.
-              autoFocus={false}
             />
           </span>
         )}

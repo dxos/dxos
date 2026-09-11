@@ -7,6 +7,7 @@ import { afterEach, beforeEach, describe, test, vi } from 'vitest';
 import {
   ABSOLUTE_CEILING,
   CREEP_TICK_MS,
+  PLUGIN_DRAIN_MAX_MS,
   STATE_1_ASYMPTOTE,
   clampPercent,
   createLoaderStore,
@@ -185,6 +186,54 @@ describe('createLoaderStore', () => {
     store.setProgress(0.8);
     vi.advanceTimersByTime(CREEP_TICK_MS * 500);
     expect(store.progress()).toBeLessThanOrEqual(ABSOLUTE_CEILING + 0.1);
+    store.dispose();
+  });
+});
+
+describe('plugin activation row', () => {
+  beforeEach(() => vi.useFakeTimers());
+  afterEach(() => vi.useRealTimers());
+
+  test('registration alone draws nothing', ({ expect }) => {
+    const store = createLoaderStore();
+    store.setPlugins([{ id: 'markdown', icon: 'ph--text-aa--regular' }]);
+    expect(store.plugins()).toHaveLength(0);
+    store.dispose();
+  });
+
+  test('a burst of activations drains one icon per interval', ({ expect }) => {
+    const store = createLoaderStore();
+    store.setPlugins([
+      { id: 'markdown', icon: 'ph--text-aa--regular' },
+      { id: 'table', icon: 'ph--table--regular' },
+      { id: 'sheet', icon: 'ph--grid-nine--regular' },
+    ]);
+
+    // The whole burst arrives within one frame, as it does during boot.
+    store.activatePlugin('markdown');
+    store.activatePlugin('table');
+    store.activatePlugin('sheet');
+    expect(store.plugins().map(({ id }) => id)).toEqual(['markdown']);
+
+    // Advance by the top of the range: each gap is sampled, so only the maximum is guaranteed.
+    vi.advanceTimersByTime(PLUGIN_DRAIN_MAX_MS);
+    expect(store.plugins().map(({ id }) => id)).toEqual(['markdown', 'table']);
+
+    vi.advanceTimersByTime(PLUGIN_DRAIN_MAX_MS);
+    expect(store.plugins().map(({ id }) => id)).toEqual(['markdown', 'table', 'sheet']);
+    store.dispose();
+  });
+
+  test('unregistered and repeated ids are ignored', ({ expect }) => {
+    const store = createLoaderStore();
+    store.setPlugins([{ id: 'markdown', icon: 'ph--text-aa--regular' }, { id: 'noicon' }]);
+
+    store.activatePlugin('never-registered');
+    store.activatePlugin('noicon');
+    store.activatePlugin('markdown');
+    store.activatePlugin('markdown');
+    vi.advanceTimersByTime(PLUGIN_DRAIN_MAX_MS * 4);
+    expect(store.plugins().map(({ id }) => id)).toEqual(['markdown']);
     store.dispose();
   });
 });

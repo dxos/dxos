@@ -2,7 +2,6 @@
 // Copyright 2026 DXOS.org
 //
 
-import { createContext } from '@radix-ui/react-context';
 import React, {
   type ComponentProps,
   type CSSProperties,
@@ -20,6 +19,7 @@ import {
   type IconButtonProps,
   type ThemedClassName,
   ToggleIconButton,
+  createContext,
   useMergeRefs,
   useTranslation,
 } from '@dxos/react-ui';

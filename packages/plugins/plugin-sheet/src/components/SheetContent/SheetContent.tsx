@@ -18,7 +18,7 @@ import { useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
 import { type CellRange, rangeToA1Notation } from '@dxos/compute-hyperformula';
 import { Obj } from '@dxos/echo';
 import { defaultColSize, defaultRowSize } from '@dxos/lit-grid';
-import { DropdownMenu, Icon, useTranslation } from '@dxos/react-ui';
+import { Icon, Menu, useTranslation } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
 import {
@@ -363,15 +363,15 @@ export const SheetContent = composable<HTMLDivElement, SheetContentProps>((props
         onClick={handleClick}
         ref={setDxGrid}
       />
-      <DropdownMenu.Root
+      <Menu.Root
         modal={false}
         open={!!contextMenuOpen}
         onOpenChange={(nextOpen) => setContextMenuOpen(nextOpen ? inertPosition : null)}
       >
-        <DropdownMenu.VirtualTrigger virtualRef={contextMenuAnchorRef} />
-        <DropdownMenu.Content side={contextMenuAxis === 'col' ? 'bottom' : 'right'} sideOffset={4} collisionPadding={8}>
-          <DropdownMenu.Viewport>
-            <DropdownMenu.Item
+        <Menu.VirtualTrigger virtualRef={contextMenuAnchorRef} />
+        <Menu.Content side={contextMenuAxis === 'col' ? 'bottom' : 'right'} sideOffset={4} collisionPadding={8}>
+          <Menu.Viewport>
+            <Menu.Item
               onClick={() => handleAxisMenuAction('insert-before')}
               data-testid={`grid.${contextMenuAxis}.insert-before`}
             >
@@ -379,8 +379,8 @@ export const SheetContent = composable<HTMLDivElement, SheetContentProps>((props
                 icon={contextMenuAxis === 'col' ? 'ph--columns-plus-left--regular' : 'ph--rows-plus-top--regular'}
               />
               <span>{t(`add-${contextMenuAxis}-before.label`)}</span>
-            </DropdownMenu.Item>
-            <DropdownMenu.Item
+            </Menu.Item>
+            <Menu.Item
               onClick={() => handleAxisMenuAction('insert-after')}
               data-testid={`grid.${contextMenuAxis}.insert-after`}
             >
@@ -388,18 +388,15 @@ export const SheetContent = composable<HTMLDivElement, SheetContentProps>((props
                 icon={contextMenuAxis === 'col' ? 'ph--columns-plus-right--regular' : 'ph--rows-plus-bottom--regular'}
               />
               <span>{t(`add-${contextMenuAxis}-after.label`)}</span>
-            </DropdownMenu.Item>
-            <DropdownMenu.Item
-              onClick={() => handleAxisMenuAction('drop')}
-              data-testid={`grid.${contextMenuAxis}.drop`}
-            >
+            </Menu.Item>
+            <Menu.Item onClick={() => handleAxisMenuAction('drop')} data-testid={`grid.${contextMenuAxis}.drop`}>
               <Icon icon='ph--backspace--regular' />
               <span>{t(`delete-${contextMenuAxis}.label`)}</span>
-            </DropdownMenu.Item>
-          </DropdownMenu.Viewport>
-          <DropdownMenu.Arrow />
-        </DropdownMenu.Content>
-      </DropdownMenu.Root>
+            </Menu.Item>
+          </Menu.Viewport>
+          <Menu.Arrow />
+        </Menu.Content>
+      </Menu.Root>
     </div>
   );
 });

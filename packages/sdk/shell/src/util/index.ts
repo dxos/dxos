@@ -3,3 +3,4 @@
 //
 
 export * from './invitationStatusValue.ts';
+export * from './profileString.ts';

@@ -8,6 +8,7 @@ import { Trigger, latch } from '@dxos/async';
 import { DXN, Type } from '@dxos/echo';
 import {
   EdgeClient,
+  type PeerData,
   SwarmRequest_Action,
   SwarmRequestSchema,
   createEphemeralEdgeIdentity,
@@ -15,7 +16,6 @@ import {
 } from '@dxos/edge-client';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { type PeerInfo } from '@dxos/messaging';
 import { EdgeService } from '@dxos/protocols';
 import { trace } from '@dxos/tracing';
 
@@ -29,7 +29,7 @@ export class Text extends Type.makeObject<Text>(DXN.make('org.dxos.type.bladeRun
 
 export class WsReplicant {
   private _edgeConnection?: EdgeClient = undefined;
-  private _peerInfo?: PeerInfo = undefined;
+  private _peerInfo?: PeerData = undefined;
 
   constructor(private readonly _env: ReplicantEnv) {}
 

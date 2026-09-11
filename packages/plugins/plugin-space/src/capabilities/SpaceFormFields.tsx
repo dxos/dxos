@@ -11,7 +11,7 @@ import { type Surface } from '@dxos/app-framework/ui';
 import { type AppSurface, useTypeOptions } from '@dxos/app-toolkit/ui';
 import { Database, Obj } from '@dxos/echo';
 import { SchemaEx } from '@dxos/effect';
-import { Input } from '@dxos/react-ui';
+import { Field } from '@dxos/react-ui';
 import { type FormFieldRendererProps, SelectField } from '@dxos/react-ui-form';
 import { HuePicker, IconPicker } from '@dxos/react-ui-pickers';
 
@@ -31,10 +31,10 @@ export const HueField = ({ data, label, readonly, getValue, onValueChange }: Spa
   }
 
   return (
-    <Input.Root>
-      <Input.Label>{label}</Input.Label>
+    <Field.Root>
+      <Field.Label>{label}</Field.Label>
       <HuePicker disabled={!!readonly} value={getValue() ?? ''} onChange={handleChange} onReset={handleReset} />
-    </Input.Root>
+    </Field.Root>
   );
 };
 
@@ -48,10 +48,10 @@ export const IconField = ({ data, label, readonly, getValue, onValueChange }: Sp
   }
 
   return (
-    <Input.Root>
-      <Input.Label>{label}</Input.Label>
+    <Field.Root>
+      <Field.Label>{label}</Field.Label>
       <IconPicker disabled={!!readonly} value={getValue() ?? ''} onChange={handleChange} onReset={handleReset} />
-    </Input.Root>
+    </Field.Root>
   );
 };
 

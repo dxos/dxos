@@ -789,8 +789,8 @@ const seedDedupSet = (
   foreignKeySource: string,
   tail: number,
 ): Effect.Effect<Set<string>, never, Database.Service> =>
-  // `limit` selects the newest/oldest N by insertion order (a limited feed query still decodes the
-  // whole feed to apply the limit — a query-engine limitation tracked separately).
+  // `limit` selects the newest/oldest N by insertion order, and the query engine pushes it into the
+  // feed scan, so each read costs its tail rather than the whole feed.
   Effect.all([
     Feed.query(feed, Query.select(Filter.everything()).orderBy(Order.natural('desc')).limit(tail)).run,
     Feed.query(feed, Query.select(Filter.everything()).orderBy(Order.natural('asc')).limit(tail)).run,

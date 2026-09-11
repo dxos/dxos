@@ -12,8 +12,9 @@ import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as Operation from '@dxos/compute/Operation';
 import { invariant } from '@dxos/invariant';
 
-import { DeckCapabilities, DeckSchema } from '#types';
+import { DeckCapabilities } from '#types';
 
+import { applyWorkspace, navigateDeck } from '../url/index.ts';
 import { openableChildren } from '../util/index.ts';
 
 const handler: Operation.WithHandler<typeof LayoutOperation.SwitchWorkspace> = LayoutOperation.SwitchWorkspace.pipe(
@@ -24,52 +25,28 @@ const handler: Operation.WithHandler<typeof LayoutOperation.SwitchWorkspace> = L
         Effect.catch(() => Effect.succeed('desktop' as const)),
       );
 
-      {
-        const state = yield* Capabilities.getAtomValue(DeckCapabilities.State);
-        // TODO(wittjosiah): This is a hack to prevent the previous deck from being set for pinned items.
-        //   Ideally this should be worked into the data model in a generic way.
-        const shouldUpdatePrevious = !GraphPath.isPinnedWorkspace(state.activeDeck);
+      yield* applyWorkspace(input.subject);
 
-        yield* Capabilities.updateAtomValue(DeckCapabilities.State, (state) => {
-          const newDecks = state.decks[input.subject]
-            ? state.decks
-            : { ...state.decks, [input.subject]: { ...DeckSchema.defaultDeck } };
-          return {
-            ...state,
-            previousDeck: shouldUpdatePrevious ? state.activeDeck : state.previousDeck,
-            activeDeck: input.subject,
-            decks: newDecks,
-          };
-        });
+      const state = yield* Capabilities.getAtomValue(DeckCapabilities.State);
+      const deck = state.decks[input.subject];
+      invariant(deck, `Deck not found: ${input.subject}`);
+      // What a workspace had open is remembered for the session but never persisted, so a reload
+      // arrives here with nothing and the workspace seeds itself again.
+      const { open } = yield* Capabilities.getAtomValue(DeckCapabilities.EphemeralState);
+      const remembered = open[input.subject]?.active ?? [];
 
-        // Fullscreen is transient and scoped to the workspace it was entered in.
-        yield* Capabilities.updateAtomValue(DeckCapabilities.EphemeralState, (state) => ({
-          ...state,
-          fullscreen: undefined,
-        }));
+      const seeded =
+        remembered.length === 0 && platform !== 'mobile' ? openableChildren(graph, input.subject).slice(0, 1) : [];
+      const active = remembered.length > 0 ? remembered : seeded;
+
+      const workspace = GraphPath.getWorkspaceToken(input.subject);
+      if (workspace) {
+        yield* navigateDeck({ workspace, active, companionPlanks: deck.companionPlanks });
       }
 
-      {
-        const state = yield* Capabilities.getAtomValue(DeckCapabilities.State);
-        const deck = state.decks[input.subject];
-        invariant(deck, `Deck not found: ${input.subject}`);
-
-        const first = deck.active[0];
-        if (first) {
-          yield* Operation.schedule(LayoutOperation.ScrollIntoView, { subject: first });
-        } else if (platform !== 'mobile') {
-          // Mobile lands on the workspace's own list panel; auto-opening the first child would skip it.
-          const [item] = openableChildren(graph, input.subject);
-          if (item) {
-            // Use `invoke` (synchronous) rather than `schedule` (fire-and-forget) so
-            // that the implicit "open first child" finishes BEFORE this handler
-            // returns. Otherwise, a caller that follows `SwitchWorkspace` with its
-            // own `Open` (e.g. WelcomePlugin DefaultContent) has its `active`
-            // clobbered by this scheduled Open when it later races behind the
-            // caller's state writes.
-            yield* Operation.invoke(LayoutOperation.Open, { subject: [item] });
-          }
-        }
+      const first = active[0];
+      if (first) {
+        yield* Operation.schedule(LayoutOperation.ScrollIntoView, { subject: first });
       }
     }),
   ),

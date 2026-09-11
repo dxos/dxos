@@ -2,9 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
-import { createContext } from '@radix-ui/react-context';
 import { type FC, type ReactNode } from 'react';
 
+import { createContext } from '@dxos/react-hooks';
 // Imported so TypeScript can name this type in the emitted .d.ts (ThreadContext → Message).
 // eslint-disable-next-line unused-imports/no-unused-imports
 import { type Message } from '@dxos/types';

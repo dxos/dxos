@@ -5,7 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
-import { Input, Toolbar } from '@dxos/react-ui';
+import { Field, Toolbar } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
@@ -43,9 +43,9 @@ const meta = {
             ))}
           </ChatDialog.Content>
           <ChatDialog.Footer classNames='px-2 items-center'>
-            <Input.Root>
-              <Input.TextInput classNames='border-none' placeholder='Test' />
-            </Input.Root>
+            <Field.Root>
+              <Field.Input classNames='border-none' placeholder='Test' />
+            </Field.Root>
           </ChatDialog.Footer>
         </ChatDialog.Root>
       </>

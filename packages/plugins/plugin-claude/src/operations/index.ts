@@ -13,9 +13,8 @@ export const ClaudeAgentOperationHandlerSet = OperationHandlerSet.lazy([
   ClaudeAgentOperation.DeployAgent.pipe(Operation.lazyHandler(() => import('./deploy-agent.ts'))),
   ClaudeAgentOperation.StartSession.pipe(Operation.lazyHandler(() => import('./start-session.ts'))),
   ClaudeAgentOperation.SendMessage.pipe(Operation.lazyHandler(() => import('./send-message.ts'))),
-  ClaudeAgentOperation.SetSessionCredentials.pipe(Operation.lazyHandler(() => import('./set-session-credentials.ts'))),
-  ClaudeAgentOperation.RevokeSessionCredentials.pipe(
-    Operation.lazyHandler(() => import('./revoke-session-credentials.ts')),
+  ClaudeAgentOperation.UpdateSessionCredentials.pipe(
+    Operation.lazyHandler(() => import('./update-session-credentials.ts')),
   ),
   ClaudeAgentOperation.GetTranscript.pipe(Operation.lazyHandler(() => import('./get-transcript.ts'))),
 ]);

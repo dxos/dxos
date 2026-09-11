@@ -3,8 +3,9 @@
 //
 
 import { PublicKey } from '@dxos/keys';
-import { type Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
-import { type DelegateSpaceInvitation } from '@dxos/protocols/proto/dxos/halo/invitations';
+import { toDate, toPublicKey } from '@dxos/protocols/buf';
+import { type Credential } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
+import { type DelegateSpaceInvitation } from '@dxos/protocols/buf/dxos/halo/invitations_pb';
 import { type AsyncCallback, Callback, ComplexMap, ComplexSet } from '@dxos/util';
 
 import { getCredentialAssertion } from '../credentials/index.ts';
@@ -31,49 +32,52 @@ export class InvitationStateMachine {
   }
 
   async process(credential: Credential): Promise<void> {
-    const credentialId = credential.id;
+    const credentialId = toPublicKey(credential.id);
     if (credentialId == null) {
       return;
     }
     const assertion = getCredentialAssertion(credential);
-    switch (assertion['@type']) {
+    switch (assertion.$typeName) {
       case 'dxos.halo.invitations.CancelDelegatedInvitation': {
-        this._cancelledInvitationCredentialIds.add(assertion.credentialId);
-        const existingInvitation = this._invitations.get(assertion.credentialId);
+        const cancelled = toPublicKey(assertion.credentialId);
+        if (cancelled == null) {
+          break;
+        }
+        this._cancelledInvitationCredentialIds.add(cancelled);
+        const existingInvitation = this._invitations.get(cancelled);
         if (existingInvitation != null) {
-          this._invitations.delete(assertion.credentialId);
+          this._invitations.delete(cancelled);
           await this.onDelegatedInvitationRemoved.callIfSet({
-            credentialId: assertion.credentialId,
+            credentialId: cancelled,
             invitation: existingInvitation,
           });
         }
         break;
       }
       case 'dxos.halo.invitations.DelegateSpaceInvitation': {
-        if (credential.id) {
-          const isExpired = assertion.expiresOn && assertion.expiresOn.getTime() < Date.now();
-          const wasUsed = this._redeemedInvitationCredentialIds.has(credential.id) && !assertion.multiUse;
-          const wasCancelled = this._cancelledInvitationCredentialIds.has(credential.id);
-          if (isExpired || wasCancelled || wasUsed) {
-            return;
-          }
-          const invitation: DelegateSpaceInvitation = { ...assertion };
-          this._invitations.set(credential.id, invitation);
-          await this.onDelegatedInvitation.callIfSet({
-            credentialId: credential.id,
-            invitation,
-          });
+        const expiresOn = toDate(assertion.expiresOn);
+        const isExpired = expiresOn != null && expiresOn.getTime() < Date.now();
+        const wasUsed = this._redeemedInvitationCredentialIds.has(credentialId) && !assertion.multiUse;
+        const wasCancelled = this._cancelledInvitationCredentialIds.has(credentialId);
+        if (isExpired || wasCancelled || wasUsed) {
+          return;
         }
+        this._invitations.set(credentialId, assertion);
+        await this.onDelegatedInvitation.callIfSet({
+          credentialId,
+          invitation: assertion,
+        });
         break;
       }
       case 'dxos.halo.credentials.SpaceMember': {
-        if (assertion.invitationCredentialId != null) {
-          this._redeemedInvitationCredentialIds.add(assertion.invitationCredentialId);
-          const existingInvitation = this._invitations.get(assertion.invitationCredentialId);
+        const redeemed = toPublicKey(assertion.invitationCredentialId);
+        if (redeemed != null) {
+          this._redeemedInvitationCredentialIds.add(redeemed);
+          const existingInvitation = this._invitations.get(redeemed);
           if (existingInvitation != null && !existingInvitation.multiUse) {
-            this._invitations.delete(assertion.invitationCredentialId);
+            this._invitations.delete(redeemed);
             await this.onDelegatedInvitationRemoved.callIfSet({
-              credentialId: assertion.invitationCredentialId,
+              credentialId: redeemed,
               invitation: existingInvitation,
             });
           }

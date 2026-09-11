@@ -4,8 +4,6 @@
 
 import { EditorSelection, type Extension } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
-import { composeRefs } from '@radix-ui/react-compose-refs';
-import { createContext } from '@radix-ui/react-context';
 import React, {
   type PropsWithChildren,
   type RefObject,
@@ -19,14 +17,8 @@ import React, {
 } from 'react';
 
 import { Doc } from '@dxos/echo-doc';
-import {
-  DX_ANCHOR_ACTIVATE,
-  DxAnchorActivate,
-  composable,
-  composableProps,
-  useThemeContext,
-  useTranslation,
-} from '@dxos/react-ui';
+import { composeRefs, createContext } from '@dxos/react-hooks';
+import { composable, composableProps, useThemeContext, useTranslation } from '@dxos/react-ui';
 import {
   type EditorMenuGroup,
   EditorMenuProvider,
@@ -36,8 +28,6 @@ import {
 } from '@dxos/react-ui-editor';
 import { type Text } from '@dxos/schema';
 import {
-  AnchorWidget,
-  type XmlWidgetProps,
   createBasicExtensions,
   createDataExtensions,
   createMarkdownExtensions,
@@ -46,10 +36,10 @@ import {
   getItemText,
   hashtag,
   isItemLink,
+  objectLinks,
   outliner,
   replaceItemWithLink,
   syncLinkLabels,
-  xmlTags,
 } from '@dxos/ui-editor';
 
 import { meta } from '#meta';
@@ -59,8 +49,6 @@ export type OutlineLink = {
   label: string;
   url: string;
 };
-
-const OBJECT_URL_SCHEMES = ['dxn:', 'echo:'];
 
 /** Replaces the current item with a link to the object created from its text. */
 const convertItemToTask = async (
@@ -252,16 +240,7 @@ const OutlineContent = composable<HTMLDivElement, OutlineContentProps>((props, f
           }
         }),
         // Renders links to converted objects as anchor chips (which dispatch `DX_ANCHOR_ACTIVATE`).
-        xmlTags({
-          registry: {
-            'link-preview': {
-              block: false,
-              urlSchemes: OBJECT_URL_SCHEMES,
-              factory: ({ label, dxn }: XmlWidgetProps<{ label: string; dxn: string }>) =>
-                label && dxn ? new AnchorWidget(label, dxn) : null,
-            },
-          },
-        }),
+        objectLinks(),
         hashtag(),
         // Last, so a host's decoration sees the document the outline's own extensions produced.
         extensions ?? [],
@@ -340,21 +319,37 @@ const OutlineContent = composable<HTMLDivElement, OutlineContentProps>((props, f
     }
   }, [view, resolveLinkLabel]);
 
-  // `DxAnchorActivate` does not bubble, so listen during capture on the editor's container.
+  // A link is followed on click or keyboard activation only. The chip's own `DxAnchorActivate`
+  // also fires on hover intent (and on leave, with `state: false`), which the host's preview
+  // popover answers; acting on those would follow the link on hover. The chip dispatches its
+  // activate from its own click/keydown handlers, so stopping the event in capture here keeps a
+  // pinned preview from opening against an outline that is about to leave.
   const [root, setRoot] = useState<HTMLDivElement | null>(null);
   useEffect(() => {
     if (!root || !onSelectLink) {
       return;
     }
 
-    const handler = (event: Event) => {
-      if (event instanceof DxAnchorActivate) {
-        onSelectLink(event.dxn);
+    const follow = (event: Event) => {
+      const anchor = event.target instanceof Element ? event.target.closest('dx-anchor') : null;
+      const eid = anchor?.getAttribute('eid');
+      if (!anchor || !eid) {
+        return;
       }
+      if (event instanceof KeyboardEvent && event.key !== 'Enter' && event.key !== ' ') {
+        return;
+      }
+      event.preventDefault();
+      event.stopPropagation();
+      onSelectLink(eid);
     };
 
-    root.addEventListener(DX_ANCHOR_ACTIVATE, handler, { capture: true });
-    return () => root.removeEventListener(DX_ANCHOR_ACTIVATE, handler, { capture: true });
+    root.addEventListener('click', follow, { capture: true });
+    root.addEventListener('keydown', follow, { capture: true });
+    return () => {
+      root.removeEventListener('click', follow, { capture: true });
+      root.removeEventListener('keydown', follow, { capture: true });
+    };
   }, [root, onSelectLink]);
 
   return (

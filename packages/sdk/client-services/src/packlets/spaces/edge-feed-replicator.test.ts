@@ -13,8 +13,9 @@ import { createTestEdgeWsServer } from '@dxos/edge-client/testing';
 import { FeedFactory, FeedStore } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';
 import { SpaceId } from '@dxos/keys';
-import { EdgeStatus } from '@dxos/protocols/proto/dxos/client/services';
-import { type FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
+import { createBuf, fromTimeframe } from '@dxos/protocols/buf';
+import { EdgeStatus_ConnectionState } from '@dxos/protocols/buf/dxos/client/services_pb';
+import { type FeedMessage, FeedMessageSchema } from '@dxos/protocols/buf/dxos/echo/feed_pb';
 import { createStorage } from '@dxos/random-access-storage';
 import { openAndClose } from '@dxos/test-utils';
 import { Timeframe } from '@dxos/timeframe';
@@ -45,7 +46,7 @@ describe('EdgeFeedReplicator', () => {
     const { endpoint, admitConnection, messageSink } = await createEdge();
     const { messenger } = await createClient(endpoint);
     admitConnection.wake();
-    await expect.poll(() => messenger.status.state).toBe(EdgeStatus.ConnectionState.CONNECTED);
+    await expect.poll(() => messenger.status.state).toBe(EdgeStatus_ConnectionState.CONNECTED);
 
     await attachReplicator(messenger);
     await expect.poll(() => messageSink.length).toEqual(1);
@@ -58,7 +59,7 @@ describe('EdgeFeedReplicator', () => {
     const { feed } = await attachReplicator(messenger);
 
     admitConnection.wake();
-    await feed.append({ timeframe: new Timeframe() });
+    await feed.append(createBuf(FeedMessageSchema, { timeframe: fromTimeframe(new Timeframe()) }));
 
     await expect.poll(() => messageSink.length).toEqual(2);
     expect(messageSink[1].type).toEqual('data');
@@ -105,7 +106,7 @@ describe('EdgeFeedReplicator', () => {
     const { messenger, sendSpy, reconnectTrigger } = await createClient(endpoint);
 
     const { feed } = await attachReplicator(messenger);
-    await feed.append({ timeframe: new Timeframe() });
+    await feed.append(createBuf(FeedMessageSchema, { timeframe: fromTimeframe(new Timeframe()) }));
 
     sendSpy.mockImplementationOnce(async (_ctx: any, request: any) => {
       sendResponseMessage(request, encodeCbor({ type: 'metadata', feedKey: feed.key.toHex(), length: 0 }));
@@ -169,7 +170,7 @@ describe('EdgeFeedReplicator', () => {
 
     admitConnection.reset();
     await updateIdentity(messenger);
-    await feed.append({ timeframe: new Timeframe() });
+    await feed.append(createBuf(FeedMessageSchema, { timeframe: fromTimeframe(new Timeframe()) }));
     await sleep(20);
     admitConnection.wake();
 
@@ -184,7 +185,7 @@ describe('EdgeFeedReplicator', () => {
     admitConnection.wake();
     await sleep(10);
 
-    void feed.append({ timeframe: new Timeframe() });
+    void feed.append(createBuf(FeedMessageSchema, { timeframe: fromTimeframe(new Timeframe()) }));
     await updateIdentity(messenger);
 
     await expect.poll(() => feedLength()).toEqual(1);

@@ -11,4 +11,5 @@ export const handlers = OperationHandlerSet.lazy([
   DebugOperation.InsertLoremIpsum.pipe(Operation.lazyHandler(() => import('./insert-lorem-ipsum.ts'))),
   DebugOperation.Snapshot.pipe(Operation.lazyHandler(() => import('./snapshot.ts'))),
   DebugOperation.CreateSampleSpace.pipe(Operation.lazyHandler(() => import('./create-sample-space.ts'))),
+  DebugOperation.Undo.pipe(Operation.lazyHandler(() => import('./undo.ts'))),
 ]);

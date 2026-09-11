@@ -12,8 +12,8 @@ import {
   crawlerLineEffect,
   navigateNextEffect,
   navigatePreviousEffect,
-  xmlTagContextEffect,
-  xmlTagUpdateEffect,
+  widgetContextEffect,
+  widgetUpdateEffect,
 } from '@dxos/ui-editor';
 
 import { type DocumentRange, type MarkdownStreamController } from './MarkdownStream.tsx';
@@ -124,7 +124,7 @@ export const createMarkdownStreamController = ({
     setContext: (context: any) => {
       pendingContextRef.current = { value: context };
       viewRef.current?.dispatch({
-        effects: xmlTagContextEffect.of(context),
+        effects: widgetContextEffect.of(context),
       });
     },
 
@@ -133,7 +133,7 @@ export const createMarkdownStreamController = ({
       const pending = pendingContextRef.current;
       if (pending && viewRef.current) {
         viewRef.current.dispatch({
-          effects: xmlTagContextEffect.of(pending.value),
+          effects: widgetContextEffect.of(pending.value),
         });
       }
     },
@@ -160,7 +160,7 @@ export const createMarkdownStreamController = ({
     /** Update widget state. */
     updateWidget: (id: string, value: any) => {
       viewRef.current?.dispatch({
-        effects: xmlTagUpdateEffect.of({ id, value }),
+        effects: widgetUpdateEffect.of({ id, value }),
       });
     },
   } satisfies MarkdownStreamController;

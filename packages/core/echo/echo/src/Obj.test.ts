@@ -107,8 +107,7 @@ describe('Obj', () => {
 
     test('getSnapshot preserves parent', ({ expect }) => {
       const parent = Obj.make(TestSchema.Organization, { name: 'parent' });
-      const child = Obj.make(TestSchema.Person, { name: 'child' });
-      Obj.setParent(child, parent);
+      const child = Obj.make(TestSchema.Person, { [Obj.Parent]: parent, name: 'child' });
 
       const snapshot = Obj.getSnapshot(child);
 

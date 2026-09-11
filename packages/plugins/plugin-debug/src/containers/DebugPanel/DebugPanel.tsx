@@ -2,11 +2,11 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { useCallback } from 'react';
+import React, { type PropsWithChildren, useCallback } from 'react';
 
-import { Panel, SystemIconButton, ToggleIconButton, Toolbar, useTranslation } from '@dxos/react-ui';
+import { Tabs, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { useViewState, useViewStateActions } from '@dxos/react-ui-attention';
-import { Tabs } from '@dxos/react-ui-tabs';
+import { mx } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
 
@@ -14,71 +14,75 @@ import { DebugConsole } from '../DebugConsole/index.ts';
 import { LoggerPanel } from '../LoggerPanel/index.ts';
 import { DEBUG_PANEL_CONTEXT, type DebugPanelTab, debugPanelAspect } from './view-state.ts';
 
-export type DebugPanelProps = {
-  /** Overridable so a second host (or a story) gets its own tab and pin rather than the rail's. */
+export type DebugPanelRootProps = PropsWithChildren<{
+  /** Overridable so a second host (or a story) gets its own tab rather than the rail's. */
   contextId?: string;
-  /** Rendered as a close button when provided (the popover host closes itself). */
-  onClose?: () => void;
-};
+}>;
 
 /**
- * The debug surface: the log viewer and the Effect-CLI console behind one toolbar, so the two
- * share a single entry point in the status rail rather than a popover each.
+ * The debug surface in parts, so a host places the tab strip where it wants it — the floating
+ * window puts it in the title bar beside the drag handle — and the panels where the room is. `Root`
+ * owns the selected tab, persisted so a debugging session survives the reloads it provokes.
  */
-export const DebugPanel = ({ contextId = DEBUG_PANEL_CONTEXT, onClose }: DebugPanelProps) => {
-  const { t } = useTranslation(meta.profile.key);
-  const { tab, pinned } = useViewState(debugPanelAspect, contextId);
+const DebugPanelRoot = ({ contextId = DEBUG_PANEL_CONTEXT, children }: DebugPanelRootProps) => {
+  const { tab } = useViewState(debugPanelAspect, contextId);
   const { update } = useViewStateActions(debugPanelAspect, contextId);
   const handleTabChange = useCallback(
     (value: string) => update((prev) => ({ ...prev, tab: value as DebugPanelTab })),
     [update],
   );
-  const handlePinChange = useCallback(() => update((prev) => ({ ...prev, pinned: !prev.pinned })), [update]);
 
   return (
     <Tabs.Root
       classNames='contents'
       orientation='horizontal'
       activationMode='automatic'
+      keepMounted
       value={tab}
       onValueChange={handleTabChange}
     >
-      <Panel.Root>
-        <Panel.Toolbar size='sm' asChild>
-          <Toolbar.Root density='sm'>
-            <Tabs.Tablist classNames='w-auto p-0 gap-0.5'>
-              <Tabs.Button value='console' density='sm'>
-                {t('console.tab.label')}
-              </Tabs.Button>
-              <Tabs.Button value='logs' density='sm'>
-                {t('logs.tab.label')}
-              </Tabs.Button>
-            </Tabs.Tablist>
-            <div role='none' className='grow' />
-            <ToggleIconButton
-              variant='ghost'
-              active={pinned}
-              icon='ph--push-pin--regular'
-              iconOnly
-              activeIcon='ph--push-pin-slash--regular'
-              label={t(pinned ? 'unpin.label' : 'pin.label')}
-              data-testid='debugPlugin.pin'
-              onClick={handlePinChange}
-            />
-            {onClose && <SystemIconButton.Close variant='ghost' iconOnly onClick={onClose} />}
-          </Toolbar.Root>
-        </Panel.Toolbar>
-        <Panel.Content>
-          <Tabs.Panel value='console' forceMount classNames='dx-expand data-[state="inactive"]:hidden'>
-            <DebugConsole fit />
-          </Tabs.Panel>
-          <Tabs.Panel value='logs' forceMount classNames='dx-expand data-[state="inactive"]:hidden'>
-            <LoggerPanel />
-          </Tabs.Panel>
-        </Panel.Content>
-      </Panel.Root>
+      {children}
     </Tabs.Root>
   );
 };
 
-DebugPanel.displayName = 'DebugPanel';
+DebugPanelRoot.displayName = 'DebugPanel.Root';
+
+export type DebugPanelTablistProps = ThemedClassName<{}>;
+
+/** The console and log tabs, sized to their labels so they sit inside a toolbar or a title bar. */
+const DebugPanelTablist = ({ classNames }: DebugPanelTablistProps) => {
+  const { t } = useTranslation(meta.profile.key);
+  return (
+    <Tabs.Tablist classNames={mx('w-auto p-0 gap-0.5', classNames)}>
+      <Tabs.Button value='console' density='sm'>
+        {t('console.tab.label')}
+      </Tabs.Button>
+      <Tabs.Button value='logs' density='sm'>
+        {t('logs.tab.label')}
+      </Tabs.Button>
+    </Tabs.Tablist>
+  );
+};
+
+DebugPanelTablist.displayName = 'DebugPanel.Tablist';
+
+/** The Effect-CLI console and the log viewer, one per tab; both stay mounted so neither loses its state. */
+const DebugPanelContent = () => (
+  <>
+    <Tabs.Panel value='console' classNames='dx-expand'>
+      <DebugConsole fit />
+    </Tabs.Panel>
+    <Tabs.Panel value='logs' classNames='dx-expand'>
+      <LoggerPanel />
+    </Tabs.Panel>
+  </>
+);
+
+DebugPanelContent.displayName = 'DebugPanel.Content';
+
+export const DebugPanel = {
+  Root: DebugPanelRoot,
+  Tablist: DebugPanelTablist,
+  Content: DebugPanelContent,
+};

@@ -5,8 +5,11 @@
 export * from './builder.ts';
 export * from './content.ts';
 export * from './dialect.ts';
+export * as Diagnostics from './diagnostics.ts';
 export * as Layout from './layout.ts';
 export * as Mermaid from './mermaid.ts';
+export * as MermaidEngine from './mermaid-engine.ts';
+export * as Objective from './objective.ts';
 export * as Scene from './scene.ts';
 export * from './svg-handler.ts';
 export * as Ui from './ui.ts';

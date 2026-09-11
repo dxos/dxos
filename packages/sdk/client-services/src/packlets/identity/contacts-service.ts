@@ -10,7 +10,13 @@ import { Context } from '@dxos/context';
 import { type MemberInfo } from '@dxos/credentials';
 import { EffectEx } from '@dxos/effect';
 import { PublicKey } from '@dxos/keys';
-import { type Contact, type ContactBook } from '@dxos/protocols/proto/dxos/client/services';
+import { buf, fromPublicKey } from '@dxos/protocols/buf';
+import {
+  type Contact,
+  type ContactBook,
+  ContactBookSchema,
+  ContactSchema,
+} from '@dxos/protocols/buf/dxos/client/services_pb';
 import { type ContactsService } from '@dxos/protocols/rpc';
 import { ComplexMap, ComplexSet } from '@dxos/util';
 
@@ -66,7 +72,7 @@ export class ContactsServiceImpl implements ContactsService.Handlers {
   #getContacts(): ContactBook {
     const identity = this._identityManager.identity;
     if (identity == null) {
-      return { contacts: [] };
+      return buf.create(ContactBookSchema, { contacts: [] });
     }
     const contacts = [...this._spaceManager.spaces.values()]
       .flatMap((s) => [...s.spaceState.members.values()].map((m) => [s.key, m]))
@@ -78,18 +84,19 @@ export class ContactsServiceImpl implements ContactsService.Handlers {
         const existing = acc.get(memberInfo.key);
         if (existing != null) {
           existing.profile ??= memberInfo.profile;
-          existing.commonSpaces?.push(spaceKey);
+          existing.commonSpaces.push(fromPublicKey(spaceKey));
         } else {
-          acc.set(memberInfo.key, {
-            identityKey: memberInfo.key,
-            profile: memberInfo.profile,
-            commonSpaces: [spaceKey],
-          });
+          acc.set(
+            memberInfo.key,
+            buf.create(ContactSchema, {
+              identityKey: fromPublicKey(memberInfo.key),
+              profile: memberInfo.profile,
+              commonSpaces: [fromPublicKey(spaceKey)],
+            }),
+          );
         }
         return acc;
       }, new ComplexMap<PublicKey, Contact>(PublicKey.hash));
-    return {
-      contacts: [...contacts.values()],
-    };
+    return buf.create(ContactBookSchema, { contacts: [...contacts.values()] });
   }
 }

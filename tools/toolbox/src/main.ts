@@ -41,7 +41,6 @@ if (argModuleStats) {
   // await toolbox.updateProjects();
   await toolbox.updatePackages();
   await toolbox.updateTsConfig();
-  // await toolbox.updateTsConfigPaths();
   await toolbox.updateTsConfigAll();
 }
 

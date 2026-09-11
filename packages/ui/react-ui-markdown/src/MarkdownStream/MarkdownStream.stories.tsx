@@ -9,7 +9,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import '@dxos/lit-ui';
 import { PublicKey } from '@dxos/keys';
 import { random } from '@dxos/random';
-import { Input, Toolbar } from '@dxos/react-ui';
+import { Field, Toolbar } from '@dxos/react-ui';
 import { Panel } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Domino } from '@dxos/ui';
@@ -155,10 +155,10 @@ const DefaultStory = ({
             onClick={handleAppend}
           />
           <Toolbar.Separator />
-          <Input.Root>
-            <Input.Label classNames='pr-1'>Debug</Input.Label>
-            <Input.Switch checked={debug} onCheckedChange={setDebug} />
-          </Input.Root>
+          <Field.Root>
+            <Field.Label classNames='pr-1'>Debug</Field.Label>
+            <Field.Switch checked={debug} onCheckedChange={setDebug} />
+          </Field.Root>
         </Toolbar.Root>
       </Panel.Toolbar>
       <Panel.Content>

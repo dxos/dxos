@@ -72,12 +72,12 @@ describe('UrlPath', () => {
       });
     });
 
-    test('pinned workspace names', ({ expect }) => {
-      const parsed = UrlPath.parse('/w/!dxos:settings/doc/A', table);
+    test('a non-space workspace name', ({ expect }) => {
+      const parsed = UrlPath.parse('/w/dxos:settings/doc/A', table);
       expect(Option.getOrThrow(parsed)).toEqual({
-        workspace: '!dxos:settings',
+        workspace: 'dxos:settings',
         workspaceKey: 'w',
-        pairs: [{ key: 'doc', id: 'A', workspace: '!dxos:settings' }],
+        pairs: [{ key: 'doc', id: 'A', workspace: 'dxos:settings' }],
       });
     });
 
@@ -191,7 +191,7 @@ describe('UrlPath', () => {
           { key: 'task', id: 'B', workspace: WORKSPACE_B },
         ],
       },
-      { workspace: '!dxos:settings', workspaceKey: 'w', pairs: [{ key: 'doc', id: 'A', workspace: '!dxos:settings' }] },
+      { workspace: 'dxos:settings', workspaceKey: 'w', pairs: [{ key: 'doc', id: 'A', workspace: 'dxos:settings' }] },
     ];
 
     for (const parsedUrl of cases) {
@@ -201,6 +201,28 @@ describe('UrlPath', () => {
         expect(Option.getOrThrow(reparsed)).toEqual(parsedUrl);
       });
     }
+  });
+
+  describe('readWorkspace', () => {
+    test('reads the leading workspace without a key table', ({ expect }) => {
+      expect(Option.getOrThrow(UrlPath.readWorkspace(`/w/${WORKSPACE_A}`))).toBe(WORKSPACE_A);
+    });
+
+    test('reads it from a chain whose later keys are unregistered', ({ expect }) => {
+      expect(Option.getOrThrow(UrlPath.readWorkspace(`/w/${WORKSPACE_A}/unknown/abc`))).toBe(WORKSPACE_A);
+      expect(Option.isNone(UrlPath.parse(`/w/${WORKSPACE_A}/unknown/abc`, table))).toBe(true);
+    });
+
+    test('rejects a path that does not open with the anchor key', ({ expect }) => {
+      expect(Option.isNone(UrlPath.readWorkspace('/'))).toBe(true);
+      expect(Option.isNone(UrlPath.readWorkspace('/doc/abc'))).toBe(true);
+      expect(Option.isNone(UrlPath.readWorkspace('/w'))).toBe(true);
+    });
+
+    test('rejects a malformed encoding rather than throwing', ({ expect }) => {
+      expect(Option.isNone(UrlPath.readWorkspace('/w/%'))).toBe(true);
+      expect(Option.isNone(UrlPath.parse('/w/%', table))).toBe(true);
+    });
   });
 
   describe('isReservedKey', () => {

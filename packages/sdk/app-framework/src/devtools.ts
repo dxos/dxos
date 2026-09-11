@@ -60,7 +60,7 @@ export interface ComposerDevtools {
   manager?: PluginManager.PluginManager;
   plugins?: () => PluginInfo[];
   operations?: (pluginId?: string) => OperationInfo[];
-  invoke?: (key: string, input?: unknown) => Promise<unknown>;
+  invoke?: (key: string, input?: unknown, options?: Operation.InvokeOptions) => Promise<unknown>;
   [key: string]: unknown;
 }
 
@@ -182,7 +182,7 @@ export const setupDevtools = (manager: PluginManager.PluginManager): void => {
 
   composer.operations = listOperations;
 
-  composer.invoke = async (key, input) => {
+  composer.invoke = async (key, input, options) => {
     const definition = findDefinition(key);
     if (!definition) {
       throw new Error(`Unknown operation: ${key} (try composer.operations())`);
@@ -210,7 +210,9 @@ export const setupDevtools = (manager: PluginManager.PluginManager): void => {
     }
 
     const invoker = manager.capabilities.get(Capabilities.OperationInvoker);
-    const { data, error } = await invoker.invokePromise(definition, input as never);
+    // Forwarded as given: a database-backed operation resolves its space from `options.spaceId`,
+    // which a caller on the debug port has no other way to supply.
+    const { data, error } = await invoker.invokePromise(definition, input as never, options);
     if (error) {
       throw error;
     }

@@ -27,7 +27,7 @@ const step = () => random.number.int({ min: 1, max: 4 });
 const NOTES = ['Syncing feeds', 'Selecting articles', 'Adding to magazine'];
 
 /**
- * At rest the meter already shows the shape of the run it is about to make: a stepper that only
+ * At rest the meter already shows the shape of the run it is about to make: a plan that only
  * appears once the run starts makes the row change under the reader for no reason they can act on,
  * and a counted run that sweeps until started reports the one thing it knows is untrue.
  */
@@ -180,7 +180,7 @@ export const Indeterminate: Story = {
  * A declared plan of three stages, each counted. The stages carry the fraction on the line leaving
  * the one in flight, so the plan and the progress within it are one drawing rather than two.
  */
-export const Stepper: Story = {
+export const Steps: Story = {
   args: {
     stages: 3,
   },
@@ -190,7 +190,7 @@ export const Stepper: Story = {
  * The same plan with nothing to count. No line can be filled honestly, so the stage in flight spins
  * and the clock runs in place of a count.
  */
-export const StepperIndeterminate: Story = {
+export const StepsIndeterminate: Story = {
   args: {
     stages: 3,
     indeterminate: true,

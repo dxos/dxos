@@ -4,5 +4,6 @@
 
 export * from './commands.ts';
 export * from './dnd.ts';
+export * from './ghost.ts';
 export * from './outliner.ts';
 export * from './tree.ts';

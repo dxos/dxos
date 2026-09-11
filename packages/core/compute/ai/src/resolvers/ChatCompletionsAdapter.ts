@@ -117,8 +117,11 @@ type ChatTool = {
  */
 type OpenAiChatRequest = {
   model: string;
+  /** Provider-specific fields passed through from {@link RequestOptions.body} (e.g. DeepSeek `thinking`). */
+  [key: string]: unknown;
   messages: ChatMessage[];
   stream?: boolean;
+  stream_options?: { include_usage: boolean };
   response_format?: { type: 'json_object' };
   temperature?: number;
   tools?: ChatTool[];
@@ -152,6 +155,8 @@ type OpenAiChatResponse = {
     message: {
       role: string;
       content: string | null;
+      /** DeepSeek (and other reasoning models) return chain-of-thought alongside the answer. */
+      reasoning_content?: string | null;
       tool_calls?: ChatToolCall[];
     };
     finish_reason: string;
@@ -194,6 +199,7 @@ type OpenAiStreamChunk = {
     delta: {
       role?: string;
       content?: string | null;
+      reasoning_content?: string | null;
       tool_calls?: Array<{
         index: number;
         id?: string;
@@ -206,6 +212,12 @@ type OpenAiStreamChunk = {
     };
     finish_reason: string | null;
   }>;
+  /** Present only on the final chunk, and only when `stream_options.include_usage` was requested. */
+  usage?: {
+    prompt_tokens: number;
+    completion_tokens: number;
+    total_tokens: number;
+  };
 };
 
 /**
@@ -247,6 +259,11 @@ export type ChatCompletionsClientConfig = {
    * OpenAI, and consumers price on this field. Defaults to the API format.
    */
   readonly provider?: string;
+  /**
+   * Request `stream_options.include_usage` on streamed OpenAI-format calls. Providers that meter on
+   * reported usage (DeepSeek via EDGE) need it; local servers that reject unknown fields do not.
+   */
+  readonly streamUsage?: boolean;
   readonly transformClient?: (client: HttpClient.HttpClient) => HttpClient.HttpClient;
   /**
    * Maximum duration to wait for the HTTP response to start. Applies to both
@@ -460,6 +477,8 @@ const buildRequestBody = (
   jsonFormat: boolean,
   apiFormat: ApiFormat,
   tools: ChatTool[] | undefined,
+  streamUsage = false,
+  extraBody: Readonly<Record<string, unknown>> = {},
 ): OllamaChatRequest | OpenAiChatRequest => {
   switch (apiFormat) {
     case 'ollama':
@@ -472,9 +491,11 @@ const buildRequestBody = (
       };
     case 'openai':
       return {
+        ...extraBody,
         model,
         messages,
         stream,
+        stream_options: stream && streamUsage ? { include_usage: true } : undefined,
         response_format: jsonFormat ? { type: 'json_object' } : undefined,
         tools,
         tool_choice: tools ? 'auto' : undefined,
@@ -554,6 +575,7 @@ const extractResponse = (
       const mappedReason = mapOpenAiFinishReason(choice?.finish_reason);
       return {
         text: choice?.message?.content ?? '',
+        reasoning: choice?.message?.reasoning_content ?? undefined,
         toolCalls,
         inputTokens: r.usage?.prompt_tokens,
         outputTokens: r.usage?.completion_tokens,
@@ -630,6 +652,9 @@ const parseStreamChunk = (line: string, apiFormat: ApiFormat): ParsedStreamChunk
         }
         const chunk = JSON.parse(data) as OpenAiStreamChunk;
         const choice = chunk.choices?.[0];
+        // The chunk is an unvalidated cast over `JSON.parse`; a non-numeric count would otherwise
+        // reach the finish payload and telemetry as a string.
+        const tokenCount = (value: unknown): number | undefined => (typeof value === 'number' ? value : undefined);
         const deltas = choice?.delta?.tool_calls?.map((tc) => ({
           index: tc.index,
           id: tc.id,
@@ -638,7 +663,10 @@ const parseStreamChunk = (line: string, apiFormat: ApiFormat): ParsedStreamChunk
         }));
         return {
           content: choice?.delta?.content ?? undefined,
+          reasoning: choice?.delta?.reasoning_content ?? undefined,
           done: choice?.finish_reason !== null && choice?.finish_reason !== undefined,
+          inputTokens: tokenCount(chunk.usage?.prompt_tokens),
+          outputTokens: tokenCount(chunk.usage?.completion_tokens),
           finishReason: choice?.finish_reason ? mapOpenAiFinishReason(choice.finish_reason) : undefined,
           toolCallDeltas: deltas,
         };
@@ -650,9 +678,20 @@ const parseStreamChunk = (line: string, apiFormat: ApiFormat): ParsedStreamChunk
 };
 
 /**
+ * Per-model request options.
+ */
+export type RequestOptions = {
+  /**
+   * Provider-specific request-body fields merged into every OpenAI-format call (DeepSeek's
+   * `thinking` and `reasoning_effort`, say). Ignored for the Ollama dialect.
+   */
+  readonly body?: Readonly<Record<string, unknown>>;
+};
+
+/**
  * Create a chat completions language model service.
  */
-export const make = (model: string) =>
+export const make = (model: string, requestOptions: RequestOptions = {}) =>
   Effect.flatMap(ChatCompletionsClient, ({ config, httpClient }) => {
     const requestTimeout = config.requestTimeout ?? DEFAULT_REQUEST_TIMEOUT;
     const streamIdleTimeout = config.streamIdleTimeout ?? DEFAULT_STREAM_IDLE_TIMEOUT;
@@ -666,7 +705,16 @@ export const make = (model: string) =>
           const messages = promptToMessages(options.prompt, config.apiFormat);
           const jsonFormat = options.responseFormat.type === 'json';
           const tools = toolsToRequest(options.tools);
-          const requestBody = buildRequestBody(model, messages, false, jsonFormat, config.apiFormat, tools);
+          const requestBody = buildRequestBody(
+            model,
+            messages,
+            false,
+            jsonFormat,
+            config.apiFormat,
+            tools,
+            false,
+            requestOptions.body,
+          );
           const endpoint = getChatEndpoint(config.baseUrl, config.apiFormat);
           const httpRequest = HttpClientRequest.post(endpoint).pipe(HttpClientRequest.bodyJson(requestBody));
           const response = yield* httpRequest.pipe(
@@ -738,7 +786,16 @@ export const make = (model: string) =>
             const messages = promptToMessages(options.prompt, config.apiFormat);
             const jsonFormat = options.responseFormat.type === 'json';
             const tools = toolsToRequest(options.tools);
-            const requestBody = buildRequestBody(model, messages, true, jsonFormat, config.apiFormat, tools);
+            const requestBody = buildRequestBody(
+              model,
+              messages,
+              true,
+              jsonFormat,
+              config.apiFormat,
+              tools,
+              config.streamUsage,
+              requestOptions.body,
+            );
             const endpoint = getChatEndpoint(config.baseUrl, config.apiFormat);
             const httpRequest = HttpClientRequest.post(endpoint).pipe(HttpClientRequest.bodyJson(requestBody));
             const response = yield* httpRequest.pipe(
@@ -783,6 +840,16 @@ export const make = (model: string) =>
             let reasoningStarted = false;
             let reasoningEnded = false;
 
+            // The finish part is emitted once, after the source completes, rather than on the first
+            // chunk reporting `done`. Two shapes force this: OpenAI-format streams end with a
+            // `data: [DONE]` sentinel *after* the `finish_reason` chunk, so emitting per `done` sent
+            // a second, usage-less finish; and a provider may report usage in a trailing chunk whose
+            // `choices` is empty (OpenAI proper does), which arrives after `finish_reason`.
+            let finishSeen = false;
+            let finishReason: Response.FinishReason | undefined;
+            let inputTokens: number | undefined;
+            let outputTokens: number | undefined;
+
             /**
              * Ensure reasoning is closed before emitting non-reasoning parts.
              */
@@ -800,8 +867,33 @@ export const make = (model: string) =>
               args: string;
               emittedId?: string;
               started: boolean;
+              flushed: boolean;
             };
             const openAiCalls = new Map<number, OpenAiCallState>();
+
+            /**
+             * Emits the terminating `tool-params-end` / `tool-call` pair for every started call whose
+             * index is below `before`. Consumers track a single open tool call, so a parallel call's
+             * `tool-params-start` must not arrive while the previous one is still open.
+             */
+            const flushOpenAiCalls = (parts: Response.StreamPartEncoded[], before: number) =>
+              Effect.gen(function* () {
+                for (const [index, call] of openAiCalls) {
+                  if (index >= before || call.flushed || !call.started || !call.name || !call.emittedId) {
+                    continue;
+                  }
+                  call.flushed = true;
+                  parts.push({ type: 'tool-params-end', id: call.emittedId });
+                  const params = yield* parseToolArguments(call.args, call.name, 'streamText');
+                  parts.push({
+                    type: 'tool-call',
+                    id: call.emittedId,
+                    name: call.name,
+                    params,
+                    providerExecuted: false,
+                  });
+                }
+              });
 
             // Buffer lines across chunk boundaries — newline-delimited frames and UTF-8
             // characters can be split across network chunks.
@@ -825,6 +917,11 @@ export const make = (model: string) =>
                     if (!parsed) {
                       continue;
                     }
+
+                    // Last reported value wins: a trailing usage-only chunk supersedes the counts on
+                    // the chunk that carried `finish_reason`.
+                    inputTokens = parsed.inputTokens ?? inputTokens;
+                    outputTokens = parsed.outputTokens ?? outputTokens;
 
                     if (parsed.reasoning && parsed.reasoning.length > 0) {
                       if (!reasoningStarted) {
@@ -877,6 +974,7 @@ export const make = (model: string) =>
                         const existing: OpenAiCallState = openAiCalls.get(delta.index) ?? {
                           args: '',
                           started: false,
+                          flushed: false,
                         };
                         if (delta.id) {
                           existing.id = delta.id;
@@ -885,6 +983,9 @@ export const make = (model: string) =>
                           existing.name = delta.name;
                         }
                         if (!existing.started && existing.name) {
+                          // Calls stream one index at a time, so a new index means every earlier call
+                          // is complete.
+                          yield* flushOpenAiCalls(parts, delta.index);
                           existing.started = true;
                           existing.emittedId = existing.id ?? (yield* idGen.generateId());
                           parts.push({
@@ -915,36 +1016,12 @@ export const make = (model: string) =>
                       }
                       closeReasoningIfOpen(parts);
 
-                      // Flush accumulated OpenAI tool calls.
-                      for (const [, call] of openAiCalls) {
-                        if (!call.started || !call.name || !call.emittedId) {
-                          continue;
-                        }
-                        parts.push({ type: 'tool-params-end', id: call.emittedId });
-                        const params = yield* parseToolArguments(call.args, call.name, 'streamText');
-                        parts.push({
-                          type: 'tool-call',
-                          id: call.emittedId,
-                          name: call.name,
-                          params,
-                          providerExecuted: false,
-                        });
-                      }
+                      // Flush whichever OpenAI tool call is still open.
+                      yield* flushOpenAiCalls(parts, Number.POSITIVE_INFINITY);
                       openAiCalls.clear();
 
-                      annotateResponse(options.span, {
-                        inputTokens: parsed.inputTokens,
-                        outputTokens: parsed.outputTokens,
-                        finishReason: parsed.finishReason ?? 'stop',
-                      });
-                      parts.push({
-                        type: 'finish',
-                        reason: parsed.finishReason ?? 'stop',
-                        usage: {
-                          inputTokens: { total: parsed.inputTokens },
-                          outputTokens: { total: parsed.outputTokens },
-                        },
-                      });
+                      finishSeen = true;
+                      finishReason = parsed.finishReason ?? finishReason;
                     }
                   }
 
@@ -958,6 +1035,27 @@ export const make = (model: string) =>
                 }
                 return Stream.fail(unknownError('streamText', 'request failed', err));
               }),
+              // Suspended so the accumulators are read after the source drains. A stream that ended
+              // without reporting `done` (truncated, or failed above) emits nothing, as before.
+              (stream) =>
+                Stream.concat(
+                  stream,
+                  Stream.suspend((): Stream.Stream<Response.StreamPartEncoded, never, never> => {
+                    if (!finishSeen) {
+                      return Stream.empty;
+                    }
+                    const reason = finishReason ?? 'stop';
+                    annotateResponse(options.span, { inputTokens, outputTokens, finishReason: reason });
+                    return Stream.succeed({
+                      type: 'finish',
+                      reason,
+                      usage: {
+                        inputTokens: { total: inputTokens },
+                        outputTokens: { total: outputTokens },
+                      },
+                    });
+                  }),
+                ),
             );
 
             return parsedStream;
@@ -1004,7 +1102,8 @@ const withIdleTimeout =
 /**
  * Create a chat completions language model layer.
  */
-export const layer = (model: string) => Layer.effect(LanguageModel.LanguageModel, make(model));
+export const layer = (model: string, options?: RequestOptions) =>
+  Layer.effect(LanguageModel.LanguageModel, make(model, options));
 
 /**
  * Create a chat completions client layer.

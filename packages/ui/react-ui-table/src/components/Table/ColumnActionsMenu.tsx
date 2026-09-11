@@ -5,7 +5,7 @@
 import { useAtomValue } from '@effect/atom-react/Hooks';
 import React from 'react';
 
-import { DropdownMenu, useTranslation } from '@dxos/react-ui';
+import { Menu, useTranslation } from '@dxos/react-ui';
 
 import { translationKey } from '#translations';
 
@@ -27,46 +27,40 @@ export const ColumnActionsMenu = ({ model, modals }: ColumnActionsMenuProps) => 
   const isCurrentColumnSorted = currentSort?.fieldId === state.fieldId;
 
   return (
-    <DropdownMenu.Root modal={false} open={true} onOpenChange={modals.close}>
-      <DropdownMenu.VirtualTrigger virtualRef={modals.trigger} />
-      <DropdownMenu.Portal>
-        <DropdownMenu.Content>
-          <DropdownMenu.Viewport>
+    <Menu.Root modal={false} open={true} onOpenChange={modals.close}>
+      <Menu.VirtualTrigger virtualRef={modals.trigger} />
+      <Menu.Portal>
+        <Menu.Content>
+          <Menu.Viewport>
             {(!isCurrentColumnSorted || currentSort?.direction === 'asc') && (
-              <DropdownMenu.Item
-                data-testid='column-sort-descending'
-                onClick={() => model.setSort(state.fieldId, 'desc')}
-              >
+              <Menu.Item data-testid='column-sort-descending' onClick={() => model.setSort(state.fieldId, 'desc')}>
                 {t('column-action-sort-descending.menu')}
-              </DropdownMenu.Item>
+              </Menu.Item>
             )}
             {(!isCurrentColumnSorted || currentSort?.direction === 'desc') && (
-              <DropdownMenu.Item
-                data-testid='column-sort-ascending'
-                onClick={() => model.setSort(state.fieldId, 'asc')}
-              >
+              <Menu.Item data-testid='column-sort-ascending' onClick={() => model.setSort(state.fieldId, 'asc')}>
                 {t('column-action-sort-ascending.menu')}
-              </DropdownMenu.Item>
+              </Menu.Item>
             )}
             {isCurrentColumnSorted && (
-              <DropdownMenu.Item data-testid='column-clear-sort' onClick={() => model.clearSort()}>
+              <Menu.Item data-testid='column-clear-sort' onClick={() => model.clearSort()}>
                 {t('column-action-clear-sorting.menu')}
-              </DropdownMenu.Item>
+              </Menu.Item>
             )}
             {model.getColumnCount() > 1 && model.features.schemaEditable && (
-              <DropdownMenu.Item data-testid='column-delete' onClick={() => model.deleteColumn(state.fieldId)}>
+              <Menu.Item data-testid='column-delete' onClick={() => model.deleteColumn(state.fieldId)}>
                 {t('column-action-delete.menu')}
-              </DropdownMenu.Item>
+              </Menu.Item>
             )}
             {model.features.schemaEditable && (
-              <DropdownMenu.Item data-testid='column-settings' onClick={() => modals.openColumnSettings()}>
+              <Menu.Item data-testid='column-settings' onClick={() => modals.openColumnSettings()}>
                 {t('column-action-settings.menu')}
-              </DropdownMenu.Item>
+              </Menu.Item>
             )}
-          </DropdownMenu.Viewport>
-          <DropdownMenu.Arrow />
-        </DropdownMenu.Content>
-      </DropdownMenu.Portal>
-    </DropdownMenu.Root>
+          </Menu.Viewport>
+          <Menu.Arrow />
+        </Menu.Content>
+      </Menu.Portal>
+    </Menu.Root>
   );
 };

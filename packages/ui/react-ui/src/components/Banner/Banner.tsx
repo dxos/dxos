@@ -2,13 +2,11 @@
 // Copyright 2022 DXOS.org
 //
 
-import { createContext } from '@radix-ui/react-context';
-import { Primitive } from '@radix-ui/react-primitive';
-import { Slot } from '@radix-ui/react-slot';
+import { ark } from '@ark-ui/react/factory';
 import React, { type ComponentPropsWithRef, type CSSProperties, type PropsWithChildren, forwardRef } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import { useId } from '@dxos/react-hooks';
+import { createContext, useId } from '@dxos/react-hooks';
 import { type Elevation, type MessageValence, type SlottableProps } from '@dxos/ui-types';
 
 import { translationKey } from '#translations';
@@ -148,7 +146,7 @@ BannerContent.displayName = BANNER_CONTENT_NAME;
 
 const BANNER_TITLE_NAME = 'Banner.Title';
 
-type BannerTitleProps = Omit<ThemedClassName<ComponentPropsWithRef<typeof Primitive.h2>>, 'id'> & {
+type BannerTitleProps = Omit<ThemedClassName<ComponentPropsWithRef<typeof ark.h2>>, 'id'> & {
   icon?: string;
   onClose?: () => void;
 };
@@ -194,7 +192,7 @@ BannerTitle.displayName = BANNER_TITLE_NAME;
 
 const BANNER_BODY_NAME = 'Banner.Body';
 
-type BannerBodyProps = Omit<ThemedClassName<ComponentPropsWithRef<typeof Primitive.h2>>, 'id'> & {
+type BannerBodyProps = Omit<ThemedClassName<ComponentPropsWithRef<typeof ark.h2>>, 'id'> & {
   asChild?: boolean;
 };
 
@@ -202,11 +200,16 @@ const BannerBody = forwardRef<HTMLParagraphElement, BannerBodyProps>(
   ({ asChild, classNames, children, ...props }, forwardedRef) => {
     const { tx } = useThemeContext();
     const { descriptionId } = useMessageContext(BANNER_BODY_NAME);
-    const Comp = asChild ? Slot : Primitive.p;
     return (
-      <Comp {...props} className={tx('banner.body', {}, classNames)} id={descriptionId} ref={forwardedRef}>
+      <ark.p
+        asChild={asChild}
+        {...props}
+        className={tx('banner.body', {}, classNames)}
+        id={descriptionId}
+        ref={forwardedRef}
+      >
         {children}
-      </Comp>
+      </ark.p>
     );
   },
 );

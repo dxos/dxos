@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { useCallback, useEffect, useMemo, useRef } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import * as AppGraph from '@dxos/app-graph/AppGraph';
@@ -10,13 +10,14 @@ import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as NotFound from '@dxos/app-toolkit/NotFound';
 import { type AttentionSigilAction } from '@dxos/app-toolkit/ui';
-import { useAppGraph } from '@dxos/app-toolkit/ui';
+import { useAppGraph, useNavigationPresence } from '@dxos/app-toolkit/ui';
 import { useActionRunner, useActions, useNode } from '@dxos/plugin-graph/hooks';
 
 import { useBreakpoints, useCompanions, useDeckSettings, useDeckState } from '#hooks';
 import { meta } from '#meta';
 import { DeckOperation, DeckSchema } from '#types';
 
+import { RESOLVE_TIMEOUT_MS } from '../../url/index.ts';
 import { isCompanionOpen } from '../../util/index.ts';
 
 /** Sigil-menu dispositions surfaced as plank actions. */
@@ -44,7 +45,7 @@ export type UseDeckPlankOptions = {
 
 export type DeckPlank = {
   node: AppGraphNode.Node | undefined;
-  /** Whether a URL restore gave up on this plank; distinguishes "gave up" from "still loading". */
+  /** Whether the plank's target was confirmed missing. */
   unresolved: boolean;
   /** The not-found sentinel's node, so an unresolved plank can borrow its label and icon. */
   notFoundNode: AppGraphNode.Node | undefined;
@@ -80,12 +81,16 @@ export const useDeckPlank = ({ id, part, active }: UseDeckPlankOptions): DeckPla
   const actions = useActions(graph, node?.id);
   const companions = useCompanions(id);
   const notFoundNode = useNode(graph, NotFound.NOT_FOUND_PATH);
-  // Keyed by id, not a boolean: call sites render planks unkeyed, so a swapped id reuses this
-  // instance and a plain latch would carry the previous plank's verdict onto the new one.
-  const resolvedOnce = useRef<string | undefined>(undefined);
-  if (node) {
-    resolvedOnce.current = id;
-  }
+  const presence = useNavigationPresence(graph, id);
+  // `absent` is proof; `unknown` is only ignorance, and a loader that could not form a question at all
+  // (a malformed space id) stays unknown forever. So the plank also gives up when resolution does:
+  // past that deadline no node is still coming, and a plank that waits for one waits for good.
+  const [waited, setWaited] = useState(false);
+  useEffect(() => {
+    setWaited(false);
+    const timer = setTimeout(() => setWaited(true), RESOLVE_TIMEOUT_MS);
+    return () => clearTimeout(timer);
+  }, [id]);
 
   // Ordering within the active stack drives the increment-start/end affordances.
   const index = active ? active.findIndex((entryId) => entryId === id) : -1;
@@ -176,9 +181,7 @@ export const useDeckPlank = ({ id, part, active }: UseDeckPlankOptions): DeckPla
 
   return {
     node,
-    // Latched on first sight of the node: a plank that healed is no longer unresolved, so a later
-    // graph gap shows loading rather than resurrecting the restore's verdict.
-    unresolved: !node && resolvedOnce.current !== id && !!state.unresolved?.includes(id),
+    unresolved: presence === 'absent' || (waited && presence !== 'exists'),
     notFoundNode,
     capabilities,
     sigilActions,

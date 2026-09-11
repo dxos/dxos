@@ -98,10 +98,11 @@ const Icon = ({ classNames, children }: IconProps) => {
   if (children !== undefined) {
     return <>{children}</>;
   }
+
   return (
     <span
       aria-hidden='true'
-      className={mx('inline-block size-2 rounded-full bg-current animate-halo-pulse', classNames)}
+      className={mx('inline-block size-2 rounded-full bg-current text-info-text animate-pulse', classNames)}
     />
   );
 };

@@ -9,7 +9,16 @@ import { describe, test } from 'vitest';
 import { join } from '../../../util/index.ts';
 import { createMarkdownExtensions } from '../../language/markdown/index.ts';
 import { blockSelectionField } from '../blocks/index.ts';
-import { getDropIndent, getExtent, moveBlocks, replaceBlocks, selectAllItems, selectDown, selectUp } from './dnd.ts';
+import {
+  canDragItem,
+  getDropIndent,
+  getExtent,
+  moveBlocks,
+  replaceBlocks,
+  selectAllItems,
+  selectDown,
+  selectUp,
+} from './dnd.ts';
 import { outlinerTree, treeFacet } from './tree.ts';
 
 const LINES = ['- [ ] 1', '- [ ] 2', '  - [ ] 2.1', '  - [ ] 2.2', '    - 2.2.1', '  - [ ] 2.3', '- [ ] 3'];
@@ -138,5 +147,15 @@ describe('outliner drag reindent', () => {
     } finally {
       view.destroy();
     }
+  });
+});
+
+describe('canDragItem', () => {
+  test('only an item with content gets a grip', ({ expect }) => {
+    const doc = join('- [ ] A', '- [ ] ', '', 'Prose');
+    const state = EditorState.create({ doc, extensions });
+    expect(canDragItem(state, { from: 0, to: 7 })).to.eq(true);
+    expect(canDragItem(state, { from: 8, to: 14 })).to.eq(false);
+    expect(canDragItem(state, { from: 16, to: 21 })).to.eq(false);
   });
 });

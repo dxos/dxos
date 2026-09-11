@@ -2,60 +2,125 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Primitive } from '@radix-ui/react-primitive';
-import { Slot } from '@radix-ui/react-slot';
-import type { ToggleGroupItemProps as ToggleGroupItemPrimitiveProps } from '@radix-ui/react-toggle-group';
-import * as ToolbarPrimitive from '@radix-ui/react-toolbar';
-import React, { type MouseEventHandler, forwardRef } from 'react';
+import { ark } from '@ark-ui/react/factory';
+import React, {
+  type ComponentPropsWithoutRef,
+  type FocusEvent,
+  type KeyboardEvent,
+  type MouseEventHandler,
+  forwardRef,
+  useCallback,
+} from 'react';
 import { useTranslation } from 'react-i18next';
 
-import { type SlottableProps } from '@dxos/ui-types';
+import { useFocusGroup } from '@dxos/react-focus';
+import { useComposedRefs } from '@dxos/react-hooks';
+import { elevationAttrs, elevationSurface } from '@dxos/ui-theme';
+import { type ElevationLevel, type SlottableProps } from '@dxos/ui-types';
 
 import { translationKey } from '#translations';
 
 import { useThemeContext } from '../../hooks/index.ts';
-import { DensityProvider } from '../../primitives/DensityProvider/index.ts';
+import { DensityProvider } from '../../providers/DensityProvider/index.ts';
 import { type ToolbarStyleProps } from '../../theme/index.ts';
 import { composable, composableProps, slottable } from '../../util/index.ts';
 import {
   Button,
-  ButtonGroup,
   type ButtonGroupProps,
   type ButtonProps,
   IconButton,
   type IconButtonProps,
   Toggle,
+  ToggleGroup,
+  ToggleGroupIconItem,
+  type ToggleGroupIconItemProps,
+  ToggleGroupItem,
   type ToggleGroupItemProps,
+  type ToggleGroupProps,
   type ToggleProps,
 } from '../Button/index.ts';
 import { Icon } from '../Icon/index.ts';
 import { Link, type LinkProps } from '../Link/index.ts';
-import { DropdownMenu } from '../Menu/index.ts';
+import { Menu } from '../Menu/index.ts';
 import { Separator, type SeparatorProps } from '../Separator/index.ts';
 
 //
 // Root
 //
 
-type ToolbarRootProps = ToolbarPrimitive.ToolbarProps & ToolbarStyleProps;
+type ToolbarRootProps = Omit<ComponentPropsWithoutRef<'div'>, 'dir'> &
+  Omit<ToolbarStyleProps, 'surface'> & {
+    /** Material-style elevation, 0–5, onto the surface ladder: the bar paints that level and its shadow. */
+    elevation?: ElevationLevel;
+    orientation?: 'horizontal' | 'vertical';
+    /** Wrap arrow navigation at the ends (default true). */
+    loop?: boolean;
+  };
 
+/**
+ * A `role="toolbar"` that is one `Tab` stop: arrow keys along `orientation` move between its
+ * controls and the last-focused control is where focus returns. The roving focus is
+ * `@dxos/react-focus`'s — Ark has no toolbar — so any focusable child is a toolbar item.
+ */
 const ToolbarRoot = composable<HTMLDivElement, ToolbarRootProps>(
-  ({ children, density, disabled, layoutManaged, orientation, ...props }, forwardedRef) => {
+  (
+    {
+      children,
+      density,
+      disabled,
+      layoutManaged,
+      elevation,
+      orientation = 'horizontal',
+      loop = true,
+      onKeyDown,
+      onFocus,
+      ...props
+    },
+    forwardedRef,
+  ) => {
     const { className, role, ...rest } = composableProps(props);
     const { tx } = useThemeContext();
+    const {
+      ref: focusGroupRef,
+      onKeyDown: onFocusGroupKeyDown,
+      onFocus: onFocusGroupFocus,
+      ...focusGroupAttrs
+    } = useFocusGroup({ axis: orientation, memorizeCurrent: true, cyclic: loop });
+
+    const handleKeyDown = useCallback(
+      (event: KeyboardEvent<HTMLDivElement>) => {
+        onFocusGroupKeyDown(event);
+        onKeyDown?.(event);
+      },
+      [onFocusGroupKeyDown, onKeyDown],
+    );
+    const handleFocus = useCallback(
+      (event: FocusEvent<HTMLDivElement>) => {
+        onFocusGroupFocus(event);
+        onFocus?.(event);
+      },
+      [onFocusGroupFocus, onFocus],
+    );
 
     return (
-      <ToolbarPrimitive.Root
+      <ark.div
         {...rest}
-        // Radix sets role="toolbar" before spreading props, so an undefined `role` erases it —
-        // omit the key entirely in that case. Every role the caller does set is forwarded,
-        // `role=''` included: dropping it would leave the default in place and silently
-        // invert the caller's intent.
-        {...(role !== undefined && { role })}
-        orientation={orientation}
+        {...focusGroupAttrs}
+        // Every role the caller sets is forwarded, `role=''` included: dropping it would leave the
+        // default in place and silently invert the caller's intent.
+        role={role ?? 'toolbar'}
+        {...(orientation === 'vertical' && { 'aria-orientation': 'vertical' })}
+        data-orientation={orientation}
         data-arrow-keys={orientation === 'vertical' ? 'up down' : 'left right'}
-        className={tx('toolbar.root', { density, disabled, layoutManaged }, className)}
-        ref={forwardedRef}
+        {...elevationAttrs(elevation)}
+        className={tx(
+          'toolbar.root',
+          { density, disabled, layoutManaged, surface: elevationSurface(elevation) },
+          className,
+        )}
+        onKeyDown={handleKeyDown}
+        onFocus={handleFocus}
+        ref={useComposedRefs<HTMLDivElement>(forwardedRef, focusGroupRef)}
       >
         {/* The class alone cannot resize the bar's controls: `Button` and `Input` stamp
             `data-density` from context — `md` from the root provider unless something nearer says
@@ -63,7 +128,7 @@ const ToolbarRoot = composable<HTMLDivElement, ToolbarRootProps>(
             class set around it. The context is what those controls read, so the bar provides both:
             the class for descendants that only read the variable, the context for those that stamp. */}
         {density ? <DensityProvider density={density}>{children}</DensityProvider> : children}
-      </ToolbarPrimitive.Root>
+      </ark.div>
     );
   },
 );
@@ -78,12 +143,11 @@ type ToolbarTextProps = SlottableProps;
 
 const ToolbarText = slottable<HTMLDivElement>(({ children, asChild, ...props }, forwardedRef) => {
   const { className, ...rest } = composableProps(props);
-  const Comp = asChild ? Slot : Primitive.div;
   const { tx } = useThemeContext();
   return (
-    <Comp {...rest} className={tx('toolbar.text', {}, className)} ref={forwardedRef}>
+    <ark.div asChild={asChild} {...rest} className={tx('toolbar.text', {}, className)} ref={forwardedRef}>
       {children}
-    </Comp>
+    </ark.div>
   );
 });
 
@@ -96,11 +160,7 @@ ToolbarText.displayName = 'Toolbar.Text';
 type ToolbarButtonProps = ButtonProps;
 
 const ToolbarButton = forwardRef<HTMLButtonElement, ToolbarButtonProps>((props, forwardedRef) => {
-  return (
-    <ToolbarPrimitive.Button asChild>
-      <Button {...props} ref={forwardedRef} />
-    </ToolbarPrimitive.Button>
-  );
+  return <Button {...props} ref={forwardedRef} />;
 });
 
 ToolbarButton.displayName = 'Toolbar.Button';
@@ -112,11 +172,7 @@ ToolbarButton.displayName = 'Toolbar.Button';
 type ToolbarIconButtonProps = IconButtonProps;
 
 const ToolbarIconButton = forwardRef<HTMLButtonElement, ToolbarIconButtonProps>((props, forwardedRef) => {
-  return (
-    <ToolbarPrimitive.Button asChild>
-      <IconButton {...props} ref={forwardedRef} />
-    </ToolbarPrimitive.Button>
-  );
+  return <IconButton {...props} ref={forwardedRef} />;
 });
 
 ToolbarIconButton.displayName = 'Toolbar.IconButton';
@@ -124,11 +180,7 @@ ToolbarIconButton.displayName = 'Toolbar.IconButton';
 type ToolbarToggleProps = ToggleProps;
 
 const ToolbarToggle = forwardRef<HTMLButtonElement, ToolbarToggleProps>((props, forwardedRef) => {
-  return (
-    <ToolbarPrimitive.Button asChild>
-      <Toggle {...props} ref={forwardedRef} />
-    </ToolbarPrimitive.Button>
-  );
+  return <Toggle {...props} ref={forwardedRef} />;
 });
 
 ToolbarToggle.displayName = 'Toolbar.Toggle';
@@ -140,72 +192,37 @@ ToolbarToggle.displayName = 'Toolbar.Toggle';
 type ToolbarLinkProps = LinkProps;
 
 const ToolbarLink = forwardRef<HTMLAnchorElement, ToolbarLinkProps>((props, forwardedRef) => {
-  return (
-    <ToolbarPrimitive.Link asChild>
-      <Link {...props} ref={forwardedRef} />
-    </ToolbarPrimitive.Link>
-  );
+  return <Link {...props} ref={forwardedRef} />;
 });
 
 ToolbarLink.displayName = 'Toolbar.Link';
 
-type ToolbarToggleGroupProps = (
-  | Omit<ToolbarPrimitive.ToolbarToggleGroupSingleProps, 'className'>
-  | Omit<ToolbarPrimitive.ToolbarToggleGroupMultipleProps, 'className'>
-) &
-  ButtonGroupProps;
+type ToolbarToggleGroupProps = ToggleGroupProps & ButtonGroupProps;
 
 //
 // ToggleGroup
 //
 
-const ToolbarToggleGroup = forwardRef<HTMLDivElement, ToolbarToggleGroupProps>(
-  ({ classNames, children, elevation, ...props }, forwardedRef) => {
-    return (
-      <ToolbarPrimitive.ToolbarToggleGroup {...props} asChild>
-        <ButtonGroup {...{ classNames, children, elevation }} ref={forwardedRef} />
-      </ToolbarPrimitive.ToolbarToggleGroup>
-    );
-  },
-);
+/** A toggle group inside the bar leaves arrow navigation to the bar. */
+const ToolbarToggleGroup = forwardRef<HTMLDivElement, ToolbarToggleGroupProps>((props, forwardedRef) => {
+  return <ToggleGroup {...props} rovingFocus={false} ref={forwardedRef} />;
+});
 
 ToolbarToggleGroup.displayName = 'Toolbar.ToggleGroup';
 
 type ToolbarToggleGroupItemProps = ToggleGroupItemProps;
 
-const ToolbarToggleGroupItem = forwardRef<HTMLButtonElement, ToolbarToggleGroupItemProps>(
-  ({ variant, density, elevation, classNames, children, ...props }, forwardedRef) => {
-    return (
-      <ToolbarPrimitive.ToolbarToggleItem {...props} asChild>
-        <Button {...{ variant, density, elevation, classNames, children }} ref={forwardedRef} />
-      </ToolbarPrimitive.ToolbarToggleItem>
-    );
-  },
-);
+const ToolbarToggleGroupItem = forwardRef<HTMLButtonElement, ToolbarToggleGroupItemProps>((props, forwardedRef) => {
+  return <ToggleGroupItem {...props} ref={forwardedRef} />;
+});
 
 ToolbarToggleGroupItem.displayName = 'Toolbar.ToggleGroupItem';
 
-type ToolbarToggleGroupIconItemProps = Omit<ToggleGroupItemPrimitiveProps, 'className'> & IconButtonProps;
+type ToolbarToggleGroupIconItemProps = ToggleGroupIconItemProps;
 
 const ToolbarToggleGroupIconItem = forwardRef<HTMLButtonElement, ToolbarToggleGroupIconItemProps>(
-  ({ variant, density, elevation, classNames, icon, label, iconOnly, iconClassNames, ...props }, forwardedRef) => {
-    return (
-      <ToolbarPrimitive.ToolbarToggleItem {...props} asChild>
-        <IconButton
-          {...{
-            variant,
-            density,
-            elevation,
-            classNames,
-            icon,
-            label,
-            iconOnly,
-            iconClassNames,
-          }}
-          ref={forwardedRef}
-        />
-      </ToolbarPrimitive.ToolbarToggleItem>
-    );
+  (props, forwardedRef) => {
+    return <ToggleGroupIconItem {...props} ref={forwardedRef} />;
   },
 );
 
@@ -220,11 +237,9 @@ type ToolbarSeparatorProps = SeparatorProps & { variant?: 'gap' | 'line' };
 const ToolbarSeparator = forwardRef<HTMLDivElement, ToolbarSeparatorProps>(
   ({ variant = 'gap', ...props }, forwardedRef) => {
     return variant === 'line' ? (
-      <ToolbarPrimitive.Separator asChild>
-        <Separator orientation='vertical' {...props} ref={forwardedRef} />
-      </ToolbarPrimitive.Separator>
+      <Separator orientation='vertical' {...props} ref={forwardedRef} />
     ) : (
-      <ToolbarPrimitive.Separator className='grow' ref={forwardedRef} />
+      <div role='separator' aria-orientation='vertical' className='grow' ref={forwardedRef} />
     );
   },
 );
@@ -328,31 +343,31 @@ function ToolbarMenu<T extends any | void = void>({ context, items }: ToolbarMen
   const { t } = useTranslation(translationKey);
 
   return (
-    <DropdownMenu.Root>
-      <DropdownMenu.Trigger disabled={!items?.length} asChild>
+    <Menu.Root>
+      <Menu.Trigger disabled={!items?.length} asChild>
         <ToolbarIconButton
           iconOnly
           variant='ghost'
           icon='ph--dots-three-vertical--regular'
           label={t('toolbar-menu.label')}
         />
-      </DropdownMenu.Trigger>
+      </Menu.Trigger>
       {(items?.length ?? 0) > 0 && (
-        <DropdownMenu.Portal>
-          <DropdownMenu.Content>
-            <DropdownMenu.Viewport>
+        <Menu.Portal>
+          <Menu.Content>
+            <Menu.Viewport>
               {items?.map(({ label, icon, onClick: onSelect }, index) => (
-                <DropdownMenu.Item key={index} onSelect={() => onSelect(context as T)}>
+                <Menu.Item key={index} onSelect={() => onSelect(context as T)}>
                   {icon && <Icon icon={icon} />}
                   {label}
-                </DropdownMenu.Item>
+                </Menu.Item>
               ))}
-            </DropdownMenu.Viewport>
-            <DropdownMenu.Arrow />
-          </DropdownMenu.Content>
-        </DropdownMenu.Portal>
+            </Menu.Viewport>
+            <Menu.Arrow />
+          </Menu.Content>
+        </Menu.Portal>
       )}
-    </DropdownMenu.Root>
+    </Menu.Root>
   );
 }
 

@@ -148,7 +148,7 @@ describe('IndexEngine', () => {
         query: 'Hello',
         spaceId: null,
         includeAllQueues: false,
-        queueIds: null,
+        queues: null,
       });
       expect(ftsResults1.length).toBeGreaterThan(0);
       expect(ftsResults1.some((row) => row.objectId === obj1.data.id)).toBe(true);
@@ -180,7 +180,7 @@ describe('IndexEngine', () => {
         query: 'World',
         spaceId: null,
         includeAllQueues: false,
-        queueIds: null,
+        queues: null,
       });
       expect(ftsResults2.length).toBeGreaterThan(0);
     }, Effect.provide(TestLayer)),
@@ -254,7 +254,7 @@ describe('IndexEngine', () => {
         query: 'TypeA',
         spaceId: null,
         includeAllQueues: false,
-        queueIds: null,
+        queues: null,
       });
       expect(ftsResults).toHaveLength(2);
     }, Effect.provide(TestLayer)),

@@ -7,7 +7,7 @@ import React, { type ChangeEventHandler, type KeyboardEventHandler, useState } f
 import { Filter, Obj } from '@dxos/echo';
 import { type SpaceId } from '@dxos/keys';
 import { useQuery, useSpace } from '@dxos/react-client/echo';
-import { IconButton, Input } from '@dxos/react-ui';
+import { Field, IconButton } from '@dxos/react-ui';
 
 import { TaskType } from '../types.ts';
 
@@ -31,22 +31,22 @@ const TaskList = ({ id, spaceId }: { id: number; spaceId?: SpaceId }) => {
   return (
     <div className='grow max-w-lg mt-4 mx-1'>
       <h2 className='mb-2 font-bold'>{`Peer ${id + 1}`}</h2>
-      <Input.Root>
-        <Input.Label srOnly>Create new item</Input.Label>
-        <Input.TextInput
+      <Field.Root>
+        <Field.Label srOnly>Create new item</Field.Label>
+        <Field.Input
           classNames='mb-2'
           placeholder='New item'
           value={value}
           onChange={handleChange}
           onKeyDown={handleKeyDown}
         />
-      </Input.Root>
+      </Field.Root>
       <ul>
         {tasks.map((task) => (
           <li key={task.id} className='flex items-center gap-2 mb-2 pl-3'>
-            <Input.Root>
-              <Input.Label srOnly>Complete {task.title}</Input.Label>
-              <Input.Checkbox
+            <Field.Root>
+              <Field.Label srOnly>Complete {task.title}</Field.Label>
+              <Field.Checkbox
                 checked={!!task.completed}
                 onCheckedChange={() =>
                   Obj.update(task, (task) => {
@@ -54,7 +54,7 @@ const TaskList = ({ id, spaceId }: { id: number; spaceId?: SpaceId }) => {
                   })
                 }
               />
-            </Input.Root>
+            </Field.Root>
             <div className='grow'>{task.title}</div>
             <IconButton
               icon='ph--x--regular'

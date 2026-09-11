@@ -2,17 +2,24 @@
 // Copyright 2024 DXOS.org
 //
 
+import { create } from '@bufbuild/protobuf';
+
 import { type Trigger, scheduleTask } from '@dxos/async';
 import { Context } from '@dxos/context';
+import { invariant } from '@dxos/invariant';
 import { ProtocolError } from '@dxos/protocols';
-import { getBufService } from '@dxos/protocols/buf-service';
-import { type Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { requirePublicKey } from '@dxos/protocols/buf';
+import { type BufService, getBufService } from '@dxos/protocols/buf-service';
+import { type Credential } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import {
-  type AdmissionDiscoveryService,
+  AdmissionDiscoveryService as AdmissionDiscoveryServiceDesc,
   type GetAdmissionCredentialRequest,
   type GetAdmissionCredentialResponse,
-} from '@dxos/protocols/proto/dxos/mesh/teleport';
+  GetAdmissionCredentialResponseSchema,
+} from '@dxos/protocols/buf/dxos/mesh/teleport/admission-discovery_pb';
 import { type ExtensionContext, RpcExtension } from '@dxos/teleport';
+
+type AdmissionDiscoveryService = BufService<typeof AdmissionDiscoveryServiceDesc>;
 
 import { type Space } from './space.ts';
 
@@ -47,6 +54,7 @@ export class CredentialRetrieverExtension extends RpcExtension<
     scheduleTask(this._ctx, async () => {
       try {
         const result = await this.rpc.AdmissionDiscoveryService.getAdmissionCredential(this._request);
+        invariant(result.admissionCredential, 'Admission response carries no credential.');
         this._onResult.wake(result.admissionCredential);
       } catch (err: any) {
         context.close(err);
@@ -83,11 +91,11 @@ export class CredentialServerExtension extends RpcExtension<
         getAdmissionCredential: async (
           request: GetAdmissionCredentialRequest,
         ): Promise<GetAdmissionCredentialResponse> => {
-          const memberInfo = this._space.spaceState.members.get(request.memberKey);
+          const memberInfo = this._space.spaceState.members.get(requirePublicKey(request.memberKey));
           if (!memberInfo?.credential) {
             throw new ProtocolError({ message: 'Space member not found.', context: { ...request } });
           }
-          return { admissionCredential: memberInfo.credential };
+          return create(GetAdmissionCredentialResponseSchema, { admissionCredential: memberInfo.credential });
         },
       },
     };

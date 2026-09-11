@@ -986,8 +986,6 @@ export const Test: Story = {
     // `:not([data-focus-sentinel])`: a focus group inserts zero-size boundary elements as its first
     // and last children, so the first *rendered* cell is not the first element child.
     const firstCell = (element: HTMLElement) => element.querySelector(':scope > *:not([data-focus-sentinel])');
-    const labelCell = (element: HTMLElement) =>
-      element.querySelectorAll<HTMLElement>(':scope > *:not([data-focus-sentinel])')[1];
     // A tree row leads with its disclosure toggle and carries the status control inside the
     // heading, where the pane — which has no disclosure — leads with the status column itself.
     const rowIcon = row.querySelector<HTMLElement>('[data-testid="taskList.item.status"]');
@@ -995,7 +993,8 @@ export const Test: Story = {
     // child — the same column a row's status toggle occupies.
     const createIcon = firstCell(create);
     const rowLabel = row.querySelector<HTMLElement>('.truncate');
-    const createLabel = labelCell(create);
+    // The title input itself: its field root takes no box, so a positional pick would measure nothing.
+    const createLabel = create.querySelector<HTMLElement>('[data-testid="taskList.edit.title"]');
     // Guarded together: indexing a NodeList yields `undefined` for a missing cell, and reading
     // geometry off it would throw a TypeError instead of failing the alignment assertion.
     if (!rowIcon || !createIcon || !rowLabel || !createLabel) {

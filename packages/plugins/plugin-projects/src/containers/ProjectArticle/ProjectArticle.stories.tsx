@@ -17,7 +17,12 @@ import { useQuery } from '@dxos/echo-react';
 import * as AssistantPlugin from '@dxos/plugin-assistant/AssistantPlugin';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import * as GitHubPlugin from '@dxos/plugin-github/GitHubPlugin';
+import { FixtureLinkSourcePlugin } from '@dxos/plugin-github/testing';
+import * as MarkdownEvents from '@dxos/plugin-markdown/MarkdownEvents';
+import { PreviewEvents } from '@dxos/plugin-preview';
+import { PreviewPlugin } from '@dxos/plugin-preview/testing';
 import * as ProjectsPlugin from '@dxos/plugin-projects/ProjectsPlugin';
+import * as RoutinePlugin from '@dxos/plugin-routine/RoutinePlugin';
 import { translations as routineTranslations } from '@dxos/plugin-routine/translations';
 import * as TasksPlugin from '@dxos/plugin-tasks/TasksPlugin';
 import { translations as tasksTranslations } from '@dxos/plugin-tasks/translations';
@@ -80,12 +85,15 @@ const createProject = (space: Space, storyGeneration: number) => {
   });
   Obj.setParent(instructions, project);
 
-  const task = space.db.add(Task.make({ title: TASK_TITLE, status: 'todo' }));
-  Obj.setParent(task, taskSet);
+  const task = space.db.add(Task.make({ [Obj.Parent]: taskSet, title: TASK_TITLE, status: 'todo' }));
   const linkTask = space.db.add(
-    Task.make({ title: LINK_TASK_TITLE, description: LINK_TASK_DESCRIPTION, status: 'todo' }),
+    Task.make({
+      [Obj.Parent]: taskSet,
+      title: LINK_TASK_TITLE,
+      description: LINK_TASK_DESCRIPTION,
+      status: 'todo',
+    }),
   );
-  Obj.setParent(linkTask, taskSet);
   Obj.update(taskSet, (taskSet) => {
     taskSet.tasks = [Ref.make(task), Ref.make(linkTask)];
   });
@@ -113,10 +121,11 @@ const seedContent = async () => {
 
 /** Adds a task to the set the way the verbs do — array membership plus the lifecycle parent edge. */
 const addTask = (space: Space, taskSet: TaskSet.TaskSet, title: string, milestone?: Milestone.Milestone) => {
-  const task = space.db.add(Task.make({ title, status: 'todo', milestone: milestone && Ref.make(milestone) }));
-  Obj.setParent(task, taskSet);
+  const task = space.db.add(
+    Task.make({ [Obj.Parent]: taskSet, title, status: 'todo', milestone: milestone && Ref.make(milestone) }),
+  );
   Obj.update(taskSet, (taskSet) => {
-    taskSet.tasks = [...taskSet.tasks, Ref.make(task)];
+    taskSet.tasks.push(Ref.make(task));
   });
   return task;
 };
@@ -186,8 +195,15 @@ const meta = {
         // handler that action runs.
         ProjectsPlugin.make(),
         AssistantPlugin.make(),
-        // Contributes the `#123` decoration; `project.repo` is what it resolves against.
+        // Provides `RemoteProcessManager`, which Assistant's `AgentService` spec now requires — the
+        // spec is pruned without it, so delegating a task fails with "Chat not found".
+        RoutinePlugin.make(),
+        // Contributes the `#123` decoration (`project.repo` is what it resolves against), the link
+        // chips, and the resolver behind a chip's hover card; PreviewPlugin owns the popover and the
+        // fixture source answers the resolver without the network.
         GitHubPlugin.make(),
+        PreviewPlugin.make(),
+        FixtureLinkSourcePlugin(),
         ClientPlugin.make({
           types: [
             Project.Project,
@@ -214,6 +230,9 @@ const meta = {
         }),
         StorybookPlugin.make({}),
       ],
+      // Both start events at setup, so the markdown extensions and the link resolver are live before
+      // the first render.
+      setupEvents: [MarkdownEvents.Start, PreviewEvents.Start],
     }),
   ],
   parameters: {
@@ -246,6 +265,17 @@ export const Default: Story = {
   },
 };
 
+/** The article opened on its Tasks tab: the seeded set, its two tasks, and the delegate toolbar. */
+export const Tasks: Story = {
+  ...Default,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await seedContent();
+    await showTab(canvas, 'tasks');
+    await expect(canvas.findByText(TASK_TITLE, undefined, { timeout: 10_000 })).resolves.toBeTruthy();
+  },
+};
+
 /**
  * Each section is asserted by its content rather than its heading, since an invalid surface id is
  * dropped silently and leaves the heading rendering over an empty section.
@@ -266,6 +296,12 @@ export const Sections: Story = {
     // Artifacts: the section heading renders, and the seeded artifact's label resolves.
     await expect(canvas.findByText('Artifacts', undefined, { timeout: 10_000 })).resolves.toBeTruthy();
     await findPainted(canvas, ARTIFACT_TITLE);
+
+    // The tabs are painted, not just present: a `w-full` sibling toolbar once squeezed the tablist
+    // to zero width, and its scroll container clipped both buttons while every query still found them.
+    const tablist = (await canvas.findByRole('tablist', undefined, { timeout: 10_000 })) as HTMLElement;
+    await waitFor(() => expect(tablist.clientWidth).toBeGreaterThanOrEqual(tablist.scrollWidth), { timeout: 10_000 });
+    await expect(tablist.getBoundingClientRect().width).toBeGreaterThan(0);
 
     // Tasks: behind its own toolbar tab, so switch to it. The task title is the load-bearing
     // assertion — an invalid surface id is dropped silently, leaving an empty panel.
@@ -399,8 +435,8 @@ export const TaskLink: Story = {
     // Overview owns the outline, so the link is followed from a tab that is not the Tasks one.
     // `find`, not `get`: seeding completes at client init, which can be before the article mounts.
     await expect(await canvas.findByTestId('projectsPlugin.tab.tasks', undefined, { timeout: 10_000 })).toHaveAttribute(
-      'data-state',
-      'inactive',
+      'aria-selected',
+      'false',
     );
 
     const link = await canvas.findByText(TASK_TITLE, undefined, { timeout: 10_000 });
@@ -409,7 +445,7 @@ export const TaskLink: Story = {
     // The section swaps the outline for the task's form; the tab the host owns is untouched.
     await expect(canvas.findByDisplayValue(TASK_TITLE, undefined, { timeout: 10_000 })).resolves.toBeTruthy();
     await waitFor(() => expect(canvas.queryByText(OUTLINE_ITEM)).toBeNull(), { timeout: 10_000 });
-    await expect(canvas.getByTestId('projectsPlugin.tab.tasks')).toHaveAttribute('data-state', 'inactive');
+    await expect(canvas.getByTestId('projectsPlugin.tab.tasks')).toHaveAttribute('aria-selected', 'false');
 
     // Back is the way out, and the outline it came from is shown again.
     // The label plugin-tasks contributes for the outline's own back action.
@@ -448,10 +484,9 @@ export const Updates: Story = {
 
     // 3. A task filed under a milestone is still just a row: the article renders one flat list and
     //    does not group by milestone yet (see TASKS.md), so no heading or backlog split appears.
-    const milestone = space.db.add(Milestone.make({ name: MILESTONE_NAME }));
-    Obj.setParent(milestone, taskSet);
+    const milestone = space.db.add(Milestone.make({ [Obj.Parent]: taskSet, name: MILESTONE_NAME }));
     Obj.update(taskSet, (taskSet) => {
-      taskSet.milestones = [...taskSet.milestones, Ref.make(milestone)];
+      taskSet.milestones.push(Ref.make(milestone));
     });
     const MILESTONE_TASK = 'Filed under the milestone';
     addTask(space, taskSet, MILESTONE_TASK, milestone);
@@ -473,7 +508,7 @@ export const Updates: Story = {
     const ADDED_ARTIFACT = 'Added artifact';
     const artifact = space.db.add(Text.make({ name: ADDED_ARTIFACT, content: 'More notes.' }));
     Obj.update(project, (project) => {
-      project.artifacts = [...project.artifacts, Ref.make(artifact)];
+      project.artifacts.push(Ref.make(artifact));
     });
     await findPainted(canvas, ADDED_ARTIFACT);
 

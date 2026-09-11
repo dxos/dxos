@@ -17,7 +17,6 @@
 // select-first, scroll-into-view) comes from `Picker`. This file is a
 // thin search-domain wrapper; the heavy lifting is in `../Picker`.
 
-import { useControllableState } from '@radix-ui/react-use-controllable-state';
 import React, {
   type ChangeEvent,
   type ComponentPropsWithRef,
@@ -36,6 +35,7 @@ import {
   ScrollArea,
   type ScrollAreaRootProps,
   type ThemedClassName,
+  useControllableState,
   useTranslation,
 } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';

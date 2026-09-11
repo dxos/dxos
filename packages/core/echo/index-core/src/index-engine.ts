@@ -21,6 +21,7 @@ import {
   type FtsQueryResult,
   type Index,
   type IndexerObject,
+  type QueueRef,
   type QueueWindow,
   ReverseRefIndex,
   type ReverseRefQuery,
@@ -161,7 +162,7 @@ export class IndexEngine {
   queryAll(query: {
     spaceIds: readonly SpaceId[];
     includeAllQueues?: boolean;
-    queueIds?: readonly string[] | null;
+    queues?: readonly QueueRef[] | null;
     window?: QueueWindow;
   }): Effect.Effect<readonly EntityMeta[], SqlError.SqlError, SqlClient.SqlClient> {
     return this.#objectMetaIndex.queryAll(query);
@@ -196,7 +197,7 @@ export class IndexEngine {
     typeDxns: readonly EntityMeta['typeDXN'][];
     inverted?: boolean;
     includeAllQueues?: boolean;
-    queueIds?: readonly string[] | null;
+    queues?: readonly QueueRef[] | null;
     window?: QueueWindow;
   }): Effect.Effect<readonly EntityMeta[], SqlError.SqlError, SqlClient.SqlClient> {
     return this.#objectMetaIndex.queryTypes(query);
@@ -208,7 +209,7 @@ export class IndexEngine {
     createdAfter?: number;
     createdBefore?: number;
     includeAllQueues?: boolean;
-    queueIds?: readonly string[] | null;
+    queues?: readonly QueueRef[] | null;
   }): Effect.Effect<readonly EntityMeta[], SqlError.SqlError, SqlClient.SqlClient> {
     return this.#objectMetaIndex.queryByTimeRange(query);
   }

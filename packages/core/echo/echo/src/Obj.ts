@@ -944,8 +944,13 @@ export type JSON = internal.ObjectJSON;
  * Converts object to its JSON representation.
  * Accepts both reactive objects and snapshots.
  *
- * The same algorithm is used when calling the standard `JSON.stringify(obj)` function.
+ * `JSON.stringify(obj)` gives the same result for an in-memory object, which shares this serializer.
+ * A database-backed object carries its own `toJSON`, which reads the document rather than the target
+ * and still differs in two ways: it omits `@uri`, and it leaves `Uint8Array` values unencoded.
+ * Prefer this function where the two must agree.
  */
+// TODO(dmaretskyi): Unify with the echo-handler serializer (`echo-prototypes.ts`) so the divergence
+//   above goes away; changes what `JSON.stringify` emits for every database object.
 export const toJSON = (entity: Unknown | Snapshot): JSON => objInternal.objectToJSON(entity);
 
 /**

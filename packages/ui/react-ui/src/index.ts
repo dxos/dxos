@@ -10,6 +10,8 @@ export * from '@dxos/ui-types';
 
 export * from './components/index.ts';
 export * from './hooks/index.ts';
-export * from './primitives/index.ts';
+export * from './flow/index.ts';
+export * from './layout/index.ts';
+export * from './providers/index.ts';
 export * from './theme/index.ts';
 export * from './util/index.ts';

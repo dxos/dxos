@@ -10,11 +10,14 @@ import { Trigger } from '@dxos/async';
 import { ClientRpcServer, PROXY_CONNECTION_TIMEOUT, makeBridgeServiceClientOverProtocol } from '@dxos/client-protocol';
 import { EffectEx } from '@dxos/effect';
 import { log, logInfo } from '@dxos/log';
-import { type BridgeService } from '@dxos/protocols/proto/dxos/mesh/bridge';
+import { type BufService } from '@dxos/protocols/buf-service';
+import { BridgeService as BridgeServiceDesc } from '@dxos/protocols/buf/dxos/mesh/bridge_pb';
 import { type WorkerService } from '@dxos/protocols/rpc';
 import { Callback, type MaybePromise } from '@dxos/util';
 
 import { type ClientServicesHost } from '../services/index.ts';
+
+type BridgeService = BufService<typeof BridgeServiceDesc>;
 
 export type WorkerSessionProps = {
   serviceHost: ClientServicesHost;

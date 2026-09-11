@@ -78,7 +78,7 @@ describe('FtsIndex', () => {
       yield* metaIndex.lookupRecordIds(objects);
       yield* index.update(objects);
 
-      const match = yield* index.query({ query: 'Effect', spaceId: null, includeAllQueues: false, queueIds: null });
+      const match = yield* index.query({ query: 'Effect', spaceId: null, includeAllQueues: false, queues: null });
       expect(match.length).toBeGreaterThan(0);
       expect(match[0].objectId).toBe(objects[0].data.id);
 
@@ -86,7 +86,7 @@ describe('FtsIndex', () => {
         query: 'DefinitelyNotPresent',
         spaceId: null,
         includeAllQueues: false,
-        queueIds: null,
+        queues: null,
       });
       expect(noMatch).toHaveLength(0);
     }, Effect.provide(TestLayer)),
@@ -122,7 +122,7 @@ describe('FtsIndex', () => {
       yield* metaIndex.lookupRecordIds([obj1]);
       yield* index.update([obj1]);
 
-      let match = yield* index.query({ query: 'Original', spaceId: null, includeAllQueues: false, queueIds: null });
+      let match = yield* index.query({ query: 'Original', spaceId: null, includeAllQueues: false, queues: null });
       expect(match.length).toBe(1);
 
       // Update with same doc id and object id.
@@ -147,11 +147,11 @@ describe('FtsIndex', () => {
       yield* index.update([obj2]);
 
       // Old content should be gone.
-      match = yield* index.query({ query: 'Original', spaceId: null, includeAllQueues: false, queueIds: null });
+      match = yield* index.query({ query: 'Original', spaceId: null, includeAllQueues: false, queues: null });
       expect(match.length).toBe(0);
 
       // New content should exist.
-      match = yield* index.query({ query: 'Updated', spaceId: null, includeAllQueues: false, queueIds: null });
+      match = yield* index.query({ query: 'Updated', spaceId: null, includeAllQueues: false, queues: null });
       expect(match.length).toBe(1);
     }, Effect.provide(TestLayer)),
   );
@@ -219,7 +219,7 @@ describe('FtsIndex', () => {
         query: 'Alpha',
         spaceId: null,
         includeAllQueues: false,
-        queueIds: null,
+        queues: null,
       });
       expect(alphaMatch).toHaveLength(1);
 
@@ -228,7 +228,7 @@ describe('FtsIndex', () => {
         query: 'Document',
         spaceId: null,
         includeAllQueues: false,
-        queueIds: null,
+        queues: null,
       });
       expect(allMatch).toHaveLength(3);
     }, Effect.provide(TestLayer)),
@@ -285,7 +285,7 @@ describe('FtsIndex', () => {
         query: 'Content',
         spaceId: null,
         includeAllQueues: false,
-        queueIds: null,
+        queues: null,
       });
       expect(allMatches).toHaveLength(2);
 
@@ -294,7 +294,7 @@ describe('FtsIndex', () => {
         query: 'Content',
         spaceId: [space1],
         includeAllQueues: false,
-        queueIds: null,
+        queues: null,
       });
       expect(s1Matches).toHaveLength(1);
       expect(s1Matches[0].objectId).toBe(obj1.data.id);
@@ -304,7 +304,7 @@ describe('FtsIndex', () => {
         query: 'Content',
         spaceId: [space2],
         includeAllQueues: false,
-        queueIds: null,
+        queues: null,
       });
       expect(s2Matches).toHaveLength(1);
       expect(s2Matches[0].objectId).toBe(obj2.data.id);
@@ -357,7 +357,7 @@ describe('FtsIndex', () => {
       yield* metaIndex.lookupRecordIds(objects);
       yield* index.update(objects);
 
-      const defaultQuery = { spaceId: null, includeAllQueues: false, queueIds: null } as const;
+      const defaultQuery = { spaceId: null, includeAllQueues: false, queues: null } as const;
 
       // Full word matches exactly.
       const exactMatch = yield* index.query({ query: 'Programming', ...defaultQuery });
@@ -462,7 +462,7 @@ describe('FtsIndex', () => {
         query: 'Content',
         spaceId: null,
         includeAllQueues: false,
-        queueIds: [queue1],
+        queues: [{ queueId: queue1 }],
       });
       expect(q1Matches).toHaveLength(1);
       expect(q1Matches[0].objectId).toBe(queue1Obj.data.id);
@@ -472,7 +472,7 @@ describe('FtsIndex', () => {
         query: 'Content',
         spaceId: null,
         includeAllQueues: false,
-        queueIds: [queue1, queue2],
+        queues: [{ queueId: queue1 }, { queueId: queue2 }],
       });
       expect(bothQueuesMatches).toHaveLength(2);
     }, Effect.provide(TestLayer)),
@@ -528,7 +528,7 @@ describe('FtsIndex', () => {
         query: 'Content',
         spaceId: [spaceId],
         includeAllQueues: false,
-        queueIds: null,
+        queues: null,
       });
       expect(spaceOnlyMatches).toHaveLength(1);
       expect(spaceOnlyMatches[0].objectId).toBe(spaceObj.data.id);
@@ -538,7 +538,7 @@ describe('FtsIndex', () => {
         query: 'Content',
         spaceId: [spaceId],
         includeAllQueues: true,
-        queueIds: null,
+        queues: null,
       });
       expect(allMatches).toHaveLength(2);
     }, Effect.provide(TestLayer)),
@@ -610,7 +610,7 @@ describe('FtsIndex', () => {
         query: 'Content',
         spaceId: [space1],
         includeAllQueues: false,
-        queueIds: [queueInSpace2],
+        queues: [{ queueId: queueInSpace2 }],
       });
       expect(orMatches).toHaveLength(2);
       const objectIds = orMatches.map((m) => m.objectId);
@@ -663,7 +663,7 @@ describe('FtsIndex', () => {
       yield* metaIndex.lookupRecordIds([person, task]);
       yield* index.update([person, task]);
 
-      const defaultQuery = { query: 'Shared', spaceId: null, includeAllQueues: false, queueIds: null } as const;
+      const defaultQuery = { query: 'Shared', spaceId: null, includeAllQueues: false, queues: null } as const;
 
       // No type scope — both match.
       const unscoped = yield* index.query(defaultQuery);

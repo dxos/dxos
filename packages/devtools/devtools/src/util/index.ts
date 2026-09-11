@@ -3,3 +3,4 @@
 //
 
 export * from './textBitbar.ts';
+export * from './assertionType.ts';

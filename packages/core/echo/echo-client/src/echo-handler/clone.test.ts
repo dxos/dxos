@@ -8,9 +8,8 @@ import { Filter, Obj, Query, Ref } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 
 import { EchoTestBuilder } from '../testing/index.ts';
-import { clone } from './clone.ts';
 
-describe('clone', () => {
+describe('Obj.clone against a database', () => {
   let builder: EchoTestBuilder;
 
   beforeEach(async () => {
@@ -32,7 +31,7 @@ describe('clone', () => {
     db1.add(task1);
     await db1.flush();
 
-    const task2 = clone(task1);
+    const task2 = Obj.clone(task1, { retainId: true });
     expect(task2 !== task1).to.be.true;
     expect(task2.id).to.equal(task1.id);
     expect(task2.title).to.equal(task1.title);
@@ -41,11 +40,9 @@ describe('clone', () => {
     db2.add(task2);
     await db2.flush();
     expect(task2.id).to.equal(task1.id);
-
-    expect(() => db1.add(task1)).to.throw;
   });
 
-  test('clone to the same database by changing the id', async () => {
+  test('clone to the same database by minting a new id', async () => {
     const { db } = await builder.createDatabase();
 
     const task1 = Obj.make(TestSchema.Expando, {
@@ -55,7 +52,7 @@ describe('clone', () => {
     db.add(task1);
     await db.flush();
 
-    const task2 = clone(task1, { retainId: false });
+    const task2 = Obj.clone(task1);
     db.add(task2);
     await db.flush();
     expect(task2 !== task1).to.be.true;
@@ -64,7 +61,7 @@ describe('clone', () => {
     expect([...task2.tags]).to.deep.equal([...task1.tags]);
   });
 
-  test('clone with nested objects', async () => {
+  test('deep clone carries referenced objects across databases', async () => {
     const { db: db1 } = await builder.createDatabase();
     const { db: db2 } = await builder.createDatabase();
 
@@ -81,7 +78,7 @@ describe('clone', () => {
     db1.add(task1);
     await db1.flush();
 
-    const task2 = clone(task1, { additional: [task1.assignee.target] });
+    const task2 = Obj.clone(task1, { deep: 'all', retainId: true });
     expect(task2 !== task1).to.be.true;
     expect(task2.id).to.equal(task1.id);
     expect(task2.title).to.equal(task1.title);
@@ -94,50 +91,40 @@ describe('clone', () => {
     db2.add(task2);
     await db2.flush();
     expect(task2.id).to.equal(task1.id);
-    expect(task2.assignee !== task1.assignee).to.be.true;
-    expect(task2.assignee.target !== task1.assignee.target).to.be.true;
-    expect(task2.assignee.target?.id).to.equal(task1.assignee.target?.id);
-    expect(task2.assignee.target?.name).to.equal(task1.assignee.target?.name);
-    expect(
-      (await db2.query(Query.select(Filter.type(TestSchema.Expando, { type: 'Person' }))).run())[0] ===
-        task2.assignee.target,
-    ).to.be.true;
+    const assignee = await task2.assignee.load();
+    expect(assignee?.id).to.equal(task1.assignee.target?.id);
+    expect(assignee?.name).to.equal(task1.assignee.target?.name);
+    expect((await db2.query(Query.select(Filter.type(TestSchema.Expando, { type: 'Person' }))).run())[0]?.id).to.equal(
+      task1.assignee.target?.id,
+    );
   });
 
-  test('clone with nested text objects', async () => {
+  test('a reference shared by two properties clones once', async () => {
     const { db: db1 } = await builder.createDatabase();
     const { db: db2 } = await builder.createDatabase();
 
-    // Create the nested object first and add to database.
     const details1 = Obj.make(TestSchema.Expando, { content: 'Some details' });
     db1.add(details1);
 
-    // Create parent object with Ref to the nested object.
     const task1 = Obj.make(TestSchema.Expando, {
       title: 'Main task',
-      tags: ['red', 'green'],
       details: Ref.make(details1),
+      summary: Ref.make(details1),
     });
     db1.add(task1);
     await db1.flush();
 
-    // Clone with the referenced object included.
-    const task2 = clone(task1, { additional: [details1] });
+    const task2 = Obj.clone(task1, { deep: 'all', retainId: true });
     const details2 = task2.details?.target;
-    expect(task2 !== task1).to.be.true;
-    expect(task2.id).to.equal(task1.id);
-    expect(task2.title).to.equal(task1.title);
-    expect([...task2.tags]).to.deep.equal([...task1.tags]);
     expect(details2 !== details1).to.be.true;
     expect(details2?.id).to.equal(details1.id);
     expect(details2?.content).to.equal(details1.content);
+    // The DAG is reused rather than re-cloned, so both refs land on the same clone.
+    expect(task2.summary?.target === details2).to.be.true;
 
     db2.add(task2);
-    db2.add(details2!);
     await db2.flush();
-    expect(task2.id).to.equal(task1.id);
-    const resolvedDetails = task2.details?.target;
-    expect(resolvedDetails !== details1).to.be.true;
+    const resolvedDetails = await task2.details.load();
     expect(resolvedDetails?.id).to.equal(details1.id);
     expect(resolvedDetails?.content).to.equal(details1.content);
   });

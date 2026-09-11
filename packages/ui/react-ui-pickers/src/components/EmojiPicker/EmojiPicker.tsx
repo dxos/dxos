@@ -4,9 +4,9 @@
 
 import './emoji.css';
 
-import { useControllableState } from '@radix-ui/react-use-controllable-state';
 import React, { Suspense, lazy, useState } from 'react';
 
+import { useControllableState } from '@dxos/react-hooks';
 import {
   Button,
   ButtonGroup,
@@ -132,7 +132,7 @@ export const EmojiPickerBlock = ({
           <Button variant={triggerVariant} classNames='grow gap-2 text-2xl' disabled={disabled}>
             <span className='sr-only'>{t('select-emoji.label')}</span>
             <span>{emojiValue}</span>
-            <Icon icon='ph--caret-down--bold' size={3} />
+            <Icon icon='ph--caret-down--bold' size={3} classNames='mx-0.5' />
           </Button>
         </Popover.Trigger>
         {/* Portalled, like `EmojiPickerToolbarButton` above and `PickerButton` (which is why the hue

@@ -9,6 +9,7 @@ import { type CleanupFn, addEventListener } from '@dxos/async';
 import { Domino } from '@dxos/ui';
 
 import { GUTTER_WIDTH } from '../blocks/index.ts';
+import { treeFacet } from './tree.ts';
 
 // Square trigger size (px), matching the drag grip (`dx-button` density `xs` + `aspect-square` → `size-6`).
 // The right-hand strip (`GUTTER_WIDTH`, shared with the grip's left strip) centers the trigger within it.
@@ -51,9 +52,11 @@ export const menu = (options: MenuOptions = {}): Extension => [
 
         container.appendChild(this.tag);
 
-        // Listen for scroll events.
+        // Capture-phase on the document, not `container`: the trigger is `position: fixed`, so its
+        // coordinates go stale when ANY ancestor scrolls — and when the editor grows to fit its
+        // content the scroller is the surrounding plank, which never fires on `scrollDOM`.
         const handler = () => this.scheduleUpdate();
-        this.cleanup = addEventListener(container, 'scroll', handler);
+        this.cleanup = addEventListener(document, 'scroll', handler, { capture: true, passive: true });
         this.scheduleUpdate();
       }
 
@@ -92,6 +95,12 @@ export const menu = (options: MenuOptions = {}): Extension => [
         const { x, width } = this.view.contentDOM.getBoundingClientRect();
 
         const pos = this.view.state.selection.main.head;
+        // The actions act on an item; a prose line has none to offer.
+        if (!this.view.state.facet(treeFacet).find(pos)) {
+          this.tag.style.display = 'none';
+          return;
+        }
+
         const line = this.view.lineBlockAt(pos);
         const coords = this.view.coordsAtPos(line.from);
         if (!coords) {

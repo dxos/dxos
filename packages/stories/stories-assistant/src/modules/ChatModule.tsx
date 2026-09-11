@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import React from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 
 import { useProcessManagerRuntime } from '@dxos/app-framework/ui';
 import { useActiveSpace } from '@dxos/app-toolkit/ui';
@@ -27,7 +27,15 @@ const ChatModuleContainer = ({ space }: { space: Space }) => {
   const { preset, ...chatProps } = usePresets({});
 
   const chats = useQuery(space.db, Filter.type(ChatSchema.Chat));
-  const chat = chats.at(-1);
+  // The newest chat until the reader picks another; a template switch drops the id and lands on the
+  // new space's own chat.
+  const [selected, setSelected] = useState<string>();
+  const chat = chats.find(({ id }) => id === selected) ?? chats.at(-1);
+
+  // Every chat in the space, not the companion chats of one object: the story is a tour of the
+  // space, and its chats are the thing worth moving between.
+  const onSelect = useCallback((chat: ChatSchema.Chat) => setSelected(chat.id), []);
+  const switcher = useMemo(() => ({ chats: [...chats], onSelect }), [chats, onSelect]);
 
   const registry = useRegistry();
   const runtime = useProcessManagerRuntime();
@@ -46,7 +54,7 @@ const ChatModuleContainer = ({ space }: { space: Space }) => {
     <Chat.Root chat={chat} processor={processor}>
       <Panel.Root>
         <Panel.Toolbar asChild>
-          <Chat.Toolbar attendableId={chat.id} alwaysActive>
+          <Chat.Toolbar attendableId={chat.id} alwaysActive switcher={switcher}>
             <Toolbar.Text classNames='text-subdued'>{chat?.name}</Toolbar.Text>
             <Popover.Root>
               <Popover.Trigger asChild>
@@ -64,12 +72,11 @@ const ChatModuleContainer = ({ space }: { space: Space }) => {
         <Panel.Content asChild>
           <Chat.Content>
             <Chat.Thread viewType={view} />
-            {/* What the request is doing before the first token arrives. */}
-            <Chat.Activity />
-            <Chat.Queue />
-            {/* TODO(dmaretskyi): Breaks layout. */}
-            {/* <Chat.TaskList classNames='shrink-0 border border-separator border-b-0 rounded-t-sm text-description' /> */}
-            <Chat.Prompt classNames='border-none rounded-none' {...chatProps} outline preset={preset?.id} />
+            <div className='flex flex-col gap-1 p-1'>
+              <Chat.Queue />
+              <Chat.Activity />
+              <Chat.Prompt {...chatProps} outline preset={preset?.id} />
+            </div>
           </Chat.Content>
         </Panel.Content>
       </Panel.Root>

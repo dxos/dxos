@@ -124,6 +124,34 @@ describe('scene DSL', () => {
     expect(arrow).to.include({ kind: 'arrow', from: 'brim', to: 'face/head' });
   });
 
+  test('arrow heads and tails map onto tldraw arrowheads', ({ expect }) => {
+    const content: Record<string, any> = {};
+    applyCommands(content, [
+      upsert({
+        id: 'kinds',
+        origin: { x: 0, y: 0 },
+        elements: [
+          { kind: 'rect', id: 'a', x: 0, y: 0, w: 40, h: 20 },
+          { kind: 'rect', id: 'b', x: 100, y: 0, w: 40, h: 20 },
+          { kind: 'arrow', id: 'reference', from: 'a', to: 'b' },
+          { kind: 'arrow', id: 'inherits', from: 'a', to: 'b', head: 'triangle' },
+          { kind: 'arrow', id: 'has-many', from: 'a', to: 'b', head: 'crowsfoot' },
+          { kind: 'arrow', id: 'contains', from: 'a', to: 'b', tail: 'circle' },
+        ],
+      }),
+    ]);
+
+    const heads = (id: string) => {
+      const record = content[`shape:kinds/${id}`];
+      return [record.props.arrowheadStart, record.props.arrowheadEnd];
+    };
+    expect(heads('reference')).to.deep.eq(['none', 'arrow']);
+    expect(heads('inherits')).to.deep.eq(['none', 'triangle']);
+    // tldraw has no crow's foot; the inverted triangle is the nearest distinct marker.
+    expect(heads('has-many')).to.deep.eq(['none', 'inverted']);
+    expect(heads('contains')).to.deep.eq(['dot', 'arrow']);
+  });
+
   test('upsert-elements replaces by id and keeps the rest', ({ expect }) => {
     const content = {};
     applyCommands(content, [upsert(face)]);

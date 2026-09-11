@@ -26,7 +26,7 @@ A future iteration will absorb plugin-help (welcome tour, contextual hints,
 keyboard shortcuts) so all user education lives here.
 
 Initial scope is a thin skeleton: a `Ticket` schema, four ticket operations
-wired to a skill, a `FeedbackForm` + `captureUserFeedback` operation, and
+wired to a skill, a `FeedbackForm` + `submitReport` operation, and
 two surfaces (`Ticket` article + `--help` companion). Documentation search and
 issue filing are stubbed — the skill exists so the assistant can be
 exercised end-to-end while the integrations land in later phases.
@@ -39,10 +39,10 @@ The following extension dialects are used in this document.
 |-------------|--------------------------------|
 | `type`      | `org.dxos.mdl.type@1.0`       |
 | `feat`      | `org.dxos.mdl.feat@1.0`       |
-| `test`      | `org.dxos.mdl.test@1.0`       |
+| `scenario`  | `org.dxos.mdl.scenario@1.0`   |
 | `component` | `org.dxos.mdl.component@1.0`  |
 | `op`        | `org.dxos.mdl.op@1.1`         |
-| `flow`      | `org.dxos.mdl.flow@1.0`       |
+| `test`      | `org.dxos.mdl.test@1.0`       |
 
 ## Types
 
@@ -177,17 +177,30 @@ op searchDocs
 ```
 
 ```mdl
-op captureUserFeedback
-  key: org.dxos.operation.support.captureFeedback
+op submitIssue
+  key: org.dxos.operation.support.submitIssue
   desc: >
-    Sends a one-shot feedback message (with optional debug logs) to the
-    observability backend. Backed by the Observability capability contributed
-    by plugin-observability — plugin-support owns the UI and operation; the
-    actual transport stays in the observability plugin.
+    Files a report straight to Linear through the support service's `/issue`
+    route: no PostHog ticket, no Discord thread. The log dump and session
+    context travel the same way as submitReport, and the flushed logs are
+    tagged with the report id the service mints. The service refuses any
+    identity the hub does not know as an internal account, so this is the
+    team's path; the debug console's `report` command invokes it by key.
+
+op submitReport
+  key: org.dxos.operation.support.submitReport
+  desc: >
+    Files a user report through the support service (discord-service on EDGE),
+    which creates the PostHog support ticket anchoring the report's telemetry,
+    notes where the debug logs went, and opens the public Discord help thread.
+    The Observability capability supplies the log dump and the PostHog session
+    context; plugin-support owns the UI and operation. Fails when no support
+    service is configured or the service cannot create the ticket.
   input:
-    message: string
-    includeLogs?: boolean
-  output: void
+    report: SupportRequest
+    did?: string
+    screenshotUrl?: string
+  output: { ticketId: string, threadUrl?: string }
 ```
 
 GitHub issue submission is performed inline by the FeedbackPanel — it
@@ -245,7 +258,7 @@ feat F-4: One-shot Feedback
   req F-4.1: plugin-support contributes the deck `--help` companion surface; it renders a FeedbackForm.
   req F-4.2:
     when: user submits the FeedbackForm
-    then: captureUserFeedback runs and forwards to the Observability capability.
+    then: submitReport files the PostHog ticket, then the ticket id anchors the public Discord thread.
   req F-4.3:
     when: feedback succeeds
     then: a confirmation toast is shown and the companion collapses.
@@ -276,7 +289,7 @@ feat F-5: GitHub Issue Submission
 ## Acceptance
 
 ```mdl
-test T-1: Create a ticket
+scenario T-1: Create a ticket
   given: user is in a space
   when: createTicket invoked with title "Echo sync hung"
   then:
@@ -286,7 +299,7 @@ test T-1: Create a ticket
 ```
 
 ```mdl
-test T-2: Resolve a ticket
+scenario T-2: Resolve a ticket
   given: an open Ticket
   when: resolveTicket invoked with resolution "Restarted client"
   then:
@@ -295,7 +308,7 @@ test T-2: Resolve a ticket
 ```
 
 ```mdl
-test T-3: SupportArticle renders ticket
+scenario T-3: SupportArticle renders ticket
   given: a Ticket with title and body
   when: SupportArticle is rendered
   then:
@@ -305,7 +318,7 @@ test T-3: SupportArticle renders ticket
 ```
 
 ```mdl
-test T-4: Resolve button updates status
+scenario T-4: Resolve button updates status
   given: SupportArticle is shown for an open Ticket
   when: user clicks the Resolve button
   then:
@@ -313,7 +326,7 @@ test T-4: Resolve button updates status
 ```
 
 ```mdl
-test T-5: Mark in progress
+scenario T-5: Mark in progress
   given: an open Ticket
   when: markInProgress invoked (via assistant or UI button)
   then:
@@ -321,7 +334,7 @@ test T-5: Mark in progress
 ```
 
 ```mdl
-test T-6: Reopen a resolved ticket
+scenario T-6: Reopen a resolved ticket
   given: a resolved Ticket shown in SupportArticle
   when: user clicks the Reopen button
   then:
@@ -330,11 +343,11 @@ test T-6: Reopen a resolved ticket
 
 ## QA
 
-Executable flows. Each step carries a human instruction (`do`) and, where the step maps to an
-invocable operation, an agent binding (`invoke`). Report failures by flow and step number.
+Executable tests. Each step carries a human instruction (`do`) and, where the step maps to an
+invocable operation, an agent binding (`invoke`). Report failures by test and step number.
 
 ```mdl
-flow QA-1: Create a support ticket and resolve it
+test QA-1: Create a support ticket and resolve it
   desc: The core ticket lifecycle round-trip — create, mark in progress, resolve, read back.
   actors: agent
   covers: [F-1.1, F-1.2, F-1.3, F-1.4, T-1, T-2, T-5]
@@ -342,8 +355,8 @@ flow QA-1: Create a support ticket and resolve it
   given:
     - an identity exists
     - space: a space is open
-    - no Ticket titled "QA Ticket" exists — ABORT rather than deleting one this flow did not create
-  test:
+    - no Ticket titled "QA Ticket" exists — ABORT rather than deleting one this test did not create
+  steps:
     - name: Create the ticket
       do: In the navtree, click + on the space and choose Support Ticket. Title it "QA Ticket".
       invoke: [op:createTicket] { title: "QA Ticket", body: "Echo sync hung" }
@@ -368,7 +381,7 @@ flow QA-1: Create a support ticket and resolve it
 ```
 
 ```mdl
-flow QA-2: Send one-shot feedback via the help companion
+test QA-2: Send one-shot feedback via the help companion
   desc: The `--help` companion's PostHog feedback path — no ECHO object is created.
   actors: both
   covers: [F-4.1, F-4.2, F-4.3]
@@ -376,14 +389,14 @@ flow QA-2: Send one-shot feedback via the help companion
   given:
     - an identity exists
     - the deck `--help` companion is available (SupportPlugin is a core plugin, always enabled)
-  test:
+  steps:
     - name: Open the help companion
       do: Click the `?` / help affordance to open the `--help` companion.
       expect: the FeedbackForm renders with type, severity, title and body fields
       note: NO `invoke` — opening a deck companion panel is a UI gesture with no operation behind it.
     - name: Submit feedback
       do: Fill in a short description ("QA smoke test — please ignore") and click Submit.
-      invoke: [op:captureUserFeedback] { message: "QA smoke test — please ignore", includeLogs: false }
+      invoke: [op:submitReport] { report: { title: "QA smoke test — please ignore", body: "Ignore me.", includeLogs: false } }
       expect: a confirmation toast is shown and the companion collapses
   # No `after` — feedback goes straight to the observability backend; no ECHO object is created to remove.
 ```

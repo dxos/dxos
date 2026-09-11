@@ -8,3 +8,4 @@ export * from './invitations-handler.ts';
 export * from './invitations-service.ts';
 export * from './space-invitation-protocol.ts';
 export * from './invitations-manager.ts';
+export * from './utils.ts';

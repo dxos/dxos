@@ -36,6 +36,8 @@ export type TestProps<S> = {
   testId: string;
   outDir: string;
   spec: S;
+  /** Seed for this run, so a plan can make its own generation reproducible. */
+  randomSeed?: string;
 };
 
 /**

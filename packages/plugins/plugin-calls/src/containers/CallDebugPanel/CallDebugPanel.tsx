@@ -11,7 +11,7 @@ import { useCapabilities } from '@dxos/app-framework/ui';
 import { truncateKey } from '@dxos/debug';
 import { JsonView, Panel } from '@dxos/devtools';
 import { log } from '@dxos/log';
-import { Flex, IconButton, Input, type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { Field, Flex, IconButton, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';
 import { CallsCapabilities } from '#types';
@@ -96,16 +96,14 @@ export const CallDebugPanel = ({ state: stateOverride }: CallDebugPanelProps) =>
     >
       <Flex column classNames='w-full text-xs'>
         <Flex gap='sm' align='center'>
-          <Input.Root>
-            <Input.Switch checked={showDetailedWebRTCStats} onCheckedChange={handleShowDetailedWebRTCStats} />
-            <Input.Label>{t('show-webrtc-stats.title')}</Input.Label>
-          </Input.Root>
+          <Field.Switch checked={showDetailedWebRTCStats} onCheckedChange={handleShowDetailedWebRTCStats}>
+            {t('show-webrtc-stats.title')}
+          </Field.Switch>
         </Flex>
         <Flex gap='sm' align='center'>
-          <Input.Root>
-            <Input.Switch checked={showServiceHistory} onCheckedChange={handleToggleServiceHistory} />
-            <Input.Label>{t('show-calls-history.title')}</Input.Label>
-          </Input.Root>
+          <Field.Switch checked={showServiceHistory} onCheckedChange={handleToggleServiceHistory}>
+            {t('show-calls-history.title')}
+          </Field.Switch>
         </Flex>
         <Flex gap='sm' align='center'>
           <IconButton icon='ph--copy--regular' label={'copy raw'} onClick={handleCopyRaw} />

@@ -2,12 +2,10 @@
 // Copyright 2026 DXOS.org
 //
 
-import { createContext } from '@radix-ui/react-context';
-import { Primitive } from '@radix-ui/react-primitive';
-import { Slot } from '@radix-ui/react-slot';
-import { useControllableState } from '@radix-ui/react-use-controllable-state';
+import { ark } from '@ark-ui/react/factory';
 import React, { type PropsWithChildren, forwardRef, useCallback, useMemo } from 'react';
 
+import { createContext, useControllableState } from '@dxos/react-hooks';
 import {
   type ComposableProps,
   type SlottableProps,
@@ -78,11 +76,14 @@ type DashboardContentProps = SlottableProps;
  * Grid layout container for dashboard sections.
  */
 const DashboardContent = slottable<HTMLDivElement>(({ children, asChild, ...props }, forwardedRef) => {
-  const Comp = asChild ? Slot : Primitive.div;
   return (
-    <Comp {...composableProps(props, { classNames: 'grid content-start gap-2 p-2' })} ref={forwardedRef}>
+    <ark.div
+      asChild={asChild}
+      {...composableProps(props, { classNames: 'grid content-start gap-2 p-2' })}
+      ref={forwardedRef}
+    >
       {children}
-    </Comp>
+    </ark.div>
   );
 });
 
@@ -98,14 +99,14 @@ type DashboardStatsProps = SlottableProps;
  * Auto-fit grid of stat cards.
  */
 const DashboardStats = slottable<HTMLDivElement>(({ children, asChild, ...props }, forwardedRef) => {
-  const Comp = asChild ? Slot : Primitive.div;
   return (
-    <Comp
+    <ark.div
+      asChild={asChild}
       {...composableProps(props, { classNames: 'grid grid-cols-[repeat(auto-fit,minmax(10rem,1fr))] gap-2' })}
       ref={forwardedRef}
     >
       {children}
-    </Comp>
+    </ark.div>
   );
 });
 
@@ -121,14 +122,14 @@ type DashboardStatProps = SlottableProps;
  * Single stat card; composes StatLabel and StatValue.
  */
 const DashboardStat = slottable<HTMLDivElement>(({ children, asChild, ...props }, forwardedRef) => {
-  const Comp = asChild ? Slot : Primitive.div;
   return (
-    <Comp
+    <ark.div
+      asChild={asChild}
       {...composableProps(props, { classNames: 'flex min-w-0 flex-col gap-1 rounded-sm dx-group-surface p-2' })}
       ref={forwardedRef}
     >
       {children}
-    </Comp>
+    </ark.div>
   );
 });
 

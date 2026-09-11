@@ -6,13 +6,15 @@ import { type Extension } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
 
 import {
+  WidgetHostOptions,
   type XmlWidgetRegistry,
-  type XmlWidgetState,
   createBasicExtensions,
   createMarkdownExtensions,
   createThemeExtensions,
   decorateMarkdown,
   extendedMarkdown,
+  objectLinks,
+  widgetHost,
   xmlBlockDecoration,
   xmlFormatting,
   xmlTags,
@@ -24,7 +26,7 @@ export type ItemExtensionOptions = {
   registry?: XmlWidgetRegistry;
   editable?: boolean;
   themeMode?: 'light' | 'dark';
-  setWidgets?: (widgets: XmlWidgetState[]) => void;
+  setWidgets?: WidgetHostOptions['setWidgets'];
 };
 
 /**
@@ -48,7 +50,7 @@ export const createBlockExtensions = ({
 }: ItemExtensionOptions = {}): Extension[] => [
   ...sharedExtensions(registry, editable, themeMode),
   // The one part that cannot be shared: the callback that hands this item's widgets back to it.
-  ...(registry ? [xmlTags({ registry, setWidgets: setWidgets ?? (() => {}), bookmarks: ['prompt'] })] : []),
+  ...(registry ? [widgetHost({ setWidgets, bookmarks: ['prompt'] }), xmlTags({ registry }), objectLinks()] : []),
 ];
 
 /** Registries are compared by identity, so a feed's single registry is a single cache scope. */

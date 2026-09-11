@@ -27,6 +27,7 @@ import {
   InvitationCodeSchema,
   OAuthProvider,
 } from '@dxos/protocols';
+import { requirePublicKey } from '@dxos/protocols/buf';
 
 import * as AppSpace from '../echo/AppSpace.ts';
 
@@ -205,8 +206,8 @@ export const redeemAccessCode = Effect.fn(function* ({
       hub.redeemInvitationCode(DxContext.default(), {
         code: code === undefined ? undefined : normalizeAccessCode(code),
         email,
-        identityDid: await createDidFromIdentityKey(identity.identityKey),
-        identityKey: identity.identityKey.toHex(),
+        identityDid: await createDidFromIdentityKey(requirePublicKey(identity.identityKey)),
+        identityKey: requirePublicKey(identity.identityKey).toHex(),
       }),
     catch: AccountRedemptionError.wrap(),
   });
@@ -287,7 +288,7 @@ export const completeOAuthRegistration = Effect.fn(function* ({
     try: () =>
       client.edge.http.completeOAuthRegistration(DxContext.default(), {
         registrationToken,
-        identityKey: identity.identityKey.toHex(),
+        identityKey: requirePublicKey(identity.identityKey).toHex(),
         spaceKey: defaultSpace.key.toHex(),
       }),
     catch: OAuthRegistrationError.wrap(),

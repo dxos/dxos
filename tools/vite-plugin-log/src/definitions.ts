@@ -24,7 +24,7 @@ export interface LogMetaTransformSpec {
 }
 
 /**
- * Default `to_transform` list (Composer / `tools/dx-compile` SWC plugin parity).
+ * Default `to_transform` list (Composer parity).
  */
 export const DEFAULT_LOG_META_TRANSFORM_SPEC: LogMetaTransformSpec[] = [
   {

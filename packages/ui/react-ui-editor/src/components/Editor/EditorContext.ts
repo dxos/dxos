@@ -3,10 +3,10 @@
 //
 
 import { type Extension } from '@codemirror/state';
-import { createContext } from '@radix-ui/react-context';
 import type * as Atom from 'effect/unstable/reactivity/Atom';
 
-import { type XmlWidgetState } from '@dxos/ui-editor';
+import { createContext } from '@dxos/react-hooks';
+import { type WidgetState } from '@dxos/ui-editor';
 
 import { type EditorToolbarState } from '../EditorToolbar/types.ts';
 import { type EditorController } from './controller.ts';
@@ -23,7 +23,7 @@ export type EditorContextValue = {
   setController: (controller: EditorController) => void;
   extensions?: Extension[];
   /** xmlTags widget portals (embedded blocks); rendered by `Editor.Blocks`, fed via `setWidgets`. */
-  widgets?: XmlWidgetState[];
+  widgets?: WidgetState[];
   state: Atom.Writable<EditorToolbarState>;
 };
 

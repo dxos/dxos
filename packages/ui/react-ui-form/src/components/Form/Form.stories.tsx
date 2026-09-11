@@ -17,10 +17,17 @@ import { withClientProvider } from '@dxos/react-client/testing';
 import { Toolbar, Tooltip } from '@dxos/react-ui';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
+import { hues } from '@dxos/ui-types';
 
 import { translations } from '#translations';
 
-import { AutofillAnnotation, OptionsLookupAnnotation, autofill, optionsLookup } from '../../annotations.ts';
+import {
+  AutofillAnnotation,
+  HueAnnotation,
+  OptionsLookupAnnotation,
+  autofill,
+  optionsLookup,
+} from '../../annotations.ts';
 import { Organization, Person, TestLayout } from '../../testing/index.ts';
 import { type ExcludeId, omitId } from '../../util/index.ts';
 import { Form, type FormRootProps } from './Form.tsx';
@@ -64,8 +71,9 @@ const DefaultStory = <T extends AnyProperties = AnyProperties>({
         >
           <Form.Viewport scroll>
             <Form.Content>
-              <Form.Section title='Section' description='This is a [section description](https://dxos.org).' />
-              <Form.FieldSet />
+              <Form.FieldSet label='Section' description='This is a [section description](https://dxos.org).'>
+                <Form.Fields />
+              </Form.FieldSet>
               <Form.Actions />
             </Form.Content>
           </Form.Viewport>
@@ -166,6 +174,13 @@ const SettingsSchema = Schema.Struct({
   ),
   fontSize: Schema.optional(
     Schema.Number.annotate({ title: 'Font size', description: 'Editor font size, in pixels.' }),
+  ),
+  // A hue-annotated literal renders the hue picker rather than a select.
+  accent: Schema.optional(
+    Schema.Literals(hues).pipe(
+      HueAnnotation.set(true),
+      Schema.annotate({ title: 'Accent color', description: 'The hue of buttons, links and selection.' }),
+    ),
   ),
 }).mapFields(Struct.map(Schema.mutableKey));
 
@@ -453,7 +468,7 @@ const ReactiveBufferedStory = () => {
           <Form.Root schema={ReactiveSchema} values={source} onValuesChanged={handleValuesChanged}>
             <Form.Viewport>
               <Form.Content>
-                <Form.FieldSet />
+                <Form.Fields />
               </Form.Content>
             </Form.Viewport>
           </Form.Root>

@@ -11,3 +11,4 @@ export * from './generate-planet.ts';
 export * from './planet-cache.ts';
 export * from './scene-manager.ts';
 export * from './scene-fps.ts';
+export * from './scene-gui.ts';

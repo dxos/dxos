@@ -1085,14 +1085,21 @@ export class QueryPlanner {
       return QueryPlan.Plan.make(processedSteps);
     }
 
+    // A feed scan can be ordered and capped by the storage layer itself, so it takes the limit in
+    // either natural direction — which is the point: a bounded feed query must read bounded work.
+    const feedScan =
+      selectStepIndex !== -1
+        ? feedScanForLimit(processedSteps, selectStepIndex, orderStepIndex, limitStepIndex)
+        : undefined;
+
     // Pushing the limit into the SelectStep is only sound when the scan enumerates candidates in the
-    // requested order, so that the first N of the scan are the first N of the result. The scan runs
-    // in ascending natural order (by id / queue position). A content-based reorder (property or
-    // system timestamp) or a descending natural order does not match that scan order, so slicing at
-    // select time would keep the wrong N; those need the FULL candidate set and only the OrderStep
-    // may apply the limit. Ascending natural and rank (the FTS scan already returns by rank) stay
-    // consistent with the scan, so keep optimizing those.
-    if (orderStepIndex !== -1) {
+    // requested order, so that the first N of the scan are the first N of the result. Absent a feed
+    // scan the select runs in ascending natural order (by id / queue position). A content-based
+    // reorder (property or system timestamp) or a descending natural order does not match that scan
+    // order, so slicing at select time would keep the wrong N; those need the FULL candidate set and
+    // only the OrderStep may apply the limit. Ascending natural and rank (the FTS scan already
+    // returns by rank) stay consistent with the scan, so keep optimizing those.
+    if (orderStepIndex !== -1 && feedScan === undefined) {
       const orderStep = processedSteps[orderStepIndex];
       const scanOrderMismatch =
         orderStep._tag === 'OrderStep' &&
@@ -1130,6 +1137,7 @@ export class QueryPlanner {
       newSteps[selectStepIndex] = {
         ...selectStep,
         limit: limitValue + skipBetween(selectStepIndex),
+        ...(feedScan ? { feedScan } : {}),
       };
     }
 
@@ -1219,6 +1227,132 @@ const createRelationTraversalStep = (direction: QueryPlan.RelationTraversal['dir
     direction,
   },
 });
+
+/**
+ * The scan shape that lets a feed-only SelectStep apply the query's `limit` itself, or `undefined`
+ * when it may not: a bounded feed query is the whole point of pushing the limit into storage, but
+ * a page capped before a step that prunes it would come back short of what the caller asked for.
+ *
+ * Sound only when every step between the select and the limit is one the scan reproduces:
+ * the deleted filter (folded into the returned scan), a residual filter the selector already
+ * enforces, a skip (the caller inflates the limit by it), and the order step the scan matches.
+ */
+const feedScanForLimit = (
+  steps: readonly QueryPlan.Step[],
+  selectStepIndex: number,
+  orderStepIndex: number,
+  limitStepIndex: number,
+): QueryPlan.FeedScan | undefined => {
+  const selectStep = steps[selectStepIndex];
+  if (selectStep._tag !== 'SelectStep') {
+    return undefined;
+  }
+  // Only a feed scan orders and caps its own rows; a space scan has no ordering to cap against,
+  // and a mixed scope has no single ordering at all.
+  if (selectStep.scope.length === 0 || !selectStep.scope.every((scope) => scope._tag === 'feed')) {
+    return undefined;
+  }
+  // A cursor read is already windowed by position, which is a different ordering.
+  if (selectStep.feedCursorRange !== undefined) {
+    return undefined;
+  }
+  // The index seeks by id or type; every other selector reaches rows the window cannot order.
+  if (selectStep.selector._tag !== 'WildcardSelector' && selectStep.selector._tag !== 'TypeSelector') {
+    return undefined;
+  }
+
+  const direction = feedScanDirection(steps, orderStepIndex);
+  if (direction === undefined) {
+    return undefined;
+  }
+
+  let deleted: boolean | undefined;
+  for (let index = selectStepIndex + 1; index < limitStepIndex; index++) {
+    const step = steps[index];
+    switch (step._tag) {
+      case 'FilterDeletedStep':
+        deleted = step.mode === 'only-deleted';
+        break;
+      case 'FilterStep':
+        if (!isSelectorResidualFilter(step.filter, selectStep.selector)) {
+          return undefined;
+        }
+        break;
+      case 'OrderStep':
+        // Only the step `direction` was derived from; a second one would reorder the capped page.
+        if (index !== orderStepIndex) {
+          return undefined;
+        }
+        break;
+      case 'SkipStep':
+        // A skip below the order composes the other way round: the plan drops rows in scan order
+        // and orders what is left, where an inflated scan limit orders first and drops from that.
+        if (orderStepIndex !== -1 && index < orderStepIndex) {
+          return undefined;
+        }
+        break;
+      default:
+        return undefined;
+    }
+  }
+
+  return deleted === undefined ? { direction } : { direction, deleted };
+};
+
+/**
+ * The natural direction a feed scan must run to satisfy the plan's ordering, or `undefined` when
+ * the ordering is not one the scan can produce (a content-based reorder needs the full candidate
+ * set). An absent order step means natural ascending, which is what the planner inserts.
+ */
+const feedScanDirection = (
+  steps: readonly QueryPlan.Step[],
+  orderStepIndex: number,
+): QueryPlan.FeedScan['direction'] | undefined => {
+  if (orderStepIndex === -1) {
+    return 'asc';
+  }
+  const orderStep = steps[orderStepIndex];
+  if (orderStep._tag !== 'OrderStep') {
+    return undefined;
+  }
+  if (orderStep.order.length === 0) {
+    return 'asc';
+  }
+  // Entity ids are unique, so a secondary order could only break ties the scan never produces.
+  if (orderStep.order.length !== 1 || orderStep.order[0].kind !== 'natural') {
+    return undefined;
+  }
+  return orderStep.order[0].direction === 'desc' ? 'desc' : 'asc';
+};
+
+/**
+ * Whether a residual FilterStep can only re-check what the selector already enforced, so capping
+ * the scan before it cannot drop a row it would have kept. True for the empty filter, and for the
+ * typename re-check `_generateSelectionFromFilter` emits alongside a TypeSelector — the index
+ * matches the same typenames, versioned or not, that `compareTypenameStrings` accepts.
+ */
+const isSelectorResidualFilter = (filter: QueryAST.Filter, selector: QueryPlan.Selector): boolean => {
+  if (filter.type !== 'object') {
+    return false;
+  }
+  const hasOnlyTypename =
+    (filter.id === undefined || filter.id.length === 0) &&
+    (filter.props === undefined || Object.keys(filter.props).length === 0) &&
+    (filter.foreignKeys === undefined || filter.foreignKeys.length === 0) &&
+    filter.metaKey === undefined;
+  if (!hasOnlyTypename) {
+    return false;
+  }
+  if (filter.typename === null) {
+    return true;
+  }
+  return (
+    selector._tag === 'TypeSelector' &&
+    !selector.inverted &&
+    selector.typename.length === 1 &&
+    selector.typename[0] === filter.typename
+  );
+};
 
 /**
  * Returns true if the filter is `child-of` or `has-parent` — the post-select pruning filters —

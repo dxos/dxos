@@ -3,6 +3,7 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
 
 import { ClientService } from '@dxos/client';
 import * as Operation from '@dxos/compute/Operation';
@@ -25,7 +26,7 @@ export default SandboxOperation.CreateSandbox.pipe(
       const spaceId = db.spaceId;
       const sandboxClient = createSandboxClient(client);
 
-      const record = yield* Effect.promise(() => sandboxClient.createSandbox(spaceId, sandboxId, { name, baseImage }));
+      const record = yield* sandboxClient.createSandbox(spaceId, sandboxId, { name, baseImage }).pipe(Effect.orDie);
 
       Obj.update(sandbox, (sandbox) => {
         sandbox.createdAt = record.createdAt;
@@ -36,6 +37,6 @@ export default SandboxOperation.CreateSandbox.pipe(
       });
 
       return { sandboxId: Obj.getURI(sandbox) };
-    }),
+    }, Effect.provide(FetchHttpClient.layer)),
   ),
 );

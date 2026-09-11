@@ -51,8 +51,7 @@ test.describe('Collaboration tests', () => {
     // NOTE: `afterEach` even if the test is skipped in the beforeEach!
     // Guard against uninitialized app managers.
     if (host !== undefined && guest !== undefined) {
-      await host.closePage();
-      await guest.closePage();
+      await Promise.all([host.close(), guest.close()]);
     }
   });
 
@@ -74,7 +73,7 @@ test.describe('Collaboration tests', () => {
 
     // Guest waits for the space to be ready and confirms it has the markdown object.
     await guest.waitForSpaceReady();
-    await guest.toggleSection('spacePlugin.collectionsSection');
+    await guest.expandSection('spacePlugin.collectionsSection');
     await expect(guest.getObjectLinks()).toHaveCount(1);
     await navigateToNewDocument(guest);
 
@@ -108,7 +107,7 @@ test.describe('Collaboration tests', () => {
     await perfomInvitation(host, guest);
 
     await guest.waitForSpaceReady();
-    await guest.toggleSection('spacePlugin.collectionsSection');
+    await guest.expandSection('spacePlugin.collectionsSection');
     await expect(guest.getObjectLinks()).toHaveCount(1);
     await navigateToNewDocument(guest);
 
@@ -159,7 +158,7 @@ test.describe('Collaboration tests', () => {
 
     // Guest waits for the space to be ready and confirms it has the markdown object
     await guest.waitForSpaceReady();
-    await guest.toggleSection('spacePlugin.collectionsSection');
+    await guest.expandSection('spacePlugin.collectionsSection');
     await expect(guest.getObjectLinks()).toHaveCount(1);
     await navigateToNewDocument(guest);
 
@@ -218,7 +217,7 @@ test.describe('Collaboration tests', () => {
 
     await perfomInvitation(host, guest);
     await guest.waitForSpaceReady();
-    await guest.toggleSection('spacePlugin.collectionsSection');
+    await guest.expandSection('spacePlugin.collectionsSection');
     await expect(guest.getObjectLinks()).toHaveCount(1);
     await navigateToNewDocument(guest);
 

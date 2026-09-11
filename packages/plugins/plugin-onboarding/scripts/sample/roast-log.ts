@@ -214,8 +214,8 @@ export const RoastLogs: SampleSpace.Phase<RoastLogsResult, PersonMap> = SampleSp
       const typename = 'example.type.roastLog';
 
       const roastLogType = yield* Database.addType(RoastLog);
-      Type.update(roastLogType, (draft) => {
-        draft.name = 'Roast Log';
+      Type.update(roastLogType, (roastLogType) => {
+        roastLogType.name = 'Roast Log';
       });
 
       const entries = makeRoastLogs(Type.assertObject(roastLogType), people);

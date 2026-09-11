@@ -9,6 +9,8 @@ import { createRoot } from 'react-dom/client';
 import { RouterProvider, createBrowserRouter } from 'react-router-dom';
 
 import { log } from '@dxos/log';
+import { createBuf } from '@dxos/protocols/buf';
+import { ProfileDocumentSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 // TODO(wittjosiah): Restore observability for testbench.
 // import { initializeAppObservability } from '@dxos/observability';
 import { type Client, ClientProvider } from '@dxos/react-client';
@@ -82,7 +84,7 @@ const main = async () => {
     const deviceInvitationCode = searchProps.get('deviceInvitationCode');
     const identity = client.halo.identity.get();
     if (!identity && !deviceInvitationCode) {
-      await client.halo.createIdentity({ displayName: 'Testbench User' });
+      await client.halo.createIdentity(createBuf(ProfileDocumentSchema, { displayName: 'Testbench User' }));
       // TODO(wittjosiah): Ideally this would be per app rather than per identity.
     } else if (deviceInvitationCode) {
       await client.shell.joinIdentity({ invitationCode: deviceInvitationCode }).then(({ identity }) => {

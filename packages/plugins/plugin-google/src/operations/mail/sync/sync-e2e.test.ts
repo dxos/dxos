@@ -22,7 +22,7 @@ import { AccessToken, Connection, Cursor } from '@dxos/link';
 import { log } from '@dxos/log';
 import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 import { ErrorCodec, FunctionRuntimeKind } from '@dxos/protocols';
-import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
+import { EdgeReplicationSetting } from '@dxos/protocols/buf/dxos/echo/metadata_pb';
 import { Message } from '@dxos/types';
 
 import { GMAIL_CONNECTOR_ID } from '../../../constants.ts';

@@ -9,7 +9,7 @@ import { withTheme } from '../../testing/index.ts';
 import { Icon } from '../Icon/index.ts';
 import { ToggleGroup, ToggleGroupItem, type ToggleGroupProps } from './ToggleGroup.tsx';
 
-// TODO(burdon): Create Radix-style Root, Item, etc?
+// TODO(burdon): Create composite Root, Item, etc?
 const DefaultStory = (props: ToggleGroupProps) => {
   return (
     <ToggleGroup {...props}>

@@ -10,9 +10,9 @@ import { useLayout } from '@dxos/app-toolkit/ui';
 import {
   Button,
   Carousel,
+  Field,
   Grid,
   Icon,
-  Input,
   Link,
   ScrollArea,
   Select,
@@ -186,9 +186,9 @@ export const PluginDetail = composable<HTMLDivElement, PluginDetailProps>(
                   {installing ? t('installing.label') : t('install.label')}
                 </Button>
               ) : (
-                <Input.Root>
-                  <Input.Switch classNames='self-center' checked={enabled} onCheckedChange={onEnabledChange} />
-                </Input.Root>
+                <Field.Root>
+                  <Field.Switch classNames='self-center' checked={enabled} onCheckedChange={onEnabledChange} />
+                </Field.Root>
               )}
               <div className='flex items-center gap-1 pt-0.5 text-sm text-description'>
                 {slug}

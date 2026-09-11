@@ -65,11 +65,11 @@ const meta = {
                   const artifact = Artifact.make({ name: `Artifact ${index + 1}`, kind: 'image' });
                   const variant = space.db.add(
                     Variant.make({
+                      [Obj.Parent]: artifact,
                       contentType: 'image/png',
                       url: `https://picsum.photos/seed/lb-${index}/512/512`,
                     }),
                   );
-                  Obj.setParent(variant, artifact);
                   Obj.update(artifact, (artifact) => {
                     artifact.variants = [Ref.make(variant)];
                     artifact.cover = Ref.make(variant);

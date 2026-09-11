@@ -2,9 +2,10 @@
 // Copyright 2026 DXOS.org
 //
 
+import { toBinary } from '@bufbuild/protobuf';
+
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { encodeCompat } from '@dxos/protocols/buf-shape-compat';
 import { PresentationSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
 import { type EdgeIdentity } from './edge-identity.ts';
@@ -204,7 +205,7 @@ export const presentCredentialsForChallenge = async (
   challenge: string,
 ): Promise<Uint8Array> => {
   const presentation = await identity.presentCredentials({ challenge: Buffer.from(challenge, 'base64') });
-  return encodeCompat(PresentationSchema, presentation);
+  return toBinary(PresentationSchema, presentation);
 };
 
 export type ChallengeAuthentication = {

@@ -2,9 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
+import { ark } from '@ark-ui/react/factory';
 import { RegistryContext } from '@effect/atom-react/RegistryContext';
-import { Primitive } from '@radix-ui/react-primitive';
-import { Slot } from '@radix-ui/react-slot';
 import React, {
   type ComponentPropsWithRef,
   type FocusEvent,
@@ -77,16 +76,16 @@ export type AttendableContainerProps = ThemedClassName<
 const AttendableContainer = forwardRef<HTMLDivElement, AttendableContainerProps>(
   ({ id, classNames, children, asChild, ...props }, forwardedRef) => {
     const attentionAttrs = useAttentionAttributes(id);
-    const Comp = asChild ? Slot : Primitive.div;
     return (
-      <Comp
+      <ark.div
+        asChild={asChild}
         {...props}
         {...attentionAttrs}
         className={mx('dx-attention-surface', props.tabIndex === 0 && 'dx-focus-ring-inset-over-all', classNames)}
         ref={forwardedRef}
       >
         {children}
-      </Comp>
+      </ark.div>
     );
   },
 );

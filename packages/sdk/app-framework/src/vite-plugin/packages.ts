@@ -41,7 +41,6 @@ const THIRD_PARTY_SHARED_PACKAGES = [
 export const DEFAULT_PACKAGES = [
   // packages/common
   '@dxos/async',
-  '@dxos/codec-protobuf',
   '@dxos/context',
   '@dxos/crypto',
   '@dxos/debug',
@@ -154,7 +153,6 @@ export const DEFAULT_PACKAGES = [
   '@dxos/react-ui-list',
   '@dxos/react-ui-syntax-highlighter',
   '@dxos/react-ui-table',
-  '@dxos/react-ui-tabs',
   '@dxos/react-ui-thread',
   '@dxos/solid-ui',
   '@dxos/solid-ui-geo',

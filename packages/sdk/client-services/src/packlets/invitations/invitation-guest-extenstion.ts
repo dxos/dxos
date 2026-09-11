@@ -2,18 +2,28 @@
 // Copyright 2024 DXOS.org
 //
 
+import { create } from '@bufbuild/protobuf';
+import { EmptySchema } from '@bufbuild/protobuf/wkt';
+
 import { type Mutex, type MutexGuard, Trigger } from '@dxos/async';
 import { Context, cancelWithContext } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { InvalidInvitationExtensionRoleError } from '@dxos/protocols';
-import { getBufService } from '@dxos/protocols/buf-service';
-import { type Invitation } from '@dxos/protocols/proto/dxos/client/services';
-import { type InvitationHostService, InvitationOptions } from '@dxos/protocols/proto/dxos/halo/invitations';
+import { type BufService, getBufService } from '@dxos/protocols/buf-service';
+import { Invitation_State } from '@dxos/protocols/buf/dxos/client/invitation_pb';
+import {
+  InvitationHostService as InvitationHostServiceDesc,
+  type InvitationOptions,
+  InvitationOptions_Role,
+  InvitationOptionsSchema,
+} from '@dxos/protocols/buf/dxos/halo/invitations_pb';
 import { type ExtensionContext, RpcExtension } from '@dxos/teleport';
 
 import { type FlowLockHolder } from './invitation-state.ts';
 import { tryAcquireBeforeContextDisposed } from './utils.ts';
+
+type InvitationHostService = BufService<typeof InvitationHostServiceDesc>;
 
 const OPTIONS_TIMEOUT = 10_000;
 
@@ -22,7 +32,7 @@ type InvitationGuestExtensionCallbacks = {
   onOpen: (ctx: Context, extensionCtx: ExtensionContext) => void;
   onError: (error: Error) => void;
 
-  onStateUpdate: (newState: Invitation.State) => void;
+  onStateUpdate: (newState: Invitation_State) => void;
 };
 
 /**
@@ -68,6 +78,7 @@ export class InvitationGuestExtension
           invariant(!this._remoteOptions, 'Remote options already set.');
           this._remoteOptions = options;
           this._remoteOptionsTrigger.wake();
+          return create(EmptySchema, {});
         },
         introduce: () => {
           throw new Error('Method not allowed.');
@@ -91,15 +102,15 @@ export class InvitationGuestExtension
       log.verbose('guest lock acquired');
       await cancelWithContext(
         this._ctx,
-        this.rpc.InvitationHostService.options({ role: InvitationOptions.Role.GUEST }),
+        this.rpc.InvitationHostService.options(create(InvitationOptionsSchema, { role: InvitationOptions_Role.GUEST })),
       );
       log.verbose('options sent');
       await cancelWithContext(this._ctx, this._remoteOptionsTrigger.wait({ timeout: OPTIONS_TIMEOUT }));
       log.verbose('options received');
-      if (this._remoteOptions?.role !== InvitationOptions.Role.HOST) {
+      if (this._remoteOptions?.role !== InvitationOptions_Role.HOST) {
         throw new InvalidInvitationExtensionRoleError({
           context: {
-            expected: InvitationOptions.Role.HOST,
+            expected: InvitationOptions_Role.HOST,
             remoteOptions: this._remoteOptions,
             remotePeerId: context.remotePeerId,
           },

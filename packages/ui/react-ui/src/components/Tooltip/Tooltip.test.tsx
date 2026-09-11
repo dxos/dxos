@@ -6,7 +6,7 @@ import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/re
 import React, { type PropsWithChildren, forwardRef } from 'react';
 import { afterEach, describe, test } from 'vitest';
 
-import { ThemeProvider } from '../../primitives/index.ts';
+import { ThemeProvider } from '../../providers/index.ts';
 import { defaultTx } from '../../theme/index.ts';
 import { Tooltip } from './Tooltip.tsx';
 

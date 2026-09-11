@@ -2,8 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Primitive } from '@radix-ui/react-primitive';
-import { Slot } from '@radix-ui/react-slot';
+import { ark } from '@ark-ui/react/factory';
 import React, { type ComponentProps, type ComponentPropsWithRef, type PropsWithChildren, forwardRef } from 'react';
 
 import '@dxos/lit-ui/dx-avatar.pcss';
@@ -48,32 +47,39 @@ const AvatarContent = forwardRef<NaturalDxAvatar, AvatarContentProps>(
   },
 );
 
-type AvatarLabelProps = ThemedClassName<Omit<ComponentPropsWithRef<typeof Primitive.span>, 'id'>> & {
+type AvatarLabelProps = ThemedClassName<Omit<ComponentPropsWithRef<typeof ark.span>, 'id'>> & {
   asChild?: boolean;
   srOnly?: boolean;
 };
 
 const AvatarLabel = forwardRef<HTMLSpanElement, AvatarLabelProps>(
   ({ asChild, srOnly, classNames, ...props }, forwardedRef) => {
-    const Comp = asChild ? Slot : Primitive.span;
     const { tx } = useThemeContext();
     const { labelId } = useAvatarContext('AvatarLabel');
-    return <Comp {...props} id={labelId} ref={forwardedRef} className={tx('avatar.label', { srOnly }, classNames)} />;
+    return (
+      <ark.span
+        asChild={asChild}
+        {...props}
+        id={labelId}
+        ref={forwardedRef}
+        className={tx('avatar.label', { srOnly }, classNames)}
+      />
+    );
   },
 );
 
-type AvatarDescriptionProps = ThemedClassName<Omit<ComponentPropsWithRef<typeof Primitive.span>, 'id'>> & {
+type AvatarDescriptionProps = ThemedClassName<Omit<ComponentPropsWithRef<typeof ark.span>, 'id'>> & {
   asChild?: boolean;
   srOnly?: boolean;
 };
 
 const AvatarDescription = forwardRef<HTMLSpanElement, AvatarDescriptionProps>(
   ({ asChild, srOnly, classNames, ...props }, forwardedRef) => {
-    const Comp = asChild ? Slot : Primitive.span;
     const { tx } = useThemeContext();
     const { descriptionId } = useAvatarContext('AvatarDescription');
     return (
-      <Comp
+      <ark.span
+        asChild={asChild}
         {...props}
         id={descriptionId}
         ref={forwardedRef}

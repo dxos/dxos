@@ -15,11 +15,14 @@ import { Config } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { verifyPresentation } from '@dxos/credentials';
 import { EffectEx } from '@dxos/effect';
+import { failedInvariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
 import { MemorySignalManagerContext } from '@dxos/messaging';
-import { type Identity } from '@dxos/protocols/proto/dxos/client/services';
-import { MembershipPolicy } from '@dxos/protocols/proto/dxos/halo/credentials';
-import { type Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { buf, toPublicKey } from '@dxos/protocols/buf';
+import { requirePublicKey } from '@dxos/protocols/buf';
+import { type Identity } from '@dxos/protocols/buf/dxos/client/services_pb';
+import { type Credential, PresentationSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
+import { MembershipPolicy } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { isNode } from '@dxos/util';
 
 import { createMockCredential, createServiceHost } from '../testing/index.ts';
@@ -57,9 +60,11 @@ describe('ClientServicesHost', () => {
     const services = await makeProxyServices(host);
 
     await services.IdentityService!.createIdentity({});
-    const { spaceKey } = await services.SpacesService!.createSpace({ membershipPolicy: MembershipPolicy.INVITE });
+    const space = await services.SpacesService!.createSpace({ membershipPolicy: MembershipPolicy.INVITE });
 
-    const stream = services.SpacesService!.queryCredentials({ spaceKey });
+    const stream = services.SpacesService!.queryCredentials({
+      spaceKey: toPublicKey(space.spaceKey) ?? failedInvariant(),
+    });
     const [done, tick] = latch({ count: 3 });
     stream.subscribe((credential) => {
       tick();
@@ -86,8 +91,9 @@ describe('ClientServicesHost', () => {
     // Test if Identity exposes haloSpace key.
     const haloSpace = new Trigger<PublicKey>();
     services.IdentityService!.queryIdentity()!.subscribe(({ identity }) => {
-      if (identity?.spaceKey) {
-        haloSpace.wake(identity.spaceKey);
+      const spaceKey = toPublicKey(identity?.spaceKey);
+      if (spaceKey) {
+        haloSpace.wake(spaceKey);
       }
     });
 
@@ -99,7 +105,7 @@ describe('ClientServicesHost', () => {
     const credentials = services.SpacesService!.queryCredentials({ spaceKey: await haloSpace.wait() });
     const queriedCredential = new Trigger<Credential>();
     credentials.subscribe((credential) => {
-      if (credential.subject.id.equals(testCredential.subject.id)) {
+      if (toPublicKey(credential.subject?.id)?.equals(requirePublicKey(testCredential.subject?.id))) {
         queriedCredential.wake(credential);
       }
     });
@@ -124,9 +130,9 @@ describe('ClientServicesHost', () => {
     const nonce = new Uint8Array([0, 0, 0, 0]);
 
     const presentation = await services.IdentityService!.signPresentation({
-      presentation: {
+      presentation: buf.create(PresentationSchema, {
         credentials: [testCredential],
-      },
+      }),
       nonce,
     });
 

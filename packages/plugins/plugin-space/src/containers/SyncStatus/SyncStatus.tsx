@@ -5,7 +5,7 @@
 import React, { useEffect, useState } from 'react';
 
 import { StatusBar } from '@dxos/plugin-status-bar/components';
-import { EdgeStatus } from '@dxos/protocols/proto/dxos/client/services';
+import { type EdgeStatus, EdgeStatus_ConnectionState } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { useClient } from '@dxos/react-client';
 import { type SpaceSyncStateMap, getSyncSummary, useSyncState } from '@dxos/react-client/echo';
 import { Flex, Grid, Icon, IconButton, Popover, useTranslation } from '@dxos/react-ui';
@@ -40,7 +40,7 @@ export const SyncStatusIndicator = ({
   const { t } = useTranslation(meta.profile.key);
   const summary = getSyncSummary(state);
   // Absent peer sync state is indistinguishable from having no connection.
-  const offline = edgeStatus.state !== EdgeStatus.ConnectionState.CONNECTED || Object.values(state).length === 0;
+  const offline = edgeStatus.state !== EdgeStatus_ConnectionState.CONNECTED || Object.values(state).length === 0;
   const needsToUpload = summary.differentDocuments > 0 || summary.missingOnRemote > 0;
   const needsToDownload = summary.differentDocuments > 0 || summary.missingOnLocal > 0;
 
@@ -75,7 +75,7 @@ const EdgeConnectionPopover = ({ status }: { status: EdgeStatus }) => {
   const { t } = useTranslation(meta.profile.key);
   const client = useClient();
 
-  const isConnected = status.state === EdgeStatus.ConnectionState.CONNECTED;
+  const isConnected = status.state === EdgeStatus_ConnectionState.CONNECTED;
   const edgeUrl = client.config.get('runtime.services.edge.url');
 
   return (

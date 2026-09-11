@@ -231,7 +231,7 @@ const sortImports = (imports: string[]): string[] => {
  * manifest matches whichever build the package uses.
  *
  * Two layouts exist. `ts-vite-build` flattens each entry to `dist/lib/<name>.mjs`, so the
- * condition rides the name (`capabilities.node.mjs`). The older `ts-build` mirrors the source
+ * condition rides the name (`capabilities.node.mjs`). The retired esbuild pipeline mirrored the source
  * tree under a platform slug (`dist/lib/neutral/capabilities/index.mjs`), so the condition keeps
  * the source's own shape (`.../capabilities/gen/node.mjs`). Guessing one of them for every
  * package is what left two plugins pointing at bundles their build never emits.

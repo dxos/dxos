@@ -70,7 +70,7 @@ const handler: Operation.WithHandler<typeof ProjectOperation.DelegateTaskToChat>
         // The tasks join the chat's checklist in the order they were given, which is the order the
         // list showed them — the reader's reading order is the agent's working order.
         Obj.update(chat, (chat) => {
-          chat.tasks = [...chat.tasks, ...tasks.map((task) => Ref.make(task))];
+          chat.tasks.push(...tasks.map((task) => Ref.make(task)));
         });
 
         // Parent edge before the add, as the project's own create-chat action does: it files the

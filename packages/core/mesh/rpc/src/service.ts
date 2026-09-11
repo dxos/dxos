@@ -2,13 +2,12 @@
 // Copyright 2021 DXOS.org
 //
 
+import { invariant } from '@dxos/invariant';
 import {
-  type EncodingOptions,
   type ServiceBackend,
   type ServiceDescriptorLike,
   type ServiceProvider,
-} from '@dxos/codec-protobuf';
-import { invariant } from '@dxos/invariant';
+} from '@dxos/protocols/service-contract';
 
 import { RpcPeer, type RpcPeerOptions } from './rpc.ts';
 
@@ -67,11 +66,6 @@ export interface ProtoRpcPeerOptions<Client, Server> extends Omit<RpcPeerOptions
    * Handlers for the exposed services
    */
   handlers?: ServiceHandlers<Server>;
-
-  /**
-   * Encoding options passed to the underlying proto codec.
-   */
-  encodingOptions?: EncodingOptions;
 }
 
 /**
@@ -84,7 +78,6 @@ export const createProtoRpcPeer = <Client = {}, Server = {}>({
   requested,
   exposed,
   handlers,
-  encodingOptions,
   ...rest
 }: ProtoRpcPeerOptions<Client, Server>): ProtoRpcPeer<Client> => {
   // Create map of RPCs.
@@ -94,7 +87,7 @@ export const createProtoRpcPeer = <Client = {}, Server = {}>({
     for (const serviceName of Object.keys(exposed) as (keyof Server)[]) {
       const serviceFqn = exposed[serviceName].name;
       const serviceProvider = handlers[serviceName];
-      exposedRpcs[serviceFqn] = exposed[serviceName].createServer(serviceProvider, encodingOptions);
+      exposedRpcs[serviceFqn] = exposed[serviceName].createServer(serviceProvider);
     }
   }
 
@@ -126,13 +119,10 @@ export const createProtoRpcPeer = <Client = {}, Server = {}>({
     for (const serviceName of Object.keys(requested) as (keyof Client)[]) {
       const serviceFqn = requested[serviceName].name;
 
-      requestedRpcs[serviceName] = requested[serviceName].createClient(
-        {
-          call: (method, req, options) => peer.call(`${serviceFqn}.${method}`, req, options),
-          callStream: (method, req, options) => peer.callStream(`${serviceFqn}.${method}`, req, options),
-        },
-        encodingOptions,
-      );
+      requestedRpcs[serviceName] = requested[serviceName].createClient({
+        call: (method, req, options) => peer.call(`${serviceFqn}.${method}`, req, options),
+        callStream: (method, req, options) => peer.callStream(`${serviceFqn}.${method}`, req, options),
+      });
     }
   }
 

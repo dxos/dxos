@@ -70,7 +70,7 @@ const createFakeController = (initial: Partial<DebugPortStatus> = {}): DebugPort
   };
 };
 
-/** `Form.Row` reads the form context for its variant; the section itself binds no fields. */
+/** `Form.Field` reads the form context for its variant; the section itself binds no fields. */
 const NoFields = Schema.Struct({});
 
 type StoryArgs = {

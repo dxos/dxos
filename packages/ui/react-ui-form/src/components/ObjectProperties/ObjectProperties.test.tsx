@@ -22,7 +22,7 @@ const getDebug = (): ObjectPropertiesDebug => {
 };
 
 /**
- * Refs may be stored in local (`echo:/<id>`) or qualified (`echo://<space>/<id>`) form —
+ * Refs may be stored in local (`echo:///<id>`) or qualified (`echo://<space>/<id>`) form —
  * extract and compare object id.
  */
 const refTargetsObject = (uri: string, objectId: string): boolean => {

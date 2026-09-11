@@ -106,6 +106,7 @@ const meta_ = {
                 artifact.variants = Array.from({ length: 3 }, (_, index) => {
                   const variant = space.db.add(
                     Variant.make({
+                      [Obj.Parent]: artifact,
                       name: prompt,
                       contentType: 'image/png',
                       url: `https://picsum.photos/seed/dxos-${index}/512/512`,
@@ -113,7 +114,6 @@ const meta_ = {
                       generation: { provider: 'mock', prompt, seed: index },
                     }),
                   );
-                  Obj.setParent(variant, artifact);
                   return Ref.make(variant);
                 });
                 artifact.cover = artifact.variants[0];

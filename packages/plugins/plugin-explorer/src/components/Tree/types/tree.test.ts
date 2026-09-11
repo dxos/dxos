@@ -128,8 +128,8 @@ describe('tree', () => {
 
     const tree = createTree();
     const node = tree.addNode(tree.root);
-    Obj.update(tree.tree, () => {
-      node.ref = Ref.make(task);
+    Obj.update(tree.tree, (treeObject) => {
+      treeObject.nodes[node.id].ref = Ref.make(task);
     });
   });
 });

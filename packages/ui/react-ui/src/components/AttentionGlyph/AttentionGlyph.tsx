@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type Primitive } from '@radix-ui/react-primitive';
+import { ark } from '@ark-ui/react/factory';
 import React, { type ComponentPropsWithRef, type CSSProperties, forwardRef, useMemo } from 'react';
 
 import { mx } from '@dxos/ui-theme';
@@ -11,7 +11,7 @@ import { type ThemedClassName } from '../../util/index.ts';
 import { Icon } from '../Icon/index.ts';
 
 const attentionGlyphStyles = mx(
-  'inline-block rounded-xs w-3 h-3 bg-transparent text-accent-text transition-colors',
+  'inline-block rounded-xs size-3 bg-transparent text-accent-text transition-colors',
   '[[data-contains-attended=true]_&]:bg-attention-contains',
   '[[data-attention=true]_&]:bg-accent-bg',
   '[[data-attention=true]_&]:text-accent-fg',
@@ -21,7 +21,7 @@ const attentionGlyphStyles = mx(
   '[[aria-selected="true"][data-attention=true]_&]:text-accent-fg',
 );
 
-const presenceIconStyles = mx('w-3 h-3');
+const presenceIconStyles = mx('size-3');
 
 const PresenceOne = () => {
   return (
@@ -83,7 +83,7 @@ export type AttentionGlyphProps = {
   containsAttended?: boolean;
   syncing?: boolean;
   presence?: 'none' | 'one' | 'many';
-} & ThemedClassName<Omit<ComponentPropsWithRef<typeof Primitive.span>, 'children'>>;
+} & ThemedClassName<Omit<ComponentPropsWithRef<typeof ark.span>, 'children'>>;
 
 export const AttentionGlyph = forwardRef<HTMLSpanElement, AttentionGlyphProps>(
   ({ presence, attended, syncing, containsAttended, classNames, ...props }, forwardedRef) => {

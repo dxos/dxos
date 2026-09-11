@@ -1,6 +1,6 @@
 //
-// Copyright 2024 DXOS.org
+// Copyright 2026 DXOS.org
 //
 
 export * from './FormFieldSet.tsx';
-export * from './FormFieldSetContainer.tsx';
+export * from './FormFieldSetContext.ts';

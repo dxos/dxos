@@ -2,17 +2,30 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { useCallback, useState, useSyncExternalStore } from 'react';
-import { createPortal } from 'react-dom';
+import React, { useCallback, useSyncExternalStore } from 'react';
 
 import { StatusBar } from '@dxos/plugin-status-bar/components';
 import { type DebugPortController, getDebugPortController } from '@dxos/react-client/devtools';
-import { IconButton, Popover, useTranslation } from '@dxos/react-ui';
-import { useViewState } from '@dxos/react-ui-attention';
+import {
+  FloatingPanel,
+  type FloatingPanelPoint,
+  type FloatingPanelSize,
+  IconButton,
+  useTranslation,
+} from '@dxos/react-ui';
+import { useViewState, useViewStateActions } from '@dxos/react-ui-attention';
 
 import { meta } from '#meta';
 
 import { DEBUG_PANEL_CONTEXT, DebugPanel, debugPanelAspect } from '../DebugPanel/index.ts';
+
+/** Room for the log table to breathe; the console fits itself to whatever it is given. */
+const DEFAULT_SIZE: FloatingPanelSize = { width: 1024, height: 384 };
+
+const MIN_SIZE: FloatingPanelSize = { width: 480, height: 240 };
+
+/** Clear of the status bar the panel opens from. */
+const MARGIN = 8;
 
 export type DebugPanelStatusProps = {
   /** Injectable for stories/tests; defaults to the page-wide controller. */
@@ -20,33 +33,63 @@ export type DebugPanelStatusProps = {
 };
 
 /**
- * Status-bar button opening the debug panel. The red dot marks a live agent debug port — an agent
- * can evaluate code in this page — so it must be visible without opening settings.
+ * Status-bar button opening the debug panel as a floating window over the whole app: dragged,
+ * resized, folded to its title bar as the session needs, and left where it was put across reloads. The
+ * red dot marks a live agent debug port — an agent can evaluate code in this page — so it must be
+ * visible without opening settings.
  */
 export const DebugPanelStatus = ({ controller = getDebugPortController() }: DebugPanelStatusProps) => {
   const { t } = useTranslation(meta.profile.key);
   const subscribe = useCallback((listener: () => void) => controller.subscribe(listener), [controller]);
   const getStatus = useCallback(() => controller.getStatus(), [controller]);
   const status = useSyncExternalStore(subscribe, getStatus);
-  // Controlled so the panel's toolbar close button can dismiss the popover.
-  const [open, setOpen] = useState(false);
-  const { pinned } = useViewState(debugPanelAspect, DEBUG_PANEL_CONTEXT);
-  const handleClose = useCallback(() => setOpen(false), []);
-  // Pinning suppresses only self-dismissal; the trigger and the close button still close it.
-  const handleDismiss = useCallback((event: Event) => pinned && event.preventDefault(), [pinned]);
+  const { position, size = DEFAULT_SIZE } = useViewState(debugPanelAspect, DEBUG_PANEL_CONTEXT);
+  const { update } = useViewStateActions(debugPanelAspect, DEBUG_PANEL_CONTEXT);
+  const handlePositionChangeEnd = useCallback(
+    (next: FloatingPanelPoint) => update((prev) => ({ ...prev, position: next })),
+    [update],
+  );
+  const handleSizeChangeEnd = useCallback(
+    (next: FloatingPanelSize) => update((prev) => ({ ...prev, size: next })),
+    [update],
+  );
+  // First opening: centred above the status bar, where the popover it replaces used to sit. A
+  // persisted position wins from then on.
+  const getAnchorPosition = useCallback(
+    ({ triggerRect, boundaryRect }: { triggerRect: DOMRect | null; boundaryRect: DOMRect | null }) => {
+      if (position) {
+        return position;
+      }
+      const bounds = boundaryRect ?? new DOMRect(0, 0, window.innerWidth, window.innerHeight);
+      const bottom = triggerRect?.top ?? bounds.bottom;
+      return {
+        x: Math.max(0, bounds.left + (bounds.width - size.width) / 2),
+        y: Math.max(0, bottom - size.height - MARGIN),
+      };
+    },
+    [position, size],
+  );
 
   return (
-    <Popover.Root open={open} onOpenChange={setOpen}>
+    <FloatingPanel.Root
+      defaultSize={size}
+      minSize={MIN_SIZE}
+      getAnchorPosition={getAnchorPosition}
+      persistRect
+      closeOnEscape
+      onPositionChangeEnd={handlePositionChangeEnd}
+      onSizeChangeEnd={handleSizeChangeEnd}
+    >
       {/* IconButton is the direct trigger child so the trigger ref/handlers/ARIA attach to the button, not the container. */}
       <StatusBar.Item classNames='relative'>
-        <Popover.Trigger asChild>
+        <FloatingPanel.Trigger asChild>
           <IconButton
             variant='ghost'
             icon='ph--terminal-window--regular'
             iconOnly
             label={status.running ? t('debug-port-status.running.label') : t('open-debug-panel.label')}
           />
-        </Popover.Trigger>
+        </FloatingPanel.Trigger>
         {status.running && (
           <span
             role='status'
@@ -56,32 +99,31 @@ export const DebugPanelStatus = ({ controller = getDebugPortController() }: Debu
           />
         )}
       </StatusBar.Item>
-      {/* Full-width strip pinned to the bottom of the viewport: with side=top / align=center the
-          panel opens horizontally centered above the status bar rather than over the trigger.
-          Portaled to the body so `fixed` measures against the viewport — inside the status bar a
-          transformed ancestor would re-root it next to the trigger. */}
-      {createPortal(
-        <Popover.Anchor asChild>
-          <span role='none' className='fixed inset-x-0 bottom-0 pointer-events-none' />
-        </Popover.Anchor>,
-        document.body,
-      )}
-      <Popover.Portal>
-        <Popover.Content
-          classNames='bg-base-surface border-b-0 rounded-b-none'
-          side='top'
-          align='center'
-          onInteractOutside={handleDismiss}
-          onEscapeKeyDown={handleDismiss}
-        >
-          {/* Definite size: the log table needs room to breathe and the terminal fits itself to
-              whatever it is given, so neither child can size the panel. */}
-          <Popover.Viewport classNames='h-[24rem] w-[64rem] max-w-[calc(100vw-4rem)]'>
-            <DebugPanel onClose={handleClose} />
-          </Popover.Viewport>
-        </Popover.Content>
-      </Popover.Portal>
-    </Popover.Root>
+      <FloatingPanel.Portal>
+        <FloatingPanel.Content>
+          {/* The tab strip lives in the title bar, so the tabs' root spans the header and the body. */}
+          <DebugPanel.Root>
+            <FloatingPanel.Header classNames='pl-1'>
+              {/* The tabs stand where a title would; the title stays as the window's accessible name. */}
+              <DebugPanel.Tablist />
+              <FloatingPanel.DragTrigger>
+                <FloatingPanel.Title classNames='sr-only'>{t('debug-panel.title')}</FloatingPanel.Title>
+              </FloatingPanel.DragTrigger>
+              {/* Fold and restore only: a debug panel over the whole app is a window the reader would resize. */}
+              <FloatingPanel.Control>
+                <FloatingPanel.StageTrigger stage='minimized' />
+                <FloatingPanel.StageTrigger stage='default' />
+                <FloatingPanel.CloseTrigger />
+              </FloatingPanel.Control>
+            </FloatingPanel.Header>
+            <FloatingPanel.Body classNames='grid'>
+              <DebugPanel.Content />
+            </FloatingPanel.Body>
+          </DebugPanel.Root>
+          <FloatingPanel.Resizers />
+        </FloatingPanel.Content>
+      </FloatingPanel.Portal>
+    </FloatingPanel.Root>
   );
 };
 

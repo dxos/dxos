@@ -5,6 +5,7 @@
 export * from './useDensityContext.ts';
 export * from './useElevationContext.ts';
 export * from './useIconHref.ts';
+export * from './usePositioning.ts';
 export * from './useSafeArea.ts';
 export * from './useSafeCollisionPadding.ts';
 export * from './useTranslationsContext.ts';

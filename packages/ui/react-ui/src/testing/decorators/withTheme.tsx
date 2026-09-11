@@ -9,7 +9,7 @@ import { I18nProvider } from 'react-aria-components';
 import { type ThemeMode } from '@dxos/ui-types';
 
 import { Tooltip } from '../../components/index.ts';
-import { type ThemeContextValue, ThemeProvider } from '../../primitives/index.ts';
+import { type ThemeContextValue, ThemeProvider } from '../../providers/index.ts';
 import { defaultTx } from '../../theme/index.ts';
 
 /**

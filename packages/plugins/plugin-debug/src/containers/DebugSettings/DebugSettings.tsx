@@ -11,7 +11,7 @@ import { type ConfigInit, SaveConfig, Storage, defs } from '@dxos/config';
 import { log } from '@dxos/log';
 import { type IdbLogStore, MANUAL_LOG_EXPORT_MAX_BYTES } from '@dxos/log-store-idb';
 import { useClient } from '@dxos/react-client';
-import { IconButton, Input, Select, Toast, useFileDownload, useTranslation } from '@dxos/react-ui';
+import { Field, IconButton, Select, Toast, useFileDownload, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 import { TRACE_ALL_KEY } from '@dxos/tracing';
 import { setDeep } from '@dxos/util';
@@ -157,30 +157,31 @@ export const DebugSettings = ({ settings, onSettingsChange, logStore, onUpload }
     <Form.Root schema={Settings.Settings} values={settings} variant='settings' readonly={!onSettingsChange}>
       <Form.Viewport scroll>
         <Form.Content>
-          <Form.Section title={meta.profile.name ?? meta.profile.key}>
-            <Form.Row label={t('settings.wireframe.label')} description={t('settings.wireframe.description')}>
-              <Input.Root>
-                <Input.Switch
-                  disabled={!onSettingsChange}
-                  checked={settings.wireframe}
-                  onCheckedChange={handleWireframeChange}
-                />
-              </Input.Root>
-            </Form.Row>
-            <Form.Row label={t('settings.trace-all.label')} description={t('settings.trace-all.description')}>
-              <Input.Root>
-                <Input.Switch disabled={!onSettingsChange} checked={traceAll} onCheckedChange={handleTraceAllChange} />
-              </Input.Root>
-            </Form.Row>
-            <Form.Row label={t('settings.tracing-panel.label')} description={t('settings.tracing-panel.description')}>
+          <Form.FieldSet label={meta.profile.name ?? meta.profile.key}>
+            <Form.Field label={t('settings.wireframe.label')} description={t('settings.wireframe.description')}>
+              <Field.Switch
+                disabled={!onSettingsChange}
+                checked={settings.wireframe}
+                onCheckedChange={handleWireframeChange}
+              />
+            </Form.Field>
+            <Form.Field label={t('settings.trace-all.label')} description={t('settings.trace-all.description')}>
+              <Field.Switch disabled={!onSettingsChange} checked={traceAll} onCheckedChange={handleTraceAllChange} />
+            </Form.Field>
+            <Form.Field
+              standalone
+              label={t('settings.tracing-panel.label')}
+              description={t('settings.tracing-panel.description')}
+            >
               <IconButton
                 icon='ph--arrow-square-out--regular'
                 iconOnly
                 label={t('settings.tracing-panel.label')}
                 onClick={handleOpenTracingPanel}
               />
-            </Form.Row>
-            <Form.Row
+            </Form.Field>
+            <Form.Field
+              standalone
               label={t('settings.download-diagnostics.label')}
               description={t('settings.download-diagnostics.description')}
             >
@@ -190,23 +191,27 @@ export const DebugSettings = ({ settings, onSettingsChange, logStore, onUpload }
                 label={t('settings.download-diagnostics.label')}
                 onClick={handleDownload}
               />
-            </Form.Row>
-            <Form.Row label={t('settings.download-logs.label')} description={t('settings.download-logs.description')}>
+            </Form.Field>
+            <Form.Field
+              standalone
+              label={t('settings.download-logs.label')}
+              description={t('settings.download-logs.description')}
+            >
               <IconButton
                 icon='ph--download-simple--regular'
                 iconOnly
                 label={t('settings.download-logs.label')}
                 onClick={handleDownloadLogs}
               />
-            </Form.Row>
-            <Form.Row label={t('settings.repair.label')} description={t('settings.repair.description')}>
+            </Form.Field>
+            <Form.Field standalone label={t('settings.repair.label')} description={t('settings.repair.description')}>
               <IconButton
                 icon='ph--first-aid-kit--regular'
                 iconOnly
                 label={t('settings.repair.label')}
                 onClick={handleRepair}
               />
-            </Form.Row>
+            </Form.Field>
 
             {/* TODO(burdon): Move to layout? */}
             {toast && (
@@ -218,7 +223,7 @@ export const DebugSettings = ({ settings, onSettingsChange, logStore, onUpload }
               </Toast.Root>
             )}
 
-            <Form.Row
+            <Form.Field
               label={t('settings.choose-storage-adaptor.label')}
               description={t('settings.choose-storage-adaptor.description')}
             >
@@ -241,12 +246,11 @@ export const DebugSettings = ({ settings, onSettingsChange, logStore, onUpload }
                         </Select.Option>
                       ))}
                     </Select.Viewport>
-                    <Select.Arrow />
                   </Select.Content>
                 </Select.Portal>
               </Select.Root>
-            </Form.Row>
-          </Form.Section>
+            </Form.Field>
+          </Form.FieldSet>
 
           <DebugPortSettings disabled={!onSettingsChange} />
         </Form.Content>

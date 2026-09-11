@@ -11,14 +11,16 @@ import * as MarkdownCapabilities from '@dxos/plugin-markdown/MarkdownCapabilitie
 import { Repo, TaskSet } from '@dxos/types';
 
 import { GITHUB_SOURCE } from '../constants.ts';
-import { githubReferences, referenceUrl } from '../extensions/index.ts';
+import { githubLinks, githubReferences, referenceUrl } from '../extensions/index.ts';
 
 /** `owner/repo` — what `sync` writes as the name of the TaskSet mirroring a repository. */
 const REPO_NAME = /^[\w.-]+\/[\w.-]+$/;
 
 /**
  * `#123` in a document resolves against the repository the document's project names: this plugin
- * owns that knowledge, so the decoration is contributed rather than built into the editor.
+ * owns that knowledge, so the decoration is contributed rather than built into the editor. A full
+ * pull-request or issue URL needs no repository and becomes a chip whose popover this plugin's
+ * link resolver answers.
  *
  * Ambiguity is answered by declining. A space with several repositories and no project naming one
  * has no single meaning for a bare number, so the reference is left as text rather than guessed at.
@@ -26,23 +28,28 @@ const REPO_NAME = /^[\w.-]+\/[\w.-]+$/;
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     return Capability.contribute(MarkdownCapabilities.ExtensionProvider, [
-      ({ document: doc, viewMode }) => {
+      ({ document: doc, subject, viewMode }) => {
         // Source view shows the document's own text; a decoration there would hide what it is.
-        if (viewMode === 'source' || !doc) {
+        if (viewMode === 'source') {
           return undefined;
         }
 
-        const db = Obj.getDatabase(doc);
-        if (!db) {
-          return undefined;
-        }
-
-        return githubReferences({
-          resolve: (number) => {
-            const repo = resolveRepo(db, doc);
-            return repo ? referenceUrl(repo, number) : undefined;
-          },
-        });
+        // A full URL needs no object: a task's description or an outline gets the chip too. A bare
+        // `#123` resolves against the repository of the project owning the edited object, so it
+        // needs one — the document, or whatever else the editor edits.
+        const object = doc ?? subject;
+        const db = object && Obj.getDatabase(object);
+        return [
+          githubLinks(),
+          object && db
+            ? githubReferences({
+                resolve: (number) => {
+                  const repo = resolveRepo(db, object);
+                  return repo ? referenceUrl(repo, number) : undefined;
+                },
+              })
+            : [],
+        ];
       },
     ]);
   }),

@@ -2,10 +2,12 @@
 // Copyright 2023 DXOS.org
 //
 
+import { create } from '@bufbuild/protobuf';
 import React, { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 
 import { DEFAULT_CLIENT_CHANNEL, DEFAULT_SHELL_CHANNEL } from '@dxos/client-protocol';
+import { AppContextRequestSchema } from '@dxos/protocols/buf/dxos/iframe_pb';
 import { AgentHostingProvider, ClientProvider, ClientServicesProxy, Config, ShellDisplay } from '@dxos/react-client';
 import { Button, Clipboard, Dialog, ThemeProvider, Tooltip, useTranslation } from '@dxos/react-ui';
 import { defaultTx } from '@dxos/react-ui';
@@ -49,7 +51,9 @@ export const runShell = async (config: Config = new Config()) => {
     createRoot(document.getElementById('root')!).render(
       <StrictMode>
         <ThemeProvider tx={defaultTx} resourceExtensions={translations}>
-          <Fallback onClose={() => runtime.setAppContext({ display: ShellDisplay.NONE })} />
+          <Fallback
+            onClose={() => runtime.setAppContext(create(AppContextRequestSchema, { display: ShellDisplay.NONE }))}
+          />
         </ThemeProvider>
       </StrictMode>,
     );

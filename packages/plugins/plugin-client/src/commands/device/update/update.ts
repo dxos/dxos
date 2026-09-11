@@ -10,6 +10,8 @@ import * as Options from 'effect/unstable/cli/Flag';
 import { CommandConfig } from '@dxos/cli-util';
 import { print } from '@dxos/cli-util';
 import { ClientService } from '@dxos/client';
+import { buf, requirePublicKey } from '@dxos/protocols/buf';
+import { DeviceProfileDocumentSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
 import { printDevice } from '../util.ts';
 
@@ -26,10 +28,7 @@ export const handler = Effect.fn(function* ({ label }: { label: string }) {
     return;
   }
 
-  const updatedProfile = {
-    ...device.profile,
-    label,
-  };
+  const updatedProfile = buf.create(DeviceProfileDocumentSchema, { ...device.profile, label });
 
   const devicesService = client.services.services.DevicesService;
   if (!devicesService) {
@@ -47,7 +46,7 @@ export const handler = Effect.fn(function* ({ label }: { label: string }) {
     yield* Console.log(
       JSON.stringify(
         {
-          deviceKey: updatedDevice.deviceKey.toHex(),
+          deviceKey: requirePublicKey(updatedDevice.deviceKey).toHex(),
           profile: updatedDevice.profile,
         },
         null,

@@ -5,7 +5,7 @@
 import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 
-import { OutlineOperation, TaskOperation } from '#types';
+import { OutlineOperation, RemoteSessionOperation, TaskOperation } from '#types';
 
 export const handlers = OperationHandlerSet.lazy([
   OutlineOperation.ConvertToTask.pipe(Operation.lazyHandler(() => import('./convert-to-task.ts'))),
@@ -15,10 +15,12 @@ export const handlers = OperationHandlerSet.lazy([
   TaskOperation.DeleteTask.pipe(Operation.lazyHandler(() => import('./delete-task.ts'))),
   OutlineOperation.GetOutline.pipe(Operation.lazyHandler(() => import('./get-outline.ts'))),
   TaskOperation.ListMilestones.pipe(Operation.lazyHandler(() => import('./list-milestones.ts'))),
+  RemoteSessionOperation.ListSessions.pipe(Operation.lazyHandler(() => import('./list-sessions.ts'))),
   TaskOperation.ListTasks.pipe(Operation.lazyHandler(() => import('./list-tasks.ts'))),
   TaskOperation.MoveMilestone.pipe(Operation.lazyHandler(() => import('./move-milestone.ts'))),
   TaskOperation.MoveTask.pipe(Operation.lazyHandler(() => import('./move-task.ts'))),
   OutlineOperation.QuickJournalEntry.pipe(Operation.lazyHandler(() => import('./quick-entry.ts'))),
+  RemoteSessionOperation.RecordSession.pipe(Operation.lazyHandler(() => import('./report-session.ts'))),
   TaskOperation.RestoreTasks.pipe(Operation.lazyHandler(() => import('./restore-tasks.ts'))),
   OutlineOperation.UpdateOutline.pipe(Operation.lazyHandler(() => import('./update-outline.ts'))),
   TaskOperation.UpdateTask.pipe(Operation.lazyHandler(() => import('./update-task.ts'))),

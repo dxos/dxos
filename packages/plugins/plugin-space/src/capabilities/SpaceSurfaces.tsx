@@ -15,7 +15,7 @@ import * as AppSpace from '@dxos/app-toolkit/AppSpace';
 import { useActiveSpace, useHomeVisibility, useSettingsSpace, useSettingsSpaceProperties } from '@dxos/app-toolkit/ui';
 import { Annotation, Obj, Type } from '@dxos/echo';
 import { useType } from '@dxos/echo-react';
-import { MembershipPolicy } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { MembershipPolicy } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { type Space, SpaceState, getSpace, isSpace, useSpaces } from '@dxos/react-client/echo';
 import { getTypeURIFromQuery } from '@dxos/schema';
 

@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+import { ark } from '@ark-ui/react/factory';
 import {
   type Edge,
   attachClosestEdge,
@@ -16,9 +17,6 @@ import {
 import { preserveOffsetOnSource } from '@atlaskit/pragmatic-drag-and-drop/element/preserve-offset-on-source';
 import { setCustomNativeDragPreview } from '@atlaskit/pragmatic-drag-and-drop/element/set-custom-native-drag-preview';
 import { type DropTargetRecord } from '@atlaskit/pragmatic-drag-and-drop/types';
-import { composeRefs } from '@radix-ui/react-compose-refs';
-import { Primitive } from '@radix-ui/react-primitive';
-import { Slot } from '@radix-ui/react-slot';
 import React, {
   type PropsWithChildren,
   useCallback,
@@ -30,6 +28,7 @@ import React, {
 } from 'react';
 import { createPortal } from 'react-dom';
 
+import { composeRefs } from '@dxos/react-hooks';
 import { type ThemedClassName } from '@dxos/react-ui';
 import { composableProps, slottable } from '@dxos/react-ui';
 import {
@@ -102,7 +101,6 @@ const MosaicTile = slottable<HTMLDivElement, MosaicTileProps>(
     },
     forwardedRef,
   ) => {
-    const Comp = asChild ? Slot : Primitive.div;
     const rootRef = useRef<HTMLDivElement>(null);
     const composedRef = composeRefs<HTMLDivElement>(rootRef, forwardedRef);
 
@@ -281,7 +279,8 @@ const MosaicTile = slottable<HTMLDivElement, MosaicTileProps>(
         minSize={minSize}
         maxSize={maxSize}
       >
-        <Comp
+        <ark.div
+          asChild={asChild}
           {...rest}
           {...(bounded && resizeAttributes)}
           {...(bounded && { style: { ...rest.style, ...sizeStyles } })}
@@ -300,14 +299,15 @@ const MosaicTile = slottable<HTMLDivElement, MosaicTileProps>(
           ref={composedRef}
         >
           {children}
-        </Comp>
+        </ark.div>
 
         {/* Dragging preview. Cloned at the source size; the live tile is removed from the list while
             dragging, so this clone is what the user sees following the cursor. NOTE: external SVG sprite
             `<use>` icons do not rasterize here — use inline SVG (see Mosaic.DragHandle) for drag affordances. */}
         {state.type === 'preview' &&
           createPortal(
-            <Comp
+            <ark.div
+              asChild={asChild}
               {...{
                 // NOTE: Use to control appearance while dragging.
                 [`data-${MOSAIC_TILE_STATE_ATTR}`]: state.type,
@@ -319,7 +319,7 @@ const MosaicTile = slottable<HTMLDivElement, MosaicTileProps>(
               }}
             >
               {children}
-            </Comp>,
+            </ark.div>,
             state.container,
           )}
       </MosaicTileContextProvider>

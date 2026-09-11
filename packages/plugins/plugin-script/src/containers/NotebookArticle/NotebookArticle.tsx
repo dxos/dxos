@@ -20,7 +20,7 @@ import { QueryBuilder } from '@dxos/echo-query';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import * as Graph from '@dxos/plugin-explorer/Graph';
-import { DropdownMenu, IconButton, Panel, Toolbar, useTranslation } from '@dxos/react-ui';
+import { IconButton, Menu, Panel, Toolbar, useTranslation } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
 import { Text, ViewModel } from '@dxos/schema';
 import { isNonNullable } from '@dxos/util';
@@ -177,12 +177,12 @@ export const NotebookArticle = ({ role, subject: notebook, attendableId, env }: 
     <Panel.Root role={role} classNames='dx-document'>
       <Panel.Toolbar asChild>
         <Toolbar.Root disabled={!hasAttention}>
-          <DropdownMenu.Root>
-            <DropdownMenu.Trigger asChild>
+          <Menu.Root>
+            <Menu.Trigger asChild>
               <IconButton icon='ph--plus--regular' iconOnly label={t('notebook-cell-insert.label')} />
-            </DropdownMenu.Trigger>
+            </Menu.Trigger>
             <NotebookMenu onCellInsert={handleCellInsert} />
-          </DropdownMenu.Root>
+          </Menu.Root>
           <Toolbar.IconButton
             icon='ph--play--fill'
             iconOnly

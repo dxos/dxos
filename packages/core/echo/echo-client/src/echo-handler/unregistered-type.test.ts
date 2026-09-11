@@ -75,9 +75,9 @@ describe('object whose type is absent from the registry', () => {
 
     // There is no schema to validate against, so a value the schema would reject is written as-is.
     Obj.update(object, (object) => {
-      (object as any).name = 42;
+      (object as Obj.Any).name = 42;
     });
-    expect((object as any).name).toEqual(42);
+    expect((object as Obj.Any).name).toEqual(42);
   });
 
   test('re-registering the type restores validation', async () => {
@@ -89,7 +89,7 @@ describe('object whose type is absent from the registry', () => {
     expect(Obj.getType(object)).toBe(VersionedV1);
     expect(() =>
       Obj.update(object, (object) => {
-        (object as any).name = 42;
+        (object as Obj.Any).name = 42;
       }),
     ).toThrow();
     Obj.update(object, (object) => {

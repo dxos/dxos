@@ -19,7 +19,7 @@ import { useActiveSpace, useProgressMonitors } from '@dxos/app-toolkit/ui';
 import * as Project from '@dxos/compute/Project';
 import { Feed, Filter, Obj, Query, Ref, Tag } from '@dxos/echo';
 import { EffectEx, createKvsStore } from '@dxos/effect';
-import { DXN } from '@dxos/keys';
+import { DXN, PublicKey } from '@dxos/keys';
 import { AccessToken, Connection, Cursor } from '@dxos/link';
 import { log } from '@dxos/log';
 import * as Assistant from '@dxos/plugin-assistant/Assistant';
@@ -494,7 +494,7 @@ const ProcessModuleContainer = ({ space }: { space: Space }) => {
         <JsonHighlighter
           classNames='text-xs'
           data={{
-            identity: identity?.identityKey.truncate(),
+            identity: identity?.identityKey && PublicKey.from(identity.identityKey.data).truncate(),
             runs,
             mailbox: mailbox ? 1 : 0,
             messages: messages.length,

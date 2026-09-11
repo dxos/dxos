@@ -6,7 +6,7 @@ import { format as formatDate } from 'date-fns';
 import React, { type MouseEvent, forwardRef, useCallback } from 'react';
 
 import { Obj } from '@dxos/echo';
-import { Card, Icon, Input, useTranslation } from '@dxos/react-ui';
+import { Card, Field, Icon, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';
 import { Segment } from '#types';
@@ -42,7 +42,7 @@ type FlightEditableCardProps = {
 /**
  * Editable card variant for a flight Segment. Surfaces only the most important fields:
  * kind icon + title + delete in the toolbar, route and departure date in the content.
- * The departure date is always editable via `Input.DateTime`.
+ * The departure date is always editable via `Field.DateTime`.
  */
 export const FlightEditableCard = forwardRef<HTMLDivElement, FlightEditableCardProps>(
   ({ segment, onAction }, forwardedRef) => {
@@ -92,13 +92,13 @@ export const FlightEditableCard = forwardRef<HTMLDivElement, FlightEditableCardP
             <Card.Block>
               <Icon icon='ph--calendar--regular' />
             </Card.Block>
-            <Input.Root>
-              <Input.DateTime
+            <Field.Root>
+              <Field.DateTime
                 aria-label={t('segment.depart.placeholder')}
                 value={isoToLocalDateTime(departAt)}
                 onValueChange={handleDepartChange}
               />
-            </Input.Root>
+            </Field.Root>
           </Card.Row>
         </Card.Body>
       </Card.Root>

@@ -7,7 +7,7 @@ import React, { Fragment, forwardRef } from 'react';
 import { type ThemedClassName } from '../../util/index.ts';
 import { IconButton, type IconButtonProps } from '../Button/index.ts';
 import { Icon } from '../Icon/index.ts';
-import { DropdownMenu } from '../Menu/index.ts';
+import { Menu } from '../Menu/index.ts';
 
 /**
  * One entry in a {@link MenuButton}'s menu.
@@ -20,7 +20,7 @@ export type MenuButtonItem =
   | { type: 'group'; label: string }
   | { type: 'separator' }
   /**
-   * Single-select entry with a trailing check. `DropdownMenu.RadioItem` renders a plain item with
+   * Single-select entry with a trailing check. `Menu.RadioItem` renders a plain item with
    * no radio semantics, so single-select is modelled here as an item plus an explicit check.
    */
   | { type: 'option'; label: string; selected: boolean; onSelect: () => void; testId?: string }
@@ -40,13 +40,13 @@ export type MenuButtonProps = ThemedClassName<
  * and its settings make).
  */
 export const MenuButton = forwardRef<HTMLButtonElement, MenuButtonProps>(({ items, ...props }, forwardedRef) => (
-  <DropdownMenu.Root>
-    <DropdownMenu.Trigger asChild>
+  <Menu.Root>
+    <Menu.Trigger asChild>
       <IconButton {...props} ref={forwardedRef} />
-    </DropdownMenu.Trigger>
-    <DropdownMenu.Portal>
-      <DropdownMenu.Content>
-        <DropdownMenu.Viewport>
+    </Menu.Trigger>
+    <Menu.Portal>
+      <Menu.Content>
+        <Menu.Viewport>
           {items.map((item, index) => (
             // Index keys: the entries are a positional list with no identity of their own, and a
             // label repeats across groups (two devices may share a name).
@@ -54,11 +54,11 @@ export const MenuButton = forwardRef<HTMLButtonElement, MenuButtonProps>(({ item
               <MenuButtonEntry item={item} />
             </Fragment>
           ))}
-        </DropdownMenu.Viewport>
-        <DropdownMenu.Arrow />
-      </DropdownMenu.Content>
-    </DropdownMenu.Portal>
-  </DropdownMenu.Root>
+        </Menu.Viewport>
+        <Menu.Arrow />
+      </Menu.Content>
+    </Menu.Portal>
+  </Menu.Root>
 ));
 
 MenuButton.displayName = 'MenuButton';
@@ -66,15 +66,15 @@ MenuButton.displayName = 'MenuButton';
 const MenuButtonEntry = ({ item }: { item: MenuButtonItem }) => {
   switch (item.type) {
     case 'group':
-      return <DropdownMenu.GroupLabel>{item.label}</DropdownMenu.GroupLabel>;
+      return <Menu.GroupLabel>{item.label}</Menu.GroupLabel>;
 
     case 'separator':
-      return <DropdownMenu.Separator />;
+      return <Menu.Separator />;
 
     case 'option':
       return (
         // `onSelect`, not `onClick`, so keyboard activation works.
-        <DropdownMenu.Item
+        <Menu.Item
           classNames='gap-2'
           role='menuitemradio'
           aria-checked={item.selected}
@@ -83,22 +83,22 @@ const MenuButtonEntry = ({ item }: { item: MenuButtonItem }) => {
         >
           <span className='grow truncate'>{item.label}</span>
           {item.selected && <Icon icon='ph--check--regular' size={4} />}
-        </DropdownMenu.Item>
+        </Menu.Item>
       );
 
     case 'checkbox':
       return (
-        <DropdownMenu.CheckboxItem
+        <Menu.CheckboxItem
           classNames='gap-2'
           checked={item.checked}
           data-testid={item.testId}
           onCheckedChange={item.onCheckedChange}
         >
           <span className='grow truncate'>{item.label}</span>
-          <DropdownMenu.ItemIndicator asChild>
+          <Menu.ItemIndicator asChild>
             <Icon icon='ph--check--regular' size={4} />
-          </DropdownMenu.ItemIndicator>
-        </DropdownMenu.CheckboxItem>
+          </Menu.ItemIndicator>
+        </Menu.CheckboxItem>
       );
   }
 };

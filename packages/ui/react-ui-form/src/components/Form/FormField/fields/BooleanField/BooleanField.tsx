@@ -4,25 +4,36 @@
 
 import React, { useCallback } from 'react';
 
-import { Input, type SwitchProps } from '@dxos/react-ui';
+import { Field, type SwitchProps } from '@dxos/react-ui';
 
 import { type FormFieldRendererProps } from '#types';
 
-import { FormRow } from '../../FormRow.tsx';
+import { FormStaticValue } from '../../FormField.tsx';
+import { presentationFor } from '../../presentation.tsx';
 
-export const BooleanField = ({ type, readonly, onValueChange, ...props }: FormFieldRendererProps<boolean>) => {
+export const BooleanField = ({
+  type,
+  format,
+  readonly,
+  presentation,
+  getValue,
+  onValueChange,
+}: FormFieldRendererProps<boolean>) => {
   const handleChange = useCallback<NonNullable<SwitchProps['onCheckedChange']>>(
     (value) => onValueChange?.(type, value),
     [type, onValueChange],
   );
+  const value = getValue();
+  if (presentationFor(presentation).isStatic) {
+    return <FormStaticValue value={value} format={format} />;
+  }
 
   return (
-    <FormRow<boolean> readonly={readonly} {...props}>
-      {({ value }) => (
-        <Input.Block>
-          <Input.Switch disabled={!!readonly} checked={value} onCheckedChange={handleChange} />
-        </Input.Block>
-      )}
-    </FormRow>
+    <Field.Block>
+      <Field.Switch disabled={!!readonly} checked={value} onCheckedChange={handleChange} />
+    </Field.Block>
   );
 };
+
+// A toggle reads with its text beside it; the row lays the label there.
+BooleanField.labelPlacement = 'beside' as const;

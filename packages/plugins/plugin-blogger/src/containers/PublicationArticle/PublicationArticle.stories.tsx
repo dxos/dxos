@@ -35,7 +35,8 @@ const makeStoryPublication = (): Blog.Publication => {
       description: `Summary for post ${i + 1}.`,
     });
     Obj.update(publication, (publication) => {
-      publication.posts = [...(publication.posts ?? []), Ref.make(post)];
+      publication.posts ??= [];
+      publication.posts.push(Ref.make(post));
     });
   }
 

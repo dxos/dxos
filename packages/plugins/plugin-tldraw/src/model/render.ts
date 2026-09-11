@@ -163,6 +163,8 @@ export const renderObject = (object: Scene.WorldObject, options: RenderOptions):
           start: element.start ? point(element.start) : undefined,
           end: element.end ? point(element.end) : undefined,
           text: element.text,
+          head: element.head,
+          tail: element.tail,
           ...style(element),
         };
         builder.arrow(props);

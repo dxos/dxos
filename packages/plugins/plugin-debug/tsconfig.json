@@ -53,6 +53,15 @@
       "path": "../../common/util"
     },
     {
+      "path": "../../core/compute/agent-runtime"
+    },
+    {
+      "path": "../../core/compute/ai"
+    },
+    {
+      "path": "../../core/compute/assistant"
+    },
+    {
       "path": "../../core/compute/assistant-toolkit"
     },
     {
@@ -90,6 +99,9 @@
     },
     {
       "path": "../../sdk/app-toolkit"
+    },
+    {
+      "path": "../../sdk/client-protocol"
     },
     {
       "path": "../../sdk/config"
@@ -134,9 +146,6 @@
       "path": "../../ui/react-ui-syntax-highlighter"
     },
     {
-      "path": "../../ui/react-ui-tabs"
-    },
-    {
       "path": "../../ui/react-ui-terminal"
     },
     {
@@ -152,10 +161,16 @@
       "path": "../plugin-attention"
     },
     {
+      "path": "../plugin-chess"
+    },
+    {
       "path": "../plugin-client"
     },
     {
       "path": "../plugin-connector"
+    },
+    {
+      "path": "../plugin-game"
     },
     {
       "path": "../plugin-google"
@@ -173,6 +188,12 @@
       "path": "../plugin-progress"
     },
     {
+      "path": "../plugin-projects"
+    },
+    {
+      "path": "../plugin-sandbox"
+    },
+    {
       "path": "../plugin-sheet"
     },
     {
@@ -180,6 +201,9 @@
     },
     {
       "path": "../plugin-status-bar"
+    },
+    {
+      "path": "../plugin-tasks"
     },
     {
       "path": "../plugin-testing"
