@@ -1,0 +1,129 @@
+name: Assistant evals
+
+# `ASSISTANT_EVALS_ANTHROPIC_API_KEY` is a dedicated key with its own spend limit, restricted in
+# Depot's secret settings to this workflow file on `main`.
+
+# TODO(wittjosiah): Once a few weeks of nightly baseline exist, add an advisory `pull_request` job
+# that runs the cheap, deterministically graded scenarios (smoke, basic, database, markdown) on
+# changes under the assistant packages, skills and prompts.
+on:
+  schedule:
+    - cron: '0 3 * * *'
+
+  workflow_dispatch:
+    inputs:
+      models:
+        type: string
+        description: 'DX_EVAL_MODELS: comma-separated model variants for the scenarios that take them'
+        default: ''
+
+permissions:
+  contents: read
+  packages: read
+
+env:
+  # Bound once here rather than at the setup call site: a composite action cannot read the
+  # `secrets` context, but it does inherit the process environment.
+  MOON_CACHE_CA_PEM: ${{ secrets.MOON_CACHE_CA_PEM }}
+  MOON_CACHE_CLIENT_PEM: ${{ secrets.MOON_CACHE_CLIENT_PEM }}
+  MOON_CACHE_CLIENT_KEY: ${{ secrets.MOON_CACHE_CLIENT_KEY }}
+
+concurrency:
+  group: >-
+    ${{ github.workflow }}-${{ github.event_name }}-${{ github.ref
+    }}-${{ github.event_name == 'workflow_dispatch' && github.run_id || '' }}
+  cancel-in-progress: false
+
+jobs:
+  evals:
+    runs-on: depot-ubuntu-24.04-8
+    container:
+      image: ghcr.io/dxos/gh-actions:24.11.1
+      credentials:
+        username: dxos-bot
+        password: ${{ secrets.GITHUB_TOKEN }}
+    timeout-minutes: 120
+    defaults:
+      run:
+        working-directory: packages/core/compute/assistant-evals
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+          filter: blob:none
+          persist-credentials: false
+
+      # `depot ci run` patches the caller's uncommitted changes in after checkout; nothing from the
+      # tree runs before this, so a patched Setup cannot pass it.
+      - name: Refuse a patched checkout
+        env:
+          EXPECTED_SHA: ${{ github.sha }}
+        run: |
+          if [ -n "$(git status --porcelain)" ]; then
+            echo "::error::The checkout has uncommitted changes; this workflow only runs committed code."
+            git status --short
+            exit 1
+          fi
+          if [ "$(git rev-parse HEAD)" != "$EXPECTED_SHA" ]; then
+            echo "::error::HEAD $(git rev-parse HEAD) is not the event's commit $EXPECTED_SHA."
+            exit 1
+          fi
+
+      - name: Setup
+        uses: ./.depot/actions/setup
+
+      # The MCP server eval drives the `claude` CLI as its client.
+      - name: Install Claude Code
+        run: |
+          npm install --prefix "$RUNNER_TEMP/claude" @anthropic-ai/claude-code@2.1.259
+          echo "$RUNNER_TEMP/claude/node_modules/.bin" >> "$GITHUB_PATH"
+
+      - name: Run evals
+        id: evals
+        continue-on-error: true
+        env:
+          DX_ANTHROPIC_API_KEY: ${{ secrets.ASSISTANT_EVALS_ANTHROPIC_API_KEY }}
+          DX_EVAL_MODELS: ${{ inputs.models }}
+          DX_EVAL_RUN_ID: ${{ github.run_id }}-${{ github.run_attempt }}
+          DX_EVAL_RUN_NAME: ${{ github.ref_name }}
+          DX_EVALS_POSTHOG_API_KEY: ${{ secrets.COMPOSER_APP_PROD_POSTHOG_API_KEY }}
+        run: |
+          if [ -z "$DX_ANTHROPIC_API_KEY" ]; then
+            echo "::error::ASSISTANT_EVALS_ANTHROPIC_API_KEY is not available to this run. It is scoped to this workflow on main; a dispatch of another branch runs without it."
+            exit 1
+          fi
+          moon run assistant-evals:evals
+
+      - name: Summarize
+        id: summary
+        if: always() && steps.evals.outcome != 'skipped'
+        env:
+          DX_EVAL_RUN_ID: ${{ github.run_id }}-${{ github.run_attempt }}
+          DX_EVAL_RUN_NAME: ${{ github.ref_name }}
+          DX_EVALS_POSTHOG_API_KEY: ${{ secrets.COMPOSER_APP_PROD_POSTHOG_API_KEY }}
+        run: |
+          if [ ! -f node_modules/.evalite/cache.sqlite ]; then
+            echo "::warning::evalite wrote no store; the run did not start."
+            echo "exported=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          mkdir -p out
+          moon run assistant-evals:evals-report
+          cat out/summary.md >> "$GITHUB_STEP_SUMMARY"
+          pnpm exec evalite export --output out/ui || echo "::warning::evalite's static UI export failed."
+          echo "exported=true" >> "$GITHUB_OUTPUT"
+
+      - name: Upload results
+        if: always() && steps.summary.outputs.exported == 'true'
+        uses: actions/upload-artifact@v7
+        with:
+          name: assistant-evals
+          path: packages/core/compute/assistant-evals/out
+          retention-days: 30
+
+      - name: Fail on a red run
+        if: always() && steps.evals.outcome != 'success'
+        run: |
+          echo "::error::The eval run failed; see the summary above and the assistant-evals artifact."
+          exit 1
