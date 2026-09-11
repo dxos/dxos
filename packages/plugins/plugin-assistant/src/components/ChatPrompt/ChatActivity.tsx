@@ -13,6 +13,10 @@ import { meta } from '#meta';
 
 const CHAT_ACTIVITY_NAME = 'Chat.Activity';
 
+const SECOND = 1_000;
+const MINUTE = 60 * SECOND;
+const HOUR = 60 * MINUTE;
+
 const activityLabelKey = (phase: RequestPhaseName): string => `activity.${phase}.label`;
 
 /**
@@ -25,8 +29,8 @@ export type ChatActivityProps = ThemedClassName<{
   activity?: Trace.PayloadType<typeof RequestPhase>;
   /**
    * Epoch milliseconds the agent is scheduled to wake at, when an alarm is pending. Rendered as a
-   * counting-down line while the agent is otherwise idle; a live phase supersedes it, since a
-   * running turn is the more immediate answer to "what is it doing".
+   * counting-down line while the agent is idle or reports `sleeping`; any other live phase
+   * supersedes it, since a running turn is the more immediate answer to "what is it doing".
    */
   wakeAt?: number;
 }>;
@@ -44,12 +48,19 @@ export type ChatActivityProps = ThemedClassName<{
  */
 export const ChatActivity = ({ classNames, activity, wakeAt }: ChatActivityProps) => {
   const { t } = useTranslation(meta.profile.key);
-  const remaining = useCountdown(activity ? undefined : wakeAt);
-  const label = activity
-    ? t(activityLabelKey(activity.phase), { detail: activity.detail ?? '' })
-    : remaining !== undefined
+  // `sleeping` is the agent saying the turn is over and only the alarm is left, so the countdown
+  // replaces it rather than competing with it.
+  const waking = !activity || activity.phase === 'sleeping';
+  const remaining = useCountdown(waking ? wakeAt : undefined);
+  // A wake time in the past is an alarm that has already fired: its record outlives the firing (and
+  // the projection that drops it can lag a beat), so a countdown driven off it alone would sit on
+  // "Waking up" forever after the agent had moved on.
+  const counting = remaining !== undefined && remaining >= SECOND;
+  const label = waking
+    ? counting
       ? formatWaking(t, remaining)
-      : undefined;
+      : activity && t(activityLabelKey(activity.phase))
+    : t(activityLabelKey(activity.phase), { detail: activity.detail ?? '' });
   if (!label) {
     return null;
   }
@@ -85,10 +96,6 @@ export const ChatActivity = ({ classNames, activity, wakeAt }: ChatActivityProps
 
 ChatActivity.displayName = CHAT_ACTIVITY_NAME;
 
-const SECOND = 1_000;
-const MINUTE = 60 * SECOND;
-const HOUR = 60 * MINUTE;
-
 /**
  * Milliseconds until `wakeAt`, re-read every second, or `undefined` when nothing is scheduled.
  *
@@ -117,9 +124,6 @@ const useCountdown = (wakeAt?: number): number | undefined => {
  * not become more legible counted in seconds.
  */
 const formatWaking = (t: (key: string, options?: Record<string, unknown>) => string, remaining: number): string => {
-  if (remaining < SECOND) {
-    return t('activity.waking.now.label');
-  }
   if (remaining < MINUTE) {
     return t('activity.waking.seconds.label', { count: Math.round(remaining / SECOND) });
   }

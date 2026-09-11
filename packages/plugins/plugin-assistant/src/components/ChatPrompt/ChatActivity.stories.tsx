@@ -72,6 +72,20 @@ export const Waking: StoryObj<typeof meta> = {
   },
 };
 
+/**
+ * The agent reporting `sleeping` with the alarm already fired: its record outlives the firing, so the
+ * line falls back to naming the wait rather than counting down to a time that has passed.
+ */
+export const SleepingPastWake: Story = {
+  args: {
+    activity: { phase: 'sleeping' },
+    wakeAt: Date.now() - 5_000,
+  },
+  play: async ({ canvasElement }) => {
+    await expect(within(canvasElement).getByTestId('assistant.chat-activity')).toHaveTextContent('Waiting to wake');
+  },
+};
+
 /** A running turn supersedes a pending alarm: the turn is the more immediate answer. */
 export const RunningWithAlarm: Story = {
   args: {

@@ -135,7 +135,7 @@ export const translations: Resource[] = [
         'activity.waking.minutes.label_other': 'Waking up in {{count}} minutes',
         'activity.waking.hours.label_one': 'Waking up in {{count}} hour',
         'activity.waking.hours.label_other': 'Waking up in {{count}} hours',
-        'activity.waking.now.label': 'Waking up',
+        'activity.sleeping.label': 'Waiting to wake',
         'activity.attempt': 'attempt {{attempt}}',
 
         'assistant-dialog.title': 'Assistant',

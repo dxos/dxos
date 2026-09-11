@@ -88,6 +88,11 @@ export const RequestPhaseName = Schema.Literals([
   'generating',
   /** A tool the model called is executing; `detail` carries the tool's name. */
   'calling-tool',
+  /**
+   * The turn is over and the process is resident only to fire a pending alarm. Reported so the line
+   * stops naming the stage the last turn ended in, which reads as a request that is still working.
+   */
+  'sleeping',
 ]);
 export type RequestPhaseName = Schema.Schema.Type<typeof RequestPhaseName>;
 
