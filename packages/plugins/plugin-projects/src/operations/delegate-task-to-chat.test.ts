@@ -146,6 +146,40 @@ describe('ProjectOperation.DelegateTaskToChat', () => {
     // Nothing was started: the refusal happens before any task is marked or any chat exists.
     expect([voyage.status, harbour.status]).toEqual(['todo', 'todo']);
   });
+
+  test('skips a task the agent already holds, and refuses a list of nothing else', async ({ expect }) => {
+    await using harness = await setup();
+    const space = AppSpace.getDefaultSpace(harness.get(ClientCapabilities.Client));
+    invariant(space, 'Expected a default space.');
+
+    const held = space.db.add(
+      Task.make({ title: 'Roast the beans', status: 'started', assignee: { role: 'assistant' } }),
+    );
+    const fresh = space.db.add(Task.make({ title: 'Grind the beans', status: 'todo' }));
+    await space.db.flush();
+
+    // A second invocation over a row already underway must not fork it into another session.
+    const { chat } = await harness.runPromise(
+      Operation.invoke(
+        ProjectOperation.DelegateTaskToChat,
+        { tasks: [Ref.make(held), Ref.make(fresh)] },
+        { spaceId: space.id },
+      ),
+    );
+    expect(chat.tasks.map((ref) => Task.refEntityId(ref))).toEqual([fresh.id]);
+    expect(fresh.status).toBe('started');
+
+    // Now both are held, so the same call has nothing to hand over.
+    await expect(
+      harness.runPromise(
+        Operation.invoke(
+          ProjectOperation.DelegateTaskToChat,
+          { tasks: [Ref.make(held), Ref.make(fresh)] },
+          { spaceId: space.id },
+        ),
+      ),
+    ).rejects.toThrow();
+  });
 });
 
 const setup = async () => {

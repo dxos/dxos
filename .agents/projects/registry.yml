@@ -6,6 +6,16 @@
 # status: active | paused | blocked | ended
 
 projects:
+  - name: task-visualization
+    status: active
+    user: burdon
+    host: Mac
+    created: 2026-09-11
+    summary: 'Visualize the tasks a project delegates to the assistant on a time axis (gantt): document the delegation flow, make "Assign to agent" idempotent with a stop, join trace events to sessions and sessions to tasks, and build the data structure + component + storybook.'
+    tasks: .agents/projects/task-visualization/TASKS.md
+    design: .agents/projects/task-visualization/DESIGN.md
+    prs: []
+    resume: 'Plan approved 2026-09-11. Parallel: FLOW.md (agent), data layer + delegationSpawned event + Gantt component + story (agent), idempotence/stop in ProjectArticle (foreground).'
   - name: echo-plain-objects
     status: active
     user: dmaretskyi

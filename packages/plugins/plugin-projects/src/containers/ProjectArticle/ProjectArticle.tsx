@@ -72,7 +72,7 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
   // Membership only: fires when a milestone is added or removed, not on milestone edits.
   const [milestoneRefs = []] = useObject(taskSet, 'milestones');
   // The rows the embedded `TaskSetArticle` has checked; the toolbar arms its delegate action on them.
-  const { checkedTasks, clearChecked } = useCheckedTasks(taskSet);
+  const { delegatableTasks, clearChecked } = useCheckedTasks(taskSet);
 
   // The tabs are a toolbar item like any other, so the one action graph owns the bar's order:
   // tabs, separator, then the actions. The tablist only needs the `Tabs.Root` context, which
@@ -93,7 +93,7 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
   const menuActions = useToolbarActions({
     project: subject,
     tabs,
-    checkedTasks,
+    checkedTasks: delegatableTasks,
     onAddArtifact: () => void handleAddArtifact(),
     onDelegated: clearChecked,
   });
@@ -286,7 +286,13 @@ const useCheckedTasks = (taskSet: TaskSet.TaskSet | undefined) => {
       }
 
       const tasks: readonly Task.Task[] = get(query.atom);
-      tasks.forEach((task) => get(Obj.atomProperty(task, 'parentTask')));
+      tasks.forEach((task) => {
+        get(Obj.atomProperty(task, 'parentTask'));
+        // The delegate action arms on whether the agent already holds a checked row, and delegation
+        // writes both fields — without tracking them the bar would keep offering rows already handed over.
+        get(Obj.atomProperty(task, 'status'));
+        get(Obj.atomProperty(task, 'assignee'));
+      });
       return Task.orderTasks(tasks, get(Obj.atomProperty(taskSet, 'tasks')) ?? []);
     });
   }, [taskSet]);
@@ -297,14 +303,17 @@ const useCheckedTasks = (taskSet: TaskSet.TaskSet | undefined) => {
     return flattenVisibleTasks(buildTaskForest(tasks)).filter((task) => checked.has(task.id));
   }, [ids, tasks]);
 
-  return { checkedTasks, clearChecked: clear };
+  // A row the agent is already working on is left out rather than handed to a second session.
+  const delegatableTasks = useMemo(() => checkedTasks.filter((task) => !Task.isAgentWorking(task)), [checkedTasks]);
+
+  return { checkedTasks, delegatableTasks, clearChecked: clear };
 };
 
 export type ToolbarActionsProps = {
   project: Project.Project;
   /** The view tabs, rendered as the bar's leading item. */
   tabs: ReactNode;
-  /** The checked rows, which the delegate action hands to one chat, in this order. */
+  /** The checked rows not already with the agent, which the delegate action hands to one chat, in this order. */
   checkedTasks: readonly Task.Task[];
   onAddArtifact: () => void;
   /** Called once the checked tasks are delegated, so the boxes clear with the work. */
@@ -340,20 +349,30 @@ const useToolbarActions = ({ project, tabs, checkedTasks, onAddArtifact, onDeleg
     await invokePromise(AssistantOperation.SetCurrentChat, { companionTo: project, chat }, { spaceId });
   }, [invokePromise, project, spaceId]);
 
+  // Held in state so the bar redraws disabled for the whole invocation: a ref would guard the
+  // handler but leave the button live, and the operation runs long enough (chat, bind, first turn)
+  // for a second click to land.
+  const [delegating, setDelegating] = useState(false);
+
   // One chat for the whole checked set, not one per task: the reader is handing over a body of work,
   // and the operation is the same one the row's own menu action runs with a single task.
   const delegateTasks = useCallback(async () => {
-    if (!spaceId || checkedTasks.length === 0) {
+    if (!spaceId || checkedTasks.length === 0 || delegating) {
       return;
     }
 
-    await invokePromise(
-      ProjectOperation.DelegateTaskToChat,
-      { tasks: checkedTasks.map((task) => Ref.make(task)) },
-      { spaceId },
-    );
-    onDelegated();
-  }, [invokePromise, spaceId, checkedTasks, onDelegated]);
+    setDelegating(true);
+    try {
+      await invokePromise(
+        ProjectOperation.DelegateTaskToChat,
+        { tasks: checkedTasks.map((task) => Ref.make(task)) },
+        { spaceId },
+      );
+      onDelegated();
+    } finally {
+      setDelegating(false);
+    }
+  }, [invokePromise, spaceId, checkedTasks, delegating, onDelegated]);
 
   return useMenuBuilder(
     (): ActionGraphProps =>
@@ -386,7 +405,7 @@ const useToolbarActions = ({ project, tabs, checkedTasks, onAddArtifact, onDeleg
             label: ['delegate-tasks.label', { ns: meta.profile.key }],
             icon: 'ph--paper-plane-tilt--regular',
             disposition: 'toolbar',
-            disabled: checkedTasks.length === 0,
+            disabled: checkedTasks.length === 0 || delegating,
             testId: 'projectsPlugin.delegateTasks',
           },
           () => void delegateTasks(),
@@ -408,7 +427,7 @@ const useToolbarActions = ({ project, tabs, checkedTasks, onAddArtifact, onDeleg
           'projectsPlugin.overflow',
         )
         .build(),
-    [project, tabs, spaceId, invokePromise, onAddArtifact, createChat, delegateTasks, checkedTasks.length],
+    [project, tabs, spaceId, invokePromise, onAddArtifact, createChat, delegateTasks, checkedTasks.length, delegating],
   );
 };
 
