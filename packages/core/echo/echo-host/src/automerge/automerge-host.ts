@@ -312,7 +312,10 @@ export class AutomergeHost extends Resource {
       isDocumentInRemoteCollection: this._isDocumentInRemoteCollection.bind(this),
       onCollectionStateQueried: this._onCollectionStateQueried.bind(this),
       onCollectionStateReceived: this._onCollectionStateReceived.bind(this),
-      onConnectionOpen: () => this._sharePolicyChangedTask?.schedule(),
+      onConnectionOpen: () => {
+        this._sharePolicyChangedTask?.schedule();
+        this._resyncAwaitedDocuments();
+      },
       monitor: dataMonitor,
     });
     this._echoNetworkAdapter.documentRequested.on(({ peerId, documentId }) => {
@@ -1461,6 +1464,25 @@ export class AutomergeHost extends Resource {
    * can advertise a document it never delivers, and `'unavailable'` is transient here (the query
    * reports it whenever no source can serve the document *yet*), so it cannot be the release signal.
    */
+  /**
+   * Re-drives the documents this peer is still waiting on.
+   *
+   * Called when a connection opens, which includes the replacement one a Subduction restart brings
+   * up. The repo-wide kick beside this only revives `all-failed`/`no-peers` entries; a document
+   * whose fetch was in flight when the connection went away leaves an entry Subduction considers
+   * settled, so nothing else re-asks for it.
+   */
+  private _resyncAwaitedDocuments(): void {
+    if (!this._useSubduction || this._replicationLeases.size === 0) {
+      return;
+    }
+
+    log('re-driving documents awaiting replication', { count: this._replicationLeases.size });
+    for (const documentId of this._replicationLeases.keys()) {
+      this._repo.resyncSubduction(documentId);
+    }
+  }
+
   private _leaseUntilSettled(documentId: DocumentId): void {
     if (this._replicationLeases.has(documentId)) {
       return;
