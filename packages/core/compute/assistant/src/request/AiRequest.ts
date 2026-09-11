@@ -461,12 +461,17 @@ export class Request {
       if (toolCalls.length === 0) {
         return;
       }
-      const toolResults = yield* Effect.forEach(toolCalls, ({ block, message }) => {
-        if (!toolkit) {
-          throw new Error('No toolkit provided');
-        }
-        return callTool(toolkit, block);
-      });
+      const toolResults = yield* Effect.forEach(toolCalls, ({ block, message }) =>
+        Effect.gen(function* () {
+          if (!toolkit) {
+            throw new Error('No toolkit provided');
+          }
+          // Tool execution is where an agentic turn spends most of its time, and it produces no
+          // streamed content, so the tool's name is the only progress the reader has.
+          yield* emitRequestPhase('calling-tool', { detail: block.name });
+          return yield* callTool(toolkit, block);
+        }),
+      );
 
       yield* this._submitMessage(
         Obj.make(Message.Message, {
