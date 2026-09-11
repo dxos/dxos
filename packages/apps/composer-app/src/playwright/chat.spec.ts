@@ -47,7 +47,9 @@ test.describe('Chat', () => {
     await host.createObject({ type: 'Chat' });
 
     const assistant = new Assistant(Assistant.plank(host.page));
-    await expect(assistant.prompt).toBeVisible();
+    // Creating the chat returns when its dialog closes, which is before the plank has resolved its
+    // surface and mounted the editor, so this is sized to that rather than to an interaction.
+    await expect(assistant.prompt).toBeVisible({ timeout: 30_000 });
 
     await assistant.send(PROMPT);
 
