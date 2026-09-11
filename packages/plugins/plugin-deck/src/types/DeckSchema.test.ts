@@ -95,18 +95,6 @@ describe('shouldOpenCompanionByDefault', () => {
     ).toBe(true);
   });
 
-  test('stays shut once the user has closed the pane', ({ expect }) => {
-    expect(
-      DeckSchema.shouldOpenCompanionByDefault({
-        companions: withHelp,
-        companionPlanks: [],
-        companionDismissed: true,
-        flatten: true,
-        plankId: 'plank',
-      }),
-    ).toBe(false);
-  });
-
   test('does nothing when the pane is already open', ({ expect }) => {
     expect(
       DeckSchema.shouldOpenCompanionByDefault({

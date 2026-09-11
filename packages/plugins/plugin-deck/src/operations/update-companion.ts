@@ -19,7 +19,6 @@ import {
   openCompanionPlank,
   resolveCompanionAnchor,
   resolveCompanionPlank,
-  updateActiveDeck,
 } from '../util/index.ts';
 
 const handler: Operation.WithHandler<typeof LayoutOperation.UpdateCompanion> = LayoutOperation.UpdateCompanion.pipe(
@@ -34,9 +33,6 @@ const handler: Operation.WithHandler<typeof LayoutOperation.UpdateCompanion> = L
       if (subject === null) {
         const plankId = input.anchor ?? resolveCompanionAnchor(deck.active, attention.getCurrent());
         const companionPlanks = closeCompanionPlank(deck.companionPlanks, flatten, plankId);
-        yield* Capabilities.updateAtomValue(DeckCapabilities.State, (state) =>
-          updateActiveDeck(state, { companionDismissed: true }),
-        );
         yield* navigateDeck({ workspace, active: deck.active, companionPlanks });
         return;
       }
@@ -57,9 +53,6 @@ const handler: Operation.WithHandler<typeof LayoutOperation.UpdateCompanion> = L
         variant: Attention.getLinkedVariant(subject),
       }));
 
-      yield* Capabilities.updateAtomValue(DeckCapabilities.State, (state) =>
-        updateActiveDeck(state, { companionDismissed: false }),
-      );
       const companionPlanks = openCompanionPlank(deck.companionPlanks, flatten, plankId);
       yield* navigateDeck({ workspace, active: deck.active, companionPlanks });
     }),

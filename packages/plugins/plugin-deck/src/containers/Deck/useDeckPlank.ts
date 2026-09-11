@@ -84,7 +84,6 @@ export const useDeckPlank = ({ id, part, active }: UseDeckPlankOptions): DeckPla
     id,
     companions,
     companionPlanks: deck.companionPlanks,
-    companionDismissed: deck.companionDismissed,
     flatten,
   });
   const notFoundNode = useNode(graph, NotFound.NOT_FOUND_PATH);

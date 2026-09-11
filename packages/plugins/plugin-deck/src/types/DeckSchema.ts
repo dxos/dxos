@@ -24,17 +24,15 @@ export const DEFAULT_COMPANION_VARIANT = 'help';
 export const shouldOpenCompanionByDefault = ({
   companions,
   companionPlanks,
-  companionDismissed,
   flatten,
   plankId,
 }: {
   companions: readonly { id: string }[];
   companionPlanks: readonly string[];
-  companionDismissed?: boolean;
   flatten?: boolean;
   plankId: string;
 }): boolean => {
-  if (companionDismissed || isCompanionOpen(companionPlanks, flatten, plankId)) {
+  if (isCompanionOpen(companionPlanks, flatten, plankId)) {
     return false;
   }
 
@@ -91,11 +89,6 @@ export const StoredDeck = Schema.Struct({
    * state you left it in as you move between articles.
    */
   companionPlanks: Schema.mutable(Schema.Array(Schema.String)),
-  /**
-   * Whether the user has closed the companion in this deck; unset means a newly opened plank brings
-   * its help companion up with it. Optional so decks persisted before the key still decode.
-   */
-  companionDismissed: Schema.optional(Schema.Boolean),
   /**
    * Named planks, as name → the plank id currently occupying that name. A name makes a plank behave
    * like a browser tab: opening under a name that is already taken replaces its occupant in place.

@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import type * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
@@ -12,40 +12,39 @@ import { Attention } from '@dxos/react-ui-attention/types';
 import { DeckSchema } from '#types';
 
 /**
- * Brings the companion up on help when a plank opens, unless the user has closed the pane in this
- * deck. Runs from the plank because its companions resolve only after the plank exists.
+ * Brings the companion up on help when a plank opens. Runs from the plank because its companions
+ * resolve only after the plank exists.
+ *
+ * Applied at most once per plank, tracked here rather than persisted: the default and a close are
+ * otherwise the same state, so the pane would reopen the instant it was closed. Each newly opened
+ * object gets the default again, and closing holds for the object it was closed on.
  */
 export const useCompanionDefault = ({
   id,
   companions,
   companionPlanks,
-  companionDismissed,
   flatten,
 }: {
   id: string;
   companions: AppGraphNode.Node[];
   companionPlanks: readonly string[];
-  companionDismissed?: boolean;
   flatten?: boolean;
 }): void => {
   const { invokePromise } = useOperationInvoker();
+  const applied = useRef<string | undefined>(undefined);
 
   useEffect(() => {
     if (
-      !DeckSchema.shouldOpenCompanionByDefault({
-        companions,
-        companionPlanks,
-        companionDismissed,
-        flatten,
-        plankId: id,
-      })
+      applied.current === id ||
+      !DeckSchema.shouldOpenCompanionByDefault({ companions, companionPlanks, flatten, plankId: id })
     ) {
       return;
     }
 
+    applied.current = id;
     void invokePromise(LayoutOperation.UpdateCompanion, {
       subject: Attention.linkedSegment(DeckSchema.DEFAULT_COMPANION_VARIANT),
       anchor: id,
     });
-  }, [id, companions, companionPlanks, companionDismissed, flatten, invokePromise]);
+  }, [id, companions, companionPlanks, flatten, invokePromise]);
 };

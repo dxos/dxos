@@ -5,7 +5,7 @@
 import { expect, test } from '@playwright/test';
 
 import { AppManager } from './app-manager.ts';
-import { Tour } from './plugins/index.ts';
+import { Tour } from './tour.ts';
 
 test.describe('Tour tests', () => {
   let host: AppManager;
