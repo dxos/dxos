@@ -43,8 +43,6 @@ describe('project chats graph extension', () => {
     const project = db.add(Project.make({ name: 'Test' }));
     await db.flush();
 
-    // The real graph's shape around a project (`root/<space>/ai/<project typename>/<id>`), since the
-    // chat URL binding resolves a chat id back to a path of that shape.
     const sectionPath = [GraphPath.GroupSegments.ai, Type.getTypename(Project.Project)];
     const rootExtensions = await EffectEx.runPromise(
       AppGraphBuilder.createExtension({
@@ -70,8 +68,7 @@ describe('project chats graph extension', () => {
     const sectionExtensions = await EffectEx.runPromise(
       AppGraphBuilder.createExtension({
         id: 'testSection',
-        // Stands in for the real type section, which addresses the project itself under the same key
-        // and the same path the branches use — the sharing this suite exists to pin down.
+        // Stands in for the real type section, which shares the key and the path.
         url: { key: 'project', kind: 'item', path: sectionPath },
         match: GraphNodeMatcher.whenNodeType('test-section'),
         connector: () => Effect.succeed([{ id: project.id, type: 'test', data: project }]),
@@ -94,7 +91,6 @@ describe('project chats graph extension', () => {
       ],
     });
 
-    // The chats hang off a virtual Chats branch, not the project row, so every level is expanded.
     const projectNodeId = GraphPath.getSpacePath(db.spaceId, ...sectionPath, project.id);
     const chatsNodeId = GraphNode.qualifyId(projectNodeId, SESSIONS_SEGMENT);
     const artifactsNodeId = GraphNode.qualifyId(projectNodeId, ARTIFACTS_SEGMENT);
@@ -145,7 +141,6 @@ describe('project chats graph extension', () => {
   test('a project always carries the Chats branch, empty or not', async ({ expect }) => {
     const { projectNodeId, chatsNodeId, artifactsNodeId, getConnections, getChildIds } = await setupTestContext();
 
-    // The branches are what the reader clicks into, so they exist before there is anything under them.
     expect(getConnections(projectNodeId).map((node) => node.id)).toEqual([chatsNodeId, artifactsNodeId]);
     expect(getChildIds()).toEqual([]);
   });
@@ -181,16 +176,11 @@ describe('project chats graph extension', () => {
     const { db, project, builder, addChat, chatsNodeId } = await setupTestContext();
     const chat = await addChat('Chat');
     const chatNodeId = GraphNode.qualifyId(chatsNodeId, chat.id);
-    // The project and the branch sit between the binding's static path and the chat, so they ride in
-    // the pair's id rather than needing a resolver.
     const pairId = [project.id, SESSIONS_SEGMENT, chat.id].join('+');
 
-    // Reverse: the deck serializes the open plank into the URL, which is what fails with "node has
-    // no URL binding" when the connector declares none.
     const represented = PathResolution.representNode(builder, chatNodeId);
     expect(Option.getOrUndefined(represented)).toEqual({ key: 'project', id: pairId, workspace: db.spaceId });
 
-    // Forward: a fresh graph resolves the pair back to the same node.
     const [resolved] = await EffectEx.runPromise(
       PathResolution.resolveUrl(builder, {
         workspace: db.spaceId,
@@ -204,8 +194,7 @@ describe('project chats graph extension', () => {
     const { db, project, builder, addChat, projectNodeId, chatsNodeId } = await setupTestContext();
     const chat = await addChat('Chat');
 
-    // The project stops at the section path; its contents extend the same id. Four extensions share
-    // the key, so what tells these apart is only how far the pair's id reaches.
+    // Four extensions share the key; only how far the id reaches tells these apart.
     const cases = [
       [projectNodeId, project.id],
       [chatsNodeId, [project.id, SESSIONS_SEGMENT].join('+')],
@@ -230,8 +219,6 @@ describe('project chats graph extension', () => {
   test('the branch rows are addressable too, at the id their children extend', async ({ expect }) => {
     const { db, project, builder, chatsNodeId, artifactsNodeId } = await setupTestContext();
 
-    // Both rows are selectable (they open their contents as cards), so both need an address; without
-    // one, clicking Sessions logs "node has no URL binding" and does nothing.
     for (const [nodeId, segment] of [
       [chatsNodeId, SESSIONS_SEGMENT],
       [artifactsNodeId, ARTIFACTS_SEGMENT],

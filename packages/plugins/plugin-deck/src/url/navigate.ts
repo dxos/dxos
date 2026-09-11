@@ -34,8 +34,7 @@ export const currentNavigation = Effect.fnUntraced(function* () {
 
 /**
  * Change what is open: push the URL, then project it. Returns the plank attention has to move to
- * because the one holding it is no longer open. `navigatedIds` is the caller's side channel past the
- * URL (see {@link Navigation.PlankIds}); omit it and every plank opens under a placeholder first.
+ * because the one holding it is no longer open.
  */
 export const navigate = Effect.fnUntraced(function* (
   next: Navigation.Navigation,
@@ -52,7 +51,7 @@ export const navigate = Effect.fnUntraced(function* (
 
 /**
  * The navigation a deck represents: a pair per active plank, with the companion pair inserted after
- * the plank it is anchored to, alongside the node id each pair was derived from.
+ * the plank it is anchored to.
  */
 export const deckNavigation = Effect.fnUntraced(function* (params: {
   workspace: string;
@@ -72,8 +71,6 @@ export const deckNavigation = Effect.fnUntraced(function* (params: {
     anchorId && variant && isCompanionOpen(companionPlanks, flatten, anchorId) ? anchorId : undefined;
 
   const pairs: UrlPath.Pair[] = [];
-  // Kept rather than discarded: this loop is the node id -> pair mapping, so its inverse is free here
-  // and costs the projection a resolution round trip to recover.
   const navigatedIds = new Map<Navigation.PlankSegment, string>();
   for (const nodeId of active) {
     const represented = PathResolution.representNode(builder, nodeId);

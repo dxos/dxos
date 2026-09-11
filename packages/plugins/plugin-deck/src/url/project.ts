@@ -87,19 +87,16 @@ const project = Effect.fnUntraced(function* (url?: URL, options?: ProjectOptions
     registry.set(stateAtom, fn(registry.get(stateAtom)));
   };
 
-  /**
-   * The ids the first pass keys planks by: what the caller navigated with, overridden by what is
-   * already open, since a plank that is mounted has to keep the id it is mounted under. A segment in
-   * neither opens under a placeholder and is re-keyed once resolution names it.
-   */
+  /** The ids the first pass keys planks by. */
   const idsBySegment = (): Navigation.PlankIds => {
     const state = registry.get(stateAtom);
     const workspace = registry.get(ephemeralAtom).open[state.activeDeck];
-    const active = workspace?.active ?? [];
-    return new Map<Navigation.PlankSegment, string>([
-      ...(options?.navigatedIds ?? []),
-      ...active.map((id: string) => [Navigation.segmentOf(workspace?.segments, id), id] as const),
-    ]);
+    const ids = new Map<Navigation.PlankSegment, string>(options?.navigatedIds ?? []);
+    // Written over what the caller navigated with: a mounted plank has to keep the id it is mounted under.
+    for (const id of workspace?.active ?? []) {
+      ids.set(Navigation.segmentOf(workspace?.segments, id), id);
+    }
+    return ids;
   };
 
   /**

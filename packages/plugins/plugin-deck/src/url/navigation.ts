@@ -17,11 +17,9 @@ export type Navigation = {
 };
 
 /**
- * Node ids by the URL segment that addresses them. An in-app navigation already holds the id of every
- * plank it is opening (it derived the pairs FROM those ids), so handing them to the projection opens
- * each plank under its real id at once, rather than under a placeholder swapped for the resolved id a
- * pass later — a swap that re-keys the plank and remounts everything in it, its companion included.
- * Not part of {@link Navigation}: the URL cannot carry these, and an external navigation has none.
+ * Node ids by the URL segment that addresses them. An in-app navigation derived its pairs FROM these
+ * ids, so it can hand them to the projection and skip the placeholder a pair otherwise opens under.
+ * Not part of {@link Navigation}: the URL cannot carry them, and an external navigation has none.
  */
 export type PlankIds = ReadonlyMap<PlankSegment, string>;
 
@@ -113,7 +111,7 @@ export const getUnresolvedPlankId = (pair: UrlPath.Pair): string =>
 
 /**
  * The planks a chain opens before it resolves: each pair under the id `idsBySegment` holds for its
- * segment, else under a placeholder the resolved id replaces. Companion pairs open nothing of their own.
+ * segment, else under a placeholder the resolved id replaces.
  */
 export const initialPlanks = (pairs: readonly UrlPath.Pair[], idsBySegment: PlankIds): Plank[] =>
   pairs

@@ -116,18 +116,15 @@ export const createMailboxProjectExtension = () =>
 /** Node `type` of a project's virtual Chats branch; the child extension below matches on it. */
 export const CHATS_SECTION_TYPE = 'org.dxos.plugin.projects.chats-section';
 
-/** Path segment of the Chats branch, which the navtree and the URL both call sessions. */
+/** Path segment of the Chats branch. */
 export const SESSIONS_SEGMENT = 'sessions';
 
 /**
  * One URL binding for everything a project contains, shared with the type section that addresses the
  * project itself — so `project/<id>` is the project, `project/<id>+sessions` its Sessions branch, and
- * `project/<id>+sessions+<session>` a session. The path is fixed only as far as the Project section; what
- * varies below it rides in the pair's id, `+`-joined, and the chain reconstructs with no lookup.
- *
- * Sharing a key is safe only because every extension under it declares this same path, so a node's
- * address never depends on which connector reached it. Two paths under one key is what made the
- * borrowed `chat` key wrong.
+ * `project/<id>+sessions+<session>` a session. The path is fixed only as far as the Project section;
+ * what varies below it rides in the pair's id, `+`-joined, and the chain reconstructs with no lookup.
+ * Every extension under the key must share this one path, or a node's address forks by connector.
  */
 const PROJECT_URL: AppGraphBuilder.UrlBinding = {
   key: 'project',
@@ -159,8 +156,7 @@ export const isChatsBranch = (data: unknown): data is ChatsBranch =>
 export const createProjectChatsExtension = () =>
   AppGraphBuilder.createExtension({
     id: 'projectChats',
-    // The branch row is selectable (it opens its chats as cards), so it needs an address of its own:
-    // without one, clicking Sessions logs "node has no URL binding" and does nothing.
+    // Selectable, so addressable: the row opens its chats as cards.
     url: PROJECT_URL,
     match: (node) =>
       Obj.instanceOf(Project.Project, node.data)
@@ -194,10 +190,8 @@ export const createProjectChatsExtension = () =>
  * same edge every companion chat uses — so what is project-specific is only the DISPLAY: project
  * chats surface in the navtree, other companions stay in their subject's companion panel.
  *
- * Addressed as the project's (see {@link PROJECT_URL}), not under plugin-assistant's `chat` key: that
- * key reaches a parentless chat by a different path, and one key with two paths would make a chat's
- * address depend on which connector got there first. Declaring a binding is not optional — without one
- * the deck cannot put an open project chat into the URL and refuses to open it.
+ * Addressed as the project's (see {@link PROJECT_URL}), not under plugin-assistant's `chat` key,
+ * which reaches a parentless chat by a different path.
  */
 export const createProjectChatsChildrenExtension = () =>
   AppGraphBuilder.createExtension({
@@ -286,7 +280,7 @@ export const isArtifactsBranch = (data: unknown): data is ArtifactsBranch =>
 export const createProjectArtifactsExtension = () =>
   AppGraphBuilder.createExtension({
     id: 'projectArtifacts',
-    // Addressable for the same reason the Sessions branch is: the row opens its artifacts as cards.
+    // Selectable, so addressable: the row opens its artifacts as cards.
     url: PROJECT_URL,
     match: (node) =>
       Obj.instanceOf(Project.Project, node.data)
@@ -326,9 +320,8 @@ export const createProjectArtifactsExtension = () =>
  * The dialog places the object in the space; the ref array is what makes it the project's, so the
  * link is written here rather than left to the dialog's own placement.
  *
- * Addressed as the project's (see {@link PROJECT_URL}). That is a different node from the same object
- * under its own type section (`object/<id>`), and the distinction is the point: an artifact opened
- * from a project comes back to the project.
+ * Addressed as the project's (see {@link PROJECT_URL}), which is a different node from the same object
+ * under its own type section, so an artifact opened from a project comes back to the project.
  */
 export const createProjectArtifactsActionExtension = () =>
   AppGraphBuilder.createExtension({
