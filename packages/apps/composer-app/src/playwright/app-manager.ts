@@ -327,10 +327,13 @@ export class AppManager {
   /** Opens the add-space dialog, submits it, and waits for it to close. */
   async #submitCreateSpaceForm(): Promise<void> {
     const dialog = this.page.getByTestId('create-space-dialog');
-    // Same remount as in `deleteSpace`: a navigation landing while the menu is open detaches the item
-    // mid-click, and the overlay that replaces it swallows the pointer. Reopening a menu whose dialog
-    // is already up is a no-op, so the block is safe to repeat.
+    // A navigation landing while the menu is open detaches the item mid-click, and the overlay that
+    // replaces it swallows the pointer. `addSpace` is the menu's trigger, so a retry must not click
+    // it again once the dialog is up — that would toggle the menu behind a modal.
     await expect(async () => {
+      if (await dialog.isVisible()) {
+        return;
+      }
       await this.page.getByTestId('spacePlugin.addSpace').click({ timeout: 5_000 });
       await this.page.getByTestId('spacePlugin.createSpace').click({ timeout: 5_000 });
       await expect(dialog).toBeVisible({ timeout: 5_000 });

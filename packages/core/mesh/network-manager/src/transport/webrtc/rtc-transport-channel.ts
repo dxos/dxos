@@ -21,6 +21,23 @@ const MAX_MESSAGE_SIZE = 64 * 1024;
 // The default Readable stream buffer size: https://nodejs.org/api/stream.html#implementing-a-readable-stream
 const MAX_BUFFERED_AMOUNT = 64 * 1024;
 
+/** A peer sends a handful of frames before the channel opens; past that something is wrong. */
+const MAX_PREOPEN_MESSAGES = 64;
+
+/** Copied rather than aliased: a buffered frame outlives the event that carried it. */
+const toFrame = (data: unknown): Buffer | string => {
+  if (data instanceof ArrayBuffer) {
+    return Buffer.from(new Uint8Array(data));
+  }
+  if (ArrayBuffer.isView(data)) {
+    return Buffer.from(new Uint8Array(data.buffer, data.byteOffset, data.byteLength));
+  }
+  if (typeof data === 'string' || Buffer.isBuffer(data)) {
+    return data;
+  }
+  throw new Error(`Unsupported data-channel frame: ${typeof data}.`);
+};
+
 /**
  * A WebRTC connection data channel.
  * Manages a WebRTC connection to a remote peer using an abstract signalling mechanism.
@@ -33,7 +50,7 @@ export class RtcTransportChannel extends Resource implements Transport {
   private _channel: RTCDataChannel | undefined;
   private _stream: Duplex | undefined;
   /** Frames delivered before {@link _stream} exists; nothing retransmits them. */
-  private _bufferedMessages: Buffer[] = [];
+  private _bufferedMessages: (Buffer | string)[] = [];
   private _streamDataFlushedCallback: PendingStreamFlushedCallback | null = null;
   private _isChannelCreationInProgress = false;
 
@@ -89,40 +106,41 @@ export class RtcTransportChannel extends Resource implements Transport {
       this._channel = undefined;
       this._stream = undefined;
     }
+    this._bufferedMessages.length = 0;
     this.closed.emit();
 
     log('closed');
   }
 
   private _initChannel(channel: RTCDataChannel): void {
-    // Frames are available synchronously as bytes; `blob`, the default, would make `onmessage` async
-    // and let two frames complete out of arrival order.
+    // Bytes rather than the default `blob`, whose async conversion lets two frames complete out of
+    // arrival order.
     channel.binaryType = 'arraybuffer';
 
-    Object.assign<RTCDataChannel, Partial<RTCDataChannel>>(channel, {
-      onopen: () => {
-        if (!this.isOpen) {
-          log.warn('channel opened in a closed transport', { topic: this._options.topic });
-          this._safeCloseChannel(channel);
-          return;
-        }
+    const open = () => {
+      if (!this.isOpen) {
+        log.warn('channel opened in a closed transport', { topic: this._options.topic });
+        this._safeCloseChannel(channel);
+        return;
+      }
 
-        log('onopen');
-        const duplex = new Duplex({
-          read: () => {},
-          write: (chunk, encoding, callback) => {
-            return this._handleChannelWrite(chunk, callback);
-          },
-        });
-        duplex.pipe(this._options.stream).pipe(duplex);
-        this._stream = duplex;
-        // The peer's first frames can be delivered before this handler runs, and nothing retransmits
-        // them, so they are held rather than dropped.
-        const buffered = this._bufferedMessages;
-        this._bufferedMessages = [];
-        buffered.forEach((message) => duplex.push(message));
-        this.connected.emit();
-      },
+      log('onopen');
+      const duplex = new Duplex({
+        read: () => {},
+        write: (chunk, encoding, callback) => {
+          return this._handleChannelWrite(chunk, callback);
+        },
+      });
+      duplex.pipe(this._options.stream).pipe(duplex);
+      this._stream = duplex;
+      const buffered = this._bufferedMessages;
+      this._bufferedMessages = [];
+      buffered.forEach((message) => duplex.push(message));
+      this.connected.emit();
+    };
+
+    Object.assign<RTCDataChannel, Partial<RTCDataChannel>>(channel, {
+      onopen: open,
 
       onclose: async () => {
         log('onclose');
@@ -130,14 +148,21 @@ export class RtcTransportChannel extends Resource implements Transport {
       },
 
       onmessage: (event: MessageEvent) => {
-        const data: Buffer = event.data instanceof ArrayBuffer ? Buffer.from(event.data) : event.data;
+        const data = toFrame(event.data);
         if (this._stream) {
           this._stream.push(data);
-        } else if (this.isOpen) {
-          this._bufferedMessages.push(data);
-        } else {
-          log.warn('ignoring message on a closed channel');
+          return;
         }
+        if (!this.isOpen) {
+          log.warn('ignoring message on a closed channel');
+          return;
+        }
+        // Nothing retransmits a frame that lands before the channel reports open, so it waits.
+        if (this._bufferedMessages.length >= MAX_PREOPEN_MESSAGES) {
+          this.errors.raise(new Error(`More than ${MAX_PREOPEN_MESSAGES} frames before the channel opened.`));
+          return;
+        }
+        this._bufferedMessages.push(data);
       },
 
       onerror: (event: Event & any) => {
@@ -153,6 +178,12 @@ export class RtcTransportChannel extends Resource implements Transport {
         cb?.();
       },
     });
+
+    // A channel that was already open when these handlers were attached never dispatches `open`,
+    // leaving every frame to queue against a stream that is never created.
+    if (channel.readyState === 'open') {
+      open();
+    }
   }
 
   private async _handleChannelWrite(chunk: any, callback: PendingStreamFlushedCallback): Promise<void> {

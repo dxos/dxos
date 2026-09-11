@@ -46,10 +46,12 @@ test.describe('Chat', () => {
     await host.createSpace();
     await host.createObject({ type: 'Chat' });
 
+    // Opened from the navtree rather than relying on creation to leave it open: a navigation landing
+    // late replaces the deck's contents, and the chat is the only object in this space.
+    await host.navigateToObject(0);
+
     const assistant = new Assistant(Assistant.plank(host.page));
-    // Creating the chat returns when its dialog closes, which is before the plank has resolved its
-    // surface and mounted the editor, so this is sized to that rather than to an interaction.
-    await expect(assistant.prompt).toBeVisible({ timeout: 30_000 });
+    await expect(assistant.prompt).toBeVisible();
 
     await assistant.send(PROMPT);
 

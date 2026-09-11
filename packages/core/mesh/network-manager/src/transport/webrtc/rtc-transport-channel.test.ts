@@ -86,6 +86,34 @@ describe('RtcTransportChannel', () => {
     expect(deliveredMessages).toStrictEqual([message]);
   });
 
+  // Nothing retransmits a frame delivered before the channel reports open.
+  test('messages delivered before the channel opens arrive in order once it does', async () => {
+    const controller = createChannelController();
+    const { deliveredMessages, transport } = createTransport(controller.connection);
+    await transport.open();
+    await controller.onChannelCreated();
+
+    await controller.channel.onMessage('first');
+    await controller.channel.onMessage('second');
+    expect(deliveredMessages).toStrictEqual([]);
+
+    controller.channel.onopen();
+    await sleep(5);
+    expect(deliveredMessages).toStrictEqual(['first', 'second']);
+  });
+
+  // A channel already open when the handlers are attached never dispatches `open`.
+  test('a channel that is already open delivers messages', async () => {
+    const controller = createChannelController();
+    (controller.channel as any).readyState = 'open';
+    const { deliveredMessages, transport } = createTransport(controller.connection);
+    await transport.open();
+    await controller.onChannelCreated();
+
+    await controller.channel.onMessage('hello');
+    expect(deliveredMessages).toStrictEqual(['hello']);
+  });
+
   test('message not sent on a closed transport', async () => {
     const controller = createChannelController();
     const { deliveredMessages, transport } = createTransport(controller.connection);
