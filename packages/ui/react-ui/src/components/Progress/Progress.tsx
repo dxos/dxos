@@ -22,7 +22,7 @@ export type ProgressProps = ThemedClassName<
 
 /**
  * A fill bar: a fraction of a track, or an indeterminate sweep, for a host that supplies its own
- * chrome. {@link Stepper} draws a plan instead, and `ProgressMeter` is the readout built from both.
+ * chrome. {@link Steps} draws a plan instead, and `ProgressMeter` is the readout built from both.
  */
 export const Progress = forwardRef<HTMLSpanElement, ProgressProps>(
   ({ classNames, children, progress = 0, indeterminate, countdown, paused, error, ...props }, forwardedRef) => {

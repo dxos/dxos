@@ -17,7 +17,7 @@ The package currently holds two kinds of thing, and the split is worth knowing b
 Splitting along that line is the sharpening this package needs; until then, prefer adding a
 presentational primitive here and keeping domain coupling out of it.
 
-The progress primitives have gone the other way: `Progress` (the bar), `Stepper` (the plan) and
+The progress primitives have gone the other way: `Progress` (the bar), `Steps` (the plan) and
 `TextCrawl` now live in `@dxos/react-ui`, where anything that reports progress can reach them
 without paying for this package's domain dependencies. `ProgressMeter` stays here — it is the
 readout that assembles them, which is what this package is for. `Spinner`, `Shimmer` and `Waveform`

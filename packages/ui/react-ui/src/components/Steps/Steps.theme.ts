@@ -8,7 +8,7 @@ import type { ComponentFunction, Theme } from '@dxos/ui-types';
 /** Where a stage sits relative to the run: behind it, in flight, ahead of it, or where it failed. */
 export type StepState = 'pending' | 'active' | 'complete' | 'error';
 
-export type StepperStyleProps = {
+export type StepsStyleProps = {
   state?: StepState;
   /** The run failed — the whole plan is drawn in the error hue, not only the stage it stopped on. */
   failed?: boolean;
@@ -42,16 +42,16 @@ const failedStepFill: Record<StepState, string> = {
   complete: 'bg-error-surface border-transparent',
 };
 
-const root: ComponentFunction<StepperStyleProps> = (_props, ...etc) => mx('flex items-center w-full min-w-0', ...etc);
+const root: ComponentFunction<StepsStyleProps> = (_props, ...etc) => mx('flex items-center w-full min-w-0', ...etc);
 
 /**
  * A stage and the line leaving it. Stretches so the line can flex — except the last, which has no
  * line, and would otherwise claim a share of the width and pull the final circle off the end.
  */
-const item: ComponentFunction<StepperStyleProps> = ({ last }, ...etc) =>
+const item: ComponentFunction<StepsStyleProps> = ({ last }, ...etc) =>
   mx('flex items-center min-w-0', !last && 'grow', ...etc);
 
-const step: ComponentFunction<StepperStyleProps> = (
+const step: ComponentFunction<StepsStyleProps> = (
   { state = 'pending', failed, selected, interactive, spinning },
   ...etc
 ) =>
@@ -65,20 +65,20 @@ const step: ComponentFunction<StepperStyleProps> = (
     ...etc,
   );
 
-const notch: ComponentFunction<StepperStyleProps> = (_props, ...etc) =>
+const notch: ComponentFunction<StepsStyleProps> = (_props, ...etc) =>
   mx('dx-fullscreen animate-spin text-accent-bg', ...etc);
 
 /**
- * The line between two stages. A separator-derived track rather than a surface: the stepper is drawn
+ * The line between two stages. A separator-derived track rather than a surface: the plan is drawn
  * ON a surface, so a track painted in one is invisible against its host.
  */
-const connector: ComponentFunction<StepperStyleProps> = (_props, ...etc) =>
+const connector: ComponentFunction<StepsStyleProps> = (_props, ...etc) =>
   mx('relative grow min-w-1 rounded-full bg-separator', ...etc);
 
-const fill: ComponentFunction<StepperStyleProps> = ({ failed }, ...etc) =>
+const fill: ComponentFunction<StepsStyleProps> = ({ failed }, ...etc) =>
   mx('absolute inset-y-0 start-0 rounded-full', failed ? 'bg-error-surface' : 'bg-accent-bg', ...etc);
 
-export const stepperTheme: Theme<StepperStyleProps> = {
+export const stepsTheme: Theme<StepsStyleProps> = {
   root,
   item,
   step,

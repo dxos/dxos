@@ -2196,6 +2196,9 @@ importers:
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
+      '@dxos/brand':
+        specifier: workspace:*
+        version: link:../../ui/brand
       '@dxos/client-services':
         specifier: workspace:*
         version: link:../../sdk/client-services
@@ -17793,6 +17796,9 @@ importers:
         specifier: 'catalog:'
         version: 1.9.11
     devDependencies:
+      '@dxos/brand':
+        specifier: workspace:*
+        version: link:../../ui/brand
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
@@ -19193,6 +19199,9 @@ importers:
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../../ui/react-ui
+      '@dxos/react-ui-attention':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-attention
       '@dxos/react-ui-chat':
         specifier: workspace:*
         version: link:../../ui/react-ui-chat
@@ -23527,7 +23536,7 @@ importers:
         version: 1.0.3
 
   tools/storybook-solid:
-    devDependencies:
+    dependencies:
       '@dxos/log':
         specifier: workspace:*
         version: link:../../packages/common/log
@@ -23537,6 +23546,9 @@ importers:
       '@dxos/vite-plugin-icons':
         specifier: workspace:*
         version: link:../vite-plugin-icons
+      '@dxos/vite-plugin-import-source':
+        specifier: workspace:*
+        version: link:../vite-plugin-import-source
       '@dxos/vite-plugin-log':
         specifier: workspace:*
         version: link:../vite-plugin-log

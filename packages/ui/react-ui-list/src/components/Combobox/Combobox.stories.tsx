@@ -39,7 +39,6 @@ const DefaultStory = () => {
             <Combobox.Item key={value} value={value} label={value} />
           ))}
         </Combobox.List>
-        <Combobox.Arrow />
       </Combobox.Content>
     </Combobox.Root>
   );

@@ -111,7 +111,6 @@ export const ComboboxField = ({
             {/* The literal typed text as a fallback option at the bottom, unless a suggestion already is it. */}
             {normalized.length > 0 && !hasExact && <Combobox.Item value={trimmed} label={trimmed} />}
           </Combobox.List>
-          <Combobox.Arrow />
         </Combobox.Content>
       </Combobox.Portal>
     </Combobox.Root>
