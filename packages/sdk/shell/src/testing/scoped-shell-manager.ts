@@ -74,8 +74,10 @@ export class ScopedShellManager {
       .first()
       .waitFor({ state: 'attached' })
       .catch(async (err) => {
+        // `:visible`, for the same reason the wait above uses it: every step stays mounted, so the
+        // unfiltered set is the shell's whole vocabulary and names no step in particular.
         const showing = await peer
-          .locator('[data-testid]')
+          .locator('[data-testid]:visible')
           .evaluateAll((elements) => [...new Set(elements.map((element) => element.dataset.testid))].join(', '))
           .catch(() => '(unavailable)');
         throw new Error(`${type} invitation never reached the auth-code step; shell is showing: ${showing}`, {
