@@ -458,7 +458,7 @@ const SKIP_FILE_PATTERNS = [
 
 // Noise patterns for specific known non-Tailwind class families.
 const EXTRA_NOISE_PATTERNS: RegExp[] = [
-  /^ph--/, // Phosphor icon font: ph--icon-name--weight
+  /^(?:ph|px|dx)--/, // Sprite icon names: ph--icon--weight (Phosphor), px--/dx--brand--regular
   /^eslint-/, // ESLint directives in comments
   /^prettier-/, // Prettier directives in comments
   /^(?:react|solid|vue|angular)(-[a-z][-a-z0-9]*)+$/, // npm package name patterns

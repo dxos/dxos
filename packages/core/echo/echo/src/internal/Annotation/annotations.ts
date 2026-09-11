@@ -521,9 +521,13 @@ export const makeUserAnnotation = <T>(props: MakeAnnoationsProps<T>): Annotation
 
 const IconAnnotationSchema = Schema.Struct({
   /**
-   * Phosphor icon name (e.g., 'ph--user--regular', 'ph--cube--regular', 'ph--link--regular ', etc.)
+   * Sprite icon name (e.g., 'ph--user--regular', 'ph--cube--regular', 'px--anthropic--regular').
+   *
+   * `ph--*` is Phosphor; `px--*` and `dx--*` are brand glyphs, which are sprite-only and carry no
+   * weight variants. All three are admitted because a type whose subject IS a brand — an Anthropic
+   * session, a GitHub repo — has no honest Phosphor equivalent.
    */
-  icon: Schema.String.pipe(Schema.check(Schema.isPattern(/^ph--[a-z-]+--[a-z]+$/))),
+  icon: Schema.String.pipe(Schema.check(Schema.isPattern(/^(ph|px|dx)--[a-z0-9-]+--[a-z]+$/))),
 
   /**
    * Color name.

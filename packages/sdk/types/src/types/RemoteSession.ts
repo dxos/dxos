@@ -72,7 +72,10 @@ export class RemoteSession extends Type.makeObject<RemoteSession>(DXN.make('org.
   }).pipe(
     Schema.annotate({ title: 'Remote Session' }),
     LabelAnnotation.set(['title']),
-    Annotation.IconAnnotation.set({ icon: 'ph--robot--regular', hue: 'indigo' }),
+    // The harness's own mark rather than a generic robot: every session this type holds is reported
+    // by Claude Code (`SOURCE`). An icon annotation is type-level, so a second harness would have to
+    // make this per-object — `harnessIcon` already keys off the foreign key for the places that can.
+    Annotation.IconAnnotation.set({ icon: 'px--anthropic--regular', hue: 'yellow' }),
   ),
 ) {}
 
@@ -91,6 +94,33 @@ export const make = ({
 
 /** The harness session id this object stands for, read back off its foreign keys. */
 export const getSessionId = (session: RemoteSession): string | undefined => Obj.getKeys(session, SOURCE).at(0)?.id;
+
+/**
+ * Display name for the harness a session belongs to, from the foreign key's `source`. The pill that
+ * stands for a session says which harness it is, so the mapping cannot live in the UI: an actor whose
+ * subject is a session is the only thing that knows, and a second harness must render as itself rather
+ * than inherit Claude Code's name.
+ */
+export const harnessName = (session: RemoteSession): string | undefined => {
+  const source = getSource(session);
+  return source === undefined ? undefined : (HARNESS_NAMES[source] ?? source);
+};
+
+/** The foreign system this session belongs to — the harness that reported it. */
+const getSource = (session: RemoteSession): string | undefined => Obj.getMeta(session).keys.at(0)?.source;
+
+/**
+ * The harness's own brand glyph, where one exists. Falls back to undefined rather than a generic
+ * icon so the caller picks its own default — a pill and a card want different ones.
+ */
+export const harnessIcon = (session: RemoteSession): string | undefined => {
+  const source = getSource(session);
+  return source === undefined ? undefined : HARNESS_ICONS[source];
+};
+
+const HARNESS_NAMES: Record<string, string> = { [SOURCE]: 'Claude Code' };
+
+const HARNESS_ICONS: Record<string, string> = { [SOURCE]: 'px--anthropic--regular' };
 
 /** Terminal states: a session in one of these is not expected to check in again. */
 export const isTerminal = (session: RemoteSession): boolean =>
