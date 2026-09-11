@@ -418,10 +418,16 @@ const PlankSplit = ({
       </Splitter.Panel>
       <Splitter.Handle />
       <Splitter.Panel position='end'>
+<<<<<<< HEAD
         {/* One component whether or not a companion resolved, so a companion arriving re-renders the
             pane rather than rebuilding it: the plank's own id addresses the same pane with its tab
             strip empty. Gated on the seam, so a plank whose pane is closed mounts none of it. */}
         {companion && <CompanionPlank id={companionId ?? id} classNames='size-full' />}
+||||||| 71c1a0fe86
+        <DeckPlank id={companionId} part='main' active={active} classNames='size-full' />
+=======
+        {companion && <CompanionPlank id={companionId ?? id} classNames='size-full' />}
+>>>>>>> origin/main
       </Splitter.Panel>
     </Splitter.Root>
   );
