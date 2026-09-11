@@ -70,6 +70,7 @@
     "@dxos/plugin-projects": "workspace:*",
     "@dxos/plugin-review": "workspace:*",
     "@dxos/plugin-routine": "workspace:*",
+    "@dxos/plugin-sandbox": "workspace:*",
     "@dxos/plugin-script": "workspace:*",
     "@dxos/plugin-table": "workspace:*",
     "@dxos/plugin-tasks": "workspace:*",

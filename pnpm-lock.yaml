@@ -19314,6 +19314,9 @@ importers:
       '@dxos/plugin-routine':
         specifier: workspace:*
         version: link:../../plugins/plugin-routine
+      '@dxos/plugin-sandbox':
+        specifier: workspace:*
+        version: link:../../plugins/plugin-sandbox
       '@dxos/plugin-script':
         specifier: workspace:*
         version: link:../../plugins/plugin-script
