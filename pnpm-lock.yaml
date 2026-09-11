@@ -4311,6 +4311,9 @@ importers:
       '@dxos/react-ui-table':
         specifier: workspace:*
         version: link:../../../ui/react-ui-table
+      '@dxos/test-utils':
+        specifier: workspace:*
+        version: link:../../../common/test-utils
       '@dxos/types':
         specifier: workspace:*
         version: link:../../../sdk/types
@@ -6684,9 +6687,9 @@ importers:
         specifier: 'catalog:'
         version: 2.8.2
     devDependencies:
-      '@dxos/assistant-evals':
+      '@dxos/test-utils':
         specifier: workspace:*
-        version: link:../../core/compute/assistant-evals
+        version: link:../../common/test-utils
       '@opentui/core-darwin-arm64':
         specifier: 'catalog:'
         version: 0.1.61

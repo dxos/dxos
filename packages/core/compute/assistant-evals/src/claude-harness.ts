@@ -26,8 +26,8 @@ import * as InboxPlugin from '@dxos/plugin-inbox/InboxPlugin';
 import * as RoutinePlugin from '@dxos/plugin-routine/RoutinePlugin';
 import * as SpacePlugin from '@dxos/plugin-space/SpacePlugin';
 import { createComposerTestApp } from '@dxos/plugin-testing/harness';
+import { ClaudeAgent, type Turn } from '@dxos/test-utils/claude-agent';
 
-import { ClaudeAgent, type Turn } from './claude-agent.ts';
 import { registerSkills, startMcpHost } from './mcp-host.ts';
 
 /** How the server is named to the agent, and therefore the prefix of every tool it exposes. */

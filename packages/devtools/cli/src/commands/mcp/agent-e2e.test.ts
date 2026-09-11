@@ -7,7 +7,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 
-import { ClaudeAgent } from '@dxos/assistant-evals';
+import { ClaudeAgent } from '@dxos/test-utils/claude-agent';
 
 import { McpSession, bootstrapProfile, dxBin, runDx } from '../../testing/index.ts';
 

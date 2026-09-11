@@ -82,7 +82,7 @@
     "yaml": "catalog:"
   },
   "devDependencies": {
-    "@dxos/assistant-evals": "workspace:*",
+    "@dxos/test-utils": "workspace:*",
     "@opentui/core-darwin-arm64": "catalog:",
     "@opentui/core-darwin-x64": "catalog:",
     "@opentui/core-linux-arm64": "catalog:",
