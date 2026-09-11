@@ -148,7 +148,8 @@ export const runClaudeEval = async <T>(
     ): Promise<D> =>
       app.runPromise(effect.pipe(Effect.provide(ServiceResolver.provide({ space: spaceId }, Database.Service))));
 
-    // The turns only; the scaffold before them and the scoring after are not the agent's time.
+    // The turns only, summed: the scaffold before them, the queries between them and the scoring
+    // after are the harness's time, not the agent's.
     let durationMillis = 0;
     const score = (scorers: readonly Scorer.Any[]): Promise<Scorer.Scores> =>
       app.runPromise(
@@ -200,18 +201,17 @@ export const runClaudeEval = async <T>(
       });
       const claudeAgent = agent;
 
-      const started = Date.now();
-      const result = await body({
+      return await body({
         spaceId,
         query,
         score,
         send: async (prompt) => {
+          const started = Date.now();
           const turn = await claudeAgent.send(prompt);
-          durationMillis = Date.now() - started;
+          durationMillis += Date.now() - started;
           return turn;
         },
       });
-      return result;
     } finally {
       await EffectEx.runPromise(Scope.close(scope, Exit.void));
     }
