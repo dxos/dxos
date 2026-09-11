@@ -35,23 +35,35 @@ const makeStore = () => {
 };
 
 /** Local side of a binding: a plain value cell that notifies on write, like a settings atom. */
-const makeLocal = (initial: AppSettings.Values, namespace: string = NS, sparse = false) => {
+const makeLocal = (
+  initial: AppSettings.Values,
+  { namespace = NS, sparse }: { namespace?: string; sparse?: boolean } = {},
+) => {
   let value = initial;
+  let failNextWrite = false;
   const listeners: (() => void)[] = [];
+  const put = (next: AppSettings.Values) => {
+    value = next;
+    listeners.forEach((listener) => listener());
+  };
+
   return {
     get: () => value,
-    /** A local edit, as the user makes it. */
-    set: (next: AppSettings.Values) => {
-      value = next;
-      listeners.forEach((listener) => listener());
+    set: put,
+    /** Make the next write throw, as a binding whose persistence is momentarily unavailable does. */
+    failOnce: () => {
+      failNextWrite = true;
     },
     binding: {
       namespace,
       sparse,
       read: () => value,
       write: (next: AppSettings.Values) => {
-        value = next;
-        listeners.forEach((listener) => listener());
+        if (failNextWrite) {
+          failNextWrite = false;
+          throw new Error('write failed');
+        }
+        put(next);
       },
       subscribe: (onChange: () => void) => {
         listeners.push(onChange);
@@ -155,6 +167,25 @@ describe('Reconciler', () => {
     expect(local.get()).toEqual({ toolbar: true });
   });
 
+  test('a failed write leaves the baseline, so the next pull retries', ({ expect }) => {
+    const store = makeStore();
+    const local = makeLocal({ toolbar: true });
+    const view = store.device();
+    const reconciler = new Reconciler(view.store, local.binding);
+    reconciler.seed();
+
+    local.failOnce();
+    store.device().store.update((draft) => AppSettings.setValue(draft, NS, 'toolbar', false));
+    expect(local.get()).toEqual({ toolbar: true });
+
+    expect(() => reconciler.pull()).toThrow();
+    expect(local.get()).toEqual({ toolbar: true });
+
+    // Recording agreement before the write landed would leave this one with nothing left to do.
+    reconciler.pull();
+    expect(local.get()).toEqual({ toolbar: false });
+  });
+
   test('applying a remote change does not echo back as a local edit', ({ expect }) => {
     const store = makeStore();
     const local = makeLocal({ toolbar: true });
@@ -170,8 +201,8 @@ describe('Reconciler', () => {
     const markdown = 'org.dxos.plugin.markdown';
     const chess = 'org.dxos.plugin.chess';
     const store = makeStore();
-    const here = makeLocal({ [markdown]: true, [chess]: false }, AppSettings.PLUGINS_NAMESPACE);
-    const there = makeLocal({ [markdown]: true, [chess]: false }, AppSettings.PLUGINS_NAMESPACE);
+    const here = makeLocal({ [markdown]: true, [chess]: false }, { namespace: AppSettings.PLUGINS_NAMESPACE });
+    const there = makeLocal({ [markdown]: true, [chess]: false }, { namespace: AppSettings.PLUGINS_NAMESPACE });
     bindTo(store, store.device(), here);
     bindTo(store, store.device(), there);
 
@@ -186,8 +217,11 @@ describe('Reconciler', () => {
     const chess = 'org.dxos.plugin.chess';
     const store = makeStore();
     // The plugin set is sparse: this device has never heard of chess, so it reports no key for it.
-    const here = makeLocal({ [markdown]: true }, AppSettings.PLUGINS_NAMESPACE, true);
-    const there = makeLocal({ [markdown]: true, [chess]: true }, AppSettings.PLUGINS_NAMESPACE, true);
+    const here = makeLocal({ [markdown]: true }, { namespace: AppSettings.PLUGINS_NAMESPACE, sparse: true });
+    const there = makeLocal(
+      { [markdown]: true, [chess]: true },
+      { namespace: AppSettings.PLUGINS_NAMESPACE, sparse: true },
+    );
     bindTo(store, store.device(), there);
     bindTo(store, store.device(), here);
 
@@ -202,8 +236,8 @@ describe('Reconciler', () => {
     const chess = 'org.dxos.plugin.chess';
     const sketch = 'org.dxos.plugin.sketch';
     const store = makeStore();
-    const here = makeLocal({ [markdown]: true, [chess]: true }, AppSettings.PLUGINS_NAMESPACE);
-    const there = makeLocal({ [markdown]: true, [chess]: true }, AppSettings.PLUGINS_NAMESPACE);
+    const here = makeLocal({ [markdown]: true, [chess]: true }, { namespace: AppSettings.PLUGINS_NAMESPACE });
+    const there = makeLocal({ [markdown]: true, [chess]: true }, { namespace: AppSettings.PLUGINS_NAMESPACE });
     const view = store.device();
     bindTo(store, view, here);
     bindTo(store, store.device(), there);

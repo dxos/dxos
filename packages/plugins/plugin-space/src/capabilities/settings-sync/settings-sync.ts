@@ -119,9 +119,7 @@ export default Capability.makeModule(
       unsynced,
       pinned,
       takeLocal: (namespace) => {
-        // The plugin set deliberately pins nothing, so plugins enabled on another device later
-        // still arrive here.
-        const freeze = namespace !== AppSettings.PLUGINS_NAMESPACE;
+        const freeze = sync.freezes(namespace);
         store.update((draft) => AppSettings.takeLocal(draft, namespace, sync.local(namespace), { freeze }));
       },
       rejoinAccount: (namespace, options) => {

@@ -27,19 +27,11 @@ export const Pin = Schema.Struct({
 
 /**
  * Which settings this device keeps to itself, by namespace. Absent means the namespace follows the
- * account entirely.
- *
- * Records only WHICH settings are pinned. The values themselves are already in each namespace's own
- * local store, which is what the app renders from, so a second copy could only go stale.
+ * account entirely. Records only WHICH: the values are in each namespace's own local store.
  */
 export const DeviceSettings = Schema.Record(Schema.String, Schema.mutableKey(Pin));
 
-/**
- * App configuration that replicates across a user's devices.
- *
- * A singleton in the settings space (`AppSpace.SETTINGS_SPACE_TAG`), which is hidden and
- * membership-locked; see {@link DeviceSettings} for what stays on the device.
- */
+/** App configuration that replicates across a user's devices. */
 export class AppSettings extends Type.makeObject<AppSettings>(DXN.make('org.dxos.app.type.settings', '0.1.0'))(
   Schema.Struct({
     /** Values in effect on every device unless a device pins them. */
@@ -59,10 +51,8 @@ export const AppSettingsAnnotation = Annotation.make({
 /**
  * The space's settings object, named on `properties` on first use.
  *
- * A query alone cannot settle which object that is: it does not subscribe, so two devices that both
- * run before replication each find nothing and each create one. Naming it gives the account a single
- * answer, and any object the name does not cover is folded in and left behind — so a profile that
- * duplicated before this existed, or across that window, converges the next time this runs.
+ * A query cannot settle this alone: it does not subscribe, so two devices that both run before
+ * replication each find nothing and each create one. Anything the name does not cover is folded in.
  */
 export const open = Effect.fnUntraced(function* () {
   const [properties] = yield* Database.query(Query.type(SpaceProperties)).run;
@@ -73,8 +63,6 @@ export const open = Effect.fnUntraced(function* () {
     ? yield* Database.load(named)
     : ([...objects].sort((left, right) => left.id.localeCompare(right.id))[0] ?? (yield* Database.add(make())));
 
-  // Whatever a losing device wrote is not the user's to lose: adopt it on `applyResolved`'s rule,
-  // where a key only the loser holds is taken and a key both hold keeps this object's.
   for (const other of objects.filter((object) => object.id !== settings.id)) {
     const loser = Obj.getSnapshot(other).shared;
     Obj.update(settings, (settings) => mergeShared(settings.shared, loser));
@@ -144,10 +132,7 @@ export const isKeySynced = (settings: Snapshot, namespace: string, key: string):
 
 /**
  * The values in effect on this device: `local` overlaid with the shared values, except where this
- * device pins a key and keeps its own.
- *
- * `local` is the namespace's own store — both the base for keys the account has no opinion on, and
- * the source for pinned ones.
+ * device pins a key. `local` is the namespace's own store.
  */
 export const resolve = (settings: Snapshot, namespace: string, local: Values = {}): Values => {
   const resolved: Values = { ...local, ...settings.shared[namespace] };
@@ -180,12 +165,7 @@ const namespaceOf = (container: Namespaces, namespace: string): Values => {
 
 const pinOf = (draft: Draft, namespace: string): Pin => (draft.local[namespace] ??= { local: false, keys: [] });
 
-/**
- * Route a write to the account, or record that this device keeps the key.
- *
- * A pinned key's value is not stored here: it is already in the namespace's own store, which is
- * where every reader gets it from.
- */
+/** Route a write to the account, or record that this device keeps the key. */
 export const setValue = (draft: Draft, namespace: string, key: string, value: unknown): void => {
   if (isSynced(draft, namespace) && !isPinned(draft, namespace, key)) {
     namespaceOf(draft.shared, namespace)[key] = value;
@@ -208,13 +188,10 @@ export const clearValue = (draft: Draft, namespace: string, key: string): void =
 export type Adopt = 'shared' | 'local';
 
 /**
- * Take a namespace off the account for this device.
+ * Take a namespace off the account for this device. Lossless, and no other device is touched.
  *
- * Lossless, and no other device is touched. `freeze` pins every key in `local` so the switch is a
- * visible no-op; without it the namespace diverges from the next write on, which is what lets a
- * plugin enabled on another device still arrive here.
- *
- * `local` is the namespace's own store, which holds the values in effect.
+ * `freeze` pins every key in `local`, so the switch is a visible no-op; without it the namespace
+ * diverges from the next write on.
  */
 export const takeLocal = (draft: Draft, namespace: string, local: Values, { freeze = false } = {}): void => {
   draft.local[namespace] = {
@@ -224,12 +201,8 @@ export const takeLocal = (draft: Draft, namespace: string, local: Values, { free
 };
 
 /**
- * Hand a namespace back to the account.
- *
- * The one direction that can discard a value, and only for a key both sides hold and disagree on:
- * {@link conflictingKeys} names exactly those, and `adopt` picks the side that survives them. A
- * pinned key the account does not hold is published either way, since there is no competing opinion
- * to lose.
+ * Hand a namespace back to the account — the one direction that can discard a value, and only for
+ * the keys {@link conflictingKeys} reports, where `adopt` picks the side that survives.
  */
 export const rejoinAccount = (
   draft: Draft,
@@ -247,12 +220,7 @@ export const rejoinAccount = (
   delete draft.local[namespace];
 };
 
-/**
- * Keep one key on this device — the per-key counterpart of {@link takeLocal}.
- *
- * Nothing is copied: the value it pins is the one already in the namespace's own store, so this
- * changes nothing anyone can see until the two sides drift apart.
- */
+/** Keep one key on this device — the per-key counterpart of {@link takeLocal}. */
 export const pinKey = (draft: Draft, namespace: string, key: string): void => {
   const pin = pinOf(draft, namespace);
   if (!pin.keys.includes(key)) {
@@ -260,11 +228,7 @@ export const pinKey = (draft: Draft, namespace: string, key: string): void => {
   }
 };
 
-/**
- * Hand one key back to the account — the per-key counterpart of {@link rejoinAccount}.
- *
- * Drops this device's claim on the key, so the account's value takes over wherever the two disagree.
- */
+/** Hand one key back to the account — the per-key counterpart of {@link rejoinAccount}. */
 export const unpinKey = (draft: Draft, namespace: string, key: string): void => {
   const pin = draft.local[namespace];
   if (!pin) {
@@ -290,10 +254,8 @@ export const conflictingKeys = (settings: Snapshot, namespace: string, local: Va
 };
 
 /**
- * Route every changed key of a resolved-value edit to its owning layer.
- *
- * A dropped key is cleared only where the write would have reached the account anyway. Dropping a
- * key this device keeps is a local event, and the account's value is not this device's to delete.
+ * Route every changed key of a resolved-value edit to its owning layer. A dropped key is cleared
+ * only where the write would have reached the account anyway.
  */
 export const applyResolved = (draft: Draft, namespace: string, before: Values, after: Values): void => {
   for (const key of changedKeys(before, after)) {
@@ -305,13 +267,7 @@ export const applyResolved = (draft: Draft, namespace: string, before: Values, a
   }
 };
 
-/**
- * Fold a losing settings object's values into the canonical one, on {@link applyResolved}'s rule: a
- * key only the loser holds is adopted, and a key both hold keeps the winner's.
- *
- * Two devices that both create an `AppSettings` before replication each write real settings into
- * their own; whichever the account ends up naming, the other's values are not the user's to lose.
- */
+/** Fold a loser's values in: a key only it holds is adopted, a key both hold keeps the winner's. */
 export const mergeShared = (winner: Namespaces, loser: Namespaces): void => {
   for (const [namespace, values] of Object.entries(loser)) {
     const target = namespaceOf(winner, namespace);

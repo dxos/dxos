@@ -8,11 +8,8 @@ import { type Binding } from './binding.ts';
 import { Reconciler, type Store } from './reconciler.ts';
 
 /**
- * Every namespace being reconciled against one store.
- *
- * Bindings arrive over the session as plugins activate, and the capability needs the whole set at
- * once — to pull them when either half of the store moves, and to release their subscriptions when
- * it shuts down.
+ * Every namespace being reconciled against one store. Bindings arrive over the session as plugins
+ * activate, and the capability acts on the whole set at once.
  */
 export class Sync {
   readonly #entries: Reconciler[] = [];
@@ -38,9 +35,18 @@ export class Sync {
     }
   }
 
-  /** One namespace's own store, which holds the value of every pinned key. */
+  /** @see {@link Reconciler.local} */
   local(namespace: string): AppSettings.Values {
-    return this.#entries.find((reconciler) => reconciler.namespace === namespace)?.local() ?? {};
+    return this.#find(namespace)?.local() ?? {};
+  }
+
+  /** Whether taking the namespace local pins the keys in effect. @see {@link Binding.freezes} */
+  freezes(namespace: string): boolean {
+    return this.#find(namespace)?.freezes ?? false;
+  }
+
+  #find(namespace: string): Reconciler | undefined {
+    return this.#entries.find((reconciler) => reconciler.namespace === namespace);
   }
 
   dispose(): void {

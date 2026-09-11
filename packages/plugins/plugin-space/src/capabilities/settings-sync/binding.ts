@@ -24,11 +24,17 @@ export type Binding = {
    * opinion about rather than one that was removed.
    */
   sparse?: boolean;
+  /**
+   * Whether taking the namespace local pins the keys in effect, so the switch is a visible no-op.
+   * False lets a value set on another device still arrive until this one writes the key.
+   */
+  freezes?: boolean;
 };
 
 /** One plugin's contributed settings atom. */
 export const pluginSettings = (entry: AppCapabilities.Settings, registry: AtomRegistry.AtomRegistry): Binding => ({
   namespace: entry.prefix,
+  freezes: true,
   read: () => registry.get(entry.atom),
   write: (values) => registry.set(entry.atom, values),
   subscribe: (onChange) => registry.subscribe(entry.atom, onChange),
@@ -48,8 +54,6 @@ export const pluginSet = (manager: PluginManager.PluginManager, registry: AtomRe
 
   return {
     namespace: AppSettings.PLUGINS_NAMESPACE,
-    // Only plugins registered here are reported, and the account carries decisions about plugins
-    // that are not.
     sparse: true,
     read: () => {
       const enabled = manager.getEnabled();
@@ -80,13 +84,12 @@ export const pluginSet = (manager: PluginManager.PluginManager, registry: AtomRe
 };
 
 /**
- * Plugins installed from a URL, keyed by plugin id.
- *
- * No `subscribe`: `UrlLoader`'s store has no change notification, and an install goes through a full
- * reload anyway, so this direction is pull-only.
+ * Plugins installed from a URL, keyed by plugin id. No `subscribe`: `UrlLoader`'s store has no
+ * change notification, so this direction is pull-only.
  */
 export const installedPlugins = (): Binding => ({
   namespace: AppSettings.INSTALLED_NAMESPACE,
+  freezes: true,
   read: () => Object.fromEntries(UrlLoader.getRemoteEntries().map((entry) => [entry.id, entry])),
   write: (entries) => {
     UrlLoader.setRemoteEntries(Object.values(entries).filter(AppSettings.isInstalledPlugin));

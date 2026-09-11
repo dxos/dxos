@@ -14,10 +14,7 @@ export type SettingsScopeProps = {
   prefix: string;
 };
 
-/**
- * Whether a settings panel follows the account or stays on this device. Belongs in the heading row
- * of a settings panel's first section, via `Form.Section`'s `actions` slot.
- */
+/** Whether a settings panel follows the account or stays on this device. */
 export const SettingsScope = ({ prefix }: SettingsScopeProps) => {
   const { t } = useTranslation(osTranslations);
   const { available, synced, takeLocal, rejoinAccount, getConflicts } = useSettingsScope(prefix);

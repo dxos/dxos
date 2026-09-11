@@ -72,6 +72,9 @@ export const useSettingsKeyScope = (prefix: string, key: string): SettingsKeySco
   };
 };
 
+/** Stable empty set, so a prefix with no pins keeps a constant identity across renders. */
+const noKeys: ReadonlySet<string> = new Set();
+
 /**
  * Keys within a prefix whose value here differs from the account's. Re-derived whenever the device
  * layer is republished, which the sync does on any settings change.
@@ -80,8 +83,9 @@ export const useSettingsDivergedKeys = (prefix: string): ReadonlySet<string> => 
   const sync = useOptionalCapability(AppCapabilities.SettingsSync);
   const pins = useAtomValue(sync?.pinned ?? emptyPinned);
 
-  return useMemo(() => {
-    void pins;
-    return new Set(sync?.conflicts(prefix) ?? []);
-  }, [sync, prefix, pins]);
+  return useMemo(
+    // Only a pinned key can diverge, so nothing pinned settles it without reading the account.
+    () => (pins[prefix]?.keys.length ? new Set(sync?.conflicts(prefix) ?? []) : noKeys),
+    [sync, prefix, pins],
+  );
 };

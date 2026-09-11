@@ -10,6 +10,21 @@ import { StackPlugin } from './plugins/index.ts';
 
 // TODO(wittjosiah): WebRTC only available in chromium browser for testing currently.
 //   https://github.com/microsoft/playwright/issues/2973
+/**
+ * Wait until a settings write made on `from` has reached `to`.
+ *
+ * A negative assertion needs this: without a write that IS expected to arrive, it passes on a
+ * channel that simply has not delivered yet. The dev-plugin URL is an ordinary synced setting, so
+ * anything leaked alongside it would have arrived with it.
+ */
+const awaitSettingsSync = async (from: AppManager, to: AppManager) => {
+  const marker = `http://localhost:${Math.floor(Math.random() * 10_000) + 20_000}`;
+  await from.openPluginSettings('org.dxos.plugin.registry');
+  await from.getDevPluginUrlInput().fill(marker);
+  await to.openPluginSettings('org.dxos.plugin.registry');
+  await expect(to.getDevPluginUrlInput()).toHaveValue(marker, { timeout: 60_000 });
+};
+
 test.describe('HALO tests', () => {
   // TODO(wittjosiah): STRICTLY temporary, remove when DX-1152 lands. These retries exist solely
   //   because the production edge's two-peer path stalls endemically (invitations and replication,
@@ -84,8 +99,7 @@ test.describe('HALO tests', () => {
     await guest.openUserDevices();
     await guest.joinNewIdentity();
     await guest.shell.acceptDeviceInvitation(invitationCode);
-    // Read after the guest connects: the host learns the auth code from `readyForAuthentication`,
-    // which the flow only reaches once there is a guest on the other side.
+    // Read after the guest connects: `readyForAuthentication` is only reached with a guest present.
     const authCode = await host.getAuthCode();
     await guest.shell.authenticateDevice(authCode);
     await expect(guest.getSpaceItems()).toHaveCount(INITIAL_SPACE_COUNT, { timeout: 60_000 });
@@ -109,17 +123,7 @@ test.describe('HALO tests', () => {
     await expect(guest.getPluginToggle(StackPlugin.meta.profile.key)).not.toBeChecked();
 
     // 3. The host keeps the account's decision.
-    //
-    // Proving that needs a guest-to-host write that IS expected to arrive, or the assertion passes
-    // on a channel that has simply not delivered yet. Only the plugin SET is local on the guest, so
-    // an ordinary setting still syncs: once the host sees this one, anything the guest leaked would
-    // have arrived with it.
-    const marker = 'http://localhost:4321';
-    await guest.openPluginSettings('org.dxos.plugin.registry');
-    await guest.getDevPluginUrlInput().fill(marker);
-    await host.openPluginSettings('org.dxos.plugin.registry');
-    await expect(host.getDevPluginUrlInput()).toHaveValue(marker, { timeout: 60_000 });
-
+    await awaitSettingsSync(guest, host);
     await host.openRegistryCategory('recommended');
     await expect(host.getPluginToggle(StackPlugin.meta.profile.key)).toBeChecked();
   });
@@ -139,8 +143,7 @@ test.describe('HALO tests', () => {
     // for it — no need to race the reload against a fixed deadline.
     await guest.joinNewIdentity();
     await guest.shell.acceptDeviceInvitation(invitationCode);
-    // Read after the guest connects: the host learns the auth code from `readyForAuthentication`,
-    // which the flow only reaches once there is a guest on the other side.
+    // Read after the guest connects: `readyForAuthentication` is only reached with a guest present.
     const authCode = await host.getAuthCode();
     await guest.shell.authenticateDevice(authCode);
 

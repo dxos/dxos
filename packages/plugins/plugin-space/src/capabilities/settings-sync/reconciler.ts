@@ -37,15 +37,17 @@ export class Reconciler {
     return this.#resolved();
   }
 
+  /** Whether taking the namespace local pins the keys in effect. @see {@link Binding.freezes} */
+  get freezes(): boolean {
+    return this._binding.freezes ?? false;
+  }
+
   /** The namespace's own store, which holds the value of every pinned key. */
   local(): AppSettings.Values {
     return this._binding.read();
   }
 
-  /**
-   * First reconciliation: the store wins for keys it holds, and keys only this device has are
-   * adopted into the shared layer.
-   */
+  /** First reconciliation: the store wins for keys it holds, and local-only keys are adopted. */
   seed(): void {
     const stored = this.#stored();
     const local = this._binding.read();
@@ -91,11 +93,8 @@ export class Reconciler {
   }
 
   /**
-   * What a local edit is diffed against.
-   *
-   * A sparse binding is narrowed to the keys it reports: the ones it leaves out are keys it has no
-   * opinion about — a plugin registered on another device — and diffing against them would read as
-   * a deletion and take the account's decision with it.
+   * What a local edit is diffed against. A sparse binding is narrowed to the keys it reports:
+   * diffing against the ones it omits would read as a deletion and take the account's value with it.
    */
   #baseline(local: AppSettings.Values): AppSettings.Values {
     if (!this._binding.sparse) {

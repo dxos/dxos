@@ -139,24 +139,20 @@ export class AppManager {
     return this.page.getByTestId('navtree.workspace.visible');
   }
 
-  /**
-   * Waits out the boot-time navigation to the default space, which lands seconds after `init()`
-   * returns and replaces whatever route ran in the meantime. Boot navigates more than once, so this
-   * waits for the URL to stop moving rather than for its first arrival.
-   */
+  /** Waits out the boot-time navigation to the default space, which `init()` returns ahead of. */
   async waitForDefaultWorkspace(): Promise<void> {
     await this.#waitForBoot(DEFAULT_WORKSPACE_URL);
   }
 
-  /**
-   * Waits out the same boot navigation for a device that has just joined an existing identity. Such
-   * a device stops at the inviter's workspace root, never reaching `/home`, hence the looser pattern.
-   */
+  /** The same, for a device that has just joined an existing identity. */
   async waitForJoinedWorkspace(): Promise<void> {
     await this.#waitForBoot(JOINED_WORKSPACE_URL);
   }
 
-  /** Arrive at `url`, then wait for boot to stop navigating away from it. */
+  /**
+   * Arrive at `url`, then wait for boot to stop navigating away from it. Boot navigates more than
+   * once, so the test waits for the URL to stop moving rather than for its first arrival.
+   */
   async #waitForBoot(url: RegExp): Promise<void> {
     let lastNavigation = Date.now();
     const onNavigated = (frame: Frame) => {
