@@ -2,7 +2,14 @@
 // Copyright 2026 DXOS.org
 //
 
-import { describe, test } from 'vitest';
+import * as Effect from 'effect/Effect';
+import * as Option from 'effect/Option';
+import { afterEach, beforeEach, describe, test } from 'vitest';
+
+import { SpaceProperties } from '@dxos/client-protocol/types';
+import { Annotation, Database, Obj, Ref } from '@dxos/echo';
+import { type EchoDatabase } from '@dxos/echo-client';
+import { EchoTestBuilder } from '@dxos/echo-client/testing';
 
 import * as AppSettings from './AppSettings.ts';
 
@@ -459,5 +466,86 @@ describe('pinKey and unpinKey', () => {
 
     expect(AppSettings.getEnabledPlugins(resolve(target, PLUGINS)).sort()).toEqual([stack]);
     expect(AppSettings.getEnabledPlugins(resolve(otherDevice(target), PLUGINS)).sort()).toEqual([chess, stack].sort());
+  });
+});
+
+/**
+ * The annotation and the merge only misbehave against a real database: `Obj.update` on a proxy is
+ * where a detached write shows up, and the annotation lives on a `SpaceProperties` object.
+ */
+describe('open', () => {
+  let builder: EchoTestBuilder;
+
+  beforeEach(async () => {
+    builder = await new EchoTestBuilder().open();
+  });
+
+  afterEach(async () => {
+    await builder.close();
+  });
+
+  const database = () => builder.createDatabase({ types: [AppSettings.AppSettings, SpaceProperties] });
+  const open = (db: EchoDatabase) => AppSettings.open().pipe(Effect.provide(Database.layer(db)), Effect.runPromise);
+
+  test('names the object it creates, so the next run finds it rather than making another', async ({ expect }) => {
+    const { db } = await database();
+    const properties = db.add(Obj.make(SpaceProperties, {}));
+    await db.flush();
+
+    const first = await open(db);
+    expect(Annotation.get(properties, AppSettings.AppSettingsAnnotation).pipe(Option.isSome)).toBe(true);
+
+    const second = await open(db);
+    expect(second.id).toBe(first.id);
+  });
+
+  test('keeps the first key written to a namespace that did not exist', async ({ expect }) => {
+    const { db } = await database();
+    db.add(Obj.make(SpaceProperties, {}));
+    await db.flush();
+
+    const settings = await open(db);
+    Obj.update(settings, (settings) => {
+      AppSettings.setValue({ shared: settings.shared, local: {} }, NS, 'toolbar', true);
+    });
+
+    // `??=` yields the object it assigned rather than the proxy's, so this is `{}` if the record is
+    // not read back — a plain-object test cannot catch it.
+    expect(Obj.getSnapshot(settings).shared[NS]).toEqual({ toolbar: true });
+  });
+
+  test('adopts what an object the name does not cover was holding', async ({ expect }) => {
+    const { db } = await database();
+    const properties = db.add(Obj.make(SpaceProperties, {}));
+
+    // What two devices that both created one before replication leave behind.
+    const named = db.add(AppSettings.make());
+    Obj.update(named, (named) => {
+      AppSettings.setValue({ shared: named.shared, local: {} }, NS, 'toolbar', false);
+    });
+    const stray = db.add(AppSettings.make());
+    Obj.update(stray, (stray) => {
+      AppSettings.setValue({ shared: stray.shared, local: {} }, NS, 'folding', true);
+    });
+    Obj.update(properties, (properties) => {
+      Annotation.set(properties, AppSettings.AppSettingsAnnotation, Ref.make(named));
+    });
+    await db.flush();
+
+    const settings = await open(db);
+
+    expect(settings.id).toBe(named.id);
+    // The named object keeps its own value and adopts the one only the stray held.
+    expect(Obj.getSnapshot(settings).shared[NS]).toEqual({ toolbar: false, folding: true });
+  });
+
+  test('converges on the lowest id when nothing is named yet', async ({ expect }) => {
+    const { db } = await database();
+    db.add(Obj.make(SpaceProperties, {}));
+    const objects = [db.add(AppSettings.make()), db.add(AppSettings.make())];
+    const lowest = [...objects].sort((left, right) => left.id.localeCompare(right.id))[0];
+    await db.flush();
+
+    expect((await open(db)).id).toBe(lowest.id);
   });
 });

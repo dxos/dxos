@@ -4,9 +4,12 @@
 
 // @import-as-namespace
 
+import * as Effect from 'effect/Effect';
+import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 
-import { DXN, Obj, Type } from '@dxos/echo';
+import { SpaceProperties } from '@dxos/client-protocol/types';
+import { Annotation, Database, DXN, Obj, Query, Ref, Type } from '@dxos/echo';
 
 /** Values for a single settings namespace, keyed by field name. */
 export const Values = Schema.Record(Schema.String, Schema.Any);
@@ -46,6 +49,45 @@ export class AppSettings extends Type.makeObject<AppSettings>(DXN.make('org.dxos
 
 /** Create an empty settings object. */
 export const make = (): AppSettings => Obj.make(AppSettings, { shared: {} });
+
+/** Names the space's settings object on its `properties`, so every device writes through one. */
+export const AppSettingsAnnotation = Annotation.make({
+  id: 'org.dxos.space.appSettings',
+  schema: Ref.Ref(AppSettings),
+});
+
+/**
+ * The space's settings object, named on `properties` on first use.
+ *
+ * A query alone cannot settle which object that is: it does not subscribe, so two devices that both
+ * run before replication each find nothing and each create one. Naming it gives the account a single
+ * answer, and any object the name does not cover is folded in and left behind — so a profile that
+ * duplicated before this existed, or across that window, converges the next time this runs.
+ */
+export const open = Effect.fnUntraced(function* () {
+  const [properties] = yield* Database.query(Query.type(SpaceProperties)).run;
+  const named = properties ? Annotation.get(properties, AppSettingsAnnotation).pipe(Option.getOrUndefined) : undefined;
+
+  const objects = yield* Database.query(Query.type(AppSettings)).run;
+  const settings = named
+    ? yield* Database.load(named)
+    : ([...objects].sort((left, right) => left.id.localeCompare(right.id))[0] ?? (yield* Database.add(make())));
+
+  // Whatever a losing device wrote is not the user's to lose: adopt it on `applyResolved`'s rule,
+  // where a key only the loser holds is taken and a key both hold keeps this object's.
+  for (const other of objects.filter((object) => object.id !== settings.id)) {
+    const loser = Obj.getSnapshot(other).shared;
+    Obj.update(settings, (settings) => mergeShared(settings.shared, loser));
+  }
+
+  if (properties && !named) {
+    Obj.update(properties, (properties) => {
+      Annotation.set(properties, AppSettingsAnnotation, Ref.make(settings));
+    });
+  }
+
+  return settings;
+});
 
 /** Create an empty device layer, for the local store's initial value. */
 export const makeDeviceSettings = (): DeviceSettings => ({});

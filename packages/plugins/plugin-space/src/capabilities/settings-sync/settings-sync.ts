@@ -10,14 +10,13 @@ import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppSettings from '@dxos/app-toolkit/AppSettings';
-import { Obj } from '@dxos/echo';
-import { EffectEx, createKvsStore } from '@dxos/effect';
+import { Database, Obj } from '@dxos/echo';
+import { createKvsStore } from '@dxos/effect';
 import { log } from '@dxos/log';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 
 import { resolveSettingsSpace } from '../../util/index.ts';
 import { installedPlugins, pluginSet, pluginSettings } from './binding.ts';
-import { Canonical } from './canonical.ts';
 import { type Store } from './reconciler.ts';
 import { Sync } from './sync.ts';
 
@@ -25,20 +24,17 @@ import { Sync } from './sync.ts';
  * Adapt the two halves to the reconciler's storage interface: the shared layer in ECHO, this
  * device's pins in local storage. A write opens both, since only {@link AppSettings.setValue} knows
  * whether an edit reaches the account.
- *
- * The shared layer is read through {@link Canonical} rather than captured, so a device that adopts
- * the account's object mid-session keeps writing through the same store.
  */
 const makeStore = (
-  canonical: Canonical,
+  settings: AppSettings.AppSettings,
   device: Atom.Writable<AppSettings.DeviceSettings>,
   registry: AtomRegistry.AtomRegistry,
 ): Store => ({
-  read: () => ({ shared: canonical.settings.shared, local: registry.get(device) }),
+  read: () => ({ shared: settings.shared, local: registry.get(device) }),
   update: (fn) => {
     const before = registry.get(device);
     const local: AppSettings.DeviceSettings = structuredClone(before);
-    Obj.update(canonical.settings, (settings) => fn({ shared: settings.shared, local }));
+    Obj.update(settings, (settings) => fn({ shared: settings.shared, local }));
     if (JSON.stringify(local) !== JSON.stringify(before)) {
       registry.set(device, local);
     }
@@ -62,14 +58,14 @@ export default Capability.makeModule(
     }
 
     const space = yield* resolveSettingsSpace(client);
-    const canonical = yield* Canonical.resolve(space);
+    const settings = yield* AppSettings.open().pipe(Effect.provide(Database.layer(space.db)));
     // This device's pins. One per device, so the key names no device.
     const device = createKvsStore({
       key: 'org.dxos.app-toolkit.settings-scope',
       schema: AppSettings.DeviceSettings,
       defaultValue: AppSettings.makeDeviceSettings,
     });
-    const store = makeStore(canonical, device, registry);
+    const store = makeStore(settings, device, registry);
     const sync = new Sync(store);
 
     //
@@ -106,23 +102,9 @@ export default Capability.makeModule(
       sync.pull();
     };
 
-    // `properties` carries the annotation naming the canonical object, so a change there can mean
-    // this device lost the race to name it and has to follow the account onto the winner.
-    let watchSettings = Obj.subscribe(canonical.settings, refresh);
-    const adopt = Effect.fnUntraced(function* () {
-      if (!(yield* canonical.follow())) {
-        return;
-      }
-
-      watchSettings();
-      watchSettings = Obj.subscribe(canonical.settings, refresh);
-      refresh();
-    });
-
     const unsubscribe = [
       registry.subscribe(contributed, bindSettings),
-      () => watchSettings(),
-      Obj.subscribe(space.properties, () => void EffectEx.runAndForwardErrors(adopt())),
+      Obj.subscribe(settings, refresh),
       registry.subscribe(device, refresh),
     ];
 

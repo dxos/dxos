@@ -11,21 +11,10 @@ import { Annotation, Collection, Obj, Ref } from '@dxos/echo';
 // The module, not the barrel: the barrel pulls in `AppNode`, which imports this file back, and the
 // annotation below reads the schema at module-init time.
 import * as DeckSpec from '../app-graph/DeckSpec.ts';
-import * as AppSettings from '../types/AppSettings.ts';
 /** Root navigation collection for a space. */
 export const RootCollectionAnnotation = Annotation.make({
   id: 'org.dxos.space.rootCollection',
   schema: Ref.Ref(Collection.Collection),
-});
-
-/**
- * The settings space's canonical {@link AppSettings.AppSettings}. Named on `properties` rather than
- * found by query, so two devices that both create one before replication converge on the same object
- * instead of each keeping its own.
- */
-export const AppSettingsAnnotation = Annotation.make({
-  id: 'org.dxos.space.appSettings',
-  schema: Ref.Ref(AppSettings.AppSettings),
 });
 
 /**
