@@ -63,14 +63,27 @@ const BAR_OVERHANG = BAR_HEIGHT / 2;
 /** Radius of the delegation connector's bend from the drop into the child bar. */
 const BEND_RADIUS = BAR_HEIGHT / 2;
 
-/** Bar, node and label colours per status: a node is its bar's hue in a lighter shade. */
-const STATUS_COLOR: Record<GanttLaneStatus, { fill: string; node: string; text: string }> = {
-  pending: { fill: 'fill-neutral-500/40', node: 'fill-neutral-300', text: 'text-neutral-400' },
-  blocked: { fill: 'fill-orange-500/40', node: 'fill-orange-300', text: 'text-orange-500' },
-  running: { fill: 'fill-sky-500/40', node: 'fill-sky-300', text: 'text-sky-500' },
-  review: { fill: 'fill-cyan-500/40', node: 'fill-cyan-300', text: 'text-cyan-500' },
-  done: { fill: 'fill-green-500/40', node: 'fill-green-300', text: 'text-green-500' },
-  failed: { fill: 'fill-red-500/40', node: 'fill-red-300', text: 'text-red-500' },
+/**
+ * Bar, node, thread and label colours per status: nodes and the thread through them are the bar's
+ * hue in a lighter shade.
+ */
+const STATUS_COLOR: Record<GanttLaneStatus, { fill: string; node: string; thread: string; text: string }> = {
+  pending: {
+    fill: 'fill-neutral-500/40',
+    node: 'fill-neutral-300',
+    thread: 'stroke-neutral-300',
+    text: 'text-neutral-400',
+  },
+  blocked: {
+    fill: 'fill-orange-500/40',
+    node: 'fill-orange-300',
+    thread: 'stroke-orange-300',
+    text: 'text-orange-500',
+  },
+  running: { fill: 'fill-sky-500/40', node: 'fill-sky-300', thread: 'stroke-sky-300', text: 'text-sky-500' },
+  review: { fill: 'fill-cyan-500/40', node: 'fill-cyan-300', thread: 'stroke-cyan-300', text: 'text-cyan-500' },
+  done: { fill: 'fill-green-500/40', node: 'fill-green-300', thread: 'stroke-green-300', text: 'text-green-500' },
+  failed: { fill: 'fill-red-500/40', node: 'fill-red-300', thread: 'stroke-red-300', text: 'text-red-500' },
 };
 
 type Row = { lane: GanttLane; depth: number; index: number };
@@ -246,7 +259,7 @@ export const Gantt = composable<HTMLDivElement, GanttProps>(
                 x2={nodeX(lane, Math.max(...times))}
                 y1={rowY(index)}
                 y2={rowY(index)}
-                className='stroke-neutral-400'
+                className={STATUS_COLOR[lane.status].thread}
               />
             );
           })}
