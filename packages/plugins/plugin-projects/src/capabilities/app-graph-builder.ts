@@ -17,10 +17,8 @@ import * as TypeSection from '@dxos/app-toolkit/TypeSection';
 import * as Chat from '@dxos/assistant/Chat';
 import * as Operation from '@dxos/compute/Operation';
 import * as Project from '@dxos/compute/Project';
-import { type Database, EID, Filter, Obj, Query, Type } from '@dxos/echo';
-import { EntityId, SpaceId } from '@dxos/keys';
+import { EID, Filter, Obj, Query, Type } from '@dxos/echo';
 import * as AssistantOperation from '@dxos/plugin-assistant/AssistantOperation';
-import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 
@@ -39,7 +37,6 @@ import { inboxResearch } from '../templates/index.ts';
  */
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const capabilities = yield* Capability.Service;
     const sectionExtensions = yield* TypeSection.createTypeSectionExtension(Project.Project, {
       urlKey: 'project',
       match: AppNodeMatcher.whenNavTreeGroup(GraphPath.GroupTypes.ai),
@@ -58,12 +55,7 @@ export default Capability.makeModule(
 
     const actionExtensions = yield* createProjectActionExtension();
     const chatExtensions = yield* createProjectChatsExtension();
-    const chatChildrenExtensions = yield* createProjectChatsChildrenExtension({
-      // Looked up at resolve time rather than here: the Client is not yet available when the graph
-      // builder activates, and a URL only resolves much later.
-      getDatabase: (spaceId) =>
-        SpaceId.isValid(spaceId) ? capabilities.get(ClientCapabilities.Client).spaces.get(spaceId)?.db : undefined,
-    });
+    const chatChildrenExtensions = yield* createProjectChatsChildrenExtension();
     const artifactsExtensions = yield* createProjectArtifactsExtension();
     const artifactsActionExtensions = yield* createProjectArtifactsActionExtension();
     const mailboxExtensions = yield* createMailboxProjectExtension();
@@ -178,48 +170,27 @@ export const createProjectChatsExtension = () =>
       ]),
   });
 
-export type ProjectChatsChildrenOptions = {
-  /** The database behind a URL's workspace segment, or undefined when it names no open space. */
-  getDatabase: (spaceId: string) => Database.Database | undefined;
-};
-
 /**
  * The Chats branch's children. Ownership is the ECHO parent edge (no `Project` schema field) — the
  * same edge every companion chat uses — so what is project-specific is only the DISPLAY: project
  * chats surface in the navtree, other companions stay in their subject's companion panel.
  *
- * The `chat` url key is shared with plugin-assistant's Chats section on purpose — one key spanning
- * several connectors is how plugin-space addresses objects wherever they sit — so the path resolves
- * through whichever project currently parents the chat. The section's static path cannot describe
- * that (the project is data), so this binding resolves it: without one the deck cannot put an open
- * project chat into the URL and refuses to open it.
+ * `project-session` is this connector's own url key, not plugin-assistant's `chat`: the two address
+ * different nodes (a parentless chat in the Chats section, a chat on a project's Sessions branch), so
+ * one key spanning both would make a chat's address depend on which connector reached it first.
+ * Declaring one is not optional — without a binding the deck cannot put an open project chat into the
+ * URL and refuses to open it.
+ *
+ * The path is static down to the Project section; the project and the branch ride in the pair's id,
+ * `+`-joined, so the whole chain reconstructs without a database lookup.
  */
-export const createProjectChatsChildrenExtension = ({ getDatabase }: ProjectChatsChildrenOptions) =>
+export const createProjectChatsChildrenExtension = () =>
   AppGraphBuilder.createExtension({
     id: 'projectChatsChildren',
     url: {
-      key: 'chat',
+      key: 'project-session',
       kind: 'item',
-      path: ({ id, workspace }) =>
-        Effect.gen(function* () {
-          const db = getDatabase(workspace);
-          if (!db || !EntityId.isValid(id)) {
-            return null;
-          }
-          const [chat] = yield* Effect.promise(() => db.query(Filter.id(id)).run());
-          const project = Obj.instanceOf(Chat.Chat, chat) ? Obj.getParent(chat) : undefined;
-          if (!Obj.instanceOf(Project.Project, project)) {
-            return null;
-          }
-          return GraphPath.getSpacePath(
-            workspace,
-            GraphPath.GroupSegments.ai,
-            Type.getTypename(Project.Project),
-            project.id,
-            CHATS_SEGMENT,
-            id,
-          );
-        }),
+      path: [GraphPath.GroupSegments.ai, Type.getTypename(Project.Project)],
     },
     match: (node) =>
       node.type === CHATS_SECTION_TYPE && isChatsBranch(node.data) ? Option.some(node.data.project) : Option.none(),
@@ -341,10 +312,20 @@ export const createProjectArtifactsExtension = () =>
  *
  * The dialog places the object in the space; the ref array is what makes it the project's, so the
  * link is written here rather than left to the dialog's own placement.
+ *
+ * `project-artifact` addresses an object AS the project's. That is a different node from the same
+ * object under its own type section (`object/<id>`), so it takes its own key: an artifact opened from
+ * a project comes back to the project. Shaped like the `project-session` binding above — static down
+ * to the Project section, with the project and the branch in the pair's id.
  */
 export const createProjectArtifactsActionExtension = () =>
   AppGraphBuilder.createExtension({
     id: 'projectArtifactsActions',
+    url: {
+      key: 'project-artifact',
+      kind: 'item',
+      path: [GraphPath.GroupSegments.ai, Type.getTypename(Project.Project)],
+    },
     match: (node) =>
       node.type === ARTIFACTS_SECTION_TYPE && isArtifactsBranch(node.data)
         ? Option.some({ project: node.data.project, nodeId: node.id })

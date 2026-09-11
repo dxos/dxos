@@ -19,7 +19,10 @@ import * as GraphNode from '@dxos/graph/GraphNode';
 import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
 
 import {
+  ARTIFACTS_SEGMENT,
   CHATS_SEGMENT,
+  createProjectArtifactsActionExtension,
+  createProjectArtifactsExtension,
   createProjectChatsChildrenExtension,
   createProjectChatsExtension,
 } from './app-graph-builder.ts';
@@ -72,9 +75,9 @@ describe('project chats graph extension', () => {
       }),
     );
     const chatExtensions = await EffectEx.runPromise(createProjectChatsExtension());
-    const chatChildrenExtensions = await EffectEx.runPromise(
-      createProjectChatsChildrenExtension({ getDatabase: (spaceId) => (spaceId === db.spaceId ? db : undefined) }),
-    );
+    const chatChildrenExtensions = await EffectEx.runPromise(createProjectChatsChildrenExtension());
+    const artifactExtensions = await EffectEx.runPromise(createProjectArtifactsExtension());
+    const artifactChildrenExtensions = await EffectEx.runPromise(createProjectArtifactsActionExtension());
     const context = setupGraphBuilder({
       extensions: [
         ...rootExtensions,
@@ -83,12 +86,15 @@ describe('project chats graph extension', () => {
         ...sectionExtensions,
         ...chatExtensions,
         ...chatChildrenExtensions,
+        ...artifactExtensions,
+        ...artifactChildrenExtensions,
       ],
     });
 
     // The chats hang off a virtual Chats branch, not the project row, so every level is expanded.
     const projectNodeId = GraphPath.getSpacePath(db.spaceId, ...sectionPath, project.id);
     const chatsNodeId = GraphNode.qualifyId(projectNodeId, CHATS_SEGMENT);
+    const artifactsNodeId = GraphNode.qualifyId(projectNodeId, ARTIFACTS_SEGMENT);
     for (const nodeId of [
       GraphNode.RootId,
       ...sectionPath.map((_, index) => GraphPath.getSpacePath(db.spaceId, ...sectionPath.slice(0, index))),
@@ -98,6 +104,18 @@ describe('project chats graph extension', () => {
     await context.expand(GraphPath.getSpacePath(db.spaceId, ...sectionPath));
     await context.expand(projectNodeId);
     await context.expand(chatsNodeId);
+    await context.expand(artifactsNodeId);
+
+    const addArtifact = async () => {
+      const artifact = db.add(Feed.make());
+      Obj.update(project, (project) => {
+        project.artifacts.push(Ref.make(artifact));
+      });
+      await db.flush();
+      await context.flush();
+      await context.expand(artifactsNodeId);
+      return artifact;
+    };
 
     const addChat = async (name: string) => {
       const feed = db.add(Feed.make());
@@ -113,17 +131,19 @@ describe('project chats graph extension', () => {
       db,
       project,
       addChat,
+      addArtifact,
       projectNodeId,
       chatsNodeId,
+      artifactsNodeId,
       getChildIds: () => context.getConnections(chatsNodeId).map((node) => node.id),
     };
   };
 
   test('a project always carries the Chats branch, empty or not', async ({ expect }) => {
-    const { projectNodeId, chatsNodeId, getConnections, getChildIds } = await setupTestContext();
+    const { projectNodeId, chatsNodeId, artifactsNodeId, getConnections, getChildIds } = await setupTestContext();
 
-    // The branch is what the reader clicks into, so it exists before there is anything under it.
-    expect(getConnections(projectNodeId).map((node) => node.id)).toEqual([chatsNodeId]);
+    // The branches are what the reader clicks into, so they exist before there is anything under them.
+    expect(getConnections(projectNodeId).map((node) => node.id)).toEqual([chatsNodeId, artifactsNodeId]);
     expect(getChildIds()).toEqual([]);
   });
 
@@ -152,23 +172,46 @@ describe('project chats graph extension', () => {
     expect(getChildIds()).toEqual([GraphNode.qualifyId(chatsNodeId, chat.id)]);
   });
 
-  test('a project chat is addressable by URL: `chat/<id>` resolves to the node and back', async ({ expect }) => {
-    const { db, builder, addChat, chatsNodeId } = await setupTestContext();
+  test('a project chat is addressable by URL: `project-session/<id>` resolves to the node and back', async ({
+    expect,
+  }) => {
+    const { db, project, builder, addChat, chatsNodeId } = await setupTestContext();
     const chat = await addChat('Chat');
     const chatNodeId = GraphNode.qualifyId(chatsNodeId, chat.id);
+    // The project and the branch sit between the binding's static path and the chat, so they ride in
+    // the pair's id rather than needing a resolver.
+    const pairId = [project.id, CHATS_SEGMENT, chat.id].join('+');
 
     // Reverse: the deck serializes the open plank into the URL, which is what fails with "node has
     // no URL binding" when the connector declares none.
     const represented = PathResolution.representNode(builder, chatNodeId);
-    expect(Option.getOrUndefined(represented)).toEqual({ key: 'chat', id: chat.id, workspace: db.spaceId });
+    expect(Option.getOrUndefined(represented)).toEqual({ key: 'project-session', id: pairId, workspace: db.spaceId });
 
     // Forward: a fresh graph resolves the pair back to the same node.
     const [resolved] = await EffectEx.runPromise(
       PathResolution.resolveUrl(builder, {
         workspace: db.spaceId,
-        pairs: [{ key: 'chat', id: chat.id, workspace: db.spaceId }],
+        pairs: [{ key: 'project-session', id: pairId, workspace: db.spaceId }],
       }),
     );
     expect(resolved?.nodeId).toEqual(chatNodeId);
+  });
+
+  test('a project artifact is addressable by URL under its own key', async ({ expect }) => {
+    const { db, project, builder, addArtifact, artifactsNodeId } = await setupTestContext();
+    const artifact = await addArtifact();
+    const artifactNodeId = GraphNode.qualifyId(artifactsNodeId, artifact.id);
+    const pairId = [project.id, ARTIFACTS_SEGMENT, artifact.id].join('+');
+
+    const represented = PathResolution.representNode(builder, artifactNodeId);
+    expect(Option.getOrUndefined(represented)).toEqual({ key: 'project-artifact', id: pairId, workspace: db.spaceId });
+
+    const [resolved] = await EffectEx.runPromise(
+      PathResolution.resolveUrl(builder, {
+        workspace: db.spaceId,
+        pairs: [{ key: 'project-artifact', id: pairId, workspace: db.spaceId }],
+      }),
+    );
+    expect(resolved?.nodeId).toEqual(artifactNodeId);
   });
 });
