@@ -13,6 +13,7 @@ import { AiService } from '@dxos/ai';
 import { AiServiceTestingPreset } from '@dxos/ai/testing';
 import type * as Capabilities from '@dxos/app-framework/Capabilities';
 import type * as Plugin from '@dxos/app-framework/Plugin';
+import { FeedTraceSink } from '@dxos/compute-runtime';
 import * as ServiceResolver from '@dxos/compute/ServiceResolver';
 import type * as Skill from '@dxos/compute/Skill';
 import { Database, Tag, type Type } from '@dxos/echo';
@@ -29,6 +30,7 @@ import { createComposerTestApp } from '@dxos/plugin-testing/harness';
 import { ClaudeAgent, type Turn } from '@dxos/test-utils/claude-agent';
 
 import { registerSkills, startMcpHost } from './mcp-host.ts';
+import * as Scorer from './Scorer.ts';
 
 /** How the server is named to the agent, and therefore the prefix of every tool it exposes. */
 export const SERVER = 'dx-dev';
@@ -82,6 +84,12 @@ export type ClaudeHarness = {
   readonly query: <D>(
     effect: Effect.Effect<D, unknown, Database.Service | Capabilities.ProcessManagerRuntimeServices>,
   ) => Promise<D>;
+  /**
+   * Scores the run against the still-open space (see {@link Scorer}), with the wall clock the turns
+   * took. A scenario whose stages are only true mid-run lifts those facts into scorers of their own;
+   * everything else asks the database its own question here.
+   */
+  readonly score: (scorers: readonly Scorer.Any[]) => Promise<Scorer.Scores>;
 };
 
 /**
@@ -140,6 +148,15 @@ export const runClaudeEval = async <T>(
     ): Promise<D> =>
       app.runPromise(effect.pipe(Effect.provide(ServiceResolver.provide({ space: spaceId }, Database.Service))));
 
+    // The turns only; the scaffold before them and the scoring after are not the agent's time.
+    let durationMillis = 0;
+    const score = (scorers: readonly Scorer.Any[]): Promise<Scorer.Scores> =>
+      app.runPromise(
+        Scorer.runAll(scorers, { durationMillis }).pipe(
+          Effect.provide(ServiceResolver.provide({ space: spaceId }, Database.Service, FeedTraceSink.FeedTraceSink)),
+        ),
+      );
+
     const registry = app.get(ClientCapabilities.Client).graph.registry;
     registerSkills(registry, options.skills);
     // The space's database is captured alongside the runtime services, because a reference argument
@@ -182,7 +199,18 @@ export const runClaudeEval = async <T>(
       });
       const claudeAgent = agent;
 
-      return await body({ spaceId, query, send: (prompt) => claudeAgent.send(prompt) });
+      const started = Date.now();
+      const result = await body({
+        spaceId,
+        query,
+        score,
+        send: async (prompt) => {
+          const turn = await claudeAgent.send(prompt);
+          durationMillis = Date.now() - started;
+          return turn;
+        },
+      });
+      return result;
     } finally {
       await Effect.runPromise(Scope.close(scope, Exit.void));
     }

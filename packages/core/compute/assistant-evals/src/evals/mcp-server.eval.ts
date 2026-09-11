@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 import { evalite } from 'evalite';
 
 import * as Project from '@dxos/compute/Project';
-import { Database, Ref } from '@dxos/echo';
+import { Database, Filter, Query, Ref } from '@dxos/echo';
 import * as ProjectSkill from '@dxos/plugin-projects/ProjectSkill';
 import * as ProjectsPlugin from '@dxos/plugin-projects/ProjectsPlugin';
 import * as TasksPlugin from '@dxos/plugin-tasks/TasksPlugin';
@@ -15,6 +15,7 @@ import { trim } from '@dxos/util';
 
 import { findObject } from '../assertions.ts';
 import { SERVER, runClaudeEval, tool } from '../claude-harness.ts';
+import * as Scorer from '../Scorer.ts';
 
 //
 // This repo's MCP surface, driven by a real Claude Code subprocess and graded by what reached the
@@ -53,6 +54,73 @@ const readTasks = Effect.gen(function* () {
 const find = (tasks: readonly TaskRow[], title: string): TaskRow | undefined =>
   tasks.find((candidate) => candidate.title === title);
 
+/**
+ * What each turn established, at the turn rather than at the end.
+ *
+ * A staged fact cannot be recovered from the final space — "the read-only turn changed nothing" is
+ * only true between two writes — so the turns record them and the scorers below read them back. The
+ * dimensions that *are* end state ask the database their own question instead.
+ */
+type Staged = {
+  scaffolded: boolean;
+  listed: boolean;
+  readOnly: boolean;
+  completed: boolean;
+  started: boolean;
+};
+
+const NOTHING_STAGED: Staged = {
+  scaffolded: false,
+  listed: false,
+  readOnly: false,
+  completed: false,
+  started: false,
+};
+
+const scorers = (staged: Staged): Scorer.Any[] => [
+  Scorer.make({
+    name: 'scaffold-visible',
+    description: 'The seeded ledger is readable outside the agent before the run starts.',
+    query: Effect.succeed(staged.scaffolded),
+    score: (ok) => ok,
+  }),
+  Scorer.make({
+    name: 'tasks-listed',
+    description: 'The agent read both tasks through the server rather than answering from the prompt.',
+    query: Effect.succeed(staged.listed),
+    score: (ok) => ok,
+  }),
+  Scorer.make({
+    name: 'read-turn-changed-nothing',
+    description: 'The read-only turn left every task as it found it.',
+    query: Effect.succeed(staged.readOnly),
+    score: (ok) => ok,
+  }),
+  Scorer.make({
+    name: 'task-completed',
+    description: 'The named task is done in the database, and only that task moved.',
+    query: Effect.succeed(staged.completed),
+    score: (ok) => ok,
+  }),
+  Scorer.make({
+    name: 'follow-up-turn-wrote',
+    description: 'A second turn set the other task started with its description, without rolling the first back.',
+    query: Effect.succeed(staged.started),
+    score: (ok) => ok,
+  }),
+  Scorer.database({
+    name: 'ledger-intact',
+    // The ledger's own length, not a filter: the natural failure of an agent that cannot find a task
+    // is to create a new one and report success, which every title-keyed check would pass.
+    description: 'Still exactly two tasks — the agent updated the ledger rather than adding to it.',
+    query: Query.select(Filter.type(Task.Task)),
+    score: (tasks) => tasks.length === 2,
+  }),
+];
+
+/** Names and descriptions only; the marks come from the run, through `output.scores`. */
+const SCORERS = scorers(NOTHING_STAGED);
+
 const task = () =>
   runClaudeEval(
     {
@@ -74,7 +142,7 @@ const task = () =>
           yield* Database.add(Project.make({ name: PROJECT_NAME, taskSet: Ref.make(taskSet) }));
         }),
     },
-    async ({ spaceId, send, query }) => {
+    async ({ spaceId, send, query, score }) => {
       // Stage 1 — the starting state, proven before a single token is spent. Without it, a later
       // "the task is done" score cannot distinguish the agent's work from a bad fixture.
       const seeded = await query(readTasks);
@@ -129,15 +197,9 @@ const task = () =>
         // Still done: a later turn must not roll back what an earlier one committed.
         find(afterStart, ROTATE)?.status === 'done';
 
+      const scores = await score(scorers({ scaffolded, listed, readOnly, completed, started }));
       return {
-        scaffolded,
-        listed,
-        readOnly,
-        completed,
-        started,
-        // The ledger's own length, not a filter: the natural failure of an agent that cannot find a
-        // task is to create a new one and report success, which every title-keyed check would pass.
-        taskCount: afterStart.length,
+        scores,
         turns: [read, complete, start].map(({ isError, toolCalls, result }) => ({ isError, toolCalls, result })),
       };
     },
@@ -146,36 +208,5 @@ const task = () =>
 evalite('MCP server — Claude Code drives the projected surface, graded from the database', {
   data: [{ input: null }],
   task,
-  scorers: [
-    {
-      name: 'scaffold-visible',
-      description: 'The seeded ledger is readable outside the agent before the run starts.',
-      scorer: ({ output }) => (output.scaffolded ? 1 : 0),
-    },
-    {
-      name: 'tasks-listed',
-      description: 'The agent read both tasks through the server rather than answering from the prompt.',
-      scorer: ({ output }) => (output.listed ? 1 : 0),
-    },
-    {
-      name: 'read-turn-changed-nothing',
-      description: 'The read-only turn left every task as it found it.',
-      scorer: ({ output }) => (output.readOnly ? 1 : 0),
-    },
-    {
-      name: 'task-completed',
-      description: 'The named task is done in the database, and only that task moved.',
-      scorer: ({ output }) => (output.completed ? 1 : 0),
-    },
-    {
-      name: 'follow-up-turn-wrote',
-      description: 'A second turn set the other task started with its description, without rolling the first back.',
-      scorer: ({ output }) => (output.started ? 1 : 0),
-    },
-    {
-      name: 'ledger-intact',
-      description: 'Still exactly two tasks — the agent updated the ledger rather than adding to it.',
-      scorer: ({ output }) => (output.taskCount === 2 ? 1 : 0),
-    },
-  ],
+  scorers: Scorer.toEvalite(SCORERS),
 });
