@@ -21,6 +21,7 @@ export type GanttLane = {
   start?: number;
   end?: number;
   parentId?: string;
+  taskId?: string;
   blockedOn?: readonly string[];
   delegatedFrom?: { laneId: string; markerId: string };
   tokens?: { input: number; output: number; total: number };
@@ -139,7 +140,14 @@ export const Gantt = composable<HTMLDivElement, GanttProps>(
     const span = Math.max(range.end - range.start, 1);
     const x = (time: number): number => PAD_X + ((time - range.start) / span) * (width - 2 * PAD_X);
     const rowY = (index: number): number => HEADER_HEIGHT + index * ROW_HEIGHT + ROW_HEIGHT / 2;
-    const laneEnd = (lane: GanttLane): number | undefined => lane.end ?? now;
+    const laneTimes = (lane: GanttLane): number[] =>
+      markers.filter((marker) => marker.laneId === lane.id).map((marker) => marker.timestamp);
+    // A bar reaches its last node, not `now`: a lane without a fresh event is not shown as still
+    // busy, and a terminated one ends where its last event did.
+    const laneEnd = (lane: GanttLane): number | undefined => {
+      const times = laneTimes(lane);
+      return times.length > 0 ? Math.max(...times) : (lane.end ?? now);
+    };
     const delegationSource = (lane: GanttLane): GanttMarker | undefined =>
       lane.delegatedFrom && markerById.get(lane.delegatedFrom.markerId);
     // A delegated lane's bar begins where the connector's bend lands, never under the drop from the
@@ -177,9 +185,7 @@ export const Gantt = composable<HTMLDivElement, GanttProps>(
               onClick={() => onLaneSelect?.(lane)}
             >
               <span className={mx('shrink-0 w-2 h-2 rounded-full bg-current', STATUS_COLOR[lane.status].text)} />
-              <span className={mx('truncate', lane.kind === 'task' ? 'text-subdued' : 'text-base-fg')}>
-                {lane.label}
-              </span>
+              <span className='truncate text-base-fg'>{lane.label}</span>
             </div>
             <div
               className='col-start-3 flex items-center justify-end gap-2 px-2 text-subdued whitespace-nowrap'
@@ -240,7 +246,7 @@ export const Gantt = composable<HTMLDivElement, GanttProps>(
 
           {/* The thread through a lane's nodes, so a row reads as a sequence rather than scattered dots. */}
           {rows.map(({ lane, index }) => {
-            const times = markers.filter((marker) => marker.laneId === lane.id).map((marker) => marker.timestamp);
+            const times = laneTimes(lane);
             if (times.length < 2) {
               return null;
             }
@@ -254,22 +260,6 @@ export const Gantt = composable<HTMLDivElement, GanttProps>(
                 className='stroke-neutral-400'
               />
             );
-          })}
-
-          {markers.map((marker) => {
-            const row = rowById.get(marker.laneId);
-            return row ? (
-              <circle
-                key={marker.id}
-                cx={nodeX(row.lane, marker.timestamp)}
-                cy={rowY(row.index)}
-                r={NODE_RADIUS}
-                className={mx('cursor-pointer stroke-base-surface', markerFill(marker))}
-                onClick={() => onMarkerSelect?.(marker)}
-              >
-                <title>{marker.label}</title>
-              </circle>
-            ) : null;
           })}
 
           {rows.flatMap(({ lane, index }) =>
@@ -292,7 +282,7 @@ export const Gantt = composable<HTMLDivElement, GanttProps>(
             }),
           )}
 
-          {/* Down from the parent node, a quarter bend, then right into the child bar's left edge. */}
+          {/* Down from the parent node, a quarter bend, then right to the centre of the child's first node. */}
           {rows.flatMap(({ lane, index }) => {
             const source = delegationSource(lane);
             const sourceRow = lane.delegatedFrom && rowById.get(lane.delegatedFrom.laneId);
@@ -301,14 +291,35 @@ export const Gantt = composable<HTMLDivElement, GanttProps>(
             }
             const sourceX = x(source.timestamp);
             const y = rowY(index);
+            const firstNode = Math.min(...laneTimes(lane));
+            const targetX = Number.isFinite(firstNode)
+              ? nodeX(lane, firstNode)
+              : barStart(lane, lane.start) + BAR_OVERHANG;
             return [
               <path
                 key={`delegation:${lane.id}`}
-                d={`M ${sourceX} ${rowY(sourceRow.index)} V ${y - BEND_RADIUS} Q ${sourceX} ${y} ${sourceX + BEND_RADIUS} ${y} H ${barStart(lane, lane.start)}`}
+                d={`M ${sourceX} ${rowY(sourceRow.index)} V ${y - BEND_RADIUS} Q ${sourceX} ${y} ${sourceX + BEND_RADIUS} ${y} H ${targetX}`}
                 fill='none'
                 className='stroke-fuchsia-500'
               />,
             ];
+          })}
+
+          {/* Nodes last, over the bars and every line, so a line reads as ending at a node's centre. */}
+          {markers.map((marker) => {
+            const row = rowById.get(marker.laneId);
+            return row ? (
+              <circle
+                key={marker.id}
+                cx={nodeX(row.lane, marker.timestamp)}
+                cy={rowY(row.index)}
+                r={NODE_RADIUS}
+                className={mx('cursor-pointer stroke-base-surface', markerFill(marker))}
+                onClick={() => onMarkerSelect?.(marker)}
+              >
+                <title>{marker.label}</title>
+              </circle>
+            ) : null;
           })}
         </svg>
       </div>
