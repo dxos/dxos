@@ -362,10 +362,6 @@ export class Request {
       // re-issued: the messages are already in `_pending` and a second attempt would duplicate them.
       let emitted = false;
 
-      // The provider has answered once a block arrives, so the wait the reader is watching is now the
-      // generation itself. Emitted once per turn: every subsequent block is the same stage.
-      let generating = false;
-
       const messages = yield* stream.pipe(
         withoutToolCallParsing,
         AiParser.parseResponse({
@@ -382,10 +378,6 @@ export class Request {
         Stream.mapEffect(
           (block) =>
             Effect.gen({ self: this }, function* () {
-              if (!generating) {
-                generating = true;
-                yield* emitRequestPhase('generating');
-              }
               if (block._tag === 'stats' && block.finishReason !== undefined) {
                 finishReason = block.finishReason;
               }

@@ -604,6 +604,11 @@ export class AiChatProcessor {
    * ephemeral delivery and feed replication.
    */
   #handleEphemeralMessage(event: Trace.PayloadType<typeof PartialBlock>) {
+    // Content arriving is what "generating" means, and deriving it here keeps it out of the agent's
+    // streaming pipeline, where the extra yield a trace write costs is observable to the turn's
+    // tools. A tool call the agent reports supersedes it for as long as the tool runs.
+    this.#registry.set(this.activity, { phase: 'generating' });
+
     const isPending = event.block.pending;
     const message = Obj.make(Message.Message, {
       id: event.messageId,

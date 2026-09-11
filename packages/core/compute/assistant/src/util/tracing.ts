@@ -80,7 +80,11 @@ export const RequestPhaseName = Schema.Literals([
   'building-toolkit',
   'encoding-prompt',
   'contacting-provider',
-  /** The model is streaming its reply; the first block of a generation enters this. */
+  /**
+   * The model is streaming its reply. Derived client-side from the arriving blocks rather than
+   * emitted by the agent: a write from inside the streaming pipeline adds a yield between parsing a
+   * block and submitting it, which is observable in what the tools of that turn then see.
+   */
   'generating',
   /** A tool the model called is executing; `detail` carries the tool's name. */
   'calling-tool',

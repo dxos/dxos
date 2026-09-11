@@ -301,9 +301,10 @@ describe('AiChatProcessor streaming', () => {
         expect(snapshots.indexOf('connecting-mcp')).toBeLessThan(snapshots.indexOf('contacting-provider'));
         expect(attempts[snapshots.indexOf('contacting-provider')]).toBe(3);
 
-        // A streamed block no longer supersedes the phase line — an agentic turn streams a little and
-        // then works for a long time, so only the settled request clears it: the two empty snapshots
-        // are the subscription's immediate read and the settle.
+        // A streamed block no longer clears the phase line — an agentic turn streams a little and then
+        // works for a long time — it moves it to `generating`, and only the settled request clears
+        // it: the two empty snapshots are the subscription's immediate read and the settle.
+        expect(snapshots.indexOf('contacting-provider')).toBeLessThan(snapshots.indexOf('generating'));
         expect(snapshots.filter((phase) => phase === undefined)).toHaveLength(2);
         expect(snapshots.at(-1)).toBeUndefined();
         expect(observableRegistry.get(processor.activity)).toBeUndefined();
