@@ -59,6 +59,11 @@
       "types": "./dist/types/src/plugin.d.ts",
       "default": "./dist/lib/plugin.mjs"
     },
+    "#session-timeline": {
+      "source": "./src/session-timeline/index.ts",
+      "types": "./dist/types/src/session-timeline/index.d.ts",
+      "default": "./dist/lib/session-timeline.mjs"
+    },
     "#skills": {
       "source": "./src/skills/index.ts",
       "types": "./dist/types/src/skills/index.d.ts",

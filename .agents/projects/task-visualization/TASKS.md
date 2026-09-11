@@ -20,15 +20,20 @@ are (event → session → task).
 
 ## Phase 3: Data layer
 
-- [ ] **`assistant.delegationSpawned { taskId, pid }` trace event** at the spawn site in
-      `@dxos/agent-runtime` `agent-process.ts`.
-- [ ] **`buildSessionTimeline`** in plugin-assistant next to `execution-graph`: trace messages +
-      processes + chats + tasks → `Lane[]` + `Marker[]`; Effect schema; tests on the existing
-      `sub-agent-delegation.json` fixture.
+- [x] **`assistant.delegationSpawned { taskId, pid }` trace event** — `@dxos/assistant`
+      `util/tracing.ts`, written at both spawn sites in `agent-process.ts`.
+- [x] **`buildSessionTimeline`** — `plugin-assistant/src/session-timeline/` (`#session-timeline`):
+      Effect-schema `Lane`/`Marker`/`SessionTimeline`; sub-agent runs are child `session` lanes with
+      `delegatedFrom`; 4 tests incl. the `sub-agent-delegation.json` fixture.
+- [ ] **Capture a fresh trace fixture** with `dxosDumpTrace()` from a live delegation — the existing
+      one predates `meta.conversation` (still `conversationId`) and `delegationSpawned`.
 
 ## Phase 4: Visualization
 
-- [ ] **Gantt component** (own, not a library) with a story driven by fixture data.
+- [x] **Gantt component** — `react-ui-components/src/components/Gantt/`: session boxes with event
+      nodes, task lines, dependency + delegation connectors, tokens gutter, `now` line; `Default` +
+      `Live` stories.
+- [ ] Story cleanup: one `DefaultStory` + args (drop per-story `render`); zoom/pan; marker tooltips.
 - [ ] **Companion panel** subscribing via `useTraceMessages` + `ProcessMonitor`.
 
 ## Follow-ups surfaced by FLOW.md §7 (not in scope unless promoted)
