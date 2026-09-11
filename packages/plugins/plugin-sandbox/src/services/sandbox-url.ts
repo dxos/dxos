@@ -28,17 +28,38 @@ export const getSandboxServiceUrl = (client: Client): string => {
 };
 
 /**
+ * Whether a credential may be put on the wire to `url`.
+ *
+ * HTTPS, or a loopback host — `runtime.services.sandbox.url` exists to point at a local
+ * `wrangler dev`, which is plain HTTP but never leaves the machine. Any other `http://` target is a
+ * credential in cleartext across a network, so the presentation is withheld rather than sent.
+ */
+export const acceptsCredentials = (url: string): boolean => {
+  try {
+    const { protocol, hostname } = new URL(url);
+    return protocol === 'https:' || hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '[::1]';
+  } catch {
+    return false;
+  }
+};
+
+/**
  * Mints the verifiable presentation sandbox-service authenticates every route with.
  *
  * The edge client is created lazily and the identity re-applied on every call: identity becomes
  * available after boot and can be swapped, and a client bound once would go on presenting the
  * identity it was built with.
  */
-const createAuthHeaderProvider = (client: Client): (() => Promise<string | undefined>) => {
+const createAuthHeaderProvider = (client: Client, sandboxUrl: string): (() => Promise<string | undefined>) => {
   const edgeUrl = client.config.values.runtime?.services?.edge?.url;
+  const maySendCredentials = acceptsCredentials(sandboxUrl);
+  if (!maySendCredentials) {
+    log.warn('sandbox: endpoint is not https, requests will be unauthenticated', { sandboxUrl });
+  }
+
   let edgeClient: EdgeHttpClient | undefined;
   return async () => {
-    if (!edgeUrl) {
+    if (!edgeUrl || !maySendCredentials) {
       return undefined;
     }
     try {
@@ -55,5 +76,7 @@ const createAuthHeaderProvider = (client: Client): (() => Promise<string | undef
 };
 
 /** Builds a {@link SandboxClient} from the DXOS client config. */
-export const createSandboxClient = (client: Client): SandboxClient =>
-  new SandboxClient(getSandboxServiceUrl(client), createAuthHeaderProvider(client));
+export const createSandboxClient = (client: Client): SandboxClient => {
+  const url = getSandboxServiceUrl(client);
+  return new SandboxClient(url, createAuthHeaderProvider(client, url));
+};
