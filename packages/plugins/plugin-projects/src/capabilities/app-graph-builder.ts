@@ -116,13 +116,13 @@ export const createMailboxProjectExtension = () =>
 /** Node `type` of a project's virtual Chats branch; the child extension below matches on it. */
 export const CHATS_SECTION_TYPE = 'org.dxos.plugin.projects.chats-section';
 
-/** Path segment of the Chats branch. */
-export const CHATS_SEGMENT = 'chats';
+/** Path segment of the Chats branch, which the navtree and the URL both call sessions. */
+export const SESSIONS_SEGMENT = 'sessions';
 
 /**
  * One URL binding for everything a project contains, shared with the type section that addresses the
- * project itself — so `project/<id>` is the project, `project/<id>+chats` its Sessions branch, and
- * `project/<id>+chats+<chat>` a session. The path is fixed only as far as the Project section; what
+ * project itself — so `project/<id>` is the project, `project/<id>+sessions` its Sessions branch, and
+ * `project/<id>+sessions+<session>` a session. The path is fixed only as far as the Project section; what
  * varies below it rides in the pair's id, `+`-joined, and the chain reconstructs with no lookup.
  *
  * Sharing a key is safe only because every extension under it declares this same path, so a node's
@@ -169,7 +169,7 @@ export const createProjectChatsExtension = () =>
     connector: ({ project, space }) =>
       Effect.succeed([
         AppGraphNode.make({
-          id: CHATS_SEGMENT,
+          id: SESSIONS_SEGMENT,
           type: CHATS_SECTION_TYPE,
           data: { branch: 'chats', project } satisfies ChatsBranch,
           properties: {

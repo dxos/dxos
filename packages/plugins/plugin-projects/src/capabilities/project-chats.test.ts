@@ -20,7 +20,7 @@ import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
 
 import {
   ARTIFACTS_SEGMENT,
-  CHATS_SEGMENT,
+  SESSIONS_SEGMENT,
   createProjectArtifactsActionExtension,
   createProjectArtifactsExtension,
   createProjectChatsChildrenExtension,
@@ -96,7 +96,7 @@ describe('project chats graph extension', () => {
 
     // The chats hang off a virtual Chats branch, not the project row, so every level is expanded.
     const projectNodeId = GraphPath.getSpacePath(db.spaceId, ...sectionPath, project.id);
-    const chatsNodeId = GraphNode.qualifyId(projectNodeId, CHATS_SEGMENT);
+    const chatsNodeId = GraphNode.qualifyId(projectNodeId, SESSIONS_SEGMENT);
     const artifactsNodeId = GraphNode.qualifyId(projectNodeId, ARTIFACTS_SEGMENT);
     for (const nodeId of [
       GraphNode.RootId,
@@ -175,7 +175,7 @@ describe('project chats graph extension', () => {
     expect(getChildIds()).toEqual([GraphNode.qualifyId(chatsNodeId, chat.id)]);
   });
 
-  test('a project chat is addressable by URL: `project/<project>+chats+<id>` resolves to the node and back', async ({
+  test('a project chat is addressable by URL: `project/<project>+sessions+<id>` resolves to the node and back', async ({
     expect,
   }) => {
     const { db, project, builder, addChat, chatsNodeId } = await setupTestContext();
@@ -183,7 +183,7 @@ describe('project chats graph extension', () => {
     const chatNodeId = GraphNode.qualifyId(chatsNodeId, chat.id);
     // The project and the branch sit between the binding's static path and the chat, so they ride in
     // the pair's id rather than needing a resolver.
-    const pairId = [project.id, CHATS_SEGMENT, chat.id].join('+');
+    const pairId = [project.id, SESSIONS_SEGMENT, chat.id].join('+');
 
     // Reverse: the deck serializes the open plank into the URL, which is what fails with "node has
     // no URL binding" when the connector declares none.
@@ -208,8 +208,8 @@ describe('project chats graph extension', () => {
     // the key, so what tells these apart is only how far the pair's id reaches.
     const cases = [
       [projectNodeId, project.id],
-      [chatsNodeId, [project.id, CHATS_SEGMENT].join('+')],
-      [GraphNode.qualifyId(chatsNodeId, chat.id), [project.id, CHATS_SEGMENT, chat.id].join('+')],
+      [chatsNodeId, [project.id, SESSIONS_SEGMENT].join('+')],
+      [GraphNode.qualifyId(chatsNodeId, chat.id), [project.id, SESSIONS_SEGMENT, chat.id].join('+')],
     ] as const;
     for (const [nodeId, id] of cases) {
       expect(Option.getOrUndefined(PathResolution.representNode(builder, nodeId))).toEqual({
@@ -233,7 +233,7 @@ describe('project chats graph extension', () => {
     // Both rows are selectable (they open their contents as cards), so both need an address; without
     // one, clicking Sessions logs "node has no URL binding" and does nothing.
     for (const [nodeId, segment] of [
-      [chatsNodeId, CHATS_SEGMENT],
+      [chatsNodeId, SESSIONS_SEGMENT],
       [artifactsNodeId, ARTIFACTS_SEGMENT],
     ] as const) {
       const pairId = [project.id, segment].join('+');
