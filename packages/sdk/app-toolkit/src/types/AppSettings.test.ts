@@ -7,7 +7,7 @@ import * as Option from 'effect/Option';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
 import { SpaceProperties } from '@dxos/client-protocol/types';
-import { Annotation, Database, Obj, Ref } from '@dxos/echo';
+import { Annotation, Database, Obj, Query, Ref } from '@dxos/echo';
 import { type EchoDatabase } from '@dxos/echo-client';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 
@@ -512,6 +512,20 @@ describe('open', () => {
     // `??=` yields the object it assigned rather than the proxy's, so this is `{}` if the record is
     // not read back — a plain-object test cannot catch it.
     expect(Obj.getSnapshot(settings).shared[NS]).toEqual({ toolbar: true });
+  });
+
+  test('is idempotent, so seeding at genesis and opening later yield one object', async ({ expect }) => {
+    const { db } = await database();
+    db.add(Obj.make(SpaceProperties, {}));
+    await db.flush();
+
+    // Genesis seeds it; every later open is a device reading the name replication delivered.
+    const seeded = await open(db);
+    await open(db);
+    await open(db);
+
+    const objects = await db.query(Query.type(AppSettings.AppSettings)).run();
+    expect(objects.map((object) => object.id)).toEqual([seeded.id]);
   });
 
   test('adopts what an object the name does not cover was holding', async ({ expect }) => {
