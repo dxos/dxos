@@ -5,6 +5,7 @@
 import React, { useCallback, useMemo } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
+import type * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { useNode } from '@dxos/plugin-graph/hooks';
@@ -55,3 +56,33 @@ export const CompanionPlank = ({ id, classNames }: CompanionPlankProps) => {
 };
 
 CompanionPlank.displayName = 'CompanionPlank';
+
+export type CompanionEmptyPlankProps = ThemedClassName<{
+  /** The plank whose companions are empty. */
+  contextId: string;
+}>;
+
+/**
+ * The companion pane for a plank that has no companions: the same frame and close control, with the
+ * tab strip empty. The pane is open because the reader opened it, and only the reader closes it, so a
+ * plank with nothing to put in it says so rather than collapsing the pane out from under them.
+ */
+export const CompanionEmptyPlank = ({ contextId, classNames }: CompanionEmptyPlankProps) => {
+  const { graph } = useAppGraph();
+  const contextNode = useNode(graph, contextId);
+  const controls = useMemo(() => <PlankCompanionControls primary={contextId} />, [contextId]);
+
+  return (
+    <Companion
+      classNames={classNames}
+      companions={EMPTY_COMPANIONS}
+      attendableId={contextId}
+      companionTo={contextNode?.data}
+      controls={controls}
+    />
+  );
+};
+
+CompanionEmptyPlank.displayName = 'CompanionEmptyPlank';
+
+const EMPTY_COMPANIONS: AppGraphNode.Node[] = [];

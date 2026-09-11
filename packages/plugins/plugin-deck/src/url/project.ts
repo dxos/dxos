@@ -24,7 +24,7 @@ import { log } from '@dxos/log';
 import { DeckCapabilities, DeckSchema } from '#types';
 
 import { shouldDeferNavigationHandlers } from '../capabilities/check-app-scheme.ts';
-import { applyActive, applyCompanion, applyWorkspace } from './apply.ts';
+import { type CompanionTarget, applyActive, applyCompanion, applyWorkspace } from './apply.ts';
 import * as Navigation from './navigation.ts';
 import { getCandidateEntityIds, getUnresolvedPlankId, initialPlanks } from './navigation.ts';
 
@@ -215,14 +215,19 @@ const project = Effect.fnUntraced(function* (url?: URL, options?: ProjectOptions
   );
 
   const planks: Navigation.Plank[] = [];
-  let companionNodeId: string | null = null;
+  let companion: CompanionTarget | undefined;
   let companionAnchorId: string | undefined;
   pairs.forEach((pair, index) => {
     const nodeId = resolved[index]?.nodeId;
     if (pair.key === UrlPath.COMPANION_KEY) {
+      // Carried whether or not it resolved: a plank without this variant still shows its companion,
+      // on a variant it does have. Only a chain with no companion pair at all closes one.
+      const anchor = planks[planks.length - 1]?.id;
+      if (anchor && pair.id) {
+        companion = { anchor, variant: pair.id, subject: nodeId };
+      }
       if (nodeId) {
-        companionNodeId = nodeId;
-        companionAnchorId = planks[planks.length - 1]?.id;
+        companionAnchorId = anchor;
       }
       return;
     }
@@ -234,7 +239,7 @@ const project = Effect.fnUntraced(function* (url?: URL, options?: ProjectOptions
 
   const displaced = yield* applyActive(planks);
 
-  yield* applyCompanion(companionNodeId);
+  yield* applyCompanion(companion);
 
   if (!attendChainEnd) {
     return displaced;
