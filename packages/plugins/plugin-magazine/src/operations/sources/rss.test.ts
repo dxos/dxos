@@ -7,7 +7,7 @@ import { afterEach, beforeEach, describe, test, vi } from 'vitest';
 import { EffectEx } from '@dxos/effect';
 import { TestHelpers } from '@dxos/effect/testing';
 
-import { fetchRss } from './rss';
+import { fetchRss } from './rss.ts';
 // Real-world RSS feed (CDATA-wrapped summary + content:encoded HTML), loaded via Vite's `?raw` suffix.
 import FEED_XML from './testing/feed.xml?raw';
 

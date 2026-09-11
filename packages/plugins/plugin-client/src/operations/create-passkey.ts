@@ -13,7 +13,7 @@ import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { getHostPlatform } from '@dxos/util';
 
-import { CreatePasskey } from './definitions';
+import { CreatePasskey } from './definitions.ts';
 
 /**
  * Best-effort name for a newly created passkey, so the list is not a column of identical dates.

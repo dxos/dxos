@@ -16,7 +16,7 @@ import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { TagIndex, Text } from '@dxos/schema';
 import { Message, Organization, Person, Task, TaskSet } from '@dxos/types';
 
-import { scaffoldProject } from '../../templates';
+import { scaffoldProject } from '../../templates/index.ts';
 
 export const testLayer = () =>
   TestDatabaseLayer({

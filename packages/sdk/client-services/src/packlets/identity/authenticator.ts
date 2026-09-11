@@ -13,7 +13,7 @@ import { requirePublicKey } from '@dxos/protocols/buf';
 import { AuthSchema, CredentialSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { type ComplexSet } from '@dxos/util';
 
-import { type AuthProvider, type AuthVerifier } from '../space';
+import { type AuthProvider, type AuthVerifier } from '../space/index.ts';
 
 export const createAuthProvider =
   (signer: CredentialSigner): AuthProvider =>

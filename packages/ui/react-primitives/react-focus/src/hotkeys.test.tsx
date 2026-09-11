@@ -15,7 +15,7 @@ import {
   setHotkeyScope,
   useActiveHotkeys,
   useHotkeys,
-} from './hotkeys';
+} from './hotkeys.ts';
 
 const press = (key: string, target: EventTarget = document.body) => {
   target.dispatchEvent(new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true }));

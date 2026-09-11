@@ -9,7 +9,7 @@ import { type IdbLogStore } from '@dxos/log-store-idb';
 
 import { meta } from '#meta';
 
-import * as Settings from './Settings';
+import * as Settings from './Settings.ts';
 
 export type DebugPluginOptions = {
   /** Shared persistent log store for capturing and downloading logs. */

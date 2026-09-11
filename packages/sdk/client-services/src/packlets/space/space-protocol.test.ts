@@ -14,8 +14,8 @@ import { FeedMessageSchema } from '@dxos/protocols/buf/dxos/echo/feed_pb';
 import { PeerSchema } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
 import { Timeframe } from '@dxos/timeframe';
 
-import { AuthStatus, MOCK_AUTH_PROVIDER, MOCK_AUTH_VERIFIER, SpaceProtocol } from './space-protocol';
-import { TestAgentBuilder, TestFeedBuilder } from './testing';
+import { AuthStatus, MOCK_AUTH_PROVIDER, MOCK_AUTH_VERIFIER, SpaceProtocol } from './space-protocol.ts';
+import { TestAgentBuilder, TestFeedBuilder } from './testing/index.ts';
 
 describe('space/space-protocol', () => {
   // Flaky.

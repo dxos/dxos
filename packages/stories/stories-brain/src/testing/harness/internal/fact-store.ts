@@ -9,7 +9,7 @@ import { dirname } from 'node:path';
 
 import { FactStore, FactStoreLive, type RDF } from '@dxos/pipeline-rdf';
 
-import { FACT_STORE_FIXTURE } from '../config';
+import { FACT_STORE_FIXTURE } from '../config.ts';
 
 export const factStoreFixtureExists = (): boolean => existsSync(FACT_STORE_FIXTURE);
 

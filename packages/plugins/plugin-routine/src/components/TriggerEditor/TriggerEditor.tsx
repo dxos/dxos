@@ -17,7 +17,7 @@ import { mx } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
 
-import { wireTriggers } from '../../util';
+import { wireTriggers } from '../../util/index.ts';
 import {
   FrequencyDefaults,
   Schedule,
@@ -26,8 +26,8 @@ import {
   cronToSchedule,
   scheduleToCron,
   toCron,
-} from '../Schedule';
-import { type TriggerKind, TriggerKindSelector } from './TriggerKindSelector';
+} from '../Schedule/index.ts';
+import { type TriggerKind, TriggerKindSelector } from './TriggerKindSelector.tsx';
 
 // A recurring trigger fires on a cron, so the one-time `once` kind is not offered here.
 const RECURRING_KINDS = ['hourly', 'daily', 'weekly', 'monthly', 'custom'] as const satisfies readonly ScheduleKind[];

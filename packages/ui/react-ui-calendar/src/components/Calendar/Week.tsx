@@ -16,7 +16,7 @@ import React, {
 import { composable, composableProps } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
-import { useCalendarContext } from './context';
+import { useCalendarContext } from './context.ts';
 import {
   MINUTES_PER_DAY,
   SNAP_MINUTES,
@@ -29,8 +29,8 @@ import {
   setMinutesOfDay,
   snapMinutes,
   yToMinutes,
-} from './util';
-import { Weekdays } from './Weekdays';
+} from './util.ts';
+import { Weekdays } from './Weekdays.tsx';
 
 const CALENDAR_WEEK_NAME = 'CalendarWeek';
 

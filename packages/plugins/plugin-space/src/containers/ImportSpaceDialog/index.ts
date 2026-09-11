@@ -2,4 +2,4 @@
 // Copyright 2026 DXOS.org
 //
 
-export { ImportSpaceDialog as default } from './ImportSpaceDialog';
+export { ImportSpaceDialog as default } from './ImportSpaceDialog.tsx';

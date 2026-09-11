@@ -7,7 +7,7 @@ import { describe, test } from 'vitest';
 import * as Trace from '@dxos/compute/Trace';
 import { renderTimelineAscii } from '@dxos/react-ui-components';
 
-import { buildExecutionGraph, collectProcessActivityLines, deriveInFlightActivityLine } from './execution-graph';
+import { buildExecutionGraph, collectProcessActivityLines, deriveInFlightActivityLine } from './execution-graph.ts';
 import subAgentFixture from './testing/sub-agent-delegation.json';
 
 // Real trace captured from a live supervisor → sub-agent delegation via `dxosDumpTrace()`.

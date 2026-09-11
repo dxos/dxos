@@ -6,7 +6,7 @@ import { describe, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Stream from 'effect/Stream';
 
-import { type StreamerOptions, createStreamer, splitFragments, splitSentences, splitSpans } from './stream';
+import { type StreamerOptions, createStreamer, splitFragments, splitSentences, splitSpans } from './stream.ts';
 
 describe('stream', () => {
   it.effect('tokenize tags', ({ expect }) =>

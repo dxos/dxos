@@ -4,7 +4,7 @@
 
 import { line, select } from 'd3';
 
-import { type D3Callable } from '../util';
+import { type D3Callable } from '../util/index.ts';
 
 const createLine = line();
 

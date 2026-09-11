@@ -12,7 +12,7 @@ import { Database, Ref } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 import { File } from '@dxos/types';
 
-import * as Sandbox from './Sandbox';
+import * as Sandbox from './Sandbox.ts';
 
 const SandboxRef = Ref.Ref(Sandbox.Sandbox).annotate({
   description: 'The sandbox object ID.',
@@ -61,8 +61,9 @@ export const Exec = Operation.make({
       description:
         'Additional environment variables. Merged with env vars from the sandbox credentials field; these override on conflict.',
     }),
-    timeout: Schema.optional(Schema.Number).annotate({
-      description: 'Timeout in milliseconds.',
+    // A model that quotes the number gets the number, not a schema rejection and a lost turn.
+    timeout: Schema.optional(Schema.Union([Schema.Number, Schema.NumberFromString])).annotate({
+      description: 'Timeout in milliseconds. Defaults to five minutes.',
     }),
   }),
   output: Schema.Struct({

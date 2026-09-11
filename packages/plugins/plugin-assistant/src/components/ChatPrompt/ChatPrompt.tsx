@@ -30,14 +30,14 @@ import { useChatKeymapExtensions } from '#hooks';
 import { meta } from '#meta';
 import { AssistantPreset } from '#types';
 
-import { TaskSlashCommands } from '../../commands';
-import { type AiChatProcessor } from '../../processor';
-import { type ChatEvent } from '../Chat';
-import { ChatActions, type ChatActionsProps } from './ChatActions';
-import { ChatMcpErrors } from './ChatMcpErrors';
-import { ChatOptions } from './ChatOptions';
-import { ChatReferences } from './ChatReferences';
-import { useChatVoiceInput } from './useChatVoiceInput';
+import { TaskSlashCommands } from '../../commands/index.ts';
+import { type AiChatProcessor } from '../../processor/index.ts';
+import { type ChatEvent } from '../Chat/index.ts';
+import { ChatActions, type ChatActionsProps } from './ChatActions.tsx';
+import { ChatMcpErrors } from './ChatMcpErrors.tsx';
+import { ChatOptions } from './ChatOptions.tsx';
+import { ChatReferences } from './ChatReferences.tsx';
+import { useChatVoiceInput } from './useChatVoiceInput.ts';
 
 export type ChatPromptProps = Merge<
   ThemedClassName<{

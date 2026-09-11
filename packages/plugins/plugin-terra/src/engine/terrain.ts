@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type Vec3 } from './noise';
+import { type Vec3 } from './noise.ts';
 
 export type TerrainConfig = {
   radius: number;

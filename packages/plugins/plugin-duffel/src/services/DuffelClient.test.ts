@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { duffelErrorMessage } from './DuffelClient';
+import { duffelErrorMessage } from './DuffelClient.ts';
 
 // A real Duffel 422 body for a past departure date (the failure that motivated surfacing the message).
 const PAST_DATE_BODY = JSON.stringify({

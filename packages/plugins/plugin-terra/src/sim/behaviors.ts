@@ -2,9 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type TerraConfigValues, type Vec3, makeSampler, radiusAt, seaRadius } from '../engine';
-import * as TerraObject from '../types/TerraObject';
-import { routeLength, walkRouteSeries } from './path';
+import { type TerraConfigValues, type Vec3, makeSampler, radiusAt, seaRadius } from '../engine/index.ts';
+import * as TerraObject from '../types/TerraObject.ts';
+import { routeLength, walkRouteSeries } from './path.ts';
 
 /** Cruise altitude for planes, as a fraction of sea radius above the surface. */
 export const CRUISE_ALTITUDE = 0.06;

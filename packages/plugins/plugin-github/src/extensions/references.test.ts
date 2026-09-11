@@ -10,7 +10,7 @@ import { describe, test } from 'vitest';
 import { Repo } from '@dxos/types';
 import { createMarkdownExtensions } from '@dxos/ui-editor';
 
-import { type GitHubReferenceResolver, githubReferences, referenceUrl } from './references';
+import { type GitHubReferenceResolver, githubReferences, referenceUrl } from './references.ts';
 
 const REPO = 'dxos/dxos';
 

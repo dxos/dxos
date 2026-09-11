@@ -42,7 +42,7 @@ import {
   EdgeTracesSurface,
   SpaceInfoSurface,
   SpaceListSurface,
-} from './DevtoolsSurfaces';
+} from './DevtoolsSurfaces.tsx';
 
 type GraphDebug = {
   graph: AppGraph.Graph;

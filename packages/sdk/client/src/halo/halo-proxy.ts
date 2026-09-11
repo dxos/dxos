@@ -35,8 +35,8 @@ import {
 } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { trace } from '@dxos/tracing';
 
-import { RPC_TIMEOUT } from '../common';
-import { InvitationsProxy } from '../invitations';
+import { RPC_TIMEOUT } from '../common.ts';
+import { InvitationsProxy } from '../invitations/index.ts';
 
 /**
  * Selects the `request` oneof from the public union. The service dispatches on the case, and the

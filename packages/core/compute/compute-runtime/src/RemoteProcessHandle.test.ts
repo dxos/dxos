@@ -16,9 +16,9 @@ import * as Trace from '@dxos/compute/Trace';
 import { EffectEx } from '@dxos/effect';
 import { SpaceId } from '@dxos/keys';
 
-import * as RemoteProcessHandle from './RemoteProcessHandle';
-import type * as RemoteProcessManager from './RemoteProcessManager';
-import type * as RemoteTraceMonitor from './RemoteTraceMonitor';
+import * as RemoteProcessHandle from './RemoteProcessHandle.ts';
+import type * as RemoteProcessManager from './RemoteProcessManager.ts';
+import type * as RemoteTraceMonitor from './RemoteTraceMonitor.ts';
 
 /**
  * How a handle for a remotely hosted process delivers ephemeral trace.

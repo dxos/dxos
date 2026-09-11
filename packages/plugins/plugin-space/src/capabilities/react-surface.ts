@@ -39,11 +39,11 @@ import {
   JOIN_DIALOG,
   OBJECT_FORM_DIALOG,
   RENAME_POPOVER,
-} from '../constants';
-import { TypeInputOptionsAnnotationId } from '../types/SpaceForm';
-import { HueAnnotationId, IconAnnotationId, SPACE_HOME_NODE_TYPE } from '../types/SpaceSchema';
-import { SpaceHomeContent } from '../types/SpaceSurface';
-import { HueField, IconField, TypenameField } from './SpaceFormFields';
+} from '../constants.ts';
+import { TypeInputOptionsAnnotationId } from '../types/SpaceForm.ts';
+import { HueAnnotationId, IconAnnotationId, SPACE_HOME_NODE_TYPE } from '../types/SpaceSchema.ts';
+import { SpaceHomeContent } from '../types/SpaceSurface.ts';
+import { HueField, IconField, TypenameField } from './SpaceFormFields.tsx';
 import {
   NavbarPresenceSurface,
   NavtreePresenceSurface,
@@ -56,8 +56,8 @@ import {
   SpaceSettingsSurface,
   TypeArticleSurface,
   ViewEditorSurface,
-} from './SpaceSurfaces';
-import { tryGetViewForObject } from './try-get-view';
+} from './SpaceSurfaces.tsx';
+import { tryGetViewForObject } from './try-get-view.ts';
 
 type ReactSurfaceOptions = {
   createInvitationUrl: (invitationCode: string) => string;

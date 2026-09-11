@@ -25,7 +25,7 @@ import { type Credential, PresentationSchema } from '@dxos/protocols/buf/dxos/ha
 import { MembershipPolicy } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { isNode } from '@dxos/util';
 
-import { createMockCredential, createServiceHost } from '../testing';
+import { createMockCredential, createServiceHost } from '../testing/index.ts';
 
 /**
  * Bridges a host's effect-rpc {@link ClientServices} handlers to the Promise/`Stream` shaped

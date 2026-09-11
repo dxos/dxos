@@ -10,7 +10,7 @@ import { Feed, Obj, Type } from '@dxos/echo';
 import { EchoTestBuilder, createTmpPath } from '@dxos/echo-client/testing';
 import { DXN } from '@dxos/keys';
 
-import { blackhole } from './testing/bench-util';
+import { blackhole } from './testing/bench-util.ts';
 
 //
 // Property-access cost of an ECHO object relative to a plain JS object, across the three object

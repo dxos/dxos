@@ -4,7 +4,7 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { MAX_TURN_RATE_DEG_PER_SEC, easeHeading } from './heading';
+import { MAX_TURN_RATE_DEG_PER_SEC, easeHeading } from './heading.ts';
 
 describe('easeHeading', () => {
   test('a first frame (no previous heading) snaps straight to target, no spin-up', () => {

@@ -10,9 +10,9 @@ import { useCanvasContext } from '@dxos/react-ui-canvas';
 import { type CanvasBoard } from '@dxos/react-ui-canvas-editor';
 import { getParentShapeElement, rowHeight } from '@dxos/react-ui-canvas-editor';
 
-import { Box, type BoxProps } from '../common';
-import { getProperties } from '../defs';
-import { bodyPadding } from './function-anchors';
+import { Box, type BoxProps } from '../common/index.ts';
+import { getProperties } from '../defs.ts';
+import { bodyPadding } from './function-anchors.ts';
 
 const expandedHeight = 200;
 

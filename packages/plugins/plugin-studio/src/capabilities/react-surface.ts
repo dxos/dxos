@@ -15,7 +15,7 @@ import { ArtifactArticle, ArtifactsArticle, GalleryArticle, LightboxArticle } fr
 import { VariantRenderer } from '#surfaces';
 import { Artifact, Lightbox } from '#types';
 
-import { ARTIFACTS_NODE_DATA } from '../constants';
+import { ARTIFACTS_NODE_DATA } from '../constants.ts';
 
 const isArtifact = Obj.instanceOf(Artifact.Artifact);
 

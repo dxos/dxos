@@ -11,8 +11,8 @@ import * as Operation from '@dxos/compute/Operation';
 import { Database, DXN, Ref } from '@dxos/echo';
 import { AccessToken } from '@dxos/link';
 
-import * as ClaudeAgentSession from './ClaudeAgentSession';
-import * as ClaudeManagedAgent from './ClaudeManagedAgent';
+import * as ClaudeAgentSession from './ClaudeAgentSession.ts';
+import * as ClaudeManagedAgent from './ClaudeManagedAgent.ts';
 
 const ICON = 'ph--robot--regular';
 

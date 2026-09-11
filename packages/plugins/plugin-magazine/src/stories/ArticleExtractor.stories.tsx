@@ -14,7 +14,7 @@ import { PostContent } from '#components';
 import { translations } from '#translations';
 import { Subscription } from '#types';
 
-import { type ExtractedArticle, extractArticle } from '../operations/extraction';
+import { type ExtractedArticle, extractArticle } from '../operations/extraction/index.ts';
 
 type State =
   | { status: 'idle' }

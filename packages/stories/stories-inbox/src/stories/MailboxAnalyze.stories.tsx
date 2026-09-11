@@ -65,9 +65,15 @@ import {
 import { ModuleRole, moduleSurfaces } from '@dxos/storybook-testing/modules';
 import { Message, Organization, Person, Task } from '@dxos/types';
 
-import { StoryRole } from '../modules';
-import { StoryTripAiPlugin, seedFromFixture, seedFromMessages, seedFromObjects, seedFromTrips } from '../testing';
-import { StoryModulesPlugin } from '../testing/modules';
+import { StoryRole } from '../modules/index.ts';
+import {
+  StoryTripAiPlugin,
+  seedFromFixture,
+  seedFromMessages,
+  seedFromObjects,
+  seedFromTrips,
+} from '../testing/index.ts';
+import { StoryModulesPlugin } from '../testing/modules.tsx';
 
 /** Local Ollama model driving the `AnalyzeMailbox` fact variant; Ollama needs `strict: false`. */
 const OLLAMA_MODEL = 'com.alibaba.model.qwen-2-5-7b.instruct';

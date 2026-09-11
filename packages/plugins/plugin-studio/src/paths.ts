@@ -4,7 +4,7 @@
 
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 
-import { ARTIFACTS_SEGMENT, STUDIO_SEGMENT } from './constants';
+import { ARTIFACTS_SEGMENT, STUDIO_SEGMENT } from './constants.ts';
 
 /** Canonical qualified path to the Studio section of a space. */
 const getStudioPath = (spaceId: string): string =>

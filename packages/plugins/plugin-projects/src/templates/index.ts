@@ -4,11 +4,11 @@
 
 import { ProjectCapabilities } from '#types';
 
-import { defaultTemplate } from './default';
-import { inboxResearch } from './inbox-research';
+import { defaultTemplate } from './default.ts';
+import { inboxResearch } from './inbox-research.ts';
 
-export * from './inbox-research';
-export * from './scaffold';
+export * from './inbox-research.ts';
+export * from './scaffold.ts';
 
 /**
  * Templates contributed by plugin-projects itself. `inboxResearch` lives here rather than in

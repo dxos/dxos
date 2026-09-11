@@ -15,7 +15,7 @@ import { Outline } from '@dxos/types';
 import { translations } from '#translations';
 import { Journal, TasksUtil } from '#types';
 
-import { Journal as JournalComponent } from './Journal';
+import { Journal as JournalComponent } from './Journal.tsx';
 
 const DefaultJournalStory = () => {
   const [space] = useSpaces();

@@ -22,7 +22,7 @@ import {
   type MenuItems,
   type MenuItemsAccessor,
   type MenuItemsMap,
-} from '../types';
+} from '../types.ts';
 
 export type ActionGraphNodes = AppGraphNode.NodeArg<any>[];
 export type ActionGraphEdges = AppGraph.Edge[];

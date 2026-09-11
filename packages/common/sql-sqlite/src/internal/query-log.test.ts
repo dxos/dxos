@@ -6,7 +6,7 @@ import { describe, test } from 'vitest';
 
 import { type LogEntry, LogLevel, type LogProcessor, log, serializeToJsonl } from '@dxos/log';
 
-import { SLOW_QUERY_THRESHOLD_MS, logSqliteQuery } from './query-log';
+import { SLOW_QUERY_THRESHOLD_MS, logSqliteQuery } from './query-log.ts';
 
 describe('logSqliteQuery', () => {
   test('a fast query is TRACE, so it never reaches an uploaded log bundle', ({ expect }) => {

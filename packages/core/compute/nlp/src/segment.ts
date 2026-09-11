@@ -8,8 +8,8 @@ import * as LanguageModel from 'effect/unstable/ai/LanguageModel';
 
 import { AiService } from '@dxos/ai';
 
-import { alignSegments } from './align-segments';
-import { type RawSegment, type Segmentation, SegmentKind } from './Segmentation';
+import { alignSegments } from './align-segments.ts';
+import { type RawSegment, type Segmentation, SegmentKind } from './Segmentation.ts';
 
 /** Structural analysis is quotation, not reasoning, so the cheapest tier is the right default. */
 export const SEGMENT_MODEL = 'com.anthropic.model.claude-haiku-4-5.default';

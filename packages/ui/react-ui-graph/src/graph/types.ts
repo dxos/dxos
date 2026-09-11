@@ -10,7 +10,7 @@
 import * as GraphModel from '@dxos/graph/GraphModel';
 import { invariant } from '@dxos/invariant';
 
-import { type Point } from '../util';
+import { type Point } from '../util/index.ts';
 
 export type IdAccessor<N = any> = (node: N) => string;
 

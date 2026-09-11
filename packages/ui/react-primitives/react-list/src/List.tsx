@@ -33,7 +33,7 @@
 import { ark } from '@ark-ui/react/factory';
 import React, { forwardRef } from 'react';
 
-import { LIST_NAME, type ListProps, ListProvider } from './ListContext';
+import { LIST_NAME, type ListProps, ListProvider } from './ListContext.ts';
 
 const List = forwardRef<HTMLOListElement, ListProps>((props: ListProps, forwardedRef) => {
   const { variant = 'ordered', selectable = false, multiSelectable = false, itemSizes, children, ...rootProps } = props;

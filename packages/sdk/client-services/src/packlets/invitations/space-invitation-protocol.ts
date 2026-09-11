@@ -45,9 +45,9 @@ import {
   SpaceAdmissionRequestSchema,
 } from '@dxos/protocols/buf/dxos/halo/invitations_pb';
 
-import { type DataSpaceManager, type SigningContext } from '../spaces';
-import { type InvitationProtocol } from './invitation-protocol';
-import { computeExpirationTime, toSpaceMemberRole } from './utils';
+import { type DataSpaceManager, type SigningContext } from '../spaces/index.ts';
+import { type InvitationProtocol } from './invitation-protocol.ts';
+import { computeExpirationTime, toSpaceMemberRole } from './utils.ts';
 
 export class SpaceInvitationProtocol implements InvitationProtocol {
   constructor(

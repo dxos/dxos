@@ -26,10 +26,10 @@ import React, {
 
 import { composeEventHandlers, useComposedRefs, useControllableState } from '@dxos/react-hooks';
 
-import { type Positioning, useElevationContext, usePositioning, useThemeContext } from '../../hooks';
-import { type ThemedClassName } from '../../util';
-import { ColumnContext } from '../Column/ColumnContext';
-import { ScrollArea } from '../ScrollArea';
+import { type Positioning, useElevationContext, usePositioning, useThemeContext } from '../../hooks/index.ts';
+import { type ThemedClassName } from '../../util/index.ts';
+import { ColumnContext } from '../Column/ColumnContext.ts';
+import { ScrollArea } from '../ScrollArea/index.ts';
 import {
   MENU_NAME,
   type MenuAlign,
@@ -39,7 +39,7 @@ import {
   type MenuSelectHandler,
   type MenuSide,
   useMenuContext,
-} from './MenuContext';
+} from './MenuContext.ts';
 
 //
 // Root

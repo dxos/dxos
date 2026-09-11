@@ -13,7 +13,7 @@ import { Jmap, JmapMail } from '#apis';
 import { JmapCredentials } from '#services';
 import { JmapOperation } from '#types';
 
-import { JmapApiError, JmapSendIdentityNotFoundError, JmapSendMessageInvalidError } from '../../../errors';
+import { JmapApiError, JmapSendIdentityNotFoundError, JmapSendMessageInvalidError } from '../../../errors.ts';
 
 const MAIL_ACCOUNT_CAPABILITY = 'urn:ietf:params:jmap:mail';
 

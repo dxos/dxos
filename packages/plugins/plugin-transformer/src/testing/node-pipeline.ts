@@ -4,7 +4,7 @@
 
 import { pipeline as xenovaPipeline } from '@xenova/transformers';
 
-import { type EmbeddingOutput, RagPipeline } from './pipeline';
+import { type EmbeddingOutput, RagPipeline } from './pipeline.ts';
 
 /**
  * Node implementation using Xenova transformers.

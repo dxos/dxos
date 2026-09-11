@@ -13,7 +13,7 @@ import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
 
-import { SpaceSettingsContainer } from './SpaceSettingsContainer';
+import { SpaceSettingsContainer } from './SpaceSettingsContainer.tsx';
 
 const Story = (props: Partial<AppSurface.SpaceArticleProps>) => {
   const { space } = useClientStory();

@@ -7,9 +7,9 @@ import React from 'react';
 import { DEFAULT_INPUT } from '@dxos/conductor';
 import { type ShapeComponentProps, TextBox } from '@dxos/react-ui-canvas-editor';
 
-import { useComputeNodeState } from '../hooks';
-import { Box, type BoxActionHandler } from './common';
-import { type TextShape } from './text-def';
+import { useComputeNodeState } from '../hooks/index.ts';
+import { Box, type BoxActionHandler } from './common/index.ts';
+import { type TextShape } from './text-def.ts';
 
 export const TextComponent = ({ shape }: ShapeComponentProps<TextShape>) => {
   const { runtime } = useComputeNodeState(shape);

@@ -6,8 +6,8 @@ import { inspect } from 'node:util';
 
 import { PublicKey } from '@dxos/keys';
 
-import { humanize } from './human-hash';
-import { arrayToBuffer } from './uint8array';
+import { humanize } from './human-hash.ts';
+import { arrayToBuffer } from './uint8array.ts';
 
 export type JsonValue = string | number | boolean | null | JsonValue[] | { [key: string]: JsonValue };
 

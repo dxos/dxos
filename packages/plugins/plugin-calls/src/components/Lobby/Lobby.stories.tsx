@@ -7,8 +7,8 @@ import React from 'react';
 
 import { withLayout } from '@dxos/react-ui/testing';
 
-import { makeCallState, makeUser, useSeedCallManager, withCallManager } from '../../testing';
-import { Lobby } from './Lobby';
+import { makeCallState, makeUser, useSeedCallManager, withCallManager } from '../../testing/index.ts';
+import { Lobby } from './Lobby.tsx';
 
 const self = makeUser('self', 'Alice');
 const state = makeCallState(self, [self], { audioEnabled: true, videoEnabled: false });

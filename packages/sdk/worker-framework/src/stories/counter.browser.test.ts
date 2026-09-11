@@ -6,7 +6,7 @@ import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { Trigger, asyncTimeout, waitForCondition } from '@dxos/async';
 
-import { CounterConnection } from './counter-connection';
+import { CounterConnection } from './counter-connection.ts';
 
 const nextSubscribedValue = async (connection: CounterConnection): Promise<number> => {
   const trigger = new Trigger<number>();

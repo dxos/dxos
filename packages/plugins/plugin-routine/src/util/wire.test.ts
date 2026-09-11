@@ -11,9 +11,9 @@ import * as Runnable from '@dxos/compute/Runnable';
 import * as Trigger from '@dxos/compute/Trigger';
 import { Obj, Ref } from '@dxos/echo';
 
-import { blank } from '../templates';
-import { isRunInstructions, runInstructionsRef } from './run-instructions';
-import { makeRoutine } from './wire';
+import { blank } from '../templates/index.ts';
+import { isRunInstructions, runInstructionsRef } from './run-instructions.ts';
+import { makeRoutine } from './wire.ts';
 
 describe('wire', () => {
   test('makeRoutine produces a typed Routine', ({ expect }) => {

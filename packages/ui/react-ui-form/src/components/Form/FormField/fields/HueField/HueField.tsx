@@ -8,8 +8,8 @@ import { HuePicker } from '@dxos/react-ui-pickers';
 
 import { type FormFieldRendererProps } from '#types';
 
-import { FormStaticValue } from '../../FormField';
-import { presentationFor } from '../../presentation';
+import { FormStaticValue } from '../../FormField.tsx';
+import { presentationFor } from '../../presentation.tsx';
 
 /**
  * A control whose value is one of the theme's hues: the hue picker, with the field's label as the

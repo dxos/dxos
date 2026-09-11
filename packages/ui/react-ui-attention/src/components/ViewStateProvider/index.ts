@@ -9,6 +9,6 @@ export {
   useSelectionActions,
   useViewState,
   useViewStateActions,
-} from './view-state-hooks';
+} from './view-state-hooks.ts';
 
-export * from './ViewStateProvider';
+export * from './ViewStateProvider.tsx';

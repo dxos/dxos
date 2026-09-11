@@ -13,7 +13,7 @@ import { log, logInfo } from '@dxos/log';
 import { type Signal, SignalSchema } from '@dxos/protocols/buf/dxos/mesh/swarm_pb';
 import { ComplexMap } from '@dxos/util';
 
-import { type Transport, type TransportFactory, type TransportOptions } from './transport';
+import { type Transport, type TransportFactory, type TransportOptions } from './transport.ts';
 
 // TODO(burdon): Make configurable.
 // Delay (in milliseconds) for data being sent through in-memory connections to simulate network latency.

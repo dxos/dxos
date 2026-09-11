@@ -14,9 +14,9 @@ import { type Thread } from '@dxos/types';
 
 import { meta } from '#meta';
 
-import * as ReviewCapabilities from './ReviewCapabilities';
+import * as ReviewCapabilities from './ReviewCapabilities.ts';
 
-export const Settings = Capability.makeSingleton<Atom.Writable<import('./Settings').Settings>>()(
+export const Settings = Capability.makeSingleton<Atom.Writable<import('./Settings.ts').Settings>>()(
   `${meta.profile.key}.capability.settings`,
 );
 

@@ -16,7 +16,7 @@ import { existsSync, readFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import pkgUp from 'pkg-up';
 
-import { Lock } from './lock';
+import { Lock } from './lock.ts';
 
 const findWorkspaceRoot = (startDir: string): string => {
   let dir = resolve(startDir);

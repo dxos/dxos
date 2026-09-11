@@ -15,7 +15,7 @@ import { Listbox } from '@dxos/react-ui-list';
 import { meta } from '#meta';
 import { ClientOperation } from '#operations';
 
-import { useAccountUrl } from '../../hooks';
+import { useAccountUrl } from '../../hooks/index.ts';
 
 export const MANAGE_CREDENTIALS_DIALOG = `${meta.profile.key}.ManageCredentialsDialog`;
 

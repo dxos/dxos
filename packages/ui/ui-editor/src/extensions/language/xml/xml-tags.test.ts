@@ -9,7 +9,7 @@ import { describe, test } from 'vitest';
 
 import { trim } from '@dxos/util';
 
-import { decorationSetToArray } from '../../../util';
+import { decorationSetToArray } from '../../../util/index.ts';
 import {
   StubWidget,
   type WidgetProps,
@@ -21,9 +21,9 @@ import {
   widgetRebuildEffect,
   widgetResetEffect,
   widgetUpdateEffect,
-} from '../../widgets';
-import { extendedMarkdown } from './extended-markdown';
-import { type XmlWidgetDef, getXmlTextChild, xmlTags } from './xml-tags';
+} from '../../widgets/index.ts';
+import { extendedMarkdown } from './extended-markdown.ts';
+import { type XmlWidgetDef, getXmlTextChild, xmlTags } from './xml-tags.ts';
 
 //
 // Harness.

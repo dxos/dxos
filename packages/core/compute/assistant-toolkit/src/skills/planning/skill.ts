@@ -8,7 +8,7 @@ import * as Template from '@dxos/compute/Template';
 import { Ref } from '@dxos/echo';
 import { trim } from '@dxos/util';
 
-import { AssignTasks, PlanReminder, UpdateTasks } from './operations/definitions';
+import { AssignTasks, PlanReminder, UpdateTasks } from './operations/definitions.ts';
 
 const SKILL_KEY = 'org.dxos.skill.planning';
 

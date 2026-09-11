@@ -12,7 +12,7 @@ import { TestSchema } from '@dxos/echo/testing';
 import { EID, EntityId } from '@dxos/keys';
 import { openAndClose } from '@dxos/test-utils';
 
-import { EchoTestBuilder } from '../testing';
+import { EchoTestBuilder } from '../testing/index.ts';
 
 // Originally reproduced the stall observed in
 // composer-logs-2026-05-15T13-18-07.ndjson: running

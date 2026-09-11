@@ -26,14 +26,18 @@ import {
 import { type Message } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
 import { trace } from '@dxos/tracing';
 
-import { authenticateViaChallengeEndpoint, presentCredentialsForChallenge, readAuthChallenge } from './auth-challenge';
-import { protocol } from './defs';
-import { type EdgeIdentity } from './edge-identity';
-import { EdgeWsConnection } from './edge-ws-connection';
-import { EdgeConnectionClosedError, EdgeIdentityChangedError } from './errors';
-import { type Protocol } from './protocol';
-import { type ReconnectReason } from './reconnect-reason';
-import { getEdgeUrlWithProtocol } from './utils';
+import {
+  authenticateViaChallengeEndpoint,
+  presentCredentialsForChallenge,
+  readAuthChallenge,
+} from './auth-challenge.ts';
+import { protocol } from './defs.ts';
+import { type EdgeIdentity } from './edge-identity.ts';
+import { EdgeWsConnection } from './edge-ws-connection.ts';
+import { EdgeConnectionClosedError, EdgeIdentityChangedError } from './errors.ts';
+import { type Protocol } from './protocol.ts';
+import { type ReconnectReason } from './reconnect-reason.ts';
+import { getEdgeUrlWithProtocol } from './utils.ts';
 
 const DEFAULT_TIMEOUT = 10_000;
 

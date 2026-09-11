@@ -17,7 +17,7 @@ import { Message } from '@dxos/types';
 
 import { ExtractedFrom, InboxCapabilities, InboxOperation } from '#types';
 
-import handler from './extract-message';
+import handler from './extract-message.ts';
 
 const runExtractMessage = (
   input: { source: Obj.Any; extractorId?: string },

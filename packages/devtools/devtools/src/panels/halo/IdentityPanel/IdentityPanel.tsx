@@ -7,8 +7,8 @@ import React from 'react';
 import { useDevices, useIdentity } from '@dxos/react-client/halo';
 import { Panel, Toolbar } from '@dxos/react-ui';
 
-import { JsonView } from '../../../components';
-import { VaultSelector } from '../../../containers';
+import { JsonView } from '../../../components/index.ts';
+import { VaultSelector } from '../../../containers/index.ts';
 
 export const IdentityPanel = () => {
   const identity = useIdentity();

@@ -11,7 +11,7 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { type DiscordPresence } from '#hooks';
 import { translations } from '#translations';
 
-import { FeedbackForm, type FeedbackSubmitHandler } from './FeedbackForm';
+import { FeedbackForm, type FeedbackSubmitHandler } from './FeedbackForm.tsx';
 
 type FeedbackFormStoryArgs = {
   hidden?: { version?: string };

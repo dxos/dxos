@@ -7,9 +7,9 @@ import { describe, expect, test } from 'vitest';
 import { bufWkt } from '@dxos/protocols/buf';
 import { TextMessageSchema } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
 
-import { protocol } from './defs';
-import type { EdgeIdentity } from './edge-identity';
-import { WebSocketMuxer } from './edge-ws-muxer';
+import { protocol } from './defs.ts';
+import type { EdgeIdentity } from './edge-identity.ts';
+import { WebSocketMuxer } from './edge-ws-muxer.ts';
 
 const MAX_CHUNK_LENGTH = 16;
 

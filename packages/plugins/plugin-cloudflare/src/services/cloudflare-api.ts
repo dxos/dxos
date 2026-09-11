@@ -15,7 +15,7 @@ import * as HttpClientRequest from 'effect/unstable/http/HttpClientRequest';
 import { Database, type Ref } from '@dxos/echo';
 import { type AccessToken, Connection } from '@dxos/link';
 
-import { CLOUDFLARE_API_BASE } from '../constants';
+import { CLOUDFLARE_API_BASE } from '../constants.ts';
 
 type CloudflareCredentialsValue = {
   token: string;

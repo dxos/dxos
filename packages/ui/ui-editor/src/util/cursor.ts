@@ -4,8 +4,8 @@
 
 import { type EditorState } from '@codemirror/state';
 
-import { type Range } from '../types';
-import { singleValueFacet } from './facet';
+import { type Range } from '../types/index.ts';
+import { singleValueFacet } from './facet.ts';
 
 /**
  * Determines if two ranges overlap.

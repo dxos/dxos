@@ -8,11 +8,11 @@ import { EncodedReference, type QueryAST, isEncodedReference } from '@dxos/echo-
 import { DXN, EID } from '@dxos/keys';
 import { assumeType } from '@dxos/util';
 
-import { getTypeURI } from '../Annotation/annotations';
-import { getMetaChecked } from '../common/api/meta';
-import { type AnyEntity, ParentId } from '../common/types';
-import { type InternalObjectProps } from '../Entity/model';
-import { objectToJSON } from '../Obj/json-serializer';
+import { getTypeURI } from '../Annotation/annotations.ts';
+import { getMetaChecked } from '../common/api/meta.ts';
+import { type AnyEntity, ParentId } from '../common/types/index.ts';
+import { type InternalObjectProps } from '../Entity/model.ts';
+import { objectToJSON } from '../Obj/json-serializer.ts';
 
 /**
  * Matches a tag filter against an object's stored tags. Tags may be stored as encoded references or

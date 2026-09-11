@@ -10,7 +10,7 @@ import { afterEach, describe, test } from 'vitest';
 
 import { LogEntry, LogLevel } from '@dxos/log';
 
-import { OtelLogs, stringifyValues } from './logs';
+import { OtelLogs, stringifyValues } from './logs.ts';
 
 describe('stringifyValues', () => {
   test('serializes errors via stack', ({ expect }) => {

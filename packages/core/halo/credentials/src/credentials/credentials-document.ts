@@ -8,8 +8,8 @@ import { PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type Credential, CredentialSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
-import { getCredentialAssertion } from './assertions';
-import { credentialIdOf, issuanceDateOf } from './credential-keys';
+import { getCredentialAssertion } from './assertions.ts';
+import { credentialIdOf, issuanceDateOf } from './credential-keys.ts';
 
 /** Versioned DXN in the same form `EntitySystem.type` carries. */
 export const CREDENTIALS_DOCUMENT_TYPE = 'dxn:org.dxos.document.spaceCredentials:0.1.0';

@@ -14,7 +14,7 @@ import { Button, Flex, Icon, useTranslation } from '@dxos/react-ui';
 import { meta } from '#meta';
 import { Book } from '#types';
 
-import { EpubReader, type EpubReaderHandle, type ReaderLocation } from './EpubReader';
+import { EpubReader, type EpubReaderHandle, type ReaderLocation } from './EpubReader.tsx';
 
 const ACCEPT = '.pdf,.epub,application/pdf,application/epub+zip';
 const EPUB_TYPE = 'application/epub+zip';

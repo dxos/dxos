@@ -12,7 +12,7 @@ import { useSoundEffect } from '@dxos/react-ui-audio';
 
 import { CallsCapabilities } from '#types';
 
-import { Call } from '../../components/Call';
+import { Call } from '../../components/Call/index.ts';
 
 export const CallSidebar = () => {
   const call = useCapability(CallsCapabilities.Manager);

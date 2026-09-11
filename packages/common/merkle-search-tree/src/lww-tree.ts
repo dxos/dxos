@@ -2,8 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
-import type { ActorID } from './common';
-import { type DigestHex, Forest, type Key, type NodeData } from './forest';
+import type { ActorID } from './common.ts';
+import { type DigestHex, Forest, type Key, type NodeData } from './forest.ts';
 
 export type LLWTreeProps = {
   actor: ActorID;

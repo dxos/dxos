@@ -17,8 +17,8 @@ import { useBreakpoints, useCompanions, useDeckSettings, useDeckState } from '#h
 import { meta } from '#meta';
 import { DeckOperation, DeckSchema } from '#types';
 
-import { RESOLVE_TIMEOUT_MS } from '../../url';
-import { isCompanionOpen } from '../../util';
+import { RESOLVE_TIMEOUT_MS } from '../../url/index.ts';
+import { isCompanionOpen } from '../../util/index.ts';
 
 /** Sigil-menu dispositions surfaced as plank actions. */
 const PLANK_ACTION_DISPOSITIONS = ['list-item', 'list-item-primary', 'heading-list-item'];

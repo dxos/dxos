@@ -42,7 +42,7 @@ import { tocTheme } from '../components/Toc/Toc.theme';
 import { toolbarTheme } from '../components/Toolbar/Toolbar.theme';
 import { tooltipTheme } from '../components/Tooltip/Tooltip.theme';
 import { tourTheme } from '../components/Tour/Tour.theme';
-import { bindTheme } from './bindTheme';
+import { bindTheme } from './bindTheme.ts';
 
 export const defaultTheme: Theme<Record<string, any>> = {
   themeName: () => 'default',

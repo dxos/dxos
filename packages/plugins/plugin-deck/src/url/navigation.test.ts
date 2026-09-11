@@ -8,7 +8,7 @@ import { describe, test } from 'vitest';
 import * as UrlPath from '@dxos/app-toolkit/UrlPath';
 import { EntityId } from '@dxos/keys';
 
-import { format, fromSegment, getCandidateEntityIds, getUnresolvedPlankId, parse, toSegment } from './navigation';
+import { format, fromSegment, getCandidateEntityIds, getUnresolvedPlankId, parse, toSegment } from './navigation.ts';
 
 const table: UrlPath.KeyTable = new Map<string, UrlPath.KeyTableEntry>([
   ['w', { key: 'w', hasId: true, anchor: true }],

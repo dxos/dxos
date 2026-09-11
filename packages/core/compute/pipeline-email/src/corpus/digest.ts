@@ -2,11 +2,11 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type Thread } from '../types';
-import { type Commitment } from './ledger';
-import { DEFAULT_EMAIL_PROMPTS, type EmailPrompts, type Summarizer, mergePrompts } from './prompts';
-import { type RelationshipRollup } from './rollups';
-import { type TopicDraft } from './topics';
+import { type Thread } from '../types/index.ts';
+import { type Commitment } from './ledger.ts';
+import { DEFAULT_EMAIL_PROMPTS, type EmailPrompts, type Summarizer, mergePrompts } from './prompts.ts';
+import { type RelationshipRollup } from './rollups.ts';
+import { type TopicDraft } from './topics.ts';
 
 /**
  * Everything the corpus pass has computed; the digest is a Query-mode view over it (spec §3③

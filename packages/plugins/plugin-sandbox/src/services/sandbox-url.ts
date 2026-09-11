@@ -8,7 +8,7 @@ import { EdgeServiceName, getEdgeServiceEndpoint } from '@dxos/config';
 import { EdgeHttpClient } from '@dxos/edge-client';
 import { log } from '@dxos/log';
 
-import { SandboxClient } from './SandboxClient';
+import { SandboxClient } from './SandboxClient.ts';
 
 /**
  * Base URL of the sandbox-service REST API.

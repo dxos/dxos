@@ -17,7 +17,7 @@ import {
   getOrderByColumnFromArrangement,
   getOrderFromArrangement,
   orderItemsInColumn,
-} from '../util';
+} from '../util/index.ts';
 
 /**
  * Builds a board model that maps kanban arrangement and projection onto columns and per-column items.

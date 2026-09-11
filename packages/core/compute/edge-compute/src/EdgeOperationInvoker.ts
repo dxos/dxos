@@ -13,7 +13,7 @@ import { RemoteOperationInvoker } from '@dxos/compute-runtime';
 import { type Context as DxosContext } from '@dxos/context';
 import { type SpaceId } from '@dxos/keys';
 
-import { createEdgeClient } from './edge-client';
+import { createEdgeClient } from './edge-client.ts';
 
 type EdgeClient = ReturnType<typeof createEdgeClient>;
 

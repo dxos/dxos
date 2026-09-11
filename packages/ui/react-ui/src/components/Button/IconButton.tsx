@@ -4,11 +4,11 @@
 
 import React, { forwardRef } from 'react';
 
-import { useThemeContext } from '../../hooks';
-import { type ThemedClassName } from '../../util';
-import { Icon, type IconProps } from '../Icon';
-import { Tooltip, type TooltipSide } from '../Tooltip';
-import { Button, type ButtonProps } from './Button';
+import { useThemeContext } from '../../hooks/index.ts';
+import { type ThemedClassName } from '../../util/index.ts';
+import { Icon, type IconProps } from '../Icon/index.ts';
+import { Tooltip, type TooltipSide } from '../Tooltip/index.ts';
+import { Button, type ButtonProps } from './Button.tsx';
 
 type IconButtonProps = Omit<ButtonProps, 'children'> &
   Partial<Pick<IconProps, 'icon' | 'size'>> & {

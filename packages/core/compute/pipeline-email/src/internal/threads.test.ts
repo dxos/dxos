@@ -6,7 +6,7 @@ import { describe, test } from 'vitest';
 
 import { Message } from '@dxos/types';
 
-import { buildThreads } from './threads';
+import { buildThreads } from './threads.ts';
 
 const msg = (subject: string, from: string, created: string, summary?: string) =>
   Message.make({

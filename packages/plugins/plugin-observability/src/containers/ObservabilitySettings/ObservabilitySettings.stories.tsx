@@ -14,7 +14,7 @@ import { meta as pluginMeta } from '#meta';
 import { translations } from '#translations';
 import { Settings } from '#types';
 
-import { ObservabilitySettings } from './ObservabilitySettings';
+import { ObservabilitySettings } from './ObservabilitySettings.tsx';
 
 type StoryArgs = {
   settings: Settings.Settings;

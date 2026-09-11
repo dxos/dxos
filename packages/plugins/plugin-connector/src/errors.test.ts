@@ -8,7 +8,7 @@ import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as Operation from '@dxos/compute/Operation';
 import { BaseError } from '@dxos/errors';
 
-import { ConnectionAuthExpiredError, isUnauthorizedError } from './errors';
+import { ConnectionAuthExpiredError, isUnauthorizedError } from './errors.ts';
 
 describe('isUnauthorizedError', () => {
   test('detects a GoogleApiError-style numeric `code`', ({ expect }) => {

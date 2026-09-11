@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { acceptsCredentials } from './sandbox-url';
+import { acceptsCredentials } from './sandbox-url.ts';
 
 describe('acceptsCredentials', () => {
   test('admits https', ({ expect }) => {

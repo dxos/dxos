@@ -7,7 +7,7 @@ import { type Accessor } from 'solid-js';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 
-import { useCapability } from './useCapabilities';
+import { useCapability } from './useCapabilities.ts';
 
 export const useOperationInvoker = (): Accessor<Capabilities.OperationInvoker> =>
   useCapability(Capabilities.OperationInvoker);

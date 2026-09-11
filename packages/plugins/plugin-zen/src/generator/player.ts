@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { SAMPLE_URLS } from './sounds';
+import { SAMPLE_URLS } from './sounds.ts';
 
 /**
  * Audio player for bundled m4a samples.

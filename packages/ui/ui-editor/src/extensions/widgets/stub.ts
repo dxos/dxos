@@ -9,7 +9,7 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { Domino } from '@dxos/ui';
 
-import { type WidgetProps, type WidgetState } from './widgets';
+import { type WidgetProps, type WidgetState } from './widgets.ts';
 
 export interface WidgetNotifier {
   mounted(widget: WidgetState): void;

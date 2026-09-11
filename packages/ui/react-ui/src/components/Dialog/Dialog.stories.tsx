@@ -9,11 +9,11 @@ import { expect, userEvent, waitFor, within } from 'storybook/test';
 import { invariant } from '@dxos/invariant';
 import { random } from '@dxos/random';
 
-import { withTheme } from '../../testing';
-import { Button } from '../Button';
-import { Field } from '../Field';
-import { ScrollArea } from '../ScrollArea';
-import { Dialog, DIALOG_AUTOFOCUS_ATTRIBUTE, type DialogContentProps } from './Dialog';
+import { withTheme } from '../../testing/index.ts';
+import { Button } from '../Button/index.ts';
+import { Field } from '../Field/index.ts';
+import { ScrollArea } from '../ScrollArea/index.ts';
+import { Dialog, DIALOG_AUTOFOCUS_ATTRIBUTE, type DialogContentProps } from './Dialog.tsx';
 
 type StoryArgs = Pick<DialogContentProps, 'size' | 'elevation'> &
   Partial<{

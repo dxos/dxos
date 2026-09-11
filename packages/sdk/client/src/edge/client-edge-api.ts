@@ -15,7 +15,7 @@ import { type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { QueryReactivity, QueryRequestSchema } from '@dxos/protocols/buf/dxos/echo/query_pb';
 
-import { type Client } from '../client';
+import { type Client } from '../client/index.ts';
 
 /**
  * API for EDGE client functionality.

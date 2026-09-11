@@ -14,7 +14,7 @@ import { log } from '@dxos/log';
 import { trace } from '@dxos/tracing';
 import { getDeep, isNonNullable } from '@dxos/util';
 
-import { type QueryContext, type SourceEntry } from './query-context';
+import { type QueryContext, type SourceEntry } from './query-context.ts';
 
 /**
  * Predicate based query.

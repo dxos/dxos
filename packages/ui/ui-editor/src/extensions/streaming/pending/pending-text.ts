@@ -7,8 +7,8 @@ import { type Command, Decoration, EditorView, WidgetType, keymap } from '@codem
 
 import { Domino } from '@dxos/ui';
 
-import { type MarkerHue, markerButtons, markerText, markerTheme } from '../../decoration/marker';
-import { busy, setBusy } from '../../state/busy';
+import { type MarkerHue, markerButtons, markerText, markerTheme } from '../../decoration/marker.ts';
+import { busy, setBusy } from '../../state/busy.ts';
 
 //
 // State.

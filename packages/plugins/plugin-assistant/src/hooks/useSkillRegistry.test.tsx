@@ -14,7 +14,7 @@ import { Database, Feed, Obj } from '@dxos/echo';
 import { TestDatabaseLayer } from '@dxos/echo-client/testing';
 import { Text } from '@dxos/schema';
 
-import { getSkillId, useActiveSkills, useSkillHandlers, useSkills } from './useSkillRegistry';
+import { getSkillId, useActiveSkills, useSkillHandlers, useSkills } from './useSkillRegistry.ts';
 
 /**
  * A skill the user authored in a space, which — unlike a registry skill — carries no registry key.

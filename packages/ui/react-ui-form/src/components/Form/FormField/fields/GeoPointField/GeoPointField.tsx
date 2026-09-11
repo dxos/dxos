@@ -11,7 +11,7 @@ import { safeParseFloat } from '@dxos/util';
 import { translationKey } from '#translations';
 import { type FormFieldRendererProps } from '#types';
 
-import { presentationFor } from '../../presentation';
+import { presentationFor } from '../../presentation.tsx';
 
 export const GeoPointField = ({
   type,

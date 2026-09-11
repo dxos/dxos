@@ -22,10 +22,10 @@ import * as Trace from '@dxos/compute/Trace';
 import type { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 
-import type * as ProcessManager from './ProcessManager';
-import { toError, toStatus } from './remote-process-info';
-import type * as RemoteProcessManager from './RemoteProcessManager';
-import type * as RemoteTraceMonitor from './RemoteTraceMonitor';
+import type * as ProcessManager from './ProcessManager.ts';
+import { toError, toStatus } from './remote-process-info.ts';
+import type * as RemoteProcessManager from './RemoteProcessManager.ts';
+import type * as RemoteTraceMonitor from './RemoteTraceMonitor.ts';
 
 /** How long to wait before re-reading a process's event log after an empty page. */
 const DEFAULT_POLL_INTERVAL = Duration.millis(250);

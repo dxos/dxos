@@ -9,7 +9,7 @@ import { afterAll, beforeAll, describe, test } from 'vitest';
 
 import { Shell } from '#shell';
 
-import { type Host, startHost } from './testing';
+import { type Host, startHost } from './testing.ts';
 
 describe('shell middleware', () => {
   let root: string;

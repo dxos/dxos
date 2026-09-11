@@ -8,7 +8,7 @@ import { describe, expect, test } from 'vitest';
 import { SchemaAST } from '@dxos/effect';
 import { getDeep } from '@dxos/util';
 
-import { SchemaValidator } from './schema-validator';
+import { SchemaValidator } from './schema-validator.ts';
 
 describe('schema-validator', () => {
   describe('validateSchema', () => {

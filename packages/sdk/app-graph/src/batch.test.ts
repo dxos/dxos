@@ -9,8 +9,8 @@ import { describe, expect, test } from 'vitest';
 
 import * as GraphNode from '@dxos/graph/GraphNode';
 
-import * as Graph from './AppGraph';
-import * as GraphBuilder from './AppGraphBuilder';
+import * as Graph from './AppGraph.ts';
+import * as GraphBuilder from './AppGraphBuilder.ts';
 
 const TYPE = 'org.dxos.type.example';
 

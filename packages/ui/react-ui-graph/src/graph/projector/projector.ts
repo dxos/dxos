@@ -2,9 +2,9 @@
 // Copyright 2021 DXOS.org
 //
 
-import { type SVGContext } from '../../hooks';
-import { EventEmitter } from '../../util';
-import { type IdAccessor, defaultIdAccessor } from '../types';
+import { type SVGContext } from '../../hooks/index.ts';
+import { EventEmitter } from '../../util/index.ts';
+import { type IdAccessor, defaultIdAccessor } from '../types.ts';
 
 export type ProjectorOptions = {
   idAccessor?: IdAccessor;

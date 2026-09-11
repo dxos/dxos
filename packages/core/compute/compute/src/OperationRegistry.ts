@@ -11,8 +11,8 @@ import * as Option from 'effect/Option';
 
 import { Database, Filter, Query } from '@dxos/echo';
 
-import * as Operation from './Operation';
-import * as OperationHandlerSet from './OperationHandlerSet';
+import * as Operation from './Operation.ts';
+import * as OperationHandlerSet from './OperationHandlerSet.ts';
 
 export interface OperationRegistry {
   /**

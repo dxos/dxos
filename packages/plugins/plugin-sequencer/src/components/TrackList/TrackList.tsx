@@ -10,7 +10,7 @@ import { mx } from '@dxos/ui-theme';
 
 import { Track } from '#types';
 
-import { hueFor, hueToHex } from '../../util/hue';
+import { hueFor, hueToHex } from '../../util/hue.ts';
 
 export type TrackListProps = {
   tracks: ReadonlyArray<Track.Track>;

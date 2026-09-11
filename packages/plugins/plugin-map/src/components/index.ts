@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-export * from './types';
+export * from './types.ts';
 
-export * from './Globe';
-export * from './Map';
+export * from './Globe/index.ts';
+export * from './Map/index.ts';

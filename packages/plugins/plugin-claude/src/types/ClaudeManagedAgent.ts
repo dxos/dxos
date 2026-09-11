@@ -9,7 +9,7 @@ import * as Schema from 'effect/Schema';
 import { Annotation, DXN, Format, Obj, Type } from '@dxos/echo';
 import { LabelAnnotation } from '@dxos/echo/Annotation';
 
-import { ANTHROPIC_SOURCE } from '../constants';
+import { ANTHROPIC_SOURCE } from '../constants.ts';
 
 /** Default model for a newly created agent. */
 export const DEFAULT_MODEL = 'claude-opus-5';

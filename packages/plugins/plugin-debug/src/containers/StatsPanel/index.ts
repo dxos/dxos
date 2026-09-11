@@ -2,4 +2,4 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './StatsPanel';
+export * from './StatsPanel.tsx';

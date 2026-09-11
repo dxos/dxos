@@ -16,9 +16,9 @@ import { Annotation, Obj } from '@dxos/echo';
 import { EdgeReplicationSetting } from '@dxos/protocols/buf/dxos/echo/metadata_pb';
 import { type Credential, DefaultSpaceSchema, MembershipPolicy } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
-import { GraphPath } from '../app';
-import { AppCapabilities } from '../app-framework';
-import * as AppAnnotation from './AppAnnotation';
+import { AppCapabilities } from '../app-framework/index.ts';
+import { GraphPath } from '../app/index.ts';
+import * as AppAnnotation from './AppAnnotation.ts';
 
 //
 // Space tags.

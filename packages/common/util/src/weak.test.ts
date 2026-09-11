@@ -4,7 +4,7 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { WeakDictionary } from './weak';
+import { WeakDictionary } from './weak.ts';
 
 describe('WeakDictionary', () => {
   // Skipped because it takes a long time for garbage collection to kick in (~8 sec)

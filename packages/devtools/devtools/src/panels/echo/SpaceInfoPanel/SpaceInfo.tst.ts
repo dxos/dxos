@@ -6,9 +6,9 @@ import { describe, expect, it } from 'tstyche';
 
 import { type SubscribeToSpacesResponse_SpaceInfo } from '@dxos/protocols/buf/dxos/devtools/host_pb';
 
-import { useSpacesInfo } from '../../../hooks';
-import { type PipelineTableProps } from './PipelineTable';
-import { SpaceProperties } from './SpaceProperties';
+import { useSpacesInfo } from '../../../hooks/index.ts';
+import { type PipelineTableProps } from './PipelineTable.tsx';
+import { SpaceProperties } from './SpaceProperties.tsx';
 
 // Carrier group A: `DevtoolsHost.subscribeToSpaces` moved to `bufMessage`, so these pin the type the
 // carrier hands over rather than the annotation the panels happen to write.

@@ -5,7 +5,7 @@
 import { EditorState } from '@codemirror/state';
 import { describe, test } from 'vitest';
 
-import { Cursor } from './cursor';
+import { Cursor } from './cursor.ts';
 
 describe('Cursor', () => {
   // A converter in the shape of the automerge one: opaque cursors it minted decode, anything else throws.

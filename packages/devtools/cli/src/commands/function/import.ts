@@ -16,7 +16,7 @@ import { Context } from '@dxos/context';
 import { Database, Filter, Obj } from '@dxos/echo';
 import { getDeployedFunctions } from '@dxos/edge-compute';
 
-import { getFunctionStatus, printFunction, selectDeployedFunction } from './util';
+import { getFunctionStatus, printFunction, selectDeployedFunction } from './util.ts';
 
 export const importCommand = Command.make(
   'import',

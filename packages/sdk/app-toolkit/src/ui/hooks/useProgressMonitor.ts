@@ -9,7 +9,7 @@ import { useMemo } from 'react';
 import { useOptionalCapability } from '@dxos/app-framework/ui';
 import { type Progress } from '@dxos/progress';
 
-import { AppCapabilities } from '../../app-framework';
+import { AppCapabilities } from '../../app-framework/index.ts';
 
 // Stable fallbacks so the hooks degrade to "no progress" when the ProgressRegistry host is absent
 // (e.g., a storybook, a test, or a minimal app config) rather than throwing.

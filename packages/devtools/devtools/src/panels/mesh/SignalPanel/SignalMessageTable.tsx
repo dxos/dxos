@@ -20,7 +20,7 @@ import { useNetworkStatus } from '@dxos/react-client/mesh';
 import { Toolbar } from '@dxos/react-ui';
 import { type TablePropertyDefinition } from '@dxos/react-ui-table';
 
-import { MasterDetailTable, Searchbar, Select } from '../../../components';
+import { MasterDetailTable, Searchbar, Select } from '../../../components/index.ts';
 
 const ACKNOWLEDGEMENT = 'dxos.mesh.messaging.Acknowledgement';
 const RELIABLE_PAYLOAD = 'dxos.mesh.messaging.ReliablePayload';

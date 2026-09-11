@@ -12,7 +12,7 @@ import { TestDatabaseLayer } from '@dxos/echo-client/testing';
 import { Text } from '@dxos/schema';
 import { Outline, Task, TaskSet } from '@dxos/types';
 
-import getProject from './get-project';
+import getProject from './get-project.ts';
 
 const testLayer = () =>
   TestDatabaseLayer({

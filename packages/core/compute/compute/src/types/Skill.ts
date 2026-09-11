@@ -16,10 +16,10 @@ import { BaseError } from '@dxos/errors';
 // eslint-disable-next-line unused-imports/no-unused-imports
 import { type Text } from '@dxos/schema';
 
-import * as McpServer from '../McpServer';
-import * as Operation from '../Operation';
-import * as Template from './Template';
-import * as Trigger from './Trigger';
+import * as McpServer from '../McpServer.ts';
+import * as Operation from '../Operation.ts';
+import * as Template from './Template.ts';
+import * as Trigger from './Trigger.ts';
 
 /**
  * Skill schema defines the structure for AI assistant skills.

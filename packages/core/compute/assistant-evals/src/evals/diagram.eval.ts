@@ -13,9 +13,9 @@ import { Diagnostics, SVG_SCHEMA, SvgBuilder } from '@dxos/plugin-illustrator/mo
 import { UmlSkill } from '@dxos/plugin-illustrator/skills';
 import { trim } from '@dxos/util';
 
-import { findObject } from '../assertions';
-import { createEvalRunner } from '../runner';
-import { getDefaultSkills } from '../skills';
+import { findObject } from '../assertions.ts';
+import { createEvalRunner } from '../runner.ts';
+import { getDefaultSkills } from '../skills.ts';
 
 //
 // Tier 3 of the illustrator eval (see plugin-illustrator/docs/DESIGN.md): the agent is asked to

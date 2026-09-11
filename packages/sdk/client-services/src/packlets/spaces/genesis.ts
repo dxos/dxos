@@ -19,8 +19,8 @@ import {
 } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { Timeframe } from '@dxos/timeframe';
 
-import { type Space } from '../space';
-import { type SigningContext } from './data-space-manager';
+import { type Space } from '../space/index.ts';
+import { type SigningContext } from './data-space-manager.ts';
 
 export const spaceGenesis = async (
   keyring: KeyringApi,

@@ -7,8 +7,8 @@ import { describe, test } from 'vitest';
 
 import { type Scene } from '@dxos/plugin-illustrator/model';
 
-import { applyCommands } from './builder';
-import { readScene } from './read';
+import { applyCommands } from './builder.ts';
+import { readScene } from './read.ts';
 
 /** A face made of every element category: boxes, circles, arc sugar, polyline, text. */
 const face: Scene.WorldObject = {

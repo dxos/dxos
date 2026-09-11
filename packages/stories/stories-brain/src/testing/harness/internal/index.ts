@@ -2,14 +2,14 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './active-topics';
-export * from './active-topics-report';
-export * from './agent';
-export * from './embeddings';
-export * from './eval-report';
-export * from './fact-store';
-export * from './grade';
-export * from './judge';
-export * from './ladder';
-export * from './subject-index';
-export * from './vector';
+export * from './active-topics.ts';
+export * from './active-topics-report.ts';
+export * from './agent.ts';
+export * from './embeddings.ts';
+export * from './eval-report.ts';
+export * from './fact-store.ts';
+export * from './grade.ts';
+export * from './judge.ts';
+export * from './ladder.ts';
+export * from './subject-index.ts';
+export * from './vector.ts';

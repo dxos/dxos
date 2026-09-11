@@ -4,6 +4,6 @@
 
 export * from '@dxos/app-framework';
 
-export * from './common';
-export * from './useCapabilities';
-export * from './usePluginManager';
+export * from './common.ts';
+export * from './useCapabilities.ts';
+export * from './usePluginManager.ts';
