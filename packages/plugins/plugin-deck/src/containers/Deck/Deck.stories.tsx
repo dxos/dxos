@@ -587,9 +587,8 @@ export const CompanionPerPlank: Story = {
     await new Promise((resolve) => setTimeout(resolve, 100));
     await expect(showingCompanionsFor(canvasElement)).toEqual(['Overview', 'Notes']);
 
-    // Every plank sits in a splitter panel, companion or not. A tile that changed shape around a
-    // companion re-parented the plank beneath it, and companions arrive a commit after the plank does,
-    // so a plank with one would be torn down and rebuilt on the commit after it mounted.
+    // Every plank sits in a splitter panel, companion or not: a companion resolves a commit after its
+    // plank mounts, so a shape that varied with it would unmount the plank and everything it holds.
     const planks = canvasElement.querySelectorAll<HTMLElement>('[data-testid="deck.plank"]');
     await expect(planks).toHaveLength(3);
     for (const plank of planks) {
