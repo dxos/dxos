@@ -40,10 +40,10 @@ const carryCompanions = (
   next: readonly string[],
   flatten: boolean | undefined,
 ): string[] | undefined => {
-  // Undecided stays undecided while there is nothing to hang a companion off; the first plank makes
-  // it concrete, which is the one moment the "starts open" default applies.
+  // Undecided is carried, never settled here: only the reader opening or closing the pane decides,
+  // and navigation is not that.
   if (companionPlanks === undefined) {
-    return next.length === 0 ? undefined : [next[next.length - 1]];
+    return undefined;
   }
   if (companionPlanks.length === 0 || next.length === 0) {
     return [];

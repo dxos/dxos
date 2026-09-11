@@ -19,6 +19,7 @@ import {
   openCompanionPlank,
   resolveCompanionAnchor,
   resolveCompanionPlank,
+  updateActiveDeck,
 } from '../util/index.ts';
 
 const handler: Operation.WithHandler<typeof LayoutOperation.UpdateCompanion> = LayoutOperation.UpdateCompanion.pipe(
@@ -32,7 +33,12 @@ const handler: Operation.WithHandler<typeof LayoutOperation.UpdateCompanion> = L
       const subject = input.subject;
       if (subject === null) {
         const plankId = input.anchor ?? resolveCompanionAnchor(deck.active, attention.getCurrent());
-        const companionPlanks = closeCompanionPlank(deck.companionPlanks, flatten, plankId);
+        // Written here rather than left to the projection: the URL carries no companion pair either
+        // way, so the projection cannot tell this close from a deck nobody has decided on.
+        const companionPlanks = closeCompanionPlank(deck.companionPlanks, flatten, plankId, deck.active);
+        yield* Capabilities.updateAtomValue(DeckCapabilities.State, (state) =>
+          updateActiveDeck(state, { companionPlanks }),
+        );
         yield* navigateDeck({ workspace, active: deck.active, companionPlanks });
         return;
       }

@@ -138,17 +138,15 @@ describe('computeActiveUpdates', () => {
       expect(deckUpdates.companionPlanks).toBeUndefined();
     });
 
-    test('the first plank makes an undecided companion concrete and open', ({ expect }) => {
+    test('carries an undecided companion through navigation rather than settling it', ({ expect }) => {
       const deck = makeDeck({ active: [], companionPlanks: undefined });
-      const { deckUpdates } = computeActiveUpdates({ next: ['a'], deck });
-      expect(deckUpdates.companionPlanks).toEqual(['a']);
+      expect(computeActiveUpdates({ next: ['a'], deck }).deckUpdates.companionPlanks).toBeUndefined();
+
+      const opened = makeDeck({ active: ['a'], companionPlanks: undefined });
+      expect(computeActiveUpdates({ next: ['a', 'b'], deck: opened }).deckUpdates.companionPlanks).toBeUndefined();
     });
 
-    test('an undecided companion, once closed, stays closed through later navigation', ({ expect }) => {
-      const opened = makeDeck({ active: [], companionPlanks: undefined });
-      const first = computeActiveUpdates({ next: ['a'], deck: opened }).deckUpdates;
-      expect(first.companionPlanks).toEqual(['a']);
-
+    test('once the reader closes it, later navigation keeps it closed', ({ expect }) => {
       const closed = makeDeck({ active: ['a'], companionPlanks: [] });
       const { deckUpdates } = computeActiveUpdates({ next: ['a', 'b'], deck: closed });
       expect(deckUpdates.companionPlanks).toEqual([]);

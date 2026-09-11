@@ -132,6 +132,13 @@ export const applyCompanion = Effect.fnUntraced(function* (target: CompanionTarg
   const attention = yield* Capability.get(AttentionCapabilities.Attention);
 
   if (!target) {
+    // An undecided companion is left alone: every URL lacks a pair until something opens one, so
+    // treating absence as a close here would settle the default to closed on the first projection.
+    // The reader's own close writes the empty list, and this then only prunes it.
+    if (deck.companionPlanks === undefined) {
+      return;
+    }
+
     const plankId = resolveCompanionAnchor(deck.active, attention.getCurrent());
     yield* Capabilities.updateAtomValue(DeckCapabilities.State, (state) =>
       updateActiveDeck(state, { companionPlanks: closeCompanionPlank(deck.companionPlanks, flatten, plankId) }),
