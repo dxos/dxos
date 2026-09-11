@@ -138,17 +138,14 @@ type PlankContextValue = RenderedPlanks & {
  * companion could be "open" in state yet render beside no visible plank. The variant (which tab) stays
  * global view state, shared across planks.
  */
-const useDeckCompanion = (
-  id: string | undefined,
-): { open: boolean; companionId: string | undefined; empty: boolean } => {
+const useDeckCompanion = (id: string | undefined): { open: boolean; companionId: string | undefined } => {
   const { deck } = useDeckContext('useDeckCompanion');
   const { flatten } = useDeckSettings();
   const companions = useCompanions(id);
   const selectedVariant = useSelectedCompanionVariant();
   const { companionId } = useSelectedCompanion(companions ?? [], selectedVariant);
   const open = isCompanionOpen(deck.companionPlanks, flatten, id);
-  // False while the companions are still being read, so the empty pane never flashes before its tabs.
-  return { open, companionId: open ? companionId : undefined, empty: companions?.length === 0 };
+  return { open, companionId: open ? companionId : undefined };
 };
 
 /**
@@ -383,7 +380,6 @@ const PlankSplit = ({
   id,
   companion,
   companionId,
-  empty,
   active,
   companionSize,
   total,
@@ -393,8 +389,6 @@ const PlankSplit = ({
   /** Whether the seam is open; the pane it opens is empty until `companionId` resolves. */
   companion: boolean;
   companionId?: string;
-  /** The plank has no companions at all, so the open pane says so rather than standing blank. */
-  empty?: boolean;
   active: string[];
   companionSize: number;
   total?: number;
@@ -424,11 +418,10 @@ const PlankSplit = ({
       </Splitter.Panel>
       <Splitter.Handle />
       <Splitter.Panel position='end'>
-        {companionId ? (
-          <DeckPlank id={companionId} part='main' active={active} classNames='size-full' />
-        ) : (
-          empty && <CompanionPlank id={id} classNames='size-full' />
-        )}
+        {/* One component whether or not a companion resolved, so a companion arriving re-renders the
+            pane rather than rebuilding it: the plank's own id addresses the same pane with its tab
+            strip empty. Gated on the seam, so a plank whose pane is closed mounts none of it. */}
+        {companion && <CompanionPlank id={companionId ?? id} classNames='size-full' />}
       </Splitter.Panel>
     </Splitter.Root>
   );
@@ -461,7 +454,7 @@ const DeckPlankTile: MosaicStackTileComponent<string> = (props) => {
   const node = useNode(graph, id);
   const breakpoint = useBreakpoints();
   const { planks: rendered, maxPlankWidthPx, captureExposeGeometry, markExposeSelect } = usePlankContext();
-  const { open: companion, companionId, empty: companionEmpty } = useDeckCompanion(id);
+  const { open: companion, companionId } = useDeckCompanion(id);
   const presentation = useDeckPresentation(rendered.length);
   const isMobile = breakpoint === 'mobile';
   const exposed = !!state.expose;
@@ -532,7 +525,6 @@ const DeckPlankTile: MosaicStackTileComponent<string> = (props) => {
           id={id}
           companion={companion}
           companionId={companionId}
-          empty={companionEmpty}
           active={deck.active}
           companionSize={soloCompanionSize}
           classNames={mx('dx-fullscreen', mainPaddingTransitions)}
@@ -589,7 +581,6 @@ const DeckPlankTile: MosaicStackTileComponent<string> = (props) => {
         id={id}
         companion={companion}
         companionId={companionId}
-        empty={companionEmpty}
         active={deck.active}
         companionSize={companionSize}
         total={tileSize}

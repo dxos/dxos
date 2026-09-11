@@ -39,7 +39,7 @@ export const CompanionPlank = ({ id, classNames }: CompanionPlankProps) => {
   const companion = Attention.isLinkedSegment(id);
   const contextId = (companion ? Attention.getParentId(id) : undefined) ?? id;
   const contextNode = useNode(graph, contextId);
-  const companions = useCompanions(contextId) ?? [];
+  const companions = useCompanions(contextId);
 
   const onValueChange = useCallback(
     (companion: string) => invokePromise(LayoutOperation.UpdateCompanion, { subject: companion }),
