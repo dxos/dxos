@@ -327,9 +327,14 @@ export class AppManager {
   /** Opens the add-space dialog, submits it, and waits for it to close. */
   async #submitCreateSpaceForm(): Promise<void> {
     const dialog = this.page.getByTestId('create-space-dialog');
-    await this.page.getByTestId('spacePlugin.addSpace').click();
-    await this.page.getByTestId('spacePlugin.createSpace').click();
-    await expect(dialog).toBeVisible({ timeout: 15_000 });
+    // Same remount as in `deleteSpace`: a navigation landing while the menu is open detaches the item
+    // mid-click, and the overlay that replaces it swallows the pointer. Reopening a menu whose dialog
+    // is already up is a no-op, so the block is safe to repeat.
+    await expect(async () => {
+      await this.page.getByTestId('spacePlugin.addSpace').click();
+      await this.page.getByTestId('spacePlugin.createSpace').click({ timeout: 5_000 });
+      await expect(dialog).toBeVisible({ timeout: 5_000 });
+    }).toPass({ timeout: 30_000 });
 
     const form = this.page.getByTestId('create-space-form');
     // The action row is pinned outside the scrolling field region, so it is scoped to the dialog,
