@@ -79,8 +79,9 @@ export type AuthHeaderProvider = () => Promise<string | undefined>;
  * `_base` is the service's base URL, normally `<edge>/sandbox`; the worker serves its routes at its
  * own root, so a path is appended directly.
  *
- * Every route of the service authenticates the caller and requires membership of the space in the
- * path, so `_authHeader` is not optional in practice — a client built without one gets 401s.
+ * The service authenticates every route and requires membership of the space in the path, unless its
+ * `EDGE_CONFIG.sandbox.noAuth` is set — so `_authHeader` is what keeps this client working once that
+ * flag is turned off, not something the current deployment already refuses requests without.
  *
  * Requests go through the Effect `HttpClient` rather than bare `fetch` for two reasons beyond
  * style: the client aborts the underlying request when the fiber is interrupted, so cancelling an
