@@ -281,6 +281,12 @@ export const AgentProcess = (options: AgentProcessOptions) =>
             toolCallManager,
           });
 
+        // A turn that ends with an alarm pending leaves the process resident, and the reader is then
+        // waiting on the wake rather than on the turn — so the last stage of that turn is no longer
+        // what is happening.
+        const reportSleeping = (state: PendingState): Effect.Effect<void, never, Trace.TraceService> =>
+          state.pendingAlarms.length > 0 ? emitRequestPhase('sleeping') : Effect.void;
+
         const maybeCompleteWith = (state: PendingState) =>
           Effect.gen(function* () {
             // A result reported inside the turn it belongs to is still sitting in the queue; it is
@@ -290,6 +296,7 @@ export const AgentProcess = (options: AgentProcessOptions) =>
               log('drop tool result reported within its turn', { pid });
             }
             if (pendingWork(state)) {
+              yield* reportSleeping(state);
               return;
             }
 
@@ -308,6 +315,7 @@ export const AgentProcess = (options: AgentProcessOptions) =>
             if (pendingWork(after)) {
               log('agent work enqueued by end-request hook, continuing');
               yield* reconcileAlarmWith(after);
+              yield* reportSleeping(after);
               return;
             }
 

@@ -2,11 +2,16 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Context from 'effect/Context';
+import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
+
 import { type CleanupFn } from '@dxos/async';
 import { type BlobBackend } from '@dxos/blob';
+import { BaseError } from '@dxos/errors';
 import { type URI } from '@dxos/keys';
 
-import type * as Database from './Database.ts';
+import * as Database from './Database.ts';
 import type * as Entity from './Entity.ts';
 import type * as Key from './Key.ts';
 import type * as Ref from './Ref.ts';
@@ -91,3 +96,64 @@ export interface Hypergraph extends Database.Queryable {
    */
   get defaultBlobStorage(): string;
 }
+
+/**
+ * Effect service tag for Hypergraph dependency injection.
+ *
+ * Distinct from {@link Database.Service}, which carries one space's database: an operation
+ * declaring the database is declaring that it acts on a space, and callers that cannot name one
+ * (a harness hook fires a fixed payload) are refused before the handler runs. This service is the
+ * cross-space handle — query every space, or reach one by id with `getDatabase` — for the work
+ * that has to find its own space rather than be told it.
+ */
+export class Service extends Context.Service<
+  Service,
+  {
+    readonly graph: Hypergraph;
+  }
+>()('@dxos/echo/Hypergraph/Service') {}
+
+/**
+ * Layer that provides a Hypergraph service that throws when accessed. The default where no graph
+ * exists, so a host that never wires one fails loudly at the call rather than silently resolving
+ * nothing.
+ */
+export const notAvailable = Layer.succeed(Service, {
+  get graph(): Hypergraph {
+    throw new globalThis.Error('Hypergraph not available');
+  },
+});
+
+/** Creates a Hypergraph service instance from a graph. */
+export const makeService = (graph: Hypergraph): Service['Service'] => ({
+  get graph() {
+    return graph;
+  },
+});
+
+/** Creates a Layer that provides the Hypergraph service. */
+export const layer = (graph: Hypergraph): Layer.Layer<Service> => Layer.succeed(Service, makeService(graph));
+
+/** The graph holds no database for the requested space — it is not open, or does not exist. */
+export class SpaceNotFoundError extends BaseError.extend('SpaceNotFoundError', 'Space not found.') {}
+
+/**
+ * Narrows the graph to one space's {@link Database.Service}.
+ *
+ * The bridge between the two services: work that had to *find* a space still wants to be written
+ * with the ordinary space-scoped API once it has one, and every caller doing that by hand would
+ * otherwise reimplement the same lookup-and-fail. The space id is resolved when the layer is built,
+ * so a missing space fails there rather than at the first query.
+ */
+export const withDatabase = (spaceId: Key.SpaceId): Layer.Layer<Database.Service, SpaceNotFoundError, Service> =>
+  Layer.effect(
+    Database.Service,
+    Effect.gen(function* () {
+      const { graph } = yield* Service;
+      const db = graph.getDatabase(spaceId);
+      if (!db) {
+        return yield* Effect.fail(new SpaceNotFoundError({ context: { spaceId } }));
+      }
+      return Database.makeService(db);
+    }),
+  );

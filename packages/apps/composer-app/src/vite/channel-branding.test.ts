@@ -32,6 +32,10 @@ describe('channelVariant', () => {
     expect(channelVariant('build', 'production')).toBeUndefined();
   });
 
+  test('the e2e bundle is not a deploy, so it ships the released mark', ({ expect }) => {
+    expect(channelVariant('build', 'ci')).toBeUndefined();
+  });
+
   test('an unset environment is a local build, not a channel', ({ expect }) => {
     // `environment` defaults to `process.env.DX_ENVIRONMENT`, so passing `undefined` reads the
     // ambient value — a developer who exports one (a machine name, say) fails this otherwise.
@@ -48,8 +52,6 @@ describe('channelVariant', () => {
 
   test('an environment with no artwork fails the build rather than shipping the released mark', ({ expect }) => {
     expect(() => channelVariant('build', 'labs')).toThrow(/unknown environment: labs/);
-    // The e2e bundle's environment; it is built on every PR, so a throw here takes e2e down wholesale.
-    expect(channelVariant('build', 'ci')).toBeUndefined();
   });
 
   // Only a deployed bundle is branded, so `DX_ENVIRONMENT` in a shell does not repaint localhost.

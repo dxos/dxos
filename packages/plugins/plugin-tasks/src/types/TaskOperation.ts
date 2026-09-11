@@ -67,7 +67,10 @@ export const UpdateTask = Operation.make({
   meta: {
     key: DXN.make('org.dxos.operation.tasks.update'),
     name: 'Update Task',
-    description: 'Patch task fields: title, description, status, priority, estimate, assignee. Null clears a field.',
+    description:
+      'Patch task fields: title, description, status, priority, estimate, assignee. Null clears a field. ' +
+      'Pass `remoteSession` with a harness session id to assign the task to that coding-agent session, ' +
+      'creating the session record in the space if it is not there yet.',
     icon: 'ph--pencil-simple--regular',
   },
   services: [Database.Service],
@@ -81,6 +84,25 @@ export const UpdateTask = Operation.make({
     priority: Schema.optional(Schema.NullOr(Task.Priority)),
     estimate: Schema.optional(Schema.NullOr(Task.Estimate)),
     assignee: Schema.optional(Schema.NullOr(Actor.Actor)),
+    /**
+     * Assign the task to a coding-agent session, by the harness session id — one call, rather than
+     * looking the session object up first and composing the actor by hand.
+     *
+     * An agent's actor is the object it IS, so the assignee it produces carries a `subject` ref to
+     * the session; a bare `{ role: 'assistant' }` would record that AN assistant owns the task but
+     * not which run, and a session's own check-in finds its open tasks by that ref. The session is
+     * created in the task's space when this id is not recorded there yet, so an agent can claim
+     * work on its first call.
+     */
+    remoteSession: Schema.optional(
+      Schema.Struct({
+        sessionId: Schema.String.annotate({ description: 'The harness session id (your own, when claiming work).' }),
+        title: Schema.optional(Schema.String),
+        repo: Schema.optional(Schema.String),
+        branch: Schema.optional(Schema.String),
+        worktree: Schema.optional(Schema.String),
+      }),
+    ),
     /** Re-file under a milestone; `null` moves the task to the backlog. */
     milestone: Schema.optional(Schema.NullOr(Ref.Ref(Milestone.Milestone))),
     /** Re-parent as a sub-task; `null` promotes the task to a root of its set. */

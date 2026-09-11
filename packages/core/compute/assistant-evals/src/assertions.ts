@@ -41,7 +41,7 @@ export const findObject = <T extends Type.AnyEntity>(
  * dimension G), read from the durable feed rather than trusting the agent's own report.
  */
 export const completedBlocks = (): Effect.Effect<
-  { role: string; block: ContentBlock.Any }[],
+  { role: string; block: ContentBlock.Any; timestamp: number }[],
   unknown,
   Database.Service | FeedTraceSink.FeedTraceSink
 > =>
@@ -53,11 +53,11 @@ export const completedBlocks = (): Effect.Effect<
     const feed = yield* FeedTraceSink.getOrCreateTraceFeed();
     const messages = yield* Database.query(Query.select(Filter.type(Trace.Message)).from(feed)).run;
 
-    const blocks: { role: string; block: ContentBlock.Any }[] = [];
+    const blocks: { role: string; block: ContentBlock.Any; timestamp: number }[] = [];
     for (const message of messages) {
       for (const event of message.events) {
         if (Trace.isOfType(CompleteBlock, event)) {
-          blocks.push({ role: event.data.role, block: event.data.block });
+          blocks.push({ role: event.data.role, block: event.data.block, timestamp: event.timestamp });
         }
       }
     }
@@ -73,6 +73,9 @@ export interface ToolInvocation {
   readonly input: string;
   readonly result?: unknown;
   readonly error?: string;
+  /** When the call and its result were traced, epoch millis: where a session's time went. */
+  readonly calledAt?: number;
+  readonly resultAt?: number;
 }
 
 /** Pairs `toolCall`/`toolResult` blocks (by `toolCallId`) from {@link completedBlocks}. */
@@ -83,11 +86,16 @@ export const toolInvocations = (): Effect.Effect<
 > =>
   Effect.gen(function* () {
     const blocks = yield* completedBlocks();
-    const calls = new Map<string, { name: string; operationKey?: string; input: string }>();
+    const calls = new Map<string, { name: string; operationKey?: string; input: string; timestamp: number }>();
     const invocations: ToolInvocation[] = [];
-    for (const { block } of blocks) {
+    for (const { block, timestamp } of blocks) {
       if (block._tag === 'toolCall') {
-        calls.set(block.toolCallId, { name: block.name, operationKey: block.operationKey, input: block.input });
+        calls.set(block.toolCallId, {
+          name: block.name,
+          operationKey: block.operationKey,
+          input: block.input,
+          timestamp,
+        });
       } else if (block._tag === 'toolResult') {
         const call = calls.get(block.toolCallId);
         invocations.push({
@@ -96,6 +104,8 @@ export const toolInvocations = (): Effect.Effect<
           input: call?.input ?? '',
           result: block.result,
           error: block.error,
+          calledAt: call?.timestamp,
+          resultAt: timestamp,
         });
       }
     }

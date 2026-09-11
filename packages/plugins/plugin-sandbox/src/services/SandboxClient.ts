@@ -66,10 +66,22 @@ export type SandboxRequestError =
 type RequestEffect<T> = Effect.Effect<T, SandboxRequestError, HttpClient.HttpClient>;
 
 /**
+ * Supplies the `Authorization` header for a request, normally `EdgeHttpClient.getAuthHeader`.
+ *
+ * Resolved per request rather than captured: a client outlives an identity change, and a captured
+ * header would keep presenting the previous identity's credential.
+ */
+export type AuthHeaderProvider = () => Promise<string | undefined>;
+
+/**
  * Client for the sandbox-service REST API.
  *
  * `_base` is the service's base URL, normally `<edge>/sandbox`; the worker serves its routes at its
  * own root, so a path is appended directly.
+ *
+ * The service authenticates every route and requires membership of the space in the path, unless its
+ * `EDGE_CONFIG.sandbox.noAuth` is set — so `_authHeader` is what keeps this client working once that
+ * flag is turned off, not something the current deployment already refuses requests without.
  *
  * Requests go through the Effect `HttpClient` rather than bare `fetch` for two reasons beyond
  * style: the client aborts the underlying request when the fiber is interrupted, so cancelling an
@@ -77,7 +89,10 @@ type RequestEffect<T> = Effect.Effect<T, SandboxRequestError, HttpClient.HttpCli
  * what joins these requests to the service's own spans in one trace.
  */
 export class SandboxClient {
-  constructor(private readonly _base: string) {}
+  constructor(
+    private readonly _base: string,
+    private readonly _authHeader: AuthHeaderProvider,
+  ) {}
 
   #url(path: string): string {
     return `${this._base.replace(/\/$/, '')}${path}`;
@@ -163,10 +178,13 @@ export class SandboxClient {
     schema: Schema.Codec<T>,
     timeout: Duration.Duration,
   ): RequestEffect<T> {
+    const authHeader = this._authHeader;
     return Effect.gen(function* () {
       const httpClient = yield* HttpClient.HttpClient;
       const withBody = body === undefined ? request : yield* HttpClientRequest.bodyJson(request, body);
-      return yield* httpClient.execute(withBody).pipe(
+      const header = yield* Effect.promise(authHeader);
+      const authorized = header ? HttpClientRequest.setHeader(withBody, 'Authorization', header) : withBody;
+      return yield* httpClient.execute(authorized).pipe(
         Effect.flatMap((response) => Effect.flatMap(response.json, Schema.decodeUnknownEffect(schema))),
         Effect.timeout(timeout),
         Effect.scoped,

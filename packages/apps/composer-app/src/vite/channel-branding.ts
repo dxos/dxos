@@ -41,10 +41,11 @@ const FAVICONS = [
 ];
 
 /**
- * Environments that ship the released mark. `ci` builds the bundle the e2e suite drives, which no one
- * deploys and no one looks at, so there is no channel for it to be mistaken for.
+ * Environments whose bundle is the released app: production itself, and CI's e2e bundle, which is
+ * built under `DX_ENVIRONMENT=ci` (a moon hash input, see `.depot/workflows/check.yml`) and never
+ * deployed.
  */
-const UNBRANDED = new Set(['production', 'ci']);
+const UNBRANDED_ENVIRONMENTS = new Set(['production', 'ci']);
 
 /**
  * The channel a deploy environment brands itself as, or undefined for the released app.
@@ -56,7 +57,7 @@ export const channelVariant = (
   command: ConfigEnv['command'],
   environment = process.env.DX_ENVIRONMENT,
 ): ChannelVariant | undefined => {
-  if (command !== 'build' || !environment || UNBRANDED.has(environment)) {
+  if (command !== 'build' || !environment || UNBRANDED_ENVIRONMENTS.has(environment)) {
     return undefined;
   }
   if (!isChannel(environment)) {

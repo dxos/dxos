@@ -79,7 +79,7 @@ export const useDeckPlank = ({ id, part, active }: UseDeckPlankOptions): DeckPla
   // below, and the node atom does not re-emit when action edges arrive, so a one-shot read would
   // leave a freshly-created plank's sigil menu empty until an unrelated re-render.
   const actions = useActions(graph, node?.id);
-  const companions = useCompanions(id);
+  const companions = useCompanions(id) ?? [];
   const notFoundNode = useNode(graph, NotFound.NOT_FOUND_PATH);
   const presence = useNavigationPresence(graph, id);
   // `absent` is proof; `unknown` is only ignorance, and a loader that could not form a question at all
