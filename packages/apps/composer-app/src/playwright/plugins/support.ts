@@ -4,7 +4,8 @@
 
 import { type Page } from '@playwright/test';
 
-export const Tour = {
+/** The guided-tour card, and the two controls that start a tour: Home's toolbar and the help companion's. */
+export const Support = {
   card: (page: Page) => page.getByTestId('helpPlugin.tooltip'),
   title: (page: Page) => page.getByTestId('helpPlugin.tooltip.title'),
 
@@ -18,7 +19,7 @@ export const Tour = {
   },
 
   startGlobal: async (page: Page) => {
-    await Tour.openSpaceHome(page);
+    await Support.openSpaceHome(page);
     await page.getByTestId('supportPlugin.startTour').click();
   },
 

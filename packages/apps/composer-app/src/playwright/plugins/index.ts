@@ -9,3 +9,4 @@ export * from './markdown.ts';
 export * from './table.ts';
 export * from './thread.ts';
 export * from './stack.ts';
+export * from './support.ts';
