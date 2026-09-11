@@ -6,6 +6,17 @@ import type { FrameLocator, Locator, Page } from '@playwright/test';
 
 type Scope = Locator | FrameLocator | Page;
 
+/**
+ * The rescuer renderings that end the flow. Its third, the connecting branch carrying
+ * `invitation-rescuer-cancel`, is not one: every invitation passes through it on the way to the auth
+ * code.
+ */
+const RESCUER_DEAD_ENDS =
+  "[data-testid='invitation-rescuer-reset']:visible, [data-testid='invitation-rescuer-blank-reset']:visible";
+
+/** Covers the swarm connection, introduction and authenticator handshake the guest waits through. */
+const AUTH_CODE_TIMEOUT = 30_000;
+
 /** @deprecated */
 export class ScopedShellManager {
   page!: Page;
@@ -64,16 +75,12 @@ export class ScopedShellManager {
     // tells the device rescuer from the space one: `Viewport.View` takes `id` as its view key and
     // never renders it, so the two cannot be told apart by selector, and only one is ever active.
     const settled = peer.locator(
-      `[data-testid='${type === 'device' ? 'halo' : 'space'}-auth-code-input']:visible, ` +
-        // The rescuer's two dead ends. Its third rendering, the connecting branch that carries
-        // `invitation-rescuer-cancel`, is not one: every invitation passes through it on the way to
-        // the auth code, so matching it here would end the wait before the invitation had a chance.
-        `[data-testid='invitation-rescuer-reset']:visible, ` +
-        `[data-testid='invitation-rescuer-blank-reset']:visible`,
+      `[data-testid='${type === 'device' ? 'halo' : 'space'}-auth-code-input']:not([disabled]):visible, ` +
+        RESCUER_DEAD_ENDS,
     );
     await settled
       .first()
-      .waitFor({ state: 'attached' })
+      .waitFor({ state: 'visible', timeout: AUTH_CODE_TIMEOUT })
       .catch(async (err) => {
         // `:visible`, for the same reason the wait above uses it: every step stays mounted, so the
         // unfiltered set is the shell's whole vocabulary and names no step in particular.
@@ -85,9 +92,7 @@ export class ScopedShellManager {
           cause: err,
         });
       });
-    const rescuer = peer.locator(
-      "[data-testid='invitation-rescuer-reset']:visible, [data-testid='invitation-rescuer-blank-reset']:visible",
-    );
+    const rescuer = peer.locator(RESCUER_DEAD_ENDS);
     if (await rescuer.first().isVisible()) {
       const state = await rescuer
         .evaluateAll((elements) => elements.map((element) => element.dataset.testid).join(', '))
