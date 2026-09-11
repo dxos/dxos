@@ -34,19 +34,25 @@ export const currentNavigation = Effect.fnUntraced(function* () {
 
 /**
  * Change what is open: push the URL, then project it. Returns the plank attention has to move to
- * because the one holding it is no longer open.
+ * because the one holding it is no longer open. `navigatedIds` is the caller's side channel past the
+ * URL (see {@link Navigation.PlankIds}); omit it and every plank opens under a placeholder first.
  */
-export const navigate = Effect.fnUntraced(function* (next: Navigation.Navigation, method?: 'push' | 'replace') {
+export const navigate = Effect.fnUntraced(function* (
+  next: Navigation.Navigation,
+  options?: { method?: 'push' | 'replace'; navigatedIds?: Navigation.PlankIds },
+) {
   if (!next.workspace) {
     log.warn('navigation has no workspace, so it cannot be pushed', { pairs: next.pairs.length });
     return undefined;
   }
-  return Navigation.push(next, method) ? yield* projectUrl(undefined, { attend: false, known: next.known }) : undefined;
+  return Navigation.push(next, options?.method)
+    ? yield* projectUrl(undefined, { attend: false, navigatedIds: options?.navigatedIds })
+    : undefined;
 });
 
 /**
  * The navigation a deck represents: a pair per active plank, with the companion pair inserted after
- * the plank it is anchored to.
+ * the plank it is anchored to, alongside the node id each pair was derived from.
  */
 export const deckNavigation = Effect.fnUntraced(function* (params: {
   workspace: string;
@@ -66,7 +72,9 @@ export const deckNavigation = Effect.fnUntraced(function* (params: {
     anchorId && variant && isCompanionOpen(companionPlanks, flatten, anchorId) ? anchorId : undefined;
 
   const pairs: UrlPath.Pair[] = [];
-  const known = new Map<Navigation.PlankSegment, string>();
+  // Kept rather than discarded: this loop is the node id -> pair mapping, so its inverse is free here
+  // and costs the projection a resolution round trip to recover.
+  const navigatedIds = new Map<Navigation.PlankSegment, string>();
   for (const nodeId of active) {
     const represented = PathResolution.representNode(builder, nodeId);
     if (Option.isNone(represented)) {
@@ -77,13 +85,13 @@ export const deckNavigation = Effect.fnUntraced(function* (params: {
       continue;
     }
     pairs.push(represented.value);
-    known.set(Navigation.toSegment(represented.value), nodeId);
+    navigatedIds.set(Navigation.toSegment(represented.value), nodeId);
     if (nodeId === companionAnchor) {
       pairs.push({ key: UrlPath.COMPANION_KEY, id: variant, workspace });
     }
   }
 
-  return { workspace, pairs, known };
+  return { navigation: { workspace, pairs }, navigatedIds };
 });
 
 /** Navigate to the deck `params` describes, returning the plank attention has to move to. */
@@ -92,5 +100,6 @@ export const navigateDeck = Effect.fnUntraced(function* (params: {
   active: readonly string[];
   companionPlanks?: readonly string[];
 }) {
-  return yield* navigate(yield* deckNavigation(params));
+  const { navigation, navigatedIds } = yield* deckNavigation(params);
+  return yield* navigate(navigation, { navigatedIds });
 });

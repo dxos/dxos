@@ -66,8 +66,8 @@ export const handleExternalUrl = Effect.fnUntraced(function* (url?: URL) {
 export type ProjectOptions = {
   /** Attend the end of the chain rather than the displaced plank. */
   attend?: boolean;
-  /** Node ids the caller already holds, by segment; see `Navigation.known`. */
-  known?: ReadonlyMap<Navigation.PlankSegment, string>;
+  /** Node ids an in-app navigation already holds; see {@link Navigation.PlankIds}. */
+  navigatedIds?: Navigation.PlankIds;
 };
 
 /**
@@ -87,16 +87,20 @@ const project = Effect.fnUntraced(function* (url?: URL, options?: ProjectOptions
     registry.set(stateAtom, fn(registry.get(stateAtom)));
   };
 
-  // A plank already open keeps its id; past that, the id the caller navigated with.
-  const knownIdsBySegment = Effect.fnUntraced(function* () {
+  /**
+   * The ids the first pass keys planks by: what the caller navigated with, overridden by what is
+   * already open, since a plank that is mounted has to keep the id it is mounted under. A segment in
+   * neither opens under a placeholder and is re-keyed once resolution names it.
+   */
+  const idsBySegment = (): Navigation.PlankIds => {
     const state = registry.get(stateAtom);
     const workspace = registry.get(ephemeralAtom).open[state.activeDeck];
     const active = workspace?.active ?? [];
     return new Map<Navigation.PlankSegment, string>([
-      ...(options?.known ?? []),
+      ...(options?.navigatedIds ?? []),
       ...active.map((id: string) => [Navigation.segmentOf(workspace?.segments, id), id] as const),
     ]);
-  });
+  };
 
   /**
    * Re-runs `parse` as builders register their keys, settling as soon as it succeeds. Keyed off the
@@ -176,7 +180,7 @@ const project = Effect.fnUntraced(function* (url?: URL, options?: ProjectOptions
     workspace === DeckSchema.DEFAULT_DECK_ID ? DeckSchema.DEFAULT_DECK_ID : GraphPath.getSpacePath(workspace);
   yield* switchWorkspace(workspacePath);
 
-  yield* applyActive(initialPlanks(pairs, yield* knownIdsBySegment()));
+  yield* applyActive(initialPlanks(pairs, idsBySegment()));
 
   const loaders = navigationTargetLoaders;
   const verdicts: AppCapabilities.NavigationTargetVerdict[] = pairs.map(() => 'unknown');

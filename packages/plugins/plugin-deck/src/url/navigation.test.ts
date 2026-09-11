@@ -131,13 +131,13 @@ describe('initialPlanks', () => {
 
   test('a pair the caller already resolved opens under that id, so resolution never re-keys it', ({ expect }) => {
     const nodeId = `root/${WORKSPACE}/content/collections/01JXYZ`;
-    const known = new Map([[toSegment(doc), nodeId]]);
-    expect(initialPlanks([doc, companion], known)).toEqual([{ segment: 'object/01JXYZ', id: nodeId }]);
+    const idsBySegment = new Map([[toSegment(doc), nodeId]]);
+    expect(initialPlanks([doc, companion], idsBySegment)).toEqual([{ segment: 'object/01JXYZ', id: nodeId }]);
   });
 
   test('a pair nothing vouches for opens under a placeholder', ({ expect }) => {
-    expect(initialPlanks([doc, other], new Map([[toSegment(doc), 'known']]))).toEqual([
-      { segment: 'object/01JXYZ', id: 'known' },
+    expect(initialPlanks([doc, other], new Map([[toSegment(doc), 'resolved']]))).toEqual([
+      { segment: 'object/01JXYZ', id: 'resolved' },
       { segment: 'object/01JABC', id: getUnresolvedPlankId(other) },
     ]);
   });

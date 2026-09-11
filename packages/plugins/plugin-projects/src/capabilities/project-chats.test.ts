@@ -197,6 +197,32 @@ describe('project chats graph extension', () => {
     expect(resolved?.nodeId).toEqual(chatNodeId);
   });
 
+  test('the branch rows are addressable too, at the id their children extend', async ({ expect }) => {
+    const { db, project, builder, chatsNodeId, artifactsNodeId } = await setupTestContext();
+
+    // Both rows are selectable (they open their contents as cards), so both need an address; without
+    // one, clicking Sessions logs "node has no URL binding" and does nothing.
+    for (const [nodeId, key, segment] of [
+      [chatsNodeId, 'project-session', CHATS_SEGMENT],
+      [artifactsNodeId, 'project-artifact', ARTIFACTS_SEGMENT],
+    ] as const) {
+      const pairId = [project.id, segment].join('+');
+      expect(Option.getOrUndefined(PathResolution.representNode(builder, nodeId))).toEqual({
+        key,
+        id: pairId,
+        workspace: db.spaceId,
+      });
+
+      const [resolved] = await EffectEx.runPromise(
+        PathResolution.resolveUrl(builder, {
+          workspace: db.spaceId,
+          pairs: [{ key, id: pairId, workspace: db.spaceId }],
+        }),
+      );
+      expect(resolved?.nodeId).toEqual(nodeId);
+    }
+  });
+
   test('a project artifact is addressable by URL under its own key', async ({ expect }) => {
     const { db, project, builder, addArtifact, artifactsNodeId } = await setupTestContext();
     const artifact = await addArtifact();

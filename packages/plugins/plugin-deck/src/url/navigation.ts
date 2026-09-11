@@ -10,17 +10,20 @@ import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as UrlPath from '@dxos/app-toolkit/UrlPath';
 import { EntityId } from '@dxos/keys';
 
-/**
- * What is open, as the URL says it: a workspace and an ordered chain of pairs. `known` carries the node
- * id an in-app navigation already holds for a pair's segment, so the projection can open the plank
- * under it at once rather than under a placeholder it later swaps for the resolved id — a swap that
- * re-keys the plank and remounts everything in it, its companion included.
- */
+/** What is open, as the URL says it: a workspace and an ordered chain of pairs. */
 export type Navigation = {
   workspace: string;
   pairs: readonly UrlPath.Pair[];
-  known?: ReadonlyMap<PlankSegment, string>;
 };
+
+/**
+ * Node ids by the URL segment that addresses them. An in-app navigation already holds the id of every
+ * plank it is opening (it derived the pairs FROM those ids), so handing them to the projection opens
+ * each plank under its real id at once, rather than under a placeholder swapped for the resolved id a
+ * pass later — a swap that re-keys the plank and remounts everything in it, its companion included.
+ * Not part of {@link Navigation}: the URL cannot carry these, and an external navigation has none.
+ */
+export type PlankIds = ReadonlyMap<PlankSegment, string>;
 
 /**
  * A pair as it appears in a plank list, in its URL segment form (`doc/<id>`, `home`). Branded so a
@@ -109,13 +112,13 @@ export const getUnresolvedPlankId = (pair: UrlPath.Pair): string =>
   [GraphPath.getSpacePath(pair.workspace), pair.key, pair.id].filter((segment) => segment !== undefined).join('/');
 
 /**
- * The planks a chain opens before it resolves: each pair under the id `known` holds for its segment,
- * else under a placeholder the resolved id replaces. Companion pairs open nothing of their own.
+ * The planks a chain opens before it resolves: each pair under the id `idsBySegment` holds for its
+ * segment, else under a placeholder the resolved id replaces. Companion pairs open nothing of their own.
  */
-export const initialPlanks = (pairs: readonly UrlPath.Pair[], known: ReadonlyMap<PlankSegment, string>): Plank[] =>
+export const initialPlanks = (pairs: readonly UrlPath.Pair[], idsBySegment: PlankIds): Plank[] =>
   pairs
     .filter((pair) => pair.key !== UrlPath.COMPANION_KEY)
     .map((pair) => {
       const segment = toSegment(pair);
-      return { segment, id: known.get(segment) ?? getUnresolvedPlankId(pair) };
+      return { segment, id: idsBySegment.get(segment) ?? getUnresolvedPlankId(pair) };
     });

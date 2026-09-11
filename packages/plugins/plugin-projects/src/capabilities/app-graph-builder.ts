@@ -120,6 +120,14 @@ export const CHATS_SECTION_TYPE = 'org.dxos.plugin.projects.chats-section';
 export const CHATS_SEGMENT = 'chats';
 
 /**
+ * The static URL path every node under a project shares: the ai group and the Project type section,
+ * which is as far as the shape is fixed. The project, the branch and the object below it vary, so
+ * they ride in the pair's id `+`-joined (`<project>+chats+<chat>`) and the chain reconstructs with no
+ * lookup. Both branches and both sets of children resolve against it.
+ */
+const PROJECT_URL_PATH = [GraphPath.GroupSegments.ai, Type.getTypename(Project.Project)];
+
+/**
  * Data carried by the Chats branch node. Wrapped so no Project-matching extension claims it, and
  * tagged because the Artifacts branch wraps a project the same way — without the tag a surface
  * matching on the shape alone renders whichever branch it saw first for both.
@@ -143,6 +151,9 @@ export const isChatsBranch = (data: unknown): data is ChatsBranch =>
 export const createProjectChatsExtension = () =>
   AppGraphBuilder.createExtension({
     id: 'projectChats',
+    // The branch row is selectable (it opens its chats as cards), so it needs an address of its own:
+    // without one, clicking Sessions logs "node has no URL binding" and does nothing.
+    url: { key: 'project-session', kind: 'item', path: PROJECT_URL_PATH },
     match: (node) =>
       Obj.instanceOf(Project.Project, node.data)
         ? Option.some({ project: node.data, space: node.properties.space })
@@ -181,17 +192,13 @@ export const createProjectChatsExtension = () =>
  * Declaring one is not optional — without a binding the deck cannot put an open project chat into the
  * URL and refuses to open it.
  *
- * The path is static down to the Project section; the project and the branch ride in the pair's id,
- * `+`-joined, so the whole chain reconstructs without a database lookup.
+ * Shares the branch's key: the branch and the chats under it are the same kind of address, told apart
+ * by whether the pair's id ends at the branch (see {@link PROJECT_URL_PATH}).
  */
 export const createProjectChatsChildrenExtension = () =>
   AppGraphBuilder.createExtension({
     id: 'projectChatsChildren',
-    url: {
-      key: 'project-session',
-      kind: 'item',
-      path: [GraphPath.GroupSegments.ai, Type.getTypename(Project.Project)],
-    },
+    url: { key: 'project-session', kind: 'item', path: PROJECT_URL_PATH },
     match: (node) =>
       node.type === CHATS_SECTION_TYPE && isChatsBranch(node.data) ? Option.some(node.data.project) : Option.none(),
     connector: (project, get) => {
@@ -275,6 +282,8 @@ export const isArtifactsBranch = (data: unknown): data is ArtifactsBranch =>
 export const createProjectArtifactsExtension = () =>
   AppGraphBuilder.createExtension({
     id: 'projectArtifacts',
+    // Addressable for the same reason the Sessions branch is: the row opens its artifacts as cards.
+    url: { key: 'project-artifact', kind: 'item', path: PROJECT_URL_PATH },
     match: (node) =>
       Obj.instanceOf(Project.Project, node.data)
         ? Option.some({ project: node.data, space: node.properties.space })
@@ -315,17 +324,13 @@ export const createProjectArtifactsExtension = () =>
  *
  * `project-artifact` addresses an object AS the project's. That is a different node from the same
  * object under its own type section (`object/<id>`), so it takes its own key: an artifact opened from
- * a project comes back to the project. Shaped like the `project-session` binding above — static down
- * to the Project section, with the project and the branch in the pair's id.
+ * a project comes back to the project. Shaped like the `project-session` binding above; see
+ * {@link PROJECT_URL_PATH}.
  */
 export const createProjectArtifactsActionExtension = () =>
   AppGraphBuilder.createExtension({
     id: 'projectArtifactsActions',
-    url: {
-      key: 'project-artifact',
-      kind: 'item',
-      path: [GraphPath.GroupSegments.ai, Type.getTypename(Project.Project)],
-    },
+    url: { key: 'project-artifact', kind: 'item', path: PROJECT_URL_PATH },
     match: (node) =>
       node.type === ARTIFACTS_SECTION_TYPE && isArtifactsBranch(node.data)
         ? Option.some({ project: node.data.project, nodeId: node.id })
