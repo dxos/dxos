@@ -4,7 +4,7 @@
 
 import { type Context as ReactContext, createContext } from 'react';
 
-import type * as Tour from '@dxos/app-toolkit/Tour';
+import type * as Tour from '@dxos/plugin-support/Tour';
 
 /** Shape of the React context exposed to consumers of the running tour. */
 export type TourContextType = {

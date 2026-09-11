@@ -5,10 +5,10 @@
 import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
-import * as Tour from '@dxos/app-toolkit/Tour';
 import * as AssistantCapabilities from '@dxos/plugin-assistant/AssistantCapabilities';
 import * as AssistantEvents from '@dxos/plugin-assistant/AssistantEvents';
 import * as SpaceCapability from '@dxos/plugin-space/SpaceCapability';
+import * as SupportCapabilities from '@dxos/plugin-support/SupportCapabilities';
 import * as TasksCapabilities from '@dxos/plugin-tasks/TasksCapabilities';
 import * as TasksEvents from '@dxos/plugin-tasks/TasksEvents';
 
@@ -57,12 +57,12 @@ export const Templates = Capability.lazyModule(
   () => import('./templates.ts'),
 );
 
-export const ProjectTour = AppCapability.tour({
-  id: 'org.dxos.plugin.projects.tour.project',
-  matches: Tour.whenTypename('org.dxos.type.project'),
-  label: ['project-tour.label', { ns: meta.profile.key }],
-  auto: true,
-  steps: () => import('../tours/index.ts').then(({ steps }) => steps),
-});
+// Lazy rather than inline: the matcher names the schema, and a schema in the plugin definition's
+// static closure drags its barrel onto the boot path to answer whether a tour applies.
+export const ProjectTour = Capability.lazyModule(
+  'ProjectTour',
+  { provides: [SupportCapabilities.Tour], environments: [] },
+  () => import('./project-tour.ts'),
+);
 
 export const Translations = AppCapability.translations(translations);

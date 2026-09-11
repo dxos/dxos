@@ -5,9 +5,9 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 
 import { useCapabilities } from '@dxos/app-framework/ui';
-import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
-import * as Tour from '@dxos/app-toolkit/Tour';
 import { log } from '@dxos/log';
+
+import { SupportCapabilities, Tour } from '#types';
 
 import { useAttendedData } from './useAttendedData.ts';
 
@@ -19,7 +19,7 @@ const NO_STEPS: Tour.Step[] = [];
  * app itself, which selects the global tours.
  */
 export const useTours = (data?: unknown): readonly Tour.Definition[] => {
-  const tours = useCapabilities(AppCapabilities.Tour);
+  const tours = useCapabilities(SupportCapabilities.Tour);
   return useMemo(() => Tour.matching(tours, data), [tours, data]);
 };
 
@@ -40,8 +40,8 @@ export const useTours = (data?: unknown): readonly Tour.Definition[] => {
  * ticks and the machine opens on whatever it holds at the first of them.
  */
 export const useTourSteps = (tourId: string | undefined, running: boolean): Tour.Step[] => {
-  const tours = useCapabilities(AppCapabilities.Tour);
-  const fragments = useCapabilities(AppCapabilities.TourFragment);
+  const tours = useCapabilities(SupportCapabilities.Tour);
+  const fragments = useCapabilities(SupportCapabilities.TourFragment);
   const data = useAttendedData();
   const subject = useRef(data);
   subject.current = data;

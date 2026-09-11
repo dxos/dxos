@@ -196,11 +196,6 @@
       "source": "./src/ui/index.ts",
       "types": "./dist/types/src/ui/index.d.ts",
       "import": "./dist/lib/ui.mjs"
-    },
-    "./Tour": {
-      "source": "./src/app-framework/Tour.ts",
-      "types": "./dist/types/src/app-framework/Tour.d.ts",
-      "import": "./dist/lib/app-framework/Tour.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",

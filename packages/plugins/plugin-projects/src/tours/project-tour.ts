@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import type * as Tour from '@dxos/app-toolkit/Tour';
+import type * as Tour from '@dxos/plugin-support/Tour';
 
 /**
  * Puts the article in the tab a step is about before it shows.

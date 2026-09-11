@@ -7,5 +7,7 @@ export * as HelpOperation from './HelpOperation.ts';
 export * as Settings from './Settings.ts';
 export * as Support from './Support.ts';
 export * as SupportCapabilities from './SupportCapabilities.ts';
+export * as SupportCapability from './SupportCapability.ts';
 export * as SupportOperation from './SupportOperation.ts';
 export * as SupportService from './SupportService.ts';
+export * as Tour from './Tour.ts';

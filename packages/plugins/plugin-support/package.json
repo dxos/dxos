@@ -128,6 +128,16 @@
       "source": "./src/SupportPlugin.ts",
       "types": "./dist/types/src/SupportPlugin.d.ts",
       "import": "./dist/lib/SupportPlugin.mjs"
+    },
+    "./Tour": {
+      "source": "./src/types/Tour.ts",
+      "types": "./dist/types/src/types/Tour.d.ts",
+      "import": "./dist/lib/Tour.mjs"
+    },
+    "./SupportCapability": {
+      "source": "./src/types/SupportCapability.ts",
+      "types": "./dist/types/src/types/SupportCapability.d.ts",
+      "import": "./dist/lib/SupportCapability.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",

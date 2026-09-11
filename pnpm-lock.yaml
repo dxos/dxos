@@ -12428,6 +12428,9 @@ importers:
       '@dxos/plugin-space':
         specifier: workspace:*
         version: link:../plugin-space
+      '@dxos/plugin-support':
+        specifier: workspace:*
+        version: link:../plugin-support
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../sdk/react-client
@@ -13692,6 +13695,9 @@ importers:
       '@dxos/plugin-space':
         specifier: workspace:*
         version: link:../plugin-space
+      '@dxos/plugin-support':
+        specifier: workspace:*
+        version: link:../plugin-support
       '@dxos/plugin-tasks':
         specifier: workspace:*
         version: link:../plugin-tasks
@@ -14071,6 +14077,9 @@ importers:
       '@dxos/plugin-space':
         specifier: workspace:*
         version: link:../plugin-space
+      '@dxos/plugin-support':
+        specifier: workspace:*
+        version: link:../plugin-support
       '@dxos/protocols':
         specifier: workspace:*
         version: link:../../core/protocols
@@ -16867,6 +16876,9 @@ importers:
       '@dxos/plugin-markdown':
         specifier: workspace:*
         version: link:../plugin-markdown
+      '@dxos/plugin-support':
+        specifier: workspace:*
+        version: link:../plugin-support
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../sdk/react-client

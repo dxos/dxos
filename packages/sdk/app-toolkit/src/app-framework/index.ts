@@ -7,6 +7,5 @@ export * as AppCapabilities from './AppCapabilities.ts';
 export * as AppCapability from './AppCapability.ts';
 export * as ObjectAction from './ObjectAction.ts';
 export * as ObservabilityMapping from './ObservabilityMapping.ts';
-export * as Tour from './Tour.ts';
 export * from './progress-registry.ts';
 export * from './progress-trace-sink.ts';

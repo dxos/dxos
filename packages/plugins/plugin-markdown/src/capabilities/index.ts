@@ -5,9 +5,9 @@
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
-import * as Tour from '@dxos/app-toolkit/Tour';
 import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabilities';
 import * as SpaceCapability from '@dxos/plugin-space/SpaceCapability';
+import * as SupportCapabilities from '@dxos/plugin-support/SupportCapabilities';
 import { translations as editorTranslations } from '@dxos/react-ui-editor/translations';
 
 import { meta } from '#meta';
@@ -51,11 +51,11 @@ export const MarkdownState = Capability.lazyModule(
   () => import('./state.ts'),
 );
 export const Translations = AppCapability.translations([...translations, ...editorTranslations]);
-export const DocumentTour = AppCapability.tour({
-  id: 'org.dxos.plugin.markdown.tour.document',
-  matches: Tour.whenTypename('org.dxos.type.document'),
-  label: ['document-tour.label', { ns: meta.profile.key }],
-  auto: true,
-  steps: () => import('../tours/index.ts').then(({ steps }) => steps),
-});
+// Lazy rather than inline: the matcher names the schema, and a schema in the plugin definition's
+// static closure drags its barrel onto the boot path to answer whether a tour applies.
+export const DocumentTour = Capability.lazyModule(
+  'DocumentTour',
+  { provides: [SupportCapabilities.Tour], environments: [] },
+  () => import('./document-tour.ts'),
+);
 export const UndoMappings = AppCapability.undoMappings(() => import('./undo-mappings.ts'));

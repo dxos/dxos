@@ -6,6 +6,7 @@ import { describe, test } from 'vitest';
 
 import { Position } from '@dxos/util';
 
+import * as Support from './Support.ts';
 import * as Tour from './Tour.ts';
 
 const loader = (name: string) => async () => [{ target: name, title: name, description: name }];
@@ -13,7 +14,7 @@ const loader = (name: string) => async () => [{ target: name, title: name, descr
 const definition = (steps: () => Promise<readonly Tour.Step[]>, position?: Position.Position): Tour.Definition => ({
   id: 'tour',
   label: 'Tour',
-  matches: Tour.whenTypename('org.dxos.type.document'),
+  matches: (data) => (data as any)?.typename === 'org.dxos.type.document',
   position,
   steps,
 });
@@ -75,7 +76,13 @@ describe('matchers', () => {
     expect(Tour.whenGlobal({})).toBe(false);
   });
 
-  test('whenTypename rejects an absent subject', ({ expect }) => {
-    expect(Tour.whenTypename('org.dxos.type.document')(undefined)).toBe(false);
+  test('a type matcher rejects an absent subject, so it never reads as global', ({ expect }) => {
+    expect(Tour.whenType(Support.Ticket)(undefined)).toBe(false);
+  });
+
+  test('a type matcher accepts its own type and nothing else', ({ expect }) => {
+    const ticket = Support.make({ title: 'x' });
+    expect(Tour.whenType(Support.Ticket)(ticket)).toBe(true);
+    expect(Tour.whenType(Support.Ticket)({ typename: 'org.dxos.type.document' })).toBe(false);
   });
 });

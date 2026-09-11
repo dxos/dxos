@@ -5,12 +5,11 @@
 // @import-as-namespace
 
 import type * as CapabilityManager from '@dxos/app-framework/CapabilityManager';
-import { Obj } from '@dxos/echo';
+// eslint-disable-next-line @dxos/rules/import-as-namespace
+import type * as Translations from '@dxos/app-toolkit/Translations';
+import { Obj, Type } from '@dxos/echo';
 import type { TourStepPlacement } from '@dxos/react-ui';
 import { Position } from '@dxos/util';
-
-// eslint-disable-next-line @dxos/rules/import-as-namespace
-import type * as Translations from '../app/Translations.ts';
 
 /**
  * One stop of a guided tour: a target on the page, what to say beside it, and a hook run before it shows.
@@ -38,7 +37,7 @@ export type Step = {
  * page, Home, and the plugin registry are nodes too, and each can have a tour. `undefined` means the
  * app itself rather than anything it is displaying, which is what makes a tour global.
  *
- * A matcher MUST reject `undefined`, or its tour runs as the app's introduction; {@link whenTypename}
+ * A matcher MUST reject `undefined`, or its tour runs as the app's introduction; {@link whenType}
  * and its kin do. Matchers run unguarded: one that throws is a bug in the plugin that registered it.
  */
 export type Matcher = (data?: unknown) => boolean;
@@ -56,7 +55,7 @@ export type Definition = Readonly<{
   auto?: boolean;
   /** Where the tour's own steps sit among contributed {@link Fragment}s; neutral when unset. */
   position?: Position.Position;
-  /** A loader rather than an array so step bodies stay out of the plugin definition's boot closure. */
+  /** A loader rather than an array so step bodies stay out of the registering module's closure. */
   steps: () => Promise<readonly Step[]>;
 }>;
 
@@ -65,8 +64,8 @@ export type Definition = Readonly<{
  *
  * Fragments join by matcher rather than by naming a tour, which is what keeps the coupling one-way:
  * a plugin that owns a feature says where its feature applies, and never learns which tours exist or
- * what they are called. A tour needs no fragments. Its own steps are the whole of it until
- * someone contributes.
+ * what they are called. A tour needs no fragments. Its own steps are the whole of it until someone
+ * contributes.
  */
 export type Fragment = Readonly<{
   matches: Matcher;
@@ -78,20 +77,16 @@ export type Fragment = Readonly<{
 /** Matches the app itself: the walkthrough offered from the help menu, not tied to anything on screen. */
 export const whenGlobal: Matcher = (data) => data === undefined;
 
-/**
- * Matches articles of one ECHO type, by typename rather than by schema: a registration lives in the
- * plugin definition's static closure, so naming the schema there would drag its barrel onto the boot
- * path to decide whether a tour applies.
- */
-export const whenTypename =
-  (typename: string): Matcher =>
+/** Matches articles of one ECHO type. */
+export const whenType =
+  (type: Type.AnyEntity): Matcher =>
   (data) =>
-    Obj.isObject(data) && Obj.getTypename(data) === typename;
+    Obj.isObject(data) && Obj.getTypename(data) === Type.getTypename(type);
 
-/** Matches articles of any of `typenames`, for a fragment that applies wherever its feature does. */
-export const whenTypenames = (typenames: readonly string[]): Matcher => {
-  const set = new Set(typenames);
-  return (data) => Obj.isObject(data) && set.has(Obj.getTypename(data) ?? '');
+/** Matches articles of any of `types`, for a fragment that applies wherever its feature does. */
+export const whenTypes = (types: readonly Type.AnyEntity[]): Matcher => {
+  const typenames = new Set(types.map((type) => Type.getTypename(type)));
+  return (data) => Obj.isObject(data) && typenames.has(Obj.getTypename(data) ?? '');
 };
 
 /**

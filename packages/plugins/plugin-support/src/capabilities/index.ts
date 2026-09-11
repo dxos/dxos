@@ -3,10 +3,9 @@
 //
 
 import * as Capability from '@dxos/app-framework/Capability';
-import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
-import type * as Tour from '@dxos/app-toolkit/Tour';
 import * as SpaceCapability from '@dxos/plugin-space/SpaceCapability';
+import type * as Tour from '@dxos/plugin-support/Tour';
 
 import { meta } from '#meta';
 import { translations } from '#translations';
@@ -37,7 +36,7 @@ export const ReactRoot = AppCapability.reactRoot(() => import('./react-root.tsx'
 export const WelcomeTour = Capability.lazyModule(
   'WelcomeTour',
   {
-    provides: [AppCapabilities.Tour],
+    provides: [SupportCapabilities.Tour],
     environments: [],
     /** Maps the plugin's configured tour-step loader to the body's props. */
     props: (options: { helpSteps?: () => Promise<Tour.Step[]> }) => options.helpSteps,

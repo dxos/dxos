@@ -161,6 +161,7 @@
     "@dxos/plugin-markdown": "workspace:*",
     "@dxos/plugin-routine": "workspace:*",
     "@dxos/plugin-space": "workspace:*",
+    "@dxos/plugin-support": "workspace:*",
     "@dxos/plugin-tasks": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-attention": "workspace:*",

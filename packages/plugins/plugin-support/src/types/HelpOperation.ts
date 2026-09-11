@@ -22,7 +22,7 @@ export const Start = Operation.make({
 });
 
 /**
- * Runs a tour registered via `AppCapabilities.Tour`, by id. Invoked from the help companion's tour
+ * Runs a tour registered via `SupportCapabilities.Tour`, by id. Invoked from the help companion's tour
  * list and from the first-open auto-start; the id is recorded as seen so an `auto` tour fires once.
  */
 export const StartTour = Operation.make({
