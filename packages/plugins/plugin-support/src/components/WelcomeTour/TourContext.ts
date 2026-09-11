@@ -8,8 +8,8 @@ import type * as Tour from '@dxos/app-toolkit/Tour';
 
 export type TourContextType = {
   running: boolean;
-  steps: Tour.Step[];
-  setSteps: (steps: Tour.Step[]) => void;
+  steps: readonly Tour.Step[];
+  setSteps: (steps: readonly Tour.Step[]) => void;
   setIndex: (index: number) => void;
   start: () => void;
   stop: () => void;

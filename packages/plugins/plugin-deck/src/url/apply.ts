@@ -73,9 +73,12 @@ export const applyActive = Effect.fnUntraced(function* (planks: readonly Navigat
   return toAttend;
 });
 
-/** Whether two plank lists hold the same ids in the same order. */
-const sameList = (a: readonly string[] | undefined, b: readonly string[]): boolean =>
-  !!a && a.length === b.length && a.every((id, index) => id === b[index]);
+/**
+ * Whether two plank lists hold the same ids in the same order. Two absent lists are the same, which
+ * is what keeps an undecided companion from being rewritten on every projection.
+ */
+const sameList = (a: readonly string[] | undefined, b: readonly string[] | undefined): boolean =>
+  a === undefined || b === undefined ? a === b : a.length === b.length && a.every((id, index) => id === b[index]);
 
 /** Whether two lookups hold the same keys and values. */
 const sameMap = (a: Record<string, string> | undefined, b: Record<string, string>): boolean => {

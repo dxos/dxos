@@ -36,11 +36,6 @@ export class PlankManager {
     await closePlank(this.locator);
   }
 
-  /** Opens the plank's companion pane; it lands on whichever tab the deck currently selects. */
-  async openCompanion(): Promise<void> {
-    await this.locator.getByTestId('plankHeading.companion').click();
-  }
-
   async kind(): Promise<PlankKind> {
     return classifyArticleElement(this.locator);
   }

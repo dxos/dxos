@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useMemo } from 'react';
 
 import { useCapabilities } from '@dxos/app-framework/ui';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
@@ -21,54 +21,33 @@ export const useTours = (data?: unknown): readonly Tour.Definition[] => {
 
 /**
  * Steps for the running tour: its own plus every fragment matching what is on screen, in position
- * order. Composed on `running`, not on `tourId`, which outlives the run. Empty until the loaders
- * settle.
+ * order. Composed in the render that starts the tour, so the machine never opens on another tour's
+ * steps.
  */
-export const useTourSteps = (tourId: string | undefined, running: boolean): Tour.Step[] => {
+export const useTourSteps = (tourId: string | undefined): readonly Tour.Step[] => {
   const tours = useCapabilities(AppCapabilities.Tour);
   const fragments = useCapabilities(AppCapabilities.TourFragment);
   const data = useAttendedData();
-  const subject = useRef(data);
-  subject.current = data;
 
-  const [loaded, setLoaded] = useState<{ tourId?: string; steps: Tour.Step[] }>({ steps: NO_STEPS });
-
-  useEffect(() => {
-    if (!tourId || !running) {
-      return;
+  return useMemo(() => {
+    if (!tourId) {
+      return NO_STEPS;
     }
 
     const tour = tours.find((candidate) => candidate.id === tourId);
     if (!tour) {
       log.warn('no tour registered', { tourId });
-      setLoaded({ tourId, steps: NO_STEPS });
-      return;
+      return NO_STEPS;
     }
 
-    let live = true;
-    const loaders = Tour.stepLoaders(tour, fragments, subject.current);
-    void Promise.allSettled(loaders.map((load) => load())).then((results) => {
-      if (!live) {
-        return;
-      }
+    const steps = Tour.composeSteps(tour, fragments, data);
+    if (steps.length === 0) {
+      log.warn('tour has no steps', { tourId });
+    }
 
-      results.forEach((result, index) => {
-        if (result.status === 'rejected') {
-          log.warn('tour steps unavailable', { tourId, index, error: result.reason });
-        }
-      });
-
-      const steps = results.flatMap((result) => (result.status === 'fulfilled' ? [...result.value] : []));
-      if (steps.length === 0) {
-        log.warn('tour has no steps', { tourId });
-      }
-
-      setLoaded({ tourId, steps: steps.length > 0 ? steps : NO_STEPS });
-    });
-    return () => {
-      live = false;
-    };
-  }, [tourId, running, tours, fragments]);
-
-  return tourId !== undefined && loaded.tourId === tourId ? loaded.steps : NO_STEPS;
+    return steps;
+    // The subject is read when the tour starts and deliberately not tracked: a step's `before` hook
+    // moves the page about, and recomposing mid-tour would swap the machine's steps under the reader.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tourId, tours, fragments]);
 };

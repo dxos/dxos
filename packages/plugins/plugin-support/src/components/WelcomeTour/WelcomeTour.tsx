@@ -50,7 +50,7 @@ const toStep = (
 });
 
 export type WelcomeTourProps = {
-  steps: Tour.Step[];
+  steps: readonly Tour.Step[];
   running?: boolean;
   onRunningChanged?: (state: boolean) => any;
 };
@@ -61,9 +61,9 @@ export const WelcomeTour = ({ steps: initialSteps, running: runningProp, onRunni
   const manager = usePluginManager();
   const layout = useLayout();
   const paused = layout.dialogOpen;
-  const [override, setOverride] = useState<{ base: Tour.Step[]; steps: Tour.Step[] }>();
+  const [override, setOverride] = useState<{ base: readonly Tour.Step[]; steps: readonly Tour.Step[] }>();
   const steps = override?.base === initialSteps ? override.steps : initialSteps;
-  const setSteps = (next: Tour.Step[]) => setOverride({ base: initialSteps, steps: next });
+  const setSteps = (next: readonly Tour.Step[]) => setOverride({ base: initialSteps, steps: next });
   const tourSteps = useMemo(
     () => steps.map((step, index) => toStep(step, index, manager.capabilities)),
     [steps, manager],
@@ -114,7 +114,7 @@ export const WelcomeTour = ({ steps: initialSteps, running: runningProp, onRunni
   // The machine takes its steps once, at creation, so a later set must be pushed in through the api.
   // Must precede the start effect below.
   useEffect(() => {
-    tour.setSteps(tourSteps);
+    tour.setSteps([...tourSteps]);
   }, [tourSteps]);
 
   // The machine exposes no dismiss beyond its close trigger, so a pause clicks it.

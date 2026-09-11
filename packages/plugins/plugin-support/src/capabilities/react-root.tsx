@@ -20,7 +20,7 @@ export default Capability.makeModule(() =>
       id: meta.profile.key,
       root: () => {
         const [state, updateState] = useAtomCapabilityState(HelpCapabilities.State);
-        const steps = useTourSteps(state.tourId, state.running);
+        const steps = useTourSteps(state.tourId);
         return (
           <>
             <TourAutoStart />

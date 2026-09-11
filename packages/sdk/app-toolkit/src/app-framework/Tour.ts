@@ -47,7 +47,7 @@ export type Definition = Readonly<{
   auto?: boolean;
   /** Where the tour's own steps sit among contributed {@link Fragment}s; neutral when unset. */
   position?: Position.Position;
-  steps: () => Promise<readonly Step[]>;
+  steps: readonly Step[];
 }>;
 
 /** Steps another plugin adds to whatever tour is running, when its own matcher accepts the subject. */
@@ -55,7 +55,7 @@ export type Fragment = Readonly<{
   matches: Matcher;
   /** Relative to the tour's own steps, which sit at neutral: `Position.first` leads, `last` trails. */
   position?: Position.Position;
-  steps: () => Promise<readonly Step[]>;
+  steps: readonly Step[];
 }>;
 
 /** Matches the app itself rather than anything on screen. */
@@ -73,18 +73,17 @@ export const whenTypes = (types: readonly Type.AnyEntity[]): Matcher => {
   return (data) => Obj.isObject(data) && typenames.has(Obj.getTypename(data) ?? '');
 };
 
-/** The step loaders a tour runs for `data`: its own, plus every fragment accepting the same subject. */
-export const stepLoaders = (
-  definition: Definition,
-  fragments: readonly Fragment[],
-  data?: unknown,
-): readonly (() => Promise<readonly Step[]>)[] =>
-  [
-    { position: definition.position, steps: definition.steps },
-    ...fragments.filter((fragment) => fragment.matches(data)),
-  ]
+/**
+ * The steps a tour runs for `data`: its own, plus every fragment accepting the same subject.
+ *
+ * Synchronous, because a registration already sits behind its plugin's lazy module and costs nothing
+ * until that module loads. Resolving steps in a later tick than the one that starts a tour is what
+ * lets the machine open on the wrong set.
+ */
+export const composeSteps = (definition: Definition, fragments: readonly Fragment[], data?: unknown): readonly Step[] =>
+  [{ position: definition.position, steps: definition.steps }, ...fragments.filter((f) => f.matches(data))]
     .toSorted(Position.compare)
-    .map(({ steps }) => steps);
+    .flatMap(({ steps }) => steps);
 
 /** The tours that apply to `data`, in registration order. */
 export const matching = (tours: readonly Definition[], data?: unknown): readonly Definition[] =>

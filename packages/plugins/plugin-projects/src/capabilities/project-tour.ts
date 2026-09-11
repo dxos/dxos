@@ -11,6 +11,8 @@ import * as Project from '@dxos/compute/Project';
 
 import { meta } from '#meta';
 
+import { steps } from '../tours/index.ts';
+
 export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contribute(AppCapabilities.Tour, {
@@ -18,7 +20,7 @@ export default Capability.makeModule(() =>
       label: ['project-tour.label', { ns: meta.profile.key }],
       matches: Tour.whenType(Project.Project),
       auto: true,
-      steps: () => import('../tours/index.ts').then(({ steps }) => steps),
+      steps,
     }),
   ),
 );
