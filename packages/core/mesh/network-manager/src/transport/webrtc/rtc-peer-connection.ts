@@ -140,13 +140,18 @@ export class RtcPeerConnection {
         }
 
         log('onnegotiationneeded');
-        try {
-          const offer = await connection.createOffer();
-          await connection.setLocalDescription(offer);
-          await this._sendDescription(connection, offer);
-        } catch (err: any) {
-          void this._lockAndAbort(connection, err);
-        }
+        // Under the same lock as offer/answer handling: one connection is shared across swarms, so a
+        // second transport opening its data channel renegotiates while an answer for the first may
+        // still be in flight, and `setLocalDescription` would move the state out from under it.
+        await this._offerProcessingMutex.executeSynchronized(async () => {
+          try {
+            const offer = await connection.createOffer();
+            await connection.setLocalDescription(offer);
+            await this._sendDescription(connection, offer);
+          } catch (err: any) {
+            void this._lockAndAbort(connection, err);
+          }
+        });
       },
 
       // When ICE candidate identified (should be sent to remote peer) and when ICE gathering finalized.
@@ -301,7 +306,7 @@ export class RtcPeerConnection {
             await this._sendDescription(connection, answer);
             this._onSessionNegotiated(connection);
           } catch (err) {
-            this._abortConnection(connection, new Error('Error handling a remote offer.', { cause: err }));
+            this._abortConnection(connection, new Error(`Error handling a remote offer: ${err}`, { cause: err }));
           }
         });
         break;
@@ -324,7 +329,7 @@ export class RtcPeerConnection {
             await connection.setRemoteDescription({ type, sdp });
             this._onSessionNegotiated(connection);
           } catch (err) {
-            this._abortConnection(connection, new Error('Error handling a remote answer.', { cause: err }));
+            this._abortConnection(connection, new Error(`Error handling a remote answer: ${err}`, { cause: err }));
           }
         });
         break;
