@@ -2,7 +2,6 @@
 // Copyright 2026 DXOS.org
 //
 
-import { useAtomValue } from '@effect/atom-react/Hooks';
 import React from 'react';
 
 import { type RequestPhase, type RequestPhaseName } from '@dxos/assistant';
@@ -12,42 +11,26 @@ import { ChatStatus as NaturalChatStatus } from '@dxos/react-ui-chat';
 
 import { meta } from '#meta';
 
-// From the context module rather than the `../Chat` barrel: `Chat.tsx` imports this component, so
-// the barrel would close a cycle and leave `ChatActivity` uninitialized at module evaluation.
-import { useChatContext } from '../Chat/context';
-
 const CHAT_ACTIVITY_NAME = 'Chat.Activity';
-const CHAT_ACTIVITY_VIEW_NAME = 'Chat.ActivityView';
 
 const activityLabelKey = (phase: RequestPhaseName): string => `activity.${phase}.label`;
 
-/**
- * What the request is doing while the reader waits for the first token.
- *
- * The gap before a reply is dominated by setup the reader cannot see — a cold MCP server, a
- * summarization pass, a request the provider is making us re-issue — so the agent reports each stage
- * as it enters it and this renders the latest one. It disappears as soon as content streams in: the
- * reply is the better progress report, and a label left underneath it would only compete with it.
- */
-export const ChatActivity = ({ classNames }: ThemedClassName) => {
-  const { processor } = useChatContext(CHAT_ACTIVITY_NAME);
-  const activity = useAtomValue(processor.activity);
-
-  return <ChatActivityView classNames={classNames} activity={activity} />;
-};
-
-ChatActivity.displayName = CHAT_ACTIVITY_NAME;
-
-export type ChatActivityViewProps = ThemedClassName<{
+export type ChatActivityProps = ThemedClassName<{
   activity?: Trace.PayloadType<typeof RequestPhase>;
 }>;
 
 /**
- * The line itself, given a resolved phase. Split from {@link ChatActivity} so each phase can be
- * mounted in a story without a live agent process — the same live/resolved split `ChatStatus` and
- * `ChatStatusView` make for the counters pill this line sits above.
+ * What the request is doing while the reader waits for the first token, given a resolved phase.
+ *
+ * The gap before a reply is dominated by setup the reader cannot see — a cold MCP server, a
+ * summarization pass, a request the provider is making us re-issue — so the agent reports each stage
+ * as it enters it and this renders the latest one. It renders nothing once content streams in: the
+ * reply is the better progress report, and a label left underneath it would only compete with it.
+ *
+ * The phase arrives as a prop rather than being read from the chat context, so every phase can be
+ * mounted in a story without a live agent process; `Chat.Activity` is the bound form.
  */
-export const ChatActivityView = ({ classNames, activity }: ChatActivityViewProps) => {
+export const ChatActivity = ({ classNames, activity }: ChatActivityProps) => {
   const { t } = useTranslation(meta.profile.key);
   if (!activity) {
     return null;
@@ -82,4 +65,4 @@ export const ChatActivityView = ({ classNames, activity }: ChatActivityViewProps
   );
 };
 
-ChatActivityView.displayName = CHAT_ACTIVITY_VIEW_NAME;
+ChatActivity.displayName = CHAT_ACTIVITY_NAME;
