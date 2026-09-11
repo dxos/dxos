@@ -5,8 +5,9 @@
 import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 
-import { Database, Ref } from '@dxos/echo';
+import { Database, Obj, Ref } from '@dxos/echo';
 import { TestDatabaseLayer } from '@dxos/echo-client/testing';
+import { URI } from '@dxos/keys';
 import { Text } from '@dxos/schema';
 import { Outline } from '@dxos/types';
 
@@ -25,6 +26,22 @@ describe('get-outline', () => {
         { title: 'first', done: false },
         { title: 'second', done: true },
       ]);
+    }).pipe(Effect.provide(TestDatabaseLayer({ types: [Outline.Outline, Text.Text] }))),
+  );
+
+  it.effect('fails with a typed error when the ref is not an outline', () =>
+    Effect.gen(function* () {
+      const other = yield* Database.add(Text.make({ content: 'not an outline' }));
+      yield* Database.flush();
+
+      // Built from the URI rather than the object: the caller is a model passing an id, which is
+      // exactly the shape the ref's static type cannot vouch for.
+      const ref = yield* Database.makeRef<Outline.Outline>(URI.make(Obj.getURI(other)));
+      const exit = yield* Effect.exit(getOutline.handler({ outline: ref }));
+
+      expect(exit._tag).toBe('Failure');
+      // A raw `TypeError: Cannot read properties of undefined (reading 'tryLoad')` is the regression.
+      expect(String(exit)).toContain('Not an outline');
     }).pipe(Effect.provide(TestDatabaseLayer({ types: [Outline.Outline, Text.Text] }))),
   );
 });
