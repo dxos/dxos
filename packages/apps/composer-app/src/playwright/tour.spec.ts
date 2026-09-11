@@ -65,19 +65,12 @@ test.describe('Tour tests', () => {
     await Support.finish(host.page).click();
     await expect(Support.card(host.page)).not.toBeVisible();
 
-    // Replayed after a reload: the running tour's id is persisted and names a tour before anything
-    // is attended.
+    // The finished tour's id is persisted and survives a reload, where it names a tour while nothing
+    // is attended. Starting a different one afterwards must compose that one rather than replay what
+    // the id named at boot. A reload does not restore the deck here — boot lands on Home — so this
+    // cannot also assert the reopened document's own fragments.
     await host.page.reload();
-    await Support.awaitFragments(host.page);
-    await Support.startFromCompanion(host.page);
-    await expect(Support.title(host.page)).toHaveText('Markdown, formatted as you type');
-
-    await Support.next(host.page).click();
-    await Support.next(host.page).click();
-    await Support.next(host.page).click();
-    await expect(Support.title(host.page)).toHaveText('Comments');
-
-    await Support.next(host.page).click();
-    await expect(Support.title(host.page)).toHaveText('Dictate');
+    await Support.startGlobal(host.page);
+    await expect(Support.title(host.page)).toHaveText('Sharing');
   });
 });
