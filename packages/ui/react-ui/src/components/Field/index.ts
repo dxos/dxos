@@ -2,8 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-export { type FieldValence, useFieldValence } from './FieldContext';
-export { useFieldTrigger } from './FieldTriggerContext';
+export { type FieldValence, useFieldValence } from './FieldContext.ts';
+export { useFieldTrigger } from './FieldTriggerContext.ts';
 
-export * from './Field';
-export * from './SegmentedInput';
+export * from './Field.tsx';
+export * from './SegmentedInput.tsx';

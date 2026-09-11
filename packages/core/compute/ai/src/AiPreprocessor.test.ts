@@ -11,9 +11,9 @@ import { Obj } from '@dxos/echo';
 import { ContentBlock, Message } from '@dxos/types';
 import { bufferToArray } from '@dxos/util';
 
-import * as AiPreprocessor from './AiPreprocessor';
-import { PromptPreprocessingError } from './errors';
-import { TestData } from './testing';
+import * as AiPreprocessor from './AiPreprocessor.ts';
+import { PromptPreprocessingError } from './errors.ts';
+import { TestData } from './testing/index.ts';
 
 describe('AiPreprocessor.preprocessPrompt', () => {
   it.effect(

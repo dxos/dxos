@@ -4,10 +4,16 @@
 
 import { log } from '@dxos/log';
 
-import { type DeliverInvokeOptions, type InvokeBridgeApi, deliverInvoke } from './invoke';
-import { enrichSnapshotWithThumbnail } from './thumbnail';
-import { type InvokeAck, type InvokeRequest, type Snapshot, type SnapshotHints, type SnapshotSelection } from './types';
-import { nextId } from './util';
+import { type DeliverInvokeOptions, type InvokeBridgeApi, deliverInvoke } from './invoke.ts';
+import { enrichSnapshotWithThumbnail } from './thumbnail.ts';
+import {
+  type InvokeAck,
+  type InvokeRequest,
+  type Snapshot,
+  type SnapshotHints,
+  type SnapshotSelection,
+} from './types.ts';
+import { nextId } from './util.ts';
 
 const isRecord = (value: unknown): value is Record<string, unknown> => typeof value === 'object' && value !== null;
 

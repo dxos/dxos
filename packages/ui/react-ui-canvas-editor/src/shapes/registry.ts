@@ -2,9 +2,9 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type ShapeDefSet } from '../components';
-import { ellipseShape } from './ellipse-def';
-import { rectangleShape } from './Rectangle';
+import { type ShapeDefSet } from '../components/index.ts';
+import { ellipseShape } from './ellipse-def.ts';
+import { rectangleShape } from './Rectangle.tsx';
 
 /**
  * Order used by toolbar.

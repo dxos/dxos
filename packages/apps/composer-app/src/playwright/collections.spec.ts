@@ -4,7 +4,7 @@
 
 import { expect, test } from '@playwright/test';
 
-import { AppManager } from './app-manager';
+import { AppManager } from './app-manager.ts';
 
 test.describe('Collection tests', () => {
   let host: AppManager;

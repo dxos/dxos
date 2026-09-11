@@ -7,10 +7,10 @@ import * as Effect from 'effect/Effect';
 import * as SampleSpace from '@dxos/app-toolkit/SampleSpace';
 import { Ref } from '@dxos/echo';
 
-import { Docs } from './docs';
-import { ProjectPhase } from './project';
-import { Tasks } from './tasks';
-import { REFERENCE } from './util';
+import { Docs } from './docs.ts';
+import { ProjectPhase } from './project.ts';
+import { Tasks } from './tasks.ts';
+import { REFERENCE } from './util.ts';
 
 const phases = {
   docs: Docs,

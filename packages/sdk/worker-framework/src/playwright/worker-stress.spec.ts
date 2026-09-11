@@ -4,10 +4,10 @@
 
 import { test } from '@playwright/test';
 
-import { STRESS_COMMANDS, runRandomCommand, seededRandom } from './stress-commands';
-import { StressFleet } from './stress-fleet';
-import { HARNESS_URL } from './stress-harness-server';
-import { assertRecovered } from './stress-recovery';
+import { STRESS_COMMANDS, runRandomCommand, seededRandom } from './stress-commands.ts';
+import { StressFleet } from './stress-fleet.ts';
+import { HARNESS_URL } from './stress-harness-server.ts';
+import { assertRecovered } from './stress-recovery.ts';
 
 /**
  * Reads a positive-integer knob. Throws rather than coercing: `Number('tow') || 2` would silently

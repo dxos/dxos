@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-export * from './connection';
-export * from './swarm';
-export * from './swarm-mapper';
-export * from './connection-limiter';
+export * from './connection.ts';
+export * from './swarm.ts';
+export * from './swarm-mapper.ts';
+export * from './connection-limiter.ts';

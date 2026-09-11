@@ -21,7 +21,7 @@ import { useActiveFileSystemWorkspace } from '#hooks';
 import { meta } from '#meta';
 import { FileSystemCapabilities, FileSystemOperation } from '#types';
 
-import { writeComposerConfig } from '../util';
+import { writeComposerConfig } from '../util.ts';
 
 const WorkspaceSettingsSchema = Schema.Struct({
   icon: Schema.optional(Schema.String).annotate({ title: 'Icon' }),

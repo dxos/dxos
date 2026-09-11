@@ -8,8 +8,8 @@ import { EdgeServiceClient, Image } from '@dxos/edge-client/service';
 import { EffectEx } from '@dxos/effect';
 import { log } from '@dxos/log';
 
-import { getConfig } from '../../config';
-import { ThumbnailUrl } from '../state';
+import { getConfig } from '../../config.ts';
+import { ThumbnailUrl } from '../state/index.ts';
 
 /**
  * Get content type from URL extension.

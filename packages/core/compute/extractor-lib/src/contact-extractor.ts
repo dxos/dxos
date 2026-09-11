@@ -8,8 +8,8 @@ import { type Obj, Type } from '@dxos/echo';
 import { type ExtractInput, type ExtractResult, type MatchResult, type ObjectExtractor } from '@dxos/extractor';
 import { Message } from '@dxos/types';
 
-import { buildContactGraph } from './contact';
-import { isAutomatedSender, senderSignals } from './selection';
+import { buildContactGraph } from './contact.ts';
+import { isAutomatedSender, senderSignals } from './selection.ts';
 
 export const TEMPLATE_ID = 'org.dxos.extractor.contact';
 

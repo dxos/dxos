@@ -18,7 +18,7 @@ import { useDiscordPresence } from '#hooks';
 import { meta } from '#meta';
 import { SupportOperation, SupportService } from '#types';
 
-import { useScreenshotAttachment } from './useScreenshotAttachment';
+import { useScreenshotAttachment } from './useScreenshotAttachment.ts';
 
 type Toast = {
   id: string;

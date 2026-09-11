@@ -11,7 +11,7 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { type Signal, SignalSchema } from '@dxos/protocols/buf/dxos/mesh/swarm_pb';
 
-import { type Transport, type TransportFactory, type TransportOptions, type TransportStats } from '../transport';
+import { type Transport, type TransportFactory, type TransportOptions, type TransportStats } from '../transport.ts';
 
 export const TcpTransportFactory: TransportFactory = {
   createTransport: (options) => new TcpTransport(options),

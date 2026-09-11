@@ -12,7 +12,7 @@ import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
 
 import { ClientService } from '@dxos/client';
 
-import { AUTH_OPTION_DESCRIPTIONS, NSID, deleteRecord, listRecords, resolveSession } from './util';
+import { AUTH_OPTION_DESCRIPTIONS, NSID, deleteRecord, listRecords, resolveSession } from './util.ts';
 
 const rkeyOf = (uri: string): string => uri.split('/').pop() ?? '';
 

@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './ProviderArticle';
-export * from './ResultCard';
-export * from './SearchArticle';
-export * from './SearchProperties';
+export * from './ProviderArticle/index.ts';
+export * from './ResultCard/index.ts';
+export * from './SearchArticle/index.ts';
+export * from './SearchProperties/index.ts';

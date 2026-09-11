@@ -12,7 +12,7 @@ import {
   runItemsBench,
   selectVariants,
   summarizeMessage,
-} from '../testing/harness';
+} from '../testing/harness/index.ts';
 
 describe.skipIf(!fixtureExists())('summarize messages (multi-model)', () => {
   test(

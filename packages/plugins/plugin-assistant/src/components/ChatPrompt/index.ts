@@ -2,12 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
-export * from './ChatActions';
-export * from './ChatActivity';
-export * from './ChatMcpErrors';
-export * from './ChatOptions';
-export * from './ChatPresets';
-export * from './ChatPrompt';
-export * from './ChatReferences';
-export * from './ChatStatus';
-export * from './ChatStatusStack';
+export * from './ChatActions.tsx';
+export * from './ChatActivity.tsx';
+export * from './ChatMcpErrors.tsx';
+export * from './ChatOptions.tsx';
+export * from './ChatPresets.tsx';
+export * from './ChatPrompt.tsx';
+export * from './ChatReferences.tsx';
+export * from './ChatStatus.tsx';
+export * from './ChatStatusStack.tsx';

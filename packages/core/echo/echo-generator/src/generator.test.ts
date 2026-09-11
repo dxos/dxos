@@ -11,8 +11,8 @@ import { DXN, Obj, Type } from '@dxos/echo';
 import { getObjectCore } from '@dxos/echo-client/testing';
 import { random } from '@dxos/random';
 
-import { TestSchemaType, createSpaceObjectGenerator, createTestObjectGenerator } from './data';
-import { SpaceObjectGenerator } from './generator';
+import { TestSchemaType, createSpaceObjectGenerator, createTestObjectGenerator } from './data.ts';
+import { SpaceObjectGenerator } from './generator.ts';
 
 random.seed(3);
 

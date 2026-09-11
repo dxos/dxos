@@ -6,8 +6,8 @@ import * as Effect from 'effect/Effect';
 
 import { log } from '@dxos/log';
 
-import { ActivationEvents } from '../common';
-import { ActivationEvent, type PluginManager } from '../core';
+import { ActivationEvents } from '../common/index.ts';
+import { ActivationEvent, type PluginManager } from '../core/index.ts';
 
 /**
  * Fires every activation event that a running app fires in response to demand: the

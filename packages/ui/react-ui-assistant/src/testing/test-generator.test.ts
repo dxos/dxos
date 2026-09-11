@@ -10,7 +10,7 @@ import { Database, Entity, Feed, Obj } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { type Message } from '@dxos/types';
 
-import { createMessageGenerator } from './test-generator';
+import { createMessageGenerator } from './test-generator.ts';
 
 /**
  * In-memory Database.Service that records appendToFeed calls and emits a change event

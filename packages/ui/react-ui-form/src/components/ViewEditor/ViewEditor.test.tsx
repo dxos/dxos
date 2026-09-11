@@ -10,9 +10,9 @@ import { Type, View } from '@dxos/echo';
 import { instanceOf as isInstanceOf } from '@dxos/echo/Obj';
 import { ProjectionModel } from '@dxos/schema';
 
-import { VIEW_EDITOR_DEBUG_SYMBOL } from '../../testing';
-import * as stories from './ViewEditor.stories';
-import { type ViewEditorDebugObjects } from './ViewEditor.stories';
+import { VIEW_EDITOR_DEBUG_SYMBOL } from '../../testing/index.ts';
+import * as stories from './ViewEditor.stories.tsx';
+import { type ViewEditorDebugObjects } from './ViewEditor.stories.tsx';
 
 const { Default } = composeStories(stories);
 

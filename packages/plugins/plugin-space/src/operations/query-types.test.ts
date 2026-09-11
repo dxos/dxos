@@ -10,8 +10,8 @@ import { TestHelpers } from '@dxos/effect/testing';
 
 import { SpaceOperation } from '#types';
 
-import QueryTypesHandler from './query-types';
-import { decodeTypeRow, makeTestLayer } from './testing';
+import QueryTypesHandler from './query-types.ts';
+import { decodeTypeRow, makeTestLayer } from './testing.ts';
 
 const TestLayer = makeTestLayer(QueryTypesHandler);
 

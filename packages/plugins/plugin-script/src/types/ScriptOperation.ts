@@ -11,7 +11,7 @@ import * as Operation from '@dxos/compute/Operation';
 import * as Script from '@dxos/compute/Script';
 import { Database, DXN, Type } from '@dxos/echo';
 
-import { templates } from '../templates';
+import { templates } from '../templates/index.ts';
 
 export const ScriptProps = Schema.Struct({
   name: Schema.optional(Schema.String),

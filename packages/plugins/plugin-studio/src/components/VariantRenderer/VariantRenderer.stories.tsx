@@ -10,8 +10,8 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { type VariantContent } from '#surfaces';
 import { translations } from '#translations';
 
-import { ImageVariant } from './ImageVariant';
-import { VideoVariant } from './VideoVariant';
+import { ImageVariant } from './ImageVariant.tsx';
+import { VideoVariant } from './VideoVariant.tsx';
 
 const imageVariant: VariantContent = {
   contentType: 'image/png',

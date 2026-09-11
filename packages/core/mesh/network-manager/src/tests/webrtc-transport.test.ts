@@ -4,9 +4,9 @@
 
 import { describe } from 'vitest';
 
-import { TestBuilder } from '../testing';
-import { TransportKind } from '../transport';
-import { basicTestSuite } from './basic-test-suite';
+import { TestBuilder } from '../testing/index.ts';
+import { TransportKind } from '../transport/index.ts';
+import { basicTestSuite } from './basic-test-suite.ts';
 
 // Segfault in node-datachannel.
 describe.skip('WebRTC transport', { timeout: 10_000 }, () => {

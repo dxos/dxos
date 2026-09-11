@@ -13,7 +13,7 @@ import React, {
 
 import { useComposedRefs } from '@dxos/react-hooks';
 
-import { Tooltip, type TooltipTriggerProps } from './Tooltip';
+import { Tooltip, type TooltipTriggerProps } from './Tooltip.tsx';
 
 export type TextTooltipProps = PropsWithChildren<
   {

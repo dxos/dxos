@@ -15,7 +15,7 @@ import { log } from '@dxos/log';
 import { HeadsSchema } from '@dxos/protocols/buf/dxos/echo/query_pb';
 import { SqlTransaction } from '@dxos/sql-sqlite';
 
-import { MIGRATIONS, MIGRATIONS_TABLE } from '../migrations/heads';
+import { MIGRATIONS, MIGRATIONS_TABLE } from '../migrations/heads/index.ts';
 
 // SqlTransaction.SqlTransaction is the Tag class exported from the SqlTransaction namespace.
 type SqlTransactionTag = SqlTransaction.SqlTransaction;

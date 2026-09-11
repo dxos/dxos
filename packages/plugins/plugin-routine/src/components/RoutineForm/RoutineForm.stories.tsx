@@ -16,7 +16,7 @@ import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
 
-import { RoutineForm } from './RoutineForm';
+import { RoutineForm } from './RoutineForm.tsx';
 
 // Exposes the live automation to the play function (module scope is shared with the story render)
 // so it can assert the primary trigger's spec kind.

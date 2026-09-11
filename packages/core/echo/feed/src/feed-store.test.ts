@@ -14,8 +14,8 @@ import { log } from '@dxos/log';
 import { FeedProtocol } from '@dxos/protocols';
 import { SqlTransaction } from '@dxos/sql-sqlite';
 
-import { FeedStore } from './feed-store';
-import { createInMemoryKeyProvider, createWebCryptoCypher } from './web-crypto-cypher';
+import { FeedStore } from './feed-store.ts';
+import { createInMemoryKeyProvider, createWebCryptoCypher } from './web-crypto-cypher.ts';
 
 const Block = FeedProtocol.Block;
 type Block = FeedProtocol.Block;

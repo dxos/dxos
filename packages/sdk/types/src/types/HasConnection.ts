@@ -8,7 +8,7 @@ import * as Schema from 'effect/Schema';
 
 import { DXN, Obj, Relation, Type } from '@dxos/echo';
 
-import * as Organization from './Organization';
+import * as Organization from './Organization.ts';
 
 // TODO(burdon): Rename HasBusinessRelationship?
 export class HasConnection extends Type.makeRelation<HasConnection>(

@@ -11,10 +11,10 @@ import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { ComplexMap, isNonNullable } from '@dxos/util';
 
-import { AbstractFeedIterator } from './feed-iterator';
-import { FeedQueue } from './feed-queue';
-import { type FeedWrapper } from './feed-wrapper';
-import { type FeedBlock } from './types';
+import { AbstractFeedIterator } from './feed-iterator.ts';
+import { FeedQueue } from './feed-queue.ts';
+import { type FeedWrapper } from './feed-wrapper.ts';
+import { type FeedBlock } from './types.ts';
 
 /**
  * Select next block.

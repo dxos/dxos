@@ -4,8 +4,8 @@
 
 import { type RefObject, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { type FrameMeter, useFrameMeter } from '../../debug';
-import { sweepScroll } from './sweep';
+import { type FrameMeter, useFrameMeter } from '../../debug/index.ts';
+import { sweepScroll } from './sweep.ts';
 
 export type FeedDebugOptions = {
   /** What the pass ran under; the recorded line carries these rather than a story name. */

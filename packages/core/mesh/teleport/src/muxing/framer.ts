@@ -8,7 +8,7 @@ import { Event } from '@dxos/async';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
-import { type RpcPort } from './rpc-port';
+import { type RpcPort } from './rpc-port.ts';
 
 const FRAME_LENGTH_SIZE = 2;
 

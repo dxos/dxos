@@ -17,8 +17,8 @@ import { type Mutable } from '@dxos/echo/Obj';
 import { EffectEx, SchemaAST, SchemaEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 
-import { ProjectionModel, createEchoChangeCallback } from '../projection';
-import { createDefaultSchema, getSchema } from '../util';
+import { ProjectionModel, createEchoChangeCallback } from '../projection/index.ts';
+import { createDefaultSchema, getSchema } from '../util/index.ts';
 
 type MakeProps = {
   name?: string;

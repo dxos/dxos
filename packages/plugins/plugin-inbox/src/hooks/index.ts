@@ -2,14 +2,14 @@
 // Copyright 2025 DXOS.org
 //
 
-export * from './useBlobUrl';
-export * from './useCidResolver';
-export * from './useDebouncedValue';
-export * from './useEmailComposerExtensions';
-export * from './useExtractedObjects';
-export * from './useInjectedMailboxActions';
-export * from './useMailboxExtractorActions';
-export * from './useSendEmail';
-export * from './useShadowObject';
-export * from './useSyncTrigger';
-export * from './useTags';
+export * from './useBlobUrl.ts';
+export * from './useCidResolver.ts';
+export * from './useDebouncedValue.ts';
+export * from './useEmailComposerExtensions.ts';
+export * from './useExtractedObjects.ts';
+export * from './useInjectedMailboxActions.tsx';
+export * from './useMailboxExtractorActions.tsx';
+export * from './useSendEmail.ts';
+export * from './useShadowObject.ts';
+export * from './useSyncTrigger.ts';
+export * from './useTags.ts';

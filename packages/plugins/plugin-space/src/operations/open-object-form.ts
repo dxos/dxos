@@ -10,8 +10,8 @@ import { Collection, Obj, type Ref } from '@dxos/echo';
 
 import { SpaceCapabilities, SpaceOperation } from '#types';
 
-import { OBJECT_FORM_DIALOG } from '../constants';
-import { makeObjectFormHandle } from '../util';
+import { OBJECT_FORM_DIALOG } from '../constants.ts';
+import { makeObjectFormHandle } from '../util/index.ts';
 
 const handler: Operation.WithHandler<typeof SpaceOperation.OpenObjectForm> = SpaceOperation.OpenObjectForm.pipe(
   Operation.withHandler(

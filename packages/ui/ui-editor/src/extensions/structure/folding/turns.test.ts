@@ -5,7 +5,7 @@
 import { EditorState } from '@codemirror/state';
 import { describe, test } from 'vitest';
 
-import { PROMPT_ELEMENT, createTurnSource } from './turns';
+import { PROMPT_ELEMENT, createTurnSource } from './turns.ts';
 
 describe('createTurnSource', () => {
   test('folds the response below a prompt', ({ expect }) => {

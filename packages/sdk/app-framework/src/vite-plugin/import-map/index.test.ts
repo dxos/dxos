@@ -7,7 +7,7 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { describe, test } from 'vitest';
 
-import { getPackageEntrypoints } from './index';
+import { getPackageEntrypoints } from './index.ts';
 
 /** Materialises a package on disk so wildcard exports have a directory to walk. */
 const makePackage = (exports: Record<string, unknown>, files: string[]): string => {

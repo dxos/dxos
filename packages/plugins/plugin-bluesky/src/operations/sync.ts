@@ -17,9 +17,9 @@ import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as Binding from '@dxos/plugin-connector/Binding';
 import * as Subscription from '@dxos/plugin-magazine/Subscription';
 
-import { BLUESKY_TARGET, DEFAULT_MAX_PAGES, MAX_PAGES_HARD_CAP } from '../constants';
-import { BlueskyApi } from '../services';
-import { SyncBlueskyTargets } from './definitions';
+import { BLUESKY_TARGET, DEFAULT_MAX_PAGES, MAX_PAGES_HARD_CAP } from '../constants.ts';
+import { BlueskyApi } from '../services/index.ts';
+import { SyncBlueskyTargets } from './definitions.ts';
 
 const handler: Operation.WithHandler<typeof SyncBlueskyTargets> = SyncBlueskyTargets.pipe(
   Operation.withHandler(

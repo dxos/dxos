@@ -15,25 +15,25 @@ import { DXN, EID, EntityId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { clearUndefined, orderKeys, removeProperties } from '@dxos/util';
 
-import type * as Type from '../../Type';
-import { type TypeAnnotation, TypeAnnotationId, TypeIdentifierAnnotationId } from '../Annotation/annotations';
-import { makeTypeJsonSchemaAnnotation } from '../Annotation/util';
+import type * as Type from '../../Type.ts';
+import { type TypeAnnotation, TypeAnnotationId, TypeIdentifierAnnotationId } from '../Annotation/annotations.ts';
+import { makeTypeJsonSchemaAnnotation } from '../Annotation/util.ts';
 import {
   ANY_OBJECT_TYPENAME,
   ANY_OBJECT_VERSION,
   EntityKind,
   EntityKindSchema,
   getStaticTypeSchema,
-} from '../common/types';
-import { JSON_SCHEMA_ECHO_REF_ID, type JsonSchemaReferenceInfo, createEchoReferenceSchema } from '../Ref';
-import { CustomAnnotations, DecodedAnnotations, EchoAnnotations } from './annotations';
+} from '../common/types/index.ts';
+import { JSON_SCHEMA_ECHO_REF_ID, type JsonSchemaReferenceInfo, createEchoReferenceSchema } from '../Ref/index.ts';
+import { CustomAnnotations, DecodedAnnotations, EchoAnnotations } from './annotations.ts';
 import {
   ECHO_ANNOTATIONS_NS_DEPRECATED_KEY,
   ECHO_ANNOTATIONS_NS_KEY,
   type JsonSchemaEchoAnnotations,
   type JsonSchemaType,
   getNormalizedEchoAnnotations,
-} from './json-schema-type';
+} from './json-schema-type.ts';
 
 // TODO(burdon): Are these values stored (can they be changed?)
 export enum PropType {

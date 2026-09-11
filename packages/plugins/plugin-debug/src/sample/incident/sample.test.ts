@@ -7,7 +7,7 @@ import { describe, test } from 'vitest';
 import { buildArchive, histogram } from '@dxos/app-toolkit/testing';
 import { EffectEx } from '@dxos/effect';
 
-import { IncidentSpace } from './index';
+import { IncidentSpace } from './index.ts';
 
 /**
  * Built on demand rather than committed, so this asserts the shape in place of a fixture: if a

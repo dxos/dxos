@@ -27,8 +27,8 @@ import {
 
 import { Chess } from '#types';
 
-import { Info, type InfoProps } from './Info';
-import { ExtendedChessModel } from './types';
+import { Info, type InfoProps } from './Info.tsx';
+import { ExtendedChessModel } from './types.ts';
 
 export interface ChessboardController {
   setMoveNumber(index: number): void;

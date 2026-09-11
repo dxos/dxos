@@ -45,11 +45,11 @@ import { type ComposableProps } from '@dxos/ui-types';
 
 import { translationKey } from '#translations';
 
-import { type TaskPlacement, subtreeIds } from './hierarchy';
-import { STATUS_ORDER, UNSET_ICON, estimateTextStyle, priorityIcon, priorityTextStyle } from './status-icons';
-import { type TaskDescriptionProps } from './TaskDescription';
-import { TaskTreeContent } from './TaskTreeContent';
-import { type TaskNode, buildTaskForest, flattenVisibleTasks } from './tree-model';
+import { type TaskPlacement, subtreeIds } from './hierarchy.ts';
+import { STATUS_ORDER, UNSET_ICON, estimateTextStyle, priorityIcon, priorityTextStyle } from './status-icons.ts';
+import { type TaskDescriptionProps } from './TaskDescription.tsx';
+import { TaskTreeContent } from './TaskTreeContent.tsx';
+import { type TaskNode, buildTaskForest, flattenVisibleTasks } from './tree-model.ts';
 
 const shortDid = (did: string): string => `${did.slice(0, 12)}…`;
 

@@ -4,7 +4,7 @@
 
 import React, { type PropsWithChildren, createContext, useContext, useEffect, useMemo } from 'react';
 
-import { DebugModel, type DebugProbe } from './debug-model';
+import { DebugModel, type DebugProbe } from './debug-model.ts';
 
 const DebugContext = createContext<DebugModel | undefined>(undefined);
 

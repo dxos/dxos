@@ -9,8 +9,8 @@ import { invariant } from '@dxos/invariant';
 import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
-import { type ResponsiveGridItemProps } from './ResponsiveGridItem';
-import { ResponsivePanel } from './ResponsivePanel';
+import { type ResponsiveGridItemProps } from './ResponsiveGridItem.tsx';
+import { ResponsivePanel } from './ResponsivePanel.tsx';
 
 const ASPECT_RATIO = 16 / 9;
 const MIN_GALLERY_HEIGHT = 250;

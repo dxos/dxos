@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 import * as SchemaTransformation from 'effect/SchemaTransformation';
 
-import { FormatAnnotation, TypeFormat } from './types';
+import { FormatAnnotation, TypeFormat } from './types.ts';
 
 const encodeMultipleOf = (divisor: number) => 1 / Math.pow(10, divisor);
 

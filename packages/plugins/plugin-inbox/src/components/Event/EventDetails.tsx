@@ -12,7 +12,7 @@ import { type Actor, type Event as EventType } from '@dxos/types';
 
 import { meta } from '#meta';
 
-import { EventEditor } from './EventEditor';
+import { EventEditor } from './EventEditor.tsx';
 
 // The hub `Meeting` type is owned by plugin-meeting; reference its typename by string so plugin-inbox
 // stays meeting-agnostic (no package dependency). Anchored objects of other types are ignored here.

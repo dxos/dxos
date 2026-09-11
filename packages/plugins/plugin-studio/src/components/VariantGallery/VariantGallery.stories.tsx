@@ -9,7 +9,7 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
 
-import { VariantGallery, type VariantTileSource } from './VariantGallery';
+import { VariantGallery, type VariantTileSource } from './VariantGallery.tsx';
 
 const variants: VariantTileSource[] = Array.from({ length: 8 }, (_, index) => ({
   id: `variant-${index}`,

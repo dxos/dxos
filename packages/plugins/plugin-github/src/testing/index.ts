@@ -2,5 +2,5 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './fixtures';
-export * from './plugin';
+export * from './fixtures.ts';
+export * from './plugin.ts';

@@ -8,7 +8,7 @@ import { useTranslation } from '@dxos/react-ui';
 import { TogglePanel } from '@dxos/react-ui-components';
 import { type WidgetProps, getXmlTextChild } from '@dxos/ui-editor';
 
-import { translationKey } from '../translations';
+import { translationKey } from '../translations.ts';
 
 export const SummaryWidget = ({ children }: WidgetProps) => {
   const { t } = useTranslation(translationKey);

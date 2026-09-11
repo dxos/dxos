@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { getColumnWidth, layout } from './layout';
+import { getColumnWidth, layout } from './layout.ts';
 
 describe('layout', () => {
   test('assigns each tile to the shortest column (not by index)', ({ expect }) => {

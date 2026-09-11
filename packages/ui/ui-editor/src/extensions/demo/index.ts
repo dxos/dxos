@@ -2,5 +2,5 @@
 // Copyright 2025 DXOS.org
 //
 
-export * from './blast';
-export * from './snippets';
+export * from './blast.ts';
+export * from './snippets.ts';

@@ -27,9 +27,9 @@ import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { trim } from '@dxos/util';
 
-import { PromptError } from '../errors';
-import { makeCompleteJobParameters, makeCompleteJobTool } from './complete-job-tool';
-import { RunInstructions } from './definitions';
+import { PromptError } from '../errors.ts';
+import { makeCompleteJobParameters, makeCompleteJobTool } from './complete-job-tool.ts';
+import { RunInstructions } from './definitions.ts';
 
 const DEFAULT_MODEL: DXN.DXN = DXN.make('com.anthropic.model.claude-opus-5.default');
 

@@ -12,7 +12,7 @@ import { ClientService } from '@dxos/client';
 import { requirePublicKey } from '@dxos/protocols/buf';
 import { DeviceType } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
-import { printDevice } from '../util';
+import { printDevice } from '../util.ts';
 
 export const handler = Effect.fn(function* () {
   const { json } = yield* CommandConfig;

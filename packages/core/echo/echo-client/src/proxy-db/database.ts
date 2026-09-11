@@ -54,9 +54,9 @@ import { log } from '@dxos/log';
 import { RpcClosedError, runServiceCall, subscribeStream } from '@dxos/protocols';
 import { type DataService, type FeedService, type QueryService } from '@dxos/protocols/rpc';
 
-import type { SaveStateChangedEvent } from '../automerge';
-import { type DocHandleProxy, type RepoProxy } from '../automerge';
-import { type BranchStore, EntityManager, type LoadObjectOptions } from '../core-db';
+import type { SaveStateChangedEvent } from '../automerge/index.ts';
+import { type DocHandleProxy, type RepoProxy } from '../automerge/index.ts';
+import { type BranchStore, EntityManager, type LoadObjectOptions } from '../core-db/index.ts';
 import {
   EchoReactiveHandler,
   type ProxyTarget,
@@ -65,9 +65,9 @@ import {
   getObjectCore,
   initEchoReactiveObjectRootProxy,
   isEchoObject,
-} from '../echo-handler';
-import { FeedHandle } from '../feed/feed-handle';
-import { type HypergraphImpl } from '../hypergraph';
+} from '../echo-handler/index.ts';
+import { FeedHandle } from '../feed/feed-handle.ts';
+import { type HypergraphImpl } from '../hypergraph.ts';
 
 export interface EchoDatabase extends Database.Database {
   /**

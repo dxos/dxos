@@ -8,7 +8,7 @@ import { Obj } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { Organization, Person } from '@dxos/types';
 
-import { findReferences, insertReferences } from './quotes';
+import { findReferences, insertReferences } from './quotes.ts';
 
 describe('insertReferences', () => {
   test('should replace quotes with DXN references', () => {

@@ -14,12 +14,12 @@ import { mx } from '@dxos/ui-theme';
 
 import { type FormFieldLabelPlacement, type FormFieldRendererProps, type FormPresentation } from '#types';
 
-import { useFormContext, useFormFieldState } from '../../../hooks';
+import { useFormContext, useFormFieldState } from '../../../hooks/index.ts';
 import { type FormVariant, formTheme } from '../Form.theme';
-import { resolveLayoutField } from '../FormLayout/resolve-layout-field';
-import { type FormFieldBinding, FormFieldBindingProvider } from './FormFieldContext';
-import { FormFieldDispatch } from './FormFieldDispatch';
-import { presentationFor } from './presentation';
+import { resolveLayoutField } from '../FormLayout/resolve-layout-field.ts';
+import { type FormFieldBinding, FormFieldBindingProvider } from './FormFieldContext.ts';
+import { FormFieldDispatch } from './FormFieldDispatch.tsx';
+import { presentationFor } from './presentation.tsx';
 
 //
 // FormFieldLabel

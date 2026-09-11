@@ -16,33 +16,35 @@ import { ProjectCapabilities, ProjectsEvents } from '#types';
 
 // Narrower than the `appGraphBuilder` family default: the nodes it contributes carry
 // `LayoutOperation` actions, which mean nothing without an app shell.
-export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'), {
+export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder.ts'), {
   environments: [],
 });
 // Browser-only: the entry supplies `CreateProjectPanel`, the React form that picks the project
 // template and collects its name.
-export const CreateObject = SpaceCapability.createObject(() => import('./create-object'), {
+export const CreateObject = SpaceCapability.createObject(() => import('./create-object.ts'), {
   environments: [],
 });
-export const NavigationTargetResolver = AppCapability.navigationResolver(() => import('./navigation-target-resolver'));
-export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'), {
+export const NavigationTargetResolver = AppCapability.navigationResolver(
+  () => import('./navigation-target-resolver.ts'),
+);
+export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler.ts'), {
   activatesOn: ActivationEvents.Idle,
 });
-export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition'));
-export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
+export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition.ts'));
+export const ReactSurface = AppCapability.surface(() => import('./react-surface.ts'), {
   roles: ['org.dxos.role.article'],
 });
-export const Schema = AppCapability.schema(() => import('./schema'));
+export const Schema = AppCapability.schema(() => import('./schema.ts'));
 export const SubjectContext = Capability.lazyModule(
   'SubjectContext',
   { provides: [AssistantCapabilities.SubjectContext], activatesOn: AssistantEvents.Start },
-  () => import('./subject-context'),
+  () => import('./subject-context.ts'),
 );
 export const TaskAction = Capability.lazyModule(
   'TaskAction',
   // Rides the tasks feature it contributes to: the entry is unreachable until a task list renders.
   { provides: [TasksCapabilities.TaskAction], activatesOn: TasksEvents.Start },
-  () => import('./task-action'),
+  () => import('./task-action.ts'),
 );
 export const Templates = Capability.lazyModule(
   'Templates',
@@ -50,7 +52,7 @@ export const Templates = Capability.lazyModule(
     provides: [ProjectCapabilities.Template],
     activatesOn: ProjectsEvents.Start,
   },
-  () => import('./templates'),
+  () => import('./templates.ts'),
 );
 
 export const Translations = AppCapability.translations(translations);

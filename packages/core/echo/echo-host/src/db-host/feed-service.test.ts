@@ -15,7 +15,7 @@ import { EntityId, SpaceId } from '@dxos/keys';
 import { FeedProtocol } from '@dxos/protocols';
 import { SqlTransaction } from '@dxos/sql-sqlite';
 
-import { LocalFeedServiceImpl } from './local-feed-service';
+import { LocalFeedServiceImpl } from './local-feed-service.ts';
 
 const TestLayer = SqlTransaction.layer.pipe(
   Layer.provideMerge(

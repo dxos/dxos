@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './conversation-parser';
-export * from './fixtures';
-export * from './scripted-source';
-export * from './stream-simulator';
+export * from './conversation-parser.ts';
+export * from './fixtures.ts';
+export * from './scripted-source.ts';
+export * from './stream-simulator.ts';

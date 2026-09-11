@@ -4,8 +4,8 @@
 
 import { describe, test } from 'vitest';
 
-import { defaultViewport } from './atoms';
-import { hitTestCell, screenToWorld, visibleCellRange, visibleCells, worldToScreen } from './viewport';
+import { defaultViewport } from './atoms.ts';
+import { hitTestCell, screenToWorld, visibleCellRange, visibleCells, worldToScreen } from './viewport.ts';
 
 const headers = { left: 80, top: 24 };
 

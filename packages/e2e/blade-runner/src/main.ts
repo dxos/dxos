@@ -17,7 +17,7 @@ import {
   readYAMLSpecFile,
   runPlan,
   runReplicant,
-} from './plan';
+} from './plan/index.ts';
 
 /**
  * Plans by name, each importing its own spec module on demand.
@@ -26,17 +26,17 @@ import {
  * `edge-sync` transitively pulls the function bundler (parsimmon), which fails to load as ESM.
  */
 const plans: { [key: string]: () => Promise<TestPlan<any, any>> } = {
-  edgeStress: async () => new (await import('./spec/edge-stress')).EdgeStress(),
-  edgeJoinLatency: async () => new (await import('./spec/edge-join-latency')).EdgeJoinLatency(),
-  edgeSync: async () => new (await import('./spec/edge-sync')).EdgeSync(),
-  edgeWs: async () => new (await import('./spec/edge-ws')).EdgeWs(),
-  automerge: async () => new (await import('./spec/automerge')).AutomergeTestPlan(),
+  edgeStress: async () => new (await import('./spec/edge-stress/index.ts')).EdgeStress(),
+  edgeJoinLatency: async () => new (await import('./spec/edge-join-latency/index.ts')).EdgeJoinLatency(),
+  edgeSync: async () => new (await import('./spec/edge-sync.ts')).EdgeSync(),
+  edgeWs: async () => new (await import('./spec/edge-ws.ts')).EdgeWs(),
+  automerge: async () => new (await import('./spec/automerge.ts')).AutomergeTestPlan(),
   // signal: async () => new (await import('./spec/signal')).SignalTestPlan(),
-  transport: async () => new (await import('./spec/transport')).TransportTestPlan(),
-  query: async () => new (await import('./spec/query')).QueryTestPlan(),
-  replication: async () => new (await import('./spec/replication')).ReplicationTestPlan(),
-  storage: async () => new (await import('./spec/storage')).StorageTestPlan(),
-  empty: async () => new (await import('./spec/empty')).EmptyTestPlan(),
+  transport: async () => new (await import('./spec/transport.ts')).TransportTestPlan(),
+  query: async () => new (await import('./spec/query.ts')).QueryTestPlan(),
+  replication: async () => new (await import('./spec/replication.ts')).ReplicationTestPlan(),
+  storage: async () => new (await import('./spec/storage.ts')).StorageTestPlan(),
+  empty: async () => new (await import('./spec/empty.ts')).EmptyTestPlan(),
 };
 
 /**
@@ -44,15 +44,15 @@ const plans: { [key: string]: () => Promise<TestPlan<any, any>> } = {
  * one registers that class with `ReplicantRegistry` as a side effect.
  */
 const replicantModules: { [key: string]: () => Promise<unknown> } = {
-  AutomergeReplicant: () => import('./replicants/automerge-replicant'),
-  ClientReplicant: () => import('./replicants/client-replicant'),
-  DumbReplicant: () => import('./replicants/dumb-replicant'),
-  EchoReplicant: () => import('./replicants/echo-replicant'),
-  EdgeReplicant: () => import('./replicants/edge-replicant'),
-  SignalReplicant: () => import('./replicants/signal-replicant'),
-  StorageReplicant: () => import('./replicants/storage-replicant'),
-  TransportReplicant: () => import('./replicants/transport-replicant'),
-  WsReplicant: () => import('./replicants/ws-replicant'),
+  AutomergeReplicant: () => import('./replicants/automerge-replicant.ts'),
+  ClientReplicant: () => import('./replicants/client-replicant.ts'),
+  DumbReplicant: () => import('./replicants/dumb-replicant.ts'),
+  EchoReplicant: () => import('./replicants/echo-replicant.ts'),
+  EdgeReplicant: () => import('./replicants/edge-replicant.ts'),
+  SignalReplicant: () => import('./replicants/signal-replicant.ts'),
+  StorageReplicant: () => import('./replicants/storage-replicant.ts'),
+  TransportReplicant: () => import('./replicants/transport-replicant.ts'),
+  WsReplicant: () => import('./replicants/ws-replicant.ts'),
 };
 
 /**

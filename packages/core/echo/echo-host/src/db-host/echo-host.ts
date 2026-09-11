@@ -48,16 +48,16 @@ import {
   type PeerIdProvider,
   type RootDocumentSpaceKeyProvider,
   deriveCollectionIdFromSpaceId,
-} from '../automerge';
-import { AutomergeDataSource } from './automerge-data-source';
-import { DataServiceImpl } from './data-service';
-import { type DatabaseRoot } from './database-root';
-import { DeletionResolver } from './deletion';
-import { FeedDataSource } from './feed-data-source';
-import { hintFromIndexingResult } from './invalidation-hint';
-import { LocalFeedServiceImpl } from './local-feed-service';
-import { QueryServiceImpl } from './query-service';
-import { type SpaceDocumentListUpdatedEvent, type SpaceRootRefs, SpaceStateManager } from './space-state-manager';
+} from '../automerge/index.ts';
+import { AutomergeDataSource } from './automerge-data-source.ts';
+import { DataServiceImpl } from './data-service.ts';
+import { type DatabaseRoot } from './database-root.ts';
+import { DeletionResolver } from './deletion.ts';
+import { FeedDataSource } from './feed-data-source.ts';
+import { hintFromIndexingResult } from './invalidation-hint.ts';
+import { LocalFeedServiceImpl } from './local-feed-service.ts';
+import { QueryServiceImpl } from './query-service.ts';
+import { type SpaceDocumentListUpdatedEvent, type SpaceRootRefs, SpaceStateManager } from './space-state-manager.ts';
 
 /**
  * Documents walked between event-loop yields during a reachability traversal. Bounds how long one

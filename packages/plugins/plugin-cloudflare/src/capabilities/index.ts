@@ -16,7 +16,7 @@ import pluginSpec from '../../PLUGIN.mdl?raw';
 export const Connector = Capability.lazyModule(
   'CloudflareConnector',
   { provides: [ConnectorSpec.Connector], activatesOn: ConnectorEvents.Start },
-  () => import('./connector'),
+  () => import('./connector.ts'),
 );
 export const PluginAsset = AppCapability.pluginAsset({
   pluginId: meta.profile.key,

@@ -10,8 +10,8 @@
 import { type EditorState, type Extension } from '@codemirror/state';
 import { Decoration, type WidgetType } from '@codemirror/view';
 
-import { type Range } from '../../../types';
-import { escapeRegExpSource } from '../../../util';
+import { type Range } from '../../../types/index.ts';
+import { escapeRegExpSource } from '../../../util/index.ts';
 import {
   type WidgetDef,
   type WidgetMatch,
@@ -22,8 +22,8 @@ import {
   widgetId,
   widgetMatchersFacet,
   widgetsCore,
-} from '../../widgets';
-import { nodeToJson } from './xml-util';
+} from '../../widgets/index.ts';
+import { nodeToJson } from './xml-util.ts';
 
 /**
  * Widget registry definition: how one tag renders.

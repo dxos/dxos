@@ -8,7 +8,7 @@ import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { type Organization, type Person } from '@dxos/types';
 
-import { OrganizationCard, PersonCard } from '../cards';
+import { OrganizationCard, PersonCard } from '../cards/index.ts';
 
 export type OrganizationCardContentProps = AppSurface.ObjectCardData<Organization.Organization> & {
   role: string;

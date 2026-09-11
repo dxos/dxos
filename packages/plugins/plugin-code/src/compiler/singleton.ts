@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Compiler } from './compiler';
+import { Compiler } from './compiler.ts';
 
 /**
  * Module-level Compiler shared across operation invocations within a single

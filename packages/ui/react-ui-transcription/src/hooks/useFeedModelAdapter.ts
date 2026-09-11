@@ -6,7 +6,7 @@ import { useEffect, useMemo } from 'react';
 
 import type { Obj } from '@dxos/echo';
 
-import { type ChunkRenderer, TranscriptModel } from '../model';
+import { type ChunkRenderer, TranscriptModel } from '../model/index.ts';
 
 /**
  * Feeds an array of objects (typically from `useQuery(db, Query.from(feed))`) into a

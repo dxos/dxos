@@ -12,7 +12,7 @@ import { Listbox } from '@dxos/react-ui-list';
 import { meta } from '#meta';
 import { Settings } from '#types';
 
-import { getSpaceDisplayName } from '../../util';
+import { getSpaceDisplayName } from '../../util/index.ts';
 
 export type SpaceSettingsProps = {
   spaces?: Space[];

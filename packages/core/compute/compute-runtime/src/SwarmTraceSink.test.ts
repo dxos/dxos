@@ -7,7 +7,7 @@ import { describe, test } from 'vitest';
 import * as Trace from '@dxos/compute/Trace';
 import { Obj } from '@dxos/echo';
 
-import * as SwarmTraceSink from './SwarmTraceSink';
+import * as SwarmTraceSink from './SwarmTraceSink.ts';
 
 // DX-1125: the producer sink is the inverse of the feed sink — it broadcasts ephemeral messages and
 // ignores durable ones / messages without a space.

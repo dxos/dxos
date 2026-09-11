@@ -6,7 +6,7 @@ import { ROOT_CONTEXT, context, trace } from '@opentelemetry/api';
 import { StackContextManager } from '@opentelemetry/sdk-trace-web';
 import { afterEach, describe, test } from 'vitest';
 
-import { activeTraceContext, contextForTrace } from './trace-context';
+import { activeTraceContext, contextForTrace } from './trace-context.ts';
 
 const TRACE = { traceId: '0af7651916cd43dd8448eb211c80319c', spanId: 'b7ad6b7169203331' };
 

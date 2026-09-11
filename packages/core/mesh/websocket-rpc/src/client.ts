@@ -8,7 +8,7 @@ import { Event, Trigger } from '@dxos/async';
 import { log, logInfo } from '@dxos/log';
 import { type ProtoRpcPeer, type ProtoRpcPeerOptions, createProtoRpcPeer } from '@dxos/rpc';
 
-import { WebSocketWithTokenAuth } from './token-auth';
+import { WebSocketWithTokenAuth } from './token-auth.ts';
 
 export type WebsocketRpcClientProps<C, S> = {
   url: string;

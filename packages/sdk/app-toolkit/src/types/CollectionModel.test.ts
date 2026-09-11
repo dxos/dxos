@@ -12,7 +12,7 @@ import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { HiddenAnnotation } from '@dxos/echo/Annotation';
 import { TestSchema } from '@dxos/echo/testing';
 
-import * as CollectionModel from './CollectionModel';
+import * as CollectionModel from './CollectionModel.ts';
 
 describe('containing', () => {
   let builder: EchoTestBuilder;

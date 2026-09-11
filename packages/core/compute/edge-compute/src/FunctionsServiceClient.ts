@@ -16,7 +16,7 @@ import { log } from '@dxos/log';
 import { type FunctionRuntimeKind, type SerializedError } from '@dxos/protocols';
 import { safeParseJson } from '@dxos/util';
 
-import { createEdgeClient } from './edge-client';
+import { createEdgeClient } from './edge-client.ts';
 
 // TODO(wittjosiah): Copied from @dxos/functions-simulator-cloudflare.
 export type InvokeResult =

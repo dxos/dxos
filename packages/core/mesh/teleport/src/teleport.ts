@@ -12,8 +12,8 @@ import { PublicKey } from '@dxos/keys';
 import { log, logInfo } from '@dxos/log';
 import { RpcClosedError, TimeoutError } from '@dxos/protocols';
 
-import { ControlExtension } from './control-extension';
-import { type CreateChannelOpts, Muxer, type MuxerStats, type RpcPort } from './muxing';
+import { ControlExtension } from './control-extension.ts';
+import { type CreateChannelOpts, Muxer, type MuxerStats, type RpcPort } from './muxing/index.ts';
 
 export type TeleportProps = {
   initiator: boolean;

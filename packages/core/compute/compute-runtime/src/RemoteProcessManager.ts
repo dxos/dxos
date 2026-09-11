@@ -24,9 +24,9 @@ import { log } from '@dxos/log';
 // same error shape as the domain type they extend.
 import type { SerializedError } from '@dxos/protocols';
 
-import type * as ProcessManager from './ProcessManager';
-import * as RemoteProcessHandle from './RemoteProcessHandle';
-import type * as RemoteTraceMonitor from './RemoteTraceMonitor';
+import type * as ProcessManager from './ProcessManager.ts';
+import * as RemoteProcessHandle from './RemoteProcessHandle.ts';
+import type * as RemoteTraceMonitor from './RemoteTraceMonitor.ts';
 
 /**
  * Cancel target for a remote (EDGE) run — the {@link Manager.cancel} argument. Addressed by `trigger`

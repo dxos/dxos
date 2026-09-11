@@ -7,10 +7,10 @@ import { EditorState } from '@codemirror/state';
 import { EditorView, WidgetType } from '@codemirror/view';
 import { describe, test } from 'vitest';
 
-import { decorationSetToArray } from '../../util';
-import { extendedMarkdown, xmlTags } from '../language/xml';
-import { type ObjectLinkProps, objectLinks } from './object-links';
-import { type WidgetDef, WidgetHostOptions, type WidgetState, widgetHost, widgetRebuildEffect } from './widgets';
+import { decorationSetToArray } from '../../util/index.ts';
+import { extendedMarkdown, xmlTags } from '../language/xml/index.ts';
+import { type ObjectLinkProps, objectLinks } from './object-links.ts';
+import { type WidgetDef, WidgetHostOptions, type WidgetState, widgetHost, widgetRebuildEffect } from './widgets.ts';
 
 /** Widget whose props are inspectable so tests can assert the id the builder assigned. */
 class TestWidget extends WidgetType {

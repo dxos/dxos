@@ -2,6 +2,6 @@
 // Copyright 2026 DXOS.org
 //
 
-export * as DiscordEvents from './DiscordEvents';
-export * as DiscordOperation from './DiscordOperation';
-export * as DiscordTargetOptions from './DiscordTargetOptions';
+export * as DiscordEvents from './DiscordEvents.ts';
+export * as DiscordOperation from './DiscordOperation.ts';
+export * as DiscordTargetOptions from './DiscordTargetOptions.ts';

@@ -31,7 +31,7 @@ import { EffectEx } from '@dxos/effect';
 import { TestHelpers } from '@dxos/effect/testing';
 import { type ContentBlock, type Message } from '@dxos/types';
 
-import { AiChatProcessor } from './processor';
+import { AiChatProcessor } from './processor.ts';
 
 const TestLayer = AssistantTestLayer({ tracing: 'noop', types: [Chat.Chat, Feed.Feed] });
 

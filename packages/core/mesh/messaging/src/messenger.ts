@@ -21,10 +21,10 @@ import {
 import { type AnyEnvelope } from '@dxos/protocols/service-contract';
 import { ComplexMap, ComplexSet } from '@dxos/util';
 
-import { MessengerMonitor } from './messenger-monitor';
-import { type SignalManager } from './signal-manager';
-import { type Message, type PeerInfo } from './signal-methods';
-import { MESSAGE_TIMEOUT } from './timeouts';
+import { MessengerMonitor } from './messenger-monitor.ts';
+import { type SignalManager } from './signal-manager/index.ts';
+import { type Message, type PeerInfo } from './signal-methods.ts';
+import { MESSAGE_TIMEOUT } from './timeouts.ts';
 
 export type OnMessage = (params: Message) => Promise<void>;
 

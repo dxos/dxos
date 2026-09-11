@@ -8,9 +8,9 @@ import { type Space } from '@dxos/client/echo';
 import { log } from '@dxos/log';
 import { IconButton, Panel, Toolbar } from '@dxos/react-ui';
 
-import { DataSpaceSelector } from '../../../containers';
-import { useDevtoolsState } from '../../../hooks';
-import { SyncStateInfo } from '../../echo';
+import { DataSpaceSelector } from '../../../containers/index.ts';
+import { useDevtoolsState } from '../../../hooks/index.ts';
+import { SyncStateInfo } from '../../echo/index.ts';
 
 export type TestingPanelProps = {
   onScriptPluginOpen?: (space: Space) => Promise<void>;

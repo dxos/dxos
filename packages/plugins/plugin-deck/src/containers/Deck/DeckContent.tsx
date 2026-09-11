@@ -9,10 +9,10 @@ import { Main } from '@dxos/react-ui';
 
 import { useBreakpoints } from '#hooks';
 
-import { layoutAppliesTopbar } from '../../util';
-import { ComplementarySidebar, Sidebar } from '../Sidebar';
-import { Banner } from './Banner';
-import { useDeckContext } from './DeckRoot';
+import { layoutAppliesTopbar } from '../../util/index.ts';
+import { ComplementarySidebar, Sidebar } from '../Sidebar/index.ts';
+import { Banner } from './Banner.tsx';
+import { useDeckContext } from './DeckRoot.tsx';
 
 const DECK_CONTENT_NAME = 'DeckContent';
 

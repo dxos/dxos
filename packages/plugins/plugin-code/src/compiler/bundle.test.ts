@@ -4,9 +4,9 @@
 
 import { afterAll, describe, test } from 'vitest';
 
-import { compileEntry, executeScript } from './build';
-import { bundleEntry } from './bundle';
-import { resetCompiler } from './singleton';
+import { compileEntry, executeScript } from './build.ts';
+import { bundleEntry } from './bundle.ts';
+import { resetCompiler } from './singleton.ts';
 
 type File = { path: string; content: string };
 

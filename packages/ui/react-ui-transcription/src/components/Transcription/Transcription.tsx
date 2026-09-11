@@ -17,8 +17,8 @@ import {
   scroller,
 } from '@dxos/ui-editor';
 
-import { type TranscriptModel } from '../../model';
-import { transcription } from './transcription-extension';
+import { type TranscriptModel } from '../../model/index.ts';
+import { transcription } from './transcription-extension.ts';
 
 export type TranscriptionProps = {
   transcript?: Transcript.Transcript;

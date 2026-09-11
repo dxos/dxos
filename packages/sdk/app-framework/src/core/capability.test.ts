@@ -7,8 +7,8 @@ import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 
-import * as Capability from './capability';
-import * as CapabilityManager from './capability-manager';
+import * as CapabilityManager from './capability-manager.ts';
+import * as Capability from './capability.ts';
 
 type Example = { example: string };
 

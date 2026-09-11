@@ -22,7 +22,7 @@ import { StudioPlugin } from '#plugin';
 import { translations } from '#translations';
 import { Artifact, Lightbox, Variant } from '#types';
 
-import { LightboxArticle } from './LightboxArticle';
+import { LightboxArticle } from './LightboxArticle.tsx';
 
 const DefaultStory = () => {
   const spaces = useSpaces();

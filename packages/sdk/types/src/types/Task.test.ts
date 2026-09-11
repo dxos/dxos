@@ -8,8 +8,8 @@ import * as Effect from 'effect/Effect';
 import { Database, Obj, Ref } from '@dxos/echo';
 import { TestDatabaseLayer } from '@dxos/echo-client/testing';
 
-import * as Milestone from './Milestone';
-import * as Task from './Task';
+import * as Milestone from './Milestone.ts';
+import * as Task from './Task.ts';
 
 /**
  * The derived views are the whole point of the flat-array model — hierarchy, milestone grouping,

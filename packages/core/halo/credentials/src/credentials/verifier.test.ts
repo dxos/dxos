@@ -16,9 +16,9 @@ import {
   SpaceMemberSchema,
 } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
-import { createCredential } from './credential-factory';
-import { chainCredentialOf, chainOf, proofOf } from './credential-keys';
-import { verifyCredential } from './verifier';
+import { createCredential } from './credential-factory.ts';
+import { chainCredentialOf, chainOf, proofOf } from './credential-keys.ts';
+import { verifyCredential } from './verifier.ts';
 
 describe('verifier', () => {
   describe('no chain', () => {

@@ -16,8 +16,8 @@ import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { ConnectionView } from '#components';
 import { useConnector, useReauthenticate, useSyncConnection, useSyncTargets, useTestConnection } from '#hooks';
 
-import * as Binding from '../../Binding';
-import { connectionsDeckSubject } from '../../constants';
+import * as Binding from '../../Binding.ts';
+import { connectionsDeckSubject } from '../../constants.ts';
 
 export type ConnectionArticleProps = AppSurface.ObjectArticleProps<Connection.Connection>;
 

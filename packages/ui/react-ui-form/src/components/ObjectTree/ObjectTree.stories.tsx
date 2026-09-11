@@ -12,8 +12,8 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
 
-import { Form } from '../Form';
-import { ObjectTree } from './ObjectTree';
+import { Form } from '../Form/index.ts';
+import { ObjectTree } from './ObjectTree.tsx';
 
 // Mirrors `dxos.config.Config` so the story exercises nested structs, arrays and enums.
 const ConfigSchema = Schema.Struct({

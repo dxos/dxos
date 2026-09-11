@@ -15,8 +15,8 @@ import { SearchList, useSearchListResults } from '@dxos/react-ui-search';
 
 import { meta } from '#meta';
 
-import { ObjectMasonry } from './ObjectMasonry';
-import { type TileData } from './ObjectTile';
+import { ObjectMasonry } from './ObjectMasonry.tsx';
+import { type TileData } from './ObjectTile.tsx';
 
 export type ObjectMasonryArticleProps = {
   role?: string;

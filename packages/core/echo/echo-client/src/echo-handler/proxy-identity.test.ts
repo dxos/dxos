@@ -10,7 +10,7 @@ import { describe, expect, test } from 'vitest';
 import { Obj } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 
-import { EchoTestBuilder } from '../testing';
+import { EchoTestBuilder } from '../testing/index.ts';
 
 /**
  * Entity proxies key the reactive atom families (`Atom.family` resolves through `MutableHashMap`,

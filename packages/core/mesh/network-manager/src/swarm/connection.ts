@@ -14,9 +14,14 @@ import { type PeerInfo } from '@dxos/messaging';
 import { CancelledError, ConnectionResetError, ConnectivityError, ProtocolError, TimeoutError } from '@dxos/protocols';
 import { type Signal, SignalBatchSchema } from '@dxos/protocols/buf/dxos/mesh/swarm_pb';
 
-import { type SignalMessage, type SignalMessenger } from '../signal';
-import { type Transport, TRANSPORT_CONNECTION_TIMEOUT, type TransportFactory, type TransportStats } from '../transport';
-import { type WireProtocol } from '../wire-protocol';
+import { type SignalMessage, type SignalMessenger } from '../signal/index.ts';
+import {
+  type Transport,
+  TRANSPORT_CONNECTION_TIMEOUT,
+  type TransportFactory,
+  type TransportStats,
+} from '../transport/index.ts';
+import { type WireProtocol } from '../wire-protocol.ts';
 
 /**
  * How long to wait before sending the signal in case we receive another signal.

@@ -4,8 +4,8 @@
 
 import { useEffect } from 'react';
 
-import { type GlobeController } from './context';
-import { type Vector } from './context';
+import { type GlobeController } from './context.ts';
+import { type Vector } from './context.ts';
 
 export type WheelOptions = {
   disabled?: boolean;

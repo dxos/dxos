@@ -11,7 +11,7 @@ import { AccessToken, Connection } from '@dxos/link';
 
 import { Blog, Publisher } from '#types';
 
-import { runSyncPosts } from './sync-posts';
+import { runSyncPosts } from './sync-posts.ts';
 
 const SOURCE = 'stub.test';
 

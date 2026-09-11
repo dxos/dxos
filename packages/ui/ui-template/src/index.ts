@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './model';
-export * from './parser';
-export * from './render';
-export * from './system';
+export * from './model.ts';
+export * from './parser.ts';
+export * from './render.ts';
+export * from './system.ts';

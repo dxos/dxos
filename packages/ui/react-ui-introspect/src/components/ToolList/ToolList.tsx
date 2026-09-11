@@ -18,7 +18,7 @@ import { Listbox } from '@dxos/react-ui-list';
 
 import { translationKey } from '#translations';
 
-import type { ToolEntry } from '../types';
+import type { ToolEntry } from '../types.ts';
 
 // Not `composable()` — ToolList's outermost rendered element is
 // `<Listbox.Root>`, which is headless. Slot-merging className/ref onto

@@ -9,7 +9,7 @@ import * as Operation from '@dxos/compute/Operation';
 
 import { DeckOperation } from '#types';
 
-import { handleExternalUrl } from '../url';
+import { handleExternalUrl } from '../url/index.ts';
 
 const handler: Operation.WithHandler<typeof DeckOperation.HandleExternalUrl> = DeckOperation.HandleExternalUrl.pipe(
   Operation.withHandler(

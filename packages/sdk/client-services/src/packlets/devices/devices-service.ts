@@ -20,7 +20,7 @@ import { EdgeStatus_ConnectionState } from '@dxos/protocols/buf/dxos/client/serv
 import { type DeviceProfileDocument } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { type DevicesService } from '@dxos/protocols/rpc';
 
-import { type IdentityManager } from '../identity';
+import { type IdentityManager } from '../identity/index.ts';
 
 export class DevicesServiceImpl implements DevicesService.Handlers {
   'constructor'(

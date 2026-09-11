@@ -10,9 +10,9 @@ import { log } from '@dxos/log';
 import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
-import { useGameboardContext } from './GameboardContext';
-import { type Location, isPiece } from './types';
-import { type DOMRectBounds } from './util';
+import { useGameboardContext } from './GameboardContext.ts';
+import { type Location, isPiece } from './types.ts';
+import { type DOMRectBounds } from './util.ts';
 
 type HoveredState = 'idle' | 'validMove' | 'invalidMove';
 

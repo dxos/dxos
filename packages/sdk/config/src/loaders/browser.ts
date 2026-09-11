@@ -8,8 +8,8 @@ import localforage from 'localforage';
 
 import { log } from '@dxos/log';
 
-import { parseConfig } from '../config';
-import { type ConfigInit } from '../types';
+import { parseConfig } from '../config.ts';
+import { type ConfigInit } from '../types.ts';
 
 declare const __DXOS_CONFIG__: { publicUrl?: string; dynamic?: boolean };
 declare const __CONFIG_ENVS__: ConfigInit | undefined;

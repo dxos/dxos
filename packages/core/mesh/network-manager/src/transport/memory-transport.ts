@@ -18,7 +18,7 @@ import {
   TRANSPORT_CONNECTION_TIMEOUT,
   type TransportFactory,
   type TransportOptions,
-} from './transport';
+} from './transport.ts';
 
 // TODO(burdon): Make configurable.
 // Delay (in milliseconds) for data being sent through in-memory connections to simulate network latency.

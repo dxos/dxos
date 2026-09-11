@@ -10,7 +10,7 @@ import * as SqlClient from 'effect/unstable/sql/SqlClient';
 
 import { SqlTransaction } from '@dxos/sql-sqlite';
 
-import { migrate } from './schema';
+import { migrate } from './schema.ts';
 
 const TestLayer = SqlTransaction.layer.pipe(
   Layer.provideMerge(SqlTransaction.layer),

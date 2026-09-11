@@ -18,8 +18,8 @@ import { expect } from 'vitest';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
-import * as AiParser from '../AiParser';
-import * as ChatCompletionsAdapter from './ChatCompletionsAdapter';
+import * as AiParser from '../AiParser.ts';
+import * as ChatCompletionsAdapter from './ChatCompletionsAdapter.ts';
 
 type ProviderConfig = {
   name: string;

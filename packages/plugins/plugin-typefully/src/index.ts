@@ -2,6 +2,6 @@
 // Copyright 2026 DXOS.org
 //
 
-export * as TypefullyPlugin from './TypefullyPlugin';
-export * from './events';
+export * as TypefullyPlugin from './TypefullyPlugin.ts';
+export * from './events.ts';
 export * from '#meta';

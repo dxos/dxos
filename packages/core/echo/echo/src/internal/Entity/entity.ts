@@ -9,11 +9,12 @@ import { SchemaAST } from '@dxos/effect';
 import { DXN, EntityId } from '@dxos/keys';
 import { type ToMutable } from '@dxos/util';
 
-import { type TypeAnnotation, TypeAnnotationId } from '../Annotation/annotations';
-import { makeTypeJsonSchemaAnnotation } from '../Annotation/util';
-import { defineHiddenProperty } from '../common/proxy/define-hidden-property';
-import { makeObject } from '../common/proxy/make-object';
-import { getProxyTarget } from '../common/proxy/proxy-utils';
+import { type TypeAnnotation, TypeAnnotationId } from '../Annotation/annotations.ts';
+import { makeTypeJsonSchemaAnnotation } from '../Annotation/util.ts';
+import { defineHiddenProperty } from '../common/proxy/define-hidden-property.ts';
+import { makeObject } from '../common/proxy/make-object.ts';
+import { getProxyTarget } from '../common/proxy/proxy-utils.ts';
+import { type AnyProperties } from '../common/types/base.ts';
 import {
   type AnyEntity,
   EntityKind,
@@ -21,10 +22,9 @@ import {
   KindId,
   SchemaKindId,
   StaticTypeSchemaSlot,
-} from '../common/types';
-import { type AnyProperties } from '../common/types/base';
-import { type EntityMeta } from '../common/types/meta';
-import { JsonSchemaType } from '../JsonSchema/json-schema-type';
+} from '../common/types/index.ts';
+import { type EntityMeta } from '../common/types/meta.ts';
+import { JsonSchemaType } from '../JsonSchema/json-schema-type.ts';
 
 // TODO(burdon): Define Schema type for `typename` and use consistently for all DXN-like properties.
 
@@ -281,4 +281,4 @@ export const makeEchoTypeSchema = <
   return entity as unknown as EchoTypeSchema<Self, {}, K, Fields>;
 };
 
-export { isEntity } from './guard';
+export { isEntity } from './guard.ts';

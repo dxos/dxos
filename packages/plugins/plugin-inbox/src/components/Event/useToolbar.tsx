@@ -7,8 +7,8 @@ import { MenuBuilder, graphActions, isToolbarAction, useMenuBuilder } from '@dxo
 
 import { meta } from '#meta';
 
-import { deleteAction, openGroup } from '../Toolbar';
-import { type ViewMode, viewModeGroup } from '../ViewMode';
+import { deleteAction, openGroup } from '../Toolbar/index.ts';
+import { type ViewMode, viewModeGroup } from '../ViewMode/index.ts';
 
 export type UseEventToolbarActionsProps = {
   /** App graph used to source contributed (`disposition: 'toolbar'`) actions; omitted outside a plugin context. */

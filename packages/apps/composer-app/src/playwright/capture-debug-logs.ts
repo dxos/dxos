@@ -5,7 +5,7 @@
 import { type TestInfo } from '@playwright/test';
 import { writeFile } from 'node:fs/promises';
 
-import { type AppManager } from './app-manager';
+import { type AppManager } from './app-manager.ts';
 
 /** Values of `DX_E2E_CAPTURE_LOGS` that enable capture; `all` also captures passing tests. */
 const ENABLED = new Set(['1', 'true', 'all']);

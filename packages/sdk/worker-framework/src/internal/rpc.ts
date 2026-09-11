@@ -16,7 +16,7 @@ import type * as Scope from 'effect/Scope';
 import * as RpcClient from 'effect/unstable/rpc/RpcClient';
 import * as RpcServer from 'effect/unstable/rpc/RpcServer';
 
-import * as RpcTiming from '../RpcTiming';
+import * as RpcTiming from '../RpcTiming.ts';
 
 export type ServeOptions = {
   disableTracing?: boolean;

@@ -10,7 +10,7 @@ import * as Operation from '@dxos/compute/Operation';
 import * as Skill from '@dxos/compute/Skill';
 import { Ref } from '@dxos/echo';
 
-import { EnableSkills } from './definitions';
+import { EnableSkills } from './definitions.ts';
 
 export default EnableSkills.pipe(
   Operation.withHandler(

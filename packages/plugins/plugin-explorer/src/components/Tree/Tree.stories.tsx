@@ -10,9 +10,9 @@ import { random } from '@dxos/random';
 import { Tree, type TreeComponentProps } from '@dxos/react-ui-graph';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { createTree } from '../../testing';
-import { getNodeFillForObject } from '../../util';
-import { treeTypeToTreeNode } from './types';
+import { createTree } from '../../testing/index.ts';
+import { getNodeFillForObject } from '../../util/index.ts';
+import { treeTypeToTreeNode } from './types/index.ts';
 
 random.seed(1);
 

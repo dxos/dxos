@@ -12,7 +12,7 @@ import { log } from '@dxos/log';
 import { random } from '@dxos/random';
 import { range } from '@dxos/util';
 
-import { TestBuilder, TestItemBuilder, defaultValueEncoding } from './testing';
+import { TestBuilder, TestItemBuilder, defaultValueEncoding } from './testing/index.ts';
 
 describe('FeedWrapper', () => {
   const factory = new TestBuilder().createFeedFactory();

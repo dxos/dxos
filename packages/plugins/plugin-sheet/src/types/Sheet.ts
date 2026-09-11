@@ -12,7 +12,7 @@ import { Annotation, DXN, Obj, Type } from '@dxos/echo';
 import { FormInputAnnotation } from '@dxos/echo/Annotation';
 import { CollectionItemAnnotation } from '@dxos/schema';
 
-import { addressToIndex, initialize, mapFormulaRefsToIndices } from './SheetUtil';
+import { addressToIndex, initialize, mapFormulaRefsToIndices } from './SheetUtil.ts';
 
 export const SKILL_KEY = 'org.dxos.skill.sheet';
 

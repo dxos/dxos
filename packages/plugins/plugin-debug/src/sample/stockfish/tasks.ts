@@ -8,7 +8,7 @@ import * as SampleSpace from '@dxos/app-toolkit/SampleSpace';
 import { Database, Obj, Ref } from '@dxos/echo';
 import { Actor, Task, TaskSet } from '@dxos/types';
 
-import { daysAgo } from './util';
+import { daysAgo } from './util.ts';
 
 //
 // The plan, authored as a tree.

@@ -21,7 +21,7 @@ import {
   findFeedCursor,
   findOrCreateAnalyzeCursor,
   findOrCreateFeedCursor,
-} from './FeedCursor';
+} from './FeedCursor.ts';
 
 /**
  * The feed-cursor helpers outlived `ProcessMailbox` (deleted 2026-08-13) because `ClassifyMailbox`

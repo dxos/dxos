@@ -10,7 +10,7 @@ import { AlertDialog, Dialog as NaturalDialog } from '@dxos/react-ui';
 
 import { useDeckState } from '#hooks';
 
-import { PlankErrorFallback } from '../Deck/PlankFallback';
+import { PlankErrorFallback } from '../Deck/PlankFallback.tsx';
 
 export const Dialog = () => {
   const { state, updateEphemeral } = useDeckState();

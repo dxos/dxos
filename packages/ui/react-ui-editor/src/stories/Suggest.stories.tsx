@@ -21,7 +21,7 @@ import {
   suggestions,
 } from '@dxos/ui-editor';
 
-import { Editor, type EditorViewProps } from '../components';
+import { Editor, type EditorViewProps } from '../components/index.ts';
 
 // The parent (main) content and a branch proposal that rewrites three words — three independent,
 // reviewable changes (like a branch's edits against a style guide).

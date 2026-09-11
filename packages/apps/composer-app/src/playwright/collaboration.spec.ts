@@ -4,9 +4,9 @@
 
 import { expect, test } from '@playwright/test';
 
-import { AppManager } from './app-manager';
-import { captureDebugLogs } from './capture-debug-logs';
-import { Markdown } from './plugins';
+import { AppManager } from './app-manager.ts';
+import { captureDebugLogs } from './capture-debug-logs.ts';
+import { Markdown } from './plugins/index.ts';
 
 const perfomInvitation = async (host: AppManager, guest: AppManager) => {
   const sharedWorkspace = host.workspaceId;

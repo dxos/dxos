@@ -16,10 +16,10 @@ import { mx } from '@dxos/ui-theme';
 
 import { translationKey } from '#translations';
 
-import { useTranslation } from '../../providers';
-import { type ThemedClassName, composable, composableProps } from '../../util';
-import { IconButton } from '../Button';
-import { type MediaKind, MediaPlayer } from '../MediaPlayer';
+import { useTranslation } from '../../providers/index.ts';
+import { type ThemedClassName, composable, composableProps } from '../../util/index.ts';
+import { IconButton } from '../Button/index.ts';
+import { type MediaKind, MediaPlayer } from '../MediaPlayer/index.ts';
 
 //
 // Root

@@ -9,7 +9,7 @@ import { PublicKey } from '@dxos/keys';
 import { Toolbar } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
 
-import { PublicKeySelector } from './PublicKeySelector';
+import { PublicKeySelector } from './PublicKeySelector.tsx';
 
 const meta = {
   title: 'devtools/devtools/PublicKeySelector',

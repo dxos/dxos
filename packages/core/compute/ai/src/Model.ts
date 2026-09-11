@@ -6,7 +6,7 @@
 
 import { DXN } from '@dxos/keys';
 
-import * as Provider from './Provider';
+import * as Provider from './Provider.ts';
 
 /** Characteristics of a model, which may differ between providers serving the same model. */
 export type Characteristics = {

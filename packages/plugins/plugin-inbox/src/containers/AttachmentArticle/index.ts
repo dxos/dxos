@@ -2,8 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
-import { AttachmentArticle } from './AttachmentArticle';
+import { AttachmentArticle } from './AttachmentArticle.tsx';
 
-export * from './AttachmentArticle';
+export * from './AttachmentArticle.tsx';
 
 export default AttachmentArticle;

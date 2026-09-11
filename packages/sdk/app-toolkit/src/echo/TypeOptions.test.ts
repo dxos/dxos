@@ -9,7 +9,7 @@ import { Type } from '@dxos/echo';
 import { HiddenAnnotation } from '@dxos/echo/Annotation';
 import { DXN } from '@dxos/keys';
 
-import * as TypeOptions from './TypeOptions';
+import * as TypeOptions from './TypeOptions.ts';
 
 const UserType = Type.makeObject(DXN.make('com.example.type.user', '0.1.0'))(Schema.Struct({ name: Schema.String }));
 

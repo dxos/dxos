@@ -6,8 +6,8 @@ import { type KeyEvent, type ScrollBoxRenderable } from '@opentui/core';
 import { useKeyboard } from '@opentui/solid';
 import { For, createEffect, createSignal, useContext } from 'solid-js';
 
-import { type Theme } from '../theme';
-import { AppContext } from './App';
+import { type Theme } from '../theme.ts';
+import { AppContext } from './App.tsx';
 
 export type Column<T> = {
   header: string;

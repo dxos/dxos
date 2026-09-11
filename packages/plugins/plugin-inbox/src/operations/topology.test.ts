@@ -4,7 +4,7 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { type Node, descendants, sort } from './topology';
+import { type Node, descendants, sort } from './topology.ts';
 
 const ids = (nodes: readonly Node[]) => nodes.map((node) => node.id);
 

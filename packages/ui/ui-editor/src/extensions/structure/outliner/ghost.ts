@@ -15,9 +15,9 @@ import {
 import { type CleanupFn, addEventListener } from '@dxos/async';
 import { Domino } from '@dxos/ui';
 
-import { PlaceholderWidget } from '../../completion/placeholder';
-import { GUTTER_WIDTH } from '../blocks';
-import { treeFacet } from './tree';
+import { PlaceholderWidget } from '../../completion/placeholder.ts';
+import { GUTTER_WIDTH } from '../blocks/index.ts';
+import { treeFacet } from './tree.ts';
 
 export type GhostOptions = {
   /** Placeholder shown in an empty item. */

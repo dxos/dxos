@@ -12,7 +12,7 @@ import { Database, Ref } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 import { File } from '@dxos/types';
 
-import * as Sandbox from './Sandbox';
+import * as Sandbox from './Sandbox.ts';
 
 const SandboxRef = Ref.Ref(Sandbox.Sandbox).annotate({
   description: 'The sandbox object ID.',

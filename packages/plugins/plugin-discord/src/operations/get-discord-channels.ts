@@ -11,7 +11,7 @@ import { log } from '@dxos/log';
 
 import { DiscordOperation } from '#types';
 
-import { makeDiscordLayer } from '../services';
+import { makeDiscordLayer } from '../services/index.ts';
 
 const GUILD_PAGE_LIMIT = 200;
 

@@ -2,8 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './anchor';
-export * from './link-widgets';
-export * from './object-links';
-export * from './stub';
-export * from './widgets';
+export * from './anchor.ts';
+export * from './link-widgets.ts';
+export * from './object-links.ts';
+export * from './stub.ts';
+export * from './widgets.ts';

@@ -16,7 +16,7 @@ import { Employer, Organization, Person, Pipeline } from '@dxos/types';
 
 import { translations } from '#translations';
 
-import { QueryEditor, type QueryEditorProps } from './QueryEditor';
+import { QueryEditor, type QueryEditorProps } from './QueryEditor.tsx';
 
 // Create tags at render time to avoid Storybook serialization issues with ECHO objects.
 const createTags = (): Tag.Map => ({

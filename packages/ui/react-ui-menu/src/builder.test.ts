@@ -6,8 +6,8 @@ import { describe, test } from 'vitest';
 
 import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 
-import { MenuBuilder } from './builder';
-import { MenuSeparatorType } from './types';
+import { MenuBuilder } from './builder.ts';
+import { MenuSeparatorType } from './types.ts';
 
 describe('MenuBuilder', () => {
   test('builds a flat menu with actions', ({ expect }) => {
@@ -163,7 +163,7 @@ describe('MenuBuilder', () => {
 
   test('composable curried subgraph functions', ({ expect }) => {
     // Simulates the curried pattern: addX(args) returns (builder) => void.
-    const addHeadingsSection = () => (builder: import('./builder').ActionGroupBuilder) => {
+    const addHeadingsSection = () => (builder: import('./builder.ts').ActionGroupBuilder) => {
       builder.group(
         'headings',
         { label: 'Headings', variant: 'dropdownMenu', icon: 'ph--text-h-one--regular' },
@@ -175,7 +175,7 @@ describe('MenuBuilder', () => {
       );
     };
 
-    const addFormattingSection = () => (builder: import('./builder').ActionGroupBuilder) => {
+    const addFormattingSection = () => (builder: import('./builder.ts').ActionGroupBuilder) => {
       builder.group('formatting', { label: 'Formatting' }, (group) => {
         group.action('bold', { label: 'Bold', icon: 'ph--text-b--regular' }, () => {});
       });

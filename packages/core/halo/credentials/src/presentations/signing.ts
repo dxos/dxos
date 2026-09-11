@@ -4,7 +4,7 @@
 
 import { type Credential, type Proof } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
-import { canonicalStringify, toProofSigningShape, toSigningShape } from '../credentials/signing';
+import { canonicalStringify, toProofSigningShape, toSigningShape } from '../credentials/signing.ts';
 
 export const getPresentationProofPayload = (credentials: Credential[], proof: Proof): Uint8Array => {
   const copy = {

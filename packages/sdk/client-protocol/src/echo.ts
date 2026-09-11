@@ -9,9 +9,9 @@ import type { Invitation } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 import type { MembershipPolicy } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import type { SpacesService } from '@dxos/protocols/rpc';
 
-import type { AuthenticatingInvitation } from './invitations';
-import type { Space } from './space';
-import type { SpaceProperties } from './types';
+import type { AuthenticatingInvitation } from './invitations/index.ts';
+import type { Space } from './space.ts';
+import type { SpaceProperties } from './types/index.ts';
 
 /**
  * Public database API.

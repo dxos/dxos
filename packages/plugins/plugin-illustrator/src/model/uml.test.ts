@@ -4,9 +4,9 @@
 
 import { describe, test } from 'vitest';
 
-import type * as Scene from './scene';
-import { CLASS_DIAGRAM } from './testing';
-import { compile, isClassDiagram, parse } from './uml';
+import type * as Scene from './scene.ts';
+import { CLASS_DIAGRAM } from './testing.ts';
+import { compile, isClassDiagram, parse } from './uml.ts';
 
 const objectsOf = (commands: Scene.Command[]) =>
   commands.flatMap((command) => (command.op === 'upsert-object' ? [command.object] : []));

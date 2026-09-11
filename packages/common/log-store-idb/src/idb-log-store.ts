@@ -13,7 +13,7 @@ import {
   shouldLog,
 } from '@dxos/log';
 
-import { byteLengthUtf8, trimJsonlToSize } from './trim';
+import { byteLengthUtf8, trimJsonlToSize } from './trim.ts';
 
 const DEFAULT_STORE_NAME = 'logs';
 const DEFAULT_LOG_FILTER = 'debug';

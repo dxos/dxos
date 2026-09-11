@@ -12,8 +12,8 @@ import * as Prompt from 'effect/unstable/cli/Prompt';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import { CommandConfig } from '@dxos/cli-util';
 
-import { type PluginRecord, loadPlugins, savePlugins } from '../../storage';
-import { PluginInstallError, downloadAssets, resolveLocator } from '../../util';
+import { type PluginRecord, loadPlugins, savePlugins } from '../../storage.ts';
+import { PluginInstallError, downloadAssets, resolveLocator } from '../../util/index.ts';
 
 export const handler = Effect.fn(function* ({
   locator,

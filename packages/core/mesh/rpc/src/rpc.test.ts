@@ -11,8 +11,8 @@ import { Stream } from '@dxos/async';
 import { log } from '@dxos/log';
 import { type AnyEnvelope } from '@dxos/protocols/service-contract';
 
-import { RpcPeer } from './rpc';
-import { createLinkedPorts, encodeMessage } from './testing';
+import { RpcPeer } from './rpc.ts';
+import { createLinkedPorts, encodeMessage } from './testing.ts';
 
 const createPayload = (value = ''): AnyEnvelope =>
   create(AnySchema, {

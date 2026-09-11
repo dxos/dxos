@@ -18,7 +18,7 @@ import * as TranscriptionSkill from '@dxos/plugin-transcription/TranscriptionSki
 import { Cell } from '@dxos/storybook-testing';
 import { Event, Message, Transcript } from '@dxos/types';
 
-import { StoryRole } from '../modules';
+import { StoryRole } from '../modules/index.ts';
 import {
   ModuleContainer,
   addToRootCollection,
@@ -27,7 +27,7 @@ import {
   createTestMailbox,
   createTestTranscription,
   storyParameters,
-} from '../testing';
+} from '../testing/index.ts';
 const meta: Meta<typeof ModuleContainer> = {
   title: 'stories/stories-assistant/Connectors',
   render: ModuleContainer,

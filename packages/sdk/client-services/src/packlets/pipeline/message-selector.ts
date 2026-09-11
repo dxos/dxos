@@ -8,7 +8,7 @@ import { log } from '@dxos/log';
 import { toTimeframe } from '@dxos/protocols/buf';
 import type { FeedMessage } from '@dxos/protocols/buf/dxos/echo/feed_pb';
 
-import { type TimeframeClock } from './timeframe-clock';
+import { type TimeframeClock } from './timeframe-clock.ts';
 
 /**
  * The MessageSelector makes sure that we read in a trusted order.

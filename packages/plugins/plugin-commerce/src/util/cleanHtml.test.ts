@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { cleanHtml } from './cleanHtml';
+import { cleanHtml } from './cleanHtml.ts';
 
 const RAW = `<!doctype html><html><head>
   <style>.x{color:red}</style>

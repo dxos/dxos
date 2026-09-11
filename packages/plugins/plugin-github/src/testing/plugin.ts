@@ -10,7 +10,7 @@ import { DXN } from '@dxos/keys';
 
 import { GitHubCapabilities } from '#types';
 
-import { fixtureLinkSource } from './fixtures';
+import { fixtureLinkSource } from './fixtures.ts';
 
 /** Replaces the plugin's default fetch: a story answers every link from fixtures, deterministic per URL. */
 export const FixtureLinkSourcePlugin = Plugin.define(

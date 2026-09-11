@@ -14,8 +14,8 @@ import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
 import { Jmap } from '#apis';
 import { JmapCredentials } from '#services';
 
-import { JMAP_DEFAULT_HOST } from '../constants';
-import { JmapApiError } from '../errors';
+import { JMAP_DEFAULT_HOST } from '../constants.ts';
+import { JmapApiError } from '../errors.ts';
 
 /**
  * Manual-credential form for the JMAP connector. JMAP auth is a server-issued Bearer API token

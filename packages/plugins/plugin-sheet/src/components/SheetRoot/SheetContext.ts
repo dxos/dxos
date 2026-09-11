@@ -6,7 +6,7 @@ import { createContext, useContext } from 'react';
 
 import { raise } from '@dxos/debug';
 
-import { type SheetContextValue } from './SheetRoot';
+import { type SheetContextValue } from './SheetRoot.tsx';
 
 // Kept out of `SheetRoot.tsx`: react-refresh only fast-refreshes a module whose exports are all
 // components, so a context and its hook exported beside them force a full page reload on every edit.

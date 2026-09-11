@@ -2,4 +2,4 @@
 // Copyright 2025 DXOS.org
 //
 
-export { FeedProperties as default } from './FeedProperties';
+export { FeedProperties as default } from './FeedProperties.tsx';
