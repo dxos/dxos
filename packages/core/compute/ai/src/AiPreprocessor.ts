@@ -361,7 +361,10 @@ const makeToolResultPart = (
   Prompt.makePart('tool-result', {
     id: block.toolCallId,
     name: block.name,
-    result,
+    // `undefined` drops the key on serialization, and the part schema requires it — a single such
+    // part fails the decode of the entire prompt, permanently, for a conversation that already
+    // holds one. Normalized here so a history written before the parser guard still replays.
+    result: result === undefined ? null : result,
     isFailure,
     providerExecuted: false,
   });

@@ -91,7 +91,7 @@ export const SubmitIssue = Operation.make({
   meta: {
     key: DXN.make('org.dxos.operation.support.submitIssue'),
     name: 'File Linear Issue',
-    description: 'Files a report as a Linear issue with logs attached. Internal accounts only.',
+    description: 'Files a report as a Linear issue with logs attached.',
     icon: 'ph--bug--regular',
   },
   services: [Capability.Service],

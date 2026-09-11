@@ -15,6 +15,7 @@ import * as Geo from './Geo';
 import * as HasConnection from './HasConnection';
 import * as HasRelationship from './HasRelationship';
 import * as HasSubject from './HasSubject';
+import * as Issue from './Issue';
 import * as Message from './Message';
 import * as Milestone from './Milestone';
 import * as Organization from './Organization';
@@ -22,6 +23,8 @@ import * as Outline from './Outline';
 import * as Person from './Person';
 import * as Pipeline from './Pipeline';
 import * as Provider from './Provider';
+import * as PullRequest from './PullRequest';
+import * as RemoteSession from './RemoteSession';
 import * as Repo from './Repo';
 import * as Task from './Task';
 import * as TaskSet from './TaskSet';
@@ -59,6 +62,7 @@ export {
   HasConnection,
   HasRelationship,
   HasSubject,
+  Issue,
   Message,
   Milestone,
   Organization,
@@ -66,6 +70,8 @@ export {
   Person,
   Pipeline,
   Provider,
+  PullRequest,
+  RemoteSession,
   Repo,
   Task,
   TaskSet,

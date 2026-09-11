@@ -41,7 +41,7 @@ import {
   Skeleton,
   Slider,
   Splitter,
-  Stepper,
+  Steps,
   Tabs,
   Tag,
   Toast,
@@ -322,7 +322,7 @@ const ProgressSection = () => (
       <Progress indeterminate />
     </div>
     <div className='w-64'>
-      <Stepper
+      <Steps
         steps={['Plan', 'Build', 'Verify', 'Ship'].map((label) => ({ id: label.toLowerCase(), label }))}
         active={1}
         fraction={0.5}

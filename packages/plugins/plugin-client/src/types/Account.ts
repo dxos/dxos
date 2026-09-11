@@ -2,15 +2,21 @@
 // Copyright 2024 DXOS.org
 //
 
-// TODO(wittjosiah): Cannot use slashes in ids until we have a router which decouples ids from url paths.
-const _id = 'dxos.org.plugin.client.account';
-// TODO(wittjosiah): This is a hack to prevent the previous deck from being set for pinned items.
-//  Ideally this should be worked into the data model in a generic way.
-export const id = `!${_id}`;
+import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 
-export const Profile = `${_id}.profile`;
-export const Devices = `${_id}.devices`;
-export const Security = `${_id}.security`;
-export const Account = `${_id}.account`;
-export const Invitations = `${_id}.invitations`;
-export const Usage = `${_id}.usage`;
+/** Pinned (non-space) workspace ID anchoring the account's graph subtree, and its URL workspace token. */
+export const id = 'dxos:account';
+
+/** Panel ids, relative to the account workspace they hang off. Each is also its own singleton URL key. */
+export const Profile = 'profile';
+export const Devices = 'devices';
+export const Security = 'security';
+export const Account = 'account';
+export const Invitations = 'invitations';
+export const Usage = 'usage';
+
+/** The account's own workspace path. */
+export const workspacePath = GraphPath.getSpacePath(id);
+
+/** A panel's qualified path, which its surface matches on. */
+export const path = (panel: string): string => GraphPath.getSpacePath(id, panel);

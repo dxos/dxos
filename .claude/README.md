@@ -269,6 +269,40 @@ survive being read every turn.
 > Both now match only on the **first line**, where a slash command must appear
 > and prose cannot reach. Any new marker should start there.
 
+### Reporting the session to Composer
+
+The `dxos` plugin ships three `mcp_tool` hooks (`tools/claude/plugins/dxos/hooks/hooks.json`) that
+call `org.dxos.operation.tasks.recordSession` through the bundled `plugin:dxos:composer` server,
+upserting a `RemoteSession` object keyed on the harness `session_id`:
+
+| Event | Sends | Why there |
+| --- | --- | --- |
+| `UserPromptSubmit` | `sessionId`, `cwd` | The session's heartbeat, and its open. **Not `SessionStart`** — an `mcp_tool` hook needs an already-connected server and `SessionStart` fires before the connection exists, so it can only answer "not connected". The upsert makes the first prompt indistinguishable from a later check-in. |
+| `Stop` | `sessionId`, `${last_assistant_message}` | The turn's final message becomes the object's prose `lastMessage` — the cheapest honest summary that does not read the transcript. |
+| `SessionEnd`, matched `logout\|prompt_input_exit\|other` | `sessionId`, `state: finished` | Its `resume` and `clear` reasons fire while the user is still working, so a blanket close would mark a paused session finished. |
+
+`bash .claude/scripts/plugin-hooks.test.sh` checks the shape of that file. It exists because a
+handler placed at the wrong depth is still valid JSON and the harness simply ignores it — the hook
+then never fires, silently, which is how the prompt-submit report shipped broken once.
+
+They live in the plugin rather than this `settings.json` because the plugin is what bundles the
+server they call: installing it is the consent, and a contributor who has not installed it fires
+nothing. Three details are load-bearing:
+
+- **The call goes through the server's dispatcher.** `composer.dxos.network/mcp` advertises
+  `queryOperations` / `invokeOperation` / `loadSkill` / `whoami`, not one tool per verb, so the
+  operation key is an argument to `invokeOperation`. (A host that projects verbs individually would
+  name this one `tasks-record-session` — hyphens, from `Operation.toolNameFromKey`.)
+- **The heartbeat sends no `state`.** A prompt says the session is alive, not what it is doing;
+  sending `running` every turn would fight the terminal state a close already wrote.
+- **No `spaceId` is passed**, so the write lands in the server's session default. A repo that wants
+  its sessions in a specific space should drive the verb through `/dxos:project`, whose directive
+  resolves the committed binding — a hook cannot read a file.
+
+Nothing depends on the close landing: `SessionEnd` cannot block and a reclaimed cloud container
+never fires it, which is why the type carries `lastCheckedIn` and an `unknown` state — readers age
+a stale `running` session out by its heartbeat rather than trusting a close event.
+
 ### Commands
 
 A slash command is a markdown file under `.claude/commands/` (e.g.

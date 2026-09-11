@@ -2,12 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as GraphPath from '@dxos/app-toolkit/GraphPath';
-
-/**
- * Pinned (non-space) workspace ID anchoring the registry's graph subtree.
- */
-export const REGISTRY_ID = GraphPath.pinnedWorkspaceId('dxos:plugin-registry');
+/** Pinned (non-space) workspace ID anchoring the registry's graph subtree, and its URL workspace token. */
+export const REGISTRY_ID = 'dxos:registry';
 
 // A registry category node id is the bare category name (e.g. `bundled`), which doubles as its URL
 // segment (`category/<name>`); the graph builder, the category surfaces and `getCategoryPredicate` all

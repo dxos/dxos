@@ -45,6 +45,12 @@ export type BootLoaderOptions = {
   markSvg?: string;
 
   /**
+   * A CSS filter applied to the mark — `hue-rotate(82deg)` turns the released blue mark purple —
+   * so a channel recolours the one piece of artwork instead of shipping a generated copy.
+   */
+  markFilter?: string;
+
+  /**
    * URL of the icon sprite the plugin activation row resolves its `<use href>` against; defaults
    * to `/icons.svg`. A static asset, so the row draws before any app bundle loads.
    */
@@ -166,6 +172,7 @@ const getLoaderBundle = (): Promise<string> => (bundlePromise ??= compileLoaderB
 export const bootLoaderPlugin = ({
   status,
   markSvg,
+  markFilter,
   spritePath,
   include = ['index.html'],
 }: BootLoaderOptions = {}): Plugin => {
@@ -202,7 +209,7 @@ export const bootLoaderPlugin = ({
         {
           tag: 'script',
           injectTo: 'body-prepend',
-          children: `window.__BOOT_LOADER_CONFIG__=${JSON.stringify({ rootId, markSvg, status, spritePath })};`,
+          children: `window.__BOOT_LOADER_CONFIG__=${JSON.stringify({ rootId, markSvg, markFilter, status, spritePath })};`,
         },
         {
           tag: 'script',

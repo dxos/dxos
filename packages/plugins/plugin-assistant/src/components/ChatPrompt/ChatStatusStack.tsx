@@ -2,12 +2,15 @@
 // Copyright 2026 DXOS.org
 //
 
+import { useAtomValue } from '@effect/atom-react/Hooks';
 import React from 'react';
 
 import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
-import { ChatActivity, ChatActivityView, type ChatActivityViewProps } from './ChatActivity';
+// From the context module rather than the `../Chat` barrel, which imports this file.
+import { useChatContext } from '../Chat/context';
+import { ChatActivity, type ChatActivityProps } from './ChatActivity';
 import { ChatStatus, ChatStatusView, type ChatStatusViewProps } from './ChatStatus';
 
 const CHAT_STATUS_STACK_NAME = 'Chat.StatusStack';
@@ -27,22 +30,25 @@ export type ChatStatusStackProps = ThemedClassName<{
  * numbers rather than an afterthought below them. Composed here rather than in the container so the
  * order is asserted and screenshotted in one story ({@link ChatStatusStackView}).
  */
-export const ChatStatusStack = ({ classNames, rowClassNames, pillClassNames }: ChatStatusStackProps) => (
-  <div className={mx('flex flex-col', classNames)}>
-    <div className={rowClassNames}>
-      <ChatActivity />
+export const ChatStatusStack = ({ classNames, rowClassNames, pillClassNames }: ChatStatusStackProps) => {
+  const { processor } = useChatContext(CHAT_STATUS_STACK_NAME);
+  const activity = useAtomValue(processor.activity);
+
+  return (
+    <div className={mx('flex flex-col', classNames)}>
+      <div className={rowClassNames}>
+        <ChatActivity activity={activity} />
+      </div>
+      <div className={rowClassNames}>
+        <ChatStatus classNames={pillClassNames} />
+      </div>
     </div>
-    <div className={rowClassNames}>
-      <ChatStatus classNames={pillClassNames} />
-    </div>
-  </div>
-);
+  );
+};
 
 ChatStatusStack.displayName = CHAT_STATUS_STACK_NAME;
 
-export type ChatStatusStackViewProps = ChatStatusStackProps &
-  ChatStatusViewProps &
-  Pick<ChatActivityViewProps, 'activity'>;
+export type ChatStatusStackViewProps = ChatStatusStackProps & ChatStatusViewProps & Pick<ChatActivityProps, 'activity'>;
 
 /**
  * The stack given resolved values. Split from {@link ChatStatusStack} so both rows can be mounted
@@ -57,7 +63,7 @@ export const ChatStatusStackView = ({
 }: ChatStatusStackViewProps) => (
   <div className={mx('flex flex-col', classNames)}>
     <div className={rowClassNames}>
-      <ChatActivityView activity={activity} />
+      <ChatActivity activity={activity} />
     </div>
     <div className={rowClassNames}>
       <ChatStatusView {...statusProps} classNames={pillClassNames} />

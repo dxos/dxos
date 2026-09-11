@@ -70,6 +70,13 @@ export const getDynamicLabel = createFactory(
 // Constants and stable callbacks.
 //
 
+/**
+ * Whether a workspace sits in the rail's pinned region rather than among the space tabs. Declared by
+ * the workspace itself through its disposition, so any workspace opts in by placing itself there.
+ */
+export const isPinnedWorkspace = (node: Pick<AppGraphNode.Node, 'properties'>): boolean =>
+  AppGraphNode.hasDisposition(node, ['pin-end', 'pin-start', 'user-account']);
+
 export const CACHEABLE_PROPS: string[] = ['label', 'icon', 'role'];
 export const ACCEPT_ECHO_CLASS: Set<string> = new Set(['echo']);
 

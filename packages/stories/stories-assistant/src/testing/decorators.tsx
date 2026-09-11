@@ -57,6 +57,7 @@ import * as ClientEvents from '@dxos/plugin-client/ClientEvents';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import * as MarkdownOperationHandlerSet from '@dxos/plugin-markdown/MarkdownOperationHandlerSet';
 import * as MarkdownSkill from '@dxos/plugin-markdown/MarkdownSkill';
+import { MarkdownPlugin } from '@dxos/plugin-markdown/testing';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
 import * as RoutineCapabilities from '@dxos/plugin-routine/RoutineCapabilities';
 import * as RoutinePlugin from '@dxos/plugin-routine/RoutinePlugin';
@@ -194,6 +195,9 @@ const toStoryDecoratorsProps = ({
     ...types,
   ],
   plugins: [
+    // Registers the document card surface. Without it a seeded `Markdown.Document` has no card of
+    // its own and falls through to `plugin-preview`'s JSON dump, which is the last-resort surface.
+    MarkdownPlugin.make(),
     PreviewPlugin.make(),
     RoutinePlugin.make(),
     AssistantPlugin.make(

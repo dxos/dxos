@@ -9,13 +9,13 @@ import { TogglePanel, type TogglePanelRootProps } from '@dxos/react-ui-component
 import { Accordion } from '@dxos/react-ui-list';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { type ContentBlock } from '@dxos/types';
-import { type XmlWidgetProps, getXmlTextChild } from '@dxos/ui-editor';
+import { type WidgetProps, getXmlTextChild } from '@dxos/ui-editor';
 import { mx } from '@dxos/ui-theme';
 import { safeParseJson } from '@dxos/util';
 
 import { translationKey } from '../translations';
 
-export type ToolWidgetProps = XmlWidgetProps;
+export type ToolWidgetProps = WidgetProps;
 
 /**
  * A run of tool blocks as one collapsible panel with a row per call. The `<toolkit>` tag carries

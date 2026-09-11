@@ -15,7 +15,7 @@ import {
   createEditorController,
   useEditorContext,
 } from '@dxos/react-ui-editor';
-import { type XmlWidgetState } from '@dxos/ui-editor';
+import { type WidgetState } from '@dxos/ui-editor';
 import { Merge, isNonNullable } from '@dxos/util';
 
 import {
@@ -94,7 +94,7 @@ export const MarkdownEditorProvider = ({
   onViewModeChange,
 }: MarkdownEditorProviderProps) => {
   // Widget portals driven by xmlTags.
-  const [widgets, setWidgets] = useState<XmlWidgetState[]>([]);
+  const [widgets, setWidgets] = useState<WidgetState[]>([]);
 
   // Context menu options (Editor.Root calls useEditorMenu with these props).
   const menuOptions = useEditorMenuOptions({ slashCommandGroups, onLinkQuery });

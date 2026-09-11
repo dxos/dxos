@@ -43,6 +43,27 @@ describe('ScriptedLanguageModel', () => {
       });
     });
 
+    // The default nesting models Anthropic's wire shape, which is why no scripted test could
+    // reproduce the OpenAI-dialect crash until this option existed.
+    test('defers every tool-params-end to the end of the turn when asked', ({ expect }) => {
+      const parts = __testing.encodeStreamTurn(
+        [toolCall('alpha', { x: 1 }), toolCall('beta', { y: 2 })],
+        0,
+        'tool-calls',
+        { deferToolEnds: true },
+      );
+      expect(parts.map((part) => [part.type, (part as { id?: string }).id])).toEqual([
+        ['response-metadata', 'msg_0'],
+        ['tool-params-start', 'toolu_0_0'],
+        ['tool-params-delta', 'toolu_0_0'],
+        ['tool-params-start', 'toolu_0_1'],
+        ['tool-params-delta', 'toolu_0_1'],
+        ['tool-params-end', 'toolu_0_0'],
+        ['tool-params-end', 'toolu_0_1'],
+        ['finish', undefined],
+      ]);
+    });
+
     test('encodes an aggregated (non-streamed) tool call', ({ expect }) => {
       const parts = __testing.encodeTurn([toolCall('Calculator', { input: '2 + 2' }, 'call-1')], 0, 'tool-calls');
       expect(parts.map((part) => part.type)).toEqual(['response-metadata', 'tool-call', 'finish']);

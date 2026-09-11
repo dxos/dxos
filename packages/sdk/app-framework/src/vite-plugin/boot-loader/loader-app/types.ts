@@ -89,6 +89,8 @@ export type BootLoaderConfig = {
   rootId?: string;
   /** Inline SVG markup for the brand mark rendered inside the ring. */
   markSvg?: string;
+  /** A CSS filter over the mark — how a channel recolours the released artwork without its own file. */
+  markFilter?: string;
   /** Initial status text rendered before the host fires its first `status(...)`. */
   status?: string;
   /**
