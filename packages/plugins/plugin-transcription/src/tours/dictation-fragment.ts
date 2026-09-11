@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import type * as Tour from '@dxos/plugin-support/Tour';
+import type * as Tour from '@dxos/app-toolkit/Tour';
 
 // Targets the control's own testid: the graph action is a `custom` variant that renders its own
 // element, so a `testId` on the action's properties never reaches the DOM.

@@ -3,7 +3,7 @@
 //
 
 import * as Plugin from '@dxos/app-framework/Plugin';
-import type * as Tour from '@dxos/plugin-support/Tour';
+import type * as Tour from '@dxos/app-toolkit/Tour';
 
 import {
   AppGraphBuilder,

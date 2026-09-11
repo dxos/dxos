@@ -5,10 +5,10 @@
 import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import * as MarkdownCapabilities from '@dxos/plugin-markdown/MarkdownCapabilities';
 import * as MarkdownEvents from '@dxos/plugin-markdown/MarkdownEvents';
-import * as SupportCapabilities from '@dxos/plugin-support/SupportCapabilities';
 
 import { meta } from '#meta';
 import { translations } from '#translations';
@@ -75,7 +75,7 @@ export const TranscriptionSettings = AppCapability.settings(() => import('./sett
 // Lazy: schemas in the plugin definition's static closure drag their barrels onto the boot path.
 export const TourFragment = Capability.lazyModule(
   'TourFragment',
-  { provides: [SupportCapabilities.TourFragment], environments: [] },
+  { provides: [AppCapabilities.TourFragment], environments: [] },
   () => import('./tour-fragment.ts'),
 );
 export const Translations = AppCapability.translations(translations);

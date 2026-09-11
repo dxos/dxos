@@ -7,7 +7,7 @@ import React, { useState } from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
-import type * as Tour from '@dxos/plugin-support/Tour';
+import type * as Tour from '@dxos/app-toolkit/Tour';
 import { corePlugins } from '@dxos/plugin-testing';
 import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { Button, IconButton, Panel, Toolbar } from '@dxos/react-ui';

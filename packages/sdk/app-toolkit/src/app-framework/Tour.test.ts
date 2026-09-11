@@ -2,12 +2,15 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Schema from 'effect/Schema';
 import { describe, test } from 'vitest';
 
+import { DXN, Obj, Type } from '@dxos/echo';
 import { Position } from '@dxos/util';
 
-import * as Support from './Support.ts';
 import * as Tour from './Tour.ts';
+
+const Widget = Type.makeObject(DXN.make('com.example.test.Widget', '0.1.0'))(Schema.Struct({ name: Schema.String }));
 
 const loader = (name: string) => async () => [{ target: name, title: name, description: name }];
 
@@ -76,12 +79,11 @@ describe('matchers', () => {
   });
 
   test('a type matcher rejects an absent subject, so it never reads as global', ({ expect }) => {
-    expect(Tour.whenType(Support.Ticket)(undefined)).toBe(false);
+    expect(Tour.whenType(Widget)(undefined)).toBe(false);
   });
 
   test('a type matcher accepts its own type and nothing else', ({ expect }) => {
-    const ticket = Support.make({ title: 'x' });
-    expect(Tour.whenType(Support.Ticket)(ticket)).toBe(true);
-    expect(Tour.whenType(Support.Ticket)({ typename: 'org.dxos.type.document' })).toBe(false);
+    expect(Tour.whenType(Widget)(Obj.make(Widget, { name: 'x' }))).toBe(true);
+    expect(Tour.whenType(Widget)({ typename: 'org.dxos.type.document' })).toBe(false);
   });
 });

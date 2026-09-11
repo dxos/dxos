@@ -6,10 +6,10 @@ import * as Effect from 'effect/Effect';
 
 import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as Capability from '@dxos/app-framework/Capability';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import * as MarkdownCapabilities from '@dxos/plugin-markdown/MarkdownCapabilities';
 import * as MarkdownEvents from '@dxos/plugin-markdown/MarkdownEvents';
-import * as SupportCapabilities from '@dxos/plugin-support/SupportCapabilities';
 import { translations as threadTranslations } from '@dxos/react-ui-thread/translations';
 
 import { meta } from '#meta';
@@ -105,7 +105,7 @@ export const UndoMappings = AppCapability.undoMappings(() => import('./undo-mapp
 });
 export const TourFragment = Capability.lazyModule(
   'TourFragment',
-  { provides: [SupportCapabilities.TourFragment], environments: [] },
+  { provides: [AppCapabilities.TourFragment], environments: [] },
   () => import('./tour-fragment.ts'),
 );
 export const Translations = AppCapability.translations([...translations, ...threadTranslations]);

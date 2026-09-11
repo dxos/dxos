@@ -4,11 +4,11 @@
 
 import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as Capability from '@dxos/app-framework/Capability';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import * as AssistantCapabilities from '@dxos/plugin-assistant/AssistantCapabilities';
 import * as AssistantEvents from '@dxos/plugin-assistant/AssistantEvents';
 import * as SpaceCapability from '@dxos/plugin-space/SpaceCapability';
-import * as SupportCapabilities from '@dxos/plugin-support/SupportCapabilities';
 import * as TasksCapabilities from '@dxos/plugin-tasks/TasksCapabilities';
 import * as TasksEvents from '@dxos/plugin-tasks/TasksEvents';
 
@@ -59,7 +59,7 @@ export const Templates = Capability.lazyModule(
 // Lazy: a schema in the plugin definition's static closure drags its barrel onto the boot path.
 export const ProjectTour = Capability.lazyModule(
   'ProjectTour',
-  { provides: [SupportCapabilities.Tour], environments: [] },
+  { provides: [AppCapabilities.Tour], environments: [] },
   () => import('./project-tour.ts'),
 );
 

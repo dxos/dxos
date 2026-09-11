@@ -5,9 +5,9 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 
 import { useCapabilities } from '@dxos/app-framework/ui';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as Tour from '@dxos/app-toolkit/Tour';
 import { log } from '@dxos/log';
-
-import { SupportCapabilities, Tour } from '#types';
 
 import { useAttendedData } from './useAttendedData.ts';
 
@@ -15,7 +15,7 @@ const NO_STEPS: Tour.Step[] = [];
 
 /** Tours that apply to `data`; `undefined` selects the global tours. */
 export const useTours = (data?: unknown): readonly Tour.Definition[] => {
-  const tours = useCapabilities(SupportCapabilities.Tour);
+  const tours = useCapabilities(AppCapabilities.Tour);
   return useMemo(() => Tour.matching(tours, data), [tours, data]);
 };
 
@@ -25,8 +25,8 @@ export const useTours = (data?: unknown): readonly Tour.Definition[] => {
  * settle.
  */
 export const useTourSteps = (tourId: string | undefined, running: boolean): Tour.Step[] => {
-  const tours = useCapabilities(SupportCapabilities.Tour);
-  const fragments = useCapabilities(SupportCapabilities.TourFragment);
+  const tours = useCapabilities(AppCapabilities.Tour);
+  const fragments = useCapabilities(AppCapabilities.TourFragment);
   const data = useAttendedData();
   const subject = useRef(data);
   subject.current = data;

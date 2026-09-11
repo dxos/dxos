@@ -22,8 +22,6 @@ export default defineConfig({
     Settings: 'src/types/Settings.ts',
     Support: 'src/types/Support.ts',
     SupportCapabilities: 'src/types/SupportCapabilities.ts',
-    SupportCapability: 'src/types/SupportCapability.ts',
-    Tour: 'src/types/Tour.ts',
     SupportOperation: 'src/types/SupportOperation.ts',
     types: 'src/types/index.ts',
   },

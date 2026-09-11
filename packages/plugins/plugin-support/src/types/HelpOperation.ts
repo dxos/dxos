@@ -21,7 +21,7 @@ export const Start = Operation.make({
   output: Schema.Void,
 });
 
-/** Runs a tour registered via `SupportCapabilities.Tour`, by id, and records it as seen. */
+/** Runs a tour registered via `AppCapabilities.Tour`, by id, and records it as seen. */
 export const StartTour = Operation.make({
   meta: {
     key: DXN.make('org.dxos.operation.support.startTour'),

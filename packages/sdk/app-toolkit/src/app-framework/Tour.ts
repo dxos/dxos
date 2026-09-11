@@ -5,11 +5,12 @@
 // @import-as-namespace
 
 import type * as CapabilityManager from '@dxos/app-framework/CapabilityManager';
-// eslint-disable-next-line @dxos/rules/import-as-namespace
-import type * as Translations from '@dxos/app-toolkit/Translations';
 import { Obj, Type } from '@dxos/echo';
 import type { TourStepPlacement } from '@dxos/react-ui';
 import { Position } from '@dxos/util';
+
+// eslint-disable-next-line @dxos/rules/import-as-namespace
+import type * as Translations from '../app/Translations.ts';
 
 /**
  * One stop of a guided tour.

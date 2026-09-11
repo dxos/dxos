@@ -7,7 +7,6 @@ import * as Effect from 'effect/Effect';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { Obj } from '@dxos/echo';
-import * as SupportCapabilities from '@dxos/plugin-support/SupportCapabilities';
 
 /**
  * Adds a comments step to any tour running on an object that can carry comments, matched against the
@@ -17,7 +16,7 @@ export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const capabilities = yield* Capability.Service;
 
-    return Capability.contribute(SupportCapabilities.TourFragment, {
+    return Capability.contribute(AppCapabilities.TourFragment, {
       matches: (data) =>
         Obj.isObject(data) &&
         capabilities.getAll(AppCapabilities.CommentConfig).some(({ id }) => id === Obj.getTypename(data)),

@@ -4,7 +4,7 @@
 
 import { type Context as ReactContext, createContext } from 'react';
 
-import type * as Tour from '@dxos/plugin-support/Tour';
+import type * as Tour from '@dxos/app-toolkit/Tour';
 
 export type TourContextType = {
   running: boolean;

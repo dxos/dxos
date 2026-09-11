@@ -151,9 +151,6 @@
       "path": "../plugin-space"
     },
     {
-      "path": "../plugin-support"
-    },
-    {
       "path": "../plugin-testing"
     }
   ]

@@ -7,7 +7,6 @@ import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabilities';
 import * as SpaceCapability from '@dxos/plugin-space/SpaceCapability';
-import * as SupportCapabilities from '@dxos/plugin-support/SupportCapabilities';
 import { translations as editorTranslations } from '@dxos/react-ui-editor/translations';
 
 import { translations } from '#translations';
@@ -53,7 +52,7 @@ export const Translations = AppCapability.translations([...translations, ...edit
 // Lazy: a schema in the plugin definition's static closure drags its barrel onto the boot path.
 export const DocumentTour = Capability.lazyModule(
   'DocumentTour',
-  { provides: [SupportCapabilities.Tour], environments: [] },
+  { provides: [AppCapabilities.Tour], environments: [] },
   () => import('./document-tour.ts'),
 );
 export const UndoMappings = AppCapability.undoMappings(() => import('./undo-mappings.ts'));

@@ -5,14 +5,16 @@
 import { useEffect } from 'react';
 
 import { useAtomCapabilityState, useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as Tour from '@dxos/app-toolkit/Tour';
 
 import { useAttendedData, useAutoToursEnabled } from '#hooks';
-import { HelpCapabilities, HelpOperation, SupportCapabilities, Tour } from '#types';
+import { HelpCapabilities, HelpOperation } from '#types';
 
 /** Runs a matching `auto` tour the first time the user attends something it applies to. */
 export const TourAutoStart = () => {
   const enabled = useAutoToursEnabled();
-  const tours = useCapabilities(SupportCapabilities.Tour);
+  const tours = useCapabilities(AppCapabilities.Tour);
   const [state] = useAtomCapabilityState(HelpCapabilities.State);
   const { invokePromise } = useOperationInvoker();
 
