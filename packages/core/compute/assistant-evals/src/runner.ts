@@ -41,8 +41,8 @@ import { createComposerTestApp } from '@dxos/plugin-testing/harness';
 import { Employer, Organization, Person } from '@dxos/types';
 import { trim } from '@dxos/util';
 
-import * as Scorer from './Scorer.ts';
 import { startMcpHost } from './mcp-host.ts';
+import * as Scorer from './Scorer.ts';
 import { getDefaultSkills } from './skills.ts';
 
 const DEFAULT_MODEL: DXN.DXN = DXN.make('com.anthropic.model.claude-opus-5.default');
