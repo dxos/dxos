@@ -7,13 +7,13 @@ import { describe, expect, expectTypeOf, test } from 'vitest';
 
 import { EID } from '@dxos/keys';
 
-import * as Entity from './Entity';
-import { SnapshotKindId } from './internal';
-import * as Obj from './Obj';
-import * as Ref from './Ref';
-import * as Relation from './Relation';
-import { TestSchema } from './testing';
-import type * as Type from './Type';
+import * as Entity from './Entity.ts';
+import { SnapshotKindId } from './internal/index.ts';
+import * as Obj from './Obj.ts';
+import * as Ref from './Ref.ts';
+import * as Relation from './Relation.ts';
+import { TestSchema } from './testing/index.ts';
+import type * as Type from './Type.ts';
 
 describe('Obj', () => {
   describe('make', () => {

@@ -8,7 +8,7 @@ import { Obj, Ref, Tag } from '@dxos/echo';
 import { SchemaAST } from '@dxos/effect';
 import { EID } from '@dxos/keys';
 
-import { omitId } from '../../util';
+import { omitId } from '../../util/index.ts';
 
 /**
  * Form-field key for the synthetic meta-tags array spliced into property/create forms.

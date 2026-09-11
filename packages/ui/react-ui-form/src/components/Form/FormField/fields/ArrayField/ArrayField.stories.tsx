@@ -13,8 +13,8 @@ import { trim } from '@dxos/util';
 
 import { translations } from '#translations';
 
-import { TestLayout } from '../../../../../testing';
-import { Form } from '../../../Form';
+import { TestLayout } from '../../../../../testing/index.ts';
+import { Form } from '../../../Form.tsx';
 
 // Mirrors the structure of `Pipeline` (`@dxos/types`): a scalar header plus an
 // array of `Column`-like structs. The array is the field we render as either a

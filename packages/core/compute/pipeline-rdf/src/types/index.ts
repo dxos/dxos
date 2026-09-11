@@ -2,10 +2,10 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './Assertion';
-export * from './Attribution';
-export * from './Entity';
-export * from './Extract';
-export * from './Fact';
-export * from './Factuality';
-export * from './Illocution';
+export * from './Assertion.ts';
+export * from './Attribution.ts';
+export * from './Entity.ts';
+export * from './Extract.ts';
+export * from './Fact.ts';
+export * from './Factuality.ts';
+export * from './Illocution.ts';

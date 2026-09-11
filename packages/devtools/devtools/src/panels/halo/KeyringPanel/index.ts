@@ -2,4 +2,4 @@
 // Copyright 2020 DXOS.org
 //
 
-export { KeyringPanel as default } from './KeyringPanel';
+export { KeyringPanel as default } from './KeyringPanel.tsx';

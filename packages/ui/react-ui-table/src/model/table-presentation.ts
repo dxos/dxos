@@ -20,9 +20,9 @@ import { formatForDisplay } from '@dxos/schema';
 import { VIEW_FIELD_LIMIT } from '@dxos/schema';
 import { mx } from '@dxos/ui-theme';
 
-import { tableButtons, tableControls } from '../util';
-import { type SelectionMode } from './selection-model';
-import { type TableModel, type TableRow } from './table-model';
+import { tableButtons, tableControls } from '../util/index.ts';
+import { type SelectionMode } from './selection-model.ts';
+import { type TableModel, type TableRow } from './table-model.ts';
 
 /**
  * Presentation layer for a table component, handling cell rendering and grid display logic.

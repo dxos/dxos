@@ -12,7 +12,7 @@ import * as ObservabilityOperation from '@dxos/plugin-observability/Observabilit
 
 import { InboxOperation } from '#types';
 
-import { getMailboxPath } from '../paths';
+import { getMailboxPath } from '../paths.ts';
 
 const handler: Operation.WithHandler<typeof InboxOperation.AddMailbox> = InboxOperation.AddMailbox.pipe(
   Operation.withHandler(

@@ -6,9 +6,9 @@ import { EditorSelection, EditorState } from '@codemirror/state';
 import { type Command, EditorView } from '@codemirror/view';
 import { describe, test } from 'vitest';
 
-import { join } from '../../../util';
-import { createMarkdownExtensions } from '../../language/markdown';
-import { blockSelectionField, setBlockSelection } from '../blocks';
+import { join } from '../../../util/index.ts';
+import { createMarkdownExtensions } from '../../language/markdown/index.ts';
+import { blockSelectionField, setBlockSelection } from '../blocks/index.ts';
 import {
   deleteItem,
   getItemText,
@@ -19,8 +19,8 @@ import {
   moveItemUp,
   replaceItemWithLink,
   toggleTask,
-} from './commands';
-import { outlinerTree } from './tree';
+} from './commands.ts';
+import { outlinerTree } from './tree.ts';
 
 const LINES = [
   '- [ ] 1',

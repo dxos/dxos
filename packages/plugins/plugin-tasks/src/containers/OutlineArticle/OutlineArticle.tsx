@@ -18,7 +18,7 @@ import { Outline as OutlineType, Task, TaskSet } from '@dxos/types';
 import { Outline, type OutlineController } from '#components';
 import { meta } from '#meta';
 
-import { useMarkdownExtensions } from '../../hooks';
+import { useMarkdownExtensions } from '../../hooks/index.ts';
 
 export type OutlineArticleProps = AppSurface.ObjectArticleProps<OutlineType.Outline> & {
   /**

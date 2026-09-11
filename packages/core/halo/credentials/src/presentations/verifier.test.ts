@@ -19,9 +19,9 @@ import {
   SpaceMemberSchema,
 } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
-import { chainCredentialOf, createCredential, proofOf } from '../credentials';
-import { signPresentation } from './presentation';
-import { verifyPresentation, verifyPresentationSignature } from './verifier';
+import { chainCredentialOf, createCredential, proofOf } from '../credentials/index.ts';
+import { signPresentation } from './presentation.ts';
+import { verifyPresentation, verifyPresentationSignature } from './verifier.ts';
 
 describe('presentation verifier', () => {
   describe('chain', () => {

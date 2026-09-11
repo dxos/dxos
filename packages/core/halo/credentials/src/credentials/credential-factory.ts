@@ -11,9 +11,9 @@ import { anyPackBare, fromDate, fromPublicKey, toPublicKey } from '@dxos/protoco
 import { bufRegistry } from '@dxos/protocols/buf-registry';
 import { type Chain, type Credential, CredentialSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
-import { type CredentialAssertion } from './assertions';
-import { getCredentialProofPayload } from './signing';
-import { SIGNATURE_TYPE_ED25519, verifyChain } from './verifier';
+import { type CredentialAssertion } from './assertions.ts';
+import { getCredentialProofPayload } from './signing.ts';
+import { SIGNATURE_TYPE_ED25519, verifyChain } from './verifier.ts';
 
 export type CreateCredentialSignerProps = {
   subject: PublicKey;

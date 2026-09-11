@@ -9,7 +9,7 @@ import * as Operation from '@dxos/compute/Operation';
 
 import { SlackOperation } from '#types';
 
-import { SlackApi } from '../services';
+import { SlackApi } from '../services/index.ts';
 
 /**
  * Friendly label for a Slack conversation, derived from its type:

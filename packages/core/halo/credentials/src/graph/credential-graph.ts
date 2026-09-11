@@ -8,7 +8,7 @@ import { log } from '@dxos/log';
 import { type Credential } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { type AsyncCallback, Callback, ComplexMap, ComplexSet } from '@dxos/util';
 
-import { credentialIdOf, issuanceDateOf, issuerOf, subjectIdOf } from '../credentials/credential-keys';
+import { credentialIdOf, issuanceDateOf, issuerOf, subjectIdOf } from '../credentials/credential-keys.ts';
 
 export class CredentialGraph<A, State> {
   /**

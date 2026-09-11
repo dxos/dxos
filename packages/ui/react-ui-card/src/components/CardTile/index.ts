@@ -2,4 +2,4 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './CardTile';
+export * from './CardTile.tsx';

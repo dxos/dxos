@@ -9,7 +9,7 @@ import * as Operation from '@dxos/compute/Operation';
 
 import { SheetCapabilities, SheetOperation } from '#types';
 
-import { parseThreadAnchorAsCellRange } from '../integrations/thread-ranges';
+import { parseThreadAnchorAsCellRange } from '../integrations/thread-ranges.ts';
 
 const handler: Operation.WithHandler<typeof SheetOperation.ScrollToAnchor> = SheetOperation.ScrollToAnchor.pipe(
   Operation.withHandler(

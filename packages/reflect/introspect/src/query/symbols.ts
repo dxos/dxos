@@ -2,9 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
-import type { PackageSymbols } from '../indexer';
-import { parseRef } from '../refs';
-import type { PackageDetail, SymbolDetail, SymbolInclude, SymbolKind, SymbolMatch } from '../types';
+import type { PackageSymbols } from '../indexer/index.ts';
+import { parseRef } from '../refs.ts';
+import type { PackageDetail, SymbolDetail, SymbolInclude, SymbolKind, SymbolMatch } from '../types.ts';
 
 const MAX_RESULTS = 50;
 

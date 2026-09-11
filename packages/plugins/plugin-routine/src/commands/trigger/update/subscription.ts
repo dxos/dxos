@@ -18,8 +18,8 @@ import * as Trigger from '@dxos/compute/Trigger';
 import { Database, Filter, JsonSchema, Obj, Query, Ref } from '@dxos/echo';
 import { DXN, EID } from '@dxos/keys';
 
-import { Deep, Delay, Enabled, Input, TriggerId, Typename } from '../options';
-import { printTrigger, promptForSchemaInput, selectFunction, selectTrigger } from '../util';
+import { Deep, Delay, Enabled, Input, TriggerId, Typename } from '../options.ts';
+import { printTrigger, promptForSchemaInput, selectFunction, selectTrigger } from '../util.ts';
 
 export const subscription = Command.make(
   'subscription',

@@ -7,8 +7,8 @@ import { describe, expect, test } from 'vitest';
 import { DXN, EID, EntityId } from '@dxos/keys';
 import { safeStringify } from '@dxos/util';
 
-import * as Database from './Database';
-import * as Json from './Json';
+import * as Database from './Database.ts';
+import * as Json from './Json.ts';
 
 /** Mint a random ECHO object id usable as both a stub-db key and a DXN payload. */
 const newId = (): string => EntityId.random();

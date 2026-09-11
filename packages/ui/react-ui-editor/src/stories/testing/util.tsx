@@ -22,7 +22,7 @@ import { safeUrl } from '@dxos/util';
 
 random.seed(1);
 
-import { str } from '../../util';
+import { str } from '../../util/index.ts';
 
 export const num = () => random.number.int({ min: 0, max: 9999 }).toLocaleString();
 

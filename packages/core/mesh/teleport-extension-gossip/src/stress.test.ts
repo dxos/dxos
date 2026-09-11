@@ -9,7 +9,7 @@ import { log } from '@dxos/log';
 import { TestBuilder } from '@dxos/teleport/testing';
 import { range } from '@dxos/util';
 
-import { TestAgent } from './testing';
+import { TestAgent } from './testing.ts';
 
 describe.skip('Presence stress-test ', () => {
   test('N peers chain', async () => {

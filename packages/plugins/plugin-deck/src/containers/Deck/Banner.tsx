@@ -12,7 +12,7 @@ import { mx, osTranslations } from '@dxos/ui-theme';
 import { meta } from '#meta';
 import { DeckRole } from '#types';
 
-import { CloseSidebarButton, ToggleSidebarButton } from '../Sidebar';
+import { CloseSidebarButton, ToggleSidebarButton } from '../Sidebar/index.ts';
 
 export const Banner = ({ variant, classNames }: ThemedClassName<{ variant?: 'topbar' | 'sidebar' }>) => {
   const { t } = useTranslation(meta.profile.key);

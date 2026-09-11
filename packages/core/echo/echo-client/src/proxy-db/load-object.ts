@@ -6,8 +6,8 @@ import { asyncTimeout } from '@dxos/async';
 import { type Obj } from '@dxos/echo';
 import { type AnyProperties } from '@dxos/echo/internal';
 
-import { type EntityManager } from '../core-db';
-import { getObjectCore } from '../echo-handler';
+import { type EntityManager } from '../core-db/index.ts';
+import { getObjectCore } from '../echo-handler/index.ts';
 
 /**
  * @param obj

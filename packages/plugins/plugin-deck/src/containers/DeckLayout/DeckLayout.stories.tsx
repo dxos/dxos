@@ -14,8 +14,8 @@ import { withLayout } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
 
-import { DeckStoryPlugin, storyItemId } from '../../testing';
-import { DeckLayout } from './DeckLayout';
+import { DeckStoryPlugin, storyItemId } from '../../testing/index.ts';
+import { DeckLayout } from './DeckLayout.tsx';
 
 const meta = {
   title: 'plugins/plugin-deck/containers/DeckLayout',

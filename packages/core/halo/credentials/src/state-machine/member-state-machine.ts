@@ -14,7 +14,7 @@ import {
 } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { ComplexMap } from '@dxos/util';
 
-import { getCredentialAssertion, issuerOf, subjectIdOf } from '../credentials';
+import { getCredentialAssertion, issuerOf, subjectIdOf } from '../credentials/index.ts';
 import {
   type ChainVertex,
   CredentialGraph,
@@ -22,7 +22,7 @@ import {
   type PathState,
   type StateScope,
   vertexCredential,
-} from '../graph/credential-graph';
+} from '../graph/credential-graph.ts';
 
 export interface MemberInfo {
   key: PublicKey;

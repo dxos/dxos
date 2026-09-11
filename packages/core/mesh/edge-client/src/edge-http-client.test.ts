@@ -8,9 +8,9 @@ import { afterEach, describe, it, test, vi } from 'vitest';
 import { Context } from '@dxos/context';
 import { type Presentation, PresentationSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
-import { createEphemeralEdgeIdentity } from './auth';
-import { EdgeHttpClient } from './edge-http-client';
-import { type EdgeIdentity } from './edge-identity';
+import { createEphemeralEdgeIdentity } from './auth.ts';
+import { EdgeHttpClient } from './edge-http-client.ts';
+import { type EdgeIdentity } from './edge-identity.ts';
 
 // TODO(burdon): Factor out config.
 const DEV_SERVER = 'https://dev.dxos.network';

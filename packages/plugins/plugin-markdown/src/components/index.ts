@@ -2,5 +2,5 @@
 // Copyright 2025 DXOS.org
 //
 
-export * from './MarkdownEditor';
-export * from './PreviewComponent';
+export * from './MarkdownEditor/index.ts';
+export * from './PreviewComponent/index.ts';

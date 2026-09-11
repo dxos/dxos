@@ -13,7 +13,7 @@ import * as Trigger from '@dxos/compute/Trigger';
 import { Context } from '@dxos/context';
 import { Database, Filter, Query } from '@dxos/echo';
 
-import { getTriggerRemoteStatus, printTrigger } from './util';
+import { getTriggerRemoteStatus, printTrigger } from './util.ts';
 
 export const list = Command.make(
   'list',

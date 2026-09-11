@@ -16,8 +16,8 @@ import {
 } from '@dxos/protocols/buf/example/testing/rpc_pb';
 import { createProtoRpcPeer } from '@dxos/rpc';
 
-import { Muxer } from './muxer';
-import { type RpcPort } from './rpc-port';
+import { Muxer } from './muxer.ts';
+import { type RpcPort } from './rpc-port.ts';
 
 type TestService = BufService<typeof TestServiceDesc>;
 

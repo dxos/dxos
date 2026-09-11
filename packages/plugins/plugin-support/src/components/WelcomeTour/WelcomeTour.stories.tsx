@@ -15,7 +15,7 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { translations } from '#translations';
 import { type Tour } from '#types';
 
-import { WelcomeTour } from './WelcomeTour';
+import { WelcomeTour } from './WelcomeTour.tsx';
 
 const steps: Tour.Step[] = [
   {

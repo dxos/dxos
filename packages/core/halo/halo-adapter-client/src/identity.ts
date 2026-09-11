@@ -38,7 +38,7 @@ import {
 } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { ComplexSet } from '@dxos/util';
 
-import { makeFlow, streamFromClientObservable, toShareOptions } from './util';
+import { makeFlow, streamFromClientObservable, toShareOptions } from './util.ts';
 
 /**
  * Narrows arbitrary profile metadata to what a `google.protobuf.Struct` can carry.

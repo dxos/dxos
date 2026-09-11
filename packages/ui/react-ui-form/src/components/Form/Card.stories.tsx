@@ -11,7 +11,7 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
 
-import { Form } from './Form';
+import { Form } from './Form.tsx';
 
 /**
  * Alignment harness for a form hosted inside a Card.

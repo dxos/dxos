@@ -8,7 +8,7 @@ import path from 'node:path';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
-import { type SchedulerEnvImpl } from '../../env';
+import { type SchedulerEnvImpl } from '../../env/index.ts';
 import {
   type Platform,
   type ReplicantBrain,
@@ -16,10 +16,10 @@ import {
   type TestPlan,
   type TestProps,
   onCleanupSignal,
-} from '../../plan';
-import { ClientReplicant, type SpaceDigest } from '../../replicants/client-replicant';
-import { describeError } from '../../util';
-import { type EdgeTarget, assertCanCleanUp, canonical, isDevLikeTarget, urlsFor } from '../edge-stress';
+} from '../../plan/index.ts';
+import { ClientReplicant, type SpaceDigest } from '../../replicants/client-replicant.ts';
+import { describeError } from '../../util.ts';
+import { type EdgeTarget, assertCanCleanUp, canonical, isDevLikeTarget, urlsFor } from '../edge-stress/index.ts';
 
 //
 // Spec.

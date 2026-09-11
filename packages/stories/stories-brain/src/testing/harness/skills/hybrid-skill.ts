@@ -12,7 +12,7 @@ import * as Template from '@dxos/compute/Template';
 import { DXN } from '@dxos/echo';
 import { trim } from '@dxos/util';
 
-import { SubjectIndex } from '../internal/subject-index';
+import { SubjectIndex } from '../internal/subject-index.ts';
 
 export const HYBRID_SKILL_KEY = 'org.dxos.stories-brain.skill.hybrid';
 

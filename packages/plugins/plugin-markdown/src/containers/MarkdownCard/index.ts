@@ -2,4 +2,4 @@
 // Copyright 2025 DXOS.org
 //
 
-export { MarkdownCard as default } from './MarkdownCard';
+export { MarkdownCard as default } from './MarkdownCard.tsx';

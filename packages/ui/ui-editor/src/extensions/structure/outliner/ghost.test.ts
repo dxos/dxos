@@ -6,9 +6,9 @@ import { EditorSelection, EditorState } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
 import { describe, test } from 'vitest';
 
-import { createMarkdownExtensions } from '../../language/markdown';
-import { ghost, insertTaskAtLine } from './ghost';
-import { outlinerTree } from './tree';
+import { createMarkdownExtensions } from '../../language/markdown/index.ts';
+import { ghost, insertTaskAtLine } from './ghost.ts';
+import { outlinerTree } from './tree.ts';
 
 const extensions = [createMarkdownExtensions(), outlinerTree(), ghost()];
 

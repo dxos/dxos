@@ -6,7 +6,7 @@ import { Provider } from '@dxos/ai';
 import { type AiServicePreset } from '@dxos/ai/testing';
 import { type DXN } from '@dxos/keys';
 
-import { MODELS } from './config';
+import { MODELS } from './config.ts';
 
 /**
  * A model configuration to benchmark. `preset` selects the AI backend layer and `provider` the model

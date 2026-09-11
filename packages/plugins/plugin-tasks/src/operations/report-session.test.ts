@@ -9,8 +9,8 @@ import { Database, Ref } from '@dxos/echo';
 import { TestDatabaseLayer } from '@dxos/echo-client/testing';
 import { RemoteSession, Task, TaskSet } from '@dxos/types';
 
-import listSessions from './list-sessions';
-import reportSession from './report-session';
+import listSessions from './list-sessions.ts';
+import reportSession from './report-session.ts';
 
 const types = [RemoteSession.RemoteSession, Task.Task, TaskSet.TaskSet];
 

@@ -10,7 +10,7 @@ import { withRegistry } from '@dxos/storybook-utils';
 
 import { translations } from '#translations';
 
-import { ReportSections } from './ReportSections';
+import { ReportSections } from './ReportSections.tsx';
 
 const meta = {
   title: 'plugins/plugin-ibkr/ReportSections',

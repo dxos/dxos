@@ -18,7 +18,7 @@ import {
 import { type InvitationsService } from '@dxos/protocols/rpc';
 import { trace } from '@dxos/tracing';
 
-import { type InvitationsManager } from './invitations-manager';
+import { type InvitationsManager } from './invitations-manager.ts';
 
 /**
  * Adapts invitation service observable to client/service stream.

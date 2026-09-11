@@ -10,10 +10,10 @@ import { log } from '@dxos/log';
 import { type Config as ConfigProto, ConfigSchema } from '@dxos/protocols/buf/dxos/config_pb';
 import { type IndexConfig, IndexConfigSchema, IndexKind_Kind } from '@dxos/protocols/buf/dxos/echo/indexing_pb';
 
-import { TraceReader } from '../analysys/traces';
-import { type SchedulerEnvImpl } from '../env';
-import { type Platform, type ReplicantsSummary, type TestPlan, type TestProps } from '../plan';
-import { EdgeReplicant } from '../replicants/edge-replicant';
+import { TraceReader } from '../analysys/traces.ts';
+import { type SchedulerEnvImpl } from '../env/index.ts';
+import { type Platform, type ReplicantsSummary, type TestPlan, type TestProps } from '../plan/index.ts';
+import { EdgeReplicant } from '../replicants/edge-replicant.ts';
 
 export type EdgeTestSpec = {
   platform: Platform;

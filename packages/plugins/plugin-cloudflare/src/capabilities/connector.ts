@@ -16,7 +16,7 @@ import { OAuthProvider } from '@dxos/protocols';
 
 import { CloudflareApi, CloudflareHttpClientLayer } from '#services';
 
-import { CLOUDFLARE_OAUTH_SCOPES, CLOUDFLARE_PROVIDER_ID, CLOUDFLARE_SOURCE } from '../constants';
+import { CLOUDFLARE_OAUTH_SCOPES, CLOUDFLARE_PROVIDER_ID, CLOUDFLARE_SOURCE } from '../constants.ts';
 
 /** `orDie` is safe: the coordinator catches defects from this hook and keeps the Connection. */
 const onTokenCreated: ConnectorSpec.OnTokenCreated = ({ accessToken }) =>

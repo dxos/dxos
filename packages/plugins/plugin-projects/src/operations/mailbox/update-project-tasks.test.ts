@@ -8,9 +8,9 @@ import * as Effect from 'effect/Effect';
 import { Database, Filter, Obj, Ref } from '@dxos/echo';
 import { Task } from '@dxos/types';
 
-import { scaffoldProject } from '../../templates';
-import { makeMessage, seed, testLayer } from './testing';
-import updateProjectTasks from './update-project-tasks';
+import { scaffoldProject } from '../../templates/index.ts';
+import { makeMessage, seed, testLayer } from './testing.ts';
+import updateProjectTasks from './update-project-tasks.ts';
 
 describe('update-project-tasks', () => {
   it.effect('tracks requests as tasks, idempotently, preserving user edits', () =>

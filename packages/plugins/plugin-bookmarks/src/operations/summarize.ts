@@ -20,7 +20,7 @@ import { trim } from '@dxos/util';
 
 import { BookmarkOperation } from '#types';
 
-import { extractReadableText, fetchPage } from '../util';
+import { extractReadableText, fetchPage } from '../util/index.ts';
 
 const handler: Operation.WithHandler<typeof BookmarkOperation.Summarize> = BookmarkOperation.Summarize.pipe(
   Operation.withHandler(

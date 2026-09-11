@@ -22,10 +22,10 @@ import { EID, EntityId, PublicKey, SpaceId, URI } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { openAndClose } from '@dxos/test-utils';
 
-import { Doc } from '../automerge';
-import { EchoTestBuilder, createTmpPath } from '../testing';
-import { createObject } from './echo-handler';
-import { getObjectCore, isEchoObject } from './echo-object-utils';
+import { Doc } from '../automerge/index.ts';
+import { EchoTestBuilder, createTmpPath } from '../testing/index.ts';
+import { createObject } from './echo-handler.ts';
+import { getObjectCore, isEchoObject } from './echo-object-utils.ts';
 
 const TEST_OBJECT: TestSchema.ExampleSchema = {
   string: 'foo',

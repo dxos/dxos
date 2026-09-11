@@ -12,8 +12,8 @@ import { SpanAttributes } from '@dxos/effect';
 import { SpaceId } from '@dxos/keys';
 import { SqlTransaction } from '@dxos/sql-sqlite';
 
-import { MIGRATIONS, MIGRATIONS_TABLE } from './migrations/tracker';
-import { chunkArray } from './utils';
+import { MIGRATIONS, MIGRATIONS_TABLE } from './migrations/tracker/index.ts';
+import { chunkArray } from './utils.ts';
 
 export const IndexCursor = Schema.Struct({
   /**

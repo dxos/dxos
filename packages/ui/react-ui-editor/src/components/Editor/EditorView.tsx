@@ -10,8 +10,8 @@ import { type ThemedClassName } from '@dxos/react-ui';
 import { initialSync } from '@dxos/ui-editor';
 import { mx } from '@dxos/ui-theme';
 
-import { type UseTextEditorProps, useTextEditor } from '../../hooks';
-import { type EditorController, createEditorController } from './controller';
+import { type UseTextEditorProps, useTextEditor } from '../../hooks/index.ts';
+import { type EditorController, createEditorController } from './controller.ts';
 
 export type EditorViewProps = ThemedClassName<
   {

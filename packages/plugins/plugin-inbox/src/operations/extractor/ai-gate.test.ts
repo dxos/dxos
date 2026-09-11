@@ -7,7 +7,7 @@ import { describe, test } from 'vitest';
 import { AiService } from '@dxos/ai';
 import { ServiceNotAvailableError } from '@dxos/compute';
 
-import { isAiServiceUnavailable } from './ai-gate';
+import { isAiServiceUnavailable } from './ai-gate.ts';
 
 describe('isAiServiceUnavailable', () => {
   test('true for a ServiceNotAvailableError naming the AiService tag (structured context)', ({ expect }) => {

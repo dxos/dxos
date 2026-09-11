@@ -10,7 +10,7 @@ import { Device_PresenceState, DeviceKind, DeviceType, useDevices } from '@dxos/
 import { Panel } from '@dxos/react-ui';
 import { type TablePropertyDefinition } from '@dxos/react-ui-table';
 
-import { MasterDetailTable } from '../../../components';
+import { MasterDetailTable } from '../../../components/index.ts';
 
 export const DeviceListPanel = () => {
   const devices = useDevices();

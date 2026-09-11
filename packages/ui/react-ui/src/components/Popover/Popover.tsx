@@ -27,9 +27,9 @@ import { useComposedRefs, useControllableState } from '@dxos/react-hooks';
 import { elevationAttrs, elevationSurface } from '@dxos/ui-theme';
 import { DX_POPOVER_CONTENT_ATTR, type ElevationLevel } from '@dxos/ui-types';
 
-import { useElevationContext, usePositioning, useThemeContext } from '../../hooks';
-import { type ThemedClassName } from '../../util';
-import { ColumnContext } from '../Column';
+import { useElevationContext, usePositioning, useThemeContext } from '../../hooks/index.ts';
+import { type ThemedClassName } from '../../util/index.ts';
+import { ColumnContext } from '../Column/index.ts';
 import {
   POPOVER_NAME,
   type PopoverContentHandlers,
@@ -40,7 +40,7 @@ import {
   type PopoverPointerDownOutsideEvent,
   PopoverProvider,
   usePopoverContext,
-} from './PopoverContext';
+} from './PopoverContext.ts';
 
 /** The answer a `preventDefault()`-style handler gives, asked ahead of the moment it would fire. */
 const prevents = (handler: ((event: Event) => void) | undefined) => {

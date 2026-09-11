@@ -10,7 +10,7 @@ import { type Space, SpaceState, type SpaceSyncState } from '@dxos/client/echo';
 import { toDate } from '@dxos/protocols/buf';
 import { EpochSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
-import * as FormBuilder from './form-builder';
+import * as FormBuilder from './form-builder.ts';
 
 export type FormatSpaceOptions = {
   verbose?: boolean;

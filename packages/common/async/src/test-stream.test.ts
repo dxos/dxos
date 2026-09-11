@@ -4,7 +4,7 @@
 
 import { test } from 'vitest';
 
-import { TestStream } from './test-stream';
+import { TestStream } from './test-stream.ts';
 
 test('TestStream', async () => {
   const stream1 = new TestStream();

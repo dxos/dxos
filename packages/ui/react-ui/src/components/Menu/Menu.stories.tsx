@@ -6,10 +6,10 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useRef, useState } from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
-import { withTheme } from '../../testing';
-import { Button } from '../Button';
-import { Icon } from '../Icon';
-import { Menu } from './Menu';
+import { withTheme } from '../../testing/index.ts';
+import { Button } from '../Button/index.ts';
+import { Icon } from '../Icon/index.ts';
+import { Menu } from './Menu.tsx';
 
 /** Every part: plain, disabled and shortcut items, a submenu, checkbox items and a radio group. */
 const MenuParts = () => {

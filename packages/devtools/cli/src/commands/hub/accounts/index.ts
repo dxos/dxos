@@ -4,8 +4,8 @@
 
 import * as Command from 'effect/unstable/cli/Command';
 
-import { grant } from './grant';
-import { list } from './list';
+import { grant } from './grant.ts';
+import { list } from './list.ts';
 
 export const account: Command.Command<any, any, any, any, any> = Command.make('account').pipe(
   Command.withDescription('Manage Hub accounts.'),

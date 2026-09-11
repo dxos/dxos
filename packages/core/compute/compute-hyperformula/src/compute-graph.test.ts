@@ -10,7 +10,7 @@ import { Obj } from '@dxos/echo';
 import { type CellValue } from '@dxos/vendor-hyperformula';
 import { DetailedCellError } from '@dxos/vendor-hyperformula';
 
-import { TestBuilder } from './testing';
+import { TestBuilder } from './testing/index.ts';
 
 describe('ComputeGraph', () => {
   let testBuilder: TestBuilder;

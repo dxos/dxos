@@ -13,8 +13,8 @@ import { withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
 
-import { Form } from '../Form';
 import { type FormVariant } from '../Form.theme';
+import { Form } from '../Form.tsx';
 
 // A nested struct is a group: the walker renders it as a collapsible field set named by its title.
 const ContactSchema = Schema.Struct({

@@ -8,7 +8,7 @@ import { addEventListener } from '@dxos/async';
 import { DX_ANCHOR_ACTIVATE, type DxAnchorActivate, Popover } from '@dxos/react-ui';
 import { type PreviewLinkRef, type PreviewLinkTarget } from '@dxos/ui-types';
 
-import { EditorPreviewContextProvider, type EditorPreviewPopoverValue } from './EditorPreviewContext';
+import { EditorPreviewContextProvider, type EditorPreviewPopoverValue } from './EditorPreviewContext.ts';
 
 export type EditorPreviewProviderProps = PropsWithChildren<{
   onLookup?: (link: PreviewLinkRef) => Promise<PreviewLinkTarget | null | undefined>;

@@ -7,11 +7,11 @@ import * as Effect from 'effect/Effect';
 import { type AiService } from '@dxos/ai';
 import { Stage } from '@dxos/pipeline';
 
-import { type SemanticIndexError } from '../errors';
-import { hashText } from '../internal/stages/reconcile';
-import { FactStore } from '../store';
-import { type ExtractDocument, type ExtractOptions } from '../types';
-import { type DocumentFacts, extractDocFacts } from './extract-facts';
+import { type SemanticIndexError } from '../errors.ts';
+import { hashText } from '../internal/stages/reconcile.ts';
+import { FactStore } from '../store/index.ts';
+import { type ExtractDocument, type ExtractOptions } from '../types/index.ts';
+import { type DocumentFacts, extractDocFacts } from './extract-facts.ts';
 
 /**
  * Indexing stage: extract → link (slug) → persist into the {@link FactStore}, building the fact

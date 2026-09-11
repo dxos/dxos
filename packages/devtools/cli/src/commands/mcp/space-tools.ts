@@ -11,7 +11,7 @@ import { type Space } from '@dxos/client/echo';
 import { log } from '@dxos/log';
 import { McpServer } from '@dxos/mcp-server';
 
-import { type LocalServer } from './local-server';
+import { type LocalServer } from './local-server.ts';
 
 const SpaceInfo = Schema.Struct({
   spaceId: Schema.String,

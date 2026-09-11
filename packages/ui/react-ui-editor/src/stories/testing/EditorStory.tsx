@@ -24,8 +24,8 @@ import {
 import { mx } from '@dxos/ui-theme';
 import { isNonNullable } from '@dxos/util';
 
-import { type EditorController, createEditorController } from '../../components';
-import { type UseTextEditorProps, useTextEditor } from '../../hooks';
+import { type EditorController, createEditorController } from '../../components/index.ts';
+import { type UseTextEditorProps, useTextEditor } from '../../hooks/index.ts';
 
 // Type definitions.
 export type DebugMode = 'raw' | 'tree' | 'raw+tree';

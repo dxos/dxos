@@ -19,8 +19,8 @@ import { createBasicExtensions, createThemeExtensions, keymap } from '@dxos/ui-e
 
 import { translationKey } from '#translations';
 
-import { type CompletionOptions, completions } from './autocomplete';
-import { query } from './query-extension';
+import { type CompletionOptions, completions } from './autocomplete.ts';
+import { query } from './query-extension.ts';
 
 export type QueryEditorProps = ThemedClassName<
   {

@@ -7,7 +7,7 @@ import { type Topology } from 'topojson-specification';
 
 import { log } from '@dxos/log';
 
-import { type CountriesResolution, loadTopology } from '../data';
+import { type CountriesResolution, loadTopology } from '../data.ts';
 
 export type Level = CountriesResolution;
 

@@ -4,8 +4,8 @@
 
 import * as Atom from 'effect/unstable/reactivity/Atom';
 
-import { Path } from '../../util';
-import { type TreeItemDataProps, type TreeModel } from './TreeContext';
+import { Path } from '../../util/index.ts';
+import { type TreeItemDataProps, type TreeModel } from './TreeContext.ts';
 
 export type TreeNodeState = {
   open: boolean;

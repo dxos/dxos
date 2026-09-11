@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import * as Position from './Position';
+import * as Position from './Position.ts';
 
 type TestItem = {
   id: number;

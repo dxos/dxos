@@ -9,7 +9,7 @@ import { IconButton, Panel, ScrollArea, Toolbar } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { mx } from '@dxos/ui-theme';
 
-import { ScrollFollower } from './follow';
+import { ScrollFollower } from './follow.ts';
 
 /** Fixed so the readout in rows/s is directly checkable against the pixels travelled. */
 const ROW_HEIGHT = 48;

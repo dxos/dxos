@@ -2,10 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
-export * from './engine';
-export * from './geometry';
-export * from './types';
+export * from './engine.ts';
+export * from './geometry.ts';
+export * from './types.ts';
 
-export { type BoardContextValue, useBoardContext } from './BoardContext';
+export { type BoardContextValue, useBoardContext } from './BoardContext.ts';
 
-export * from './Board';
+export * from './Board.tsx';

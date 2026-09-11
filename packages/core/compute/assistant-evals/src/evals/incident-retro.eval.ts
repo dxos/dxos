@@ -24,10 +24,10 @@ import * as TasksPlugin from '@dxos/plugin-tasks/TasksPlugin';
 import { type Actor, Outline, Task, TaskSet } from '@dxos/types';
 import { trim } from '@dxos/util';
 
-import { findObject, toolInvocations } from '../assertions';
-import { judge } from '../judge';
-import { createEvalRunner } from '../runner';
-import { getDefaultSkills } from '../skills';
+import { findObject, toolInvocations } from '../assertions.ts';
+import { judge } from '../judge.ts';
+import { createEvalRunner } from '../runner.ts';
+import { getDefaultSkills } from '../skills.ts';
 
 //
 // An outage retrospective, delegated end to end.

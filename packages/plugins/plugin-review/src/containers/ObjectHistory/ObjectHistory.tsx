@@ -17,7 +17,7 @@ import { Branch, type History, Version } from '@dxos/versioning';
 import { meta } from '#meta';
 import { ReviewCapabilities } from '#types';
 
-import { MAIN_BRANCH, commitToSelection, createTimelineModel } from './timeline';
+import { MAIN_BRANCH, commitToSelection, createTimelineModel } from './timeline.ts';
 
 export type ObjectHistoryProps = AppSurface.ObjectArticleProps<History.VersionedObject>;
 

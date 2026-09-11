@@ -10,7 +10,7 @@ import { TestDatabaseLayer } from '@dxos/echo-client/testing';
 import { Text } from '@dxos/schema';
 import { Outline } from '@dxos/types';
 
-import getOutline from './get-outline';
+import getOutline from './get-outline.ts';
 
 describe('get-outline', () => {
   it.effect('returns the markdown and its parsed items', () =>

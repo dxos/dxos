@@ -16,7 +16,7 @@ import {
   RecoverIdentityRequestSchema,
 } from '@dxos/protocols/buf/dxos/client/services_pb';
 
-import { HaloProxy } from './halo-proxy';
+import { HaloProxy } from './halo-proxy.ts';
 
 /**
  * A proxy over a service provider that records the request rather than serving it. The rpc payload

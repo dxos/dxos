@@ -12,7 +12,7 @@ import { Avatar, type ThemedClassName, useId } from '@dxos/react-ui';
 import { Listbox } from '@dxos/react-ui-list';
 import { keyToFallback } from '@dxos/util';
 
-import { profileString } from '../../util';
+import { profileString } from '../../util/index.ts';
 
 type IdentityListItemProps = {
   identity: Identity;

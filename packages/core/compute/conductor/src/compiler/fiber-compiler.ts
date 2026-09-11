@@ -16,7 +16,7 @@ import { Database, Registry } from '@dxos/echo';
 import { failedInvariant, invariant } from '@dxos/invariant';
 import { isNonNullable } from '@dxos/util';
 
-import { ComputeNodeError, InvalidValueError } from '../errors';
+import { ComputeNodeError, InvalidValueError } from '../errors.ts';
 import {
   ComputeBeginEvent,
   ComputeEndEvent,
@@ -33,8 +33,8 @@ import {
   ValueBag,
   type ValueEffect,
   isNotExecuted,
-} from '../types';
-import { createDefectLogger } from '../util';
+} from '../types/index.ts';
+import { createDefectLogger } from '../util/index.ts';
 import {
   type GraphDiagnostic,
   InputKind,
@@ -42,7 +42,7 @@ import {
   type TopologyNode,
   type TopologyNodeConnector,
   createTopology,
-} from './topology';
+} from './topology.ts';
 
 export type ValidateProps = {
   graph: ComputeGraphModel;

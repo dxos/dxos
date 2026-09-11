@@ -9,7 +9,7 @@ import { useConfig } from '@dxos/react-client';
 import { Icon } from '@dxos/react-ui';
 import { type ShapeComponentProps } from '@dxos/react-ui-canvas-editor';
 
-import { type GptRealtimeShape } from './gpt-realtime-def';
+import { type GptRealtimeShape } from './gpt-realtime-def.ts';
 
 export const GptRealtimeComponent = ({ shape }: ShapeComponentProps<GptRealtimeShape>) => {
   const [isLive, setIsLive] = useState(false);

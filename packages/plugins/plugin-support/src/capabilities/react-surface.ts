@@ -27,7 +27,7 @@ import {
 import { meta } from '#meta';
 import { Support } from '#types';
 
-import { SHORTCUTS_DIALOG } from '../constants';
+import { SHORTCUTS_DIALOG } from '../constants.ts';
 
 export default Capability.makeModule(() =>
   Effect.succeed(

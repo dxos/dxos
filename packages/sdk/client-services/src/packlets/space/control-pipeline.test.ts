@@ -17,9 +17,9 @@ import { SpaceMetadataSchema } from '@dxos/protocols/buf/dxos/echo/metadata_pb';
 import { AdmittedFeed_Designation, AdmittedFeedSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { StorageType, createStorage } from '@dxos/random-access-storage';
 
-import { MetadataStore } from '../metadata';
-import { valueEncoding } from '../pipeline';
-import { ControlPipeline } from './control-pipeline';
+import { MetadataStore } from '../metadata/index.ts';
+import { valueEncoding } from '../pipeline/index.ts';
+import { ControlPipeline } from './control-pipeline.ts';
 
 describe('space/control-pipeline', () => {
   test('admits feeds', async () => {

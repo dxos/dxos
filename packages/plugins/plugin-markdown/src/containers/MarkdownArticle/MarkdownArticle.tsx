@@ -35,7 +35,7 @@ import { MarkdownEditor, MarkdownEditorProvider, type MarkdownEditorProviderProp
 import { useLinkQuery } from '#hooks';
 import { Markdown, MarkdownCapabilities } from '#types';
 
-import { mergeConflicts } from '../../extensions';
+import { mergeConflicts } from '../../extensions/index.ts';
 
 /**
  * Built-in binding when no {@link MarkdownCapabilities.EditorBindingHook} is contributed: bind the

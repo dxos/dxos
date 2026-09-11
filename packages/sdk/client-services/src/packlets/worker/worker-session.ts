@@ -15,7 +15,7 @@ import { BridgeService as BridgeServiceDesc } from '@dxos/protocols/buf/dxos/mes
 import { type WorkerService } from '@dxos/protocols/rpc';
 import { Callback, type MaybePromise } from '@dxos/util';
 
-import { type ClientServicesHost } from '../services';
+import { type ClientServicesHost } from '../services/index.ts';
 
 type BridgeService = BufService<typeof BridgeServiceDesc>;
 

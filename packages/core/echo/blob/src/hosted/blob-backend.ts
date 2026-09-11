@@ -4,8 +4,8 @@
 
 import { invariant } from '@dxos/invariant';
 
-import { type BlobBackend, type BlobTransport } from '../backend';
-import { SCHEME, digestHex, fromDigestHex } from '../ni-uri';
+import { type BlobBackend, type BlobTransport } from '../backend.ts';
+import { SCHEME, digestHex, fromDigestHex } from '../ni-uri.ts';
 
 export interface CreateEdgeBlobBackendOptions {
   transport: BlobTransport;

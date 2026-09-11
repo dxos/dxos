@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './bootstrap';
-export * from './claude-agent';
-export * from './mcp-session';
-export * from './run-dx';
+export * from './bootstrap.ts';
+export * from './claude-agent.ts';
+export * from './mcp-session.ts';
+export * from './run-dx.ts';

@@ -14,7 +14,7 @@ import {
   type PageActionDescriptor,
   decodeInvokeAck,
   getActionsForUrl,
-} from '../../core';
+} from '../../core/index.ts';
 
 type ActionState = 'idle' | 'pending' | 'ok' | 'error';
 

@@ -6,11 +6,11 @@ import { type CleanupFn } from '@dxos/async';
 import { type BlobBackend } from '@dxos/blob';
 import { type URI } from '@dxos/keys';
 
-import type * as Database from './Database';
-import type * as Entity from './Entity';
-import type * as Key from './Key';
-import type * as Ref from './Ref';
-import type * as Registry from './Registry';
+import type * as Database from './Database.ts';
+import type * as Entity from './Entity.ts';
+import type * as Key from './Key.ts';
+import type * as Ref from './Ref.ts';
+import type * as Registry from './Registry.ts';
 
 /**
  * Resolution context.

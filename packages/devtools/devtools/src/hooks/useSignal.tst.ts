@@ -6,7 +6,7 @@ import { describe, expect, it } from 'tstyche';
 
 import { type SignalResponse } from '@dxos/protocols/buf/dxos/devtools/host_pb';
 
-import { useSignal } from './useSignal';
+import { useSignal } from './useSignal.tsx';
 
 // `SignalResponse` moved to `bufMessage` on `DevtoolsHost.subscribeToSignal`, so these pin the
 // carrier's exposed type rather than the annotation the panel happens to write. A green build

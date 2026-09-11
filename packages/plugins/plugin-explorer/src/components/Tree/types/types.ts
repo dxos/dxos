@@ -5,7 +5,7 @@
 import { type Key } from '@dxos/echo';
 import { type TreeNode } from '@dxos/react-ui-graph';
 
-import { type TreeType } from './tree';
+import { type TreeType } from './tree.ts';
 
 /**
  * Convert an ECHO `TreeType` (id-keyed node map) into a nested `TreeNode` hierarchy.

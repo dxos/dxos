@@ -2,4 +2,4 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './agent-service';
+export * from './agent-service/index.ts';

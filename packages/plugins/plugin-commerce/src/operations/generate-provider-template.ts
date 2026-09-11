@@ -16,7 +16,7 @@ import { trim } from '@dxos/util';
 import { meta } from '#meta';
 import { Provider, SearchOperation } from '#types';
 
-import { ProviderSkill } from '../skills';
+import { ProviderSkill } from '../skills/index.ts';
 
 const TOAST_ID = `${meta.profile.key}/regenerate`;
 

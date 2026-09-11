@@ -13,12 +13,12 @@ import React, {
 import { Icon, type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
-import { listTheme } from '../List.theme';
+import { listTheme } from '../List.theme.ts';
 
 // See `AccordionRoot.tsx` for the rationale on `ListItemRecord = any`.
 type ListItemRecord = any;
-import { ACCORDION_ITEM_NAME, AccordionItemProvider } from './AccordionItemContext';
-import { useAccordionContext } from './AccordionRoot';
+import { ACCORDION_ITEM_NAME, AccordionItemProvider } from './AccordionItemContext.ts';
+import { useAccordionContext } from './AccordionRoot.tsx';
 
 const styles = listTheme.styles();
 

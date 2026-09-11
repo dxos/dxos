@@ -8,8 +8,8 @@ import * as Command from 'effect/unstable/cli/Command';
 
 import { invariant } from '@dxos/invariant';
 
-import { ActivationEvents, Capabilities } from '../common';
-import { Capability, Plugin, PluginManager } from '../core';
+import { ActivationEvents, Capabilities } from '../common/index.ts';
+import { Capability, Plugin, PluginManager } from '../core/index.ts';
 
 const defaultPluginLoader =
   (plugins: Plugin.Plugin[]): PluginManager.ManagerOptions['pluginLoader'] =>

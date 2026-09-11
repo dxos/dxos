@@ -12,8 +12,8 @@ import { Ref } from '@dxos/echo/internal';
 import { TestSchema } from '@dxos/echo/testing';
 import { PublicKey } from '@dxos/keys';
 
-import { type EchoDatabase } from '../proxy-db';
-import { EchoTestBuilder } from './echo-test-builder';
+import { type EchoDatabase } from '../proxy-db/index.ts';
+import { EchoTestBuilder } from './echo-test-builder.ts';
 
 // Matrix of e2e tests for STRONG-DEPENDENCY resolution exercised through the public database API
 // (db.add / Relation.make / db.query / Relation.getSource|getTarget / feed / Obj.getParent),

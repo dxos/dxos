@@ -9,7 +9,7 @@ import { AiServiceTestingPreset } from '@dxos/ai/testing';
 import { EffectEx } from '@dxos/effect';
 import { log } from '@dxos/log';
 
-import { fixtureExists, generateText, parseJsonObject, selectVariants } from '../testing/harness';
+import { fixtureExists, generateText, parseJsonObject, selectVariants } from '../testing/harness/index.ts';
 
 // Smoke + baseline for the model ladder. For each selected variant: warms the model once (a cold
 // Ollama load is a 10–30s VRAM spike that would poison timing), then times a single structured call

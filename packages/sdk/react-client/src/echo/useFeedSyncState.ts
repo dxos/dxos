@@ -6,7 +6,7 @@ import { useEffect, useState } from 'react';
 
 import { type SpaceId } from '@dxos/keys';
 
-import { useClient } from '../client';
+import { useClient } from '../client/index.ts';
 
 const DEFAULT_POLL_INTERVAL_MS = 5_000;
 

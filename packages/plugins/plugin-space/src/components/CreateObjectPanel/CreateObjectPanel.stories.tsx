@@ -16,7 +16,7 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
 
-import { type CreateObjectOption, CreateObjectPanel, type Metadata } from './CreateObjectPanel';
+import { type CreateObjectOption, CreateObjectPanel, type Metadata } from './CreateObjectPanel.tsx';
 
 const mockOptions: CreateObjectOption[] = [
   { id: 'org.dxos.type.document', label: 'Document', plugin: 'Markdown', icon: 'ph--file-text--regular' },

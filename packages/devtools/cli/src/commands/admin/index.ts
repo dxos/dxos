@@ -7,8 +7,8 @@ import * as Option from 'effect/Option';
 import * as Command from 'effect/unstable/cli/Command';
 import * as Options from 'effect/unstable/cli/Flag';
 
-import { identity } from './identity';
-import { space } from './space';
+import { identity } from './identity/index.ts';
+import { space } from './space/index.ts';
 
 export const admin = Command.make('admin', {
   adminKey: Options.string('admin-key').pipe(

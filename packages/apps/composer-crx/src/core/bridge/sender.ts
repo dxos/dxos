@@ -6,7 +6,7 @@ import browser from 'webextension-polyfill';
 
 import { log } from '@dxos/log';
 
-import { getComposerUrls } from './urls';
+import { getComposerUrls } from './urls.ts';
 
 let lastUsedTabId: number | undefined;
 

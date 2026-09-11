@@ -10,7 +10,7 @@ import { afterEach, beforeEach, describe, test } from 'vitest';
 import { Annotation, type Database, DXN, Obj, Type } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 
-import * as AppNode from './AppNode';
+import * as AppNode from './AppNode.ts';
 
 const TYPENAME = 'com.example.type.doc';
 

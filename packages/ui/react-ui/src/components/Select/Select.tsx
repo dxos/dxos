@@ -28,12 +28,12 @@ import React, {
 
 import { useComposedRefs } from '@dxos/react-hooks';
 
-import { toOverflowPadding, useElevationContext, useSafeCollisionPadding, useThemeContext } from '../../hooks';
-import { type ThemedClassName } from '../../util';
-import { Button, type ButtonProps } from '../Button';
-import { Icon } from '../Icon';
-import { ScrollArea } from '../ScrollArea';
-import { SELECT_NAME, type SelectOptionEntry, SelectProvider, useSelectContext } from './SelectContext';
+import { toOverflowPadding, useElevationContext, useSafeCollisionPadding, useThemeContext } from '../../hooks/index.ts';
+import { type ThemedClassName } from '../../util/index.ts';
+import { Button, type ButtonProps } from '../Button/index.ts';
+import { Icon } from '../Icon/index.ts';
+import { ScrollArea } from '../ScrollArea/index.ts';
+import { SELECT_NAME, type SelectOptionEntry, SelectProvider, useSelectContext } from './SelectContext.ts';
 
 /** Document order, which is the order keyboard navigation and typeahead follow. */
 const byDocumentPosition = (a: SelectOptionEntry, b: SelectOptionEntry) => {

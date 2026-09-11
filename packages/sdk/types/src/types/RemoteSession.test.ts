@@ -6,9 +6,9 @@ import { describe, test } from '@effect/vitest';
 
 import { Obj, Ref } from '@dxos/echo';
 
-import * as Actor from './Actor';
-import * as RemoteSession from './RemoteSession';
-import * as Task from './Task';
+import * as Actor from './Actor.ts';
+import * as RemoteSession from './RemoteSession.ts';
+import * as Task from './Task.ts';
 
 describe('RemoteSession', () => {
   test('carries the harness session id as a foreign key, not a property', ({ expect }) => {

@@ -13,11 +13,11 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { translations } from '#translations';
 import { Terra, TerraObject } from '#types';
 
-import { seaRadius } from '../../engine';
-import { SimEngine, type SimObject, buildNavGrid, pickReachableTarget, toGeo } from '../../sim';
-import { STORY_ATTENDABLE_ID, withAttention } from '../../testing';
-import { TelemetryPanel, type TelemetryRow } from '../TelemetryPanel';
-import { TerraMap } from './TerraMap';
+import { seaRadius } from '../../engine/index.ts';
+import { SimEngine, type SimObject, buildNavGrid, pickReachableTarget, toGeo } from '../../sim/index.ts';
+import { STORY_ATTENDABLE_ID, withAttention } from '../../testing/index.ts';
+import { TelemetryPanel, type TelemetryRow } from '../TelemetryPanel/index.ts';
+import { TerraMap } from './TerraMap.tsx';
 
 /**
  * The map is an overview of slow-moving objects, not a cockpit view: sampling the sim at ~15Hz

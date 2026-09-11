@@ -10,12 +10,12 @@ import * as Schema from 'effect/Schema';
 
 import { DXN } from '@dxos/keys';
 
-import * as Annotation from './Annotation';
-import * as Database from './Database';
-import * as Error from './Error';
-import * as internal from './internal';
-import * as Obj from './Obj';
-import * as Type from './Type';
+import * as Annotation from './Annotation.ts';
+import * as Database from './Database.ts';
+import * as Error from './Error.ts';
+import * as internal from './internal/index.ts';
+import * as Obj from './Obj.ts';
+import * as Type from './Type.ts';
 
 /**
  * Inline blob data: bytes stored directly on the ECHO object.

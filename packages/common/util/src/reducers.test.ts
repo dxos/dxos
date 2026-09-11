@@ -4,7 +4,7 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { median, numericalValues } from './reducers';
+import { median, numericalValues } from './reducers.ts';
 
 describe('Reducers', () => {
   test('median', () => {

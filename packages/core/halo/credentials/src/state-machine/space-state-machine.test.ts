@@ -22,8 +22,8 @@ import {
   SpaceMemberSchema,
 } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
-import { createCredential, getCredentialAssertion, subjectIdOf, verifyCredential } from '../credentials';
-import { type SpaceState, SpaceStateMachine } from './space-state-machine';
+import { createCredential, getCredentialAssertion, subjectIdOf, verifyCredential } from '../credentials/index.ts';
+import { type SpaceState, SpaceStateMachine } from './space-state-machine.ts';
 
 describe('SpaceStateMachine', () => {
   test('basic space creation', async () => {

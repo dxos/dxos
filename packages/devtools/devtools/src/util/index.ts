@@ -2,5 +2,5 @@
 // Copyright 2025 DXOS.org
 //
 
-export * from './textBitbar';
-export * from './assertionType';
+export * from './textBitbar.ts';
+export * from './assertionType.ts';

@@ -9,7 +9,7 @@ import type * as AtomRegistry from 'effect/unstable/reactivity/AtomRegistry';
 import { EffectEx } from '@dxos/effect';
 import { log } from '@dxos/log';
 
-import type * as Plugin from './plugin';
+import type * as Plugin from './plugin.ts';
 
 /**
  * A registry catalog entry is a {@link Plugin.Meta} (profile + the latest release), the same

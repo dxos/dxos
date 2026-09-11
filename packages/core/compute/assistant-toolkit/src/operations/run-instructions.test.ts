@@ -21,8 +21,8 @@ import { EntityId } from '@dxos/keys';
 import { Text } from '@dxos/schema';
 import { Message, Outline } from '@dxos/types';
 
-import { RunInstructions } from './definitions';
-import defaultAgentPrompt from './run-instructions';
+import { RunInstructions } from './definitions.ts';
+import defaultAgentPrompt from './run-instructions.ts';
 
 EntityId.dangerouslyDisableRandomness();
 

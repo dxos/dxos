@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { defaultMap } from './map';
+import { defaultMap } from './map.ts';
 
 /**
  * Tracer events form a graph.

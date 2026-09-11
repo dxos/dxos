@@ -14,9 +14,9 @@ import * as TablePlugin from '@dxos/plugin-table/TablePlugin';
 import { Table } from '@dxos/react-ui-table/types';
 import { trim } from '@dxos/util';
 
-import { findObject } from '../assertions';
-import { createEvalRunner } from '../runner';
-import { getDefaultSkills } from '../skills';
+import { findObject } from '../assertions.ts';
+import { createEvalRunner } from '../runner.ts';
+import { getDefaultSkills } from '../skills.ts';
 
 // The sender-ledger routine's headless task, run through the same RunInstructions path a
 // feed-triggered routine uses. The input batches two messages from the SAME sender so one run also

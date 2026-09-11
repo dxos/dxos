@@ -52,7 +52,7 @@ import { ConfigSchema } from '@dxos/protocols/buf/dxos/config_pb';
 import { MembershipPolicy } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { InvitationsService, SpacesService, SystemService } from '@dxos/protocols/rpc';
 
-import { remainingLifetimeSeconds } from '../spaces/data-space-manager';
+import { remainingLifetimeSeconds } from '../spaces/data-space-manager.ts';
 
 //
 // Helpers & Schema for test suite 2

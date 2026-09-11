@@ -4,7 +4,7 @@
 
 import { createContext } from '@dxos/react-ui';
 
-import { type UseListSelectionReturn } from '../../hooks';
+import { type UseListSelectionReturn } from '../../hooks/index.ts';
 
 //
 // Contexts — plain `createContext` contexts from `@dxos/react-hooks` (un-scoped). Scoped composition (nested Listboxes,

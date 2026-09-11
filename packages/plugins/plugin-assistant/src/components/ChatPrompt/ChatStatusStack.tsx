@@ -9,9 +9,9 @@ import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 // From the context module rather than the `../Chat` barrel, which imports this file.
-import { useChatContext } from '../Chat/context';
-import { ChatActivity, type ChatActivityProps } from './ChatActivity';
-import { ChatStatus, ChatStatusView, type ChatStatusViewProps } from './ChatStatus';
+import { useChatContext } from '../Chat/context.ts';
+import { ChatActivity, type ChatActivityProps } from './ChatActivity.tsx';
+import { ChatStatus, ChatStatusView, type ChatStatusViewProps } from './ChatStatus.tsx';
 
 const CHAT_STATUS_STACK_NAME = 'Chat.StatusStack';
 

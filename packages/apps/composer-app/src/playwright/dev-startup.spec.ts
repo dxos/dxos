@@ -6,8 +6,14 @@ import { expect, test } from '@playwright/test';
 
 import { log } from '@dxos/log';
 
-import { INITIAL_URL } from './app-manager';
-import { appendBenchmarkRow, collectStartupReport, trackNetwork, waitForReady, writeReport } from './harness-helpers';
+import { INITIAL_URL } from './app-manager.ts';
+import {
+  appendBenchmarkRow,
+  collectStartupReport,
+  trackNetwork,
+  waitForReady,
+  writeReport,
+} from './harness-helpers.ts';
 
 // Surface the DX_PWA requirement as a test-level failure rather than a hard
 // `process.exit` at spec-collection time.

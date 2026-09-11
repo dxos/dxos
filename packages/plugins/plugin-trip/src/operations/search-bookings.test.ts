@@ -11,7 +11,7 @@ import * as CapabilityManager from '@dxos/app-framework/CapabilityManager';
 
 import { BookingSearch, TripCapabilities } from '#types';
 
-import handler from './search-bookings';
+import handler from './search-bookings.ts';
 
 const FLIGHT_OFFER: BookingSearch.FlightOffer = {
   _tag: 'flight' as const,

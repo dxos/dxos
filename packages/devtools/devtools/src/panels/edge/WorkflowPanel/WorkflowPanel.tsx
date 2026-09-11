@@ -14,10 +14,10 @@ import { Panel, Toolbar } from '@dxos/react-ui';
 import { type TablePropertyDefinition } from '@dxos/react-ui-table';
 import { mx } from '@dxos/ui-theme';
 
-import { ControlledSelector, MasterDetailTable } from '../../../components';
-import { DataSpaceSelector } from '../../../containers';
-import { useDevtoolsState } from '../../../hooks';
-import { WorkflowDebugPanel, WorkflowDebugPanelMode } from './WorkflowDebugPanel';
+import { ControlledSelector, MasterDetailTable } from '../../../components/index.ts';
+import { DataSpaceSelector } from '../../../containers/index.ts';
+import { useDevtoolsState } from '../../../hooks/index.ts';
+import { WorkflowDebugPanel, WorkflowDebugPanelMode } from './WorkflowDebugPanel.tsx';
 
 export const WorkflowPanel = (props: { space?: Space }) => {
   const state = useDevtoolsState();

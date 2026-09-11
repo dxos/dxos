@@ -2,10 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
-export * from './assistant';
-export * from './deck';
-export * from './inbox';
-export * from './markdown';
-export * from './table';
-export * from './thread';
-export * from './stack';
+export * from './assistant.ts';
+export * from './deck.ts';
+export * from './inbox.ts';
+export * from './markdown.ts';
+export * from './table.ts';
+export * from './thread.ts';
+export * from './stack.ts';

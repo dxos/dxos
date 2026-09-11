@@ -8,9 +8,9 @@ import React, { PropsWithChildren } from 'react';
 
 import { mx } from '@dxos/ui-theme';
 
-import { withTheme } from '../testing';
-import { composable, composableProps, slottable } from '../util';
-import { ThemedClassName } from '../util';
+import { withTheme } from '../testing/index.ts';
+import { composable, composableProps, slottable } from '../util/index.ts';
+import { ThemedClassName } from '../util/index.ts';
 
 /**
  * `asChild` composition.

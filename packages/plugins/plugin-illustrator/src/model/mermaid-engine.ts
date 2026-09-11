@@ -14,13 +14,13 @@ import ELK, { type ElkNode } from 'elkjs/lib/elk.bundled.js';
 
 import { invariant } from '@dxos/invariant';
 
-import * as Diagnostics from './diagnostics';
-import * as Layout from './layout';
-import { type Direction, type MermaidEdge, type MermaidGraph, markers, parse } from './mermaid';
-import * as Objective from './objective';
-import { makeAvoidingRouter } from './ortho-router';
-import type * as Scene from './scene';
-import { GRID, type Rect, type Router, zRouter } from './uml-grid';
+import * as Diagnostics from './diagnostics.ts';
+import * as Layout from './layout.ts';
+import { type Direction, type MermaidEdge, type MermaidGraph, markers, parse } from './mermaid.ts';
+import * as Objective from './objective.ts';
+import { makeAvoidingRouter } from './ortho-router.ts';
+import type * as Scene from './scene.ts';
+import { GRID, type Rect, type Router, zRouter } from './uml-grid.ts';
 
 const MIN_W = GRID * 3;
 const MAX_W = GRID * 6;

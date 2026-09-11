@@ -9,7 +9,7 @@ import { random } from '@dxos/random';
 import { Icon, IconButton } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { Card, type CardRootProps } from './Card';
+import { Card, type CardRootProps } from './Card.tsx';
 
 random.seed(0);
 

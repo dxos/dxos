@@ -13,7 +13,7 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { translations } from '#translations';
 import { Chess } from '#types';
 
-import { ChessArticle } from './ChessArticle';
+import { ChessArticle } from './ChessArticle.tsx';
 
 type StoryArgs = {
   pgn?: string;

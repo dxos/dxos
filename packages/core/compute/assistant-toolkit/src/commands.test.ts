@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { type SlashCommand, parseTaskSelectors, resolveSlashCommand } from './commands';
+import { type SlashCommand, parseTaskSelectors, resolveSlashCommand } from './commands.ts';
 
 describe('parseTaskSelectors', () => {
   test('bare numbers are ordinals', ({ expect }) => {

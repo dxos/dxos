@@ -10,8 +10,8 @@ import { TestSchema } from '@dxos/echo/testing';
 import { PublicKey } from '@dxos/keys';
 import { openAndClose } from '@dxos/test-utils';
 
-import { EchoTestBuilder, createTmpPath } from '../testing';
-import { loadObjectReferences } from './load-object';
+import { EchoTestBuilder, createTmpPath } from '../testing/index.ts';
+import { loadObjectReferences } from './load-object.ts';
 
 // TODO(dmaretskyi): Refactor to test Ref.load() instead.
 describe.skip('loadObjectReferences', () => {

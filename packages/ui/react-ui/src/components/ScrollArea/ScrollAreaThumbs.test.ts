@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { measure } from './ScrollAreaThumbs';
+import { measure } from './ScrollAreaThumbs.tsx';
 
 // Viewport of 200 over content of 800, inset 10 at both ends: track 180, thumb 45, travel 135.
 // Sized so the proportional length clears MIN_THUMB, which the clamping case covers separately.

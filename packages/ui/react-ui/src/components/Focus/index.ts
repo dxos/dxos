@@ -2,6 +2,6 @@
 // Copyright 2026 DXOS.org
 //
 
-export { useFocus } from './FocusContext';
+export { useFocus } from './FocusContext.ts';
 
-export * from './Focus';
+export * from './Focus.tsx';

@@ -4,9 +4,9 @@
 
 import { type Extension } from '@codemirror/state';
 
-import { AnchorWidget } from './anchor';
-import { type LinkWidgetProps, linkWidgets, matchSchemes } from './link-widgets';
-import { type WidgetDef } from './widgets';
+import { AnchorWidget } from './anchor.ts';
+import { type LinkWidgetProps, linkWidgets, matchSchemes } from './link-widgets.ts';
+import { type WidgetDef } from './widgets.ts';
 
 /** URL schemes that name an ECHO object. */
 export const OBJECT_URL_SCHEMES = ['eid:', 'echo:'];

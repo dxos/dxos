@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-export { Message } from './Message';
+export { Message } from './Message.tsx';
 export type {
   MessageAuthorNameProps,
   MessageBodyProps,
@@ -12,4 +12,4 @@ export type {
   MessageTextboxProps,
   MessageTileProps,
   MessageTimeProps,
-} from './Message';
+} from './Message.tsx';

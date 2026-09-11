@@ -9,7 +9,7 @@ import { Issue, PullRequest, Repo } from '@dxos/types';
 
 import { type GitHubCapabilities } from '#types';
 
-import { type GitHubLink } from '../extensions';
+import { type GitHubLink } from '../extensions/index.ts';
 
 // Kept out of the story modules: react-refresh only fast-refreshes a module whose exports are all
 // components, so factories exported beside a story force a full page reload on every edit.

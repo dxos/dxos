@@ -10,8 +10,8 @@
 
 import { type ReadResult, type ReadWorldObject, type Scene } from '@dxos/plugin-illustrator/model';
 
-import { type CanvasContent, type ExternalBox } from './render';
-import { readStyle, readTextStyle } from './style';
+import { type CanvasContent, type ExternalBox } from './render.ts';
+import { readStyle, readTextStyle } from './style.ts';
 
 type ElementRecord = Record<string, any>;
 

@@ -7,7 +7,7 @@ import React from 'react';
 
 import { withTheme } from '@dxos/react-ui/testing';
 
-import { Tree } from './Tree';
+import { Tree } from './Tree.tsx';
 
 const meta = {
   title: 'devtools/devtools/Tree',

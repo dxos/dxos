@@ -13,8 +13,8 @@ import { withRegistry } from '@dxos/storybook-utils';
 
 import { translations } from '#translations';
 
-import { MobileAppBar, type MobileAppBarProps } from './MobileAppBar';
-import { MobileLayout } from './MobileLayout';
+import { MobileAppBar, type MobileAppBarProps } from './MobileAppBar.tsx';
+import { MobileLayout } from './MobileLayout.tsx';
 
 const buildEmptyActions = (): ActionGraphProps => ({ nodes: [], edges: [] });
 

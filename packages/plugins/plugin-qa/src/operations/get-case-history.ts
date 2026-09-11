@@ -9,7 +9,7 @@ import { Database, Ref } from '@dxos/echo';
 
 import { QaOperation } from '#types';
 
-import { loadRuns } from './util';
+import { loadRuns } from './util.ts';
 
 /** One case's outcome across runs — the question a flaky or long-broken case is answered by. */
 const handler: Operation.WithHandler<typeof QaOperation.GetCaseHistory> = QaOperation.GetCaseHistory.pipe(

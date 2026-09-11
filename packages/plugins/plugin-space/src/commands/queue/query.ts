@@ -12,7 +12,7 @@ import { ClientService } from '@dxos/client';
 import { Entity, Filter, Query, Scope } from '@dxos/echo';
 import { EID } from '@dxos/keys';
 
-import { printQueueObject } from './util';
+import { printQueueObject } from './util.ts';
 
 export const query = Command.make(
   'query',

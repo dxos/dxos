@@ -15,13 +15,13 @@ import { describe, test } from 'vitest';
 import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 
-import * as AiModelResolver from '../../AiModelResolver';
-import * as AiService from '../../AiService';
-import * as Model from '../../Model';
-import * as Provider from '../../Provider';
-import { CalculatorLayer, CalculatorToolkit } from '../../testing/calculator';
-import * as ChatCompletionsAdapter from '../ChatCompletionsAdapter';
-import * as DeepSeekResolver from './DeepSeekResolver';
+import * as AiModelResolver from '../../AiModelResolver.ts';
+import * as AiService from '../../AiService.ts';
+import * as Model from '../../Model.ts';
+import * as Provider from '../../Provider.ts';
+import { CalculatorLayer, CalculatorToolkit } from '../../testing/calculator.ts';
+import * as ChatCompletionsAdapter from '../ChatCompletionsAdapter.ts';
+import * as DeepSeekResolver from './DeepSeekResolver.ts';
 
 const FLASH = 'com.deepseek.model.deepseek-v4-flash.default';
 

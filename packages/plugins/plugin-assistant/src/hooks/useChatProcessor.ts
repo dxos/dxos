@@ -23,7 +23,7 @@ import { useAsyncEffect } from '@dxos/react-ui';
 
 import { Assistant } from '#types';
 
-import { AiChatProcessor, type AiServicePreset } from '../processor';
+import { AiChatProcessor, type AiServicePreset } from '../processor/index.ts';
 
 export type UseChatProcessorProps = {
   db?: Database.Database;

@@ -16,7 +16,7 @@ import {
   Text,
 } from '@dxos/schema';
 
-import { bookLens, canPublishBook, enrichBook, inspectBook } from '../atproto';
+import { bookLens, canPublishBook, enrichBook, inspectBook } from '../atproto/index.ts';
 
 /**
  * Reading status, mirroring the `buzz.bookhive.defs` known values

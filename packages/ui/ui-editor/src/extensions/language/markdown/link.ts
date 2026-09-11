@@ -10,7 +10,7 @@ import { type SyntaxNode } from '@lezer/common';
 
 import { mx, surfaceShadow } from '@dxos/ui-theme';
 
-import { type RenderCallback } from '../../../types';
+import { type RenderCallback } from '../../../types/index.ts';
 
 export type LinkTooltipProps = {
   render: RenderCallback<{ url: string }>;

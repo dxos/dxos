@@ -12,7 +12,7 @@ import { isNonNullable } from '@dxos/util';
 
 import { meta } from '#meta';
 
-import { TemplateEditor } from './TemplateEditor';
+import { TemplateEditor } from './TemplateEditor.tsx';
 
 /**
  * Callback type for mutating template within a parent object's Obj.update context.
