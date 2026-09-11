@@ -118,6 +118,11 @@ export class RtcTransportChannel extends Resource implements Transport {
     channel.binaryType = 'arraybuffer';
 
     const open = () => {
+      // Both the event and the already-open check below can reach this; piping twice would duplicate
+      // every frame on the protocol stream.
+      if (this._stream) {
+        return;
+      }
       if (!this.isOpen) {
         log.warn('channel opened in a closed transport', { topic: this._options.topic });
         this._safeCloseChannel(channel);

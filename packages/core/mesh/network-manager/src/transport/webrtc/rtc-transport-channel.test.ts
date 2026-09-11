@@ -114,6 +114,23 @@ describe('RtcTransportChannel', () => {
     expect(deliveredMessages).toStrictEqual(['hello']);
   });
 
+  // A channel already open at attach time reaches the open path from both the check and the event.
+  // Opening twice pipes the protocol stream into two channels, so every outgoing frame is sent twice.
+  test('a channel open at attach time sends each frame once', async ({ expect }) => {
+    const controller = createChannelController();
+    (controller.channel as any).readyState = 'open';
+    const { stream, transport } = createTransport(controller.connection);
+    await transport.open();
+    await controller.onChannelCreated();
+    controller.channel.onopen();
+
+    stream.push('outgoing');
+    await sleep(5);
+    expect(controller.channel.sentMessages.map((message) => Buffer.from(message).toString())).toStrictEqual([
+      'outgoing',
+    ]);
+  });
+
   test('message not sent on a closed transport', async () => {
     const controller = createChannelController();
     const { deliveredMessages, transport } = createTransport(controller.connection);
@@ -171,10 +188,12 @@ describe('RtcTransportChannel', () => {
       onopen: () => {},
       onclose: async () => {},
       close: () => (closed = true),
-      send: () => {
+      sentMessages: [] as any[],
+      send: (message: any) => {
         if (failsSending) {
           throw new Error('Expected');
         }
+        channel.sentMessages.push(message);
       },
       wasClosed: () => closed,
       onMessage: async (message: string) => {
