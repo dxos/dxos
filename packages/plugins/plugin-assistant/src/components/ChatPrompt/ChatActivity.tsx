@@ -90,26 +90,26 @@ const MINUTE = 60 * SECOND;
 const HOUR = 60 * MINUTE;
 
 /**
- * Milliseconds until `wakeAt`, re-evaluated every second, or `undefined` when nothing is scheduled.
+ * Milliseconds until `wakeAt`, re-read every second, or `undefined` when nothing is scheduled.
  *
  * The alarm is a fixed instant rather than a stream of events, so the countdown is the client's to
  * run; ticking on a plain interval keeps it a rendering concern and leaves the agent silent while
  * it sleeps.
  */
 const useCountdown = (wakeAt?: number): number | undefined => {
-  const [remaining, setRemaining] = useState(() => (wakeAt === undefined ? undefined : wakeAt - Date.now()));
+  // The value is read during render and the state only forces the next read, so a changed `wakeAt`
+  // shows its own countdown on the first render rather than the previous one until the effect runs.
+  const [, setTick] = useState(0);
   useEffect(() => {
     if (wakeAt === undefined) {
-      setRemaining(undefined);
       return;
     }
 
-    setRemaining(wakeAt - Date.now());
-    const interval = setInterval(() => setRemaining(wakeAt - Date.now()), SECOND);
+    const interval = setInterval(() => setTick((tick) => tick + 1), SECOND);
     return () => clearInterval(interval);
   }, [wakeAt]);
 
-  return remaining;
+  return wakeAt === undefined ? undefined : wakeAt - Date.now();
 };
 
 /**
