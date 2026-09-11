@@ -50,7 +50,9 @@ const HEADER_HEIGHT = 20;
 const PAD_X = 12;
 const BOX_INSET = 6;
 const NODE_RADIUS = 3;
-const TICKS = 5;
+/** Upper bound on axis ticks; the count shrinks with the width so `HH:mm:ss` labels never overlap. */
+const MAX_TICKS = 5;
+const TICK_MIN_WIDTH = 72;
 
 const STATUS_COLOR: Record<GanttLaneStatus, { stroke: string; fill: string; text: string }> = {
   pending: { stroke: 'stroke-neutral-400', fill: 'fill-neutral-400', text: 'text-neutral-400' },
@@ -131,12 +133,16 @@ export const Gantt = composable<HTMLDivElement, GanttProps>(
     const rowY = (index: number): number => HEADER_HEIGHT + index * ROW_HEIGHT + ROW_HEIGHT / 2;
     const laneEnd = (lane: GanttLane): number | undefined => lane.end ?? now;
     const height = HEADER_HEIGHT + rows.length * ROW_HEIGHT;
-    const ticks = Array.from({ length: TICKS }, (_, index) => range.start + (span * index) / (TICKS - 1));
+    const tickCount = Math.max(2, Math.min(MAX_TICKS, Math.floor((width - 2 * PAD_X) / TICK_MIN_WIDTH)));
+    const ticks = Array.from({ length: tickCount }, (_, index) => range.start + (span * index) / (tickCount - 1));
 
     return (
       <div
         {...composableProps(props, {
-          classNames: 'grid grid-cols-[minmax(8rem,14rem)_1fr_auto] text-xs font-mono overflow-hidden',
+          // `content-start auto-rows-min`: a stretching host would otherwise spread the rows over its
+          // height, and the chart is drawn in pixel rows.
+          classNames:
+            'grid w-full grid-cols-[minmax(8rem,14rem)_1fr_auto] content-start auto-rows-min text-xs font-mono overflow-hidden',
         })}
         ref={forwardedRef}
       >
@@ -168,8 +174,9 @@ export const Gantt = composable<HTMLDivElement, GanttProps>(
         <svg
           ref={svgRef}
           className='col-start-2 min-w-0'
+          // Pixel coordinates against the measured width, with no viewBox: a viewBox would letterbox
+          // the drawing to the column's aspect ratio and shrink every node with it.
           style={{ gridRow: `1 / span ${rows.length + 1}`, width: '100%', height }}
-          viewBox={`0 0 ${width} ${height}`}
         >
           {ticks.map((tick, index) => (
             <g key={index}>
@@ -177,13 +184,19 @@ export const Gantt = composable<HTMLDivElement, GanttProps>(
               <text
                 x={x(tick)}
                 y={HEADER_HEIGHT - 6}
-                textAnchor={index === 0 ? 'start' : index === TICKS - 1 ? 'end' : 'middle'}
+                textAnchor={index === 0 ? 'start' : index === tickCount - 1 ? 'end' : 'middle'}
                 className='fill-current text-subdued'
               >
                 {format(tick, 'HH:mm:ss')}
               </text>
             </g>
           ))}
+
+          {/* Under the lanes and connectors: a dependency on a still-running lane anchors at `now`
+              and would otherwise be hidden by this line. */}
+          {now !== undefined && (
+            <line x1={x(now)} x2={x(now)} y1={0} y2={height} strokeDasharray='3 3' className='stroke-red-500' />
+          )}
 
           {rows.map(({ lane, index }) => {
             const end = laneEnd(lane);
@@ -272,10 +285,6 @@ export const Gantt = composable<HTMLDivElement, GanttProps>(
               />,
             ];
           })}
-
-          {now !== undefined && (
-            <line x1={x(now)} x2={x(now)} y1={0} y2={height} strokeDasharray='3 3' className='stroke-red-500' />
-          )}
         </svg>
       </div>
     );
