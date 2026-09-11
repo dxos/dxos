@@ -48,13 +48,17 @@ export type GanttProps = ThemedClassName<{
 const ROW_HEIGHT = 28;
 const HEADER_HEIGHT = 20;
 const PAD_X = 12;
-const NODE_RADIUS = 3;
+const NODE_RADIUS = 5;
 /** Upper bound on axis ticks; the count shrinks with the width so `HH:mm:ss` labels never overlap. */
 const MAX_TICKS = 5;
 const TICK_MIN_WIDTH = 72;
 
-/** Bar heights: a session is the row's block, a task a slimmer one nested under it. */
-const BAR_HEIGHT: Record<GanttLaneKind, number> = { session: 16, task: 10 };
+const BAR_HEIGHT = 15;
+/**
+ * A bar reaches half its height past its first and last instant, so a node sitting on either one is
+ * as far from the bar's end as it is from its top and bottom.
+ */
+const BAR_OVERHANG = BAR_HEIGHT / 2;
 
 const STATUS_COLOR: Record<GanttLaneStatus, { fill: string; text: string }> = {
   pending: { fill: 'fill-neutral-500/40', text: 'text-neutral-400' },
@@ -205,15 +209,14 @@ export const Gantt = composable<HTMLDivElement, GanttProps>(
             if (lane.start === undefined || end === undefined) {
               return null;
             }
-            const barHeight = BAR_HEIGHT[lane.kind];
             return (
               <rect
                 key={lane.id}
-                x={x(lane.start)}
-                y={rowY(index) - barHeight / 2}
-                width={Math.max(x(end) - x(lane.start), barHeight)}
-                height={barHeight}
-                rx={barHeight / 2}
+                x={x(lane.start) - BAR_OVERHANG}
+                y={rowY(index) - BAR_HEIGHT / 2}
+                width={Math.max(x(end) - x(lane.start), 0) + 2 * BAR_OVERHANG}
+                height={BAR_HEIGHT}
+                rx={BAR_HEIGHT / 2}
                 className={mx('cursor-pointer', STATUS_COLOR[lane.status].fill)}
                 onClick={() => onLaneSelect?.(lane)}
               />
