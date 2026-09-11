@@ -10,11 +10,8 @@ import { Obj } from '@dxos/echo';
 import * as SupportCapabilities from '@dxos/plugin-support/SupportCapabilities';
 
 /**
- * Adds a comments step to any tour running on an object that can carry comments.
- *
- * The matcher reads the comment-config registry live, the same test the toolbar's own comment action
- * makes, so the step is present exactly when the button it points at is. A static list of typenames
- * would drift the moment a plugin registered a config.
+ * Adds a comments step to any tour running on an object that can carry comments, matched against the
+ * live comment-config registry so the step is present exactly when the button it points at is.
  */
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {

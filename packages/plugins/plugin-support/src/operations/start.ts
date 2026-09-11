@@ -11,12 +11,10 @@ import { log } from '@dxos/log';
 
 import { HelpCapabilities, HelpOperation, SupportCapabilities, Tour } from '#types';
 
-/** Runs the app's own walkthrough: the first registered tour whose matcher applies to no subject. */
 const handler: Operation.WithHandler<typeof HelpOperation.Start> = HelpOperation.Start.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* () {
       const tours = yield* Capability.getAll(SupportCapabilities.Tour);
-      // No argument selects the global matchers.
       const [tour] = Tour.matching(tours);
       if (!tour) {
         log.warn('no global tour registered');

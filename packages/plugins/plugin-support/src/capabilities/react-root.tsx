@@ -26,8 +26,6 @@ export default Capability.makeModule(() =>
             <TourAutoStart />
             <WelcomeTour
               steps={steps}
-              // A tour's steps arrive a tick after it starts; holding the machine closed until then
-              // keeps it from opening on an empty tour and immediately reporting "ended".
               running={state.running && steps.length > 0}
               onRunningChanged={(newState) => {
                 updateState((s) => ({ ...s, running: newState }));

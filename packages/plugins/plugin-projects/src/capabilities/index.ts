@@ -12,7 +12,6 @@ import * as SupportCapabilities from '@dxos/plugin-support/SupportCapabilities';
 import * as TasksCapabilities from '@dxos/plugin-tasks/TasksCapabilities';
 import * as TasksEvents from '@dxos/plugin-tasks/TasksEvents';
 
-import { meta } from '#meta';
 import { translations } from '#translations';
 import { ProjectCapabilities, ProjectsEvents } from '#types';
 
@@ -57,8 +56,7 @@ export const Templates = Capability.lazyModule(
   () => import('./templates.ts'),
 );
 
-// Lazy rather than inline: the matcher names the schema, and a schema in the plugin definition's
-// static closure drags its barrel onto the boot path to answer whether a tour applies.
+// Lazy: a schema in the plugin definition's static closure drags its barrel onto the boot path.
 export const ProjectTour = Capability.lazyModule(
   'ProjectTour',
   { provides: [SupportCapabilities.Tour], environments: [] },

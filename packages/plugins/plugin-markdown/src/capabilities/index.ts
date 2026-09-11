@@ -10,7 +10,6 @@ import * as SpaceCapability from '@dxos/plugin-space/SpaceCapability';
 import * as SupportCapabilities from '@dxos/plugin-support/SupportCapabilities';
 import { translations as editorTranslations } from '@dxos/react-ui-editor/translations';
 
-import { meta } from '#meta';
 import { translations } from '#translations';
 import { MarkdownCapabilities } from '#types';
 
@@ -51,8 +50,7 @@ export const MarkdownState = Capability.lazyModule(
   () => import('./state.ts'),
 );
 export const Translations = AppCapability.translations([...translations, ...editorTranslations]);
-// Lazy rather than inline: the matcher names the schema, and a schema in the plugin definition's
-// static closure drags its barrel onto the boot path to answer whether a tour applies.
+// Lazy: a schema in the plugin definition's static closure drags its barrel onto the boot path.
 export const DocumentTour = Capability.lazyModule(
   'DocumentTour',
   { provides: [SupportCapabilities.Tour], environments: [] },

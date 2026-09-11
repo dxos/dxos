@@ -10,11 +10,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 
 import * as SupportCapabilities from './SupportCapabilities.ts';
 
-/**
- * Module contributing guided tours. Inline because a registration is metadata plus a step loader, so
- * the help companion can list what applies to the object in front of it without activating whichever
- * plugin owns the steps.
- */
+/** Module contributing guided tours. */
 export const tour = (
   tours: SupportCapabilities.Tour | ReadonlyArray<SupportCapabilities.Tour>,
   options?: { name?: string; environments?: readonly Capability.Environment[] },
@@ -27,7 +23,7 @@ export const tour = (
   );
 };
 
-/** Module contributing steps into other plugins' tours. Inline for the same reason as {@link tour}. */
+/** Module contributing steps into other plugins' tours. */
 export const tourFragment = (
   fragments: SupportCapabilities.TourFragment | ReadonlyArray<SupportCapabilities.TourFragment>,
   options?: { name?: string; environments?: readonly Capability.Environment[] },

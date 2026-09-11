@@ -4,13 +4,7 @@
 
 import type * as Tour from '@dxos/plugin-support/Tour';
 
-/**
- * Walks the editor's controls.
- *
- * Targets are toolbar controls rather than the editor body. A step whose target fills the viewport
- * leaves the card nowhere to sit and it renders off-screen, so the spotlight has to land on
- * something small enough to sit beside.
- */
+/** Walks the editor's toolbar controls. */
 export const steps: Tour.Step[] = [
   {
     target: '[data-testid="editor.toolbar.strong"]',

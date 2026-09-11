@@ -11,33 +11,18 @@ import { SupportCapabilities, Tour } from '#types';
 
 import { useAttendedData } from './useAttendedData.ts';
 
-/** Stable identity: the caller feeds this straight into an effect dependency. */
 const NO_STEPS: Tour.Step[] = [];
 
-/**
- * Tours that apply to `data` — the graph node data of whatever is on screen, or `undefined` for the
- * app itself, which selects the global tours.
- */
+/** Tours that apply to `data`; `undefined` selects the global tours. */
 export const useTours = (data?: unknown): readonly Tour.Definition[] => {
   const tours = useCapabilities(SupportCapabilities.Tour);
   return useMemo(() => Tour.matching(tours, data), [tours, data]);
 };
 
 /**
- * Steps for the running tour: its own steps plus every contributed fragment matching what is on
- * screen, in position order.
- *
- * Composed when a tour STARTS, not when `tourId` merely has a value. The id outlives the run (it is
- * persisted, so a reload restores the last one), and composing on the id alone ran at boot with
- * nothing attended yet — every fragment matcher was asked about an absent subject, rejected, and the
- * bare result was cached under that id for the life of the session.
- *
- * The subject is read through a ref rather than taken as a dependency: a step's `before` hook moves
- * the page about, and recomposing mid-tour would swap the machine's steps under the reader.
- *
- * Returns an empty list until the loaders settle. Handing back the previous tour's steps in the
- * meantime would start the machine on them, since starting a tour and loading its steps are separate
- * ticks and the machine opens on whatever it holds at the first of them.
+ * Steps for the running tour: its own plus every fragment matching what is on screen, in position
+ * order. Composed on `running`, not on `tourId`, which outlives the run. Empty until the loaders
+ * settle.
  */
 export const useTourSteps = (tourId: string | undefined, running: boolean): Tour.Step[] => {
   const tours = useCapabilities(SupportCapabilities.Tour);
@@ -60,10 +45,6 @@ export const useTourSteps = (tourId: string | undefined, running: boolean): Tour
       return;
     }
 
-    // `allSettled`, not `all`: the loaders come from different plugins, and with all-or-nothing a
-    // single failing contributor took the whole tour down to nothing. That is a tour that
-    // silently does not open, rather than one missing a step. A broken loader now costs its own
-    // steps and says so.
     let live = true;
     const loaders = Tour.stepLoaders(tour, fragments, subject.current);
     void Promise.allSettled(loaders.map((load) => load())).then((results) => {

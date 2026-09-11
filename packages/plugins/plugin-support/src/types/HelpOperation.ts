@@ -21,10 +21,7 @@ export const Start = Operation.make({
   output: Schema.Void,
 });
 
-/**
- * Runs a tour registered via `SupportCapabilities.Tour`, by id. Invoked from the help companion's tour
- * list and from the first-open auto-start; the id is recorded as seen so an `auto` tour fires once.
- */
+/** Runs a tour registered via `SupportCapabilities.Tour`, by id, and records it as seen. */
 export const StartTour = Operation.make({
   meta: {
     key: DXN.make('org.dxos.operation.support.startTour'),

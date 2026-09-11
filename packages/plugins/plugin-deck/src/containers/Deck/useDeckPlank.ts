@@ -80,9 +80,6 @@ export const useDeckPlank = ({ id, part, active }: UseDeckPlankOptions): DeckPla
   // leave a freshly-created plank's sigil menu empty until an unrelated re-render.
   const actions = useActions(graph, node?.id);
   const companions = useCompanions(id) ?? [];
-  // The pane's default for a newly opened plank; a no-op once the user has closed it in this deck.
-  // Unresolved companions read as none here, which simply defers the decision to the pass that
-  // resolves them.
   useCompanionDefault({
     id,
     companions,

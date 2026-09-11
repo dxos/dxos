@@ -17,23 +17,10 @@ import { isCompanionOpen } from '../util/companion-anchor.ts';
 export const PLANK_COMPANION_TYPE = AppNode.PLANK_COMPANION_TYPE;
 export const DECK_COMPANION_TYPE = AppNode.DECK_COMPANION_TYPE;
 
-/**
- * Companion tab shown when the user has expressed no preference. Help is a companion of every ECHO
- * article, so the pane opens on something that explains whatever it is sitting beside.
- */
+/** Companion tab shown when the user has expressed no preference. */
 export const DEFAULT_COMPANION_VARIANT = 'help';
 
-/**
- * The companion a plank actually renders, from its tabs in display order: the user's persisted tab
- * when the plank offers it, else help, else the first tab.
- */
-/**
- * Whether opening `plankId` should bring its companion up with it: the pane is the default for a new
- * plank, but only where there is a help companion to land on. With no companions the pane would be
- * empty, and with companions but no help the default would land on something else — the assistant
- * chat provisions a chat object as soon as it becomes the effective variant, so opening it unasked
- * would create one per object opened.
- */
+/** Whether opening `plankId` should bring its companion up with it. */
 export const shouldOpenCompanionByDefault = ({
   companions,
   companionPlanks,
@@ -105,13 +92,8 @@ export const StoredDeck = Schema.Struct({
    */
   companionPlanks: Schema.mutable(Schema.Array(Schema.String)),
   /**
-   * Whether the user has closed the companion in this deck. A plank opened while this is unset brings
-   * its help companion up with it, which is what makes help the pane's default rather than merely its
-   * default TAB. Closing the pane once turns it off, so the default never overrides a decision — and
-   * without it, closing would be futile: the next object opened would put the pane straight back.
-   *
-   * Optional because decks persisted before it existed have no such key, and a required one would fail
-   * the whole blob's decode and reset every deck.
+   * Whether the user has closed the companion in this deck; unset means a newly opened plank brings
+   * its help companion up with it. Optional so decks persisted before the key still decode.
    */
   companionDismissed: Schema.optional(Schema.Boolean),
   /**

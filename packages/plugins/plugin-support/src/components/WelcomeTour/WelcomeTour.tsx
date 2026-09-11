@@ -26,10 +26,7 @@ import { TourContext } from './TourContext.ts';
 const resolveTarget = (target: Tour.Step['target']) =>
   typeof target === 'string' ? () => document.querySelector<HTMLElement>(target) : target;
 
-/**
- * The machine's step. `before` becomes the step's effect: the step shows once the hook settles,
- * and the target is resolved after it, so a hook that opens a sidebar brings its target into being.
- */
+/** `before` becomes the machine's step effect, so the target is resolved after it settles. */
 const toStep = (
   step: Tour.Step,
   index: number,
@@ -43,7 +40,6 @@ const toStep = (
   placement: step.placement,
   arrow: true,
   ...(step.before && {
-    // A hook that throws, synchronously or not, still shows the step; the failure is logged.
     effect: ({ show }) => {
       void Promise.resolve()
         .then(() => step.before?.(capabilities))
@@ -59,20 +55,12 @@ export type WelcomeTourProps = {
   onRunningChanged?: (state: boolean) => any;
 };
 
-/**
- * The onboarding walkthrough on `Tour`. It pauses while a dialog is open — the tour leaves and
- * comes back at the same step when the dialog closes — and ends when a target never appears.
- */
+/** Pauses while a dialog is open, resuming at the same step, and ends when a target never appears. */
 export const WelcomeTour = ({ steps: initialSteps, running: runningProp, onRunningChanged }: WelcomeTourProps) => {
   const { t } = useTranslation(meta.profile.key);
   const manager = usePluginManager();
   const layout = useLayout();
   const paused = layout.dialogOpen;
-  // Derived during render, never mirrored into state by an effect. A tour's steps arrive after this
-  // component has mounted, and `running` flips in the same render they land in; state written from an
-  // effect is a commit behind, so the start effect below would open the machine on the PREVIOUS
-  // tour's steps, or on none at all. The override is what `TourContext` consumers set, and it dies
-  // with the prop identity it was made against, so it cannot leak into the next tour.
   const [override, setOverride] = useState<{ base: Tour.Step[]; steps: Tour.Step[] }>();
   const steps = override?.base === initialSteps ? override.steps : initialSteps;
   const setSteps = (next: Tour.Step[]) => setOverride({ base: initialSteps, steps: next });
@@ -91,7 +79,6 @@ export const WelcomeTour = ({ steps: initialSteps, running: runningProp, onRunni
     }
   };
 
-  // Where a paused tour resumes; cleared when the tour ends for real.
   const resumeAt = useRef<string | undefined>(undefined);
   const pausing = useRef(false);
   const lastStepId = useRef<string | undefined>(undefined);
@@ -111,10 +98,6 @@ export const WelcomeTour = ({ steps: initialSteps, running: runningProp, onRunni
         return;
       }
 
-      // A step whose target never appears ends the tour rather than failing, which reads as the
-      // tour stopping for no reason. Nothing else reports it, so name the step. The test is the
-      // target itself rather than how the tour ended: a reader closing the card does so on a step
-      // that IS on screen, while the silent end leaves behind a selector that resolves to nothing.
       const ended = steps.find((step, index) => (step.id ?? String(index + 1)) === lastStepId.current);
       if (ended && !resolveTarget(ended.target)()) {
         log.warn('tour ended on a step whose target never appeared', {
@@ -128,14 +111,13 @@ export const WelcomeTour = ({ steps: initialSteps, running: runningProp, onRunni
     },
   });
 
-  // The machine takes its steps once, at creation, and this component is mounted long before any
-  // tour has steps to give it, so a set that arrives later has to be pushed in through the api.
-  // Declared ahead of the start effect below so the machine is loaded before it is told to open.
+  // The machine takes its steps once, at creation, so a later set must be pushed in through the api.
+  // Must precede the start effect below.
   useEffect(() => {
     tour.setSteps(tourSteps);
   }, [tourSteps]);
 
-  // The machine exposes no dismiss beyond its close trigger, so a pause presses it.
+  // The machine exposes no dismiss beyond its close trigger, so a pause clicks it.
   const closeRef = useRef<HTMLButtonElement>(null);
   const shouldRun = running && !paused;
   useEffect(() => {

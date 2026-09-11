@@ -10,24 +10,20 @@ import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
 import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
-import * as Chat from '@dxos/assistant/Chat';
 import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
-import * as Markdown from '@dxos/plugin-markdown/Markdown';
 
 import { Mic } from '#components';
 import { meta } from '#meta';
 
+import { DICTATABLE_TYPES } from '../dictatable.ts';
+
 /**
- * Where dictation is offered: anything with a text surface to dictate into. One matcher rather than
- * one extension per host, so a new surface is a typename here — and the hosts stay unaware that
- * transcription exists.
+ * One matcher rather than one extension per host, so a new surface is a typename in
+ * {@link DICTATABLE_TYPES} and the hosts stay unaware that transcription exists.
  */
 const whenDictatable = GraphNodeMatcher.whenAll(
   AppNodeMatcher.whenEchoObjectMatches,
-  GraphNodeMatcher.whenAny(
-    AppNodeMatcher.whenEchoTypeMatches(Markdown.Document),
-    AppNodeMatcher.whenEchoTypeMatches(Chat.Chat),
-  ),
+  GraphNodeMatcher.whenAny(...DICTATABLE_TYPES.map((type) => AppNodeMatcher.whenEchoTypeMatches(type))),
 );
 
 export default Capability.makeModule(

@@ -12,12 +12,10 @@ import type { TourStepPlacement } from '@dxos/react-ui';
 import { Position } from '@dxos/util';
 
 /**
- * One stop of a guided tour: a target on the page, what to say beside it, and a hook run before it shows.
+ * One stop of a guided tour.
  *
- * Target a CONTROL, not a container. The card is positioned beside the target and the spotlight cuts
- * it out of the backdrop, so a target that fills the viewport pushes the card off-screen and teaches
- * nothing anyway. `before` runs and is awaited before the target is resolved, so a step can put the
- * page into the state it is about, opening a tab or a pane it needs.
+ * `target` must be a control, not a container: the card is placed beside it and a viewport-sized
+ * target pushes the card off-screen.
  */
 export type Step = {
   /** Defaults to the step's one-based position. */
@@ -32,20 +30,13 @@ export type Step = {
 };
 
 /**
- * Whether a tour applies to what the app is showing. The argument is the DATA of the graph node in
- * the main content area, typed `unknown` because not every node carries an ECHO object — a settings
- * page, Home, and the plugin registry are nodes too, and each can have a tour. `undefined` means the
- * app itself rather than anything it is displaying, which is what makes a tour global.
- *
- * A matcher MUST reject `undefined`, or its tour runs as the app's introduction; {@link whenType}
- * and its kin do. Matchers run unguarded: one that throws is a bug in the plugin that registered it.
+ * Whether a tour applies to the data of the graph node in the main content area; `undefined` is the
+ * app itself. A matcher must reject `undefined` unless its tour is the app's introduction, and must
+ * not throw: matchers run unguarded.
  */
 export type Matcher = (data?: unknown) => boolean;
 
-/**
- * A guided tour a plugin offers. Registration is metadata plus a step loader, so a consumer can ask
- * what applies to the node in front of it without paying for anyone's steps.
- */
+/** A guided tour a plugin offers. */
 export type Definition = Readonly<{
   /** Stable across releases: it is what gets recorded when the tour has been seen. */
   id: string;
@@ -55,18 +46,10 @@ export type Definition = Readonly<{
   auto?: boolean;
   /** Where the tour's own steps sit among contributed {@link Fragment}s; neutral when unset. */
   position?: Position.Position;
-  /** A loader rather than an array so step bodies stay out of the registering module's closure. */
   steps: () => Promise<readonly Step[]>;
 }>;
 
-/**
- * Steps another plugin adds to whatever tour is running, when its own matcher accepts the subject.
- *
- * Fragments join by matcher rather than by naming a tour, which is what keeps the coupling one-way:
- * a plugin that owns a feature says where its feature applies, and never learns which tours exist or
- * what they are called. A tour needs no fragments. Its own steps are the whole of it until someone
- * contributes.
- */
+/** Steps another plugin adds to whatever tour is running, when its own matcher accepts the subject. */
 export type Fragment = Readonly<{
   matches: Matcher;
   /** Relative to the tour's own steps, which sit at neutral: `Position.first` leads, `last` trails. */
@@ -74,7 +57,7 @@ export type Fragment = Readonly<{
   steps: () => Promise<readonly Step[]>;
 }>;
 
-/** Matches the app itself: the walkthrough offered from the help menu, not tied to anything on screen. */
+/** Matches the app itself rather than anything on screen. */
 export const whenGlobal: Matcher = (data) => data === undefined;
 
 /** Matches articles of one ECHO type. */
@@ -83,16 +66,13 @@ export const whenType =
   (data) =>
     Obj.isObject(data) && Obj.getTypename(data) === Type.getTypename(type);
 
-/** Matches articles of any of `types`, for a fragment that applies wherever its feature does. */
+/** Matches articles of any of `types`. */
 export const whenTypes = (types: readonly Type.AnyEntity[]): Matcher => {
   const typenames = new Set(types.map((type) => Type.getTypename(type)));
   return (data) => Obj.isObject(data) && typenames.has(Obj.getTypename(data) ?? '');
 };
 
-/**
- * The step loaders a tour runs for `data`, in order: its own steps plus every fragment that accepts
- * the same subject. Loaders rather than steps, so a caller decides when to pay for them.
- */
+/** The step loaders a tour runs for `data`: its own, plus every fragment accepting the same subject. */
 export const stepLoaders = (
   definition: Definition,
   fragments: readonly Fragment[],
@@ -102,7 +82,6 @@ export const stepLoaders = (
     { position: definition.position, steps: definition.steps },
     ...fragments.filter((fragment) => fragment.matches(data)),
   ]
-    // Stable, so fragments sharing a position keep the order their plugins registered in.
     .toSorted(Position.compare)
     .map(({ steps }) => steps);
 

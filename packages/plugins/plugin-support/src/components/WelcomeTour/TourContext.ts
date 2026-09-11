@@ -6,7 +6,6 @@ import { type Context as ReactContext, createContext } from 'react';
 
 import type * as Tour from '@dxos/plugin-support/Tour';
 
-/** Shape of the React context exposed to consumers of the running tour. */
 export type TourContextType = {
   running: boolean;
   steps: Tour.Step[];
@@ -16,9 +15,8 @@ export type TourContextType = {
   stop: () => void;
 };
 
-// Lives with the component rather than under `types/`: `createContext` is a real React import, and
-// `types/` is reachable from the node capability barrel, so a context declared there pulls React
-// into a headless bundle.
+// Not under `types/`: that barrel is reachable from the node capabilities, and `createContext` would
+// pull React into a headless bundle.
 export const TourContext: ReactContext<TourContextType> = createContext<TourContextType>({
   running: false,
   steps: [],

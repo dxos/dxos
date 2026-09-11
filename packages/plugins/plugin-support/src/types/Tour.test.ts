@@ -24,7 +24,6 @@ const titles = async (loaders: readonly (() => Promise<readonly Tour.Step[]>)[])
 
 describe('stepLoaders', () => {
   const document = { id: 'a', typename: 'org.dxos.type.document' };
-  // `Obj.isObject` brands real ECHO objects, so matchers are exercised through explicit stubs.
   const matchesDocument: Tour.Matcher = (data) => (data as any)?.typename === 'org.dxos.type.document';
 
   test('a tour with no fragments is just its own steps', async ({ expect }) => {

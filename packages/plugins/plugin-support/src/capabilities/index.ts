@@ -38,7 +38,6 @@ export const WelcomeTour = Capability.lazyModule(
   {
     provides: [SupportCapabilities.Tour],
     environments: [],
-    /** Maps the plugin's configured tour-step loader to the body's props. */
     props: (options: { helpSteps?: () => Promise<Tour.Step[]> }) => options.helpSteps,
   },
   () => import('./welcome-tour.ts'),

@@ -11,11 +11,6 @@ import { SupportCapabilities, Tour } from '#types';
 
 import { WELCOME_TOUR_ID } from '../constants.ts';
 
-/**
- * Registers the host app's walkthrough as an ordinary tour whose matcher is the global one, so the
- * welcome tour and a type's tour run through one mechanism. An app that supplies no steps registers
- * nothing, and "Show welcome tour" then has nothing to offer.
- */
 export default Capability.makeModule(
   Effect.fnUntraced(function* (helpSteps?: () => Promise<Tour.Step[]>) {
     if (!helpSteps) {

@@ -11,7 +11,6 @@ import { DeckSchema } from '#types';
 
 /**
  * Resolves which companion to show based on variant preference.
- * Falls back to the help tab, then to the first available.
  */
 export const useSelectedCompanion = (companions: AppGraphNode.Node[], preferredVariant?: string) => {
   return useMemo(() => {

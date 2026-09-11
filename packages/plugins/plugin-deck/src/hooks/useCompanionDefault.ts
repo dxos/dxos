@@ -13,9 +13,7 @@ import { DeckSchema } from '#types';
 
 /**
  * Brings the companion up on help when a plank opens, unless the user has closed the pane in this
- * deck. Runs from the plank rather than from the operation that opened it: a plank's companions are
- * graph connections that resolve after the plank exists, so whether there IS a help companion is not
- * yet knowable at the moment the plank is added.
+ * deck. Runs from the plank because its companions resolve only after the plank exists.
  */
 export const useCompanionDefault = ({
   id,

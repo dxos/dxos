@@ -84,9 +84,7 @@ export const Default: Story = {};
 
 const card = () => document.querySelector<HTMLElement>('[data-testid="helpPlugin.tooltip"]');
 
-// The plugin manager activates before it mounts the story, which regularly outlasts the one second
-// `findBy*` allows by default. The story that waits first was failing on an empty canvas, not on
-// anything the tour did.
+// The plugin manager activates before the story mounts, outlasting the default `findBy*` timeout.
 const MOUNT_TIMEOUT = { timeout: 15_000 };
 
 /** The card walks the steps by its own buttons, numbered as the e2e suite expects, and leaves on Done. */
@@ -141,7 +139,7 @@ const laterSteps: Tour.Step[] = [
   },
 ];
 
-/** Mounts with no steps and receives them later, the way a registered tour's loader delivers them. */
+/** Mounts with no steps and receives them later, as a registered tour's loader delivers them. */
 const LateStepsStory = () => {
   const [current, setCurrent] = useState<Tour.Step[]>([]);
   const [running, setRunning] = useState(false);
@@ -177,8 +175,7 @@ const title = () => document.querySelector<HTMLElement>('[data-testid="helpPlugi
 
 /**
  * Steps that arrive after mount reach the card, and a second tour replaces the first rather than
- * replaying it. Guards the frozen-initial-state bug: seeding component state from the prop once left
- * every tour after the first showing the steps of whichever ran first.
+ * replaying it.
  */
 export const TestLateSteps: Story = {
   render: LateStepsStory,
@@ -199,11 +196,7 @@ export const TestLateSteps: Story = {
   },
 };
 
-/**
- * A step whose target is never rendered ends the tour where it stands. Guards the report rather than
- * the behaviour: four separate tour steps shipped pointing at elements that do not exist, and each
- * one looked like the tour simply stopping.
- */
+/** A step whose target is never rendered ends the tour where it stands. */
 export const TestMissingTarget: Story = {
   render: () => {
     const [running, setRunning] = useState(false);
@@ -232,7 +225,6 @@ export const TestMissingTarget: Story = {
     await userEvent.click(await canvas.findByTestId('story.start', {}, MOUNT_TIMEOUT));
     await waitFor(() => expect(card()).toHaveAttribute('data-step', '1'));
 
-    // Advancing onto the unrenderable step closes the card rather than showing it.
     await userEvent.click(within(canvasElement.ownerDocument.body).getByTestId('helpPlugin.tooltip.next'));
     await waitFor(() => expect(card()).toBeNull());
   },

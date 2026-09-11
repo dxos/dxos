@@ -4,26 +4,14 @@
 
 import type * as Tour from '@dxos/plugin-support/Tour';
 
-/**
- * Puts the article in the tab a step is about before it shows.
- *
- * Driven through the tab control rather than through state: the article holds `tab` in local React
- * state, so there is nothing an operation or a capability can address. Clicking the same `data-testid`
- * the step targets is what a reader would do, and it keeps the whole arrangement inside this file.
- */
+/** Puts the article in the tab a step is about before it shows. */
 const showTab =
   (tab: 'overview' | 'tasks'): Tour.Step['before'] =>
   () => {
     document.querySelector<HTMLElement>(`[data-testid="projectsPlugin.tab.${tab}"]`)?.click();
   };
 
-/**
- * Walks what a project is made of, switching tabs as it goes.
- *
- * Every target is chrome the article always renders. The outline, the standing context and the
- * milestone list are all conditional on content a new project does not have yet, and a step whose
- * target never appears does not fail loudly — it ends the tour early.
- */
+/** Walks what a project is made of, switching tabs as it goes. */
 export const steps: Tour.Step[] = [
   {
     before: showTab('overview'),

@@ -34,8 +34,6 @@ const handler: Operation.WithHandler<typeof LayoutOperation.UpdateCompanion> = L
       if (subject === null) {
         const plankId = input.anchor ?? resolveCompanionAnchor(deck.active, attention.getCurrent());
         const companionPlanks = closeCompanionPlank(deck.companionPlanks, flatten, plankId);
-        // Recorded so the pane's default does not undo the close on the next object opened. A deck
-        // preference rather than part of what is open, so it stays out of the URL.
         yield* Capabilities.updateAtomValue(DeckCapabilities.State, (state) =>
           updateActiveDeck(state, { companionDismissed: true }),
         );
