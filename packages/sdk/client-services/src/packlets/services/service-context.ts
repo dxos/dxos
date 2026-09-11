@@ -135,7 +135,6 @@ export const ServiceContextLayer = (
     Layer.provideMerge(DataSpaceManagerLayer({ runtimeProps: options, edgeFeatures: options.edgeFeatures })),
     Layer.provideMerge(SigningContextProviderLayer),
     Layer.provideMerge(identityProviderLayer),
-    Layer.provideMerge(options.disableP2pReplication ? Layer.empty : MeshEchoReplicatorLayer()),
     Layer.provideMerge(echoHostLayer({ useSubduction: options.edgeFeatures?.subductionReplicator })),
     Layer.provideMerge(InvitationsManagerLayer()),
     Layer.provideMerge(InvitationsHandlerLayer({ connectionProps: options.invitationConnectionDefaultProps })),
@@ -148,6 +147,7 @@ export const ServiceContextLayer = (
         automergeCredentials: options.automergeCredentials,
       }),
     ),
+    Layer.provideMerge(options.disableP2pReplication ? Layer.empty : MeshEchoReplicatorLayer()),
     Layer.provideMerge(SpaceManagerLayer({ disableP2pReplication: options.disableP2pReplication })),
     Layer.provideMerge(storageLayer),
   );

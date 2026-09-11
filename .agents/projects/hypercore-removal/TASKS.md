@@ -1,24 +1,56 @@
 # Hypercore removal — credentials over Automerge — Tasks
 
-_Resume (2026-08-25): PR A `dxos/dxos#12726`, PR B `dxos/edge#945`. Phase 1 is done; Phase 2 is done on the
-WRITE side (root + credentials document minted, populated and mirrored, on both data spaces and HALO) and
-on the EDGE read side. What is NOT done is the CLIENT read flip: there is no `CredentialSource` behind
-`ControlPipeline`, so the client still reads its credentials from the control feed and the document is
-written but never authoritative. That flip (Phase 2 write/read path + notarization) and all of Phase 3 are
-the remaining work, and Phase 3 is blocked on a design decision — see "Open decision" below. Phase 4 is out
-of scope for both PRs by design._
+_Resume (2026-08-28): PRs `dxos/dxos#12726` (merged), `#12774` (merged), `#12825` (open, green) and
+`dxos/edge#945` (open, green). Phase 1 done. Phase 2 done on the WRITE side and on the EDGE read side,
+including the pieces that made the edge path actually work end to end: edge is TOLD its space root over
+`POST /db/spaces/:spaceId/root` (write-once, genesis-checked, KV-cached), the client reports it on anchor
+with backoff, the space root and credentials documents are named in the replicated document set, credential
+documents are read from whichever replicator realm holds them, and HALO documents now replicate between an
+identity's own devices. What is still NOT done is the CLIENT read flip: there is no `CredentialSource`
+behind `ControlPipeline`, so the client still reads its credentials from the control feed and the document
+is written but never authoritative. Phase 3 is PARTLY done — the anchor migration, credential mirroring, EDGE
+dual-source read, root reporting and HALO replication items below are checked; what remains is the client
+read flip and the still-unchecked Phase 3 items. Phase 4 is out of scope for every PR so far by design._
 
-## Open decision — blocks Phase 3
+> **Historical note on `idDerivation`.** Phases 1–3 below were written when a space could be anchored
+> either on its key or on its root document, recorded as `idDerivation`. That was BACKTRACKED: a space id
+> is now ALWAYS `SHA-256(spaceKey)[0..20]` and `idDerivation` no longer exists in the code. Every mention
+> of it below is historical plan text, not a current contract.
 
-Client-initiated migration executed by EDGE. Two shapes, not yet chosen:
+## Resolved decision (2026-09-11, supersedes 2026-08-27) — EDGE mints the root of a legacy space
 
-1. EDGE performs the migration and returns the new document ids. Matches the original framing; the
-   recovery/invitation resolver (returning `haloSpaceRootUrl`) falls out of it for free; larger build.
-2. The client creates the documents and EDGE records them. Smaller, and delivers the resolver now, but it
-   moves migration authority to the client, which is weaker than what was asked for.
+**Shape 1 for the migration path: the client asks, EDGE creates.** A client with no root calls
+`POST /db/spaces/:spaceId/root` with an EMPTY body; edge mints the root and its credentials document,
+populates the credentials from the chain it already materialized off the control feed, records the root
+write-once and returns it. The client adopts what it is handed and never mints.
 
-Until this is settled EDGE has nothing to put in `haloSpaceRootUrl`, because it locates space roots by
-derivation and nothing on EDGE records a root-document url for any space.
+**Why the 2026-08-27 resolution did not settle this.** It read "edge cannot IDENTIFY a space root" (true —
+no document id reproduces `SHA-256(spaceKey)[0..20]`) as "edge cannot OWN one", which does not follow.
+Identifying and minting are different problems, and only the first was blocked. Meanwhile Shape 2 left the
+one thing DESIGN decision 3 requires — _"the migration is driven by one writer and the others adopt the
+root they receive"_ — with no mechanism: nothing elected a writer, so every device that already held the
+space minted its own root over it, and `adoptSpaceRoot` threw rather than converging. DESIGN's
+"Bootstrap and cutover (resolved)" note hid this, because "the pointer is handed over" is true for a peer
+JOINING a space and false for the existing members that migration is FOR — their admission credentials
+predate `space_root_url`.
+
+**What resolves the race** is not that edge writes the bytes but that edge is a per-space serialization
+point that already existed: the durable object is single-threaded per space id, and the registry record is
+write-once. Concurrent callers are answered with one root.
+
+Retained from Shape 2, still correct and still in force: a client-minted root IS accepted when the body
+names one, because a root-anchored space MUST mint its own (its id is the hash of the root's document id,
+so the document precedes the space); the record stays write-once; and a named root must carry the genesis
+credential of the space's known space key.
+
+**Cost, and the decision it encodes:** a space that never reaches edge never migrates. That is a real
+concession for a local-first system — peer-to-peer-only and self-hosted deployments stay on feeds — and it
+is accepted deliberately rather than by omission.
+
+**HALO is NOT on this path.** Edge learns a space's directory from an `Epoch` credential
+(`SpaceStateMachine.getAutomergeRoot`), and HALO has none: it never had a directory at all, so
+`IdentityManager` creates one locally. Edge would have nothing to point a root at. HALO therefore still
+mints locally, and the multi-device race is still OPEN for it — see the Phase 3 item below.
 
 Branch `claude/remove-hypercore-automerge-creds-uo7lx9`. Rationale in `DESIGN.md`.
 
@@ -63,8 +95,9 @@ every test matrix row below keys off, and the rollback lever if the new path mis
 
 1. Doc-backed credential source for the `SpaceStateMachine` DO, behind the same
    per-space selector; feed path retained.
-2. Auth negative-cache invalidation on credential apply
-   (`automerge-replicator-auth.ts`).
+2. ~~Auth negative-cache invalidation on credential apply
+   (`automerge-replicator-auth.ts`).~~ MOOT — dxos/edge#990 deleted the classical
+   `AutomergeReplicator` and its authenticator outright; subduction has no such cache.
 3. A space mid-flip refuses admissions.
 
 PR A can land first and is independently testable — a space that has flipped simply has no
@@ -221,11 +254,12 @@ migration; crash mid-migration and resume.
       directory but is a separate hand-written contract consumed by deployed functions, so it is left
       alone rather than widened into this change.
 - [x] `createAdmissionCredentials` is now 10 positional parameters — convert to an options bag.
-- [x] **EDGE auth negative cache — already fixed, now covered.** `automerge-replicator-auth.ts`
-      caches only an allow; a denial re-queries, so a joiner that dialled before its admission
-      landed is no longer refused for the rest of the 60s TTL. Verified by
-      `automerge-replicator-auth.workerd.test.ts`, which denies a joiner, applies the admission,
-      and re-asks with the same authenticator instance.
+- [x] **EDGE auth negative cache — no longer a thing to fix.** The fix (cache only an allow, so a
+      joiner that dialled before its admission landed is not refused for the rest of the 60s TTL)
+      and its `automerge-replicator-auth.workerd.test.ts` were both dropped when edge#945 was
+      rebased: dxos/edge#990 deleted `AutomergeReplicator` and `AutomergeReplicationAuthenticator`
+      with it. Subduction carries no per-identity auth cache, so there is nothing left to
+      invalidate. Re-check if one is ever introduced there.
 - [ ] Replication: credentials doc joins normal subduction; fresh-joiner test that reads
       credentials before being admitted to anything else.
 - [x] Replay test: replaying the document into a fresh `SpaceStateMachine` reaches the same genesis,
@@ -276,16 +310,38 @@ migration; crash mid-migration and resume.
       writing feed credentials for it. Both sources still run today.
 
 - [x] **Reader accepts BOTH sources on EDGE** (dxos/edge#945) — `SpaceStateMachine` pulls from the
-      credentials document alongside the control feed. Two things made this cheaper than planned:
-      the root document is found by DERIVATION rather than by a new client API or protocol field
-      (a `rootDoc` space id is the hash of its root document id, so exactly one stored document can
-      match, and the lookup is self-certifying); and the per-space selector falls out of that for
-      free — a space is on the document path exactly when its root resolves, so a legacy space needs
-      no flag to stay on the feed. Cost: the wire contract and `orderCredentials` are DUPLICATED in
-      the edge repo, because the catalog pins `@dxos/echo-protocol` to a commit predating them. A
-      shared fixed derivation vector is asserted on both sides so they cannot drift silently.
-      A document write is not gated the way feed admission gates a block, so every credential is
-      signature-verified before it reaches a processor.
+      credentials document alongside the control feed. Edge learns the root from the client via
+      `POST /db/spaces/:spaceId/root` — an earlier version of this entry claimed derivation instead, see
+      the historical note at the top. Cost: the wire contract
+      and `orderCredentials` are DUPLICATED in the edge repo, because the catalog pins `@dxos/echo-protocol`
+      to a commit predating them. A document write is not gated the way feed admission gates a block, so
+      every credential is signature-verified before it reaches a processor.
+- [x] **Rebased onto subduction** (2026-08-31) — dxos/edge#990 removed the classical
+      `AutomergeReplicator`, which had held both the documents and the `getSpaceCredentials` RPC.
+      `SpaceCredentialsSource` now reads through `initSubductionReplicator(spaceId).getDocumentsBytes`
+      and holds no durable-object state, so `SpaceStateMachine` constructs one directly instead of
+      paying a cross-DO hop; it moved to `worker/space/` beside the state machine to say so. The
+      registry is what makes this work: it already held the root record precisely because the reader
+      lives in a different durable object from the replicator.
+- [x] **Edge is told the space root** — write-once record (`COALESCE`, returns the id in force), genesis
+      credential checked against the space's known space key, cached in `GlobalKv` (safe without
+      invalidation precisely because the record is write-once).
+- [ ] **Follow-up: the root lookup has no negative cache.** Only a hit is cached, so every
+      unanchored space re-asks the `SpaceRegistry` singleton once per state-machine poll — N spaces
+      into one durable object, forever, for an answer that is "no" until the space is anchored. The
+      reasoning for caching only hits is sound (a miss is the pre-anchor state), but the cost is
+      real; a short-TTL negative entry would delay a flip by that TTL and nothing else. Decide
+      before the flip goes wide, not after.
+- [x] **Client reports the root on anchor** (dxos#12774) — `EdgeHttpClient.recordSpaceRoot`, retried with
+      backoff on the manager's own context, since the invitation accept flow disposes its ctx as soon as
+      `acceptSpace` returns.
+- [x] **The three bugs the e2e suite exposed** — the space root and credentials documents hung off the
+      space rather than the directory, so they were never in the replicated set; credentials were read
+      through the classical replicator while replication landed in the subduction realm; and `acceptSpace`
+      accepted a `spaceRootUrl` and then ignored it, minting a competing root.
+- [x] **HALO documents replicate between devices** (dxos#12825) — halo sessions registered only the gossip
+      extension, so a joining device could never fetch the root the inviter named. It now registers the
+      automerge replicator extension too, and adoption retries to a ceiling.
 - [ ] Reader accepts both sources on the CLIENT for the whole migration window.
 - [ ] **Dual-write during the window** — a migrating space writes every credential to BOTH
       the control feed and the credentials doc, so either reader stays complete and no
@@ -298,7 +354,16 @@ migration; crash mid-migration and resume.
       space to the doc source. Space id UNCHANGED. No space is ever half-migrated.
 - [ ] EDGE reads a given space's credentials from exactly one source — the per-space flip is
       the only thing that switches it.
-- [ ] Single-writer/adopt protocol so peers converge on one root doc per legacy space.
+- [x] **Single-writer/adopt protocol — EDGE is the single writer** (dxos#12825 + dxos/edge#945). A legacy
+      space's root is minted by `SpaceCredentialsSource.ensureSpaceRoot` on an empty-body
+      `POST /db/spaces/:spaceId/root`; the client adopts what it is handed and no longer calls
+      `EchoHost.migrateSpaceToRootDocument`. `adoptSpaceRoot` now REPLACES a disagreeing local root
+      rather than throwing, since edge's write-once record is the authority and a local root can only
+      be one this device minted before that record existed. See the resolved decision above.
+- [ ] **HALO still races.** Its directory is created locally (`IdentityManager` → `createSpaceRoot`) and
+      no `Epoch` credential carries it, so `getAutomergeRoot` returns nothing and edge cannot mint a HALO
+      root. Two pre-existing devices still mint one each. Options: have the client name the directory in
+      the mint request, or record a HALO root the way data spaces do and elect on it.
 - [ ] Migration test over a real profile fixture: mid-migration crash, concurrent credential
       writes, and re-running the migration.
 - [ ] Retire the dual path once no space reports the feed source.
