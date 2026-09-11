@@ -211,7 +211,7 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
                     </Form.FieldSet>
                   )}
 
-                  <Form.FieldSet label={t('artifacts.label')}>
+                  <Form.FieldSet label={t('artifacts.label')} data-testid='projectsPlugin.artifacts'>
                     <ObjectGallery refs={project.artifacts} onOpen={handleOpen} onDelete={handleDeleteArtifact} />
                   </Form.FieldSet>
                 </Form.Content>

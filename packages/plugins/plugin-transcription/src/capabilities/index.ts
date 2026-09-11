@@ -5,6 +5,7 @@
 import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import * as MarkdownCapabilities from '@dxos/plugin-markdown/MarkdownCapabilities';
 import * as MarkdownEvents from '@dxos/plugin-markdown/MarkdownEvents';
@@ -71,6 +72,12 @@ export const Transcriber = Capability.lazyModule(
 export const TranscriptionSettings = AppCapability.settings(() => import('./settings.ts'), {
   provides: [TranscriptionCapabilities.Settings],
 });
+// Lazy: schemas in the plugin definition's static closure drag their barrels onto the boot path.
+export const TourFragment = Capability.lazyModule(
+  'TourFragment',
+  { provides: [AppCapabilities.TourFragment], environments: [] },
+  () => import('./tour-fragment.ts'),
+);
 export const Translations = AppCapability.translations(translations);
 export const PluginAsset = AppCapability.pluginAsset({
   pluginId: meta.profile.key,

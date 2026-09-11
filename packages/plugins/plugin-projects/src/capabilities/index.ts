@@ -4,6 +4,7 @@
 
 import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as Capability from '@dxos/app-framework/Capability';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import * as AssistantCapabilities from '@dxos/plugin-assistant/AssistantCapabilities';
 import * as AssistantEvents from '@dxos/plugin-assistant/AssistantEvents';
@@ -53,6 +54,13 @@ export const Templates = Capability.lazyModule(
     activatesOn: ProjectsEvents.Start,
   },
   () => import('./templates.ts'),
+);
+
+// Lazy: a schema in the plugin definition's static closure drags its barrel onto the boot path.
+export const ProjectTour = Capability.lazyModule(
+  'ProjectTour',
+  { provides: [AppCapabilities.Tour], environments: [] },
+  () => import('./project-tour.ts'),
 );
 
 export const Translations = AppCapability.translations(translations);

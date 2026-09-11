@@ -22,7 +22,7 @@ export type SetActiveResult = {
   deckUpdates: {
     inactive: string[];
     active: string[];
-    companionPlanks: string[];
+    companionPlanks: string[] | undefined;
   };
   /** ID of the item to attend (scroll into view) if attention changed. */
   toAttend?: string;
@@ -36,10 +36,15 @@ export type SetActiveResult = {
  * planks that stay open keep their own flag, and a companion whose plank left lands on the newest.
  */
 const carryCompanions = (
-  companionPlanks: readonly string[],
+  companionPlanks: readonly string[] | undefined,
   next: readonly string[],
   flatten: boolean | undefined,
-): string[] => {
+): string[] | undefined => {
+  // Undecided is carried, never settled here: only the reader opening or closing the pane decides,
+  // and navigation is not that.
+  if (companionPlanks === undefined) {
+    return undefined;
+  }
   if (companionPlanks.length === 0 || next.length === 0) {
     return [];
   }

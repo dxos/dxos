@@ -19,6 +19,7 @@ export default Capability.makeModule(() =>
         running: false,
         showHints: true,
         showWelcome: true,
+        seenTours: [],
       }),
     });
 

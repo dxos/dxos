@@ -9,4 +9,3 @@ export * as Support from './Support.ts';
 export * as SupportCapabilities from './SupportCapabilities.ts';
 export * as SupportOperation from './SupportOperation.ts';
 export * as SupportService from './SupportService.ts';
-export * as Tour from './Tour.ts';

@@ -3,12 +3,14 @@
 //
 
 import * as Capability from '@dxos/app-framework/Capability';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
+import type * as Tour from '@dxos/app-toolkit/Tour';
 import * as SpaceCapability from '@dxos/plugin-space/SpaceCapability';
 
 import { meta } from '#meta';
 import { translations } from '#translations';
-import { HelpCapabilities, SupportCapabilities, Tour } from '#types';
+import { HelpCapabilities, SupportCapabilities } from '#types';
 
 // eslint-disable-next-line import/no-relative-packages
 import pluginSpec from '../../PLUGIN.mdl?raw';
@@ -31,10 +33,16 @@ export const HelpState = Capability.lazyModule(
   () => import('./help-state.ts'),
 );
 export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler.ts'));
-export const ReactRoot = AppCapability.reactRoot(() => import('./react-root.tsx'), {
-  /** Maps the plugin's configured tour-step loader to the body's props. */
-  props: (options: { helpSteps?: () => Promise<Tour.Step[]> }) => options.helpSteps,
-});
+export const ReactRoot = AppCapability.reactRoot(() => import('./react-root.tsx'));
+export const WelcomeTour = Capability.lazyModule(
+  'WelcomeTour',
+  {
+    provides: [AppCapabilities.Tour],
+    environments: [],
+    props: (options: { helpSteps?: () => Promise<Tour.Step[]> }) => options.helpSteps,
+  },
+  () => import('./welcome-tour.ts'),
+);
 export const ReactSurface = AppCapability.surface(() => import('./react-surface.ts'), {
   roles: [
     'org.dxos.plugin.space.role.homeContent',

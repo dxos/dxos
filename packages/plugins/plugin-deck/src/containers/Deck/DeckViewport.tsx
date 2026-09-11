@@ -1585,7 +1585,7 @@ export const DeckPlanks = () => {
     if (!viewport || !isSliding || expose) {
       return;
     }
-    const opened = deck.companionPlanks.filter((id) => !(previous ?? []).includes(id) && planks.includes(id));
+    const opened = (deck.companionPlanks ?? []).filter((id) => !(previous ?? []).includes(id) && planks.includes(id));
     const openedId = opened[opened.length - 1];
     if (!openedId) {
       return;

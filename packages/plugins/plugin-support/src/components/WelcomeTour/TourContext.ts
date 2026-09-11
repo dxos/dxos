@@ -4,12 +4,20 @@
 
 import { type Context as ReactContext, createContext } from 'react';
 
-import { type Tour } from '#types';
+import type * as Tour from '@dxos/app-toolkit/Tour';
 
-// Lives with the component rather than under `types/`: `createContext` is a real React import, and
-// `types/` is reachable from the node capability barrel, so a context declared there pulls React
-// into a headless bundle. The `Tour` types stay in `types/` — they erase.
-export const TourContext: ReactContext<Tour.ContextType> = createContext<Tour.ContextType>({
+export type TourContextType = {
+  running: boolean;
+  steps: readonly Tour.Step[];
+  setSteps: (steps: readonly Tour.Step[]) => void;
+  setIndex: (index: number) => void;
+  start: () => void;
+  stop: () => void;
+};
+
+// Not under `types/`: that barrel is reachable from the node capabilities, and `createContext` would
+// pull React into a headless bundle.
+export const TourContext: ReactContext<TourContextType> = createContext<TourContextType>({
   running: false,
   steps: [],
   setSteps: () => {},

@@ -13,12 +13,16 @@
 import { useAtomValue } from '@effect/atom-react/Hooks';
 import React, { useMemo } from 'react';
 
-import { usePluginManager } from '@dxos/app-framework/ui';
+import { useOperationInvoker, usePluginManager } from '@dxos/app-framework/ui';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj, Type } from '@dxos/echo';
-import { Carousel, Panel, ScrollArea, Toolbar } from '@dxos/react-ui';
+import { Carousel, Panel, ScrollArea, Toolbar, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { MarkdownView } from '@dxos/react-ui-markdown';
+
+import { useTours } from '#hooks';
+import { meta } from '#meta';
+import { HelpOperation } from '#types';
 
 // The surface registration constrains incoming data to
 // `AppSurface.ArticleProps<'help', {}, Obj.Any>` (companion node with
@@ -33,12 +37,16 @@ export type SupportCompanionProps = Pick<AppSurface.ArticleProps<'help', {}, Obj
  * plugin's `meta.profile.description` (Markdown) and `meta.profile.screenshots` (Carousel).
  */
 export const SupportCompanion = ({ companionTo }: SupportCompanionProps) => {
+  const { t } = useTranslation(meta.profile.key);
   const manager = usePluginManager();
+  const { invokePromise } = useOperationInvoker();
   const schemasByModule = useAtomValue(manager.capabilities.atomByModule(AppCapabilities.Schema));
+
+  const typename = Obj.getTypename(companionTo);
+  const tours = useTours(companionTo);
 
   const { content, screenshots } = useMemo(() => {
     const empty = { content: '', screenshots: [] as readonly string[] };
-    const typename = Obj.getTypename(companionTo);
     if (!typename) {
       return empty;
     }
@@ -61,12 +69,22 @@ export const SupportCompanion = ({ companionTo }: SupportCompanionProps) => {
         .map((s) => (typeof s === 'string' ? s : (s.light ?? s.dark ?? '')))
         .filter(Boolean),
     };
-  }, [companionTo, manager, schemasByModule]);
+  }, [typename, manager, schemasByModule]);
 
   return (
     <Panel.Root>
       <Panel.Toolbar asChild>
-        <Toolbar.Root />
+        <Toolbar.Root>
+          {tours.map((tour) => (
+            <Toolbar.IconButton
+              key={tour.id}
+              icon='ph--path--regular'
+              label={toLocalizedString(tour.label, t)}
+              onClick={() => invokePromise(HelpOperation.StartTour, { tourId: tour.id })}
+              data-testid='supportPlugin.startCompanionTour'
+            />
+          ))}
+        </Toolbar.Root>
       </Panel.Toolbar>
       <Panel.Content>
         <ScrollArea.Root orientation='vertical'>

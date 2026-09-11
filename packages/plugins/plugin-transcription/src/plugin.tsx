@@ -16,6 +16,7 @@ import {
   Schema,
   SkillDefinition,
   TextContent,
+  TourFragment,
   Transcriber,
   TranscriptionDriver,
   TranscriptionSettings,
@@ -38,6 +39,7 @@ export const TranscriptionPlugin = Plugin.define(meta).pipe(
   Plugin.addModule(Transcriber),
   Plugin.addModule(TranscriptionDriver),
   Plugin.addModule(TranscriptionSettings),
+  Plugin.addModule(TourFragment),
   Plugin.addModule(Translations),
   Plugin.make,
 );

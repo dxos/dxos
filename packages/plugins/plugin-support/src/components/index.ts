@@ -4,4 +4,5 @@
 
 export * from './FeedbackForm/index.ts';
 export * from './Shortcuts/index.ts';
+export * from './TourAutoStart/index.ts';
 export * from './WelcomeTour/index.ts';

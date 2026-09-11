@@ -7,13 +7,13 @@ import React, { useState } from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
+import type * as Tour from '@dxos/app-toolkit/Tour';
 import { corePlugins } from '@dxos/plugin-testing';
 import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { Button, IconButton, Panel, Toolbar } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
-import { type Tour } from '#types';
 
 import { WelcomeTour } from './WelcomeTour.tsx';
 
@@ -84,12 +84,14 @@ export const Default: Story = {};
 
 const card = () => document.querySelector<HTMLElement>('[data-testid="helpPlugin.tooltip"]');
 
+// The plugin manager activates before the story mounts, outlasting the default `findBy*` timeout.
+const MOUNT_TIMEOUT = { timeout: 15_000 };
+
 /** The card walks the steps by its own buttons, numbered as the e2e suite expects, and leaves on Done. */
 export const TestWalkthrough: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    // The plugin manager mounts the story once its plugins are active.
-    const start = await canvas.findByTestId('story.start');
+    const start = await canvas.findByTestId('story.start', {}, MOUNT_TIMEOUT);
     await expect(card()).toBeNull();
     await userEvent.click(start);
     await waitFor(() => expect(card()).toHaveAttribute('data-step', '1'));
@@ -121,9 +123,109 @@ export const TestWalkthrough: Story = {
 export const TestClose: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    await userEvent.click(await canvas.findByTestId('story.start'));
+    await userEvent.click(await canvas.findByTestId('story.start', {}, MOUNT_TIMEOUT));
     await waitFor(() => expect(card()).toHaveAttribute('data-step', '1'));
     await userEvent.click(within(canvasElement.ownerDocument.body).getByTestId('helpPlugin.tooltip.close'));
+    await waitFor(() => expect(card()).toBeNull());
+  },
+};
+
+const laterSteps: Tour.Step[] = [
+  {
+    target: '[data-testid="story.menu"]',
+    title: 'Menu',
+    description: 'A different tour entirely.',
+    placement: 'bottom-end',
+  },
+];
+
+/** Mounts with no steps and receives them later, as a registered tour's loader delivers them. */
+const LateStepsStory = () => {
+  const [current, setCurrent] = useState<Tour.Step[]>([]);
+  const [running, setRunning] = useState(false);
+  const load = (next: Tour.Step[]) => {
+    setCurrent(next);
+    setRunning(true);
+  };
+
+  return (
+    <Panel.Root classNames='dx-base-surface'>
+      <Panel.Toolbar asChild>
+        <Toolbar.Root>
+          <IconButton icon='ph--plus--regular' iconOnly label='Add' data-testid='story.add' />
+          <IconButton icon='ph--magnifying-glass--regular' iconOnly label='Search' data-testid='story.search' />
+          <Toolbar.Separator variant='gap' />
+          <IconButton icon='ph--dots-three-vertical--regular' iconOnly label='Menu' data-testid='story.menu' />
+        </Toolbar.Root>
+      </Panel.Toolbar>
+      <Panel.Content classNames='grid place-items-center gap-2'>
+        <Button onClick={() => load(steps)} data-testid='story.startFirst'>
+          Start first tour
+        </Button>
+        <Button onClick={() => load(laterSteps)} data-testid='story.startSecond'>
+          Start second tour
+        </Button>
+      </Panel.Content>
+      <WelcomeTour steps={current} running={running && current.length > 0} onRunningChanged={setRunning} />
+    </Panel.Root>
+  );
+};
+
+const title = () => document.querySelector<HTMLElement>('[data-testid="helpPlugin.tooltip.title"]');
+
+/**
+ * Steps that arrive after mount reach the card, and a second tour replaces the first rather than
+ * replaying it.
+ */
+export const TestLateSteps: Story = {
+  render: LateStepsStory,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const first = await canvas.findByTestId('story.startFirst', {}, MOUNT_TIMEOUT);
+    await expect(card()).toBeNull();
+
+    await userEvent.click(first);
+    await waitFor(() => expect(card()).toHaveAttribute('data-step', '1'));
+    await waitFor(() => expect(title()).toHaveTextContent('Creating content'));
+
+    await userEvent.click(within(canvasElement.ownerDocument.body).getByTestId('helpPlugin.tooltip.close'));
+    await waitFor(() => expect(card()).toBeNull());
+
+    await userEvent.click(canvas.getByTestId('story.startSecond'));
+    await waitFor(() => expect(title()).toHaveTextContent('Menu'));
+  },
+};
+
+/** A step whose target is never rendered ends the tour where it stands. */
+export const TestMissingTarget: Story = {
+  render: () => {
+    const [running, setRunning] = useState(false);
+    const withMissing: Tour.Step[] = [
+      steps[0],
+      { target: '[data-testid="story.absent"]', title: 'Missing', description: 'Never rendered.' },
+    ];
+    return (
+      <Panel.Root classNames='dx-base-surface'>
+        <Panel.Toolbar asChild>
+          <Toolbar.Root>
+            <IconButton icon='ph--plus--regular' iconOnly label='Add' data-testid='story.add' />
+          </Toolbar.Root>
+        </Panel.Toolbar>
+        <Panel.Content classNames='grid place-items-center'>
+          <Button onClick={() => setRunning(true)} data-testid='story.start'>
+            Start tour
+          </Button>
+        </Panel.Content>
+        <WelcomeTour steps={withMissing} running={running} onRunningChanged={setRunning} />
+      </Panel.Root>
+    );
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await userEvent.click(await canvas.findByTestId('story.start', {}, MOUNT_TIMEOUT));
+    await waitFor(() => expect(card()).toHaveAttribute('data-step', '1'));
+
+    await userEvent.click(within(canvasElement.ownerDocument.body).getByTestId('helpPlugin.tooltip.next'));
     await waitFor(() => expect(card()).toBeNull());
   },
 };
