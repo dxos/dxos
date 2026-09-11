@@ -1,8 +1,6 @@
 ---
-'@dxos/plugin-space': patch
-'@dxos/plugin-tasks': patch
-'@dxos/types': patch
 '@dxos/echo': patch
+'@dxos/plugin-markdown': patch
 ---
 
 Three fixes to the operation surface the MCP server projects.
