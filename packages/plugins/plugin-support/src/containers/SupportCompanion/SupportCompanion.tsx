@@ -11,7 +11,7 @@
 // module back to its plugin via `manager.getPlugins()`.
 
 import { useAtomValue } from '@effect/atom-react/Hooks';
-import React, { useEffect, useMemo } from 'react';
+import React, { useMemo } from 'react';
 
 import { usePluginManager } from '@dxos/app-framework/ui';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
