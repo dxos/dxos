@@ -423,6 +423,12 @@ export const DelegateCheckedTasks: Story = {
 
     // The boxes clear with the work, so the toolbar is dead again.
     await waitFor(() => expect(button).toBeDisabled(), { timeout: 10_000 });
+
+    // Re-checking rows the agent already holds arms nothing: a second click cannot fork them into
+    // another session.
+    await userEvent.click(await checkbox(TASK_TITLE));
+    await userEvent.click(await checkbox(LINK_TASK_TITLE));
+    await expect(button).toBeDisabled();
   },
 };
 
