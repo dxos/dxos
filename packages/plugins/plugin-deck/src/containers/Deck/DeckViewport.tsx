@@ -58,6 +58,7 @@ import {
   ToggleComplementarySidebarButton as NaturalToggleComplementarySidebarButton,
   ToggleSidebarButton as NaturalToggleSidebarButton,
 } from '../Sidebar/index.ts';
+import { CompanionPlank } from './CompanionPlank.tsx';
 import { DeckPlank } from './DeckPlank.tsx';
 import { useDeckContext } from './DeckRoot.tsx';
 
@@ -124,22 +125,27 @@ type PlankContextValue = RenderedPlanks & {
 };
 
 /**
- * The companion plank id to render beside `id`, or undefined when its companion is closed. Whether it is
- * open comes from `DeckState.companionPlanks` (deck-wide under `flatten`, per plank while the deck
- * slides — see {@link isCompanionOpen}) and never from attention. Attention used to pick a single anchor
+ * Whether `id` shows its companion, and the companion plank id to render there once resolved. The two
+ * are separate because they arrive at different times: `open` is deck state, known on the tile's first
+ * render, while the id waits on the plank's companion nodes (a commit later, see `useCompanions`). The
+ * seam is laid out from `open`, so a tile never mounts collapsed and animates open a frame later.
+ *
+ * Whether it is open comes from `DeckState.companionPlanks` (deck-wide under `flatten`, per plank while
+ * the deck slides — see {@link isCompanionOpen}) and never from attention. Attention used to pick a single anchor
  * here, which meant attention traffic re-anchored the companion between planks: tiles widened and
  * narrowed with no user gesture, the engine answered a sticky tile's width change by silently shifting
  * `scrollLeft` by the delta (zero scroll commands — writer instrumentation finds nothing), and a
  * companion could be "open" in state yet render beside no visible plank. The variant (which tab) stays
  * global view state, shared across planks.
  */
-const useDeckCompanion = (id: string | undefined): string | undefined => {
+const useDeckCompanion = (id: string | undefined): { open: boolean; companionId: string | undefined } => {
   const { deck } = useDeckContext('useDeckCompanion');
   const { flatten } = useDeckSettings();
   const companions = useCompanions(id);
   const selectedVariant = useSelectedCompanionVariant();
-  const { companionId } = useSelectedCompanion(companions, selectedVariant);
-  return isCompanionOpen(deck.companionPlanks, flatten, id) ? companionId : undefined;
+  const { companionId } = useSelectedCompanion(companions ?? [], selectedVariant);
+  const open = isCompanionOpen(deck.companionPlanks, flatten, id);
+  return { open, companionId: open ? companionId : undefined };
 };
 
 /**
@@ -233,6 +239,14 @@ export const DeckContentEmpty = () => {
 //
 
 const getPlankId = (id: string) => id;
+
+/**
+ * Under `flatten` the stack has one tile, the slot the current plank shows in: keyed by that role rather
+ * than by the plank, so switching planks re-renders the slot — its companion included — instead of
+ * rebuilding it. The tile's `id` (and so `data-object-id`) stays the plank's.
+ */
+const CURRENT_PLANK_KEY = 'current';
+const getCurrentPlankKey = () => CURRENT_PLANK_KEY;
 
 type RenderedPlanks = {
   /** The real planks the deck lays out (`flatten` collapses these to the current plank). */
@@ -348,17 +362,23 @@ const resolveTileSizes = (
 };
 
 /**
- * A plank and its companion sharing a single container — the one splitter geometry every such pair uses,
- * whether the pair fills the viewport (a lone plank) or is a tile within the sliding deck: anchored to
- * the companion and sized by the deck-wide {@link COMPANION_SIZE_KEY} width, so the seam sits in the same
- * place whichever plank the companion is attached to.
+ * A plank and the place its companion sits — the one splitter geometry every tile uses, whether it fills
+ * the viewport (a lone plank) or slides within the deck: anchored to the companion and sized by the
+ * deck-wide {@link COMPANION_SIZE_KEY} width, so the seam sits in the same place whichever plank the
+ * companion is attached to.
  *
- * `total` is the pair's fixed overall width, present only for a sliding tile. The seam trades width
+ * One component, with a seam that collapses to the plank when there is nothing to put beside it, so a
+ * plank's place in the tree is the same whether or not a companion is attached. React reconciles by
+ * element type and position, and a companion resolves a commit after its plank mounts, so a shape that
+ * varied with it would unmount the plank and everything it holds.
+ *
+ * `total` is the tile's fixed overall width, present only for a sliding tile. The seam trades width
  * between the panes inside it, so committing writes both — the plank's new width alongside the
  * companion's — in a single update, or the pair would render one frame resized against a stale total.
  */
-const CompanionSplit = ({
+const PlankSplit = ({
   id,
+  companion,
   companionId,
   active,
   companionSize,
@@ -366,7 +386,9 @@ const CompanionSplit = ({
   classNames,
 }: ThemedClassName<{
   id: string;
-  companionId: string;
+  /** Whether the seam is open; the pane it opens is empty until `companionId` resolves. */
+  companion: boolean;
+  companionId?: string;
   active: string[];
   companionSize: number;
   total?: number;
@@ -384,7 +406,8 @@ const CompanionSplit = ({
     <Splitter.Root
       orientation='horizontal'
       anchor='end'
-      resizable
+      mode={companion ? 'split' : 'start'}
+      resizable={companion}
       size={liveSize}
       minSize={MIN_COMPANION_SIZE}
       onSizeChange={onSizeChange}
@@ -395,7 +418,7 @@ const CompanionSplit = ({
       </Splitter.Panel>
       <Splitter.Handle />
       <Splitter.Panel position='end'>
-        <DeckPlank id={companionId} part='main' active={active} classNames='size-full' />
+        {companion && <CompanionPlank id={companionId ?? id} classNames='size-full' />}
       </Splitter.Panel>
     </Splitter.Root>
   );
@@ -428,7 +451,7 @@ const DeckPlankTile: MosaicStackTileComponent<string> = (props) => {
   const node = useNode(graph, id);
   const breakpoint = useBreakpoints();
   const { planks: rendered, maxPlankWidthPx, captureExposeGeometry, markExposeSelect } = usePlankContext();
-  const companion = useDeckCompanion(id);
+  const { open: companion, companionId } = useDeckCompanion(id);
   const presentation = useDeckPresentation(rendered.length);
   const isMobile = breakpoint === 'mobile';
   const exposed = !!state.expose;
@@ -447,11 +470,11 @@ const DeckPlankTile: MosaicStackTileComponent<string> = (props) => {
   const spineIcon = typeof node?.properties.icon === 'string' ? node.properties.icon : 'ph--circle-dashed--regular';
   // Clamp the tile to the viewport-derived cap so its trailing controls stay clear of the piled spines;
   // the cap only ever shrinks the stored width, so widths are restored when the viewport grows.
-  const maxSize = resolveMaxTileSize(maxPlankWidthPx, !!companion);
+  const maxSize = resolveMaxTileSize(maxPlankWidthPx, companion);
   const { companionSize, tileSize: storedSize } = resolveTileSizes(
     deck.plankSizing,
     Navigation.segmentOf(deck.segments, id),
-    !!companion,
+    companion,
     maxSize,
   );
   // Expanded takes the whole cap, which is by construction the viewport less a spine for every other
@@ -490,22 +513,19 @@ const DeckPlankTile: MosaicStackTileComponent<string> = (props) => {
       MIN_COMPANION_SIZE,
       deck.plankSizing[COMPANION_SIZE_KEY] ?? DEFAULT_COMPANION_SIZE,
     );
-    // The pair/solo choice mirrors the sliding return below so the first child keeps its component
-    // type across a presentation change — the reconciliation that keeps a plank's DOM (and therefore
-    // its content state and scroll) alive when the deck crosses 1↔2 planks.
+    // Mirrors the sliding return below so the first child keeps its component type across a
+    // presentation change — the reconciliation that keeps a plank's DOM (and therefore its content
+    // state and scroll) alive when the deck crosses 1↔2 planks.
     return (
       <Mosaic.Tile {...props} classNames='relative dx-fill'>
-        {companion ? (
-          <CompanionSplit
-            id={id}
-            companionId={companion}
-            active={deck.active}
-            companionSize={soloCompanionSize}
-            classNames={mx('dx-fullscreen', mainPaddingTransitions)}
-          />
-        ) : (
-          <DeckPlank id={id} part='main' active={deck.active} classNames={mx('dx-fullscreen', mainIntrinsicSize)} />
-        )}
+        <PlankSplit
+          id={id}
+          companion={companion}
+          companionId={companionId}
+          active={deck.active}
+          companionSize={soloCompanionSize}
+          classNames={mx('dx-fullscreen', mainPaddingTransitions)}
+        />
       </Mosaic.Tile>
     );
   }
@@ -554,23 +574,15 @@ const DeckPlankTile: MosaicStackTileComponent<string> = (props) => {
     >
       {/* Fades out while folded (crossfading with the spine) so a wide plank never occludes the plank in
           view. The `dx-fold-content` hook lets stories retime/restyle the transition. */}
-      {companion ? (
-        <CompanionSplit
-          id={id}
-          companionId={companion}
-          active={deck.active}
-          companionSize={companionSize}
-          total={tileSize}
-          classNames={mx(FOLD_CONTENT_CLASSNAMES, exposed && 'pointer-events-none')}
-        />
-      ) : (
-        <DeckPlank
-          id={id}
-          part='main'
-          active={deck.active}
-          classNames={mx(FOLD_CONTENT_CLASSNAMES, exposed && 'pointer-events-none')}
-        />
-      )}
+      <PlankSplit
+        id={id}
+        companion={companion}
+        companionId={companionId}
+        active={deck.active}
+        companionSize={companionSize}
+        total={tileSize}
+        classNames={mx(FOLD_CONTENT_CLASSNAMES, exposed && 'pointer-events-none')}
+      />
       {/* The exposé's hit target, covering the plank so a click picks the tile rather than landing in a
           miniature editor. Also its frame: at exposé scale a plank is dark content on the equally dark
           deck surface, and the outline is what makes it read as a tile at all. The attended tile gets a
@@ -1350,13 +1362,13 @@ const isPlankLevelFocus = (): boolean => {
 
 export const DeckPlanks = () => {
   const { state, deck } = useDeckContext('DeckPlanks');
-  const { overscroll } = useDeckSettings();
+  const { overscroll, flatten } = useDeckSettings();
   const rendered = useRenderedPlanks();
   const { planks, attendedPlankId } = rendered;
   // The last plank's companion feeds both the fullbleed pair (a singleton deck's only plank *is* the
   // last) and the overscroll runway, which is sized to the last tile.
   const lastPlankId = planks[planks.length - 1];
-  const lastPlankCompanionId = useDeckCompanion(lastPlankId);
+  const { open: lastPlankCompanion } = useDeckCompanion(lastPlankId);
   const breakpoint = useBreakpoints();
   const presentation = useDeckPresentation(planks.length);
   const fullscreenId = state.fullscreen;
@@ -1701,7 +1713,7 @@ export const DeckPlanks = () => {
     if (!overscroll || !isSliding || expose || !lastPlankId || !viewportWidthPx) {
       return 0;
     }
-    const paired = !!lastPlankCompanionId;
+    const paired = lastPlankCompanion;
     const { tileSize } = resolveTileSizes(
       deck.plankSizing,
       Navigation.segmentOf(deck.segments, lastPlankId),
@@ -1723,7 +1735,7 @@ export const DeckPlanks = () => {
     expose,
     planks,
     lastPlankId,
-    lastPlankCompanionId,
+    lastPlankCompanion,
     lastTileWidthPx,
     deck.plankSizing,
     deck.segments,
@@ -1760,9 +1772,9 @@ export const DeckPlanks = () => {
         ) : (
           // Every non-fullscreen presentation renders through this one pipeline — fullbleed included
           // (its tile spans the viewport; see DeckPlankTile's fullbleed return). One tree, keyed by
-          // plank id, is what keeps a plank's DOM mounted across 1↔2 plank transitions; a separate
-          // fullbleed branch here remounted the surviving plank on every message open/close (the
-          // mailbox-list flash). The stack is `w-full` when not sliding so the lone tile's `w-full`
+          // plank id (by the one slot under `flatten`, see CURRENT_PLANK_KEY), is what keeps a plank's
+          // DOM mounted across 1↔2 plank transitions; a separate fullbleed branch here remounted the
+          // surviving plank on every message open/close (the mailbox-list flash). The stack is `w-full` when not sliding so the lone tile's `w-full`
           // resolves against the viewport instead of a shrink-wrapped flex row.
           <Mosaic.Container orientation='horizontal' classNames={['dx-fullscreen', mainPaddingTransitions]}>
             <ScrollArea.Root orientation='horizontal' classNames='size-full'>
@@ -1797,6 +1809,7 @@ export const DeckPlanks = () => {
                         : 'dx-fill'
                   }
                   getId={getPlankId}
+                  getKey={flatten ? getCurrentPlankKey : getPlankId}
                   items={planks}
                   Tile={DeckPlankTile}
                   draggable={false}
