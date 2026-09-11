@@ -75,7 +75,13 @@ const createAuthHeaderProvider = (client: Client, sandboxUrl: string): (() => Pr
   };
 };
 
-/** Builds a {@link SandboxClient} from the DXOS client config. */
+/**
+ * Builds a {@link SandboxClient} from the DXOS client config.
+ *
+ * The returned client resolves the edge credential per request, and sends the request
+ * unauthenticated when no identity is available yet or the endpoint would carry it in cleartext
+ * (see {@link acceptsCredentials}).
+ */
 export const createSandboxClient = (client: Client): SandboxClient => {
   const url = getSandboxServiceUrl(client);
   return new SandboxClient(url, createAuthHeaderProvider(client, url));
