@@ -55,6 +55,11 @@ export const RecordSession = Operation.make({
     }),
     /** Prose: what the session last did. Written from the `Stop` event's final assistant message. */
     lastMessage: Schema.optional(Schema.String),
+    summary: Schema.optional(Schema.String).annotate({
+      description:
+        'One sentence on where the work stands, written by the agent rather than taken from the ' +
+        'turn. Asked for when the session has no title or has gone quiet.',
+    }),
     repo: Schema.optional(Schema.String),
     branch: Schema.optional(Schema.String),
     worktree: Schema.optional(Schema.String),
@@ -67,11 +72,26 @@ export const RecordSession = Operation.make({
     /** True when this call created the object, so a caller can tell a first report from a check-in. */
     created: Schema.Boolean,
     /**
-     * What to do when nothing was written. A hook fires a fixed payload and cannot choose a space,
-     * so an unregistered session is not an error — it is a call that needs one argument more, and
-     * the model reading this result is the one that can supply it.
+     * What the caller should do next, if anything. A hook fires a fixed payload and cannot choose a
+     * space or write prose, so a call needing either is not an error — it is a call that needs one
+     * argument more, and the model reading this result is the one that can supply it.
      */
     instructions: Schema.optional(Schema.String),
+    /**
+     * The open tasks this session is assigned, so a report doubles as a reminder of what the
+     * session is for — the cheapest moment to notice drift is the heartbeat it already sends.
+     */
+    tasks: Schema.optional(
+      Schema.Array(
+        Schema.Struct({
+          title: Schema.optional(Schema.String),
+          dxn: Schema.String,
+          status: Schema.optional(Schema.String),
+          project: Schema.optional(Schema.String),
+          projectDxn: Schema.optional(Schema.String),
+        }),
+      ),
+    ),
   }),
 }).pipe(Operation.mutation('write'));
 

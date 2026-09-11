@@ -57,6 +57,13 @@ export class RemoteSession extends Type.makeObject<RemoteSession>(DXN.make('org.
      */
     lastMessage: Schema.optional(Schema.String.annotate({ title: 'Last message' })),
 
+    /**
+     * One sentence the agent writes about where the work stands. Distinct from `lastMessage`, which
+     * is whatever the turn happened to end on: a summary is asked for deliberately, so a reader
+     * seeing a stale session learns what it was doing rather than what it last said.
+     */
+    summary: Schema.optional(Schema.String.annotate({ title: 'Summary' })),
+
     started: Format.DateTime.annotate({ title: 'Started' }),
 
     /** Last time the session reported in; how a stale `running` session is detected. */
@@ -121,6 +128,18 @@ export const harnessIcon = (session: RemoteSession): string | undefined => {
 const HARNESS_NAMES: Record<string, string> = { [SOURCE]: 'Claude Code' };
 
 const HARNESS_ICONS: Record<string, string> = { [SOURCE]: 'px--anthropic--regular' };
+
+/**
+ * How long a session may go without checking in before a reader should stop trusting `state`. Also
+ * what makes a report ask for a fresh summary: the heartbeat says a session is alive, and only
+ * prose says what it is alive doing.
+ */
+export const STALE_AFTER_MS = 30 * 60 * 1000;
+
+/** Whether a session's last check-in is old enough that its `state` no longer describes it. */
+export const isStale = (session: RemoteSession, now: number = Date.now()): boolean =>
+  !isTerminal(session) &&
+  (session.lastCheckedIn === undefined || now - new Date(session.lastCheckedIn).getTime() > STALE_AFTER_MS);
 
 /** Terminal states: a session in one of these is not expected to check in again. */
 export const isTerminal = (session: RemoteSession): boolean =>

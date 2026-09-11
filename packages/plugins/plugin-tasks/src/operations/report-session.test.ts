@@ -5,7 +5,8 @@
 import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 
-import { Database, Ref } from '@dxos/echo';
+import * as Project from '@dxos/compute/Project';
+import { Database, Obj, Ref } from '@dxos/echo';
 import { TestDatabaseLayer } from '@dxos/echo-client/testing';
 import { invariant } from '@dxos/invariant';
 import { RemoteSession, Task, TaskSet } from '@dxos/types';
@@ -13,7 +14,7 @@ import { RemoteSession, Task, TaskSet } from '@dxos/types';
 import listSessions from './list-sessions';
 import reportSession from './report-session';
 
-const types = [RemoteSession.RemoteSession, Task.Task, TaskSet.TaskSet];
+const types = [RemoteSession.RemoteSession, Task.Task, TaskSet.TaskSet, Project.Project];
 
 /** The space the fixture's database belongs to — what a first report has to be told. */
 const spaceId = Effect.map(Database.Service, ({ db }) => db.spaceId);
@@ -173,6 +174,79 @@ describe('report-session', () => {
       const { session } = yield* create({ sessionId: 'session_assign', title: 'Worker' });
       const task = Task.make({ title: 'Fix the flake', assignee: { name: 'Worker', subject: Ref.make(session) } });
       expect(task.assignee?.subject?.target?.id).toBe(session.id);
+    }).pipe(Effect.provide(TestDatabaseLayer({ types }))),
+  );
+  it.effect('an unplaced session is told the exact call to make, with its id substituted', () =>
+    Effect.gen(function* () {
+      const result = yield* reportSession.handler({ sessionId: 'session_unplaced' });
+      expect(result.session).toBeUndefined();
+      expect(result.instructions).toContain('RecordSession({ spaceId: "<assigned space>"');
+      expect(result.instructions).toContain('sessionId: "session_unplaced"');
+      expect(result.instructions).toContain('summary:');
+    }).pipe(Effect.provide(TestDatabaseLayer({ types }))),
+  );
+
+  it.effect('a session with no title is asked for one, and for a summary', () =>
+    Effect.gen(function* () {
+      const created = yield* create({ sessionId: 'session_untitled' });
+      expect(created.instructions).toContain('title: "<short title for this run>"');
+      expect(created.instructions).toContain('summary:');
+
+      // Supplying both settles it: a titled session that just checked in needs no prose.
+      const titled = yield* report({ sessionId: 'session_untitled', title: 'Land the PR', summary: 'Tests green.' });
+      expect(titled.session.summary).toBe('Tests green.');
+      expect(titled.instructions ?? '').not.toContain('title:');
+    }).pipe(Effect.provide(TestDatabaseLayer({ types }))),
+  );
+
+  it.effect('a session that has gone quiet is asked for a fresh summary', () =>
+    Effect.gen(function* () {
+      const { db } = yield* Database.Service;
+      const longAgo = new Date(Date.now() - RemoteSession.STALE_AFTER_MS - 60_000).toISOString();
+      db.add(
+        RemoteSession.make({
+          sessionId: 'session_quiet',
+          state: 'running',
+          title: 'Long run',
+          started: longAgo,
+          lastCheckedIn: longAgo,
+        }),
+      );
+      yield* Database.flush();
+
+      const reported = yield* report({ sessionId: 'session_quiet' });
+      expect(reported.instructions).toContain('has not checked in for a while');
+      expect(reported.instructions).toContain('summary:');
+      // Staleness is judged before the write, so this same call is what clears it.
+      expect(RemoteSession.isStale(reported.session)).toBe(false);
+    }).pipe(Effect.provide(TestDatabaseLayer({ types }))),
+  );
+
+  it.effect('reports back the open tasks the session is assigned, with project and DXNs', () =>
+    Effect.gen(function* () {
+      const { session } = yield* create({ sessionId: 'session_tasks', title: 'Worker' });
+      const assignee = { role: 'assistant' as const, subject: Ref.make(session) };
+
+      const taskSet = yield* Database.add(TaskSet.make({ name: 'Backlog' }));
+      const open = yield* Database.add(Task.make({ title: 'Ship the thing', status: 'started', assignee }));
+      const closed = yield* Database.add(Task.make({ title: 'Already done', status: 'done', assignee }));
+      const project = yield* Database.add(Project.make({ name: 'Voyage', taskSet: Ref.make(taskSet) }));
+      Obj.update(taskSet, (set) => {
+        set.tasks = [Ref.make(open), Ref.make(closed)];
+      });
+      yield* Database.flush();
+
+      const reported = yield* report({ sessionId: 'session_tasks' });
+      const titles = (reported.tasks ?? []).map((task) => task.title);
+      // Closed work is not a reminder.
+      expect(titles).toEqual(['Ship the thing']);
+
+      const [row] = reported.tasks ?? [];
+      expect(row!.dxn).toBe(Obj.getURI(open).toString());
+      expect(row!.status).toBe('started');
+      expect(row!.project).toBe('Voyage');
+      expect(row!.projectDxn).toBe(Obj.getURI(project).toString());
+      expect(reported.instructions).toContain('tasks-list');
     }).pipe(Effect.provide(TestDatabaseLayer({ types }))),
   );
 });

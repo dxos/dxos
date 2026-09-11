@@ -69,6 +69,12 @@ const ROTATE = 'Rotate the staging credentials';
 const BACKFILL = 'Backfill the sync telemetry dashboard';
 
 type TaskRow = { id: string; title?: string; status?: string; description?: string };
+type SessionRow = { id: string; title?: string; summary?: string; state?: string };
+
+/** The harness session id the hook-path stages report under; arbitrary, but stable across them. */
+const E2E_SESSION = 'e2e-0000-1111-2222-333344445555';
+
+const SESSION_TYPE = 'org.dxos.type.remoteSession';
 
 // `skipIf` rather than an early return in every test: without the credential the suite would
 // otherwise report a row of passes having asserted nothing, which is worse than a visible skip.
@@ -82,6 +88,18 @@ describe.skipIf(!API_KEY)('claude code against dx mcp serve', { tags: ['manual']
   const readTasks = (): TaskRow[] => {
     const { stdout, stderr, status } = runDx(
       ['--json', 'database', 'query', '--space-id', spaceId, '--typename', TASK_TYPE],
+      { home, timeout: 120_000 },
+    );
+    if (status !== 0) {
+      throw new Error(`dx database query failed (${status}): ${stderr}`);
+    }
+    return JSON.parse(stdout);
+  };
+
+  /** Sessions in the space, read by a `dx` process of its own — never through the agent. */
+  const readSessions = (): SessionRow[] => {
+    const { stdout, stderr, status } = runDx(
+      ['--json', 'database', 'query', '--space-id', spaceId, '--typename', SESSION_TYPE],
       { home, timeout: 120_000 },
     );
     if (status !== 0) {
@@ -248,6 +266,86 @@ describe.skipIf(!API_KEY)('claude code against dx mcp serve', { tags: ['manual']
       expect(backfill.description).toContain('e2e agent');
       // Still done: a later turn must not roll back what an earlier one committed.
       expect(findTask(tasks, ROTATE).status).toBe('done');
+    },
+    TEST_TIMEOUT,
+  );
+
+  // Stage 5 — the hook path, which is the one `RecordSession` actually exists for. A hook sends a
+  // fixed payload with no space, so the operation has to place the session itself; the agent is
+  // asked to do exactly what the returned instructions say, and the database is read back to prove
+  // the session landed rather than the agent merely claiming it did.
+  test(
+    'stage 5: an unplaced session report tells the agent how to place it, and placing it works',
+    async ({ expect }) => {
+      // Sent the way the hook sends it: no spaceId, no title, no prose.
+      const scaffold = await McpSession.open({ home });
+      let instructions: string;
+      try {
+        const unplaced = await scaffold.invoke('org.dxos.operation.tasks.recordSession', {
+          sessionId: E2E_SESSION,
+          worktree: workdir,
+        });
+        // Nothing written, and the caller told the literal call to make next.
+        expect(unplaced.session).toBeUndefined();
+        expect(unplaced.created).toBe(false);
+        instructions = String(unplaced.instructions);
+        expect(instructions).toContain(E2E_SESSION);
+        expect(instructions).toContain('spaceId');
+      } finally {
+        await scaffold.close();
+      }
+
+      expect(readSessions()).toHaveLength(0);
+
+      const turn = await agent.send(
+        `A session report came back with these instructions:\n\n${instructions}\n\n` +
+          `Follow them exactly, using space ${spaceId}. Use only the ${SERVER} MCP server.`,
+      );
+      expect(turn.isError, `turn failed: ${turn.result}`).toBe(false);
+      expect(turn.toolCalls).toContain(tool('invokeOperation'));
+
+      // Read by a separate process: the agent saying it recorded the session is not evidence.
+      const sessions = readSessions();
+      expect(sessions).toHaveLength(1);
+      // The instructions asked for both, so a session that landed without them followed only half.
+      expect(sessions[0]!.title, 'the agent was told to supply a title').toBeTruthy();
+      expect(sessions[0]!.summary, 'the agent was told to supply a summary').toBeTruthy();
+    },
+    TEST_TIMEOUT,
+  );
+
+  // Stage 6 — the heartbeat a placed session sends thereafter: no space, found by foreign key, and
+  // answering with the work it owns. The reminder is the point — a report that forgets the task is
+  // a report the agent learns nothing from.
+  test(
+    'stage 6: a later report needs no space, and reminds the session of its open tasks',
+    async ({ expect }) => {
+      const [session] = readSessions();
+      const spaceless = await McpSession.open({ home });
+      try {
+        // Assigned over the same surface the agent uses, so the fixture cannot hide a defect in it.
+        const tasks = readTasks();
+        await spaceless.invoke(
+          'org.dxos.operation.tasks.update',
+          {
+            task: { '/': findTask(tasks, BACKFILL).id },
+            assignee: { role: 'assistant', subject: { '/': session!.id } },
+          },
+          spaceId,
+        );
+
+        const beat = await spaceless.invoke('org.dxos.operation.tasks.recordSession', {
+          sessionId: E2E_SESSION,
+          lastMessage: 'still working',
+        });
+
+        expect(beat.created).toBe(false);
+        expect(beat.session, 'the session is found without a space').toBeDefined();
+        expect(beat.tasks?.map((task: { title?: string }) => task.title)).toEqual([BACKFILL]);
+        expect(beat.tasks?.[0]?.dxn).toBe(findTask(tasks, BACKFILL).id);
+      } finally {
+        await spaceless.close();
+      }
     },
     TEST_TIMEOUT,
   );

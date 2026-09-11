@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Filter, Hypergraph, Obj, Query } from '@dxos/echo';
 import { SpaceId } from '@dxos/keys';
-import { RemoteSession } from '@dxos/types';
+import { RemoteSession, Task } from '@dxos/types';
 
 import { RemoteSessionOperation } from '#types';
 
@@ -19,10 +19,33 @@ import { RemoteSessionOperation } from '#types';
  * the loop that knows which space the work is being tracked in.
  */
 const NEEDS_SPACE = (sessionId: string) =>
-  `This session (${sessionId}) is not recorded in any space, and no spaceId was given, so nothing ` +
-  'was written. Re-run this operation with the `spaceId` of the space this work is tracked in — ' +
-  'the project skill resolves it from the repo binding, and `whoami` lists the spaces available. ' +
-  'Once recorded, later reports find the session on their own and need no spaceId.';
+  'This session is not recorded in any space and no spaceId was given, so nothing was written. ' +
+  'Call it again with the space this work is tracked in:\n\n' +
+  `  RecordSession({ spaceId: "<assigned space>", sessionId: "${sessionId}", title: "<short title ` +
+  'for this run>", summary: "<one sentence on where the work stands>" })\n\n' +
+  'The project skill resolves the assigned space from the repo binding, and `whoami` lists the ' +
+  'spaces available. Once recorded, later reports find the session on their own and need no spaceId.';
+
+/**
+ * Asked for when the session has no title, or has gone quiet long enough that `state` stopped
+ * describing it. Names the arguments verbatim: a caller told to "add a title" writes prose about
+ * adding one, while a caller shown the call makes it.
+ */
+const NEEDS_PROSE = (sessionId: string, missingTitle: boolean, stale: boolean) =>
+  `This session ${
+    missingTitle && stale
+      ? 'has no title and has not checked in for a while'
+      : missingTitle
+        ? 'has no title'
+        : 'has not checked in for a while'
+  }. Call it again to say what it is doing:\n\n` +
+  `  RecordSession({ sessionId: "${sessionId}"${missingTitle ? ', title: "<short title for this run>"' : ''}` +
+  ', summary: "<one sentence on where the work stands>" })';
+
+/** Appended when the session owns open tasks, so the reminder says what to do with them. */
+const TASKS_NOTE =
+  'These are the open tasks assigned to this session. Use `tasks-list` or `space-query-objects` ' +
+  'with a task DXN to read one in full.';
 
 /**
  * Every row for this session, across every space the graph spans.
@@ -42,10 +65,77 @@ const findAll = (graph: Hypergraph.Hypergraph, sessionId: string) =>
       .run(),
   ).pipe(Effect.map((result) => [...result].sort((left, right) => left.id.localeCompare(right.id))));
 
+/**
+ * The object's own id, from either URI form.
+ *
+ * A ref made against the object's own database carries the relative `echo:///<id>`, while
+ * `Obj.getURI` always answers the absolute `echo://<space>/<id>` — comparing them as strings finds
+ * nothing, which is the whole bug this exists to avoid.
+ */
+const objectId = (uri: string | undefined): string | undefined => uri?.split('/').filter(Boolean).at(-1);
+
+/** Statuses that mean the work is over; a reminder listing them would be noise. */
+const CLOSED: ReadonlySet<string> = new Set(['done', 'duplicate', 'cancelled', 'failed']);
+
+/**
+ * The open tasks whose assignee stands for this session.
+ *
+ * Filtered in memory rather than in the query: `assignee` is an inline actor, not a relation, so
+ * there is no edge to select on — the subject ref is a field of a struct on the task.
+ */
+const assignedTasks = (graph: Hypergraph.Hypergraph, session: RemoteSession.RemoteSession) =>
+  Effect.promise(() => graph.query(Query.select(Filter.type(Task.Task)).from('all-accessible-spaces')).run()).pipe(
+    Effect.map((result) =>
+      [...result]
+        .filter((task) => objectId(task.assignee?.subject?.uri) === objectId(Obj.getURI(session)))
+        .filter((task) => !CLOSED.has(task.status ?? ''))
+        .map((task) => {
+          // Containment, not a lookup: `TaskSet.tasks` and `Project.taskSet` both set parent, so the
+          // project is two hops up from any task filed in one.
+          const taskSet = Obj.getParent(task);
+          const project = taskSet && Obj.getParent(taskSet);
+          return {
+            title: task.title,
+            dxn: Obj.getURI(task).toString(),
+            status: task.status,
+            project: project && Obj.getLabel(project),
+            projectDxn: project && Obj.getURI(project).toString(),
+          };
+        }),
+    ),
+  );
+
+/**
+ * What a successful report hands back: the tasks it owns, and a nudge when the session cannot yet
+ * say what it is doing. Staleness is measured BEFORE this call stamps `lastCheckedIn`, or every
+ * report would look fresh to itself.
+ */
+const reminder = Effect.fn(function* (
+  graph: Hypergraph.Hypergraph,
+  session: RemoteSession.RemoteSession,
+  wasStale: boolean,
+) {
+  const tasks = yield* assignedTasks(graph, session);
+  const missingTitle = !session.title;
+  const instructions = [
+    missingTitle || wasStale
+      ? NEEDS_PROSE(RemoteSession.getSessionId(session) ?? '', missingTitle, wasStale)
+      : undefined,
+    tasks.length > 0 ? TASKS_NOTE : undefined,
+  ]
+    .filter((line) => line !== undefined)
+    .join('\n\n');
+
+  return {
+    ...(tasks.length > 0 ? { tasks } : {}),
+    ...(instructions.length > 0 ? { instructions } : {}),
+  };
+});
+
 const handler: Operation.WithHandler<typeof RemoteSessionOperation.RecordSession> =
   RemoteSessionOperation.RecordSession.pipe(
     Operation.withHandler(
-      Effect.fnUntraced(function* ({ sessionId, spaceId, title, state, lastMessage, repo, branch, worktree }) {
+      Effect.fnUntraced(function* ({ sessionId, spaceId, title, state, lastMessage, summary, repo, branch, worktree }) {
         const { graph } = yield* Hypergraph.Service;
         const now = new Date().toISOString();
 
@@ -74,6 +164,7 @@ const handler: Operation.WithHandler<typeof RemoteSessionOperation.RecordSession
               title,
               state: state ?? 'running',
               lastMessage,
+              summary,
               started: now,
               lastCheckedIn: now,
               ...(state && state !== 'running' ? { finished: now } : {}),
@@ -83,8 +174,14 @@ const handler: Operation.WithHandler<typeof RemoteSessionOperation.RecordSession
             }),
           );
           yield* Effect.promise(() => db.flush());
-          return { session, sessionId, created: true };
+          // A session created by this call has never checked in before, so it is not stale — only
+          // a missing title can ask for prose here.
+          return { session, sessionId, created: true, ...(yield* reminder(graph, session, false)) };
         }
+
+        // Read before either update below stamps `lastCheckedIn`, which would otherwise make every
+        // report look freshly seen to itself.
+        const wasStale = RemoteSession.isStale(existing);
 
         // Written back through the database that actually holds the survivor, which is not
         // necessarily the one the caller named.
@@ -127,6 +224,9 @@ const handler: Operation.WithHandler<typeof RemoteSessionOperation.RecordSession
           if (lastMessage !== undefined) {
             existing.lastMessage = lastMessage;
           }
+          if (summary !== undefined) {
+            existing.summary = summary;
+          }
           if (repo !== undefined) {
             existing.repo = repo;
           }
@@ -156,7 +256,7 @@ const handler: Operation.WithHandler<typeof RemoteSessionOperation.RecordSession
           db?.remove(duplicate);
         }
         yield* Effect.promise(async () => db?.flush());
-        return { session: existing, sessionId, created: false };
+        return { session: existing, sessionId, created: false, ...(yield* reminder(graph, existing, wasStale)) };
       }),
     ),
   );
