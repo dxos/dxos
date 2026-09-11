@@ -348,16 +348,23 @@ const resolveTileSizes = (
 };
 
 /**
- * A plank and its companion sharing a single container — the one splitter geometry every such pair uses,
- * whether the pair fills the viewport (a lone plank) or is a tile within the sliding deck: anchored to
- * the companion and sized by the deck-wide {@link COMPANION_SIZE_KEY} width, so the seam sits in the same
- * place whichever plank the companion is attached to.
+ * A plank and the place its companion sits — the one splitter geometry every tile uses, whether it fills
+ * the viewport (a lone plank) or slides within the deck: anchored to the companion and sized by the
+ * deck-wide {@link COMPANION_SIZE_KEY} width, so the seam sits in the same place whichever plank the
+ * companion is attached to.
  *
- * `total` is the pair's fixed overall width, present only for a sliding tile. The seam trades width
+ * The seam is here even with no companion to put in it (collapsed to the plank), because the plank's
+ * place in the tree must not depend on whether one is attached. Companions arrive a commit late — the
+ * node's children are read in an effect — so a tile that swapped a bare plank for a split one re-parented
+ * the plank on the very next commit, unmounting it and everything it holds: switching documents rebuilt
+ * the editor twice and flashed the companion. It also makes opening and closing a companion a resize of
+ * a seam that was already there rather than a rebuild of the plank beside it.
+ *
+ * `total` is the tile's fixed overall width, present only for a sliding tile. The seam trades width
  * between the panes inside it, so committing writes both — the plank's new width alongside the
  * companion's — in a single update, or the pair would render one frame resized against a stale total.
  */
-const CompanionSplit = ({
+const PlankSplit = ({
   id,
   companionId,
   active,
@@ -366,7 +373,7 @@ const CompanionSplit = ({
   classNames,
 }: ThemedClassName<{
   id: string;
-  companionId: string;
+  companionId?: string;
   active: string[];
   companionSize: number;
   total?: number;
@@ -384,7 +391,8 @@ const CompanionSplit = ({
     <Splitter.Root
       orientation='horizontal'
       anchor='end'
-      resizable
+      mode={companionId ? 'split' : 'start'}
+      resizable={!!companionId}
       size={liveSize}
       minSize={MIN_COMPANION_SIZE}
       onSizeChange={onSizeChange}
@@ -395,7 +403,7 @@ const CompanionSplit = ({
       </Splitter.Panel>
       <Splitter.Handle />
       <Splitter.Panel position='end'>
-        <DeckPlank id={companionId} part='main' active={active} classNames='size-full' />
+        {companionId && <DeckPlank id={companionId} part='main' active={active} classNames='size-full' />}
       </Splitter.Panel>
     </Splitter.Root>
   );
@@ -490,22 +498,18 @@ const DeckPlankTile: MosaicStackTileComponent<string> = (props) => {
       MIN_COMPANION_SIZE,
       deck.plankSizing[COMPANION_SIZE_KEY] ?? DEFAULT_COMPANION_SIZE,
     );
-    // The pair/solo choice mirrors the sliding return below so the first child keeps its component
-    // type across a presentation change — the reconciliation that keeps a plank's DOM (and therefore
-    // its content state and scroll) alive when the deck crosses 1↔2 planks.
+    // Mirrors the sliding return below so the first child keeps its component type across a
+    // presentation change — the reconciliation that keeps a plank's DOM (and therefore its content
+    // state and scroll) alive when the deck crosses 1↔2 planks.
     return (
       <Mosaic.Tile {...props} classNames='relative dx-fill'>
-        {companion ? (
-          <CompanionSplit
-            id={id}
-            companionId={companion}
-            active={deck.active}
-            companionSize={soloCompanionSize}
-            classNames={mx('dx-fullscreen', mainPaddingTransitions)}
-          />
-        ) : (
-          <DeckPlank id={id} part='main' active={deck.active} classNames={mx('dx-fullscreen', mainIntrinsicSize)} />
-        )}
+        <PlankSplit
+          id={id}
+          companionId={companion}
+          active={deck.active}
+          companionSize={soloCompanionSize}
+          classNames={mx('dx-fullscreen', mainPaddingTransitions)}
+        />
       </Mosaic.Tile>
     );
   }
@@ -554,23 +558,14 @@ const DeckPlankTile: MosaicStackTileComponent<string> = (props) => {
     >
       {/* Fades out while folded (crossfading with the spine) so a wide plank never occludes the plank in
           view. The `dx-fold-content` hook lets stories retime/restyle the transition. */}
-      {companion ? (
-        <CompanionSplit
-          id={id}
-          companionId={companion}
-          active={deck.active}
-          companionSize={companionSize}
-          total={tileSize}
-          classNames={mx(FOLD_CONTENT_CLASSNAMES, exposed && 'pointer-events-none')}
-        />
-      ) : (
-        <DeckPlank
-          id={id}
-          part='main'
-          active={deck.active}
-          classNames={mx(FOLD_CONTENT_CLASSNAMES, exposed && 'pointer-events-none')}
-        />
-      )}
+      <PlankSplit
+        id={id}
+        companionId={companion}
+        active={deck.active}
+        companionSize={companionSize}
+        total={tileSize}
+        classNames={mx(FOLD_CONTENT_CLASSNAMES, exposed && 'pointer-events-none')}
+      />
       {/* The exposé's hit target, covering the plank so a click picks the tile rather than landing in a
           miniature editor. Also its frame: at exposé scale a plank is dark content on the equally dark
           deck surface, and the outline is what makes it read as a tile at all. The attended tile gets a
