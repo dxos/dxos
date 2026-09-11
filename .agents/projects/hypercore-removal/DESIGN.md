@@ -102,15 +102,33 @@ structure. The version lives in the DXN, so the root needs no separate `SpaceDoc
    the credentials doc, and `echo_spaces` rewritten — its space id does **not** change.
    Every peer must agree on that root, so the migration is driven by one writer and the
    others adopt the root they receive.
+
+   **The one writer is EDGE** (resolved 2026-09-11). Nothing on the client side can elect one,
+   and the alternative that was built first — every device mints and edge records the first
+   report — is not an election: each device kept its own root and `adoptSpaceRoot` threw rather
+   than converging. Edge needs no election because it already serializes per space: the durable
+   object is single-threaded per space id and the registry record is write-once. A client with no
+   root asks (`POST /db/spaces/:spaceId/root`, empty body), edge mints root + credentials and
+   populates the chain it already holds, and every caller is handed the same root. The cost is
+   that a space which never reaches edge never migrates; that is accepted. HALO is excluded —
+   edge learns a directory from an `Epoch` credential and HALO has none, so it still mints
+   locally and its multi-device race is open.
+
 4. **Feed machinery dies with hypercore, not before it.** Data feeds (queues) and the
    control feed have separate fates — the audit below has to establish which `feed-store`
    consumers are credential-chain-only.
 
 ## Bootstrap and cutover (resolved 2026-08-24)
 
-**There is no discovery problem — the pointer is handed over, exactly as it is today.**
-Both invitation protocols already work this way, so the new world is a field swap, not a new
-mechanism:
+**There is no discovery problem for a peer JOINING a space — the pointer is handed over, exactly
+as it is today.** Both invitation protocols already work this way, so for a join the new world is a
+field swap, not a new mechanism:
+
+> **Correction (2026-09-11).** This section was read as settling discovery outright. It does not:
+> every path below hands the pointer to a peer being ADMITTED. The peers that migration exists for
+> are EXISTING members, admitted long before `space_root_url` was a field, so nothing hands them
+> anything — which is how "every peer must agree on that root" in decision 3 came to have no
+> mechanism behind it. Edge minting the root is what closes that case.
 
 - **Space invite** (`space-invitation-protocol.ts`): the host admits the guest and returns the
   `SpaceMember` credential in the `AdmissionResponse`; the guest reads `assertion.spaceKey`

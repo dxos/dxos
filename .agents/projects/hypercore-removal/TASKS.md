@@ -17,16 +17,40 @@ read flip and the still-unchecked Phase 3 items. Phase 4 is out of scope for eve
 > is now ALWAYS `SHA-256(spaceKey)[0..20]` and `idDerivation` no longer exists in the code. Every mention
 > of it below is historical plan text, not a current contract.
 
-## Resolved decision (2026-08-27) — was blocking Phase 3
+## Resolved decision (2026-09-11, supersedes 2026-08-27) — EDGE mints the root of a legacy space
 
-Shape 2: the client creates the documents and EDGE records them. Shape 1 (EDGE performs the migration) was
-dropped because edge cannot identify a space root on its own — a space id is `SHA-256(spaceKey)[0..20]` and
-no document id reproduces it, and the subduction replicator never materializes documents to inspect. So the
-record is a client report, made safe rather than authoritative: write-once per space, and a space migrating
-off the control feed must present a root carrying the genesis credential issued by its known space key.
+**Shape 1 for the migration path: the client asks, EDGE creates.** A client with no root calls
+`POST /db/spaces/:spaceId/root` with an EMPTY body; edge mints the root and its credentials document,
+populates the credentials from the chain it already materialized off the control feed, records the root
+write-once and returns it. The client adopts what it is handed and never mints.
 
-This also delivers `haloSpaceRootUrl` — the inviting device names its root in the device invitation and the
-joining device adopts it.
+**Why the 2026-08-27 resolution did not settle this.** It read "edge cannot IDENTIFY a space root" (true —
+no document id reproduces `SHA-256(spaceKey)[0..20]`) as "edge cannot OWN one", which does not follow.
+Identifying and minting are different problems, and only the first was blocked. Meanwhile Shape 2 left the
+one thing DESIGN decision 3 requires — _"the migration is driven by one writer and the others adopt the
+root they receive"_ — with no mechanism: nothing elected a writer, so every device that already held the
+space minted its own root over it, and `adoptSpaceRoot` threw rather than converging. DESIGN's
+"Bootstrap and cutover (resolved)" note hid this, because "the pointer is handed over" is true for a peer
+JOINING a space and false for the existing members that migration is FOR — their admission credentials
+predate `space_root_url`.
+
+**What resolves the race** is not that edge writes the bytes but that edge is a per-space serialization
+point that already existed: the durable object is single-threaded per space id, and the registry record is
+write-once. Concurrent callers are answered with one root.
+
+Retained from Shape 2, still correct and still in force: a client-minted root IS accepted when the body
+names one, because a root-anchored space MUST mint its own (its id is the hash of the root's document id,
+so the document precedes the space); the record stays write-once; and a named root must carry the genesis
+credential of the space's known space key.
+
+**Cost, and the decision it encodes:** a space that never reaches edge never migrates. That is a real
+concession for a local-first system — peer-to-peer-only and self-hosted deployments stay on feeds — and it
+is accepted deliberately rather than by omission.
+
+**HALO is NOT on this path.** Edge learns a space's directory from an `Epoch` credential
+(`SpaceStateMachine.getAutomergeRoot`), and HALO has none: it never had a directory at all, so
+`IdentityManager` creates one locally. Edge would have nothing to point a root at. HALO therefore still
+mints locally, and the multi-device race is still OPEN for it — see the Phase 3 item below.
 
 Branch `claude/remove-hypercore-automerge-creds-uo7lx9`. Rationale in `DESIGN.md`.
 
@@ -330,7 +354,16 @@ migration; crash mid-migration and resume.
       space to the doc source. Space id UNCHANGED. No space is ever half-migrated.
 - [ ] EDGE reads a given space's credentials from exactly one source — the per-space flip is
       the only thing that switches it.
-- [ ] Single-writer/adopt protocol so peers converge on one root doc per legacy space.
+- [x] **Single-writer/adopt protocol — EDGE is the single writer** (dxos#12825 + dxos/edge#945). A legacy
+      space's root is minted by `SpaceCredentialsSource.ensureSpaceRoot` on an empty-body
+      `POST /db/spaces/:spaceId/root`; the client adopts what it is handed and no longer calls
+      `EchoHost.migrateSpaceToRootDocument`. `adoptSpaceRoot` now REPLACES a disagreeing local root
+      rather than throwing, since edge's write-once record is the authority and a local root can only
+      be one this device minted before that record existed. See the resolved decision above.
+- [ ] **HALO still races.** Its directory is created locally (`IdentityManager` → `createSpaceRoot`) and
+      no `Epoch` credential carries it, so `getAutomergeRoot` returns nothing and edge cannot mint a HALO
+      root. Two pre-existing devices still mint one each. Options: have the client name the directory in
+      the mint request, or record a HALO root the way data spaces do and elect on it.
 - [ ] Migration test over a real profile fixture: mid-migration crash, concurrent credential
       writes, and re-running the migration.
 - [ ] Retire the dual path once no space reports the feed source.

@@ -216,13 +216,18 @@ export class EdgeHttpClient extends BaseHttpClient {
   }
 
   /**
-   * Names the space's root document, which edge cannot derive, and returns the root in force —
+   * Settles the space's root document, which edge cannot derive, and returns the root in force —
    * not necessarily the one offered, since the record is write-once.
+   *
+   * Pass `rootDocumentUrl` for a space whose root this peer minted, which a root-anchored space
+   * must do because its id is the hash of that document's id. Omit it for a legacy space and edge
+   * mints the root, so devices that all already hold the space converge on one instead of minting
+   * one each.
    */
   public async recordSpaceRoot(
     ctx: Context,
     spaceId: SpaceId,
-    body: { rootDocumentUrl: string },
+    body: { rootDocumentUrl?: string },
     args?: EdgeHttpCallArgs,
   ): Promise<{ rootDocumentUrl: string }> {
     return this._call(ctx, new URL(`/db/spaces/${spaceId}/root`, this.baseUrl), {
