@@ -48,6 +48,8 @@ describe('channelVariant', () => {
 
   test('an environment with no artwork fails the build rather than shipping the released mark', ({ expect }) => {
     expect(() => channelVariant('build', 'labs')).toThrow(/unknown environment: labs/);
+    // The e2e bundle's environment; it is built on every PR, so a throw here takes e2e down wholesale.
+    expect(channelVariant('build', 'ci')).toBeUndefined();
   });
 
   // Only a deployed bundle is branded, so `DX_ENVIRONMENT` in a shell does not repaint localhost.

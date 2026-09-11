@@ -41,6 +41,12 @@ const FAVICONS = [
 ];
 
 /**
+ * Environments that ship the released mark. `ci` builds the bundle the e2e suite drives, which no one
+ * deploys and no one looks at, so there is no channel for it to be mistaken for.
+ */
+const UNBRANDED = new Set(['production', 'ci']);
+
+/**
  * The channel a deploy environment brands itself as, or undefined for the released app.
  * Only a bundle is branded — the variant marks a deployed channel, so a dev server showing one would
  * claim this build came from somewhere it did not. An environment this module does not know fails the
@@ -50,7 +56,7 @@ export const channelVariant = (
   command: ConfigEnv['command'],
   environment = process.env.DX_ENVIRONMENT,
 ): ChannelVariant | undefined => {
-  if (command !== 'build' || !environment || environment === 'production') {
+  if (command !== 'build' || !environment || UNBRANDED.has(environment)) {
     return undefined;
   }
   if (!isChannel(environment)) {
