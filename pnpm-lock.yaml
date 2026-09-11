@@ -4226,9 +4226,6 @@ importers:
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../../common/keys
-      '@dxos/link':
-        specifier: workspace:*
-        version: link:../link
     devDependencies:
       '@dxos/ai':
         specifier: workspace:*
@@ -4257,6 +4254,9 @@ importers:
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../../common/effect
+      '@dxos/link':
+        specifier: workspace:*
+        version: link:../link
       '@dxos/plugin-assistant':
         specifier: workspace:*
         version: link:../../../plugins/plugin-assistant
