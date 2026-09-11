@@ -12,8 +12,8 @@ import type * as Operation from '@dxos/compute/Operation';
 import { ClientOperation } from '@dxos/plugin-client';
 import { InvalidRecoveryTokenError } from '@dxos/protocols';
 
-import { WELCOME_SCREEN } from './constants';
-import { OnboardingManager } from './onboarding-manager';
+import { WELCOME_SCREEN } from './constants.ts';
+import { OnboardingManager } from './onboarding-manager.ts';
 
 /** The HALO adapter's wrapper shape: the cause travels under `context.error` rather than `cause`. */
 class WrappedIdentityError extends Error {

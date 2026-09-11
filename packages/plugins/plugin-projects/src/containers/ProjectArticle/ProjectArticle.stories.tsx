@@ -17,6 +17,10 @@ import { useQuery } from '@dxos/echo-react';
 import * as AssistantPlugin from '@dxos/plugin-assistant/AssistantPlugin';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import * as GitHubPlugin from '@dxos/plugin-github/GitHubPlugin';
+import { FixtureLinkSourcePlugin } from '@dxos/plugin-github/testing';
+import * as MarkdownEvents from '@dxos/plugin-markdown/MarkdownEvents';
+import { PreviewEvents } from '@dxos/plugin-preview';
+import { PreviewPlugin } from '@dxos/plugin-preview/testing';
 import * as ProjectsPlugin from '@dxos/plugin-projects/ProjectsPlugin';
 import * as RoutinePlugin from '@dxos/plugin-routine/RoutinePlugin';
 import { translations as routineTranslations } from '@dxos/plugin-routine/translations';
@@ -34,7 +38,7 @@ import { Milestone, Outline, Repo, Task, TaskSet } from '@dxos/types';
 
 import { translations } from '#translations';
 
-import { ProjectArticle } from './ProjectArticle';
+import { ProjectArticle } from './ProjectArticle.tsx';
 
 const PROJECT_NAME = 'Project 1';
 const TASK_TITLE = 'Ship the tasks section';
@@ -194,8 +198,12 @@ const meta = {
         // Provides `RemoteProcessManager`, which Assistant's `AgentService` spec now requires — the
         // spec is pruned without it, so delegating a task fails with "Chat not found".
         RoutinePlugin.make(),
-        // Contributes the `#123` decoration; `project.repo` is what it resolves against.
+        // Contributes the `#123` decoration (`project.repo` is what it resolves against), the link
+        // chips, and the resolver behind a chip's hover card; PreviewPlugin owns the popover and the
+        // fixture source answers the resolver without the network.
         GitHubPlugin.make(),
+        PreviewPlugin.make(),
+        FixtureLinkSourcePlugin(),
         ClientPlugin.make({
           types: [
             Project.Project,
@@ -222,6 +230,9 @@ const meta = {
         }),
         StorybookPlugin.make({}),
       ],
+      // Both start events at setup, so the markdown extensions and the link resolver are live before
+      // the first render.
+      setupEvents: [MarkdownEvents.Start, PreviewEvents.Start],
     }),
   ],
   parameters: {

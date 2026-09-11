@@ -15,9 +15,9 @@ import {
   lockOrRpcTimeoutError,
   requestExclusiveLock,
   waitWithLockOrRpcTimeout,
-} from './internal/locks';
-import { workerErrorFromEvent } from './internal/worker-errors';
-import * as WorkerProtocol from './WorkerProtocol';
+} from './internal/locks.ts';
+import { workerErrorFromEvent } from './internal/worker-errors.ts';
+import * as WorkerProtocol from './WorkerProtocol.ts';
 
 // Sentinel resolved when a follower gives up waiting for a port from the leader.
 const LEADER_TIMEOUT = Symbol('leader-timeout');

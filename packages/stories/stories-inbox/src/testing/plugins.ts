@@ -15,7 +15,7 @@ import * as Plugin from '@dxos/app-framework/Plugin';
 import * as LayerSpec from '@dxos/compute/LayerSpec';
 import { DXN } from '@dxos/keys';
 
-import { TRIP_LEGS } from './trip';
+import { TRIP_LEGS } from './trip.ts';
 
 /** Resolve the canned structured output for the trip extractor from the prompt (contains the body). */
 const resolvePayload = (prompt: string): unknown => {

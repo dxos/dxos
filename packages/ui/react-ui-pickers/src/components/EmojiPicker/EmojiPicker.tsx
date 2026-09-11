@@ -26,7 +26,7 @@ import { osTranslations } from '@dxos/ui-theme';
  * emoji-mart plus its emoji database is ~480 KB; loading it with the barrel put it in every
  * tab's boot graph, so the panel loads on first open instead.
  */
-const EmojiMartPanel = lazy(() => import('./EmojiMartPanel'));
+const EmojiMartPanel = lazy(() => import('./EmojiMartPanel.tsx'));
 
 export type EmojiPickerProps = ThemedClassName<{
   disabled?: boolean;

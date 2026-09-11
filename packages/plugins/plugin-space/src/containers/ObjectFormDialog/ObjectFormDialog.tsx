@@ -28,7 +28,7 @@ import { type CreateObjectOption, CreateObjectPanel, type CreateObjectPanelProps
 import { meta } from '#meta';
 import { SpaceCapabilities, SpaceEvents, SpaceOperation } from '#types';
 
-import { type ObjectFormHandle, getSpaceDisplayName } from '../../util';
+import { type ObjectFormHandle, getSpaceDisplayName } from '../../util/index.ts';
 
 export type ObjectFormDialogProps = Pick<CreateObjectPanelProps, 'target' | 'typename' | 'mode' | 'schema'> & {
   views?: boolean;

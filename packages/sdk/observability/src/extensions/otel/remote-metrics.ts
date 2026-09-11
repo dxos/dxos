@@ -8,8 +8,8 @@ import { type CleanupFn, scheduleTaskInterval } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { type MetricData, type MetricObserver, TRACE_PROCESSOR } from '@dxos/tracing';
 
-import { METRIC_EXPORT_INTERVAL } from './intervals';
-import type * as OtelMetricsSink from './OtelMetricsSink';
+import { METRIC_EXPORT_INTERVAL } from './intervals.ts';
+import type * as OtelMetricsSink from './OtelMetricsSink.ts';
 
 /** Projects tags onto OTel attributes, dropping nullish values that are not valid attribute values. */
 export const metricDataToAttributes = (data?: MetricData): Attributes => {

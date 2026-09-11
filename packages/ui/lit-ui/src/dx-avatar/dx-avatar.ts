@@ -8,7 +8,7 @@ import { styleMap } from 'lit/directives/style-map.js';
 
 import { makeId } from '@dxos/react-hooks';
 
-import { type Size } from '../defs';
+import { type Size } from '../defs.ts';
 
 export type ImageLoadingStatus = 'idle' | 'loading' | 'loaded' | 'error';
 

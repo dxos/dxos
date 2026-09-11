@@ -7,14 +7,14 @@ import { describe, test } from 'vitest';
 
 import { DXN, EntityId } from '@dxos/keys';
 
-import * as Entity from './Entity';
-import * as Filter from './Filter';
-import * as JsonSchema from './JsonSchema';
-import * as Obj from './Obj';
-import * as Ref from './Ref';
-import * as Relation from './Relation';
-import { TestSchema } from './testing';
-import * as Type from './Type';
+import * as Entity from './Entity.ts';
+import * as Filter from './Filter.ts';
+import * as JsonSchema from './JsonSchema.ts';
+import * as Obj from './Obj.ts';
+import * as Ref from './Ref.ts';
+import * as Relation from './Relation.ts';
+import { TestSchema } from './testing/index.ts';
+import * as Type from './Type.ts';
 
 describe('Type', () => {
   describe('Obj.Unknown schema', () => {

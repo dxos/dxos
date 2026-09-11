@@ -14,8 +14,8 @@ import { OAuthProvider } from '@dxos/protocols';
 
 import { TrelloOperation } from '#types';
 
-import { TRELLO_SOURCE } from '../constants';
-import { TrelloApi } from '../services';
+import { TRELLO_SOURCE } from '../constants.ts';
+import { TrelloApi } from '../services/index.ts';
 
 /**
  * Service-specific token-created hook for Trello.

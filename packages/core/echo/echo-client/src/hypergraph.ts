@@ -7,6 +7,7 @@ import { type BlobBackend } from '@dxos/blob';
 import { Context } from '@dxos/context';
 import { StackTrace } from '@dxos/debug';
 import { type Database, type Entity, Feed, Filter, type Hypergraph, Query, Ref, type Registry, Type } from '@dxos/echo';
+import { QueryAST } from '@dxos/echo-protocol';
 import {
   type AnyProperties,
   type RefResolverRequest,
@@ -22,11 +23,11 @@ import { log } from '@dxos/log';
 import { trace } from '@dxos/tracing';
 import { entry } from '@dxos/util';
 
-import { BlobManager } from './blob';
-import { type ItemsUpdatedEvent } from './core-db';
-import { type LoadBackend, LoadOpTable, type LoadResult } from './core-db/load-op';
-import { RequestImpl } from './core-db/ref-resolver-request';
-import { type DatabaseImpl } from './proxy-db';
+import { BlobManager } from './blob/index.ts';
+import { type ItemsUpdatedEvent } from './core-db/index.ts';
+import { type LoadBackend, LoadOpTable, type LoadResult } from './core-db/load-op.ts';
+import { RequestImpl } from './core-db/ref-resolver-request.ts';
+import { type DatabaseImpl } from './proxy-db/index.ts';
 import {
   GraphQueryContext,
   type QueryContext,
@@ -35,8 +36,8 @@ import {
   type QuerySource,
   RegistryQuerySource,
   SpaceQuerySource,
-} from './query';
-import { makeRegistry } from './registry';
+} from './query/index.ts';
+import { makeRegistry } from './registry/index.ts';
 
 const TRACE_REF_RESOLUTION = false;
 
@@ -135,10 +136,32 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
   }
 
   private _query(queryOrFilter: Query.Any | Filter.Any) {
-    const query = Filter.is(queryOrFilter) ? Query.select(queryOrFilter) : queryOrFilter;
+    const selected = Filter.is(queryOrFilter) ? Query.select(queryOrFilter) : queryOrFilter;
+    const query = this.#bindAllSpacesScope(selected);
     return this.#queryResultCache.getOrCreate(
       query,
       () => new QueryResultImpl(this._createLiveObjectQueryContext(), query),
+    );
+  }
+
+  /**
+   * Names every registered space on a `from('all-accessible-spaces')` clause, which carries no
+   * scopes of its own.
+   *
+   * The index host answers a space-less query with nothing, so such a query would otherwise see
+   * only what the working set already holds — a space nobody has read from in this process
+   * contributes no results at all, silently.
+   */
+  #bindAllSpacesScope(query: Query.Any): Query.Any {
+    const spaceIds = [...this._databases.keys()];
+    if (spaceIds.length === 0 || !isAllSpacesScope(query.ast)) {
+      return query;
+    }
+    return Query.fromAst(
+      bindAllSpacesScope(
+        query.ast,
+        spaceIds.map((spaceId) => ({ _tag: 'space' as const, spaceId })),
+      ),
     );
   }
 
@@ -859,3 +882,27 @@ trace.diagnostic({
     });
   },
 });
+
+/** True when the query carries a scope clause naming nothing — `from('all-accessible-spaces')`. */
+const isAllSpacesScope = (ast: QueryAST.Query): boolean => {
+  let found = false;
+  QueryAST.visit(ast, (node) => {
+    if (node.type === 'from' && node.from._tag === 'scope' && node.from.scopes.length === 0) {
+      found = true;
+    }
+  });
+  return found;
+};
+
+/**
+ * Replaces every empty scope clause with one naming the given spaces.
+ *
+ * `QueryAST.map` rather than a walk over every value: a filter literal can itself be an object
+ * carrying `_tag` and `scopes`, and rewriting one would silently change what the query matches.
+ */
+const bindAllSpacesScope = (ast: QueryAST.Query, scopes: QueryAST.SpaceScope[]): QueryAST.Query =>
+  QueryAST.map(ast, (node) =>
+    node.type === 'from' && node.from._tag === 'scope' && node.from.scopes.length === 0
+      ? { ...node, from: { ...node.from, scopes } }
+      : node,
+  );

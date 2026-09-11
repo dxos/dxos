@@ -19,6 +19,6 @@ export { type SpaceMember, SpaceMember_PresenceState } from '@dxos/protocols/buf
 export { type SpaceMember as HaloSpaceMember, SpaceMember_Role } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 export { type SpaceSyncState } from '@dxos/echo-client';
 
-export { type ImportSpaceOptions, importSpace } from './import';
-export { type PeerSyncState, type SpaceSyncStateMap, getSyncSummary } from './util';
-export { getSpace } from './space-proxy';
+export { type ImportSpaceOptions, importSpace } from './import.ts';
+export { type PeerSyncState, type SpaceSyncStateMap, getSyncSummary } from './util.ts';
+export { getSpace } from './space-proxy.ts';

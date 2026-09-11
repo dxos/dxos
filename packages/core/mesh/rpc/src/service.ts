@@ -9,7 +9,7 @@ import {
   type ServiceProvider,
 } from '@dxos/protocols/service-contract';
 
-import { RpcPeer, type RpcPeerOptions } from './rpc';
+import { RpcPeer, type RpcPeerOptions } from './rpc.ts';
 
 /**
  * Map of service definitions.

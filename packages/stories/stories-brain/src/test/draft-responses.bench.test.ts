@@ -12,8 +12,8 @@ import {
   round,
   runItemsBench,
   selectVariants,
-} from '../testing/harness';
-import { DRAFT_INSTRUCTIONS } from './defs';
+} from '../testing/harness/index.ts';
+import { DRAFT_INSTRUCTIONS } from './defs.ts';
 
 describe.skipIf(!fixtureExists())('draft replies (multi-model)', () => {
   test(

@@ -11,8 +11,8 @@ import * as SystemTags from '@dxos/plugin-inbox/SystemTags';
 import { TagIndex } from '@dxos/schema';
 import { type Actor, Message, type Person } from '@dxos/types';
 
-import { MAIN_CHARACTER, PEOPLE_SEEDS, type PersonKey, type PersonMap } from './people';
-import { actor, daysAgo, textBlock, threadIdFor } from './util';
+import { MAIN_CHARACTER, PEOPLE_SEEDS, type PersonKey, type PersonMap } from './people.ts';
+import { actor, daysAgo, textBlock, threadIdFor } from './util.ts';
 
 const makeMailbox = (
   people: Record<PersonKey, Person.Person>,

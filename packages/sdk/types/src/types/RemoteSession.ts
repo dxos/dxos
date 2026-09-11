@@ -57,6 +57,13 @@ export class RemoteSession extends Type.makeObject<RemoteSession>(DXN.make('org.
      */
     lastMessage: Schema.optional(Schema.String.annotate({ title: 'Last message' })),
 
+    /**
+     * One sentence the agent writes about where the work stands. Distinct from `lastMessage`, which
+     * is whatever the turn happened to end on: a summary is asked for deliberately, so a reader
+     * seeing a stale session learns what it was doing rather than what it last said.
+     */
+    summary: Schema.optional(Schema.String.annotate({ title: 'Summary' })),
+
     started: Format.DateTime.annotate({ title: 'Started' }),
 
     /** Last time the session reported in; how a stale `running` session is detected. */
@@ -72,7 +79,10 @@ export class RemoteSession extends Type.makeObject<RemoteSession>(DXN.make('org.
   }).pipe(
     Schema.annotate({ title: 'Remote Session' }),
     LabelAnnotation.set(['title']),
-    Annotation.IconAnnotation.set({ icon: 'ph--robot--regular', hue: 'indigo' }),
+    // The harness's own mark rather than a generic robot: every session this type holds is reported
+    // by Claude Code (`SOURCE`). An icon annotation is type-level, so a second harness would have to
+    // make this per-object — `harnessIcon` already keys off the foreign key for the places that can.
+    Annotation.IconAnnotation.set({ icon: 'px--anthropic--regular', hue: 'yellow' }),
   ),
 ) {}
 
@@ -91,6 +101,45 @@ export const make = ({
 
 /** The harness session id this object stands for, read back off its foreign keys. */
 export const getSessionId = (session: RemoteSession): string | undefined => Obj.getKeys(session, SOURCE).at(0)?.id;
+
+/**
+ * Display name for the harness a session belongs to, from the foreign key's `source`. The pill that
+ * stands for a session says which harness it is, so the mapping cannot live in the UI: an actor whose
+ * subject is a session is the only thing that knows, and a second harness must render as itself rather
+ * than inherit Claude Code's name.
+ */
+export const harnessName = (session: RemoteSession): string | undefined => {
+  const source = getSource(session);
+  return source === undefined ? undefined : (HARNESS_NAMES[source] ?? source);
+};
+
+/** The foreign system this session belongs to — the harness that reported it. */
+const getSource = (session: RemoteSession): string | undefined => Obj.getMeta(session).keys.at(0)?.source;
+
+/**
+ * The harness's own brand glyph, where one exists. Falls back to undefined rather than a generic
+ * icon so the caller picks its own default — a pill and a card want different ones.
+ */
+export const harnessIcon = (session: RemoteSession): string | undefined => {
+  const source = getSource(session);
+  return source === undefined ? undefined : HARNESS_ICONS[source];
+};
+
+const HARNESS_NAMES: Record<string, string> = { [SOURCE]: 'Claude Code' };
+
+const HARNESS_ICONS: Record<string, string> = { [SOURCE]: 'px--anthropic--regular' };
+
+/**
+ * How long a session may go without checking in before a reader should stop trusting `state`. Also
+ * what makes a report ask for a fresh summary: the heartbeat says a session is alive, and only
+ * prose says what it is alive doing.
+ */
+export const STALE_AFTER_MS = 30 * 60 * 1000;
+
+/** Whether a session's last check-in is old enough that its `state` no longer describes it. */
+export const isStale = (session: RemoteSession, now: number = Date.now()): boolean =>
+  !isTerminal(session) &&
+  (session.lastCheckedIn === undefined || now - new Date(session.lastCheckedIn).getTime() > STALE_AFTER_MS);
 
 /** Terminal states: a session in one of these is not expected to check in again. */
 export const isTerminal = (session: RemoteSession): boolean =>

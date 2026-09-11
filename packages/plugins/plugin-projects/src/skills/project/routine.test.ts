@@ -26,7 +26,7 @@ import { Milestone, Outline, Task, TaskSet } from '@dxos/types';
 
 import { ProjectOperationHandlerSet } from '#operations';
 
-import * as ProjectSkill from './ProjectSkill';
+import * as ProjectSkill from './ProjectSkill.ts';
 
 const { text, toolCall } = ScriptedLanguageModel;
 

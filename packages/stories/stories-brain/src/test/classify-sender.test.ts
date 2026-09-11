@@ -6,7 +6,7 @@ import { describe, test } from 'vitest';
 
 import { Message } from '@dxos/types';
 
-import { type SenderClass, classifySenderHeuristic, scoreSenders, uniqueSenders } from '../testing/harness';
+import { type SenderClass, classifySenderHeuristic, scoreSenders, uniqueSenders } from '../testing/harness/index.ts';
 
 // Deterministic coverage for the sender-triage heuristic + scorer — no fixture / model required, so it
 // runs in CI (the model-graded eval lives in classify-sender.bench.test.ts and skips without the

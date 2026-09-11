@@ -28,11 +28,11 @@ import type { AnchoredTo } from '@dxos/types';
 import type { Position } from '@dxos/util';
 
 // eslint-disable-next-line @dxos/rules/import-as-namespace
-import type * as Translations$ from '../app/Translations';
+import type * as Translations$ from '../app/Translations.ts';
 // eslint-disable-next-line @dxos/rules/import-as-namespace
-import type * as ObservabilityMapping$ from './ObservabilityMapping';
+import type * as ObservabilityMapping$ from './ObservabilityMapping.ts';
 // eslint-disable-next-line @dxos/rules/import-as-namespace
-import type * as Tour$ from './Tour';
+import type * as Tour$ from './Tour.ts';
 
 export const LAYOUT_CAPABILITY_ID = 'org.dxos.app-framework.capability.layout';
 
@@ -367,18 +367,19 @@ export const NavigationTargetResolver = Capability$.make<NavigationTargetResolve
 export type NavigationTargetVerdict = 'exists' | 'absent' | 'unknown';
 
 /**
- * Loads/verifies a navigation target by its `(spaceId, entityId)` so graph resolution can materialize
- * its node. Contributed by the plugin that owns object storage (plugin-client), consumed by layout
- * plugins — this is the abstraction that keeps layout plugins from depending on the client for
- * loading. `load` loads the object into local ECHO when present locally (so a URL-driven restore
- * materializes the plank's node), and resolves `exists` if the object is present locally or, as a
- * fallback, remotely. A remote-only object resolves `exists` but cannot render until it replicates
- * locally.
+ * Loads/verifies a navigation target so graph resolution can materialize its node. Contributed by the
+ * plugin that owns object storage (plugin-client), consumed by layout plugins — this is the
+ * abstraction that keeps layout plugins from depending on the client for loading. `load` loads the
+ * object into local ECHO when present locally (so a URL-driven restore materializes the plank's
+ * node), and resolves `exists` if the object is present locally or, as a fallback, remotely. A
+ * remote-only object resolves `exists` but cannot render until it replicates locally.
+ *
+ * Omitting `entityId` asks about the space itself.
  * @category Capability
  */
 export type NavigationTargetLoader = Readonly<{
   id: string;
-  load: (target: { spaceId: string; entityId: string }) => Effect$.Effect<NavigationTargetVerdict>;
+  load: (target: { spaceId: string; entityId?: string }) => Effect$.Effect<NavigationTargetVerdict>;
 }>;
 
 export const NavigationTargetLoader = Capability$.make<NavigationTargetLoader>()(

@@ -4,9 +4,9 @@
 
 import { describe, expect, onTestFinished, test } from 'vitest';
 
-import { Event } from './events';
-import { MulticastObservable, Observable, PushStream } from './observable';
-import { Trigger } from './trigger';
+import { Event } from './events.ts';
+import { MulticastObservable, Observable, PushStream } from './observable.ts';
+import { Trigger } from './trigger.ts';
 
 describe('multicast observable', () => {
   test('gets current value', () => {

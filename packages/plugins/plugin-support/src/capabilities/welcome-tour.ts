@@ -10,7 +10,7 @@ import * as Tour from '@dxos/app-toolkit/Tour';
 
 import { meta } from '#meta';
 
-import { WELCOME_TOUR_ID } from '../constants';
+import { WELCOME_TOUR_ID } from '../constants.ts';
 
 /**
  * Registers the host app's walkthrough as an ordinary tour whose matcher is the global one, so the

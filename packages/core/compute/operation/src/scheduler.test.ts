@@ -13,8 +13,8 @@ import { describe, expect } from 'vitest';
 import * as Operation from '@dxos/compute/Operation';
 import { DXN } from '@dxos/keys';
 
-import * as OperationInvoker from './OperationInvoker';
-import * as Scheduler from './scheduler';
+import * as OperationInvoker from './OperationInvoker.ts';
+import * as Scheduler from './scheduler.ts';
 
 const testRuntime = ManagedRuntime.make(Layer.empty) as unknown as ManagedRuntime.ManagedRuntime<any, any>;
 

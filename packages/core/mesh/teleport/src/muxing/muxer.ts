@@ -18,8 +18,8 @@ import {
 } from '@dxos/protocols/buf/dxos/devtools/swarm_pb';
 import { type Command, CommandSchema } from '@dxos/protocols/buf/dxos/mesh/muxer_pb';
 
-import { Balancer } from './balancer';
-import { type RpcPort } from './rpc-port';
+import { Balancer } from './balancer.ts';
+import { type RpcPort } from './rpc-port.ts';
 
 const DEFAULT_SEND_COMMAND_TIMEOUT = 60_000;
 const DESTROY_COMMAND_SEND_TIMEOUT = 5_000;

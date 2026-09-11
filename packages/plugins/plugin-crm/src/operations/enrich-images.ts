@@ -13,8 +13,8 @@ import { Organization, Person } from '@dxos/types';
 
 import { CrmOperation } from '#types';
 
-import { attachImageToSubject } from './attach-image';
-import { organizationImageCandidates, personImageCandidates } from './image-candidates';
+import { attachImageToSubject } from './attach-image.ts';
+import { organizationImageCandidates, personImageCandidates } from './image-candidates.ts';
 
 type Subject = Person.Person | Organization.Organization;
 

@@ -26,7 +26,7 @@ const installHighlighting = (): Promise<void> => {
   if (highlightExtension) {
     return Promise.resolve();
   }
-  loading ??= import('./highlight')
+  loading ??= import('./highlight.ts')
     .then(({ mermaidHighlightStyle }) => {
       highlightExtension = syntaxHighlighting(mermaidHighlightStyle());
       for (const view of pendingViews) {

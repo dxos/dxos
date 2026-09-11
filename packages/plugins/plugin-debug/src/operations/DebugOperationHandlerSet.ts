@@ -8,8 +8,8 @@ import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import { DebugOperation } from '#types';
 
 export const handlers = OperationHandlerSet.lazy([
-  DebugOperation.InsertLoremIpsum.pipe(Operation.lazyHandler(() => import('./insert-lorem-ipsum'))),
-  DebugOperation.Snapshot.pipe(Operation.lazyHandler(() => import('./snapshot'))),
-  DebugOperation.CreateSampleSpace.pipe(Operation.lazyHandler(() => import('./create-sample-space'))),
-  DebugOperation.Undo.pipe(Operation.lazyHandler(() => import('./undo'))),
+  DebugOperation.InsertLoremIpsum.pipe(Operation.lazyHandler(() => import('./insert-lorem-ipsum.ts'))),
+  DebugOperation.Snapshot.pipe(Operation.lazyHandler(() => import('./snapshot.ts'))),
+  DebugOperation.CreateSampleSpace.pipe(Operation.lazyHandler(() => import('./create-sample-space.ts'))),
+  DebugOperation.Undo.pipe(Operation.lazyHandler(() => import('./undo.ts'))),
 ]);

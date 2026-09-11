@@ -4,8 +4,8 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { type CypherContext } from './cypher';
-import { createInMemoryKeyProvider, createWebCryptoCypher } from './web-crypto-cypher';
+import { type CypherContext } from './cypher.ts';
+import { createInMemoryKeyProvider, createWebCryptoCypher } from './web-crypto-cypher.ts';
 
 const CONTEXT: CypherContext = {
   feed: { spaceId: 'space-1', feedId: 'feed-1', feedNamespace: 'data' },

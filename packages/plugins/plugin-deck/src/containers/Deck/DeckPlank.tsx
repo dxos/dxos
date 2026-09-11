@@ -16,12 +16,10 @@ import { Plank } from '#components';
 import { useBreadcrumbs, useDeckSettings } from '#hooks';
 import { DeckSchema } from '#types';
 
-import { CompanionPlank } from './CompanionPlank';
-import { PlankControls } from './PlankControls';
-import { PlankErrorFallback, PlankLoading } from './PlankFallback';
-import { useDeckPlank } from './useDeckPlank';
-
-const PLANK_LOADING = <PlankLoading />;
+import { CompanionPlank } from './CompanionPlank.tsx';
+import { PlankControls } from './PlankControls.tsx';
+import { PlankErrorFallback } from './PlankFallback.tsx';
+import { useDeckPlank } from './useDeckPlank.ts';
 
 export type DeckPlankProps = ThemedClassName<{
   id: string;
@@ -119,12 +117,8 @@ const DeckPlankInner = ({ id, part, fullscreen = false, active, path, classNames
     [path, unresolved],
   );
 
-  // Borrowed for its label and icon; the plank is still the one the URL asked for.
-  const shellNode = node ?? (unresolved ? notFoundNode : undefined);
-  if (!shellNode) {
-    // Absent is indefinite until the restore says it gave up, so the loader is the default.
-    return PLANK_LOADING;
-  }
+  // The plank the URL names, before anything has resolved: an id and nothing else.
+  const loadingNode = useMemo(() => ({ id }), [id]);
 
   const controls = (
     <PlankControls
@@ -135,6 +129,25 @@ const DeckPlankInner = ({ id, part, fullscreen = false, active, path, classNames
       onClick={onAdjust}
     />
   );
+
+  const headless = fullscreen;
+
+  const shellNode = node ?? (unresolved ? notFoundNode : undefined);
+  if (!shellNode) {
+    return (
+      <Plank
+        ref={rootRef}
+        node={loadingNode}
+        attendableId={id}
+        related={part === 'complementary'}
+        pending
+        controls={controls}
+        headless={headless}
+        onKeyDown={handleKeyDown}
+        classNames={classNames}
+      />
+    );
+  }
 
   const navbarEnd =
     part !== 'complementary' ? (
@@ -150,9 +163,6 @@ const DeckPlankInner = ({ id, part, fullscreen = false, active, path, classNames
       data={{ subject: shellNode.data } satisfies AppSurface.MenuFooterData}
     />
   );
-
-  // In fullscreen the toolbar is hidden so the content fills the viewport.
-  const headless = fullscreen;
 
   return (
     <Plank
@@ -170,7 +180,6 @@ const DeckPlankInner = ({ id, part, fullscreen = false, active, path, classNames
       navbarEnd={navbarEnd}
       sigilFooter={sigilFooter}
       fallback={PlankErrorFallback}
-      placeholder={PLANK_LOADING}
       headless={headless}
       onKeyDown={handleKeyDown}
       classNames={classNames}

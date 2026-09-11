@@ -2,4 +2,4 @@
 // Copyright 2024 DXOS.org
 //
 
-export * from './thread-ranges';
+export * from './thread-ranges.ts';

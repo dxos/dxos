@@ -6,9 +6,9 @@ import { Keyring } from '@dxos/keyring';
 import { type Directory, type Storage, StorageType, createStorage } from '@dxos/random-access-storage';
 import type { ValueEncoding } from '@dxos/vendor-hypercore/hypercore';
 
-import { FeedFactory } from '../feed-factory';
-import { FeedStore } from '../feed-store';
-import { type TestGenerator, type TestItem, defaultTestGenerator, defaultValueEncoding } from './test-generator';
+import { FeedFactory } from '../feed-factory.ts';
+import { FeedStore } from '../feed-store.ts';
+import { type TestGenerator, type TestItem, defaultTestGenerator, defaultValueEncoding } from './test-generator.ts';
 
 export type TestBuilderOptions<T extends {}> = {
   storage?: Storage;

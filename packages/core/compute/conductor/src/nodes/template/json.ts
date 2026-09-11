@@ -6,7 +6,7 @@ import * as Schema from 'effect/Schema';
 
 import { deepMapValues } from '@dxos/util';
 
-import { findHandlebarVariables } from './text';
+import { findHandlebarVariables } from './text.ts';
 
 // TODO(dmaretskyi): https://www.npmjs.com/package/json-templates.
 

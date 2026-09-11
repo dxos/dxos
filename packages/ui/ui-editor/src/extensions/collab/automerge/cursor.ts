@@ -6,7 +6,7 @@ import { fromCursor, toCursor } from '@dxos/echo-client';
 import { Doc } from '@dxos/echo-doc';
 import { log } from '@dxos/log';
 
-import { type CursorConverter } from '../../../util';
+import { type CursorConverter } from '../../../util/index.ts';
 
 /**
  * Maps between editor offsets and stable Automerge cursors for the text the {@link Doc.Accessor}

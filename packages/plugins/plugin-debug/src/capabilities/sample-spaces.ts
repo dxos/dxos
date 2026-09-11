@@ -5,7 +5,7 @@
 import type * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as SampleSpace from '@dxos/app-toolkit/SampleSpace';
 
-import { IncidentSpace, PipelineSpace, StockfishSpace, TidepoolSpace } from '../sample';
+import { IncidentSpace, PipelineSpace, StockfishSpace, TidepoolSpace, WorkerSpace } from '../sample/index.ts';
 
 /**
  * The sample spaces this plugin offers. Loaded only once something asks for the list — the content
@@ -33,6 +33,12 @@ export default [
     description:
       'A brief, a five-stage plan as a task tree, a position to test against, and the skill for building it in a sandbox.',
     definition: StockfishSpace(),
+  }),
+  SampleSpace.preset({
+    id: 'org.dxos.plugin-debug.sample.worker',
+    label: 'Hello Worker',
+    description: 'Five tasks from an empty sandbox to a Cloudflare Worker that answers, with no account to start.',
+    definition: WorkerSpace(),
   }),
   SampleSpace.preset({
     id: 'org.dxos.plugin-debug.sample.incident',

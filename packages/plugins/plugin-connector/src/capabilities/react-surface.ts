@@ -19,7 +19,7 @@ import {
   SyncTargetsDialog,
 } from '#containers';
 
-import { CONNECTIONS_SECTION_TYPE, PROVIDER_FORM_DIALOG, SYNC_TARGETS_DIALOG } from '../constants';
+import { CONNECTIONS_SECTION_TYPE, PROVIDER_FORM_DIALOG, SYNC_TARGETS_DIALOG } from '../constants.ts';
 
 export default Capability.makeModule(() =>
   Effect.succeed(

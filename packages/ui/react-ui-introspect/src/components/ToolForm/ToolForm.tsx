@@ -16,8 +16,8 @@ import { mx } from '@dxos/ui-theme';
 
 import { translationKey } from '#translations';
 
-import { Picker } from '../Picker';
-import type { ToolEntry } from '../types';
+import { Picker } from '../Picker/index.ts';
+import type { ToolEntry } from '../types.ts';
 
 export type ToolFormProps = ThemedClassName<{
   /**

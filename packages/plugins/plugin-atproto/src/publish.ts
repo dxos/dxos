@@ -11,12 +11,12 @@ import { type AtprotoPolicy, type PublishEligibility, type PublishInspection } f
 
 import { AtprotoPublication } from '#types';
 
-import { getPolicyAnnotation, getRecordAnnotation } from './annotation';
-import { AtprotoRepoError, NotPublishableError } from './errors';
-import { computePublishedValues } from './field-values';
-import { ATPROTO_SOURCE, atprotoForeignKey } from './foreign-key';
-import { hashRecord } from './hash';
-import * as AtprotoRepo from './services/AtprotoRepo';
+import { getPolicyAnnotation, getRecordAnnotation } from './annotation.ts';
+import { AtprotoRepoError, NotPublishableError } from './errors.ts';
+import { computePublishedValues } from './field-values.ts';
+import { ATPROTO_SOURCE, atprotoForeignKey } from './foreign-key.ts';
+import { hashRecord } from './hash.ts';
+import * as AtprotoRepo from './services/AtprotoRepo.ts';
 
 /** Whether an object is unpublished, published-and-in-sync, or published-but-stale. */
 export type PublishStatus = 'unpublished' | 'published' | 'outOfDate';

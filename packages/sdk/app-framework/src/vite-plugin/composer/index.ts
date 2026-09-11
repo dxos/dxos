@@ -6,10 +6,10 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { type Plugin as VitePlugin } from 'vite';
 
-import { Plugin, PLUGIN_DEV_SERVER_PORT } from '../../core';
-import { findDxConfigFile, loadDxConfig } from '../load';
-import { type BuildMeta, ENTRY_FILENAME, MANIFEST_ASSET_NAME, serializeManifest, toBuildMeta } from '../manifest';
-import { DEFAULT_PACKAGES, isSharedPackage } from '../packages';
+import { Plugin, PLUGIN_DEV_SERVER_PORT } from '../../core/index.ts';
+import { findDxConfigFile, loadDxConfig } from '../load.ts';
+import { type BuildMeta, ENTRY_FILENAME, MANIFEST_ASSET_NAME, serializeManifest, toBuildMeta } from '../manifest.ts';
+import { DEFAULT_PACKAGES, isSharedPackage } from '../packages.ts';
 
 export { ENTRY_FILENAME, MANIFEST_ASSET_NAME, serializeManifest };
 export type { BuildMeta };

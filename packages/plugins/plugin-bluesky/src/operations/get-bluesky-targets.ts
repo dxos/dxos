@@ -12,9 +12,9 @@ import { Database, Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 
-import { BLUESKY_TARGET } from '../constants';
-import { BlueskyApi } from '../services';
-import { GetBlueskyTargets } from './definitions';
+import { BLUESKY_TARGET } from '../constants.ts';
+import { BlueskyApi } from '../services/index.ts';
+import { GetBlueskyTargets } from './definitions.ts';
 
 /**
  * Fixed self-targets every Bluesky integration exposes. The remote-id is the

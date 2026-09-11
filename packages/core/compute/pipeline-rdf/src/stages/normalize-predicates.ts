@@ -6,8 +6,8 @@ import * as Effect from 'effect/Effect';
 
 import { Stage } from '@dxos/pipeline';
 
-import { normalizePredicate } from '../internal/sparql/normalize-predicate';
-import { type DocumentFacts } from './extract-facts';
+import { normalizePredicate } from '../internal/sparql/normalize-predicate.ts';
+import { type DocumentFacts } from './extract-facts.ts';
 
 export type NormalizeOptions = {
   /**

@@ -29,7 +29,7 @@ export const ClientReady = Capability.lazyModule(
     // forked client initialization to have completed.
     activatesOn: ObservabilityCapabilities.ClientInitialized,
   },
-  () => import('./client-ready'),
+  () => import('./client-ready.ts'),
 );
 export const InvocationListener = Capability.lazyModule(
   'InvocationListener',
@@ -40,7 +40,7 @@ export const InvocationListener = Capability.lazyModule(
     // running before the first user action, not before the plugins that register events.
     activatesOn: ActivationEvents.Idle,
   },
-  () => import('./invocation-listener'),
+  () => import('./invocation-listener.ts'),
 );
 export const PrivacyNotice = Capability.lazyModule(
   'PrivacyNotice',
@@ -57,7 +57,7 @@ export const PrivacyNotice = Capability.lazyModule(
     // (mirrored by identifier — see `ObservabilityEvents.IdentityCreatedEvent`).
     activatesOn: ObservabilityEvents.IdentityCreatedEvent,
   },
-  () => import('./privacy-notice'),
+  () => import('./privacy-notice.ts'),
 );
 export const PrivacyBanner = Capability.lazyModule(
   'PrivacyBanner',
@@ -95,10 +95,10 @@ export const Observability = Capability.inlineModule(
     }),
 );
 export const OperationHandler = AppCapability.operationHandler(() => import('#operation-handler'));
-export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
+export const ReactSurface = AppCapability.surface(() => import('./react-surface.ts'), {
   roles: ['org.dxos.role.article'],
 });
-export const ObservabilitySettings = AppCapability.settings(() => import('./settings'), {
+export const ObservabilitySettings = AppCapability.settings(() => import('./settings.ts'), {
   provides: [ObservabilityCapabilities.Settings],
   environments: [],
 });
@@ -110,6 +110,6 @@ export const ObservabilityState = Capability.lazyModule(
     provides: [ObservabilityCapabilities.State],
     props: ({ namespace }: ObservabilityOptions.ObservabilityPluginOptions) => ({ namespace }),
   },
-  () => import('./state'),
+  () => import('./state.ts'),
 );
 export const Translations = AppCapability.translations(translations);

@@ -21,13 +21,13 @@ import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { DynamicTable, type TableFeatures, type TablePropertyDefinition } from '@dxos/react-ui-table';
 import { mx } from '@dxos/ui-theme';
 
-import { DataSpaceSelector } from '../../../containers';
-import { ExceptionPanel } from './ExceptionPanel';
-import { ExecutionGraphPanel } from './ExecutionGraphPanel';
-import { useFunctionNameResolver, useInvocationSpans } from './hooks';
-import { LogPanel } from './LogPanel';
-import { RawDataPanel } from './RawDataPanel';
-import { formatDuration } from './utils';
+import { DataSpaceSelector } from '../../../containers/index.ts';
+import { ExceptionPanel } from './ExceptionPanel.tsx';
+import { ExecutionGraphPanel } from './ExecutionGraphPanel.tsx';
+import { useFunctionNameResolver, useInvocationSpans } from './hooks.ts';
+import { LogPanel } from './LogPanel.tsx';
+import { RawDataPanel } from './RawDataPanel.tsx';
+import { formatDuration } from './utils.ts';
 
 export type InvocationTraceContainerProps = {
   db?: Database.Database;

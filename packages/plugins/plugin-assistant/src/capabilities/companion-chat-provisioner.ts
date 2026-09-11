@@ -42,6 +42,12 @@ export default Capability.makeModule(
       return [];
     }
     const deckStateAtom = deckStateOption.value;
+    // What is open is derived from the URL and lives in the deck's ephemeral state, not its stored one.
+    const deckEphemeralOption = yield* Capability.getOption(DeckCapabilities.EphemeralState);
+    if (Option.isNone(deckEphemeralOption)) {
+      return [];
+    }
+    const deckEphemeralAtom = deckEphemeralOption.value;
     // The mobile drawer and the desktop companion plank record "which companion is on screen" in
     // different fields, so the host has to be known before that state can be read.
     const platform = yield* Capability.get(DeckCapabilities.Platform).pipe(
@@ -112,6 +118,7 @@ export default Capability.makeModule(
     const provision = () => {
       const deckState: DeckSchema.StoredDeckState = registry.get(deckStateAtom);
       const deck = deckState.decks[deckState.activeDeck];
+      const active: string[] = registry.get(deckEphemeralAtom).open[deckState.activeDeck]?.active ?? [];
       const { open, variant: companionVariant } = DeckSchema.getCompanionSelection(
         platform,
         deckState,
@@ -122,7 +129,7 @@ export default Capability.makeModule(
         return;
       }
 
-      const plankIds = new Set(deck.active);
+      const plankIds = new Set(active);
 
       // Remove subscriptions for planks that are no longer active.
       for (const trackedId of plankSubs.keys()) {
@@ -157,12 +164,14 @@ export default Capability.makeModule(
     provision();
 
     const unsub1 = registry.subscribe(deckStateAtom, provision);
+    const unsubOpen = registry.subscribe(deckEphemeralAtom, provision);
     const unsub2 = registry.subscribe(stateAtom, provision);
     const unsub3 = registry.subscribe(variantAtom, provision);
 
     yield* Effect.addFinalizer(() =>
       Effect.sync(() => {
         unsub1();
+        unsubOpen();
         unsub2();
         unsub3();
         unsubAllPlanks();

@@ -17,7 +17,7 @@ import {
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
-import { type HandleQueryState } from './handle-state';
+import { type HandleQueryState } from './handle-state.ts';
 
 /** One loaded document as the repo holds it now. */
 export type DocumentPair<T> = { query: DocumentProgress<T>; handle: DocHandle<T> };

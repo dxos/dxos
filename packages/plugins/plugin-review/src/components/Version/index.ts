@@ -2,5 +2,5 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './VersionBanner';
-export * from './VersionToolbar';
+export * from './VersionBanner.tsx';
+export * from './VersionToolbar.tsx';

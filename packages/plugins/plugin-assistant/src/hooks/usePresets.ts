@@ -17,7 +17,7 @@ import {
   pickPreset,
   presetsForProvider,
   resolveProvider,
-} from '../processor';
+} from '../processor/index.ts';
 
 export type UsePresets = {
   preset: AiServicePreset | undefined;

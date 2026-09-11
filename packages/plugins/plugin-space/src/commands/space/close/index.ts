@@ -2,4 +2,4 @@
 // Copyright 2025 DXOS.org
 //
 
-export * from './close';
+export * from './close.ts';

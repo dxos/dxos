@@ -16,8 +16,8 @@ import { Text } from '@dxos/schema';
 
 import { translations } from '#translations';
 
-import { TestLayout } from '../../../../../testing';
-import { Form } from '../../../Form';
+import { TestLayout } from '../../../../../testing/index.ts';
+import { Form } from '../../../Form.tsx';
 
 //
 // String-backed markdown.

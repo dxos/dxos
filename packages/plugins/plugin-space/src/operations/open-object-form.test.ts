@@ -24,8 +24,8 @@ import { ComplexMap } from '@dxos/util';
 import { SpacePlugin } from '#plugin';
 import { SpaceCapabilities, SpaceOperation } from '#types';
 
-import type { ObjectFormHandle } from '../util';
-import { TestObject } from './testing';
+import type { ObjectFormHandle } from '../util/index.ts';
+import { TestObject } from './testing.ts';
 
 /**
  * `OpenObjectForm` returns what the dialog produced, which means the handler has to stay suspended

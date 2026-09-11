@@ -14,8 +14,8 @@ import { trim } from '@dxos/util';
 
 import { translationKey } from '#translations';
 
-import { Shimmer } from '../Shimmer';
-import { type TimelineOptions, compactOptions, defaultOptions } from './timeline-options';
+import { Shimmer } from '../Shimmer/index.ts';
+import { type TimelineOptions, compactOptions, defaultOptions } from './timeline-options.ts';
 
 /**
  * Mercurial-style Commit.

@@ -33,7 +33,7 @@ import { EdgeReplicationSetting } from '@dxos/protocols/buf/dxos/echo/metadata_p
 import { ProfileDocumentSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { trace } from '@dxos/tracing';
 
-import { type ReplicantEnv, ReplicantRegistry } from '../env';
+import { type ReplicantEnv, ReplicantRegistry } from '../env/index.ts';
 
 /**
  * The one document type the stress test manipulates.

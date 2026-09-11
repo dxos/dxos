@@ -7,9 +7,9 @@ import * as Atom from 'effect/unstable/reactivity/Atom';
 import React from 'react';
 import { afterEach, describe, test } from 'vitest';
 
-import { type MenuActions, type MenuItem, type MenuItemsAccessor } from '../types';
-import { createMenuAction } from '../util';
-import { makeMenuActions, useMenuContribution, useMenuItems } from './useMenuActions';
+import { type MenuActions, type MenuItem, type MenuItemsAccessor } from '../types.ts';
+import { createMenuAction } from '../util.ts';
+import { makeMenuActions, useMenuContribution, useMenuItems } from './useMenuActions.ts';
 
 const createMenu = (baseItems: MenuItem[] = []): MenuActions => {
   const baseItemsAtom = Atom.make<MenuItem[] | null>(baseItems);

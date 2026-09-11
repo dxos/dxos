@@ -20,7 +20,7 @@ import { log } from '@dxos/log';
 import { meta } from '#meta';
 import { NativeCapabilities, Update } from '#types';
 
-import { TAURI_LOCALHOST_PORTS } from '../constants';
+import { TAURI_LOCALHOST_PORTS } from '../constants.ts';
 
 const SUPPORTS_OTA = ['linux', 'macos', 'windows'];
 

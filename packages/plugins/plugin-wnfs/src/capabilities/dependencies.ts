@@ -10,7 +10,7 @@ import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 
 import { WnfsCapabilities } from '#types';
 
-import * as Blockstore from '../blockstore';
+import * as Blockstore from '../blockstore.ts';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {

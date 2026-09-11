@@ -19,24 +19,24 @@ import { MarkdownCapabilities } from '#types';
 export const AnchorResolver = Capability.lazyModule(
   'AnchorResolver',
   { requires: [AppCapabilities.AppGraph], provides: [AppCapabilities.AnchorResolver], environments: [] },
-  () => import('./anchor-resolver'),
+  () => import('./anchor-resolver.ts'),
 );
 // Ordering-only: registers the sort comparator once the app graph exists (mirrors the
 // AppGraphReady ordering the event-mode module used previously); the body reads nothing.
-export const AnchorSort = AppCapability.anchorSort(() => import('./anchor-sort'), {
+export const AnchorSort = AppCapability.anchorSort(() => import('./anchor-sort.ts'), {
   requires: [AppCapabilities.AppGraph],
 });
-export const CommentConfig = AppCapability.commentConfig(() => import('./comment-config'));
-export const CreateObject = SpaceCapability.createObject(() => import('./create-object'), {
+export const CommentConfig = AppCapability.commentConfig(() => import('./comment-config.ts'));
+export const CreateObject = SpaceCapability.createObject(() => import('./create-object.ts'), {
   environments: ['node'],
 });
-export const Schema = AppCapability.schema(() => import('./schema'));
-export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition'));
-export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'));
-export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
+export const Schema = AppCapability.schema(() => import('./schema.ts'));
+export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition.ts'));
+export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler.ts'));
+export const ReactSurface = AppCapability.surface(() => import('./react-surface.ts'), {
   roles: ['org.dxos.role.article', 'org.dxos.role.cardContent', 'org.dxos.role.section', 'org.dxos.role.tabpanel'],
 });
-export const MarkdownSettings = AppCapability.settings(() => import('./settings'), {
+export const MarkdownSettings = AppCapability.settings(() => import('./settings.ts'), {
   provides: [MarkdownCapabilities.Settings],
 });
 // Browser-only, like the two anchor modules: it requires attention's view state, which only the
@@ -48,7 +48,7 @@ export const MarkdownState = Capability.lazyModule(
     provides: [MarkdownCapabilities.EditorState, MarkdownCapabilities.EditorViews],
     environments: [],
   },
-  () => import('./state'),
+  () => import('./state.ts'),
 );
 export const Translations = AppCapability.translations([...translations, ...editorTranslations]);
 export const DocumentTour = AppCapability.tour({
@@ -56,6 +56,6 @@ export const DocumentTour = AppCapability.tour({
   matches: Tour.whenTypename('org.dxos.type.document'),
   label: ['document-tour.label', { ns: meta.profile.key }],
   auto: true,
-  steps: () => import('../tours').then(({ steps }) => steps),
+  steps: () => import('../tours/index.ts').then(({ steps }) => steps),
 });
-export const UndoMappings = AppCapability.undoMappings(() => import('./undo-mappings'));
+export const UndoMappings = AppCapability.undoMappings(() => import('./undo-mappings.ts'));

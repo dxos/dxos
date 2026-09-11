@@ -11,10 +11,10 @@ import { assertArgument, invariant } from '@dxos/invariant';
 import { DXN, URI } from '@dxos/keys';
 import { type Primitive } from '@dxos/util';
 
-import type * as Annotation from '../../Annotation';
-import { type Mutable } from '../common/proxy';
-import { type AnyProperties, EntityKind, TypeId, getSchema } from '../common/types';
-import { createAnnotationHelper } from './util';
+import type * as Annotation from '../../Annotation.ts';
+import { type Mutable } from '../common/proxy/index.ts';
+import { type AnyProperties, EntityKind, TypeId, getSchema } from '../common/types/index.ts';
+import { createAnnotationHelper } from './util.ts';
 
 const ANNOTATION_TYPE_ID: Annotation.TypeId = '~@dxos/echo/Annotation' as const;
 
@@ -200,7 +200,7 @@ export const setTypename = (obj: any, typename: URI.URI): void => {
  * @returns Object type URI — either a typename {@link DXN} or an `echo:` reference to a stored Schema object.
  * @returns undefined if the object has no registered type URI (e.g. unresolved query result).
  * @example `dxn:com.example.type.person:1.0.0`
- * @example `echo:/01KKKG2FHWCMTR0BY00GJSVT1X` (stored schema)
+ * @example Stored schema: `echo:///01KKKG2FHWCMTR0BY00GJSVT1X`.
  *
  * @internal (use Obj.getTypeURI)
  */
@@ -521,9 +521,13 @@ export const makeUserAnnotation = <T>(props: MakeAnnoationsProps<T>): Annotation
 
 const IconAnnotationSchema = Schema.Struct({
   /**
-   * Phosphor icon name (e.g., 'ph--user--regular', 'ph--cube--regular', 'ph--link--regular ', etc.)
+   * Sprite icon name (e.g., 'ph--user--regular', 'ph--cube--regular', 'px--anthropic--regular').
+   *
+   * `ph--*` is Phosphor; `px--*` and `dx--*` are brand glyphs, which are sprite-only and carry no
+   * weight variants. All three are admitted because a type whose subject IS a brand — an Anthropic
+   * session, a GitHub repo — has no honest Phosphor equivalent.
    */
-  icon: Schema.String.pipe(Schema.check(Schema.isPattern(/^ph--[a-z-]+--[a-z]+$/))),
+  icon: Schema.String.pipe(Schema.check(Schema.isPattern(/^(ph|px|dx)--[a-z0-9-]+--[a-z]+$/))),
 
   /**
    * Color name.
@@ -693,7 +697,7 @@ export const setDescription = (entity: Mutable<AnyProperties>, description: stri
   }
 };
 
-export { Dictionary, Key, getDictionary, setDictionary } from './dictionary';
+export { Dictionary, Key, getDictionary, setDictionary } from './dictionary.ts';
 
 export const getFromAst = <T>(ast: SchemaAST.AST, annotation: Annotation.Annotation<T>): Option.Option<T> => {
   const meta = SchemaAST.getAnnotation<PropertyMetaAnnotation>(ast, PropertyMetaAnnotationId);

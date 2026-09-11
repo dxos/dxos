@@ -23,7 +23,7 @@ export default Capability.makeModule(
       matches: (data) =>
         Obj.isObject(data) &&
         capabilities.getAll(AppCapabilities.CommentConfig).some(({ id }) => id === Obj.getTypename(data)),
-      steps: () => import('../tours').then(({ steps }) => steps),
+      steps: () => import('../tours/index.ts').then(({ steps }) => steps),
     });
   }),
 );

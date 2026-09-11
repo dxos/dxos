@@ -26,13 +26,13 @@ import {
   useLayout,
   useSelectionEvents,
   useShortcuts,
-} from '../../hooks';
-import { rectContains } from '../../layout';
-import { type TestId } from '../defs';
-import { eventsNone, styles } from '../styles';
-import { Frame } from './Frame';
-import { getShapeBounds } from './shape-defs';
-import { Shapes } from './Shapes';
+} from '../../hooks/index.ts';
+import { rectContains } from '../../layout/index.ts';
+import { type TestId } from '../defs.ts';
+import { eventsNone, styles } from '../styles.tsx';
+import { Frame } from './Frame.tsx';
+import { getShapeBounds } from './shape-defs.ts';
+import { Shapes } from './Shapes.tsx';
 
 /**
  * Main canvas component.

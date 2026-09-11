@@ -12,10 +12,15 @@ import { type AnyProperties } from '@dxos/echo/internal';
 
 import { type FormPresentation } from '#types';
 
-import { useFormFieldState } from '../../../hooks';
-import { FormFieldDispatch, type FormFieldDispatchProps, FormFieldErrorBoundary, FormFieldRow } from '../FormField';
-import { type LayoutNode, LayoutParseError, parseLayout } from './parser';
-import { resolveLayoutField } from './resolve-layout-field';
+import { useFormFieldState } from '../../../hooks/index.ts';
+import {
+  FormFieldDispatch,
+  type FormFieldDispatchProps,
+  FormFieldErrorBoundary,
+  FormFieldRow,
+} from '../FormField/index.ts';
+import { type LayoutNode, LayoutParseError, parseLayout } from './parser.ts';
+import { resolveLayoutField } from './resolve-layout-field.ts';
 
 const FORM_LAYOUT_NAME = 'Form.Layout';
 

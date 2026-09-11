@@ -13,7 +13,7 @@ import * as Options from 'effect/unstable/cli/Flag';
 import { CommandConfig, Common, printList, spaceLayer } from '@dxos/cli-util';
 import { Database, Filter, Obj, Query } from '@dxos/echo';
 
-import { printStats } from './util';
+import { printStats } from './util.ts';
 
 export const stats = Command.make(
   'stats',

@@ -6,9 +6,9 @@ import { subDays, subMonths, subWeeks, subYears } from 'date-fns';
 import * as Option from 'effect/Option';
 import { describe, test } from 'vitest';
 
-import { type Filter } from '../Jmap';
-import { filterScopesMailbox, parseMailQuery, resolveMailboxByNameOrRole } from './query';
-import { type Mailbox } from './types';
+import { type Filter } from '../Jmap/index.ts';
+import { filterScopesMailbox, parseMailQuery, resolveMailboxByNameOrRole } from './query.ts';
+import { type Mailbox } from './types.ts';
 
 const FOLDERS: Mailbox[] = [
   { id: 'mb-inbox', name: 'Inbox', role: 'inbox' },

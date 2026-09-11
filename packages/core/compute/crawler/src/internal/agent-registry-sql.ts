@@ -9,9 +9,9 @@ import type * as SqlError from 'effect/unstable/sql/SqlError';
 
 import { SqlTransaction } from '@dxos/sql-sqlite';
 
-import type * as AgentRegistry from '../AgentRegistry';
-import { StateError } from '../errors';
-import { MIGRATIONS, MIGRATIONS_TABLE } from '../migrations/agent-registry';
+import type * as AgentRegistry from '../AgentRegistry.ts';
+import { StateError } from '../errors.ts';
+import { MIGRATIONS, MIGRATIONS_TABLE } from '../migrations/agent-registry/index.ts';
 
 /**
  * Applies any migrations this database has not recorded yet.

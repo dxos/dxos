@@ -2,4 +2,4 @@
 // Copyright 2025 DXOS.org
 //
 
-export * from './NavBranch';
+export * from './NavBranch.tsx';

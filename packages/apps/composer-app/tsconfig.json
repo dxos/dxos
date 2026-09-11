@@ -436,6 +436,9 @@
       "path": "../../sdk/worker-framework"
     },
     {
+      "path": "../../ui/brand"
+    },
+    {
       "path": "../../ui/react-primitives/react-error-boundary"
     },
     {

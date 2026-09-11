@@ -7,7 +7,7 @@ import { expect, within } from 'storybook/test';
 
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { FeedStory, type FeedStoryProps } from '../testing';
+import { FeedStory, type FeedStoryProps } from '../testing/index.ts';
 
 /**
  * Arrow keys step between the feed's stops, one press one stop.

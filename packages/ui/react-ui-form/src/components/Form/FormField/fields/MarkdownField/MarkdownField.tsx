@@ -15,7 +15,7 @@ import { createDataExtensions } from '@dxos/ui-editor';
 import { translationKey } from '#translations';
 import { type FormFieldRendererProps } from '#types';
 
-import { presentationFor } from '../../presentation';
+import { presentationFor } from '../../presentation.tsx';
 
 /**
  * Form field that edits a markdown value in a CodeMirror editor.

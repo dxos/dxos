@@ -2,8 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-import { ClipboardProvider } from './ClipboardProvider';
-import { CopyButton, CopyButtonIconOnly } from './CopyButton';
+import { ClipboardProvider } from './ClipboardProvider.tsx';
+import { CopyButton, CopyButtonIconOnly } from './CopyButton.tsx';
 
 export const Clipboard = {
   Button: CopyButton,
@@ -11,4 +11,4 @@ export const Clipboard = {
   Provider: ClipboardProvider,
 };
 
-export { useClipboard } from './ClipboardContext';
+export { useClipboard } from './ClipboardContext.ts';

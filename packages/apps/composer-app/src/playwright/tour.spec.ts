@@ -4,8 +4,8 @@
 
 import { expect, test } from '@playwright/test';
 
-import { AppManager } from './app-manager';
-import { Tour } from './plugins';
+import { AppManager } from './app-manager.ts';
+import { Tour } from './plugins/index.ts';
 
 // Started from the Home toolbar rather than on first run: the automatic trigger is part of the beta
 // auth flow, which localhost does not go through, so the tour would never appear here on its own.

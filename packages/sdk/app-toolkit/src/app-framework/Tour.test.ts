@@ -6,7 +6,7 @@ import { describe, test } from 'vitest';
 
 import { Position } from '@dxos/util';
 
-import * as Tour from './Tour';
+import * as Tour from './Tour.ts';
 
 const loader = (name: string) => async () => [{ target: name, title: name, description: name }];
 

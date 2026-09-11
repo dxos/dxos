@@ -8,7 +8,7 @@ import { Trigger, sleep } from '@dxos/async';
 import { ShellManager } from '@dxos/shell/testing';
 import { setupPage } from '@dxos/test-utils/playwright';
 
-import { type FILTER } from '../constants';
+import { type FILTER } from '../constants.ts';
 
 export const INITIAL_URL = 'http://localhost:9006/';
 

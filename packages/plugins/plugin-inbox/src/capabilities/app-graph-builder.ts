@@ -29,7 +29,7 @@ import { meta } from '#meta';
 import { createSyncProgressKey } from '#sync';
 import { Calendar, DraftEvent, InboxOperation, Mailbox, SystemTags } from '#types';
 
-import { MAILBOX_SUBSCRIPTIONS_TYPE, MAILBOXES_SECTION_TYPE } from '../constants';
+import { MAILBOX_SUBSCRIPTIONS_TYPE, MAILBOXES_SECTION_TYPE } from '../constants.ts';
 import {
   getAllMailId,
   getCalendarsPath,
@@ -42,8 +42,8 @@ import {
   getSentId,
   getStarredId,
   getSubscriptionsId,
-} from '../paths';
-import { getMessageLabel } from '../util';
+} from '../paths.ts';
+import { getMessageLabel } from '../util/index.ts';
 
 const calendarTypename = Type.getTypename(Calendar.Calendar);
 

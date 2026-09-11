@@ -20,7 +20,7 @@ import { KanbanCardTileSimple } from '#testing';
 import { translations } from '#translations';
 import { Kanban } from '#types';
 
-import { KanbanBoard } from './KanbanBoard';
+import { KanbanBoard } from './KanbanBoard.tsx';
 
 random.seed(1);
 

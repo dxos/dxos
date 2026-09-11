@@ -10,7 +10,7 @@ import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
 import { test } from 'vitest';
 
-import { runAndForwardErrors } from './internal/errors';
+import { runAndForwardErrors } from './internal/errors.ts';
 
 class ClientConfig extends Context.Service<ClientConfig, { endpoint: string }>()('ClientConfig') {}
 

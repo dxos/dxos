@@ -17,27 +17,27 @@ import { RoutineCapabilities } from '#types';
 // eslint-disable-next-line import/no-relative-packages
 import pluginSpec from '../../PLUGIN.mdl?raw';
 
-export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'), {
+export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder.ts'), {
   environments: ['node'],
 });
-export const Commands = AppCapability.commands(() => import('./commands'));
+export const Commands = AppCapability.commands(() => import('./commands.ts'));
 // The entry carries a live `customPanel` (`CreateRoutinePanel`) alongside the object factory, so the
 // module cannot be evaluated without React.
-export const CreateObject = SpaceCapability.createObject(() => import('./create-object'), {
+export const CreateObject = SpaceCapability.createObject(() => import('./create-object.ts'), {
   environments: [],
 });
-export const LayerSpecs = AppCapability.layerSpec(() => import('./layer-specs'), {
+export const LayerSpecs = AppCapability.layerSpec(() => import('./layer-specs.ts'), {
   name: 'LayerSpecs',
   provides: [Capabilities.TraceSink],
 });
-export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'));
+export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler.ts'));
 export const PluginAsset = AppCapability.pluginAsset({
   pluginId: meta.profile.key,
   path: 'PLUGIN.mdl',
   content: pluginSpec,
   mimeType: 'application/x-mdl',
 });
-export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
+export const ReactSurface = AppCapability.surface(() => import('./react-surface.ts'), {
   roles: ['org.dxos.role.article', 'org.dxos.role.cardContent'],
 });
 export const RegistrySync = Capability.lazyModule(
@@ -52,13 +52,13 @@ export const RegistrySync = Capability.lazyModule(
     provides: [],
     environments: ['node'],
   },
-  () => import('./registry-sync'),
+  () => import('./registry-sync.ts'),
 );
-export const Schema = AppCapability.schema(() => import('./schema'));
+export const Schema = AppCapability.schema(() => import('./schema.ts'));
 export const Templates = Capability.lazyModule(
   'Templates',
   { provides: [RoutineCapabilities.Template], environments: ['node', 'workerd'] },
-  () => import('./templates'),
+  () => import('./templates.ts'),
 );
 export const Translations = AppCapability.translations(translations);
 export const TriggerRuntimeController = Capability.lazyModule(
@@ -70,5 +70,5 @@ export const TriggerRuntimeController = Capability.lazyModule(
     activatesOn: ClientEvents.SpacesReady,
     environments: ['node'],
   },
-  () => import('./trigger-runtime-controller'),
+  () => import('./trigger-runtime-controller.ts'),
 );

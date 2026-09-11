@@ -6,8 +6,8 @@ import { describe, test } from '@effect/vitest';
 import fs from 'node:fs';
 import path from 'node:path';
 
-import { runDx, withIsolatedHome } from '../testing';
-import { getCore, getDefaults } from './plugin-defs';
+import { runDx, withIsolatedHome } from '../testing/index.ts';
+import { getCore, getDefaults } from './plugin-defs.ts';
 
 /**
  * End-to-end subprocess tests for `dx plugin`. Each runs against a throwaway HOME so the profile

@@ -4,14 +4,24 @@
 
 import * as Plugin from '@dxos/app-framework/Plugin';
 
-import { Connector, MarkdownExtension, OperationHandler, PluginAsset, Translations } from '#capabilities';
+import {
+  Connector,
+  LinkResolver,
+  MarkdownExtension,
+  OperationHandler,
+  PluginAsset,
+  ReactSurface,
+  Translations,
+} from '#capabilities';
 import { meta } from '#meta';
 
 export const GitHubPlugin = Plugin.define(meta).pipe(
   Plugin.addModule(Connector),
+  Plugin.addModule(LinkResolver),
   Plugin.addModule(MarkdownExtension),
   Plugin.addModule(OperationHandler),
   Plugin.addModule(PluginAsset),
+  Plugin.addModule(ReactSurface),
   Plugin.addModule(Translations),
   Plugin.make,
 );

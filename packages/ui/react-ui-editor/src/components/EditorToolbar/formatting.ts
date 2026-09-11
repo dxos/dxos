@@ -9,7 +9,7 @@ import { type Formatting, Inline, addLink, removeLink, setStyle } from '@dxos/ui
 
 import { translationKey } from '#translations';
 
-import { type EditorToolbarState } from './types';
+import { type EditorToolbarState } from './types.ts';
 
 const formats = {
   strong: 'ph--text-b--regular',

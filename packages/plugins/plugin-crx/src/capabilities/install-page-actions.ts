@@ -12,7 +12,7 @@ import { log } from '@dxos/log';
 import { meta } from '#meta';
 import { CrxCapabilities, Settings } from '#types';
 
-import { installPageActionListeners } from '../page-actions';
+import { installPageActionListeners } from '../page-actions.ts';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {

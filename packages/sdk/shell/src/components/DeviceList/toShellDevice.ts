@@ -5,7 +5,7 @@
 import { requirePublicKey } from '@dxos/protocols/buf';
 import { type Device as ClientDevice, Device_PresenceState, DeviceKind, DeviceType } from '@dxos/react-client/halo';
 
-import { type ShellDevice } from './DeviceListProps';
+import { type ShellDevice } from './DeviceListProps.ts';
 
 const KINDS: Record<DeviceType, ShellDevice['kind']> = {
   [DeviceType.UNKNOWN]: 'unknown',

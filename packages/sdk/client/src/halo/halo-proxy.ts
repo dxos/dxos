@@ -17,7 +17,13 @@ import { ApiError, runServiceCall, subscribeStream } from '@dxos/protocols';
 import { buf, bufWkt, requirePublicKey, toPublicKey } from '@dxos/protocols/buf';
 import { Invitation, Invitation_Kind } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 import { DeviceKind } from '@dxos/protocols/buf/dxos/client/services_pb';
-import { type Contact, type Device, type Identity } from '@dxos/protocols/buf/dxos/client/services_pb';
+import {
+  type Contact,
+  type Device,
+  type Identity,
+  type RecoverIdentityRequest,
+  RecoverIdentityRequestSchema,
+} from '@dxos/protocols/buf/dxos/client/services_pb';
 import {
   type Credential,
   type DeviceProfileDocument,
@@ -29,8 +35,25 @@ import {
 } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { trace } from '@dxos/tracing';
 
-import { RPC_TIMEOUT } from '../common';
-import { InvitationsProxy } from '../invitations';
+import { RPC_TIMEOUT } from '../common.ts';
+import { InvitationsProxy } from '../invitations/index.ts';
+
+/**
+ * Selects the `request` oneof from the public union. The service dispatches on the case, and the
+ * rpc payload codec refuses to encode a message that leaves it unset, so the mapping cannot be
+ * skipped by handing the union straight to the wire.
+ */
+const toRecoverIdentityRequest = (args: RecoverIdentityArgs): RecoverIdentityRequest =>
+  buf.create(RecoverIdentityRequestSchema, {
+    request:
+      'recoveryCode' in args
+        ? { case: 'recoveryCode', value: args.recoveryCode }
+        : 'recoveryProof' in args
+          ? { case: 'recoveryProof', value: args.recoveryProof }
+          : 'token' in args
+            ? { case: 'token', value: args.token }
+            : { case: 'external', value: args.external },
+  });
 
 export class HaloProxy implements Halo {
   /** Subscriptions for overall lifecycle (reconnected event listener). */
@@ -283,7 +306,7 @@ export class HaloProxy implements Halo {
   async recoverIdentity(args: RecoverIdentityArgs): Promise<Identity> {
     const identity = await runServiceCall(
       this._runtime,
-      this._serviceProvider.rpc['IdentityService.recoverIdentity'](args),
+      this._serviceProvider.rpc['IdentityService.recoverIdentity'](toRecoverIdentityRequest(args)),
       {
         timeout: RPC_TIMEOUT,
         label: 'IdentityService.recoverIdentity',

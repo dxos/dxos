@@ -16,7 +16,7 @@ import {
   computeItemArrangement,
   getOrderByColumnFromArrangement,
   getOrderFromArrangement,
-} from './arrangement';
+} from './arrangement.ts';
 
 const selectOptions = [
   { id: KanbanConstants.UNCATEGORIZED_VALUE, title: 'Uncategorized', color: 'neutral' },

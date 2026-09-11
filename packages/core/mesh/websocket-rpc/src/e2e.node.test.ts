@@ -14,8 +14,8 @@ import {
 } from '@dxos/protocols/buf/example/testing/rpc_pb';
 import { type ServiceTypesOf, createServiceBundle } from '@dxos/rpc';
 
-import { WebsocketRpcClient } from './client';
-import { WebsocketRpcServer } from './server';
+import { WebsocketRpcClient } from './client.ts';
+import { WebsocketRpcServer } from './server.ts';
 
 type TestService = BufService<typeof TestServiceDesc>;
 

@@ -18,10 +18,10 @@ import { useContacts } from '@dxos/react-client/halo';
 import { IconButton, Panel, Toolbar } from '@dxos/react-ui';
 import { type TablePropertyDefinition } from '@dxos/react-ui-table';
 
-import { Bitbar, MasterDetailTable, PublicKeySelector } from '../../../components';
-import { DataSpaceSelector } from '../../../containers';
-import { useDevtoolsDispatch, useDevtoolsState, useFeedMessages } from '../../../hooks';
-import { assertionTypeName } from '../../../util';
+import { Bitbar, MasterDetailTable, PublicKeySelector } from '../../../components/index.ts';
+import { DataSpaceSelector } from '../../../containers/index.ts';
+import { useDevtoolsDispatch, useDevtoolsState, useFeedMessages } from '../../../hooks/index.ts';
+import { assertionTypeName } from '../../../util/index.ts';
 
 type FeedTableRow = SubscribeToFeedBlocksResponse_Block & {
   type: string;

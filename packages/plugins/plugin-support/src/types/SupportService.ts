@@ -12,8 +12,8 @@ import * as Schema from 'effect/Schema';
 import { type Config, EdgeServiceName, getEdgeServiceEndpoint, getEnvString } from '@dxos/config';
 import type * as Observability from '@dxos/observability/Observability';
 
-import { SupportForbiddenError, SupportSubmitError } from '../errors';
-import type * as SupportOperation from './SupportOperation';
+import { SupportForbiddenError, SupportSubmitError } from '../errors.ts';
+import type * as SupportOperation from './SupportOperation.ts';
 
 export const SupportReportResult = Schema.Struct({
   ticketId: Schema.optional(Schema.String),

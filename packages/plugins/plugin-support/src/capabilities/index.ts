@@ -15,7 +15,7 @@ import { HelpCapabilities, SupportCapabilities } from '#types';
 // eslint-disable-next-line import/no-relative-packages
 import pluginSpec from '../../PLUGIN.mdl?raw';
 
-export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'), {
+export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder.ts'), {
   requires: [SupportCapabilities.Settings],
 });
 export const PluginAsset = AppCapability.pluginAsset({
@@ -24,16 +24,16 @@ export const PluginAsset = AppCapability.pluginAsset({
   content: pluginSpec,
   mimeType: 'application/x-mdl',
 });
-export const Schema = AppCapability.schema(() => import('./schema'));
-export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition'));
-export const CreateObject = SpaceCapability.createObject(() => import('./create-object'));
+export const Schema = AppCapability.schema(() => import('./schema.ts'));
+export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition.ts'));
+export const CreateObject = SpaceCapability.createObject(() => import('./create-object.ts'));
 export const HelpState = Capability.lazyModule(
   'HelpState',
   { provides: [HelpCapabilities.State] },
-  () => import('./help-state'),
+  () => import('./help-state.ts'),
 );
-export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'));
-export const ReactRoot = AppCapability.reactRoot(() => import('./react-root'));
+export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler.ts'));
+export const ReactRoot = AppCapability.reactRoot(() => import('./react-root.tsx'));
 export const WelcomeTour = Capability.lazyModule(
   'WelcomeTour',
   {
@@ -42,9 +42,9 @@ export const WelcomeTour = Capability.lazyModule(
     /** Maps the plugin's configured tour-step loader to the body's props. */
     props: (options: { helpSteps?: () => Promise<Tour.Step[]> }) => options.helpSteps,
   },
-  () => import('./welcome-tour'),
+  () => import('./welcome-tour.ts'),
 );
-export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
+export const ReactSurface = AppCapability.surface(() => import('./react-surface.ts'), {
   roles: [
     'org.dxos.plugin.space.role.homeContent',
     'org.dxos.plugin.support.role.hints',
@@ -57,7 +57,7 @@ export const ReactSurface = AppCapability.surface(() => import('./react-surface'
     'org.dxos.role.statusIndicator',
   ],
 });
-export const SupportSettings = AppCapability.settings(() => import('./settings'), {
+export const SupportSettings = AppCapability.settings(() => import('./settings.ts'), {
   provides: [SupportCapabilities.Settings],
 });
 export const Translations = AppCapability.translations(translations);

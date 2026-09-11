@@ -11,8 +11,8 @@
 
 import * as Schema from 'effect/Schema';
 
-import * as Layout from './layout';
-import type * as Scene from './scene';
+import * as Layout from './layout.ts';
+import type * as Scene from './scene.ts';
 
 export const Severity = Schema.Literals(['error', 'warning']);
 export type Severity = Schema.Schema.Type<typeof Severity>;

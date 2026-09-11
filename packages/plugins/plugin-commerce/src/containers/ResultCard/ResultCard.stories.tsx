@@ -20,9 +20,9 @@ import { Loading, withLayout } from '@dxos/react-ui/testing';
 import { CommercePlugin } from '#plugin';
 import { Provider, Result } from '#types';
 
-import { makeSampleProvider, makeSampleResults } from '../../testing';
-import { translations } from '../../translations';
-import { ResultCard } from './ResultCard';
+import { makeSampleProvider, makeSampleResults } from '../../testing.ts';
+import { translations } from '../../translations.ts';
+import { ResultCard } from './ResultCard.tsx';
 
 // `ResultCard` subscribes to its subject via `useObject`, so the story renders a live ECHO object
 // from a seeded space (a detached fixture throws in the chromium storybook run).

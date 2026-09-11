@@ -10,7 +10,7 @@ import { DXOSHorizontalType } from '@dxos/brand';
 import { Flex, Icon, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
-import { meta } from '../../meta';
+import { meta } from '../../meta.ts';
 
 /**
  * Shown while a magic-link token is being redeemed and this device admitted to the existing

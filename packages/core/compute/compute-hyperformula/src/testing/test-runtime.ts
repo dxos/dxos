@@ -10,7 +10,7 @@ import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import { type SpaceId } from '@dxos/keys';
 
-import { type FunctionsRuntimeProvider } from '../compute-graph-registry';
+import { type FunctionsRuntimeProvider } from '../compute-graph-registry.ts';
 
 /**
  * Minimal compute runtime provider for tests and Storybook.

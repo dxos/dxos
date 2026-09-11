@@ -19,7 +19,7 @@ import { type Registry } from '@dxos/echo';
 import { SpaceId } from '@dxos/keys';
 import { McpServer } from '@dxos/mcp-server';
 
-import { chatLayer, operationHandlers } from '../../util';
+import { chatLayer, operationHandlers } from '../../util/index.ts';
 
 /**
  * What this host wires beneath the projected surface — echo's registry holding the operations and

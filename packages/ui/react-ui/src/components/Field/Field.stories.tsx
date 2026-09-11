@@ -10,8 +10,8 @@ import { invariant } from '@dxos/invariant';
 import { mx } from '@dxos/ui-theme';
 import { type MessageValence } from '@dxos/ui-types';
 
-import { withLayout, withLayoutVariants, withTheme } from '../../testing';
-import { Icon } from '../Icon';
+import { withLayout, withLayoutVariants, withTheme } from '../../testing/index.ts';
+import { Icon } from '../Icon/index.ts';
 import {
   type CheckboxProps,
   type DateInputProps,
@@ -22,7 +22,7 @@ import {
   type SwitchProps,
   type TextareaProps,
   type TimeProps,
-} from './Field';
+} from './Field.tsx';
 
 type VariantMap = {
   text: InputProps;

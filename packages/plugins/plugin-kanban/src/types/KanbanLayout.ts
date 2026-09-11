@@ -4,7 +4,7 @@
 
 import { type Obj } from '@dxos/echo';
 
-import { type Kanban } from './Kanban';
+import { type Kanban } from './Kanban.ts';
 
 export type Location = {
   idx?: number;

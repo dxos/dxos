@@ -6,9 +6,9 @@ import * as Schema from 'effect/Schema';
 
 import { log } from '@dxos/log';
 
-import { type ComputeNode } from '../../types';
-import { applyObjectTemplate, getObjectTemplateInputSchema } from './json';
-import { applyTextTemplate, getTextTemplateInputSchema } from './text';
+import { type ComputeNode } from '../../types/index.ts';
+import { applyObjectTemplate, getObjectTemplateInputSchema } from './json.ts';
+import { applyTextTemplate, getTextTemplateInputSchema } from './text.ts';
 
 export const computeTemplate = (node: ComputeNode, props: Record<string, any>): unknown => {
   switch (node.valueType) {

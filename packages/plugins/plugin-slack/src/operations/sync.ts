@@ -18,9 +18,9 @@ import { Channel, ContentBlock, Message } from '@dxos/types';
 import { meta } from '#meta';
 import { SlackOperation } from '#types';
 
-import { SLACK_SOURCE } from '../constants';
-import { formatSlackSyncFailure } from '../errors';
-import { SlackApi } from '../services';
+import { SLACK_SOURCE } from '../constants.ts';
+import { formatSlackSyncFailure } from '../errors.ts';
+import { SlackApi } from '../services/index.ts';
 
 type SlackConversation = SlackApi.SlackConversation;
 type SlackMessage = SlackApi.SlackMessage;

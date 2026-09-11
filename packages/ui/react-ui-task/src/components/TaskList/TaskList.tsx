@@ -29,8 +29,9 @@ import {
   toLocalizedString,
   useTranslation,
 } from '@dxos/react-ui';
+import { useCardHover } from '@dxos/react-ui-card';
 import { Listbox, useListDisclosure } from '@dxos/react-ui-list';
-import { MarkdownEditable, type MarkdownEditableController } from '@dxos/react-ui-markdown';
+import { MarkdownEditable, type MarkdownEditableController, type MarkdownEditableProps } from '@dxos/react-ui-markdown';
 import {
   ActionMenu,
   type MenuAction,
@@ -39,16 +40,17 @@ import {
   executeMenuAction,
   fallbackIcon,
 } from '@dxos/react-ui-menu';
-import { type Actor, Task } from '@dxos/types';
+import { type Actor, RemoteSession, Task } from '@dxos/types';
 import { hoverableControlItem, mx } from '@dxos/ui-theme';
 import { type ComposableProps } from '@dxos/ui-types';
 
 import { translationKey } from '#translations';
 
-import { type TaskPlacement, subtreeIds } from './hierarchy';
-import { STATUS_ORDER, UNSET_ICON, estimateTextStyle, priorityIcon, priorityTextStyle } from './status-icons';
-import { TaskTreeContent } from './TaskTreeContent';
-import { type TaskNode, buildTaskForest, flattenVisibleTasks } from './tree-model';
+import { type TaskPlacement, subtreeIds } from './hierarchy.ts';
+import { STATUS_ORDER, UNSET_ICON, estimateTextStyle, priorityIcon, priorityTextStyle } from './status-icons.ts';
+import { type TaskDescriptionProps } from './TaskDescription.tsx';
+import { TaskTreeContent } from './TaskTreeContent.tsx';
+import { type TaskNode, buildTaskForest, flattenVisibleTasks } from './tree-model.ts';
 
 const shortDid = (did: string): string => `${did.slice(0, 12)}…`;
 
@@ -64,6 +66,8 @@ type TaskListContextValue = {
   showGroupLabels: boolean;
   showOrdinals: boolean;
   showDescription: boolean;
+  /** Renderers for a row's description beyond its own — a host's link anchor, say. */
+  descriptionComponents?: TaskDescriptionProps['components'];
   /** Render each task's estimate beside the priority control. */
   showEstimates: boolean;
   hierarchical: boolean;
@@ -169,6 +173,8 @@ type TaskListRootProps = PropsWithChildren<{
    * single-line list (e.g. the chat strip) keeps one row per task.
    */
   showDescription?: boolean;
+  /** Renderers for a row's description beyond its own — a host's link anchor, say. */
+  descriptionComponents?: TaskDescriptionProps['components'];
 
   //
   // Callbacks. Wiring one is what enables the affordance that calls it — the list never writes.
@@ -217,6 +223,7 @@ const TaskListRoot = ({
   showGroupLabels = true,
   showOrdinals = false,
   showDescription = false,
+  descriptionComponents,
   showEstimates = false,
   hierarchical = false,
   collapsed,
@@ -294,6 +301,7 @@ const TaskListRoot = ({
       showGroupLabels={showGroupLabels}
       showOrdinals={showOrdinals}
       showDescription={showDescription}
+      descriptionComponents={descriptionComponents}
       showEstimates={showEstimates}
       hierarchical={hierarchical}
       debug={debug}
@@ -410,6 +418,7 @@ const TaskListContent = composable<HTMLUListElement>((props, forwardedRef) => {
     showGroupLabels,
     showOrdinals,
     showDescription,
+    descriptionComponents,
     showGutter,
     gridTemplateColumns,
     isCollapsed,
@@ -445,6 +454,7 @@ const TaskListContent = composable<HTMLUListElement>((props, forwardedRef) => {
   // group is a `group` node the machine splices out of its own topology.
   return (
     <TaskTreeContent
+      descriptionComponents={descriptionComponents}
       debug={debug}
       hierarchical={hierarchical}
       groupByStatus={grouping}
@@ -729,7 +739,7 @@ const ArtifactTag = ({ artifact }: { artifact: Obj.Unknown }) => {
       // The row is an option: without this the click selects the task as well as opening the card.
       event.stopPropagation();
       const trigger = tagRef.current;
-      trigger?.dispatchEvent(new DxAnchorActivate({ trigger, dxn: Obj.getURI(artifact), label, kind: 'card' }));
+      trigger?.dispatchEvent(new DxAnchorActivate({ trigger, eid: Obj.getURI(artifact), label, kind: 'card' }));
     },
     [artifact, label],
   );
@@ -758,6 +768,8 @@ type TaskListEditProps = ComposableProps<{
   showDescription?: boolean;
   /** Placeholder for the description field. */
   descriptionPlaceholder?: string;
+  /** Editor extensions for the description field beyond its own — what the host's plugins contribute. */
+  descriptionExtensions?: MarkdownEditableProps['extensions'];
   /**
    * Lay the pane out on the list's own column template, so the title field starts where the rows'
    * titles do and the icon sits under their status controls. Off by default: a pane used away from
@@ -774,10 +786,18 @@ type TaskListEditProps = ComposableProps<{
  */
 const TaskListEdit = composable<HTMLDivElement, TaskListEditProps>(
   (
-    { placeholder = 'Add task', showDescription = false, descriptionPlaceholder = 'Add a description', grid, ...props },
+    {
+      placeholder = 'Add task',
+      showDescription = false,
+      descriptionPlaceholder = 'Add a description',
+      descriptionExtensions,
+      grid,
+      ...props
+    },
     forwardedRef,
   ) => {
     const { t } = useTranslation(translationKey);
+    const descriptionRef = useRef<MarkdownEditableController>(null);
     const { tasks, selected, onTaskCreate, onTaskUpdate, onTaskSelect, gridTemplateColumns } =
       useTaskListContext('TaskList.Edit');
     const { className, ...rest } = composableProps(props);
@@ -786,8 +806,6 @@ const TaskListEdit = composable<HTMLDivElement, TaskListEditProps>(
     // Subscribe to the selected task so the pane follows a rename made anywhere else.
     const [snapshot] = useObject(task);
     const current = snapshot ?? task;
-
-    const descriptionRef = useRef<MarkdownEditableController>(null);
 
     // The create row's description, mirrored out of the field. A ref rather than state because the
     // create reads it in the same tick it commits the field, and `useEditable` calls back
@@ -931,16 +949,20 @@ const TaskListEdit = composable<HTMLDivElement, TaskListEditProps>(
             {/* A description is markdown, so it is edited as markdown. `editing` is held open —
                 the pane IS the editor, so there is nothing to click into — and the key remounts
                 it per task, since a field held open never re-reads its subject.
-
                 Creating, the field is uncontrolled: there is no task to read a value from, so it
                 holds the draft itself until the create collects it. */}
             <MarkdownEditable
               key={current?.id ?? `create-${createEpoch}`}
               ref={descriptionRef}
               classNames='text-sm'
-              {...(current && { value: current.description ?? '' })}
               editing
               multiline
+              placeholder={descriptionPlaceholder}
+              extensions={descriptionExtensions}
+              // Held open, so it must not pull focus: selecting a row by keyboard would otherwise
+              // land the reader in the description instead of the list.
+              autoFocus={false}
+              {...(current && { value: current.description ?? '' })}
               onValueChange={(description) => {
                 if (task && current) {
                   onTaskUpdate?.(task, { description });
@@ -948,10 +970,6 @@ const TaskListEdit = composable<HTMLDivElement, TaskListEditProps>(
                   draftDescription.current = description;
                 }
               }}
-              placeholder={descriptionPlaceholder}
-              // Held open, so it must not pull focus: selecting a row by keyboard would otherwise
-              // land the reader in the description instead of the list.
-              autoFocus={false}
             />
           </span>
         )}
@@ -1004,20 +1022,65 @@ TaskListEdit.displayName = 'TaskList.Edit';
 type TaskListAssigneeProps = { assignee: Actor.Actor };
 
 const TaskListAssignee = composable<HTMLSpanElement, TaskListAssigneeProps>(({ assignee }, _forwardedRef) => {
+  const tagRef = useRef<HTMLSpanElement>(null);
   const [contact] = useObject(assignee.contact);
+  // An agent's actor stands for its session rather than a person, so the pill names the harness the
+  // session belongs to — `agent` alone says an assistant owns the task, never which run did.
+  const [session] = useObject(assignee.subject);
+  const harness = session && Obj.instanceOf(RemoteSession.RemoteSession, session) ? session : undefined;
+  const sessionLabel = harness && RemoteSession.harnessName(harness);
+  // The harness's own mark when it has one, so a Claude Code session is recognisable at a glance;
+  // the sparkle stays the generic "an assistant owns this" fallback.
+  const icon = (harness && RemoteSession.harnessIcon(harness)) ?? 'ph--sparkle--regular';
   const label =
     contact?.fullName ??
+    sessionLabel ??
     assignee.name ??
     assignee.email ??
     (assignee.identityDid ? shortDid(assignee.identityDid) : undefined);
   const agent = assignee.role === 'assistant';
+
+  // Hover, not click, because the session is context for the row rather than a place to navigate to:
+  // the reader wants to know which run owns the task while their eye is already on it. The grace
+  // period is what keeps that from firing as the pointer crosses the row on its way elsewhere —
+  // the objection recorded on `ArtifactTag`, which opens a destination and so stays on click.
+  const openCard = useCallback(() => {
+    const trigger = tagRef.current;
+    if (!trigger || !session) {
+      return;
+    }
+    trigger.dispatchEvent(
+      new DxAnchorActivate({
+        trigger,
+        eid: Obj.getURI(session).toString(),
+        label: label ?? '',
+        kind: 'card',
+        // Without this the popover falls back to the type's placeholder ("New item"), since a
+        // session's label prop is its title and the harness reports none.
+        title: harness?.title ?? label,
+      }),
+    );
+  }, [session, harness, label]);
+  const { start: startHover, cancel: cancelHover } = useCardHover(openCard, !!session);
+
   if (!label && !agent) {
     return null;
   }
 
   return (
-    <Tag hue={agent ? 'purple' : 'indigo'}>
-      {agent && <Icon icon='ph--sparkle--regular' size={3} classNames='inline-block me-1' />}
+    <Tag
+      ref={tagRef}
+      hue={agent ? 'purple' : 'indigo'}
+      // Focus as well as hover: the card is the only place the row says which run owns the task, so
+      // a pointer-only trigger puts that out of reach of a keyboard or a touch device.
+      tabIndex={session ? 0 : undefined}
+      onPointerEnter={startHover}
+      onPointerLeave={cancelHover}
+      onFocus={startHover}
+      onBlur={cancelHover}
+      classNames={session && 'cursor-help'}
+    >
+      {agent && <Icon icon={icon} size={3} classNames='inline-block me-1' />}
       {label ?? 'agent'}
     </Tag>
   );

@@ -11,7 +11,7 @@ import { Position } from '@dxos/util';
 
 import { Artifact } from '#types';
 
-import { getArtifactPath } from '../paths';
+import { getArtifactPath } from '../paths.ts';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {

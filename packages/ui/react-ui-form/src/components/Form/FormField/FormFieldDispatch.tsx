@@ -21,11 +21,11 @@ import {
   HueAnnotation,
   type OptionsLookup,
   OptionsLookupAnnotation,
-} from '../../../annotations';
-import { useFormFieldState } from '../../../hooks';
-import { getRefProps } from '../../../util';
-import { FormFields } from '../FormFields';
-import { FormFieldSet } from '../FormFieldSet';
+} from '../../../annotations.ts';
+import { useFormFieldState } from '../../../hooks/index.ts';
+import { getRefProps } from '../../../util/index.ts';
+import { FormFields } from '../FormFields/index.ts';
+import { FormFieldSet } from '../FormFieldSet/index.ts';
 import {
   ArrayField,
   AsyncSelectField,
@@ -43,9 +43,9 @@ import {
   SelectField,
   TextAreaField,
   TextField,
-} from './fields';
-import { FormFieldRow } from './FormField';
-import { type FormFieldBinding } from './FormFieldContext';
+} from './fields/index.ts';
+import { FormFieldRow } from './FormField.tsx';
+import { type FormFieldBinding } from './FormFieldContext.ts';
 
 export type FormFieldDispatchProps = {
   /**

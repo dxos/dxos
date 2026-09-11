@@ -18,7 +18,7 @@ import { osTranslations } from '@dxos/ui-theme';
 import { meta } from '#meta';
 import { ConnectorCoordination, ConnectorSpec } from '#types';
 
-import * as Binding from '../../Binding';
+import * as Binding from '../../Binding.ts';
 
 export type SyncTargetsDialogProps = {
   connection: Connection.Connection;

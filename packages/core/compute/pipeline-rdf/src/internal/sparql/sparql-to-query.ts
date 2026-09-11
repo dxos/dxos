@@ -4,9 +4,9 @@
 
 import { type Expression, type IriTerm, type LiteralTerm, Parser, type Pattern, type Triple } from 'sparqljs';
 
-import { SemanticIndexError } from '../../errors';
-import { ENTITY, PROV, SX, entityIdFromIri } from '../vocab';
-import { type SemanticQuery } from './query-builder';
+import { SemanticIndexError } from '../../errors.ts';
+import { ENTITY, PROV, SX, entityIdFromIri } from '../vocab.ts';
+import { type SemanticQuery } from './query-builder.ts';
 
 // Reified-fact predicates (see DESIGN.md "Reification").
 const PRED_SUBJECT = SX + 'subject';

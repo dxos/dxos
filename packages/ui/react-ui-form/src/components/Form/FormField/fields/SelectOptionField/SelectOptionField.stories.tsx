@@ -12,9 +12,9 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
 
-import { TestLayout } from '../../../../../testing';
-import { Form } from '../../../Form';
-import { SelectOptionField } from './SelectOptionField';
+import { TestLayout } from '../../../../../testing/index.ts';
+import { Form } from '../../../Form.tsx';
+import { SelectOptionField } from './SelectOptionField.tsx';
 
 const TestSchema = Schema.Struct({
   options: Schema.Array(SelectOption).pipe(Schema.mutable),

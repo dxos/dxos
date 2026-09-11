@@ -37,10 +37,10 @@ import { InboxPlugin } from '#plugin';
 import { initializeMailbox, seedSummaries } from '#testing';
 import { InboxCapabilities, Mailbox } from '#types';
 
-import * as InboxOperation from '../../types/InboxOperation';
-import AttachmentArticle from '../AttachmentArticle';
-import MessageArticle from '../MessageArticle';
-import { MailboxArticle } from './MailboxArticle';
+import * as InboxOperation from '../../types/InboxOperation.ts';
+import AttachmentArticle from '../AttachmentArticle/index.ts';
+import MessageArticle from '../MessageArticle/index.ts';
+import { MailboxArticle } from './MailboxArticle.tsx';
 
 // No-op handler for the one layout operation the article invokes that belongs to DeckPlugin, which
 // this story does not install. `Select` is deliberately NOT stubbed: it belongs to AttentionPlugin

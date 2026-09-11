@@ -13,9 +13,9 @@ import { fromHost } from '@dxos/client/local';
 import { log } from '@dxos/log';
 import { ProfileDocumentSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
-import { useIdentity } from '../halo';
-import { ClientProvider } from './ClientProvider';
-import { useClient } from './useClient';
+import { useIdentity } from '../halo/index.ts';
+import { ClientProvider } from './ClientProvider.tsx';
+import { useClient } from './useClient.ts';
 
 log.config({ filter: 'ClientContext:debug,warn' });
 

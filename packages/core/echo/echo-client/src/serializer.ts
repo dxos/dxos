@@ -8,8 +8,8 @@ import { invariant } from '@dxos/invariant';
 import { DXN, EID, type URI } from '@dxos/keys';
 import { isNonNullable } from '@dxos/util';
 
-import { type EchoDatabase } from './proxy-db';
-import type { SerializedSpace } from './serialized-space';
+import { type EchoDatabase } from './proxy-db/index.ts';
+import type { SerializedSpace } from './serialized-space.ts';
 
 const MAX_LOAD_OBJECT_CHUNK_SIZE = 30;
 

@@ -7,8 +7,12 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import { DXN } from '@dxos/keys';
 
-const Main = Capability.lazyModule('Main', { provides: [Capabilities.ReactSurface] }, () => import('./Main'));
-const Toolbar = Capability.lazyModule('Toolbar', { provides: [Capabilities.ReactSurface] }, () => import('./Toolbar'));
+const Main = Capability.lazyModule('Main', { provides: [Capabilities.ReactSurface] }, () => import('./Main.tsx'));
+const Toolbar = Capability.lazyModule(
+  'Toolbar',
+  { provides: [Capabilities.ReactSurface] },
+  () => import('./Toolbar.tsx'),
+);
 
 export const GeneratorPlugin = Plugin.define(
   Plugin.makeMeta({ key: DXN.make('org.dxos.test.generator'), name: 'Generator' }),

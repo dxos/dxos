@@ -10,7 +10,7 @@ import { useConfig, useEdgeServiceEndpoint } from '@dxos/react-client';
 
 import { type SupportOperation } from '#types';
 
-import { captureScreenshot, uploadScreenshot } from './screenshot';
+import { captureScreenshot, uploadScreenshot } from './screenshot.ts';
 
 export type ScreenshotAttachment = {
   /** Public image-service URL, absent when capture was not requested or failed. */

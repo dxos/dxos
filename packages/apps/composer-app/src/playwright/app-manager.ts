@@ -9,7 +9,7 @@ import { Trigger } from '@dxos/async';
 import { ShellManager } from '@dxos/shell/testing';
 import { setupPage } from '@dxos/test-utils/playwright';
 
-import { DeckManager } from './plugins';
+import { DeckManager } from './plugins/index.ts';
 
 // TODO(wittjosiah): Normalize data-testids between snake and camel case.
 // TODO(wittjosiah): Consider structuring tests in such that they could be run with different sets of plugins enabled.
@@ -21,9 +21,9 @@ const modifier = isMac ? 'Meta' : 'Control';
 
 export const INITIAL_URL = 'http://localhost:4173';
 
-// `GraphPath.pinnedWorkspaceId('dxos:plugin-registry')`, restated so this page-object does not import
-// the registry plugin (its module graph reaches packages that fail to load under playwright's loader).
-const REGISTRY_WORKSPACE = '!dxos:plugin-registry';
+// `REGISTRY_ID`, restated so this page-object does not import the registry plugin: its module graph
+// reaches packages that fail to load under playwright's loader.
+const REGISTRY_WORKSPACE = 'dxos:registry';
 
 // `UrlPath.WORKSPACE_KEY` — the pair-chain anchor segment, restated for the same reason.
 const WORKSPACE_KEY = 'w';

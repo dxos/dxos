@@ -2,4 +2,4 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './dictation-fragment';
+export * from './dictation-fragment.ts';

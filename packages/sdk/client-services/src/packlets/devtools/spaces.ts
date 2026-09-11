@@ -17,8 +17,8 @@ import {
 import { type SpaceMetadata } from '@dxos/protocols/buf/dxos/echo/metadata_pb';
 import { type DevtoolsHost } from '@dxos/protocols/rpc';
 
-import { type ServiceContext } from '../services';
-import { type Space } from '../space';
+import { type ServiceContext } from '../services/index.ts';
+import { type Space } from '../space/index.ts';
 
 export const subscribeToSpaces = (
   context: ServiceContext,

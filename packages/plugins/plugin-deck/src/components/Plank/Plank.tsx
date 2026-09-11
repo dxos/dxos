@@ -19,12 +19,29 @@ import { useAttentionAttributes } from '@dxos/react-ui-attention';
 
 import { meta } from '#meta';
 
-import { Pane } from '../Pane';
+import { Pane } from '../Pane/index.ts';
+import { PlankLoading } from './PlankLoading.tsx';
+
+/** A plank waiting: for the node the URL names, and then for that node's article to load. */
+const PLANK_LOADING = <PlankLoading />;
+
+/**
+ * How long a plank waits before it admits to waiting. A node that resolves inside this never shows a
+ * placeholder icon or a loading title at all, so the common case reads as an instant open.
+ */
+const PENDING_DELAY = '1s';
+const pendingStyle = { animationDelay: PENDING_DELAY, animationFillMode: 'backwards' } as const;
 
 type SurfaceProps = ComponentProps<typeof Surface.Surface>;
 
+/**
+ * What a plank renders: its identity plus whatever chrome it can offer. A plank the URL names but
+ * nothing has resolved yet has only an id, which is why this is not a graph node.
+ */
+export type PlankSubject = Pick<AppGraphNode.Node, 'id'> & Partial<Pick<AppGraphNode.Node, 'properties' | 'data'>>;
+
 export type PlankProps = ThemedClassName<{
-  node: AppGraphNode.Node;
+  node: PlankSubject;
   /** Attendable id; defaults to the node id. */
   attendableId?: string;
   /** Grouped sigil menu actions; when present the sigil opens a menu, otherwise it is a plain button. */
@@ -49,8 +66,6 @@ export type PlankProps = ThemedClassName<{
   articleData?: Partial<AppSurface.ArticleData>;
   /** Error fallback for the content surface. */
   fallback?: SurfaceProps['fallback'];
-  /** Loading placeholder for the content surface. */
-  placeholder?: SurfaceProps['placeholder'];
   /** Render only the content surface, omitting the toolbar (e.g. fullscreen). */
   headless?: boolean;
   // TODO(burdon): Why is this required?
@@ -81,7 +96,6 @@ export const Plank = forwardRef<HTMLDivElement, PlankProps>(
       popoverAnchorId,
       articleData,
       fallback,
-      placeholder,
       headless,
       onKeyDown,
     },
@@ -90,7 +104,11 @@ export const Plank = forwardRef<HTMLDivElement, PlankProps>(
     const { t } = useTranslation(meta.profile.key);
     const attentionAttrs = useAttentionAttributes(attendableId);
     const icon = node.properties?.icon ?? 'ph--circle-dashed--regular';
-    const label = toLocalizedString(node.properties?.label ?? '', t);
+    // A bare string is taken verbatim by `toLocalizedString`; only the tuple form is looked up.
+    const label = toLocalizedString(
+      node.properties?.label ?? (pending ? (['pending.heading', { ns: meta.profile.key }] as const) : ''),
+      t,
+    );
     const data = useMemo<AppSurface.ArticleData>(
       () => ({
         attendableId,
@@ -130,7 +148,11 @@ export const Plank = forwardRef<HTMLDivElement, PlankProps>(
                   {sigilFooter}
                 </AttentionSigil>
               ) : (
-                <Pane.Sigil attendableId={attendableId}>
+                <Pane.Sigil
+                  attendableId={attendableId}
+                  classNames={pending && 'animate-fade-in'}
+                  style={pending ? pendingStyle : undefined}
+                >
                   <span className='sr-only'>{label}</span>
                   <Icon icon={icon} />
                 </Pane.Sigil>
@@ -170,7 +192,12 @@ export const Plank = forwardRef<HTMLDivElement, PlankProps>(
                 </Breadcrumb.List>
               </Breadcrumb.Root>
             ) : (
-              <Pane.Title attendableId={attendableId} related={related} classNames={pending && 'text-description'}>
+              <Pane.Title
+                attendableId={attendableId}
+                related={related}
+                classNames={pending && ['text-description', 'animate-fade-in']}
+                style={pending ? pendingStyle : undefined}
+              >
                 {label}
               </Pane.Title>
             )}
@@ -179,14 +206,21 @@ export const Plank = forwardRef<HTMLDivElement, PlankProps>(
           </Pane.Toolbar>
         )}
         <Pane.Content>
-          <Surface.Surface
-            key={node.id}
-            type={AppSurface.Article}
-            data={data}
-            limit={1}
-            fallback={fallback}
-            placeholder={placeholder}
-          />
+          {node.data === undefined ? (
+            // A plank with no subject: the URL named it and nothing has resolved it yet, so there is
+            // no Article to ask for. The same shell stands in until the Article's own module lands,
+            // so the plank does not change under the reader on the way there.
+            PLANK_LOADING
+          ) : (
+            <Surface.Surface
+              key={node.id}
+              type={AppSurface.Article}
+              data={data}
+              limit={1}
+              fallback={fallback}
+              placeholder={PLANK_LOADING}
+            />
+          )}
         </Pane.Content>
       </Pane.Root>
     );

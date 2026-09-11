@@ -13,7 +13,7 @@ import { type ThemedClassName } from '@dxos/react-ui';
 import { Companion } from '#components';
 import { useCompanions } from '#hooks';
 
-import { PlankCompanionControls } from './PlankControls';
+import { PlankCompanionControls } from './PlankControls.tsx';
 
 export type CompanionPlankProps = ThemedClassName<{
   /** The companion node id (`<contextPlankId>/~<variant>`). */

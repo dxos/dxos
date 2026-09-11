@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 import * as Match from 'effect/Match';
 
 import * as Operation from '@dxos/compute/Operation';
-import { Database, Filter, Obj, Query, Scope, Type } from '@dxos/echo';
+import { Database, DXN, Filter, Obj, Query, Scope, Type } from '@dxos/echo';
 
 import { SpaceOperation } from '#types';
 
@@ -26,11 +26,11 @@ const handler: Operation.WithHandler<typeof SpaceOperation.QueryObjects> = Space
       const selected = yield* Match.value({ text, typename }).pipe(
         Match.withReturnType<Effect.Effect<Query.Any, Error, Database.Service>>(),
         Match.when({ text: present, typename: present }, ({ text, typename }) =>
-          resolveType(typename).pipe(Effect.map((type) => fullText(text).select(Filter.type(type)))),
+          typeFilter(typename).pipe(Effect.map((filter) => fullText(text).select(filter))),
         ),
         Match.when({ text: present }, ({ text }) => Effect.succeed(fullText(text))),
         Match.when({ typename: present }, ({ typename }) =>
-          resolveType(typename).pipe(Effect.map((type) => Query.select(Filter.type(type)))),
+          typeFilter(typename).pipe(Effect.map((filter) => Query.select(filter))),
         ),
         Match.orElse(() => Effect.succeed(Query.select(Filter.everything()))),
       );
@@ -60,14 +60,23 @@ const fullText = (text: string): Query.Any =>
   Query.all(...text.split(' ').map((term) => Query.select(Filter.text(term, { type: 'full-text' }))));
 
 /**
- * Resolves a typename against the types registered for the space, so the filter uses the same type
- * identity the registry reports rather than a bare string.
+ * The filter for a caller-supplied typename: a bare-typename DXN, which is what `Filter.type`
+ * documents for this case.
+ *
+ * Resolving the typename to a registered `Type` entity first and filtering on THAT pinned the
+ * filter to one registration — a versioned `dxn:` for a static declaration, an `echo:` id for a
+ * copy persisted in the space — so objects of the same typename written under any other
+ * registration did not match, and which registration was picked depended on the order the registry
+ * query happened to return. That is the under-return: a space holding both forms answered the same
+ * call with all of its objects, some of them, or none, run to run.
+ *
+ * The registry is still consulted, but only to reject a typename nothing declares; it no longer
+ * decides what the filter matches.
  */
-const resolveType = Effect.fnUntraced(function* (typename: string) {
+const typeFilter = Effect.fnUntraced(function* (typename: string) {
   const types = yield* Database.query(Query.select(Filter.type(Type.Type)).from(Scope.space(), Scope.registry())).run;
-  const schema = types.find((type) => Type.getTypename(type) === typename);
-  if (!schema) {
+  if (!types.some((type) => Type.getTypename(type) === typename)) {
     return yield* Effect.fail(new Error(`Schema not found: ${typename}`));
   }
-  return schema;
+  return Filter.type(DXN.make(typename));
 });

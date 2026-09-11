@@ -2,6 +2,6 @@
 // Copyright 2024 DXOS.org
 //
 
-export * from './default-value';
+export * from './default-value.ts';
 
-export * from './ArrayField';
+export * from './ArrayField.tsx';

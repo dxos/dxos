@@ -24,7 +24,7 @@ import { Organization, Person } from '@dxos/types';
 import { useContextBinder } from '#hooks';
 import { translations } from '#translations';
 
-import { ChatOptions, type ChatOptionsProps, ObjectsPanel } from './ChatOptions';
+import { ChatOptions, type ChatOptionsProps, ObjectsPanel } from './ChatOptions.tsx';
 
 const presets = [
   {

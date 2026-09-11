@@ -11,14 +11,14 @@ export {
   buildExecutionGraph,
   collectProcessActivityLines,
   deriveInFlightActivityLine,
-} from './execution-graph';
+} from './execution-graph.ts';
 export {
   type EphemeralStatusUpdate,
   estimateTokenCount,
   formatPendingBlockStatus,
   pendingStatusFromEphemeralMessage,
   resolveEphemeralStatusUpdate,
-} from './pending-block-status';
+} from './pending-block-status.ts';
 export {
   BEGIN_EVENT_TYPES,
   type BuildSpanTreeOptions,
@@ -32,4 +32,4 @@ export {
   isSpanBeginEvent,
   isSpanEndEvent,
   walkSpanTree,
-} from './span-tree';
+} from './span-tree.ts';

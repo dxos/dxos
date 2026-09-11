@@ -10,7 +10,7 @@ import * as Operation from '@dxos/compute/Operation';
 import { Database } from '@dxos/echo';
 import { trim } from '@dxos/util';
 
-import { DelegateTask } from './definitions';
+import { DelegateTask } from './definitions.ts';
 
 /**
  * Delegation is the promotion moment: the unit of work becomes a durable `Task` on the

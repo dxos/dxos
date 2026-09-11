@@ -18,7 +18,7 @@ import {
   InvitationEncoder,
 } from '@dxos/react-client/invitations';
 
-import { type AgentFormProps } from '../../components';
+import { type AgentFormProps } from '../../components/index.ts';
 
 export const useKubeAgentHandlers = ({
   invitations,

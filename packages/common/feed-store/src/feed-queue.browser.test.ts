@@ -8,8 +8,8 @@ import { sleep, untilError, untilPromise } from '@dxos/async';
 import { log } from '@dxos/log';
 import { StorageType, createStorage } from '@dxos/random-access-storage';
 
-import { FeedQueue } from './feed-queue';
-import { TestItemBuilder } from './testing';
+import { FeedQueue } from './feed-queue.ts';
+import { TestItemBuilder } from './testing/index.ts';
 
 describe('FeedQueue', () => {
   const builder = new TestItemBuilder();

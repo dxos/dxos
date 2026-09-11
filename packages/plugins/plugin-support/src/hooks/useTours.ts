@@ -9,7 +9,7 @@ import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as Tour from '@dxos/app-toolkit/Tour';
 import { log } from '@dxos/log';
 
-import { useAttendedData } from './useAttendedData';
+import { useAttendedData } from './useAttendedData.ts';
 
 /** Stable identity: the caller feeds this straight into an effect dependency. */
 const NO_STEPS: Tour.Step[] = [];

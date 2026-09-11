@@ -7,7 +7,7 @@ import * as Operation from '@dxos/compute/Operation';
 
 import { SpaceOperation } from '#types';
 
-import { SpaceOperationConfig } from './helpers';
+import { SpaceOperationConfig } from './helpers.ts';
 
 const handler: Operation.WithHandler<typeof SpaceOperation.GetShareLink> = SpaceOperation.GetShareLink.pipe(
   Operation.withHandler(

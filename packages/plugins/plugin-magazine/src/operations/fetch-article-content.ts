@@ -10,7 +10,7 @@ import { invariant } from '@dxos/invariant';
 
 import { FeedOperation } from '#types';
 
-import { browserCorsProxy, fetchArticle } from './sources';
+import { browserCorsProxy, fetchArticle } from './sources/index.ts';
 
 const handler: Operation.WithHandler<typeof FeedOperation.FetchArticleContent> = FeedOperation.FetchArticleContent.pipe(
   Operation.withHandler(

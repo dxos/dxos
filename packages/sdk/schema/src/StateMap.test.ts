@@ -12,7 +12,7 @@ import { EchoTestBuilder, getObjectCore } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
 import { type EntityId } from '@dxos/keys';
 
-import * as StateMap from './StateMap';
+import * as StateMap from './StateMap.ts';
 
 /** Per-item state stored in the side-map (the non-tag metadata for a feed item). */
 const PostState = Schema.Struct({

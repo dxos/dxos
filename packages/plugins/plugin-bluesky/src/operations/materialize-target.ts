@@ -10,8 +10,8 @@ import { Database, Filter, Obj, Query, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import * as Subscription from '@dxos/plugin-magazine/Subscription';
 
-import { BLUESKY_SOURCE, BLUESKY_TARGET } from '../constants';
-import { MaterializeBlueskyTarget } from './definitions';
+import { BLUESKY_SOURCE, BLUESKY_TARGET } from '../constants.ts';
+import { MaterializeBlueskyTarget } from './definitions.ts';
 
 /**
  * Find-or-create the empty local `Subscription.Feed` root for a Bluesky target

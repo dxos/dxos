@@ -10,7 +10,7 @@ import type { TourStepPlacement } from '@dxos/react-ui';
 import { Position } from '@dxos/util';
 
 // eslint-disable-next-line @dxos/rules/import-as-namespace
-import type * as Translations from '../app/Translations';
+import type * as Translations from '../app/Translations.ts';
 
 /**
  * One stop of a guided tour: a target on the page, what to say beside it, and a hook run before it shows.

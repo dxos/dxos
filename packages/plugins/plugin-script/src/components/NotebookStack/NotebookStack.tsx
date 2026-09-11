@@ -15,9 +15,9 @@ import { arrayMove } from '@dxos/util';
 import { meta } from '#meta';
 import { Notebook } from '#types';
 
-import { type TypescriptEditorProps } from '../TypescriptEditor';
-import { NotebookCell, type NotebookCellProps } from './NotebookCell';
-import { NotebookMenu } from './NotebookMenu';
+import { type TypescriptEditorProps } from '../TypescriptEditor/index.ts';
+import { NotebookCell, type NotebookCellProps } from './NotebookCell.tsx';
+import { NotebookMenu } from './NotebookMenu.tsx';
 
 const minSectionHeight = 'min-h-[16rem]';
 

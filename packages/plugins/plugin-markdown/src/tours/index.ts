@@ -2,4 +2,4 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './document-tour';
+export * from './document-tour.ts';

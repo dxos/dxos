@@ -11,7 +11,7 @@ import { type RDF } from '@dxos/pipeline-rdf';
 import { captureSink } from '@dxos/pipeline/testing';
 import { Message } from '@dxos/types';
 
-import { type FactExtractor, type FactUnit, extractFactsUnitStage } from './extract-facts-commit';
+import { type FactExtractor, type FactUnit, extractFactsUnitStage } from './extract-facts-commit.ts';
 
 const ALICE_FACT: RDF.Fact = {
   id: 'fact-1',

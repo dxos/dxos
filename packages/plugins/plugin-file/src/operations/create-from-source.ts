@@ -11,7 +11,7 @@ import { safeFetchBytes, validateExternalUrl } from '@dxos/util';
 
 import { FileLimits, FileOperation } from '#types';
 
-import { FileReadError, FileTooLargeError, UnsupportedFileTypeError, resolveActiveStorage } from './create';
+import { FileReadError, FileTooLargeError, UnsupportedFileTypeError, resolveActiveStorage } from './create.ts';
 
 /**
  * Cap on the `base64` arm. Far below the storage limits on purpose: the payload arrives as a

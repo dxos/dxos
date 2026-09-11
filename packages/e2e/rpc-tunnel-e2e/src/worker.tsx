@@ -16,10 +16,10 @@ import { useAsyncEffect } from '@dxos/react-hooks';
 import { createProtoRpcPeer } from '@dxos/rpc';
 import { createWorkerPort } from '@dxos/rpc-tunnel';
 
-import { Channels } from './channels';
+import { Channels } from './channels.ts';
 // eslint-disable-next-line
 // @ts-ignore
-import SharedWorker from './test-worker?sharedworker';
+import SharedWorker from './test-worker.ts?sharedworker';
 
 type TestStreamService = BufService<typeof TestStreamServiceDesc>;
 

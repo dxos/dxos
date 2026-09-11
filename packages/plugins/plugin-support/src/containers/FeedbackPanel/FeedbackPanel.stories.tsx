@@ -18,7 +18,7 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
 
-import { FeedbackPanel } from './FeedbackPanel';
+import { FeedbackPanel } from './FeedbackPanel.tsx';
 
 const makeObservability = (): Observability.Observability =>
   ({

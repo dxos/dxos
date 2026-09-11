@@ -16,7 +16,7 @@ import { type Client, useClient } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';
 import { Select, Toolbar, useAsyncEffect } from '@dxos/react-ui';
 
-import { VOYAGE_SPACE_ID } from '../testing/voyage-space';
+import { VOYAGE_SPACE_ID } from '../testing/voyage-space.ts';
 
 /**
  * Story chrome: a picker over the contributed space templates

@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { formatElapsed } from './format';
+import { formatElapsed } from './format.ts';
 
 describe('formatElapsed', () => {
   test('zero returns 0s', ({ expect }) => {

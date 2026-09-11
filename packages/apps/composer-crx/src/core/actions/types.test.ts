@@ -13,7 +13,7 @@ import {
   decodeInvokeAck,
   decodeListAck,
   decodeRegistry,
-} from './types';
+} from './types.ts';
 
 const fullDescriptor: PageActionDescriptor = {
   id: 'youtube-clip',

@@ -12,8 +12,8 @@ import { cardDefaultInlineSize } from '@dxos/ui-theme';
 
 import { translations } from '#translations';
 
-import { Board, type BoardController, type BoardRootProps } from './Board';
-import { type GridMode, type Layout, rejectIfNoFit, resizeToFit } from './engine';
+import { Board, type BoardController, type BoardRootProps } from './Board.tsx';
+import { type GridMode, type Layout, rejectIfNoFit, resizeToFit } from './engine.ts';
 
 type TestItem = {
   id: string;

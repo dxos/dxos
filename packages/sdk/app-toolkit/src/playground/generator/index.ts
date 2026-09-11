@@ -2,5 +2,5 @@
 // Copyright 2025 DXOS.org
 //
 
-export * from './plugin';
-export * from './generator';
+export * from './plugin.ts';
+export * from './generator.ts';

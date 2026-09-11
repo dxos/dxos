@@ -23,7 +23,7 @@ import { meta } from '#meta';
 import { BloggerOperation } from '#operations';
 import { Blog } from '#types';
 
-import { getPublicationsSectionId } from '../paths';
+import { getPublicationsSectionId } from '../paths.ts';
 
 /** Node type of the "Publications" section under a space's content group. */
 const PUBLICATIONS_SECTION_TYPE = `${meta.profile.key}.publications-section`;

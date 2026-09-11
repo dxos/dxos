@@ -12,9 +12,9 @@ import { AlreadyJoinedError } from '@dxos/protocols';
 import { fromPublicKey, toPublicKey } from '@dxos/protocols/buf';
 import { Invitation, Invitation_Kind, Invitation_State } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 
-import { type ServiceContext } from '../services';
-import { createIdentity, createPeers } from '../testing';
-import { acceptInvitation, createInvitation, performInvitation } from '../testing/invitation-utils';
+import { type ServiceContext } from '../services/index.ts';
+import { createIdentity, createPeers } from '../testing/index.ts';
+import { acceptInvitation, createInvitation, performInvitation } from '../testing/invitation-utils.ts';
 
 const closeAfterTest = async (peer: ServiceContext) => {
   onTestFinished(async () => {

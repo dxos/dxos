@@ -7,7 +7,7 @@ import * as os from 'node:os';
 import * as path from 'node:path';
 import { afterAll, beforeAll, describe, test } from 'vitest';
 
-import { resolveWithin } from './path-scope';
+import { resolveWithin } from './path-scope.ts';
 
 describe('resolveWithin', () => {
   let root: string;

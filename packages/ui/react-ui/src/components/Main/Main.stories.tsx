@@ -6,11 +6,11 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
-import { withLayout, withTheme } from '../../testing';
-import { IconButton } from '../Button';
-import { Toolbar } from '../Toolbar';
-import { Main, type MainRootProps } from './Main';
-import { useSidebars } from './MainContext';
+import { withLayout, withTheme } from '../../testing/index.ts';
+import { IconButton } from '../Button/index.ts';
+import { Toolbar } from '../Toolbar/index.ts';
+import { Main, type MainRootProps } from './Main.tsx';
+import { useSidebars } from './MainContext.ts';
 
 type StoryMainArgs = Pick<MainRootProps, 'defaultNavigationSidebarState' | 'defaultComplementarySidebarState'>;
 

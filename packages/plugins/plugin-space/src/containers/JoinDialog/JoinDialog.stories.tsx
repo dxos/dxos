@@ -12,7 +12,7 @@ import { Dialog } from '@dxos/react-ui';
 
 import { translations } from '#translations';
 
-import { JoinDialog } from './JoinDialog';
+import { JoinDialog } from './JoinDialog.tsx';
 
 const DefaultStory = () => (
   <Dialog.Root defaultOpen>

@@ -18,8 +18,8 @@ import { type Database, type Obj, type Ref, type Registry } from '@dxos/echo';
 
 import { meta } from '#meta';
 
-import * as Assistant from './Assistant';
-import * as Ollama from './Ollama';
+import * as Assistant from './Assistant.ts';
+import * as Ollama from './Ollama.ts';
 
 export const Settings = Capability.makeSingleton<Atom.Writable<Assistant.Settings>>()(
   `${meta.profile.key}.capability.settings`,

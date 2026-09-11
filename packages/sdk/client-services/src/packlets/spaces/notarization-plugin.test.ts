@@ -14,7 +14,7 @@ import { type Credential } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { AdmittedFeed_Designation } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { TestBuilder, type TestConnection, TestPeer } from '@dxos/teleport/testing';
 
-import { NotarizationPlugin, type NotarizationPluginProps } from './notarization-plugin';
+import { NotarizationPlugin, type NotarizationPluginProps } from './notarization-plugin.ts';
 
 class TestAgent extends TestPeer {
   private readonly _ctx = new Context();
