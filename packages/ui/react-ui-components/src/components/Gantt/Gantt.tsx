@@ -63,26 +63,15 @@ const BAR_OVERHANG = BAR_HEIGHT / 2;
 /** Radius of the delegation connector's bend from the drop into the child bar. */
 const BEND_RADIUS = BAR_HEIGHT / 2;
 
-const STATUS_COLOR: Record<GanttLaneStatus, { fill: string; text: string }> = {
-  pending: { fill: 'fill-neutral-500/40', text: 'text-neutral-400' },
-  blocked: { fill: 'fill-orange-500/40', text: 'text-orange-500' },
-  running: { fill: 'fill-sky-500/40', text: 'text-sky-500' },
-  review: { fill: 'fill-cyan-500/40', text: 'text-cyan-500' },
-  done: { fill: 'fill-green-500/40', text: 'text-green-500' },
-  failed: { fill: 'fill-red-500/40', text: 'text-red-500' },
+/** Bar, node and label colours per status: a node is its bar's hue in a lighter shade. */
+const STATUS_COLOR: Record<GanttLaneStatus, { fill: string; node: string; text: string }> = {
+  pending: { fill: 'fill-neutral-500/40', node: 'fill-neutral-300', text: 'text-neutral-400' },
+  blocked: { fill: 'fill-orange-500/40', node: 'fill-orange-300', text: 'text-orange-500' },
+  running: { fill: 'fill-sky-500/40', node: 'fill-sky-300', text: 'text-sky-500' },
+  review: { fill: 'fill-cyan-500/40', node: 'fill-cyan-300', text: 'text-cyan-500' },
+  done: { fill: 'fill-green-500/40', node: 'fill-green-300', text: 'text-green-500' },
+  failed: { fill: 'fill-red-500/40', node: 'fill-red-300', text: 'text-red-500' },
 };
-
-const MARKER_FILL: Record<GanttMarkerKind, string> = {
-  request: 'fill-sky-500',
-  operation: 'fill-neutral-500',
-  tool: 'fill-violet-500',
-  message: 'fill-teal-500',
-  error: 'fill-red-500',
-  delegation: 'fill-fuchsia-500',
-};
-
-const markerFill = (marker: GanttMarker): string =>
-  marker.level === 'error' ? 'fill-red-500' : marker.level === 'warn' ? 'fill-orange-500' : MARKER_FILL[marker.kind];
 
 type Row = { lane: GanttLane; depth: number; index: number };
 
@@ -314,7 +303,7 @@ export const Gantt = composable<HTMLDivElement, GanttProps>(
                 cx={nodeX(row.lane, marker.timestamp)}
                 cy={rowY(row.index)}
                 r={NODE_RADIUS}
-                className={mx('cursor-pointer stroke-base-surface', markerFill(marker))}
+                className={mx('cursor-pointer stroke-base-surface', STATUS_COLOR[row.lane.status].node)}
                 onClick={() => onMarkerSelect?.(marker)}
               >
                 <title>{marker.label}</title>
