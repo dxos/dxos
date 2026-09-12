@@ -615,7 +615,11 @@ jobs:
               echo "targets=$targets" >> "$GITHUB_OUTPUT"
 
       - name: Test
-        timeout-minutes: 35
+        # Sized to a cold cache, not a warm one. The `rest` shard's own tests total under five
+        # minutes; the rest is building its ~380 dependencies, which took 34 minutes the last time
+        # the remote cache could not serve them. At 35 the step was killed mid-build and reported as
+        # a test failure, which is the one outcome that tells you nothing.
+        timeout-minutes: 50
         uses: trunk-io/analytics-uploader@v1
         env:
           # Forces the e2e tasks to actually run: re-running one commit otherwise replays a cache hit and
