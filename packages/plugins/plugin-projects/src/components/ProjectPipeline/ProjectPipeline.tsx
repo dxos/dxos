@@ -47,7 +47,8 @@ export const ProjectPipeline = ({ space, project, tasks }: ProjectPipelineProps)
     );
   }
 
-  // The chart alone: the ledger above already names every lane.
+  // Named and totalled here rather than read off the ledger above: a ledger row is several lines
+  // tall and a chart row is one, so nothing lines up between them.
   return (
     <ScrollArea.Root>
       <ScrollArea.Viewport>
@@ -59,7 +60,9 @@ export const ProjectPipeline = ({ space, project, tasks }: ProjectPipelineProps)
           classNames='p-2'
           data-testid='projectsPlugin.pipeline.chart'
         >
+          <Gantt.Legend />
           <Gantt.Chart />
+          <Gantt.Meta />
         </Gantt.Root>
       </ScrollArea.Viewport>
     </ScrollArea.Root>

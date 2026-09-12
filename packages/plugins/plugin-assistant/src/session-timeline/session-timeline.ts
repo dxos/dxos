@@ -188,7 +188,9 @@ export const buildSessionTimeline = ({
           pids.add(event.meta.pid);
         }
       }
-      sources.push({ key: chat.id, label: chat.name?.trim() || feed || chat.id, chat, pids });
+      // A feed or object id is not a name: an unnamed chat reads as the session it is until the
+      // naming turn lands.
+      sources.push({ key: chat.id, label: chat.name?.trim() || 'Session', chat, pids });
     }
   } else {
     // Without chats, the conversation feed groups a session's pids; a trace with no conversation
@@ -306,9 +308,21 @@ export const buildSessionTimeline = ({
       lanes.push(taskLane);
     }
 
+    // Spawned pids without a trace yet still get a lane from their process.
+    const subAgentPids = new Set<string>([...subAgentSpans.map(({ pid }) => pid), ...taskByPid.keys()]);
+
     // The status events bound each task's stretch of the session, giving its lane a span of its own
-    // and a node where it started and finished.
-    const segments = buildTaskSegments(sessionEvents, begins[0]?.timestamp).filter((segment) =>
+    // and a node where it started and finished. A status tool runs as a child process of the agent,
+    // so its events carry their own pid and reach the session through `parentPid`; a spawned
+    // sub-agent's do too, and those belong to its own lane rather than cutting this one.
+    const ownEvents = events.filter(
+      (event) =>
+        (event.meta.pid !== undefined && source.pids.has(event.meta.pid)) ||
+        (event.meta.parentPid !== undefined &&
+          source.pids.has(event.meta.parentPid) &&
+          !(event.meta.pid !== undefined && subAgentPids.has(event.meta.pid))),
+    );
+    const segments = buildTaskSegments(ownEvents, begins[0]?.timestamp).filter((segment) =>
       taskLanes.has(segment.taskId),
     );
     segmentsBySession.set(laneId, segments);
@@ -322,8 +336,6 @@ export const buildSessionTimeline = ({
       taskLane.end = segment.end === undefined ? undefined : Math.max(taskLane.end ?? segment.end, segment.end);
     }
 
-    // Spawned pids without a trace yet still get a lane from their process.
-    const subAgentPids = new Set<string>([...subAgentSpans.map(({ pid }) => pid), ...taskByPid.keys()]);
     for (const subPid of subAgentPids) {
       const match = subAgentSpans.find((candidate) => candidate.pid === subPid);
       const process = processByPid.get(subPid);
