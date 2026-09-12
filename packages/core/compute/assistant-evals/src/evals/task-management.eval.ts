@@ -31,15 +31,17 @@ const TASK_TITLES = ['Ship the beacon', 'Tune the retry budget', 'Document the r
 
 const REQUIRED_TOOLS = ['space-query-objects', 'tasks-update', 'space-update-object'];
 
-/** The project's tasks, read outside the agent; empty if the ledger is gone. */
-const ledgerTasks = Effect.gen(function* () {
-  const project = yield* findObject(Project.Project, (candidate) => candidate.name === PROJECT_NAME);
-  const taskSet = project?.taskSet ? yield* Database.load(project.taskSet) : undefined;
-  if (!taskSet) {
-    return [] as Task.Task[];
-  }
-  return yield* Effect.forEach(taskSet.tasks, (ref) => Database.load(ref));
-});
+/** The project's tasks, read outside the agent; empty if the ledger is gone. Read once per run. */
+const ledgerTasks = Scorer.shared(
+  Effect.gen(function* () {
+    const project = yield* findObject(Project.Project, (candidate) => candidate.name === PROJECT_NAME);
+    const taskSet = project?.taskSet ? yield* Database.load(project.taskSet) : undefined;
+    if (!taskSet) {
+      return [] as Task.Task[];
+    }
+    return yield* Effect.forEach(taskSet.tasks, (ref) => Database.load(ref));
+  }),
+);
 
 const byKeyword = (tasks: readonly Task.Task[], keyword: string): Task.Task | undefined =>
   tasks.find((candidate) => candidate.title?.toLowerCase().includes(keyword));
@@ -51,26 +53,26 @@ const SCORERS = [
   Scorer.make({
     name: 'task-completed',
     description: 'The retry task is done, reached through `tasks-update` rather than `tasks-complete`.',
-    query: ledgerTasks,
-    score: (tasks) => byKeyword(tasks, COMPLETE_KEYWORD)?.status === 'done',
+    score: ledgerTasks.pipe(Effect.map((tasks) => byKeyword(tasks, COMPLETE_KEYWORD)?.status === 'done')),
   }),
   Scorer.make({
     name: 'task-assigned',
     description: 'The rollout task carries the assignee, reached through `tasks-update`.',
-    query: ledgerTasks,
-    score: (tasks) => byKeyword(tasks, ASSIGN_KEYWORD)?.assignee?.email === ASSIGNEE_EMAIL,
+    score: ledgerTasks.pipe(
+      Effect.map((tasks) => byKeyword(tasks, ASSIGN_KEYWORD)?.assignee?.email === ASSIGNEE_EMAIL),
+    ),
   }),
   Scorer.make({
     name: 'milestone-dated',
     description: 'The milestone target date is set through the generic `space-update-object`.',
-    query: previewMilestone,
-    score: (milestone) => milestone?.targetDate === TARGET_DATE,
+    score: previewMilestone.pipe(Effect.map((milestone) => milestone?.targetDate === TARGET_DATE)),
   }),
   Scorer.make({
     name: 'left-the-rest-alone',
     description: 'Exactly two tasks remain open — the agent closed one task, not the ledger.',
-    query: ledgerTasks,
-    score: (tasks) => tasks.filter((candidate) => (candidate.status ?? 'todo') !== 'done').length === 2,
+    score: ledgerTasks.pipe(
+      Effect.map((tasks) => tasks.filter((candidate) => (candidate.status ?? 'todo') !== 'done').length === 2),
+    ),
   }),
   Scorer.toolCalls({
     name: 'generic-verbs-reached',
@@ -120,7 +122,7 @@ const task = createEvalRunner({
 
       return { objects: [], chat: Ref.make(chat) };
     }),
-  scorers: SCORERS,
+  scored: true,
 });
 
 evalite('Task management — the ledger verbs survive losing their type-specific sugar', {

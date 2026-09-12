@@ -32,8 +32,7 @@ const SCORERS = [
   Scorer.make({
     name: 'answer-correct',
     description: 'The agent reports the capital of France (Paris) in its response.',
-    query: assistantText,
-    score: (text) => text.includes('Paris'),
+    score: assistantText.pipe(Effect.map((text) => text.includes('Paris'))),
   }),
   Scorer.toolCalls({
     name: 'only-web-search-used',
@@ -62,7 +61,7 @@ const task = createEvalRunner({
   output: Schema.Unknown,
   // TODO(dmaretskyi): Update to use skill keys and get skills from registry.
   skills: [Ref.make(WebSearchSkill.make())],
-  scorers: SCORERS,
+  scored: true,
 });
 
 evalite('Web — search the web', {

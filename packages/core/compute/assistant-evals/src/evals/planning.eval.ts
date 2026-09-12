@@ -47,34 +47,33 @@ const checklist = Effect.gen(function* () {
 });
 
 /** The judge's verdict on the haikus the session wrote into the chat feed. */
-const haikuVerdict = completedBlocks().pipe(
-  Effect.map((blocks) =>
-    blocks
-      .filter(({ role, block }) => role === 'assistant' && block._tag === 'text')
-      .map(({ block }) => (block as { text: string }).text)
-      .join('\n'),
+const haikuVerdict = Scorer.shared(
+  completedBlocks().pipe(
+    Effect.map((blocks) =>
+      blocks
+        .filter(({ role, block }) => role === 'assistant' && block._tag === 'text')
+        .map(({ block }) => (block as { text: string }).text)
+        .join('\n'),
+    ),
+    Effect.flatMap((assistantText) => judge(HAIKU_JUDGE_RUBRIC, assistantText)),
   ),
-  Effect.flatMap((assistantText) => judge(HAIKU_JUDGE_RUBRIC, assistantText)),
 );
 
 const SCORERS = [
   Scorer.make({
     name: 'exactly-three-tasks',
     description: 'Exactly 3 checklist items exist for the three haiku topics.',
-    query: checklist,
-    score: (items) => items.length === 3,
+    score: checklist.pipe(Effect.map((items) => items.length === 3)),
   }),
   Scorer.make({
     name: 'all-tasks-done',
     description: 'All 3 tasks are marked done.',
-    query: checklist,
-    score: (items) => items.length === 3 && items.every((item) => item.done),
+    score: checklist.pipe(Effect.map((items) => items.length === 3 && items.every((item) => item.done))),
   }),
   Scorer.make({
     name: 'haikus-well-formed',
     description: 'An LLM judge confirms all three topics have their own well-formed haiku.',
-    query: haikuVerdict,
-    score: (verdict) => verdict.pass,
+    score: haikuVerdict.pipe(Effect.map((verdict) => verdict.pass)),
   }),
   Scorer.toolCalls({
     name: 'used-update-tasks',
@@ -113,7 +112,7 @@ const task = createEvalRunner({
   output: Schema.Unknown,
   // Three sequential subtasks, each a assistant-toolkit-update-tasks call + haiku turn, plus a final judge call.
   timeout: 150_000,
-  scorers: SCORERS,
+  scored: true,
 });
 
 evalite('Planning — create three haiku tasks and complete each one', {

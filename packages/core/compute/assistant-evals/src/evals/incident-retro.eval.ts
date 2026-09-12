@@ -98,55 +98,69 @@ const lower = (text: string | undefined) => (text ?? '').toLowerCase();
 const REQUIRED_TOOLS = ['projects-add-artifact', 'tasks-create'];
 
 /** The documents the session filed on the project, by the name each task asked for. */
-const filedDocuments = Effect.gen(function* () {
-  const project = yield* findObject(Project.Project, (candidate) => candidate.name === PROJECT_NAME);
-  if (!project) {
-    return { timeline: '', retro: '', notice: '' };
-  }
-  const artifacts = yield* Effect.forEach(project.artifacts, (ref) =>
-    Database.load(ref).pipe(Effect.orElseSucceed(() => undefined)),
-  );
-  const documents = artifacts.filter((candidate): candidate is Markdown.Document =>
-    Obj.instanceOf(Markdown.Document, candidate),
-  );
-  const textOf = (needle: RegExp) => {
-    const document = documents.find((candidate) => needle.test(candidate.name ?? ''));
-    return document
-      ? Database.load(document.content).pipe(
-          Effect.map((text) => text.content),
-          Effect.orElseSucceed(() => ''),
-        )
-      : Effect.succeed('');
-  };
-  return {
-    timeline: yield* textOf(/timeline/i),
-    retro: yield* textOf(/retro/i),
-    notice: yield* textOf(/notice|customer/i),
-  };
-});
+const filedDocuments = Scorer.shared(
+  Effect.gen(function* () {
+    const project = yield* findObject(Project.Project, (candidate) => candidate.name === PROJECT_NAME);
+    if (!project) {
+      return { timeline: '', retro: '', notice: '' };
+    }
+    const artifacts = yield* Effect.forEach(project.artifacts, (ref) =>
+      Database.load(ref).pipe(Effect.orElseSucceed(() => undefined)),
+    );
+    const documents = artifacts.filter((candidate): candidate is Markdown.Document =>
+      Obj.instanceOf(Markdown.Document, candidate),
+    );
+    const textOf = (needle: RegExp) => {
+      const document = documents.find((candidate) => needle.test(candidate.name ?? ''));
+      return document
+        ? Database.load(document.content).pipe(
+            Effect.map((text) => text.content),
+            Effect.orElseSucceed(() => ''),
+          )
+        : Effect.succeed('');
+    };
+    return {
+      timeline: yield* textOf(/timeline/i),
+      retro: yield* textOf(/retro/i),
+      notice: yield* textOf(/notice|customer/i),
+    };
+  }),
+);
+
+/** Reads the filed documents and turns them into a mark. */
+const filed = (score: (documents: Effect.Success<typeof filedDocuments>) => Scorer.Result) =>
+  filedDocuments.pipe(Effect.map(score));
 
 /** The judge's verdict on the filed retrospective; absent when the session filed none. */
-const retroVerdict = filedDocuments.pipe(
-  Effect.flatMap(({ retro }) =>
-    retro ? judge(RETRO_RUBRIC, retro).pipe(Effect.orElseSucceed(() => undefined)) : Effect.succeed(undefined),
+const retroVerdict = Scorer.shared(
+  filedDocuments.pipe(
+    Effect.flatMap(({ retro }) =>
+      retro ? judge(RETRO_RUBRIC, retro).pipe(Effect.orElseSucceed(() => undefined)) : Effect.succeed(undefined),
+    ),
   ),
 );
 
 /** The project's tasks, split into the four the session was given and the ones it added. */
-const taskLedger = Effect.gen(function* () {
-  const project = yield* findObject(Project.Project, (candidate) => candidate.name === PROJECT_NAME);
-  const taskSet = project?.taskSet ? yield* Database.load(project.taskSet) : undefined;
-  if (!taskSet) {
-    return { delegated: [] as Task.Task[], created: [] as Task.Task[] };
-  }
-  const tasks = (yield* Effect.forEach(taskSet.tasks, (ref) =>
-    Database.load(ref).pipe(Effect.orElseSucceed(() => undefined)),
-  )).filter((candidate): candidate is Task.Task => !!candidate);
-  return {
-    delegated: tasks.filter((candidate) => candidate.assignee?.role === 'assistant'),
-    created: tasks.filter((candidate) => candidate.assignee?.role !== 'assistant'),
-  };
-});
+const taskLedger = Scorer.shared(
+  Effect.gen(function* () {
+    const project = yield* findObject(Project.Project, (candidate) => candidate.name === PROJECT_NAME);
+    const taskSet = project?.taskSet ? yield* Database.load(project.taskSet) : undefined;
+    if (!taskSet) {
+      return { delegated: [] as Task.Task[], created: [] as Task.Task[] };
+    }
+    const tasks = (yield* Effect.forEach(taskSet.tasks, (ref) =>
+      Database.load(ref).pipe(Effect.orElseSucceed(() => undefined)),
+    )).filter((candidate): candidate is Task.Task => !!candidate);
+    return {
+      delegated: tasks.filter((candidate) => candidate.assignee?.role === 'assistant'),
+      created: tasks.filter((candidate) => candidate.assignee?.role !== 'assistant'),
+    };
+  }),
+);
+
+/** Reads the project's tasks and turns them into a mark. */
+const ledger = (score: (tasks: Effect.Success<typeof taskLedger>) => Scorer.Result) =>
+  taskLedger.pipe(Effect.map(score));
 
 const about = (task: Task.Task, needle: RegExp) => needle.test(`${task.title ?? ''} ${task.description ?? ''}`);
 
@@ -154,75 +168,72 @@ const SCORERS = [
   Scorer.make({
     name: 'timeline-follows-the-log',
     description: 'A Timeline artifact carries the four times the log fixes.',
-    query: filedDocuments,
-    score: ({ timeline }) => LOG_TIMES.filter((time) => timeline.includes(time)).length / LOG_TIMES.length,
+    score: filed(({ timeline }) => LOG_TIMES.filter((time) => timeline.includes(time)).length / LOG_TIMES.length),
   }),
   Scorer.make({
     name: 'timeline-holds-the-disk-claim-as-a-claim',
     description: 'The second-hand disk claim is absent from the timeline, or marked as unsupported by the log.',
-    query: filedDocuments,
     // The disk claim may appear, but only as a claim: something the record does not bear out.
-    score: ({ timeline }) =>
-      !/disk/i.test(timeline) ||
-      /second.?hand|unverified|not (?:supported|borne out|confirmed)|contradict|rules? (?:this |it )?out|no evidence|held at 41/i.test(
-        timeline,
-      ),
+    score: filed(
+      ({ timeline }) =>
+        !/disk/i.test(timeline) ||
+        /second.?hand|unverified|not (?:supported|borne out|confirmed)|contradict|rules? (?:this |it )?out|no evidence|held at 41/i.test(
+          timeline,
+        ),
+    ),
   }),
   Scorer.make({
     name: 'retro-names-the-cause',
     description: 'A Retrospective artifact is filed and names the expired certificate.',
-    query: filedDocuments,
-    score: ({ retro }) => retro.length > 0 && /certificate/i.test(retro),
+    score: filed(({ retro }) => retro.length > 0 && /certificate/i.test(retro)),
   }),
   Scorer.make({
     name: 'retro-finds-both-process-gaps',
     description: 'The retrospective names the stale alert routing and the unowned renewal.',
-    query: filedDocuments,
-    score: ({ retro }) => [ROUTING_GAP.test(retro), RENEWAL_GAP.test(retro)].filter(Boolean).length / 2,
+    score: filed(({ retro }) => [ROUTING_GAP.test(retro), RENEWAL_GAP.test(retro)].filter(Boolean).length / 2),
   }),
   Scorer.make({
     name: 'retro-grounded-and-blameless',
     description: 'Judge: no deploy freeze, the disk claim not stated as fact, no named person blamed.',
-    query: retroVerdict,
-    score: (verdict) => verdict?.pass ?? false,
+    score: retroVerdict.pipe(Effect.map((verdict) => verdict?.pass ?? false)),
   }),
   Scorer.make({
     name: 'action-items-are-owned-tasks',
     description: "At least two new tasks on the project's set, each assigned to someone from the notes.",
-    query: taskLedger,
-    score: ({ created }) =>
+    score: ledger(({ created }) =>
       created.length >= 2
         ? created.filter((candidate) => CAST.some((name) => lower(candidate.assignee?.name).includes(lower(name))))
             .length / created.length
         : 0,
+    ),
   }),
   Scorer.make({
     name: 'action-items-follow-the-evidence',
     description: 'One item on alert routing, one on renewal ownership, none on deploys or disk.',
-    query: taskLedger,
-    score: ({ created }) =>
-      [
-        created.some((candidate) => about(candidate, ROUTING_GAP)),
-        created.some((candidate) => about(candidate, RENEWAL_GAP)),
-        !created.some((candidate) => DISTRACTOR_ACTIONS.test(candidate.title ?? '')),
-      ].filter(Boolean).length / 3,
+    score: ledger(
+      ({ created }) =>
+        [
+          created.some((candidate) => about(candidate, ROUTING_GAP)),
+          created.some((candidate) => about(candidate, RENEWAL_GAP)),
+          !created.some((candidate) => DISTRACTOR_ACTIONS.test(candidate.title ?? '')),
+        ].filter(Boolean).length / 3,
+    ),
   }),
   Scorer.make({
     name: 'customer-notice-is-plain',
     description: 'A Customer notice artifact names the certificate and carries no internal names or systems.',
-    query: filedDocuments,
-    score: ({ notice }) => notice.length > 0 && /certificate/i.test(notice) && !INTERNAL.test(notice),
+    score: filed(({ notice }) => notice.length > 0 && /certificate/i.test(notice) && !INTERNAL.test(notice)),
   }),
   Scorer.make({
     name: 'delegated-tasks-back-in-review',
     description: 'Every task the session was given is in review (or done) when it finishes.',
-    query: taskLedger,
     // `done` past a named reviewer lands as `review`; either means the session finished the task.
-    score: ({ delegated }) =>
+    score: ledger(({ delegated }) =>
       delegated.length > 0
         ? delegated.filter((candidate) => candidate.status === 'review' || candidate.status === 'done').length /
           delegated.length
         : 0,
+    ),
   }),
   Scorer.toolCalls({
     name: 'project-verbs-reached',
@@ -284,7 +295,7 @@ const task = createEvalRunner({
 
       return { objects: [Ref.make(project)], chat: Ref.make(chat) };
     }),
-  scorers: SCORERS,
+  scored: true,
 });
 
 evalite('Incident retro — a delegated session turns a log and four notes into a filed retro', {

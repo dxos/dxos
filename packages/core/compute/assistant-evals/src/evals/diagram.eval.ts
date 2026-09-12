@@ -42,58 +42,59 @@ const EXPECTED_NODES = ['Gateway', 'Auth', 'Router', 'Store', 'Indexer', 'Notifi
  * The drawing the run was asked for, analysed by the same `Diagnostics` report that gates our own
  * layouts. One effect, shared by every scorer below: the analysis is paid for once per run.
  */
-const relayDrawing = Effect.gen(function* () {
-  const drawing = yield* findObject(Drawing.Drawing, (entry) => entry.name === 'Relay');
-  if (!drawing) {
-    return undefined;
-  }
-  const canvas = yield* Database.load(drawing.canvas);
-  const { scene } = SvgBuilder.read(canvas);
-  const report = Diagnostics.analyze(scene.objects);
-  return {
-    errors: Diagnostics.errors(report).map(({ message }) => message),
-    metrics: report.metrics,
-    nodes: scene.objects.filter((object) => object.id !== 'edges').map(({ id, ref }) => ({ id, ref })),
-  };
-});
+const relayDrawing = Scorer.shared(
+  Effect.gen(function* () {
+    const drawing = yield* findObject(Drawing.Drawing, (entry) => entry.name === 'Relay');
+    if (!drawing) {
+      return undefined;
+    }
+    const canvas = yield* Database.load(drawing.canvas);
+    const { scene } = SvgBuilder.read(canvas);
+    const report = Diagnostics.analyze(scene.objects);
+    return {
+      errors: Diagnostics.errors(report).map(({ message }) => message),
+      metrics: report.metrics,
+      nodes: scene.objects.filter((object) => object.id !== 'edges').map(({ id, ref }) => ({ id, ref })),
+    };
+  }),
+);
+
+/** Reads the drawing and turns it into a mark. */
+const drawn = (score: (drawing: Effect.Success<typeof relayDrawing>) => Scorer.Result) =>
+  relayDrawing.pipe(Effect.map(score));
 
 const SCORERS = [
   Scorer.make({
     name: 'drawing-generated',
     description: 'A drawing named "Relay" exists and holds at least one node.',
-    query: relayDrawing,
-    score: (drawing) => (drawing?.nodes.length ?? 0) > 0,
+    score: drawn((drawing) => (drawing?.nodes.length ?? 0) > 0),
   }),
   Scorer.make({
     name: 'no-hard-defects',
     description: 'Diagnostics report no errors (overlap, route through node, label overflow).',
-    query: relayDrawing,
-    score: (drawing) => !!drawing && drawing.errors.length === 0,
+    score: drawn((drawing) => !!drawing && drawing.errors.length === 0),
   }),
   Scorer.make({
     name: 'components-present',
     description: 'Every described component appears as a node (fraction present).',
-    query: relayDrawing,
-    score: (drawing) => {
+    score: drawn((drawing) => {
       const ids = new Set(drawing?.nodes.map(({ id }) => id) ?? []);
       return EXPECTED_NODES.filter((id) => ids.has(id)).length / EXPECTED_NODES.length;
-    },
+    }),
   }),
   Scorer.make({
     name: 'refs-grounded',
     description: 'Every component node carries the documentation URL it was given (fraction).',
-    query: relayDrawing,
-    score: (drawing) => {
+    score: drawn((drawing) => {
       const refs = new Map(drawing?.nodes.map(({ id, ref }) => [id, ref]) ?? []);
       const grounded = EXPECTED_NODES.filter((id) => refs.get(id) === `https://example.com/docs/${id.toLowerCase()}`);
       return grounded.length / EXPECTED_NODES.length;
-    },
+    }),
   }),
   Scorer.make({
     name: 'connectors-connected',
     description: 'Connector count is at least the six described relationships.',
-    query: relayDrawing,
-    score: (drawing) => (drawing?.metrics.connectors ?? 0) >= 6,
+    score: drawn((drawing) => (drawing?.metrics.connectors ?? 0) >= 6),
   }),
 ];
 
@@ -113,7 +114,7 @@ const task = createEvalRunner({
   plugins: [IllustratorPlugin.make()],
   skills: [...getDefaultSkills(), Ref.make(UmlSkill.make())],
   timeout: 150_000,
-  scorers: SCORERS,
+  scored: true,
 });
 
 // Skipped: the SVG drawing variant is browser-only (`environments: []` in plugin-illustrator's

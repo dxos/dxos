@@ -35,7 +35,7 @@ const draftTask = createEvalRunner({
   input: Schema.Unknown,
   output: Schema.Unknown,
   plugins: [MarkdownPlugin.make()],
-  scorers: DRAFT_SCORERS,
+  scored: true,
 });
 
 evalite('Markdown — draft a document', {
@@ -62,8 +62,7 @@ const APPEND_SCORERS = [
   Scorer.make({
     name: 'content-matches',
     description: `The "${DOCUMENT_NAME}" document's final content is exactly the appended line.`,
-    query: documentText,
-    score: (content) => content === APPENDED_LINE,
+    score: documentText.pipe(Effect.map((content) => content === APPENDED_LINE)),
   }),
 ];
 
@@ -82,7 +81,7 @@ const appendTask = createEvalRunner({
   input: Schema.Unknown,
   output: Schema.Unknown,
   plugins: [MarkdownPlugin.make()],
-  scorers: APPEND_SCORERS,
+  scored: true,
 });
 
 evalite('Markdown — append text to empty document', {

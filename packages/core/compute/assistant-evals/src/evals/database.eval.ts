@@ -41,7 +41,7 @@ const task = createEvalRunner({
   `,
   input: Schema.Struct({ name: Schema.String }),
   output: Schema.Unknown,
-  scorers: SCORERS,
+  scored: true,
 });
 
 evalite('Database — create and query', {

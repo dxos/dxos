@@ -69,67 +69,69 @@ const SEED_EMAIL_INPUT = {
 const PERSON_NAME = 'Vishal Sharma';
 const ORGANIZATION_NAME = 'SigNoz';
 
-const person = findObject(Person.Person, (candidate) => candidate.fullName === PERSON_NAME);
-const organization = findObject(Organization.Organization, (candidate) => candidate.name === ORGANIZATION_NAME);
-const employerRelation = findObject(Employer.Employer, (relation) => {
-  const source = Relation.getSource(relation);
-  const target = Relation.getTarget(relation);
-  return source?.fullName === PERSON_NAME && target?.name === ORGANIZATION_NAME;
-});
-const summaryProfile = findObject(ProfileOf.ProfileOf, (relation) => {
-  const target = Relation.getTarget(relation);
-  return Obj.instanceOf(Organization.Organization, target) && target.name === ORGANIZATION_NAME;
-});
+const person = Scorer.shared(findObject(Person.Person, (candidate) => candidate.fullName === PERSON_NAME));
+const organization = Scorer.shared(
+  findObject(Organization.Organization, (candidate) => candidate.name === ORGANIZATION_NAME),
+);
+const employerRelation = Scorer.shared(
+  findObject(Employer.Employer, (relation) => {
+    const source = Relation.getSource(relation);
+    const target = Relation.getTarget(relation);
+    return source?.fullName === PERSON_NAME && target?.name === ORGANIZATION_NAME;
+  }),
+);
+const summaryProfile = Scorer.shared(
+  findObject(ProfileOf.ProfileOf, (relation) => {
+    const target = Relation.getTarget(relation);
+    return Obj.instanceOf(Organization.Organization, target) && target.name === ORGANIZATION_NAME;
+  }),
+);
 
 /** The judge's verdict on whether the records the run created match the email it worked from. */
-const accuracyVerdict = Effect.gen(function* () {
-  const foundPerson = yield* person;
-  const foundOrganization = yield* organization;
-  const foundRelation = yield* employerRelation;
-  const createdRecords = {
-    person: foundPerson ? { fullName: foundPerson.fullName } : null,
-    organization: foundOrganization ? { name: foundOrganization.name } : null,
-    employerRole: foundRelation?.role ?? null,
-  };
-  return yield* judge(ACCURACY_JUDGE_RUBRIC, JSON.stringify({ sourceEmail: SEED_EMAIL_INPUT, createdRecords }));
-});
+const accuracyVerdict = Scorer.shared(
+  Effect.gen(function* () {
+    const foundPerson = yield* person;
+    const foundOrganization = yield* organization;
+    const foundRelation = yield* employerRelation;
+    const createdRecords = {
+      person: foundPerson ? { fullName: foundPerson.fullName } : null,
+      organization: foundOrganization ? { name: foundOrganization.name } : null,
+      employerRole: foundRelation?.role ?? null,
+    };
+    return yield* judge(ACCURACY_JUDGE_RUBRIC, JSON.stringify({ sourceEmail: SEED_EMAIL_INPUT, createdRecords }));
+  }),
+);
 
 const SCORERS = [
   Scorer.make({
     name: 'person-created',
     description: `A Person object for ${PERSON_NAME} exists in the database.`,
-    query: person,
-    score: (person) => !!person,
+    score: person.pipe(Effect.map((person) => !!person)),
   }),
   Scorer.make({
     name: 'organization-created',
     description: `An Organization object named ${ORGANIZATION_NAME} exists in the database.`,
-    query: organization,
-    score: (organization) => !!organization,
+    score: organization.pipe(Effect.map((organization) => !!organization)),
   }),
   Scorer.make({
     name: 'employer-relation-created',
     description: `An Employer relation between ${PERSON_NAME} and ${ORGANIZATION_NAME} exists.`,
-    query: employerRelation,
-    score: (relation) => !!relation,
+    score: employerRelation.pipe(Effect.map((relation) => !!relation)),
   }),
   Scorer.make({
     name: 'employer-role-correct',
     description: 'The Employer relation\'s role is "Founding Engineer", stored as a proper schema field.',
-    query: employerRelation,
-    score: (relation) => relation?.role === 'Founding Engineer',
+    score: employerRelation.pipe(Effect.map((relation) => relation?.role === 'Founding Engineer')),
   }),
   Scorer.make({
     name: 'summary-document-linked',
     description: `A Profile Document is linked to the ${ORGANIZATION_NAME} Organization via a ProfileOf relation.`,
-    query: summaryProfile,
-    score: (profile) => !!profile,
+    score: summaryProfile.pipe(Effect.map((profile) => !!profile)),
   }),
   Scorer.make({
     name: 'crm-data-accurate',
     description: 'An LLM judge confirms the CRM records accurately reflect the source email (not just present).',
-    query: accuracyVerdict,
-    score: (verdict) => verdict.pass,
+    score: accuracyVerdict.pipe(Effect.map((verdict) => verdict.pass)),
   }),
 ];
 
@@ -156,7 +158,7 @@ const task = createEvalRunner({
   // Research (web search) + CRM + markdown tool calls chain across several turns; ~95s alone, and
   // the nightly runs it beside the hour-long scenarios.
   timeout: 300_000,
-  scorers: SCORERS,
+  scored: true,
 });
 
 evalite('CRM Mailbox — processes a mailbox email into CRM profiles and employer relation', {

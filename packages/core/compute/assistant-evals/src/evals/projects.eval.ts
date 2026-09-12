@@ -52,85 +52,91 @@ const entityId = (uri: string): string => {
 };
 
 /** The project, its task set and the tasks on it — the ledger every scorer below reads. */
-const ledger = Effect.gen(function* () {
-  const project = yield* findObject(Project.Project, (candidate) => candidate.name === PROJECT_NAME);
-  const taskSet = project?.taskSet ? yield* Database.load(project.taskSet) : undefined;
-  if (!project || !taskSet) {
-    return undefined;
-  }
-  const tasks = yield* Effect.forEach(taskSet.tasks, (ref) => Database.load(ref));
-  const matched = PLAN.map((item) => tasks.find((candidate) => candidate.title?.toLowerCase().includes(item.keyword)));
-  return { project, taskSet, tasks, matched };
-});
+const ledger = Scorer.shared(
+  Effect.gen(function* () {
+    const project = yield* findObject(Project.Project, (candidate) => candidate.name === PROJECT_NAME);
+    const taskSet = project?.taskSet ? yield* Database.load(project.taskSet) : undefined;
+    if (!project || !taskSet) {
+      return undefined;
+    }
+    const tasks = yield* Effect.forEach(taskSet.tasks, (ref) => Database.load(ref));
+    const matched = PLAN.map((item) =>
+      tasks.find((candidate) => candidate.title?.toLowerCase().includes(item.keyword)),
+    );
+    return { project, taskSet, tasks, matched };
+  }),
+);
 
 /** The Alpha milestone, and how many of the planned tasks are filed under it. */
-const milestoneFiling = Effect.gen(function* () {
-  const found = yield* ledger;
-  const milestone = yield* findObject(Milestone.Milestone, (candidate) => candidate.name === MILESTONE_NAME);
-  if (!found || !milestone || !found.taskSet.milestones.some((ref) => entityId(ref.uri) === milestone.id)) {
-    return 0;
-  }
-  return found.matched.filter((candidate) => candidate?.milestone && entityId(candidate.milestone.uri) === milestone.id)
-    .length;
-});
+const milestoneFiling = Scorer.shared(
+  Effect.gen(function* () {
+    const found = yield* ledger;
+    const milestone = yield* findObject(Milestone.Milestone, (candidate) => candidate.name === MILESTONE_NAME);
+    if (!found || !milestone || !found.taskSet.milestones.some((ref) => entityId(ref.uri) === milestone.id)) {
+      return 0;
+    }
+    return found.matched.filter(
+      (candidate) => candidate?.milestone && entityId(candidate.milestone.uri) === milestone.id,
+    ).length;
+  }),
+);
 
 /** What the session filed into the project's artifacts: the outline itself, and the design document. */
-const filedArtifacts = Effect.gen(function* () {
-  const found = yield* ledger;
-  if (!found) {
-    return { outlineFiled: false, designDocFiled: false };
-  }
-  const { project } = found;
-  const outlineId = project.outline ? entityId(project.outline.uri) : undefined;
-  const artifacts = yield* Effect.forEach(project.artifacts, (ref) =>
-    Database.load(ref).pipe(Effect.orElseSucceed(() => undefined)),
-  );
-  const designDoc = artifacts.find(
-    (candidate) => Obj.instanceOf(Markdown.Document, candidate) && !!candidate.name?.toLowerCase().includes('design'),
-  );
-  const designText =
-    designDoc && Obj.instanceOf(Markdown.Document, designDoc)
-      ? yield* Database.load(designDoc.content).pipe(Effect.orElseSucceed(() => undefined))
-      : undefined;
-  return {
-    outlineFiled: !!outlineId && project.artifacts.some((ref) => entityId(ref.uri) === outlineId),
-    designDocFiled: !!designText?.content.toLowerCase().includes(DESIGN_KEYWORD),
-  };
-});
+const filedArtifacts = Scorer.shared(
+  Effect.gen(function* () {
+    const found = yield* ledger;
+    if (!found) {
+      return { outlineFiled: false, designDocFiled: false };
+    }
+    const { project } = found;
+    const outlineId = project.outline ? entityId(project.outline.uri) : undefined;
+    const artifacts = yield* Effect.forEach(project.artifacts, (ref) =>
+      Database.load(ref).pipe(Effect.orElseSucceed(() => undefined)),
+    );
+    const designDoc = artifacts.find(
+      (candidate) => Obj.instanceOf(Markdown.Document, candidate) && !!candidate.name?.toLowerCase().includes('design'),
+    );
+    const designText =
+      designDoc && Obj.instanceOf(Markdown.Document, designDoc)
+        ? yield* Database.load(designDoc.content).pipe(Effect.orElseSucceed(() => undefined))
+        : undefined;
+    return {
+      outlineFiled: !!outlineId && project.artifacts.some((ref) => entityId(ref.uri) === outlineId),
+      designDocFiled: !!designText?.content.toLowerCase().includes(DESIGN_KEYWORD),
+    };
+  }),
+);
 
 const SCORERS = [
   Scorer.make({
     name: 'tasks-created',
     description: "One task per open outline item, on the project's own task set.",
-    query: ledger,
-    score: (found) => (found?.matched.filter(Boolean).length ?? 0) / PLAN.length,
+    score: ledger.pipe(Effect.map((found) => (found?.matched.filter(Boolean).length ?? 0) / PLAN.length)),
   }),
   Scorer.make({
     name: 'filed-under-milestone',
     description: 'The Alpha milestone is in the set and every created task references it.',
-    query: milestoneFiling,
-    score: (filed) => filed / PLAN.length,
+    score: milestoneFiling.pipe(Effect.map((filed) => filed / PLAN.length)),
   }),
   Scorer.make({
     name: 'closed-the-right-task',
     description: 'Exactly one task is done, and it is the schema item.',
-    query: ledger,
-    score: (found) => {
-      const done = found?.tasks.filter((candidate) => candidate.status === 'done') ?? [];
-      return done.length === 1 && !!done[0].title?.toLowerCase().includes(DONE_KEYWORD);
-    },
+    score: ledger.pipe(
+      Effect.map((found) => {
+        const done = found?.tasks.filter((candidate) => candidate.status === 'done') ?? [];
+        return done.length === 1 && !!done[0].title?.toLowerCase().includes(DONE_KEYWORD);
+      }),
+    ),
   }),
   Scorer.make({
     name: 'outline-filed-as-artifact',
     description: "The outline is in the project's artifacts (projects-add-artifact).",
-    query: filedArtifacts,
-    score: ({ outlineFiled }) => outlineFiled,
+    score: filedArtifacts.pipe(Effect.map(({ outlineFiled }) => outlineFiled)),
   }),
   Scorer.make({
     name: 'design-doc-filed',
     description: "A design document carrying the finding is in the project's artifacts.",
-    query: filedArtifacts,
-    score: ({ designDocFiled }) => designDocFiled,
+    score: filedArtifacts.pipe(Effect.map(({ designDocFiled }) => designDocFiled)),
   }),
   Scorer.toolCalls({
     name: 'project-verbs-reached',
@@ -180,7 +186,7 @@ const task = createEvalRunner({
 
       return { objects: [Ref.make(project)], chat: Ref.make(chat) };
     }),
-  scorers: SCORERS,
+  scored: true,
 });
 
 evalite('Projects — a project chat turns its outline into a task ledger', {

@@ -50,7 +50,7 @@ const task = createEvalRunner({
   `,
   input: Schema.Struct({ name: Schema.String }),
   output: Schema.Unknown,
-  scorers: SCORERS,
+  scored: true,
 });
 
 evalite('Descriptive scenario name', {
@@ -60,32 +60,34 @@ evalite('Descriptive scenario name', {
 });
 ```
 
-`createEvalRunner` boots a full Composer test harness, invokes the prompt, and — when `scorers` are
-passed — grades each dimension **while the space is still open**, returning
-`{ agentOutput, scores, durationMillis }` instead of the bare agent output. Model precedence:
+`createEvalRunner` boots a full Composer test harness, invokes the prompt, and — with `scored: true`
+— keeps the space **open past the task**, returning `{ runId, agentOutput, durationMillis }` instead
+of the bare agent output. The scorers then run on the evalite side, against that live space; the
+harness is disposed by an `afterAll` the runner registers, once every row of the eval has been
+graded. Model precedence:
 `variant.model` → `options.model` → `com.anthropic.model.claude-opus-5.default`.
 
 ### Scorers (`../Scorer.ts`)
 
-Each scorer is **self-contained**: it carries its own query and the verdict on what that query
-returned, so a dimension can be read, moved or deleted without touching a shared state blob. The
-query's value is reported next to the mark, so a reader of a run sees what the session actually
-left. Queries are memoized per run by effect identity — name one module-level effect and share it
-across scorers, and it runs once.
+Each scorer is **self-contained**: `score` is a single `Effect<number | boolean, _, Scorer.Services>`
+that reads whatever it needs of the open run and returns the mark for it. Reading and judging are one
+step, so a dimension can be read, moved or deleted without touching anything else.
 
-- **`Scorer.make({ name, description?, query, score })`** — the general case; `query` is any
-  `Effect<A, E, Scorer.Services>` and `score: (value, run) => number | boolean`. Omit `query` for a
-  scorer that only reads the run itself (`score: (run) => …`).
-- **`Scorer.database({ name, query, score })`** — `query` is an ECHO `Query`; `score` sees its
-  results.
-- **`Scorer.toolCalls({ name, score })`** — `score` sees the run's `ToolInvocation[]`
-  (`Scorer.invocations` is the same effect, for composing into a larger query).
-- **`Scorer.duration({ name, targetMinutes, budgetMinutes, when, delivered })`** — grades the
-  session's wall clock, gated on the run having produced the thing being timed.
+- **`Scorer.make({ name, description?, score })`** — the general case; `score` is the effect.
+- **`Scorer.database({ name, query, score })`** — `query` is an ECHO `Query`; `score` is a plain
+  function over its results.
+- **`Scorer.toolCalls({ name, score })`** — `score` is a plain function over the run's
+  `ToolInvocation[]` (`Scorer.invocations` is the same effect, for composing into a larger one).
+- **`Scorer.duration({ name, targetMinutes, budgetMinutes, delivered })`** — grades the session's
+  wall clock, gated on `delivered` (an effect) proving the run produced the thing being timed.
+  `Scorer.Run` is the service carrying `durationMillis` for a scorer that wants it directly.
+- **`Scorer.shared(effect)`** — wrap a query several dimensions read so the run pays for it once.
+  Name it at module level and `.pipe(Effect.map(…))` it per scorer; a judge call belongs behind one
+  of these.
 
-A fraction is clamped to `[0, 1]`; a boolean is one mark or none. A query that fails scores nothing
-and reports why rather than failing the run. `Scorer.toEvalite(SCORERS)` turns the same list into
-the evalite scorers that read the recorded marks.
+A fraction is clamped to `[0, 1]`; a boolean is one mark or none. A scorer that fails scores nothing
+and reports why rather than failing the row. `Scorer.toEvalite(SCORERS)` turns the same list into the
+evalite scorers, so a dimension is declared once and wired once.
 
 ### `createEvalRunner` options
 
@@ -107,7 +109,8 @@ the evalite scorers that read the recorded marks.
   per-scenario timeout of its own; this is what actually bounds each eval (`vitest.config.ts`'s
   `testTimeout` is just the outer safety net). Raise it only for scenarios with more tool
   round-trips than a typical eval — e.g. `crm-mailbox.eval.ts`/`planning.eval.ts` use `150_000`.
-- `scorers: readonly Scorer.Any[]` — the graded dimensions; see Scorers above.
+- `scored: true` — keeps the space open past the task so the eval's scorers can query it; see
+  Scorers above. Leave it unset for an eval graded from the agent's output alone (`basic`, `smoke`).
 
 ### Driving a real Claude Code subprocess (`../claude-harness.ts`)
 
@@ -130,7 +133,7 @@ server's tools allowed — no Bash, no file tools, so a prompt the surface canno
 
 ### Assertions (`../assertions.ts`)
 
-All are `Effect<_, _, Database.Service>` — compose freely inside a scorer's `query`:
+All are `Effect<_, _, Database.Service>` — compose freely inside a scorer's `score`:
 
 - **`objectExists(type, predicate)`** / **`findObject(type, predicate)`** — query the DB for a
   matching entity (object or relation). `findObject` returns the match itself (e.g. to load a
