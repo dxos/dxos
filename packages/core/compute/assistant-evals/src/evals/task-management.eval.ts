@@ -15,8 +15,9 @@ import * as TasksPlugin from '@dxos/plugin-tasks/TasksPlugin';
 import { Milestone, Outline, Task, TaskSet } from '@dxos/types';
 import { trim } from '@dxos/util';
 
-import { findObject, toolInvocations } from '../assertions.ts';
+import { findObject } from '../assertions.ts';
 import { createEvalRunner } from '../runner.ts';
+import * as Scorer from '../Scorer.ts';
 import { getDefaultSkills } from '../skills.ts';
 
 const PROJECT_NAME = 'Beacon';
@@ -29,6 +30,57 @@ const ASSIGN_KEYWORD = 'rollout';
 const TASK_TITLES = ['Ship the beacon', 'Tune the retry budget', 'Document the rollout'];
 
 const REQUIRED_TOOLS = ['space-query-objects', 'tasks-update', 'space-update-object'];
+
+/** The project's tasks, read outside the agent; empty if the ledger is gone. */
+const ledgerTasks = Effect.gen(function* () {
+  const project = yield* findObject(Project.Project, (candidate) => candidate.name === PROJECT_NAME);
+  const taskSet = project?.taskSet ? yield* Database.load(project.taskSet) : undefined;
+  if (!taskSet) {
+    return [] as Task.Task[];
+  }
+  return yield* Effect.forEach(taskSet.tasks, (ref) => Database.load(ref));
+});
+
+const byKeyword = (tasks: readonly Task.Task[], keyword: string): Task.Task | undefined =>
+  tasks.find((candidate) => candidate.title?.toLowerCase().includes(keyword));
+
+/** The milestone the run is asked to date, or `undefined` if it never existed. */
+const previewMilestone = findObject(Milestone.Milestone, (candidate) => candidate.name === MILESTONE_NAME);
+
+const SCORERS = [
+  Scorer.make({
+    name: 'task-completed',
+    description: 'The retry task is done, reached through `tasks-update` rather than `tasks-complete`.',
+    query: ledgerTasks,
+    score: (tasks) => byKeyword(tasks, COMPLETE_KEYWORD)?.status === 'done',
+  }),
+  Scorer.make({
+    name: 'task-assigned',
+    description: 'The rollout task carries the assignee, reached through `tasks-update`.',
+    query: ledgerTasks,
+    score: (tasks) => byKeyword(tasks, ASSIGN_KEYWORD)?.assignee?.email === ASSIGNEE_EMAIL,
+  }),
+  Scorer.make({
+    name: 'milestone-dated',
+    description: 'The milestone target date is set through the generic `space-update-object`.',
+    query: previewMilestone,
+    score: (milestone) => milestone?.targetDate === TARGET_DATE,
+  }),
+  Scorer.make({
+    name: 'left-the-rest-alone',
+    description: 'Exactly two tasks remain open — the agent closed one task, not the ledger.',
+    query: ledgerTasks,
+    score: (tasks) => tasks.filter((candidate) => (candidate.status ?? 'todo') !== 'done').length === 2,
+  }),
+  Scorer.toolCalls({
+    name: 'generic-verbs-reached',
+    description: 'Discovery and both patches went through the generic verbs, and none errored.',
+    score: (invocations) => {
+      const called = new Set(invocations.map((invocation) => invocation.name));
+      return REQUIRED_TOOLS.every((name) => called.has(name)) && invocations.every(({ error }) => !error);
+    },
+  }),
+];
 
 const task = createEvalRunner({
   instructions: trim`
@@ -68,67 +120,11 @@ const task = createEvalRunner({
 
       return { objects: [], chat: Ref.make(chat) };
     }),
-  dbQuery: () =>
-    Effect.gen(function* () {
-      const invocations = yield* toolInvocations();
-      const called = new Set(invocations.map((invocation) => invocation.name));
-      const trace = {
-        missingTools: REQUIRED_TOOLS.filter((name) => !called.has(name)),
-        erroredTools: invocations.filter((invocation) => invocation.error).map((invocation) => invocation.name),
-      };
-      const empty = { ...trace, completed: false, assigned: false, milestoneDated: false, untouched: 0 };
-
-      const project = yield* findObject(Project.Project, (candidate) => candidate.name === PROJECT_NAME);
-      const taskSet = project?.taskSet ? yield* Database.load(project.taskSet) : undefined;
-      if (!taskSet) {
-        return empty;
-      }
-
-      const tasks = yield* Effect.forEach(taskSet.tasks, (ref) => Database.load(ref));
-      const byKeyword = (keyword: string) =>
-        tasks.find((candidate) => candidate.title?.toLowerCase().includes(keyword));
-
-      const milestone = yield* findObject(Milestone.Milestone, (candidate) => candidate.name === MILESTONE_NAME);
-
-      return {
-        ...trace,
-        completed: byKeyword(COMPLETE_KEYWORD)?.status === 'done',
-        assigned: byKeyword(ASSIGN_KEYWORD)?.assignee?.email === ASSIGNEE_EMAIL,
-        milestoneDated: milestone?.targetDate === TARGET_DATE,
-        untouched: tasks.filter((candidate) => (candidate.status ?? 'todo') !== 'done').length,
-      };
-    }),
+  scorers: SCORERS,
 });
 
 evalite('Task management — the ledger verbs survive losing their type-specific sugar', {
   data: [{ input: null }],
   task,
-  scorers: [
-    {
-      name: 'task-completed',
-      description: 'The retry task is done, reached through `tasks-update` rather than `tasks-complete`.',
-      scorer: ({ output }) => (output.dbQuery.completed ? 1 : 0),
-    },
-    {
-      name: 'task-assigned',
-      description: 'The rollout task carries the assignee, reached through `tasks-update`.',
-      scorer: ({ output }) => (output.dbQuery.assigned ? 1 : 0),
-    },
-    {
-      name: 'milestone-dated',
-      description: 'The milestone target date is set through the generic `space-update-object`.',
-      scorer: ({ output }) => (output.dbQuery.milestoneDated ? 1 : 0),
-    },
-    {
-      name: 'left-the-rest-alone',
-      description: 'Exactly two tasks remain open — the agent closed one task, not the ledger.',
-      scorer: ({ output }) => (output.dbQuery.untouched === 2 ? 1 : 0),
-    },
-    {
-      name: 'generic-verbs-reached',
-      description: 'Discovery and both patches went through the generic verbs, and none errored.',
-      scorer: ({ output }) =>
-        output.dbQuery.missingTools.length === 0 && output.dbQuery.erroredTools.length === 0 ? 1 : 0,
-    },
-  ],
+  scorers: Scorer.toEvalite(SCORERS),
 });

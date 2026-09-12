@@ -11,9 +11,10 @@ import { EffectEx } from '@dxos/effect';
 import { Outline } from '@dxos/types';
 import { trim } from '@dxos/util';
 
-import { completedBlocks, findObject, toolInvocations } from '../assertions.ts';
+import { completedBlocks, findObject } from '../assertions.ts';
 import { judge } from '../judge.ts';
 import { createEvalRunner } from '../runner.ts';
+import * as Scorer from '../Scorer.ts';
 
 // Ported from the gated `Planning` scenario (../testing/planning.test.ts).
 // Grades the real outline-checklist DB state and tool-invocation trace directly instead of the agent's
@@ -38,6 +39,61 @@ const HAIKU_JUDGE_RUBRIC = trim`
   unbroken sentence instead of a short multi-line poem.
 `;
 
+/** The plan's checklist items, parsed from the outline the session kept. */
+const checklist = Effect.gen(function* () {
+  const outline = yield* findObject(Outline.Outline, () => true);
+  const text = outline ? yield* Database.load(outline.content).pipe(Effect.orElseSucceed(() => undefined)) : undefined;
+  return Outline.parseChecklist(text?.content ?? '');
+});
+
+/** The judge's verdict on the haikus the session wrote into the chat feed. */
+const haikuVerdict = completedBlocks().pipe(
+  Effect.map((blocks) =>
+    blocks
+      .filter(({ role, block }) => role === 'assistant' && block._tag === 'text')
+      .map(({ block }) => (block as { text: string }).text)
+      .join('\n'),
+  ),
+  Effect.flatMap((assistantText) => judge(HAIKU_JUDGE_RUBRIC, assistantText)),
+);
+
+const SCORERS = [
+  Scorer.make({
+    name: 'exactly-three-tasks',
+    description: 'Exactly 3 checklist items exist for the three haiku topics.',
+    query: checklist,
+    score: (items) => items.length === 3,
+  }),
+  Scorer.make({
+    name: 'all-tasks-done',
+    description: 'All 3 tasks are marked done.',
+    query: checklist,
+    score: (items) => items.length === 3 && items.every((item) => item.done),
+  }),
+  Scorer.make({
+    name: 'haikus-well-formed',
+    description: 'An LLM judge confirms all three topics have their own well-formed haiku.',
+    query: haikuVerdict,
+    score: (verdict) => verdict.pass,
+  }),
+  Scorer.toolCalls({
+    name: 'used-update-tasks',
+    description: 'The assistant-toolkit-update-tasks tool was used at least 3 times (once per task).',
+    score: (invocations) =>
+      invocations.filter((invocation) => invocation.operationKey === UPDATE_TASKS_OPERATION_KEY).length >= 3,
+  }),
+  Scorer.toolCalls({
+    name: 'no-direct-plan-manipulation',
+    description: 'The outline was never written via a raw database object-create/update call.',
+    score: (invocations) =>
+      !invocations.some(
+        (invocation) =>
+          OBJECT_WRITE_OPERATION_KEYS.includes(invocation.operationKey ?? '') &&
+          invocation.input.includes(OUTLINE_TYPENAME),
+      ),
+  }),
+];
+
 const task = createEvalRunner({
   sessionChat: true,
   instructions: trim`
@@ -57,74 +113,13 @@ const task = createEvalRunner({
   output: Schema.Unknown,
   // Three sequential subtasks, each a assistant-toolkit-update-tasks call + haiku turn, plus a final judge call.
   timeout: 150_000,
-  dbQuery: () =>
-    Effect.gen(function* () {
-      const outline = yield* findObject(Outline.Outline, () => true);
-      const text = outline
-        ? yield* Database.load(outline.content).pipe(Effect.orElseSucceed(() => undefined))
-        : undefined;
-      const items = Outline.parseChecklist(text?.content ?? '');
-      const invocations = yield* toolInvocations();
-      const blocks = yield* completedBlocks();
-
-      const assistantText = blocks
-        .filter(({ role, block }) => role === 'assistant' && block._tag === 'text')
-        .map(({ block }) => (block as { text: string }).text)
-        .join('\n');
-
-      const updateTasksCalls = invocations.filter(
-        (invocation) => invocation.operationKey === UPDATE_TASKS_OPERATION_KEY,
-      );
-      const directPlanWrites = invocations.filter(
-        (invocation) =>
-          OBJECT_WRITE_OPERATION_KEYS.includes(invocation.operationKey ?? '') &&
-          invocation.input.includes(OUTLINE_TYPENAME),
-      );
-      const haikuVerdict = yield* judge(HAIKU_JUDGE_RUBRIC, assistantText);
-
-      return {
-        taskCount: items.length,
-        allTasksDone: items.length === 3 && items.every((item) => item.done),
-        haikuVerdict,
-        usedUpdateTasks: updateTasksCalls.length >= 3,
-        noDirectPlanManipulation: directPlanWrites.length === 0,
-      };
-    }),
+  scorers: SCORERS,
 });
 
 evalite('Planning — create three haiku tasks and complete each one', {
   data: [{ input: null }],
   task,
-  scorers: [
-    {
-      name: 'exactly-three-tasks',
-      description: 'Exactly 3 checklist items exist for the three haiku topics.',
-      scorer: ({ output }) => (output.dbQuery.taskCount === 3 ? 1 : 0),
-    },
-    {
-      name: 'all-tasks-done',
-      description: 'All 3 tasks are marked done.',
-      scorer: ({ output }) => (output.dbQuery.allTasksDone ? 1 : 0),
-    },
-    {
-      name: 'haikus-well-formed',
-      description: 'An LLM judge confirms all three topics have their own well-formed haiku.',
-      scorer: ({ output }) => ({
-        score: output.dbQuery.haikuVerdict.pass ? 1 : 0,
-        metadata: { reasoning: output.dbQuery.haikuVerdict.reasoning },
-      }),
-    },
-    {
-      name: 'used-update-tasks',
-      description: 'The assistant-toolkit-update-tasks tool was used at least 3 times (once per task).',
-      scorer: ({ output }) => (output.dbQuery.usedUpdateTasks ? 1 : 0),
-    },
-    {
-      name: 'no-direct-plan-manipulation',
-      description: 'The outline was never written via a raw database object-create/update call.',
-      scorer: ({ output }) => (output.dbQuery.noDirectPlanManipulation ? 1 : 0),
-    },
-  ],
+  scorers: Scorer.toEvalite(SCORERS),
 });
 
 // A judge that only ever passes would be worthless as a scorer — this demonstrates it correctly
