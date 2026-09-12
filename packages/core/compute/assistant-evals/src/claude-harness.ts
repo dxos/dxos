@@ -222,7 +222,7 @@ export const runClaudeEval = async <T>(
     const { defaultSpace } = await EffectEx.runAndForwardErrors(initializeIdentity(app.get(ClientCapabilities.Client)));
     // A deployed worker serves its own data plane, so the space the harness just created does not
     // exist there and the scenario has to be pointed at one that does.
-    const spaceId = remoteUrl != null ? (McpTarget.spaceId() ?? defaultSpace.id) : defaultSpace.id;
+    const spaceId = remoteUrl != null ? remoteSpaceId() : defaultSpace.id;
 
     const query = <D>(
       effect: Effect.Effect<D, unknown, Database.Service | Capabilities.ProcessManagerRuntimeServices>,
