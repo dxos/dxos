@@ -1,6 +1,6 @@
 # Project Tasks — Tasks
 
-_Resume: #12787 MERGED 2026-08-27 — the hierarchical TaskList with drag-and-drop. Uncommitted: none. Next: pick from the Phase 3 backlog._
+_Resume: #12847 MERGED 2026-08-30; main since gained #13016 (tabs as a toolbar item), #13057 and #13069 (delegation flow doc, session timeline + Gantt). In flight: the gantt-task-separation PR from this branch — `task.statusChanged` trace events cut a session into per-task segments. Uncommitted: none. Next: pick from the Phase 3 backlog (terminal-status dates first — the timeline now consumes them)._
 
 ## Phase 1: Agent delegation over durable tasks
 
