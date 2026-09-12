@@ -90,9 +90,10 @@ const TERMINAL_STATUS = new Set<Task.Status>(['done', 'review', 'failed', 'cance
  * in progress. A task can also finish without one: delegation marks every task it hands over
  * `started` before the agent's first turn, so the run's only event for that task is the one closing
  * it. Such a task gets the stretch since the last boundary, which is where its work happened — but
- * only on the transition out of `started`, so a task merely dismissed (`todo` → `blocked`) claims
- * nothing, and a second close (`review` → `done`, arriving while another task is active) does not
- * mint a segment overlapping it.
+ * only on the transition out of `started` and only while no other task holds the stretch: a task
+ * merely dismissed (`todo` → `blocked`) claims nothing, a second close (`review` → `done`) mints
+ * nothing, and a close arriving after the next task has started leaves that task's segment alone
+ * rather than overlapping it.
  */
 const buildTaskSegments = (
   events: readonly Trace.FlatEvent[],
@@ -131,7 +132,7 @@ const buildTaskSegments = (
       const started = segments.findLast((candidate) => candidate.taskId === data.taskId && candidate.end === undefined);
       if (started) {
         close(started, event.timestamp);
-      } else if (data.previousStatus === 'started') {
+      } else if (data.previousStatus === 'started' && open === undefined) {
         const segment = {
           taskId: data.taskId,
           laneId: taskLaneId(data.taskId),

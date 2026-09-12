@@ -151,19 +151,19 @@ describe('buildSessionTimeline', () => {
       withMeta(
         { pid: 'agent', conversation: chat.feed },
         Effect.gen(function* () {
-          yield* Trace.write(AgentRequestBegin, {}); // 1
+          yield* Trace.write(AgentRequestBegin, {}); // 1.
           yield* toolCall('Search'); // 2 — before any task started, stays on the session.
-          yield* Trace.write(Trace.TaskStatusChanged, { taskId: first.id, title: 'First', status: 'started' }); // 3
-          yield* toolCall('Read file'); // 4
+          yield* Trace.write(Trace.TaskStatusChanged, { taskId: first.id, title: 'First', status: 'started' }); // 3.
+          yield* toolCall('Read file'); // 4.
           yield* Trace.write(Trace.TaskStatusChanged, {
             taskId: first.id,
             title: 'First',
             status: 'done',
             previousStatus: 'started',
-          }); // 5
+          }); // 5.
           yield* toolCall('Think'); // 6 — between segments.
-          yield* Trace.write(Trace.TaskStatusChanged, { taskId: second.id, title: 'Second', status: 'started' }); // 7
-          yield* toolCall('Write file'); // 8
+          yield* Trace.write(Trace.TaskStatusChanged, { taskId: second.id, title: 'Second', status: 'started' }); // 7.
+          yield* toolCall('Write file'); // 8.
         }),
       ),
     );
@@ -203,22 +203,22 @@ describe('buildSessionTimeline', () => {
       withMeta(
         { pid: 'agent', conversation: chat.feed },
         Effect.gen(function* () {
-          yield* Trace.write(AgentRequestBegin, {}); // 1
-          yield* toolCall('Read file'); // 2
+          yield* Trace.write(AgentRequestBegin, {}); // 1.
+          yield* toolCall('Read file'); // 2.
           yield* Trace.write(Trace.TaskStatusChanged, {
             taskId: first.id,
             title: 'First',
             status: 'done',
             previousStatus: 'started',
-          }); // 3
-          yield* toolCall('Write file'); // 4
+          }); // 3.
+          yield* toolCall('Write file'); // 4.
           yield* Trace.write(Trace.TaskStatusChanged, {
             taskId: second.id,
             title: 'Second',
             status: 'done',
             previousStatus: 'started',
-          }); // 5
-          yield* Trace.write(AgentRequestEnd, { status: 'success' }); // 6
+          }); // 5.
+          yield* Trace.write(AgentRequestEnd, { status: 'success' }); // 6.
         }),
       ),
     );
@@ -241,18 +241,18 @@ describe('buildSessionTimeline', () => {
       withMeta(
         { pid: 'agent', conversation: chat.feed },
         Effect.gen(function* () {
-          yield* Trace.write(AgentRequestBegin, {}); // 1
-          yield* Trace.write(Trace.TaskStatusChanged, { taskId: mine.id, title: 'Mine', status: 'started' }); // 2
-          yield* toolCall('Read file'); // 3
+          yield* Trace.write(AgentRequestBegin, {}); // 1.
+          yield* Trace.write(Trace.TaskStatusChanged, { taskId: mine.id, title: 'Mine', status: 'started' }); // 2.
+          yield* toolCall('Read file'); // 3.
           // A task on somebody else's list: it must neither close `Mine` nor move the boundary.
-          yield* Trace.write(Trace.TaskStatusChanged, { taskId: other.id, title: 'Elsewhere', status: 'started' }); // 4
-          yield* toolCall('Write file'); // 5
+          yield* Trace.write(Trace.TaskStatusChanged, { taskId: other.id, title: 'Elsewhere', status: 'started' }); // 4.
+          yield* toolCall('Write file'); // 5.
           yield* Trace.write(Trace.TaskStatusChanged, {
             taskId: mine.id,
             title: 'Mine',
             status: 'done',
             previousStatus: 'started',
-          }); // 6
+          }); // 6.
         }),
       ),
     );
@@ -273,30 +273,30 @@ describe('buildSessionTimeline', () => {
       withMeta(
         { pid: 'agent', conversation: chat.feed },
         Effect.gen(function* () {
-          yield* Trace.write(AgentRequestBegin, {}); // 1
+          yield* Trace.write(AgentRequestBegin, {}); // 1.
           // Never started, so it owns nothing — not the reading the agent did before it said so.
           yield* Trace.write(Trace.TaskStatusChanged, {
             taskId: dismissed.id,
             title: 'Dismissed',
             status: 'blocked',
             previousStatus: 'todo',
-          }); // 2
-          yield* Trace.write(Trace.TaskStatusChanged, { taskId: worked.id, title: 'Worked', status: 'started' }); // 3
+          }); // 2.
+          yield* Trace.write(Trace.TaskStatusChanged, { taskId: worked.id, title: 'Worked', status: 'started' }); // 3.
           yield* Trace.write(Trace.TaskStatusChanged, {
             taskId: worked.id,
             title: 'Worked',
             status: 'review',
             previousStatus: 'started',
-          }); // 4
-          yield* Trace.write(Trace.TaskStatusChanged, { taskId: dismissed.id, title: 'Dismissed', status: 'started' }); // 5
-          yield* toolCall('Unblock'); // 6
+          }); // 4.
+          yield* Trace.write(Trace.TaskStatusChanged, { taskId: dismissed.id, title: 'Dismissed', status: 'started' }); // 5.
+          yield* toolCall('Unblock'); // 6.
           // The sign-off on a task closed at 4: it must not stretch that lane over this one's work.
           yield* Trace.write(Trace.TaskStatusChanged, {
             taskId: worked.id,
             title: 'Worked',
             status: 'done',
             previousStatus: 'review',
-          }); // 7
+          }); // 7.
         }),
       ),
     );
@@ -311,6 +311,39 @@ describe('buildSessionTimeline', () => {
     expect(unblock?.laneId).toBe(`task:${dismissed.id}`);
   });
 
+  test('a close arriving after the next task started leaves that task the stretch', ({ expect }) => {
+    const first = Task.make({ title: 'First', status: 'done' });
+    const second = Task.make({ title: 'Second', status: 'started' });
+    const chat = makeChat('Interleaved', [first, second]);
+    const messages = collectTraceEvents(
+      withMeta(
+        { pid: 'agent', conversation: chat.feed },
+        Effect.gen(function* () {
+          yield* Trace.write(AgentRequestBegin, {}); // 1.
+          yield* Trace.write(Trace.TaskStatusChanged, { taskId: first.id, title: 'First', status: 'started' }); // 2.
+          yield* Trace.write(Trace.TaskStatusChanged, { taskId: second.id, title: 'Second', status: 'started' }); // 3.
+          yield* toolCall('Write file'); // 4.
+          // The first task's close lands after the second one is under way; the stretch is the
+          // second task's, so nothing may be minted over it.
+          yield* Trace.write(Trace.TaskStatusChanged, {
+            taskId: first.id,
+            title: 'First',
+            status: 'done',
+            previousStatus: 'started',
+          }); // 5.
+          yield* toolCall('Read file'); // 6.
+        }),
+      ),
+    );
+
+    const timeline = buildSessionTimeline({ traceMessages: messages, chats: [chat], tasks: [first, second] });
+    expect(timeline.lanes.find((lane) => lane.id === `task:${first.id}`)).toMatchObject({ start: 2, end: 3 });
+    expect(timeline.lanes.find((lane) => lane.id === `task:${second.id}`)).toMatchObject({ start: 3, end: undefined });
+    const lanesByLabel = new Map(timeline.markers.map((marker) => [marker.label, marker.laneId]));
+    expect(lanesByLabel.get('Write file')).toBe(`task:${second.id}`);
+    expect(lanesByLabel.get('Read file')).toBe(`task:${second.id}`);
+  });
+
   test('a delegated task keeps its markers on the session that handed it over', ({ expect }) => {
     const task = Task.make({ title: 'Delegated', status: 'done' });
     const chat = makeChat('Handover', [task]);
@@ -318,20 +351,20 @@ describe('buildSessionTimeline', () => {
       withMeta(
         { pid: 'agent', conversation: chat.feed },
         Effect.gen(function* () {
-          yield* Trace.write(AgentRequestBegin, {}); // 1
-          yield* Trace.write(Trace.TaskStatusChanged, { taskId: task.id, title: 'Delegated', status: 'started' }); // 2
-          yield* Trace.write(DelegationSpawned, { taskId: task.id, pid: 'sub' }); // 3
-          yield* toolCall('Wait'); // 4
+          yield* Trace.write(AgentRequestBegin, {}); // 1.
+          yield* Trace.write(Trace.TaskStatusChanged, { taskId: task.id, title: 'Delegated', status: 'started' }); // 2.
+          yield* Trace.write(DelegationSpawned, { taskId: task.id, pid: 'sub' }); // 3.
+          yield* toolCall('Wait'); // 4.
           yield* withMeta(
             { pid: 'sub', parentPid: 'agent' },
             Effect.gen(function* () {
-              yield* Trace.write(Trace.OperationStart, { key: 'run', name: 'Run Instructions' }); // 5
+              yield* Trace.write(Trace.OperationStart, { key: 'run', name: 'Run Instructions' }); // 5.
               yield* Trace.write(CompleteBlock, {
                 messageId: MESSAGE_ID,
                 role: 'assistant',
                 block: { _tag: 'text', text: 'done' },
-              }); // 6
-              yield* Trace.write(Trace.OperationEnd, { key: 'run', outcome: 'success' }); // 7
+              }); // 6.
+              yield* Trace.write(Trace.OperationEnd, { key: 'run', outcome: 'success' }); // 7.
             }),
           );
           yield* Trace.write(Trace.TaskStatusChanged, {
@@ -339,7 +372,7 @@ describe('buildSessionTimeline', () => {
             title: 'Delegated',
             status: 'done',
             previousStatus: 'started',
-          }); // 8
+          }); // 8.
         }),
       ),
     );

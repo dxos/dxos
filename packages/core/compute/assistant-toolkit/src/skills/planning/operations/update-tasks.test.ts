@@ -39,16 +39,6 @@ const TestLayer = AssistantTestLayer(layerOptions);
 /** Persists trace events so a test can read back what the tool emitted. */
 const TracingTestLayer = AssistantTestLayer({ ...layerOptions, tracing: 'feed' });
 
-/** The status events on the space's trace feed, in the order they were written. */
-const readStatusEvents = Effect.gen(function* () {
-  const feed = yield* FeedTraceSink.getOrCreateTraceFeed();
-  const messages = yield* Database.query(Query.select(Filter.type(Trace.Message)).from(feed)).run;
-  return messages
-    .flatMap((message) => message.events)
-    .filter((event) => event.type === Trace.TaskStatusChanged.key)
-    .map((event) => Schema.decodeUnknownSync(Trace.TaskStatusChanged.schema)(event.data));
-});
-
 describe('UpdateTasks', () => {
   it.effect(
     "adds tasks to the chat's checklist",
@@ -172,4 +162,14 @@ describe('UpdateTasks', () => {
       TestHelpers.provideTestContext,
     ),
   );
+});
+
+/** The status events on the space's trace feed, in the order they were written. */
+const readStatusEvents = Effect.gen(function* () {
+  const feed = yield* FeedTraceSink.getOrCreateTraceFeed();
+  const messages = yield* Database.query(Query.select(Filter.type(Trace.Message)).from(feed)).run;
+  return messages
+    .flatMap((message) => message.events)
+    .filter((event) => event.type === Trace.TaskStatusChanged.key)
+    .map((event) => Schema.decodeUnknownSync(Trace.TaskStatusChanged.schema)(event.data));
 });

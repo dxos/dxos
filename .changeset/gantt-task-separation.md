@@ -1,10 +1,6 @@
 ---
-'@dxos/assistant-toolkit': minor
 '@dxos/compute': minor
 '@dxos/plugin-assistant': minor
-'@dxos/plugin-projects': minor
-'@dxos/plugin-tasks': minor
-'@dxos/react-ui-components': minor
 ---
 
 The session gantt now separates a run's events by task.
