@@ -51,8 +51,8 @@ export type BootLoaderOptions = {
   markFilter?: string;
 
   /**
-   * URL of the icon sprite the plugin activation row resolves its `<use href>` against; defaults
-   * to `/icons.svg`. A static asset, so the row draws before any app bundle loads.
+   * URL of the icon sprite the plugin activation row draws from; defaults to `/icons.svg`. The
+   * loader fetches and inlines it at mount, so the download starts before any app bundle loads.
    */
   spritePath?: string;
 
