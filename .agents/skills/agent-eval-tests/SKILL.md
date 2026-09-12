@@ -179,7 +179,7 @@ routing through Braintrust's proxy, neither of which this repo has wired up.
 only for the specific criterion that needs a content judgment, never as a blanket replacement for a
 deterministic check that already exists — and when you add one, also demonstrate it can fail (a
 judge that only ever passes is worthless as a scorer). See `planning.eval.ts` for the pattern: one
-judge call behind one scorer's `query` for the real scenario's haiku-quality criterion, plus a second
+judge call behind one scorer's `score` for the real scenario's haiku-quality criterion, plus a second
 `evalite()` case in the same file feeding the same rubric a hand-crafted bad transcript, asserting
 `pass === false`. Don't build a separate meta-test file for the judge mechanism itself, and don't
 convert every eval's checks to judges just because one exists — most criteria in this package

@@ -302,9 +302,18 @@ export function createEvalRunner<I, O>(
   afterAll(async () => {
     const disposals = [...open.entries()];
     open.clear();
-    for (const [runId, dispose] of disposals) {
+    // Every session is closed, and every harness disposed, before any failure is reported: one
+    // harness that will not go must not strand the rest of the file's.
+    for (const [runId] of disposals) {
       Scorer.closeSession(runId);
-      await dispose();
+    }
+    const results = await Promise.allSettled(disposals.map(([, dispose]) => dispose()));
+    const failures = results.filter((result) => result.status === 'rejected');
+    if (failures.length > 0) {
+      throw new AggregateError(
+        failures.map((failure) => failure.reason),
+        `Failed to dispose ${failures.length} of ${disposals.length} eval harnesses.`,
+      );
     }
   });
 
@@ -323,18 +332,16 @@ export function createEvalRunner<I, O>(
     // Scoped for the ungraded path's finalizer; a scored run's harness is not on this scope.
     const run = Effect.scoped(
       Effect.gen(function* () {
-        // Not `acquireRelease`: a scored run's harness outlives this effect, so that the eval's
-        // scorers can query the space it left. It is registered below and disposed by `afterAll`.
         const harness = yield* Effect.promise(async () =>
           createComposerTestApp({
             plugins: await createDefaultPlugins({ ...options, model, record }),
           }),
         );
-        if (options.scored) {
-          open.set(runId, () => harness.dispose());
-        } else {
-          yield* Effect.addFinalizer(() => Effect.promise(() => harness.dispose()));
-        }
+        // The scope owns the harness until a session that outlives this effect takes it over, so a
+        // run that fails before it has anything to grade releases its harness now rather than
+        // holding it — and the whole eval's memory — until the file ends.
+        let handedOver = false;
+        yield* Effect.addFinalizer(() => (handedOver ? Effect.void : Effect.promise(() => harness.dispose())));
 
         const { defaultSpace } = yield* Effect.promise(() =>
           EffectEx.runAndForwardErrors(initializeIdentity(harness.get(ClientCapabilities.Client))),
@@ -404,6 +411,8 @@ export function createEvalRunner<I, O>(
             return graded;
           },
         });
+        open.set(runId, () => harness.dispose());
+        handedOver = true;
         return { runId, agentOutput, durationMillis };
       }),
     );
