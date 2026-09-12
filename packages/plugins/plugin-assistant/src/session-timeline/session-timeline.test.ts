@@ -26,20 +26,6 @@ const SUB_AGENT_PID = 'cf8f7243-5b1d-4902-b158-70d9107d5f43';
 
 const MESSAGE_ID = '01HQ0000000000000000000000';
 
-const makeChat = (name: string, tasks: readonly Task.Task[]) =>
-  Chat.make({ name, feed: Ref.make(Feed.make()), tasks: tasks.map((task) => Ref.make(task)) });
-
-const stats = (input: number, output: number, toolCalls: number) =>
-  Trace.write(CompleteBlock, {
-    messageId: MESSAGE_ID,
-    role: 'assistant',
-    block: {
-      _tag: 'stats',
-      usage: { inputTokens: input, outputTokens: output, totalTokens: input + output },
-      toolCalls,
-    },
-  });
-
 describe('buildSessionTimeline', () => {
   test('fixture: attaches the sub-agent span to the supervisor session without a task join', ({ expect }) => {
     const task = Task.make({ title: 'Create a haiku in a new document', status: 'done' });
@@ -215,3 +201,17 @@ const agentProcess = (pid: string, chat: Chat.Chat, state: Process.State): Proce
   completedAt: Option.none(),
   metrics: { wallTime: 0, inputCount: 0, outputCount: 0 },
 });
+
+const makeChat = (name: string, tasks: readonly Task.Task[]) =>
+  Chat.make({ name, feed: Ref.make(Feed.make()), tasks: tasks.map((task) => Ref.make(task)) });
+
+const stats = (input: number, output: number, toolCalls: number) =>
+  Trace.write(CompleteBlock, {
+    messageId: MESSAGE_ID,
+    role: 'assistant',
+    block: {
+      _tag: 'stats',
+      usage: { inputTokens: input, outputTokens: output, totalTokens: input + output },
+      toolCalls,
+    },
+  });

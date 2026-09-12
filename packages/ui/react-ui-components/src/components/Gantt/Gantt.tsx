@@ -217,9 +217,18 @@ export const Gantt = composable<HTMLDivElement, GanttProps>(
         {rows.map(({ lane, depth }) => (
           <Fragment key={lane.id}>
             <div
+              // The label row is the lane's keyboard path; the SVG shapes stay pointer-only.
+              role='button'
+              tabIndex={0}
               className='col-start-1 flex items-center gap-2 truncate cursor-pointer hover:bg-hover-surface-subtle'
               style={{ height: ROW_HEIGHT, paddingInlineStart: `${0.5 + depth}rem` }}
               onClick={() => onLaneSelect?.(lane)}
+              onKeyDown={(event) => {
+                if (event.key === 'Enter' || event.key === ' ') {
+                  event.preventDefault();
+                  onLaneSelect?.(lane);
+                }
+              }}
             >
               <span className={mx('shrink-0 w-2 h-2 rounded-full bg-current', STATUS_COLOR[lane.status].text)} />
               <span className='truncate text-base-fg'>{lane.label}</span>

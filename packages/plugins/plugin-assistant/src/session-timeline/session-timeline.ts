@@ -207,6 +207,9 @@ export const buildSessionTimeline = ({
           .map((id) => (id === undefined ? undefined : taskById.get(id)))
           .filter((task): task is Task.Task => task !== undefined)
       : [];
+    // Only a dependency on the checklist gets a lane, so `blockedOn` never names a lane that is
+    // not drawn.
+    const chatTaskIds = new Set(chatTasks.map((task) => task.id));
     const taskLanes = new Map<string, MutableLane>();
     for (const task of chatTasks) {
       const taskLane: MutableLane = {
@@ -220,7 +223,7 @@ export const buildSessionTimeline = ({
       };
       const blockedOn = (task.dependsOn ?? [])
         .map((ref) => Task.refEntityId(ref))
-        .filter((id): id is string => id !== undefined && taskById.has(id))
+        .filter((id): id is string => id !== undefined && chatTaskIds.has(id))
         .map(taskLaneId);
       if (blockedOn.length > 0) {
         taskLane.blockedOn = blockedOn;
@@ -302,10 +305,14 @@ export const buildSessionTimeline = ({
       const data = decode(CompleteBlock.schema, event.data);
       if (data?.block._tag === 'stats') {
         const entry = tokens.get(laneId) ?? { usage: { input: 0, output: 0, total: 0 }, toolCalls: 0 };
+        // A provider that reports no total still reports the parts.
+        const input = data.block.usage?.inputTokens ?? 0;
+        const output = data.block.usage?.outputTokens ?? 0;
+        const total = data.block.usage?.totalTokens ?? input + output;
         entry.usage = {
-          input: entry.usage.input + (data.block.usage?.inputTokens ?? 0),
-          output: entry.usage.output + (data.block.usage?.outputTokens ?? 0),
-          total: entry.usage.total + (data.block.usage?.totalTokens ?? 0),
+          input: entry.usage.input + input,
+          output: entry.usage.output + output,
+          total: entry.usage.total + total,
         };
         entry.toolCalls += data.block.toolCalls ?? 0;
         tokens.set(laneId, entry);
