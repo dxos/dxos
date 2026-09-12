@@ -142,6 +142,7 @@ export const buildSessionTimeline = ({
   const lanes: MutableLane[] = [];
   const markers: Marker[] = [];
   const childSessions: { lane: MutableLane; sessionLaneId: string }[] = [];
+  const replacedTaskLanes = new Map<string, string>();
 
   for (const source of sources) {
     const laneId = sessionLaneId(source.key);
@@ -256,15 +257,23 @@ export const buildSessionTimeline = ({
       };
       laneByPid.set(subPid, subLane.id);
       childSessions.push({ lane: subLane, sessionLaneId: laneId });
+      // A delegated task IS its child session: the session lane takes the task lane's place and
+      // its dependencies, so a task is either worked in-session (a task lane) or spawned (a session).
       const taskLane = taskId === undefined ? undefined : taskLanes.get(taskId);
       if (taskLane) {
-        taskLane.start = start;
-        taskLane.end = end;
-        taskLane.pid = subPid;
-        lanes.splice(lanes.indexOf(taskLane) + 1, 0, subLane);
+        subLane.blockedOn = taskLane.blockedOn;
+        lanes.splice(lanes.indexOf(taskLane), 1, subLane);
+        replacedTaskLanes.set(taskLane.id, subLane.id);
       } else {
         lanes.push(subLane);
       }
+    }
+  }
+
+  // Dependencies named the task lane; they follow it to the session that replaced it.
+  for (const lane of lanes) {
+    if (lane.blockedOn) {
+      lane.blockedOn = lane.blockedOn.map((id) => replacedTaskLanes.get(id) ?? id);
     }
   }
 

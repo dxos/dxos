@@ -17,173 +17,147 @@ const T0 = Date.UTC(2026, 8, 11, 10, 0, 0);
 const MINUTE = 60_000;
 
 /**
- * One session per task, every one spawned from a node on its parent: the supervisor delegates three
- * tasks, one of which delegates two subtasks of its own; two runs have terminated (one failed), two
- * are still running, and the last waits on a running one.
+ * Process A works two tasks itself and spawns process B for a third, which in turn works two subtasks
+ * in-session; process C is a second spawn from A. Two runs have terminated (one failed), the rest are
+ * still going, and the last task waits on C.
  */
 const lanes: GanttLane[] = [
   {
-    id: 'supervisor',
+    id: 'a',
     kind: 'session',
-    label: 'Plan the release',
+    label: 'Process A — Plan the release',
     status: 'running',
     start: T0,
     tokens: { input: 12_400, output: 3_100, total: 15_500 },
     toolCalls: 6,
   },
   {
-    id: 'changelog',
+    id: 'a:triage',
+    kind: 'task',
+    taskId: 'task:triage',
+    label: 'Triage open issues',
+    status: 'done',
+    parentId: 'a',
+    start: T0 + 0.5 * MINUTE,
+    end: T0 + 1.8 * MINUTE,
+  },
+  {
+    id: 'a:docs',
+    kind: 'task',
+    taskId: 'task:docs',
+    label: 'Update docs',
+    status: 'failed',
+    parentId: 'a',
+    start: T0 + 2.4 * MINUTE,
+    end: T0 + 3.6 * MINUTE,
+  },
+  {
+    id: 'b',
     kind: 'session',
     taskId: 'task:changelog',
-    label: 'Draft changelog',
+    label: 'Process B — Draft changelog',
     status: 'done',
-    parentId: 'supervisor',
-    start: T0 + 2.1 * MINUTE,
-    end: T0 + 6.2 * MINUTE,
-    delegatedFrom: { laneId: 'supervisor', markerId: 'm:spawn-changelog' },
+    parentId: 'a',
+    start: T0 + 4.1 * MINUTE,
+    end: T0 + 7.2 * MINUTE,
+    delegatedFrom: { laneId: 'a', markerId: 'm:a-spawn-b' },
     tokens: { input: 40_200, output: 8_900, total: 49_100 },
     toolCalls: 4,
   },
   {
-    id: 'docs',
-    kind: 'session',
-    taskId: 'task:docs',
-    label: 'Update docs',
-    status: 'failed',
-    parentId: 'supervisor',
-    start: T0 + 3.1 * MINUTE,
-    end: T0 + 5.3 * MINUTE,
-    delegatedFrom: { laneId: 'supervisor', markerId: 'm:spawn-docs' },
-    tokens: { input: 6_100, output: 400, total: 6_500 },
-    toolCalls: 2,
-  },
-  {
-    id: 'notes',
-    kind: 'session',
-    taskId: 'task:notes',
-    label: 'Write release notes',
-    status: 'running',
-    parentId: 'supervisor',
-    start: T0 + 4.2 * MINUTE,
-    delegatedFrom: { laneId: 'supervisor', markerId: 'm:spawn-notes' },
-    tokens: { input: 8_000, output: 900, total: 8_900 },
-    toolCalls: 3,
-  },
-  {
-    id: 'notes:titles',
-    kind: 'session',
-    taskId: 'task:notes:titles',
+    id: 'b:titles',
+    kind: 'task',
+    taskId: 'task:titles',
     label: 'Collect PR titles',
     status: 'done',
-    parentId: 'notes',
+    parentId: 'b',
+    start: T0 + 4.6 * MINUTE,
+    end: T0 + 5.7 * MINUTE,
+  },
+  {
+    id: 'b:highlights',
+    kind: 'task',
+    taskId: 'task:highlights',
+    label: 'Write highlights',
+    status: 'done',
+    parentId: 'b',
+    start: T0 + 6 * MINUTE,
+    end: T0 + 6.9 * MINUTE,
+  },
+  {
+    id: 'c',
+    kind: 'session',
+    taskId: 'task:notes',
+    label: 'Process C — Write release notes',
+    status: 'running',
+    parentId: 'a',
     start: T0 + 5.1 * MINUTE,
-    end: T0 + 7 * MINUTE,
-    delegatedFrom: { laneId: 'notes', markerId: 'm:notes-spawn-titles' },
-    tokens: { input: 3_200, output: 600, total: 3_800 },
+    delegatedFrom: { laneId: 'a', markerId: 'm:a-spawn-c' },
+    tokens: { input: 8_000, output: 900, total: 8_900 },
     toolCalls: 2,
   },
   {
-    id: 'notes:breaking',
-    kind: 'session',
-    taskId: 'task:notes:breaking',
-    label: 'Summarize breaking changes',
-    status: 'running',
-    parentId: 'notes',
-    start: T0 + 6.3 * MINUTE,
-    delegatedFrom: { laneId: 'notes', markerId: 'm:notes-spawn-breaking' },
-    tokens: { input: 2_400, output: 300, total: 2_700 },
-    toolCalls: 1,
-  },
-  {
-    id: 'announce',
+    id: 'a:announce',
     kind: 'task',
     taskId: 'task:announce',
     label: 'Publish announcement',
     status: 'blocked',
-    parentId: 'supervisor',
-    blockedOn: ['notes'],
+    parentId: 'a',
+    blockedOn: ['c'],
   },
 ];
 
 const markers: GanttMarker[] = [
-  { id: 'm:begin', laneId: 'supervisor', kind: 'request', timestamp: T0, label: 'Request started' },
-  { id: 'm:user', laneId: 'supervisor', kind: 'message', timestamp: T0 + 0.2 * MINUTE, label: 'Plan the release' },
-  { id: 'm:tool-1', laneId: 'supervisor', kind: 'tool', timestamp: T0 + 1.5 * MINUTE, label: 'update-tasks' },
-  { id: 'm:spawn-changelog', laneId: 'supervisor', kind: 'delegation', timestamp: T0 + 2 * MINUTE, label: 'Delegated' },
-  { id: 'm:spawn-docs', laneId: 'supervisor', kind: 'delegation', timestamp: T0 + 3 * MINUTE, label: 'Delegated' },
-  { id: 'm:spawn-notes', laneId: 'supervisor', kind: 'delegation', timestamp: T0 + 4 * MINUTE, label: 'Delegated' },
-  { id: 'm:end', laneId: 'supervisor', kind: 'request', timestamp: T0 + 4.5 * MINUTE, label: 'Request success' },
+  { id: 'm:a-begin', laneId: 'a', kind: 'request', timestamp: T0, label: 'Request started' },
+  { id: 'm:a-user', laneId: 'a', kind: 'message', timestamp: T0 + 0.2 * MINUTE, label: 'Plan the release' },
+  { id: 'm:a-spawn-b', laneId: 'a', kind: 'delegation', timestamp: T0 + 4 * MINUTE, label: 'Spawned process B' },
+  { id: 'm:a-spawn-c', laneId: 'a', kind: 'delegation', timestamp: T0 + 5 * MINUTE, label: 'Spawned process C' },
+  { id: 'm:a-end', laneId: 'a', kind: 'request', timestamp: T0 + 5.4 * MINUTE, label: 'Request success' },
 
-  {
-    id: 'm:changelog-start',
-    laneId: 'changelog',
-    kind: 'operation',
-    timestamp: T0 + 2.1 * MINUTE,
-    label: 'Run Instructions',
-  },
-  { id: 'm:changelog-tool', laneId: 'changelog', kind: 'tool', timestamp: T0 + 3.5 * MINUTE, label: 'create-document' },
-  {
-    id: 'm:changelog-end',
-    laneId: 'changelog',
-    kind: 'operation',
-    timestamp: T0 + 6.2 * MINUTE,
-    label: 'Run Instructions',
-  },
+  { id: 'm:triage-start', laneId: 'a:triage', kind: 'operation', timestamp: T0 + 0.5 * MINUTE, label: 'Started' },
+  { id: 'm:triage-tool', laneId: 'a:triage', kind: 'tool', timestamp: T0 + 1.1 * MINUTE, label: 'list-issues' },
+  { id: 'm:triage-end', laneId: 'a:triage', kind: 'operation', timestamp: T0 + 1.8 * MINUTE, label: 'Done' },
 
-  { id: 'm:docs-start', laneId: 'docs', kind: 'operation', timestamp: T0 + 3.1 * MINUTE, label: 'Run Instructions' },
-  { id: 'm:docs-tool', laneId: 'docs', kind: 'tool', timestamp: T0 + 4.1 * MINUTE, label: 'search' },
+  { id: 'm:docs-start', laneId: 'a:docs', kind: 'operation', timestamp: T0 + 2.4 * MINUTE, label: 'Started' },
+  { id: 'm:docs-tool', laneId: 'a:docs', kind: 'tool', timestamp: T0 + 3 * MINUTE, label: 'search' },
   {
     id: 'm:docs-fail',
-    laneId: 'docs',
+    laneId: 'a:docs',
     kind: 'error',
-    timestamp: T0 + 5.3 * MINUTE,
+    timestamp: T0 + 3.6 * MINUTE,
     label: 'Add artifact',
     level: 'error',
   },
 
-  { id: 'm:notes-start', laneId: 'notes', kind: 'operation', timestamp: T0 + 4.2 * MINUTE, label: 'Run Instructions' },
-  { id: 'm:notes-spawn-titles', laneId: 'notes', kind: 'delegation', timestamp: T0 + 5 * MINUTE, label: 'Delegated' },
-  { id: 'm:notes-spawn-breaking', laneId: 'notes', kind: 'delegation', timestamp: T0 + 6 * MINUTE, label: 'Delegated' },
-  { id: 'm:notes-tool', laneId: 'notes', kind: 'tool', timestamp: T0 + 8 * MINUTE, label: 'create-document' },
+  { id: 'm:b-start', laneId: 'b', kind: 'operation', timestamp: T0 + 4.1 * MINUTE, label: 'Run Instructions' },
+  { id: 'm:b-tool', laneId: 'b', kind: 'tool', timestamp: T0 + 4.3 * MINUTE, label: 'read-project' },
+  { id: 'm:b-end', laneId: 'b', kind: 'operation', timestamp: T0 + 7.2 * MINUTE, label: 'Run Instructions' },
 
+  { id: 'm:titles-start', laneId: 'b:titles', kind: 'operation', timestamp: T0 + 4.6 * MINUTE, label: 'Started' },
+  { id: 'm:titles-tool', laneId: 'b:titles', kind: 'tool', timestamp: T0 + 5.2 * MINUTE, label: 'list-pull-requests' },
+  { id: 'm:titles-end', laneId: 'b:titles', kind: 'operation', timestamp: T0 + 5.7 * MINUTE, label: 'Done' },
+
+  { id: 'm:highlights-start', laneId: 'b:highlights', kind: 'operation', timestamp: T0 + 6 * MINUTE, label: 'Started' },
   {
-    id: 'm:titles-start',
-    laneId: 'notes:titles',
-    kind: 'operation',
-    timestamp: T0 + 5.1 * MINUTE,
-    label: 'Run Instructions',
-  },
-  {
-    id: 'm:titles-tool',
-    laneId: 'notes:titles',
+    id: 'm:highlights-tool',
+    laneId: 'b:highlights',
     kind: 'tool',
-    timestamp: T0 + 6.1 * MINUTE,
-    label: 'list-pull-requests',
+    timestamp: T0 + 6.4 * MINUTE,
+    label: 'create-document',
   },
-  {
-    id: 'm:titles-end',
-    laneId: 'notes:titles',
-    kind: 'operation',
-    timestamp: T0 + 7 * MINUTE,
-    label: 'Run Instructions',
-  },
+  { id: 'm:highlights-end', laneId: 'b:highlights', kind: 'operation', timestamp: T0 + 6.9 * MINUTE, label: 'Done' },
 
-  {
-    id: 'm:breaking-start',
-    laneId: 'notes:breaking',
-    kind: 'operation',
-    timestamp: T0 + 6.3 * MINUTE,
-    label: 'Run Instructions',
-  },
-  { id: 'm:breaking-tool', laneId: 'notes:breaking', kind: 'tool', timestamp: T0 + 7.5 * MINUTE, label: 'search' },
+  { id: 'm:c-start', laneId: 'c', kind: 'operation', timestamp: T0 + 5.1 * MINUTE, label: 'Run Instructions' },
+  { id: 'm:c-tool-1', laneId: 'c', kind: 'tool', timestamp: T0 + 6.6 * MINUTE, label: 'search' },
+  { id: 'm:c-tool-2', laneId: 'c', kind: 'tool', timestamp: T0 + 8.3 * MINUTE, label: 'create-document' },
 ];
 
 /** The chart over the data it was drawn from, so a reader can match a bar to its lane. */
 const Layout = ({ chart, data }: { chart: ReactNode; data: unknown }) => (
-  <div className='flex flex-col w-full h-full overflow-hidden'>
+  <div className='flex flex-col dx-fill overflow-hidden'>
     {chart}
     <Syntax.Root data={data}>
-      <Syntax.Content classNames='min-h-0 flex-1 border-t border-separator'>
+      <Syntax.Content classNames='dx-grow border-t border-separator'>
         <Syntax.Viewport>
           <Syntax.Code classNames='text-xs' />
         </Syntax.Viewport>
@@ -211,7 +185,7 @@ const LiveStory = (props: GanttProps) => {
           ...markers,
           {
             id: `m:live-${markers.length}`,
-            laneId: 'notes:breaking',
+            laneId: 'c',
             kind: 'tool',
             timestamp: next,
             label: random.lorem.word(),

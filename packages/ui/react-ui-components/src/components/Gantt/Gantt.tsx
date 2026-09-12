@@ -60,6 +60,11 @@ const BAR_HEIGHT = 15;
  * as far from the bar's end as it is from its top and bottom.
  */
 const BAR_OVERHANG = BAR_HEIGHT / 2;
+/** Gap between adjacent session rectangles, halved on each. */
+const GROUP_INSET = 2;
+/** The rectangle's clearance around its bars, the same on every side, so its corners stay concentric with theirs. */
+const GROUP_PAD = ROW_HEIGHT / 2 - BAR_HEIGHT / 2 - GROUP_INSET;
+const GROUP_RADIUS = BAR_HEIGHT / 2 + GROUP_PAD;
 /** Radius of the delegation connector's bend from the drop into the child bar. */
 const BEND_RADIUS = BAR_HEIGHT / 2;
 
@@ -86,21 +91,50 @@ const STATUS_COLOR: Record<GanttLaneStatus, { fill: string; node: string; thread
   failed: { fill: 'fill-red-500/40', node: 'fill-red-300', thread: 'stroke-red-300', text: 'text-red-500' },
 };
 
-type Row = { lane: GanttLane; depth: number; index: number };
+type Row = { lane: GanttLane; depth: number; index: number; sessionId: string | undefined };
 
-/** Lanes in tree order: each parent followed by its children, in input order. */
-const orderRows = (lanes: readonly GanttLane[]): Row[] => {
+/** A session's rows: the session itself followed by every task it works in-session, contiguous. */
+type SessionGroup = { session: GanttLane; first: number; last: number };
+
+/**
+ * Rows grouped by the session that processes them: a session, then the tasks (and subtasks) it
+ * works itself, then — after that block — every session those tasks spawned, recursively. Keeping a
+ * session's own rows contiguous is what lets one rectangle enclose them.
+ */
+const orderRows = (lanes: readonly GanttLane[]): { rows: Row[]; groups: SessionGroup[] } => {
   const rows: Row[] = [];
-  const visit = (parentId: string | undefined, depth: number): void => {
-    for (const lane of lanes) {
-      if (lane.parentId === parentId) {
-        rows.push({ lane, depth, index: rows.length });
-        visit(lane.id, depth + 1);
+  const groups: SessionGroup[] = [];
+  const childrenOf = (parentId: string | undefined): GanttLane[] => lanes.filter((lane) => lane.parentId === parentId);
+
+  const visitSession = (session: GanttLane, depth: number): void => {
+    const first = rows.length;
+    rows.push({ lane: session, depth, index: rows.length, sessionId: session.id });
+    const spawned: { lane: GanttLane; depth: number }[] = [];
+    const visitTasks = (parentId: string, taskDepth: number): void => {
+      for (const child of childrenOf(parentId)) {
+        if (child.kind === 'task') {
+          rows.push({ lane: child, depth: taskDepth, index: rows.length, sessionId: session.id });
+          visitTasks(child.id, taskDepth + 1);
+        } else {
+          spawned.push({ lane: child, depth: taskDepth });
+        }
       }
+    };
+    visitTasks(session.id, depth + 1);
+    groups.push({ session, first, last: rows.length - 1 });
+    for (const child of spawned) {
+      visitSession(child.lane, child.depth);
     }
   };
-  visit(undefined, 0);
-  return rows;
+
+  for (const lane of childrenOf(undefined)) {
+    if (lane.kind === 'session') {
+      visitSession(lane, 0);
+    } else {
+      rows.push({ lane, depth: 0, index: rows.length, sessionId: undefined });
+    }
+  }
+  return { rows, groups };
 };
 
 const formatTokens = (tokens: NonNullable<GanttLane['tokens']>): string =>
@@ -125,7 +159,7 @@ export const Gantt = composable<HTMLDivElement, GanttProps>(
       return () => observer.disconnect();
     }, []);
 
-    const rows = useMemo(() => orderRows(lanes), [lanes]);
+    const { rows, groups } = useMemo(() => orderRows(lanes), [lanes]);
     const rowById = useMemo(() => new Map(rows.map((row) => [row.lane.id, row])), [rows]);
     const markerById = useMemo(() => new Map(markers.map((marker) => [marker.id, marker])), [markers]);
     const range = useMemo(() => {
@@ -157,7 +191,8 @@ export const Gantt = composable<HTMLDivElement, GanttProps>(
     const barStart = (lane: GanttLane, start: number): number => {
       const source = delegationSource(lane);
       const edge = x(start) - BAR_OVERHANG;
-      return source ? Math.max(edge, x(source.timestamp) + BEND_RADIUS) : edge;
+      // Past the bend the connector runs level for one more radius before the bar begins.
+      return source ? Math.max(edge, x(source.timestamp) + 2 * BEND_RADIUS) : edge;
     };
     // A node never sits outside its bar: a delegated lane's first event is the spawn instant itself,
     // which is where the connector drops, so that node is nudged in past the bar's edge.
@@ -173,7 +208,7 @@ export const Gantt = composable<HTMLDivElement, GanttProps>(
           // `content-start auto-rows-min`: a stretching host would otherwise spread the rows over its
           // height, and the chart is drawn in pixel rows.
           classNames:
-            'grid w-full grid-cols-[minmax(8rem,14rem)_1fr_auto] content-start auto-rows-min text-xs font-mono overflow-hidden',
+            'grid w-full grid-cols-[minmax(10rem,20rem)_1fr_auto] content-start auto-rows-min text-xs font-mono overflow-hidden',
         })}
         ref={forwardedRef}
       >
@@ -227,17 +262,46 @@ export const Gantt = composable<HTMLDivElement, GanttProps>(
             <line x1={x(now)} x2={x(now)} y1={0} y2={height} strokeDasharray='3 3' className='stroke-red-500' />
           )}
 
-          {/* Connectors first, so the drop to a child passes beneath any bar it crosses. */}
+          {/* A session's rectangle encloses its own bar and the tasks it works in-session; a task it
+              spawned is a session of its own, drawn as a rectangle further down. */}
+          {groups.flatMap(({ session, first, last }) => {
+            const members = rows.slice(first, last + 1).map((row) => row.lane);
+            const starts = members.flatMap((lane) => (lane.start === undefined ? [] : [barStart(lane, lane.start)]));
+            // Only lanes with a bar bound the rectangle: a task not yet started has no extent.
+            const ends = members.flatMap((lane) => {
+              const end = lane.start === undefined ? undefined : laneEnd(lane);
+              return end === undefined ? [] : [x(end) + BAR_OVERHANG];
+            });
+            if (starts.length === 0 || ends.length === 0) {
+              return [];
+            }
+            const left = Math.min(...starts) - GROUP_PAD;
+            const right = Math.max(...ends) + GROUP_PAD;
+            return [
+              <rect
+                key={`group:${session.id}`}
+                x={left}
+                y={rowY(first) - ROW_HEIGHT / 2 + GROUP_INSET}
+                width={Math.max(right - left, ROW_HEIGHT)}
+                height={(last - first + 1) * ROW_HEIGHT - 2 * GROUP_INSET}
+                rx={GROUP_RADIUS}
+                className='fill-input-surface'
+              />,
+            ];
+          })}
+
+          {/* Connectors next, so the drop to a child passes beneath any bar it crosses. */}
           {rows.flatMap(({ lane, index }) =>
             (lane.blockedOn ?? []).flatMap((depId) => {
               const dep = rowById.get(depId);
+              // Anchored on the dependency's last node, so the line meets a node rather than a bar edge.
               const anchor = dep && (laneEnd(dep.lane) ?? dep.lane.start);
               return dep && anchor !== undefined
                 ? [
                     <line
                       key={`${lane.id}:${depId}`}
-                      x1={x(anchor)}
-                      x2={x(anchor)}
+                      x1={nodeX(dep.lane, anchor)}
+                      x2={nodeX(dep.lane, anchor)}
                       y1={rowY(dep.index)}
                       y2={rowY(index)}
                       strokeDasharray='2 2'

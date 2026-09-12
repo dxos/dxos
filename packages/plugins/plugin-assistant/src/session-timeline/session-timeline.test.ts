@@ -135,21 +135,25 @@ describe('buildSessionTimeline', () => {
       now: 100,
     });
 
-    const [session, firstLane, subSession, secondLane] = timeline.lanes;
+    // The delegated task is represented by its session alone — no task lane doubles it — and the
+    // dependency on it follows to that session.
+    const [session, subSession, secondLane] = timeline.lanes;
+    expect(timeline.lanes).toHaveLength(3);
     expect(session).toMatchObject({ kind: 'session', status: 'running', start: 1, end: undefined });
-    expect(firstLane).toMatchObject({ kind: 'task', status: 'running', pid: 'sub', start: 4, end: undefined });
     expect(subSession).toMatchObject({
       kind: 'session',
       label: 'First',
       status: 'running',
       taskId: first.id,
       pid: 'sub',
+      start: 4,
+      end: undefined,
       delegatedFrom: {
         laneId: session?.id,
         markerId: timeline.markers.find((marker) => marker.kind === 'delegation')?.id,
       },
     });
-    expect(secondLane).toMatchObject({ kind: 'task', status: 'blocked', blockedOn: [`task:${first.id}`] });
+    expect(secondLane).toMatchObject({ kind: 'task', status: 'blocked', blockedOn: [subSession?.id] });
     expect(timeline.range).toEqual({ start: 1, end: 100 });
   });
 

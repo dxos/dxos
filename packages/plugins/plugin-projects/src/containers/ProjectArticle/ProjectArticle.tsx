@@ -19,6 +19,7 @@ import { SchemaAST } from '@dxos/effect';
 import * as AssistantOperation from '@dxos/plugin-assistant/AssistantOperation';
 import { InstructionsEditor } from '@dxos/plugin-routine/components';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
+import { useSpace } from '@dxos/react-client/echo';
 import { Flex, Icon, Panel, Tabs, useTranslation } from '@dxos/react-ui';
 import { useSelection, useSelectionActions } from '@dxos/react-ui-attention';
 import { Form } from '@dxos/react-ui-form';
@@ -27,7 +28,7 @@ import { type ActionGraphProps, ActionToolbar, MenuBuilder, useMenuBuilder } fro
 import { buildTaskForest, flattenVisibleTasks } from '@dxos/react-ui-task';
 import { type Milestone, Task, type TaskSet } from '@dxos/types';
 
-import { ObjectCard } from '#components';
+import { ObjectCard, ProjectPipeline } from '#components';
 import { meta } from '#meta';
 import { ProjectOperation } from '#types';
 
@@ -43,8 +44,8 @@ const HeaderValues = Schema.make<Schema.Codec<HeaderValues, any>>(
 // The Context section edits only the instructions' standing context objects.
 const CONTEXT_FIELDS: readonly string[] = ['objects'];
 
-/** Overview is everything the project owns; Tasks gives the ledger the whole panel. */
-type Tab = 'overview' | 'tasks';
+/** Overview is everything the project owns; Tasks gives the ledger the whole panel; Pipeline shows the agent sessions working it. */
+type Tab = 'overview' | 'tasks' | 'pipeline';
 
 export type ProjectArticleProps = AppSurface.ObjectArticleProps<Project.Project>;
 
@@ -59,6 +60,8 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
   const { invokePromise } = useOperationInvoker();
   const [project, updateProject] = useObject(subject);
   const db = Obj.getDatabase(subject);
+  // The pipeline reads the space's trace feed, which is addressed by space rather than database.
+  const space = useSpace(db?.spaceId);
   // Resolve reactively: on a cold load (deep link) the owned ref's target is not yet in memory,
   // and a sync `.target` read would leave the section permanently missing. `useResolveRef` tracks
   // loading without tracking mutations — the sub-editors and section surfaces subscribe themselves,
@@ -72,7 +75,7 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
   // Membership only: fires when a milestone is added or removed, not on milestone edits.
   const [milestoneRefs = []] = useObject(taskSet, 'milestones');
   // The rows the embedded `TaskSetArticle` has checked; the toolbar arms its delegate action on them.
-  const { delegatableTasks, clearChecked } = useCheckedTasks(taskSet);
+  const { tasks, delegatableTasks, clearChecked } = useCheckedTasks(taskSet);
 
   // The tabs are a toolbar item like any other, so the one action graph owns the bar's order:
   // tabs, separator, then the actions. The tablist only needs the `Tabs.Root` context, which
@@ -86,16 +89,25 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
         <Tabs.Button value='tasks' data-testid='projectsPlugin.tab.tasks'>
           {t('tasks.label')}
         </Tabs.Button>
+        <Tabs.Button value='pipeline' data-testid='projectsPlugin.tab.pipeline'>
+          {t('pipeline.label')}
+        </Tabs.Button>
       </Tabs.Tablist>
     ),
     [t],
   );
+  // The reader is taken to the pipeline as the session starts, so the first events land in view.
+  const handleDelegated = useCallback(() => {
+    clearChecked();
+    setTab('pipeline');
+  }, [clearChecked]);
+
   const menuActions = useToolbarActions({
     project: subject,
     tabs,
     checkedTasks: delegatableTasks,
     onAddArtifact: () => void handleAddArtifact(),
-    onDelegated: clearChecked,
+    onDelegated: handleDelegated,
   });
 
   // Read once per project identity; the uncontrolled form owns edits after mount.
@@ -229,6 +241,8 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
                 {t('no-task-set.message')}
               </Flex>
             ))}
+
+          {tab === 'pipeline' && space && <ProjectPipeline space={space} project={subject} tasks={tasks} />}
         </Panel.Content>
       </Panel.Root>
     </Tabs.Root>
@@ -306,7 +320,7 @@ const useCheckedTasks = (taskSet: TaskSet.TaskSet | undefined) => {
   // A row the agent is already working on is left out rather than handed to a second session.
   const delegatableTasks = useMemo(() => checkedTasks.filter((task) => !Task.isAgentWorking(task)), [checkedTasks]);
 
-  return { checkedTasks, delegatableTasks, clearChecked: clear };
+  return { tasks, checkedTasks, delegatableTasks, clearChecked: clear };
 };
 
 export type ToolbarActionsProps = {
@@ -368,9 +382,11 @@ const useToolbarActions = ({ project, tabs, checkedTasks, onAddArtifact, onDeleg
         { tasks: checkedTasks.map((task) => Ref.make(task)) },
         { spaceId },
       );
-      onDelegated();
     } finally {
       setDelegating(false);
+      // Whatever the first turn did: the chat and the task hand-over are durable before the turn
+      // starts, and the pipeline is where the reader sees what became of them.
+      onDelegated();
     }
   }, [invokePromise, spaceId, checkedTasks, delegating, onDelegated]);
 

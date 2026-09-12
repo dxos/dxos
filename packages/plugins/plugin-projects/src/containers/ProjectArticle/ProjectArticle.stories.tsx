@@ -150,7 +150,7 @@ const findPainted = async (canvas: ReturnType<typeof within>, text: string) => {
 };
 
 /** Radix unmounts an inactive tab panel, so a story asserts a tab's content only while it is shown. */
-const showTab = async (canvas: ReturnType<typeof within>, tab: 'overview' | 'tasks') => {
+const showTab = async (canvas: ReturnType<typeof within>, tab: 'overview' | 'tasks' | 'pipeline') => {
   await userEvent.click(await canvas.findByTestId(`projectsPlugin.tab.${tab}`, undefined, { timeout: 10_000 }));
 };
 
@@ -421,11 +421,17 @@ export const DelegateCheckedTasks: Story = {
       { timeout: 10_000 },
     );
 
-    // The boxes clear with the work, so the toolbar is dead again.
+    // The boxes clear with the work, so the toolbar is dead again — and the article has moved to
+    // the pipeline, where the session's first events land.
     await waitFor(() => expect(button).toBeDisabled(), { timeout: 10_000 });
+    await waitFor(
+      () => expect(canvas.getByTestId('projectsPlugin.tab.pipeline')).toHaveAttribute('aria-selected', 'true'),
+      { timeout: 10_000 },
+    );
 
     // Re-checking rows the agent already holds arms nothing: a second click cannot fork them into
     // another session.
+    await showTab(canvas, 'tasks');
     await userEvent.click(await checkbox(TASK_TITLE));
     await userEvent.click(await checkbox(LINK_TASK_TITLE));
     await expect(button).toBeDisabled();
