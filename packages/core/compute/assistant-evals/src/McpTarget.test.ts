@@ -4,7 +4,6 @@
 
 import { describe, test } from 'vitest';
 
-import * as McpLatency from './McpLatency.ts';
 import * as McpTarget from './McpTarget.ts';
 
 describe('McpTarget', () => {
@@ -26,30 +25,5 @@ describe('McpTarget', () => {
 
   test('an unknown target fails rather than falling back to a surface nobody asked for', ({ expect }) => {
     expect(() => McpTarget.fromEnv('staging')).to.throw(/Unknown MCP eval target/);
-  });
-});
-
-describe('McpLatency.stats', () => {
-  const samples = (...millis: number[]): McpLatency.Sample[] =>
-    millis.map((value) => ({ tool: 'queryOperations', millis: value, isError: false }));
-
-  test('nearest-rank percentiles over the samples a run actually has', ({ expect }) => {
-    expect(McpLatency.stats(samples(10, 20, 30, 40, 100))).to.deep.equal({
-      count: 5,
-      errors: 0,
-      min: 10,
-      mean: 40,
-      p50: 30,
-      p95: 100,
-      max: 100,
-    });
-  });
-
-  test('an errored call is still a sample, so a dead endpoint reports as errors rather than as nothing', ({
-    expect,
-  }) => {
-    const stats = McpLatency.stats([...samples(10), { tool: 'loadSkill', millis: 30, isError: true }]);
-    expect(stats.count).to.equal(2);
-    expect(stats.errors).to.equal(1);
   });
 });

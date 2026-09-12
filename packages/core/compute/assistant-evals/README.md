@@ -46,7 +46,8 @@ DX_EVAL_MCP_TARGET=dev DX_EVAL_MCP_TOKEN=... DX_EVAL_SPACE_ID=... \
 - `DX_EVAL_MCP_TOKEN` — bearer token for a deployed endpoint (it is OAuth-gated, and an eval cannot
   complete a passkey ceremony).
 - `DX_EVAL_SPACE_ID` — the space a remote run acts on.
-- `DX_EVAL_MCP_URL` — override the endpoint outright.
+- `DX_EVAL_MCP_URL` — override the endpoint of a non-`local` target; `local` is always the
+  in-process host.
 - `DX_EVAL_MCP_LATENCY_BUDGET_MS` — p95 ceiling for the `tool-latency` scorer (500 local, 3000
   remote).
 

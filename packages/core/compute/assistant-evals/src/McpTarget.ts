@@ -49,6 +49,7 @@ export const fromEnv = (value: string | undefined = process.env.DX_EVAL_MCP_TARG
   return alias as Target;
 };
 
+/** True for the in-process host, the one target whose writes a scorer can read back. */
 export const isLocal = (target: Target): boolean => target === 'local';
 
 /** The endpoint to dial, or undefined for the in-process host, whose URL is only known once bound. */
@@ -64,7 +65,34 @@ export const url = (target: Target): string | undefined =>
  */
 export const headers = (target: Target): Record<string, string> | undefined => {
   const token = process.env.DX_EVAL_MCP_TOKEN;
-  return isLocal(target) || token == null || token.length === 0 ? undefined : { Authorization: `Bearer ${token}` };
+  if (isLocal(target) || token == null || token.length === 0) {
+    return undefined;
+  }
+  const endpoint = url(target);
+  // A bearer over plain HTTP puts the token on the wire in cleartext, and `local-edge` and
+  // `DX_EVAL_MCP_URL` both make that reachable by accident.
+  if (endpoint == null || !endpoint.startsWith('https:')) {
+    throw new Error(`DX_EVAL_MCP_TOKEN is set for a non-HTTPS endpoint (${endpoint ?? 'none'}); refusing to send it.`);
+  }
+  return { Authorization: `Bearer ${token}` };
+};
+
+/**
+ * Ceiling for the p95 of a tool call, in ms.
+ *
+ * Parsed rather than `Number(...)`: an empty variable coerces to `0`, which fails every report, and
+ * a typo to `NaN`, which fails every comparison — both of them silently.
+ */
+export const latencyBudget = (fallback: number): number => {
+  const value = process.env.DX_EVAL_MCP_LATENCY_BUDGET_MS;
+  if (value == null || value.trim().length === 0) {
+    return fallback;
+  }
+  const budget = Number(value);
+  if (!Number.isFinite(budget) || budget <= 0) {
+    throw new Error(`DX_EVAL_MCP_LATENCY_BUDGET_MS must be a positive number of milliseconds; got "${value}".`);
+  }
+  return budget;
 };
 
 /**

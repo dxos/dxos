@@ -56,7 +56,7 @@ const LATENCY_PROBES = [
  * loopback socket; a deployed worker is a TLS round trip in front of a data plane, so the two cannot
  * share a number. Override with `DX_EVAL_MCP_LATENCY_BUDGET_MS`.
  */
-const LATENCY_BUDGET = Number(process.env.DX_EVAL_MCP_LATENCY_BUDGET_MS ?? (REMOTE ? 3_000 : 500));
+const LATENCY_BUDGET = McpTarget.latencyBudget(REMOTE ? 3_000 : 500);
 
 const PROJECT_NAME = 'Lighthouse';
 

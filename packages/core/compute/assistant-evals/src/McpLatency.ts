@@ -114,14 +114,17 @@ export const probe = async ({
   const transport = new StreamableHTTPClientTransport(new URL(url), {
     requestInit: headers ? { headers } : undefined,
   });
-
-  const connectStarted = Date.now();
-  await client.connect(transport);
-  await client.listTools();
-  const connectMillis = Date.now() - connectStarted;
+  let connectMillis: number | undefined;
 
   const samples: Sample[] = [];
+  const connectStarted = Date.now();
   try {
+    // Inside the protected lifecycle, because a target that refuses the connection is exactly what
+    // the report exists to show: rejecting here would leave the eval with no numbers at all.
+    await client.connect(transport);
+    await client.listTools();
+    connectMillis = Date.now() - connectStarted;
+
     for (const { tool, args } of probes) {
       for (let index = 0; index < warmup + iterations; ++index) {
         const started = Date.now();
@@ -139,9 +142,18 @@ export const probe = async ({
         }
       }
     }
+  } catch (error) {
+    // Connect or discovery failed: one errored sample per probe, so `stats['*'].errors` is nonzero
+    // and the scorer reads a failing report rather than a thrown eval.
+    connectMillis ??= Date.now() - connectStarted;
+    for (const { tool } of probes) {
+      samples.push({ tool, millis: Date.now() - connectStarted, isError: true });
+    }
   } finally {
-    await client.close();
+    // The client may never have connected, and closing one that did not is not an error worth
+    // losing the report over.
+    await client.close().catch(() => {});
   }
 
-  return { target, url, connectMillis, samples, stats: summarize(samples) };
+  return { target, url, connectMillis: connectMillis ?? 0, samples, stats: summarize(samples) };
 };

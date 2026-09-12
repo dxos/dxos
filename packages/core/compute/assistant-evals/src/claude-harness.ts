@@ -115,6 +115,21 @@ export type ClaudeHarness = {
   readonly score: (scorers: readonly Scorer.Any[]) => Promise<Scorer.Scores>;
 };
 
+/**
+ * The space a deployed run names.
+ *
+ * Never the harness's own `defaultSpace`: that space exists only in this process, and a deployed
+ * worker rejects it as not in the session's context — a failure that reads as a broken surface
+ * rather than as missing configuration.
+ */
+const remoteSpaceId = (): SpaceId => {
+  const spaceId = McpTarget.spaceId();
+  if (spaceId == null) {
+    throw new Error('DX_EVAL_SPACE_ID is required for a deployed MCP target; the harness space does not exist there.');
+  }
+  return spaceId;
+};
+
 const count = (value: unknown): number => (typeof value === 'number' ? value : 0);
 
 /**
