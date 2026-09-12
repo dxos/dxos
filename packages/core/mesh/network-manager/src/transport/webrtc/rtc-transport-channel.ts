@@ -192,8 +192,12 @@ export class RtcTransportChannel extends Resource implements Transport {
   }
 
   private async _handleChannelWrite(chunk: any, callback: PendingStreamFlushedCallback): Promise<void> {
-    if (!this._channel) {
-      log.warn('writing to a channel after a connection was closed');
+    // `send` throws once the channel leaves `open`, and raising that tears down the peer connection
+    // — including a replacement one — for bytes whose connection is already going away. `onclose`
+    // carries the close on its own. The callback still runs, or the stream never writes again.
+    if (this._channel?.readyState !== 'open') {
+      log('write dropped for a channel that is not open', { readyState: this._channel?.readyState });
+      callback();
       return;
     }
 

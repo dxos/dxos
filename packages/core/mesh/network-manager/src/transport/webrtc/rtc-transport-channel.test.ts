@@ -28,7 +28,7 @@ describe('RtcTransportChannel', () => {
     await transport.open();
     await controller.onChannelCreated();
     await transport.close();
-    controller.channel.onopen();
+    controller.open();
     expect(controller.channel.wasClosed()).to.be.true;
   });
 
@@ -40,9 +40,9 @@ describe('RtcTransportChannel', () => {
       await controller.onChannelCreated();
       void transport.close();
       if (syncOpen) {
-        controller.channel.onopen();
+        controller.open();
       } else {
-        setTimeout(() => controller.channel.onopen());
+        setTimeout(() => controller.open());
       }
       // Poll until the channel observes the transport closing, regardless of open/close ordering.
       await expect.poll(() => controller.channel.wasClosed()).toBe(true);
@@ -55,7 +55,7 @@ describe('RtcTransportChannel', () => {
     const transportClosedEvent = handleClose(transport);
     await transport.open();
     await controller.onChannelCreated();
-    controller.channel.onopen();
+    controller.open();
     await sleep(10);
     await controller.channel.onclose();
     expect(transport.isOpen).to.be.false;
@@ -68,7 +68,7 @@ describe('RtcTransportChannel', () => {
     await transport.open();
     await transport.close();
     await controller.onChannelCreated();
-    controller.channel.onopen();
+    controller.open();
     expect(controller.channel.wasClosed()).to.be.true;
   });
 
@@ -77,7 +77,7 @@ describe('RtcTransportChannel', () => {
     const { deliveredMessages, transport } = createTransport(controller.connection);
     await transport.open();
     await controller.onChannelCreated();
-    controller.channel.onopen();
+    controller.open();
     const message = 'hello';
     await controller.channel.onMessage(message);
     expect(deliveredMessages).toStrictEqual([message]);
@@ -97,7 +97,7 @@ describe('RtcTransportChannel', () => {
     await controller.channel.onMessage('second');
     expect(deliveredMessages).toStrictEqual([]);
 
-    controller.channel.onopen();
+    controller.open();
     await sleep(5);
     expect(deliveredMessages).toStrictEqual(['first', 'second']);
   });
@@ -122,7 +122,7 @@ describe('RtcTransportChannel', () => {
     const { stream, transport } = createTransport(controller.connection);
     await transport.open();
     await controller.onChannelCreated();
-    controller.channel.onopen();
+    controller.open();
 
     stream.push('outgoing');
     await sleep(5);
@@ -136,7 +136,7 @@ describe('RtcTransportChannel', () => {
     const { deliveredMessages, transport } = createTransport(controller.connection);
     await transport.open();
     await controller.onChannelCreated();
-    controller.channel.onopen();
+    controller.open();
     const message = 'hello';
     await controller.channel.onMessage(message);
     expect(deliveredMessages).toStrictEqual([message]);
@@ -145,13 +145,31 @@ describe('RtcTransportChannel', () => {
     expect(deliveredMessages).toStrictEqual([message]);
   });
 
+  // A channel that has left `open` throws on `send`, and raising that tears the peer connection down
+  // for bytes whose connection is already going away; `onclose` carries the close on its own.
+  test('a write to a channel that is not open is dropped, not raised', async ({ expect }) => {
+    const controller = createChannelController();
+    const { transport, stream, deliveredMessages } = createTransport(controller.connection);
+    await transport.open();
+    await controller.onChannelCreated();
+    const errors = handleChannelErrors(transport);
+    controller.open();
+    controller.channel.readyState = 'closing';
+
+    stream.push('hello');
+    await sleep(20);
+    expect(controller.channel.sentMessages).toEqual([]);
+    expect(deliveredMessages).toEqual([]);
+    await errors.expectNoErrorRaised();
+  });
+
   test('error raised if send fails', async () => {
     const controller = createChannelController();
     const { transport, stream } = createTransport(controller.connection);
     await transport.open();
     await controller.onChannelCreated();
     const transportClosedEvent = handleChannelErrors(transport);
-    controller.channel.onopen();
+    controller.open();
     controller.setFailSending(true);
     stream.push('hello');
     await transportClosedEvent.expectErrorRaised();
@@ -185,9 +203,14 @@ describe('RtcTransportChannel', () => {
     let closed = false;
     let failsSending = false;
     const channel = {
+      // A real `RTCDataChannel` always reports one, and `send` throws outside `open`.
+      readyState: 'connecting' as RTCDataChannelState,
       onopen: () => {},
       onclose: async () => {},
-      close: () => (closed = true),
+      close: () => {
+        closed = true;
+        channel.readyState = 'closed';
+      },
       sentMessages: [] as any[],
       send: (message: any) => {
         if (failsSending) {
@@ -211,6 +234,11 @@ describe('RtcTransportChannel', () => {
       onChannelCreationFailed = reject;
     });
     return {
+      /** Mirrors the browser: the channel reports `open` before it fires `onopen`. */
+      open: () => {
+        channel.readyState = 'open';
+        (channel as any).onopen();
+      },
       onChannelCreated,
       onChannelCreationFailed,
       setFailSending: (fail: boolean) => {
