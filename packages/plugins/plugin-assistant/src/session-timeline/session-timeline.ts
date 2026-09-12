@@ -88,11 +88,24 @@ const TERMINAL_STATUS = new Set<Task.Status>(['done', 'review', 'failed', 'cance
 
 /**
  * Cuts a session's events into one segment per task worked, from the planning tool's status events.
- * The agent keeps exactly one task started, so a new `started` closes the segment still open.
+ *
+ * A `started` event opens a segment and closes the one still open — the agent keeps exactly one task
+ * in progress. A task can also finish without one: delegation marks every task it hands over
+ * `started` before the agent's first turn, so the run's only event for a task is the one closing it.
+ * Such a task gets the stretch since the last boundary, which is where its work actually happened.
  */
-const buildTaskSegments = (events: readonly Trace.FlatEvent[]): TaskSegment[] => {
+const buildTaskSegments = (events: readonly Trace.FlatEvent[], sessionStart: number | undefined): TaskSegment[] => {
   const segments: TaskSegment[] = [];
   let open: TaskSegment | undefined;
+  let boundary = sessionStart;
+  const close = (segment: TaskSegment, timestamp: number): void => {
+    segment.end = timestamp;
+    boundary = timestamp;
+    if (open === segment) {
+      open = undefined;
+    }
+  };
+
   for (const event of events) {
     if (event.type !== TaskStatusChanged.key) {
       continue;
@@ -103,20 +116,25 @@ const buildTaskSegments = (events: readonly Trace.FlatEvent[]): TaskSegment[] =>
     }
     if (data.status === 'started') {
       if (open && open.taskId !== data.taskId) {
-        open.end = event.timestamp;
-        open = undefined;
+        close(open, event.timestamp);
       }
       if (!open) {
         open = { taskId: data.taskId, laneId: taskLaneId(data.taskId), start: event.timestamp };
         segments.push(open);
+        boundary = event.timestamp;
       }
     } else if (TERMINAL_STATUS.has(data.status)) {
-      const segment = segments.findLast((candidate) => candidate.taskId === data.taskId);
-      if (segment && segment.end === undefined) {
-        segment.end = event.timestamp;
-      }
-      if (open?.taskId === data.taskId) {
-        open = undefined;
+      const started = segments.findLast((candidate) => candidate.taskId === data.taskId && candidate.end === undefined);
+      if (started) {
+        close(started, event.timestamp);
+      } else {
+        const segment = {
+          taskId: data.taskId,
+          laneId: taskLaneId(data.taskId),
+          start: Math.min(boundary ?? event.timestamp, event.timestamp),
+        };
+        segments.push(segment);
+        close(segment, event.timestamp);
       }
     }
   }
@@ -296,7 +314,9 @@ export const buildSessionTimeline = ({
 
     // The status events bound each task's stretch of the session, giving its lane a span of its own
     // and a node where it started and finished.
-    const segments = buildTaskSegments(sessionEvents).filter((segment) => taskLanes.has(segment.taskId));
+    const segments = buildTaskSegments(sessionEvents, begins[0]?.timestamp).filter((segment) =>
+      taskLanes.has(segment.taskId),
+    );
     segmentsBySession.set(laneId, segments);
     for (const segment of segments) {
       const taskLane = taskLanes.get(segment.taskId);

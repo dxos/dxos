@@ -199,6 +199,46 @@ describe('buildSessionTimeline', () => {
     ]);
   });
 
+  test('cuts a delegated run, where a task is only ever closed', ({ expect }) => {
+    // Delegation marks every task it hands over `started`, so the agent's only event per task is
+    // the one closing it — the cut comes from the previous boundary instead.
+    const first = Task.make({ title: 'First', status: 'done' });
+    const second = Task.make({ title: 'Second', status: 'done' });
+    const chat = makeChat('Delegated', [first, second]);
+    const messages = collectTraceEvents(
+      withMeta(
+        { pid: 'agent', conversation: chat.feed },
+        Effect.gen(function* () {
+          yield* Trace.write(AgentRequestBegin, {}); // 1
+          yield* toolCall('Read file'); // 2
+          yield* Trace.write(TaskStatusChanged, {
+            taskId: first.id,
+            title: 'First',
+            status: 'done',
+            previousStatus: 'started',
+          }); // 3
+          yield* toolCall('Write file'); // 4
+          yield* Trace.write(TaskStatusChanged, {
+            taskId: second.id,
+            title: 'Second',
+            status: 'done',
+            previousStatus: 'started',
+          }); // 5
+          yield* Trace.write(AgentRequestEnd, { status: 'success' }); // 6
+        }),
+      ),
+    );
+
+    const timeline = buildSessionTimeline({ traceMessages: messages, chats: [chat], tasks: [first, second] });
+    const firstLane = timeline.lanes.find((lane) => lane.id === `task:${first.id}`);
+    const secondLane = timeline.lanes.find((lane) => lane.id === `task:${second.id}`);
+    expect(firstLane).toMatchObject({ start: 1, end: 3 });
+    expect(secondLane).toMatchObject({ start: 3, end: 5 });
+    const lanesByLabel = new Map(timeline.markers.map((marker) => [marker.label, marker.laneId]));
+    expect(lanesByLabel.get('Read file')).toBe(firstLane?.id);
+    expect(lanesByLabel.get('Write file')).toBe(secondLane?.id);
+  });
+
   test('joins the sub-agent by the delegationSpawned event and sums tokens per lane', ({ expect }) => {
     const task = Task.make({ title: 'Write', status: 'done' });
     const chat = makeChat('Tokens', [task]);
