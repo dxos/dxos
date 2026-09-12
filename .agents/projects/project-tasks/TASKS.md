@@ -173,11 +173,6 @@ back. Ordered as a chain — each item is what the one above it needs.
 - [x] **Delegating should navigate to the chat it started** —
       `RunPromptInChat` opens it, so the reader lands on the work they just
       delegated.
-- [ ] **Repair tasks already re-parented by the old owning checklist** — a task
-      delegated before the fix still has the chat as its ECHO parent and stays
-      missing from its project. One-off (`Obj.setParent(task, taskSet)`); decide
-      whether it is worth a migration or just a manual fix in the affected
-      spaces.
 
 - [x] **A lone tool call renders outside its "Ran N commands" group** — fixed in
       `react-ui-assistant/renderer.ts`: `flushTools()` ran BEFORE the block was
@@ -238,17 +233,9 @@ the hierarchical list, which is #12787.
       them — so a toolbar's density never reached its controls anywhere in the
       app; and tearing the editor down fires a blur, which commits, so a revert
       wrote the text it was discarding.
-- [ ] **Combine the Send/Stop buttons in `ChatPrompt`** — the two are separate
-      controls today, so the prompt's trailing edge changes shape as a turn
-      starts and stops. One button that swaps its icon and action with the
-      session's running state keeps the target in place.
-- [ ] **Toggle the task panel from `ChatPrompt`** — a button at the end of the
-      bottom row showing/hiding the checklist, so a conversation that is working
-      a task can surface it without leaving the prompt.
-- [ ] **Move the online/offline toggle into the `ChatPrompt` options** — it is
-      a read-only indicator on the chat today, derived from the provider in
-      settings (`preset?.provider === Provider.edge.id`); as an option on the
-      prompt it becomes the control it looks like.
+- [x] **Combine the Send/Stop buttons in `ChatPrompt`** — done 2026-09-12.
+- [x] **Toggle the task panel from `ChatPrompt`** — done 2026-09-12.
+- [x] **Move the online/offline toggle into the `ChatPrompt` options** — done 2026-09-12.
 - [ ] **Record when a task reached a terminal status** — `Task` carries no date
       at all today, so nothing can show when work finished or say how long it
       took. Stamp the transition into `done`/`failed`/`cancelled` wherever status
