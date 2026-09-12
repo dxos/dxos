@@ -3,12 +3,11 @@
 //
 
 import { create } from '@bufbuild/protobuf';
-import { anyPack } from '@bufbuild/protobuf/wkt';
 import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { Trigger } from '@dxos/async';
 import { PublicKey } from '@dxos/keys';
-import { fromDate, fromPublicKey, requirePublicKey } from '@dxos/protocols/buf';
+import { anyPackPrefixed, fromDate, fromPublicKey, requirePublicKey } from '@dxos/protocols/buf';
 import { PeerStateSchema } from '@dxos/protocols/buf/dxos/mesh/presence_pb';
 import { type GossipMessage, GossipMessageSchema } from '@dxos/protocols/buf/dxos/mesh/teleport/gossip_pb';
 import { TestBuilder, TestPeer } from '@dxos/teleport/testing';
@@ -44,7 +43,7 @@ describe('GossipExtension', () => {
         channelId: 'dxos.mesh.teleport.gossip',
         timestamp: fromDate(new Date()),
         messageId: fromPublicKey(PublicKey.random()),
-        payload: anyPack(
+        payload: anyPackPrefixed(
           PeerStateSchema,
           create(PeerStateSchema, {
             connections: [fromPublicKey(peer2.peerId)],
@@ -60,7 +59,7 @@ describe('GossipExtension', () => {
         channelId: 'dxos.mesh.teleport.gossip',
         timestamp: fromDate(new Date()),
         messageId: fromPublicKey(PublicKey.random()),
-        payload: anyPack(
+        payload: anyPackPrefixed(
           PeerStateSchema,
           create(PeerStateSchema, {
             connections: [fromPublicKey(peer1.peerId)],

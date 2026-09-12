@@ -3,14 +3,14 @@
 //
 
 import { create } from '@bufbuild/protobuf';
-import { type Any, anyPack, anyUnpack } from '@bufbuild/protobuf/wkt';
+import { type Any, anyUnpack } from '@bufbuild/protobuf/wkt';
 
 import { Event, scheduleTaskInterval } from '@dxos/async';
 import { Resource } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { fromPublicKey, requirePublicKey, toDate, toPublicKey } from '@dxos/protocols/buf';
+import { anyPackPrefixed, fromPublicKey, requirePublicKey, toDate, toPublicKey } from '@dxos/protocols/buf';
 import { type PeerState, PeerStateSchema } from '@dxos/protocols/buf/dxos/mesh/presence_pb';
 import { type GossipMessage } from '@dxos/protocols/buf/dxos/mesh/teleport/gossip_pb';
 import { ComplexMap } from '@dxos/util';
@@ -139,7 +139,7 @@ export class Presence extends Resource {
 
   /** Gossip routes `Any` payloads generically, so presence packs its own channel's state. */
   private _toAnnounce(state: PeerState): Any {
-    return anyPack(PeerStateSchema, state);
+    return anyPackPrefixed(PeerStateSchema, state);
   }
 
   private _receiveAnnounces(message: GossipMessage): void {
