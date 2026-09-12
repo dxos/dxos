@@ -89,7 +89,7 @@ export class DataServiceImpl implements DataService.Handlers {
    *
    * Bytes are copied before the RPC stub is disposed: the stub's own buffers belong to memory the
    * runtime reclaims when it is released.
-   * See https://developers.cloudflare.com/workers/runtime-apis/rpc/lifecycle/
+   * See <https://developers.cloudflare.com/workers/runtime-apis/rpc/lifecycle/>.
    */
   private async '_loadDocuments'(spaceId: SpaceId, documentIds: string[]): Promise<Map<string, Uint8Array>> {
     using documents = await this._dataService.getDocuments(this._executionContext, spaceId, documentIds);
