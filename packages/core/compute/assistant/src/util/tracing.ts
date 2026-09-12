@@ -7,7 +7,7 @@ import * as Schema from 'effect/Schema';
 
 import * as Trace from '@dxos/compute/Trace';
 import { Obj } from '@dxos/echo';
-import { Actor, ContentBlock, Task } from '@dxos/types';
+import { Actor, ContentBlock } from '@dxos/types';
 
 /**
  * Partial content block emitted.
@@ -54,22 +54,6 @@ export const DelegationSpawned = Trace.EventType('assistant.delegationSpawned', 
   schema: Schema.Struct({
     taskId: Schema.String,
     pid: Schema.String,
-  }),
-  isEphemeral: false,
-});
-
-/**
- * Emitted by the planning tool when a checklist task's status changes (a new task counts as a
- * change from nothing). The trace holds no other record of which task the agent was working on, so
- * these events are what cut a session's timeline into per-task segments.
- */
-export const TaskStatusChanged = Trace.EventType('assistant.taskStatusChanged', {
-  schema: Schema.Struct({
-    taskId: Obj.ID,
-    title: Schema.String,
-    status: Task.Status,
-    /** Absent when the task was just created, or held no status before. */
-    previousStatus: Schema.optional(Task.Status),
   }),
   isEphemeral: false,
 });

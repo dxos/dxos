@@ -4,7 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Harness, TaskStatusChanged } from '@dxos/assistant';
+import { Harness } from '@dxos/assistant';
 import * as Chat from '@dxos/assistant/Chat';
 import * as Operation from '@dxos/compute/Operation';
 import * as Trace from '@dxos/compute/Trace';
@@ -35,7 +35,7 @@ export default UpdateTasks.pipe(
           Task.setStatus(task, status);
           // The resolved status, not the requested one: a reviewed task lands in `review`.
           if (task.status !== undefined && task.status !== previousStatus) {
-            yield* Trace.write(TaskStatusChanged, {
+            yield* Trace.write(Trace.TaskStatusChanged, {
               taskId: task.id,
               title: task.title,
               status: task.status,
@@ -46,7 +46,7 @@ export default UpdateTasks.pipe(
           const created = Chat.addTask(db, chat, title, { status });
           existing.push(created);
           if (created.status !== undefined) {
-            yield* Trace.write(TaskStatusChanged, {
+            yield* Trace.write(Trace.TaskStatusChanged, {
               taskId: created.id,
               title: created.title,
               status: created.status,

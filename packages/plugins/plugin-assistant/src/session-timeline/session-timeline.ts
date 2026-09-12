@@ -6,13 +6,7 @@ import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 
 import { AGENT_PROCESS_KEY } from '@dxos/agent-runtime';
-import {
-  AgentRequestBegin,
-  AgentRequestEnd,
-  CompleteBlock,
-  DelegationSpawned,
-  TaskStatusChanged,
-} from '@dxos/assistant';
+import { AgentRequestBegin, AgentRequestEnd, CompleteBlock, DelegationSpawned } from '@dxos/assistant';
 import * as Chat from '@dxos/assistant/Chat';
 import * as Process from '@dxos/compute/Process';
 import * as Trace from '@dxos/compute/Trace';
@@ -107,10 +101,10 @@ const buildTaskSegments = (events: readonly Trace.FlatEvent[], sessionStart: num
   };
 
   for (const event of events) {
-    if (event.type !== TaskStatusChanged.key) {
+    if (event.type !== Trace.TaskStatusChanged.key) {
       continue;
     }
-    const data = decode(TaskStatusChanged.schema, event.data);
+    const data = decode(Trace.TaskStatusChanged.schema, event.data);
     if (!data) {
       continue;
     }
@@ -497,8 +491,8 @@ const toMarker = (event: Trace.FlatEvent, id: string, laneId: string): Marker | 
         detail: data?.error,
       };
     }
-    case TaskStatusChanged.key: {
-      const data = decode(TaskStatusChanged.schema, event.data);
+    case Trace.TaskStatusChanged.key: {
+      const data = decode(Trace.TaskStatusChanged.schema, event.data);
       return {
         ...base,
         kind: 'task',

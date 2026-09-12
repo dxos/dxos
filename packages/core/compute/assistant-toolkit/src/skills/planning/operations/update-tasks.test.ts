@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
-import { AiContext, TaskStatusChanged } from '@dxos/assistant';
+import { AiContext } from '@dxos/assistant';
 import * as Agent from '@dxos/assistant/Agent';
 import * as Chat from '@dxos/assistant/Chat';
 import { FeedTraceSink } from '@dxos/compute-runtime';
@@ -45,8 +45,8 @@ const readStatusEvents = Effect.gen(function* () {
   const messages = yield* Database.query(Query.select(Filter.type(Trace.Message)).from(feed)).run;
   return messages
     .flatMap((message) => message.events)
-    .filter((event) => event.type === TaskStatusChanged.key)
-    .map((event) => Schema.decodeUnknownSync(TaskStatusChanged.schema)(event.data));
+    .filter((event) => event.type === Trace.TaskStatusChanged.key)
+    .map((event) => Schema.decodeUnknownSync(Trace.TaskStatusChanged.schema)(event.data));
 });
 
 describe('UpdateTasks', () => {

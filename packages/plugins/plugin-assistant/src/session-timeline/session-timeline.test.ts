@@ -7,13 +7,7 @@ import * as Option from 'effect/Option';
 import { describe, test } from 'vitest';
 
 import { AGENT_PROCESS_KEY } from '@dxos/agent-runtime';
-import {
-  AgentRequestBegin,
-  AgentRequestEnd,
-  CompleteBlock,
-  DelegationSpawned,
-  TaskStatusChanged,
-} from '@dxos/assistant';
+import { AgentRequestBegin, AgentRequestEnd, CompleteBlock, DelegationSpawned } from '@dxos/assistant';
 import * as Chat from '@dxos/assistant/Chat';
 import * as Process from '@dxos/compute/Process';
 import * as Trace from '@dxos/compute/Trace';
@@ -159,16 +153,16 @@ describe('buildSessionTimeline', () => {
         Effect.gen(function* () {
           yield* Trace.write(AgentRequestBegin, {}); // 1
           yield* toolCall('Search'); // 2 — before any task started, stays on the session.
-          yield* Trace.write(TaskStatusChanged, { taskId: first.id, title: 'First', status: 'started' }); // 3
+          yield* Trace.write(Trace.TaskStatusChanged, { taskId: first.id, title: 'First', status: 'started' }); // 3
           yield* toolCall('Read file'); // 4
-          yield* Trace.write(TaskStatusChanged, {
+          yield* Trace.write(Trace.TaskStatusChanged, {
             taskId: first.id,
             title: 'First',
             status: 'done',
             previousStatus: 'started',
           }); // 5
           yield* toolCall('Think'); // 6 — between segments.
-          yield* Trace.write(TaskStatusChanged, { taskId: second.id, title: 'Second', status: 'started' }); // 7
+          yield* Trace.write(Trace.TaskStatusChanged, { taskId: second.id, title: 'Second', status: 'started' }); // 7
           yield* toolCall('Write file'); // 8
         }),
       ),
@@ -211,14 +205,14 @@ describe('buildSessionTimeline', () => {
         Effect.gen(function* () {
           yield* Trace.write(AgentRequestBegin, {}); // 1
           yield* toolCall('Read file'); // 2
-          yield* Trace.write(TaskStatusChanged, {
+          yield* Trace.write(Trace.TaskStatusChanged, {
             taskId: first.id,
             title: 'First',
             status: 'done',
             previousStatus: 'started',
           }); // 3
           yield* toolCall('Write file'); // 4
-          yield* Trace.write(TaskStatusChanged, {
+          yield* Trace.write(Trace.TaskStatusChanged, {
             taskId: second.id,
             title: 'Second',
             status: 'done',

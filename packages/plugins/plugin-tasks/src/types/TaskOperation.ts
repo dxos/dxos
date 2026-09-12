@@ -7,6 +7,7 @@
 import * as Schema from 'effect/Schema';
 
 import * as Operation from '@dxos/compute/Operation';
+import * as Trace from '@dxos/compute/Trace';
 import { Database, Format, Obj, Ref, Type } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 // Person is referenced in Actor.Actor's inferred type (via the contact ref); importing it lets
@@ -73,7 +74,7 @@ export const UpdateTask = Operation.make({
       'creating the session record in the space if it is not there yet.',
     icon: 'ph--pencil-simple--regular',
   },
-  services: [Database.Service],
+  services: [Database.Service, Trace.TraceService],
   input: Schema.Struct({
     task: Ref.Ref(Task.Task),
     title: Schema.optional(Schema.String),
