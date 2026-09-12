@@ -9,8 +9,8 @@ import { safeStringify } from '@dxos/util';
 
 import { translationKey } from '#translations';
 
-import { useTranslation } from '../../providers/index.ts';
-import { IconButton } from '../Button/index.ts';
+import { useTranslation } from '../../providers';
+import { IconButton } from '../Button';
 import { ErrorStack } from './ErrorStack.tsx';
 
 export type ErrorFallbackProps = PropsWithChildren<Pick<FallbackProps, 'error'> & { title?: string; data?: any }>;

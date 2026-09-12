@@ -9,8 +9,8 @@ import { useFocusGroup } from '@dxos/react-focus';
 import { useComposedRefs } from '@dxos/react-hooks';
 import { type Axis } from '@dxos/ui-types';
 
-import { useThemeContext } from '../../hooks/index.ts';
-import { composableProps, slottable } from '../../util/index.ts';
+import { useThemeContext } from '../../hooks';
+import { composableProps, slottable } from '../../util';
 import { FOCUS_STATE_ATTR, FocusContext, type FocusState } from './FocusContext.ts';
 
 //

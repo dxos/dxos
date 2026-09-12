@@ -20,10 +20,10 @@ import { type ElevationLevel, type SlottableProps } from '@dxos/ui-types';
 
 import { translationKey } from '#translations';
 
-import { useThemeContext } from '../../hooks/index.ts';
-import { DensityProvider } from '../../providers/DensityProvider/index.ts';
-import { type ToolbarStyleProps } from '../../theme/index.ts';
-import { composable, composableProps, slottable } from '../../util/index.ts';
+import { useThemeContext } from '../../hooks';
+import { DensityProvider } from '../../providers/DensityProvider';
+import { type ToolbarStyleProps } from '../../theme';
+import { composable, composableProps, slottable } from '../../util';
 import {
   Button,
   type ButtonGroupProps,
@@ -38,11 +38,11 @@ import {
   type ToggleGroupItemProps,
   type ToggleGroupProps,
   type ToggleProps,
-} from '../Button/index.ts';
-import { Icon } from '../Icon/index.ts';
-import { Link, type LinkProps } from '../Link/index.ts';
-import { Menu } from '../Menu/index.ts';
-import { Separator, type SeparatorProps } from '../Separator/index.ts';
+} from '../Button';
+import { Icon } from '../Icon';
+import { Link, type LinkProps } from '../Link';
+import { Menu } from '../Menu';
+import { Separator, type SeparatorProps } from '../Separator';
 
 //
 // Root

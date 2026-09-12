@@ -5,7 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { withLayout, withTheme } from '../../testing/index.ts';
+import { withLayout, withTheme } from '../../testing';
 import { Container } from './Container.tsx';
 
 const DefaultStory = () => (

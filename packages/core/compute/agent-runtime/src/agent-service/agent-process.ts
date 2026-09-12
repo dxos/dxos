@@ -21,6 +21,7 @@ import {
   AgentRequestEnd,
   AiContext,
   Alarm,
+  DelegationSpawned,
   HarnessControl,
   type PendingState,
   SessionStore,
@@ -512,6 +513,7 @@ export const AgentProcess = (options: AgentProcessOptions) =>
                   const pid = yield* delegation.spawn;
                   delegations.push({ pid, id: delegation.id });
                   log('delegated work', { pid, id: delegation.id });
+                  yield* Trace.write(DelegationSpawned, { taskId: delegation.id, pid: String(pid) });
                 }
                 if (pending.length > 0) {
                   yield* DelegationsCell.set(delegations);
@@ -560,6 +562,7 @@ export const AgentProcess = (options: AgentProcessOptions) =>
                     const pid = yield* next.spawn;
                     delegations.push({ pid, id: next.id });
                     log('delegated work', { pid, id: next.id });
+                    yield* Trace.write(DelegationSpawned, { taskId: next.id, pid: String(pid) });
                   }
                   if (pending.length > 0) {
                     yield* DelegationsCell.set(delegations);

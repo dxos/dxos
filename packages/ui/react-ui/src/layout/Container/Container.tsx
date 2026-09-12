@@ -7,7 +7,7 @@ import React from 'react';
 
 import { mx } from '@dxos/ui-theme';
 
-import { composableProps, slottable } from '../../util/index.ts';
+import { composableProps, slottable } from '../../util';
 
 export const Container = slottable<HTMLDivElement>(({ children, asChild, ...props }, forwardedRef) => {
   const { className, ...rest } = composableProps<HTMLDivElement>(props);

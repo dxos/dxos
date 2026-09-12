@@ -8,7 +8,7 @@ import React from 'react';
 import { useId } from '@dxos/react-hooks';
 import { toEmoji } from '@dxos/util';
 
-import { withTheme } from '../../testing/index.ts';
+import { withTheme } from '../../testing';
 import { Avatar } from './Avatar.tsx';
 
 const hues = ['lime', 'teal', 'purple', 'pink'];

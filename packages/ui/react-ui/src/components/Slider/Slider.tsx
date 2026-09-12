@@ -7,8 +7,8 @@ import React, { type ComponentPropsWithRef, forwardRef } from 'react';
 
 import { invariant } from '@dxos/invariant';
 
-import { useThemeContext } from '../../hooks/index.ts';
-import { type ThemedClassName } from '../../util/index.ts';
+import { useThemeContext } from '../../hooks';
+import { type ThemedClassName } from '../../util';
 
 type SliderProps = ThemedClassName<
   Omit<ComponentPropsWithRef<'div'>, 'defaultValue' | 'dir' | 'onChange' | 'aria-labelledby'>

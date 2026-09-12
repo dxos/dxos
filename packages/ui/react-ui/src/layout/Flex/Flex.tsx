@@ -7,7 +7,7 @@ import React from 'react';
 
 import { mx } from '@dxos/ui-theme';
 
-import { composableProps, slottable } from '../../util/index.ts';
+import { composableProps, slottable } from '../../util';
 import { type Align, type Gap, type Justify, alignClasses, gapClasses, justifyClasses } from '../layout.ts';
 
 export type FlexProps = {

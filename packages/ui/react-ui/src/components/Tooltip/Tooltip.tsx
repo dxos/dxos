@@ -32,7 +32,7 @@ import React, {
 
 import { useControllableState } from '@dxos/react-hooks';
 
-import { useElevationContext, useThemeContext } from '../../hooks/index.ts';
+import { useElevationContext, useThemeContext } from '../../hooks';
 import {
   DEFAULT_DELAY_DURATION,
   TOOLTIP_NAME,

@@ -7,8 +7,8 @@ import React, { type ComponentPropsWithRef, forwardRef } from 'react';
 
 import { type ChromaticPalette, type MessageValence, type NeutralPalette } from '@dxos/ui-types';
 
-import { useThemeContext } from '../../hooks/index.ts';
-import { type ThemedClassName } from '../../util/index.ts';
+import { useThemeContext } from '../../hooks';
+import { type ThemedClassName } from '../../util';
 
 export type TagProps = ThemedClassName<ComponentPropsWithRef<typeof ark.span>> & {
   asChild?: boolean;

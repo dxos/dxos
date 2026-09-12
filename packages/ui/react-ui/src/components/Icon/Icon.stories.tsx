@@ -8,7 +8,7 @@ import React, { type FC, type ReactElement, type SVGProps, forwardRef } from 're
 
 import { getSize, iconSize, mx } from '@dxos/ui-theme';
 
-import { withTheme } from '../../testing/index.ts';
+import { withTheme } from '../../testing';
 import { Icon } from './Icon.tsx';
 
 /**

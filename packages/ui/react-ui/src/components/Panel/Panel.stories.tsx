@@ -6,9 +6,9 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 import { expect, within } from 'storybook/test';
 
-import { Card, Field, ScrollArea, ScrollAreaRootProps, Toolbar } from '../../components/index.ts';
-import { withLayout, withTheme } from '../../testing/index.ts';
-import { composable, composableProps } from '../../util/index.ts';
+import { Card, Field, ScrollArea, ScrollAreaRootProps, Toolbar } from '../../components';
+import { withLayout, withTheme } from '../../testing';
+import { composable, composableProps } from '../../util';
 import { Panel, type PanelRootProps } from './Panel.tsx';
 
 const List = composable<HTMLDivElement, ScrollAreaRootProps>((props, forwardedRef) => {

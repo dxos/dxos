@@ -13,8 +13,8 @@ import React from 'react';
 
 import { type SlottableProps } from '@dxos/ui-types';
 
-import { useThemeContext } from '../../hooks/index.ts';
-import { composableProps, slottable } from '../../util/index.ts';
+import { useThemeContext } from '../../hooks';
+import { composableProps, slottable } from '../../util';
 
 //
 // Root
