@@ -60,8 +60,11 @@ const readProbes = (spaceId: string): McpLatency.Probe[] => [
   // Cheapest handler that still reaches the database: an unfiltered listing, ids and labels only.
   { tool: 'invokeOperation', args: { key: 'org.dxos.operation.space.queryObjects', input: { limit: 10 }, spaceId } },
   // The same verb with the objects loaded, which is what separates a query's cost from a handler's.
+  // Labelled, because the operation key alone would fold it into the row above and average the two
+  // shapes into a figure describing neither.
   {
     tool: 'invokeOperation',
+    label: 'invokeOperation:org.dxos.operation.space.queryObjects(content)',
     args: {
       key: 'org.dxos.operation.space.queryObjects',
       input: { typename: Type.getTypename(Task.Task), includeContent: true, limit: 10 },
